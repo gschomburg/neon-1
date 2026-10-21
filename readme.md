@@ -10,7 +10,7 @@ All ASCII, mobile first, plain HTML/JS: each version is one self-contained HTML 
 
 ## Play
 
-Open `versions/v10/beta_runner_v10.html` in a browser. That's it, no build step.
+Open `versions/v11/beta_runner_v11.html` in a browser. That's it, no build step.
 
 - `?seed=WORD` plays a fixed seed. A corp's name as the seed (`?seed=NOIR`) makes every node that corp.
 - `?dev=1` (or the backtick key) opens the dev menu.
@@ -18,8 +18,8 @@ Open `versions/v10/beta_runner_v10.html` in a browser. That's it, no build step.
 
 ## Folders
 
-- `versions/`: every prototype, each a standalone snapshot. `v10` is the working copy; older
-  ones are locked (v08 is the online test build, v09 the 74-corp build).
+- `versions/`: every prototype, each a standalone snapshot. `v11` is the working copy; older
+  ones are locked (v08 is the online test build, v09 the 74-corp build, v10 adds BONEYARD).
 - `docs/SPEC.md`: the living design doc: what's built, version by version, plus the backlog.
 - `docs/CORPS.md`: every corp, its tell, its mod, and the build plan by tier.
 - `docs/CONTENT.md`, `docs/NAMES.md`, `docs/ART.md`: content reference, naming, art drop-off.

@@ -340,7 +340,8 @@ neon+1/
       v01_core/beta_runner_v01.html
       v02_overworld/ ... v06_online/
       v07/ v08/ v09/
-      v10/beta_runner_v10.html   <- the working copy
+      v10/
+      v11/beta_runner_v11.html   <- the working copy
 ```
 
 Naming: folder `vXX` (early ones `vXX_<topic>`), file `beta_runner_vXX.html`, all under `versions/`.
@@ -362,7 +363,8 @@ Order is by risk: test the most important unproven idea (corp tells) early.
 | v07 | `versions/v07/` | Polish on v06: menus full screen, How to Play rework, music player, death / boss-win music + transitions, fail and breach reveals, editable seed, persona names/colors | **Locked** |
 | v08 | `versions/v08/` | Built on v07: mods & corps round (tiers, swaps, new mods), boss entrance, then the endless map (sectors, 5-layer corps, SKIPJACK, cash out, REP + THE BOARD, run resume) | **Locked** (online test build) |
 | v09 | `versions/v09/` | Built on v08: corp kit, corp levels + modifiers, all 74 corps (tiers 1-3), RIVAL, sector bosses rethink | **Locked** (2026-10-21, for testing the corps) |
-| v10 | `versions/v10/` | Working copy of v09: new notes and builds go here | In progress |
+| v10 | `versions/v10/` | Built on v09: hacker logos + profile, database rules, multiplayer open to all, BONEYARD (corp 75) | **Locked** (2026-10-21) |
+| v11 | `versions/v11/` | Working copy of v10: new notes and builds go here | In progress |
 | later | | Scans, more corps (HYDRA, CIPHER, BLACKOUT), balance pass | Idea |
 | later | | Hot-seat multiplayer (out of scope for now) | Parked |
 
@@ -585,6 +587,9 @@ What was on the list:
 ## 16f. Pending revisions (next round)
 
 Agreed changes not built yet.
+- **FIRST next session: NeoN+1 logotype on the title page** (the user, 2026-10-21: "first order of
+  business next time"). The title still shows the old Beta Runner logo (`LOGO` ASCII art + `R U N N E R`).
+  Replace it with a NeoN+1 logo in the same ASCII style (keep the occasional glitch).
 - **INFO page, opened from the footer** (2026-10-21): a link in the footer (all screens, like the version tag) opens an
   INFO page about the game: what it is, when it was made, who made it (design by the user), and how: built in
   conversation with Claude (Anthropic's AI) in Claude Code, which wrote the code, music and placeholder art.
@@ -606,6 +611,18 @@ Agreed changes not built yet.
 - **Multiplayer: share link** (2026-10-21). The host gets a `[ SHARE ]` button that copies (or opens the
   phone share sheet for) the page URL with the code in it, e.g. `?room=YUAH`. Opening that link goes
   straight into the room (or the join screen with the code filled in).
+- **Hacker logo: draw it on your color style's background** (2026-10-21). The big logo is drawn in your
+  style's text color straight on the screen background (black for the user), so dark styles hide it. Give
+  the logo block the same background as the name on the runner card. Same fix in all 3 places: the
+  PROFILE screen, CORP BREACHED, and the multiplayer turn card.
+  - **PROFILE layout: logo + name as one lockup** (same day). Today it goes logo, then the logo picker
+    (`[ < ] NAME [ > ]`), then the runner card with your name. Put the logo right on top of the card (same
+    background) so logo, name and stats read as one block, and move all the controls (logo picker, NEW NAME,
+    COLOR, RANDOMIZE ALL) together below it.
+- **Dev menu palette cycles every palette** (2026-10-21; from §17 "Two palette lists"). The dev menu's
+  `[ palette ]` steps through the player palettes plus all 76 corp palettes (75 corps + OMNI), named, to
+  preview them. SETTINGS keeps the player list only (`playerPalettes()`). Close pairs are fine as they are
+  (PLAYTIME / DIALTONE ONLINE, COLDBREW / CARAPACE ARMOR...).
 
 Built straight into v05 after release:
 - **Version number in the footer:** `beta_runner v05`, right-aligned and dim, on every screen (next to the seed during runs, bottom corner on the title).
@@ -1349,7 +1366,7 @@ Built in v09:
     KERNEL's map reseed, CHUCK E. CACHE'S 2-tap boss, second boss mods, real art, multiplayer for
     the new corps. QUICK EYE doesn't slow the screen wipes.
 
-## 16m. v10 (in progress)
+## 16m. v10 (locked)
 
 Started 2026-10-21 as an exact copy of v09 (only the version, title and save slot changed:
 `beta_runner.v10.save`, so v10 starts with a fresh save, and its run save is
@@ -1382,6 +1399,31 @@ Built in v10:
     never deleted (small; clean up by hand if ever needed).
 - **Multiplayer is open** (2026-10-21): `[ MULTIPLAYER ]` always shows on the title screen (next to
   SETTINGS), no longer only with dev on.
+- **BONEYARD, the spooky corp** (2026-10-21, the user's ask; corp 75). Level 3, map letter `j`. Built from the
+  §17 notes; Claude filled in the tell, boss and mod.
+  - Intel: "the guy asked for something spooky." Rules line: they pay in bones here.
+  - **Tell: the dead cast no shadow.** Every node casts a faint shadow (dim `:` down its right side) except
+    the real node and 1 ghost decoy (2 deeper and on the boss). Shadows flicker now and then. Measured
+    x1.8 over blind at tier 1, x1.5 at tier 2, x1.8 on the boss (target ~x2).
+  - **Boss: the ghosts walk.** After every miss, one ghost (a shadowless decoy) fades and drifts to an empty
+    cell ("something moved."). The real node never moves. ANCHOR stops it.
+  - **Bones are their money:** the HUD shows `BONES` instead of `CR` inside, $ nodes are bone piles
+    (`o=$=o`), and ICE hits rattle (dry clicks).
+  - **Boss mod GRAVE ROBBER** `GRV` (LAYER END): clear a layer, +2cr for every ICE you never touched. (The
+    seed idea, cash for ICE hits, was already POLICY, so it pays for clean play instead.)
+  - Look and sound: grave purple and sickly green palette, bone-white gold; skull intro art; track
+    GRAVE SHIFT (76 bpm, harmonic minor, half-time, long echo).
+  - Checked headless (layers, shadows, odds); not yet played in a browser.
+
+## 16n. v11 (in progress)
+
+Started 2026-10-21 as an exact copy of v10 (only the version, title and save slot changed:
+`beta_runner.v11.save`, so v11 starts with a fresh save, and its run save is
+`beta_runner.v11.save.run`). v10 is locked (the user is testing the corps on it, BONEYARD included). All new
+builds go here. Note: v06-v11 share the same Firebase rooms; don't mix versions in one multiplayer room.
+
+Built in v11:
+- (nothing yet; the pending list is in 16f)
 
 ## 17. Ideas backlog
 
@@ -1644,7 +1686,7 @@ Not yet placed in a version.
 - **More palettes.** Keep the current 5; add more, with more variety.
 - **Corp palettes.** Each corp gets its own palette, so you know where you are at a glance.
 - **Two palette lists: dev vs settings, corp palettes as unlocks.** (noted v07)
-  - **Dev menu palette select stays**, but it cycles **every** palette: the player ones plus all the corp palettes (PERIMETER, SIGIL, CHRONOS, MIRRORLINE, OMNI, and future corps), for previewing / tuning. *Today both the dev menu and SETTINGS cycle the same list (player palettes only; corp palettes are hidden from both).*
+  - **Dev menu palette select stays** (moved to the 16f pending list, 2026-10-21), but it cycles **every** palette: the player ones plus all the corp palettes (PERIMETER, SIGIL, CHRONOS, MIRRORLINE, OMNI, and future corps), for previewing / tuning. *Today both the dev menu and SETTINGS cycle the same list (player palettes only; corp palettes are hidden from both).*
   - **SETTINGS palette list is the player list only:** it does *not* include the corp palettes by default.
   - **Corp palettes unlock into SETTINGS** through corp achievements, e.g. breach a corp (or beat its boss N times / perfect it) to unlock its palette as a player palette. Could also be a REP purchase (see REP meta progression).
   - **Every corp gets its own unique palette**, including future corps (CIPHER, HYDRA, BLACKOUT, ...), and maybe more than one per corp (an alt palette unlocked by a harder achievement).
@@ -1662,7 +1704,7 @@ Not yet placed in a version.
   - ASCII emoticons / kaomoji for flavor, e.g. `(⌐■_■)` `[o_o]` `x_x`
   - Real emoji: most colorful, but they ignore the palette (can't be recolored) and look different on each device, so they'd clash with the console look. Use sparingly if at all.
   - Bigger mini-art (3–5 lines) for mods in reward/market details boxes, while the tray keeps the small badges
-- **A spooky corp** (noted 2026-10-20). Working names: BONEYARD, OSSUARY, SPOOKY INC. Pulls from the "the bones are their money" sketch, and works in the quote **"the guy asked for something spooky"** (as the intel line, the intro, or a line on the CORP BREACHED screen).
+- **A spooky corp** (noted 2026-10-20; **built v10 as BONEYARD**, see §16m). Working names: BONEYARD, OSSUARY, SPOOKY INC. Pulls from the "the bones are their money" sketch, and works in the quote **"the guy asked for something spooky"** (as the intel line, the intro, or a line on the CORP BREACHED screen).
   - **Tell idea:** every node casts a faint shadow (a dim copy one cell off) except the real one: "the dead cast no shadow." Or the reverse, where only the real node has a ghostly afterimage.
   - **Bones are their money:** credits show as bones while you're inside (`12 bones`). $ nodes become bone piles. Hitting ICE could rattle (a skeleton clack sound).
   - **Boss twist:** the ghost moves. One ICE node drifts to a new spot when you aren't looking, either after each tap or on a timer.
@@ -1672,7 +1714,9 @@ Not yet placed in a version.
   - A melody of its own for each corp (a short motif in the song data, in place of the shared `LEAD_DEGREES`).
   - More drum and bass patterns (swing, breakbeat, half-time trap hats, a waltz in 3).
   - A couple of new instrument sounds (organ, pluck, chiptune square, bell).
-  - Wait for the user to listen to tier 2 first.
+  - **The user, 2026-10-21:** wants more unique music for some corps; today it all sits on the same beat.
+    So start with the beat: different grooves and time feels per corp, not just tempo. Pick a handful of
+    corps (the signature ones, the final bosses, BONEYARD) to get fully custom tracks first.
 
 - **Pushing past the 4x4 grid** (the user, 2026-10-21; "at some point"). What does it mean to go bigger,
   even double the grid (e.g. 8x8)? How it scales on screen (tile size, phones, scrolling), in odds and
@@ -1682,6 +1726,27 @@ Not yet placed in a version.
   - **Interstitial ads** between parts of a run: after a boss, or on the way into a safehouse or black market.
   - **Ads for the game's own corps.**
   - Maybe a **corp built around ads** (pop-ups, banners over the board).
+
+- **Publishing: link previews and page metadata** (the user, 2026-10-21). For when the game goes public, so
+  link previews (Discord, iMessage, Slack, X...) and crawlers pick it up:
+  - Meta tags: description, Open Graph (`og:title`, `og:description`, `og:image`, `og:url`, `og:type`) and
+    `twitter:card` (`summary_large_image`).
+  - A **poster image** for previews (~1200x630 PNG, the ASCII title look), plus a favicon / home-screen icon
+    (`apple-touch-icon`) and a `theme-color`.
+  - The page has `<meta name="robots" content="noindex, nofollow">` today: drop it for the public build.
+  - Previews need absolute URLs, so this goes with picking where it's hosted (§10 Tech / hosting).
+
+- **Browser back button works as BACK** (the user, 2026-10-21; "might be opening a can of worms"). On a
+  menu page (settings, codex, how to play, profile, multiplayer...), the browser / phone back button (and
+  Android's back gesture) should do what `[ BACK ]` does, instead of leaving the page. Today the game never
+  touches browser history, so back leaves the game. The worms:
+  - Push a history entry when a menu opens and catch `popstate` to go back; keep it in step with the game's
+    own BACK and ESC, or the history fills with stale entries.
+  - During a run, back should never quietly drop you out: pause, or ask "abandon run?" (the run save helps).
+  - Multiplayer: back in a lobby or game should ask before leaving the room.
+  - The title is the bottom: back from there leaves the page as normal. Keep the URL clean (`?seed`,
+    `?dev`, a future `?room`) while doing this.
+  - iOS Safari's swipe-back is the same event, so it gets covered too.
 
 ## 18. Decision log
 

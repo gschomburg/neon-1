@@ -129,6 +129,7 @@
     c_watchpoint: Object.assign({ name: 'WATCHPOINT', hidden: true, bg: '#020a04', dim: '#123018', mid: '#3a7a44', text: '#b8f0c0', bright: '#eaffee', cyan: '#5aff7a', red: '#ff4a4a', redDim: '#5a1414', gold: '#d8ff8a' }, CORP_RARITY, { common: '#b8f0c0' }),   // night vision
     c_verdant: Object.assign({ name: 'VERDANT', hidden: true, bg: '#060d04', dim: '#1e3414', mid: '#5a8a3a', text: '#dcf0c8', bright: '#f6fff0', cyan: '#8aff4a', red: '#ff6a3a', redDim: '#5a2412', gold: '#e8e070' }, CORP_RARITY, { common: '#dcf0c8' }),   // leaf green
     c_halflife: Object.assign({ name: 'HALFLIFE', hidden: true, bg: '#0a0c02', dim: '#2c3208', mid: '#7a8a1a', text: '#eef4c0', bright: '#ffffff', cyan: '#d4ff1a', red: '#ff4a2a', redDim: '#5a1a10', gold: '#ffe01a' }, CORP_RARITY, { common: '#eef4c0' }),   // hazard yellow-green
+    c_boneyard: Object.assign({ name: 'BONEYARD', hidden: true, bg: '#0c0714', dim: '#3a2a52', mid: '#7a5a9a', text: '#d6e6c4', bright: '#f4fff0', cyan: '#a6ff4a', red: '#ff3a78', redDim: '#55122e', gold: '#eee2b8' }, CORP_RARITY, { common: '#d6e6c4' }),   // sickly green on grave purple
     c_echo: Object.assign({ name: 'ECHO', hidden: true, bg: '#020810', dim: '#0e2a3a', mid: '#2a6a8a', text: '#c0e8ff', bright: '#f0faff', cyan: '#3ad8ff', red: '#ff5a7a', redDim: '#5a1a2a', gold: '#a0f0ff' }, CORP_RARITY, { common: '#c0e8ff' }),   // sonar
     c_dialtone: Object.assign({ name: 'DIALTONE', hidden: true, bg: '#0a0a14', dim: '#26264a', mid: '#5a5aa0', text: '#dcdcff', bright: '#ffffff', cyan: '#ffd23a', red: '#ff4a4a', redDim: '#5a1a1a', gold: '#ffd23a' }, CORP_RARITY, { common: '#dcdcff' }),   // 90s portal
     c_telephonix: Object.assign({ name: 'TELEPHONIX', hidden: true, bg: '#0c0806', dim: '#30241a', mid: '#7a5c44', text: '#f0e0d0', bright: '#ffffff', cyan: '#4ab0ff', red: '#ff4a3a', redDim: '#5a1a14', gold: '#ffd27a' }, CORP_RARITY, { common: '#f0e0d0' }),   // beige phone + bell blue
@@ -279,6 +280,7 @@
   const MOTIFS = MOTIFS_RAW.map(normMotif);
   const JACK_GLYPH = normMotif(['', '>_', '']);
   const LOOT_GLYPH = normMotif(['$ $', '[$]', '$ $']);
+  const BONE_GLYPH = normMotif(['o=o', 'o=$=o', 'o=o']);   // BONEYARD's $ nodes: bone piles
   const MASK_GLYPH = normMotif(['', '???', '']);
   const X_SHAPE = normMotif(['\\ /', ' X ', '/ \\']);
   const shapeOf = gl => gl.map(l => l.replace(/[^ ]/g, '#')).join('|');
@@ -1419,6 +1421,51 @@
         if ((c.rad || 0) <= radLimit(c)) return null;
         st.run.integrity = Math.max(1, st.run.integrity - 1);
         return '> radiation dose: -1 integrity.';
+      },
+    },
+    boneyard: {
+      key: 'boneyard', name: 'BONEYARD', letter: 'j', level: 3, moves: true,
+      intel: '"the guy asked for something spooky."',
+      tell: null, money: 'BONES',
+      bossDesc: 'boss: the ghosts walk.',
+      rules: () => 'they pay in bones here.',
+      mods: ['graverobber'],
+      // The dead cast no shadow. Every node casts a faint shadow (dim : down its right side)
+      // except the real one, and a decoy or two (the ghosts). Shadows flicker now and then.
+      // $ nodes are bone piles. Boss: after every miss, a ghost drifts to an empty cell.
+      dress(lv, k) {
+        const others = shuffle(k.tiles.filter(t => t !== k.tellTile), k.r);
+        const extra = Math.min(k.tier >= 2 || k.boss ? 2 : 1, Math.max(0, others.length - 1));
+        k.tellTile.noShadow = true; k.tellTile.tell = true;
+        for (const t of others.slice(0, extra)) { t.noShadow = true; t.ghost = true; }
+        for (const t of lv.tiles) if (t.loaded) t.glyph = BONE_GLYPH;
+        lv.shade = { seed: Math.floor(k.r() * 1000), flicker: k.boss ? 0.06 : k.tier >= 2 ? 0.04 : 0.02 };
+      },
+      onHit() { Sound.rattle(); },
+      async afterHit(t, lv) {
+        if (!lv.boss || lv.anchor || st.run.integrity <= 0) return;
+        const r = rngFor(st.run.seed, 'haunt', st.corp.node.id, st.corp.idx, lv.misses);
+        const ghost = pickR(lv.tiles.filter(o => o.ghost && !o.safe && o.state === 'closed' && !o.slide), r);
+        if (!ghost) return;
+        const used = new Set(lv.tiles.map(o => o.cell)), free = [];
+        for (let c = 0; c < lv.cols * lv.rows; c++) if (!used.has(c)) free.push(c);
+        if (!free.length) return;
+        await wait(200);
+        slideTo(lv, ghost, pickR(free, r), 900, 0.6);
+        Sound.whoosh();
+        setMsg('> something moved.', C.cyan);
+        await wait(slideMs(900) + 50);
+      },
+      fx: t => t.ghost && t.slide ? { dim: true } : null,   // a ghost fades while it drifts
+      draw(put, lv, now) {
+        const sh = lv.shade;
+        if (!sh) return;
+        for (const t of lv.tiles) {
+          if (t.hidden || t.state !== 'closed' || t.noShadow) continue;
+          if (h01(sh.seed + t.cell, Math.floor((now + t.cell * 337) / 160)) < sh.flicker) continue;
+          const { tx, ty } = tileOrigin(t);
+          for (let k = 1; k < TILE_H; k++) put(tx + TILE_W, ty + k, ':', C.dim, 'fx');
+        }
       },
     },
     echo: {
@@ -3015,6 +3062,7 @@
     watchpoint: "the camera sweeps the rows. each sweep catches one ICE: it flashes ### as the camera passes. boss: some sweeps catch nothing.",
     verdant: "the real node has a leaf % on its frame, and so do 1-2 decoys. ICE you hit grows back a few seconds later, with a leaf.",
     halflife: "the geiger counter sweeps the nodes. the real node reads full ::::: and the ones near it click faster. too slow and the radiation costs 1 at the end.",
+    boneyard: "the dead cast no shadow: every node casts a faint shadow except the real one (and a ghost or two). boss: after every miss, a ghost drifts to a new spot. the real node never moves.",
     echo: "the nodes ping one after another. the real node pings lower and its ring goes in, not out. boss: every ping sounds the same; watch the rings.",
     dialtone: "the modem screeches, then beeps: the count is the real node's place in reading order (1 = top left; $ nodes count too). dots on the hint row. boss: counted from the end.",
     telephonix: "the nodes are phone keys. the hint dials a number; the last digit is the real key. then the line goes on hold. boss: the last digit is dialed as a letter (2 = ABC).",
@@ -3357,6 +3405,13 @@
       "     \\ | /",
       "    __\\|/__",
       "     V E R D A N T",
+    ],
+    boneyard: [
+      "      .-----.",
+      "     / x   x \\",
+      "     |   ^   |",
+      "      \ vvv /",
+      "   B O N E Y A R D",
     ],
     halflife: [
       "      .-.",
@@ -3759,6 +3814,7 @@
     cctv:          { name: 'CCTV',           short: 'CTV', kind: 'corp', corp: 'watchpoint', rarity: 'boss', icon: '[o]=', anim: 'blink', tip: 'each layer: 1 ICE shows ###', desc: 'every layer, 1 second in, one ICE flashes ### for a moment. watch for it.' },
     compost:       { name: 'COMPOST',        short: 'CMP', kind: 'corp', corp: 'verdant', rarity: 'boss', icon: '%.%,', anim: 'cycle', tip: 'every 3rd ICE hit: heal 1.', desc: 'every 3rd ICE hit (all run long) heals 1.' },
     leadlining:    { name: 'LEAD LINING',    short: 'LED', kind: 'corp', corp: 'halflife', rarity: 'boss', icon: '[#]#', anim: 'blink', tip: 'boss layers: 1 free hit.', desc: 'the first ICE hit in every boss layer is free.' },
+    graverobber:   { name: 'GRAVE ROBBER',   short: 'GRV', kind: 'corp', corp: 'boneyard', rarity: 'boss', icon: 'o==o', anim: 'cycle', tip: 'layer done: +2cr per untouched ICE.', desc: 'clear a layer: +2cr for every ICE you never touched.' },
     foghorn:       { name: 'FOGHORN',        short: 'FOG', kind: 'corp', corp: 'echo', rarity: 'boss', icon: ')))>', anim: 'wave', tip: 'hit: horn. louder = closer', desc: 'an ICE hit sounds a horn: the closer the real node, the louder (shown as bars).' },
     handshake:     { name: 'HANDSHAKE',      short: 'HSK', kind: 'corp', corp: 'dialtone', rarity: 'boss', icon: 'o.o.', anim: 'blink', tip: 'layer start: beeps = real row.', desc: "every layer starts with beeps: the count is the real node's row (1 = top). also shown on the hint row." },
     callerid:      { name: 'CALLER ID',      short: 'CID', kind: 'corp', corp: 'telephonix', rarity: 'boss', icon: '[#]>', anim: 'cycle', tip: 'hit ICE: real row.', desc: "an ICE hit tells you the real node's row." },
@@ -3831,7 +3887,7 @@
     bulwark: 'block', forgery: 'block', shatter: 'block', failsafe: 'block',
     tracer: 'hit', keylogger: 'hit',
     virus: 'board', autocomplete: 'board', twinlock: 'board',
-    skipjack: 'end', interest: 'end',
+    skipjack: 'end', interest: 'end', graverobber: 'end',
     burner: 'tap', overclock: 'clock',
     anchor: 'tap', infrared: 'start', ambush: 'block', antigrav: 'board',
     timewarp: 'tap', inversion: 'block', lastbyte: 'hit', precog: 'start',
@@ -4458,6 +4514,8 @@
         noise(0.6, { vol: 0.18, freq: 9000, delay: 0.62 });
       },
       burst: () => { noise(0.25, { vol: 0.22, freq: 6000 + Math.random() * 3000 }); tone(1200 + Math.random() * 1200, 0.08, { type: 'triangle', vol: 0.18 }); },
+      // BONEYARD: a skeleton's clack, a handful of dry clicks
+      rattle: () => { for (let i = 0; i < 6; i++) { const d = 0.05 + i * 0.045 + Math.random() * 0.02; tone(900 + Math.random() * 700, 0.02, { vol: 0.12, delay: d }); noise(0.03, { vol: 0.15, freq: 2500, delay: d }); } },
     };
   })();
 
@@ -4517,6 +4575,7 @@
     newsdesk: { name: 'NEWS DESK',      bpm: 128, root: 48, scale: 'minor',    prog: [0, 3, 4, 4], bass: 'march',   drums: 'march', arp: 'up', tick: true },
     nightshift: { name: 'NIGHT SHIFT',    bpm: 84,  root: 42, scale: 'dorian',   prog: [0, 6, 5, 4], bass: 'offbeat', drums: 'half',  arp: 'down', echo: 0.45, feedback: 0.4 },
     regrowth: { name: 'REGROWTH',       bpm: 96,  root: 47, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'pulse',   drums: 'half',  arp: 'mirror', pingpong: true },
+    graveshift: { name: 'GRAVE SHIFT',    bpm: 76,  root: 38, scale: 'harmonic', prog: [0, 5, 1, 4], bass: 'pulse',   drums: 'half',  arp: 'down', echo: 0.5, feedback: 0.45 },
     falloutd: { name: 'FALLOUT',        bpm: 108, root: 38, scale: 'harmonic', prog: [0, 1, 5, 4], bass: 'gallop',  drums: 'heavy', arp: 'down' },
     sonar: { name: 'SONAR',          bpm: 76,  root: 44, scale: 'minor',    prog: [0, 5, 6, 4], style: 'ambient', echo: 0.7, feedback: 0.6 },
     handshake: { name: 'HANDSHAKE',      bpm: 110, root: 46, scale: 'dorian',   prog: [0, 3, 4, 3], bass: 'offbeat', drums: 'four',  arp: 'updown', tick: true },
@@ -4561,7 +4620,7 @@
     basic: 'plaintext', seekr: 'query', megamart: 'aisle9', cloneworks: 'mitosis', haute: 'catwalk', ledger: 'compound',
     parcelnet: 'conveyor', burgertron: 'drivethru', nimbus: 'lowpressure', dewey: 'quietplease', rydr: 'nightfare', safeharbor: 'fineprint', tumbler: 'tumblers', purlwise: 'caston', numberwong: 'numberwong', gencorp: 'splice', zodiac: 'retrograde', lexicon: 'typeset', kernel: 'kernelpanic', forgetmenot: 'forget', tollgate: 'tollroad',
     brightline: 'brownout', coldbrew: 'doubleshot', mochi: 'pikopiko', playtime: 'windup', medix: 'vitals', apiary: 'hive', kerning: 'leading', streamflix: 'buffering',
-    glacier: 'permafrost', gridlock: 'redlight', liftco: 'muzak', headline: 'newsdesk', watchpoint: 'nightshift', verdant: 'regrowth', halflife: 'falloutd', echo: 'sonar',
+    glacier: 'permafrost', gridlock: 'redlight', liftco: 'muzak', headline: 'newsdesk', watchpoint: 'nightshift', verdant: 'regrowth', halflife: 'falloutd', boneyard: 'graveshift', echo: 'sonar',
     dialtone: 'handshake', telephonix: 'onhold', tempo: 'fourfloor', bidblitz: 'pennybid', famiglia: 'omerta', choir: 'hymnal', luckeez: 'jackpot', channel9: 'snow', bytepets: 'treats', pawnbros: 'freeparking',
     form27b: 'redtape', carapace: 'shellshock', chuckecache: 'insertcoin', demolition: 'wreckingball', noir: 'gumshoe', synapse: 'deeplearning',
     spectra: 'prismatic', drop4: 'gravitydrop',
@@ -5371,7 +5430,7 @@
         where = `${c.def.name} ${prog}`;
       } else if (st.mode === 'panel') where = st.panelTitle || '';
       put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.red : C.text);
-      putR(3, `CR ${run.credits}`, C.gold);
+      putR(3, `${(st.mode === 'play' && st.corp && st.corp.def.money) || 'CR'} ${run.credits}`, C.gold);
     } else {
       put(0, 2, `BEST ${pad2(save.best)}   RUNS ${save.runs}   WINS ${save.wins}`, C.mid);
     }
@@ -7223,6 +7282,13 @@
   // LAYER END stage: what each mod does once a layer is passed.
   const END_FX = {
     ezpass() { st.run.credits += 2; st.run.earned += 2; },
+    // GRAVE ROBBER: every ICE you never touched is a grave to rob
+    graverobber() {
+      const lv = st.lv, n = lv ? lv.tiles.filter(t => !t.safe && !(t.state === 'locked' && t.lockedBy === 'hit')).length : 0;
+      if (!n) return;
+      st.run.credits += 2 * n; st.run.earned += 2 * n;
+      setMsg(`> grave robber: ${n} graves. +${2 * n}cr`, C.gold); Sound.loot();
+    },
     // LET IT RIDE: a perfect bets its pay on the next layer: another perfect pays it back
     // double, anything else loses it.
     letitride(perfect) {
