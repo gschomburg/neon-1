@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beta Runner v01</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  html, body { margin: 0; height: 100%; background: #06090a; overflow: hidden; }
+  body {
+    touch-action: manipulation;
+    user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  canvas { display: block; width: 100vw; height: 100vh; height: 100dvh; cursor: default; }
+</style>
+</head>
+<body>
+<canvas id="screen" aria-label="Beta Runner game screen"></canvas>
+<script>
+// Beta Runner v01: core loop only.
+// The whole screen is a grid of text characters drawn on one canvas,
+// so any character can turn into a particle for effects.
+(() => {
+  'use strict';
+
+  // ---------------- Config ----------------
+  const VERSION = 'v01';
+  const STORE_KEY = 'beta_runner.v01.save';
+  const SAVE_FORMAT = 1;
+  const START_INTEGRITY = 3;
+
+  const TILE_W = 7, TILE_H = 5;   // tile size in characters
+  const GAP_X = 2, GAP_Y = 1;     // space between tiles in characters
+  const BOARD_Y = 8;              // first character row of the board
+  const MIN_CONTENT_W = 36;       // narrowest layout in characters
+  const LINE_H = 1.22;            // character cell height relative to font size
+  const FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
+
+  const C = {
+    bg: '#06090a',
+    dim: '#2c3a38',
+    mid: '#5f7470',
+    text: '#a9bdb7',
+    bright: '#e6f4ef',
+    cyan: '#3cf0ff',
+    red: '#ff3b4e',
+    redDim: '#6a1e26',
+  };
+
+  const NOISE = '#%&@$*+=<>/\\|:;~^01';
+
+  // ---------------- Seeded RNG ----------------
+  // All gameplay randomness comes from the run seed. Math.random is only
+  // used for cosmetic effects and for making new seeds.
+  function hashStr(str) {
+    let h = 1779033703 ^ str.length;
+    for (let i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return (h ^= h >>> 16) >>> 0;
+  }
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  // Separate stream per purpose, so player actions never shift the answers.
+  const rngFor = (...parts) => mulberry32(hashStr(parts.join('|')));
+
+  const SEED_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  function newSeed() {
+    let s = '';
+    for (let i = 0; i < 6; i++) s += SEED_ALPHABET[Math.floor(Math.random() * SEED_ALPHABET.length)];
+    return s;
+  }
+  const cleanSeed = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
+
+  function shuffle(arr, r) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // ---------------- Tile glyphs ----------------
+  // Decoration only in v01. Each is up to 3 lines of up to 5 characters.
+  const MOTIFS_RAW = [
+    [' /\\ ', '<  >', ' \\/ '],
+    ['\\ /', ' X ', '/ \\'],
+    ['[==]', '[  ]', '[==]'],
+    [' .-. ', '( o )', " '-' "],
+    ['~ ~ ~', ' ~ ~ ', '~ ~ ~'],
+    ['# #', ' # ', '# #'],
+    ['  ^  ', ' /|\\ ', '  |  '],
+    ['o-+  ', '  |  ', '  +-o'],
+    ['0110', '1001', '0110'],
+    ['(o.o)', ' |=| '],
+    ['+-+-+', '| | |', '+-+-+'],
+    ['  |  ', '--+--', '  |  '],
+    ['. : .', ': . :', '. : .'],
+    ['>>>', '>>>'],
+    [' .-. ', ' | | ', '[###]'],
+    ['%#@', '@ %', '#%@'],
+    ['{ }', '{*}', '{ }'],
+    ['=====', ' === ', '  =  '],
+  ];
+  function normMotif(m) {
+    let lines = m.slice(0, 3);
+    if (lines.length === 1) lines = ['', lines[0], ''];
+    else if (lines.length === 2) lines = [lines[0], lines[1], ''];
+    return lines.map(l => {
+      l = l.slice(0, 5);
+      const pad = 5 - l.length, left = Math.floor(pad / 2);
+      return ' '.repeat(left) + l + ' '.repeat(pad - left);
+    });
+  }
+  const MOTIFS = MOTIFS_RAW.map(normMotif);
+  const JACK_GLYPH = normMotif(['', '>_', '']);
+
+  // ---------------- Layers ----------------
+  // Smallest grid (starting at 4x4) where tiles fill at most 75% of cells.
+  // Grows rows first, so it stays tall for phones held upright.
+  function gridFor(n) {
+    let cols = 4, rows = 4;
+    while (n > Math.floor(cols * rows * 0.75)) {
+      if (rows <= cols) rows++; else cols++;
+    }
+    return { cols, rows };
+  }
+
+  function genLayer(seed, n) {
+    const r = rngFor(seed, 'layer', n);
+    const { cols, rows } = gridFor(n);
+    const cells = [];
+    for (let i = 0; i < cols * rows; i++) cells.push(i);
+    shuffle(cells, r);
+    const tiles = cells.slice(0, n).sort((a, b) => a - b).map(cell => ({
+      cell,
+      col: cell % cols,
+      row: Math.floor(cell / cols),
+      glyph: n === 1 ? JACK_GLYPH : MOTIFS[Math.floor(r() * MOTIFS.length)],
+      state: 'closed',   // closed | locked | safe | reveal
+      hidden: false,
+      probing: false,
+    }));
+    const safe = Math.floor(r() * n);
+    return { n, cols, rows, tiles, safe };
+  }
+
+  // ---------------- Save data ----------------
+  const save = (() => {
+    const d = { format: SAVE_FORMAT, best: 0, runs: 0, history: [], muted: false };
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (raw && raw.format === SAVE_FORMAT) Object.assign(d, raw);
+    } catch (e) { /* storage unavailable */ }
+    return d;
+  })();
+  const persist = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(save)); } catch (e) { /* ignore */ } };
+
+  // ---------------- Sound ----------------
+  // A few synthesized beeps. Starts on the first tap (browser rule).
+  const Sound = (() => {
+    let ac = null, master = null, noiseBuf = null;
+    function init() {
+      if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+      try {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        master = ac.createGain(); master.gain.value = 0.16; master.connect(ac.destination);
+        noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+        const ch = noiseBuf.getChannelData(0);
+        for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+      } catch (e) { ac = null; }
+    }
+    function tone(freq, dur, { type = 'square', vol = 1, slide = 0, delay = 0 } = {}) {
+      if (!ac || save.muted) return;
+      const t = ac.currentTime + delay;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+    function noise(dur, { vol = 0.5, freq = 1000, delay = 0 } = {}) {
+      if (!ac || save.muted) return;
+      const t = ac.currentTime + delay;
+      const s = ac.createBufferSource(); s.buffer = noiseBuf;
+      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 0.8;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(master);
+      s.start(t); s.stop(t + dur + 0.02);
+    }
+    return {
+      init,
+      tick: () => tone(1800, 0.018, { vol: 0.12 }),
+      ui: () => tone(990, 0.04, { vol: 0.3 }),
+      probe: () => { tone(520, 0.05, { vol: 0.3 }); tone(780, 0.05, { vol: 0.25, delay: 0.09 }); tone(640, 0.05, { vol: 0.25, delay: 0.18 }); },
+      layer: n => tone(260 + Math.min(n, 30) * 22, 0.07, { vol: 0.25 }),
+      safe: () => {
+        tone(523, 0.09, { type: 'triangle', vol: 0.6 });
+        tone(784, 0.12, { type: 'triangle', vol: 0.55, delay: 0.07 });
+        tone(1046, 0.22, { type: 'triangle', vol: 0.5, delay: 0.14 });
+      },
+      implode: () => tone(180, 0.6, { type: 'sine', vol: 0.5, slide: 4 }),
+      trap: () => { tone(110, 0.35, { type: 'sawtooth', vol: 0.7, slide: 0.5 }); noise(0.25, { vol: 0.6, freq: 900 }); },
+      death: () => { tone(220, 1.3, { type: 'sawtooth', vol: 0.6, slide: 0.2 }); noise(1.0, { vol: 0.45, freq: 350, delay: 0.1 }); },
+    };
+  })();
+
+  // ---------------- Canvas & layout ----------------
+  const cv = document.getElementById('screen');
+  const g = cv.getContext('2d');
+  let W = 0, H = 0, dpr = 1;
+  let L = null; // current layout, in pixels and characters
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    computeLayout();
+  }
+
+  function computeLayout() {
+    const gd = (st.mode === 'play' && st.lv) ? { cols: st.lv.cols, rows: st.lv.rows } : { cols: 4, rows: 4 };
+    const gw = gd.cols * TILE_W + (gd.cols - 1) * GAP_X;
+    const gh = gd.rows * TILE_H + (gd.rows - 1) * GAP_Y;
+    const wc = Math.max(gw, MIN_CONTENT_W);
+    const hc = BOARD_Y + gh + 3;
+    g.font = `400 100px ${FONT}`;
+    const ratio = (g.measureText('M').width / 100) || 0.6;
+    const gutter = 12;
+    let fs = Math.min((W - 2 * gutter) / (wc * ratio), (H - 2 * gutter) / (hc * LINE_H));
+    fs = Math.max(7, Math.min(26, fs));
+    const cw = fs * ratio, chh = fs * LINE_H;
+    L = {
+      fs, cw, chh, wc, hc, gw, gh,
+      gx: Math.floor((wc - gw) / 2),
+      cols: gd.cols, rows: gd.rows,
+      ox: Math.round((W - wc * cw) / 2),
+      oy: Math.round((H - hc * chh) / 2),
+    };
+  }
+  // Character cell -> pixel center.
+  const pxX = cx => L.ox + cx * L.cw + L.cw / 2;
+  const pxY = cy => L.oy + cy * L.chh + L.chh / 2;
+  const tileOrigin = t => ({ tx: L.gx + t.col * (TILE_W + GAP_X), ty: BOARD_Y + t.row * (TILE_H + GAP_Y) });
+
+  // ---------------- State ----------------
+  const params = new URLSearchParams(location.search);
+  const urlSeed = cleanSeed(params.get('seed'));
+
+  const st = {
+    mode: 'title',          // title | play | over
+    seed: urlSeed || newSeed(),
+    practice: !!urlSeed,    // typed-in or replayed seeds don't count for best
+    layer: 0,
+    lv: null,
+    integrity: START_INTEGRITY,
+    busy: true,
+    hover: -1,
+    hoverBtn: null,
+    msg: '', msgCol: C.text, msgT: 0,
+    boardStart: 0,
+    hideBoard: false,
+    hideAll: false,
+    debug: params.get('debug') === '1',
+    result: null,
+    transitioning: false,
+  };
+
+  // ---------------- Effects ----------------
+  const parts = [];
+  const shakeFx = { amp: 0, t0: 0, dur: 1 };
+  const flashFx = { col: '#fff', a: 0, t0: 0, dur: 1 };
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function shake(amp, dur = 0.35) { Object.assign(shakeFx, { amp: amp * L.fs / 16, t0: performance.now(), dur }); }
+  function flash(col, a, dur = 0.3) { Object.assign(flashFx, { col, a, t0: performance.now(), dur }); }
+
+  // Current on-screen characters, as pixel positions.
+  function snapshot(filter) {
+    return buildScene(performance.now(), false)
+      .filter(filter)
+      .map(c => ({ ch: c.ch, x: pxX(c.cx), y: pxY(c.cy), col: c.col }));
+  }
+
+  function explode(cells, ox, oy, { col = null, power = 1, grav = 1, life = [0.7, 1.3] } = {}) {
+    const k = L.fs / 16;
+    for (const c of cells) {
+      const dx = c.x - ox, dy = c.y - oy, d = Math.hypot(dx, dy) || 1;
+      const sp = rand(220, 600) * power * k;
+      parts.push({
+        mode: 'explode', ch: c.ch, x: c.x, y: c.y, col: col || c.col,
+        vx: dx / d * sp + rand(-60, 60) * k,
+        vy: dy / d * sp - rand(80, 320) * power * k,
+        rot: 0, vr: rand(-9, 9), g: grav,
+        t: 0, life: rand(life[0], life[1]), alpha: 1, scr: 5,
+      });
+    }
+  }
+
+  function implode(cells, cx, cy) {
+    let maxR = 1;
+    for (const c of cells) maxR = Math.max(maxR, Math.hypot(c.x - cx, c.y - cy));
+    for (const c of cells) {
+      const dx = c.x - cx, dy = c.y - cy, r0 = Math.hypot(dx, dy), q = r0 / maxR;
+      parts.push({
+        mode: 'implode', ch: c.ch, x: c.x, y: c.y, col: c.col, cx, cy, r0,
+        a0: Math.atan2(dy, dx), spin: 0, // straight suck-in; raise for a swirl
+        t: -Math.random() * 0.08, life: 0.45 + 0.35 * q + Math.random() * 0.1,
+        rot: 0, alpha: 1, scr: 6,
+      });
+    }
+  }
+
+  function updateParts(dt) {
+    const grav = 1500 * L.fs / 16;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.t += dt;
+      if (p.t < 0) continue;
+      const k = Math.min(1, p.t / p.life);
+      if (p.mode === 'implode') {
+        const e = k * k;
+        const r = p.r0 * (1 - e), a = p.a0 + p.spin * e;
+        p.x = p.cx + Math.cos(a) * r; p.y = p.cy + Math.sin(a) * r;
+        if (e > 0.35) p.col = C.cyan;
+        p.alpha = k > 0.8 ? (1 - k) / 0.2 : 1;
+      } else {
+        p.vy += grav * p.g * dt;
+        p.vx *= 1 - 0.8 * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.rot += p.vr * dt;
+        p.alpha = k > 0.6 ? Math.max(0, (1 - k) / 0.4) : 1;
+      }
+      if (Math.random() < p.scr * dt) p.ch = NOISE[Math.floor(Math.random() * NOISE.length)];
+      if (p.t >= p.life) parts.splice(i, 1);
+    }
+  }
+
+  // ---------------- Scene ----------------
+  // Builds the list of characters on screen. Also records tap targets.
+  let hits = [];
+  const pad2 = n => String(n).padStart(2, '0');
+  const rule = w => '- '.repeat(Math.ceil(w / 2)).slice(0, w);
+  const decodeDelay = (cx, cy) => 40 + ((((cx + 1) * 374761393) ^ ((cy + 1) * 668265263)) >>> 0) % 380;
+
+  function buildScene(now, collectHits) {
+    const cells = [];
+    const put = (cx, cy, str, col, own = 'hud') => {
+      for (let k = 0; k < str.length; k++) {
+        if (str[k] !== ' ') cells.push({ ch: str[k], cx: cx + k, cy, col, own });
+      }
+    };
+    const putC = (cy, str, col, own) => put(Math.floor((L.wc - str.length) / 2), cy, str, col, own);
+    const putR = (cy, str, col, own) => put(L.wc - str.length, cy, str, col, own);
+    const addHit = (cx, cy, w, h, hit) => {
+      if (!collectHits) return;
+      let x = L.ox + cx * L.cw, y = L.oy + cy * L.chh, pw = w * L.cw, ph = h * L.chh;
+      if (ph < 40) { y -= (40 - ph) / 2; ph = 40; } // finger-sized tap targets
+      hits.push(Object.assign({ x, y, w: pw, h: ph }, hit));
+    };
+    const button = (cy, label, id, onTap) => {
+      const cx = Math.floor((L.wc - label.length) / 2);
+      put(cx, cy, label, st.hoverBtn === id ? C.cyan : C.bright, 'ui');
+      addHit(cx, cy, label.length, 1, { kind: 'btn', id, onTap });
+    };
+
+    if (st.hideAll) return cells;
+
+    // Header
+    put(0, 0, 'BETA_RUNNER', C.cyan);
+    put(12, 0, `// ${VERSION}`, C.dim);
+    const snd = save.muted ? '[SND OFF]' : '[SND ON ]';
+    put(L.wc - snd.length, 0, snd, st.hoverBtn === 'snd' ? C.cyan : C.mid, 'ui');
+    addHit(L.wc - snd.length, 0, snd.length, 1, { kind: 'btn', id: 'snd', onTap: toggleMute });
+    put(0, 1, rule(L.wc), C.dim);
+
+    // HUD
+    const layerTxt = st.mode === 'title' ? '--' : pad2(st.layer);
+    put(0, 2, 'LAYER ', C.mid); put(6, 2, layerTxt, C.bright);
+    const max = START_INTEGRITY, cur = Math.max(0, st.mode === 'title' ? max : st.integrity);
+    const bar = '[' + '#'.repeat(cur) + '-'.repeat(Math.max(0, max - cur)) + ']';
+    putR(2, bar, cur <= 1 && st.mode !== 'title' ? C.red : C.cyan);
+    put(L.wc - bar.length - 10, 2, 'INTEGRITY', C.mid);
+    put(0, 3, 'SEED ', C.mid); put(5, 3, st.seed.slice(0, 10), C.text);
+    if (st.practice) put(6 + Math.min(10, st.seed.length), 3, 'PRACTICE', C.redDim);
+    putR(3, `BEST ${pad2(save.best)}`, C.mid);
+    put(0, 4, rule(L.wc), C.dim);
+
+    // Odds readout: chance that a random pick among the open nodes is real.
+    if (st.mode === 'play' && st.lv) {
+      const open = st.lv.tiles.filter(t => t.state === 'closed').length;
+      put(0, 5, 'OPEN ', C.mid); put(5, 5, `${pad2(open)}/${pad2(st.lv.n)}`, C.text);
+      if (open > 0) {
+        const pct = Math.round(100 / open);
+        const col = open === 1 ? C.cyan : pct < 25 ? C.red : C.text;
+        const val = `1 IN ${open}  ${String(pct).padStart(3)}%`;
+        putR(5, val, col);
+        put(L.wc - val.length - 5, 5, 'ODDS', C.mid);
+      }
+    }
+
+    // Message line, typed out
+    if (st.msg) {
+      const shown = st.msg.slice(0, Math.floor((now - st.msgT) / 16));
+      put(0, 6, shown, st.msgCol);
+    }
+
+    // Board
+    const boardEnd = BOARD_Y + L.gh;
+    if (!st.hideBoard) {
+      if (st.mode === 'play' && st.lv) buildBoard(put, addHit);
+      else buildTextBoard(put, putC, button);
+    }
+
+    // Footer
+    put(0, boardEnd + 1, rule(L.wc), C.dim);
+    const hint = st.mode === 'play' ? 'tap a node to probe it.'
+      : st.mode === 'title' ? 'tap [ JACK IN ] to start.'
+      : 'R = retry seed   ENTER = new run';
+    put(0, boardEnd + 2, hint, C.dim);
+
+    // Characters on the board "decode" in when a layer or screen appears.
+    const age = now - st.boardStart;
+    if (age < 500) {
+      for (const c of cells) {
+        if (c.cy >= BOARD_Y && c.cy < boardEnd && age < decodeDelay(c.cx, c.cy)) {
+          c.ch = NOISE[Math.floor(Math.random() * NOISE.length)];
+          c.col = C.dim;
+        }
+      }
+    }
+    return cells;
+  }
+
+  function buildBoard(put, addHit) {
+    const lv = st.lv;
+    const used = new Set();
+    lv.tiles.forEach((t, i) => {
+      used.add(t.cell);
+      const { tx, ty } = tileOrigin(t);
+      if (t.state === 'closed') addHit(tx, ty, TILE_W, TILE_H, { kind: 'tile', i });
+      if (t.hidden) return;
+      const own = 't' + i;
+      if (t.state === 'locked') {
+        put(tx, ty, '.     .', C.dim, own);
+        put(tx + 2, ty + 2, 'ICE', C.redDim, own);
+        put(tx, ty + 4, '.     .', C.dim, own);
+        return;
+      }
+      let solid = false, fc = C.mid, gc = C.text;
+      if (t.state === 'safe' || t.state === 'reveal') { solid = true; fc = C.cyan; gc = C.cyan; }
+      else if (t.probing) { solid = true; fc = C.bright; gc = C.bright; }
+      else if (i === st.hover && !st.busy) { solid = true; fc = C.bright; gc = C.bright; }
+      const edge = solid ? '+-----+' : '+- - -+';
+      const side = solid ? '|' : ':';
+      let rows = [edge, ...t.glyph.map(l => side + l + side), edge];
+      if (t.probing) {
+        rows = rows.map(r => r.replace(/[^ ]/g, ch => Math.random() < 0.5 ? NOISE[Math.floor(Math.random() * NOISE.length)] : ch));
+      }
+      rows.forEach((r, k) => {
+        const isEdge = k === 0 || k === rows.length - 1;
+        put(tx, ty + k, r[0], fc, own);
+        put(tx + 1, ty + k, r.slice(1, TILE_W - 1), isEdge ? fc : gc, own);
+        put(tx + TILE_W - 1, ty + k, r[TILE_W - 1], fc, own);
+      });
+      if (st.debug && i === lv.safe && t.state === 'closed') put(tx + TILE_W - 1, ty, '*', C.cyan, own);
+    });
+    // Empty cells show a faint dot, so the grid shape is always visible.
+    for (let cell = 0; cell < lv.cols * lv.rows; cell++) {
+      if (used.has(cell)) continue;
+      const { tx, ty } = tileOrigin({ col: cell % lv.cols, row: Math.floor(cell / lv.cols) });
+      put(tx + 3, ty + 2, '.', C.dim, 'dot');
+    }
+  }
+
+  function buildTextBoard(put, putC, button) {
+    const lines = [];
+    const T = (text, col = C.text) => lines.push({ text, col });
+    const B = (text, id, onTap) => lines.push({ text, id, onTap });
+
+    if (st.mode === 'title') {
+      T('B E T A _ R U N N E R', C.cyan);
+      T('network intrusion // prototype', C.dim);
+      T('');
+      T('every layer adds one node.');
+      T('one node is real.');
+      T('the rest are ICE.');
+      T('ICE burns integrity.');
+      T('hit zero and you are out.');
+      T('');
+      B('[ JACK IN ]', 'start', jackIn);
+      T('');
+      T(`best ${pad2(save.best)}   runs ${save.runs}`, C.mid);
+      if (st.practice) T('custom seed: practice run', C.redDim);
+    } else if (st.mode === 'over' && st.result) {
+      const r = st.result;
+      T('CONNECTION TERMINATED', C.red);
+      T('');
+      T(`traced on layer ${pad2(r.layer)}`, C.bright);
+      if (r.newBest) T('** new best **', C.cyan);
+      else T(`best ${pad2(save.best)}`, C.mid);
+      if (r.practice) T('practice run: not scored', C.redDim);
+      T('');
+      T(`seed ${st.seed}`, C.mid);
+      T('');
+      B('[ RETRY SEED ]', 'retry', retry);
+      T('');
+      B('[  NEW  RUN  ]', 'new', newRun);
+      T('');
+      T('retry = practice, not scored', C.dim);
+    }
+
+    const y0 = BOARD_Y + Math.max(0, Math.floor((L.gh - lines.length) / 2));
+    lines.forEach((ln, k) => {
+      if (ln.id) button(y0 + k, ln.text, ln.id, ln.onTap);
+      else if (ln.text) putC(y0 + k, ln.text, ln.col, 'board');
+    });
+  }
+
+  // ---------------- Render loop ----------------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    updateParts(dt);
+    render(now);
+    requestAnimationFrame(frame);
+  }
+
+  function render(now) {
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = C.bg;
+    g.fillRect(0, 0, W, H);
+
+    const sk = (now - shakeFx.t0) / 1000;
+    if (sk < shakeFx.dur) {
+      const a = shakeFx.amp * (1 - sk / shakeFx.dur);
+      g.translate(rand(-a, a), rand(-a, a));
+    }
+
+    hits = [];
+    const cells = buildScene(now, true);
+    g.font = `400 ${L.fs}px ${FONT}`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    for (const c of cells) {
+      g.fillStyle = c.col;
+      g.fillText(c.ch, pxX(c.cx), pxY(c.cy));
+    }
+
+    for (const p of parts) {
+      if (p.t < 0) continue;
+      g.globalAlpha = Math.max(0, p.alpha);
+      g.fillStyle = p.col;
+      if (p.rot) {
+        g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.fillText(p.ch, 0, 0); g.restore();
+      } else {
+        g.fillText(p.ch, p.x, p.y);
+      }
+    }
+    g.globalAlpha = 1;
+
+    const fk = (now - flashFx.t0) / 1000;
+    if (fk < flashFx.dur) {
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.globalAlpha = flashFx.a * (1 - fk / flashFx.dur);
+      g.fillStyle = flashFx.col;
+      g.fillRect(0, 0, W, H);
+      g.globalAlpha = 1;
+    }
+  }
+
+  // ---------------- Game flow ----------------
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function setMsg(msg, col = C.text) { st.msg = msg; st.msgCol = col; st.msgT = performance.now(); }
+
+  function showTitle() {
+    st.mode = 'title';
+    st.hideAll = false; st.hideBoard = false;
+    st.busy = false;
+    computeLayout();
+    st.boardStart = performance.now();
+    setMsg('> link ready_', C.text);
+  }
+
+  async function startRun(seed, practice) {
+    if (st.transitioning) return;
+    st.transitioning = true;
+    Sound.ui();
+    // Pull the menu into the center, then start.
+    const cells = snapshot(c => c.cy >= BOARD_Y);
+    st.hideBoard = true;
+    implode(cells, W / 2, pxY(BOARD_Y + L.gh / 2));
+    Sound.implode();
+    await wait(650);
+    st.seed = seed; st.practice = practice;
+    st.mode = 'play';
+    st.layer = 0;
+    st.integrity = START_INTEGRITY;
+    st.result = null;
+    st.hideAll = false;
+    st.transitioning = false;
+    await nextLayer();
+  }
+
+  async function nextLayer() {
+    st.layer++;
+    st.lv = genLayer(st.seed, st.layer);
+    st.hover = -1;
+    computeLayout();
+    st.hideBoard = false;
+    st.boardStart = performance.now();
+    Sound.layer(st.layer);
+    setMsg(st.layer === 1 ? '> one node. it is real. jack in.' : `> ${st.layer} nodes. one is real.`);
+    st.busy = true;
+    await wait(480);
+    st.busy = false;
+  }
+
+  async function pick(i) {
+    if (st.mode !== 'play' || st.busy) return;
+    const t = st.lv.tiles[i];
+    if (!t || t.state !== 'closed') return;
+    st.busy = true;
+    t.probing = true;
+    Sound.probe();
+    setMsg('> probing...', C.mid);
+    await wait(300);
+    t.probing = false;
+    if (i === st.lv.safe) await onSafe(t);
+    else await onTrap(t, i);
+  }
+
+  async function onSafe(t) {
+    t.state = 'safe';
+    Sound.safe();
+    flash(C.cyan, 0.12, 0.3);
+    setMsg('> access granted.', C.cyan);
+    await wait(380);
+    const { tx, ty } = tileOrigin(t);
+    const cx = pxX(tx + (TILE_W - 1) / 2), cy = pxY(ty + (TILE_H - 1) / 2);
+    const cells = snapshot(c => c.cy >= BOARD_Y && c.cy < BOARD_Y + L.gh);
+    st.hideBoard = true;
+    implode(cells, cx, cy);
+    Sound.implode();
+    await wait(820);
+    flash(C.cyan, 0.08, 0.25);
+    await nextLayer();
+  }
+
+  async function onTrap(t, i) {
+    const { tx, ty } = tileOrigin(t);
+    const cx = pxX(tx + (TILE_W - 1) / 2), cy = pxY(ty + (TILE_H - 1) / 2);
+    const cells = snapshot(c => c.own === 't' + i);
+    t.hidden = true;
+    explode(cells, cx, cy, { col: C.red });
+    st.integrity--;
+    Sound.trap();
+    shake(9);
+    flash(C.red, 0.18, 0.35);
+    setMsg(st.integrity > 0 ? `> ICE. integrity -1.` : '> ICE. integrity gone.', C.red);
+    await wait(500);
+    t.hidden = false;
+    t.state = 'locked';
+    if (st.integrity <= 0) return die();
+    const left = st.lv.tiles.filter(x => x.state === 'closed').length;
+    setMsg(left === 1 ? '> one node left.' : '> pick again.', C.text);
+    st.busy = false;
+  }
+
+  async function die() {
+    st.busy = true;
+    const safeTile = st.lv.tiles[st.lv.safe];
+    if (safeTile.state === 'closed') safeTile.state = 'reveal';
+    setMsg('> traced. real node revealed.', C.red);
+    Sound.death();
+    await wait(1100);
+    const cells = snapshot(() => true);
+    st.hideAll = true;
+    explode(cells, W / 2, H / 2, { power: 0.7, grav: 0.8, life: [1.0, 1.8] });
+    shake(14, 0.6);
+    flash(C.red, 0.3, 0.6);
+    await wait(1400);
+
+    const practice = st.practice;
+    const newBest = !practice && st.layer > save.best;
+    if (!practice) {
+      save.runs++;
+      if (newBest) save.best = st.layer;
+    }
+    save.history.unshift({ seed: st.seed, layer: st.layer, practice, at: Date.now() });
+    save.history = save.history.slice(0, 20);
+    persist();
+
+    st.result = { layer: st.layer, newBest, practice };
+    st.mode = 'over';
+    st.hideAll = false;
+    st.hideBoard = false;
+    st.busy = false;
+    computeLayout();
+    st.boardStart = performance.now();
+    setMsg('> link severed_', C.red);
+  }
+
+  const jackIn = () => startRun(st.seed, st.practice);
+  const retry = () => startRun(st.seed, true);
+  const newRun = () => startRun(newSeed(), false);
+
+  function toggleMute() {
+    save.muted = !save.muted;
+    persist();
+    Sound.ui();
+  }
+
+  // ---------------- Input ----------------
+  function hitAt(x, y) {
+    for (let k = hits.length - 1; k >= 0; k--) {
+      const h = hits[k];
+      if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) return h;
+    }
+    return null;
+  }
+
+  cv.addEventListener('pointerdown', e => {
+    Sound.init();
+    const h = hitAt(e.clientX, e.clientY);
+    if (!h) return;
+    if (h.kind === 'tile') pick(h.i);
+    else if (h.kind === 'btn' && !st.transitioning) h.onTap();
+  });
+
+  cv.addEventListener('pointermove', e => {
+    const h = hitAt(e.clientX, e.clientY);
+    const tile = h && h.kind === 'tile' ? h.i : -1;
+    if (tile !== st.hover && tile >= 0 && !st.busy) Sound.tick();
+    st.hover = tile;
+    st.hoverBtn = h && h.kind === 'btn' ? h.id : null;
+    cv.style.cursor = h ? 'pointer' : 'default';
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    Sound.init();
+    const k = e.key.toLowerCase();
+    if (k === 'm') return toggleMute();
+    if (e.key === '`') { st.debug = !st.debug; return; }
+    if (st.transitioning) return;
+    if (st.mode === 'title' && (k === 'enter' || k === ' ')) { e.preventDefault(); jackIn(); }
+    else if (st.mode === 'over') {
+      if (k === 'r') retry();
+      else if (k === 'enter' || k === ' ') { e.preventDefault(); newRun(); }
+    }
+  });
+
+  // ---------------- Boot ----------------
+  window.addEventListener('resize', resize);
+  resize();
+  showTitle();
+  requestAnimationFrame(t => { last = t; frame(t); });
+  // Re-measure once the web font arrives (falls back to a system mono font offline).
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load(`16px "JetBrains Mono"`).then(() => computeLayout()).catch(() => {});
+  }
+
+  // Debug hook for the console: __br.state, __br.genLayer('SEED', 5)
+  window.__br = { state: st, save, genLayer, gridFor };
+})();
+</script>
+</body>
+</html>

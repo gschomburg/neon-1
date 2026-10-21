@@ -1,0 +1,2986 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hackjack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+  html, body { margin: 0; height: 100%; background: #06090a; overflow: hidden; }
+  body {
+    touch-action: manipulation;
+    user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  canvas { display: block; width: 100vw; height: 100vh; height: 100dvh; cursor: default; }
+</style>
+</head>
+<body>
+<canvas id="screen" aria-label="Hackjack game screen"></canvas>
+<script>
+// Hackjack v01: the Hackjack card game (github.com/jbakse/hackjack) as a video game,
+// in the style of Beta Runner. The whole screen is a grid of text characters drawn on
+// one canvas, so any character can turn into a particle for effects.
+(() => {
+  'use strict';
+
+  // ---------------- Tuning ----------------
+  const CONFIG = {
+    aiStep: 700,           // ms an AI move is shown before it happens
+    aiFastMul: 0.12,       // speed multiplier while their turn is fast-forwarded
+    flipMs: 300,           // card flip animation
+    bannerMs: 750,         // turn banner
+    pingMs: 1300,          // ping test reveal
+    instant: false,        // tests: no waiting at all
+    wipeSpeed: 1,
+    wipeOverlap: 0.45,
+    wipeOverlapWin: 0.8,
+    wipeStagger: 300,
+  };
+
+  const VERSION = 'v01';
+  const STORE_KEY = 'hackjack.v01.save';
+  const SAVE_FORMAT = 1;
+  const LINE_H = 1.22;
+  const FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
+
+  // Current colors. Filled from a palette at boot.
+  const C = {
+    bg: '', dim: '', mid: '', text: '', bright: '', cyan: '', red: '', redDim: '', gold: '',
+    common: '', rare: '', epic: '', exotic: '', boss: '',
+  };
+
+  const PALETTES = {
+    default:  { name: 'DEFAULT',   bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', cyan: '#3cf0ff', red: '#ff3b4e', redDim: '#7a2630', gold: '#e8c66a',
+                common: '#a9bdb7', rare: '#4da3ff', epic: '#c07bff', exotic: '#ffd84a', boss: '#ff7a3d' },
+    amber:    { name: 'AMBER CRT', bg: '#0c0800', dim: '#3a2a10', mid: '#7a5a24', text: '#d9a441', bright: '#ffd27a', cyan: '#ffb000', red: '#ff5a3c', redDim: '#6e2a18', gold: '#ffe08a',
+                common: '#d9a441', rare: '#ffcf70', epic: '#ff8a3c', exotic: '#fff1b0', boss: '#ff5a3c' },
+    phosphor: { name: 'GREEN CRT', bg: '#020a04', dim: '#12331a', mid: '#2f6e3c', text: '#5fd47a', bright: '#b8ffc8', cyan: '#39ff6a', red: '#ff5c5c', redDim: '#5a1f1f', gold: '#d8ff6a',
+                common: '#5fd47a', rare: '#7affd4', epic: '#c8ff6a', exotic: '#f0fff0', boss: '#ff7a5c' },
+    dusk:     { name: 'DUSK',      bg: '#14111f', dim: '#332c4a', mid: '#6b5f8f', text: '#c8bfe8', bright: '#f4f0ff', cyan: '#ff79c6', red: '#ff5555', redDim: '#6a2a3a', gold: '#f1fa8c',
+                common: '#c8bfe8', rare: '#8be9fd', epic: '#bd93f9', exotic: '#f1fa8c', boss: '#ffb86c' },
+    paper:    { name: 'PAPER',     bg: '#f2efe6', dim: '#cfc9ba', mid: '#8a8376', text: '#3b3a36', bright: '#111111', cyan: '#0077a8', red: '#c4122c', redDim: '#d99aa2', gold: '#9a6a00',
+                common: '#3b3a36', rare: '#1d5fbf', epic: '#7a2fbf', exotic: '#a86b00', boss: '#c4122c' },
+  };
+  // Opponent palettes: used during a match with that opponent. Not offered in the picker.
+  const OPP_RARITY = { common: '#a9bdb7', rare: '#4da3ff', epic: '#c07bff', exotic: '#ffd84a', boss: '#ff7a3d' };
+  Object.assign(PALETTES, {
+    c_n00b:       Object.assign({ name: 'N00B', hidden: true, bg: '#010a03', dim: '#103019', mid: '#2e7a43', text: '#6fe08c', bright: '#d2ffd9', cyan: '#3dff8a', red: '#ff5c4d', redDim: '#5a1f1a', gold: '#e4ff7a' }, OPP_RARITY),
+    c_tele:       Object.assign({ name: 'TELECOMMUTER', hidden: true, bg: '#0c0800', dim: '#3a2a10', mid: '#7a5a24', text: '#d9a441', bright: '#ffe2a8', cyan: '#ffb000', red: '#ff5a3c', redDim: '#6e2a18', gold: '#ffe08a' }, OPP_RARITY),
+    c_gambler:    Object.assign({ name: 'GAMBLER', hidden: true, bg: '#1b0a26', dim: '#45204f', mid: '#9a5fb5', text: '#f0d6ff', bright: '#ffffff', cyan: '#f5c542', red: '#ff3f7f', redDim: '#6b1f45', gold: '#f5c542' }, OPP_RARITY),
+    c_praetorian: Object.assign({ name: 'PRAETORIAN', hidden: true, bg: '#0f1214', dim: '#2c3439', mid: '#6b7780', text: '#c9d1d6', bright: '#ffffff', cyan: '#ff8a00', red: '#ff3b30', redDim: '#6b2016', gold: '#ffd166' }, OPP_RARITY),
+    c_zerocool:   { name: 'ZERO_COOL', hidden: true, bg: '#e9f2f8', dim: '#c3d2de', mid: '#6f8597', text: '#1d2b3a', bright: '#000000', cyan: '#006fd6', red: '#d11a3a', redDim: '#e9a8b6', gold: '#8a6a00',
+                    common: '#1d2b3a', rare: '#1d5fbf', epic: '#7a2fbf', exotic: '#a86b00', boss: '#c4122c' },
+    c_leet:       Object.assign({ name: '1337', hidden: true, bg: '#080203', dim: '#3a0f14', mid: '#7a2a33', text: '#d79a9f', bright: '#ffe1e3', cyan: '#ffb3c0', red: '#ff1f3a', redDim: '#5e1018', gold: '#ffc36e', font: { weight: 700, bold: 800 } }, OPP_RARITY),
+  });
+  const playerPalettes = () => Object.keys(PALETTES).filter(k => !PALETTES[k].hidden);
+
+  const DRAW_FONT = { family: FONT, weight: 400, bold: 700, scale: 1 };
+  let paletteFade = null;
+  const PALETTE_FADE_MS = 700;
+  const hexRgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const mixHex = (a, b, t) => '#' + hexRgb(a).map((v, i) => Math.round(v + (hexRgb(b)[i] - v) * t).toString(16).padStart(2, '0')).join('');
+  function stepPaletteFade(now) {
+    const f = paletteFade;
+    if (!f) return;
+    const k = clamp((now - f.t0) / PALETTE_FADE_MS, 0, 1), e = k * (2 - k);
+    for (const key of Object.keys(f.to)) C[key] = mixHex(f.from[key], f.to[key], e);
+    document.documentElement.style.background = C.bg;
+    document.body.style.background = C.bg;
+    if (k >= 1) paletteFade = null;
+  }
+  let paletteKey = null;
+  function applyPalette(key, instant = false) {
+    if (key === paletteKey && !instant) return;
+    paletteKey = key;
+    const p = PALETTES[key] || PALETTES.default;
+    const to = {};
+    for (const k of Object.keys(C)) if (p[k]) to[k] = p[k];
+    if (instant || !C.bg || save.effects === 'reduced') { Object.assign(C, to); paletteFade = null; }
+    else paletteFade = { from: Object.assign({}, C), to, t0: performance.now() };
+    const f = p.font || {};
+    DRAW_FONT.weight = f.weight || 400;
+    DRAW_FONT.bold = f.bold || 700;
+    document.documentElement.style.background = C.bg;
+    document.body.style.background = C.bg;
+  }
+  // The palette for the current screen: the opponent's inside a match, else the player's.
+  function scenePalette() {
+    const inOpp = st.opp && save.oppColors && ['intro', 'setup', 'match'].includes(st.mode);
+    applyPalette(inOpp ? st.opp.palette : save.palette);
+  }
+
+  const NOISE = '#%&@$*+=<>/\\|:;~^01';
+  const noiseCh = () => NOISE[Math.floor(Math.random() * NOISE.length)];
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const pickR = (arr, r = Math.random) => arr[Math.floor(r() * arr.length)];
+  const sum = arr => arr.reduce((s, c) => s + (c.v != null ? c.v : c), 0);
+  const pad2 = n => String(n).padStart(2, '0');
+  const rule = w => '- '.repeat(Math.ceil(w / 2)).slice(0, w);
+  function shuffle(arr, r = Math.random) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function uniqBy(arr, f) {
+    const seen = new Set();
+    return arr.filter(x => { const k = f(x); if (seen.has(k)) return false; seen.add(k); return true; });
+  }
+  // Wraps text to lines of at most w characters.
+  function wrapText(str, w) {
+    const out = [];
+    let line = '';
+    for (const word of str.split(' ')) {
+      if (line && (line + ' ' + word).length > w) { out.push(line); line = word; }
+      else line = line ? line + ' ' + word : word;
+    }
+    if (line) out.push(line);
+    return out;
+  }
+
+  // ---------------- Save data ----------------
+  const freshSave = () => ({
+    format: SAVE_FORMAT,
+    muted: false, palette: 'default', effects: 'full', oppColors: true,
+    musicOn: true, musicVol: 0.6, sfxVol: 0.8, aiSpeed: 'normal',
+    unlocked: 1,            // how many ladder opponents are open
+    record: {},             // per opponent: { w, l }
+    matches: [],            // recent match records (newest last)
+  });
+  const save = (() => {
+    const d = freshSave();
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (raw && raw.format === SAVE_FORMAT) Object.assign(d, raw);
+    } catch (e) { /* storage unavailable */ }
+    return d;
+  })();
+  const persist = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(save)); } catch (e) { /* ignore */ } };
+  function recordOf(key) {
+    if (!save.record[key]) save.record[key] = { w: 0, l: 0 };
+    return save.record[key];
+  }
+
+  // ---------------- Sound ----------------
+  // Everything is synthesized with Web Audio. Two buses: effects and music,
+  // each with its own on/off and volume.
+  const Sound = (() => {
+    let ac = null, sfxBus = null, noiseBuf = null;
+    function init() {
+      if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+      try {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        sfxBus = ac.createGain(); sfxBus.connect(ac.destination);
+        noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+        const ch = noiseBuf.getChannelData(0);
+        for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+        Music.init(ac, ac.destination, noiseBuf);
+        levels();
+      } catch (e) { ac = null; }
+    }
+    // Apply the volume settings to both buses.
+    function levels() {
+      if (!ac) return;
+      sfxBus.gain.setTargetAtTime(save.muted ? 0 : 0.16 * save.sfxVol, ac.currentTime, 0.02);
+      Music.volume();
+    }
+    function tone(freq, dur, { type = 'square', vol = 1, slide = 0, delay = 0 } = {}) {
+      if (!ac || save.muted) return;
+      const t = ac.currentTime + delay;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(sfxBus);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+    // Filtered noise; `to` sweeps the filter (for risers).
+    function noise(dur, { vol = 0.5, freq = 1000, to = 0, delay = 0, type = 'bandpass' } = {}) {
+      if (!ac || save.muted) return;
+      const t = ac.currentTime + delay;
+      const s = ac.createBufferSource(); s.buffer = noiseBuf;
+      const f = ac.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = 0.8;
+      if (to) f.frequency.exponentialRampToValueAtTime(to, t + dur);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(sfxBus);
+      s.start(t); s.stop(t + dur + 0.02);
+    }
+    // A brass-ish voice: detuned saws + a square through a filter that opens on the attack,
+    // with vibrato coming in on long notes.
+    function brass(freq, dur, { vol = 0.12, delay = 0 } = {}) {
+      if (!ac || save.muted) return;
+      const t = ac.currentTime + delay;
+      const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 2;
+      f.frequency.setValueAtTime(300, t);
+      f.frequency.exponentialRampToValueAtTime(3400, t + 0.05);
+      f.frequency.exponentialRampToValueAtTime(1500, t + Math.max(0.1, dur * 0.6));
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.03);
+      g.gain.setValueAtTime(vol, t + Math.max(0.04, dur - 0.08));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      const lfo = ac.createOscillator(), lg = ac.createGain();
+      lfo.frequency.value = 5.5;
+      lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(dur > 0.4 ? 14 : 0, t + dur * 0.7);
+      lfo.connect(lg);
+      for (const [type, det] of [['sawtooth', -7], ['sawtooth', 7], ['square', 0]]) {
+        const o = ac.createOscillator(); o.type = type;
+        o.frequency.setValueAtTime(freq, t); o.detune.value = det;
+        lg.connect(o.detune);
+        o.connect(f); o.start(t); o.stop(t + dur + 0.02);
+      }
+      lfo.start(t); lfo.stop(t + dur + 0.02);
+      f.connect(g); g.connect(sfxBus);
+    }
+    const arp = (notes, step, opts) => notes.forEach((f, i) => tone(f, 0.12, Object.assign({ type: 'triangle', vol: 0.4, delay: i * step }, opts)));
+    const chord = (notes, dur, opts) => notes.forEach(f => tone(f, dur, opts));
+    return {
+      init, levels,
+      tick: () => tone(1800, 0.018, { vol: 0.12 }),
+      clock: () => tone(1400, 0.03, { vol: 0.25 }),
+      ui: () => tone(990, 0.04, { vol: 0.3 }),
+      deny: () => tone(160, 0.12, { type: 'square', vol: 0.3 }),
+      buy: () => { tone(880, 0.05, { vol: 0.3 }); tone(1320, 0.08, { vol: 0.3, delay: 0.06 }); },
+      probe: () => { tone(520, 0.05, { vol: 0.3 }); tone(780, 0.05, { vol: 0.25, delay: 0.09 }); tone(640, 0.05, { vol: 0.25, delay: 0.18 }); },
+      layer: n => tone(260 + Math.min(n, 30) * 22, 0.07, { vol: 0.25 }),
+      // Boss incoming: a riser, then a deep boom with a bright power chord and rising fifths.
+      boss: () => {
+        noise(0.5, { vol: 0.35, freq: 300, to: 4000 });
+        tone(1320, 0.06, { type: 'square', vol: 0.18 }); tone(1320, 0.06, { type: 'square', vol: 0.18, delay: 0.16 });
+        tone(110, 0.7, { type: 'sine', vol: 0.9, slide: 0.4, delay: 0.48 });
+        chord([220, 330, 440], 0.5, { type: 'square', vol: 0.12, delay: 0.48 });
+        arp([440, 659, 880], 0.1, { vol: 0.35, delay: 0.6 });
+        tone(1318, 0.5, { type: 'triangle', vol: 0.3, delay: 0.9 });
+      },
+      safe: () => arp([523, 784, 1046], 0.07, { vol: 0.55 }),
+      // Page transition: a soft sweep. Success: a rising sweep, bigger at level 2.
+      whoosh: () => noise(0.3, { vol: 0.18, freq: 500 }),
+      sweep: lvl => {
+        tone(220, 0.45, { type: 'sine', vol: 0.4, slide: 5 });
+        noise(0.35, { vol: 0.3, freq: 1800 });
+        if (lvl >= 2) arp([659, 880, 1175, 1568], 0.06, { vol: 0.35, delay: 0.1 });
+      },
+      // Offer pops, scaled by rarity level (0 common .. 4 boss). All bright; no low buzz.
+      pop: (lvl, step = 0) => {
+        if (lvl >= 3) return Sound.bigPop(lvl, step);
+        if (lvl <= 0) return tone(900, 0.03, { vol: 0.2 });
+        if (lvl === 1) return arp([700, 1050], 0.05, { vol: 0.3 });
+        if (lvl === 2) { arp([600, 900, 1200], 0.05, { vol: 0.35 }); noise(0.12, { vol: 0.2, freq: 4000 }); return; }
+        if (lvl === 3) { arp([784, 988, 1175, 1568, 1976], 0.04, { vol: 0.35 }); noise(0.4, { vol: 0.22, freq: 7000 }); return; }
+        // BOSS: major chord stab, a quick fanfare up, a held high note and some sparkle.
+        chord([523, 659, 784], 0.35, { type: 'triangle', vol: 0.3 });
+        chord([523, 784], 0.2, { type: 'square', vol: 0.1 });
+        arp([523, 659, 784, 1046], 0.07, { vol: 0.35, delay: 0.08 });
+        tone(1568, 0.6, { type: 'triangle', vol: 0.32, delay: 0.38 });
+        noise(0.35, { vol: 0.2, freq: 9000, delay: 0.38 });
+      },
+      // Exotic / boss offers: a short fanfare of their own. `step` is the offer's place
+      // in the row, so a row of boss mods climbs (each one a whole step higher).
+      bigPop: (lvl, step = 0) => {
+        const k = Math.pow(2, (step * 2) / 12);
+        const n = m => 440 * Math.pow(2, (m - 69) / 12) * k;
+        if (lvl === 3) {
+          // EXOTIC: a shimmering run up through a strange (lydian) chord, a bell, sparkle
+          arp([72, 76, 78, 83, 86, 90].map(n), 0.035, { vol: 0.3 });
+          chord([72, 78, 83].map(n), 0.6, { type: 'triangle', vol: 0.12, delay: 0.21 });
+          tone(n(95), 0.9, { type: 'sine', vol: 0.2, delay: 0.21 });
+          tone(n(95) * 1.01, 0.9, { type: 'sine', vol: 0.12, delay: 0.21 });   // beating, for shimmer
+          noise(0.6, { vol: 0.2, freq: 8000, delay: 0.21 });
+          return;
+        }
+        // BOSS: a brass-like stab, a fast run up, a held top note with a shake, a boom, a crash
+        chord([60, 64, 67].map(n), 0.3, { type: 'sawtooth', vol: 0.1 });
+        chord([60, 67].map(n), 0.3, { type: 'square', vol: 0.08 });
+        tone(n(36), 0.5, { type: 'sine', vol: 0.55, slide: 0.6 });
+        arp([60, 64, 67, 72, 76].map(n), 0.045, { vol: 0.32, delay: 0.1 });
+        tone(n(79), 0.7, { type: 'triangle', vol: 0.32, delay: 0.33 });
+        for (let i = 0; i < 5; i++) tone(n(84) * (i % 2 ? 1.01 : 0.99), 0.07, { type: 'square', vol: 0.05, delay: 0.4 + i * 0.07 });
+        noise(0.8, { vol: 0.2, freq: 7000, type: 'highpass', delay: 0.33 });
+      },
+      // Bad things keep the low buzz, so it always means "bad".
+      trap: () => { tone(110, 0.35, { type: 'sawtooth', vol: 0.7, slide: 0.5 }); noise(0.25, { vol: 0.6, freq: 900 }); },
+      yourTurn: () => { tone(880, 0.08, { type: 'triangle', vol: 0.45 }); tone(1320, 0.16, { type: 'triangle', vol: 0.45, delay: 0.09 }); },
+      shield: () => { tone(1200, 0.15, { type: 'triangle', vol: 0.5, slide: 0.5 }); noise(0.15, { vol: 0.3, freq: 3000 }); },
+      loot: () => { for (let i = 0; i < 4; i++) tone(1200 + i * 200, 0.05, { vol: 0.25, delay: i * 0.05 }); },
+      // Game over: the music powers down. Over three beats the track slows and sags in
+      // pitch, and on each beat a ding plays from the current chord, stepping down
+      // (5th, 3rd, root), each one lower, longer and droopier. A low tone powers off
+      // under the last one. keepMusic: just the dings (multiplayer, where play goes on).
+      death: (keepMusic = false) => {
+        if (!ac) return;
+        const pd = keepMusic ? Music.keyInfo() : Music.powerDown();
+        const now = ac.currentTime;
+        const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+        const deg = d => pd.root + 24 + pd.scale[((d % 7) + 7) % 7] + 12 * Math.floor(d / 7);
+        [pd.deg + 4, pd.deg + 2, pd.deg].forEach((d, k) => {
+          const t = pd.beats[k], f = mtof(deg(d)) * pd.bend(t), delay = Math.max(0, t - now);
+          const len = [0.6, 0.85, 1.5][k], slide = [0.985, 0.95, 0.78][k];
+          tone(f, len, { type: 'triangle', vol: 0.55, slide, delay });              // the ding
+          tone(f * 2, len * 0.5, { type: 'sine', vol: 0.16, slide, delay });         // its shine
+          tone(f * 3.01, 0.05, { type: 'sine', vol: 0.06, delay });                  // a little strike
+        });
+        const t3 = pd.beats[2];
+        tone(mtof(pd.root + 12) * pd.bend(t3), 1.6, { type: 'sine', vol: 0.5, slide: 0.4, delay: Math.max(0, t3 - now) });   // power off
+        noise(0.5, { vol: 0.06, freq: 2500, to: 200, delay: Math.max(0, t3 - now) + 0.2 });
+      },
+      // Boss beaten: the music powers up. Over three beats the track pushes faster and a
+      // little higher, and a ding climbs the current chord on each beat (root, 3rd, 5th).
+      // Then a bright major chord with a high bell and sparkle, and the music cuts to silence.
+      bossWin: () => {
+        if (!ac) return 1.5;
+        const pd = Music.powerUp();
+        const now = ac.currentTime;
+        const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+        const deg = d => pd.root + 24 + pd.scale[((d % 7) + 7) % 7] + 12 * Math.floor(d / 7);
+        const at = t => Math.max(0, t - now);
+        [pd.deg, pd.deg + 2, pd.deg + 4].forEach((d, k) => {
+          const t = pd.beats[k], f = mtof(deg(d)) * pd.bend(t);
+          tone(f, 0.35 + k * 0.08, { type: 'triangle', vol: 0.45 + k * 0.08, delay: at(t) });   // the ding
+          tone(f * 2, 0.25, { type: 'sine', vol: 0.18, delay: at(t) });                            // its shine
+          tone(f * 3.01, 0.04, { type: 'sine', vol: 0.07, delay: at(t) });                         // a little strike
+        });
+        // the landing: a major chord on the chord's root, an octave up (always major: it's a win)
+        const t = pd.end, b = pd.bend(t), r0 = deg(pd.deg) + 12;
+        chord([r0, r0 + 4, r0 + 7].map(m => mtof(m) * b), 1.4, { type: 'triangle', vol: 0.2, delay: at(t) });
+        chord([r0 - 12, r0 - 5].map(m => mtof(m) * b), 0.9, { type: 'square', vol: 0.06, delay: at(t) });
+        tone(mtof(r0 + 12) * b, 1.6, { type: 'triangle', vol: 0.28, delay: at(t) });              // high bell
+        tone(mtof(pd.root) * b, 0.6, { type: 'sine', vol: 0.6, slide: 0.6, delay: at(t) });        // boom
+        noise(0.7, { vol: 0.16, freq: 9000, delay: at(t) });                                       // sparkle
+        arp([r0 + 7, r0 + 12, r0 + 16, r0 + 19].map(m => mtof(m) * b), 0.05, { vol: 0.16, delay: at(t) + 0.08 });
+
+        // On top: a classic "stage clear" layer, separate from the track.
+        // A riser and a snare roll build into the landing...
+        const build = Math.max(0.3, t - now);
+        noise(build, { vol: 0.13, freq: 700, to: 7000 });
+        for (let i = 0, d = 0; d < build - 0.04; i++) {
+          const u = d / build;
+          noise(0.05, { vol: 0.08 + 0.2 * u, freq: 2200, delay: d });
+          d += 0.16 - 0.11 * u;                                         // the roll speeds up
+        }
+        // ...then a brass fanfare: "ta-ta-ta TAAA, ta-da DAAAA" over a held major chord,
+        // with timpani under it...
+        const br = r0 - 12, B_ = (m, d, len, v) => brass(mtof(m) * b, len, { vol: v, delay: at(t) + d });
+        [-0.27, -0.18, -0.09].forEach(d => B_(br - 5, d, 0.08, 0.1));     // pickup triplet
+        B_(br, 0, 0.42, 0.13);                                            // TAAA
+        B_(br - 12, 0, 1.5, 0.07); B_(br - 5, 0, 1.5, 0.06); B_(br + 4, 0, 1.5, 0.05);   // the chord, held
+        B_(br + 4, 0.45, 0.12, 0.11); B_(br + 7, 0.58, 0.12, 0.11);      // ta-da
+        B_(br + 12, 0.72, 1.1, 0.14);                                     // DAAAA
+        B_(br + 16, 0.74, 1.05, 0.06);                                    // harmony a 3rd up
+        const timp = (d, v) => tone(mtof(pd.root + 12) * b, 0.6, { type: 'sine', vol: v, slide: 0.85, delay: Math.max(0, at(t) + d) });
+        [-0.36, -0.24, -0.12].forEach((d, i) => timp(d, 0.18 + i * 0.08)); timp(0, 0.55); timp(0.72, 0.5);
+        // ...a crash on each big hit, and a twinkle falling away into the silence.
+        noise(1.4, { vol: 0.22, freq: 6000, type: 'highpass', delay: at(t) });
+        noise(1.6, { vol: 0.2, freq: 6000, type: 'highpass', delay: at(t) + 0.72 });
+        [24, 19, 16, 12, 7, 4].forEach((iv, i) => tone(mtof(r0 + iv) * b, 0.18, { type: 'triangle', vol: 0.08 * (1 - i / 7), delay: at(t) + 1.5 + i * 0.09 }));
+        return t - now;   // seconds until the fanfare lands (screens time their reveal to it)
+      },
+      // A line coming in on a success screen: blips that climb a pentatonic scale.
+      climb: i => {
+        const P = [0, 2, 4, 7, 9], m = 76 + P[i % 5] + 12 * Math.floor(i / 5) % 24;
+        tone(440 * Math.pow(2, (m - 69) / 12), 0.06, { type: 'triangle', vol: 0.3 });
+      },
+      // The losing collapse, under the dings: a crackle, a long falling whistle, data
+      // blips breaking up lower and lower as the line sweeps down, and a thud at the bottom.
+      collapse: (dur = 2.9) => {
+        noise(0.25, { vol: 0.35, freq: 6000, to: 1500 });                       // the crack
+        tone(1400, 0.06, { type: 'square', vol: 0.15 }); tone(1100, 0.06, { type: 'square', vol: 0.15, delay: 0.07 });
+        tone(900, dur * 0.85, { type: 'sawtooth', vol: 0.06, slide: 0.06, delay: 0.1 });   // falling whistle
+        tone(450, dur * 0.85, { type: 'sine', vol: 0.12, slide: 0.08, delay: 0.1 });
+        noise(dur * 0.8, { vol: 0.12, freq: 3000, to: 150, delay: 0.1 });       // rushing air, darkening
+        const n = 22;
+        for (let i = 0; i < n; i++) {
+          const u = i / n, f = (2400 - 2000 * u) * rand(0.8, 1.25);              // blips get lower as it falls
+          tone(f, 0.025 + Math.random() * 0.03, { type: 'square', vol: 0.12 * (1 - u * 0.5), slide: Math.random() < 0.3 ? 0.5 : 0, delay: 0.15 + u * dur * 0.75 + Math.random() * 0.06 });
+        }
+        tone(70, 0.6, { type: 'sine', vol: 0.7, slide: 0.5, delay: dur * 0.88 });   // landing thud
+        noise(0.3, { vol: 0.25, freq: 400, type: 'lowpass', delay: dur * 0.88 });
+      },
+      win: () => arp([523, 659, 784, 1046, 1318], 0.1, { vol: 0.5 }),
+      // Run won: a boom, a big major chord, a fast run up, and a held top note with sparkle.
+      victory: () => {
+        tone(98, 0.8, { type: 'sine', vol: 0.8, slide: 0.5 });
+        chord([523, 659, 784], 0.6, { type: 'triangle', vol: 0.28 });
+        arp([523, 659, 784, 1046, 1318, 1568, 2093], 0.06, { vol: 0.32, delay: 0.15 });
+        chord([784, 1046, 1318], 0.9, { type: 'triangle', vol: 0.22, delay: 0.62 });
+        tone(2093, 1.0, { type: 'triangle', vol: 0.25, delay: 0.62 });
+        noise(0.6, { vol: 0.18, freq: 9000, delay: 0.62 });
+      },
+      // Card game sounds.
+      deal: () => tone(700 + Math.random() * 300, 0.025, { vol: 0.15 }),
+      flip: () => { noise(0.05, { vol: 0.25, freq: 3500 }); tone(1500, 0.03, { type: 'triangle', vol: 0.15 }); },
+      crack: () => { noise(0.2, { vol: 0.4, freq: 1400, to: 300 }); arp([523, 784, 1046], 0.05, { vol: 0.35 }); },
+      hold: () => { tone(180, 0.16, { type: 'square', vol: 0.25, slide: 0.7 }); noise(0.08, { vol: 0.2, freq: 600 }); },
+      upload: () => { tone(380, 0.14, { type: 'triangle', vol: 0.35, slide: 2.2 }); tone(1200, 0.04, { vol: 0.12, delay: 0.12 }); },
+      crack21: () => { arp([523, 659, 784, 1046, 1318], 0.05, { vol: 0.45 }); noise(0.35, { vol: 0.22, freq: 6000 }); },
+      burn: () => noise(0.25, { vol: 0.3, freq: 2600, to: 500 }),
+      prog: () => { tone(520, 0.05, { vol: 0.3 }); tone(780, 0.05, { vol: 0.25, delay: 0.09 }); tone(1040, 0.08, { vol: 0.25, delay: 0.18 }); },
+      swap: () => { tone(660, 0.06, { type: 'triangle', vol: 0.3, slide: 1.5 }); tone(990, 0.06, { type: 'triangle', vol: 0.3, slide: 0.66, delay: 0.08 }); },
+      download: () => { for (let i = 0; i < 6; i++) tone(900 + i * 180, 0.06, { vol: 0.28, delay: i * 0.045 }); chord([523, 659, 784], 0.5, { type: 'triangle', vol: 0.2, delay: 0.28 }); noise(0.5, { vol: 0.18, freq: 8000, delay: 0.28 }); },
+      stolen: () => { tone(220, 0.5, { type: 'sawtooth', vol: 0.5, slide: 0.4 }); tone(110, 0.6, { type: 'sine', vol: 0.7, slide: 0.5, delay: 0.05 }); noise(0.4, { vol: 0.4, freq: 700 }); },
+      reboot: () => { tone(200, 0.35, { type: 'sine', vol: 0.4, slide: 4 }); noise(0.3, { vol: 0.15, freq: 1200, to: 5000 }); },
+      theirTurn: () => { tone(660, 0.08, { type: 'triangle', vol: 0.3 }); tone(440, 0.14, { type: 'triangle', vol: 0.3, delay: 0.09 }); },
+      burst: () => { noise(0.25, { vol: 0.22, freq: 6000 + Math.random() * 3000 }); tone(1200 + Math.random() * 1200, 0.08, { type: 'triangle', vol: 0.18 }); },
+    };
+  })();
+
+  // ---------------- Music ----------------
+  // Generated 80s-style synthwave: pad, bass, drums, arp and lead, scheduled a little
+  // ahead in 16th-note steps. Each corp has its own song; layers come in as you go deeper.
+  //   level 0: pad + bass   1: + drums   2: + arp   3: + lead (boss)   4: final boss
+  // urgency (0..1): Chronos clock pressure; speeds up, opens the filter, doubles the hats.
+  const SCALES = {
+    minor: [0, 2, 3, 5, 7, 8, 10], phrygian: [0, 1, 3, 5, 7, 8, 10],
+    dorian: [0, 2, 3, 5, 7, 9, 10], harmonic: [0, 2, 3, 5, 7, 8, 11],
+  };
+  // Tracks, by their own names. Where each one plays is set in MUSIC_FOR below,
+  // so tracks can be moved between corps/screens by changing one line.
+  const SONGS = {
+    // Slow and mellow, Blade Runner-ish: long pad swells, a low brass-like swell, sparse
+    // bell notes into a long echo, no drums. (echo/feedback: per-track delay.)
+    night_rain: { name: 'NIGHT RAIN',     bpm: 64,  root: 40, scale: 'minor',    prog: [0, 5, 3, 6], style: 'ambient', echo: 0.62, feedback: 0.55 },
+    gridlock:   { name: 'GRIDLOCK',       bpm: 96,  root: 45, scale: 'minor',    prog: [0, 5, 3, 4], bass: 'eighths', drums: 'four',  arp: 'up' },
+    concrete:   { name: 'CONCRETE MARCH', bpm: 104, root: 43, scale: 'minor',    prog: [0, 0, 5, 6], bass: 'march',   drums: 'march', arp: 'up' },
+    velvet:     { name: 'VELVET HEX',     bpm: 92,  root: 46, scale: 'phrygian', prog: [0, 1, 0, 6], bass: 'pulse',   drums: 'half',  arp: 'updown' },
+    overdrive:  { name: 'OVERDRIVE',      bpm: 124, root: 50, scale: 'minor',    prog: [0, 6, 5, 6], bass: 'eighths', drums: 'four',  arp: 'up', tick: true },
+    glass:      { name: 'GLASS ECHO',     bpm: 100, root: 52, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'offbeat', drums: 'four',  arp: 'mirror', pingpong: true },
+    meltdown:   { name: 'MELTDOWN',       bpm: 112, root: 38, scale: 'harmonic', prog: [0, 5, 1, 4], bass: 'gallop',  drums: 'heavy', arp: 'down' },
+  };
+  // Where each track plays: menus, the map (+ market, caches, safehouses), and each corp.
+  const MUSIC_FOR = {
+    menu: 'night_rain', map: 'gridlock',
+    perimeter: 'concrete', sigil: 'velvet', chronos: 'overdrive', mirror: 'glass', omni: 'meltdown',
+  };
+  const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const BASS_STEPS = {
+    eighths: [0, 2, 4, 6, 8, 10, 12, 14], march: [0, 3, 6, 8, 11, 14], pulse: [0, 4, 8, 12],
+    offbeat: [2, 6, 10, 14], gallop: [0, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15],
+  };
+  const DRUMS = {
+    four:  { kick: [0, 4, 8, 12], snare: [4, 12], hat: [2, 6, 10, 14] },
+    march: { kick: [0, 8], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14], roll: [13, 14, 15] },
+    half:  { kick: [0, 10], snare: [8], hat: [4, 12] },
+    heavy: { kick: [0, 3, 8, 11], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14] },
+  };
+  const LEAD_STEPS = [0, 3, 6, 10, 12];
+  const LEAD_DEGREES = [4, 2, 0, 2, 4, 5, 4, 2];
+
+  const Music = (() => {
+    let ac = null, out = null, songG = null, pump = null, echo = null, noiseBuf = null;
+    let key = null, song = null, step = 0, nextTime = 0, getState = null, echoDelay = null, echoFb = null;
+    // A power-down (lose) or power-up (boss beaten) in progress:
+    //   { dir: -1 | 1, t0, beats: [3 beat times], end, hold }
+    // Down: the tempo drops each beat and the pitch sags (to -8 semitones).
+    // Up: the tempo pushes each beat and the pitch lifts a little (+2 semitones).
+    // After `end` the track is silent; the next track waits until `hold`, then fades in slowly.
+    let fx = null;
+    const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+    const bend = t => {
+      if (!fx) return 1;
+      const u = clamp((t - fx.t0) / (fx.end - fx.t0), 0, 1);
+      return Math.pow(2, (fx.dir < 0 ? -8 : 2) * u * u / 12);
+    };
+    const slowAt = t => {
+      if (!fx) return 1;
+      const k = t < fx.beats[1] ? 0 : t < fx.beats[2] ? 1 : 2;
+      return (fx.dir < 0 ? [0.8, 0.55, 0.4] : [1.05, 1.1, 1.15])[k];
+    };
+
+    // The current track's key, chord and beat, for jingles that play along with it.
+    function keyInfo(slowing = false) {
+      const sg = song || SONGS[key] || SONGS.gridlock;
+      const s = getState ? getState() : null;
+      const beat = clamp(60 / (sg.bpm * (s && s.tempo || 1)), 0.45, 0.7);
+      const t0 = (ac ? ac.currentTime : 0) + 0.03;
+      const beats = slowing === 'up' ? [t0, t0 + beat / 1.05, t0 + beat / 1.05 + beat / 1.1]
+        : slowing ? [t0, t0 + beat / 0.8, t0 + beat / 0.8 + beat / 0.55] : [t0, t0 + beat * 1.1, t0 + beat * 2.4];
+      const end = beats[2] + (slowing === 'up' ? beat / 1.15 : beat / 0.4);
+      return { root: sg.root, scale: SCALES[sg.scale], deg: sg.prog[Math.floor(step / 16) % sg.prog.length], beat, beats, end, t0 };
+    }
+    // Slow the playing track down to a stop over three beats (game over).
+    function powerDown() {
+      const info = keyInfo(true);
+      if (!ac || !song) return Object.assign(info, { bend: () => 1 });
+      fx = { dir: -1, t0: info.t0, beats: info.beats, end: info.end, hold: 0 };
+      songG.gain.cancelScheduledValues(info.beats[2]);
+      songG.gain.setTargetAtTime(0, info.beats[2], info.beat / 2.5);   // fade over the last beat
+      return Object.assign(info, { bend });
+    }
+    // Push the playing track up over three beats, then cut to silence (boss beaten).
+    // The next track waits a moment, then fades in slowly.
+    function powerUp() {
+      const info = keyInfo('up');
+      if (!ac || !song) return Object.assign(info, { bend: () => 1 });
+      fx = { dir: 1, t0: info.t0, beats: info.beats, end: info.end, hold: info.end + 2.6 };   // room for the brass fanfare
+      songG.gain.cancelScheduledValues(info.beats[2]);
+      songG.gain.setTargetAtTime(0, info.end, 0.08);                 // stop on the fanfare's last hit
+      return Object.assign(info, { bend });
+    }
+
+    function init(ctx, dest, nb) {
+      ac = ctx; noiseBuf = nb;
+      out = ac.createGain(); out.gain.value = 0; out.connect(dest);       // music volume
+      songG = ac.createGain(); songG.gain.value = 0; songG.connect(out);   // fades between songs
+      pump = ac.createGain(); pump.connect(songG);                         // "sidechain" pumping
+      // Echo for the arp and lead.
+      const d = ac.createDelay(1.5), fb = ac.createGain(), lp = ac.createBiquadFilter();
+      d.delayTime.value = 0.32; fb.gain.value = 0.3; lp.type = 'lowpass'; lp.frequency.value = 2400;
+      echoDelay = d; echoFb = fb;
+      echo = ac.createGain(); echo.gain.value = 0.5;
+      echo.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(pump);
+      setInterval(schedule, 25);
+    }
+    function volume() {
+      if (!ac) return;
+      out.gain.setTargetAtTime(save.musicOn ? 0.5 * save.musicVol : 0, ac.currentTime, 0.1);
+    }
+
+    // Fade out the current song, then start the new one from the top.
+    function switchTo(next) {
+      const first = key == null;
+      key = next;
+      const slowIn = fx && fx.dir > 0;   // after a boss fanfare: ease the next track in
+      fx = null;
+      const now = ac.currentTime;
+      songG.gain.cancelScheduledValues(now);
+      songG.gain.setValueAtTime(songG.gain.value, now);
+      songG.gain.linearRampToValueAtTime(0, now + (first ? 0.01 : 0.35));
+      song = null;
+      setTimeout(() => {
+        song = SONGS[key] || null;
+        if (!song) return;
+        step = 0; nextTime = ac.currentTime + 0.05;
+        echoDelay.delayTime.setTargetAtTime(song.echo || 0.32, ac.currentTime, 0.05);
+        echoFb.gain.setTargetAtTime(song.feedback || 0.3, ac.currentTime, 0.05);
+        pump.gain.cancelScheduledValues(ac.currentTime);
+        pump.gain.setValueAtTime(1, ac.currentTime);
+        const t = ac.currentTime;
+        songG.gain.cancelScheduledValues(t);
+        songG.gain.setValueAtTime(0, t);
+        songG.gain.linearRampToValueAtTime(1, t + (slowIn ? 4 : 0.8));
+      }, first ? 0 : 380);
+    }
+
+    function schedule() {
+      if (!ac || ac.state !== 'running' || !getState) return;
+      const s = getState();
+      // A new track waits for a boss fanfare (and its silence) to finish.
+      if (s.song !== key && !(fx && fx.dir > 0 && ac.currentTime < fx.hold)) switchTo(s.song);
+      if (!song) return;
+      // After a stall (background tab), skip ahead instead of playing a burst of missed notes.
+      if (nextTime < ac.currentTime - 0.2) nextTime = ac.currentTime + 0.02;
+      while (nextTime < ac.currentTime + 0.12) {
+        if (fx && nextTime > fx.end) return;        // powered down / fanfare over: silence until the next track
+        const spb = 60 / (song.bpm * s.tempo * slowAt(nextTime)) / 4;   // seconds per 16th note
+        playStep(step, nextTime, spb, s);
+        nextTime += spb;
+        step = (step + 1) % (16 * song.prog.length);
+      }
+    }
+
+    function voice(type, freq, t, dur, { vol = 0.2, cut = 2000, q = 1, attack = 0.005, release = 0.08, detune = 0, sweep = false, send = 0, pan = 0 } = {}) {
+      const o = ac.createOscillator(); o.type = type; o.frequency.value = freq * bend(t); o.detune.value = detune;
+      const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = q;
+      f.frequency.setValueAtTime(sweep ? cut * 2.5 : cut, t);
+      if (sweep) f.frequency.exponentialRampToValueAtTime(Math.max(80, cut * 0.6), t + dur * 0.8);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + attack);
+      g.gain.setValueAtTime(vol, t + Math.max(attack, dur - release));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(f); f.connect(g);
+      let node = g;
+      if (pan && ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = pan; g.connect(p); node = p; }
+      node.connect(pump);
+      if (send) { const sg = ac.createGain(); sg.gain.value = send; node.connect(sg); sg.connect(echo); }
+      o.start(t); o.stop(t + dur + 0.05);
+    }
+    function hit(dur, { vol = 0.3, freq = 1000, type = 'bandpass', t }) {
+      const s = ac.createBufferSource(); s.buffer = noiseBuf;
+      const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(pump);
+      s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
+    }
+    function kick(t, vol = 0.7) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      o.connect(g); g.connect(songG);   // the kick skips the pump so it stays punchy
+      o.start(t); o.stop(t + 0.32);
+    }
+    // Duck the music right after the kick: the classic synthwave pumping.
+    function duck(t, spb) {
+      pump.gain.cancelScheduledValues(t);
+      pump.gain.setValueAtTime(0.45, t);
+      pump.gain.linearRampToValueAtTime(1, t + spb * 3);
+    }
+
+    // Ambient songs (the menu track): pads, a brass swell, bells. No drums or pumping.
+    function ambientStep(i, t, spb) {
+      const sc = SCALES[song.scale];
+      const bar = Math.floor(i / 16) % song.prog.length, k = i % 16;
+      const deg = song.prog[bar];
+      const note = (d, oct = 0) => song.root + sc[((d % 7) + 7) % 7] + 12 * (Math.floor(d / 7) + oct);
+      const chordN = [note(deg), note(deg + 2), note(deg + 4)];
+      const barLen = spb * 16;
+      if (k === 0) {
+        // Wide, slow pad: three detuned saws per note, fading in and out across the bar.
+        for (const n of chordN) for (const det of [-14, 0, 14]) voice('sawtooth', mtof(n + 12), t, barLen + 1.2, { vol: 0.018, cut: 900, attack: 1.4, release: 1.4, detune: det });
+        voice('sine', mtof(note(deg) - 12), t, barLen + 1, { vol: 0.07, cut: 300, attack: 0.8, release: 1 });
+        // Every other bar: a low, brassy swell (root + fifth).
+        if (bar % 2 === 0) for (const n of [note(deg) + 12, note(deg + 4) + 12]) voice('sawtooth', mtof(n - 12), t, barLen * 1.6, { vol: 0.03, cut: 1300, q: 2, attack: 1.8, release: 1.6, detune: 6 });
+      }
+      // Sparse bell notes that ring out into the echo.
+      const bells = { 0: 2, 6: 1, 10: 0, 13: 2 };
+      if (k in bells && (k !== 13 || bar % 2 === 1)) {
+        const n = chordN[bells[k]] + 24;
+        voice('triangle', mtof(n), t, 2.4, { vol: 0.045, cut: 5000, attack: 0.005, release: 2.2, send: 0.85, pan: (k % 4 === 2) ? 0.4 : -0.3 });
+        voice('sine', mtof(n + 12), t, 1.2, { vol: 0.015, cut: 6000, attack: 0.005, release: 1.1 });
+      }
+    }
+
+    function playStep(i, t, spb, s) {
+      if (song.style === 'ambient') return ambientStep(i, t, spb);
+      const sc = SCALES[song.scale];
+      const bar = Math.floor(i / 16) % song.prog.length, k = i % 16;
+      const deg = song.prog[bar];
+      const note = (d, oct = 0) => song.root + sc[((d % 7) + 7) % 7] + 12 * (Math.floor(d / 7) + oct);
+      const chordN = [note(deg), note(deg + 2), note(deg + 4)];
+      const lvl = s.level, u = s.urgency;
+      const cut = 500 + lvl * 450 + u * 2400;
+
+      // Pad: a held, detuned chord each bar.
+      if (k === 0) for (const n of chordN) for (const det of [-9, 9]) voice('sawtooth', mtof(n + 12), t, spb * 16, { vol: 0.03, cut: cut * 0.8, attack: 0.25, release: 0.3, detune: det });
+      // Bass
+      if (BASS_STEPS[song.bass].includes(k)) {
+        voice('sawtooth', mtof(note(deg)), t, spb * 1.7, { vol: 0.15, cut: 260 + cut * 0.25, q: 6, sweep: true });
+        voice('sine', mtof(note(deg)), t, spb * 1.7, { vol: 0.1, cut: 400 });
+      }
+      // Drums
+      if (lvl >= 1) {
+        const d = DRUMS[song.drums];
+        if (d.kick.includes(k)) { kick(t); duck(t, spb); }
+        if (d.snare.includes(k) || (d.roll && bar === song.prog.length - 1 && d.roll.includes(k))) {
+          hit(0.22, { vol: 0.28, freq: 1800, t });
+          hit(0.35, { vol: 0.08, freq: 4000, type: 'lowpass', t });   // a little gated-reverb tail
+        }
+        const fast = song.tick ? u > 0.45 : lvl >= 3;
+        if (d.hat.includes(k) || (fast && k % 2 === 1)) hit(0.04, { vol: song.tick ? 0.12 : 0.07, freq: 7000, type: 'highpass', t });
+      } else if (k % 4 === 0) duck(t, spb);
+      // Arp
+      if (lvl >= 2) {
+        const tones = [...chordN, ...chordN.map(n => n + 12)].map(n => n + 12);
+        const order = song.arp === 'down' ? [5, 4, 3, 2, 1, 0]
+          : song.arp === 'updown' ? [0, 1, 2, 3, 4, 5, 4, 3, 2, 1]
+          : song.arp === 'mirror' ? (k < 8 ? [0, 1, 2, 3, 4, 5] : [5, 4, 3, 2, 1, 0]) : [0, 1, 2, 3, 4, 5];
+        const n = tones[order[k % order.length]];
+        voice('square', mtof(n), t, spb * 0.9, { vol: 0.04, cut: 1800 + u * 2000, release: 0.04, send: 0.6, pan: song.pingpong ? (k % 2 ? 0.6 : -0.6) : 0 });
+      }
+      // Lead (bosses)
+      if (lvl >= 3 && LEAD_STEPS.includes(k)) {
+        const dg = deg + LEAD_DEGREES[(bar * LEAD_STEPS.length + LEAD_STEPS.indexOf(k)) % LEAD_DEGREES.length];
+        voice('square', mtof(note(dg, 2)), t, spb * 2.6, { vol: lvl >= 4 ? 0.06 : 0.05, cut: 3200, attack: 0.02, release: 0.1, send: 0.5 });
+      }
+      // Heartbeat when integrity is low.
+      if (s.low && (k === 0 || k === 3)) {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.15);
+        g.gain.setValueAtTime(k === 0 ? 0.5 : 0.35, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+        o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.22);
+      }
+    }
+
+    return { init, volume, setSource: fn => { getState = fn; }, current: () => key, keyInfo: () => Object.assign(keyInfo(), { bend: () => 1 }), powerDown, powerUp,
+      restart: () => { if (ac && key) switchTo(key); } };
+  })();
+
+
+  // ---------------- Canvas & layout ----------------
+  // The screen is a fixed 54 x 36 grid of characters, scaled to fit the window.
+  //   row  0      header                 row 15      center line (turns, ping, prompts)
+  //   row  2-3    their info + log       rows 16-25  your server (held, FW, EN, ST)
+  //   rows 5-14   their server           row 26      your info
+  //               (ST, EN, FW, held)     rows 28-31  your attack deck
+  //                                      rows 32-33  buttons, info
+  const WC = 54, HC = 36;
+  const YOU = 0, AI = 1;
+  const BX = 4, UPX = 42;
+  const ROWS = { [AI]: { st: 5, en: 8, fw: 11, held: 14 }, [YOU]: { held: 16, fw: 17, en: 20, st: 23 } };
+  const INFO_ROW = { [AI]: 2, [YOU]: 26 };
+  const CENTER_Y = 15, HAND_Y = 29, BTN_Y = 32, HINT_Y = 33;
+  const BOARD_Y = 3;   // used by the shared effects code
+  const posX = (layer, i) => layer === 'fw' ? BX + i * 6 : BX + 3 + i * 6;
+  const fullScreen = () => true;
+
+  const cv = document.getElementById('screen');
+  const g = cv.getContext('2d');
+  let W = 0, H = 0, dpr = 1;
+  let L = null;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    computeLayout();
+  }
+  function computeLayout() {
+    g.font = `400 100px ${FONT}`;
+    const ratio = (g.measureText('M').width / 100) || 0.6;
+    const gutter = 10;
+    let fs = Math.min((W - 2 * gutter) / (WC * ratio), (H - 2 * gutter) / (HC * LINE_H));
+    fs = Math.max(6, Math.min(28, fs));
+    const cw = fs * ratio, chh = fs * LINE_H;
+    L = { fs, cw, chh, wc: WC, hc: HC, gh: HC - 6, ox: Math.round((W - WC * cw) / 2), oy: Math.round((H - HC * chh) / 2) };
+  }
+  const pxX = cx => L.ox + cx * L.cw + L.cw / 2;
+  const pxY = cy => L.oy + cy * L.chh + L.chh / 2;
+
+  // ---------------- State ----------------
+  const st = {
+    mode: 'title',          // title | ladder | intro | help | stats | settings | setup | match | over
+    overlay: null,          // pause | help | log (drawn over a match)
+    opp: null,              // the ladder opponent being played
+    helpPage: 0,
+    setupSel: null,         // setup: the card picked to swap
+    result: null,
+    hideAll: false,
+    wipe: null,
+    boardStart: 0,
+    transitioning: false,
+    hoverId: null, kbFocus: null,
+    focusables: [],
+    ff: false,              // fast-forwarding their turn
+    autoplay: false,        // tests: the AI plays your side too
+    resetArmed: false,
+    msg: '', msgCol: '', msgT: 0,
+  };
+  const reduced = () => save.effects === 'reduced';
+  const wait = ms => CONFIG.instant ? new Promise(r => setTimeout(r, 0)) : new Promise(r => setTimeout(r, ms));
+  function setMsg(msg, col = C.text) { st.msg = msg; st.msgCol = col; st.msgT = performance.now(); }
+
+  // ---------------- Cards ----------------
+  // card: { id, r: 'A'..'K', s: suit, v: value, owner: YOU | AI }
+  // A = target (1), 2-10 = data, J Q K = programs (11-13).
+  const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  const rankVal = r => r === 'A' ? 1 : r === 'J' ? 11 : r === 'Q' ? 12 : r === 'K' ? 13 : Number(r);
+  let nextCardId = 1;
+  const isAce = c => c.r === 'A';
+  const isProg = c => c.r === 'J' || c.r === 'Q' || c.r === 'K';
+  const isData = c => c.v >= 2 && c.v <= 10;
+  const PROG = {
+    J: { name: 'HOT SWAP', atk: 'swap two positions in one layer of their server', def: 'you may swap two positions in one layer of your server' },
+    Q: { name: 'QUERY', atk: 'reveal 1 or 2 adjacent exposed cards in one layer', def: "you may reveal 1 card, or 2 adjacent FW/EN cards, on the attacker's server" },
+    K: { name: 'PATCH', atk: 'remove a firewall card or an exposed encryption card', def: 'swap a non-ace server card with one from your deck or discard' },
+  };
+  const cardStr = c => c.r + c.s;
+  const label3 = c => (c.r.length === 2 ? c.r : ' ' + c.r) + c.s;
+  const isRedSuit = s => s === '♥' || s === '♦';
+  const suitCol = c => isRedSuit(c.s) ? C.red : C.bright;
+  const sortHand = cards => cards.slice().sort((a, b) => a.v - b.v || a.s.localeCompare(b.s));
+
+  const LAYERS = ['fw', 'en', 'st'];
+  const LAYER_N = { fw: 6, en: 5, st: 5 };
+  const LAYER_NAME = { fw: 'FIREWALL', en: 'ENCRYPTION', st: 'STORAGE' };
+  const LAYER_TAG = { fw: 'FW', en: 'EN', st: 'ST' };
+  const mkCell = c => ({ c, up: false, held: [], t: 0 });
+
+  // A side: 26 cards, a server, an attack deck, a discard pile.
+  //   stolen  = the opponent's aces this side has downloaded
+  //   uploads = the opponent's cards uploaded onto THIS side's server
+  function newSide(idx, name, suits) {
+    const all = [];
+    for (const s of suits) for (const r of RANKS) all.push({ id: nextCardId++, r, s, v: rankVal(r), owner: idx });
+    return { idx, name, suits, all, fw: Array(6).fill(null), en: Array(5).fill(null), st: Array(5).fill(null), deck: [], disc: [], stolen: [], uploads: [] };
+  }
+
+  // Exposure. Encryption card i sits behind firewall cards i and i+1;
+  // storage card i sits behind encryption card i.
+  const exposed = (S, layer, i) => layer === 'fw' ? true : layer === 'en' ? (!S.fw[i] || !S.fw[i + 1]) : !S.en[i];
+
+  // Server builds. style: random | balanced | fortress | aggro
+  function layoutServer(S, style) {
+    const aces = S.all.filter(isAce), progs = S.all.filter(isProg), data = S.all.filter(isData);
+    const desc = shuffle(data.slice()).sort((a, b) => b.v - a.v);
+    let fw, en, deck;
+    if (style === 'random') { const d = shuffle(data.slice()); fw = d.slice(0, 6); en = d.slice(6, 11); deck = d.slice(11); }
+    else if (style === 'fortress') { fw = desc.slice(1, 7); en = desc.slice(7, 12); deck = [desc[0], ...desc.slice(12)]; }
+    else if (style === 'aggro') { deck = desc.slice(0, 7); fw = desc.slice(7, 13); en = desc.slice(13); }
+    else {
+      // balanced: deal high to low around the piles
+      fw = []; en = []; deck = [];
+      const piles = [[fw, 6], [deck, 7], [en, 5]];
+      let k = 0;
+      for (const c of desc) {
+        for (let t = 0; t < 3; t++) {
+          const [pile, cap] = piles[(k + t) % 3];
+          if (pile.length < cap) { pile.push(c); k = (k + t + 1) % 3; break; }
+        }
+      }
+    }
+    const byRank = rk => progs.filter(c => c.r === rk);
+    let stProgs;
+    if (style === 'random') stProgs = shuffle(progs.slice()).slice(0, 3);
+    else if (style === 'aggro') stProgs = [byRank('J')[0], byRank('J')[1], byRank('Q')[0]];
+    else stProgs = [byRank('K')[0], byRank('J')[0], byRank('Q')[0]];
+    const deckProgs = progs.filter(c => !stProgs.includes(c));
+    S.fw = shuffle(fw).map(mkCell);
+    S.en = shuffle(en).map(mkCell);
+    S.st = shuffle([...aces, ...stProgs]).map(mkCell);
+    S.deck = shuffle([...deck, ...deckProgs]);
+    S.disc = []; S.stolen = []; S.uploads = [];
+  }
+
+  // ---------------- Opponents ----------------
+  // ai: rand = chance of a random legal move, noise = sloppiness in judging moves,
+  //     memory = tracks which of your cards it has seen, caution = fear of honeypots.
+  const OPPS = [
+    { key: 'n00b', name: 'N00B', tag: 'just installed kali linux. ready to own.', style: 'random build // random-ish moves', palette: 'c_n00b', song: 'gridlock',
+      ai: { rand: 0.4, noise: 1.2, memory: false, caution: 0.1, setup: 'random' } },
+    { key: 'tele', name: 'TELECOMMUTER', tag: "hasn't worn pants since the merger.", style: 'balanced build // lazy play', palette: 'c_tele', song: 'glass',
+      ai: { rand: 0.22, noise: 0.9, memory: false, caution: 0.4, setup: 'balanced' } },
+    { key: 'gambler', name: 'GAMBLER', tag: 'doubles down on every storage dive.', style: 'stacked attack deck // dives for aces', palette: 'c_gambler', song: 'velvet',
+      ai: { rand: 0.12, noise: 0.6, memory: true, caution: 0, setup: 'aggro' } },
+    { key: 'praetorian', name: 'PRAETORIAN', tag: 'controls the light switch. and the firewall.', style: 'fortress firewall // patient', palette: 'c_praetorian', song: 'concrete',
+      ai: { rand: 0.06, noise: 0.35, memory: true, caution: 0.9, setup: 'fortress' } },
+    { key: 'zerocool', name: 'ZERO_COOL', tag: 'crashed 1,507 systems in one day.', style: 'stacked attack deck // sharp', palette: 'c_zerocool', song: 'overdrive',
+      ai: { rand: 0.03, noise: 0.2, memory: true, caution: 0.5, setup: 'aggro' } },
+    { key: 'leet', name: '1337', tag: 'there is no 1338.', style: 'fortress firewall // near-perfect play', palette: 'c_leet', song: 'meltdown', boss: true,
+      ai: { rand: 0, noise: 0.08, memory: true, caution: 0.6, setup: 'fortress' } },
+  ];
+  const AUTO_AI = { rand: 0, noise: 0.08, memory: true, caution: 0.6 };   // tests: plays your side
+
+  // ---------------- Effects ----------------
+  const parts = [];
+  const shakeFx = { amp: 0, t0: 0, dur: 1 };
+  const flashFx = { col: '#fff', a: 0, t0: 0, dur: 1 };
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function shake(amp, dur = 0.35) { if (reduced()) return; Object.assign(shakeFx, { amp: amp * L.fs / 16, t0: performance.now(), dur }); }
+  function flash(col, a, dur = 0.3) { if (reduced()) return; Object.assign(flashFx, { col, a, t0: performance.now(), dur }); }
+
+  // Current on-screen characters (without transitions), as pixel positions.
+  function snapshot(filter) {
+    return buildScene(performance.now(), false, true)
+      .filter(filter)
+      .map(c => ({ ch: c.ch, x: pxX(c.cx), y: pxY(c.cy), col: c.col }));
+  }
+
+  function explode(cells, ox, oy, { col = null, power = 1, grav = 1, life = [0.7, 1.3] } = {}) {
+    const k = L.fs / 16;
+    for (const c of cells) {
+      const dx = c.x - ox, dy = c.y - oy, d = Math.hypot(dx, dy) || 1;
+      const sp = rand(220, 600) * power * k;
+      parts.push({
+        mode: 'explode', ch: c.ch, x: c.x, y: c.y, col: col || c.col,
+        vx: dx / d * sp + rand(-60, 60) * k,
+        vy: dy / d * sp - rand(80, 320) * power * k,
+        rot: 0, vr: rand(-9, 9), g: grav,
+        t: 0, life: rand(life[0], life[1]), alpha: 1, scr: 5,
+      });
+    }
+  }
+
+  // Fireworks made of type: a word and some noise characters blasting out from a point.
+  const FIREWORK_WORDS = ['ROOT', 'ACCESS', 'GRANTED', 'OWNED', '0xFF', '1337', 'WIN', 'R00T'];
+  function typeFirework(x, y, col) {
+    const word = FIREWORK_WORDS[Math.floor(Math.random() * FIREWORK_WORDS.length)];
+    const cells = [];
+    for (let i = 0; i < 22; i++) cells.push({ ch: i < word.length * 2 ? word[i % word.length] : noiseCh(), x, y, col });
+    // Spread the start points a little so the burst has a shape.
+    for (const c of cells) { const a = Math.random() * Math.PI * 2; c.x += Math.cos(a) * L.cw; c.y += Math.sin(a) * L.chh; }
+    explode(cells, x, y, { power: 0.75, grav: 0.45, life: [0.8, 1.5] });
+    Sound.burst();
+  }
+  function fireworkShow(n = 9, every = 280, mode = 'over') {
+    const cols = () => [C.cyan, C.gold, C.exotic, C.epic, C.rare, C.bright];
+    for (let i = 0; i < n; i++) {
+      setTimeout(() => {
+        if (st.mode !== mode) return;
+        const x = pxX(rand(L.wc * 0.15, L.wc * 0.85)), y = pxY(rand(BOARD_Y + 1, BOARD_Y + L.gh * 0.6));
+        typeFirework(x, y, pickR(cols(), Math.random));
+      }, 350 + i * every + Math.random() * 120);
+    }
+  }
+
+  // Losing: the screen collapses from the top down, like falling back down the net.
+  // Characters glitch in place, then let go row by row from the top, dropping
+  // (accelerating), scrambling, going red and fading. Returns the total time (ms).
+  const FALL = { wave: 1.7, jitter: 0.3, fall: 0.95 };
+  function fallOut(cells) {
+    const top = L.oy, h = L.hc * L.chh;
+    for (const c of cells) {
+      const f = clamp((c.y - top) / h, 0, 1);
+      parts.push({
+        mode: 'fall', ch: c.ch, x: c.x, y: c.y, x0: c.x, y0: c.y, col: c.col, base: c.col,
+        drop: f * FALL.wave + Math.random() * FALL.jitter,   // when it lets go
+        vy: 0, t: 0, life: 0, rot: 0, alpha: 1, scr: 0,
+      });
+    }
+    return (FALL.wave + FALL.jitter + FALL.fall) * 1000;
+  }
+
+  // Boss beaten: the screen breaks up from the bottom and floats away upward, the real
+  // node last. Ends empty (the reveal comes next). Returns the total time (ms).
+  const RISE = { wave: 0.9, jitter: 0.25, rise: 0.8 };
+  function riseOut(litKeys, speed = 1) {   // speed > 1 = slower (fits it to the fanfare)
+    const R = { wave: RISE.wave * speed, jitter: RISE.jitter * speed, rise: RISE.rise * speed };
+    const top = L.oy, h = L.hc * L.chh;
+    const cells = buildScene(performance.now(), false, true);
+    for (const c of cells) {
+      const x = pxX(c.cx), y = pxY(c.cy);
+      const lit = litKeys.has(c.cx + ',' + c.cy);
+      const f = 1 - clamp((y - top) / h, 0, 1);   // bottom rows go first
+      parts.push({
+        mode: 'rise', ch: c.ch, x, y, x0: x, y0: y, col: lit ? C.cyan : c.col, base: lit ? C.cyan : c.col, bold: lit,
+        drop: lit ? R.wave + R.jitter : f * R.wave + Math.random() * R.jitter, riseT: R.rise,
+        vy: 0, t: 0, life: 0, rot: 0, alpha: 1, scr: 0,
+      });
+    }
+    return (R.wave + R.jitter + R.rise) * 1000;
+  }
+
+  function updateParts(dt) {
+    const grav = 1500 * L.fs / 16;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.t += dt;
+      if (p.t < 0) continue;
+      const k = Math.min(1, p.t / p.life);
+      if (p.mode === 'float') {   // emotes: drift up and fade
+        p.y -= 26 * (L.fs / 16) * dt;
+        p.alpha = k > 0.6 ? Math.max(0, (1 - k) / 0.4) : 1;
+        if (p.t >= p.life) parts.splice(i, 1);
+        continue;
+      }
+      if (p.mode === 'rise') {
+        const r = Math.random();
+        if (p.t < p.drop) {
+          const near = 1 - Math.min(1, (p.drop - p.t) / 0.5);
+          if (r < 0.1 * near) p.ch = noiseCh();
+          p.col = Math.random() < 0.3 * near ? C.bright : p.base;
+          continue;
+        }
+        const k2 = (p.t - p.drop) / p.riseT;
+        p.vy -= grav * 0.45 * dt;
+        p.y += p.vy * dt;
+        if (r < 0.2) p.ch = noiseCh();
+        p.col = k2 < 0.25 ? C.bright : k2 < 0.6 ? C.cyan : C.gold;
+        p.alpha = Math.max(0, 1 - k2);
+        if (k2 >= 1) parts.splice(i, 1);
+        continue;
+      }
+      if (p.mode === 'fall') {
+        const r = Math.random();
+        if (p.t < p.drop) {
+          // waiting: glitch in place, more as its turn gets close
+          const near = 1 - Math.min(1, (p.drop - p.t) / 0.6);
+          if (r < 0.02 + 0.12 * near) p.ch = noiseCh();
+          p.x = r < 0.03 + 0.08 * near ? p.x0 + rand(-1, 1) * L.cw : p.x0;
+          p.col = Math.random() < 0.05 + 0.25 * near ? C.red : p.base;
+          continue;
+        }
+        const k2 = (p.t - p.drop) / FALL.fall;
+        p.vy += grav * 0.55 * dt;
+        p.y += p.vy * dt;
+        p.x = p.x0 + (r < 0.05 ? rand(-1, 1) * L.cw : 0);
+        if (r < 0.25) p.ch = noiseCh();
+        p.col = k2 > 0.3 ? C.redDim : C.red;
+        p.alpha = Math.max(0, 1 - k2);
+        if (k2 >= 1) parts.splice(i, 1);
+        continue;
+      }
+      if (p.mode === 'glitch') {
+        const r = Math.random();
+        if (r < 0.12) p.ch = noiseCh();
+        p.x = r < 0.06 ? p.x0 + rand(-2, 2) * L.cw : p.x0;
+        p.col = Math.random() < 0.1 ? C.red : p.base;
+        if (p.t >= p.life) parts.splice(i, 1);
+        continue;
+      }
+      p.vy += grav * p.g * dt;
+      p.vx *= 1 - 0.8 * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+      p.alpha = k > 0.6 ? Math.max(0, (1 - k) / 0.4) : 1;
+      if (Math.random() < p.scr * dt) p.ch = noiseCh();
+      if (p.t >= p.life) parts.splice(i, 1);
+    }
+  }
+
+  // ---------------- Scroll-fill wipe ----------------
+  // The board fills from the bottom with a scrolling pattern; a scramble band
+  // rides the front. Then the next screen comes up out of the fill the same way.
+  // level 0 = quiet page change, 1 = success, 2 = perfect / boss clear.
+  // Fills scroll upward. Two kinds:
+  //   - patterns: 4-row repeats (strings), so you can see them move
+  //   - noise fields: random characters fixed in place, so the whole field scrolls
+  //     up together (fresh random noise every frame would just flicker)
+  // Each wipe picks one at random (quiet set for page changes, success set for wins).
+  const hash2 = (a, b) => {
+    let x = (Math.imul(a + 11, 374761393) + Math.imul(b + 7, 668265263)) | 0;
+    x = Math.imul(x ^ (x >>> 15), 0x2c1b3c6d);
+    x = Math.imul(x ^ (x >>> 12), 0x297a2d39);
+    return (x ^ (x >>> 15)) >>> 0;
+  };
+  const noiseField = (chars, density) => (cx, r) => {
+    const h = hash2(cx, r);
+    return (h % 1000) < density * 1000 ? chars[(h >>> 10) % chars.length] : null;
+  };
+  // Each column cycles through `chain` with its own offset, so columns ripple.
+  const streams = chain => (cx, r) => {
+    const ch = chain[(r + hash2(cx, 3) % chain.length) % chain.length];
+    return ch === ' ' ? null : ch;
+  };
+  const FILLS = {
+    quiet: [
+      streams(' .:|'),
+      noiseField('...::;+=', 0.5),
+      [' ^  ^  ^', '/ \\/ \\/ ', ': :: :: ', '. .. .. '],    // chevrons
+      ['-=-=-=-=', ' . . . .', '=-=-=-=-', '. . . . '],      // dashes
+      ['.:  .:  ', ':|  :|  ', '  .:  .:', '  :|  :|'],      // checker streams
+    ],
+    success: [
+      streams(' .:|#'),
+      noiseField('::;+=*#%', 0.65),
+      ['^^  ^^  ', '||  ||  ', '::^^::^^', '  ||  ||'],      // double chevrons
+      [' /\\  /\\ ', '/::\\/::\\', ':||::||:', '.::..::.'],  // arrows
+    ],
+  };
+  // Timing per strength: how long the front takes to cross the board, and how
+  // long each character takes to break down (or build up) when the front hits it.
+  const WIPE_TIME = [
+    { travel: 280, decay: 240 },   // quiet page change
+    { travel: 340, decay: 320 },   // success
+    { travel: 360, decay: 360 },   // perfect / boss clear
+  ];
+  const DECAY_CHARS = '.:,\'`';
+
+  function fillChar(cx, cy, now, level, pat) {
+    const s = Math.floor(now * CONFIG.wipeSpeed / (level ? 45 : 75));   // one row up per tick
+    if (typeof pat === 'function') return pat(cx, cy + s);
+    const row = pat[(((cy + s) % pat.length) + pat.length) % pat.length];
+    const ch = row[((cx % row.length) + row.length) % row.length];
+    return ch === ' ' ? null : ch;
+  }
+
+  // How it works: fronts rise row by row; each board row gets an arrival time.
+  // The old screen's front starts first. Partway up, the new screen's front starts
+  // behind it, so the two overlap like a cross-fade:
+  //   top: old screen still breaking down / middle: scrolling fill / bottom: new screen.
+  // Old characters break down when hit (flicker -> noise -> decay dots).
+  // New characters build up the reverse way. Empty cells just fill or clear.
+  const LIT_HOLD = 220;   // wipe-time the real node stays lit after the front passes the top
+  // Each character gets its own random delay and change speed, so swaps don't happen in a neat line.
+  const charJitter = (cx, cy, salt) => (hash2(Math.round(cx * 2) + salt, Math.round(cy)) % 1000) / 1000;
+
+  function applyWipe(cells, now) {
+    const w = st.wipe;
+    const top = w.full ? 0 : BOARD_Y, bot = w.full ? L.hc : BOARD_Y + L.gh;
+    const inB = c => c.cy >= top && c.cy < bot;
+    const out = cells.filter(c => !inB(c));
+    const outT = WIPE_TIME[w.level];
+    const inLvl = w.levelIn != null ? w.levelIn : Math.min(w.level, 1);
+    const inT = WIPE_TIME[inLvl];
+    const eOut = (now - w.t0) * CONFIG.wipeSpeed;                                   // wipe-time, scaled by speed
+    const eIn = w.tIn != null ? (now - w.tIn) * CONFIG.wipeSpeed : -Infinity;
+    const frac = cy => (bot - 1 - cy) / Math.max(1, bot - top - 1);                   // bottom row first
+    const hitOut = w.level ? C.cyan : C.text, hitIn = inLvl ? C.cyan : C.text;
+    const fillCol = age => age < 70 ? (w.level ? C.cyan : C.mid) : age < 200 && w.level ? C.mid : C.dim;
+    const busy = new Set();   // cells with a character mid-change; no fill drawn there
+    const key = (cx, cy) => Math.round(cx) + ',' + Math.round(cy);
+    const decayCh = () => DECAY_CHARS[Math.floor(Math.random() * DECAY_CHARS.length)];
+
+    // Old screen: breaks down as its front passes.
+    for (const c of w.cells) {
+      if (!inB(c)) continue;
+      const hit = eOut - frac(Math.round(c.cy)) * outT.travel;          // time since the front got here
+      const t = hit - charJitter(c.cx, c.cy, 1) * CONFIG.wipeStagger;      // this character starts a bit later
+      const dec = outT.decay * (0.7 + 0.6 * charJitter(c.cx, c.cy, 2));
+      if (t < 0) { out.push(c); if (hit >= 0) busy.add(key(c.cx, c.cy)); continue; }   // holding on in the fill
+      if (t >= dec) continue;
+      const q = t / dec;
+      let ch, col;
+      if (q < 0.3) { ch = Math.random() < 0.5 ? c.ch : noiseCh(); col = Math.random() < 0.5 ? c.col : hitOut; }
+      else if (q < 0.7) { ch = noiseCh(); col = hitOut; }
+      else { ch = decayCh(); col = C.mid; }
+      const dy = -Math.sin(Math.min(1, q * 2) * Math.PI) * (w.level ? 0.35 : 0.2);   // bumped by the front
+      out.push({ ch, cx: c.cx, cy: c.cy + dy, col, own: 'wipe', bold: c.bold });
+      busy.add(key(c.cx, c.cy));
+    }
+
+    // New screen: builds up as its front passes (once it has started).
+    if (w.tIn != null) {
+      for (const c of cells) {
+        if (!inB(c) || busy.has(key(c.cx, c.cy))) continue;
+        const hit = eIn - frac(Math.round(c.cy)) * inT.travel;
+        if (hit < 0) continue;                                              // still under the fill
+        const t = hit - charJitter(c.cx, c.cy, 3) * CONFIG.wipeStagger;
+        const dec = inT.decay * (0.7 + 0.6 * charJitter(c.cx, c.cy, 4));
+        if (t < 0) {                                                        // waiting its turn: cycling noise
+          out.push({ ch: Math.random() < 0.5 ? decayCh() : noiseCh(), cx: c.cx, cy: c.cy, col: C.mid, own: 'wipe' });
+          busy.add(key(c.cx, c.cy));
+          continue;
+        }
+        if (t >= dec) { out.push(c); continue; }
+        const q = t / dec;
+        let ch, col;
+        if (q < 0.25) { ch = decayCh(); col = C.mid; }
+        else if (q < 0.65) { ch = noiseCh(); col = hitIn; }
+        else { ch = Math.random() < 0.6 ? c.ch : noiseCh(); col = Math.random() < 0.6 ? c.col : hitIn; }
+        out.push({ ch, cx: c.cx, cy: c.cy, col, own: 'wipe', bold: c.bold });
+        busy.add(key(c.cx, c.cy));
+      }
+    }
+
+    // Fill between the two fronts, with bright leading lines.
+    for (let cy = top; cy < bot; cy++) {
+      const tO = eOut - frac(cy) * outT.travel;
+      const tI = eIn - frac(cy) * inT.travel;
+      for (let cx = 0; cx < L.wc; cx++) {
+        if (busy.has(cx + ',' + cy)) continue;
+        if (tO < 0) {
+          // Old screen region. Sparks just ahead of the front on a success.
+          if (w.level && tO > -90 && Math.random() < (w.level >= 2 ? 0.08 : 0.04)) out.push({ ch: noiseCh(), cx, cy, col: C.cyan, own: 'wipe' });
+          continue;
+        }
+        if (tI >= 0) {
+          // New screen region; a bright line marks its front.
+          if (tI < 60) { const ch = fillChar(cx, cy, now, inLvl, w.pattern); if (ch) out.push({ ch, cx, cy, col: hitIn, own: 'wipe' }); }
+          continue;
+        }
+        const ch = fillChar(cx, cy, now, w.level, w.pattern);
+        if (ch) out.push({ ch, cx, cy, col: fillCol(tO), own: 'wipe' });
+      }
+    }
+
+    // The real node stays lit and is the last thing swallowed.
+    if (w.lit && eOut < outT.travel + LIT_HOLD) {
+      const ending = eOut > outT.travel + LIT_HOLD - 160;
+      for (const c of w.lit) out.push(Object.assign({}, c, { ch: ending && Math.random() < 0.6 ? noiseCh() : c.ch, col: C.cyan, bold: true }));
+    }
+    return out;
+  }
+
+  // Start wiping the board out. Resolves at the hand-off point, partway through,
+  // so the caller can open the next screen while the old one is still going.
+  async function wipeOut(level = 0, lit = null, quiet = false) {
+    const now = performance.now();
+    const cells = buildScene(now, false, true);   // whole screen; applyWipe uses the part in its region
+    const pattern = pickR(level ? FILLS.success : FILLS.quiet, Math.random);   // new fill each wipe
+    st.wipe = { t0: now, level, cells, lit, pattern, tIn: null, full: fullScreen() };
+    if (level) { if (quiet) Sound.whoosh(); else Sound.sweep(level); shake(level >= 2 ? 7 : 3, 0.3); if (level >= 2) flash(C.cyan, 0.15, 0.4); }
+    else Sound.whoosh();
+    // Success wipes hand off later, so the lit node gets its moment.
+    const handoff = WIPE_TIME[level].travel * (level ? CONFIG.wipeOverlapWin : CONFIG.wipeOverlap) / CONFIG.wipeSpeed;
+    await wait(handoff);
+  }
+
+  // Start the new screen's front. Without a wipe in progress, just decode in.
+  function wipeIn() {
+    const w = st.wipe;
+    if (w && w.tIn == null) {
+      const now = performance.now();
+      w.tIn = now;
+      if (fullScreen()) w.full = true;   // full-screen screens wipe the whole screen
+      w.levelIn = Math.min(w.level, 1);   // the new screen always builds in calmly
+      const outT = WIPE_TIME[w.level], inT = WIPE_TIME[w.levelIn];
+      const slack = CONFIG.wipeStagger;   // the last characters can start this much later, and change 1.3x slower
+      const outEnd = w.t0 + (outT.travel + Math.max(outT.decay * 1.3 + slack, w.lit ? LIT_HOLD : 0)) / CONFIG.wipeSpeed;
+      const inEnd = now + (inT.travel + inT.decay * 1.3 + slack) / CONFIG.wipeSpeed;
+      w.dur = inEnd - now;                 // how long until the new screen is fully in
+      w.endsAt = Math.max(outEnd, inEnd);
+    } else {
+      st.wipe = null;
+      st.boardStart = performance.now();
+    }
+  }
+
+  // ---------------- Match ----------------
+  let M = null;
+  const ABORT = { abort: true };
+
+  function newMatch(opp) {
+    return {
+      opp,
+      s: [newSide(YOU, 'YOU', ['♥', '♦']), newSide(AI, opp.name, ['♣', '♠'])],
+      turn: YOU, turnNo: 0,
+      ui: { phase: 'wait', picks: [] },
+      log: [], over: false, aborted: false, winner: null, idle: 0, again: false,
+      stats: { turns: [0, 0], moves: [0, 0], pickup: [null, null], first: null },
+      tele: null, banner: null, ping: null, swapFx: null,
+    };
+  }
+
+  function log(text, col) {
+    if (!M) return;
+    M.log.push({ text, col: col || null, turn: M.turnNo });
+    if (M.log.length > 300) M.log.shift();
+    if (!M.sim) setMsg(text, col || C.text);
+  }
+
+  // Waits that respect the menu (paused), fast-forward, and quitting the match.
+  async function pace(ms) {
+    const m = M;
+    let k = save.aiSpeed === 'fast' ? 0.5 : 1;
+    if (m && m.turn === AI && st.ff) k *= CONFIG.aiFastMul;
+    await wait(ms * k);
+    while (st.overlay && M === m && !m.aborted && !CONFIG.instant) await wait(100);
+    if (!m || m.aborted || M !== m) throw ABORT;
+  }
+
+  const toDisc = card => M.s[card.owner].disc.push(card);
+  function takeFromDeck(S, card) { const i = S.deck.indexOf(card); if (i >= 0) S.deck.splice(i, 1); }
+  const hasExposedEn = D => D.en.some((cell, i) => cell && exposed(D, 'en', i));
+  const storageTargets = D => [0, 1, 2, 3, 4].filter(i => D.st[i] && exposed(D, 'st', i) && !(D.st[i].up && isProg(D.st[i].c)));
+  function queenCells(D) {
+    const out = [];
+    for (const layer of LAYERS) D[layer].forEach((cell, i) => { if (cell && exposed(D, layer, i)) out.push({ layer, i }); });
+    return out;
+  }
+  function kingCells(D) {
+    const out = [];
+    D.fw.forEach((cell, i) => { if (cell) out.push({ layer: 'fw', i }); });
+    D.en.forEach((cell, i) => { if (cell && exposed(D, 'en', i)) out.push({ layer: 'en', i }); });
+    return out;
+  }
+  function cardUses(A, D, card) {
+    return {
+      fw: isData(card) && D.fw.some(Boolean),
+      en: isData(card) && hasExposedEn(D),
+      st: storageTargets(D).length > 0,
+      run: isProg(card) && (card.r === 'J' || (card.r === 'Q' ? queenCells(D).length > 0 : kingCells(D).length > 0)),
+    };
+  }
+  const usable = (A, D, card) => { const u = cardUses(A, D, card); return u.fw || u.en || u.st || u.run; };
+  const anyLegal = (A, D) => A.deck.some(c => usable(A, D, c));
+
+  // ---------------- Effects on cards ----------------
+  function cellXY(side, layer, i) { return { cx: posX(layer, i), cy: ROWS[side][layer] }; }
+  function burstCard(cx, cy, card, opts = {}) {
+    const chars = [];
+    const put = (x, y, s, col) => { for (let k = 0; k < s.length; k++) if (s[k] !== ' ') chars.push({ ch: s[k], x: pxX(x + k), y: pxY(y), col }); };
+    drawCard(put, cx, cy, card, 'up');
+    if (!M.sim) explode(chars, pxX(cx + 2), pxY(cy + 1), opts);
+  }
+  function floatText(cx, cy, str, col) {
+    if (M && M.sim) return;
+    [...str].forEach((ch, k) => parts.push({ mode: 'float', ch, x: pxX(cx + k), y: pxY(cy), col, t: 0, life: 1.4, alpha: 1, rot: 0, scr: 0 }));
+  }
+  function uploadXY(side, k) { return { cx: UPX + (k % 3) * 4, cy: ROWS[side].en + 1 + Math.floor(k / 3) }; }
+
+  // ---------------- Actions ----------------
+  async function revealCell(S, layer, i) {
+    const cell = S[layer][i];
+    if (!cell || cell.up) return;
+    cell.up = true; cell.t = performance.now();
+    Sound.flip();
+    await pace(CONFIG.flipMs);
+  }
+
+  // Remove a server card: it goes to its owner's discard, held attack cards to theirs.
+  function removeCell(S, layer, i) {
+    const cell = S[layer][i];
+    if (!cell) return;
+    const { cx, cy } = cellXY(S.idx, layer, i);
+    burstCard(cx, cy, cell.c, { power: 0.8 });
+    S[layer][i] = null;
+    toDisc(cell.c);
+    cell.held.forEach(toDisc);
+  }
+
+  function swapCells(S, layer, a, b) {
+    const row = S[layer];
+    [row[a], row[b]] = [row[b], row[a]];
+    M.swapFx = { side: S.idx, layer, a, b, t0: performance.now() };
+    Sound.swap();
+  }
+
+  async function doFirewall(A, D, card, i) {
+    takeFromDeck(A, card);
+    log(`${A.name}: ${cardStr(card)} -> FIREWALL ${i + 1}`);
+    const cell = D.fw[i];
+    cell.incoming = card;
+    await revealCell(D, 'fw', i);
+    await pace(250);
+    cell.incoming = null;
+    const total = card.v + sum(cell.held);
+    const { cx, cy } = cellXY(D.idx, 'fw', i);
+    if (total > cell.c.v) {
+      removeCell(D, 'fw', i);
+      toDisc(card);
+      Sound.crack(); shake(3);
+      floatText(cx, cy + 1, `${total}>${cell.c.v}`, C.cyan);
+      log(`${total} beats ${cell.c.v}. firewall ${i + 1} down`, C.cyan);
+      return true;
+    }
+    cell.held.push(card);
+    Sound.hold();
+    floatText(cx, cy + 1, `${total}<=${cell.c.v}`, C.redDim);
+    log(`${total} vs ${cell.c.v}. ${cardStr(card)} is held`, C.mid);
+    return false;
+  }
+
+  async function doUpload(A, D, card) {
+    takeFromDeck(A, card);
+    D.uploads.push(card);
+    Sound.upload();
+    log(`${A.name}: uploads ${cardStr(card)}`);
+    await pace(350);
+  }
+
+  // combo: [{ up: card } | { en: i }], must total 21
+  async function doEncRemove(A, D, combo) {
+    if (!combo.length) return false;
+    const total = combo.reduce((s, x) => s + (x.up ? x.up.v : D.en[x.en].c.v), 0);
+    if (total !== 21) return false;
+    for (const x of combo) {
+      if (x.en != null) removeCell(D, 'en', x.en);
+      else {
+        const k = D.uploads.indexOf(x.up);
+        const { cx, cy } = uploadXY(D.idx, k);
+        if (!M.sim) explode([...cardStr(x.up)].map((ch, j) => ({ ch, x: pxX(cx + j), y: pxY(cy), col: suitCol(x.up) })), pxX(cx + 1), pxY(cy), { power: 0.6 });
+        D.uploads.splice(k, 1);
+        toDisc(x.up);
+      }
+    }
+    Sound.crack21(); flash(C.cyan, 0.12, 0.3); shake(4);
+    floatText(UPX + 2, ROWS[D.idx].en, '= 21', C.cyan);
+    log(`21! ${combo.length} card${combo.length > 1 ? 's' : ''} cracked`, C.cyan);
+    await pace(300);
+    return true;
+  }
+
+  async function doStorage(A, D, card, i) {
+    takeFromDeck(A, card);
+    toDisc(card);
+    Sound.burn();
+    log(`${A.name}: burns ${cardStr(card)} -> STORAGE ${i + 1}`);
+    await pace(300);
+    await revealCell(D, 'st', i);
+    const cell = D.st[i];
+    const { cx, cy } = cellXY(D.idx, 'st', i);
+    if (isAce(cell.c)) {
+      D.st[i] = null;
+      A.stolen.push(cell.c);
+      burstCard(cx, cy, cell.c, { col: C.gold, power: 1.2 });
+      floatText(cx - 2, cy + 1, 'DOWNLOAD', C.gold);
+      if (A.idx === YOU) { Sound.download(); flash(C.gold, 0.25, 0.5); shake(6); }
+      else { Sound.stolen(); flash(C.red, 0.3, 0.5); shake(9); }
+      log(`${A.name === 'YOU' ? 'YOU download' : A.name + ' downloads'} ${cardStr(cell.c)}!`, A.idx === YOU ? C.gold : C.red);
+      await pace(800);
+      return true;
+    }
+    if (isData(cell.c)) {
+      removeCell(D, 'st', i);
+      Sound.crack();
+      log(`decoy data ${cardStr(cell.c)} wiped`, C.mid);
+      return true;
+    }
+    // A program: honeypot.
+    Sound.trap(); flash(C.red, 0.22, 0.35); shake(6);
+    floatText(cx - 2, cy + 1, 'HONEYPOT', C.red);
+    log(`HONEYPOT! ${cardStr(cell.c)} ${PROG[cell.c.r].name} triggers`, C.red);
+    await pace(700);
+    if (D.idx === YOU && !st.autoplay) await playerDefense(D, A, cell.c);
+    else await aiDefense(D, A, cell.c);
+    return false;
+  }
+
+  // t: J { layer, a, b } / Q { layer, idx: [i] or [i, i+1] } / K { layer, i }
+  async function doProgram(A, D, card, t) {
+    takeFromDeck(A, card);
+    Sound.prog();
+    log(`${A.name}: runs ${cardStr(card)} ${PROG[card.r].name}`);
+    await pace(350);
+    let removed = false;
+    if (card.r === 'J') { swapCells(D, t.layer, t.a, t.b); await pace(350); }
+    if (card.r === 'Q') for (const i of t.idx) await revealCell(D, t.layer, i);
+    if (card.r === 'K') { removeCell(D, t.layer, t.i); Sound.crack(); shake(3); removed = true; }
+    toDisc(card);
+    return removed;
+  }
+
+  // Defense K helpers: move a server card out, and put one in.
+  function takeOut(S, layer, i, where) {
+    const cell = S[layer][i];
+    if (!cell) return;
+    S[layer][i] = null;
+    cell.held.forEach(toDisc);
+    if (where === 'deck') S.deck.push(cell.c); else S.disc.push(cell.c);
+  }
+  function placeCard(S, layer, i, card) {
+    let k = S.deck.indexOf(card);
+    if (k >= 0) S.deck.splice(k, 1);
+    else { k = S.disc.indexOf(card); if (k >= 0) S.disc.splice(k, 1); }
+    S[layer][i] = mkCell(card);
+    S[layer][i].t = performance.now();
+    Sound.deal();
+  }
+  const canPatch = (card, layer) => layer === 'st' ? (isProg(card) || isData(card)) : isData(card);
+
+  // ---------------- Turn flow ----------------
+  async function runMatch() {
+    const m = M;
+    try {
+      await pace(500);
+      const first = await pingTest();
+      m.stats.first = first;
+      m.turn = first;
+      while (!m.over) {
+        await playTurn(m.turn);
+        if (m.over) break;
+        m.turn = 1 - m.turn;
+      }
+    } catch (e) { if (e !== ABORT) console.error(e); }
+  }
+
+  async function pingTest() {
+    const me = M.s[YOU], op = M.s[AI];
+    for (;;) {
+      const mine = pickR(op.deck), theirs = pickR(me.deck);   // each side draws from the other's deck
+      M.ping = { mine, theirs, t0: performance.now(), done: false };
+      Sound.probe();
+      await pace(CONFIG.pingMs);
+      M.ping.done = true;
+      if (mine.v === theirs.v) { log(`ping tie: ${cardStr(mine)} vs ${cardStr(theirs)}. again`, C.mid); await pace(900); continue; }
+      const first = theirs.v < mine.v ? YOU : AI;   // the owner of the lower card goes first
+      log(`ping: ${first === YOU ? 'YOU go' : op.name + ' goes'} first`, C.cyan);
+      await pace(1300);
+      M.ping = null;
+      return first;
+    }
+  }
+
+  async function playTurn(side) {
+    const A = M.s[side], D = M.s[1 - side];
+    M.turnNo++; M.stats.turns[side]++;
+    st.ff = false;
+    if (!A.deck.length && A.disc.length) {
+      A.deck = shuffle(A.disc.splice(0));
+      Sound.reboot();
+      log(`${A.name}: reloads ${A.deck.length} cards from discard`, C.mid);
+      if (M.stats.pickup[side] == null) M.stats.pickup[side] = M.turnNo;
+    }
+    M.banner = { side, t0: performance.now() };
+    if (side === YOU) Sound.yourTurn(); else Sound.theirTurn();
+    await pace(CONFIG.bannerMs);
+    let acts = 0;
+    for (;;) {
+      if (!A.deck.length || !anyLegal(A, D)) {
+        if (!acts) log(`${A.name}: no moves. turn passes`, C.mid);
+        else if (!A.deck.length) log(`${A.name}: out of attack cards`, C.mid);
+        break;
+      }
+      M.again = acts > 0;
+      const removed = side === YOU && !st.autoplay ? await playerAction(A, D) : await aiAction(A, D);
+      if (removed === null) break;
+      acts++; M.stats.moves[side]++;
+      if (A.stolen.length >= 2) { await endMatch(side); return; }
+      if (!removed) break;
+      if (A.deck.length && anyLegal(A, D)) log(`BREACH. ${side === YOU ? 'you must act' : A.name + ' acts'} again`, C.cyan);
+    }
+    M.again = false;
+    M.idle = acts ? 0 : M.idle + 1;
+    if (M.idle >= 4) { await endMatch(-1); return; }
+    await pace(400);
+  }
+
+  // ---------------- Your moves (the UI resolves these) ----------------
+  function ask(phase, extra = {}) {
+    return new Promise(resolve => { M.ui = Object.assign({ phase, sel: null, mode: null, picks: [], resolve }, extra); });
+  }
+  function finish(v) {
+    const r = M.ui.resolve;
+    M.ui = { phase: 'wait', picks: [] };
+    Sound.ui();
+    if (r) r(v);
+  }
+
+  function comboItems(D, extra = null) {
+    const items = D.uploads.map(c => ({ v: c.v, w: 0.2, up: c }));
+    if (extra) items.push({ v: extra.v, w: 0.2, up: extra, isNew: true });
+    D.en.forEach((cell, i) => { if (cell && cell.up && exposed(D, 'en', i)) items.push({ v: cell.c.v, w: 4 + enGain(D, i), en: i }); });
+    return items;
+  }
+  // Best subset of items that adds to exactly 21 (by total weight w), or null.
+  function best21(items) {
+    const n = Math.min(items.length, 13);
+    let best = null, bestW = -Infinity;
+    for (let m = 1; m < (1 << n); m++) {
+      let s = 0, w = 0;
+      for (let k = 0; k < n && s <= 21; k++) if (m & (1 << k)) { s += items[k].v; w += items[k].w; }
+      if (s === 21 && w > bestW) { bestW = w; best = m; }
+    }
+    return best == null ? null : { pick: items.filter((_, k) => best & (1 << k)), w: bestW };
+  }
+
+  async function playerAction(A, D) {
+    const ch = await ask('pick');
+    if (ch.type === 'fw') return doFirewall(A, D, ch.card, ch.i);
+    if (ch.type === 'st') return doStorage(A, D, ch.card, ch.i);
+    if (ch.type === 'prog') return doProgram(A, D, ch.card, ch.t);
+    await doUpload(A, D, ch.card);
+    if (D.en.some((cell, i) => cell && !cell.up && exposed(D, 'en', i))) {
+      const i = await ask('encReveal');
+      if (i != null) await revealCell(D, 'en', i);
+    }
+    if (!best21(comboItems(D))) {
+      log('no combination makes 21. turn over', C.mid);
+      await pace(900);
+      return false;
+    }
+    const combo = await ask('encCombo');
+    return doEncRemove(A, D, combo);
+  }
+
+  async function playerDefense(D, A, prog) {
+    if (prog.r === 'J') {
+      const ch = await ask('defJ');
+      if (ch) { swapCells(D, ch.layer, ch.a, ch.b); log(`YOU: hot swap ${LAYER_TAG[ch.layer]} ${ch.a + 1} <-> ${ch.b + 1}`); await pace(350); }
+    } else if (prog.r === 'Q') {
+      const ch = await ask('defQ');
+      if (ch) { log(`YOU: query ${LAYER_NAME[ch.layer]} ${ch.idx.map(i => i + 1).join('+')}`); for (const i of ch.idx) await revealCell(A, ch.layer, i); }
+    } else {
+      const pos = await ask('defK1');
+      if (!pos) return;
+      if (D[pos.layer][pos.i]) {
+        const where = await ask('defK2', { pos });
+        takeOut(D, pos.layer, pos.i, where);
+      }
+      const pick = await ask('defK3', { pos });
+      if (pick) placeCard(D, pos.layer, pos.i, pick);
+      log(`YOU: patched ${LAYER_NAME[pos.layer]} ${pos.i + 1}`);
+    }
+  }
+
+  // ---------------- End ----------------
+  async function endMatch(winner) {
+    const m = M;
+    m.over = true; m.winner = winner;
+    m.ui = { phase: 'wait', picks: [] };
+    if (m.sim) return;
+    const opp = m.opp, idx = OPPS.indexOf(opp);
+    const rec = recordOf(opp.key);
+    let unlockedNew = null;
+    if (winner === YOU) {
+      rec.w++;
+      if (idx + 2 > save.unlocked) { save.unlocked = idx + 2; unlockedNew = OPPS[idx + 1] || null; }
+    } else rec.l++;
+    save.matches.push({ opp: opp.key, win: winner === YOU, draw: winner === -1, first: m.stats.first, turns: m.stats.turns, moves: m.stats.moves, pickup: m.stats.pickup, when: Date.now() });
+    if (save.matches.length > 100) save.matches.shift();
+    persist();
+    st.result = { win: winner === YOU, draw: winner === -1, opp, stats: m.stats, mine: m.s[YOU].stolen.slice(), theirs: m.s[AI].stolen.slice(), unlockedNew, final: winner === YOU && opp.boss };
+    log(winner === YOU ? 'DOWNLOAD COMPLETE' : winner === AI ? 'CONNECTION TERMINATED' : 'DEADLOCK', winner === YOU ? C.cyan : C.red);
+    await wait(900);
+    if (M !== m) return;
+    if (winner === YOU) {
+      const lead = Sound.bossWin();
+      const dur = riseOut(new Set(), 1.4);
+      st.hideAll = true;
+      await wait(Math.max(dur, lead * 1000));
+    } else {
+      Sound.death(); Sound.collapse();
+      const dur = fallOut(snapshot(() => true));
+      st.hideAll = true;
+      await wait(dur);
+    }
+    if (M !== m) return;
+    st.hideAll = false;
+    st.mode = 'over';
+    st.boardStart = performance.now();
+    scenePalette();
+    if (winner === YOU) fireworkShow(st.result.final ? 16 : 8, st.result.final ? 220 : 300, 'over');
+  }
+
+
+  // ---------------- AI ----------------
+  // Scores every move it can see and takes the best (plus noise), with no peeking:
+  // face-down values are guessed from the cards it hasn't seen yet.
+  const util = c => isData(c) ? c.v * 0.6 : c.r === 'K' ? 7 : c.r === 'J' ? 3 : 2.5;
+  const CONT = 3;   // value of keeping the turn going
+
+  function publicIds() {
+    const set = new Set();
+    for (const S of M.s) {
+      for (const c of S.disc) set.add(c.id);
+      for (const c of S.stolen) set.add(c.id);
+      for (const c of S.uploads) set.add(c.id);
+      for (const layer of LAYERS) for (const cell of S[layer]) {
+        if (!cell) continue;
+        if (cell.up) set.add(cell.c.id);
+        for (const h of cell.held) set.add(h.id);
+      }
+    }
+    return set;
+  }
+  const FLAT_POOL = [2, 3, 4, 5, 6, 7, 8, 9, 10, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  function aiPool(D, ai) {
+    if (!ai.memory) return FLAT_POOL;
+    const pub = publicIds();
+    const vals = D.all.filter(c => isData(c) && !pub.has(c.id)).map(c => c.v);
+    return vals.length ? vals : FLAT_POOL;
+  }
+
+  // What removing firewall i opens up: encryption cards that become exposed.
+  function fwGain(D, i) {
+    let g = 0;
+    if (i - 1 >= 0 && D.en[i - 1] && D.fw[i - 1]) g += 2.5;
+    if (i <= 4 && D.en[i] && D.fw[i + 1]) g += 2.5;
+    return g;
+  }
+  // What removing encryption i opens up: the storage card behind it.
+  function enGain(D, i) {
+    const s = D.st[i];
+    if (!s) return 0.5;
+    if (s.up && isAce(s.c)) return 30;
+    if (s.up && isProg(s.c)) return 0.5;
+    return 5;
+  }
+  function aceOdds(A, D) {
+    const hidden = D.st.filter(cell => cell && !cell.up).length;
+    const left = 2 - A.stolen.length - D.st.filter(cell => cell && cell.up && isAce(cell.c)).length;
+    return hidden ? Math.max(0, left) / hidden : 0;
+  }
+
+  function aiCandidates(A, D, ai) {
+    const out = [];
+    const pool = aiPool(D, ai);
+    const pLess = t => pool.filter(v => v < t).length / pool.length;
+    const datas = uniqBy(sortHand(A.deck.filter(isData)), c => c.v);
+    const pAce = aceOdds(A, D);
+
+    // Firewall
+    D.fw.forEach((cell, i) => {
+      if (!cell) return;
+      const held = sum(cell.held);
+      for (const c of datas) {
+        const tot = c.v + held;
+        const p = cell.up ? (tot > cell.c.v ? 1 : 0) : pLess(tot);
+        const win = 7 + fwGain(D, i) + CONT - util(c) * 0.3;
+        const lose = 0.6 - util(c) * 0.5 + (cell.up ? Math.max(0, 3 - (cell.c.v - tot)) * 0.3 : 0);
+        out.push({ type: 'fw', card: c, i, score: p * win + (1 - p) * lose });
+      }
+    });
+
+    // Encryption
+    if (hasExposedEn(D)) {
+      const hidden = [];
+      D.en.forEach((cell, i) => { if (cell && !cell.up && exposed(D, 'en', i)) hidden.push(i); });
+      for (const c of datas) {
+        const known = best21(comboItems(D, c));
+        let score;
+        if (known) score = 9 + known.w + CONT - util(c) * 0.2;
+        else {
+          let bestP = 0;
+          const base = comboItems(D, c);
+          for (const h of hidden) {
+            let hits = 0;
+            for (const v of pool) {
+              const r = best21([...base, { v, w: 4, en: h }]);
+              if (r && r.pick.some(x => x.en === h)) hits++;
+            }
+            bestP = Math.max(bestP, hits / pool.length);
+          }
+          score = bestP * (12 + CONT) + 0.3 - util(c) * 0.6;
+        }
+        out.push({ type: 'en', card: c, score });
+      }
+    }
+
+    // Storage
+    const sts = storageTargets(D);
+    if (sts.length) {
+      const burn = A.deck.slice().sort((a, b) => util(a) - util(b))[0];
+      for (const i of sts) {
+        const cell = D.st[i];
+        let score;
+        if (cell.up) score = isAce(cell.c) ? 100 : 6;
+        else score = pAce * (40 + CONT) - (1 - pAce) * (3 + 9 * ai.caution) - util(burn) * 0.3;
+        out.push({ type: 'st', card: burn, i, score });
+      }
+    }
+
+    // Programs
+    for (const c of uniqBy(A.deck.filter(isProg), c => c.r)) {
+      if (c.r === 'K') {
+        for (const { layer, i } of kingCells(D)) {
+          const cell = D[layer][i];
+          const s = layer === 'fw'
+            ? 6 + fwGain(D, i) + (cell.up ? Math.max(0, cell.c.v - 6) * 0.5 : 1.5) + sum(cell.held) * 0.1
+            : 6 + enGain(D, i);
+          out.push({ type: 'prog', card: c, t: { layer, i }, score: s + CONT - util(c) * 0.5 });
+        }
+      }
+      if (c.r === 'Q') {
+        for (const layer of LAYERS) {
+          const n = LAYER_N[layer];
+          for (let i = 0; i < n; i++) {
+            const a = D[layer][i];
+            if (!a || !exposed(D, layer, i)) continue;
+            if (layer === 'st') { if (!a.up) out.push({ type: 'prog', card: c, t: { layer, idx: [i] }, score: 1 + 6 * pAce - 1.2 }); continue; }
+            const b = i + 1 < n ? D[layer][i + 1] : null;
+            const pair = b && exposed(D, layer, i + 1);
+            const hid = (a.up ? 0 : 1) + (pair && !b.up ? 1 : 0);
+            if (!hid) continue;
+            out.push({ type: 'prog', card: c, t: { layer, idx: pair ? [i, i + 1] : [i] }, score: hid * (layer === 'en' ? 1.6 : 1) - 1.2 });
+          }
+        }
+      }
+      if (c.r === 'J') {
+        // Pull a hidden storage card (or a known ace) into an exposed slot.
+        const open = [], covered = [];
+        D.st.forEach((cell, i) => {
+          if (exposed(D, 'st', i)) { if (!cell || (cell.up && !isAce(cell.c))) open.push(i); }
+          else if (cell && (!cell.up || isAce(cell.c))) covered.push(i);
+        });
+        for (const a of open) for (const b of covered) {
+          const s = D.st[b].up ? 30 : 1 + 8 * pAce;
+          out.push({ type: 'prog', card: c, t: { layer: 'st', a, b }, score: s - 1 });
+        }
+      }
+    }
+
+    // Nothing useful but something legal: a harmless hot swap, so the turn still has an action.
+    if (!out.length) {
+      const j = A.deck.find(c => c.r === 'J');
+      if (j) out.push({ type: 'prog', card: j, t: { layer: 'fw', a: 0, b: 5 }, score: -5 });
+      const q = A.deck.find(c => c.r === 'Q');
+      const qc = queenCells(D)[0];
+      if (q && qc) out.push({ type: 'prog', card: q, t: { layer: qc.layer, idx: [qc.i] }, score: -5 });
+    }
+    return out;
+  }
+
+  function aiChoose(A, D, ai) {
+    const c = aiCandidates(A, D, ai);
+    if (!c.length) return null;
+    if (Math.random() < ai.rand) return pickR(c);
+    let best = null, bs = -Infinity;
+    for (const x of c) {
+      const s = x.score + (Math.random() - 0.5) * ai.noise * 8;
+      if (s > bs) { bs = s; best = x; }
+    }
+    return best;
+  }
+
+  // What the AI is about to do, shown in the center line, and the cells it targets.
+  function teleFor(A, D, ch) {
+    const t = ch.t || {};
+    const cells = ch.type === 'fw' ? [['fw', ch.i]] : ch.type === 'st' ? [['st', ch.i]]
+      : ch.type === 'en' ? [] : ch.card.r === 'J' ? [[t.layer, t.a], [t.layer, t.b]]
+      : ch.card.r === 'Q' ? t.idx.map(i => [t.layer, i]) : [[t.layer, t.i]];
+    const what = ch.type === 'fw' ? `${cardStr(ch.card)} -> FIREWALL ${ch.i + 1}`
+      : ch.type === 'en' ? `${cardStr(ch.card)} -> UPLOAD`
+      : ch.type === 'st' ? `burn ${cardStr(ch.card)} -> STORAGE ${ch.i + 1}`
+      : `run ${cardStr(ch.card)} ${PROG[ch.card.r].name}`;
+    return { side: D.idx, cells, upload: ch.type === 'en', text: `${A.name} > ${what}` };
+  }
+
+  async function aiAction(A, D) {
+    const ai = A.idx === YOU ? AUTO_AI : M.opp.ai;
+    const ch = aiChoose(A, D, ai);
+    if (!ch) return null;
+    M.tele = teleFor(A, D, ch);
+    Sound.tick();
+    await pace(CONFIG.aiStep);
+    M.tele = null;
+    if (ch.type === 'fw') return doFirewall(A, D, ch.card, ch.i);
+    if (ch.type === 'st') return doStorage(A, D, ch.card, ch.i);
+    if (ch.type === 'prog') return doProgram(A, D, ch.card, ch.t);
+    await doUpload(A, D, ch.card);
+    // Flip the hidden exposed encryption card most likely to complete a 21.
+    const pool = aiPool(D, ai);
+    let bestI = -1, bestP = -1;
+    D.en.forEach((cell, i) => {
+      if (!cell || cell.up || !exposed(D, 'en', i)) return;
+      const base = comboItems(D);
+      const p = pool.filter(v => { const r = best21([...base, { v, w: 4, en: i }]); return r && r.pick.some(x => x.en === i); }).length / pool.length;
+      if (p > bestP) { bestP = p; bestI = i; }
+    });
+    if (bestI >= 0) await revealCell(D, 'en', bestI);
+    const r = best21(comboItems(D));
+    if (r) return doEncRemove(A, D, r.pick.map(x => x.en != null ? { en: x.en } : { up: x.up }));
+    log(`${A.name}: no 21`, C.mid);
+    await pace(300);
+    return false;
+  }
+
+  // How exposed a side's aces are (higher = worse for that side).
+  function danger(S) {
+    let d = 0;
+    S.st.forEach((cell, i) => {
+      if (!cell || !isAce(cell.c)) return;
+      let x = cell.up ? 6 : 0;
+      if (exposed(S, 'st', i)) x += 10;
+      else if (exposed(S, 'en', i)) x += 4 + (S.en[i].up ? 1 : 0);
+      else for (const f of [S.fw[i], S.fw[i + 1]]) x += f ? (f.up ? (10 - f.c.v) * 0.12 : 0.3) : 1;
+      d += x;
+    });
+    return d;
+  }
+
+  async function aiDefense(D, A, prog) {
+    await pace(CONFIG.aiStep * 0.7);
+    if (prog.r === 'J') {
+      let best = null, bd = danger(D) - 0.01;
+      for (const layer of LAYERS) {
+        const row = D[layer], n = row.length;
+        for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {
+          [row[a], row[b]] = [row[b], row[a]];
+          const d = danger(D);
+          [row[a], row[b]] = [row[b], row[a]];
+          if (d < bd) { bd = d; best = { layer, a, b }; }
+        }
+      }
+      if (best) { swapCells(D, best.layer, best.a, best.b); log(`${D.name}: hot swap ${LAYER_TAG[best.layer]} ${best.a + 1} <-> ${best.b + 1}`); await pace(400); }
+      else log(`${D.name}: lets it ride`, C.mid);
+      return;
+    }
+    if (prog.r === 'Q') {
+      // Look for your aces: the storage card closest to being exposed; else encryption pairs.
+      let target = null;
+      const st = A.st.map((cell, i) => ({ cell, i })).filter(x => x.cell && !x.cell.up);
+      st.sort((x, y) => (exposed(A, 'st', y.i) - exposed(A, 'st', x.i)) || (exposed(A, 'en', y.i) - exposed(A, 'en', x.i)));
+      if (st.length) target = { layer: 'st', idx: [st[0].i] };
+      else for (const layer of ['en', 'fw']) {
+        const row = A[layer];
+        for (let i = 0; i < row.length - 1 && !target; i++) if (row[i] && row[i + 1] && (!row[i].up || !row[i + 1].up)) target = { layer, idx: [i, i + 1] };
+        if (target) break;
+      }
+      if (!target) { log(`${D.name}: nothing left to query`, C.mid); return; }
+      log(`${D.name}: query ${LAYER_NAME[target.layer]} ${target.idx.map(i => i + 1).join('+')}`);
+      for (const i of target.idx) await revealCell(A, target.layer, i);
+      return;
+    }
+    // K: patch the spot that best protects the aces.
+    const cards = [...D.disc, ...D.deck];
+    let best = null;
+    for (const layer of LAYERS) for (let i = 0; i < D[layer].length; i++) {
+      const saved = D[layer][i];
+      if (saved && isAce(saved.c)) continue;
+      const legal = cards.filter(c => canPatch(c, layer));
+      const rep = layer === 'st' ? (legal.find(c => c.r === 'J') || legal.find(isProg) || null)
+        : legal.filter(isData).sort((a, b) => b.v - a.v)[0] || null;
+      D[layer][i] = rep ? { c: rep, up: false, held: [] } : null;
+      let score = -danger(D);
+      D[layer][i] = saved;
+      if (saved && saved.c === prog) score += 1.5;
+      if (saved && saved.up && isProg(saved.c) && rep) score += 0.5;
+      if (rep && D.deck.includes(rep)) score -= util(rep) * 0.08;
+      if (!saved && !rep) score -= 1;
+      if (saved && rep === null) score -= 0.3;
+      score += Math.random() * 0.1;
+      if (!best || score > best.score) best = { score, layer, i, rep };
+    }
+    if (!best) return;
+    const cell = D[best.layer][best.i];
+    if (cell) takeOut(D, best.layer, best.i, isProg(cell.c) || cell.c.v >= 6 ? 'deck' : 'disc');
+    if (best.rep) placeCard(D, best.layer, best.i, best.rep);
+    log(`${D.name}: patched ${LAYER_NAME[best.layer]} ${best.i + 1}`);
+    await pace(400);
+  }
+
+
+  // ---------------- Drawing cards ----------------
+  // A card is 5 x 3 characters:  +---+   back: +---+   empty slot: .   .
+  //                              | 7♥|         |///|
+  //                              +---+         +---+               '   '
+  // look: up (face up) | back (their hidden card) | own (your hidden card: you know it) | dim
+  function drawCard(put, x, y, card, look, now = 0, t0 = 0, frameCol = null) {
+    if (look === 'back') {
+      const fc = frameCol || C.mid;
+      put(x, y, '+---+', fc); put(x, y + 2, '+---+', fc);
+      put(x, y + 1, '|', fc); put(x + 4, y + 1, '|', fc);
+      put(x + 1, y + 1, '///', C.dim, false, true);
+      return;
+    }
+    const flipping = now && now - t0 < CONFIG.flipMs;
+    const fc = frameCol || (flipping ? C.cyan : look === 'up' ? C.text : C.mid);
+    put(x, y, '+---+', fc); put(x, y + 2, '+---+', fc);
+    put(x, y + 1, '|', fc); put(x + 4, y + 1, '|', fc);
+    if (flipping) { put(x + 1, y + 1, noiseCh() + noiseCh() + noiseCh(), C.cyan, false, true); return; }
+    const lab = label3(card);
+    const bright = look === 'up';
+    put(x + 1, y + 1, lab.slice(0, 2), bright ? C.bright : look === 'dim' ? C.mid : C.text, bright, true);
+    put(x + 3, y + 1, lab[2], bright ? suitCol(card) : C.mid, bright, true);
+  }
+  function drawSlot(put, x, y) {
+    put(x, y, '.   .', C.dim);
+    put(x, y + 2, "'   '", C.dim);
+  }
+
+  function cardInfo(c) {
+    if (isAce(c)) return `${cardStr(c)} TARGET: keep it hidden. lose both and you lose`;
+    if (isProg(c)) return `${cardStr(c)} ${PROG[c.r].name}: ${PROG[c.r].atk}`;
+    return `${cardStr(c)} DATA ${c.v}`;
+  }
+  function cellInfo(side, layer, i) {
+    const S = M.s[side], cell = S[layer][i];
+    const where = `${side === YOU ? 'YOUR' : 'THEIR'} ${LAYER_TAG[layer]}${i + 1}`;
+    if (!cell) return `${where}: empty`;
+    const ex = exposed(S, layer, i) ? 'exposed' : 'covered';
+    const known = side === YOU || cell.up;
+    let s = `${where}: ${known ? cardStr(cell.c) : 'face down'} ${ex}${side === YOU ? (cell.up ? ', revealed' : ', hidden') : ''}`;
+    if (known && isProg(cell.c)) s += ` // ${PROG[cell.c.r].name}`;
+    if (cell.held.length) s += ` // held ${cell.held.map(cardStr).join('+')} = ${sum(cell.held)}`;
+    return s;
+  }
+
+  // ---------------- What you can tap right now ----------------
+  // Built every frame from the UI phase: tappable cells, uploads, deck cards, buttons.
+  const cellId = (side, layer, i) => `c:${side}:${layer}:${i}`;
+  function uiTargets() {
+    const T = { cells: new Map(), ups: new Map(), upBox: null, hand: new Map(), btns: [], hint: '', sel: new Set(), handList: null, center: null };
+    if (!M) return T;
+    if (st.mode === 'setup') return setupTargets(T);
+    const ui = M.ui;
+    if (!ui || M.over) return T;
+    const me = M.s[YOU], op = M.s[AI];
+    const done = v => finish(v);
+    ui.picks.forEach(p => T.sel.add(p.id));
+    const pickCell = (side, layer, i) => ({ id: cellId(side, layer, i), layer, i });
+    // Two positions in one layer (hot swap). empty = empty positions count.
+    const pairTargets = (side, onDone) => {
+      const S = M.s[side], first = ui.picks[0];
+      for (const layer of LAYERS) for (let i = 0; i < LAYER_N[layer]; i++) {
+        if (first && (first.layer !== layer || first.i === i)) continue;
+        T.cells.set(cellId(side, layer, i), () => {
+          if (!first) { ui.picks.push(pickCell(side, layer, i)); Sound.tick(); }
+          else onDone({ layer, a: first.i, b: i });
+        });
+      }
+      return S;
+    };
+    // One card, or two side by side in one layer (query). ok(layer, i) says which count.
+    const queryTargets = (side, ok, singleLayers, onDone) => {
+      const S = M.s[side], first = ui.picks[0];
+      for (const layer of LAYERS) for (let i = 0; i < LAYER_N[layer]; i++) {
+        if (!S[layer][i] || !ok(layer, i)) continue;
+        if (first && (first.layer !== layer || Math.abs(first.i - i) !== 1)) continue;
+        T.cells.set(cellId(side, layer, i), () => {
+          if (first) return onDone({ layer, idx: [first.i, i].sort((a, b) => a - b) });
+          if (singleLayers.includes(layer)) return onDone({ layer, idx: [i] });
+          ui.picks.push(pickCell(side, layer, i)); Sound.tick();
+        });
+      }
+      if (first) T.btns.push({ text: '[REVEAL 1]', fn: () => onDone({ layer: first.layer, idx: [first.i] }) });
+    };
+
+    switch (ui.phase) {
+      case 'pick': {
+        for (const c of me.deck) if (usable(me, op, c)) T.hand.set(c.id, () => { ui.sel = ui.sel === c ? null : c; ui.mode = null; ui.picks = []; Sound.tick(); });
+        const c = ui.sel;
+        T.center = M.again ? '>> BREACH! ACT AGAIN <<' : '>> YOUR MOVE <<';
+        if (!c) { T.hint = 'pick an attack card from your deck'; break; }
+        T.sel.add('h:' + c.id);
+        const back = () => { ui.mode = null; ui.picks = []; Sound.tick(); };
+        if (!ui.mode) {
+          const u = cardUses(me, op, c);
+          if (u.fw) op.fw.forEach((cell, i) => { if (cell) T.cells.set(cellId(AI, 'fw', i), () => done({ type: 'fw', card: c, i })); });
+          if (u.en) T.upBox = () => done({ type: 'en', card: c });
+          if (u.st) storageTargets(op).forEach(i => T.cells.set(cellId(AI, 'st', i), () => done({ type: 'st', card: c, i })));
+          if (u.run) T.btns.push({ text: `[RUN ${PROG[c.r].name}]`, fn: () => { ui.mode = c.r; ui.picks = []; Sound.tick(); } });
+          T.btns.push({ text: '[CANCEL]', fn: () => { ui.sel = null; Sound.tick(); } });
+          const opts = [u.fw && 'hit a firewall card', u.en && 'upload it', u.st && 'burn it on exposed storage'].filter(Boolean);
+          T.hint = isProg(c) ? `${PROG[c.r].name}: ${PROG[c.r].atk}` : opts.join(', ');
+        } else if (ui.mode === 'J') {
+          pairTargets(AI, t => done({ type: 'prog', card: c, t }));
+          T.hint = ui.picks.length ? 'pick a second position in the same layer' : 'HOT SWAP: pick a position on their server';
+          T.btns.push({ text: '[BACK]', fn: back });
+        } else if (ui.mode === 'Q') {
+          queryTargets(AI, (layer, i) => exposed(op, layer, i), ['st'], t => done({ type: 'prog', card: c, t }));
+          T.hint = ui.picks.length ? 'pick an adjacent exposed card, or reveal just one' : 'QUERY: pick an exposed card to reveal';
+          T.btns.push({ text: '[BACK]', fn: back });
+        } else if (ui.mode === 'K') {
+          kingCells(op).forEach(({ layer, i }) => T.cells.set(cellId(AI, layer, i), () => done({ type: 'prog', card: c, t: { layer, i } })));
+          T.hint = 'PATCH: remove a firewall card or an exposed encryption card';
+          T.btns.push({ text: '[BACK]', fn: back });
+        }
+        break;
+      }
+      case 'encReveal':
+        op.en.forEach((cell, i) => { if (cell && !cell.up && exposed(op, 'en', i)) T.cells.set(cellId(AI, 'en', i), () => done(i)); });
+        T.btns.push({ text: '[SKIP]', fn: () => done(null) });
+        T.center = '>> FLIP AN ENCRYPTION CARD <<';
+        T.hint = 'you may flip one exposed encryption card';
+        break;
+      case 'encCombo': {
+        const total = ui.picks.reduce((s, p) => s + p.v, 0);
+        const toggle = p => () => {
+          const k = ui.picks.findIndex(x => x.id === p.id);
+          if (k >= 0) ui.picks.splice(k, 1); else ui.picks.push(p);
+          Sound.tick();
+        };
+        op.uploads.forEach(c => T.ups.set(c.id, toggle({ id: 'u:' + c.id, v: c.v, up: c })));
+        op.en.forEach((cell, i) => { if (cell && cell.up && exposed(op, 'en', i)) T.cells.set(cellId(AI, 'en', i), toggle({ id: cellId(AI, 'en', i), v: cell.c.v, en: i })); });
+        T.btns.push({ text: `[CRACK ${total}/21]`, disabled: total !== 21, fn: () => done(ui.picks.map(p => p.up ? { up: p.up } : { en: p.en })) });
+        T.btns.push({ text: '[END TURN]', fn: () => done([]) });
+        T.center = '>> MAKE 21 <<';
+        T.hint = 'pick uploads + face-up exposed encryption cards that total 21';
+        break;
+      }
+      case 'defJ':
+        pairTargets(YOU, t => done(t));
+        T.btns.push({ text: '[SKIP]', fn: () => done(null) });
+        T.center = '!! HONEYPOT: HOT SWAP !!';
+        T.hint = ui.picks.length ? 'pick a second position in the same layer' : 'swap two positions in one layer of your server';
+        break;
+      case 'defQ':
+        queryTargets(AI, () => true, ['st'], t => done(t));
+        T.btns.push({ text: '[SKIP]', fn: () => done(null) });
+        T.center = '!! HONEYPOT: QUERY !!';
+        T.hint = ui.picks.length ? 'pick an adjacent card, or reveal just one' : 'reveal a card on their server';
+        break;
+      case 'defK1':
+        for (const layer of LAYERS) me[layer].forEach((cell, i) => { if (!(cell && isAce(cell.c))) T.cells.set(cellId(YOU, layer, i), () => done({ layer, i })); });
+        T.btns.push({ text: '[SKIP]', fn: () => done(null) });
+        T.center = '!! HONEYPOT: PATCH !!';
+        T.hint = 'pick a position on your server (not an ace)';
+        break;
+      case 'defK2': {
+        const c = me[ui.pos.layer][ui.pos.i].c;
+        T.sel.add(cellId(YOU, ui.pos.layer, ui.pos.i));
+        T.btns.push({ text: '[TO DECK]', fn: () => done('deck') });
+        T.btns.push({ text: '[DISCARD]', fn: () => done('disc') });
+        T.center = '!! HONEYPOT: PATCH !!';
+        T.hint = `send ${cardStr(c)} to your attack deck or your discard pile`;
+        break;
+      }
+      case 'defK3': {
+        const { layer, i } = ui.pos;
+        T.sel.add(cellId(YOU, layer, i));
+        const deck = sortHand(me.deck.filter(c => canPatch(c, layer)));
+        const disc = sortHand(me.disc.filter(c => canPatch(c, layer)));
+        T.handList = [...deck, ...disc];
+        T.discFrom = deck.length;
+        T.handList.forEach(c => T.hand.set(c.id, () => done(c)));
+        T.btns.push({ text: '[LEAVE EMPTY]', fn: () => done(null) });
+        T.center = '!! HONEYPOT: PATCH !!';
+        T.hint = T.handList.length ? 'fill the slot from your deck or discard (dim)' : 'no card fits there';
+        break;
+      }
+    }
+    return T;
+  }
+
+  // ---------------- Match board ----------------
+  function buildMatch(ctx) {
+    const { now, put, putC, putR, bg, addHit } = ctx;
+    const T = uiTargets();
+    const pulse = (Math.sin(now / 260) + 1) / 2;
+    const setup = st.mode === 'setup';
+
+    // Header
+    put(0, 0, 'HACKJACK', C.cyan, true);
+    put(10, 0, '[MENU]', st.overlay ? C.cyan : C.mid);
+    addHit(10, 0, 6, 1, { kind: 'btn', id: 'menu', onTap: openPause, noFocus: true });
+    const idx = OPPS.indexOf(M.opp);
+    putR(0, `${pad2(idx + 1)}/${pad2(OPPS.length)} ${M.opp.name}`, M.opp.boss ? C.red : C.mid);
+    put(0, 1, rule(WC), C.dim);
+
+    for (const side of [AI, YOU]) drawSideInfo(ctx, side);
+    if (st.msg) put(0, 3, st.msg.slice(0, Math.floor((now - st.msgT) / 14)).slice(0, WC), st.msgCol || C.text);
+
+    for (const side of [AI, YOU]) drawServer(ctx, side, T, pulse, setup);
+
+    // Center line
+    const cy = CENTER_Y;
+    const bn = M.banner, bAge = bn ? now - bn.t0 : 1e9;
+    if (setup) {
+      const txt = '[ L O C K   I N ]';
+      const x = Math.floor((WC - txt.length) / 2);
+      bg(x, cy, txt.length, C.cyan, 0.15 + 0.15 * pulse);
+      put(x, cy, txt, C.bright, true);
+      addHit(x, cy, txt.length, 1, { kind: 'btn', id: 'lock', onTap: lockIn, info: 'start the match with this server' });
+    } else {
+      put(0, cy, 'T' + pad2(M.turnNo), C.dim);
+      let text = '', col = C.mid;
+      if (M.ping) {
+        const p = M.ping, rolling = !p.done;
+        const a = rolling ? noiseCh() + noiseCh() : cardStr(p.mine), b = rolling ? noiseCh() + noiseCh() : cardStr(p.theirs);
+        text = `PING  you drew ${a}  //  they drew ${b}`;
+        col = C.cyan;
+      } else if (M.tele) { text = M.tele.text; col = C.bright; }
+      else if (bAge < CONFIG.bannerMs) {
+        text = bn.side === YOU ? '>>  YOUR TURN  <<' : `<<  ${M.opp.name}'S TURN  >>`;
+        col = bn.side === YOU ? C.cyan : C.red;
+        bg(0, cy, WC, col, 0.25 * (1 - bAge / CONFIG.bannerMs));
+      } else if (T.center) { text = T.center; col = Math.floor(now / 450) % 2 ? C.cyan : C.bright; }
+      else if (M.turn === AI && !M.over) { text = `.. ${M.opp.name} ..`; col = C.mid; }
+      if (text) putC(cy, text.slice(0, WC - 8), col, true);
+      if (M.turn === AI && !M.over && !M.ping && M.ui.phase === 'wait') putR(cy, st.ff ? '>>>' : 'tap >>', C.dim);
+    }
+
+    drawHand(ctx, T, setup);
+
+    // Buttons
+    if (setup) T.btns = setupButtons();
+    if (T.btns.length) {
+      const w = T.btns.reduce((s, b) => s + b.text.length, 0) + (T.btns.length - 1) * 2;
+      let x = Math.floor((WC - w) / 2);
+      for (const b of T.btns) {
+        if (b.sel) bg(x, BTN_Y, b.text.length, C.cyan, 0.25);
+        put(x, BTN_Y, b.text, b.disabled ? C.dim : b.sel ? C.cyan : C.bright);
+        if (!b.disabled) addHit(x, BTN_Y, b.text.length, 1, { kind: 'btn', id: 'b:' + b.text, onTap: b.fn, info: b.info });
+        x += b.text.length + 2;
+      }
+    }
+
+    // Info line: what's under the pointer, else the hint.
+    const info = ctx.hoverInfo || T.hint;
+    if (info) putC(HINT_Y, info.slice(0, WC), ctx.hoverInfo ? C.text : C.mid);
+    put(0, HC - 1, setup ? 'setup' : `you ${M.s[YOU].stolen.length}/2  them ${M.s[AI].stolen.length}/2`, C.dim);
+    putR(HC - 1, `hackjack ${VERSION}`, C.dim);
+  }
+
+  function drawSideInfo(ctx, side) {
+    const { put, putR, addHit } = ctx;
+    const S = M.s[side], y = INFO_ROW[side];
+    const name = side === YOU ? 'YOU' : M.opp.name;
+    put(0, y, name, side === YOU ? C.red : C.cyan, true);
+    let x = name.length + 1;
+    S.suits.forEach((s, k) => put(x + k, y, s, isRedSuit(s) ? C.red : C.bright));
+    x += 4;
+    const deck = `deck ${pad2(S.deck.length)}`, disc = `disc ${pad2(S.disc.length)}`;
+    put(x, y, deck, C.mid);
+    addHit(x, y, deck.length, 1, { kind: 'info', id: 'deck' + side, info: side === YOU ? `your attack deck: ${S.deck.length} cards` : `their attack deck: ${S.deck.length} cards, face down` });
+    x += deck.length + 2;
+    put(x, y, disc, C.mid);
+    addHit(x, y, disc.length, 1, { kind: 'info', id: 'disc' + side, info: S.disc.length ? `discard: ${sortHand(S.disc).map(cardStr).join(' ')}` : 'discard: empty' });
+    // Loot: the aces this side has downloaded.
+    const slots = [0, 1].map(k => S.stolen[k]);
+    let rx = WC - 10;
+    put(rx - 5, y, 'LOOT', C.dim);
+    slots.forEach((c, k) => {
+      const sx = rx + k * 5;
+      if (c) { put(sx, y, '[', C.gold); put(sx + 1, y, cardStr(c), suitCol(c), true); put(sx + 3, y, ']', C.gold); }
+      else put(sx, y, '[  ]', C.dim);
+    });
+  }
+
+  function drawServer(ctx, side, T, pulse, setup) {
+    const { now, put, bg, addHit } = ctx;
+    const S = M.s[side], R = ROWS[side];
+    const tele = M.tele && M.tele.side === side ? M.tele : null;
+    const sw = M.swapFx && M.swapFx.side === side && now - M.swapFx.t0 < 350 ? M.swapFx : null;
+    for (const layer of LAYERS) {
+      const y = R[layer];
+      put(0, y + 1, LAYER_TAG[layer], C.dim);
+      for (let i = 0; i < LAYER_N[layer]; i++) {
+        const x = posX(layer, i), cell = S[layer][i];
+        const id = cellId(side, layer, i);
+        const fn = T.cells.get(id);
+        const picked = T.sel.has(id);
+        if (picked) bg(x, y, 5, C.cyan, 0.4, 3);
+        else if (fn && !T.quiet) bg(x, y, 5, C.cyan, 0.1 + 0.12 * pulse, 3);
+        if (tele && tele.cells.some(([l, k]) => l === layer && k === i)) bg(x, y, 5, C.red, 0.18 + 0.2 * pulse, 3);
+        if (sw && sw.layer === layer && (sw.a === i || sw.b === i)) {
+          for (let r = 0; r < 3; r++) put(x, y + r, noiseCh() + noiseCh() + noiseCh() + noiseCh() + noiseCh(), C.cyan);
+        } else if (cell) {
+          const look = cell.up ? 'up' : side === AI ? 'back' : 'own';
+          drawCard(put, x, y, cell.c, look, now, cell.t, picked ? C.cyan : null);
+          if (cell.incoming) put(x + 1, side === AI ? y + 3 : y - 1, cardStr(cell.incoming), suitCol(cell.incoming), true);
+        } else drawSlot(put, x, y);
+        addHit(x, y, 5, 3, { kind: fn ? 'btn' : 'info', id, onTap: fn, info: setup ? (cell ? `${cardInfo(cell.c)} // tap to swap` : '') : cellInfo(side, layer, i), noMark: true });
+      }
+    }
+    // Held attack cards on the firewall, shown as their total.
+    S.fw.forEach((cell, i) => {
+      if (!cell || !cell.held.length) return;
+      const s = '+' + sum(cell.held);
+      put(posX('fw', i) + Math.floor((5 - s.length) / 2), R.held, s, side === AI ? C.red : C.bright, true);
+    });
+    if (!setup) drawUploads(ctx, side, T, pulse);
+  }
+
+  function drawUploads(ctx, side, T, pulse) {
+    const { put, bg, addHit } = ctx;
+    const S = M.s[side], y = ROWS[side].en, x = UPX;
+    const fn = side === AI ? T.upBox : null;
+    const tele = M.tele && M.tele.side === side && M.tele.upload;
+    if (fn) bg(x - 1, y, 13, C.cyan, 0.1 + 0.12 * pulse, 3);
+    if (tele) bg(x - 1, y, 13, C.red, 0.18 + 0.2 * pulse, 3);
+    put(x, y, 'UPLOAD', fn ? C.cyan : C.dim);
+    if (S.uploads.length) { const t = 'Σ' + sum(S.uploads); put(x + 12 - t.length, y, t, C.mid); }
+    addHit(x - 1, y, 13, 3, { kind: fn ? 'btn' : 'info', id: 'ub:' + side, onTap: fn, info: `upload area: ${S.uploads.length ? S.uploads.map(cardStr).join(' ') : 'empty'}`, noMark: true });
+    if (!S.uploads.length) put(x, y + 1, '. . .', C.dim);
+    S.uploads.slice(0, 6).forEach((c, k) => {
+      const { cx, cy } = uploadXY(side, k);
+      const id = 'u:' + c.id, tf = T.ups.get(c.id);
+      if (T.sel.has(id)) bg(cx, cy, 3, C.cyan, 0.45);
+      else if (tf) bg(cx, cy, 3, C.cyan, 0.12 + 0.12 * pulse);
+      put(cx, cy, cardStr(c), suitCol(c), true);
+      addHit(cx, cy, 3, 1, { kind: tf ? 'btn' : 'info', id, onTap: tf, info: `uploaded ${cardStr(c)} (${c.owner === YOU ? 'yours' : 'theirs'})`, noMark: true });
+    });
+    if (S.uploads.length > 6) put(x + 9, y + 2, '+' + (S.uploads.length - 6), C.mid);
+  }
+
+  function drawHand(ctx, T, setup) {
+    const { now, put, putC, addHit } = ctx;
+    const me = M.s[YOU];
+    const list = T.handList || sortHand(me.deck);
+    const n = list.length;
+    if (!n) { putC(HAND_Y + 1, T.handList ? '-- nothing fits --' : '-- attack deck empty --', C.dim); return; }
+    const step = n <= 13 ? 4 : Math.max(2, Math.floor((WC - 6) / (n - 1)));
+    const w = step * (n - 1) + 5;
+    const x0 = Math.floor((WC - w) / 2);
+    const picking = M.ui && M.ui.phase === 'pick';
+    const order = list.map((c, k) => k);
+    const selK = list.findIndex(c => T.sel.has('h:' + c.id));
+    if (selK >= 0) { order.splice(selK, 1); order.push(selK); }   // the lifted card draws on top
+    for (const k of order) {
+      const c = list[k];
+      const id = 'h:' + c.id;
+      const fn = T.hand.get(c.id);
+      const sel = T.sel.has(id);
+      const fromDisc = T.discFrom != null && k >= T.discFrom;
+      const y = HAND_Y - (sel ? 1 : 0);
+      const x = x0 + k * step;
+      const live = setup || fn || !picking;
+      drawCard(put, x, y, c, live && !fromDisc ? 'up' : 'dim', 0, 0, sel ? C.cyan : null);
+      addHit(x, y, k === n - 1 || sel ? 5 : step, sel ? 4 : 3, { kind: fn ? 'btn' : 'info', id, onTap: fn, info: setup ? `${cardInfo(c)} // tap to swap` : cardInfo(c) + (fromDisc ? ' (from discard)' : ''), noMark: true });
+    }
+  }
+
+
+  // ---------------- Setup ----------------
+  // Your server starts from a build; tap two cards to swap them (if both fit their new spots).
+  const setupFits = (c, where) => where === 'fw' || where === 'en' ? isData(c) : where === 'st' ? (isAce(c) || isProg(c)) : !isAce(c);
+  function setupCard(loc) {
+    const me = M.s[YOU];
+    return loc.layer === 'deck' ? loc.card : me[loc.layer][loc.i].c;
+  }
+  function setupTap(loc) {
+    const me = M.s[YOU], a = st.setupSel;
+    if (!a) { st.setupSel = loc; Sound.tick(); return; }
+    st.setupSel = null;
+    if (a.id === loc.id) { Sound.tick(); return; }
+    const ca = setupCard(a), cb = setupCard(loc);
+    if (!setupFits(ca, loc.layer) || !setupFits(cb, a.layer)) {
+      Sound.deny();
+      setMsg(`${cardStr(isAce(ca) || isAce(cb) ? (isAce(ca) ? ca : cb) : ca)} can't go there`, C.red);
+      return;
+    }
+    const put = (l, c) => { if (l.layer === 'deck') me.deck[me.deck.indexOf(l.card)] = c; else me[l.layer][l.i].c = c; };
+    put(a, cb); put(loc, ca);
+    Sound.swap();
+    setMsg(`swapped ${cardStr(ca)} and ${cardStr(cb)}`, C.cyan);
+  }
+  function setupTargets(T) {
+    const me = M.s[YOU];
+    if (st.setupSel) T.sel.add(st.setupSel.id);
+    for (const layer of LAYERS) me[layer].forEach((cell, i) => {
+      const id = cellId(YOU, layer, i);
+      T.cells.set(id, () => setupTap({ id, layer, i }));
+    });
+    me.deck.forEach(c => T.hand.set(c.id, () => setupTap({ id: 'h:' + c.id, layer: 'deck', card: c })));
+    T.quiet = true;
+    T.hint = 'FW/EN take data 2-10 // ST takes aces + programs';
+    return T;
+  }
+  function setupButtons() {
+    const b = (text, style) => ({ text, sel: st.setupStyle === style, fn: () => { layoutServer(M.s[YOU], style); st.setupStyle = style; st.setupSel = null; Sound.deal(); setMsg(`${style} build`, C.cyan); },
+      info: { balanced: 'strength spread across firewall, encryption and deck', fortress: 'best cards in the firewall, weak attack deck', aggro: 'best cards in your attack deck', random: 'shuffle everything' }[style] });
+    return [b('[BALANCED]', 'balanced'), b('[FORTRESS]', 'fortress'), b('[AGGRO]', 'aggro'), b('[RANDOM]', 'random')];
+  }
+  function startSetup(opp) {
+    st.opp = opp;
+    M = newMatch(opp);
+    layoutServer(M.s[YOU], 'balanced');
+    layoutServer(M.s[AI], opp.ai.setup);
+    st.setupStyle = 'balanced'; st.setupSel = null;
+    st.mode = 'setup';
+    scenePalette();
+    setMsg('build your server: tap two cards to swap them', C.text);
+  }
+  function lockIn() {
+    swapTo(() => {
+      st.mode = 'match';
+      setMsg(`connecting to ${M.opp.name}...`, C.mid);
+      runMatch();
+    }, 1);
+  }
+
+  // ---------------- Text screens ----------------
+  // Lines: { text, col, bold, colorAt, left } | { box, text, sub, id, onTap } | { row: [buttons], gap }
+  //        | { text, id, onTap } (button) | { list, name, right, id, onTap } | { cards: [card|null], look }
+  const HX = 2, HELP_W = 50;
+  function buildTextBoard(ctx, lines) {
+    const { now, put, bg, addHit } = ctx;
+    const hOf = ln => ln.box ? (ln.sub ? 4 : 3) : ln.cards ? 3 : 1;
+    const total = lines.reduce((s, ln) => s + hOf(ln), 0);
+    let y = Math.max(0, Math.floor((HC - 1 - total) / 2));
+    const btnCol = b => b.disabled ? C.dim : b.sel ? C.cyan : b.col || C.bright;
+    for (const ln of lines) {
+      if (ln.box) drawBox(ctx, y, ln);
+      else if (ln.cards) {
+        let x = Math.floor((WC - (ln.cards.length * 6 - 1)) / 2);
+        for (const c of ln.cards) { if (c) drawCard(put, x, y, c, ln.look || 'up'); else drawSlot(put, x, y); x += 6; }
+      } else if (ln.list) {
+        const LW = 34, x = Math.floor((WC - LW) / 2);
+        if (ln.sel) put(x - 2, y, '>', C.cyan, true);
+        put(x + 1, y, ln.name, ln.faded ? C.mid : (ln.col || C.bright));
+        if (ln.right) put(x + LW - 1 - ln.right.length, y, ln.right, ln.faded ? C.dim : (ln.rightCol || C.mid));
+        if (ln.id) addHit(x, y, LW, 1, { kind: ln.onTap ? 'btn' : 'info', id: ln.id, onTap: ln.onTap, info: ln.info });
+      } else if (ln.row) {
+        const gap = ln.gap != null ? ln.gap : 2;
+        const w = ln.row.reduce((s, b) => s + b.text.length, 0) + (ln.row.length - 1) * gap;
+        let x = Math.floor((WC - w) / 2);
+        for (const b of ln.row) {
+          if (!b.id) put(x, y, b.text, b.col || C.dim);
+          else {
+            if (b.sel) bg(x, y, b.text.length, C.cyan, 0.22);
+            put(x, y, b.text, btnCol(b), !!b.sel);
+            if (!b.disabled) addHit(x, y, b.text.length, 1, { kind: 'btn', id: b.id, onTap: b.onTap });
+          }
+          x += b.text.length + gap;
+        }
+      } else if (ln.id) {
+        const x = Math.floor((WC - ln.text.length) / 2);
+        put(x, y, ln.text, btnCol(ln));
+        if (!ln.disabled) addHit(x, y, ln.text.length, 1, { kind: 'btn', id: ln.id, onTap: ln.onTap });
+      } else if (ln.text) {
+        const x = ln.left ? HX : Math.floor((WC - ln.text.length) / 2);
+        if (ln.colorAt) { for (let i = 0; i < ln.text.length; i++) if (ln.text[i] !== ' ') put(x + i, y, ln.text[i], ln.colorAt(i), !!ln.bold); }
+        else put(x, y, ln.text, ln.col || C.text, !!ln.bold);
+      }
+      y += hOf(ln);
+    }
+  }
+
+  function drawBox(ctx, y, ln) {
+    const { now, put, addHit } = ctx;
+    const label = ln.text, sub = ln.sub || '';
+    const w = Math.max(ln.minW || 24, Math.max(label.length, sub.length) + 8);
+    const x = Math.floor((WC - w) / 2);
+    const h = sub ? 4 : 3;
+    const pulse = (Math.sin(now / 420) + 1) / 2;
+    const fcol = C.cyan, lcol = pulse > 0.85 ? C.bright : C.cyan;
+    let edge = '+' + '='.repeat(w - 2) + '+';
+    if (((now / 1000 + y * 0.37) % 3.2) < 0.07) {
+      const i = 1 + Math.floor(Math.random() * (w - 2));
+      edge = edge.slice(0, i) + noiseCh() + edge.slice(i + 1);
+    }
+    put(x, y, edge, fcol, true);
+    for (let r = 1; r < h - 1; r++) { put(x, y + r, '|', fcol, true); put(x + w - 1, y + r, '|', fcol, true); }
+    put(x + Math.floor((w - label.length) / 2), y + 1, label, lcol, true);
+    if (sub) put(x + Math.floor((w - sub.length) / 2), y + 2, sub, C.mid);
+    put(x, y + h - 1, '+' + '='.repeat(w - 2) + '+', fcol, true);
+    addHit(x, y, w, h, { kind: 'btn', id: ln.id, onTap: ln.onTap });
+  }
+
+  // Title art: two aces, red over black, with live bits.
+  const CARD_ART = [
+    '+-----------+',
+    '|A          |',
+    '|S  .---.   |',
+    '|  / b b \\  |',
+    '|  | b b |  |',
+    '|  \\ b b /  |',
+    "|   '---'  S|",
+    '|          A|',
+    '+-----------+',
+  ];
+  function coverLines(now) {
+    const W2 = 13 + 8, H2 = CARD_ART.length + 1;
+    const grid = Array.from({ length: H2 }, () => Array(W2).fill(null));
+    const stamp = (ox, oy, suit, col) => CARD_ART.forEach((row, r) => [...row].forEach((ch, c) => {
+      let out = ch === 'S' ? suit : ch === 'b' ? (Math.random() < 0.02 || ((now / 300 + r * 3 + c) | 0) % 7 === 0 ? '1' : '0') : ch;
+      grid[oy + r][ox + c] = { ch: out, col: ch === 'S' || ch === 'A' ? col : ch === 'b' ? C.cyan : '|+-'.includes(ch) ? C.mid : C.text };
+    }));
+    stamp(8, 0, '♠', C.bright);
+    stamp(0, 1, '♥', C.red);
+    const glitch = (now / 1000 % 3.3) < 0.1 ? Math.floor(now / 50) % H2 : -1;
+    return grid.map((row, r) => {
+      const text = row.map(x => x ? (r === glitch && Math.random() < 0.3 ? noiseCh() : x.ch) : ' ').join('');
+      return { text, colorAt: i => row[i] ? row[i].col : C.dim };
+    });
+  }
+  const LOGO = (() => {
+    const H = [' _  _ ', '| || |', '| __ |', '|_||_|'];
+    const A = ['   _   ', '  /_\\  ', ' / _ \\ ', '/_/ \\_\\'];
+    const Cc = ['  ___ ', ' / __|', '| (__ ', ' \\___|'];
+    const K = [' _  __', '| |/ /', "| ' < ", '|_|\\_\\'];
+    const J = ['    _ ', ' _ | |', '| || |', ' \\__/ '];
+    return [0, 1, 2, 3].map(k => H[k] + A[k] + Cc[k] + K[k] + J[k] + A[k] + Cc[k] + K[k]);
+  })();
+
+  function totals() {
+    const w = save.matches.filter(m => m.win).length;
+    return { w, l: save.matches.length - w };
+  }
+
+  function titleLines(now) {
+    const lines = [];
+    const T = (text, col = C.text, extra = {}) => lines.push(Object.assign({ text, col }, extra));
+    lines.push(...coverLines(now));
+    T('');
+    LOGO.forEach((l, i) => {
+      let s = l;
+      if (((now / 1000 + i * 0.9) % 4.5) < 0.09) s = s.replace(/[^ ]/g, ch => Math.random() < 0.3 ? noiseCh() : ch);
+      lines.push({ text: s, bold: true, colorAt: k => k < 25 ? C.red : C.cyan });
+    });
+    T('server intrusion // one deck // red vs black', C.dim);
+    T('');
+    lines.push({ box: true, text: 'J A C K   I N', sub: '- the ladder -', id: 'start', onTap: () => swapTo(showLadder), minW: 26 });
+    T('');
+    lines.push({ row: [
+      { text: '[ HOW TO PLAY ]', id: 'help', onTap: () => swapTo(() => { st.helpPage = 0; st.mode = 'help'; }) },
+      { text: '[ STATS ]', id: 'stats', onTap: () => swapTo(() => { st.mode = 'stats'; }) },
+      { text: '[ SETTINGS ]', id: 'settings', onTap: () => swapTo(() => { st.mode = 'settings'; }) },
+    ] });
+    T('');
+    const t = totals();
+    T(`ladder ${Math.min(save.unlocked, OPPS.length)}/${OPPS.length}${save.unlocked > OPPS.length ? ' CLEARED' : ''}   won ${t.w}   lost ${t.l}`, C.mid);
+    return lines;
+  }
+
+  function showLadder() { st.mode = 'ladder'; st.opp = null; scenePalette(); }
+  function ladderLines() {
+    const lines = [];
+    const T = (text, col = C.text, extra = {}) => lines.push(Object.assign({ text, col }, extra));
+    T('THE LADDER', C.cyan, { bold: true });
+    T('beat a hacker to unlock the next one', C.dim);
+    T('');
+    let hov = null;
+    OPPS.forEach((o, k) => {
+      const open = k < save.unlocked, r = recordOf(o.key), id = 'opp' + k;
+      if (st.hoverId === id) hov = o;
+      lines.push({ list: true, id, name: `${pad2(k + 1)}  ${open ? o.name : '?????'}`, faded: !open, col: o.boss && open ? C.red : null,
+        right: open ? (r.w || r.l ? `W${r.w} L${r.l}` : 'new') : 'LOCKED', rightCol: r.w ? C.cyan : null,
+        onTap: open ? () => swapTo(() => openIntro(o)) : null });
+    });
+    T('');
+    T(hov && OPPS.indexOf(hov) < save.unlocked ? `"${hov.tag}"` : ' ', C.mid);
+    T('');
+    lines.push({ text: '[ BACK ]', id: 'back', onTap: () => swapTo(() => { st.mode = 'title'; }) });
+    return lines;
+  }
+
+  function openIntro(o) { st.opp = o; st.mode = 'intro'; scenePalette(); Sound.boss(); }
+  function introLines() {
+    const o = st.opp, k = OPPS.indexOf(o), r = recordOf(o.key);
+    const lines = [];
+    const T = (text, col = C.text, extra = {}) => lines.push(Object.assign({ text, col }, extra));
+    T(`TARGET ${pad2(k + 1)} OF ${pad2(OPPS.length)}${o.boss ? '  // FINAL' : ''}`, C.dim);
+    T('');
+    const name = [...o.name].join(' ');
+    T('+' + '-'.repeat(name.length + 6) + '+', C.mid);
+    T('|   ' + name + '   |', o.boss ? C.red : C.cyan, { bold: true });
+    T('+' + '-'.repeat(name.length + 6) + '+', C.mid);
+    T('');
+    T(`"${o.tag}"`, C.text);
+    T('');
+    T(o.style, C.mid);
+    T(`record  W${r.w}  L${r.l}`, C.mid);
+    T('');
+    T('you: RED ♥♦   them: BLACK ♣♠', C.dim);
+    T('');
+    lines.push({ box: true, text: 'C O N N E C T', sub: '- build your server -', id: 'go', onTap: () => swapTo(() => startSetup(o)), minW: 28 });
+    lines.push({ text: '[ BACK ]', id: 'back', onTap: () => swapTo(showLadder) });
+    return lines;
+  }
+
+  // ---------------- Help ----------------
+  const HELP = [
+    { title: 'THE JOB', body: [
+      { p: 'Two hackers, one deck. You play RED (♥♦). They play BLACK (♣♠). Each side builds a SERVER out of its 26 cards:' },
+      { pre: '  ST  [A][A][J][Q][K]     2 aces + 3 programs' },
+      { pre: '  EN  [#][#][#][#][#]     5 data cards' },
+      { pre: '  FW [#][#][#][#][#][#]   6 data cards' },
+      { p: 'The other 10 cards are your ATTACK DECK. Data cards are 2-10. Programs are J, Q and K. Aces are TARGETS.' },
+      { h: 'TO WIN' },
+      { p: "Download both of your opponent's aces." },
+    ] },
+    { title: 'TURNS', body: [
+      { p: "A PING TEST picks who starts: each side draws a random card from the other's attack deck. Whoever OWNS the lower card goes first." },
+      { p: 'On your turn, play a card from your attack deck to make an ACTION.' },
+      { p: 'If the action REMOVES a card from their server, you MUST act again, as long as you have cards. Otherwise your turn ends.' },
+      { p: 'Played cards go to your discard pile. If your deck is empty when your turn starts, your discard pile becomes your deck.' },
+    ] },
+    { title: 'ATTACKS', body: [
+      { h: 'FIREWALL' },
+      { p: 'Play a data card on a firewall card. It flips. If yours is HIGHER, both are removed. If not, yours is HELD there and adds to your next attack on that card.' },
+      { h: 'ENCRYPTION' },
+      { p: 'Upload a data card to their upload area. You may flip one exposed encryption card. Then you may remove any uploaded and face-up exposed encryption cards that add up to exactly 21.' },
+      { h: 'STORAGE' },
+      { p: 'Burn any card to flip an exposed storage card. An ace is downloaded. A program is a HONEYPOT: its defense runs and your turn ends.' },
+    ] },
+    { title: 'PROGRAMS', body: [
+      { p: 'Run a J, Q or K from your deck as an action. In storage, they defend when flipped.' },
+      { h: 'J  HOT SWAP' },
+      { p: 'run: swap two positions (even empty ones) in one layer of their server.' },
+      { p: 'honeypot: the defender may swap two positions in one layer of their server.' },
+      { h: 'Q  QUERY' },
+      { p: "run: reveal 1 or 2 adjacent exposed cards in one layer. Programs revealed this way don't trigger." },
+      { p: "honeypot: the defender may reveal 1 card, or 2 adjacent FW/EN cards, on the attacker's server." },
+      { h: 'K  PATCH' },
+      { p: 'run: remove any firewall card or exposed encryption card (then act again).' },
+      { p: 'honeypot: the defender sends a non-ace server card to their deck or discard, then may fill the spot from their deck or discard.' },
+    ] },
+    { title: 'EXPOSED', body: [
+      { p: 'Attacks only reach EXPOSED cards. Firewall cards are always exposed.' },
+      { pre: '      [#] [#] [#] [*] [#]     storage' },
+      { pre: '      [#] [*] [*]  .  [*]     encryption' },
+      { pre: '    [#] [#]  .  [#] [#]  .    firewall' },
+      { pre: '      [*] exposed  [#] covered  . empty' },
+      { p: 'An encryption card is exposed when either firewall card in front of it is gone. A storage card is exposed when the encryption card in front of it is gone.' },
+      { h: 'CONTROLS' },
+      { p: 'Tap a card in your deck, then a lit target. ESC cancels or opens the menu. Tap (or SPACE) to speed up their turn. Arrows + ENTER work too. M mutes, N toggles music.' },
+    ] },
+  ];
+  function helpLines(onBack) {
+    const p = clamp(st.helpPage, 0, HELP.length - 1), page = HELP[p];
+    const lines = [];
+    lines.push({ text: `HOW TO PLAY // ${page.title}`, col: C.cyan, bold: true });
+    lines.push({ text: `${p + 1}/${HELP.length}`, col: C.dim });
+    lines.push({ text: '' });
+    for (const b of page.body) {
+      if (b.h) { lines.push({ text: '' }); lines.push({ text: b.h, col: C.cyan, left: true, bold: true }); }
+      else if (b.pre) lines.push({ text: b.pre, left: true, colorAt: i => '♥♦'.includes(b.pre[i]) ? C.red : b.pre[i] === '*' ? C.cyan : C.text });
+      else { for (const l of wrapText(b.p, HELP_W)) lines.push({ text: l, left: true, col: C.text }); }
+    }
+    lines.push({ text: '' });
+    lines.push({ row: [
+      { text: '[ < PREV ]', id: 'prev', disabled: p === 0, onTap: () => { st.helpPage = p - 1; Sound.tick(); } },
+      { text: '[ BACK ]', id: 'back', onTap: onBack },
+      { text: '[ NEXT > ]', id: 'next', disabled: p === HELP.length - 1, onTap: () => { st.helpPage = p + 1; Sound.tick(); } },
+    ] });
+    return lines;
+  }
+
+  // ---------------- Stats ----------------
+  function statsLines() {
+    const lines = [];
+    const T = (text, col = C.text, extra = {}) => lines.push(Object.assign({ text, col }, extra));
+    const ms = save.matches, t = totals();
+    const avg = (arr) => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1) : '-';
+    T('STATS', C.cyan, { bold: true });
+    T('');
+    T(`matches ${ms.length}   won ${t.w}   lost ${t.l}`, C.bright);
+    const first = ms.filter(m => m.first === YOU);
+    T(`you went first ${first.length}x (won ${first.filter(m => m.win).length})   they went first ${ms.length - first.length}x`, C.text);
+    T(`avg turns: you ${avg(ms.map(m => m.turns[0]))}   them ${avg(ms.map(m => m.turns[1]))}`, C.text);
+    T(`avg actions per turn: you ${avg(ms.filter(m => m.turns[0]).map(m => m.moves[0] / m.turns[0]))}   them ${avg(ms.filter(m => m.turns[1]).map(m => m.moves[1] / m.turns[1]))}`, C.text);
+    const pk = ms.map(m => m.pickup[0]).filter(x => x != null);
+    T(`discard pickup: avg turn ${avg(pk)} (${pk.length} of ${ms.length} matches)`, C.text);
+    T('');
+    T('BY OPPONENT', C.cyan);
+    OPPS.forEach((o, k) => {
+      const r = recordOf(o.key);
+      lines.push({ list: true, name: `${pad2(k + 1)}  ${k < save.unlocked ? o.name : '?????'}`, right: `W${r.w} L${r.l}`, faded: !r.w && !r.l });
+    });
+    T('');
+    T('RECENT', C.cyan);
+    const recent = ms.slice(-6).reverse();
+    if (!recent.length) T('no matches yet', C.dim);
+    for (const m of recent) {
+      const o = OPPS.find(x => x.key === m.opp);
+      lines.push({ list: true, name: `${m.win ? 'WIN ' : m.draw ? 'DRAW' : 'LOSS'}  ${o ? o.name : m.opp}`, col: m.win ? C.cyan : C.redDim,
+        right: `${m.turns[0] + m.turns[1]} turns, ${m.first === YOU ? 'you' : 'they'} 1st` });
+    }
+    T('');
+    lines.push({ text: '[ BACK ]', id: 'back', onTap: () => swapTo(() => { st.mode = 'title'; }) });
+    return lines;
+  }
+
+  // ---------------- Settings ----------------
+  function settingsLines(onBack) {
+    const lines = [];
+    const T = (text, col = C.text, extra = {}) => lines.push(Object.assign({ text, col }, extra));
+    const pct = v => `${Math.round(v * 100)}%`;
+    const vol = (key, d) => () => { save[key] = clamp(Math.round((save[key] + d) * 10) / 10, 0, 1); persist(); Sound.levels(); Sound.ui(); };
+    T('SETTINGS', C.cyan, { bold: true });
+    T('');
+    lines.push({ row: [{ text: `[ PALETTE: ${PALETTES[save.palette].name} ]`, id: 'pal', onTap: cyclePalette }] });
+    lines.push({ row: [{ text: `[ OPPONENT COLORS: ${save.oppColors ? 'ON' : 'OFF'} ]`, id: 'oppc', onTap: () => { save.oppColors = !save.oppColors; persist(); scenePalette(); Sound.ui(); } }] });
+    T('');
+    lines.push({ gap: 1, row: [{ text: `[ MUSIC: ${save.musicOn ? 'ON ' : 'OFF'} ]`, id: 'mus', onTap: toggleMusic }, { text: '[-]', id: 'mv-', onTap: vol('musicVol', -0.1) }, { text: pct(save.musicVol).padStart(4) }, { text: '[+]', id: 'mv+', onTap: vol('musicVol', 0.1) }] });
+    lines.push({ gap: 1, row: [{ text: `[ SOUND: ${save.muted ? 'OFF' : 'ON '} ]`, id: 'snd', onTap: toggleMute }, { text: '[-]', id: 'sv-', onTap: vol('sfxVol', -0.1) }, { text: pct(save.sfxVol).padStart(4) }, { text: '[+]', id: 'sv+', onTap: vol('sfxVol', 0.1) }] });
+    T('');
+    lines.push({ row: [{ text: `[ EFFECTS: ${save.effects === 'full' ? 'FULL' : 'REDUCED'} ]`, id: 'fx', onTap: () => { save.effects = save.effects === 'full' ? 'reduced' : 'full'; persist(); Sound.ui(); } }] });
+    lines.push({ row: [{ text: `[ THEIR TURNS: ${save.aiSpeed === 'fast' ? 'FAST' : 'NORMAL'} ]`, id: 'aisp', onTap: () => { save.aiSpeed = save.aiSpeed === 'fast' ? 'normal' : 'fast'; persist(); Sound.ui(); } }] });
+    T('');
+    if (st.mode !== 'match' && st.mode !== 'setup') {
+      lines.push({ text: st.resetArmed ? '[ REALLY ERASE ALL PROGRESS? ]' : '[ RESET PROGRESS ]', id: 'reset', col: st.resetArmed ? C.red : C.mid, onTap: () => {
+        if (!st.resetArmed) { st.resetArmed = true; Sound.deny(); return; }
+        const keep = { palette: save.palette, muted: save.muted, musicOn: save.musicOn, musicVol: save.musicVol, sfxVol: save.sfxVol };
+        Object.assign(save, freshSave(), keep); persist(); st.resetArmed = false; Sound.trap();
+      } });
+      T('');
+    }
+    lines.push({ text: '[ BACK ]', id: 'back', onTap: () => { st.resetArmed = false; onBack(); } });
+    return lines;
+  }
+  function cyclePalette() {
+    const keys = playerPalettes();
+    save.palette = keys[(keys.indexOf(save.palette) + 1) % keys.length];
+    persist(); Sound.ui();
+    if (st.mode === 'match' || st.mode === 'setup') { if (!save.oppColors) applyPalette(save.palette); }
+    else applyPalette(save.palette);
+  }
+  function toggleMute() { save.muted = !save.muted; persist(); Sound.levels(); }
+  function toggleMusic() { save.musicOn = !save.musicOn; persist(); Sound.levels(); }
+
+  // ---------------- Results ----------------
+  function overLines() {
+    const r = st.result, o = r.opp, lines = [];
+    const T = (text, col = C.text, extra = {}) => lines.push(Object.assign({ text, col }, extra));
+    const s = r.stats;
+    const statLine = `turns ${s.turns[0]}/${s.turns[1]}   actions ${s.moves[0]}/${s.moves[1]}   ${s.first === YOU ? 'you' : 'they'} went first`;
+    const next = OPPS[OPPS.indexOf(o) + 1];
+    if (r.win) {
+      for (const l of ['     .---.     ', '    /  _  \\    ', '    | | | |    ', '    | |        ', ' +===========+ ', ' |  R O O T  | ', ' +===========+ ']) T(l, C.gold, { bold: true });
+      T('');
+      T('DOWNLOAD COMPLETE', C.cyan, { bold: true });
+      T(`${o.name} has been owned.`, C.text);
+      T('');
+      lines.push({ cards: r.mine });
+      T('');
+      T(statLine, C.mid);
+      if (r.unlockedNew) T(`NEW TARGET UNLOCKED: ${r.unlockedNew.name}`, C.gold);
+      if (r.final) T('THE LADDER IS YOURS. THERE IS NO 1338.', C.gold, { bold: true });
+      T('');
+      if (next) lines.push({ box: true, text: 'N E X T   T A R G E T', sub: `- ${next.name} -`, id: 'next', onTap: () => swapTo(() => openIntro(next)), minW: 28 });
+      else lines.push({ box: true, text: 'L A D D E R', id: 'ladder2', onTap: () => swapTo(showLadder), minW: 24 });
+    } else {
+      T(r.draw ? 'DEADLOCK' : 'CONNECTION TERMINATED', C.red, { bold: true });
+      T(r.draw ? 'nobody can move. the servers sit in silence.' : `${o.name} downloaded both of your aces.`, C.text);
+      T('');
+      lines.push({ cards: r.draw ? [] : r.theirs });
+      T('');
+      T(statLine, C.mid);
+      T('');
+      lines.push({ box: true, text: 'R E T R Y', sub: `- ${o.name} -`, id: 'retry', onTap: () => swapTo(() => startSetup(o)), minW: 24 });
+    }
+    lines.push({ row: [
+      ...(r.win ? [{ text: '[ REMATCH ]', id: 'rematch', onTap: () => swapTo(() => startSetup(o)) }] : []),
+      { text: '[ LADDER ]', id: 'ladder', onTap: () => swapTo(showLadder) },
+      { text: '[ TITLE ]', id: 'title', onTap: () => swapTo(() => { st.mode = 'title'; st.opp = null; scenePalette(); }) },
+    ] });
+    return lines;
+  }
+
+  // ---------------- Menu (over a match) ----------------
+  function openPause() {
+    if (st.overlay) { st.overlay = null; Sound.ui(); return; }
+    st.overlay = 'pause'; Sound.ui();
+  }
+  function pauseLines() {
+    const lines = [];
+    const T = (text, col = C.text, extra = {}) => lines.push(Object.assign({ text, col }, extra));
+    T('PAUSED', C.cyan, { bold: true });
+    T(`vs ${M.opp.name}  //  turn ${M.turnNo}`, C.mid);
+    T('');
+    const B = (text, id, onTap, col) => lines.push({ text, id, onTap, col });
+    B('[ RESUME ]', 'resume', () => { st.overlay = null; Sound.ui(); });
+    B('[ HOW TO PLAY ]', 'help', () => { st.overlay = 'help'; st.helpPage = 0; Sound.ui(); });
+    if (st.mode === 'match') B('[ MATCH LOG ]', 'log', () => { st.overlay = 'log'; Sound.ui(); });
+    B('[ SETTINGS ]', 'set', () => { st.overlay = 'settings'; Sound.ui(); });
+    T('');
+    if (st.mode === 'match' && !M.over) B(st.forfeitArmed ? '[ REALLY FORFEIT? ]' : '[ FORFEIT ]', 'forfeit', () => {
+      if (!st.forfeitArmed) { st.forfeitArmed = true; Sound.deny(); return; }
+      st.forfeitArmed = false; st.overlay = null;
+      recordOf(M.opp.key).l++;
+      save.matches.push({ opp: M.opp.key, win: false, first: M.stats.first, turns: M.stats.turns, moves: M.stats.moves, pickup: M.stats.pickup, when: Date.now() });
+      persist();
+      M.aborted = true;
+      swapTo(showLadder);
+    }, C.red);
+    else B('[ BACK TO LADDER ]', 'quit', () => { st.overlay = null; M.aborted = true; swapTo(showLadder); }, C.mid);
+    return lines;
+  }
+  function logLines() {
+    const lines = [{ text: 'MATCH LOG', col: C.cyan, bold: true }, { text: '' }];
+    for (const e of M.log.slice(-26)) lines.push({ text: `T${pad2(e.turn)} ${e.text}`.slice(0, HELP_W), left: true, col: e.col || C.text });
+    lines.push({ text: '' });
+    lines.push({ text: '[ BACK ]', id: 'back', onTap: () => { st.overlay = 'pause'; Sound.ui(); } });
+    return lines;
+  }
+  function overlayLines() {
+    const back = () => { st.overlay = 'pause'; Sound.ui(); };
+    if (st.overlay === 'help') return helpLines(back);
+    if (st.overlay === 'log') return logLines();
+    if (st.overlay === 'settings') return settingsLines(back);
+    return pauseLines();
+  }
+
+  function screenLines(now) {
+    const toTitle = () => swapTo(() => { st.mode = 'title'; });
+    switch (st.mode) {
+      case 'title': return titleLines(now);
+      case 'ladder': return ladderLines();
+      case 'intro': return introLines();
+      case 'help': return helpLines(toTitle);
+      case 'stats': return statsLines();
+      case 'settings': return settingsLines(toTitle);
+      case 'over': return st.result ? overLines() : [];
+    }
+    return [];
+  }
+
+  // ---------------- Scene ----------------
+  let hits = [];
+  let bgs = [];
+  const decodeDelay = (cx, cy) => 40 + ((((Math.round(cx * 2) + 1) * 374761393) ^ ((Math.round(cy * 2) + 1) * 668265263)) >>> 0) % 380;
+
+  function buildScene(now, collectHits, raw = false) {
+    let cells = [];
+    const frameBgs = [];
+    const localHits = [];
+    const put = (cx, cy, str, col, bold = false, opaque = false) => {
+      for (let k = 0; k < str.length; k++) if (str[k] !== ' ' || opaque) cells.push({ ch: str[k], cx: cx + k, cy, col, bold });
+    };
+    const putC = (cy, str, col, bold) => put(Math.floor((WC - str.length) / 2), cy, str, col, bold);
+    const putR = (cy, str, col, bold) => put(WC - str.length, cy, str, col, bold);
+    const bg = (cx, cy, w, col, alpha, h = 1) => { for (let r = 0; r < h; r++) frameBgs.push({ cx, cy: cy + r, w, col, alpha }); };
+    const ctx = { now, put, putC, putR, bg, hoverInfo: null };
+    ctx.addHit = (cx, cy, w, h, hit) => {
+      localHits.push(Object.assign({ cx, cy, cw: w, ch: h }, hit));
+      if (hit.id === st.hoverId && hit.info) ctx.hoverInfo = hit.info;
+    };
+
+    if (!st.hideAll) {
+      if (st.overlay && M) buildTextBoard(ctx, overlayLines());
+      else if ((st.mode === 'match' || st.mode === 'setup') && M) buildMatch(ctx);
+      else {
+        buildTextBoard(ctx, screenLines(now));
+        putR(HC - 1, `hackjack ${VERSION}`, C.dim);
+      }
+    }
+
+    // Hover / keyboard cursor: a background highlight (and > for the keyboard).
+    const hov = localHits.find(h => h.id === st.hoverId && h.kind === 'btn');
+    if (hov) {
+      bg(hov.cx, hov.cy, hov.cw, C.cyan, st.kbFocus === hov.id ? 0.32 : 0.2, hov.ch);
+      if (st.kbFocus === hov.id && !hov.noMark && hov.cx >= 2) put(hov.cx - 2, hov.cy + Math.floor((hov.ch - 1) / 2), '>', C.cyan, true);
+    }
+    // Last write wins where characters overlap (fanned cards); blanks erase.
+    const map = new Map();
+    for (const c of cells) map.set(c.cx + ',' + c.cy, c);
+    cells = [...map.values()].filter(c => c.ch !== ' ');
+
+    let result = cells;
+    if (!raw) {
+      if (st.wipe) result = applyWipe(cells, now);
+      else {
+        const age = now - st.boardStart;
+        if (age < 500) for (const c of cells) if (age < decodeDelay(c.cx, c.cy)) { c.ch = noiseCh(); c.col = C.dim; }
+      }
+    }
+    if (collectHits) {
+      bgs = st.wipe ? [] : frameBgs;
+      hits = localHits.map(h => {
+        let x = L.ox + h.cx * L.cw, y = L.oy + h.cy * L.chh, pw = h.cw * L.cw, ph = h.ch * L.chh;
+        if (ph < 34) { y -= (34 - ph) / 2; ph = 34; }
+        if (pw < 34) { x -= (34 - pw) / 2; pw = 34; }
+        return Object.assign({}, h, { x, y, w: pw, h: ph });
+      });
+      st.focusables = localHits.filter(h => h.kind === 'btn' && h.onTap && !h.noFocus).sort((a, b) => a.cy - b.cy || a.cx - b.cx).map(h => ({ id: h.id, onTap: h.onTap }));
+    }
+    return result;
+  }
+
+  // ---------------- Render loop ----------------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    updateParts(dt);
+    stepPaletteFade(now);
+    if (st.wipe && st.wipe.endsAt && now > st.wipe.endsAt) st.wipe = null;
+    render(now);
+    requestAnimationFrame(frame);
+  }
+  function render(now) {
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = C.bg;
+    g.fillRect(0, 0, W, H);
+    const sk = (now - shakeFx.t0) / 1000;
+    if (sk < shakeFx.dur) {
+      const a = shakeFx.amp * (1 - sk / shakeFx.dur);
+      g.translate(rand(-a, a), rand(-a, a));
+    }
+    const cells = buildScene(now, true);
+    for (const b of bgs) {
+      g.globalAlpha = b.alpha;
+      g.fillStyle = b.col;
+      g.fillRect(L.ox + b.cx * L.cw, L.oy + b.cy * L.chh, b.w * L.cw, L.chh);
+    }
+    g.globalAlpha = 1;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    for (const bold of [false, true]) {
+      g.font = `${bold ? DRAW_FONT.bold : DRAW_FONT.weight} ${L.fs}px ${DRAW_FONT.family}`;
+      for (const c of cells) {
+        if (!!c.bold !== bold) continue;
+        g.fillStyle = c.col;
+        g.fillText(c.ch, pxX(c.cx), pxY(c.cy));
+      }
+    }
+    g.font = `${DRAW_FONT.weight} ${L.fs}px ${DRAW_FONT.family}`;
+    for (const p of parts) {
+      if (p.t < 0) continue;
+      g.globalAlpha = Math.max(0, p.alpha);
+      g.fillStyle = p.col;
+      if (p.rot) { g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.fillText(p.ch, 0, 0); g.restore(); }
+      else g.fillText(p.ch, p.x, p.y);
+    }
+    g.globalAlpha = 1;
+    const fk = (now - flashFx.t0) / 1000;
+    if (fk < flashFx.dur) {
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.globalAlpha = flashFx.a * (1 - fk / flashFx.dur);
+      g.fillStyle = flashFx.col;
+      g.fillRect(0, 0, W, H);
+      g.globalAlpha = 1;
+    }
+  }
+
+
+  // ---------------- Screen changes ----------------
+  async function swapTo(fn, level = 0) {
+    if (st.transitioning) return;
+    st.transitioning = true;
+    st.kbFocus = null; st.hoverId = null;
+    await wipeOut(level);
+    fn();
+    scenePalette();
+    wipeIn();
+    st.transitioning = false;
+  }
+
+  // ---------------- Input ----------------
+  function hitAt(x, y) {
+    for (let k = hits.length - 1; k >= 0; k--) {
+      const h = hits[k];
+      if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) return h;
+    }
+    return null;
+  }
+  const theirTurn = () => st.mode === 'match' && M && !M.over && M.turn === AI && M.ui.phase === 'wait' && !st.overlay;
+
+  cv.addEventListener('pointerdown', e => {
+    Sound.init();
+    if (st.wipe || st.transitioning) return;
+    const h = hitAt(e.clientX, e.clientY);
+    if (h && h.kind === 'btn' && h.onTap) { st.kbFocus = null; h.onTap(); return; }
+    if (theirTurn()) { st.ff = true; return; }
+    if (st.mode === 'setup' && !h) st.setupSel = null;
+  });
+  cv.addEventListener('pointermove', e => {
+    const h = hitAt(e.clientX, e.clientY);
+    const id = h ? h.id : null;
+    if (id !== st.hoverId && h && h.kind === 'btn') Sound.tick();
+    st.hoverId = id;
+    st.kbFocus = null;
+    cv.style.cursor = h && h.kind === 'btn' ? 'pointer' : 'default';
+  });
+
+  function moveFocus(d) {
+    const f = st.focusables;
+    if (!f.length) return;
+    let k = f.findIndex(x => x.id === st.kbFocus);
+    k = k < 0 ? (d > 0 ? 0 : f.length - 1) : (k + d + f.length) % f.length;
+    st.kbFocus = st.hoverId = f[k].id;
+    Sound.tick();
+  }
+  // Escape: back out one step.
+  function escape() {
+    if (st.overlay) { st.overlay = st.overlay === 'pause' ? null : 'pause'; Sound.ui(); return; }
+    if (st.mode === 'match' && M && M.ui.phase === 'pick' && M.ui.sel) {
+      if (M.ui.mode) { M.ui.mode = null; M.ui.picks = []; } else M.ui.sel = null;
+      Sound.tick(); return;
+    }
+    if (st.mode === 'setup' && st.setupSel) { st.setupSel = null; Sound.tick(); return; }
+    if (st.mode === 'match' || st.mode === 'setup') { openPause(); return; }
+    if (st.mode === 'intro') return swapTo(showLadder);
+    if (st.mode !== 'title') swapTo(() => { st.mode = 'title'; st.opp = null; });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    Sound.init();
+    const k = e.key.toLowerCase();
+    if (k.startsWith('arrow') || k === ' ' || k === 'enter' || k === 'tab') e.preventDefault();
+    if (k === 'm') return toggleMute();
+    if (k === 'n') return toggleMusic();
+    if (st.transitioning || st.wipe) return;
+    if (k === 'escape') return escape();
+    if (k === ' ' && theirTurn()) { st.ff = true; return; }
+    if (k === 'arrowup' || k === 'arrowleft' || (k === 'tab' && e.shiftKey)) return moveFocus(-1);
+    if (k === 'arrowdown' || k === 'arrowright' || k === 'tab') return moveFocus(1);
+    if (k === 'enter' || k === ' ') {
+      const f = st.kbFocus && st.focusables.find(x => x.id === st.kbFocus);
+      if (f) return f.onTap();
+      if (st.mode === 'title') return swapTo(showLadder);
+    }
+  });
+
+  // ---------------- Music ----------------
+  // Menus: NIGHT RAIN. A match: the opponent's track, layers building as aces fall.
+  function musicState() {
+    let song = 'night_rain', level = 0, low = false;
+    const o = st.opp;
+    if (o && (st.mode === 'intro' || st.mode === 'setup' || st.mode === 'match')) {
+      song = o.song;
+      if (st.mode === 'match' && M) {
+        const a = M.s[YOU].stolen.length, b = M.s[AI].stolen.length;
+        level = 1 + (a + b > 0 ? 1 : 0) + ((a && b) || o.boss ? 1 : 0);
+        if (o.boss && a + b > 0) level = 4;
+        low = b === 1 && !M.over;
+      }
+    }
+    return { song, level, urgency: 0, low, tempo: 1 };
+  }
+  Music.setSource(musicState);
+
+  // ---------------- Boot ----------------
+  window.addEventListener('resize', resize);
+  applyPalette(save.palette, true);
+  st.msgCol = C.text;
+  resize();
+  st.boardStart = performance.now();
+  requestAnimationFrame(t => { last = t; frame(t); });
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('16px "JetBrains Mono"').then(() => computeLayout()).catch(() => {});
+    document.fonts.load('800 16px "JetBrains Mono"').catch(() => {});
+  }
+
+  // Debug hook for the console and automated tests.
+  // __hj.simulate(n, oppIndex): plays n AI-vs-AI matches as fast as possible.
+  async function simulate(n = 10, oppIdx = 5) {
+    const res = { you: 0, ai: 0, draw: 0, turns: [], errors: 0 };
+    CONFIG.instant = true; st.autoplay = true;
+    for (let k = 0; k < n; k++) {
+      const o = OPPS[oppIdx];
+      st.opp = o;
+      M = newMatch(o);
+      M.sim = true;
+      layoutServer(M.s[YOU], 'balanced');
+      layoutServer(M.s[AI], o.ai.setup);
+      try { await runMatch(); } catch (e) { res.errors++; console.error(e); }
+      const total = M.s.reduce((s, S) => s + S.deck.length + S.disc.length + S.stolen.length + S.uploads.length
+        + LAYERS.reduce((t, l) => t + S[l].reduce((u, c) => u + (c ? 1 + c.held.length : 0), 0), 0), 0);
+      if (total !== 52) { res.errors++; console.error('card count', total); }
+      res[M.winner === YOU ? 'you' : M.winner === AI ? 'ai' : 'draw']++;
+      res.turns.push(M.turnNo);
+    }
+    CONFIG.instant = false; st.autoplay = false; M = null; st.mode = 'title'; st.opp = null;
+    return res;
+  }
+  window.__hj = { st, save, C, OPPS, CONFIG, get M() { return M; }, simulate, doStorage, endMatch, startSetup, lockIn, swapTo, showLadder, openIntro, buildScene, uiTargets };
+})();
+</script>
+</body>
+</html>

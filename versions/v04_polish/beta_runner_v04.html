@@ -1,0 +1,2812 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beta Runner v04</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  html, body { margin: 0; height: 100%; background: #06090a; overflow: hidden; }
+  body {
+    touch-action: manipulation;
+    user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  canvas { display: block; width: 100vw; height: 100vh; height: 100dvh; cursor: default; }
+</style>
+</head>
+<body>
+<canvas id="screen" aria-label="Beta Runner game screen"></canvas>
+<script>
+// Beta Runner v04: polish round. Title/help/codex/settings screens, boxed buttons,
+// rarity tiers with escalating reveals, scroll-fill wipe transitions, clearer tray,
+// Sigil signature variations and corp tiers.
+// The whole screen is a grid of text characters drawn on one canvas,
+// so any character can turn into a particle for effects.
+(() => {
+  'use strict';
+
+  // ---------------- Tuning ----------------
+  const CONFIG = {
+    startIntegrity: 4,
+    perfectHeal: 1,        // integrity restored by a first-try pick
+    tellStrength: 0.75,    // how often a position tell is followed
+    markDecoyFrac: 0.4,    // share of other tiles that also carry the Sigil signature
+    lootChance: 0.3,       // chance a layer has a loaded ($) ICE tile
+    beltSlots: 4,
+    startItems: ['purge'], // everyone starts with one, like 1TD's torch
+    repairAmount: 2,
+    maskDelayMs: 1800,     // how long a fading glyph tell stays visible
+    overclockClock: 15,    // clock added to every layer by OVERCLOCK
+    overclockStart: 6,     // seconds left when OVERCLOCK starts purging
+    overclockCut: 0.2,     // payout lost per OVERCLOCK purge
+    fastpayMs: 3000,
+    revealDelay: 380,      // ms before the first offer pops in
+    revealGap: 300,        // ms between offer pops
+    wipeSpeed: 1,      // screen transition speed: 1 = normal, 0.5 = half speed
+    wipeOverlap: 0.45,     // page changes: new screen starts when the old front is this far up (lower = more overlap)
+    wipeOverlapWin: 0.8,   // same, for success wipes (later, so the lit node gets its moment)
+    wipeStagger: 300,      // max random delay (wipe-time ms) before each character starts changing
+  };
+
+  const VERSION = 'v04';
+  const STORE_KEY = 'beta_runner.v04.save';
+  const SAVE_FORMAT = 1;
+
+  const TILE_W = 7, TILE_H = 5;
+  const GAP_X = 2, GAP_Y = 1;
+  const BOARD_Y = 8;
+  const TRAY_ROWS = 5;            // rule, mods, mod info, items, item info
+  const MIN_CONTENT_W = 36;
+  const LINE_H = 1.22;
+  const FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
+
+  // Current colors. Filled from a palette at boot.
+  const C = {
+    bg: '', dim: '', mid: '', text: '', bright: '', cyan: '', red: '', redDim: '', gold: '',
+    common: '', rare: '', epic: '', exotic: '', boss: '',
+  };
+
+  // Console palettes. Each one also defines its own rarity colors.
+  const PALETTES = {
+    default:  { name: 'DEFAULT',   bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', cyan: '#3cf0ff', red: '#ff3b4e', redDim: '#7a2630', gold: '#e8c66a',
+                common: '#a9bdb7', rare: '#4da3ff', epic: '#c07bff', exotic: '#ffd84a', boss: '#ff7a3d' },
+    amber:    { name: 'AMBER CRT', bg: '#0c0800', dim: '#3a2a10', mid: '#7a5a24', text: '#d9a441', bright: '#ffd27a', cyan: '#ffb000', red: '#ff5a3c', redDim: '#6e2a18', gold: '#ffe08a',
+                common: '#d9a441', rare: '#ffcf70', epic: '#ff8a3c', exotic: '#fff1b0', boss: '#ff5a3c' },
+    phosphor: { name: 'GREEN CRT', bg: '#020a04', dim: '#12331a', mid: '#2f6e3c', text: '#5fd47a', bright: '#b8ffc8', cyan: '#39ff6a', red: '#ff5c5c', redDim: '#5a1f1f', gold: '#d8ff6a',
+                common: '#5fd47a', rare: '#7affd4', epic: '#c8ff6a', exotic: '#f0fff0', boss: '#ff7a5c' },
+    dusk:     { name: 'DUSK',      bg: '#14111f', dim: '#332c4a', mid: '#6b5f8f', text: '#c8bfe8', bright: '#f4f0ff', cyan: '#ff79c6', red: '#ff5555', redDim: '#6a2a3a', gold: '#f1fa8c',
+                common: '#c8bfe8', rare: '#8be9fd', epic: '#bd93f9', exotic: '#f1fa8c', boss: '#ffb86c' },
+    paper:    { name: 'PAPER',     bg: '#f2efe6', dim: '#cfc9ba', mid: '#8a8376', text: '#3b3a36', bright: '#111111', cyan: '#0077a8', red: '#c4122c', redDim: '#d99aa2', gold: '#9a6a00',
+                common: '#3b3a36', rare: '#1d5fbf', epic: '#7a2fbf', exotic: '#a86b00', boss: '#c4122c' },
+  };
+  function applyPalette(key) {
+    const p = PALETTES[key] || PALETTES.default;
+    for (const k of Object.keys(C)) if (p[k]) C[k] = p[k];
+    document.documentElement.style.background = C.bg;
+    document.body.style.background = C.bg;
+  }
+
+  const NOISE = '#%&@$*+=<>/\\|:;~^01';
+
+  // ---------------- Seeded RNG ----------------
+  function hashStr(str) {
+    let h = 1779033703 ^ str.length;
+    for (let i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return (h ^= h >>> 16) >>> 0;
+  }
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  // Separate stream per purpose, so player actions never shift the answers.
+  const rngFor = (...parts) => mulberry32(hashStr(parts.join('|')));
+
+  const SEED_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  function newSeed() {
+    let s = '';
+    for (let i = 0; i < 6; i++) s += SEED_ALPHABET[Math.floor(Math.random() * SEED_ALPHABET.length)];
+    return s;
+  }
+  const cleanSeed = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
+  const pickR = (arr, r) => arr[Math.floor(r() * arr.length)];
+  const noiseCh = () => NOISE[Math.floor(Math.random() * NOISE.length)];
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function shuffle(arr, r) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // ---------------- Glyphs ----------------
+  const MOTIFS_RAW = [
+    [' /\\ ', '<  >', ' \\/ '],
+    ['\\ /', ' X ', '/ \\'],
+    ['[==]', '[  ]', '[==]'],
+    [' .-. ', '( o )', " '-' "],
+    ['~ ~ ~', ' ~ ~ ', '~ ~ ~'],
+    ['# #', ' # ', '# #'],
+    ['  ^  ', ' /|\\ ', '  |  '],
+    ['o-+  ', '  |  ', '  +-o'],
+    ['0110', '1001', '0110'],
+    ['(o.o)', ' |=| '],
+    ['+-+-+', '| | |', '+-+-+'],
+    ['  |  ', '--+--', '  |  '],
+    ['. : .', ': . :', '. : .'],
+    ['>>>', '>>>'],
+    [' .-. ', ' | | ', '[###]'],
+    ['%#@', '@ %', '#%@'],
+    ['{ }', '{*}', '{ }'],
+    ['=====', ' === ', '  =  '],
+  ];
+  function normMotif(m) {
+    let lines = m.slice(0, 3);
+    if (lines.length === 1) lines = ['', lines[0], ''];
+    else if (lines.length === 2) lines = [lines[0], lines[1], ''];
+    return lines.map(l => {
+      l = l.slice(0, 5);
+      const pad = 5 - l.length, left = Math.floor(pad / 2);
+      return ' '.repeat(left) + l + ' '.repeat(pad - left);
+    });
+  }
+  const MOTIFS = MOTIFS_RAW.map(normMotif);
+  const JACK_GLYPH = normMotif(['', '>_', '']);
+  const LOOT_GLYPH = normMotif(['$ $', '[$]', '$ $']);
+  const MASK_GLYPH = normMotif(['', '???', '']);
+  const X_SHAPE = normMotif(['\\ /', ' X ', '/ \\']);
+  const shapeOf = gl => gl.map(l => l.replace(/[^ ]/g, '#')).join('|');
+  const X_MASK = shapeOf(X_SHAPE);
+  const MARK_CHARS = '#%@*+=o0&';
+
+  // Codex entries for every tile glyph: a name and some (unreliable) lore.
+  // Lore lines stay under 26 characters so they fit next to the tile art.
+  const GLYPH_LORE = [
+    ['DIAMOND',      ['a rhombus with ambition.', 'every corp logo is this', 'plus a gradient.']],
+    ['THE CROSS',    ['marks the spot.', 'the spot is usually', 'a trap.']],
+    ['STORAGE UNIT', ['contents: nothing.', 'a firewall\'s lunchbox.']],
+    ['THE WATCHER',  ['it saw you jack in.', 'it says nothing.', 'it judges.']],
+    ['SIGNAL NOISE', ['the sound of 4,000', 'routers screaming', 'in harmony.']],
+    ['HASHTAG X',    ['deprecated social rune.', 'still trending', 'somewhere awful.']],
+    ['UPLINK',       ['points up.', 'management loves it.']],
+    ['TRACE PATH',   ['a wire that took the', 'long way round to', 'avoid the tolls.']],
+    ['BINARY',       ['spells "i" if you squint.', 'the rest is a typo.']],
+    ['SYSADMIN',     ['on call since 2071.', 'please be gentle.']],
+    ['LATTICE',      ['a very small fence', 'for very small data.']],
+    ['JUNCTION',     ['four roads.', 'no lights.', 'all cops.']],
+    ['STATIC',       ['what is left when a', 'hard drive dreams.']],
+    ['FAST FORWARD', ['skips the ads.', 'there are always', 'more ads.']],
+    ['PADLOCK',      ['the oldest security', 'tech in the net.', 'still mostly works.']],
+    ['CORRUPTION',   ['a file that got too', 'close to a magnet once.', 'it does not talk about it.']],
+    ['BRACKET STAR', ['a JSON object that', 'reached enlightenment.']],
+    ['FUNNEL',       ['data goes in.', 'invoices come out.']],
+  ];
+  const SPECIAL_GLYPHS = [
+    { key: 'gjack', name: 'PROMPT',          glyphOf: () => JACK_GLYPH, lore: ['where every bad', 'decision starts.'] },
+    { key: 'gloot', name: 'LOADED NODE',     glyphOf: () => LOOT_GLYPH, lore: ['always ICE.', 'always worth it?', 'never sure.'] },
+    { key: 'gsig',  name: 'SIGIL SIGNATURE', glyphOf: () => X_SHAPE,    lore: ['sigil signs its work.', 'the signature changes.', 'the habit does not.'] },
+    { key: 'gmask', name: 'REDACTED',        glyphOf: () => MASK_GLYPH, lore: ['the sigil boss forgot', 'what it signed.', 'you should not.'] },
+  ];
+  const GLYPHS = [
+    ...GLYPH_LORE.map(([name, lore], i) => ({ key: 'g' + i, name, lore, glyphOf: () => MOTIFS[i] })),
+    ...SPECIAL_GLYPHS,
+  ];
+  const GLYPH_BY_KEY = Object.fromEntries(GLYPHS.map(gl => [gl.key, gl]));
+
+  // Labels on locked-out nodes: [word, mod code]. 5 characters max.
+  const LOCK_LABEL = {
+    purge: ['PURGE', ''], burner: ['BURNT', ''],
+    sniffer: ['INERT', 'SNF'], corners: ['INERT', 'CNR'], sigscan: ['INERT', 'SIG'],
+    echo: ['INERT', 'ECH'], overclock: ['INERT', 'OVC'],
+  };
+
+  // ---------------- Content ----------------
+  // tell: how the corp picks its safe tile. bossTell: the boss layer's twist.
+  // rules: shown on the map only when the corp has something special.
+  const CORPS = {
+    perimeter: {
+      key: 'perimeter', name: 'PERIMETER SYS', letter: 'P',
+      intel: '"our corners never fall."',
+      tell: 'corner', bossTell: 'center',
+      bossDesc: 'boss: the core hides inward.',
+      mods: ['corners', 'bulwark'],
+    },
+    sigil: {
+      key: 'sigil', name: 'SIGIL DYNAMICS', letter: 'S',
+      intel: '"we sign everything we make."',
+      tell: 'mark', bossTell: 'mark', bossFlash: true,
+      bossDesc: 'boss: the signature fades fast.',
+      mods: ['sigscan', 'forgery'],
+    },
+    chronos: {
+      key: 'chronos', name: 'CHRONOS', letter: 'C',
+      intel: '"time is money. yours is short."',
+      tell: null, timer: 10, pay: 1.6, bossShrink: true,
+      bossDesc: 'boss: clock shrinks every miss.',
+      mods: ['overclock', 'fastpay'],
+    },
+    mirror: {
+      key: 'mirror', name: 'MIRRORLINE', letter: 'M',
+      intel: '"every step echoes the last."',
+      tell: 'mirror', bossTell: 'point',
+      bossDesc: 'boss: the echo turns over.',
+      mods: ['echo', 'afterimage'],
+    },
+  };
+  const FINAL = {
+    key: 'omni', name: 'OMNI//CORE', letter: '!',
+    intel: '"you shouldn\'t be here."',
+    timer: 12, pay: 2, bossDmg: 2,
+    bossDesc: 'boss: ICE hits for 2.',
+  };
+  const PUBLIC = { key: 'public', name: 'PUBLIC NET', letter: '>', intel: 'one node. it is real.', tell: null };
+  const corpDef = key => CORPS[key] || (key === 'omni' ? FINAL : PUBLIC);
+
+  // Corp numbers by tier: deeper corps get harder versions.
+  function corpTimer(def, tier) { return def.timer ? def.timer - (def.key === 'chronos' && tier >= 2 ? 2 : 0) : 0; }
+  function corpPay(def, tier) { return (def.pay || 1) + (def.key === 'chronos' && tier >= 2 ? 0.2 : 0); }
+  function corpRules(def, tier) {
+    if (def.key === 'chronos') return `${corpTimer(def, tier)}s clock per pick. pays x${corpPay(def, tier).toFixed(1)}`;
+    if (def.key === 'omni') return '12s clock. tell unknown. pays x2';
+    return '';
+  }
+
+  const RARITY = {
+    common: { label: 'COMMON', lvl: 0 },
+    rare:   { label: 'RARE',   lvl: 1 },
+    epic:   { label: 'EPIC',   lvl: 2 },
+    exotic: { label: 'EXOTIC', lvl: 3 },
+    boss:   { label: 'BOSS',   lvl: 4 },
+  };
+  const rarityCol = r => C[r] || C.text;
+
+  const ITEMS = {
+    patch: { key: 'patch', name: 'PATCH', price: 25, desc: 'restore 1 integrity.', tip: '+1 integrity.' },
+    purge: { key: 'purge', name: 'PURGE', price: 22, desc: 'lock out one ICE node.', tip: 'lock out 1 ICE.' },
+    wall:  { key: 'wall',  name: 'FWALL', price: 30, desc: 'block the next ICE hit.', tip: 'block next ICE hit.' },
+    split: { key: 'split', name: 'SPLIT', price: 34, desc: 'rule out half the grid.', tip: 'rule out half the grid.' },
+  };
+  const ITEM_WHERE = 'market, $ nodes, caches.';
+
+  // Mods last the whole run (some are tap-to-use when `active` is set).
+  // kind: gen = general pool, minor = small perks, corp = only from that corp's boss.
+  // icon: animation frames for the badge's first character. anim: how the letters move.
+  // tip: short text for the tray info line. desc: full text.
+  const MODS = {
+    // General
+    tracer:   { name: 'TRACER',   short: 'TRC', kind: 'gen', rarity: 'epic',   icon: '.oOo', anim: 'wave',     price: 70, tip: 'hit ICE shows dist.',   desc: 'ICE you hit shows its distance to the real node.' },
+    skimmer:  { name: 'SKIMMER',  short: 'SKM', kind: 'gen', rarity: 'rare',   icon: '$$s$', anim: 'cycle',    price: 60, tip: '+50% credits.',         desc: '+50% credits from every payout.' },
+    buffer:   { name: 'BUFFER',   short: 'BUF', kind: 'gen', rarity: 'rare',   icon: '[]][', anim: 'blink',    price: 65, tip: '+1 max integrity.',     desc: '+1 max integrity, and heal 1.' },
+    sniffer:  { name: 'SNIFFER',  short: 'SNF', kind: 'gen', rarity: 'epic',   icon: '~-_-', anim: 'scramble', price: 90, tip: 'lock 1 ICE each layer.', desc: 'every layer starts with 1 ICE locked.' },
+    burner:   { name: 'BURNER',   short: 'BRN', kind: 'gen', rarity: 'rare',   icon: '.*^*', anim: 'cycle',    price: 55, active: 'layer', tip: 'lock 1 ICE, 1x/corp', desc: 'tap in a layer: lock 1 ICE. once per corp.' },
+    reroute:  { name: 'REROUTE',  short: 'RRT', kind: 'gen', rarity: 'rare',   icon: '|/-\\', anim: 'spin',    price: 45, active: 'map', charges: 2, tip: 'reshuffle map ahead', desc: 'tap on the map: reshuffle every node ahead. 2 uses.' },
+    wormhole: { name: 'WORMHOLE', short: 'WRM', kind: 'gen', rarity: 'exotic', icon: 'oO0O', anim: 'wave',     price: 50, active: 'map', charges: 1, tip: 'warp to random node', desc: 'tap on the map: warp to a random node ahead. 1 use.' },
+    // Minor
+    stash:    { name: 'STASH',    short: 'STS', kind: 'minor', rarity: 'common', icon: '=#=#', anim: 'blink',    price: 35, tip: '+1 item slot.',       desc: '+1 slot on your item belt.' },
+    haggle:   { name: 'HAGGLE',   short: 'HGL', kind: 'minor', rarity: 'common', icon: '%%/%', anim: 'scramble', price: 30, tip: 'market prices -25%.', desc: 'black market prices are 25% lower.' },
+    cachekey: { name: 'CACHEKEY', short: 'KEY', kind: 'minor', rarity: 'common', icon: 'o-o=', anim: 'wave',     price: 30, tip: 'caches drop double.', desc: 'data caches drop their loot twice.' },
+    coolant:  { name: 'COOLANT',  short: 'CLT', kind: 'minor', rarity: 'common', icon: '*+x+', anim: 'cycle',    price: 30, tip: '+3s on every clock.', desc: '+3 seconds on every clock.' },
+    // Corp-specific (boss rewards)
+    corners:    { name: 'CORNERS',    short: 'CNR', kind: 'corp', corp: 'perimeter', rarity: 'boss', icon: '+  +', anim: 'blink',    tip: 'lock 1 corner ICE.',     desc: 'layer start: lock 1 ICE node in a corner.' },
+    bulwark:    { name: 'BULWARK',    short: 'BLW', kind: 'corp', corp: 'perimeter', rarity: 'boss', icon: '#|#|', anim: 'wave',     tip: 'block 1st hit/corp.',    desc: 'the first ICE hit in each corp is blocked.' },
+    sigscan:    { name: 'SIGSCAN',    short: 'SIG', kind: 'corp', corp: 'sigil',     rarity: 'boss', icon: 'xX+X', anim: 'scramble', tip: 'lock 1 signed ICE.',     desc: 'layer start: lock 1 ICE node wearing the Sigil signature.' },
+    forgery:    { name: 'FORGERY',    short: 'FRG', kind: 'corp', corp: 'sigil',     rarity: 'boss', icon: '$x$X', anim: 'cycle',    tip: '$ nodes do no damage.',  desc: '$ nodes no longer cost integrity.' },
+    overclock:  { name: 'OVERCLOCK',  short: 'OVC', kind: 'corp', corp: 'chronos',   rarity: 'boss', icon: '|/-\\', anim: 'spin',    tip: 'clock purges ICE.',      desc: 'every layer gets a clock. near the end it purges ICE, but each purge cuts the pay 20%.' },
+    fastpay:    { name: 'FASTPAY',    short: 'FST', kind: 'corp', corp: 'chronos',   rarity: 'boss', icon: '>>->', anim: 'wave',     tip: 'fast picks pay x1.5',    desc: 'picks made within 3 seconds pay x1.5.' },
+    echo:       { name: 'ECHO',       short: 'ECH', kind: 'corp', corp: 'mirror',    rarity: 'boss', icon: '()|)', anim: 'blink',    tip: 'hit ICE: mirror locks.', desc: 'hit ICE: its mirror-image ICE node locks too.' },
+    afterimage: { name: 'AFTERIMAGE', short: 'AFT', kind: 'corp', corp: 'mirror',    rarity: 'boss', icon: ':.:.', anim: 'scramble', tip: 'marks last real spot.',  desc: 'marks where the last layer\'s real node was.' },
+  };
+  for (const k of Object.keys(MODS)) MODS[k].key = k;
+  const modsOfKind = (...kinds) => Object.keys(MODS).filter(k => kinds.includes(MODS[k].kind));
+  function modWhere(m) {
+    if (m.kind === 'corp') return `from: ${corpDef(m.corp).name} boss.`;
+    if (m.kind === 'minor') return 'from: start, safehouse, cache, shop.';
+    return 'from: bosses, caches, market.';
+  }
+
+  // ---------------- Layers ----------------
+  function gridFor(n) {
+    let cols = 4, rows = 4;
+    while (n > Math.floor(cols * rows * 0.75)) {
+      if (rows <= cols) rows++; else cols++;
+    }
+    return { cols, rows };
+  }
+
+  function tellCells(tell, cols, rows, prevSafe) {
+    const all = [];
+    for (let i = 0; i < cols * rows; i++) all.push(i);
+    const colOf = i => i % cols, rowOf = i => Math.floor(i / cols);
+    if (tell === 'corner') return [0, cols - 1, (rows - 1) * cols, rows * cols - 1];
+    if (tell === 'center') return all.filter(i => colOf(i) > 0 && colOf(i) < cols - 1 && rowOf(i) > 0 && rowOf(i) < rows - 1);
+    if ((tell === 'mirror' || tell === 'vmirror' || tell === 'point') && prevSafe) {
+      const col = tell === 'vmirror' ? prevSafe.col : cols - 1 - prevSafe.col;
+      const row = tell === 'mirror' ? prevSafe.row : rows - 1 - prevSafe.row;
+      if (col >= 0 && col < cols && row >= 0 && row < rows) return [row * cols + col];
+    }
+    return null;
+  }
+
+  // Sigil signature for one tile. level 1: one glyph for the whole visit.
+  // level 2: always an X shape, random characters per tile.
+  // level 3: always 'x' characters, random arrangement per tile.
+  function signedGlyph(mark, r) {
+    if (mark.level === 1) return mark.glyph;
+    if (mark.level === 2) return X_SHAPE.map(l => l.replace(/[^ ]/g, () => pickR(MARK_CHARS, r)));
+    const cells = [];
+    for (let i = 0; i < 15; i++) cells.push(i);
+    const on = new Set(shuffle(cells, r).slice(0, 3 + Math.floor(r() * 3)));
+    const out = [];
+    for (let row = 0; row < 3; row++) {
+      let s = '';
+      for (let col = 0; col < 5; col++) s += on.has(row * 5 + col) ? (r() < 0.5 ? 'x' : 'X') : ' ';
+      out.push(s);
+    }
+    return out;
+  }
+
+  // ctx: { seed, nodeId, idx, n, tell, prevSafe, loot, mark }
+  function genLayer(ctx) {
+    const { seed, nodeId, idx, n, tell, prevSafe, loot, mark } = ctx;
+    const r = rngFor(seed, 'layer', nodeId, idx);
+    const { cols, rows } = gridFor(n);
+    const cells = [];
+    for (let i = 0; i < cols * rows; i++) cells.push(i);
+    shuffle(cells, r);
+    const tiles = cells.slice(0, n).map(cell => ({
+      cell, col: cell % cols, row: Math.floor(cell / cols),
+      glyph: null, safe: false, loaded: false, marked: false, ruledOut: false,
+      state: 'closed', hidden: false, probing: false, dist: null,
+    }));
+    const setCell = (t, cell) => { t.cell = cell; t.col = cell % cols; t.row = Math.floor(cell / cols); };
+
+    // Pick the safe tile, following the position tell most of the time.
+    let safe = tiles[Math.floor(r() * n)];
+    const follow = r() < CONFIG.tellStrength;
+    const targets = n > 1 ? tellCells(tell, cols, rows, prevSafe) : null;
+    if (targets && follow) {
+      let cand = tiles.filter(t => targets.includes(t.cell));
+      if (!cand.length) {
+        const used = new Set(tiles.map(t => t.cell));
+        const free = targets.filter(c => !used.has(c));
+        if (free.length) { const t = pickR(tiles, r); setCell(t, pickR(free, r)); cand = [t]; }
+      }
+      if (cand.length) safe = pickR(cand, r);
+    }
+    safe.safe = true;
+
+    // Glyphs. A mark tell puts the signature on the safe tile and some decoys.
+    const isMark = tell === 'mark' && mark;
+    const pool = MOTIFS.filter(m => {
+      if (!isMark) return true;
+      if (mark.level === 1) return m.join('|') !== mark.glyph.join('|');
+      if (mark.level === 2) return shapeOf(m) !== X_MASK;
+      return !/[xX]/.test(m.join(''));
+    });
+    for (const t of tiles) t.glyph = pickR(pool, r);
+    if (isMark && n > 1) {
+      const others = shuffle(tiles.filter(t => !t.safe), r);
+      const k = Math.min(others.length, Math.max(1, Math.round((n - 1) * CONFIG.markDecoyFrac)));
+      for (const t of [safe, ...others.slice(0, k)]) { t.marked = true; t.glyph = signedGlyph(mark, r); }
+    }
+    if (n === 1) tiles[0].glyph = JACK_GLYPH;
+
+    // Loaded ICE: a known trap that drops loot when hit.
+    if (loot && n >= 4 && r() < CONFIG.lootChance) {
+      const opts = tiles.filter(t => !t.safe && !t.marked);
+      if (opts.length) { const t = pickR(opts, r); t.loaded = true; t.glyph = LOOT_GLYPH; }
+    }
+
+    tiles.sort((a, b) => a.cell - b.cell);
+    return { n, cols, rows, tiles, safe: tiles.findIndex(t => t.safe), safeCell: { col: safe.col, row: safe.row } };
+  }
+
+  // ---------------- Overworld map ----------------
+  // Steps run bottom (0, start) to top (5, final). Steps 1-4 have 3 lanes.
+  const MAP_STEPS = 6;
+  function genMap(seed) {
+    const r = rngFor(seed, 'map');
+    const nodes = {};
+    const add = (step, lane, type, extra = {}) => {
+      const id = `${step}:${lane}`;
+      nodes[id] = Object.assign({ id, step, lane, type, next: [] }, extra);
+    };
+    add(0, 1, 'start', { corp: 'public', tier: 0 });
+    const specs = [
+      null,
+      ['corp', 'corp', 'corp'],
+      ['corp', 'corp', r() < 0.5 ? 'cache' : 'repair'],
+      ['corp', 'corp', 'shop'],
+      ['corp', 'corp', r() < 0.5 ? 'cache' : 'repair'],
+    ];
+    for (let s = 1; s <= 4; s++) {
+      const types = shuffle(specs[s].slice(), r);
+      const corps = shuffle(Object.keys(CORPS), r);
+      types.forEach((type, lane) => add(s, lane, type, type === 'corp' ? { corp: corps[lane], tier: s <= 2 ? 1 : 2 } : {}));
+    }
+    add(5, 1, 'final', { corp: 'omni', tier: 3 });
+    for (let lane = 0; lane < 3; lane++) nodes['0:1'].next.push(`1:${lane}`);
+    for (let s = 1; s <= 3; s++) {
+      for (let lane = 0; lane < 3; lane++) {
+        const n = nodes[`${s}:${lane}`];
+        n.next.push(`${s + 1}:${lane}`);
+        for (const d of [-1, 1]) if (lane + d >= 0 && lane + d < 3 && r() < 0.45) n.next.push(`${s + 1}:${lane + d}`);
+      }
+    }
+    for (let lane = 0; lane < 3; lane++) nodes[`4:${lane}`].next.push('5:1');
+    return nodes;
+  }
+  const nodeLetter = n => n.type === 'shop' ? '$' : n.type === 'cache' ? '?' : n.type === 'repair' ? '+' : corpDef(n.corp).letter;
+
+  // ---------------- Save data ----------------
+  const freshSave = () => ({
+    format: SAVE_FORMAT, best: 0, runs: 0, wins: 0, history: [], seen: {},
+    muted: false, palette: 'default', effects: 'full', tapMode: 'two',
+  });
+  const save = (() => {
+    const d = freshSave();
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (raw && raw.format === SAVE_FORMAT) Object.assign(d, raw);
+    } catch (e) { /* storage unavailable */ }
+    return d;
+  })();
+  const persist = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(save)); } catch (e) { /* ignore */ } };
+  function markSeen(key) {
+    if (!key || save.seen[key]) return;
+    save.seen[key] = true;
+    persist();
+  }
+
+  // ---------------- Sound ----------------
+  const Sound = (() => {
+    let ac = null, master = null, noiseBuf = null;
+    function init() {
+      if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+      try {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        master = ac.createGain(); master.gain.value = 0.16; master.connect(ac.destination);
+        noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+        const ch = noiseBuf.getChannelData(0);
+        for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+      } catch (e) { ac = null; }
+    }
+    function tone(freq, dur, { type = 'square', vol = 1, slide = 0, delay = 0 } = {}) {
+      if (!ac || save.muted) return;
+      const t = ac.currentTime + delay;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+    function noise(dur, { vol = 0.5, freq = 1000, delay = 0 } = {}) {
+      if (!ac || save.muted) return;
+      const t = ac.currentTime + delay;
+      const s = ac.createBufferSource(); s.buffer = noiseBuf;
+      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 0.8;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(master);
+      s.start(t); s.stop(t + dur + 0.02);
+    }
+    const arp = (notes, step, opts) => notes.forEach((f, i) => tone(f, 0.12, Object.assign({ type: 'triangle', vol: 0.4, delay: i * step }, opts)));
+    return {
+      init,
+      tick: () => tone(1800, 0.018, { vol: 0.12 }),
+      clock: () => tone(1400, 0.03, { vol: 0.25 }),
+      ui: () => tone(990, 0.04, { vol: 0.3 }),
+      deny: () => tone(160, 0.12, { type: 'square', vol: 0.3 }),
+      buy: () => { tone(880, 0.05, { vol: 0.3 }); tone(1320, 0.08, { vol: 0.3, delay: 0.06 }); },
+      probe: () => { tone(520, 0.05, { vol: 0.3 }); tone(780, 0.05, { vol: 0.25, delay: 0.09 }); tone(640, 0.05, { vol: 0.25, delay: 0.18 }); },
+      layer: n => tone(260 + Math.min(n, 30) * 22, 0.07, { vol: 0.25 }),
+      boss: () => { tone(90, 0.8, { type: 'sawtooth', vol: 0.5 }); tone(95, 0.8, { type: 'sawtooth', vol: 0.4 }); },
+      safe: () => arp([523, 784, 1046], 0.07, { vol: 0.55 }),
+      // Page transition: a soft sweep. Success: a rising sweep, bigger at level 2.
+      whoosh: () => noise(0.3, { vol: 0.18, freq: 500 }),
+      sweep: lvl => {
+        tone(220, 0.45, { type: 'sine', vol: 0.4, slide: 5 });
+        noise(0.35, { vol: 0.3, freq: 1800 });
+        if (lvl >= 2) arp([659, 880, 1175, 1568], 0.06, { vol: 0.35, delay: 0.1 });
+      },
+      // Offer pops, scaled by rarity level (0 common .. 4 boss).
+      pop: lvl => {
+        if (lvl <= 0) return tone(900, 0.03, { vol: 0.2 });
+        if (lvl === 1) return arp([700, 1050], 0.05, { vol: 0.3 });
+        if (lvl === 2) { arp([600, 900, 1200], 0.05, { vol: 0.35 }); noise(0.12, { vol: 0.2, freq: 4000 }); return; }
+        if (lvl === 3) { arp([523, 659, 784, 1046, 1318, 1568], 0.045, { vol: 0.4 }); noise(0.4, { vol: 0.25, freq: 6000 }); return; }
+        tone(70, 0.5, { type: 'sawtooth', vol: 0.5 }); arp([392, 523, 659, 784], 0.07, { vol: 0.4, delay: 0.08 });
+      },
+      trap: () => { tone(110, 0.35, { type: 'sawtooth', vol: 0.7, slide: 0.5 }); noise(0.25, { vol: 0.6, freq: 900 }); },
+      shield: () => { tone(1200, 0.15, { type: 'triangle', vol: 0.5, slide: 0.5 }); noise(0.15, { vol: 0.3, freq: 3000 }); },
+      loot: () => { for (let i = 0; i < 4; i++) tone(1200 + i * 200, 0.05, { vol: 0.25, delay: i * 0.05 }); },
+      death: () => { tone(220, 1.3, { type: 'sawtooth', vol: 0.6, slide: 0.2 }); noise(1.0, { vol: 0.45, freq: 350, delay: 0.1 }); },
+      win: () => arp([523, 659, 784, 1046, 1318], 0.1, { vol: 0.5 }),
+    };
+  })();
+
+  // ---------------- Canvas & layout ----------------
+  const cv = document.getElementById('screen');
+  const g = cv.getContext('2d');
+  let W = 0, H = 0, dpr = 1;
+  let L = null;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    computeLayout();
+  }
+
+  function computeLayout() {
+    const gd = (st.mode === 'play' && st.lv) ? { cols: st.lv.cols, rows: st.lv.rows } : { cols: 4, rows: 4 };
+    const gw = gd.cols * TILE_W + (gd.cols - 1) * GAP_X;
+    const gh = gd.rows * TILE_H + (gd.rows - 1) * GAP_Y;
+    const wc = Math.max(gw, MIN_CONTENT_W);
+    const hc = BOARD_Y + gh + TRAY_ROWS + 1;
+    g.font = `400 100px ${FONT}`;
+    const ratio = (g.measureText('M').width / 100) || 0.6;
+    const gutter = 12;
+    let fs = Math.min((W - 2 * gutter) / (wc * ratio), (H - 2 * gutter) / (hc * LINE_H));
+    fs = Math.max(7, Math.min(26, fs));
+    const cw = fs * ratio, chh = fs * LINE_H;
+    L = {
+      fs, cw, chh, wc, hc, gw, gh,
+      gx: Math.floor((wc - gw) / 2),
+      cols: gd.cols, rows: gd.rows,
+      ox: Math.round((W - wc * cw) / 2),
+      oy: Math.round((H - hc * chh) / 2),
+    };
+  }
+  const pxX = cx => L.ox + cx * L.cw + L.cw / 2;
+  const pxY = cy => L.oy + cy * L.chh + L.chh / 2;
+  const tileOrigin = t => ({ tx: L.gx + t.col * (TILE_W + GAP_X), ty: BOARD_Y + t.row * (TILE_H + GAP_Y) });
+  const tileCenter = t => { const { tx, ty } = tileOrigin(t); return { x: pxX(tx + (TILE_W - 1) / 2), y: pxY(ty + (TILE_H - 1) / 2) }; };
+
+  // ---------------- State ----------------
+  const params = new URLSearchParams(location.search);
+  const urlSeed = cleanSeed(params.get('seed'));
+
+  const st = {
+    mode: 'title',          // title | map | play | panel | over
+    seed: urlSeed || newSeed(),
+    practice: !!urlSeed,
+    run: null,              // the current run (map, integrity, credits, items, mods)
+    corp: null,             // the corp being hacked
+    lv: null,               // the current layer
+    panelFn: null,          // builds the lines for panel screens
+    panelTitle: '',
+    panelT0: 0,             // when offers start popping in
+    revealed: new Set(),    // offers that already popped
+    busy: true,
+    hover: -1, hoverBtn: null, hoverNode: null, hoverItem: -1, hoverMod: -1,
+    selItem: -1, selMod: -1,  // tray selection: first tap shows info, second tap uses
+    mapSel: null,
+    timer: null,
+    msg: '', msgCol: '', msgT: 0,
+    boardStart: 0,
+    wipe: null,             // board transition in progress
+    hideBoard: false, hideAll: false,
+    debug: false,           // show the real node (dev menu)
+    dev: false,             // dev menu open
+    devAccess: params.get('dev') === '1',
+    result: null,
+    transitioning: false,
+    resetArmed: false,
+    pause: false,           // pause menu open (during a run)
+    abandonArmed: false,
+    kbFocus: null,          // id of the button the keyboard cursor is on
+    kbGrid: false,          // last grid move came from the keyboard (shows a blinking cursor)
+    focusables: [],         // tappable buttons on screen, in reading order, for the keyboard
+    keyHandler: null,       // screen-specific keys (codex, help, settings)
+    scroll: null,           // screen-specific scrolling (wheel, swipe)
+    drag: null,
+  };
+  const has = key => !!(st.run && st.run.mods.includes(key));
+  const reduced = () => save.effects === 'reduced';
+
+  // ---------------- Effects ----------------
+  const parts = [];
+  const shakeFx = { amp: 0, t0: 0, dur: 1 };
+  const flashFx = { col: '#fff', a: 0, t0: 0, dur: 1 };
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function shake(amp, dur = 0.35) { if (reduced()) return; Object.assign(shakeFx, { amp: amp * L.fs / 16, t0: performance.now(), dur }); }
+  function flash(col, a, dur = 0.3) { if (reduced()) return; Object.assign(flashFx, { col, a, t0: performance.now(), dur }); }
+
+  // Current on-screen characters (without transitions), as pixel positions.
+  function snapshot(filter) {
+    return buildScene(performance.now(), false, true)
+      .filter(filter)
+      .map(c => ({ ch: c.ch, x: pxX(c.cx), y: pxY(c.cy), col: c.col }));
+  }
+
+  function explode(cells, ox, oy, { col = null, power = 1, grav = 1, life = [0.7, 1.3] } = {}) {
+    const k = L.fs / 16;
+    for (const c of cells) {
+      const dx = c.x - ox, dy = c.y - oy, d = Math.hypot(dx, dy) || 1;
+      const sp = rand(220, 600) * power * k;
+      parts.push({
+        mode: 'explode', ch: c.ch, x: c.x, y: c.y, col: col || c.col,
+        vx: dx / d * sp + rand(-60, 60) * k,
+        vy: dy / d * sp - rand(80, 320) * power * k,
+        rot: 0, vr: rand(-9, 9), g: grav,
+        t: 0, life: rand(life[0], life[1]), alpha: 1, scr: 5,
+      });
+    }
+  }
+
+  // All characters get pulled straight into one point (used for the win screen).
+  function implode(cells, cx, cy) {
+    let maxR = 1;
+    for (const c of cells) maxR = Math.max(maxR, Math.hypot(c.x - cx, c.y - cy));
+    for (const c of cells) {
+      const dx = c.x - cx, dy = c.y - cy, r0 = Math.hypot(dx, dy), q = r0 / maxR;
+      parts.push({
+        mode: 'implode', ch: c.ch, x: c.x, y: c.y, col: c.col, cx, cy, r0,
+        a0: Math.atan2(dy, dx),
+        t: -Math.random() * 0.08, life: 0.45 + 0.35 * q + Math.random() * 0.1,
+        rot: 0, alpha: 1, scr: 6,
+      });
+    }
+  }
+
+  // Characters stay in place, glitch, and blink out one by one at random.
+  function glitchOut(cells, dur = 1.3) {
+    for (const c of cells) {
+      parts.push({
+        mode: 'glitch', ch: c.ch, x: c.x, y: c.y, x0: c.x, y0: c.y, col: c.col, base: c.col,
+        t: 0, life: 0.15 + Math.random() * dur, rot: 0, alpha: 1, scr: 0,
+      });
+    }
+  }
+
+  function updateParts(dt) {
+    const grav = 1500 * L.fs / 16;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.t += dt;
+      if (p.t < 0) continue;
+      const k = Math.min(1, p.t / p.life);
+      if (p.mode === 'glitch') {
+        const r = Math.random();
+        if (r < 0.12) p.ch = noiseCh();
+        p.x = r < 0.06 ? p.x0 + rand(-2, 2) * L.cw : p.x0;
+        p.col = Math.random() < 0.1 ? C.red : p.base;
+        if (p.t >= p.life) parts.splice(i, 1);
+        continue;
+      }
+      if (p.mode === 'implode') {
+        const e = k * k, r = p.r0 * (1 - e);
+        p.x = p.cx + Math.cos(p.a0) * r; p.y = p.cy + Math.sin(p.a0) * r;
+        if (e > 0.35) p.col = C.cyan;
+        p.alpha = k > 0.8 ? (1 - k) / 0.2 : 1;
+      } else {
+        p.vy += grav * p.g * dt;
+        p.vx *= 1 - 0.8 * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.rot += p.vr * dt;
+        p.alpha = k > 0.6 ? Math.max(0, (1 - k) / 0.4) : 1;
+      }
+      if (Math.random() < p.scr * dt) p.ch = noiseCh();
+      if (p.t >= p.life) parts.splice(i, 1);
+    }
+  }
+
+  // ---------------- Scroll-fill wipe ----------------
+  // The board fills from the bottom with a scrolling pattern; a scramble band
+  // rides the front. Then the next screen comes up out of the fill the same way.
+  // level 0 = quiet page change, 1 = success, 2 = perfect / boss clear.
+  // Fills scroll upward. Two kinds:
+  //   - patterns: 4-row repeats (strings), so you can see them move
+  //   - noise fields: random characters fixed in place, so the whole field scrolls
+  //     up together (fresh random noise every frame would just flicker)
+  // Each wipe picks one at random (quiet set for page changes, success set for wins).
+  const hash2 = (a, b) => {
+    let x = (Math.imul(a + 11, 374761393) + Math.imul(b + 7, 668265263)) | 0;
+    x = Math.imul(x ^ (x >>> 15), 0x2c1b3c6d);
+    x = Math.imul(x ^ (x >>> 12), 0x297a2d39);
+    return (x ^ (x >>> 15)) >>> 0;
+  };
+  const noiseField = (chars, density) => (cx, r) => {
+    const h = hash2(cx, r);
+    return (h % 1000) < density * 1000 ? chars[(h >>> 10) % chars.length] : null;
+  };
+  // Each column cycles through `chain` with its own offset, so columns ripple.
+  const streams = chain => (cx, r) => {
+    const ch = chain[(r + hash2(cx, 3) % chain.length) % chain.length];
+    return ch === ' ' ? null : ch;
+  };
+  const FILLS = {
+    quiet: [
+      streams(' .:|'),
+      noiseField('...::;+=', 0.5),
+      [' ^  ^  ^', '/ \\/ \\/ ', ': :: :: ', '. .. .. '],    // chevrons
+      ['-=-=-=-=', ' . . . .', '=-=-=-=-', '. . . . '],      // dashes
+      ['.:  .:  ', ':|  :|  ', '  .:  .:', '  :|  :|'],      // checker streams
+    ],
+    success: [
+      streams(' .:|#'),
+      noiseField('::;+=*#%', 0.65),
+      ['^^  ^^  ', '||  ||  ', '::^^::^^', '  ||  ||'],      // double chevrons
+      [' /\\  /\\ ', '/::\\/::\\', ':||::||:', '.::..::.'],  // arrows
+    ],
+  };
+  // Timing per strength: how long the front takes to cross the board, and how
+  // long each character takes to break down (or build up) when the front hits it.
+  const WIPE_TIME = [
+    { travel: 280, decay: 240 },   // quiet page change
+    { travel: 340, decay: 320 },   // success
+    { travel: 360, decay: 360 },   // perfect / boss clear
+  ];
+  const DECAY_CHARS = '.:,\'`';
+
+  function fillChar(cx, cy, now, level, pat) {
+    const s = Math.floor(now * CONFIG.wipeSpeed / (level ? 45 : 75));   // one row up per tick
+    if (typeof pat === 'function') return pat(cx, cy + s);
+    const row = pat[(((cy + s) % pat.length) + pat.length) % pat.length];
+    const ch = row[((cx % row.length) + row.length) % row.length];
+    return ch === ' ' ? null : ch;
+  }
+
+  // How it works: fronts rise row by row; each board row gets an arrival time.
+  // The old screen's front starts first. Partway up, the new screen's front starts
+  // behind it, so the two overlap like a cross-fade:
+  //   top: old screen still breaking down / middle: scrolling fill / bottom: new screen.
+  // Old characters break down when hit (flicker -> noise -> decay dots).
+  // New characters build up the reverse way. Empty cells just fill or clear.
+  const LIT_HOLD = 220;   // wipe-time the real node stays lit after the front passes the top
+  // Each character gets its own random delay and change speed, so swaps don't happen in a neat line.
+  const charJitter = (cx, cy, salt) => (hash2(Math.round(cx * 2) + salt, Math.round(cy)) % 1000) / 1000;
+
+  function applyWipe(cells, now) {
+    const w = st.wipe;
+    const top = BOARD_Y, bot = BOARD_Y + L.gh;
+    const inB = c => c.cy >= top && c.cy < bot;
+    const out = cells.filter(c => !inB(c));
+    const outT = WIPE_TIME[w.level];
+    const inLvl = w.levelIn != null ? w.levelIn : Math.min(w.level, 1);
+    const inT = WIPE_TIME[inLvl];
+    const eOut = (now - w.t0) * CONFIG.wipeSpeed;                                   // wipe-time, scaled by speed
+    const eIn = w.tIn != null ? (now - w.tIn) * CONFIG.wipeSpeed : -Infinity;
+    const frac = cy => (bot - 1 - cy) / Math.max(1, L.gh - 1);                        // bottom row first
+    const hitOut = w.level ? C.cyan : C.text, hitIn = inLvl ? C.cyan : C.text;
+    const fillCol = age => age < 70 ? (w.level ? C.cyan : C.mid) : age < 200 && w.level ? C.mid : C.dim;
+    const busy = new Set();   // cells with a character mid-change; no fill drawn there
+    const key = (cx, cy) => Math.round(cx) + ',' + Math.round(cy);
+    const decayCh = () => DECAY_CHARS[Math.floor(Math.random() * DECAY_CHARS.length)];
+
+    // Old screen: breaks down as its front passes.
+    for (const c of w.cells) {
+      const hit = eOut - frac(Math.round(c.cy)) * outT.travel;          // time since the front got here
+      const t = hit - charJitter(c.cx, c.cy, 1) * CONFIG.wipeStagger;      // this character starts a bit later
+      const dec = outT.decay * (0.7 + 0.6 * charJitter(c.cx, c.cy, 2));
+      if (t < 0) { out.push(c); if (hit >= 0) busy.add(key(c.cx, c.cy)); continue; }   // holding on in the fill
+      if (t >= dec) continue;
+      const q = t / dec;
+      let ch, col;
+      if (q < 0.3) { ch = Math.random() < 0.5 ? c.ch : noiseCh(); col = Math.random() < 0.5 ? c.col : hitOut; }
+      else if (q < 0.7) { ch = noiseCh(); col = hitOut; }
+      else { ch = decayCh(); col = C.mid; }
+      const dy = -Math.sin(Math.min(1, q * 2) * Math.PI) * (w.level ? 0.35 : 0.2);   // bumped by the front
+      out.push({ ch, cx: c.cx, cy: c.cy + dy, col, own: 'wipe', bold: c.bold });
+      busy.add(key(c.cx, c.cy));
+    }
+
+    // New screen: builds up as its front passes (once it has started).
+    if (w.tIn != null) {
+      for (const c of cells) {
+        if (!inB(c) || busy.has(key(c.cx, c.cy))) continue;
+        const hit = eIn - frac(Math.round(c.cy)) * inT.travel;
+        if (hit < 0) continue;                                              // still under the fill
+        const t = hit - charJitter(c.cx, c.cy, 3) * CONFIG.wipeStagger;
+        const dec = inT.decay * (0.7 + 0.6 * charJitter(c.cx, c.cy, 4));
+        if (t < 0) {                                                        // waiting its turn: cycling noise
+          out.push({ ch: Math.random() < 0.5 ? decayCh() : noiseCh(), cx: c.cx, cy: c.cy, col: C.mid, own: 'wipe' });
+          busy.add(key(c.cx, c.cy));
+          continue;
+        }
+        if (t >= dec) { out.push(c); continue; }
+        const q = t / dec;
+        let ch, col;
+        if (q < 0.25) { ch = decayCh(); col = C.mid; }
+        else if (q < 0.65) { ch = noiseCh(); col = hitIn; }
+        else { ch = Math.random() < 0.6 ? c.ch : noiseCh(); col = Math.random() < 0.6 ? c.col : hitIn; }
+        out.push({ ch, cx: c.cx, cy: c.cy, col, own: 'wipe', bold: c.bold });
+        busy.add(key(c.cx, c.cy));
+      }
+    }
+
+    // Fill between the two fronts, with bright leading lines.
+    for (let cy = top; cy < bot; cy++) {
+      const tO = eOut - frac(cy) * outT.travel;
+      const tI = eIn - frac(cy) * inT.travel;
+      for (let cx = 0; cx < L.wc; cx++) {
+        if (busy.has(cx + ',' + cy)) continue;
+        if (tO < 0) {
+          // Old screen region. Sparks just ahead of the front on a success.
+          if (w.level && tO > -90 && Math.random() < (w.level >= 2 ? 0.08 : 0.04)) out.push({ ch: noiseCh(), cx, cy, col: C.cyan, own: 'wipe' });
+          continue;
+        }
+        if (tI >= 0) {
+          // New screen region; a bright line marks its front.
+          if (tI < 60) { const ch = fillChar(cx, cy, now, inLvl, w.pattern); if (ch) out.push({ ch, cx, cy, col: hitIn, own: 'wipe' }); }
+          continue;
+        }
+        const ch = fillChar(cx, cy, now, w.level, w.pattern);
+        if (ch) out.push({ ch, cx, cy, col: fillCol(tO), own: 'wipe' });
+      }
+    }
+
+    // The real node stays lit and is the last thing swallowed.
+    if (w.lit && eOut < outT.travel + LIT_HOLD) {
+      const ending = eOut > outT.travel + LIT_HOLD - 160;
+      for (const c of w.lit) out.push(Object.assign({}, c, { ch: ending && Math.random() < 0.6 ? noiseCh() : c.ch, col: C.cyan, bold: true }));
+    }
+    return out;
+  }
+
+  // Start wiping the board out. Resolves at the hand-off point, partway through,
+  // so the caller can open the next screen while the old one is still going.
+  async function wipeOut(level = 0, lit = null) {
+    const now = performance.now();
+    const cells = buildScene(now, false, true).filter(c => c.cy >= BOARD_Y && c.cy < BOARD_Y + L.gh);
+    const pattern = pickR(level ? FILLS.success : FILLS.quiet, Math.random);   // new fill each wipe
+    st.wipe = { t0: now, level, cells, lit, pattern, tIn: null };
+    if (level) { Sound.sweep(level); shake(level >= 2 ? 7 : 3, 0.3); if (level >= 2) flash(C.cyan, 0.15, 0.4); }
+    else Sound.whoosh();
+    // Success wipes hand off later, so the lit node gets its moment.
+    const handoff = WIPE_TIME[level].travel * (level ? CONFIG.wipeOverlapWin : CONFIG.wipeOverlap) / CONFIG.wipeSpeed;
+    await wait(handoff);
+  }
+
+  // Start the new screen's front. Without a wipe in progress, just decode in.
+  function wipeIn() {
+    const w = st.wipe;
+    if (w && w.tIn == null) {
+      const now = performance.now();
+      w.tIn = now;
+      w.levelIn = Math.min(w.level, 1);   // the new screen always builds in calmly
+      const outT = WIPE_TIME[w.level], inT = WIPE_TIME[w.levelIn];
+      const slack = CONFIG.wipeStagger;   // the last characters can start this much later, and change 1.3x slower
+      const outEnd = w.t0 + (outT.travel + Math.max(outT.decay * 1.3 + slack, w.lit ? LIT_HOLD : 0)) / CONFIG.wipeSpeed;
+      const inEnd = now + (inT.travel + inT.decay * 1.3 + slack) / CONFIG.wipeSpeed;
+      w.dur = inEnd - now;                 // how long until the new screen is fully in
+      w.endsAt = Math.max(outEnd, inEnd);
+    } else {
+      st.wipe = null;
+      st.boardStart = performance.now();
+    }
+  }
+
+  // ---------------- Scene ----------------
+  let hits = [];
+  let bgs = [];             // background-tinted cells for the current frame
+  const pad2 = n => String(n).padStart(2, '0');
+  const rule = w => '- '.repeat(Math.ceil(w / 2)).slice(0, w);
+  const decodeDelay = (cx, cy) => 40 + ((((Math.round(cx * 2) + 1) * 374761393) ^ ((Math.round(cy * 2) + 1) * 668265263)) >>> 0) % 380;
+
+  // raw = skip transitions (used for snapshots).
+  function buildScene(now, collectHits, raw = false) {
+    const cells = [];
+    const frameBgs = [];
+    const put = (cx, cy, str, col, own = 'hud', bold = false) => {
+      for (let k = 0; k < str.length; k++) {
+        if (str[k] !== ' ') cells.push({ ch: str[k], cx: cx + k, cy, col, own, bold });
+      }
+    };
+    const putC = (cy, str, col, own) => put(Math.floor((L.wc - str.length) / 2), cy, str, col, own);
+    const putR = (cy, str, col, own) => put(L.wc - str.length, cy, str, col, own);
+    const bg = (cx, cy, w, col, alpha) => frameBgs.push({ cx, cy, w, col, alpha });
+    const addHit = (cx, cy, w, h, hit) => {
+      if (!collectHits) return;
+      let x = L.ox + cx * L.cw, y = L.oy + cy * L.chh, pw = w * L.cw, ph = h * L.chh;
+      if (ph < 40) { y -= (40 - ph) / 2; ph = 40; }   // finger-sized tap targets
+      if (pw < 40) { x -= (40 - pw) / 2; pw = 40; }
+      hits.push(Object.assign({ x, y, w: pw, h: ph }, hit));
+    };
+    const ctx = { now, put, putC, putR, addHit, bg, cells, collectHits };
+
+    if (st.hideAll) { if (collectHits) bgs = []; return cells; }
+    const run = st.run;
+
+    // Header
+    put(0, 0, 'BETA_RUNNER', C.cyan);
+    if (run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel')) {
+      put(12, 0, '[MENU]', st.pause || st.hoverBtn === 'menu' ? C.cyan : C.mid, 'ui');
+      addHit(12, 0, 6, 1, { kind: 'btn', id: 'menu', onTap: togglePause, noFocus: true });
+    } else put(12, 0, `// ${VERSION}`, C.dim);
+    const snd = save.muted ? '[SND OFF]' : '[SND ON ]';
+    put(L.wc - snd.length, 0, snd, st.hoverBtn === 'snd' ? C.cyan : C.mid, 'ui');
+    addHit(L.wc - snd.length, 0, snd.length, 1, { kind: 'btn', id: 'snd', onTap: toggleMute, noFocus: true });
+    if (st.devAccess || st.dev) {
+      const dx = L.wc - snd.length - 6;
+      put(dx, 0, '[DEV]', st.dev || st.hoverBtn === 'dev' ? C.cyan : C.mid, 'ui');
+      addHit(dx, 0, 5, 1, { kind: 'btn', id: 'dev', onTap: toggleDev, noFocus: true });
+    }
+    put(0, 1, rule(L.wc), C.dim);
+
+    // HUD
+    if (run && st.mode !== 'title' && st.mode !== 'over') {
+      put(0, 2, 'LAYER ', C.mid); put(6, 2, pad2(run.depth), C.bright);
+      const cur = Math.max(0, run.integrity);
+      const bar = run.maxInt <= 10 ? '#'.repeat(cur) + '-'.repeat(Math.max(0, run.maxInt - cur)) : `${cur}/${run.maxInt}`;
+      putR(2, bar, cur <= 1 ? C.red : C.cyan);
+      put(L.wc - bar.length - 10, 2, 'INTEGRITY', C.mid);
+      if (run.shield) put(L.wc - bar.length - 10 - 3 - String(run.shield).length, 2, `FW${run.shield}`, C.cyan);
+
+      let where = 'OVERWORLD';
+      if (st.mode === 'play' && st.corp) {
+        const c = st.corp;
+        const prog = c.hasBoss ? (st.lv && st.lv.boss ? 'BOSS' : `${c.idx + 1}/${c.counts.length - 1}`) : '';
+        where = `${c.def.name} ${prog}`;
+      } else if (st.mode === 'panel') where = st.panelTitle || '';
+      put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.red : C.text);
+      putR(3, `CR ${run.credits}`, C.gold);
+    } else {
+      put(0, 2, 'LAYER ', C.mid); put(6, 2, '--', C.bright);
+      putR(3, `BEST ${pad2(save.best)}`, C.mid);
+      put(0, 3, 'SEED ', C.mid);
+      if (st.mode === 'title') {
+        // Tap the seed to roll a new one.
+        const label = `[${st.seed.slice(0, 10)}]`;
+        put(5, 3, label, st.hoverBtn === 'seed' ? C.cyan : C.text, 'ui');
+        addHit(5, 3, label.length, 1, { kind: 'btn', id: 'seed', onTap: rerollSeed });
+        if (st.practice) put(6 + label.length, 3, 'PRACTICE', C.redDim);
+      } else put(5, 3, st.seed.slice(0, 10), C.text);
+    }
+    put(0, 4, rule(L.wc), C.dim);
+
+    // Row 5: odds in a layer, seed elsewhere
+    if (st.mode === 'play' && st.lv) {
+      const cand = candidates().length;
+      const open = st.lv.tiles.filter(t => t.state === 'closed').length;
+      put(0, 5, 'OPEN ', C.mid); put(5, 5, `${pad2(open)}/${pad2(st.lv.n)}`, C.text);
+      if (cand > 0) {
+        const pct = Math.round(100 / cand);
+        const col = cand === 1 ? C.cyan : pct < 25 ? C.red : C.text;
+        const val = `1 IN ${cand}  ${String(pct).padStart(3)}%`;
+        putR(5, val, col);
+        put(L.wc - val.length - 5, 5, 'ODDS', C.mid);
+      }
+    } else if (run && st.mode !== 'title' && st.mode !== 'over') {
+      put(0, 5, 'SEED ', C.mid); put(5, 5, run.seed.slice(0, 10), C.text);
+      if (run.practice) putR(5, 'PRACTICE', C.redDim);
+    }
+
+    if (st.msg) put(0, 6, st.msg.slice(0, Math.floor((now - st.msgT) / 16)), st.msgCol || C.text);
+
+    // Row 7: clock or boss warning
+    if (st.mode === 'play' && st.lv) {
+      if (st.timer) {
+        const w = 20, f = Math.max(0, st.timer.left / st.timer.max);
+        const fill = Math.ceil(f * w);
+        const low = st.timer.left <= 3;
+        put(0, 7, 'CLOCK ', C.mid);
+        put(6, 7, '=' .repeat(fill), low ? C.red : C.text);
+        put(6 + w, 7, '|', C.dim);
+        put(6 + w + 2, 7, `${Math.ceil(st.timer.left)}s`, low ? C.red : C.text);
+      } else if (st.lv.boss) {
+        put(0, 7, '!! ' + st.corp.def.bossDesc, C.redDim);
+      }
+    }
+
+    // Board
+    const boardEnd = BOARD_Y + L.gh;
+    if (st.dev) buildTextBoard(ctx, devLines());
+    else if (st.pause) buildTextBoard(ctx, pauseLines());
+    else if (!st.hideBoard) {
+      if (st.mode === 'play' && st.lv) buildBoard(ctx);
+      else if (st.mode === 'map') buildMap(ctx);
+      else buildTextBoard(ctx, panelLines());
+    }
+
+    // Tray: mods, items, info
+    put(0, boardEnd + 1, rule(L.wc), C.dim);
+    buildTray(ctx, boardEnd + 2);
+
+    let result = cells;
+    if (!raw) {
+      if (st.wipe && !st.dev) result = applyWipe(cells, now);
+      else {
+        // Board characters "decode" in when a screen appears without a wipe.
+        const age = now - st.boardStart;
+        if (age < 500) {
+          for (const c of cells) {
+            if (c.cy >= BOARD_Y && c.cy < boardEnd && age < decodeDelay(c.cx, c.cy)) { c.ch = noiseCh(); c.col = C.dim; }
+          }
+        }
+      }
+    }
+    if (collectHits) bgs = st.wipe && !st.dev ? frameBgs.filter(b => b.cy < BOARD_Y || b.cy >= boardEnd) : frameBgs;
+    if (collectHits) st.focusables = hits.filter(h => h.kind === 'btn' && !h.noFocus).sort((a, b) => a.y - b.y || a.x - b.x).map(h => ({ id: h.id, onTap: h.onTap }));
+    return result;
+  }
+
+  // Badge color by rarity.
+  const modColor = m => rarityCol(m.rarity);
+
+  // Draws one mod badge: an animated icon character plus its short name.
+  // Animation gets fancier with rarity: common = icon only, exotic = full show.
+  function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own = 'tray', noCharges = false } = {}) {
+    const m = MODS[key];
+    const lvl = RARITY[m.rarity].lvl;
+    const base = dim ? C.mid : modColor(m);
+    const phase = i * 0.77;
+    const icon = m.icon[Math.floor(now / 180 + i * 3) % m.icon.length];
+    put(x, y, icon === ' ' ? '.' : icon, selected ? C.bright : base, own, true);
+    const charges = noCharges ? null : modCharges(key);
+    const label = m.short + (charges != null ? String(charges) : '');
+    const anim = lvl === 0 ? 'none' : lvl === 3 ? 'exotic' : m.anim;
+    const cyc = [base, C.bright, base, C.mid];
+    const rainbow = [C.exotic, C.bright, C.epic, C.rare, C.boss];
+    for (let k = 0; k < label.length; k++) {
+      let ch = label[k], dy = 0, col = selected ? C.bright : base;
+      const t = (now / 1000 + phase) % 4;
+      if (anim === 'wave' || anim === 'exotic') { const w = t - k * 0.09; if (w > 0 && w < 0.3) dy = -Math.sin(w / 0.3 * Math.PI) * 0.35; }
+      if (anim === 'exotic' && !dim) col = rainbow[Math.floor(now / 160 + k) % rainbow.length];
+      if (anim === 'cycle' && !selected && !dim) col = cyc[Math.floor(now / 300 + k) % cyc.length];
+      if (anim === 'scramble' && t < 0.2 && Math.random() < 0.5) ch = noiseCh();
+      if (anim === 'blink' && t % 2 < 0.12) col = C.bright;
+      if (anim === 'spin' && t < 0.4) col = C.bright;
+      put(x + 1 + k, y + dy, ch, col, own, lvl >= 4);
+    }
+    return 1 + label.length;
+  }
+
+  // Tray layout (fixed rows, nothing moves so hover stays stable):
+  //   mods row, mod info line, item belt, item info line.
+  function buildTray({ now, put, addHit, bg }, y) {
+    const run = st.run;
+    const inRun = run && st.mode !== 'title' && st.mode !== 'over';
+    if (!inRun) {
+      const hint = st.mode === 'over' ? 'R = retry seed   ENTER = new run' : '';
+      put(0, y + 1, hint, C.dim);
+      return;
+    }
+
+    // Mods row
+    if (!run.mods.length) put(0, y, 'no mods yet', C.dim);
+    let x = 0;
+    run.mods.forEach((key, i) => {
+      if (x > L.wc - 4) return;
+      const active = MODS[key].active;
+      const sel = st.selMod === i, hov = st.hoverMod === i;
+      const w = drawBadge(put, now, x, y, key, i, { selected: sel || hov, dim: active && !modUsable(key) });
+      if (sel || hov) bg(x, y, w, C.cyan, sel ? 0.25 : 0.12);
+      addHit(x, y, w, 1, { kind: 'mod', i });
+      x += w + 2;
+    });
+
+    // Mod info line, right under the mods
+    const mi = st.selMod >= 0 ? st.selMod : st.hoverMod;
+    if (mi >= 0 && run.mods[mi]) {
+      const key = run.mods[mi], m = MODS[key];
+      put(0, y + 1, '\\_', C.mid);
+      put(2, y + 1, m.short, modColor(m), 'tray', true);
+      put(6, y + 1, m.tip, C.text);
+      if (m.active) put(7 + m.tip.length + 1, y + 1, modUsable(key) ? '>tap' : '(not now)', modUsable(key) ? C.cyan : C.dim);
+    }
+
+    // Item belt: every slot is always shown, empty ones too (no brackets: not tappable).
+    const slots = run.beltSlots;
+    const step = Math.min(8, Math.floor((L.wc + 1) / slots));
+    for (let i = 0; i < slots; i++) {
+      const key = run.items[i];
+      const ix = i * step;
+      if (!key) { put(ix, y + 2, ':  .  :', C.dim, 'tray'); continue; }
+      const ok = canUse(key);
+      const sel = st.selItem === i, hov = st.hoverItem === i;
+      put(ix, y + 2, `[${ITEMS[key].name}]`, sel || hov ? C.cyan : ok ? C.bright : C.mid, 'tray');
+      if (sel || hov) bg(ix, y + 2, 7, C.cyan, sel ? 0.25 : 0.12);
+      addHit(ix, y + 2, 7, 1, { kind: 'item', i });
+    }
+
+    // Item info line, right under the belt
+    const ii = st.selItem >= 0 ? st.selItem : st.hoverItem;
+    if (ii >= 0 && run.items[ii]) {
+      const it = ITEMS[run.items[ii]];
+      put(0, y + 3, '\\_', C.mid);
+      put(2, y + 3, it.name, C.bright, 'tray', true);
+      put(3 + it.name.length, y + 3, it.tip, C.text);
+      const usable = canUse(it.key);
+      put(4 + it.name.length + it.tip.length, y + 3, usable ? '>tap' : '(not now)', usable ? C.cyan : C.dim);
+    }
+  }
+
+  function buildBoard({ now, put, addHit }) {
+    const lv = st.lv;
+    const used = new Set();
+    const masked = lv.maskAt && now > lv.maskAt;
+    lv.tiles.forEach((t, i) => {
+      used.add(t.cell);
+      const { tx, ty } = tileOrigin(t);
+      if (t.state === 'closed') addHit(tx, ty, TILE_W, TILE_H, { kind: 'tile', i });
+      if (t.hidden) return;
+      const own = 't' + i;
+      // A node you hit stays on the board, bold and red.
+      if (t.state === 'locked' && t.lockedBy === 'hit') {
+        const fresh = now - t.hitAt < 220;   // brief glitch right after the hit
+        const glyphCol = t.loaded ? C.gold : C.red;
+        let bottom = '+-----+';
+        if (t.dist != null) {   // tracer distance, centered in the bottom edge
+          const tag = `<${t.dist}>`, left = Math.floor((5 - tag.length) / 2);
+          bottom = '+' + ('-'.repeat(left) + tag).padEnd(5, '-') + '+';
+        }
+        let rows = ['+-----+', ...t.glyph.map(l => '|' + l + '|'), bottom];
+        if (fresh) rows = rows.map(r => r.replace(/[^ ]/g, ch => Math.random() < 0.6 ? noiseCh() : ch));
+        rows.forEach((r, k) => {
+          const isEdge = k === 0 || k === rows.length - 1;
+          put(tx, ty + k, r[0], C.red, own, true);
+          put(tx + 1, ty + k, r.slice(1, TILE_W - 1), isEdge ? (t.dist != null && !fresh ? C.bright : C.red) : glyphCol, own, true);
+          put(tx + TILE_W - 1, ty + k, r[TILE_W - 1], C.red, own, true);
+        });
+        return;
+      }
+      if (t.state === 'locked') {
+        // Switched off by an item or mod: the whole tile in dim red, with a label
+        // saying what did it (and the mod's code, for mods).
+        const [word, code] = LOCK_LABEL[t.lockedBy] || ['INERT', ''];
+        const mid5 = str => { const l = Math.floor((5 - str.length) / 2); return (' '.repeat(l) + str).padEnd(5); };
+        const rows = ['+-----+', '|' + t.glyph[0] + '|', '|' + mid5(word) + '|', '|' + (code ? mid5(code) : t.glyph[2]) + '|', '+-----+'];
+        rows.forEach((r, k) => {
+          put(tx, ty + k, r[0], C.redDim, own);
+          put(tx + 1, ty + k, r.slice(1, TILE_W - 1), k === 2 ? C.text : k === 3 && code ? C.mid : C.redDim, own, k === 2);
+          put(tx + TILE_W - 1, ty + k, r[TILE_W - 1], C.redDim, own);
+        });
+        return;
+      }
+      let solid = false, fc = C.mid, gc = C.text;
+      if (t.loaded) { fc = C.redDim; gc = C.gold; }
+      if (t.ruledOut) { fc = C.dim; gc = C.dim; }
+      if (t.state === 'safe' || t.state === 'reveal') { solid = true; fc = C.cyan; gc = C.cyan; }
+      else if (t.probing || (i === st.hover && !st.busy)) { solid = true; fc = C.bright; if (!t.loaded) gc = C.bright; }
+      const edge = solid ? '+-----+' : '+- - -+';
+      const side = solid ? '|' : ':';
+      const glyph = masked && t.state === 'closed' && !t.loaded ? MASK_GLYPH : t.glyph;
+      let rows = [edge, ...glyph.map(l => side + l + side), edge];
+      if (t.probing) rows = rows.map(r => r.replace(/[^ ]/g, ch => Math.random() < 0.5 ? noiseCh() : ch));
+      rows.forEach((r, k) => {
+        const isEdge = k === 0 || k === rows.length - 1;
+        put(tx, ty + k, r[0], fc, own);
+        put(tx + 1, ty + k, r.slice(1, TILE_W - 1), isEdge ? fc : gc, own);
+        put(tx + TILE_W - 1, ty + k, r[TILE_W - 1], fc, own);
+      });
+      if (st.debug && t.safe && t.state === 'closed') put(tx + TILE_W - 1, ty, '*', C.cyan, own);
+      if (st.kbGrid && i === st.hover && !st.busy && Math.floor(now / 280) % 2) {
+        for (const [cx, cy] of [[tx, ty], [tx + TILE_W - 1, ty], [tx, ty + TILE_H - 1], [tx + TILE_W - 1, ty + TILE_H - 1]]) put(cx, cy, '#', C.cyan, own, true);
+      }
+    });
+    for (let cell = 0; cell < lv.cols * lv.rows; cell++) {
+      if (used.has(cell)) continue;
+      const { tx, ty } = tileOrigin({ col: cell % lv.cols, row: Math.floor(cell / lv.cols) });
+      put(tx + 3, ty + 2, '.', C.dim, 'dot');
+    }
+    // AFTERIMAGE: cyan corners where the last layer's real node was.
+    if (has('afterimage') && lv.after && lv.after.col < lv.cols && lv.after.row < lv.rows) {
+      const { tx, ty } = tileOrigin(lv.after);
+      const t = lv.tiles.find(o => o.col === lv.after.col && o.row === lv.after.row);
+      if (t && t.state === 'closed' && !t.hidden) {
+        put(tx, ty, '+', C.cyan, 'fx', true);
+        put(tx + TILE_W - 1, ty + TILE_H - 1, '+', C.cyan, 'fx', true);
+      } else if (!t) put(tx + 3, ty + 2, 'o', C.cyan, 'fx');
+    }
+  }
+
+  // Big boxed primary button. 3 rows, or 4 with a subtitle.
+  function drawBox(ctx, y, ln) {
+    const { now, put, addHit } = ctx;
+    const label = ln.text, sub = ln.sub || '';
+    const w = Math.max(ln.minW || 20, Math.max(label.length, sub.length) + 8);
+    const x = Math.floor((L.wc - w) / 2);
+    const h = sub ? 4 : 3;
+    const hov = st.hoverBtn === ln.id;
+    const pulse = (Math.sin(now / 420) + 1) / 2;
+    const fcol = ln.disabled ? C.dim : hov ? C.bright : C.cyan;
+    const lcol = ln.disabled ? C.dim : hov || pulse > 0.75 ? C.bright : C.cyan;
+    let edge = '+' + '='.repeat(w - 2) + '+';
+    // Occasional glitch on the frame.
+    if (!ln.disabled && ((now / 1000 + y * 0.37) % 3.2) < 0.07) {
+      const i = 1 + Math.floor(Math.random() * (w - 2));
+      edge = edge.slice(0, i) + noiseCh() + edge.slice(i + 1);
+    }
+    put(x, y, edge, fcol, 'ui', true);
+    for (let r = 1; r < h - 1; r++) { put(x, y + r, '|', fcol, 'ui', true); put(x + w - 1, y + r, '|', fcol, 'ui', true); }
+    put(x + Math.floor((w - label.length) / 2), y + 1, label, lcol, 'ui', true);
+    if (sub) put(x + Math.floor((w - sub.length) / 2), y + 2, sub, C.mid, 'ui');
+    put(x, y + h - 1, '+' + '='.repeat(w - 2) + '+', fcol, 'ui', true);
+    if (!ln.disabled) addHit(x, y, w, h, { kind: 'btn', id: ln.id, onTap: ln.onTap });
+    return h;
+  }
+
+  // Map: final node at the top, start at the bottom. Edges are dotted lines.
+  const mapPos = n => {
+    const mid = Math.floor(L.wc / 2);
+    return { x: n.lane === 1 || n.step === 0 || n.step === MAP_STEPS - 1 ? mid : mid + (n.lane - 1) * 11, y: BOARD_Y + (MAP_STEPS - 1 - n.step) * 3 };
+  };
+
+  function buildMap(ctx) {
+    const { now, put, addHit, putC } = ctx;
+    const run = st.run, map = run.map;
+    const avail = new Set(availableNodes());
+    const nodes = Object.values(map);
+
+    for (const n of nodes) {
+      for (const id of n.next) {
+        const m = map[id], a = mapPos(n), b = mapPos(m);
+        const vi = run.visited.indexOf(n.id);
+        const onPath = vi >= 0 && run.visited[vi + 1] === m.id;
+        const live = run.at === n.id && avail.has(m.id);
+        const col = onPath ? C.cyan : live ? C.mid : C.dim;
+        const steps = 6;
+        for (let k = 1; k < steps; k++) {
+          const f = k / steps;
+          put(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f, '·', col, 'map');
+        }
+      }
+    }
+    for (const n of nodes) {
+      const p = mapPos(n);
+      const visited = run.visited.includes(n.id), available = avail.has(n.id);
+      const sel = st.mapSel === n.id, hov = st.hoverNode === n.id;
+      let col = visited ? C.cyan : C.dim;
+      if (available) col = sel || hov ? C.cyan : (Math.floor(now / 500) % 2 ? C.bright : C.text);
+      put(p.x - 1, p.y, `[${nodeLetter(n)}]`, col, 'map');
+      if (sel) { put(p.x - 3, p.y, '>', C.cyan, 'map'); put(p.x + 3, p.y, '<', C.cyan, 'map'); }
+      else if (run.at === n.id) put(p.x - 3, p.y, '@', C.bright, 'map');
+      if (available) addHit(p.x - 1, p.y, 3, 1, { kind: 'node', id: n.id });
+    }
+
+    // Info panel under the map
+    const y0 = BOARD_Y + (MAP_STEPS - 1) * 3 + 1;
+    const id = st.mapSel || (avail.has(st.hoverNode) ? st.hoverNode : null);
+    if (!id) {
+      putC(y0 + 1, 'choose a target.', C.text, 'map');
+      putC(y0 + 3, 'P S C M = corps   ! = final', C.dim, 'map');
+      putC(y0 + 4, '$ = market  ? = cache  + = repair', C.dim, 'map');
+      return;
+    }
+    const info = nodeInfo(map[id]);
+    info.lines.forEach((ln, k) => putC(y0 + k, ln.text, ln.col, 'map'));
+    if (st.mapSel) drawBox(ctx, y0 + info.lines.length, { text: info.action, id: 'enter', onTap: () => enterNode(map[st.mapSel]), minW: 18 });
+  }
+
+  function nodeInfo(n) {
+    const lines = [];
+    const T = (text, col = C.text) => lines.push({ text, col });
+    if (n.type === 'corp' || n.type === 'final' || n.type === 'start') {
+      const d = corpDef(n.corp);
+      T(n.tier ? `${d.name} // TIER ${n.tier}` : d.name, n.type === 'final' ? C.red : C.cyan);
+      T(d.intel, C.text);
+      const rules = corpRules(d, n.tier);
+      if (rules) T(rules, C.mid);
+      if (d.bossDesc) T(d.bossDesc, C.redDim);
+      return { lines, action: 'B R E A C H' };
+    }
+    if (n.type === 'shop') { T('BLACK MARKET', C.gold); T('items and mods for credits.'); }
+    if (n.type === 'cache') { T('DATA CACHE', C.gold); T('loot, then pick a mod.'); }
+    if (n.type === 'repair') { T('SAFEHOUSE', C.cyan); T(`heal ${CONFIG.repairAmount}, then pick a mod.`); }
+    return { lines, action: 'E N T E R' };
+  }
+
+  // Centered text screens: title, panels, help, codex, settings, game over.
+  // Line types:
+  //   text {text,col}           button {text,id,onTap,disabled,sel,faded}
+  //   box {box,text,sub,id}     row of small buttons {row:[...]}
+  //   badge {badge}             list row {list,id,onTap,sel,name,right,badge,col,tint}
+  //   gap {gap:n} (empty rows)
+  // Any line can have `reveal` (index) and `rarity` to pop in one at a time.
+  function buildTextBoard(ctx, lines) {
+    const { now, put, putC, addHit, bg, cells, collectHits } = ctx;
+    const heightOf = ln => ln.box ? (ln.sub ? 4 : 3) : ln.tileInfo ? TILE_H : 1;
+    const total = lines.reduce((s, ln) => s + heightOf(ln), 0);
+    let y = BOARD_Y + Math.max(0, Math.floor((L.gh - total) / 2));
+    const btnCol = b => b.disabled ? C.dim : b.sel || st.hoverBtn === b.id ? C.cyan : b.faded ? C.mid : C.bright;
+
+    for (const ln of lines) {
+      const h = heightOf(ln);
+      // Escalating reveal: hidden until its turn, then pops with fx scaled by rarity.
+      if (ln.reveal != null) {
+        const at = st.panelT0 + ln.reveal * CONFIG.revealGap;
+        if (now < at) { y += h; continue; }
+        const rid = ln.revealId || ('r' + ln.reveal);
+        if (collectHits && !st.revealed.has(rid)) { st.revealed.add(rid); popFx(ln, y); }
+      }
+      const startIdx = cells.length;
+
+      if (ln.box) drawBox(ctx, y, ln);
+      else if (ln.tileInfo) {
+        // A tile drawn like on the board, with text lines beside it.
+        const x = Math.floor((L.wc - 34) / 2);
+        const rows = ['+- - -+', ...ln.tileInfo.map(l => ':' + l + ':'), '+- - -+'];
+        rows.forEach((r, k) => {
+          put(x, y + k, r[0], C.mid, 'board');
+          put(x + 1, y + k, r.slice(1, TILE_W - 1), k === 0 || k === rows.length - 1 ? C.mid : C.bright, 'board');
+          put(x + TILE_W - 1, y + k, r[TILE_W - 1], C.mid, 'board');
+        });
+        ln.lines.slice(0, TILE_H).forEach((t, k) => put(x + TILE_W + 2, y + k, t.text, t.col, 'board', k === 0));
+      }
+      else if (ln.badge && !ln.list) {
+        const m = MODS[ln.badge];
+        const w = 1 + m.short.length + 2 + m.name.length;
+        const x = Math.floor((L.wc - w) / 2);
+        drawBadge(put, now, x, y, ln.badge, 0, { own: 'board', noCharges: true });
+        put(x + 1 + m.short.length + 2, y, m.name, modColor(m), 'board', true);
+      } else if (ln.list) {
+        const LW = 32, x = Math.floor((L.wc - LW) / 2);
+        const hov = st.hoverBtn === ln.id;
+        if (ln.tint) bg(x, y, LW, ln.tint, ln.sel ? 0.3 : hov ? 0.2 : 0.1);
+        put(x, y, ln.sel ? '>' : ' ', C.cyan, 'ui', true);
+        let cx = x + 2;
+        if (ln.badge) { drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', noCharges: true }); cx += 5; }
+        put(cx, y, ln.name, ln.faded ? C.mid : (ln.col || C.bright), 'ui', !!ln.sel);
+        if (ln.right) put(x + LW - ln.right.length, y, ln.right, ln.faded ? C.dim : (ln.rightCol || C.mid), 'ui');
+        if (!ln.disabled) addHit(x, y, LW, 1, { kind: 'btn', id: ln.id, onTap: ln.onTap });
+      } else if (ln.row) {
+        const gap = ln.gap != null ? ln.gap : 2;
+        const w = ln.row.reduce((s, b) => s + b.text.length, 0) + (ln.row.length - 1) * gap;
+        let x = Math.floor((L.wc - w) / 2);
+        for (const b of ln.row) {
+          if (b.sel) bg(x, y, b.text.length, C.cyan, 0.22);
+          put(x, y, b.text, btnCol(b), 'ui', !!b.sel);
+          if (!b.disabled) addHit(x, y, b.text.length, 1, { kind: 'btn', id: b.id, onTap: b.onTap });
+          x += b.text.length + gap;
+        }
+      } else if (ln.id) {
+        const x = Math.floor((L.wc - ln.text.length) / 2);
+        put(x, y, ln.text, btnCol(ln), 'ui');
+        if (!ln.disabled) addHit(x, y, ln.text.length, 1, { kind: 'btn', id: ln.id, onTap: ln.onTap });
+      } else if (ln.text) {
+        if (ln.left != null) put(Math.floor((L.wc - (ln.w || ln.text.length)) / 2), y, ln.text, ln.col, 'board', !!ln.bold);
+        else put(Math.floor((L.wc - ln.text.length) / 2), y, ln.text, ln.col, 'board', !!ln.bold);
+      }
+
+      // Glitch-in right after a reveal.
+      if (ln.reveal != null) {
+        const age = now - (st.panelT0 + ln.reveal * CONFIG.revealGap);
+        if (age < 180) for (let i = startIdx; i < cells.length; i++) if (Math.random() < 0.55) cells[i].ch = noiseCh();
+      }
+      y += h;
+    }
+  }
+
+  // Pop effect for an offer appearing: sound + burst scaled by rarity.
+  function popFx(ln, y) {
+    const lvl = ln.rarity ? RARITY[ln.rarity].lvl : 0;
+    Sound.pop(lvl);
+    if (ln.seenKey) markSeen(ln.seenKey);
+    if (lvl < 2) return;
+    const col = rarityCol(ln.rarity);
+    const n = [0, 0, 8, 16, 22][lvl];
+    const fake = [];
+    for (let i = 0; i < n; i++) fake.push({ ch: noiseCh(), x: pxX(rand(L.wc * 0.2, L.wc * 0.8)), y: pxY(y), col });
+    explode(fake, pxX(L.wc / 2), pxY(y + 0.5), { power: lvl >= 3 ? 0.55 : 0.35, grav: 0.4, life: [0.3, 0.7] });
+    if (lvl >= 3) { flash(col, 0.12, 0.3); shake(lvl >= 4 ? 4 : 2, 0.25); }
+  }
+
+  // ---------------- Screens built from lines ----------------
+  const LOGO = [
+    ' ___  ___  _____  _   ',
+    '| _ )| __||_   _|/_\\  ',
+    '| _ \\| _|   | | / _ \\ ',
+    '|___/|___|  |_|/_/ \\_\\',
+  ];
+
+  function titleLines(now) {
+    const lines = [];
+    const T = (text, col = C.text, extra = {}) => lines.push(Object.assign({ text, col }, extra));
+    // Logo with an occasional glitch.
+    LOGO.forEach((l, i) => {
+      let s = l;
+      if (((now / 1000 + i * 0.9) % 4.5) < 0.09) s = s.replace(/[^ ]/g, ch => Math.random() < 0.3 ? noiseCh() : ch);
+      T(s, C.cyan, { bold: true });
+    });
+    T('R   U   N   N   E   R', C.bright, { bold: true });
+    T('network intrusion // prototype', C.dim);
+    T('');
+    lines.push({ box: true, text: 'J A C K   I N', sub: '- start a run -', id: 'start', onTap: jackIn, minW: 26 });
+    T('');
+    lines.push({ row: [{ text: '[ HOW TO PLAY ]', id: 'help', onTap: () => swapTo(openHelp) }] });
+    lines.push({ row: [
+      { text: '[ CODEX ]', id: 'codex', onTap: () => swapTo(openCodex) },
+      { text: '[ SETTINGS ]', id: 'settings', onTap: () => swapTo(openSettings) },
+    ] });
+    T('');
+    T(`best ${pad2(save.best)}   runs ${save.runs}   wins ${save.wins}`, C.mid);
+    if (st.practice) T('custom seed: practice run', C.redDim);
+    return lines;
+  }
+
+  function overLines() {
+    const lines = [];
+    const T = (text, col = C.text) => lines.push({ text, col });
+    const r = st.result;
+    if (r.win) { T('ROOT ACCESS GRANTED', C.cyan); T('OMNI//CORE is yours.', C.text); }
+    else T('CONNECTION TERMINATED', C.red);
+    T('');
+    T(`layers ${pad2(r.depth)}   corps ${r.corps}`, C.bright);
+    T(`credits earned ${r.earned}`, C.gold);
+    if (r.newBest) T('** new best **', C.cyan);
+    else T(`best ${pad2(save.best)}`, C.mid);
+    if (r.practice) T('practice run: not scored', C.redDim);
+    T('');
+    T(`seed ${r.seed}`, C.mid);
+    T('');
+    lines.push({ box: true, text: 'N E W   R U N', id: 'new', onTap: newRun, minW: 24 });
+    T('');
+    lines.push({ row: [
+      { text: '[ RETRY SEED ]', id: 'retry', onTap: retry },
+      { text: '[ TITLE ]', id: 'title', onTap: () => swapTo(showTitle) },
+    ] });
+    T('');
+    T('retry = practice, not scored', C.dim);
+    return lines;
+  }
+
+  function panelLines() {
+    const now = performance.now();
+    if (st.mode === 'title') return titleLines(now);
+    if (st.mode === 'over' && st.result) return overLines();
+    const lines = [];
+    const T = (text, col = C.text) => lines.push({ text, col });
+    const B = (text, id, onTap, disabled = false) => lines.push({ text, id, onTap, disabled });
+    if (st.mode === 'panel' && st.panelFn) st.panelFn(T, B, ln => lines.push(ln), lines);
+    return lines;
+  }
+
+  // ---------------- Render loop ----------------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    updateParts(dt);
+    updateTimer(dt);
+    if (st.wipe && st.wipe.endsAt && now > st.wipe.endsAt) st.wipe = null;
+    render(now);
+    requestAnimationFrame(frame);
+  }
+
+  function render(now) {
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = C.bg;
+    g.fillRect(0, 0, W, H);
+    const sk = (now - shakeFx.t0) / 1000;
+    if (sk < shakeFx.dur) {
+      const a = shakeFx.amp * (1 - sk / shakeFx.dur);
+      g.translate(rand(-a, a), rand(-a, a));
+    }
+    hits = [];
+    const cells = buildScene(now, true);
+    for (const b of bgs) {
+      g.globalAlpha = b.alpha;
+      g.fillStyle = b.col;
+      g.fillRect(L.ox + b.cx * L.cw, L.oy + b.cy * L.chh, b.w * L.cw, L.chh);
+    }
+    g.globalAlpha = 1;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    for (const bold of [false, true]) {
+      g.font = `${bold ? 700 : 400} ${L.fs}px ${FONT}`;
+      for (const c of cells) {
+        if (!!c.bold !== bold) continue;
+        g.fillStyle = c.col;
+        g.fillText(c.ch, pxX(c.cx), pxY(c.cy));
+      }
+    }
+    g.font = `400 ${L.fs}px ${FONT}`;
+    for (const p of parts) {
+      if (p.t < 0) continue;
+      g.globalAlpha = Math.max(0, p.alpha);
+      g.fillStyle = p.col;
+      if (p.rot) { g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.fillText(p.ch, 0, 0); g.restore(); }
+      else g.fillText(p.ch, p.x, p.y);
+    }
+    g.globalAlpha = 1;
+    const fk = (now - flashFx.t0) / 1000;
+    if (fk < flashFx.dur) {
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.globalAlpha = flashFx.a * (1 - fk / flashFx.dur);
+      g.fillStyle = flashFx.col;
+      g.fillRect(0, 0, W, H);
+      g.globalAlpha = 1;
+    }
+  }
+
+  // ---------------- Helpers ----------------
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function setMsg(msg, col = C.text) { st.msg = msg; st.msgCol = col; st.msgT = performance.now(); }
+  const candidates = () => st.lv ? st.lv.tiles.filter(t => t.state === 'closed' && !t.loaded && !t.ruledOut) : [];
+
+  function availableNodes() {
+    const run = st.run;
+    if (!run) return [];
+    return run.at ? run.map[run.at].next : ['0:1'];
+  }
+
+  function showBoard(mode) {
+    st.mode = mode;
+    st.selItem = -1; st.selMod = -1;
+    st.kbFocus = null; st.keyHandler = null; st.scroll = null;
+    st.hideBoard = false; st.hideAll = false;
+    computeLayout();
+    wipeIn();
+  }
+
+  // Wipe the board out, then open the next screen (which wipes in).
+  async function swapTo(openFn, level = 0) {
+    if (st.transitioning) return;
+    st.transitioning = true;
+    Sound.ui();
+    await wipeOut(level);
+    st.transitioning = false;
+    openFn();
+  }
+
+  // ---------------- Run flow ----------------
+  function showTitle() {
+    st.run = null; st.corp = null; st.lv = null; st.timer = null;
+    st.panelFn = null;
+    showBoard('title');
+    st.busy = false;
+    setMsg('> link ready_');
+  }
+
+  function rerollSeed() {
+    st.seed = newSeed();
+    st.practice = false;
+    Sound.ui();
+    setMsg('> new seed rolled.');
+  }
+
+  async function startRun(seed, practice) {
+    if (st.transitioning) return;
+    st.transitioning = true;
+    Sound.ui();
+    await wipeOut(0);
+    st.seed = seed; st.practice = practice;
+    st.run = {
+      seed, practice,
+      map: genMap(seed),
+      finalTell: pickR(['corner', 'mark', 'mirror'], rngFor(seed, 'final')),
+      at: '0:1', visited: ['0:1'],
+      integrity: CONFIG.startIntegrity, maxInt: CONFIG.startIntegrity, shield: 0,
+      credits: 0, earned: 0, items: CONFIG.startItems.slice(), mods: [],
+      beltSlots: CONFIG.beltSlots, charges: {}, reroutes: 0,
+      depth: 0, corps: 0,
+    };
+    for (const k of CONFIG.startItems) markSeen(k);
+    st.result = null;
+    st.transitioning = false;
+    // Straight into the public net; the map comes after.
+    startCorp(st.run.map['0:1']);
+  }
+
+  function toMap() {
+    st.corp = null; st.lv = null; st.timer = null;
+    st.mapSel = null; st.hoverNode = null;
+    showBoard('map');
+    st.busy = false;
+    setMsg('> choose your next target.');
+  }
+
+  function selectNode(id) {
+    if (st.transitioning || !availableNodes().includes(id)) return;
+    if (st.mapSel === id) return enterNode(st.run.map[id]);
+    st.mapSel = id;
+    Sound.ui();
+  }
+
+  async function enterNode(node, warp = false) {
+    if (st.transitioning || !node || (!warp && !availableNodes().includes(node.id))) return;
+    st.transitioning = true;
+    const run = st.run;
+    await wipeOut(0);
+    run.at = node.id;
+    run.visited.push(node.id);
+    st.transitioning = false;
+    if (node.type === 'shop') return openShop(node);
+    if (node.type === 'cache') return openCache(node);
+    if (node.type === 'repair') return openRepair(node);
+    startCorp(node);
+  }
+
+  function startCorp(node, startIdx = 0) {
+    const def = corpDef(node.corp);
+    const t = node.tier;
+    const counts = node.type === 'start' ? [1] : [t + 1, t + 2, t + 3, t + 4];
+    let tell = node.type === 'final' ? st.run.finalTell : def.tell;
+    if (tell === 'mirror' && t >= 2) tell = 'vmirror';   // deeper Mirrorlines mirror top-bottom
+    let mark = null;
+    if (tell === 'mark') {
+      const level = clamp(t, 1, 3);
+      mark = { level, glyph: level === 1 ? pickR(MOTIFS, rngFor(st.run.seed, 'sigil', node.id)) : null };
+    }
+    st.corp = {
+      def, node, tier: t, idx: Math.min(startIdx, counts.length - 1), counts,
+      hasBoss: node.type !== 'start',
+      tell, mark,
+      timer: corpTimer(def, t), pay: corpPay(def, t),
+      prevSafe: null,
+    };
+    enterLayer();
+  }
+
+  async function enterLayer() {
+    const c = st.corp, run = st.run;
+    const n = c.counts[c.idx];
+    const boss = c.hasBoss && c.idx === c.counts.length - 1;
+    let tell = c.tell;
+    if (boss && c.def.bossTell) tell = c.def.bossTell;
+    const lv = genLayer({ seed: run.seed, nodeId: c.node.id, idx: c.idx, n, tell, prevSafe: c.prevSafe, loot: !boss && c.hasBoss, mark: c.mark });
+    lv.after = c.prevSafe;       // last layer's real node, for AFTERIMAGE
+    c.prevSafe = lv.safeCell;
+    lv.payCut = 0; lv.ocCount = 0;
+    lv.boss = boss;
+    lv.misses = 0;
+    lv.split = false;
+    lv.dmg = boss && c.def.bossDmg ? c.def.bossDmg : 1;
+    if (boss && c.def.bossFlash) lv.maskAt = performance.now() + 450 + CONFIG.maskDelayMs;
+    st.lv = lv;
+    st.hover = -1;
+    run.depth++;
+    // Codex: every glyph that shows up on a board counts as found.
+    for (const t of lv.tiles) {
+      const gi = MOTIFS.indexOf(t.glyph);
+      if (gi >= 0) markSeen('g' + gi);
+      if (t.loaded) markSeen('gloot');
+      if (t.marked) markSeen('gsig');
+    }
+    if (n === 1) markSeen('gjack');
+    if (lv.maskAt) markSeen('gmask');
+    st.timer = makeTimer();
+    showBoard('play');
+    st.busy = true;
+    if (boss) { Sound.boss(); shake(5, 0.5); setMsg(`> BOSS LAYER. ${n} nodes.`, C.red); }
+    else { Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : `> ${n} nodes. one is real.`); }
+    await wait(480);
+    // Layer-start mods, each locks at most one ICE node.
+    const iceWhere = f => lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed' && f(t));
+    const starts = [
+      ['sniffer', () => true],
+      ['corners', t => (t.col === 0 || t.col === lv.cols - 1) && (t.row === 0 || t.row === lv.rows - 1)],
+      ['sigscan', t => t.marked],
+    ];
+    for (const [key, f] of starts) {
+      if (!has(key) || n < 2) continue;
+      const opts = iceWhere(f);
+      if (!opts.length) continue;
+      lockTile(pickR(opts, rngFor(run.seed, key, c.node.id, c.idx)), C.mid, key);
+      setMsg(`> ${MODS[key].name.toLowerCase()}: 1 ICE locked.`, C.mid);
+      await wait(250);
+    }
+    st.busy = false;
+    lv.readyAt = performance.now();
+  }
+
+  // Clock for this layer: the corp's own, or one added by OVERCLOCK.
+  function makeTimer() {
+    const c = st.corp, lv = st.lv;
+    let max = c.timer || (has('overclock') && c.hasBoss ? CONFIG.overclockClock : 0);
+    if (!max) return null;
+    if (lv && lv.boss && c.def.bossShrink) max = Math.max(3, max - 3 * lv.misses);
+    if (has('coolant')) max += 3;
+    return { max, left: max, lastSec: max, ocNext: CONFIG.overclockStart };
+  }
+
+  // Lock a trap tile without damage (sniffer, purge).
+  // source: what locked it (purge, burner, sniffer, corners, sigscan, echo, overclock).
+  function lockTile(t, col, source = 'purge') {
+    const i = st.lv.tiles.indexOf(t);
+    const { x, y } = tileCenter(t);
+    explode(snapshot(c => c.own === 't' + i), x, y, { col, power: 0.6 });
+    t.state = 'locked';
+    t.lockedBy = source;
+    Sound.shield();
+  }
+
+  function updateTimer(dt) {
+    const tm = st.timer;
+    if (!tm || st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.pause) return;
+    tm.left -= dt;
+    const sec = Math.ceil(tm.left);
+    if (sec < tm.lastSec) { tm.lastSec = sec; if (sec <= 3 && sec > 0) Sound.clock(); }
+    // OVERCLOCK: near the end, purge ICE one by one; each purge cuts the payout.
+    const lv = st.lv;
+    if (has('overclock') && tm.left <= tm.ocNext && tm.left > 0.5 && lv.ocCount < 3) {
+      tm.ocNext -= 2;
+      const opts = lv.tiles.filter(t => !t.safe && t.state === 'closed');
+      if (opts.length > 0 && candidates().length > 1) {
+        lockTile(opts[Math.floor(Math.random() * opts.length)], C.mid, 'overclock');
+        lv.ocCount++;
+        lv.payCut = Math.min(0.9, lv.payCut + CONFIG.overclockCut);
+        setMsg(`> overclock: purged 1. pay -${Math.round(lv.payCut * 100)}%`, C.mid);
+      }
+    }
+    if (tm.left <= 0) {
+      tm.left = 0;
+      const opts = candidates().length ? candidates() : st.lv.tiles.filter(t => t.state === 'closed');
+      const t = opts[Math.floor(Math.random() * opts.length)];
+      setMsg('> clock ran out.', C.red);
+      if (t) pick(st.lv.tiles.indexOf(t));
+    }
+  }
+
+  function resetTimer() {
+    if (!st.timer) return;
+    st.timer = makeTimer();
+  }
+
+  async function pick(i) {
+    if (st.mode !== 'play' || st.busy) return;
+    const t = st.lv.tiles[i];
+    if (!t || t.state !== 'closed') return;
+    st.busy = true;
+    st.selItem = -1; st.selMod = -1;
+    st.lv.fast = st.lv.readyAt != null && performance.now() - st.lv.readyAt < CONFIG.fastpayMs;
+    t.probing = true;
+    Sound.probe();
+    setMsg('> probing...', C.mid);
+    await wait(300);
+    t.probing = false;
+    if (t.safe) await onSafe(t);
+    else await onTrap(t, i);
+  }
+
+  function payFor(lv) {
+    const c = st.corp;
+    let base = 4 + 2 * lv.n;
+    if (lv.boss) base *= 3;
+    let mult = c.pay || 1;
+    if (lv.misses === 0 && lv.n > 1) mult *= 1 + 0.5 * (lv.n - 1);
+    if (has('skimmer')) mult *= 1.5;
+    if (has('fastpay') && lv.fast) mult *= 1.5;
+    mult *= 1 - (lv.payCut || 0);
+    return lv.n === 1 ? 0 : Math.round(base * mult);
+  }
+
+  async function onSafe(t) {
+    const run = st.run, lv = st.lv, c = st.corp;
+    t.state = 'safe';
+    const perfect = lv.misses === 0 && lv.n > 1;
+    const pay = payFor(lv);
+    run.credits += pay; run.earned += pay;
+    let healed = false;
+    if (perfect && run.integrity < run.maxInt) { run.integrity = Math.min(run.maxInt, run.integrity + CONFIG.perfectHeal); healed = true; }
+    Sound.safe();
+    flash(C.cyan, 0.12, 0.3);
+    let msg = perfect ? '> perfect.' : '> access granted.';
+    if (pay) msg += ` +${pay}cr`;
+    if (healed) msg += ' +1 int';
+    setMsg(msg, C.cyan);
+    await wait(380);
+    // Success wipe: the real node stays lit while the fill rises. Bigger for perfect / boss.
+    const i = lv.tiles.indexOf(t);
+    const lit = buildScene(performance.now(), false, true).filter(cl => cl.own === 't' + i);
+    await wipeOut(perfect || lv.boss ? 2 : 1, lit);
+    c.idx++;
+    if (c.idx < c.counts.length) return enterLayer();
+    // Corp finished
+    if (c.node.type === 'start') return openStartReward(c.node);
+    run.corps++;
+    if (c.node.type === 'final') return endRun(true);
+    openReward(c.node);
+  }
+
+  async function onTrap(t, i) {
+    const run = st.run, lv = st.lv;
+    lv.misses++;
+    t.state = 'locked';
+    t.lockedBy = 'hit';
+    t.hitAt = performance.now();
+    let msg;
+    if (t.loaded && has('forgery')) {
+      Sound.shield();
+      msg = '> $ node. forgery: no damage.';
+    } else if (has('bulwark') && !st.corp.bulwarkUsed) {
+      st.corp.bulwarkUsed = true;
+      Sound.shield();
+      flash(C.cyan, 0.12, 0.3);
+      shake(4);
+      msg = '> ICE. bulwark blocked it.';
+    } else if (run.shield > 0) {
+      run.shield--;
+      Sound.shield();
+      flash(C.cyan, 0.12, 0.3);
+      shake(4);
+      msg = '> ICE. firewall absorbed it.';
+    } else {
+      run.integrity -= lv.dmg;
+      Sound.trap();
+      shake(9);
+      flash(C.red, 0.18, 0.35);
+      msg = run.integrity > 0 ? `> ICE. integrity -${lv.dmg}.` : '> ICE. integrity gone.';
+    }
+    if (t.loaded) msg += ' ' + grantLoot(rngFor(run.seed, 'loot', st.corp.node.id, st.corp.idx), st.corp.tier);
+    if (has('tracer')) {
+      const s = lv.tiles[lv.safe];
+      t.dist = Math.abs(s.col - t.col) + Math.abs(s.row - t.row);
+    }
+    setMsg(msg, t.loaded ? C.gold : C.red);
+    await wait(450);
+    if (run.integrity <= 0) return die();
+    // ECHO: the mirror-image node locks too, if it's ICE.
+    if (has('echo')) {
+      const mc = lv.cols - 1 - t.col;
+      const m = lv.tiles.find(o => o.col === mc && o.row === t.row && o !== t && o.state === 'closed' && !o.safe);
+      if (m) { lockTile(m, C.mid, 'echo'); await wait(200); }
+    }
+    resetTimer();
+    st.busy = false;
+    lv.readyAt = performance.now();
+  }
+
+  // Credits or an item. Returns a short text for the message line.
+  function grantLoot(r, tier) {
+    const run = st.run;
+    Sound.loot();
+    if (r() < 0.4 && run.items.length < run.beltSlots) {
+      const key = pickR(Object.keys(ITEMS), r);
+      run.items.push(key);
+      markSeen(key);
+      return `got ${ITEMS[key].name}.`;
+    }
+    const cr = Math.round(12 + tier * 8 + r() * 12);
+    run.credits += cr; run.earned += cr;
+    return `+${cr}cr`;
+  }
+
+  async function die() {
+    st.busy = true;
+    st.timer = null;
+    const safeTile = st.lv.tiles[st.lv.safe];
+    if (safeTile.state === 'closed') safeTile.state = 'reveal';
+    setMsg('> traced. real node revealed.', C.red);
+    Sound.death();
+    await wait(1100);
+    await endRun(false);
+  }
+
+  async function endRun(win) {
+    const run = st.run;
+    st.busy = true;
+    st.timer = null;
+    const cells = snapshot(() => true);
+    st.hideAll = true;
+    st.wipe = null;
+    if (win) { Sound.win(); implode(cells, W / 2, H / 2); flash(C.cyan, 0.3, 0.8); }
+    else { glitchOut(cells); flash(C.red, 0.2, 0.4); }
+    await wait(1400);
+
+    const newBest = !run.practice && run.depth > save.best;
+    if (!run.practice) {
+      save.runs++;
+      if (win) save.wins++;
+      if (newBest) save.best = run.depth;
+    }
+    save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, win, practice: run.practice, at: Date.now() });
+    save.history = save.history.slice(0, 20);
+    persist();
+
+    st.result = { win, depth: run.depth, corps: run.corps, earned: run.earned, newBest, practice: run.practice, seed: run.seed };
+    st.corp = null; st.lv = null;
+    showBoard('over');
+    st.busy = false;
+    setMsg(win ? '> root access_' : '> link severed_', win ? C.cyan : C.red);
+  }
+
+  const jackIn = () => startRun(st.seed, st.practice);
+  const retry = () => startRun(st.result ? st.result.seed : st.seed, true);
+  const newRun = () => startRun(newSeed(), false);
+
+  // ---------------- Panels ----------------
+  function openPanel(title, fn, msg) {
+    st.panelTitle = title;
+    st.panelFn = fn;
+    st.revealed = new Set();
+    showBoard('panel');
+    st.panelT0 = performance.now() + (st.wipe ? st.wipe.dur : 0) + CONFIG.revealDelay;
+    st.busy = false;
+    if (msg) setMsg(msg);
+  }
+
+  async function leavePanel() {
+    if (st.transitioning) return;
+    await swapTo(toMap);
+  }
+
+  function addMod(key) {
+    const run = st.run;
+    if (run.mods.includes(key)) return;
+    run.mods.push(key);
+    markSeen(key);
+    const m = MODS[key];
+    if (key === 'buffer') { run.maxInt++; run.integrity++; }
+    if (key === 'stash') run.beltSlots++;
+    if (m.charges) run.charges[key] = m.charges;
+  }
+
+  // Up to k mods from a pool that the player doesn't have yet.
+  function pickMods(r, pool, k, exclude = []) {
+    return shuffle(pool.filter(key => !st.run.mods.includes(key) && !exclude.includes(key)), r).slice(0, k);
+  }
+
+  const priceOf = o => o.kind === 'repair' ? o.price : Math.round(o.price * (has('haggle') ? 0.75 : 1));
+  const SEP = '+ - - - - - - - - - - - - - - - +';
+
+  function openShop(node) {
+    const run = st.run;
+    const r = rngFor(run.seed, 'shop', node.id);
+    const itemKeys = shuffle(Object.keys(ITEMS), r).slice(0, 3);
+    let offers = itemKeys.map(k => ({ kind: 'item', key: k, price: ITEMS[k].price, sold: false }));
+    for (const k of pickMods(r, modsOfKind('gen', 'minor'), 2)) offers.push({ kind: 'mod', key: k, price: MODS[k].price, sold: false });
+    offers = shuffle(offers, r);   // random order: any slot could be the good one
+    offers.push({ kind: 'repair', key: 'repair', price: 20, sold: false });
+
+    const buy = o => {
+      const price = priceOf(o);
+      if (o.sold || run.credits < price) return Sound.deny();
+      if (o.kind === 'item') { if (run.items.length >= run.beltSlots) return Sound.deny(); run.items.push(o.key); o.sold = true; markSeen(o.key); }
+      if (o.kind === 'mod') { addMod(o.key); o.sold = true; }
+      if (o.kind === 'repair') { if (run.integrity >= run.maxInt) return Sound.deny(); run.integrity++; }
+      run.credits -= price;
+      Sound.buy();
+      setMsg(`> bought ${o.kind === 'repair' ? 'repair' : (o.kind === 'item' ? ITEMS[o.key] : MODS[o.key]).name.toLowerCase()}.`, C.gold);
+    };
+
+    let sel = 0;
+    const defOf = o => o.kind === 'item' ? ITEMS[o.key] : o.kind === 'mod' ? MODS[o.key] : { name: 'REPAIR', desc: 'restore 1 integrity.' };
+    const whyNot = o => {
+      if (o.sold) return 'sold out.';
+      if (o.kind === 'item' && run.items.length >= run.beltSlots) return 'item belt is full.';
+      if (o.kind === 'repair' && run.integrity >= run.maxInt) return 'integrity is full.';
+      if (run.credits < priceOf(o)) return 'not enough credits.';
+      return null;
+    };
+
+    openPanel('BLACK MARKET', (T, B, X) => {
+      const now = performance.now();
+      T('BLACK MARKET', C.gold);
+      T(`credits ${run.credits}${has('haggle') ? '  (haggle -25%)' : ''}`, C.gold);
+      T('');
+      offers.forEach((o, k) => {
+        const def = defOf(o);
+        const isMod = o.kind === 'mod';
+        const price = o.sold ? 'SOLD' : `${priceOf(o)}cr`;
+        const tag = isMod ? 'mod' : o.kind === 'item' ? 'item' : 'svc';
+        X({
+          list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
+          sel: k === sel, faded: !!whyNot(o),
+          badge: isMod ? o.key : null, name: def.name,
+          col: isMod ? modColor(def) : C.bright,
+          right: `${tag} ${price.padStart(5)}`, rightCol: C.gold,
+          tint: isMod ? modColor(def) : o.kind === 'item' ? C.mid : C.cyan,
+          reveal: k, revealId: 'offer' + k,
+          rarity: isMod ? def.rarity : null, seenKey: o.kind === 'repair' ? null : o.key,
+        });
+      });
+      T('');
+      // Details box for the selected offer (once it has popped in).
+      const o = offers[sel], def = defOf(o), why = whyNot(o);
+      const shown = now >= st.panelT0 + sel * CONFIG.revealGap;
+      // Fixed height (7 rows) so the layout never jumps while offers pop in.
+      T(SEP, C.dim);
+      if (!shown) { T('...', C.dim); for (let i = 0; i < 6; i++) T(''); }
+      else {
+        if (o.kind === 'mod') { X({ badge: o.key }); T(`${RARITY[def.rarity].label} mod`, modColor(def)); }
+        else { T(def.name, C.bright); T(o.kind === 'item' ? 'item // single use' : 'service', C.mid); }
+        T(o.kind === 'mod' ? def.tip : def.desc, C.text);
+        if (why) { T(''); T(why, C.redDim); T(''); T(''); }
+        else X({ box: true, text: 'B U Y', sub: `${priceOf(o)}cr`, id: 'buy', onTap: () => buy(o), minW: 18 });
+      }
+      T(SEP, C.dim);
+      B('[ LEAVE ]', 'leave', leavePanel);
+    }, '> the market is open.');
+  }
+
+  // A reward screen: header lines, then a list of mods to pick one from (or skip).
+  function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg }) {
+    let sel = 0;
+    const take = key => {
+      if (st.transitioning) return;
+      if (key) { addMod(key); Sound.buy(); setMsg(`> installed ${MODS[key].name.toLowerCase()}.`, C.cyan); }
+      else if (onSkip) onSkip();
+      leavePanel();
+    };
+    openPanel(title, (T, B, X) => {
+      const now = performance.now();
+      T(title, col);
+      for (const h of head) T(h[0], h[1]);
+      T('');
+      if (options.length) T(options.length > 1 ? 'choose one mod:' : 'mod found:', C.mid);
+      options.forEach((k, i) => {
+        const m = MODS[k];
+        X({
+          list: true, id: 'opt' + i, onTap: () => { sel = i; Sound.tick(); },
+          sel: i === sel, badge: k, name: m.name, col: modColor(m),
+          right: RARITY[m.rarity].label, rightCol: modColor(m), tint: modColor(m),
+          reveal: i, revealId: 'opt' + i, rarity: m.rarity, seenKey: k,
+        });
+      });
+      if (options.length) {
+        T('');
+        const k = options[sel], m = MODS[k];
+        const shown = now >= st.panelT0 + sel * CONFIG.revealGap;
+        T(SEP, C.dim);
+        if (shown) {
+          X({ badge: k });
+          T(m.tip, C.text);
+          X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(k), minW: 18 });
+        } else { T('...', C.dim); T(''); T(''); T(''); T(''); }
+        T(SEP, C.dim);
+      }
+      T('');
+      B(options.length && skipLabel ? skipLabel : '[ CONTINUE ]', 'skip', () => take(null));
+    }, msg);
+  }
+
+  // PUBLIC NET done: a small starting perk.
+  function openStartReward(node) {
+    const run = st.run;
+    const r = rngFor(run.seed, 'choice', node.id);
+    openChoice({
+      title: 'LINK ESTABLISHED', col: C.cyan,
+      head: [['you are in. pick a starter perk.', C.text]],
+      options: pickMods(r, modsOfKind('minor'), 3),
+      skipLabel: '[ SKIP  +15cr ]',
+      onSkip: () => { run.credits += 15; run.earned += 15; },
+      msg: '> link established.',
+    });
+  }
+
+  function openCache(node) {
+    const run = st.run;
+    const r = rngFor(run.seed, 'cache', node.id);
+    const got = [grantLoot(r, 2)];
+    if (has('cachekey')) got.push(grantLoot(r, 2));
+    openChoice({
+      title: 'DATA CACHE', col: C.gold,
+      head: got.map(g => [g, C.bright]),
+      options: pickMods(r, modsOfKind('gen', 'minor'), 2),
+      skipLabel: '[ SKIP ]',
+      msg: '> cache cracked.',
+    });
+  }
+
+  function openRepair(node) {
+    const run = st.run;
+    const r = rngFor(run.seed, 'rest', node.id);
+    const before = run.integrity;
+    run.integrity = Math.min(run.maxInt, run.integrity + CONFIG.repairAmount);
+    Sound.buy();
+    openChoice({
+      title: 'SAFEHOUSE', col: C.cyan,
+      head: [[`integrity +${run.integrity - before}`, C.bright]],
+      options: pickMods(r, modsOfKind('minor'), 2),
+      skipLabel: '[ SKIP ]',
+      msg: '> patched up.',
+    });
+  }
+
+  // Corp boss beaten: one corp-specific mod plus one general mod.
+  function openReward(node) {
+    const run = st.run;
+    const r = rngFor(run.seed, 'reward', node.id);
+    const def = corpDef(node.corp);
+    const corpPick = pickMods(r, def.mods || [], 1);
+    const options = shuffle(corpPick.concat(pickMods(r, modsOfKind('gen'), 1, corpPick)), r);
+    Sound.win();
+    openChoice({
+      title: 'CORP BREACHED', col: C.cyan,
+      head: [[def.name, C.text]],
+      options,
+      skipLabel: '[ SKIP  +20cr ]',
+      onSkip: () => { run.credits += 20; run.earned += 20; Sound.loot(); },
+      msg: '> corp breached.',
+    });
+  }
+
+  // ---------------- How to play ----------------
+  const HELP_PAGES = [
+    { title: 'THE BASICS', tab: 'BASIC', lines: [
+      ['each layer hides ONE real node.'], ['every other node is ICE.'], [''],
+      ['hit ICE: lose integrity.'], ['integrity at 0: you are traced.'], [''],
+      ['first-try pick = PERFECT:', 'cyan'], ['+1 integrity, bigger payout.'], [''],
+      ['ODDS = your chance if you guess.', 'mid'], ['beat the odds: read the tell.', 'mid'], [''],
+      ['$ nodes: always ICE, drop loot.', 'gold'],
+    ] },
+    { title: 'THE NET', tab: 'NET', lines: [
+      ['climb the map from the bottom.'], ['pick a route. reach the top.'], [''],
+      ['P S C M  corps: 3 layers + boss', 'cyan'], ['!        OMNI//CORE, the final', 'red'],
+      ['$        black market', 'gold'], ['?        data cache: loot', 'gold'], ['+        safehouse: heal'], [''],
+      ['every stop gives you a mod.'], ['bosses offer corp-only mods.'], [''],
+      ['deeper corps hide things harder.', 'mid'],
+    ] },
+    { title: 'THE TRAY', tab: 'TRAY', lines: [
+      ['the bottom of the screen.'], [''],
+      ['MODS last the whole run.', 'cyan'], ['some are tap-to-use.'], [''],
+      ['ITEMS are single use.', 'bright'], ['you start with one PURGE.'], [''],
+      ['tap a mod or item: info.'], ['tap it again: use it.'], [''],
+      ['desktop: hover for info,', 'mid'], ['number keys use items.', 'mid'],
+    ] },
+    { title: 'THE CORPS', tab: 'CORPS', corps: true },
+    { title: 'MOD RARITY', tab: 'TIERS', rarity: true },
+  ];
+
+  function openHelp() {
+    let page = 0;
+    const show = i => { page = (i + HELP_PAGES.length) % HELP_PAGES.length; st.boardStart = performance.now(); Sound.tick(); };
+    const go = d => show(page + d);
+    const CONTENT_ROWS = 18;   // every tab uses the same height, so the tabs never jump
+    openPanel('HOW TO PLAY', (T, B, X, lines) => {
+      const p = HELP_PAGES[page];
+      T('HOW TO PLAY', C.cyan);
+      X({ gap: 1, row: HELP_PAGES.map((hp, i) => ({ text: `[${hp.tab}]`, id: 'htab' + i, sel: i === page, onTap: () => show(i) })) });
+      T(SEP, C.dim);
+      const start = lines.length;
+      T(p.title, C.bright);
+      T('');
+      if (p.lines) for (const [text, col] of p.lines) T(text, col ? C[col] : C.text);
+      if (p.corps) {
+        for (const d of [CORPS.perimeter, CORPS.sigil, CORPS.chronos, CORPS.mirror, FINAL]) {
+          T(`${d.letter}  ${d.name}`.padEnd(34), d.key === 'omni' ? C.red : C.cyan);
+          T(d.intel.padEnd(34), C.text);
+          const rules = corpRules(d, 1);
+          if (rules) T(rules.padEnd(34), C.mid);
+          if (d !== FINAL) T('');
+        }
+      }
+      if (p.rarity) {
+        T('mods come in five tiers:');
+        T('');
+        const ex = { common: 'small perks.', rare: 'solid upgrades.', epic: 'build-defining.', exotic: 'rare and strange.', boss: 'only from corp bosses.' };
+        for (const r of Object.keys(RARITY)) { T(`${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(30), C[r]); }
+        T('');
+        T('rarer mods pop in louder.', C.mid);
+      }
+      while (lines.length - start < CONTENT_ROWS) T('');
+      T(SEP, C.dim);
+      B('[ BACK ]', 'back', () => swapTo(showTitle));
+    }, '> manual loaded.');
+    // Keys: left/right or 1-5 = tabs, esc = back.
+    st.keyHandler = k => {
+      const focusTab = () => { st.kbFocus = st.hoverBtn = 'htab' + page; };   // cursor follows the active tab
+      if (k === 'arrowleft') { go(-1); focusTab(); return true; }
+      if (k === 'arrowright') { go(1); focusTab(); return true; }
+      if (/^[1-9]$/.test(k) && Number(k) <= HELP_PAGES.length) { show(Number(k) - 1); focusTab(); return true; }
+      if (k === 'escape') { swapTo(showTitle); return true; }
+      return false;
+    };
+  }
+
+  // ---------------- Codex ----------------
+  const RARITY_ORDER = Object.keys(RARITY);
+  const codexMods = () => Object.keys(MODS).sort((a, b) => RARITY_ORDER.indexOf(MODS[a].rarity) - RARITY_ORDER.indexOf(MODS[b].rarity) || MODS[a].name.localeCompare(MODS[b].name));
+  const CODEX_ROWS = 10;   // height of the list window, including "more" rows
+
+  function wrapText(str, w) {
+    const lines = [];
+    let cur = '';
+    for (const word of str.split(' ')) {
+      if (cur && (cur + ' ' + word).length > w) { lines.push(cur); cur = word; }
+      else cur = cur ? cur + ' ' + word : word;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  // Which entries fit in the list window when it starts at `top`.
+  // A "more" row takes a slot at the top/bottom when there are entries that way.
+  function listWindow(top, n) {
+    const hasUp = top > 0;
+    let shown = CODEX_ROWS - (hasUp ? 1 : 0);
+    const hasDown = top + shown < n;
+    if (hasDown) shown -= 1;
+    return { hasUp, hasDown, shown: Math.min(shown, n - top) };
+  }
+  const maxTop = n => n <= CODEX_ROWS ? 0 : n - (CODEX_ROWS - 1);
+
+  function openCodex() {
+    const TABS = [['mods', 'MODS', 'tabm'], ['items', 'ITEMS', 'tabi'], ['glyphs', 'GLYPHS', 'tabg']];
+    let tab = 'mods', sel = 0, top = 0;
+    const entries = () => tab === 'mods' ? codexMods() : tab === 'items' ? Object.keys(ITEMS) : GLYPHS.map(gl => gl.key);
+    const setTab = name => { tab = name; sel = 0; top = 0; Sound.tick(); };
+    const scrollBy = d => { const n = entries().length; const t = clamp(top + d, 0, maxTop(n)); if (t !== top) { top = t; Sound.tick(); } };
+    // Keep the selected entry inside the list window.
+    const follow = () => {
+      const n = entries().length;
+      for (let i = 0; i < 4; i++) {
+        const w = listWindow(top, n);
+        if (sel < top) top = sel;
+        else if (sel >= top + w.shown) top = sel - w.shown + 1;
+        else break;
+        top = clamp(top, 0, maxTop(n));
+      }
+    };
+
+    openPanel('CODEX', (T, B, X) => {
+      const list = entries(), n = list.length;
+      sel = clamp(sel, 0, n - 1);
+      top = clamp(top, 0, maxTop(n));
+      const found = list.filter(k => save.seen[k]).length;
+      T(`CODEX  ${tab} ${found}/${n} found`, C.cyan);
+      X({ row: TABS.map(([name, label, id]) => ({ text: tab === name ? `[>${label} ]` : `[ ${label} ]`, id, sel: tab === name, onTap: () => setTab(name) })) });
+
+      // Details of the selected entry (always 5 rows).
+      T(SEP, C.dim);
+      const k = list[sel], seen = !!save.seen[k];
+      if (tab === 'glyphs') {
+        const gl = GLYPH_BY_KEY[k];
+        X({ tileInfo: seen ? gl.glyphOf() : MASK_GLYPH, lines: seen
+          ? [{ text: gl.name, col: C.cyan }, ...gl.lore.map(t => ({ text: t, col: C.text }))]
+          : [{ text: '???', col: C.dim }, { text: 'not found yet.', col: C.mid }, { text: 'it shows up on a board.', col: C.dim }] });
+      } else if (!seen) {
+        T('???', C.dim); T('not found yet.', C.mid);
+        T(tab === 'mods' ? 'find it in a run to unlock it.' : 'pick one up to unlock it.', C.dim);
+        T(''); T('');
+      } else if (tab === 'mods') {
+        const m = MODS[k];
+        const kind = m.kind === 'corp' ? 'corp mod' : m.kind === 'minor' ? 'minor mod' : 'mod';
+        X({ badge: k });
+        T(`${RARITY[m.rarity].label} // ${kind}${m.active ? ' // tap-to-use' : ''}`, modColor(m));
+        const d = wrapText(m.desc, 34);
+        T(d[0] || '', C.text); T(d[1] || '', C.text);
+        T(modWhere(m), C.mid);
+      } else {
+        const it = ITEMS[k];
+        T(it.name, C.bright); T('item // single use', C.mid);
+        const d = wrapText(it.desc, 34);
+        T(d[0] || '', C.text); T(d[1] || '', C.text);
+        T(`from: ${ITEM_WHERE}`, C.mid);
+      }
+      T(SEP, C.dim);
+
+      // The list window, with "more" rows when there are entries above/below.
+      const w = listWindow(top, n);
+      let used = 0;
+      if (w.hasUp) { X({ text: '[ ^ ^ ^  more  ^ ^ ^ ]', id: 'moreup', onTap: () => scrollBy(-1) }); used++; }
+      for (let idx = top; idx < top + w.shown; idx++) {
+        const key = list[idx], seenK = !!save.seen[key];
+        const base = { list: true, id: 'cx' + idx, onTap: () => { sel = idx; Sound.tick(); }, sel: idx === sel };
+        if (tab === 'glyphs') {
+          X(Object.assign(base, { name: seenK ? GLYPH_BY_KEY[key].name : '???', col: seenK ? C.bright : C.dim, right: `#${pad2(idx + 1)}`, rightCol: C.mid }));
+        } else {
+          const isMod = tab === 'mods';
+          const def = isMod ? MODS[key] : ITEMS[key];
+          X(Object.assign(base, {
+            badge: isMod && seenK ? key : null,
+            name: seenK ? def.name : '???', col: seenK ? (isMod ? modColor(def) : C.bright) : C.dim,
+            right: isMod ? (seenK ? RARITY[def.rarity].label : '') : 'item', rightCol: seenK && isMod ? modColor(def) : C.mid,
+            tint: seenK && isMod ? modColor(def) : null,
+          }));
+        }
+        used++;
+      }
+      if (w.hasDown) { X({ text: '[ v v v  more  v v v ]', id: 'moredn', onTap: () => scrollBy(1) }); used++; }
+      for (; used < CODEX_ROWS; used++) T('');
+      T(`${pad2(top + 1)}-${pad2(top + w.shown)} of ${n}`, C.dim);
+      B('[ BACK ]', 'back', () => swapTo(showTitle));
+    }, '> codex open.');
+
+    // Keys: left/right = tabs, up/down = move through the list, esc = back.
+    st.keyHandler = k => {
+      if (k === 'arrowleft' || k === 'arrowright') {
+        const i = TABS.findIndex(t => t[0] === tab);
+        const next = TABS[(i + (k === 'arrowright' ? 1 : TABS.length - 1)) % TABS.length];
+        setTab(next[0]);
+        st.kbFocus = st.hoverBtn = next[2];   // cursor follows the active tab
+        return true;
+      }
+      if (k === 'arrowup' || k === 'arrowdown') {
+        sel = clamp(sel + (k === 'arrowdown' ? 1 : -1), 0, entries().length - 1);
+        follow();
+        Sound.tick();
+        return true;
+      }
+      if (k === 'escape') { swapTo(showTitle); return true; }
+      return false;
+    };
+    st.scroll = scrollBy;   // mouse wheel and swipe
+  }
+
+  // ---------------- Settings ----------------
+  function openSettings() {
+    st.resetArmed = false;
+    openPanel('SETTINGS', (T, B, X) => {
+      T('SETTINGS', C.cyan);
+      T('');
+      B(`[ palette: ${PALETTES[save.palette].name.padEnd(9)} ]`, 'pal', cyclePalette);
+      B(`[ sound: ${save.muted ? 'OFF' : 'ON '} ]`, 'snd2', toggleMute);
+      B(`[ effects: ${save.effects === 'full' ? 'FULL   ' : 'REDUCED'} ]`, 'fx', () => { save.effects = save.effects === 'full' ? 'reduced' : 'full'; persist(); Sound.ui(); });
+      B(`[ items: ${save.tapMode === 'two' ? 'TAP TWICE' : 'TAP ONCE '} ]`, 'tap', () => { save.tapMode = save.tapMode === 'two' ? 'one' : 'two'; persist(); Sound.ui(); });
+      T('');
+      T(`next run seed: ${st.seed}${st.practice ? ' (practice)' : ''}`, C.text);
+      X({ row: [
+        { text: '[ NEW SEED ]', id: 'rseed', onTap: rerollSeed },
+        { text: '[ ENTER SEED ]', id: 'eseed', onTap: enterSeed },
+      ] });
+      T('');
+      T('effects REDUCED: no shake or flash.', C.dim);
+      T('tap once: items/abilities fire', C.dim);
+      T('on the first tap.', C.dim);
+      T('');
+      B(st.resetArmed ? '[ TAP AGAIN TO ERASE ]' : '[ reset save data ]', 'reset', resetSave);
+      if (st.resetArmed) T('erases best, runs, codex.', C.red);
+      T('');
+      B('[ BACK ]', 'back', () => swapTo(showTitle));
+    }, '> settings.');
+    st.keyHandler = k => { if (k === 'escape') { swapTo(showTitle); return true; } return false; };
+  }
+
+  function enterSeed() {
+    let s = null;
+    try { s = window.prompt('enter a seed (letters and numbers):', st.seed); } catch (e) { s = null; }
+    const clean = cleanSeed(s);
+    if (!clean) return Sound.deny();
+    st.seed = clean;
+    st.practice = true;     // a chosen seed is a practice run
+    Sound.ui();
+    setMsg(`> seed set: ${clean}`);
+  }
+
+  function resetSave() {
+    if (!st.resetArmed) { st.resetArmed = true; Sound.deny(); return; }
+    const keep = { palette: save.palette, muted: save.muted, effects: save.effects, tapMode: save.tapMode };
+    for (const k of Object.keys(save)) delete save[k];
+    Object.assign(save, freshSave(), keep);
+    persist();
+    st.resetArmed = false;
+    Sound.buy();
+    setMsg('> save data erased.', C.red);
+  }
+
+  // ---------------- Active mods ----------------
+  function modCharges(key) {
+    const m = MODS[key], run = st.run;
+    if (!m || !m.active || !run) return null;
+    if (m.charges) return run.charges[key] || 0;
+    if (key === 'burner') return st.mode === 'play' && st.corp && st.corp.hasBoss ? (st.corp.burnerUsed ? 0 : 1) : null;
+    return null;
+  }
+
+  function nodesAhead() {
+    const run = st.run, cur = run.map[run.at];
+    return Object.values(run.map).filter(n => n.step > cur.step && n.step < MAP_STEPS - 1);
+  }
+
+  function modUsable(key) {
+    const m = MODS[key], run = st.run;
+    if (!m || !m.active || !run || st.transitioning || st.dev || st.wipe) return false;
+    if (m.active === 'layer') {
+      if (st.mode !== 'play' || st.busy || !st.lv || !st.corp || !st.corp.hasBoss) return false;
+      if (key === 'burner') return !st.corp.burnerUsed && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
+    }
+    if (m.active === 'map') return st.mode === 'map' && (run.charges[key] || 0) > 0 && nodesAhead().length > 0;
+    return false;
+  }
+
+  function activateMod(key) {
+    const run = st.run;
+    if (!modUsable(key)) { Sound.deny(); return; }
+    st.selMod = -1;
+    if (key === 'burner') {
+      const lv = st.lv;
+      let opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.loaded);
+      if (!opts.length) opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe);
+      lockTile(pickR(opts, rngFor(run.seed, 'burner', st.corp.node.id, st.corp.idx)), C.cyan, 'burner');
+      st.corp.burnerUsed = true;
+      setMsg('> burner: 1 ICE locked.', C.cyan);
+    }
+    if (key === 'reroute') {
+      run.charges.reroute--;
+      rerouteMap();
+      st.mapSel = null;
+      st.boardStart = performance.now();
+      Sound.whoosh();
+      setMsg('> rerouted. the net shifts.', C.cyan);
+    }
+    if (key === 'wormhole') {
+      run.charges.wormhole--;
+      const ahead = nodesAhead();
+      const target = pickR(ahead, rngFor(run.seed, 'wormhole', run.at));
+      setMsg('> wormhole open...', C.cyan);
+      enterNode(target, true);
+    }
+  }
+
+  // Re-roll the type and corp of every node ahead (links stay the same).
+  function rerouteMap() {
+    const run = st.run;
+    const r = rngFor(run.seed, 'reroute', run.reroutes++);
+    const corps = Object.keys(CORPS);
+    for (const n of nodesAhead()) {
+      const roll = r();
+      n.type = roll < 0.6 ? 'corp' : roll < 0.75 ? 'cache' : roll < 0.88 ? 'repair' : 'shop';
+      if (n.type === 'corp') { n.corp = pickR(corps, r); n.tier = n.step <= 2 ? 1 : 2; }
+      else { delete n.corp; delete n.tier; }
+    }
+  }
+
+  // ---------------- Items ----------------
+  function canUse(key) {
+    const run = st.run;
+    if (!run || st.wipe) return false;
+    if (key === 'patch') return run.integrity < run.maxInt;
+    if (key === 'wall') return true;
+    const inLayer = st.mode === 'play' && !st.busy && st.lv;
+    if (key === 'purge') return !!inLayer && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
+    if (key === 'split') return !!inLayer && !st.lv.split && candidates().length > 1;
+    return false;
+  }
+
+  function useItem(slot) {
+    const run = st.run;
+    if (!run || st.transitioning) return;
+    const key = run.items[slot];
+    if (!key) return;
+    if (!canUse(key)) { Sound.deny(); return; }
+    run.items.splice(slot, 1);
+    st.hoverItem = -1; st.selItem = -1;
+    if (key === 'patch') { run.integrity++; Sound.buy(); setMsg('> patched. +1 int', C.cyan); }
+    if (key === 'wall') { run.shield++; Sound.shield(); setMsg('> firewall up.', C.cyan); }
+    if (key === 'purge') {
+      const lv = st.lv;
+      let opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.loaded);
+      if (!opts.length) opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe);
+      const r = rngFor(run.seed, 'purge', st.corp.node.id, st.corp.idx, lv.tiles.filter(t => t.state === 'locked').length);
+      lockTile(pickR(opts, r), C.cyan, 'purge');
+      setMsg('> purged one ICE node.', C.cyan);
+    }
+    if (key === 'split') {
+      const lv = st.lv, s = lv.tiles[lv.safe];
+      const vertical = rngFor(run.seed, 'split', st.corp.node.id, st.corp.idx)() < 0.5;
+      for (const t of lv.tiles) {
+        const sameHalf = vertical ? (t.col < lv.cols / 2) === (s.col < lv.cols / 2) : (t.row < lv.rows / 2) === (s.row < lv.rows / 2);
+        if (!sameHalf) t.ruledOut = true;
+      }
+      lv.split = true;
+      Sound.shield();
+      setMsg(`> split: it is in the ${vertical ? (s.col < lv.cols / 2 ? 'left' : 'right') : (s.row < lv.rows / 2 ? 'top' : 'bottom')} half.`, C.cyan);
+    }
+  }
+
+  function toggleMute() {
+    save.muted = !save.muted;
+    persist();
+    Sound.ui();
+  }
+
+  function cyclePalette() {
+    const keys = Object.keys(PALETTES);
+    save.palette = keys[(keys.indexOf(save.palette) + 1) % keys.length];
+    applyPalette(save.palette);
+    persist();
+    Sound.ui();
+  }
+
+  // ---------------- Pause menu ----------------
+  // [MENU] in the header or Esc during a run. Stops clocks. Abandon goes to the title.
+  function togglePause() {
+    if (st.dev) return;
+    if (!st.pause && (!st.run || st.busy || st.transitioning || st.wipe)) { Sound.deny(); return; }
+    st.pause = !st.pause;
+    st.abandonArmed = false;
+    st.kbFocus = null;
+    st.boardStart = performance.now();
+    Sound.ui();
+  }
+
+  const toggleEffects = () => { save.effects = save.effects === 'full' ? 'reduced' : 'full'; persist(); Sound.ui(); };
+  const toggleTapMode = () => { save.tapMode = save.tapMode === 'two' ? 'one' : 'two'; persist(); Sound.ui(); };
+
+  function pauseLines() {
+    const lines = [];
+    const T = (text, col = C.text) => lines.push({ text, col });
+    const B = (text, id, onTap) => lines.push({ text, id, onTap });
+    const run = st.run;
+    T('PAUSED', C.cyan);
+    T(`layer ${pad2(run.depth)}   corps ${run.corps}   cr ${run.credits}`, C.text);
+    T(`seed ${run.seed}${run.practice ? '  (practice)' : ''}`, C.mid);
+    T('');
+    lines.push({ box: true, text: 'R E S U M E', id: 'resume', onTap: togglePause, minW: 22 });
+    T('');
+    B(`[ palette: ${PALETTES[save.palette].name.padEnd(9)} ]`, 'ppal', cyclePalette);
+    B(`[ sound: ${save.muted ? 'OFF' : 'ON '} ]`, 'psnd', toggleMute);
+    B(`[ effects: ${save.effects === 'full' ? 'FULL   ' : 'REDUCED'} ]`, 'pfx', toggleEffects);
+    B(`[ items: ${save.tapMode === 'two' ? 'TAP TWICE' : 'TAP ONCE '} ]`, 'ptap', toggleTapMode);
+    T('');
+    B(st.abandonArmed ? '[ TAP AGAIN TO ABANDON ]' : '[ ABANDON RUN ]', 'abandon', abandonRun);
+    T(st.abandonArmed ? 'the run ends here.' : 'abandoned runs are not scored.', st.abandonArmed ? C.red : C.dim);
+    return lines;
+  }
+
+  function abandonRun() {
+    if (!st.abandonArmed) { st.abandonArmed = true; Sound.deny(); return; }
+    const run = st.run;
+    save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, win: false, abandoned: true, practice: run.practice, at: Date.now() });
+    save.history = save.history.slice(0, 20);
+    persist();
+    st.pause = false; st.abandonArmed = false; st.timer = null;
+    swapTo(showTitle);
+  }
+
+  // ---------------- Keyboard cursor ----------------
+  // Buttons and list rows: move through them in reading order.
+  function moveFocus(d) {
+    const list = st.focusables;
+    if (!list.length) return;
+    let i = list.findIndex(f => f.id === st.kbFocus);
+    i = i < 0 ? (d > 0 ? 0 : list.length - 1) : (i + d + list.length) % list.length;
+    st.kbFocus = list[i].id;
+    st.hoverBtn = st.kbFocus;
+    Sound.tick();
+  }
+
+  // Grid: jump to the nearest open tile in the arrow's direction.
+  function moveTileCursor(k) {
+    const lv = st.lv;
+    if (st.busy) return;
+    const open = lv.tiles.map((t, i) => [t, i]).filter(([t]) => t.state === 'closed');
+    if (!open.length) return;
+    st.kbGrid = true;
+    const cur = lv.tiles[st.hover];
+    if (!cur || cur.state !== 'closed') {
+      // Start at the tile nearest the middle of the grid.
+      const mx = (lv.cols - 1) / 2, my = (lv.rows - 1) / 2;
+      open.sort((a, b) => Math.hypot(a[0].col - mx, a[0].row - my) - Math.hypot(b[0].col - mx, b[0].row - my));
+      st.hover = open[0][1];
+      Sound.tick();
+      return;
+    }
+    const [dx, dy] = { arrowleft: [-1, 0], arrowright: [1, 0], arrowup: [0, -1], arrowdown: [0, 1] }[k];
+    let best = -1, bestScore = Infinity;
+    for (const [t, i] of open) {
+      if (t === cur) continue;
+      const vx = t.col - cur.col, vy = t.row - cur.row;
+      const along = vx * dx + vy * dy;
+      if (along <= 0) continue;
+      const score = along + Math.abs(vx * dy - vy * dx) * 2;
+      if (score < bestScore) { bestScore = score; best = i; }
+    }
+    if (best >= 0) { st.hover = best; Sound.tick(); }
+  }
+
+  // Map: step through the nodes you can pick next.
+  function moveMapCursor(k) {
+    const run = st.run;
+    const avail = availableNodes().slice().sort((a, b) => run.map[a].lane - run.map[b].lane);
+    if (!avail.length) return;
+    const d = k === 'arrowleft' || k === 'arrowup' ? -1 : 1;
+    const i = avail.indexOf(st.mapSel);
+    st.mapSel = avail[i < 0 ? 0 : (i + d + avail.length) % avail.length];
+    Sound.ui();
+  }
+
+  // ---------------- Dev menu ----------------
+  // Open with ` (backtick), or the [DEV] button when the URL has ?dev=1.
+  // Using cheats on a run marks it as practice, so it doesn't count.
+  function toggleDev() {
+    if (st.transitioning || st.wipe) return;
+    st.dev = !st.dev;
+    st.devAccess = true;
+    st.boardStart = performance.now();
+    Sound.ui();
+  }
+
+  function cheat(fn) {
+    return () => {
+      if (st.run) st.run.practice = true;
+      fn();
+      Sound.buy();
+    };
+  }
+
+  // Jump straight to a corp's boss layer.
+  function jumpToBoss(node) {
+    const run = st.run;
+    st.dev = false;
+    if (st.mode === 'play' && st.corp && st.corp.hasBoss && !st.lv.boss) {
+      st.corp.idx = st.corp.counts.length - 1;
+      enterLayer();
+      return;
+    }
+    if (!node) return;
+    run.practice = true;
+    if (run.at !== node.id) { run.at = node.id; run.visited.push(node.id); }
+    startCorp(node, 99);
+  }
+
+  function devLines() {
+    const lines = [];
+    const T = (text, col = C.text) => lines.push({ text, col });
+    const B = (text, id, onTap, disabled = false) => lines.push({ text, id, onTap, disabled });
+    const run = st.run;
+    const idle = !st.busy && !st.transitioning;
+    T('DEV MENU', C.cyan);
+    T(run ? (run.practice ? 'run is practice (not scored)' : 'cheats mark the run as practice') : 'start a run for cheats', C.dim);
+    B(`[ palette: ${PALETTES[save.palette].name.padEnd(9)} ]`, 'pal', cyclePalette);
+    B(`[ show real node: ${st.debug ? 'ON ' : 'OFF'} ]`, 'dbg', () => { st.debug = !st.debug; if (run) run.practice = true; Sound.ui(); });
+    T('');
+    T('mods (by rarity)', C.mid);
+    const toggleMod = k => cheat(() => {
+      if (!run.mods.includes(k)) return addMod(k);
+      run.mods = run.mods.filter(m => m !== k);
+      if (k === 'buffer') { run.maxInt--; run.integrity = Math.min(run.integrity, run.maxInt); }
+      if (k === 'stash') { run.beltSlots--; run.items = run.items.slice(0, run.beltSlots); }
+    });
+    const keys = codexMods();
+    for (let i = 0; i < keys.length; i += 4) {
+      lines.push({ row: keys.slice(i, i + 4).map(k => ({
+        text: `[${run && run.mods.includes(k) ? 'x' : ' '}]${MODS[k].short}`,
+        id: 'mod_' + k, onTap: toggleMod(k), disabled: !run,
+      })) });
+    }
+    T('');
+    lines.push({ row: [
+      { text: '[+100cr]', id: 'cr', onTap: cheat(() => { run.credits += 100; }), disabled: !run },
+      { text: '[heal]', id: 'hp', onTap: cheat(() => { run.integrity = run.maxInt; }), disabled: !run },
+      { text: '[fill belt]', id: 'belt', onTap: cheat(() => { const ks = Object.keys(ITEMS); let i = 0; while (run.items.length < run.beltSlots) run.items.push(ks[i++ % ks.length]); }), disabled: !run },
+    ] });
+    lines.push({ row: [
+      { text: '[unlock codex]', id: 'seenall', onTap: () => { for (const k of [...Object.keys(MODS), ...Object.keys(ITEMS), ...GLYPHS.map(gl => gl.key)]) save.seen[k] = true; persist(); Sound.buy(); } },
+    ] });
+    T('');
+    const inCorp = st.mode === 'play' && st.corp && st.corp.hasBoss && st.lv && !st.lv.boss;
+    const sel = st.mode === 'map' && st.mapSel && run.map[st.mapSel];
+    const selCorp = sel && (sel.type === 'corp' || sel.type === 'final') ? sel : null;
+    const bossLabel = inCorp ? '[ jump to this boss ]' : selCorp ? `[ jump to ${corpDef(selCorp.corp).letter} boss ]` : '[ jump to boss ]';
+    B(bossLabel, 'boss', cheat(() => jumpToBoss(selCorp)), !idle || !(inCorp || selCorp));
+    B('[ jump to final boss ]', 'final', cheat(() => jumpToBoss(run.map['5:1'])), !idle || !run || st.mode === 'over');
+    if (!inCorp && !selCorp) T('(select a corp on the map first)', C.dim);
+    T('');
+    B('[ close ]', 'close', toggleDev);
+    return lines;
+  }
+
+  // ---------------- Input ----------------
+  function hitAt(x, y) {
+    for (let k = hits.length - 1; k >= 0; k--) {
+      const h = hits[k];
+      if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) return h;
+    }
+    return null;
+  }
+
+  cv.addEventListener('pointerdown', e => {
+    Sound.init();
+    const h = hitAt(e.clientX, e.clientY);
+    st.drag = st.scroll ? { y: e.clientY } : null;
+    // Ignore taps during a wipe, except the header buttons.
+    if (st.wipe && !(h && (h.id === 'snd' || h.id === 'dev'))) return;
+    // While paused, only buttons respond.
+    if (st.pause && h && h.kind !== 'btn') return;
+    if (!h) {
+      if (st.mode === 'map' && !st.dev && !st.pause) st.mapSel = null;
+      st.selItem = -1; st.selMod = -1;
+      return;
+    }
+    const oneTap = save.tapMode === 'one';
+    if (h.kind === 'tile') pick(h.i);
+    else if (h.kind === 'node') selectNode(h.id);
+    else if (h.kind === 'item') {
+      // Two-tap mode: first tap shows info, second tap uses.
+      st.selMod = -1;
+      if (oneTap || st.selItem === h.i) useItem(h.i);
+      else { st.selItem = h.i; Sound.tick(); }
+    } else if (h.kind === 'mod') {
+      st.selItem = -1;
+      const key = st.run.mods[h.i];
+      const active = MODS[key].active;
+      if (active && (oneTap || st.selMod === h.i)) activateMod(key);
+      else if (st.selMod === h.i) st.selMod = -1;
+      else { st.selMod = h.i; Sound.tick(); }
+    }
+    else if (h.kind === 'btn' && !st.transitioning) h.onTap();
+  });
+
+  cv.addEventListener('pointermove', e => {
+    // Swipe to scroll lists (one entry per row of finger travel).
+    if (st.drag && e.buttons && st.scroll) {
+      const dy = e.clientY - st.drag.y;
+      if (Math.abs(dy) > L.chh) { st.scroll(dy < 0 ? 1 : -1); st.drag.y = e.clientY; }
+    }
+    const h = hitAt(e.clientX, e.clientY);
+    const tile = h && h.kind === 'tile' ? h.i : -1;
+    if (tile !== st.hover && tile >= 0 && !st.busy) Sound.tick();
+    st.hover = tile;
+    st.kbGrid = false;
+    st.kbFocus = null;   // the mouse takes over the cursor
+    st.hoverBtn = h && h.kind === 'btn' ? h.id : null;
+    st.hoverNode = h && h.kind === 'node' ? h.id : null;
+    st.hoverItem = h && h.kind === 'item' ? h.i : -1;
+    st.hoverMod = h && h.kind === 'mod' ? h.i : -1;
+    cv.style.cursor = h ? 'pointer' : 'default';
+  });
+  cv.addEventListener('pointerup', () => { st.drag = null; });
+  cv.addEventListener('wheel', e => {
+    if (!st.scroll || st.wipe) return;
+    e.preventDefault();
+    st.scroll(e.deltaY > 0 ? 1 : -1);
+  }, { passive: false });
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    Sound.init();
+    const k = e.key.toLowerCase();
+    const arrow = k.startsWith('arrow');
+    if (arrow || k === ' ' || k === 'enter') e.preventDefault();
+    if (e.key === '`') return toggleDev();
+    if (k === 'm' && !st.dev) return toggleMute();
+    if (k === 'escape') {
+      if (st.dev) return toggleDev();
+      if (st.pause) return togglePause();
+      if (st.keyHandler && st.keyHandler(k)) return;
+      if (st.run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel')) return togglePause();
+      return;
+    }
+    if (st.transitioning || st.wipe) return;
+    const overlay = st.dev || st.pause;
+    if (!overlay) {
+      if (st.keyHandler && st.keyHandler(k)) return;
+      if (/^[1-9]$/.test(e.key) && st.run && (st.mode === 'play' || st.mode === 'map')) return useItem(Number(e.key) - 1);
+      if (st.mode === 'play' && st.lv) {
+        if (arrow) return moveTileCursor(k);
+        if ((k === 'enter' || k === ' ') && st.hover >= 0) return pick(st.hover);
+        return;
+      }
+      if (st.mode === 'map') {
+        if (arrow) return moveMapCursor(k);
+        if ((k === 'enter' || k === ' ') && st.mapSel) return enterNode(st.run.map[st.mapSel]);
+        return;
+      }
+      if (st.mode === 'over' && k === 'r') return retry();
+    }
+    // Everything else (title, panels, menus): a cursor over the buttons.
+    if (arrow) return moveFocus(k === 'arrowup' || k === 'arrowleft' ? -1 : 1);
+    if (k === 'enter' || k === ' ') {
+      const f = st.kbFocus && st.focusables.find(x => x.id === st.kbFocus);
+      if (f) return f.onTap();
+      // Nothing focused yet: the screen's main action.
+      if (!overlay && st.mode === 'title') return jackIn();
+      if (!overlay && st.mode === 'over') return newRun();
+    }
+  });
+
+  // ---------------- Boot ----------------
+  window.addEventListener('resize', resize);
+  applyPalette(save.palette);
+  st.msgCol = C.text;
+  resize();
+  showTitle();
+  requestAnimationFrame(t => { last = t; frame(t); });
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load(`16px "JetBrains Mono"`).then(() => computeLayout()).catch(() => {});
+  }
+
+  // Debug hook for the console and automated tests.
+  window.__br = {
+    state: st, save, genLayer, genMap, CONFIG, MODS, ITEMS,
+    startRun, selectNode, enterNode, pick, useItem, activateMod, modUsable, addMod,
+    toggleDev, devLines, availableNodes, panelLines, swapTo, openHelp, openCodex, openSettings, showTitle, buildScene,
+    togglePause, pauseLines, abandonRun, moveFocus, moveTileCursor, moveMapCursor,
+  };
+})();
+</script>
+</body>
+</html>
