@@ -1,0 +1,79 @@
+// NeoN+1 corps/playball.js
+'use strict';
+NEON_FILES.push(['corps/playball.js', 'v12.00']);
+CORPS.playball = {
+  key: 'playball', name: 'PLAYBALL', letter: '0', level: 5, drag: true,
+  intel: '"it\'s not whether you win. it is."',
+  tell: null, alwaysFollow: true,
+  bossDesc: 'boss: overtime. two balls.',
+  rules: () => 'keep the ball in. it rings on real.',
+  mods: ['overtime'],
+  // Pong over the grid. A ball bounces around; the paddles (top and bottom, they move
+  // together) follow your pointer or finger; a tap still picks a node (and pulls the
+  // paddles to it). The ball bumps nodes: ICE cracks after 2 bumps and locks; the real node
+  // rings (a chime and a flash). A ball out costs 20% pay (boss: -1 integrity).
+  // Boss: two balls.
+  dress(lv, k) { lv.pb = { boss: k.boss, balls: [] }; },
+  async intro(lv, c) {
+    lv.pad = L.gx + L.gw / 2 - 0.5; lv.padTo = lv.pad;
+    const now = performance.now();
+    for (let j = 0; j < (lv.pb.boss ? 2 : 1); j++) { const b = {}; pbServe(lv, b, now); if (j) b.vx = -b.vx; lv.pb.balls.push(b); }
+    setMsg(`> Q${c.idx + 1}. play ball!`, C.accent);
+  },
+  onPick(t) { const lv = st.lv; if (lv.pb) { lv.padTo = L.gx + t.col * (TILE_W + GAP_X) + 3; lv.padSetAt = performance.now(); } },   // a tap pulls the paddles over
+  tick(lv, lt, dt, now) {
+    const pb = lv.pb;
+    if (!pb || !pb.balls.length) return;
+    // paddles: follow the pointer, or the keyboard cursor
+    if (st.kbGrid && st.hover >= 0 && lv.tiles[st.hover]) lv.padTo = L.gx + lv.tiles[st.hover].col * (TILE_W + GAP_X) + 3;
+    else if (st.ptr && (st.ptrAt || 0) > (lv.padSetAt || 0)) lv.padTo = (st.ptr.x - L.ox) / L.cw - 0.5;
+    lv.padTo = clamp(lv.padTo, L.gx + 4, L.gx + L.gw - 5);
+    const sp = 48 * dt / 1000;
+    lv.pad += clamp(lv.padTo - lv.pad, -sp, sp);
+    for (const b of pb.balls) {
+      if (b.out) { if (now >= b.at) pbServe(lv, b, now); continue; }
+      const steps = 4;
+      for (let j = 0; j < steps; j++) {
+        const res = pbStep(lv, b, dt / 1000 / steps, now);
+        if (res === 'out') {
+          b.at = now + 900;
+          Sound.deny(); shake(3);
+          if (pb.boss) {
+            if (!st.god) st.run.integrity -= 1;
+            setMsg('> ball out! -1 int.', C.danger);
+            if (st.run.integrity <= 0) { st.busy = true; die(); return; }
+          } else { lv.payCut = Math.min(0.9, (lv.payCut || 0) + 0.2); setMsg(`> ball out. pay -${Math.round(lv.payCut * 100)}%`, C.danger); }
+          break;
+        }
+        if (res === 'bump') break;
+      }
+    }
+  },
+  fx(t, ft) {
+    if (t.ringAt && ft - t.ringAt < 380) return { bright: true, fc: C.money, gc: C.money };
+    if (t.bumps === 1) return { corner: '/', cornerCol: C.danger };
+    return null;
+  },
+  draw(put, lv, now) {
+    if (!lv.pb || lv.pad == null) return;
+    const paddle = '=========', x = lv.pad - 4;
+    put(x, BOARD_Y - 1, paddle, C.bright, 'fx', true);
+    put(x, BOARD_Y + L.gh, paddle, C.bright, 'fx', true);
+    for (const b of lv.pb.balls) if (!b.out) put(b.x, b.y, 'o', C.money, 'fx', true);
+  },
+  hint: () => ({ text: '' }),   // row 7 is the top paddle
+};
+
+// the codex, once you've beaten it
+CORP_TELL.playball = "pong over the grid. the ball bumps nodes: ICE cracks after 2 bumps, the real node rings (a chime and a flash). keep the ball in.";
+
+// intro art
+CORP_ART.playball = [
+  "   =========",
+  "  |    o     |",
+  "  |  [] []   |",
+  "  |  [] []   |",
+  "   =========",
+  "",
+  "  P L A Y B A L L",
+];

@@ -1,0 +1,40 @@
+// NeoN+1 corps/safeharbor.js
+'use strict';
+NEON_FILES.push(['corps/safeharbor.js', 'v12.00']);
+CORPS.safeharbor = {
+  key: 'safeharbor', name: 'SAFEHARBOR', letter: 'F', level: 2,
+  intel: '"read the fine print."',
+  tell: null,
+  bossDesc: 'boss: the fakes forge the print.',
+  rules: () => 'premium 10cr. hits pay 5cr claims.',
+  mods: ['policy'],
+  // The fine print: a tiny dot in the bottom right corner of the real node's glyph.
+  // Deeper: decoys get dots in other corners. Boss: decoys get a , in the same corner.
+  dress(lv, k) {
+    const r = k.r, plain = MOTIFS.filter(m => !m.join('').includes('.') && !m.join('').includes(','));
+    const deck = shuffle(plain.slice(), r);
+    const put = (g, y, x, ch) => g.map((l, yy) => yy === y ? l.slice(0, x) + ch + l.slice(x + 1) : l);
+    k.tiles.forEach((t, i) => {
+      let g = deck[i % deck.length];
+      if (t === k.tellTile) { g = put(g, 2, 4, '.'); t.marked = true; }
+      else if (k.boss) { g = put(g, 2, 4, ','); t.marked = true; }
+      else if (k.tier >= 2 && r() < 0.6) { const [y, x] = pickR([[0, 0], [0, 4], [2, 0]], r); g = put(g, y, x, '.'); t.marked = true; }
+      t.glyph = g;
+    });
+  },
+  onEnter() { const run = st.run, p = Math.min(10, run.credits); run.credits -= p; if (p) setMsg(`> premium paid: -${p}cr`, C.money); },
+  onHit() { st.run.credits += 5; st.run.earned += 5; },
+};
+
+// the codex, once you've beaten it
+CORP_TELL.safeharbor = "the fine print: a dot in the bottom right corner of the real node. deeper, decoys have dots in other corners; boss: a comma in the same one.";
+
+// intro art
+CORP_ART.safeharbor = [
+  "      _|_",
+  "     /_|_\\",
+  "   ____|____",
+  "   \\_______/",
+  "  ~~~~~~~~~~~~",
+  "   SAFEHARBOR",
+];

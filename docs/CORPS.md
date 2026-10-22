@@ -1,5 +1,7 @@
 # NeoN+1 (Beta Runner): corp ideas
 
+Since v12, each built corp lives in its own file, `dist/corps/<key>.js`. How to add one, and what a corp file can use: the top of `dist/engine/corpkit.js`.
+
 A brainstorm, kept out of SPEC.md. Two parts:
 - **Part A:** the user's own corp ideas (first logged in SPEC §17), written up in the same format.
 - **Part B:** Claude's 50, revised 2026-10-20 after the user's review.

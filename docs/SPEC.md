@@ -335,10 +335,20 @@ neon+1/
       SPEC.md            <- this file
       CORPS.md, CONTENT.md, NAMES.md, ART.md
     tools/
-      tell_odds.js
-    dist/                <- THE GAME: the master copy, tracked in git (upload this folder)
-      index.html
-      palettes.js        <- every palette (loaded before the game script)
+      palette_editor.html  <- edit dist/palettes.js with the game beside it
+      check.js           <- fingerprint the game (data, layers, maps, code) and compare builds
+      playtest.js        <- play every corp in headless Chrome and compare builds
+      bump.js            <- change the build number everywhere (node tools/bump.js minor)
+      tell_odds.js       <- how much each position tell helps
+    dist/                <- THE GAME: the master copy, tracked in git (upload this whole folder)
+      index.html         <- the page: meta tags, then every script below, in load order
+      palettes.js        <- every palette and player style (the palette editor writes it)
+      icon.svg, icon-180.png, preview.png   <- tab icon, phone home-screen icon, link preview
+      engine/            <- the game's code by job (v12): core, corpkit, corps, mods, layers, map, save,
+                            sound, music, screen, effects, scene, screens, render, run, panels, help,
+                            codex, menus, active, input, dev, multiplayer, boot, editor
+      data/              <- pure data: glyphs, title art, personas, mods + items, music tracks
+      corps/             <- one file per corp (78): its definition, codex text and intro art
     prototypes/          <- old versions, frozen (was versions/)
       v01_core/beta_runner_v01.html
       v02_overworld/ ... v06_online/
@@ -350,7 +360,9 @@ Since 2026-10-21 (the user's call) there is one master copy, `dist/`, and git ke
 **Build numbers: `vMAJOR.MINOR`** (`VERSION` in the code; shown in the header, the footer and on the title).
 The minor ticks +.01 with every update Claude makes to `dist/` (one tick per batch of changes handed over,
 logged in the version log in §16n). The major changes only when the user says so (v12.00 ...). The save
-slot follows the major only (`beta_runner.v11.save`), so minor updates keep progress. The user uploads `dist/` by FTP. If a build needs to stay playable for testing while
+slot follows the major only (`beta_runner.v12.save`; v12 copies the v11 save over the first time), so
+minor updates keep progress. **`node tools/bump.js minor`** ticks the build everywhere (VERSION, every file's
+stamp, the `?v=` links). The user uploads `dist/` by FTP. If a build needs to stay playable for testing while
 work goes on (like v09 / v10 were), copy `dist/` into `prototypes/vNN/` and tag the commit.
 
 The prototypes (v01-v11) are standalone snapshots from before: folder `vXX` (early ones `vXX_<topic>`),
@@ -373,7 +385,7 @@ Order is by risk: test the most important unproven idea (corp tells) early.
 | v09 | `prototypes/v09/` | Built on v08: corp kit, corp levels + modifiers, all 74 corps (tiers 1-3), RIVAL, sector bosses rethink | **Locked** (2026-10-21, for testing the corps) |
 | v10 | `prototypes/v10/` | Built on v09: hacker logos + profile, database rules, multiplayer open to all, BONEYARD (corp 75) | **Locked** (2026-10-21) |
 | v11 | `prototypes/v11/` | Built on v10: NeoN+1 title, CIPHER / HYDRA / BLACKOUT, palettes.js + slot rename | Moved to `dist/` (2026-10-21) |
-| dist | `dist/` | The master copy from here on (VERSION v11 for now) | **Current** |
+| dist | `dist/` | The master copy from here on: v11.00-v11.06, then **v12** (split into files) | **Current** |
 | later | | Scans, balance pass | Idea |
 | later | | Hot-seat multiplayer (out of scope for now) | Parked |
 
@@ -650,7 +662,7 @@ Agreed changes not built yet.
   (PLAYTIME / DIALTONE ONLINE, COLDBREW / CARAPACE ARMOR...). *(Part of the palette pass below; the
   editor's preview may cover it.)*
 
-### Breaking the game into files (2026-10-21, the user agreed; after the palette editor)
+### Breaking the game into files: DONE in v12.00 (see the version log in §16n)
 
 `dist/index.html` is ~10,500 lines. `palettes.js` was the first file out. Next:
 - **Data split pass** (easy, pure data): corp intro art (~630 lines), codex corp text, music tracks +
@@ -1533,6 +1545,28 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.00** (2026-10-21): **the game in files** (the user: "lets break this stuff out into components or files that
+  make sense... warrants a major version"). Plays exactly like v11.06; nothing new to see except the meta tags.
+  - **Layout:** `dist/index.html` is just the page; the game is 108 plain scripts loaded in order (still works
+    opened from a local file, no build step): `engine/` (30 files of code by job), `data/` (glyphs, title art,
+    personas, mods + items, music) and `corps/` (one file per corp: its definition and hooks, codex text and
+    intro art). Each top-level piece of the old script moved verbatim (split with a JS parser, not by hand);
+    the old wrapper function is gone, so the files share one global scope. `engine/corpkit.js` starts with
+    how to add a corp and the list of the 124 game names the corp files use (the "corp kit").
+  - **Version stamps:** every file starts with `NEON_FILES.push(['engine/core.js', 'v12.00'])`, the script
+    links carry `?v=12.00` (phones fetch new copies), and the title shows a red warning if a file is missing or
+    from another build. `palettes.js` gets the link only for now (the palette editor writes that file; its
+    stamp waits until the editor writes it too).
+  - **Save:** new slot `beta_runner.v12.save`; the first load copies the v11 save (and a run in progress).
+  - **Meta tags:** description, link previews (og / twitter card with `preview.png`, the title art + a
+    pitch), theme color, tab icon (`icon.svg`, the big N with a raised +1), phone home-screen icon. The preview
+    image needs the game's full web address: `GAME_URL` in index.html is a placeholder (on the review list).
+  - **Tools:** `tools/check.js` (fingerprint: every corp's layers at 3 tiers x 3 seeds, maps, 38 data tables,
+    340 function hashes; v12 matched v11.06 exactly), `tools/playtest.js` (plays all 78 corps in headless
+    Chrome; 78/78 the same, 7 corps' hints run on the clock), `tools/bump.js`. `tell_odds.js` loads the
+    split game. The fingerprints live in `tools/check/` (git-ignored; `node tools/check.js save baseline`).
+  - Also: HYDRA's `moveTo` helper renamed `moveTile` (it shadowed the browser's `window.moveTo` once the code
+    became global).
 - **v11.06** (2026-10-21): **fix: SHARE LINK crashed the Chrome tab** ("Aw, Snap!", the user's first try, on the
   local file). It called the browser share sheet, which on a computer is the Windows share dialog. Now the share
   sheet is only used on phones (coarse pointer) on http(s); everywhere else the link is copied, with a note when

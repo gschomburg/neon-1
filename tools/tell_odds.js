@@ -19,9 +19,15 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const file = process.argv[2] || path.join(__dirname, '..', 'dist', 'index.html');
 const RUNS = Number(process.argv[3]) || 3000;
 
-// ---- load the game with a do-nothing browser
+// ---- load the game with a do-nothing browser: every script index.html loads, in order
+// (one inline script in the old single-file builds, many files from v12 on)
 const html = fs.readFileSync(file, 'utf8');
-const src = html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>'));
+const scripts = [];
+for (const m of html.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
+  const src = ((m[1] || '').match(/src="([^"]+)"/) || [])[1];
+  if (src && /^https?:/.test(src)) continue;
+  scripts.push(src ? fs.readFileSync(path.join(path.dirname(file), src.split('?')[0]), 'utf8') : m[2]);
+}
 const noop = () => {};
 const ctx2d = new Proxy({}, { get: (t, k) => k === 'measureText' ? () => ({ width: 60 }) : (k in t ? t[k] : noop), set: (t, k, v) => (t[k] = v, true) });
 const canvas = { getContext: () => ctx2d, addEventListener: noop, style: {}, width: 0, height: 0 };
@@ -31,14 +37,11 @@ const sandbox = {
   localStorage: { getItem: () => null, setItem: noop }, location: { search: '' },
   document: { getElementById: () => canvas, addEventListener: noop, createElement: () => ({ style: {}, setAttribute: noop, addEventListener: noop }),
     documentElement: { style: {} }, body: { style: {}, appendChild: noop }, fonts: null },
-  window: { innerWidth: 390, innerHeight: 844, devicePixelRatio: 1, addEventListener: noop },
+  innerWidth: 390, innerHeight: 844, devicePixelRatio: 1, addEventListener: noop,
 };
-sandbox.window.window = sandbox.window;
+sandbox.window = sandbox;   // like a browser: window is the global object
 vm.createContext(sandbox);
-// the palettes live next to the game (v11+)
-const palFile = path.join(path.dirname(file), 'palettes.js');
-if (fs.existsSync(palFile)) vm.runInContext(fs.readFileSync(palFile, 'utf8'), vm.createContext(Object.assign(sandbox, { window: sandbox.window })));
-vm.runInContext(src, sandbox);
+for (const s of scripts) vm.runInContext(s, sandbox);
 const B = sandbox.window.__br;
 if (!B || !B.genLayer || !B.CORPS) throw new Error('game does not expose genLayer / CORPS (window.__br)');
 

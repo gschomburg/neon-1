@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="10" fill="#06090a"/>
+  <text x="25" y="50" font-family="Consolas, 'JetBrains Mono', 'Courier New', monospace" font-size="48" font-weight="700" fill="#3cf0ff" text-anchor="middle">N</text>
+  <text x="49" y="27" font-family="Consolas, 'JetBrains Mono', 'Courier New', monospace" font-size="22" font-weight="700" fill="#e6f4ef" text-anchor="middle">+1</text>
+</svg>

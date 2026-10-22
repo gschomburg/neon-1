@@ -1,0 +1,38 @@
+// NeoN+1 corps/playtime.js
+'use strict';
+NEON_FILES.push(['corps/playtime.js', 'v12.00']);
+CORPS.playtime = {
+  key: 'playtime', name: 'PLAYTIME', letter: '&', level: 1,
+  intel: '"wind it up and watch it go!"',
+  tell: null,
+  bossDesc: 'boss: the spring is almost out.',
+  mods: ['jackbox'],
+  // The real toy is wound up: it hops now and then. Deeper: the decoys rattle in place
+  // (they never leave the ground). Boss: rare, small hops.
+  dress(lv, k) {
+    const r = k.r, deck = shuffle(TOY_GLYPHS.slice(), r);
+    k.tiles.forEach((t, i) => { t.glyph = deck[i % deck.length]; t.ph = Math.floor(r() * 5000); });
+    k.tellTile.tell = true;
+    lv.hop = { every: k.boss ? 4200 : k.tier >= 2 ? 3000 : 2200, h: k.boss ? 0.25 : 0.45, wob: k.tier >= 2 || k.boss };
+  },
+  fx(t, ft, lv) {
+    const h = lv.hop;
+    if (!h) return null;
+    const p = (ft + t.ph) % h.every;
+    if (t.tell) return p < 260 ? { dy: -h.h * Math.sin(p / 260 * Math.PI) } : null;
+    if (h.wob && p < 300) return { dx: 0.12 * Math.sin(p / 300 * Math.PI * 4) };
+    return null;
+  },
+};
+
+// the codex, once you've beaten it
+CORP_TELL.playtime = "the real toy is wound up: it hops now and then. deeper, decoys rattle in place, but they never leave the ground.";
+
+// intro art
+CORP_ART.playtime = [
+  "     _ _",
+  "    (o_o)  _|_",
+  "   --| |--(___)",
+  "     / \\    V",
+  "  P L A Y T I M E",
+];

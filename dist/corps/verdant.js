@@ -1,0 +1,46 @@
+// NeoN+1 corps/verdant.js
+'use strict';
+NEON_FILES.push(['corps/verdant.js', 'v12.00']);
+CORPS.verdant = {
+  key: 'verdant', name: 'VERDANT', letter: 'v', level: 3,
+  intel: '"nothing is wasted. nothing."',
+  tell: null,
+  bossDesc: 'boss: it grows back fast.',
+  rules: () => 'ICE you hit grows back. leafy.',
+  mods: ['compost'],
+  // The real node has a leaf on its frame (so do 1-2 decoys). ICE you hit grows back a
+  // few seconds later as a fresh node, leaf and all.
+  dress(lv, k) {
+    const others = shuffle(k.tiles.filter(t => t !== k.tellTile), k.r);
+    const extra = Math.min(k.tier >= 2 || k.boss ? 2 : 1, Math.max(0, others.length - 1));
+    for (const t of [k.tellTile, ...others.slice(0, extra)]) { t.leaf = true; t.marked = true; }
+    lv.regrowMs = k.boss ? 2500 : 4000;
+    lv.regrow = [];
+  },
+  onHit(t) { const lv = st.lv; if (lv.regrow) lv.regrow.push({ t, at: (lv.lt || 0) + lv.regrowMs }); },
+  tick(lv, lt) {
+    if (!lv.regrow) return;
+    for (const g of lv.regrow.filter(o => lt >= o.at)) {
+      const t = g.t;
+      lv.regrow.splice(lv.regrow.indexOf(g), 1);
+      if (t.state !== 'locked') continue;
+      t.state = 'closed'; t.lockedBy = null; t.leaf = true; t.marked = true; t.klog = false; t.dir = null;
+      t.glyph = pickR(MOTIFS.filter(m => !lv.tiles.some(o => o.glyph === m)), rngFor(st.run.seed, 'regrow', lv.misses, lt | 0));
+      Sound.nodeOn();
+      setMsg('> verdant: the ICE grows back.', C.accent);
+    }
+  },
+  fx: t => t.leaf ? { corner: '%', cornerCol: C.accent } : null,
+};
+
+// the codex, once you've beaten it
+CORP_TELL.verdant = "the real node has a leaf % on its frame, and so do 1-2 decoys. ICE you hit grows back a few seconds later, with a leaf.";
+
+// intro art
+CORP_ART.verdant = [
+  "      _%_",
+  "    %(   )%",
+  "     \\ | /",
+  "    __\\|/__",
+  "     V E R D A N T",
+];

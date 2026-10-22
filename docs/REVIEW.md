@@ -6,6 +6,15 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **The game's web address, for link previews** (v12.00). Pasting the game's link into a chat can show a
+  preview card (`dist/preview.png`: the title art and a pitch), but the card needs the full address. Tell
+  Claude the URL, or replace `GAME_URL` in `dist/index.html` yourself.
+- [ ] **v12 on the web host** (v12.00). The game is now a folder: upload all of `dist/` (`engine/`, `data/`,
+  `corps/`, the icons and `preview.png`, not just index.html). If a file is missed or a phone has an old copy,
+  the title shows a red warning naming the file. Your v11 save should carry over on first load.
+- [ ] **Link preview and icons** (v12.00): `dist/preview.png` (shows "v12.00"; Claude can re-render it any
+  time), `dist/icon.svg` (tab icon) and `dist/icon-180.png` (phone home screen).
+
 - [ ] **INFO page wording** (v11.05). Tap the version tag in the footer (`neon+1 v11.05 [?]`). Credits:
   "idea and design: greg: the original idea, the game, the corps and their tells, and the playtesting",
   built with Claude in Claude Code, "started from One True Door (an earlier game, also made with

@@ -48,8 +48,9 @@ Open `dist/index.html` in a browser (or upload the `dist/` folder to a web host)
 
 ## Folders
 
-- `dist/`: the game: `index.html` plus its data files (`palettes.js`). The master copy, tracked in git;
-  the build number is `VERSION` in the code.
+- `dist/`: the game (upload the whole folder). `index.html` is the page; the code is in `engine/`, the data in
+  `data/`, each corp in its own file in `corps/`, every palette in `palettes.js`. The master copy, tracked in
+  git; the build number is `VERSION` in `engine/core.js` (`node tools/bump.js minor` ticks it everywhere).
 - `prototypes/`: the old versions, frozen, each a standalone snapshot (v01-v11; v08 is the online
   test build, v09 the 74-corp build, v10 adds BONEYARD, v11 is where `dist/` started).
 - `docs/REVIEW.md`: my review list: things Claude built or decided that I still need to look at.
@@ -58,6 +59,9 @@ Open `dist/index.html` in a browser (or upload the `dist/` folder to a web host)
 - `docs/CONTENT.md`, `docs/NAMES.md`, `docs/ART.md`: content reference, naming, art drop-off.
 - `tools/palette_editor.html`: the palette editor (open it in Chrome): edit `dist/palettes.js` with the game
   running beside it, and save straight to the file.
+- `tools/check.js` and `tools/playtest.js`: "did anything change?" A fingerprint of the game (every corp's
+  layers, maps, data, code) and a headless playthrough of every corp, compared to a saved baseline.
+- `tools/bump.js`: change the build number everywhere.
 - `tools/tell_odds.js`: `node tools/tell_odds.js` measures how much each corp's tell helps.
 - `reference/1TD.html`: One True Door, the game that inspired this one.
 - `database.rules.json`: the Firebase Realtime Database rules (pasted into the Firebase console).
@@ -92,6 +96,7 @@ NeoN+1 was built in conversation with Claude, Anthropic's AI model, running in C
 | v09 | The corp kit: 74 corps with levels and modifiers, RIVAL |
 | v10 | Hacker logos and profiles, database rules, multiplayer for everyone, BONEYARD |
 | v11 | The NeoN+1 title, CIPHER, HYDRA and BLACKOUT, palettes in their own file, the palette editor, `dist/` |
+| v12 | The game split into files: engine, data, and one file per corp; version stamps; link previews |
 
 The full record (every change, and the ideas still waiting) is in `docs/SPEC.md`.
 
