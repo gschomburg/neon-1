@@ -6,6 +6,18 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **Boss intro animation** (2026-10-22, your ask; you'll have notes). Today (~2.5 s, tap or any key skips): the
+  screen empties and the music goes muffled, then `!! WARNING !!` / `<CORP> // BOSS` / the boss line /
+  `n nodes. one is real.` type in with an alarm + 3 heartbeat thumps, red pulses and a growing shake; a riser,
+  then the board slams in (boom, shake, red flash) and the nodes power on one by one. Code: `bossEntrance()` in
+  `dist/engine/run.js`. Quick way to see it: dev menu `[ jump to boss ]`. Already on the ideas list: show the
+  corp's logo in it (SPEC §17).
+
+- [ ] **Every mod flashes when it fires** (v12.13). One shared animation: the badge blinks inverted and the letters hop.
+  To change it for all mods: `MOD_FIRE` at the top of `dist/engine/mods.js` (`ms`, `blinkMs`, `hop`, `hopMs`), or rewrite
+  `modFireLook()` right under it for a different style. Watch for mods that fire every layer (EZPASS, SKIMMER, the hint
+  notes): if the tray gets too busy at layer start, those could be left out.
+
 - [ ] **Corp map codes** (v12.11). Corps on the map are now 2 letters + their level (`SK1` = SEEKR, level 1),
   in the corp's colors, in place of `[S]`. Nodes you can travel to get a small glint across the code now and then
   (it replaces the old blinking brackets). Stops and OMNI keep brackets: `[$]` `[?]` `[+]` `[!]`. Also in the codex,
