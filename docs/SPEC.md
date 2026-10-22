@@ -679,6 +679,10 @@ Agreed changes not built yet.
   use (~50: messages, sounds, locking nodes, moving tiles...). Adding a corp = adding one file. The biggest
   part of the code (~2,800 lines of corps).
 
+- **Spacing / copy pass on the pick screens** (2026-10-22, the user's ask): the black market, data caches, safehouses,
+  boss rewards and the swap screens. The copy feels squeezed to fit (short tips, cut descriptions) when there may
+  be room for more, and it's making things less clear (e.g. STASH's upgrade read like +2 slots). Look at layout and
+  spacing, show the full description where there's room, and say plainly what an upgrade changes.
 - **When the game moves** (2026-10-21, the user: gregschomburg.com/br is not its final home; it may get its own
   URL or another folder). The only absolute address is `og:image` in `dist/index.html` (the link preview,
   now `https://gregschomburg.com/br/preview.png`; the site redirects to www): point it at the new place and
@@ -1552,6 +1556,8 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.07** (2026-10-22): STASH's upgrade text says what changes: "same slot. loot: an item more often" (RARE), "same
+  slot. loot: always an item" (EPIC). The old "+1 slot, more items" read like a second slot to the user.
 - **v12.06** (2026-10-22): market tag for a mod you'd upgrade: `mod+` instead of `up` (the user's pick; matches the
   `+` after its name).
 - **v12.05** (2026-10-22): market items always say `item` in the right column (a tiered item used to show its tier,

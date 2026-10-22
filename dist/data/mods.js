@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v12.06']);
+NEON_FILES.push(['data/mods.js', 'v12.07']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },
@@ -54,7 +54,7 @@ const MODS = {
     codex: "tap ICE in the same column as the real node and the scan catches it: no damage, the layer counts as found. it just isn't a perfect (no perfect pay or heal). a column without it hits you like normal." },
   // Minor (they tier up: COMMON, RARE, EPIC)
   stash:    { name: 'STASH',    short: 'STS', kind: 'minor', rarity: 'common', icon: '=#=#', anim: 'blink',    price: 35, tip: '+1 item slot.',       desc: '+1 slot on your item belt.',
-    tiers: [{}, { rarity: 'rare', tip: '+1 slot, more items.', desc: '+1 item slot, and loot is an item more often.' }, { rarity: 'epic', tip: '+1 slot, loot = items.', desc: '+1 item slot, and loot is always an item when there is room.' }] },
+    tiers: [{}, { rarity: 'rare', tip: 'same slot. loot: an item more often.', desc: 'still +1 item slot (not another), and loot is an item more often.' }, { rarity: 'epic', tip: 'same slot. loot: always an item.', desc: 'still +1 item slot (not another), and loot is always an item when there is room.' }] },
   haggle:   { name: 'HAGGLE',   short: 'HGL', kind: 'minor', rarity: 'common', icon: '%%/%', anim: 'scramble', price: 30, tip: 'market prices -25%.', desc: 'black market prices are 25% lower.',
     tiers: [{}, { rarity: 'rare', tip: 'market prices -35%.', desc: 'black market prices are 35% lower.' }, { rarity: 'epic', tip: 'market prices -50%.', desc: 'black market prices are half off.' }] },
   cachekey: { name: 'CACHEKEY', short: 'KEY', kind: 'minor', rarity: 'common', icon: 'o-o=', anim: 'wave',     price: 30, tip: 'caches drop double.', desc: 'data caches drop their loot twice.',
