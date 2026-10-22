@@ -1,6 +1,6 @@
 // NeoN+1 corps/haute.js
 'use strict';
-NEON_FILES.push(['corps/haute.js', 'v12.04']);
+NEON_FILES.push(['corps/haute.js', 'v12.05']);
 // Its boss mod: RUNWAY (runway), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
