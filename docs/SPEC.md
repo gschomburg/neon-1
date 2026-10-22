@@ -720,6 +720,16 @@ Agreed changes not built yet.
     ([ADS.md](ADS.md)). Real-IP could be an opt-in later if wanted.
   - *(Claude)* the map step could use the ascii-art.de collection in `reference/ascii/` for a world map to start
     from (credit / ask before shipping a piece), and the blinking spot could be the run seed's "city".
+- **Multiplayer backend: maybe move off Firebase to p5.party** (2026-10-22, the user; to look into). https://p5party.org/,
+  GitHub https://github.com/jbakse/p5.party. Built for p5.js but works with plain JS (`p5party.connect()`,
+  `loadShared()`; there's a `hello_party_vanilla` example). Rooms plus shared objects you just change and it
+  syncs. *(Claude, from its docs, to check when we get there)*: its own helpers for a host, per-guest shared data
+  and messages (`partyIsHost`, guest shareds, `partyEmit`) map closely to our lobby / host / turn model in
+  engine/multiplayer.js, which already sits behind a small `Net` layer, so the swap is mostly inside `Net`. Things
+  to weigh: the demo server (`wss://demoserver.p5party.org`) is meant for prototypes and teaching, so for real
+  players we'd run our own server (a small Node server, i.e. a host to pay for / keep up), vs Firebase (no
+  server of ours, but the test-mode rules expire, see §16 multiplayer). No accounts or security rules to speak
+  of either way; cheating stays as it is (answers come from the seed).
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
