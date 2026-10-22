@@ -82,10 +82,9 @@ mod that works in every corp. DEMOLITION's code already does most of it (`corps/
 that hurt besides tapping ICE: GLACIER's frostbite, AEGIS's breach, HALFLIFE's radiation dose, PLAYBALL's boss
 (ball out), CHANCE CARD's -1, and SACRIFICE spends it. So integrity becomes the buffer for **corp hazards**,
 and the perfect heal tops it up.
-- **Catch: the clock.** When a layer's clock runs out, the game taps a random node for you (engine/run.js,
-  "clock ran out"). Under ICE EATER that could be the real node: death by timeout. Options: a timeout eats a
-  random *ICE* instead (kind), costs 1 integrity instead (integrity matters again), or stays a random tap
-  (brutal, and makes CHRONOS / clock mods scary).
+- **The clock (decided, the user, 2026-10-22):** when a layer's clock runs out, the game normally taps a random
+  node for you (engine/run.js, "clock ran out"), which under ICE EATER could be the real node. Instead, **a
+  timeout costs 1 integrity** (no tap). That gives integrity a job under ICE EATER too.
 
 *(Claude)* still open (small):
 - How the warning looks: X-AXIS could tint the row's frames (the scan's `-` line on the empty cells, from
@@ -95,6 +94,12 @@ and the perfect heal tops it up.
 - **Feel:** eating should feel good: a crunch sound, the node crumbling, a little `nom` / chomp glyph.
 
 ## Money for health (the user, 2026-10-22; no name yet)
+
+**Already close in the game: OMERTA** (LA FAMIGLIA's boss mod): an ICE hit costs 10% of your credits (at least
+15cr) instead of integrity, while you can pay; broke, hits go back to integrity. **FRIENDSHIP** (MOCHI MOCHI)
+is the small one: once per corp, a hit costs 10cr. So the money-for-health idea already lives with
+LA FAMIGLIA; the new part is going all the way (integrity locked low so there's no fallback, or debt). It
+could be OMERTA's exotic big sibling, or replace / upgrade OMERTA. Not tied to a corp yet.
 
 Sets your integrity to 1 (or even 0), and you **use your money (or something else) as your health**. Or it
 gives you a big enough bonus that there are ways to **deflect** ICE hits. Rule slot: a new one, `health`
