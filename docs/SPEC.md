@@ -1552,6 +1552,8 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.06** (2026-10-22): market tag for a mod you'd upgrade: `mod+` instead of `up` (the user's pick; matches the
+  `+` after its name).
 - **v12.05** (2026-10-22): market items always say `item` in the right column (a tiered item used to show its tier,
   e.g. PATCH said RARE, which read like a bug to the user); the rarity shows on the name chip and in the details.
 - **v12.04** (2026-10-22): offers you can't take (too expensive, sold, locked) keep their color bit at full strength (a

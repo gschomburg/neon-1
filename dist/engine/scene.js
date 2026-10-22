@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.05']);
+NEON_FILES.push(['engine/scene.js', 'v12.06']);
 
 // ---------------- Scene ----------------
 let hits = [];

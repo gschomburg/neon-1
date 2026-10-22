@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v12.05']);
+NEON_FILES.push(['engine/panels.js', 'v12.06']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -122,7 +122,7 @@ function openShop(node) {
       const def = defOf(o);
       const isMod = o.kind === 'mod', up = isMod && has(o.key);
       const price = o.sold ? 'SOLD' : `${priceOf(o)}cr`;
-      const tag = isMod ? (up ? 'up' : 'mod') : o.kind === 'item' ? 'item' : 'svc';   // an item's rarity shows on its name chip
+      const tag = isMod ? (up ? 'mod+' : 'mod') : o.kind === 'item' ? 'item' : 'svc';   // an item's rarity shows on its name chip
       const col = C.bright;
       X({
         list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
