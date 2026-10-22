@@ -31,7 +31,7 @@ other mod. A first set of slots:
 | `tap` | what a tap does (a pick vs a 50/50 call) | COIN FLIP |
 | `carry` | what carries between layers | ICE THAT COMES WITH YOU (maybe WORM) |
 | `slots` | the tray itself (items vs mods) | the slot trade |
-| `health` | what a hit costs you (integrity vs credits / something else) | money for health |
+| `health` | what a hit costs you (integrity vs credits / something else) | money for health, ZOMBIE |
 
 (Clash warning text from the slot: "ICE EATER changes how layers are won. it will replace QUANTUM.")
 
@@ -121,6 +121,32 @@ gives you a big enough bonus that there are ways to **deflect** ICE hits. Rule s
 - With **ICE EATER** (where ICE doesn't hurt) it does little: different slots (`goal` vs `health`), so they're
   allowed together, but this one would be nearly useless. Could be a soft "doesn't combine well" note in the
   warning.
+
+## Zombie (the user, 2026-10-22; *(Claude)* names: FLATLINE, UNDEAD, POSTMORTEM, NECROSIS)
+
+Takes your integrity away: **you're dead**, like a zombie, but it gives you something pretty powerful. Rule
+slot: `health` (it rewrites what a hit costs: there's nothing left to lose), so it clashes with money for health.
+
+*(Claude)* the design question is **what ends a dead run**, since hits can't kill you anymore:
+- **Rot.** A rot meter (the HUD bar turns into `ROT ####------`) that grows every layer, or every ICE you hit;
+  full = you're gone for good. ICE hits speed it up instead of costing integrity, so mistakes still matter.
+- **Feeding.** Zombies eat: ICE you hit (or eat, with ICE EATER, a natural pair) slows the rot; the real node
+  is "brains" and resets it. Clearing layers keeps you going.
+- **A countdown:** you have N more corps / layers of unlife (shown big), then the run ends as a cash-out (you
+  keep your score), not a death.
+
+*(Claude)* the power (one, or a pick):
+- **You see like the dead:** ICE shows faint (a ghost frame) for the first second of every layer.
+- **Hits can't hurt:** the obvious one; with rot as the cost it's still balanced.
+- **Big pay:** everything pays double; dead runners don't need integrity, they need credits.
+- **The corps fear you:** every layer starts with 1 ICE locked (a SNIFFER for free), or bosses lose a node.
+
+*(Claude)* notes:
+- Clashes: heals (PATCH, TRIAGE, perfect heals) have nothing to heal: they could slow the rot instead. FAILSAFE
+  is pointless (you're already dead): taking ZOMBIE could spend it. CONTINUE? doesn't apply.
+- Look: the runner card / logo goes grey or glitched, the HUD says `FLATLINED` where integrity was, maybe a
+  zombie take on your palette (washed-out green). The death screen could say "you died. again."
+- Pairs: with ICE EATER it's a feeding game. With money for health: same slot, can't have both.
 
 ## QUANTUM
 
