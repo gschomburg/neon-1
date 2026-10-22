@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.06']);
+NEON_FILES.push(['engine/scene.js', 'v13.07']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -354,7 +354,7 @@ function buildTray(ctx, y) {
     addHit(x, ry, w, 1, { kind: 'mod', i });
     xs[row] = x + w + gap;
   });
-  if (!pockets && run.mods.length <= MOD_SLOTS) put(0, y + 2, `chromed up: ${modSlots() - run.mods.length} more mod slots`, C.dim);
+  if (!pockets && run.mods.length <= MOD_SLOTS) put(0, y + 2, `chromed up: ${modSlots() - run.mods.length} of ${modSlots()} slots free`, C.dim);
 
   // Mod info line, right under the mods
   const mi = st.selMod >= 0 ? st.selMod : st.hoverMod;

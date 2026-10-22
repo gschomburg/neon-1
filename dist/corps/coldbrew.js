@@ -1,6 +1,6 @@
 // NeoN+1 corps/coldbrew.js
 'use strict';
-NEON_FILES.push(['corps/coldbrew.js', 'v13.06']);
+NEON_FILES.push(['corps/coldbrew.js', 'v13.07']);
 // Its boss mod: ESPRESSO (espresso), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

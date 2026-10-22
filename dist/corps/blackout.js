@@ -1,6 +1,6 @@
 // NeoN+1 corps/blackout.js
 'use strict';
-NEON_FILES.push(['corps/blackout.js', 'v13.06']);
+NEON_FILES.push(['corps/blackout.js', 'v13.07']);
 // Its boss mod: FLARE (flare), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
