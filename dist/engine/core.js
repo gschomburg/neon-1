@@ -1,6 +1,6 @@
 // NeoN+1 engine/core.js: Tuning, the build number, constants, the palettes (resolved from palettes.js), the seeded RNG.
 'use strict';
-NEON_FILES.push(['engine/core.js', 'v12.07']);
+NEON_FILES.push(['engine/core.js', 'v12.08']);
 
 // ---------------- Tuning ----------------
 const CONFIG = {
@@ -31,7 +31,7 @@ const CONFIG = {
 
 // Build number: vMAJOR.MINOR. The minor ticks (+.01) with every update; the major changes only on
 // the user's call. The save slot follows the major only, so minor updates keep your progress.
-const VERSION = 'v12.07';
+const VERSION = 'v12.08';
 // In the palette editor (index.html?editor=1) the game keeps its own save, so yours is never touched.
 const EDITOR = /[?&]editor=1(&|$)/.test(location.search);
 const STORE_KEY = EDITOR ? 'beta_runner.editor.save' : 'beta_runner.v12.save';

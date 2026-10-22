@@ -1,6 +1,6 @@
 // NeoN+1 engine/effects.js: Particles, flashes, shakes, and the scroll-fill wipe.
 'use strict';
-NEON_FILES.push(['engine/effects.js', 'v12.07']);
+NEON_FILES.push(['engine/effects.js', 'v12.08']);
 
 // ---------------- Effects ----------------
 const parts = [];

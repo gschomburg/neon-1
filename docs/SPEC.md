@@ -1556,6 +1556,8 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.08** (2026-10-22): market right column: the tags (mod / mod+ / item / svc) sit in their own 4-wide column, so they
+  line up on the left as well as the prices on the right.
 - **v12.07** (2026-10-22): STASH's upgrade text says what changes: "same slot. loot: an item more often" (RARE), "same
   slot. loot: always an item" (EPIC). The old "+1 slot, more items" read like a second slot to the user.
 - **v12.06** (2026-10-22): market tag for a mod you'd upgrade: `mod+` instead of `up` (the user's pick; matches the
