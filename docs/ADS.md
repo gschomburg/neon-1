@@ -62,6 +62,21 @@ the map, and going there starts a strange hidden quest line).
 - A chain: tapping the right ad gives a map coordinate or a seed; the nuked corp's node there is the next step.
 - Rare on purpose (one per run at most, and not every run), and a codex entry once you find it.
 
+## Corp ads give a free trial of their mod (the user, 2026-10-22)
+
+When an ad for a corp comes up, tap it and you get **that corp's boss mod, temporarily**. A "free trial", the
+way real ads push them.
+
+*(Claude)* things to decide:
+- How long the trial lasts: the next corp, a few layers, or until the next ad. Shown on the badge (a `TRIAL`
+  tag or a countdown) and the badge greys out / leaves when it ends.
+- Whether it takes a mod slot (a full bar: it replaces nothing, or it rides along as an extra slot).
+- The catch, in ad style: tapping costs something (a few credits, a "subscription" that renews: it charges
+  you each layer unless you cancel, which fits the debt idea), or the trial ends at the worst time.
+- Is it a mod that unlocks this (an EXOTIC "AD BLOCKER" that does the opposite? an "early adopter" mod that
+  makes trials last longer?), or do all corp ads work this way?
+- Ads for corps you've never met: a trial of a mod you haven't seen, a way to discover boss mods.
+
 ## Gambling ads (the user, 2026-10-22)
 
 The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ
