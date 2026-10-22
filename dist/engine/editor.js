@@ -1,6 +1,6 @@
 // NeoN+1 engine/editor.js: The palette editor bridge (only with ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v12.08']);
+NEON_FILES.push(['engine/editor.js', 'v12.09']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -70,7 +70,7 @@ if (EDITOR) {
     shop: async () => {
       await mapRun();
       const id = Object.keys(st.run.map).find(k => st.run.map[k].type === 'shop');
-      st.run.credits = 999;   // so every offer shows at full strength (nothing greyed out as too expensive)
+      st.run.credits = 48;   // a mix: the items and repair are affordable, most mods aren't (to see both looks)
       openShop(id ? st.run.map[id] : { id: 'editor' });
       await settle();
     },

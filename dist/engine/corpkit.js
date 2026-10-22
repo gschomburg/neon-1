@@ -36,7 +36,7 @@
 //   engine/run.js       lockTile, pick, die, grantLoot, onSafe, blockHit, frostbite
 //
 'use strict';
-NEON_FILES.push(['engine/corpkit.js', 'v12.08']);
+NEON_FILES.push(['engine/corpkit.js', 'v12.09']);
 
 // ---------------- Content ----------------
 // tell: how the corp picks its safe tile. bossTell: the boss layer's twist.

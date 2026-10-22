@@ -1,6 +1,6 @@
 // NeoN+1 corps/famiglia.js
 'use strict';
-NEON_FILES.push(['corps/famiglia.js', 'v12.08']);
+NEON_FILES.push(['corps/famiglia.js', 'v12.09']);
 // Its boss mod: OMERTA (omerta), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
