@@ -506,3 +506,80 @@ One big N with a small raised +1 next to it, like n+1 written in math. The spell
 │          |   \           |    │    │
 │    NeoN+1|    \          │    │====│
 │__________|     \_________│          
+
+## Title lockup samples, round 4: oldskool / Amiga styles (2026-10-22)
+
+The user's references: the Amiga-style ASCII from roysac.com ("Styles of underground text art"): the BLUE SYSTEM banner (Roy/SAC) and Paso's ICE CREAM piece (Amiga and PC versions), plus the ascii-art.de collection for later. Much more expressive than our block letters; these ignore the 32-column title limit (most are 60-100 columns), the idea being the title could cycle between the face and a logotype. Rendered: `docs/art/logotype_round4.png`.
+
+### C1. OLDSKOOL SLAB (after Blue System)
+
+Slab letters built from underscores and slashes, pointed > serifs, : and . sparkles hanging off the stems, a -===- rule with the subtitle worked into it. The most "warez scene" of the set.
+
+```
+                                                                       .
+  _____  _____                              _____  _____               :
+  \    \ \    |   ________    ________      \    \ \    |      ___     :  _____
+ .|     \ \   |  /   __   \  /   __   \    .|     \ \   |   __|   |__  | /     |
+ :|  |\  \_\  | /   /_/   / /   / \   \    :|  |\  \_\  |  |__     __| |/_     |
+  |  | \      |/   _____/  \   \_/   /      |  | \      |     |___|       |    |
+ _|__|  \_____|\_______>    \_______/      _|__|  \_____|      .        __|    |__
+.:                                                             :       |__________|
+  -===-  .:. network intrusion .:.  -=============================================-
+```
+
+### C2. AMIGA OUTLINE (after Paso / Ice Cream)
+
+Thin outlined letters with a 3D extruded edge, leaning right, lots of open space inside. Reads like a sketch, the classic Amiga line style.
+
+```
+   _______    _______                                _______    _______                       _____
+  /\      \  /\      \     _______      _______     /\      \  /\      \          ___        _/\    \
+  \ \   _  \ \ \   _  \   /\  ___ \    /\  ___ \    \ \   _  \ \ \   _  \      __/\  \__    /\_\ \    \
+   \ \  \\  \ \/   \\  \  \ \ \__\ \   \ \ \  \ \    \ \  \\  \ \/   \\  \    /\__    __\   \/_/\ \    \
+    \ \  \\  \/     \\  \  \ \  ____\   \ \ \__\ \    \ \  \\  \/     \\  \   \/_/\  \_\/       \ \    \
+     \ \__\\_____/\__\\__\  \ \______\   \ \______\    \ \__\\_____/\__\\__\     \ \__\          \ \____\
+      \/__//_____\/__//__/   \/______/    \/______/     \/__//_____\/__//__/      \/__/           \/____/
+```
+
+### C3. TALL SLANT (after Paso PC)
+
+Solid slanted letters with a side face, after the PC version of Paso's piece. The clearest read of the set.
+
+```
+       _____    _____                             _____    _____
+      /    /|  /    /|    _______    _______     /    /|  /    /|                ____
+     /    / | /    / |   /  __  /|  /  __  /|   /    / | /    / |      __       /   /|
+    /    /  |/    /  /  /  /_/ / / /  / / / /  /    /  |/    /  /   __/ /__    /_  / /
+   /    / /|     /  /  /  ____/ / /  / / / /  /    / /|     /  /   /_   __/|    / / /
+  /____/ / |____/  /  /______/ /  /  /_/ / /  /____/ / |____/  /    |_/ /__|/   / / /
+  |____|/  |____| /   |______|/   |______|/   |____|/  |____| /       |_|/     /_/ /
+                                                                               |_|/
+```
+
+### C4. TALL SLANT + BLUE SYSTEM TRIM
+
+C3 with Blue System trim: sparkles, a long rule, the subtitle hanging under it. A full title piece.
+
+```
+        .            _____    _____                             _____    _____                  :
+        :           /    /|  /    /|    _______    _______     /    /|  /    /|                ____
+        :          /    / | /    / |   /  __  /|  /  __  /|   /    / | /    / |      __       /   /|
+   _ ___:__       /    /  |/    /  /  /  /_/ / / /  / / / /  /    /  |/    /  /   __/ /__    /_  / /
+       .:.       /    / /|     /  /  /  ____/ / /  / / / /  /    / /|     /  /   /_   __/|    / / /
+                /____/ / |____/  /  /______/ /  /  /_/ / /  /____/ / |____/  /    |_/ /__|/   / / /
+                |____|/  |____| /   |______|/   |______|/   |____|/  |____| /       |_|/     /_/ /
+  -==========================================================================-  .   |_|/  .:
+                                                .:. network intrusion .:.         :
+```
+
+### C5. COMPACT SLANT (fits our 32-column title)
+
+A small slanted version that fits our 32-column title as it is today.
+
+```
+    ____ ___                ____ ___
+   /   //  /  ____   ____  /   //  /   _    __
+  /    /  /  / __/  / __ \/    /  / _/ |_  /_ |
+ /  /|   /  / __/  / /_/ /  /|   / /_ __/   | |
+/__/ |__/  /___/   \____/__/ |__/   /_/     |_|
+```
