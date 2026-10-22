@@ -701,6 +701,14 @@ Agreed changes not built yet.
     5% of your credits (in debt: it charges you?); the market (can you buy on credit?); CONTINUE? (needs 100cr); the
     credits HUD (`CR -40` in the danger color). Other corps with the money theme: PAWN BROS, LUCKEEZ CASINO, LA FAMIGLIA.
   - Code note: ~25 places check or spend credits assuming they never go below 0; check them all when this is built.
+- **Loading / intro screen** (2026-10-22, the user; backlog). The game is 111 script files now (~1MB), so a boot
+  moment before the title, mostly for the feel of it (it barely needs to load). *(Claude)* ideas: an old-terminal
+  boot log that lists the real files as they load (`engine/run.js ..... ok`, `corps/seekr.js ..... ok`; the version
+  stamps in `NEON_FILES` are already there, and a missed or stale file could show as `FAIL` right there instead of the
+  red warning on the title), a modem handshake sound, a progress bar out of ASCII, then a cut to the title. Fast and
+  skippable (tap / key), shorter after the first visit, off on REDUCED effects. Has to be drawn before the game code
+  loads (a small inline script in index.html, or the first file in the list). Could also be where the fake ads show
+  first (a "sponsored" line while it "loads": [ADS.md](ADS.md)).
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
