@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v12.17']);
+NEON_FILES.push(['engine/panels.js', 'v12.18']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -124,7 +124,7 @@ function openShop(node) {
   openPanel('BLACK MARKET', (T, B, X) => {
     const now = performance.now();
     T('BLACK MARKET', C.money);
-    T(`credits ${run.credits}${has('haggle') ? `  (haggle -${Math.round(tv('haggle', [0.25, 0.35, 0.5]) * 100)}%)` : ''}`, C.money);
+    T(`credits ${run.credits}${leverage() ? `  (limit ${creditFloor()})` : ''}${has('haggle') ? `  (haggle -${Math.round(tv('haggle', [0.25, 0.35, 0.5]) * 100)}%)` : ''}`, run.credits < 0 ? C.danger : C.money);   // LEVERAGE: the limit
     T('');
     offers.forEach((o, k) => {
       const def = defOf(o);
