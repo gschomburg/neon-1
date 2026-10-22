@@ -77,6 +77,26 @@ way real ads push them.
   makes trials last longer?), or do all corp ads work this way?
 - Ads for corps you've never met: a trial of a mod you haven't seen, a way to discover boss mods.
 
+## Gun ads and cyberware ads (the user, 2026-10-22)
+
+Ads for guns (maybe from an arms-dealer corp, SPEC §17) and for **cyberware**: a way to lean the world more
+cyberpunk without changing the gameplay. The ads are where the setting can show: implants, chrome, body mods,
+sold like phones and supplements.
+
+*(Claude)* drafts:
+- "the new SMARTGUN 9: it aims so you don't have to. (it also decides.)"
+- "home defense made easy. 0% APR on all sidearms. ask about our trade-in program for limbs."
+- "CARAPACE ARMOR: stops 9 out of 10 bullets. the 10th is on us."
+- "PREDATOR: smart ammo that remembers your face."
+- "upgrade your eyes this weekend! 20% off all optics. old eyes recycled free."
+- "doctors HATE this neural port (it's installed by a dentist)"
+- "tired of your arms? 3 new models in stock."
+- "is your spine up to date? 1 in 4 runners are running last year's firmware."
+- "MEDIX CHROME CLINIC: walk in human, walk out 30% faster. financing available."
+- "subscription reflexes: first month free. cancel anytime (reflexes stop working)."
+- chumbox style: "she replaced her hands. you won't believe what she does now" / "7 implants that are
+  secretly spying on you (#2 is your heart)"
+
 ## Gambling ads (the user, 2026-10-22)
 
 The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ

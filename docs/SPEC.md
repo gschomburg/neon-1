@@ -1853,6 +1853,15 @@ Not yet placed in a version.
 - **Minesweeper ideas** (noted v08). A mod where tripping an ICE also **deactivates any ICE close to it** (all neighbors, not just one). Note: VIRUS (EPIC) already locks **one** neighboring ICE on a hit, so this could be VIRUS's bigger version (a tier, or its own EXOTIC mod, e.g. CHAINLOCK / DETONATOR), or VIRUS could become tiered (1 / 2 / all neighbors). *(Claude)*: a minesweeper corp where hit ICE shows a **number**: how many steps away the real node is (or how many ICE touch it).
 - **Corp idea: shell game** (noted v08; names *(Claude)*: SHELLGAME, THREE CARD, MONTE). The real node **moves** to another node without you seeing the switch. *(Claude)*: nodes shuffle positions in a quick animation (cups sliding) you can follow if you're sharp; or swaps happen unseen but leave a tell (a glyph line flickers on the two nodes that swapped); boss: more swaps, faster.
 - **Corp idea: gambling** (noted v08; names *(Claude)*: HOUSE EDGE, LUCKY 7, CASINO.SYS). Ideas: **double down** on a node (bet that your pick is right: double pay if real, double damage if ICE), either as the corp's mechanic or as its boss mod. *(Claude)*: slot-machine glyphs (the real node shows three matching symbols); a "let it ride" choice after each layer.
+- **Corp idea: an arms dealer** (the user, 2026-10-22). A corp that sells weapons; it also runs gun ads
+  ([ADS.md](ADS.md)). Close to it today: AEGIS DEFENSE, CARAPACE ARMOR, PREDATOR, DEMOLITION CO (none is a dealer;
+  one could become one). *(Claude)* names: GUNMETAL, SURPLUS, ARSENAL, BRASS & SONS. Tell sketch: the nodes are
+  crates with serial numbers / calibers, the real one matches a manifest on the hint line; boss: a sting (one
+  decoy is a federal crate, hit it and it costs more). Mod: a sidearm-style one-shot (tap: lock 1 ICE, once a corp).
+- **Lean more cyberpunk: cyberware** (the user, 2026-10-22). The game mentions almost no cyberpunk stuff (the theme
+  was kept light on purpose, see the top). Ways to add it without changing play: the ads ([ADS.md](ADS.md), implant
+  and chrome ads), mod / item names and flavor (*(Claude)*: some items as implants: an optic, a neural port, reflex
+  boosters), corp intel lines, the codex, MEDIX as a chrome clinic, and the runner card (installed chrome as a stat).
 - **Corp idea: a dating app** (the user, 2026-10-22; like Bumble or Match). Not designed yet. *(Claude)* sketches to
   react to: names SPARKD, KINDLR, SOULM8, LOVE.EXE. Nodes are profiles (a tiny face + 3 interests); the hint line is
   your profile, and the real node is your match (shares the most interests, or a compatibility %). Swipe-style
