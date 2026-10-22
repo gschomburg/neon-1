@@ -10,6 +10,13 @@ Mods for corps that don't exist yet stay with those corp ideas (SPEC §17). Mods
 
 ---
 
+## Stored for later (v13.00, the user: "store all those other exotics for now")
+
+Not built, kept here for a later round: **GHOST**, **WORM**, **LOGIC BOMB**, **FORK BOMB** (names / drafts only), and the
+exotic items **PARADOX**, **ENTANGLE**, **NUKE** (with the hidden quest). Also parked: the AD BLOCKER / ad mods (wait for
+the ads, see ADS.md), promoting some wild corp boss mods to exotic, MEMORY DOUBLER as a spare name, and SNOOZE's
+"backlog comes due" rule if it plays too strong.
+
 ## Questions for all exotics
 
 **Decided (the user, 2026-10-22):**

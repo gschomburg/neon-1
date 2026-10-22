@@ -31,7 +31,8 @@ All ASCII, mobile first, plain HTML/JS, no build step.
   letter on screen into symbols; BLACKOUT gets darker every layer; HYDRA grows a new node every time
   you miss).
 - Corp levels and corp modifiers (CURSED, RUSH, LOADED, RIVAL...) that change how any corp plays.
-- 100+ mods and items with rarity tiers, upgrades and a fixed trigger order.
+- 100+ mods and items with rarity tiers, upgrades and a fixed trigger order, plus EXOTIC mods that change
+  the rules (eat the ICE instead of avoiding it, play as a zombie, go into debt, bet on a coin flip...).
 - Online multiplayer for 2-6 players: a shared run, elimination by integrity, spectators, shared
   cursors and emotes. Host a room and share the code or the link (`?room=CODE`).
 - Everything is text on one canvas, so any character can turn into a particle: glitches, wipes,
@@ -97,6 +98,7 @@ NeoN+1 was built in conversation with Claude, Anthropic's AI model, running in C
 | v10 | Hacker logos and profiles, database rules, multiplayer for everyone, BONEYARD |
 | v11 | The NeoN+1 title, CIPHER, HYDRA and BLACKOUT, palettes in their own file, the palette editor, `dist/` |
 | v12 | The game split into files: engine, data, and one file per corp; version stamps; link previews |
+| v13 | EXOTIC mods that bend the rules (ICE EATER, ZOMBIE, BLOOD MONEY, LEVERAGE, QUANTUM, COIN FLIP, SNOOZE, CHROMED UP), the ALL-IN item, corp map codes with levels, mod effects you can see |
 
 The full record (every change, and the ideas still waiting) is in `docs/SPEC.md`.
 

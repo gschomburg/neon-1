@@ -6,6 +6,9 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **v13.00 on the web host** (2026-10-22). Upload all of `dist/` again (most files changed). Your v12 save carries over
+  on first load (new save slot `beta_runner.v13.save`).
+
 - [ ] **CHROMED UP** (v12.24). No item belt, 9 mod slots (the 7th-9th on the belt's row). Held items are sold for half when you take
   it. Feel: is 3 slots worth losing items? (STASH and CACHEKEY's item side do nothing with it.)
 

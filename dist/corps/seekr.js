@@ -1,6 +1,6 @@
 // NeoN+1 corps/seekr.js
 'use strict';
-NEON_FILES.push(['corps/seekr.js', 'v12.24']);
+NEON_FILES.push(['corps/seekr.js', 'v13.00']);
 // Its boss mod: AUTOCOMPLETE (autocomplete), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

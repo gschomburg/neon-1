@@ -1,6 +1,6 @@
 // NeoN+1 corps/nimbus.js
 'use strict';
-NEON_FILES.push(['corps/nimbus.js', 'v12.24']);
+NEON_FILES.push(['corps/nimbus.js', 'v13.00']);
 // Its boss mod: FORECAST (forecast), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
