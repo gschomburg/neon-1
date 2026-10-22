@@ -1,6 +1,6 @@
 // NeoN+1 corps/bullettime.js
 'use strict';
-NEON_FILES.push(['corps/bullettime.js', 'v13.05']);
+NEON_FILES.push(['corps/bullettime.js', 'v13.06']);
 // Its boss mod: TIMEWARP (timewarp), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

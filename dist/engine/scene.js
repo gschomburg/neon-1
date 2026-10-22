@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.05']);
+NEON_FILES.push(['engine/scene.js', 'v13.06']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -241,7 +241,6 @@ function buildScene(now, collectHits, raw = false) {
   footerRight();
   }
 
-  if (st.ad && !st.dev) buildAd(ctx, now);   // a fake ad, over everything (engine/ads.js)
   let result = cells;
   if (!raw) {
     if (st.wipe && !st.dev) result = applyWipe(cells, now);
@@ -255,7 +254,17 @@ function buildScene(now, collectHits, raw = false) {
       }
     }
   }
-  if (collectHits) bgs = st.wipe && !st.dev ? (st.wipe.full ? [] : frameBgs.filter(b => b.cy < BOARD_Y || b.cy >= boardEnd)) : frameBgs;
+  // A fake ad goes over everything, after the wipe too (a wipe between layers holds the screen while
+  // an ad is up; drawn under the wipe, the ad was invisible). Its characters and backgrounds are kept
+  // apart and added on top; what was under the box is dropped.
+  const adBgs = [];
+  if (st.ad && !st.dev) {
+    const ac = [];
+    const aput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ac.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
+    buildAd(Object.assign({}, ctx, { put: aput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result, under: true }), now);
+    result = result.concat(ac);
+  }
+  if (collectHits) bgs = (st.wipe && !st.dev ? (st.wipe.full ? [] : frameBgs.filter(b => b.cy < BOARD_Y || b.cy >= boardEnd)) : frameBgs).concat(adBgs);
   if (collectHits) st.focusables = hits.filter(h => h.kind === 'btn' && !h.noFocus).sort((a, b) => a.y - b.y || a.x - b.x).map(h => ({ id: h.id, onTap: h.onTap }));
   return result;
 }

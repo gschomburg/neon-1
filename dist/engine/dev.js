@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v13.05']);
+NEON_FILES.push(['engine/dev.js', 'v13.06']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
@@ -177,6 +177,7 @@ function devMenuLines() {
   lines.push({ row: [
     { text: '[intro: first boot]', id: 'introfull', onTap: () => { save.bootSeen = false; persist(); toggleDev(); startIntro(); } },
     { text: '[intro: short]', id: 'introshort', onTap: () => { save.bootSeen = true; persist(); toggleDev(); startIntro(); } },
+    { text: '[show ad]', id: 'showad', onTap: () => { toggleDev(); showAd(pickR(Object.keys(ADS), Math.random)); } },
   ] });
   T('');
   // Corp tester: pick a corp from the list, then breach it now (on the map) or start a
