@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v12.21']);
+NEON_FILES.push(['engine/active.js', 'v12.22']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -149,6 +149,21 @@ function rerouteMap() {
 }
 
 // ---------------- Items ----------------
+// Items some corps switch off (like MOD_OFF): ALL-IN in corps with their own tap rules.
+const ITEM_OFF = { allin: def => !!def.tap };
+const itemOffHere = key => !!(st.mode === 'play' && st.corp && st.corp.hasBoss && ITEM_OFF[key] && ITEM_OFF[key](st.corp.def));
+// Why an item can't be used right now (shown when you try): a short line for the info row.
+function whyNotItem(stack) {
+  const key = stack.key, inCorp = st.mode === 'play' && st.corp && st.corp.hasBoss;
+  if (itemOffHere(key)) return 'off in this corp.';
+  if (key === 'patch') return zombie() ? 'no rot to fix.' : 'integrity is full.';
+  if (key === 'route' || key === 'warp') return st.mode !== 'map' ? 'only on the map.' : 'nowhere to go.';
+  if (key === 'wall') return 'only inside a corp.';
+  if (!inCorp && key !== 'wall') return 'only inside a corp layer.';
+  if (st.busy) return 'wait a moment.';
+  if (key === 'split' && st.lv && st.lv.split) return 'already split this layer.';
+  return 'nothing to use it on.';
+}
 function canUse(stack) {
   const run = st.run;
   if (!run || st.wipe || !stack) return false;
@@ -159,6 +174,7 @@ function canUse(stack) {
   const inLayer = st.mode === 'play' && !st.busy && st.lv;
   if (key === 'purge') return !!inLayer && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
   if (key === 'split') return !!inLayer && !st.lv.split && candidates().length > 1;
+  if (key === 'allin') return !!inLayer && st.corp.hasBoss && !itemOffHere(key) && st.lv.n > 1 && st.lv.tiles[st.lv.safe].state === 'closed';
   return false;
 }
 
@@ -167,7 +183,12 @@ function useItem(slot) {
   if (!run || st.transitioning) return;
   const stack = run.items[slot];
   if (!stack) return;
-  if (!canUse(stack)) { Sound.deny(); return; }
+  if (!canUse(stack)) {   // say why, where the info was, and shake the item
+    st.itemDeny = { slot, at: performance.now(), text: whyNotItem(stack) };
+    st.selItem = slot;
+    Sound.deny();
+    return;
+  }
   const key = stack.key, tier = stack.tier || 0;
   stack.n--;
   if (stack.n <= 0) run.items.splice(slot, 1);
@@ -214,6 +235,7 @@ function useItem(slot) {
     lv.split = true;
     Sound.shield();
   }
+  if (key === 'allin') allIn();
   if (key === 'route') {
     rerouteMap();
     st.mapSel = null;

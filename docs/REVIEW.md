@@ -6,6 +6,10 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **ALL-IN item, and "why not" on items** (v12.22). ALL-IN (EPIC, 60cr): 50/50, the layer clears or +2 ICE (copies of a
+  decoy, so a glyph can show up 3 times: a small hint those are ICE; fine?). Tapping an item you can't use now shakes it and
+  says why in red under the belt (try ALL-IN in DEMOLITION, or a PATCH at full integrity).
+
 - [ ] **COIN FLIP** (v12.19). Hold a node (or drag from it) and the coin box pops up; drag to ♥ or $ and let go. Feel
   the gesture on your phone (hold time 260ms, how far you drag), whether the bet is worth it, and the x N drop-in.
   The multiplier (HUD, by the credits) is the strong part: watch the pay. Numbers: `COIN` in `dist/engine/mods.js`.

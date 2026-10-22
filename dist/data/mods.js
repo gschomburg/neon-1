@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v12.21']);
+NEON_FILES.push(['data/mods.js', 'v12.22']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },
@@ -23,6 +23,8 @@ const ITEMS = {
     tiers: [{}, { rarity: 'rare', desc: 'rule out two thirds of the ICE.', tip: 'rule out 2/3 ICE.' }, { rarity: 'epic', desc: 'rule out all but one ICE node.', tip: 'leave real + 1 ICE.' }] },
   route: { key: 'route', name: 'ROUTE', price: 45, rarity: 'rare',   desc: 'on the map: reshuffle every node ahead.', tip: 'shuffle map ahead.' },
   warp:  { key: 'warp',  name: 'WARP',  price: 50, rarity: 'exotic', desc: 'on the map: warp to a random node ahead.', tip: 'random jump ahead.' },
+  allin: { key: 'allin', name: 'ALL-IN', price: 60, rarity: 'epic', desc: 'in a corp layer: 50/50. the layer clears, or 2 more ICE nodes show up.', tip: '50/50: clear it or +2 ICE.',
+    codex: 'use it in a corp layer: half the time the layer clears on the spot (the real node opens, normal pay, no perfect); the other half two new ICE nodes appear, copies of the decoys already there. not in corps with their own tap rules.' },
 };
 const ITEM_WHERE = 'market, $ nodes, caches.';
 

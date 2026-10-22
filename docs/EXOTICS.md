@@ -220,7 +220,9 @@ One ICE node per layer shows as see-through (a faint frame) from the start. Simp
 might be too plain for EXOTIC (it's a steady SNIFFER); make it rule-bending: **you can tap through** a ghost
 node (it never counts as a pick), or ghosts show where last layer's ICE was.
 
-## ALL OR NOTHING (the user's; *(Claude)*: DOUBLE OR NOTHING, ROULETTE)
+## ALL OR NOTHING — BUILT v12.22 as the EPIC item ALL-IN (the user: an item, not a mod)
+
+50/50 when you use it: the layer clears, or two new ICE (copies of a decoy) appear. The notes below were the open questions.
 
 A chance to clear the whole layer at once, but also a chance it adds ICE instead.
 

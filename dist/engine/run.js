@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.21']);
+NEON_FILES.push(['engine/run.js', 'v12.22']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -1042,6 +1042,41 @@ function coinPop(m) {
   const cells = [];
   for (let k = 0; k < 34; k++) cells.push({ ch: pickR(['*', '+', '$', 'x', '.', 'o', String(m)], Math.random), x: x + rand(-2, 2) * L.cw, y: y + rand(-1, 1) * L.chh, col: pickR(cols, Math.random) });
   setTimeout(() => explode(cells, x, y + L.chh, { power: 0.9, grav: 0.7, life: [0.9, 1.6] }), 280);
+}
+
+// ---- ALL-IN (EPIC item): 50/50. The layer clears on the spot (normal pay, no perfect), or two new ICE
+// nodes appear: copies of a decoy already there (same glyph and marks), so the corp's tell still holds.
+function allIn() {
+  const run = st.run, lv = st.lv, c = st.corp;
+  const r = rngFor(run.seed, 'allin', c.node.id, c.idx, (run.allins = (run.allins || 0) + 1));
+  if (r() < 0.5) {
+    st.busy = true; lv.scanned = true;   // no perfect
+    Sound.jingle(); flash(C.money, 0.2, 0.4); shake(5);
+    setMsg('> all in: the house folds. layer clear.', C.money);
+    (async () => { await wait(550); if (st.lv === lv) await onSafe(lv.tiles[lv.safe]); })();
+    return;
+  }
+  const used = new Set(lv.tiles.map(t => t.cell)), free = [];
+  for (let k = 0; k < lv.cols * lv.rows; k++) if (!used.has(k)) free.push(k);
+  const decoys = lv.tiles.filter(t => !isReal(t) && !t.loaded);
+  const src = decoys.length ? decoys : lv.tiles.filter(t => !isReal(t));
+  const real = lv.tiles[lv.safe], now = performance.now();
+  let added = 0;
+  for (const cell of shuffle(free, r).slice(0, 2)) {
+    const from = src.length ? pickR(src, r) : real;
+    const nt = Object.assign({}, from, { cell, safe: false, quantum: false, loaded: false, state: 'closed', hidden: false, probing: false, ruledOut: false, infectAt: now });
+    for (const k of ['dir', 'dirPending', 'dirAt', 'klog', 'klogAt', 'eaten', 'shattered', 'cracks', 'crackAt', 'hitAt', 'lockedBy', 'slide', 'tell']) delete nt[k];
+    moveTile(lv, nt, cell);
+    lv.tiles.push(nt);
+    setTimeout(() => { nt.infectAt = null; }, 450);   // they glitch in
+    added++;
+  }
+  lv.tiles.sort((a, b) => a.cell - b.cell);
+  lv.safe = lv.tiles.indexOf(real);
+  lv.n += added; lv.iceTotal = (lv.iceTotal || 0) + added;
+  st.hover = -1; st.sel = -1;
+  Sound.trap(); shake(6); flash(C.danger, 0.15, 0.3);
+  setMsg(added ? `> all in: busted. +${added} ICE.` : '> all in: busted. no room for more ICE.', C.danger);
 }
 
 // Every frame: an ICE EATER layer with no ICE left clears (bites, locks, items, mods: whatever ate it).

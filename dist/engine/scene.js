@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.21']);
+NEON_FILES.push(['engine/scene.js', 'v12.22']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -360,7 +360,8 @@ function buildTray(ctx, y) {
   const step = Math.min(8, Math.floor((L.wc + 1) / slots));
   for (let i = 0; i < slots; i++) {
     const stack = run.items[i];
-    const ix = i * step;
+    const dn = st.itemDeny && st.itemDeny.slot === i ? now - st.itemDeny.at : 1e9;
+    const ix = i * step + (dn < 320 ? 0.35 * Math.sin(dn / 22) * (1 - dn / 320) : 0);   // a tap it can't take: an error shake
     if (!stack) { put(ix, y + 2, ':  .  :', C.dim, 'tray'); continue; }
     const ok = canUse(stack), v = itemView(stack.key, stack.tier);
     const sel = st.selItem === i, hov = st.hoverItem === i;
@@ -378,9 +379,13 @@ function buildTray(ctx, y) {
     const stack = run.items[ii], it = itemView(stack.key, stack.tier);
     put(0, y + 3, '\\_', C.mid);
     putChip(put, bg, 2, y + 3, it.name, it.rarity, 'tray', true);
-    put(3 + it.name.length, y + 3, it.tip, C.text);
-    const usable = canUse(stack);
-    put(4 + it.name.length + it.tip.length, y + 3, usable ? '>tap' : '(not now)', usable ? C.accent : C.dim);
+    const dn = st.itemDeny && st.itemDeny.slot === ii ? now - st.itemDeny.at : 1e9;
+    if (dn < 1800) put(3 + it.name.length, y + 3, st.itemDeny.text, C.danger);   // why it can't be used (a second or two)
+    else {
+      put(3 + it.name.length, y + 3, it.tip, C.text);
+      const usable = canUse(stack);
+      put(4 + it.name.length + it.tip.length, y + 3, usable ? '>tap' : '(not now)', usable ? C.accent : C.dim);
+    }
   }
 }
 
