@@ -139,6 +139,22 @@ A way to "go ad free", or an **ad to go ad free**. *(Claude)* takes on it:
 - **For the player who really doesn't want them:** a plain settings toggle that turns the ads off for real
   (no joke), next to REDUCED effects, so the bit never gets in anyone's way.
 
+## Fantasy mobile game ads (the user, 2026-10-22)
+
+The spammy free-to-play fantasy game ad: a "sexy" ASCII lady in armor (or not much of it) and a vague line
+that adults love this game. Parody of the real ones, kept cheeky, not explicit. *(Claude)* game names:
+DRAGON THRONE: AWAKENING, RAID OF LEGENDS, QUEENS OF KALDOR, EMPIRE OF DESIRE (sic), WAIFU WARS ONLINE.
+
+*(Claude)* drafts:
+- "this game is not for kids." / "adults only. you've been warned."
+- "only 1% of players can beat level 3. (she believes in you.)"
+- "play for 1 minute and you'll see why everyone is addicted."
+- "the most realistic strategy game of 2026" (over an ASCII lady who has nothing to do with strategy)
+- "your queen awaits. tap to claim your FREE 10x summon."
+- bait-and-switch gag: tap it and the "game" is a 4x4 grid of nodes. "find the real one, my lord."
+- the art: a small ASCII bust / pin-up in the old textmode style (the scene's own pin-up pieces are a good
+  reference; keep it suggestive, the joke is how shameless the ad is).
+
 ## Gambling ads (the user, 2026-10-22)
 
 The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ
