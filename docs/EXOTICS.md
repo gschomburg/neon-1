@@ -127,6 +127,31 @@ gives you a big enough bonus that there are ways to **deflect** ICE hits. Rule s
 Takes your integrity away: **you're dead**, like a zombie, but it gives you something pretty powerful. Rule
 slot: `health` (it rewrites what a hit costs: there's nothing left to lose), so it clashes with money for health.
 
+**The user's design (2026-10-22): rot makes your taps weak.**
+- **Rot** is just a number counting up (it replaces the integrity bar). Every layer adds some rot, and every
+  ICE you **break** adds rot.
+- Finding the real node still moves you to the next layer. ICE doesn't hurt: you're pretty much invincible.
+- **The more rot, the weaker your taps:** a node (ICE *or* the real one) takes more taps to break. Low rot: 2
+  taps. At ~100 rot: ~20 taps. The weak taps add no rot; only a node actually breaking does.
+- **Healing brings rot down** instead of adding integrity (PATCH, TRIAGE, HONEYCOMB, perfect heals...).
+
+*(Claude)* notes on that design:
+- **A formula to start from:** taps to break = 1 + rot / 5 (rot 5: 2 taps, rot 50: 11, rot 100: 21). Rot per
+  layer +3, per ICE broken +5? To tune.
+- **Half-tapped nodes must not tell you what they are.** If a node showed "ICE" or "real" before it breaks, you
+  could tap every node once to probe. So a weak tap only shows damage (cracks, a counter like `3/11`), the
+  same for ICE and the real node, and nothing more.
+- **What ends the run?** Rot never kills you on its own, it just slows you. The pressure comes from **clocks**:
+  20 taps a node on a CHRONOS clock is a real threat, and a timeout costs integrity... which you don't have.
+  So: a timeout adds a lot of rot, or a **rot cap** (e.g. 150 = you fall apart for good). Or the run only ends
+  when you cash out, and rot is how it slowly becomes not worth going on. Needs a pick.
+- Corps with their own tap rules (DEMOLITION, FORM 27B, TELEPHONIX, LUCKEEZ...) need a rule: multi-tap applies
+  to the final "break" only.
+- **Feel:** each weak tap a dull thud and a crack spreading on the node; the break a wet crunch. The HUD:
+  `ROT 047` in a sickly green, and your taps visibly weaker (a smaller flash).
+
+*(Claude)* earlier thoughts (before the user's design):
+
 *(Claude)* the design question is **what ends a dead run**, since hits can't kill you anymore:
 - **Rot.** A rot meter (the HUD bar turns into `ROT ####------`) that grows every layer, or every ICE you hit;
   full = you're gone for good. ICE hits speed it up instead of costing integrity, so mistakes still matter.
