@@ -31,6 +31,7 @@ other mod. A first set of slots:
 | `tap` | what a tap does (a pick vs a 50/50 call) | COIN FLIP |
 | `carry` | what carries between layers | ICE THAT COMES WITH YOU (maybe WORM) |
 | `slots` | the tray itself (items vs mods) | the slot trade |
+| `health` | what a hit costs you (integrity vs credits / something else) | money for health |
 
 (Clash warning text from the slot: "ICE EATER changes how layers are won. it will replace QUANTUM.")
 
@@ -73,14 +74,48 @@ mod that works in every corp. DEMOLITION's code already does most of it (`corps/
 - **HYDRA gets a head limit** under ICE EATER, so eating ends.
 - **Always on** once you have it (no toggle).
 
+- **The pay split includes the perfect bonus** (every clear you survive counts as perfect), and so does the
+  perfect heal (the user: "yes i think").
+- **SNIFFER and VIRUS pay** when they eat ICE for you (each bite pays like your own).
+
+**Does integrity still matter?** (the user wondered, if the real node kills you.) *(Claude)*: yes, a bit. Things
+that hurt besides tapping ICE: GLACIER's frostbite, AEGIS's breach, HALFLIFE's radiation dose, PLAYBALL's boss
+(ball out), CHANCE CARD's -1, and SACRIFICE spends it. So integrity becomes the buffer for **corp hazards**,
+and the perfect heal tops it up.
+- **Catch: the clock.** When a layer's clock runs out, the game taps a random node for you (engine/run.js,
+  "clock ran out"). Under ICE EATER that could be the real node: death by timeout. Options: a timeout eats a
+  random *ICE* instead (kind), costs 1 integrity instead (integrity matters again), or stays a random tap
+  (brutal, and makes CHRONOS / clock mods scary).
+
 *(Claude)* still open (small):
-- The pay split: is it the plain layer pay, or with the perfect bonus (every survived clear is "perfect" now)?
-  And the perfect heal (+1 int): every layer, never, or only boss layers? Every layer would heal a lot.
 - How the warning looks: X-AXIS could tint the row's frames (the scan's `-` line on the empty cells, from
   v12.11) and leave it lit for the layer.
-- Mods that lock ICE (SNIFFER, VIRUS, PURGE, OVERCLOCK...) eat for you: does that pay? (probably yes, half.)
+- The other lockers (PURGE, OVERCLOCK, CORNERS, BURNER...): pay like SNIFFER / VIRUS too, probably.
 - DEMOLITION already has this rule: ICE EATER does nothing extra there (or its numbers stay on for the boss).
 - **Feel:** eating should feel good: a crunch sound, the node crumbling, a little `nom` / chomp glyph.
+
+## Money for health (the user, 2026-10-22; no name yet)
+
+Sets your integrity to 1 (or even 0), and you **use your money (or something else) as your health**. Or it
+gives you a big enough bonus that there are ways to **deflect** ICE hits. Rule slot: a new one, `health`
+(what you lose when you get hit).
+
+*(Claude)* takes, to react to:
+- **Credits are your health.** Integrity is locked at 1 (the bar shows `$`). An ICE hit costs credits instead
+  (a set price, or a % of what you have, growing deeper in the run); at 0 credits the next hit kills you, or
+  you go **into debt** (ties to the debt idea, SPEC §16f, and LEDGER TRUST). Pay is your healing: every layer you
+  clear "heals" you. Spending at the market is spending your life. Names: BLOOD MONEY, PAY TO LIVE,
+  CREDIT LINE, INSURED.
+- **The deflect version:** integrity drops to 1, but you get a big credit bonus and every ICE hit can be paid
+  off ("deflect for 25cr? [ PAY ] [ TAKE IT ]"), a quick choice under pressure. OMERTA and FRIENDSHIP already
+  pay instead of bleed, once; this is the whole-run version.
+- **Something else as health:** your mods (a hit destroys your last mod: THIEF in reverse), your items (a hit
+  eats an item), or time (a hit takes seconds off a run-wide clock).
+- Clashes: anything that heals integrity (PATCH, TRIAGE, HONEYCOMB, perfect heals) needs a meaning: it pays
+  credits instead? FAILSAFE: catches the killing hit at 0cr.
+- With **ICE EATER** (where ICE doesn't hurt) it does little: different slots (`goal` vs `health`), so they're
+  allowed together, but this one would be nearly useless. Could be a soft "doesn't combine well" note in the
+  warning.
 
 ## QUANTUM
 
