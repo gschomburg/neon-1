@@ -707,6 +707,13 @@ Agreed changes not built yet.
     credits HUD (`CR -40` in the danger color). Other corps with the money theme: PAWN BROS, LUCKEEZ CASINO, LA FAMIGLIA.
   - Code note: ~25 places check or spend credits assuming they never go below 0; check them all when this is built.
 - **Loading / intro screen** (2026-10-22, the user). **BUILT v13.03** (engine/intro.js). Follow-up idea (the user): on a first run, take the player to the profile setup (logo, name, color), maybe not right away (after the first run, or while the profile is still the random default). The game is 111 script files now (~1MB), so a boot
+  - **Next for the intro (the user, 2026-10-22):** music or sound effects, and more glitchy particle effects. The
+    catch (the user spotted it): browsers block audio until the first tap or key, so the first boot plays silent.
+    *(Claude)* fix: open on `>_ press any key to connect` (a tap or key starts the login with sound, which fits the
+    terminal), instead of tap = skip; a second tap skips. Sounds: modem handshake / dial-up screech under the boot log,
+    key clicks as the login types, a beep per `ok` (a buzz on `FAIL`), a chirp on `handshake complete`, the title theme
+    fading in. Glitches: noise characters flickering through the log, the map drawing in with scan lines / static, a
+    burst of characters (like the fireworks) on `handshake complete`, the logo decoding in (like the codex decode).
   moment before the title, mostly for the feel of it (it barely needs to load). *(Claude)* ideas: an old-terminal
   boot log that lists the real files as they load (`engine/run.js ..... ok`, `corps/seekr.js ..... ok`; the version
   stamps in `NEON_FILES` are already there, and a missed or stale file could show as `FAIL` right there instead of the
