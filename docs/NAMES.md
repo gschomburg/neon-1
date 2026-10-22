@@ -661,3 +661,49 @@ A small slanted version that fits our 32-column title as it is today.
    |.                                                  |________|
    |_| .:. N e o N + 1 .:. network intrusion .:. <_______________>
 ```
+
+## Title lockup samples, round 6: developing F2 (2026-10-22)
+
+The user: "that f2 is getting closer and interesting". More of the BLUE SYSTEM tricks: a broken top bar with `:` drips, the 1 rising above the bar, the first N's stem dripping below the baseline, a pointed `_>` on the e, and a side tag like the original's `-[01/01]-` (here the build). Rendered: `docs/art/logotype_round6.png`.
+
+### G1. broken bar, drips, pointed e, the 1 breaks the bar (72 columns)
+
+```
+                                                         _____
+   _ ______ __:__ .  ______ _______ ______ __:__  ___   /     |  -[v12]-
+     \     \\    |  /  _   \\  __  \\     \\    | _| |_ /_     |
+    . |     \\   |_/  /_\  //  /  \ \|     \\   ||_   _|  |    |
+    : |  |\  \\  |    ____/ \  \__/ /|  |\  \\  |  |_|    |    |
+      |  | \     |\       \  \     / |  | \     |    :    |    |
+    __|__|  \____|_\_______>__\___/__|__|  \____|____:____|    |___
+   _|.  :                                            .   |________|
+   .|_| :  .:. network intrusion .:.  <______________________________>
+```
+
+### G2. tighter, the e and o share a wall (62 columns)
+
+```
+                                                    _____
+   _ _____ __:__ ._____ ______ _____ __:__  ___    /     |
+     \    \\    |/  _  \/ __ \\    \\    | _| |_  /_     |
+    . |    \\   |  /_\ /  /  \ \|    \\   ||_   _|  |    |
+    : | |\  \\  |  ___/\  \__/ /| |\  \\  |  |_|    |    |
+      | | \     |\     >\     / | | \     |    :    |    |
+    __|_|  \____|_\____/ \___/__|_|  \____|____:____|    |__
+   _|. :                                          .  |_______|
+   .|_| .:. network intrusion .:. <______________________>
+```
+
+### G3. with a frame like the original (tag + side panel) (86 columns)
+
+```
+                                                         _____                   .
+   _ ______ __:__ .  ______ _______ ______ __:__  ___   /     |  ____________    :
+     \     \\    |  /  _   \\  __  \\     \\    | _| |_ /_     | |  .: v12 :. |   :
+    . |     \\   |_/  /_\  //  /  \ \|     \\   ||_   _|  |    | |  network   | -[01]-
+    : |  |\  \\  |    ____/ \  \__/ /|  |\  \\  |  |_|    |    | |  intrusion |   :
+      |  | \     |\       \  \     / |  | \     |    :    |    | |____________|   :
+    __|__|  \____|_\_______>__\___/__|__|  \____|____:____|    |___ -========-  _|_
+   _|.  :                                            .   |________|            |.
+   .|_| :  .:. N e o N + 1 .:.  <________________________________________>   .:|_|
+```
