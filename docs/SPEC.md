@@ -748,6 +748,23 @@ Agreed changes not built yet.
     line on the INFO page saying what's sent, and a settings switch to turn it off. Batch events (send at run
     end / when the tab hides) so it doesn't slow play. Ties to leaderboards (§17), which need a backend too, and to
     the multiplayer backend choice above (p5.party / Firebase).
+- **Flipped characters: effects that mirror text** (2026-10-22, the user; ideas, not built). The renderer can
+  already turn a cell 180° (UPSIDE's `r180`, engine/render.js) and the whole screen (UPSIDE's `flipNow`, with taps
+  flipped to match). Adding per-cell `flipX` / `flipY` (mirror around the cell's center) is ~5 lines; a whole-screen
+  left-right mirror is the same as UPSIDE's rotate with taps mirrored. Pixel-flipped glyphs read backwards (`b`
+  looks like `d`); for art that should still read as ASCII, swap characters instead (`/` `\`, `(` `)`; MIRRORLINE
+  has `mirrorGlyph`).
+  - **MIRRORLINE flips its characters when the mirror flips.** Its tell: the real node mirrors last layer's spot
+    (left-right; deeper top-bottom; boss through the center). *(Claude)*: each layer the glyphs flip on the same axis
+    the tell uses (`flipX` for left-right, `flipY` for top-bottom, both = 180° for the boss), maybe with a quick
+    "mirror sweep" across the board as the layer opens. Doubles as a hint about which axis is in play.
+  - **A corp or mod that flips things backwards.** *(Claude)* where it could fit: **UPSIDE** (screen upside down,
+    the real node's word reads right side up): a deeper / boss variant in mirror writing (left-right) instead of
+    rotated; **KERNING** (one character of the real node is a pixel off): a variant where one character is mirrored;
+    a new **corp modifier** like ARMORED / THIEF (engine/map.js `CORP_MODS`): BACKWARDS / REARVIEW, the whole corp
+    is mirrored left-right (taps too); a **mod** (*(Claude)* names: REARVIEW, MIRROR WRITING, DA VINCI): e.g. the
+    real node's glyph flips for a blink at layer start, or ICE you hit flips to show it's dead. Also usable in ads
+    and art (a backwards ad, a flipped logo).
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
