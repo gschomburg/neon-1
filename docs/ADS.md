@@ -113,6 +113,20 @@ NORTHON, VIRUSHIELD PRO, AV-GUARD 2026, KASPERSKEE.
   rule could kick in (tap it: VIRUS spreads one extra time next hit? or the antivirus "removes" it for a refund).
 - chumbox style: "this one setting is letting hackers into your fridge"
 
+## VPN ads (the user, 2026-10-22)
+
+The podcast-read VPN ad, in a game about getting traced. *(Claude)* names: NORDVEIL, EXPRESSWAY VPN, SURFBORED,
+TUNNEL.ME, PRIVATE PROXY (just "PROXY").
+
+*(Claude)* drafts:
+- "your IP address is showing. (it's 10.0.4.17.)" (the same fake address as the boot screen: SPEC §16f)
+- "hackers can see everything you do. we would know."
+- "watch STREAMFLIX shows from other sectors!"
+- "military-grade encryption. (the military is us. we're one guy.)"
+- "use code RUNNER for 3 months free and a mystery tote bag."
+- secret-ad hook: tap it and your next trace / TRACER-style reveal is hidden, or a corp can't see your heat
+  (PREDATOR) for one layer.
+
 ## Gambling ads (the user, 2026-10-22)
 
 The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ

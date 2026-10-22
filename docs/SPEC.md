@@ -709,6 +709,17 @@ Agreed changes not built yet.
   skippable (tap / key), shorter after the first visit, off on REDUCED effects. Has to be drawn before the game code
   loads (a small inline script in index.html, or the first file in the list). Could also be where the fake ads show
   first (a "sponsored" line while it "loads": [ADS.md](ADS.md)).
+  - **The user's sequence** (2026-10-22): a little text prompt `>_`, the profile name typing in (a login); boot
+    text scrolling up; then a **map**: the overworld, or (the user's first thought) an ASCII world / country map with
+    a location blinking on it (where you are in the game, not in real life); an **IP address** shown as part of
+    start-up; "handshake complete" (or similar), then into the game. The loading bar is worked in as a
+    `*****-----` bar that fills during / after the login.
+  - *(Claude)* on the IP: the player's **real** IP would need a call to an outside service (the game is static files;
+    the page can't see its own IP), and showing it can feel creepy or leak on a stream / screenshot. Suggest a
+    **fake IP** made from the profile (same one every time, like `10.0.4.17`), which can also show in the VPN ad
+    ([ADS.md](ADS.md)). Real-IP could be an opt-in later if wanted.
+  - *(Claude)* the map step could use the ascii-art.de collection in `reference/ascii/` for a world map to start
+    from (credit / ask before shipping a piece), and the blinking spot could be the run seed's "city".
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
