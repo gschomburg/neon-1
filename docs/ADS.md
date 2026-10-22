@@ -12,6 +12,37 @@ keep, change or cut. The screen is 36 columns wide, so short copy works best.
 - *(Claude)* A banner strip on the map screen, or a "sponsored" line on the loading / layer messages.
 - *(Claude)* A "skip ad in 5..." button that does something (or doesn't).
 
+## The main style: spammy "sponsored stories" (the user, 2026-10-22)
+
+A lot of the ads should be like the junk at the bottom of news sites (the "chumbox"): fake news stories
+that are really ads, and open-ended clickbait ("4 things that are killing you"). The look: a block of
+2-4 tiles, each a crude little picture plus a headline, a tiny `sponsored` / `promoted by` line, and a
+made-up source name. Never says what it's selling.
+
+*(Claude)* Format ideas:
+- A tile = a tiny ASCII thumbnail (a face, a hand, a "before / after", a red circle around something) and a
+  1-2 line headline. Source line like `PROMOTED BY HEALTHTRUTHS DAILY`.
+- Shows on the reward screen or between corps, under a `SPONSORED STORIES` header, 2 or 4 at a time.
+- Tapping one does nothing, or opens a fake article that's one line long, or costs 1cr.
+
+*(Claude)* Headline drafts (mixing game-world jokes and plain clickbait):
+- "4 things that are killing you (number 3 is your integrity)"
+- "runners hate him: local man finds the real node every time"
+- "doctors are stunned by this one weird ICE trick"
+- "you won't believe what this OMNI//CORE sysadmin looks like now"
+- "the BURGERTRON menu item employees won't eat"
+- "if you own a 4x4 grid, you need to read this"
+- "this hacker deleted her trace. what happened next is shocking"
+- "the 7 worst corps to breach in 2026 (#4 will surprise you)"
+- "seniors in your sector are getting free firewalls"
+- "MEGAMART is ending this tomorrow"
+- "throw out your mods now: here's why"
+- "what your favorite glyph says about you"
+- "the one thing LEDGER TRUST doesn't want you to know about debt"
+- "she thought it was a decoy. she was wrong."
+- "20 runners who flatlined too soon"
+- "your sector's top-rated safehouse (it's not what you think)"
+
 ## Ad ideas
 
 - *(Claude)* **MEGAMART:** "everything you need. nothing you asked for."
