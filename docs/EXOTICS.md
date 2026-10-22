@@ -145,8 +145,20 @@ slot: `health` (it rewrites what a hit costs: there's nothing left to lose), so 
   20 taps a node on a CHRONOS clock is a real threat, and a timeout costs integrity... which you don't have.
   So: a timeout adds a lot of rot, or a **rot cap** (e.g. 150 = you fall apart for good). Or the run only ends
   when you cash out, and rot is how it slowly becomes not worth going on. Needs a pick.
+  - **The user (2026-10-22): weak taps don't highlight the real node** by default. Other mods could be what
+    reveals it (*(Claude)*: e.g. STETHOSCOPE-style: a half-broken real node "beats"; or a new mod for it).
 - Corps with their own tap rules (DEMOLITION, FORM 27B, TELEPHONIX, LUCKEEZ...) need a rule: multi-tap applies
   to the final "break" only.
+- **Can you get rid of ZOMBIE?** The user: maybe swap it out at a market, but not if that means riding it
+  invincible deep into the run and then dropping it. So maybe **some mods lock in for good** once taken.
+  *(Claude)*:
+  - A `locked` flag on a mod: its badge shows a lock (`#`), and the swap / replace screens skip it (a full bar
+    can't push it out; a clashing mod can't replace it, the warning says so).
+  - Good fits for locked: ZOMBIE (you can't come back to life), maybe the money-for-health mod (you sold your
+    health), ICE EATER? (probably not: it's a playstyle, not a curse).
+  - Or a middle way: you *can* drop it, at a price: coming back to life costs a lot (all your credits, or you
+    return at 1 integrity, or your rot turns into damage).
+  - Note: CURSED is already a corp modifier name; call the mod flag something else (LOCKED, BOUND, FUSED).
 - **Feel:** each weak tap a dull thud and a crack spreading on the node; the break a wet crunch. The HUD:
   `ROT 047` in a sickly green, and your taps visibly weaker (a smaller flash).
 
