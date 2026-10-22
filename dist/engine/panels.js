@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v12.13']);
+NEON_FILES.push(['engine/panels.js', 'v12.14']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -42,6 +42,7 @@ function addMod(key, tier = 0) {
   run.modTier[key] = clamp(tier, 0, tierCount(MODS[key]) - 1);
   if (key === 'buffer') { run.maxInt++; run.integrity++; }
   if (key === 'stash') run.beltSlots++;
+  if (key === 'zombie') { run.rot = 0; if (has('failsafe')) run.failsafeUsed = true; }   // dead: FAILSAFE has nothing to save
   return 'new';
 }
 function removeMod(key) {
@@ -88,6 +89,7 @@ function openShop(node) {
   let offers = itemKeys.map(k => ({ kind: 'item', key: k, tier: rollTier(r, ITEMS[k]), price: ITEMS[k].price, sold: false }));
   for (const k of ['coupon', 'haggle']) if (has(k)) modFired(k);   // the market they change opens
   for (const o of pickMods(r, modsOfKind('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
+  for (const o of exoticOffer(run.seed, 'shop', node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
   offers = shuffle(offers, r);   // random order: any slot could be the good one
   offers.push({ kind: 'repair', key: 'repair', price: 20, sold: false });
 
@@ -96,20 +98,24 @@ function openShop(node) {
   const buy = o => {
     const price = priceOf(o);
     if (o.sold || run.credits < price) return Sound.deny();
-    if (o.kind === 'repair' && run.integrity >= run.maxInt) return Sound.deny();
+    if (o.kind === 'repair' && !canHeal()) return Sound.deny();
     const name = defOf(o).name.toLowerCase();
     const finish = () => { run.credits -= price; if (o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
     // No room: pick one of yours to replace (the purchase goes through after the swap).
     if (o.kind === 'item') { if (!itemRoom(o.key, o.tier)) return openSwap('item', o.key, o.tier, finish); addItem(o.key, o.tier); }
-    if (o.kind === 'mod') { if (!modRoom(o.key)) return openSwap('mod', o.key, o.tier, finish); addMod(o.key, o.tier); }
-    if (o.kind === 'repair') run.integrity++;
+    if (o.kind === 'mod') {
+      if (clashWith(o.key)) return openClash(o.key, o.tier, finish);
+      if (!modRoom(o.key)) return openSwap('mod', o.key, o.tier, finish);
+      addMod(o.key, o.tier);
+    }
+    if (o.kind === 'repair') heal(1);
     finish();
   };
 
   let sel = 0;
   const whyNot = o => {
     if (o.sold) return 'sold out.';
-    if (o.kind === 'repair' && run.integrity >= run.maxInt) return 'integrity is full.';
+    if (o.kind === 'repair' && !canHeal()) return zombie() ? 'no rot to fix.' : 'integrity is full.';
     if (run.credits < priceOf(o)) return 'not enough credits.';
     return null;
   };
@@ -169,6 +175,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     if (st.transitioning) return;
     if (o && locked) return Sound.deny();
     if (o) {
+      if (clashWith(o.key)) return openClash(o.key, o.tier, () => leave());   // same rule slot: replace it?
       if (!modRoom(o.key)) return openSwap('mod', o.key, o.tier, () => leave());   // full: pick one to replace
       const how = addMod(o.key, o.tier), v = modView(o.key);
       Sound.buy();
@@ -230,6 +237,12 @@ function openStartReward(node) {
   });
 }
 
+// A cache's 2 mod offers; now and then one is an exotic (more often with CACHEKEY).
+function cacheOptions(r, node) {
+  const opts = pickMods(r, modsOfKind('gen', 'minor'), 2);
+  const ex = exoticOffer(st.run.seed, 'cache', node.id, has('cachekey') ? tv('cachekey', EXOTIC.cacheKeyChance) : EXOTIC.cacheChance);
+  return ex.length ? [opts[0], ex[0]].filter(Boolean) : opts;
+}
 function openCache(node) {
   const run = st.run;
   const r = rngFor(run.seed, 'cache', node.id);
@@ -239,7 +252,7 @@ function openCache(node) {
   openChoice({
     title: 'DATA CACHE', col: C.money,
     head: got.map(g => [g, C.bright]),
-    options: pickMods(r, modsOfKind('gen', 'minor'), 2),
+    options: cacheOptions(r, node),
     skipLabel: '[ SKIP ]',
     msg: '> cache cracked.',
   });
@@ -248,12 +261,12 @@ function openCache(node) {
 function openRepair(node) {
   const run = st.run;
   const r = rngFor(run.seed, 'rest', node.id);
-  const before = run.integrity;
-  run.integrity = Math.min(run.maxInt, run.integrity + CONFIG.repairAmount);
+  const before = zombie() ? -(run.rot || 0) : run.integrity;
+  heal(CONFIG.repairAmount);
   Sound.buy();
   openChoice({
     title: 'SAFEHOUSE', col: C.accent,
-    head: [[`integrity +${run.integrity - before}`, C.bright]],
+    head: [[zombie() ? `rot -${-(run.rot || 0) - before}` : `integrity +${run.integrity - before}`, C.bright]],
     options: pickMods(r, modsOfKind('minor'), 2),
     skipLabel: '[ SKIP ]',
     msg: '> patched up.',

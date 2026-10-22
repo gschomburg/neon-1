@@ -1,6 +1,6 @@
 // NeoN+1 engine/editor.js: The palette editor bridge (only with ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v12.13']);
+NEON_FILES.push(['engine/editor.js', 'v12.14']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -36,7 +36,7 @@ if (EDITOR) {
     if (st.mode === 'play' && st.lv) { await pick(st.lv.safe); await settle(); }   // the public net
     if (st.mode !== 'map') { toMap(); await settle(); }
     st.god = true;
-    for (const r of Object.keys(RARITY)) { const k = Object.keys(MODS).find(m => MODS[m].rarity === r && !st.run.mods.includes(m)); if (k) addMod(k); }
+    for (const r of Object.keys(RARITY)) { const k = Object.keys(MODS).find(m => MODS[m].rarity === r && MODS[m].kind !== 'exotic' && !st.run.mods.includes(m)); if (k) addMod(k); }
     for (const k of Object.keys(ITEMS).slice(0, 3)) addItem(k);
   };
   const enterCorp = async (corp, boss) => {
@@ -98,5 +98,5 @@ window.__br = {
   addSector, sectorClear, showSectorClear, pushOn, cashOut, openOmniReward, STAGES, modsAt, resumeRun, openBoard, LEGACY, legacyLv, repFor, saveRun, savedRun, clearRun,
   askSkip, scrollMapSector, sectorViewRow, SKIP_BOSS, toMap, startCorp, pickCorps, targetLevel, CORP_TELL, CODEX_CORPS, openShop,
   togglePause, pauseLines, abandonRun, moveFocus, moveTileCursor, moveMapCursor,
-  cipherNow, TAP_FX, PALETTES,
+  cipherNow, TAP_FX, PALETTES, clashWith, exoticOffer, tapsToBreak, openCache,
 };

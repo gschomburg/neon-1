@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.13']);
+NEON_FILES.push(['engine/mods.js', 'v12.14']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -85,8 +85,55 @@ const modsOfKind = (...kinds) => Object.keys(MODS).filter(k => kinds.includes(MO
 function modWhere(m) {
   if (m.kind === 'corp') return `from: ${corpDef(m.corp).name} boss.`;
   if (m.kind === 'minor') return 'from: start, safehouse, cache, shop.';
+  if (m.kind === 'exotic') return 'from: sector bosses, rare in markets, caches.';
   return 'from: bosses, caches, market.';
 }
+
+// ---- EXOTIC mods (docs/EXOTICS.md). Where they show up, how often:
+const EXOTIC = {
+  shopChance: 0.12,                  // a market has an exotic mod for sale
+  cacheChance: 0.05,                 // a cache offers one (CACHEKEY raises it, by tier:)
+  cacheKeyChance: [0.10, 0.20, 0.35],
+};
+// Rule slots: what a mod rewrites. Two mods on the same slot can't be held together.
+const SLOT_TEXT = {
+  goal: 'changes how layers are won',
+  health: 'changes what a hit costs you',
+  real: 'changes how many nodes are real',
+  tap: 'changes what a tap does',
+  carry: 'changes what carries between layers',
+  slots: 'changes your tray',
+};
+// The mod you own that `key` clashes with (same slot), or null.
+const clashWith = key => {
+  const s = MODS[key] && MODS[key].slot;
+  return s && st.run ? st.run.mods.find(k => k !== key && MODS[k] && MODS[k].slot === s) || null : null;
+};
+const modLocked = key => !!(MODS[key] && MODS[key].locked);
+// An exotic mod offer ({ key, tier }) with odds `chance`, from its own random stream (so the
+// normal offers roll the same as before). [] when it doesn't come up or you have them all.
+function exoticOffer(seed, where, id, chance) {
+  const r = rngFor(seed, 'exotic', where, id);
+  if (r() >= chance) return [];
+  return pickMods(r, modsOfKind('exotic').filter(k => !clashLockedOut(k)), 1);
+}
+// Can't be offered: it would replace a locked mod (ZOMBIE's slot).
+const clashLockedOut = key => { const c = clashWith(key); return !!(c && modLocked(c)); };
+
+// ---- ZOMBIE: rot instead of integrity. Numbers to tune:
+const ROT = {
+  max: 150,       // fall apart here
+  layer: 3,       // every layer you enter
+  ice: 5,         // every ICE node you break
+  timeout: 6,     // the clock running out (at least an ICE)
+  realTap: 40,    // with ICE EATER: biting the real node
+  heal: 10,       // each point of healing takes this much rot away
+  perTap: 5,      // taps to break a node = 1 + rot / perTap
+};
+const zombie = () => has('zombie');
+const tapsToBreak = () => 1 + Math.floor((st.run.rot || 0) / ROT.perTap);
+// ICE EATER is on for this layer (set when the layer opens).
+const eaterOn = () => !!(st.lv && st.lv.eater);
 
 // ---- Tiers. Mods and items with `tiers` come in up to 3 steps (COMMON, RARE, EPIC, or
 // levels). Finds roll a tier; finding a mod you have upgrades it (see addMod).

@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.13']);
+NEON_FILES.push(['engine/scene.js', 'v12.14']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -110,8 +110,14 @@ function buildScene(now, collectHits, raw = false) {
     const cur = fsAge < FAILSAFE_BEAT ? 0 : Math.max(0, run.integrity);
     const bar = run.maxInt <= 10 ? '#'.repeat(cur) + '-'.repeat(Math.max(0, run.maxInt - cur)) : `${cur}/${run.maxInt}`;
     const fsBlink = fsAge >= FAILSAFE_BEAT && fsAge < FAILSAFE_BEAT + 900 && Math.floor(fsAge / 110) % 2;
-    putR(2, bar, fsBlink ? C.bright : cur <= 1 ? C.danger : C.accent);
-    put(L.wc - bar.length - 10, 2, 'INTEGRITY', C.mid);
+    if (zombie()) {   // ZOMBIE: rot in place of integrity, sickly as it climbs
+      const rot = run.rot || 0, txt = `${String(rot).padStart(3, '0')}/${ROT.max}`;
+      putR(2, txt, rot >= ROT.max - 30 ? C.danger : rot >= ROT.max / 2 ? C.money : C.accent);
+      put(L.wc - txt.length - 4, 2, 'ROT', C.mid);
+    } else {
+      putR(2, bar, fsBlink ? C.bright : cur <= 1 ? C.danger : C.accent);
+      put(L.wc - bar.length - 10, 2, 'INTEGRITY', C.mid);
+    }
     const fw = st.corp && st.corp.wallAll ? 'FW*' : run.shield ? `FW${run.shield}` : '';
     if (fw) put(L.wc - bar.length - 10 - 1 - fw.length, 2, fw, C.accent);
 
@@ -419,7 +425,13 @@ function buildBoard({ now, put, addHit, bg, cells }) {
         rows.forEach((r, k) => put(tx, ty + k, r, k === 2 && fresh ? C.bright : C.mid, own, k > 0 && k < 4));
         return;
       }
-      const glyphCol = t.klog ? C.accent : t.loaded ? C.money : t.shattered ? C.mid : C.danger;   // keylogger lines stand out
+      // ICE EATER: an eaten node is crumbs (keylogger / tracer marks still show on it)
+      if (t.eaten && !t.klog && !t.dir && !t.loaded) {
+        const rows = ['+ - . -+', ':. , .:', ' ,.:. ', ':. ` ,:', '+-. - +'];
+        rows.forEach((r, k) => put(tx, ty + k, r, fresh ? C.accent : C.dim, own));
+        return;
+      }
+      const glyphCol = t.klog ? C.accent : t.loaded ? C.money : t.shattered || t.eaten ? C.mid : C.danger;   // keylogger lines stand out
       // TRACER: the sides facing the real node turn into arrows (< > sides, ^ v top / bottom).
       // They appear with TRACER's callout after the hit (t.dirAt), blinking a moment.
       const d = t.dir && !(t.dirPending && !t.dirAt) ? t.dir : { h: 0, v: 0 };
@@ -430,7 +442,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
       let rows = [d.v < 0 ? '+^^^^^+' : '+-----+', ...glyph.map(l => sl + l + sr), d.v > 0 ? '+vvvvv+' : '+-----+'];
       if (fresh) rows = rows.map(r => r.replace(/[^ ]/g, ch => Math.random() < 0.6 ? noiseCh() : ch));
       const arrowCol = t.dirAt && now - t.dirAt < 800 && Math.floor((now - t.dirAt) / 120) % 2 ? C.accent : C.bright;
-      const edgeCol = ch => !fresh && '<>^v'.includes(ch) ? arrowCol : t.shattered ? C.mid : C.danger;
+      const edgeCol = ch => !fresh && '<>^v'.includes(ch) ? arrowCol : t.shattered || t.eaten ? C.mid : C.danger;
       rows.forEach((r, k) => {
         const isEdge = k === 0 || k === rows.length - 1;
         put(tx, ty + k, r[0], edgeCol(r[0]), own, true);
@@ -471,6 +483,8 @@ function buildBoard({ now, put, addHit, bg, cells }) {
       if (sc.real && age >= 0) { solid = true; fc = t === sc.real ? C.bright : C.accent; if (t === sc.real) { gc = C.bright; bold = true; } }
       else if (!sc.real && age >= 0 && age < 450 && !solid) { fc = C.accent; }
     }
+    // ICE EATER: a scan found the real node's line (lv.warn): its nodes keep a red frame
+    if (lv.warn && t.state === 'closed' && !solid && fc === C.mid && (lv.warn.row === t.row || lv.warn.col === t.col)) fc = C.danger;
     const edge = solid ? '+-----+' : '+- - -+';
     const side = solid ? '|' : ':';
     let glyph = masked && t.state === 'closed' && !t.loaded ? MASK_GLYPH : t.glyph;
@@ -519,6 +533,17 @@ function buildBoard({ now, put, addHit, bg, cells }) {
       rows = rows.map(r => r.replace(/[^ ]/g, ch => Math.random() < 0.25 + 0.6 * f ? noiseCh() : ch));
       fc = C.accent; gc = C.accent;
     }
+    // ZOMBIE: a cracked node (weak taps). Cracks spread over it as the count climbs, the bottom
+    // edge counts taps (3/11), and it jolts on each tap. Looks the same for ICE and the real node.
+    if (t.cracks && t.state === 'closed' && zombie()) {
+      const need = tapsToBreak(), f = Math.min(1, t.cracks / need), CR = '/\\.`,';
+      rows = rows.map((r, k) => k === 0 || k === rows.length - 1 ? r : [...r].map((ch, x) =>
+        x > 0 && x < TILE_W - 1 && h01(i * 31 + k * 7 + x, 5) < f * 0.6 ? CR[(x + k + i) % CR.length] : ch).join(''));
+      const cnt = `${t.cracks}/${need}`;
+      if (cnt.length <= TILE_W - 2) { const l = Math.floor((TILE_W - 2 - cnt.length) / 2); rows[rows.length - 1] = '+' + '-'.repeat(l) + cnt + '-'.repeat(TILE_W - 2 - l - cnt.length) + '+'; }
+      if (now - (t.crackAt || 0) < 120) dx += 0.15 * Math.sin((now - t.crackAt) / 12);
+      fc = C.mid;
+    }
     const ox = tx + dx, oy = ty + dy;
     rows.forEach((r, k) => {
       if (clip && oy + k < BOARD_Y - 0.5) return;   // DROP-4: chips falling in from above the board
@@ -547,7 +572,9 @@ function buildBoard({ now, put, addHit, bg, cells }) {
       const sc = lv.scan, c = { col: cell % lv.cols, row: Math.floor(cell / lv.cols) };
       const ax = sc && sc.axes.find(a => a === 'xaxis' ? c.row === sc.from.row : c.col === sc.from.col);
       const age = ax ? now - sc.t0 - scanDist(c, sc.from) * SCAN_STEP : -1;
+      const wr = lv.warn && (lv.warn.row === c.row ? '-' : lv.warn.col === c.col ? '|' : null);   // ICE EATER: a warning line
       if (ax && age >= 0 && (sc.real || age < 450)) put(tx + 3, ty + 2, ax === 'xaxis' ? '-' : '|', C.accent, 'dot', !!sc.real);
+      else if (wr) put(tx + 3, ty + 2, wr, C.danger, 'dot');
       else put(tx + 3, ty + 2, '.', C.dim, 'dot');
     }
   }

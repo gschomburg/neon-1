@@ -6,6 +6,13 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **ICE EATER and ZOMBIE, the first exotic mods** (v12.14). Fastest way to try them: dev menu, add the mod (or wait
+  for a sector boss: its reward always has one exotic). ICE EATER: eat every ICE, never the real one; X-AXIS / Y-AXIS turn
+  the real node's line red. ZOMBIE: watch the `ROT 000/150` counter and the crack counts on nodes. Numbers to tune are in
+  `dist/engine/mods.js`: `EXOTIC` (drop odds) and `ROT` (rot per layer / ICE / timeout, taps per rot). Also look at the
+  MODS CLASH screen (no real clash exists yet: ICE EATER and ZOMBIE use different slots, so it shows up with the next
+  exotic that shares one).
+
 - [ ] **Boss intro animation** (2026-10-22, your ask; you'll have notes). Today (~2.5 s, tap or any key skips): the
   screen empties and the music goes muffled, then `!! WARNING !!` / `<CORP> // BOSS` / the boss line /
   `n nodes. one is real.` type in with an alarm + 3 heartbeat thumps, red pulses and a growing shake; a riser,

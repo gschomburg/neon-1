@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v12.13']);
+NEON_FILES.push(['data/mods.js', 'v12.14']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },
@@ -152,4 +152,13 @@ const MODS = {
   overtime:      { name: 'OVERTIME',       short: 'OVT', kind: 'corp', corp: 'playball', rarity: 'boss', icon: 'o-=-', anim: 'wave', tip: 'clock out: +5s, once.', desc: 'boss clocks get +5s, and the first time a clock runs out in a layer you get 5 more seconds.' },
   linkup:        { name: 'LINKUP',         short: 'LNK', kind: 'corp', corp: 'twinlink', rarity: 'boss', icon: 'o=o.', anim: 'blink', tip: 'hit: its mirror locks.', desc: 'ICE you hit takes its partner with it: in TWINLINK its link, anywhere else the node mirrored across the center (if it is ICE).' },
   interest:      { name: 'INTEREST',       short: 'INT', kind: 'corp', corp: 'ledger', rarity: 'boss', icon: '%+%+', anim: 'cycle', tip: 'corp done: +5% credits.', desc: 'every corp you finish pays 5% of your credits (up to 20cr).' },
+  // EXOTIC: rule-benders (docs/EXOTICS.md). kind 'exotic': from sector bosses, markets and caches.
+  // slot: the rule it rewrites; two mods with the same slot can't be held together (the newer one
+  // asks to replace the older). locked: once taken, it can't be swapped out or replaced.
+  iceeater:      { name: 'ICE EATER',      short: 'EAT', kind: 'exotic', rarity: 'exotic', slot: 'goal', icon: '<{(o', anim: 'exotic', price: 160,
+    tip: 'eat the ICE. not the real one.', desc: "ICE can't hurt you: eat every ICE node to clear a layer. the real node kills you.",
+    codex: "flips the game: tapping ICE eats it (no damage), and eating all of a layer's ICE clears it. each bite pays a share of the layer's pay. tapping the real node is instant death (FAILSAFE can catch it once). scan mods warn instead of picking. a clock running out costs 1 integrity." },
+  zombie:        { name: 'ZOMBIE',         short: 'ZMB', kind: 'exotic', rarity: 'exotic', slot: 'health', locked: true, icon: 'x_x.', anim: 'exotic', price: 150,
+    tip: "you're dead. rot is your clock.", desc: "you're dead, so ICE can't hurt you. but you rot: the more rot, the more taps a node takes. 150 rot and you fall apart. locked in.",
+    codex: "integrity is gone: you're dead. ICE can't hurt you, but every layer and every node you break adds rot. the more rot, the more taps it takes to break a node (tap it until it breaks; weak taps don't show what it is). healing takes rot away. at 150 rot you fall apart. once taken it's locked in for the run." },
 };

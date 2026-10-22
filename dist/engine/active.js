@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v12.13']);
+NEON_FILES.push(['engine/active.js', 'v12.14']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -70,10 +70,10 @@ const TAP_FX = {
     use(lv, now) { lv.holdUntil = now + 1000; lv.freeze = { from: now, until: now + 1000 }; Sound.shield(); setMsg('> freeze frame.', C.accent); },
   },
   sacrifice: {
-    ok: lv => st.run.integrity > 1 && iceOpen(lv).length >= 2,
+    ok: lv => (zombie() || st.run.integrity > 1) && iceOpen(lv).length >= 2,
     use(lv) {
       const ice = shuffle(iceOpen(lv), rngFor(st.run.seed, 'sac', st.corp.node.id, st.corp.idx));
-      st.run.integrity -= 1;
+      hurt(1);   // ZOMBIE: rot instead
       ice.slice(0, Math.floor(ice.length / 2)).forEach(t => lockTile(t, C.money, 'sacrifice'));
       flash(C.money, 0.2, 0.5); shake(5);
       setMsg('> sacrifice: -1 int. the ICE parts.', C.money);
@@ -153,7 +153,7 @@ function canUse(stack) {
   const run = st.run;
   if (!run || st.wipe || !stack) return false;
   const key = stack.key, tier = stack.tier || 0;
-  if (key === 'patch') return run.integrity < run.maxInt;
+  if (key === 'patch') return canHeal();
   if (key === 'wall') return tier < 2 ? true : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll;
   if (key === 'route' || key === 'warp') return st.mode === 'map' && !st.busy && !st.transitioning && nodesAhead().length > 0;
   const inLayer = st.mode === 'play' && !st.busy && st.lv;
@@ -175,7 +175,7 @@ function useItem(slot) {
   const lv = st.lv;
   if (key === 'patch') {
     const before = run.integrity;
-    run.integrity = Math.min(run.maxInt, run.integrity + tier + 1);
+    heal(tier + 1);
     Sound.buy(); setMsg(`> patched. +${run.integrity - before} int`, C.accent);
   }
   if (key === 'wall') {

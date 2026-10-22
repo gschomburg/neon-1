@@ -33,10 +33,12 @@
 //   engine/screen.js    st, g, tileOrigin, L, tileCenter, has
 //   engine/effects.js   shake, flash, rand, explode, snapshot
 //   engine/render.js    setMsg, wait, candidates, last
-//   engine/run.js       lockTile, pick, die, grantLoot, onSafe, blockHit, failsafeBeat, frostbite
+//   engine/run.js       lockTile, pick, die, grantLoot, onSafe, blockHit, failsafeBeat, frostbite, hurt, heal,
+//                       addRot (ZOMBIE: corp damage goes through hurt so it turns into rot)
+//   engine/mods.js      zombie, ROT
 //
 'use strict';
-NEON_FILES.push(['engine/corpkit.js', 'v12.13']);
+NEON_FILES.push(['engine/corpkit.js', 'v12.14']);
 
 // ---------------- Content ----------------
 // tell: how the corp picks its safe tile. bossTell: the boss layer's twist.

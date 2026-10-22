@@ -1,6 +1,6 @@
 // NeoN+1 corps/playball.js
 'use strict';
-NEON_FILES.push(['corps/playball.js', 'v12.13']);
+NEON_FILES.push(['corps/playball.js', 'v12.14']);
 // Its boss mod: OVERTIME (overtime), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -88,7 +88,7 @@ CORPS.playball = {
           b.at = now + 900;
           Sound.deny(); shake(3);
           if (pb.boss) {
-            if (!st.god) st.run.integrity -= 1;
+            if (!st.god) hurt(1);
             setMsg('> ball out! -1 int.', C.danger);
             if (st.run.integrity <= 0) { st.busy = true; die(); return; }
           } else { lv.payCut = Math.min(0.9, (lv.payCut || 0) + 0.2); setMsg(`> ball out. pay -${Math.round(lv.payCut * 100)}%`, C.danger); }

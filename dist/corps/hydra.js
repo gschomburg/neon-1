@@ -1,6 +1,6 @@
 // NeoN+1 corps/hydra.js
 'use strict';
-NEON_FILES.push(['corps/hydra.js', 'v12.13']);
+NEON_FILES.push(['corps/hydra.js', 'v12.14']);
 // Its boss mod: HEADCOUNT (headcount), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -58,6 +58,7 @@ CORPS.hydra = {
   async afterHit(t, lv) {
     const h = lv.hydra;
     if (!h || st.run.integrity <= 0) return;
+    if (lv.eater && (lv.hydraGrew || 0) >= (h.boss ? 4 : 3)) return;   // ICE EATER: a head limit, so the eating ends
     const real = lv.tiles[lv.safe], r = rngFor(st.run.seed, 'hydra', st.corp.node.id, st.corp.idx, lv.misses);
     const plain = h.boss || h.tier >= 2;
     const usedGlyphs = new Set(lv.tiles.map(o => o.glyph));
@@ -78,6 +79,7 @@ CORPS.hydra = {
       lv.tiles.push(nt);
       grew++;
     }
+    lv.hydraGrew = (lv.hydraGrew || 0) + grew;
     if (!grew) return;
     lv.tiles.sort((a, b) => a.cell - b.cell);
     lv.safe = lv.tiles.indexOf(real);

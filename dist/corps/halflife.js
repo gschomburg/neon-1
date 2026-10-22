@@ -1,6 +1,6 @@
 // NeoN+1 corps/halflife.js
 'use strict';
-NEON_FILES.push(['corps/halflife.js', 'v12.13']);
+NEON_FILES.push(['corps/halflife.js', 'v12.14']);
 // Its boss mod: LEAD LINING (leadlining), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -56,6 +56,7 @@ CORPS.halflife = {
   // at the end of the corp: over the limit costs 1 integrity (never below 1)
   onClear(c) {
     if ((c.rad || 0) <= radLimit(c)) return null;
+    if (zombie()) { addRot(ROT.ice); return '> radiation dose: rot.'; }
     st.run.integrity = Math.max(1, st.run.integrity - 1);
     return '> radiation dose: -1 integrity.';
   },

@@ -2,7 +2,7 @@
 
 The EXOTIC rarity exists but has **no mods** yet (the only exotic thing is the WARP item). Exotics should
 bend the rules of the game, not just give bigger numbers. Several change how a layer works, so each needs
-thinking through before it's built. Nothing here is built. *(Claude)* marks my drafts; the rest is the
+thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
 user's.
 
 Mods for corps that don't exist yet stay with those corp ideas (SPEC §17). Mods that need the fake ads
@@ -48,7 +48,7 @@ Still open:
 
 ---
 
-## ICE EATER (the user's; the favorite)
+## ICE EATER (the user's; the favorite) — BUILT v12.14
 
 **Flips the game around: you eat the ICE.** ICE doesn't hurt you anymore. You clear a layer by destroying
 every ICE node, and the real node becomes the danger: tap it and it **instantly kills you** (or something
@@ -122,7 +122,7 @@ gives you a big enough bonus that there are ways to **deflect** ICE hits. Rule s
   allowed together, but this one would be nearly useless. Could be a soft "doesn't combine well" note in the
   warning.
 
-## Zombie (the user, 2026-10-22; *(Claude)* names: FLATLINE, UNDEAD, POSTMORTEM, NECROSIS)
+## Zombie — BUILT v12.14 as ZOMBIE (the user, 2026-10-22; *(Claude)* other names: FLATLINE, UNDEAD, POSTMORTEM, NECROSIS)
 
 Takes your integrity away: **you're dead**, like a zombie, but it gives you something pretty powerful. Rule
 slot: `health` (it rewrites what a hit costs: there's nothing left to lose), so it clashes with money for health.

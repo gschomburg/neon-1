@@ -1,6 +1,6 @@
 // NeoN+1 corps/aegis.js
 'use strict';
-NEON_FILES.push(['corps/aegis.js', 'v12.13']);
+NEON_FILES.push(['corps/aegis.js', 'v12.14']);
 // Its boss mod: AMBUSH (ambush), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -11,7 +11,7 @@ async function aegisBreach(lv) {
   st.busy = true;
   lv.scanned = true;   // no perfect after a breach
   const bottom = lv.tiles.filter(t => t.row === lv.rows - 1 && t.state === 'closed');
-  if (!st.god) run.integrity -= 1;
+  if (!st.god) hurt(1);
   Sound.trap(); shake(9); flash(C.danger, 0.18, 0.35);
   if (bottom.includes(real)) {
     setMsg('> it broke through. -1 int.', C.danger);

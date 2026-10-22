@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v12.13']);
+NEON_FILES.push(['engine/boot.js', 'v12.14']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -32,7 +32,7 @@ function musicState() {
     if (song === 'chronos' && st.lv && st.lv.boss) urgency = Math.min(1, urgency + st.lv.misses * 0.25);
     if (song !== 'chronos') urgency *= 0.3;
   } else if (st.corp) level = 0;                         // public net
-  const low = !!(run && st.mode === 'play' && run.integrity <= 1 && !st.dying);
+  const low = !!(run && st.mode === 'play' && (zombie() ? (run.rot || 0) >= ROT.max - 30 : run.integrity <= 1) && !st.dying);
   const slowmo = !!(st.mode === 'play' && st.corp && st.corp.hasBoss && st.corp.def.slowmo && st.lv);   // BULLET TIME
   const tempo = (1 + (song === 'chronos' ? urgency * 0.25 : 0) + (level >= 3 ? 0.05 : 0)) * (slowmo ? 0.55 : 1);
   const track = song === 'none' ? 'none' : MUSIC_FOR[song === 'theme' ? 'map' : song] || song;

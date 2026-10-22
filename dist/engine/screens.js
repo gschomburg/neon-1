@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v12.13']);
+NEON_FILES.push(['engine/screens.js', 'v12.14']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -277,10 +277,37 @@ function overLines() {
 // "No room": pick one of yours to replace with the new one (or keep what you have).
 // st.swap = { kind: 'mod' | 'item', key, tier, onDone }
 function openSwap(kind, key, tier, onDone) { st.swap = { kind, key, tier, onDone }; Sound.deny(); }
+// Taking `key` clashes with a mod you own (same rule slot): replace it, or keep what you have.
+// A locked mod can't be replaced.
+function openClash(key, tier, onDone) { st.swap = { kind: 'clash', key, tier, old: clashWith(key), onDone }; Sound.deny(); }
 function swapLines() {
   const sw = st.swap, run = st.run, lines = [];
   const T = (text, col = C.text) => lines.push({ text, col });
   const done = () => { const f = sw.onDone; st.swap = null; if (f) f(); };
+  if (sw.kind === 'clash') {
+    const v = modView(sw.key, sw.tier), o = modView(sw.old), locked = modLocked(sw.old);
+    T('MODS CLASH', C.danger);
+    T('');
+    lines.push({ badge: sw.key, badgeTier: sw.tier });
+    for (const ln of wrapText(`${v.name.toLowerCase()} ${SLOT_TEXT[MODS[sw.key].slot] || 'clashes'}.`, 34)) T(ln, C.text);
+    T('');
+    lines.push({ badge: sw.old, badgeTier: o.tier });
+    if (locked) {
+      T(`${o.name.toLowerCase()} is locked in.`, C.dangerDim);
+      T("you can't take this one.", C.dangerDim);
+      T('');
+      lines.push({ text: '[ OK ]', id: 'swkeep', onTap: () => { st.swap = null; Sound.ui(); } });
+      return lines;
+    }
+    T(`it will replace ${o.name.toLowerCase()}.`, C.dangerDim);
+    T('');
+    lines.push({ text: '[ REPLACE IT ]', id: 'swclash', onTap: () => {
+      removeMod(sw.old); addMod(sw.key, sw.tier); Sound.buy();
+      setMsg(`> ${o.name.toLowerCase()} out, ${v.name.toLowerCase()} in.`, C.accent); done();
+    } });
+    lines.push({ text: '[ KEEP WHAT I HAVE ]', id: 'swkeep', onTap: () => { st.swap = null; Sound.ui(); } });
+    return lines;
+  }
   T(sw.kind === 'mod' ? 'MOD SLOTS FULL' : 'ITEM BELT FULL', C.danger);
   T('');
   if (sw.kind === 'mod') {
@@ -291,6 +318,11 @@ function swapLines() {
     T('');
     run.mods.forEach((k, i) => {
       const o = modView(k);
+      if (modLocked(k)) {   // locked in: can't be swapped out
+        lines.push({ list: true, id: 'sw' + i, badge: k, badgeTier: o.tier, name: o.name, col: C.dim, faded: true, right: 'LOCKED', rightCol: C.dangerDim,
+          onTap: () => { Sound.deny(); setMsg(`> ${o.name.toLowerCase()} is locked in.`, C.dangerDim); } });
+        return;
+      }
       lines.push({ list: true, id: 'sw' + i, badge: k, badgeTier: o.tier, name: o.name, col: C.bright, right: tierLabel(o), rightCol: C.mid, rightChips: true,
         onTap: () => { removeMod(k); addMod(sw.key, sw.tier); Sound.buy(); setMsg(`> swapped ${o.name.toLowerCase()} for ${v.name.toLowerCase()}.`, C.accent); done(); } });
     });

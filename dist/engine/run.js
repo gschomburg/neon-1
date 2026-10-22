@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.13']);
+NEON_FILES.push(['engine/run.js', 'v12.14']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -255,6 +255,8 @@ async function enterLayer() {
   lv.boss = boss;
   lv.misses = 0;
   lv.split = false;
+  lv.eater = has('iceeater') && n > 1 && !st.mp;   // ICE EATER: eat the ICE (a 1-node layer is just the real one)
+  lv.iceTotal = lv.tiles.filter(t => !t.safe).length; lv.eatPaid = 0;
   lv.dmg = boss && (c.def.bossDmg || c.stageBoss) ? (c.def.bossDmg || 2) : 1;   // sector bosses hit for 2
   st.lv = lv;
   if (c.hasBoss && c.def.dark) refreshPalette();   // BLACKOUT: the lights dim every layer
@@ -357,6 +359,8 @@ async function enterLayer() {
   lv.readyAt = performance.now();
   lv.shownAt = lv.readyAt;   // unlike readyAt, this one doesn't reset after a miss
   c.express = false;
+  // ZOMBIE: every layer adds rot
+  if (zombie() && n > 1 && c.hasBoss) { addRot(ROT.layer); if (run.integrity <= 0) return die(); }
 }
 
 // Clock for this layer: the corp's own, or one added by OVERCLOCK.
@@ -377,10 +381,12 @@ function lockTile(t, col, source = 'purge') {
   const i = st.lv.tiles.indexOf(t);
   const { x, y } = tileCenter(t);
   explode(snapshot(c => c.own === 't' + i), x, y, { col, power: 0.6 });
+  const wasIce = t.state === 'closed' && !t.safe;
   t.state = 'locked';
   t.lockedBy = source;
   Sound.shield();
-  if (MODS[source]) modFired(source);   // a mod locked it (SNIFFER, VIRUS, OVERCLOCK...)
+  if (MODS[source]) modFired(source);
+  if (wasIce && eaterOn() && source !== 'rival') eatPay();   // ICE EATER: locked ICE counts as eaten (and pays)   // a mod locked it (SNIFFER, VIRUS, OVERCLOCK...)
 }
 
 function updateTimer(dt) {
@@ -407,6 +413,7 @@ function updateTimer(dt) {
     Sound.shield(); setMsg('> overtime! +5s.', C.accent); modFired('overtime');
     return;
   }
+  if (tm.left <= 0 && (eaterOn() || zombie())) return clockHurts();   // no random tap: it costs you instead
   if (tm.left <= 0) {
     tm.left = 0;
     const opts = candidates().length ? candidates() : st.lv.tiles.filter(t => t.state === 'closed');
@@ -473,6 +480,7 @@ function chanceCard(lv, c, run) {
   if (u < 0.55 || (u < 0.7 && !st.timer)) { run.credits += 10; run.earned += 10; return 'chance: +10cr'; }
   if (u < 0.7) { st.timer.max += 3; st.timer.left += 3; return 'chance: +3s'; }
   if (u < 0.92) return 'chance: nothing';
+  if (zombie()) { addRot(ROT.ice); return 'chance: rot!'; }
   run.integrity = Math.max(1, run.integrity - 1);
   return 'chance: -1 int!';
 }
@@ -482,9 +490,9 @@ async function frostbite(t) {
   const run = st.run, lv = st.lv;
   st.busy = true;
   lv.scanned = true;
-  run.integrity -= 1;
+  hurt(1);
   Sound.trap(); shake(9); flash(C.accent, 0.2, 0.4);
-  setMsg('> frostbite. integrity -1.', C.danger);
+  setMsg(zombie() ? '> frostbite. rot.' : '> frostbite. integrity -1.', C.danger);
   await wait(500);
   if (run.integrity <= 0) return die();
   await onSafe(t);
@@ -502,6 +510,18 @@ async function pick(i) {
   if (st.mode !== 'play' || st.busy) return;
   const t = st.lv.tiles[i];
   if (!t || t.state !== 'closed') return;
+  // ZOMBIE: weak taps. A node takes tapsToBreak() taps; the ones before the last only crack it
+  // (the same for ICE and the real node: a crack never tells you which it is).
+  if (zombie() && st.corp && st.corp.hasBoss) {
+    const need = tapsToBreak();
+    if ((t.cracks || 0) + 1 < need) {
+      t.cracks = (t.cracks || 0) + 1; t.crackAt = performance.now();
+      Sound.tick(); shake(1.5, 0.12);
+      setMsg(`> crack. ${t.cracks}/${need}`, C.mid);
+      return;
+    }
+    t.cracks = 0;
+  }
   st.busy = true;
   st.sel = -1;
   st.selItem = -1; st.selMod = -1;
@@ -524,9 +544,11 @@ async function pick(i) {
     sh.total++; sh[cellZone(t, st.lv)]++; sh['c' + t.col] = (sh['c' + t.col] || 0) + 1;
     if (sh.total % 5 === 0) persist();
   }
+  if (eaterOn() && t.safe) return eaterBit(t);   // ICE EATER: the real node kills
   // A corp's own pick rule (FORM 27B, DEMOLITION) can take the tap.
   if (st.corp && st.corp.hasBoss && st.corp.def.tap && st.corp.def.tap(t, i)) return;
   if (t.safe) return onSafe(t);
+  if (eaterOn()) { eaterScan(t); return onTrap(t, i); }   // ICE EATER: eat it (scans only warn)
   // PICK stage. X-AXIS / Y-AXIS: the tap scans its row / column. If the real node is on
   // it, the scan catches it: no damage, the layer is passed (but it's not a perfect).
   // The first one on the bar that catches it wins.
@@ -568,7 +590,7 @@ function payFor(lv) {
   if (lv.boss) base *= 3;
   let mult = c.pay || 1;
   if (c.stageBoss) mult *= 1.5;   // a corp as the sector boss pays more
-  if (lv.misses === 0 && lv.n > 1 && !lv.scanned) mult *= 1 + 0.5 * (lv.n - 1);
+  if ((lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned) mult *= 1 + 0.5 * (lv.n - 1);   // ICE EATER: every clear is clean
   if (has('skimmer')) mult *= 1.5;
   if (has('fastpay') && lv.fast) mult *= 1.5;
   if (has('surge') && lv.late) mult *= 1.5;
@@ -585,17 +607,17 @@ function payFor(lv) {
 async function onSafe(t) {
   const run = st.run, lv = st.lv, c = st.corp;
   t.state = 'safe';
-  const perfect = lv.misses === 0 && lv.n > 1 && !lv.scanned;
+  const perfect = (lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned;
   if (c.hasBoss && lv.n > 1) run.lastReal = { col: t.col, row: t.row };   // DEJA VU
   if (lv.n > 1) { c.scored = (c.scored || 0) + 1; if (perfect) { c.perfects = (c.perfects || 0) + 1; run.perfects = (run.perfects || 0) + 1; } }
-  const pay = payFor(lv);
+  const pay = lv.eater ? Math.max(0, payFor(lv) - (lv.eatPaid || 0)) : payFor(lv);   // ICE EATER: the rest of the layer's pay
   if (pay) for (const [k, on] of [['skimmer', true], ['fastpay', lv.fast], ['surge', lv.late], ['supersize', lv.boss], ['onbeat', lv.onBeat]]) if (on && has(k)) modFired(k);   // pay boosts
   const tix = c.hasBoss && c.def.tickets;   // CHUCK E. CACHE'S pays in tickets
   if (tix) c.tickets = (c.tickets || 0) + pay;
   else { run.credits += pay; run.earned += pay; }
   lv.paid = tix ? 0 : pay;
   let healed = false;
-  if (perfect && run.integrity < run.maxInt && c.mod !== 'cursed') { run.integrity = Math.min(run.maxInt, run.integrity + CONFIG.perfectHeal); healed = true; }
+  if (perfect && canHeal() && c.mod !== 'cursed') { heal(CONFIG.perfectHeal); healed = true; }
   if (!lv.boss) Sound.safe();
   if (c.hasBoss && c.def.onSafe) c.def.onSafe(t, lv);   // corp kit: SQUALOR's likes
   flash(C.accent, 0.12, 0.3);
@@ -708,7 +730,8 @@ const END_FX = {
   triage() {
     const run = st.run, c = st.corp;
     if (!c.hasBoss || c.idx < c.counts.length) return false;
-    if (run.integrity < run.maxInt) run.integrity++;
+    if (zombie()) heal(1);
+    else if (run.integrity < run.maxInt) run.integrity++;
     else { run.maxInt++; run.integrity++; }
     Sound.shield();
   },
@@ -716,9 +739,9 @@ const END_FX = {
   honeycomb(perfect) {
     const run = st.run;
     if (!perfect) return false;
-    if (run.integrity >= run.maxInt) { run.credits += 10; run.earned += 10; return; }
+    if (!canHeal()) { run.credits += 10; run.earned += 10; return; }
     run.honey = (run.honey || 0) + 1;
-    if (run.honey >= 3) { run.honey = 0; run.integrity = Math.min(run.maxInt, run.integrity + 1); Sound.shield(); }
+    if (run.honey >= 3) { run.honey = 0; heal(1); Sound.shield(); }
     else return false;   // storing honey
   },
   // INTEREST: a corp you finish pays 5% of your credits (up to 20).
@@ -807,7 +830,8 @@ async function onTrap(t, i) {
   t.hitAt = performance.now();
   // BLOCK, then HIT (the node's own loot first, then mods left to right), then a death
   // check, then BOARD. Corp twists would go after the mods in HIT and BOARD.
-  let msg = blockHit(t, i);
+  if (lv.eater) t.eaten = true;
+  let msg = lv.eater ? eatBite(t) : blockHit(t, i);
   if (t.loaded) {
     const lr = rngFor(run.seed, 'loot', st.corp.node.id, st.corp.idx);
     msg += ' ' + grantLoot(lr, st.corp.tier);
@@ -820,7 +844,7 @@ async function onTrap(t, i) {
     if (HIT_FX[k](t) !== false && (lv.callouts || []).length === queued) modFired(k);
   }
   if (t.rejected) msg = msg.replace('> ICE.', '> REJECTED.');   // FORM 27B
-  setMsg(msg, t.loaded ? C.money : C.danger);
+  setMsg(msg, t.loaded ? C.money : lv.eater ? C.accent : C.danger);
   if (st.corp.hasBoss && st.corp.def.onHit) st.corp.def.onHit(t);   // corp twist, after your mods
   // corp modifiers: ARMORED points at the real node, THIEF takes your last mod
   if (st.corp.mod === 'armored' && !t.dir) { const q = lv.tiles[lv.safe]; t.dir = Math.abs(q.col - t.col) >= Math.abs(q.row - t.row) ? { h: Math.sign(q.col - t.col), v: 0 } : { h: 0, v: Math.sign(q.row - t.row) }; }
@@ -849,6 +873,94 @@ async function onTrap(t, i) {
   lv.readyAt = performance.now();
 }
 
+// ---- Damage and healing outside an ICE hit go through these, so ZOMBIE can turn them into rot.
+// hurt: n integrity (ZOMBIE: rot instead). heal: up to n integrity (ZOMBIE: less rot).
+function hurt(n) {
+  const run = st.run;
+  if (zombie()) return addRot(n * ROT.ice);
+  run.integrity -= n;
+}
+function heal(n) {
+  const run = st.run;
+  if (zombie()) { run.rot = Math.max(0, (run.rot || 0) - n * ROT.heal); return; }
+  run.integrity = Math.min(run.maxInt, run.integrity + n);
+}
+// ZOMBIE: add rot. At ROT.max you fall apart: integrity goes to 0, so the usual death checks
+// (onTrap, the corps' own) end the run.
+function addRot(n) {
+  const run = st.run;
+  run.rot = (run.rot || 0) + n;
+  if (run.rot >= ROT.max) { run.rot = ROT.max; run.integrity = 0; }
+}
+const canHeal = () => zombie() ? (st.run.rot || 0) > 0 : st.run.integrity < st.run.maxInt;
+
+// ---- ICE EATER (docs/EXOTICS.md). Tapping ICE eats it, eating all the ICE clears the layer,
+// the real node kills you. Each bite pays the layer's pay / its ICE count; onSafe pays the rest.
+function eatPay() {
+  const run = st.run, lv = st.lv;
+  const share = Math.max(1, Math.round(payFor(lv) / Math.max(1, lv.iceTotal)));
+  run.credits += share; run.earned += share; lv.eatPaid = (lv.eatPaid || 0) + share;
+  return share;
+}
+// An ICE node you tapped (from onTrap, in place of blockHit). Returns the message.
+function eatBite(t) {
+  const pay = eatPay();
+  Sound.shatter(); shake(3);
+  modFired('iceeater');
+  if (zombie()) addRot(ROT.ice);   // you still broke it
+  return `> ICE eaten. +${pay}cr${zombie() ? ` rot +${ROT.ice}` : ''}`;
+}
+// You bit the real node. Instant death; FAILSAFE catches it once (no pay, the layer passes);
+// ZOMBIE can't die from it, it rots a lot instead.
+async function eaterBit(t) {
+  const run = st.run, lv = st.lv;
+  t.state = 'reveal';
+  Sound.trap(); shake(14, 0.6); flash(C.danger, 0.3, 0.5);
+  modFired('iceeater');
+  setMsg('> that was the real one.', C.danger);
+  if (st.god) { /* dev: no death */ }
+  else if (zombie()) addRot(ROT.realTap);
+  else if (has('failsafe') && !run.failsafeUsed) { run.failsafeUsed = true; run.integrity = 1; st.fsAt = performance.now(); lv.failsafeNow = true; }
+  else run.integrity = 0;
+  await failsafeBeat(lv);
+  await wait(600);
+  if (run.integrity <= 0) return die();
+  lv.payCut = 1; lv.scanned = true;   // you live: the layer passes, no pay
+  return onSafe(t);
+}
+// X-AXIS / Y-AXIS under ICE EATER: they never pick the real node. A scan whose line holds it
+// marks the line as a warning for the layer (lv.warn: row / col); every scan sweeps dim.
+function eaterScan(t) {
+  const lv = st.lv, real = lv.tiles[lv.safe];
+  if (real.state !== 'closed') return;
+  const axes = modsAt('pick').filter(k => k === 'xaxis' || k === 'yaxis');
+  if (!axes.length) return;
+  const hit = axes.filter(k => k === 'xaxis' ? real.row === t.row : real.col === t.col);
+  lv.scan = { t0: performance.now(), from: t, axes, real: null };   // the sweep (dim, fades)
+  lv.warn = lv.warn || {};   // the warning lines stay lit for the layer
+  for (const k of hit) { if (k === 'xaxis') lv.warn.row = t.row; else lv.warn.col = t.col; }
+  for (const k of hit) callout(k, `> ${MODS[k].name.toLowerCase()}: the real one is in this ${k === 'xaxis' ? 'row' : 'column'}.`);
+}
+// The clock ran out under ICE EATER or ZOMBIE: no random tap. It costs 1 integrity (ZOMBIE: rot)
+// and the clock starts over.
+function clockHurts() {
+  const run = st.run, tm = st.timer;
+  tm.left = tm.max; tm.lastSec = Math.ceil(tm.max);
+  Sound.trap(); shake(6); flash(C.danger, 0.15, 0.3);
+  if (zombie()) { addRot(ROT.timeout); setMsg(`> clock ran out. rot +${ROT.timeout}.`, C.danger); }
+  else { run.integrity -= 1; setMsg('> clock ran out. integrity -1.', C.danger); }
+  if (run.integrity <= 0) { st.busy = true; die(); }
+}
+// Every frame: an ICE EATER layer with no ICE left clears (bites, locks, items, mods: whatever ate it).
+function eaterWatch() {
+  const lv = st.lv;
+  if (!lv || !lv.eater || st.mode !== 'play' || st.busy || st.transitioning || st.wipe || st.pause || st.dev || st.lv !== lv) return;
+  const real = lv.tiles[lv.safe];
+  if (!real || real.state !== 'closed' || lv.tiles.some(t => !t.safe && t.state === 'closed')) return;
+  st.busy = true;
+  onSafe(real);
+}
+
 // FAILSAFE (after blockHit caught a killing hit): the hit reads as the end first (the HUD
 // shows 0 for FAILSAFE_BEAT), then it catches you.
 const FAILSAFE_BEAT = 650;
@@ -871,7 +983,11 @@ const callout = (key, text, fn) => (st.lv.callouts = st.lv.callouts || []).push(
 function blockHit(t, i) {
   const run = st.run, lv = st.lv;
   let msg;
-  if (st.god) {
+  if (zombie() && !st.god) {
+    addRot(ROT.ice);
+    Sound.shatter(); shake(4);
+    msg = run.integrity > 0 ? `> ICE broken. rot +${ROT.ice}.` : '> ICE broken. you fall apart.';
+  } else if (st.god) {
     Sound.shield();
     msg = '> ICE. god mode: no damage.';
   } else if (has('forgery') && (t.loaded || (t.forged && !lv.forgeUsed))) {
@@ -939,7 +1055,7 @@ function blockHit(t, i) {
     msg = '> ICE. friendship: -10cr instead.';
   } else if (has('inversion') && st.corp.hasBoss && !st.corp.invUsed) {
     st.corp.invUsed = true;
-    run.integrity = Math.min(run.maxInt, run.integrity + 1);
+    heal(1);
     Sound.shield(); flash(C.accent, 0.16, 0.35);
     modFired('inversion');
     msg = '> ICE. inversion: +1 int.';
@@ -1008,7 +1124,7 @@ const HIT_FX = {
   compost() {
     const run = st.run;
     run.compost = (run.compost || 0) + 1;
-    if (run.compost % 3 === 0 && run.integrity < run.maxInt) { run.integrity++; Sound.shield(); }
+    if (run.compost % 3 === 0 && canHeal()) { heal(1); Sound.shield(); }
     else return false;   // only fires when it heals
   },
   // FOGHORN: louder the closer the real node is (bars on row 7)
@@ -1135,7 +1251,7 @@ function grantLoot(r, tier) {
 async function die() {
   // CONTINUE?: once per run, 10 seconds to pay 100cr and keep going
   const run0 = st.run;
-  if (run0 && has('continue') && !run0.continueUsed && run0.credits >= 100 && st.lv && !st.mp) {
+  if (run0 && has('continue') && !zombie() && !run0.continueUsed && run0.credits >= 100 && st.lv && !st.mp) {
     run0.continueUsed = true;
     modFired('continue');
     const go = await askContinue();
@@ -1157,7 +1273,7 @@ async function die() {
   st.timer = null;
   const safeTile = st.lv.tiles[st.lv.safe];
   if (safeTile.state === 'closed') safeTile.state = 'reveal';
-  setMsg('> traced. real node revealed.', C.danger);
+  setMsg(zombie() ? '> you fell apart.' : '> traced. real node revealed.', C.danger);
   st.dying = true;      // the music powers down instead of cutting out
   Sound.death();
   await wait(1100);
@@ -1276,10 +1392,11 @@ function openOmniReward(from) {
   const corpPick = pickMods(r, modsOfKind('corp'), 1);
   const gen = pickMods(r, modsOfKind('gen'), 1, corpPick);
   const third = pickMods(r, modsOfKind('gen', 'minor'), 1, corpPick.concat(gen));
+  const exotic = exoticOffer(run.seed, 'sector', from, 1);   // the sector boss always has one (if any are left)
   openChoice({
     title: 'OMNI//CORE BREACHED', col: C.accent,
     head: [[`sector ${from + 1} spoils. take one.`, C.text]],
-    options: shuffle(corpPick.concat(gen, third), r),
+    options: shuffle(corpPick.concat(gen, third), r).concat(exotic),
     skipLabel: '[ SKIP  +40cr ]',
     onSkip: () => { run.credits += 40; run.earned += 40; Sound.loot(); },
     msg: '> the core is open.',
