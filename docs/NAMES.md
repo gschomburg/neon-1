@@ -707,3 +707,55 @@ The user: "that f2 is getting closer and interesting". More of the BLUE SYSTEM t
    _|.  :                                            .   |________|            |.
    .|_| :  .:. N e o N + 1 .:.  <________________________________________>   .:|_|
 ```
+
+## Title lockup samples, round 7: just NeoN, from F1, in 36 columns (2026-10-22)
+
+The user: F1 is cool but looks a little broken; let the N's overlap the other letters, drop the band and type underneath, just NeoN, and fit the 36-column screen. First tries (H1-H4) in `docs/art/logotype_round7_drafts.png`; this round in `docs/art/logotype_round7.png`. I3 / I4 are the strongest (the e and o share the N's walls, one baseline under the word).
+
+### I1. tall N's, the e and o hanging between (H4, trimmed) (35 columns)
+
+```
+ _____ ___               _____ ___
+ \    \\  |              \    \\  |
+.|     \\ |   ___   ___ .|     \\ |
+:|  |\  \\|  / _ \ / _ \:|  |\  \\|
+ |  | \   | | __/ | (_) ||  | \   |
+ |  |  \  | |\___> \___/ |  |  \  |
+_|__|   \_|             _|__|   \_|
+```
+
+### I2. slanted joints (H3, cleaned up) (37 columns)
+
+```
+  _____ ___       .       _____ ___
+  \    \\  |  ___ :  ____ \    \\  |
+ .|    \\ |_/ _ \_:_/ __ \_.|    \\ |
+ :|  |\ \\| / ___/ / /  \ \:|  |\ \\|
+  |  | \  |/ /__/ /  \__/ / |  | \  |
+ _|__|  \_|\____>/\______/_|__|  \_|
+```
+
+### I3. hybrid: the e and o share the N's walls (33 columns)
+
+```
+ _____ ___             _____ ___
+ \    \\  |            \    \\  |
+.|     \\ |  ___  ___ .|     \\ |
+:|  |\  \\| / _ \/ _ \:|  |\  \\|
+ |  | \   || __/| (_) ||  | \   |
+ |  |  \  ||\___>\___/ |  |  \  |
+_|__|   \_|___________|__|   \_|
+```
+
+### I4. I3 with a drip and sparkles (36 columns)
+
+```
+ _____ ___     .       _____ ___
+ \    \\  |    :       \    \\  |
+.|     \\ |  __:  ___ .|     \\ |
+:|  |\  \\| / _ \/ _ \:|  |\  \\|
+ |  | \   || __/| (_) ||  | \   |
+ |  |  \  ||\___>\___/ |  |  \  |
+_|__|   \_|___________|__|   \_|_ _
+ :.                                .
+```
