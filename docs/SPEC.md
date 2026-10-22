@@ -336,17 +336,25 @@ neon+1/
       CORPS.md, CONTENT.md, NAMES.md, ART.md
     tools/
       tell_odds.js
-    versions/
+    dist/                <- THE GAME: the master copy, tracked in git (upload this folder)
+      index.html
+      palettes.js        <- every palette (loaded before the game script)
+    prototypes/          <- old versions, frozen (was versions/)
       v01_core/beta_runner_v01.html
       v02_overworld/ ... v06_online/
-      v07/ v08/ v09/
-      v10/
-      v11/beta_runner_v11.html   <- the working copy
+      v07/ v08/ v09/ v10/
+      v11/beta_runner_v11.html   <- where dist/ started
 ```
 
-Naming: folder `vXX` (early ones `vXX_<topic>`), file `beta_runner_vXX.html`, all under `versions/`.
+Since 2026-10-21 (the user's call) there is one master copy, `dist/`, and git keeps the history.
+**Build numbers: `vMAJOR.MINOR`** (`VERSION` in the code; shown in the header, the footer and on the title).
+The minor ticks +.01 with every update Claude makes to `dist/` (one tick per batch of changes handed over,
+logged in the version log in §16n). The major changes only when the user says so (v12.00 ...). The save
+slot follows the major only (`beta_runner.v11.save`), so minor updates keep progress. The user uploads `dist/` by FTP. If a build needs to stay playable for testing while
+work goes on (like v09 / v10 were), copy `dist/` into `prototypes/vNN/` and tag the commit.
 
-Each version folder is a standalone snapshot. Copy the previous version to start the next, so old versions stay playable for comparison.
+The prototypes (v01-v11) are standalone snapshots from before: folder `vXX` (early ones `vXX_<topic>`),
+file `beta_runner_vXX.html`. v11 also has its own `palettes.js`.
 
 ## 15. Versions (proposed roadmap)
 
@@ -354,18 +362,19 @@ Order is by risk: test the most important unproven idea (corp tells) early.
 
 | Version | Folder | Goal | Status |
 |---|---|---|---|
-| v01 | `versions/v01_core/` | 4x4 grid, layer N = N tiles, Integrity, game over, restart, seeded RNG, basic ASCII look | Built, needs playtest |
-| v02 | `versions/v02_overworld/` | Overworld map, 4 corps + final corp with tells and bosses, merchant, caches, safehouses, items, mods, loot ICE, dev menu, palettes | Built, needs playtest |
-| v03 | `versions/v03_mods/` | Always-visible item belt + starting item, animated mod badges with info, a mod reward at every location, corp-specific boss mods, active mods (layer and map), market rework, skip straight into PUBLIC NET | Built, needs playtest |
-| v04 | `versions/v04_polish/` | Title/how-to/codex/settings screens, boxed buttons, rarity tiers + escalating reveals, market colors, tray info layout, scroll-fill wipe, Sigil levels, corp tiers | Built, needs playtest |
-| v05 | `versions/v05_boot/` | Corp intros + corp palettes, generated music, title round 2 (cover art), consistent hover, sound pass | Built, needs playtest |
-| v06 | `versions/v06_online/` | Online multiplayer over Firebase: 2-6 players, elimination, spectators, lobby + next game, shared cursors, emotes, profiles, turn clock, kick, persona | **Locked** (for multiplayer testing) |
-| v07 | `versions/v07/` | Polish on v06: menus full screen, How to Play rework, music player, death / boss-win music + transitions, fail and breach reveals, editable seed, persona names/colors | **Locked** |
-| v08 | `versions/v08/` | Built on v07: mods & corps round (tiers, swaps, new mods), boss entrance, then the endless map (sectors, 5-layer corps, SKIPJACK, cash out, REP + THE BOARD, run resume) | **Locked** (online test build) |
-| v09 | `versions/v09/` | Built on v08: corp kit, corp levels + modifiers, all 74 corps (tiers 1-3), RIVAL, sector bosses rethink | **Locked** (2026-10-21, for testing the corps) |
-| v10 | `versions/v10/` | Built on v09: hacker logos + profile, database rules, multiplayer open to all, BONEYARD (corp 75) | **Locked** (2026-10-21) |
-| v11 | `versions/v11/` | Working copy of v10: new notes and builds go here | In progress |
-| later | | Scans, more corps (HYDRA, CIPHER, BLACKOUT), balance pass | Idea |
+| v01 | `prototypes/v01_core/` | 4x4 grid, layer N = N tiles, Integrity, game over, restart, seeded RNG, basic ASCII look | Built, needs playtest |
+| v02 | `prototypes/v02_overworld/` | Overworld map, 4 corps + final corp with tells and bosses, merchant, caches, safehouses, items, mods, loot ICE, dev menu, palettes | Built, needs playtest |
+| v03 | `prototypes/v03_mods/` | Always-visible item belt + starting item, animated mod badges with info, a mod reward at every location, corp-specific boss mods, active mods (layer and map), market rework, skip straight into PUBLIC NET | Built, needs playtest |
+| v04 | `prototypes/v04_polish/` | Title/how-to/codex/settings screens, boxed buttons, rarity tiers + escalating reveals, market colors, tray info layout, scroll-fill wipe, Sigil levels, corp tiers | Built, needs playtest |
+| v05 | `prototypes/v05_boot/` | Corp intros + corp palettes, generated music, title round 2 (cover art), consistent hover, sound pass | Built, needs playtest |
+| v06 | `prototypes/v06_online/` | Online multiplayer over Firebase: 2-6 players, elimination, spectators, lobby + next game, shared cursors, emotes, profiles, turn clock, kick, persona | **Locked** (for multiplayer testing) |
+| v07 | `prototypes/v07/` | Polish on v06: menus full screen, How to Play rework, music player, death / boss-win music + transitions, fail and breach reveals, editable seed, persona names/colors | **Locked** |
+| v08 | `prototypes/v08/` | Built on v07: mods & corps round (tiers, swaps, new mods), boss entrance, then the endless map (sectors, 5-layer corps, SKIPJACK, cash out, REP + THE BOARD, run resume) | **Locked** (online test build) |
+| v09 | `prototypes/v09/` | Built on v08: corp kit, corp levels + modifiers, all 74 corps (tiers 1-3), RIVAL, sector bosses rethink | **Locked** (2026-10-21, for testing the corps) |
+| v10 | `prototypes/v10/` | Built on v09: hacker logos + profile, database rules, multiplayer open to all, BONEYARD (corp 75) | **Locked** (2026-10-21) |
+| v11 | `prototypes/v11/` | Built on v10: NeoN+1 title, CIPHER / HYDRA / BLACKOUT, palettes.js + slot rename | Moved to `dist/` (2026-10-21) |
+| dist | `dist/` | The master copy from here on (VERSION v11 for now) | **Current** |
+| later | | Scans, balance pass | Idea |
 | later | | Hot-seat multiplayer (out of scope for now) | Parked |
 
 ## 16. v02 as built
@@ -587,9 +596,16 @@ What was on the list:
 ## 16f. Pending revisions (next round)
 
 Agreed changes not built yet.
-- **FIRST next session: NeoN+1 logotype on the title page** (the user, 2026-10-21: "first order of
-  business next time"). The title still shows the old Beta Runner logo (`LOGO` ASCII art + `R U N N E R`).
-  Replace it with a NeoN+1 logo in the same ASCII style (keep the occasional glitch).
+- **NeoN+1 logotype on the title page: first pass BUILT in v11** (2026-10-21). Uses NAMES.md **#15
+  EXPONENT** (big N + raised +1) tucked under the jaw, with two tweaks: the build number (`v011`, from
+  `VERSION`) beside the +1 one row lower where `N E O N` was, and `N e o N + 1` along the bottom instead
+  of `R U N N E R`. "For now"
+  (the user may change it more). Background from **#3 CIRCUIT**: circuit traces on the right side and a few
+  on the left, static in the top-left corner. **Pulses radiate out from the head:** a yellow spark (gold)
+  with a short tail runs from a pad touching the head out along a trace (traces are dim cyan). Dev menu
+  `[ title pulse: COLOR / CHAR / BOTH ]` compares recoloring vs. swapping the spark's character for noise.
+  Off on REDUCED effects. Code: `TITLE_LOGO`, `TITLE_BG`, `TITLE`, `titleArtLines()`.
+  - **To try next:** traces coming *into* the head from the left and out the right (the user's alternative).
 - **INFO page, opened from the footer** (2026-10-21): a link in the footer (all screens, like the version tag) opens an
   INFO page about the game: what it is, when it was made, who made it (design by the user), and how: built in
   conversation with Claude (Anthropic's AI) in Claude Code, which wrote the code, music and placeholder art.
@@ -619,10 +635,85 @@ Agreed changes not built yet.
     (`[ < ] NAME [ > ]`), then the runner card with your name. Put the logo right on top of the card (same
     background) so logo, name and stats read as one block, and move all the controls (logo picker, NEW NAME,
     COLOR, RANDOMIZE ALL) together below it.
+- **Corp map codes: 3 letters instead of `[S]`** (2026-10-21, the user's pick; backlog for now). Many corps
+  share a first letter and most single characters are taken (the v11 corps got `{` `(` `5`). Each corp
+  gets a static 3-letter code (`SKR`, `BNY`, `CPH`) in the same 3 cells as `[S]`, in its corp colors; the
+  special nodes keep their brackets (`[$]` `[?]` `[+]` `[!]`), so they stand out more. Maybe one shared,
+  occasional effect (like the mods' scramble glint) on nodes you can travel to; nothing busy. Also used
+  in the codex, the results' breached list, the dev corp list and OMNI's intro. Claude drafts all 78
+  codes for the user to review before wiring them in.
 - **Dev menu palette cycles every palette** (2026-10-21; from §17 "Two palette lists"). The dev menu's
   `[ palette ]` steps through the player palettes plus all 76 corp palettes (75 corps + OMNI), named, to
   preview them. SETTINGS keeps the player list only (`playerPalettes()`). Close pairs are fine as they are
-  (PLAYTIME / DIALTONE ONLINE, COLDBREW / CARAPACE ARMOR...).
+  (PLAYTIME / DIALTONE ONLINE, COLDBREW / CARAPACE ARMOR...). *(Part of the palette pass below; the
+  editor's preview may cover it.)*
+
+### Palette pass (2026-10-21): sort these out before / with the palette editor
+
+The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
+*is* goes first, so the editor is built on the final shape.
+1. **DONE in v11 (2026-10-21), with the move to `palettes.js`** (see §16n). Names picked by the user:
+   `bg dim mid text bright accent danger dangerDim money` (was cyan / red / redDim / gold). Original note:
+   **Rename the color slots to their roles** (the user agreed the names mislead). Today: `bg dim mid text
+   bright cyan red redDim gold` + rarity `common rare epic exotic boss` (14). `cyan` is the accent (orange
+   in AMBER, pink in DUSK) and `gold` is the money color (dark amber on PAPER, light blue in TWINLINK, ice
+   white in GLACIER). Something like `accent`, `money`, `danger`, `dangerDim`. Mechanical, but touches the
+   whole file.
+2. **Keyword highlighting in text** (the user's idea: code-editor style). In HOW TO PLAY, and throughout
+   info pages and mod descriptions, key words take their game color: ICE = danger (red), credits / cr =
+   money, integrity = accent (matches the HUD bar), PERFECT / real node = bright, mod names = their rarity.
+   No new colors needed. A short keyword list, colored automatically as text is drawn, with an inline tag
+   to override. Watch: headings already use the accent (integrity could use bright instead); keep the
+   list short. If a dedicated "keyword" color is wanted later, that's one new slot.
+3. **Palette checks / fixes** (audit 2026-10-21 over all 84 palettes: 5 player + 78 corps + OMNI):
+   - **Accent = money (exactly the same color) in 14 corp palettes:** SIGIL, MEGAMART, HAUTE, BURGERTRON,
+     TUMBLER, ZODIAC, PLAYTIME, APIARY, DIALTONE, BIDBLITZ, FAMIGLIA, LUCKEEZ, TOLLGATE (+ close in
+     BRIGHTLINE, COLDBREW). Buttons, credits and gold glows look alike. Matters more once keyword
+     highlighting and unlocks land.
+   - **Secondary text (`mid`) is hard to read in ~20 corp palettes** (contrast under 3:1 on the background):
+     STREAMFLIX, PREDATOR, OMNI, LAGRANGE, TWINLINK, ENTROPY, GRAVITAS, FAMIGLIA, CHUCKE, BIDBLITZ,
+     BULLET TIME, GROUNDHOG, BITROT, DROP4, UPSIDE, TEMPO, BURGERTRON, AEGIS, MONTE, NOIR. `mid` is used a
+     lot (HUD labels, stats, info lines). `dim` is faint on purpose and is fine.
+   - **Same color for two jobs:** boss rarity = danger red (AMBER, PAPER, LEXICON); accent = bright
+     (SPECTRA, PLAYBALL); text = bright (FOURTH WALL, probably on purpose: the old blue-screen look).
+   - **Palettes that look alike:** PLAYTIME / DIALTONE (known), LIFTCO / GROUNDHOG, RYDR / ENTROPY,
+     COLDBREW / CARAPACE, TOLLGATE / BLACKOUT, HEADLINE / PAWNBROS, SPECTRA / PLAYBALL, CLONEWORKS / CIPHER.
+   - The editor should show these checks live (contrast numbers, "too close" warnings).
+4. **One palette list + unlocks** (§17 "Two palette lists"): player and corp palettes become the same thing;
+   the 5 player palettes are the free starters, and beating a corp unlocks its palette in SETTINGS.
+   Needs a field tying each palette to its corp, and locked ones hidden or shown as `???`.
+5. **Dev menu palette cycles every palette** (item above).
+6. **Font per palette:** keep the option (OMNI uses weight 700/800 only); decide if the editor exposes it.
+   The typeface/size parts are leftovers from the reverted per-corp fonts.
+7. **BLACKOUT** fades every slot but red toward the background (v11): the editor should be able to preview
+   that, and the rename has to keep red out of it.
+8. **Player color styles** (`PLAYER_STYLES`, the persona name colors) are a separate list: decide if the
+   editor covers them too. Related: "Hacker logo: draw it on your color style's background" (above).
+9. **The palette editor itself** (agreed 2026-10-21):
+   - **A dev tool, for the user**, not a player feature.
+   - **Separate page** `tools/palette_editor.html`: the game in a frame on the left, a regular web form on the
+     right (real color pickers, text fields, dropdowns), with none of the game's screen / UI limits.
+   - **Preview without playing:** a scene picker (title, overworld, a corp layer, a boss layer, a hit node,
+     HOW TO PLAY, codex, settings, reward...) puts the game on that screen with a canned, frozen sample
+     state. The game gets a small listener ("show this scene", "use these colors") that's only on when
+     opened by the editor, so normal play isn't touched.
+   - **Palettes move to their own file** `palettes.js` (the first step of splitting the game into data
+     files); the game and the editor both load it. Do the slot rename (item 1) in the same move.
+   - **Saving:** the editor writes `palettes.js` directly (Chrome can save to a file you pick), with an
+     EXPORT (copy code) fallback. The user is on Chrome, and the game is served from a web host, so the
+     extra file is fine (it has to be uploaded next to the game).
+   - Order: move + rename first, then the editor; keyword highlighting and unlocks after.
+10. **Rarity slot names stay as they are** (`common rare epic exotic boss`): the code looks them up by the
+   rarity's id (`C[rarity]`), so renaming them would break that. Only the 9 base slots get role names.
+11. **Colors that live outside the palettes** (the editor should know about them, maybe edit some):
+   - **Map corp icons** use each corp's own background + accent, drawn on whatever palette you're in
+     (`corpIconCols`; it swaps in the corp's `dim` when the backgrounds are too close).
+   - **Player color styles** (`PLAYER_STYLES`, 10 fg/bg pairs: NEON, TOXIC, BLOOD...) and multiplayer
+     cursor colors (your style, or palette slots by join order).
+   - **SPECTRA's rainbow** (6 fixed colors, its tell), the screen flash (white by default).
+   - **Mixed colors:** palette fades, BLACKOUT's darkening, the title's dim traces (background + accent).
+12. **Light palettes** (PAPER, MIRRORLINE, LEXICON): check effects made with dark screens in mind (white
+   flash, glows, BLACKOUT fading to the background) in the editor's preview.
 
 Built straight into v05 after release:
 - **Version number in the footer:** `beta_runner v05`, right-aligned and dim, on every screen (next to the seed during runs, bottom corner on the title).
@@ -1415,7 +1506,16 @@ Built in v10:
     GRAVE SHIFT (76 bpm, harmonic minor, half-time, long echo).
   - Checked headless (layers, shadows, odds); not yet played in a browser.
 
-## 16n. v11 (in progress)
+## 16n. v11, then dist/ (current)
+
+**2026-10-21: the game moved to `dist/`** (`dist/index.html` + `dist/palettes.js`), the one master copy from now
+on, tracked in git. `versions/` was renamed `prototypes/` (v01-v11 frozen there; v11 is the same as `dist/` at the
+move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. See §14 for how releases work now.
+New builds are listed below as before.
+
+**Version log** (newest first; see §14 for the numbering):
+- **v11.00** (2026-10-21): the starting point of `dist/`: everything in the v11 list below (NeoN+1 title,
+  CIPHER / HYDRA / BLACKOUT, `palettes.js` + slot rename, the move to `dist/`) and the new build numbers.
 
 Started 2026-10-21 as an exact copy of v10 (only the version, title and save slot changed:
 `beta_runner.v11.save`, so v11 starts with a fresh save, and its run save is
@@ -1423,7 +1523,57 @@ Started 2026-10-21 as an exact copy of v10 (only the version, title and save slo
 builds go here. Note: v06-v11 share the same Firebase rooms; don't mix versions in one multiplayer room.
 
 Built in v11:
-- (nothing yet; the pending list is in 16f)
+- **NeoN+1 title logotype** (2026-10-21): see 16f (first item) for the details.
+- **Three style corps: CIPHER, HYDRA, BLACKOUT** (2026-10-21, the user's ask: build them before the palette /
+  style pass, so the pass covers everything). From the §17 ideas; Claude filled in the tells, bosses and mods.
+  Corps 76-78. Each has its own palette, track, intro art, codex tell and boss mod. Checked headless
+  (layers, odds, a full visit of each at tiers 1 and 2, screenshots); not yet played in a browser.
+  - **CIPHER** (`{`, LV4). Inside the corp every letter on screen turns into a symbol (`CIPHER_SYMS`, 26 shapes
+    like `◆ ▲ ● ◐ ◢ ★ ⌘ Ω`), done at draw time (`cipherNow`), so the HUD, messages, tray, board, and floating
+    text all go. Digits and punctuation stay readable. Menus, pause, panels and the dev menu read normally.
+    New mapping every visit.
+    - **Tell: the key line.** Row 7 shows `key: ROW 2` or `key: COL 3`, in cipher (number readable): that line
+      holds the real node (75% of the time, like other tells). You have to learn which symbols spell ROW and
+      which spell COL; messages you already know ("4 nodes. one is real.") help crack it. Measured x2.2 over
+      blind once decoded (x1.7 before), x2.5 at tier 2.
+    - **Boss: the cipher shifts.** Every miss reshuffles the alphabet (a scramble and a modem chirp).
+    - **Mod PARITY** `PAR` (ON HIT): an ICE hit says whether the real node shares its row or column
+      (`par: in line` / `off line`).
+    - Palette code-book teal + mint; track ENIGMA (phrygian).
+  - **HYDRA** (`(`, LV3). "Cut off one head..."
+    - **Tell: heads grow from the body** (the real node). Every layer opens with 2 young heads (always ICE,
+      head glyph `<o o>`) next to it; tier 2: one of them grows anywhere. Every ICE hit grows a new head
+      next to the body (it glitches in); tier 2+: new heads look like any node, so watch where they appear.
+      Row 7: `heads grown: N`. Measured x2.4 (tier 1), x2.2 (tier 2).
+    - **Boss: two heads for every one.** No young heads; each hit grows two plain-looking nodes, one next
+      to the body, one anywhere.
+    - **Mod HEADCOUNT** `HDC` (LAYER START): a note with how many nodes touch the real node.
+    - Palette swamp green + venom violet; track MANY HEADS.
+  - **BLACKOUT** (`5`, LV3). The palette fades into the background every layer (0%, 20%, 40%, 60%; tier 2
+    +10%; boss 74%), every color but red, so the nodes you hit stay bright red landmarks. The lights come
+    back on when you beat it or die. Row 7: `power [###.....]`. Works with any palette (it fades toward
+    the background color, so PAPER fades to white).
+    - **Tell: afterglow.** When the lights flash (the layer opening, every ICE hit), every node lights up
+      and fades (0.45s); the real node glows longest (1.4s). Tier 2: one decoy glows long too, and the
+      glow is shorter. Different from BRIGHTLINE (whose real node stays lit during timed brownouts).
+      Measured x2.5 (tier 1), x1.9 (tier 2).
+    - **Boss: nearly black**, two slow-glowing decoys, a short glow.
+    - **Mod FLARE** `FLR` (TAP, once per corp): splits the board down the middle; the half without the
+      real node lights up and its ICE is ruled out (dimmed).
+    - Palette pitch black + emergency yellow; track LIGHTS OUT (ambient).
+  - Map letters `{` `(` `5` are placeholders (most letters are taken).
+  - Also fixed: BONEYARD's intro skull was missing a backslash on its jaw line.
+- **Palettes moved to `palettes.js` (now `dist/palettes.js`), slots renamed** (2026-10-21; palette pass items 1 and 9).
+  - The game loads `palettes.js` with a `<script src>` before its own script; **upload it next to the game**.
+    If it fails to load, the game falls back to DEFAULT only.
+  - Format (`window.NEON_PALETTES`): `rarity.corp` holds the shared corp rarity colors once; each palette is
+    one line with all 9 base slots, `rarity: 'corp'` plus any rarity colors it changes (or all 5), `hidden`
+    for corp palettes, `font` (OMNI), and `note` (the old end-of-line comments). Generated from the old
+    block and checked: every palette resolves to exactly the same colors as before.
+  - Slots renamed everywhere in the code (461 uses): `cyan` -> `accent`, `red` -> `danger`, `redDim` ->
+    `dangerDim`, `gold` -> `money`. Rarity slots unchanged.
+  - `tools/tell_odds.js` loads `palettes.js` too. Checked with a full headless visit of CIPHER, HYDRA and
+    BLACKOUT, and a screenshot of a PERIMETER layer.
 
 ## 17. Ideas backlog
 
@@ -1482,7 +1632,7 @@ Not yet placed in a version.
   - **Earned** at the end of every run (win or lose): from layers cleared, corps breached, perfect picks, credits earned. Not from practice or abandoned runs.
   - **Spent at** a meta shop reached from the title. Fits the look: an old-school hacker **BBS** (bulletin board) screen, e.g. "THE BOARD".
   - **Unlock ideas:** +1 starting integrity, +1 item slot, start with an extra item, starting credits, add mods to the pool (like 1TD's locked relics), unlock palettes (ties into "palettes as unlockables"), seed replay, maybe new corps or the codex lore.
-- **Corp idea: CIPHER** (working name). Inside this corp everything is shown in a symbol "font", Wingdings-style: messages, HUD labels, node info, maybe even the tile glyphs turn into symbols. You have to play by shape and memory instead of reading.
+- **Corp idea: CIPHER** (working name; **built v11**, see §16n). Inside this corp everything is shown in a symbol "font", Wingdings-style: messages, HUD labels, node info, maybe even the tile glyphs turn into symbols. You have to play by shape and memory instead of reading.
   - Tech note: real Wingdings isn't available on the web/phones, so do it as our own substitution: each letter/character maps to a symbol (e.g. Unicode shapes like `◆ ▲ ☼ ♠ ⌘ ✦`, or a custom set). Same idea, works everywhere, and we control it.
   - Tell idea: the cipher is consistent, so the real node's glyph is always the same *symbol* even though you can't "read" it; or one line of the HUD stays readable as a hint.
   - Counter items/mods: a DECODER that translates for one layer, or a mod that keeps the HUD readable.
@@ -1494,7 +1644,7 @@ Not yet placed in a version.
 - **Corp idea: corrupted / rotting corp** (noted v07; working names: BITROT, LEGACY SYS, DEADLINK, ARCHIVE-9). An old corp whose data is busted. Mostly an **aesthetic** corp: nodes look glitchy and falling apart (frames with missing pieces, glyphs flickering to noise, characters dropping out), and they **drift / jitter around a little** (ties to the early "moving tiles" idea). Palette: faded, washed-out colors with bad-pixel accents; music: a detuned, wobbly (tape-warped) track.
   - Tell: open / not required. Light ideas if wanted: the real node is the **least corrupted** one (or the one that stays still), or the real node is the one whose glyph **holds steady** for a moment between glitches. Could also just use no tell (like CHRONOS) and be pure atmosphere, maybe as a filler corp.
   - Boss: corruption spreads each miss (more nodes glitch harder, or nodes swap places).
-- **Corp idea: HYDRA** (working name; "cut one head off, another grows"). Hitting an ICE node spawns a new node somewhere else on the grid, so your odds never improve just by guessing.
+- **Corp idea: HYDRA** (working name; "cut one head off, another grows"; **built v11**, see §16n). Hitting an ICE node spawns a new node somewhere else on the grid, so your odds never improve just by guessing.
   - The skill part: spawned nodes are always ICE. If you keep track of which nodes appeared mid-layer, you can rule them out. Maybe a tiny tell on new nodes (they glitch in, or a frame detail differs) that gets subtler at higher tiers.
   - Boss twist: each hit spawns two, or spawned nodes look identical to the originals.
   - Could also work as a boss for another corp instead of a full corp.
@@ -1695,7 +1845,7 @@ Not yet placed in a version.
   - Scanline wipe: a line sweeps top to bottom, recoloring as it goes (old-CRT feel)
   - Glitch: characters flip to the new colors at random times over ~0.5s
   - When: maybe a subtle preview on **select** (the info panel or node takes the corp's colors), then the full transition on **enter**. Pairs well with the existing suck-into-the-node effect.
-- **Palette as a corp effect.** Example corp, working name **BLACKOUT**: the palette gets darker every layer, fading toward black, making the board harder to read. Wrong tiles you hit stay **bright red**, so your mistakes become the only clear landmarks. Ideas around it:
+- **Palette as a corp effect.** Example corp, working name **BLACKOUT** (**built v11**, see §16n): the palette gets darker every layer, fading toward black, making the board harder to read. Wrong tiles you hit stay **bright red**, so your mistakes become the only clear landmarks. Ideas around it:
   - Boss twist: starts nearly black, or only the tile under your finger/cursor lights up
   - Counter items/mods: FLARE (resets brightness for one layer), something that makes hit tiles light up their neighbors
   - Tech note: easy to build, since all colors come from one table. Blend every color toward black each layer, except red.

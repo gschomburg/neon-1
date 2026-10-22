@@ -7,7 +7,8 @@
 // Then ranks the corps from hardest to easiest (by "knowing" odds).
 //
 // Usage:   node tools/tell_odds.js [game.html] [runs]
-//   default game: the newest versions/vNN folder's beta_runner_vNN.html, runs: 3000
+//   default game: dist/index.html (the master copy), runs: 3000
+//   (old prototypes: node tools/tell_odds.js prototypes/v10/beta_runner_v10.html)
 //
 // Not modeled: CHRONOS's clock, damage, items/mods, and picks after the first miss.
 // The per-tier tell rules (deeper MIRRORLINE = top-bottom, deeper PERIMETER = edge, SIGIL signature level =
@@ -15,16 +16,7 @@
 
 const fs = require('fs'), path = require('path'), vm = require('vm');
 
-const root = path.join(__dirname, '..', 'versions');
-const newest = () => {
-  const dirs = fs.readdirSync(root).filter(d => /^v\d\d/.test(d)).sort();
-  for (const d of dirs.reverse()) {
-    const f = fs.readdirSync(path.join(root, d)).find(x => /^beta_runner_v\d\d\.html$/.test(x));
-    if (f) return path.join(root, d, f);
-  }
-  throw new Error('no game file found');
-};
-const file = process.argv[2] || newest();
+const file = process.argv[2] || path.join(__dirname, '..', 'dist', 'index.html');
 const RUNS = Number(process.argv[3]) || 3000;
 
 // ---- load the game with a do-nothing browser
@@ -43,6 +35,9 @@ const sandbox = {
 };
 sandbox.window.window = sandbox.window;
 vm.createContext(sandbox);
+// the palettes live next to the game (v11+)
+const palFile = path.join(path.dirname(file), 'palettes.js');
+if (fs.existsSync(palFile)) vm.runInContext(fs.readFileSync(palFile, 'utf8'), vm.createContext(Object.assign(sandbox, { window: sandbox.window })));
 vm.runInContext(src, sandbox);
 const B = sandbox.window.__br;
 if (!B || !B.genLayer || !B.CORPS) throw new Error('game does not expose genLayer / CORPS (window.__br)');

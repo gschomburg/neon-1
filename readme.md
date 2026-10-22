@@ -4,13 +4,13 @@ A minimalist cyberpunk push-your-luck game: hack a corp's network one layer at a
 layer is a grid of nodes. One is real, the rest are ICE. Every corp hides its real node in its
 own way (its "tell"), and learning the tells is how you get deeper.
 
-All ASCII, mobile first, plain HTML/JS: each version is one self-contained HTML file.
+All ASCII, mobile first, plain HTML/JS, no build step.
 
 (Working title in the code: Beta Runner.)
 
 ## Play
 
-Open `versions/v11/beta_runner_v11.html` in a browser. That's it, no build step.
+Open `dist/index.html` in a browser (or upload the `dist/` folder to a web host). That's it, no build step.
 
 - `?seed=WORD` plays a fixed seed. A corp's name as the seed (`?seed=NOIR`) makes every node that corp.
 - `?dev=1` (or the backtick key) opens the dev menu.
@@ -18,8 +18,10 @@ Open `versions/v11/beta_runner_v11.html` in a browser. That's it, no build step.
 
 ## Folders
 
-- `versions/`: every prototype, each a standalone snapshot. `v11` is the working copy; older
-  ones are locked (v08 is the online test build, v09 the 74-corp build, v10 adds BONEYARD).
+- `dist/`: the game: `index.html` plus its data files (`palettes.js`). The master copy, tracked in git;
+  the build number is `VERSION` in the code.
+- `prototypes/`: the old versions, frozen, each a standalone snapshot (v01-v11; v08 is the online
+  test build, v09 the 74-corp build, v10 adds BONEYARD, v11 is where `dist/` started).
 - `docs/SPEC.md`: the living design doc: what's built, version by version, plus the backlog.
 - `docs/CORPS.md`: every corp, its tell, its mod, and the build plan by tier.
 - `docs/CONTENT.md`, `docs/NAMES.md`, `docs/ART.md`: content reference, naming, art drop-off.
