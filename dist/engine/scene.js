@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.04']);
+NEON_FILES.push(['engine/scene.js', 'v13.05']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -241,6 +241,7 @@ function buildScene(now, collectHits, raw = false) {
   footerRight();
   }
 
+  if (st.ad && !st.dev) buildAd(ctx, now);   // a fake ad, over everything (engine/ads.js)
   let result = cells;
   if (!raw) {
     if (st.wipe && !st.dev) result = applyWipe(cells, now);

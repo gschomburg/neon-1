@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.04']);
+NEON_FILES.push(['engine/run.js', 'v13.05']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -58,6 +58,7 @@ function toMap(fromSector) {
   st.busy = false;
   setMsg(st.run.sector ? `> sector ${st.run.sector + 1}. choose your next target.` : '> choose your next target.');
   saveRun();
+  adBreak('map');   // maybe an ad, over the map
 }
 
 // Map rows count down from the top of the whole map; a sector view starts at its OMNI.
@@ -665,7 +666,7 @@ async function onSafe(t) {
   c.depthAt = run.depth;   // this layer is done: a save from here keeps it
   // LAYER END stage, left to right on the bar.
   for (const k of modsAt('end')) if (END_FX[k] && await END_FX[k](perfect) !== false) modFired(k);   // false: nothing happened
-  if (c.idx < c.counts.length) { saveRun(); return enterLayer(); }
+  if (c.idx < c.counts.length) { saveRun(); await adBreak('layer'); return enterLayer(); }   // (maybe an ad between layers)
   // Corp finished
   if (c.mod === 'rival' && c.rival) {   // RIVAL: beat it
     const bonus = c.rival.hp <= 0 ? 30 : c.rival.stole === 0 ? 15 : 0;

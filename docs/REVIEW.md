@@ -6,6 +6,10 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **The first fake ads** (v13.05): SPONSORED STORIES and VIRUSHIELD PRO. They pop up between layers or on the way back
+  to the map, from your second corp on (1 in 6, one per corp at most). To see one now: play into your second corp, or ask
+  me for a dev button. Look at the art, the skip countdown, the spin-turn on the two-screen one, and how often feels right.
+
 - [ ] **The boot / login intro** (v13.03). To replay it: dev menu `[intro: first boot]` (the full
   first-time version) or `[intro: short]`; `?nointro` in the URL skips it. Look at: the pacing (~6.5s full, ~1.5s after), the world map
   drawing (`INTRO_MAP` in `dist/engine/intro.js`, easy to redraw), the fake jargon lines (`INTRO_JARGON`).

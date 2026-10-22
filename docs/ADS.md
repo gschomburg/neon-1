@@ -4,6 +4,12 @@ Parody ads for the game: the corps selling themselves, plus anything else that's
 built yet. Add freely; mark where an idea came from. Lines marked *(Claude)* are my drafts for you to
 keep, change or cut. The screen is 36 columns wide, so short copy works best.
 
+## Built (v13.05)
+
+The ad box and two ads: **SPONSORED STORIES** (chumbox) and **VIRUSHIELD PRO** (antivirus, two screens). Adding an ad = its
+screens in `dist/data/ads.js` (30 wide, up to 18 lines; block letters with `adBig`). How often / when: `AD_CFG` in
+`dist/engine/ads.js`. Not yet: ads that do something when tapped (free trials, secret ads), AD BLOCKER.
+
 ## Where ads could show up
 
 - **Interstitials** between parts of a run: after a boss, or on the way into a safehouse or black market.

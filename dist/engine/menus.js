@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v13.04']);
+NEON_FILES.push(['engine/menus.js', 'v13.05']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -12,6 +12,7 @@ function openSettings() {
     B(`[ corp colors: ${save.corpColors ? 'ON ' : 'OFF'} ]`, 'ccol', toggleCorpColors);
     B(`[ effects: ${save.effects === 'full' ? 'FULL   ' : 'REDUCED'} ]`, 'fx', toggleEffects);
     B(`[ items: ${save.tapMode === 'two' ? 'TAP TWICE' : 'TAP ONCE '} ]`, 'tap', toggleTapMode);
+    B(`[ ads: ${save.ads === false ? 'OFF' : 'ON '} ]`, 'ads', () => { save.ads = save.ads === false; persist(); Sound.ui(); });   // the fake ads
     T('');
     audioLines(X, 's_');
     T('');
@@ -43,7 +44,7 @@ function setSeed(s) {
 
 function resetSave() {
   if (!st.resetArmed) { st.resetArmed = true; Sound.deny(); return; }
-  const keep = { palette: save.palette, muted: save.muted, effects: save.effects, tapMode: save.tapMode };
+  const keep = { palette: save.palette, muted: save.muted, effects: save.effects, tapMode: save.tapMode, ads: save.ads };
   for (const k of Object.keys(save)) delete save[k];
   Object.assign(save, freshSave(), keep);
   persist();
