@@ -2,7 +2,7 @@
 
 The EXOTIC rarity exists but has **no mods** yet (the only exotic thing is the WARP item). Exotics should
 bend the rules of the game, not just give bigger numbers. Several change how a layer works, so each needs
-thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15), LEVERAGE (v12.16), QUANTUM (v12.17), COIN FLIP (v12.19), SNOOZE (v12.23), CHROMED UP (v12.24)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
+thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15), LEVERAGE (v12.16), QUANTUM (v12.17), COIN FLIP (v12.19), SNOOZE (v12.23), RAM DOUBLER (v12.24, was CHROMED UP)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
 user's.
 
 Mods for corps that don't exist yet stay with those corp ideas (SPEC §17). Mods that need the fake ads
@@ -37,7 +37,7 @@ other mod. A first set of slots:
 | `real` | how many real nodes there are | QUANTUM (built) |
 | `tap` | what a tap does (a pick vs a 50/50 call) | COIN FLIP (built) |
 | `carry` | what carries between layers | SNOOZE (built) |
-| `slots` | the tray itself (items vs mods) | CHROMED UP (built) |
+| `slots` | the tray itself (items vs mods) | RAM DOUBLER (built) |
 | `health` | what a hit costs you (integrity vs credits / something else) | BLOOD MONEY, ZOMBIE (they clash) |
 | `money` | how low your credits can go | LEVERAGE |
 
@@ -279,9 +279,9 @@ ICE you carry stays *dead* (locked) so the next layer is bigger but partly solve
   its row.
 - **FORK BOMB:** each ICE you hit forks: it locks 2 more ICE, which can lock 2 more... (a chain reaction;
   capped so it doesn't clear the board), but each fork costs pay.
-- **The slot trade — BUILT v12.24 as CHROMED UP** (the user's name; spare: MEMORY DOUBLER, maybe for a mod that really
-  doubles something): no item belt (held items sold for half, finds become credits, no items in markets), +3 mod slots
-  (9) on the belt's row. Locked in.
+- **The slot trade — BUILT v12.24 as CHROMED UP, v13.08 RAM DOUBLER** (the user's names): no item belt (held items sold
+  for half, finds become credits, no items in markets), twice the mod slots (12: a second row of 6 where the belt was).
+  Locked in.
 
 ## Exotic items (on the list)
 

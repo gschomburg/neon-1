@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.07']);
+NEON_FILES.push(['engine/scene.js', 'v13.08']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -332,8 +332,8 @@ function buildTray(ctx, y) {
   // Spent passives (FAILSAFE) go dim.
   if (!run.mods.length) put(0, y, 'no mods yet', C.dim);
   const widths = run.mods.map(k => { const v = modView(k); return 1 + v.short.length + (v.lvlTag && v.tier > 0 ? 1 : 0) + (v.active ? 2 : 0); });
-  // CHROMED UP: mods 7-9 go on a second row, where the item belt was
-  const pockets = !has('chromed'), rowOf = i => pockets || i < MOD_SLOTS ? 0 : 1;
+  // RAM DOUBLER: mods 7-12 go on a second row, where the item belt was
+  const pockets = !has('ramdoubler'), rowOf = i => pockets || i < MOD_SLOTS ? 0 : 1;
   const gapOf = row => { const ws = widths.filter((w, i) => rowOf(i) === row); return ws.reduce((a, w) => a + w, 0) + 2 * (ws.length - 1) <= L.wc ? 2 : 1; };
   const gaps = [gapOf(0), gapOf(1)], xs = [0, 0];
   run.mods.forEach((key, i) => {
@@ -354,7 +354,7 @@ function buildTray(ctx, y) {
     addHit(x, ry, w, 1, { kind: 'mod', i });
     xs[row] = x + w + gap;
   });
-  if (!pockets && run.mods.length <= MOD_SLOTS) put(0, y + 2, `chromed up: ${modSlots() - run.mods.length} of ${modSlots()} slots free`, C.dim);
+  if (!pockets && run.mods.length <= MOD_SLOTS) put(0, y + 2, `ram doubler: ${modSlots() - run.mods.length} of ${modSlots()} slots free`, C.dim);
 
   // Mod info line, right under the mods
   const mi = st.selMod >= 0 ? st.selMod : st.hoverMod;
@@ -372,7 +372,7 @@ function buildTray(ctx, y) {
     if (status) put(7 + tip.length, y + 1, status[0], status[1]);
   }
 
-  if (has('chromed')) return;   // CHROMED UP: no belt (its row holds mods 7-9)
+  if (has('ramdoubler')) return;   // RAM DOUBLER: no belt (its row holds mods 7-12)
   // Item belt: every slot is always shown, empty ones too (no brackets: not tappable).
   const slots = run.beltSlots;
   const step = Math.min(8, Math.floor((L.wc + 1) / slots));

@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v13.07']);
+NEON_FILES.push(['engine/save.js', 'v13.08']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -73,9 +73,16 @@ function saveRun() {
   try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch (e) { /* storage unavailable */ }
 }
 function clearRun() { try { localStorage.removeItem(RUN_KEY); } catch (e) { /* ignore */ } }
+// Mods that changed their key: old saves get the new one (CHROMED UP became RAM DOUBLER in v13.08).
+const MOD_RENAMED = { chromed: 'ramdoubler' };
 function savedRun() {
   try {
     const d = JSON.parse(localStorage.getItem(RUN_KEY) || 'null');
+    if (d && d.run && d.run.mods) {   // mods renamed since the run was saved, and any that are gone
+      const run = d.run, tiers = run.modTier || {};
+      run.mods = run.mods.map(k => MOD_RENAMED[k] || k).filter(k => MODS[k]);
+      for (const [from, to] of Object.entries(MOD_RENAMED)) if (from in tiers) { tiers[to] = tiers[from]; delete tiers[from]; }
+    }
     return d && d.run && d.run.map && d.run.integrity > 0 ? d : null;
   } catch (e) { return null; }
 }

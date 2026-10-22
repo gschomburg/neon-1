@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.07']);
+NEON_FILES.push(['data/mods.js', 'v13.08']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },
@@ -178,7 +178,7 @@ const MODS = {
   snooze:        { name: 'SNOOZE',         short: 'ZZZ', kind: 'exotic', rarity: 'exotic', slot: 'carry', icon: 'z.Zz', anim: 'exotic', price: 110,
     tip: 'half your ICE hits: later.', desc: 'half the ICE you hit does no damage now. it follows you into the next layer instead, with a z in its glyph.',
     codex: 'procrastinate: half the time an ICE hit does no damage and that ICE carries over into the next layer as one more ICE node (in the same spot if it can). it comes back looking like the other nodes there, except one character of its glyph is a z. it stacks: snoozed ICE can be snoozed again.' },
-  chromed:     { name: 'CHROMED UP',     short: 'CHR', kind: 'exotic', rarity: 'exotic', slot: 'slots', locked: true, icon: '#=#-', anim: 'exotic', price: 120,
-    tip: 'no items. 3 more mod slots.', desc: 'your item belt is gone (what you hold is sold for half), but you can hold 3 more mods. items you find turn into credits. locked in.',
-    codex: 'trade your pockets for power: the item belt goes away (items you hold are sold for half their price) and you get 3 more mod slots, 9 in all, on the row where the belt was. any item you would find becomes credits instead, and the market stops selling items. locked in for the run.' },
+  ramdoubler:  { name: 'RAM DOUBLER',    short: 'RAM', kind: 'exotic', rarity: 'exotic', slot: 'slots', locked: true, icon: '#=#-', anim: 'exotic', price: 140,
+    tip: 'no items. twice the mod slots.', desc: 'get your memory chromed up: twice the mod slots (12), but your item belt is gone (what you hold is sold for half). locked in.',
+    codex: 'the memory doubler: your head gets chromed up for twice the mods. the item belt goes away (items you hold are sold for half their price) and you get 12 mod slots, the second six on the row where the belt was. any item you would find becomes credits instead, and the market stops selling items. locked in for the run.' },
 };

@@ -1,6 +1,6 @@
 // NeoN+1 corps/perimeter.js
 'use strict';
-NEON_FILES.push(['corps/perimeter.js', 'v13.07']);
+NEON_FILES.push(['corps/perimeter.js', 'v13.08']);
 // Its boss mod: CORNERS (corners), BULWARK (bulwark), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

@@ -16,7 +16,7 @@ to build stays in `docs/SPEC.md` §16f.)
 - [ ] **v13.00 on the web host** (2026-10-22). Upload all of `dist/` again (most files changed). Your v12 save carries over
   on first load (new save slot `beta_runner.v13.save`).
 
-- [ ] **CHROMED UP** (v12.24). No item belt, 9 mod slots (the 7th-9th on the belt's row). Held items are sold for half when you take
+- [ ] **RAM DOUBLER** (v12.24 as CHROMED UP; v13.08 renamed, 12 slots). No item belt, 12 mod slots (the 7th-12th on the belt's row). Held items are sold for half when you take
   it. Feel: is 3 slots worth losing items? (STASH and CACHEKEY's item side do nothing with it.)
 
 - [ ] **SNOOZE** (v12.23). Half your ICE hits do no damage and come back next layer as an extra node with a z in its glyph.
