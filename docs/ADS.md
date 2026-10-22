@@ -158,6 +158,13 @@ DRAGON THRONE: AWAKENING, RAID OF LEGENDS, QUEENS OF KALDOR, EMPIRE OF DESIRE (s
 - the art: a small ASCII bust / pin-up in the old textmode style (the scene's own pin-up pieces are a good
   reference; keep it suggestive, the joke is how shameless the ad is).
 
+## Leaderboard ads (the user, 2026-10-22; once there's a leaderboard, SPEC §17)
+
+An ad that shows the leaderboard. *(Claude)*: "TOP RUNNERS THIS WEEK" with the real top 3 (names, layers,
+logos), sold like a sports ad or a dating ad: "GHOST_RAT reached sector 4. what's your excuse?", "you are
+ranked #4,812. upgrade to PREMIUM to see who's above you.", "these 3 runners hate you (you passed them)".
+Offline (no shared board yet) it could show your own best runs, or the profile's local records.
+
 ## Gambling ads (the user, 2026-10-22)
 
 The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ

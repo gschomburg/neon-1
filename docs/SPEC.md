@@ -730,6 +730,24 @@ Agreed changes not built yet.
   players we'd run our own server (a small Node server, i.e. a host to pay for / keep up), vs Firebase (no
   server of ours, but the test-mode rules expire, see §16 multiplayer). No accounts or security rules to speak
   of either way; cheating stays as it is (answers come from the seed).
+- **Analytics: see how people play** (2026-10-22, the user; a bigger thing, needs its own plan). Which bosses / corps
+  get beaten (and which beat people), and lots more. **Not Google**: build our own, an open-source tool, or a free
+  service that isn't gross. *(Claude)* starting points for the plan:
+  - **What to track** (game events, not people): run start / end (seed, sector, layers, cause of death or cash
+    out, mods and items taken), each corp entered / breached / died in (by layer, misses, time), boss results,
+    mod picks vs offers (which get taken, which get skipped), market buys, how long layers take, palette / settings
+    picks, device size (phone vs desktop), errors (the red file warning, script errors), multiplayer games.
+  - **Options:** (1) **our own**: the game sends small JSON events to a tiny endpoint that appends them to a
+    database (Firebase is already in for multiplayer; or a Cloudflare Worker / Supabase free tier), and we read
+    them with a script or a small dashboard page; full control, game-shaped data. (2) **open source, self-hosted or
+    their free cloud:** Umami, Plausible (self-host free; cloud paid), GoatCounter (free for small / non-commercial,
+    mostly page views), PostHog (open source, generous free cloud tier, has custom events and funnels, heavier).
+    (3) a mix: a light page-view counter + our own events for the game stuff. Game events ("died to SIGIL on layer
+    3") fit (1) best; the web tools are built around page views and clicks.
+  - **Not gross:** no personal data, no cookies, an anonymous random id per device (not the profile name), a
+    line on the INFO page saying what's sent, and a settings switch to turn it off. Batch events (send at run
+    end / when the tab hides) so it doesn't slow play. Ties to leaderboards (§17), which need a backend too, and to
+    the multiplayer backend choice above (p5.party / Firebase).
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
