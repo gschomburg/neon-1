@@ -165,6 +165,34 @@ logos), sold like a sports ad or a dating ad: "GHOST_RAT reached sector 4. what'
 ranked #4,812. upgrade to PREMIUM to see who's above you.", "these 3 runners hate you (you passed them)".
 Offline (no shared board yet) it could show your own best runs, or the profile's local records.
 
+## Floppy disk ads (the user, 2026-10-22)
+
+An ad with an ASCII floppy disk in it. *(Claude)* the obvious fit is the old free-trial disk in the mail
+("500 HOURS FREE!"), or software sold on floppies in a world that should be past them.
+
+*(Claude)* a first floppy (3.5", 15 wide; label could carry the brand):
+```
+ _____________
+| |  _____  | |
+| | |  _  | | |
+| | | |_| | | |
+| |_|_____|_| |
+|   _______   |
+|  |       |  |
+|  |NEON+1 |  |
+|__|_______|__|
+```
+
+*(Claude)* drafts:
+- "500 HOURS FREE! insert disk and connect." (a dial-up / net-provider parody: OMNINET ONLINE, DIALTONE ONLINE
+  already exists as a corp and could be the sponsor)
+- "INSTALL DISK 1 OF 47"
+- "now on 3.5\" floppy! (requires 640K. requires faith.)"
+- "your data, backed up forever* on one floppy" (`*1.44MB`)
+- "VIRUSHIELD PRO 1996 EDITION: still the best."
+- secret-ad hook: the floppy is a real item ("a disk with no label"); tapping it gives a save-icon item, or a
+  seed written on the label.
+
 ## Gambling ads (the user, 2026-10-22)
 
 The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ
