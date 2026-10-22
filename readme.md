@@ -98,7 +98,7 @@ NeoN+1 was built in conversation with Claude, Anthropic's AI model, running in C
 | v10 | Hacker logos and profiles, database rules, multiplayer for everyone, BONEYARD |
 | v11 | The NeoN+1 title, CIPHER, HYDRA and BLACKOUT, palettes in their own file, the palette editor, `dist/` |
 | v12 | The game split into files: engine, data, and one file per corp; version stamps; link previews |
-| v13 | EXOTIC mods that bend the rules (ICE EATER, ZOMBIE, BLOOD MONEY, LEVERAGE, QUANTUM, COIN FLIP, SNOOZE, CHROMED UP), the ALL-IN item, corp map codes with levels, mod effects you can see |
+| v13 | EXOTIC mods that bend the rules (ICE EATER, ZOMBIE, BLOOD MONEY, LEVERAGE, QUANTUM, COIN FLIP, SNOOZE, RAM DOUBLER), the ALL-IN item, corp map codes with levels, mod effects you can see |
 
 The full record (every change, and the ideas still waiting) is in `docs/SPEC.md`.
 
