@@ -12,16 +12,38 @@ Mods for corps that don't exist yet stay with those corp ideas (SPEC §17). Mods
 
 ## Questions for all exotics
 
-*(Claude)* to settle once, for the whole tier:
-1. **How you get them.** Today EXOTIC shows up as a rarity on items (WARP). Options: a rare roll on boss
-   rewards / caches / the market; only from sector bosses; or a special event (a secret ad, the nuke quest).
-2. **How many at once.** One exotic at a time (taking another swaps it) keeps them from stacking into chaos.
-3. **On / off?** The game-changing ones (ICE EATER, COIN FLIP) could be a **toggle** on the tray (tap the badge:
-   on for the next corp / off), so you choose when to bend the rules. Or always on, and that's the risk.
-4. **Levels.** Most mods level up (COMMON to EPIC). Exotics probably don't: one strength, its own thing.
-5. **Corp clashes.** A lot of corps have their own tap rules (DEMOLITION, FORM 27B, HYDRA, TELEPHONIX...).
-   Each exotic needs a rule for those: it wins, the corp wins, or it switches off inside that corp.
-6. **Multiplayer:** mods aren't in multiplayer yet, so not a worry for now.
+**Decided (the user, 2026-10-22):**
+- **Where they come from:** the **sector boss** reward pool (the end of each sector), and mixed into
+  **markets and caches**. **CACHEKEY** at its higher tiers also makes exotics drop more often in caches.
+- **Always on** once you have one (no on/off toggle).
+- **Some mods can't be had together.** Taking one that clashes with a mod you own **warns you that it will
+  replace** that mod (like the swap when the bar is full).
+
+*(Claude)* **How to track clashes without comparing every pair: "rule slots".** Each exotic (and any other
+mod that changes a rule) names the **rule it rewrites**. Two mods that rewrite the same rule can't be had
+together; mods on different rules are fine. So each new mod only needs one tag, not a check against every
+other mod. A first set of slots:
+
+| Slot | What it rewrites | Mods |
+|---|---|---|
+| `goal` | what clears a layer (find the real node vs eat the ICE) | ICE EATER |
+| `real` | how many real nodes there are | QUANTUM |
+| `tap` | what a tap does (a pick vs a 50/50 call) | COIN FLIP |
+| `carry` | what carries between layers | ICE THAT COMES WITH YOU (maybe WORM) |
+| `slots` | the tray itself (items vs mods) | the slot trade |
+
+(Clash warning text from the slot: "ICE EATER changes how layers are won. it will replace QUANTUM.")
+
+The other half is mods that **still work but act differently** under a rule (X-AXIS under ICE EATER marks
+instead of picks). Those don't clash; each such mod gets a line for the rule ("under `goal: eat`: mark the
+row"), found by looking at the mods that touch that rule (the finders, the ICE lockers), not at every mod.
+
+Still open:
+1. **Levels.** Most mods level up (COMMON to EPIC). Exotics probably don't: one strength, its own thing.
+2. **Corp clashes.** A lot of corps have their own tap rules (DEMOLITION, FORM 27B, HYDRA, TELEPHONIX...).
+   Each exotic needs a rule for those: it wins, the corp wins, or it switches off inside that corp. (The same
+   slots can help: a corp that rewrites `goal`, like DEMOLITION, already matches ICE EATER.)
+3. **Multiplayer:** mods aren't in multiplayer yet, so not a worry for now.
 
 ---
 
@@ -41,19 +63,24 @@ mod that works in every corp. DEMOLITION's code already does most of it (`corps/
   you go** (the last tap is always a 1-in-2 if you're guessing), unlike normal play, where they get better.
 - Layers take more taps (n-1 instead of ~half), so clock corps (CHRONOS, the clock mods) get much harder.
 
-*(Claude)* questions:
-- **How deadly is the real node?** Instant death (pure, scary) vs "lose 2 integrity and the layer passes
-  with no pay" (DEMOLITION's rule) vs "lose all but 1". FAILSAFE could catch it once.
-- **Pay:** per ICE eaten (+cr each bite, so it feels like eating), plus a bonus for a clean clear? A
-  "perfect" = a clear without touching the real node, which is every clear you survive.
-- **Mods that lock ICE** (SNIFFER, VIRUS, PURGE, OVERCLOCK...) now **help** (they eat for you). **Mods that
-  find the real node** (X-AXIS, TRACER, KEYLOGGER) become warnings instead of finds: X-AXIS would say "it's in
-  this row" and *not* tap it for you. Each one needs a rule.
-- **Corps:** HYDRA spawns new heads when you hit ICE, so eating could never end (cap the spawns, or HYDRA's
-  heads don't respawn under ICE EATER). DEMOLITION: already the same rule, so ICE EATER does nothing extra (or
-  shows the numbers louder). OMNI / bosses: bigger grids, a long clear.
+**Decided (the user, 2026-10-22):**
+- **The real node is instant death.** (FAILSAFE can still catch it once: that's what it's for.)
+- **Pay per ICE eaten:** what the layer would pay for finding the real node, divided by its ICE count, paid
+  bite by bite. Eat all the ICE, get the full layer's pay.
+- **Mods that find the real node don't tap it for you.** X-AXIS / Y-AXIS mark the line instead: "it's in this
+  row" (and / or column with both), as a warning. The same idea for the other finders (TRACER, KEYLOGGER,
+  CORNERS...): they point, they never pick.
+- **HYDRA gets a head limit** under ICE EATER, so eating ends.
+- **Always on** once you have it (no toggle).
+
+*(Claude)* still open (small):
+- The pay split: is it the plain layer pay, or with the perfect bonus (every survived clear is "perfect" now)?
+  And the perfect heal (+1 int): every layer, never, or only boss layers? Every layer would heal a lot.
+- How the warning looks: X-AXIS could tint the row's frames (the scan's `-` line on the empty cells, from
+  v12.11) and leave it lit for the layer.
+- Mods that lock ICE (SNIFFER, VIRUS, PURGE, OVERCLOCK...) eat for you: does that pay? (probably yes, half.)
+- DEMOLITION already has this rule: ICE EATER does nothing extra there (or its numbers stay on for the boss).
 - **Feel:** eating should feel good: a crunch sound, the node crumbling, a little `nom` / chomp glyph.
-- **Toggle?** This is the strongest case for an on/off toggle, since it changes the whole game.
 
 ## QUANTUM
 
