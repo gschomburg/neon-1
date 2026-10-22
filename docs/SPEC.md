@@ -1845,6 +1845,12 @@ Not yet placed in a version.
 - **Minesweeper ideas** (noted v08). A mod where tripping an ICE also **deactivates any ICE close to it** (all neighbors, not just one). Note: VIRUS (EPIC) already locks **one** neighboring ICE on a hit, so this could be VIRUS's bigger version (a tier, or its own EXOTIC mod, e.g. CHAINLOCK / DETONATOR), or VIRUS could become tiered (1 / 2 / all neighbors). *(Claude)*: a minesweeper corp where hit ICE shows a **number**: how many steps away the real node is (or how many ICE touch it).
 - **Corp idea: shell game** (noted v08; names *(Claude)*: SHELLGAME, THREE CARD, MONTE). The real node **moves** to another node without you seeing the switch. *(Claude)*: nodes shuffle positions in a quick animation (cups sliding) you can follow if you're sharp; or swaps happen unseen but leave a tell (a glyph line flickers on the two nodes that swapped); boss: more swaps, faster.
 - **Corp idea: gambling** (noted v08; names *(Claude)*: HOUSE EDGE, LUCKY 7, CASINO.SYS). Ideas: **double down** on a node (bet that your pick is right: double pay if real, double damage if ICE), either as the corp's mechanic or as its boss mod. *(Claude)*: slot-machine glyphs (the real node shows three matching symbols); a "let it ride" choice after each layer.
+- **Corp idea: a dating app** (the user, 2026-10-22; like Bumble or Match). Not designed yet. *(Claude)* sketches to
+  react to: names SPARKD, KINDLR, SOULM8, LOVE.EXE. Nodes are profiles (a tiny face + 3 interests); the hint line is
+  your profile, and the real node is your match (shares the most interests, or a compatibility %). Swipe-style
+  picking (left / right instead of a tap?). Boss: a **catfish**, a decoy that copies the real profile with one thing
+  off. Boss mod ideas: SUPERLIKE (one pick a layer can't hurt you), GHOSTED (hit ICE disappears from the board).
+  Ad line in [ADS.md](ADS.md).
 - **Multiplayer mode idea: roulette** (noted v08). A roulette-style mode for multiplayer (the user's idea was more a multiplayer mode than a corp). *(Claude)*: players place bets on nodes before the reveal; or a spinning cursor lands on a node and whoever's turn it is must take it or pay to respin.
 - **Corp ideas batch** (noted v08, 2026-10-20). Suggestions marked *(Claude)* are mine, not the user's.
   - **BASIC** (working name; could literally be called BASIC). An easy, plain corp to sneak in
@@ -2058,7 +2064,7 @@ Not yet placed in a version.
   even double the grid (e.g. 8x8)? How it scales on screen (tile size, phones, scrolling), in odds and
   pacing, and in tells and mods (row/column scans, PERIMETER, mirror tells). Ties to "Node count keeps
   climbing" above and the tap-size limit in §12.
-- **Fake ads** (the user, 2026-10-21). Parody ads in the game. Ideas so far:
+- **Fake ads** (the user, 2026-10-21). Parody ads in the game. **The idea list is [ADS.md](ADS.md)** (since 2026-10-22). Ideas so far:
   - **Interstitial ads** between parts of a run: after a boss, or on the way into a safehouse or black market.
   - **Ads for the game's own corps.**
   - Maybe a **corp built around ads** (pop-ups, banners over the board).
