@@ -1,6 +1,6 @@
 // NeoN+1 corps/brightline.js
 'use strict';
-NEON_FILES.push(['corps/brightline.js', 'v12.11']);
+NEON_FILES.push(['corps/brightline.js', 'v12.12']);
 // Its boss mod: GROUNDED (grounded), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

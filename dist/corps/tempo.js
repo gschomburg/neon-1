@@ -1,6 +1,6 @@
 // NeoN+1 corps/tempo.js
 'use strict';
-NEON_FILES.push(['corps/tempo.js', 'v12.11']);
+NEON_FILES.push(['corps/tempo.js', 'v12.12']);
 // Its boss mod: ON BEAT (onbeat), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

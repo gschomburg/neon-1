@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v12.11']);
+NEON_FILES.push(['data/mods.js', 'v12.12']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },

@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.11']);
+NEON_FILES.push(['engine/mods.js', 'v12.12']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -54,6 +54,12 @@ const MOD_STAGE = {
 for (const k of Object.keys(MODS)) MODS[k].stage = MOD_STAGE[k] || 'always';
 // Your mods that fire in a stage, left to right on the bar.
 const modsAt = stage => st.run ? st.run.mods.map(k => k === 'mutate' ? st.run.mutateAs : k).filter(k => k && MODS[k] && MODS[k].stage === stage) : [];
+// A mod just went off: its tray badge flashes for a moment (drawBadge's `fired`), so you can
+// tell which mod did what.
+const FIRE_MS = 900;
+// (on st, not the run: times don't survive a reload)
+const modFired = key => { (st.firedAt = st.firedAt || {})[key] = performance.now(); };
+const modFiring = (key, now) => { const a = st.firedAt && st.firedAt[key]; return a != null && now - a >= 0 && now - a < FIRE_MS; };
 const modsOfKind = (...kinds) => Object.keys(MODS).filter(k => kinds.includes(MODS[k].kind));
 function modWhere(m) {
   if (m.kind === 'corp') return `from: ${corpDef(m.corp).name} boss.`;

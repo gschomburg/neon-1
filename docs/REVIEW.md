@@ -18,7 +18,12 @@ to build stays in `docs/SPEC.md` §16f.)
   - LV5: `BR5` BITROT, `BT5` BULLET TIME INC, `DB5` DECIBEL LABS, `FW5` FOURTH WALL, `GH5` GROUNDHOG, `GV5` GRAVITAS LABS, `LG5` LAGRANGE NET, `PL5` PLAYBALL, `UP5` UPSIDE
 - [ ] **X-AXIS / Y-AXIS scan** (v12.11). Own one, tap ICE in the real node's row / column: the scan runs out from
   the tap a node at a time, the real node lights up with a ping, a beat, then the reveal (~1 s, was ~0.4 s). A miss
-  lights its line dim for a moment without slowing the hit. Next on that list: VIRUS, KEYLOGGER, SHATTER, FAILSAFE, TRACER.
+  lights its line dim for a moment without slowing the hit.
+- [ ] **Mods you can see go off** (v12.12). The mod's tray badge flashes when it fires. KEYLOGGER / TRACER: after the hit,
+  a line says what they showed ("real node's top line.", "real node is down+right.") as the key line types in / the
+  arrows blink in. VIRUS: the next node glitches, then locks. SHATTER: the node shows cracked glass, not a red hit.
+  FAILSAFE: "integrity gone." and the HUD at 0 for a beat, then the save. A miss with KEYLOGGER + TRACER now takes
+  ~1.5 s before you can pick again (was ~0.75 s): say if that drags.
 
 - [ ] **Logotype round 4: oldskool / Amiga styles** (2026-10-22). Five takes on NeoN+1 after your references
   (Blue System, Paso's Ice Cream): open `docs/art/logotype_round4.png` (text in `docs/NAMES.md`, round 4). Pick

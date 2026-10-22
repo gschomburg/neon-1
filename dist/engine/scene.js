@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.11']);
+NEON_FILES.push(['engine/scene.js', 'v12.12']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -105,9 +105,12 @@ function buildScene(now, collectHits, raw = false) {
   } else if (run && st.mode !== 'title' && st.mode !== 'over') {
     put(0, 2, 'LAYER ', C.mid); put(6, 2, pad2(run.depth), C.bright);
     if (run.sector) { put(9, 2, 'S', C.mid); put(10, 2, String(run.sector + 1), C.bright); }
-    const cur = Math.max(0, run.integrity);
+    // FAILSAFE: shows 0 for a beat after the killing hit, then blinks back to 1
+    const fsAge = st.fsAt && now >= st.fsAt ? now - st.fsAt : 1e9;
+    const cur = fsAge < FAILSAFE_BEAT ? 0 : Math.max(0, run.integrity);
     const bar = run.maxInt <= 10 ? '#'.repeat(cur) + '-'.repeat(Math.max(0, run.maxInt - cur)) : `${cur}/${run.maxInt}`;
-    putR(2, bar, cur <= 1 ? C.danger : C.accent);
+    const fsBlink = fsAge >= FAILSAFE_BEAT && fsAge < FAILSAFE_BEAT + 900 && Math.floor(fsAge / 110) % 2;
+    putR(2, bar, fsBlink ? C.bright : cur <= 1 ? C.danger : C.accent);
     put(L.wc - bar.length - 10, 2, 'INTEGRITY', C.mid);
     const fw = st.corp && st.corp.wallAll ? 'FW*' : run.shield ? `FW${run.shield}` : '';
     if (fw) put(L.wc - bar.length - 10 - 1 - fw.length, 2, fw, C.accent);
@@ -254,14 +257,15 @@ function putChip(put, bg, x, y, text, r, own = 'ui', bold = false) {
 // becomes key color on dark), so a badge always reads. EXOTIC breaks the rule on purpose: its
 // letters cycle through every rarity's chip. Dim (spent, can't use) = plain grey, no chip. Muted
 // (a market offer you can't afford) = the rarity's key color as text, no chip.
-function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own = 'tray', noCharges = false, tier = 0, bg = null, muted = false } = {}) {
+function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own = 'tray', noCharges = false, tier = 0, bg = null, muted = false, fired = false } = {}) {
   const m = tierView(MODS[key], tier || 0);
   const lvl = RARITY[m.rarity].lvl, chip0 = chipOf(m.rarity);
   const phase = i * 0.77, t = (now / 1000 + phase) % 4;
   const icon = m.icon[Math.floor(now / 180 + i * 3) % m.icon.length];
   const label = m.short + (m.lvlTag && m.tier > 0 ? String(m.tier + 1) : '');   // TRC2 = level 2
   const anim = lvl === 0 ? 'none' : lvl === 3 ? 'exotic' : m.anim;
-  const flash = (anim === 'blink' && t % 2 < 0.12) || (anim === 'spin' && t < 0.4);
+  if (fired) dim = false;   // it just went off: flash, even if that spent it (FAILSAFE)
+  const flash = (fired && Math.floor(now / 110) % 2 === 0) || (anim === 'blink' && t % 2 < 0.12) || (anim === 'spin' && t < 0.4);
   const cell = (cx, ch, inv, chip, dy = 0) => {
     if (dim || muted || !bg) { put(cx, y + dy, ch, dim ? C.mid : chip.bg, own, lvl >= 4); return; }
     bg(cx, y, 1, inv ? chip.fg : chip.bg, 1);
@@ -308,10 +312,10 @@ function buildTray(ctx, y) {
     if (m.active) {
       const bc = spent ? C.danger : usable ? C.accent : C.dim;
       put(x, y, '[', bc, 'tray', true);
-      const bw = drawBadge(put, now, x + 1, y, key, i, { dim: !usable, tier: modTier(key), bg, selected: sel });
+      const bw = drawBadge(put, now, x + 1, y, key, i, { dim: !usable, tier: modTier(key), bg, selected: sel, fired: modFiring(key, now) });
       put(x + 1 + bw, y, ']', bc, 'tray', true);
       w = bw + 2;
-    } else w = drawBadge(put, now, x, y, key, i, { dim: spent, tier: modTier(key), bg, selected: sel });
+    } else w = drawBadge(put, now, x, y, key, i, { dim: spent, tier: modTier(key), bg, selected: sel, fired: modFiring(key, now) });
     if (hov && !sel) bg(x, y, w, C.accent, 0.12);
     addHit(x, y, w, 1, { kind: 'mod', i });
     x += w + gap;
@@ -405,13 +409,24 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     // A node you hit stays on the board, bold and red.
     if (t.state === 'locked' && t.lockedBy === 'hit') {
       const fresh = now - t.hitAt < 220;   // brief glitch right after the hit
-      const glyphCol = t.klog ? C.accent : t.loaded ? C.money : C.danger;   // keylogger lines stand out
-      // TRACER: the sides facing the real node turn into arrows (< > sides, ^ v top / bottom)
-      const d = t.dir || { h: 0, v: 0 };
+      // SHATTER: no damage, so it's cracked glass, not a red hit
+      if (t.shattered && !t.klog && !t.dir) {
+        const rows = ['+-. .-+', '| \\|/ |', '|--*--|', '| /|\\ |', '+-\' \'-+'];
+        rows.forEach((r, k) => put(tx, ty + k, r, k === 2 && fresh ? C.bright : C.mid, own, k > 0 && k < 4));
+        return;
+      }
+      const glyphCol = t.klog ? C.accent : t.loaded ? C.money : t.shattered ? C.mid : C.danger;   // keylogger lines stand out
+      // TRACER: the sides facing the real node turn into arrows (< > sides, ^ v top / bottom).
+      // They appear with TRACER's callout after the hit (t.dirAt), blinking a moment.
+      const d = t.dir && !(t.dirPending && !t.dirAt) ? t.dir : { h: 0, v: 0 };
       const sl = d.h < 0 ? '<' : '|', sr = d.h > 0 ? '>' : '|';
-      let rows = [d.v < 0 ? '+^^^^^+' : '+-----+', ...t.glyph.map(l => sl + l + sr), d.v > 0 ? '+vvvvv+' : '+-----+'];
+      // KEYLOGGER: the key line types in with its callout (t.klogAt)
+      const typed = t.klog ? (t.klogAt ? Math.floor((now - t.klogAt) / 35) : 0) : 99;
+      const glyph = t.glyph.map(l => typed >= l.length ? l : l.slice(0, typed) + ' '.repeat(l.length - typed));
+      let rows = [d.v < 0 ? '+^^^^^+' : '+-----+', ...glyph.map(l => sl + l + sr), d.v > 0 ? '+vvvvv+' : '+-----+'];
       if (fresh) rows = rows.map(r => r.replace(/[^ ]/g, ch => Math.random() < 0.6 ? noiseCh() : ch));
-      const edgeCol = ch => !fresh && '<>^v'.includes(ch) ? C.bright : C.danger;
+      const arrowCol = t.dirAt && now - t.dirAt < 800 && Math.floor((now - t.dirAt) / 120) % 2 ? C.accent : C.bright;
+      const edgeCol = ch => !fresh && '<>^v'.includes(ch) ? arrowCol : t.shattered ? C.mid : C.danger;
       rows.forEach((r, k) => {
         const isEdge = k === 0 || k === rows.length - 1;
         put(tx, ty + k, r[0], edgeCol(r[0]), own, true);
@@ -427,7 +442,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
       if (t.lockedBy === 'demo') { word = lv.boss && now - t.hitAt > 1200 ? '?' : String(t.demoN); code = ''; }   // DEMOLITION
       const mid5 = str => { const l = Math.floor((5 - str.length) / 2); return (' '.repeat(l) + str).padEnd(5); };
       const rows = ['+-----+', '|' + t.glyph[0] + '|', '|' + mid5(word) + '|', '|' + (code ? mid5(code) : t.glyph[2]) + '|', '+-----+'];
-      const lc = t.lockedBy === 'xaxis' || t.lockedBy === 'yaxis' ? C.accent : C.dangerDim;   // a scan's start: the scan's color
+      const lc = ['xaxis', 'yaxis', 'virus'].includes(t.lockedBy) ? C.accent : C.dangerDim;   // scans and VIRUS: the mod's color
       rows.forEach((r, k) => {
         put(tx, ty + k, r[0], lc, own);
         put(tx + 1, ty + k, r.slice(1, TILE_W - 1), k === 2 ? C.text : k === 3 && code ? C.mid : lc, own, k === 2);
@@ -495,6 +510,11 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     let rows = frame ? [frame.frame[0], ...glyph.map(l => frame.side + l + frame.side), frame.frame[1]] : [edge, ...glyph.map(l => side + l + side), edge];
     if (corner) rows[0] = rows[0].slice(0, TILE_W - 1) + ' ';
     if (t.probing) rows = rows.map(r => r.replace(/[^ ]/g, ch => Math.random() < 0.5 ? noiseCh() : ch));
+    if (t.infectAt) {   // VIRUS spreading into it: it glitches, more and more, in the mod's color
+      const f = Math.min(1, (now - t.infectAt) / 420);
+      rows = rows.map(r => r.replace(/[^ ]/g, ch => Math.random() < 0.25 + 0.6 * f ? noiseCh() : ch));
+      fc = C.accent; gc = C.accent;
+    }
     const ox = tx + dx, oy = ty + dy;
     rows.forEach((r, k) => {
       if (clip && oy + k < BOARD_Y - 0.5) return;   // DROP-4: chips falling in from above the board

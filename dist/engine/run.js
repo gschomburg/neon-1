@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.11']);
+NEON_FILES.push(['engine/run.js', 'v12.12']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -549,6 +549,7 @@ async function onScan(t, real, axis) {
   const d = scanDist(t, real);
   for (let k = 1; k <= d; k++) { await wait(SCAN_STEP); if (k < d) Sound.tick(); }
   Sound.ping(1568);
+  modFired(axis);
   flash(C.accent, 0.12, 0.3);
   setMsg(`> ${MODS[axis].name.toLowerCase()} scan: found it in this ${axis === 'xaxis' ? 'row' : 'column'}.`, C.accent);
   await wait(650);
@@ -813,14 +814,40 @@ async function onTrap(t, i) {
     (st.corp.stolen = st.corp.stolen || []).push(key);
     setMsg(`${st.msg} thief took ${MODS[key].name}!`, C.danger);
   }
+  await failsafeBeat(lv);
   await wait(450);
   if (run.integrity <= 0) return die();
+  // Mods that showed something on the hit node (KEYLOGGER, TRACER) say so, one at a time,
+  // after the hit has sunk in. Each one's change shows up on the node as its line comes.
+  for (const c of lv.callouts || []) {
+    if (c.fn) c.fn(performance.now());
+    modFired(c.key);
+    Sound.tick();
+    setMsg(c.text, C.accent);
+    await wait(520);
+  }
+  lv.callouts = [];
   for (const k of modsAt('board')) if (BOARD_FX[k]) await BOARD_FX[k](t);
   if (st.corp.hasBoss && st.corp.def.afterHit && st.lv === lv) await st.corp.def.afterHit(t, lv);   // corp kit: MONTE, GRAVITAS move on a miss
   resetTimer();
   st.busy = false;
   lv.readyAt = performance.now();
 }
+
+// FAILSAFE (after blockHit caught a killing hit): the hit reads as the end first (the HUD
+// shows 0 for FAILSAFE_BEAT), then it catches you.
+const FAILSAFE_BEAT = 650;
+async function failsafeBeat(lv) {
+  if (!lv.failsafeNow) return;
+  lv.failsafeNow = false;
+  await wait(FAILSAFE_BEAT);
+  Sound.shield(); flash(C.accent, 0.25, 0.5);
+  modFired('failsafe');
+  setMsg('> FAILSAFE: held at 1 integrity.', C.accent);
+}
+// Queue a line for after the hit (see onTrap): a mod saying what it just showed you.
+// fn(now) runs as the line shows (that's when the change appears on the node).
+const callout = (key, text, fn) => (st.lv.callouts = st.lv.callouts || []).push({ key, text, fn });
 
 // BLOCK stage. Not by the bar: one fixed order, so nothing is spent when something free
 // would have blocked it. Free blocks first (FORGERY, BULWARK, a corp-long firewall,
@@ -857,6 +884,8 @@ function blockHit(t, i) {
     const { x, y } = tileCenter(t);
     explode(snapshot(cl => cl.own === 't' + i), x, y, { col: C.bright, power: 0.9 });
     Sound.shatter(); flash(C.bright, 0.14, 0.3); shake(5);
+    t.shattered = true;   // drawn as cracked glass, not a red hit
+    modFired('shatter');
     msg = '> ICE shattered. no damage.';
   } else if (lv.rolled && !lv.rollUsed) {
     lv.rollUsed = true; lv.payCut = 1;
@@ -903,11 +932,11 @@ function blockHit(t, i) {
     shake(9);
     flash(C.danger, 0.18, 0.35);
     msg = run.integrity > 0 ? `> ICE. integrity -${dmg}.` : '> ICE. integrity gone.';
-    // FAILSAFE: once per run, a killing hit leaves you at 1
+    // FAILSAFE: once per run, a killing hit leaves you at 1 (failsafeBeat plays it out: the HUD
+    // shows 0 until st.fsAt + FAILSAFE_BEAT, then the save)
     if (run.integrity <= 0 && has('failsafe') && !run.failsafeUsed) {
       run.failsafeUsed = true; run.integrity = 1;
-      Sound.shield(); flash(C.accent, 0.2, 0.4);
-      msg = '> FAILSAFE: held at 1 integrity.';
+      st.fsAt = performance.now(); lv.failsafeNow = true;
     }
   }
   return msg;
@@ -974,6 +1003,10 @@ const HIT_FX = {
     if (modTier('tracer') >= 1) t.dir = { h: dx, v: dy };
     else if (gx > gy || (gx === gy && rngFor(st.run.seed, 'tracer', st.corp.node.id, st.corp.idx, lv.misses)() < 0.5)) t.dir = { h: dx, v: 0 };
     else t.dir = { h: 0, v: dy };
+    // the arrows show up (blinking) with the callout, after the hit
+    t.dirPending = true;
+    const words = [t.dir.v < 0 ? 'up' : t.dir.v > 0 ? 'down' : '', t.dir.h < 0 ? 'left' : t.dir.h > 0 ? 'right' : ''].filter(Boolean);
+    callout('tracer', `> tracer: real node is ${words.join('+')}.`, now => { t.dirAt = now; });
   },
   keylogger(t) {
     if (t.loaded) return;
@@ -983,6 +1016,9 @@ const HIT_FX = {
     const from = k * per;
     t.glyph = g.map((line, r) => from >= 3 || (r >= from && r < from + per) ? line : ' '.repeat(line.length));
     t.klog = true;
+    // the key line types in with the callout, after the hit
+    const names = ['top', 'middle', 'bottom'], got = from >= 3 || per >= 3 ? null : names.slice(from, from + per);
+    callout('keylogger', got ? `> keylogger: real node's ${got.join('+')} line.` : "> keylogger: the real node's glyph.", now => { t.klogAt = now; });
   },
 };
 
@@ -1038,9 +1074,18 @@ const BOARD_FX = {
     const lv = st.lv;
     const nb = lv.tiles.filter(o => o.state === 'closed' && !o.safe && Math.abs(o.col - t.col) + Math.abs(o.row - t.row) === 1);
     if (!nb.length) return;
-    lockTile(pickR(nb, rngFor(st.run.seed, 'virus', st.corp.node.id, st.corp.idx, lv.misses)), C.mid, 'virus');
-    setMsg('> virus: 1 more ICE infected.', C.mid);
-    await wait(200);
+    // the node next to it glitches a moment (infecting), then locks
+    const v = pickR(nb, rngFor(st.run.seed, 'virus', st.corp.node.id, st.corp.idx, lv.misses));
+    v.infectAt = performance.now();
+    modFired('virus');
+    Sound.probe();
+    setMsg('> virus: spreading...', C.accent);
+    await wait(420);
+    v.infectAt = null;
+    if (v.state !== 'closed') return;
+    lockTile(v, C.accent, 'virus');
+    setMsg('> virus: infected the next node.', C.accent);
+    await wait(450);
   },
 };
 

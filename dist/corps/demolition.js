@@ -1,6 +1,6 @@
 // NeoN+1 corps/demolition.js
 'use strict';
-NEON_FILES.push(['corps/demolition.js', 'v12.11']);
+NEON_FILES.push(['corps/demolition.js', 'v12.12']);
 // Its boss mod: CONTROLLED BLAST (blast), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -27,7 +27,7 @@ CORPS.demolition = {
       lv.misses++;
       setMsg(blockHit(t, lv.tiles.indexOf(t)) + ' that was the real one.', C.danger);
       lv.payCut = 1; lv.scanned = true;
-      (async () => { await wait(450); if (run.integrity <= 0) return die(); await onSafe(t); })();
+      (async () => { await failsafeBeat(lv); await wait(450); if (run.integrity <= 0) return die(); await onSafe(t); })();
       return true;
     }
     t.state = 'locked'; t.lockedBy = 'demo'; t.hitAt = performance.now();
