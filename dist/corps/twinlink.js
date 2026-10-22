@@ -1,6 +1,6 @@
 // NeoN+1 corps/twinlink.js
 'use strict';
-NEON_FILES.push(['corps/twinlink.js', 'v12.00']);
+NEON_FILES.push(['corps/twinlink.js', 'v12.01']);
 CORPS.twinlink = {
   key: 'twinlink', name: 'TWINLINK', letter: ':', level: 4,
   intel: '"better together."',

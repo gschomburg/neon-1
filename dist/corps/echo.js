@@ -1,6 +1,6 @@
 // NeoN+1 corps/echo.js
 'use strict';
-NEON_FILES.push(['corps/echo.js', 'v12.00']);
+NEON_FILES.push(['corps/echo.js', 'v12.01']);
 CORPS.echo = {
   key: 'echo', name: 'ECHO LABS', letter: 'e', level: 3,
   intel: '"we hear everything. ping."',

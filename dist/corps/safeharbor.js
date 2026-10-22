@@ -1,6 +1,6 @@
 // NeoN+1 corps/safeharbor.js
 'use strict';
-NEON_FILES.push(['corps/safeharbor.js', 'v12.00']);
+NEON_FILES.push(['corps/safeharbor.js', 'v12.01']);
 CORPS.safeharbor = {
   key: 'safeharbor', name: 'SAFEHARBOR', letter: 'F', level: 2,
   intel: '"read the fine print."',

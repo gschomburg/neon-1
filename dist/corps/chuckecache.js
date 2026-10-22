@@ -1,6 +1,6 @@
 // NeoN+1 corps/chuckecache.js
 'use strict';
-NEON_FILES.push(['corps/chuckecache.js', 'v12.00']);
+NEON_FILES.push(['corps/chuckecache.js', 'v12.01']);
 CORPS.chuckecache = {
   key: 'chuckecache', name: "CHUCK E. CACHE'S", letter: 'u', level: 3,
   intel: '"where a hacker can be a kid!"',

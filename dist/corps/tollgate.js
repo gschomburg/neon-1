@@ -1,6 +1,6 @@
 // NeoN+1 corps/tollgate.js
 'use strict';
-NEON_FILES.push(['corps/tollgate.js', 'v12.00']);
+NEON_FILES.push(['corps/tollgate.js', 'v12.01']);
 CORPS.tollgate = {
   key: 'tollgate', name: 'TOLLGATE', letter: 'J', level: 2,
   intel: '"exact change only."',

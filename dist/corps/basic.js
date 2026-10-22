@@ -1,6 +1,6 @@
 // NeoN+1 corps/basic.js
 'use strict';
-NEON_FILES.push(['corps/basic.js', 'v12.00']);
+NEON_FILES.push(['corps/basic.js', 'v12.01']);
 CORPS.basic = {
   key: 'basic', name: 'BASIC CORP', letter: 'B', level: 1,
   intel: '"we do one thing. it is this."',

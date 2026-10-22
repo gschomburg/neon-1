@@ -1,6 +1,6 @@
 // NeoN+1 corps/tumbler.js
 'use strict';
-NEON_FILES.push(['corps/tumbler.js', 'v12.00']);
+NEON_FILES.push(['corps/tumbler.js', 'v12.01']);
 CORPS.tumbler = {
   key: 'tumbler', name: 'TUMBLER LOCKS', letter: 'T', level: 2,
   intel: '"every lock has a weak pin."',

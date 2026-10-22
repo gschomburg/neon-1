@@ -1,6 +1,6 @@
 // NeoN+1 corps/rydr.js
 'use strict';
-NEON_FILES.push(['corps/rydr.js', 'v12.00']);
+NEON_FILES.push(['corps/rydr.js', 'v12.01']);
 CORPS.rydr = {
   key: 'rydr', name: 'RYDR', letter: 'Z', level: 2,
   intel: '"your driver is 2 minutes away."',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/choir.js
 'use strict';
-NEON_FILES.push(['corps/choir.js', 'v12.00']);
+NEON_FILES.push(['corps/choir.js', 'v12.01']);
 CORPS.choir = {
   key: 'choir', name: 'THE CHOIR', letter: 'c', level: 3,
   intel: '"have faith. or pay. both work."',

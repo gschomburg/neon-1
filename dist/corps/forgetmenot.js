@@ -1,6 +1,6 @@
 // NeoN+1 corps/forgetmenot.js
 'use strict';
-NEON_FILES.push(['corps/forgetmenot.js', 'v12.00']);
+NEON_FILES.push(['corps/forgetmenot.js', 'v12.01']);
 CORPS.forgetmenot = {
   key: 'forgetmenot', name: 'FORGET-ME-NOT', letter: 'V', level: 3,
   intel: '"you were here before. remember?"',

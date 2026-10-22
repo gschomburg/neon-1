@@ -1,6 +1,6 @@
 // NeoN+1 corps/cipher.js
 'use strict';
-NEON_FILES.push(['corps/cipher.js', 'v12.00']);
+NEON_FILES.push(['corps/cipher.js', 'v12.01']);
 CORPS.cipher = {
   key: 'cipher', name: 'CIPHER', letter: '{', level: 4, cipher: true,
   intel: '"we have nothing to hide. read it yourself."',

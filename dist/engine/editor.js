@@ -1,6 +1,6 @@
 // NeoN+1 engine/editor.js: The palette editor bridge (only with ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v12.00']);
+NEON_FILES.push(['engine/editor.js', 'v12.01']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -12,7 +12,8 @@ if (EDITOR) {
   // New palette data from the editor: resolve it the same way palettes.js is resolved at boot.
   const loadPaletteData = data => {
     for (const k of Object.keys(PALETTES)) delete PALETTES[k];
-    for (const [key, p] of Object.entries(data.palettes || {})) PALETTES[key] = Object.assign({}, p.rarity ? (data.rarity || {})[p.rarity] : null, p);
+    for (const [key, p] of Object.entries(data.palettes || {})) PALETTES[key] = Object.assign({}, p);
+    if (data.chips) { Object.assign(CHIPS, data.chips); setChipKeys(); }
     if (data.styles) PLAYER_STYLES.splice(0, PLAYER_STYLES.length, ...data.styles);
     refreshPalette();
   };

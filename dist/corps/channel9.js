@@ -1,6 +1,6 @@
 // NeoN+1 corps/channel9.js
 'use strict';
-NEON_FILES.push(['corps/channel9.js', 'v12.00']);
+NEON_FILES.push(['corps/channel9.js', 'v12.01']);
 CORPS.channel9 = {
   key: 'channel9', name: 'CHANNEL 9', letter: '9', level: 3,
   intel: '"stay tuned."',

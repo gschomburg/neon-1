@@ -1,6 +1,6 @@
 // NeoN+1 engine/corps.js: After the corps load: OMNI//CORE and the public net, corpDef, RIVAL, the codex corp order, intro art clean-up.
 'use strict';
-NEON_FILES.push(['engine/corps.js', 'v12.00']);
+NEON_FILES.push(['engine/corps.js', 'v12.01']);
 
 const FINAL = {
   key: 'omni', name: 'OMNI//CORE', letter: '!',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/upside.js
 'use strict';
-NEON_FILES.push(['corps/upside.js', 'v12.00']);
+NEON_FILES.push(['corps/upside.js', 'v12.01']);
 CORPS.upside = {
   key: 'upside', name: 'UPSIDE', letter: '6', level: 5, flip: true,
   intel: '"we\'re fine. you\'re upside down."',

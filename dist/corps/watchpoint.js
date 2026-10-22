@@ -1,6 +1,6 @@
 // NeoN+1 corps/watchpoint.js
 'use strict';
-NEON_FILES.push(['corps/watchpoint.js', 'v12.00']);
+NEON_FILES.push(['corps/watchpoint.js', 'v12.01']);
 CORPS.watchpoint = {
   key: 'watchpoint', name: 'WATCHPOINT', letter: 'w', level: 3,
   intel: '"smile. you\'re on camera."',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/aegis.js
 'use strict';
-NEON_FILES.push(['corps/aegis.js', 'v12.00']);
+NEON_FILES.push(['corps/aegis.js', 'v12.01']);
 CORPS.aegis = {
   key: 'aegis', name: 'AEGIS DEFENSE', letter: 'g', level: 4, moves: true,
   intel: '"hold the line. then take it."',

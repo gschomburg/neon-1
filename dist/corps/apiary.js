@@ -1,6 +1,6 @@
 // NeoN+1 corps/apiary.js
 'use strict';
-NEON_FILES.push(['corps/apiary.js', 'v12.00']);
+NEON_FILES.push(['corps/apiary.js', 'v12.01']);
 CORPS.apiary = {
   key: 'apiary', name: 'APIARY', letter: '@', level: 3,
   intel: '"long live the queen."',

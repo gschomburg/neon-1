@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v12.00']);
+NEON_FILES.push(['engine/screens.js', 'v12.01']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -255,7 +255,7 @@ function overLines() {
   if (r.mods.length) {
     for (let i = 0; i < r.mods.length; i += 5) lines.push({ gap: 2, row: r.mods.slice(i, i + 5).map(k => ({ badge: k, plain: true, tier: r.modTier[k] || 0 })) });
   } else T('no mods: a naked run', C.dim);
-  lines.push(r.items.length ? { gap: 1, row: r.items.map(x => ({ text: itemLabel(x), col: itemCol(itemView(x.key, x.tier)) })) } : { text: 'no items', col: C.dim });
+  lines.push(r.items.length ? { gap: 1, row: r.items.map(x => ({ text: itemLabel(x), chip: itemView(x.key, x.tier).rarity })) } : { text: 'no items', col: C.dim });
   T('');
   // the map, with the path you took (scrolls when it's taller than the space left)
   const rest = 1 + 3 + 1 + 1;   // gap, NEW RUN box, retry, back
@@ -291,18 +291,18 @@ function swapLines() {
     T('');
     run.mods.forEach((k, i) => {
       const o = modView(k);
-      lines.push({ list: true, id: 'sw' + i, badge: k, badgeTier: o.tier, name: o.name, col: modColor(o), right: tierLabel(o), rightCol: modColor(o), tint: modColor(o),
+      lines.push({ list: true, id: 'sw' + i, badge: k, badgeTier: o.tier, name: o.name, col: C.bright, right: tierLabel(o), rightCol: C.mid, rightChips: true,
         onTap: () => { removeMod(k); addMod(sw.key, sw.tier); Sound.buy(); setMsg(`> swapped ${o.name.toLowerCase()} for ${v.name.toLowerCase()}.`, C.accent); done(); } });
     });
   } else {
     const v = itemView(sw.key, sw.tier);
     T('to take', C.mid);
-    lines.push({ text: `[${v.name}]`, col: itemCol(v), bold: true });
+    lines.push({ text: `[${v.name}]`, chip: v.rarity, bold: true });
     T('replace one of your items:', C.mid);
     T('');
     run.items.forEach((s, i) => {
       const o = itemView(s.key, s.tier);
-      lines.push({ list: true, id: 'sw' + i, name: itemLabel(s), col: itemCol(o), right: s.n > 1 ? `all ${s.n}` : 'item', rightCol: C.mid,
+      lines.push({ list: true, id: 'sw' + i, name: itemLabel(s), chip: o.rarity, right: s.n > 1 ? `all ${s.n}` : 'item', rightCol: C.mid,
         onTap: () => { run.items.splice(i, 1); addItem(sw.key, sw.tier); Sound.buy(); setMsg(`> swapped for ${v.name.toLowerCase()}.`, C.accent); done(); } });
     });
   }

@@ -1,6 +1,6 @@
 // NeoN+1 corps/entropy.js
 'use strict';
-NEON_FILES.push(['corps/entropy.js', 'v12.00']);
+NEON_FILES.push(['corps/entropy.js', 'v12.01']);
 CORPS.entropy = {
   key: 'entropy', name: 'ENTROPY', letter: 'z', level: 4, moves: true,
   intel: '"order is just a phase."',

@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v12.00']);
+NEON_FILES.push(['engine/help.js', 'v12.01']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -110,7 +110,7 @@ function buildTrayPage(T, X) {
   T('');
   H('MOD RARITY');
   const ex = { common: 'small perks', rare: 'solid upgrades', epic: 'build-defining', exotic: 'rare and strange', boss: 'only from corp bosses' };
-  for (const r of Object.keys(RARITY)) X({ text: `${RARITY[r].label.padEnd(8)}${ex[r]}`.padEnd(HELP_W), colorAt: i => i < 8 ? C[r] : C.text });
+  for (const r of Object.keys(RARITY)) X({ text: `${RARITY[r].label.padEnd(8)}${ex[r]}`.padEnd(HELP_W), col: C.text, chips: true });
 }
 
 function openHelp() {
@@ -159,7 +159,7 @@ function openHelp() {
       T('mods come in five tiers:');
       T('');
       const ex = { common: 'small perks.', rare: 'solid upgrades.', epic: 'build-defining.', exotic: 'rare and strange.', boss: 'only from corp bosses.' };
-      for (const r of Object.keys(RARITY)) T(`${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(30), C[r]);
+      for (const r of Object.keys(RARITY)) X({ text: `${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(30), col: C.text, chips: true });
     }
     return out;
   }

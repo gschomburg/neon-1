@@ -1,6 +1,6 @@
 // NeoN+1 corps/gridlock.js
 'use strict';
-NEON_FILES.push(['corps/gridlock.js', 'v12.00']);
+NEON_FILES.push(['corps/gridlock.js', 'v12.01']);
 CORPS.gridlock = {
   key: 'gridlock', name: 'GRIDLOCK TRAFFIC', letter: 'r', level: 4,
   intel: '"please wait for the signal."',

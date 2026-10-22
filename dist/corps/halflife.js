@@ -1,6 +1,6 @@
 // NeoN+1 corps/halflife.js
 'use strict';
-NEON_FILES.push(['corps/halflife.js', 'v12.00']);
+NEON_FILES.push(['corps/halflife.js', 'v12.01']);
 CORPS.halflife = {
   key: 'halflife', name: 'HALFLIFE NUCLEAR', letter: 'h', level: 4,
   intel: '"perfectly safe. mostly."',

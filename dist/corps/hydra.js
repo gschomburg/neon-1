@@ -1,6 +1,6 @@
 // NeoN+1 corps/hydra.js
 'use strict';
-NEON_FILES.push(['corps/hydra.js', 'v12.00']);
+NEON_FILES.push(['corps/hydra.js', 'v12.01']);
 CORPS.hydra = {
   key: 'hydra', name: 'HYDRA', letter: '(', level: 3,
   intel: '"cut off one head..."',

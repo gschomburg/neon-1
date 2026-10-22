@@ -1,6 +1,6 @@
 // NeoN+1 corps/nimbus.js
 'use strict';
-NEON_FILES.push(['corps/nimbus.js', 'v12.00']);
+NEON_FILES.push(['corps/nimbus.js', 'v12.01']);
 CORPS.nimbus = {
   key: 'nimbus', name: 'NIMBUS WEATHER', letter: 'W', level: 1,
   intel: '"70% chance of ICE."',

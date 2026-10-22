@@ -1,6 +1,6 @@
 // NeoN+1 corps/demolition.js
 'use strict';
-NEON_FILES.push(['corps/demolition.js', 'v12.00']);
+NEON_FILES.push(['corps/demolition.js', 'v12.01']);
 CORPS.demolition = {
   key: 'demolition', name: 'DEMOLITION CO', letter: 'q', level: 4,
   intel: '"everything must go. almost."',

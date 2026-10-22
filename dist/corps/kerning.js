@@ -1,6 +1,6 @@
 // NeoN+1 corps/kerning.js
 'use strict';
-NEON_FILES.push(['corps/kerning.js', 'v12.00']);
+NEON_FILES.push(['corps/kerning.js', 'v12.01']);
 CORPS.kerning = {
   key: 'kerning', name: 'KERNING', letter: 'A', level: 3,
   intel: '"everything in place. EVERYTHING."',

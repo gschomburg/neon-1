@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v12.00']);
+NEON_FILES.push(['engine/panels.js', 'v12.01']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -68,7 +68,7 @@ function addItem(key, tier = 0) {
 const itemRoom = (key, tier) => st.run.items.some(s => s.key === key && s.tier === tier && s.n < STACK_MAX) || st.run.items.length < st.run.beltSlots;
 // An item's belt label: [PURGE], or PURGEx3 when stacked (hex count, up to F).
 const itemLabel = s => s.n > 1 ? `${ITEMS[s.key].name}x${s.n.toString(16).toUpperCase()}` : `[${ITEMS[s.key].name}]`;
-const itemCol = v => v.rarity === 'common' ? C.bright : rarityCol(v.rarity);
+const itemCol = v => rarityCol(v.rarity);   // an item's key color (its name sits on its rarity chip)
 
 // Up to k mod offers ({ key, tier }) from a pool. Mods you have come back as upgrades
 // (tiered ones only, until they're maxed). Each offer rolls its tier.
@@ -122,14 +122,15 @@ function openShop(node) {
       const def = defOf(o);
       const isMod = o.kind === 'mod', up = isMod && has(o.key);
       const price = o.sold ? 'SOLD' : `${priceOf(o)}cr`;
-      const tag = isMod ? (up ? 'up' : 'mod') : o.kind === 'item' ? (def.tier ? RARITY[def.rarity].label.toLowerCase() : 'item') : 'svc';
-      const col = isMod ? modColor(def) : o.kind === 'item' ? itemCol(def) : C.bright;
+      const tag = isMod ? (up ? 'up' : 'mod') : o.kind === 'item' ? (def.tier ? RARITY[def.rarity].label : 'item') : 'svc';
+      const col = C.bright;
       X({
         list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
         sel: k === sel, faded: !!whyNot(o),
         badge: isMod ? o.key : null, badgeTier: def.tier, name: def.name + (up ? ' +' : ''), col,
-        right: `${tag} ${price.padStart(5)}`, rightCol: C.money,
-        tint: isMod ? modColor(def) : o.kind === 'item' ? (def.tier ? itemCol(def) : C.mid) : C.accent,
+        chip: o.kind === 'item' ? def.rarity : null,
+        right: `${tag} ${price.padStart(5)}`, rightCol: C.money, rightChips: true,
+        tint: o.kind === 'repair' ? C.accent : null,
         reveal: k, revealId: 'offer' + k,
         rarity: o.kind === 'repair' ? null : def.rarity, seenKey: o.kind === 'repair' ? null : o.key,
       });
@@ -144,8 +145,11 @@ function openShop(node) {
     else {
       if (o.kind === 'mod') {
         X({ badge: o.key, badgeTier: def.tier });
-        T(has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(def)}` : `${tierLabel(def)} mod`, modColor(def));
-      } else { T(def.name, o.kind === 'item' ? itemCol(def) : C.bright); T(o.kind === 'item' ? `${def.tier ? RARITY[def.rarity].label + ' ' : ''}item // single use` : 'service', C.mid); }
+        X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(def)}` : `${tierLabel(def)} mod`, col: C.text, chips: true });
+      } else {
+        if (o.kind === 'item') X({ text: def.name, chip: def.rarity, bold: true }); else T(def.name, C.bright);
+        X({ text: o.kind === 'item' ? `${def.tier ? RARITY[def.rarity].label + ' ' : ''}item // single use` : 'service', col: C.mid, chips: true });
+      }
       T(def.tip || def.desc, C.text);   // the short text: long item descs ran off the screen
       if (why) { T(''); T(why, C.dangerDim); T(''); T(''); }
       else X({ box: true, text: 'B U Y', sub: `${priceOf(o)}cr`, id: 'buy', onTap: () => buy(o), minW: 18 });
@@ -184,11 +188,11 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     // each offer shows what you'd end up with (a mod you have = an upgrade, "+")
     const viewOf = o => modView(o.key, upgradeTo(o.key, o.tier));
     options.forEach((o, i) => {
-      const v = viewOf(o), up = has(o.key), mc = locked ? C.dim : modColor(v);
+      const v = viewOf(o), up = has(o.key), mc = locked ? C.dim : C.bright;
       X({
         list: true, id: 'opt' + i, onTap: () => { sel = i; Sound.tick(); },
-        sel: i === sel, badge: o.key, badgeTier: v.tier, name: v.name + (up ? ' +' : ''), col: mc,
-        right: up ? `> ${tierLabel(v)}` : tierLabel(v), rightCol: mc, tint: mc,
+        sel: i === sel, badge: o.key, badgeTier: v.tier, name: v.name + (up ? ' +' : ''), col: mc, faded: locked,
+        right: up ? `> ${tierLabel(v)}` : tierLabel(v), rightCol: mc, rightChips: !locked,
         reveal: i, revealId: 'opt' + i, rarity: v.rarity, seenKey: o.key,
       });
     });
@@ -200,7 +204,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
       if (shown) {
         X({ badge: o.key, badgeTier: v.tier });
         T(v.tip, C.text);
-        T(has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(v)}` : !modRoom(o.key) ? `mod slots full (${MOD_SLOTS}): you'll swap one` : '', has(o.key) ? modColor(v) : C.dangerDim);
+        X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(v)}` : !modRoom(o.key) ? `mod slots full (${MOD_SLOTS}): you'll swap one` : '', col: has(o.key) ? C.text : C.dangerDim, chips: true });
         if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
         else X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
       } else { T('...', C.dim); T(''); T(''); T(''); T(''); T(''); }

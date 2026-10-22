@@ -1,6 +1,6 @@
 // NeoN+1 corps/mirror.js
 'use strict';
-NEON_FILES.push(['corps/mirror.js', 'v12.00']);
+NEON_FILES.push(['corps/mirror.js', 'v12.01']);
 CORPS.mirror = {
   key: 'mirror', name: 'MIRRORLINE', letter: 'M', level: 2,
   intel: '"every step echoes the last."',

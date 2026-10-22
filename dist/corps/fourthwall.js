@@ -1,6 +1,6 @@
 // NeoN+1 corps/fourthwall.js
 'use strict';
-NEON_FILES.push(['corps/fourthwall.js', 'v12.00']);
+NEON_FILES.push(['corps/fourthwall.js', 'v12.01']);
 CORPS.fourthwall = {
   key: 'fourthwall', name: 'FOURTH WALL', letter: ']', level: 5,
   intel: '"hi. yes, you. holding the phone."',

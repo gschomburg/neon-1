@@ -1,6 +1,6 @@
 // NeoN+1 corps/sigil.js
 'use strict';
-NEON_FILES.push(['corps/sigil.js', 'v12.00']);
+NEON_FILES.push(['corps/sigil.js', 'v12.01']);
 CORPS.sigil = {
   key: 'sigil', name: 'SIGIL DYNAMICS', letter: 'S', level: 2,
   intel: '"we sign everything we make."',

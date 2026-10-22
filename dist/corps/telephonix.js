@@ -1,6 +1,6 @@
 // NeoN+1 corps/telephonix.js
 'use strict';
-NEON_FILES.push(['corps/telephonix.js', 'v12.00']);
+NEON_FILES.push(['corps/telephonix.js', 'v12.01']);
 CORPS.telephonix = {
   key: 'telephonix', name: 'TELEPHONIX', letter: 't', level: 3,
   intel: '"please hold. your call matters."',

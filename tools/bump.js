@@ -4,7 +4,8 @@
 //
 // Updates VERSION in dist/engine/core.js, the stamp line at the top of every game file
 // (NEON_FILES.push([..., 'v12.01'])), and the ?v= on every local script link in dist/index.html
-// (so phones fetch the new files). palettes.js only gets the link; its contents are the editor's.
+// (so phones fetch the new files), palettes.js included (the palette editor writes the stamp it
+// gets from the game, so reload the editor after a bump).
 // A new major also needs a new save slot (STORE_KEY in core.js): this tool reminds you.
 
 const fs = require('fs'), path = require('path');
@@ -21,8 +22,9 @@ else { console.log(`now v${maj}.${String(min).padStart(2, '0')}. usage: node too
 const v = `v${maj}.${String(min).padStart(2, '0')}`, num = v.slice(1);
 
 let n = 0;
-const walk = d => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (p.endsWith('.js') && e.name !== 'palettes.js') {
-  const t = fs.readFileSync(p, 'utf8'), u = t.replace(/NEON_FILES\.push\(\['([^']+)', 'v[\d.]+'\]\);/, `NEON_FILES.push(['$1', '${v}']);`);
+const walk = d => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (p.endsWith('.js')) {
+  // the stamp: NEON_FILES.push(['engine/core.js', 'v12.00']) (palettes.js writes it a little differently)
+  const t = fs.readFileSync(p, 'utf8'), u = t.replace(/(\.push\(\['[^']+', ')v[\d.]+('\]\);)/, `$1${v}$2`);
   if (u !== t) { fs.writeFileSync(p, u); n++; }
 } } };
 walk(DIST);

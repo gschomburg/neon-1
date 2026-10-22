@@ -1,6 +1,6 @@
 // NeoN+1 corps/zodiac.js
 'use strict';
-NEON_FILES.push(['corps/zodiac.js', 'v12.00']);
+NEON_FILES.push(['corps/zodiac.js', 'v12.01']);
 CORPS.zodiac = {
   key: 'zodiac', name: 'ZODIAC HOUSE', letter: 'O', level: 2,
   intel: '"the stars never lie. we do."',

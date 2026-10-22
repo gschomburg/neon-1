@@ -1,6 +1,6 @@
 // NeoN+1 corps/purlwise.js
 'use strict';
-NEON_FILES.push(['corps/purlwise.js', 'v12.00']);
+NEON_FILES.push(['corps/purlwise.js', 'v12.01']);
 CORPS.purlwise = {
   key: 'purlwise', name: 'PURLWISE', letter: 'K', level: 2,
   intel: '"knit one, purl two."',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/playball.js
 'use strict';
-NEON_FILES.push(['corps/playball.js', 'v12.00']);
+NEON_FILES.push(['corps/playball.js', 'v12.01']);
 CORPS.playball = {
   key: 'playball', name: 'PLAYBALL', letter: '0', level: 5, drag: true,
   intel: '"it\'s not whether you win. it is."',

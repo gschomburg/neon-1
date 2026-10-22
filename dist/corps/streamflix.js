@@ -1,6 +1,6 @@
 // NeoN+1 corps/streamflix.js
 'use strict';
-NEON_FILES.push(['corps/streamflix.js', 'v12.00']);
+NEON_FILES.push(['corps/streamflix.js', 'v12.01']);
 CORPS.streamflix = {
   key: 'streamflix', name: 'STREAMFLIX', letter: '=', level: 3,
   intel: '"are you still watching?"',

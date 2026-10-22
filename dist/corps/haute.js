@@ -1,6 +1,6 @@
 // NeoN+1 corps/haute.js
 'use strict';
-NEON_FILES.push(['corps/haute.js', 'v12.00']);
+NEON_FILES.push(['corps/haute.js', 'v12.01']);
 CORPS.haute = {
   key: 'haute', name: 'HAUTE//COUTURE', letter: 'H', level: 2,
   intel: '"accept no imitations."',

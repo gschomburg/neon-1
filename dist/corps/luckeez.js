@@ -1,6 +1,6 @@
 // NeoN+1 corps/luckeez.js
 'use strict';
-NEON_FILES.push(['corps/luckeez.js', 'v12.00']);
+NEON_FILES.push(['corps/luckeez.js', 'v12.01']);
 CORPS.luckeez = {
   key: 'luckeez', name: 'LUCKEEZ CASINO', letter: '7', level: 2,
   intel: '"everybody wins! eventually!"',

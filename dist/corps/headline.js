@@ -1,6 +1,6 @@
 // NeoN+1 corps/headline.js
 'use strict';
-NEON_FILES.push(['corps/headline.js', 'v12.00']);
+NEON_FILES.push(['corps/headline.js', 'v12.01']);
 CORPS.headline = {
   key: 'headline', name: 'HEADLINE NEWS', letter: 'n', level: 3,
   intel: '"if it bleeds, it leads."',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/glacier.js
 'use strict';
-NEON_FILES.push(['corps/glacier.js', 'v12.00']);
+NEON_FILES.push(['corps/glacier.js', 'v12.01']);
 // ---- Tier 2, group 2: timed board effects (corp `tick`). tick(lv, lt, dt, now) runs every
 // frame while you can pick; lt is the layer's own clock (it stops while you're busy).
 CORPS.glacier = {

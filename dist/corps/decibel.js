@@ -1,6 +1,6 @@
 // NeoN+1 corps/decibel.js
 'use strict';
-NEON_FILES.push(['corps/decibel.js', 'v12.00']);
+NEON_FILES.push(['corps/decibel.js', 'v12.01']);
 CORPS.decibel = {
   key: 'decibel', name: 'DECIBEL LABS', letter: ')', level: 5, drag: true,
   intel: '"can you hear that?"',

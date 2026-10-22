@@ -1,6 +1,6 @@
 // NeoN+1 corps/cloneworks.js
 'use strict';
-NEON_FILES.push(['corps/cloneworks.js', 'v12.00']);
+NEON_FILES.push(['corps/cloneworks.js', 'v12.01']);
 CORPS.cloneworks = {
   key: 'cloneworks', name: 'CLONEWORKS', letter: 'D', level: 2,
   intel: '"two of everything. almost."',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/predator.js
 'use strict';
-NEON_FILES.push(['corps/predator.js', 'v12.00']);
+NEON_FILES.push(['corps/predator.js', 'v12.01']);
 CORPS.predator = {
   key: 'predator', name: 'PREDATOR', letter: '<', level: 4, moves: true,
   intel: '"we see you. we see your heat."',

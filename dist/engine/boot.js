@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v12.00']);
+NEON_FILES.push(['engine/boot.js', 'v12.01']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -49,7 +49,7 @@ resize();
 // another build (an old copy cached on a phone) puts a warning on the title screen.
 try {
   const want = [...document.querySelectorAll('script[src]')].map(s => s.getAttribute('src').split('?')[0])
-    .filter(f => !/^https?:/.test(f) && f !== 'palettes.js');
+    .filter(f => !/^https?:/.test(f));
   const got = new Map(window.NEON_FILES || []);
   const bad = want.filter(f => got.get(f) !== VERSION);
   if (bad.length) st.fileWarn = `${bad.length} game file${bad.length > 1 ? 's' : ''} not ${VERSION}: ${bad[0]}${bad.length > 1 ? '...' : ''}`;

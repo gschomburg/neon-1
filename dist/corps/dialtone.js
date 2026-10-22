@@ -1,6 +1,6 @@
 // NeoN+1 corps/dialtone.js
 'use strict';
-NEON_FILES.push(['corps/dialtone.js', 'v12.00']);
+NEON_FILES.push(['corps/dialtone.js', 'v12.01']);
 // ---- Tier 2, group 3: sound tells (each also shows on the hint row, for muted players).
 CORPS.dialtone = {
   key: 'dialtone', name: 'DIALTONE ONLINE', letter: 'd', level: 2,

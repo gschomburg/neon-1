@@ -1,6 +1,6 @@
 // NeoN+1 corps/drop4.js
 'use strict';
-NEON_FILES.push(['corps/drop4.js', 'v12.00']);
+NEON_FILES.push(['corps/drop4.js', 'v12.01']);
 CORPS.drop4 = {
   key: 'drop4', name: 'DROP-4', letter: '4', level: 3,
   intel: '"four in a row. or bust."',

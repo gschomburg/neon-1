@@ -1,6 +1,6 @@
 // NeoN+1 corps/bidblitz.js
 'use strict';
-NEON_FILES.push(['corps/bidblitz.js', 'v12.00']);
+NEON_FILES.push(['corps/bidblitz.js', 'v12.01']);
 // ---- Tier 2, group 4: corps with a button on the hint row (corp `action`) or a choice.
 CORPS.bidblitz = {
   key: 'bidblitz', name: 'BIDBLITZ LIVE', letter: 'a', level: 3,

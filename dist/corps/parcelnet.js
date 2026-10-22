@@ -1,6 +1,6 @@
 // NeoN+1 corps/parcelnet.js
 'use strict';
-NEON_FILES.push(['corps/parcelnet.js', 'v12.00']);
+NEON_FILES.push(['corps/parcelnet.js', 'v12.01']);
 CORPS.parcelnet = {
   key: 'parcelnet', name: 'PARCELNET', letter: 'N', level: 1,
   intel: '"it\'s out for delivery. somewhere."',

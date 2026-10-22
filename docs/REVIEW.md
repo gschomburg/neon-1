@@ -6,6 +6,11 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **Rarity chips** (v12.01). Every mod and item now shows its rarity as a light chip (dark text on the rarity's key
+  color), the same in every palette: tray badges and item names, market / rewards / codex lists, and the RARE /
+  EPIC words in text. Selected badges invert; EXOTIC letters cycle through all the chips. The chip colors are in
+  the palette editor's "rarity chips" tab. Look at the tray, a market, the codex, and a light palette.
+
 - [ ] **Upload `preview.png` to the root of gregschomburg.com/br/** (v12.00), above the version folders, once.
   Every version's link preview points at `https://gregschomburg.com/br/preview.png`. It's `dist/preview.png`
   (the title art and a pitch, no build number, so it never goes stale). Then paste a game link in a chat

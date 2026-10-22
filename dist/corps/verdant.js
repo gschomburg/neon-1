@@ -1,6 +1,6 @@
 // NeoN+1 corps/verdant.js
 'use strict';
-NEON_FILES.push(['corps/verdant.js', 'v12.00']);
+NEON_FILES.push(['corps/verdant.js', 'v12.01']);
 CORPS.verdant = {
   key: 'verdant', name: 'VERDANT', letter: 'v', level: 3,
   intel: '"nothing is wasted. nothing."',

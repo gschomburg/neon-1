@@ -1,6 +1,6 @@
 // NeoN+1 corps/noir.js
 'use strict';
-NEON_FILES.push(['corps/noir.js', 'v12.00']);
+NEON_FILES.push(['corps/noir.js', 'v12.01']);
 CORPS.noir = {
   key: 'noir', name: 'NOIR & ASSOCIATES', letter: 'k', level: 4,
   intel: '"everybody lies. except one."',

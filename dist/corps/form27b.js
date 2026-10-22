@@ -1,6 +1,6 @@
 // NeoN+1 corps/form27b.js
 'use strict';
-NEON_FILES.push(['corps/form27b.js', 'v12.00']);
+NEON_FILES.push(['corps/form27b.js', 'v12.01']);
 // ---- Tier 2, group 5: new pick rules (corp `tap` takes over a tap; true = handled).
 CORPS.form27b = {
   key: 'form27b', name: 'FORM 27B', letter: 'y', level: 4,

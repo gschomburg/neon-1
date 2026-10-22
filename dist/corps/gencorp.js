@@ -1,6 +1,6 @@
 // NeoN+1 corps/gencorp.js
 'use strict';
-NEON_FILES.push(['corps/gencorp.js', 'v12.00']);
+NEON_FILES.push(['corps/gencorp.js', 'v12.01']);
 CORPS.gencorp = {
   key: 'gencorp', name: 'GENCORP', letter: 'G', level: 3,
   intel: '"we only improve on nature."',

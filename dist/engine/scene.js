@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.00']);
+NEON_FILES.push(['engine/scene.js', 'v12.01']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -240,32 +240,41 @@ function buildScene(now, collectHits, raw = false) {
   return result;
 }
 
-// Badge color by rarity.
+// A mod's key color (its rarity chip's background).
 const modColor = m => rarityCol(m.rarity);
+// Text on its rarity chip: the chip's background behind it, the chip's text color on top.
+function putChip(put, bg, x, y, text, r, own = 'ui', bold = false) {
+  const ch = chipOf(r);
+  bg(x, y, text.length, ch.bg, 1);
+  put(x, y, text, ch.fg, own, bold);
+}
 
-// Draws one mod badge: an animated icon character plus its short name.
-// Animation gets fancier with rarity: common = icon only, exotic = full show.
-function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own = 'tray', noCharges = false, tier = 0 } = {}) {
+// Draws one mod badge on its rarity chip: an animated icon character plus its short name.
+// Animation gets fancier with rarity: common = still. Flashes invert the chip (dark on key color
+// becomes key color on dark), so a badge always reads. EXOTIC breaks the rule on purpose: its
+// letters cycle through every rarity's chip. Dim (spent, can't use) = plain grey, no chip.
+function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own = 'tray', noCharges = false, tier = 0, bg = null } = {}) {
   const m = tierView(MODS[key], tier || 0);
-  const lvl = RARITY[m.rarity].lvl;
-  const base = dim ? C.mid : modColor(m);
-  const phase = i * 0.77;
+  const lvl = RARITY[m.rarity].lvl, chip0 = chipOf(m.rarity);
+  const phase = i * 0.77, t = (now / 1000 + phase) % 4;
   const icon = m.icon[Math.floor(now / 180 + i * 3) % m.icon.length];
-  put(x, y, icon === ' ' ? '.' : icon, selected ? C.bright : base, own, true);
   const label = m.short + (m.lvlTag && m.tier > 0 ? String(m.tier + 1) : '');   // TRC2 = level 2
   const anim = lvl === 0 ? 'none' : lvl === 3 ? 'exotic' : m.anim;
-  const cyc = [base, C.bright, base, C.mid];
-  const rainbow = [C.exotic, C.bright, C.epic, C.rare, C.boss];
+  const flash = (anim === 'blink' && t % 2 < 0.12) || (anim === 'spin' && t < 0.4);
+  const cell = (cx, ch, inv, chip, dy = 0) => {
+    if (dim || !bg) { put(cx, y + dy, ch, dim ? C.mid : chip.bg, own, lvl >= 4); return; }
+    bg(cx, y, 1, inv ? chip.fg : chip.bg, 1);
+    put(cx, y + dy, ch, inv ? chip.bg : chip.fg, own, lvl >= 4);
+  };
+  cell(x, icon === ' ' ? '.' : icon, selected || flash, chip0);
+  const rainbow = ['exotic', 'epic', 'rare', 'boss'].map(chipOf);
   for (let k = 0; k < label.length; k++) {
-    let ch = label[k], dy = 0, col = selected ? C.bright : base;
-    const t = (now / 1000 + phase) % 4;
+    let ch = label[k], dy = 0, inv = selected || flash, chip = chip0;
     if (anim === 'wave' || anim === 'exotic') { const w = t - k * 0.09; if (w > 0 && w < 0.3) dy = -Math.sin(w / 0.3 * Math.PI) * 0.35; }
-    if (anim === 'exotic' && !dim) col = rainbow[Math.floor(now / 160 + k) % rainbow.length];
-    if (anim === 'cycle' && !selected && !dim) col = cyc[Math.floor(now / 300 + k) % cyc.length];
+    if (anim === 'exotic' && !dim) chip = rainbow[Math.floor(now / 160 + k) % rainbow.length];
+    if (anim === 'cycle' && !selected && !dim) inv = Math.floor(now / 300 + k) % 4 === 1;
     if (anim === 'scramble' && t < 0.2 && Math.random() < 0.5) ch = noiseCh();
-    if (anim === 'blink' && t % 2 < 0.12) col = C.bright;
-    if (anim === 'spin' && t < 0.4) col = C.bright;
-    put(x + 1 + k, y + dy, ch, col, own, lvl >= 4);
+    cell(x + 1 + k, ch, inv, chip, dy);
   }
   return 1 + label.length;
 }
@@ -298,11 +307,11 @@ function buildTray(ctx, y) {
     if (m.active) {
       const bc = spent ? C.danger : usable ? C.accent : C.dim;
       put(x, y, '[', bc, 'tray', true);
-      const bw = drawBadge(put, now, x + 1, y, key, i, { dim: !usable, tier: modTier(key) });
+      const bw = drawBadge(put, now, x + 1, y, key, i, { dim: !usable, tier: modTier(key), bg, selected: sel });
       put(x + 1 + bw, y, ']', bc, 'tray', true);
       w = bw + 2;
-    } else w = drawBadge(put, now, x, y, key, i, { dim: spent, tier: modTier(key) });
-    if (sel || hov) bg(x, y, w, C.accent, sel ? 0.25 : 0.12);
+    } else w = drawBadge(put, now, x, y, key, i, { dim: spent, tier: modTier(key), bg, selected: sel });
+    if (hov && !sel) bg(x, y, w, C.accent, 0.12);
     addHit(x, y, w, 1, { kind: 'mod', i });
     x += w + gap;
   });
@@ -312,7 +321,7 @@ function buildTray(ctx, y) {
   if (mi >= 0 && run.mods[mi]) {
     const key = run.mods[mi], m = modView(key);
     put(0, y + 1, '\\_', C.mid);
-    put(2, y + 1, m.short, modColor(m), 'tray', true);
+    putChip(put, bg, 2, y + 1, m.short, m.rarity, 'tray', true);
     const tip = key === 'mutate' && run.mutateAs && MODS[run.mutateAs] ? `now: ${MODS[run.mutateAs].name.toLowerCase()}.`
       : key === 'honeycomb' ? `honey ${run.honey || 0}/3. ${m.tip}` : m.tip;
     put(6, y + 1, tip, C.text);
@@ -330,7 +339,8 @@ function buildTray(ctx, y) {
     const ok = canUse(stack), v = itemView(stack.key, stack.tier);
     const sel = st.selItem === i, hov = st.hoverItem === i;
     const lab = itemLabel(stack), nameLen = stack.n > 1 ? ITEMS[stack.key].name.length : lab.length;
-    put(ix, y + 2, lab.slice(0, nameLen), ok ? itemCol(v) : C.mid, 'tray', v.tier > 0);   // tier = rarity color
+    if (ok) putChip(put, bg, ix, y + 2, lab.slice(0, nameLen), v.rarity, 'tray', v.tier > 0);   // on its rarity chip
+    else put(ix, y + 2, lab.slice(0, nameLen), C.mid, 'tray');
     if (stack.n > 1) put(ix + nameLen, y + 2, lab.slice(nameLen), ok ? C.text : C.dim, 'tray');   // x3: the count, dimmer
     if (sel || hov) bg(ix, y + 2, 7, C.accent, sel ? 0.25 : 0.12);
     addHit(ix, y + 2, 7, 1, { kind: 'item', i });
@@ -341,7 +351,7 @@ function buildTray(ctx, y) {
   if (ii >= 0 && run.items[ii]) {
     const stack = run.items[ii], it = itemView(stack.key, stack.tier);
     put(0, y + 3, '\\_', C.mid);
-    put(2, y + 3, it.name, itemCol(it), 'tray', true);
+    putChip(put, bg, 2, y + 3, it.name, it.rarity, 'tray', true);
     put(3 + it.name.length, y + 3, it.tip, C.text);
     const usable = canUse(stack);
     put(4 + it.name.length + it.tip.length, y + 3, usable ? '>tap' : '(not now)', usable ? C.accent : C.dim);
@@ -813,20 +823,20 @@ function buildTextBoard(ctx, lines, area = null) {
       if (ln.trayDemo === 'rule') put(x0, y, rule(HELP_W), C.dim, 'board');
       if (ln.trayDemo === 'mods') {
         let x = x0;
-        ['tracer', 'skimmer', 'burner', 'stash'].forEach((key, i) => { x += drawBadge(put, now, x, y, key, i, { own: 'board', noCharges: true, dim: key === 'burner' }) + 2; });
+        ['tracer', 'skimmer', 'burner', 'stash'].forEach((key, i) => { x += drawBadge(put, now, x, y, key, i, { own: 'board', noCharges: true, dim: key === 'burner', bg }) + 2; });
       }
       if (ln.trayDemo === 'modinfo') {
         put(x0, y, '\\_', C.mid, 'board');
-        put(x0 + 2, y, 'TRC', modColor(MODS.tracer), 'board', true);
+        putChip(put, bg, x0 + 2, y, 'TRC', MODS.tracer.rarity, 'board', true);
         put(x0 + 6, y, MODS.tracer.tip, C.text, 'board');
       }
       if (ln.trayDemo === 'items') {
-        put(x0, y, '[PURGE]', C.bright, 'board'); put(x0 + 8, y, '[PATCH]', C.bright, 'board');
+        putChip(put, bg, x0, y, '[PURGE]', ITEMS.purge.rarity, 'board'); putChip(put, bg, x0 + 8, y, '[PATCH]', ITEMS.patch.rarity, 'board');
         put(x0 + 16, y, ':  .  :', C.dim, 'board'); put(x0 + 24, y, ':  .  :', C.dim, 'board');
       }
       if (ln.trayDemo === 'iteminfo') {
         put(x0, y, '\\_', C.mid, 'board');
-        put(x0 + 2, y, 'PURGE', C.bright, 'board', true);
+        putChip(put, bg, x0 + 2, y, 'PURGE', ITEMS.purge.rarity, 'board', true);
         put(x0 + 8, y, ITEMS.purge.tip, C.text, 'board');
         put(x0 + 9 + ITEMS.purge.tip.length, y, '>tap', C.accent, 'board');
       }
@@ -835,8 +845,8 @@ function buildTextBoard(ctx, lines, area = null) {
       const m = tierView(MODS[ln.badge], ln.badgeTier || 0);
       const bw = 1 + m.short.length + (m.lvlTag && m.tier > 0 ? 1 : 0);
       const x = Math.floor((L.wc - (bw + 2 + m.name.length)) / 2);
-      drawBadge(put, now, x, y, ln.badge, 0, { own: 'board', tier: m.tier });
-      put(x + bw + 2, y, m.name, modColor(m), 'board', true);
+      drawBadge(put, now, x, y, ln.badge, 0, { own: 'board', tier: m.tier, bg });
+      put(x + bw + 2, y, m.name, C.bright, 'board', true);
     } else if (ln.list) {
       const LW = 32, x = Math.floor((L.wc - LW) / 2);
       const hov = st.hoverBtn === ln.id;
@@ -845,9 +855,14 @@ function buildTextBoard(ctx, lines, area = null) {
       // The selection cursor sits outside the row, clear of its background color.
       if (ln.sel) put(x - 2, y, '>', C.accent, 'ui', true);
       let cx = x + 1;
-      if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier }) + 1;
-      put(cx, y, ln.name, ln.faded ? C.mid : (ln.col || C.bright), 'ui', !!ln.sel);
-      if (ln.right) put(x + LW - ln.right.length, y, ln.right, ln.faded ? C.dim : (ln.rightCol || C.mid), 'ui');
+      if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg, dim: !!ln.faded }) + 1;
+      if (ln.chip && !ln.faded) putChip(put, bg, cx, y, ln.name, ln.chip, 'ui', !!ln.sel);
+      else put(cx, y, ln.name, ln.faded ? C.mid : (ln.col || C.bright), 'ui', !!ln.sel);
+      if (ln.right) {
+        const rx = x + LW - ln.right.length;
+        put(rx, y, ln.right, ln.faded ? C.dim : (ln.rightCol || C.mid), 'ui');
+        if (ln.rightChips && !ln.faded) for (const c of rarityChips(ln.right)) putChip(put, bg, rx + c.from, y, ln.right.substr(c.from, c.len), c.r, 'ui');
+      }
       if (!ln.disabled) addHit(x, y, LW, 1, { kind: 'btn', id: ln.id, onTap: ln.onTap });
     } else if (ln.row) {
       const gap = ln.gap != null ? ln.gap : 2;
@@ -856,18 +871,16 @@ function buildTextBoard(ctx, lines, area = null) {
       let x = Math.floor((L.wc - w) / 2);
       ln.row.forEach((b, bi) => {
         if (b.field) { drawField(ctx, x, y, b); x += itemW(b) + gap; return; }
-        if (b.badge && b.plain) { x += drawBadge(put, now, x, y, b.badge, bi, { own: 'board', tier: b.tier }) + gap; return; }
+        if (b.badge && b.plain) { x += drawBadge(put, now, x, y, b.badge, bi, { own: 'board', tier: b.tier, bg }) + gap; return; }
         if (b.badge) {
           // A mod as it looks in the tray. On = tinted in its rarity color with bright brackets.
-          const mc = modColor(MODS[b.badge]);
-          if (b.on) bg(x, y, 6, mc, 0.3);
           if (!b.disabled) hl(x, y, 6, 1, b.id, bi === 0 || gap >= 3);
-          put(x, y, '[', b.on ? C.bright : C.dim, 'ui'); put(x + 5, y, ']', b.on ? C.bright : C.dim, 'ui');
-          drawBadge(put, now, x + 1, y, b.badge, bi, { own: 'ui', noCharges: true });
+          put(x, y, '[', b.on ? C.bright : C.dim, 'ui', !!b.on); put(x + 5, y, ']', b.on ? C.bright : C.dim, 'ui', !!b.on);
+          drawBadge(put, now, x + 1, y, b.badge, bi, { own: 'ui', noCharges: true, bg, dim: !b.on && !!b.offDim });
           if (!b.disabled) addHit(x, y, 6, 1, { kind: 'btn', id: b.id, onTap: b.onTap });
           x += 6 + gap; return;
         }
-        if (!b.id) { put(x, y, b.text, b.col || C.dim, 'board'); x += b.text.length + gap; return; }   // plain text
+        if (!b.id) { if (b.chip) putChip(put, bg, x, y, b.text, b.chip, 'board'); else put(x, y, b.text, b.col || C.dim, 'board'); x += b.text.length + gap; return; }   // plain text
         if (b.sel) bg(x, y, b.text.length, C.accent, 0.22);
         // The > marker only where there's room for it: the first item, or wide gaps.
         if (!b.disabled) hl(x, y, b.text.length, 1, b.id, bi === 0 || gap >= 3);
@@ -890,7 +903,13 @@ function buildTextBoard(ctx, lines, area = null) {
       if (!ln.disabled) addHit(x, y, ln.text.length, 1, { kind: 'btn', id: ln.id, onTap: ln.onTap });
     } else if (ln.text) {
       const x = Math.floor((L.wc - ln.text.length) / 2);
-      if (ln.colorAt) {
+      // rarity chips: chips: true = the rarity words in it; chip: 'rare' = the whole text (not its padding)
+      const chips = ln.chip ? [{ from: ln.text.length - ln.text.trimStart().length, len: ln.text.trim().length, r: ln.chip }] : ln.chips ? rarityChips(ln.text) : null;
+      if (chips && chips.length) {
+        const chipAt = i => chips.find(c => i >= c.from && i < c.from + c.len);
+        for (const c of chips) bg(x + c.from, y, c.len, chipOf(c.r).bg, 1);
+        for (let i = 0; i < ln.text.length; i++) if (ln.text[i] !== ' ') { const c = chipAt(i); put(x + i, y, ln.text[i], c ? chipOf(c.r).fg : ln.colorAt ? ln.colorAt(i) : ln.col, 'board', !!ln.bold); }
+      } else if (ln.colorAt) {
         // Per-character colors (used by the title art).
         for (let i = 0; i < ln.text.length; i++) if (ln.text[i] !== ' ') put(x + i, y, ln.text[i], ln.colorAt(i), 'board', ln.boldAt ? !!ln.boldAt(i) : !!ln.bold);
       } else put(x, y, ln.text, ln.col, 'board', !!ln.bold);

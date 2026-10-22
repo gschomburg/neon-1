@@ -1,6 +1,6 @@
 // NeoN+1 corps/chronos.js
 'use strict';
-NEON_FILES.push(['corps/chronos.js', 'v12.00']);
+NEON_FILES.push(['corps/chronos.js', 'v12.01']);
 CORPS.chronos = {
   key: 'chronos', name: 'CHRONOS', letter: 'C', level: 3,
   intel: '"time is money. yours is short."',

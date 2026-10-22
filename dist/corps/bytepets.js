@@ -1,6 +1,6 @@
 // NeoN+1 corps/bytepets.js
 'use strict';
-NEON_FILES.push(['corps/bytepets.js', 'v12.00']);
+NEON_FILES.push(['corps/bytepets.js', 'v12.01']);
 CORPS.bytepets = {
   key: 'bytepets', name: 'BYTEPETS', letter: 'p', level: 2,
   intel: '"they love you! feed them!"',

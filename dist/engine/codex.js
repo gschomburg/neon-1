@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v12.00']);
+NEON_FILES.push(['engine/codex.js', 'v12.01']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -107,20 +107,19 @@ function openCodex() {
       const kind = m.kind === 'corp' ? 'corp mod' : m.kind === 'minor' ? 'minor mod' : 'mod';
       X({ badge: k });
       const sg = STAGES[m.stage];   // when it fires (the trigger order)
-      X({ text: `${RARITY[m.rarity].label} // ${kind} // ${sg.order ? sg.order + '.' : ''}${sg.label}`,
-        colorAt: i => i >= RARITY[m.rarity].label.length + kind.length + 8 ? C.mid : modColor(m) });
+      X({ text: `${RARITY[m.rarity].label} // ${kind} // ${sg.order ? sg.order + '.' : ''}${sg.label}`, col: C.mid, chips: true });
       const tiers = m.tiers ? m.tiers.map((_, i) => tierView(m, i)) : [];
       const d = wrapText(m.codex || m.desc, 34).slice(0, 12 - 3 - tiers.length - (tiers.length ? 1 : 0));
       d.forEach(l => T(l.padEnd(34), C.text));
-      if (tiers.length) { T(''); tiers.forEach(v => X({ text: `${tierLabel(v).padEnd(7)}${v.tip}`.padEnd(34), colorAt: i => i < 7 ? modColor(v) : C.text })); }
+      if (tiers.length) { T(''); tiers.forEach(v => X({ text: `${tierLabel(v).padEnd(7)}${v.tip}`.padEnd(34), col: C.text, chips: true })); }
       T(modWhere(m), C.mid);
       for (let i = 3 + d.length + tiers.length + (tiers.length ? 1 : 0); i < 12; i++) T('');
     } else {
       const it = ITEMS[k], tiers = it.tiers ? it.tiers.map((_, i) => tierView(it, i)) : [];
-      T(it.name, itemCol(it)); T(`${it.rarity !== 'common' ? RARITY[it.rarity].label + ' ' : ''}item // single use`, C.mid);
+      X({ text: it.name, chip: it.rarity, bold: true }); X({ text: `${it.rarity !== 'common' ? RARITY[it.rarity].label + ' ' : ''}item // single use`, col: C.mid, chips: true });
       const dl = wrapText(it.codex || it.desc, 34).slice(0, 12 - 3 - tiers.length - (tiers.length ? 1 : 0));
       dl.forEach(l => T(l.padEnd(34), C.text));
-      if (tiers.length) { T(''); tiers.forEach(v => X({ text: `${RARITY[v.rarity].label.padEnd(7)}${v.tip}`.padEnd(34), colorAt: i => i < 7 ? itemCol(v) : C.text })); }
+      if (tiers.length) { T(''); tiers.forEach(v => X({ text: `${RARITY[v.rarity].label.padEnd(7)}${v.tip}`.padEnd(34), col: C.text, chips: true })); }
       T(`from: ${ITEM_WHERE}`, C.mid);
       for (let i = 3 + dl.length + tiers.length + (tiers.length ? 1 : 0); i < 12; i++) T('');
     }
@@ -146,9 +145,8 @@ function openCodex() {
         const def = isMod ? MODS[key] : ITEMS[key];
         X(Object.assign(base, {
           badge: isMod && seenK ? key : null,
-          name: seenK ? def.name : '???', col: seenK ? (isMod ? modColor(def) : C.bright) : C.dim,
-          right: isMod ? (seenK ? RARITY[def.rarity].label : '') : 'item', rightCol: seenK && isMod ? modColor(def) : C.mid,
-          tint: seenK && isMod ? modColor(def) : null,
+          name: seenK ? def.name : '???', col: seenK ? C.bright : C.dim, chip: seenK && !isMod ? def.rarity : null,
+          right: isMod ? (seenK ? RARITY[def.rarity].label : '') : 'item', rightCol: C.mid, rightChips: seenK,
         }));
       }
       used++;

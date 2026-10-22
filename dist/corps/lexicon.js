@@ -1,6 +1,6 @@
 // NeoN+1 corps/lexicon.js
 'use strict';
-NEON_FILES.push(['corps/lexicon.js', 'v12.00']);
+NEON_FILES.push(['corps/lexicon.js', 'v12.01']);
 CORPS.lexicon = {
   key: 'lexicon', name: 'LEXICON', letter: 'X', level: 3,
   intel: '"in the beginning was the word."',

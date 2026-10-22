@@ -1,6 +1,6 @@
 // NeoN+1 corps/ledger.js
 'use strict';
-NEON_FILES.push(['corps/ledger.js', 'v12.00']);
+NEON_FILES.push(['corps/ledger.js', 'v12.01']);
 CORPS.ledger = {
   key: 'ledger', name: 'LEDGER TRUST', letter: 'L', level: 2,
   intel: '"your balance is our business."',

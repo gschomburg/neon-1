@@ -678,6 +678,12 @@ Agreed changes not built yet.
   use (~50: messages, sounds, locking nodes, moving tiles...). Adding a corp = adding one file. The biggest
   part of the code (~2,800 lines of corps).
 
+- **When the game moves** (2026-10-21, the user: gregschomburg.com/br is not its final home; it may get its own
+  URL or another folder). The only absolute address is `og:image` in `dist/index.html` (the link preview,
+  now `https://gregschomburg.com/br/preview.png`; the site redirects to www): point it at the new place and
+  upload `preview.png` there. Everything else is relative (share links use the page's own address). Fold the
+  www fix into the next update.
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
@@ -734,8 +740,8 @@ The user's next big task is a **palette editor and preview system**. Everything 
      EXPORT (copy code) fallback. The user is on Chrome, and the game is served from a web host, so the
      extra file is fine (it has to be uploaded next to the game).
    - Order: move + rename first, then the editor; keyword highlighting and unlocks after.
-10. **Rarity slot names stay as they are** (`common rare epic exotic boss`): the code looks them up by the
-   rarity's id (`C[rarity]`), so renaming them would break that. Only the 9 base slots get role names.
+10. **Rarity colors left the palettes in v12.01** (rarity chips: fixed pairs, the same in every palette; see the
+   version log). `C.common`... still exist as the chips' key colors.
 11. **Colors that live outside the palettes** (the editor should know about them, maybe edit some):
    - **Map corp icons** use each corp's own background + accent, drawn on whatever palette you're in
      (`corpIconCols`; it swaps in the corp's `dim` when the backgrounds are too close).
@@ -1545,6 +1551,26 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.01** (2026-10-22): **rarity chips** (the user's idea: "all the items and mods always have a bg color and a text
+  color... everywhere in the game so we never need to worry about readability").
+  - Each rarity is a fixed pair, a text color on its own background, the same in every palette ("light chips", the
+    user's pick: the key color is the background): COMMON dark on light grey, RARE dark blue on light blue, EPIC dark
+    purple on light purple, EXOTIC dark brown on yellow, BOSS dark red on orange. In `palettes.js` as `chips`
+    (editable in the palette editor's "rarity chips" tab); `CHIPS` + `chipOf()` in the code. A rarity's "key
+    color" (`C.rare`...) is its chip's background, the same everywhere (reward bursts, fireworks).
+  - Where: tray mod badges and item names, the mod / item info lines, market and reward lists (badge chip + the
+    RARE / EPIC label as a chip; item names on their chip), the swap screens, run results, the codex, the HOW TO
+    PLAY rarity legend. In running text only the rarity words get a chip (`chips: true` on a line,
+    `rarityChips()`); a whole name: `chip: 'rare'`; list rows: `chip` (name) / `rightChips`. The faint
+    rarity tints behind list rows are gone.
+  - Badges: selected = the chip inverted (key color on dark); blink / spin flash by inverting; cycle inverts letter
+    by letter; EXOTIC breaks the rule on purpose (its letters cycle through every rarity's chip, the user: exotics
+    and boss can break the rules with animations). Spent / can't-use mods and items: plain grey, no chip.
+  - Palettes lost their 5 rarity colors (and the shared corp set): 9 slots each now, and fewer warnings (40 -> 37).
+  - `palettes.js` got its version stamp (the editor writes it with the game's build; `bump.js` updates it) and
+    the title's file check covers it. `NEON_FILES` now starts before `palettes.js` in index.html.
+  - Checked: fingerprint (layers and maps unchanged; palettes / help text changed on purpose), all 78 corps play
+    the same, the palette editor test, screenshots of the tray, market, codex and a light palette.
 - **v12.00** (2026-10-21): **the game in files** (the user: "lets break this stuff out into components or files that
   make sense... warrants a major version"). Plays exactly like v11.06; nothing new to see except the meta tags.
   - **Layout:** `dist/index.html` is just the page; the game is 108 plain scripts loaded in order (still works

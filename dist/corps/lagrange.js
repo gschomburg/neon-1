@@ -1,6 +1,6 @@
 // NeoN+1 corps/lagrange.js
 'use strict';
-NEON_FILES.push(['corps/lagrange.js', 'v12.00']);
+NEON_FILES.push(['corps/lagrange.js', 'v12.01']);
 CORPS.lagrange = {
   key: 'lagrange', name: 'LAGRANGE NET', letter: '2', level: 5, moves: true,
   intel: '"we\'ll get back to you. eventually."',

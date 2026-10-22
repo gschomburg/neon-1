@@ -1,6 +1,6 @@
 // NeoN+1 engine/core.js: Tuning, the build number, constants, the palettes (resolved from palettes.js), the seeded RNG.
 'use strict';
-NEON_FILES.push(['engine/core.js', 'v12.00']);
+NEON_FILES.push(['engine/core.js', 'v12.01']);
 
 // ---------------- Tuning ----------------
 const CONFIG = {
@@ -31,7 +31,7 @@ const CONFIG = {
 
 // Build number: vMAJOR.MINOR. The minor ticks (+.01) with every update; the major changes only on
 // the user's call. The save slot follows the major only, so minor updates keep your progress.
-const VERSION = 'v12.00';
+const VERSION = 'v12.01';
 // In the palette editor (index.html?editor=1) the game keeps its own save, so yours is never touched.
 const EDITOR = /[?&]editor=1(&|$)/.test(location.search);
 const STORE_KEY = EDITOR ? 'beta_runner.editor.save' : 'beta_runner.v12.save';
@@ -56,22 +56,28 @@ const LINE_H = 1.22;
 const FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
 
 // Current colors. Filled from a palette at boot. Slots (see palettes.js): bg dim mid text bright
-// accent (buttons, logo) danger (ICE, damage) dangerDim money (credits), + the 5 rarity colors.
+// accent (buttons, logo) danger (ICE, damage) dangerDim money (credits). The 5 rarity colors are the
+// rarity chips' key colors (below): the same in every palette.
 const C = {
   bg: '', dim: '', mid: '', text: '', bright: '', accent: '', danger: '', dangerDim: '', money: '',
   common: '', rare: '', epic: '', exotic: '', boss: '',
 };
 
-// Palettes live in palettes.js (loaded before this script). Each one is resolved here: a
-// palette with rarity: 'corp' takes the shared corp rarity colors first. If the file didn't
-// load, DEFAULT keeps the game running.
-const PALETTE_DATA = window.NEON_PALETTES || { rarity: {}, palettes: {
-  c_basic: { name: 'BASIC', bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', accent: '#3cf0ff', danger: '#ff3b4e', dangerDim: '#7a2630', money: '#e8c66a',
-    common: '#a9bdb7', rare: '#4da3ff', epic: '#c07bff', exotic: '#ffd84a', boss: '#ff7a3d' },
+// Palettes live in palettes.js (loaded before this script). If the file didn't load, BASIC keeps
+// the game running.
+const PALETTE_DATA = window.NEON_PALETTES || { palettes: {
+  c_basic: { name: 'BASIC', bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', accent: '#3cf0ff', danger: '#ff3b4e', dangerDim: '#7a2630', money: '#e8c66a' },
 } };
 const PALETTES = {};
-for (const [key, p] of Object.entries(PALETTE_DATA.palettes))
-  PALETTES[key] = Object.assign({}, p.rarity ? PALETTE_DATA.rarity[p.rarity] : null, p);
+for (const [key, p] of Object.entries(PALETTE_DATA.palettes)) PALETTES[key] = Object.assign({}, p);
+// Rarity chips: every mod and item shows its rarity as a chip, a text color on its own background,
+// the same in every palette (so it reads on any of them). The background is the rarity's key color.
+const CHIPS = Object.assign({
+  common: { fg: '#1d2326', bg: '#b9c3c1' }, rare: { fg: '#0b2a55', bg: '#7fb6ff' }, epic: { fg: '#2d0a4e', bg: '#c99bff' },
+  exotic: { fg: '#3a2800', bg: '#ffd84a' }, boss: { fg: '#4a1300', bg: '#ff8a4a' },
+}, PALETTE_DATA.chips || {});
+const setChipKeys = () => { for (const r of Object.keys(CHIPS)) C[r] = CHIPS[r].bg; };
+setChipKeys();
 const playerPalettes = () => Object.keys(PALETTES).filter(k => !PALETTES[k].hidden);
 // The default palette: the first starter in palettes.js (BASIC). Old saves named the player
 // palettes that were folded into corps (2026-10-21): map them to their corps.
@@ -104,7 +110,7 @@ function applyPalette(key, instant = false, dark = 0) {
   const p = PALETTES[key] || PALETTES[DEFAULT_PALETTE];
   PAL_LIT = p;
   const to = {};
-  for (const k of Object.keys(C)) if (p[k]) to[k] = dark && k !== 'bg' && k !== 'danger' ? mixHex(p[k], p.bg, dark) : p[k];
+  for (const k of Object.keys(C)) if (p[k] && !CHIPS[k]) to[k] = dark && k !== 'bg' && k !== 'danger' ? mixHex(p[k], p.bg, dark) : p[k];
   if (instant || !C.bg || save.effects === 'reduced') { Object.assign(C, to); paletteFade = null; }
   else paletteFade = { from: Object.assign({}, C), to, t0: performance.now() };
   const f = p.font || {};

@@ -1,6 +1,6 @@
 // NeoN+1 corps/coldbrew.js
 'use strict';
-NEON_FILES.push(['corps/coldbrew.js', 'v12.00']);
+NEON_FILES.push(['corps/coldbrew.js', 'v12.01']);
 CORPS.coldbrew = {
   key: 'coldbrew', name: 'COLDBREW', letter: '~', level: 2,
   intel: '"another shot? another shot."',

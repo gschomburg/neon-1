@@ -1,6 +1,6 @@
 // NeoN+1 corps/kernel.js
 'use strict';
-NEON_FILES.push(['corps/kernel.js', 'v12.00']);
+NEON_FILES.push(['corps/kernel.js', 'v12.01']);
 CORPS.kernel = {
   key: 'kernel', name: 'KERNEL', letter: 'E', level: 3,
   intel: '"the seed knows."',

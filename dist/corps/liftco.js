@@ -1,6 +1,6 @@
 // NeoN+1 corps/liftco.js
 'use strict';
-NEON_FILES.push(['corps/liftco.js', 'v12.00']);
+NEON_FILES.push(['corps/liftco.js', 'v12.01']);
 CORPS.liftco = {
   key: 'liftco', name: 'LIFTCO', letter: 'l', level: 3,
   intel: '"going up. going down. going up."',

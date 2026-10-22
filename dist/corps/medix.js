@@ -1,6 +1,6 @@
 // NeoN+1 corps/medix.js
 'use strict';
-NEON_FILES.push(['corps/medix.js', 'v12.00']);
+NEON_FILES.push(['corps/medix.js', 'v12.01']);
 CORPS.medix = {
   key: 'medix', name: 'MEDIX', letter: 'm', level: 2,
   intel: '"this might sting a little."',

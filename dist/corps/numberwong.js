@@ -1,6 +1,6 @@
 // NeoN+1 corps/numberwong.js
 'use strict';
-NEON_FILES.push(['corps/numberwong.js', 'v12.00']);
+NEON_FILES.push(['corps/numberwong.js', 'v12.01']);
 CORPS.numberwong = {
   key: 'numberwong', name: 'NUMBERWONG', letter: '#', level: 4,
   intel: '"that\'s numberwong!"',

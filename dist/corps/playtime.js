@@ -1,6 +1,6 @@
 // NeoN+1 corps/playtime.js
 'use strict';
-NEON_FILES.push(['corps/playtime.js', 'v12.00']);
+NEON_FILES.push(['corps/playtime.js', 'v12.01']);
 CORPS.playtime = {
   key: 'playtime', name: 'PLAYTIME', letter: '&', level: 1,
   intel: '"wind it up and watch it go!"',

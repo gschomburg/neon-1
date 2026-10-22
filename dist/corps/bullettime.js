@@ -1,6 +1,6 @@
 // NeoN+1 corps/bullettime.js
 'use strict';
-NEON_FILES.push(['corps/bullettime.js', 'v12.00']);
+NEON_FILES.push(['corps/bullettime.js', 'v12.01']);
 CORPS.bullettime = {
   key: 'bullettime', name: 'BULLET TIME INC', letter: '}', level: 5, slowmo: true,
   intel: '"there is no hurry. except yours."',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/pawnbros.js
 'use strict';
-NEON_FILES.push(['corps/pawnbros.js', 'v12.00']);
+NEON_FILES.push(['corps/pawnbros.js', 'v12.01']);
 CORPS.pawnbros = {
   key: 'pawnbros', name: 'PAWN BROS', letter: 'x', level: 3,
   intel: '"do not pass GO. well, ok, pass it."',

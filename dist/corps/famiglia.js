@@ -1,6 +1,6 @@
 // NeoN+1 corps/famiglia.js
 'use strict';
-NEON_FILES.push(['corps/famiglia.js', 'v12.00']);
+NEON_FILES.push(['corps/famiglia.js', 'v12.01']);
 CORPS.famiglia = {
   key: 'famiglia', name: 'LA FAMIGLIA', letter: 'f', level: 3,
   intel: '"nice node you got. shame if..."',

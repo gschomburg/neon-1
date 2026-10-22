@@ -1,6 +1,6 @@
 // NeoN+1 corps/boneyard.js
 'use strict';
-NEON_FILES.push(['corps/boneyard.js', 'v12.00']);
+NEON_FILES.push(['corps/boneyard.js', 'v12.01']);
 CORPS.boneyard = {
   key: 'boneyard', name: 'BONEYARD', letter: 'j', level: 3, moves: true,
   intel: '"the guy asked for something spooky."',

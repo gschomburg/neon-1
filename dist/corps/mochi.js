@@ -1,6 +1,6 @@
 // NeoN+1 corps/mochi.js
 'use strict';
-NEON_FILES.push(['corps/mochi.js', 'v12.00']);
+NEON_FILES.push(['corps/mochi.js', 'v12.01']);
 CORPS.mochi = {
   key: 'mochi', name: 'MOCHI MOCHI', letter: '^', level: 1,
   intel: '"you found us!! yay!!"',

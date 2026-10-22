@@ -1,6 +1,6 @@
 // NeoN+1 corps/megamart.js
 'use strict';
-NEON_FILES.push(['corps/megamart.js', 'v12.00']);
+NEON_FILES.push(['corps/megamart.js', 'v12.01']);
 CORPS.megamart = {
   key: 'megamart', name: 'MEGAMART', letter: 'R', level: 1,
   intel: '"everyday low prices. everyday."',

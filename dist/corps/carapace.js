@@ -1,6 +1,6 @@
 // NeoN+1 corps/carapace.js
 'use strict';
-NEON_FILES.push(['corps/carapace.js', 'v12.00']);
+NEON_FILES.push(['corps/carapace.js', 'v12.01']);
 CORPS.carapace = {
   key: 'carapace', name: 'CARAPACE ARMOR', letter: 'o', level: 3,
   intel: '"roll with it."',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/groundhog.js
 'use strict';
-NEON_FILES.push(['corps/groundhog.js', 'v12.00']);
+NEON_FILES.push(['corps/groundhog.js', 'v12.01']);
 CORPS.groundhog = {
   key: 'groundhog', name: 'GROUNDHOG', letter: '8', level: 5,
   intel: '"same time tomorrow?"',

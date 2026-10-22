@@ -1,6 +1,6 @@
 // NeoN+1 corps/synapse.js
 'use strict';
-NEON_FILES.push(['corps/synapse.js', 'v12.00']);
+NEON_FILES.push(['corps/synapse.js', 'v12.01']);
 CORPS.synapse = {
   key: 'synapse', name: 'SYNAPSE AI', letter: 's', level: 4,
   intel: '"we know you. better than you."',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/squalor.js
 'use strict';
-NEON_FILES.push(['corps/squalor.js', 'v12.00']);
+NEON_FILES.push(['corps/squalor.js', 'v12.01']);
 CORPS.squalor = {
   key: 'squalor', name: 'SQUALOR', letter: ';', level: 3, drag: true,
   intel: '"like. share. subscribe. obey."',

@@ -58,6 +58,8 @@
   table.slots input.hex { width: 82px; }
   table.slots td.cr { width: 70px; font-size: 12px; text-align: right; white-space: nowrap; }
   .good { color: var(--ok); } .meh { color: var(--warn); } .badc { color: var(--bad); }
+  .chiprow { padding: 6px 9px; margin: 4px 0; border-radius: 5px; font: 12px/1.6 "JetBrains Mono", Consolas, monospace; }
+  .chiprow span.c { padding: 0 3px; margin-right: 6px; }
   .randbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
   .randbar .note { margin: 0; }
   td.name input[type=checkbox] { margin: 0 5px 0 0; vertical-align: -2px; }
@@ -124,7 +126,7 @@
   <div id="tabs">
     <button data-tab="pal" class="on">palette</button>
     <button data-tab="all">all palettes</button>
-    <button data-tab="rar">shared rarity</button>
+    <button data-tab="rar">rarity chips</button>
     <button data-tab="sty">player styles</button>
   </div>
   <div id="body">
@@ -148,17 +150,9 @@
         <button id="rsmart" title="A palette that follows the rules: a dark or light background, a text ladder in one hue, an accent from a color-wheel scheme, danger reddish, money goldish, every color nudged to its contrast target">random: smart</button>
         <button id="rwild" title="Every color fully random">random: wild</button>
         <select id="rtone" title="smart only: a dark or a light background"><option value="any">dark or light</option><option value="dark">dark</option><option value="light">light</option></select>
-        <label title="also roll the 5 rarity colors (the palette gets its own set)"><input id="rrar" type="checkbox"> rarity too</label>
         <span class="note">tick a color's box to lock it</span>
       </div>
       <table class="slots" id="baseslots"></table>
-
-      <h2>Rarity colors</h2>
-      <div class="note">
-        <label><input type="radio" name="rarmode" value="corp"> use the shared corp set</label> (tick a color to change just that one)
-        &nbsp; <label><input type="radio" name="rarmode" value="own"> own colors</label>
-      </div>
-      <table class="slots" id="rarslots"></table>
 
       <h2>Font</h2>
       <div class="note">Only OMNI uses this (a heavier weight). Empty = the normal 400 / 700.</div>
@@ -197,9 +191,13 @@
     </div>
 
     <div class="tab" id="tab-rar">
-      <div class="note">The shared rarity set: every palette marked "use the shared corp set" takes these, except the colors it changes itself.</div>
-      <div class="note" id="raruse"></div>
-      <table class="slots" id="sharedslots"></table>
+      <div class="note">Rarity chips: every mod and item shows its rarity as a chip, a text color on its own background,
+        the same in every palette (so it reads on all of them). The background is the rarity's key color. Mods in the tray,
+        item names, the RARE / EPIC labels and the rarity words in text all use these.</div>
+      <table class="slots" id="chipslots"></table>
+      <h2>On every palette</h2>
+      <div class="note">How the chips sit on each palette's background (they don't need to contrast with it: they bring their own).</div>
+      <div id="chipgrid"></div>
     </div>
 
     <div class="tab" id="tab-sty">
@@ -224,18 +222,20 @@
     ['bright', 'headings, emphasis'], ['accent', 'buttons, the logo, highlights'], ['danger', 'ICE, damage, warnings'],
     ['dangerDim', 'locked nodes, dark red frames'], ['money', 'credits, rewards'],
   ];
-  const RAR = [['common', 'common mods'], ['rare', 'rare'], ['epic', 'epic'], ['exotic', 'exotic'], ['boss', 'boss / corp mods']];
+  const RAR = [['common', 'common mods and items'], ['rare', 'rare'], ['epic', 'epic'], ['exotic', 'exotic'], ['boss', 'boss / corp mods']];
   // how readable each color should be on the background (contrast ratio): dim and dangerDim are faint on purpose
-  const NEED = { dim: 1.2, mid: 3, text: 4.5, bright: 4.5, accent: 3, danger: 3, dangerDim: 1.2, money: 3, common: 3, rare: 3, epic: 3, exotic: 3, boss: 3 };
-  const PAIRS = [['accent', 'money'], ['accent', 'danger'], ['danger', 'money'], ['accent', 'bright'], ['money', 'bright'], ['text', 'bright'], ['mid', 'text'], ['dim', 'mid'], ['danger', 'boss']];
+  const NEED = { dim: 1.2, mid: 3, text: 4.5, bright: 4.5, accent: 3, danger: 3, dangerDim: 1.2, money: 3 };
+  const PAIRS = [['accent', 'money'], ['accent', 'danger'], ['danger', 'money'], ['accent', 'bright'], ['money', 'bright'], ['text', 'bright'], ['mid', 'text'], ['dim', 'mid']];
 
   const clone = o => JSON.parse(JSON.stringify(o));
   if (!window.NEON_PALETTES) { document.body.textContent = "Couldn't load ../dist/palettes.js. Open this page from the repo's tools/ folder."; return; }
   let data = clone(window.NEON_PALETTES);
   let sel = Object.keys(data.palettes)[0];
 
-  // resolve a palette the way the game does
-  const resolved = key => { const p = data.palettes[key]; return Object.assign({}, p.rarity ? data.rarity[p.rarity] : null, p); };
+  // a palette as the game sees it (palettes are self-contained since v12: no shared rarity set)
+  const resolved = key => Object.assign({}, data.palettes[key]);
+  // the build to stamp into palettes.js: the game's own (from its 'ready' message), else the stamp the file came with
+  let build = ((window.NEON_FILES || []).find(f => f[0] === 'palettes.js') || [])[1] || 'v12.00';
 
   // ---------------- Color math ----------------
   const isHex = s => /^#[0-9a-f]{6}$/i.test(s);
@@ -250,7 +250,7 @@
 
   function warnings(p) {
     const out = [];
-    for (const [s] of [...BASE.slice(1), ...RAR]) {
+    for (const [s] of BASE.slice(1)) {
       const c = contrast(p[s], p.bg);
       if (c < NEED[s]) out.push({ text: `${s} is hard to read on the background: ${c.toFixed(2)}:1 (want ${NEED[s]})`, bad: c < NEED[s] * 0.8 });
     }
@@ -262,7 +262,7 @@
   }
 
   // ---------------- Writing palettes.js ----------------
-  const HEADER = `// NeoN+1 palettes. The game loads this file before its own script (so does the palette editor).
+  const HEADER = `// NeoN+1 palettes. The game loads this file before its own scripts (so does the palette editor).
 // Edit with tools/palette_editor.html, or by hand: one palette per line, colors as '#rrggbb'.
 //
 // Slots (what each color is for):
@@ -271,17 +271,15 @@
 //   mid        secondary text, labels   dangerDim  locked nodes, dark red frames
 //   text       normal text              money      credits, rewards, gold glows
 //   bright     headings, emphasis
-//   common rare epic exotic boss: the rarity colors (mods, items)
-// rarity: 'corp' takes the shared corp rarity set below, plus any rarity colors the palette lists itself.
 // hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
+// Rarity colors aren't in the palettes: every mod and item shows its rarity as a chip (chips, below),
+// the same in every palette.
 `;
   const q = s => `'${String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
   function paletteLine(key, p) {
     const parts = [`name: ${q(p.name)}`];
     if (p.hidden) parts.push('hidden: true');
     for (const [s] of BASE) parts.push(`${s}: ${q(p[s])}`);
-    if (p.rarity) { parts.push(`rarity: ${q(p.rarity)}`); for (const [r] of RAR) if (p[r]) parts.push(`${r}: ${q(p[r])}`); }
-    else for (const [r] of RAR) parts.push(`${r}: ${q(p[r])}`);
     if (p.font && (p.font.weight || p.font.bold)) parts.push(`font: { ${Object.entries(p.font).filter(([, v]) => v != null && v !== '').map(([k, v]) => `${k}: ${typeof v === 'string' ? q(v) : v}`).join(', ')} }`);
     if (p.note) parts.push(`note: ${q(p.note)}`);
     return `    ${(key + ':').padEnd(15)} { ${parts.join(', ')} },`;
@@ -289,9 +287,12 @@
   function fileText() {
     const keys = Object.keys(data.palettes);
     const starters = keys.filter(k => !data.palettes[k].hidden), locked = keys.filter(k => data.palettes[k].hidden);
-    const rar = Object.entries(data.rarity).map(([name, set]) => `    ${name}: { ${RAR.map(([r]) => `${r}: ${q(set[r])}`).join(', ')} },`);
+    const chips = RAR.map(([r]) => `    ${(r + ':').padEnd(8)} { fg: ${q(data.chips[r].fg)}, bg: ${q(data.chips[r].bg)} },`);
     const styles = data.styles.map(s => `    { name: ${(q(s.name) + ',').padEnd(9)} fg: ${q(s.fg)}, bg: ${q(s.bg)} },`);
-    return HEADER + 'window.NEON_PALETTES = {\n  rarity: {\n' + rar.join('\n') + '\n  },\n  palettes: {\n' +
+    return HEADER + `(window.NEON_FILES = window.NEON_FILES || []).push(['palettes.js', '${build}']);   // the build it's from (see index.html)\n` +
+      'window.NEON_PALETTES = {\n' +
+      '  // Rarity chips: a text color on its own background, for each rarity (bg = the rarity\'s key color).\n' +
+      '  chips: {\n' + chips.join('\n') + '\n  },\n  palettes: {\n' +
       '    // starters: offered in SETTINGS from the start (the first one is the default for new players)\n' +
       starters.map(k => paletteLine(k, data.palettes[k])).join('\n') + '\n' +
       '    // locked: unlocked by beating the corp (for now: hidden from SETTINGS)\n' +
@@ -353,6 +354,7 @@
     if (!m || m.from !== 'neon-game') return;
     if (m.type === 'ready') {
       gameReady = true;
+      if (m.version) build = m.version;   // stamp palettes.js with the game's build
       $('#scenestate').textContent = `game ${m.version} ready`;
       sendAll();
       runScene(scene);
@@ -473,27 +475,17 @@
     let Hm = rnd(38, 55);
     for (let k = 0; k < 12 && (hueGap(Hm, Ha) < 40 || hueGap(Hm, hueOf(out.danger)) < 30); k++) Hm += 30;
     out.money = keep('money') ? p.money : toContrast(Hm, rnd(0.7, 0.95), rnd(5, 8), bg, dark);
-    if ($('#rrar').checked) {
-      // rarity keeps its meaning: common = text, rare blue, epic purple, exotic yellow, boss orange
-      out.common = out.text;
-      out.rare = toContrast(rnd(205, 222), 0.85, rnd(4, 6), bg, dark);
-      out.epic = toContrast(rnd(270, 290), 0.8, rnd(4, 6), bg, dark);
-      out.exotic = toContrast(rnd(48, 58), 0.95, rnd(6, 9), bg, dark);
-      out.boss = toContrast(rnd(18, 30), 0.95, rnd(4.5, 6.5), bg, dark);
-    }
     return out;
   }
   function wildPalette(p) {
     const out = {}, r = () => '#' + Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, '0');
     for (const [s] of BASE) out[s] = locks.has(s) ? p[s] : r();
-    if ($('#rrar').checked) for (const [s] of RAR) out[s] = r();
     return out;
   }
   function randomize(fn) {
     const p = data.palettes[sel];
     lastPush = 0; before();   // always its own undo step
     const out = fn(p);
-    if (out.common) { delete p.rarity; }   // rolled rarity colors: the palette gets its own set
     Object.assign(p, out);
     changed(true);
   }
@@ -513,18 +505,6 @@
       lock.onchange = () => { if (lock.checked) locks.add(s); else locks.delete(s); };
       base.append(colorRow(s, role, p[s], v => setColor(() => { p[s] = v; }), { cr: s === 'bg' ? null : p.bg, toggle: lock }));
     }
-    const rs = $('#rarslots'); rs.innerHTML = '';
-    const shared = !!p.rarity;
-    for (const el2 of document.querySelectorAll('input[name=rarmode]')) el2.checked = el2.value === (shared ? 'corp' : 'own');
-    for (const [s, role] of RAR) {
-      const own = !shared || !!p[s];
-      let toggle = null;
-      if (shared) {
-        toggle = el('input', { type: 'checkbox', checked: own, title: 'change this one for this palette only' });
-        toggle.onchange = () => { before(); if (toggle.checked) p[s] = r[s]; else delete p[s]; changed(true); };
-      }
-      rs.append(colorRow(s, role + (shared && !own ? ' (shared)' : ''), r[s], v => setColor(() => { p[s] = v; }), { cr: p.bg, inherited: shared && !own, locked: shared && !own, toggle }));
-    }
     $('#fweight').value = (p.font && p.font.weight) || ''; $('#fbold').value = (p.font && p.font.bold) || '';
     renderReadouts();
   }
@@ -532,7 +512,6 @@
   function renderReadouts() {
     const p = data.palettes[sel], r = resolved(sel);
     for (const tr of $('#baseslots').children) { const s = tr.firstChild.textContent; if (s !== 'bg') { const c = contrast(p[s], p.bg), need = NEED[s]; tr.lastChild.innerHTML = `<span class="${c >= need ? 'good' : c >= need * 0.8 ? 'meh' : 'badc'}">${c.toFixed(2)}:1</span>`; } }
-    for (const tr of $('#rarslots').children) { const s = tr.firstChild.textContent; const c = contrast(r[s], p.bg); tr.lastChild.innerHTML = `<span class="${c >= 3 ? 'good' : c >= 2.4 ? 'meh' : 'badc'}">${c.toFixed(2)}:1</span>`; }
     // quick look: a few lines in the palette's own colors
     const sp = (c, t, bold) => `<span style="color:${r[c]}${bold ? ';font-weight:700' : ''}">${t}</span>`;
     $('#sample').style.background = r.bg;
@@ -544,7 +523,7 @@
       sp('danger', '> ICE. -1 integrity.') + '\n' +
       sp('text', 'a ') + sp('bright', 'real node', true) + sp('text', ', a ') + sp('danger', 'locked', false) + sp('text', ' one: ') + sp('dangerDim', '[INERT]') + '\n' +
       sp('accent', '[ JACK IN ]') + '  ' + sp('text', '[ CODEX ]') + '\n' +
-      RAR.map(([s]) => sp(s, s.toUpperCase())).join(' ');
+      RAR.map(([s]) => chipHtml(s, s.toUpperCase())).join(' ');
     // checks
     const ws = warnings(r), ul = $('#checks'); ul.innerHTML = '';
     if (!ws.length) ul.append(el('li', { className: 'none', textContent: 'all clear' }));
@@ -555,13 +534,6 @@
     if (!near.length) sim.append(el('li', { className: 'none', textContent: 'no close look-alikes' }));
     for (const [d, k] of near) { const li = el('li', {}, el('a', { className: 'jump', textContent: data.palettes[k].name, onclick: () => select(k) }), ` (difference ${Math.round(d)}; under 140 reads as close)`); sim.append(li); }
   }
-  for (const r of document.querySelectorAll('input[name=rarmode]')) r.onchange = () => {
-    const p = data.palettes[sel], rv = resolved(sel);
-    before();
-    if (r.value === 'own') { for (const [s] of RAR) p[s] = rv[s]; delete p.rarity; }
-    else { p.rarity = 'corp'; for (const [s] of RAR) if (p[s] === data.rarity.corp[s]) delete p[s]; }
-    changed(true);
-  };
   $('#pname').oninput = () => { before(); data.palettes[sel].name = $('#pname').value; changed(false); fillPicker(); };
   $('#pnote').oninput = () => { before(); const v = $('#pnote').value; if (v) data.palettes[sel].note = v; else delete data.palettes[sel].note; changed(false); };
   $('#pstarter').onchange = () => { before(); const p = data.palettes[sel]; if ($('#pstarter').checked) delete p.hidden; else p.hidden = true; reorder(); changed(true); };
@@ -593,19 +565,32 @@
       card.innerHTML = `<span class="tag" style="color:${r.mid}">${data.palettes[k].hidden ? 'locked' : 'starter'}${n ? ' · ' + n + '!' : ''}</span>` +
         sp('bright', r.name, true) + '\n' + sp('text', 'text ') + sp('mid', 'mid ') + sp('dim', 'dim') + '\n' +
         sp('accent', '[ GO ]') + ' ' + sp('danger', 'ICE') + ' ' + sp('money', 'CR 32') + '\n' +
-        RAR.map(([s]) => sp(s, '#')).join('');
+        RAR.map(([s]) => chipHtml(s, s[0].toUpperCase())).join(' ');
       card.onclick = () => { select(k); showTab('pal'); };
       g.append(card);
     }
   }
   $('#gridfilter').onchange = renderGrid; $('#gridsort').onchange = renderGrid;
 
-  // ---------------- Shared rarity ----------------
+  // ---------------- Rarity chips ----------------
+  const chipHtml = (r, text) => `<span class="c" style="color:${data.chips[r].fg};background:${data.chips[r].bg}">${text}</span>`;
   function renderShared() {
-    const t = $('#sharedslots'); t.innerHTML = '';
-    const users = Object.keys(data.palettes).filter(k => data.palettes[k].rarity === 'corp');
-    $('#raruse').textContent = `${users.length} palettes use the shared set.`;
-    for (const [s, role] of RAR) t.append(colorRow(s, role, data.rarity.corp[s], v => setColor(() => { data.rarity.corp[s] = v; })));
+    const t = $('#chipslots'); t.innerHTML = '';
+    for (const [s, role] of RAR) {
+      // two rows per rarity: its text color (contrast against its own background) and its background
+      t.append(colorRow(s, role + ': text', data.chips[s].fg, v => setColor(() => { data.chips[s].fg = v; renderChipGrid(); }), { cr: data.chips[s].bg }));
+      t.append(colorRow(s, role + ': background (key color)', data.chips[s].bg, v => setColor(() => { data.chips[s].bg = v; renderChipGrid(); })));
+    }
+    renderChipGrid();
+  }
+  function renderChipGrid() {
+    const g = $('#chipgrid'); g.innerHTML = '';
+    for (const k of Object.keys(data.palettes)) {
+      const p = data.palettes[k], row = el('div', { className: 'chiprow' });
+      row.style.background = p.bg;
+      row.innerHTML = `<span style="color:${p.text}">${p.name.padEnd(12).replace(/ /g, '&nbsp;')}</span>` + RAR.map(([s]) => chipHtml(s, s.toUpperCase())).join('');
+      g.append(row);
+    }
   }
 
   // ---------------- Player styles ----------------

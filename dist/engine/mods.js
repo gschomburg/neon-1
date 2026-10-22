@@ -1,8 +1,12 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.00']);
+NEON_FILES.push(['engine/mods.js', 'v12.01']);
 
-const rarityCol = r => C[r] || C.text;
+const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
+// Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
+// (COMMON RARE EPIC EXOTIC BOSS) in a line, so only those words get chipped.
+const chipOf = r => CHIPS[r] || CHIPS.common;
+const rarityChips = text => [...String(text).matchAll(/\b(COMMON|RARE|EPIC|EXOTIC|BOSS)\b/g)].map(m => ({ from: m.index, len: m[0].length, r: m[0].toLowerCase() }));
 const TIERED_ITEMS = Object.keys(ITEMS).filter(k => ITEMS[k].tiers);
 for (const k of Object.keys(MODS)) MODS[k].key = k;
 

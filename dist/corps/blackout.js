@@ -1,6 +1,6 @@
 // NeoN+1 corps/blackout.js
 'use strict';
-NEON_FILES.push(['corps/blackout.js', 'v12.00']);
+NEON_FILES.push(['corps/blackout.js', 'v12.01']);
 CORPS.blackout = {
   key: 'blackout', name: 'BLACKOUT', letter: '5', level: 3, dark: true,
   intel: '"lights out. stay where you are."',

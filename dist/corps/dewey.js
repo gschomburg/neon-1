@@ -1,6 +1,6 @@
 // NeoN+1 corps/dewey.js
 'use strict';
-NEON_FILES.push(['corps/dewey.js', 'v12.00']);
+NEON_FILES.push(['corps/dewey.js', 'v12.01']);
 CORPS.dewey = {
   key: 'dewey', name: 'DEWEY SYSTEMS', letter: 'Y', level: 2,
   intel: '"shhh."',

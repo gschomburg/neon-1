@@ -1,6 +1,6 @@
 // NeoN+1 corps/monte.js
 'use strict';
-NEON_FILES.push(['corps/monte.js', 'v12.00']);
+NEON_FILES.push(['corps/monte.js', 'v12.01']);
 CORPS.monte = {
   key: 'monte', name: 'MONTE', letter: '3', level: 4, moves: true,
   intel: '"keep your eye on the ball."',

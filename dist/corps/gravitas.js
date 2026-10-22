@@ -1,6 +1,6 @@
 // NeoN+1 corps/gravitas.js
 'use strict';
-NEON_FILES.push(['corps/gravitas.js', 'v12.00']);
+NEON_FILES.push(['corps/gravitas.js', 'v12.01']);
 CORPS.gravitas = {
   key: 'gravitas', name: 'GRAVITAS LABS', letter: 'I', level: 5, moves: true,
   intel: '"what goes up. you know the rest."',

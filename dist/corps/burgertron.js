@@ -1,6 +1,6 @@
 // NeoN+1 corps/burgertron.js
 'use strict';
-NEON_FILES.push(['corps/burgertron.js', 'v12.00']);
+NEON_FILES.push(['corps/burgertron.js', 'v12.01']);
 CORPS.burgertron = {
   key: 'burgertron', name: 'BURGERTRON', letter: 'U', level: 1,
   intel: '"have it your way. one way."',

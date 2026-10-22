@@ -1,6 +1,6 @@
 // NeoN+1 corps/spectra.js
 'use strict';
-NEON_FILES.push(['corps/spectra.js', 'v12.00']);
+NEON_FILES.push(['corps/spectra.js', 'v12.01']);
 // ---- Tier 2, group 6: node colors (each color also has its own shape, for color-blind
 // players).
 CORPS.spectra = {

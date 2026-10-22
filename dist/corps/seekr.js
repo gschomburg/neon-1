@@ -1,6 +1,6 @@
 // NeoN+1 corps/seekr.js
 'use strict';
-NEON_FILES.push(['corps/seekr.js', 'v12.00']);
+NEON_FILES.push(['corps/seekr.js', 'v12.01']);
 CORPS.seekr = {
   key: 'seekr', name: 'SEEKR', letter: 'Q', level: 1,
   intel: '"did you mean: give up?"',

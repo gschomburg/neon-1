@@ -1,6 +1,6 @@
 // NeoN+1 corps/bitrot.js
 'use strict';
-NEON_FILES.push(['corps/bitrot.js', 'v12.00']);
+NEON_FILES.push(['corps/bitrot.js', 'v12.01']);
 CORPS.bitrot = {
   key: 'bitrot', name: 'BITROT', letter: '1', level: 5,
   intel: '"all data decays. yours first."',

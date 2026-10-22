@@ -1,6 +1,6 @@
 // NeoN+1 corps/brightline.js
 'use strict';
-NEON_FILES.push(['corps/brightline.js', 'v12.00']);
+NEON_FILES.push(['corps/brightline.js', 'v12.01']);
 // ---- Tier 2, group 1: node animation (corp `fx`). fx(t, ft, lv) runs every frame for
 // each closed node; ft is the node's own clock (it stops while the node is frozen).
 CORPS.brightline = {

@@ -1,6 +1,6 @@
 // NeoN+1 corps/perimeter.js
 'use strict';
-NEON_FILES.push(['corps/perimeter.js', 'v12.00']);
+NEON_FILES.push(['corps/perimeter.js', 'v12.01']);
 CORPS.perimeter = {
   key: 'perimeter', name: 'PERIMETER SYS', letter: 'P', level: 1,
   intel: '"our corners never fall."',
