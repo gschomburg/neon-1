@@ -1,6 +1,6 @@
 // NeoN+1 corps/mochi.js
 'use strict';
-NEON_FILES.push(['corps/mochi.js', 'v12.10']);
+NEON_FILES.push(['corps/mochi.js', 'v12.11']);
 // Its boss mod: FRIENDSHIP (friendship), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -16,7 +16,7 @@ MUSIC_FOR.mochi = 'pikopiko';
 
 // ---- the corp
 CORPS.mochi = {
-  key: 'mochi', name: 'MOCHI MOCHI', letter: '^', level: 1,
+  key: 'mochi', name: 'MOCHI MOCHI', code: 'MO', level: 1,
   intel: '"you found us!! yay!!"',
   tell: null,
   bossDesc: 'boss: they all wave. ICE: 20cr.',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/dewey.js
 'use strict';
-NEON_FILES.push(['corps/dewey.js', 'v12.10']);
+NEON_FILES.push(['corps/dewey.js', 'v12.11']);
 // Its boss mod: INDEX (index), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.dewey = 'quietplease';
 
 // ---- the corp
 CORPS.dewey = {
-  key: 'dewey', name: 'DEWEY SYSTEMS', letter: 'Y', level: 2,
+  key: 'dewey', name: 'DEWEY SYSTEMS', code: 'DW', level: 2,
   intel: '"shhh."',
   tell: null, nodes: 1,   // a section needs 2+ books to show
   bossDesc: 'boss: digits swapped.',

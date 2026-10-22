@@ -1,6 +1,6 @@
 // NeoN+1 corps/chuckecache.js
 'use strict';
-NEON_FILES.push(['corps/chuckecache.js', 'v12.10']);
+NEON_FILES.push(['corps/chuckecache.js', 'v12.11']);
 // Its boss mod: CONTINUE? (continue), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -14,7 +14,7 @@ MUSIC_FOR.chuckecache = 'insertcoin';
 
 // ---- the corp
 CORPS.chuckecache = {
-  key: 'chuckecache', name: "CHUCK E. CACHE'S", letter: 'u', level: 3,
+  key: 'chuckecache', name: "CHUCK E. CACHE'S", code: 'CE', level: 3,
   intel: '"where a hacker can be a kid!"',
   tell: null, tickets: true,
   bossDesc: 'boss: the score runs fast.',

@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.10']);
+NEON_FILES.push(['engine/run.js', 'v12.11']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -529,15 +529,30 @@ async function pick(i) {
   const scans = { xaxis: () => real.row === t.row, yaxis: () => real.col === t.col };
   const axis = real.state === 'closed' ? modsAt('pick').find(k => scans[k] && scans[k]()) || null : null;
   if (axis) return onScan(t, real, axis);
+  // A scan that misses still lights its line (dim, quick), so you see what it checked.
+  const axes = modsAt('pick').filter(k => scans[k]);
+  if (axes.length && real.state === 'closed') st.lv.scan = { t0: performance.now(), from: t, axes, real: null };
   await onTrap(t, i);
 }
 
+// X-AXIS / Y-AXIS: the scan runs out from the tap along the row / column, one node a step
+// (drawn in engine/scene.js from lv.scan). When it reaches the real node, that node lights up,
+// a beat, then the reveal.
+const SCAN_STEP = 90;
+const scanDist = (a, b) => Math.abs(a.col - b.col) + Math.abs(a.row - b.row);
 async function onScan(t, real, axis) {
-  st.lv.scanned = true;
+  const lv = st.lv;
+  lv.scanned = true;
   lockTile(t, C.accent, axis);
+  lv.scan = { t0: performance.now(), from: t, axes: [axis], real };
+  setMsg(`> ${MODS[axis].name.toLowerCase()} scan...`, C.mid);
+  const d = scanDist(t, real);
+  for (let k = 1; k <= d; k++) { await wait(SCAN_STEP); if (k < d) Sound.tick(); }
+  Sound.ping(1568);
   flash(C.accent, 0.12, 0.3);
-  setMsg(`> ${MODS[axis].name.toLowerCase()} scan: it's in this ${axis === 'xaxis' ? 'row' : 'column'}.`, C.accent);
-  await wait(420);
+  setMsg(`> ${MODS[axis].name.toLowerCase()} scan: found it in this ${axis === 'xaxis' ? 'row' : 'column'}.`, C.accent);
+  await wait(650);
+  lv.scan = null;
   await onSafe(real);
 }
 

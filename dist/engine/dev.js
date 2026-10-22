@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v12.10']);
+NEON_FILES.push(['engine/dev.js', 'v12.11']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
@@ -137,7 +137,7 @@ function devCorpLines() {
   for (const k of corpsByLevel()) {
     const d = CORPS[k];
     if ((d.level || 1) !== lvl) { lvl = d.level || 1; lines.push({ text: '' }, { text: `- LEVEL ${lvl} -`, col: C.mid }); }
-    lines.push({ text: `${k === st.devCorp ? '>' : ' '} ${d.letter}  ${d.name.slice(0, 16).padEnd(16)}`, id: 'dc_' + k, onTap: () => { st.devCorp = k; st.devPage = null; st.devTop = 0; Sound.ui(); } });
+    lines.push({ text: `${k === st.devCorp ? '>' : ' '} ${corpCode(d)}  ${d.name.slice(0, 16).padEnd(16)}`, id: 'dc_' + k, onTap: () => { st.devCorp = k; st.devPage = null; st.devTop = 0; Sound.ui(); } });
   }
   lines.push({ text: '' }, { text: '[ back ]', id: 'dcback', onTap: () => { st.devPage = null; st.devTop = 0; Sound.ui(); } });
   return lines;
@@ -179,7 +179,7 @@ function devMenuLines() {
   T('corp tester', C.mid);
   const tc = st.devCorp && CORPS[st.devCorp] ? st.devCorp : 'basic', td = CORPS[tc];
   st.devTier = st.devTier || 1;
-  B(`[ corp: ${(td.letter + ' ' + td.name).slice(0, 16).padEnd(16)} LV${td.level || 1} v ]`, 'dcorp', () => { st.devPage = 'corps'; st.devTop = 0; Sound.ui(); });
+  B(`[ corp: ${(corpCode(td) + ' ' + td.name).slice(0, 16).padEnd(16)} LV${td.level || 1} v ]`, 'dcorp', () => { st.devPage = 'corps'; st.devTop = 0; Sound.ui(); });
   const cmKeys = [null, ...Object.keys(CORP_MODS)];
   B(`[ modifier: ${(st.devCMod ? CORP_MODS[st.devCMod].name : 'none').padEnd(8)} ]`, 'dcmod', () => { st.devCMod = cmKeys[(cmKeys.indexOf(st.devCMod || null) + 1) % cmKeys.length]; Sound.tick(); });
   lines.push({ row: [
@@ -219,7 +219,7 @@ function devMenuLines() {
   const inCorp = st.mode === 'play' && st.corp && st.corp.hasBoss && st.lv && !st.lv.boss;
   const sel = st.mode === 'map' && st.mapSel && run.map[st.mapSel];
   const selCorp = sel && (sel.type === 'corp' || sel.type === 'final') ? sel : null;
-  const bossLabel = inCorp ? '[ jump to this boss ]' : selCorp ? `[ jump to ${corpDef(selCorp.corp).letter} boss ]` : '[ jump to boss ]';
+  const bossLabel = inCorp ? '[ jump to this boss ]' : selCorp ? `[ jump to ${corpCode(corpDef(selCorp.corp))} boss ]` : '[ jump to boss ]';
   B(bossLabel, 'boss', cheat(() => jumpToBoss(selCorp)), !idle || !(inCorp || selCorp));
   if (!inCorp && !selCorp) T('(select a corp on the map first)', C.dim);
   B('[ clear this sector ]', 'sclr', cheat(() => {

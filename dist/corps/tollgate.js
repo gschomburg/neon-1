@@ -1,6 +1,6 @@
 // NeoN+1 corps/tollgate.js
 'use strict';
-NEON_FILES.push(['corps/tollgate.js', 'v12.10']);
+NEON_FILES.push(['corps/tollgate.js', 'v12.11']);
 // Its boss mod: EZPASS (ezpass), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.tollgate = 'tollroad';
 
 // ---- the corp
 CORPS.tollgate = {
-  key: 'tollgate', name: 'TOLLGATE', letter: 'J', level: 2,
+  key: 'tollgate', name: 'TOLLGATE', code: 'TG', level: 2,
   intel: '"exact change only."',
   tell: null, pay: 1.3,
   bossDesc: 'boss: the booth is next door.',

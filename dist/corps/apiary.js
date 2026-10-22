@@ -1,6 +1,6 @@
 // NeoN+1 corps/apiary.js
 'use strict';
-NEON_FILES.push(['corps/apiary.js', 'v12.10']);
+NEON_FILES.push(['corps/apiary.js', 'v12.11']);
 // Its boss mod: HONEYCOMB (honeycomb), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.apiary = 'hive';
 
 // ---- the corp
 CORPS.apiary = {
-  key: 'apiary', name: 'APIARY', letter: '@', level: 3,
+  key: 'apiary', name: 'APIARY', code: 'AP', level: 3,
   intel: '"long live the queen."',
   tell: null,
   bossDesc: 'boss: half the hive swarms.',

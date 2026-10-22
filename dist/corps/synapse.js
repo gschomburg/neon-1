@@ -1,6 +1,6 @@
 // NeoN+1 corps/synapse.js
 'use strict';
-NEON_FILES.push(['corps/synapse.js', 'v12.10']);
+NEON_FILES.push(['corps/synapse.js', 'v12.11']);
 // Its boss mod: TURING (turing), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -13,7 +13,7 @@ MUSIC_FOR.synapse = 'deeplearning';
 
 // ---- the corp
 CORPS.synapse = {
-  key: 'synapse', name: 'SYNAPSE AI', letter: 's', level: 4,
+  key: 'synapse', name: 'SYNAPSE AI', code: 'SY', level: 4,
   intel: '"we know you. better than you."',
   tell: null,
   bossDesc: 'boss: fully trained.',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/tumbler.js
 'use strict';
-NEON_FILES.push(['corps/tumbler.js', 'v12.10']);
+NEON_FILES.push(['corps/tumbler.js', 'v12.11']);
 // Its boss mod: PICKSET (pickset), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.tumbler = 'tumblers';
 
 // ---- the corp
 CORPS.tumbler = {
-  key: 'tumbler', name: 'TUMBLER LOCKS', letter: 'T', level: 2,
+  key: 'tumbler', name: 'TUMBLER LOCKS', code: 'TU', level: 2,
   intel: '"every lock has a weak pin."',
   tell: null, nodes: 1,
   bossDesc: 'boss: pins rattle loose.',

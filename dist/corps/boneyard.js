@@ -1,6 +1,6 @@
 // NeoN+1 corps/boneyard.js
 'use strict';
-NEON_FILES.push(['corps/boneyard.js', 'v12.10']);
+NEON_FILES.push(['corps/boneyard.js', 'v12.11']);
 // Its boss mod: GRAVE ROBBER (graverobber), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.boneyard = 'graveshift';
 
 // ---- the corp
 CORPS.boneyard = {
-  key: 'boneyard', name: 'BONEYARD', letter: 'j', level: 3, moves: true,
+  key: 'boneyard', name: 'BONEYARD', code: 'BY', level: 3, moves: true,
   intel: '"the guy asked for something spooky."',
   tell: null, money: 'BONES',
   bossDesc: 'boss: the ghosts walk.',

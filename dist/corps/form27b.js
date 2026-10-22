@@ -1,6 +1,6 @@
 // NeoN+1 corps/form27b.js
 'use strict';
-NEON_FILES.push(['corps/form27b.js', 'v12.10']);
+NEON_FILES.push(['corps/form27b.js', 'v12.11']);
 // Its boss mod: QUEUE NUMBER (queuenumber), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -20,7 +20,7 @@ MUSIC_FOR.form27b = 'redtape';
 // ---- the corp
 // ---- Tier 2, group 5: new pick rules (corp `tap` takes over a tap; true = handled).
 CORPS.form27b = {
-  key: 'form27b', name: 'FORM 27B', letter: 'y', level: 4,
+  key: 'form27b', name: 'FORM 27B', code: 'FM', level: 4,
   intel: '"please take a number."',
   tell: null,
   bossDesc: 'boss: the form is longer.',

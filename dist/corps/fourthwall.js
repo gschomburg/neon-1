@@ -1,6 +1,6 @@
 // NeoN+1 corps/fourthwall.js
 'use strict';
-NEON_FILES.push(['corps/fourthwall.js', 'v12.10']);
+NEON_FILES.push(['corps/fourthwall.js', 'v12.11']);
 // Its boss mod: SPOILER (spoiler), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -25,7 +25,7 @@ MUSIC_FOR.fourthwall = 'bluescreen';
 
 // ---- the corp
 CORPS.fourthwall = {
-  key: 'fourthwall', name: 'FOURTH WALL', letter: ']', level: 5,
+  key: 'fourthwall', name: 'FOURTH WALL', code: 'FW', level: 5,
   intel: '"hi. yes, you. holding the phone."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: runner.exe has stopped.',

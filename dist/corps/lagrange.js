@@ -1,6 +1,6 @@
 // NeoN+1 corps/lagrange.js
 'use strict';
-NEON_FILES.push(['corps/lagrange.js', 'v12.10']);
+NEON_FILES.push(['corps/lagrange.js', 'v12.11']);
 // Its boss mod: PRECOG (precog), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -28,7 +28,7 @@ MUSIC_FOR.lagrange = 'lightlag';
 
 // ---- the corp
 CORPS.lagrange = {
-  key: 'lagrange', name: 'LAGRANGE NET', letter: '2', level: 5, moves: true,
+  key: 'lagrange', name: 'LAGRANGE NET', code: 'LG', level: 5, moves: true,
   intel: '"we\'ll get back to you. eventually."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: two echoes. one lies.',

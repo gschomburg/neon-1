@@ -1,6 +1,6 @@
 // NeoN+1 corps/drop4.js
 'use strict';
-NEON_FILES.push(['corps/drop4.js', 'v12.10']);
+NEON_FILES.push(['corps/drop4.js', 'v12.11']);
 // Its boss mod: FOUR IN A ROW (fourinarow), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -30,7 +30,7 @@ MUSIC_FOR.drop4 = 'gravitydrop';
 
 // ---- the corp
 CORPS.drop4 = {
-  key: 'drop4', name: 'DROP-4', letter: '4', level: 3,
+  key: 'drop4', name: 'DROP-4', code: 'DR', level: 3,
   intel: '"four in a row. or bust."',
   tell: null, nodes: 2,   // a line of four needs 4+ chips
   bossDesc: 'boss: a bigger board.',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/coldbrew.js
 'use strict';
-NEON_FILES.push(['corps/coldbrew.js', 'v12.10']);
+NEON_FILES.push(['corps/coldbrew.js', 'v12.11']);
 // Its boss mod: ESPRESSO (espresso), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.coldbrew = 'doubleshot';
 
 // ---- the corp
 CORPS.coldbrew = {
-  key: 'coldbrew', name: 'COLDBREW', letter: '~', level: 2,
+  key: 'coldbrew', name: 'COLDBREW', code: 'CB', level: 2,
   intel: '"another shot? another shot."',
   tell: null, timer: 12, pay: 1.3, shot: true,
   bossDesc: 'boss: decaf steam. barely.',

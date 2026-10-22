@@ -1,6 +1,6 @@
 // NeoN+1 corps/streamflix.js
 'use strict';
-NEON_FILES.push(['corps/streamflix.js', 'v12.10']);
+NEON_FILES.push(['corps/streamflix.js', 'v12.11']);
 // Its boss mod: FREEZE FRAME (freezeframe), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.streamflix = 'buffering';
 
 // ---- the corp
 CORPS.streamflix = {
-  key: 'streamflix', name: 'STREAMFLIX', letter: '=', level: 3,
+  key: 'streamflix', name: 'STREAMFLIX', code: 'SF', level: 3,
   intel: '"are you still watching?"',
   tell: null,
   bossDesc: 'boss: buffering... buffering...',

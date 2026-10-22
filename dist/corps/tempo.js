@@ -1,6 +1,6 @@
 // NeoN+1 corps/tempo.js
 'use strict';
-NEON_FILES.push(['corps/tempo.js', 'v12.10']);
+NEON_FILES.push(['corps/tempo.js', 'v12.11']);
 // Its boss mod: ON BEAT (onbeat), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.tempo = 'fourfloor';
 
 // ---- the corp
 CORPS.tempo = {
-  key: 'tempo', name: 'TEMPO RECORDS', letter: 'b', level: 3,
+  key: 'tempo', name: 'TEMPO RECORDS', code: 'TM', level: 3,
   intel: '"feel the beat. BE the beat."',
   tell: null,
   bossDesc: 'boss: find the off-beat.',

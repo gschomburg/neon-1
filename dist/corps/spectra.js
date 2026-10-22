@@ -1,6 +1,6 @@
 // NeoN+1 corps/spectra.js
 'use strict';
-NEON_FILES.push(['corps/spectra.js', 'v12.10']);
+NEON_FILES.push(['corps/spectra.js', 'v12.11']);
 // Its boss mod: PRISM (prism), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -19,7 +19,7 @@ MUSIC_FOR.spectra = 'prismatic';
 // ---- Tier 2, group 6: node colors (each color also has its own shape, for color-blind
 // players).
 CORPS.spectra = {
-  key: 'spectra', name: 'SPECTRA', letter: '%', level: 3,
+  key: 'spectra', name: 'SPECTRA', code: 'SP', level: 3,
   intel: '"we see what you can\'t."',
   tell: null,
   bossDesc: 'boss: the spectrum runs backwards.',

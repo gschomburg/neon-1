@@ -1,6 +1,6 @@
 // NeoN+1 corps/pawnbros.js
 'use strict';
-NEON_FILES.push(['corps/pawnbros.js', 'v12.10']);
+NEON_FILES.push(['corps/pawnbros.js', 'v12.11']);
 // Its boss mod: CHANCE CARD (chancecard), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -21,7 +21,7 @@ MUSIC_FOR.pawnbros = 'freeparking';
 
 // ---- the corp
 CORPS.pawnbros = {
-  key: 'pawnbros', name: 'PAWN BROS', letter: 'x', level: 3,
+  key: 'pawnbros', name: 'PAWN BROS', code: 'PB', level: 3,
   intel: '"do not pass GO. well, ok, pass it."',
   tell: null,
   bossDesc: 'boss: chance cards.',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/safeharbor.js
 'use strict';
-NEON_FILES.push(['corps/safeharbor.js', 'v12.10']);
+NEON_FILES.push(['corps/safeharbor.js', 'v12.11']);
 // Its boss mod: POLICY (policy), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.safeharbor = 'fineprint';
 
 // ---- the corp
 CORPS.safeharbor = {
-  key: 'safeharbor', name: 'SAFEHARBOR', letter: 'F', level: 2,
+  key: 'safeharbor', name: 'SAFEHARBOR', code: 'SH', level: 2,
   intel: '"read the fine print."',
   tell: null,
   bossDesc: 'boss: the fakes forge the print.',

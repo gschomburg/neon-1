@@ -1,6 +1,6 @@
 // NeoN+1 corps/headline.js
 'use strict';
-NEON_FILES.push(['corps/headline.js', 'v12.10']);
+NEON_FILES.push(['corps/headline.js', 'v12.11']);
 // Its boss mod: SCOOP (scoop), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -15,7 +15,7 @@ MUSIC_FOR.headline = 'newsdesk';
 
 // ---- the corp
 CORPS.headline = {
-  key: 'headline', name: 'HEADLINE NEWS', letter: 'n', level: 3,
+  key: 'headline', name: 'HEADLINE NEWS', code: 'HN', level: 3,
   intel: '"if it bleeds, it leads."',
   tell: null,
   bossDesc: 'boss: rumors everywhere.',

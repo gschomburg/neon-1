@@ -1,6 +1,6 @@
 // NeoN+1 corps/numberwong.js
 'use strict';
-NEON_FILES.push(['corps/numberwong.js', 'v12.10']);
+NEON_FILES.push(['corps/numberwong.js', 'v12.11']);
 // Its boss mod: PENCIL MARKS (pencil), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -13,7 +13,7 @@ MUSIC_FOR.numberwong = 'numberwong';
 
 // ---- the corp
 CORPS.numberwong = {
-  key: 'numberwong', name: 'NUMBERWONG', letter: '#', level: 4,
+  key: 'numberwong', name: 'NUMBERWONG', code: 'NW', level: 4,
   intel: '"that\'s numberwong!"',
   tell: null,
   bossDesc: 'boss: only prime. no easy outs.',

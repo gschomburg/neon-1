@@ -1,6 +1,6 @@
 // NeoN+1 corps/chronos.js
 'use strict';
-NEON_FILES.push(['corps/chronos.js', 'v12.10']);
+NEON_FILES.push(['corps/chronos.js', 'v12.11']);
 // Its boss mod: OVERCLOCK (overclock), FASTPAY (fastpay), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.chronos = 'overdrive';
 
 // ---- the corp
 CORPS.chronos = {
-  key: 'chronos', name: 'CHRONOS', letter: 'C', level: 3,
+  key: 'chronos', name: 'CHRONOS', code: 'CR', level: 3,
   intel: '"time is money. yours is short."',
   tell: null, timer: 10, pay: 1.6, bossShrink: true,
   bossDesc: 'boss: clock shrinks every miss.',

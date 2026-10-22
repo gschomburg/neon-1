@@ -1,6 +1,6 @@
 // NeoN+1 corps/kerning.js
 'use strict';
-NEON_FILES.push(['corps/kerning.js', 'v12.10']);
+NEON_FILES.push(['corps/kerning.js', 'v12.11']);
 // Its boss mod: PIXEL PEEP (pixelpeep), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.kerning = 'leading';
 
 // ---- the corp
 CORPS.kerning = {
-  key: 'kerning', name: 'KERNING', letter: 'A', level: 3,
+  key: 'kerning', name: 'KERNING', code: 'KN', level: 3,
   intel: '"everything in place. EVERYTHING."',
   tell: null,
   bossDesc: 'boss: "we fixed it. ALL of it."',

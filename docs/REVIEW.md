@@ -6,6 +6,20 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **Corp map codes** (v12.11). Corps on the map are now 2 letters + their level (`SK1` = SEEKR, level 1),
+  in the corp's colors, in place of `[S]`. Nodes you can travel to get a small glint across the code now and then
+  (it replaces the old blinking brackets). Stops and OMNI keep brackets: `[$]` `[?]` `[+]` `[!]`. Also in the codex,
+  help, results and dev corp list. The level digit is in the same color as the letters; it could get its own color
+  (or be bars) if it doesn't read as "level". Rename any code: it's `code:` near the top of each `corps/*.js`. All 78:
+  - LV1: `BC1` BASIC CORP, `BG1` BURGERTRON, `MM1` MEGAMART, `MO1` MOCHI MOCHI, `NB1` NIMBUS WEATHER, `PN1` PARCELNET, `PR1` PERIMETER SYS, `PT1` PLAYTIME, `SK1` SEEKR
+  - LV2: `BL2` BRIGHTLINE POWER, `BP2` BYTEPETS, `CB2` COLDBREW, `CW2` CLONEWORKS, `DT2` DIALTONE ONLINE, `DW2` DEWEY SYSTEMS, `HC2` HAUTE//COUTURE, `LD2` LEDGER TRUST, `LK2` LUCKEEZ CASINO, `MD2` MEDIX, `ML2` MIRRORLINE, `PW2` PURLWISE, `RY2` RYDR, `SG2` SIGIL DYNAMICS, `SH2` SAFEHARBOR, `TG2` TOLLGATE, `TU2` TUMBLER LOCKS, `ZD2` ZODIAC HOUSE
+  - LV3: `AP3` APIARY, `BB3` BIDBLITZ LIVE, `BK3` BLACKOUT, `BY3` BONEYARD, `CA3` CARAPACE ARMOR, `CE3` CHUCK E. CACHE'S, `CH3` THE CHOIR, `CN3` CHANNEL 9, `CR3` CHRONOS, `DR3` DROP-4, `EC3` ECHO LABS, `FA3` LA FAMIGLIA, `FN3` FORGET-ME-NOT, `GC3` GENCORP, `HN3` HEADLINE NEWS, `HY3` HYDRA, `KN3` KERNING, `KR3` KERNEL, `LC3` LIFTCO, `LX3` LEXICON, `PB3` PAWN BROS, `SF3` STREAMFLIX, `SP3` SPECTRA, `SQ3` SQUALOR, `TM3` TEMPO RECORDS, `TX3` TELEPHONIX, `VD3` VERDANT, `WP3` WATCHPOINT
+  - LV4: `AE4` AEGIS DEFENSE, `CI4` CIPHER, `DM4` DEMOLITION CO, `EN4` ENTROPY, `FM4` FORM 27B, `GL4` GLACIER STORAGE, `GR4` GRIDLOCK TRAFFIC, `HL4` HALFLIFE NUCLEAR, `MT4` MONTE, `NR4` NOIR & ASSOCIATES, `NW4` NUMBERWONG, `PD4` PREDATOR, `SY4` SYNAPSE AI, `TL4` TWINLINK
+  - LV5: `BR5` BITROT, `BT5` BULLET TIME INC, `DB5` DECIBEL LABS, `FW5` FOURTH WALL, `GH5` GROUNDHOG, `GV5` GRAVITAS LABS, `LG5` LAGRANGE NET, `PL5` PLAYBALL, `UP5` UPSIDE
+- [ ] **X-AXIS / Y-AXIS scan** (v12.11). Own one, tap ICE in the real node's row / column: the scan runs out from
+  the tap a node at a time, the real node lights up with a ping, a beat, then the reveal (~1 s, was ~0.4 s). A miss
+  lights its line dim for a moment without slowing the hit. Next on that list: VIRUS, KEYLOGGER, SHATTER, FAILSAFE, TRACER.
+
 - [ ] **Logotype round 4: oldskool / Amiga styles** (2026-10-22). Five takes on NeoN+1 after your references
   (Blue System, Paso's Ice Cream): open `docs/art/logotype_round4.png` (text in `docs/NAMES.md`, round 4). Pick
   favorites / mix and match; then the title can cycle between the face and the logotype.

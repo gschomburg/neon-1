@@ -1,6 +1,6 @@
 // NeoN+1 corps/gencorp.js
 'use strict';
-NEON_FILES.push(['corps/gencorp.js', 'v12.10']);
+NEON_FILES.push(['corps/gencorp.js', 'v12.11']);
 // Its boss mod: MUTATE (mutate), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.gencorp = 'splice';
 
 // ---- the corp
 CORPS.gencorp = {
-  key: 'gencorp', name: 'GENCORP', letter: 'G', level: 3,
+  key: 'gencorp', name: 'GENCORP', code: 'GC', level: 3,
   intel: '"we only improve on nature."',
   tell: null,
   bossDesc: 'boss: the cousins look close.',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/carapace.js
 'use strict';
-NEON_FILES.push(['corps/carapace.js', 'v12.10']);
+NEON_FILES.push(['corps/carapace.js', 'v12.11']);
 // Its boss mod: ROLL UP (rollup), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.carapace = 'shellshock';
 
 // ---- the corp
 CORPS.carapace = {
-  key: 'carapace', name: 'CARAPACE ARMOR', letter: 'o', level: 3,
+  key: 'carapace', name: 'CARAPACE ARMOR', code: 'CA', level: 3,
   intel: '"roll with it."',
   tell: null,
   bossDesc: 'boss: no thin spots.',

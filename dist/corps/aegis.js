@@ -1,6 +1,6 @@
 // NeoN+1 corps/aegis.js
 'use strict';
-NEON_FILES.push(['corps/aegis.js', 'v12.10']);
+NEON_FILES.push(['corps/aegis.js', 'v12.11']);
 // Its boss mod: AMBUSH (ambush), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -35,7 +35,7 @@ MUSIC_FOR.aegis = 'warpath';
 
 // ---- the corp
 CORPS.aegis = {
-  key: 'aegis', name: 'AEGIS DEFENSE', letter: 'g', level: 4, moves: true,
+  key: 'aegis', name: 'AEGIS DEFENSE', code: 'AE', level: 4, moves: true,
   intel: '"hold the line. then take it."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: a decoy holds back too.',

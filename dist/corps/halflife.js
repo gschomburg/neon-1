@@ -1,6 +1,6 @@
 // NeoN+1 corps/halflife.js
 'use strict';
-NEON_FILES.push(['corps/halflife.js', 'v12.10']);
+NEON_FILES.push(['corps/halflife.js', 'v12.11']);
 // Its boss mod: LEAD LINING (leadlining), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -20,7 +20,7 @@ MUSIC_FOR.halflife = 'falloutd';
 
 // ---- the corp
 CORPS.halflife = {
-  key: 'halflife', name: 'HALFLIFE NUCLEAR', letter: 'h', level: 4,
+  key: 'halflife', name: 'HALFLIFE NUCLEAR', code: 'HL', level: 4,
   intel: '"perfectly safe. mostly."',
   tell: null,
   bossDesc: 'boss: the counter crackles.',

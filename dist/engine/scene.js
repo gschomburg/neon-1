@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.10']);
+NEON_FILES.push(['engine/scene.js', 'v12.11']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -427,10 +427,11 @@ function buildBoard({ now, put, addHit, bg, cells }) {
       if (t.lockedBy === 'demo') { word = lv.boss && now - t.hitAt > 1200 ? '?' : String(t.demoN); code = ''; }   // DEMOLITION
       const mid5 = str => { const l = Math.floor((5 - str.length) / 2); return (' '.repeat(l) + str).padEnd(5); };
       const rows = ['+-----+', '|' + t.glyph[0] + '|', '|' + mid5(word) + '|', '|' + (code ? mid5(code) : t.glyph[2]) + '|', '+-----+'];
+      const lc = t.lockedBy === 'xaxis' || t.lockedBy === 'yaxis' ? C.accent : C.dangerDim;   // a scan's start: the scan's color
       rows.forEach((r, k) => {
-        put(tx, ty + k, r[0], C.dangerDim, own);
-        put(tx + 1, ty + k, r.slice(1, TILE_W - 1), k === 2 ? C.text : k === 3 && code ? C.mid : C.dangerDim, own, k === 2);
-        put(tx + TILE_W - 1, ty + k, r[TILE_W - 1], C.dangerDim, own);
+        put(tx, ty + k, r[0], lc, own);
+        put(tx + 1, ty + k, r.slice(1, TILE_W - 1), k === 2 ? C.text : k === 3 && code ? C.mid : lc, own, k === 2);
+        put(tx + TILE_W - 1, ty + k, r[TILE_W - 1], lc, own);
       });
       return;
     }
@@ -443,6 +444,14 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     if (t.ruledOut) { fc = C.dim; gc = C.dim; }
     if (t.state === 'safe' || t.state === 'reveal') { solid = true; fc = C.accent; gc = C.accent; }
     else if (t.probing || st.sel === i || (i === st.hover && !st.busy && !(st.press && st.press.moved))) { solid = true; fc = C.bright; if (!t.loaded) gc = C.bright; }
+    // X-AXIS / Y-AXIS scan (lv.scan, set in engine/run.js): nodes on the line light up as the
+    // scan reaches them. A hit stays lit and the real node glows; a miss is dim and fades.
+    const sc = lv.scan;
+    if (sc && t.state === 'closed' && t !== sc.from && sc.axes.some(a => a === 'xaxis' ? t.row === sc.from.row : t.col === sc.from.col)) {
+      const age = now - sc.t0 - scanDist(t, sc.from) * SCAN_STEP;
+      if (sc.real && age >= 0) { solid = true; fc = t === sc.real ? C.bright : C.accent; if (t === sc.real) { gc = C.bright; bold = true; } }
+      else if (!sc.real && age >= 0 && age < 450 && !solid) { fc = C.accent; }
+    }
     const edge = solid ? '+-----+' : '+- - -+';
     const side = solid ? '|' : ':';
     let glyph = masked && t.state === 'closed' && !t.loaded ? MASK_GLYPH : t.glyph;
@@ -509,7 +518,14 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     if (boardDef && boardDef.cellTap) addHit(tx, ty, TILE_W, TILE_H, { kind: 'cell', cell });
     const lab = boardDef && boardDef.cellLabel ? boardDef.cellLabel(lv, cell) : null;
     if (lab) put(tx + 3 - Math.floor(lab.length / 2), ty + 2, lab, C.accent, 'dot', true);
-    else put(tx + 3, ty + 2, '.', C.dim, 'dot');
+    else {
+      // X-AXIS / Y-AXIS: the scan lights the empty cells on its line too (- for a row, | for a column)
+      const sc = lv.scan, c = { col: cell % lv.cols, row: Math.floor(cell / lv.cols) };
+      const ax = sc && sc.axes.find(a => a === 'xaxis' ? c.row === sc.from.row : c.col === sc.from.col);
+      const age = ax ? now - sc.t0 - scanDist(c, sc.from) * SCAN_STEP : -1;
+      if (ax && age >= 0 && (sc.real || age < 450)) put(tx + 3, ty + 2, ax === 'xaxis' ? '-' : '|', C.accent, 'dot', !!sc.real);
+      else put(tx + 3, ty + 2, '.', C.dim, 'dot');
+    }
   }
   // corp marks beside a cell (LAGRANGE's early echo and your sent tap)
   if (boardDef && boardDef.marks) for (const m of boardDef.marks(lv, now) || []) {
@@ -582,7 +598,7 @@ function linkDots(a, b, f) {
   return out;
 }
 
-// Corp node colors on the map: the corp's own palette behind its letter. If that
+// Corp node colors on the map: the corp's own palette behind its code. If that
 // background is too close to the map's, use the corp's dim color instead so it reads.
 const hexLum = h => { const v = parseInt(String(h).slice(1), 16); return ((v >> 16) * 0.299 + ((v >> 8) & 255) * 0.587 + (v & 255) * 0.114) / 255; };
 function corpIconCols(n) {
@@ -616,7 +632,7 @@ function drawMapView(ctx, y, ln) {
     if (!inView(p.row)) continue;
     const visited = r.visited.includes(n.id), dead = !r.win && n.id === r.at;
     const col = dead ? C.danger : visited ? C.accent : n.type === 'final' ? C.dangerDim : C.dim;
-    put(p.x - 1, y + p.row - top, `[${nodeLetter(n)}]`, col, 'board', dead || visited);
+    put(p.x - 1, y + p.row - top, nodeLabel(n), col, 'board', dead || visited);
     if (dead) put(p.x - 3, y + p.row - top, 'X', C.danger, 'board', true);
     if (r.win && n.id === r.at) put(p.x - 3, y + p.row - top, '@', C.bright, 'board', true);
   }
@@ -660,8 +676,20 @@ function buildMap(ctx) {
     if (available) col = sel ? C.accent : (Math.floor(now / 500) % 2 ? C.bright : C.text);
     // corps in their own colors (not once you've been there)
     const cc = !visited ? corpIconCols(n) : null;
-    if (cc) { ctx.bg(p.x - 1, y, 3, cc.bg, available ? 1 : 0.55); put(p.x - 1, y, '[', col, 'map'); put(p.x, y, nodeLetter(n), available ? cc.fg : col, 'map', available); put(p.x + 1, y, ']', col, 'map'); }
-    else put(p.x - 1, y, `[${nodeLetter(n)}]`, col, 'map');
+    const label = nodeLabel(n);
+    if (cc && label[0] !== '[') {
+      ctx.bg(p.x - 1, y, 3, cc.bg, available ? 1 : 0.55);
+      // Nodes you can go to: a glint sweeps across the code now and then (that cell's colors
+      // swap), each node at its own time. Selected: the code is drawn inverted.
+      const g = available ? Math.floor(((now + p.x * 397 + p.row * 211) % 2400) / 90) : -1;
+      for (let i = 0; i < 3; i++) {
+        const inv = available && (sel || g === i);
+        if (inv) ctx.bg(p.x - 1 + i, y, 1, cc.fg, 1);
+        put(p.x - 1 + i, y, label[i], inv ? cc.bg : available ? cc.fg : col, 'map', available);
+      }
+    }
+    else if (cc) { ctx.bg(p.x - 1, y, 3, cc.bg, available ? 1 : 0.55); put(p.x - 1, y, '[', col, 'map'); put(p.x, y, label[1], available ? cc.fg : col, 'map', available); put(p.x + 1, y, ']', col, 'map'); }
+    else put(p.x - 1, y, label, col, 'map');
     if (hov) ctx.bg(p.x - 1, y, 3, C.accent, 0.25);
     if (n.mod && CORP_MODS[n.mod] && !visited) put(p.x + 2, y, CORP_MODS[n.mod].tag, C.money, 'map', true);   // corp modifier
     if (sel) { put(p.x - 3, y, '>', C.accent, 'map'); put(p.x + 3, y, '<', C.accent, 'map'); }
@@ -686,7 +714,7 @@ function buildMap(ctx) {
       return;
     }
     putC(y0 + 1, 'choose a target.', C.text, 'map');
-    putC(y0 + 3, 'letters = corps   ! = final', C.dim, 'map');
+    putC(y0 + 3, 'AB3 = corp, level 3   ! = final', C.dim, 'map');
     putC(y0 + 4, '$ = market  ? = cache  + = repair', C.dim, 'map');
     if (run.sector > 0) putC(y0 + 5, 'scroll for older sectors.', C.dim, 'map');
     return;

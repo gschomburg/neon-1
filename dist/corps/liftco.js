@@ -1,6 +1,6 @@
 // NeoN+1 corps/liftco.js
 'use strict';
-NEON_FILES.push(['corps/liftco.js', 'v12.10']);
+NEON_FILES.push(['corps/liftco.js', 'v12.11']);
 // Its boss mod: EXPRESS (express), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.liftco = 'muzak';
 
 // ---- the corp
 CORPS.liftco = {
-  key: 'liftco', name: 'LIFTCO', letter: 'l', level: 3,
+  key: 'liftco', name: 'LIFTCO', code: 'LC', level: 3,
   intel: '"going up. going down. going up."',
   tell: null,
   bossDesc: 'boss: express. it barely stops.',

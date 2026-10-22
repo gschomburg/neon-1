@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v12.10']);
+NEON_FILES.push(['engine/help.js', 'v12.11']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -73,7 +73,7 @@ function buildNetPage(T, X) {
   H('CORPS');
   P('4 layers and a boss. each corp hides the real node its own way: its tell. the quote on the map is a hint.');
   for (const d of [CORPS.perimeter, CORPS.sigil, CORPS.chronos, CORPS.mirror, FINAL]) {
-    X({ text: `[${d.letter}]  ${d.name}`.padEnd(HELP_W), colorAt: i => i < 3 ? (d === FINAL ? C.danger : C.bright) : C.text });
+    X({ text: `${corpCode(d)}  ${d.name}`.padEnd(HELP_W), colorAt: i => i < 3 ? (d === FINAL ? C.danger : C.bright) : C.text });
   }
   P('beat a corp to log its tell in the CODEX.');
   T('');

@@ -1,6 +1,6 @@
 // NeoN+1 corps/brightline.js
 'use strict';
-NEON_FILES.push(['corps/brightline.js', 'v12.10']);
+NEON_FILES.push(['corps/brightline.js', 'v12.11']);
 // Its boss mod: GROUNDED (grounded), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -12,7 +12,7 @@ MUSIC_FOR.brightline = 'brownout';
 // ---- Tier 2, group 1: node animation (corp `fx`). fx(t, ft, lv) runs every frame for
 // each closed node; ft is the node's own clock (it stops while the node is frozen).
 CORPS.brightline = {
-  key: 'brightline', name: 'BRIGHTLINE POWER', letter: '*', level: 2,
+  key: 'brightline', name: 'BRIGHTLINE POWER', code: 'BL', level: 2,
   intel: '"keeping the lights on. mostly."',
   tell: null,
   bossDesc: 'boss: blink and you miss it.',

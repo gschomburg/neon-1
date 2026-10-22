@@ -1,6 +1,6 @@
 // NeoN+1 corps/cloneworks.js
 'use strict';
-NEON_FILES.push(['corps/cloneworks.js', 'v12.10']);
+NEON_FILES.push(['corps/cloneworks.js', 'v12.11']);
 // Its boss mod: TWIN LOCK (twinlock), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.cloneworks = 'mitosis';
 
 // ---- the corp
 CORPS.cloneworks = {
-  key: 'cloneworks', name: 'CLONEWORKS', letter: 'D', level: 2,
+  key: 'cloneworks', name: 'CLONEWORKS', code: 'CW', level: 2,
   intel: '"two of everything. almost."',
   tell: null, nodes: 1,   // at least 3 nodes: the real one and a pair
   bossDesc: 'boss: the clones mutate.',

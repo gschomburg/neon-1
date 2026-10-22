@@ -1,6 +1,6 @@
 // NeoN+1 corps/telephonix.js
 'use strict';
-NEON_FILES.push(['corps/telephonix.js', 'v12.10']);
+NEON_FILES.push(['corps/telephonix.js', 'v12.11']);
 // Its boss mod: CALLER ID (callerid), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -14,7 +14,7 @@ MUSIC_FOR.telephonix = 'onhold';
 
 // ---- the corp
 CORPS.telephonix = {
-  key: 'telephonix', name: 'TELEPHONIX', letter: 't', level: 3,
+  key: 'telephonix', name: 'TELEPHONIX', code: 'TX', level: 3,
   intel: '"please hold. your call matters."',
   tell: null,
   bossDesc: 'boss: dial by letter.',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/ledger.js
 'use strict';
-NEON_FILES.push(['corps/ledger.js', 'v12.10']);
+NEON_FILES.push(['corps/ledger.js', 'v12.11']);
 // Its boss mod: INTEREST (interest), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -13,7 +13,7 @@ MUSIC_FOR.ledger = 'compound';
 
 // ---- the corp
 CORPS.ledger = {
-  key: 'ledger', name: 'LEDGER TRUST', letter: 'L', level: 2,
+  key: 'ledger', name: 'LEDGER TRUST', code: 'LD', level: 2,
   intel: '"your balance is our business."',
   tell: null,
   bossDesc: 'boss: bigger balances.',

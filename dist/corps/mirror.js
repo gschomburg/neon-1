@@ -1,6 +1,6 @@
 // NeoN+1 corps/mirror.js
 'use strict';
-NEON_FILES.push(['corps/mirror.js', 'v12.10']);
+NEON_FILES.push(['corps/mirror.js', 'v12.11']);
 // Its boss mod: SHATTER (shatter), AFTERIMAGE (afterimage), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.mirror = 'glass';
 
 // ---- the corp
 CORPS.mirror = {
-  key: 'mirror', name: 'MIRRORLINE', letter: 'M', level: 2,
+  key: 'mirror', name: 'MIRRORLINE', code: 'ML', level: 2,
   intel: '"every step echoes the last."',
   tell: 'mirror', bossTell: 'point',
   bossDesc: 'boss: the echo turns over.',

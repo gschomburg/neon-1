@@ -1,6 +1,6 @@
 // NeoN+1 corps/sigil.js
 'use strict';
-NEON_FILES.push(['corps/sigil.js', 'v12.10']);
+NEON_FILES.push(['corps/sigil.js', 'v12.11']);
 // Its boss mod: SIGSCAN (sigscan), FORGERY (forgery), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.sigil = 'velvet';
 
 // ---- the corp
 CORPS.sigil = {
-  key: 'sigil', name: 'SIGIL DYNAMICS', letter: 'S', level: 2,
+  key: 'sigil', name: 'SIGIL DYNAMICS', code: 'SG', level: 2,
   intel: '"we sign everything we make."',
   tell: 'mark', bossTell: 'mark', bossFlash: true,
   bossDesc: 'boss: the signature fades fast.',

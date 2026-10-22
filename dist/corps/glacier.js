@@ -1,6 +1,6 @@
 // NeoN+1 corps/glacier.js
 'use strict';
-NEON_FILES.push(['corps/glacier.js', 'v12.10']);
+NEON_FILES.push(['corps/glacier.js', 'v12.11']);
 // Its boss mod: ICEBOX (icebox), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -12,7 +12,7 @@ MUSIC_FOR.glacier = 'permafrost';
 // ---- Tier 2, group 2: timed board effects (corp `tick`). tick(lv, lt, dt, now) runs every
 // frame while you can pick; lt is the layer's own clock (it stops while you're busy).
 CORPS.glacier = {
-  key: 'glacier', name: 'GLACIER STORAGE', letter: 'i', level: 4,
+  key: 'glacier', name: 'GLACIER STORAGE', code: 'GL', level: 4,
   intel: '"everything keeps. forever."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: the frost moves fast.',

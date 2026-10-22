@@ -1,6 +1,6 @@
 // NeoN+1 corps/lexicon.js
 'use strict';
-NEON_FILES.push(['corps/lexicon.js', 'v12.10']);
+NEON_FILES.push(['corps/lexicon.js', 'v12.11']);
 // Its boss mod: SPELLBOUND (spellbound), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -19,7 +19,7 @@ MUSIC_FOR.lexicon = 'typeset';
 
 // ---- the corp
 CORPS.lexicon = {
-  key: 'lexicon', name: 'LEXICON', letter: 'X', level: 3,
+  key: 'lexicon', name: 'LEXICON', code: 'LX', level: 3,
   intel: '"in the beginning was the word."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: the last letter.',

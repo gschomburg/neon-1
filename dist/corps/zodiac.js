@@ -1,6 +1,6 @@
 // NeoN+1 corps/zodiac.js
 'use strict';
-NEON_FILES.push(['corps/zodiac.js', 'v12.10']);
+NEON_FILES.push(['corps/zodiac.js', 'v12.11']);
 // Its boss mod: HOROSCOPE (horoscope), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -18,7 +18,7 @@ MUSIC_FOR.zodiac = 'retrograde';
 
 // ---- the corp
 CORPS.zodiac = {
-  key: 'zodiac', name: 'ZODIAC HOUSE', letter: 'O', level: 2,
+  key: 'zodiac', name: 'ZODIAC HOUSE', code: 'ZD', level: 2,
   intel: '"the stars never lie. we do."',
   tell: null,
   bossDesc: 'boss: mercury retrograde.',

@@ -1,6 +1,6 @@
 // NeoN+1 corps/bytepets.js
 'use strict';
-NEON_FILES.push(['corps/bytepets.js', 'v12.10']);
+NEON_FILES.push(['corps/bytepets.js', 'v12.11']);
 // Its boss mod: COMPANION (companion), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -14,7 +14,7 @@ MUSIC_FOR.bytepets = 'treats';
 
 // ---- the corp
 CORPS.bytepets = {
-  key: 'bytepets', name: 'BYTEPETS', letter: 'p', level: 2,
+  key: 'bytepets', name: 'BYTEPETS', code: 'BP', level: 2,
   intel: '"they love you! feed them!"',
   tell: null,
   bossDesc: 'boss: a cat. it might not come.',

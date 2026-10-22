@@ -1,6 +1,6 @@
 // NeoN+1 corps/dialtone.js
 'use strict';
-NEON_FILES.push(['corps/dialtone.js', 'v12.10']);
+NEON_FILES.push(['corps/dialtone.js', 'v12.11']);
 // Its boss mod: HANDSHAKE (handshake), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -11,7 +11,7 @@ MUSIC_FOR.dialtone = 'handshake';
 // ---- the corp
 // ---- Tier 2, group 3: sound tells (each also shows on the hint row, for muted players).
 CORPS.dialtone = {
-  key: 'dialtone', name: 'DIALTONE ONLINE', letter: 'd', level: 2,
+  key: 'dialtone', name: 'DIALTONE ONLINE', code: 'DT', level: 2,
   intel: '"welcome! you\'ve got ICE!"',
   tell: null,
   bossDesc: 'boss: it counts from the end.',

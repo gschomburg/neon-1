@@ -1,6 +1,6 @@
 // NeoN+1 corps/famiglia.js
 'use strict';
-NEON_FILES.push(['corps/famiglia.js', 'v12.10']);
+NEON_FILES.push(['corps/famiglia.js', 'v12.11']);
 // Its boss mod: OMERTA (omerta), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.famiglia = 'omerta';
 
 // ---- the corp
 CORPS.famiglia = {
-  key: 'famiglia', name: 'LA FAMIGLIA', letter: 'f', level: 3,
+  key: 'famiglia', name: 'LA FAMIGLIA', code: 'FA', level: 3,
   intel: '"nice node you got. shame if..."',
   tell: null,
   bossDesc: 'boss: protection costs 25cr.',

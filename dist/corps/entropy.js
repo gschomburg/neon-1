@@ -1,6 +1,6 @@
 // NeoN+1 corps/entropy.js
 'use strict';
-NEON_FILES.push(['corps/entropy.js', 'v12.10']);
+NEON_FILES.push(['corps/entropy.js', 'v12.11']);
 // Its boss mod: ANCHOR (anchor), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -30,7 +30,7 @@ MUSIC_FOR.entropy = 'scramble';
 
 // ---- the corp
 CORPS.entropy = {
-  key: 'entropy', name: 'ENTROPY', letter: 'z', level: 4, moves: true,
+  key: 'entropy', name: 'ENTROPY', code: 'EN', level: 4, moves: true,
   intel: '"order is just a phase."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: every hit shuffles too.',

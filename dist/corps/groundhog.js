@@ -1,6 +1,6 @@
 // NeoN+1 corps/groundhog.js
 'use strict';
-NEON_FILES.push(['corps/groundhog.js', 'v12.10']);
+NEON_FILES.push(['corps/groundhog.js', 'v12.11']);
 // Its boss mod: DEJA VU (dejavu), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.groundhog = 'sixam';
 
 // ---- the corp
 CORPS.groundhog = {
-  key: 'groundhog', name: 'GROUNDHOG', letter: '8', level: 5,
+  key: 'groundhog', name: 'GROUNDHOG', code: 'GH', level: 5,
   intel: '"same time tomorrow?"',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: two nodes move each loop.',

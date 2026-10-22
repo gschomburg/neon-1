@@ -629,7 +629,7 @@ Agreed changes not built yet.
   how to play, features, multiplayer, version history, how it was made). Not game code: can be done any time.
 - **DONE v11.04: Persona names: add THE and PLAGUE** (2026-10-21): `THE` to the before-words (`NAME_A`) and `PLAGUE` to the
   middle words (`NAME_B`), so THE_PLAGUE (Hackers) can roll, along with THE_POTATO, ACID_PLAGUE and so on.
-- **Make mod effects easier to see when they trigger** (2026-10-21). Some mods go off too fast to tell what
+- **Make mod effects easier to see when they trigger** (2026-10-21). *X-AXIS / Y-AXIS DONE in v12.11; the rest still to do.* Some mods go off too fast to tell what
   happened; give them a beat. Start with **X-AXIS / Y-AXIS**: on the scan, pause a moment and light up the
   whole row / column being checked, especially when the real node is in it, before the reveal (today: the
   tapped tile locks, a quick flash, the message, 420ms, then the real node). Then go through the other
@@ -650,7 +650,7 @@ Agreed changes not built yet.
     (`[ < ] NAME [ > ]`), then the runner card with your name. Put the logo right on top of the card (same
     background) so logo, name and stats read as one block, and move all the controls (logo picker, NEW NAME,
     COLOR, RANDOMIZE ALL) together below it.
-- **Corp map codes: 3 letters instead of `[S]`** (2026-10-21, the user's pick; backlog for now). Many corps
+- **DONE v12.11: Corp map codes** (2026-10-21; the user's twist 2026-10-22: 2 letters + the corp's level, `SK1`). Many corps
   share a first letter and most single characters are taken (the v11 corps got `{` `(` `5`). Each corp
   gets a static 3-letter code (`SKR`, `BNY`, `CPH`) in the same 3 cells as `[S]`, in its corp colors; the
   special nodes keep their brackets (`[$]` `[?]` `[+]` `[!]`), so they stand out more. Maybe one shared,
@@ -1556,6 +1556,7 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.11** (2026-10-22): **corp map codes** and **X-AXIS / Y-AXIS scans you can see**. Each corp has a 2-letter `code` in its file (`SK`, `BR`...); the game adds its level as the third character (`SK1`, `BR5`: `corpCode()` in engine/corps.js). The code takes the place of `[S]` on the map (in the corp's colors; nodes you can go to get a glint that sweeps across the code now and then), and in the codex, the help page, the results' breached list, OMNI's "copies one of" line and the dev corp list. Stops and OMNI keep their brackets (`[$]` `[?]` `[+]` `[!]`). The old one-character `letter` is gone from the corps. X-AXIS / Y-AXIS: the scan runs out from the tap along the row / column, a node a step (ticks; the empty cells show `-` / `|`), the real node lights up with a ping, a beat (650ms), then the reveal; the tapped node shows SCAN in the accent color, not red. A scan that misses lights its line dim for a moment (no extra wait before the hit).
 - **v12.10** (2026-10-22): the message line ("> BOSS LAYER. 6 nodes.") follows palette changes. It kept the color
   value it was posted with, so a palette switch (a corp's colors fading in, or an edit in the palette editor) left it
   in the old color until the next message; now `setMsg` remembers the color slot and the line looks it up live.

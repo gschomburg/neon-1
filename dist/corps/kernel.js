@@ -1,6 +1,6 @@
 // NeoN+1 corps/kernel.js
 'use strict';
-NEON_FILES.push(['corps/kernel.js', 'v12.10']);
+NEON_FILES.push(['corps/kernel.js', 'v12.11']);
 // Its boss mod: SEED READER (seedreader), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.kernel = 'kernelpanic';
 
 // ---- the corp
 CORPS.kernel = {
-  key: 'kernel', name: 'KERNEL', letter: 'E', level: 3,
+  key: 'kernel', name: 'KERNEL', code: 'KR', level: 3,
   intel: '"the seed knows."',
   tell: null,
   bossDesc: 'boss: two characters lit.',

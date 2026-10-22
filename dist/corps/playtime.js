@@ -1,6 +1,6 @@
 // NeoN+1 corps/playtime.js
 'use strict';
-NEON_FILES.push(['corps/playtime.js', 'v12.10']);
+NEON_FILES.push(['corps/playtime.js', 'v12.11']);
 // Its boss mod: JACK-IN-THE-BOX (jackbox), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -17,7 +17,7 @@ MUSIC_FOR.playtime = 'windup';
 
 // ---- the corp
 CORPS.playtime = {
-  key: 'playtime', name: 'PLAYTIME', letter: '&', level: 1,
+  key: 'playtime', name: 'PLAYTIME', code: 'PT', level: 1,
   intel: '"wind it up and watch it go!"',
   tell: null,
   bossDesc: 'boss: the spring is almost out.',

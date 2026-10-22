@@ -1,6 +1,6 @@
 // NeoN+1 corps/perimeter.js
 'use strict';
-NEON_FILES.push(['corps/perimeter.js', 'v12.10']);
+NEON_FILES.push(['corps/perimeter.js', 'v12.11']);
 // Its boss mod: CORNERS (corners), BULWARK (bulwark), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -10,7 +10,7 @@ MUSIC_FOR.perimeter = 'concrete';
 
 // ---- the corp
 CORPS.perimeter = {
-  key: 'perimeter', name: 'PERIMETER SYS', letter: 'P', level: 1,
+  key: 'perimeter', name: 'PERIMETER SYS', code: 'PR', level: 1,
   intel: '"our corners never fall."',
   tell: 'corner', bossTell: 'center',
   bossDesc: 'boss: the core hides inward.',

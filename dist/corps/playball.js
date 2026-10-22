@@ -1,6 +1,6 @@
 // NeoN+1 corps/playball.js
 'use strict';
-NEON_FILES.push(['corps/playball.js', 'v12.10']);
+NEON_FILES.push(['corps/playball.js', 'v12.11']);
 // Its boss mod: OVERTIME (overtime), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -51,7 +51,7 @@ MUSIC_FOR.playball = 'seventhinning';
 
 // ---- the corp
 CORPS.playball = {
-  key: 'playball', name: 'PLAYBALL', letter: '0', level: 5, drag: true,
+  key: 'playball', name: 'PLAYBALL', code: 'PL', level: 5, drag: true,
   intel: '"it\'s not whether you win. it is."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: overtime. two balls.',

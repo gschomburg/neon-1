@@ -1,6 +1,6 @@
 // NeoN+1 corps/upside.js
 'use strict';
-NEON_FILES.push(['corps/upside.js', 'v12.10']);
+NEON_FILES.push(['corps/upside.js', 'v12.11']);
 // Its boss mod: INVERSION (inversion), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -13,7 +13,7 @@ MUSIC_FOR.upside = 'flipside';
 
 // ---- the corp
 CORPS.upside = {
-  key: 'upside', name: 'UPSIDE', letter: '6', level: 5, flip: true,
+  key: 'upside', name: 'UPSIDE', code: 'UP', level: 5, flip: true,
   intel: '"we\'re fine. you\'re upside down."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: taps land mirrored.',

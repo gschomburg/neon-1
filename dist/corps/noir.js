@@ -1,6 +1,6 @@
 // NeoN+1 corps/noir.js
 'use strict';
-NEON_FILES.push(['corps/noir.js', 'v12.10']);
+NEON_FILES.push(['corps/noir.js', 'v12.11']);
 // Its boss mod: INTERROGATE (interrogate), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -32,7 +32,7 @@ MUSIC_FOR.noir = 'gumshoe';
 
 // ---- the corp
 CORPS.noir = {
-  key: 'noir', name: 'NOIR & ASSOCIATES', letter: 'k', level: 4,
+  key: 'noir', name: 'NOIR & ASSOCIATES', code: 'NR', level: 4,
   intel: '"everybody lies. except one."',
   tell: null,
   bossDesc: 'boss: no confessions.',

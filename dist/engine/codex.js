@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v12.10']);
+NEON_FILES.push(['engine/codex.js', 'v12.11']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -80,7 +80,7 @@ function openCodex() {
         T('???', C.dim); T('not found yet.', C.mid); T('enter it on the map to log it.', C.dim);
         for (let i = 0; i < 7; i++) T('');
       } else {
-        X({ text: `${d.letter}  ${d.name}${d.level ? '  LV' + d.level : ''}`, col: key === 'omni' ? C.danger : C.accent, bold: true });
+        X({ text: `${corpCode(d)}  ${d.name}${d.level ? '  LV' + d.level : ''}`, col: key === 'omni' ? C.danger : C.accent, bold: true });
         T(d.intel, C.text);
         T(corpRules(d, 1), C.mid);
         T(d.bossDesc || '', C.dangerDim);
@@ -137,7 +137,7 @@ function openCodex() {
       } else if (tab === 'corps') {
         const ck = key.slice(5), d = corpDef(ck), rec = corpStat(ck);
         X(Object.assign(base, {
-          name: seenK ? `${d.letter}  ${d.name}` : '???', col: seenK ? C.bright : C.dim,
+          name: seenK ? `${corpCode(d)}  ${d.name}` : '???', col: seenK ? C.bright : C.dim,
           right: rec.breached ? 'BREACHED' : seenK ? 'SEEN' : '', rightCol: rec.breached ? C.accent : C.mid,
         }));
       } else {

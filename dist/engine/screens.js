@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v12.10']);
+NEON_FILES.push(['engine/screens.js', 'v12.11']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -246,8 +246,8 @@ function overLines() {
   if (r.newBest) T('** new best **', C.accent);
   else T(`best ${pad2(save.best)}   seed ${r.seed}`, C.mid);
   if (r.practice) T('practice run: not scored', C.dangerDim);
-  // corps breached, by letter
-  { const marks = r.breached.map(k => `[${corpDef(k).letter}]`).join(' ');
+  // corps breached, by code
+  { const marks = r.breached.map(k => corpCode(corpDef(k))).join(' ');
     const txt = `breached ${marks || 'none'}`;
     lines.push({ text: txt, colorAt: i => i < 9 ? C.mid : marks ? C.accent : C.dim }); }
   T('');

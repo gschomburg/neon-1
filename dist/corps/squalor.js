@@ -1,6 +1,6 @@
 // NeoN+1 corps/squalor.js
 'use strict';
-NEON_FILES.push(['corps/squalor.js', 'v12.10']);
+NEON_FILES.push(['corps/squalor.js', 'v12.11']);
 // Its boss mod: INFLUENCER (influencer), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -13,7 +13,7 @@ MUSIC_FOR.squalor = 'doomscroll';
 
 // ---- the corp
 CORPS.squalor = {
-  key: 'squalor', name: 'SQUALOR', letter: ';', level: 3, drag: true,
+  key: 'squalor', name: 'SQUALOR', code: 'SQ', level: 3, drag: true,
   intel: '"like. share. subscribe. obey."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: the comments turn on you.',

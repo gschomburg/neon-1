@@ -1,6 +1,6 @@
 // NeoN+1 corps/gravitas.js
 'use strict';
-NEON_FILES.push(['corps/gravitas.js', 'v12.10']);
+NEON_FILES.push(['corps/gravitas.js', 'v12.11']);
 // Its boss mod: ANTIGRAV (antigrav), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -38,7 +38,7 @@ MUSIC_FOR.gravitas = 'freefall';
 
 // ---- the corp
 CORPS.gravitas = {
-  key: 'gravitas', name: 'GRAVITAS LABS', letter: 'I', level: 5, moves: true,
+  key: 'gravitas', name: 'GRAVITAS LABS', code: 'GV', level: 5, moves: true,
   intel: '"what goes up. you know the rest."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: the floor drops on a timer.',

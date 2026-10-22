@@ -1,6 +1,6 @@
 // NeoN+1 corps/choir.js
 'use strict';
-NEON_FILES.push(['corps/choir.js', 'v12.10']);
+NEON_FILES.push(['corps/choir.js', 'v12.11']);
 // Its boss mod: SACRIFICE (sacrifice), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -13,7 +13,7 @@ MUSIC_FOR.choir = 'hymnal';
 
 // ---- the corp
 CORPS.choir = {
-  key: 'choir', name: 'THE CHOIR', letter: 'c', level: 3,
+  key: 'choir', name: 'THE CHOIR', code: 'CH', level: 3,
   intel: '"have faith. or pay. both work."',
   tell: null, faith: true,
   bossDesc: 'boss: the prophet. tithe 20cr.',
