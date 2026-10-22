@@ -6,6 +6,10 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **SNOOZE** (v12.23). Half your ICE hits do no damage and come back next layer as an extra node with a z in its glyph.
+  Is the z readable enough (or too easy)? If it plays too strong: the held-back rule "the backlog comes due" (leftover
+  snoozed ICE hits you at the end of the corp).
+
 - [ ] **ALL-IN item, and "why not" on items** (v12.22). ALL-IN (EPIC, 60cr): 50/50, the layer clears or +2 ICE (copies of a
   decoy, so a glyph can show up 3 times: a small hint those are ICE; fine?). Tapping an item you can't use now shakes it and
   says why in red under the belt (try ALL-IN in DEMOLITION, or a PATCH at full integrity).

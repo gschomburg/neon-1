@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v12.22']);
+NEON_FILES.push(['data/mods.js', 'v12.23']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },
@@ -175,4 +175,7 @@ const MODS = {
   coinflip:      { name: 'COIN FLIP',      short: 'FLP', kind: 'exotic', rarity: 'exotic', slot: 'tap', icon: 'o0O0', anim: 'exotic', price: 130,
     tip: 'hold a node: flip a coin on it.', desc: 'hold a node to flip a coin first: call a side (♥ or $), win its prize or lose it. wins raise a pay multiplier (to x5).',
     codex: 'hold a node (or drag up from it) and a coin comes up with two faces: ♥ (integrity) or $ (credits), sometimes both the same, sometimes a big one. drag to a side and let go to call it: if the coin lands on it you win that prize, if not you lose it. then the node opens as usual. each win raises a multiplier on all your pay (up to x5), each loss drops it one. a quick tap is a normal pick; let go anywhere else to skip the flip. keys: C on a node, left / right, enter.' },
+  snooze:        { name: 'SNOOZE',         short: 'ZZZ', kind: 'exotic', rarity: 'exotic', slot: 'carry', icon: 'z.Zz', anim: 'exotic', price: 110,
+    tip: 'half your ICE hits: later.', desc: 'half the ICE you hit does no damage now. it follows you into the next layer instead, with a z in its glyph.',
+    codex: 'procrastinate: half the time an ICE hit does no damage and that ICE carries over into the next layer as one more ICE node (in the same spot if it can). it comes back looking like the other nodes there, except one character of its glyph is a z. it stacks: snoozed ICE can be snoozed again.' },
 };

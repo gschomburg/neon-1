@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.22']);
+NEON_FILES.push(['engine/mods.js', 'v12.23']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -172,7 +172,7 @@ const COIN = {
 // Mods some corps switch off: COIN FLIP in the drag corps (DECIBEL, SQUALOR, PLAYBALL: holding and
 // dragging already mean something there), QUANTUM in corps with their own tap rules (DEMOLITION,
 // FORM 27B...). Shown on the map's corp info, the tray tip, and a dimmed badge inside.
-const MOD_OFF = { coinflip: def => !!def.drag, quantum: def => !!def.tap };
+const MOD_OFF = { coinflip: def => !!def.drag, quantum: def => !!def.tap, snooze: def => !!def.tap };
 const modOffIn = (key, def) => !!(def && MOD_OFF[key] && MOD_OFF[key](def));
 const modsOffIn = def => st.run ? st.run.mods.filter(k => modOffIn(k, def)) : [];
 const modOffHere = key => !!(st.mode === 'play' && st.corp && st.corp.hasBoss && modOffIn(key, st.corp.def));

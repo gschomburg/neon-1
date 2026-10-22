@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.22']);
+NEON_FILES.push(['engine/run.js', 'v12.23']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -259,6 +259,7 @@ async function enterLayer() {
     const opts = lv.tiles.filter(t => !t.safe && !t.loaded);
     if (opts.length) pickR(opts, rngFor(run.seed, 'quantum', c.node.id, c.idx)).quantum = true;
   }
+  if (run.snoozed && run.snoozed.length && n > 1 && c.hasBoss && !st.mp && !modOffIn('snooze', c.def)) snoozeIn(lv, rngFor(run.seed, 'snoozein', c.node.id, c.idx));
   lv.eater = has('iceeater') && n > 1 && !st.mp;   // ICE EATER: eat the ICE (a 1-node layer is just the real one)
   lv.iceTotal = lv.tiles.filter(t => !isReal(t)).length; lv.eatPaid = 0;
   lv.dmg = boss && (c.def.bossDmg || c.stageBoss) ? (c.def.bossDmg || 2) : 1;   // sector bosses hit for 2
@@ -285,7 +286,7 @@ async function enterLayer() {
     showBoard('play');
     st.busy = true;
     Sound.bossDrop(); shake(10, 0.6); flash(C.danger, 0.22, 0.45);
-    setMsg(`> BOSS LAYER. ${n} nodes.`, C.danger);
+    setMsg(`> BOSS LAYER. ${lv.n} nodes.`, C.danger);
     if (has('precog')) modFired('precog');
     for (const t of has('precog') ? [lv.tiles[lv.safe], ...lv.tiles.filter(o => !o.safe)] : lv.tiles) { await wait(70); t.hidden = false; Sound.nodeOn(); }
     if (c.def.bossFlash) lv.maskAt = performance.now() + 450 + CONFIG.maskDelayMs;   // SIGIL: the clock starts once you can see them
@@ -302,7 +303,7 @@ async function enterLayer() {
   } else {
     showBoard('play');
     st.busy = true;
-    Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : `> ${n} nodes. ${lv.tiles.some(t => t.quantum) ? 'two are' : 'one is'} real.`);
+    Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : `> ${lv.n} nodes. ${lv.tiles.some(t => t.quantum) ? 'two are' : 'one is'} real.`);
     if (has('precog') && c.hasBoss && n > 1) {   // PRECOG: the real node shows up a beat early
       modFired('precog');
       for (const t of lv.tiles) if (!t.safe) t.hidden = true;
@@ -1044,6 +1045,39 @@ function coinPop(m) {
   setTimeout(() => explode(cells, x, y + L.chh, { power: 0.9, grav: 0.7, life: [0.9, 1.6] }), 280);
 }
 
+// ---- SNOOZE (EXOTIC): the ICE you snoozed comes back into this layer, one more ICE node each: in
+// the same spot if it's free, dressed like this layer's decoys, but one character of its glyph is a z.
+// What doesn't fit waits for the next layer.
+function snoozeIn(lv, r) {
+  const run = st.run, real = lv.tiles[lv.safe];
+  const decoys = lv.tiles.filter(t => !isReal(t) && !t.loaded);
+  const src = decoys.length ? decoys : lv.tiles.filter(t => !isReal(t));
+  const left = [];
+  for (const s of run.snoozed) {
+    const used = new Set(lv.tiles.map(t => t.cell)), free = [];
+    for (let k = 0; k < lv.cols * lv.rows; k++) if (!used.has(k)) free.push(k);
+    if (!free.length || !src.length) { left.push(s); continue; }
+    const same = s.col < lv.cols && s.row < lv.rows ? s.row * lv.cols + s.col : -1;
+    const cell = free.includes(same) ? same : pickR(free, r);
+    const from = pickR(src, r);
+    const glyph = from.glyph.map(l => l);
+    const spots = [];
+    glyph.forEach((l, y) => [...l].forEach((ch, x) => { if (ch !== ' ') spots.push([y, x]); }));
+    if (spots.length) { const [y, x] = pickR(spots, r); glyph[y] = glyph[y].slice(0, x) + 'z' + glyph[y].slice(x + 1); }
+    const nt = Object.assign({}, from, { cell, glyph, safe: false, quantum: false, loaded: false, state: 'closed', hidden: false, probing: false, ruledOut: false, snoozed: true });
+    for (const k of ['dir', 'dirPending', 'dirAt', 'klog', 'klogAt', 'eaten', 'shattered', 'cracks', 'crackAt', 'hitAt', 'lockedBy', 'slide', 'tell', 'infectAt']) delete nt[k];
+    moveTile(lv, nt, cell);
+    lv.tiles.push(nt);
+  }
+  const added = run.snoozed.length - left.length;
+  run.snoozed = left;
+  if (!added) return;
+  lv.tiles.sort((a, b) => a.cell - b.cell);
+  lv.safe = lv.tiles.indexOf(real);
+  lv.n += added;
+  modFired('snooze');
+}
+
 // ---- ALL-IN (EPIC item): 50/50. The layer clears on the spot (normal pay, no perfect), or two new ICE
 // nodes appear: copies of a decoy already there (same glyph and marks), so the corp's tell still holds.
 function allIn() {
@@ -1155,6 +1189,12 @@ function blockHit(t, i) {
     Sound.shield(); flash(C.money, 0.14, 0.3); shake(4);
     modFired('leverage');
     msg = '> ICE. too big to fail.';
+  } else if (has('snooze') && !modOffHere('snooze') && rngFor(run.seed, 'snooze', st.corp.node.id, st.corp.idx, lv.misses)() < 0.5) {
+    // SNOOZE: no damage now; this ICE follows you into the next layer (with a z in its glyph)
+    (run.snoozed = run.snoozed || []).push({ col: t.col, row: t.row });
+    Sound.shield(); flash(C.accent, 0.1, 0.3);
+    modFired('snooze');
+    msg = '> ICE. snoozed: later.';
   } else if (lv.rolled && !lv.rollUsed) {
     lv.rollUsed = true; lv.payCut = 1;
     Sound.shield(); flash(C.accent, 0.14, 0.3); shake(4);

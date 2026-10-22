@@ -29,7 +29,7 @@ other mod. A first set of slots:
 | `goal` | what clears a layer (find the real node vs eat the ICE) | ICE EATER |
 | `real` | how many real nodes there are | QUANTUM (built) |
 | `tap` | what a tap does (a pick vs a 50/50 call) | COIN FLIP (built) |
-| `carry` | what carries between layers | ICE THAT COMES WITH YOU (maybe WORM) |
+| `carry` | what carries between layers | SNOOZE (built) |
 | `slots` | the tray itself (items vs mods) | the slot trade |
 | `health` | what a hit costs you (integrity vs credits / something else) | BLOOD MONEY, ZOMBIE (they clash) |
 | `money` | how low your credits can go | LEVERAGE |
@@ -251,7 +251,9 @@ either is: "heads or tails"; (b) "real / ICE": you call it before it opens. Does
 (the user: maybe not, keep the pressure). Why take it: it should beat your normal odds (with 6 nodes, a 50/50
 is a gift), and the cost is double damage when wrong.
 
-## ICE THAT COMES WITH YOU (the user's; time travel / procrastination)
+## ICE THAT COMES WITH YOU — BUILT v12.23 as SNOOZE (the user's; time travel / procrastination)
+
+**The upside (the user):** a carried hit doesn't hurt you now; the cost is a harder next layer. **Built:** 50% of ICE hits snooze (no damage) and come back next layer as an extra ICE node, same spot if free, dressed like that layer's decoys with one glyph character turned into a z (subtle: the user wanted it readable but not a flash). Stacks. Idea held back: "the backlog comes due" (leftover carried ICE hits you at the corp's end) if SNOOZE plays too strong. Earlier notes below.
 
 A 50% chance that ICE you hit carries over and adds to the next layer's ICE count, maybe in the same spot,
 looking a little different. Name: *(Claude)* LATER, BACKLOG, SNOOZE (not DEJA VU: that's GROUNDHOG's mod).
