@@ -824,6 +824,12 @@ Agreed changes not built yet.
   into that scrolling area, like the tray, alongside the map. Ties to the user seeing only 3 of their mods on a death
   (2026-10-22; a headless run showed both rows, 5 + 3, so maybe the first row was hidden on the phone): check it there.
 
+- **10 more glyphs, to 32** (2026-10-22, the user). The codex has 22 glyphs: 18 node glyphs (`MOTIFS_RAW` in
+  data/glyphs.js, each with a name and 3 lore lines in `GLYPH_LORE`) plus 4 specials (LOADED NODE, SIGIL SIGNATURE,
+  REDACTED...). Add 10 node glyphs (5 wide, 3 tall, like the rest) with names and lore, at the end of both lists. Note:
+  more glyphs change which glyphs layers roll, so the check baseline's layers shift (re-save it); look at corps whose
+  tells read glyphs (KERNING, PURLWISE, KEYLOGGER's lines...) to make sure the new ones work with them.
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
