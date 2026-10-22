@@ -2019,6 +2019,9 @@ Not yet placed in a version.
       from HALFLIFE's NUKE (CORPS.md A21: wipe a corp node off the map, get past it with no reward).
       - **Hidden quest line:** a nuked or removed corp's node stays on the map, and going there has
         something special: maybe the start of a strange hidden quest line.
+      - **Another hidden-quest entrance: a secret ad** (the user, 2026-10-22). Most fake ads do nothing when
+        tapped, but one particular ad does something special, or a certain ad + a certain mod you own does
+        (e.g. an extra EXOTIC mod). Details in [ADS.md](ADS.md) "Secret ads". Could be how the nuke quest starts.
 - **Tutorial mode** (noted v08). A guided first run (or a separate `[ TUTORIAL ]` on the title) that teaches by playing instead of reading How to Play. Ideas:
   - A short scripted run on a fixed seed: the PUBLIC NET (one node, it's real), a tiny corp with an obvious tell, a $ node, a stop (cache / market), using an item, a boss.
   - Short prompts typed into the message line or a small box ("one of these is real. tap one."), pointing at things (the tray, a mod, the clock).

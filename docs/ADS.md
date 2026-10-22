@@ -46,6 +46,22 @@ The user's headlines:
 - "20 runners who flatlined too soon"
 - "your sector's top-rated safehouse (it's not what you think)"
 
+## Secret ads: hidden quests (the user, 2026-10-22)
+
+Most ads do nothing when you tap them (that's the joke). But **one particular ad, if you actually tap it,
+gives you something special**. Or it needs a combination: **own a certain mod, and when a certain ad shows
+up, tap it** to trigger something, like an extra EXOTIC mod. A hidden quest, the kind players whisper about.
+It joins the **nuke quest** (SPEC §17, "Remove a corp from the run": a nuked or removed corp's node stays on
+the map, and going there starts a strange hidden quest line).
+
+*(Claude)* ideas to react to:
+- The secret ad looks almost like the others, with one tell (a headline that's slightly off, a source
+  name that's a corp you've beaten, a thumbnail that's a real node's glyph).
+- Mod + ad pairs: KEYLOGGER + an ad whose headline is a password; CIPHER's PARITY + an ad written in cipher;
+  SNIFFER + "is your dog in danger?" (the dog is your companion: tap it to get COMPANION).
+- A chain: tapping the right ad gives a map coordinate or a seed; the nuked corp's node there is the next step.
+- Rare on purpose (one per run at most, and not every run), and a codex entry once you find it.
+
 ## Gambling ads (the user, 2026-10-22)
 
 The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ
