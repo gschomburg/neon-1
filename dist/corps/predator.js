@@ -1,6 +1,6 @@
 // NeoN+1 corps/predator.js
 'use strict';
-NEON_FILES.push(['corps/predator.js', 'v13.03']);
+NEON_FILES.push(['corps/predator.js', 'v13.04']);
 // Its boss mod: INFRARED (infrared), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

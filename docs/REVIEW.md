@@ -6,8 +6,8 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
-- [ ] **The boot / login intro** (v13.03). To see the full one again: `?nointro` skips it; to replay the first-time version,
-  clear the site data (or I can add a dev-menu button). Look at: the pacing (~6.5s full, ~1.5s after), the world map
+- [ ] **The boot / login intro** (v13.03). To replay it: dev menu `[intro: first boot]` (the full
+  first-time version) or `[intro: short]`; `?nointro` in the URL skips it. Look at: the pacing (~6.5s full, ~1.5s after), the world map
   drawing (`INTRO_MAP` in `dist/engine/intro.js`, easy to redraw), the fake jargon lines (`INTRO_JARGON`).
 
 - [ ] **v13.00 on the web host** (2026-10-22). Upload all of `dist/` again (most files changed). Your v12 save carries over
