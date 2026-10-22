@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.19']);
+NEON_FILES.push(['engine/run.js', 'v12.20']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -990,7 +990,7 @@ function clockHurts() {
 function coinOpen(i) {
   const t = st.lv && st.lv.tiles[i];
   if (!coinOn() || st.busy || !t || t.state !== 'closed') return;
-  st.coin = { i, faces: rollCoin(i), side: null, at: performance.now(), below: t.row === 0 };   // top row: the coin opens below
+  st.coin = { i, faces: rollCoin(i), side: null, at: performance.now(), below: false };   // always above (on the top row it covers the header for a moment)
   Sound.tick();
 }
 function coinCancel() { if (st.coin && !st.coin.flipAt) { st.coin = null; Sound.ui(); } }

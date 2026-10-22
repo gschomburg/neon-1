@@ -1,6 +1,6 @@
 // NeoN+1 corps/noir.js
 'use strict';
-NEON_FILES.push(['corps/noir.js', 'v12.19']);
+NEON_FILES.push(['corps/noir.js', 'v12.20']);
 // Its boss mod: INTERROGATE (interrogate), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

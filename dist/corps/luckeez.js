@@ -1,6 +1,6 @@
 // NeoN+1 corps/luckeez.js
 'use strict';
-NEON_FILES.push(['corps/luckeez.js', 'v12.19']);
+NEON_FILES.push(['corps/luckeez.js', 'v12.20']);
 // Its boss mod: LET IT RIDE (letitride), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
