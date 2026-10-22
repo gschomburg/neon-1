@@ -689,6 +689,18 @@ Agreed changes not built yet.
   upload `preview.png` there. Everything else is relative (share links use the page's own address). Fold the
   www fix into the next update.
 
+- **Debt: credits that go negative** (2026-10-22, the user's idea; backlog, not designed yet). Some mods already take
+  money instead of integrity (OMERTA, FRIENDSHIP). This goes further: something lets your credits go **below 0**, into
+  debt. A second mod gets **stronger the deeper in debt you are**, e.g. a better chance that an ICE hit does no damage.
+  The user sees it mixed into existing corps, most likely **LEDGER TRUST** (the bank, LV2: balances whose digits add up
+  to 10; boss mod INTEREST). Reworking LEDGER around debt is on the table.
+  - Pieces to decide: what opens debt (a mod, an item, LEDGER's boss mod, a corp rule inside LEDGER?); how far down
+    (a credit limit?); what debt costs (interest each layer / corp, worse prices, a collector, no CONTINUE?); how the
+    debt-power mod scales (per 10cr owed, capped?), and whether it's a block (in `blockHit`, with OMERTA / FRIENDSHIP).
+  - Fits / clashes: OMERTA and FRIENDSHIP would charge into debt instead of stopping at what you have; INTEREST pays
+    5% of your credits (in debt: it charges you?); the market (can you buy on credit?); CONTINUE? (needs 100cr); the
+    credits HUD (`CR -40` in the danger color). Other corps with the money theme: PAWN BROS, LUCKEEZ CASINO, LA FAMIGLIA.
+  - Code note: ~25 places check or spend credits assuming they never go below 0; check them all when this is built.
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
