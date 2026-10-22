@@ -25,6 +25,9 @@ made-up source name. Never says what it's selling.
 - Shows on the reward screen or between corps, under a `SPONSORED STORIES` header, 2 or 4 at a time.
 - Tapping one does nothing, or opens a fake article that's one line long, or costs 1cr.
 
+The user's headlines:
+- "is your dog in danger?"
+
 *(Claude)* Headline drafts (mixing game-world jokes and plain clickbait):
 - "4 things that are killing you (number 3 is your integrity)"
 - "runners hate him: local man finds the real node every time"
