@@ -9,6 +9,8 @@ to build stays in `docs/SPEC.md` §16f.)
 - [ ] **Logotype round 4: oldskool / Amiga styles** (2026-10-22). Five takes on NeoN+1 after your references
   (Blue System, Paso's Ice Cream): open `docs/art/logotype_round4.png` (text in `docs/NAMES.md`, round 4). Pick
   favorites / mix and match; then the title can cycle between the face and the logotype.
+  - Round 5 (same day): just N+1 in the 3D styles (`docs/art/logotype_n1.png`), and Blue System-style
+    interlocking type (`docs/art/logotype_round5.png`, F1 / F2). Text in `docs/NAMES.md`, round 5.
 
 - [ ] **Rarity chips** (v12.01). Every mod and item now shows its rarity as a light chip (dark text on the rarity's key
   color), the same in every palette: tray badges and item names, market / rewards / codex lists, and the RARE /

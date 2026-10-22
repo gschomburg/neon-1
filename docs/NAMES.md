@@ -583,3 +583,81 @@ A small slanted version that fits our 32-column title as it is today.
  /  /|   /  / __/  / /_/ /  /|   / /_ __/   | |
 /__/ |__/  /___/   \____/__/ |__/   /_/     |_|
 ```
+
+## Title lockup samples, round 5: just N+1, and Blue System-style interlocking (2026-10-22)
+
+**N+1 in the 3D styles** (`docs/art/logotype_n1.png`): D2 (tall slant) and D3 (slab) read well; D1 (outline) needs its N redone (it reads like a W). They measure about 50 columns wide, so they need tightening or the title drawn at a smaller character size to fit a phone.
+
+### D1. N+1, Amiga outline (after Paso) (51 columns)
+
+```
+   ________    ________
+  /\       \  /\       \                _____
+  \ \   _   \ \ \   _   \              /\    \
+   \ \  \\   \ \/   \\   \     ___   _/  \    \
+    \ \  \\   \/     \\   \  _/\  \_/\_\  \    \
+     \ \  \\          \\   \/\_    __\/_/\ \    \
+      \ \  \\    /\    \\   \/_/\  \_\/   \ \    \
+       \ \__\\___\ \____\\___\  \ \__\     \ \____\
+        \/__//___/\/____//___/   \/__/      \/____/
+          N  e  o  N  +  1   // network intrusion
+```
+
+### D2. N+1, tall slant (after Paso PC) (49 columns)
+
+```
+        ______     ______
+       /     /|   /     /|                ______
+      /     / |  /     / |               /     /|
+     /     /  | /     /  /     __       /_    / /
+    /     /   |/     /  /   __/ /__      /   / /
+   /     /    /     /  /   /_   __/|    /   / /
+  /     / /|       /  /    |_/ /__|/   /   / /
+ /_____/ / |______/  /       |_|/     /   / /
+ |_____|/  |______| /                /___/ /
+                                     |___|/
+       N e o N + 1  .:. network intrusion .:.
+```
+
+### D3. N+1, oldskool slab (after Blue System) (50 columns)
+
+```
+                                    .
+  ______   ______                   :
+  \     \  \     |       ___        :  ______
+ .|      \  \    |    __|   |__     | /      |
+ :|   |\  \__\   |   |__     __|    |/_      |
+  |   | \        |      |___|          |     |
+  |   |  \       |        .            |     |
+ _|___|   \______|        :         ___|     |___
+.:                        :        |____________|
+  -===- .:. N e o N + 1 .:. network intrusion -==-
+```
+
+**Interlocking, after the BLUE SYSTEM banner** (`docs/art/logotype_round5.png`): the user's point: that piece isn't block letters, it's hand-crafted type that overlaps and fits together, like graffiti. Letters share strokes, one top line and baseline run across several letters, pointed `_>` ends, `|` / `/|` joints, sparkles, and a framed band with the name and a tag line.
+
+### F1. interlocking, round 2 (64 columns)
+
+```
+     _____ ___        .                ___:__
+     \    \\  |   ___ :  ____    _____ \   \\ |       ____
+  _ _.|    \\ |__/ _ \:_/ __ \__ \    \ \   \\|  _   /    |
+     :|  |\ \\| / /_\ \/ /  \ \  |     \ \   \ _| |_/_    |
+    . |  | \  |/  ___/  \__/  / |  |\  \ \    |_   _| |   |
+    :_|__|  \_|\_____>\______/__|__| \__\_\___| |_|___|   |__
+   _|.                                              |_______|.|_
+   .|_| .:. network intrusion .:.  <___________________>  |_|.
+```
+
+### F2. interlocking, round 2 (letters on a shared top bar) (66 columns)
+
+```
+   _ ______ ___:__ ______ ________ ______ ___:__ ____ _______ _
+     \     \\    |/  _   \\  __  \\     \\    |  _  | /     |
+    . |     \\   |  /_\  //  /  \ \|     \\   |_| |_|/_     |
+    : |  |\  \\  |  ____/ \  \__/ /|  |\  \\  |_   _|  |    |
+      |  | \     |\     \  \     / |  | \     | |_|    |    |
+    __|__|  \____|_\_____>__\___/__|__|  \____|________|    |___
+   |.                                                  |________|
+   |_| .:. N e o N + 1 .:. network intrusion .:. <_______________>
+```
