@@ -1853,6 +1853,12 @@ Not yet placed in a version.
 - **Minesweeper ideas** (noted v08). A mod where tripping an ICE also **deactivates any ICE close to it** (all neighbors, not just one). Note: VIRUS (EPIC) already locks **one** neighboring ICE on a hit, so this could be VIRUS's bigger version (a tier, or its own EXOTIC mod, e.g. CHAINLOCK / DETONATOR), or VIRUS could become tiered (1 / 2 / all neighbors). *(Claude)*: a minesweeper corp where hit ICE shows a **number**: how many steps away the real node is (or how many ICE touch it).
 - **Corp idea: shell game** (noted v08; names *(Claude)*: SHELLGAME, THREE CARD, MONTE). The real node **moves** to another node without you seeing the switch. *(Claude)*: nodes shuffle positions in a quick animation (cups sliding) you can follow if you're sharp; or swaps happen unseen but leave a tell (a glyph line flickers on the two nodes that swapped); boss: more swaps, faster.
 - **Corp idea: gambling** (noted v08; names *(Claude)*: HOUSE EDGE, LUCKY 7, CASINO.SYS). Ideas: **double down** on a node (bet that your pick is right: double pay if real, double damage if ICE), either as the corp's mechanic or as its boss mod. *(Claude)*: slot-machine glyphs (the real node shows three matching symbols); a "let it ride" choice after each layer.
+- **Corp idea: punk** (the user, 2026-10-22; details still to come from the user).
+- **THE CHOIR as a "ministry", not a corp** (the user, 2026-10-22). The cult (THE CHOIR, LV3: faith x2 or tithe;
+  boss mod SACRIFICE) would be a ministry. *(Claude)*: a name like THE MINISTRY or MINISTRY OF THE CHOIR (map code
+  then MN / MC instead of CH), and its own words where the game says "corp" ("MINISTRY BREACHED", the codex line).
+  Opens a door: other non-corps could get their own word too (a gang, an agency, a family: LA FAMIGLIA). That
+  needs a per-corp label (e.g. `kind: 'ministry'`) the screens read, instead of "CORP" written in.
 - **Corp idea: an arms dealer** (the user, 2026-10-22). A corp that sells weapons; it also runs gun ads
   ([ADS.md](ADS.md)). Close to it today: AEGIS DEFENSE, CARAPACE ARMOR, PREDATOR, DEMOLITION CO (none is a dealer;
   one could become one). *(Claude)* names: GUNMETAL, SURPLUS, ARSENAL, BRASS & SONS. Tell sketch: the nodes are
