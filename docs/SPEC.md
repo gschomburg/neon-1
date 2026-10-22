@@ -814,6 +814,11 @@ Agreed changes not built yet.
   - **Other:** the login intro (tap to skip), the fake ads (`[x]` after the countdown; SETTINGS turns them off),
     THE BOARD and REP if they aren't explained, run resume (CONTINUE).
 
+- **Say what each offer is: mod or item** (2026-10-22, the user). The black market tags every line (`mod`, `mod+`, `item`,
+  `svc`), but the reward screens (CORP BREACHED, OMNI / sector boss, data cache, safehouse, the starter perk) only show
+  the name and its rarity (`RARE`, `BOSS`, `EXOTIC`). Wherever a list mixes or could mix mods and items, say which each
+  one is, the same way as the market. Goes with the spacing / copy pass on the pick screens (set aside, the UI pass).
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
