@@ -60,7 +60,7 @@
 
   // Build number: vMAJOR.MINOR. The minor ticks (+.01) with every update; the major changes only on
   // the user's call. The save slot follows the major only, so minor updates keep your progress.
-  const VERSION = 'v11.03';
+  const VERSION = 'v11.06';
   // In the palette editor (index.html?editor=1) the game keeps its own save, so yours is never touched.
   const EDITOR = /[?&]editor=1(&|$)/.test(location.search);
   const STORE_KEY = EDITOR ? 'beta_runner.editor.save' : 'beta_runner.v11.save';
@@ -5495,11 +5495,16 @@
     ctx.hl = hl;
 
     // The title gets the whole screen: no header, HUD or tray.
-    const versionTag = `beta_runner ${VERSION}`;
-    // Footer, bottom row on every screen: [DEV] (when dev access is on) + build version.
+    const versionTag = `neon+1 ${VERSION} [?]`;
+    // Footer, bottom row on every screen: [DEV] (when dev access is on) + build version. The
+    // version is the link to the INFO page (not during a run or a multiplayer game).
     const footerRight = () => {
-      const y = L.hc - 1;
-      putR(y, versionTag, C.dim);
+      const y = L.hc - 1, x0 = L.wc - versionTag.length, live = !st.run && !st.mp && !st.busy && !st.transitioning;
+      putR(y, versionTag, st.hoverBtn === 'info' ? C.accent : C.dim);
+      if (live) {
+        if (st.hoverBtn === 'info') bg(x0, y, versionTag.length, C.accent, 0.2);
+        addHit(x0, y, versionTag.length, 1, { kind: 'btn', id: 'info', onTap: () => swapTo(openInfo), noFocus: true });
+      }
       if (st.devAccess || st.dev) {   // ?dev=1 in the URL, or the backtick key (until a refresh)
         const label = '[DEV]', x = L.wc - versionTag.length - label.length - 2;
         put(x, y, label, st.dev ? C.accent : C.mid, 'ui');
@@ -6161,9 +6166,10 @@
   // ---- Text fields. The canvas can't take typing, so a real (invisible) input sits
   // exactly over the field. Tapping it is a real tap on an input, so phones open
   // their keyboard as usual. What you type is drawn by the game.
-  //   { field: 'seed', width, value: () => str, clean: str => str, onCommit: str => {} }
+  //   { field: 'seed', width, value: () => str, clean: str => str, onCommit: (str, enter) => {} }
+  // (enter: true when the field was left with the Enter key)
   const Field = (() => {
-    let el = null, spec = null, cancel = false;
+    let el = null, spec = null, cancel = false, entered = false;
     const editing = id => !!(el && spec && spec.field === id && document.activeElement === el);
     function make() {
       if (el || !document.createElement) return;
@@ -6173,14 +6179,14 @@
       // font-size 16px stops iOS zooming in on focus
       el.style.cssText = 'position:fixed;display:none;opacity:0;border:0;padding:0;margin:0;outline:none;font-size:16px;background:transparent;color:transparent;caret-color:transparent;cursor:text;z-index:2;';
       document.body.appendChild(el);
-      el.addEventListener('focus', () => { if (!spec) return; el.value = spec.value(); cancel = false; Sound.init(); Sound.tick(); });
+      el.addEventListener('focus', () => { if (!spec) return; el.value = spec.value(); cancel = false; entered = false; Sound.init(); Sound.tick(); });
       el.addEventListener('input', () => { if (spec) el.value = spec.clean(el.value); });
       el.addEventListener('keydown', e => {
         e.stopPropagation();   // typing doesn't reach the game's keys
-        if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+        if (e.key === 'Enter') { e.preventDefault(); entered = true; el.blur(); }
         if (e.key === 'Escape') { e.preventDefault(); cancel = true; el.blur(); }
       });
-      el.addEventListener('blur', () => { if (spec && !cancel) spec.onCommit(el.value); cancel = false; });
+      el.addEventListener('blur', () => { if (spec && !cancel) spec.onCommit(el.value, entered); cancel = false; entered = false; });
     }
     // Called every frame: keep the input over the field shown this frame (or hide it).
     function sync() {
@@ -8261,8 +8267,7 @@
       T(title, col);
       if (by) {   // a boss win: the hacker who did it
         const sty = styleOf(by.style);
-        for (const l of hackerArt(by.logo)) X({ text: l, col: sty.fg, bold: true });
-        X({ text: ` ${logoMark(by.logo)} ${by.name} `, col: sty.fg, bgCol: sty.bg, bold: true });
+        for (const ln of logoBlock(by.logo, by.name, sty)) X(ln);
         for (const h of head) T(`breached ${h[0].toLowerCase()}`, C.mid);
       } else for (const h of head) T(h[0], h[1]);
       if (!by) T('');   // (with the logo, the screen is full: no gap)
@@ -9716,9 +9721,9 @@
   // ---- player profile: a generated handle (no typing, so nothing to moderate) + a logo
   // Persona names: a middle word, with either a word before it (IRON_POTATO)
   // or a word after it (POTATO_SAUCE). Half and half.
-  const NAME_A = ['NEON', 'GHOST', 'ZERO', 'CHROME', 'STATIC', 'RAZOR', 'NULL', 'VOLT', 'HEX', 'DUSK', 'ACID', 'IRON'];
+  const NAME_A = ['NEON', 'GHOST', 'ZERO', 'CHROME', 'STATIC', 'RAZOR', 'NULL', 'VOLT', 'HEX', 'DUSK', 'ACID', 'IRON', 'THE'];
   const NAME_B = ['RAT', 'FOX', 'WIRE', 'BYTE', 'JACK', 'MOTH', 'KEY', 'SAINT', 'HOUND', 'LOOP', 'DRONE', 'SPIKE', 'POTATO',
-    'SHARK', 'VIPER', 'CROW', 'GOBLIN', 'WIDOW', 'PIXEL', 'TOAD', 'SPARK', 'COBRA', 'GLITCH', 'RONIN', 'MANTIS', 'NOODLE', 'PICKLE', 'WAFFLE'];
+    'SHARK', 'VIPER', 'CROW', 'GOBLIN', 'WIDOW', 'PIXEL', 'TOAD', 'SPARK', 'COBRA', 'GLITCH', 'RONIN', 'MANTIS', 'NOODLE', 'PICKLE', 'WAFFLE', 'PLAGUE'];
   const NAME_C = ['SAUCE', 'KING', 'PRIME', 'EXE', '9000', 'MK2', 'DELUXE', '404', 'JR', 'MAX', 'LORD', 'OS'];
   // Hacker logos: your persona's art (corp-logo size, <= 5 lines), and its mark: 3 characters
   // for tight spots (HUD, lists); the middle one is your cursor in multiplayer.
@@ -9746,6 +9751,14 @@
     const rows = logoOf(i).art, lead = Math.min(...rows.filter(l => l.trim()).map(l => l.length - l.trimStart().length));
     const out = rows.map(l => l.slice(lead).trimEnd()), w = Math.max(...out.map(l => l.length));
     return out.map(l => l.padEnd(w));
+  }
+  // Logo + name as one block on your color style's background (dark styles used to vanish on a dark
+  // screen). Every row the same width, with a space of background on each side.
+  function logoBlock(logo, name, sty) {
+    const art = hackerArt(logo), tag = `${logoMark(logo)} ${name}`;
+    const w = Math.max(tag.length, ...art.map(l => l.length)) + 2;
+    const mid = s => { const l = Math.floor((w - s.length) / 2); return (' '.repeat(l) + s).padEnd(w); };
+    return [...art, tag].map(l => ({ text: mid(l), col: sty.fg, bgCol: sty.bg, bold: true }));
   }
   // RANDOMIZE ALL: a new name, logo and color at once.
   function randomizeProfile(prof) {
@@ -9867,10 +9880,42 @@
       if (!online) { T('online is unavailable.', C.danger); T('check your connection.', C.dim); }
       else {
         X({ box: true, text: 'H O S T', sub: 'make a room code', id: 'mphost', onTap: mpHost, minW: 22 });
-        B('[ JOIN GAME ]', 'mpjoin', mpJoin);
+        T('');
+        T('join a room', C.mid);
+        X({ row: [
+          { field: 'room', width: 6, value: () => st.joinCode || '', clean: cleanRoomCode,
+            onCommit: (v, enter) => { st.joinCode = cleanRoomCode(v); if (enter && st.joinCode) mpJoin(); } },
+          { text: '[ JOIN ]', id: 'mpjoin', onTap: () => mpJoin() },
+        ] });
+        T(Field.editing('room') ? 'enter to join, esc to cancel' : 'tap the box to type the code', C.dim);
       }
       B('[ BACK ]', 'back', () => swapTo(showTitle));
     }, '> multiplayer.', { full: true });
+    st.keyHandler = k => { if (k === 'escape') { swapTo(showTitle); return true; } return false; };
+  }
+
+  // INFO: what the game is and how it was made. From the version tag in the footer.
+  const REPO_URL = 'https://github.com/gschomburg/neon-1';
+  function openInfo() {
+    openPanel('INFO', (T, B, X) => {
+      const P = (s, col = C.text) => wrapText(s, 31).forEach(l => T(l.padEnd(31), col));
+      X({ text: 'N e o N + 1', col: C.accent, bold: true });
+      T(`build ${VERSION}`, C.dim);
+      T('');
+      P('a minimalist cyberpunk push-your-luck game. hack a corp one layer at a time: one node is real, the rest are ICE. every corp hides its real node its own way. learn the tells, get deeper.');
+      T('');
+      T('idea and design', C.mid);
+      P('greg: the original idea, the game, the corps and their tells, and the playtesting.');
+      T('');
+      T('built with', C.mid);
+      P('Claude (Anthropic\'s AI), in Claude Code, which wrote the code, the music and the placeholder art.');
+      T('');
+      P('started from One True Door (an earlier game, also made with Claude) as the reference. made in 2026.', C.mid);
+      T('');
+      B('[ GITHUB: gschomburg/neon-1 ]', 'repo', () => { try { window.open(REPO_URL, '_blank', 'noopener'); } catch (e) { /* blocked */ } });
+      T('');
+      B('[ BACK ]', 'back', () => swapTo(showTitle));
+    }, '> info.', { full: true });
     st.keyHandler = k => { if (k === 'escape') { swapTo(showTitle); return true; } return false; };
   }
 
@@ -9883,23 +9928,23 @@
       T('RUNNER PROFILE', C.accent);
       T('');
       const sty = styleOf(prof.style);
-      for (const l of hackerArt(prof.logo)) X({ text: l, col: sty.fg, bold: true });
+      // The card: logo, name and record as one block in your style; the controls go under it.
+      const card = (text, extra = {}) => X(Object.assign({ text, col: sty.fg, bgCol: sty.bg }, extra));
+      const center = s => ' '.repeat(Math.max(0, Math.floor((W - 4 - s.length) / 2))) + s;
+      T(edge, C.mid);
+      card(row(''));
+      for (const l of hackerArt(prof.logo)) card(row(center(l)), { bold: true });
+      card(row(center(`${logoMark(prof.logo)} ${prof.name}`)), { bold: true });
+      card(row(''));
+      card(row(`best ${pad2(save.best)}   runs ${save.runs}`));
+      card(row(`wins ${save.wins}    codex ${found}`));
+      T(edge, C.mid);
       const step = d => { prof.logo = (prof.logo + d + HACKER_LOGOS.length) % HACKER_LOGOS.length; persist(); Sound.tick(); };
       X({ row: [
         { text: '[ < ]', id: 'plogoL', onTap: () => step(-1) },
         { text: (' '.repeat(Math.floor((17 - logoOf(prof.logo).name.length) / 2)) + logoOf(prof.logo).name).padEnd(17), id: 'plogoN', onTap: () => step(1) },
         { text: '[ > ]', id: 'plogo', onTap: () => step(1) },
       ] });
-      T(edge, C.mid);
-      T(row(''), C.mid);
-      // The card's middle rows are drawn in the player's style.
-      const card = (text, extra = {}) => X(Object.assign({ text, col: sty.fg, bgCol: sty.bg }, extra));
-      card(row(`${logoMark(prof.logo)}   ${prof.name}`), { bold: true });
-      card(row(''));
-      card(row(`best ${pad2(save.best)}   runs ${save.runs}`));
-      card(row(`wins ${save.wins}    codex ${found}`));
-      T(row(''), C.mid);
-      T(edge, C.mid);
       T(`color: ${sty.name}`, C.mid);
       X({ row: [
         { text: '[ NEW NAME ]', id: 'pname', onTap: () => { prof.name = randomName(); persist(); Sound.tick(); } },
@@ -9935,30 +9980,47 @@
 
   // Copy the room code to the clipboard (the canvas can't be selected).
   // The Clipboard API needs https or localhost; a hidden textarea covers file:// pages.
+  async function copyText(text) {
+    try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) { /* try the old way */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px;';
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
   async function copyRoomCode(m) {
-    const code = m.code;
-    let ok = false;
-    try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(code); ok = true; } } catch (e) { ok = false; }
-    if (!ok) {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = code; ta.setAttribute('readonly', '');
-        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px;';
-        document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, code.length);
-        ok = document.execCommand('copy');
-        document.body.removeChild(ta);
-      } catch (e) { ok = false; }
-    }
+    const code = m.code, ok = await copyText(code);
     if (ok) { m.copiedAt = performance.now(); Sound.buy(); setMsg(`> room code ${code} copied.`, C.accent); }
     else { Sound.deny(); setMsg(`> couldn't copy. the code is ${code}.`, C.danger); }
   }
 
-  async function mpJoin() {
+  const cleanRoomCode = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  // The room's link: this page with ?room=CODE. On phones the share sheet opens; elsewhere
+  // the link is copied.
+  async function shareRoom(m) {
+    const url = location.href.split('#')[0].split('?')[0] + '?room=' + m.code;
+    const web = /^https?:$/.test(location.protocol);
+    // The share sheet only on phones, on the web. Chrome's desktop share (the Windows share
+    // dialog) crashed the tab ("Aw, Snap!"), and a file:// link only works on this computer.
+    const phone = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    if (web && phone && navigator.share) {
+      try { await navigator.share({ title: 'NeoN+1', text: `join my NeoN+1 room: ${m.code}`, url }); Sound.buy(); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }   // anything else: copy instead
+    }
+    if (await copyText(url)) {
+      m.sharedAt = performance.now(); Sound.buy();
+      setMsg(web ? '> room link copied.' : '> link copied (a local file: it only works on this computer).', C.accent);
+    } else { Sound.deny(); setMsg(`> couldn't copy. code: ${m.code}`, C.danger); }
+  }
+  async function mpJoin(codeIn) {
     if (st.mpBusy) return;
-    let code = null;
-    try { code = window.prompt('room code:', ''); } catch (e) { code = null; }
-    code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-    if (!code) return;
+    const code = cleanRoomCode(codeIn != null ? codeIn : st.joinCode);
+    if (!code) { Sound.deny(); setMsg('> type a room code first.', C.mid); return; }
+    st.joinCode = code;
     st.mpBusy = true;
     setMsg(`> joining ${code}...`, C.mid);
     try {
@@ -10037,7 +10099,9 @@
         { text: `ROOM  ${m.code.split('').join(' ')}`, col: C.accent },
         { text: copied ? '[ COPIED ]' : '[ COPY ]', id: 'mpcopy', sel: copied, onTap: () => copyRoomCode(m) },
       ] });
-      T('share the code to invite people.', C.dim);
+      const shared = m.sharedAt && performance.now() - m.sharedAt < 1500;
+      B(shared ? '[ LINK COPIED ]' : '[ SHARE LINK ]', 'mpshare', () => shareRoom(m));
+      T('send the code or the link to invite.', C.dim);
       T('');
       if (host) {
         X({ gap: 1, row: [
@@ -10498,6 +10562,9 @@
   st.msgCol = C.text;
   resize();
   showTitle();
+  // A shared room link (?room=CODE): straight to multiplayer, code filled in, and join.
+  { const rc = !EDITOR && cleanRoomCode(params.get('room'));
+    if (rc) { st.joinCode = rc; setTimeout(() => { openMultiplayer(); setTimeout(() => mpJoin(rc), 400); }, 50); } }
   requestAnimationFrame(t => { last = t; frame(t); });
   if (document.fonts && document.fonts.load) {
     document.fonts.load(`16px "JetBrains Mono"`).then(() => computeLayout()).catch(() => {});

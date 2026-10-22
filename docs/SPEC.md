@@ -595,6 +595,8 @@ What was on the list:
 
 ## 16f. Pending revisions (next round)
 
+(Things waiting for the user to look at, rather than to build, are in `docs/REVIEW.md`.)
+
 Agreed changes not built yet.
 - **NeoN+1 logotype on the title page: first pass BUILT in v11** (2026-10-21). Uses NAMES.md **#15
   EXPONENT** (big N + raised +1) tucked under the jaw, with two tweaks: the build number (`v011`, from
@@ -606,13 +608,13 @@ Agreed changes not built yet.
   `[ title pulse: COLOR / CHAR / BOTH ]` compares recoloring vs. swapping the spark's character for noise.
   Off on REDUCED effects. Code: `TITLE_LOGO`, `TITLE_BG`, `TITLE`, `titleArtLines()`.
   - **To try next:** traces coming *into* the head from the left and out the right (the user's alternative).
-- **INFO page, opened from the footer** (2026-10-21): a link in the footer (all screens, like the version tag) opens an
+- **DONE v11.04: INFO page, opened from the footer** (2026-10-21): a link in the footer (all screens, like the version tag) opens an
   INFO page about the game: what it is, when it was made, who made it (design by the user), and how: built in
   conversation with Claude (Anthropic's AI) in Claude Code, which wrote the code, music and placeholder art.
   Maybe a link to the repo (github.com/gschomburg/neon-1). Could mention One True Door / HackJack.
-- **Flesh out the repo readme** (2026-10-21): `readme.md` is the GitHub front page; expand it (what the game is,
+- **DONE v11.04: Flesh out the repo readme** (2026-10-21): `readme.md` is the GitHub front page; expand it (what the game is,
   how to play, features, multiplayer, version history, how it was made). Not game code: can be done any time.
-- **Persona names: add THE and PLAGUE** (2026-10-21): `THE` to the before-words (`NAME_A`) and `PLAGUE` to the
+- **DONE v11.04: Persona names: add THE and PLAGUE** (2026-10-21): `THE` to the before-words (`NAME_A`) and `PLAGUE` to the
   middle words (`NAME_B`), so THE_PLAGUE (Hackers) can roll, along with THE_POTATO, ACID_PLAGUE and so on.
 - **Make mod effects easier to see when they trigger** (2026-10-21). Some mods go off too fast to tell what
   happened; give them a beat. Start with **X-AXIS / Y-AXIS**: on the scan, pause a moment and light up the
@@ -622,12 +624,12 @@ Agreed changes not built yet.
 - **Bigger, roomier buttons on phones** (2026-10-21). On the user's iPhone, some buttons are small and close
   together, mainly the **tray buttons** and **lists**. Think through a mobile pass: bigger tap areas (the
   §12 rule is ~44px), more space between buttons, maybe fewer per row on narrow screens.
-- **Multiplayer: type the join code on the page** (2026-10-21). JOIN GAME opens a browser popup today; use
+- **DONE v11.04: Multiplayer: type the join code on the page** (2026-10-21). JOIN GAME opens a browser popup today; use
   the game's own text field instead, like the other text fields.
-- **Multiplayer: share link** (2026-10-21). The host gets a `[ SHARE ]` button that copies (or opens the
+- **DONE v11.04: Multiplayer: share link** (2026-10-21). The host gets a `[ SHARE ]` button that copies (or opens the
   phone share sheet for) the page URL with the code in it, e.g. `?room=YUAH`. Opening that link goes
   straight into the room (or the join screen with the code filled in).
-- **Hacker logo: draw it on your color style's background** (2026-10-21). The big logo is drawn in your
+- **DONE v11.04: Hacker logo: draw it on your color style's background** (2026-10-21). The big logo is drawn in your
   style's text color straight on the screen background (black for the user), so dark styles hide it. Give
   the logo block the same background as the name on the runner card. Same fix in all 3 places: the
   PROFILE screen, CORP BREACHED, and the multiplayer turn card.
@@ -1531,6 +1533,26 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v11.06** (2026-10-21): **fix: SHARE LINK crashed the Chrome tab** ("Aw, Snap!", the user's first try, on the
+  local file). It called the browser share sheet, which on a computer is the Windows share dialog. Now the share
+  sheet is only used on phones (coarse pointer) on http(s); everywhere else the link is copied, with a note when
+  it's a local file link.
+- **v11.05** (2026-10-21): INFO credits: the original idea is the user's ("idea and design"), and One True
+  Door is "started from ... as the reference" (the user fed it in with the first prompt). Readme matches. New
+  `docs/REVIEW.md`: the user's review list (things to look at), kept by Claude.
+- **v11.04** (2026-10-21): **the small batch.**
+  - Persona names: THE (before-word) and PLAGUE (middle word), so THE_PLAGUE can roll.
+  - Hacker logo on your style's background: CORP BREACHED draws logo + name as one block in your colors
+    (`logoBlock`); PROFILE is one card (logo, name, best / runs / wins / codex) with the logo picker, color,
+    NEW NAME and RANDOMIZE ALL under it. (The multiplayer turn card already filled the board with your colors.)
+  - Multiplayer join: a room-code box on the MULTIPLAYER screen (the game's own text field) + `[ JOIN ]`;
+    Enter joins. No more browser popup. Text fields now tell `onCommit` whether Enter was pressed.
+  - Share link: `[ SHARE LINK ]` in the lobby (everyone, not just the host): the phone share sheet, or the
+    link copied. Opening `?room=CODE` goes to MULTIPLAYER with the code filled in and joins.
+  - INFO page: the footer's version tag is now `neon+1 v11.04 [?]` and opens INFO (what the game is, design
+    by greg, built with Claude in Claude Code, inspired by One True Door, made in 2026, a GitHub button).
+    Tappable everywhere except during a run or a multiplayer game.
+  - Readme: how to play, what's in it, a version history table; the history note updated for `dist/`.
 - **v11.03** (2026-10-21): **the palette editor** (`tools/palette_editor.html`, palette pass item 9) and its bridge in
   the game (`?editor=1` only). See "Palette editor" below.
 - **v11.02** (2026-10-21): **starters are the 9 level-1 corps only** (the user: "for simplicity"): BASIC, PARCELNET,
