@@ -152,6 +152,9 @@ DRAGON THRONE: AWAKENING, RAID OF LEGENDS, QUEENS OF KALDOR, EMPIRE OF DESIRE (s
 - "the most realistic strategy game of 2026" (over an ASCII lady who has nothing to do with strategy)
 - "your queen awaits. tap to claim your FREE 10x summon."
 - bait-and-switch gag: tap it and the "game" is a 4x4 grid of nodes. "find the real one, my lord."
+- the user: a **"PLAY FOR FREE"** button, or **"earn your rewards"**. *(Claude)* more in that vein: "FREE TO
+  PLAY*" (`*pay to win`), "log in daily for rewards!", "your rewards are waiting. (they expire in 2:59:59.)",
+  "claim your FREE gems now", "no download needed. no skill needed. no escape."
 - the art: a small ASCII bust / pin-up in the old textmode style (the scene's own pin-up pieces are a good
   reference; keep it suggestive, the joke is how shameless the ad is).
 
