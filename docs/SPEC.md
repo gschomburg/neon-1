@@ -714,6 +714,8 @@ Agreed changes not built yet.
     key clicks as the login types, a beep per `ok` (a buzz on `FAIL`), a chirp on `handshake complete`, the title theme
     fading in. Glitches: noise characters flickering through the log, the map drawing in with scan lines / static, a
     burst of characters (like the fireworks) on `handshake complete`, the logo decoding in (like the codex decode).
+  - **The title should wipe in** after the intro (the user, 2026-10-22): today the intro just ends and the title is there.
+    The intro text goes out, then the title comes in with a wipe (like the game's other screen changes), not a cut.
   moment before the title, mostly for the feel of it (it barely needs to load). *(Claude)* ideas: an old-terminal
   boot log that lists the real files as they load (`engine/run.js ..... ok`, `corps/seekr.js ..... ok`; the version
   stamps in `NEON_FILES` are already there, and a missed or stale file could show as `FAIL` right there instead of the
