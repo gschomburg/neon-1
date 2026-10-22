@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v13.02']);
+NEON_FILES.push(['engine/boot.js', 'v13.03']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -55,6 +55,7 @@ try {
   if (bad.length) st.fileWarn = `${bad.length} game file${bad.length > 1 ? 's' : ''} not ${VERSION}: ${bad[0]}${bad.length > 1 ? '...' : ''}`;
 } catch (e) { /* no document (tests) */ }
 showTitle();
+if (!EDITOR && !params.get('room') && !params.get('nointro')) startIntro();   // the boot / login intro over the title
 // A shared room link (?room=CODE): straight to multiplayer, code filled in, and join.
 { const rc = !EDITOR && cleanRoomCode(params.get('room'));
   if (rc) { st.joinCode = rc; setTimeout(() => { openMultiplayer(); setTimeout(() => mpJoin(rc), 400); }, 50); } }

@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.02']);
+NEON_FILES.push(['engine/scene.js', 'v13.03']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -62,7 +62,9 @@ function buildScene(now, collectHits, raw = false) {
       addHit(x, y, label.length, 1, { kind: 'btn', id: 'dev', onTap: toggleDev, noFocus: true });
     }
   };
-  if (!st.dev && st.bossIntro) {
+  if (!st.dev && st.boot) {
+    buildIntro(ctx, now);   // the boot / login intro (engine/intro.js)
+  } else if (!st.dev && st.bossIntro) {
     buildBossIntro(ctx, now);
   } else if (!st.dev && st.mode === 'over' && st.overReveal) {
     buildOverReveal(ctx, now);
