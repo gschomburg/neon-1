@@ -988,6 +988,12 @@ variant, scans as patterns, DECODER / HYDRA mods, recon stops, REP.
 | WORM, LOGIC BOMB, FORK BOMB, ICE EATER (names from the user, 2026-10-21) | mods | below ("New mod names") |
 | A mod that turns your item slots into more mod slots | mod | below ("New mod names") |
 | Exotic batch: all-or-nothing, coin flip, more real nodes, carried-over ICE, OMNI reveal, remove a corp (+ hidden quest) | EXOTIC mods / item | §17 "More EXOTIC mods and items" |
+| NUKE: wipe a corp node off the map, no reward (HALFLIFE) | EXOTIC item | CORPS.md A21; §17 (hidden quest) |
+| Debt: something that lets credits go negative + a mod stronger the deeper in debt (2026-10-22) | mods / LEDGER rework | §16f "Debt" |
+| A backwards / flip mod (REARVIEW, MIRROR WRITING) and a BACKWARDS corp modifier (2026-10-22) | mod / corp modifier | §16f "Flipped characters" |
+| Ad mods: free trial of a corp's mod from its ad; AD BLOCKER; secret ad + mod combos (2026-10-22) | system / mods | ADS.md |
+| Second boss mod for the corps that have one (74 of 78) | boss mods | (no list yet) |
+| New corps' mod ideas: SUPERLIKE / GHOSTED (dating), a one-shot sidearm (arms dealer) (2026-10-22) | boss mods | §17 corp ideas |
 
 **KEYLOGGER: a Wordle-style clue mod** (noted v07)
 - The real node's glyph is the "word". **Each ICE you hit changes its glyph into one line of the
