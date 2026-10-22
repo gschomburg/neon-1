@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.20']);
+NEON_FILES.push(['engine/scene.js', 'v12.21']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -325,7 +325,7 @@ function buildTray(ctx, y) {
   run.mods.forEach((key, i) => {
     if (x + widths[i] > L.wc) return;          // more than fits (dev / bots): clip
     const m = MODS[key], sel = st.selMod === i, hov = st.hoverMod === i;
-    const spent = modSpent(key), usable = !!m.active && modUsable(key);
+    const spent = modSpent(key) || modOffHere(key), usable = !!m.active && modUsable(key);   // (off in this corp: drawn dim like spent)
     let w;
     if (m.active) {
       const bc = spent ? C.danger : usable ? C.accent : C.dim;
@@ -349,7 +349,8 @@ function buildTray(ctx, y) {
       : key === 'honeycomb' ? `honey ${run.honey || 0}/3. ${m.tip}`
       : key === 'leverage' ? (run.credits < 0 ? `debt shield ${Math.round(debtShield() * 100)}%. limit ${creditFloor()}.` : `no debt. limit ${creditFloor()}.`)
       : key === 'zombie' ? `rot ${run.rot || 0}/${ROT.max}. ${tapsToBreak()} taps a node.` : m.tip;
-    put(6, y + 1, tip, C.text);
+    const offTip = modOffHere(key) ? 'off in this corp.' : null;   // this corp switches it off
+    put(6, y + 1, offTip || tip, offTip ? C.dangerDim : C.text);
     const status = modSpent(key) ? ['(spent)', C.danger] : m.active ? (modUsable(key) ? ['>tap', C.accent] : ['(not now)', C.dim]) : null;
     if (status) put(7 + tip.length, y + 1, status[0], status[1]);
   }
@@ -853,6 +854,7 @@ function nodeInfo(n) {
     if (rules) T(rules, C.mid);
     if (d.bossDesc) T(d.bossDesc, C.dangerDim);
     if (n.mod && CORP_MODS[n.mod]) T(`+ ${CORP_MODS[n.mod].name}: ${CORP_MODS[n.mod].desc}`, C.money);
+    { const off = modsOffIn(d); if (off.length) T(`off here: ${off.map(k => MODS[k].name.toLowerCase()).join(', ')}.`, C.dangerDim); }   // e.g. COIN FLIP in a drag corp
     return { lines, action: 'B R E A C H' };
   }
   if (n.type === 'shop') { T('BLACK MARKET', C.money); T('items and mods for credits.'); }

@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.20']);
+NEON_FILES.push(['engine/mods.js', 'v12.21']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -169,7 +169,14 @@ const COIN = {
   cr: 10, bigCr: 25, // a $ face: credits won / lost, x the multiplier
   max: 5,            // the multiplier tops out here
 };
-const coinOn = () => has('coinflip') && st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.mp && !(st.corp.def.drag);
+// Mods some corps switch off: COIN FLIP in the drag corps (DECIBEL, SQUALOR, PLAYBALL: holding and
+// dragging already mean something there), QUANTUM in corps with their own tap rules (DEMOLITION,
+// FORM 27B...). Shown on the map's corp info, the tray tip, and a dimmed badge inside.
+const MOD_OFF = { coinflip: def => !!def.drag, quantum: def => !!def.tap };
+const modOffIn = (key, def) => !!(def && MOD_OFF[key] && MOD_OFF[key](def));
+const modsOffIn = def => st.run ? st.run.mods.filter(k => modOffIn(k, def)) : [];
+const modOffHere = key => !!(st.mode === 'play' && st.corp && st.corp.hasBoss && modOffIn(key, st.corp.def));
+const coinOn = () => has('coinflip') && st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.mp && !modOffHere('coinflip');
 const coinMult = () => has('coinflip') && st.run ? (st.run.coinMult || 1) : 1;
 const coinValue = f => f.kind === 'hp' ? (f.big ? COIN.bigHp : COIN.hp) : (f.big ? COIN.bigCr : COIN.cr) * coinMult();
 // The two faces for a coin on node i: [{ kind, big }, { kind, big }], from its own random stream.
