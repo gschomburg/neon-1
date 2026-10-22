@@ -46,6 +46,26 @@ The user's headlines:
 - "20 runners who flatlined too soon"
 - "your sector's top-rated safehouse (it's not what you think)"
 
+## Gambling ads (the user, 2026-10-22)
+
+The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ
+CASINO, BIDBLITZ LIVE, PLAYBALL, CHUCK E. CACHE'S. *(Claude)* the fine print could be a running gag
+(`must be 18+. odds not real. nodes may be ICE.`), and the ad could offer an actual bet (ties to LET IT RIDE
+and the debt idea).
+
+*(Claude)* drafts:
+- "NEW RUNNERS: bet 10cr, get 500cr in bonus bets!*" (`*bonus bets are not credits.`)
+- "parlay your next 3 layers. 1 in 4,096 odds. feeling lucky?"
+- "LUCKEEZ: deposit match up to 1000cr. your first loss is on us. so is your second."
+- "boosted odds: the real node is in the top row (+340)"
+- "live in-layer betting is HERE. bet on yourself. bet against yourself."
+- "risk-free boss bet! (risk not free)"
+- "PLAYBALL SPORTSBOOK: same-game parlay on your own death"
+- "this runner turned 5cr into 12,000cr. you could too.*"
+- "spin the wheel every day for FREE FIREWALLS"
+- "gambling problem? call 1-800-ICE-HITS. (it's a betting line.)"
+- fine print bits: "past nodes do not predict future nodes." / "the house is OMNI." / "debt available."
+
 ## Ad ideas
 
 - *(Claude)* **MEGAMART:** "everything you need. nothing you asked for."
