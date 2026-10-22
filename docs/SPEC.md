@@ -793,6 +793,16 @@ Agreed changes not built yet.
   lever, items that target a node (PURGE on the node you hold), a quick info card for a node (its glyph / tell
   marks), the fake ads (an ad box over the board), confirm prompts ("replace this mod?") without leaving the board.
 
+- **A THE BOARD unlock for finishing the codex** (2026-10-22, the user). Something you can only buy with REP once the codex
+  is complete (every corp, tell, mod, item and glyph found). THE BOARD already sells REP unlocks (`LEGACY` in
+  engine/save.js: HARDENED, SEED MONEY, FIELD KIT, WIDE BELT, SHORTLIST, DEADMAN); this would be a locked entry there,
+  shown as `???` / "complete the codex" until then. What it is: open. *(Claude)* ideas, from most to least fitting:
+  - **THE ARCHIVE:** start every run by picking any one mod you've ever found (the codex becomes your armory). Pricey.
+  - **ARCHIVIST** (a mod you start with): you've learned every tell, so each corp's tell is printed when you enter it
+    (SPOILER for every corp, every time).
+  - **An exotic pick:** the sector boss offers two exotics instead of one, or you start with one exotic of your choice.
+  - **Cosmetic:** a gold codex palette, a title-screen badge, a special logo for your profile.
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
