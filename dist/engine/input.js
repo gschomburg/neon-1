@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.00']);
+NEON_FILES.push(['engine/input.js', 'v13.01']);
 
 // ---------------- Pause menu ----------------
 // [MENU] in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -136,6 +136,32 @@ function hitAt(x, y) {
     if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) return h;
   }
   return null;
+}
+
+// Older Safari (before iOS 13) has no pointer events: turn touches (and mouse) into the
+// pointer events below, so taps, holds and drags work the same.
+if (!window.PointerEvent) {
+  const fire = (type, x, y, kind, buttons) => {
+    const ev = document.createEvent('Event');
+    ev.initEvent(type, true, true);
+    Object.assign(ev, { clientX: x, clientY: y, pointerType: kind, buttons });
+    cv.dispatchEvent(ev);
+  };
+  let last = null;
+  const touch = (type, buttons) => e => {
+    const t = e.changedTouches[0];
+    if (!t) return;
+    e.preventDefault();   // no page scroll / zoom, and no copycat mouse events after
+    last = t;
+    fire(type, t.clientX, t.clientY, 'touch', buttons);
+  };
+  cv.addEventListener('touchstart', touch('pointerdown', 1), { passive: false });
+  cv.addEventListener('touchmove', touch('pointermove', 1), { passive: false });
+  cv.addEventListener('touchend', touch('pointerup', 0), { passive: false });
+  cv.addEventListener('touchcancel', () => { if (last) fire('pointercancel', last.clientX, last.clientY, 'touch', 0); });
+  cv.addEventListener('mousedown', e => fire('pointerdown', e.clientX, e.clientY, 'mouse', 1));
+  cv.addEventListener('mousemove', e => fire('pointermove', e.clientX, e.clientY, 'mouse', e.buttons));
+  cv.addEventListener('mouseup', e => fire('pointerup', e.clientX, e.clientY, 'mouse', 0));
 }
 
 cv.addEventListener('pointerdown', e => {

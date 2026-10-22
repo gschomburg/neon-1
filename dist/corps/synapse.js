@@ -1,6 +1,6 @@
 // NeoN+1 corps/synapse.js
 'use strict';
-NEON_FILES.push(['corps/synapse.js', 'v13.00']);
+NEON_FILES.push(['corps/synapse.js', 'v13.01']);
 // Its boss mod: TURING (turing), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
