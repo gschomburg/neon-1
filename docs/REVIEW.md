@@ -10,6 +10,9 @@ to build stays in `docs/SPEC.md` §16f.)
   color), the same in every palette: tray badges and item names, market / rewards / codex lists, and the RARE /
   EPIC words in text. Selected badges invert; EXOTIC letters cycle through all the chips. The chip colors are in
   the palette editor's "rarity chips" tab. Look at the tray, a market, the codex, and a light palette.
+  - Watch the COMMON chip (dark text on light grey): grey can read as "disabled". Items you can't use right now
+    (most items on the map) are plain grey with no chip, on purpose. If usable common items still look off,
+    try a brighter or slightly tinted common in the rarity chips tab (it changes everywhere at once).
 
 - [ ] **Upload `preview.png` to the root of gregschomburg.com/br/** (v12.00), above the version folders, once.
   Every version's link preview points at `https://gregschomburg.com/br/preview.png`. It's `dist/preview.png`
