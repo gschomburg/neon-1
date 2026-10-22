@@ -2,7 +2,7 @@
 
 The EXOTIC rarity exists but has **no mods** yet (the only exotic thing is the WARP item). Exotics should
 bend the rules of the game, not just give bigger numbers. Several change how a layer works, so each needs
-thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
+thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
 user's.
 
 Mods for corps that don't exist yet stay with those corp ideas (SPEC §17). Mods that need the fake ads
@@ -31,7 +31,7 @@ other mod. A first set of slots:
 | `tap` | what a tap does (a pick vs a 50/50 call) | COIN FLIP |
 | `carry` | what carries between layers | ICE THAT COMES WITH YOU (maybe WORM) |
 | `slots` | the tray itself (items vs mods) | the slot trade |
-| `health` | what a hit costs you (integrity vs credits / something else) | money for health, ZOMBIE |
+| `health` | what a hit costs you (integrity vs credits / something else) | BLOOD MONEY, ZOMBIE (they clash) |
 
 (Clash warning text from the slot: "ICE EATER changes how layers are won. it will replace QUANTUM.")
 
@@ -93,7 +93,7 @@ and the perfect heal tops it up.
 - DEMOLITION already has this rule: ICE EATER does nothing extra there (or its numbers stay on for the boss).
 - **Feel:** eating should feel good: a crunch sound, the node crumbling, a little `nom` / chomp glyph.
 
-## Money for health (the user, 2026-10-22; no name yet)
+## Money for health — BUILT v12.15 as BLOOD MONEY (the user, 2026-10-22)
 
 **Already close in the game: OMERTA** (LA FAMIGLIA's boss mod): an ICE hit costs 10% of your credits (at least
 15cr) instead of integrity, while you can pay; broke, hits go back to integrity. **FRIENDSHIP** (MOCHI MOCHI)

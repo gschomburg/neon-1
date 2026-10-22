@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.14']);
+NEON_FILES.push(['engine/run.js', 'v12.15']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -481,6 +481,7 @@ function chanceCard(lv, c, run) {
   if (u < 0.7) { st.timer.max += 3; st.timer.left += 3; return 'chance: +3s'; }
   if (u < 0.92) return 'chance: nothing';
   if (zombie()) { addRot(ROT.ice); return 'chance: rot!'; }
+  if (bloodMoney()) { const cost = payBlood(1); return run.integrity > 0 ? `chance: -${cost}cr!` : 'chance: broke!'; }
   run.integrity = Math.max(1, run.integrity - 1);
   return 'chance: -1 int!';
 }
@@ -878,11 +879,13 @@ async function onTrap(t, i) {
 function hurt(n) {
   const run = st.run;
   if (zombie()) return addRot(n * ROT.ice);
+  if (bloodMoney()) return payBlood(n);
   run.integrity -= n;
 }
 function heal(n) {
   const run = st.run;
   if (zombie()) { run.rot = Math.max(0, (run.rot || 0) - n * ROT.heal); return; }
+  if (bloodMoney()) { run.credits += n * BLOOD.heal; run.earned += n * BLOOD.heal; return; }
   run.integrity = Math.min(run.maxInt, run.integrity + n);
 }
 // ZOMBIE: add rot. At ROT.max you fall apart: integrity goes to 0, so the usual death checks
@@ -892,7 +895,18 @@ function addRot(n) {
   run.rot = (run.rot || 0) + n;
   if (run.rot >= ROT.max) { run.rot = ROT.max; run.integrity = 0; }
 }
-const canHeal = () => zombie() ? (st.run.rot || 0) > 0 : st.run.integrity < st.run.maxInt;
+const canHeal = () => zombie() ? (st.run.rot || 0) > 0 : bloodMoney() ? true : st.run.integrity < st.run.maxInt;
+// BLOOD MONEY: a hurt of n costs credits. Can't pay: you're dead (integrity 0), unless FAILSAFE
+// catches it (you're left broke). Returns what it cost.
+function payBlood(n) {
+  const run = st.run, cost = bloodCost(n);
+  modFired('bloodmoney');
+  if (run.credits >= cost) { run.credits -= cost; return cost; }
+  run.credits = 0;
+  if (has('failsafe') && !run.failsafeUsed) { run.failsafeUsed = true; st.fsAt = performance.now(); if (st.lv) st.lv.failsafeNow = true; return cost; }
+  run.integrity = 0;
+  return cost;
+}
 
 // ---- ICE EATER (docs/EXOTICS.md). Tapping ICE eats it, eating all the ICE clears the layer,
 // the real node kills you. Each bite pays the layer's pay / its ICE count; onSafe pays the rest.
@@ -948,6 +962,7 @@ function clockHurts() {
   tm.left = tm.max; tm.lastSec = Math.ceil(tm.max);
   Sound.trap(); shake(6); flash(C.danger, 0.15, 0.3);
   if (zombie()) { addRot(ROT.timeout); setMsg(`> clock ran out. rot +${ROT.timeout}.`, C.danger); }
+  else if (bloodMoney()) { const cost = payBlood(1); setMsg(`> clock ran out. -${cost}cr.`, C.danger); }
   else { run.integrity -= 1; setMsg('> clock ran out. integrity -1.', C.danger); }
   if (run.integrity <= 0) { st.busy = true; die(); }
 }
@@ -970,7 +985,7 @@ async function failsafeBeat(lv) {
   await wait(FAILSAFE_BEAT);
   Sound.shield(); flash(C.accent, 0.25, 0.5);
   modFired('failsafe');
-  setMsg('> FAILSAFE: held at 1 integrity.', C.accent);
+  setMsg(bloodMoney() ? '> FAILSAFE: you live. broke.' : '> FAILSAFE: held at 1 integrity.', C.accent);
 }
 // Queue a line for after the hit (see onTrap): a mod saying what it just showed you.
 // fn(now) runs as the line shows (that's when the change appears on the node).
@@ -1069,6 +1084,12 @@ function blockHit(t, i) {
     const raw = st.corp.hasBoss && st.corp.def.hitDmg ? Math.max(lv.dmg, st.corp.def.hitDmg(t, lv)) : lv.dmg;   // GRIDLOCK: red hits for 2
     const dmg = has('grounded') && raw >= 2 ? raw - 1 : raw;   // GROUNDED
     if (dmg < raw) modFired('grounded');
+    if (bloodMoney()) {   // BLOOD MONEY: the hit costs credits
+      const cost = payBlood(dmg);
+      Sound.trap(); shake(9); flash(C.money, 0.18, 0.35);
+      msg = run.integrity > 0 ? `> ICE. -${cost}cr. blood money.` : '> ICE. you can\x27t pay.';
+      return msg;
+    }
     run.integrity -= dmg;
     Sound.trap();
     shake(9);
@@ -1273,7 +1294,7 @@ async function die() {
   st.timer = null;
   const safeTile = st.lv.tiles[st.lv.safe];
   if (safeTile.state === 'closed') safeTile.state = 'reveal';
-  setMsg(zombie() ? '> you fell apart.' : '> traced. real node revealed.', C.danger);
+  setMsg(zombie() ? '> you fell apart.' : bloodMoney() ? '> broke. real node revealed.' : '> traced. real node revealed.', C.danger);
   st.dying = true;      // the music powers down instead of cutting out
   Sound.death();
   await wait(1100);

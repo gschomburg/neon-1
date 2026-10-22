@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.14']);
+NEON_FILES.push(['engine/mods.js', 'v12.15']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -131,6 +131,15 @@ const ROT = {
   perTap: 5,      // taps to break a node = 1 + rot / perTap
 };
 const zombie = () => has('zombie');
+// ---- BLOOD MONEY: credits are your health. Numbers to tune:
+const BLOOD = {
+  bonus: 100,     // credits when you take it
+  hit: 20,        // what a hit costs (x damage), plus
+  perSector: 10,  // this much more each sector
+  heal: 15,       // each point of healing pays this
+};
+const bloodMoney = () => has('bloodmoney');
+const bloodCost = (n = 1) => n * (BLOOD.hit + BLOOD.perSector * ((st.run && st.run.sector) || 0));
 const tapsToBreak = () => 1 + Math.floor((st.run.rot || 0) / ROT.perTap);
 // ICE EATER is on for this layer (set when the layer opens).
 const eaterOn = () => !!(st.lv && st.lv.eater);

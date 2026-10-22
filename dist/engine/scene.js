@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.14']);
+NEON_FILES.push(['engine/scene.js', 'v12.15']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -114,6 +114,11 @@ function buildScene(now, collectHits, raw = false) {
       const rot = run.rot || 0, txt = `${String(rot).padStart(3, '0')}/${ROT.max}`;
       putR(2, txt, rot >= ROT.max - 30 ? C.danger : rot >= ROT.max / 2 ? C.money : C.accent);
       put(L.wc - txt.length - 4, 2, 'ROT', C.mid);
+    } else if (bloodMoney()) {   // BLOOD MONEY: your credits are your life; red when one more hit breaks you
+      const txt = `${run.credits}cr`, cost = bloodCost(1);
+      putR(2, txt, run.credits < cost ? C.danger : run.credits < cost * 3 ? C.money : C.accent);
+      put(L.wc - txt.length - 5, 2, 'LIFE', C.mid);
+      put(L.wc - txt.length - 5 - 9, 2, `hit-${cost}`, C.dim);
     } else {
       putR(2, bar, fsBlink ? C.bright : cur <= 1 ? C.danger : C.accent);
       put(L.wc - bar.length - 10, 2, 'INTEGRITY', C.mid);

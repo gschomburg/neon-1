@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v12.14']);
+NEON_FILES.push(['data/mods.js', 'v12.15']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },
@@ -161,4 +161,7 @@ const MODS = {
   zombie:        { name: 'ZOMBIE',         short: 'ZMB', kind: 'exotic', rarity: 'exotic', slot: 'health', locked: true, icon: 'x_x.', anim: 'exotic', price: 150,
     tip: "you're dead. rot is your clock.", desc: "you're dead, so ICE can't hurt you. but you rot: the more rot, the more taps a node takes. 150 rot and you fall apart. locked in.",
     codex: "integrity is gone: you're dead. ICE can't hurt you, but every layer and every node you break adds rot. the more rot, the more taps it takes to break a node (tap it until it breaks; weak taps don't show what it is). healing takes rot away. at 150 rot you fall apart. once taken it's locked in for the run." },
+  bloodmoney:    { name: 'BLOOD MONEY',    short: 'BLD', kind: 'exotic', rarity: 'exotic', slot: 'health', icon: '$+$-', anim: 'exotic', price: 120,
+    tip: 'your credits are your health.', desc: '+100cr now. from then on ICE hits cost credits, not integrity. broke and hit: you die.',
+    codex: 'you sell your health: +100cr now, and every ICE hit (and every other hurt) costs credits instead of integrity, 20cr plus 10 a sector. can\x27t pay and you\x27re dead (FAILSAFE catches it once). healing pays you credits instead. the market is now where you buy your life back.' },
 };

@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v12.14']);
+NEON_FILES.push(['engine/panels.js', 'v12.15']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -42,6 +42,7 @@ function addMod(key, tier = 0) {
   run.modTier[key] = clamp(tier, 0, tierCount(MODS[key]) - 1);
   if (key === 'buffer') { run.maxInt++; run.integrity++; }
   if (key === 'stash') run.beltSlots++;
+  if (key === 'bloodmoney') { run.credits += BLOOD.bonus; run.earned += BLOOD.bonus; }
   if (key === 'zombie') { run.rot = 0; if (has('failsafe')) run.failsafeUsed = true; }   // dead: FAILSAFE has nothing to save
   return 'new';
 }

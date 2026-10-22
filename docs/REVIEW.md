@@ -6,6 +6,11 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **BLOOD MONEY and the MODS CLASH screen** (v12.15). Credits are your health (+100cr when taken; hits cost 20cr +10 a
+  sector). To see the clash: dev menu, add BLOOD MONEY, then take ZOMBIE from a sector boss / market / cache ("it will
+  replace blood money"); the other way round, ZOMBIE is locked in and BLOOD MONEY can't be taken. Numbers: `BLOOD` in
+  `dist/engine/mods.js`.
+
 - [ ] **ICE EATER and ZOMBIE, the first exotic mods** (v12.14). Fastest way to try them: dev menu, add the mod (or wait
   for a sector boss: its reward always has one exotic). ICE EATER: eat every ICE, never the real one; X-AXIS / Y-AXIS turn
   the real node's line red. ZOMBIE: watch the `ROT 000/150` counter and the crack counts on nodes. Numbers to tune are in
