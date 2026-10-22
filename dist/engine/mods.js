@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.18']);
+NEON_FILES.push(['engine/mods.js', 'v12.19']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -158,6 +158,28 @@ const tapsToBreak = () => 1 + Math.floor((st.run.rot || 0) / ROT.perTap);
 const eaterOn = () => !!(st.lv && st.lv.eater);
 // A real node: the corp's, or QUANTUM's second one (t.quantum).
 const isReal = t => !!(t && (t.safe || t.quantum));
+
+// ---- COIN FLIP: hold a node to flip a coin on it first. Numbers to tune:
+const COIN = {
+  holdMs: 260,       // hold a node this long (or drag up from it) to bring the coin up
+  spinMs: 650,       // the flip
+  faces: [['hp', 'cr', 50], ['hp', 'hp', 25], ['cr', 'cr', 25]],   // face pairs, % odds
+  bigChance: 0.2,    // each face can be a big one
+  hp: 1, bigHp: 2,   // a ♥ face: integrity won / lost
+  cr: 10, bigCr: 25, // a $ face: credits won / lost, x the multiplier
+  max: 5,            // the multiplier tops out here
+};
+const coinOn = () => has('coinflip') && st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.mp && !(st.corp.def.drag);
+const coinMult = () => has('coinflip') && st.run ? (st.run.coinMult || 1) : 1;
+const coinValue = f => f.kind === 'hp' ? (f.big ? COIN.bigHp : COIN.hp) : (f.big ? COIN.bigCr : COIN.cr) * coinMult();
+// The two faces for a coin on node i: [{ kind, big }, { kind, big }], from its own random stream.
+function rollCoin(i) {
+  const run = st.run, r = rngFor(run.seed, 'coinface', st.corp.node.id, st.corp.idx, i, (run.coinRolls = (run.coinRolls || 0) + 1));
+  let u = r() * 100, pair = COIN.faces[0];
+  for (const p of COIN.faces) { if (u < p[2]) { pair = p; break; } u -= p[2]; }
+  const faces = [pair[0], pair[1]].map(kind => ({ kind, big: r() < COIN.bigChance }));
+  return r() < 0.5 ? faces : faces.reverse();
+}
 
 // ---- Tiers. Mods and items with `tiers` come in up to 3 steps (COMMON, RARE, EPIC, or
 // levels). Finds roll a tier; finding a mod you have upgrades it (see addMod).

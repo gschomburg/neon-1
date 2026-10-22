@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.18']);
+NEON_FILES.push(['engine/scene.js', 'v12.19']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -136,6 +136,7 @@ function buildScene(now, collectHits, raw = false) {
     // LEVERAGE: in debt the credits go red, with your limit after them (CR -120/-150)
     const crTxt = `${(st.mode === 'play' && st.corp && st.corp.def.money) || 'CR'} ${run.credits}${leverage() && run.credits < 0 ? '/' + creditFloor() : ''}`;
     putR(3, crTxt, run.credits < 0 ? C.danger : C.money);
+    if (has('coinflip')) { const m = run.coinMult || 1; put(L.wc - crTxt.length - 4, 3, `x${m}`, m >= COIN.max ? C.bright : m > 1 ? C.money : C.dim, 'hud', m > 1); }   // COIN FLIP: the multiplier
   } else {
     put(0, 2, `BEST ${pad2(save.best)}   RUNS ${save.runs}   WINS ${save.wins}`, C.mid);
   }
@@ -607,6 +608,61 @@ function buildBoard({ now, put, addHit, bg, cells }) {
       put(tx + TILE_W - 1, ty + TILE_H - 1, '+', C.accent, 'fx', true);
     } else if (!t) put(tx + 3, ty + 2, 'o', C.accent, 'fx');
   }
+  drawCoin(put, bg, now, lv, cells);
+  drawCoinPop(put, bg, now, cells);
+}
+
+// Overlays (the coin box, the multiplier pop): drop whatever was drawn under a rectangle,
+// since characters always draw over backgrounds.
+const clearRect = (cells, x0, y0, w, h) => { for (let k = cells.length - 1; k >= 0; k--) { const c = cells[k]; if (c.cx >= x0 - 0.5 && c.cx < x0 + w - 0.5 && c.cy >= y0 - 0.5 && c.cy < y0 + h - 0.5) cells.splice(k, 1); } };
+// COIN FLIP: the coin box over a held node. Two node-sized faces side by side (a coin spinning
+// between them), above the node (below it on the top row), drawn over the board.
+function drawCoin(put, bg, now, lv, cells) {
+  const cn = st.coin, t = cn && lv.tiles[cn.i];
+  if (!t) return;
+  const { tx, ty } = tileOrigin(t);
+  const w = TILE_W * 2 + 3, x0 = clamp(tx + Math.floor(TILE_W / 2) - Math.floor(w / 2), 0, L.wc - w);
+  const y0 = cn.below ? ty + TILE_H : ty - TILE_H;
+  clearRect(cells, x0, y0, w, TILE_H);   // drawn over whatever is under it
+  for (let r = 0; r < TILE_H; r++) bg(x0, y0 + r, w, C.bg, 1);
+  const spinning = cn.flipAt && cn.landed == null;
+  const lit = spinning ? Math.floor(now / 90) % 2 : cn.landed != null ? cn.landed : cn.side;
+  cn.faces.forEach((f, k) => {
+    const x = x0 + k * (TILE_W + 3), on = lit === k, chosen = cn.side === k;
+    const sym = f.kind === 'hp' ? '♥' : '$';
+    const amt = String(cn.vals ? cn.vals[k] : coinValue(f));
+    const mid = s => { const l = Math.floor((TILE_W - 2 - s.length) / 2); return (' '.repeat(l) + s).padEnd(TILE_W - 2); };
+    const res = cn.landed != null && chosen ? (cn.landed === k ? 'WIN' : 'LOSE') : f.big ? 'BIG' : '';
+    const rows = [on ? '+-----+' : '+- - -+', '|' + mid(sym) + '|', '|' + mid(amt) + '|', '|' + mid(res) + '|', on ? '+-----+' : '+- - -+'];
+    const col = f.kind === 'hp' ? C.danger : C.money;
+    const fc = on ? C.bright : chosen ? col : C.mid;
+    if (on && !spinning) bg(x, y0, TILE_W, col, 0.25);
+    rows.forEach((r, i) => put(x, y0 + i, r, fc, 'fx', on));
+    put(x + 1, y0 + 1, mid(sym), col, 'fx', true);
+    if (res) put(x + 1, y0 + 3, mid(res), res === 'LOSE' ? C.danger : res === 'WIN' ? C.accent : C.money, 'fx', true);
+  });
+  // the coin between the faces: spins while it's up, fast while flipping
+  const spin = '|/-\\'[Math.floor(now / (spinning ? 60 : 160)) % 4];
+  put(x0 + TILE_W + 1, y0 + 2, cn.landed != null ? 'o' : spin, C.money, 'fx', true);
+  if (!cn.flipAt) put(x0 + TILE_W, y0 + (cn.below ? 4 : 0), '< >', C.dim, 'fx');   // drag to a side
+}
+// COIN FLIP: the multiplier went up: a boxed xN drops onto the board, bounces, then fades.
+function drawCoinPop(put, bg, now, cells) {
+  const p = st.coinPop;
+  if (!p) return;
+  const age = now - p.at;
+  if (age > 1300) { st.coinPop = null; return; }
+  const txt = ` x ${p.m} `, w = txt.length + 2, x0 = Math.floor((L.wc - w) / 2);
+  const land = p.y, fall = Math.min(1, age / 320);
+  const bounce = age < 320 ? 0 : Math.max(0, Math.sin((age - 320) / 90) * 0.6 * Math.exp(-(age - 320) / 160));
+  const y = land - 5 * (1 - fall) * (1 - fall) - bounce;
+  const cols = [C.money, C.accent, C.bright, C.exotic || C.money];
+  const col = cols[Math.floor(now / 90) % cols.length];
+  clearRect(cells, x0, Math.round(y), w, 3);
+  for (let r = 0; r < 3; r++) bg(x0, Math.round(y) + r, w, C.bg, 1);
+  put(x0, y, '+' + '='.repeat(w - 2) + '+', col, 'fx', true);
+  put(x0, y + 1, '|' + txt + '|', col, 'fx', true);
+  put(x0, y + 2, '+' + '='.repeat(w - 2) + '+', col, 'fx', true);
 }
 
 // Big boxed primary button. 3 rows, or 4 with a subtitle.

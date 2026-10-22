@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v12.18']);
+NEON_FILES.push(['data/mods.js', 'v12.19']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },
@@ -170,4 +170,7 @@ const MODS = {
   quantum:       { name: 'QUANTUM',        short: 'QTM', kind: 'exotic', rarity: 'exotic', slot: 'real', icon: 'o.O0', anim: 'exotic', price: 140,
     tip: '2 real nodes. half pay.', desc: 'every layer (3+ nodes) has two real nodes: either one passes. layers pay half.',
     codex: 'every layer with 3 or more nodes has a second real node; tap either one and the layer passes. the corp\x27s tell points to the first one as usual; the second is random, no tell. layers pay half. with ICE EATER both real nodes bite.' },
+  coinflip:      { name: 'COIN FLIP',      short: 'FLP', kind: 'exotic', rarity: 'exotic', slot: 'tap', icon: 'o0O0', anim: 'exotic', price: 130,
+    tip: 'hold a node: flip a coin on it.', desc: 'hold a node to flip a coin first: call a side (♥ or $), win its prize or lose it. wins raise a pay multiplier (to x5).',
+    codex: 'hold a node (or drag up from it) and a coin comes up with two faces: ♥ (integrity) or $ (credits), sometimes both the same, sometimes a big one. drag to a side and let go to call it: if the coin lands on it you win that prize, if not you lose it. then the node opens as usual. each win raises a multiplier on all your pay (up to x5), each loss drops it one. a quick tap is a normal pick; let go anywhere else to skip the flip. keys: C on a node, left / right, enter.' },
 };

@@ -1,6 +1,6 @@
 // NeoN+1 engine/editor.js: The palette editor bridge (only with ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v12.18']);
+NEON_FILES.push(['engine/editor.js', 'v12.19']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -98,5 +98,5 @@ window.__br = {
   addSector, sectorClear, showSectorClear, pushOn, cashOut, openOmniReward, STAGES, modsAt, resumeRun, openBoard, LEGACY, legacyLv, repFor, saveRun, savedRun, clearRun,
   askSkip, scrollMapSector, sectorViewRow, SKIP_BOSS, toMap, startCorp, pickCorps, targetLevel, CORP_TELL, CODEX_CORPS, openShop,
   togglePause, pauseLines, abandonRun, moveFocus, moveTileCursor, moveMapCursor,
-  cipherNow, TAP_FX, PALETTES, clashWith, exoticOffer, tapsToBreak, openCache, openClash, bloodCost,
+  cipherNow, TAP_FX, PALETTES, clashWith, exoticOffer, tapsToBreak, openCache, openClash, bloodCost, coinOpen, coinFlip, tileCenter, COIN,
 };

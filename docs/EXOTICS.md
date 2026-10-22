@@ -2,7 +2,7 @@
 
 The EXOTIC rarity exists but has **no mods** yet (the only exotic thing is the WARP item). Exotics should
 bend the rules of the game, not just give bigger numbers. Several change how a layer works, so each needs
-thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15), LEVERAGE (v12.16), QUANTUM (v12.17)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
+thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15), LEVERAGE (v12.16), QUANTUM (v12.17), COIN FLIP (v12.19)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
 user's.
 
 Mods for corps that don't exist yet stay with those corp ideas (SPEC §17). Mods that need the fake ads
@@ -28,7 +28,7 @@ other mod. A first set of slots:
 |---|---|---|
 | `goal` | what clears a layer (find the real node vs eat the ICE) | ICE EATER |
 | `real` | how many real nodes there are | QUANTUM (built) |
-| `tap` | what a tap does (a pick vs a 50/50 call) | COIN FLIP |
+| `tap` | what a tap does (a pick vs a 50/50 call) | COIN FLIP (built) |
 | `carry` | what carries between layers | ICE THAT COMES WITH YOU (maybe WORM) |
 | `slots` | the tray itself (items vs mods) | the slot trade |
 | `health` | what a hit costs you (integrity vs credits / something else) | BLOOD MONEY, ZOMBIE (they clash) |
@@ -228,7 +228,18 @@ A chance to clear the whole layer at once, but also a chance it adds ICE instead
 Odds (50/50? better the more ICE is left?). "Adds ICE": new nodes appear (layer gets bigger) or closed nodes
 turn more dangerous (hit for 2)? Pay: a cleared-by-roulette layer pays normal or nothing?
 
-## COIN FLIP (the user's; *(Claude)*: 50/50, HEADS)
+## COIN FLIP — BUILT v12.19 (the user's)
+
+**As built (designed with the user, 2026-10-22):** a side bet on the tap, not a change to it. Hold a node: a coin
+box comes up over it, two node-sized faces: ♥ (integrity) or $ (credits); the faces are rolled per coin (♥/$ half
+the time, ♥/♥ or $/$ a quarter each, sometimes a BIG face). Drag to a side, let go: the coin lands; win that
+prize or lose it; then the node opens as usual (so you can win the coin and still get hurt by ICE, or find the
+real node and lose the bet). Each win +1 to a pay multiplier (to x5), each loss -1 (not a reset): with a fair coin
+it drifts around x3 if you flip a lot, which is where the strength is (the ♥ bet itself evens out). Going up drops
+a boxed x N with confetti. Quick tap = normal pick; let go elsewhere = no flip. Ideas for later: a loaded coin with a
+learnable pattern ("the coin has a tell"); the user's first take was "every tap is a 50/50". Old notes below.
+
+### (earlier notes)
 
 Every tap becomes a 50/50: tap a node and a small window opens with 2 options; pick one. Maybe double damage
 on a wrong answer.

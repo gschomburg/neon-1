@@ -6,6 +6,10 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **COIN FLIP** (v12.19). Hold a node (or drag from it) and the coin box pops up; drag to ♥ or $ and let go. Feel
+  the gesture on your phone (hold time 260ms, how far you drag), whether the bet is worth it, and the x N drop-in.
+  The multiplier (HUD, by the credits) is the strong part: watch the pay. Numbers: `COIN` in `dist/engine/mods.js`.
+
 - [ ] **QUANTUM** (v12.17). Two real nodes a layer (3+ nodes), either passes, half pay. The tell finds the first; the second
   is random. Watch the odds (`2 IN 5`) and the `quantum: 2 real` note. Is half pay the right price?
 

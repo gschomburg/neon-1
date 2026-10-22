@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.18']);
+NEON_FILES.push(['engine/run.js', 'v12.19']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -263,6 +263,7 @@ async function enterLayer() {
   lv.iceTotal = lv.tiles.filter(t => !isReal(t)).length; lv.eatPaid = 0;
   lv.dmg = boss && (c.def.bossDmg || c.stageBoss) ? (c.def.bossDmg || 2) : 1;   // sector bosses hit for 2
   st.lv = lv;
+  st.coin = null; st.coinPress = null;   // COIN FLIP: nothing left open from the last layer
   if (c.hasBoss && c.def.dark) refreshPalette();   // BLACKOUT: the lights dim every layer
   st.hover = -1; st.sel = -1;
   c.depthAt = run.depth;
@@ -605,6 +606,7 @@ function payFor(lv) {
   if (c.stageBoss) mult *= 1.5;   // a corp as the sector boss pays more
   if ((lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned) mult *= 1 + 0.5 * (lv.n - 1);   // ICE EATER: every clear is clean
   if (has('skimmer')) mult *= 1.5;
+  mult *= coinMult();   // COIN FLIP: the streak multiplier
   if (has('quantum') && lv.tiles.some(t => t.quantum)) mult *= 0.5;   // QUANTUM: 2 real, half pay
   if (has('fastpay') && lv.fast) mult *= 1.5;
   if (has('surge') && lv.late) mult *= 1.5;
@@ -982,6 +984,66 @@ function clockHurts() {
   else { run.integrity -= 1; setMsg('> clock ran out. integrity -1.', C.danger); }
   if (run.integrity <= 0) { st.busy = true; die(); }
 }
+// ---- COIN FLIP (docs/EXOTICS.md). Hold a node: st.coin opens over it (two faces); drag to a side
+// and let go to call it. The coin lands, you win or lose that face's prize, the multiplier moves,
+// then the node opens as a normal pick. Input in engine/input.js, drawing in engine/scene.js.
+function coinOpen(i) {
+  const t = st.lv && st.lv.tiles[i];
+  if (!coinOn() || st.busy || !t || t.state !== 'closed') return;
+  st.coin = { i, faces: rollCoin(i), side: null, at: performance.now(), below: t.row === 0 };   // top row: the coin opens below
+  Sound.tick();
+}
+function coinCancel() { if (st.coin && !st.coin.flipAt) { st.coin = null; Sound.ui(); } }
+// Every frame: a press held long enough brings the coin up.
+function coinTick(now) {
+  const p = st.coinPress;
+  if (p && !st.coin && now - p.t0 >= COIN.holdMs) coinOpen(p.i);
+}
+async function coinFlip() {
+  const cn = st.coin, run = st.run;
+  if (!cn || cn.side == null || cn.flipAt || st.busy) return;
+  st.busy = true;
+  cn.flipAt = performance.now();
+  cn.vals = cn.faces.map(coinValue);   // the prizes as called (the multiplier moves after)
+  Sound.probe();
+  const landed = rngFor(run.seed, 'coin', st.corp.node.id, st.corp.idx, (run.flips = (run.flips || 0) + 1))() < 0.5 ? 0 : 1;
+  await wait(COIN.spinMs);
+  cn.landed = landed;
+  const f = cn.faces[cn.side], win = landed === cn.side, v = cn.vals[cn.side];
+  const what = f.kind === 'hp' ? `${v} ♥` : `${v}cr`;
+  modFired('coinflip');
+  if (win) {
+    if (f.kind === 'hp') heal(v); else { run.credits += v; run.earned += v; }
+    Sound.loot(); setMsg(`> heads up: won ${what}.`, C.money);
+  } else {
+    if (f.kind === 'hp') hurt(v);
+    else run.credits -= Math.max(0, Math.min(v, run.credits - creditFloor()));
+    Sound.deny(); shake(4); setMsg(`> tails down: lost ${what}.`, C.danger);
+  }
+  const old = run.coinMult || 1;
+  run.coinMult = clamp(old + (win ? 1 : -1), 1, COIN.max);
+  if (run.coinMult > old) coinPop(run.coinMult);
+  await wait(750);
+  st.coin = null;
+  if (run.integrity <= 0) return die();
+  st.busy = false;
+  return pick(cn.i);   // then the node opens, as a normal pick
+}
+// The multiplier went up: a big xN drops onto the board, with confetti and a fanfare.
+function coinPop(m) {
+  const cn = st.coin, ct = cn && st.lv && st.lv.tiles[cn.i];
+  const coinTop = ct ? tileOrigin(ct).ty < BOARD_Y + L.gh / 2 : true;
+  const py = coinTop ? BOARD_Y + Math.floor(L.gh * 0.7) : BOARD_Y + 2;   // the other half of the board
+  st.coinPop = { m, at: performance.now(), y: py };
+  Sound.jingle(); setTimeout(() => Sound.burst(), 260);
+  flash(C.money, 0.12, 0.35);
+  if (reduced()) return;
+  const x = pxX(L.wc / 2), y = pxY(py + 1), cols = [C.money, C.accent, C.bright, C.exotic, C.epic, C.rare];
+  const cells = [];
+  for (let k = 0; k < 34; k++) cells.push({ ch: pickR(['*', '+', '$', 'x', '.', 'o', String(m)], Math.random), x: x + rand(-2, 2) * L.cw, y: y + rand(-1, 1) * L.chh, col: pickR(cols, Math.random) });
+  setTimeout(() => explode(cells, x, y + L.chh, { power: 0.9, grav: 0.7, life: [0.9, 1.6] }), 280);
+}
+
 // Every frame: an ICE EATER layer with no ICE left clears (bites, locks, items, mods: whatever ate it).
 function eaterWatch() {
   const lv = st.lv;

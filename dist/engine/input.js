@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v12.18']);
+NEON_FILES.push(['engine/input.js', 'v12.19']);
 
 // ---------------- Pause menu ----------------
 // [MENU] in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -156,6 +156,11 @@ cv.addEventListener('pointerdown', e => {
     return;
   }
   const oneTap = save.tapMode === 'one';
+  if (h.kind === 'tile' && coinOn() && !st.busy && !st.coin) {
+    // COIN FLIP: a press waits: a quick tap picks, a hold (or a drag up) brings the coin up
+    st.coinPress = { i: h.i, x: e.clientX, y: e.clientY, t0: performance.now() };
+    return;
+  }
   if (h.kind === 'tile') {
     // drag-to-select corps (DECIBEL, SQUALOR) on touch: a press waits to see if it's a drag.
     // Tapping the selected node confirms it.
@@ -185,6 +190,7 @@ cv.addEventListener('pointerdown', e => {
 cv.addEventListener('pointermove', e => {
   { const [px, py] = ptXY(e); st.ptr = { x: px, y: py }; st.ptrAt = performance.now(); }
   if (st.press && Math.hypot(e.clientX - st.press.x, e.clientY - st.press.y) > 12) st.press.moved = true;
+  if (st.coinPress) coinDrag(e);   // COIN FLIP
   if (st.mp) mpSendCursor((e.clientX - L.ox - L.cw / 2) / L.cw, (e.clientY - L.oy - L.chh / 2) / L.chh);
   // Swipe to scroll lists (one entry per row of finger travel).
   if (st.drag && e.buttons && activeScroll()) {
@@ -205,6 +211,13 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   st.drag = null;
+  if (st.coinPress) {   // COIN FLIP: let go: a quick tap picks, on a side flips, anywhere else skips
+    const cp = st.coinPress;
+    st.coinPress = null;
+    if (!st.coin) return pick(cp.i);
+    if (st.coin.side != null) return coinFlip();
+    return coinCancel();
+  }
   const pr = st.press;
   st.press = null;
   if (!pr) return;
@@ -212,7 +225,19 @@ cv.addEventListener('pointerup', e => {
   const h = hitAt(...ptXY(e));   // a drag: lifting selects (a second tap confirms)
   if (h && h.kind === 'tile' && st.mode === 'play' && !st.busy) { st.sel = h.i; Sound.tick(); }
 });
-cv.addEventListener('pointercancel', () => { st.press = null; });
+cv.addEventListener('pointercancel', () => { st.press = null; if (st.coinPress) { st.coinPress = null; coinCancel(); } });
+// COIN FLIP: while held, dragging up opens the coin and picks a side (left / right of the node).
+function coinDrag(e) {
+  const p = st.coinPress, t = st.lv && st.lv.tiles[p.i];
+  if (!t) return;
+  const [px, py] = ptXY(e), [sx, sy] = ptXY({ clientX: p.x, clientY: p.y });
+  if (!st.coin && Math.abs(py - sy) > 12) coinOpen(p.i);
+  const cn = st.coin;
+  if (!cn || cn.flipAt) return;
+  const c = tileCenter(t), out = cn.below ? py > c.y + L.chh * 2 : py < c.y - L.chh * 2;
+  const side = out ? (px < c.x ? 0 : 1) : null;
+  if (side !== cn.side) { cn.side = side; if (side != null) Sound.tick(); }
+}
 // Closing the tab or switching away: save the run now (phones may not come back).
 window.addEventListener('pagehide', saveRun);
 document.addEventListener('visibilitychange', () => { if (document.hidden) saveRun(); });
@@ -239,6 +264,7 @@ document.addEventListener('keydown', e => {
     if (st.dev) return toggleDev();
     if (st.pause) return togglePause();
     if (st.keyHandler && st.keyHandler(k)) return;
+    if (st.coin) return coinCancel();   // COIN FLIP: skip the flip
     if (st.run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel')) return togglePause();
     return;
   }
@@ -248,6 +274,13 @@ document.addEventListener('keydown', e => {
     if (st.keyHandler && st.keyHandler(k)) return;
     if (/^[1-9]$/.test(e.key) && st.run && (st.mode === 'play' || st.mode === 'map')) return useItem(Number(e.key) - 1);
     if (st.mode === 'play' && st.lv) {
+      if (st.coin && !st.coin.flipAt) {   // COIN FLIP: left / right picks a side, enter flips
+        if (k === 'arrowleft' || k === 'a') { st.coin.side = 0; return Sound.tick(); }
+        if (k === 'arrowright' || k === 'd') { st.coin.side = 1; return Sound.tick(); }
+        if ((k === 'enter' || k === ' ') && st.coin.side != null) return coinFlip();
+        return;
+      }
+      if (k === 'c' && st.hover >= 0 && coinOn()) return coinOpen(st.hover);
       if (arrow) return moveTileCursor(k);
       if ((k === 'enter' || k === ' ') && st.hover >= 0) return pick(st.hover);
       return;

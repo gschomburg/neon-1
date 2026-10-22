@@ -765,6 +765,10 @@ Agreed changes not built yet.
     is mirrored left-right (taps too); a **mod** (*(Claude)* names: REARVIEW, MIRROR WRITING, DA VINCI): e.g. the
     real node's glyph flips for a blink at layer start, or ICE you hit flips to show it's dead. Also usable in ads
     and art (a backwards ad, a flipped logo).
+- **Economy tuning pass** (2026-10-22, the user: money feels easy to get and not very powerful). Look at what layers,
+  caches and loot pay vs what things cost (market prices, repairs), and what money is for late in a run. The exotics
+  that trade in money (BLOOD MONEY, LEVERAGE, COIN FLIP's $ bets) lean on this.
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
@@ -1635,6 +1639,7 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.19** (2026-10-22): **COIN FLIP** (EXOTIC, `tap` slot). Hold a node (260ms) or drag from it: a coin box opens over it (below it on the top row) with two node-sized faces, ♥ (integrity) and/or $ (credits, 10 x the multiplier), sometimes both the same (50% ♥/$, 25% ♥/♥, 25% $/$), sometimes a BIG one (♥2 / $25 x). Drag to a side and let go to call it; the coin spins, lands: win that face's prize or lose it (a side bet: the node then opens as a normal pick, ICE still hurts). Each win raises a pay multiplier (x1 to x5, on all pay; the HUD shows `x3` by the credits), each loss drops it one; going up drops a boxed `x N` onto the board with confetti and a jingle. A quick tap is a normal pick; let go anywhere else (or Esc) to skip. Keys: C on a node, left / right, enter. Not in drag corps (DECIBEL, PLAYBALL). `COIN` in engine/mods.js; coinOpen / coinFlip / coinPop in engine/run.js; the gesture in engine/input.js; drawCoin / drawCoinPop in engine/scene.js (overlays clear the characters under them).
 - **v12.18** (2026-10-22): the black market's credits line shows your LEVERAGE limit (`credits -40  (limit -150)`, red in debt).
 - **v12.17** (2026-10-22): **QUANTUM** (EXOTIC, `real` slot): every corp layer with 3+ nodes gets a second real node (`t.quantum`, random, no tell; not in corps with their own tap rules like DEMOLITION / FORM 27B); tapping either passes; those layers pay half. The odds show `2 IN n`, the hint row says `quantum: 2 real`, the layer line "two are real". With ICE EATER both real nodes bite. `isReal(t)` in engine/mods.js.
 - **v12.16** (2026-10-22): **LEVERAGE** (EXOTIC, the user's debt idea as one mod; `money` slot). Credits can go below 0, down to a limit (-150, -100 more a sector: `DEBT` in engine/mods.js); buying, tithes, bids, OMERTA / FRIENDSHIP, CONTINUE? and BLOOD MONEY can all spend into debt (`canSpend` / `creditFloor`, every credit check now uses them). In debt: an ICE hit does nothing with odds debt / 250, up to 60% ("too big to fail", a free block after SHATTER); debt grows 10% (at least 2cr) every layer; past the limit the collectors take 1 integrity a layer (through `hurt`, so BLOOD MONEY / ZOMBIE pay their way). HUD: `CR -120/-150` in red; the tray tip shows the shield odds. Pairs with BLOOD MONEY (a hit you can't pay goes into debt instead of killing you). The debt idea in §16f is now this.

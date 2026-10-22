@@ -1,6 +1,6 @@
 // NeoN+1 corps/streamflix.js
 'use strict';
-NEON_FILES.push(['corps/streamflix.js', 'v12.18']);
+NEON_FILES.push(['corps/streamflix.js', 'v12.19']);
 // Its boss mod: FREEZE FRAME (freezeframe), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

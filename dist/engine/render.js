@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v12.18']);
+NEON_FILES.push(['engine/render.js', 'v12.19']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -11,6 +11,7 @@ function frame(now) {
   updateTimer(dt);
   layerTick(now);
   eaterWatch();   // ICE EATER: a layer with no ICE left clears
+  coinTick(now);  // COIN FLIP: a held press brings the coin up
   stepPaletteFade(now);
   if (st.mp) { mpWatchdog(now); mpClockTick(now); }
   mpTabTitle(now);
