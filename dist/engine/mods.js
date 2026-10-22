@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.16']);
+NEON_FILES.push(['engine/mods.js', 'v12.17']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -156,6 +156,8 @@ const bloodCost = (n = 1) => n * (BLOOD.hit + BLOOD.perSector * ((st.run && st.r
 const tapsToBreak = () => 1 + Math.floor((st.run.rot || 0) / ROT.perTap);
 // ICE EATER is on for this layer (set when the layer opens).
 const eaterOn = () => !!(st.lv && st.lv.eater);
+// A real node: the corp's, or QUANTUM's second one (t.quantum).
+const isReal = t => !!(t && (t.safe || t.quantum));
 
 // ---- Tiers. Mods and items with `tiers` come in up to 3 steps (COMMON, RARE, EPIC, or
 // levels). Finds roll a tier; finding a mod you have upgrades it (see addMod).

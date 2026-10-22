@@ -2,7 +2,7 @@
 
 The EXOTIC rarity exists but has **no mods** yet (the only exotic thing is the WARP item). Exotics should
 bend the rules of the game, not just give bigger numbers. Several change how a layer works, so each needs
-thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15), LEVERAGE (v12.16)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
+thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15), LEVERAGE (v12.16), QUANTUM (v12.17)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
 user's.
 
 Mods for corps that don't exist yet stay with those corp ideas (SPEC §17). Mods that need the fake ads
@@ -27,7 +27,7 @@ other mod. A first set of slots:
 | Slot | What it rewrites | Mods |
 |---|---|---|
 | `goal` | what clears a layer (find the real node vs eat the ICE) | ICE EATER |
-| `real` | how many real nodes there are | QUANTUM |
+| `real` | how many real nodes there are | QUANTUM (built) |
 | `tap` | what a tap does (a pick vs a 50/50 call) | COIN FLIP |
 | `carry` | what carries between layers | ICE THAT COMES WITH YOU (maybe WORM) |
 | `slots` | the tray itself (items vs mods) | the slot trade |
@@ -203,7 +203,9 @@ Credits can go negative, and debt makes you stronger. One mod for both halves of
 A few of the wilder corp boss mods change the game enough that they might belong in EXOTIC. Not now: just a note to
 go through them sometime and bump some up (they'd move to the exotic pool and get a rule slot).
 
-## QUANTUM
+## QUANTUM — BUILT v12.17
+
+**Built as:** the tell points to the first real node; the second is random (no tell); either passes; layers with a second real node pay half; only layers with 3+ nodes, and not in corps with their own tap rules (DEMOLITION, FORM 27B...). With ICE EATER both bite. The notes below were the open questions.
 
 Two nodes are real each layer; either one passes. Layers pay half. (The user's "more real nodes" idea is the
 same mod; keep one.)

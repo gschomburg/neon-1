@@ -6,6 +6,9 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **QUANTUM** (v12.17). Two real nodes a layer (3+ nodes), either passes, half pay. The tell finds the first; the second
+  is random. Watch the odds (`2 IN 5`) and the `quantum: 2 real` note. Is half pay the right price?
+
 - [ ] **LEVERAGE: debt** (v12.16). Credits go negative (limit -150, -100 a sector), debt shields you (debt/250, up to 60%),
   grows 10% a layer, and past the limit the collectors take 1 integrity a layer. Try it with BLOOD MONEY. The HUD shows
   `CR -120/-150`; the tray tip shows the shield odds. Numbers: `DEBT` in `dist/engine/mods.js`.

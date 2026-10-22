@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.16']);
+NEON_FILES.push(['engine/run.js', 'v12.17']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -255,8 +255,12 @@ async function enterLayer() {
   lv.boss = boss;
   lv.misses = 0;
   lv.split = false;
+  if (has('quantum') && n >= 3 && c.hasBoss && !c.def.tap && !st.mp) {   // QUANTUM: a second real node, random
+    const opts = lv.tiles.filter(t => !t.safe && !t.loaded);
+    if (opts.length) pickR(opts, rngFor(run.seed, 'quantum', c.node.id, c.idx)).quantum = true;
+  }
   lv.eater = has('iceeater') && n > 1 && !st.mp;   // ICE EATER: eat the ICE (a 1-node layer is just the real one)
-  lv.iceTotal = lv.tiles.filter(t => !t.safe).length; lv.eatPaid = 0;
+  lv.iceTotal = lv.tiles.filter(t => !isReal(t)).length; lv.eatPaid = 0;
   lv.dmg = boss && (c.def.bossDmg || c.stageBoss) ? (c.def.bossDmg || 2) : 1;   // sector bosses hit for 2
   st.lv = lv;
   if (c.hasBoss && c.def.dark) refreshPalette();   // BLACKOUT: the lights dim every layer
@@ -297,7 +301,7 @@ async function enterLayer() {
   } else {
     showBoard('play');
     st.busy = true;
-    Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : `> ${n} nodes. one is real.`);
+    Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : `> ${n} nodes. ${lv.tiles.some(t => t.quantum) ? 'two are' : 'one is'} real.`);
     if (has('precog') && c.hasBoss && n > 1) {   // PRECOG: the real node shows up a beat early
       modFired('precog');
       for (const t of lv.tiles) if (!t.safe) t.hidden = true;
@@ -335,6 +339,7 @@ async function enterLayer() {
   lv.notes = [];
   if (n > 1 && c.hasBoss) {
     for (const key of modsAt('start')) if (START_NOTE[key]) { const note = START_NOTE[key](lv, c, run); if (note) { lv.notes.push(note); modFired(key); } }
+    if (lv.tiles.some(t => t.quantum)) { lv.notes.push({ text: 'quantum: 2 real' }); modFired('quantum'); }
     if (has('horoscope') && c.luckyIdx === c.idx) { lv.notes.push({ text: 'lucky layer!' }); modFired('horoscope'); }
     if (has('handshake')) { modFired('handshake'); const row = lv.tiles[lv.safe].row; lv.notes.push({ text: `hs: ${'o'.repeat(row + 1)}` }); Sound.beeps(row + 1); }
     if (has('chancecard') && c.idx === 0) { lv.notes.push({ text: chanceCard(lv, c, run) }); modFired('chancecard'); }
@@ -387,7 +392,7 @@ function lockTile(t, col, source = 'purge') {
   const i = st.lv.tiles.indexOf(t);
   const { x, y } = tileCenter(t);
   explode(snapshot(c => c.own === 't' + i), x, y, { col, power: 0.6 });
-  const wasIce = t.state === 'closed' && !t.safe;
+  const wasIce = t.state === 'closed' && !isReal(t);
   t.state = 'locked';
   t.lockedBy = source;
   Sound.shield();
@@ -551,10 +556,11 @@ async function pick(i) {
     sh.total++; sh[cellZone(t, st.lv)]++; sh['c' + t.col] = (sh['c' + t.col] || 0) + 1;
     if (sh.total % 5 === 0) persist();
   }
-  if (eaterOn() && t.safe) return eaterBit(t);   // ICE EATER: the real node kills
+  if (eaterOn() && isReal(t)) return eaterBit(t);   // ICE EATER: the real node kills
   // A corp's own pick rule (FORM 27B, DEMOLITION) can take the tap.
   if (st.corp && st.corp.hasBoss && st.corp.def.tap && st.corp.def.tap(t, i)) return;
   if (t.safe) return onSafe(t);
+  if (t.quantum) { modFired('quantum'); return onSafe(t); }   // QUANTUM: the other real node
   if (eaterOn()) { eaterScan(t); return onTrap(t, i); }   // ICE EATER: eat it (scans only warn)
   // PICK stage. X-AXIS / Y-AXIS: the tap scans its row / column. If the real node is on
   // it, the scan catches it: no damage, the layer is passed (but it's not a perfect).
@@ -599,6 +605,7 @@ function payFor(lv) {
   if (c.stageBoss) mult *= 1.5;   // a corp as the sector boss pays more
   if ((lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned) mult *= 1 + 0.5 * (lv.n - 1);   // ICE EATER: every clear is clean
   if (has('skimmer')) mult *= 1.5;
+  if (has('quantum') && lv.tiles.some(t => t.quantum)) mult *= 0.5;   // QUANTUM: 2 real, half pay
   if (has('fastpay') && lv.fast) mult *= 1.5;
   if (has('surge') && lv.late) mult *= 1.5;
   if (has('supersize') && lv.boss) mult *= 1.5;
@@ -980,7 +987,7 @@ function eaterWatch() {
   const lv = st.lv;
   if (!lv || !lv.eater || st.mode !== 'play' || st.busy || st.transitioning || st.wipe || st.pause || st.dev || st.lv !== lv) return;
   const real = lv.tiles[lv.safe];
-  if (!real || real.state !== 'closed' || lv.tiles.some(t => !t.safe && t.state === 'closed')) return;
+  if (!real || real.state !== 'closed' || lv.tiles.some(t => !isReal(t) && t.state === 'closed')) return;
   st.busy = true;
   onSafe(real);
 }

@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.16']);
+NEON_FILES.push(['engine/scene.js', 'v12.17']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -144,13 +144,13 @@ function buildScene(now, collectHits, raw = false) {
 
   // Row 5: odds in a layer, seed elsewhere
   if (st.mode === 'play' && st.lv) {
-    const cand = candidates().length;
+    const cand = candidates().length, reals = Math.max(1, candidates().filter(isReal).length);
     const open = st.lv.tiles.filter(t => t.state === 'closed').length;
     put(0, 5, 'OPEN ', C.mid); put(5, 5, `${pad2(open)}/${pad2(st.lv.n)}`, C.text);
     if (cand > 0) {
-      const pct = Math.round(100 / cand);
-      const col = cand === 1 ? C.accent : pct < 25 ? C.danger : C.text;
-      const val = `1 IN ${cand}  ${String(pct).padStart(3)}%`;
+      const pct = Math.round(100 * Math.min(reals, cand) / cand);   // QUANTUM: 2 IN n
+      const col = cand <= reals ? C.accent : pct < 25 ? C.danger : C.text;
+      const val = `${Math.min(reals, cand)} IN ${cand}  ${String(pct).padStart(3)}%`;
       putR(5, val, col);
       put(L.wc - val.length - 5, 5, 'ODDS', C.mid);
     }

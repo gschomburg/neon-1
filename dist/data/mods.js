@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v12.16']);
+NEON_FILES.push(['data/mods.js', 'v12.17']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },
@@ -167,4 +167,7 @@ const MODS = {
   leverage:      { name: 'LEVERAGE',       short: 'LVG', kind: 'exotic', rarity: 'exotic', slot: 'money', icon: '-$-%', anim: 'exotic', price: 90,
     tip: 'go into debt. debt shields you.', desc: 'your credits can go below 0. the deeper in debt, the more often ICE does nothing. debt grows each layer.',
     codex: 'credits can go negative, down to a limit (-150, and -100 more each sector): buy on credit, pay for things you can\x27t afford. the deeper in debt, the better the chance an ICE hit does no damage (up to 60%). debt grows 10% every layer, and past the limit the collectors take 1 integrity a layer.' },
+  quantum:       { name: 'QUANTUM',        short: 'QTM', kind: 'exotic', rarity: 'exotic', slot: 'real', icon: 'o.O0', anim: 'exotic', price: 140,
+    tip: '2 real nodes. half pay.', desc: 'every layer (3+ nodes) has two real nodes: either one passes. layers pay half.',
+    codex: 'every layer with 3 or more nodes has a second real node; tap either one and the layer passes. the corp\x27s tell points to the first one as usual; the second is random, no tell. layers pay half. with ICE EATER both real nodes bite.' },
 };
