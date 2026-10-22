@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.23']);
+NEON_FILES.push(['engine/mods.js', 'v12.24']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -191,6 +191,7 @@ function rollCoin(i) {
 // ---- Tiers. Mods and items with `tiers` come in up to 3 steps (COMMON, RARE, EPIC, or
 // levels). Finds roll a tier; finding a mod you have upgrades it (see addMod).
 const MOD_SLOTS = 6;                 // mods you can hold; more means swapping one out
+const modSlots = () => MOD_SLOTS + (has('chromed') ? 3 : 0);   // CHROMED UP: 3 more
 const TIER_ODDS = [0.70, 0.95];      // a find is COMMON under 0.70, RARE under 0.95, else EPIC
 const TIER_PRICE = [1, 1.6, 2.5];    // market price by tier
 const STACK_MAX = 15;                // items stack up to F (counts are hex)

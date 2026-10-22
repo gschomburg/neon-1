@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v12.23']);
+NEON_FILES.push(['engine/panels.js', 'v12.24']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -42,6 +42,11 @@ function addMod(key, tier = 0) {
   run.modTier[key] = clamp(tier, 0, tierCount(MODS[key]) - 1);
   if (key === 'buffer') { run.maxInt++; run.integrity++; }
   if (key === 'stash') run.beltSlots++;
+  if (key === 'chromed') {   // the belt goes: what you hold is sold for half
+    const cash = run.items.reduce((a, s) => a + Math.floor(itemView(s.key, s.tier).price * TIER_PRICE[s.tier || 0] / 2) * s.n, 0);
+    run.items = []; run.credits += cash; run.earned += cash;
+    if (cash) setTimeout(() => setMsg(`> chromed up: items sold, +${cash}cr.`, C.money), 400);
+  }
   if (key === 'bloodmoney') { run.credits += BLOOD.bonus; run.earned += BLOOD.bonus; }
   if (key === 'zombie') { run.rot = 0; if (has('failsafe')) run.failsafeUsed = true; }   // dead: FAILSAFE has nothing to save
   return 'new';
@@ -54,12 +59,13 @@ function removeMod(key) {
   if (key === 'buffer') { run.maxInt--; run.integrity = Math.min(run.integrity, run.maxInt); }
   if (key === 'stash') { run.beltSlots--; run.items = run.items.slice(0, run.beltSlots); }
 }
-const modRoom = key => has(key) || st.run.mods.length < MOD_SLOTS;
+const modRoom = key => has(key) || st.run.mods.length < modSlots();
 
 // Add an item to the belt: onto a matching stack (same item + tier, up to F), else a free
 // slot. Returns false when there's no room.
 function addItem(key, tier = 0) {
   const run = st.run;
+  if (has('chromed')) return false;   // CHROMED UP: nowhere to put it (finds turn into credits)
   markSeen(key);
   const stack = run.items.find(s => s.key === key && s.tier === tier && s.n < STACK_MAX);
   if (stack) { stack.n++; return true; }
@@ -86,7 +92,7 @@ const SEP = '+ - - - - - - - - - - - - - - - +';
 function openShop(node) {
   const run = st.run;
   const r = rngFor(run.seed, 'shop', node.id);
-  const itemKeys = shuffle(Object.keys(ITEMS), r).slice(0, 3);
+  const itemKeys = has('chromed') ? [] : shuffle(Object.keys(ITEMS), r).slice(0, 3);   // CHROMED UP: no items for sale
   let offers = itemKeys.map(k => ({ kind: 'item', key: k, tier: rollTier(r, ITEMS[k]), price: ITEMS[k].price, sold: false }));
   for (const k of ['coupon', 'haggle']) if (has(k)) modFired(k);   // the market they change opens
   for (const o of pickMods(r, modsOfKind('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
@@ -213,7 +219,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
       if (shown) {
         X({ badge: o.key, badgeTier: v.tier });
         T(v.tip, C.text);
-        X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(v)}` : !modRoom(o.key) ? `mod slots full (${MOD_SLOTS}): you'll swap one` : '', col: has(o.key) ? C.text : C.dangerDim, chips: true });
+        X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(v)}` : !modRoom(o.key) ? `mod slots full (${modSlots()}): you'll swap one` : '', col: has(o.key) ? C.text : C.dangerDim, chips: true });
         if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
         else X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
       } else { T('...', C.dim); T(''); T(''); T(''); T(''); T(''); }

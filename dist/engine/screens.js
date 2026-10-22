@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v12.23']);
+NEON_FILES.push(['engine/screens.js', 'v12.24']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -314,7 +314,7 @@ function swapLines() {
     const v = modView(sw.key, sw.tier);
     T('to take', C.mid);
     lines.push({ badge: sw.key, badgeTier: sw.tier });
-    T(`replace one of your ${MOD_SLOTS} mods:`, C.mid);
+    T(`replace one of your ${modSlots()} mods:`, C.mid);
     T('');
     run.mods.forEach((k, i) => {
       const o = modView(k);

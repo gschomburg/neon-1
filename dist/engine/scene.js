@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.23']);
+NEON_FILES.push(['engine/scene.js', 'v12.24']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -320,24 +320,29 @@ function buildTray(ctx, y) {
   // Spent passives (FAILSAFE) go dim.
   if (!run.mods.length) put(0, y, 'no mods yet', C.dim);
   const widths = run.mods.map(k => { const v = modView(k); return 1 + v.short.length + (v.lvlTag && v.tier > 0 ? 1 : 0) + (v.active ? 2 : 0); });
-  const gap = widths.reduce((a, w) => a + w, 0) + 2 * (widths.length - 1) <= L.wc ? 2 : 1;
-  let x = 0;
+  // CHROMED UP: mods 7-9 go on a second row, where the item belt was
+  const pockets = !has('chromed'), rowOf = i => pockets || i < MOD_SLOTS ? 0 : 1;
+  const gapOf = row => { const ws = widths.filter((w, i) => rowOf(i) === row); return ws.reduce((a, w) => a + w, 0) + 2 * (ws.length - 1) <= L.wc ? 2 : 1; };
+  const gaps = [gapOf(0), gapOf(1)], xs = [0, 0];
   run.mods.forEach((key, i) => {
+    const row = rowOf(i), gap = gaps[row], ry = y + row * 2;
+    let x = xs[row];
     if (x + widths[i] > L.wc) return;          // more than fits (dev / bots): clip
     const m = MODS[key], sel = st.selMod === i, hov = st.hoverMod === i;
     const spent = modSpent(key) || modOffHere(key), usable = !!m.active && modUsable(key);   // (off in this corp: drawn dim like spent)
     let w;
     if (m.active) {
       const bc = spent ? C.danger : usable ? C.accent : C.dim;
-      put(x, y, '[', bc, 'tray', true);
-      const bw = drawBadge(put, now, x + 1, y, key, i, { dim: !usable, tier: modTier(key), bg, selected: sel, fireKey: key === 'mutate' ? run.mutateAs : key });
-      put(x + 1 + bw, y, ']', bc, 'tray', true);
+      put(x, ry, '[', bc, 'tray', true);
+      const bw = drawBadge(put, now, x + 1, ry, key, i, { dim: !usable, tier: modTier(key), bg, selected: sel, fireKey: key === 'mutate' ? run.mutateAs : key });
+      put(x + 1 + bw, ry, ']', bc, 'tray', true);
       w = bw + 2;
-    } else w = drawBadge(put, now, x, y, key, i, { dim: spent, tier: modTier(key), bg, selected: sel, fireKey: key === 'mutate' ? run.mutateAs : key });
-    if (hov && !sel) bg(x, y, w, C.accent, 0.12);
-    addHit(x, y, w, 1, { kind: 'mod', i });
-    x += w + gap;
+    } else w = drawBadge(put, now, x, ry, key, i, { dim: spent, tier: modTier(key), bg, selected: sel, fireKey: key === 'mutate' ? run.mutateAs : key });
+    if (hov && !sel) bg(x, ry, w, C.accent, 0.12);
+    addHit(x, ry, w, 1, { kind: 'mod', i });
+    xs[row] = x + w + gap;
   });
+  if (!pockets && run.mods.length <= MOD_SLOTS) put(0, y + 2, `chromed up: ${modSlots() - run.mods.length} more mod slots`, C.dim);
 
   // Mod info line, right under the mods
   const mi = st.selMod >= 0 ? st.selMod : st.hoverMod;
@@ -355,6 +360,7 @@ function buildTray(ctx, y) {
     if (status) put(7 + tip.length, y + 1, status[0], status[1]);
   }
 
+  if (has('chromed')) return;   // CHROMED UP: no belt (its row holds mods 7-9)
   // Item belt: every slot is always shown, empty ones too (no brackets: not tappable).
   const slots = run.beltSlots;
   const step = Math.min(8, Math.floor((L.wc + 1) / slots));
