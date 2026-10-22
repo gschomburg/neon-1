@@ -819,6 +819,11 @@ Agreed changes not built yet.
   the name and its rarity (`RARE`, `BOSS`, `EXOTIC`). Wherever a list mixes or could mix mods and items, say which each
   one is, the same way as the market. Goes with the spacing / copy pass on the pick screens (set aside, the UI pass).
 
+- **Game over: your mods and items go in the scrolling area with the map** (2026-10-22, the user). Today the death
+  screen lists the run's mods in rows of 5 above the run's map (which scrolls). Move the mods and the items you held
+  into that scrolling area, like the tray, alongside the map. Ties to the user seeing only 3 of their mods on a death
+  (2026-10-22; a headless run showed both rows, 5 + 3, so maybe the first row was hidden on the phone): check it there.
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
