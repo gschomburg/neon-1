@@ -141,10 +141,11 @@ slot: `health` (it rewrites what a hit costs: there's nothing left to lose), so 
 - **Half-tapped nodes must not tell you what they are.** If a node showed "ICE" or "real" before it breaks, you
   could tap every node once to probe. So a weak tap only shows damage (cracks, a counter like `3/11`), the
   same for ICE and the real node, and nothing more.
-- **What ends the run?** Rot never kills you on its own, it just slows you. The pressure comes from **clocks**:
-  20 taps a node on a CHRONOS clock is a real threat, and a timeout costs integrity... which you don't have.
-  So: a timeout adds a lot of rot, or a **rot cap** (e.g. 150 = you fall apart for good). Or the run only ends
-  when you cash out, and rot is how it slowly becomes not worth going on. Needs a pick.
+- **What ends the run (decided, the user, 2026-10-22):** **at 150 rot you fall apart**: the run ends. You can
+  also cash out as usual. A **timeout adds rot**, at least as much as breaking an ICE, and it **doesn't tap a
+  node** for you (today a timeout taps a random node): you still have to break the nodes yourself. *(Claude)*:
+  then the clock restarts for the layer (or the layer goes on with no clock), so a slow layer keeps costing
+  rot until you finish it. Show the cap on the HUD: `ROT 047/150`.
   - **The user (2026-10-22): weak taps don't highlight the real node** by default. Other mods could be what
     reveals it (*(Claude)*: e.g. STETHOSCOPE-style: a half-broken real node "beats"; or a new mod for it).
 - Corps with their own tap rules (DEMOLITION, FORM 27B, TELEPHONIX, LUCKEEZ...) need a rule: multi-tap applies
