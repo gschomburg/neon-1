@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.12']);
+NEON_FILES.push(['engine/mods.js', 'v12.13']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -54,12 +54,33 @@ const MOD_STAGE = {
 for (const k of Object.keys(MODS)) MODS[k].stage = MOD_STAGE[k] || 'always';
 // Your mods that fire in a stage, left to right on the bar.
 const modsAt = stage => st.run ? st.run.mods.map(k => k === 'mutate' ? st.run.mutateAs : k).filter(k => k && MODS[k] && MODS[k].stage === stage) : [];
-// A mod just went off: its tray badge flashes for a moment (drawBadge's `fired`), so you can
-// tell which mod did what.
-const FIRE_MS = 900;
+// ---- MOD FIRED: one animation for every mod. When a mod goes off, its tray badge plays this,
+// so you can tell which mod did what. Tune the look here; it's the same for all mods.
+// The game calls modFired(key) wherever a mod takes effect (the stage loops in engine/run.js,
+// lockTile, blockHit, the tap-to-use mods...). A mod already playing it doesn't restart.
+const MOD_FIRE = {
+  ms: 900,        // how long it plays
+  blinkMs: 110,   // the badge flips inverted / normal this often
+  hop: 0.3,       // the letters hop (in rows) as a wave runs across them; 0 = no hop
+  hopMs: 360,     // how long the wave takes to cross the badge
+};
+// How cell k of a firing badge looks right now (k: 0 = the icon, 1.. = the letters):
+// { inv, dy }, or null when the mod isn't firing. drawBadge (engine/scene.js) draws it.
+function modFireLook(key, now, k) {
+  const a = st.firedAt && st.firedAt[key], age = a == null ? -1 : now - a;
+  if (age < 0 || age >= MOD_FIRE.ms) return null;
+  const inv = Math.floor(age / MOD_FIRE.blinkMs) % 2 === 0;
+  const w = age / MOD_FIRE.hopMs - k * 0.12;
+  return { inv, dy: MOD_FIRE.hop && w > 0 && w < 1 ? -Math.sin(w * Math.PI) * MOD_FIRE.hop : 0 };
+}
 // (on st, not the run: times don't survive a reload)
-const modFired = key => { (st.firedAt = st.firedAt || {})[key] = performance.now(); };
-const modFiring = (key, now) => { const a = st.firedAt && st.firedAt[key]; return a != null && now - a >= 0 && now - a < FIRE_MS; };
+const modFiring = (key, now) => !!modFireLook(key, now, 0);
+const modFired = key => {
+  if (modFiring(key, performance.now())) return;
+  (st.firedAt = st.firedAt || {})[key] = performance.now();
+};
+// For mods the screen shows on its own (drawn every frame): fire once per `holder` (the layer).
+const modFiredOnce = (key, holder) => { if (!holder || (holder.fired && holder.fired[key])) return; (holder.fired = holder.fired || {})[key] = true; modFired(key); };
 const modsOfKind = (...kinds) => Object.keys(MODS).filter(k => kinds.includes(MODS[k].kind));
 function modWhere(m) {
   if (m.kind === 'corp') return `from: ${corpDef(m.corp).name} boss.`;

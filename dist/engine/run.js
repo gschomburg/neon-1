@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.12']);
+NEON_FILES.push(['engine/run.js', 'v12.13']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -200,7 +200,7 @@ async function corpIntro() {
     ['> ICE detected ............ yes', C.danger],
   ];
   const spoil = has('spoiler') && st.run && c.hasBoss && !(st.run.spoiled || {})[def.key] && CORP_TELL[def.key];
-  if (spoil) st.run.spoiled = Object.assign({}, st.run.spoiled, { [def.key]: true });
+  if (spoil) { st.run.spoiled = Object.assign({}, st.run.spoiled, { [def.key]: true }); modFired('spoiler'); }
   const spoilLines = spoil ? wrapText('spoiler: ' + CORP_TELL[def.key], 31) : [];
   st.intro = { skip: false };
   openPanel(def.name, (T, B, X) => {
@@ -279,6 +279,7 @@ async function enterLayer() {
     st.busy = true;
     Sound.bossDrop(); shake(10, 0.6); flash(C.danger, 0.22, 0.45);
     setMsg(`> BOSS LAYER. ${n} nodes.`, C.danger);
+    if (has('precog')) modFired('precog');
     for (const t of has('precog') ? [lv.tiles[lv.safe], ...lv.tiles.filter(o => !o.safe)] : lv.tiles) { await wait(70); t.hidden = false; Sound.nodeOn(); }
     if (c.def.bossFlash) lv.maskAt = performance.now() + 450 + CONFIG.maskDelayMs;   // SIGIL: the clock starts once you can see them
     await wait(200);
@@ -288,7 +289,7 @@ async function enterLayer() {
     for (const t of lv.tiles) t.hidden = true;
     showBoard('play');
     st.busy = true;
-    Sound.layer(run.depth); setMsg('> runway: the collection walks in.', C.accent);
+    Sound.layer(run.depth); setMsg('> runway: the collection walks in.', C.accent); modFired('runway');
     for (const t of order) { await wait(140); t.hidden = false; Sound.nodeOn(); }
     await wait(250);
   } else {
@@ -296,6 +297,7 @@ async function enterLayer() {
     st.busy = true;
     Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : `> ${n} nodes. one is real.`);
     if (has('precog') && c.hasBoss && n > 1) {   // PRECOG: the real node shows up a beat early
+      modFired('precog');
       for (const t of lv.tiles) if (!t.safe) t.hidden = true;
       Sound.ping(1568); await wait(260);
       for (const t of lv.tiles) t.hidden = false;
@@ -330,19 +332,21 @@ async function enterLayer() {
   // START stage notes: hint mods put a short note on row 7 (left to right on the bar).
   lv.notes = [];
   if (n > 1 && c.hasBoss) {
-    for (const key of modsAt('start')) if (START_NOTE[key]) { const note = START_NOTE[key](lv, c, run); if (note) lv.notes.push(note); }
-    if (has('horoscope') && c.luckyIdx === c.idx) lv.notes.push({ text: 'lucky layer!' });
-    if (has('handshake')) { const row = lv.tiles[lv.safe].row; lv.notes.push({ text: `hs: ${'o'.repeat(row + 1)}` }); Sound.beeps(row + 1); }
-    if (has('chancecard') && c.idx === 0) lv.notes.push({ text: chanceCard(lv, c, run) });
+    for (const key of modsAt('start')) if (START_NOTE[key]) { const note = START_NOTE[key](lv, c, run); if (note) { lv.notes.push(note); modFired(key); } }
+    if (has('horoscope') && c.luckyIdx === c.idx) { lv.notes.push({ text: 'lucky layer!' }); modFired('horoscope'); }
+    if (has('handshake')) { modFired('handshake'); const row = lv.tiles[lv.safe].row; lv.notes.push({ text: `hs: ${'o'.repeat(row + 1)}` }); Sound.beeps(row + 1); }
+    if (has('chancecard') && c.idx === 0) { lv.notes.push({ text: chanceCard(lv, c, run) }); modFired('chancecard'); }
     if (c.stolen && c.stolen.length) lv.notes.push({ text: `stolen: ${c.stolen.map(k => MODS[k].short).join(' ')}` });
-    if (lv.dejavu) lv.notes.push({ text: 'deja vu' });
+    if (lv.dejavu) { lv.notes.push({ text: 'deja vu' }); modFired('dejavu'); }
+    if (has('scoop') && c.idx === 0) modFired('scoop');
     if (has('scoop') && c.idx === 0) lv.notes.push({ text: `scoop: ${ROW_NAMES(lv.rows, lv.tiles[lv.safe].row)}` });
     if (has('cctv')) {
       const ice = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
-      if (ice.length) lv.cctv = { t: pickR(ice, rngFor(run.seed, 'cctv', c.node.id, c.idx)), at: 1000 };
+      if (ice.length) lv.cctv = { t: pickR(ice, rngFor(run.seed, 'cctv', c.node.id, c.idx)), at: 1000 };   // fires when it flashes (scene)
     }
+    if (c.express && !lv.lift) modFired('express');
     if (c.express && !lv.lift) lv.lift = makeLift(lv.tiles[lv.safe].row, rngFor(run.seed, 'express', c.node.id, c.idx), 1150);
-    if (has('pickset') && (c.pins || 0) >= 3) { c.pins = 0; lv.litRow = lv.tiles[lv.safe].row; lv.notes.push({ text: `pins set: ${ROW_NAMES(lv.rows, lv.litRow)}` }); }
+    if (has('pickset') && (c.pins || 0) >= 3) { modFired('pickset'); c.pins = 0; lv.litRow = lv.tiles[lv.safe].row; lv.notes.push({ text: `pins set: ${ROW_NAMES(lv.rows, lv.litRow)}` }); }
   }
   if (c.hasBoss && c.def.intro && n > 1) { await c.def.intro(lv, c); if (st.lv !== lv) return; }   // corp kit: MONTE's shuffle
   if (lv.maskMs) lv.maskAt = performance.now() + lv.maskMs;   // corp kit: FORGET-ME-NOT
@@ -376,6 +380,7 @@ function lockTile(t, col, source = 'purge') {
   t.state = 'locked';
   t.lockedBy = source;
   Sound.shield();
+  if (MODS[source]) modFired(source);   // a mod locked it (SNIFFER, VIRUS, OVERCLOCK...)
 }
 
 function updateTimer(dt) {
@@ -399,7 +404,7 @@ function updateTimer(dt) {
   }
   if (tm.left <= 0 && has('overtime') && st.lv && !st.lv.otUsed) {   // OVERTIME: once a layer, 5 more seconds
     st.lv.otUsed = true; tm.left = 5; tm.lastSec = 5;
-    Sound.shield(); setMsg('> overtime! +5s.', C.accent);
+    Sound.shield(); setMsg('> overtime! +5s.', C.accent); modFired('overtime');
     return;
   }
   if (tm.left <= 0) {
@@ -584,6 +589,7 @@ async function onSafe(t) {
   if (c.hasBoss && lv.n > 1) run.lastReal = { col: t.col, row: t.row };   // DEJA VU
   if (lv.n > 1) { c.scored = (c.scored || 0) + 1; if (perfect) { c.perfects = (c.perfects || 0) + 1; run.perfects = (run.perfects || 0) + 1; } }
   const pay = payFor(lv);
+  if (pay) for (const [k, on] of [['skimmer', true], ['fastpay', lv.fast], ['surge', lv.late], ['supersize', lv.boss], ['onbeat', lv.onBeat]]) if (on && has(k)) modFired(k);   // pay boosts
   const tix = c.hasBoss && c.def.tickets;   // CHUCK E. CACHE'S pays in tickets
   if (tix) c.tickets = (c.tickets || 0) + pay;
   else { run.credits += pay; run.earned += pay; }
@@ -619,7 +625,7 @@ async function onSafe(t) {
   if (lv.carryNext) c.carry = lv.carryNext;   // corp kit: what this layer leaves the next one
   c.depthAt = run.depth;   // this layer is done: a save from here keeps it
   // LAYER END stage, left to right on the bar.
-  for (const k of modsAt('end')) if (END_FX[k]) await END_FX[k](perfect);
+  for (const k of modsAt('end')) if (END_FX[k] && await END_FX[k](perfect) !== false) modFired(k);   // false: nothing happened
   if (c.idx < c.counts.length) { saveRun(); return enterLayer(); }
   // Corp finished
   if (c.mod === 'rival' && c.rival) {   // RIVAL: beat it
@@ -670,7 +676,7 @@ const END_FX = {
   // GRAVE ROBBER: every ICE you never touched is a grave to rob
   graverobber() {
     const lv = st.lv, n = lv ? lv.tiles.filter(t => !t.safe && !(t.state === 'locked' && t.lockedBy === 'hit')).length : 0;
-    if (!n) return;
+    if (!n) return false;
     st.run.credits += 2 * n; st.run.earned += 2 * n;
     setMsg(`> grave robber: ${n} graves. +${2 * n}cr`, C.money); Sound.loot();
   },
@@ -678,7 +684,7 @@ const END_FX = {
   // double, anything else loses it.
   letitride(perfect) {
     const run = st.run, c = st.corp, lv = st.lv;
-    if (!c.hasBoss) return;
+    if (!c.hasBoss) return false;
     if (c.ride) {
       if (perfect) { run.credits += 2 * c.ride; run.earned += c.ride; Sound.loot(); setMsg(`> let it ride: +${2 * c.ride}cr!`, C.money); }
       else setMsg(`> let it ride: lost ${c.ride}cr.`, C.danger);
@@ -687,20 +693,21 @@ const END_FX = {
       c.ride = Math.min(lv.paid, run.credits);
       run.credits -= c.ride;
       setMsg(`> let it ride: ${c.ride}cr riding.`, C.money);
-    }
+    } else return false;
   },
   // FOUR IN A ROW: 4 perfects in a row arm the next boss (2 ICE locked)
   fourinarow(perfect) {
     const run = st.run;
     run.p4 = perfect ? (run.p4 || 0) + 1 : 0;
     if (run.p4 >= 4) { run.p4 = 0; run.p4Ready = true; setMsg('> 4 in a row! next boss -2 ICE.', C.money); }
+    else return false;   // counting
   },
   // EXPRESS: a perfect gives the next layer a lift
-  express(perfect) { const c = st.corp; if (perfect && c.hasBoss && c.idx < c.counts.length) c.express = true; },
+  express(perfect) { const c = st.corp; if (perfect && c.hasBoss && c.idx < c.counts.length) c.express = true; else return false; },
   // TRIAGE: a corp you beat heals 1; at full, +1 max integrity
   triage() {
     const run = st.run, c = st.corp;
-    if (!c.hasBoss || c.idx < c.counts.length) return;
+    if (!c.hasBoss || c.idx < c.counts.length) return false;
     if (run.integrity < run.maxInt) run.integrity++;
     else { run.maxInt++; run.integrity++; }
     Sound.shield();
@@ -708,25 +715,28 @@ const END_FX = {
   // HONEYCOMB: perfects store honey; 3 drops heal 1. At full, a drop is +10cr.
   honeycomb(perfect) {
     const run = st.run;
-    if (!perfect) return;
+    if (!perfect) return false;
     if (run.integrity >= run.maxInt) { run.credits += 10; run.earned += 10; return; }
     run.honey = (run.honey || 0) + 1;
     if (run.honey >= 3) { run.honey = 0; run.integrity = Math.min(run.maxInt, run.integrity + 1); Sound.shield(); }
+    else return false;   // storing honey
   },
   // INTEREST: a corp you finish pays 5% of your credits (up to 20).
   async interest() {
     const run = st.run, c = st.corp;
-    if (!c.hasBoss || c.idx < c.counts.length) return;
+    if (!c.hasBoss || c.idx < c.counts.length) return false;
     const cr = Math.min(20, Math.floor(run.credits * 0.05));
     if (cr > 0) { run.credits += cr; run.earned += cr; Sound.loot(); }
+    else return false;
   },
   // SKIPJACK: a perfect can open a skip past the next layer. The player chooses.
   async skipjack(perfect) {
     const run = st.run, c = st.corp;
     if (!(perfect && c.hasBoss && c.idx < c.counts.length &&
-      rngFor(run.seed, 'skip', c.node.id, c.idx, run.resumes || 0)() < tv('skipjack', [0.15, 0.25, 0.4]))) return;
+      rngFor(run.seed, 'skip', c.node.id, c.idx, run.resumes || 0)() < tv('skipjack', [0.15, 0.25, 0.4]))) return false;
     const boss = c.idx === c.counts.length - 1;
-    if (boss && !SKIP_BOSS) return;
+    if (boss && !SKIP_BOSS) return false;
+    modFired('skipjack');   // as the offer opens
     const go = await askSkip(boss);
     await wipeOut(0);
     if (!go) return;
@@ -801,9 +811,14 @@ async function onTrap(t, i) {
   if (t.loaded) {
     const lr = rngFor(run.seed, 'loot', st.corp.node.id, st.corp.idx);
     msg += ' ' + grantLoot(lr, st.corp.tier);
-    if (has('priority')) msg += ' ' + grantLoot(lr, st.corp.tier);   // PRIORITY: delivered twice
+    if (has('priority')) { msg += ' ' + grantLoot(lr, st.corp.tier); modFired('priority'); }   // PRIORITY: delivered twice
   }
-  for (const k of modsAt('hit')) if (HIT_FX[k]) HIT_FX[k](t);
+  // a HIT mod fires unless it returns false (nothing happened); a callout fires it later
+  for (const k of modsAt('hit')) {
+    if (!HIT_FX[k]) continue;
+    const queued = (lv.callouts || []).length;
+    if (HIT_FX[k](t) !== false && (lv.callouts || []).length === queued) modFired(k);
+  }
   if (t.rejected) msg = msg.replace('> ICE.', '> REJECTED.');   // FORM 27B
   setMsg(msg, t.loaded ? C.money : C.danger);
   if (st.corp.hasBoss && st.corp.def.onHit) st.corp.def.onHit(t);   // corp twist, after your mods
@@ -862,20 +877,24 @@ function blockHit(t, i) {
   } else if (has('forgery') && (t.loaded || (t.forged && !lv.forgeUsed))) {
     Sound.shield();
     if (!t.loaded) lv.forgeUsed = true;   // a counterfeit (HAUTE//COUTURE): one free per layer
+    modFired('forgery');
     msg = t.loaded ? '> $ node. forgery: no damage.' : '> knockoff. forgery: no damage.';
   } else if (has('bulwark') && !st.corp.bulwarkUsed) {
     st.corp.bulwarkUsed = true;
     Sound.shield();
     flash(C.accent, 0.12, 0.3);
     shake(4);
+    modFired('bulwark');
     msg = '> ICE. bulwark blocked it.';
   } else if (has('horoscope') && st.corp.luckyIdx === st.corp.idx && !lv.luckUsed) {
     lv.luckUsed = true;
     Sound.shield(); flash(C.accent, 0.12, 0.3);
+    modFired('horoscope');
     msg = '> ICE. lucky layer: no damage.';
   } else if (has('ambush') && st.corp.hasBoss && !lv.ambushUsed && lv.shownAt != null && (lv.pickAt || 0) - lv.shownAt < 2000) {
     lv.ambushUsed = true;
     Sound.shield(); flash(C.accent, 0.12, 0.3);
+    modFired('ambush');
     msg = '> ICE. ambush: too fast to hit.';
   } else if (st.corp && st.corp.wallAll) {
     Sound.shield(); flash(C.accent, 0.12, 0.3); shake(4);
@@ -894,29 +913,35 @@ function blockHit(t, i) {
   } else if (has('icebox') && st.corp.hasBoss && st.corp.idx === 0 && !lv.iceboxUsed) {
     lv.iceboxUsed = true;
     Sound.shield(); flash(C.accent, 0.12, 0.3);
+    modFired('icebox');
     msg = '> ICE. icebox: no damage.';
   } else if (has('leadlining') && lv.boss && !lv.leadUsed) {
     lv.leadUsed = true;
     Sound.shield(); flash(C.accent, 0.12, 0.3);
+    modFired('leadlining');
     msg = '> ICE. lead lining: no damage.';
   } else if (has('greenwave') && st.timer && Math.ceil(st.timer.left) % 2 === 0) {
     Sound.shield(); flash(C.accent, 0.12, 0.3);
+    modFired('greenwave');
     msg = '> ICE. green wave: no damage.';
   } else if (has('omerta') && run.credits >= Math.max(15, Math.floor(run.credits * 0.1))) {
     const cost = Math.max(15, Math.floor(run.credits * 0.1));
     run.credits -= cost;
     Sound.shield(); flash(C.money, 0.1, 0.3);
+    modFired('omerta');
     msg = `> ICE. omerta: -${cost}cr. say nothing.`;
   } else if (st.corp.hasBoss && st.corp.def.block && (msg = st.corp.def.block(t, lv))) {
     // a corp's own rule took the hit (the message is set)
   } else if (has('friendship') && !st.corp.friendUsed && run.credits >= 10) {
     st.corp.friendUsed = true; run.credits -= 10;
     Sound.shield(); flash(C.accent, 0.1, 0.3);
+    modFired('friendship');
     msg = '> ICE. friendship: -10cr instead.';
   } else if (has('inversion') && st.corp.hasBoss && !st.corp.invUsed) {
     st.corp.invUsed = true;
     run.integrity = Math.min(run.maxInt, run.integrity + 1);
     Sound.shield(); flash(C.accent, 0.16, 0.35);
+    modFired('inversion');
     msg = '> ICE. inversion: +1 int.';
   } else if (run.shield > 0) {
     run.shield--;
@@ -927,6 +952,7 @@ function blockHit(t, i) {
   } else {
     const raw = st.corp.hasBoss && st.corp.def.hitDmg ? Math.max(lv.dmg, st.corp.def.hitDmg(t, lv)) : lv.dmg;   // GRIDLOCK: red hits for 2
     const dmg = has('grounded') && raw >= 2 ? raw - 1 : raw;   // GROUNDED
+    if (dmg < raw) modFired('grounded');
     run.integrity -= dmg;
     Sound.trap();
     shake(9);
@@ -947,7 +973,7 @@ const HIT_FX = {
   // LAST BYTE: down to 1 integrity, the HUD glitches and spells out the real column
   lastbyte() {
     const lv = st.lv;
-    if (st.run.integrity !== 1 || lv.lastByte) return;
+    if (st.run.integrity !== 1 || lv.lastByte) return false;
     lv.lastByte = true;
     flash(C.danger, 0.15, 0.3); shake(4);
     lv.notes = (lv.notes || []).concat([{ text: `c0l_${lv.tiles[lv.safe].col + 1}`, tag: 'lastbyte' }]);
@@ -958,7 +984,7 @@ const HIT_FX = {
   pixelpeep() { st.lv.peepAt = performance.now(); },
   prism() { st.lv.prismRow = st.lv.tiles[st.lv.safe].row; },
   queuenumber(t) {
-    if (t.loaded) return;
+    if (t.loaded) return false;
     const lv = st.lv, order = lv.tiles.slice().sort((a, b) => a.cell - b.cell), d = order.indexOf(lv.tiles[lv.safe]) - order.indexOf(t);
     t.glyph = normMotif(['', `${d > 0 ? '+' : ''}${d}`, '']);
   },
@@ -967,6 +993,7 @@ const HIT_FX = {
     const ice = lv.tiles.filter(o => o !== t && !o.safe && o.state === 'closed' && !o.say), real = lv.tiles[lv.safe];
     const who = r() < 0.75 || real.state !== 'closed' ? pickR(ice, r) : real;
     if (who) who.say = ['NOT', 'ME'];
+    else return false;
   },
   // PARITY: does the real node share this ICE's row or column?
   parity(t) {
@@ -982,6 +1009,7 @@ const HIT_FX = {
     const run = st.run;
     run.compost = (run.compost || 0) + 1;
     if (run.compost % 3 === 0 && run.integrity < run.maxInt) { run.integrity++; Sound.shield(); }
+    else return false;   // only fires when it heals
   },
   // FOGHORN: louder the closer the real node is (bars on row 7)
   foghorn(t) {
@@ -994,7 +1022,8 @@ const HIT_FX = {
   // PENCIL MARKS: rule out one other ICE in the same row
   pencil(t) {
     const lv = st.lv, opts = lv.tiles.filter(o => o !== t && o.row === t.row && o.state === 'closed' && !o.safe && !o.ruledOut);
-    if (opts.length) pickR(opts, rngFor(st.run.seed, 'pencil', st.corp.node.id, st.corp.idx, lv.misses)).ruledOut = true;
+    if (!opts.length) return false;
+    pickR(opts, rngFor(st.run.seed, 'pencil', st.corp.node.id, st.corp.idx, lv.misses)).ruledOut = true;
   },
   tracer(t) {
     // which way the real node is: level 1 the bigger direction (coin flip when even), level 2 both
@@ -1009,7 +1038,7 @@ const HIT_FX = {
     callout('tracer', `> tracer: real node is ${words.join('+')}.`, now => { t.dirAt = now; });
   },
   keylogger(t) {
-    if (t.loaded) return;
+    if (t.loaded) return false;
     // the real node's glyph, line by line: level 1 one line per miss, 2 two lines, 3 all of it
     const lv = st.lv, g = lv.tiles[lv.safe].glyph, per = [1, 2, 3][modTier('keylogger')], k = lv.klog || 0;
     lv.klog = k + 1;
@@ -1108,6 +1137,7 @@ async function die() {
   const run0 = st.run;
   if (run0 && has('continue') && !run0.continueUsed && run0.credits >= 100 && st.lv && !st.mp) {
     run0.continueUsed = true;
+    modFired('continue');
     const go = await askContinue();
     if (go) {
       run0.credits -= 100; run0.integrity = 1;

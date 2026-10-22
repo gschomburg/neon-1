@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v12.12']);
+NEON_FILES.push(['engine/panels.js', 'v12.13']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -86,6 +86,7 @@ function openShop(node) {
   const r = rngFor(run.seed, 'shop', node.id);
   const itemKeys = shuffle(Object.keys(ITEMS), r).slice(0, 3);
   let offers = itemKeys.map(k => ({ kind: 'item', key: k, tier: rollTier(r, ITEMS[k]), price: ITEMS[k].price, sold: false }));
+  for (const k of ['coupon', 'haggle']) if (has(k)) modFired(k);   // the market they change opens
   for (const o of pickMods(r, modsOfKind('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
   offers = shuffle(offers, r);   // random order: any slot could be the good one
   offers.push({ kind: 'repair', key: 'repair', price: 20, sold: false });
@@ -234,6 +235,7 @@ function openCache(node) {
   const r = rngFor(run.seed, 'cache', node.id);
   const got = [grantLoot(r, 2)];
   for (let i = 0; i < (has('cachekey') ? tv('cachekey', [1, 2, 3]) : 0); i++) got.push(grantLoot(r, 2));
+  if (has('cachekey')) modFired('cachekey');
   openChoice({
     title: 'DATA CACHE', col: C.money,
     head: got.map(g => [g, C.bright]),

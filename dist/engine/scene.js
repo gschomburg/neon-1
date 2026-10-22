@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.12']);
+NEON_FILES.push(['engine/scene.js', 'v12.13']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -257,16 +257,20 @@ function putChip(put, bg, x, y, text, r, own = 'ui', bold = false) {
 // becomes key color on dark), so a badge always reads. EXOTIC breaks the rule on purpose: its
 // letters cycle through every rarity's chip. Dim (spent, can't use) = plain grey, no chip. Muted
 // (a market offer you can't afford) = the rarity's key color as text, no chip.
-function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own = 'tray', noCharges = false, tier = 0, bg = null, muted = false, fired = false } = {}) {
+// fireKey: in the tray, the mod whose MOD FIRED animation this badge plays (engine/mods.js).
+function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own = 'tray', noCharges = false, tier = 0, bg = null, muted = false, fireKey = null } = {}) {
   const m = tierView(MODS[key], tier || 0);
   const lvl = RARITY[m.rarity].lvl, chip0 = chipOf(m.rarity);
   const phase = i * 0.77, t = (now / 1000 + phase) % 4;
   const icon = m.icon[Math.floor(now / 180 + i * 3) % m.icon.length];
   const label = m.short + (m.lvlTag && m.tier > 0 ? String(m.tier + 1) : '');   // TRC2 = level 2
   const anim = lvl === 0 ? 'none' : lvl === 3 ? 'exotic' : m.anim;
-  if (fired) dim = false;   // it just went off: flash, even if that spent it (FAILSAFE)
-  const flash = (fired && Math.floor(now / 110) % 2 === 0) || (anim === 'blink' && t % 2 < 0.12) || (anim === 'spin' && t < 0.4);
-  const cell = (cx, ch, inv, chip, dy = 0) => {
+  const fire = k => fireKey ? modFireLook(fireKey, now, k) : null;
+  if (fire(0)) dim = false;   // it just went off: play it, even if that spent it (FAILSAFE)
+  const flash = (anim === 'blink' && t % 2 < 0.12) || (anim === 'spin' && t < 0.4);
+  const cell = (cx, ch, inv, chip, dy = 0, k = 0) => {
+    const f = fire(k);
+    if (f) { inv = f.inv; dy += f.dy; }
     if (dim || muted || !bg) { put(cx, y + dy, ch, dim ? C.mid : chip.bg, own, lvl >= 4); return; }
     bg(cx, y, 1, inv ? chip.fg : chip.bg, 1);
     put(cx, y + dy, ch, inv ? chip.bg : chip.fg, own, lvl >= 4);
@@ -279,7 +283,7 @@ function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own 
     if (anim === 'exotic' && !dim) chip = rainbow[Math.floor(now / 160 + k) % rainbow.length];
     if (anim === 'cycle' && !selected && !dim) inv = Math.floor(now / 300 + k) % 4 === 1;
     if (anim === 'scramble' && t < 0.2 && Math.random() < 0.5) ch = noiseCh();
-    cell(x + 1 + k, ch, inv, chip, dy);
+    cell(x + 1 + k, ch, inv, chip, dy, k + 1);
   }
   return 1 + label.length;
 }
@@ -312,10 +316,10 @@ function buildTray(ctx, y) {
     if (m.active) {
       const bc = spent ? C.danger : usable ? C.accent : C.dim;
       put(x, y, '[', bc, 'tray', true);
-      const bw = drawBadge(put, now, x + 1, y, key, i, { dim: !usable, tier: modTier(key), bg, selected: sel, fired: modFiring(key, now) });
+      const bw = drawBadge(put, now, x + 1, y, key, i, { dim: !usable, tier: modTier(key), bg, selected: sel, fireKey: key === 'mutate' ? run.mutateAs : key });
       put(x + 1 + bw, y, ']', bc, 'tray', true);
       w = bw + 2;
-    } else w = drawBadge(put, now, x, y, key, i, { dim: spent, tier: modTier(key), bg, selected: sel, fired: modFiring(key, now) });
+    } else w = drawBadge(put, now, x, y, key, i, { dim: spent, tier: modTier(key), bg, selected: sel, fireKey: key === 'mutate' ? run.mutateAs : key });
     if (hov && !sel) bg(x, y, w, C.accent, 0.12);
     addHit(x, y, w, 1, { kind: 'mod', i });
     x += w + gap;
@@ -476,7 +480,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     if (t.brand && t.state === 'closed') corner = { corner: 's', cornerCol: C.money };   // BRANDED
     if (st.corp && st.corp.mod === 'armored' && t.state === 'closed') frame = { frame: ['#=====#', '#=====#'], side: '#' };   // ARMORED
     // CCTV: one ICE flashes ### a second into the layer
-    if (lv.cctv && lv.cctv.t === t && t.state === 'closed' && lv.shownAt != null && now - lv.shownAt > lv.cctv.at && now - lv.shownAt < lv.cctv.at + 300) { glyph = ICE_FLASH; gc = C.danger; }
+    if (lv.cctv && lv.cctv.t === t && t.state === 'closed' && lv.shownAt != null && now - lv.shownAt > lv.cctv.at && now - lv.shownAt < lv.cctv.at + 300) { glyph = ICE_FLASH; gc = C.danger; modFiredOnce('cctv', lv); }
     if (t.state === 'closed' && !masked && !t.loaded) {
       const live = liveTime(t, now);
       const fx = boardDef && boardDef.fx ? boardDef.fx(t, live, lv, i) : null;
@@ -495,7 +499,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
       if (lv.prismRow === t.row && !solid) fc = C.accent;   // PRISM
       if (has('infrared') && st.corp && st.corp.hasBoss && !lv.pred && lv.n > 1 && lv.shownAt != null && now - lv.shownAt < 1000 && !solid) {
         const v = t.safe ? 0.85 + 0.15 * h01(i, 3) : 0.78 * h01(i, 7 + lv.n);
-        glyph = heatGlyph(v, i * 17, now); gc = heatCol(v);
+        glyph = heatGlyph(v, i * 17, now); gc = heatCol(v); modFiredOnce('infrared', lv);
       }
       if (t.safe) {
         if (lv.peepAt && now - lv.peepAt < 1000) dx += 2 / L.cw;
@@ -559,6 +563,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
   }
   // AFTERIMAGE: cyan corners where the last layer's real node was.
   if (has('afterimage') && lv.after && lv.after.col < lv.cols && lv.after.row < lv.rows) {
+    if (lv.shownAt != null) modFiredOnce('afterimage', lv);
     const { tx, ty } = tileOrigin(lv.after);
     const t = lv.tiles.find(o => o.col === lv.after.col && o.row === lv.after.row);
     if (t && t.state === 'closed' && !t.hidden) {

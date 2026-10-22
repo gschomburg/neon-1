@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v12.12']);
+NEON_FILES.push(['engine/active.js', 'v12.13']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -31,6 +31,7 @@ function activateMod(key) {
   const run = st.run;
   if (!modUsable(key)) { Sound.deny(); return; }
   st.selMod = -1;
+  modFired(key);   // tap-to-use: plays as you use it
   if (key === 'burner') {
     const lv = st.lv;
     let opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.loaded);
