@@ -97,6 +97,22 @@ sold like phones and supplements.
 - chumbox style: "she replaced her hands. you won't believe what she does now" / "7 implants that are
   secretly spying on you (#2 is your heart)"
 
+## Antivirus ads (the user, 2026-10-22; McAfee-style)
+
+The scareware pop-up: "YOUR SYSTEM IS INFECTED", fake scan bars, a countdown, a big red button. Funny in a
+game where *you* are the hacker. In game it'd be a parody brand, not the real one. *(Claude)* names: McAFFEINE,
+NORTHON, VIRUSHIELD PRO, AV-GUARD 2026, KASPERSKEE.
+
+*(Claude)* drafts:
+- "WARNING: 3 VIRUSES DETECTED. one of them is you."
+- "your integrity is at ##--. scan now to protect your data!" (uses your real integrity)
+- a fake scan bar that fills: `scanning... [########--] 81 threats found`
+- "your subscription has EXPIRED. your nodes are UNPROTECTED." (`[ RENEW 49cr ]` / `[ remind me later ]`)
+- "VIRUSHIELD PRO blocked 1 ICE today. you're welcome." (lies)
+- ties to the **VIRUS** mod: if you own VIRUS, the ad says "VIRUS detected on this device" and the secret-ad
+  rule could kick in (tap it: VIRUS spreads one extra time next hit? or the antivirus "removes" it for a refund).
+- chumbox style: "this one setting is letting hackers into your fridge"
+
 ## Gambling ads (the user, 2026-10-22)
 
 The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ
