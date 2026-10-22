@@ -608,6 +608,11 @@ What was on the list:
 
 ## 16f. Pending revisions (next round)
 
+**Set aside for now (the user, 2026-10-22):**
+- **A UI / phone pass, together, later:** the spacing / copy pass on the pick screens, bigger phone buttons, and the
+  scaling questions (pushing past the 4x4 grid, how the screen scales on phones).
+- **Back burner:** the logotype (rounds 4-7 in NAMES.md) and the economy tuning pass.
+
 (Things waiting for the user to look at, rather than to build, are in `docs/REVIEW.md`.)
 
 Agreed changes not built yet.
