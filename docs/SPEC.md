@@ -803,6 +803,17 @@ Agreed changes not built yet.
   - **An exotic pick:** the sector boss offers two exotics instead of one, or you start with one exotic of your choice.
   - **Cosmetic:** a gold codex palette, a title-screen badge, a special logo for your profile.
 
+- **HOW TO PLAY pass** (2026-10-22, the user). Go through it and touch it up; a lot is new. Today it has three pages
+  (engine/help.js): THE BASICS, THE NET (the map, stops, corps, sectors), THE TRAY (mods, items). Corps and tells are only
+  on the NET page; **THE BASICS should at least mention corps and their tells** (the heart of the game: each corp hides
+  the real node its own way; learn it and you beat it). *(Claude)* what else is new since it was written:
+  - **Map:** corp codes with levels (`SK1` = SEEKR, level 1), the glint on nodes you can go to, `off here:` lines.
+  - **Tray:** the mod flash when a mod fires; items that say why they can't be used; a locked mod; RAM DOUBLER's two rows.
+  - **Exotics:** what EXOTIC means, where they drop (sector bosses, markets, caches), rule clashes ("it will replace X").
+  - **Gestures:** hold a node for COIN FLIP; the keys (C, arrows, enter).
+  - **Other:** the login intro (tap to skip), the fake ads (`[x]` after the countdown; SETTINGS turns them off),
+    THE BOARD and REP if they aren't explained, run resume (CONTINUE).
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
