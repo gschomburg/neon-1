@@ -706,7 +706,7 @@ The user's next big task is a **palette editor and preview system**. Everything 
    that, and the rename has to keep red out of it.
 8. **Player color styles** (`PLAYER_STYLES`, the persona name colors): **moved to `palettes.js` in v11.01**
    (`styles`); the editor should cover them too. Related: "Hacker logo: draw it on your color style's background" (above).
-9. **The palette editor itself** (agreed 2026-10-21):
+9. **The palette editor: BUILT in v11.03** (see §16n). As agreed 2026-10-21:
    - **A dev tool, for the user**, not a player feature.
    - **Separate page** `tools/palette_editor.html`: the game in a frame on the left, a regular web form on the
      right (real color pickers, text fields, dropdowns), with none of the game's screen / UI limits.
@@ -1531,6 +1531,8 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v11.03** (2026-10-21): **the palette editor** (`tools/palette_editor.html`, palette pass item 9) and its bridge in
+  the game (`?editor=1` only). See "Palette editor" below.
 - **v11.02** (2026-10-21): **starters are the 9 level-1 corps only** (the user: "for simplicity"): BASIC, PARCELNET,
   MOCHI, PERIMETER, SEEKR, MEGAMART, BURGERTRON, NIMBUS, PLAYTIME. CHRONOS and MIRRORLINE keep the GREEN CRT /
   PAPER colors but are locked again. (Old saves on those two keep them until the player changes palette.)
@@ -1591,6 +1593,31 @@ Built in v11:
     - Palette pitch black + emergency yellow; track LIGHTS OUT (ambient).
   - Map letters `{` `(` `5` are placeholders (most letters are taken).
   - Also fixed: BONEYARD's intro skull was missing a backslash on its jaw line.
+- **Palette editor** (v11.03): open `tools/palette_editor.html` in Chrome (straight from the repo folder).
+  - **Left: the game** in a frame (`dist/index.html?editor=1`), always painted in the palette you're editing.
+    Scene buttons set up a screen with a canned run, no playing needed: title, map, layer, a miss (a red hit
+    node, a locked node, the cursor on a node), boss, shop, how to play, codex, settings, profile. Layers use
+    the palette's own corp (or any corp from the list). The tray gets a mod of every rarity and a few items.
+    Frame widths (phone 360 / 390 / 480, tablet 720) and a darkness slider (BLACKOUT's fade).
+  - **Right: the form.** Palette tab: pick a palette (starters / locked; warning counts in the list), name,
+    starter on/off, note, the 9 color slots (picker + hex + contrast on the background), rarity colors (the
+    shared corp set with per-color overrides, or its own), font weight, a quick-look sample, checks (hard to
+    read, colors that look alike) and look-alike palettes. All palettes tab: a grid of cards (filter starters /
+    locked / with warnings; sort by file order, most like the selected one, lightest first). Shared rarity tab.
+    Player styles tab (edit, add at the end; no removing, saves point at them by position).
+  - **Randomizer** (the user's ask): "random: smart" builds a palette by rules: a dark or light background
+    (choosable; 80% dark), a text ladder in one hue stepping up in contrast (dim ~1.5, mid ~3.8, text ~8,
+    bright ~14:1), an accent from a color-wheel scheme against the background, danger reddish and money goldish
+    (moved round the wheel when too close to the accent), each color nudged to its contrast target (2,000
+    test rolls: no contrast or look-alike warnings). "random: wild" = every color random. Per-color lock
+    boxes (smart builds around locked ones, e.g. keep the background). "rarity too" also rolls the 5 rarity
+    colors (rare blue, epic purple, exotic yellow, boss orange, common = text) and gives the palette its own
+    set. Each roll is one undo step.
+  - **Save** writes `dist/palettes.js` directly (first time: pick the file; the link is remembered). Reload
+    file, export (clipboard + download), undo / redo (Ctrl+Z, Ctrl+Shift+Z), Ctrl+S. Warns before closing with
+    unsaved changes. The writer reproduces the file exactly (checked), starters first, then locked.
+  - **Game side:** `?editor=1` uses its own save slot (`beta_runner.editor.save`, sound off), holds clocks still,
+    and takes messages: new palette data (live), which palette to show (+ darkness), which scene to set up.
 - **Palettes moved to `palettes.js` (now `dist/palettes.js`), slots renamed** (2026-10-21; palette pass items 1 and 9).
   - The game loads `palettes.js` with a `<script src>` before its own script; **upload it next to the game**.
     If it fails to load, the game falls back to DEFAULT only.

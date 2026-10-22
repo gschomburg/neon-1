@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NeoN+1 palette editor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The palettes, the same file the game loads. -->
+<script src="../dist/palettes.js"></script>
+<style>
+  :root {
+    --bg: #15171a; --panel: #1d2024; --line: #2c3036; --text: #d6dade; --mid: #8b929a; --hi: #ffffff;
+    --acc: #5cc8ff; --warn: #ffb347; --bad: #ff5c6c; --ok: #5fd47a;
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+  body { display: flex; overflow: hidden; }
+  button, select, input { font: inherit; color: var(--text); background: #262a2f; border: 1px solid var(--line); border-radius: 4px; }
+  button { padding: 4px 9px; cursor: pointer; white-space: nowrap; }
+  button:hover { border-color: var(--acc); }
+  button.on { background: #12384a; border-color: var(--acc); color: var(--hi); }
+  button.primary { background: #1d5a7a; border-color: #2c7ea8; color: var(--hi); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  input[type=text], input[type=number], select { padding: 3px 6px; }
+  input[type=color] { width: 34px; height: 24px; padding: 0 2px; cursor: pointer; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mid); margin: 16px 0 6px; }
+  .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+
+  /* left: the game */
+  #stage { display: flex; flex-direction: column; flex: 0 0 auto; min-width: 0; border-right: 1px solid var(--line); }
+  #stagebar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--line); background: var(--panel); max-width: 100%; }
+  #stagebar .grp { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-right: 8px; }
+  #stagebar label { color: var(--mid); }
+  #framewrap { flex: 1; display: flex; justify-content: center; background: #0c0d0f; overflow: hidden; }
+  #game { border: 0; height: 100%; background: #000; }
+  #scenestate { padding: 4px 8px; color: var(--mid); font-size: 12px; border-top: 1px solid var(--line); min-height: 22px; }
+
+  /* right: the form */
+  #panel { flex: 1; min-width: 440px; display: flex; flex-direction: column; }
+  #top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  #filestate { color: var(--mid); flex-basis: 100%; }
+  #filestate b { color: var(--warn); }
+  #tabs { display: flex; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--line); }
+  #tabs button { border-radius: 4px 4px 0 0; border-bottom: 0; }
+  #body { flex: 1; overflow: auto; padding: 4px 14px 40px; }
+  .tab { display: none; }
+  .tab.show { display: block; }
+
+  .pickrow { display: flex; gap: 6px; align-items: center; margin-top: 10px; }
+  .pickrow select { flex: 1; }
+  .meta { display: grid; grid-template-columns: 70px 1fr; gap: 6px 10px; align-items: center; margin-top: 10px; }
+  .meta label { color: var(--mid); }
+
+  table.slots { border-collapse: collapse; }
+  table.slots td { padding: 3px 6px 3px 0; vertical-align: middle; border-bottom: 1px solid #23262b; }
+  table.slots td.name { width: 82px; font-weight: 600; }
+  table.slots td.role { color: var(--mid); font-size: 12px; width: 230px; }
+  table.slots input.hex { width: 82px; }
+  table.slots td.cr { width: 70px; font-size: 12px; text-align: right; white-space: nowrap; }
+  .good { color: var(--ok); } .meh { color: var(--warn); } .badc { color: var(--bad); }
+  .randbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .randbar .note { margin: 0; }
+  td.name input[type=checkbox] { margin: 0 5px 0 0; vertical-align: -2px; }
+  .inherited input[type=color], .inherited input.hex { opacity: 0.45; }
+
+  #sample { margin-top: 10px; padding: 10px 12px; border-radius: 6px; font: 13px/1.5 "JetBrains Mono", Consolas, monospace; white-space: pre; overflow: auto; }
+
+  ul.checks { margin: 6px 0; padding-left: 18px; }
+  ul.checks li { margin: 2px 0; }
+  ul.checks li.none { list-style: none; margin-left: -18px; color: var(--ok); }
+  a.jump { color: var(--acc); cursor: pointer; text-decoration: underline; }
+
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-top: 10px; }
+  .card { border-radius: 6px; padding: 8px 9px; cursor: pointer; font: 12px/1.45 "JetBrains Mono", Consolas, monospace; border: 2px solid transparent; white-space: pre; overflow: hidden; }
+  .card.sel { border-color: var(--acc); }
+  .card .tag { float: right; font-family: system-ui, sans-serif; font-size: 10px; opacity: 0.8; }
+  .gridbar { display: flex; gap: 6px; align-items: center; margin-top: 10px; }
+
+  .styles td { padding: 4px 8px 4px 0; }
+  .chip { padding: 1px 6px; font: 600 13px "JetBrains Mono", Consolas, monospace; }
+  .note { color: var(--mid); font-size: 12px; margin: 6px 0; }
+  #toast { position: fixed; bottom: 14px; right: 14px; background: #262a2f; border: 1px solid var(--line); padding: 8px 12px; border-radius: 6px; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<section id="stage">
+  <div id="stagebar">
+    <div class="grp" id="scenes"></div>
+    <div class="grp">
+      <label for="corpsel">corp</label>
+      <select id="corpsel"></select>
+    </div>
+    <div class="grp">
+      <label for="width">frame</label>
+      <select id="width">
+        <option value="390">phone 390</option>
+        <option value="360">small phone 360</option>
+        <option value="480">wide phone 480</option>
+        <option value="720">tablet 720</option>
+      </select>
+      <button id="reloadgame" title="Reload the game frame">reload game</button>
+    </div>
+    <div class="grp" title="BLACKOUT's darkness: every color but danger fades into the background">
+      <label for="dark">darkness</label>
+      <input id="dark" type="range" min="0" max="0.8" step="0.02" value="0">
+      <span id="darkv" class="mono">0%</span>
+    </div>
+  </div>
+  <div id="framewrap"><iframe id="game" title="game preview"></iframe></div>
+  <div id="scenestate">loading the game...</div>
+</section>
+
+<section id="panel">
+  <div id="top">
+    <span id="filestate"></span>
+    <button id="undo" title="Undo (Ctrl+Z)">undo</button>
+    <button id="redo" title="Redo (Ctrl+Shift+Z)">redo</button>
+    <button id="reload" title="Load palettes.js again from disk (drops unsaved changes)">reload file</button>
+    <button id="export" title="Copy the whole palettes.js text to the clipboard, and download it">export</button>
+    <button id="save" class="primary" title="Write dist/palettes.js (Ctrl+S)">save palettes.js</button>
+  </div>
+  <div id="tabs">
+    <button data-tab="pal" class="on">palette</button>
+    <button data-tab="all">all palettes</button>
+    <button data-tab="rar">shared rarity</button>
+    <button data-tab="sty">player styles</button>
+  </div>
+  <div id="body">
+
+    <div class="tab show" id="tab-pal">
+      <div class="pickrow">
+        <button id="prev" title="Previous palette">&lt;</button>
+        <select id="palsel"></select>
+        <button id="next" title="Next palette">&gt;</button>
+      </div>
+      <div class="meta">
+        <label for="pname">name</label><input id="pname" type="text">
+        <label>access</label>
+        <span><label><input id="pstarter" type="checkbox"> starter: offered in SETTINGS from the start</label></span>
+        <label for="pnote">note</label><input id="pnote" type="text">
+        <label>key</label><span id="pkey" class="mono"></span>
+      </div>
+
+      <h2>Colors</h2>
+      <div class="randbar">
+        <button id="rsmart" title="A palette that follows the rules: a dark or light background, a text ladder in one hue, an accent from a color-wheel scheme, danger reddish, money goldish, every color nudged to its contrast target">random: smart</button>
+        <button id="rwild" title="Every color fully random">random: wild</button>
+        <select id="rtone" title="smart only: a dark or a light background"><option value="any">dark or light</option><option value="dark">dark</option><option value="light">light</option></select>
+        <label title="also roll the 5 rarity colors (the palette gets its own set)"><input id="rrar" type="checkbox"> rarity too</label>
+        <span class="note">tick a color's box to lock it</span>
+      </div>
+      <table class="slots" id="baseslots"></table>
+
+      <h2>Rarity colors</h2>
+      <div class="note">
+        <label><input type="radio" name="rarmode" value="corp"> use the shared corp set</label> (tick a color to change just that one)
+        &nbsp; <label><input type="radio" name="rarmode" value="own"> own colors</label>
+      </div>
+      <table class="slots" id="rarslots"></table>
+
+      <h2>Font</h2>
+      <div class="note">Only OMNI uses this (a heavier weight). Empty = the normal 400 / 700.</div>
+      <div class="meta">
+        <label for="fweight">weight</label><input id="fweight" type="number" min="100" max="900" step="100" placeholder="400">
+        <label for="fbold">bold</label><input id="fbold" type="number" min="100" max="900" step="100" placeholder="700">
+      </div>
+
+      <h2>Quick look</h2>
+      <div id="sample"></div>
+
+      <h2>Checks</h2>
+      <ul class="checks" id="checks"></ul>
+      <h2>Looks like</h2>
+      <ul class="checks" id="similar"></ul>
+    </div>
+
+    <div class="tab" id="tab-all">
+      <div class="gridbar">
+        <label>show</label>
+        <select id="gridfilter">
+          <option value="all">all</option>
+          <option value="starters">starters</option>
+          <option value="locked">locked</option>
+          <option value="warn">with warnings</option>
+        </select>
+        <label>order</label>
+        <select id="gridsort">
+          <option value="file">file order</option>
+          <option value="like">most like the selected one</option>
+          <option value="light">lightest background first</option>
+        </select>
+        <span id="gridcount" class="note"></span>
+      </div>
+      <div id="grid"></div>
+    </div>
+
+    <div class="tab" id="tab-rar">
+      <div class="note">The shared rarity set: every palette marked "use the shared corp set" takes these, except the colors it changes itself.</div>
+      <div class="note" id="raruse"></div>
+      <table class="slots" id="sharedslots"></table>
+    </div>
+
+    <div class="tab" id="tab-sty">
+      <div class="note">Your name and logo colors (PROFILE &gt; COLOR, multiplayer). Fixed colors: a player looks the same on every screen and palette. Saved profiles point at a style by its place in this list, so new ones go at the end and none can be removed.</div>
+      <table class="styles" id="styles"></table>
+      <button id="addstyle">add a style</button>
+    </div>
+
+  </div>
+</section>
+<div id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); for (const k of kids) e.append(k); return e; };
+
+  // ---------------- Data ----------------
+  const BASE = [
+    ['bg', 'background'], ['dim', 'faint text, dividers'], ['mid', 'secondary text, labels'], ['text', 'normal text'],
+    ['bright', 'headings, emphasis'], ['accent', 'buttons, the logo, highlights'], ['danger', 'ICE, damage, warnings'],
+    ['dangerDim', 'locked nodes, dark red frames'], ['money', 'credits, rewards'],
+  ];
+  const RAR = [['common', 'common mods'], ['rare', 'rare'], ['epic', 'epic'], ['exotic', 'exotic'], ['boss', 'boss / corp mods']];
+  // how readable each color should be on the background (contrast ratio): dim and dangerDim are faint on purpose
+  const NEED = { dim: 1.2, mid: 3, text: 4.5, bright: 4.5, accent: 3, danger: 3, dangerDim: 1.2, money: 3, common: 3, rare: 3, epic: 3, exotic: 3, boss: 3 };
+  const PAIRS = [['accent', 'money'], ['accent', 'danger'], ['danger', 'money'], ['accent', 'bright'], ['money', 'bright'], ['text', 'bright'], ['mid', 'text'], ['dim', 'mid'], ['danger', 'boss']];
+
+  const clone = o => JSON.parse(JSON.stringify(o));
+  if (!window.NEON_PALETTES) { document.body.textContent = "Couldn't load ../dist/palettes.js. Open this page from the repo's tools/ folder."; return; }
+  let data = clone(window.NEON_PALETTES);
+  let sel = Object.keys(data.palettes)[0];
+
+  // resolve a palette the way the game does
+  const resolved = key => { const p = data.palettes[key]; return Object.assign({}, p.rarity ? data.rarity[p.rarity] : null, p); };
+
+  // ---------------- Color math ----------------
+  const isHex = s => /^#[0-9a-f]{6}$/i.test(s);
+  const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  const lum = h => { const [r, g, b] = rgb(h).map(lin); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const dist = (a, b) => { const [r1, g1, b1] = rgb(a), [r2, g2, b2] = rgb(b), rm = (r1 + r2) / 2;
+    return Math.sqrt((2 + rm / 256) * (r1 - r2) ** 2 + 4 * (g1 - g2) ** 2 + (2 + (255 - rm) / 256) * (b1 - b2) ** 2); };
+  const likeness = (a, b) => dist(a.bg, b.bg) + dist(a.text, b.text) + 2 * dist(a.accent, b.accent);
+  const mix = (a, b, t) => '#' + rgb(a).map((v, i) => Math.round(v + (rgb(b)[i] - v) * t).toString(16).padStart(2, '0')).join('');
+
+  function warnings(p) {
+    const out = [];
+    for (const [s] of [...BASE.slice(1), ...RAR]) {
+      const c = contrast(p[s], p.bg);
+      if (c < NEED[s]) out.push({ text: `${s} is hard to read on the background: ${c.toFixed(2)}:1 (want ${NEED[s]})`, bad: c < NEED[s] * 0.8 });
+    }
+    for (const [a, b] of PAIRS) {
+      const d = dist(p[a], p[b]);
+      if (d < 60) out.push({ text: p[a].toLowerCase() === p[b].toLowerCase() ? `${a} and ${b} are the same color` : `${a} and ${b} look alike`, bad: d < 20 });
+    }
+    return out;
+  }
+
+  // ---------------- Writing palettes.js ----------------
+  const HEADER = `// NeoN+1 palettes. The game loads this file before its own script (so does the palette editor).
+// Edit with tools/palette_editor.html, or by hand: one palette per line, colors as '#rrggbb'.
+//
+// Slots (what each color is for):
+//   bg         background               accent     buttons, the logo, highlights (the "main" color)
+//   dim        faint text, dividers     danger     ICE, damage, warnings
+//   mid        secondary text, labels   dangerDim  locked nodes, dark red frames
+//   text       normal text              money      credits, rewards, gold glows
+//   bright     headings, emphasis
+//   common rare epic exotic boss: the rarity colors (mods, items)
+// rarity: 'corp' takes the shared corp rarity set below, plus any rarity colors the palette lists itself.
+// hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
+`;
+  const q = s => `'${String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+  function paletteLine(key, p) {
+    const parts = [`name: ${q(p.name)}`];
+    if (p.hidden) parts.push('hidden: true');
+    for (const [s] of BASE) parts.push(`${s}: ${q(p[s])}`);
+    if (p.rarity) { parts.push(`rarity: ${q(p.rarity)}`); for (const [r] of RAR) if (p[r]) parts.push(`${r}: ${q(p[r])}`); }
+    else for (const [r] of RAR) parts.push(`${r}: ${q(p[r])}`);
+    if (p.font && (p.font.weight || p.font.bold)) parts.push(`font: { ${Object.entries(p.font).filter(([, v]) => v != null && v !== '').map(([k, v]) => `${k}: ${typeof v === 'string' ? q(v) : v}`).join(', ')} }`);
+    if (p.note) parts.push(`note: ${q(p.note)}`);
+    return `    ${(key + ':').padEnd(15)} { ${parts.join(', ')} },`;
+  }
+  function fileText() {
+    const keys = Object.keys(data.palettes);
+    const starters = keys.filter(k => !data.palettes[k].hidden), locked = keys.filter(k => data.palettes[k].hidden);
+    const rar = Object.entries(data.rarity).map(([name, set]) => `    ${name}: { ${RAR.map(([r]) => `${r}: ${q(set[r])}`).join(', ')} },`);
+    const styles = data.styles.map(s => `    { name: ${(q(s.name) + ',').padEnd(9)} fg: ${q(s.fg)}, bg: ${q(s.bg)} },`);
+    return HEADER + 'window.NEON_PALETTES = {\n  rarity: {\n' + rar.join('\n') + '\n  },\n  palettes: {\n' +
+      '    // starters: offered in SETTINGS from the start (the first one is the default for new players)\n' +
+      starters.map(k => paletteLine(k, data.palettes[k])).join('\n') + '\n' +
+      '    // locked: unlocked by beating the corp (for now: hidden from SETTINGS)\n' +
+      locked.map(k => paletteLine(k, data.palettes[k])).join('\n') + '\n  },\n' +
+      '  // Player color styles: the colors of your name and logo (PROFILE > COLOR, multiplayer). Saved\n' +
+      '  // profiles store a style by its position here, so add new ones at the end.\n' +
+      '  styles: [\n' + styles.join('\n') + '\n  ],\n};\n';
+  }
+  // keep the file's order the way it's written: starters, then locked
+  function reorder() {
+    const keys = Object.keys(data.palettes), out = {};
+    for (const k of keys.filter(k => !data.palettes[k].hidden)) out[k] = data.palettes[k];
+    for (const k of keys.filter(k => data.palettes[k].hidden)) out[k] = data.palettes[k];
+    data.palettes = out;
+  }
+  const parseFile = text => { const w = {}; new Function('window', text)(w); if (!w.NEON_PALETTES || !w.NEON_PALETTES.palettes) throw new Error('no palettes in that file'); return w.NEON_PALETTES; };
+
+  // ---------------- Undo / dirty ----------------
+  let undo = [], redo = [], lastPush = 0, saved = JSON.stringify(data);
+  function before() {   // call before a change; typing / dragging in a burst counts as one step
+    const now = Date.now();
+    if (now - lastPush > 700) { undo.push(JSON.stringify(data)); if (undo.length > 200) undo.shift(); redo = []; }
+    lastPush = now;
+  }
+  function stepHistory(from, to) {
+    if (!from.length) return;
+    to.push(JSON.stringify(data));
+    data = JSON.parse(from.pop());
+    if (!data.palettes[sel]) sel = Object.keys(data.palettes)[0];
+    lastPush = 0;
+    changed(true);
+  }
+  const dirty = () => JSON.stringify(data) !== saved;
+
+  // ---------------- The game frame ----------------
+  const frame = $('#game');
+  let gameReady = false, scene = 'title', sendQueued = false;
+  const toGame = m => { try { frame.contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
+  function sendAll() {
+    if (!gameReady || sendQueued) return;
+    sendQueued = true;
+    setTimeout(() => {   // a burst of edits (dragging a picker) goes out as one message
+      sendQueued = false;
+      toGame({ type: 'palettes', data });
+      toGame({ type: 'show', key: sel, dark: +$('#dark').value });
+    }, 30);
+  }
+  const corpOf = key => key.startsWith('c_') ? key.slice(2) : 'basic';
+  function runScene(name) {
+    scene = name;
+    for (const b of document.querySelectorAll('#scenes button')) b.classList.toggle('on', b.dataset.scene === name);
+    if (!gameReady) return;
+    const corp = $('#corpsel').value === 'auto' ? corpOf(sel) : $('#corpsel').value;
+    $('#scenestate').textContent = `setting up: ${name}${['layer', 'hit', 'boss'].includes(name) ? ' (' + corp + ')' : ''}...`;
+    toGame({ type: 'scene', name, opts: { corp } });
+  }
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.from !== 'neon-game') return;
+    if (m.type === 'ready') {
+      gameReady = true;
+      $('#scenestate').textContent = `game ${m.version} ready`;
+      sendAll();
+      runScene(scene);
+    }
+    if (m.type === 'scene') $('#scenestate').textContent = m.ok ? `scene: ${m.name}${m.info && m.info.corp ? ' · ' + m.info.corp + (m.info.boss ? ' (boss)' : '') : ''}` : `scene ${m.name} failed: ${m.error}`;
+    if (m.type === 'shown') window.__lastShown = m;   // (for tests)
+  });
+  function loadGame() { gameReady = false; $('#scenestate').textContent = 'loading the game...'; frame.src = '../dist/index.html?editor=1&t=' + Date.now(); }
+
+  const SCENES = [['title', 'title'], ['map', 'map'], ['layer', 'layer'], ['hit', 'a miss'], ['boss', 'boss'], ['shop', 'shop'], ['help', 'how to play'], ['codex', 'codex'], ['settings', 'settings'], ['profile', 'profile']];
+  for (const [k, label] of SCENES) {
+    const b = el('button', { textContent: label, onclick: () => runScene(k), title: `show the ${label} screen` });
+    b.dataset.scene = k;
+    $('#scenes').append(b);
+  }
+  function fillCorps() {
+    const s = $('#corpsel'), cur = s.value || 'auto';
+    s.innerHTML = '';
+    s.append(el('option', { value: 'auto', textContent: "this palette's corp" }));
+    for (const k of Object.keys(data.palettes).filter(k => k.startsWith('c_') && k !== 'c_omni').sort()) s.append(el('option', { value: k.slice(2), textContent: data.palettes[k].name }));
+    s.value = [...s.options].some(o => o.value === cur) ? cur : 'auto';
+  }
+  $('#corpsel').onchange = () => { if (['layer', 'hit', 'boss'].includes(scene)) runScene(scene); };
+  // the game column hugs the frame; the form gets the rest
+  const sizeStage = () => { const w = +$('#width').value; frame.style.width = w + 'px'; $('#stage').style.width = Math.max(w + 40, 430) + 'px'; };
+  $('#width').onchange = sizeStage;
+  $('#reloadgame').onclick = loadGame;
+  $('#dark').oninput = () => { $('#darkv').textContent = Math.round($('#dark').value * 100) + '%'; sendAll(); };
+
+  // ---------------- The palette tab ----------------
+  function fillPicker() {
+    const s = $('#palsel');
+    s.innerHTML = '';
+    const groups = [['starters', k => !data.palettes[k].hidden], ['locked', k => data.palettes[k].hidden]];
+    for (const [label, f] of groups) {
+      const g = el('optgroup', { label });
+      for (const k of Object.keys(data.palettes).filter(f)) {
+        const n = warnings(resolved(k)).length;
+        g.append(el('option', { value: k, textContent: data.palettes[k].name + (n ? `  (${n} warning${n > 1 ? 's' : ''})` : '') }));
+      }
+      s.append(g);
+    }
+    s.value = sel;
+  }
+  function select(key) { if (!data.palettes[key]) return; sel = key; renderAll(); sendAll(); if (['layer', 'hit', 'boss'].includes(scene) && $('#corpsel').value === 'auto') runScene(scene); }
+  $('#palsel').onchange = () => select($('#palsel').value);
+  const stepSel = d => { const k = [...$('#palsel').options].map(o => o.value), i = k.indexOf(sel); select(k[(i + d + k.length) % k.length]); };
+  $('#prev').onclick = () => stepSel(-1);
+  $('#next').onclick = () => stepSel(1);
+
+  // one color row: [name] [role] [picker] [#hex] [contrast]
+  function colorRow(name, role, value, onSet, opts = {}) {
+    const tr = el('tr', opts.inherited ? { className: 'inherited' } : {});
+    const pick = el('input', { type: 'color', value, disabled: !!opts.locked });
+    const hex = el('input', { type: 'text', value, className: 'hex mono', disabled: !!opts.locked, spellcheck: false });
+    pick.oninput = () => { hex.value = pick.value; onSet(pick.value); };
+    hex.oninput = () => { let v = hex.value.trim(); if (/^[0-9a-f]{6}$/i.test(v)) v = '#' + v; if (isHex(v)) { pick.value = v.toLowerCase(); onSet(v.toLowerCase()); } };
+    const tdName = el('td', { className: 'name' });
+    if (opts.toggle) tdName.append(opts.toggle);
+    tdName.append(name);
+    tr.append(tdName, el('td', { className: 'role', textContent: role }), el('td', {}, pick), el('td', {}, hex), el('td', { className: 'cr' }));
+    if (opts.cr) { const c = contrast(value, opts.cr), need = NEED[name] || 3; tr.lastChild.innerHTML = `<span class="${c >= need ? 'good' : c >= need * 0.8 ? 'meh' : 'badc'}">${c.toFixed(2)}:1</span>`; tr.lastChild.title = `contrast on the background (want ${need})`; }
+    return tr;
+  }
+  // ---------------- Randomizer ----------------
+  // smart: a palette built by rules. A background (dark or light), a text ladder in one hue that
+  // steps up in contrast (dim faint, mid readable, text easy, bright strongest), an accent from a
+  // color-wheel scheme, danger kept reddish and money goldish (pushed away from the accent when they
+  // land too close), and every color nudged lighter / darker until it meets its contrast target.
+  // wild: every color random. Locked colors stay as they are (and smart builds around them).
+  const locks = new Set();
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pickOne = a => a[Math.floor(Math.random() * a.length)];
+  const hsl = (H, S, L) => {   // H 0-360, S and L 0-1
+    H = ((H % 360) + 360) % 360;
+    const c = (1 - Math.abs(2 * L - 1)) * S, x = c * (1 - Math.abs((H / 60) % 2 - 1)), m = L - c / 2;
+    const [r, g, b] = H < 60 ? [c, x, 0] : H < 120 ? [x, c, 0] : H < 180 ? [0, c, x] : H < 240 ? [0, x, c] : H < 300 ? [x, 0, c] : [c, 0, x];
+    return '#' + [r, g, b].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+  };
+  const hueOf = hex => {
+    const [r, g, b] = rgb(hex).map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (!d) return 0;
+    const h0 = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return (h0 * 60 + 360) % 360;
+  };
+  const hueGap = (a, b) => { const d = Math.abs(a - b) % 360; return Math.min(d, 360 - d); };
+  // the lightness that gives this hue/saturation the wanted contrast on bg (or as close as it gets),
+  // searching from the background's side toward the far end
+  function toContrast(H, S, want, bg, dark) {
+    // contrast grows as L moves away from the background: binary search for the first L that meets it
+    const far = dark ? 1 : 0;
+    if (contrast(hsl(H, S, far), bg) < want) return hsl(H, S, far);
+    let a = dark ? 0 : 1, b = far;
+    for (let i = 0; i < 24; i++) { const mL = (a + b) / 2; if (contrast(hsl(H, S, mL), bg) >= want) b = mL; else a = mL; }
+    return hsl(H, S, b);
+  }
+  function smartPalette(p) {
+    const tone = $('#rtone').value, keep = s => locks.has(s);
+    const dark = keep('bg') ? lum(p.bg) < 0.4 : tone === 'dark' ? true : tone === 'light' ? false : Math.random() < 0.8;
+    const H0 = keep('bg') ? hueOf(p.bg) : rnd(0, 360);
+    const out = {};
+    out.bg = keep('bg') ? p.bg : dark ? hsl(H0, rnd(0.15, 0.6), rnd(0.03, 0.09)) : hsl(H0, rnd(0.1, 0.45), rnd(0.9, 0.96));
+    const bg = out.bg;
+    // the text ladder: one hue (the background's, nudged a little), gentle saturation
+    const Ht = H0 + rnd(-20, 20), St = rnd(0.08, 0.35);
+    const ladder = { dim: rnd(1.35, 1.7), mid: rnd(3.4, 4.2), text: rnd(7, 9.5), bright: dark ? rnd(13, 17) : rnd(12, 15) };
+    for (const s of ['dim', 'mid', 'text', 'bright']) out[s] = keep(s) ? p[s] : toContrast(Ht, s === 'bright' ? St * 0.5 : St, ladder[s], bg, dark);
+    // the accent: a color-wheel scheme against the background's hue
+    const scheme = pickOne([180, 150, 210, 120, 240, 30, -30]);
+    const Ha = keep('accent') ? hueOf(p.accent) : H0 + scheme + rnd(-15, 15);
+    out.accent = keep('accent') ? p.accent : toContrast(Ha, rnd(0.75, 1), rnd(5, 9), bg, dark);
+    // danger: reddish, away from the accent's hue
+    let Hd = rnd(345, 375);
+    if (hueGap(Hd, Ha) < 35) Hd = Ha + (Math.random() < 0.5 ? 50 : -50);
+    out.danger = keep('danger') ? p.danger : toContrast(Hd, rnd(0.75, 1), rnd(4, 6), bg, dark);
+    out.dangerDim = keep('dangerDim') ? p.dangerDim : toContrast(hueOf(out.danger), rnd(0.4, 0.7), rnd(1.6, 2.3), bg, dark);
+    // money: goldish, away from the accent and danger; otherwise the next free hue round the wheel
+    let Hm = rnd(38, 55);
+    for (let k = 0; k < 12 && (hueGap(Hm, Ha) < 40 || hueGap(Hm, hueOf(out.danger)) < 30); k++) Hm += 30;
+    out.money = keep('money') ? p.money : toContrast(Hm, rnd(0.7, 0.95), rnd(5, 8), bg, dark);
+    if ($('#rrar').checked) {
+      // rarity keeps its meaning: common = text, rare blue, epic purple, exotic yellow, boss orange
+      out.common = out.text;
+      out.rare = toContrast(rnd(205, 222), 0.85, rnd(4, 6), bg, dark);
+      out.epic = toContrast(rnd(270, 290), 0.8, rnd(4, 6), bg, dark);
+      out.exotic = toContrast(rnd(48, 58), 0.95, rnd(6, 9), bg, dark);
+      out.boss = toContrast(rnd(18, 30), 0.95, rnd(4.5, 6.5), bg, dark);
+    }
+    return out;
+  }
+  function wildPalette(p) {
+    const out = {}, r = () => '#' + Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, '0');
+    for (const [s] of BASE) out[s] = locks.has(s) ? p[s] : r();
+    if ($('#rrar').checked) for (const [s] of RAR) out[s] = r();
+    return out;
+  }
+  function randomize(fn) {
+    const p = data.palettes[sel];
+    lastPush = 0; before();   // always its own undo step
+    const out = fn(p);
+    if (out.common) { delete p.rarity; }   // rolled rarity colors: the palette gets its own set
+    Object.assign(p, out);
+    changed(true);
+  }
+  $('#rsmart').onclick = () => randomize(smartPalette);
+  $('#rwild').onclick = () => randomize(wildPalette);
+
+  // a color change: update the data, the game, and the readouts (not the inputs being typed in)
+  function setColor(fn) { before(); fn(); changed(false); }
+
+  function renderPalette() {
+    const p = data.palettes[sel], r = resolved(sel);
+    fillPicker();
+    $('#pname').value = p.name; $('#pnote').value = p.note || ''; $('#pkey').textContent = sel; $('#pstarter').checked = !p.hidden;
+    const base = $('#baseslots'); base.innerHTML = '';
+    for (const [s, role] of BASE) {
+      const lock = el('input', { type: 'checkbox', checked: locks.has(s), title: 'lock: the randomizer leaves this one alone' });
+      lock.onchange = () => { if (lock.checked) locks.add(s); else locks.delete(s); };
+      base.append(colorRow(s, role, p[s], v => setColor(() => { p[s] = v; }), { cr: s === 'bg' ? null : p.bg, toggle: lock }));
+    }
+    const rs = $('#rarslots'); rs.innerHTML = '';
+    const shared = !!p.rarity;
+    for (const el2 of document.querySelectorAll('input[name=rarmode]')) el2.checked = el2.value === (shared ? 'corp' : 'own');
+    for (const [s, role] of RAR) {
+      const own = !shared || !!p[s];
+      let toggle = null;
+      if (shared) {
+        toggle = el('input', { type: 'checkbox', checked: own, title: 'change this one for this palette only' });
+        toggle.onchange = () => { before(); if (toggle.checked) p[s] = r[s]; else delete p[s]; changed(true); };
+      }
+      rs.append(colorRow(s, role + (shared && !own ? ' (shared)' : ''), r[s], v => setColor(() => { p[s] = v; }), { cr: p.bg, inherited: shared && !own, locked: shared && !own, toggle }));
+    }
+    $('#fweight').value = (p.font && p.font.weight) || ''; $('#fbold').value = (p.font && p.font.bold) || '';
+    renderReadouts();
+  }
+  // the parts that follow the colors: contrast numbers, quick look, checks, look-alikes
+  function renderReadouts() {
+    const p = data.palettes[sel], r = resolved(sel);
+    for (const tr of $('#baseslots').children) { const s = tr.firstChild.textContent; if (s !== 'bg') { const c = contrast(p[s], p.bg), need = NEED[s]; tr.lastChild.innerHTML = `<span class="${c >= need ? 'good' : c >= need * 0.8 ? 'meh' : 'badc'}">${c.toFixed(2)}:1</span>`; } }
+    for (const tr of $('#rarslots').children) { const s = tr.firstChild.textContent; const c = contrast(r[s], p.bg); tr.lastChild.innerHTML = `<span class="${c >= 3 ? 'good' : c >= 2.4 ? 'meh' : 'badc'}">${c.toFixed(2)}:1</span>`; }
+    // quick look: a few lines in the palette's own colors
+    const sp = (c, t, bold) => `<span style="color:${r[c]}${bold ? ';font-weight:700' : ''}">${t}</span>`;
+    $('#sample').style.background = r.bg;
+    $('#sample').innerHTML =
+      sp('accent', 'NeoN+1', true) + ' ' + sp('dim', '// ' + r.name.toLowerCase()) + '\n' +
+      sp('dim', '- - - - - - - - - - - - - - - -') + '\n' +
+      sp('mid', 'LAYER ') + sp('bright', '04') + '   ' + sp('mid', 'INTEGRITY ') + sp('accent', '###') + sp('danger', '#') + '\n' +
+      sp('text', 'PERIMETER SYS 2/4') + '        ' + sp('money', 'CR 32') + '\n' +
+      sp('danger', '> ICE. -1 integrity.') + '\n' +
+      sp('text', 'a ') + sp('bright', 'real node', true) + sp('text', ', a ') + sp('danger', 'locked', false) + sp('text', ' one: ') + sp('dangerDim', '[INERT]') + '\n' +
+      sp('accent', '[ JACK IN ]') + '  ' + sp('text', '[ CODEX ]') + '\n' +
+      RAR.map(([s]) => sp(s, s.toUpperCase())).join(' ');
+    // checks
+    const ws = warnings(r), ul = $('#checks'); ul.innerHTML = '';
+    if (!ws.length) ul.append(el('li', { className: 'none', textContent: 'all clear' }));
+    for (const w of ws) ul.append(el('li', { className: w.bad ? 'badc' : 'meh', textContent: w.text }));
+    // look-alikes
+    const sim = $('#similar'); sim.innerHTML = '';
+    const near = Object.keys(data.palettes).filter(k => k !== sel).map(k => [likeness(r, resolved(k)), k]).filter(([d]) => d < 140).sort((a, b) => a[0] - b[0]);
+    if (!near.length) sim.append(el('li', { className: 'none', textContent: 'no close look-alikes' }));
+    for (const [d, k] of near) { const li = el('li', {}, el('a', { className: 'jump', textContent: data.palettes[k].name, onclick: () => select(k) }), ` (difference ${Math.round(d)}; under 140 reads as close)`); sim.append(li); }
+  }
+  for (const r of document.querySelectorAll('input[name=rarmode]')) r.onchange = () => {
+    const p = data.palettes[sel], rv = resolved(sel);
+    before();
+    if (r.value === 'own') { for (const [s] of RAR) p[s] = rv[s]; delete p.rarity; }
+    else { p.rarity = 'corp'; for (const [s] of RAR) if (p[s] === data.rarity.corp[s]) delete p[s]; }
+    changed(true);
+  };
+  $('#pname').oninput = () => { before(); data.palettes[sel].name = $('#pname').value; changed(false); fillPicker(); };
+  $('#pnote').oninput = () => { before(); const v = $('#pnote').value; if (v) data.palettes[sel].note = v; else delete data.palettes[sel].note; changed(false); };
+  $('#pstarter').onchange = () => { before(); const p = data.palettes[sel]; if ($('#pstarter').checked) delete p.hidden; else p.hidden = true; reorder(); changed(true); };
+  const setFont = () => {
+    before(); const p = data.palettes[sel], w = +$('#fweight').value || null, b = +$('#fbold').value || null;
+    if (w || b) p.font = Object.assign({}, w ? { weight: w } : {}, b ? { bold: b } : {}); else delete p.font;
+    changed(false);
+  };
+  $('#fweight').oninput = setFont; $('#fbold').oninput = setFont;
+
+  // ---------------- All palettes ----------------
+  function renderGrid() {
+    const g = $('#grid'); g.innerHTML = '';
+    const selR = resolved(sel);
+    let keys = Object.keys(data.palettes);
+    const f = $('#gridfilter').value;
+    if (f === 'starters') keys = keys.filter(k => !data.palettes[k].hidden);
+    if (f === 'locked') keys = keys.filter(k => data.palettes[k].hidden);
+    if (f === 'warn') keys = keys.filter(k => warnings(resolved(k)).length);
+    const sort = $('#gridsort').value;
+    if (sort === 'like') keys.sort((a, b) => likeness(selR, resolved(a)) - likeness(selR, resolved(b)));
+    if (sort === 'light') keys.sort((a, b) => lum(resolved(b).bg) - lum(resolved(a).bg));
+    $('#gridcount').textContent = `${keys.length} palettes`;
+    for (const k of keys) {
+      const r = resolved(k), n = warnings(r).length;
+      const sp = (c, t, bold) => `<span style="color:${r[c]}${bold ? ';font-weight:700' : ''}">${t}</span>`;
+      const card = el('div', { className: 'card' + (k === sel ? ' sel' : ''), title: (r.note || '') + (n ? `\n${n} warning(s)` : '') });
+      card.style.background = r.bg;
+      card.innerHTML = `<span class="tag" style="color:${r.mid}">${data.palettes[k].hidden ? 'locked' : 'starter'}${n ? ' · ' + n + '!' : ''}</span>` +
+        sp('bright', r.name, true) + '\n' + sp('text', 'text ') + sp('mid', 'mid ') + sp('dim', 'dim') + '\n' +
+        sp('accent', '[ GO ]') + ' ' + sp('danger', 'ICE') + ' ' + sp('money', 'CR 32') + '\n' +
+        RAR.map(([s]) => sp(s, '#')).join('');
+      card.onclick = () => { select(k); showTab('pal'); };
+      g.append(card);
+    }
+  }
+  $('#gridfilter').onchange = renderGrid; $('#gridsort').onchange = renderGrid;
+
+  // ---------------- Shared rarity ----------------
+  function renderShared() {
+    const t = $('#sharedslots'); t.innerHTML = '';
+    const users = Object.keys(data.palettes).filter(k => data.palettes[k].rarity === 'corp');
+    $('#raruse').textContent = `${users.length} palettes use the shared set.`;
+    for (const [s, role] of RAR) t.append(colorRow(s, role, data.rarity.corp[s], v => setColor(() => { data.rarity.corp[s] = v; })));
+  }
+
+  // ---------------- Player styles ----------------
+  function renderStyles() {
+    const t = $('#styles'); t.innerHTML = '';
+    data.styles.forEach((s, i) => {
+      const chip = el('span', { className: 'chip', textContent: ` <#> ${s.name} ` });
+      const paint = () => { chip.style.color = s.fg; chip.style.background = s.bg; };
+      paint();
+      const name = el('input', { type: 'text', value: s.name, size: 9 });
+      name.oninput = () => { before(); s.name = name.value.toUpperCase(); chip.textContent = ` <#> ${s.name} `; changed(false); };
+      const pick = (k) => { const p = el('input', { type: 'color', value: s[k] }); p.oninput = () => { before(); s[k] = p.value; paint(); changed(false); }; return p; };
+      const c = contrast(s.fg, s.bg);
+      t.append(el('tr', {}, el('td', { className: 'mono', textContent: String(i + 1).padStart(2) }), el('td', {}, name), el('td', {}, 'text ', pick('fg')), el('td', {}, 'back ', pick('bg')), el('td', {}, chip),
+        el('td', { className: c >= 4.5 ? 'good' : c >= 3 ? 'meh' : 'badc', textContent: c.toFixed(2) + ':1' })));
+    });
+  }
+  $('#addstyle').onclick = () => { before(); data.styles.push({ name: 'NEW', fg: '#ffffff', bg: '#333333' }); changed(true); };
+
+  // ---------------- Tabs, rendering, files ----------------
+  let tab = 'pal';
+  function showTab(name) {
+    tab = name;
+    for (const b of document.querySelectorAll('#tabs button')) b.classList.toggle('on', b.dataset.tab === name);
+    for (const t of document.querySelectorAll('.tab')) t.classList.toggle('show', t.id === 'tab-' + name);
+    renderTab();
+  }
+  for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => showTab(b.dataset.tab);
+  function renderTab() { if (tab === 'pal') renderPalette(); if (tab === 'all') renderGrid(); if (tab === 'rar') renderShared(); if (tab === 'sty') renderStyles(); }
+  function renderAll() { fillCorps(); renderTab(); renderFileState(); }
+  // full: rebuild the form (structure changed); otherwise just the readouts, so typing isn't interrupted
+  function changed(full) {
+    sendAll();
+    if (full) renderAll();
+    else { if (tab === 'pal') renderReadouts(); renderFileState(); }
+  }
+
+  let handle = null;   // the palettes.js file on disk (Chrome / Edge)
+  function renderFileState() {
+    const d = dirty();
+    $('#filestate').innerHTML = (handle ? `file: <span class="mono">${handle.name}</span>` : 'file: not linked yet (save asks for dist/palettes.js)') + (d ? ' · <b>unsaved changes</b>' : ' · saved');
+    $('#undo').disabled = !undo.length; $('#redo').disabled = !redo.length;
+    document.title = (d ? '* ' : '') + 'NeoN+1 palette editor';
+  }
+  let toastT = 0;
+  function toast(t) { $('#toast').textContent = t; $('#toast').classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => $('#toast').classList.remove('show'), 2200); }
+
+  // remember the linked file between sessions (IndexedDB can store file handles)
+  const idb = (mode, fn) => new Promise((res, rej) => {
+    const open = indexedDB.open('neon-palette-editor', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('h');
+    open.onerror = () => rej(open.error);
+    open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
+  });
+  const rememberHandle = h => idb('readwrite', s => s.put(h, 'palettes')).catch(() => {});
+  idb('readonly', s => s.get('palettes')).then(h => { if (h) { handle = h; renderFileState(); } }).catch(() => {});
+
+  async function ensureHandle() {
+    if (handle) {
+      if ((await handle.queryPermission({ mode: 'readwrite' })) === 'granted' || (await handle.requestPermission({ mode: 'readwrite' })) === 'granted') return handle;
+    }
+    const [h] = await window.showOpenFilePicker({ id: 'neon-palettes', types: [{ description: 'palettes.js', accept: { 'text/javascript': ['.js'] } }] });
+    if (h.name !== 'palettes.js' && !confirm(`That file is ${h.name}, not palettes.js. Use it anyway?`)) throw new Error('cancelled');
+    if ((await h.requestPermission({ mode: 'readwrite' })) !== 'granted') throw new Error('no permission to write the file');
+    handle = h; rememberHandle(h);
+    return h;
+  }
+  function download(text) {
+    const a = el('a', { href: URL.createObjectURL(new Blob([text], { type: 'text/javascript' })), download: 'palettes.js' });
+    document.body.append(a); a.click(); a.remove();
+  }
+  async function save() {
+    reorder();
+    const text = fileText();
+    if (!window.showOpenFilePicker) { download(text); saved = JSON.stringify(data); renderFileState(); toast('downloaded palettes.js (this browser cannot write files directly)'); return; }
+    try {
+      const h = await ensureHandle();
+      const w = await h.createWritable();
+      await w.write(text); await w.close();
+      saved = JSON.stringify(data); renderFileState();
+      toast('saved ' + h.name);
+    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('save failed: ' + e.message); }
+  }
+  async function reloadFile() {
+    if (dirty() && !confirm('Drop your unsaved changes and load the file again?')) return;
+    try {
+      let text;
+      if (window.showOpenFilePicker) { const h = await ensureHandle(); text = await (await h.getFile()).text(); }
+      else { location.reload(); return; }
+      data = clone(parseFile(text)); saved = JSON.stringify(data); undo = []; redo = [];
+      if (!data.palettes[sel]) sel = Object.keys(data.palettes)[0];
+      renderAll(); sendAll(); toast('loaded ' + handle.name);
+    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
+  }
+  async function exportText() {
+    reorder();
+    const text = fileText();
+    try { await navigator.clipboard.writeText(text); toast('copied palettes.js to the clipboard (and downloaded it)'); } catch (e) { toast('downloaded palettes.js'); }
+    download(text);
+  }
+  $('#save').onclick = save; $('#reload').onclick = reloadFile; $('#export').onclick = exportText;
+  $('#undo').onclick = () => stepHistory(undo, redo); $('#redo').onclick = () => stepHistory(redo, undo);
+  document.addEventListener('keydown', e => {
+    const mod = e.ctrlKey || e.metaKey;
+    if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+    else if (mod && e.key.toLowerCase() === 'z' && !(e.target.matches && e.target.matches('input[type=text]'))) { e.preventDefault(); e.shiftKey ? stepHistory(redo, undo) : stepHistory(undo, redo); }
+    else if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); stepHistory(redo, undo); }
+  });
+  window.addEventListener('beforeunload', e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });
+
+  // a check that what we write reads back the same (the editor never changes colors on its own)
+  try { const back = parseFile(fileText()); if (JSON.stringify(back.palettes) !== JSON.stringify(data.palettes)) console.warn('palette editor: the file writer does not round-trip'); } catch (e) { console.warn(e); }
+
+  sizeStage();
+  renderAll();
+  loadGame();
+  window.__editor = { fileText, get data() { return data; } };   // for tests
+})();
+</script>
+</body>
+</html>

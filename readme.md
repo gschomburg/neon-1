@@ -25,6 +25,8 @@ Open `dist/index.html` in a browser (or upload the `dist/` folder to a web host)
 - `docs/SPEC.md`: the living design doc: what's built, version by version, plus the backlog.
 - `docs/CORPS.md`: every corp, its tell, its mod, and the build plan by tier.
 - `docs/CONTENT.md`, `docs/NAMES.md`, `docs/ART.md`: content reference, naming, art drop-off.
+- `tools/palette_editor.html`: the palette editor (open it in Chrome): edit `dist/palettes.js` with the game
+  running beside it, and save straight to the file.
 - `tools/tell_odds.js`: `node tools/tell_odds.js` measures how much each corp's tell helps.
 - `reference/1TD.html`: One True Door, the game that inspired this one.
 - `database.rules.json`: the Firebase Realtime Database rules (pasted into the Firebase console).
