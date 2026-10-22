@@ -1552,6 +1552,9 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.04** (2026-10-22): offers you can't take (too expensive, sold, locked) keep their color bit at full strength (a
+  mod's badge chip, an item's name chip) and grey out the rest (name, price, label), the user's call: "i like seeing the
+  colors of things even if i can't buy them". (Replaces v12.03's key-color-text look.)
 - **v12.03** (2026-10-22): market / reward offers you can't take (too expensive, sold, locked) keep their rarity: the
   key color as text, no chip (they used to go plain grey). The palette editor's market scene gives 999 credits, so
   every offer shows its chip.

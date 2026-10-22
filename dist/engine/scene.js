@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.03']);
+NEON_FILES.push(['engine/scene.js', 'v12.04']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -856,18 +856,15 @@ function buildTextBoard(ctx, lines, area = null) {
       // The selection cursor sits outside the row, clear of its background color.
       if (ln.sel) put(x - 2, y, '>', C.accent, 'ui', true);
       let cx = x + 1;
-      if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg, muted: !!ln.faded }) + 1;
-      // faded (can't afford, sold, locked): the rarity stays, quieter: its key color as text, no chip
-      if (ln.chip && !ln.faded) putChip(put, bg, cx, y, ln.name, ln.chip, 'ui', !!ln.sel);
-      else if (ln.chip) put(cx, y, ln.name, chipOf(ln.chip).bg, 'ui', !!ln.sel);
+      if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg }) + 1;
+      // faded (can't afford, sold, locked): the color bit stays (a mod's badge, an item's name chip),
+      // everything else goes grey, so you see what you're missing
+      if (ln.chip) putChip(put, bg, cx, y, ln.name, ln.chip, 'ui', !!ln.sel);
       else put(cx, y, ln.name, ln.faded ? C.mid : (ln.col || C.bright), 'ui', !!ln.sel);
       if (ln.right) {
         const rx = x + LW - ln.right.length;
         put(rx, y, ln.right, ln.faded ? C.dim : (ln.rightCol || C.mid), 'ui');
-        if (ln.rightChips) for (const c of rarityChips(ln.right)) {
-          if (ln.faded) put(rx + c.from, y, ln.right.substr(c.from, c.len), chipOf(c.r).bg, 'ui');
-          else putChip(put, bg, rx + c.from, y, ln.right.substr(c.from, c.len), c.r, 'ui');
-        }
+        if (ln.rightChips && !ln.faded) for (const c of rarityChips(ln.right)) putChip(put, bg, rx + c.from, y, ln.right.substr(c.from, c.len), c.r, 'ui');
       }
       if (!ln.disabled) addHit(x, y, LW, 1, { kind: 'btn', id: ln.id, onTap: ln.onTap });
     } else if (ln.row) {
