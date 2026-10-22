@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.09']);
+NEON_FILES.push(['engine/run.js', 'v12.10']);
 
 // ---------------- Run flow ----------------
 function showTitle() {

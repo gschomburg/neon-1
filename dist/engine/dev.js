@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v12.09']);
+NEON_FILES.push(['engine/dev.js', 'v12.10']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.

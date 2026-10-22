@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v12.09']);
+NEON_FILES.push(['engine/render.js', 'v12.10']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -77,7 +77,10 @@ function render(now) {
 
 // ---------------- Helpers ----------------
 const wait = ms => new Promise(r => setTimeout(r, ms));
-function setMsg(msg, col = C.text) { st.msg = msg; st.msgCol = col; st.msgT = performance.now(); }
+// A message remembers which color slot it used (danger, accent...), not just the color, so it follows
+// palette changes: a corp's colors fading in, or edits in the palette editor.
+const slotOf = col => Object.keys(C).find(k => C[k] === col) || (paletteFade && Object.keys(paletteFade.to).find(k => paletteFade.to[k] === col)) || null;
+function setMsg(msg, col = C.text) { st.msg = msg; st.msgCol = col; st.msgSlot = slotOf(col); st.msgT = performance.now(); }
 const candidates = () => st.lv ? st.lv.tiles.filter(t => t.state === 'closed' && !t.loaded && !t.ruledOut) : [];
 
 function availableNodes() {

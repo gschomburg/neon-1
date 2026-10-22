@@ -1556,6 +1556,10 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.10** (2026-10-22): the message line ("> BOSS LAYER. 6 nodes.") follows palette changes. It kept the color
+  value it was posted with, so a palette switch (a corp's colors fading in, or an edit in the palette editor) left it
+  in the old color until the next message; now `setMsg` remembers the color slot and the line looks it up live.
+  Found by the user in the palette editor's boss scene.
 - **v12.09** (2026-10-22): the palette editor's market scene gives 48 credits (was 999): a mix of offers you can and
   can't afford, so both looks show.
 - **v12.08** (2026-10-22): market right column: the tags (mod / mod+ / item / svc) sit in their own 4-wide column, so they

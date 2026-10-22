@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v12.09']);
+NEON_FILES.push(['engine/input.js', 'v12.10']);
 
 // ---------------- Pause menu ----------------
 // [MENU] in the header or Esc during a run. Stops clocks. Abandon goes to the title.
