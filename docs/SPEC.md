@@ -648,6 +648,22 @@ Agreed changes not built yet.
   (PLAYTIME / DIALTONE ONLINE, COLDBREW / CARAPACE ARMOR...). *(Part of the palette pass below; the
   editor's preview may cover it.)*
 
+### Breaking the game into files (2026-10-21, the user agreed; after the palette editor)
+
+`dist/index.html` is ~10,500 lines. `palettes.js` was the first file out. Next:
+- **Data split pass** (easy, pure data): corp intro art (~630 lines), codex corp text, music tracks +
+  where they play (`SONGS`, `MUSIC_FOR`; sets up a music editor later), glyphs / hacker logos / name lists,
+  help and info text (pairs with keyword highlighting). Mods and items: their names / tips / descriptions
+  move, their effects stay in the code.
+- **Version stamps** (the user likes it; do it with the data split): every data file carries the build
+  number, and the game warns if they don't match (a file the FTP upload missed, or an old copy cached on
+  a phone). The `<script src>` links get the build number too (`palettes.js?v=11.01`) so phones fetch the
+  new copy.
+- **Corp kit files** (the user likes it; its own project, after the data split): each corp in its own file
+  (`corps/cipher.js`), registered with the game through a "corp kit" object of the game functions the corps
+  use (~50: messages, sounds, locking nodes, moving tiles...). Adding a corp = adding one file. The biggest
+  part of the code (~2,800 lines of corps).
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
@@ -679,7 +695,8 @@ The user's next big task is a **palette editor and preview system**. Everything 
    - **Palettes that look alike:** PLAYTIME / DIALTONE (known), LIFTCO / GROUNDHOG, RYDR / ENTROPY,
      COLDBREW / CARAPACE, TOLLGATE / BLACKOUT, HEADLINE / PAWNBROS, SPECTRA / PLAYBALL, CLONEWORKS / CIPHER.
    - The editor should show these checks live (contrast numbers, "too close" warnings).
-4. **One palette list + unlocks** (§17 "Two palette lists"): player and corp palettes become the same thing;
+4. **One palette list: DONE in v11.01-02** (player palettes folded into corps; starters = the 9 level-1 corps).
+   **Unlocks: still to build** (beating a corp shows its palette in SETTINGS). Original note: **One palette list + unlocks** (§17 "Two palette lists"): player and corp palettes become the same thing;
    the 5 player palettes are the free starters, and beating a corp unlocks its palette in SETTINGS.
    Needs a field tying each palette to its corp, and locked ones hidden or shown as `???`.
 5. **Dev menu palette cycles every palette** (item above).
@@ -687,8 +704,8 @@ The user's next big task is a **palette editor and preview system**. Everything 
    The typeface/size parts are leftovers from the reverted per-corp fonts.
 7. **BLACKOUT** fades every slot but red toward the background (v11): the editor should be able to preview
    that, and the rename has to keep red out of it.
-8. **Player color styles** (`PLAYER_STYLES`, the persona name colors) are a separate list: decide if the
-   editor covers them too. Related: "Hacker logo: draw it on your color style's background" (above).
+8. **Player color styles** (`PLAYER_STYLES`, the persona name colors): **moved to `palettes.js` in v11.01**
+   (`styles`); the editor should cover them too. Related: "Hacker logo: draw it on your color style's background" (above).
 9. **The palette editor itself** (agreed 2026-10-21):
    - **A dev tool, for the user**, not a player feature.
    - **Separate page** `tools/palette_editor.html`: the game in a frame on the left, a regular web form on the
@@ -1514,6 +1531,17 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v11.02** (2026-10-21): **starters are the 9 level-1 corps only** (the user: "for simplicity"): BASIC, PARCELNET,
+  MOCHI, PERIMETER, SEEKR, MEGAMART, BURGERTRON, NIMBUS, PLAYTIME. CHRONOS and MIRRORLINE keep the GREEN CRT /
+  PAPER colors but are locked again. (Old saves on those two keep them until the player changes palette.)
+- **v11.01** (2026-10-21): **one palette list.** The 5 player palettes were folded into corps (the user's call:
+  "no difference, special player palettes"), matched by closeness: DEFAULT -> BASIC, AMBER CRT -> PARCELNET,
+  DUSK -> MOCHI (all level 1), GREEN CRT -> CHRONOS (its near twin), PAPER -> MIRRORLINE (the other light one).
+  Those corps now wear those colors (their old looks are in each palette's `note` and in git). **Starters**
+  (shown in SETTINGS from the start): all 9 level-1 corps + CHRONOS + MIRRORLINE; the rest stay `hidden`
+  (locked) until unlocks are built. New players start on BASIC (the old DEFAULT colors); old saves are mapped
+  (`OLD_PALETTES`), so nobody's colors change. Player color styles (`PLAYER_STYLES`) moved to `palettes.js`
+  (`styles`, same order). SETTINGS palette label widened for corp names.
 - **v11.00** (2026-10-21): the starting point of `dist/`: everything in the v11 list below (NeoN+1 title,
   CIPHER / HYDRA / BLACKOUT, `palettes.js` + slot rename, the move to `dist/`) and the new build numbers.
 

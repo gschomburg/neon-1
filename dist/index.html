@@ -60,7 +60,7 @@
 
   // Build number: vMAJOR.MINOR. The minor ticks (+.01) with every update; the major changes only on
   // the user's call. The save slot follows the major only, so minor updates keep your progress.
-  const VERSION = 'v11.00';
+  const VERSION = 'v11.02';
   const STORE_KEY = 'beta_runner.v11.save';
   const SAVE_FORMAT = 1;
 
@@ -83,13 +83,17 @@
   // palette with rarity: 'corp' takes the shared corp rarity colors first. If the file didn't
   // load, DEFAULT keeps the game running.
   const PALETTE_DATA = window.NEON_PALETTES || { rarity: {}, palettes: {
-    default: { name: 'DEFAULT', bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', accent: '#3cf0ff', danger: '#ff3b4e', dangerDim: '#7a2630', money: '#e8c66a',
+    c_basic: { name: 'BASIC', bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', accent: '#3cf0ff', danger: '#ff3b4e', dangerDim: '#7a2630', money: '#e8c66a',
       common: '#a9bdb7', rare: '#4da3ff', epic: '#c07bff', exotic: '#ffd84a', boss: '#ff7a3d' },
   } };
   const PALETTES = {};
   for (const [key, p] of Object.entries(PALETTE_DATA.palettes))
     PALETTES[key] = Object.assign({}, p.rarity ? PALETTE_DATA.rarity[p.rarity] : null, p);
   const playerPalettes = () => Object.keys(PALETTES).filter(k => !PALETTES[k].hidden);
+  // The default palette: the first starter in palettes.js (BASIC). Old saves named the player
+  // palettes that were folded into corps (2026-10-21): map them to their corps.
+  const DEFAULT_PALETTE = playerPalettes()[0] || Object.keys(PALETTES)[0];
+  const OLD_PALETTES = { default: 'c_basic', amber: 'c_parcelnet', dusk: 'c_mochi', phosphor: 'c_chronos', paper: 'c_mirror' };
 
   // Font used for drawing. Layout always uses the default font's measurements, and
   // every character is centered in its own cell, so a corp's font changes the look
@@ -112,9 +116,9 @@
 
   // dark (0-1): BLACKOUT's lights going out. Every color fades into the background, except
   // red (the nodes you hit stay bright). PAL_LIT keeps the full-brightness colors.
-  let PAL_LIT = PALETTES.default;
+  let PAL_LIT = PALETTES[DEFAULT_PALETTE];
   function applyPalette(key, instant = false, dark = 0) {
-    const p = PALETTES[key] || PALETTES.default;
+    const p = PALETTES[key] || PALETTES[DEFAULT_PALETTE];
     PAL_LIT = p;
     const to = {};
     for (const k of Object.keys(C)) if (p[k]) to[k] = dark && k !== 'bg' && k !== 'danger' ? mixHex(p[k], p.bg, dark) : p[k];
@@ -4288,7 +4292,7 @@
   // ---------------- Save data ----------------
   const freshSave = () => ({
     format: SAVE_FORMAT, best: 0, runs: 0, wins: 0, history: [], seen: {},
-    muted: false, palette: 'default', effects: 'full', tapMode: 'two', corpColors: true,
+    muted: false, palette: DEFAULT_PALETTE, effects: 'full', tapMode: 'two', corpColors: true,
     musicOn: true, musicVol: 0.6, sfxVol: 0.8,
     corpStats: {},          // per corp: { breached, lost }
     rep: 0, repTotal: 0, legacy: {}, cashouts: 0, bestSector: 0,   // legacy (THE BOARD)
@@ -4299,6 +4303,8 @@
       const raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
       if (raw && raw.format === SAVE_FORMAT) Object.assign(d, raw);
     } catch (e) { /* storage unavailable */ }
+    d.palette = OLD_PALETTES[d.palette] || d.palette;
+    if (!PALETTES[d.palette]) d.palette = DEFAULT_PALETTE;   // a palette that's gone (or palettes.js didn't load)
     return d;
   })();
   const persist = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(save)); } catch (e) { /* ignore */ } };
@@ -8764,7 +8770,7 @@
     openPanel('SETTINGS', (T, B, X) => {
       T('SETTINGS', C.accent);
       T('');
-      B(`[ palette: ${PALETTES[save.palette].name.padEnd(9)} ]`, 'pal', cyclePalette);
+      B(`[ palette: ${PALETTES[save.palette].name.padEnd(11)} ]`, 'pal', cyclePalette);
       B(`[ corp colors: ${save.corpColors ? 'ON ' : 'OFF'} ]`, 'ccol', toggleCorpColors);
       B(`[ effects: ${save.effects === 'full' ? 'FULL   ' : 'REDUCED'} ]`, 'fx', toggleEffects);
       B(`[ items: ${save.tapMode === 'two' ? 'TAP TWICE' : 'TAP ONCE '} ]`, 'tap', toggleTapMode);
@@ -9186,7 +9192,7 @@
     T('');
     lines.push({ box: true, text: 'R E S U M E', id: 'resume', onTap: togglePause, minW: 22 });
     T('');
-    B(`[ palette: ${PALETTES[save.palette].name.padEnd(9)} ]`, 'ppal', cyclePalette);
+    B(`[ palette: ${PALETTES[save.palette].name.padEnd(11)} ]`, 'ppal', cyclePalette);
     B(`[ corp colors: ${save.corpColors ? 'ON ' : 'OFF'} ]`, 'pccol', toggleCorpColors);
     B(`[ effects: ${save.effects === 'full' ? 'FULL   ' : 'REDUCED'} ]`, 'pfx', toggleEffects);
     B(`[ items: ${save.tapMode === 'two' ? 'TAP TWICE' : 'TAP ONCE '} ]`, 'ptap', toggleTapMode);
@@ -9431,7 +9437,7 @@
     const idle = !st.busy && !st.transitioning;
     T('DEV MENU', C.accent);
     T(run ? (run.practice ? 'run is practice (not scored)' : 'cheats mark the run as practice') : 'start a run for cheats', C.dim);
-    B(`[ palette: ${PALETTES[save.palette].name.padEnd(9)} ]`, 'pal', cyclePalette);
+    B(`[ palette: ${PALETTES[save.palette].name.padEnd(11)} ]`, 'pal', cyclePalette);
     B(`[ show real node: ${st.debug ? 'ON ' : 'OFF'} ]`, 'dbg', () => { st.debug = !st.debug; if (run) run.practice = true; Sound.ui(); });
     B(`[ god: ${st.god ? 'ON ' : 'OFF'} ]`, 'god', () => { st.god = !st.god; if (run) run.practice = true; Sound.ui(); });
     B(`[ free travel: ${st.freeTravel ? 'ON ' : 'OFF'} ]`, 'free', () => { st.freeTravel = !st.freeTravel; if (run) run.practice = true; st.mapSel = null; Sound.ui(); });
@@ -9745,20 +9751,10 @@
     prof.style = Math.floor(Math.random() * PLAYER_STYLES.length);
     persist();
   }
-  // Player color styles: a text color on a background, picked to read well together.
-  // Fixed colors (not palette-based), so a player looks the same on everyone's screen.
-  const PLAYER_STYLES = [
-    { name: 'NEON',   fg: '#3cf0ff', bg: '#06303a' },
-    { name: 'TOXIC',  fg: '#9dff3c', bg: '#16300a' },
-    { name: 'BLOOD',  fg: '#ff4d5e', bg: '#3a0a10' },
-    { name: 'GOLD',   fg: '#ffd84a', bg: '#3a2c06' },
-    { name: 'ULTRA',  fg: '#c07bff', bg: '#24103a' },
-    { name: 'VAPOR',  fg: '#ff79c6', bg: '#1a1030' },
-    { name: 'GHOST',  fg: '#e6f4ef', bg: '#2c3a38' },
-    { name: 'ICE',    fg: '#0b2a4a', bg: '#bfe6ff' },
-    { name: 'PAPER',  fg: '#111111', bg: '#efe9da' },
-    { name: 'HAZARD', fg: '#111111', bg: '#ffb000' },
-  ];
+  // Player color styles: a text color on a background, picked to read well together. Fixed colors
+  // (not palette-based), so a player looks the same on everyone's screen. They live in palettes.js
+  // (NEON only if it didn't load).
+  const PLAYER_STYLES = (window.NEON_PALETTES && window.NEON_PALETTES.styles) || [{ name: 'NEON', fg: '#3cf0ff', bg: '#06303a' }];
   const styleOf = i => PLAYER_STYLES[((i % PLAYER_STYLES.length) + PLAYER_STYLES.length) % PLAYER_STYLES.length];
   const randomName = () => {
     const mid = pickR(NAME_B, Math.random);

@@ -9,30 +9,29 @@
 //   bright     headings, emphasis
 //   common rare epic exotic boss: the rarity colors (mods, items)
 // rarity: 'corp' takes the shared corp rarity set below, plus any rarity colors the palette lists itself.
-// hidden: a corp palette (not offered in SETTINGS). font: { weight, bold } (OMNI only). note: a description.
+// hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
 window.NEON_PALETTES = {
   rarity: {
     corp: { common: '#a9bdb7', rare: '#4da3ff', epic: '#c07bff', exotic: '#ffd84a', boss: '#ff7a3d' },
   },
   palettes: {
-    default:        { name: 'DEFAULT', bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', accent: '#3cf0ff', danger: '#ff3b4e', dangerDim: '#7a2630', money: '#e8c66a', common: '#a9bdb7', rare: '#4da3ff', epic: '#c07bff', exotic: '#ffd84a', boss: '#ff7a3d' },
-    amber:          { name: 'AMBER CRT', bg: '#0c0800', dim: '#3a2a10', mid: '#7a5a24', text: '#d9a441', bright: '#ffd27a', accent: '#ffb000', danger: '#ff5a3c', dangerDim: '#6e2a18', money: '#ffe08a', common: '#d9a441', rare: '#ffcf70', epic: '#ff8a3c', exotic: '#fff1b0', boss: '#ff5a3c' },
-    phosphor:       { name: 'GREEN CRT', bg: '#020a04', dim: '#12331a', mid: '#2f6e3c', text: '#5fd47a', bright: '#b8ffc8', accent: '#39ff6a', danger: '#ff5c5c', dangerDim: '#5a1f1f', money: '#d8ff6a', common: '#5fd47a', rare: '#7affd4', epic: '#c8ff6a', exotic: '#f0fff0', boss: '#ff7a5c' },
-    dusk:           { name: 'DUSK', bg: '#14111f', dim: '#332c4a', mid: '#6b5f8f', text: '#c8bfe8', bright: '#f4f0ff', accent: '#ff79c6', danger: '#ff5555', dangerDim: '#6a2a3a', money: '#f1fa8c', common: '#c8bfe8', rare: '#8be9fd', epic: '#bd93f9', exotic: '#f1fa8c', boss: '#ffb86c' },
-    paper:          { name: 'PAPER', bg: '#f2efe6', dim: '#cfc9ba', mid: '#8a8376', text: '#3b3a36', bright: '#111111', accent: '#0077a8', danger: '#c4122c', dangerDim: '#d99aa2', money: '#9a6a00', common: '#3b3a36', rare: '#1d5fbf', epic: '#7a2fbf', exotic: '#a86b00', boss: '#c4122c' },
-    c_perimeter:    { name: 'PERIMETER', hidden: true, bg: '#0f1214', dim: '#2c3439', mid: '#6b7780', text: '#c9d1d6', bright: '#ffffff', accent: '#ff8a00', danger: '#ff3b30', dangerDim: '#6b2016', money: '#ffd166', rarity: 'corp', common: '#c9d1d6', note: 'concrete grey + hazard orange' },
+    // starters: offered in SETTINGS from the start (the first one is the default for new players)
+    c_basic:        { name: 'BASIC', bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', accent: '#3cf0ff', danger: '#ff3b4e', dangerDim: '#7a2630', money: '#e8c66a', common: '#a9bdb7', rare: '#4da3ff', epic: '#c07bff', exotic: '#ffd84a', boss: '#ff7a3d', note: 'was the DEFAULT player palette (its old look: plain grey)' },
+    c_parcelnet:    { name: 'PARCELNET', bg: '#0c0800', dim: '#3a2a10', mid: '#7a5a24', text: '#d9a441', bright: '#ffd27a', accent: '#ffb000', danger: '#ff5a3c', dangerDim: '#6e2a18', money: '#ffe08a', common: '#d9a441', rare: '#ffcf70', epic: '#ff8a3c', exotic: '#fff1b0', boss: '#ff5a3c', note: 'was the AMBER CRT player palette (its old look: brown box + orange)' },
+    c_mochi:        { name: 'MOCHI', bg: '#14111f', dim: '#332c4a', mid: '#6b5f8f', text: '#c8bfe8', bright: '#f4f0ff', accent: '#ff79c6', danger: '#ff5555', dangerDim: '#6a2a3a', money: '#f1fa8c', common: '#c8bfe8', rare: '#8be9fd', epic: '#bd93f9', exotic: '#f1fa8c', boss: '#ffb86c', note: 'was the DUSK player palette (its old look: pink)' },
+    c_perimeter:    { name: 'PERIMETER', bg: '#0f1214', dim: '#2c3439', mid: '#6b7780', text: '#c9d1d6', bright: '#ffffff', accent: '#ff8a00', danger: '#ff3b30', dangerDim: '#6b2016', money: '#ffd166', rarity: 'corp', common: '#c9d1d6', note: 'concrete grey + hazard orange' },
+    c_seekr:        { name: 'SEEKR', bg: '#0b0d12', dim: '#232a38', mid: '#5a6a86', text: '#c7d2e6', bright: '#ffffff', accent: '#4c8dff', danger: '#ff4d4d', dangerDim: '#5c1f1f', money: '#ffcc33', rarity: 'corp', common: '#c7d2e6', note: 'search blue' },
+    c_megamart:     { name: 'MEGAMART', bg: '#06122a', dim: '#163063', mid: '#3d63a8', text: '#cddcff', bright: '#ffffff', accent: '#ffd21f', danger: '#ff4040', dangerDim: '#5a1a1a', money: '#ffd21f', rarity: 'corp', common: '#cddcff', exotic: '#fff3a0', note: 'retail blue + yellow' },
+    c_burgertron:   { name: 'BURGERTRON', bg: '#1a0606', dim: '#4a1414', mid: '#a03a2a', text: '#ffd9b0', bright: '#fff6e8', accent: '#ffcc00', danger: '#ff3030', dangerDim: '#5a1010', money: '#ffcc00', rarity: 'corp', common: '#ffd9b0', note: 'ketchup + mustard' },
+    c_nimbus:       { name: 'NIMBUS', bg: '#06101c', dim: '#1a3350', mid: '#4f7aa8', text: '#cfe4ff', bright: '#ffffff', accent: '#8fd8ff', danger: '#ff5a6a', dangerDim: '#5a1f2a', money: '#ffe08a', rarity: 'corp', common: '#cfe4ff', note: 'sky blue' },
+    c_playtime:     { name: 'PLAYTIME', bg: '#0a0c1a', dim: '#24285a', mid: '#5a62b0', text: '#e0e4ff', bright: '#ffffff', accent: '#ffd23a', danger: '#ff3a3a', dangerDim: '#5a1414', money: '#ffd23a', rarity: 'corp', common: '#e0e4ff', note: 'toy blue + yellow' },
+    // locked: unlocked by beating the corp (for now: hidden from SETTINGS)
+    c_chronos:      { name: 'CHRONOS', hidden: true, bg: '#020a04', dim: '#12331a', mid: '#2f6e3c', text: '#5fd47a', bright: '#b8ffc8', accent: '#39ff6a', danger: '#ff5c5c', dangerDim: '#5a1f1f', money: '#d8ff6a', common: '#5fd47a', rare: '#7affd4', epic: '#c8ff6a', exotic: '#f0fff0', boss: '#ff7a5c', note: 'was the GREEN CRT player palette (its old look: green terminal)' },
+    c_mirror:       { name: 'MIRRORLINE', hidden: true, bg: '#f2efe6', dim: '#cfc9ba', mid: '#8a8376', text: '#3b3a36', bright: '#111111', accent: '#0077a8', danger: '#c4122c', dangerDim: '#d99aa2', money: '#9a6a00', common: '#3b3a36', rare: '#1d5fbf', epic: '#7a2fbf', exotic: '#a86b00', boss: '#c4122c', note: 'was the PAPER player palette (its old look: light: icy white + deep blue)' },
     c_sigil:        { name: 'SIGIL', hidden: true, bg: '#1b0a26', dim: '#45204f', mid: '#9a5fb5', text: '#f0d6ff', bright: '#ffffff', accent: '#f5c542', danger: '#ff3f7f', dangerDim: '#6b1f45', money: '#f5c542', rarity: 'corp', common: '#f0d6ff', exotic: '#ff9de2', note: 'deep violet + gold' },
-    c_chronos:      { name: 'CHRONOS', hidden: true, bg: '#010a03', dim: '#103019', mid: '#2e7a43', text: '#6fe08c', bright: '#d2ffd9', accent: '#3dff8a', danger: '#ff5c4d', dangerDim: '#5a1f1a', money: '#e4ff7a', rarity: 'corp', common: '#6fe08c', note: 'green terminal' },
-    c_mirror:       { name: 'MIRRORLINE', hidden: true, bg: '#e9f2f8', dim: '#c3d2de', mid: '#6f8597', text: '#1d2b3a', bright: '#000000', accent: '#006fd6', danger: '#d11a3a', dangerDim: '#e9a8b6', money: '#8a6a00', common: '#1d2b3a', rare: '#1d5fbf', epic: '#7a2fbf', exotic: '#a86b00', boss: '#c4122c', note: 'light: icy white + deep blue' },
-    c_basic:        { name: 'BASIC', hidden: true, bg: '#111111', dim: '#333333', mid: '#777777', text: '#bdbdbd', bright: '#ffffff', accent: '#9fd3ff', danger: '#ff5555', dangerDim: '#552222', money: '#e0c070', rarity: 'corp', common: '#bdbdbd', note: 'plain grey' },
-    c_seekr:        { name: 'SEEKR', hidden: true, bg: '#0b0d12', dim: '#232a38', mid: '#5a6a86', text: '#c7d2e6', bright: '#ffffff', accent: '#4c8dff', danger: '#ff4d4d', dangerDim: '#5c1f1f', money: '#ffcc33', rarity: 'corp', common: '#c7d2e6', note: 'search blue' },
-    c_megamart:     { name: 'MEGAMART', hidden: true, bg: '#06122a', dim: '#163063', mid: '#3d63a8', text: '#cddcff', bright: '#ffffff', accent: '#ffd21f', danger: '#ff4040', dangerDim: '#5a1a1a', money: '#ffd21f', rarity: 'corp', common: '#cddcff', exotic: '#fff3a0', note: 'retail blue + yellow' },
     c_cloneworks:   { name: 'CLONEWORKS', hidden: true, bg: '#04110f', dim: '#12332e', mid: '#3f7d72', text: '#a8e6d8', bright: '#eafffa', accent: '#7dffb2', danger: '#ff5a7a', dangerDim: '#5a1f2c', money: '#e6ff8a', rarity: 'corp', common: '#a8e6d8', note: 'lab mint' },
     c_haute:        { name: 'HAUTE', hidden: true, bg: '#000000', dim: '#2a2a2a', mid: '#7a7a7a', text: '#e8e2d6', bright: '#ffffff', accent: '#d4af37', danger: '#e0245e', dangerDim: '#4f0d22', money: '#d4af37', rarity: 'corp', common: '#e8e2d6', exotic: '#fff0b8', note: 'black, white, gold' },
     c_ledger:       { name: 'LEDGER', hidden: true, bg: '#0a0f0a', dim: '#22301f', mid: '#5d7a52', text: '#cfe3c1', bright: '#f4fff0', accent: '#8fd16a', danger: '#ff5a4a', dangerDim: '#5a2018', money: '#e8d27a', rarity: 'corp', common: '#cfe3c1', note: 'money green' },
-    c_parcelnet:    { name: 'PARCELNET', hidden: true, bg: '#120c06', dim: '#3a2a14', mid: '#7a5a30', text: '#e0c8a0', bright: '#fff4e0', accent: '#ff9a1f', danger: '#ff4a3a', dangerDim: '#5a1e14', money: '#ffd166', rarity: 'corp', common: '#e0c8a0', note: 'brown box + orange' },
-    c_burgertron:   { name: 'BURGERTRON', hidden: true, bg: '#1a0606', dim: '#4a1414', mid: '#a03a2a', text: '#ffd9b0', bright: '#fff6e8', accent: '#ffcc00', danger: '#ff3030', dangerDim: '#5a1010', money: '#ffcc00', rarity: 'corp', common: '#ffd9b0', note: 'ketchup + mustard' },
-    c_nimbus:       { name: 'NIMBUS', hidden: true, bg: '#06101c', dim: '#1a3350', mid: '#4f7aa8', text: '#cfe4ff', bright: '#ffffff', accent: '#8fd8ff', danger: '#ff5a6a', dangerDim: '#5a1f2a', money: '#ffe08a', rarity: 'corp', common: '#cfe4ff', note: 'sky blue' },
     c_dewey:        { name: 'DEWEY', hidden: true, bg: '#0d0a06', dim: '#2f2616', mid: '#6e5c3a', text: '#e6d9b8', bright: '#fffaf0', accent: '#7fd18b', danger: '#e05a4a', dangerDim: '#4f1f18', money: '#e8c66a', rarity: 'corp', common: '#e6d9b8', note: 'wood + green lamp' },
     c_rydr:         { name: 'RYDR', hidden: true, bg: '#0a0a0f', dim: '#26263a', mid: '#5c5c80', text: '#d0d0e8', bright: '#ffffff', accent: '#ff4fd8', danger: '#ff4a4a', dangerDim: '#5a1a2a', money: '#ffd84a', rarity: 'corp', common: '#d0d0e8', note: 'night + hot pink' },
     c_safeharbor:   { name: 'SAFEHARBOR', hidden: true, bg: '#071022', dim: '#1c2c4c', mid: '#4f6a99', text: '#d6e2f5', bright: '#ffffff', accent: '#5fe0c8', danger: '#ff5a5a', dangerDim: '#5a1f24', money: '#e8d27a', rarity: 'corp', common: '#d6e2f5', note: 'navy + teal' },
@@ -45,8 +44,6 @@ window.NEON_PALETTES = {
     c_forgetmenot:  { name: 'FORGET', hidden: true, bg: '#0c0d18', dim: '#2a2c48', mid: '#6a6c9a', text: '#c8cae8', bright: '#f4f4ff', accent: '#9fb4ff', danger: '#ff6a8a', dangerDim: '#5a2034', money: '#e8d6a0', rarity: 'corp', common: '#c8cae8', note: 'faded lilac' },
     c_brightline:   { name: 'BRIGHTLINE', hidden: true, bg: '#0a0a06', dim: '#2e2a12', mid: '#7a6e2a', text: '#f0e6b0', bright: '#fffbe6', accent: '#ffe84a', danger: '#ff5a3a', dangerDim: '#5a2012', money: '#ffd23a', rarity: 'corp', common: '#f0e6b0', note: 'power yellow' },
     c_coldbrew:     { name: 'COLDBREW', hidden: true, bg: '#0f0a07', dim: '#33241a', mid: '#7a5a44', text: '#e8d6c4', bright: '#fff6ec', accent: '#e0aa70', danger: '#ff5a4a', dangerDim: '#5a1e18', money: '#f0c27a', rarity: 'corp', common: '#e8d6c4', note: 'coffee' },
-    c_mochi:        { name: 'MOCHI', hidden: true, bg: '#1a0a14', dim: '#4a2040', mid: '#a05a8a', text: '#ffd6ec', bright: '#ffffff', accent: '#ff8ac8', danger: '#ff4a6a', dangerDim: '#5a1a2c', money: '#ffe08a', rarity: 'corp', common: '#ffd6ec', note: 'pink' },
-    c_playtime:     { name: 'PLAYTIME', hidden: true, bg: '#0a0c1a', dim: '#24285a', mid: '#5a62b0', text: '#e0e4ff', bright: '#ffffff', accent: '#ffd23a', danger: '#ff3a3a', dangerDim: '#5a1414', money: '#ffd23a', rarity: 'corp', common: '#e0e4ff', note: 'toy blue + yellow' },
     c_medix:        { name: 'MEDIX', hidden: true, bg: '#06100f', dim: '#16302e', mid: '#4a8a84', text: '#d6f4f0', bright: '#ffffff', accent: '#5affd8', danger: '#ff3a4a', dangerDim: '#5a141c', money: '#e8f0a0', rarity: 'corp', common: '#d6f4f0', note: 'scrubs teal' },
     c_apiary:       { name: 'APIARY', hidden: true, bg: '#120d02', dim: '#3a2c08', mid: '#8a6a1a', text: '#f4e2b0', bright: '#fff8e0', accent: '#ffc21a', danger: '#ff5a2a', dangerDim: '#5a2010', money: '#ffc21a', rarity: 'corp', common: '#f4e2b0', note: 'honey' },
     c_kerning:      { name: 'KERNING', hidden: true, bg: '#0c0c0c', dim: '#2c2c2c', mid: '#6c6c6c', text: '#e6e6e6', bright: '#ffffff', accent: '#ff3a8a', danger: '#ff4a3a', dangerDim: '#5a1a14', money: '#e6d68a', rarity: 'corp', common: '#e6e6e6', note: 'print black + magenta' },
@@ -100,4 +97,18 @@ window.NEON_PALETTES = {
     c_blackout:     { name: 'BLACKOUT', hidden: true, bg: '#000000', dim: '#2a2a2a', mid: '#7a7a7a', text: '#d8d8d8', bright: '#ffffff', accent: '#ffe600', danger: '#ff2a2a', dangerDim: '#5a1010', money: '#ffb000', rarity: 'corp', common: '#d8d8d8', note: 'pitch black + emergency yellow' },
     c_omni:         { name: 'OMNI', hidden: true, bg: '#080203', dim: '#3a0f14', mid: '#7a2a33', text: '#d79a9f', bright: '#ffe1e3', accent: '#ffb3c0', danger: '#ff1f3a', dangerDim: '#5e1018', money: '#ffc36e', rarity: 'corp', common: '#d79a9f', font: { weight: 700, bold: 800 }, note: 'red on black, heavy' },
   },
+  // Player color styles: the colors of your name and logo (PROFILE > COLOR, multiplayer). Saved
+  // profiles store a style by its position here, so add new ones at the end.
+  styles: [
+    { name: 'NEON',   fg: '#3cf0ff', bg: '#06303a' },
+    { name: 'TOXIC',  fg: '#9dff3c', bg: '#16300a' },
+    { name: 'BLOOD',  fg: '#ff4d5e', bg: '#3a0a10' },
+    { name: 'GOLD',   fg: '#ffd84a', bg: '#3a2c06' },
+    { name: 'ULTRA',  fg: '#c07bff', bg: '#24103a' },
+    { name: 'VAPOR',  fg: '#ff79c6', bg: '#1a1030' },
+    { name: 'GHOST',  fg: '#e6f4ef', bg: '#2c3a38' },
+    { name: 'ICE',    fg: '#0b2a4a', bg: '#bfe6ff' },
+    { name: 'PAPER',  fg: '#111111', bg: '#efe9da' },
+    { name: 'HAZARD', fg: '#111111', bg: '#ffb000' },
+  ],
 };
