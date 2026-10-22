@@ -769,6 +769,16 @@ Agreed changes not built yet.
   caches and loot pay vs what things cost (market prices, repairs), and what money is for late in a run. The exotics
   that trade in money (BLOOD MONEY, LEVERAGE, COIN FLIP's $ bets) lean on this.
 
+- **Popup overlays over the board: reuse the coin box** (2026-10-22, the user). COIN FLIP (v12.19) already has the
+  pieces of a general "popup over a node": a **hold on a node** that opens it (`st.coinPress`, `coinTick` / `coinDrag`
+  in engine/input.js and engine/run.js), **drag to a choice and let go** (or keys: left / right, enter; Esc / let go
+  elsewhere cancels), and an **overlay drawn over the board and header** (`drawCoin` in engine/scene.js; `clearRect`
+  drops the characters under it, since characters always draw over backgrounds). The x N drop-in (`drawCoinPop`)
+  is a second overlay of the same kind. When something else wants a popup, pull these into one shared piece (e.g.
+  `nodePopup({ i, choices, onPick })`) instead of copying the coin's code. *(Claude)* possible uses: ALL OR NOTHING's
+  lever, items that target a node (PURGE on the node you hold), a quick info card for a node (its glyph / tell
+  marks), the fake ads (an ad box over the board), confirm prompts ("replace this mod?") without leaving the board.
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
