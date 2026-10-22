@@ -6,9 +6,10 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
-- [ ] **The game's web address, for link previews** (v12.00). Pasting the game's link into a chat can show a
-  preview card (`dist/preview.png`: the title art and a pitch), but the card needs the full address. Tell
-  Claude the URL, or replace `GAME_URL` in `dist/index.html` yourself.
+- [ ] **Upload `preview.png` to the root of gregschomburg.com/br/** (v12.00), above the version folders, once.
+  Every version's link preview points at `https://gregschomburg.com/br/preview.png`. It's `dist/preview.png`
+  (the title art and a pitch, no build number, so it never goes stale). Then paste a game link in a chat
+  to see the card.
 - [ ] **v12 on the web host** (v12.00). The game is now a folder: upload all of `dist/` (`engine/`, `data/`,
   `corps/`, the icons and `preview.png`, not just index.html). If a file is missed or a phone has an old copy,
   the title shows a red warning naming the file. Your v11 save should carry over on first load.

@@ -1560,7 +1560,9 @@ New builds are listed below as before.
   - **Save:** new slot `beta_runner.v12.save`; the first load copies the v11 save (and a run in progress).
   - **Meta tags:** description, link previews (og / twitter card with `preview.png`, the title art + a
     pitch), theme color, tab icon (`icon.svg`, the big N with a raised +1), phone home-screen icon. The preview
-    image needs the game's full web address: `GAME_URL` in index.html is a placeholder (on the review list).
+    image needs a full address: it points at one shared copy in the root of the user's game folder,
+    `https://gregschomburg.com/br/preview.png` (the version folders live under /br/), so no version has to change
+    it; the image has no build number in it.
   - **Tools:** `tools/check.js` (fingerprint: every corp's layers at 3 tiers x 3 seeds, maps, 38 data tables,
     340 function hashes; v12 matched v11.06 exactly), `tools/playtest.js` (plays all 78 corps in headless
     Chrome; 78/78 the same, 7 corps' hints run on the clock), `tools/bump.js`. `tell_odds.js` loads the
