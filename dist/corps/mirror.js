@@ -1,6 +1,14 @@
 // NeoN+1 corps/mirror.js
 'use strict';
-NEON_FILES.push(['corps/mirror.js', 'v12.01']);
+NEON_FILES.push(['corps/mirror.js', 'v12.02']);
+// Its boss mod: SHATTER (shatter), AFTERIMAGE (afterimage), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.glass = { name: 'GLASS ECHO',     bpm: 100, root: 52, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'offbeat', drums: 'four',  arp: 'mirror', pingpong: true };
+MUSIC_FOR.mirror = 'glass';
+
+// ---- the corp
 CORPS.mirror = {
   key: 'mirror', name: 'MIRRORLINE', letter: 'M', level: 2,
   intel: '"every step echoes the last."',

@@ -1,6 +1,19 @@
 // NeoN+1 corps/headline.js
 'use strict';
-NEON_FILES.push(['corps/headline.js', 'v12.01']);
+NEON_FILES.push(['corps/headline.js', 'v12.02']);
+// Its boss mod: SCOOP (scoop), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// HEADLINE's ticker.
+const NEWS_VERBS = ['markets crash', 'mayor resigns', 'icebergs sighted', 'cats elected', 'stocks soar', 'aliens land', 'pizza recalled', 'drones strike'];
+const NEWS_FILLER = ['LOCAL MAN WINS NOTHING', 'WEATHER: YES', 'EXPERTS BAFFLED', 'SPORTS: A TEAM WON', 'CELEB SAYS THING', 'NEW PHONE SAME AS OLD PHONE', 'TRAFFIC: BAD'];
+
+// ---- its music
+SONGS.newsdesk = { name: 'NEWS DESK',      bpm: 128, root: 48, scale: 'minor',    prog: [0, 3, 4, 4], bass: 'march',   drums: 'march', arp: 'up', tick: true };
+MUSIC_FOR.headline = 'newsdesk';
+
+// ---- the corp
 CORPS.headline = {
   key: 'headline', name: 'HEADLINE NEWS', letter: 'n', level: 3,
   intel: '"if it bleeds, it leads."',

@@ -1,6 +1,18 @@
 // NeoN+1 corps/luckeez.js
 'use strict';
-NEON_FILES.push(['corps/luckeez.js', 'v12.01']);
+NEON_FILES.push(['corps/luckeez.js', 'v12.02']);
+// Its boss mod: LET IT RIDE (letitride), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// LUCKEEZ reels, BIDBLITZ's host, BYTEPETS (E = eyes).
+const SLOT_SYMS = '7$@*%&#';
+
+// ---- its music
+SONGS.jackpot = { name: 'JACKPOT',        bpm: 126, root: 50, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'offbeat', drums: 'four',  arp: 'up', pingpong: true };
+MUSIC_FOR.luckeez = 'jackpot';
+
+// ---- the corp
 CORPS.luckeez = {
   key: 'luckeez', name: 'LUCKEEZ CASINO', letter: '7', level: 2,
   intel: '"everybody wins! eventually!"',

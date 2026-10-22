@@ -1,6 +1,14 @@
 // NeoN+1 corps/rydr.js
 'use strict';
-NEON_FILES.push(['corps/rydr.js', 'v12.01']);
+NEON_FILES.push(['corps/rydr.js', 'v12.02']);
+// Its boss mod: SURGE (surge), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.nightfare = { name: 'NIGHT FARE',     bpm: 98,  root: 46, scale: 'minor',    prog: [0, 6, 5, 4], bass: 'offbeat', drums: 'four',  arp: 'up' };
+MUSIC_FOR.rydr = 'nightfare';
+
+// ---- the corp
 CORPS.rydr = {
   key: 'rydr', name: 'RYDR', letter: 'Z', level: 2,
   intel: '"your driver is 2 minutes away."',

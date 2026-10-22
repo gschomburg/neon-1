@@ -1,6 +1,27 @@
 // NeoN+1 corps/hydra.js
 'use strict';
-NEON_FILES.push(['corps/hydra.js', 'v12.01']);
+NEON_FILES.push(['corps/hydra.js', 'v12.02']);
+// Its boss mod: HEADCOUNT (headcount), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+const HEAD_GLYPH = normMotif([" ,^, ", '<o o>', " 'v' "]);
+ // HYDRA's young heads
+// HYDRA: a free cell touching `t` (8 around it), or null.
+function freeNear(lv, t, r) {
+  const used = new Set(lv.tiles.map(o => o.cell)), out = [];
+  for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+    const col = t.col + dc, row = t.row + dr;
+    if ((dr || dc) && col >= 0 && col < lv.cols && row >= 0 && row < lv.rows && !used.has(row * lv.cols + col)) out.push(row * lv.cols + col);
+  }
+  return out.length ? pickR(out, r) : null;
+}
+
+// ---- its music
+SONGS.manyheads = { name: 'MANY HEADS',     bpm: 112, root: 40, scale: 'harmonic', prog: [0, 1, 0, 5], bass: 'gallop',  drums: 'heavy', arp: 'updown' };
+MUSIC_FOR.hydra = 'manyheads';
+
+// ---- the corp
 CORPS.hydra = {
   key: 'hydra', name: 'HYDRA', letter: '(', level: 3,
   intel: '"cut off one head..."',

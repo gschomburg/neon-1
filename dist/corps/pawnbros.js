@@ -1,6 +1,25 @@
 // NeoN+1 corps/pawnbros.js
 'use strict';
-NEON_FILES.push(['corps/pawnbros.js', 'v12.01']);
+NEON_FILES.push(['corps/pawnbros.js', 'v12.02']);
+// Its boss mod: CHANCE CARD (chancecard), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// PAWN BROS: the outer ring of the grid, clockwise from the top left (GO).
+function boardLoop(cols, rows) {
+  const out = [];
+  for (let c = 0; c < cols; c++) out.push(c);
+  for (let r = 1; r < rows; r++) out.push(r * cols + cols - 1);
+  for (let c = cols - 2; c >= 0; c--) out.push((rows - 1) * cols + c);
+  for (let r = rows - 2; r >= 1; r--) out.push(r * cols);
+  return out;
+}
+
+// ---- its music
+SONGS.freeparking = { name: 'FREE PARKING',   bpm: 112, root: 47, scale: 'major',    prog: [0, 5, 3, 4], bass: 'march',   drums: 'march', arp: 'up' };
+MUSIC_FOR.pawnbros = 'freeparking';
+
+// ---- the corp
 CORPS.pawnbros = {
   key: 'pawnbros', name: 'PAWN BROS', letter: 'x', level: 3,
   intel: '"do not pass GO. well, ok, pass it."',

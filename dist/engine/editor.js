@@ -1,6 +1,6 @@
 // NeoN+1 engine/editor.js: The palette editor bridge (only with ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v12.01']);
+NEON_FILES.push(['engine/editor.js', 'v12.02']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with

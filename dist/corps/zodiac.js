@@ -1,6 +1,22 @@
 // NeoN+1 corps/zodiac.js
 'use strict';
-NEON_FILES.push(['corps/zodiac.js', 'v12.01']);
+NEON_FILES.push(['corps/zodiac.js', 'v12.02']);
+// Its boss mod: HOROSCOPE (horoscope), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+const ZODIAC = [
+  ['ARI', 'fire'], ['LEO', 'fire'], ['SAG', 'fire'], ['TAU', 'earth'], ['VIR', 'earth'], ['CAP', 'earth'],
+  ['GEM', 'air'], ['LIB', 'air'], ['AQU', 'air'], ['CAN', 'water'], ['SCO', 'water'], ['PIS', 'water'],
+];
+const ELEMENT_MARK = { fire: '^ ^ ^', earth: '# # #', air: '= = =', water: '~ ~ ~' };
+const ELEMENT_OPPOSITE = { fire: 'air', air: 'fire', earth: 'water', water: 'earth' };
+
+// ---- its music
+SONGS.retrograde = { name: 'RETROGRADE',     bpm: 84,  root: 46, scale: 'phrygian', prog: [0, 6, 5, 1], bass: 'offbeat', drums: 'half',  arp: 'mirror', pingpong: true, echo: 0.5, feedback: 0.45 };
+MUSIC_FOR.zodiac = 'retrograde';
+
+// ---- the corp
 CORPS.zodiac = {
   key: 'zodiac', name: 'ZODIAC HOUSE', letter: 'O', level: 2,
   intel: '"the stars never lie. we do."',

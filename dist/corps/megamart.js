@@ -1,6 +1,14 @@
 // NeoN+1 corps/megamart.js
 'use strict';
-NEON_FILES.push(['corps/megamart.js', 'v12.01']);
+NEON_FILES.push(['corps/megamart.js', 'v12.02']);
+// Its boss mod: COUPON (coupon), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.aisle9 = { name: 'AISLE 9',        bpm: 96,  root: 45, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'pulse',   drums: 'half',  arp: 'up' };
+MUSIC_FOR.megamart = 'aisle9';
+
+// ---- the corp
 CORPS.megamart = {
   key: 'megamart', name: 'MEGAMART', letter: 'R', level: 1,
   intel: '"everyday low prices. everyday."',

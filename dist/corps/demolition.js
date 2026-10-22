@@ -1,6 +1,14 @@
 // NeoN+1 corps/demolition.js
 'use strict';
-NEON_FILES.push(['corps/demolition.js', 'v12.01']);
+NEON_FILES.push(['corps/demolition.js', 'v12.02']);
+// Its boss mod: CONTROLLED BLAST (blast), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.wreckingball = { name: 'WRECKING BALL', bpm: 100, root: 38, scale: 'minor',   prog: [0, 6, 5, 4], bass: 'eighths', drums: 'heavy', arp: 'up' };
+MUSIC_FOR.demolition = 'wreckingball';
+
+// ---- the corp
 CORPS.demolition = {
   key: 'demolition', name: 'DEMOLITION CO', letter: 'q', level: 4,
   intel: '"everything must go. almost."',

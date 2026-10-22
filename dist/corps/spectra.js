@@ -1,6 +1,21 @@
 // NeoN+1 corps/spectra.js
 'use strict';
-NEON_FILES.push(['corps/spectra.js', 'v12.01']);
+NEON_FILES.push(['corps/spectra.js', 'v12.02']);
+// Its boss mod: PRISM (prism), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// SPECTRA's colors, each with its own shape.
+const RAINBOW = [
+  { n: 'red', c: '#ff4a4a', ch: '#' }, { n: 'orange', c: '#ff9a2a', ch: '%' }, { n: 'yellow', c: '#ffe84a', ch: '*' },
+  { n: 'green', c: '#4aff6a', ch: '+' }, { n: 'blue', c: '#4ab0ff', ch: '=' }, { n: 'violet', c: '#c86aff', ch: '~' },
+];
+
+// ---- its music
+SONGS.prismatic = { name: 'PRISMATIC',      bpm: 112, root: 49, scale: 'dorian',   prog: [0, 2, 4, 5], bass: 'offbeat', drums: 'four',  arp: 'mirror', pingpong: true };
+MUSIC_FOR.spectra = 'prismatic';
+
+// ---- the corp
 // ---- Tier 2, group 6: node colors (each color also has its own shape, for color-blind
 // players).
 CORPS.spectra = {

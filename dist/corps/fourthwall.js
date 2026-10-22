@@ -1,6 +1,29 @@
 // NeoN+1 corps/fourthwall.js
 'use strict';
-NEON_FILES.push(['corps/fourthwall.js', 'v12.01']);
+NEON_FILES.push(['corps/fourthwall.js', 'v12.02']);
+// Its boss mod: SPOILER (spoiler), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+function fwLines(top, colTop) {
+  const chat = [];
+  const killer = Object.entries(save.corpStats || {}).sort((a, b) => (b[1].lost || 0) - (a[1].lost || 0))[0];
+  if (killer && killer[1].lost) chat.push(`> ${killer[1].lost} deaths to ${corpDef(killer[0]).name.toLowerCase()}. again?`);
+  chat.push(`> ${save.runs} runs. ${save.wins} wins. hm.`);
+  const m = st.run && st.run.mods.length ? MODS[st.run.mods[Math.floor(Math.random() * st.run.mods.length)]] : null;
+  chat.push(m ? `> ${m.name.toLowerCase()}? bold choice.` : '> no mods? brave.');
+  const d = new Date(), hh = d.getHours();
+  chat.push(`> it's ${hh}:${String(d.getMinutes()).padStart(2, '0')}. ${hh >= 23 || hh < 5 ? 'go to bed.' : 'on company time?'}`);
+  chat.push('> i can see your cursor, you know.');
+  return { tell: `> ${FW_ZONE[top]}${colTop != null ? ` + col ${colTop + 1}` : ''}? not today.`, chat };
+}
+const FW_BUTTONS = ['  OK ', 'RETRY', ' SEND', ' HELP', ' [X] ', ' (x) ', ' [+] ', ' {x} ', ' [*] ', 'CLOSE', ' x   ', ' [k] '];
+
+// ---- its music
+SONGS.bluescreen = { name: 'BLUE SCREEN',    bpm: 100, root: 45, scale: 'phrygian', prog: [0, 1, 0, 1], bass: 'offbeat', drums: 'four',  arp: 'down', tick: true };
+MUSIC_FOR.fourthwall = 'bluescreen';
+
+// ---- the corp
 CORPS.fourthwall = {
   key: 'fourthwall', name: 'FOURTH WALL', letter: ']', level: 5,
   intel: '"hi. yes, you. holding the phone."',

@@ -1,6 +1,14 @@
 // NeoN+1 corps/channel9.js
 'use strict';
-NEON_FILES.push(['corps/channel9.js', 'v12.01']);
+NEON_FILES.push(['corps/channel9.js', 'v12.02']);
+// Its boss mod: REMOTE (remote), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.snow = { name: 'SNOW',           bpm: 96,  root: 44, scale: 'minor',    prog: [0, 6, 5, 4], bass: 'pulse',   drums: 'half',  arp: 'mirror', echo: 0.45, feedback: 0.4 };
+MUSIC_FOR.channel9 = 'snow';
+
+// ---- the corp
 CORPS.channel9 = {
   key: 'channel9', name: 'CHANNEL 9', letter: '9', level: 3,
   intel: '"stay tuned."',

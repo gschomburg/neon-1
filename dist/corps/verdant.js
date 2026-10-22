@@ -1,6 +1,14 @@
 // NeoN+1 corps/verdant.js
 'use strict';
-NEON_FILES.push(['corps/verdant.js', 'v12.01']);
+NEON_FILES.push(['corps/verdant.js', 'v12.02']);
+// Its boss mod: COMPOST (compost), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.regrowth = { name: 'REGROWTH',       bpm: 96,  root: 47, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'pulse',   drums: 'half',  arp: 'mirror', pingpong: true };
+MUSIC_FOR.verdant = 'regrowth';
+
+// ---- the corp
 CORPS.verdant = {
   key: 'verdant', name: 'VERDANT', letter: 'v', level: 3,
   intel: '"nothing is wasted. nothing."',

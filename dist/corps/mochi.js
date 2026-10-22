@@ -1,6 +1,20 @@
 // NeoN+1 corps/mochi.js
 'use strict';
-NEON_FILES.push(['corps/mochi.js', 'v12.01']);
+NEON_FILES.push(['corps/mochi.js', 'v12.02']);
+// Its boss mod: FRIENDSHIP (friendship), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// MOCHI MOCHI faces, ears and feet; PLAYTIME toys.
+const MOCHI_FACES = ['(^.^)', '(o.o)', '(=.=)', '(>.<)', '(*.*)', '(-.-)', '(^o^)', '(u.u)', "('.')", '(o_o)', '(^_^)', '(;.;)', '(@.@)', '(n.n)'];
+const MOCHI_TOPS = ['/\\ /\\', ' ^ ^ ', ' o o ', '  *  ', ' ~ ~ ', '(\\ /)'];
+const MOCHI_BOTS = [' u u ', ' <3  ', '  w  ', ' ) ( ', ' v v ', ' " " '];
+
+// ---- its music
+SONGS.pikopiko = { name: 'PIKO PIKO',      bpm: 136, root: 52, scale: 'major',    prog: [0, 4, 5, 3], bass: 'offbeat', drums: 'four',  arp: 'up', pingpong: true };
+MUSIC_FOR.mochi = 'pikopiko';
+
+// ---- the corp
 CORPS.mochi = {
   key: 'mochi', name: 'MOCHI MOCHI', letter: '^', level: 1,
   intel: '"you found us!! yay!!"',

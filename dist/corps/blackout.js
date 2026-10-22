@@ -1,6 +1,14 @@
 // NeoN+1 corps/blackout.js
 'use strict';
-NEON_FILES.push(['corps/blackout.js', 'v12.01']);
+NEON_FILES.push(['corps/blackout.js', 'v12.02']);
+// Its boss mod: FLARE (flare), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.lightsout = { name: 'LIGHTS OUT',     bpm: 80,  root: 38, scale: 'minor',    prog: [0, 6, 5, 6], style: 'ambient', echo: 0.7, feedback: 0.6 };
+MUSIC_FOR.blackout = 'lightsout';
+
+// ---- the corp
 CORPS.blackout = {
   key: 'blackout', name: 'BLACKOUT', letter: '5', level: 3, dark: true,
   intel: '"lights out. stay where you are."',

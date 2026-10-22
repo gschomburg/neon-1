@@ -1,6 +1,14 @@
 // NeoN+1 corps/haute.js
 'use strict';
-NEON_FILES.push(['corps/haute.js', 'v12.01']);
+NEON_FILES.push(['corps/haute.js', 'v12.02']);
+// Its boss mod: RUNWAY (runway), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.catwalk = { name: 'CATWALK',        bpm: 120, root: 41, scale: 'phrygian', prog: [0, 1, 5, 1], bass: 'offbeat', drums: 'four',  arp: 'down' };
+MUSIC_FOR.haute = 'catwalk';
+
+// ---- the corp
 CORPS.haute = {
   key: 'haute', name: 'HAUTE//COUTURE', letter: 'H', level: 2,
   intel: '"accept no imitations."',

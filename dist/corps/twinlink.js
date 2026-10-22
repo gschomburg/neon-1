@@ -1,6 +1,14 @@
 // NeoN+1 corps/twinlink.js
 'use strict';
-NEON_FILES.push(['corps/twinlink.js', 'v12.01']);
+NEON_FILES.push(['corps/twinlink.js', 'v12.02']);
+// Its boss mod: LINKUP (linkup), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.duet = { name: 'DUET',           bpm: 110, root: 44, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'offbeat', drums: 'four',  arp: 'mirror', pingpong: true };
+MUSIC_FOR.twinlink = 'duet';
+
+// ---- the corp
 CORPS.twinlink = {
   key: 'twinlink', name: 'TWINLINK', letter: ':', level: 4,
   intel: '"better together."',

@@ -1,6 +1,23 @@
 // NeoN+1 corps/lexicon.js
 'use strict';
-NEON_FILES.push(['corps/lexicon.js', 'v12.01']);
+NEON_FILES.push(['corps/lexicon.js', 'v12.02']);
+// Its boss mod: SPELLBOUND (spellbound), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+const LEX_WORDS = {
+  animal: ['TIGER', 'HORSE', 'MOUSE', 'SNAKE', 'EAGLE', 'SHARK', 'ZEBRA', 'OTTER', 'CAMEL'],
+  tech: ['PIXEL', 'LASER', 'ROBOT', 'MODEM', 'CABLE', 'CACHE', 'PROXY', 'VIRUS', 'TOKEN', 'LOGIC'],
+  food: ['PIZZA', 'BREAD', 'MANGO', 'LEMON', 'SUSHI', 'TACOS', 'CANDY', 'BACON'],
+  color: ['GREEN', 'BLACK', 'WHITE', 'AMBER', 'CORAL', 'IVORY', 'OLIVE'],
+};
+const LETTERS = 'ABCDEFGHIJKLMNOPRSTUVWY';
+
+// ---- its music
+SONGS.typeset = { name: 'TYPESET',        bpm: 100, root: 48, scale: 'minor',    prog: [0, 3, 6, 5], bass: 'march',   drums: 'four',  arp: 'up' };
+MUSIC_FOR.lexicon = 'typeset';
+
+// ---- the corp
 CORPS.lexicon = {
   key: 'lexicon', name: 'LEXICON', letter: 'X', level: 3,
   intel: '"in the beginning was the word."',

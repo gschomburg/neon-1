@@ -1,6 +1,17 @@
 // NeoN+1 corps/basic.js
 'use strict';
-NEON_FILES.push(['corps/basic.js', 'v12.01']);
+NEON_FILES.push(['corps/basic.js', 'v12.02']);
+// Its boss mod: BASIC TRAINING (basictraining), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+const PLAIN_GLYPH = normMotif(['', '[ ]', '']);
+
+// ---- its music
+SONGS.plaintext = { name: 'PLAIN TEXT',     bpm: 100, root: 48, scale: 'dorian',   prog: [0, 3, 4, 0], bass: 'pulse',   drums: 'half',  arp: 'up' };
+MUSIC_FOR.basic = 'plaintext';
+
+// ---- the corp
 CORPS.basic = {
   key: 'basic', name: 'BASIC CORP', letter: 'B', level: 1,
   intel: '"we do one thing. it is this."',

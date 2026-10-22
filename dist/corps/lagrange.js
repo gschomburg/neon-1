@@ -1,6 +1,32 @@
 // NeoN+1 corps/lagrange.js
 'use strict';
-NEON_FILES.push(['corps/lagrange.js', 'v12.01']);
+NEON_FILES.push(['corps/lagrange.js', 'v12.02']);
+// Its boss mod: PRECOG (precog), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+function lagSlide(lv) {
+  const now = performance.now();
+  for (const t of lv.tiles) {
+    const wrap = t.col === lv.cols - 1;
+    slideTo(lv, t, lagNext(lv, t), 300);
+    if (wrap) { t.slide = null; t.wrapAt = now; }   // wraps around: jumps to the left edge (no drawing off the board)
+  }
+  Sound.whoosh();
+}
+// a tap that waited for the slide: whatever is in that cell now gets picked
+function lagLand(lv, cell) {
+  const i = lv.tiles.findIndex(t => t.cell === cell && t.state === 'closed');
+  if (i < 0) { setMsg('> lag: it landed on nothing.', C.mid); Sound.deny(); return; }
+  st.lagBypass = true;
+  pick(i);
+}
+
+// ---- its music
+SONGS.lightlag = { name: 'LIGHT LAG',      bpm: 92,  root: 46, scale: 'dorian',   prog: [0, 3, 5, 4], bass: 'pulse',   drums: 'half',  arp: 'updown', echo: 0.75, feedback: 0.55 };
+MUSIC_FOR.lagrange = 'lightlag';
+
+// ---- the corp
 CORPS.lagrange = {
   key: 'lagrange', name: 'LAGRANGE NET', letter: '2', level: 5, moves: true,
   intel: '"we\'ll get back to you. eventually."',

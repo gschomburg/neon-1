@@ -1,6 +1,14 @@
 // NeoN+1 corps/bitrot.js
 'use strict';
-NEON_FILES.push(['corps/bitrot.js', 'v12.01']);
+NEON_FILES.push(['corps/bitrot.js', 'v12.02']);
+// Its boss mod: LAST BYTE (lastbyte), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.corrupted = { name: 'CORRUPTED',      bpm: 114, root: 39, scale: 'phrygian', prog: [0, 1, 0, 6], bass: 'gallop',  drums: 'heavy', arp: 'mirror', tick: true };
+MUSIC_FOR.bitrot = 'corrupted';
+
+// ---- the corp
 CORPS.bitrot = {
   key: 'bitrot', name: 'BITROT', letter: '1', level: 5,
   intel: '"all data decays. yours first."',

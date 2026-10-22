@@ -1,6 +1,55 @@
 // NeoN+1 corps/playball.js
 'use strict';
-NEON_FILES.push(['corps/playball.js', 'v12.01']);
+NEON_FILES.push(['corps/playball.js', 'v12.02']);
+// Its boss mod: OVERTIME (overtime), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// PLAYBALL: ball physics in screen cells. The paddles sit on row 7 and just under the board.
+function pbServe(lv, b, now) {
+  const yB = BOARD_Y + L.gh;
+  Object.assign(b, { x: lv.pad, y: yB - 0.6, vx: (Math.random() < 0.5 ? -1 : 1) * rand(6, 10), vy: -7, out: false, at: now });
+}
+function pbStep(lv, b, h, now) {
+  const left = L.gx - 0.5, right = L.gx + L.gw - 0.5, yT = BOARD_Y - 1, yB = BOARD_Y + L.gh;
+  const px = b.x, py = b.y;
+  b.x += b.vx * h; b.y += b.vy * h;
+  if (b.x < left) { b.x = 2 * left - b.x; b.vx = Math.abs(b.vx); }
+  if (b.x > right) { b.x = 2 * right - b.x; b.vx = -Math.abs(b.vx); }
+  // the paddles (both move together)
+  for (const [row, dir] of [[yT, 1], [yB, -1]]) {
+    const crossing = dir > 0 ? b.y <= row + 0.5 && py > row + 0.5 : b.y >= row - 0.5 && py < row - 0.5;
+    if (!crossing) continue;
+    if (Math.abs(b.x - lv.pad) <= 4.6) {
+      b.y = row + 0.5 * dir; b.vy = Math.abs(b.vy) * dir;
+      b.vx = clamp(b.vx + (b.x - lv.pad) * 1.3, -15, 15);
+      Sound.tick();
+    }
+  }
+  if (b.y < yT - 0.6 || b.y > yB + 0.6) { b.out = true; return 'out'; }
+  // nodes: bounce off closed ones and bump them
+  for (const t of lv.tiles) {
+    if (t.state !== 'closed') continue;
+    const { tx, ty } = tileOrigin(t), w = t.wide ? TILE_W * 2 + GAP_X : TILE_W;
+    if (b.x < tx - 0.5 || b.x > tx + w - 0.5 || b.y < ty - 0.5 || b.y > ty + TILE_H - 0.5) continue;
+    const wasIn = px >= tx - 0.5 && px <= tx + w - 0.5;
+    if (wasIn) b.vy = -b.vy; else b.vx = -b.vx;
+    b.x = px; b.y = py;
+    if (t.safe) { t.ringAt = now; Sound.ping(1760); }
+    else {
+      t.bumps = (t.bumps || 0) + 1; t.bumpAt = now;
+      if (t.bumps >= 2) lockTile(t, C.mid, 'crack'); else Sound.tick();
+    }
+    return 'bump';
+  }
+  return null;
+}
+
+// ---- its music
+SONGS.seventhinning = { name: 'SEVENTH INNING', bpm: 132, root: 50, scale: 'major', prog: [0, 3, 4, 3], bass: 'eighths', drums: 'four',  arp: 'updown', pingpong: true };
+MUSIC_FOR.playball = 'seventhinning';
+
+// ---- the corp
 CORPS.playball = {
   key: 'playball', name: 'PLAYBALL', letter: '0', level: 5, drag: true,
   intel: '"it\'s not whether you win. it is."',

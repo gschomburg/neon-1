@@ -1,6 +1,14 @@
 // NeoN+1 corps/decibel.js
 'use strict';
-NEON_FILES.push(['corps/decibel.js', 'v12.01']);
+NEON_FILES.push(['corps/decibel.js', 'v12.02']);
+// Its boss mod: STETHOSCOPE (stethoscope), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.loudness = { name: 'LOUDNESS WAR',   bpm: 122, root: 42, scale: 'minor',    prog: [0, 3, 6, 5], bass: 'eighths', drums: 'heavy', arp: 'updown' };
+MUSIC_FOR.decibel = 'loudness';
+
+// ---- the corp
 CORPS.decibel = {
   key: 'decibel', name: 'DECIBEL LABS', letter: ')', level: 5, drag: true,
   intel: '"can you hear that?"',

@@ -1,6 +1,24 @@
 // NeoN+1 corps/halflife.js
 'use strict';
-NEON_FILES.push(['corps/halflife.js', 'v12.01']);
+NEON_FILES.push(['corps/halflife.js', 'v12.02']);
+// Its boss mod: LEAD LINING (leadlining), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// HALFLIFE: which node the Geiger counter is on, and the corp's radiation limit (s).
+function geigerAt(lv, lt) {
+  const gg = lv.geiger;
+  if (!gg) return null;
+  const open = gg.order.filter(t => t.state === 'closed');
+  return open.length ? open[Math.floor(lt / gg.per) % open.length] : null;
+}
+const radLimit = c => (c.tier >= 2 ? 7 : 8) * c.counts.length;
+
+// ---- its music
+SONGS.falloutd = { name: 'FALLOUT',        bpm: 108, root: 38, scale: 'harmonic', prog: [0, 1, 5, 4], bass: 'gallop',  drums: 'heavy', arp: 'down' };
+MUSIC_FOR.halflife = 'falloutd';
+
+// ---- the corp
 CORPS.halflife = {
   key: 'halflife', name: 'HALFLIFE NUCLEAR', letter: 'h', level: 4,
   intel: '"perfectly safe. mostly."',

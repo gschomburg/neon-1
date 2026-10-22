@@ -1,6 +1,39 @@
 // NeoN+1 corps/aegis.js
 'use strict';
-NEON_FILES.push(['corps/aegis.js', 'v12.01']);
+NEON_FILES.push(['corps/aegis.js', 'v12.02']);
+// Its boss mod: AMBUSH (ambush), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// AEGIS: the line breaks through at the bottom.
+async function aegisBreach(lv) {
+  const run = st.run, real = lv.tiles[lv.safe];
+  st.busy = true;
+  lv.scanned = true;   // no perfect after a breach
+  const bottom = lv.tiles.filter(t => t.row === lv.rows - 1 && t.state === 'closed');
+  if (!st.god) run.integrity -= 1;
+  Sound.trap(); shake(9); flash(C.danger, 0.18, 0.35);
+  if (bottom.includes(real)) {
+    setMsg('> it broke through. -1 int.', C.danger);
+    await wait(500);
+    if (run.integrity <= 0) return die();
+    return onSafe(real);
+  }
+  for (const t of bottom) lockTile(t, C.danger, 'breach');
+  setMsg('> breach! -1 int. they fall back.', C.danger);
+  await wait(450);
+  if (run.integrity <= 0) return die();
+  const top = Math.min(...lv.tiles.map(t => t.row));
+  for (const t of lv.tiles) slideTo(lv, t, t.cell - top * lv.cols, 520);
+  await wait(slideMs(520));
+  st.busy = false; lv.readyAt = performance.now();
+}
+
+// ---- its music
+SONGS.warpath = { name: 'WAR PATH',       bpm: 108, root: 40, scale: 'minor',    prog: [0, 0, 5, 6], bass: 'march',   drums: 'march', arp: 'up' };
+MUSIC_FOR.aegis = 'warpath';
+
+// ---- the corp
 CORPS.aegis = {
   key: 'aegis', name: 'AEGIS DEFENSE', letter: 'g', level: 4, moves: true,
   intel: '"hold the line. then take it."',

@@ -1,6 +1,42 @@
 // NeoN+1 corps/gravitas.js
 'use strict';
-NEON_FILES.push(['corps/gravitas.js', 'v12.01']);
+NEON_FILES.push(['corps/gravitas.js', 'v12.02']);
+// Its boss mod: ANTIGRAV (antigrav), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// GRAVITAS: gravity. Everything falls and stacks, except the floaters (the real node; deeper,
+// one decoy on the first drop), which rise one row, past the node above if they have to.
+async function gravDrop(lv, own = true) {
+  const g = lv.grav, real = lv.tiles[lv.safe];
+  g.n++;
+  if (own) st.busy = true;
+  const floats = t => t.state === 'closed' && (t === real || (t === g.bounce && g.n === 1));
+  let moved = false;
+  for (let col = 0; col < lv.cols; col++) {
+    const list = lv.tiles.filter(t => t.col === col).sort((a, b) => a.row - b.row);
+    const f = list.find(floats), others = list.filter(t => t !== f), place = new Map();
+    if (!f) others.forEach((t, j) => place.set(t, lv.rows - others.length + j));
+    else {
+      const want = Math.max(0, f.row - 1), top = lv.rows - others.length;
+      if (want < top) { others.forEach((t, j) => place.set(t, top + j)); place.set(f, want); }
+      else {
+        const top2 = top - 1, pIdx = want - top2, stack = others.slice();
+        stack.splice(pIdx, 0, f);
+        stack.forEach((t, j) => place.set(t, top2 + j));
+      }
+    }
+    for (const [t, row] of place) if (row !== t.row) { slideTo(lv, t, row * lv.cols + col, 420); moved = true; }
+  }
+  if (moved) { Sound.whoosh(); await wait(slideMs(420) + 40); shake(2); }
+  if (own && st.lv === lv) { st.busy = false; lv.readyAt = performance.now(); }
+}
+
+// ---- its music
+SONGS.freefall = { name: 'FREE FALL',      bpm: 100, root: 43, scale: 'dorian',   prog: [0, 6, 5, 4], bass: 'eighths', drums: 'four',  arp: 'down', echo: 0.45, feedback: 0.45 };
+MUSIC_FOR.gravitas = 'freefall';
+
+// ---- the corp
 CORPS.gravitas = {
   key: 'gravitas', name: 'GRAVITAS LABS', letter: 'I', level: 5, moves: true,
   intel: '"what goes up. you know the rest."',

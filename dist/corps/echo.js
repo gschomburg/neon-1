@@ -1,6 +1,14 @@
 // NeoN+1 corps/echo.js
 'use strict';
-NEON_FILES.push(['corps/echo.js', 'v12.01']);
+NEON_FILES.push(['corps/echo.js', 'v12.02']);
+// Its boss mod: FOGHORN (foghorn), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.sonar = { name: 'SONAR',          bpm: 76,  root: 44, scale: 'minor',    prog: [0, 5, 6, 4], style: 'ambient', echo: 0.7, feedback: 0.6 };
+MUSIC_FOR.echo = 'sonar';
+
+// ---- the corp
 CORPS.echo = {
   key: 'echo', name: 'ECHO LABS', letter: 'e', level: 3,
   intel: '"we hear everything. ping."',

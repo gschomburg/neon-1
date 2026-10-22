@@ -1,6 +1,14 @@
 // NeoN+1 corps/brightline.js
 'use strict';
-NEON_FILES.push(['corps/brightline.js', 'v12.01']);
+NEON_FILES.push(['corps/brightline.js', 'v12.02']);
+// Its boss mod: GROUNDED (grounded), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.brownout = { name: 'BROWNOUT',       bpm: 100, root: 45, scale: 'minor',    prog: [0, 5, 3, 4], bass: 'pulse',   drums: 'four',  arp: 'up', tick: true };
+MUSIC_FOR.brightline = 'brownout';
+
+// ---- the corp
 // ---- Tier 2, group 1: node animation (corp `fx`). fx(t, ft, lv) runs every frame for
 // each closed node; ft is the node's own clock (it stops while the node is frozen).
 CORPS.brightline = {

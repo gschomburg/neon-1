@@ -1,6 +1,17 @@
 // NeoN+1 corps/choir.js
 'use strict';
-NEON_FILES.push(['corps/choir.js', 'v12.01']);
+NEON_FILES.push(['corps/choir.js', 'v12.02']);
+// Its boss mod: SACRIFICE (sacrifice), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+const FACE_CH = ['\\', '^', '/', '<', 'o', '>', '/', 'v', '\\'];
+
+// ---- its music
+SONGS.hymnal = { name: 'HYMNAL',         bpm: 66,  root: 41, scale: 'major',    prog: [0, 3, 4, 0], style: 'ambient', echo: 0.7, feedback: 0.55 };
+MUSIC_FOR.choir = 'hymnal';
+
+// ---- the corp
 CORPS.choir = {
   key: 'choir', name: 'THE CHOIR', letter: 'c', level: 3,
   intel: '"have faith. or pay. both work."',

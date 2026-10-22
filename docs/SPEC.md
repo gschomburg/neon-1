@@ -348,7 +348,8 @@ neon+1/
                             sound, music, screen, effects, scene, screens, render, run, panels, help,
                             codex, menus, active, input, dev, multiplayer, boot, editor
       data/              <- pure data: glyphs, title art, personas, mods + items, music tracks
-      corps/             <- one file per corp (78): its definition, codex text and intro art
+      corps/             <- one file per corp (78): its definition, its own helpers, codex text, intro art
+                            and music (its boss mod is noted at the top; it lives in data/mods.js)
     prototypes/          <- old versions, frozen (was versions/)
       v01_core/beta_runner_v01.html
       v02_overworld/ ... v06_online/
@@ -1551,6 +1552,13 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.02** (2026-10-22): **self-contained corp files.** Each `corps/KEY.js` now also holds the helpers only that
+  corp uses (49 of them moved out of `engine/corpkit.js`: MONTE's cups and shuffle, NOIR's statements, HALFLIFE's
+  geiger, MOCHI's faces...) and its music track (`SONGS.<track>` + `MUSIC_FOR.KEY`, all 78). `corpkit.js` keeps only
+  what's shared (488 -> 243 lines; the kit list at its top is regenerated: 81 names). Boss mods stay in
+  `data/mods.js`, because the order of MODS decides reward rolls (moving a corp's mod would change which mods get
+  offered); each corp file starts with a note naming its boss mod. Plays exactly the same (fingerprint and all 78
+  corps). The dev music player now lists the menu / map / OMNI tracks first, then the corps' in corp order.
 - **v12.01** (2026-10-22): **rarity chips** (the user's idea: "all the items and mods always have a bg color and a text
   color... everywhere in the game so we never need to worry about readability").
   - Each rarity is a fixed pair, a text color on its own background, the same in every palette ("light chips", the

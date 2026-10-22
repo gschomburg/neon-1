@@ -1,6 +1,14 @@
 // NeoN+1 corps/apiary.js
 'use strict';
-NEON_FILES.push(['corps/apiary.js', 'v12.01']);
+NEON_FILES.push(['corps/apiary.js', 'v12.02']);
+// Its boss mod: HONEYCOMB (honeycomb), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.hive = { name: 'HIVE MIND',      bpm: 112, root: 46, scale: 'harmonic', prog: [0, 1, 0, 5], bass: 'eighths', drums: 'four',  arp: 'mirror', pingpong: true };
+MUSIC_FOR.apiary = 'hive';
+
+// ---- the corp
 CORPS.apiary = {
   key: 'apiary', name: 'APIARY', letter: '@', level: 3,
   intel: '"long live the queen."',

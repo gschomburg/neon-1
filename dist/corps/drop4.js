@@ -1,6 +1,34 @@
 // NeoN+1 corps/drop4.js
 'use strict';
-NEON_FILES.push(['corps/drop4.js', 'v12.01']);
+NEON_FILES.push(['corps/drop4.js', 'v12.02']);
+// Its boss mod: FOUR IN A ROW (fourinarow), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// DROP-4: a stacked board (chips fall to the bottom) where exactly one chip blocks a line of
+// four: three of one color plus it. Returns { cells, color, blocker } or null.
+function dropLayout(cols, rows, n, r) {
+  const h = Array(cols).fill(0);
+  for (let i = 0; i < n; i++) { const open = h.map((v, c) => c).filter(c => h[c] < rows); if (!open.length) return null; h[pickR(open, r)]++; }
+  const cells = [], color = {};
+  for (let c = 0; c < cols; c++) for (let k = 0; k < h[c]; k++) { const cell = (rows - 1 - k) * cols + c; cells.push(cell); color[cell] = r() < 0.5; }
+  const at = (c, rw) => c >= 0 && c < cols && rw >= 0 && rw < rows && color[rw * cols + c] != null ? rw * cols + c : null;
+  const blockers = new Set();
+  for (let c = 0; c < cols; c++) for (let rw = 0; rw < rows; rw++) for (const [dc, dr] of [[1, 0], [0, 1], [1, 1], [1, -1]]) {
+    const line = [0, 1, 2, 3].map(j => at(c + dc * j, rw + dr * j));
+    if (line.some(x => x == null)) continue;
+    const xs = line.filter(x => color[x]);
+    if (xs.length === 3) blockers.add(line.find(x => !color[x]));
+    if (xs.length === 1) blockers.add(xs[0]);
+  }
+  return blockers.size === 1 ? { cells, color, blocker: [...blockers][0] } : null;
+}
+
+// ---- its music
+SONGS.gravitydrop = { name: 'GRAVITY DROP',   bpm: 118, root: 45, scale: 'minor',    prog: [0, 3, 4, 0], bass: 'eighths', drums: 'four',  arp: 'down' };
+MUSIC_FOR.drop4 = 'gravitydrop';
+
+// ---- the corp
 CORPS.drop4 = {
   key: 'drop4', name: 'DROP-4', letter: '4', level: 3,
   intel: '"four in a row. or bust."',

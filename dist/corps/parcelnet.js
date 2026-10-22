@@ -1,6 +1,14 @@
 // NeoN+1 corps/parcelnet.js
 'use strict';
-NEON_FILES.push(['corps/parcelnet.js', 'v12.01']);
+NEON_FILES.push(['corps/parcelnet.js', 'v12.02']);
+// Its boss mod: PRIORITY (priority), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.conveyor = { name: 'CONVEYOR',       bpm: 112, root: 45, scale: 'minor',    prog: [0, 4, 5, 3], bass: 'eighths', drums: 'four',  arp: 'up' };
+MUSIC_FOR.parcelnet = 'conveyor';
+
+// ---- the corp
 CORPS.parcelnet = {
   key: 'parcelnet', name: 'PARCELNET', letter: 'N', level: 1,
   intel: '"it\'s out for delivery. somewhere."',

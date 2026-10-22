@@ -1,6 +1,14 @@
 // NeoN+1 corps/medix.js
 'use strict';
-NEON_FILES.push(['corps/medix.js', 'v12.01']);
+NEON_FILES.push(['corps/medix.js', 'v12.02']);
+// Its boss mod: TRIAGE (triage), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.vitals = { name: 'VITALS',         bpm: 60,  root: 44, scale: 'dorian',   prog: [0, 5, 3, 4], bass: 'pulse',   drums: 'half',  arp: 'down', echo: 0.5, feedback: 0.4 };
+MUSIC_FOR.medix = 'vitals';
+
+// ---- the corp
 CORPS.medix = {
   key: 'medix', name: 'MEDIX', letter: 'm', level: 2,
   intel: '"this might sting a little."',

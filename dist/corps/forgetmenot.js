@@ -1,6 +1,14 @@
 // NeoN+1 corps/forgetmenot.js
 'use strict';
-NEON_FILES.push(['corps/forgetmenot.js', 'v12.01']);
+NEON_FILES.push(['corps/forgetmenot.js', 'v12.02']);
+// Its boss mod: PHOTOGRAPHIC (photographic), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.forget = { name: 'FORGET',         bpm: 72,  root: 45, scale: 'dorian',   prog: [0, 5, 3, 4], style: 'ambient', echo: 0.65, feedback: 0.55 };
+MUSIC_FOR.forgetmenot = 'forget';
+
+// ---- the corp
 CORPS.forgetmenot = {
   key: 'forgetmenot', name: 'FORGET-ME-NOT', letter: 'V', level: 3,
   intel: '"you were here before. remember?"',

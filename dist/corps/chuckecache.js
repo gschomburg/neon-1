@@ -1,6 +1,18 @@
 // NeoN+1 corps/chuckecache.js
 'use strict';
-NEON_FILES.push(['corps/chuckecache.js', 'v12.01']);
+NEON_FILES.push(['corps/chuckecache.js', 'v12.02']);
+// Its boss mod: CONTINUE? (continue), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// CHUCK E. CACHE'S sprites.
+const ARCADE_GLYPHS = [[' .-. ', '(o o)', '|^^^|'], ['/oo\\', '<-->', ' /\\ '], [' ^ ^ ', '(@ @)', ' >-< '], ['[- -]', '|ooo|', ' | | '], ['  o  ', ' /|\\ ', ' / \\ '], [' _ _ ', '(*_*)', '/   \\'], ['.-=-.', '|o o|', "'-=-'"], ['<o o>', ' \\_/ ', ' / \\ ']].map(normMotif);
+
+// ---- its music
+SONGS.insertcoin = { name: 'INSERT COIN',    bpm: 140, root: 52, scale: 'major',    prog: [0, 5, 3, 4], bass: 'gallop',  drums: 'four',  arp: 'updown', tick: true };
+MUSIC_FOR.chuckecache = 'insertcoin';
+
+// ---- the corp
 CORPS.chuckecache = {
   key: 'chuckecache', name: "CHUCK E. CACHE'S", letter: 'u', level: 3,
   intel: '"where a hacker can be a kid!"',

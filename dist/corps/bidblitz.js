@@ -1,6 +1,18 @@
 // NeoN+1 corps/bidblitz.js
 'use strict';
-NEON_FILES.push(['corps/bidblitz.js', 'v12.01']);
+NEON_FILES.push(['corps/bidblitz.js', 'v12.02']);
+// Its boss mod: SNIPE (snipe), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+const AUCTION_CALLS = ['going once!', 'going twice!', 'do I hear 10?', 'bid now! BID NOW!', 'look at this ICE!'];
+const AUCTION_SOLD = ['SOLD!', 'SOLD to the runner!', 'SOLD! another?', 'what a steal!'];
+
+// ---- its music
+SONGS.pennybid = { name: 'PENNY BID',      bpm: 140, root: 48, scale: 'major',    prog: [0, 4, 5, 3], bass: 'gallop',  drums: 'four',  arp: 'updown', tick: true };
+MUSIC_FOR.bidblitz = 'pennybid';
+
+// ---- the corp
 // ---- Tier 2, group 4: corps with a button on the hint row (corp `action`) or a choice.
 CORPS.bidblitz = {
   key: 'bidblitz', name: 'BIDBLITZ LIVE', letter: 'a', level: 3,

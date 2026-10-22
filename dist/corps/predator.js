@@ -1,6 +1,14 @@
 // NeoN+1 corps/predator.js
 'use strict';
-NEON_FILES.push(['corps/predator.js', 'v12.01']);
+NEON_FILES.push(['corps/predator.js', 'v12.02']);
+// Its boss mod: INFRARED (infrared), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.thermal = { name: 'THERMAL',        bpm: 86,  root: 38, scale: 'minor',    prog: [0, 6, 0, 5], bass: 'pulse',   drums: 'half',  arp: 'down', echo: 0.55, feedback: 0.5 };
+MUSIC_FOR.predator = 'thermal';
+
+// ---- the corp
 CORPS.predator = {
   key: 'predator', name: 'PREDATOR', letter: '<', level: 4, moves: true,
   intel: '"we see you. we see your heat."',

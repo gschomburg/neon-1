@@ -1,6 +1,21 @@
 // NeoN+1 corps/playtime.js
 'use strict';
-NEON_FILES.push(['corps/playtime.js', 'v12.01']);
+NEON_FILES.push(['corps/playtime.js', 'v12.02']);
+// Its boss mod: JACK-IN-THE-BOX (jackbox), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+const TOY_GLYPHS = [
+  [' _|_ ', '(___)', '  V  '], ['[o_o]', ' /|\\ ', ' / \\ '], [' \\o/ ', ' |_| ', '[___]'], [' .-. ', '( o )', " '-' "],
+  ['  __ ', '<(o )', '(___)'], ['  __ ', '_/__\\', '-o--o'], ['+---+', '| A |', '+---+'], [' (@) ', '  |  ', '  |  '],
+  ['_[]_ ', '|___|', 'o-o-o'], ['  /\\ ', ' <  >', '  \\/ '], ['()_()', '(o.o)', '(___)'], ['  |  ', '-(+)-', '  |  '],
+].map(normMotif);
+
+// ---- its music
+SONGS.windup = { name: 'WIND UP',        bpm: 124, root: 50, scale: 'major',    prog: [0, 3, 4, 0], bass: 'march',   drums: 'march', arp: 'updown' };
+MUSIC_FOR.playtime = 'windup';
+
+// ---- the corp
 CORPS.playtime = {
   key: 'playtime', name: 'PLAYTIME', letter: '&', level: 1,
   intel: '"wind it up and watch it go!"',

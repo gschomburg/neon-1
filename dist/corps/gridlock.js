@@ -1,6 +1,18 @@
 // NeoN+1 corps/gridlock.js
 'use strict';
-NEON_FILES.push(['corps/gridlock.js', 'v12.01']);
+NEON_FILES.push(['corps/gridlock.js', 'v12.02']);
+// Its boss mod: GREEN WAVE (greenwave), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// GRIDLOCK: a node's traffic light at time `now`.
+const lightOf = (lv, t, now) => { const c = lv.lights.cyc, p = (now + (t.ph || 0)) % c; return p < c * 0.42 ? 'green' : p < c * 0.58 ? 'amber' : 'red'; };
+
+// ---- its music
+SONGS.redlight = { name: 'RED LIGHT',      bpm: 120, root: 45, scale: 'phrygian', prog: [0, 1, 0, 6], bass: 'eighths', drums: 'four',  arp: 'up', tick: true };
+MUSIC_FOR.gridlock = 'redlight';
+
+// ---- the corp
 CORPS.gridlock = {
   key: 'gridlock', name: 'GRIDLOCK TRAFFIC', letter: 'r', level: 4,
   intel: '"please wait for the signal."',

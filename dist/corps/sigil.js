@@ -1,6 +1,14 @@
 // NeoN+1 corps/sigil.js
 'use strict';
-NEON_FILES.push(['corps/sigil.js', 'v12.01']);
+NEON_FILES.push(['corps/sigil.js', 'v12.02']);
+// Its boss mod: SIGSCAN (sigscan), FORGERY (forgery), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.velvet = { name: 'VELVET HEX',     bpm: 92,  root: 46, scale: 'phrygian', prog: [0, 1, 0, 6], bass: 'pulse',   drums: 'half',  arp: 'updown' };
+MUSIC_FOR.sigil = 'velvet';
+
+// ---- the corp
 CORPS.sigil = {
   key: 'sigil', name: 'SIGIL DYNAMICS', letter: 'S', level: 2,
   intel: '"we sign everything we make."',

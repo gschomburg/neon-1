@@ -1,6 +1,14 @@
 // NeoN+1 corps/burgertron.js
 'use strict';
-NEON_FILES.push(['corps/burgertron.js', 'v12.01']);
+NEON_FILES.push(['corps/burgertron.js', 'v12.02']);
+// Its boss mod: SUPERSIZE (supersize), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.drivethru = { name: 'DRIVE THRU',     bpm: 126, root: 48, scale: 'dorian',   prog: [0, 3, 4, 3], bass: 'offbeat', drums: 'four',  arp: 'updown' };
+MUSIC_FOR.burgertron = 'drivethru';
+
+// ---- the corp
 CORPS.burgertron = {
   key: 'burgertron', name: 'BURGERTRON', letter: 'U', level: 1,
   intel: '"have it your way. one way."',

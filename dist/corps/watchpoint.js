@@ -1,6 +1,14 @@
 // NeoN+1 corps/watchpoint.js
 'use strict';
-NEON_FILES.push(['corps/watchpoint.js', 'v12.01']);
+NEON_FILES.push(['corps/watchpoint.js', 'v12.02']);
+// Its boss mod: CCTV (cctv), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.nightshift = { name: 'NIGHT SHIFT',    bpm: 84,  root: 42, scale: 'dorian',   prog: [0, 6, 5, 4], bass: 'offbeat', drums: 'half',  arp: 'down', echo: 0.45, feedback: 0.4 };
+MUSIC_FOR.watchpoint = 'nightshift';
+
+// ---- the corp
 CORPS.watchpoint = {
   key: 'watchpoint', name: 'WATCHPOINT', letter: 'w', level: 3,
   intel: '"smile. you\'re on camera."',

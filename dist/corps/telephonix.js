@@ -1,6 +1,18 @@
 // NeoN+1 corps/telephonix.js
 'use strict';
-NEON_FILES.push(['corps/telephonix.js', 'v12.01']);
+NEON_FILES.push(['corps/telephonix.js', 'v12.02']);
+// Its boss mod: CALLER ID (callerid), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+// TELEPHONIX keypad: [key, letters]. CHOIR: which way a follower faces (by [dx, dy]).
+const PHONE_KEYS = [['1', ''], ['2', 'ABC'], ['3', 'DEF'], ['4', 'GHI'], ['5', 'JKL'], ['6', 'MNO'], ['7', 'PQRS'], ['8', 'TUV'], ['9', 'WXYZ'], ['*', ''], ['0', ''], ['#', '']];
+
+// ---- its music
+SONGS.onhold = { name: 'ON HOLD',        bpm: 88,  root: 50, scale: 'major',    prog: [0, 5, 3, 4], bass: 'pulse',   drums: 'half',  arp: 'up' };
+MUSIC_FOR.telephonix = 'onhold';
+
+// ---- the corp
 CORPS.telephonix = {
   key: 'telephonix', name: 'TELEPHONIX', letter: 't', level: 3,
   intel: '"please hold. your call matters."',

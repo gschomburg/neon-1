@@ -1,6 +1,14 @@
 // NeoN+1 corps/seekr.js
 'use strict';
-NEON_FILES.push(['corps/seekr.js', 'v12.01']);
+NEON_FILES.push(['corps/seekr.js', 'v12.02']);
+// Its boss mod: AUTOCOMPLETE (autocomplete), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.query = { name: 'QUERY',          bpm: 110, root: 47, scale: 'dorian',   prog: [0, 4, 5, 3], bass: 'offbeat', drums: 'four',  arp: 'updown' };
+MUSIC_FOR.seekr = 'query';
+
+// ---- the corp
 CORPS.seekr = {
   key: 'seekr', name: 'SEEKR', letter: 'Q', level: 1,
   intel: '"did you mean: give up?"',

@@ -1,6 +1,17 @@
 // NeoN+1 corps/bullettime.js
 'use strict';
-NEON_FILES.push(['corps/bullettime.js', 'v12.01']);
+NEON_FILES.push(['corps/bullettime.js', 'v12.02']);
+// Its boss mod: TIMEWARP (timewarp), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its own helpers
+const BT_SPIN = '|/-\\';
+
+// ---- its music
+SONGS.slowmotion = { name: 'SLOW MOTION',    bpm: 120, root: 44, scale: 'minor',    prog: [0, 5, 3, 6], bass: 'eighths', drums: 'four',  arp: 'up', echo: 0.6, feedback: 0.5 };
+MUSIC_FOR.bullettime = 'slowmotion';
+
+// ---- the corp
 CORPS.bullettime = {
   key: 'bullettime', name: 'BULLET TIME INC', letter: '}', level: 5, slowmo: true,
   intel: '"there is no hurry. except yours."',

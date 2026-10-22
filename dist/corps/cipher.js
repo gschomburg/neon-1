@@ -1,6 +1,14 @@
 // NeoN+1 corps/cipher.js
 'use strict';
-NEON_FILES.push(['corps/cipher.js', 'v12.01']);
+NEON_FILES.push(['corps/cipher.js', 'v12.02']);
+// Its boss mod: PARITY (parity), defined with the others in data/mods.js (their order there
+// decides reward rolls), its effect in engine/run.js or engine/active.js.
+
+// ---- its music
+SONGS.enigma = { name: 'ENIGMA',         bpm: 104, root: 43, scale: 'phrygian', prog: [0, 1, 5, 6], bass: 'offbeat', drums: 'four',  arp: 'mirror', tick: true };
+MUSIC_FOR.cipher = 'enigma';
+
+// ---- the corp
 CORPS.cipher = {
   key: 'cipher', name: 'CIPHER', letter: '{', level: 4, cipher: true,
   intel: '"we have nothing to hide. read it yourself."',
