@@ -1552,6 +1552,9 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v12.03** (2026-10-22): market / reward offers you can't take (too expensive, sold, locked) keep their rarity: the
+  key color as text, no chip (they used to go plain grey). The palette editor's market scene gives 999 credits, so
+  every offer shows its chip.
 - **v12.02** (2026-10-22): **self-contained corp files.** Each `corps/KEY.js` now also holds the helpers only that
   corp uses (49 of them moved out of `engine/corpkit.js`: MONTE's cups and shuffle, NOIR's statements, HALFLIFE's
   geiger, MOCHI's faces...) and its music track (`SONGS.<track>` + `MUSIC_FOR.KEY`, all 78). `corpkit.js` keeps only

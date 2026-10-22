@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v12.02']);
+NEON_FILES.push(['engine/map.js', 'v12.03']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the

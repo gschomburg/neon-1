@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.02']);
+NEON_FILES.push(['engine/scene.js', 'v12.03']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -252,8 +252,9 @@ function putChip(put, bg, x, y, text, r, own = 'ui', bold = false) {
 // Draws one mod badge on its rarity chip: an animated icon character plus its short name.
 // Animation gets fancier with rarity: common = still. Flashes invert the chip (dark on key color
 // becomes key color on dark), so a badge always reads. EXOTIC breaks the rule on purpose: its
-// letters cycle through every rarity's chip. Dim (spent, can't use) = plain grey, no chip.
-function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own = 'tray', noCharges = false, tier = 0, bg = null } = {}) {
+// letters cycle through every rarity's chip. Dim (spent, can't use) = plain grey, no chip. Muted
+// (a market offer you can't afford) = the rarity's key color as text, no chip.
+function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own = 'tray', noCharges = false, tier = 0, bg = null, muted = false } = {}) {
   const m = tierView(MODS[key], tier || 0);
   const lvl = RARITY[m.rarity].lvl, chip0 = chipOf(m.rarity);
   const phase = i * 0.77, t = (now / 1000 + phase) % 4;
@@ -262,7 +263,7 @@ function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own 
   const anim = lvl === 0 ? 'none' : lvl === 3 ? 'exotic' : m.anim;
   const flash = (anim === 'blink' && t % 2 < 0.12) || (anim === 'spin' && t < 0.4);
   const cell = (cx, ch, inv, chip, dy = 0) => {
-    if (dim || !bg) { put(cx, y + dy, ch, dim ? C.mid : chip.bg, own, lvl >= 4); return; }
+    if (dim || muted || !bg) { put(cx, y + dy, ch, dim ? C.mid : chip.bg, own, lvl >= 4); return; }
     bg(cx, y, 1, inv ? chip.fg : chip.bg, 1);
     put(cx, y + dy, ch, inv ? chip.bg : chip.fg, own, lvl >= 4);
   };
@@ -855,13 +856,18 @@ function buildTextBoard(ctx, lines, area = null) {
       // The selection cursor sits outside the row, clear of its background color.
       if (ln.sel) put(x - 2, y, '>', C.accent, 'ui', true);
       let cx = x + 1;
-      if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg, dim: !!ln.faded }) + 1;
+      if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg, muted: !!ln.faded }) + 1;
+      // faded (can't afford, sold, locked): the rarity stays, quieter: its key color as text, no chip
       if (ln.chip && !ln.faded) putChip(put, bg, cx, y, ln.name, ln.chip, 'ui', !!ln.sel);
+      else if (ln.chip) put(cx, y, ln.name, chipOf(ln.chip).bg, 'ui', !!ln.sel);
       else put(cx, y, ln.name, ln.faded ? C.mid : (ln.col || C.bright), 'ui', !!ln.sel);
       if (ln.right) {
         const rx = x + LW - ln.right.length;
         put(rx, y, ln.right, ln.faded ? C.dim : (ln.rightCol || C.mid), 'ui');
-        if (ln.rightChips && !ln.faded) for (const c of rarityChips(ln.right)) putChip(put, bg, rx + c.from, y, ln.right.substr(c.from, c.len), c.r, 'ui');
+        if (ln.rightChips) for (const c of rarityChips(ln.right)) {
+          if (ln.faded) put(rx + c.from, y, ln.right.substr(c.from, c.len), chipOf(c.r).bg, 'ui');
+          else putChip(put, bg, rx + c.from, y, ln.right.substr(c.from, c.len), c.r, 'ui');
+        }
       }
       if (!ln.disabled) addHit(x, y, LW, 1, { kind: 'btn', id: ln.id, onTap: ln.onTap });
     } else if (ln.row) {
