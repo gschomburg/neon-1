@@ -1,6 +1,6 @@
 // NeoN+1 corps/famiglia.js
 'use strict';
-NEON_FILES.push(['corps/famiglia.js', 'v12.15']);
+NEON_FILES.push(['corps/famiglia.js', 'v12.16']);
 // Its boss mod: OMERTA (omerta), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -22,7 +22,7 @@ CORPS.famiglia = {
   action(lv) {
     const pr = lv.protect;
     if (!pr) return null;
-    return { label: pr.paid ? 'PAID' : `PROTECT ${pr.price}cr`, ok: !pr.paid && st.run.credits >= pr.price && candidates().length > 1, use() {
+    return { label: pr.paid ? 'PAID' : `PROTECT ${pr.price}cr`, ok: !pr.paid && canSpend(pr.price) && candidates().length > 1, use() {
       const ice = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
       if (!ice.length) return;
       st.run.credits -= pr.price; pr.paid = true;

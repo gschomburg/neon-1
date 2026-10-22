@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v12.15']);
+NEON_FILES.push(['engine/scene.js', 'v12.16']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -133,7 +133,9 @@ function buildScene(now, collectHits, raw = false) {
       where = `${c.def.name} ${prog}`;
     } else if (st.mode === 'panel') where = st.panelTitle || '';
     put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.danger : C.text);
-    putR(3, `${(st.mode === 'play' && st.corp && st.corp.def.money) || 'CR'} ${run.credits}`, C.money);
+    // LEVERAGE: in debt the credits go red, with your limit after them (CR -120/-150)
+    const crTxt = `${(st.mode === 'play' && st.corp && st.corp.def.money) || 'CR'} ${run.credits}${leverage() && run.credits < 0 ? '/' + creditFloor() : ''}`;
+    putR(3, crTxt, run.credits < 0 ? C.danger : C.money);
   } else {
     put(0, 2, `BEST ${pad2(save.best)}   RUNS ${save.runs}   WINS ${save.wins}`, C.mid);
   }
@@ -343,7 +345,9 @@ function buildTray(ctx, y) {
     put(0, y + 1, '\\_', C.mid);
     putChip(put, bg, 2, y + 1, m.short, m.rarity, 'tray', true);
     const tip = key === 'mutate' && run.mutateAs && MODS[run.mutateAs] ? `now: ${MODS[run.mutateAs].name.toLowerCase()}.`
-      : key === 'honeycomb' ? `honey ${run.honey || 0}/3. ${m.tip}` : m.tip;
+      : key === 'honeycomb' ? `honey ${run.honey || 0}/3. ${m.tip}`
+      : key === 'leverage' ? (run.credits < 0 ? `debt shield ${Math.round(debtShield() * 100)}%. limit ${creditFloor()}.` : `no debt. limit ${creditFloor()}.`)
+      : key === 'zombie' ? `rot ${run.rot || 0}/${ROT.max}. ${tapsToBreak()} taps a node.` : m.tip;
     put(6, y + 1, tip, C.text);
     const status = modSpent(key) ? ['(spent)', C.danger] : m.active ? (modUsable(key) ? ['>tap', C.accent] : ['(not now)', C.dim]) : null;
     if (status) put(7 + tip.length, y + 1, status[0], status[1]);

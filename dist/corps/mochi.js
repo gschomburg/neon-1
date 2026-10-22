@@ -1,6 +1,6 @@
 // NeoN+1 corps/mochi.js
 'use strict';
-NEON_FILES.push(['corps/mochi.js', 'v12.15']);
+NEON_FILES.push(['corps/mochi.js', 'v12.16']);
 // Its boss mod: FRIENDSHIP (friendship), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -41,7 +41,7 @@ CORPS.mochi = {
   // ICE costs credits instead of integrity, while you have them
   block(t, lv) {
     const run = st.run, cost = lv.boss ? 20 : 10;
-    if (run.credits < cost) return null;
+    if (!canSpend(cost)) return null;
     run.credits -= cost; Sound.shield(); flash(C.accent, 0.1, 0.3);
     return `> ICE. "sorry!!" -${cost}cr.`;
   },

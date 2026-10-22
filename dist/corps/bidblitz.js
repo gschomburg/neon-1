@@ -1,6 +1,6 @@
 // NeoN+1 corps/bidblitz.js
 'use strict';
-NEON_FILES.push(['corps/bidblitz.js', 'v12.15']);
+NEON_FILES.push(['corps/bidblitz.js', 'v12.16']);
 // Its boss mod: SNIPE (snipe), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -32,7 +32,7 @@ CORPS.bidblitz = {
   action(lv) {
     const a = lv.auction;
     if (!a) return null;
-    return { label: `BID ${a.price}cr`, ok: st.run.credits >= a.price && candidates().length > 1, use() {
+    return { label: `BID ${a.price}cr`, ok: canSpend(a.price) && candidates().length > 1, use() {
       const ice = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
       if (!ice.length) return;
       st.run.credits -= a.price; a.bids++; a.price += a.step;

@@ -1,6 +1,6 @@
 // NeoN+1 corps/safeharbor.js
 'use strict';
-NEON_FILES.push(['corps/safeharbor.js', 'v12.15']);
+NEON_FILES.push(['corps/safeharbor.js', 'v12.16']);
 // Its boss mod: POLICY (policy), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -30,7 +30,7 @@ CORPS.safeharbor = {
       t.glyph = g;
     });
   },
-  onEnter() { const run = st.run, p = Math.min(10, run.credits); run.credits -= p; if (p) setMsg(`> premium paid: -${p}cr`, C.money); },
+  onEnter() { const run = st.run, p = Math.max(0, Math.min(10, run.credits - creditFloor())); run.credits -= p; if (p) setMsg(`> premium paid: -${p}cr`, C.money); },
   onHit() { st.run.credits += 5; st.run.earned += 5; },
 };
 

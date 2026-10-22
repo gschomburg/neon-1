@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v12.15']);
+NEON_FILES.push(['data/mods.js', 'v12.16']);
 
 const RARITY = {
   common: { label: 'COMMON', lvl: 0 },
@@ -164,4 +164,7 @@ const MODS = {
   bloodmoney:    { name: 'BLOOD MONEY',    short: 'BLD', kind: 'exotic', rarity: 'exotic', slot: 'health', icon: '$+$-', anim: 'exotic', price: 120,
     tip: 'your credits are your health.', desc: '+100cr now. from then on ICE hits cost credits, not integrity. broke and hit: you die.',
     codex: 'you sell your health: +100cr now, and every ICE hit (and every other hurt) costs credits instead of integrity, 20cr plus 10 a sector. can\x27t pay and you\x27re dead (FAILSAFE catches it once). healing pays you credits instead. the market is now where you buy your life back.' },
+  leverage:      { name: 'LEVERAGE',       short: 'LVG', kind: 'exotic', rarity: 'exotic', slot: 'money', icon: '-$-%', anim: 'exotic', price: 90,
+    tip: 'go into debt. debt shields you.', desc: 'your credits can go below 0. the deeper in debt, the more often ICE does nothing. debt grows each layer.',
+    codex: 'credits can go negative, down to a limit (-150, and -100 more each sector): buy on credit, pay for things you can\x27t afford. the deeper in debt, the better the chance an ICE hit does no damage (up to 60%). debt grows 10% every layer, and past the limit the collectors take 1 integrity a layer.' },
 };

@@ -2,7 +2,7 @@
 
 The EXOTIC rarity exists but has **no mods** yet (the only exotic thing is the WARP item). Exotics should
 bend the rules of the game, not just give bigger numbers. Several change how a layer works, so each needs
-thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
+thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15), LEVERAGE (v12.16)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
 user's.
 
 Mods for corps that don't exist yet stay with those corp ideas (SPEC §17). Mods that need the fake ads
@@ -32,6 +32,7 @@ other mod. A first set of slots:
 | `carry` | what carries between layers | ICE THAT COMES WITH YOU (maybe WORM) |
 | `slots` | the tray itself (items vs mods) | the slot trade |
 | `health` | what a hit costs you (integrity vs credits / something else) | BLOOD MONEY, ZOMBIE (they clash) |
+| `money` | how low your credits can go | LEVERAGE |
 
 (Clash warning text from the slot: "ICE EATER changes how layers are won. it will replace QUANTUM.")
 
@@ -185,6 +186,22 @@ slot: `health` (it rewrites what a hit costs: there's nothing left to lose), so 
 - Look: the runner card / logo goes grey or glitched, the HUD says `FLATLINED` where integrity was, maybe a
   zombie take on your palette (washed-out green). The death screen could say "you died. again."
 - Pairs: with ICE EATER it's a feeding game. With money for health: same slot, can't have both.
+
+## LEVERAGE — BUILT v12.16 (the user's debt idea, 2026-10-22; was in SPEC §16f)
+
+Credits can go negative, and debt makes you stronger. One mod for both halves of the idea. Built:
+- Credits can go below 0, down to a **limit** (-150, and -100 more each sector). Buy on credit, tithe, bid, pay
+  OMERTA / FRIENDSHIP, CONTINUE?, BLOOD MONEY hits: all can spend into debt.
+- **Debt shield:** in debt, an ICE hit does nothing with odds debt / 250 (up to 60%): "too big to fail".
+- **Interest:** debt grows 10% (at least 2cr) every layer. **Past the limit** the collectors take 1 integrity a layer.
+- With **BLOOD MONEY**: a hit you can't pay goes into debt instead of killing you (until the limit).
+- Numbers: `DEBT` in engine/mods.js. Still open: a LEDGER TRUST rework around debt (its boss mod could offer a
+  bigger limit); cashing out in debt (today it doesn't matter: the score counts what you earned).
+
+## Some corp boss mods might be exotics (the user, 2026-10-22; later)
+
+A few of the wilder corp boss mods change the game enough that they might belong in EXOTIC. Not now: just a note to
+go through them sometime and bump some up (they'd move to the exotic pool and get a rule slot).
 
 ## QUANTUM
 

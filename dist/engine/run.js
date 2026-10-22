@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v12.15']);
+NEON_FILES.push(['engine/run.js', 'v12.16']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -359,6 +359,12 @@ async function enterLayer() {
   lv.readyAt = performance.now();
   lv.shownAt = lv.readyAt;   // unlike readyAt, this one doesn't reset after a miss
   c.express = false;
+  // LEVERAGE: debt grows every layer; past the limit the collectors take 1 integrity
+  if (leverage() && run.credits < 0 && n > 1 && c.hasBoss) {
+    run.credits -= Math.max(2, Math.round(-run.credits * DEBT.interest));
+    modFired('leverage');
+    if (run.credits < creditFloor()) { hurt(1); Sound.trap(); flash(C.danger, 0.15, 0.3); setMsg('> the collectors came. -1.', C.danger); if (run.integrity <= 0) return die(); }
+  }
   // ZOMBIE: every layer adds rot
   if (zombie() && n > 1 && c.hasBoss) { addRot(ROT.layer); if (run.integrity <= 0) return die(); }
 }
@@ -444,7 +450,7 @@ function layerTick(now) {
   if (lv.petAt && now > lv.petAt) {
     lv.petAt = null;
     const opts = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
-    if (st.run.credits < 1) setMsg('> no treats, no sniffing. (0cr)', C.mid);
+    if (!canSpend(1)) setMsg('> no treats, no sniffing. (0cr)', C.mid);
     else if (opts.length && candidates().length > 1) {
       st.run.credits -= 1;
       lockTile(pickR(opts, rngFor(st.run.seed, 'pet', st.corp.node.id, st.corp.idx)), C.accent, 'companion');
@@ -713,7 +719,8 @@ const END_FX = {
       else setMsg(`> let it ride: lost ${c.ride}cr.`, C.danger);
       c.ride = 0;
     } else if (perfect && c.idx < c.counts.length && lv.paid > 0) {
-      c.ride = Math.min(lv.paid, run.credits);
+      c.ride = Math.min(lv.paid, Math.max(0, run.credits));   // (in debt: nothing to bet)
+      if (!c.ride) return false;
       run.credits -= c.ride;
       setMsg(`> let it ride: ${c.ride}cr riding.`, C.money);
     } else return false;
@@ -895,14 +902,16 @@ function addRot(n) {
   run.rot = (run.rot || 0) + n;
   if (run.rot >= ROT.max) { run.rot = ROT.max; run.integrity = 0; }
 }
+// LEVERAGE: the odds an ICE hit does nothing, from how deep in debt you are.
+const debtShield = () => Math.min(DEBT.shieldMax, Math.max(0, -st.run.credits) / DEBT.shieldPer);
 const canHeal = () => zombie() ? (st.run.rot || 0) > 0 : bloodMoney() ? true : st.run.integrity < st.run.maxInt;
 // BLOOD MONEY: a hurt of n costs credits. Can't pay: you're dead (integrity 0), unless FAILSAFE
 // catches it (you're left broke). Returns what it cost.
 function payBlood(n) {
   const run = st.run, cost = bloodCost(n);
   modFired('bloodmoney');
-  if (run.credits >= cost) { run.credits -= cost; return cost; }
-  run.credits = 0;
+  if (canSpend(cost)) { run.credits -= cost; return cost; }   // (LEVERAGE: into debt)
+  run.credits = Math.min(run.credits, Math.max(creditFloor(), 0));
   if (has('failsafe') && !run.failsafeUsed) { run.failsafeUsed = true; st.fsAt = performance.now(); if (st.lv) st.lv.failsafeNow = true; return cost; }
   run.integrity = 0;
   return cost;
@@ -1037,6 +1046,11 @@ function blockHit(t, i) {
     t.shattered = true;   // drawn as cracked glass, not a red hit
     modFired('shatter');
     msg = '> ICE shattered. no damage.';
+  } else if (leverage() && run.credits < 0 && rngFor(run.seed, 'debt', st.corp.node.id, st.corp.idx, lv.misses)() < debtShield()) {
+    // LEVERAGE: too big to fail. The deeper in debt, the more often a hit does nothing.
+    Sound.shield(); flash(C.money, 0.14, 0.3); shake(4);
+    modFired('leverage');
+    msg = '> ICE. too big to fail.';
   } else if (lv.rolled && !lv.rollUsed) {
     lv.rollUsed = true; lv.payCut = 1;
     Sound.shield(); flash(C.accent, 0.14, 0.3); shake(4);
@@ -1055,15 +1069,15 @@ function blockHit(t, i) {
     Sound.shield(); flash(C.accent, 0.12, 0.3);
     modFired('greenwave');
     msg = '> ICE. green wave: no damage.';
-  } else if (has('omerta') && run.credits >= Math.max(15, Math.floor(run.credits * 0.1))) {
-    const cost = Math.max(15, Math.floor(run.credits * 0.1));
+  } else if (has('omerta') && canSpend(Math.max(15, Math.floor(Math.max(0, run.credits) * 0.1)))) {
+    const cost = Math.max(15, Math.floor(Math.max(0, run.credits) * 0.1));
     run.credits -= cost;
     Sound.shield(); flash(C.money, 0.1, 0.3);
     modFired('omerta');
     msg = `> ICE. omerta: -${cost}cr. say nothing.`;
   } else if (st.corp.hasBoss && st.corp.def.block && (msg = st.corp.def.block(t, lv))) {
     // a corp's own rule took the hit (the message is set)
-  } else if (has('friendship') && !st.corp.friendUsed && run.credits >= 10) {
+  } else if (has('friendship') && !st.corp.friendUsed && canSpend(10)) {
     st.corp.friendUsed = true; run.credits -= 10;
     Sound.shield(); flash(C.accent, 0.1, 0.3);
     modFired('friendship');
@@ -1272,7 +1286,7 @@ function grantLoot(r, tier) {
 async function die() {
   // CONTINUE?: once per run, 10 seconds to pay 100cr and keep going
   const run0 = st.run;
-  if (run0 && has('continue') && !zombie() && !run0.continueUsed && run0.credits >= 100 && st.lv && !st.mp) {
+  if (run0 && has('continue') && !zombie() && !run0.continueUsed && canSpend(100) && st.lv && !st.mp) {
     run0.continueUsed = true;
     modFired('continue');
     const go = await askContinue();

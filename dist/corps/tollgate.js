@@ -1,6 +1,6 @@
 // NeoN+1 corps/tollgate.js
 'use strict';
-NEON_FILES.push(['corps/tollgate.js', 'v12.15']);
+NEON_FILES.push(['corps/tollgate.js', 'v12.16']);
 // Its boss mod: EZPASS (ezpass), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -29,7 +29,7 @@ CORPS.tollgate = {
     const { tx } = tileOrigin({ col: lv.booth, row: 0 });
     return { text: '|=|', col: C.accent, x: tx + 2 };
   },
-  onPick() { const run = st.run; if (run.credits >= 2) run.credits -= 2; },
+  onPick() { const run = st.run; if (canSpend(2)) run.credits -= 2; },
 };
 
 // the codex, once you've beaten it

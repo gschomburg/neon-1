@@ -6,6 +6,10 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **LEVERAGE: debt** (v12.16). Credits go negative (limit -150, -100 a sector), debt shields you (debt/250, up to 60%),
+  grows 10% a layer, and past the limit the collectors take 1 integrity a layer. Try it with BLOOD MONEY. The HUD shows
+  `CR -120/-150`; the tray tip shows the shield odds. Numbers: `DEBT` in `dist/engine/mods.js`.
+
 - [ ] **BLOOD MONEY and the MODS CLASH screen** (v12.15). Credits are your health (+100cr when taken; hits cost 20cr +10 a
   sector). To see the clash: dev menu, add BLOOD MONEY, then take ZOMBIE from a sector boss / market / cache ("it will
   replace blood money"); the other way round, ZOMBIE is locked in and BLOOD MONEY can't be taken. Numbers: `BLOOD` in

@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v12.15']);
+NEON_FILES.push(['engine/panels.js', 'v12.16']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -98,7 +98,7 @@ function openShop(node) {
   const defOf = o => o.kind === 'item' ? itemView(o.key, o.tier) : o.kind === 'mod' ? modView(o.key, upgradeTo(o.key, o.tier)) : { name: 'REPAIR', desc: 'restore 1 integrity.', rarity: 'common', tier: 0 };
   const buy = o => {
     const price = priceOf(o);
-    if (o.sold || run.credits < price) return Sound.deny();
+    if (o.sold || !canSpend(price)) return Sound.deny();
     if (o.kind === 'repair' && !canHeal()) return Sound.deny();
     const name = defOf(o).name.toLowerCase();
     const finish = () => { run.credits -= price; if (o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
@@ -117,7 +117,7 @@ function openShop(node) {
   const whyNot = o => {
     if (o.sold) return 'sold out.';
     if (o.kind === 'repair' && !canHeal()) return zombie() ? 'no rot to fix.' : 'integrity is full.';
-    if (run.credits < priceOf(o)) return 'not enough credits.';
+    if (!canSpend(priceOf(o))) return leverage() ? 'past your credit limit.' : 'not enough credits.';
     return null;
   };
 

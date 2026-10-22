@@ -1,6 +1,6 @@
 // NeoN+1 corps/bytepets.js
 'use strict';
-NEON_FILES.push(['corps/bytepets.js', 'v12.15']);
+NEON_FILES.push(['corps/bytepets.js', 'v12.16']);
 // Its boss mod: COMPANION (companion), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -40,7 +40,7 @@ CORPS.bytepets = {
   action(lv) {
     const pt = lv.pets;
     if (!pt) return null;
-    return { label: 'CALL 1cr', ok: st.run.credits >= 1, use() {
+    return { label: 'CALL 1cr', ok: canSpend(1), use() {
       st.run.credits -= 1; pt.calls++;
       pt.at = performance.now();
       pt.comes = !pt.boss || h01(pt.seed, pt.calls) < 0.5;

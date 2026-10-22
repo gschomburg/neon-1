@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v12.15']);
+NEON_FILES.push(['engine/mods.js', 'v12.16']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -139,6 +139,19 @@ const BLOOD = {
   heal: 15,       // each point of healing pays this
 };
 const bloodMoney = () => has('bloodmoney');
+// ---- LEVERAGE: credits can go negative. Numbers to tune:
+const DEBT = {
+  limit: 150,       // how far below 0 you can go, plus
+  perSector: 100,   // this much more each sector
+  interest: 0.10,   // debt grows this much every layer (at least 2cr)
+  shieldPer: 250,   // ICE does nothing with odds debt / shieldPer, up to
+  shieldMax: 0.6,
+};
+const leverage = () => has('leverage');
+// The lowest your credits can go: 0, or the debt limit with LEVERAGE.
+const creditFloor = () => leverage() ? -(DEBT.limit + DEBT.perSector * ((st.run && st.run.sector) || 0)) : 0;
+// Can you spend n credits (into debt, with LEVERAGE)?
+const canSpend = n => !!st.run && st.run.credits - n >= creditFloor();
 const bloodCost = (n = 1) => n * (BLOOD.hit + BLOOD.perSector * ((st.run && st.run.sector) || 0));
 const tapsToBreak = () => 1 + Math.floor((st.run.rot || 0) / ROT.perTap);
 // ICE EATER is on for this layer (set when the layer opens).

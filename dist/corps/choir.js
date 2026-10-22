@@ -1,6 +1,6 @@
 // NeoN+1 corps/choir.js
 'use strict';
-NEON_FILES.push(['corps/choir.js', 'v12.15']);
+NEON_FILES.push(['corps/choir.js', 'v12.16']);
 // Its boss mod: SACRIFICE (sacrifice), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -50,7 +50,7 @@ CORPS.choir = {
   action(lv) {
     const ti = lv.tithe;
     if (!ti) return null;
-    return { label: ti.paid ? 'BLESSED' : `TITHE ${ti.price}cr`, ok: !ti.paid && st.run.credits >= ti.price, use() {
+    return { label: ti.paid ? 'BLESSED' : `TITHE ${ti.price}cr`, ok: !ti.paid && canSpend(ti.price), use() {
       st.run.credits -= ti.price; ti.paid = true; lv.tithed = true;
       for (const t of lv.tiles) if (t.face && t.state === 'closed') t.glyph = normMotif(['+', `(${t.face})`, '/|\\']);
       Sound.shield(); flash(C.money, 0.12, 0.4);
