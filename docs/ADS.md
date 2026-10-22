@@ -127,6 +127,18 @@ TUNNEL.ME, PRIVATE PROXY (just "PROXY").
 - secret-ad hook: tap it and your next trace / TRACER-style reveal is hidden, or a corp can't see your heat
   (PREDATOR) for one layer.
 
+## Go ad free (the user, 2026-10-22)
+
+A way to "go ad free", or an **ad to go ad free**. *(Claude)* takes on it:
+- **The ad for going ad free** is itself an ad, and shows up more the more you see ads. "tired of ads? go AD
+  FREE for 99cr/month!" Tapping it shows... another ad.
+- **A real option that's a joke:** a setting / purchase (in credits) called `AD FREE`. It works, but the
+  loading line says "ad free (sponsored by VIRUSHIELD PRO)", or ads come back as "partner messages".
+- **A mod:** AD BLOCKER (EXOTIC?): no ads, but you also lose the free trials and secret ads (a real trade-off
+  with the hidden quests). Or a corp mod from the ad corp (SPEC §17).
+- **For the player who really doesn't want them:** a plain settings toggle that turns the ads off for real
+  (no joke), next to REDUCED effects, so the bit never gets in anyone's way.
+
 ## Gambling ads (the user, 2026-10-22)
 
 The sports-betting / online-casino kind: loud, "free bonus", tiny fine print. Natural sponsors: LUCKEEZ
