@@ -3,6 +3,9 @@ these are gs notes
 - menu button in the header should maybe be aligned right
 - audio ideas. clean up music tracks, maybe not every corp needs it's own track. maybe have a 8 main tracks, maybe corps can vary off each one of those. then maybe like 8 specialty tracks for corps like bosses or the higher level corps. maybe 2 tracks reserved for corps with timers. and then a title track and maybe a overworld track.
 - music inspirations, anything electronic or synthy. daft punk tron, arcade fire, kavinsky, goblin, blade runner, maybe a little skryilix, ladytron, albumn leaf, NIN, pixel grip, 
+- add some mention of a gru in the corp that blacks out.. something like "a wild gru is NEAR!"
+
+
 
 ascii
 ********************
