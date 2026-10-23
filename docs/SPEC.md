@@ -830,6 +830,18 @@ Agreed changes not built yet.
   more glyphs change which glyphs layers roll, so the check baseline's layers shift (re-save it); look at corps whose
   tells read glyphs (KERNING, PURLWISE, KEYLOGGER's lines...) to make sure the new ones work with them.
 
+- **A content editing guide** (2026-10-22, the user): one doc (e.g. `docs/EDITING.md`) on how to edit the editable
+  content, mostly art: where each piece lives, its size, and the little syntax tricks. Not how to edit everything. *(Claude)*
+  what it would cover:
+  - **Ads** (data/ads.js): 30 x 18 screens; line options (color, centered, bold, inverted, button); `adBig` block
+    letters; bars `{bar}` / `{bar:20:6s}` / `{rbar}`.
+  - **Corp intro art / logos** (`CORP_ART` in each corps/*.js): size, blank columns trimmed automatically, centering.
+  - **Hacker logos** (the profile logos), **node glyphs** (5 x 3, data/glyphs.js, with names and lore), **the title art**
+    (data/title.js), **the intro world map** (`INTRO_MAP` in engine/intro.js), **lock labels** (5 letters).
+  - **Gotchas:** in these files a backslash is written `\` and a quote `'`; keep lines the right width; then
+    `node tools/bump.js minor` and `node tools/check.js` before uploading.
+  - **Palettes:** a pointer to tools/palette_editor.html.
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
