@@ -818,6 +818,11 @@ Agreed changes not built yet.
   `svc`), but the reward screens (CORP BREACHED, OMNI / sector boss, data cache, safehouse, the starter perk) only show
   the name and its rarity (`RARE`, `BOSS`, `EXOTIC`). Wherever a list mixes or could mix mods and items, say which each
   one is, the same way as the market. Goes with the spacing / copy pass on the pick screens (set aside, the UI pass).
+  - **The data cache too** (the user, 2026-10-22): its list needs the mod / item tag on each line.
+  - **Rarity vs level, shown the same way** (the user, 2026-10-22): mods that start at EPIC (KEYLOGGER, TRACER) level up
+    LV1-LV3 instead of climbing rarity, and their label shows `LV2` *in place of* the rarity (`tierLabel` in
+    engine/mods.js), next to other mods showing `EPIC`. Show both, the same everywhere: the rarity, plus the level when
+    it has levels (e.g. `EPIC LV2`, or the EPIC chip and `lv2`).
 
 - **Game over: your mods and items go in the scrolling area with the map** (2026-10-22, the user). Today the death
   screen lists the run's mods in rows of 5 above the run's map (which scrolls). Move the mods and the items you held
