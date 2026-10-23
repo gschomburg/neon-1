@@ -872,6 +872,11 @@ Agreed changes not built yet.
   - **Standalone, not part of the game** (the user: better separate). Its own page with no game code: its own copy of the
     font and the size presets, so it can live in its own folder or repo and be used for any ASCII art.
 
+- **More room for long text** (2026-10-22, the user): the codex and the mod descriptions need more space; some
+  descriptions (and the new exotics' codex text) are long and get squeezed. Check other places too: the reward / market
+  detail boxes, the tray's info line (one line), the clash screen. *(Claude)*: options are a scrolling detail box, a
+  taller box on screens with room, or shorter text with a "more" tap. Goes with the UI pass.
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
