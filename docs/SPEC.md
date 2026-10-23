@@ -842,6 +842,21 @@ Agreed changes not built yet.
     `node tools/bump.js minor` and `node tools/check.js` before uploading.
   - **Palettes:** a pointer to tools/palette_editor.html.
 
+- **An ASCII art tool: vector paths to characters** (2026-10-22, the user; think-through only, not started). Online
+  editors mostly paint one character as a brush; the user wants shapes turned into fitting characters (`\ . _` along a
+  diagonal). Plan: `tools/ascii_tool.html`, one page like the palette editor.
+  - **Layers:** SVG paths (import an SVG: paths / lines / curves; a simple pen tool to add and edit paths; move / scale /
+    rotate), the game's character grid over them (cells are tall, ~0.6 x 1, so slopes map to `/` steeper than 45 degrees),
+    a live ASCII preview in the game font, and a touch-up layer (type characters into cells; a button clears them when
+    the paths move).
+  - **Conversion:** sample each path ~8 points a cell (position in the cell + direction there); per cell pick by
+    direction (flat: `_` / `-` by height in the cell; upright `|`; slanted `/` `\`), bends `(` `)`, small marks `. , '`,
+    ends `.` `'`, crossings `+` `X`; ASCII-only or Unicode line characters as an option. Fills ignored (maybe shading later).
+  - **Output:** presets for the game's sizes (5x3 glyphs, the 30x18 ad box, 36-wide corp art, the intro map); copy as plain
+    text or as code lines with the escaping done.
+  - **Version 1:** import + move/scale + convert + touch-up + export, and a point-to-point pen; curve handles later.
+    Tiny art (5x3) is mostly a starting point for touch-up; bigger pieces are where it shines.
+
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
 The user's next big task is a **palette editor and preview system**. Everything that changes what a palette
