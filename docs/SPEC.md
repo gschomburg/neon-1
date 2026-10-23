@@ -844,7 +844,7 @@ Agreed changes not built yet.
 
 - **An ASCII art tool: vector paths to characters** (2026-10-22, the user; think-through only, not started). Online
   editors mostly paint one character as a brush; the user wants shapes turned into fitting characters (`\ . _` along a
-  diagonal). Plan: `tools/ascii_tool.html`, one page like the palette editor.
+  diagonal). Plan: one standalone page (see below), built like the palette editor.
   - **Layers:** SVG paths (import an SVG: paths / lines / curves; a simple pen tool to add and edit paths; move / scale /
     rotate), the game's character grid over them (cells are tall, ~0.6 x 1, so slopes map to `/` steeper than 45 degrees),
     a live ASCII preview in the game font, and a touch-up layer (type characters into cells; a button clears them when
@@ -856,6 +856,11 @@ Agreed changes not built yet.
     text or as code lines with the escaping done.
   - **Version 1:** import + move/scale + convert + touch-up + export, and a point-to-point pen; curve handles later.
     Tiny art (5x3) is mostly a starting point for touch-up; bigger pieces are where it shines.
+  - **Added (the user, 2026-10-22):** a **select + move tool** on the ASCII layer (box-select characters, drag them, keep or
+    drop the rest), and **ASCII import**: paste text into a box, it becomes a floating block you drag around the canvas
+    and drop where you want (on top of what's there; spaces see-through or not).
+  - **Standalone, not part of the game** (the user: better separate). Its own page with no game code: its own copy of the
+    font and the size presets, so it can live in its own folder or repo and be used for any ASCII art.
 
 ### Palette pass (2026-10-21): sort these out before / with the palette editor
 
