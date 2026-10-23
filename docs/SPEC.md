@@ -611,6 +611,7 @@ What was on the list:
 **Set aside for now (the user, 2026-10-22):**
 - **A UI / phone pass, together, later:** the spacing / copy pass on the pick screens, bigger phone buttons, and the
   scaling questions (pushing past the 4x4 grid, how the screen scales on phones).
+  - **The menu button in the header should maybe be right-aligned** (the user, 2026-10-23).
 - **Back burner:** the logotype (rounds 4-7 in NAMES.md) and the economy tuning pass.
 
 (Things waiting for the user to look at, rather than to build, are in `docs/REVIEW.md`.)
@@ -667,6 +668,9 @@ Agreed changes not built yet.
   preview them. SETTINGS keeps the player list only (`playerPalettes()`). Close pairs are fine as they are
   (PLAYTIME / DIALTONE ONLINE, COLDBREW / CARAPACE ARMOR...). *(Part of the palette pass below; the
   editor's preview may cover it.)*
+- **BLACKOUT: a grue joke** (the user, 2026-10-23). Somewhere in the corp that goes dark, a nod to Zork's grue ("it is
+  pitch black. you are likely to be eaten by a grue."), something like `a wild gru is NEAR!`. *(Claude)*: fits the
+  intel line, a codex line, or a message on the boss layer when it's nearly black.
 
 ### Breaking the game into files: DONE in v12.00 (see the version log in §16n)
 
@@ -828,6 +832,10 @@ Agreed changes not built yet.
       where it comes from, level = how upgraded, shown together (`EPIC II` / `EPIC+`); (2) a new top rarity only for maxed
       mods (LEGENDARY / MAXED, its own color), whatever they started as; (3) levels climb EPIC > EXOTIC > BOSS (the user's
       first thought; muddles them). Claude leans to 1, maybe with 2 on top.
+    - **The user, 2026-10-23: mods need legendary versions.** Maybe BOSS mods just get renamed LEGENDARY, or BOSS turns
+      into something else. Or a fuller ladder with a green tier in the middle: **scrap (white), common (green), rare
+      (blue), epic (purple), legendary (orange), exotic (gold)** (the usual loot colors). *(Claude)*: that ladder would
+      leave BOSS out; it could become a tag (where it drops) rather than a rarity.
 
 - **Game over: your mods and items go in the scrolling area with the map** (2026-10-22, the user). Today the death
   screen lists the run's mods in rows of 5 above the run's map (which scrolls). Move the mods and the items you held
@@ -1085,6 +1093,9 @@ variant, scans as patterns, DECODER / HYDRA mods, recon stops, REP.
 | A backwards / flip mod (REARVIEW, MIRROR WRITING) and a BACKWARDS corp modifier (2026-10-22) | mod / corp modifier | §16f "Flipped characters" |
 | Ad mods: free trial of a corp's mod from its ad; AD BLOCKER (the user likes it); secret ad + mod combos (2026-10-22) | mods, wait for the ads | ADS.md |
 | Second boss mod for the corps that have one (74 of 78) | boss mods | (no list yet) |
+| TRUTH METER: says whether the corp's tell is really in effect (2026-10-23, the user) | mod; maybe a REP bonus, or unlocked once you've found the corp | not designed |
+| Dummy ICE: a mod that adds ICE, clearly marked as dummies, to combo with other mods (VIRUS, KEYLOGGER...: more ICE to hit) (2026-10-23, the user) | mod | not designed |
+| Legendary versions of mods / a fuller rarity ladder (2026-10-23, the user) | system | §16f "Rarity vs level" |
 
 **KEYLOGGER: a Wordle-style clue mod** (noted v07)
 - The real node's glyph is the "word". **Each ICE you hit changes its glyph into one line of the
@@ -2027,7 +2038,7 @@ Not yet placed in a version.
 - **Minesweeper ideas** (noted v08). A mod where tripping an ICE also **deactivates any ICE close to it** (all neighbors, not just one). Note: VIRUS (EPIC) already locks **one** neighboring ICE on a hit, so this could be VIRUS's bigger version (a tier, or its own EXOTIC mod, e.g. CHAINLOCK / DETONATOR), or VIRUS could become tiered (1 / 2 / all neighbors). *(Claude)*: a minesweeper corp where hit ICE shows a **number**: how many steps away the real node is (or how many ICE touch it).
 - **Corp idea: shell game** (noted v08; names *(Claude)*: SHELLGAME, THREE CARD, MONTE). The real node **moves** to another node without you seeing the switch. *(Claude)*: nodes shuffle positions in a quick animation (cups sliding) you can follow if you're sharp; or swaps happen unseen but leave a tell (a glyph line flickers on the two nodes that swapped); boss: more swaps, faster.
 - **Corp idea: gambling** (noted v08; names *(Claude)*: HOUSE EDGE, LUCKY 7, CASINO.SYS). Ideas: **double down** on a node (bet that your pick is right: double pay if real, double damage if ICE), either as the corp's mechanic or as its boss mod. *(Claude)*: slot-machine glyphs (the real node shows three matching symbols); a "let it ride" choice after each layer.
-- **Corp idea: punk** (the user, 2026-10-22; details still to come from the user).
+- **Corp idea: punk** (the user, 2026-10-22; listed again 2026-10-23, details still to come from the user).
 - **THE CHOIR as a "ministry", not a corp** (the user, 2026-10-22). The cult (THE CHOIR, LV3: faith x2 or tithe;
   boss mod SACRIFICE) would be a ministry. *(Claude)*: a name like THE MINISTRY or MINISTRY OF THE CHOIR (map code
   then MN / MC instead of CH), and its own words where the game says "corp" ("MINISTRY BREACHED", the codex line).
@@ -2259,6 +2270,13 @@ Not yet placed in a version.
   - **The user, 2026-10-21:** wants more unique music for some corps; today it all sits on the same beat.
     So start with the beat: different grooves and time feels per corp, not just tempo. Pick a handful of
     corps (the signature ones, the final bosses, BONEYARD) to get fully custom tracks first.
+  - **Fewer, better tracks** (the user, 2026-10-23): clean up the tracks; not every corp needs its own. Maybe:
+    - **8 main tracks**, with corps varying off one of them (key, tempo, a layer).
+    - **About 8 specialty tracks** for bosses and the higher-level corps.
+    - **2 tracks for corps with timers.**
+    - **A title track**, and maybe an **overworld (map) track**.
+  - **Inspirations** (the user, 2026-10-23): anything electronic or synthy: Daft Punk's Tron: Legacy, Arcade Fire,
+    Kavinsky, Goblin, Blade Runner, a little Skrillex, Ladytron, The Album Leaf, Nine Inch Nails, Pixel Grip.
 
 - **Pushing past the 4x4 grid** (the user, 2026-10-21; "at some point"). What does it mean to go bigger,
   even double the grid (e.g. 8x8)? How it scales on screen (tile size, phones, scrolling), in odds and

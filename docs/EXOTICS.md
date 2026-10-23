@@ -274,11 +274,13 @@ ICE you carry stays *dead* (locked) so the next layer is bigger but partly solve
 *(Claude)* first drafts, to react to:
 - **WORM:** a node you hit "worms" through: next layer, the node in the same spot is shown as real or ICE
   from the start. Or: your hits tunnel, and every 3rd ICE you hit opens a row.
+  - The user listed WORM again on 2026-10-23, under corp / mod / item ideas, with no details: a mod, or maybe a corp?
 - **LOGIC BOMB:** set a trap: tap a node to plant the bomb; next layer, if the real node lands on that spot,
   the layer passes at once (a bet on position). Or: a delayed blast, 3 taps later the bomb locks all ICE in
   its row.
 - **FORK BOMB:** each ICE you hit forks: it locks 2 more ICE, which can lock 2 more... (a chain reaction;
   capped so it doesn't clear the board), but each fork costs pay.
+  - **The user, 2026-10-23:** "something recursive" (the chain reaction above fits).
 - **The slot trade — BUILT v12.24 as CHROMED UP, v13.08 RAM DOUBLER** (the user's names): no item belt (held items sold
   for half, finds become credits, no items in markets), twice the mod slots (12: a second row of 6 where the belt was).
   Locked in.

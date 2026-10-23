@@ -6,6 +6,11 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **Meat notes filed** (2026-10-23). Check the spots I picked, and two open calls: the ASCII tool's default (plain
+  ASCII or Unicode; ASCII_TOOL.md "How the conversion picks characters") and the rarity ladder (SPEC §16f "Rarity vs
+  level": rename BOSS to LEGENDARY, or the scrap / common / rare / epic / legendary / exotic ladder). Also: the
+  ascii-art.de catalog is now git-ignored and removed from the repo (still on your disk; still in old commits).
+
 - [ ] **The first fake ads** (v13.05): SPONSORED STORIES and VIRUSHIELD PRO. They pop up between layers or on the way back
   to the map, from your second corp on (1 in 6, one per corp at most). To see one now: dev menu `[show ad]`. Look at the art, the skip countdown, the spin-turn on the two-screen one, and how often feels right.
 

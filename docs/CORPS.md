@@ -288,6 +288,21 @@ made up, not real brands.
   pick.
 - **Works with:** the clock mods.
 
+### A28. FOSSIL (dig site; "we've been around a long time") (the user, 2026-10-23; not designed)
+- **Special:** digging for fossils. You brush the nodes off: a tap doesn't just break the node, it slowly
+  reveals its glyph, a bit more each tap.
+- **Tell:** some glyphs are the usual glyphs and some are fossils. Uncover a regular glyph and it's ICE: it
+  hurts you. *(Claude)*: open question is whether brushing costs anything (a tap, time) so you can't just
+  half-brush every node for free.
+
+### A29. UNICORN (very rare) (the user, 2026-10-23; not designed)
+- A very rare corp. Maybe all its mod offers are EXOTIC, or its reward raises your odds of exotics and
+  legendaries. Or it's not a corp you find but a REP unlock.
+
+### A30. MAGIC (stage magic) (the user, 2026-10-23; not designed)
+- Nodes get sawed in half or vanish; or you're looking for the rabbit. The user notes MONTE (A7, the shell
+  game) may already cover this idea.
+
 (The user's mod thief idea is under corp modifiers below.)
 
 ---
