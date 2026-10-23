@@ -852,26 +852,8 @@ Agreed changes not built yet.
     `node tools/bump.js minor` and `node tools/check.js` before uploading.
   - **Palettes:** a pointer to tools/palette_editor.html.
 
-- **An ASCII art tool: vector paths to characters** (2026-10-22, the user; think-through only, not started). Online
-  editors mostly paint one character as a brush; the user wants shapes turned into fitting characters (`\ . _` along a
-  diagonal). Plan: one standalone page (see below), built like the palette editor.
-  - **Layers:** SVG paths (import an SVG: paths / lines / curves; a simple pen tool to add and edit paths; move / scale /
-    rotate), the game's character grid over them (cells are tall, ~0.6 x 1, so slopes map to `/` steeper than 45 degrees),
-    a live ASCII preview in the game font, and a touch-up layer (type characters into cells; a button clears them when
-    the paths move).
-  - **Conversion:** sample each path ~8 points a cell (position in the cell + direction there); per cell pick by
-    direction (flat: `_` / `-` by height in the cell; upright `|`; slanted `/` `\`), bends `(` `)`, small marks `. , '`,
-    ends `.` `'`, crossings `+` `X`; ASCII-only or Unicode line characters as an option. Fills ignored (maybe shading later).
-  - **Output:** presets for the game's sizes (5x3 glyphs, the 30x18 ad box, 36-wide corp art, the intro map); copy as plain
-    text or as code lines with the escaping done.
-  - **Version 1:** import + move/scale + convert + touch-up + export, and a point-to-point pen; curve handles later.
-    Tiny art (5x3) is mostly a starting point for touch-up; bigger pieces are where it shines.
-  - **Added (the user, 2026-10-22):** a **select + move tool** on the ASCII layer (box-select characters, drag them, keep or
-    drop the rest), and **ASCII import**: paste text into a box, it becomes a floating block you drag around the canvas
-    and drop where you want (on top of what's there; spaces see-through or not).
-  - **Standalone, not part of the game** (the user: better separate). Its own page with no game code: its own copy of the
-    font and the size presets, so it can live in its own folder or repo and be used for any ASCII art.
-
+- **An ASCII art tool** (2026-10-22, the user; not started): its plan is in its own doc, [ASCII_TOOL.md](ASCII_TOOL.md)
+  (standalone, not part of the game).
 - **More room for long text** (2026-10-22, the user): the codex and the mod descriptions need more space; some
   descriptions (and the new exotics' codex text) are long and get squeezed. Check other places too: the reward / market
   detail boxes, the tray's info line (one line), the clash screen. *(Claude)*: options are a scrolling detail box, a
