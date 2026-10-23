@@ -823,6 +823,11 @@ Agreed changes not built yet.
     LV1-LV3 instead of climbing rarity, and their label shows `LV2` *in place of* the rarity (`tierLabel` in
     engine/mods.js), next to other mods showing `EPIC`. Show both, the same everywhere: the rarity, plus the level when
     it has levels (e.g. `EPIC LV2`, or the EPIC chip and `lv2`).
+    - **Open question (the user):** should a higher level look rarer? A LV2 of an EPIC mod as BOSS? *(Claude)*: BOSS and
+      EXOTIC already mean something (from a corp boss; rule-benders), so borrowing them would muddle that. Options: (1) rarity =
+      where it comes from, level = how upgraded, shown together (`EPIC II` / `EPIC+`); (2) a new top rarity only for maxed
+      mods (LEGENDARY / MAXED, its own color), whatever they started as; (3) levels climb EPIC > EXOTIC > BOSS (the user's
+      first thought; muddles them). Claude leans to 1, maybe with 2 on top.
 
 - **Game over: your mods and items go in the scrolling area with the map** (2026-10-22, the user). Today the death
   screen lists the run's mods in rows of 5 above the run's map (which scrolls). Move the mods and the items you held
