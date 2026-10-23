@@ -1,6 +1,6 @@
 // NeoN+1 engine/ads.js: the fake ads: when they show up, the ad box, and its two-screen turn.
 'use strict';
-NEON_FILES.push(['engine/ads.js', 'v13.08']);
+NEON_FILES.push(['engine/ads.js', 'v13.09']);
 
 // An ad comes up over whatever is on screen, in a bordered box nearly the screen's width, and
 // blocks everything under it until you close it. [x] (top right) shows up after a few seconds
@@ -74,10 +74,15 @@ function adKey(k, now) {
 function adRows(screen, sinceScreen) {
   return screen.map(ln => {
     let t = ln.t || '';
-    if (t.includes('{bar}')) {
-      const f = Math.min(1, sinceScreen / (AD_CFG.screenMs * 0.85)), n = 10, k = Math.round(f * n);
-      t = t.replace('{bar}', `[${'#'.repeat(k)}${'-'.repeat(n - k)}]`);
-    }
+    // bars: {bar} fills, {rbar} empties; {bar:20} sets the width (inside the brackets), {bar:20:6s}
+    // the time (default: most of the time the screen is up)
+    t = t.replace(/{(r?)bar(?::(d+))?(?::(d+(?:.d+)?)s)?}/g, (m, rev, w, secs) => {
+      const n = Math.max(1, Math.min(ADS_W - 2, w ? +w : 10)), dur = secs ? +secs * 1000 : AD_CFG.screenMs * 0.85;
+      let f = Math.min(1, sinceScreen / dur);
+      if (rev) f = 1 - f;
+      const k = Math.round(f * n);
+      return `[${'#'.repeat(k)}${'-'.repeat(n - k)}]`;
+    });
     t = t.slice(0, ADS_W);
     const x = ln.x === 'c' ? Math.floor((ADS_W - t.length) / 2) : (ln.x || 0);
     return { s: (' '.repeat(x) + t).padEnd(ADS_W).slice(0, ADS_W), col: C[ln.c || 'text'] || C.text, inv: !!ln.inv, b: !!ln.b, btn: ln.btn, x, len: t.length };

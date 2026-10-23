@@ -1,6 +1,6 @@
 // NeoN+1 corps/mirror.js
 'use strict';
-NEON_FILES.push(['corps/mirror.js', 'v13.08']);
+NEON_FILES.push(['corps/mirror.js', 'v13.09']);
 // Its boss mod: SHATTER (shatter), AFTERIMAGE (afterimage), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

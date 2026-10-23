@@ -1,13 +1,15 @@
 // NeoN+1 data/ads.js: the fake ads: their screens, text and art. (Shown by engine/ads.js.)
 'use strict';
-NEON_FILES.push(['data/ads.js', 'v13.08']);
+NEON_FILES.push(['data/ads.js', 'v13.09']);
 
 // An ad is 1 or 2 screens. A screen is a list of lines, up to ADS_W characters, drawn inside
 // the ad box from the top. A line: { t: text, c: color (a palette slot: text, dim, mid, bright,
 // accent, danger, money), x: column (default 0; 'c' = centered), inv: drawn inverted (dark
 // text on a bar of its color), b: bold, btn: a button (tapping it closes the ad; its value is
 // the line shown after) }.
-// {bar} in a line becomes a bar that fills while the screen is up.
+// Bars: {bar} in a line becomes a bar that fills while the screen is up; {rbar} one that empties.
+// {bar:20} sets its width (inside the brackets; default 10), {bar:20:6s} how long it takes (default:
+// most of the time the screen is up). E.g. 'installing... {bar:16:8s}', 'battery {rbar:8}'.
 const ADS_W = 30, ADS_H = 18;
 
 // Big block letters for headlines (4 wide, 5 tall, made of #).

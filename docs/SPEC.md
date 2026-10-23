@@ -1700,6 +1700,7 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v13.09** (2026-10-22): ad bars can be sized, timed and reversed (the user): `{bar:20}` (width inside the brackets, default 10), `{bar:20:6s}` (fill time, default most of the screen's time), `{rbar...}` empties instead of filling. Several per line work.
 - **v13.08** (2026-10-22): **CHROMED UP is now RAM DOUBLER** (the user; a nod to Johnny Mnemonic), and it really doubles: 12 mod slots (two full rows of 6), not 9. The text keeps the chrome ("get your memory chromed up"). A saved run with the old CHROMED UP gets RAM DOUBLER on load (`MOD_RENAMED` in engine/save.js, which also drops mods that no longer exist).
 - **v13.07** (2026-10-22): CHROMED UP's tray line read `4 more mod slots` (the free slots left, read as the bonus; the user). Now `chromed up: 4 of 9 slots free`.
 - **v13.06** (2026-10-22): **fix: an ad between layers was invisible** (the user, in CLONEWORKS: the transition looped and never reached the next layer). Between layers the screen wipe holds the screen while the ad is up, and the wipe was drawn over the ad, so you were stuck behind an ad you couldn't see. The ad is now drawn after the wipe, on top of everything (engine/scene.js). Also a dev menu `[show ad]`.
