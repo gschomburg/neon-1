@@ -838,7 +838,7 @@ Agreed changes not built yet.
   - **Corp intro art / logos** (`CORP_ART` in each corps/*.js): size, blank columns trimmed automatically, centering.
   - **Hacker logos** (the profile logos), **node glyphs** (5 x 3, data/glyphs.js, with names and lore), **the title art**
     (data/title.js), **the intro world map** (`INTRO_MAP` in engine/intro.js), **lock labels** (5 letters).
-  - **Gotchas:** in these files a backslash is written `\` and a quote `'`; keep lines the right width; then
+  - **Gotchas:** inside these files' quoted lines a backslash is written `\\` and a quote `\'`; keep lines the right width; then
     `node tools/bump.js minor` and `node tools/check.js` before uploading.
   - **Palettes:** a pointer to tools/palette_editor.html.
 
