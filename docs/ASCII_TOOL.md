@@ -34,6 +34,10 @@ every point (a painted image only gives pixels).
 - **ASCII import** (the user): paste text into a box; it becomes a floating block you drag around the canvas
   and drop where you want, on top of what's there (spaces see-through, or not).
 - **Type:** click a cell and type, for touch-ups.
+- **Noise brush** (the user): pick a set of characters (a list you type in, e.g. `.:;'`), and painting drops a random one
+  from the set in each cell. *(Claude)*: a brush size, a density (how many cells it fills), saved sets (dust `.,'`,
+  static `#%&@`, glitch `/\|-_`, the game's own noise characters), and weights (some characters more often). Great for
+  texture, static, and glitch fills.
 
 ## How the conversion picks characters
 
