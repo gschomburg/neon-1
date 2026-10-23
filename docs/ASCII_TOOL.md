@@ -1,7 +1,7 @@
 # ASCII art tool: plan
 
-A standalone tool for making ASCII art: draw (or import) shapes and get fitting characters, then touch
-up by hand. Not part of the game, and it shares no game code: its own page, its own copy of the font and
+A standalone tool for making ASCII art: draw (or import) shapes and get fitting characters, or build in 3D
+blocks and get 3D block lettering, then touch up by hand. Not part of the game, and it shares no game code: its own page, its own copy of the font and
 the size presets, so it can live in its own folder or repo and work for any ASCII art. Planned with the
 user on 2026-10-22; **not started**. Notes marked *(Claude)* are my suggestions.
 
@@ -46,6 +46,26 @@ the line runs there. Per cell:
 - **Crossings:** `+` or `X`.
 - An option for plain ASCII only, or Unicode line characters too.
 - Filled shapes are ignored for now (maybe a shading option later).
+
+## Block mode: build in 3D, get ASCII 3D text (the user, 2026-10-22)
+
+A second mode, for the blocky 3D ASCII lettering the user likes (the oldskool / Amiga look from the logotype rounds in
+NAMES.md, e.g. "N+1 in 3D"). You build with **3D blocks (voxels) on a grid, seen at a three-quarter view**, and the
+tool converts them to ASCII: tops, fronts and sides each get their own characters, and blocks in front hide the ones
+behind.
+
+*(Claude)* how it could work:
+- **Building:** a 3D grid shown at a three-quarter angle; click to place or remove blocks, a layer (height) slider, and
+  a few stamp tools (a line of blocks, a filled box).
+- **Type to blocks:** type letters and they become extruded block letters (a pixel font, each pixel a column of
+  blocks a set depth deep): 3D text in one step, then edit it block by block.
+- **Converting:** every block is drawn as a small fixed tile of characters (e.g. 2-3 wide, 2 tall) for its visible
+  faces, back to front, so nearer blocks cover farther ones. Shared edges between neighboring blocks merge, so a row of
+  blocks reads as one solid shape, not a stack of boxes.
+- **Styles** (presets, like the 3D figlet fonts): outlines only (`_ / \ |`), solid with shaded faces (`#` on the
+  front, `:` on the side, `_` on top), or block shading characters (`▓ ▒ ░`) for the faces.
+- **View:** from the left or the right, a steeper or flatter angle, and the depth of the extrusion.
+- Then it lands on the ASCII layer like any other art, for touch-up, select / move, and export.
 
 ## Output
 
