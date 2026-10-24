@@ -60,7 +60,7 @@ const hotspot = glyph => glyphOf(glyph).hot.map(v => Math.round(OFF + v * SCALE)
 // A CSS cursor value, ending in a built-in fallback in case the image doesn't load
 const cache = new Map();
 function css(glyph, badge, dim, fallback = 'crosshair') {
-  const key = [typeof glyph === 'string' ? glyph : glyph.d, badge, !!dim, fallback].join('|');
+  const key = [typeof glyph === 'string' ? glyph : JSON.stringify([glyph.d, glyph.ink, glyph.fill, glyph.hot, glyph.badgeLeft]), badge, !!dim, fallback].join('|');
   if (!cache.has(key)) {
     const [hx, hy] = hotspot(glyph);
     cache.set(key, `url("data:image/svg+xml,${encodeURIComponent(svg(glyph, badge, dim))}") ${hx} ${hy}, ${fallback}`);
