@@ -145,7 +145,7 @@ Quieter and more consistent. Changes below supersede the parts of 1, 5, 7 and 8 
 - [x] The mirror lines and their triangles always show on the canvas when a line is on, faded to 25% when the current
   tool isn't mirroring (full strength when it is). The triangles can be dragged with any tool
 - [x] The cell highlight's mirrored copies only show when the tool is mirroring
-- [x] The panel fades when the tool isn't mirroring (no message)
+- [x] ~~The panel fades when the tool isn't mirroring~~ (v0.128: the panel stays at full strength; only the canvas lines fade)
 
 ### Characters
 - [x] **Recent** becomes its own group at the top of the palette, above Special: one row, as many recent characters as fit

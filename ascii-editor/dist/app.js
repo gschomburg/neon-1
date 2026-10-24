@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.127';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.128';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -4456,7 +4456,7 @@ function renderOptions() {
     addSym(well(`<button class="btn${S.mirrorFlip ? ' on' : ''}" data-tog="mirrorFlip" title="Flip characters: the mirrored copy turns / into \, ( into ) and so on">Flip characters</button>`));
   }
   const canMirror = MIRROR_TOOLS.includes(t), uses = canMirror && !!S.mirrorUse[t];
-  $('[data-panel="sym"]').classList.toggle('unused', !uses || S.mirror === 'off');   // faded when the tool isn't mirroring
+  // (the Symmetry panel stays at full strength; only the lines on the canvas fade when the tool isn't mirroring)
   // the tool's "uses mirror" toggle: the last thing in the bar, with the rest of its settings
   if (canMirror) add((bar.children.length ? sep : '') + well(`<button class="btn icon mirroruse${uses ? ' on' : ''}" data-mirroruse title="${uses ? `${toolName()} mirrors (click to stop). The lines are set up in the Symmetry panel` : `Mirror with ${toolName()} (set the lines up in the Symmetry panel)`}">${MIRROR_SVG}</button>`));
 
