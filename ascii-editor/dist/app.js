@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.122';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.123';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -53,7 +53,8 @@ const S = {
   wandContig: true, selSample: 'layer',   // Wand: connected cells only (off = every match), and which layers it looks at
   fillContig: true,     // Fill: connected cells only (off = every matching cell on the canvas; Shift-click flips it)
   pickSample: 'all',    // Picker: the character you see ('all') or the one on the active layer ('layer')
-  ch2: null,            // the right-button character for Pencil and Brush (null = erase); Shift or right-click with the Picker sets it
+  ch2: null,
+  activeSlot: 'draw',   // the selected chip in the tool panel: picking a character fills it ('draw' or 'right')            // the right-button character for Pencil and Brush (null = erase); Shift or right-click with the Picker sets it
   mirror: 'off',        // Pencil / Brush / Eraser paint a mirrored copy: off | h (left-right) | v (top-bottom) | both
   mirrorUse: { pencil: true, brush: true, eraser: true },   // which tools mirror (the toggle in the bar; TOOLBAR.md 7)
   panels: {},           // right-pane panels that are folded: { id: true }
@@ -2429,7 +2430,7 @@ vp.addEventListener('pointerdown', e => {
     commitFloat(); setCursor(c.x, c.y);
   } else if ((t === 'pencil' || t === 'brush' || t === 'fill') && e.altKey) {   // hold Alt: pick a character without leaving the tool
     const got = pickAt(c, 'all') || CLEAR;   // an empty cell is Clear
-    setBrushChar(got); toast(`Character: ${chName(got)}`);
+    pickInto(got); toast(`${S.activeSlot === 'draw' ? 'Draw' : 'Right'}: ${chName(got)}`);
   } else if ((t === 'pencil' || t === 'brush' || t === 'eraser') && e.button === 2) {
     // the right button: Pencil / Brush paint the right-button character (or erase), the Eraser erases only the brush character
     commitFloat(); pushUndo();
@@ -2494,9 +2495,8 @@ vp.addEventListener('pointerdown', e => {
     floodFill(c.x, c.y, S.fillContig === e.shiftKey);
   } else if (t === 'picker') {
     const got = pickAt(c, S.pickSample) || CLEAR;   // an empty cell is Clear (it erases)
-    if (e.button === 2 || e.shiftKey) {   // the Right character for Pencil and Brush
-      S.ch2 = got === CLEAR ? null : got; savePrefs(); renderSlots(); toast(`Right: ${chName(got)}`); setTool(S.lastDraw);
-    } else { setBrushChar(got); toast(`Character: ${chName(got)}`); setTool(S.lastDraw); }
+    const other = e.button === 2 || e.shiftKey;   // the selected chip; Shift / right-click: the other one
+    pickInto(got, other); toast(`${(other ? otherSlot() : S.activeSlot) === 'draw' ? 'Draw' : 'Right'}: ${chName(got)}`); setTool(S.lastDraw);
   } else if (t === 'zoom') {
     zoomStep(e.altKey ? -1 : 1, px, py);
   }
@@ -3185,7 +3185,7 @@ function savePrefs() {
   try {
     const tb = $('#toolbox');
     localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid, showSolid: S.showSolid,
-      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, mirrorUse: S.mirrorUse, panels: S.panels, sideW: S.sideW, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
+      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, activeSlot: S.activeSlot, mirrorUse: S.mirrorUse, panels: S.panels, sideW: S.sideW, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || null; } catch { return null; } }
@@ -3309,14 +3309,14 @@ function renderCharPane() {
     `</div>`).join('');
   $$('.cbtn', box).forEach(b => {
     b.addEventListener('click', () => pickFromPane(b.textContent));
-    b.addEventListener('contextmenu', e => { e.preventDefault(); setCh2(b.textContent); });   // right-click: the Right character
+    b.addEventListener('contextmenu', e => { e.preventDefault(); pickInto(b.textContent, true); });   // right-click: the other chip
   });
   renderRecent();
 }
 // Opaque space and Clear have no glyph: anywhere the drawing character is shown (chip, palette, recents, the input, the
 // right-button setting), a cell holding it gets the same faint red tint as on the canvas.
 function markSolid() {
-  for (const el of $$('#brushChip span, #charpane .cbtn, #slots .slot, .opts .micon, #paintMenu .micon')) {
+  for (const el of $$('#chipBox input, #charpane .cbtn, .opts .micon, #paintMenu .micon')) {
     const c = el.tagName === 'INPUT' ? el.value : el.textContent;
     el.classList.toggle('solidch', c === SOLID); el.classList.toggle('clearch', c === CLEAR);
   }
@@ -3324,8 +3324,7 @@ function markSolid() {
 // Clicking a character in the pane: type it (Type tool), or make it the character to draw with. The tool stays the same.
 function pickFromPane(c) {
   if (S.tool === 'type' && S.cursor) { typeChar(c); return; }
-  setBrushChar(c);
-  if ((S.tool === 'brush' || S.tool === 'fill') && S.paint.mode !== 'char') { S.paint.mode = 'char'; savePrefs(); renderOptions(); redraw(); }
+  pickInto(c);   // the selected chip
 }
 // Help panel (TOOLBAR.md 3): per tool, a summary and one key per line. keys: [keys, what] (the keys are words separated
 // by spaces; Shift, Alt, Ctrl and Space light up while held). drag: the keys that matter while dragging.
@@ -3357,7 +3356,7 @@ const HELP = {
   block: { sum: 'Drag the ASCII preview to move the blocks (before baking). Double-click to build them in 3D (or Layer › Edit blocks in 3D); Layer › Bake makes them ASCII on a new layer.', keys: [] },
   fill: { sum: 'Click to fill the connected area of the same character, with the Paint panel\'s setting.',
     keys: [['Shift', 'click: every matching cell (the opposite of Contiguous)'], ['Alt', 'click: pick a character']] },
-  picker: { sum: 'Click a character to draw with it. An empty cell picks Clear (it erases).', keys: [['Shift', 'click: set the Right character'], ['Right', 'set the Right character']] },
+  picker: { sum: 'Click a character to put it in the selected chip (tool panel). An empty cell picks Clear (it erases).', keys: [['Shift', 'click: the other chip'], ['Right', 'the other chip']] },
   hand: { sum: 'Drag to pan.', keys: [] },
   zoom: { sum: 'Click to zoom in.', keys: [['Alt', 'click: zoom out'], ['Ctrl 0', 'fit the canvas']] },
 };
@@ -3398,7 +3397,7 @@ function renderRecent() {
   box.innerHTML = S.recent.map(c => `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="${c === SOLID ? 'Opaque space' : c === CLEAR ? 'Clear' : esc(c)}">${esc(c)}</button>`).join('');
   $$('.cbtn', box).forEach(b => {
     b.addEventListener('click', () => pickFromPane(b.textContent));
-    b.addEventListener('contextmenu', e => { e.preventDefault(); setCh2(b.textContent); });
+    b.addEventListener('contextmenu', e => { e.preventDefault(); pickInto(b.textContent, true); });
   });
   markSolid();
 }
@@ -4526,37 +4525,46 @@ function bindOptions(o) {
 
 // ---------- Characters panel: the Draw and Right slots (TOOLBAR.md 5) ----------
 // Draw is the brush character (the left button); Right is S.ch2 (the right button; null = erase, shown as Clear).
-function setCh2(c) {
-  S.ch2 = !c || c === CLEAR ? null : c; savePrefs(); renderSlots(); renderOptions();
-  toast(S.ch2 ? `Right: ${chName(S.ch2)}` : 'Right: erase');
+// The Draw and Right chips (the tool panel): one is selected; picking a character (palette, Picker, Alt-click) fills it,
+// and right-click / Shift fills the other one
+const otherSlot = () => S.activeSlot === 'draw' ? 'right' : 'draw';
+function setSlot(slot, c) {
+  if (slot === 'draw') { setBrushChar(c); if ((S.tool === 'brush' || S.tool === 'fill') && S.paint.mode !== 'char') { S.paint.mode = 'char'; savePrefs(); renderOptions(); redraw(); } }
+  else { S.ch2 = !c || c === CLEAR ? null : c; savePrefs(); renderSlots(); renderOptions(); }
 }
+const pickInto = (c, other) => setSlot(other ? otherSlot() : S.activeSlot, c);
+function selectSlot(slot) { if (S.activeSlot === slot) return; S.activeSlot = slot; savePrefs(); renderSlots(); }
+function setCh2(c) { setSlot('right', c); }
 function swapSlots() {
   const draw = S.brush.ch, right = S.ch2 || CLEAR;
   S.ch2 = draw === CLEAR ? null : draw; setBrushChar(right); savePrefs();
-  toast(`Draw: ${chName(S.brush.ch)} · Right: ${S.ch2 ? chName(S.ch2) : 'erase'}`);
 }
+// Typing into a chip ends on Enter, Tab, Esc, a character, or a click anywhere else
+function endChipTyping() {
+  const w = $('#chipBox input:not([readonly])'); if (!w) return;
+  w.readOnly = true; w.classList.remove('typing');
+  if (document.activeElement === w) w.blur();
+  renderSlots();
+}
+document.addEventListener('pointerdown', e => { if (!e.target.closest('#chipBox input:not([readonly])')) endChipTyping(); }, true);
+// The chips at the bottom of the tool panel: Draw (top left) and Right (bottom right), overlapping; the selected one is
+// in front. Click one to select it; double-click to type a character into it (Enter, Tab or a click elsewhere ends that).
 function renderSlots() {
-  const el = $('#slots');
-  if (el && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#slots'))) {
-    // the two wells (click one and type a character), with the swap between them
-    el.innerHTML = `<input class="slot well" data-slot="draw" value="${esc(S.brush.ch)}" title="Draw: what the left button paints. Click and type a character, or click one below">` +
-      `<button class="btn icon swap" data-slot="swap" title="Swap Draw and Right (X)">⇄</button>` +
-      `<input class="slot well right" data-slot="right" value="${esc(S.ch2 || CLEAR)}" title="Right: what the right button paints (blue: erase). Click and type a character, or right-click one below">`;
-    $('[data-slot="swap"]', el).addEventListener('click', swapSlots);
-    $$('input.well', el).forEach(w => {
-      w.addEventListener('focus', () => w.select());
-      w.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); w.blur(); } });
-      w.addEventListener('input', () => {
-        const c = chars(w.value).filter(x => x !== ' ').pop();
-        w.blur();
-        if (w.dataset.slot === 'draw') { if (c) setBrushChar(c); else renderSlots(); }
-        else { S.ch2 = !c || c === CLEAR ? null : c; savePrefs(); renderSlots(); renderOptions(); }
-      });
-      w.addEventListener('blur', () => setTimeout(renderSlots));   // show what's set (a half-typed well goes back)
-    });
-  }
-  const chip = $('#brushChip');
-  if (chip) chip.innerHTML = `<span class="c1">${esc(S.brush.ch)}</span><span class="c2">${esc(S.ch2 || CLEAR)}</span>`;
+  const box = $('#chipBox'); if (!box) return;
+  const editing = box.querySelector('input:not([readonly])'); if (editing) { markSolid(); return; }
+  const chip = (slot, c, title) => `<input class="chipc ${slot}${S.activeSlot === slot ? ' sel' : ''}" data-slot="${slot}" readonly value="${esc(c)}" title="${title}">`;
+  box.innerHTML = chip('right', S.ch2 || CLEAR, 'Right: what the right button paints (blue: erase). Click to select, double-click to type a character') +
+    chip('draw', S.brush.ch, 'Draw: what the left button paints. Click to select, double-click to type a character') +
+    `<button class="chipswap" title="Swap Draw and Right (X)">⇄</button>`;
+  $('.chipswap', box).addEventListener('click', swapSlots);
+  $$('input.chipc', box).forEach(w => {
+    w.addEventListener('mousedown', e => { if (w.readOnly) e.preventDefault(); });   // (no text caret until a double-click)
+    w.addEventListener('click', () => selectSlot(w.dataset.slot));
+    w.addEventListener('dblclick', () => { selectSlot(w.dataset.slot); const e2 = $(`#chipBox input[data-slot="${w.dataset.slot}"]`); e2.readOnly = false; e2.classList.add('typing'); e2.focus(); e2.select(); });
+    w.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); endChipTyping(); } });
+    w.addEventListener('input', () => { const c = chars(w.value).filter(x => x !== ' ').pop(); endChipTyping(); if (c) setSlot(w.dataset.slot, c); });
+    w.addEventListener('blur', () => endChipTyping());
+  });
   markSolid();
 }
 
@@ -4681,7 +4689,6 @@ $$('#toolbox .tool').forEach(b => b.addEventListener('click', () => {
 $('#patSave').addEventListener('click', savePatternDraft);
 $('#patCancel').addEventListener('click', closePatternDialog);
 $('#patDlg').addEventListener('pointerdown', e => { if (e.target.id === 'patDlg') closePatternDialog(); });
-$('#brushChip').addEventListener('click', () => { setTool(S.lastDraw === 'brush' && S.paint.mode === 'char' ? 'brush' : 'pencil'); const w = $('#slots [data-slot="draw"]'); if (w) w.focus(); });
 
 // tool palette: drag by the grip, double-click to dock
 (() => {
@@ -4859,6 +4866,7 @@ function start() {
   if (['h', 'v', 'both'].includes(p.mirror)) S.mirror = p.mirror;
   if (p.mirrorFlip === false) S.mirrorFlip = false;
   if (p.mirrorUse && typeof p.mirrorUse === 'object') S.mirrorUse = { ...p.mirrorUse };
+  if (p.activeSlot === 'right') S.activeSlot = 'right';
   if (p.panels && typeof p.panels === 'object') S.panels = { ...p.panels };
   if (p.sideW) S.sideW = clamp(+p.sideW || 0, 240, 480);
   applyPanels();

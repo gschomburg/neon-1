@@ -70,6 +70,12 @@ questions (now under Decisions, at the end).
 - [x] The Pencil's character box (type any character), the quick characters and **Recent** move here, under the slots
 - [x] The brush chip at the bottom of the toolbox shows both slots
 
+- [x] v0.123 (the user's notes): the chips moved out of Characters to the bottom of the tool panel, as overlapping squares
+  (Draw top left, Right bottom right, ⇄ in the corner). Click a chip to select it (it comes to the front); picking a
+  character (palette click, Picker, Alt-click) fills the selected chip, and right-click / Shift fills the other one.
+  Double-click a chip to type a character in; Enter, Tab, Esc or a click elsewhere ends that. The tool panel's grip is a
+  field of dots (8 x 2)
+
 ## 6. Paint panel
 
 - [x] The Paint source moves out of the Brush and Fill bars into its own panel: Character / Noise / Pattern / Ramp, with each
