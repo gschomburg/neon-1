@@ -437,5 +437,12 @@ body[data-theme="light"], body[data-theme="green"] { --warn: #8a5a00; --warn-bg:
 #toolopts .fontbtn .caret { color: var(--mute); font-size: 10px; }
 .layer .ltag { font-size: 10px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 0 4px; margin-right: 6px; line-height: 14px; }
 
-/* Opaque space (no glyph): the same faint red as on the canvas, wherever it's the character shown */
-.solidch { background-color: rgba(255, 0, 0, 0.15) !important; box-shadow: inset 0 0 0 1px rgba(255, 0, 0, 0.35); }
+/* The Special characters have no glyph. Wherever one is the character shown, it's a small inset swatch, like on the
+   canvas: opaque space a faint red cell, Clear a blue outline with no fill. Inset so the two never touch. */
+.solidch, .clearch { position: relative; }
+.clearch { color: transparent !important; }   /* its stand-in character would show as a 'missing glyph' box */
+.solidch::after, .clearch::after { content: ''; position: absolute; inset: 4px; border-radius: 2px; pointer-events: none; }
+.solidch::after { background: rgba(255, 0, 0, 0.15); box-shadow: inset 0 0 0 1px rgba(255, 0, 0, 0.35); }
+.clearch::after { box-shadow: inset 0 0 0 1.5px #4ea1ff; }
+input.solidch { background-color: rgba(255, 0, 0, 0.15); }
+input.clearch { box-shadow: inset 0 0 0 2px #4ea1ff; }
