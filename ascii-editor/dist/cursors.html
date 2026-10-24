@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>asXii cursors</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0f141c; --panel: #161d28; --line: #263142; --ink: #dfe6ef; --mute: #8a97a8; --accent: #6cb6ff; --dark: #1d2633; --light: #f2efe6; --hot: #ff3b5c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.45 "JetBrains Mono", Consolas, monospace; }
+  header { padding: 20px 24px 8px; }
+  h1 { margin: 0 0 6px; font-size: 18px; }
+  h2 { margin: 28px 0 10px; font-size: 14px; color: var(--accent); }
+  p { margin: 4px 0; color: var(--mute); max-width: 860px; }
+  main { padding: 0 24px 40px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card:hover { border-color: var(--accent); }
+  .id { font-weight: 700; }
+  .id .n { color: var(--accent); margin-right: 6px; }
+  .use { color: var(--mute); font-size: 12px; min-height: 2.9em; }
+  .views { display: flex; gap: 6px; align-items: stretch; }
+  .big { position: relative; width: 96px; height: 96px; border-radius: 6px; flex: none; }
+  .big.d { background: var(--dark); } .big.l { background: var(--light); }
+  .big img { width: 96px; height: 96px; display: block; }
+  .hot { position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: var(--hot); box-shadow: 0 0 0 1px #fff; }
+  .small { flex: 1; display: grid; grid-template-rows: 1fr 1fr; border-radius: 6px; overflow: hidden; min-width: 40px; }
+  .small div { display: grid; place-items: center; }
+  .small .d { background: var(--dark); } .small .l { background: var(--light); }
+  .small img { width: 24px; height: 24px; }
+  .try { font-size: 11px; color: var(--mute); }
+  .native { height: 96px; display: grid; place-items: center; background: var(--dark); border-radius: 6px; color: var(--mute); }
+  .group { grid-column: 1 / -1; margin: 10px 0 0; color: var(--ink); font-weight: 700; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  table { border-collapse: collapse; }
+  th, td { border: 1px solid var(--line); padding: 4px; text-align: center; }
+  th { color: var(--mute); font-weight: 400; font-size: 11px; }
+  td { background: var(--dark); width: 56px; height: 56px; }
+  td img { width: 48px; height: 48px; display: block; margin: auto; }
+  .matrix { overflow-x: auto; }
+  label { color: var(--mute); }
+</style>
+</head>
+<body>
+<header>
+  <h1>asXii cursors</h1>
+  <p>Every cursor the editor draws, numbered so you can point at one ("C07: the lasso tail is too long"). Each card shows the
+    cursor big on a dark and a light background, with its click point (hotspot) as a red dot, and at real size on the right.
+    Hover a card to try the real cursor.</p>
+  <p>Drawn in <code>cursors.js</code> on the toolbox icons' 20 × 20 grid, then scaled to 85% on a 24 × 24 image so a badge fits
+    in the corner. The plan and checklist are in <code>ascii-editor/CURSORS.md</code>.</p>
+</header>
+<main>
+  <h2>In use</h2>
+  <div class="grid" id="used"></div>
+
+  <h2>Glyphs on their own</h2>
+  <p>The base drawings, with no badge.</p>
+  <div class="grid" id="glyphs"></div>
+
+  <h2>Every glyph × every badge</h2>
+  <p>Most of these aren't used. They're here to see how a badge reads on each glyph, for new modes. Hover a cell to try it.</p>
+  <div class="matrix"><table id="matrix"></table></div>
+</main>
+<script src="cursors.js"></script>
+<script>
+'use strict';
+const C = window.ASXII_CURSORS;
+const src = (g, b, dim) => 'data:image/svg+xml,' + encodeURIComponent(C.svg(g, b, dim));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const label = (g, b, dim) => C.GLYPHS[g].name + (b ? ' + ' + C.BADGES[b].name : '') + (dim ? ' (dimmed)' : '');
+
+function card(n, v) {
+  const id = 'C' + String(n).padStart(2, '0');
+  if (v.native) {
+    return `<div class="card" style="cursor:${v.native}"><div class="id"><span class="n">${id}</span>${esc(v.native)}</div>` +
+      `<div class="use">${esc(v.use)}</div><div class="native">browser's own</div><div class="try">hover to try</div></div>`;
+  }
+  const s = src(v.glyph, v.badge, v.dim), [hx, hy] = C.hotspot(v.glyph), k = 96 / C.SIZE;
+  const hot = `<span class="hot" style="left:${hx * k}px;top:${hy * k}px"></span>`;
+  return `<div class="card" style='cursor:${C.css(v.glyph, v.badge, v.dim)}'>` +
+    `<div class="id"><span class="n">${id}</span>${esc(label(v.glyph, v.badge, v.dim))}</div>` +
+    `<div class="use">${esc(v.use)}</div>` +
+    `<div class="views"><div class="big d"><img src="${s}" alt="">${hot}</div><div class="big l"><img src="${s}" alt="">${hot}</div>` +
+    `<div class="small"><div class="d"><img src="${s}" alt=""></div><div class="l"><img src="${s}" alt=""></div></div></div>` +
+    `<div class="try">glyph: ${v.glyph}${v.badge ? ' · badge: ' + v.badge : ''} · hotspot ${hx}, ${hy}</div></div>`;
+}
+
+let n = 0, html = '', group = '';
+for (const v of C.VARIANTS) {
+  if (v.group !== group) { group = v.group; html += `<div class="group">${esc(group)}</div>`; }
+  html += card(++n, v);
+}
+document.getElementById('used').innerHTML = html;
+
+html = '';
+for (const g of Object.keys(C.GLYPHS)) html += card(++n, { glyph: g, badge: null, use: 'Glyph: ' + g });
+document.getElementById('glyphs').innerHTML = html;
+
+const badges = [null, ...Object.keys(C.BADGES)];
+let t = '<tr><th></th>' + badges.map(b => `<th>${b ? esc(C.BADGES[b].name) : 'none'}</th>`).join('') + '</tr>';
+for (const g of Object.keys(C.GLYPHS)) {
+  t += `<tr><th>${esc(C.GLYPHS[g].name)}</th>` + badges.map(b =>
+    `<td title="${esc(label(g, b))}" style='cursor:${C.css(g, b)}'><img src="${src(g, b)}" alt=""></td>`).join('') + '</tr>';
+}
+document.getElementById('matrix').innerHTML = t;
+</script>
+</body>
+</html>

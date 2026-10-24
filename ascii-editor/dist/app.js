@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.71';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.72';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -1566,10 +1566,81 @@ function outlineCells(set, color, now) {
 }
 function loop() {
   // the ants and the float's box move, so keep drawing while either is up
-  if (dirty || S.sel || S.float) { render(); dirty = false; }
+  if (dirty || S.sel || S.float) { render(); updateCursor(); dirty = false; }
   requestAnimationFrame(loop);
 }
 setInterval(() => { if (S.tool === 'type' && S.cursor) { S.blinkOn = !S.blinkOn; redraw(); } }, 530);
+
+// ---------- cursors ----------
+// Our own cursors (drawn in cursors.js, like the toolbox icons): a tool glyph plus a badge for the mode.
+// See ascii-editor/CURSORS.md for the full list, and dist/cursors.html for all of them side by side.
+const curImage = (glyph, badge, dim, fallback) => window.ASXII_CURSORS.css(glyph, badge, dim, fallback);
+// Modifier keys, kept current from every key and pointer event, so the cursor can change the moment one is pressed
+S.mods = { shift: false, alt: false, cmd: false };
+function trackMods(e) {
+  const m = { shift: !!e.shiftKey, alt: !!e.altKey, cmd: !!(e.ctrlKey || e.metaKey) };
+  if (m.shift === S.mods.shift && m.alt === S.mods.alt && m.cmd === S.mods.cmd) return;
+  S.mods = m; redraw(); update3dCursor();
+}
+window.addEventListener('keydown', trackMods, true);
+window.addEventListener('keyup', trackMods, true);
+window.addEventListener('blur', () => { S.mods = { shift: false, alt: false, cmd: false }; redraw(); update3dCursor(); });
+const SEL_BADGE = { rect: 'rect', ellipse: 'ellipse', lasso: null };
+// What a click (or the drag in progress) will do, as a cursor
+function cursorFor() {
+  const t = S.tool, d = S.drag, c = S.hover, m = S.mods;
+  const blocked = c && S.sel && !editable(c.x, c.y);   // with a selection, edits only land inside it
+  if (d) {
+    if (d.kind === 'pan') return 'grabbing';
+    if (d.kind === 'float' || d.kind === 'blockmove') return curImage('move', null, false, 'move');
+    if (d.kind === 'outline') return curImage('arrow', 'dashbox', false, 'default');
+    if (d.kind === 'rect') return curImage('cross', d.mode === 'add' ? 'plus' : d.mode === 'sub' ? 'minus' : SEL_BADGE[S.selShape]);
+    if (d.kind === 'lasso') return curImage('lasso', d.mode === 'add' ? 'plus' : d.mode === 'sub' ? 'minus' : null);
+    if (d.kind === 'shape') return curImage('cross', S.shape.kind);
+    if (d.kind === 'paint' || d.kind === 'stroke') return curImage('fine', d.kind === 'stroke' ? 'wait' : null);
+  }
+  if (S.spaceDown || t === 'hand') return 'grab';
+  if (t === 'select') {
+    if (m.cmd) return curImage('move', null, false, 'move');
+    const mode = m.shift ? 'add' : m.alt ? 'sub' : 'new';
+    if (mode === 'new' && c && S.sel && S.sel.has(K(c.x, c.y))) return curImage('arrow', 'dashbox', false, 'default');
+    const badge = mode === 'add' ? 'plus' : mode === 'sub' ? 'minus' : SEL_BADGE[S.selShape];
+    return curImage(S.selShape === 'lasso' ? 'lasso' : 'cross', badge);
+  }
+  if (t === 'move') return curImage('move', S.sel || S.float ? null : 'layer', false, 'move');
+  if (t === 'type') return 'text';
+  if (t === 'pencil' || t === 'brush' || t === 'eraser') {
+    if (blocked) return 'not-allowed';
+    return curImage('fine', t === 'brush' && strokeDeferred() ? 'wait' : null);
+  }
+  if (t === 'shape') {
+    if (blocked) return 'not-allowed';
+    const p = S.poly && S.poly.pts, f = p && p[0];
+    if (p && p.length >= 3 && c && c.x === f.x && c.y === f.y) return curImage('cross', 'ring');   // a click here closes it
+    return curImage('cross', S.shape.kind);
+  }
+  if (t === 'fill') {
+    if (c && (blocked || c.x < 0 || c.y < 0 || c.x >= S.w || c.y >= S.h)) return 'not-allowed';
+    return curImage('bucket', S.fillSample === 'all' ? 'layer' : null, false, 'cell');
+  }
+  if (t === 'picker') {
+    const got = c && compositeAt(c.x, c.y);
+    return curImage('picker', null, !got || got === SOLID, 'cell');   // dim over an empty cell: nothing to pick
+  }
+  if (t === 'block') return S.blocks.dcells.size ? curImage('move', null, false, 'move') : curImage('cube', null, false, 'pointer');
+  return 'default';
+}
+let lastCur = '';
+function updateCursor() { const v = cursorFor(); if (v !== lastCur) { vp.style.cursor = v; lastCur = v; } }
+// The 3D editor's canvas: Add / Remove (Shift = Remove), Alt or right-drag turns the view, Space or middle-drag pans
+let last3dCur = '';
+function update3dCursor() {
+  const c = b3dCanvas(); if (!c || !cam.open) return;
+  const m = S.mods, d = cam.drag;
+  const v = d && d.pan ? 'grabbing' : d ? curImage('orbit', null, false, 'move') : S.spaceDown ? 'grab' : m.alt ? curImage('orbit', null, false, 'move')
+    : curImage('cross', cam.tool === 'remove' || m.shift ? 'minus' : 'plus');
+  if (v !== last3dCur) { c.style.cursor = v; last3dCur = v; }
+}
 
 // ---------- pointer ----------
 function pt(e) { const r = vp.getBoundingClientRect(); return { px: e.clientX - r.left, py: e.clientY - r.top }; }
@@ -1581,7 +1652,7 @@ vp.addEventListener('pointerdown', e => {
   const { px, py } = pt(e), c = cellAt(px, py);
   if (e.button === 1 || S.spaceDown || S.tool === 'hand') {
     S.drag = { kind: 'pan', sx: px, sy: py, ox: S.offX, oy: S.offY };
-    vp.classList.add('panning'); e.preventDefault(); return;
+    redraw(); e.preventDefault(); return;
   }
   if (e.button !== 0 && !(e.button === 2 && S.tool === 'block')) return;
   const t = S.tool;
@@ -1673,14 +1744,12 @@ vp.addEventListener('pointermove', e => {
       d.lx = c.x; d.ly = c.y; changed();
     }
   }
-  vp.classList.toggle('over-float', S.tool === 'select' && !!S.sel && S.sel.has(K(c.x, c.y)));
   if (moved) { updateInfo(); redraw(); }
 });
 function endDrag() {
   if (S.drag && S.drag.kind === 'shape') { const sh = currentShape(); S.drag = null; commitShape(sh); redraw(); return; }
   if (S.drag && S.drag.kind === 'stroke') { const pts = S.drag.pts; S.drag = null; commitStroke(pts); redraw(); return; }
   const d = S.drag; S.drag = null;
-  vp.classList.remove('panning');
   if (!d) return;
   if (d.kind === 'rect') {
     if (d.ax === d.cx && d.ay === d.cy && d.mode === 'new') { S.sel = null; updateInfo(); }   // a plain click deselects
@@ -1797,7 +1866,7 @@ window.addEventListener('keydown', e => {
     return;
   }
 
-  if (k === ' ') { if (!S.spaceDown) { S.spaceDown = true; vp.classList.add('panning'); } e.preventDefault(); return; }
+  if (k === ' ') { if (!S.spaceDown) { S.spaceDown = true; redraw(); update3dCursor(); } e.preventDefault(); return; }
   const step = e.shiftKey ? 5 : 1;
   switch (k) {
     case 'ArrowLeft': nudge(-step, 0); break;
@@ -1852,9 +1921,9 @@ window.addEventListener('keyup', e => {
   if (e.key === 'Shift') { S.shiftDown = false; if (S.float) redraw(); }
   if (e.key === 'Alt') e.preventDefault();
   if ((e.key === 'Shift' || e.key === 'Alt') && S.drag && (S.drag.kind === 'rect' || S.drag.kind === 'shape')) { S.drag.shift = e.shiftKey; if (S.drag.shape !== 'line') dragBox(S.drag, e.shiftKey, e.altKey); redraw(); }
-  if (e.key === ' ') { S.spaceDown = false; if (!S.drag) vp.classList.remove('panning'); }
+  if (e.key === ' ') { S.spaceDown = false; redraw(); update3dCursor(); }
 });
-window.addEventListener('blur', () => { S.spaceDown = false; S.shiftDown = false; vp.classList.remove('panning'); });
+window.addEventListener('blur', () => { S.spaceDown = false; S.shiftDown = false; redraw(); });
 
 // ---------- clipboard (the copy / cut / paste events work without a permission prompt) ----------
 document.addEventListener('copy', e => {
@@ -2914,6 +2983,7 @@ function b3dTarget(h) {
 }
 function render3d() {
   const c = b3dCanvas(); if (!c || !cam.open) return;
+  update3dCursor();
   const dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
   if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
   const g = c.getContext('2d'), C = S.colors;
@@ -3027,8 +3097,8 @@ function setCamView(name, instant) {
   c.addEventListener('pointerdown', e => {
     try { c.setPointerCapture(e.pointerId); } catch (_) {}
     const [x, y] = pos(e);
-    if (e.button === 1 || S.spaceDown) { cam.drag = { pan: true, x, y, px: cam.pan[0], py: cam.pan[1] }; c.style.cursor = 'grabbing'; e.preventDefault(); return; }   // move the view
-    if (e.button !== 0 || e.altKey) { cam.drag = { x, y, yaw: cam.yaw, pitch: cam.pitch }; return; }   // turn the view
+    if (e.button === 1 || S.spaceDown) { cam.drag = { pan: true, x, y, px: cam.pan[0], py: cam.pan[1] }; update3dCursor(); e.preventDefault(); return; }   // move the view
+    if (e.button !== 0 || e.altKey) { cam.drag = { x, y, yaw: cam.yaw, pitch: cam.pitch }; update3dCursor(); return; }   // turn the view
     const t = b3dTarget(b3dPick(x, y)); if (!t) return;
     const removing = cam.tool === 'remove' || e.shiftKey;
     if (removing) { if (!t.remove) return; pushUndo(); S.blocks.dcells.delete(dkey(...t.remove)); }
@@ -3041,7 +3111,7 @@ function setCamView(name, instant) {
     if (cam.drag) { cam.yaw = cam.drag.yaw + (x - cam.drag.x) * 0.01; cam.pitch = clamp(cam.drag.pitch + (y - cam.drag.y) * 0.01, -Math.PI / 2, Math.PI / 2); render3d(); return; }
     cam.hover = b3dPick(x, y); render3d();
   });
-  const end = () => { cam.drag = null; c.style.cursor = ''; };
+  const end = () => { cam.drag = null; update3dCursor(); };
   c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
   c.addEventListener('pointerleave', () => { if (!cam.drag) { cam.hover = null; render3d(); } });
   c.addEventListener('wheel', e => { e.preventDefault(); cam.zoom = clamp(cam.zoom * Math.pow(1.0015, -e.deltaY), 0.25, 5); render3d(); }, { passive: false });
