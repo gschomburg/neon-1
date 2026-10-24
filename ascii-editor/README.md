@@ -25,6 +25,7 @@ clean (the welcome art).
 - `dist/`: the app itself (`index.html`, `style.css`, `app.js`, `cursors.js`); the only folder that ships.
   - `dist/cursors.html`: every cursor the editor draws, numbered, big and at real size, for feedback on the drawings.
 - `CURSORS.md`: the cursor plan and checklist (what each mode's cursor is, and modes other editors have).
+- `AUTOTILE.md`: the plan for Auto characters (cells that pick their character from their neighbors). Not built yet.
 - `PLAN.md`: the plan (layers, tools, the character converter, block mode, canvas, layout, animation,
   reference apps, output, version 1).
 - `reference/`: art and links to look at.
