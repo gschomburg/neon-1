@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>asXii chip layouts</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* the editor's default (blue) theme */
+  :root { --bg: #0d121c; --panel: #151c2b; --panel-2: #1b2437; --line: #27334b; --text: #c8d3ea; --mute: #7e8aa5; --accent: #6cb6ff; --c-paper: #111a29; --c-ink: #d9e4f8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 20px 24px 6px; }
+  h1 { margin: 0 0 6px; font-size: 18px; }
+  p { margin: 4px 0; color: var(--mute); max-width: 820px; }
+  main { padding: 10px 24px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow: hidden; }
+  .card h2 { margin: 0 0 2px; font-size: 14px; }
+  .card h2 .n { color: var(--accent); margin-right: 6px; }
+  .card .why { color: var(--mute); font-size: 12px; min-height: 2.9em; margin-bottom: 10px; }
+  .row { display: flex; gap: 14px; align-items: flex-start; }
+  .states { display: flex; gap: 10px; }
+  .state { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10.5px; color: var(--mute); }
+  /* a slice of the tool panel: a tool button, the grip of dots, then the chips */
+  .tb { width: 44px; padding: 5px 5px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
+  .tb .tool { width: 34px; height: 32px; border-radius: 5px; display: grid; place-items: center; color: var(--text); }
+  .tb .tool svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .big { zoom: 2.5; }
+  .chips { position: relative; width: 34px; margin: 6px auto 0; }
+  .chip { position: absolute; display: grid; place-items: center; cursor: pointer; font: 700 14px "JetBrains Mono", Consolas, monospace;
+    background: var(--c-paper); color: var(--c-ink); border: 1px solid var(--line); border-radius: 4px; z-index: 1; }
+  .chip.sel { z-index: 2; border-color: var(--mute); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); }
+  .chip.solid { background: color-mix(in srgb, #ff0000 22%, var(--c-paper)); }
+  .chip.clear { background: color-mix(in srgb, #4ea1ff 35%, var(--c-paper)); }
+  .swap { position: absolute; cursor: pointer; color: var(--mute); }
+  .swap:hover { color: var(--text); }
+  .swap svg { display: block; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Draw / Right chip layouts</h1>
+  <p>Six ways to lay out the two chips and the swap at the bottom of the tool panel. Each shows a slice of the tool panel at
+    real size, then 2.5x, in three states: Draw selected, Right selected, and the specials (opaque space in Draw, Clear in Right),
+    which only change the chip's fill. Click a chip to select it, click the arrow to swap. Pick by letter.</p>
+</header>
+<main id="opts"></main>
+<script>
+// arrows, each in its own little viewBox
+const ARROWS = {
+  straight: { vb: '0 0 12 12', d: 'M2 4h8M8 2l2 2-2 2M10 8H2M4 6 2 8l2 2' },
+  curve: { vb: '0 0 12 12', d: 'M3 10V7.5A4.5 4.5 0 0 1 7.5 3H9M7.5 1.5 9 3 7.5 4.5M1.5 8.5 3 10l1.5-1.5' },   // Photoshop's corner swap
+  curveV: { vb: '0 0 10 16', d: 'M3 2.5h1a4 4 0 0 1 4 4v3a4 4 0 0 1-4 4H3M4.5 1 3 2.5 4.5 4M4.5 12 3 13.5 4.5 15' },   // up and down, bulging right
+  curveH: { vb: '0 0 16 10', d: 'M2.5 7v-1a4 4 0 0 1 4-4h3a4 4 0 0 1 4 4v1M1 5.5l1.5 1.5L4 5.5M12 5.5l1.5 1.5L15 5.5' },   // left and right, over the top
+};
+// each layout: the box height, where the chips go (x, y, size) and the arrow (x, y, w, h, kind)
+const LAYOUTS = [
+  { id: 'A', name: 'Diagonal, straight arrow (now)', why: 'What you have: Draw top left, Right bottom right, a straight ⇄ in the corner.',
+    h: 34, draw: [0, 0, 22], right: [12, 12, 22], arrow: [23, -2, 11, 11, 'straight'] },
+  { id: 'B', name: 'Diagonal, curved arrow', why: 'The same overlap, with a curved corner arrow (as in Photoshop), which reads as "swap these two".',
+    h: 34, draw: [0, 0, 22], right: [12, 12, 22], arrow: [23, -2, 11, 11, 'curve'] },
+  { id: 'C', name: 'Vertical overlap', why: 'Draw on top, Right tucked below it (slightly offset), a curved up-down arrow on the right.',
+    h: 37, draw: [0, 0, 22], right: [4, 14, 22], arrow: [27, 7, 7, 13, 'curveV'] },
+  { id: 'D', name: 'Vertical, apart', why: 'Two chips stacked with a small gap, no overlap; the curved up-down arrow beside them.',
+    h: 48, draw: [1, 0, 22], right: [1, 26, 22], arrow: [26, 16, 7, 13, 'curveV'] },
+  { id: 'E', name: 'Vertical, arrow between', why: 'Stacked, with the swap arrow in the gap between them. Tallest, but very clear.',
+    h: 60, draw: [6, 0, 22], right: [6, 38, 22], arrow: [9, 24, 16, 10, 'curveH'] },
+  { id: 'F', name: 'Diagonal, big Draw', why: 'Draw bigger, Right smaller behind it, curved corner arrow. Draw is what you use most.',
+    h: 34, draw: [0, 0, 25], right: [15, 15, 19], arrow: [24, -2, 11, 11, 'curve'] },
+];
+const STATES = [
+  { label: 'Draw selected', draw: '#', right: '@', sel: 'draw' },
+  { label: 'Right selected', draw: '#', right: '@', sel: 'right' },
+  { label: 'specials', draw: 'solid', right: 'clear', sel: 'draw' },
+];
+const toolSvg = '<svg viewBox="0 0 20 20"><path d="M13.5 3.5l3 3L7 16H4v-3zM11.5 5.5l3 3"/></svg>';   // the Pencil
+function chipsHtml(L, st) {
+  const chip = (slot, [x, y, s]) => { const v = st[slot], special = v === 'solid' || v === 'clear';
+    return `<div class="chip ${slot}${special ? ' ' + v : ''}${st.sel === slot ? ' sel' : ''}" data-slot="${slot}" style="left:${x}px;top:${y}px;width:${s}px;height:${s}px;font-size:${Math.round(s * 0.62)}px">${special ? '' : v}</div>`; };
+  const [ax, ay, aw, ah, kind] = L.arrow, A = ARROWS[kind];
+  return `<div class="chips" style="height:${L.h}px">${chip('right', L.right)}${chip('draw', L.draw)}` +
+    `<div class="swap" style="left:${ax}px;top:${ay}px;width:${aw}px;height:${ah}px" title="Swap"><svg viewBox="${A.vb}"><path d="${A.d}"/></svg></div></div>`;
+}
+const panel = (L, st, big) => `<div class="tb${big ? ' big' : ''}"><div class="tool">${toolSvg}</div>${chipsHtml(L, st)}</div>`;
+function render() {
+  document.getElementById('opts').innerHTML = LAYOUTS.map((L, i) => `<div class="card" data-i="${i}"><h2><span class="n">${L.id}</span>${L.name}</h2><div class="why">${L.why}</div>` +
+    `<div class="row">${panel(L, L.live, false)}<div class="states">${STATES.map((st, j) => `<div class="state" data-j="${j}">${panel(L, L.states[j], true)}${st.label}</div>`).join('')}</div></div></div>`).join('');
+}
+// each card keeps its own state (click to select, arrow to swap)
+LAYOUTS.forEach(L => { L.states = STATES.map(s => ({ ...s })); L.live = { ...STATES[0] }; });
+document.addEventListener('click', e => {
+  const card = e.target.closest('.card'); if (!card) return;
+  const L = LAYOUTS[+card.dataset.i], stEl = e.target.closest('.state'), st = stEl ? L.states[+stEl.dataset.j] : L.live;
+  const chip = e.target.closest('.chip'), swap = e.target.closest('.swap');
+  if (chip) st.sel = chip.dataset.slot;
+  else if (swap) [st.draw, st.right] = [st.right, st.draw];
+  else return;
+  render();
+});
+render();
+</script>
+</body>
+</html>

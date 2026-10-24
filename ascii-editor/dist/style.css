@@ -611,5 +611,7 @@ input.clearch { box-shadow: inset 0 0 0 2px #4ea1ff; }
 .chipswap { position: absolute; right: -2px; top: -3px; width: 13px; height: 13px; padding: 0; font-size: 11px; line-height: 13px;
   background: none; border: 0; color: var(--mute); cursor: pointer; }
 .chipswap:hover { color: var(--text); }
-.chipc.clearch { border-color: #4ea1ff; box-shadow: inset 0 0 0 1px #4ea1ff; }
-.chipc.sel.clearch { box-shadow: inset 0 0 0 1px #4ea1ff, 0 2px 6px rgba(0, 0, 0, 0.45); }
+/* the specials in a chip: only the fill changes (opaque space red, Clear blue); the border stays the chip's own */
+.chipc.solidch { background: color-mix(in srgb, #ff0000 22%, var(--c-paper)) !important; }
+.chipc.clearch { background: color-mix(in srgb, #4ea1ff 35%, var(--c-paper)) !important; box-shadow: none; }
+.chipc.sel.clearch { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); }
