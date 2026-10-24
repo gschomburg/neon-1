@@ -6,6 +6,13 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **Meat notes filed, and the music notes compiled** (2026-10-24). New: **`docs/MUSIC.md`**, everything about the
+  music in one place (what's built, the plans, your inspirations incl. Robyn / Monkey Island / the Amiga intros link).
+  The SPEC's music plan now points there. Filed: the alarm corp (CORPS.md A31), the rival waiting its turn (CORPS.md
+  RIVAL), the corp modifiers' name + stage-wide effects (CORPS.md "Corp modifiers": a list of name ideas for you to
+  pick from), the tool suite (SPEC §17). Open: the "Lemonheads dance intro, maybe Moby" reference: which track is it?
+  Not filed: "hackers ICE man" (left in meat notes; not sure what it's for).
+
 - [x] **asXii: decide what a selection does when you switch tools** (decided: option 2, built v0.11) (2026-10-23). Clear it on the drawing tools, or
   keep it and make Brush / Eraser / Type stay inside it (Photoshop; you lean this way). Details in
   `ascii-editor/PLAN.md`, "Open: what a selection does...".

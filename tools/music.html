@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NeoN+1 music</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The game's own music: the same files the game loads, so what plays here is what plays in the game.
+     A few stand-ins first, for the bits of the game these files expect to exist. -->
+<script>
+  window.NEON_FILES = [];
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const save = { musicOn: true, musicVol: 0.8, muted: false, sfxVol: 0.8 };
+  const CORPS = {}, CORP_TELL = {}, CORP_ART = {};
+  const normMotif = m => m;   // (some corps shape their glyphs at the top of the file)
+  window.addEventListener('error', e => { (window.LOAD_ERRORS = window.LOAD_ERRORS || []).push(e.filename + ': ' + e.message); });
+</script>
+<script src="../dist/data/music.js"></script>
+<script src="../dist/engine/music.js"></script>
+<script src="../dist/engine/sound.js"></script>
+<!-- the corps (each one's track sits at the top of its file). tools/bump.js keeps this list in step with dist/index.html. -->
+<!-- corps: begin -->
+<script src="../dist/corps/perimeter.js"></script>
+<script src="../dist/corps/sigil.js"></script>
+<script src="../dist/corps/chronos.js"></script>
+<script src="../dist/corps/mirror.js"></script>
+<script src="../dist/corps/basic.js"></script>
+<script src="../dist/corps/seekr.js"></script>
+<script src="../dist/corps/megamart.js"></script>
+<script src="../dist/corps/cloneworks.js"></script>
+<script src="../dist/corps/haute.js"></script>
+<script src="../dist/corps/ledger.js"></script>
+<script src="../dist/corps/parcelnet.js"></script>
+<script src="../dist/corps/burgertron.js"></script>
+<script src="../dist/corps/nimbus.js"></script>
+<script src="../dist/corps/dewey.js"></script>
+<script src="../dist/corps/rydr.js"></script>
+<script src="../dist/corps/safeharbor.js"></script>
+<script src="../dist/corps/tumbler.js"></script>
+<script src="../dist/corps/purlwise.js"></script>
+<script src="../dist/corps/numberwong.js"></script>
+<script src="../dist/corps/gencorp.js"></script>
+<script src="../dist/corps/zodiac.js"></script>
+<script src="../dist/corps/lexicon.js"></script>
+<script src="../dist/corps/kernel.js"></script>
+<script src="../dist/corps/forgetmenot.js"></script>
+<script src="../dist/corps/tollgate.js"></script>
+<script src="../dist/corps/brightline.js"></script>
+<script src="../dist/corps/coldbrew.js"></script>
+<script src="../dist/corps/mochi.js"></script>
+<script src="../dist/corps/playtime.js"></script>
+<script src="../dist/corps/medix.js"></script>
+<script src="../dist/corps/apiary.js"></script>
+<script src="../dist/corps/kerning.js"></script>
+<script src="../dist/corps/streamflix.js"></script>
+<script src="../dist/corps/glacier.js"></script>
+<script src="../dist/corps/gridlock.js"></script>
+<script src="../dist/corps/liftco.js"></script>
+<script src="../dist/corps/headline.js"></script>
+<script src="../dist/corps/watchpoint.js"></script>
+<script src="../dist/corps/verdant.js"></script>
+<script src="../dist/corps/halflife.js"></script>
+<script src="../dist/corps/boneyard.js"></script>
+<script src="../dist/corps/echo.js"></script>
+<script src="../dist/corps/dialtone.js"></script>
+<script src="../dist/corps/telephonix.js"></script>
+<script src="../dist/corps/tempo.js"></script>
+<script src="../dist/corps/bidblitz.js"></script>
+<script src="../dist/corps/famiglia.js"></script>
+<script src="../dist/corps/choir.js"></script>
+<script src="../dist/corps/luckeez.js"></script>
+<script src="../dist/corps/channel9.js"></script>
+<script src="../dist/corps/bytepets.js"></script>
+<script src="../dist/corps/pawnbros.js"></script>
+<script src="../dist/corps/form27b.js"></script>
+<script src="../dist/corps/carapace.js"></script>
+<script src="../dist/corps/chuckecache.js"></script>
+<script src="../dist/corps/demolition.js"></script>
+<script src="../dist/corps/noir.js"></script>
+<script src="../dist/corps/synapse.js"></script>
+<script src="../dist/corps/spectra.js"></script>
+<script src="../dist/corps/drop4.js"></script>
+<script src="../dist/corps/monte.js"></script>
+<script src="../dist/corps/entropy.js"></script>
+<script src="../dist/corps/predator.js"></script>
+<script src="../dist/corps/aegis.js"></script>
+<script src="../dist/corps/gravitas.js"></script>
+<script src="../dist/corps/decibel.js"></script>
+<script src="../dist/corps/squalor.js"></script>
+<script src="../dist/corps/bullettime.js"></script>
+<script src="../dist/corps/upside.js"></script>
+<script src="../dist/corps/bitrot.js"></script>
+<script src="../dist/corps/lagrange.js"></script>
+<script src="../dist/corps/groundhog.js"></script>
+<script src="../dist/corps/fourthwall.js"></script>
+<script src="../dist/corps/playball.js"></script>
+<script src="../dist/corps/twinlink.js"></script>
+<script src="../dist/corps/cipher.js"></script>
+<script src="../dist/corps/hydra.js"></script>
+<script src="../dist/corps/blackout.js"></script>
+<!-- corps: end -->
+<style>
+  :root {
+    --bg: #15171a; --panel: #1d2024; --line: #2c3036; --text: #d6dade; --mid: #8b929a; --dim: #5d636b; --hi: #ffffff;
+    --acc: #5cc8ff; --warn: #ffb347; --bad: #ff5c6c; --ok: #5fd47a;
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+  body { display: flex; overflow: hidden; }
+  button, select, input { font: inherit; color: var(--text); background: #262a2f; border: 1px solid var(--line); border-radius: 4px; }
+  button { padding: 4px 9px; cursor: pointer; white-space: nowrap; }
+  button:hover { border-color: var(--acc); }
+  button.on { background: #12384a; border-color: var(--acc); color: var(--hi); }
+  button.primary { background: #1d5a7a; border-color: #2c7ea8; color: var(--hi); }
+  input[type=text] { padding: 4px 8px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mid); margin: 18px 0 8px; font-weight: 600; }
+  .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+  .dim { color: var(--dim); }
+
+  /* left: the track list */
+  #list { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--line); }
+  #bar { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  #bar h1 { font-size: 15px; margin: 0 10px 0 0; color: var(--hi); }
+  #filter { width: 180px; }
+  #count { color: var(--mid); margin-left: auto; }
+  #scroll { overflow: auto; flex: 1; }
+  table { border-collapse: collapse; width: 100%; }
+  th { position: sticky; top: 0; background: var(--panel); text-align: left; font-weight: 600; color: var(--mid); font-size: 11px;
+       text-transform: uppercase; letter-spacing: 0.06em; padding: 7px 8px; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; }
+  th.sorted { color: var(--acc); }
+  td { padding: 5px 8px; border-bottom: 1px solid #202327; white-space: nowrap; }
+  tr.track { cursor: pointer; }
+  tr.track:hover td { background: #1c2026; }
+  tr.track.playing td { background: #10303f; }
+  tr.track.playing td.name { color: var(--acc); }
+  td.name { color: var(--hi); font-weight: 600; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.used { color: var(--mid); white-space: normal; min-width: 140px; }
+  .tag { display: inline-block; min-width: 46px; text-align: center; border-radius: 3px; padding: 1px 6px; font-size: 11px; font-weight: 600; }
+  .tag.keep { background: #173d24; color: var(--ok); }
+  .tag.maybe { background: #3d3317; color: var(--warn); }
+  .tag.cut { background: #3d1a1f; color: var(--bad); }
+
+  /* right: the player */
+  #player { flex: 0 0 340px; padding: 6px 16px 16px; overflow: auto; background: var(--panel); }
+  #now { font-size: 22px; font-weight: 700; color: var(--hi); margin-top: 12px; letter-spacing: 0.03em; }
+  #nowinfo { color: var(--mid); margin-top: 2px; }
+  #nowused { color: var(--mid); margin-top: 6px; }
+  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+  .row label { color: var(--mid); min-width: 64px; }
+  #steps { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; margin: 14px 0 4px; }
+  #steps i { height: 14px; background: #262a2f; border-radius: 2px; }
+  #steps i.beat { background: #2f343b; }
+  #steps i.on { background: var(--acc); }
+  #levelname { color: var(--mid); }
+  input[type=range] { width: 150px; accent-color: var(--acc); }
+  textarea { width: 100%; min-height: 54px; font: inherit; color: var(--text); background: #262a2f; border: 1px solid var(--line); border-radius: 4px; padding: 6px; resize: vertical; }
+  #keys { color: var(--dim); font-size: 12px; line-height: 1.6; }
+  #keys b { color: var(--mid); font-weight: 600; }
+  #errors { color: var(--bad); white-space: pre-wrap; font-size: 12px; }
+</style>
+</head>
+<body>
+<section id="list">
+  <div id="bar">
+    <h1>NeoN+1 music</h1>
+    <input id="filter" type="text" placeholder="filter: name, corp, scale..." autocomplete="off">
+    <button id="fAll" class="on">all</button><button id="fKeep">keep</button><button id="fMaybe">maybe</button><button id="fCut">cut</button><button id="fNone">untagged</button>
+    <span id="count"></span>
+  </div>
+  <div id="scroll"><table>
+    <thead><tr>
+      <th data-k="name">track</th><th data-k="bpm">bpm</th><th data-k="key">key</th><th data-k="style">groove</th>
+      <th data-k="bass">bass</th><th data-k="arp">arp</th><th data-k="used">plays for</th><th data-k="tag">tag</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+</section>
+
+<aside id="player">
+  <div id="now">-</div>
+  <div id="nowinfo" class="mono"></div>
+  <div id="nowused"></div>
+  <div id="steps"></div>
+  <div class="row"><button id="play" class="primary">play</button><button id="prev">prev</button><button id="next">next</button></div>
+
+  <h2>Like the game does</h2>
+  <div class="row"><label>level</label><span id="levels"></span></div>
+  <div class="row"><label></label><span id="levelname"></span></div>
+  <div class="row"><label>urgency</label><input id="urgency" type="range" min="0" max="1" step="0.05" value="0"><span id="urgv" class="mono dim">0</span></div>
+  <div class="row"><label>heartbeat</label><button id="low">off</button></div>
+  <div class="row"><label>test</label><button id="win">boss win</button><button id="death">game over</button></div>
+  <div class="row"><label>volume</label><input id="vol" type="range" min="0" max="1" step="0.05" value="0.8"></div>
+
+  <h2>Narrowing down</h2>
+  <div class="row"><button id="tKeep">keep</button><button id="tMaybe">maybe</button><button id="tCut">cut</button><button id="tClear">clear</button></div>
+  <textarea id="note" placeholder="a note on this track"></textarea>
+  <div class="row"><button id="export">copy the list</button><span id="copied" class="dim"></span></div>
+
+  <h2>Keys</h2>
+  <div id="keys">
+    <b>space</b> play / stop &nbsp; <b>up / down</b> track<br>
+    <b>0-4</b> level &nbsp; <b>h</b> heartbeat<br>
+    <b>k / y / x</b> keep / maybe / cut
+  </div>
+  <div id="errors"></div>
+</aside>
+
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const LEVELS = ['pad + bass', '+ drums', '+ arp', '+ lead (boss)', 'final boss'];
+  const TAGS_KEY = 'neon.music.tags';
+  let tags = {};
+  try { tags = JSON.parse(localStorage.getItem(TAGS_KEY) || '{}'); } catch (e) { tags = {}; }
+  const saveTags = () => { try { localStorage.setItem(TAGS_KEY, JSON.stringify(tags)); } catch (e) { /* private mode */ } };
+
+  // Where each track plays: the corps by name, plus the shared spots.
+  const PLACES = { menu: 'title + menus', map: 'map, markets, caches', omni: 'OMNI//CORE', theme: 'theme' };
+  const usedBy = k => Object.keys(MUSIC_FOR).filter(p => MUSIC_FOR[p] === k).map(p => PLACES[p] || (CORPS[p] && CORPS[p].name) || p.toUpperCase());
+  const keyName = s => `${NOTE_NAMES[s.root % 12]} ${s.scale}`;
+  const groove = s => s.style === 'ambient' ? 'ambient' : s.drums || '';
+  const tracks = Object.keys(SONGS).map(k => ({ k, s: SONGS[k], used: usedBy(k) }));
+
+  // ---- the player state the engine reads (the same shape as the game's)
+  const p = { key: null, playing: false, level: 2, urgency: 0, low: false };
+  Music.setSource(() => {
+    const s = SONGS[p.key];
+    return { song: p.playing ? p.key : 'none', level: p.level, urgency: p.urgency, low: p.low,
+      tempo: 1 + (s && s.tick ? p.urgency * 0.25 : 0) + (p.level >= 3 ? 0.05 : 0) };
+  });
+  const start = () => Sound.init();   // audio starts on the first click / key (browsers' rule)
+
+  // ---- the list
+  let sortK = 'order', sortDir = 1, filter = '', tagFilter = 'all';
+  const val = (t, k) => k === 'name' ? t.s.name : k === 'bpm' ? t.s.bpm : k === 'key' ? keyName(t.s) : k === 'style' ? groove(t.s)
+    : k === 'bass' ? (t.s.bass || '') : k === 'arp' ? (t.s.arp || '') + (t.s.pingpong ? ' ping-pong' : '') : k === 'used' ? t.used.join(', ') : k === 'tag' ? (tags[t.k] && tags[t.k].tag) || '' : 0;
+  function visible() {
+    const f = filter.toLowerCase();
+    let out = tracks.filter(t => {
+      const tg = (tags[t.k] && tags[t.k].tag) || '';
+      if (tagFilter === 'none' ? tg : tagFilter !== 'all' && tg !== tagFilter) return false;
+      return !f || [t.s.name, keyName(t.s), groove(t.s), t.s.bass, t.s.arp, t.used.join(' '), t.s.bpm].join(' ').toLowerCase().includes(f);
+    });
+    if (sortK !== 'order') out = out.slice().sort((a, b) => { const x = val(a, sortK), y = val(b, sortK); return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
+    return out;
+  }
+  function renderList() {
+    const vis = visible();
+    $('#rows').innerHTML = vis.map(t => {
+      const tg = tags[t.k] && tags[t.k].tag;
+      return `<tr class="track${t.k === p.key ? ' playing' : ''}" data-k="${t.k}">
+        <td class="name">${t.s.name}</td><td class="num mono">${t.s.bpm}</td><td class="mono">${keyName(t.s)}</td><td>${groove(t.s)}</td>
+        <td>${t.s.bass || ''}</td><td>${t.s.arp || ''}${t.s.pingpong ? ' <span class="dim">ping-pong</span>' : ''}${t.s.tick ? ' <span class="dim">tick</span>' : ''}</td>
+        <td class="used">${t.used.join(', ') || '<span class="dim">unused</span>'}</td>
+        <td>${tg ? `<span class="tag ${tg}">${tg}</span>` : ''}${tags[t.k] && tags[t.k].note ? ' <span class="dim" title="has a note">*</span>' : ''}</td></tr>`;
+    }).join('');
+    const n = k => Object.values(tags).filter(x => x.tag === k).length;
+    $('#count').textContent = `${vis.length} of ${tracks.length} tracks · keep ${n('keep')} · maybe ${n('maybe')} · cut ${n('cut')}`;
+    document.querySelectorAll('th').forEach(th => th.classList.toggle('sorted', th.dataset.k === sortK));
+  }
+  $('#rows').addEventListener('click', e => { const tr = e.target.closest('tr.track'); if (tr) pick(tr.dataset.k, true); });
+  document.querySelectorAll('th').forEach(th => th.addEventListener('click', () => {
+    if (sortK === th.dataset.k) { if (sortDir === 1) sortDir = -1; else { sortK = 'order'; sortDir = 1; } } else { sortK = th.dataset.k; sortDir = 1; }
+    renderList();
+  }));
+  $('#filter').addEventListener('input', e => { filter = e.target.value; renderList(); });
+  const tagBtns = { all: '#fAll', keep: '#fKeep', maybe: '#fMaybe', cut: '#fCut', none: '#fNone' };
+  for (const [k, sel] of Object.entries(tagBtns)) $(sel).addEventListener('click', () => {
+    tagFilter = k; for (const [k2, s2] of Object.entries(tagBtns)) $(s2).classList.toggle('on', k2 === k); renderList();
+  });
+
+  // ---- the player
+  function pick(k, play) {
+    start();
+    p.key = k;
+    if (play) p.playing = true;
+    if (play && Music.current() === k) Music.restart();
+    renderPlayer(); renderList();
+    const row = document.querySelector(`tr[data-k="${k}"]`); if (row) row.scrollIntoView({ block: 'nearest' });
+  }
+  function step(d) {
+    const vis = visible(); if (!vis.length) return;
+    const i = vis.findIndex(t => t.k === p.key);
+    pick(vis[(i + d + vis.length) % vis.length].k, true);
+  }
+  function renderPlayer() {
+    const s = SONGS[p.key];
+    $('#now').textContent = s ? s.name : 'pick a track';
+    $('#nowinfo').textContent = s ? `${s.bpm} bpm · ${keyName(s)} · ${groove(s)}${s.bass ? ' · bass ' + s.bass : ''}${s.arp ? ' · arp ' + s.arp : ''}` : '';
+    $('#nowused').textContent = s ? 'plays for: ' + (usedBy(p.key).join(', ') || 'nothing (unused)') : '';
+    $('#play').textContent = p.playing ? 'stop' : 'play';
+    $('#levels').innerHTML = LEVELS.map((_, i) => `<button data-l="${i}" class="${i === p.level ? 'on' : ''}">${i}</button>`).join(' ');
+    $('#levelname').textContent = s && s.style === 'ambient' ? 'ambient: no levels or drums' : LEVELS[p.level];
+    $('#low').textContent = p.low ? 'on' : 'off'; $('#low').classList.toggle('on', p.low);
+    $('#urgency').value = p.urgency; $('#urgv').textContent = p.urgency.toFixed(2);
+    const t = tags[p.key] || {};
+    for (const [k, sel] of [['keep', '#tKeep'], ['maybe', '#tMaybe'], ['cut', '#tCut']]) $(sel).classList.toggle('on', t.tag === k);
+    if (document.activeElement !== $('#note')) $('#note').value = t.note || '';
+  }
+  $('#play').addEventListener('click', () => { start(); if (!p.key) return step(1); p.playing = !p.playing; renderPlayer(); renderList(); });
+  $('#prev').addEventListener('click', () => step(-1));
+  $('#next').addEventListener('click', () => step(1));
+  $('#levels').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { p.level = +b.dataset.l; renderPlayer(); } });
+  $('#urgency').addEventListener('input', e => { p.urgency = +e.target.value; $('#urgv').textContent = p.urgency.toFixed(2); });
+  $('#low').addEventListener('click', () => { p.low = !p.low; renderPlayer(); });
+  $('#vol').addEventListener('input', e => { save.musicVol = save.sfxVol = +e.target.value; start(); Music.volume(); });
+  // the end jingles over the playing track: it powers up / down, then starts again
+  let restartT = 0;
+  const test = (fn, ms) => () => { start(); if (!p.playing) return; fn(); clearTimeout(restartT); restartT = setTimeout(() => Music.restart(), ms); };
+  $('#win').addEventListener('click', test(() => Sound.bossWin(), 3600));
+  $('#death').addEventListener('click', test(() => Sound.death(), 3800));
+
+  // ---- tags and notes
+  function setTag(tag) {
+    if (!p.key) return;
+    const t = tags[p.key] = tags[p.key] || {};
+    if (tag && t.tag !== tag) t.tag = tag; else delete t.tag;
+    if (!t.tag && !t.note) delete tags[p.key];
+    saveTags(); renderPlayer(); renderList();
+  }
+  $('#tKeep').addEventListener('click', () => setTag('keep'));
+  $('#tMaybe').addEventListener('click', () => setTag('maybe'));
+  $('#tCut').addEventListener('click', () => setTag('cut'));
+  $('#tClear').addEventListener('click', () => setTag(null));
+  $('#note').addEventListener('input', e => {
+    if (!p.key) return;
+    const t = tags[p.key] = tags[p.key] || {};
+    t.note = e.target.value; if (!t.note) delete t.note;
+    if (!t.tag && !t.note) delete tags[p.key];
+    saveTags(); renderList();
+  });
+  // The list as text, to paste into a chat or a doc.
+  $('#export').addEventListener('click', () => {
+    const line = t => `- ${t.s.name} (${t.s.bpm} bpm, ${keyName(t.s)}, ${groove(t.s)}; ${t.used.join(', ') || 'unused'})${tags[t.k] && tags[t.k].note ? ': ' + tags[t.k].note : ''}`;
+    const group = (title, f) => { const ts = tracks.filter(f); return ts.length ? `${title} (${ts.length})\n${ts.map(line).join('\n')}\n` : ''; };
+    const tg = t => (tags[t.k] && tags[t.k].tag) || '';
+    const txt = [group('KEEP', t => tg(t) === 'keep'), group('MAYBE', t => tg(t) === 'maybe'), group('CUT', t => tg(t) === 'cut'),
+      group('NOT TAGGED YET', t => !tg(t))].filter(Boolean).join('\n');
+    const done = () => { $('#copied').textContent = 'copied.'; setTimeout(() => { $('#copied').textContent = ''; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => prompt('copy this:', txt));
+    else prompt('copy this:', txt);
+  });
+
+  // ---- keys
+  document.addEventListener('keydown', e => {
+    if ((e.target.matches && e.target.matches('input[type=text], textarea')) || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === ' ') { e.preventDefault(); $('#play').click(); }
+    else if (k === 'arrowdown') { e.preventDefault(); step(1); }
+    else if (k === 'arrowup') { e.preventDefault(); step(-1); }
+    else if (/^[0-4]$/.test(k)) { p.level = +k; renderPlayer(); }
+    else if (k === 'h') { p.low = !p.low; renderPlayer(); }
+    else if (k === 'k') setTag('keep'); else if (k === 'y') setTag('maybe'); else if (k === 'x') setTag('cut');
+  });
+
+  // ---- the step lights: where the track is in its bar
+  const steps = $('#steps');
+  steps.innerHTML = Array.from({ length: 16 }, (_, i) => `<i class="${i % 4 === 0 ? 'beat' : ''}"></i>`).join('');
+  const cells = [...steps.children];
+  (function tick() {
+    const b = Music.beat();
+    let lit = -1;
+    if (b && p.playing) { const into = (performance.now() - b.perf) / b.ms; if (into >= 0 && into < 1.5) lit = ((b.n % 4) * 4 + Math.floor(into * 4)) % 16; }
+    cells.forEach((c, i) => c.classList.toggle('on', i === lit));
+    requestAnimationFrame(tick);
+  })();
+
+  if (window.LOAD_ERRORS && window.LOAD_ERRORS.length) $('#errors').textContent = 'some files had errors (their tracks may still be fine):\n' + window.LOAD_ERRORS.slice(0, 6).join('\n');
+  if (typeof SONGS === 'undefined') document.body.textContent = "Couldn't load the game's music. Open this page from the repo's tools/ folder.";
+  renderList(); renderPlayer();
+})();
+</script>
+</body>
+</html>

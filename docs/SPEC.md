@@ -2283,20 +2283,11 @@ Not yet placed in a version.
   - **Boss twist:** the ghost moves. One ICE node drifts to a new spot when you aren't looking, either after each tap or on a timer.
   - **Boss mod seed:** something like GRAVE ROBBER, where each ICE hit drops a bone you can cash in at the end.
   - **Look and feel:** a sickly green and purple palette, a minor or harmonic theme with an organ-like pad, and a skull for the intro art.
-- **Music engine pass** (noted 2026-10-20). All 64 tracks run on one engine and differ only by settings (tempo, key, scale, chords, pattern picks, echo). The engine has just 4 drum patterns, 5 bass patterns and one lead melody, so similar tracks blur together. Upgrade the engine rather than the tracks:
-  - A melody of its own for each corp (a short motif in the song data, in place of the shared `LEAD_DEGREES`).
-  - More drum and bass patterns (swing, breakbeat, half-time trap hats, a waltz in 3).
-  - A couple of new instrument sounds (organ, pluck, chiptune square, bell).
-  - **The user, 2026-10-21:** wants more unique music for some corps; today it all sits on the same beat.
-    So start with the beat: different grooves and time feels per corp, not just tempo. Pick a handful of
-    corps (the signature ones, the final bosses, BONEYARD) to get fully custom tracks first.
-  - **Fewer, better tracks** (the user, 2026-10-23): clean up the tracks; not every corp needs its own. Maybe:
-    - **8 main tracks**, with corps varying off one of them (key, tempo, a layer).
-    - **About 8 specialty tracks** for bosses and the higher-level corps.
-    - **2 tracks for corps with timers.**
-    - **A title track**, and maybe an **overworld (map) track**.
-  - **Inspirations** (the user, 2026-10-23): anything electronic or synthy: Daft Punk's Tron: Legacy, Arcade Fire,
-    Kavinsky, Goblin, Blade Runner, a little Skrillex, Ladytron, The Album Leaf, Nine Inch Nails, Pixel Grip.
+- **Music: the engine pass, fewer / better tracks, inspirations: all in [MUSIC.md](MUSIC.md)** (moved there
+  2026-10-24, with everything else about the music).
+- **A NeoN+1 tool suite** (the user, 2026-10-24, meat notes): put asXii, the palette editor and any other tools
+  together as a tool suite for the game. Maybe add a **music preview tool** there, so the music player isn't all
+  inside the game; music is the one thing that seems better out of the game (see MUSIC.md).
 
 - **Pushing past the 4x4 grid** (the user, 2026-10-21; "at some point"). What does it mean to go bigger,
   even double the grid (e.g. 8x8)? How it scales on screen (tile size, phones, scrolling), in odds and

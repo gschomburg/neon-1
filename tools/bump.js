@@ -1,6 +1,7 @@
 // bump.js: change the build number everywhere at once.
 //
 //   node tools/bump.js v12.01      (or: node tools/bump.js minor / major)
+//   node tools/bump.js music       (only: refresh tools/music.html's list of corp files)
 //
 // Updates VERSION in dist/engine/core.js, the stamp line at the top of every game file
 // (NEON_FILES.push([..., 'v12.01'])), and the ?v= on every local script link in dist/index.html
@@ -15,6 +16,17 @@ const cur = fs.readFileSync(core, 'utf8').match(/const VERSION = 'v(\d+)\.(\d+)'
 if (!cur) throw new Error('no VERSION in engine/core.js');
 let [maj, min] = [+cur[1], +cur[2]];
 const arg = process.argv[2];
+// The music tool (tools/music.html) loads every corp file for its track: keep its list in step with index.html.
+function syncMusicTool() {
+  const tool = path.join(__dirname, 'music.html');
+  if (!fs.existsSync(tool)) return;
+  const corps = [...fs.readFileSync(path.join(DIST, 'index.html'), 'utf8').matchAll(/<script src="(corps\/[^"?]+)/g)].map(m => m[1]);
+  const t = fs.readFileSync(tool, 'utf8'), nl = t.includes('\r\n') ? '\r\n' : '\n';
+  const list = corps.map(c => `<script src="../dist/${c}"></script>`).join(nl);
+  fs.writeFileSync(tool, t.replace(/(<!-- corps: begin -->)[\s\S]*?(<!-- corps: end -->)/, `$1${nl}${list}${nl}$2`));
+  console.log(`music tool: ${corps.length} corps.`);
+}
+if (arg === 'music') { syncMusicTool(); process.exit(0); }
 if (arg === 'minor') min++;
 else if (arg === 'major') { maj++; min = 0; }
 else if (/^v?\d+\.\d+$/.test(arg || '')) [maj, min] = arg.replace('v', '').split('.').map(Number);
@@ -32,4 +44,5 @@ fs.writeFileSync(core, fs.readFileSync(core, 'utf8').replace(/const VERSION = 'v
 const html = path.join(DIST, 'index.html');
 fs.writeFileSync(html, fs.readFileSync(html, 'utf8').replace(/(<script src="(?!https?:)[^"?]+)\?v=[\d.]+"/g, `$1?v=${num}"`));
 console.log(`build ${v}: VERSION, ${n} file stamps, and the script links.`);
+syncMusicTool();
 if (min === 0) console.log(`new major: give it a new save slot (STORE_KEY in engine/core.js, beta_runner.v${maj}.save) and copy the old one over, like v12 does.`);

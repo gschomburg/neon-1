@@ -303,6 +303,13 @@ made up, not real brands.
 - Nodes get sawed in half or vanish; or you're looking for the rabbit. The user notes MONTE (A7, the shell
   game) may already cover this idea.
 
+### A31. ALARMS (working name) (the user, 2026-10-24; not designed)
+- A corp with **alarms that go off when you hit ICE**. The user wasn't sure it was noted already: the closest
+  is SPEC §17's trap ideas ("alarm (raises a corp-wide trace meter)", "trace meter: misses raise alarm across a
+  corp; at max, the boss arrives early or ICE hunts you"). *(Claude)*: so the alarm could be that meter, made
+  into a corp: each ICE hit raises it, and at full the corp does something nasty (the boss comes early, a clock
+  starts, ICE starts moving).
+
 (The user's mod thief idea is under corp modifiers below.)
 
 ---
@@ -644,6 +651,14 @@ From the user's notes on YOU INC and the mod thief: **modifiers that get rolled 
 shown on the map as a small tag on the node. They give variety without new corps, and they get more
 common the deeper you go (e.g. 0% in sector 1, then 10% and +5% per sector).
 
+**The user, 2026-10-24 (meat notes):**
+- **They need a better name than "corp mods"**, since mods are already the player's thing. Something like
+  modifiers, events, effects? *(Claude)* more to pick from: CONDITIONS, TWISTS, HAZARDS, FLAGS, STATUS,
+  PROTOCOLS, or in-world: the corp's **SECURITY** (`SECURITY: RIVAL`) or **ALERTS**.
+- **Effects could be stage-wide**, not just on one corp: e.g. "this stage has a greater chance of rival
+  hackers".
+- **We need more of them.**
+
 ### RIVAL * (from YOU INC)
 - A rival hacker (your persona's name, glitched) runs the same corp alongside you, picking every
   few seconds.
@@ -654,6 +669,8 @@ common the deeper you go (e.g. 0% in sector 1, then 10% and +5% per sector).
 - Beat them to the boss, or outlast them: a bonus (credits, or a better boss reward).
 - Could reuse the multiplayer code with a bot driving the second player.
 - Mod they could drop: DRAFTING (ALWAYS ON): after your 2nd miss in a layer, one ICE locks itself.
+- **The user, 2026-10-24:** the rival should **wait for you to tap a node before it starts** tapping. Maybe
+  it waits and goes **every other turn** (you, then it); you can still outrace it.
 
 ### THIEF (the user's mod thief idea)
 - Hitting ICE steals one of your mods (the rightmost, or a random one), and it shows up in the

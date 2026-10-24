@@ -34,7 +34,7 @@ const INTRO_SHORT = { login: 150, pass: 99999, log: 450, map: 99999, hand: 850, 
 function introIp(name) { const h = hashStr(String(name)) >>> 0; return `10.${h % 256}.${(h >>> 8) % 256}.${(h >>> 16) % 256}`; }
 
 function startIntro() {
-  const full = !save.bootSeen;
+  const full = !save.bootSeen || params.get('intro') === '1';   // ?intro=1: the full first-boot version again
   const p = profile(), files = (window.NEON_FILES || []).map(([f, v]) => ({ f, ok: v === VERSION }));
   const r = rngFor(String(p.name), 'intro');
   // The boot log: every file, with a fake line now and then.
