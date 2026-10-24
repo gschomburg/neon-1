@@ -7,13 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Mono&family=Fira+Code&family=Source+Code+Pro&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=0.104">
+<link rel="stylesheet" href="style.css?v=0.105">
 </head>
 <body data-theme="blue">
 
 <!-- Top bar: menus, document name, global view controls -->
 <header id="topbar">
-  <div class="brand">as<b>X</b>ii <span class="ver">v0.104</span></div>
+  <div class="brand">as<b>X</b>ii <span class="ver">v0.105</span></div>
   <nav class="menus">
     <div class="menu">
       <button class="btn menu-btn">File</button>
@@ -42,16 +42,21 @@
         <button class="btn" data-cmd="copyMerged" title="Copy the selection as you see it, from all visible layers">Copy merged <kbd>Ctrl Shift C</kbd></button>
         <button class="btn" data-cmd="paste">Paste <kbd>Ctrl V</kbd></button>
         <button class="btn" data-cmd="delete">Delete <kbd>Del</kbd></button>
-        <button class="btn" data-cmd="fillSel">Fill selection <kbd>Alt Backspace</kbd></button>
-        <hr>
+      </div>
+    </div>
+    <div class="menu">
+      <button class="btn menu-btn">Select</button>
+      <div class="menu-list">
         <button class="btn" data-cmd="selectAll">Select all <kbd>Ctrl A</kbd></button>
         <button class="btn" data-cmd="deselect">Deselect <kbd>Ctrl D</kbd></button>
+        <hr>
+        <button class="btn" data-cmd="fillSel">Fill selection <kbd>Alt Backspace</kbd></button>
+        <button class="btn" data-cmd="flipH">Flip horizontal</button>
+        <button class="btn" data-cmd="flipV">Flip vertical</button>
         <hr>
         <button class="btn" data-cmd="extrude">Extrude selection (beta)...</button>
         <button class="btn" data-cmd="makePattern">Make pattern from selection...</button>
         <hr>
-        <button class="btn" data-cmd="flipH">Flip horizontal</button>
-        <button class="btn" data-cmd="flipV">Flip vertical</button>
         <button class="btn" data-cmd="drop">Drop floating block <kbd>Enter</kbd></button>
         <button class="btn" data-cmd="dropReplace">Drop with solid white space <kbd>Shift Enter</kbd></button>
       </div>
@@ -66,6 +71,10 @@
         <button class="btn" data-cmd="rasterize">Rasterize text layer</button>
         <button class="btn" data-cmd="mergeDown">Merge down</button>
         <button class="btn" data-cmd="flatten">Flatten all</button>
+        <hr>
+        <button class="btn" data-cmd="blocks3d">Edit blocks in 3D... <kbd>double-click</kbd></button>
+        <button class="btn" data-cmd="blocksBake">Bake blocks to a new layer</button>
+        <button class="btn" data-cmd="blocksClear">Clear blocks</button>
         <hr>
         <button class="btn" data-cmd="focusToggle">Layer focus on / off <kbd>L</kbd></button>
       </div>
@@ -86,9 +95,10 @@
           <b>Block</b> drag to add 3D blocks (Alt / right-drag erases); Block size, Depth and Style; Bake makes them ASCII on a new layer<br>
           <b>Paint</b> Brush and Fill paint a character, noise (random from a set) or a repeating pattern<br>
           <b>Drop</b> white space is Clear (see-through); Shift Enter / Shift D drops it Solid, wiping what is under it (hold Shift to preview)<br>
-          <b>Draw</b> Pencil = one character; Advanced brush = character, noise or pattern; [ and ] change the size; Shift-click draws a straight line from the last stroke; Alt-click picks a character; the right button paints the right-button character (Erase to start; Shift-click with the Picker sets it); the Eraser's right button erases only the brush character; Mirror paints a mirrored copy (drag the triangles at the ends of its lines to move them; Center puts them back; Flip characters turns / into \)<br>
+          <b>Draw</b> Pencil = one character; Advanced brush = character, noise or pattern; [ and ] change the size; Shift-click draws a straight line from the last stroke; Alt-click picks a character; the right button paints the right-button character (Erase to start; Shift-click with the Picker sets it); the Eraser's right button erases only the Draw character. Mirror: set the lines up in the Symmetry panel (or drag the triangles at their ends); each tool's mirror button in the settings bar turns it on for that tool<br>
           <b>Fill</b> Shift-click fills every matching cell (or the other way with Contiguous off)<br>
           <b>Cursor</b> the cell under the pointer is always highlighted (with Mirror on, its mirrored copies too, fainter)<br>
+          <b>Panels</b> the Help panel (right) shows the current tool's keys; click a panel's title to fold it, drag the pane's left edge to resize it. Settings: the bar has each tool's main ones, … the rest; actions are in the Select and Layer menus, and the right-click menu (Ctrl + right-click on tools that paint with the right button)<br>
           <b>View</b> wheel scrolls, Ctrl + wheel zooms, Space + drag pans; Z zoom tool (Alt-click zooms out); + − 0 1
         </div>
       </div>
@@ -121,12 +131,17 @@
   </div>
 </header>
 
-<!-- Tool options: filled in for the current tool -->
+<!-- Tool settings bar: one fixed-height row. The tool's main settings; its secondary ones in the … menu (see TOOLBAR.md) -->
 <div id="optionsbar">
-  <div id="toolname"><span class="name"></span><span id="selnote" hidden title="A selection is active: this tool only changes cells inside it. Ctrl D clears the selection.">inside selection · Ctrl D clears</span></div>
-  <div id="toolopts"></div>
-  <div id="hint"></div>
+  <div id="toolname"><span class="name"></span></div>
+  <div id="toolopts" class="opts"></div>
+  <div class="barend">
+    <button class="btn icon mirroruse" id="mirrorUse" title="Use mirror with this tool (set the mirror lines up in the Symmetry panel)"><svg viewBox="0 0 20 20"><path d="M10 2.5v15" stroke-dasharray="2 2"/><path d="M7.5 5.5 3 10l4.5 4.5zM12.5 5.5 17 10l-4.5 4.5z"/></svg></button>
+    <button class="btn icon" id="moreBtn" title="More settings for this tool">…</button>
+  </div>
 </div>
+<div id="toolmore" class="opts" hidden></div>
+<div id="ctxMenu" class="menu-list ctx" hidden></div>
 
 <main id="workspace">
   <div id="viewport"><canvas id="view"></canvas></div>
@@ -178,14 +193,20 @@
     <div class="gal-credit">From the <a href="https://www.ascii-art.de/ascii/" target="_blank" rel="noopener">ASCII Art Dictionary</a>. The art belongs to its artists; their signatures are in the pieces.</div>
   </aside>
 
-  <!-- Right pane: info, canvas, layers -->
+  <!-- Right pane: help, info, canvas, characters, paint, symmetry, layers. Click a title to fold a panel; drag the left edge to resize -->
+  <div id="sideGrip" title="Drag to resize the side panel"></div>
   <aside id="rightpane">
-    <section>
-      <h2>Info</h2>
-      <div class="info" id="info"></div>
+    <section data-panel="help" class="helpsec">
+      <h2>Help</h2>
+      <div class="pbody" id="help"></div>
     </section>
-    <section>
+    <section data-panel="info">
+      <h2>Info</h2>
+      <div class="pbody"><div class="info" id="info"></div></div>
+    </section>
+    <section data-panel="canvas">
       <h2>Canvas</h2>
+      <div class="pbody">
       <div class="row">
         <label>W <input id="cw" type="number" min="1" max="1000"></label>
         <label>H <input id="chh" type="number" min="1" max="1000"></label>
@@ -207,13 +228,26 @@
         </select>
         <button class="btn primary" id="applySize">Apply</button>
       </div>
+      </div>
     </section>
-    <section class="charsec">
+    <section data-panel="chars" class="charsec">
       <h2>Characters</h2>
-      <div id="charpane" title=""></div>
+      <div class="pbody">
+        <div class="slots opts" id="slots"></div>
+        <div id="charpane" title=""></div>
+      </div>
     </section>
-    <section class="grow">
+    <section data-panel="paint">
+      <h2>Paint</h2>
+      <div class="pbody"><div class="pnote" id="paintNote"></div><div class="opts stack" id="paintOpts"></div></div>
+    </section>
+    <section data-panel="sym">
+      <h2>Symmetry</h2>
+      <div class="pbody"><div class="pnote" id="symNote"></div><div class="opts stack" id="symOpts"></div></div>
+    </section>
+    <section data-panel="layers" class="grow">
       <h2>Layers</h2>
+      <div class="pbody">
       <div class="layer-settings">
         <label class="check" title="Dim every layer but the active one, and draw the active one on top (L)"><input type="checkbox" id="focusChk"> Layer focus</label>
         <label class="check" title="Text layers (T) only change with the Font tool; the Move tool moves them whole. Rasterize or Merge down to paint on them."><input type="checkbox" id="protectChk" checked> Protect text layers</label>
@@ -229,6 +263,7 @@
       <div class="row layerbtns">
         <button class="btn" data-cmd="mergeDown">Merge down</button>
         <button class="btn" data-cmd="flatten">Flatten</button>
+      </div>
       </div>
     </section>
   </aside>
@@ -307,8 +342,8 @@
 <input type="file" id="fileTxt" accept=".txt,text/plain" hidden>
 <pre id="selftest" hidden></pre>
 
-<script src="fonts.js?v=0.104"></script>
-<script src="cursors.js?v=0.104"></script>
-<script src="app.js?v=0.104"></script>
+<script src="fonts.js?v=0.105"></script>
+<script src="cursors.js?v=0.105"></script>
+<script src="app.js?v=0.105"></script>
 </body>
 </html>

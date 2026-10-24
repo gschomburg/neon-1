@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.104';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.105';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -55,6 +55,9 @@ const S = {
   pickSample: 'all',    // Picker: the character you see ('all') or the one on the active layer ('layer')
   ch2: null,            // the right-button character for Pencil and Brush (null = erase); Shift or right-click with the Picker sets it
   mirror: 'off',        // Pencil / Brush / Eraser paint a mirrored copy: off | h (left-right) | v (top-bottom) | both
+  mirrorUse: { pencil: true, brush: true, eraser: true },   // which tools mirror (the toggle in the bar; TOOLBAR.md 7)
+  panels: {},           // right-pane panels that are folded: { id: true }
+  sideW: 0,             // the right pane's width, if you resized it (0 = the default)
   mirrorFlip: true,     // mirrored copies flip their characters (/ becomes \); off = the same characters
   mirrorAt: { x: null, y: null },   // where the mirror lines are, in cells from the canvas's left / top, in half-cell steps
                                     // (a whole number: between two cells; a half: through a cell). null = the middle. Saved with the document
@@ -231,6 +234,10 @@ function textCells(t) {
       for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (!ink(i, j) && !out.has(i + ',' + j)) m.set(K(t.x + i, t.y + j), SOLID);
     }
   }
+  if (t.mirror) {   // typed with mirror on: the mirrored copy too (where it doesn't land on the text itself)
+    const maps = mirrorMapsFor(t.mirror).slice(1), base = [...m];
+    for (const mp of maps) for (const [k, c] of base) { const [x, y] = unK(k), k2 = K(mp.x(x), mp.y(y)); if (!m.has(k2)) m.set(k2, mp.c(c)); }
+  }
   return m;
 }
 // Protect text layers (Layers pane, on by default): other tools leave a text layer alone, the Move tool moves it whole,
@@ -241,6 +248,8 @@ function textLock(what) {
   toast(what + ': this is a text layer. Edit it with the Font tool (F), or Layer › Rasterize to paint on it', 'warn');
   return true;
 }
+// Font + mirror: the text keeps a copy of the mirror setup it was typed with, and draws its mirrored copy from that
+function syncTextMirror(t) { if (mirrorOn('font')) t.mirror = mirrorCfg(); else delete t.mirror; }
 function renderTextLayer(l) { if (l && l.text) l.cells = textCells(l.text); }
 // still the text it was made from? (another tool may have changed its cells)
 function textIntact(l) {
@@ -280,7 +289,7 @@ function endTextEdit() {
 }
 function typeText(fn) {   // change the edited text, as one undo step per run of typing
   const l = editingText(); if (!l) return;
-  pushUndo('font' + l.id); fn(l.text); renderTextLayer(l); textAutoName(l); changed(true);
+  pushUndo('font' + l.id); fn(l.text); syncTextMirror(l.text); renderTextLayer(l); textAutoName(l); changed(true);
 }
 // the font list: each font's name with a sample in it
 function openFontMenu(btn) {
@@ -523,6 +532,7 @@ function selBounds(set) {
 // Combine a set of cells with the selection: new / add (Shift) / sub (Alt) / int (Shift + Alt: keep only the overlap).
 // combineSel works it out without changing anything (the live preview while dragging uses it too).
 function combineSel(cells, mode) {
+  if (S.tool === 'select') cells = mirrorCellSet(cells, 'select');   // with mirror on, the mirrored area is selected too
   if (mode === 'int') { const keep = new Set(); if (S.sel) for (const k of cells) if (S.sel.has(k)) keep.add(k); return keep; }
   const out = mode === 'new' || !S.sel ? new Set() : new Set(S.sel);
   for (const k of cells) { if (mode === 'sub') out.delete(k); else out.add(k); }
@@ -705,7 +715,7 @@ function liftSelection(copy) {
     cells.set(K(x - b.x, y - b.y), lay.cells.get(k) || ' ');
     if (!copy) lay.cells.delete(k);
   }
-  S.float = { cells, x: b.x, y: b.y, w: b.w, h: b.h, lifted: true, origSel: S.sel };
+  S.float = { cells, x: b.x, y: b.y, w: b.w, h: b.h, lifted: true, copy: !!copy, origSel: S.sel };
   S.sel = null;
   changed();
   return true;
@@ -739,11 +749,20 @@ function commitFloat(replaceBlanks) {
   if (!f.lifted) pushUndo();
   if (textLocked()) { S.layers.splice(S.active + 1, 0, makeLayer('Layer ' + (S.layers.length + 1))); S.active++; toast('Dropped on a new layer (the active one is a text layer)'); }
   const lay = L(), sel = new Set();
+  // with mirror on (Move, or Select with Ctrl), the mirrored copy goes too: the mirrored original is lifted away
+  // (unless this was a copy) and the block lands mirrored on the other side as well
+  const maps = mirrorMaps(S.tool === 'select' ? 'select' : 'move').slice(1);
+  if (maps.length && f.lifted && !f.copy && f.origSel) for (const k of f.origSel) { const [x, y] = unK(k); for (const m of maps) lay.cells.delete(K(m.x(x), m.y(y))); }
   for (const [rk, c] of f.cells) {
     const [dx, dy] = unK(rk), x = f.x + dx, y = f.y + dy;
     if (c !== ' ') lay.cells.set(K(x, y), c);
     else if (erase) lay.cells.delete(K(x, y));
     sel.add(K(x, y));
+  }
+  for (const m of maps) for (const [rk, c] of f.cells) {
+    const [dx, dy] = unK(rk), X = m.x(f.x + dx), Y = m.y(f.y + dy);
+    if (sel.has(K(X, Y))) continue;   // where the copies overlap, the block itself wins
+    if (c !== ' ') lay.cells.set(K(X, Y), m.c(c)); else if (erase) lay.cells.delete(K(X, Y));
   }
   S.float = null;
   S.sel = sel;
@@ -858,7 +877,7 @@ function typeChar(c) {
   if (!editable(cur.x, cur.y)) { warnOutside('Typing'); S.blinkOn = true; redraw(); return; }
   pushUndo('type');
   if (inserting()) shiftRow(cur.y, cur.x, 1);
-  setCell(L(), cur.x, cur.y, c);
+  putCell(L(), cur.x, cur.y, c);
   noteRecent(c);
   if (S.sel) { const n = selStep(cur.x, cur.y, 1); if (n) { cur.x = n.x; cur.y = n.y; } else cur.x++; }
   else cur.x++;
@@ -884,20 +903,32 @@ function brushOffsets(size, tip) {
 const editable = (x, y) => !S.sel || S.sel.has(K(x, y));
 function warnOutside(what) {
   toast(what + ' only inside the selection · Ctrl D clears it', 'warn');
-  const n = $('#selnote'); if (n && !n.hidden) shake(n);
+  const n = $('#help .help-state'); if (n) shake(n);
 }
 // Mirror painting (Pencil, Brush, Eraser): the cells a paint at x, y also lands on, across the mirror lines,
 // with the characters flipped to match (/ becomes \ and so on) when Flip characters is on.
-const mirrorOn = () => S.mirror !== 'off' && (S.tool === 'pencil' || S.tool === 'brush' || S.tool === 'eraser');
+const mirrorOn = (tool = S.tool) => S.mirror !== 'off' && MIRROR_TOOLS.includes(tool) && !!S.mirrorUse[tool];   // the tool's "uses mirror" toggle
 const mirrorX = () => S.mirrorAt.x ?? S.w / 2, mirrorY = () => S.mirrorAt.y ?? S.h / 2;
-function mirrorTargets(x, y, c) {
-  const out = [[x, y, c]];
-  if (!mirrorOn()) return out;
-  const fx = 2 * mirrorX() - 1 - x, fy = 2 * mirrorY() - 1 - y, flip = S.mirrorFlip;
-  const fh = v => v == null || !flip ? v : FLIP_H[v] || v, fv = v => v == null || !flip ? v : FLIP_V[v] || v;
-  if (S.mirror === 'h' || S.mirror === 'both') out.push([fx, y, fh(c)]);
-  if (S.mirror === 'v' || S.mirror === 'both') out.push([x, fy, fv(c)]);
-  if (S.mirror === 'both') out.push([fx, fy, fv(fh(c))]);
+// The mirror as transforms: the first is "as is", then one per mirrored copy, each mapping x, y and the character.
+// cfg: { mode: 'h' | 'v' | 'both', x, y (the lines), flip (flip the characters) }.
+function mirrorMapsFor(cfg) {
+  const id = { x: v => v, y: v => v, c: v => v }, out = [id];
+  if (!cfg || cfg.mode === 'off') return out;
+  const mx = v => 2 * cfg.x - 1 - v, my = v => 2 * cfg.y - 1 - v;
+  const fh = v => v == null || !cfg.flip ? v : FLIP_H[v] || v, fv = v => v == null || !cfg.flip ? v : FLIP_V[v] || v;
+  if (cfg.mode === 'h' || cfg.mode === 'both') out.push({ x: mx, y: id.y, c: fh });
+  if (cfg.mode === 'v' || cfg.mode === 'both') out.push({ x: id.x, y: my, c: fv });
+  if (cfg.mode === 'both') out.push({ x: mx, y: my, c: v => fv(fh(v)) });
+  return out;
+}
+const mirrorCfg = () => ({ mode: S.mirror, x: mirrorX(), y: mirrorY(), flip: S.mirrorFlip });
+const mirrorMaps = (tool = S.tool) => mirrorMapsFor(mirrorOn(tool) ? mirrorCfg() : null);
+const mirrorTargets = (x, y, c, tool) => mirrorMaps(tool).map(m => [m.x(x), m.y(y), m.c(c)]);
+// a set of cells plus their mirrored copies (selections)
+function mirrorCellSet(cells, tool) {
+  const maps = mirrorMaps(tool); if (maps.length < 2) return cells;
+  const out = new Set();
+  for (const k of cells) { const [x, y] = unK(k); for (const m of maps) out.add(K(m.x(x), m.y(y))); }
   return out;
 }
 // The mirror lines' drag handles: small tabs just outside the canvas, at both ends of each line.
@@ -993,22 +1024,37 @@ function floodFill(x, y, every) {
   commitFloat();
   const lay = L();
   const get = S.fillSample === 'all' ? (a, b) => compositeAt(a, b) : (a, b) => lay.cells.has(K(a, b)) ? lay.cells.get(K(a, b)) : null;
-  const target = get(x, y), seen = new Set([K(x, y)]), stack = [[x, y]], cells = [];
-  if (every) {
-    stack.length = 0;
-    for (let j = 0; j < S.h; j++) for (let i = 0; i < S.w; i++) if (editable(i, j) && get(i, j) === target) cells.push([i, j]);
-  }
-  while (stack.length) {
-    const [cx, cy] = stack.pop();
-    cells.push([cx, cy]);
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-      const nx = cx + dx, ny = cy + dy, k = K(nx, ny);
-      if (seen.has(k) || nx < 0 || ny < 0 || nx >= S.w || ny >= S.h || !editable(nx, ny) || get(nx, ny) !== target) continue;
-      seen.add(k); stack.push([nx, ny]);
+  // the area to fill from a start cell: connected cells with its character (or all of them, every)
+  const region = (x, y) => {
+    const target = get(x, y), seen = new Set([K(x, y)]), stack = [[x, y]], cells = [];
+    if (every) {
+      stack.length = 0;
+      for (let j = 0; j < S.h; j++) for (let i = 0; i < S.w; i++) if (editable(i, j) && get(i, j) === target) cells.push([i, j]);
     }
+    while (stack.length) {
+      const [cx, cy] = stack.pop();
+      cells.push([cx, cy]);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = cx + dx, ny = cy + dy, k = K(nx, ny);
+        if (seen.has(k) || nx < 0 || ny < 0 || nx >= S.w || ny >= S.h || !editable(nx, ny) || get(nx, ny) !== target) continue;
+        seen.add(k); stack.push([nx, ny]);
+      }
+    }
+    return cells;
+  };
+  // with mirror on, the mirrored start cells fill their own areas too (the characters flipped to match)
+  const jobs = [];
+  for (const m of mirrorMaps()) {
+    const sx = m.x(x), sy = m.y(y);
+    if (sx < 0 || sy < 0 || sx >= S.w || sy >= S.h || !editable(sx, sy)) continue;
+    jobs.push([region(sx, sy), m.c]);   // all worked out before anything changes
   }
   pushUndo();
-  for (const [cx, cy] of cells) { const p = paintChar(cx, cy, true); if (p !== undefined) setCell(lay, cx, cy, p); }
+  const done = new Set();
+  for (const [cells, flipC] of jobs) for (const [cx, cy] of cells) {
+    if (done.has(K(cx, cy))) continue; done.add(K(cx, cy));
+    const p = paintChar(cx, cy, true); if (p !== undefined) setCell(lay, cx, cy, flipC(p));
+  }
   if (S.paint.mode === 'char') noteRecent(S.brush.ch);
   changed();
 }
@@ -1097,7 +1143,7 @@ function openPatternMenu(btn) {
     if (e.target.classList.contains('pdel')) {
       deleteCustomPattern(p.name);
       if (S.paint.pattern.name === p.name) S.paint.pattern = { name: 'Checker', rows: PATTERNS.Checker };
-      closePatternMenu(); renderOptions(); openPatternMenu($('#toolopts .patbtn'));
+      closePatternMenu(); renderOptions(); openPatternMenu($('.opts .patbtn'));
       return;
     }
     setPattern(p.name, p.rows); closePatternMenu();
@@ -1184,7 +1230,7 @@ function openNoiseMenu(btn) {
     if (e.target.classList.contains('pdel')) {
       S.noises = S.noises.filter(q => q.name !== n.name); saveCustomNoises(); toast(`Deleted noise "${n.name}"`);
       if (S.paint.noise.name === n.name) S.paint.noise = { name: 'Dust', ...NOISES.Dust };
-      closeNoiseMenu(); renderOptions(); openNoiseMenu($('#toolopts .noisebtn'));
+      closeNoiseMenu(); renderOptions(); openNoiseMenu($('.opts .noisebtn'));
       return;
     }
     setNoise(n.name, n.set, n.density); closeNoiseMenu();
@@ -1749,12 +1795,12 @@ function commitShape(shape) {
     if (stroke && shape.outline.has(k)) continue;
     const [x, y] = unK(k);
     if (!editable(x, y)) { blocked = true; continue; }
-    const p = paintChar(x, y, true); if (p !== undefined) setCell(lay, x, y, p);
+    const p = paintChar(x, y, true); if (p !== undefined) putCell(lay, x, y, p);
   }
   if (stroke) for (const [k, c] of shape.outline) {
     const [x, y] = unK(k);
     if (!editable(x, y)) { blocked = true; continue; }
-    setCell(lay, x, y, c);
+    putCell(lay, x, y, c);
   }
   if (blocked) warnOutside('Drawing');
   if (shapeStyle() === 'char') noteRecent(S.brush.ch);
@@ -1946,11 +1992,16 @@ function render() {
   ctx.globalAlpha = 1;
   if (f) {
     ctx.fillStyle = C['c-float-ink'];
-    for (const [rk, c] of f.cells) {
-      if (c === ' ') continue;
-      const [dx, dy] = unK(rk), x = f.x + dx, y = f.y + dy;
-      if (inView(x, y)) ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
-    }
+    const fmaps = mirrorMaps(S.tool === 'select' ? 'select' : 'move');
+    fmaps.forEach((m, i) => {   // with mirror on, where the mirrored copy will land (fainter)
+      ctx.globalAlpha = i ? 0.45 : 1;
+      for (const [rk, c] of f.cells) {
+        if (c === ' ') continue;
+        const [dx, dy] = unK(rk), x = m.x(f.x + dx), y = m.y(f.y + dy);
+        if (inView(x, y)) ctx.fillText(m.c(c), px(x) + cw / 2, py(y) + ty);
+      }
+    });
+    ctx.globalAlpha = 1;
   }
 
   // gallery preview: the piece on a plate, over the art
@@ -2036,8 +2087,8 @@ function render() {
       for (const k of (stroke ? shp.inside : new Set([...shp.inside, ...shp.outline.keys()]))) { const [x, y] = unK(k); if (inView(x, y)) ctx.fillRect(px(x), py(y), cw, ch); }
     }
     if (!stroke) ctx.globalAlpha = 0.3;   // no outline: show it faintly, as a guide only
-    for (const [k, c] of shp.outline) {
-      const [x, y] = unK(k); if (!inView(x, y)) continue;
+    for (const [k, c0] of shp.outline) for (const [x, y, c] of mirrorTargets(...unK(k), c0)) {   // (and its mirrored copies)
+      if (!inView(x, y)) continue;
       ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x), py(y), cw, ch);
       ctx.fillStyle = C['c-float-ink']; drawCh(c, x, y);
     }
@@ -2265,7 +2316,7 @@ function cursorFor() {
   return 'default';
 }
 let lastCur = '';
-function updateCursor() { const v = cursorFor(); if (v !== lastCur) { vp.style.cursor = v; lastCur = v; } }
+function updateCursor() { const v = cursorFor(); if (v !== lastCur) { vp.style.cursor = v; lastCur = v; } renderHelp(); }   // (renderHelp only redraws when something it shows changed)
 // The 3D editor's canvas: Add / Remove (Shift = Remove), Alt or right-drag turns the view, Space or middle-drag pans
 let last3dCur = '';
 function update3dCursor() {
@@ -2286,6 +2337,7 @@ const rightButtonTool = () => ['block', 'pencil', 'brush', 'eraser', 'picker'].i
 vp.addEventListener('pointerdown', e => {
   if (S.spring) S.spring.used = true;   // a held tool key was used: letting go of it goes back
   if (e.button === 2 && !rightButtonTool()) return;
+  if ((e.button === 2 && (e.ctrlKey || e.metaKey)) || (isMac && e.button === 0 && e.ctrlKey && !e.metaKey)) return;   // the right-click menu
   vp.setPointerCapture(e.pointerId);
   const { px, py } = pt(e), c = cellAt(px, py);
   if (gal.open && !(e.button === 1 || S.spaceDown || S.tool === 'hand' || S.tool === 'zoom')) closeGallery();   // drawing on the canvas puts the gallery away (panning and zooming don't)
@@ -2589,10 +2641,10 @@ window.addEventListener('keydown', e => {
     }
     else if (k === 'Backspace' && S.sel) {
       const p = selStep(cur.x, cur.y, -1);
-      if (p) { cur.x = p.x; cur.y = p.y; pushUndo('type'); setCell(L(), cur.x, cur.y, null); changed(); } else warnOutside('Typing');
+      if (p) { cur.x = p.x; cur.y = p.y; pushUndo('type'); putCell(L(), cur.x, cur.y, null); changed(); } else warnOutside('Typing');
     }
-    else if (k === 'Backspace') { if (editable(cur.x - 1, cur.y)) { cur.x--; pushUndo('type'); setCell(L(), cur.x, cur.y, null); if (inserting()) shiftRow(cur.y, cur.x + 1, -1); changed(); } else warnOutside('Typing'); }
-    else if (k === 'Delete') { if (editable(cur.x, cur.y)) { pushUndo('type'); setCell(L(), cur.x, cur.y, null); if (inserting()) shiftRow(cur.y, cur.x + 1, -1); changed(); } else warnOutside('Typing'); }
+    else if (k === 'Backspace') { if (editable(cur.x - 1, cur.y)) { cur.x--; pushUndo('type'); putCell(L(), cur.x, cur.y, null); if (inserting()) shiftRow(cur.y, cur.x + 1, -1); changed(); } else warnOutside('Typing'); }
+    else if (k === 'Delete') { if (editable(cur.x, cur.y)) { pushUndo('type'); putCell(L(), cur.x, cur.y, null); if (inserting()) shiftRow(cur.y, cur.x + 1, -1); changed(); } else warnOutside('Typing'); }
     else if (k === 'Insert') setTypeInsert(!S.typeInsert);
     else if (k === 'ArrowLeft') cur.x--;
     else if (k === 'ArrowRight') cur.x++;
@@ -2646,6 +2698,7 @@ window.addEventListener('keydown', e => {
     case 'i': case 'I': setTool('picker'); break;
     case 'h': case 'H': setTool('hand'); break;
     case 'z': case 'Z': setTool('zoom'); break;
+    case 'x': case 'X': swapSlots(); break;
     case 'l': case 'L': CMDS.focusToggle(); break;
     case '[': setBrushSize(toolSize().size - 1); break;
     case ']': setBrushSize(toolSize().size + 1); break;
@@ -3035,7 +3088,9 @@ function bakeBlocks() {
   const f = S.blocks.fill, preset = blockFillPreset(f);
   commitFloat(); pushUndo();
   const l = makeLayer('Blocks' + (preset && preset !== 'none' ? ' (' + BLOCK_FILLS[preset].name.split(' ')[0] + ')' : ''));
-  for (const [k, c] of bakeCells()) l.cells.set(k, c);
+  const baked = bakeCells();
+  for (const [k, c] of baked) l.cells.set(k, c);
+  for (const m of mirrorMaps('block').slice(1)) for (const [k, c] of baked) { const [x, y] = unK(k), k2 = K(m.x(x), m.y(y)); if (!baked.has(k2)) l.cells.set(k2, m.c(c)); }   // mirror on: the mirrored blocks too
   S.layers.splice(S.active + 1, 0, l); S.active++;
   changed(true);
   toast(`Baked to a new layer, "${l.name}". The blocks are still here: tweak and bake again, or Clear them`);
@@ -3092,7 +3147,7 @@ function savePrefs() {
   try {
     const tb = $('#toolbox');
     localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid, showSolid: S.showSolid,
-      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
+      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, mirrorUse: S.mirrorUse, panels: S.panels, sideW: S.sideW, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || null; } catch { return null; } }
@@ -3188,7 +3243,6 @@ document.addEventListener('mousedown', e => { if (!isField(e.target) && e.target
 
 // ---------- tools + options bar ----------
 // A few basics stay in the options bar; the full set is the Characters pane on the right.
-const QUICK = ['#', '*', '.', '-', '|'];
 // White space: what the blank cells (spaces) in a moved block, a pattern or noise do where they land on characters.
 const WS_TIP = 'White space = the blank cells (spaces) in what you are placing. Where they land on existing characters: Solid covers them, Clear lets them show through.';
 const WS_SOLID = 'Solid: blank cells cover what is under them and leave it blank. What you place lands exactly as it looks.';
@@ -3214,16 +3268,19 @@ function renderCharPane() {
     chars(set).map(c => c === SOLID ? `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="Opaque space: an empty cell that covers the layers under it (copied and exported as a space)">${SOLID}</button>` :
       c === CLEAR ? `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="Clear: erases wherever you paint it, with any tool (Fill a region, draw a Shape...)">${CLEAR}</button>` : `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="${esc(c)}  U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}">${esc(c)}</button>`).join('') +
     `</div>`).join('');
-  $$('.cbtn', box).forEach(b => b.addEventListener('click', () => pickFromPane(b.textContent)));
+  $$('.cbtn', box).forEach(b => {
+    b.addEventListener('click', () => pickFromPane(b.textContent));
+    b.addEventListener('contextmenu', e => { e.preventDefault(); setCh2(b.textContent); });   // right-click: the Right character
+  });
   markSolid();
 }
 // Opaque space and Clear have no glyph: anywhere the drawing character is shown (chip, palette, recents, the input, the
 // right-button setting), a cell holding it gets the same faint red tint as on the canvas.
 function markSolid() {
-  for (const el of $$('#brushChip, #charpane .cbtn, #toolopts .quick .btn, #toolopts .micon, #toolopts .ch2btn, #paintMenu .micon')) {
+  for (const el of $$('#brushChip span, #charpane .cbtn, #slots .slot, #slots .recent .btn, .opts .micon, #paintMenu .micon')) {
     el.classList.toggle('solidch', el.textContent === SOLID); el.classList.toggle('clearch', el.textContent === CLEAR);
   }
-  const ci = $('#toolopts .charin'); if (ci) { ci.classList.toggle('solidch', ci.value === SOLID); ci.classList.toggle('clearch', ci.value === CLEAR); }
+  const ci = $('#slots .charin'); if (ci) { ci.classList.toggle('solidch', ci.value === SOLID); ci.classList.toggle('clearch', ci.value === CLEAR); }
 }
 // Clicking a character in the pane: type it (Type tool), or make it the character to draw with. The tool stays the same.
 function pickFromPane(c) {
@@ -3231,23 +3288,41 @@ function pickFromPane(c) {
   setBrushChar(c);
   if ((S.tool === 'brush' || S.tool === 'fill') && S.paint.mode !== 'char') { S.paint.mode = 'char'; savePrefs(); renderOptions(); redraw(); }
 }
-const HINTS = {
-  select: 'Drag to select · Shift adds · Alt takes away · Shift + Alt keeps the overlap · mid-drag: Shift = square / circle, Alt = from center, Space moves it · drag inside or arrows move the outline · Ctrl + drag moves the content (+ Alt: a copy)',
-  polygon: 'Click the corners · click the first point (or double-click, or Enter) to close · Backspace takes back a point · Esc cancels · Shift adds, Alt takes away, both keep the overlap',
-  wand: 'Click to select the same character (connected, or everywhere with Contiguous off) · Shift adds · Alt takes away · Shift + Alt keeps the overlap · drag inside moves the outline',
-  move: 'Drag to move the selection (or the whole layer) · Alt + drag moves a copy · Shift locks to one direction · Ctrl + click picks the layer under the pointer · arrows nudge · Enter drops · Esc puts back',
-  type: 'Click a cell and type · Enter = next line · arrows move · Insert switches Overwrite / Insert · Esc leaves typing',
-  font: 'Click and type · click text to edit, drag to move · Enter new line · Esc done',
-  pencil: 'Draw with one character, or Smart: a line that picks its own characters · S switches · Shift-click: a straight line · right button: the right-button character · Alt-click picks a character · Mirror: drag the triangles to move the lines · [ ] size',
-  brush: 'Paint a character, noise or a pattern · Taper / Outline strokes land when you let go · Shift-click: a straight line · right button: the right-button character · Alt-click picks · Mirror: drag the triangles to move the lines · [ ] size',
-  eraser: 'Drag to erase on the active layer · right button erases only the brush character · Shift-click: a straight line · Mirror: drag the triangles to move the lines · [ ] size',
-  block: 'Edit 3D builds the blocks · drag the shape to move it · Bake turns it into ASCII on a new layer',
-  shape: 'Drag to draw · Shift = square / circle / straight, Alt = from center, Space moves it · Polygon: click points, click the first to close, Enter to finish open',
-  fill: 'Click to fill the connected area of the same character · Shift-click fills every match (or the other way with Contiguous off) · Alt-click picks · Alt Backspace fills the selection',
-  picker: 'Click a character to use it for the brush · Shift-click or right-click sets the right-button character (an empty cell: erase)',
-  hand: 'Drag to pan · or hold Space with any tool · Ctrl + wheel zooms',
-  zoom: 'Click to zoom in · Alt-click zooms out · Ctrl 0 fits · Ctrl + wheel zooms with any tool',
+// Help panel (TOOLBAR.md 3): per tool, a summary and one key per line. keys: [keys, what] (the keys are words separated
+// by spaces; Shift, Alt, Ctrl and Space light up while held). drag: the keys that matter while dragging.
+const HELP = {
+  select: { sum: 'Drag to select. Press inside the selection to move just its outline.',
+    keys: [['Shift', 'add to the selection'], ['Alt', 'take away'], ['Shift Alt', 'keep only the overlap'], ['Ctrl', 'drag the content'], ['Ctrl Alt', 'drag a copy of it'], ['Arrows', 'move the outline (Ctrl: the content)'], ['Esc', 'deselect']],
+    drag: [['Shift', 'square / circle'], ['Alt', 'from the center'], ['Space', 'move the box']] },
+  lasso: { sum: 'Drag around what you want; let go to close it.', keys: 'select', drag: [] },
+  polygon: { sum: 'Click the corners. Click the first point, double-click or press Enter to close.',
+    keys: [['Shift', 'add to the selection'], ['Alt', 'take away'], ['Shift Alt', 'keep only the overlap'], ['Backspace', 'take back a point'], ['Esc', 'cancel']] },
+  wand: { sum: 'Click a character to select it: the connected ones, or every one with Contiguous off (in …).',
+    keys: [['Shift', 'add to the selection'], ['Alt', 'take away'], ['Shift Alt', 'keep only the overlap'], ['Drag', 'inside the selection: move its outline']] },
+  move: { sum: 'Drag to move the selection, or the whole layer when nothing is selected.',
+    keys: [['Alt', 'drag a copy'], ['Shift', 'lock to one direction'], ['Ctrl', 'click: pick the layer under the pointer'], ['Arrows', 'nudge (Shift: 5)'], ['Enter', 'drop it (Shift Enter: solid)'], ['Esc', 'put it back']],
+    drag: [['Shift', 'lock to one direction']] },
+  type: { sum: 'Click a cell and type.',
+    keys: [['Enter', 'next line'], ['Arrows', 'move the caret'], ['Backspace', 'delete back'], ['Insert', 'Overwrite / Insert'], ['Esc', 'stop typing']] },
+  font: { sum: 'Click to start text in the font, or click text to edit it. Drag text to move it.',
+    keys: [['Enter', 'new line'], ['Arrows', 'move the text'], ['Esc', 'done']] },
+  pencil: { sum: 'Draw with the Draw character, or Smart: a line that picks its own characters.',
+    keys: [['Shift', 'click: a straight line from the last stroke'], ['Alt', 'click: pick a character'], ['Right', 'paint the Right character'], ['S', 'Character / Smart'], ['[ ]', 'size'], ['X', 'swap Draw and Right']] },
+  brush: { sum: 'Paint with the Paint panel\'s setting. Taper and Outline strokes land when you let go.',
+    keys: [['Shift', 'click: a straight line from the last stroke'], ['Alt', 'click: pick a character'], ['Right', 'paint the Right character'], ['[ ]', 'size'], ['X', 'swap Draw and Right']] },
+  eraser: { sum: 'Drag to erase on the active layer.',
+    keys: [['Shift', 'click: a straight line from the last stroke'], ['Right', 'erase only the Draw character'], ['[ ]', 'size']] },
+  shape: { sum: 'Drag to draw the shape. Polygon: click the corners.',
+    keys: [['Enter', 'Polygon: finish it open'], ['Backspace', 'Polygon: take back a point'], ['Esc', 'Polygon: cancel']],
+    drag: [['Shift', 'square / circle / straight'], ['Alt', 'from the center'], ['Space', 'move it']] },
+  block: { sum: 'Drag the blocks to move them. Double-click to build them in 3D (or Layer › Edit blocks in 3D); Layer › Bake makes them ASCII.', keys: [] },
+  fill: { sum: 'Click to fill the connected area of the same character, with the Paint panel\'s setting.',
+    keys: [['Shift', 'click: every matching cell (the opposite of Contiguous)'], ['Alt', 'click: pick a character']] },
+  picker: { sum: 'Click a character to draw with it.', keys: [['Shift', 'click: set the Right character'], ['Right', 'set the Right character']] },
+  hand: { sum: 'Drag to pan.', keys: [] },
+  zoom: { sum: 'Click to zoom in.', keys: [['Alt', 'click: zoom out'], ['Ctrl 0', 'fit the canvas']] },
 };
+const HELP_ANY = [['Space', 'drag: pan'], ['Ctrl Wheel', 'zoom'], ['Shift Wheel', 'scroll sideways'], ['Tool_key', 'hold it: use that tool for a moment']];
 function setTool(t) {
   if (t === S.tool) return;
   if (t !== 'move' && t !== 'hand') commitFloat();
@@ -3268,20 +3343,18 @@ function setTool(t) {
 }
 function setBrushChar(c) {
   c = chars(c).pop(); if (!c || c === ' ') return;
-  S.brush.ch = c; $('#brushChip').textContent = c;
-  const inp = $('#toolopts .charin'); if (inp) inp.value = c;
-  $$('#toolopts .quick .btn').forEach(b => b.classList.toggle('on', b.textContent === c));
+  S.brush.ch = c;
   $$('#charpane .cbtn').forEach(b => b.classList.toggle('on', b.textContent === c));
-  markSolid(); savePrefs(); redraw();
+  renderSlots(); savePrefs(); redraw();
 }
 function setBrushSize(n) {
   const ts = toolSize();
   ts.size = clamp(n, 1, 25);
-  const s = $('#toolopts .size'); if (s) s.value = ts.size;
+  const s = $('.opts .size'); if (s) s.value = ts.size;
   savePrefs(); redraw();
 }
 function renderRecent() {
-  const box = $('#toolopts .recent'); if (!box) return;
+  const box = $('#slots .recent'); if (!box) return;
   box.innerHTML = S.recent.length
     ? S.recent.map(c => `<button class="btn${c === S.brush.ch ? ' on' : ''}" title="Recently used">${esc(c)}</button>`).join('')
     : '<span class="label" style="font-size:11px">none yet</span>';
@@ -3410,7 +3483,7 @@ function openRampMenu(btn) {
     if (e.target.classList.contains('pdel')) {
       S.ramps = S.ramps.filter(q => q.name !== r.name); saveCustomRamps(); toast(`Deleted ramp "${r.name}"`);
       if (S.paint.ramp.name === r.name) S.paint.ramp = { name: 'Classic', set: RAMPS.Classic };
-      closeRampMenu(); renderOptions(); openRampMenu($('#toolopts .rampbtn'));
+      closeRampMenu(); renderOptions(); openRampMenu($('.opts .rampbtn'));
       return;
     }
     setRamp(r.name, r.set); closeRampMenu();
@@ -3444,7 +3517,7 @@ function openBrushMenu(btn) {
       S.brushes = S.brushes.filter(b => b.name !== name); saveCustomBrushes();
       toast(`Deleted brush "${name}"`);
       if (S.brush.preset === name) S.brush.preset = 'Plain';
-      closeBrushMenu(); renderOptions(); openBrushMenu($('#toolopts .brushbtn'));
+      closeBrushMenu(); renderOptions(); openBrushMenu($('.opts .brushbtn'));
       return;
     }
     setBrushPreset(name); closeBrushMenu();
@@ -3530,20 +3603,19 @@ document.addEventListener('pointerdown', e => {
   if (!e.target.closest('#brushMenu, .brushbtn')) closeBrushMenu();
   if (!e.target.closest('#rampMenu, .rampbtn')) closeRampMenu();
   if (!e.target.closest('#noiseMenu, .noisebtn')) closeNoiseMenu();
-  if (!e.target.closest('#setPop, .setgear, #toolopts .density')) closeSetPop();
+  if (!e.target.closest('#setPop, .setgear, .opts .density')) closeSetPop();
   if (!e.target.closest('#blockPop, .blockgear')) closeBlockPop();
   if (extrude.open && !e.target.closest('#extrudePop, .extrudebtn, [data-cmd="extrude"]')) closeExtrude();
   if (!e.target.closest('#brushPop, .brushgear')) closeBrushPop();
 });
 // Block tool options: Draw / Erase, block size, depth, style, Clear, Bake.
-function blockOptions(add) {
+function blockOptions(add, addMore) {
   const B = S.blocks, num = (key, label, title) => `<span class="label" title="${title}">${label}</span><button class="btn icon" data-bnum="${key}" data-d="-1">−</button><span class="bminv">${B[key]}</span><button class="btn icon" data-bnum="${key}" data-d="1">+</button>`;
-  add(`<button class="btn primary" data-cmd="blocks3d" title="Open the 3D editor to build or change the blocks">Edit 3D</button><span class="sep"></span>`);
   add(`<span class="label">Angle</span><span class="seg"><button class="btn${B.dir < 0 ? ' on' : ''}" data-bdir="-1" title="Depth going back to the left">Left</button><button class="btn${B.dir < 0 ? '' : ' on'}" data-bdir="1" title="Depth going back to the right">Right</button></span><span class="sep"></span>`);
   add(`<span class="label">Show</span><span class="seg"><button class="btn${B.show === 'shapes' ? '' : ' on'}" data-bshow="ascii" title="Pre-bake: the ASCII the blocks will make (amber until you Bake)">ASCII</button><button class="btn${B.show === 'shapes' ? ' on' : ''}" data-bshow="shapes" title="The block shapes">Shapes</button></span><span class="sep"></span>`);
-  add(num('size', 'Size', 'How big each block\'s diamond is') + `<span class="sep"></span>` + num('depth', 'Depth', 'How many columns one block reaches back') + `<span class="sep"></span>`);
-  add(`<button class="btn blockgear" title="How the blocks bake: a fill for each face, white space, with a preview"><span class="gear">⚙</span> Faces</button><span class="sep"></span>`);
-  add(`<button class="btn" data-cmd="blocksClear" title="Remove all the blocks (Ctrl Z brings them back)">Clear</button><button class="btn primary" data-cmd="blocksBake" title="Turn the blocks into ASCII on a new layer">Bake</button>`);
+  addMore(num('size', 'Size', 'How big each block\'s diamond is'));
+  addMore(num('depth', 'Depth', 'How many columns one block reaches back'));
+  addMore(`<button class="btn blockgear" title="How the blocks bake: a fill for each face, white space, with a preview"><span class="gear">⚙</span> Faces</button>`);
 
 }
 function bindBlockOptions(o) {
@@ -3679,7 +3751,7 @@ function openExtrude(btn) {
   if (!extrudeCells()) return toast('The selection is empty on this layer: nothing to extrude', 'warn');
   extrude.open = true;
   refreshExtrudePop();
-  placeUnder($('#extrudePop'), btn || $('#toolopts .extrudebtn') || $('#toolname'), 320);
+  placeUnder($('#extrudePop'), btn || $('#toolname'), 320);
   redraw();
 }
 function closeExtrude() { extrude.open = false; const p = $('#extrudePop'); if (p) p.hidden = true; redraw(); }
@@ -4162,20 +4234,20 @@ function setCamView(name, instant) {
   new ResizeObserver(() => render3d()).observe(c);
 })();
 // Shape tool options: which shape, its style, Fixed aspect / From center, Fill inside.
-function shapeOptions(add) {
+function shapeOptions(add, addMore) {
   const sh = S.shape, k = sh.kind;
   const seg = (v, label) => `<button class="btn${k === v ? ' on' : ''}" data-shapek="${v}">${label}</button>`;
-  add(`<span class="label">Shape</span><span class="seg">${seg('rect', 'Rectangle')}${seg('ellipse', 'Ellipse')}${seg('line', 'Line')}${seg('polygon', 'Polygon')}</span><span class="sep"></span>`);
+  add(`<span class="seg">${seg('rect', 'Rectangle')}${seg('ellipse', 'Ellipse')}${seg('line', 'Line')}${seg('polygon', 'Polygon')}</span><span class="sep"></span>`);
   const styles = k === 'rect' ? RECT_STYLES : k === 'ellipse' ? ELLIPSE_STYLES : k === 'polygon' ? POLY_STYLES : LINE_STYLES;
   const cur = sh[k];
   add(`<span class="label">Style</span><select class="shapestyle" title="How the edges are drawn">${['none', ...Object.keys(styles).filter(s => s !== 'none')].filter(s => styles[s]).map(s =>
     `<option value="${s}"${s === cur ? ' selected' : ''}>${esc(typeof styles[s] === 'string' ? styles[s] : styles[s].name)}</option>`).join('')}</select>`);
-  if (cur === 'char') add(`<span class="micon" title="The Pencil's character">${esc(S.brush.ch)}</span>`);
-  add(`<span class="sep"></span>`);
-  if (k === 'rect' || k === 'ellipse') add(
-    `<label class="label check" title="Keep it a ${k === 'ellipse' ? 'circle' : 'square'} (or hold Shift while dragging)"><input type="checkbox" class="shfixed"${sh.fixed ? ' checked' : ''}> Fixed aspect</label>` +
-    `<label class="label check" title="Grow from where you start (or hold Alt while dragging)"><input type="checkbox" class="shcenter"${sh.center ? ' checked' : ''}> From center</label><span class="sep"></span>`);
-  if (k !== 'line') add(`<label class="label check" title="Fill the inside with the Paint setting (Character / Noise / Pattern). Polygons fill when closed."><input type="checkbox" class="shfill"${sh.fill ? ' checked' : ''}> Fill inside</label><span class="sep"></span>`);
+  if (cur === 'char') add(`<span class="micon" title="The Draw character">${esc(S.brush.ch)}</span>`);
+  if (k === 'rect' || k === 'ellipse') {
+    addMore(`<label class="check" title="Keep it a ${k === 'ellipse' ? 'circle' : 'square'} (or hold Shift while dragging)"><input type="checkbox" class="shfixed"${sh.fixed ? ' checked' : ''}> Fixed aspect</label>`);
+    addMore(`<label class="check" title="Grow from where you start (or hold Alt while dragging)"><input type="checkbox" class="shcenter"${sh.center ? ' checked' : ''}> From center</label>`);
+  }
+  if (k !== 'line') addMore(`<label class="check" title="Fill the inside with the Paint setting (the Paint panel). Polygons fill when closed."><input type="checkbox" class="shfill"${sh.fill ? ' checked' : ''}> Fill inside</label>`);
 }
 function bindShapeOptions(o) {
   $$('[data-shapek]', o).forEach(b => b.addEventListener('click', () => { S.shape.kind = b.dataset.shapek; S.poly = null; savePrefs(); renderOptions(); redraw(); }));
@@ -4187,92 +4259,109 @@ function bindShapeOptions(o) {
   bind('.shfixed', 'fixed'); bind('.shcenter', 'center'); bind('.shfill', 'fill');
 }
 // The character picker: the character box, Recent, and the quick picks (Pencil, and Brush on Character).
-function charPicker(add) {
-    add(`<input class="charin" type="text" value="${esc(S.brush.ch)}" title="Type any character">`);
-    add(`<span class="label">Recent</span><div class="quick recent"></div><span class="sep"></span>`);
-    add(`<div class="quick">${QUICK.map(c => `<button class="btn${c === S.brush.ch ? ' on' : ''}">${esc(c)}</button>`).join('')}</div><span class="sep"></span>`);
-}
+// The tools that can mirror what they do (each has a "uses mirror" toggle in the bar; the lines are set up in Symmetry)
+const MIRROR_TOOLS = ['select', 'move', 'type', 'font', 'pencil', 'brush', 'eraser', 'shape', 'block', 'fill'];
+const TOOL_NAMES = { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Advanced brush', font: 'Font', shape: 'Shape', block: 'Block', eraser: 'Eraser', fill: 'Fill', picker: 'Picker', hand: 'Hand', zoom: 'Zoom' };
+const toolName = () => S.tool === 'select' && S.selShape === 'wand' ? 'Magic wand' : TOOL_NAMES[S.tool] || '';
+const paintUsed = () => S.tool === 'brush' || S.tool === 'fill' || (S.tool === 'shape' && S.shape.fill && S.shape.kind !== 'line');
+// The settings bar (one row: the tool's main settings), its … menu (the secondary ones), and the Paint and Symmetry
+// panels on the right. Each control is built once, in the place it belongs; bindOptions wires up each place.
 function renderOptions() {
   closePatternMenu(); closePaintMenu(); closeRampMenu(); closeNoiseMenu();
-  const o = $('#toolopts'), t = S.tool;
-  o.innerHTML = '';
-  const add = html => o.insertAdjacentHTML('beforeend', html);
-  $('#toolname .name').textContent = t === 'select' && S.selShape === 'wand' ? 'Magic wand' : { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Advanced brush', font: 'Font', shape: 'Shape', block: 'Block', eraser: 'Eraser', fill: 'Fill', picker: 'Picker', hand: 'Hand', zoom: 'Zoom' }[t];
-  if (t === 'shape') shapeOptions(add);
-  if (t === 'block') blockOptions(add);
-  if (t === 'brush' || t === 'fill' || (t === 'shape' && S.shape.fill && S.shape.kind !== 'line')) {
-    const pm = S.paint.mode;
-    add(`<span class="label">Paint</span><button class="btn paintbtn" title="What to paint with"><span class="micon">${esc(modeIcon(pm))}</span><span class="pname">${PAINT_MODES[pm].name}</span><span class="caret">▾</span></button><span class="sep"></span>`);
-    if (pm === 'char') {
-      charPicker(add);
-    } else if (pm === 'ramp') {
-      add(`<button class="btn rampbtn" title="Choose a ramp (light to dense, from the end of the stroke to the middle)"><span class="micon">${esc(rampMirror(S.paint.ramp.set, 13))}</span><span class="pname">${esc(S.paint.ramp.name || 'Custom')}${setPopEdited('ramp') ? ' •' : ''}</span><span class="caret">▾</span></button>` +
-        `<button class="btn setgear" data-kind="ramp" title="Edit the ramp\'s characters and save your own"><span class="gear">⚙</span> Customize</button><span class="sep"></span>`);
-    } else if (pm === 'noise') {
-      add(`<button class="btn noisebtn" title="Choose a noise"><span class="micon">${esc(noisePatch(S.paint.noise.set, S.paint.noise.density, 6, 2))}</span><span class="pname">${esc(S.paint.noise.name || 'Custom')}${setPopEdited('noise') ? ' •' : ''}</span><span class="caret">▾</span></button>` +
-        `<button class="btn setgear" data-kind="noise" title="Edit the noise\'s characters and density, and save your own"><span class="gear">⚙</span> Customize</button>`);
-      add(`<span class="label" title="How many of the cells you paint get a character (the rest are skipped; White space decides what skipped cells do)">Density</span><input class="density" type="range" min="5" max="100" step="5" value="${S.paint.noise.density}" title="How many of the cells you paint get a character"><span class="label dens">${S.paint.noise.density}%</span><span class="sep"></span>`);
-    } else {
-      add(`<button class="btn patbtn" title="Choose a pattern"><pre class="patprev">${esc(patternPreview())}</pre><span class="pname">${esc(S.paint.pattern.name)}</span><span class="caret">▾</span></button><span class="sep"></span>`);
-    }
-    if (pm === 'noise' || pm === 'pattern') {   // (Character and Ramp have no blank spots)
-      const bk = t === 'fill' ? S.blanksFill : S.blanksBrush;
-      add(`<span class="label" title="${WS_TIP}">White space</span><span class="seg"><button class="btn${bk === 'replace' ? ' on' : ''}" data-pblank="replace" title="${WS_SOLID}">Solid</button><button class="btn${bk === 'through' ? ' on' : ''}" data-pblank="through" title="${WS_CLEAR}">Clear</button></span><span class="sep"></span>`);
-    }
-  }
-  if (t === 'fill') {
-    add(`<span class="label">Look at</span><span class="seg"><button class="btn${S.fillSample === 'layer' ? ' on' : ''}" data-sample="layer" title="Fill the area as it is on the active layer">Layer</button><button class="btn${S.fillSample === 'all' ? ' on' : ''}" data-sample="all" title="Fill the area as you see it (all visible layers)">All layers</button></span>`);
-    add(`<label class="label check" title="On: the connected area. Off: every cell with that character on the canvas (Shift-click does the other one)"><input type="checkbox" class="fillcontig"${S.fillContig ? ' checked' : ''}> Contiguous</label>`);
-    add(`<span class="sep"></span><button class="btn" data-cmd="fillSel" title="Alt Backspace">Fill selection</button>`);
-  }
-  if (t === 'font') {
-    add(`<span class="label">Font</span><button class="btn fontbtn" title="Choose a font"><span class="pname">${esc(S.figfont.name)}</span><span class="caret">▾</span></button><span class="sep"></span>`);
-    const lay = (v, label, title) => `<button class="btn${S.figfont.layout === v ? ' on' : ''}" data-flayout="${v}" title="${title}">${label}</button>`;
-    add(`<span class="label">Spacing</span><span class="seg">${lay('default', 'Default', 'The font\'s own spacing')}${lay('full', 'Full', 'Every letter at full width')}${lay('fit', 'Fit', 'Letters slide together until they touch')}${lay('smush', 'Smush', 'Letters overlap by a column, merging where they touch')}</span><span class="sep"></span>`);
-    const ws = (v, label, title) => `<button class="btn${(S.figfont.ws || 'clear') === v ? ' on' : ''}" data-fws="${v}" title="${title}">${label}</button>`;
-    const step = (key, label, title) => `<span class="label" title="${title}">${label}</span><button class="btn icon" data-fsp="${key}" data-d="-1">−</button><span class="bminv">${S.figfont[key] || 0}</span><button class="btn icon" data-fsp="${key}" data-d="1">+</button>`;
-    add(step('ls', 'Letters', 'Extra space between letters (after Spacing); below 0 they overlap') + step('lh', 'Lines', 'Extra rows between lines of text; below 0 they tuck in') + `<span class="sep"></span>`);
-    add(`<span class="label" title="${WS_TIP}">White space</span><span class="seg">${ws('clear', 'Clear', 'Blanks are see-through')}${ws('inside', 'Inside', 'Blanks the letters close in are solid (the inside of an O, the faces of 3D letters)')}${ws('block', 'Block', 'Each row is solid from its first character to its last: the text on a solid plate')}</span><span class="sep"></span>`);
-    const ed = editingText();
-    if (ed) add(`<button class="btn" data-cmd="fontDone" title="Stop typing (Esc)">Done</button><button class="btn" data-cmd="rasterize" title="Make it plain art, here on its own layer">Rasterize</button><button class="btn" data-cmd="mergeDown" title="Make it plain art: merge it into the layer below">Merge down</button>`);
-  }
-  if (t === 'pencil') {
-    add(`<span class="seg"><button class="btn${S.pencil.smart ? '' : ' on'}" data-psmart="0" title="Draw with one character">Character</button><button class="btn${S.pencil.smart ? ' on' : ''}" data-psmart="1" title="A line that picks its own characters as you draw (S)">Smart</button></span><span class="sep"></span>`);
-    if (S.pencil.smart) add(`<span class="label">Style</span><span class="seg">${Object.keys(SMART_STYLES).map(k => `<button class="btn${S.pencil.style === k ? ' on' : ''}" data-pstyle="${k}" title="${{ ascii: 'Picks - | / \\ _ . , ( ) < > by the direction you draw', box: 'Connected box lines ─ │ ╭ ╮ ╰ ╯, joining box lines already there', block: 'Block characters █ ▌ ▐ ▀ ▄' }[k]}">${SMART_STYLES[k]}</button>`).join('')}</span>`);
-    else charPicker(add);
-  }
-  if (t === 'brush') brushStrokeOptions(add);
-  if ((t === 'pencil' && !S.pencil.smart) || t === 'brush' || t === 'eraser') {
-    add(`<span class="label">Size</span><button class="btn icon" data-size="-1">−</button><input class="size" type="text" inputmode="numeric" maxlength="2" value="${toolSize().size}" title="Size, 1-25 ([ and ] change it)"><button class="btn icon" data-size="1">+</button>`);
-    if (t !== 'brush') add(`<span class="label">Tip</span><select class="tip"><option value="square">Square</option><option value="round">Round</option></select>`);
-  }
-  if (t === 'pencil' || t === 'brush' || t === 'eraser') {
-    const mb = (v, label, tip) => `<button class="btn${S.mirror === v ? ' on' : ''}" data-mirror="${v}" title="${tip}">${label}</button>`;
-    add(`<span class="sep"></span><span class="label" title="Paint a mirrored copy across the middle of the canvas">Mirror</span><span class="seg">${mb('off', 'Off', 'No mirror')}${mb('h', '↔', 'Left-right')}${mb('v', '↕', 'Top-bottom')}${mb('both', 'Both', 'Four ways')}</span>` +
-      (S.mirror !== 'off' ? `<label class="label check" title="On: the mirrored copy flips its characters (/ becomes \\, ( becomes )). Off: it uses the same characters"><input type="checkbox" class="mirrorflip"${S.mirrorFlip ? ' checked' : ''}> Flip characters</label>` +
-        `<button class="btn" data-mirrorcenter title="Put the mirror lines back in the middle of the canvas (drag the triangles at their ends to move them)"${S.mirrorAt.x == null && S.mirrorAt.y == null ? ' disabled' : ''}>Center</button>` : ''));
-    if (t !== 'eraser') add(`<span class="sep"></span><span class="label" title="What the right mouse button paints. Shift-click or right-click with the Picker to set it">Right button</span><button class="btn ch2btn" title="${S.ch2 ? 'Click to set it back to erase' : 'Erases. Shift-click with the Picker (I) to paint a character instead'}">${S.ch2 ? esc(S.ch2) : 'Erase'}</button>`);
-  }
-  if (t === 'type') {
-    add(`<span class="label">Typing</span><span class="seg"><button class="btn${S.typeInsert ? '' : ' on'}" data-insert="0" title="Type over what's there (Insert key switches)">Overwrite</button><button class="btn${S.typeInsert ? ' on' : ''}" data-insert="1" title="Push the rest of the row along (Insert key switches)">Insert</button></span>`);
-  }
-  if (t === 'picker') {
-    add(`<span class="label">Look at</span><span class="seg"><button class="btn${S.pickSample === 'layer' ? ' on' : ''}" data-picksample="layer" title="Pick from the active layer">Layer</button><button class="btn${S.pickSample === 'all' ? ' on' : ''}" data-picksample="all" title="Pick what you see (all visible layers)">All</button></span>`);
-  }
+  const t = S.tool, bar = $('#toolopts'), more = $('#toolmore'), paint = $('#paintOpts'), sym = $('#symOpts');
+  for (const el of [bar, more, paint, sym]) el.innerHTML = '';
+  const add = html => bar.insertAdjacentHTML('beforeend', html);
+  const addMore = html => more.insertAdjacentHTML('beforeend', `<div class="morerow">${html}</div>`);
+  const addPaint = html => paint.insertAdjacentHTML('beforeend', `<div>${html}</div>`);
+  const addSym = html => sym.insertAdjacentHTML('beforeend', `<div>${html}</div>`);
+  const sizeCtl = () => `<span class="label">Size</span><button class="btn icon" data-size="-1">−</button><input class="size" type="text" inputmode="numeric" maxlength="2" value="${toolSize().size}" title="Size, 1-25 ([ and ] change it)"><button class="btn icon" data-size="1">+</button>`;
+  const tipCtl = () => `<span class="label">Tip</span><select class="tip"><option value="square">Square</option><option value="round">Round</option></select>`;
+  $('#toolname .name').textContent = toolName();
+
   if (t === 'select') {
     const shp = (s, label) => `<button class="btn${S.selShape === s ? ' on' : ''}" data-shape="${s}" title="${s === 'wand' ? 'W' : 'Shift M cycles'}">${label}</button>`;
-    add(`<span class="label">Shape</span><span class="seg">${shp('rect', 'Rectangle')}${shp('ellipse', 'Ellipse')}${shp('lasso', 'Lasso')}${shp('polygon', 'Polygon')}${shp('wand', 'Wand')}</span><span class="sep"></span>`);
-    if (S.selShape === 'wand') add(`<label class="label check" title="On: the connected cells with the same character. Off: every cell with that character"><input type="checkbox" class="wandcontig"${S.wandContig ? ' checked' : ''}> Contiguous</label>` +
-      `<span class="label">Look at</span><span class="seg"><button class="btn${S.selSample === 'layer' ? ' on' : ''}" data-selsample="layer" title="Match characters on the active layer">Layer</button><button class="btn${S.selSample === 'all' ? ' on' : ''}" data-selsample="all" title="Match what you see (all visible layers)">All</button></span><span class="sep"></span>`);
-    if (S.selShape === 'rect' || S.selShape === 'ellipse') add(`<label class="label check" title="Keep it a ${S.selShape === 'ellipse' ? 'circle' : 'square'} (or hold Shift while dragging)"><input type="checkbox" class="selfixed"${S.selFixed ? ' checked' : ''}> Fixed aspect</label>` +
-      `<label class="label check" title="Grow from where you start (or hold Alt while dragging)"><input type="checkbox" class="selcenter"${S.selCenter ? ' checked' : ''}> From center</label><span class="sep"></span>`);
-    add(`<button class="btn" data-cmd="selectAll">Select all</button><button class="btn" data-cmd="deselect">Deselect</button><span class="sep"></span><button class="btn" data-cmd="flipH">Flip ↔</button><button class="btn" data-cmd="flipV">Flip ↕</button><span class="sep"></span><button class="btn extrudebtn" data-cmd="extrude" title="Give the selected art depth (beta: still rough in places)">Extrude <span class="beta">beta</span></button><button class="btn" data-cmd="makePattern" title="Save the selected art as a pattern for Brush and Fill">Make pattern</button>`);
+    add(`<span class="seg">${shp('rect', 'Rectangle')}${shp('ellipse', 'Ellipse')}${shp('lasso', 'Lasso')}${shp('polygon', 'Polygon')}${shp('wand', 'Wand')}</span>`);
+    if (S.selShape === 'wand') {
+      add(`<span class="sep"></span><label class="check" title="On: the connected cells with the same character. Off: every cell with that character"><input type="checkbox" class="wandcontig"${S.wandContig ? ' checked' : ''}> Contiguous</label>`);
+      addMore(`<span class="label">Look at</span><span class="seg"><button class="btn${S.selSample === 'layer' ? ' on' : ''}" data-selsample="layer" title="Match characters on the active layer">Layer</button><button class="btn${S.selSample === 'all' ? ' on' : ''}" data-selsample="all" title="Match what you see (all visible layers)">All</button></span>`);
+    }
+    if (S.selShape === 'rect' || S.selShape === 'ellipse') {
+      addMore(`<label class="check" title="Keep it a ${S.selShape === 'ellipse' ? 'circle' : 'square'} (or hold Shift while dragging)"><input type="checkbox" class="selfixed"${S.selFixed ? ' checked' : ''}> Fixed aspect</label>`);
+      addMore(`<label class="check" title="Grow from where you start (or hold Alt while dragging)"><input type="checkbox" class="selcenter"${S.selCenter ? ' checked' : ''}> From center</label>`);
+    }
   }
-  if (t === 'move') {
-    add(`<button class="btn" data-cmd="flipH">Flip ↔</button><button class="btn" data-cmd="flipV">Flip ↕</button><span class="sep"></span><button class="btn" data-cmd="drop" title="Enter (D also deselects)">Drop</button><button class="btn" data-cmd="dropReplace" title="Shift Enter: drop with solid white space, so the blank cells wipe what is under them (Shift D also deselects)">Drop solid</button><span class="sep"></span>`);
-    add(`<span class="label" title="${WS_TIP}">White space</span><span class="seg"><button class="btn blanks${S.spacesErase ? ' on' : ''}" data-blank="1" title="${WS_SOLID}">Solid</button><button class="btn blanks${S.spacesErase ? '' : ' on'}" data-blank="0" title="${WS_CLEAR}">Clear</button></span>`);
+  if (t === 'move') add(`<span class="label" title="${WS_TIP}">White space</span><span class="seg"><button class="btn blanks${S.spacesErase ? ' on' : ''}" data-blank="1" title="${WS_SOLID}">Solid</button><button class="btn blanks${S.spacesErase ? '' : ' on'}" data-blank="0" title="${WS_CLEAR}">Clear</button></span>`);
+  if (t === 'type') add(`<span class="seg"><button class="btn${S.typeInsert ? '' : ' on'}" data-insert="0" title="Type over what's there (Insert key switches)">Overwrite</button><button class="btn${S.typeInsert ? ' on' : ''}" data-insert="1" title="Push the rest of the row along (Insert key switches)">Insert</button></span>`);
+  if (t === 'font') {
+    add(`<span class="label">Font</span><button class="btn fontbtn" title="Choose a font"><span class="pname">${esc(S.figfont.name)}</span><span class="caret">▾</span></button>`);
+    const lay = (v, label, title) => `<button class="btn${S.figfont.layout === v ? ' on' : ''}" data-flayout="${v}" title="${title}">${label}</button>`;
+    addMore(`<span class="label">Spacing</span><span class="seg">${lay('default', 'Default', 'The font\'s own spacing')}${lay('full', 'Full', 'Every letter at full width')}${lay('fit', 'Fit', 'Letters slide together until they touch')}${lay('smush', 'Smush', 'Letters overlap by a column, merging where they touch')}</span>`);
+    const step = (key, label, title) => `<span class="label" title="${title}">${label}</span><button class="btn icon" data-fsp="${key}" data-d="-1">−</button><span class="bminv">${S.figfont[key] || 0}</span><button class="btn icon" data-fsp="${key}" data-d="1">+</button>`;
+    addMore(step('ls', 'Letters', 'Extra space between letters (after Spacing); below 0 they overlap') + step('lh', 'Lines', 'Extra rows between lines of text; below 0 they tuck in'));
+    const ws = (v, label, title) => `<button class="btn${(S.figfont.ws || 'clear') === v ? ' on' : ''}" data-fws="${v}" title="${title}">${label}</button>`;
+    addMore(`<span class="label" title="${WS_TIP}">White space</span><span class="seg">${ws('clear', 'Clear', 'Blanks are see-through')}${ws('inside', 'Inside', 'Blanks the letters close in are solid (the inside of an O, the faces of 3D letters)')}${ws('block', 'Block', 'Each row is solid from its first character to its last: the text on a solid plate')}</span>`);
   }
-  $('#hint').textContent = t === 'select' ? HINTS[S.selShape === 'wand' ? 'wand' : S.selShape === 'polygon' ? 'polygon' : 'select'] : HINTS[t];
+  if (t === 'pencil') {
+    add(`<span class="seg"><button class="btn${S.pencil.smart ? '' : ' on'}" data-psmart="0" title="Draw with the Draw character">Character</button><button class="btn${S.pencil.smart ? ' on' : ''}" data-psmart="1" title="A line that picks its own characters as you draw (S)">Smart</button></span>`);
+    if (S.pencil.smart) add(`<span class="sep"></span><span class="label">Style</span><span class="seg">${Object.keys(SMART_STYLES).map(k => `<button class="btn${S.pencil.style === k ? ' on' : ''}" data-pstyle="${k}" title="${{ ascii: 'Picks - | / \\ _ . , ( ) < > by the direction you draw', box: 'Connected box lines ─ │ ╭ ╮ ╰ ╯, joining box lines already there', block: 'Block characters █ ▌ ▐ ▀ ▄' }[k]}">${SMART_STYLES[k]}</button>`).join('')}</span>`);
+    else { add(`<span class="sep"></span>` + sizeCtl()); addMore(tipCtl()); }
+  }
+  if (t === 'brush') { brushStrokeOptions(add); add(sizeCtl()); }
+  if (t === 'eraser') { add(sizeCtl()); addMore(tipCtl()); }
+  if (t === 'shape') shapeOptions(add, addMore);
+  if (t === 'block') blockOptions(add, addMore);
+  if (t === 'fill') {
+    add(`<label class="check" title="On: the connected area. Off: every cell with that character on the canvas (Shift-click does the other one)"><input type="checkbox" class="fillcontig"${S.fillContig ? ' checked' : ''}> Contiguous</label>`);
+    addMore(`<span class="label">Look at</span><span class="seg"><button class="btn${S.fillSample === 'layer' ? ' on' : ''}" data-sample="layer" title="Fill the area as it is on the active layer">Layer</button><button class="btn${S.fillSample === 'all' ? ' on' : ''}" data-sample="all" title="Fill the area as you see it (all visible layers)">All layers</button></span>`);
+  }
+  if (t === 'picker') add(`<span class="label">Look at</span><span class="seg"><button class="btn${S.pickSample === 'layer' ? ' on' : ''}" data-picksample="layer" title="Pick from the active layer">Layer</button><button class="btn${S.pickSample === 'all' ? ' on' : ''}" data-picksample="all" title="Pick what you see (all visible layers)">All</button></span>`);
+
+  // Paint panel: what the Brush, Fill and a filled Shape paint with
+  const pm = S.paint.mode;
+  addPaint(`<button class="btn paintbtn" title="What to paint with"><span class="micon">${esc(modeIcon(pm))}</span><span class="pname">${PAINT_MODES[pm].name}</span><span class="caret">▾</span></button>`);
+  if (pm === 'char') addPaint(`<span class="label">Paints the Draw character (Characters panel)</span>`);
+  else if (pm === 'ramp') addPaint(`<button class="btn rampbtn" title="Choose a ramp (light to dense, from the end of the stroke to the middle)"><span class="micon">${esc(rampMirror(S.paint.ramp.set, 13))}</span><span class="pname">${esc(S.paint.ramp.name || 'Custom')}${setPopEdited('ramp') ? ' •' : ''}</span><span class="caret">▾</span></button>` +
+      `<button class="btn setgear" data-kind="ramp" title="Edit the ramp\'s characters and save your own"><span class="gear">⚙</span> Customize</button>`);
+  else if (pm === 'noise') {
+    addPaint(`<button class="btn noisebtn" title="Choose a noise"><span class="micon">${esc(noisePatch(S.paint.noise.set, S.paint.noise.density, 6, 2))}</span><span class="pname">${esc(S.paint.noise.name || 'Custom')}${setPopEdited('noise') ? ' •' : ''}</span><span class="caret">▾</span></button>` +
+      `<button class="btn setgear" data-kind="noise" title="Edit the noise\'s characters and density, and save your own"><span class="gear">⚙</span> Customize</button>`);
+    addPaint(`<span class="label" title="How many of the cells you paint get a character (the rest are skipped; White space decides what skipped cells do)">Density</span><input class="density" type="range" min="5" max="100" step="5" value="${S.paint.noise.density}" title="How many of the cells you paint get a character"><span class="label dens">${S.paint.noise.density}%</span>`);
+  } else addPaint(`<button class="btn patbtn" title="Choose a pattern"><pre class="patprev">${esc(patternPreview())}</pre><span class="pname">${esc(S.paint.pattern.name)}</span><span class="caret">▾</span></button>`);
+  if (pm === 'noise' || pm === 'pattern') {   // (Character and Ramp have no blank spots)
+    const bk = t === 'fill' ? S.blanksFill : S.blanksBrush;
+    addPaint(`<span class="label" title="${WS_TIP}">White space</span><span class="seg"><button class="btn${bk === 'replace' ? ' on' : ''}" data-pblank="replace" title="${WS_SOLID}">Solid</button><button class="btn${bk === 'through' ? ' on' : ''}" data-pblank="through" title="${WS_CLEAR}">Clear</button></span>`);
+  }
+  const pUse = paintUsed();
+  $('#paintNote').textContent = pUse ? '' : `Not used by ${toolName()}. The Brush, Fill and a filled Shape paint with it.`;
+  $('[data-panel="paint"]').classList.toggle('unused', !pUse);
+
+  // Symmetry panel: the mirror lines (each tool chooses whether it uses them, with the toggle in the bar)
+  const h = S.mirror === 'h' || S.mirror === 'both', v = S.mirror === 'v' || S.mirror === 'both';
+  addSym(`<span class="label">Lines</span><span class="seg"><button class="btn${h ? ' on' : ''}" data-symline="h" title="A left-right mirror (a vertical line)">↔ Left-right</button><button class="btn${v ? ' on' : ''}" data-symline="v" title="A top-bottom mirror (a horizontal line)">↕ Top-bottom</button></span>`);
+  if (h || v) {
+    addSym((h ? `<span class="label">↔ at</span><input type="text" class="symat" data-symat="x" value="${mirrorX()}" title="Where the left-right line is, in cells from the left (half cells: .5 runs through a cell)">` : '') +
+      (v ? `<span class="label">↕ at</span><input type="text" class="symat" data-symat="y" value="${mirrorY()}" title="Where the top-bottom line is, in cells from the top">` : '') +
+      `<button class="btn" data-mirrorcenter title="Put the lines back in the middle of the canvas (or drag the triangles at their ends)"${S.mirrorAt.x == null && S.mirrorAt.y == null ? ' disabled' : ''}>Center</button>`);
+    addSym(`<label class="check" title="On: the mirrored copy flips its characters (/ becomes \\, ( becomes )). Off: it uses the same characters"><input type="checkbox" class="mirrorflip"${S.mirrorFlip ? ' checked' : ''}> Flip characters</label>`);
+  }
+  const canMirror = MIRROR_TOOLS.includes(t), uses = canMirror && !!S.mirrorUse[t];
+  $('#symNote').textContent = !canMirror ? `Not used by ${toolName()}.` : S.mirror === 'off' ? 'Turn a line on to mirror.' : uses ? '' : `${toolName()} isn't mirroring: turn it on with the mirror button in the bar.`;
+  $('[data-panel="sym"]').classList.toggle('unused', !uses || S.mirror === 'off');
+  const mu = $('#mirrorUse'); mu.hidden = !canMirror; mu.classList.toggle('on', uses);
+  mu.title = uses ? `${toolName()} mirrors (click to stop). The lines are set up in the Symmetry panel` : `Mirror with ${toolName()} (set the lines up in the Symmetry panel)`;
+
+  // the … menu: shown only for tools with secondary settings
+  const hasMore = !!more.children.length;
+  if (hasMore) more.insertAdjacentHTML('afterbegin', `<div class="mhead">${esc(toolName())} settings</div>`);
+  $('#moreBtn').hidden = !hasMore; if (!hasMore) more.hidden = true;
+
+  for (const o of [bar, more, paint, sym]) bindOptions(o);
+  renderSlots(); renderHelp(true); clipBar();
+}
+// The bar never wraps or grows: if the window is too narrow, it fades out at the right edge.
+function clipBar() { const b = $('#toolopts'); b.classList.toggle('clipped', b.scrollWidth > b.clientWidth + 1); }
+window.addEventListener('resize', clipBar);
+function bindOptions(o) {
   const ci = $('.charin', o);
   if (ci) ci.addEventListener('input', () => { const c = chars(ci.value).pop(); if (c) { setBrushChar(c); ci.value = c; ci.blur(); } });
   $$('.quick:not(.recent) .btn', o).forEach(b => b.addEventListener('click', () => setBrushChar(b.textContent)));
@@ -4290,10 +4379,17 @@ function renderOptions() {
   const sf = $('.selfixed', o); if (sf) sf.addEventListener('change', () => { S.selFixed = sf.checked; sf.blur(); savePrefs(); });
   const sc = $('.selcenter', o); if (sc) sc.addEventListener('change', () => { S.selCenter = sc.checked; sc.blur(); savePrefs(); });
   $$('[data-shape]', o).forEach(b => b.addEventListener('click', () => setSelShape(b.dataset.shape)));
-  $$('[data-mirror]', o).forEach(b => b.addEventListener('click', () => { S.mirror = b.dataset.mirror; savePrefs(); renderOptions(); redraw(); }));
+  $$('[data-symline]', o).forEach(b => b.addEventListener('click', () => {
+    const h = S.mirror === 'h' || S.mirror === 'both', v = S.mirror === 'v' || S.mirror === 'both';
+    const nh = b.dataset.symline === 'h' ? !h : h, nv = b.dataset.symline === 'v' ? !v : v;
+    S.mirror = nh && nv ? 'both' : nh ? 'h' : nv ? 'v' : 'off'; savePrefs(); renderOptions(); redraw();
+  }));
+  $$('[data-symat]', o).forEach(inp => inp.addEventListener('change', () => {
+    const ax = inp.dataset.symat, max = ax === 'x' ? S.w : S.h, v = clamp(Math.round((+inp.value || 0) * 2) / 2, 0, max);
+    S.mirrorAt[ax] = v === max / 2 ? null : v; inp.blur(); changed(); renderOptions();
+  }));
   const mf = $('.mirrorflip', o); if (mf) mf.addEventListener('change', () => { S.mirrorFlip = mf.checked; mf.blur(); savePrefs(); });
   const mc = $('[data-mirrorcenter]', o); if (mc) mc.addEventListener('click', () => { centerMirror(); renderOptions(); });
-  const c2 = $('.ch2btn', o); if (c2) c2.addEventListener('click', () => { if (S.ch2) { S.ch2 = null; savePrefs(); renderOptions(); toast('Right button: erase'); } else toast('Shift-click a character with the Picker (I) to paint it with the right button'); });
   $$('[data-insert]', o).forEach(b => b.addEventListener('click', () => setTypeInsert(b.dataset.insert === '1')));
   const fc = $('.fillcontig', o); if (fc) fc.addEventListener('change', () => { S.fillContig = fc.checked; fc.blur(); savePrefs(); redraw(); });
   $$('[data-picksample]', o).forEach(b => b.addEventListener('click', () => { S.pickSample = b.dataset.picksample; savePrefs(); renderOptions(); redraw(); }));
@@ -4316,6 +4412,145 @@ function renderOptions() {
     savePrefs(); renderOptions();
   }));
 }
+
+// ---------- Characters panel: the Draw and Right slots (TOOLBAR.md 5) ----------
+// Draw is the brush character (the left button); Right is S.ch2 (the right button; null = erase, shown as Clear).
+function setCh2(c) {
+  S.ch2 = !c || c === CLEAR ? null : c; savePrefs(); renderSlots(); renderOptions();
+  toast(S.ch2 ? `Right: ${chName(S.ch2)}` : 'Right: erase');
+}
+function swapSlots() {
+  const draw = S.brush.ch, right = S.ch2 || CLEAR;
+  S.ch2 = draw === CLEAR ? null : draw; setBrushChar(right); savePrefs();
+  toast(`Draw: ${chName(S.brush.ch)} · Right: ${S.ch2 ? chName(S.ch2) : 'erase'}`);
+}
+function renderSlots() {
+  const el = $('#slots');
+  if (el) {
+    const focused = document.activeElement && document.activeElement.classList.contains('charin');
+    if (!focused) {
+      el.innerHTML = `<span class="slotlbl"><button class="btn slot" data-slot="draw" title="Draw: what the left button paints. Click a character below to set it">${esc(S.brush.ch)}</button>Draw</span>` +
+        `<span class="slotlbl"><button class="btn slot right" data-slot="right" title="Right: what the right button paints (right-click a character below to set it; blue = erase)">${esc(S.ch2 || CLEAR)}</button>Right</span>` +
+        `<button class="btn icon" data-slot="swap" title="Swap Draw and Right (X)">⇄</button>` +
+        `<input class="charin" type="text" value="${esc(S.brush.ch)}" title="Type any character to draw with it">` +
+        `<span class="label">Recent</span><div class="recent"></div>`;
+      $('[data-slot="swap"]', el).addEventListener('click', swapSlots);
+      $('[data-slot="right"]', el).addEventListener('click', () => { if (S.ch2) setCh2(null); else toast('Right-click a character below to paint it with the right button'); });
+      $('[data-slot="draw"]', el).addEventListener('click', () => { const ci = $('.charin', el); ci.focus(); ci.select(); });
+      const ci = $('.charin', el);
+      ci.addEventListener('input', () => { const c = chars(ci.value).pop(); if (c) { ci.blur(); setBrushChar(c); } });
+      renderRecent();
+    }
+  }
+  const chip = $('#brushChip');
+  if (chip) chip.innerHTML = `<span class="c1">${esc(S.brush.ch)}</span><span class="c2">${esc(S.ch2 || CLEAR)}</span>`;
+  markSolid();
+}
+
+// ---------- Help panel (TOOLBAR.md 3): the current tool's keys, live ----------
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform || '');
+const keyLabel = k => ({ Ctrl: isMac ? 'Cmd' : 'Ctrl', Alt: isMac ? 'Option' : 'Alt', Right: 'Right-click' }[k] || k.replace(/_/g, ' '));
+let helpKey = '';
+function renderHelp(force) {
+  const box = $('#help'); if (!box) return;
+  const t = S.tool, d = S.drag, m = S.mods;
+  const sub = t === 'select' ? (S.selShape === 'wand' ? 'wand' : S.selShape === 'polygon' ? 'polygon' : S.selShape === 'lasso' ? 'lasso' : 'select') : t;
+  const H = HELP[sub] || { sum: '', keys: [] }, keys = typeof H.keys === 'string' ? HELP[H.keys].keys : H.keys;
+  const dragging = d && ['rect', 'lasso', 'shape', 'float', 'paint', 'stroke'].includes(d.kind);
+  const held = [m.shift && 'Shift', m.alt && 'Alt', m.cmd && 'Ctrl', S.spaceDown && 'Space'].filter(Boolean);
+  // what's going on right now
+  const state = [];
+  if (S.sel && ['pencil', 'brush', 'eraser', 'shape', 'type', 'fill'].includes(t)) state.push('Inside the selection: only selected cells change. Ctrl D clears it.');
+  if (mirrorOn()) state.push(`Mirroring ${S.mirror === 'both' ? '↔ and ↕' : S.mirror === 'h' ? '↔ left-right' : '↕ top-bottom'} (Symmetry panel).`);
+  if (S.selPoly) state.push(`${S.selPoly.pts.length} point${S.selPoly.pts.length === 1 ? '' : 's'}: click the first one to close.`);
+  if (S.float) state.push('Floating: Enter drops it, Esc puts it back.');
+  const key = [sub, held.join('+'), dragging ? d.kind : '', state.join('|'), toolName()].join('/');
+  if (!force && key === helpKey) return;
+  helpKey = key;
+  const list = (rows, live) => `<div class="help-list${live ? '' : ' help-any'}">` + rows.map(([k, what]) => {
+    const toks = k.split(' '), mods = toks.filter(x => ['Shift', 'Alt', 'Ctrl', 'Space'].includes(x));
+    const on = live && mods.length && mods.length === held.length && mods.every(x => held.includes(x));
+    return `<span class="hk${on ? ' on' : ''}">${toks.map(x => `<b>${esc(keyLabel(x))}</b>`).join(' ')}</span><span class="hd">${esc(what)}</span>`;
+  }).join('') + '</div>';
+  const now = dragging && H.drag ? H.drag : keys;
+  box.innerHTML = `<div class="help-tool">${esc(toolName())}</div><div class="help-sum">${esc(H.sum)}</div>` +
+    (state.length ? `<div class="help-state">${state.map(esc).join('<br>')}</div>` : '') +
+    (dragging && H.drag ? `<div class="help-sub">While dragging</div>` : '') +
+    (now.length ? list(now, true) : '') +
+    (!dragging && H.drag && H.drag.length ? `<div class="help-sub">While dragging</div>` + list(H.drag, false) : '') +   // (lights up once you drag)
+    `<div class="help-sub">Any tool</div>` + list(HELP_ANY, false);
+}
+
+// ---------- the bar's end: uses mirror, and the … menu ----------
+$('#mirrorUse').addEventListener('click', () => {
+  const t = S.tool; if (!MIRROR_TOOLS.includes(t)) return;
+  S.mirrorUse[t] = !S.mirrorUse[t]; savePrefs(); renderOptions(); redraw();
+  toast(S.mirrorUse[t] ? `${toolName()} mirrors` + (S.mirror === 'off' ? ' (turn a line on in Symmetry)' : '') : `${toolName()} doesn't mirror`);
+});
+function placeMore() {
+  const m = $('#toolmore'), r = $('#moreBtn').getBoundingClientRect();
+  m.style.top = (r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, Math.min(r.right - m.offsetWidth, window.innerWidth - m.offsetWidth - 8)) + 'px';
+}
+$('#moreBtn').addEventListener('click', () => { const m = $('#toolmore'); m.hidden = !m.hidden; if (!m.hidden) placeMore(); });
+document.addEventListener('pointerdown', e => {
+  const m = $('#toolmore');
+  if (!m.hidden && !e.target.closest('#toolmore, #moreBtn, #patMenu, #paintMenu, #rampMenu, #noiseMenu, #setPop, #blockPop, #fontMenu')) m.hidden = true;
+});
+window.addEventListener('resize', () => { if (!$('#toolmore').hidden) placeMore(); });
+
+// ---------- right pane: fold panels by their titles, resize by the left edge (TOOLBAR.md 4) ----------
+function applyPanels() {
+  $$('#rightpane section[data-panel]').forEach(sec => sec.classList.toggle('folded', !!S.panels[sec.dataset.panel]));
+  if (S.sideW) $('#rightpane').style.width = S.sideW + 'px';
+}
+$$('#rightpane section[data-panel] > h2').forEach(h => h.addEventListener('click', () => {
+  const id = h.parentElement.dataset.panel; S.panels[id] = !S.panels[id]; applyPanels(); savePrefs();
+}));
+(() => {
+  const grip = $('#sideGrip'), pane = $('#rightpane'); let d = null;
+  grip.addEventListener('pointerdown', e => { try { grip.setPointerCapture(e.pointerId); } catch (_) {} d = { x: e.clientX, w: pane.offsetWidth }; grip.classList.add('drag'); e.preventDefault(); });
+  grip.addEventListener('pointermove', e => { if (!d) return; S.sideW = clamp(d.w - (e.clientX - d.x), 240, 480); pane.style.width = S.sideW + 'px'; });
+  const end = () => { if (!d) return; d = null; grip.classList.remove('drag'); savePrefs(); };
+  grip.addEventListener('pointerup', end); grip.addEventListener('pointercancel', end);
+  grip.addEventListener('dblclick', () => { S.sideW = 0; pane.style.width = ''; savePrefs(); });
+})();
+
+// ---------- right-click menu on the canvas (TOOLBAR.md 2) ----------
+// Right-click, for the tools that don't paint with the right button; Ctrl / Cmd + right-click (or Ctrl-click on a Mac) on those.
+function openCtxMenu(x, y) {
+  const m = $('#ctxMenu'), L0 = L(), items = [];
+  const it = (cmd, label, k) => items.push(`<button class="btn" data-cmd="${cmd}">${label}${k ? ` <kbd>${k}</kbd>` : ''}</button>`), hr = () => items.push('<hr>');
+  it('undo', 'Undo', 'Ctrl Z'); it('redo', 'Redo', 'Ctrl Shift Z'); hr();
+  if (S.sel || S.float) { it('cut', 'Cut', 'Ctrl X'); it('copy', 'Copy', 'Ctrl C'); }
+  it('paste', 'Paste', 'Ctrl V');
+  if (S.sel) it('delete', 'Delete', 'Del');
+  hr(); it('selectAll', 'Select all', 'Ctrl A');
+  if (S.sel || S.float) {
+    it('deselect', 'Deselect', 'Ctrl D'); it('fillSel', 'Fill selection', 'Alt Backspace');
+    it('flipH', 'Flip horizontal'); it('flipV', 'Flip vertical');
+    it('extrude', 'Extrude selection (beta)...'); it('makePattern', 'Make pattern from selection...');
+  }
+  if (S.float) { hr(); it('drop', 'Drop floating block', 'Enter'); it('dropReplace', 'Drop with solid white space', 'Shift Enter'); }
+  if (L0 && L0.text) { hr(); it('rasterize', 'Rasterize text layer'); it('mergeDown', 'Merge down'); }
+  if (S.tool === 'block' || S.blocks.dcells.size) { hr(); it('blocks3d', 'Edit blocks in 3D...'); if (S.blocks.dcells.size) { it('blocksBake', 'Bake blocks to a new layer'); it('blocksClear', 'Clear blocks'); } }
+  m.innerHTML = items.join('').replace(/(<hr>)+/g, '<hr>').replace(/^<hr>|<hr>$/g, '').replace(/Ctrl /g, isMac ? 'Cmd ' : 'Ctrl ');
+  m.hidden = false;
+  m.style.left = Math.min(x, window.innerWidth - m.offsetWidth - 6) + 'px';
+  m.style.top = Math.min(y, window.innerHeight - m.offsetHeight - 6) + 'px';
+}
+const closeCtxMenu = () => { $('#ctxMenu').hidden = true; };
+vp.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if (rightButtonTool() && !(e.ctrlKey || e.metaKey)) return;   // these tools paint with the right button
+  if (S.drag) return;
+  openCtxMenu(e.clientX, e.clientY);
+});
+document.addEventListener('pointerdown', e => { if (!$('#ctxMenu').hidden && !e.target.closest('#ctxMenu')) closeCtxMenu(); }, true);
+document.addEventListener('click', e => { if (e.target.closest('#ctxMenu [data-cmd]')) closeCtxMenu(); });
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#ctxMenu').hidden) { closeCtxMenu(); e.stopImmediatePropagation(); } }, true);
+// Block: double-click the blocks to build them in the 3D editor
+vp.addEventListener('dblclick', () => { if (S.tool === 'block') open3d(); });
 // A few repeats of the pattern tile, for the options bar.
 function patternPreview() {
   const { g, w, h } = patternGrid(), rows = [];
@@ -4346,7 +4581,7 @@ $$('#toolbox .tool').forEach(b => b.addEventListener('click', () => {
 $('#patSave').addEventListener('click', savePatternDraft);
 $('#patCancel').addEventListener('click', closePatternDialog);
 $('#patDlg').addEventListener('pointerdown', e => { if (e.target.id === 'patDlg') closePatternDialog(); });
-$('#brushChip').addEventListener('click', () => { setTool(S.lastDraw === 'brush' && S.paint.mode === 'char' ? 'brush' : 'pencil'); const ci = $('#toolopts .charin'); ci.focus(); ci.select(); });
+$('#brushChip').addEventListener('click', () => { setTool(S.lastDraw === 'brush' && S.paint.mode === 'char' ? 'brush' : 'pencil'); const ci = $('#slots .charin'); if (ci) { ci.focus(); ci.select(); } });
 
 // tool palette: drag by the grip, double-click to dock
 (() => {
@@ -4369,12 +4604,7 @@ $('#brushChip').addEventListener('click', () => { setTool(S.lastDraw === 'brush'
 
 // ---------- right pane ----------
 // Marker next to the tool name when a selection limits what the tool can change.
-function updateSelNote() {
-  const on = !!S.sel && (S.tool === 'shape' || S.tool === 'pencil' || S.tool === 'brush' || S.tool === 'eraser' || S.tool === 'type');
-  const n = $('#selnote'); if (n) n.hidden = !on;
-}
 function updateInfo() {
-  updateSelNote();
   const h = S.hover, f = S.float;
   let selTxt = '—';
   if (f) selTxt = `${f.w} x ${f.h} at ${f.x},${f.y} <span style="color:var(--c-float-ink)">floating</span>`;
@@ -4528,6 +4758,10 @@ function start() {
   if (typeof p.ch2 === 'string' && p.ch2) S.ch2 = p.ch2;
   if (['h', 'v', 'both'].includes(p.mirror)) S.mirror = p.mirror;
   if (p.mirrorFlip === false) S.mirrorFlip = false;
+  if (p.mirrorUse && typeof p.mirrorUse === 'object') S.mirrorUse = { ...p.mirrorUse };
+  if (p.panels && typeof p.panels === 'object') S.panels = { ...p.panels };
+  if (p.sideW) S.sideW = clamp(+p.sideW || 0, 240, 480);
+  applyPanels();
   S.typeInsert = !!p.typeInsert;
   S.selFixed = !!p.selFixed; S.selCenter = !!p.selCenter;
   if (p.blanksBrush === 'replace') S.blanksBrush = 'replace';
@@ -4558,7 +4792,7 @@ function start() {
   if (p.galWs && ['clear', 'shape', 'box'].includes(p.galWs.mode)) S.galWs = { mode: p.galWs.mode, gap: clamp(p.galWs.gap | 0, 0, 4) };
   if (p.figfont && (window.ASXII_FONTS || {})[p.figfont.name]) S.figfont = { name: p.figfont.name, layout: ['default', 'full', 'fit', 'smush'].includes(p.figfont.layout) ? p.figfont.layout : 'default', ws: ['inside', 'block'].includes(p.figfont.ws) ? p.figfont.ws : 'clear', ls: clamp(p.figfont.ls | 0, -3, 20), lh: clamp(p.figfont.lh | 0, -30, 20) };
   if (p.pencil) S.pencil = { size: clamp(Math.round(+p.pencil.size) || 1, 1, 25), tip: p.pencil.tip === 'round' ? 'round' : 'square', smart: !!p.pencil.smart, style: SMART_STYLES[p.pencil.style] ? p.pencil.style : 'ascii' };
-  $('#brushChip').textContent = S.brush.ch;
+  renderSlots();
   S.spacesErase = !!p.spacesErase;
   // "Dim others" is on by default
   S.focusLayer = p.dimOthers !== false; $('#focusChk').checked = S.focusLayer;
