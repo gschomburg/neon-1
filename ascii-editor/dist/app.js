@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.89';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.90';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -474,7 +474,7 @@ function finishSelPoly(cancel) {
 // The character at a cell: what you see ('all') or what's on the active layer ('layer'); null for blank
 function pickAt(c, sample) {
   const got = sample === 'layer' ? L().cells.get(K(c.x, c.y)) : compositeAt(c.x, c.y);
-  return got && got !== SOLID ? got : null;
+  return got || null;   // an opaque space counts: you can pick it and draw with it
 }
 function selectAll() { commitFloat(); applyRect(0, 0, S.w - 1, S.h - 1, 'new'); }
 function deselect() { if (S.float) commitFloat(); S.sel = null; updateInfo(); redraw(); }
@@ -971,6 +971,7 @@ function openPaintMenu(btn) {
     `<div class="pmitem${S.paint.mode === k ? ' on' : ''}" data-pmode="${k}">` +
     `<span class="micon big">${esc(k === 'pattern' ? tileText(S.paint.pattern.rows, 4, 2) : k === 'noise' ? noiseSample() : k === 'ramp' ? rampMirror(S.paint.ramp.set, 9) : S.brush.ch)}</span>` +
     `<div class="pmtext"><div class="pmname">${PAINT_MODES[k].name}</div><div class="pmdesc">${esc(PAINT_MODES[k].desc)}</div></div></div>`).join('');
+  markSolid();
   const r = btn.getBoundingClientRect();
   m.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 340)) + 'px';
   m.style.top = (r.bottom + 6) + 'px';
@@ -1773,7 +1774,7 @@ function render() {
     const inside = x >= 0 && y >= 0 && x < S.w && y < S.h;
     ctx.globalAlpha = (inside ? 1 : 0.38) * (focus && !mine ? 0.22 : 1);
     ctx.fillStyle = C['c-ink'];
-    if (c === SOLID) { ctx.globalAlpha *= 0.3; ctx.fillText('·', px(x) + cw / 2, py(y) + ty); }   // solid space
+    if (c === SOLID) { ctx.globalAlpha *= SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); }   // opaque space: a faint red cell
     else ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
   }
   ctx.globalAlpha = 1;
@@ -1803,7 +1804,7 @@ function render() {
       ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x), py(y), cw, ch);
       ctx.fillStyle = C['c-float-bg']; ctx.fillRect(px(x), py(y), cw, ch);
       ctx.fillStyle = C['c-float-ink'];
-      if (c === SOLID) { ctx.globalAlpha = 0.3; ctx.fillText('·', px(x) + cw / 2, py(y) + ty); ctx.globalAlpha = 1; }
+      if (c === SOLID) { ctx.globalAlpha = SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); ctx.globalAlpha = 1; }
       else ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
     }
   }
@@ -1841,7 +1842,7 @@ function render() {
       ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x), py(y), cw, ch);
       ctx.fillStyle = C['c-float-bg']; ctx.fillRect(px(x), py(y), cw, ch);
       ctx.fillStyle = C['c-float-ink'];
-      if (c === SOLID) { ctx.globalAlpha = 0.3; ctx.fillText('·', px(x) + cw / 2, py(y) + ty); ctx.globalAlpha = 1; }
+      if (c === SOLID) { ctx.globalAlpha = SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); ctx.globalAlpha = 1; }
       else ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
     }
   }
@@ -1947,7 +1948,8 @@ function render() {
     ctx.globalAlpha = 1;
     if (S.tool === 'pencil' || (S.tool === 'brush' && S.paint.mode === 'char')) {
       ctx.globalAlpha = 0.5; ctx.fillStyle = C['c-ink'];
-      ctx.fillText(S.brush.ch, px(S.hover.x) + cw / 2, py(S.hover.y) + ty);
+      if (S.brush.ch === SOLID) { ctx.globalAlpha = SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(S.hover.x), py(S.hover.y), cw, ch); }
+      else ctx.fillText(S.brush.ch, px(S.hover.x) + cw / 2, py(S.hover.y) + ty);
       ctx.globalAlpha = 1;
     }
   }
@@ -2156,7 +2158,7 @@ vp.addEventListener('pointerdown', e => {
     commitFloat(); setCursor(c.x, c.y);
   } else if ((t === 'pencil' || t === 'brush' || t === 'fill') && e.altKey) {   // hold Alt: pick a character without leaving the tool
     const got = pickAt(c, 'all');
-    if (got) { setBrushChar(got); toast(`Character: ${got}`); } else toast('Empty cell: nothing to pick', 'warn');
+    if (got) { setBrushChar(got); toast(`Character: ${chName(got)}`); } else toast('Empty cell: nothing to pick', 'warn');
   } else if ((t === 'pencil' || t === 'brush' || t === 'eraser') && e.button === 2) {
     // the right button: Pencil / Brush paint the right-button character (or erase), the Eraser erases only the brush character
     commitFloat(); pushUndo();
@@ -2222,8 +2224,8 @@ vp.addEventListener('pointerdown', e => {
   } else if (t === 'picker') {
     const got = pickAt(c, S.pickSample);
     if (e.button === 2 || e.shiftKey) {   // the right-button character for Pencil and Brush; an empty cell sets it back to erase
-      S.ch2 = got || null; savePrefs(); toast(got ? `Right button: ${got}` : 'Right button: erase'); setTool(S.lastDraw);
-    } else if (got) { setBrushChar(got); toast(`Character: ${got}`); setTool(S.lastDraw); }
+      S.ch2 = got || null; savePrefs(); toast(got ? `Right button: ${chName(got)}` : 'Right button: erase'); setTool(S.lastDraw);
+    } else if (got) { setBrushChar(got); toast(`Character: ${chName(got)}`); setTool(S.lastDraw); }
     else toast('Empty cell: nothing to pick', 'warn');
   } else if (t === 'zoom') {
     zoomStep(e.altKey ? -1 : 1, px, py);
@@ -2302,7 +2304,9 @@ vp.addEventListener('wheel', e => {
     const z = S.zoom * Math.pow(1.0015, -e.deltaY);
     setZoom(z, px, py);
   } else {
-    S.offX -= e.shiftKey ? e.deltaY : e.deltaX; S.offY -= e.shiftKey ? 0 : e.deltaY; S.viewTouched = true; redraw();
+    // Shift: sideways. (macOS already turns Shift + wheel into deltaX; elsewhere it stays in deltaY)
+    if (e.shiftKey) S.offX -= e.deltaX || e.deltaY; else { S.offX -= e.deltaX; S.offY -= e.deltaY; }
+    S.viewTouched = true; redraw();
   }
 }, { passive: false });
 
@@ -2574,6 +2578,9 @@ const blockKey = (bx, by) => bx + ',' + by;
 // A solid space: a blank cell that still covers the layers below (White space: Solid). It is a no-break space in the
 // cell, drawn as a faint dot in the editor, and becomes a plain space in everything you copy or export.
 const SOLID = '\u00A0';
+// Opaque space: an empty cell that covers the layers under it. Shown as a faint red cell; copied and exported as a space.
+const SOLID_FILL = '#ff0000', SOLID_ALPHA = 0.15;
+const chName = c => c === SOLID ? 'opaque space' : c;   // for messages
 // Everything a bake puts down: the outline, the face fills, and (Solid) solid spaces in the faces left blank.
 // ---------- Diagonal view: diamond blocks on a 45° grid, extruded straight right or left (the Lennert Stock look) ----------
 // Block (u, v): its top point is at (X, Y) = ((u - v) * b, (u + v) * b) in cell-corner units; it reaches b down-right to
@@ -2991,6 +2998,7 @@ const WS_SOLID = 'Solid: blank cells cover what is under them and leave it blank
 const WS_CLEAR = 'Clear: blank cells are see-through. Only the characters land; whatever is under the blank cells stays.';
 // The Characters pane: plain ASCII first, then Unicode.
 const CHAR_GROUPS = [
+  ['Special', SOLID],   // opaque space
   ['ASCII symbols', "#*.:+=-_|/\\<>()[]{}^~'\"`,;!?@$%&"],
   ['Digits', '0123456789'],
   ['Uppercase', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
@@ -3006,9 +3014,17 @@ function renderCharPane() {
   const box = $('#charpane');
   box.innerHTML = CHAR_GROUPS.map(([name, set]) =>
     `<div class="cgroup">${esc(name)}</div><div class="cgrid">` +
-    chars(set).map(c => `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="${esc(c)}  U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}">${esc(c)}</button>`).join('') +
+    chars(set).map(c => c === SOLID ? `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="Opaque space: an empty cell that covers the layers under it (copied and exported as a space)">${SOLID}</button>` : `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="${esc(c)}  U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}">${esc(c)}</button>`).join('') +
     `</div>`).join('');
   $$('.cbtn', box).forEach(b => b.addEventListener('click', () => pickFromPane(b.textContent)));
+  markSolid();
+}
+// The opaque space has no glyph: anywhere the drawing character is shown (chip, palette, recents, the input, the
+// right-button setting), a cell holding it gets the same faint red tint as on the canvas.
+function markSolid() {
+  for (const el of $$('#brushChip, #charpane .cbtn, #toolopts .quick .btn, #toolopts .micon, #toolopts .ch2btn, #paintMenu .micon'))
+    el.classList.toggle('solidch', el.textContent === SOLID);
+  const ci = $('#toolopts .charin'); if (ci) ci.classList.toggle('solidch', ci.value === SOLID);
 }
 // Clicking a character in the pane: type it (Type tool), or make it the character to draw with.
 function pickFromPane(c) {
@@ -3058,7 +3074,7 @@ function setBrushChar(c) {
   const inp = $('#toolopts .charin'); if (inp) inp.value = c;
   $$('#toolopts .quick .btn').forEach(b => b.classList.toggle('on', b.textContent === c));
   $$('#charpane .cbtn').forEach(b => b.classList.toggle('on', b.textContent === c));
-  savePrefs(); redraw();
+  markSolid(); savePrefs(); redraw();
 }
 function setBrushSize(n) {
   const ts = toolSize();
@@ -3072,6 +3088,7 @@ function renderRecent() {
     ? S.recent.map(c => `<button class="btn${c === S.brush.ch ? ' on' : ''}" title="Recently used">${esc(c)}</button>`).join('')
     : '<span class="label" style="font-size:11px">none yet</span>';
   $$('.btn', box).forEach(b => b.addEventListener('click', () => setBrushChar(b.textContent)));
+  markSolid();
 }
 // ---------- brush library: presets + your own (saved in the browser), a picker, and the customizer ----------
 // The settings a brush carries (Size is not one of them: it is the max width, set in the bar).
