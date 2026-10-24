@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.91';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.92';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -23,7 +23,7 @@ const S = {
   layers: [], active: 0, nextId: 1,
   tool: 'select',
   zoom: 1, offX: 40, offY: 40, cw: 9.6, ch: 20, fontPx: BASE_FONT_PX,
-  font: 'JetBrains Mono', theme: 'blue', grid: true, showSolid: true,   // showSolid: tint opaque spaces red (the Opaque button)
+  font: 'JetBrains Mono', theme: 'blue', grid: true, showSolid: true,   // showSolid: tint opaque spaces red (the Spaces button)
   sel: null,            // Set of cell keys, or null
   float: null,          // { cells: Map "dx,dy" -> ch, x, y, w, h, lifted, origSel }
   cursor: null,         // type cursor { x, y, lineX }
@@ -1774,7 +1774,7 @@ function render() {
     const inside = x >= 0 && y >= 0 && x < S.w && y < S.h;
     ctx.globalAlpha = (inside ? 1 : 0.38) * (focus && !mine ? 0.22 : 1);
     ctx.fillStyle = C['c-ink'];
-    if (c === SOLID) { if (S.showSolid) { ctx.globalAlpha *= SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); } }   // opaque space: a faint red cell (Opaque button)
+    if (c === SOLID) { if (S.showSolid) { ctx.globalAlpha *= SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); } }   // opaque space: a faint red cell (Spaces button)
     else ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
   }
   ctx.globalAlpha = 1;
