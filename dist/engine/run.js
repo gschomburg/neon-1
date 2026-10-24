@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.09']);
+NEON_FILES.push(['engine/run.js', 'v13.10']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -1492,6 +1492,7 @@ async function endRun(win) {
   save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, sector: (run.sector || 0) + 1, win, rep, practice: run.practice, at: Date.now() });
   save.history = save.history.slice(0, 20);
   persist();
+  lbSubmit(run, win);   // the online leaderboard (engine/leaders.js)
 
   // Where you were traced, and the corps you breached (visited corp nodes you finished).
   const c = st.corp;

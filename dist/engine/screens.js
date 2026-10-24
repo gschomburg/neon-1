@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.09']);
+NEON_FILES.push(['engine/screens.js', 'v13.10']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -125,9 +125,10 @@ function titleLines(now) {
     { text: '[ MULTIPLAYER ]', id: 'mp', onTap: () => swapTo(openMultiplayer) },
   ] });
   lines.push({ row: [
-    ...(saved ? [{ text: st.newArmed ? '[ DROP SAVE? ]' : '[ NEW RUN ]', id: 'newrun', onTap: newOverSave }] : []),
     { text: '[ THE BOARD ]', id: 'board', onTap: () => swapTo(openBoard) },
+    { text: '[ LEADERBOARD ]', id: 'leaders', onTap: () => swapTo(openLeaders) },
   ] });
+  if (saved) lines.push({ row: [{ text: st.newArmed ? '[ DROP SAVE? ]' : '[ NEW RUN ]', id: 'newrun', onTap: newOverSave }] });
   T('');
   { const prof = profile(); lines.push({ text: `[ ${logoMark(prof.logo)} ${prof.name} ]`, id: 'profile', style: styleOf(prof.style), onTap: () => swapTo(openProfile) }); }
   T(`best ${pad2(save.best)}  runs ${save.runs}  wins ${save.wins}  rep ${save.rep || 0}`, C.mid);
