@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.130';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.131';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -4546,7 +4546,7 @@ function endChipTyping() {
   const w = $('#chipBox input:not([readonly])'); if (!w) return;
   w.readOnly = true; w.classList.remove('typing');
   if (document.activeElement === w) w.blur();
-  renderSlots();
+  renderSlots(); renderHelp(true);
 }
 document.addEventListener('pointerdown', e => { if (!e.target.closest('#chipBox input:not([readonly])')) endChipTyping(); }, true);
 // The chips at the bottom of the tool panel: Draw on top, Right below (X swaps them). Click one to select it; double-click
@@ -4560,10 +4560,11 @@ function renderSlots() {
   $$('input.chipc', box).forEach(w => {
     w.addEventListener('mousedown', e => { if (w.readOnly) e.preventDefault(); });   // (no text caret until a double-click)
     w.addEventListener('click', () => selectSlot(w.dataset.slot));
-    w.addEventListener('dblclick', () => { selectSlot(w.dataset.slot); const e2 = $(`#chipBox input[data-slot="${w.dataset.slot}"]`); e2.readOnly = false; e2.classList.add('typing'); e2.focus(); e2.select(); });
+    w.addEventListener('dblclick', () => { selectSlot(w.dataset.slot); const e2 = $(`#chipBox input[data-slot="${w.dataset.slot}"]`); e2.readOnly = false; e2.classList.add('typing'); e2.focus(); e2.select(); renderHelp(true); });
     w.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); endChipTyping(); }
-      else if (e.key === ' ') { e.preventDefault(); endChipTyping(); setSlot(w.dataset.slot, e.shiftKey ? SOLID : CLEAR); }   // Space: empty (Clear); Shift Space: opaque space
+      // (these keys stop here: once typing ends, they'd reach the editor's shortcuts, Enter = the Type tool...)
+      if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); endChipTyping(); }
+      else if (e.key === ' ') { e.preventDefault(); e.stopPropagation(); endChipTyping(); setSlot(w.dataset.slot, e.shiftKey ? SOLID : CLEAR); }   // Space: empty (Clear); Shift Space: opaque space
     });
     w.addEventListener('input', () => { const c = chars(w.value).filter(x => x !== ' ').pop(); endChipTyping(); if (c) setSlot(w.dataset.slot, c); });
     w.addEventListener('blur', () => endChipTyping());
@@ -4585,7 +4586,8 @@ function renderHelp(force) {
   // what's going on right now
   const state = [];
   if (S.float) state.push('Floating: Enter drops it, Esc puts it back.');
-  const key = [sub, held.join('+'), dragging ? d.kind : '', state.join('|'), toolName()].join('/');
+  const chipEdit = $('#chipBox input:not([readonly])');   // typing into a Draw / Right chip
+  const key = [sub, held.join('+'), dragging ? d.kind : '', state.join('|'), toolName(), chipEdit ? chipEdit.dataset.slot : ''].join('/');
   if (!force && key === helpKey) return;
   helpKey = key;
   const list = (rows, live) => `<div class="help-list${live ? '' : ' help-any'}">` + rows.map(([k, what]) => {
@@ -4593,6 +4595,12 @@ function renderHelp(force) {
     const on = live && mods.length && mods.length === held.length && mods.every(x => held.includes(x));
     return `<span class="hk${on ? ' on' : ''}">${toks.map(x => `<b>${esc(keyLabel(x))}</b>`).join(' ')}</span><span class="hd">${esc(what)}</span>`;
   }).join('') + '</div>';
+  if (chipEdit) {   // while typing into a chip, Help is about that
+    const which = chipEdit.dataset.slot === 'draw' ? 'Draw' : 'Right';
+    box.innerHTML = `<div class="help-tool">Typing into ${which}</div><div class="help-sum">Type a character to put it in the ${which} chip (${which === 'Draw' ? 'what the left button paints' : 'what the right button paints'}).</div>` +
+      list([['Space', 'empty (Clear: erases)'], ['Shift Space', 'opaque space'], ['Enter', 'done (or Tab, Esc, or a click elsewhere)']], true);
+    return;
+  }
   const now = dragging && H.drag ? H.drag : keys;
   box.innerHTML = `<div class="help-tool">${esc(toolName())}</div><div class="help-sum">${esc(H.sum)}</div>` +
     (state.length ? `<div class="help-state">${state.map(esc).join('<br>')}</div>` : '') +
