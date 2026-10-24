@@ -12,7 +12,7 @@ const GLYPHS = {   // d: the path on the toolbox's 20 grid; hot: the click point
   arrow: { name: 'Arrow', d: 'M3.5 2.5v13l3.4-3.2 2.4 5.2 2.2-1-2.4-5.1h4.6z', hot: [3.5, 2.5], fill: true },
   lasso: { name: 'Lasso', d: 'M7.5 10.6C3.5 9.6 4 3 11 3s7.5 7.5 0 7.5c-2.3 0-3.8 1.3-3.3 2.8s-.6 3.2-3.2 3.7', hot: [4.5, 17] },
   bucket: { name: 'Bucket', d: 'M4 9.5 9.5 4l6 6-5.5 5.5a1.4 1.4 0 0 1-2 0l-4-4a1.4 1.4 0 0 1 0-2zM4 9.5h11.5M8 2.5l1.5 1.5M17 13.5s1.5 1.8 1.5 2.8a1.5 1.5 0 0 1-3 0c0-1 1.5-2.8 1.5-2.8z', hot: [17, 17.5], badgeLeft: true },   // the drip is the click point: badges go bottom-left, off it
-  picker: { name: 'Eyedropper', d: 'M17.2 5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0zM11.6 5.6l2.8 2.8M13 7 5.2 14.8 3.5 16.5M5.2 14.8l-.6 1.9', hot: [3.5, 16.5] },
+  picker: { name: 'Eyedropper', d: 'M12.5 5.1 15.1 2.5A1.7 1.7 0 0 1 17.5 2.5 1.7 1.7 0 0 1 17.6 4.9L15 7.5zM11.5 4.1 10.1 5.5 14.6 9.9 16 8.5zM11.1 6.5 4.5 13 4 16 7 15.5 13.6 8.9z', ink: 'M12.5 5.1 15.1 2.5A1.7 1.7 0 0 1 17.5 2.5 1.7 1.7 0 0 1 17.6 4.9L15 7.5zM11.5 4.1 10.1 5.5 14.6 9.9 16 8.5z', fill: true, hot: [4, 16] },   // option E8.3: black bulb and collar (the user's pick, 2026-10-24)
   cube: { name: 'Cube', d: 'M4 7.5h8.5V16H4zM4 7.5 7.5 4H16v8.5L12.5 16M12.5 7.5 16 4', hot: [10, 10] },
   orbit: { name: 'Orbit', d: 'M16.5 10a6.5 6.5 0 1 1-1.9-4.6M15 2.5v3.2h-3.2', hot: [10, 10] },
   wand: { name: 'Magic wand', d: 'M3 17 11.5 8.5M14.5 1.5q.5 3.5 4 4-3.5.5-4 4-.5-3.5-4-4 3.5-.5 4-4z', hot: [14.5, 5.5] },   // option W2, Sparkle (the user's pick, 2026-10-24)
