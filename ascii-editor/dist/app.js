@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.69';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.70';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -31,7 +31,7 @@ const S = {
   // mode (fill | outline), edge (smart | paint), inside (solid | clear). size is the max width. ch is shared with the Pencil.
   brush: { ch: '#', size: 1, preset: 'Plain', start: 'none', end: 'none', tip: 'square', mode: 'fill', minSize: 1, ramp: 6, edge: 'smart', inside: 'solid' },
   brushes: [],          // your own brushes (Save as new brush)
-  pencil: { size: 1, tip: 'square' },   // the Pencil keeps its own size; both draw with brush.ch
+  pencil: { size: 1, tip: 'square', smart: false, style: 'ascii' },   // smart: draw a line that picks its own characters   // the Pencil keeps its own size; both draw with brush.ch
   lastDraw: 'pencil',   // Pencil or Brush, whichever was used last (the Picker goes back to it)
   spacesErase: false,   // spaces in a floating block erase what's under them when dropped
   anchor: 0,
@@ -759,9 +759,119 @@ const RECT_STYLES = {
   none:    { name: 'None (fill only)' },
 };
 // Smart edges pick a character by which way the line runs on screen.
+// ---------- Smart lines: one stroke, characters picked as it goes (Pencil: Smart; Shape: Line / Polygon) ----------
+// pts are in cell units (a cell spans x .. x+1). Three styles:
+//  ascii: by slope and where the stroke crosses the cell: | ( ) steep, / \ diagonal, - ' _ ` . , ´ shallow,
+//         < > where a stroke turns back. One character per column (per row when steep), so it stays a clean line.
+//  box:   walks the stroke cell to cell (never diagonally) and joins the sides it passes through: ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼.
+//         Joins box lines already on the layer, so crossing or touching one makes the junction.
+//  block: █ ▌ ▐ ▀ ▄ ▚ ▞ by slope and position.
+// (After patorjk's ASCII Art Sketchpad, which the user pointed to.)
+const SMART_STYLES = { ascii: 'ASCII', box: 'Box', block: 'Block' };
+function asciiLineChar(sl, t, curve) {
+  const r = Math.abs(sl);
+  if (!Number.isFinite(sl) || r > 1.6) return curve < 0 ? '(' : curve > 0 ? ')' : '|';
+  if (r > 0.75) return sl > 0 ? '\\' : '/';
+  const i = t < 0.38 ? 0 : t > 0.66 ? 2 : 1;
+  if (r > 0.15) return i === 1 ? '-' : sl > 0 ? (i === 0 ? '`' : '.') : (i === 0 ? '´' : ',');
+  return i === 0 ? "'" : i === 1 ? '-' : '_';
+}
+function blockLineChar(sl, tx, ty) {
+  const r = Math.abs(sl);
+  if (!Number.isFinite(sl) || r > 1.6) return tx < 0.38 ? '▌' : tx > 0.66 ? '▐' : '█';
+  if (r > 0.75) return sl > 0 ? '▚' : '▞';
+  return ty < 0.38 ? '▀' : ty > 0.66 ? '▄' : '█';
+}
+// the cell rows (or columns) whose centers a stroke from a to b passes, in the order it passes them
+function centersBetween(a, b) {
+  const lo = Math.ceil(Math.min(a, b) - 0.5), hi = Math.floor(Math.max(a, b) - 0.5), out = [];
+  for (let k = lo; k <= hi; k++) out.push(k);
+  return b < a ? out.reverse() : out;
+}
+// the cells a stroke from a to b passes through, edge to edge (no diagonal steps)
+function walk4(a, b, out) {
+  let x = Math.floor(a.x), y = Math.floor(a.y);
+  const X = Math.floor(b.x), Y = Math.floor(b.y), dx = b.x - a.x, dy = b.y - a.y, sx = dx > 0 ? 1 : -1, sy = dy > 0 ? 1 : -1;
+  const tdx = dx === 0 ? Infinity : Math.abs(1 / dx), tdy = dy === 0 ? Infinity : Math.abs(1 / dy);
+  let tx = dx === 0 ? Infinity : (sx > 0 ? x + 1 - a.x : a.x - x) * tdx, ty = dy === 0 ? Infinity : (sy > 0 ? y + 1 - a.y : a.y - y) * tdy;
+  const last = out[out.length - 1]; if (!last || last.x !== x || last.y !== y) out.push({ x, y });
+  let guard = Math.abs(X - x) + Math.abs(Y - y) + 4;
+  while ((x !== X || y !== Y) && guard-- > 0) { if (tx < ty) { tx += tdx; x += sx; } else { ty += tdy; y += sy; } out.push({ x, y }); }
+}
+// box characters by the sides they join: 1 left, 2 right, 4 up, 8 down
+const BOX_SHARP = ['─', '─', '─', '─', '│', '┘', '└', '┴', '│', '┐', '┌', '┬', '│', '┤', '├', '┼'];
+const BOX_ROUND = ['─', '─', '─', '─', '│', '╯', '╰', '┴', '│', '╮', '╭', '┬', '│', '┤', '├', '┼'];
+const BOX_BITS = (() => { const m = { '─': 3, '│': 12 }; for (const t of [BOX_SHARP, BOX_ROUND]) t.forEach((c, i) => { if (!(c in m)) m[c] = i; }); return m; })();
+// opts: round (rounded box corners), plain (no turn-backs or curves: for straight shapes), base(x, y) = what's there
+function smartPath(pts, style, opts = {}) {
+  const m = new Map();
+  if (!pts.length) return m;
+  if (style === 'box') {
+    const cells = []; let cur = null;
+    for (const p of pts) {
+      const q = { x: Math.floor(p.x), y: Math.floor(p.y) };
+      if (!cur) { cur = q; cells.push(q); continue; }
+      if (q.x === cur.x && q.y === cur.y) continue;
+      // how far into the new cell the stroke has gone, from the side it came in
+      const inX = q.x > cur.x ? p.x - q.x : q.x < cur.x ? q.x + 1 - p.x : 1, inY = q.y > cur.y ? p.y - q.y : q.y < cur.y ? q.y + 1 - p.y : 1;
+      if (Math.min(inX, inY) < 0.2 && Math.abs(q.x - cur.x) <= 1 && Math.abs(q.y - cur.y) <= 1) continue;
+      walk4({ x: cur.x + 0.5, y: cur.y + 0.5 }, { x: q.x + 0.5, y: q.y + 0.5 }, cells);
+      cur = q;
+    }
+    const bits = new Map(), or = (c, b) => { const k = K(c.x, c.y); bits.set(k, (bits.get(k) || 0) | b); };
+    cells.forEach((c, i) => {
+      or(c, 0); if (!i) return;
+      const p = cells[i - 1];
+      if (c.x === p.x + 1) { or(p, 2); or(c, 1); } else if (c.x === p.x - 1) { or(p, 1); or(c, 2); }
+      else if (c.y === p.y + 1) { or(p, 8); or(c, 4); } else if (c.y === p.y - 1) { or(p, 4); or(c, 8); }
+    });
+    const T = opts.round ? BOX_ROUND : BOX_SHARP;
+    for (const [k, b] of bits) {
+      const [x, y] = unK(k), had = opts.base ? BOX_BITS[opts.base(x, y)] : undefined;
+      m.set(k, T[b | (had || 0)]);
+    }
+    return m;
+  }
+  let prev = null, last = null;
+  // put a character down; if it doesn't touch the last one, fill the cells between with this stretch's character
+  const put = (x, y, c) => {
+    if (last && Math.max(Math.abs(x - last[0]), Math.abs(y - last[1])) > 1) {
+      const jx = x - last[0], jy = y - last[1], js = jx ? jy / jx : Infinity;   // the gap's own direction picks its character
+      const gc = style === 'block' ? blockLineChar(js, 0.5, 0.5) : asciiLineChar(js, 0.5, 0);
+      line(last[0], last[1], x, y, (fx, fy) => { if ((fx !== last[0] || fy !== last[1]) && (fx !== x || fy !== y) && !m.has(K(fx, fy))) m.set(K(fx, fy), gc); });
+    }
+    m.set(K(x, y), c); last = [x, y];
+  };
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i], dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+    if (len < 1e-6) continue;
+    const sl = Math.abs(dx) < 1e-6 ? Infinity : dy / dx, ux = dx / len, uy = dy / len;
+    let curve = 0, turn = null;
+    if (prev && style === 'ascii' && !opts.plain) {
+      const o = (prev.x * uy - prev.y * ux) * Math.sign(uy || 1);
+      if (Math.abs(o) > 0.04) curve = Math.sign(o);
+      if (prev.x * ux < 0 && Math.abs(prev.x) > 0.35 && Math.abs(ux) > 0.35 && prev.x * ux + prev.y * uy < 0.2) turn = prev.x > 0 ? '>' : '<';
+    }
+    if (!Number.isFinite(sl) || Math.abs(sl) > 0.75) {
+      for (const row of centersBetween(a.y, b.y)) {
+        const x = a.x + dx * (row + 0.5 - a.y) / dy, cx = Math.floor(x);
+        const c = style === 'block' ? blockLineChar(sl, x - cx, 0.5) : asciiLineChar(sl, 0.5, curve); put(cx, row, c);
+      }
+    } else {
+      for (const col of centersBetween(a.x, b.x)) {
+        const y = a.y + dy * (col + 0.5 - a.x) / dx, cy = Math.floor(y);
+        put(col, cy, style === 'block' ? blockLineChar(sl, 0.5, y - cy) : asciiLineChar(sl, y - cy, 0));
+      }
+    }
+    if (turn) m.set(K(Math.floor(a.x), Math.floor(a.y)), turn);
+    prev = { x: ux, y: uy };
+  }
+  if (!m.size) m.set(K(Math.floor(pts[0].x), Math.floor(pts[0].y)), style === 'block' ? '█' : '.');
+  return m;
+}
 const SMART = { ht: '-', hb: '_', v: '|', d1: '/', d2: '\\' };
 const BOXLINE = { ht: '─', hb: '─', v: '│', d1: '╱', d2: '╲' };
-const LINE_STYLES = { smart: 'Smart  - | / \\', box: 'Box  ─ │ ╱ ╲', char: 'Character' };
+const LINE_STYLES = { smart: 'Smart  - | / \\ _ . \'', box: 'Box  ─ │ ┌ ┼ (joins up)', block: 'Block  █ ▌ ▀ ▚', char: 'Character' };
 const ELLIPSE_STYLES = { smart: 'Smart  - _ / \\ |', char: 'Character', none: 'None (fill only)' };
 const POLY_STYLES = { ...LINE_STYLES, none: 'None (fill only)' };
 // The style of the current shape. 'none' = no outline, fill only (closed shapes).
@@ -855,13 +965,21 @@ function segChar(ax, ay, bx, by, st) {
 // Lines and polygons: each segment gets one character by its angle; corners get '+' or the matching box corner.
 function polyShape(pts, closed, st) {
   if (st === 'none') st = 'smart';
-  const m = new Map(), n = pts.length;
+  let m = new Map(); const n = pts.length;
   if (!n) return { outline: m, inside: null };
+  if (st === 'box' || st === 'block') {   // one connected path through the cell centers (box joins what's on the layer)
+    const P = pts.map(p => ({ x: p.x + 0.5, y: p.y + 0.5 })); if (closed && n >= 3) P.push(P[0]);
+    const lay = L();
+    m = smartPath(P, st, { plain: true, base: (x, y) => lay.cells.get(K(x, y)) });
+    return { outline: m, inside: polyInside(pts, closed) };
+  }
   if (n === 1) { m.set(K(pts[0].x, pts[0].y), st === 'char' ? S.brush.ch : '+'); return { outline: m, inside: null }; }
   const segs = closed ? n : n - 1;
   for (let i = 0; i < segs; i++) {
     const a = pts[i], b = pts[(i + 1) % n], ch = segChar(a.x, a.y, b.x, b.y, st);
     if (st !== 'smart') { line(a.x, a.y, b.x, b.y, (x, y) => m.set(K(x, y), ch)); continue; }
+    for (const [k, c] of smartPath([{ x: a.x + 0.5, y: a.y + 0.5 }, { x: b.x + 0.5, y: b.y + 0.5 }], 'ascii', { plain: true })) m.set(k, c);
+    continue;
     // smart: per cell, by how high the line passes through it
     const tx = (b.x - a.x) * S.cw || 0.001, ty = (b.y - a.y) * S.ch;
     if (Math.atan2(Math.abs(ty), Math.abs(tx)) * 180 / Math.PI >= 52) {
@@ -894,6 +1012,10 @@ function polyShape(pts, closed, st) {
       m.set(K(p.x, p.y), (a && b && a !== b && CORNERS[key]) || '┼');
     } else m.set(K(p.x, p.y), '+');
   }
+  return { outline: m, inside: polyInside(pts, closed) };
+}
+function polyInside(pts, closed) {
+  const n = pts.length;
   let inside = null;
   if (closed && n >= 3) {   // cells whose centers are inside the polygon (points sit on cell centers)
     inside = new Set();
@@ -909,7 +1031,7 @@ function polyShape(pts, closed, st) {
       if (ins) inside.add(K(x, y));
     }
   }
-  return { outline: m, inside };
+  return inside;
 }
 // The shape being drawn right now (drag or polygon in progress), for the preview and for committing.
 function currentShape() {
@@ -944,7 +1066,9 @@ const strokeOn = shape => shapeStyle() !== 'none' || !shape.inside;
 const curveF = (kind, t) => kind === 'linear' ? t : kind === 'in' ? t * t : kind === 'out' ? 1 - (1 - t) * (1 - t) : 1;
 const tapered = b => (b.start && b.start !== 'none') || (b.end && b.end !== 'none');
 // Tapered, outlined or Ramp strokes are collected while you drag (pts, in cell units) and put down on release.
-const strokeDeferred = () => S.tool === 'brush' && (tapered(S.brush) || S.brush.mode === 'outline' || S.paint.mode === 'ramp');
+const pencilSmart = () => S.tool === 'pencil' && S.pencil.smart;
+const strokeDeferred = () => pencilSmart() || S.tool === 'brush' && (tapered(S.brush) || S.brush.mode === 'outline' || S.paint.mode === 'ramp');
+function smartStroke(pts) { const lay = L(); return smartPath(pts, S.pencil.style, { round: true, base: (x, y) => lay.cells.get(K(x, y)) }); }
 // The cells a stroke covers. Each end grows from Min to Size over the Ramp length along its curve, so short strokes
 // stay thin. Each point also keeps fr (0 at the ends .. 1 in the middle) for the Ramp paint mode.
 function strokeRegion(pts, b = S.brush) {
@@ -1017,6 +1141,12 @@ function strokeCells(pts, b = S.brush) {
   return b.mode === 'outline' ? { outline: strokeOutline(region, b), region } : { outline: null, region };
 }
 function commitStroke(pts) {
+  if (pencilSmart()) {   // a smart line: the characters it picked, on the active layer
+    pushUndo(); const lay = L(); let blocked = false;
+    for (const [k, c] of smartStroke(pts)) { const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } setCell(lay, x, y, c); }
+    if (blocked) warnOutside('Drawing');
+    return changed();
+  }
   const st = strokeCells(pts);
   pushUndo();
   const lay = L(); let blocked = false;
@@ -1260,7 +1390,13 @@ function render() {
   }
 
   // Advanced brush stroke preview (Taper / Outline): the area tinted, the outline or the character on top
-  if (S.drag && S.drag.kind === 'stroke') {
+  if (S.drag && S.drag.kind === 'stroke' && pencilSmart()) {
+    for (const [k, c] of smartStroke(S.drag.pts)) {
+      const [x, y] = unK(k); if (!inView(x, y)) continue;
+      ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x), py(y), cw, ch);
+      ctx.fillStyle = C['c-float-ink']; ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
+    }
+  } else if (S.drag && S.drag.kind === 'stroke') {
     const st = strokeCells(S.drag.pts);
     if (st.outline && S.brush.inside === 'solid') {   // the inside will be wiped: cover what's there
       ctx.fillStyle = C['c-paper'];
@@ -1479,7 +1615,7 @@ vp.addEventListener('pointermove', e => {
     if (d.kind === 'blockmove' && moved) { S.blocks.ox = d.ox + c.x - d.sx; S.blocks.oy = d.oy + c.y - d.sy; S.blocks.placed = true; changed(); }
     if (d.kind === 'stroke') {
       const p = { x: (px - S.offX) / S.cw, y: (py - S.offY) / S.ch }, l = d.pts[d.pts.length - 1];
-      if (Math.abs(p.x - l.x) + Math.abs(p.y - l.y) * S.ch / S.cw > 0.3) { d.pts.push(p); redraw(); }
+      if (Math.abs(p.x - l.x) + Math.abs(p.y - l.y) * S.ch / S.cw > (pencilSmart() ? 0.2 : 0.3)) { d.pts.push(p); redraw(); }
     }
     if (d.kind === 'lasso') {
       const p = { x: (px - S.offX) / S.cw, y: (py - S.offY) / S.ch }, l = d.pts[d.pts.length - 1];
@@ -1644,6 +1780,7 @@ window.addEventListener('keydown', e => {
     case 't': case 'T': setTool('type'); break;
     case 'b': case 'B': setTool('brush'); break;
     case 'p': case 'P': setTool('pencil'); break;
+    case 's': case 'S': if (S.tool === 'pencil') { S.pencil.smart = !S.pencil.smart; savePrefs(); renderOptions(); toast(S.pencil.smart ? 'Smart line: ' + SMART_STYLES[S.pencil.style] : 'Character'); } break;
     case 'e': case 'E': setTool('eraser'); break;
     case 'i': case 'I': setTool('picker'); break;
     case 'h': case 'H': setTool('hand'); break;
@@ -2193,7 +2330,7 @@ const HINTS = {
   select: 'Drag to select · Shift adds · Alt takes away · mid-drag: Shift = square / circle, Alt = from center · drag inside or arrows move the outline · Ctrl + drag or Ctrl + arrows move the content',
   move: 'Drag to move the selection (or the whole layer) · arrows nudge · Enter drops (Shift Enter: solid white space) · D drops + deselects · Esc puts back',
   type: 'Click a cell and type · Enter = next line · arrows move · Esc leaves typing',
-  pencil: 'Draw with one character · [ ] size · I picks a character from the canvas',
+  pencil: 'Draw with one character, or Smart: a line that picks its own characters · S switches · [ ] size · I picks a character',
   brush: 'Paint a character, noise or a pattern · Taper / Outline strokes land when you let go · [ ] size',
   eraser: 'Drag to erase on the active layer · [ ] size',
   block: 'Edit 3D builds the blocks · drag the shape to move it · Bake turns it into ASCII on a new layer',
@@ -2933,9 +3070,13 @@ function renderOptions() {
     add(`<span class="label">Look at</span><span class="seg"><button class="btn${S.fillSample === 'layer' ? ' on' : ''}" data-sample="layer" title="Fill the area as it is on the active layer">Layer</button><button class="btn${S.fillSample === 'all' ? ' on' : ''}" data-sample="all" title="Fill the area as you see it (all visible layers)">All layers</button></span>`);
     add(`<span class="sep"></span><button class="btn" data-cmd="fillSel" title="Alt Backspace">Fill selection</button>`);
   }
-  if (t === 'pencil') charPicker(add);
+  if (t === 'pencil') {
+    add(`<span class="seg"><button class="btn${S.pencil.smart ? '' : ' on'}" data-psmart="0" title="Draw with one character">Character</button><button class="btn${S.pencil.smart ? ' on' : ''}" data-psmart="1" title="A line that picks its own characters as you draw (S)">Smart</button></span><span class="sep"></span>`);
+    if (S.pencil.smart) add(`<span class="label">Style</span><span class="seg">${Object.keys(SMART_STYLES).map(k => `<button class="btn${S.pencil.style === k ? ' on' : ''}" data-pstyle="${k}" title="${{ ascii: 'Picks - | / \\ _ . , ( ) < > by the direction you draw', box: 'Connected box lines ─ │ ╭ ╮ ╰ ╯, joining box lines already there', block: 'Block characters █ ▌ ▐ ▀ ▄' }[k]}">${SMART_STYLES[k]}</button>`).join('')}</span>`);
+    else charPicker(add);
+  }
   if (t === 'brush') brushStrokeOptions(add);
-  if (t === 'pencil' || t === 'brush' || t === 'eraser') {
+  if ((t === 'pencil' && !S.pencil.smart) || t === 'brush' || t === 'eraser') {
     add(`<span class="label">Size</span><button class="btn icon" data-size="-1">−</button><input class="size" type="text" inputmode="numeric" maxlength="2" value="${toolSize().size}" title="Size, 1-25 ([ and ] change it)"><button class="btn icon" data-size="1">+</button>`);
     if (t !== 'brush') add(`<span class="label">Tip</span><select class="tip"><option value="square">Square</option><option value="round">Round</option></select>`);
   }
@@ -2957,6 +3098,8 @@ function renderOptions() {
   renderRecent();
   $$('[data-size]', o).forEach(b => b.addEventListener('click', () => setBrushSize(toolSize().size + +b.dataset.size)));
   const sz = $('.size', o); if (sz) sz.addEventListener('change', () => setBrushSize(+sz.value || 1));
+  $$('[data-psmart]', o).forEach(b => b.addEventListener('click', () => { S.pencil.smart = b.dataset.psmart === '1'; savePrefs(); renderOptions(); updateInfo(); redraw(); }));
+  $$('[data-pstyle]', o).forEach(b => b.addEventListener('click', () => { S.pencil.style = b.dataset.pstyle; savePrefs(); renderOptions(); }));
   const tip = $('.tip', o); if (tip) { tip.value = toolSize().tip; tip.addEventListener('change', () => { toolSize().tip = tip.value; tip.blur(); savePrefs(); redraw(); }); }
   $$('[data-blank]', o).forEach(b => b.addEventListener('click', () => { S.spacesErase = b.dataset.blank === '1'; savePrefs(); renderOptions(); redraw(); }));
   const sf = $('.selfixed', o); if (sf) sf.addEventListener('change', () => { S.selFixed = sf.checked; sf.blur(); savePrefs(); });
@@ -3187,7 +3330,7 @@ function start() {
     S.shape.fixed = !!q.fixed; S.shape.center = !!q.center; S.shape.fill = !!q.fill;
     if (POLY_STYLES[q.polygon]) S.shape.polygon = q.polygon;
   }
-  if (p.pencil) S.pencil = { size: clamp(Math.round(+p.pencil.size) || 1, 1, 25), tip: p.pencil.tip === 'round' ? 'round' : 'square' };
+  if (p.pencil) S.pencil = { size: clamp(Math.round(+p.pencil.size) || 1, 1, 25), tip: p.pencil.tip === 'round' ? 'round' : 'square', smart: !!p.pencil.smart, style: SMART_STYLES[p.pencil.style] ? p.pencil.style : 'ascii' };
   $('#brushChip').textContent = S.brush.ch;
   S.spacesErase = !!p.spacesErase;
   // "Dim others" is on by default
@@ -3216,7 +3359,7 @@ function start() {
 }
 
 // Hooks for the headless self-test (index.html?selftest)
-window.asxii = { S, CMDS, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
+window.asxii = { S, CMDS, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
   undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render };
 

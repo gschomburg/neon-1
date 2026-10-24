@@ -353,6 +353,14 @@ follows the brush's curves.
 **Outline + White space** (the user, v0.32): with Stroke: Outline, **White space: Solid** (default) wipes the inside of the
 stroke blank on the active layer, so the outline reads as a clean shape; **Clear** lets what is inside show through.
 
+**Smart lines** (the user, v0.70, after patorjk's ASCII Art Sketchpad): the Pencil has **Character | Smart** (S switches). Smart draws a
+single-stroke line that picks its own characters, in three styles: **ASCII** (by slope and where the stroke crosses the
+cell: | ( ) steep, /  diagonal, - ' _ ` . , ´ shallow, < > where it turns back; one character per column, or per row
+when steep), **Box** (walks cell to cell and joins the sides: ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼, and joins box lines already on the
+layer; a cell only counts once the stroke is a fifth of the way in, so jitter on an edge makes no stubs) and **Block**
+(█ ▌ ▐ ▀ ▄ ▚ ▞; the user doesn't love these, kept for completeness). The Shape tool's Line / Polygon styles use the same:
+Smart (ASCII), Box (now connected, sharp corners), Block.
+
 **Not in v0:** the vector layer and converter, reference image, block
 mode, animation, built-in art.
 
