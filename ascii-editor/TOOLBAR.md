@@ -4,8 +4,8 @@ The bar under the menus (`#optionsbar`: the tool name, `#toolopts`, `#hint`). Th
 the current tool's settings. Actions move to menus, help moves to a sidebar panel, and settings several tools share
 move to their own panels.
 
-Not built yet. Tick an item (`[x]`) when it's built. Decisions are from the user (2026-10-24); the open questions at the
-end are calls Claude made that can still change.
+Tick an item (`[x]`) when it's built. Decisions are from the user (2026-10-24), including their notes on the open
+questions (now under Decisions, at the end).
 
 ## The problems
 
@@ -19,8 +19,11 @@ end are calls Claude made that can still change.
 
 - [ ] One row, always the same height (about 36px), whatever the tool. Nothing below it moves when you switch tools or settings
 - [ ] Left: the tool name, at a fixed width (Magic wand counts as its own name). Then the settings, left to right
-- [ ] If the settings don't fit the window, the ones that don't fit go in a **…** menu at the right end (a popover with the
-  same controls, stacked). Worked out again when the window resizes
+- [ ] Each tool's settings are split in two, and the split is fixed (it doesn't depend on the window):
+  - the **main** ones, in the bar: few enough that the bar fits a normal window
+  - the **secondary** ones, in a **…** menu at the right end of the bar (a popover with those controls, stacked, under a
+    heading). The **…** button is always in the same place, and only shows for tools that have secondary settings
+- [ ] If the window is too narrow even for the main settings, the bar clips at the right with a fade (it never wraps or grows)
 - [ ] Flat style: no boxes around groups. A muted label, then plain text toggles; the chosen one is tinted (or underlined).
   Thin dividers between groups. Every control the same height. Number fields and dropdowns styled to match
 - [ ] The "inside selection" note (`#selnote`) moves to the Help panel (and the canvas outline already shows the selection)
@@ -55,6 +58,7 @@ end are calls Claude made that can still change.
 - [ ] Every panel (Help, Info, Canvas, Characters, Paint, Symmetry, Layers) folds by clicking its title, with a ▸ / ▾ marker
 - [ ] Each remembers open or closed (in the browser prefs). Any number can be open
 - [ ] Order: Help, Info, Canvas, Characters, Paint, Symmetry, Layers. Layers keeps taking the leftover height
+- [ ] The sidebar is **resizable**: drag its left edge (about 240 to 480px), remembered in the browser prefs
 - [ ] **Paint** and **Symmetry** always show, dimmed with a note ("not used by Select") when the current tool doesn't use them
 
 ## 5. Characters panel: two slots
@@ -92,20 +96,22 @@ end are calls Claude made that can still change.
 
 ## 8. What stays in each tool's bar
 
-| Tool | Settings left in the bar |
-|---|---|
-| Select | Shape (Rectangle, Ellipse, Lasso, Polygon, Wand); Fixed aspect, From center (Rectangle and Ellipse); Contiguous, Look at (Wand); uses mirror |
-| Move | White space (Solid / Clear); uses mirror |
-| Type | Overwrite / Insert; uses mirror |
-| Font | Font ▾, Spacing, letter / line spacing, White space; uses mirror |
-| Pencil | Character / Smart, Style (Smart), Size, Tip; uses mirror |
-| Brush | Brush ▾ (presets, Customize), Size; uses mirror |
-| Eraser | Size, Tip; uses mirror |
-| Shape | Shape kind, Style, Fixed aspect, From center, Fill inside; uses mirror |
-| Block | Block size, Angle, Show (ASCII / Shapes); uses mirror |
-| Fill | Look at, Contiguous; uses mirror |
-| Picker | Look at |
-| Hand, Zoom | nothing (just the tool name) |
+Main settings sit in the bar; secondary ones in the **…** menu. Every tool that changes art also has **uses mirror** (7).
+
+| Tool | Main (in the bar) | Secondary (in …) |
+|---|---|---|
+| Select | Shape (Rectangle, Ellipse, Lasso, Polygon, Wand); Wand: Contiguous | Fixed aspect, From center (Rectangle, Ellipse); Look at (Wand) |
+| Move | White space (Solid / Clear) | |
+| Type | Overwrite / Insert | |
+| Font | Font ▾ | Spacing, letter and line spacing, White space |
+| Pencil | Character / Smart, Style (Smart), Size | Tip |
+| Brush | Brush ▾ (presets, Customize), Size | |
+| Eraser | Size | Tip |
+| Shape | Shape kind, Style | Fixed aspect, From center, Fill inside |
+| Block | Angle, Show (ASCII / Shapes) | Block size |
+| Fill | Contiguous | Look at |
+| Picker | Look at | |
+| Hand, Zoom | (just the tool name) | |
 
 Moved out: every action (2), the help text (3), the character, quick characters, Recent and Right button (5), the Paint
 source (6), the Mirror setup (7).
@@ -117,13 +123,13 @@ source (6), the Mirror setup (7).
   the right-click menu
 - **v3**: mirroring for selections, move and paste, Type and Font, and Block
 
-## Open questions
+## Decisions (the user's notes on the open questions)
 
-- [ ] **Right-click menu vs the right button.** Pencil, Brush, Eraser, Picker and Block already use the right button. Plan: the
-  menu opens on right-click for the other tools, and with **Ctrl / Cmd + right-click** (or a long press) on those five.
-  Alternatives: menu everywhere and the right button only paints with Alt, or no right-click menu at all
-- [ ] Keep **Look at: Layer / All** per tool (Wand, Fill, Picker each have their own), as now? (The user didn't pick sharing it)
-- [ ] **White space** (Solid / Clear) means slightly different things in Move, Font and the Paint panel. Keep one per place, as planned?
-- [ ] Should Size and Tip be shared by Pencil, Brush and Eraser, or stay separate per tool (as now, like Photoshop)?
-- [ ] The **…** menu: show it only when something overflows, or always (with a "Tool settings" heading) so its position is fixed?
-- [ ] Sidebar width: the Help panel reads better a little wider; make the sidebar resizable?
+- **Right-click menu vs the right button**: as planned. The menu opens on right-click for the tools that don't use the right
+  button, and with **Ctrl / Cmd + right-click** (or a long press) on Pencil, Brush, Eraser, Picker and Block
+- **Look at: Layer / All**: stays per tool (Wand, Fill and Picker each have their own)
+- **White space** (Solid / Clear): stays one per place (Move, Font, the Paint panel)
+- **Size and Tip**: stay separate per tool, as now
+- **The … menu**: fixed contents. It's not "what didn't fit", it's "the additional settings that don't need to be on the main
+  bar"; the main bar stays small enough to usually fit (see 1 and 8)
+- **Sidebar width**: resizable (see 4)
