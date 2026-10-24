@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.139';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.140';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -2058,14 +2058,32 @@ function render() {
     ctx.fillStyle = C['c-float-ink'];
     const fmaps = mirrorMaps(S.tool === 'select' ? 'select' : 'move');
     const fget = cellGet(f.cells);
+    // auto cells: as they'll come out where the block lands, joined with the art there, and the auto cells around it that
+    // will re-pick (drawn over the layer). Mirrored copies resolve within the block
+    let land = null;
+    if (!S.showAuto && [...f.cells.values()].some(isAuto)) {
+      const over = new Map();
+      for (const [rk, c] of f.cells) { const [dx, dy] = unK(rk), k = K(f.x + dx, f.y + dy); if (c !== ' ') over.set(k, c); else if (erase) over.set(k, null); }
+      land = autoPreview(lay, over);
+      for (const [k, c] of land) {
+        if (over.has(k)) continue;
+        const [x, y] = unK(k); if (!inView(x, y)) continue;
+        ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x), py(y), cw, ch);
+        ctx.fillStyle = C['c-ink']; if (c && c !== SOLID) ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
+      }
+      ctx.fillStyle = C['c-float-ink'];
+    }
     fmaps.forEach((m, i) => {   // with mirror on, where the mirrored copy will land (fainter)
       ctx.globalAlpha = i ? 0.45 : 1;
       for (const [rk, c] of f.cells) {
         if (c === ' ') continue;
         const [dx, dy] = unK(rk), x = m.x(f.x + dx), y = m.y(f.y + dy);
         if (!inView(x, y)) continue;
-        if (isAuto(c)) { if (S.showAuto) autoLabel(c, x, y); else { const r = resolveAt(fget, dx, dy, c); if (r !== SOLID) ctx.fillText(r, px(x) + cw / 2, py(y) + ty); } }   // (auto cells resolve within the block; they re-pick where it lands)
-        else ctx.fillText(m.c(c), px(x) + cw / 2, py(y) + ty);
+        if (isAuto(c)) {
+          if (S.showAuto) { autoLabel(c, x, y); continue; }
+          const r = !i && land ? land.get(K(x, y)) : resolveAt(fget, dx, dy, c);
+          if (r && r !== SOLID) ctx.fillText(r, px(x) + cw / 2, py(y) + ty);
+        } else ctx.fillText(m.c(c), px(x) + cw / 2, py(y) + ty);
       }
     });
     ctx.globalAlpha = 1;
