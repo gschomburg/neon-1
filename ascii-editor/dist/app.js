@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.131';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.132';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -4598,7 +4598,7 @@ function renderHelp(force) {
   if (chipEdit) {   // while typing into a chip, Help is about that
     const which = chipEdit.dataset.slot === 'draw' ? 'Draw' : 'Right';
     box.innerHTML = `<div class="help-tool">Typing into ${which}</div><div class="help-sum">Type a character to put it in the ${which} chip (${which === 'Draw' ? 'what the left button paints' : 'what the right button paints'}).</div>` +
-      list([['Space', 'empty (Clear: erases)'], ['Shift Space', 'opaque space'], ['Enter', 'done (or Tab, Esc, or a click elsewhere)']], true);
+      list([['Space', 'empty'], ['Shift Space', 'opaque empty']], true);
     return;
   }
   const now = dragging && H.drag ? H.drag : keys;
