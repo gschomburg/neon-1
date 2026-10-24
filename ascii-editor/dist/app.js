@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.114';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.115';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -4636,6 +4636,13 @@ function setSelShape(s, quiet) {
 function syncToolbox() {
   const wand = S.tool === 'select' && S.selShape === 'wand';
   $$('#toolbox .tool').forEach(b => b.classList.toggle('on', b.dataset.tool === 'wand' ? wand : b.dataset.tool === S.tool && !(S.tool === 'select' && wand)));
+  // the Select button shows the shape it selects with (the last marquee shape; the Wand has its own button)
+  const sel = $('#toolbox [data-tool="select"]'), shape = S.lastMarquee;
+  if (sel && sel.dataset.shape !== shape) {
+    sel.dataset.shape = shape;
+    sel.querySelector('svg').innerHTML = shape === 'rect' ? '<rect x="3.5" y="3.5" width="13" height="13" stroke-dasharray="2.5 2"/>' : OPT_ICONS[{ ellipse: 'selEllipse', lasso: 'selLasso', polygon: 'selPoly' }[shape]];
+    sel.title = `Select (M): ${SEL_NAMES[shape]} · Shift M cycles the shapes`;
+  }
 }
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 $$('#toolbox .tool').forEach(b => b.addEventListener('click', () => {
