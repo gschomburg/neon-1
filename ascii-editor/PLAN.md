@@ -192,6 +192,49 @@ The Photoshop setup:
 - **Global things at the very top**, outside the canvas: zoom level, light / dark mode, and menus if we need them
   (File: save, export).
 
+## 3D shapes (the user, 2026-10-24; v0.93)
+
+- **v0.99: shapes are brushes** (the user: a Shape tool next to Add / Remove felt off, since Add is a one-block shape).
+  The tools are just Add and Remove; the panel on the left is the **Brush**: Block (the default, one block) or a shape
+  with its sizes. Add puts the brush on the face pointed at (ghost + ground shadow); Remove carves the brush out,
+  centered on the block pointed at (the blocks it would take show in the clash color). Shift-click does the other one;
+  Q turns the brush. "Save blocks as a brush" stays (for the asXii shape); no bigger custom-brush system.
+  The size toggle is a fullscreen-style icon (arrows out / in), Z.
+- **Two rows on top** (the user, v0.101): row 1 is the view (View, Color, Focus, the angle readout, fullscreen); row 2
+  is the content (Add / Remove, **Brush ▾**, Clear, "add at ..."). The brush is a dropdown under its button (like the
+  Advanced brush menu), named with its sizes (Disc r6, Box 8x5x3); it folds away on a click elsewhere or Esc. The block
+  count sits in the bottom-right corner of the 3D view; the bottom bar is the key hints, Close and Preview.
+  Both rows have their controls centered in a box, like the main options bar (title left, readouts right) (v0.103).
+
+- The 3D editor has a **Shape** tool (S) next to Add / Remove: a side panel picks a premade shape and its sizes; a ghost
+  of it follows the pointer onto the floor or the face pointed at, and a click places it (keep clicking for more; Q turns
+  it; Shift-click still removes a block; Esc goes back to Add). Shapes: Cube (8), Box, Plane (12 x 12), Walls (a room
+  with no roof), Disc (radius 6), Cylinder, Ring, Sphere, Dome, Pyramid, Stairs. A shape is [u, v, h] cells with h up
+  from the floor (the editor's -z).
+- **Easier to read** (the user, 2026-10-24; v0.94): **Color** Plain | **Axes** (default: each side tinted by its axis,
+  across red, along green, up blue) | **Height** (a hue per level, so higher blocks read from any view); C cycles.
+  The block or shape about to go in casts a **shadow** on the ground (the bottom of level 0), with dashed lines down to
+  it for a block or a small shape, and the head reads **add at u, v · height h**.
+- **Turning is a trackball** (v0.95; the user found v0.94's turntable wonky from Front): right-drag turns the shape
+  the way the pointer moves, about the screen's own axes (across = side to side, up / down = toward or away from you),
+  from any angle. The turn is a quaternion (cam.q), so nothing locks up (before v0.94: turn + tilt with the tilt clamped
+  at ±90°, which locked). Views set it from turn + tilt and animate with slerp; the readout shows turn / tilt.
+- **Opening fits the blocks** (v0.100): open (and F) fit the blocks as they look from the current angle into ~75% of the
+  window (it was half the window, sized by the longest side), and fit again once the window has its final size.
+- **Focus** (the user, 2026-10-24; v0.96; F, like Unity / Blender, or the Focus button): glides back to the blocks,
+  with the pivot in their middle, the pan undone and the zoom fit; keeps the angle. The views moved to 1 / 2 / 3
+  (Front / Angled / Diamond; G and D still work).
+- **Speed** (the user, 2026-10-24; v0.97): with many blocks, adding / removing got slow. Measured at 2744 blocks: the
+  3D redraw was ~35 ms and ran on every pointer move (hover); the canvas pre-bake behind it ~5 ms (mostly its memo key,
+  which sorted and stringified every block per redraw). Now: the sides that can show are found once per view (it is
+  orthographic), corners are shared (faces 36 -> 3 ms); the grid + blocks are drawn into a layer reused until the
+  blocks / view / colors change (a hover redraw is ~0 ms); the pre-bake waits while the 3D window is open, and its key
+  no longer sorts. The 3D window has two sizes (v0.98; Bigger / Smaller button
+  in its head, or Z): Smaller (default) is 80% of Bigger, which is most of the screen (100vw - 80px by 100vh - 80px).
+- **Save blocks as a shape** keeps whatever is in the editor as one of My shapes (in this browser's prefs). The
+  user plans an **asXii** shape that spells the name: build it, save it (and save the project to saves/), and it can
+  then become a built-in shape.
+
 ## Built-in art (the user, 2026-10-23)
 
 - The app comes with a bunch of **premade art you can load**. One app the user liked had a browsable gallery; to start,
@@ -199,6 +242,27 @@ The Photoshop setup:
   the artists** (their signatures / initials in the pieces, and ascii-art.de as the source).
 - The full ascii-art.de catalog (`reference/ascii-art-de/`, ~10MB) is kept local only: taken out of the repo and
   git-ignored on 2026-10-23. `selections.txt` stays in the repo.
+- **Gallery** (the user, 2026-10-24; v0.90): File › Gallery… opens a pane on the side (left of the Info pane). It lists
+  every piece with a thumbnail, name, artist and size, plus a search box. Clicking a piece previews it floating over
+  the middle of the view on a tinted plate (kept on the canvas when it fits), without touching the layers. **Add to
+  canvas** (or Enter / double-click) puts it on a new layer above the active one, named after the piece, and picks
+  the Move tool to place it. The pane closes on Add, ×, Esc, picking another tool, or drawing on the canvas (panning
+  and zooming leave it open). Arrows step through the list.
+  - **The art is plain text** (the user, 2026-10-24): one `.txt` per piece in `dist/gallery/`, listed in
+    `dist/gallery/index.json` (file, name, artist, source subject + URL; its order is the gallery order). Served over
+    http the app reads those directly; from file:// (Chrome blocks reading them) it loads `dist/gallery.js`, the same
+    art bundled by `node ascii-editor/gallery-build.js` (bump.js runs it too). The build adds new .txt files to the
+    index (named from the file name) and drops entries whose file is gone. Nothing loads until the pane first opens.
+  - **White space** (the user, 2026-10-24; v0.92): Clear | **Shape** (default) | Box, in the pane, shown live in the
+    preview (only what gets placed is tinted; the art under see-through blanks shows). Shape makes the blanks inside
+    the art's outline solid and leaves the space around it clear, so placed art isn't a box. **Gaps** (0-4, default 1):
+    openings in the outline up to that size count as closed (0 = only fully closed spaces). It is a morphological
+    closing: grow the characters by the gap (2x across, cells are tall), fill what the outside can't reach, shrink
+    back (`artSolid`). Not perfect on very open art; Clear or a hand fix after covers that. Could also serve the Font
+    tool, imports and pastes later.
+  - The first 192 pieces came from `selections.txt` by a one-off script: split on double blank lines, matched back
+    to the catalog subject (for the source link), named, the artist taken from the signature, and the email /
+    commentary lines trimmed; single-line notes were left out.
 
 ## Animation (the user, 2026-10-23; ideas)
 

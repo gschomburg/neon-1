@@ -1,0 +1,3 @@
+(o|
+//\
+V_/_     Penguin after hitting a wall

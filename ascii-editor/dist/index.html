@@ -7,13 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Mono&family=Fira+Code&family=Source+Code+Pro&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=0.89">
+<link rel="stylesheet" href="style.css?v=0.103">
 </head>
 <body data-theme="blue">
 
 <!-- Top bar: menus, document name, global view controls -->
 <header id="topbar">
-  <div class="brand">as<b>X</b>ii <span class="ver">v0.89</span></div>
+  <div class="brand">as<b>X</b>ii <span class="ver">v0.103</span></div>
   <nav class="menus">
     <div class="menu">
       <button class="btn menu-btn">File</button>
@@ -21,6 +21,8 @@
         <button class="btn" data-cmd="new">New <kbd></kbd></button>
         <button class="btn" data-cmd="open">Open project... <kbd>Ctrl O</kbd></button>
         <button class="btn" data-cmd="save">Save project <kbd>Ctrl S</kbd></button>
+        <hr>
+        <button class="btn" data-cmd="gallery" title="Built-in art: preview a piece on the canvas, then add it on a new layer">Gallery...</button>
         <hr>
         <button class="btn" data-cmd="importTxt">Import text file...</button>
         <button class="btn" data-cmd="exportTxt">Export .txt</button>
@@ -162,6 +164,19 @@
     <div class="chip" id="brushChip" title="Brush character (click to edit)">#</div>
   </div>
 
+  <!-- Gallery (File > Gallery): built-in art; click to preview on the canvas, Add puts it on a new layer -->
+  <aside id="gallery" hidden>
+    <div class="gal-head"><h2>Gallery</h2><span id="galCount" class="gal-count"></span><button class="btn icon" id="galClose" title="Close (Esc)">×</button></div>
+    <input id="galSearch" type="search" placeholder="Search names and artists" spellcheck="false" autocomplete="off">
+    <div id="galList" class="gal-list"></div>
+    <div class="gal-foot">
+      <div id="galPick" class="gal-pick"></div>
+      <div class="gal-ws"><span class="label" title="What the blank spaces in the art do when it is placed">White space</span><span class="seg" id="galWs"><button class="btn" data-gws="clear" title="Blanks are see-through: art under it shows in the gaps">Clear</button><button class="btn" data-gws="shape" title="The blanks inside the art's outline are solid (they hide what's under it); the space around it stays clear">Shape</button><button class="btn" data-gws="box" title="Every blank in the art's rectangle is solid">Box</button></span><span id="galGap" class="gal-gap" title="Shape: gaps in the outline up to this many cells count as closed (0: only fully closed spaces)">Gaps <button class="btn icon" data-gd="-1">−</button><b id="galGapN">1</b><button class="btn icon" data-gd="1">+</button></span></div>
+      <button class="btn primary" id="galAdd" title="Put it on a new layer (Enter)" disabled>Add to canvas</button>
+    </div>
+    <div class="gal-credit">From the <a href="https://www.ascii-art.de/ascii/" target="_blank" rel="noopener">ASCII Art Dictionary</a>. The art belongs to its artists; their signatures are in the pieces.</div>
+  </aside>
+
   <!-- Right pane: info, canvas, layers -->
   <aside id="rightpane">
     <section>
@@ -223,17 +238,25 @@
 <!-- 3D block editor (Block tool: Edit 3D) -->
 <div id="b3d" class="b3d" hidden>
   <div class="b3d-win">
+    <!-- the view: how you look at it (the controls centered, like the main options bar) -->
     <div class="b3d-head">
-      <b>3D blocks</b>
-      <span class="seg"><button class="btn on" data-b3tool="add" title="Click a face to add a block on that side (A)">Add</button><button class="btn" data-b3tool="remove" title="Click a block to remove it (R, or Shift-click)">Remove</button></span>
-      <span class="b3d-views">View <span class="seg"><button class="btn" data-b3view="front" title="Straight on, square grid (F)">Front</button><button class="btn" data-b3view="angled" title="Turned toward the depth side, square grid: close to how it bakes (G)">Angled</button><button class="btn" data-b3view="diamond" title="Shaped like the canvas: turned 45°, stretched to the tall cells, depth shifted sideways (D)">◇ Diamond</button></span></span>
-      <span class="spacer"></span><span id="b3dAngles" class="b3d-count" title="The view: turn (side to side), tilt (from above), grid (0° square, 45° diamond), stretch (toward the canvas shape)"></span><span id="b3dCount" class="b3d-count"></span>
+      <div class="b3d-left"><b>3D blocks</b></div>
+      <div class="b3d-mid"><span class="b3d-views">View <span class="seg"><button class="btn" data-b3view="front" title="Straight on, square grid (1)">Front</button><button class="btn" data-b3view="angled" title="Turned toward the depth side, square grid: close to how it bakes (2 or G)">Angled</button><button class="btn" data-b3view="diamond" title="Shaped like the canvas: turned 45°, stretched to the tall cells, depth shifted sideways (3 or D)">◇ Diamond</button></span></span><span class="sep"></span><span class="b3d-views">Color <span class="seg"><button class="btn" data-b3color="plain" title="One color, shaded (C cycles)">Plain</button><button class="btn" data-b3color="axes" title="Each side tinted by its axis: across red, along green, up blue (C cycles)">Axes</button><button class="btn" data-b3color="height" title="A different hue for each level up, so you can see which blocks are higher (C cycles)">Height</button></span></span><span class="sep"></span><button class="btn" id="b3dFocus" title="Back to the blocks: turn around their middle, pan and zoom to fit (F)">Focus</button></div>
+      <div class="b3d-right"><span id="b3dAngles" class="b3d-count" title="The view: turn (side to side), tilt (toward you), grid (0° square, 45° diamond), stretch (toward the canvas shape)"></span><button class="btn icon b3d-size" id="b3dSize"></button></div>
     </div>
-    <canvas id="b3dCanvas"></canvas>
+    <!-- the content: what a click does -->
+    <div class="b3d-head b3d-row2">
+      <div class="b3d-left"></div>
+      <div class="b3d-mid"><span class="seg"><button class="btn on" data-b3tool="add" title="Click a face to add the brush on that side (A)">Add</button><button class="btn" data-b3tool="remove" title="Click a block to remove it, or the brush's shape around it (R, or Shift-click)">Remove</button></span><span class="sep"></span><button class="btn b3d-brushbtn" id="b3dBrushBtn" title="The brush Add and Remove use: one block, or a shape with its sizes"><span class="label">Brush</span> <b id="b3dBrushName">Block</b> <span class="caret">▾</span></button><span class="sep"></span><button class="btn" id="b3dClear" title="Remove all the blocks">Clear</button></div>
+      <div class="b3d-right"><span id="b3dAt" class="b3d-count"></span></div>
+    </div>
+    <div id="b3dShapes" class="b3d-shapes" hidden></div>
+    <div class="b3d-body">
+      <div class="b3d-stage"><canvas id="b3dCanvas"></canvas><span id="b3dCount" class="b3d-stagecount"></span></div>
+    </div>
     <div class="b3d-foot">
-      <span class="b3d-hint">Click a face to add · Shift-click removes · right-drag turns · middle or Space-drag pans · scroll zooms</span>
+      <span class="b3d-hint" title="Click a face to add · Shift-click removes · Q turns the brush · right-drag turns the view the way you drag · C colors · middle or Space-drag pans · scroll zooms · F focuses on the blocks · 1 2 3 views">right-drag turns · middle-drag pans · scroll zooms · F focus · Z size · Q turns the brush · C colors</span>
       <span class="spacer"></span>
-      <button class="btn" id="b3dClear" title="Remove all the blocks">Clear</button>
       <button class="btn" id="b3dClose" title="Close (Esc)">Close</button>
       <button class="btn primary" id="b3dPreview" title="Turn back to the bake angle and show it on the canvas (Enter)">Preview</button>
     </div>
@@ -283,8 +306,8 @@
 <input type="file" id="fileTxt" accept=".txt,text/plain" hidden>
 <pre id="selftest" hidden></pre>
 
-<script src="fonts.js?v=0.89"></script>
-<script src="cursors.js?v=0.89"></script>
-<script src="app.js?v=0.89"></script>
+<script src="fonts.js?v=0.103"></script>
+<script src="cursors.js?v=0.103"></script>
+<script src="app.js?v=0.103"></script>
 </body>
 </html>

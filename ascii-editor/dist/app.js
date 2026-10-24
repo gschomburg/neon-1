@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.89';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.103';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -33,6 +33,11 @@ const S = {
   brushes: [],          // your own brushes (Save as new brush)
   pencil: { size: 1, tip: 'square', smart: false, style: 'ascii' },   // smart: draw a line that picks its own characters   // the Pencil keeps its own size; both draw with brush.ch
   protectText: true,   // text layers: only the Font tool and Move change them (Layers pane)
+  galWs: { mode: 'shape', gap: 1 },
+  b3big: false,   // 3D editor window: big (most of the screen) or a bit smaller (80% of that)
+  b3color: 'axes',   // 3D editor face colors: plain | axes | height
+  b3shape: { kind: 'block', params: {}, turn: 0 },   // 3D editor brush (Add and Remove use it): which shape, sizes per shape, quarter turns
+  myShapes: [],   // shapes saved from the 3D editor: { name, cells: [[u, v, h]...] }   // gallery White space: clear | shape | box, and Shape's gap size
   lastDraw: 'pencil',   // Pencil or Brush, whichever was used last (the Picker goes back to it)
   figfont: { name: 'Standard', layout: 'default', ws: 'clear', ls: 0, lh: 0 }, textEdit: null,   // Font tool: the font for new text; the text layer being typed in
   spacesErase: false,   // spaces in a floating block erase what's under them when dropped
@@ -304,6 +309,161 @@ function setFigFont(name, layout, ws = S.figfont.ws || 'clear') {
   const l = editingText();
   if (l) { pushUndo(); l.text.font = name; l.text.layout = layout; l.text.ws = ws; renderTextLayer(l); changed(true); }
   renderOptions(); redraw();
+}
+
+// ---------- gallery (File › Gallery…): built-in art, plain .txt files in gallery/ ----------
+// Served over http, the pieces load from gallery/index.json and gallery/*.txt; from file:// (where Chrome won't let
+// the page read them) they come from gallery.js, the same art bundled by ascii-editor/gallery-build.js. Either way
+// nothing loads until the pane is first opened.
+// A pane on the side lists the pieces. Clicking one previews it over the middle of the view, on a tinted plate;
+// Add puts it on a new layer above the active one, ready for the Move tool. The pane closes on Add, ×, Esc, or using a tool.
+const gal = { open: false, sel: -1, q: '', shown: [], preview: null, items: null, loading: null };
+const galItems = () => gal.items || [];
+const APP_BASE = ((document.currentScript && document.currentScript.src) || location.href).replace(/[?#].*$/, '').replace(/[^/]*$/, '');
+const tidyArt = t => { const r = t.replace(/\r\n?/g, '\n').replace(/\t/g, '    ').split('\n').map(x => x.replace(/\s+$/, '')); while (r.length && !r[r.length - 1]) r.pop(); return r.join('\n'); };
+function loadGallery() {
+  if (gal.items) return Promise.resolve(gal.items);
+  if (gal.loading) return gal.loading;
+  const get = (u, how) => fetch(APP_BASE + u, { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(u); return r[how](); });
+  const fromFiles = () => get('gallery/index.json', 'json').then(list => Promise.all(list.map(e => get('gallery/' + encodeURIComponent(e.file), 'text').then(t => ({ ...e, art: tidyArt(t) })))));
+  const fromBundle = () => window.ASXII_GALLERY ? Promise.resolve(window.ASXII_GALLERY) : new Promise((ok, no) => {
+    const sc = document.createElement('script'); sc.src = APP_BASE + 'gallery.js?v=' + VERSION;
+    sc.onload = () => ok(window.ASXII_GALLERY || []); sc.onerror = no; document.head.appendChild(sc);
+  });
+  gal.loading = (/^https?:/.test(location.protocol) ? fromFiles().catch(fromBundle) : fromBundle())
+    .then(items => { gal.items = items; return items; }, () => [])
+    .finally(() => { gal.loading = null; });
+  return gal.loading;
+}
+function galCells(art) {
+  const cells = new Map(), rows = art.split('\n'); let w = 0;
+  rows.forEach((r, j) => { const cs = chars(r); w = Math.max(w, cs.length); cs.forEach((c, i) => { if (c !== ' ') cells.set(K(i, j), c); }); });
+  return { cells, w, h: rows.length };
+}
+// White space for placed art: which blanks become solid (they hide what's under the art).
+//   clear: none · box: every blank in the art's rectangle · shape: the blanks inside the art's outline, where gaps up to
+//   `gap` cells in the outline count as closed (0: only blanks fully closed in). Done as a morphological closing: grow the
+//   characters by the gap (twice as far across, since cells are tall), fill in what the outside can't reach, shrink back.
+// Returns a Set of "x,y" keys (relative to the art's top left).
+function artSolid(cells, w, h, mode, gap) {
+  const out = new Set();
+  if (mode === 'box') { for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (!cells.has(K(x, y))) out.add(K(x, y)); return out; }
+  if (mode !== 'shape') return out;
+  const gx = gap * 2, gy = gap, P = gx + 2, W = w + P * 2, H = h + P * 2, at = (x, y) => y * W + x;
+  const ink = new Uint8Array(W * H);
+  for (const k of cells.keys()) { const [x, y] = unK(k); ink[at(x + P, y + P)] = 1; }
+  // grow (or shrink) by a gx x gy box: a running max (min) along the rows, then the columns
+  const spread = (src, keep) => {   // keep 1: max (grow) · keep 0: min (shrink)
+    const a = new Uint8Array(W * H), b = new Uint8Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let v = 1 - keep; for (let d = -gx; d <= gx; d++) { const xx = x + d; const c = xx < 0 || xx >= W ? 1 - keep : src[at(xx, y)]; if (c === keep) { v = keep; break; } } a[at(x, y)] = v; }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let v = 1 - keep; for (let d = -gy; d <= gy; d++) { const yy = y + d; const c = yy < 0 || yy >= H ? 1 - keep : a[at(x, yy)]; if (c === keep) { v = keep; break; } } b[at(x, y)] = v; }
+    return b;
+  };
+  const grown = gap ? spread(ink, 1) : ink;
+  const filled = new Uint8Array(W * H).fill(1), q = [0]; filled[0] = 0;   // flood the outside (4-way), from the corner
+  while (q.length) {
+    const i = q.pop(), x = i % W, y = (i / W) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+      const j = at(xx, yy); if (!filled[j] || grown[j]) continue;
+      filled[j] = 0; q.push(j);
+    }
+  }
+  const closed = gap ? spread(filled, 0) : filled;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (closed[at(x + P, y + P)] && !ink[at(x + P, y + P)]) out.add(K(x, y));
+  return out;
+}
+function galSolid() { const p = gal.preview; if (p) p.solid = artSolid(p.cells, p.w, p.h, S.galWs.mode, S.galWs.gap); }
+function setGalWs(mode, gap) {
+  S.galWs = { mode, gap: clamp(gap, 0, 4) }; savePrefs();
+  galSolid(); galWsUi(); redraw();
+}
+function galWsUi() {
+  $$('#galWs [data-gws]').forEach(b => b.classList.toggle('on', b.dataset.gws === S.galWs.mode));
+  $('#galGap').hidden = S.galWs.mode !== 'shape';
+  $('#galGapN').textContent = S.galWs.gap;
+}
+function openGallery() {
+  commitFloat();
+  gal.open = true; $('#gallery').hidden = false;
+  const q = $('#galSearch'); q.value = gal.q; q.focus();
+  if (!gal.items) $('#galList').innerHTML = '<div class="gal-empty">Loading…</div>';
+  return loadGallery().then(items => {
+    if (!gal.open) return;
+    if (!items.length) { $('#galList').innerHTML = '<div class="gal-empty">The gallery art didn\'t load</div>'; return; }
+    renderGallery();
+    if (gal.sel >= 0) galPreview(gal.sel);
+  });
+}
+function closeGallery() {
+  if (!gal.open) return;
+  gal.open = false; gal.preview = null; $('#gallery').hidden = true;
+  if (document.activeElement && $('#gallery').contains(document.activeElement)) document.activeElement.blur();
+  redraw();
+}
+function renderGallery() {
+  const q = gal.q.trim().toLowerCase(), all = galItems();
+  gal.shown = all.map((g, i) => i).filter(i => !q || (all[i].name + ' ' + all[i].by + ' ' + all[i].subject).toLowerCase().includes(q));
+  $('#galCount').textContent = gal.shown.length + (q ? ' of ' + all.length : '');
+  $('#galList').innerHTML = gal.shown.map(i => {
+    const g = all[i], rows = g.art.split('\n'), w = Math.max(...rows.map(r => chars(r).length)), h = rows.length;
+    const fs = Math.max(1, Math.min(7, 92 / (w * 0.6), 60 / h)).toFixed(2);   // the thumbnail: the whole piece in a 92 x 60 box
+    return `<div class="gal-item${i === gal.sel ? ' on' : ''}" data-gi="${i}" title="${esc(g.name)}${g.by ? ' · ' + esc(g.by) : ''} · ${w} × ${h} · double-click to add">` +
+      `<div class="gal-thumb"><pre style="font-size:${fs}px">${esc(g.art)}</pre></div>` +
+      `<div class="gal-meta"><b>${esc(g.name)}</b><span>${g.by ? esc(g.by) + ' · ' : ''}${w} × ${h}</span></div></div>`;
+  }).join('') || '<div class="gal-empty">Nothing matches</div>';
+  galFoot();
+}
+function galFoot() {
+  const g = galItems()[gal.sel];
+  $('#galAdd').disabled = !gal.preview;
+  $('#galPick').innerHTML = g && gal.preview ? `<b>${esc(g.name)}</b>${g.by ? ' by ' + esc(g.by) : ''}${g.url ? ` · <a href="${esc(g.url)}" target="_blank" rel="noopener">source</a>` : ''}` : 'Click a piece to preview it on the canvas';
+}
+// preview piece i: centered in the view (kept on the canvas when it fits), floating over the art
+function galPreview(i) {
+  const g = galItems()[i]; if (!g) return;
+  gal.sel = i;
+  const { cells, w, h } = galCells(g.art), c = cellAt(vp.clientWidth / 2, vp.clientHeight / 2);
+  gal.preview = { cells, w, h, x: clamp(c.x - (w >> 1), 0, Math.max(0, S.w - w)), y: clamp(c.y - (h >> 1), 0, Math.max(0, S.h - h)) };
+  galSolid();
+  $$('#galList .gal-item').forEach(el => el.classList.toggle('on', +el.dataset.gi === i));
+  const el = $(`#galList [data-gi="${i}"]`); if (el) el.scrollIntoView({ block: 'nearest' });
+  galFoot(); redraw();
+}
+function galStep(d) {
+  if (!gal.shown.length) return;
+  const at = gal.shown.indexOf(gal.sel);
+  galPreview(gal.shown[at < 0 ? (d > 0 ? 0 : gal.shown.length - 1) : clamp(at + d, 0, gal.shown.length - 1)]);
+}
+function galAdd() {
+  const g = galItems()[gal.sel], p = gal.preview;
+  if (!g || !p) return toast('Pick a piece first', 'warn');
+  commitFloat(); pushUndo();
+  const l = makeLayer(g.name);
+  for (const [k, c] of p.cells) { const [x, y] = unK(k); l.cells.set(K(p.x + x, p.y + y), c); }
+  for (const k of p.solid || []) { const [x, y] = unK(k); l.cells.set(K(p.x + x, p.y + y), SOLID); }
+  S.layers.splice(S.active + 1, 0, l); S.active = S.layers.indexOf(l);
+  S.sel = null; S.lastTag = null;
+  closeGallery();
+  setTool('move');
+  changed(true);
+  toast('Added ' + g.name + ' on a new layer: drag it to place it');
+}
+function initGallery() {
+  $('#galClose').addEventListener('click', closeGallery);
+  $$('#galWs [data-gws]').forEach(b => b.addEventListener('click', () => setGalWs(b.dataset.gws, S.galWs.gap)));
+  $$('#galGap [data-gd]').forEach(b => b.addEventListener('click', () => setGalWs('shape', S.galWs.gap + +b.dataset.gd)));
+  galWsUi();
+  $('#galAdd').addEventListener('click', galAdd);
+  const q = $('#galSearch');
+  q.addEventListener('input', () => { gal.q = q.value; renderGallery(); });
+  q.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); galStep(e.key === 'ArrowDown' ? 1 : -1); }
+    else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); if (gal.preview) galAdd(); else galStep(1); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (q.value) { q.value = gal.q = ''; renderGallery(); } else closeGallery(); }
+  });
+  $('#galList').addEventListener('click', e => { const it = e.target.closest('.gal-item'); if (it) galPreview(+it.dataset.gi); });
+  $('#galList').addEventListener('dblclick', e => { const it = e.target.closest('.gal-item'); if (it) { galPreview(+it.dataset.gi); galAdd(); } });
 }
 
 // ---------- undo ----------
@@ -1786,6 +1946,20 @@ function render() {
     }
   }
 
+  // gallery preview: the piece on a plate, over the art
+  if (gal.preview) {
+    const p = gal.preview;
+    for (const k of [...p.cells.keys(), ...(p.solid || [])]) {   // what gets placed: the characters and the solid blanks
+      const [x, y] = unK(k), X = p.x + x, Y = p.y + y; if (!inView(X, Y)) continue;
+      ctx.fillStyle = C['c-paper']; ctx.fillRect(px(X), py(Y), cw, ch);
+      ctx.fillStyle = C['c-float-bg']; ctx.fillRect(px(X), py(Y), cw, ch);
+    }
+    ctx.save(); ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeStyle = C['c-grid'];
+    ctx.strokeRect(Math.round(px(p.x)) - 2.5, Math.round(py(p.y)) - 2.5, p.w * cw + 5, p.h * ch + 5); ctx.restore();
+    ctx.fillStyle = C['c-float-ink'];
+    for (const [k, c] of p.cells) { const [x, y] = unK(k), X = p.x + x, Y = p.y + y; if (inView(X, Y)) ctx.fillText(c, px(X) + cw / 2, py(Y) + ty); }
+  }
+
   // blocks (Block tool): shaded 3D boxes over the canvas, and the block under the pointer
   if (S.tool === 'font') {
     for (const l of S.layers) {
@@ -2091,7 +2265,7 @@ function update3dCursor() {
   const c = b3dCanvas(); if (!c || !cam.open) return;
   const m = S.mods, d = cam.drag;
   const v = d && d.pan ? 'grabbing' : d ? curImage('orbit', null, false, 'move') : S.spaceDown ? 'grab' : m.alt ? curImage('orbit', null, false, 'move')
-    : curImage('cross', cam.tool === 'remove' || m.shift ? 'minus' : 'plus');
+    : curImage('cross', (cam.tool === 'remove') !== !!m.shift ? 'minus' : 'plus');
   if (v !== last3dCur) { c.style.cursor = v; last3dCur = v; }
 }
 
@@ -2107,6 +2281,7 @@ vp.addEventListener('pointerdown', e => {
   if (e.button === 2 && !rightButtonTool()) return;
   vp.setPointerCapture(e.pointerId);
   const { px, py } = pt(e), c = cellAt(px, py);
+  if (gal.open && !(e.button === 1 || S.spaceDown || S.tool === 'hand' || S.tool === 'zoom')) closeGallery();   // drawing on the canvas puts the gallery away (panning and zooming don't)
   if (e.button === 1 || S.spaceDown || S.tool === 'hand') {
     S.drag = { kind: 'pan', sx: px, sy: py, ox: S.offX, oy: S.offY };
     redraw(); e.preventDefault(); return;
@@ -2315,15 +2490,26 @@ window.addEventListener('keydown', e => {
     else if (e.key === 'Enter') { e.preventDefault(); savePatternDraft(); }
     return;
   }
-  if (cam.open && !(e.ctrlKey || e.metaKey) && e.key !== ' ') {
-    if (e.key === 'Escape') close3d(); else if (e.key === 'Enter') preview3d();
-    else if (e.key === 'a' || e.key === 'A') $('#b3d [data-b3tool="add"]').click();
-    else if (e.key === 'r' || e.key === 'R' || e.key === 'x' || e.key === 'X') $('#b3d [data-b3tool="remove"]').click();
+  if (cam.open && !(e.ctrlKey || e.metaKey) && e.key !== ' ' && !isField(document.activeElement)) {
+    if (e.key === 'Escape') { if (!closeB3Brush()) close3d(); } else if (e.key === 'Enter') preview3d();
+    else if (e.key === 'q' || e.key === 'Q') { b3shapeTurn(); }
+    else if (e.key === 'c' || e.key === 'C') { const m = ['plain', 'axes', 'height']; S.b3color = m[(m.indexOf(S.b3color) + 1) % 3]; savePrefs(); b3ColorUi(); render3d(); }
+    else if (e.key === 'a' || e.key === 'A') setB3Tool('add');
+    else if (e.key === 'r' || e.key === 'R' || e.key === 'x' || e.key === 'X') setB3Tool('remove');
     else if (e.key === 'Shift') { cam.shift = true; render3d(); }
-    else if (e.key === 'f' || e.key === 'F') setCamView('front');
+    else if (e.key === 'f' || e.key === 'F') focus3d();
+    else if (e.key === 'z' || e.key === 'Z') $('#b3dSize').click();
+    else if (e.key === '1') setCamView('front');
+    else if (e.key === '2') setCamView('angled');
+    else if (e.key === '3') setCamView('diamond');
     else if (e.key === 'g' || e.key === 'G') setCamView('angled');
     else if (e.key === 'd' || e.key === 'D') setCamView('diamond');
     e.preventDefault(); return;
+  }
+  if (gal.open && !isField(document.activeElement) && !(e.ctrlKey || e.metaKey)) {
+    if (e.key === 'Escape') { e.preventDefault(); closeGallery(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); galAdd(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); galStep(e.key === 'ArrowDown' ? 1 : -1); return; }
   }
   if (e.key === 'Escape' && !$('#patMenu').hidden) { closePatternMenu(); return; }
   if (e.key === 'Escape' && !$('#fontMenu').hidden) { closeFontMenu(); return; }
@@ -2736,7 +2922,8 @@ function drawDiagBlocks(ctx, C, px, py) {
 // the bake, remembered until the blocks or their settings change (the canvas redraws on every hover)
 let preBakeMemo = { key: '', cells: new Map() };
 function preBake() {
-  const B = S.blocks, key = JSON.stringify([[...B.dcells].sort(), B.size, B.depth, B.dir, B.fill, B.solid, B.seams, B.flat, B.ox, B.oy]);
+  if (cam.open && preBakeMemo.cells) return preBakeMemo.cells;   // behind the 3D window: catch up when it closes
+  const B = S.blocks, key = [...B.dcells].join(';') + '|' + JSON.stringify([B.size, B.depth, B.dir, B.fill, B.solid, B.seams, B.flat, B.ox, B.oy]);
   if (key !== preBakeMemo.key) preBakeMemo = { key, cells: bakeCells() };
   return preBakeMemo.cells;
 }
@@ -2890,7 +3077,7 @@ function savePrefs() {
   try {
     const tb = $('#toolbox');
     localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid,
-      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
+      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || null; } catch { return null; } }
@@ -2901,6 +3088,7 @@ const CMDS = {
   open: () => $('#fileOpen').click(),
   save: saveProject,
   importTxt: () => $('#fileTxt').click(),
+  gallery: () => gal.open ? closeGallery() : openGallery(),
   exportTxt: () => { commitFloat(); download(fileBase() + '.txt', canvasText() + '\n', 'text/plain'); toast('Exported ' + fileBase() + '.txt'); },
   copyMerged: () => copyMerged(),
   blocksBake: () => bakeBlocks(),
@@ -3039,7 +3227,7 @@ function setTool(t) {
   if (t !== 'move' && t !== 'hand') commitFloat();
   S.tool = t;
   if (t === 'pencil' || t === 'brush') S.lastDraw = t;
-  closeBrushMenu(); closeBrushPop(); closeSetPop(); closeBlockPop(); closeFontMenu(); if (extrude.open) closeExtrude();
+  closeBrushMenu(); closeBrushPop(); closeSetPop(); closeBlockPop(); closeFontMenu(); closeGallery(); if (extrude.open) closeExtrude();
   if (S.textEdit) endTextEdit();
   if (S.poly) S.poly = null;
   if (S.selPoly) S.selPoly = null;
@@ -3503,21 +3691,49 @@ function refreshExtrudePop() {
 // world (x, y) = (u - v, u + v), its points 1 away, and it runs from depth z to z + 1. You turn the view around them,
 // click a face to add a block on that side (or the floor grid to start one), and Preview swings back to the bake angle
 // and puts the shape on the canvas, where you can drag it around and Bake it.
+// The view's turn is a trackball: right-drag turns the shape the way the pointer moves, about the screen's own axes
+// (across = side to side, up / down = toward or away from you), from whatever angle it is at. Kept as a quaternion
+// (cam.q), so there are no stops to lock up at. The views (Front, Angled, Diamond) are a turn + tilt, as before.
 const cam = { roll: 0, pan: [0, 0], m: 0,   // roll: 0.5 = turned 45° (Angled), 1 = shaped like the canvas (Diamond)
-  yaw: -0.55, pitch: 0.35, zoom: 1, tool: 'add', open: false, hover: null, drag: null, center: [0, 0, 0], faces: [] };
+  q: [1, 0, 0, 0], zoom: 1, tool: 'add', open: false, hover: null, drag: null, center: [0, 0, 0], faces: [] };
 // orthographic views: Front, Top, Left and Right look straight along an axis; Angled is the 3/4 view
 // the views: Front shows the square grid; Angled turns it 45° and looks from the depth side (turn 57°, tilt -2°, picked by
 // eye to read close to the bake); Diamond is the canvas look (turned, stretched, straight on with the depth shifted sideways)
-const CAM_VIEWS = { front: [0, 0, 0], angled: [-57 * Math.PI / 180, -2 * Math.PI / 180, 0.5], diamond: [0, 0, 1] };
+const CAM_VIEWS = { front: [0, 0, 0], angled: [-57 * Math.PI / 180, -2 * Math.PI / 180, 0.5], diamond: [0, 0, 1] };   // [turn, tilt, roll]
+// quaternions [w, x, y, z]
+const qMul = (a, b) => [a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3], a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2], a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1], a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]];
+const qAxis = (ax, ay, az, ang) => { const s = Math.sin(ang / 2); return [Math.cos(ang / 2), ax * s, ay * s, az * s]; };
+const qNorm = q => { const m = Math.hypot(...q) || 1; return q.map(c => c / m); };
+function qSlerp(a, b, t) {
+  let d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+  if (d < 0) { b = b.map(c => -c); d = -d; }   // the short way round
+  if (d > 0.9995) return qNorm(a.map((c, i) => c + (b[i] - c) * t));
+  const th = Math.acos(d), sa = Math.sin((1 - t) * th) / Math.sin(th), sb = Math.sin(t * th) / Math.sin(th);
+  return a.map((c, i) => c * sa + b[i] * sb);
+}
+// a view from a turn (side to side) and a tilt (toward you), the tilt after the turn
+const qView = (turn, tilt) => qMul(qAxis(1, 0, 0, tilt), qAxis(0, 1, 0, -turn));
+function camM() {   // the rotation matrix, kept while cam.q stays the same
+  if (cam.Mq !== cam.q) { const [w, x, y, z] = cam.q; cam.Mq = cam.q;
+    cam.M = [[1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)], [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)], [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)]]; }
+  return cam.M;
+}
+const camTurnTilt = () => { const M = camM(); return [Math.atan2(-M[0][2], M[0][0]), Math.atan2(M[2][1], M[1][1])]; };   // for the readout
 // faces in the editor's square grid: ne = north (up), se = east, sw = south, nw = west (they become the diamond's edges)
 const FACE_N = { front: [0, 0, -1], back: [0, 0, 1], ne: [0, -1, 0], se: [1, 0, 0], sw: [0, 1, 0], nw: [-1, 0, 0] };
 const FACE_STEP = { front: [0, 0, -1], back: [0, 0, 1], ne: [0, -1, 0], se: [1, 0, 0], sw: [0, 1, 0], nw: [-1, 0, 0] };
-const LIGHT = (() => { const l = [-0.3, -0.55, -0.8], m = Math.hypot(...l); return l.map(c => c / m); })();
-function camRot(x, y, z) {
-  const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw), cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
-  const x1 = x * cy - z * sy, z1 = x * sy + z * cy;
-  return [x1, y * cp - z1 * sp, y * sp + z1 * cp];
+// face colors. Axes: a tint per axis (across = red, along = green, up = blue). Height: a hue per level, so you can
+// tell how high a block is from any view. Plain: the accent color.
+const B3_AXIS_HUE = { se: 0, nw: 0, ne: 130, sw: 130, front: 215, back: 215 };
+const b3HeightHue = h => ((205 - h * 47) % 360 + 360) % 360;
+function b3FaceFill(f, C) {
+  const mode = S.b3color;
+  if (mode === 'axes') return `hsl(${B3_AXIS_HUE[f.face]} 70% 60%)`;
+  if (mode === 'height') return `hsl(${b3HeightHue(-f.vox[2])} 72% 58%)`;
+  return C.accent;
 }
+const LIGHT = (() => { const l = [-0.3, -0.55, -0.8], m = Math.hypot(...l); return l.map(c => c / m); })();
+function camRot(x, y, z) { const M = camM(); return [M[0][0] * x + M[0][1] * y + M[0][2] * z, M[1][0] * x + M[1][1] * y + M[1][2] * z, M[2][0] * x + M[2][1] * y + M[2][2] * z]; }
 const voxels3d = () => [...S.blocks.dcells].map(dparse);
 function b3dCanvas() { return $('#b3dCanvas'); }
 function b3dUnit() { return 26 * cam.zoom / (1 + Math.max(0, Math.max(cam.m, cam.roll) * 2 - 1) * (Math.SQRT2 * ((S.ch / S.cw) || 2) - 1) * 0.6); }   // shrinks as Preview stretches the shape
@@ -3529,7 +3745,7 @@ function b3dXf() {
   // tall cells and the real depth, with the sideways depth shift (Diamond). Preview runs cam.m the same way.
   const r = Math.max(cam.m, cam.roll), turn = Math.min(1, r * 2), m = Math.max(0, r * 2 - 1), th = turn * Math.PI / 4, ar = (S.ch / S.cw) || 2;
   // the canvas look is oblique: straight on, each depth step shifted sideways. The shift fades out as the view turns away.
-  const sh = (S.blocks.dir < 0 ? -1 : 1) * m * Math.max(0, 1 - (Math.abs(cam.yaw) + Math.abs(cam.pitch)) / 0.3);
+  const sh = (S.blocks.dir < 0 ? -1 : 1) * m * Math.max(0, 1 - 2 * Math.acos(Math.min(1, Math.abs(cam.q[0]))) / 0.3);
   return { sh, c: Math.cos(th), sn: Math.sin(th), s: 1 + m * (Math.SQRT2 - 1), ky: 1 + m * (ar - 1), kz: 1 + m * (Math.max(S.blocks.depth, 1) / Math.max(S.blocks.size, 1) - 1) };
 }
 function b3dProj(a, b, z) {
@@ -3541,35 +3757,38 @@ function b3dProj(a, b, z) {
 // screen point -> the floor (the front plane, depth 0) -> the square there
 function b3dFloorAt(sx, sy) {
   const c = b3dCanvas(), u = b3dUnit(), x1 = (sx - c.clientWidth / 2 - cam.pan[0]) / u, y2 = (sy - c.clientHeight / 2 - cam.pan[1]) / u;
-  const cy = Math.cos(cam.yaw), syw = Math.sin(cam.yaw), cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
-  if (Math.abs(cp * cy) < 0.05) return null;   // looking along the floor: no good hit
+  const M = camM();
+  if (Math.abs(M[2][2]) < 0.05) return null;   // looking along the floor: no good hit
   const [ca, cb, cz] = cam.center, X = b3dXf(), zt = (0 - cz) * X.kz;
-  const z2 = (zt + x1 * syw + y2 * sp * cy) / (cp * cy);
-  const z1 = -y2 * sp + z2 * cp, x = (x1 * cy + z1 * syw - X.sh * zt) / X.s, y = (y2 * cp + z2 * sp) / X.ky / X.s;
+  const d = (zt - M[0][2] * x1 - M[1][2] * y2) / M[2][2];   // how deep the floor is under the point; then undo the turn
+  const A = M[0][0] * x1 + M[1][0] * y2 + M[2][0] * d, B = M[0][1] * x1 + M[1][1] * y2 + M[2][1] * d;
+  const x = (A - X.sh * zt) / X.s, y = B / X.ky / X.s;
   return [Math.round(x * X.c + y * X.sn + ca), Math.round(-x * X.sn + y * X.c + cb)];
 }
 // the visible faces of every block, far to near (painter's order), with their screen polygons
-function b3dFaces() {
-  const vox = voxels3d(), set = new Set(vox.map(v => dkey(...v))), faces = [], X = b3dXf();
+function b3dFaces(vox = voxels3d()) {
+  const set = new Set(vox.map(v => dkey(...v))), faces = [], X = b3dXf(), show = [];
+  // which way a side faces doesn't depend on the block (the view is orthographic): find the sides that show, once
+  for (const f of Object.keys(FACE_N)) {
+    const [nx, ny, nz] = FACE_N[f];
+    const n = [(nx * X.c - ny * X.sn) / X.s, (nx * X.sn + ny * X.c) / X.s / X.ky, nz / X.kz];   // normals scale inversely
+    n[2] -= X.sh * n[0];   // and shear inversely
+    const m = Math.hypot(...n), nn = n.map(c => c / m);
+    if (camRot(...nn)[2] >= -0.001) continue;               // facing away
+    show.push([f, FACE_STEP[f], 0.35 + 0.65 * Math.max(0, nn[0] * LIGHT[0] + nn[1] * LIGHT[1] + nn[2] * LIGHT[2])]);
+  }
+  const pc = new Map(), at = (a, b, d) => { const k = a + ',' + b + ',' + d; let p = pc.get(k); if (!p) pc.set(k, p = b3dProj(a, b, d)); return p; };   // corners are shared
   for (const [u, v, z] of vox) {
-    const T = [u - 0.5, v - 0.5], R = [u + 0.5, v - 0.5], Bt = [u + 0.5, v + 0.5], Lf = [u - 0.5, v + 0.5];
-    const at = (p, d) => b3dProj(p[0], p[1], d);
-    const polys = {
-      front: [T, R, Bt, Lf].map(p => at(p, z)), back: [T, Lf, Bt, R].map(p => at(p, z + 1)),
-      ne: [at(T, z), at(R, z), at(R, z + 1), at(T, z + 1)], se: [at(R, z), at(Bt, z), at(Bt, z + 1), at(R, z + 1)],
-      sw: [at(Bt, z), at(Lf, z), at(Lf, z + 1), at(Bt, z + 1)], nw: [at(Lf, z), at(T, z), at(T, z + 1), at(Lf, z + 1)],
-    };
-    for (const f of Object.keys(FACE_N)) {
-      const [du, dv, dz] = FACE_STEP[f];
+    for (const [f, [du, dv, dz], shade] of show) {
       if (set.has(dkey(u + du, v + dv, z + dz))) continue;   // covered by a neighbor
-      const [nx, ny, nz] = FACE_N[f];
-      const n = [(nx * X.c - ny * X.sn) / X.s, (nx * X.sn + ny * X.c) / X.s / X.ky, nz / X.kz];   // normals scale inversely
-      n[2] -= X.sh * n[0];   // and shear inversely
-      const m = Math.hypot(...n), nn = n.map(c => c / m);
-      if (camRot(...nn)[2] >= -0.001) continue;               // facing away
-      const P = polys[f], depth = P.reduce((s, p) => s + p[2], 0) / P.length;
-      const shade = 0.35 + 0.65 * Math.max(0, nn[0] * LIGHT[0] + nn[1] * LIGHT[1] + nn[2] * LIGHT[2]);
-      faces.push({ vox: [u, v, z], face: f, P, depth, shade });
+      const a0 = u - 0.5, a1 = u + 0.5, b0 = v - 0.5, b1 = v + 0.5, z1 = z + 1;
+      const P = f === 'front' ? [at(a0, b0, z), at(a1, b0, z), at(a1, b1, z), at(a0, b1, z)]
+        : f === 'back' ? [at(a0, b0, z1), at(a0, b1, z1), at(a1, b1, z1), at(a1, b0, z1)]
+        : f === 'ne' ? [at(a0, b0, z), at(a1, b0, z), at(a1, b0, z1), at(a0, b0, z1)]
+        : f === 'se' ? [at(a1, b0, z), at(a1, b1, z), at(a1, b1, z1), at(a1, b0, z1)]
+        : f === 'sw' ? [at(a1, b1, z), at(a0, b1, z), at(a0, b1, z1), at(a1, b1, z1)]
+        : [at(a0, b1, z), at(a0, b0, z), at(a0, b0, z1), at(a0, b1, z1)];
+      faces.push({ vox: [u, v, z], face: f, P, depth: (P[0][2] + P[1][2] + P[2][2] + P[3][2]) / 4, shade });
     }
   }
   return faces.sort((a, b) => b.depth - a.depth);
@@ -3587,12 +3806,37 @@ function b3dTarget(h) {
   const [du, dv, dz] = FACE_STEP[h.face];
   return { add: [h.vox[0] + du, h.vox[1] + dv, h.vox[2] + dz], remove: h.vox };
 }
+// the ground (the bottom of level 0, depth 1): the footprint of the blocks about to go in, and for each column above
+// the ground a dashed line down to it, so you can see where in space they are
+function b3dShadow(g, C, cells) {
+  const cols = new Map();
+  for (const [u, v, z] of cells) { const k = u + ',' + v; if (!cols.has(k) || z > cols.get(k)) cols.set(k, z); }   // the lowest block per column
+  g.save(); g.fillStyle = C['c-cursor']; g.globalAlpha = 0.22;
+  for (const k of cols.keys()) {
+    const [u, v] = k.split(',').map(Number), q = [[u - 0.5, v - 0.5], [u + 0.5, v - 0.5], [u + 0.5, v + 0.5], [u - 0.5, v + 0.5]].map(p => b3dProj(p[0], p[1], 1));
+    g.beginPath(); q.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.fill();
+  }
+  if (cols.size <= 4) {   // a block or a small shape: lines down from each column
+    g.globalAlpha = 0.85; g.strokeStyle = C['c-cursor']; g.setLineDash([3, 3]); g.lineWidth = 1.25; g.beginPath();
+    for (const [k, z] of cols) { if (z + 1 >= 1) continue; const [u, v] = k.split(',').map(Number), a = b3dProj(u, v, z + 1), b = b3dProj(u, v, 1); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); }
+    g.stroke();
+  }
+  g.restore();
+}
 function render3d() {
   const c = b3dCanvas(); if (!c || !cam.open) return;
   update3dCursor();
   const dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
   if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
   const g = c.getContext('2d'), C = S.colors;
+  // the grid and the blocks: drawn into a layer, reused until the blocks, the view or the colors change
+  const key = [W, H, dpr, cam.q.join(), cam.roll, cam.m, cam.pan.join(), cam.center.join(), cam.zoom, S.b3color, C['c-paper'], C.accent, C['c-ink'], C['c-grid'],
+    S.blocks.dir, S.blocks.depth, S.blocks.size, S.ch / S.cw, [...S.blocks.dcells].join(';')].join('|');
+  if (key === cam.layerKey && cam.layer) { g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(cam.layer, 0, 0); g.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  else {
+  const L = cam.layer || (cam.layer = document.createElement('canvas')); L.width = c.width; L.height = c.height;
+  const gm = g;   // draw the layer, then copy it to the screen
+  { const g = L.getContext('2d');
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.fillStyle = C['c-paper']; g.fillRect(0, 0, W, H);
   // the floor grid (squares on the front plane), around the center
@@ -3608,72 +3852,227 @@ function render3d() {
   for (const f of cam.faces) {
     g.beginPath(); f.P.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath();
     g.globalAlpha = 1; g.fillStyle = C['c-paper']; g.fill();
-    g.globalAlpha = 0.25 + 0.7 * f.shade; g.fillStyle = C.accent; g.fill();
+    g.globalAlpha = 0.25 + 0.7 * f.shade; g.fillStyle = b3FaceFill(f, C); g.fill();
     g.globalAlpha = 0.9; g.strokeStyle = C['c-ink']; g.stroke();
   }
   g.globalAlpha = 1;
+  }
+  cam.layerKey = key;
+  gm.setTransform(1, 0, 0, 1, 0, 0); gm.drawImage(L, 0, 0); gm.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
   // hover: the face under the pointer, and a ghost of the block a click would add (or the one it would remove)
   const t = b3dTarget(cam.hover);
-  if (t && !cam.drag) {
-    const removing = cam.tool === 'remove' || cam.shift;
-    const vox = removing ? t.remove : t.add;
-    if (vox) {
-      const [u, v, z] = vox, pts = [[u - 0.5, v - 0.5], [u + 0.5, v - 0.5], [u + 0.5, v + 0.5], [u - 0.5, v + 0.5]];
-      g.setLineDash([4, 3]); g.lineWidth = 1.5; g.strokeStyle = removing ? C['c-clash'] : C['c-cursor'];
-      g.beginPath();
-      for (const d of [z, z + 1]) pts.forEach((p, i) => { const q = b3dProj(p[0], p[1], d); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); if (i === 3) { const q0 = b3dProj(pts[0][0], pts[0][1], d); g.lineTo(q0[0], q0[1]); } });
-      for (const p of pts) { const a = b3dProj(p[0], p[1], z), b2 = b3dProj(p[0], p[1], z + 1); g.moveTo(a[0], a[1]); g.lineTo(b2[0], b2[1]); }
-      g.stroke(); g.setLineDash([]); g.lineWidth = 1;
+  const removing = (cam.tool === 'remove') !== !!cam.shift;
+  const ghost = cam.drag ? null : removing ? b3removeCells() : b3shapeGhost();
+  if (ghost && !removing) b3dShadow(g, C, ghost);
+  if (ghost && ghost.length) {   // Add: the brush where it would go · Remove: the blocks it would take (see-through, dashed)
+    const col = removing ? C['c-clash'] : C['c-cursor'];
+    g.setLineDash([4, 3]);
+    for (const f of b3dFaces(ghost)) {
+      g.beginPath(); f.P.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath();
+      g.globalAlpha = (removing ? 0.35 : 0.2) + 0.3 * f.shade; g.fillStyle = col; g.fill();
+      g.globalAlpha = 0.9; g.strokeStyle = col; g.stroke();
     }
+    g.setLineDash([]); g.globalAlpha = 1;
   }
+  const at = !cam.drag && t ? (removing ? t.remove : t.add) : null;
+  $('#b3dAt').textContent = at ? `${removing ? 'remove' : 'add'} at ${at[0]}, ${at[1]} · height ${-at[2]}` : '';
   $('#b3dCount').textContent = `${S.blocks.dcells.size} block${S.blocks.dcells.size === 1 ? '' : 's'}`;
   const deg = r => Math.round(r * 180 / Math.PI), rr = Math.max(cam.m, cam.roll);
-  $('#b3dAngles').textContent = `turn ${deg(-cam.yaw)}° · tilt ${deg(cam.pitch)}° · grid ${Math.round(Math.min(1, rr * 2) * 45)}°${rr > 0.5 ? ' · stretch ' + Math.round((rr * 2 - 1) * 100) + '%' : ''}`;
+  const [tn, tl] = camTurnTilt();
+  $('#b3dAngles').textContent = `turn ${deg(-tn)}° · tilt ${deg(tl)}° · grid ${Math.round(Math.min(1, rr * 2) * 45)}°${rr > 0.5 ? ' · stretch ' + Math.round((rr * 2 - 1) * 100) + '%' : ''}`;
 }
-function b3dCenter() {
-  cam.pan = [0, 0];
+// the middle of the blocks (what the view turns around), and a zoom that fits them, as they look from this angle,
+// into about 75% of the window
+function b3dFrame() {
   const vox = voxels3d();
-  if (!vox.length) { cam.center = [0, 0, 0]; return; }
-  const xs = vox.map(v => v[0]), ys = vox.map(v => v[1]), zs = vox.map(v => v[2] + 0.5);
-  cam.center = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2, (Math.min(...zs) + Math.max(...zs)) / 2];
-  // zoom so the shape fills about half the window
-  const c = b3dCanvas(), span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), Math.max(...zs) - Math.min(...zs)) + 1.5;
-  if (c && c.clientWidth) cam.zoom = clamp(Math.min(c.clientWidth, c.clientHeight) * 0.5 / (span * 26 * 1.4), 0.4, 3);
+  if (!vox.length) return { center: [0, 0, 0], zoom: cam.zoom };
+  const xs = vox.map(v => v[0]), ys = vox.map(v => v[1]), zs = vox.map(v => v[2]);
+  const lo = [Math.min(...xs) - 0.5, Math.min(...ys) - 0.5, Math.min(...zs)], hi = [Math.max(...xs) + 0.5, Math.max(...ys) + 0.5, Math.max(...zs) + 1];
+  const center = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2];
+  const c = b3dCanvas(); if (!c || !c.clientWidth) return { center, zoom: cam.zoom };
+  // project the corners of the blocks' box at zoom 1, centered, and see how big it comes out
+  const keep = [cam.center, cam.zoom, cam.pan]; cam.center = center; cam.zoom = 1; cam.pan = [0, 0];
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const a of [lo[0], hi[0]]) for (const b of [lo[1], hi[1]]) for (const d of [lo[2], hi[2]]) { const p = b3dProj(a, b, d); x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+  [cam.center, cam.zoom, cam.pan] = keep;
+  const zoom = clamp(0.75 * Math.min(c.clientWidth / Math.max(x1 - x0, 1), c.clientHeight / Math.max(y1 - y0, 1)), 0.25, 5);
+  return { center, zoom };
 }
+function b3dCenter() { const f = b3dFrame(); cam.pan = [0, 0]; cam.center = f.center; cam.zoom = f.zoom; }
+// Focus (F, like Unity / Blender): glide back to the blocks: the view turns around their middle again, panned back and
+// zoomed to fit. Keeps the angle.
+function focus3d() {
+  const f = b3dFrame(), p0 = cam.pan.slice(), c0 = cam.center.slice(), z0 = cam.zoom, t0 = performance.now(), dur = 280;
+  let fin = false;
+  const end = () => { if (fin) return; fin = true; cam.pan = [0, 0]; cam.center = f.center; cam.zoom = f.zoom; render3d(); };
+  const step = now => { if (fin) return; const k = Math.min(1, (now - t0) / dur), e = 1 - (1 - k) * (1 - k);
+    cam.pan = p0.map(v => v * (1 - e)); cam.center = c0.map((v, i) => v + (f.center[i] - v) * e); cam.zoom = z0 * Math.pow(f.zoom / z0, e);
+    render3d(); if (k < 1) requestAnimationFrame(step); else end(); };
+  requestAnimationFrame(step); setTimeout(end, dur + 150);
+}
+// ---------- 3D brushes ----------
+// Add and Remove work with a brush: Block (one block, the default) or a premade shape with its sizes. Add puts the brush
+// on the face (or floor square) pointed at, a ghost showing where; Remove carves it out, centered on the block pointed at. Each shape is a list of [u, v, h]: u, v across the floor,
+// centered on 0; h up from the floor (toward you: the editor's -z). "Save blocks as a shape" keeps your own (My shapes).
+const B3_BOX = (w, l, h, keep = () => true) => { const out = [], u0 = (w - 1) >> 1, v0 = (l - 1) >> 1; for (let k = 0; k < h; k++) for (let j = 0; j < l; j++) for (let i = 0; i < w; i++) if (keep(i, j, k)) out.push([i - u0, j - v0, k]); return out; };
+const B3_ROUND = (r, h, inner = -1, lift = 0) => { const out = []; for (let k = 0; k < h; k++) for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) { const d = i * i + j * j; if (d <= r * (r + 1) && (inner < 0 || d > inner * (inner + 1))) out.push([i, j, k + lift]); } return out; };
+const B3D_SHAPES = {
+  block: { name: 'Block', p: {}, tip: 'One block', make: () => [[0, 0, 0]] },
+  cube: { name: 'Cube', p: { s: ['Size', 8, 1, 24] }, make: p => B3_BOX(p.s, p.s, p.s) },
+  box: { name: 'Box', p: { w: ['Width', 8, 1, 40], l: ['Length', 5, 1, 40], h: ['Height', 3, 1, 40] }, make: p => B3_BOX(p.w, p.l, p.h) },
+  plane: { name: 'Plane', p: { w: ['Width', 12, 1, 60], l: ['Length', 12, 1, 60], h: ['Thickness', 1, 1, 8] }, make: p => B3_BOX(p.w, p.l, p.h) },
+  walls: { name: 'Walls', p: { w: ['Width', 10, 3, 40], l: ['Length', 8, 3, 40], h: ['Height', 4, 1, 30] }, tip: 'A room: a floor and four walls, no roof',
+    make: p => B3_BOX(p.w, p.l, p.h + 1, (i, j, k) => k === 0 || i === 0 || j === 0 || i === p.w - 1 || j === p.l - 1) },
+  disc: { name: 'Disc', p: { r: ['Radius', 6, 1, 24], h: ['Height', 1, 1, 30] }, make: p => B3_ROUND(p.r, p.h) },
+  cylinder: { name: 'Cylinder', p: { r: ['Radius', 4, 1, 24], h: ['Height', 8, 1, 40] }, make: p => B3_ROUND(p.r, p.h) },
+  ring: { name: 'Ring', p: { r: ['Radius', 6, 2, 24], t: ['Wall', 2, 1, 12], h: ['Height', 1, 1, 30] }, make: p => B3_ROUND(p.r, p.h, Math.max(0, p.r - p.t)) },
+  sphere: { name: 'Sphere', p: { r: ['Radius', 4, 1, 16] }, make: p => { const out = [], r = p.r; for (let k = -r; k <= r; k++) for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j + k * k <= r * (r + 1)) out.push([i, j, k + r]); return out; } },
+  dome: { name: 'Dome', p: { r: ['Radius', 6, 1, 20] }, make: p => { const out = [], r = p.r; for (let k = 0; k <= r; k++) for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j + k * k <= r * (r + 1)) out.push([i, j, k]); return out; } },
+  pyramid: { name: 'Pyramid', p: { s: ['Base', 9, 1, 41] }, tip: 'Steps in by one block on each side per level',
+    make: p => { const out = [], half = (p.s - 1) / 2; for (let k = 0; half - k >= 0; k++) for (let j = -Math.floor(half - k); j <= Math.ceil(half - k); j++) for (let i = -Math.floor(half - k); i <= Math.ceil(half - k); i++) out.push([i, j, k]); return out; } },
+  stairs: { name: 'Stairs', p: { w: ['Width', 4, 1, 30], n: ['Steps', 5, 1, 30] }, tip: 'Q turns them',
+    make: p => B3_BOX(p.w, p.n, p.n, (i, j, k) => k <= j) },
+};
+function b3shapeCells() {   // the chosen shape's blocks, turned by Q
+  const sh = S.b3shape, my = sh.kind.startsWith('my:') ? S.myShapes.find(m => 'my:' + m.name === sh.kind) : null;
+  const def = B3D_SHAPES[sh.kind];
+  let cells = my ? my.cells : def ? def.make(b3shapeParams(sh.kind)) : [];
+  for (let t = 0; t < (sh.turn & 3); t++) cells = cells.map(([u, v, h]) => [-v, u, h]);
+  return cells;
+}
+function b3shapeParams(kind) {
+  const def = B3D_SHAPES[kind], cur = S.b3shape.params[kind] || {}, out = {};
+  for (const [k, [, dflt, lo, hi]] of Object.entries(def.p)) out[k] = clamp(cur[k] == null ? dflt : cur[k] | 0, lo, hi);
+  return out;
+}
+// where the ghost goes: its floor middle on the square a click would add to (the floor, or the face pointed at)
+function b3shapeGhost() {
+  const t = b3dTarget(cam.hover); if (!t || !t.add) return null;
+  const [ou, ov, oz] = t.add;
+  return b3shapeCells().map(([u, v, h]) => [ou + u, ov + v, oz - h]);
+}
+function b3removeCells() {
+  const t = b3dTarget(cam.hover); if (!t || !t.remove) return null;
+  const [ou, ov, oz] = t.remove, cells = b3shapeCells(), mid = Math.floor(Math.max(0, ...cells.map(c => c[2])) / 2);
+  return cells.map(([u, v, h]) => [ou + u, ov + v, oz - h + mid]).filter(v => S.blocks.dcells.has(dkey(...v)));
+}
+function b3brushRemove() {
+  const r = b3removeCells(); if (!r || !r.length) return;
+  pushUndo();
+  for (const v of r) S.blocks.dcells.delete(dkey(...v));
+  changed(); render3d();
+}
+function b3shapePlace() {
+  const g = b3shapeGhost(); if (!g || !g.length) return;
+  pushUndo();
+  for (const v of g) S.blocks.dcells.add(dkey(...v));
+  changed(); render3d();
+}
+function renderB3Shapes() {
+  const p = $('#b3dShapes'); if (!p) return;
+  const nm = $('#b3dBrushName'); if (nm) nm.textContent = b3brushLabel();
+  const sh = S.b3shape, all = [...Object.entries(B3D_SHAPES).map(([k, d]) => [k, d.name, d.tip]), ...S.myShapes.map(m => ['my:' + m.name, m.name, 'Your shape (' + m.cells.length + ' blocks)'])];
+  if (!all.some(a => a[0] === sh.kind)) sh.kind = 'block';
+  const def = B3D_SHAPES[sh.kind], pr = def ? b3shapeParams(sh.kind) : null;
+  p.innerHTML =
+    '<div class="b3s-title">Brush</div><div class="b3s-list">' +
+    all.map(([k, name, tip]) => '<button class="btn' + (k === sh.kind ? ' on' : '') + (k.startsWith('my:') ? ' mine' : '') + '" data-b3s="' + esc(k) + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(name) + '</button>').join('') + '</div>' +
+    (pr ? '<div class="b3s-params">' + Object.entries(def.p).map(([k, [label, , lo, hi]]) =>
+      '<label>' + label + ' <input type="number" data-b3p="' + k + '" min="' + lo + '" max="' + hi + '" value="' + pr[k] + '"></label>').join('') + '</div>' : '') +
+    (sh.kind === 'block' ? '' : '<div class="b3s-row"><button class="btn" id="b3sTurn" title="Turn the brush a quarter (Q)">⟳ Turn</button><span class="b3s-n">' + b3shapeCells().length + ' blocks</span></div>') +
+    '<div class="b3s-hint">' + (sh.kind === 'block' ? 'Add puts a block on the face you point at; Remove takes one away.' : 'Add puts the shape on the face you point at; Remove carves it out around the block you point at.') + ' Shift-click does the other one.</div>' +
+    '<div class="b3s-mine">' +
+    '<button class="btn" id="b3sSave" title="Keep the blocks in the editor now as a brush you can use again (saved in this browser)">Save blocks as a brush</button>' +
+    (sh.kind.startsWith('my:') ? '<button class="btn" id="b3sDel" title="Remove this brush">Delete this brush</button>' : '') + '</div>';
+  $$('[data-b3s]', p).forEach(b => b.addEventListener('click', () => { S.b3shape.kind = b.dataset.b3s; savePrefs(); renderB3Shapes(); render3d(); }));
+  $$('[data-b3p]', p).forEach(inp => inp.addEventListener('input', () => {
+    const v = parseInt(inp.value, 10); if (!Number.isFinite(v)) return;
+    (S.b3shape.params[S.b3shape.kind] = S.b3shape.params[S.b3shape.kind] || {})[inp.dataset.b3p] = v;
+    savePrefs(); const n = $('.b3s-n', p); if (n) n.textContent = b3shapeCells().length + ' blocks'; $('#b3dBrushName').textContent = b3brushLabel(); render3d();
+  }));
+  const tb = $('#b3sTurn', p); if (tb) tb.addEventListener('click', b3shapeTurn);
+  $('#b3sSave', p).addEventListener('click', b3shapeSave);
+  const del = $('#b3sDel', p);
+  if (del) del.addEventListener('click', () => { const n = sh.kind.slice(3); S.myShapes = S.myShapes.filter(m => m.name !== n); S.b3shape.kind = 'block'; savePrefs(); renderB3Shapes(); render3d(); toast('Deleted the shape ' + n); });
+}
+// the Brush button: its name and sizes; the dropdown opens under it and folds away on a click elsewhere or Esc
+function b3brushLabel() {
+  const sh = S.b3shape, def = B3D_SHAPES[sh.kind];
+  if (!def) return sh.kind.startsWith('my:') ? sh.kind.slice(3) : 'Block';
+  const p = b3shapeParams(sh.kind), v = Object.values(p);
+  // short sizes: Disc r6, Cylinder r4 h8, Box 8×5×3, Stairs 4 wide · 5 steps
+  const dims = ['w', 'l', 'h'].filter(k => k in p && !(def.p.r && k === 'h'));
+  const bits = [p.r != null ? 'r' + p.r : '', p.s != null ? String(p.s) : '', dims.length > 1 ? dims.map(k => p[k]).join('×') : '', def.p.r && p.h > 1 ? 'h' + p.h : '', p.t != null ? 'wall ' + p.t : '', p.n != null ? p.w + ' wide · ' + p.n + ' steps' : ''].filter(Boolean);
+  void v; return def.name + (bits.length ? ' ' + bits.join(' ') : '');
+}
+function openB3Brush() {
+  const pop = $('#b3dShapes'), btn = $('#b3dBrushBtn'), win = $('#b3d .b3d-win');
+  renderB3Shapes(); pop.hidden = false; btn.classList.add('open');
+  const r = btn.getBoundingClientRect(), w = win.getBoundingClientRect();
+  pop.style.left = (r.left - w.left) + 'px'; pop.style.top = (r.bottom - w.top + 4) + 'px';
+}
+function closeB3Brush() { const pop = $('#b3dShapes'); if (!pop || pop.hidden) return false; pop.hidden = true; $('#b3dBrushBtn').classList.remove('open'); return true; }
+function b3shapeTurn() { if (S.b3shape.kind === 'block') return; S.b3shape.turn = ((S.b3shape.turn | 0) + 1) & 3; savePrefs(); render3d(); }
+function b3shapeSave() {
+  const vox = voxels3d(); if (!vox.length) return toast('Build something first: there are no blocks to save', 'warn');
+  const name = (prompt('Name for this brush', 'My brush ' + (S.myShapes.length + 1)) || '').trim(); if (!name) return;
+  const us = vox.map(v => v[0]), vs = vox.map(v => v[1]), zs = vox.map(v => v[2]);
+  const cu = Math.round((Math.min(...us) + Math.max(...us)) / 2), cv = Math.round((Math.min(...vs) + Math.max(...vs)) / 2), zb = Math.max(...zs);
+  const cells = vox.map(([u, v, z]) => [u - cu, v - cv, zb - z]);
+  S.myShapes = [...S.myShapes.filter(m => m.name !== name), { name, cells }];
+  S.b3shape.kind = 'my:' + name; S.b3shape.turn = 0; savePrefs(); renderB3Shapes(); render3d();
+  toast('Saved the brush ' + name + ' (' + cells.length + ' blocks)');
+}
+const B3_ICON_OUT = '<svg viewBox="0 0 20 20"><path d="M3 8V3h5M17 8V3h-5M3 12v5h5M17 12v5h-5M3 3l5 5M17 3l-5 5M3 17l5-5M17 17l-5-5"/></svg>';   // arrows out: bigger
+const B3_ICON_IN = '<svg viewBox="0 0 20 20"><path d="M8 3v5H3M12 3v5h5M8 17v-5H3M12 17v-5h5M3 3l5 5M17 3l-5 5M3 17l5-5M17 17l-5-5"/></svg>';    // arrows in: smaller
+function b3SizeUi() {
+  $('#b3d .b3d-win').classList.toggle('big', S.b3big);
+  const b = $('#b3dSize'); b.innerHTML = S.b3big ? B3_ICON_IN : B3_ICON_OUT;
+  b.title = S.b3big ? 'Smaller window, so more of the editor shows (Z)' : 'Fill most of the screen (Z)';
+}
+function b3ColorUi() { $$('#b3d [data-b3color]').forEach(b => b.classList.toggle('on', b.dataset.b3color === S.b3color)); }
+function setB3Tool(t) {
+  cam.tool = t === 'remove' ? 'remove' : 'add';
+  $$('#b3d [data-b3tool]').forEach(x => x.classList.toggle('on', x.dataset.b3tool === cam.tool));
+  render3d();
+}
+
 function open3d() {
   commitFloat();
   if (S.tool !== 'block') setTool('block');
   if (!cam.view) setCamView('angled', true);   // the first time: Angled
-  cam.open = true; cam.hover = null;
+  cam.open = true; cam.hover = null; b3ColorUi(); b3SizeUi(); renderB3Shapes(); closeB3Brush();
   $('#b3d').hidden = false;
   b3dCenter();   // after it shows, so it can fit the window
   render3d();
+  requestAnimationFrame(() => { if (cam.open && !cam.drag) { b3dCenter(); render3d(); } });   // again once the window has its final size
 }
-function close3d() { cam.open = false; cam.drag = null; $('#b3d').hidden = true; renderOptions(); redraw(); }
+function close3d() { closeB3Brush(); cam.open = false; cam.drag = null; $('#b3d').hidden = true; renderOptions(); redraw(); }
 // Preview: turn back to the bake angle, close, and show the shape on the canvas (placed in view the first time)
 function animCam(to, dur, done, toRoll = cam.roll) {
-  const from = [cam.yaw, cam.pitch, cam.roll], t0 = performance.now(); let fin = false;
-  const end = () => { if (fin) return; fin = true; cam.yaw = to[0]; cam.pitch = to[1]; cam.roll = toRoll; render3d(); if (done) done(); };
+  const q0 = cam.q, q1 = qView(to[0], to[1]), r0 = cam.roll, t0 = performance.now(); let fin = false;
+  const end = () => { if (fin) return; fin = true; cam.q = q1; cam.roll = toRoll; render3d(); if (done) done(); };
   const step = now => { if (fin) return; const k = Math.min(1, (now - t0) / dur), e = 1 - (1 - k) * (1 - k);
-    cam.yaw = from[0] + (to[0] - from[0]) * e; cam.pitch = from[1] + (to[1] - from[1]) * e; cam.roll = from[2] + (toRoll - from[2]) * e; render3d(); if (k < 1) requestAnimationFrame(step); else end(); };
+    cam.q = qSlerp(q0, q1, e); cam.roll = r0 + (toRoll - r0) * e; render3d(); if (k < 1) requestAnimationFrame(step); else end(); };
   requestAnimationFrame(step); setTimeout(end, dur + 150);
 }
 function preview3d() {
   if (cam.previewing) return;
   // end straight on, turned into diamonds with the sideways depth shift: exactly how the canvas shows it
-  const from = [cam.yaw, cam.pitch], to = [0, 0], t0 = performance.now(), dur = 650;
+  const from = cam.q, to = [1, 0, 0, 0], t0 = performance.now(), dur = 650;
   cam.previewing = true;
   const finish = () => {
     if (!cam.previewing) return;
     cam.previewing = false;
-    cam.yaw = from[0]; cam.pitch = from[1]; cam.m = 0;   // keep their editing angle for next time
+    cam.q = from; cam.m = 0;   // keep their editing angle for next time
     if (!S.blocks.placed && S.blocks.dcells.size) placeBlocksInView();
     close3d();
   };
   const step = now => {
     if (!cam.previewing) return;
     const k = Math.min(1, (now - t0) / dur), e = 1 - (1 - k) * (1 - k);
-    cam.yaw = from[0] + (to[0] - from[0]) * e; cam.pitch = from[1] + (to[1] - from[1]) * e; cam.m = clamp(k * 1.6 - 0.6, 0, 1); render3d();
+    cam.q = qSlerp(from, to, e); cam.m = clamp(k * 1.6 - 0.6, 0, 1); render3d();
     if (k < 1) requestAnimationFrame(step); else finish();
   };
   requestAnimationFrame(step);
@@ -3694,7 +4093,7 @@ function setCamView(name, instant) {
   const k = S.blocks.dir < 0 ? -1 : 1, to = [v[0] * k, v[1]];
   cam.view = name;
   $$('#b3d [data-b3view]').forEach(b => b.classList.toggle('on', b.dataset.b3view === name));
-  if (instant) { cam.yaw = to[0]; cam.pitch = to[1]; cam.roll = v[2]; render3d(); } else animCam(to, 350, null, v[2]);
+  if (instant) { cam.q = qView(to[0], to[1]); cam.roll = v[2]; render3d(); } else animCam(to, 350, null, v[2]);
 }
 (() => {
   const c = b3dCanvas(); if (!c) return;
@@ -3704,27 +4103,34 @@ function setCamView(name, instant) {
     try { c.setPointerCapture(e.pointerId); } catch (_) {}
     const [x, y] = pos(e);
     if (e.button === 1 || S.spaceDown) { cam.drag = { pan: true, x, y, px: cam.pan[0], py: cam.pan[1] }; update3dCursor(); e.preventDefault(); return; }   // move the view
-    if (e.button !== 0 || e.altKey) { cam.drag = { x, y, yaw: cam.yaw, pitch: cam.pitch }; update3dCursor(); return; }   // turn the view
-    const t = b3dTarget(b3dPick(x, y)); if (!t) return;
-    const removing = cam.tool === 'remove' || e.shiftKey;
-    if (removing) { if (!t.remove) return; pushUndo(); S.blocks.dcells.delete(dkey(...t.remove)); }
-    else { pushUndo(); S.blocks.dcells.add(dkey(...t.add)); }
-    changed(); cam.hover = b3dPick(x, y); render3d();
+    if (e.button !== 0 || e.altKey) { cam.drag = { x, y, lx: x, ly: y }; update3dCursor(); return; }   // turn the view
+    cam.hover = b3dPick(x, y);
+    if ((cam.tool === 'remove') !== e.shiftKey) b3brushRemove(); else b3shapePlace();   // Shift-click does the other one
+    cam.faces = b3dFaces(); cam.hover = b3dPick(x, y); render3d();
   });
   c.addEventListener('pointermove', e => {
     const [x, y] = pos(e); cam.shift = e.shiftKey;
     if (cam.drag && cam.drag.pan) { cam.pan = [cam.drag.px + x - cam.drag.x, cam.drag.py + y - cam.drag.y]; render3d(); return; }
-    if (cam.drag) { cam.yaw = cam.drag.yaw + (x - cam.drag.x) * 0.01; cam.pitch = clamp(cam.drag.pitch + (y - cam.drag.y) * 0.01, -Math.PI / 2, Math.PI / 2); render3d(); return; }
+    if (cam.drag) {   // trackball: turn about the screen axis at right angles to the pointer's move
+      const dx = x - cam.drag.lx, dy = y - cam.drag.ly, len = Math.hypot(dx, dy); cam.drag.lx = x; cam.drag.ly = y;
+      if (len) cam.q = qNorm(qMul(qAxis(dy / len, -dx / len, 0, len * 0.01), cam.q));
+      render3d(); return;
+    }
     cam.hover = b3dPick(x, y); render3d();
   });
   const end = () => { cam.drag = null; update3dCursor(); };
   c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
   c.addEventListener('pointerleave', () => { if (!cam.drag) { cam.hover = null; render3d(); } });
   c.addEventListener('wheel', e => { e.preventDefault(); cam.zoom = clamp(cam.zoom * Math.pow(1.0015, -e.deltaY), 0.25, 5); render3d(); }, { passive: false });
-  $$('#b3d [data-b3tool]').forEach(b => b.addEventListener('click', () => { cam.tool = b.dataset.b3tool; $$('#b3d [data-b3tool]').forEach(x => x.classList.toggle('on', x === b)); render3d(); }));
+  $$('#b3d [data-b3tool]').forEach(b => b.addEventListener('click', () => { b.blur(); setB3Tool(b.dataset.b3tool); }));
   $$('#b3d [data-b3view]').forEach(b => b.addEventListener('click', () => { b.blur(); setCamView(b.dataset.b3view); }));
+  $$('#b3d [data-b3color]').forEach(b => b.addEventListener('click', () => { b.blur(); S.b3color = b.dataset.b3color; savePrefs(); b3ColorUi(); render3d(); }));
   $('#b3dPreview').addEventListener('click', preview3d);
   $('#b3dClose').addEventListener('click', close3d);
+  $('#b3dBrushBtn').addEventListener('click', e => { e.currentTarget.blur(); if (!closeB3Brush()) openB3Brush(); });
+  document.addEventListener('pointerdown', e => { if (!e.target.closest('#b3dShapes, #b3dBrushBtn')) closeB3Brush(); }, true);   // a click elsewhere folds it away
+  $('#b3dSize').addEventListener('click', e => { e.currentTarget.blur(); S.b3big = !S.b3big; savePrefs(); b3SizeUi(); });
+  $('#b3dFocus').addEventListener('click', e => { e.currentTarget.blur(); focus3d(); });
   $('#b3dClear').addEventListener('click', () => { if (!S.blocks.dcells.size) return; pushUndo(); S.blocks.dcells.clear(); changed(); render3d(); toast('All blocks removed (Ctrl Z brings them back)'); });
   new ResizeObserver(() => render3d()).observe(c);
 })();
@@ -4116,6 +4522,11 @@ function start() {
     S.shape.fixed = !!q.fixed; S.shape.center = !!q.center; S.shape.fill = !!q.fill;
     if (POLY_STYLES[q.polygon]) S.shape.polygon = q.polygon;
   }
+  S.b3big = p.b3big === true;
+  if (['plain', 'axes', 'height'].includes(p.b3color)) S.b3color = p.b3color;
+  if (p.b3brush && typeof p.b3brush === 'object') S.b3shape = { kind: String(p.b3brush.kind || 'block'), params: p.b3brush.params && typeof p.b3brush.params === 'object' ? p.b3brush.params : {}, turn: p.b3brush.turn & 3 };
+  if (Array.isArray(p.myShapes)) S.myShapes = p.myShapes.filter(m => m && typeof m.name === 'string' && Array.isArray(m.cells));
+  if (p.galWs && ['clear', 'shape', 'box'].includes(p.galWs.mode)) S.galWs = { mode: p.galWs.mode, gap: clamp(p.galWs.gap | 0, 0, 4) };
   if (p.figfont && (window.ASXII_FONTS || {})[p.figfont.name]) S.figfont = { name: p.figfont.name, layout: ['default', 'full', 'fit', 'smush'].includes(p.figfont.layout) ? p.figfont.layout : 'default', ws: ['inside', 'block'].includes(p.figfont.ws) ? p.figfont.ws : 'clear', ls: clamp(p.figfont.ls | 0, -3, 20), lh: clamp(p.figfont.lh | 0, -30, 20) };
   if (p.pencil) S.pencil = { size: clamp(Math.round(+p.pencil.size) || 1, 1, 25), tip: p.pencil.tip === 'round' ? 'round' : 'square', smart: !!p.pencil.smart, style: SMART_STYLES[p.pencil.style] ? p.pencil.style : 'ascii' };
   $('#brushChip').textContent = S.brush.ch;
@@ -4137,6 +4548,7 @@ function start() {
   fitView(); measure();
   renderLayers(); renderCharPane(); syncCanvasInputs(); renderAnchor();
   S.tool = '';
+  initGallery();
   setTool('select');
   zoomFit();
   requestAnimationFrame(() => { if (!S.viewTouched) zoomFit(); });   // again once layout has settled
@@ -4158,7 +4570,7 @@ function start() {
 }
 
 // Hooks for the headless self-test (index.html?selftest)
-window.asxii = { S, CMDS, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
+window.asxii = { S, CMDS, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
   undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render };
 
