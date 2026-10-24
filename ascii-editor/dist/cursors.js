@@ -44,19 +44,21 @@ const BADGES = {   // drawn on the 24 x 24 image itself, in the corner; a = the 
 const INK = '#151515', HALO = '#ffffff', SCALE = 0.85, OFF = 1.5, SIZE = 24;
 
 // The image for a glyph + badge (+ dimmed), as SVG markup
+// glyph: a name from GLYPHS, or a glyph object itself ({ d, hot, fill, badgeLeft }), like the options below
+const glyphOf = glyph => typeof glyph === 'string' ? GLYPHS[glyph] : glyph;
 function svg(glyph, badge, dim) {
-  const g = GLYPHS[glyph], st = (c, w) => `fill="none" stroke="${c}" stroke-width="${w}"`;
+  const g = glyphOf(glyph), st = (c, w) => `fill="none" stroke="${c}" stroke-width="${w}"`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" stroke-linecap="round" stroke-linejoin="round"${dim ? ' opacity=".45"' : ''}>` +
     `<g transform="translate(${OFF} ${OFF}) scale(${SCALE})"><path d="${g.d}" fill="${g.fill ? HALO : 'none'}" stroke="${HALO}" stroke-width="4"/><path d="${g.d}" ${st(INK, 1.6)}/></g>` +
     (badge ? `<g${g.badgeLeft ? ' transform="translate(-13 0)"' : ''}>` + BADGES[badge].draw(st(HALO, 3.4), false) + BADGES[badge].draw(st(INK, 1.4), true) + '</g>' : '') + '</svg>';
 }
 // The click point on the 24 x 24 image
-const hotspot = glyph => GLYPHS[glyph].hot.map(v => Math.round(OFF + v * SCALE));
+const hotspot = glyph => glyphOf(glyph).hot.map(v => Math.round(OFF + v * SCALE));
 
 // A CSS cursor value, ending in a built-in fallback in case the image doesn't load
 const cache = new Map();
 function css(glyph, badge, dim, fallback = 'crosshair') {
-  const key = [glyph, badge, !!dim, fallback].join('|');
+  const key = [typeof glyph === 'string' ? glyph : glyph.d, badge, !!dim, fallback].join('|');
   if (!cache.has(key)) {
     const [hx, hy] = hotspot(glyph);
     cache.set(key, `url("data:image/svg+xml,${encodeURIComponent(svg(glyph, badge, dim))}") ${hx} ${hy}, ${fallback}`);
@@ -129,5 +131,34 @@ const VARIANTS = [
   { group: 'Browser cursors (not drawn)', native: 'not-allowed', use: 'A drawing tool outside the selection; Fill outside the canvas' },
 ];
 
-return { GLYPHS, BADGES, SIZE, svg, hotspot, css, VARIANTS };
+// Redraw candidates for the Magic wand and the Eyedropper, to pick from in the gallery (the user, 2026-10-24).
+// Same 20 x 20 grid and strokes as the rest. Not used by the editor.
+const OPTIONS = {
+  wand: [
+    { name: 'Star tip', d: 'M3 17 11.8 8.2M14.5 1.5l1.06 2.54 2.74.22-2.09 1.8.64 2.68-2.35-1.44-2.35 1.44.64-2.68-2.09-1.8 2.74-.22z', hot: [14.5, 5.5] },
+    { name: 'Sparkle', d: 'M3 17 11.5 8.5M14.5 1.5q.5 3.5 4 4-3.5.5-4 4-.5-3.5-4-4 3.5-.5 4-4z', hot: [14.5, 5.5] },
+    { name: 'Band and rays', d: 'M3.5 16.5 12 8M10 6l4 4M15.5 4.5 17 3M16.5 7.5h2M12.5 3.5V2', hot: [13, 7] },
+    { name: 'Three sparkles', d: 'M3 17l8-8M14 3v6M11 6h6M17.5 9v2.5M16.25 10.25h2.5M10 1.5v2M9 2.5h2', hot: [14, 6] },
+    { name: 'Burst', d: 'M3 17l9-9M13.5 3V1.5M16.5 6.5H18M15.8 4.2l1-1M11.2 4.2l-1-1M15.8 8.8l1 1', hot: [13.5, 6.5] },
+    { name: 'Knob and rays', d: 'M3 17l8.5-8.5M15.5 6.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13.5 2v1.5M18 6.5h-1.5M16.7 3.3l-1 1', hot: [13.5, 6.5] },
+    { name: 'Big star', d: 'M3.5 16.5l6-6M13 1.5l1.41 3.56 3.82.24-2.95 2.44.95 3.71L13 9.4l-3.23 2.05.95-3.71L7.77 5.3l3.82-.24z', hot: [13, 7] },
+    { name: 'Asterisk', d: 'M3 17l9-9M14.5 2.5v6M11.9 4l5.2 3M11.9 7l5.2-3', hot: [14.5, 5.5] },
+    { name: 'Rod and diamond', d: 'M2.8 15.7 11 7.5M4.3 17.2 12.5 9M2.8 15.7l1.5 1.5M11 7.5l1.5 1.5M15 2.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z', hot: [15, 5.5] },
+    { name: 'Ring target', d: 'M3 17l8.5-8.5M17.5 5.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM14.5 5.5h.01', hot: [14.5, 5.5] },
+  ],
+  picker: [
+    { name: 'Classic dropper', d: 'M13.5 2.5a2.1 2.1 0 0 1 3 0l1 1a2.1 2.1 0 0 1 0 3l-2 2-4-4zM10.5 5.5l4 4M11.5 7.5l-7 7-1 2 2-1 7-7', hot: [3.5, 16.5] },
+    { name: 'Filled pipette', d: 'M16.8 3.2a2.5 2.5 0 0 1 0 3.5L14 9.5 10.5 6l2.8-2.8a2.5 2.5 0 0 1 3.5 0zM12 7.5 4.5 15l-1 2 2-1L13 8.5', hot: [3.5, 17], fill: true },
+    { name: 'With a drop', d: 'M12 7 5.5 13.5 5 15l1.5-.5L13 8M12 4.5 15.5 8M13.5 5.5l2-2a1.8 1.8 0 0 1 2.5 2.5l-2 2M3.5 16.5s-1.2 1.4-1.2 2.1a1.2 1.2 0 0 0 2.4 0c0-.7-1.2-2.1-1.2-2.1z', hot: [5.2, 14.8] },
+    { name: 'Straight down', d: 'M8 2.5h4a1 1 0 0 1 1 1V6H7V3.5a1 1 0 0 1 1-1zM6 6h8M8.5 6v8L10 17.5l1.5-3.5V6', hot: [10, 17.5] },
+    { name: 'Chunky', d: 'M14.6 2.9a2 2 0 0 1 2.8 2.8l-2.4 2.4-2.8-2.8zM11 6.5l2.5 2.5M12.2 7.7 5.5 14.4 3.5 16.5l2.1-2 6.7-6.7', hot: [3.5, 16.5] },
+    { name: 'Line and ring', d: 'M17.5 4.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM14 6 3.5 16.5', hot: [3.5, 16.5] },
+    { name: 'Liquid level', d: 'M11.5 6.5 4 14v2h2l7.5-7.5zM10 5.5l4.5 4.5M12.5 5.5l2-2a1.6 1.6 0 0 1 2.2 2.2l-2 2M6 12l2 2', hot: [4, 16] },
+    { name: 'Photoshop-style', d: 'M17.5 2.5a1.7 1.7 0 0 0-2.4 0l-2.6 2.6-1-1-1.4 1.4 1 1L4.5 13l-.5 3 3-.5 6.6-6.6 1 1 1.4-1.4-1-1 2.6-2.6a1.7 1.7 0 0 0 0-2.4z', hot: [4, 16] },
+    { name: 'Ring at the tip', d: 'M17 3a2 2 0 0 0-2.8 0l-2 2L15 7.8l2-2A2 2 0 0 0 17 3zM11.4 5.8l2.8 2.8M12.8 7.2 7 13M7.5 14.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z', hot: [5.5, 14.5] },
+    { name: 'Square bulb', d: 'M14 3h3v3h-3zM12.5 4.5H14M15.5 6v1.5M14.5 5.5 4 16', hot: [4, 16] },
+  ],
+};
+
+return { GLYPHS, BADGES, SIZE, svg, hotspot, css, VARIANTS, OPTIONS };
 })();

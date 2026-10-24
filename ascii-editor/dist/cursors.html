@@ -61,6 +61,16 @@
   <h2>Every glyph × every badge</h2>
   <p>Most of these aren't used. They're here to see how a badge reads on each glyph, for new modes. Hover a cell to try it.</p>
   <div class="matrix"><table id="matrix"></table></div>
+
+  <h2>Pick a Magic wand</h2>
+  <p>Ten redraws of the wand (W1–W10), next to the current one. Each shows the drawing big on dark and light with its click
+    point, at real size, and with a + badge (as when Shift adds). Hover a card to try it as the cursor.</p>
+  <div class="grid" id="optWand"></div>
+
+  <h2>Pick an Eyedropper</h2>
+  <p>Ten redraws of the eyedropper (E1–E10), next to the current one, shown the same way. The eyedropper also shows up with a
+    layers badge (Look at: All) and a "2" (Shift).</p>
+  <div class="grid" id="optPicker"></div>
 </main>
 <script src="cursors.js"></script>
 <script>
@@ -104,6 +114,22 @@ for (const g of Object.keys(C.GLYPHS)) {
     `<td title="${esc(label(g, b))}" style='cursor:${C.css(g, b)}'><img src="${src(g, b)}" alt=""></td>`).join('') + '</tr>';
 }
 document.getElementById('matrix').innerHTML = t;
+
+// The redraw options: the current drawing first, then the ten candidates
+function optCard(id, name, g, badge) {
+  const s = 'data:image/svg+xml,' + encodeURIComponent(C.svg(g, null)), sb = 'data:image/svg+xml,' + encodeURIComponent(C.svg(g, badge));
+  const [hx, hy] = C.hotspot(g), k = 96 / C.SIZE, hot = `<span class="hot" style="left:${hx * k}px;top:${hy * k}px"></span>`;
+  return `<div class="card" style='cursor:${C.css(g, null)}'>` +
+    `<div class="id"><span class="n">${id}</span>${esc(name)}</div>` +
+    `<div class="views"><div class="big d"><img src="${s}" alt="">${hot}</div><div class="big l"><img src="${s}" alt="">${hot}</div>` +
+    `<div class="small"><div class="d"><img src="${s}" alt=""></div><div class="l"><img src="${sb}" alt=""></div></div></div>` +
+    `<div class="try">real size on dark; with a ${esc(C.BADGES[badge].name)} badge on light · hotspot ${hx}, ${hy}</div></div>`;
+}
+const opts = (el, letter, now, list, badge) => {
+  document.getElementById(el).innerHTML = optCard('now', 'Current', now, badge) + list.map((g, i) => optCard(letter + (i + 1), g.name, g, badge)).join('');
+};
+opts('optWand', 'W', 'wand', C.OPTIONS.wand, 'plus');
+opts('optPicker', 'E', 'picker', C.OPTIONS.picker, 'two');
 </script>
 </body>
 </html>
