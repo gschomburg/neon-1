@@ -43,23 +43,25 @@ const BADGES = {   // drawn on the 24 x 24 image itself, in the corner; a = the 
 };
 const INK = '#151515', HALO = '#ffffff', SCALE = 0.85, OFF = 1.5, SIZE = 24;
 
-// The image for a glyph + badge (+ dimmed), as SVG markup
-function svg(glyph, badge, dim) {
+// The image for a glyph + badge (+ dimmed), as SVG markup. badgeOnly: just the badge, where it would be (precise mode)
+function svg(glyph, badge, dim, badgeOnly) {
   const g = GLYPHS[glyph], st = (c, w) => `fill="none" stroke="${c}" stroke-width="${w}"`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" stroke-linecap="round" stroke-linejoin="round"${dim ? ' opacity=".45"' : ''}>` +
-    `<g transform="translate(${OFF} ${OFF}) scale(${SCALE})"><path d="${g.d}" fill="${g.fill ? HALO : 'none'}" stroke="${HALO}" stroke-width="4"/><path d="${g.d}" ${st(INK, 1.6)}/></g>` +
+    (badgeOnly ? '' : `<g transform="translate(${OFF} ${OFF}) scale(${SCALE})"><path d="${g.d}" fill="${g.fill ? HALO : 'none'}" stroke="${HALO}" stroke-width="4"/><path d="${g.d}" ${st(INK, 1.6)}/></g>`) +
     (badge ? `<g${g.badgeLeft ? ' transform="translate(-13 0)"' : ''}>` + BADGES[badge].draw(st(HALO, 3.4), false) + BADGES[badge].draw(st(INK, 1.4), true) + '</g>' : '') + '</svg>';
 }
 // The click point on the 24 x 24 image
 const hotspot = glyph => GLYPHS[glyph].hot.map(v => Math.round(OFF + v * SCALE));
 
-// A CSS cursor value, ending in a built-in fallback in case the image doesn't load
+// A CSS cursor value, ending in a built-in fallback in case the image doesn't load.
+// precise: the editor highlights the cell itself, so only the badge is drawn (no badge: no cursor at all)
 const cache = new Map();
-function css(glyph, badge, dim, fallback = 'crosshair') {
-  const key = [glyph, badge, !!dim, fallback].join('|');
+function css(glyph, badge, dim, fallback = 'crosshair', precise = false) {
+  if (precise && !badge) return 'none';
+  const key = [glyph, badge, !!dim, fallback, precise].join('|');
   if (!cache.has(key)) {
     const [hx, hy] = hotspot(glyph);
-    cache.set(key, `url("data:image/svg+xml,${encodeURIComponent(svg(glyph, badge, dim))}") ${hx} ${hy}, ${fallback}`);
+    cache.set(key, `url("data:image/svg+xml,${encodeURIComponent(svg(glyph, badge, dim, precise))}") ${hx} ${hy}, ${precise ? 'none' : fallback}`);
   }
   return cache.get(key);
 }
@@ -123,6 +125,12 @@ const VARIANTS = [
   { group: '3D editor', glyph: 'cross', badge: 'plus', use: '3D editor, Add: click a face to add a block' },
   { group: '3D editor', glyph: 'cross', badge: 'minus', use: '3D editor, Remove (or Shift held): click a block to remove it' },
   { group: '3D editor', glyph: 'orbit', badge: null, use: '3D editor: Option / Alt held, or right-drag: turn the view' },
+  { group: 'Precise mode (Caps Lock)', glyph: 'cross', badge: 'plus', precise: true, use: 'Caps Lock on, over the canvas: the cell is highlighted on the canvas and only the badge follows the pointer (here Select, Shift adds)' },
+  { group: 'Precise mode (Caps Lock)', glyph: 'cross', badge: 'minus', precise: true, use: 'Precise: Select, Alt takes away' },
+  { group: 'Precise mode (Caps Lock)', glyph: 'cross', badge: 'times', precise: true, use: 'Precise: Select, Shift + Alt keeps the overlap' },
+  { group: 'Precise mode (Caps Lock)', glyph: 'bucket', badge: 'layer', precise: true, use: 'Precise: Fill, Look at All (the bucket\'s badges sit bottom-left)' },
+  { group: 'Precise mode (Caps Lock)', glyph: 'picker', badge: 'two', precise: true, use: 'Precise: Picker with Shift' },
+  { group: 'Precise mode (Caps Lock)', native: 'none', use: 'Precise, no badge (most of the time): no cursor at all, just the highlighted cell' },
   { group: 'Browser cursors (not drawn)', native: 'text', use: 'Type: place the caret' },
   { group: 'Browser cursors (not drawn)', native: 'grab', use: 'Hand tool, or Space held (also middle button), in the editor and the 3D editor' },
   { group: 'Browser cursors (not drawn)', native: 'grabbing', use: 'While panning' },

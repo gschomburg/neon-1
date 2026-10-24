@@ -74,12 +74,12 @@ function card(n, v) {
   const id = 'C' + String(n).padStart(2, '0');
   if (v.native) {
     return `<div class="card" style="cursor:${v.native}"><div class="id"><span class="n">${id}</span>${esc(v.native)}</div>` +
-      `<div class="use">${esc(v.use)}</div><div class="native">browser's own</div><div class="try">hover to try</div></div>`;
+      `<div class="use">${esc(v.use)}</div><div class="native">${v.native === 'none' ? 'no cursor' : "browser's own"}</div><div class="try">hover to try</div></div>`;
   }
-  const s = src(v.glyph, v.badge, v.dim), [hx, hy] = C.hotspot(v.glyph), k = 96 / C.SIZE;
+  const s = 'data:image/svg+xml,' + encodeURIComponent(C.svg(v.glyph, v.badge, v.dim, v.precise)), [hx, hy] = C.hotspot(v.glyph), k = 96 / C.SIZE;
   const hot = `<span class="hot" style="left:${hx * k}px;top:${hy * k}px"></span>`;
-  return `<div class="card" style='cursor:${C.css(v.glyph, v.badge, v.dim)}'>` +
-    `<div class="id"><span class="n">${id}</span>${esc(label(v.glyph, v.badge, v.dim))}</div>` +
+  return `<div class="card" style='cursor:${C.css(v.glyph, v.badge, v.dim, 'crosshair', v.precise)}'>` +
+    `<div class="id"><span class="n">${id}</span>${esc(v.precise ? 'Precise: ' + C.BADGES[v.badge].name + ' badge only' : label(v.glyph, v.badge, v.dim))}</div>` +
     `<div class="use">${esc(v.use)}</div>` +
     `<div class="views"><div class="big d"><img src="${s}" alt="">${hot}</div><div class="big l"><img src="${s}" alt="">${hot}</div>` +
     `<div class="small"><div class="d"><img src="${s}" alt=""></div><div class="l"><img src="${s}" alt=""></div></div></div>` +

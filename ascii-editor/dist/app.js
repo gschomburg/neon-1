@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.82';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.83';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -145,15 +145,15 @@ function selBounds(set) {
   return { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
 }
 // Combine a set of cells with the selection: new / add (Shift) / sub (Alt) / int (Shift + Alt: keep only the overlap).
+// combineSel works it out without changing anything (the live preview while dragging uses it too).
+function combineSel(cells, mode) {
+  if (mode === 'int') { const keep = new Set(); if (S.sel) for (const k of cells) if (S.sel.has(k)) keep.add(k); return keep; }
+  const out = mode === 'new' || !S.sel ? new Set() : new Set(S.sel);
+  for (const k of cells) { if (mode === 'sub') out.delete(k); else out.add(k); }
+  return out;
+}
 function applyCells(cells, mode) {
-  if (mode === 'int') {
-    const keep = new Set();
-    if (S.sel) for (const k of cells) if (S.sel.has(k)) keep.add(k);
-    S.sel = keep;
-  } else {
-    if (mode === 'new' || !S.sel) S.sel = new Set();
-    for (const k of cells) { if (mode === 'sub') S.sel.delete(k); else S.sel.add(k); }
-  }
+  S.sel = combineSel(cells, mode);
   if (!S.sel.size) S.sel = null;
   updateInfo(); redraw();
 }
@@ -1653,10 +1653,10 @@ function render() {
 
   // selection outline (marching ants), the float's box
   const now = performance.now();
-  if (S.sel) outlineCells(S.sel, C['c-sel-line'], now);
-  if (S.selPoly) {   // a polygon selection being clicked out: what it would select, and its points (the first one closes it)
-    const pts = S.selPoly.pts.slice(); if (S.hover) pts.push(S.hover);
-    outlineCells(new Set(polySelCells(pts)), C['c-sel-line'], now);
+  const live = liveSelection();   // while dragging out a selection: the cells it will end up with, instead of the old ones
+  if (live) { if (live.size) outlineCells(live, C['c-sel-line'], now); }
+  else if (S.sel) outlineCells(S.sel, C['c-sel-line'], now);
+  if (S.selPoly) {   // a polygon selection being clicked out: its points (the first one closes it)
     ctx.strokeStyle = C['c-sel-line'];
     S.selPoly.pts.forEach((p, i) => { ctx.lineWidth = i ? 1 : 2; ctx.strokeRect(Math.round(px(p.x)) + 0.5, Math.round(py(p.y)) + 0.5, Math.round(cw) - 1, Math.round(ch) - 1); });
     ctx.lineWidth = 1;
@@ -1668,23 +1668,28 @@ function render() {
     ctx.setLineDash([]);
   }
 
-  // box being dragged out
+  // a lasso being dragged: a faint line where it's been (the cells it will select show as marching ants, below)
   const d = S.drag;
-  if (d && d.kind === 'rect') {
-    const ax = Math.min(d.x0, d.x1), ay = Math.min(d.y0, d.y1);
-    const bw = (Math.abs(d.x1 - d.x0) + 1) * cw, bh = (Math.abs(d.y1 - d.y0) + 1) * ch;
-    ctx.setLineDash([4, 3]); ctx.strokeStyle = C['c-sel-line'];
-    if (d.ellipse) {
-      ctx.beginPath(); ctx.ellipse(px(ax) + bw / 2, py(ay) + bh / 2, bw / 2, bh / 2, 0, 0, Math.PI * 2); ctx.stroke();
-    } else ctx.strokeRect(Math.round(px(ax)) + 0.5, Math.round(py(ay)) + 0.5, Math.round(bw), Math.round(bh));
-    ctx.setLineDash([]);
-  }
   if (d && d.kind === 'lasso' && d.pts.length > 1) {
-    ctx.setLineDash([4, 3]); ctx.strokeStyle = C['c-sel-line']; ctx.lineWidth = 1.5;
+    ctx.strokeStyle = C['c-sel-line']; ctx.globalAlpha = 0.35; ctx.lineWidth = 1.5;
     ctx.beginPath();
     d.pts.forEach((p, i) => { const X = ox + p.x * cw, Y = oy + p.y * ch; if (i) ctx.lineTo(X, Y); else ctx.moveTo(X, Y); });
-    ctx.closePath(); ctx.stroke();
-    ctx.setLineDash([]); ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1; ctx.lineWidth = 1;
+  }
+
+  // precise mode (Caps Lock): the cell a click will act on, and with Mirror on, its mirrored copies (a little fainter)
+  if (S.preciseShown && S.hover) {
+    const W = Math.round(cw), H = Math.round(ch), seen = new Set();
+    mirrorTargets(S.hover.x, S.hover.y, null).forEach(([x, y], i) => {
+      if (seen.has(K(x, y))) return; seen.add(K(x, y));
+      const X = Math.round(px(x)), Y = Math.round(py(y));
+      ctx.globalAlpha = i ? 0.6 : 1;
+      ctx.fillStyle = C['c-cursor']; ctx.globalAlpha *= 0.22; ctx.fillRect(X, Y, W, H); ctx.globalAlpha = i ? 0.6 : 1;
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.strokeRect(X + 0.5, Y + 0.5, W - 1, H - 1);
+      ctx.lineWidth = 1.5; ctx.strokeStyle = C['c-cursor']; ctx.strokeRect(X + 0.5, Y + 0.5, W - 1, H - 1);
+    });
+    ctx.globalAlpha = 1; ctx.lineWidth = 1;
   }
 
   // type cursor
@@ -1712,6 +1717,28 @@ function render() {
     }
   }
 }
+// The selection a drag in progress will make (Rectangle, Ellipse, Lasso, or a Polygon being clicked out), combined
+// with the current one the way letting go will (new / add / sub / int). null when nothing is being dragged out.
+let liveCache = { key: '', set: null };
+function liveSelection() {
+  const d = S.drag;
+  let cells, mode, key;
+  if (d && d.kind === 'rect') {
+    mode = d.mode; key = ['r', d.ellipse, d.x0, d.y0, d.x1, d.y1].join();
+    cells = () => d.ellipse ? ellipseCells(d.x0, d.y0, d.x1, d.y1) : rectCells(d.x0, d.y0, d.x1, d.y1);
+  } else if (d && d.kind === 'lasso') {
+    const l = d.pts[d.pts.length - 1];
+    mode = d.mode; key = ['l', d.pts.length, l.x, l.y].join();
+    cells = () => d.pts.length >= 3 ? lassoCells(d.pts) : [];
+  } else if (S.selPoly) {
+    const pts = S.selPoly.pts.slice(); if (S.hover) pts.push(S.hover);
+    mode = S.selPoly.mode; key = ['p', ...pts.map(p => p.x + ':' + p.y)].join();
+    cells = () => polySelCells(pts);
+  } else return null;
+  key += '|' + mode + '|' + (S.sel ? S.sel.size : 0);   // (the selection can't change mid-drag; its size is a cheap check)
+  if (liveCache.key !== key) liveCache = { key, set: combineSel(cells(), mode) };
+  return liveCache.set;
+}
 // Outline only the edges of a cell set (neighbors outside it).
 function outlineCells(set, color, now) {
   const cw = S.cw, ch = S.ch, ox = S.offX, oy = S.offY;
@@ -1731,7 +1758,7 @@ function outlineCells(set, color, now) {
 }
 function loop() {
   // the ants and the float's box move, so keep drawing while either is up
-  if (dirty || S.sel || S.float || S.selPoly) { render(); updateCursor(); dirty = false; }
+  if (dirty || S.sel || S.float || S.selPoly || (S.drag && (S.drag.kind === 'rect' || S.drag.kind === 'lasso'))) { render(); dirty = false; updateCursor(); }   // (after clearing dirty: a cursor change can ask for another frame)
   requestAnimationFrame(loop);
 }
 setInterval(() => { if (S.tool === 'type' && S.cursor) { S.blinkOn = !S.blinkOn; redraw(); } }, 530);
@@ -1739,24 +1766,29 @@ setInterval(() => { if (S.tool === 'type' && S.cursor) { S.blinkOn = !S.blinkOn;
 // ---------- cursors ----------
 // Our own cursors (drawn in cursors.js, like the toolbox icons): a tool glyph plus a badge for the mode.
 // See ascii-editor/CURSORS.md for the full list, and dist/cursors.html for all of them side by side.
-const curImage = (glyph, badge, dim, fallback) => window.ASXII_CURSORS.css(glyph, badge, dim, fallback);
+// Precise mode (Caps Lock on, pointer over the canvas): the editor highlights the cell a click acts on, and the cursor
+// keeps only its badge (+, −...). curPrecise is worked out at the start of cursorFor.
+let curPrecise = false;
+const curImage = (glyph, badge, dim, fallback) => window.ASXII_CURSORS.css(glyph, badge, dim, fallback, curPrecise);
+const preciseOn = () => S.mods.caps && !!S.hover && S.hover.x >= 0 && S.hover.y >= 0 && S.hover.x < S.w && S.hover.y < S.h && !(S.drag && S.drag.kind === 'pan');
 // Modifier keys, kept current from every key and pointer event, so the cursor can change the moment one is pressed
-S.mods = { shift: false, alt: false, cmd: false };
+S.mods = { shift: false, alt: false, cmd: false, caps: false };
 function trackMods(e) {
-  const m = { shift: !!e.shiftKey, alt: !!e.altKey, cmd: !!(e.ctrlKey || e.metaKey) };
-  if (m.shift === S.mods.shift && m.alt === S.mods.alt && m.cmd === S.mods.cmd) return;
+  const m = { shift: !!e.shiftKey, alt: !!e.altKey, cmd: !!(e.ctrlKey || e.metaKey), caps: !!(e.getModifierState && e.getModifierState('CapsLock')) };
+  if (m.shift === S.mods.shift && m.alt === S.mods.alt && m.cmd === S.mods.cmd && m.caps === S.mods.caps) return;
   S.mods = m; redraw(); update3dCursor();
 }
 window.addEventListener('keydown', trackMods, true);
 window.addEventListener('keyup', trackMods, true);
 window.addEventListener('pointermove', trackMods, true);
 window.addEventListener('pointerdown', trackMods, true);
-window.addEventListener('blur', () => { S.mods = { shift: false, alt: false, cmd: false }; redraw(); update3dCursor(); });
+window.addEventListener('blur', () => { S.mods = { shift: false, alt: false, cmd: false, caps: S.mods.caps }; redraw(); update3dCursor(); });   // Caps Lock stays as it was
 const MODE_BADGE = { add: 'plus', sub: 'minus', int: 'times', new: null };
 const SEL_GLYPH = { rect: 'cross', ellipse: 'cross', lasso: 'lasso', polygon: 'polylasso', wand: 'wand' };
 // What a click (or the drag in progress) will do, as a cursor
 function cursorFor() {
   const t = S.tool, d = S.drag, c = S.hover, m = S.mods;
+  curPrecise = preciseOn();
   const blocked = c && S.sel && !editable(c.x, c.y);   // with a selection, edits only land inside it
   const move = badge => curImage('move', badge, false, 'move');
   if (d) {
@@ -1821,7 +1853,13 @@ function cursorFor() {
   return 'default';
 }
 let lastCur = '';
-function updateCursor() { const v = cursorFor(); if (v !== lastCur) { vp.style.cursor = v; lastCur = v; } }
+function updateCursor() {
+  const v = cursorFor();
+  if (v !== lastCur) { vp.style.cursor = v; lastCur = v; }
+  // precise mode, with one of our cursors (not the browser's I-beam, hands or not-allowed): highlight the cell
+  const shown = curPrecise && (v === 'none' || v.startsWith('url('));
+  if (shown !== S.preciseShown) { S.preciseShown = shown; redraw(); }
+}
 // The 3D editor's canvas: Add / Remove (Shift = Remove), Alt or right-drag turns the view, Space or middle-drag pans
 let last3dCur = '';
 function update3dCursor() {
