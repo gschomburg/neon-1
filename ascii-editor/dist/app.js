@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.80';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.81';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -3763,7 +3763,8 @@ function start() {
     if (vpSize[0] < 80 || vpSize[1] < 80) { if (!S.viewTouched) zoomFit(); }   // first real layout: fit once
     else { S.offX += (w - vpSize[0]) / 2; S.offY += (h - vpSize[1]) / 2; }
     vpSize = [w, h];
-    fitView();
+    // Resizing the canvas wipes it, and this runs after the frame's drawing: draw now, or the next paint shows it blank (a flicker)
+    fitView(); render(); dirty = false;
   }).observe(vp);
   if (document.fonts && document.fonts.load) document.fonts.load(`${BASE_FONT_PX}px "${S.font}"`).then(() => { measure(); if (!S.viewTouched) zoomFit(); redraw(); }, () => {});
   requestAnimationFrame(loop);
