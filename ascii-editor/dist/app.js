@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.70';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.71';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -1115,8 +1115,52 @@ function strokeRegion(pts, b = S.brush) {
 }
 // The edge of a stroke: cells next to the outside, with a smart character from the edge's direction
 // (or the Paint setting, if Edges is Paint).
+// The outlines of a region (a Map or Set of cell keys), each as a closed path through its edge cells' centers,
+// found by walking around the region with a hand on the wall (Moore-neighbor tracing).
+function traceOutlines(region) {
+  const has = (x, y) => region.has(K(x, y)), loops = [], seen = new Set();
+  const N8 = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];   // clockwise from up
+  const edge = k => { const [x, y] = unK(k); return !has(x + 1, y) || !has(x - 1, y) || !has(x, y + 1) || !has(x, y - 1); };
+  const keys = [...region.keys()].filter(edge).map(unK).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+  for (const [sx, sy] of keys) {
+    if (seen.has(K(sx, sy))) continue;
+    // start with an empty side as the "wall": the first empty 4-neighbor
+    let bi = [0, 2, 4, 6].find(d => !has(sx + N8[d][0], sy + N8[d][1]));
+    if (bi === undefined) continue;
+    const path = [{ x: sx + 0.5, y: sy + 0.5 }]; seen.add(K(sx, sy));
+    let cx = sx, cy = sy, startB = bi, guard = region.size * 4 + 16;
+    while (guard-- > 0) {
+      let found = -1;
+      for (let t = 1; t <= 8; t++) { const d = (bi + t) % 8; if (has(cx + N8[d][0], cy + N8[d][1])) { found = d; break; } }
+      if (found < 0) break;   // a lone cell
+      const nx = cx + N8[found][0], ny = cy + N8[found][1];
+      // the new wall: the neighbor just before the one we moved to, seen from the new cell
+      const wx = cx + N8[(found + 7) % 8][0], wy = cy + N8[(found + 7) % 8][1];
+      bi = N8.findIndex(([dx, dy]) => dx === wx - nx && dy === wy - ny);
+      if (bi < 0) bi = (found + 4) % 8;
+      if (found % 2) {   // a diagonal step: go around through a cell of the shape, so the line stays on it
+        const [dx, dy] = N8[found], via = has(cx + dx, cy) ? [cx + dx, cy] : [cx, cy + dy];
+        path.push({ x: via[0] + 0.5, y: via[1] + 0.5 });
+      }
+      cx = nx; cy = ny;
+      path.push({ x: cx + 0.5, y: cy + 0.5 }); seen.add(K(cx, cy));
+      if (cx === sx && cy === sy && bi === startB) break;
+      if (cx === sx && cy === sy && path.length > 2) break;
+    }
+    loops.push(path);
+  }
+  return loops;
+}
 function strokeOutline(region, b = S.brush) {
   const out = new Map();
+  if (b.edge === 'box') {   // box lines around the shape: trace its outline as one path, then draw it like a Box stroke
+    const lay = L(), base = (x, y) => lay.cells.get(K(x, y));
+    for (const loop of traceOutlines(region)) for (const [k, c] of smartPath(loop, 'box', { round: true, base })) {
+      const prev = out.get(k);   // where loops touch, join them
+      out.set(k, prev ? BOX_ROUND[(BOX_BITS[prev] || 0) | (BOX_BITS[c] || 0)] : c);
+    }
+    return out;
+  }
   for (const [k, s] of region) {
     const [x, y] = unK(k);
     if (region.has(K(x + 1, y)) && region.has(K(x - 1, y)) && region.has(K(x, y + 1)) && region.has(K(x, y - 1))) continue;
@@ -1132,7 +1176,8 @@ function strokeOutline(region, b = S.brush) {
     let tx = -ny, ty = nx, fy = ny < 0 ? 0.25 : ny > 0 ? 0.75 : 0.5;
     const nlen = Math.hypot(nx, ny) * S.cw;
     if (nlen < 0.35) { tx = s.tx * S.cw; ty = s.ty * S.cw; fy = 0.5; }   // ~1 cell wide: follow the stroke
-    out.set(k, smartChar(tx, ty, fy));
+    if (b.edge === 'block') { const sl = Math.abs(tx) < 1e-6 ? Infinity : (ty / S.ch) / (tx / S.cw); out.set(k, blockLineChar(sl, 0.5, fy)); }
+    else out.set(k, smartChar(tx, ty, fy));
   }
   return out;
 }
@@ -2414,7 +2459,7 @@ function cleanBrush(x) {
   c.minSize = clamp(Math.round(+x.minSize) || 1, 1, 25);
   if (x.tip === 'square') c.tip = 'square';
   if (x.mode === 'outline') c.mode = 'outline';
-  if (x.edge === 'paint') c.edge = 'paint';
+  if (['paint', 'box', 'block'].includes(x.edge)) c.edge = x.edge;
   if (x.inside === 'clear') c.inside = 'clear';
   return c;
 }
@@ -2568,7 +2613,7 @@ function refreshBrushPop(force) {
     `<div class="bp-row"><span class="bp-label">Tip</span><span class="seg">${seg('tip', 'round', 'Round', 'Round tip')}${seg('tip', 'square', 'Square', 'Square tip')}</span></div>` +
     `<div class="bp-row"><span class="bp-label">Stroke</span><span class="seg">${seg('mode', 'fill', 'Fill', 'Paint every cell the brush covers')}${seg('mode', 'outline', 'Outline', 'Only the edge of the stroke, worked out when you let go')}</span></div>` +
     (b.mode === 'outline' ?
-      `<div class="bp-row"><span class="bp-label">Edges</span><span class="seg">${seg('edge', 'smart', 'Smart', 'Edge characters that follow the shape')}${seg('edge', 'paint', 'Paint', 'Paint the edge with the Paint setting')}</span></div>` +
+      `<div class="bp-row"><span class="bp-label">Edges</span><span class="seg">${seg('edge', 'smart', 'Smart', 'Edge characters that follow the shape: - _ | / \\')}${seg('edge', 'box', 'Box', 'Connected box lines around the shape, joining box lines already there')}${seg('edge', 'block', 'Block', 'Block characters along the edge')}${seg('edge', 'paint', 'Paint', 'Paint the edge with the Paint setting')}</span></div>` +
       `<div class="bp-row"><span class="bp-label" title="${WS_TIP}">White space</span><span class="seg">${seg('inside', 'solid', 'Solid', 'The inside of the outline is wiped blank (on this layer)')}${seg('inside', 'clear', 'Clear', 'Only the edge lands; what is inside shows through')}</span></div>` : '') +
     `<div class="bp-save"><input class="bp-name" type="text" maxlength="40" placeholder="New brush name" spellcheck="false"><button class="btn primary bp-savebtn">Save as new brush</button></div>`;
   $$('[data-bkey]', p).forEach(el => el.addEventListener('click', () => { S.brush[el.dataset.bkey] = el.dataset.bval; brushChanged(); }));
@@ -3359,7 +3404,7 @@ function start() {
 }
 
 // Hooks for the headless self-test (index.html?selftest)
-window.asxii = { S, CMDS, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
+window.asxii = { S, CMDS, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
   undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render };
 

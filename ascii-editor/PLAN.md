@@ -359,7 +359,7 @@ cell: | ( ) steep, /  diagonal, - ' _ ` . , ´ shallow, < > where it turns back;
 when steep), **Box** (walks cell to cell and joins the sides: ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼, and joins box lines already on the
 layer; a cell only counts once the stroke is a fifth of the way in, so jitter on an edge makes no stubs) and **Block**
 (█ ▌ ▐ ▀ ▄ ▚ ▞; the user doesn't love these, kept for completeness). The Shape tool's Line / Polygon styles use the same:
-Smart (ASCII), Box (now connected, sharp corners), Block.
+Smart (ASCII), Box (now connected, sharp corners), Block. v0.71: the Advanced brush's Outline **Edges** also has Box (the outline traced as one path, then drawn like a Box stroke) and Block, next to Smart and Paint.
 
 **Not in v0:** the vector layer and converter, reference image, block
 mode, animation, built-in art.
