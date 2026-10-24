@@ -3,3 +3,21 @@ tools/check/
 
 # ascii-art.de catalog: big reference copy, kept local only (the user, 2026-10-23)
 ascii-editor/reference/ascii-art-de/
+
+# OS files
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# tools and local settings
+node_modules/
+*.log
+.env
+.claude/settings.local.json
