@@ -7,13 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Mono&family=Fira+Code&family=Source+Code+Pro&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=0.79">
+<link rel="stylesheet" href="style.css?v=0.85">
 </head>
 <body data-theme="blue">
 
 <!-- Top bar: menus, document name, global view controls -->
 <header id="topbar">
-  <div class="brand">as<b>X</b>ii <span class="ver">v0.79</span></div>
+  <div class="brand">as<b>X</b>ii <span class="ver">v0.85</span></div>
   <nav class="menus">
     <div class="menu">
       <button class="btn menu-btn">File</button>
@@ -61,6 +61,7 @@
         <button class="btn" data-cmd="layerDup">Duplicate layer</button>
         <button class="btn" data-cmd="layerDel">Delete layer</button>
         <hr>
+        <button class="btn" data-cmd="rasterize">Rasterize text layer</button>
         <button class="btn" data-cmd="mergeDown">Merge down</button>
         <button class="btn" data-cmd="flatten">Flatten all</button>
         <hr>
@@ -134,6 +135,8 @@
       <svg viewBox="0 0 20 20"><path d="M10 2.5v15M2.5 10h15M10 2.5 8 4.5M10 2.5l2 2M10 17.5l-2-2M10 17.5l2-2M2.5 10l2-2M2.5 10l2 2M17.5 10l-2-2M17.5 10l-2 2"/></svg></button>
     <button class="btn tool" data-tool="type" title="Type (T)">
       <svg viewBox="0 0 20 20"><path d="M4 5V3.5h12V5M10 3.5v13M7.5 16.5h5"/></svg></button>
+    <button class="btn tool" data-tool="font" title="Font (F): text in an ASCII art font">
+      <svg viewBox="0 0 20 20"><path d="M3 16.5L7.5 3.5h1L13 16.5M4.8 11.5h6.4M13.5 8.5h4M15.5 6.5v6"/></svg></button>
     <button class="btn tool" data-tool="pencil" title="Pencil (P): one character">
       <svg viewBox="0 0 20 20"><path d="M13.5 3.5l3 3L7 16H4v-3zM11.5 5.5l3 3"/></svg></button>
     <button class="btn tool" data-tool="brush" title="Advanced brush (B): character, noise or pattern">
@@ -191,6 +194,7 @@
       <h2>Layers</h2>
       <div class="layer-settings">
         <label class="check" title="Dim every layer but the active one, and draw the active one on top (L)"><input type="checkbox" id="focusChk"> Layer focus</label>
+        <label class="check" title="Text layers (T) only change with the Font tool; the Move tool moves them whole. Rasterize or Merge down to paint on them."><input type="checkbox" id="protectChk" checked> Protect text layers</label>
       </div>
       <div id="layers"></div>
       <div class="row layerbtns">
@@ -239,6 +243,7 @@
 
 <!-- pattern list (drops down from the pattern button in the Brush / Fill options) -->
 <div id="patMenu" class="patmenu" hidden></div>
+<div id="fontMenu" class="patmenu fontmenu" hidden></div>
 <!-- what to paint with: Character / Noise / Pattern -->
 <div id="paintMenu" class="patmenu paintmenu" hidden></div>
 <!-- brush list and the brush customizer (Advanced brush) -->
@@ -272,6 +277,7 @@
 <input type="file" id="fileTxt" accept=".txt,text/plain" hidden>
 <pre id="selftest" hidden></pre>
 
-<script src="app.js?v=0.79"></script>
+<script src="fonts.js?v=0.85"></script>
+<script src="app.js?v=0.85"></script>
 </body>
 </html>

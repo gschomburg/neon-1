@@ -433,3 +433,14 @@ body[data-theme="light"], body[data-theme="green"] { --warn: #8a5a00; --warn-bg:
 .b3d .seg .btn { border-color: transparent; background: transparent; border-radius: 5px; padding: 2px 10px; color: var(--mute); }
 .b3d .seg .btn.on { background: var(--accent); color: var(--accent-ink); }
 #viewport.t-block { cursor: move; }
+
+/* Font tool: the font list (a sample in each font) and the text-layer tag */
+.fontmenu { width: 380px; max-height: 70vh; overflow-y: auto; overflow-x: hidden; }
+.fontitem { padding: 6px 8px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+.fontitem:hover { background: var(--panel-2); }
+.fontitem.on { border-color: var(--accent); background: var(--panel-2); }
+.fontitem .pname { display: block; font-size: 11px; color: var(--mute); margin-bottom: 2px; }
+.fontitem .fprev { margin: 0; font-family: "JetBrains Mono", Consolas, monospace; font-size: 11px; line-height: 1.15; color: var(--text); white-space: pre; overflow: hidden; }
+#toolopts .fontbtn { display: inline-flex; align-items: center; gap: 6px; }
+#toolopts .fontbtn .caret { color: var(--mute); font-size: 10px; }
+.layer .ltag { font-size: 10px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 0 4px; margin-right: 6px; line-height: 14px; }
