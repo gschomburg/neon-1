@@ -15,7 +15,7 @@ const GLYPHS = {   // d: the path on the toolbox's 20 grid; hot: the click point
   picker: { name: 'Eyedropper', d: 'M17.2 5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0zM11.6 5.6l2.8 2.8M13 7 5.2 14.8 3.5 16.5M5.2 14.8l-.6 1.9', hot: [3.5, 16.5] },
   cube: { name: 'Cube', d: 'M4 7.5h8.5V16H4zM4 7.5 7.5 4H16v8.5L12.5 16M12.5 7.5 16 4', hot: [10, 10] },
   orbit: { name: 'Orbit', d: 'M16.5 10a6.5 6.5 0 1 1-1.9-4.6M15 2.5v3.2h-3.2', hot: [10, 10] },
-  wand: { name: 'Magic wand', d: 'M3 17 12 8M10.5 6.5l3 3M15 2v2.5M15 7v2.5M11.5 5.75h2.5M16 5.75h2.5M5 3.5v2M4 4.5h2', hot: [15, 6] },
+  wand: { name: 'Magic wand', d: 'M3 17 11.5 8.5M14.5 1.5q.5 3.5 4 4-3.5.5-4 4-.5-3.5-4-4 3.5-.5 4-4z', hot: [14.5, 5.5] },   // option W2, Sparkle (the user's pick, 2026-10-24)
   polylasso: { name: 'Polygon lasso', d: 'M7 10.5 3.5 6 9 2.5l8 2.5-2 6zM7 10.5C5.5 11.5 5 13.2 5.5 14.5S5 17 3.5 17.5', hot: [3.5, 17.5] },
   moveH: { name: 'Move left-right', d: 'M2.5 10h15M2.5 10 5 7.5M2.5 10 5 12.5M17.5 10 15 7.5M17.5 10 15 12.5', hot: [10, 10] },
   moveV: { name: 'Move up-down', d: 'M10 2.5v15M10 2.5 7.5 5M10 2.5 12.5 5M10 17.5 7.5 15M10 17.5l2.5-2.5', hot: [10, 10] },
@@ -45,11 +45,13 @@ const INK = '#151515', HALO = '#ffffff', SCALE = 0.85, OFF = 1.5, SIZE = 24;
 
 // The image for a glyph + badge (+ dimmed), as SVG markup
 // glyph: a name from GLYPHS, or a glyph object itself ({ d, hot, fill, badgeLeft }), like the options below
+// g.ink: parts filled solid ink (drawn over the white body that fill: true gives)
 const glyphOf = glyph => typeof glyph === 'string' ? GLYPHS[glyph] : glyph;
 function svg(glyph, badge, dim) {
   const g = glyphOf(glyph), st = (c, w) => `fill="none" stroke="${c}" stroke-width="${w}"`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" stroke-linecap="round" stroke-linejoin="round"${dim ? ' opacity=".45"' : ''}>` +
-    `<g transform="translate(${OFF} ${OFF}) scale(${SCALE})"><path d="${g.d}" fill="${g.fill ? HALO : 'none'}" stroke="${HALO}" stroke-width="4"/><path d="${g.d}" ${st(INK, 1.6)}/></g>` +
+    `<g transform="translate(${OFF} ${OFF}) scale(${SCALE})"><path d="${g.d}" fill="${g.fill ? HALO : 'none'}" stroke="${HALO}" stroke-width="4"/><path d="${g.d}" ${st(INK, 1.6)}/>` +
+    (g.ink ? `<path d="${g.ink}" fill="${INK}" stroke="${INK}" stroke-width="1.6"/>` : '') + '</g>' +
     (badge ? `<g${g.badgeLeft ? ' transform="translate(-13 0)"' : ''}>` + BADGES[badge].draw(st(HALO, 3.4), false) + BADGES[badge].draw(st(INK, 1.4), true) + '</g>' : '') + '</svg>';
 }
 // The click point on the 24 x 24 image
@@ -133,7 +135,28 @@ const VARIANTS = [
 
 // Redraw candidates for the Magic wand and the Eyedropper, to pick from in the gallery (the user, 2026-10-24).
 // Same 20 x 20 grid and strokes as the rest. Not used by the editor.
+// E8 (Photoshop-style eyedropper) in parts, so parts can be solid ink
+const E8 = {
+  bulb: 'M12.5 5.1 15.1 2.5A1.7 1.7 0 0 1 17.5 2.5 1.7 1.7 0 0 1 17.6 4.9L15 7.5z',
+  collar: 'M11.5 4.1 10.1 5.5 14.6 9.9 16 8.5z',
+  tube: 'M11.1 6.5 4.5 13 4 16 7 15.5 13.6 8.9z',
+  tip: 'M5.4 12.1 4.5 13 4 16 7 15.5 7.9 14.6z',
+  liquid: 'M7.5 10.1 4.5 13 4 16 7 15.5 10 12.5z',
+};
+const e8 = (name, ...ink) => ({ name, d: E8.bulb + E8.collar + E8.tube, ink: ink.map(k => E8[k]).join('') || undefined, hot: [4, 16], fill: true });
 const OPTIONS = {
+  pickerE8: [
+    e8('E8 as drawn (white)'),
+    e8('Black bulb', 'bulb'),
+    e8('Black bulb and collar', 'bulb', 'collar'),
+    e8('Black collar', 'collar'),
+    e8('Black tip', 'tip'),
+    e8('Black bulb and tip', 'bulb', 'tip'),
+    e8('Black collar and tip', 'collar', 'tip'),
+    e8('Liquid in the tube', 'liquid'),
+    e8('Black bulb and liquid', 'bulb', 'liquid'),
+    e8('Solid black', 'bulb', 'collar', 'tube'),
+  ],
   wand: [
     { name: 'Star tip', d: 'M3 17 11.8 8.2M14.5 1.5l1.06 2.54 2.74.22-2.09 1.8.64 2.68-2.35-1.44-2.35 1.44.64-2.68-2.09-1.8 2.74-.22z', hot: [14.5, 5.5] },
     { name: 'Sparkle', d: 'M3 17 11.5 8.5M14.5 1.5q.5 3.5 4 4-3.5.5-4 4-.5-3.5-4-4 3.5-.5 4-4z', hot: [14.5, 5.5] },

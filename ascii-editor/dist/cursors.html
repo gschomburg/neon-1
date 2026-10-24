@@ -71,6 +71,11 @@
   <p>Ten redraws of the eyedropper (E1–E10), next to the current one, shown the same way. The eyedropper also shows up with a
     layers badge (Look at: All) and a "2" (Shift).</p>
   <div class="grid" id="optPicker"></div>
+
+  <h2>E8 variations</h2>
+  <p>E8 (Photoshop-style) with black parts: the bulb, the collar, the tip, liquid in the tube, or all of it. E8.1 is E8 as
+    drawn above. Shown with the "2" badge on light, like the others.</p>
+  <div class="grid" id="optE8"></div>
 </main>
 <script src="cursors.js"></script>
 <script>
@@ -130,6 +135,7 @@ const opts = (el, letter, now, list, badge) => {
 };
 opts('optWand', 'W', 'wand', C.OPTIONS.wand, 'plus');
 opts('optPicker', 'E', 'picker', C.OPTIONS.picker, 'two');
+opts('optE8', 'E8.', 'picker', C.OPTIONS.pickerE8, 'two');
 </script>
 </body>
 </html>
