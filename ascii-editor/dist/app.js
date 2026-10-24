@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.120';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.121';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -4357,7 +4357,9 @@ const optIcon = k => `<svg viewBox="0 0 20 20">${OPT_ICONS[k]}</svg>`;
 const iconBtn = (attrs, k, title, on) => `<button class="btn icon${on ? ' on' : ''}" ${attrs} title="${esc(title)}">${optIcon(k)}</button>`;
 const well = html => `<span class="seg">${html}</span>`;   // a segment well around buttons (choices or toggles)
 // the one increment widget: − value +, in a segment well
-const stepper = (label, minus, value, plus, title) => `<span class="label"${title ? ` title="${esc(title)}"` : ''}>${label}</span><span class="seg stepper"><button class="btn icon" ${minus}>−</button>${value}<button class="btn icon" ${plus}>+</button></span>`;
+// (− and + are drawn, not text, so they sit exactly in the middle)
+const STEP_SVG = { minus: '<svg viewBox="0 0 20 20"><path d="M6 10h8"/></svg>', plus: '<svg viewBox="0 0 20 20"><path d="M6 10h8M10 6v8"/></svg>' };
+const stepper = (label, minus, value, plus, title) => `<span class="label"${title ? ` title="${esc(title)}"` : ''}>${label}</span><span class="seg stepper"><button class="btn icon" ${minus} title="Less">${STEP_SVG.minus}</button>${value}<button class="btn icon" ${plus} title="More">${STEP_SVG.plus}</button></span>`;
 // a dropdown like the others (a dd button and a tray), for a short list of choices: [[value, label]...]
 const FONT_LAYOUTS = [['default', 'Default spacing'], ['full', 'Full width'], ['fit', 'Fit'], ['smush', 'Smush']];
 const FONT_WS = [['clear', 'Clear blanks'], ['inside', 'Solid inside'], ['block', 'Solid block']];
