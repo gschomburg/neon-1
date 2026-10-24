@@ -24,8 +24,10 @@ Autotile picks characters **from the grid**: which neighboring cells are also au
   undo, layers and save carry auto cells like any other character
 - [x] Wherever the art is **shown, copied as text or exported**, a code resolves to a real character, picked from its
   neighbors: the cells with the same code on the same layer (`glyphAt`, `compositeAt`). A copied piece resolves on its own
-- [x] **Copy raw** (Edit menu, right-click menu, Ctrl Alt C) keeps the codes, for apps like the game; with nothing
-  selected it copies the whole canvas. Pasting codes back (from Copy raw or a file) gives auto cells
+- [x] **Copy and Cut** (v0.139) put both on the clipboard: the resolved text (what Slack, a text editor and so on paste) and the
+  raw cells under asXii's own type (`application/x-asxii-raw`), so pasting back into asXii keeps auto cells auto
+- [x] **Copy raw** (Edit menu, right-click menu, Ctrl Alt C) puts the codes in the plain text, for apps like the game; with
+  nothing selected it copies the whole canvas. Pasting codes back (from Copy raw or a file) gives auto cells
 - [x] Saved files store the codes in the rows. Older files have none and load as before
 - [x] The **Wand and Fill** match raw characters, so clicking any piece of a Box line selects or fills the whole set
   (connected, or all of it with Contiguous off), and plain art never matches auto cells. The Picker picks the code

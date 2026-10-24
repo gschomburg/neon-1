@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.138';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.139';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -2814,26 +2814,36 @@ window.addEventListener('keyup', e => {
 window.addEventListener('blur', () => { S.spaceDown = false; S.shiftDown = false; S.spring = null; redraw(); });
 
 // ---------- clipboard (the copy / cut / paste events work without a permission prompt) ----------
+// Copy and Cut put two versions on the clipboard: the text as you see it (auto cells resolved), for other apps, and the
+// raw cells (auto cells as their codes) under asXii's own type, so pasting back into asXii keeps them auto
+const CLIP_RAW = 'application/x-asxii-raw';
+function putClip(e) {
+  const t = selectionText(); if (t == null) return false;
+  const raw = selectionText(true);
+  e.clipboardData.setData('text/plain', t);
+  if (raw !== t) e.clipboardData.setData(CLIP_RAW, raw);
+  e.preventDefault();
+  S.clip = t; S.clipRaw = raw;
+  return true;
+}
 document.addEventListener('copy', e => {
   if (isField(document.activeElement)) return;
-  const t = selectionText(); if (t == null) return;
-  e.clipboardData.setData('text/plain', t); e.preventDefault();
-  S.clip = t; toast('Copied');
+  if (putClip(e)) toast('Copied');
 });
 document.addEventListener('cut', e => {
   if (isField(document.activeElement)) return;
-  const t = selectionText(); if (t == null) return;
-  e.clipboardData.setData('text/plain', t); e.preventDefault();
-  S.clip = t; deleteSelection(); toast('Cut');
+  if (putClip(e)) { deleteSelection(); toast('Cut'); }
 });
+// What to paste for clipboard text t: our own copy's raw cells if t is what we copied, else t
+const clipFor = t => S.clipRaw && t === S.clip ? S.clipRaw : t;
 document.addEventListener('paste', e => {
   if (isField(document.activeElement)) return;
   const t = e.clipboardData.getData('text/plain'); if (!t) return;
   if (S.tool === 'font' && editingText()) { e.preventDefault(); typeText(x => { x.str += t.replace(/\r\n?/g, '\n'); }); return; }   // pasting into the text
-  e.preventDefault(); floatFromText(t);
+  e.preventDefault(); floatFromText(e.clipboardData.getData(CLIP_RAW) || clipFor(t));   // (an asXii copy: its auto cells stay auto)
 });
 async function writeClipboard(text) {
-  S.clip = text;
+  S.clip = text; S.clipRaw = null;
   try { await navigator.clipboard.writeText(text); return true; }
   catch {
     const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
@@ -3351,8 +3361,8 @@ const CMDS = {
   cut: () => { if (!document.execCommand('cut')) toast('Use Ctrl X'); },
   copy: () => { if (!document.execCommand('copy')) toast('Use Ctrl C'); },
   paste: async () => {
-    try { const t = await navigator.clipboard.readText(); if (t) return floatFromText(t); } catch {}
-    if (S.clip) floatFromText(S.clip); else toast('Use Ctrl V to paste from other apps');
+    try { const t = await navigator.clipboard.readText(); if (t) return floatFromText(clipFor(t)); } catch {}
+    if (S.clip) floatFromText(S.clipRaw || S.clip); else toast('Use Ctrl V to paste from other apps');
   },
   delete: deleteSelection,
   selectAll, selectCanvas, deselect,
