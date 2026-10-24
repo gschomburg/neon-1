@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.129';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.130';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -4451,10 +4451,11 @@ function renderOptions() {
   // (two separate toggles, so each in its own well, not one segmented control)
   addSym(well(`<button class="btn${h ? ' on' : ''}" data-symline="h" title="A left-right mirror (a vertical line)">↔ Left-right</button>`) + well(`<button class="btn${v ? ' on' : ''}" data-symline="v" title="A top-bottom mirror (a horizontal line)">↕ Top-bottom</button>`));
   if (h || v) {
-    addSym((h ? `<span class="label">↔ at</span><input type="text" class="symat" data-symat="x" value="${mirrorX()}" title="Where the left-right line is, in cells from the left (half cells: .5 runs through a cell)">` : '') +
-      (v ? `<span class="label">↕ at</span><input type="text" class="symat" data-symat="y" value="${mirrorY()}" title="Where the top-bottom line is, in cells from the top">` : '') +
-      well(`<button class="btn" data-mirrorcenter title="Put the lines back in the middle of the canvas (or drag the triangles at their ends)"${S.mirrorAt.x == null && S.mirrorAt.y == null ? ' disabled' : ''}>Center</button>`));
-    addSym(well(`<button class="btn${S.mirrorFlip ? ' on' : ''}" data-tog="mirrorFlip" title="Flip characters: the mirrored copy turns / into \, ( into ) and so on">Flip characters</button>`));
+    // one setting per line: each line's position, then Center, then Flip characters (a checkbox, like Layer focus)
+    if (h) addSym(`<span class="label">↔ at</span><input type="text" class="symat" data-symat="x" value="${mirrorX()}" title="Where the left-right line is, in cells from the left (half cells: .5 runs through a cell)">`);
+    if (v) addSym(`<span class="label">↕ at</span><input type="text" class="symat" data-symat="y" value="${mirrorY()}" title="Where the top-bottom line is, in cells from the top">`);
+    addSym(well(`<button class="btn" data-mirrorcenter title="Put the lines back in the middle of the canvas (or drag the triangles at their ends)"${S.mirrorAt.x == null && S.mirrorAt.y == null ? ' disabled' : ''}>Center</button>`));
+    addSym(`<label class="check" title="The mirrored copy turns / into \\, ( into ) and so on"><input type="checkbox" class="mirrorflip"${S.mirrorFlip ? ' checked' : ''}> Flip characters</label>`);
   }
   const canMirror = MIRROR_TOOLS.includes(t), uses = canMirror && !!S.mirrorUse[t];
   // (the Symmetry panel stays at full strength; only the lines on the canvas fade when the tool isn't mirroring)
