@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.90';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.91';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -23,7 +23,7 @@ const S = {
   layers: [], active: 0, nextId: 1,
   tool: 'select',
   zoom: 1, offX: 40, offY: 40, cw: 9.6, ch: 20, fontPx: BASE_FONT_PX,
-  font: 'JetBrains Mono', theme: 'blue', grid: true,
+  font: 'JetBrains Mono', theme: 'blue', grid: true, showSolid: true,   // showSolid: tint opaque spaces red (the Opaque button)
   sel: null,            // Set of cell keys, or null
   float: null,          // { cells: Map "dx,dy" -> ch, x, y, w, h, lifted, origSel }
   cursor: null,         // type cursor { x, y, lineX }
@@ -1774,7 +1774,7 @@ function render() {
     const inside = x >= 0 && y >= 0 && x < S.w && y < S.h;
     ctx.globalAlpha = (inside ? 1 : 0.38) * (focus && !mine ? 0.22 : 1);
     ctx.fillStyle = C['c-ink'];
-    if (c === SOLID) { ctx.globalAlpha *= SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); }   // opaque space: a faint red cell
+    if (c === SOLID) { if (S.showSolid) { ctx.globalAlpha *= SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); } }   // opaque space: a faint red cell (Opaque button)
     else ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
   }
   ctx.globalAlpha = 1;
@@ -1804,7 +1804,7 @@ function render() {
       ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x), py(y), cw, ch);
       ctx.fillStyle = C['c-float-bg']; ctx.fillRect(px(x), py(y), cw, ch);
       ctx.fillStyle = C['c-float-ink'];
-      if (c === SOLID) { ctx.globalAlpha = SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); ctx.globalAlpha = 1; }
+      if (c === SOLID) { if (S.showSolid) { ctx.globalAlpha = SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); ctx.globalAlpha = 1; } }
       else ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
     }
   }
@@ -1842,7 +1842,7 @@ function render() {
       ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x), py(y), cw, ch);
       ctx.fillStyle = C['c-float-bg']; ctx.fillRect(px(x), py(y), cw, ch);
       ctx.fillStyle = C['c-float-ink'];
-      if (c === SOLID) { ctx.globalAlpha = SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); ctx.globalAlpha = 1; }
+      if (c === SOLID) { if (S.showSolid) { ctx.globalAlpha = SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); ctx.globalAlpha = 1; } }
       else ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
     }
   }
@@ -2896,7 +2896,7 @@ function autosave() { try { localStorage.setItem(PROJECT_KEY, JSON.stringify(pro
 function savePrefs() {
   try {
     const tb = $('#toolbox');
-    localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid,
+    localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid, showSolid: S.showSolid,
       brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
@@ -2967,6 +2967,7 @@ const CMDS = {
   zoomIn: () => zoomStep(1), zoomOut: () => zoomStep(-1), zoomFit, zoom100: () => setZoom(1),
   focusToggle: () => { S.focusLayer = !S.focusLayer; $('#focusChk').checked = S.focusLayer; savePrefs(); redraw(); toast(S.focusLayer ? 'Layer focus on' : 'Layer focus off'); },
   gridToggle: () => { S.grid = !S.grid; $('#gridBtn').classList.toggle('on', S.grid); savePrefs(); redraw(); },
+  solidToggle: () => { S.showSolid = !S.showSolid; $('#solidBtn').classList.toggle('on', S.showSolid); savePrefs(); redraw(); },
 };
 function moveLayer(dir) {
   const i = S.active, j = i + dir;
@@ -4093,6 +4094,8 @@ function start() {
   S.font = p.font || S.font; $('#fontSel').value = S.font;
   if (typeof p.grid === 'boolean') S.grid = p.grid;
   $('#gridBtn').classList.toggle('on', S.grid);
+  if (p.showSolid === false) S.showSolid = false;
+  $('#solidBtn').classList.toggle('on', S.showSolid);
   if (p.brush) { Object.assign(S.brush, p.brush); if (S.brush.edge === 'paint') S.brush.edge = 'char'; }   // the old Outline Paint
   loadCustomBrushes();
   loadCustomRamps();
