@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.125';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.126';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -4547,16 +4547,14 @@ function endChipTyping() {
   renderSlots();
 }
 document.addEventListener('pointerdown', e => { if (!e.target.closest('#chipBox input:not([readonly])')) endChipTyping(); }, true);
-// The chips at the bottom of the tool panel: Draw (top left) and Right (bottom right), overlapping; the selected one is
-// in front. Click one to select it; double-click to type a character into it (Enter, Tab or a click elsewhere ends that).
+// The chips at the bottom of the tool panel: Draw on top, Right below (X swaps them). Click one to select it; double-click
+// to type a character into it (Enter, Tab or a click elsewhere ends that).
 function renderSlots() {
   const box = $('#chipBox'); if (!box) return;
   const editing = box.querySelector('input:not([readonly])'); if (editing) { markSolid(); return; }
   const chip = (slot, c, title) => `<input class="chipc ${slot}${S.activeSlot === slot ? ' sel' : ''}" data-slot="${slot}" readonly value="${esc(c)}" title="${title}">`;
   box.innerHTML = chip('right', S.ch2 || CLEAR, 'Right: what the right button paints (blue: erase). Click to select, double-click to type a character') +
-    chip('draw', S.brush.ch, 'Draw: what the left button paints. Click to select, double-click to type a character') +
-    `<button class="chipswap" title="Swap Draw and Right (X)">⇄</button>`;
-  $('.chipswap', box).addEventListener('click', swapSlots);
+    chip('draw', S.brush.ch, 'Draw: what the left button paints. Click to select, double-click to type a character (X swaps Draw and Right)');
   $$('input.chipc', box).forEach(w => {
     w.addEventListener('mousedown', e => { if (w.readOnly) e.preventDefault(); });   // (no text caret until a double-click)
     w.addEventListener('click', () => selectSlot(w.dataset.slot));
