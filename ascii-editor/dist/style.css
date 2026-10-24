@@ -117,24 +117,14 @@ input:focus, select:focus { outline: 1px solid var(--accent); outline-offset: 0;
 .barend { flex: none; display: flex; align-items: center; gap: 4px; }
 .barend .btn { height: 28px; background: transparent; border-color: transparent; color: var(--mute); }
 .barend .btn:hover { background: var(--panel); color: var(--text); }
-.barend .btn.on { background: color-mix(in srgb, var(--accent) 24%, transparent); color: var(--text); border-color: transparent; }
 .barend .btn[hidden] { display: none; }
 .barend svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; vertical-align: middle; }
-#moreBtn { font-size: 16px; line-height: 1; letter-spacing: 1px; }
-/* the … menu: this tool's secondary settings, one per row */
-#toolmore {
-  position: fixed; z-index: 60; min-width: 220px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-#toolmore[hidden] { display: none; }
-#toolmore .mhead { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--mute); }
-.morerow, .opts.stack > div { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.opts.stack > div { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .opts.stack { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
-#toolmore .sep, .opts.stack .sep { display: none; }
+.opts.stack .sep { display: none; }
 
 .opts .label { color: var(--mute); }
 .opts .sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
-.opts .charin { width: 38px; text-align: center; font-family: "JetBrains Mono", Consolas, monospace; font-size: 15px; }
 .opts .quick { display: flex; gap: 2px; }
 .opts .quick .btn { font-family: "JetBrains Mono", Consolas, monospace; width: 24px; padding: 2px 0; text-align: center; }
 .opts .size { width: 40px; text-align: center; font-family: "JetBrains Mono", Consolas, monospace; font-size: 14px; color: var(--text); }
@@ -539,7 +529,12 @@ input.clearch { box-shadow: inset 0 0 0 2px #4ea1ff; }
 .opts .seg { background: none; border: 0; padding: 0; gap: 1px; }
 .opts .seg .btn { padding: 0 8px; color: var(--mute); border-radius: 5px; }
 .opts .seg .btn:hover { color: var(--text); background: var(--panel); border-color: transparent; }
-.opts .seg .btn.on { background: color-mix(in srgb, var(--accent) 24%, transparent); color: var(--text); }
+/* every selected or "on" control looks like the selected character in the palette: the bright blue */
+.opts .btn.on, .opts .seg .btn.on, .barend .btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.opts .btn.on:hover, .opts .seg .btn.on:hover, .barend .btn.on:hover { background: var(--accent); color: var(--accent-ink); }
+/* a toggle that stands on its own: outlined when off, so it reads as a button */
+.opts .btn.tog { border-color: var(--line); }
+.opts .btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .opts select, .opts input[type="text"] { background: var(--panel); border-color: var(--line); }
 .opts .check { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--text); }
 .opts .btn.icon { width: 26px; padding: 0; justify-content: center; }
@@ -554,9 +549,7 @@ input.clearch { box-shadow: inset 0 0 0 2px #4ea1ff; }
 #rightpane section > .pbody { margin-top: 8px; }
 #rightpane section.folded > .pbody { display: none; }
 #rightpane section.grow.folded { flex: none; }
-#rightpane section.unused > .pbody > :not(.pnote) { opacity: 0.45; }
-.pnote { font-size: 11.5px; color: var(--mute); margin-bottom: 6px; }
-.pnote:empty { display: none; }
+#rightpane section.unused > .pbody { opacity: 0.45; }
 #sideGrip { width: 5px; margin-right: -5px; z-index: 5; cursor: col-resize; flex: none; position: relative; }
 #sideGrip:hover, #sideGrip.drag { background: color-mix(in srgb, var(--accent) 40%, transparent); }
 
@@ -575,13 +568,6 @@ input.clearch { box-shadow: inset 0 0 0 2px #4ea1ff; }
 
 /* ---------- Characters: the Draw and Right slots ---------- */
 .slots { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
-.slot { width: 34px; height: 34px; padding: 0; justify-content: center; font: 700 17px "JetBrains Mono", Consolas, monospace;
-  background: var(--c-paper) !important; color: var(--c-ink); border: 1px solid var(--line) !important; border-radius: 5px; }
-.slot.right { width: 26px; height: 26px; font-size: 13px; align-self: flex-end; }
-.slots .slotlbl { font-size: 10px; color: var(--mute); display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.slots .recent { display: flex; gap: 2px; flex-wrap: wrap; }
-.slots .recent .btn { font-family: "JetBrains Mono", Consolas, monospace; width: 22px; padding: 0; justify-content: center; }
-.slots .charin { width: 34px; text-align: center; font-family: "JetBrains Mono", Consolas, monospace; font-size: 15px; }
 #toolbox .chip { position: relative; }
 #toolbox .chip .c2 { position: absolute; right: -4px; bottom: -4px; width: 15px; height: 15px; font-size: 10px; line-height: 15px; text-align: center;
   background: var(--c-paper); border: 1px solid var(--line); border-radius: 3px; }
@@ -602,3 +588,13 @@ input.clearch { box-shadow: inset 0 0 0 2px #4ea1ff; }
 ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--mute) 45%, transparent); border: 3px solid transparent; border-radius: 6px; background-clip: padding-box; }
 ::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--mute) 75%, transparent); }
 ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+
+/* Characters: the Draw and Right wells (click one and type), the swap between them; Recent in one row */
+.slots { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.well { width: 34px; height: 34px; padding: 0; box-sizing: border-box; text-align: center; font: 700 17px "JetBrains Mono", Consolas, monospace;
+  background: var(--c-paper); color: var(--c-ink); border: 1px solid var(--line); border-radius: 5px; cursor: pointer; caret-color: transparent; }
+.well:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+.well.right { width: 28px; height: 28px; font-size: 14px; }
+.slots .swap { color: var(--mute); }
+.recentrow { display: flex; flex-wrap: nowrap; overflow: hidden; min-height: 26px; }
+.recentrow .cbtn { flex: none; width: 24px; }
