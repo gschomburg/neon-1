@@ -547,9 +547,10 @@ input.clearch { box-shadow: inset 0 0 0 2px #4ea1ff; }
 
 /* ---------- Right pane panels: fold by the title, resize by the left edge ---------- */
 #rightpane { position: relative; }
-#rightpane section > h2 { cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0; }
-#rightpane section > h2::before { content: '▾'; font-size: 18px; line-height: 1; width: 16px; text-align: center; color: var(--mute); }
-#rightpane section.folded > h2::before { content: '▸'; }
+#rightpane section > h2 { cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0; line-height: 1.2; }
+/* the fold triangle: drawn (not a glyph), centered on the label's capitals (they sit 0.6px below the line's middle) */
+#rightpane section > h2::before { content: ''; flex: none; width: 10px; height: 10px; transform: translateY(0.6px); background: var(--mute); clip-path: polygon(0 17%, 100% 17%, 50% 83%); }
+#rightpane section.folded > h2::before { clip-path: polygon(17% 0, 83% 50%, 17% 100%); }
 #rightpane section > .pbody { margin-top: 8px; }
 #rightpane section.folded > .pbody { display: none; }
 #rightpane section.grow.folded { flex: none; }
