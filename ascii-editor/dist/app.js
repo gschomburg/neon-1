@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.137';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.138';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -2934,7 +2934,7 @@ const AUTO_SETS = [
   { name: 'Panel ASCII', kind: 'region', table: AUTO_ASCII, inside: SOLID },
   { name: 'Blocks', kind: 'region', rule: 'blocks' },
   { name: 'Shade', kind: 'region', rule: 'shade' },
-  { name: 'Brick', kind: 'region', table: AUTO_SLASH, inside: brickInside },   // (angled corners)
+  { name: 'Brick', kind: 'region', table: AUTO_BOX, inside: brickInside },   // (a box-line edge: └──────┘)
 ];
 const AUTO_LABELS = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 AUTO_SETS.forEach((s, i) => { s.code = String.fromCharCode(0xE101 + i); s.label = AUTO_LABELS[i]; s.table = s.table && chars(s.table); });
