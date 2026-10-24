@@ -6,8 +6,17 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [x] **asXii: decide what a selection does when you switch tools** (decided: option 2, built v0.11) (2026-10-23). Clear it on the drawing tools, or
+  keep it and make Brush / Eraser / Type stay inside it (Photoshop; you lean this way). Details in
+  `ascii-editor/PLAN.md`, "Open: what a selection does...".
+
+- [ ] **asXii v0, the ASCII editor** (2026-10-23). Open `ascii-editor/dist/index.html` in Chrome. Try: T and type, V and drag a
+  box, drag it around (watch the red clash cells), Enter to drop / Esc to put it back, Ctrl V some text in, B to draw, layers on
+  the right, resizing the canvas. Check: the layout (palette left, options top, info right), how typing vs shortcuts feels,
+  the brush shape (sizes are kept roughly square, so size 3 is 3 wide x 1 tall), and the four styles.
+
 - [ ] **Meat notes filed** (2026-10-23). Check the spots I picked, and two open calls: the ASCII tool's default (plain
-  ASCII or Unicode; ASCII_TOOL.md "How the conversion picks characters") and the rarity ladder (SPEC §16f "Rarity vs
+  ASCII or Unicode; ascii-editor/PLAN.md "How the conversion picks characters") and the rarity ladder (SPEC §16f "Rarity vs
   level": rename BOSS to LEGENDARY, or the scrap / common / rare / epic / legendary / exotic ladder). Also: the
   ascii-art.de catalog is now git-ignored and removed from the repo (still on your disk; still in old commits).
 

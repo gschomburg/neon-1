@@ -65,6 +65,8 @@ Open `dist/index.html` in a browser (or upload the `dist/` folder to a web host)
 - `tools/bump.js`: change the build number everywhere.
 - `tools/tell_odds.js`: `node tools/tell_odds.js` measures how much each corp's tell helps.
 - `reference/1TD.html`: One True Door, the game that inspired this one.
+- `ascii-editor/`: a standalone ASCII art tool (not part of the game, may get its own repo later). Its plan is
+  `ascii-editor/PLAN.md`.
 - `database.rules.json`: the Firebase Realtime Database rules (pasted into the Firebase console).
 
 ## How it was made

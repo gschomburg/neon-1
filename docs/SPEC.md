@@ -330,6 +330,8 @@ neon+1/
     readme.md
     reference/
       1TD.html           <- One True Door, the inspiration
+    ascii-editor/        <- the standalone ASCII art tool (not the game; may get its own repo):
+                            README.md, PLAN.md, dist/ (the app), reference/ (art picks; the ascii-art.de catalog is local only)
     database.rules.json  <- Firebase Realtime Database rules (pasted into the console)
     docs/
       SPEC.md            <- this file
@@ -736,7 +738,7 @@ Agreed changes not built yet.
     the page can't see its own IP), and showing it can feel creepy or leak on a stream / screenshot. Suggest a
     **fake IP** made from the profile (same one every time, like `10.0.4.17`), which can also show in the VPN ad
     ([ADS.md](ADS.md)). Real-IP could be an opt-in later if wanted.
-  - *(Claude)* the map step could use the ascii-art.de collection in `reference/ascii/` for a world map to start
+  - *(Claude)* the map step could use the ascii-art.de collection in `ascii-editor/reference/` for a world map to start
     from (credit / ask before shipping a piece), and the blinking spot could be the run seed's "city".
 - **Multiplayer backend: maybe move off Firebase to p5.party** (2026-10-22, the user; to look into). https://p5party.org/,
   GitHub https://github.com/jbakse/p5.party. Built for p5.js but works with plain JS (`p5party.connect()`,
@@ -860,7 +862,8 @@ Agreed changes not built yet.
     `node tools/bump.js minor` and `node tools/check.js` before uploading.
   - **Palettes:** a pointer to tools/palette_editor.html.
 
-- **An ASCII art tool** (2026-10-22, the user; not started): its plan is in its own doc, [ASCII_TOOL.md](ASCII_TOOL.md)
+- **An ASCII art tool** (2026-10-22, the user; working name asXii, v0 bare bones built 2026-10-23): everything for it lives in its own folder,
+  [ascii-editor/](../ascii-editor/README.md) (plan: [PLAN.md](../ascii-editor/PLAN.md); may become its own repo later)
   (standalone, not part of the game).
 - **More room for long text** (2026-10-22, the user): the codex and the mod descriptions need more space; some
   descriptions (and the new exotics' codex text) are long and get squeezed. Check other places too: the reward / market
@@ -2307,6 +2310,11 @@ Not yet placed in a version.
   - The title is the bottom: back from there leaves the page as normal. Keep the URL clean (`?seed`,
     `?dev`, a future `?room`) while doing this.
   - iOS Safari's swipe-back is the same event, so it gets covered too.
+
+- **"New version" notice for the game** (the user, 2026-10-23; built first in asXii v0.25, see `ascii-editor/PLAN.md`).
+  `tools/bump.js` would also write a `dist/version.json`; the running game checks it (on load, when you come back to the
+  tab, every ~10 min, never from cache) and, if a newer build was uploaded, shows a small "NeoN+1 v13.10 is out ·
+  REFRESH" notice. Careful mid-run: offer it on the map / menus, not in the middle of a layer (the save carries over).
 
 ## 18. Decision log
 

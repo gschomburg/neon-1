@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>asXii</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Mono&family=Fira+Code&family=Source+Code+Pro&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=0.69">
+</head>
+<body data-theme="blue">
+
+<!-- Top bar: menus, document name, global view controls -->
+<header id="topbar">
+  <div class="brand">as<b>X</b>ii <span class="ver">v0.69</span></div>
+  <nav class="menus">
+    <div class="menu">
+      <button class="btn menu-btn">File</button>
+      <div class="menu-list">
+        <button class="btn" data-cmd="new">New <kbd></kbd></button>
+        <button class="btn" data-cmd="open">Open project... <kbd>Ctrl O</kbd></button>
+        <button class="btn" data-cmd="save">Save project <kbd>Ctrl S</kbd></button>
+        <hr>
+        <button class="btn" data-cmd="importTxt">Import text file...</button>
+        <button class="btn" data-cmd="exportTxt">Export .txt</button>
+        <hr>
+        <button class="btn" data-cmd="copyText">Copy canvas as text</button>
+        <button class="btn" data-cmd="copyCode">Copy canvas as code lines</button>
+      </div>
+    </div>
+    <div class="menu">
+      <button class="btn menu-btn">Edit</button>
+      <div class="menu-list">
+        <button class="btn" data-cmd="undo">Undo <kbd>Ctrl Z</kbd></button>
+        <button class="btn" data-cmd="redo">Redo <kbd>Ctrl Shift Z</kbd></button>
+        <hr>
+        <button class="btn" data-cmd="cut">Cut <kbd>Ctrl X</kbd></button>
+        <button class="btn" data-cmd="copy">Copy <kbd>Ctrl C</kbd></button>
+        <button class="btn" data-cmd="copyMerged" title="Copy the selection as you see it, from all visible layers">Copy merged <kbd>Ctrl Shift C</kbd></button>
+        <button class="btn" data-cmd="paste">Paste <kbd>Ctrl V</kbd></button>
+        <button class="btn" data-cmd="delete">Delete <kbd>Del</kbd></button>
+        <button class="btn" data-cmd="fillSel">Fill selection <kbd>Alt Backspace</kbd></button>
+        <hr>
+        <button class="btn" data-cmd="selectAll">Select all <kbd>Ctrl A</kbd></button>
+        <button class="btn" data-cmd="deselect">Deselect <kbd>Ctrl D</kbd></button>
+        <hr>
+        <button class="btn" data-cmd="extrude">Extrude selection (beta)...</button>
+        <button class="btn" data-cmd="makePattern">Make pattern from selection...</button>
+        <hr>
+        <button class="btn" data-cmd="flipH">Flip horizontal</button>
+        <button class="btn" data-cmd="flipV">Flip vertical</button>
+        <button class="btn" data-cmd="drop">Drop floating block <kbd>Enter</kbd></button>
+        <button class="btn" data-cmd="dropReplace">Drop with solid white space <kbd>Shift Enter</kbd></button>
+      </div>
+    </div>
+    <div class="menu">
+      <button class="btn menu-btn">Layer</button>
+      <div class="menu-list">
+        <button class="btn" data-cmd="layerNew">New layer</button>
+        <button class="btn" data-cmd="layerDup">Duplicate layer</button>
+        <button class="btn" data-cmd="layerDel">Delete layer</button>
+        <hr>
+        <button class="btn" data-cmd="mergeDown">Merge down</button>
+        <button class="btn" data-cmd="flatten">Flatten all</button>
+        <hr>
+        <button class="btn" data-cmd="focusToggle">Layer focus on / off <kbd>L</kbd></button>
+      </div>
+    </div>
+    <div class="menu">
+      <button class="btn menu-btn">Help</button>
+      <div class="menu-list help">
+        <div class="help-text">
+          <b>Tools</b> M select · V move · T type · P pencil · B advanced brush · E eraser · U shape · K block · G fill · I picker · H hand<br>
+          <b>Typing</b> click with T, type; Enter = next line; Esc leaves typing<br>
+          <b>Shapes</b> while dragging: Shift = square / circle, Alt = from the center (pressed after you start)<br>
+          <b>Select</b> rectangle, ellipse or lasso (Shift M cycles); Shift adds, Alt takes away; drag inside or arrows move the outline; Ctrl + drag / Ctrl + arrows move the content<br>
+          <b>Move</b> drag moves what is selected (nothing selected = the whole layer); Ctrl + Select does it too<br>
+          <b>Moving</b> arrows nudge (Shift = 5); Enter drops it; Esc puts it back<br>
+          <b>Selection</b> while one is active, Brush, Eraser and Type only change cells inside it; Ctrl D clears it<br>
+          <b>Shape</b> rectangle, ellipse, line or polygon; Shift = square / circle / straight, Alt = from center; polygon: click points, click the first to close, Enter to finish open<br>
+          <b>Extrude</b> (beta) select some art, then Extrude…: it gets depth (set across / down), shown live; Enter applies<br>
+          <b>Block</b> drag to add 3D blocks (Alt / right-drag erases); Block size, Depth and Style; Bake makes them ASCII on a new layer<br>
+          <b>Paint</b> Brush and Fill paint a character, noise (random from a set) or a repeating pattern<br>
+          <b>Drop</b> white space is Clear (see-through); Shift Enter / Shift D drops it Solid, wiping what is under it (hold Shift to preview)<br>
+          <b>Draw</b> Pencil = one character; Advanced brush = character, noise or pattern; [ and ] change the size<br>
+          <b>View</b> wheel scrolls, Ctrl + wheel zooms, Space + drag pans; + − 0 1
+        </div>
+      </div>
+    </div>
+  </nav>
+  <input id="docname" class="docname" value="untitled" spellcheck="false" title="Name used for saved and exported files">
+  <div class="spacer"></div>
+  <div class="global">
+    <button class="btn icon" data-cmd="zoomOut" title="Zoom out (−)">−</button>
+    <button class="btn zoomlabel" id="zoomLabel" data-cmd="zoom100" title="Zoom to 100% (1)">100%</button>
+    <button class="btn icon" data-cmd="zoomIn" title="Zoom in (+)">+</button>
+    <button class="btn" data-cmd="zoomFit" title="Fit the canvas (0)">Fit</button>
+    <button class="btn toggle" id="gridBtn" data-cmd="gridToggle" title="Show the grid">Grid</button>
+    <select id="fontSel" title="Font">
+      <option>JetBrains Mono</option>
+      <option>IBM Plex Mono</option>
+      <option>Fira Code</option>
+      <option>Source Code Pro</option>
+      <option>VT323</option>
+      <option>Consolas</option>
+      <option>Courier New</option>
+    </select>
+    <select id="themeSel" title="Style">
+      <option value="blue">Blue (dark)</option>
+      <option value="dark">Dark</option>
+      <option value="light">Light</option>
+      <option value="green">Green (light)</option>
+    </select>
+  </div>
+</header>
+
+<!-- Tool options: filled in for the current tool -->
+<div id="optionsbar">
+  <div id="toolname"><span class="name"></span><span id="selnote" hidden title="A selection is active: this tool only changes cells inside it. Ctrl D clears the selection.">inside selection · Ctrl D clears</span></div>
+  <div id="toolopts"></div>
+  <div id="hint"></div>
+</div>
+
+<main id="workspace">
+  <div id="viewport"><canvas id="view"></canvas></div>
+
+  <!-- Tool palette: floats, draggable by its grip; double-click the grip to dock it back -->
+  <div id="toolbox">
+    <div class="grip" title="Drag to move. Double-click to dock.">⋮⋮</div>
+    <button class="btn tool" data-tool="select" title="Select (M)">
+      <svg viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="13" height="13" stroke-dasharray="2.5 2"/></svg></button>
+    <button class="btn tool" data-tool="move" title="Move (V) · or hold Ctrl with Select">
+      <svg viewBox="0 0 20 20"><path d="M10 2.5v15M2.5 10h15M10 2.5 8 4.5M10 2.5l2 2M10 17.5l-2-2M10 17.5l2-2M2.5 10l2-2M2.5 10l2 2M17.5 10l-2-2M17.5 10l-2 2"/></svg></button>
+    <button class="btn tool" data-tool="type" title="Type (T)">
+      <svg viewBox="0 0 20 20"><path d="M4 5V3.5h12V5M10 3.5v13M7.5 16.5h5"/></svg></button>
+    <button class="btn tool" data-tool="pencil" title="Pencil (P): one character">
+      <svg viewBox="0 0 20 20"><path d="M13.5 3.5l3 3L7 16H4v-3zM11.5 5.5l3 3"/></svg></button>
+    <button class="btn tool" data-tool="brush" title="Advanced brush (B): character, noise or pattern">
+      <svg viewBox="0 0 20 20"><path d="M16.5 3.5 9 11M9 11l-2.2-.4c-1.6 0-2.8 1.3-2.8 2.9 0 1.2-.4 2.2-1.5 3 3.2.4 6.4-.4 6.9-3.3z"/></svg></button>
+    <button class="btn tool" data-tool="eraser" title="Eraser (E)">
+      <svg viewBox="0 0 20 20"><path d="m8 16.5-4.3-4.3a1.4 1.4 0 0 1 0-2L10.9 3a1.4 1.4 0 0 1 2 0l4.1 4.1a1.4 1.4 0 0 1 0 2l-7.4 7.4H17M6 7.9l6 6"/></svg></button>
+    <button class="btn tool" data-tool="shape" title="Shape (U): rectangle, ellipse, line, polygon">
+      <svg viewBox="0 0 20 20"><rect x="2.5" y="8.5" width="9" height="9" rx="1"/><circle cx="13" cy="7" r="4.5"/></svg></button>
+    <button class="btn tool" data-tool="block" title="Block (K): paint 3D blocks, then bake them to ASCII">
+      <svg viewBox="0 0 20 20"><path d="M4 7.5h8.5V16H4zM4 7.5 7.5 4H16v8.5L12.5 16M12.5 7.5 16 4"/></svg></button>
+    <button class="btn tool" data-tool="fill" title="Fill (G)">
+      <svg viewBox="0 0 20 20"><path d="M4 9.5 9.5 4l6 6-5.5 5.5a1.4 1.4 0 0 1-2 0l-4-4a1.4 1.4 0 0 1 0-2zM4 9.5h11.5M8 2.5l1.5 1.5M17 13.5s1.5 1.8 1.5 2.8a1.5 1.5 0 0 1-3 0c0-1 1.5-2.8 1.5-2.8z"/></svg></button>
+    <button class="btn tool" data-tool="picker" title="Pick a character (I)">
+      <svg viewBox="0 0 20 20"><circle cx="15" cy="5" r="2.2"/><path d="M11.6 5.6l2.8 2.8M13 7 5.2 14.8 3.5 16.5M5.2 14.8l-.6 1.9"/></svg></button>
+    <button class="btn tool" data-tool="hand" title="Pan (H, or hold Space)">
+      <svg viewBox="0 0 20 20"><path d="M7 11V5a1.2 1.2 0 0 1 2.4 0v4.5M9.4 9.5V3.8a1.2 1.2 0 0 1 2.4 0v5.7M11.8 9.5V4.8a1.2 1.2 0 0 1 2.4 0v5.2M14.2 10V7.4a1.2 1.2 0 0 1 2.4 0v4.4c0 3.2-2.4 5.7-5.5 5.7h-.8c-1.6 0-2.9-.7-3.8-2L3.7 11.9a1.2 1.2 0 0 1 2-1.4L7 12.3"/></svg></button>
+    <div class="chip" id="brushChip" title="Brush character (click to edit)">#</div>
+  </div>
+
+  <!-- Right pane: info, canvas, layers -->
+  <aside id="rightpane">
+    <section>
+      <h2>Info</h2>
+      <div class="info" id="info"></div>
+    </section>
+    <section>
+      <h2>Canvas</h2>
+      <div class="row">
+        <label>W <input id="cw" type="number" min="1" max="1000"></label>
+        <label>H <input id="chh" type="number" min="1" max="1000"></label>
+        <div class="anchor" id="anchor" title="Which side stays put when the size changes">
+          <button class="btn" data-a="0"></button><button class="btn" data-a="1"></button><button class="btn" data-a="2"></button>
+          <button class="btn" data-a="3"></button><button class="btn" data-a="4"></button><button class="btn" data-a="5"></button>
+          <button class="btn" data-a="6"></button><button class="btn" data-a="7"></button><button class="btn" data-a="8"></button>
+        </div>
+      </div>
+      <div class="row">
+        <select id="sizePreset" title="Size presets">
+          <option value="">Presets...</option>
+          <option value="5x3">Node glyph 5 x 3</option>
+          <option value="24x12">Corp art 24 x 12</option>
+          <option value="30x18">Ad box 30 x 18</option>
+          <option value="34x9">Intro map 34 x 9</option>
+          <option value="32x20">Title art 32 x 20</option>
+          <option value="80x24">Terminal 80 x 24</option>
+        </select>
+        <button class="btn primary" id="applySize">Apply</button>
+      </div>
+    </section>
+    <section class="charsec">
+      <h2>Characters</h2>
+      <div id="charpane" title=""></div>
+    </section>
+    <section class="grow">
+      <h2>Layers</h2>
+      <div class="layer-settings">
+        <label class="check" title="Dim every layer but the active one, and draw the active one on top (L)"><input type="checkbox" id="focusChk"> Layer focus</label>
+      </div>
+      <div id="layers"></div>
+      <div class="row layerbtns">
+        <button class="btn" data-cmd="layerNew" title="New layer">+ New</button>
+        <button class="btn" data-cmd="layerDup" title="Duplicate layer">Dup</button>
+        <button class="btn" data-cmd="layerUp" title="Move up">▲</button>
+        <button class="btn" data-cmd="layerDown" title="Move down">▼</button>
+        <button class="btn" data-cmd="layerDel" title="Delete layer">Del</button>
+      </div>
+      <div class="row layerbtns">
+        <button class="btn" data-cmd="mergeDown">Merge down</button>
+        <button class="btn" data-cmd="flatten">Flatten</button>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<div id="toast"></div>
+
+<!-- 3D block editor (Block tool: Edit 3D) -->
+<div id="b3d" class="b3d" hidden>
+  <div class="b3d-win">
+    <div class="b3d-head">
+      <b>3D blocks</b>
+      <span class="seg"><button class="btn on" data-b3tool="add" title="Click a face to add a block on that side (A)">Add</button><button class="btn" data-b3tool="remove" title="Click a block to remove it (R, or Shift-click)">Remove</button></span>
+      <span class="b3d-views">View <span class="seg"><button class="btn" data-b3view="front" title="Straight on, square grid (F)">Front</button><button class="btn" data-b3view="angled" title="Turned toward the depth side, square grid: close to how it bakes (G)">Angled</button><button class="btn" data-b3view="diamond" title="Shaped like the canvas: turned 45°, stretched to the tall cells, depth shifted sideways (D)">◇ Diamond</button></span></span>
+      <span class="spacer"></span><span id="b3dAngles" class="b3d-count" title="The view: turn (side to side), tilt (from above), grid (0° square, 45° diamond), stretch (toward the canvas shape)"></span><span id="b3dCount" class="b3d-count"></span>
+    </div>
+    <canvas id="b3dCanvas"></canvas>
+    <div class="b3d-foot">
+      <span class="b3d-hint">Click a face to add · Shift-click removes · right-drag turns · middle or Space-drag pans · scroll zooms</span>
+      <span class="spacer"></span>
+      <button class="btn" id="b3dClear" title="Remove all the blocks">Clear</button>
+      <button class="btn" id="b3dClose" title="Close (Esc)">Close</button>
+      <button class="btn primary" id="b3dPreview" title="Turn back to the bake angle and show it on the canvas (Enter)">Preview</button>
+    </div>
+  </div>
+</div>
+
+<!-- shown when a newer version has been uploaded (hosted copies only) -->
+<div id="update" class="update" hidden>
+  <span class="dot"></span><span id="updateText"></span>
+  <button class="btn primary" id="updateRefresh" title="Reload to get the new version (your work is autosaved)">Refresh</button>
+  <button class="btn icon" id="updateClose" title="Not now">×</button>
+</div>
+
+<!-- pattern list (drops down from the pattern button in the Brush / Fill options) -->
+<div id="patMenu" class="patmenu" hidden></div>
+<!-- what to paint with: Character / Noise / Pattern -->
+<div id="paintMenu" class="patmenu paintmenu" hidden></div>
+<!-- brush list and the brush customizer (Advanced brush) -->
+<div id="brushMenu" class="patmenu" hidden></div>
+<div id="rampMenu" class="patmenu rampmenu" hidden></div>
+<div id="noiseMenu" class="patmenu rampmenu" hidden></div>
+<!-- Customize for Noise and Ramp -->
+<div id="setPop" class="brushpop" hidden></div>
+<!-- Block tool: Faces -->
+<div id="blockPop" class="brushpop" hidden></div>
+<!-- Extrude (Select tool) -->
+<div id="extrudePop" class="brushpop" hidden></div>
+<div id="brushPop" class="brushpop" hidden></div>
+
+<!-- New pattern dialog (Select tool: Make pattern) -->
+<div id="patDlg" class="modal" hidden>
+  <div class="dlg">
+    <h3>New pattern</h3>
+    <div class="dlg-row">
+      <div><div class="dlg-label">Tile</div><pre id="patTile" class="dlg-pre"></pre></div>
+      <div class="grow"><div class="dlg-label">Repeated</div><pre id="patTiled" class="dlg-pre"></pre></div>
+    </div>
+    <label class="dlg-name">Name <input id="patName" type="text" maxlength="40" spellcheck="false"></label>
+    <div class="dlg-btns">
+      <button class="btn" id="patCancel">Cancel</button>
+      <button class="btn primary" id="patSave">Save pattern</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="fileOpen" accept=".json,.asxii,application/json" hidden>
+<input type="file" id="fileTxt" accept=".txt,text/plain" hidden>
+<pre id="selftest" hidden></pre>
+
+<script src="app.js?v=0.69"></script>
+</body>
+</html>

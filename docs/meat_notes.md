@@ -1,7 +1,7 @@
 These are gs notes
 ***********************
 
-
+- hackers ICE man
 
 ascii
 ********************
@@ -10,4 +10,3 @@ ascii
 
 corp/mod/item ideas
 ***********************
-
