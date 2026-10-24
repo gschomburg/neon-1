@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.116';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.117';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -4330,6 +4330,7 @@ const paintUsed = () => S.tool === 'brush' || S.tool === 'fill' || (S.tool === '
 // The settings bar (one row: the tool's main settings), its … menu (the secondary ones), and the Paint and Symmetry
 // panels on the right. Each control is built once, in the place it belongs; bindOptions wires up each place.
 // Icons for the settings bar (the toolbox icons' 20 x 20 grid and strokes): long settings are icon buttons
+const MIRROR_SVG = '<svg viewBox="0 0 20 20"><path d="M10 2.5v15" stroke-dasharray="2 2"/><path d="M7.5 5.5 3 10l4.5 4.5zM12.5 5.5 17 10l-4.5 4.5z"/></svg>';
 const OPT_ICONS = {
   selRect: '<rect x="3.5" y="4.5" width="13" height="11" stroke-dasharray="2.5 2"/>',
   selEllipse: '<ellipse cx="10" cy="10" rx="7" ry="5.5" stroke-dasharray="2.5 2"/>',
@@ -4425,8 +4426,8 @@ function renderOptions() {
   }
   const canMirror = MIRROR_TOOLS.includes(t), uses = canMirror && !!S.mirrorUse[t];
   $('[data-panel="sym"]').classList.toggle('unused', !uses || S.mirror === 'off');   // faded when the tool isn't mirroring
-  const mu = $('#mirrorUse'); mu.hidden = !canMirror; mu.classList.toggle('on', uses);
-  mu.title = uses ? `${toolName()} mirrors (click to stop). The lines are set up in the Symmetry panel` : `Mirror with ${toolName()} (set the lines up in the Symmetry panel)`;
+  // the tool's "uses mirror" toggle: the last thing in the bar, with the rest of its settings
+  if (canMirror) add((bar.children.length ? sep : '') + `<button class="btn icon mirroruse${uses ? ' on' : ''}" data-mirroruse title="${uses ? `${toolName()} mirrors (click to stop). The lines are set up in the Symmetry panel` : `Mirror with ${toolName()} (set the lines up in the Symmetry panel)`}">${MIRROR_SVG}</button>`);
 
   for (const o of [bar, paint, sym]) bindOptions(o);
   renderSlots(); renderHelp(true); clipBar(); redraw();
@@ -4443,6 +4444,10 @@ function bindOptions(o) {
   $$('[data-flayout]', o).forEach(b => b.addEventListener('click', () => setFigFont(S.figfont.name, b.dataset.flayout)));
   $$('[data-fsp]', o).forEach(b => b.addEventListener('click', () => { const k = b.dataset.fsp, f = figFont(S.figfont.name); setFigSpacing(k, clamp((S.figfont[k] || 0) + +b.dataset.d, k === 'ls' ? -3 : -((f ? f.height : 2) - 1), 20)); }));
   $$('[data-fws]', o).forEach(b => b.addEventListener('click', () => setFigFont(S.figfont.name, S.figfont.layout, b.dataset.fws)));
+  $$('[data-mirroruse]', o).forEach(b => b.addEventListener('click', () => {
+    const t = S.tool; if (!MIRROR_TOOLS.includes(t)) return;
+    S.mirrorUse[t] = !S.mirrorUse[t]; savePrefs(); renderOptions(); redraw();
+  }));
   $$('[data-tip]', o).forEach(b => b.addEventListener('click', () => { toolSize().tip = b.dataset.tip; savePrefs(); renderOptions(); redraw(); }));
   $$('[data-tog]', o).forEach(b => b.addEventListener('click', () => {   // an on / off setting, by its path in S
     const keys = b.dataset.tog.split('.'), last = keys.pop(), obj = keys.reduce((x, k) => x[k], S);
@@ -4558,11 +4563,6 @@ function renderHelp(force) {
     `<div class="help-sub">Any tool</div>` + list(HELP_ANY, false);
 }
 
-// ---------- the bar's end: uses mirror ----------
-$('#mirrorUse').addEventListener('click', () => {
-  const t = S.tool; if (!MIRROR_TOOLS.includes(t)) return;
-  S.mirrorUse[t] = !S.mirrorUse[t]; savePrefs(); renderOptions(); redraw();
-});
 
 // ---------- right pane: fold panels by their titles, resize by the left edge (TOOLBAR.md 4) ----------
 function applyPanels() {

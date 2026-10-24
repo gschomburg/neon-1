@@ -112,7 +112,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); outline-offset: 0;
   background: var(--panel-2); border-bottom: 1px solid var(--line);
 }
 #toolname { width: 118px; flex: none; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#toolopts { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; overflow: hidden; }
+#toolopts { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; overflow: hidden; padding: 0 3px; }   /* full bar height, so focus rings aren't clipped */
 #toolopts.clipped { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
 .barend { flex: none; display: flex; align-items: center; gap: 4px; }
 .barend .btn { height: 28px; background: transparent; border-color: transparent; color: var(--mute); }

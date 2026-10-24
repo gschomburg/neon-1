@@ -81,8 +81,8 @@ questions (now under Decisions, at the end).
 
 - [x] A **Symmetry** panel holds the mirror setup: the left-right and top-bottom lines on or off, their positions (as numbers,
   plus dragging the triangles on the canvas), Center, Flip characters
-- [x] Each tool that changes art gets a **uses mirror** icon toggle in its bar (always in the same spot, at the right end
-  before **…**). Remembered per tool. Tools that don't change art (Hand, Zoom, Picker) don't have it
+- [x] Each tool that changes art gets a **uses mirror** icon toggle in its bar (the last thing in the tool's settings, after
+  a divider; v0.117). Remembered per tool. Tools that don't change art (Hand, Zoom, Picker) don't have it
 - [x] The mirror lines and triangles show on the canvas whenever the current tool uses mirror
 - [x] It applies to everything that changes art:
   - [x] Pencil, Brush, Eraser (as today)
