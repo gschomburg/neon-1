@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.121';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.122';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -1201,7 +1201,7 @@ document.addEventListener('pointerdown', e => {
 const PAINT_MODES = {
   char: { name: 'Character', desc: 'One character, everywhere you paint. Choose it in the bar, from Recent, or with the Picker (I).' },
   noise: { name: 'Noise', desc: 'Random characters from a set you type, scattered at a density. Good for texture, static, dust and glitches.' },
-  ramp: { name: 'Ramp', brushOnly: true, desc: 'Characters that change along the stroke: the first one at each end, stepping to the last one in the middle over the Ramp length (with Taper, in step with the width). Advanced brush only.' },
+  ramp: { name: 'Ramp', brushOnly: true, desc: 'Characters that change along the stroke: the first one at each end, stepping to the last one in the middle over the Ramp length (with Taper, in step with the width). Brush only.' },
   pattern: { name: 'Pattern', desc: 'A repeating tile, lined up to the canvas grid so separate strokes and fills join up. Make your own with Make pattern (Select tool).' },
 };
 // A small live preview for each mode: the character, a sprinkle of the noise set, a bit of the pattern.
@@ -4326,7 +4326,7 @@ function bindShapeOptions(o) {
 }
 // The tools that can mirror what they do (each has a "uses mirror" toggle in the bar; the lines are set up in Symmetry)
 const MIRROR_TOOLS = ['select', 'move', 'type', 'font', 'pencil', 'brush', 'eraser', 'shape', 'block', 'fill'];
-const TOOL_NAMES = { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Advanced brush', font: 'Font', shape: 'Shape', block: 'Block', eraser: 'Eraser', fill: 'Fill', picker: 'Picker', hand: 'Hand', zoom: 'Zoom' };
+const TOOL_NAMES = { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Brush', font: 'Font', shape: 'Shape', block: 'Block', eraser: 'Eraser', fill: 'Fill', picker: 'Picker', hand: 'Hand', zoom: 'Zoom' };
 const toolName = () => S.tool === 'select' && S.selShape === 'wand' ? 'Magic wand' : TOOL_NAMES[S.tool] || '';
 const paintUsed = () => S.tool === 'brush' || S.tool === 'fill' || (S.tool === 'shape' && S.shape.fill && S.shape.kind !== 'line');
 // The settings bar (one row: the tool's main settings), its … menu (the secondary ones), and the Paint and Symmetry
