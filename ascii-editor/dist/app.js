@@ -475,6 +475,32 @@ function initGallery() {
   $('#galList').addEventListener('dblclick', e => { const it = e.target.closest('.gal-item'); if (it) { galPreview(+it.dataset.gi); galAdd(); } });
 }
 
+// ---------- start content: the welcome document and the 3D examples (dist/start/, bundled into start.js) ----------
+let startLoading = null;
+function loadStart() {
+  if (window.ASXII_START) return Promise.resolve(window.ASXII_START);
+  if (!startLoading) startLoading = new Promise(ok => {
+    const sc = document.createElement('script'); sc.src = APP_BASE + 'start.js?v=' + VERSION;
+    sc.onload = () => ok(window.ASXII_START || {}); sc.onerror = () => { startLoading = null; ok({}); };
+    document.head.appendChild(sc);
+  });
+  return startLoading;
+}
+// the welcome document, with its "asXii v0.xx" brought up to this version
+function welcomeDoc(st) {
+  const w = JSON.parse(JSON.stringify(st.welcome));
+  for (const l of w.layers || []) l.rows = (l.rows || []).map(r => r.replace(/(asXii v)\d+\.\d+/g, (m, a) => a + VERSION));
+  return w;
+}
+// Help › Welcome: open the welcome document, like File › New (Ctrl Z brings back what was there)
+function showWelcome() {
+  return loadStart().then(st => {
+    if (!st.welcome) return toast('The welcome screen didn\'t load (start.js)', 'warn');
+    commitFloat(); pushUndo(); loadProject(welcomeDoc(st)); S.blocks.moved = false;
+    changed(true); zoomFit(); toast('Welcome (Ctrl Z brings back what you had)');
+  });
+}
+
 // ---------- undo ----------
 function snap() {
   return {
@@ -646,7 +672,15 @@ function pickAt(c, sample) {
   const got = sample === 'layer' ? L().cells.get(K(c.x, c.y)) : compositeAt(c.x, c.y);
   return got || null;   // an opaque space counts: you can pick it and draw with it
 }
-function selectAll() { commitFloat(); applyRect(0, 0, S.w - 1, S.h - 1, 'new'); }
+// Select all (Ctrl A): the canvas plus anything drawn outside it, on any layer, so nothing is left out.
+// Select canvas (Ctrl Shift A): just the canvas area.
+function selectAll() {
+  commitFloat();
+  let x0 = 0, y0 = 0, x1 = S.w - 1, y1 = S.h - 1;
+  for (const l of S.layers) for (const k of l.cells.keys()) { const [x, y] = unK(k); if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
+  applyRect(x0, y0, x1, y1, 'new');
+}
+function selectCanvas() { commitFloat(); applyRect(0, 0, S.w - 1, S.h - 1, 'new'); }
 function deselect() { if (S.float) commitFloat(); S.sel = null; updateInfo(); redraw(); }
 
 // Text of a block: rows from a lookup, trailing spaces trimmed.
@@ -2479,7 +2513,7 @@ vp.addEventListener('pointermove', e => {
     if (d.kind === 'rect') { d.cx = c.x; d.cy = c.y; dragBox(d, e.shiftKey, e.altKey); }
     if (d.kind === 'shape') { d.cx = c.x; d.cy = c.y; d.shift = e.shiftKey; if (d.shape !== 'line') dragBox(d, e.shiftKey, e.altKey); }
     if (d.kind === 'textmove' && moved) { const l = S.layers.find(q => q.id === d.id); if (l && l.text) { l.text.x = d.ox + c.x - d.sx; l.text.y = d.oy + c.y - d.sy; renderTextLayer(l); changed(); } }
-    if (d.kind === 'blockmove' && moved) { S.blocks.ox = d.ox + c.x - d.sx; S.blocks.oy = d.oy + c.y - d.sy; S.blocks.placed = true; changed(); }
+    if (d.kind === 'blockmove' && moved) { S.blocks.ox = d.ox + c.x - d.sx; S.blocks.oy = d.oy + c.y - d.sy; S.blocks.placed = true; S.blocks.moved = true; changed(); }
     if (d.kind === 'stroke') {
       const p = { x: (px - S.offX) / S.cw, y: (py - S.offY) / S.ch }, l = d.pts[d.pts.length - 1];
       if (Math.abs(p.x - l.x) + Math.abs(p.y - l.y) * S.ch / S.cw > (pencilSmart() ? 0.2 : 0.3)) { d.pts.push(p); redraw(); }
@@ -2552,7 +2586,7 @@ window.addEventListener('keydown', e => {
     return;
   }
   if (cam.open && !(e.ctrlKey || e.metaKey) && e.key !== ' ' && !isField(document.activeElement)) {
-    if (e.key === 'Escape') { if (!closeB3Brush()) close3d(); } else if (e.key === 'Enter') preview3d();
+    if (e.key === 'Escape') { if (!closeB3Brush() && !closeB3Examples()) close3d(); } else if (e.key === 'Enter') preview3d();
     else if (e.key === 'q' || e.key === 'Q') { b3shapeTurn(); }
     else if (e.key === 'c' || e.key === 'C') { const m = ['plain', 'axes', 'height']; S.b3color = m[(m.indexOf(S.b3color) + 1) % 3]; savePrefs(); b3ColorUi(); render3d(); }
     else if (e.key === 'a' || e.key === 'A') setB3Tool('add');
@@ -2605,7 +2639,7 @@ window.addEventListener('keydown', e => {
     if (lk === 'c' && e.shiftKey) { e.preventDefault(); copyMerged(); }
     else if (lk === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
     else if (lk === 'y') { e.preventDefault(); redo(); }
-    else if (lk === 'a') { e.preventDefault(); selectAll(); }
+    else if (lk === 'a') { e.preventDefault(); e.shiftKey ? selectCanvas() : selectAll(); }
     else if (lk === 'd') { e.preventDefault(); if (S.float && e.shiftKey) commitFloat(true); deselect(); }
     else if (lk === 's') { e.preventDefault(); saveProject(); }
     else if (lk === 'o') { e.preventDefault(); $('#fileOpen').click(); }
@@ -2768,7 +2802,7 @@ function projectData() {
     app: 'asXii', appVersion: VERSION, format: 1, name: $('#docname').value, width: S.w, height: S.h, active: S.active,
     mirror: { x: S.mirrorAt.x, y: S.mirrorAt.y },
     blocks: { w: S.blocks.w, h: S.blocks.h, depth: S.blocks.depth, fill: S.blocks.fill, seams: S.blocks.seams, solid: S.blocks.solid,
-      view: S.blocks.view, size: S.blocks.size, dir: S.blocks.dir, level: S.blocks.level, flat: S.blocks.flat, ox: S.blocks.ox, oy: S.blocks.oy, placed: S.blocks.placed, dcells: [...S.blocks.dcells], cells: [...S.blocks.cells] },
+      view: S.blocks.view, size: S.blocks.size, dir: S.blocks.dir, level: S.blocks.level, flat: S.blocks.flat, ox: S.blocks.ox, oy: S.blocks.oy, placed: S.blocks.placed, moved: !!S.blocks.moved, dcells: [...S.blocks.dcells], cells: [...S.blocks.cells] },
     layers: S.layers.map(l => {
       const cells = [...l.cells.keys()];
       if (!cells.length) return { name: l.name, visible: l.visible, x: 0, y: 0, rows: [], ...(l.text ? { text: { ...l.text }, autoName: !!l.autoName } : {}) };
@@ -2802,7 +2836,7 @@ function loadProject(d) {
     // Diagonal is the default view; a saved Straight view stays only if it has straight blocks in it
     view: 'diag', size: clamp(bk.size | 0 || 2, 1, 8), dir: bk.dir < 0 ? -1 : 1,
     dcells: new Set(Array.isArray(bk.dcells) ? bk.dcells.filter(k => /^-?\d+,-?\d+(,-?\d+)?$/.test(k)).map(k => dkey(...dparse(k))) : []),
-    level: clamp(bk.level | 0, 0, 20), flat: bk.flat !== false, ox: bk.ox | 0, oy: bk.oy | 0, placed: !!bk.placed, show: S.blocks.show === 'shapes' ? 'shapes' : 'ascii' };
+    level: clamp(bk.level | 0, 0, 20), flat: bk.flat !== false, ox: bk.ox | 0, oy: bk.oy | 0, placed: !!bk.placed, moved: !!bk.moved, show: S.blocks.show === 'shapes' ? 'shapes' : 'ascii' };
   if (d.name) $('#docname').value = d.name;
 }
 // ---------- Block tool (K): paint 3D blocks, then bake them to ASCII ----------
@@ -3163,8 +3197,9 @@ const CMDS = {
   copyMerged: () => copyMerged(),
   blocksBake: () => bakeBlocks(),
   blocks3d: () => open3d(),
+  welcome: () => showWelcome(),
   fontDone: () => { endTextEdit(); renderOptions(); },
-  blocksClear: () => { const set = S.blocks.dcells; if (!set.size) return; pushUndo(); set.clear(); S.blocks.placed = false; changed(); toast('Blocks cleared (Ctrl Z brings them back)'); },
+  blocksClear: () => { const set = S.blocks.dcells; if (!set.size) return; pushUndo(); set.clear(); S.blocks.placed = false; S.blocks.moved = false; changed(); toast('Blocks cleared (Ctrl Z brings them back)'); },
   copyText: async () => { commitFloat(); await writeClipboard(canvasText()); toast('Canvas copied as text'); },
   copyCode: async () => { commitFloat(); await writeClipboard(codeLines()); toast('Canvas copied as code lines'); },
   undo, redo,
@@ -3175,7 +3210,7 @@ const CMDS = {
     if (S.clip) floatFromText(S.clip); else toast('Use Ctrl V to paste from other apps');
   },
   delete: deleteSelection,
-  selectAll, deselect,
+  selectAll, selectCanvas, deselect,
   flipH: () => flip(true), flipV: () => flip(false),
   drop: () => commitFloat(),
   fillSel: () => fillSelection(),
@@ -3315,7 +3350,7 @@ const HELP = {
   shape: { sum: 'Drag to draw the shape. Polygon: click the corners.',
     keys: [['Enter', 'Polygon: finish it open'], ['Backspace', 'Polygon: take back a point'], ['Esc', 'Polygon: cancel']],
     drag: [['Shift', 'square / circle / straight'], ['Alt', 'from the center'], ['Space', 'move it']] },
-  block: { sum: 'Drag the blocks to move them. Double-click to build them in 3D (or Layer › Edit blocks in 3D); Layer › Bake makes them ASCII.', keys: [] },
+  block: { sum: 'Drag the ASCII preview to move the blocks (before baking). Double-click to build them in 3D (or Layer › Edit blocks in 3D); Layer › Bake makes them ASCII on a new layer.', keys: [] },
   fill: { sum: 'Click to fill the connected area of the same character, with the Paint panel\'s setting.',
     keys: [['Shift', 'click: every matching cell (the opposite of Contiguous)'], ['Alt', 'click: pick a character']] },
   picker: { sum: 'Click a character to draw with it.', keys: [['Shift', 'click: set the Right character'], ['Right', 'set the Right character']] },
@@ -4095,6 +4130,32 @@ function renderB3Shapes() {
   const del = $('#b3sDel', p);
   if (del) del.addEventListener('click', () => { const n = sh.kind.slice(3); S.myShapes = S.myShapes.filter(m => m.name !== n); S.b3shape.kind = 'block'; savePrefs(); renderB3Shapes(); render3d(); toast('Deleted the shape ' + n); });
 }
+// Examples (3D window): replace all the blocks with a made example, its block look too (Ctrl Z brings yours back)
+function openB3Examples() {
+  const pop = $('#b3dExamples'), btn = $('#b3dExBtn'), win = $('#b3d .b3d-win');
+  pop.innerHTML = '<div class="b3s-title">Examples</div><div class="b3s-hint">Replaces all the blocks (Ctrl Z brings yours back)</div><div class="b3x-list">Loading…</div>';
+  pop.hidden = false; btn.classList.add('open');
+  const r = btn.getBoundingClientRect(), w = win.getBoundingClientRect();
+  pop.style.left = (r.left - w.left) + 'px'; pop.style.top = (r.bottom - w.top + 4) + 'px';
+  loadStart().then(st => {
+    const list = $('.b3x-list', pop); if (!list) return;
+    const ex = st.blocks || [];
+    list.innerHTML = ex.length ? ex.map((e, i) => '<button class="btn" data-b3x="' + i + '">' + esc(e.name) + ' <span class="b3s-n">' + e.blocks.dcells.length + ' blocks</span></button>').join('') : '<div class="b3s-hint">No examples loaded</div>';
+    $$('[data-b3x]', list).forEach(b => b.addEventListener('click', () => { closeB3Examples(); loadB3Example(ex[+b.dataset.b3x]); }));
+  });
+}
+function closeB3Examples() { const pop = $('#b3dExamples'); if (!pop || pop.hidden) return false; pop.hidden = true; $('#b3dExBtn').classList.remove('open'); return true; }
+function loadB3Example(e) {
+  if (!e) return;
+  pushUndo();
+  const B = S.blocks, x = e.blocks;
+  B.dcells = new Set((x.dcells || []).filter(k => /^-?\d+,-?\d+(,-?\d+)?$/.test(k)).map(k => dkey(...dparse(k))));
+  if (x.size) B.size = clamp(x.size | 0, 1, 8); if (x.depth) B.depth = clamp(x.depth | 0, 1, 12); if (x.dir) B.dir = x.dir < 0 ? -1 : 1;
+  if (x.fill && typeof x.fill === 'object') B.fill = { front: String(x.fill.front || '').slice(0, 2), top: String(x.fill.top || '').slice(0, 2), side: String(x.fill.side || '').slice(0, 2) };
+  if (typeof x.solid === 'boolean') B.solid = x.solid; if (typeof x.seams === 'boolean') B.seams = x.seams;
+  B.moved = false; B.placed = false;
+  changed(); focus3d(); toast(e.name + ': all the blocks replaced (Ctrl Z brings yours back)');
+}
 // the Brush button: its name and sizes; the dropdown opens under it and folds away on a click elsewhere or Esc
 function b3brushLabel() {
   const sh = S.b3shape, def = B3D_SHAPES[sh.kind];
@@ -4147,7 +4208,7 @@ function open3d() {
   render3d();
   requestAnimationFrame(() => { if (cam.open && !cam.drag) { b3dCenter(); render3d(); } });   // again once the window has its final size
 }
-function close3d() { closeB3Brush(); cam.open = false; cam.drag = null; $('#b3d').hidden = true; renderOptions(); redraw(); }
+function close3d() { closeB3Brush(); closeB3Examples(); cam.open = false; cam.drag = null; $('#b3d').hidden = true; renderOptions(); redraw(); }
 // Preview: turn back to the bake angle, close, and show the shape on the canvas (placed in view the first time)
 function animCam(to, dur, done, toRoll = cam.roll) {
   const q0 = cam.q, q1 = qView(to[0], to[1]), r0 = cam.roll, t0 = performance.now(); let fin = false;
@@ -4165,7 +4226,7 @@ function preview3d() {
     if (!cam.previewing) return;
     cam.previewing = false;
     cam.q = from; cam.m = 0;   // keep their editing angle for next time
-    if (!S.blocks.placed && S.blocks.dcells.size) placeBlocksInView();
+    if (S.blocks.dcells.size) placeBlocksInView();
     close3d();
   };
   const step = now => {
@@ -4177,13 +4238,22 @@ function preview3d() {
   requestAnimationFrame(step);
   setTimeout(finish, dur + 150);   // in case animation frames are paused (a background tab)
 }
-// put the baked shape's middle in the middle of the view
-function placeBlocksInView() {
-  const B = S.blocks; B.ox = 0; B.oy = 0;
-  const m = diagBake(B), keys = [...m.keys()].map(unK); if (!keys.length) return;
-  const x0 = Math.min(...keys.map(k => k[0])), x1 = Math.max(...keys.map(k => k[0])), y0 = Math.min(...keys.map(k => k[1])), y1 = Math.max(...keys.map(k => k[1]));
-  const c = cellAt(vp.clientWidth / 2, vp.clientHeight / 2);
-  B.ox = Math.round(c.x - (x0 + x1) / 2); B.oy = Math.round(c.y - (y0 + y1) / 2); B.placed = true;
+// Where the ASCII preview sits when you come back from the 3D editor: centered on the canvas, unless you've dragged it
+// somewhere (B.moved), where it stays, unless it has ended up mostly off the canvas. If it's out of sight, the view
+// pans to it.
+function placeBlocksInView(force) {
+  const B = S.blocks, box = () => { const ks = [...diagBake(B).keys()].map(unK); if (!ks.length) return null;
+    const xs = ks.map(k => k[0]), ys = ks.map(k => k[1]), inside = ks.filter(([x, y]) => x >= 0 && y >= 0 && x < S.w && y < S.h).length;
+    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys), inside: inside / ks.length }; };
+  let b = box(); if (!b) return;
+  if (force || !B.moved || b.inside < 0.5) {
+    B.ox = Math.round((B.ox || 0) + (S.w - 1) / 2 - (b.x0 + b.x1) / 2); B.oy = Math.round((B.oy || 0) + (S.h - 1) / 2 - (b.y0 + b.y1) / 2);
+    B.placed = true; if (force) B.moved = false; b = box();
+  }
+  const a = cellAt(0, 0), z = cellAt(vp.clientWidth, vp.clientHeight);
+  if (b.x1 < a.x || b.x0 > z.x || b.y1 < a.y || b.y0 > z.y) {   // out of sight: bring the view to it
+    S.offX = vp.clientWidth / 2 - ((b.x0 + b.x1 + 1) / 2) * S.cw; S.offY = vp.clientHeight / 2 - ((b.y0 + b.y1 + 1) / 2) * S.ch; S.viewTouched = true;
+  }
   changed();
 }
 // Angled follows the Angle setting (which side the depth goes); the others are fixed
@@ -4227,7 +4297,8 @@ function setCamView(name, instant) {
   $('#b3dPreview').addEventListener('click', preview3d);
   $('#b3dClose').addEventListener('click', close3d);
   $('#b3dBrushBtn').addEventListener('click', e => { e.currentTarget.blur(); if (!closeB3Brush()) openB3Brush(); });
-  document.addEventListener('pointerdown', e => { if (!e.target.closest('#b3dShapes, #b3dBrushBtn')) closeB3Brush(); }, true);   // a click elsewhere folds it away
+  document.addEventListener('pointerdown', e => { if (!e.target.closest('#b3dShapes, #b3dBrushBtn')) closeB3Brush(); if (!e.target.closest('#b3dExamples, #b3dExBtn')) closeB3Examples(); }, true);
+  $('#b3dExBtn').addEventListener('click', e => { e.currentTarget.blur(); if (!closeB3Examples()) openB3Examples(); });   // a click elsewhere folds it away
   $('#b3dSize').addEventListener('click', e => { e.currentTarget.blur(); S.b3big = !S.b3big; savePrefs(); b3SizeUi(); });
   $('#b3dFocus').addEventListener('click', e => { e.currentTarget.blur(); focus3d(); });
   $('#b3dClear').addEventListener('click', () => { if (!S.blocks.dcells.size) return; pushUndo(); S.blocks.dcells.clear(); changed(); render3d(); toast('All blocks removed (Ctrl Z brings them back)'); });
@@ -4525,7 +4596,7 @@ function openCtxMenu(x, y) {
   if (S.sel || S.float) { it('cut', 'Cut', 'Ctrl X'); it('copy', 'Copy', 'Ctrl C'); }
   it('paste', 'Paste', 'Ctrl V');
   if (S.sel) it('delete', 'Delete', 'Del');
-  hr(); it('selectAll', 'Select all', 'Ctrl A');
+  hr(); it('selectAll', 'Select all', 'Ctrl A'); it('selectCanvas', 'Select canvas', 'Ctrl Shift A');
   if (S.sel || S.float) {
     it('deselect', 'Deselect', 'Ctrl D'); it('fillSel', 'Fill selection', 'Alt Backspace');
     it('flipH', 'Flip horizontal'); it('flipV', 'Flip vertical');
@@ -4803,10 +4874,11 @@ function start() {
   if (!new URLSearchParams(location.search).has('fresh')) {
     try { const d = JSON.parse(localStorage.getItem(PROJECT_KEY)); if (d) { loadProject(d); loaded = true; } } catch {}
   }
-  if (!loaded) {
+  if (!loaded) {   // a first visit: the welcome document (drawn from welcomeArt until start.js has loaded, or if it can't)
     S.layers = [makeLayer('Layer 1')];
     const art = welcomeArt(), ox = 4, oy = 3;
     art.forEach((r, j) => chars(r).forEach((c, i) => setCell(S.layers[0], ox + i, oy + j, c)));
+    loadStart().then(st => { if (st.welcome && !S.undo.length && !S.float && S.tool === 'select' && !S.drag) { loadProject(welcomeDoc(st)); changed(true); clearTimeout(saveTimer); zoomFit(); } });   // showing the welcome isn't an edit: don't autosave it over anything
   }
   fitView(); measure();
   renderLayers(); renderCharPane(); syncCanvasInputs(); renderAnchor();
@@ -4833,7 +4905,7 @@ function start() {
 }
 
 // Hooks for the headless self-test (index.html?selftest)
-window.asxii = { S, CMDS, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
+window.asxii = { S, CMDS, loadStart, showWelcome, loadB3Example, openB3Examples, placeBlocksInView, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
   undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render };
 

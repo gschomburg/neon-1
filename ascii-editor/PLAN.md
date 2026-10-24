@@ -235,6 +235,30 @@ The Photoshop setup:
   user plans an **asXii** shape that spells the name: build it, save it (and save the project to saves/), and it can
   then become a built-in shape.
 
+## Start content: the welcome screen and 3D examples (the user, 2026-10-24; v0.106)
+
+- **The welcome screen is a project file**, made in asXii: `dist/start/welcome.asxii.json` (for now, the old welcome
+  art as a project). A first visit opens it; **Help › Welcome screen** opens it again any time (like File › New: Ctrl Z
+  brings back what was there). The user plans a new one with a 3D block composition: build it, File › Save project,
+  copy the file over `welcome.asxii.json`.
+- **v0.107: the user's logo is the welcome** (from saves/asxii_logo.asxii.json): the asXii name in 3D blocks, baked,
+  with "asXii v0.xx" (the app writes in the current version when it opens the welcome) and a rule of *, then a few
+  lines of welcome text and a note that the keys work like Photoshop's and Help lists them. One layer (Layer focus
+  would dim the logo otherwise), and its 3D blocks come with it. The logo's blocks are also the first 3D example.
+- **?fresh** (add it to the address) opens the welcome without loading the autosaved project. v0.109 fixed it
+  autosaving the welcome over your saved work right away; your next edit still saves over it, so Help › Welcome
+  screen is the safe way to see the welcome.
+- **3D Examples** (the 3D window, Examples ▾ next to Clear): not a brush, it **replaces all the blocks** with a made
+  design and its block look (Ctrl Z brings yours back). Files in `dist/start/blocks/*.asxii.json` (any saved project:
+  its blocks are used), sorted by file name (number prefix), named by the project name. First ones: Edge cube (8 x 8 x
+  8, edges 2 thick), Ziggurat, Arch. The user's own composition goes here too.
+- `node ascii-editor/start-build.js` bundles dist/start/ into `dist/start.js` (loaded when needed; works from file://);
+  bump.js runs it.
+- **The 3D preview on the canvas** (v0.106): coming back from the 3D editor puts the ASCII preview in the middle of
+  the canvas (it used to stay where the first one went, so a shape built off to one side landed off the canvas). If
+  you've dragged the preview (Block tool: drag it on the canvas), it stays put, unless it's mostly off the canvas.
+  If it's out of sight, the view pans to it.
+
 ## Built-in art (the user, 2026-10-23)
 
 - The app comes with a bunch of **premade art you can load**. One app the user liked had a browsable gallery; to start,
@@ -460,6 +484,33 @@ mode, animation, built-in art.
   e.g. 1200 x 630, maybe the asXii logo art in the editor), the Twitter card tags, a favicon and a theme color. Same
   approach as the game (`dist/index.html` meta tags, SPEC §17 "Publishing: link previews"): keep URLs relative except
   `og:image`, which has to be absolute, so it waits until we know where asXii is hosted.
+- **3D window layout, next pass** (the user, 2026-10-24; notes, not built):
+  - **The view readout** (turn / tilt / grid) can move inside the 3D view, bottom left (like the block count, bottom
+    right).
+  - **Separate the two top rows** more: e.g. a darker background on the top (view) row, the brush row keeping its
+    color; or just a simple line between them.
+  - **Clear → "Clear all"**, so it's clear what it does.
+  - **The bottom buttons (Close, Preview) feel adrift** down there. Maybe they move up into the top (view) row, or the
+    brush row. They shouldn't get lost, which the bottom bar avoids by giving them room, but they look like they're
+    floating.
+  - **Each row's controls are wrapped too tightly together** in one box: View and Color (and the groups in the brush
+    row) need some empty space between them, so they don't read as one big control. Maybe separate boxes per group.
+  - **The fullscreen toggle is too small**: make it bigger, or a button with the icon plus a word (Big / Small).
+- **3D brushes: placing shapes is awkward** (the user, 2026-10-24; no solution picked yet). A shape brush is placed
+  from where the pointer hits, centered on that one cell, so shapes that are open in the middle can't be stacked: a
+  Ring over a Ring points at the hole and drops to the floor (or lands off-center). Ideas to weigh: snap to the top of
+  whatever blocks are under the brush's whole footprint (land on the highest one); place on a chosen level (a height
+  setting / the level of the block pointed at, kept while the pointer moves); hold a key to lock the height.
+- **Maybe, much later: 3D selection / move** (the user, 2026-10-24; leaning no, it may be too much for this tool).
+  Once there are lots of blocks you almost want more tools: select a group of blocks and drag them to shift them around.
+- **3D hover feedback** (the user, 2026-10-24):
+  - The outlines of where a new block / shape will go should **pop more** (stronger, thicker, higher contrast).
+  - The block (or face) the pointer is actually hitting should **show a hover state**, e.g. that face lit up lighter,
+    so you can see which cube the click is going off of.
+- **Done v0.105: Select all takes everything** (the user, 2026-10-24). Ctrl A selected only the canvas area, leaving
+  characters outside it out, and the user mostly uses Ctrl A to clear everything. Now **Ctrl A** selects a rectangle
+  covering the canvas and everything drawn outside it on any layer; **Ctrl Shift A** (Edit › Select canvas) selects
+  just the canvas.
 
 ## Version 1
 

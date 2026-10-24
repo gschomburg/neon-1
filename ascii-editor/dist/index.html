@@ -47,7 +47,8 @@
     <div class="menu">
       <button class="btn menu-btn">Select</button>
       <div class="menu-list">
-        <button class="btn" data-cmd="selectAll">Select all <kbd>Ctrl A</kbd></button>
+        <button class="btn" data-cmd="selectAll" title="The canvas and anything drawn outside it">Select all <kbd>Ctrl A</kbd></button>
+        <button class="btn" data-cmd="selectCanvas" title="Just the canvas area">Select canvas <kbd>Ctrl Shift A</kbd></button>
         <button class="btn" data-cmd="deselect">Deselect <kbd>Ctrl D</kbd></button>
         <hr>
         <button class="btn" data-cmd="fillSel">Fill selection <kbd>Alt Backspace</kbd></button>
@@ -82,11 +83,13 @@
     <div class="menu">
       <button class="btn menu-btn">Help</button>
       <div class="menu-list help">
+        <button class="btn" data-cmd="welcome" title="Open the welcome screen (Ctrl Z brings back what you had)">Welcome screen</button>
+        <hr>
         <div class="help-text">
           <b>Tools</b> M select · W magic wand · V move · T type · P pencil · B advanced brush · E eraser · U shape · K block · G fill · I picker · H hand · Z zoom; hold a tool's key to use it for a moment, let go to go back<br>
           <b>Typing</b> click with T, type; Enter = next line; Insert switches Overwrite / Insert; Esc leaves typing<br>
           <b>Shapes</b> while dragging: Shift = square / circle, Alt = from the center (pressed after you start), hold Space to move it<br>
-          <b>Select</b> rectangle, ellipse, lasso or polygon (Shift M cycles), or the magic wand (W: the same character; Contiguous off = everywhere); Shift adds, Alt takes away, Shift + Alt keeps the overlap; drag inside or arrows move the outline; Ctrl + drag / Ctrl + arrows move the content (+ Alt: a copy)<br>
+          <b>Select</b> rectangle, ellipse, lasso or polygon (Shift M cycles), or the magic wand (W: the same character; Contiguous off = everywhere); Shift adds, Alt takes away, Shift + Alt keeps the overlap; drag inside or arrows move the outline; Ctrl + drag / Ctrl + arrows move the content (+ Alt: a copy); Ctrl A selects everything, even outside the canvas; Ctrl Shift A just the canvas<br>
           <b>Move</b> drag moves what is selected (nothing selected = the whole layer); Alt + drag moves a copy; Shift locks it to one direction; Ctrl + click picks the layer under the pointer; Ctrl + Select moves too<br>
           <b>Moving</b> arrows nudge (Shift = 5); Enter drops it; Esc puts it back<br>
           <b>Selection</b> while one is active, Brush, Eraser and Type only change cells inside it; Ctrl D clears it<br>
@@ -283,10 +286,11 @@
     <!-- the content: what a click does -->
     <div class="b3d-head b3d-row2">
       <div class="b3d-left"></div>
-      <div class="b3d-mid"><span class="seg"><button class="btn on" data-b3tool="add" title="Click a face to add the brush on that side (A)">Add</button><button class="btn" data-b3tool="remove" title="Click a block to remove it, or the brush's shape around it (R, or Shift-click)">Remove</button></span><span class="sep"></span><button class="btn b3d-brushbtn" id="b3dBrushBtn" title="The brush Add and Remove use: one block, or a shape with its sizes"><span class="label">Brush</span> <b id="b3dBrushName">Block</b> <span class="caret">▾</span></button><span class="sep"></span><button class="btn" id="b3dClear" title="Remove all the blocks">Clear</button></div>
+      <div class="b3d-mid"><span class="seg"><button class="btn on" data-b3tool="add" title="Click a face to add the brush on that side (A)">Add</button><button class="btn" data-b3tool="remove" title="Click a block to remove it, or the brush's shape around it (R, or Shift-click)">Remove</button></span><span class="sep"></span><button class="btn b3d-brushbtn" id="b3dBrushBtn" title="The brush Add and Remove use: one block, or a shape with its sizes"><span class="label">Brush</span> <b id="b3dBrushName">Block</b> <span class="caret">▾</span></button><span class="sep"></span><button class="btn" id="b3dClear" title="Remove all the blocks">Clear</button><span class="sep"></span><button class="btn b3d-brushbtn" id="b3dExBtn" title="Made examples: replace all the blocks with one, to see what blocks can do"><span class="label">Examples</span> <span class="caret">▾</span></button></div>
       <div class="b3d-right"><span id="b3dAt" class="b3d-count"></span></div>
     </div>
     <div id="b3dShapes" class="b3d-shapes" hidden></div>
+    <div id="b3dExamples" class="b3d-shapes b3d-examples" hidden></div>
     <div class="b3d-body">
       <div class="b3d-stage"><canvas id="b3dCanvas"></canvas><span id="b3dCount" class="b3d-stagecount"></span></div>
     </div>
