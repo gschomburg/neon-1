@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.88';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.89';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -32,7 +32,9 @@ const S = {
   brush: { ch: '#', size: 1, preset: 'Plain', start: 'none', end: 'none', tip: 'square', mode: 'fill', minSize: 1, ramp: 6, edge: 'smart', inside: 'solid' },
   brushes: [],          // your own brushes (Save as new brush)
   pencil: { size: 1, tip: 'square', smart: false, style: 'ascii' },   // smart: draw a line that picks its own characters   // the Pencil keeps its own size; both draw with brush.ch
+  protectText: true,   // text layers: only the Font tool and Move change them (Layers pane)
   lastDraw: 'pencil',   // Pencil or Brush, whichever was used last (the Picker goes back to it)
+  figfont: { name: 'Standard', layout: 'default', ws: 'clear', ls: 0, lh: 0 }, textEdit: null,   // Font tool: the font for new text; the text layer being typed in
   spacesErase: false,   // spaces in a floating block erase what's under them when dropped
   anchor: 0,
   hover: null, drag: null, spaceDown: false,
@@ -87,22 +89,236 @@ function compositeAt(x, y) {
   return null;
 }
 function setCell(layer, x, y, c) {
+  if (layer.text) { layer.text = null; if (S.textEdit === layer.id) S.textEdit = null; toast('That text layer is plain art now (no longer editable as text)'); }
   if (c == null || c === ' ' || c === '') layer.cells.delete(K(x, y));
   else layer.cells.set(K(x, y), c);
+}
+
+// ---------- FIGlet fonts (Font tool): parse .flf fonts and render text with them ----------
+// A .flf font: a header line (flf2a<hardblank> height baseline maxlen oldLayout comments [dir fullLayout]), comment
+// lines, then each character as <height> lines ending in an end mark (@). Characters 32-126 come first, then 7
+// German letters, then code-tagged extras. Layout: full width, fitting (letters slide together until they touch),
+// or smushing (they overlap one column, merging the touching characters by the font's rules).
+const FIG = { cache: new Map() };
+function figFont(name) {
+  if (FIG.cache.has(name)) return FIG.cache.get(name);
+  const src = (window.ASXII_FONTS || {})[name]; if (!src) return null;
+  const lines = src.split('\n'), head = lines[0].split(' ');
+  const hard = head[0].charAt(head[0].length - 1), height = +head[1], baseline = +head[2] || +head[1], oldLayout = +head[4], comments = +head[5];
+  const full = head.length > 7 ? +head[7] : null;
+  let fit = false, smush = false, rules = 0;
+  if (full !== null && !isNaN(full)) { smush = !!(full & 128); fit = !!(full & 64); rules = full & 63; if (smush) fit = true; }
+  else if (oldLayout === -1) { /* full width */ } else if (oldLayout === 0) fit = true; else { fit = smush = true; rules = oldLayout & 31; }
+  const chars = new Map();
+  let i = 1 + comments;
+  const readChar = () => {
+    const rows = [];
+    for (let r = 0; r < height && i < lines.length; r++, i++) {
+      let s = lines[i].replace(/\s+$/, ''); const end = s.charAt(s.length - 1);
+      while (s.length && s.charAt(s.length - 1) === end) s = s.slice(0, -1);   // strip the end mark (one or two)
+      rows.push(s);
+    }
+    const w = Math.max(0, ...rows.map(r => r.length));
+    return rows.map(r => r.padEnd(w, ' '));
+  };
+  for (let c = 32; c <= 126 && i < lines.length; c++) chars.set(c, readChar());
+  for (const c of [196, 214, 220, 228, 246, 252, 223]) { if (i >= lines.length) break; chars.set(c, readChar()); }
+  while (i < lines.length) {   // code-tagged characters: "<code> <name>" then the rows
+    const m = /^\s*(-?(?:0x[0-9a-f]+|0[0-7]*|\d+))/i.exec(lines[i]);
+    if (!m) { i++; continue; }
+    const code = parseInt(m[1], m[1].toLowerCase().startsWith('0x') ? 16 : m[1].startsWith('0') && m[1].length > 1 ? 8 : 10);
+    i++; const rows = readChar(); if (rows.length === height && code > 0) chars.set(code, rows);
+  }
+  const f = { name, hard, height, baseline, fit, smush, rules, chars };
+  FIG.cache.set(name, f);
+  return f;
+}
+// Two touching characters merged into one, or null if these can't merge (controlled smushing rules 1-32).
+function figSmushPair(a, b, f, layout) {
+  if (a === ' ') return b; if (b === ' ') return a;
+  if (layout === 'smush' && !f.rules || !f.rules && f.smush) {   // universal: the later one wins (but not over by a hardblank)
+    if (b === f.hard && a !== ' ') return a;
+    return b;
+  }
+  const h = f.hard, r = f.rules;
+  if (a === h || b === h) return (r & 32) && a === h && b === h ? h : null;
+  if ((r & 1) && a === b) return a;
+  if (r & 2) { const s = '|/\\[]{}()<>'; if (a === '_' && s.includes(b)) return b; if (b === '_' && s.includes(a)) return a; }
+  if (r & 4) {
+    const cls = ['|', '/\\', '[]', '{}', '()', '<>'], ca = cls.findIndex(c => c.includes(a)), cb = cls.findIndex(c => c.includes(b));
+    if (ca >= 0 && cb >= 0 && ca !== cb) return ca > cb ? a : b;
+  }
+  if (r & 8) { const p = a + b; if (p === '[]' || p === '][' || p === '{}' || p === '}{' || p === '()' || p === ')(') return '|'; }
+  if (r & 16) { const p = a + b; if (p === '/\\') return '|'; if (p === '\\/') return 'Y'; if (p === '><') return 'X'; }
+  return null;
+}
+// One line of text in a font -> rows of characters. layout: 'default' (the font's own), 'full', 'fit' or 'smush'.
+function figLine(text, f, layout = 'default', ls = 0) {
+  const fit = layout === 'full' ? false : layout === 'default' ? f.fit : true;
+  const smush = layout === 'smush' ? true : layout === 'default' ? f.smush : false;
+  let out = Array(f.height).fill('');
+  for (const ch of chars(text)) {
+    let g = f.chars.get(ch.codePointAt(0));
+    // a letter the font doesn't have (or draws blank): the plain character, in the middle of the letter height
+    if (ch !== ' ' && (!g || g.every(r => !r.trim()))) { const mid = Math.max(0, Math.floor((Math.min(f.baseline, f.height) - 1) / 2)); g = Array.from({ length: f.height }, (_, k) => k === mid ? ' ' + ch + ' ' : '   '); }
+    if (!g) g = f.chars.get(32); if (!g) continue;
+    const gw = g[0].length;
+    if (!out[0].length) {   // the first letter (in Fit / Smush it slides to the left edge too, like figlet)
+      const lead = fit ? Math.min(...g.map(r => r.trim() ? r.length - r.replace(/^ +/, '').length : Infinity)) : 0;
+      out = g.map(r => Number.isFinite(lead) ? r.slice(lead) : r); continue;
+    }
+    // how far the glyph can slide left: the smallest gap over the rows (+1 where the touching pair can smush)
+    let amt = fit ? Infinity : 0;
+    if (fit) for (let k = 0; k < f.height; k++) {
+      const L = out[k], R = g[k];
+      const trail = L.length - L.replace(/ +$/, '').length, lead = R.length - R.replace(/^ +/, '').length;
+      let a = trail + lead;
+      if (smush && trail < L.length && lead < R.length && figSmushPair(L.charAt(L.length - 1 - trail), R.charAt(lead), f, layout) !== null) a++;
+      amt = Math.min(amt, a);
+    }
+    amt -= ls;   // Letters: more room between letters, or (negative) overlap
+    if (amt < 0) { out = out.map(r => r + ' '.repeat(-amt)); amt = 0; }
+    amt = Math.min(amt, gw, out[0].length);
+    out = out.map((L, k) => {
+      const R = g[k], keep = L.length - amt; let mid = '';
+      for (let j = 0; j < amt; j++) {
+        const a = L.charAt(keep + j), b = R.charAt(j);
+        mid += a === ' ' ? b : b === ' ' ? a : (figSmushPair(a, b, f, layout) ?? b);
+      }
+      return L.slice(0, keep) + mid + R.slice(amt);
+    });
+  }
+  return out.map(r => r.split(f.hard).join(' ').replace(/\s+$/, ''));
+}
+// Text (lines split on \n) -> rows, each line's block stacked under the last.
+function figRender(text, fontName, layout, ls = 0, lh = 0) {
+  const f = figFont(fontName); if (!f) return [];
+  const rows = [];
+  String(text).split('\n').forEach((line, n) => {
+    const block = figLine(line, f, layout, ls), top = n * Math.max(1, f.height + lh);
+    block.forEach((r, k) => {
+      const y = top + k; while (rows.length <= y) rows.push('');
+      const a = chars(rows[y]), b = chars(r);
+      b.forEach((c, i) => { while (a.length <= i) a.push(' '); if (c !== ' ') a[i] = c; });
+      rows[y] = a.join('');
+    });
+  });
+  while (rows.length && !rows[rows.length - 1].trim()) rows.pop();
+  return rows;
+}
+
+// ---------- Font tool (F): text layers in a FIGlet font ----------
+// Click to start a text layer and type; it renders live in the chosen font. A text layer keeps its text (l.text:
+// str, font, layout, x, y), so you can come back with the Font tool to type more, change the font, or drag it. It turns
+// into plain art for good when you paint on it with another tool, or merge it down.
+function textCells(t) {
+  const m = new Map(), rows = figRender(t.str || '', t.font, t.layout, t.ls || 0, t.lh || 0);
+  rows.forEach((r, j) => chars(r).forEach((c, i) => { if (c !== ' ') m.set(K(t.x + i, t.y + j), c); }));
+  // White space: fonts only know characters and blanks, so the solid parts are worked out here.
+  //   inside: blanks the letters close in (flooded from outside the text, the ones it can't reach)
+  //   block:  each row solid from its first character to its last (the text on a solid plate)
+  if (t.ws === 'inside' || t.ws === 'block') {
+    const H = rows.length, W = Math.max(0, ...rows.map(r => chars(r).length)), ink = (i, j) => j >= 0 && j < H && i >= 0 && (chars(rows[j])[i] || ' ') !== ' ';
+    if (t.ws === 'block') rows.forEach((r, j) => { const a = chars(r), lo = a.findIndex(c => c !== ' '); if (lo < 0) return; let hi = a.length - 1; while (a[hi] === ' ') hi--; for (let i = lo; i <= hi; i++) if (a[i] === ' ') m.set(K(t.x + i, t.y + j), SOLID); });
+    else {
+      const out = new Set(['-1,-1']), q = [[-1, -1]];   // flood the blanks from a ring around the text
+      while (q.length) { const [i, j] = q.pop(); for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = i + di, b = j + dj, k = a + ',' + b; if (a < -1 || b < -1 || a > W || b > H || out.has(k) || ink(a, b)) continue; out.add(k); q.push([a, b]); } }
+      for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (!ink(i, j) && !out.has(i + ',' + j)) m.set(K(t.x + i, t.y + j), SOLID);
+    }
+  }
+  return m;
+}
+// Protect text layers (Layers pane, on by default): other tools leave a text layer alone, the Move tool moves it whole,
+// and drops / pastes land on a new layer. Rasterize (Layer menu) or Merge down makes it plain art on purpose.
+const textLocked = () => S.protectText && L() && !!L().text;
+function textLock(what) {
+  if (!textLocked()) return false;
+  toast(what + ': this is a text layer. Edit it with the Font tool (F), or Layer › Rasterize to paint on it', 'warn');
+  return true;
+}
+function renderTextLayer(l) { if (l && l.text) l.cells = textCells(l.text); }
+// still the text it was made from? (another tool may have changed its cells)
+function textIntact(l) {
+  if (!l || !l.text) return false;
+  const m = textCells(l.text); if (m.size !== l.cells.size) return false;
+  for (const [k, c] of m) if (l.cells.get(k) !== c) return false;
+  return true;
+}
+// a text layer that was painted on becomes plain art
+function checkTextLayers() { for (const l of S.layers) if (l.text && !textIntact(l)) { l.text = null; if (S.textEdit === l.id) S.textEdit = null; } }
+// where the text sits (the caret's spot too, so an empty layer still has a box)
+function textBox(l) {
+  const t = l.text, f = figFont(t.font), h = f ? f.height : 1;
+  const lines = String(t.str || '').split('\n');
+  let w = 1;
+  for (const line of lines) for (const r of (f ? figLine(line, f, t.layout, t.ls || 0) : [])) w = Math.max(w, r.length);
+  const last = f ? figLine(lines[lines.length - 1], f, t.layout, t.ls || 0) : [''], step = Math.max(1, h + (t.lh || 0));
+  const caretX = t.x + Math.max(0, ...last.map(r => r.length)), caretY = t.y + (lines.length - 1) * step;
+  return { x: t.x, y: t.y, w, h: (lines.length - 1) * step + h, caretX, caretY, ch: h };
+}
+// The index of the top visible text layer whose box covers cell c, or -1
+function textLayerAt(c) {
+  for (let i = S.layers.length - 1; i >= 0; i--) { const l = S.layers[i]; if (!l.visible || !l.text) continue; const b = textBox(l); if (c.x >= b.x && c.x < b.x + Math.max(b.w, 1) && c.y >= b.y && c.y < b.y + b.h) return i; }
+  return -1;
+}
+const editingText = () => { const l = S.layers.find(q => q.id === S.textEdit); return l && l.text ? l : null; };
+function textAutoName(l) { if (l.autoName) l.name = 'Text: ' + (String(l.text.str || '').replace(/\n/g, ' ').trim().slice(0, 18) || '…'); }
+// stop editing; an empty text layer goes away
+setInterval(() => { if (S.tool === 'font' && S.textEdit) redraw(); }, 265);   // the caret blinks while you type
+function endTextEdit() {
+  const l = editingText(); S.textEdit = null;
+  if (l && !String(l.text.str || '').trim() && !l.cells.size) {
+    const i = S.layers.indexOf(l);
+    if (i >= 0 && S.layers.length > 1) { S.layers.splice(i, 1); S.active = clamp(S.active > i ? S.active - 1 : S.active, 0, S.layers.length - 1); }
+  }
+  changed(true);
+}
+function typeText(fn) {   // change the edited text, as one undo step per run of typing
+  const l = editingText(); if (!l) return;
+  pushUndo('font' + l.id); fn(l.text); renderTextLayer(l); textAutoName(l); changed(true);
+}
+// the font list: each font's name with a sample in it
+function openFontMenu(btn) {
+  const m = $('#fontMenu');
+  if (!m.hidden) return closeFontMenu();
+  const l = editingText();
+  const sample = (l && String(l.text.str || '').split('\n')[0].trim().slice(0, 10)) || 'Abc';
+  m.innerHTML = Object.keys(window.ASXII_FONTS || {}).map(n => {
+    const rows = figRender(sample, n, 'default').map(r => r.slice(0, 44));
+    return '<div class="fontitem' + (n === S.figfont.name ? ' on' : '') + '" data-name="' + esc(n) + '"><span class="pname">' + esc(n) + '</span><pre class="fprev">' + esc(rows.join('\n')) + '</pre></div>';
+  }).join('');
+  placeUnder(m, btn, 380);
+  $$('.fontitem', m).forEach(el => el.addEventListener('click', () => { setFigFont(el.dataset.name, S.figfont.layout); closeFontMenu(); }));
+  const on = $('.fontitem.on', m); if (on) on.scrollIntoView({ block: 'center' });
+}
+function closeFontMenu() { const m = $('#fontMenu'); if (m) m.hidden = true; }
+// the font / layout for new text, and for the text being edited (click a text layer with the Font tool to edit it)
+// Letters / Lines: the bar's steppers, for new text and the text being edited
+function setFigSpacing(key, v) {
+  S.figfont[key] = v; savePrefs();
+  const l = editingText(); if (l) { pushUndo('fsp' + key + l.id); l.text[key] = v; renderTextLayer(l); changed(true); }
+  renderOptions(); redraw();
+}
+function setFigFont(name, layout, ws = S.figfont.ws || 'clear') {
+  S.figfont = { ...S.figfont, name, layout, ws }; savePrefs();
+  const l = editingText();
+  if (l) { pushUndo(); l.text.font = name; l.text.layout = layout; l.text.ws = ws; renderTextLayer(l); changed(true); }
+  renderOptions(); redraw();
 }
 
 // ---------- undo ----------
 function snap() {
   return {
     w: S.w, h: S.h, active: S.active, nextId: S.nextId,
-    layers: S.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible, cells: new Map(l.cells) })),
+    layers: S.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible, cells: new Map(l.cells), text: l.text ? { ...l.text } : null, autoName: l.autoName })),
     sel: S.sel ? new Set(S.sel) : null,
     blocks: { ...S.blocks, cells: new Set(S.blocks.cells), dcells: new Set(S.blocks.dcells) },
   };
 }
 function restore(s) {
   S.w = s.w; S.h = s.h; S.active = s.active; S.nextId = s.nextId;
-  S.layers = s.layers.map(l => ({ ...l, cells: new Map(l.cells) }));
+  S.layers = s.layers.map(l => ({ ...l, cells: new Map(l.cells), text: l.text ? { ...l.text } : null }));
+  if (S.textEdit && !S.layers.some(l => l.id === S.textEdit && l.text)) S.textEdit = null;
   S.sel = s.sel ? new Set(s.sel) : null;
   if (s.blocks) S.blocks = { ...s.blocks, cells: new Set(s.blocks.cells), dcells: new Set(s.blocks.dcells || []) };
   changed(true);
@@ -301,6 +517,7 @@ async function copyMerged() {
 function deleteSelection() {
   if (S.float) { const lifted = S.float.lifted; S.float = null; if (lifted) changed(); redraw(); return; }
   if (!S.sel) return;
+  if (textLock('Deleting')) return;
   pushUndo();
   const lay = L();
   for (const k of S.sel) lay.cells.delete(k);
@@ -312,6 +529,7 @@ function deleteSelection() {
 function liftSelection(copy) {
   if (S.float) return true;
   if (!S.sel || !S.sel.size) return false;
+  if (textLock('Moving part of it')) return false;
   // Nothing to lift (the outline was moved off the art, or the art is on another layer): say so instead of moving blanks
   let any = false;
   for (const k of S.sel) if (L().cells.has(k)) { any = true; break; }
@@ -359,6 +577,7 @@ function commitFloat(replaceBlanks) {
   if (!f) return;
   const erase = typeof replaceBlanks === 'boolean' ? replaceBlanks : S.spacesErase;
   if (!f.lifted) pushUndo();
+  if (textLocked()) { S.layers.splice(S.active + 1, 0, makeLayer('Layer ' + (S.layers.length + 1))); S.active++; toast('Dropped on a new layer (the active one is a text layer)'); }
   const lay = L(), sel = new Set();
   for (const [rk, c] of f.cells) {
     const [dx, dy] = unK(rk), x = f.x + dx, y = f.y + dy;
@@ -475,6 +694,7 @@ function setTypeInsert(on) {
 }
 function typeChar(c) {
   const cur = S.cursor; if (!cur) return;
+  if (textLock('Typing')) return;
   if (!editable(cur.x, cur.y)) { warnOutside('Typing'); S.blinkOn = true; redraw(); return; }
   pushUndo('type');
   if (inserting()) shiftRow(cur.y, cur.x, 1);
@@ -607,6 +827,7 @@ function paintChar(x, y, forFill) {
 // Flood fill: the connected area of the same character, inside the canvas (and the selection, if there is one).
 // every: fill every cell on the canvas with that character, connected or not (Contiguous off, or Shift-click)
 function floodFill(x, y, every) {
+  if (textLock('Filling')) return;
   if (x < 0 || y < 0 || x >= S.w || y >= S.h) return toast('Click inside the canvas to fill', 'warn');
   if (!editable(x, y)) return warnOutside('Filling');
   commitFloat();
@@ -635,6 +856,7 @@ function floodFill(x, y, every) {
 function fillSelection() {
   if (S.float) commitFloat();
   if (!S.sel) return toast('Select an area to fill', 'warn');
+  if (textLock('Filling')) return;
   pushUndo();
   const lay = L();
   for (const k of S.sel) { const [x, y] = unK(k), p = paintChar(x, y, true); if (p !== undefined) setCell(lay, x, y, p); }
@@ -724,6 +946,7 @@ function openPatternMenu(btn) {
 function closePatternMenu() { const m = $('#patMenu'); if (m) m.hidden = true; }
 document.addEventListener('pointerdown', e => {
   if (!e.target.closest('#patMenu, .patbtn')) closePatternMenu();
+  if (!e.target.closest('#fontMenu, .fontbtn')) closeFontMenu();
   if (!e.target.closest('#paintMenu, .paintbtn')) closePaintMenu();
 });
 
@@ -1321,6 +1544,7 @@ function strokeCells(pts, b = S.brush) {
   return b.mode === 'outline' ? { outline: strokeOutline(region, b), region } : { outline: null, region };
 }
 function commitStroke(pts) {
+  if (textLock('Painting')) return;
   if (pencilSmart()) {   // a smart line: the characters it picked, on the active layer
     pushUndo(); const lay = L(); let blocked = false;
     for (const [k, c] of smartStroke(pts)) { const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } putCell(lay, x, y, c); }
@@ -1354,6 +1578,7 @@ function commitStroke(pts) {
 }
 function commitShape(shape) {
   if (!shape || !shape.outline.size) return;
+  if (textLock('Drawing')) return;
   const stroke = strokeOn(shape), fill = S.shape.fill && shape.inside;
   if (!stroke && !fill) return toast(shape.inside ? 'Style is None and Fill inside is off: nothing to draw' : 'An open shape needs its outline', 'warn');
   pushUndo();
@@ -1562,6 +1787,15 @@ function render() {
   }
 
   // blocks (Block tool): shaded 3D boxes over the canvas, and the block under the pointer
+  if (S.tool === 'font') {
+    for (const l of S.layers) {
+      if (!l.visible || !l.text) continue;
+      const b = textBox(l), ed = l.id === S.textEdit;
+      ctx.save(); ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeStyle = ed ? C['c-cursor'] : C['c-grid'];
+      ctx.strokeRect(px(b.x) - 2.5, py(b.y) - 2.5, Math.max(b.w, 1) * cw + 5, b.h * ch + 5); ctx.restore();
+      if (ed && (Date.now() / 530 | 0) % 2 === 0) { ctx.fillStyle = C['c-cursor']; ctx.fillRect(px(b.caretX) + 1, py(b.caretY), 2, b.ch * ch); }
+    }
+  }
   if (S.tool === 'block') {   // before baking: the ASCII it would make (pre-bake), or the shapes
     if (S.blocks.show === 'shapes') drawDiagBlocks(ctx, C, px, py);
     else for (const [k, c] of preBake()) {
@@ -1792,7 +2026,7 @@ function cursorFor() {
     if (d.kind === 'mirror') return curImage(d.axis === 'x' ? 'moveH' : 'moveV', null, false, d.axis === 'x' ? 'ew-resize' : 'ns-resize');
     if ((d.kind === 'rect' || d.kind === 'shape') && S.spaceDown) return move();   // Space mid-drag: moving the box
     if (d.kind === 'float') return d.axis ? curImage(d.axis === 'h' ? 'moveH' : 'moveV', null, false, 'move') : move(d.copy ? 'plus' : null);
-    if (d.kind === 'blockmove') return move();
+    if (d.kind === 'blockmove' || d.kind === 'textmove') return move();
     if (d.kind === 'outline') return curImage('arrow', 'dashbox', false, 'default');
     if (d.kind === 'rect') return curImage('cross', MODE_BADGE[d.mode] || (d.ellipse ? 'ellipse' : 'rect'));
     if (d.kind === 'lasso') return curImage('lasso', MODE_BADGE[d.mode]);
@@ -1819,6 +2053,7 @@ function cursorFor() {
     return move(S.sel || S.float ? null : 'layer');
   }
   if (t === 'type') return 'text';
+  if (t === 'font') return c && textLayerAt(c) >= 0 ? move() : 'text';   // over text: click edits it, drag moves it; elsewhere: new text
   if (t === 'pencil' || t === 'brush' || t === 'eraser') {
     const mh = S.hoverPt && mirrorHandleAt(S.hoverPt.px, S.hoverPt.py);   // over a mirror line's handle: drag to move it
     if (mh) return curImage(mh === 'x' ? 'moveH' : 'moveV', null, false, mh === 'x' ? 'ew-resize' : 'ns-resize');
@@ -1880,6 +2115,10 @@ vp.addEventListener('pointerdown', e => {
   const t = S.tool;
   const mh = e.button === 0 && mirrorHandleAt(px, py);   // grab a mirror line by its handle
   if (mh) { S.drag = { kind: 'mirror', axis: mh }; redraw(); return; }
+  if (!S.float && ['pencil', 'brush', 'eraser', 'shape', 'fill'].includes(t) && textLock({ pencil: 'Drawing', brush: 'Painting', eraser: 'Erasing', shape: 'Drawing', fill: 'Filling' }[t])) return;
+  if ((t === 'move' || (t === 'select' && (e.ctrlKey || e.metaKey))) && !S.float && textLocked()) {   // a protected text layer moves whole
+    const l = L(); pushUndo(); S.sel = null; S.drag = { kind: 'textmove', id: l.id, sx: c.x, sy: c.y, ox: l.text.x, oy: l.text.y }; redraw(); return;
+  }
   // Move tool (or Ctrl with Select): drag the selected content from anywhere; no selection = the whole layer
   // Alt: drag a copy (on a floating block: drop it, then float a copy, so each Alt-drag stamps one). Shift: lock to one axis.
   // Move + Ctrl / Cmd: first pick the layer under the pointer.
@@ -1944,6 +2183,22 @@ vp.addEventListener('pointerdown', e => {
     if (blocked) warnOutside(what);
     S.drag = { kind: 'paint', lx: c.x, ly: c.y, ch, warned: blocked, what };
     changed();
+  } else if (t === 'font') {
+    if (isField(document.activeElement)) document.activeElement.blur();   // the keys should come to the text
+    commitFloat(); checkTextLayers();
+    // a text layer under the click: edit it (and drag to move it); otherwise start a new one here
+    const hit = textLayerAt(c);
+    if (hit >= 0) {
+      const l = S.layers[hit]; if (S.textEdit !== l.id) endTextEdit();
+      S.active = S.layers.indexOf(l); S.textEdit = l.id; S.figfont = { name: l.text.font, layout: l.text.layout, ws: l.text.ws || 'clear', ls: l.text.ls || 0, lh: l.text.lh || 0 };
+      pushUndo(); S.drag = { kind: 'textmove', id: l.id, sx: c.x, sy: c.y, ox: l.text.x, oy: l.text.y };
+      renderOptions(); changed(true);
+    } else {
+      endTextEdit(); pushUndo();
+      const l = makeLayer('Text'); l.text = { str: '', font: S.figfont.name, layout: S.figfont.layout, ws: S.figfont.ws || 'clear', ls: S.figfont.ls || 0, lh: S.figfont.lh || 0, x: c.x, y: c.y }; l.autoName = true; textAutoName(l);
+      S.layers.splice(S.active + 1, 0, l); S.active++; S.textEdit = l.id;
+      renderOptions(); changed(true);
+    }
   } else if (t === 'block') {
     commitFloat();
     if (!S.blocks.dcells.size) open3d();   // nothing yet: build it in 3D
@@ -1989,6 +2244,7 @@ vp.addEventListener('pointermove', e => {
     if ((d.kind === 'rect' || d.kind === 'shape') && S.spaceDown) { d.ax += c.x - d.cx; d.ay += c.y - d.cy; }
     if (d.kind === 'rect') { d.cx = c.x; d.cy = c.y; dragBox(d, e.shiftKey, e.altKey); }
     if (d.kind === 'shape') { d.cx = c.x; d.cy = c.y; d.shift = e.shiftKey; if (d.shape !== 'line') dragBox(d, e.shiftKey, e.altKey); }
+    if (d.kind === 'textmove' && moved) { const l = S.layers.find(q => q.id === d.id); if (l && l.text) { l.text.x = d.ox + c.x - d.sx; l.text.y = d.oy + c.y - d.sy; renderTextLayer(l); changed(); } }
     if (d.kind === 'blockmove' && moved) { S.blocks.ox = d.ox + c.x - d.sx; S.blocks.oy = d.oy + c.y - d.sy; S.blocks.placed = true; changed(); }
     if (d.kind === 'stroke') {
       const p = { x: (px - S.offX) / S.cw, y: (py - S.offY) / S.ch }, l = d.pts[d.pts.length - 1];
@@ -2070,6 +2326,7 @@ window.addEventListener('keydown', e => {
     e.preventDefault(); return;
   }
   if (e.key === 'Escape' && !$('#patMenu').hidden) { closePatternMenu(); return; }
+  if (e.key === 'Escape' && !$('#fontMenu').hidden) { closeFontMenu(); return; }
   if (e.key === 'Escape' && !$('#paintMenu').hidden) { closePaintMenu(); return; }
   if (e.key === 'Escape' && (!$('#brushMenu').hidden || !$('#brushPop').hidden)) { closeBrushMenu(); closeBrushPop(); return; }
   if (e.key === 'Escape' && !$('#rampMenu').hidden) { closeRampMenu(); return; }
@@ -2117,9 +2374,19 @@ window.addEventListener('keydown', e => {
   }
   closeMenus();
 
+  // Font tool: type into the text layer being edited
+  if (S.tool === 'font' && editingText()) {
+    if (k === 'Escape' || (k === 'Enter' && e.ctrlKey)) { e.preventDefault(); endTextEdit(); renderOptions(); return; }
+    if (k === 'Backspace') { e.preventDefault(); typeText(t => { t.str = chars(t.str).slice(0, -1).join(''); }); return; }
+    if (k === 'Enter') { e.preventDefault(); typeText(t => { t.str += '\n'; }); return; }
+    if (k.startsWith('Arrow')) { e.preventDefault(); const l = editingText(); pushUndo(); l.text.x += k === 'ArrowLeft' ? -1 : k === 'ArrowRight' ? 1 : 0; l.text.y += k === 'ArrowUp' ? -1 : k === 'ArrowDown' ? 1 : 0; renderTextLayer(l); changed(); return; }
+    if (chars(k).length === 1) { e.preventDefault(); typeText(t => { t.str += k; }); return; }
+  }
+
   // typing mode
   if (S.tool === 'type' && S.cursor) {
     const cur = S.cursor;
+    if ((k === 'Backspace' || k === 'Delete') && textLock('Typing')) { e.preventDefault(); return; }
     if (k === 'Escape') { setTool('select'); return; }
     if (k === 'Enter') {
       const n = S.sel && selNextRow(cur.y);
@@ -2178,6 +2445,7 @@ window.addEventListener('keydown', e => {
     case 't': case 'T': setTool('type'); break;
     case 'b': case 'B': setTool('brush'); break;
     case 'p': case 'P': setTool('pencil'); break;
+    case 'f': case 'F': setTool('font'); break;
     case 's': case 'S': if (S.tool === 'pencil') { S.pencil.smart = !S.pencil.smart; savePrefs(); renderOptions(); toast(S.pencil.smart ? 'Smart line: ' + SMART_STYLES[S.pencil.style] : 'Character'); } break;
     case 'e': case 'E': setTool('eraser'); break;
     case 'i': case 'I': setTool('picker'); break;
@@ -2198,6 +2466,7 @@ window.addEventListener('keydown', e => {
 // Select: arrows move the outline (a floating block drops first), Ctrl + arrows move the content.
 // Move: arrows move the content.
 function nudge(dx, dy, ctrl) {
+  if (!S.float && textLocked() && (S.tool === 'move' || (S.tool === 'select' && ctrl))) { const l = L(); pushUndo('tnudge' + l.id); l.text.x += dx; l.text.y += dy; renderTextLayer(l); changed(); return; }
   if (S.tool === 'move' || (S.tool === 'select' && ctrl)) moveFloat(dx, dy);
   else if (S.tool === 'select') { if (S.float) commitFloat(); moveOutline(dx, dy); }
   else if (S.float) moveFloat(dx, dy);
@@ -2233,6 +2502,7 @@ document.addEventListener('cut', e => {
 document.addEventListener('paste', e => {
   if (isField(document.activeElement)) return;
   const t = e.clipboardData.getData('text/plain'); if (!t) return;
+  if (S.tool === 'font' && editingText()) { e.preventDefault(); typeText(x => { x.str += t.replace(/\r\n?/g, '\n'); }); return; }   // pasting into the text
   e.preventDefault(); floatFromText(t);
 });
 async function writeClipboard(text) {
@@ -2253,11 +2523,11 @@ function projectData() {
       view: S.blocks.view, size: S.blocks.size, dir: S.blocks.dir, level: S.blocks.level, flat: S.blocks.flat, ox: S.blocks.ox, oy: S.blocks.oy, placed: S.blocks.placed, dcells: [...S.blocks.dcells], cells: [...S.blocks.cells] },
     layers: S.layers.map(l => {
       const cells = [...l.cells.keys()];
-      if (!cells.length) return { name: l.name, visible: l.visible, x: 0, y: 0, rows: [] };
+      if (!cells.length) return { name: l.name, visible: l.visible, x: 0, y: 0, rows: [], ...(l.text ? { text: { ...l.text }, autoName: !!l.autoName } : {}) };
       const b = selBounds(cells);
       const rows = [];
       for (let j = 0; j < b.h; j++) { let r = ''; for (let i = 0; i < b.w; i++) r += l.cells.get(K(b.x + i, b.y + j)) || ' '; rows.push(r.replace(/\s+$/, '')); }
-      return { name: l.name, visible: l.visible, x: b.x, y: b.y, rows };
+      return { name: l.name, visible: l.visible, x: b.x, y: b.y, rows, ...(l.text ? { text: { ...l.text }, autoName: !!l.autoName } : {}) };
     }),
   };
 }
@@ -2267,11 +2537,13 @@ function loadProject(d) {
   S.layers = d.layers.map(ld => {
     const l = makeLayer(ld.name); l.visible = ld.visible !== false;
     (ld.rows || []).forEach((r, j) => chars(r).forEach((c, i) => { if (c !== ' ') l.cells.set(K(ld.x + i, ld.y + j), c); }));
+    const t = ld.text;
+    if (t && typeof t === 'object' && (window.ASXII_FONTS || {})[t.font]) { l.text = { str: String(t.str || ''), font: t.font, layout: ['default', 'full', 'fit', 'smush'].includes(t.layout) ? t.layout : 'default', ws: ['inside', 'block'].includes(t.ws) ? t.ws : 'clear', ls: clamp(t.ls | 0, -3, 20), lh: clamp(t.lh | 0, -30, 20), x: t.x | 0, y: t.y | 0 }; l.autoName = !!ld.autoName; }
     return l;
   });
   if (!S.layers.length) S.layers.push(makeLayer('Layer 1'));
   S.active = clamp(d.active | 0, 0, S.layers.length - 1);
-  S.sel = null; S.float = null; S.cursor = null;
+  S.sel = null; S.float = null; S.cursor = null; S.textEdit = null;
   const half = (v, max) => typeof v === 'number' && isFinite(v) && v >= 0 && v <= max ? Math.round(v * 2) / 2 : null;
   S.mirrorAt = { x: half(d.mirror && d.mirror.x, S.w), y: half(d.mirror && d.mirror.y, S.h) };
   const bk = d.blocks || {};
@@ -2618,7 +2890,7 @@ function savePrefs() {
   try {
     const tb = $('#toolbox');
     localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid,
-      brush: S.brush, pencil: S.pencil, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
+      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || null; } catch { return null; } }
@@ -2633,6 +2905,7 @@ const CMDS = {
   copyMerged: () => copyMerged(),
   blocksBake: () => bakeBlocks(),
   blocks3d: () => open3d(),
+  fontDone: () => { endTextEdit(); renderOptions(); },
   blocksClear: () => { const set = S.blocks.dcells; if (!set.size) return; pushUndo(); set.clear(); S.blocks.placed = false; changed(); toast('Blocks cleared (Ctrl Z brings them back)'); },
   copyText: async () => { commitFloat(); await writeClipboard(canvasText()); toast('Canvas copied as text'); },
   copyCode: async () => { commitFloat(); await writeClipboard(codeLines()); toast('Canvas copied as code lines'); },
@@ -2654,7 +2927,7 @@ const CMDS = {
   layerNew: () => { commitFloat(); pushUndo(); S.layers.splice(S.active + 1, 0, makeLayer('Layer ' + (S.layers.length + 1))); S.active++; changed(true); },
   layerDup: () => {
     commitFloat(); pushUndo(); const l = L(), n = makeLayer(l.name + ' copy');
-    n.cells = new Map(l.cells); n.visible = l.visible; S.layers.splice(S.active + 1, 0, n); S.active++; changed(true);
+    n.cells = new Map(l.cells); n.visible = l.visible; n.text = l.text ? { ...l.text } : null; S.layers.splice(S.active + 1, 0, n); S.active++; changed(true);
   },
   layerDel: () => {
     commitFloat();
@@ -2662,10 +2935,18 @@ const CMDS = {
     pushUndo(); S.layers.splice(S.active, 1); S.active = Math.max(0, S.active - 1); changed(true);
   },
   layerUp: () => moveLayer(1), layerDown: () => moveLayer(-1),
+  rasterize: () => {
+    const l = L(); if (!l.text) return toast('This layer is already plain art', 'warn');
+    commitFloat(); pushUndo(); if (S.textEdit === l.id) S.textEdit = null; l.text = null; l.autoName = false; changed(true); renderOptions();
+    toast('Rasterized: plain art now');
+  },
+  protectToggle: () => { S.protectText = !S.protectText; $('#protectChk').checked = S.protectText; savePrefs(); toast(S.protectText ? 'Text layers protected' : 'Text layers editable by any tool'); },
   mergeDown: () => {
     commitFloat();
     if (S.active === 0) return toast('Nothing below to merge into', 'warn');
     pushUndo(); const top = L(), below = S.layers[S.active - 1];
+    if (top.id === S.textEdit) S.textEdit = null;
+    below.text = null;   // merged: plain art for good
     for (const [k, c] of top.cells) below.cells.set(k, c);
     S.layers.splice(S.active, 1); S.active--; changed(true);
   },
@@ -2742,6 +3023,7 @@ const HINTS = {
   wand: 'Click to select the same character (connected, or everywhere with Contiguous off) · Shift adds · Alt takes away · Shift + Alt keeps the overlap · drag inside moves the outline',
   move: 'Drag to move the selection (or the whole layer) · Alt + drag moves a copy · Shift locks to one direction · Ctrl + click picks the layer under the pointer · arrows nudge · Enter drops · Esc puts back',
   type: 'Click a cell and type · Enter = next line · arrows move · Insert switches Overwrite / Insert · Esc leaves typing',
+  font: 'Click and type · click text to edit, drag to move · Enter new line · Esc done',
   pencil: 'Draw with one character, or Smart: a line that picks its own characters · S switches · Shift-click: a straight line · right button: the right-button character · Alt-click picks a character · Mirror: drag the triangles to move the lines · [ ] size',
   brush: 'Paint a character, noise or a pattern · Taper / Outline strokes land when you let go · Shift-click: a straight line · right button: the right-button character · Alt-click picks · Mirror: drag the triangles to move the lines · [ ] size',
   eraser: 'Drag to erase on the active layer · right button erases only the brush character · Shift-click: a straight line · Mirror: drag the triangles to move the lines · [ ] size',
@@ -2757,7 +3039,8 @@ function setTool(t) {
   if (t !== 'move' && t !== 'hand') commitFloat();
   S.tool = t;
   if (t === 'pencil' || t === 'brush') S.lastDraw = t;
-  closeBrushMenu(); closeBrushPop(); closeSetPop(); closeBlockPop(); if (extrude.open) closeExtrude();
+  closeBrushMenu(); closeBrushPop(); closeSetPop(); closeBlockPop(); closeFontMenu(); if (extrude.open) closeExtrude();
+  if (S.textEdit) endTextEdit();
   if (S.poly) S.poly = null;
   if (S.selPoly) S.selPoly = null;
   if (t === 'type' && !S.cursor) {
@@ -3187,6 +3470,7 @@ function openExtrude(btn) {
 function closeExtrude() { extrude.open = false; const p = $('#extrudePop'); if (p) p.hidden = true; redraw(); }
 function applyExtrude() {
   const cells = extrudeCells(); if (!cells) return closeExtrude();
+  if (textLock('Extruding')) return;
   pushUndo();
   const lay = L();
   for (const [k, c] of cells) { const [x, y] = unK(k); if (c === SOLID && lay.cells.has(k)) continue; setCell(lay, x, y, c); }
@@ -3480,7 +3764,7 @@ function renderOptions() {
   const o = $('#toolopts'), t = S.tool;
   o.innerHTML = '';
   const add = html => o.insertAdjacentHTML('beforeend', html);
-  $('#toolname .name').textContent = t === 'select' && S.selShape === 'wand' ? 'Magic wand' : { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Advanced brush', shape: 'Shape', block: 'Block', eraser: 'Eraser', fill: 'Fill', picker: 'Picker', hand: 'Hand', zoom: 'Zoom' }[t];
+  $('#toolname .name').textContent = t === 'select' && S.selShape === 'wand' ? 'Magic wand' : { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Advanced brush', font: 'Font', shape: 'Shape', block: 'Block', eraser: 'Eraser', fill: 'Fill', picker: 'Picker', hand: 'Hand', zoom: 'Zoom' }[t];
   if (t === 'shape') shapeOptions(add);
   if (t === 'block') blockOptions(add);
   if (t === 'brush' || t === 'fill' || (t === 'shape' && S.shape.fill && S.shape.kind !== 'line')) {
@@ -3507,6 +3791,17 @@ function renderOptions() {
     add(`<span class="label">Look at</span><span class="seg"><button class="btn${S.fillSample === 'layer' ? ' on' : ''}" data-sample="layer" title="Fill the area as it is on the active layer">Layer</button><button class="btn${S.fillSample === 'all' ? ' on' : ''}" data-sample="all" title="Fill the area as you see it (all visible layers)">All layers</button></span>`);
     add(`<label class="label check" title="On: the connected area. Off: every cell with that character on the canvas (Shift-click does the other one)"><input type="checkbox" class="fillcontig"${S.fillContig ? ' checked' : ''}> Contiguous</label>`);
     add(`<span class="sep"></span><button class="btn" data-cmd="fillSel" title="Alt Backspace">Fill selection</button>`);
+  }
+  if (t === 'font') {
+    add(`<span class="label">Font</span><button class="btn fontbtn" title="Choose a font"><span class="pname">${esc(S.figfont.name)}</span><span class="caret">▾</span></button><span class="sep"></span>`);
+    const lay = (v, label, title) => `<button class="btn${S.figfont.layout === v ? ' on' : ''}" data-flayout="${v}" title="${title}">${label}</button>`;
+    add(`<span class="label">Spacing</span><span class="seg">${lay('default', 'Default', 'The font\'s own spacing')}${lay('full', 'Full', 'Every letter at full width')}${lay('fit', 'Fit', 'Letters slide together until they touch')}${lay('smush', 'Smush', 'Letters overlap by a column, merging where they touch')}</span><span class="sep"></span>`);
+    const ws = (v, label, title) => `<button class="btn${(S.figfont.ws || 'clear') === v ? ' on' : ''}" data-fws="${v}" title="${title}">${label}</button>`;
+    const step = (key, label, title) => `<span class="label" title="${title}">${label}</span><button class="btn icon" data-fsp="${key}" data-d="-1">−</button><span class="bminv">${S.figfont[key] || 0}</span><button class="btn icon" data-fsp="${key}" data-d="1">+</button>`;
+    add(step('ls', 'Letters', 'Extra space between letters (after Spacing); below 0 they overlap') + step('lh', 'Lines', 'Extra rows between lines of text; below 0 they tuck in') + `<span class="sep"></span>`);
+    add(`<span class="label" title="${WS_TIP}">White space</span><span class="seg">${ws('clear', 'Clear', 'Blanks are see-through')}${ws('inside', 'Inside', 'Blanks the letters close in are solid (the inside of an O, the faces of 3D letters)')}${ws('block', 'Block', 'Each row is solid from its first character to its last: the text on a solid plate')}</span><span class="sep"></span>`);
+    const ed = editingText();
+    if (ed) add(`<button class="btn" data-cmd="fontDone" title="Stop typing (Esc)">Done</button><button class="btn" data-cmd="rasterize" title="Make it plain art, here on its own layer">Rasterize</button><button class="btn" data-cmd="mergeDown" title="Make it plain art: merge it into the layer below">Merge down</button>`);
   }
   if (t === 'pencil') {
     add(`<span class="seg"><button class="btn${S.pencil.smart ? '' : ' on'}" data-psmart="0" title="Draw with one character">Character</button><button class="btn${S.pencil.smart ? ' on' : ''}" data-psmart="1" title="A line that picks its own characters as you draw (S)">Smart</button></span><span class="sep"></span>`);
@@ -3553,6 +3848,10 @@ function renderOptions() {
   const sz = $('.size', o); if (sz) sz.addEventListener('change', () => setBrushSize(+sz.value || 1));
   $$('[data-psmart]', o).forEach(b => b.addEventListener('click', () => { S.pencil.smart = b.dataset.psmart === '1'; savePrefs(); renderOptions(); updateInfo(); redraw(); }));
   $$('[data-pstyle]', o).forEach(b => b.addEventListener('click', () => { S.pencil.style = b.dataset.pstyle; savePrefs(); renderOptions(); }));
+  const fb = $('.fontbtn', o); if (fb) fb.addEventListener('click', () => openFontMenu(fb));
+  $$('[data-flayout]', o).forEach(b => b.addEventListener('click', () => setFigFont(S.figfont.name, b.dataset.flayout)));
+  $$('[data-fsp]', o).forEach(b => b.addEventListener('click', () => { const k = b.dataset.fsp, f = figFont(S.figfont.name); setFigSpacing(k, clamp((S.figfont[k] || 0) + +b.dataset.d, k === 'ls' ? -3 : -((f ? f.height : 2) - 1), 20)); }));
+  $$('[data-fws]', o).forEach(b => b.addEventListener('click', () => setFigFont(S.figfont.name, S.figfont.layout, b.dataset.fws)));
   const tip = $('.tip', o); if (tip) { tip.value = toolSize().tip; tip.addEventListener('change', () => { toolSize().tip = tip.value; tip.blur(); savePrefs(); redraw(); }); }
   $$('[data-blank]', o).forEach(b => b.addEventListener('click', () => { S.spacesErase = b.dataset.blank === '1'; savePrefs(); renderOptions(); redraw(); }));
   const sf = $('.selfixed', o); if (sf) sf.addEventListener('change', () => { S.selFixed = sf.checked; sf.blur(); savePrefs(); });
@@ -3666,12 +3965,13 @@ $('#sizePreset').addEventListener('change', e => {
 });
 
 function renderLayers() {
+  checkTextLayers();
   const box = $('#layers');
   box.innerHTML = '';
   for (let i = S.layers.length - 1; i >= 0; i--) {
     const l = S.layers[i], row = document.createElement('div');
     row.className = 'layer' + (i === S.active ? ' on' : '');
-    row.innerHTML = `<span class="eye${l.visible ? '' : ' off'}" title="Show / hide">${l.visible ? '◉' : '○'}</span><span class="name" title="Double-click to rename">${esc(l.name)}</span><span class="count">${l.cells.size}</span>`;
+    row.innerHTML = `<span class="eye${l.visible ? '' : ' off'}" title="Show / hide">${l.visible ? '◉' : '○'}</span>${l.text ? '<span class="ltag" title="A text layer: edit it with the Font tool (F). Merge down to make it plain art.">T</span>' : ''}<span class="name" title="Double-click to rename">${esc(l.name)}</span><span class="count">${l.cells.size}</span>`;
     row.addEventListener('click', e => {
       if (e.target.classList.contains('eye')) { l.visible = !l.visible; changed(true); return; }
       if (S.active !== i) { commitFloat(); S.active = i; renderLayers(); updateInfo(); redraw(); }
@@ -3679,7 +3979,7 @@ function renderLayers() {
     row.querySelector('.name').addEventListener('dblclick', () => {
       const nm = row.querySelector('.name'), inp = document.createElement('input');
       inp.type = 'text'; inp.value = l.name; nm.replaceWith(inp); inp.focus(); inp.select();
-      const done = () => { const v = inp.value.trim(); if (v && v !== l.name) { pushUndo(); l.name = v; } changed(true); };
+      const done = () => { const v = inp.value.trim(); if (v && v !== l.name) { pushUndo(); l.name = v; l.autoName = false; } changed(true); };
       inp.addEventListener('blur', done);
     });
     box.appendChild(row);
@@ -3687,12 +3987,16 @@ function renderLayers() {
   const on = box.querySelector('.layer.on'); if (on) on.scrollIntoView({ block: 'nearest' });   // keep the active layer in view
 }
 function updateLayerCounts() {
+  // a text layer that stopped being text (painted on, moved in part, rasterized) loses its T: redraw the list
+  checkTextLayers();
   const rows = $$('#layers .layer');
+  if (rows.length !== S.layers.length || rows.some((r, n) => { const l = S.layers[S.layers.length - 1 - n]; return !l || !!r.querySelector('.ltag') !== !!l.text; })) return renderLayers();
   rows.forEach((r, n) => { const l = S.layers[S.layers.length - 1 - n]; if (l) r.querySelector('.count').textContent = l.cells.size; });
 }
 
 // ---------- top bar ----------
 $('#focusChk').addEventListener('change', e => { e.target.blur(); if (e.target.checked !== S.focusLayer) CMDS.focusToggle(); });
+$('#protectChk').addEventListener('change', e => { e.target.blur(); if (e.target.checked !== S.protectText) CMDS.protectToggle(); });
 $('#themeSel').addEventListener('change', e => { setTheme(e.target.value); e.target.blur(); });
 $('#fontSel').addEventListener('change', e => { setFont(e.target.value); e.target.blur(); });
 $('#docname').addEventListener('change', () => { autosave(); });
@@ -3812,11 +4116,13 @@ function start() {
     S.shape.fixed = !!q.fixed; S.shape.center = !!q.center; S.shape.fill = !!q.fill;
     if (POLY_STYLES[q.polygon]) S.shape.polygon = q.polygon;
   }
+  if (p.figfont && (window.ASXII_FONTS || {})[p.figfont.name]) S.figfont = { name: p.figfont.name, layout: ['default', 'full', 'fit', 'smush'].includes(p.figfont.layout) ? p.figfont.layout : 'default', ws: ['inside', 'block'].includes(p.figfont.ws) ? p.figfont.ws : 'clear', ls: clamp(p.figfont.ls | 0, -3, 20), lh: clamp(p.figfont.lh | 0, -30, 20) };
   if (p.pencil) S.pencil = { size: clamp(Math.round(+p.pencil.size) || 1, 1, 25), tip: p.pencil.tip === 'round' ? 'round' : 'square', smart: !!p.pencil.smart, style: SMART_STYLES[p.pencil.style] ? p.pencil.style : 'ascii' };
   $('#brushChip').textContent = S.brush.ch;
   S.spacesErase = !!p.spacesErase;
   // "Dim others" is on by default
   S.focusLayer = p.dimOthers !== false; $('#focusChk').checked = S.focusLayer;
+  S.protectText = p.protectText !== false; $('#protectChk').checked = S.protectText;
   if (p.toolbox) { const tb = $('#toolbox'); tb.style.left = p.toolbox.l; tb.style.top = p.toolbox.t; tb.dataset.moved = '1'; }
 
   let loaded = false;
@@ -3852,7 +4158,7 @@ function start() {
 }
 
 // Hooks for the headless self-test (index.html?selftest)
-window.asxii = { S, CMDS, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
+window.asxii = { S, CMDS, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
   undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render };
 
