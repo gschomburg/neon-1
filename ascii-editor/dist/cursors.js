@@ -120,7 +120,6 @@ const VARIANTS = [
   { group: 'Picker', glyph: 'picker', badge: null, use: 'Picker, Look at Layer: over a character' },
   { group: 'Picker', glyph: 'picker', badge: 'layer', use: 'Picker, Look at All (the default): over a character' },
   { group: 'Picker', glyph: 'picker', badge: 'two', use: 'Picker with Shift (or a right-click): picks the right-button character' },
-  { group: 'Picker', glyph: 'picker', badge: null, dim: true, use: 'Picker: over an empty cell (nothing to pick)' },
   { group: 'Zoom', glyph: 'zoomin', badge: null, use: 'Zoom: a click zooms in' },
   { group: 'Zoom', glyph: 'zoomout', badge: null, use: 'Zoom with Alt held: a click zooms out' },
   { group: 'Block', glyph: 'cube', badge: null, use: 'Block, no blocks yet: a click opens the 3D editor' },

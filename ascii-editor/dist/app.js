@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.110';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.111';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -2341,10 +2341,7 @@ function cursorFor() {
     if (S.fillContig === m.shift) return curImage('bucket', 'dots', false, 'cell');   // every matching cell
     return curImage('bucket', S.fillSample === 'all' ? 'layer' : null, false, 'cell');
   }
-  if (t === 'picker') {
-    const got = c && pickAt(c, S.pickSample);
-    return curImage('picker', m.shift ? 'two' : S.pickSample === 'all' ? 'layer' : null, !got && !m.shift, 'cell');   // dim over an empty cell
-  }
+  if (t === 'picker') return curImage('picker', m.shift ? 'two' : S.pickSample === 'all' ? 'layer' : null, false, 'cell');   // (an empty cell picks Clear)
   if (t === 'zoom') return curImage(m.alt ? 'zoomout' : 'zoomin', null, false, m.alt ? 'zoom-out' : 'zoom-in');
   if (t === 'block') return S.blocks.dcells.size ? move() : curImage('cube', null, false, 'pointer');
   return 'default';
@@ -2423,8 +2420,8 @@ vp.addEventListener('pointerdown', e => {
   } else if (t === 'type') {
     commitFloat(); setCursor(c.x, c.y);
   } else if ((t === 'pencil' || t === 'brush' || t === 'fill') && e.altKey) {   // hold Alt: pick a character without leaving the tool
-    const got = pickAt(c, 'all');
-    if (got) { setBrushChar(got); toast(`Character: ${chName(got)}`); } else toast('Empty cell: nothing to pick', 'warn');
+    const got = pickAt(c, 'all') || CLEAR;   // an empty cell is Clear
+    setBrushChar(got); toast(`Character: ${chName(got)}`);
   } else if ((t === 'pencil' || t === 'brush' || t === 'eraser') && e.button === 2) {
     // the right button: Pencil / Brush paint the right-button character (or erase), the Eraser erases only the brush character
     commitFloat(); pushUndo();
@@ -2488,11 +2485,10 @@ vp.addEventListener('pointerdown', e => {
   } else if (t === 'fill') {
     floodFill(c.x, c.y, S.fillContig === e.shiftKey);
   } else if (t === 'picker') {
-    const got = pickAt(c, S.pickSample);
-    if (e.button === 2 || e.shiftKey) {   // the right-button character for Pencil and Brush; an empty cell sets it back to erase
-      S.ch2 = got || null; savePrefs(); toast(got ? `Right button: ${chName(got)}` : 'Right button: erase'); setTool(S.lastDraw);
-    } else if (got) { setBrushChar(got); toast(`Character: ${chName(got)}`); setTool(S.lastDraw); }
-    else toast('Empty cell: nothing to pick', 'warn');
+    const got = pickAt(c, S.pickSample) || CLEAR;   // an empty cell is Clear (it erases)
+    if (e.button === 2 || e.shiftKey) {   // the Right character for Pencil and Brush
+      S.ch2 = got === CLEAR ? null : got; savePrefs(); renderSlots(); toast(`Right: ${chName(got)}`); setTool(S.lastDraw);
+    } else { setBrushChar(got); toast(`Character: ${chName(got)}`); setTool(S.lastDraw); }
   } else if (t === 'zoom') {
     zoomStep(e.altKey ? -1 : 1, px, py);
   }
@@ -3353,7 +3349,7 @@ const HELP = {
   block: { sum: 'Drag the ASCII preview to move the blocks (before baking). Double-click to build them in 3D (or Layer › Edit blocks in 3D); Layer › Bake makes them ASCII on a new layer.', keys: [] },
   fill: { sum: 'Click to fill the connected area of the same character, with the Paint panel\'s setting.',
     keys: [['Shift', 'click: every matching cell (the opposite of Contiguous)'], ['Alt', 'click: pick a character']] },
-  picker: { sum: 'Click a character to draw with it.', keys: [['Shift', 'click: set the Right character'], ['Right', 'set the Right character']] },
+  picker: { sum: 'Click a character to draw with it. An empty cell picks Clear (it erases).', keys: [['Shift', 'click: set the Right character'], ['Right', 'set the Right character']] },
   hand: { sum: 'Drag to pan.', keys: [] },
   zoom: { sum: 'Click to zoom in.', keys: [['Alt', 'click: zoom out'], ['Ctrl 0', 'fit the canvas']] },
 };
