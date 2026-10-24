@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.134';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.135';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -80,9 +80,7 @@ const S = {
     view: 'diag', dcells: new Set(), size: 2, dir: 1, level: 0, flat: true, ox: 0, oy: 0, placed: false, show: 'ascii' },   // diamonds 'u,v,z' built in the 3D editor; size b; depth right (1) or left (-1); ox, oy: where the shape sits on the canvas
   colors: {},
   blinkOn: true,
-  // Autotile (AUTOTILE.md): which cells count as neighbors (saved with the document), your own sets, the sets that came
-  // with the open document, the Auto view toggle (marks auto cells), the last set used (the Auto swatch)
-  autoJoin: 'set', autoSets: [], docSets: [], showAuto: false, autoLast: 'box',
+  showAuto: false,     // the Auto view: auto cells show their set's label (1-9, 0, A-Z) instead of what they resolve to
 };
 
 const view = $('#view'), ctx = view.getContext('2d'), vp = $('#viewport');
@@ -90,25 +88,26 @@ let dpr = 1, dirty = true;
 const redraw = () => { dirty = true; };
 
 // ---------- layers ----------
-function makeLayer(name) { return { id: S.nextId++, name: name || 'Layer ' + S.nextId, visible: true, cells: new Map(), auto: new Map() }; }
+function makeLayer(name) { return { id: S.nextId++, name: name || 'Layer ' + S.nextId, visible: true, cells: new Map() }; }
 const L = () => S.layers[S.active];
+// The character you see at x, y (auto codes resolved); compositeRaw: what's stored there (auto codes as they are)
 function compositeAt(x, y) {
   const k = K(x, y);
   for (let i = S.layers.length - 1; i >= 0; i--) {
     const l = S.layers[i];
-    if (l.visible && l.cells.has(k)) return l.cells.get(k);
+    if (l.visible && l.cells.has(k)) return glyphAt(l, x, y);
   }
+  return null;
+}
+function compositeRaw(x, y) {
+  const k = K(x, y);
+  for (let i = S.layers.length - 1; i >= 0; i--) { const l = S.layers[i]; if (l.visible && l.cells.has(k)) return l.cells.get(k); }
   return null;
 }
 function setCell(layer, x, y, c) {
   if (layer.text) { layer.text = null; if (S.textEdit === layer.id) S.textEdit = null; toast('That text layer is plain art now (no longer editable as text)'); }
-  const k = K(x, y), id = autoIdOf(c);
-  if (!layer.auto) layer.auto = new Map();
-  if (id) { layer.auto.set(k, id); layer.cells.set(k, autoIcon(id)); autoFix(layer, [k]); return; }   // Auto: the cell picks its character
-  const was = layer.auto.delete(k);
-  if (c == null || c === ' ' || c === '' || c === CLEAR) layer.cells.delete(k);   // Clear (Special) paints as erasing
-  else layer.cells.set(k, c);
-  if (was || (S.autoJoin === 'art' && layer.auto.size)) autoFix(layer, [k]);   // the auto cells around it re-pick
+  if (c == null || c === ' ' || c === '' || c === CLEAR) layer.cells.delete(K(x, y));   // Clear (Special) paints as erasing
+  else layer.cells.set(K(x, y), c);
 }
 
 // ---------- FIGlet fonts (Font tool): parse .flf fonts and render text with them ----------
@@ -514,16 +513,14 @@ function showWelcome() {
 function snap() {
   return {
     w: S.w, h: S.h, active: S.active, nextId: S.nextId,
-    layers: S.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible, cells: new Map(l.cells), auto: new Map(l.auto || []), text: l.text ? { ...l.text } : null, autoName: l.autoName })),
-    autoJoin: S.autoJoin,
+    layers: S.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible, cells: new Map(l.cells), text: l.text ? { ...l.text } : null, autoName: l.autoName })),
     sel: S.sel ? new Set(S.sel) : null,
     blocks: { ...S.blocks, cells: new Set(S.blocks.cells), dcells: new Set(S.blocks.dcells) },
   };
 }
 function restore(s) {
   S.w = s.w; S.h = s.h; S.active = s.active; S.nextId = s.nextId;
-  S.layers = s.layers.map(l => ({ ...l, cells: new Map(l.cells), auto: new Map(l.auto || []), text: l.text ? { ...l.text } : null }));
-  if (s.autoJoin) S.autoJoin = s.autoJoin;
+  S.layers = s.layers.map(l => ({ ...l, cells: new Map(l.cells), text: l.text ? { ...l.text } : null }));
   if (S.textEdit && !S.layers.some(l => l.id === S.textEdit && l.text)) S.textEdit = null;
   S.sel = s.sel ? new Set(s.sel) : null;
   if (s.blocks) S.blocks = { ...s.blocks, cells: new Set(s.blocks.cells), dcells: new Set(s.blocks.dcells || []) };
@@ -651,7 +648,8 @@ const selMode = e => e.shiftKey && e.altKey ? 'int' : e.shiftKey ? 'add' : e.alt
 // (Contiguous off). Looks at the active layer or at everything you see (Look at: All). Blank cells match blank cells.
 function wandCells(x, y) {
   if (x < 0 || y < 0 || x >= S.w || y >= S.h) { toast('Click inside the canvas to use the wand', 'warn'); return null; }
-  const lay = L(), get = S.selSample === 'all' ? (a, b) => { const c = compositeAt(a, b); return c === SOLID ? null : c; }
+  // (raw: an auto cell matches every cell of its set, whatever each one shows)
+  const lay = L(), get = S.selSample === 'all' ? (a, b) => { const c = compositeRaw(a, b); return c === SOLID ? null : c; }
     : (a, b) => lay.cells.has(K(a, b)) ? lay.cells.get(K(a, b)) : null;
   const target = get(x, y), out = new Set();
   if (!S.wandContig) {
@@ -680,9 +678,7 @@ function finishSelPoly(cancel) {
 }
 // The character at a cell: what you see ('all') or what's on the active layer ('layer'); null for blank
 function pickAt(c, sample) {
-  const k = K(c.x, c.y), lay = sample === 'layer' ? L() : [...S.layers].reverse().find(l => l.visible && (l.cells.has(k) || (l.auto && l.auto.has(k))));
-  if (lay && lay.auto && lay.auto.has(k)) return autoChar(lay.auto.get(k));   // an auto cell picks Auto in its set
-  const got = sample === 'layer' ? L().cells.get(K(c.x, c.y)) : compositeAt(c.x, c.y);
+  const got = sample === 'layer' ? L().cells.get(K(c.x, c.y)) : compositeRaw(c.x, c.y);   // (an auto cell picks its set)
   return got || null;   // an opaque space counts: you can pick it and draw with it
 }
 // Select all (Ctrl A): the canvas plus anything drawn outside it, on any layer, so nothing is left out.
@@ -706,19 +702,20 @@ function blockText(get, x, y, w, h) {
   }
   return rows.join('\n');
 }
-function selectionText() {
-  if (S.float) { const f = S.float; return blockText((x, y) => f.cells.get(K(x, y)), 0, 0, f.w, f.h); }
+// raw: keep auto codes as they are (Copy raw); otherwise they resolve within the copied piece
+function selectionText(raw) {
+  const out = get => raw ? get : (x, y) => resolveAt(get, x, y);
+  if (S.float) { const f = S.float; return blockText(out(cellGet(f.cells)), 0, 0, f.w, f.h); }
   if (!S.sel) return null;
-  const b = selBounds(S.sel), lay = L();
-  return blockText((x, y) => S.sel.has(K(x, y)) ? lay.cells.get(K(x, y)) : null, b.x, b.y, b.w, b.h);
+  const b = selBounds(S.sel), lay = L(), get = (x, y) => S.sel.has(K(x, y)) ? lay.cells.get(K(x, y)) : undefined;
+  return blockText(out(get), b.x, b.y, b.w, b.h);
 }
-// The selection's auto cells, placed like selectionText (so a paste of that text can bring them back)
-function selectionAuto() {
-  if (S.float) return new Map(S.float.auto || []);
-  const out = new Map(), lay = L(); if (!S.sel || !lay.auto) return out;
-  const b = selBounds(S.sel);
-  for (const k of S.sel) if (lay.auto.has(k)) { const [x, y] = unK(k); out.set(K(x - b.x, y - b.y), lay.auto.get(k)); }
-  return out;
+// Copy raw (Ctrl Alt C): the selection (or the whole canvas) with auto cells as their codes, for apps like the game
+async function copyRaw() {
+  commitFloat();
+  const sel = S.sel && S.sel.size, t = sel ? selectionText(true) : blockText((x, y) => compositeRaw(x, y), 0, 0, S.w, S.h);
+  await writeClipboard(t);
+  toast(sel ? 'Copied raw (auto cells as their codes)' : 'Copied the canvas raw (auto cells as their codes)');
 }
 // Copy merged: the selection as you see it, across all visible layers (and a floating block on top).
 function mergedSelectionText() {
@@ -728,7 +725,7 @@ function mergedSelectionText() {
   const set = new Set(cells), b = selBounds(set);
   const at = (x, y) => {
     if (!set.has(K(x, y))) return null;
-    if (f) { const c = f.cells.get(K(x - f.x, y - f.y)); if (c && c !== ' ') return c; }
+    if (f) { const c = resolveAt(cellGet(f.cells), x - f.x, y - f.y); if (c && c !== ' ') return c; }
     return compositeAt(x, y);
   };
   return blockText(at, b.x, b.y, b.w, b.h);
@@ -745,8 +742,7 @@ function deleteSelection() {
   if (textLock('Deleting')) return;
   pushUndo();
   const lay = L();
-  for (const k of S.sel) { lay.cells.delete(k); if (lay.auto) lay.auto.delete(k); }
-  autoFix(lay, S.sel);
+  for (const k of S.sel) lay.cells.delete(k);
   changed();
 }
 
@@ -765,15 +761,13 @@ function liftSelection(copy) {
     return false;
   }
   pushUndo();
-  const b = selBounds(S.sel), lay = L(), cells = new Map(), auto = new Map();
+  const b = selBounds(S.sel), lay = L(), cells = new Map();
   for (const k of S.sel) {
-    const [x, y] = unK(k), rk = K(x - b.x, y - b.y);
-    cells.set(rk, lay.cells.get(k) || ' ');
-    if (lay.auto && lay.auto.has(k)) { auto.set(rk, lay.auto.get(k)); if (!copy) lay.auto.delete(k); }   // auto cells stay auto
+    const [x, y] = unK(k);
+    cells.set(K(x - b.x, y - b.y), lay.cells.get(k) || ' ');
     if (!copy) lay.cells.delete(k);
   }
-  if (!copy) autoFix(lay, S.sel);
-  S.float = { cells, auto, x: b.x, y: b.y, w: b.w, h: b.h, lifted: true, copy: !!copy, origSel: S.sel };
+  S.float = { cells, x: b.x, y: b.y, w: b.w, h: b.h, lifted: true, copy: !!copy, origSel: S.sel };
   S.sel = null;
   changed();
   return true;
@@ -794,8 +788,7 @@ function floatFromText(text, x, y) {
       x = clamp(c.x - (w >> 1), 0, Math.max(0, S.w - w)); y = clamp(c.y - (rows.length >> 1), 0, Math.max(0, S.h - rows.length));
     }
   }
-  const auto = S.clipAuto && S.clipAuto.text === text ? new Map(S.clipAuto.auto) : new Map();   // pasting our own copy: its auto cells stay auto
-  S.float = { cells, auto, x, y, w, h: rows.length, lifted: false, origSel: null };
+  S.float = { cells, x, y, w, h: rows.length, lifted: false, origSel: null };
   S.sel = null;
   if (S.tool !== 'move') setTool('move');
   updateInfo(); redraw();
@@ -811,26 +804,18 @@ function commitFloat(replaceBlanks) {
   // with mirror on (Move, or Select with Ctrl), the mirrored copy goes too: the mirrored original is lifted away
   // (unless this was a copy) and the block lands mirrored on the other side as well
   const maps = mirrorMaps(S.tool === 'select' ? 'select' : 'move').slice(1);
-  if (!lay.auto) lay.auto = new Map();
-  const fa = f.auto || new Map(), touched = [];
-  // auto cells land auto (and re-pick against what's there); anything else landing makes the cell plain
-  const put = (k, c, id) => {
-    touched.push(k);
-    if (id) { lay.auto.set(k, id); lay.cells.set(k, c === ' ' ? autoIcon(id) : c); return; }
-    if (c !== ' ') { lay.cells.set(k, c); lay.auto.delete(k); } else if (erase) { lay.cells.delete(k); lay.auto.delete(k); }
-  };
-  if (maps.length && f.lifted && !f.copy && f.origSel) for (const k of f.origSel) { const [x, y] = unK(k); for (const m of maps) { const k2 = K(m.x(x), m.y(y)); lay.cells.delete(k2); lay.auto.delete(k2); touched.push(k2); } }
+  if (maps.length && f.lifted && !f.copy && f.origSel) for (const k of f.origSel) { const [x, y] = unK(k); for (const m of maps) lay.cells.delete(K(m.x(x), m.y(y))); }
   for (const [rk, c] of f.cells) {
     const [dx, dy] = unK(rk), x = f.x + dx, y = f.y + dy;
-    put(K(x, y), c, fa.get(rk));
+    if (c !== ' ') lay.cells.set(K(x, y), c);
+    else if (erase) lay.cells.delete(K(x, y));
     sel.add(K(x, y));
   }
   for (const m of maps) for (const [rk, c] of f.cells) {
     const [dx, dy] = unK(rk), X = m.x(f.x + dx), Y = m.y(f.y + dy);
     if (sel.has(K(X, Y))) continue;   // where the copies overlap, the block itself wins
-    put(K(X, Y), m.c(c), fa.get(rk));
+    if (c !== ' ') lay.cells.set(K(X, Y), m.c(c)); else if (erase) lay.cells.delete(K(X, Y));
   }
-  autoFix(lay, touched);
   S.float = null;
   S.sel = sel;
   S.lastTag = null;
@@ -885,11 +870,12 @@ const FLIP_H = { '/': '\\', '\\': '/', '(': ')', ')': '(', '<': '>', '>': '<', '
 const FLIP_V = { '/': '\\', '\\': '/', '^': 'v', 'v': '^', '.': "'", "'": '.', ',': '`', '`': ',', '┌': '└', '└': '┌', '┐': '┘', '┘': '┐', '┬': '┴', '┴': '┬', '╱': '╲', '╲': '╱', '▀': '▄', '▄': '▀' };
 function flip(horizontal) {
   if (!S.float && !liftSelection()) return toast('Select something to flip', 'warn');
-  const f = S.float, map = horizontal ? FLIP_H : FLIP_V, out = new Map(), auto = new Map();
-  const to = rk => { const [dx, dy] = unK(rk); return horizontal ? K(f.w - 1 - dx, dy) : K(dx, f.h - 1 - dy); };
-  for (const [rk, c] of f.cells) out.set(to(rk), map[c] || c);
-  for (const [rk, id] of f.auto || []) auto.set(to(rk), id);   // (auto cells re-pick where they land)
-  f.cells = out; f.auto = auto;
+  const f = S.float, map = horizontal ? FLIP_H : FLIP_V, out = new Map();
+  for (const [rk, c] of f.cells) {
+    const [dx, dy] = unK(rk);
+    out.set(horizontal ? K(f.w - 1 - dx, dy) : K(dx, f.h - 1 - dy), map[c] || c);
+  }
+  f.cells = out;
   redraw();
 }
 
@@ -897,8 +883,7 @@ function flip(horizontal) {
 function setCursor(x, y) { S.cursor = { x, y, lineX: x }; S.lastTag = null; S.blinkOn = true; updateInfo(); redraw(); }
 // The last 5 different characters actually placed (brush or typing), newest first.
 function noteRecent(c) {
-  if (!c || c === ' ' || S.recent[0] === c || (isAuto(c) && !AUTO_BY_ID.has(autoIdOf(c)))) return;
-  if (isAuto(c)) S.autoLast = autoIdOf(c);
+  if (!c || c === ' ' || S.recent[0] === c) return;
   S.recent = [c, ...S.recent.filter(r => r !== c)].slice(0, 30);   // the Recent row shows as many as fit
   savePrefs();
   renderRecent();
@@ -929,10 +914,8 @@ const inserting = () => S.typeInsert && !S.sel;
 function shiftRow(y, x, dx) {
   const lay = L(), moving = [];
   for (const [k, c] of lay.cells) { const [cx, cy] = unK(k); if (cy === y && cx >= x) moving.push([cx, c]); }
-  const auto = lay.auto || new Map(), ids = moving.map(([cx]) => auto.get(K(cx, y)));
-  for (const [cx] of moving) { lay.cells.delete(K(cx, y)); auto.delete(K(cx, y)); }
-  moving.forEach(([cx, c], i) => { lay.cells.set(K(cx + dx, y), c); if (ids[i]) auto.set(K(cx + dx, y), ids[i]); });
-  if (auto.size) autoFix(lay, moving.flatMap(([cx]) => [K(cx, y), K(cx + dx, y)]));
+  for (const [cx] of moving) lay.cells.delete(K(cx, y));
+  for (const [cx, c] of moving) lay.cells.set(K(cx + dx, y), c);
 }
 function setTypeInsert(on) {
   S.typeInsert = on; savePrefs(); S.blinkOn = true;
@@ -1032,7 +1015,7 @@ function putCell(lay, x, y, c, only) {
     if (done.has(K(X, Y))) continue;   // a cell on a mirror line is its own copy: keep what was painted there
     done.add(K(X, Y));
     if ((X !== x || Y !== y) && !editable(X, Y)) continue;
-    if (only !== undefined && (isAuto(only) ? !lay.auto || lay.auto.get(K(X, Y)) !== autoIdOf(only) : lay.cells.get(K(X, Y)) !== only)) continue;
+    if (only !== undefined && lay.cells.get(K(X, Y)) !== only) continue;
     setCell(lay, X, Y, v);
   }
 }
@@ -1099,7 +1082,8 @@ function floodFill(x, y, every) {
   if (!editable(x, y)) return warnOutside('Filling');
   commitFloat();
   const lay = L();
-  const get = S.fillSample === 'all' ? (a, b) => compositeAt(a, b) : (a, b) => lay.cells.has(K(a, b)) ? lay.cells.get(K(a, b)) : null;
+  // (raw: an auto cell's area is its set's cells, whatever each one shows)
+  const get = S.fillSample === 'all' ? (a, b) => compositeRaw(a, b) : (a, b) => lay.cells.has(K(a, b)) ? lay.cells.get(K(a, b)) : null;
   // the area to fill from a start cell: connected cells with its character (or all of them, every)
   const region = (x, y) => {
     const target = get(x, y), seen = new Set([K(x, y)]), stack = [[x, y]], cells = [];
@@ -1609,7 +1593,7 @@ function polyShape(pts, closed, st) {
   if (st === 'box' || st === 'block') {   // one connected path through the cell centers (box joins what's on the layer)
     const P = pts.map(p => ({ x: p.x + 0.5, y: p.y + 0.5 })); if (closed && n >= 3) P.push(P[0]);
     const lay = L();
-    m = smartPath(P, st, { plain: true, base: (x, y) => lay.cells.get(K(x, y)) });
+    m = smartPath(P, st, { plain: true, base: (x, y) => glyphAt(lay, x, y) });
     return { outline: m, inside: polyInside(pts, closed) };
   }
   if (n === 1) { m.set(K(pts[0].x, pts[0].y), st === 'char' ? S.brush.ch : '+'); return { outline: m, inside: null }; }
@@ -1707,7 +1691,7 @@ const tapered = b => (b.start && b.start !== 'none') || (b.end && b.end !== 'non
 // Tapered, outlined or Ramp strokes are collected while you drag (pts, in cell units) and put down on release.
 const pencilSmart = () => S.tool === 'pencil' && S.pencil.smart;
 const strokeDeferred = () => pencilSmart() || S.tool === 'brush' && (tapered(S.brush) || S.brush.mode === 'outline' || S.paint.mode === 'ramp');
-function smartStroke(pts) { const lay = L(); return smartPath(pts, S.pencil.style, { round: true, base: (x, y) => lay.cells.get(K(x, y)) }); }
+function smartStroke(pts) { const lay = L(); return smartPath(pts, S.pencil.style, { round: true, base: (x, y) => glyphAt(lay, x, y) }); }
 // The cells a stroke covers. Each end grows from Min to Size over the Ramp length along its curve, so short strokes
 // stay thin. Each point also keeps fr (0 at the ends .. 1 in the middle) for the Ramp paint mode.
 function strokeRegion(pts, b = S.brush) {
@@ -1794,7 +1778,7 @@ function strokeOutline(region, b = S.brush) {
   const out = new Map();
   if (b.edge === 'none') return out;
   if (b.edge === 'box') {   // box lines around the shape: trace its outline as one path, then draw it like a Box stroke
-    const lay = L(), base = (x, y) => lay.cells.get(K(x, y));
+    const lay = L(), base = (x, y) => glyphAt(lay, x, y);
     for (const loop of traceOutlines(region)) for (const [k, c] of smartPath(loop, 'box', { round: true, base })) {
       const prev = out.get(k);   // where loops touch, join them
       out.set(k, prev ? BOX_ROUND[(BOX_BITS[prev] || 0) | (BOX_BITS[c] || 0)] : c);
@@ -1926,8 +1910,6 @@ function resizeCanvas(nw, nh, anchor) {
       const m = new Map();
       for (const [k, c] of l.cells) { const [x, y] = unK(k); m.set(K(x + dx, y + dy), c); }
       l.cells = m;
-      const a = new Map(); for (const [k, id] of l.auto || []) { const [x, y] = unK(k); a.set(K(x + dx, y + dy), id); }
-      l.auto = a;
     }
     S.sel = null;
     if (S.cursor) { S.cursor.x += dx; S.cursor.y += dy; S.cursor.lineX += dx; }
@@ -2043,7 +2025,7 @@ function render() {
       const [x, y] = unK(k);
       if (!inView(x, y)) continue;
       if (focus && !mine && comp.has(k) && comp.get(k)[1]) continue;
-      comp.set(k, [c, mine]);
+      comp.set(k, [isAuto(c) && !S.showAuto ? glyphAt(l, x, y) : c, mine]);   // auto codes: what they resolve to (the Auto view: their label)
     }
   }
   if (f) for (const [rk, c] of f.cells) {
@@ -2057,36 +2039,33 @@ function render() {
   const drawCh = (c, x, y) => {
     if (c === CLEAR) { const a = ctx.globalAlpha; ctx.globalAlpha = Math.max(a, 0.8); ctx.strokeStyle = CLEAR_STROKE; ctx.lineWidth = 1.5; ctx.strokeRect(Math.round(px(x)) + 2.5, Math.round(py(y)) + 2.5, Math.round(cw) - 5, Math.round(ch) - 5); ctx.lineWidth = 1; ctx.globalAlpha = a; }
     else if (c === SOLID) { const a = ctx.globalAlpha, f = ctx.fillStyle; ctx.globalAlpha = SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); ctx.globalAlpha = a; ctx.fillStyle = f; }
-    else ctx.fillText(chGlyph(c), px(x) + cw / 2, py(y) + ty);   // (an Auto character: its set's icon)
+    else if (isAuto(c)) autoLabel(c, x, y);
+    else ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
   };
+  // an auto code as its set's label, in green (the Auto view, and previews of an auto character on its own)
+  const autoLabel = (c, x, y) => { const f = ctx.fillStyle; ctx.fillStyle = AUTO_INK; ctx.fillText(autoOf(c).label, px(x) + cw / 2, py(y) + ty); ctx.fillStyle = f; };
   for (const [k, [c, mine]] of comp) {
     const [x, y] = unK(k);
     const inside = x >= 0 && y >= 0 && x < S.w && y < S.h;
     ctx.globalAlpha = (inside ? 1 : 0.38) * (focus && !mine ? 0.22 : 1);
     ctx.fillStyle = C['c-ink'];
     if (c === SOLID) { if (S.showSolid) { ctx.globalAlpha *= SOLID_ALPHA; ctx.fillStyle = SOLID_FILL; ctx.fillRect(px(x), py(y), cw, ch); } }   // opaque space: a faint red cell (Spaces button)
+    else if (isAuto(c)) autoLabel(c, x, y);
     else ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
   }
   ctx.globalAlpha = 1;
-  if (S.showAuto) {   // the Auto view: a small green corner on each auto cell (the active layer's brighter)
-    ctx.fillStyle = AUTO_MARK; const t = Math.max(3, Math.min(6, cw * 0.4));
-    for (const l of S.layers) {
-      if (!l.visible || !l.auto || !l.auto.size) continue;
-      ctx.globalAlpha = l === act ? 0.9 : 0.35; ctx.beginPath();
-      for (const k of l.auto.keys()) { const [x, y] = unK(k); if (!inView(x, y)) continue; const X = px(x + 1), Y = py(y); ctx.moveTo(X - t, Y); ctx.lineTo(X, Y); ctx.lineTo(X, Y + t); ctx.closePath(); }
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
   if (f) {
     ctx.fillStyle = C['c-float-ink'];
     const fmaps = mirrorMaps(S.tool === 'select' ? 'select' : 'move');
+    const fget = cellGet(f.cells);
     fmaps.forEach((m, i) => {   // with mirror on, where the mirrored copy will land (fainter)
       ctx.globalAlpha = i ? 0.45 : 1;
       for (const [rk, c] of f.cells) {
         if (c === ' ') continue;
         const [dx, dy] = unK(rk), x = m.x(f.x + dx), y = m.y(f.y + dy);
-        if (inView(x, y)) ctx.fillText(m.c(c), px(x) + cw / 2, py(y) + ty);
+        if (!inView(x, y)) continue;
+        if (isAuto(c)) { if (S.showAuto) autoLabel(c, x, y); else { const r = resolveAt(fget, dx, dy, c); if (r !== SOLID) ctx.fillText(r, px(x) + cw / 2, py(y) + ty); } }   // (auto cells resolve within the block; they re-pick where it lands)
+        else ctx.fillText(m.c(c), px(x) + cw / 2, py(y) + ty);
       }
     });
     ctx.globalAlpha = 1;
@@ -2178,10 +2157,7 @@ function render() {
     const outl = new Map();
     for (const [k, c0] of shp.outline) for (const [x, y, c] of mirrorTargets(...unK(k), c0)) if (!outl.has(K(x, y))) outl.set(K(x, y), c);   // (and its mirrored copies)
     const shown = new Map(outl);
-    if ([...outl.values()].some(isAuto)) {   // Auto: as it will come out, with the neighbors that re-pick
-      const over = new Map(); for (const [k, c] of outl) over.set(k, autoIdOf(c));
-      for (const [k, c] of autoPreview(L(), over)) shown.set(k, c);
-    }
+    if (!S.showAuto && [...outl.values()].some(isAuto)) for (const [k, c] of autoPreview(L(), outl)) shown.set(k, c);   // auto: as it will come out
     for (const [k, c] of shown) {
       const [x, y] = unK(k); if (!inView(x, y)) continue;
       ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x), py(y), cw, ch);
@@ -2273,13 +2249,13 @@ function render() {
       ctx.strokeRect(Math.round(px(x)) + 0.5, Math.round(py(y)) + 0.5, Math.round(cw) - 1, Math.round(ch) - 1);
     }
     ctx.globalAlpha = 1;
-    const paintsCh = (S.tool === 'pencil' && !S.pencil.smart) || (S.tool === 'brush' && S.paint.mode === 'char'), lay = L();
-    if ((paintsCh && isAuto(S.brush.ch)) || (S.tool === 'eraser' && lay.auto && lay.auto.size)) {
-      // Auto: the cells as they'd come out, and (fainter) the neighbors that would re-pick
-      const over = new Map(), id = S.tool === 'eraser' ? null : autoIdOf(S.brush.ch);
-      for (const [dx, dy] of brushOffsets(ts.size, ts.tip)) for (const [x, y] of mirrorTargets(S.hover.x + dx, S.hover.y + dy, null)) if (editable(x, y)) over.set(K(x, y), id);
-      for (const [k, c] of autoPreview(lay, over)) {
-        const [x, y] = unK(k); if (!inView(x, y)) continue;
+    const paintsCh = (S.tool === 'pencil' && !S.pencil.smart) || (S.tool === 'brush' && S.paint.mode === 'char');
+    if (!S.showAuto && ((paintsCh && isAuto(S.brush.ch)) || S.tool === 'eraser')) {
+      // auto: the cells as they'd come out, and (fainter) the auto cells around them that would re-pick
+      const over = new Map(), v = S.tool === 'eraser' ? null : S.brush.ch;
+      for (const [dx, dy] of brushOffsets(ts.size, ts.tip)) for (const [x, y] of mirrorTargets(S.hover.x + dx, S.hover.y + dy, null)) if (editable(x, y)) over.set(K(x, y), v);
+      for (const [k, c] of autoPreview(L(), over)) {
+        const [x, y] = unK(k); if (!inView(x, y) || (v === null && over.has(k))) continue;
         ctx.globalAlpha = 0.85; ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x) + 1, py(y) + 1, cw - 2, ch - 2);
         ctx.globalAlpha = over.has(k) ? 0.6 : 0.45; ctx.fillStyle = C['c-ink']; if (c) drawCh(c, x, y);
       }
@@ -2704,7 +2680,8 @@ window.addEventListener('keydown', e => {
   }
   if (mod) {
     const lk = k.toLowerCase();
-    if (lk === 'c' && e.shiftKey) { e.preventDefault(); copyMerged(); }
+    if (e.code === 'KeyC' && e.altKey) { e.preventDefault(); copyRaw(); }   // (Option C types ç on a Mac, so by key position)
+    else if (lk === 'c' && e.shiftKey) { e.preventDefault(); copyMerged(); }
     else if (lk === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
     else if (lk === 'y') { e.preventDefault(); redo(); }
     else if (lk === 'a') { e.preventDefault(); e.shiftKey ? selectCanvas() : selectAll(); }
@@ -2841,13 +2818,13 @@ document.addEventListener('copy', e => {
   if (isField(document.activeElement)) return;
   const t = selectionText(); if (t == null) return;
   e.clipboardData.setData('text/plain', t); e.preventDefault();
-  S.clip = t; S.clipAuto = { text: t, auto: selectionAuto() }; toast('Copied');
+  S.clip = t; toast('Copied');
 });
 document.addEventListener('cut', e => {
   if (isField(document.activeElement)) return;
   const t = selectionText(); if (t == null) return;
   e.clipboardData.setData('text/plain', t); e.preventDefault();
-  S.clip = t; S.clipAuto = { text: t, auto: selectionAuto() }; deleteSelection(); toast('Cut');
+  S.clip = t; deleteSelection(); toast('Cut');
 });
 document.addEventListener('paste', e => {
   if (isField(document.activeElement)) return;
@@ -2869,34 +2846,24 @@ function projectData() {
   return {
     app: 'asXii', appVersion: VERSION, format: 1, name: $('#docname').value, width: S.w, height: S.h, active: S.active,
     mirror: { x: S.mirrorAt.x, y: S.mirrorAt.y },
-    autoJoin: S.autoJoin, autoSets: docAutoSets(),
     blocks: { w: S.blocks.w, h: S.blocks.h, depth: S.blocks.depth, fill: S.blocks.fill, seams: S.blocks.seams, solid: S.blocks.solid,
       view: S.blocks.view, size: S.blocks.size, dir: S.blocks.dir, level: S.blocks.level, flat: S.blocks.flat, ox: S.blocks.ox, oy: S.blocks.oy, placed: S.blocks.placed, moved: !!S.blocks.moved, dcells: [...S.blocks.dcells], cells: [...S.blocks.cells] },
     layers: S.layers.map(l => {
       const cells = [...l.cells.keys()];
-      const auto = autoRuns(l), A = auto ? { auto } : {};
-      if (!cells.length) return { name: l.name, visible: l.visible, x: 0, y: 0, rows: [], ...A, ...(l.text ? { text: { ...l.text }, autoName: !!l.autoName } : {}) };
+      if (!cells.length) return { name: l.name, visible: l.visible, x: 0, y: 0, rows: [], ...(l.text ? { text: { ...l.text }, autoName: !!l.autoName } : {}) };
       const b = selBounds(cells);
       const rows = [];
       for (let j = 0; j < b.h; j++) { let r = ''; for (let i = 0; i < b.w; i++) r += l.cells.get(K(b.x + i, b.y + j)) || ' '; rows.push(r.replace(/\s+$/, '')); }
-      return { name: l.name, visible: l.visible, x: b.x, y: b.y, rows, ...A, ...(l.text ? { text: { ...l.text }, autoName: !!l.autoName } : {}) };
+      return { name: l.name, visible: l.visible, x: b.x, y: b.y, rows, ...(l.text ? { text: { ...l.text }, autoName: !!l.autoName } : {}) };
     }),
   };
-}
-// The document's own sets (yours) go with it, so it opens the same in another browser
-function docAutoSets() {
-  const ids = new Set(); for (const l of S.layers) for (const id of (l.auto || new Map()).values()) ids.add(id);
-  return [...ids].filter(id => !AUTO_BY_ID.has(id)).map(autoSet).filter(Boolean);
 }
 function loadProject(d) {
   if (!d || !Array.isArray(d.layers)) throw new Error('Not an asXii project');
   S.w = d.width | 0 || 80; S.h = d.height | 0 || 24;
-  S.autoJoin = AUTO_JOINS.some(([v]) => v === d.autoJoin) ? d.autoJoin : 'set';
-  S.docSets = (Array.isArray(d.autoSets) ? d.autoSets : []).map(cleanAutoSet).filter(Boolean); S.docSets.forEach(x => autoChar(x.id));
   S.layers = d.layers.map(ld => {
     const l = makeLayer(ld.name); l.visible = ld.visible !== false;
     (ld.rows || []).forEach((r, j) => chars(r).forEach((c, i) => { if (c !== ' ') l.cells.set(K(ld.x + i, ld.y + j), c); }));
-    l.auto = autoFromRuns(ld.auto);   // (older files have none)
     const t = ld.text;
     if (t && typeof t === 'object' && (window.ASXII_FONTS || {})[t.font]) { l.text = { str: String(t.str || ''), font: t.font, layout: ['default', 'full', 'fit', 'smush'].includes(t.layout) ? t.layout : 'default', ws: ['inside', 'block'].includes(t.ws) ? t.ws : 'clear', ls: clamp(t.ls | 0, -3, 20), lh: clamp(t.lh | 0, -30, 20), x: t.x | 0, y: t.y | 0 }; l.autoName = !!ld.autoName; }
     return l;
@@ -2938,71 +2905,46 @@ const SOLID = '\u00A0';
 const SOLID_FILL = '#ff0000', SOLID_ALPHA = 0.15;
 // Clear: a stand-in character that erases wherever it's painted, so any drawing tool can erase (Fill a region, cut a
 // Shape...). setCell turns it into a delete, so it's never stored. Shown as a blue outlined cell.
-const CLEAR = '\uE000', CLEAR_STROKE = '#4ea1ff', AUTO_MARK = '#3ecf6e';
-const chName = c => c === SOLID ? 'opaque space' : c === CLEAR ? 'clear (erases)' : isAuto(c) ? 'Auto, ' + autoName(autoIdOf(c)) : c;   // for messages
+const CLEAR = '\uE000', CLEAR_STROKE = '#4ea1ff', AUTO_INK = '#3ecf6e';   // (auto codes' labels are green)
+const chName = c => c === SOLID ? 'opaque space' : c === CLEAR ? 'clear (erases)' : isAuto(c) ? `Auto ${autoOf(c).label}, ${autoOf(c).name}` : c;   // for messages
 
-// ---------- Autotile (AUTOTILE.md): auto cells pick their own character from their neighbors ----------
-// A layer's auto cells are layer.auto, Map "x,y" -> set id. The cell itself (layer.cells) holds the character it resolved
-// to, so copy, export, the wand and everything else just see plain art. Painting an Auto character (a stand-in, one per
-// set, like Clear) makes a cell auto; painting anything else makes it plain again. Either way the cell and its 8
-// neighbors re-pick (autoFix).
+// ---------- Autotile (AUTOTILE.md): cells that pick their own character from their neighbors ----------
+// An auto cell holds its set's code in layer.cells, like any character: a private-use character, U+E101 for set 1,
+// U+E102 for set 2 and so on (the sets are a fixed library, labeled 1-9, 0, A-Z). Copy, paste, move, undo and save carry
+// the codes as they are. Wherever the art is shown, copied as text or exported, a code resolves to a real character,
+// picked from its neighbors: the cells with the same code on the same layer (glyphAt, compositeAt). Copy raw keeps the
+// codes, for other apps like the game; pasting codes back gives auto cells.
 // Line sets look at the 4 neighbors: up 1, right 2, down 4, left 8, so a table is 16 characters, one per combination
 // (0 is a lone cell). Region sets also look at the corners: a cell with all 8 neighbors is inside, the rest are the edge,
-// drawn with the same 16-character table running along the edge (regionBits), or by a function (Blocks, Shade).
-const AUTO_BOX = '□│─└││┌├─┘─┴┐┤┬┼', AUTO_ASCII = '+|-+||++-+-+++++';
+// drawn with the same 16-piece table running along the edge (regionBits), or by a rule of their own (Blocks, Shade).
+const AUTO_BOX = '□│─└││┌├─┘─┴┐┤┬┼', AUTO_ROUND = '□│─╰││╭├─╯─┴╮┤┬┼', AUTO_ASCII = '+|-+||++-+-+++++';
 const brickInside = (x, y) => ((y & 1) ? (x + 2) & 3 : x & 3) === 3 ? '|' : '_';
+// The order is for good: a set's label and code come from its place in the list (add new ones at the end)
 const AUTO_SETS = [
-  { id: 'ascii', name: 'ASCII', kind: 'line', table: AUTO_ASCII, icon: '+' },
-  { id: 'ascii-round', name: 'ASCII rounded', kind: 'line', table: "+|-'||.+-'-+.+++", icon: '.' },
-  { id: 'ascii-slash', name: 'ASCII slashes', kind: 'line', table: '+|-\\||/+-/-+\\+++', icon: '/' },
-  { id: 'box', name: 'Box', kind: 'line', table: AUTO_BOX, icon: '┼' },
-  { id: 'box-round', name: 'Box rounded', kind: 'line', table: '□│─╰││╭├─╯─┴╮┤┬┼', icon: '╭' },
-  { id: 'box-heavy', name: 'Box heavy', kind: 'line', table: '■┃━┗┃┃┏┣━┛━┻┓┫┳╋', icon: '╋' },
-  { id: 'box-double', name: 'Box double', kind: 'line', table: '□║═╚║║╔╠═╝═╩╗╣╦╬', icon: '╬' },
-  { id: 'pipes', name: 'Pipes', kind: 'line', table: '◎╨╞╚╥║╔╠╡╝═╩╗╣╦╬', icon: '╠' },   // (ends get a flange)
-  { id: 'panel', name: 'Panel', kind: 'region', table: AUTO_BOX, inside: SOLID, icon: '┌' },
-  { id: 'panel-round', name: 'Panel rounded', kind: 'region', table: '□│─╰││╭├─╯─┴╮┤┬┼', inside: SOLID, icon: '╭' },
-  { id: 'panel-ascii', name: 'Panel ASCII', kind: 'region', table: AUTO_ASCII, inside: SOLID, icon: '+' },
-  { id: 'blocks', name: 'Blocks', kind: 'region', fn: 'blocks', icon: '▟' },
-  { id: 'shade', name: 'Shade', kind: 'region', fn: 'shade', icon: '▒' },
-  { id: 'brick', name: 'Brick', kind: 'region', table: AUTO_ASCII, inside: brickInside, icon: '#' },
+  { name: 'ASCII', kind: 'line', table: AUTO_ASCII },
+  { name: 'ASCII rounded', kind: 'line', table: "+|-'||.+-'-+.+++" },
+  { name: 'ASCII slashes', kind: 'line', table: '+|-\\||/+-/-+\\+++' },
+  { name: 'Box', kind: 'line', table: AUTO_BOX },
+  { name: 'Box rounded', kind: 'line', table: AUTO_ROUND },
+  { name: 'Box heavy', kind: 'line', table: '■┃━┗┃┃┏┣━┛━┻┓┫┳╋' },
+  { name: 'Box double', kind: 'line', table: '□║═╚║║╔╠═╝═╩╗╣╦╬' },
+  { name: 'Pipes', kind: 'line', table: '◎╨╞╚╥║╔╠╡╝═╩╗╣╦╬' },   // (ends get a flange)
+  { name: 'Panel', kind: 'region', table: AUTO_BOX, inside: SOLID },
+  { name: 'Panel rounded', kind: 'region', table: AUTO_ROUND, inside: SOLID },
+  { name: 'Panel ASCII', kind: 'region', table: AUTO_ASCII, inside: SOLID },
+  { name: 'Blocks', kind: 'region', rule: 'blocks' },
+  { name: 'Shade', kind: 'region', rule: 'shade' },
+  { name: 'Brick', kind: 'region', table: AUTO_ASCII, inside: brickInside },
 ];
-for (const s of AUTO_SETS) s.table = s.table && chars(s.table);
-const AUTO_BY_ID = new Map(AUTO_SETS.map(s => [s.id, s]));
+const AUTO_LABELS = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+AUTO_SETS.forEach((s, i) => { s.code = String.fromCharCode(0xE101 + i); s.label = AUTO_LABELS[i]; s.table = s.table && chars(s.table); });
+const AUTO_BY_CODE = new Map(AUTO_SETS.map(s => [s.code, s]));
+const autoOf = c => (c && AUTO_BY_CODE.get(c)) || null;
+const isAuto = c => !!autoOf(c);
+// What a cell holding c shows in the UI (chips, palette, recent): an auto code shows its set's label (in green)
+const chGlyph = c => isAuto(c) ? autoOf(c).label : c;
 // Quadrant blocks, by which quarters are filled: upper left 1, upper right 2, lower left 4, lower right 8
 const QUADS = ' ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█';
-// The Auto stand-in characters: private-use characters, one per set. The built-in sets come first, so theirs never change.
-const AUTO_BASE = 0xE100, autoReg = { byId: new Map(), byCh: new Map(), next: AUTO_BASE };
-function autoChar(id) {
-  let c = autoReg.byId.get(id);
-  if (!c) { c = String.fromCharCode(autoReg.next++); autoReg.byId.set(id, c); autoReg.byCh.set(c, id); }
-  return c;
-}
-AUTO_SETS.forEach(s => autoChar(s.id));
-const autoIdOf = c => (c && autoReg.byCh.get(c)) || null;
-const isAuto = c => !!autoIdOf(c);
-// A set by id: built in, your own (kept in the browser), or one that came with the open document
-const autoSet = id => AUTO_BY_ID.get(id) || S.autoSets.find(s => s.id === id) || S.docSets.find(s => s.id === id) || null;
-const allAutoSets = () => [...AUTO_SETS, ...S.autoSets, ...S.docSets.filter(d => !S.autoSets.some(s => s.id === d.id))];
-const autoName = id => { const s = autoSet(id); return s ? s.name : 'missing set'; };
-const autoIcon = id => { const s = autoSet(id); return !s ? '?' : s.icon || (s.table ? s.table[s.kind === 'region' ? 6 : 15] : '+'); };
-// What a cell holding c shows in the UI (chips, palette): an Auto character shows its set's icon
-const chGlyph = c => isAuto(c) ? autoIcon(autoIdOf(c)) : c;
-// Which cells count as a neighbor (S.autoJoin, saved with the document): 'set' cells of the same set, 'auto' any auto
-// cell, 'art' any character on the layer (so auto lines join plain art). over: a preview overlay, Map key -> set id or null
-const AUTO_JOINS = [['set', 'Joins the same set'], ['auto', 'Joins any auto cell'], ['art', 'Joins any art']];
-function autoAt(lay, k, over) { if (over && over.has(k)) return over.get(k); return (lay.auto && lay.auto.get(k)) || null; }
-function autoJoins(lay, id, over) {
-  const mode = S.autoJoin;
-  return (x, y) => {
-    const k = K(x, y), s = autoAt(lay, k, over);
-    if (mode === 'set') return s === id;
-    if (s) return true;
-    if (mode === 'auto' || (over && over.has(k))) return false;
-    const c = lay.cells.get(k);
-    return !!c && c !== SOLID;
-  };
-}
 // The edge of a region: which ways the edge runs through the cell, as line bits; -1 = inside (all 8 neighbors are in)
 function regionBits(x, y, inn) {
   const n = inn(x, y - 1), e = inn(x + 1, y), s = inn(x, y + 1), w = inn(x - 1, y);
@@ -3017,96 +2959,54 @@ function regionBits(x, y, inn) {
   if (s && w && !sw) b |= 12;
   return b;
 }
-// The character a cell of set `set` at x, y resolves to; inn(x, y): is that neighbor in. '' = an empty (clear) inside
+// The character a cell of `set` at x, y resolves to; inn(x, y): is that neighbor in the set
 function autoResolve(set, x, y, inn) {
   if (set.kind === 'line') return set.table[(inn(x, y - 1) ? 1 : 0) | (inn(x + 1, y) ? 2 : 0) | (inn(x, y + 1) ? 4 : 0) | (inn(x - 1, y) ? 8 : 0)];
-  if (set.fn === 'blocks') {   // the shape shrunk by half a cell, in quarter blocks, so the edges are clean
+  if (set.rule === 'blocks') {   // the shape shrunk by half a cell, in quarter blocks, so the edges are clean
     const n = inn(x, y - 1), e = inn(x + 1, y), s = inn(x, y + 1), w = inn(x - 1, y);
     const q = (v, h, vOpp, hOpp, diag) => !((!v && vOpp) || (!h && hOpp) || (v && h && !diag));
     return QUADS[(q(n, w, s, e, inn(x - 1, y - 1)) ? 1 : 0) | (q(n, e, s, w, inn(x + 1, y - 1)) ? 2 : 0) |
       (q(s, w, n, e, inn(x - 1, y + 1)) ? 4 : 0) | (q(s, e, n, w, inn(x + 1, y + 1)) ? 8 : 0)].trim() || '·';
   }
   const b = regionBits(x, y, inn);
-  if (set.fn === 'shade') return b === -1 ? '▓' : (inn(x, y - 1) && inn(x + 1, y) && inn(x, y + 1) && inn(x - 1, y)) ? '▒' : '░';
-  if (b === -1) return typeof set.inside === 'function' ? set.inside(x, y) : set.inside || '';
+  if (set.rule === 'shade') return b === -1 ? '▓' : (inn(x, y - 1) && inn(x + 1, y) && inn(x, y + 1) && inn(x - 1, y)) ? '▒' : '░';
+  if (b === -1) return typeof set.inside === 'function' ? set.inside(x, y) : set.inside;
   return set.table[b];
 }
-// Re-pick the auto cells among `keys` and their 8 neighbors (after the cells at keys changed)
-function autoFix(lay, keys) {
-  if (!lay.auto || !lay.auto.size) return;
-  const todo = new Set();
-  for (const k of keys) {
-    const [x, y] = unK(k);
-    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const k2 = K(x + i, y + j); if (lay.auto.has(k2)) todo.add(k2); }
-  }
-  for (const k of todo) {
-    const id = lay.auto.get(k), set = autoSet(id); if (!set) continue;   // (a set this browser doesn't have: leave it as it is)
-    const [x, y] = unK(k), c = autoResolve(set, x, y, autoJoins(lay, id));
-    if (c) lay.cells.set(k, c); else lay.cells.delete(k);
-  }
+// What the cell at x, y shows, given a lookup of the raw cells (get(x, y) -> character or undefined)
+function resolveAt(get, x, y, c = get(x, y)) {
+  const set = autoOf(c); if (!set) return c;
+  return autoResolve(set, x, y, (a, b) => get(a, b) === c);
 }
-const autoFixAll = lay => { if (lay.auto && lay.auto.size) autoFix(lay, [...lay.auto.keys()]); };
-// A preview: what the cells would show if the overlay (key -> set id, or null = plain / erased) were painted, for the
-// overlay's cells and the neighbors that would re-pick. Returns Map key -> character ('' = empty)
+const cellGet = cells => (x, y) => cells.get(K(x, y));
+const glyphAt = (lay, x, y) => resolveAt(cellGet(lay.cells), x, y);
+// A preview: what the cells would show if `over` (key -> raw character, null = erased) were painted on the layer: the
+// overlay's cells, and the auto cells around them whose character would change. Map key -> character ('' = empty)
 function autoPreview(lay, over) {
+  const get = (x, y) => { const k = K(x, y); return over.has(k) ? over.get(k) ?? undefined : lay.cells.get(k); };
   const out = new Map(), todo = new Set();
   for (const k of over.keys()) { const [x, y] = unK(k); for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) todo.add(K(x + i, y + j)); }
   for (const k of todo) {
-    const id = autoAt(lay, k, over), set = id && autoSet(id); if (!set) continue;
-    const [x, y] = unK(k), c = autoResolve(set, x, y, autoJoins(lay, id, over));
-    if (over.has(k) || c !== (lay.cells.get(k) || '')) out.set(k, c);
+    const [x, y] = unK(k), now = resolveAt(get, x, y);
+    if (over.has(k) || (isAuto(get(x, y)) && now !== glyphAt(lay, x, y))) out.set(k, now || '');
   }
   return out;
 }
-// A small sample of a set for menus and the set editor: rows of '#' (auto cells) resolved on their own
+// A sample of a set: rows of '#' cells, resolved on their own (the palette's tooltips)
 function autoSample(set, rows) {
-  const on = new Set(); rows.forEach((r, j) => chars(r).forEach((c, i) => { if (c === '#') on.add(K(i, j)); }));
-  const inn = (x, y) => on.has(K(x, y));
-  return rows.map((r, j) => chars(r).map((c, i) => { if (c !== '#') return ' '; const v = autoResolve(set, i, j, inn); return !v || v === SOLID ? ' ' : v; }).join('')).join('\n');
+  const get = (x, y) => (rows[y] || '')[x] === '#' ? set.code : undefined;
+  return rows.map((r, j) => chars(r).map((c, i) => { if (c !== '#') return ' '; const v = autoResolve(set, i, j, (a, b) => get(a, b) === set.code); return !v || v === SOLID ? ' ' : v; }).join('')).join('\n');
 }
-const AUTO_THUMB = { line: ['#####', '# # #', '#####'], region: ['######', '######', '######'] };
-const autoThumb = set => autoSample(set, AUTO_THUMB[set.kind] || AUTO_THUMB.line);
+const AUTO_THUMB = { line: ['######', '#  # #', '######', '   #  '], region: ['#######', '#######', '#######', '  ###  '] };
+const autoThumb = set => autoSample(set, AUTO_THUMB[set.kind]);
 // The characters a set can put down (Make auto finds the set that fits the selected art best)
 function autoSetChars(set) {
-  if (set.fn === 'blocks') return new Set(chars(QUADS.trim()));
-  if (set.fn === 'shade') return new Set(chars('░▒▓'));
+  if (set.rule === 'blocks') return new Set(chars(QUADS.trim()));
+  if (set.rule === 'shade') return new Set(chars('░▒▓'));
   const out = new Set(set.table);
-  if (typeof set.inside === 'string' && set.inside) out.add(set.inside);
-  if (set.id === 'brick') { out.add('_'); out.add('|'); }
+  if (typeof set.inside === 'string') out.add(set.inside); else if (set.inside) { out.add('_'); out.add('|'); }
   return out;
 }
-// Saved with the document: per layer, runs of auto cells along a row, [x, y, length, set id]
-function autoRuns(lay) {
-  if (!lay.auto || !lay.auto.size) return null;
-  const ks = [...lay.auto.keys()].map(unK).sort((a, b) => a[1] - b[1] || a[0] - b[0]), out = [];
-  for (const [x, y] of ks) {
-    const id = lay.auto.get(K(x, y)), last = out[out.length - 1];
-    if (last && last[1] === y && last[0] + last[2] === x && last[3] === id) last[2]++;
-    else out.push([x, y, 1, id]);
-  }
-  return out;
-}
-function autoFromRuns(runs) {
-  const m = new Map();
-  if (Array.isArray(runs)) for (const r of runs) {
-    if (!Array.isArray(r) || typeof r[3] !== 'string') continue;
-    const x = r[0] | 0, y = r[1] | 0, n = clamp(r[2] | 0, 0, 10000);
-    for (let i = 0; i < n; i++) m.set(K(x + i, y), r[3]);
-  }
-  return m;
-}
-// Your own sets: { id, name, kind: 'line' | 'region', table: [16 characters], inside (region: a character, '' = clear) }
-function cleanAutoSet(s) {
-  if (!s || typeof s !== 'object' || !Array.isArray(s.table) && typeof s.table !== 'string') return null;
-  const t = (Array.isArray(s.table) ? s.table : chars(s.table)).slice(0, 16).map(c => chars(String(c || ''))[0] || ' ');
-  while (t.length < 16) t.push(' ');
-  return { id: typeof s.id === 'string' && /^my-[\w-]+$/.test(s.id) ? s.id : 'my-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    name: String(s.name || 'My set').slice(0, 30), kind: s.kind === 'region' ? 'region' : 'line', table: t,
-    inside: s.kind === 'region' ? chars(String(s.inside ?? SOLID))[0] || '' : undefined };
-}
-const AUTOSETS_KEY = 'asxii.autosets';
-function loadAutoSets() { try { S.autoSets = (JSON.parse(localStorage.getItem(AUTOSETS_KEY)) || []).map(cleanAutoSet).filter(Boolean); } catch { S.autoSets = []; } S.autoSets.forEach(s => autoChar(s.id)); }
-function saveAutoSets() { try { localStorage.setItem(AUTOSETS_KEY, JSON.stringify(S.autoSets)); } catch {} }
 // Everything a bake puts down: the outline, the face fills, and (Solid) solid spaces in the faces left blank.
 // ---------- Diagonal view: diamond blocks on a 45° grid, extruded straight right or left (the Lennert Stock look) ----------
 // Block (u, v): its top point is at (X, Y) = ((u - v) * b, (u + v) * b) in cell-corner units; it reaches b down-right to
@@ -3401,7 +3301,7 @@ function codeLines() {
 }
 function newDoc() {
   commitFloat(); pushUndo();
-  S.layers = [makeLayer('Layer 1')]; S.active = 0; S.sel = null; S.cursor = null; S.autoJoin = 'set'; S.docSets = [];
+  S.layers = [makeLayer('Layer 1')]; S.active = 0; S.sel = null; S.cursor = null;
   S.mirrorAt = { x: null, y: null };
   $('#docname').value = 'untitled';
   changed(true); zoomFit(); toast('New canvas (Ctrl Z brings the old one back)');
@@ -3426,7 +3326,7 @@ function savePrefs() {
   try {
     const tb = $('#toolbox');
     localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid, showSolid: S.showSolid,
-      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, activeSlot: S.activeSlot, mirrorUse: S.mirrorUse, panels: S.panels, sideW: S.sideW, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, showAuto: S.showAuto, autoLast: S.autoLast, autoSlots: { draw: autoIdOf(S.brush.ch), right: autoIdOf(S.ch2) }, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
+      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, activeSlot: S.activeSlot, mirrorUse: S.mirrorUse, panels: S.panels, sideW: S.sideW, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, showAuto: S.showAuto, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || null; } catch { return null; } }
@@ -3465,11 +3365,11 @@ const CMDS = {
   layerNew: () => { commitFloat(); pushUndo(); S.layers.splice(S.active + 1, 0, makeLayer('Layer ' + (S.layers.length + 1))); S.active++; changed(true); },
   layerDup: () => {
     commitFloat(); pushUndo(); const l = L(), n = makeLayer(l.name + ' copy');
-    n.cells = new Map(l.cells); n.auto = new Map(l.auto || []); n.visible = l.visible; n.text = l.text ? { ...l.text } : null; S.layers.splice(S.active + 1, 0, n); S.active++; changed(true);
+    n.cells = new Map(l.cells); n.visible = l.visible; n.text = l.text ? { ...l.text } : null; S.layers.splice(S.active + 1, 0, n); S.active++; changed(true);
   },
   layerDel: () => {
     commitFloat();
-    if (S.layers.length < 2) { pushUndo(); L().cells.clear(); L().auto = new Map(); changed(true); return toast('Cleared the last layer'); }
+    if (S.layers.length < 2) { pushUndo(); L().cells.clear(); changed(true); return toast('Cleared the last layer'); }
     pushUndo(); S.layers.splice(S.active, 1); S.active = Math.max(0, S.active - 1); changed(true);
   },
   layerUp: () => moveLayer(1), layerDown: () => moveLayer(-1),
@@ -3485,27 +3385,21 @@ const CMDS = {
     pushUndo(); const top = L(), below = S.layers[S.active - 1];
     if (top.id === S.textEdit) S.textEdit = null;
     below.text = null;   // merged: plain art for good
-    if (!below.auto) below.auto = new Map();
-    for (const [k, c] of top.cells) { below.cells.set(k, c); below.auto.delete(k); }
-    for (const [k, id] of top.auto || []) below.auto.set(k, id);   // auto cells stay auto, and re-pick with what's below
-    autoFix(below, [...top.cells.keys(), ...(top.auto || new Map()).keys()]);
+    for (const [k, c] of top.cells) below.cells.set(k, c);
     S.layers.splice(S.active, 1); S.active--; changed(true);
   },
   flatten: () => {
     commitFloat();
     if (S.layers.length < 2) return toast('Only one layer', 'warn');
     pushUndo(); const out = makeLayer('Layer 1');
-    for (const l of S.layers) if (l.visible) {
-      for (const [k, c] of l.cells) { out.cells.set(k, c); out.auto.delete(k); }
-      for (const [k, id] of l.auto || []) out.auto.set(k, id);
-    }
-    autoFixAll(out);
+    for (const l of S.layers) if (l.visible) for (const [k, c] of l.cells) out.cells.set(k, c);
     S.layers = [out]; S.active = 0; changed(true); toast('Flattened (hidden layers were dropped)');
   },
   zoomIn: () => zoomStep(1), zoomOut: () => zoomStep(-1), zoomFit, zoom100: () => setZoom(1),
   focusToggle: () => { S.focusLayer = !S.focusLayer; $('#focusChk').checked = S.focusLayer; savePrefs(); redraw(); toast(S.focusLayer ? 'Layer focus on' : 'Layer focus off'); },
   gridToggle: () => { S.grid = !S.grid; $('#gridBtn').classList.toggle('on', S.grid); savePrefs(); redraw(); },
-  autoView: () => { S.showAuto = !S.showAuto; $('#autoBtn').classList.toggle('on', S.showAuto); savePrefs(); redraw(); },
+  copyRaw: () => copyRaw(),
+  autoView: () => { S.showAuto = !S.showAuto; $('#autoBtn').classList.toggle('on', S.showAuto); savePrefs(); redraw(); toast(S.showAuto ? 'Auto view: auto cells show their set (1-9, 0, A-Z)' : 'Auto cells show what they resolve to'); },
   autoBake: () => bakeAuto(),
   autoMake: () => makeAuto(),
   solidToggle: () => { S.showSolid = !S.showSolid; $('#solidBtn').classList.toggle('on', S.showSolid); savePrefs(); redraw(); },
@@ -3540,6 +3434,7 @@ const WS_CLEAR = 'Clear: blank cells are see-through. Only the characters land; 
 // The Characters pane: plain ASCII first, then Unicode.
 const CHAR_GROUPS = [
   ['Special', SOLID + CLEAR],   // opaque space, clear
+  ['Autotile', AUTO_SETS.map(s => s.code).join('')],   // the auto sets, by label (hover one for a preview)
   ['ASCII symbols', "#*.:+=-_|/\\<>()[]{}^~'\"`,;!?@$%&"],
   ['Digits', '0123456789'],
   ['Uppercase', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
@@ -3551,14 +3446,14 @@ const CHAR_GROUPS = [
   ['Arrows', '←↑→↓↖↗↘↙↔↕⇐⇑⇒⇓'],
   ['Misc', '·•°∙…¤§¶©®™±×÷≈≠≤≥∞√∑πΩµ¬¦'],
 ];
-// An Auto character's button shows its set's icon (green), and keeps the character itself in data-ch
-const autoBtn = c => `<button class="cbtn autoch${c === S.brush.ch ? ' on' : ''}" data-ch="${c}" title="Auto, ${esc(autoName(autoIdOf(c)))}: cells pick their own character from their neighbors, with any tool. The tool's bar has the set">${esc(chGlyph(c))}</button>`;
+// An auto code's button shows its set's label in green, and keeps the code itself in data-ch (hover: #autoTip)
+const autoBtn = c => `<button class="cbtn autoch${c === S.brush.ch ? ' on' : ''}" data-ch="${c}" aria-label="${esc(chName(c))}">${esc(chGlyph(c))}</button>`;
 const chOf = b => b.dataset.ch || b.textContent;
 function renderCharPane() {
   const box = $('#charpane');
   box.innerHTML = `<div class="cgroup">Recent</div><div class="cgrid recentrow"></div>` + CHAR_GROUPS.map(([name, set]) =>
     `<div class="cgroup">${esc(name)}</div><div class="cgrid">` +
-    (name === 'Special' ? [...chars(set), autoChar(S.autoLast)] : chars(set)).map(c => isAuto(c) ? autoBtn(c) : c === SOLID ? `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="Opaque space: an empty cell that covers the layers under it (copied and exported as a space)">${SOLID}</button>` :
+    chars(set).map(c => isAuto(c) ? autoBtn(c) : c === SOLID ? `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="Opaque space: an empty cell that covers the layers under it (copied and exported as a space)">${SOLID}</button>` :
       c === CLEAR ? `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="Clear: erases wherever you paint it, with any tool (Fill a region, draw a Shape...)">${CLEAR}</button>` : `<button class="cbtn${c === S.brush.ch ? ' on' : ''}" title="${esc(c)}  U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}">${esc(c)}</button>`).join('') +
     `</div>`).join('');
   $$('.cbtn', box).forEach(b => {
@@ -3575,9 +3470,21 @@ function markSolid() {
     el.classList.toggle('solidch', c === SOLID); el.classList.toggle('clearch', c === CLEAR); el.classList.toggle('autoch', isAuto(c));
   }
 }
+// Hovering an auto set's button: its name and a preview, like the sets look on the canvas
+document.addEventListener('mouseover', e => {
+  const b = e.target.closest && e.target.closest('.cbtn.autoch'), tip = $('#autoTip');
+  if (!b) { tip.hidden = true; return; }
+  const set = autoOf(chOf(b)); if (!set) return;
+  tip.innerHTML = `<div class="tipname"><b>${set.label}</b> ${esc(set.name)}</div><pre>${esc(autoThumb(set))}</pre><div class="tipnote">Auto: draw it with any tool; the cells pick their own characters</div>`;
+  tip.hidden = false;
+  const r = b.getBoundingClientRect();
+  const top = r.top - tip.offsetHeight - 6;   // above the button (below it if there's no room), so the row stays visible
+  tip.style.left = Math.max(8, Math.min(r.left, window.innerWidth - tip.offsetWidth - 8)) + 'px';
+  tip.style.top = (top >= 8 ? top : r.bottom + 6) + 'px';
+});
 // Clicking a character in the pane: type it (Type tool), or make it the character to draw with. The tool stays the same.
 function pickFromPane(c) {
-  if (S.tool === 'type' && S.cursor && !isAuto(c)) { typeChar(c); return; }
+  if (S.tool === 'type' && S.cursor && !isAuto(c)) { typeChar(c); return; }   // (auto codes go in the chip)
   pickInto(c);   // the selected chip
 }
 // Help panel (TOOLBAR.md 3): per tool, a summary and one key per line. keys: [keys, what] (the keys are words separated
@@ -3956,7 +3863,7 @@ const extrude = { dx: 4, dy: 0, solid: true, stroke: false, open: false };
 function extrudeCells(dx = extrude.dx, dy = extrude.dy, solid = extrude.solid, stroke = extrude.stroke) {
   if (!S.sel) return null;
   const lay = L(), front = new Map();
-  for (const k of S.sel) { const c = lay.cells.get(k); if (c && c !== SOLID) front.set(k, c); }
+  for (const k of S.sel) { const c = glyphAt(lay, ...unK(k)); if (c && c !== SOLID) front.set(k, c); }
   if (!front.size) return null;
   // the filled shape: the art plus every cell it encloses (not reachable from outside through blank cells)
   const keys = [...front.keys()].map(unK);
@@ -4645,7 +4552,7 @@ const lookAt = (attr, cur, what) => `<span class="seg">${iconBtn(`${attr}="layer
 // The settings bar (one row: every setting of the tool, long ones as icons), and the Paint and Symmetry panels on the
 // right. Each control is built once, in the place it belongs; bindOptions wires up each place.
 function renderOptions() {
-  closeAutoMenu(); closePatternMenu(); closePaintMenu(); closeRampMenu(); closeNoiseMenu();
+  closePatternMenu(); closePaintMenu(); closeRampMenu(); closeNoiseMenu();
   const t = S.tool, bar = $('#toolopts'), paint = $('#paintOpts'), sym = $('#symOpts');
   for (const el of [bar, paint, sym]) el.innerHTML = '';
   const add = html => bar.insertAdjacentHTML('beforeend', html);
@@ -4711,7 +4618,6 @@ function renderOptions() {
     addSym(well(`<button class="btn" data-mirrorcenter title="Put the lines back in the middle of the canvas (or drag the triangles at their ends)"${S.mirrorAt.x == null && S.mirrorAt.y == null ? ' disabled' : ''}>Center</button>`));
     addSym(`<label class="check" title="The mirrored copy turns / into \\, ( into ) and so on"><input type="checkbox" class="mirrorflip"${S.mirrorFlip ? ' checked' : ''}> Flip characters</label>`);
   }
-  autoOptions(add);   // Auto in a chip: its set
   const canMirror = MIRROR_TOOLS.includes(t), uses = canMirror && !!S.mirrorUse[t];
   // (the Symmetry panel stays at full strength; only the lines on the canvas fade when the tool isn't mirroring)
   // the tool's "uses mirror" toggle: the last thing in the bar, with the rest of its settings
@@ -4774,7 +4680,6 @@ function bindOptions(o) {
   bindShapeOptions(o);
   bindBrushStrokeOptions(o);
   bindBlockOptions(o);
-  bindAutoOptions(o);
   $$('[data-pblank]', o).forEach(b => b.addEventListener('click', () => {
     if (S.tool === 'fill') S.blanksFill = b.dataset.pblank; else S.blanksBrush = b.dataset.pblank;
     savePrefs(); renderOptions();
@@ -4787,8 +4692,7 @@ function bindOptions(o) {
 // and right-click / Shift fills the other one
 const otherSlot = () => S.activeSlot === 'draw' ? 'right' : 'draw';
 function setSlot(slot, c) {
-  if (isAuto(c) && S.autoLast !== autoIdOf(c)) { S.autoLast = autoIdOf(c); renderCharPane(); }   // the Auto swatch shows the last set used
-  if (slot === 'draw') { const was = isAuto(S.brush.ch); setBrushChar(c); if (was || isAuto(c)) renderOptions(); if ((S.tool === 'brush' || S.tool === 'fill') && S.paint.mode !== 'char') { S.paint.mode = 'char'; savePrefs(); renderOptions(); redraw(); } }
+  if (slot === 'draw') { setBrushChar(c); if ((S.tool === 'brush' || S.tool === 'fill') && S.paint.mode !== 'char') { S.paint.mode = 'char'; savePrefs(); renderOptions(); redraw(); } }
   else { S.ch2 = !c || c === CLEAR ? null : c; savePrefs(); renderSlots(); renderOptions(); }
 }
 const pickInto = (c, other) => setSlot(other ? otherSlot() : S.activeSlot, c);
@@ -4829,160 +4733,16 @@ function renderSlots() {
   markSolid();
 }
 
-// ---------- Autotile: the Set menu, the set editor, Bake auto / Make auto (AUTOTILE.md) ----------
-// The chip the Set menu changes: the selected one if it holds an Auto character, else the other one; null = neither
-function autoSlot() {
-  const of = slot => slot === 'draw' ? S.brush.ch : S.ch2;
-  return isAuto(of(S.activeSlot)) ? S.activeSlot : isAuto(of(otherSlot())) ? otherSlot() : null;
-}
-const AUTO_TOOLS = ['pencil', 'brush', 'fill', 'shape'];
-// The bar's Set button (for the drawing tools, whenever a chip holds Auto)
-function autoOptions(add) {
-  const slot = autoSlot(); if (!slot || !AUTO_TOOLS.includes(S.tool)) return;
-  const id = autoIdOf(slot === 'draw' ? S.brush.ch : S.ch2);
-  add(`<span class="sep"></span><span class="label" title="Auto: the cells pick their own character from their neighbors">Set</span>` +
-    `<button class="btn dd autobtn" title="The set ${slot === 'draw' ? 'the Primary' : 'the Secondary'} Auto character draws with"><span class="micon autoch">${esc(autoIcon(id))}</span><span class="pname">${esc(autoName(id))}</span><span class="caret">▾</span></button>` +
-    `<button class="btn icon autogear" title="Make your own set (or edit one of yours)"><span class="gear">⚙</span></button>`);
-}
-function bindAutoOptions(o) {
-  const b = $('.autobtn', o); if (b) b.addEventListener('click', () => openAutoMenu(b));
-  const g = $('.autogear', o); if (g) g.addEventListener('click', () => { const id = autoIdOf(autoSlot() === 'right' ? S.ch2 : S.brush.ch), s = autoSet(id); openAutoPop(g, s && !AUTO_BY_ID.has(s.id) ? s : null); });
-}
-function setAutoJoin(v) {
-  if (v === S.autoJoin) return;
-  pushUndo(); S.autoJoin = v;
-  for (const l of S.layers) autoFixAll(l);   // everything re-picks
-  changed(); toast(AUTO_JOINS.find(j => j[0] === v)[1]);
-}
-// The set list: a small sample of each, then how sets join, and making your own
-function openAutoMenu(btn) {
-  const m = $('#autoMenu');
-  if (!m.hidden) return closeAutoMenu();
-  const slot = autoSlot(), cur = autoIdOf(slot === 'right' ? S.ch2 : S.brush.ch);
-  const item = s => `<div class="patitem${s.id === cur ? ' on' : ''}" data-id="${esc(s.id)}"><pre class="thumb">${esc(autoThumb(s))}</pre><span class="pname">${esc(s.name)}</span>` +
-    (AUTO_BY_ID.has(s.id) ? '' : `<span class="ptag">yours</span><button class="btn pedit" title="Edit this set">✎</button><button class="btn pdel" title="Delete this set">×</button>`) + `</div>`;
-  const sets = allAutoSets(), group = (name, list) => list.length ? `<div class="cgroup">${name}</div>` + list.map(item).join('') : '';
-  m.innerHTML = group('Lines', sets.filter(s => AUTO_BY_ID.has(s.id) && s.kind === 'line')) + group('Regions', sets.filter(s => AUTO_BY_ID.has(s.id) && s.kind === 'region')) +
-    group('Yours', sets.filter(s => !AUTO_BY_ID.has(s.id))) +
-    `<div class="autofoot"><span class="seg">${AUTO_JOINS.map(([v, t]) => `<button class="btn${S.autoJoin === v ? ' on' : ''}" data-join="${v}" title="${t}${v === 'art' ? ' (plain characters too)' : ''}. Saved with the document">${{ set: 'Same set', auto: 'Any auto', art: 'Any art' }[v]}</button>`).join('')}</span>` +
-    `<button class="btn small autonew">New set…</button></div>`;
-  const r = btn.getBoundingClientRect();
-  m.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 300)) + 'px'; m.style.top = (r.bottom + 6) + 'px'; m.hidden = false;
-  $$('.patitem', m).forEach(el => el.addEventListener('click', e => {
-    const s = autoSet(el.dataset.id); if (!s) return;
-    if (e.target.classList.contains('pdel')) {
-      S.autoSets = S.autoSets.filter(x => x.id !== s.id); saveAutoSets(); toast(`Deleted set "${s.name}" (art drawn with it keeps its characters)`);
-      closeAutoMenu(); openAutoMenu(btn); return;
-    }
-    if (e.target.classList.contains('pedit')) { closeAutoMenu(); openAutoPop(btn, s); return; }
-    closeAutoMenu(); setSlot(slot || S.activeSlot, autoChar(s.id)); renderOptions();
-  }));
-  $$('[data-join]', m).forEach(b => b.addEventListener('click', () => { setAutoJoin(b.dataset.join); closeAutoMenu(); openAutoMenu(btn); }));
-  $('.autonew', m).addEventListener('click', () => { closeAutoMenu(); openAutoPop(btn, null); });
-}
-function closeAutoMenu() { const m = $('#autoMenu'); if (m) m.hidden = true; }
-document.addEventListener('pointerdown', e => {
-  if (!e.target.closest('#autoMenu, .autobtn')) closeAutoMenu();
-  if (!e.target.closest('#autoPop, .autogear, .autobtn, #autoMenu, #autoFile')) closeAutoPop();
-});
-
-// The set editor: the 16 cases (where Box would put each line piece), the inside for a region, a live sample.
-// Learn from the selection fills it in from a hand-drawn example.
-let autoDraft = null;
-const AUTO_GRID = [[6, 14, 12, 4], [7, 15, 13, 5], [3, 11, 9, 1], [2, 10, 8, 0]];   // laid out like the pieces of a box
-const AUTO_HINT = '□╵╶└╷│┌├╴┘─┴┐┤┬┼';
-const AUTO_DEMO = { line: ['######  #', '#  #     ', '######  #', '   #    #', '#  ####  '], region: [' ####    ', '#######  ', '######## ', '  ### ## ', '  ###    '] };
-function openAutoPop(btn, set) {
-  const p = $('#autoPop');
-  const base = set || autoSet(autoIdOf(autoSlot() === 'right' ? S.ch2 : S.brush.ch)) || AUTO_BY_ID.get('box');
-  autoDraft = { id: set ? set.id : null, name: set ? set.name : '', kind: base.kind, inside: base.kind === 'region' && typeof base.inside === 'string' ? base.inside : SOLID,
-    table: base.table ? [...base.table] : chars(AUTO_BOX) };
-  refreshAutoPop();
-  placeUnder(p, btn, 330);
-}
-function closeAutoPop() { const p = $('#autoPop'); if (p) p.hidden = true; }
-function refreshAutoPop() {
-  const p = $('#autoPop'), d = autoDraft; if (!d) return;
-  const insideName = d.inside === SOLID ? 'opaque space' : d.inside === '' ? 'clear' : '';
-  p.innerHTML =
-    `<div class="bp-head"><span class="bp-title">${d.id ? 'Edit ' + esc(d.name) : 'New set'}</span></div>` +
-    `<div class="bp-row"><span class="bp-label">Kind</span><span class="seg"><button class="btn${d.kind === 'line' ? ' on' : ''}" data-akind="line" title="Lines: each cell looks at the 4 cells beside it">Lines</button><button class="btn${d.kind === 'region' ? ' on' : ''}" data-akind="region" title="Region: an area with an edge around it and an inside">Region</button></span></div>` +
-    `<pre class="bp-preview autodemo">${esc(autoSample({ ...d, table: d.table }, AUTO_DEMO[d.kind]))}</pre>` +
-    `<div class="autogrid">${AUTO_GRID.map(row => row.map(b => `<label class="autocase" title="${b ? 'Where Box puts ' + AUTO_HINT[b] : 'A cell on its own'}"><span class="hint">${AUTO_HINT[b]}</span><input type="text" data-case="${b}" value="${esc(d.table[b] === SOLID ? '' : d.table[b])}" maxlength="2" spellcheck="false"></label>`).join('')).join('')}</div>` +
-    (d.kind === 'region' ? `<div class="bp-row"><span class="bp-label">Inside</span><input type="text" class="autoin" value="${esc(d.inside === SOLID ? '' : d.inside)}" maxlength="2" spellcheck="false" placeholder="·" title="The character inside the region"><span class="seg"><button class="btn${d.inside === SOLID ? ' on' : ''}" data-ain="solid" title="Opaque space: covers the layers under it">Opaque</button><button class="btn${d.inside === '' ? ' on' : ''}" data-ain="clear" title="Clear: see-through">Clear</button></span><span class="bp-note">${insideName}</span></div>` : '') +
-    `<div class="bp-row"><button class="btn small autolearn" title="Select a small hand-drawn example on the active layer (a box, a panel) first">Learn from selection</button><button class="btn small autoexp" title="Save the set as a file to share">Export</button><button class="btn small autoimp" title="Load a set file">Import…</button></div>` +
-    `<div class="bp-save"><input class="bp-name" type="text" maxlength="30" placeholder="New set name" spellcheck="false" value="${esc(d.id ? '' : d.name)}">` +
-    (d.id ? `<button class="btn bp-update">Save</button>` : '') + `<button class="btn primary bp-savebtn">Save as new set</button></div>`;
-  p.hidden = false;
-  const demo = () => { $('.autodemo', p).textContent = autoSample(d, AUTO_DEMO[d.kind]); };
-  $$('[data-akind]', p).forEach(b => b.addEventListener('click', () => { d.kind = b.dataset.akind; refreshAutoPop(); }));
-  $$('[data-case]', p).forEach(inp => inp.addEventListener('input', () => { d.table[+inp.dataset.case] = chars(inp.value).filter(c => c !== ' ').pop() || ' '; inp.value = d.table[+inp.dataset.case].trim(); demo(); }));
-  const ai = $('.autoin', p); if (ai) ai.addEventListener('input', () => { const c = chars(ai.value).filter(x => x !== ' ').pop(); d.inside = c || SOLID; refreshAutoPop(); });
-  $$('[data-ain]', p).forEach(b => b.addEventListener('click', () => { d.inside = b.dataset.ain === 'clear' ? '' : SOLID; refreshAutoPop(); }));
-  $('.autolearn', p).addEventListener('click', () => { if (learnAutoSet(d)) refreshAutoPop(); });
-  $('.autoexp', p).addEventListener('click', () => {
-    const s = cleanAutoSet({ ...d, name: $('.bp-name', p).value.trim() || d.name || 'My set' });
-    download((s.name.replace(/[\\/:*?"<>|]+/g, '-') || 'set') + '.asxii-set.json', JSON.stringify({ asxiiAutoSet: 1, name: s.name, kind: s.kind, table: s.table, inside: s.inside }, null, 1), 'application/json');
-  });
-  $('.autoimp', p).addEventListener('click', () => $('#autoFile').click());
-  const save = asNew => {
-    let name = $('.bp-name', p).value.trim() || (asNew ? '' : d.name);
-    if (!name) { $('.bp-name', p).focus(); return toast('Give the set a name', 'warn'); }
-    if (asNew) { const base = name; let n = 2; while (allAutoSets().some(x => x.name === name)) name = base + ' ' + n++; }
-    const s = cleanAutoSet({ ...d, id: asNew ? null : d.id, name });
-    if (asNew) S.autoSets.push(s); else S.autoSets = S.autoSets.map(x => x.id === s.id ? s : x);
-    saveAutoSets(); autoChar(s.id);
-    if (!asNew) for (const l of S.layers) if (l.auto && [...l.auto.values()].includes(s.id)) { autoFixAll(l); changed(); }   // art drawn with it re-picks
-    setSlot(autoSlot() || S.activeSlot, autoChar(s.id));
-    toast(`Saved set "${s.name}"`); closeAutoPop(); renderOptions();
-  };
-  $('.bp-savebtn', p).addEventListener('click', () => save(true));
-  const up = $('.bp-update', p); if (up) up.addEventListener('click', () => save(false));
-  $('.bp-name', p).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); save(true); } });
-}
-$('#autoFile').addEventListener('change', async e => {
-  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  try {
-    const j = JSON.parse(await f.text()), s = j && j.asxiiAutoSet ? cleanAutoSet({ ...j, id: null }) : null;
-    if (!s) throw new Error('not an asXii set file');
-    autoDraft = { id: null, name: s.name, kind: s.kind, table: s.table, inside: s.kind === 'region' ? s.inside : SOLID };
-    refreshAutoPop(); toast(`Loaded "${s.name}": Save as new set to keep it`);
-  } catch (err) { toast('Could not import: ' + err.message, 'warn'); }
-});
-// Fill the draft in from the selection on the active layer: each drawn cell is an example of the case it's in
-function learnAutoSet(d) {
-  const lay = L();
-  if (!S.sel || !S.sel.size) { toast('Select a small example first (a box, a panel)', 'warn'); return false; }
-  const on = new Set([...S.sel].filter(k => lay.cells.has(k)));
-  if (!on.size) { toast('The selection is empty on this layer', 'warn'); return false; }
-  const inn = (x, y) => on.has(K(x, y));
-  const inside = [...on].filter(k => regionBits(...unK(k), inn) === -1);
-  d.kind = inside.length ? 'region' : 'line';
-  const votes = Array.from({ length: 16 }, () => new Map()), inVotes = new Map();
-  const vote = (m, c) => m.set(c, (m.get(c) || 0) + 1);
-  for (const k of on) {
-    const [x, y] = unK(k), c = lay.cells.get(k);
-    if (d.kind === 'line') vote(votes[(inn(x, y - 1) ? 1 : 0) | (inn(x + 1, y) ? 2 : 0) | (inn(x, y + 1) ? 4 : 0) | (inn(x - 1, y) ? 8 : 0)], c);
-    else { const b = regionBits(x, y, inn); if (b === -1) vote(inVotes, c); else vote(votes[b], c); }
-  }
-  const best = m => [...m].sort((a, b) => b[1] - a[1])[0][0];
-  const known = votes.map((m, b) => m.size ? b : -1).filter(b => b >= 0);
-  const pop = n => { let c = 0; for (; n; n &= n - 1) c++; return c; };
-  // cases the example doesn't show borrow from the closest one it does (the most ways in common; straight pieces win ties)
-  const score = (q, b) => pop(q & b) * 2 - pop(q ^ b) + (q === 5 || q === 10 ? 0.5 : 0), closest = b => known.reduce((a, q) => score(q, b) > score(a, b) ? q : a);
-  d.table = votes.map((m, b) => best(m.size ? m : votes[closest(b)]));
-  if (d.kind === 'region') d.inside = inVotes.size ? best(inVotes) : SOLID;
-  toast(`Learned ${known.length} of the 16 cases${d.kind === 'region' ? ' and the inside' : ''}; the rest borrow from the closest`);
-  return true;
-}
-// Bake auto: the cells keep their characters and stop being auto (the selection, or the whole layer)
+// ---------- Autotile: Bake auto, Make auto ----------
+// Bake auto: the auto cells (in the selection, or the whole layer) become the characters they show, and stop re-picking
 function bakeAuto() {
   commitFloat();
-  const lay = L(), keys = S.sel ? [...S.sel].filter(k => lay.auto && lay.auto.has(k)) : [...(lay.auto || new Map()).keys()];
+  if (textLock('Baking')) return;
+  const lay = L(), keys = [...(S.sel || lay.cells.keys())].filter(k => isAuto(lay.cells.get(k)));
   if (!keys.length) return toast(S.sel ? 'No auto cells in the selection' : 'No auto cells on this layer', 'warn');
   pushUndo();
-  for (const k of keys) lay.auto.delete(k);
-  autoFix(lay, keys);   // (auto cells next to them may join differently now)
+  const got = keys.map(k => glyphAt(lay, ...unK(k)));   // (all worked out before any changes)
+  keys.forEach((k, i) => lay.cells.set(k, got[i]));
   changed(); toast(`Baked ${keys.length} auto cell${keys.length > 1 ? 's' : ''}: plain characters now`);
 }
 // Make auto: the selected cells whose characters belong to a set become auto in it (the set that fits the most of them)
@@ -4990,19 +4750,14 @@ function makeAuto() {
   commitFloat();
   if (!S.sel || !S.sel.size) return toast('Select some art first, then Make auto', 'warn');
   if (textLock('Making it auto')) return;
-  const lay = L(), cells = [...S.sel].filter(k => lay.cells.has(k));
+  const lay = L(), cells = [...S.sel].filter(k => lay.cells.has(k) && !isAuto(lay.cells.get(k)));
   let best = null, n = 0;
-  for (const set of allAutoSets()) {
-    const cs = autoSetChars(set), c = cells.filter(k => cs.has(lay.cells.get(k))).length;
-    if (c > n) { best = set; n = c; }
-  }
-  if (!best) return toast('No set uses these characters', 'warn');
+  for (const set of AUTO_SETS) { const cs = autoSetChars(set), c = cells.filter(k => cs.has(lay.cells.get(k))).length; if (c > n) { best = set; n = c; } }
+  if (!best) return toast('No auto set uses these characters', 'warn');
   pushUndo();
   const cs = autoSetChars(best), keys = cells.filter(k => cs.has(lay.cells.get(k)));
-  if (!lay.auto) lay.auto = new Map();
-  for (const k of keys) lay.auto.set(k, best.id);
-  autoFix(lay, keys);
-  changed(); toast(`Made ${keys.length} cell${keys.length > 1 ? 's' : ''} auto (${best.name})`);
+  for (const k of keys) lay.cells.set(k, best.code);
+  changed(); toast(`Made ${keys.length} cell${keys.length > 1 ? 's' : ''} auto: ${best.label} ${best.name}`);
 }
 
 // ---------- Help panel (TOOLBAR.md 3): the current tool's keys, live ----------
@@ -5067,7 +4822,7 @@ function openCtxMenu(x, y) {
   const m = $('#ctxMenu'), L0 = L(), items = [];
   const it = (cmd, label, k) => items.push(`<button class="btn" data-cmd="${cmd}">${label}${k ? ` <kbd>${k}</kbd>` : ''}</button>`), hr = () => items.push('<hr>');
   it('undo', 'Undo', 'Ctrl Z'); it('redo', 'Redo', 'Ctrl Shift Z'); hr();
-  if (S.sel || S.float) { it('cut', 'Cut', 'Ctrl X'); it('copy', 'Copy', 'Ctrl C'); }
+  if (S.sel || S.float) { it('cut', 'Cut', 'Ctrl X'); it('copy', 'Copy', 'Ctrl C'); it('copyRaw', 'Copy raw', 'Ctrl Alt C'); }
   it('paste', 'Paste', 'Ctrl V');
   if (S.sel) it('delete', 'Delete', 'Del');
   hr(); it('selectAll', 'Select all', 'Ctrl A'); it('selectCanvas', 'Select canvas', 'Ctrl Shift A');
@@ -5075,6 +4830,7 @@ function openCtxMenu(x, y) {
     it('deselect', 'Deselect', 'Ctrl D'); it('fillSel', 'Fill selection', 'Alt Backspace');
     it('flipH', 'Flip horizontal'); it('flipV', 'Flip vertical');
     it('extrude', 'Extrude selection (beta)...'); it('makePattern', 'Make pattern from selection...');
+    it('autoMake', 'Make auto'); it('autoBake', 'Bake auto cells');
   }
   if (S.float) { hr(); it('drop', 'Drop floating block', 'Enter'); it('dropReplace', 'Drop with solid white space', 'Shift Enter'); }
   if (L0 && L0.text) { hr(); it('rasterize', 'Rasterize text layer'); it('mergeDown', 'Merge down'); }
@@ -5307,12 +5063,9 @@ function start() {
   if (p.fillContig === false) S.fillContig = false;
   if (p.pickSample === 'layer') S.pickSample = 'layer';
   if (typeof p.ch2 === 'string' && p.ch2) S.ch2 = p.ch2;
-  // Auto characters: your own sets get their stand-in characters as they load, so the chips are saved by set id
-  loadAutoSets();
-  const slotAuto = (id, c) => id && autoSet(id) ? autoChar(id) : c >= '\uE100' && c <= '\uE8FF' ? null : c;
-  S.brush.ch = slotAuto(p.autoSlots && p.autoSlots.draw, S.brush.ch) || '#';
-  S.ch2 = slotAuto(p.autoSlots && p.autoSlots.right, S.ch2);
-  if (typeof p.autoLast === 'string' && autoSet(p.autoLast)) S.autoLast = p.autoLast;
+  const known = c => !(c >= '\uE001' && c <= '\uF8FF') || isAuto(c);   // (a private-use character that isn't Clear or a set's code: drop it)
+  if (!known(S.brush.ch)) S.brush.ch = '#';
+  if (S.ch2 && !known(S.ch2)) S.ch2 = null;
   S.showAuto = !!p.showAuto; $('#autoBtn').classList.toggle('on', S.showAuto);
   if (['h', 'v', 'both'].includes(p.mirror)) S.mirror = p.mirror;
   if (p.mirrorFlip === false) S.mirrorFlip = false;
@@ -5333,7 +5086,7 @@ function start() {
     if (p.paint.noise && typeof p.paint.noise.set === 'string') S.paint.noise = { name: p.paint.noise.name ? String(p.paint.noise.name) : 'Custom', set: p.paint.noise.set, density: clamp(+p.paint.noise.density || 50, 5, 100) };
     if (p.paint.pattern && Array.isArray(p.paint.pattern.rows) && p.paint.pattern.rows.length) S.paint.pattern = { name: String(p.paint.pattern.name || 'Custom'), rows: p.paint.pattern.rows.map(String) };
   }
-  if (Array.isArray(p.recent)) S.recent = p.recent.filter(c => typeof c === 'string' && c && c !== ' ' && (!(c >= '\uE100' && c <= '\uE8FF') || AUTO_BY_ID.has(autoIdOf(c)))).slice(0, 30);   // (Auto: the built-in sets only)   // (opaque space counts)
+  if (Array.isArray(p.recent)) S.recent = p.recent.filter(c => typeof c === 'string' && c && c !== ' ' && known(c)).slice(0, 30);   // (opaque space counts)
   S.brush.size = clamp(Math.round(+S.brush.size) || 1, 1, 25);
   if (p.shape && typeof p.shape === 'object') {
     const q = p.shape;
@@ -5396,7 +5149,7 @@ function start() {
 window.asxii = { S, CMDS, loadStart, showWelcome, loadB3Example, openB3Examples, placeBlocksInView, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
   undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render,
-  autoChar, autoSet, autoSample, autoThumb, autoPreview, setSlot, setAutoJoin, bakeAuto, makeAuto, openAutoMenu, openAutoPop, learnAutoSet, pickAt, AUTO_SETS };
+  AUTO_SETS, autoOf, autoThumb, glyphAt, resolveAt, compositeRaw, copyRaw, bakeAuto, makeAuto, autoPreview, setSlot, pickAt };
 
 start();
 })();

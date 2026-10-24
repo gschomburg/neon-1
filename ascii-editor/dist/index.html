@@ -7,13 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Mono&family=Fira+Code&family=Source+Code+Pro&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=0.134">
+<link rel="stylesheet" href="style.css?v=0.135">
 </head>
 <body data-theme="blue">
 
 <!-- Top bar: menus, document name, global view controls -->
 <header id="topbar">
-  <div class="brand">as<b>X</b>ii <span class="ver">v0.134</span></div>
+  <div class="brand">as<b>X</b>ii <span class="ver">v0.135</span></div>
   <nav class="menus">
     <div class="menu">
       <button class="btn menu-btn">File</button>
@@ -40,6 +40,7 @@
         <button class="btn" data-cmd="cut">Cut <kbd>Ctrl X</kbd></button>
         <button class="btn" data-cmd="copy">Copy <kbd>Ctrl C</kbd></button>
         <button class="btn" data-cmd="copyMerged" title="Copy the selection as you see it, from all visible layers">Copy merged <kbd>Ctrl Shift C</kbd></button>
+        <button class="btn" data-cmd="copyRaw" title="Copy the selection (or the whole canvas) with auto cells as their codes, for apps like the game. Paste takes either kind">Copy raw <kbd>Ctrl Alt C</kbd></button>
         <button class="btn" data-cmd="paste">Paste <kbd>Ctrl V</kbd></button>
         <button class="btn" data-cmd="delete">Delete <kbd>Del</kbd></button>
       </div>
@@ -73,7 +74,7 @@
         <button class="btn" data-cmd="rasterize">Rasterize text layer</button>
         <button class="btn" data-cmd="mergeDown">Merge down</button>
         <button class="btn" data-cmd="flatten">Flatten all</button>
-        <button class="btn" data-cmd="autoBake" title="The auto cells (in the selection, or the whole layer) keep their characters and stop re-picking">Bake auto cells</button>
+        <button class="btn" data-cmd="autoBake" title="The auto cells (in the selection, or the whole layer) become the characters they show, and stop re-picking">Bake auto cells</button>
         <hr>
         <button class="btn" data-cmd="blocks3d">Edit blocks in 3D... <kbd>double-click</kbd></button>
         <button class="btn" data-cmd="blocksBake">Bake blocks to a new layer</button>
@@ -101,7 +102,7 @@
           <b>Paint</b> Brush and Fill paint a character, noise (random from a set) or a repeating pattern<br>
           <b>Drop</b> white space is Clear (see-through); Shift Enter / Shift D drops it Solid, wiping what is under it (hold Shift to preview)<br>
           <b>Draw</b> Pencil = one character; Brush = character, noise or pattern; [ and ] change the size; Shift-click draws a straight line from the last stroke; Alt-click picks a character; the right button paints the Secondary character (the Primary and Secondary chips sit at the bottom of the tool panel; X swaps them); the Eraser's right button erases only the Primary character. Mirror: set the lines up in the Symmetry panel (or drag the triangles at their ends); each tool's mirror button in the settings bar turns it on for that tool<br>
-          <b>Auto</b> Characters › Special › Auto (green) draws cells that pick their own character from their neighbors: lines join up, areas get an edge. Any tool can draw it; the bar has the Set (Box, Panel, Blocks…, or make your own with ⚙). Erasing re-picks the cells around it. The Auto button (top bar) marks auto cells; Layer › Bake auto cells makes them plain, Select › Make auto makes box art live again<br>
+          <b>Autotile</b> the green 1-9, 0, A-Z in Characters are auto sets (hover one for a preview): draw with one, using any tool, and the cells pick their own characters from their neighbors in the same set, so lines join up and areas get an edge. Wand and Fill treat a set as one character. The Auto button (top bar) shows the set labels instead. Ctrl C copies what you see; Edit › Copy raw (Ctrl Alt C) keeps the auto codes. Layer › Bake auto cells makes them plain, Select › Make auto makes box art live again<br>
           <b>Fill</b> Shift-click fills every matching cell (or the other way with Contiguous off)<br>
           <b>Cursor</b> the cell under the pointer is always highlighted (with Mirror on, its mirrored copies too, fainter)<br>
           <b>Panels</b> the Help panel (right) shows the current tool's keys; click a panel's title to fold it, drag the pane's left edge to resize it. Settings: the bar has all of the tool's settings (hover an icon for its name); actions are in the Select and Layer menus, and the right-click menu (Ctrl + right-click on tools that paint with the right button)<br>
@@ -119,7 +120,7 @@
     <button class="btn" data-cmd="zoomFit" title="Fit the canvas (0)">Fit</button>
     <button class="btn toggle" id="gridBtn" data-cmd="gridToggle" title="Show the grid">Grid</button>
     <button class="btn toggle on" id="solidBtn" data-cmd="solidToggle" title="Show opaque spaces (empty cells that cover the layers under them) as faint red cells">Spaces</button>
-    <button class="btn toggle" id="autoBtn" data-cmd="autoView" title="Mark auto cells (cells that pick their own character) with a green corner">Auto</button>
+    <button class="btn toggle" id="autoBtn" data-cmd="autoView" title="Auto view: auto cells show their set (1-9, 0, A-Z) instead of the characters they resolve to">Auto</button>
     <select id="fontSel" title="Font">
       <option>JetBrains Mono</option>
       <option>IBM Plex Mono</option>
@@ -320,10 +321,8 @@
 <div id="noiseMenu" class="patmenu rampmenu" hidden></div>
 <!-- Customize for Noise and Ramp -->
 <div id="setPop" class="brushpop" hidden></div>
-<!-- Autotile: the set list and the set editor -->
-<div id="autoMenu" class="patmenu automenu" hidden></div>
-<div id="autoPop" class="brushpop autopop" hidden></div>
-<input type="file" id="autoFile" accept=".json,application/json" hidden>
+<!-- Autotile: a set's preview, shown while hovering its button in Characters -->
+<div id="autoTip" class="autotip" hidden></div>
 <!-- Block tool: Faces -->
 <div id="blockPop" class="brushpop" hidden></div>
 <!-- Extrude (Select tool) -->
@@ -349,8 +348,8 @@
 <input type="file" id="fileTxt" accept=".txt,text/plain" hidden>
 <pre id="selftest" hidden></pre>
 
-<script src="fonts.js?v=0.134"></script>
-<script src="cursors.js?v=0.134"></script>
-<script src="app.js?v=0.134"></script>
+<script src="fonts.js?v=0.135"></script>
+<script src="cursors.js?v=0.135"></script>
+<script src="app.js?v=0.135"></script>
 </body>
 </html>
