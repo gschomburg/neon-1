@@ -99,6 +99,8 @@ const VARIANTS = [
   { group: 'Pencil, Brush, Eraser', glyph: 'fine', badge: 'wait', use: 'Brush, Taper / Outline / Ramp: the stroke lands when you let go' },
   { group: 'Pencil, Brush, Eraser', glyph: 'fine', badge: 'line', use: 'Shift held: a click draws a straight line from the last stroke' },
   { group: 'Pencil, Brush, Eraser', glyph: 'fine', badge: 'mirror', use: 'Mirror on: paints a mirrored copy too' },
+  { group: 'Pencil, Brush, Eraser', glyph: 'moveH', badge: null, use: 'Mirror on, over the left-right line\'s handle (a triangle above or below the canvas): drag to move the line (same image as Move, Shift-drag)' },
+  { group: 'Pencil, Brush, Eraser', glyph: 'moveV', badge: null, use: 'Mirror on, over the top-bottom line\'s handle (a triangle left or right of the canvas): drag to move the line' },
   { group: 'Pencil, Brush, Eraser', glyph: 'eraser', badge: null, use: 'Pencil or Brush, right-drag: erases (the right-button character is Erase)' },
   { group: 'Pencil, Brush, Eraser', glyph: 'fine', badge: 'two', use: 'Pencil or Brush, right-drag: paints the right-button character' },
   { group: 'Pencil, Brush, Eraser', glyph: 'eraser', badge: 'charA', use: 'Eraser, right-drag: erases only the brush character' },

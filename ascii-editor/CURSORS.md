@@ -124,6 +124,11 @@ since Shift won). Option is the quick picker while painting, so it does nothing 
 - [x] Mirror painting (Aseprite, Krita): top bar Mirror: Off / ↔ / ↕ / Both, across the canvas's middle, with the characters
   flipped (/ to \). Dashed mirror lines on the canvas. Fine crosshair with a mirror badge
 
+- [x] Move the mirror lines (v0.82): drag the small triangles at their ends, just outside the canvas. They snap to half cells
+  (a whole number: between two cells; a half: through a cell, which mirrors onto itself). Center puts them back in the
+  middle. Saved with the document. A cell on a line keeps what you painted. A ↔ or ↕ arrow over a handle and while dragging
+- [x] Flip characters (v0.82), a checkbox next to Mirror: on (the default), the mirrored copy flips / to \ and ( to ); off, it
+  uses the same characters
 ### Pencil, Brush, Fill
 - [x] Quick picker, hold Option (Photoshop): a click picks a character and stays in the tool. Eyedropper
 

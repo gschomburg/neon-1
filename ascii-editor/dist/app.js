@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.81';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.82';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -48,6 +48,9 @@ const S = {
   pickSample: 'all',    // Picker: the character you see ('all') or the one on the active layer ('layer')
   ch2: null,            // the right-button character for Pencil and Brush (null = erase); Shift or right-click with the Picker sets it
   mirror: 'off',        // Pencil / Brush / Eraser paint a mirrored copy: off | h (left-right) | v (top-bottom) | both
+  mirrorFlip: true,     // mirrored copies flip their characters (/ becomes \); off = the same characters
+  mirrorAt: { x: null, y: null },   // where the mirror lines are, in cells from the canvas's left / top, in half-cell steps
+                                    // (a whole number: between two cells; a half: through a cell). null = the middle. Saved with the document
   typeInsert: false,    // Type: insert (push the rest of the row along) instead of overwrite; the Insert key flips it
   lastPaint: null,      // where the last paint stroke ended, for Shift-click straight lines
   spring: null,         // a tool key held down: { key, prev, at, used }; letting go goes back to prev
@@ -503,21 +506,44 @@ function warnOutside(what) {
   toast(what + ' only inside the selection · Ctrl D clears it', 'warn');
   const n = $('#selnote'); if (n && !n.hidden) shake(n);
 }
-// Mirror painting (Pencil, Brush, Eraser): the cells a paint at x, y also lands on, across the canvas's middle,
-// with the characters flipped to match (/ becomes \ and so on).
+// Mirror painting (Pencil, Brush, Eraser): the cells a paint at x, y also lands on, across the mirror lines,
+// with the characters flipped to match (/ becomes \ and so on) when Flip characters is on.
 const mirrorOn = () => S.mirror !== 'off' && (S.tool === 'pencil' || S.tool === 'brush' || S.tool === 'eraser');
+const mirrorX = () => S.mirrorAt.x ?? S.w / 2, mirrorY = () => S.mirrorAt.y ?? S.h / 2;
 function mirrorTargets(x, y, c) {
   const out = [[x, y, c]];
   if (!mirrorOn()) return out;
-  const fx = S.w - 1 - x, fy = S.h - 1 - y, fh = v => v == null ? v : FLIP_H[v] || v, fv = v => v == null ? v : FLIP_V[v] || v;
+  const fx = 2 * mirrorX() - 1 - x, fy = 2 * mirrorY() - 1 - y, flip = S.mirrorFlip;
+  const fh = v => v == null || !flip ? v : FLIP_H[v] || v, fv = v => v == null || !flip ? v : FLIP_V[v] || v;
   if (S.mirror === 'h' || S.mirror === 'both') out.push([fx, y, fh(c)]);
   if (S.mirror === 'v' || S.mirror === 'both') out.push([x, fy, fv(c)]);
   if (S.mirror === 'both') out.push([fx, fy, fv(fh(c))]);
   return out;
 }
+// The mirror lines' drag handles: small tabs just outside the canvas, at both ends of each line.
+// Returns 'x' (the left-right line, which sits at an x), 'y' (the top-bottom line) or null.
+function mirrorHandleAt(px, py) {
+  if (!mirrorOn()) return null;
+  const cw = S.cw, ch = S.ch, X = S.offX + mirrorX() * cw, Y = S.offY + mirrorY() * ch;
+  const top = S.offY, bottom = S.offY + S.h * ch, left = S.offX, right = S.offX + S.w * cw;
+  if (S.mirror !== 'v' && Math.abs(px - X) <= Math.max(7, cw * 0.7) && ((py < top && py > top - ch - 4) || (py > bottom && py < bottom + ch + 4))) return 'x';
+  if (S.mirror !== 'h' && Math.abs(py - Y) <= Math.max(7, ch * 0.45) && ((px < left && px > left - 2 * cw - 4) || (px > right && px < right + 2 * cw + 4))) return 'y';
+  return null;
+}
+// Drag a mirror line to px, py: it snaps to half cells, and stays on the canvas
+function dragMirror(axis, px, py) {
+  const v = axis === 'x' ? (px - S.offX) / S.cw : (py - S.offY) / S.ch;
+  const at = clamp(Math.round(v * 2) / 2, 0, axis === 'x' ? S.w : S.h);
+  S.mirrorAt[axis] = at === (axis === 'x' ? S.w : S.h) / 2 ? null : at;   // back in the middle = follows the canvas again
+  updateInfo(); redraw();
+}
+function centerMirror() { S.mirrorAt = { x: null, y: null }; changed(); toast('Mirror: back in the middle'); }
 // Paint one cell (and its mirror copies). only: change a cell only if it holds that character (Eraser's right button).
 function putCell(lay, x, y, c, only) {
+  const done = new Set();
   for (const [X, Y, v] of mirrorTargets(x, y, c)) {
+    if (done.has(K(X, Y))) continue;   // a cell on a mirror line is its own copy: keep what was painted there
+    done.add(K(X, Y));
     if ((X !== x || Y !== y) && !editable(X, Y)) continue;
     if (only !== undefined && lay.cells.get(K(X, Y)) !== only) continue;
     setCell(lay, X, Y, v);
@@ -1611,11 +1637,18 @@ function render() {
   // canvas edge
   ctx.strokeStyle = C['c-edge']; ctx.lineWidth = 1;
   ctx.strokeRect(Math.round(px(0)) + 0.5, Math.round(py(0)) + 0.5, Math.round(S.w * cw), Math.round(S.h * ch));
-  if (mirrorOn()) {   // the mirror lines through the middle of the canvas
-    ctx.strokeStyle = C['c-cursor']; ctx.globalAlpha = 0.6; ctx.setLineDash([6, 4]); ctx.beginPath();
-    if (S.mirror !== 'v') { const X = Math.round(px(S.w / 2)) + 0.5; ctx.moveTo(X, py(0)); ctx.lineTo(X, py(S.h)); }
-    if (S.mirror !== 'h') { const Y = Math.round(py(S.h / 2)) + 0.5; ctx.moveTo(px(0), Y); ctx.lineTo(px(S.w), Y); }
-    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  if (mirrorOn()) {   // the mirror lines, with a drag handle (a small triangle) just outside the canvas at each end
+    const X = Math.round(px(mirrorX())) + 0.5, Y = Math.round(py(mirrorY())) + 0.5, t = Math.max(5, Math.min(8, ch * 0.4));
+    ctx.strokeStyle = C['c-cursor']; ctx.fillStyle = C['c-cursor'];
+    ctx.globalAlpha = 0.6; ctx.setLineDash([6, 4]); ctx.beginPath();
+    if (S.mirror !== 'v') { ctx.moveTo(X, py(0)); ctx.lineTo(X, py(S.h)); }
+    if (S.mirror !== 'h') { ctx.moveTo(px(0), Y); ctx.lineTo(px(S.w), Y); }
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = S.drag && S.drag.kind === 'mirror' ? 1 : 0.85; ctx.beginPath();
+    const tri = (ax, ay, bx, by, cx, cy) => { ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.lineTo(cx, cy); ctx.closePath(); };
+    if (S.mirror !== 'v') { const a = py(0) - 3, b = py(S.h) + 3; tri(X, a, X - t, a - t * 1.4, X + t, a - t * 1.4); tri(X, b, X - t, b + t * 1.4, X + t, b + t * 1.4); }
+    if (S.mirror !== 'h') { const a = px(0) - 3, b = px(S.w) + 3; tri(a, Y, a - t * 1.4, Y - t, a - t * 1.4, Y + t); tri(b, Y, b + t * 1.4, Y - t, b + t * 1.4, Y + t); }
+    ctx.fill(); ctx.globalAlpha = 1;
   }
 
   // selection outline (marching ants), the float's box
@@ -1728,6 +1761,7 @@ function cursorFor() {
   const move = badge => curImage('move', badge, false, 'move');
   if (d) {
     if (d.kind === 'pan') return 'grabbing';
+    if (d.kind === 'mirror') return curImage(d.axis === 'x' ? 'moveH' : 'moveV', null, false, d.axis === 'x' ? 'ew-resize' : 'ns-resize');
     if ((d.kind === 'rect' || d.kind === 'shape') && S.spaceDown) return move();   // Space mid-drag: moving the box
     if (d.kind === 'float') return d.axis ? curImage(d.axis === 'h' ? 'moveH' : 'moveV', null, false, 'move') : move(d.copy ? 'plus' : null);
     if (d.kind === 'blockmove') return move();
@@ -1758,6 +1792,8 @@ function cursorFor() {
   }
   if (t === 'type') return 'text';
   if (t === 'pencil' || t === 'brush' || t === 'eraser') {
+    const mh = S.hoverPt && mirrorHandleAt(S.hoverPt.px, S.hoverPt.py);   // over a mirror line's handle: drag to move it
+    if (mh) return curImage(mh === 'x' ? 'moveH' : 'moveV', null, false, mh === 'x' ? 'ew-resize' : 'ns-resize');
     if (blocked) return 'not-allowed';
     if (m.alt && t !== 'eraser') return curImage('picker', null, false, 'cell');
     if (m.shift && S.lastPaint) return curImage('fine', 'line');
@@ -1814,6 +1850,8 @@ vp.addEventListener('pointerdown', e => {
   }
   if (e.button !== 0 && !(e.button === 2 && rightButtonTool())) return;
   const t = S.tool;
+  const mh = e.button === 0 && mirrorHandleAt(px, py);   // grab a mirror line by its handle
+  if (mh) { S.drag = { kind: 'mirror', axis: mh }; redraw(); return; }
   // Move tool (or Ctrl with Select): drag the selected content from anywhere; no selection = the whole layer
   // Alt: drag a copy (on a floating block: drop it, then float a copy, so each Alt-drag stamps one). Shift: lock to one axis.
   // Move + Ctrl / Cmd: first pick the layer under the pointer.
@@ -1912,10 +1950,13 @@ vp.addEventListener('pointerdown', e => {
 vp.addEventListener('pointermove', e => {
   const { px, py } = pt(e), c = cellAt(px, py);
   const moved = !S.hover || S.hover.x !== c.x || S.hover.y !== c.y;
-  S.hover = c;
+  const wasOnHandle = S.hoverPt && mirrorHandleAt(S.hoverPt.px, S.hoverPt.py);
+  S.hover = c; S.hoverPt = { px, py };
+  if (mirrorOn() && wasOnHandle !== mirrorHandleAt(px, py)) redraw();   // the cursor changes over a handle
   const d = S.drag;
   if (d) {
     if (d.kind === 'pan') { S.offX = d.ox + px - d.sx; S.offY = d.oy + py - d.sy; S.viewTouched = true; redraw(); return; }
+    if (d.kind === 'mirror') { dragMirror(d.axis, px, py); return; }
     // hold Space mid-drag: move the box or shape you're drawing instead of resizing it
     if ((d.kind === 'rect' || d.kind === 'shape') && S.spaceDown) { d.ax += c.x - d.cx; d.ay += c.y - d.cy; }
     if (d.kind === 'rect') { d.cx = c.x; d.cy = c.y; dragBox(d, e.shiftKey, e.altKey); }
@@ -1952,6 +1993,7 @@ function endDrag() {
   const d = S.drag; S.drag = null;
   if (!d) return;
   if (d.kind === 'paint') S.lastPaint = { x: d.lx, y: d.ly };
+  if (d.kind === 'mirror') { changed(); renderOptions(); }   // saved with the document; Center can be used now
   if (d.kind === 'rect') {
     if (d.ax === d.cx && d.ay === d.cy && d.mode === 'new') { S.sel = null; updateInfo(); }   // a plain click deselects
     else if (d.ellipse) applyCells(ellipseCells(d.x0, d.y0, d.x1, d.y1), d.mode);
@@ -2178,6 +2220,7 @@ async function writeClipboard(text) {
 function projectData() {
   return {
     app: 'asXii', appVersion: VERSION, format: 1, name: $('#docname').value, width: S.w, height: S.h, active: S.active,
+    mirror: { x: S.mirrorAt.x, y: S.mirrorAt.y },
     blocks: { w: S.blocks.w, h: S.blocks.h, depth: S.blocks.depth, fill: S.blocks.fill, seams: S.blocks.seams, solid: S.blocks.solid,
       view: S.blocks.view, size: S.blocks.size, dir: S.blocks.dir, level: S.blocks.level, flat: S.blocks.flat, ox: S.blocks.ox, oy: S.blocks.oy, placed: S.blocks.placed, dcells: [...S.blocks.dcells], cells: [...S.blocks.cells] },
     layers: S.layers.map(l => {
@@ -2201,6 +2244,8 @@ function loadProject(d) {
   if (!S.layers.length) S.layers.push(makeLayer('Layer 1'));
   S.active = clamp(d.active | 0, 0, S.layers.length - 1);
   S.sel = null; S.float = null; S.cursor = null;
+  const half = (v, max) => typeof v === 'number' && isFinite(v) && v >= 0 && v <= max ? Math.round(v * 2) / 2 : null;
+  S.mirrorAt = { x: half(d.mirror && d.mirror.x, S.w), y: half(d.mirror && d.mirror.y, S.h) };
   const bk = d.blocks || {};
   S.blocks = { cells: new Set(Array.isArray(bk.cells) ? bk.cells.filter(k => /^-?\d+,-?\d+$/.test(k)) : []),
     w: clamp(bk.w | 0 || 3, 1, 12), h: clamp(bk.h | 0 || 2, 1, 12), depth: clamp(bk.depth | 0 || 1, 1, 12),
@@ -2521,6 +2566,7 @@ function codeLines() {
 function newDoc() {
   commitFloat(); pushUndo();
   S.layers = [makeLayer('Layer 1')]; S.active = 0; S.sel = null; S.cursor = null;
+  S.mirrorAt = { x: null, y: null };
   $('#docname').value = 'untitled';
   changed(true); zoomFit(); toast('New canvas (Ctrl Z brings the old one back)');
 }
@@ -2544,7 +2590,7 @@ function savePrefs() {
   try {
     const tb = $('#toolbox');
     localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid,
-      brush: S.brush, pencil: S.pencil, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
+      brush: S.brush, pencil: S.pencil, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || null; } catch { return null; } }
@@ -2668,9 +2714,9 @@ const HINTS = {
   wand: 'Click to select the same character (connected, or everywhere with Contiguous off) · Shift adds · Alt takes away · Shift + Alt keeps the overlap · drag inside moves the outline',
   move: 'Drag to move the selection (or the whole layer) · Alt + drag moves a copy · Shift locks to one direction · Ctrl + click picks the layer under the pointer · arrows nudge · Enter drops · Esc puts back',
   type: 'Click a cell and type · Enter = next line · arrows move · Insert switches Overwrite / Insert · Esc leaves typing',
-  pencil: 'Draw with one character, or Smart: a line that picks its own characters · S switches · Shift-click: a straight line · right button: the right-button character · Alt-click picks a character · [ ] size',
-  brush: 'Paint a character, noise or a pattern · Taper / Outline strokes land when you let go · Shift-click: a straight line · right button: the right-button character · Alt-click picks · [ ] size',
-  eraser: 'Drag to erase on the active layer · right button erases only the brush character · Shift-click: a straight line · [ ] size',
+  pencil: 'Draw with one character, or Smart: a line that picks its own characters · S switches · Shift-click: a straight line · right button: the right-button character · Alt-click picks a character · Mirror: drag the triangles to move the lines · [ ] size',
+  brush: 'Paint a character, noise or a pattern · Taper / Outline strokes land when you let go · Shift-click: a straight line · right button: the right-button character · Alt-click picks · Mirror: drag the triangles to move the lines · [ ] size',
+  eraser: 'Drag to erase on the active layer · right button erases only the brush character · Shift-click: a straight line · Mirror: drag the triangles to move the lines · [ ] size',
   block: 'Edit 3D builds the blocks · drag the shape to move it · Bake turns it into ASCII on a new layer',
   shape: 'Drag to draw · Shift = square / circle / straight, Alt = from center, Space moves it · Polygon: click points, click the first to close, Enter to finish open',
   fill: 'Click to fill the connected area of the same character · Shift-click fills every match (or the other way with Contiguous off) · Alt-click picks · Alt Backspace fills the selection',
@@ -3446,7 +3492,9 @@ function renderOptions() {
   }
   if (t === 'pencil' || t === 'brush' || t === 'eraser') {
     const mb = (v, label, tip) => `<button class="btn${S.mirror === v ? ' on' : ''}" data-mirror="${v}" title="${tip}">${label}</button>`;
-    add(`<span class="sep"></span><span class="label" title="Paint a mirrored copy across the middle of the canvas">Mirror</span><span class="seg">${mb('off', 'Off', 'No mirror')}${mb('h', '↔', 'Left-right')}${mb('v', '↕', 'Top-bottom')}${mb('both', 'Both', 'Four ways')}</span>`);
+    add(`<span class="sep"></span><span class="label" title="Paint a mirrored copy across the middle of the canvas">Mirror</span><span class="seg">${mb('off', 'Off', 'No mirror')}${mb('h', '↔', 'Left-right')}${mb('v', '↕', 'Top-bottom')}${mb('both', 'Both', 'Four ways')}</span>` +
+      (S.mirror !== 'off' ? `<label class="label check" title="On: the mirrored copy flips its characters (/ becomes \\, ( becomes )). Off: it uses the same characters"><input type="checkbox" class="mirrorflip"${S.mirrorFlip ? ' checked' : ''}> Flip characters</label>` +
+        `<button class="btn" data-mirrorcenter title="Put the mirror lines back in the middle of the canvas (drag the triangles at their ends to move them)"${S.mirrorAt.x == null && S.mirrorAt.y == null ? ' disabled' : ''}>Center</button>` : ''));
     if (t !== 'eraser') add(`<span class="sep"></span><span class="label" title="What the right mouse button paints. Shift-click or right-click with the Picker to set it">Right button</span><button class="btn ch2btn" title="${S.ch2 ? 'Click to set it back to erase' : 'Erases. Shift-click with the Picker (I) to paint a character instead'}">${S.ch2 ? esc(S.ch2) : 'Erase'}</button>`);
   }
   if (t === 'type') {
@@ -3483,6 +3531,8 @@ function renderOptions() {
   const sc = $('.selcenter', o); if (sc) sc.addEventListener('change', () => { S.selCenter = sc.checked; sc.blur(); savePrefs(); });
   $$('[data-shape]', o).forEach(b => b.addEventListener('click', () => setSelShape(b.dataset.shape)));
   $$('[data-mirror]', o).forEach(b => b.addEventListener('click', () => { S.mirror = b.dataset.mirror; savePrefs(); renderOptions(); redraw(); }));
+  const mf = $('.mirrorflip', o); if (mf) mf.addEventListener('change', () => { S.mirrorFlip = mf.checked; mf.blur(); savePrefs(); });
+  const mc = $('[data-mirrorcenter]', o); if (mc) mc.addEventListener('click', () => { centerMirror(); renderOptions(); });
   const c2 = $('.ch2btn', o); if (c2) c2.addEventListener('click', () => { if (S.ch2) { S.ch2 = null; savePrefs(); renderOptions(); toast('Right button: erase'); } else toast('Shift-click a character with the Picker (I) to paint it with the right button'); });
   $$('[data-insert]', o).forEach(b => b.addEventListener('click', () => setTypeInsert(b.dataset.insert === '1')));
   const fc = $('.fillcontig', o); if (fc) fc.addEventListener('change', () => { S.fillContig = fc.checked; fc.blur(); savePrefs(); redraw(); });
@@ -3710,6 +3760,7 @@ function start() {
   if (p.pickSample === 'layer') S.pickSample = 'layer';
   if (typeof p.ch2 === 'string' && p.ch2) S.ch2 = p.ch2;
   if (['h', 'v', 'both'].includes(p.mirror)) S.mirror = p.mirror;
+  if (p.mirrorFlip === false) S.mirrorFlip = false;
   S.typeInsert = !!p.typeInsert;
   S.selFixed = !!p.selFixed; S.selCenter = !!p.selCenter;
   if (p.blanksBrush === 'replace') S.blanksBrush = 'replace';
