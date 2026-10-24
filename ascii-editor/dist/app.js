@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.118';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.119';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -4571,8 +4571,6 @@ function renderHelp(force) {
   const held = [m.shift && 'Shift', m.alt && 'Alt', m.cmd && 'Ctrl', S.spaceDown && 'Space'].filter(Boolean);
   // what's going on right now
   const state = [];
-  if (S.sel && ['pencil', 'brush', 'eraser', 'shape', 'type', 'fill'].includes(t)) state.push('Inside the selection: only selected cells change. Ctrl D clears it.');
-  if (mirrorOn()) state.push(`Mirroring ${S.mirror === 'both' ? '↔ and ↕' : S.mirror === 'h' ? '↔ left-right' : '↕ top-bottom'} (Symmetry panel).`);
   if (S.selPoly) state.push(`${S.selPoly.pts.length} point${S.selPoly.pts.length === 1 ? '' : 's'}: click the first one to close.`);
   if (S.float) state.push('Floating: Enter drops it, Esc puts it back.');
   const key = [sub, held.join('+'), dragging ? d.kind : '', state.join('|'), toolName()].join('/');
