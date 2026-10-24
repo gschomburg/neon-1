@@ -118,6 +118,48 @@ Main settings sit in the bar; secondary ones in the **…** menu. Every tool tha
 Moved out: every action (2), the help text (3), the character, quick characters, Recent and Right button (5), the Paint
 source (6), the Mirror setup (7).
 
+## 9. Polish round (v0.114, the user's notes after trying v0.113)
+
+Quieter and more consistent. Changes below supersede the parts of 1, 5, 7 and 8 they touch.
+
+### No instruction text in the UI
+- [ ] Instructions live in the Help panel only. Remove the ones this branch put in the UI: the Paint and Symmetry notes
+  ("Not used by …", "Turn a line on to mirror", "… isn't mirroring"), "Paints the Draw character", "none yet" under
+  Recent, and how-to toasts (clicking the Right well, the uses-mirror toggle). An unused Paint or Symmetry panel is just faded
+- [ ] Toasts that confirm a change made off-screen stay (picking a character, setting Right)
+
+### One selected state everywhere
+- [ ] Every "on" or "selected" control uses the same look as the selected character in the palette: the bright blue
+  (`--accent`) fill with `--accent-ink` text. That covers segment choices (the select shape, Overwrite / Insert…), toggles
+  (uses mirror, the Symmetry lines, Fixed aspect…), the palette and Recent
+- [ ] Toggle buttons that stand alone get an outline when off, so they read as buttons (the Symmetry line buttons first)
+
+### Symmetry
+- [ ] No "Lines" label: just the ↔ Left-right and ↕ Top-bottom toggle buttons, outlined
+- [ ] The mirror lines and their triangles always show on the canvas when a line is on, faded to 25% when the current
+  tool isn't mirroring (full strength when it is). The triangles can be dragged with any tool
+- [ ] The cell highlight's mirrored copies only show when the tool is mirroring
+- [ ] The panel fades when the tool isn't mirroring (no message)
+
+### Characters
+- [ ] **Recent** becomes its own group at the top of the palette, above Special: one row, as many recent characters as fit
+- [ ] The Draw and Right slots lose their labels; they sit side by side, centered vertically, with the swap arrows ⇄ between them
+- [ ] The slots are the wells: click one and type a character to set it (the separate type-in box goes)
+
+### Everything in the bar (no … menu)
+- [ ] The … menu goes. Every setting is in the bar; long ones become icon buttons (with a tooltip naming the setting and
+  each choice) or a compact dropdown:
+  - Select: the five shapes as icons; Fixed aspect and From center as icon toggles; Wand: Contiguous and Look at as icons
+  - Shape: the four kinds as icons; Style stays a dropdown; Fixed aspect, From center, Fill inside as icon toggles
+  - Pencil and Eraser: Tip as two icons (square / round)
+  - Brush: Customize becomes a gear icon
+  - Fill and Picker: Look at as icons (one layer / all layers); Fill: Contiguous as an icon toggle
+  - Block: Size and Depth steppers in the bar; Faces stays a gear (it opens its own panel)
+  - Font: Spacing and White space as compact dropdowns; Letters and Lines steppers in the bar
+- [ ] Complex settings open their own panel from a gear button, as Brush Customize, Block Faces and the Paint panel's
+  Customize already do
+- [ ] The Help panel and the Help menu stop mentioning "…"
+
 ## Versions
 
 - **v1**: the stable flat bar with **…**, actions to the Select and Layer menus, the Help panel (live), collapsible panels
@@ -134,5 +176,6 @@ source (6), the Mirror setup (7).
 - **White space** (Solid / Clear): stays one per place (Move, Font, the Paint panel)
 - **Size and Tip**: stay separate per tool, as now
 - **The … menu**: fixed contents. It's not "what didn't fit", it's "the additional settings that don't need to be on the main
-  bar"; the main bar stays small enough to usually fit (see 1 and 8)
+  bar"; the main bar stays small enough to usually fit (see 1 and 8). *Superseded in 9: the … menu goes, everything is in
+  the bar, long settings as icons*
 - **Sidebar width**: resizable (see 4)
