@@ -619,6 +619,21 @@ What was on the list:
 (Things waiting for the user to look at, rather than to build, are in `docs/REVIEW.md`.)
 
 Agreed changes not built yet.
+- **Play stats + leaderboard initials** (the user, 2026-10-24; greglytics, see `greglytics/PLAN.md`). Not built yet.
+  - **A run id** made at run start, kept in the run save (a resumed run keeps it); every event carries it.
+  - **Events:** `run_start` (seed, version, BOARD unlocks, practice / multiplayer); `node` when you leave a map spot
+    (corp / type, sector, layers on arrival, time spent, cleared / died / skipped, ICE hit, integrity in and out);
+    `run_end` (layers, corps, sectors, cashed out / died + where, every mod at its tier, items, credits, REP, total
+    time, ICE hit, perfect layers, reroutes, resumes); `mod_pick` (offered + taken: **most-taken mods**);
+    **exotic found** (an exotic offered / taken: does anyone ever find one); `run_quit` (left mid-run).
+  - **Dashboard:** averages / medians of a number field (time per corp), a most-taken-mods view, an exotics list.
+  - **Dev data:** file / localhost pages already send as dev (separate). Add: a tester switch for the live site
+    (e.g. `?dev=1`, remembered on the device) so phone testing goes in dev too; a **clear dev data** button in the dashboard.
+  - **Opt-out:** "anonymous play stats: ON/OFF" in settings + a line in HOW TO PLAY.
+  - **3-letter initials: BUILT v13.11** (on the end screen, Bigfig letters, UPLOAD). Original plan: set on the LEADERBOARD screen
+    (a `[ VWD ]` button + letter picker); default = letters from the hacker name. Rows show the player's *current*
+    initials (server change), the logo mark + color stay beside them, a small blocklist of rude words.
+
 - **NeoN+1 logotype on the title page: first pass BUILT in v11** (2026-10-21). Uses NAMES.md **#15
   EXPONENT** (big N + raised +1) tucked under the jaw, with two tweaks: the build number (`v011`, from
   `VERSION`) beside the +1 one row lower where `N E O N` was, and `N e o N + 1` along the bottom instead
@@ -1743,6 +1758,7 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v13.11** (2026-10-24): **leaderboard initials on the end screen** (the user): a run still posts as it ends (so the rank comes back at once and is never lost); the bottom of the results then shows this run's places (`#11 ALL TIME   #5 TODAY`, gold with `**` for a top 10), 3-letter initials drawn big in **Bigfig** (the user's pick from asXii's fonts) with [^]/[v] to change each (or type them; arrows, backspace, enter), and **U P L O A D** in place of NEW RUN. Uploading sets your name on the server (one per device, shown on all your entries: new `name.php`), saves the initials for next time, then the NEW RUN / RETRY / BACK buttons come back. Fanfare: #1 all time = fireworks + victory; top 10 = fireworks + win; a personal best = a flash. A short rude-word list blocks UPLOAD. LEADERBOARD rows show the initials, with the hacker name dimmed beside them. Server: upload `lib.php`, `scores.php` and the new `name.php` before this build.
 - **v13.10** (2026-10-24): **online LEADERBOARD** (the user): a new title-menu screen (next to THE BOARD; NEW RUN moves to its own row under them) with TODAY (the UTC day) and ALL TIME tabs, top 10 plus your own row. A finished run (not practice, not multiplayer) sends its layers, ranked by layers with fewer mods winning ties, each device's best counting. Runs on greglytics (`greglytics/` in the repo, live at s3iz.com/glx): `engine/greglytics.js` is a copy of its browser script, `engine/leaders.js` the screen and the sending (kept in the save until it goes through, so offline runs send later). Pages opened from a file or localhost use separate test boards. The death and REP screens don't show it yet (kept apart for this first pass).
 - **v13.09** (2026-10-22): ad bars can be sized, timed and reversed (the user): `{bar:20}` (width inside the brackets, default 10), `{bar:20:6s}` (fill time, default most of the screen's time), `{rbar...}` empties instead of filling. Several per line work.
 - **v13.08** (2026-10-22): **CHROMED UP is now RAM DOUBLER** (the user; a nod to Johnny Mnemonic), and it really doubles: 12 mod slots (two full rows of 6), not 9. The text keeps the chrome ("get your memory chromed up"). A saved run with the old CHROMED UP gets RAM DOUBLER on load (`MOD_RENAMED` in engine/save.js, which also drops mods that no longer exist).
@@ -2315,7 +2331,7 @@ Not yet placed in a version.
 - **"New version" notice for the game** (the user, 2026-10-23; built first in asXii v0.25, see `ascii-editor/PLAN.md`).
   `tools/bump.js` would also write a `dist/version.json`; the running game checks it (on load, when you come back to the
   tab, every ~10 min, never from cache) and, if a newer build was uploaded, shows a small "NeoN+1 v13.10 is out ·
-  REFRESH" notice. Careful mid-run: offer it on the map / menus, not in the middle of a layer (the save carries over).
+  REFRESH" notice. Careful mid-run: offer it on the map / menus, not in the middle of a layer (the save carries over). 2026-10-24 (the user, again): a small version file like asXii's, but the notice gets its own neon look (not asXii's), and maybe shows **only on the title screen or the death screen**.
 
 ## 18. Decision log
 

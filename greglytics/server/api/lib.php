@@ -52,6 +52,8 @@ function gl_schema(PDO $db): void {
     device VARCHAR(32) NOT NULL DEFAULT '', player VARCHAR(40) NOT NULL DEFAULT '', logo VARCHAR(16) NOT NULL DEFAULT '',
     score DOUBLE NOT NULL, tie DOUBLE NOT NULL DEFAULT 0, data $txt)");
   $db->exec("CREATE TABLE IF NOT EXISTS hits (k VARCHAR(64) NOT NULL PRIMARY KEY, n INTEGER NOT NULL, at INTEGER NOT NULL)");
+  $db->exec("CREATE TABLE IF NOT EXISTS names (app VARCHAR(40) NOT NULL, dev SMALLINT NOT NULL DEFAULT 0, device VARCHAR(32) NOT NULL,
+    name VARCHAR(40) NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (app, dev, device))");
   foreach ([
     'CREATE INDEX ev_app ON events (app, dev, name, at)',
     'CREATE INDEX ev_at ON events (app, dev, at)',

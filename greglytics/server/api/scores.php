@@ -1,8 +1,10 @@
 <?php
 // greglytics: leaderboards.
-//   POST {app, board, device, player, logo, score, tie, data, dev}  -> {ok, rank}
+//   POST {app, board, device, player, logo, score, tie, data, dev}  -> {ok, rank, of, run, best}
+//        rank: your best's place; run: where this run places; best: this run is your best on this board
 //   GET  ?app=neon&board=all&limit=10&device=…&dev=0              -> {board, entries: [...], you: {...}|null}
 // A board is any name a game picks (daily-2026-10-24, all, naked...). One entry per device counts (its best).
+// A name set with name.php shows on all that device's entries (so a player's latest initials are what you see).
 // Order per app (config 'scores'): score high to low by default, then tie (e.g. neon's mods taken) low to high.
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
@@ -34,6 +36,9 @@ $bests = function () use ($db, $app, $dev, $board, $better): array {
   $q->execute([$app, $dev, $board]);
   $by = [];
   foreach ($q as $r) { $k = $r['device'] !== '' ? $r['device'] : 'x' . $r['at']; if (!isset($by[$k]) || $better($r, $by[$k])) $by[$k] = $r; }
+  $names = $db->prepare('SELECT device, name FROM names WHERE app = ? AND dev = ?');
+  $names->execute([$app, $dev]);
+  foreach ($names as $n) if (isset($by[$n['device']])) $by[$n['device']]['player'] = $n['name'];
   $all = array_values($by);
   usort($all, fn($a, $b) => $better($a, $b) ? -1 : ($better($b, $a) ? 1 : 0));
   return $all;
@@ -52,9 +57,14 @@ if ($method === 'POST') {
   $db->prepare('INSERT INTO scores (app, dev, board, at, device, player, logo, score, tie, data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     ->execute([$app, $dev, $board, $row['at'], $device, $row['player'], $row['logo'], $row['score'], $row['tie'],
       gl_json_data($src['data'] ?? null, (int)($cfg['limits']['data_bytes'] ?? 4096))]);
-  $all = $bests(); $rank = null;
-  foreach ($all as $i => $r) if ($r['device'] === $device && $device !== '') { $rank = $i + 1; break; }
-  gl_out(['ok' => true, 'rank' => $rank, 'of' => count($all)]);
+  $all = $bests(); $rank = null; $run = 1; $best = false;
+  foreach ($all as $i => $r) {
+    if ($r['device'] === $device && $device !== '') {
+      $rank = $i + 1;
+      $best = (int)$r['at'] === $row['at'] && (float)$r['score'] === $row['score'] && (float)$r['tie'] === $row['tie'];
+    } elseif ($better($r, $row)) $run++;   // other players ahead of this run
+  }
+  gl_out(['ok' => true, 'rank' => $rank, 'of' => count($all), 'run' => $run, 'best' => $best]);
 }
 
 if ($method !== 'GET') gl_fail(405, 'GET or POST');

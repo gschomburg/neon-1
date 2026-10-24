@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.10']);
+NEON_FILES.push(['engine/screens.js', 'v13.11']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -169,6 +169,7 @@ function buildReveal(ctx, now, rv, all) {
   }
   if (rv.firstPop && st.panelT0 === Infinity) st.panelT0 = rv.firstPop;
   if (now < rv.t0) k = 0;
+  rv.total = all.length; rv.vis = k;   // (the leaderboard fanfare waits for the last line)
   const vis = all.slice(0, k);
   if (vis.length && typed < title.length) {
     const cursor = Math.floor(now / 250) % 2 ? '_' : ' ';
@@ -258,8 +259,15 @@ function overLines() {
   } else T('no mods: a naked run', C.dim);
   lines.push(r.items.length ? { gap: 1, row: r.items.map(x => ({ text: itemLabel(x), chip: itemView(x.key, x.tier).rarity })) } : { text: 'no items', col: C.dim });
   T('');
+  // the bottom: the leaderboard block (ranks, initials, UPLOAD) until you upload, then the buttons
+  const lb = lbOverLines(), lbOpen = lb && !(st.lbPost && st.lbPost.uploaded);
+  const bottom = [...(lb || []), ...(lbOpen ? [] : [
+    { box: true, text: 'N E W   R U N', id: 'new', onTap: newRun, minW: 24 },
+    { text: '[ RETRY SEED ]', id: 'retry', onTap: retry },
+    { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
+  ])];
   // the map, with the path you took (scrolls when it's taller than the space left)
-  const rest = 1 + 3 + 1 + 1;   // gap, NEW RUN box, retry, back
+  const rest = 1 + bottom.reduce((a, ln) => a + (ln.box ? (ln.sub ? 4 : 3) : 1), 0);   // gap + the bottom
   const used = lines.reduce((a, ln) => a + (ln.box ? 3 : 1), 0);
   const view = clamp(L.hc - 2 - used - rest, 5, mapRows(r.map));
   const om = st.overMap || (st.overMap = { top: null });
@@ -269,9 +277,7 @@ function overLines() {
   om.view = view;
   lines.push({ mapView: true, h: view, top: om.top, r });
   T('');
-  lines.push({ box: true, text: 'N E W   R U N', id: 'new', onTap: newRun, minW: 24 });
-  lines.push({ text: '[ RETRY SEED ]', id: 'retry', onTap: retry });
-  lines.push({ text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) });
+  lines.push(...bottom);
   return lines;
 }
 
