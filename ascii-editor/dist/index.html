@@ -7,13 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Mono&family=Fira+Code&family=Source+Code+Pro&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=0.133">
+<link rel="stylesheet" href="style.css?v=0.134">
 </head>
 <body data-theme="blue">
 
 <!-- Top bar: menus, document name, global view controls -->
 <header id="topbar">
-  <div class="brand">as<b>X</b>ii <span class="ver">v0.133</span></div>
+  <div class="brand">as<b>X</b>ii <span class="ver">v0.134</span></div>
   <nav class="menus">
     <div class="menu">
       <button class="btn menu-btn">File</button>
@@ -57,6 +57,7 @@
         <hr>
         <button class="btn" data-cmd="extrude">Extrude selection (beta)...</button>
         <button class="btn" data-cmd="makePattern">Make pattern from selection...</button>
+        <button class="btn" data-cmd="autoMake" title="Box lines, panels, blocks in the selection become auto again: they re-pick as you draw next to them">Make auto</button>
         <hr>
         <button class="btn" data-cmd="drop">Drop floating block <kbd>Enter</kbd></button>
         <button class="btn" data-cmd="dropReplace">Drop with solid white space <kbd>Shift Enter</kbd></button>
@@ -72,6 +73,7 @@
         <button class="btn" data-cmd="rasterize">Rasterize text layer</button>
         <button class="btn" data-cmd="mergeDown">Merge down</button>
         <button class="btn" data-cmd="flatten">Flatten all</button>
+        <button class="btn" data-cmd="autoBake" title="The auto cells (in the selection, or the whole layer) keep their characters and stop re-picking">Bake auto cells</button>
         <hr>
         <button class="btn" data-cmd="blocks3d">Edit blocks in 3D... <kbd>double-click</kbd></button>
         <button class="btn" data-cmd="blocksBake">Bake blocks to a new layer</button>
@@ -99,6 +101,7 @@
           <b>Paint</b> Brush and Fill paint a character, noise (random from a set) or a repeating pattern<br>
           <b>Drop</b> white space is Clear (see-through); Shift Enter / Shift D drops it Solid, wiping what is under it (hold Shift to preview)<br>
           <b>Draw</b> Pencil = one character; Brush = character, noise or pattern; [ and ] change the size; Shift-click draws a straight line from the last stroke; Alt-click picks a character; the right button paints the Secondary character (the Primary and Secondary chips sit at the bottom of the tool panel; X swaps them); the Eraser's right button erases only the Primary character. Mirror: set the lines up in the Symmetry panel (or drag the triangles at their ends); each tool's mirror button in the settings bar turns it on for that tool<br>
+          <b>Auto</b> Characters › Special › Auto (green) draws cells that pick their own character from their neighbors: lines join up, areas get an edge. Any tool can draw it; the bar has the Set (Box, Panel, Blocks…, or make your own with ⚙). Erasing re-picks the cells around it. The Auto button (top bar) marks auto cells; Layer › Bake auto cells makes them plain, Select › Make auto makes box art live again<br>
           <b>Fill</b> Shift-click fills every matching cell (or the other way with Contiguous off)<br>
           <b>Cursor</b> the cell under the pointer is always highlighted (with Mirror on, its mirrored copies too, fainter)<br>
           <b>Panels</b> the Help panel (right) shows the current tool's keys; click a panel's title to fold it, drag the pane's left edge to resize it. Settings: the bar has all of the tool's settings (hover an icon for its name); actions are in the Select and Layer menus, and the right-click menu (Ctrl + right-click on tools that paint with the right button)<br>
@@ -116,6 +119,7 @@
     <button class="btn" data-cmd="zoomFit" title="Fit the canvas (0)">Fit</button>
     <button class="btn toggle" id="gridBtn" data-cmd="gridToggle" title="Show the grid">Grid</button>
     <button class="btn toggle on" id="solidBtn" data-cmd="solidToggle" title="Show opaque spaces (empty cells that cover the layers under them) as faint red cells">Spaces</button>
+    <button class="btn toggle" id="autoBtn" data-cmd="autoView" title="Mark auto cells (cells that pick their own character) with a green corner">Auto</button>
     <select id="fontSel" title="Font">
       <option>JetBrains Mono</option>
       <option>IBM Plex Mono</option>
@@ -316,6 +320,10 @@
 <div id="noiseMenu" class="patmenu rampmenu" hidden></div>
 <!-- Customize for Noise and Ramp -->
 <div id="setPop" class="brushpop" hidden></div>
+<!-- Autotile: the set list and the set editor -->
+<div id="autoMenu" class="patmenu automenu" hidden></div>
+<div id="autoPop" class="brushpop autopop" hidden></div>
+<input type="file" id="autoFile" accept=".json,application/json" hidden>
 <!-- Block tool: Faces -->
 <div id="blockPop" class="brushpop" hidden></div>
 <!-- Extrude (Select tool) -->
@@ -341,8 +349,8 @@
 <input type="file" id="fileTxt" accept=".txt,text/plain" hidden>
 <pre id="selftest" hidden></pre>
 
-<script src="fonts.js?v=0.133"></script>
-<script src="cursors.js?v=0.133"></script>
-<script src="app.js?v=0.133"></script>
+<script src="fonts.js?v=0.134"></script>
+<script src="cursors.js?v=0.134"></script>
+<script src="app.js?v=0.134"></script>
 </body>
 </html>

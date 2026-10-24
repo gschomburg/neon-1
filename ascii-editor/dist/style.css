@@ -612,3 +612,17 @@ input.clearch { box-shadow: inset 0 0 0 2px #4ea1ff; }
 .chipc.solidch { background: var(--c-paper) linear-gradient(rgba(255, 60, 60, 0.45), rgba(255, 60, 60, 0.45)) center / 9px 18px no-repeat !important; }
 .chipc.clearch { background: var(--c-paper) !important; box-shadow: none; }
 .chipc.sel.clearch { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); }
+/* Autotile: an Auto character (palette, chips, the bar) shows its set's icon in green, with a green outline */
+.autoch { color: #3ecf6e !important; }
+.cbtn.autoch, .micon.autoch { box-shadow: inset 0 0 0 1.5px rgba(62, 207, 110, 0.7); border-radius: 3px; }
+.chipc.autoch { border-color: #3ecf6e; }
+.chipc.sel.autoch { box-shadow: inset 0 0 0 1px #3ecf6e, 0 2px 6px rgba(0, 0, 0, 0.45); }
+.automenu { max-height: 70vh; overflow-y: auto; }
+.automenu .cgroup { margin: 6px 6px 2px; }
+.automenu .pedit { padding: 0 6px; line-height: 18px; }
+.autofoot { display: flex; align-items: center; gap: 8px; justify-content: space-between; padding: 8px 6px 4px; border-top: 1px solid var(--line); margin-top: 6px; }
+.autopop .autogrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 8px 0; }
+.autopop .autocase { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.autopop .autocase .hint { font-size: 10px; color: var(--mute); font-family: "JetBrains Mono", Consolas, monospace; }
+.autopop .autocase input, .autopop .autoin { width: 34px; text-align: center; font-family: "JetBrains Mono", Consolas, monospace; font-size: 15px; }
+.autopop .bp-row { flex-wrap: wrap; gap: 6px; }
