@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v13.10']);
+NEON_FILES.push(['engine/menus.js', 'v13.11']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -44,7 +44,7 @@ function setSeed(s) {
 
 function resetSave() {
   if (!st.resetArmed) { st.resetArmed = true; Sound.deny(); return; }
-  const keep = { palette: save.palette, muted: save.muted, effects: save.effects, tapMode: save.tapMode, ads: save.ads };
+  const keep = { palette: save.palette, muted: save.muted, effects: save.effects, tapMode: save.tapMode, ads: save.ads, initials: save.initials };   // initials: your name on the online boards
   for (const k of Object.keys(save)) delete save[k];
   Object.assign(save, freshSave(), keep);
   persist();

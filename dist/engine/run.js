@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.10']);
+NEON_FILES.push(['engine/run.js', 'v13.11']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -1519,6 +1519,7 @@ async function endRun(win) {
     };
     st.scroll = scrollMap;
     st.keyHandler = k => { if (k === 'arrowup' || k === 'arrowdown') { scrollMap(k === 'arrowup' ? -1 : 1); return true; } return false; };
+    if (st.lbPost) st.keyHandler = lbOverKeys(st.keyHandler);   // the leaderboard initials (engine/leaders.js)
   }
   st.busy = false;
   setMsg(win ? '> root access_' : '> link severed_', win ? C.accent : C.danger);

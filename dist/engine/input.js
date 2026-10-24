@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.10']);
+NEON_FILES.push(['engine/input.js', 'v13.11']);
 
 // ---------------- Pause menu ----------------
 // [MENU] in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -288,6 +288,7 @@ document.addEventListener('keydown', e => {
   if (st.intro && e.key !== '`') { st.intro.skip = true; return; }   // any key skips a corp intro
   if (st.bossIntro && e.key !== '`') { st.bossIntro.skip = true; return; }
   if (e.key === '`') return toggleDev();
+  if (st.keyHandler && st.keyHandler.typing && !st.dev && /^[a-z]$/.test(k) && st.keyHandler(k)) return;   // typing (leaderboard initials)
   if (k === 'm' && !st.dev) return toggleMute();
   if (k === 'n' && !st.dev) return toggleMusic();
   if (k === 'escape') {

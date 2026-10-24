@@ -3,6 +3,7 @@
 //   gl.track('run_end', { layers: 21, mods: 3 });
 //   gl.submitScore('all', { score: 21, tie: 3, player: 'NEON_RAT', logo: '<#>' }).then(r => r.rank);
 //   gl.scores('all', { limit: 10 }).then(b => b.entries);
+//   gl.setName('VWD');   // this device's name on every board
 //   gl.optOut(true);
 // No cookies. An anonymous random id per device (localStorage), a new session id per page load.
 // Events are batched: sent every 20 events or 30 seconds, and when the page is hidden or closed.
@@ -72,9 +73,15 @@
       const q = new URLSearchParams({ app, board, limit: String(o.limit || 10), device, dev: dev ? '1' : '0' });
       return fetch(base + 'scores.php?' + q, { mode: 'cors' }).then(r => r.json());
     }
+    // this device's name on the boards (e.g. arcade initials): renames all its entries -> {ok, name}
+    function setName(name) {
+      return fetch(base + 'name.php', {
+        method: 'POST', mode: 'cors', body: new Blob([JSON.stringify({ app, device, dev: dev ? 1 : 0, name: String(name || '') })], { type: 'text/plain' }),
+      }).then(r => r.json());
+    }
     function optOut(on) { store.set('out', on ? '1' : null); if (on) { queue = []; keep(); } }
 
-    return { track, flush: () => flush(false), submitScore, scores, optOut, isOptedOut: out, device, session, dev, app };
+    return { track, flush: () => flush(false), submitScore, scores, setName, optOut, isOptedOut: out, device, session, dev, app };
   }
   root.Greglytics = { init };
 })(typeof window !== 'undefined' ? window : this);

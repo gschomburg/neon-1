@@ -1,6 +1,6 @@
 // NeoN+1 corps/twinlink.js
 'use strict';
-NEON_FILES.push(['corps/twinlink.js', 'v13.10']);
+NEON_FILES.push(['corps/twinlink.js', 'v13.11']);
 // Its boss mod: LINKUP (linkup), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
