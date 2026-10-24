@@ -524,3 +524,6 @@ body[data-theme="light"], body[data-theme="green"] { --warn: #8a5a00; --warn-bg:
 .clearch::after { box-shadow: inset 0 0 0 1.5px #4ea1ff; }
 input.solidch { background-color: rgba(255, 0, 0, 0.15); }
 input.clearch { box-shadow: inset 0 0 0 2px #4ea1ff; }
+.b3d-examples { width: 220px; }
+.b3x-list { display: flex; flex-direction: column; gap: 4px; }
+.b3x-list .btn { display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; }

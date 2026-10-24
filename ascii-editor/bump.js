@@ -30,3 +30,4 @@ const note = (process.argv[3] || '').trim();
 fs.writeFileSync(path.join(dist, 'version.json'), JSON.stringify({ version: v, note }) + '\n');
 console.log(`asXii is now v${v}` + (note ? ` (${note})` : ''));
 require('./gallery-build.js')(true);   // the file:// bundle of dist/gallery/
+require('./start-build.js')(true);     // the welcome document and the 3D examples (dist/start/)
