@@ -47,8 +47,8 @@ questions (now under Decisions, at the end).
   bold (a small key chip: **Shift**, **Alt**, **Space**), then what it does
 - [x] Live: the line for a key you're holding lights up, and while you drag it switches to the keys that matter mid-drag
   (Select: before the drag Shift adds / Alt takes away; during it Shift = square, Alt = from center, Space moves it)
-- [x] It shows the current state too: the polygon being clicked out ("click the first point to close") and a floating
-  block (Enter drops it). (v0.119: the "inside the selection" and "mirroring" notes were dropped; the canvas shows both)
+- [x] It shows the current state too: a floating block (Enter drops it). (v0.119 and v0.120: the "inside the selection",
+  "mirroring" and polygon notes were dropped; the canvas shows those)
 - [x] A short "any tool" section at the bottom, dimmer: Space pans, Ctrl + wheel zooms, Shift + wheel scrolls sideways, hold
   a tool key to use it for a moment
 - [x] The text comes from one table per tool (replacing `HINTS`), so the Help menu and the panel stay in step
