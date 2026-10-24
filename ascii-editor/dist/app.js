@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.93';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.94';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -3037,12 +3037,11 @@ function markSolid() {
   }
   const ci = $('#toolopts .charin'); if (ci) { ci.classList.toggle('solidch', ci.value === SOLID); ci.classList.toggle('clearch', ci.value === CLEAR); }
 }
-// Clicking a character in the pane: type it (Type tool), or make it the character to draw with.
+// Clicking a character in the pane: type it (Type tool), or make it the character to draw with. The tool stays the same.
 function pickFromPane(c) {
   if (S.tool === 'type' && S.cursor) { typeChar(c); return; }
   setBrushChar(c);
-  if (S.tool === 'brush' || S.tool === 'fill') { if (S.paint.mode !== 'char') { S.paint.mode = 'char'; savePrefs(); renderOptions(); redraw(); } }
-  else if (S.tool !== 'pencil') setTool('pencil');
+  if ((S.tool === 'brush' || S.tool === 'fill') && S.paint.mode !== 'char') { S.paint.mode = 'char'; savePrefs(); renderOptions(); redraw(); }
 }
 const HINTS = {
   select: 'Drag to select · Shift adds · Alt takes away · Shift + Alt keeps the overlap · mid-drag: Shift = square / circle, Alt = from center, Space moves it · drag inside or arrows move the outline · Ctrl + drag moves the content (+ Alt: a copy)',
