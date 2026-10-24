@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.136';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.137';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -2917,13 +2917,13 @@ const chName = c => c === SOLID ? 'opaque space' : c === CLEAR ? 'clear (erases)
 // Line sets look at the 4 neighbors: up 1, right 2, down 4, left 8, so a table is 16 characters, one per combination
 // (0 is a lone cell). Region sets also look at the corners: a cell with all 8 neighbors is inside, the rest are the edge,
 // drawn with the same 16-piece table running along the edge (regionBits), or by a rule of their own (Blocks, Shade).
-const AUTO_BOX = '□│─└││┌├─┘─┴┐┤┬┼', AUTO_ROUND = '□│─╰││╭├─╯─┴╮┤┬┼', AUTO_ASCII = '+|-+||++-+-+++++';
+const AUTO_BOX = '□│─└││┌├─┘─┴┐┤┬┼', AUTO_ROUND = '□│─╰││╭├─╯─┴╮┤┬┼', AUTO_ASCII = '+|-+||++-+-+++++', AUTO_SLASH = '+|-\\||/+-/-+\\+++';
 const brickInside = (x, y) => ((y & 1) ? (x + 2) & 3 : x & 3) === 3 ? '|' : '_';
 // The order is for good: a set's label and code come from its place in the list (add new ones at the end)
 const AUTO_SETS = [
   { name: 'ASCII', kind: 'line', table: AUTO_ASCII },
   { name: 'ASCII rounded', kind: 'line', table: "+|-'||.+-'-+.+++" },
-  { name: 'ASCII slashes', kind: 'line', table: '+|-\\||/+-/-+\\+++' },
+  { name: 'ASCII slashes', kind: 'line', table: AUTO_SLASH },
   { name: 'Box', kind: 'line', table: AUTO_BOX },
   { name: 'Box rounded', kind: 'line', table: AUTO_ROUND },
   { name: 'Box heavy', kind: 'line', table: '■┃━┗┃┃┏┣━┛━┻┓┫┳╋' },
@@ -2934,7 +2934,7 @@ const AUTO_SETS = [
   { name: 'Panel ASCII', kind: 'region', table: AUTO_ASCII, inside: SOLID },
   { name: 'Blocks', kind: 'region', rule: 'blocks' },
   { name: 'Shade', kind: 'region', rule: 'shade' },
-  { name: 'Brick', kind: 'region', table: AUTO_ASCII, inside: brickInside },
+  { name: 'Brick', kind: 'region', table: AUTO_SLASH, inside: brickInside },   // (angled corners)
 ];
 const AUTO_LABELS = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 AUTO_SETS.forEach((s, i) => { s.code = String.fromCharCode(0xE101 + i); s.label = AUTO_LABELS[i]; s.table = s.table && chars(s.table); });
