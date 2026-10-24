@@ -64,7 +64,7 @@ and at real size; hover one to try it. The drawings live in `dist/cursors.js`, s
 
 ### Picker
 - [x] Pick (default): eyedropper
-- [x] Empty cell under the pointer: dimmed eyedropper, or `not-allowed`
+- [x] ~~Empty cell under the pointer: dimmed eyedropper~~ (v0.111: an empty cell picks Clear, so the eyedropper never dims)
 
 ### Any drawing tool (Pencil, Brush, Eraser, Shape, Fill)
 - [x] Where a click can't change anything: `not-allowed`. Changed from the plan: art outside the canvas frame is allowed, so this is
