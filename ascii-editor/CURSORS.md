@@ -154,12 +154,12 @@ since Shift won). Option is the quick picker while painting, so it does nothing 
 - [x] Hold a tool's key to switch to it for a moment; letting go switches back if you used it or held it over 0.4 s (Photoshop).
   Not T (it types) or K (it opens the 3D editor). That tool's cursor
 
-## 3. Precise mode and live selections (v0.83)
+## 3. Cell highlight and live selections (v0.83, v0.84)
 
-- [x] Precise mode: while Caps Lock is on and the pointer is over the canvas, the drawn cursor is hidden and the cell a click
-  will act on is highlighted instead. The mode badge (+, −, ×, ring, layers...) still shows, bottom-right of the pointer.
-  The browser's own cursors (the I-beam, the hands, not-allowed) stay as they are; off the canvas, the normal cursor comes back
-  With Mirror on (Pencil, Brush, Eraser), the mirrored copies of the cell are highlighted too, a little fainter
+- Dropped: ~~Precise mode with Caps Lock~~ (v0.83, dropped in v0.84): the cell highlight below is always on instead, and the
+  normal cursors stay
+- [x] Cell highlight (v0.84): the cell under the pointer is always highlighted, with every tool except the Hand and Zoom
+  (and not while panning). With Mirror on (Pencil, Brush, Eraser), its mirrored copies are highlighted too, muted
 - [x] Live selections: while dragging a Rectangle, Ellipse or Lasso selection (and clicking out a Polygon), the marching ants show
   the cells the selection will end up with, as it will be with Shift (add), Alt (take away) or both (overlap), instead of
   the smooth box or circle. The lasso keeps a faint line where you've dragged

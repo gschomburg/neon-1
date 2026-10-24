@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.83';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.84';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -1678,16 +1678,17 @@ function render() {
     ctx.globalAlpha = 1; ctx.lineWidth = 1;
   }
 
-  // precise mode (Caps Lock): the cell a click will act on, and with Mirror on, its mirrored copies (a little fainter)
-  if (S.preciseShown && S.hover) {
+  // the cell under the pointer, always (not while panning, or with the Hand or Zoom, which don't act on a cell);
+  // with Mirror on, its mirrored copies too, muted
+  const hv = S.hover, panning = (S.drag && S.drag.kind === 'pan') || S.spaceDown || S.tool === 'hand' || S.tool === 'zoom';
+  if (hv && !panning && !(S.drag && S.drag.kind === 'mirror')) {
     const W = Math.round(cw), H = Math.round(ch), seen = new Set();
-    mirrorTargets(S.hover.x, S.hover.y, null).forEach(([x, y], i) => {
-      if (seen.has(K(x, y))) return; seen.add(K(x, y));
+    mirrorTargets(hv.x, hv.y, null).forEach(([x, y], i) => {
+      if (seen.has(K(x, y)) || !inView(x, y)) return; seen.add(K(x, y));
       const X = Math.round(px(x)), Y = Math.round(py(y));
-      ctx.globalAlpha = i ? 0.6 : 1;
-      ctx.fillStyle = C['c-cursor']; ctx.globalAlpha *= 0.22; ctx.fillRect(X, Y, W, H); ctx.globalAlpha = i ? 0.6 : 1;
-      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.strokeRect(X + 0.5, Y + 0.5, W - 1, H - 1);
-      ctx.lineWidth = 1.5; ctx.strokeStyle = C['c-cursor']; ctx.strokeRect(X + 0.5, Y + 0.5, W - 1, H - 1);
+      ctx.fillStyle = C['c-cursor']; ctx.globalAlpha = i ? 0.08 : 0.16; ctx.fillRect(X, Y, W, H);
+      if (!i) { ctx.globalAlpha = 1; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.strokeRect(X + 0.5, Y + 0.5, W - 1, H - 1); }
+      ctx.globalAlpha = i ? 0.45 : 1; ctx.lineWidth = i ? 1 : 1.5; ctx.strokeStyle = C['c-cursor']; ctx.strokeRect(X + 0.5, Y + 0.5, W - 1, H - 1);
     });
     ctx.globalAlpha = 1; ctx.lineWidth = 1;
   }
@@ -1766,29 +1767,24 @@ setInterval(() => { if (S.tool === 'type' && S.cursor) { S.blinkOn = !S.blinkOn;
 // ---------- cursors ----------
 // Our own cursors (drawn in cursors.js, like the toolbox icons): a tool glyph plus a badge for the mode.
 // See ascii-editor/CURSORS.md for the full list, and dist/cursors.html for all of them side by side.
-// Precise mode (Caps Lock on, pointer over the canvas): the editor highlights the cell a click acts on, and the cursor
-// keeps only its badge (+, −...). curPrecise is worked out at the start of cursorFor.
-let curPrecise = false;
-const curImage = (glyph, badge, dim, fallback) => window.ASXII_CURSORS.css(glyph, badge, dim, fallback, curPrecise);
-const preciseOn = () => S.mods.caps && !!S.hover && S.hover.x >= 0 && S.hover.y >= 0 && S.hover.x < S.w && S.hover.y < S.h && !(S.drag && S.drag.kind === 'pan');
+const curImage = (glyph, badge, dim, fallback) => window.ASXII_CURSORS.css(glyph, badge, dim, fallback);
 // Modifier keys, kept current from every key and pointer event, so the cursor can change the moment one is pressed
-S.mods = { shift: false, alt: false, cmd: false, caps: false };
+S.mods = { shift: false, alt: false, cmd: false };
 function trackMods(e) {
-  const m = { shift: !!e.shiftKey, alt: !!e.altKey, cmd: !!(e.ctrlKey || e.metaKey), caps: !!(e.getModifierState && e.getModifierState('CapsLock')) };
-  if (m.shift === S.mods.shift && m.alt === S.mods.alt && m.cmd === S.mods.cmd && m.caps === S.mods.caps) return;
+  const m = { shift: !!e.shiftKey, alt: !!e.altKey, cmd: !!(e.ctrlKey || e.metaKey) };
+  if (m.shift === S.mods.shift && m.alt === S.mods.alt && m.cmd === S.mods.cmd) return;
   S.mods = m; redraw(); update3dCursor();
 }
 window.addEventListener('keydown', trackMods, true);
 window.addEventListener('keyup', trackMods, true);
 window.addEventListener('pointermove', trackMods, true);
 window.addEventListener('pointerdown', trackMods, true);
-window.addEventListener('blur', () => { S.mods = { shift: false, alt: false, cmd: false, caps: S.mods.caps }; redraw(); update3dCursor(); });   // Caps Lock stays as it was
+window.addEventListener('blur', () => { S.mods = { shift: false, alt: false, cmd: false }; redraw(); update3dCursor(); });
 const MODE_BADGE = { add: 'plus', sub: 'minus', int: 'times', new: null };
 const SEL_GLYPH = { rect: 'cross', ellipse: 'cross', lasso: 'lasso', polygon: 'polylasso', wand: 'wand' };
 // What a click (or the drag in progress) will do, as a cursor
 function cursorFor() {
   const t = S.tool, d = S.drag, c = S.hover, m = S.mods;
-  curPrecise = preciseOn();
   const blocked = c && S.sel && !editable(c.x, c.y);   // with a selection, edits only land inside it
   const move = badge => curImage('move', badge, false, 'move');
   if (d) {
@@ -1853,13 +1849,7 @@ function cursorFor() {
   return 'default';
 }
 let lastCur = '';
-function updateCursor() {
-  const v = cursorFor();
-  if (v !== lastCur) { vp.style.cursor = v; lastCur = v; }
-  // precise mode, with one of our cursors (not the browser's I-beam, hands or not-allowed): highlight the cell
-  const shown = curPrecise && (v === 'none' || v.startsWith('url('));
-  if (shown !== S.preciseShown) { S.preciseShown = shown; redraw(); }
-}
+function updateCursor() { const v = cursorFor(); if (v !== lastCur) { vp.style.cursor = v; lastCur = v; } }
 // The 3D editor's canvas: Add / Remove (Shift = Remove), Alt or right-drag turns the view, Space or middle-drag pans
 let last3dCur = '';
 function update3dCursor() {
@@ -3846,9 +3836,11 @@ function start() {
   requestAnimationFrame(() => { if (!S.viewTouched) zoomFit(); });   // again once layout has settled
   updateInfo();
   // Resizing the window keeps the zoom and keeps the view centered (it doesn't re-fit)
+  // A size under 80 px isn't a real layout (a hidden tab can report one): skip it, and keep centering on the last real size.
   let vpSize = [vp.clientWidth, vp.clientHeight];
   new ResizeObserver(() => {
     const w = vp.clientWidth, h = vp.clientHeight;
+    if (w < 80 || h < 80) return;
     if (vpSize[0] < 80 || vpSize[1] < 80) { if (!S.viewTouched) zoomFit(); }   // first real layout: fit once
     else { S.offX += (w - vpSize[0]) / 2; S.offY += (h - vpSize[1]) / 2; }
     vpSize = [w, h];
