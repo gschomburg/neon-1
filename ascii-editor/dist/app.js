@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.132';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.133';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -2430,7 +2430,7 @@ vp.addEventListener('pointerdown', e => {
     commitFloat(); setCursor(c.x, c.y);
   } else if ((t === 'pencil' || t === 'brush' || t === 'fill') && e.altKey) {   // hold Alt: pick a character without leaving the tool
     const got = pickAt(c, 'all') || CLEAR;   // an empty cell is Clear
-    pickInto(got); toast(`${S.activeSlot === 'draw' ? 'Draw' : 'Right'}: ${chName(got)}`);
+    pickInto(got); toast(`${S.activeSlot === 'draw' ? 'Primary' : 'Secondary'}: ${chName(got)}`);
   } else if ((t === 'pencil' || t === 'brush' || t === 'eraser') && e.button === 2) {
     // the right button: Pencil / Brush paint the right-button character (or erase), the Eraser erases only the brush character
     commitFloat(); pushUndo();
@@ -2496,7 +2496,7 @@ vp.addEventListener('pointerdown', e => {
   } else if (t === 'picker') {
     const got = pickAt(c, S.pickSample) || CLEAR;   // an empty cell is Clear (it erases)
     const other = e.button === 2 || e.shiftKey;   // the selected chip; Shift / right-click: the other one
-    pickInto(got, other); toast(`${(other ? otherSlot() : S.activeSlot) === 'draw' ? 'Draw' : 'Right'}: ${chName(got)}`); setTool(S.lastDraw);
+    pickInto(got, other); toast(`${(other ? otherSlot() : S.activeSlot) === 'draw' ? 'Primary' : 'Secondary'}: ${chName(got)}`); setTool(S.lastDraw);
   } else if (t === 'zoom') {
     zoomStep(e.altKey ? -1 : 1, px, py);
   }
@@ -3344,12 +3344,12 @@ const HELP = {
     keys: [['Enter', 'next line'], ['Arrows', 'move the caret'], ['Backspace', 'delete back'], ['Insert', 'Overwrite / Insert'], ['Esc', 'stop typing']] },
   font: { sum: 'Click to start text in the font, or click text to edit it. Drag text to move it.',
     keys: [['Enter', 'new line'], ['Arrows', 'move the text'], ['Esc', 'done']] },
-  pencil: { sum: 'Draw with the Draw character, or Smart: a line that picks its own characters.',
-    keys: [['Shift', 'click: a straight line from the last stroke'], ['Alt', 'click: pick a character'], ['Right', 'paint the Right character'], ['S', 'Character / Smart'], ['[ ]', 'size'], ['X', 'swap Draw and Right']] },
+  pencil: { sum: 'Draw with the Primary character, or Smart: a line that picks its own characters.',
+    keys: [['Shift', 'click: a straight line from the last stroke'], ['Alt', 'click: pick a character'], ['Right', 'paint the Secondary character'], ['S', 'Character / Smart'], ['[ ]', 'size'], ['X', 'swap Primary and Secondary']] },
   brush: { sum: 'Paint with the Paint panel\'s setting. Taper and Outline strokes land when you let go.',
-    keys: [['Shift', 'click: a straight line from the last stroke'], ['Alt', 'click: pick a character'], ['Right', 'paint the Right character'], ['[ ]', 'size'], ['X', 'swap Draw and Right']] },
+    keys: [['Shift', 'click: a straight line from the last stroke'], ['Alt', 'click: pick a character'], ['Right', 'paint the Secondary character'], ['[ ]', 'size'], ['X', 'swap Primary and Secondary']] },
   eraser: { sum: 'Drag to erase on the active layer.',
-    keys: [['Shift', 'click: a straight line from the last stroke'], ['Right', 'erase only the Draw character'], ['[ ]', 'size']] },
+    keys: [['Shift', 'click: a straight line from the last stroke'], ['Right', 'erase only the Primary character'], ['[ ]', 'size']] },
   shape: { sum: 'Drag to draw the shape. Polygon: click the corners.',
     keys: [['Enter', 'Polygon: finish it open'], ['Backspace', 'Polygon: take back a point'], ['Esc', 'Polygon: cancel']],
     drag: [['Shift', 'square / circle / straight'], ['Alt', 'from the center'], ['Space', 'move it']] },
@@ -4316,7 +4316,7 @@ function shapeOptions(add) {
   const styles = k === 'rect' ? RECT_STYLES : k === 'ellipse' ? ELLIPSE_STYLES : k === 'polygon' ? POLY_STYLES : LINE_STYLES;
   const cur = sh[k];
   add(choiceBtn('shapestyle', 'Style: how the edges are drawn', ['none', ...Object.keys(styles).filter(s => s !== 'none')].filter(s => styles[s]).map(s => [s, typeof styles[s] === 'string' ? styles[s] : styles[s].name]), cur));
-  if (cur === 'char') add(`<span class="micon" title="The Draw character">${esc(S.brush.ch)}</span>`);
+  if (cur === 'char') add(`<span class="micon" title="The Primary character">${esc(S.brush.ch)}</span>`);
   add(`<span class="sep"></span>` + well((k === 'rect' || k === 'ellipse' ? togBtn('shape.fixed', 'fixed', `Fixed aspect: keep it a ${k === 'ellipse' ? 'circle' : 'square'} (or hold Shift while dragging)`) + togBtn('shape.center', 'center', 'From center: grow from where you start (or hold Alt while dragging)') : '') +
     (k !== 'line' ? togBtn('shape.fill', 'fillIn', 'Fill inside, with the Paint panel\'s setting (Polygons fill when closed)') : '')));
 }
@@ -4419,7 +4419,7 @@ function renderOptions() {
     add(sep + choiceBtn('fws', WS_TIP, FONT_WS, ws));
   }
   if (t === 'pencil') {
-    add(`<span class="seg"><button class="btn${S.pencil.smart ? '' : ' on'}" data-psmart="0" title="Draw with the Draw character">Character</button><button class="btn${S.pencil.smart ? ' on' : ''}" data-psmart="1" title="A line that picks its own characters as you draw (S)">Smart</button></span>`);
+    add(`<span class="seg"><button class="btn${S.pencil.smart ? '' : ' on'}" data-psmart="0" title="Draw with the Primary character">Character</button><button class="btn${S.pencil.smart ? ' on' : ''}" data-psmart="1" title="A line that picks its own characters as you draw (S)">Smart</button></span>`);
     if (S.pencil.smart) add(sep + `<span class="seg">${Object.keys(SMART_STYLES).map(k => `<button class="btn${S.pencil.style === k ? ' on' : ''}" data-pstyle="${k}" title="${{ ascii: 'Picks - | / \ _ . , ( ) < > by the direction you draw', box: 'Connected box lines ─ │ ╭ ╮ ╰ ╯, joining box lines already there', block: 'Block characters █ ▌ ▐ ▀ ▄' }[k]}">${SMART_STYLES[k]}</button>`).join('')}</span>`);
     else add(sep + sizeCtl() + tipCtl());
   }
@@ -4525,9 +4525,9 @@ function bindOptions(o) {
   }));
 }
 
-// ---------- Characters panel: the Draw and Right slots (TOOLBAR.md 5) ----------
+// ---------- Characters panel: the Primary and Secondary slots (TOOLBAR.md 5) ----------
 // Draw is the brush character (the left button); Right is S.ch2 (the right button; null = erase, shown as Clear).
-// The Draw and Right chips (the tool panel): one is selected; picking a character (palette, Picker, Alt-click) fills it,
+// The Primary and Secondary chips (the tool panel): one is selected; picking a character (palette, Picker, Alt-click) fills it,
 // and right-click / Shift fills the other one
 const otherSlot = () => S.activeSlot === 'draw' ? 'right' : 'draw';
 function setSlot(slot, c) {
@@ -4555,8 +4555,8 @@ function renderSlots() {
   const box = $('#chipBox'); if (!box) return;
   const editing = box.querySelector('input:not([readonly])'); if (editing) { markSolid(); return; }
   const chip = (slot, c, title) => `<input class="chipc ${slot}${S.activeSlot === slot ? ' sel' : ''}" data-slot="${slot}" readonly value="${esc(c)}" title="${title}">`;
-  box.innerHTML = chip('right', S.ch2 || CLEAR, 'Right: what the right button paints (blue: erase). Click to select, double-click to type a character (Space: empty, Shift Space: opaque space)') +
-    chip('draw', S.brush.ch, 'Draw: what the left button paints. Click to select, double-click to type a character (Space: empty, Shift Space: opaque space; X swaps Draw and Right)');
+  box.innerHTML = chip('right', S.ch2 || CLEAR, 'Secondary (right click): what the right button paints (blue: erase). Click to select, double-click to type a character (Space: empty, Shift Space: opaque space)') +
+    chip('draw', S.brush.ch, 'Primary (left click): what the left button paints. Click to select, double-click to type a character (Space: empty, Shift Space: opaque space; X swaps Primary and Secondary)');
   $$('input.chipc', box).forEach(w => {
     w.addEventListener('mousedown', e => { if (w.readOnly) e.preventDefault(); });   // (no text caret until a double-click)
     w.addEventListener('click', () => selectSlot(w.dataset.slot));
@@ -4586,7 +4586,7 @@ function renderHelp(force) {
   // what's going on right now
   const state = [];
   if (S.float) state.push('Floating: Enter drops it, Esc puts it back.');
-  const chipEdit = $('#chipBox input:not([readonly])');   // typing into a Draw / Right chip
+  const chipEdit = $('#chipBox input:not([readonly])');   // typing into a Primary / Secondary chip
   const key = [sub, held.join('+'), dragging ? d.kind : '', state.join('|'), toolName(), chipEdit ? chipEdit.dataset.slot : ''].join('/');
   if (!force && key === helpKey) return;
   helpKey = key;
@@ -4596,8 +4596,8 @@ function renderHelp(force) {
     return `<span class="hk${on ? ' on' : ''}">${toks.map(x => `<b>${esc(keyLabel(x))}</b>`).join(' ')}</span><span class="hd">${esc(what)}</span>`;
   }).join('') + '</div>';
   if (chipEdit) {   // while typing into a chip, Help is about that
-    const which = chipEdit.dataset.slot === 'draw' ? 'Draw' : 'Right';
-    box.innerHTML = `<div class="help-tool">Typing into ${which}</div><div class="help-sum">Type a character to put it in the ${which} chip (${which === 'Draw' ? 'what the left button paints' : 'what the right button paints'}).</div>` +
+    const which = chipEdit.dataset.slot === 'draw' ? 'Primary' : 'Secondary';
+    box.innerHTML = `<div class="help-tool">Typing into ${which}</div><div class="help-sum">Type a character to put it in the ${which} chip (${which === 'Primary' ? 'what the left button paints' : 'what the right button paints'}).</div>` +
       list([['Space', 'empty'], ['Shift Space', 'opaque empty']], true);
     return;
   }

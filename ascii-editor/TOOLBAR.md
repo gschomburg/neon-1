@@ -75,6 +75,7 @@ questions (now under Decisions, at the end).
   character (palette click, Picker, Alt-click) fills the selected chip, and right-click / Shift fills the other one.
   Double-click a chip to type a character in; Enter, Tab, Esc or a click elsewhere ends that. The tool panel's grip is a
   field of dots (8 x 2)
+- [x] v0.133: the chips are named **Primary** (left button) and **Secondary** (right button) in the UI, instead of Draw and Right
 
 ## 6. Paint panel
 
