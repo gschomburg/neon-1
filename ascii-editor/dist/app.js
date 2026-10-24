@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.73';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.79';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -1260,6 +1260,7 @@ function traceOutlines(region) {
 }
 function strokeOutline(region, b = S.brush) {
   const out = new Map();
+  if (b.edge === 'none') return out;
   if (b.edge === 'box') {   // box lines around the shape: trace its outline as one path, then draw it like a Box stroke
     const lay = L(), base = (x, y) => lay.cells.get(K(x, y));
     for (const loop of traceOutlines(region)) for (const [k, c] of smartPath(loop, 'box', { round: true, base })) {
@@ -1271,6 +1272,7 @@ function strokeOutline(region, b = S.brush) {
   for (const [k, s] of region) {
     const [x, y] = unK(k);
     if (region.has(K(x + 1, y)) && region.has(K(x - 1, y)) && region.has(K(x, y + 1)) && region.has(K(x, y - 1))) continue;
+    if (b.edge === 'char') { out.set(k, b.edgeCh || '#'); continue; }
     if (b.edge === 'paint') { const p = S.paint.mode === 'ramp' ? rampChar(s, region.total) : paintChar(x, y, false); if (p !== undefined) out.set(k, p); continue; }
     // normal = toward the empty neighbors, on screen
     // (a 5 x 5 look-around, weighted toward near cells, gives much finer angles than the 8 neighbors)
@@ -1307,6 +1309,11 @@ function commitStroke(pts) {
       if (st.outline.has(k)) continue;
       const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } putCell(lay, x, y, null);
     }
+    if (S.brush.inside === 'paint') for (const [k, smp] of st.region) {   // filled with the Paint setting
+      if (st.outline.has(k)) continue;
+      const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; }
+      const p = S.paint.mode === 'ramp' ? rampChar(smp, st.region.total) : paintChar(x, y, false); if (p !== undefined) putCell(lay, x, y, p);
+    }
     for (const [k, c] of st.outline) { const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } putCell(lay, x, y, c); }
   } else {
     for (const [k, smp] of st.region) {
@@ -1316,7 +1323,7 @@ function commitStroke(pts) {
     }
   }
   if (blocked) warnOutside('Painting');
-  if (S.paint.mode === 'char' && !(st.outline && S.brush.edge !== 'paint')) noteRecent(S.brush.ch);
+  if (S.paint.mode === 'char' && !(st.outline && S.brush.edge !== 'paint' && S.brush.inside !== 'paint')) noteRecent(S.brush.ch);
   changed();
 }
 function commitShape(shape) {
@@ -1557,6 +1564,10 @@ function render() {
     ctx.fillStyle = C['c-float-bg'];
     for (const k of st.region.keys()) { const [x, y] = unK(k); if (inView(x, y)) ctx.fillRect(px(x), py(y), cw, ch); }
     ctx.fillStyle = C['c-float-ink'];
+    if (st.outline && S.brush.inside === 'paint' && (S.paint.mode === 'char' || S.paint.mode === 'ramp')) for (const [k, smp] of st.region) {
+      if (st.outline.has(k)) continue; const [x, y] = unK(k);
+      if (inView(x, y)) ctx.fillText(S.paint.mode === 'ramp' ? rampChar(smp, st.region.total) : S.brush.ch, px(x) + cw / 2, py(y) + ty);
+    }
     if (st.outline) for (const [k, c] of st.outline) { const [x, y] = unK(k); if (inView(x, y)) ctx.fillText(c, px(x) + cw / 2, py(y) + ty); }
     else if (S.paint.mode === 'char') for (const k of st.region.keys()) { const [x, y] = unK(k); if (inView(x, y)) ctx.fillText(S.brush.ch, px(x) + cw / 2, py(y) + ty); }
     else if (S.paint.mode === 'ramp') for (const [k, smp] of st.region) { const [x, y] = unK(k); if (inView(x, y)) ctx.fillText(rampChar(smp, st.region.total), px(x) + cw / 2, py(y) + ty); }
@@ -2614,7 +2625,7 @@ $$('.menu-btn').forEach(b => b.addEventListener('mouseenter', () => {
 }));
 function closeMenus() { $$('.menu.open').forEach(m => m.classList.remove('open')); }
 // buttons don't take focus, so Enter / Space keep going to the canvas
-document.addEventListener('mousedown', e => { if (e.target.closest('.btn, .chip, .layer, .cbtn, .patitem, .pmitem')) e.preventDefault(); });
+document.addEventListener('mousedown', e => { if (!isField(e.target) && e.target.closest('.btn, .chip, .layer, .cbtn, .patitem, .pmitem')) e.preventDefault(); });   // (a text box inside a button-like pill still takes clicks)
 
 // ---------- tools + options bar ----------
 // A few basics stay in the options bar; the full set is the Characters pane on the right.
@@ -2708,7 +2719,7 @@ function renderRecent() {
 // ---------- brush library: presets + your own (saved in the browser), a picker, and the customizer ----------
 // The settings a brush carries (Size is not one of them: it is the max width, set in the bar).
 const BRUSH_KEYS = ['start', 'end', 'ramp', 'minSize', 'tip', 'mode', 'edge', 'inside'];
-const BRUSH_BASE = { start: 'none', end: 'none', ramp: 6, minSize: 1, tip: 'round', mode: 'fill', edge: 'smart', inside: 'solid' };
+const BRUSH_BASE = { start: 'none', end: 'none', ramp: 6, minSize: 1, tip: 'round', mode: 'fill', edge: 'smart', inside: 'solid', edgeCh: '#' };   // edgeCh: Outline Character's character
 const BRUSHES = {
   'Plain':      { ...BRUSH_BASE, tip: 'square' },
   'Taper':      { ...BRUSH_BASE, start: 'linear', end: 'linear', ramp: 8 },
@@ -2743,8 +2754,10 @@ function cleanBrush(x) {
   c.minSize = clamp(Math.round(+x.minSize) || 1, 1, 25);
   if (x.tip === 'square') c.tip = 'square';
   if (x.mode === 'outline') c.mode = 'outline';
-  if (['paint', 'box', 'block'].includes(x.edge)) c.edge = x.edge;
-  if (x.inside === 'clear') c.inside = 'clear';
+  if (['box', 'block', 'none', 'char'].includes(x.edge)) c.edge = x.edge;
+  if (x.edge === 'paint') c.edge = 'char';   // the old Outline Paint
+  { const e = chars(x.edgeCh || '')[0]; if (e && e !== ' ') c.edgeCh = e; }
+  if (x.inside === 'clear' || x.inside === 'paint') c.inside = x.inside;
   return c;
 }
 const allBrushes = () => [...Object.keys(BRUSHES).map(n => ({ name: n, ...BRUSHES[n], custom: false })), ...S.brushes.map(b => ({ ...b, custom: true }))];
@@ -2770,7 +2783,7 @@ function brushThumb(b, w = 26, size = 13, h = 5) {
     let r = '';
     for (let x = 0; x < w; x++) {
       const k = K(x, y);
-      r += st.outline ? (st.outline.get(k) || ' ') : (st.region.has(k) ? '#' : ' ');
+      r += st.outline ? (st.outline.get(k) || (bb.inside === 'paint' && st.region.has(k) ? '#' : ' ')) : (st.region.has(k) ? '#' : ' ');
     }
     rows.push(r);
   }
@@ -2878,7 +2891,7 @@ function openBrushPop(btn) {
   if (!p.hidden) return closeBrushPop();
   closeBrushMenu();
   refreshBrushPop(true);
-  placeUnder(p, btn, 340);
+  placeUnder(p, btn, 440);
 }
 function closeBrushPop() { const p = $('#brushPop'); if (p) p.hidden = true; }
 function refreshBrushPop(force) {
@@ -2887,6 +2900,8 @@ function refreshBrushPop(force) {
   const curveRow = (key, label) => `<div class="bp-row"><span class="bp-label">${label}</span><span class="seg curves">` +
     Object.keys(CURVES).map(c => `<button class="btn${b[key] === c ? ' on' : ''}" data-bkey="${key}" data-bval="${c}" title="${CURVES[c]}">${CURVE_ICON[c]}</button>`).join('') + `</span></div>`;
   const seg = (key, v, label, title) => `<button class="btn${b[key] === v ? ' on' : ''}" data-bkey="${key}" data-bval="${v}" title="${title}">${label}</button>`;
+  const fseg = (v, label, title) => `<button class="btn${fillOf(b) === v ? ' on' : ''}" data-bfill="${v}" title="${title}">${label}</button>`;
+  const oseg = (v, label, title) => `<button class="btn${outlineOf(b) === v ? ' on' : ''}" data-boutline="${v}" title="${title}">${label}</button>`;
   p.innerHTML =
     `<div class="bp-head"><span class="bp-title">${esc(b.preset)}${brushEdited() ? ' <span class="bp-edited">edited</span>' : ''}</span>` +
     (brushEdited() && brushByName(b.preset) ? `<button class="btn small bp-reset" title="Back to the saved brush">Reset</button>` : '') + `</div>` +
@@ -2895,13 +2910,24 @@ function refreshBrushPop(force) {
     `<div class="bp-row"><span class="bp-label">Ramp length</span><input class="bramp" type="range" min="1" max="30" value="${b.ramp}" title="How many cells each end takes to grow to full size (and to step through Ramp characters)"><span class="rampv">${b.ramp}</span></div>` +
     `<div class="bp-row"><span class="bp-label">Min width</span><button class="btn icon" data-bmin="-1">−</button><span class="bminv">${b.minSize}</span><button class="btn icon" data-bmin="1">+</button><span class="bp-note">Size (in the bar) is the max</span></div>` +
     `<div class="bp-row"><span class="bp-label">Tip</span><span class="seg">${seg('tip', 'round', 'Round', 'Round tip')}${seg('tip', 'square', 'Square', 'Square tip')}</span></div>` +
-    `<div class="bp-row"><span class="bp-label">Stroke</span><span class="seg">${seg('mode', 'fill', 'Fill', 'Paint every cell the brush covers')}${seg('mode', 'outline', 'Outline', 'Only the edge of the stroke, worked out when you let go')}</span></div>` +
-    (b.mode === 'outline' ?
-      `<div class="bp-row"><span class="bp-label">Edges</span><span class="seg">${seg('edge', 'smart', 'Smart', 'Edge characters that follow the shape: - _ | / \\')}${seg('edge', 'box', 'Box', 'Connected box lines around the shape, joining box lines already there')}${seg('edge', 'block', 'Block', 'Block characters along the edge')}${seg('edge', 'paint', 'Paint', 'Paint the edge with the Paint setting')}</span></div>` +
-      `<div class="bp-row"><span class="bp-label" title="${WS_TIP}">White space</span><span class="seg">${seg('inside', 'solid', 'Solid', 'The inside of the outline is wiped blank (on this layer)')}${seg('inside', 'clear', 'Clear', 'Only the edge lands; what is inside shows through')}</span></div>` : '') +
+    // Fill (inside) and Outline (edge). Stored as before: Fill Paint + Outline None is a plain stroke (mode fill);
+    // anything else is mode outline with edge = Outline and inside = Fill.
+    `<div class="bp-row"><span class="bp-label" title="What goes inside the stroke">Fill</span><span class="seg">${fseg('paint', 'Paint', 'Paint the stroke with the Paint setting (character, noise, pattern or ramp)')}${fseg('solid', 'Solid', 'Wipe the inside blank (on this layer)')}${fseg('clear', 'Clear', 'Leave the inside alone: what is there shows through')}</span></div>` +
+    `<div class="bp-row"><span class="bp-label" title="What goes on the edge of the stroke">Outline</span><span class="seg">${oseg('none', 'None', 'No outline')}${oseg('smart', 'Smart', 'Edge characters that follow the shape: - _ | / \\')}${oseg('box', 'Box', 'Connected box lines around the shape, joining box lines already there')}${oseg('block', 'Block', 'Block characters along the edge')}${outlineOf(b) === 'char' ? `<span class="btn on charpill" title="The edge in one character of its own: type it in the box">Character <input class="bedgech" type="text" maxlength="2" value="${esc(b.edgeCh || '#')}" title="The outline's character"></span>` : oseg('char', 'Character', 'The edge in one character of its own (type it in the box)')}</span></div>` +
+    (fillOf(b) === 'clear' && outlineOf(b) === 'none' ? `<div class="bp-row"><span class="bp-label"></span><span class="bp-note warnnote">Fill Clear with no outline draws nothing</span></div>` : '') +
     `<div class="bp-save"><input class="bp-name" type="text" maxlength="40" placeholder="New brush name" spellcheck="false"><button class="btn primary bp-savebtn">Save as new brush</button></div>`;
   $$('[data-bkey]', p).forEach(el => el.addEventListener('click', () => { S.brush[el.dataset.bkey] = el.dataset.bval; brushChanged(); }));
+  $$('[data-bfill]', p).forEach(el => el.addEventListener('click', () => { setFillOutline(S.brush, el.dataset.bfill, outlineOf(S.brush)); brushChanged(); }));
+  const focusEdgeCh = () => { const i = $('#brushPop .bedgech'); if (i) { i.focus(); i.select(); } };   // ready to type the outline's character
+  $$('[data-boutline]', p).forEach(el => el.addEventListener('click', () => { setFillOutline(S.brush, fillOf(S.brush), el.dataset.boutline); brushChanged(); if (el.dataset.boutline === 'char') focusEdgeCh(); }));
+  const pill = $('.charpill', p); if (pill) pill.addEventListener('click', focusEdgeCh);
   $$('[data-bmin]', p).forEach(el => el.addEventListener('click', () => { S.brush.minSize = clamp(S.brush.minSize + +el.dataset.bmin, 1, 25); brushChanged(); }));
+  const ec = $('.bedgech', p);
+  if (ec) ec.addEventListener('input', () => {   // typing a character: keep the popover (and the focus) as it is
+    const c = chars(ec.value).pop(); if (!c || c === ' ') return;
+    S.brush.edgeCh = c; ec.value = c; ec.select();
+    $('.bp-preview', p).textContent = brushThumb(S.brush, 34, 15, 7); savePrefs(); renderOptions(); redraw();
+  });
   const rp = $('.bramp', p);
   rp.addEventListener('input', () => { S.brush.ramp = +rp.value; $('.rampv', p).textContent = rp.value; $('.bp-preview', p).textContent = brushThumb(S.brush, 34, 15, 7); savePrefs(); });
   rp.addEventListener('change', () => brushChanged());
@@ -2919,6 +2945,13 @@ function refreshBrushPop(force) {
   };
   $('.bp-savebtn', p).addEventListener('click', save);
   $('.bp-name', p).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); save(); } });
+}
+// a brush's Fill (paint / solid / clear) and Outline (none / smart / box / block / paint), from mode, inside and edge
+const fillOf = b => b.mode === 'outline' ? (b.inside || 'solid') : 'paint';
+const outlineOf = b => b.mode === 'outline' ? (b.edge || 'smart') : 'none';
+function setFillOutline(b, fill, outline) {
+  if (fill === 'paint' && outline === 'none') { b.mode = 'fill'; b.edge = 'smart'; b.inside = 'solid'; return; }   // a plain stroke (stored like the presets)
+  b.mode = 'outline'; b.edge = outline; b.inside = fill;
 }
 function brushChanged() { savePrefs(); renderOptions(); refreshBrushPop(true); redraw(); }
 document.addEventListener('pointerdown', e => {
@@ -3661,7 +3694,7 @@ function start() {
   S.font = p.font || S.font; $('#fontSel').value = S.font;
   if (typeof p.grid === 'boolean') S.grid = p.grid;
   $('#gridBtn').classList.toggle('on', S.grid);
-  if (p.brush) Object.assign(S.brush, p.brush);
+  if (p.brush) { Object.assign(S.brush, p.brush); if (S.brush.edge === 'paint') S.brush.edge = 'char'; }   // the old Outline Paint
   loadCustomBrushes();
   loadCustomRamps();
   loadCustomNoises();

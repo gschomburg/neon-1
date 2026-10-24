@@ -359,7 +359,7 @@ cell: | ( ) steep, /  diagonal, - ' _ ` . , ´ shallow, < > where it turns back;
 when steep), **Box** (walks cell to cell and joins the sides: ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼, and joins box lines already on the
 layer; a cell only counts once the stroke is a fifth of the way in, so jitter on an edge makes no stubs) and **Block**
 (█ ▌ ▐ ▀ ▄ ▚ ▞; the user doesn't love these, kept for completeness). The Shape tool's Line / Polygon styles use the same:
-Smart (ASCII), Box (now connected, sharp corners), Block. v0.71: the Advanced brush's Outline **Edges** also has Box (the outline traced as one path, then drawn like a Box stroke) and Block, next to Smart and Paint.
+Smart (ASCII), Box (now connected, sharp corners), Block. v0.71: the Advanced brush's Outline **Edges** also has Box (the outline traced as one path, then drawn like a Box stroke) and Block, next to Smart and Paint. v0.72: Outline's inside is now **Inside: Paint | Solid | Clear** (was White space: Solid / Clear); Paint fills the inside with the Paint setting and the edges go on top. v0.73 (the user: less redundancy): the customizer's Stroke / Edges / Inside rows became two: **Fill** Paint | Solid | Clear and **Outline** None | Smart | Box | Block | Paint. Stored the same way (Fill Paint + Outline None = a plain stroke, mode fill; anything else = mode outline with edge and inside), so saved brushes keep working. v0.75: Outline Paint became **Character** with its own character box (Paint is the Paint setting, so an outline in it was the same as no outline); old Outline Paint brushes switch to Character. The customizer is 440px wide.
 
 **Not in v0:** the vector layer and converter, reference image, block
 mode, animation, built-in art.
