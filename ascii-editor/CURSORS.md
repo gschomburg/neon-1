@@ -1,7 +1,7 @@
 # asXii: cursor feedback plan
 
 The cursor should show what a click will do: which tool is active, plus any mode a key or the top bar has turned on.
-Section 1 and the fixes are built (v0.72). Section 2 isn't. Tick an item (`[x]`) when it's built.
+Section 1 and the fixes are built (v0.72); section 2 in v0.74. Tick an item (`[x]`) when it's built.
 
 **See them all:** open `dist/cursors.html`. Every cursor is numbered (C01...), drawn big on dark and light with its click point,
 and at real size; hover one to try it. The drawings live in `dist/cursors.js`, shared by the editor and that page.
@@ -84,49 +84,67 @@ and at real size; hover one to try it. The drawings live in `dist/cursors.js`, s
 - [x] Turn the view (Option-drag or right-drag): circular "orbit" arrows
 - [x] Pan (Space or middle button): `grab`, then `grabbing` while dragging
 
-## 2. Modes other editors have (candidates to add at the same time)
+## 2. Modes other editors have (v0.74)
 
-Check for key clashes before building any of these. Shift+Option currently means "add" (Shift wins), but in Photoshop it means intersect. If the quick picker uses Option, Option can't do anything else while painting.
+Built in v0.74; each item is ticked once it's tested. Key choices: Shift + Option is now intersect (it used to be "add",
+since Shift won). Option is the quick picker while painting, so it does nothing else on Pencil, Brush and Fill.
+
+### Also in this round
+- [x] The canvas zoom stays the same when the window resizes; the view stays centered (it used to re-fit until you zoomed by hand)
+- [x] Magic wand button in the toolbox, right under Select. It's the same tool: either button turns on Select and picks its
+  shape (Select goes back to the last Rectangle / Ellipse / Lasso / Polygon). Keys: M, W; Shift M cycles the marquee shapes
 
 ### Select
-- [ ] Intersect, Shift+Option (Photoshop): keep only the overlap with the current selection. Crosshair with **×**
-- [ ] Magic wand (Photoshop, Aseprite): click to select connected cells with the same character; Shift adds, Option subtracts. Wand icon
-- [ ] Select every matching character (Aseprite, the wand with Contiguous off): that character anywhere on the layer. Wand with a dots badge
-- [ ] Polygon lasso (Photoshop): click corner points instead of dragging freehand. Polygon-lasso icon
+- [x] Intersect, Shift + Option (Photoshop): keep only the overlap with the current selection. Crosshair (or lasso, polygon, wand) with **×**
+- [x] Magic wand (Photoshop, Aseprite): click to select connected cells with the same character; Shift adds, Option subtracts,
+  both intersect. Top bar: Contiguous, Look at Layer / All. Wand cursor
+- [x] Select every matching character (Aseprite, the wand with Contiguous off): that character anywhere on the layer. Wand with a dots badge
+- [x] Polygon (Photoshop's polygonal lasso, a fourth Select shape): click the corners; the first point, a double-click or Enter
+  closes it; Backspace takes back a point; Esc cancels. Polygon-lasso cursor, with a ring over the first point
 
 ### Select and Move
-- [ ] Drag a copy, Option with Move (Photoshop): drags a copy and leaves the original. Double arrow
+- [x] Drag a copy, Option with Move (or Ctrl + Option with Select) (Photoshop): drags a copy and leaves the original. On a floating
+  block, each Option-drag stamps one copy. Move cursor with **+** (changed from the plan's double arrow, to match the other "adds" badges)
 
 ### Move
-- [ ] Auto-select layer, Cmd-click (Photoshop): switch to the top layer that has a character under the pointer. Arrow with a layer badge
-- [ ] Lock to one axis, Shift-drag (most editors): move only horizontally or only vertically. Arrow with ↔ or ↕
+- [x] Auto-select layer, Cmd / Ctrl-click (Photoshop): switch to the top visible layer that has a character under the pointer, then
+  move as usual (the selection stays). Arrow with a layer badge
+- [x] Lock to one axis, Shift-drag (most editors): move only left-right or up-down. Move with a lock badge before the drag;
+  a ↔ or ↕ arrow during it
 
 ### Type
-- [ ] Overwrite vs. insert, the Insert key (REXPaint, Moebius, text editors): overwrite replaces characters, insert pushes the rest of the line along. I-beam for insert, block caret for overwrite
+- [x] Overwrite vs. insert: the Insert key, or Typing: Overwrite / Insert in the top bar (Macs have no Insert key). Insert pushes
+  the rest of the row along, and Backspace / Delete pull it back. Not inside a selection. The caret is a bar under the cell for
+  overwrite, down its left edge for insert. The pointer stays the I-beam
 
 ### Pencil, Brush, Eraser
-- [ ] Straight line from the last point, Shift-click (Photoshop, Aseprite). Crosshair with a short line
-- [ ] Right-click erases (Aseprite, REXPaint): the second mouse button paints empty cells. Eraser icon
-- [ ] Mirror painting (Aseprite, Krita): paints a mirrored copy across a center line. Crosshair with a mirror line
+- [x] Straight line from the last point, Shift-click (Photoshop, Aseprite). Fine crosshair with a short line
+- [x] Right button (Aseprite, REXPaint): Pencil and Brush paint the right-button character, which starts as Erase (top bar:
+  Right button). Eraser cursor while erasing, fine crosshair with a "2" while painting a character
+- [x] Mirror painting (Aseprite, Krita): top bar Mirror: Off / ↔ / ↕ / Both, across the canvas's middle, with the characters
+  flipped (/ to \). Dashed mirror lines on the canvas. Fine crosshair with a mirror badge
 
 ### Pencil, Brush, Fill
-- [ ] Quick picker, hold Option (Photoshop): picks a character while Option is held. Eyedropper
+- [x] Quick picker, hold Option (Photoshop): a click picks a character and stays in the tool. Eyedropper
 
 ### Eraser
-- [ ] Erase only one character (Aseprite, right-click): erases only cells holding the picked character. Eraser with a character badge
+- [x] Erase only one character, right button (Aseprite): erases only cells holding the brush character. Eraser with an "A" badge
 
-### Shape
-- [ ] Reposition while drawing, Space held mid-drag (Photoshop): moves the shape instead of resizing it. 4-way arrow
+### Shape (and the Select box)
+- [x] Reposition while drawing, Space held mid-drag (Photoshop): moves the shape instead of resizing it. 4-way arrow
 
 ### Fill
-- [ ] Global fill (Aseprite, Contiguous off or Shift-click): fills every matching cell, connected or not. Bucket with a dots badge
+- [x] Global fill (Aseprite): top bar Contiguous; Shift-click does the other one. Bucket with a dots badge
 
 ### Picker
-- [ ] Pick from all layers vs. this layer (Photoshop's sample option). Eyedropper with a stack badge
-- [ ] Pick a second character (Aseprite, right-click; like its background color). Eyedropper with a small "2"
+- [x] Pick from all layers vs. this layer: top bar Look at: Layer / All (All, the default, is what it did before). Eyedropper with
+  a layers badge for All, like Fill
+- [x] Pick the right-button character: Shift-click or right-click (an empty cell sets it back to Erase). Eyedropper with a "2"
 
 ### View
-- [ ] Zoom in / out, Cmd+Space / Option+Space or a Z tool (Photoshop): click to zoom. Magnifier with **+** or **−**
+- [x] Zoom tool, Z, in the toolbox: click zooms in, Option-click zooms out. Magnifier with **+** or **−**. (Cmd + Space and Ctrl + Space
+  are taken by macOS, so no Space shortcuts.)
 
 ### Any tool
-- [ ] Hold a tool's key to switch to it for a moment; letting go switches back (Photoshop). That tool's cursor
+- [x] Hold a tool's key to switch to it for a moment; letting go switches back if you used it or held it over 0.4 s (Photoshop).
+  Not T (it types) or K (it opens the 3D editor). That tool's cursor

@@ -41,6 +41,16 @@ const S = {
   recent: [],           // last 5 characters placed, newest first
   selShape: 'rect',     // Select tool: rect | ellipse | lasso
   selFixed: false, selCenter: false,   // Fixed aspect (square / circle) and From center, for rect + ellipse
+  lastMarquee: 'rect',  // the last non-wand Select shape (the Select button goes back to it; the Wand button picks 'wand')
+  selPoly: null,        // a polygon selection being clicked out: { pts: [{x, y}...], mode }
+  wandContig: true, selSample: 'layer',   // Wand: connected cells only (off = every match), and which layers it looks at
+  fillContig: true,     // Fill: connected cells only (off = every matching cell on the canvas; Shift-click flips it)
+  pickSample: 'all',    // Picker: the character you see ('all') or the one on the active layer ('layer')
+  ch2: null,            // the right-button character for Pencil and Brush (null = erase); Shift or right-click with the Picker sets it
+  mirror: 'off',        // Pencil / Brush / Eraser paint a mirrored copy: off | h (left-right) | v (top-bottom) | both
+  typeInsert: false,    // Type: insert (push the rest of the row along) instead of overwrite; the Insert key flips it
+  lastPaint: null,      // where the last paint stroke ended, for Shift-click straight lines
+  spring: null,         // a tool key held down: { key, prev, at, used }; letting go goes back to prev
   // What the Brush and Fill paint with: one character, noise (random from a set), or a repeating pattern
   paint: { mode: 'char', noise: { name: 'Dust', set: ".,'`", density: 25 }, pattern: { name: 'Checker', rows: ['# ', ' #'] }, ramp: { name: 'Classic', set: '.:-=+*#%@' } },
   noises: [],           // your own noises (Save in the noise list); the presets are NOISES
@@ -131,10 +141,16 @@ function selBounds(set) {
   for (const k of set) { const [x, y] = unK(k); if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
   return { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
 }
-// Combine a set of cells with the selection: new / add (Shift) / sub (Alt).
+// Combine a set of cells with the selection: new / add (Shift) / sub (Alt) / int (Shift + Alt: keep only the overlap).
 function applyCells(cells, mode) {
-  if (mode === 'new' || !S.sel) S.sel = new Set();
-  for (const k of cells) { if (mode === 'sub') S.sel.delete(k); else S.sel.add(k); }
+  if (mode === 'int') {
+    const keep = new Set();
+    if (S.sel) for (const k of cells) if (S.sel.has(k)) keep.add(k);
+    S.sel = keep;
+  } else {
+    if (mode === 'new' || !S.sel) S.sel = new Set();
+    for (const k of cells) { if (mode === 'sub') S.sel.delete(k); else S.sel.add(k); }
+  }
   if (!S.sel.size) S.sel = null;
   updateInfo(); redraw();
 }
@@ -201,6 +217,46 @@ function lassoCells(pts) {
   }
   return [...out];
 }
+// The selection mode from the keys held: Shift adds, Alt takes away, both keep only the overlap
+const SEL_SHAPES = ['rect', 'ellipse', 'lasso', 'polygon', 'wand'];
+const SEL_NAMES = { rect: 'Rectangle', ellipse: 'Ellipse', lasso: 'Lasso', polygon: 'Polygon', wand: 'Magic wand' };
+const selMode = e => e.shiftKey && e.altKey ? 'int' : e.shiftKey ? 'add' : e.altKey ? 'sub' : 'new';
+// Magic wand: the connected cells with the same character as x, y (inside the canvas), or every matching cell
+// (Contiguous off). Looks at the active layer or at everything you see (Look at: All). Blank cells match blank cells.
+function wandCells(x, y) {
+  if (x < 0 || y < 0 || x >= S.w || y >= S.h) { toast('Click inside the canvas to use the wand', 'warn'); return null; }
+  const lay = L(), get = S.selSample === 'all' ? (a, b) => { const c = compositeAt(a, b); return c === SOLID ? null : c; }
+    : (a, b) => lay.cells.has(K(a, b)) ? lay.cells.get(K(a, b)) : null;
+  const target = get(x, y), out = new Set();
+  if (!S.wandContig) {
+    for (let j = 0; j < S.h; j++) for (let i = 0; i < S.w; i++) if (get(i, j) === target) out.add(K(i, j));
+    if (target != null) for (const l of S.selSample === 'all' ? S.layers.filter(l => l.visible) : [lay])
+      for (const [k, c] of l.cells) if (c === target && get(...unK(k)) === target) out.add(k);   // art outside the canvas too
+    return out;
+  }
+  const stack = [[x, y]]; out.add(K(x, y));
+  while (stack.length) {
+    const [cx, cy] = stack.pop();
+    for (const [nx, ny] of [[cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]]) {
+      const k = K(nx, ny);
+      if (out.has(k) || nx < 0 || ny < 0 || nx >= S.w || ny >= S.h || get(nx, ny) !== target) continue;
+      out.add(k); stack.push([nx, ny]);
+    }
+  }
+  return out;
+}
+// Polygon selection: the cells inside the clicked points, plus the cells its edges cross (points are cells: use their centers)
+const polySelCells = pts => lassoCells(pts.map(p => ({ x: p.x + 0.5, y: p.y + 0.5 })));
+function finishSelPoly(cancel) {
+  const sp = S.selPoly; S.selPoly = null;
+  if (!cancel && sp && sp.pts.length >= 2) applyCells(polySelCells(sp.pts), sp.mode);
+  redraw();
+}
+// The character at a cell: what you see ('all') or what's on the active layer ('layer'); null for blank
+function pickAt(c, sample) {
+  const got = sample === 'layer' ? L().cells.get(K(c.x, c.y)) : compositeAt(c.x, c.y);
+  return got && got !== SOLID ? got : null;
+}
 function selectAll() { commitFloat(); applyRect(0, 0, S.w - 1, S.h - 1, 'new'); }
 function deselect() { if (S.float) commitFloat(); S.sel = null; updateInfo(); redraw(); }
 
@@ -249,7 +305,8 @@ function deleteSelection() {
 }
 
 // ---------- floating blocks (paste / move) ----------
-function liftSelection() {
+// copy: leave the original where it is (Alt-drag) and float a copy of it
+function liftSelection(copy) {
   if (S.float) return true;
   if (!S.sel || !S.sel.size) return false;
   // Nothing to lift (the outline was moved off the art, or the art is on another layer): say so instead of moving blanks
@@ -265,7 +322,7 @@ function liftSelection() {
   for (const k of S.sel) {
     const [x, y] = unK(k);
     cells.set(K(x - b.x, y - b.y), lay.cells.get(k) || ' ');
-    lay.cells.delete(k);
+    if (!copy) lay.cells.delete(k);
   }
   S.float = { cells, x: b.x, y: b.y, w: b.w, h: b.h, lifted: true, origSel: S.sel };
   S.sel = null;
@@ -325,13 +382,23 @@ function moveFloat(dx, dy) {
   updateInfo(); redraw();
 }
 // Lift the selection for moving; with nothing selected, lift everything on the active layer (like Photoshop).
-function liftForMove() {
+function liftForMove(copy) {
   if (S.float) return true;
   if (!S.sel) {
     if (!L().cells.size) { toast('Nothing on this layer to move', 'warn'); return false; }
     S.sel = new Set(L().cells.keys());
   }
-  return liftSelection();
+  return liftSelection(copy);
+}
+// Move tool + Ctrl / Cmd click: make the top visible layer with a character under the pointer the active one
+function pickLayerAt(c) {
+  for (let i = S.layers.length - 1; i >= 0; i--) {
+    const l = S.layers[i];
+    if (!l.visible || !l.cells.has(K(c.x, c.y))) continue;
+    if (i !== S.active) { commitFloat(); S.active = i; renderLayers(); updateInfo(); toast('Layer: ' + l.name); }
+    return true;
+  }
+  return false;
 }
 function shiftSet(set, dx, dy) {
   const out = new Set();
@@ -389,10 +456,25 @@ function selNextRow(y) {
   }
   return best;
 }
+// Insert typing: move the cells on row y from x on by dx (1 = make room, -1 = close the gap). Not inside a selection.
+const inserting = () => S.typeInsert && !S.sel;
+function shiftRow(y, x, dx) {
+  const lay = L(), moving = [];
+  for (const [k, c] of lay.cells) { const [cx, cy] = unK(k); if (cy === y && cx >= x) moving.push([cx, c]); }
+  for (const [cx] of moving) lay.cells.delete(K(cx, y));
+  for (const [cx, c] of moving) lay.cells.set(K(cx + dx, y), c);
+}
+function setTypeInsert(on) {
+  S.typeInsert = on; savePrefs(); S.blinkOn = true;
+  if (S.tool === 'type') renderOptions();
+  toast(on ? 'Insert: typing pushes the rest of the row along' + (S.sel ? ' (not inside a selection)' : '') : 'Overwrite: typing replaces what is there');
+  redraw();
+}
 function typeChar(c) {
   const cur = S.cursor; if (!cur) return;
   if (!editable(cur.x, cur.y)) { warnOutside('Typing'); S.blinkOn = true; redraw(); return; }
   pushUndo('type');
+  if (inserting()) shiftRow(cur.y, cur.x, 1);
   setCell(L(), cur.x, cur.y, c);
   noteRecent(c);
   if (S.sel) { const n = selStep(cur.x, cur.y, 1); if (n) { cur.x = n.x; cur.y = n.y; } else cur.x++; }
@@ -421,17 +503,37 @@ function warnOutside(what) {
   toast(what + ' only inside the selection · Ctrl D clears it', 'warn');
   const n = $('#selnote'); if (n && !n.hidden) shake(n);
 }
+// Mirror painting (Pencil, Brush, Eraser): the cells a paint at x, y also lands on, across the canvas's middle,
+// with the characters flipped to match (/ becomes \ and so on).
+const mirrorOn = () => S.mirror !== 'off' && (S.tool === 'pencil' || S.tool === 'brush' || S.tool === 'eraser');
+function mirrorTargets(x, y, c) {
+  const out = [[x, y, c]];
+  if (!mirrorOn()) return out;
+  const fx = S.w - 1 - x, fy = S.h - 1 - y, fh = v => v == null ? v : FLIP_H[v] || v, fv = v => v == null ? v : FLIP_V[v] || v;
+  if (S.mirror === 'h' || S.mirror === 'both') out.push([fx, y, fh(c)]);
+  if (S.mirror === 'v' || S.mirror === 'both') out.push([x, fy, fv(c)]);
+  if (S.mirror === 'both') out.push([fx, fy, fv(fh(c))]);
+  return out;
+}
+// Paint one cell (and its mirror copies). only: change a cell only if it holds that character (Eraser's right button).
+function putCell(lay, x, y, c, only) {
+  for (const [X, Y, v] of mirrorTargets(x, y, c)) {
+    if ((X !== x || Y !== y) && !editable(X, Y)) continue;
+    if (only !== undefined && lay.cells.get(K(X, Y)) !== only) continue;
+    setCell(lay, X, Y, v);
+  }
+}
 // Stamp the brush at x, y. c: a character, null = erase, undefined = whatever the Paint setting says.
-// Returns true if some of the brush fell outside the selection.
-function stamp(x, y, c) {
+// only: see putCell. Returns true if some of the brush fell outside the selection.
+function stamp(x, y, c, only) {
   const lay = L(); let blocked = false;
   const ts = toolSize();
   for (const [dx, dy] of brushOffsets(ts.size, ts.tip)) {
     const X = x + dx, Y = y + dy;
     if (!editable(X, Y)) { blocked = true; continue; }
-    if (c !== undefined) { setCell(lay, X, Y, c); continue; }
+    if (c !== undefined) { putCell(lay, X, Y, c, only); continue; }
     const p = paintChar(X, Y, false);
-    if (p !== undefined) setCell(lay, X, Y, p);
+    if (p !== undefined) putCell(lay, X, Y, p);
   }
   return blocked;
 }
@@ -477,13 +579,18 @@ function paintChar(x, y, forFill) {
 
 // ---------- fill ----------
 // Flood fill: the connected area of the same character, inside the canvas (and the selection, if there is one).
-function floodFill(x, y) {
+// every: fill every cell on the canvas with that character, connected or not (Contiguous off, or Shift-click)
+function floodFill(x, y, every) {
   if (x < 0 || y < 0 || x >= S.w || y >= S.h) return toast('Click inside the canvas to fill', 'warn');
   if (!editable(x, y)) return warnOutside('Filling');
   commitFloat();
   const lay = L();
   const get = S.fillSample === 'all' ? (a, b) => compositeAt(a, b) : (a, b) => lay.cells.has(K(a, b)) ? lay.cells.get(K(a, b)) : null;
   const target = get(x, y), seen = new Set([K(x, y)]), stack = [[x, y]], cells = [];
+  if (every) {
+    stack.length = 0;
+    for (let j = 0; j < S.h; j++) for (let i = 0; i < S.w; i++) if (editable(i, j) && get(i, j) === target) cells.push([i, j]);
+  }
   while (stack.length) {
     const [cx, cy] = stack.pop();
     cells.push([cx, cy]);
@@ -1188,7 +1295,7 @@ function strokeCells(pts, b = S.brush) {
 function commitStroke(pts) {
   if (pencilSmart()) {   // a smart line: the characters it picked, on the active layer
     pushUndo(); const lay = L(); let blocked = false;
-    for (const [k, c] of smartStroke(pts)) { const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } setCell(lay, x, y, c); }
+    for (const [k, c] of smartStroke(pts)) { const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } putCell(lay, x, y, c); }
     if (blocked) warnOutside('Drawing');
     return changed();
   }
@@ -1198,14 +1305,14 @@ function commitStroke(pts) {
   if (st.outline) {
     if (S.brush.inside === 'solid') for (const k of st.region.keys()) {
       if (st.outline.has(k)) continue;
-      const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } setCell(lay, x, y, null);
+      const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } putCell(lay, x, y, null);
     }
-    for (const [k, c] of st.outline) { const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } setCell(lay, x, y, c); }
+    for (const [k, c] of st.outline) { const [x, y] = unK(k); if (!editable(x, y)) { blocked = true; continue; } putCell(lay, x, y, c); }
   } else {
     for (const [k, smp] of st.region) {
       const [x, y] = unK(k);
       if (!editable(x, y)) { blocked = true; continue; }
-      const p = S.paint.mode === 'ramp' ? rampChar(smp, st.region.total) : paintChar(x, y, false); if (p !== undefined) setCell(lay, x, y, p);
+      const p = S.paint.mode === 'ramp' ? rampChar(smp, st.region.total) : paintChar(x, y, false); if (p !== undefined) putCell(lay, x, y, p);
     }
   }
   if (blocked) warnOutside('Painting');
@@ -1493,10 +1600,23 @@ function render() {
   // canvas edge
   ctx.strokeStyle = C['c-edge']; ctx.lineWidth = 1;
   ctx.strokeRect(Math.round(px(0)) + 0.5, Math.round(py(0)) + 0.5, Math.round(S.w * cw), Math.round(S.h * ch));
+  if (mirrorOn()) {   // the mirror lines through the middle of the canvas
+    ctx.strokeStyle = C['c-cursor']; ctx.globalAlpha = 0.6; ctx.setLineDash([6, 4]); ctx.beginPath();
+    if (S.mirror !== 'v') { const X = Math.round(px(S.w / 2)) + 0.5; ctx.moveTo(X, py(0)); ctx.lineTo(X, py(S.h)); }
+    if (S.mirror !== 'h') { const Y = Math.round(py(S.h / 2)) + 0.5; ctx.moveTo(px(0), Y); ctx.lineTo(px(S.w), Y); }
+    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
 
   // selection outline (marching ants), the float's box
   const now = performance.now();
   if (S.sel) outlineCells(S.sel, C['c-sel-line'], now);
+  if (S.selPoly) {   // a polygon selection being clicked out: what it would select, and its points (the first one closes it)
+    const pts = S.selPoly.pts.slice(); if (S.hover) pts.push(S.hover);
+    outlineCells(new Set(polySelCells(pts)), C['c-sel-line'], now);
+    ctx.strokeStyle = C['c-sel-line'];
+    S.selPoly.pts.forEach((p, i) => { ctx.lineWidth = i ? 1 : 2; ctx.strokeRect(Math.round(px(p.x)) + 0.5, Math.round(py(p.y)) + 0.5, Math.round(cw) - 1, Math.round(ch) - 1); });
+    ctx.lineWidth = 1;
+  }
   if (f) {
     ctx.setLineDash([4, 3]); ctx.lineDashOffset = -now / 60;
     ctx.strokeStyle = C['c-float-ink'];
@@ -1528,7 +1648,8 @@ function render() {
     const { x, y } = S.cursor;
     ctx.strokeStyle = C['c-cursor']; ctx.lineWidth = 1;
     ctx.strokeRect(Math.round(px(x)) + 0.5, Math.round(py(y)) + 0.5, Math.round(cw) - 1, Math.round(ch) - 1);
-    if (S.blinkOn) { ctx.fillStyle = C['c-cursor']; ctx.fillRect(px(x) + 1, py(y) + ch - 3, cw - 2, 2); }
+    // Overwrite: a bar under the cell. Insert: a bar down its left edge (where the character goes in)
+    if (S.blinkOn) { ctx.fillStyle = C['c-cursor']; if (inserting()) ctx.fillRect(px(x), py(y) + 1, 2, ch - 2); else ctx.fillRect(px(x) + 1, py(y) + ch - 3, cw - 2, 2); }
   }
 
   // brush preview
@@ -1566,7 +1687,7 @@ function outlineCells(set, color, now) {
 }
 function loop() {
   // the ants and the float's box move, so keep drawing while either is up
-  if (dirty || S.sel || S.float) { render(); updateCursor(); dirty = false; }
+  if (dirty || S.sel || S.float || S.selPoly) { render(); updateCursor(); dirty = false; }
   requestAnimationFrame(loop);
 }
 setInterval(() => { if (S.tool === 'type' && S.cursor) { S.blinkOn = !S.blinkOn; redraw(); } }, 530);
@@ -1584,34 +1705,53 @@ function trackMods(e) {
 }
 window.addEventListener('keydown', trackMods, true);
 window.addEventListener('keyup', trackMods, true);
+window.addEventListener('pointermove', trackMods, true);
+window.addEventListener('pointerdown', trackMods, true);
 window.addEventListener('blur', () => { S.mods = { shift: false, alt: false, cmd: false }; redraw(); update3dCursor(); });
-const SEL_BADGE = { rect: 'rect', ellipse: 'ellipse', lasso: null };
+const MODE_BADGE = { add: 'plus', sub: 'minus', int: 'times', new: null };
+const SEL_GLYPH = { rect: 'cross', ellipse: 'cross', lasso: 'lasso', polygon: 'polylasso', wand: 'wand' };
 // What a click (or the drag in progress) will do, as a cursor
 function cursorFor() {
   const t = S.tool, d = S.drag, c = S.hover, m = S.mods;
   const blocked = c && S.sel && !editable(c.x, c.y);   // with a selection, edits only land inside it
+  const move = badge => curImage('move', badge, false, 'move');
   if (d) {
     if (d.kind === 'pan') return 'grabbing';
-    if (d.kind === 'float' || d.kind === 'blockmove') return curImage('move', null, false, 'move');
+    if ((d.kind === 'rect' || d.kind === 'shape') && S.spaceDown) return move();   // Space mid-drag: moving the box
+    if (d.kind === 'float') return d.axis ? curImage(d.axis === 'h' ? 'moveH' : 'moveV', null, false, 'move') : move(d.copy ? 'plus' : null);
+    if (d.kind === 'blockmove') return move();
     if (d.kind === 'outline') return curImage('arrow', 'dashbox', false, 'default');
-    if (d.kind === 'rect') return curImage('cross', d.mode === 'add' ? 'plus' : d.mode === 'sub' ? 'minus' : SEL_BADGE[S.selShape]);
-    if (d.kind === 'lasso') return curImage('lasso', d.mode === 'add' ? 'plus' : d.mode === 'sub' ? 'minus' : null);
+    if (d.kind === 'rect') return curImage('cross', MODE_BADGE[d.mode] || (d.ellipse ? 'ellipse' : 'rect'));
+    if (d.kind === 'lasso') return curImage('lasso', MODE_BADGE[d.mode]);
     if (d.kind === 'shape') return curImage('cross', S.shape.kind);
-    if (d.kind === 'paint' || d.kind === 'stroke') return curImage('fine', d.kind === 'stroke' ? 'wait' : null);
+    if (d.kind === 'paint' && d.right) return t === 'eraser' ? curImage('eraser', 'charA') : d.ch == null ? curImage('eraser') : curImage('fine', 'two');
+    if (d.kind === 'paint' || d.kind === 'stroke') return curImage('fine', d.kind === 'stroke' ? 'wait' : mirrorOn() ? 'mirror' : null);
   }
   if (S.spaceDown || t === 'hand') return 'grab';
   if (t === 'select') {
-    if (m.cmd) return curImage('move', null, false, 'move');
-    const mode = m.shift ? 'add' : m.alt ? 'sub' : 'new';
+    if (m.cmd) return move(m.alt ? 'plus' : null);
+    const mode = m.shift && m.alt ? 'int' : m.shift ? 'add' : m.alt ? 'sub' : 'new';
+    if (S.selPoly) {   // clicking out a polygon: its mode was set by the first click
+      const p = S.selPoly.pts, f = p[0];
+      return curImage('polylasso', p.length >= 3 && c && c.x === f.x && c.y === f.y ? 'ring' : MODE_BADGE[S.selPoly.mode]);
+    }
     if (mode === 'new' && c && S.sel && S.sel.has(K(c.x, c.y))) return curImage('arrow', 'dashbox', false, 'default');
-    const badge = mode === 'add' ? 'plus' : mode === 'sub' ? 'minus' : SEL_BADGE[S.selShape];
-    return curImage(S.selShape === 'lasso' ? 'lasso' : 'cross', badge);
+    const shapeBadge = S.selShape === 'rect' || S.selShape === 'ellipse' ? S.selShape : S.selShape === 'wand' && !S.wandContig ? 'dots' : null;
+    return curImage(SEL_GLYPH[S.selShape], MODE_BADGE[mode] || shapeBadge);
   }
-  if (t === 'move') return curImage('move', S.sel || S.float ? null : 'layer', false, 'move');
+  if (t === 'move') {
+    if (m.cmd) return curImage('arrow', 'layer', false, 'default');   // a click picks the layer under the pointer
+    if (m.alt) return move('plus');
+    if (m.shift) return move('lock');
+    return move(S.sel || S.float ? null : 'layer');
+  }
   if (t === 'type') return 'text';
   if (t === 'pencil' || t === 'brush' || t === 'eraser') {
     if (blocked) return 'not-allowed';
-    return curImage('fine', t === 'brush' && strokeDeferred() ? 'wait' : null);
+    if (m.alt && t !== 'eraser') return curImage('picker', null, false, 'cell');
+    if (m.shift && S.lastPaint) return curImage('fine', 'line');
+    if (t === 'brush' && strokeDeferred()) return curImage('fine', 'wait');
+    return curImage('fine', mirrorOn() ? 'mirror' : null);
   }
   if (t === 'shape') {
     if (blocked) return 'not-allowed';
@@ -1621,13 +1761,16 @@ function cursorFor() {
   }
   if (t === 'fill') {
     if (c && (blocked || c.x < 0 || c.y < 0 || c.x >= S.w || c.y >= S.h)) return 'not-allowed';
+    if (m.alt) return curImage('picker', null, false, 'cell');
+    if (S.fillContig === m.shift) return curImage('bucket', 'dots', false, 'cell');   // every matching cell
     return curImage('bucket', S.fillSample === 'all' ? 'layer' : null, false, 'cell');
   }
   if (t === 'picker') {
-    const got = c && compositeAt(c.x, c.y);
-    return curImage('picker', null, !got || got === SOLID, 'cell');   // dim over an empty cell: nothing to pick
+    const got = c && pickAt(c, S.pickSample);
+    return curImage('picker', m.shift ? 'two' : S.pickSample === 'all' ? 'layer' : null, !got && !m.shift, 'cell');   // dim over an empty cell
   }
-  if (t === 'block') return S.blocks.dcells.size ? curImage('move', null, false, 'move') : curImage('cube', null, false, 'pointer');
+  if (t === 'zoom') return curImage(m.alt ? 'zoomout' : 'zoomin', null, false, m.alt ? 'zoom-out' : 'zoom-in');
+  if (t === 'block') return S.blocks.dcells.size ? move() : curImage('cube', null, false, 'pointer');
   return 'default';
 }
 let lastCur = '';
@@ -1646,31 +1789,47 @@ function update3dCursor() {
 function pt(e) { const r = vp.getBoundingClientRect(); return { px: e.clientX - r.left, py: e.clientY - r.top }; }
 function inFloat(c) { const f = S.float; return f && c.x >= f.x && c.y >= f.y && c.x < f.x + f.w && c.y < f.y + f.h; }
 
+// The right button works with these tools: Block (3D), Pencil / Brush (the right-button character), Eraser (only the
+// brush character), Picker (picks the right-button character)
+const rightButtonTool = () => ['block', 'pencil', 'brush', 'eraser', 'picker'].includes(S.tool);
 vp.addEventListener('pointerdown', e => {
-  if (e.button === 2 && S.tool !== 'block') return;
+  if (S.spring) S.spring.used = true;   // a held tool key was used: letting go of it goes back
+  if (e.button === 2 && !rightButtonTool()) return;
   vp.setPointerCapture(e.pointerId);
   const { px, py } = pt(e), c = cellAt(px, py);
   if (e.button === 1 || S.spaceDown || S.tool === 'hand') {
     S.drag = { kind: 'pan', sx: px, sy: py, ox: S.offX, oy: S.offY };
     redraw(); e.preventDefault(); return;
   }
-  if (e.button !== 0 && !(e.button === 2 && S.tool === 'block')) return;
+  if (e.button !== 0 && !(e.button === 2 && rightButtonTool())) return;
   const t = S.tool;
   // Move tool (or Ctrl with Select): drag the selected content from anywhere; no selection = the whole layer
+  // Alt: drag a copy (on a floating block: drop it, then float a copy, so each Alt-drag stamps one). Shift: lock to one axis.
+  // Move + Ctrl / Cmd: first pick the layer under the pointer.
   if (t === 'move' || (t === 'select' && (e.ctrlKey || e.metaKey))) {
-    if (!S.float && !liftForMove()) return;
-    S.drag = { kind: 'float', sx: c.x, sy: c.y, fx: S.float.x, fy: S.float.y };
-    return;
+    if (t === 'move' && (e.ctrlKey || e.metaKey)) pickLayerAt(c);
+    if (e.altKey && S.float) commitFloat();
+    if (!S.float && !liftForMove(e.altKey)) return;
+    S.drag = { kind: 'float', sx: c.x, sy: c.y, fx: S.float.x, fy: S.float.y, axis: null, copy: e.altKey };
+    redraw(); return;
   }
   if (t === 'select') {
     commitFloat();
-    const mode = e.shiftKey ? 'add' : e.altKey ? 'sub' : 'new';
-    if (mode === 'new' && S.sel && S.sel.has(K(c.x, c.y))) {    // drag inside the selection: move the outline only
-      S.drag = { kind: 'outline', sx: c.x, sy: c.y, base: S.sel };
+    if (S.selShape === 'polygon' && S.selPoly) {   // clicking out a polygon selection
+      const pts = S.selPoly.pts, first = pts[0], last = pts[pts.length - 1];
+      if ((pts.length >= 3 && c.x === first.x && c.y === first.y) || (c.x === last.x && c.y === last.y)) finishSelPoly();   // back to the start, or a double-click
+      else pts.push(c);
+      redraw(); return;
+    }
+    const mode = selMode(e);
+    if (mode === 'new' && S.sel && S.sel.has(K(c.x, c.y))) {    // drag inside the selection: move the outline only (a Wand click without a drag re-selects)
+      S.drag = { kind: 'outline', sx: c.x, sy: c.y, base: S.sel, wand: S.selShape === 'wand' ? c : null };
       return;
     }
+    if (S.selShape === 'wand') { const cells = wandCells(c.x, c.y); if (cells) applyCells(cells, mode); redraw(); return; }
     if (mode === 'new' && S.sel) { S.sel = null; updateInfo(); }   // a new selection clears the old one right away, like Photoshop
-    if (S.selShape === 'lasso') S.drag = { kind: 'lasso', pts: [{ x: (px - S.offX) / S.cw, y: (py - S.offY) / S.ch }], mode };
+    if (S.selShape === 'polygon') S.selPoly = { pts: [c], mode };
+    else if (S.selShape === 'lasso') S.drag = { kind: 'lasso', pts: [{ x: (px - S.offX) / S.cw, y: (py - S.offY) / S.ch }], mode };
     else {
       // shiftFree / altFree: a modifier held from the start means add / subtract; pressed again mid-drag it means
       // fixed aspect (Shift) or from the center (Alt), like Photoshop
@@ -1679,16 +1838,31 @@ vp.addEventListener('pointerdown', e => {
     }
   } else if (t === 'type') {
     commitFloat(); setCursor(c.x, c.y);
+  } else if ((t === 'pencil' || t === 'brush' || t === 'fill') && e.altKey) {   // hold Alt: pick a character without leaving the tool
+    const got = pickAt(c, 'all');
+    if (got) { setBrushChar(got); toast(`Character: ${got}`); } else toast('Empty cell: nothing to pick', 'warn');
+  } else if ((t === 'pencil' || t === 'brush' || t === 'eraser') && e.button === 2) {
+    // the right button: Pencil / Brush paint the right-button character (or erase), the Eraser erases only the brush character
+    commitFloat(); pushUndo();
+    const ch = t === 'eraser' ? null : S.ch2, only = t === 'eraser' ? S.brush.ch : undefined;
+    const what = t === 'eraser' ? 'Erasing' : 'Drawing', blocked = stamp(c.x, c.y, ch, only);
+    if (blocked) warnOutside(what);
+    S.drag = { kind: 'paint', lx: c.x, ly: c.y, ch, only, right: true, warned: blocked, what };
+    changed();
   } else if (strokeDeferred()) {
     commitFloat();
-    S.drag = { kind: 'stroke', pts: [{ x: (px - S.offX) / S.cw, y: (py - S.offY) / S.ch }] };
+    const at = { x: (px - S.offX) / S.cw, y: (py - S.offY) / S.ch };
+    if (e.shiftKey && S.lastPaint) { commitStroke([{ x: S.lastPaint.x + 0.5, y: S.lastPaint.y + 0.5 }, at]); S.lastPaint = c; redraw(); return; }   // Shift-click: a straight line from the last stroke
+    S.drag = { kind: 'stroke', pts: [at] };
   } else if (t === 'pencil' || t === 'brush' || t === 'eraser') {
     commitFloat();
     pushUndo();
     // Pencil: the character. Brush: undefined = the Paint setting (character / noise / pattern). Eraser: null.
     const ch = t === 'pencil' ? S.brush.ch : t === 'brush' ? undefined : null;
     if (t === 'pencil' || (t === 'brush' && S.paint.mode === 'char')) noteRecent(S.brush.ch);
-    const blocked = stamp(c.x, c.y, ch);
+    let blocked = false;
+    if (e.shiftKey && S.lastPaint) line(S.lastPaint.x, S.lastPaint.y, c.x, c.y, (x, y) => { if (stamp(x, y, ch)) blocked = true; });   // Shift-click: a straight line
+    else blocked = stamp(c.x, c.y, ch);
     const what = t === 'eraser' ? 'Erasing' : t === 'pencil' ? 'Drawing' : 'Painting';
     if (blocked) warnOutside(what);
     S.drag = { kind: 'paint', lx: c.x, ly: c.y, ch, warned: blocked, what };
@@ -1712,11 +1886,15 @@ vp.addEventListener('pointerdown', e => {
       if (S.shape.kind !== 'line') dragBox(S.drag, e.shiftKey, e.altKey);
     }
   } else if (t === 'fill') {
-    floodFill(c.x, c.y);
+    floodFill(c.x, c.y, S.fillContig === e.shiftKey);
   } else if (t === 'picker') {
-    const got0 = compositeAt(c.x, c.y), got = got0 === SOLID ? null : got0;
-    if (got) { setBrushChar(got); toast(`Character: ${got}`); setTool(S.lastDraw); }
+    const got = pickAt(c, S.pickSample);
+    if (e.button === 2 || e.shiftKey) {   // the right-button character for Pencil and Brush; an empty cell sets it back to erase
+      S.ch2 = got || null; savePrefs(); toast(got ? `Right button: ${got}` : 'Right button: erase'); setTool(S.lastDraw);
+    } else if (got) { setBrushChar(got); toast(`Character: ${got}`); setTool(S.lastDraw); }
     else toast('Empty cell: nothing to pick', 'warn');
+  } else if (t === 'zoom') {
+    zoomStep(e.altKey ? -1 : 1, px, py);
   }
   redraw();
 });
@@ -1727,6 +1905,8 @@ vp.addEventListener('pointermove', e => {
   const d = S.drag;
   if (d) {
     if (d.kind === 'pan') { S.offX = d.ox + px - d.sx; S.offY = d.oy + py - d.sy; S.viewTouched = true; redraw(); return; }
+    // hold Space mid-drag: move the box or shape you're drawing instead of resizing it
+    if ((d.kind === 'rect' || d.kind === 'shape') && S.spaceDown) { d.ax += c.x - d.cx; d.ay += c.y - d.cy; }
     if (d.kind === 'rect') { d.cx = c.x; d.cy = c.y; dragBox(d, e.shiftKey, e.altKey); }
     if (d.kind === 'shape') { d.cx = c.x; d.cy = c.y; d.shift = e.shiftKey; if (d.shape !== 'line') dragBox(d, e.shiftKey, e.altKey); }
     if (d.kind === 'blockmove' && moved) { S.blocks.ox = d.ox + c.x - d.sx; S.blocks.oy = d.oy + c.y - d.sy; S.blocks.placed = true; changed(); }
@@ -1738,10 +1918,15 @@ vp.addEventListener('pointermove', e => {
       const p = { x: (px - S.offX) / S.cw, y: (py - S.offY) / S.ch }, l = d.pts[d.pts.length - 1];
       if (Math.abs(p.x - l.x) + Math.abs(p.y - l.y) > 0.25) { d.pts.push(p); redraw(); }
     }
-    if (d.kind === 'float' && S.float) { S.float.x = d.fx + c.x - d.sx; S.float.y = d.fy + c.y - d.sy; }
+    if (d.kind === 'float' && S.float) {
+      let dx = c.x - d.sx, dy = c.y - d.sy;
+      d.axis = null;
+      if (e.shiftKey && (dx || dy)) { if (Math.abs(dx) * S.cw >= Math.abs(dy) * S.ch) { dy = 0; d.axis = 'h'; } else { dx = 0; d.axis = 'v'; } }
+      S.float.x = d.fx + dx; S.float.y = d.fy + dy;
+    }
     if (d.kind === 'outline' && moved) { S.sel = shiftSet(d.base, c.x - d.sx, c.y - d.sy); }
     if (d.kind === 'paint' && moved) {
-      line(d.lx, d.ly, c.x, c.y, (x, y) => { if (stamp(x, y, d.ch) && !d.warned) { d.warned = true; warnOutside(d.what); } });
+      line(d.lx, d.ly, c.x, c.y, (x, y) => { if (stamp(x, y, d.ch, d.only) && !d.warned) { d.warned = true; warnOutside(d.what); } });
       d.lx = c.x; d.ly = c.y; changed();
     }
   }
@@ -1749,9 +1934,13 @@ vp.addEventListener('pointermove', e => {
 });
 function endDrag() {
   if (S.drag && S.drag.kind === 'shape') { const sh = currentShape(); S.drag = null; commitShape(sh); redraw(); return; }
-  if (S.drag && S.drag.kind === 'stroke') { const pts = S.drag.pts; S.drag = null; commitStroke(pts); redraw(); return; }
+  if (S.drag && S.drag.kind === 'stroke') {
+    const pts = S.drag.pts, l = pts[pts.length - 1]; S.drag = null; commitStroke(pts);
+    S.lastPaint = { x: Math.floor(l.x), y: Math.floor(l.y) }; redraw(); return;
+  }
   const d = S.drag; S.drag = null;
   if (!d) return;
+  if (d.kind === 'paint') S.lastPaint = { x: d.lx, y: d.ly };
   if (d.kind === 'rect') {
     if (d.ax === d.cx && d.ay === d.cy && d.mode === 'new') { S.sel = null; updateInfo(); }   // a plain click deselects
     else if (d.ellipse) applyCells(ellipseCells(d.x0, d.y0, d.x1, d.y1), d.mode);
@@ -1761,6 +1950,7 @@ function endDrag() {
     if (d.pts.length < 3) { if (d.mode === 'new') { S.sel = null; updateInfo(); } }   // a click deselects
     else applyCells(lassoCells(d.pts), d.mode);
   }
+  if (d.kind === 'outline' && d.wand && S.sel === d.base) applyCells(wandCells(d.wand.x, d.wand.y) || [], 'new');   // a Wand click, not a drag
   if (d.kind === 'pan') savePrefs();
   redraw();
 }
@@ -1815,6 +2005,11 @@ window.addEventListener('keydown', e => {
   if (k === 'Alt') e.preventDefault();
   if ((k === 'Shift' || k === 'Alt') && S.drag && (S.drag.kind === 'rect' || S.drag.kind === 'shape')) { S.drag.shift = e.shiftKey; if (S.drag.shape !== 'line') dragBox(S.drag, e.shiftKey, e.altKey); redraw(); }
   // a polygon being clicked out: Enter finishes it open, Esc cancels, Backspace takes back the last point
+  if (S.selPoly && !mod) {   // the same keys for a polygon selection (Enter closes it)
+    if (k === 'Enter') { e.preventDefault(); finishSelPoly(); return; }
+    if (k === 'Escape') { e.preventDefault(); finishSelPoly(true); return; }
+    if (k === 'Backspace' || k === 'Delete') { e.preventDefault(); S.selPoly.pts.pop(); if (!S.selPoly.pts.length) S.selPoly = null; redraw(); return; }
+  }
   if (S.poly && !mod) {
     if (k === 'Enter') { e.preventDefault(); finishPolygon(false); return; }
     if (k === 'Escape') { e.preventDefault(); S.poly = null; redraw(); return; }
@@ -1853,8 +2048,9 @@ window.addEventListener('keydown', e => {
       const p = selStep(cur.x, cur.y, -1);
       if (p) { cur.x = p.x; cur.y = p.y; pushUndo('type'); setCell(L(), cur.x, cur.y, null); changed(); } else warnOutside('Typing');
     }
-    else if (k === 'Backspace') { if (editable(cur.x - 1, cur.y)) { cur.x--; pushUndo('type'); setCell(L(), cur.x, cur.y, null); changed(); } else warnOutside('Typing'); }
-    else if (k === 'Delete') { if (editable(cur.x, cur.y)) { pushUndo('type'); setCell(L(), cur.x, cur.y, null); changed(); } else warnOutside('Typing'); }
+    else if (k === 'Backspace') { if (editable(cur.x - 1, cur.y)) { cur.x--; pushUndo('type'); setCell(L(), cur.x, cur.y, null); if (inserting()) shiftRow(cur.y, cur.x + 1, -1); changed(); } else warnOutside('Typing'); }
+    else if (k === 'Delete') { if (editable(cur.x, cur.y)) { pushUndo('type'); setCell(L(), cur.x, cur.y, null); if (inserting()) shiftRow(cur.y, cur.x + 1, -1); changed(); } else warnOutside('Typing'); }
+    else if (k === 'Insert') setTypeInsert(!S.typeInsert);
     else if (k === 'ArrowLeft') cur.x--;
     else if (k === 'ArrowRight') cur.x++;
     else if (k === 'ArrowUp') cur.y--;
@@ -1869,6 +2065,11 @@ window.addEventListener('keydown', e => {
 
   if (k === ' ') { if (!S.spaceDown) { S.spaceDown = true; redraw(); update3dCursor(); } e.preventDefault(); return; }
   const step = e.shiftKey ? 5 : 1;
+  // Spring-loaded tools: hold a tool's key, use it, let go to go back (a quick tap just switches). Not T or K.
+  if (SPRING_KEYS.includes(k.toLowerCase()) && !e.shiftKey) {
+    if (e.repeat) { e.preventDefault(); return; }
+    S.spring = { key: k.toLowerCase(), prev: S.tool, prevShape: S.selShape, at: Date.now(), used: false };
+  }
   switch (k) {
     case 'ArrowLeft': nudge(-step, 0); break;
     case 'ArrowRight': nudge(step, 0); break;
@@ -1885,9 +2086,10 @@ window.addEventListener('keydown', e => {
     case 'Delete': case 'Backspace': if (e.altKey) fillSelection(); else deleteSelection(); break;
     case 'd': case 'D': if (S.float) commitFloat(e.shiftKey || undefined); deselect(); break;
     case 'm': case 'M':
-      if (e.shiftKey) { const order = ['rect', 'ellipse', 'lasso']; setSelShape(order[(order.indexOf(S.selShape) + 1) % 3]); }
-      else setTool('select');
+      if (e.shiftKey) { const order = ['rect', 'ellipse', 'lasso', 'polygon']; setSelShape(order[(order.indexOf(S.lastMarquee) + 1) % order.length]); }
+      else if (S.tool !== 'select' || S.selShape === 'wand') setSelShape(S.lastMarquee, true);
       break;
+    case 'w': case 'W': setSelShape('wand', true); break;
     case 'g': case 'G': setTool('fill'); break;
     case 'u': case 'U': setTool('shape'); break;
     case 'k': case 'K': setTool('block'); break;
@@ -1899,6 +2101,7 @@ window.addEventListener('keydown', e => {
     case 'e': case 'E': setTool('eraser'); break;
     case 'i': case 'I': setTool('picker'); break;
     case 'h': case 'H': setTool('hand'); break;
+    case 'z': case 'Z': setTool('zoom'); break;
     case 'l': case 'L': CMDS.focusToggle(); break;
     case '[': setBrushSize(toolSize().size - 1); break;
     case ']': setBrushSize(toolSize().size + 1); break;
@@ -1918,13 +2121,20 @@ function nudge(dx, dy, ctrl) {
   else if (S.tool === 'select') { if (S.float) commitFloat(); moveOutline(dx, dy); }
   else if (S.float) moveFloat(dx, dy);
 }
+const SPRING_KEYS = ['m', 'w', 'v', 'p', 'b', 'e', 'u', 'g', 'i', 'h', 'z'], SPRING_MS = 400;
 window.addEventListener('keyup', e => {
+  const sp = S.spring;
+  if (sp && e.key.toLowerCase() === sp.key) {
+    S.spring = null;
+    const moved = S.tool !== sp.prev || (S.tool === 'select' && S.selShape !== sp.prevShape);
+    if (moved && (sp.used || Date.now() - sp.at > SPRING_MS)) { if (sp.prev === 'select') setSelShape(sp.prevShape, true); else setTool(sp.prev); }
+  }
   if (e.key === 'Shift') { S.shiftDown = false; if (S.float) redraw(); }
   if (e.key === 'Alt') e.preventDefault();
   if ((e.key === 'Shift' || e.key === 'Alt') && S.drag && (S.drag.kind === 'rect' || S.drag.kind === 'shape')) { S.drag.shift = e.shiftKey; if (S.drag.shape !== 'line') dragBox(S.drag, e.shiftKey, e.altKey); redraw(); }
   if (e.key === ' ') { S.spaceDown = false; redraw(); update3dCursor(); }
 });
-window.addEventListener('blur', () => { S.spaceDown = false; S.shiftDown = false; redraw(); });
+window.addEventListener('blur', () => { S.spaceDown = false; S.shiftDown = false; S.spring = null; redraw(); });
 
 // ---------- clipboard (the copy / cut / paste events work without a permission prompt) ----------
 document.addEventListener('copy', e => {
@@ -2323,7 +2533,7 @@ function savePrefs() {
   try {
     const tb = $('#toolbox');
     localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid,
-      brush: S.brush, pencil: S.pencil, shape: S.shape, recent: S.recent, selShape: S.selShape, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
+      brush: S.brush, pencil: S.pencil, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || null; } catch { return null; } }
@@ -2442,17 +2652,20 @@ function pickFromPane(c) {
   else if (S.tool !== 'pencil') setTool('pencil');
 }
 const HINTS = {
-  select: 'Drag to select · Shift adds · Alt takes away · mid-drag: Shift = square / circle, Alt = from center · drag inside or arrows move the outline · Ctrl + drag or Ctrl + arrows move the content',
-  move: 'Drag to move the selection (or the whole layer) · arrows nudge · Enter drops (Shift Enter: solid white space) · D drops + deselects · Esc puts back',
-  type: 'Click a cell and type · Enter = next line · arrows move · Esc leaves typing',
-  pencil: 'Draw with one character, or Smart: a line that picks its own characters · S switches · [ ] size · I picks a character',
-  brush: 'Paint a character, noise or a pattern · Taper / Outline strokes land when you let go · [ ] size',
-  eraser: 'Drag to erase on the active layer · [ ] size',
+  select: 'Drag to select · Shift adds · Alt takes away · Shift + Alt keeps the overlap · mid-drag: Shift = square / circle, Alt = from center, Space moves it · drag inside or arrows move the outline · Ctrl + drag moves the content (+ Alt: a copy)',
+  polygon: 'Click the corners · click the first point (or double-click, or Enter) to close · Backspace takes back a point · Esc cancels · Shift adds, Alt takes away, both keep the overlap',
+  wand: 'Click to select the same character (connected, or everywhere with Contiguous off) · Shift adds · Alt takes away · Shift + Alt keeps the overlap · drag inside moves the outline',
+  move: 'Drag to move the selection (or the whole layer) · Alt + drag moves a copy · Shift locks to one direction · Ctrl + click picks the layer under the pointer · arrows nudge · Enter drops · Esc puts back',
+  type: 'Click a cell and type · Enter = next line · arrows move · Insert switches Overwrite / Insert · Esc leaves typing',
+  pencil: 'Draw with one character, or Smart: a line that picks its own characters · S switches · Shift-click: a straight line · right button: the right-button character · Alt-click picks a character · [ ] size',
+  brush: 'Paint a character, noise or a pattern · Taper / Outline strokes land when you let go · Shift-click: a straight line · right button: the right-button character · Alt-click picks · [ ] size',
+  eraser: 'Drag to erase on the active layer · right button erases only the brush character · Shift-click: a straight line · [ ] size',
   block: 'Edit 3D builds the blocks · drag the shape to move it · Bake turns it into ASCII on a new layer',
-  shape: 'Drag to draw · Shift = square / circle / straight, Alt = from center · Polygon: click points, click the first to close, Enter to finish open',
-  fill: 'Click to fill the connected area of the same character · Alt Backspace fills the selection',
-  picker: 'Click a character to use it for the brush',
+  shape: 'Drag to draw · Shift = square / circle / straight, Alt = from center, Space moves it · Polygon: click points, click the first to close, Enter to finish open',
+  fill: 'Click to fill the connected area of the same character · Shift-click fills every match (or the other way with Contiguous off) · Alt-click picks · Alt Backspace fills the selection',
+  picker: 'Click a character to use it for the brush · Shift-click or right-click sets the right-button character (an empty cell: erase)',
   hand: 'Drag to pan · or hold Space with any tool · Ctrl + wheel zooms',
+  zoom: 'Click to zoom in · Alt-click zooms out · Ctrl 0 fits · Ctrl + wheel zooms with any tool',
 };
 function setTool(t) {
   if (t === S.tool) return;
@@ -2461,11 +2674,12 @@ function setTool(t) {
   if (t === 'pencil' || t === 'brush') S.lastDraw = t;
   closeBrushMenu(); closeBrushPop(); closeSetPop(); closeBlockPop(); if (extrude.open) closeExtrude();
   if (S.poly) S.poly = null;
+  if (S.selPoly) S.selPoly = null;
   if (t === 'type' && !S.cursor) {
     const b = S.sel ? selNextRow(-Infinity) : S.hover || { x: 0, y: 0 };
     S.cursor = { x: b.x, y: b.y, lineX: b.x };
   }
-  $$('#toolbox .tool').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+  syncToolbox();
   vp.className = 't-' + t;
   renderOptions(); updateInfo(); redraw();
   if (t === 'block' && !S.blocks.dcells.size) open3d();   // nothing to show yet: start in the 3D editor
@@ -3159,7 +3373,7 @@ function renderOptions() {
   const o = $('#toolopts'), t = S.tool;
   o.innerHTML = '';
   const add = html => o.insertAdjacentHTML('beforeend', html);
-  $('#toolname .name').textContent = { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Advanced brush', shape: 'Shape', block: 'Block', eraser: 'Eraser', fill: 'Fill', picker: 'Picker', hand: 'Hand' }[t];
+  $('#toolname .name').textContent = t === 'select' && S.selShape === 'wand' ? 'Magic wand' : { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Advanced brush', shape: 'Shape', block: 'Block', eraser: 'Eraser', fill: 'Fill', picker: 'Picker', hand: 'Hand', zoom: 'Zoom' }[t];
   if (t === 'shape') shapeOptions(add);
   if (t === 'block') blockOptions(add);
   if (t === 'brush' || t === 'fill' || (t === 'shape' && S.shape.fill && S.shape.kind !== 'line')) {
@@ -3184,6 +3398,7 @@ function renderOptions() {
   }
   if (t === 'fill') {
     add(`<span class="label">Look at</span><span class="seg"><button class="btn${S.fillSample === 'layer' ? ' on' : ''}" data-sample="layer" title="Fill the area as it is on the active layer">Layer</button><button class="btn${S.fillSample === 'all' ? ' on' : ''}" data-sample="all" title="Fill the area as you see it (all visible layers)">All layers</button></span>`);
+    add(`<label class="label check" title="On: the connected area. Off: every cell with that character on the canvas (Shift-click does the other one)"><input type="checkbox" class="fillcontig"${S.fillContig ? ' checked' : ''}> Contiguous</label>`);
     add(`<span class="sep"></span><button class="btn" data-cmd="fillSel" title="Alt Backspace">Fill selection</button>`);
   }
   if (t === 'pencil') {
@@ -3196,10 +3411,23 @@ function renderOptions() {
     add(`<span class="label">Size</span><button class="btn icon" data-size="-1">−</button><input class="size" type="text" inputmode="numeric" maxlength="2" value="${toolSize().size}" title="Size, 1-25 ([ and ] change it)"><button class="btn icon" data-size="1">+</button>`);
     if (t !== 'brush') add(`<span class="label">Tip</span><select class="tip"><option value="square">Square</option><option value="round">Round</option></select>`);
   }
+  if (t === 'pencil' || t === 'brush' || t === 'eraser') {
+    const mb = (v, label, tip) => `<button class="btn${S.mirror === v ? ' on' : ''}" data-mirror="${v}" title="${tip}">${label}</button>`;
+    add(`<span class="sep"></span><span class="label" title="Paint a mirrored copy across the middle of the canvas">Mirror</span><span class="seg">${mb('off', 'Off', 'No mirror')}${mb('h', '↔', 'Left-right')}${mb('v', '↕', 'Top-bottom')}${mb('both', 'Both', 'Four ways')}</span>`);
+    if (t !== 'eraser') add(`<span class="sep"></span><span class="label" title="What the right mouse button paints. Shift-click or right-click with the Picker to set it">Right button</span><button class="btn ch2btn" title="${S.ch2 ? 'Click to set it back to erase' : 'Erases. Shift-click with the Picker (I) to paint a character instead'}">${S.ch2 ? esc(S.ch2) : 'Erase'}</button>`);
+  }
+  if (t === 'type') {
+    add(`<span class="label">Typing</span><span class="seg"><button class="btn${S.typeInsert ? '' : ' on'}" data-insert="0" title="Type over what's there (Insert key switches)">Overwrite</button><button class="btn${S.typeInsert ? ' on' : ''}" data-insert="1" title="Push the rest of the row along (Insert key switches)">Insert</button></span>`);
+  }
+  if (t === 'picker') {
+    add(`<span class="label">Look at</span><span class="seg"><button class="btn${S.pickSample === 'layer' ? ' on' : ''}" data-picksample="layer" title="Pick from the active layer">Layer</button><button class="btn${S.pickSample === 'all' ? ' on' : ''}" data-picksample="all" title="Pick what you see (all visible layers)">All</button></span>`);
+  }
   if (t === 'select') {
-    const shp = (s, label) => `<button class="btn${S.selShape === s ? ' on' : ''}" data-shape="${s}" title="Shift M cycles">${label}</button>`;
-    add(`<span class="label">Shape</span><span class="seg">${shp('rect', 'Rectangle')}${shp('ellipse', 'Ellipse')}${shp('lasso', 'Lasso')}</span><span class="sep"></span>`);
-    if (S.selShape !== 'lasso') add(`<label class="label check" title="Keep it a ${S.selShape === 'ellipse' ? 'circle' : 'square'} (or hold Shift while dragging)"><input type="checkbox" class="selfixed"${S.selFixed ? ' checked' : ''}> Fixed aspect</label>` +
+    const shp = (s, label) => `<button class="btn${S.selShape === s ? ' on' : ''}" data-shape="${s}" title="${s === 'wand' ? 'W' : 'Shift M cycles'}">${label}</button>`;
+    add(`<span class="label">Shape</span><span class="seg">${shp('rect', 'Rectangle')}${shp('ellipse', 'Ellipse')}${shp('lasso', 'Lasso')}${shp('polygon', 'Polygon')}${shp('wand', 'Wand')}</span><span class="sep"></span>`);
+    if (S.selShape === 'wand') add(`<label class="label check" title="On: the connected cells with the same character. Off: every cell with that character"><input type="checkbox" class="wandcontig"${S.wandContig ? ' checked' : ''}> Contiguous</label>` +
+      `<span class="label">Look at</span><span class="seg"><button class="btn${S.selSample === 'layer' ? ' on' : ''}" data-selsample="layer" title="Match characters on the active layer">Layer</button><button class="btn${S.selSample === 'all' ? ' on' : ''}" data-selsample="all" title="Match what you see (all visible layers)">All</button></span><span class="sep"></span>`);
+    if (S.selShape === 'rect' || S.selShape === 'ellipse') add(`<label class="label check" title="Keep it a ${S.selShape === 'ellipse' ? 'circle' : 'square'} (or hold Shift while dragging)"><input type="checkbox" class="selfixed"${S.selFixed ? ' checked' : ''}> Fixed aspect</label>` +
       `<label class="label check" title="Grow from where you start (or hold Alt while dragging)"><input type="checkbox" class="selcenter"${S.selCenter ? ' checked' : ''}> From center</label><span class="sep"></span>`);
     add(`<button class="btn" data-cmd="selectAll">Select all</button><button class="btn" data-cmd="deselect">Deselect</button><span class="sep"></span><button class="btn" data-cmd="flipH">Flip ↔</button><button class="btn" data-cmd="flipV">Flip ↕</button><span class="sep"></span><button class="btn extrudebtn" data-cmd="extrude" title="Give the selected art depth (beta: still rough in places)">Extrude <span class="beta">beta</span></button><button class="btn" data-cmd="makePattern" title="Save the selected art as a pattern for Brush and Fill">Make pattern</button>`);
   }
@@ -3207,7 +3435,7 @@ function renderOptions() {
     add(`<button class="btn" data-cmd="flipH">Flip ↔</button><button class="btn" data-cmd="flipV">Flip ↕</button><span class="sep"></span><button class="btn" data-cmd="drop" title="Enter (D also deselects)">Drop</button><button class="btn" data-cmd="dropReplace" title="Shift Enter: drop with solid white space, so the blank cells wipe what is under them (Shift D also deselects)">Drop solid</button><span class="sep"></span>`);
     add(`<span class="label" title="${WS_TIP}">White space</span><span class="seg"><button class="btn blanks${S.spacesErase ? ' on' : ''}" data-blank="1" title="${WS_SOLID}">Solid</button><button class="btn blanks${S.spacesErase ? '' : ' on'}" data-blank="0" title="${WS_CLEAR}">Clear</button></span>`);
   }
-  $('#hint').textContent = HINTS[t];
+  $('#hint').textContent = t === 'select' ? HINTS[S.selShape === 'wand' ? 'wand' : S.selShape === 'polygon' ? 'polygon' : 'select'] : HINTS[t];
   const ci = $('.charin', o);
   if (ci) ci.addEventListener('input', () => { const c = chars(ci.value).pop(); if (c) { setBrushChar(c); ci.value = c; ci.blur(); } });
   $$('.quick:not(.recent) .btn', o).forEach(b => b.addEventListener('click', () => setBrushChar(b.textContent)));
@@ -3221,6 +3449,13 @@ function renderOptions() {
   const sf = $('.selfixed', o); if (sf) sf.addEventListener('change', () => { S.selFixed = sf.checked; sf.blur(); savePrefs(); });
   const sc = $('.selcenter', o); if (sc) sc.addEventListener('change', () => { S.selCenter = sc.checked; sc.blur(); savePrefs(); });
   $$('[data-shape]', o).forEach(b => b.addEventListener('click', () => setSelShape(b.dataset.shape)));
+  $$('[data-mirror]', o).forEach(b => b.addEventListener('click', () => { S.mirror = b.dataset.mirror; savePrefs(); renderOptions(); redraw(); }));
+  const c2 = $('.ch2btn', o); if (c2) c2.addEventListener('click', () => { if (S.ch2) { S.ch2 = null; savePrefs(); renderOptions(); toast('Right button: erase'); } else toast('Shift-click a character with the Picker (I) to paint it with the right button'); });
+  $$('[data-insert]', o).forEach(b => b.addEventListener('click', () => setTypeInsert(b.dataset.insert === '1')));
+  const fc = $('.fillcontig', o); if (fc) fc.addEventListener('change', () => { S.fillContig = fc.checked; fc.blur(); savePrefs(); redraw(); });
+  $$('[data-picksample]', o).forEach(b => b.addEventListener('click', () => { S.pickSample = b.dataset.picksample; savePrefs(); renderOptions(); redraw(); }));
+  const wc = $('.wandcontig', o); if (wc) wc.addEventListener('change', () => { S.wandContig = wc.checked; wc.blur(); savePrefs(); redraw(); });
+  $$('[data-selsample]', o).forEach(b => b.addEventListener('click', () => { S.selSample = b.dataset.selsample; savePrefs(); renderOptions(); }));
   $$('[data-pmode]', o).forEach(b => b.addEventListener('click', () => { S.paint.mode = b.dataset.pmode; savePrefs(); renderOptions(); redraw(); }));
   $$('[data-sample]', o).forEach(b => b.addEventListener('click', () => { S.fillSample = b.dataset.sample; savePrefs(); renderOptions(); }));
   const rb = $('.rampbtn', o); if (rb) rb.addEventListener('click', () => openRampMenu(rb));
@@ -3247,13 +3482,24 @@ function patternPreview() {
   }
   return rows.join('\n');
 }
-function setSelShape(s) {
+// The Select tool's shapes. The toolbox has two buttons for the one tool: Select (the marquee shapes) and Magic wand.
+function setSelShape(s, quiet) {
+  if (s !== 'wand') S.lastMarquee = s;
+  if (S.selPoly && s !== 'polygon') S.selPoly = null;
   S.selShape = s; savePrefs();
-  if (S.tool !== 'select') setTool('select'); else renderOptions();
-  toast('Select: ' + { rect: 'Rectangle', ellipse: 'Ellipse', lasso: 'Lasso' }[s]);
+  if (S.tool !== 'select') setTool('select'); else { renderOptions(); syncToolbox(); redraw(); }
+  if (!quiet) toast('Select: ' + SEL_NAMES[s]);
+}
+function syncToolbox() {
+  const wand = S.tool === 'select' && S.selShape === 'wand';
+  $$('#toolbox .tool').forEach(b => b.classList.toggle('on', b.dataset.tool === 'wand' ? wand : b.dataset.tool === S.tool && !(S.tool === 'select' && wand)));
 }
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-$$('#toolbox .tool').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+$$('#toolbox .tool').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.tool === 'wand') setSelShape('wand', true);
+  else if (b.dataset.tool === 'select' && S.selShape === 'wand') setSelShape(S.lastMarquee, true);
+  else setTool(b.dataset.tool);
+}));
 $('#patSave').addEventListener('click', savePatternDraft);
 $('#patCancel').addEventListener('click', closePatternDialog);
 $('#patDlg').addEventListener('pointerdown', e => { if (e.target.id === 'patDlg') closePatternDialog(); });
@@ -3423,7 +3669,15 @@ function start() {
   delete S.brush.taper;
   Object.assign(S.brush, cleanBrush(S.brush));
   if (typeof S.brush.preset !== 'string' || !brushByName(S.brush.preset)) S.brush.preset = 'Plain';
-  if (['rect', 'ellipse', 'lasso'].includes(p.selShape)) S.selShape = p.selShape;
+  if (SEL_SHAPES.includes(p.selShape)) S.selShape = p.selShape;
+  if (SEL_SHAPES.includes(p.lastMarquee) && p.lastMarquee !== 'wand') S.lastMarquee = p.lastMarquee;
+  if (p.wandContig === false) S.wandContig = false;
+  if (p.selSample === 'all') S.selSample = 'all';
+  if (p.fillContig === false) S.fillContig = false;
+  if (p.pickSample === 'layer') S.pickSample = 'layer';
+  if (typeof p.ch2 === 'string' && p.ch2) S.ch2 = p.ch2;
+  if (['h', 'v', 'both'].includes(p.mirror)) S.mirror = p.mirror;
+  S.typeInsert = !!p.typeInsert;
   S.selFixed = !!p.selFixed; S.selCenter = !!p.selCenter;
   if (p.blanksBrush === 'replace') S.blanksBrush = 'replace';
   if (p.blanksFill === 'through') S.blanksFill = 'through';
@@ -3469,7 +3723,15 @@ function start() {
   zoomFit();
   requestAnimationFrame(() => { if (!S.viewTouched) zoomFit(); });   // again once layout has settled
   updateInfo();
-  new ResizeObserver(() => { fitView(); if (!S.viewTouched) zoomFit(); }).observe(vp);
+  // Resizing the window keeps the zoom and keeps the view centered (it doesn't re-fit)
+  let vpSize = [vp.clientWidth, vp.clientHeight];
+  new ResizeObserver(() => {
+    const w = vp.clientWidth, h = vp.clientHeight;
+    if (vpSize[0] < 80 || vpSize[1] < 80) { if (!S.viewTouched) zoomFit(); }   // first real layout: fit once
+    else { S.offX += (w - vpSize[0]) / 2; S.offY += (h - vpSize[1]) / 2; }
+    vpSize = [w, h];
+    fitView();
+  }).observe(vp);
   if (document.fonts && document.fonts.load) document.fonts.load(`${BASE_FONT_PX}px "${S.font}"`).then(() => { measure(); if (!S.viewTouched) zoomFit(); redraw(); }, () => {});
   requestAnimationFrame(loop);
 }
