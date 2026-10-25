@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.18']);
+NEON_FILES.push(['engine/help.js', 'v13.20']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -109,8 +109,8 @@ function buildTrayPage(T, X) {
   P('tap a mod or item to see what it does, tap again to use it. on desktop, hover for info; number keys use items.');
   T('');
   H('MOD RARITY');
-  const ex = { common: 'small perks', rare: 'solid upgrades', epic: 'build-defining', exotic: 'rare and strange', boss: 'only from corp bosses' };
-  for (const r of Object.keys(RARITY)) X({ text: `${RARITY[r].label.padEnd(8)}${ex[r]}`.padEnd(HELP_W), col: C.text, chips: true });
+  const ex = { scrap: 'the basics', common: 'small perks', rare: 'solid upgrades', epic: 'build-defining', legendary: 'boss mods, top upgrades', exotic: 'they bend the rules' };
+  for (const r of Object.keys(RARITY)) X({ text: `${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(HELP_W), col: C.text, chips: true });
 }
 
 function openHelp() {
@@ -156,9 +156,9 @@ function openHelp() {
       ] });
     }
     if (p.rarity) {
-      T('mods come in five tiers:');
+      T('mods and items come in six tiers:');
       T('');
-      const ex = { common: 'small perks.', rare: 'solid upgrades.', epic: 'build-defining.', exotic: 'rare and strange.', boss: 'only from corp bosses.' };
+      const ex = { scrap: 'the basics.', common: 'small perks.', rare: 'solid upgrades.', epic: 'build-defining.', legendary: 'boss mods, top upgrades.', exotic: 'they bend the rules.' };
       for (const r of Object.keys(RARITY)) X({ text: `${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(30), col: C.text, chips: true });
     }
     return out;

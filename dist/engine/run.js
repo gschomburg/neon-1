@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.18']);
+NEON_FILES.push(['engine/run.js', 'v13.20']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -316,7 +316,8 @@ async function enterLayer() {
       await wait(220);
     } else await wait(480);
   }
-  // START stage: layer-start mods, left to right on the bar. Each locks at most one ICE.
+  // START stage: layer-start mods, left to right on the bar. Each locks one ICE (a legendary SNIFFER: two, when
+  // there are 3 or more ICE).
   const iceWhere = f => lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed' && f(t));
   const starts = {
     sniffer: () => true,
@@ -330,8 +331,11 @@ async function enterLayer() {
     if (!f || n < 2) continue;   // AFTERIMAGE is START too, but it only draws a mark
     const opts = iceWhere(f);
     if (!opts.length) continue;
-    lockTile(pickR(opts, rngFor(run.seed, key, c.node.id, c.idx)), C.mid, key);
-    setMsg(`> ${MODS[key].name.toLowerCase()}: 1 ICE locked.`, C.mid);
+    const first = pickR(opts, rngFor(run.seed, key, c.node.id, c.idx));
+    lockTile(first, C.mid, key);
+    const more = key === 'sniffer' && tv('sniffer', [1, 2]) > 1 && opts.length >= 3 ? opts.filter(t => t !== first) : [];
+    if (more.length) lockTile(pickR(more, rngFor(run.seed, key, c.node.id, c.idx, 2)), C.mid, key);
+    setMsg(`> ${MODS[key].name.toLowerCase()}: ${more.length ? 2 : 1} ICE locked.`, C.mid);
     await wait(250);
   }
   // FOUR IN A ROW: an armed boss starts with 2 ICE locked
@@ -1399,12 +1403,12 @@ const BOARD_FX = {
     await wait(200);
   },
   // VIRUS: the infection spreads to one ICE node right next to the one you hit.
-  async virus(t) {
+  async virus(t, again = false) {
     const lv = st.lv;
     const nb = lv.tiles.filter(o => o.state === 'closed' && !o.safe && Math.abs(o.col - t.col) + Math.abs(o.row - t.row) === 1);
     if (!nb.length) return;
     // the node next to it glitches a moment (infecting), then locks
-    const v = pickR(nb, rngFor(st.run.seed, 'virus', st.corp.node.id, st.corp.idx, lv.misses));
+    const v = pickR(nb, rngFor(st.run.seed, again ? 'virus2' : 'virus', st.corp.node.id, st.corp.idx, lv.misses));
     v.infectAt = performance.now();
     modFired('virus');
     Sound.probe();
@@ -1415,6 +1419,8 @@ const BOARD_FX = {
     lockTile(v, C.accent, 'virus');
     setMsg('> virus: infected the next node.', C.accent);
     await wait(450);
+    // legendary: it spreads once more, from the node it just took (and never takes the last ICE: you still pick)
+    if (!again && tv('virus', [1, 2]) > 1 && lv.tiles.filter(o => o.state === 'closed' && !o.safe).length > 1) await BOARD_FX.virus(v, true);
   },
 };
 

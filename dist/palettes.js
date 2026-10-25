@@ -10,15 +10,16 @@
 // hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
 // Rarity colors aren't in the palettes: every mod and item shows its rarity as a chip (chips, below),
 // the same in every palette.
-(window.NEON_FILES = window.NEON_FILES || []).push(['palettes.js', 'v13.18']);   // the build it's from (see index.html)
+(window.NEON_FILES = window.NEON_FILES || []).push(['palettes.js', 'v13.20']);   // the build it's from (see index.html)
 window.NEON_PALETTES = {
   // Rarity chips: a text color on its own background, for each rarity (bg = the rarity's key color).
   chips: {
-    common:  { fg: '#1d2326', bg: '#b9c3c1' },
-    rare:    { fg: '#0b2a55', bg: '#7fb6ff' },
-    epic:    { fg: '#2d0a4e', bg: '#c99bff' },
-    exotic:  { fg: '#3a2800', bg: '#ffd84a' },
-    boss:    { fg: '#4a1300', bg: '#ff8a4a' },
+    scrap:     { fg: '#1d2326', bg: '#d4dad9' },
+    common:    { fg: '#0c3318', bg: '#6fdc84' },
+    rare:      { fg: '#0b2a55', bg: '#7fb6ff' },
+    epic:      { fg: '#2d0a4e', bg: '#c99bff' },
+    legendary: { fg: '#4a1300', bg: '#ff8a4a' },
+    exotic:    { fg: '#3a2800', bg: '#ffd84a' },
   },
   palettes: {
     // starters: offered in SETTINGS from the start (the first one is the default for new players)

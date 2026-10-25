@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.18']);
+NEON_FILES.push(['engine/scene.js', 'v13.20']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -295,7 +295,7 @@ function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own 
   const phase = i * 0.77, t = (now / 1000 + phase) % 4;
   const icon = m.icon[Math.floor(now / 180 + i * 3) % m.icon.length];
   const label = m.short + (m.lvlTag && m.tier > 0 ? String(m.tier + 1) : '');   // TRC2 = level 2
-  const anim = lvl === 0 ? 'none' : lvl === 3 ? 'exotic' : m.anim;
+  const anim = lvl <= 1 ? 'none' : m.rarity === 'exotic' ? 'exotic' : m.anim;
   const fire = k => fireKey ? modFireLook(fireKey, now, k) : null;
   if (fire(0)) dim = false;   // it just went off: play it, even if that spent it (FAILSAFE)
   const flash = (anim === 'blink' && t % 2 < 0.12) || (anim === 'spin' && t < 0.4);
@@ -307,7 +307,7 @@ function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own 
     put(cx, y + dy, ch, inv ? chip.bg : chip.fg, own, lvl >= 4);
   };
   cell(x, icon === ' ' ? '.' : icon, selected || flash, chip0);
-  const rainbow = ['exotic', 'epic', 'rare', 'boss'].map(chipOf);
+  const rainbow = ['exotic', 'epic', 'rare', 'legendary'].map(chipOf);
   for (let k = 0; k < label.length; k++) {
     let ch = label[k], dy = 0, inv = selected || flash, chip = chip0;
     if (anim === 'wave' || anim === 'exotic') { const w = t - k * 0.09; if (w > 0 && w < 0.3) dy = -Math.sin(w / 0.3 * Math.PI) * 0.35; }
@@ -1124,7 +1124,7 @@ function drawTileRow(put, y, ln, k) {
 
 // Pop effect for an offer appearing: sound + burst scaled by rarity.
 function popFx(ln, y) {
-  const lvl = ln.rarity ? RARITY[ln.rarity].lvl : 0;
+  const lvl = ln.rarity ? ({ scrap: 0, common: 0, rare: 1, epic: 2, exotic: 3, legendary: 4 })[ln.rarity] || 0 : 0;
   // its place among the rare pops on this screen (a row of boss mods climbs)
   const bigStep = lvl >= 3 ? (st.bigPops = (st.bigPops || 0) + 1) - 1 : 0;
   Sound.pop(lvl, bigStep);

@@ -6,7 +6,7 @@
 // Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
 // device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v13.18']);
+NEON_FILES.push(['engine/leaders.js', 'v13.20']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }];
@@ -41,12 +41,18 @@ const LB_FONT = {
   P: [' _ ', '|_)', '|  '], Q: [' _ ', '/ \\', '\\_X'], R: [' _ ', '|_)', '| \\'], S: [' __', '(_ ', '__)'], T: ['___', ' | ', ' | '],
   U: ['   ', '| |', '|_|'], V: ['\\ /', ' V ', '   '], W: ['   ', '| |', '|^|'], X: ['\\ /', ' X ', '/ \\'], Y: ['\\ /', ' Y ', ' | '],
   Z: ['___', ' _/', '/__'],
+  // digits (0 slashed, so it isn't O) and a few symbols; # is a solid block (the user, 2026-10-25)
+  '0': [' _ ', '|/|', '|_|'], '1': ['   ', '/| ', ' | '], '2': ['_  ', ' ) ', '/_ '], '3': ['_  ', '_) ', '_) '],
+  '4': ['   ', '|_|', '  |'], '5': [' _ ', '|_ ', ' _)'], '6': [' _ ', '|_ ', '|_)'], '7': ['__ ', ' / ', '/  '],
+  '8': [' _ ', '(_)', '(_)'], '9': [' _ ', '(_|', '  |'], '*': ['\\|/', '-*-', '/|\\'], '#': ['###', '###', '###'],
+  '$': ['_|_', '(_ ', '_|)'], '!': [' | ', ' | ', ' o '], '?': [' _ ', ' _)', ' o '], '+': ['   ', '_|_', ' | '],
 };
-const LB_ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const LB_ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*#$!?+';   // up / down cycles through these
+const LB_OK = /^[A-Z0-9*#$!?+]{3}$/;
 const LB_RUDE = ['ASS', 'CUM', 'FAG', 'FUC', 'FUK', 'FCK', 'KKK', 'NIG', 'NGR', 'DIK', 'COK', 'CNT', 'TIT', 'JIZ', 'SHT', 'FKU', 'NAZ', 'HOE', 'WTF'];
 // Yours, kept in the save. The first time: the first letters of your hacker name (VOLT_WIDOW -> VWI).
 function lbInitials() {
-  if (/^[A-Z]{3}$/.test(save.initials || '')) return save.initials;
+  if (LB_OK.test(save.initials || '')) return save.initials;
   const parts = profile().name.toUpperCase().split(/[^A-Z]+/).filter(Boolean);
   let s = parts.map(p => p[0]).join('');
   if (s.length < 3) s += (parts[parts.length - 1] || 'NEON').slice(1);
@@ -165,7 +171,7 @@ function lbStep(d) {
   p.letters[p.cur] = LB_ABC[(i + d + LB_ABC.length) % LB_ABC.length];
   Sound.tick();
 }
-// Keys while the initials are up: left / right pick a letter, up / down change it, typing a letter sets it and
+// Keys while the initials are up: left / right pick a letter, up / down change it, typing a letter (or digit, symbol) sets it and
 // moves on, backspace goes back, enter uploads. Everything else goes to the screen's own keys (`prev`).
 function lbOverKeys(prev) {
   const h = k => {
@@ -173,7 +179,7 @@ function lbOverKeys(prev) {
     if (!p || p.uploaded || st.mode !== 'over') return prev ? prev(k) : false;
     if (k === 'arrowleft' || k === 'arrowright') { p.cur = clamp(p.cur + (k === 'arrowleft' ? -1 : 1), 0, 2); Sound.tick(); return true; }
     if (k === 'arrowup' || k === 'arrowdown') { lbStep(k === 'arrowup' ? 1 : -1); return true; }
-    if (/^[a-z]$/.test(k)) { p.letters[p.cur] = k.toUpperCase(); p.cur = Math.min(2, p.cur + 1); Sound.tick(); return true; }
+    if (k.length === 1 && LB_ABC.includes(k.toUpperCase())) { p.letters[p.cur] = k.toUpperCase(); p.cur = Math.min(2, p.cur + 1); Sound.tick(); return true; }
     if (k === 'backspace') { p.cur = Math.max(0, p.cur - 1); Sound.tick(); return true; }
     if (k === 'enter') { lbUpload(); return true; }
     return prev ? prev(k) : false;

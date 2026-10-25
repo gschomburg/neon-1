@@ -1,12 +1,14 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.18']);
+NEON_FILES.push(['engine/mods.js', 'v13.20']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
-// (COMMON RARE EPIC EXOTIC BOSS) in a line, so only those words get chipped.
+// (SCRAP COMMON RARE EPIC LEGEND EXOTIC) in a line, so only those words get chipped.
 const chipOf = r => CHIPS[r] || CHIPS.common;
-const rarityChips = text => [...String(text).matchAll(/\b(COMMON|RARE|EPIC|EXOTIC|BOSS)\b/g)].map(m => ({ from: m.index, len: m[0].length, r: m[0].toLowerCase() }));
+const RARITY_OF_LABEL = Object.fromEntries(Object.entries(RARITY).map(([k, v]) => [v.label, k]));
+const RARITY_WORDS = new RegExp('\\b(' + Object.keys(RARITY_OF_LABEL).join('|') + ')\\b', 'g');
+const rarityChips = text => [...String(text).matchAll(RARITY_WORDS)].map(m => ({ from: m.index, len: m[0].length, r: RARITY_OF_LABEL[m[0]] }));
 const TIERED_ITEMS = Object.keys(ITEMS).filter(k => ITEMS[k].tiers);
 for (const k of Object.keys(MODS)) MODS[k].key = k;
 
@@ -194,7 +196,7 @@ function rollCoin(i) {
 // levels). Finds roll a tier; finding a mod you have upgrades it (see addMod).
 const MOD_SLOTS = 6;                 // mods you can hold; more means swapping one out
 const modSlots = () => MOD_SLOTS * (has('ramdoubler') ? 2 : 1);   // RAM DOUBLER: twice as many (a second full row)
-const TIER_ODDS = [0.70, 0.95];      // a find is COMMON under 0.70, RARE under 0.95, else EPIC
+const TIER_ODDS = [0.70, 0.95];      // a find is its first step under 0.70, the second under 0.95, else the third
 const TIER_PRICE = [1, 1.6, 2.5];    // market price by tier
 const STACK_MAX = 15;                // items stack up to F (counts are hex)
 const tierCount = def => def.tiers ? def.tiers.length : 1;
@@ -208,7 +210,9 @@ const tierLabel = v => v.lvlTag ? `LV${v.tier + 1}` : RARITY[v.rarity].label;
 function rollTier(r, def) {
   if (!def.tiers) return 0;
   const u = r();
-  return Math.min(def.tiers.length - 1, u < TIER_ODDS[0] ? 0 : u < TIER_ODDS[1] ? 1 : 2);
+  let t = Math.min(def.tiers.length - 1, u < TIER_ODDS[0] ? 0 : u < TIER_ODDS[1] ? 1 : 2);
+  while (t > 0 && tierView(def, t).rarity === 'legendary' && u < TIER_ODDS[1]) t--;   // a legendary step: only the top 5% (or take it twice)
+  return t;
 }
 // What owning `key` becomes if you take it at `tier`: at or below yours = up one step,
 // above yours = jump to it. Never past the top.

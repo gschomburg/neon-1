@@ -6,6 +6,13 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **Items & mods page in the editor** (2026-10-25): `tools/neon_editor.html`, the ITEMS & MODS tab. Every item and mod with its rarity steps (chip, tip, full text) and codex text; **ladder** view puts one mod per row, one column per rarity; filter by kind or text; **copy as text** for notes. Click a corp mod's corp to show it in the game. Read-only for now: say if you want to edit copy there.
+- [ ] **The new rarity ladder** (v13.19, 2026-10-25). SCRAP white, COMMON green, RARE blue, EPIC purple, LEGEND orange
+  (was BOSS), EXOTIC gold. My rebalance calls, for you to check in play: PATCH / PURGE / COOLANT start at scrap, BURNER is
+  common, TRACER rare > epic, KEYLOGGER rare > epic > legendary, and new legendary steps for SNIFFER (2 ICE a layer) and
+  VIRUS (spreads twice). Legendary steps roll 5% of the time (or take the mod twice). The chip colors can be tuned in the
+  editor's palette mode (rarity chips tab).
+
 - [ ] **Small batch** (v13.18, 2026-10-25). BLACKOUT's boss layer now and then says `it is pitch black. a grue is near.`;
   pick screens tag offers `mod` / `mod+`; the game-over screen scrolls your mods and items with the map; the title shows
   your board rank; and the hosted game offers `[ vX is out: UPDATE ]` when a newer build is uploaded (upload

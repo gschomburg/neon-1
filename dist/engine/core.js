@@ -1,6 +1,6 @@
 // NeoN+1 engine/core.js: Tuning, the build number, constants, the palettes (resolved from palettes.js), the seeded RNG.
 'use strict';
-NEON_FILES.push(['engine/core.js', 'v13.18']);
+NEON_FILES.push(['engine/core.js', 'v13.20']);
 
 // ---------------- Tuning ----------------
 const CONFIG = {
@@ -31,7 +31,7 @@ const CONFIG = {
 
 // Build number: vMAJOR.MINOR. The minor ticks (+.01) with every update; the major changes only on
 // the user's call. The save slot follows the major only, so minor updates keep your progress.
-const VERSION = 'v13.18';
+const VERSION = 'v13.20';
 // In the palette editor (index.html?editor=1) the game keeps its own save, so yours is never touched.
 const EDITOR = /[?&]editor=1(&|$)/.test(location.search);
 const STORE_KEY = EDITOR ? 'beta_runner.editor.save' : 'beta_runner.v13.save';
@@ -77,8 +77,8 @@ for (const [key, p] of Object.entries(PALETTE_DATA.palettes)) PALETTES[key] = Ob
 // Rarity chips: every mod and item shows its rarity as a chip, a text color on its own background,
 // the same in every palette (so it reads on any of them). The background is the rarity's key color.
 const CHIPS = Object.assign({
-  common: { fg: '#1d2326', bg: '#b9c3c1' }, rare: { fg: '#0b2a55', bg: '#7fb6ff' }, epic: { fg: '#2d0a4e', bg: '#c99bff' },
-  exotic: { fg: '#3a2800', bg: '#ffd84a' }, boss: { fg: '#4a1300', bg: '#ff8a4a' },
+  scrap: { fg: '#1d2326', bg: '#d4dad9' }, common: { fg: '#0c3318', bg: '#6fdc84' }, rare: { fg: '#0b2a55', bg: '#7fb6ff' },
+  epic: { fg: '#2d0a4e', bg: '#c99bff' }, legendary: { fg: '#4a1300', bg: '#ff8a4a' }, exotic: { fg: '#3a2800', bg: '#ffd84a' },
 }, PALETTE_DATA.chips || {});
 const setChipKeys = () => { for (const r of Object.keys(CHIPS)) C[r] = CHIPS[r].bg; };
 setChipKeys();

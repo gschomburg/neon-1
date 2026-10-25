@@ -1,6 +1,6 @@
 // NeoN+1 engine/multiplayer.js: Online multiplayer, profiles, INFO.
 'use strict';
-NEON_FILES.push(['engine/multiplayer.js', 'v13.18']);
+NEON_FILES.push(['engine/multiplayer.js', 'v13.20']);
 
 // ---------------- Online multiplayer ----------------
 // 2-6 players take turns on one seeded run ("Jenga" rules, elimination):
@@ -109,7 +109,7 @@ const mpBg = id => { const s_ = mpStyle(id); return s_ ? s_.bg : null; };
 function mpColor(id) {
   const s_ = mpStyle(id);
   if (s_) return s_.fg;
-  const m = st.mp, cols = [C.accent, C.money, C.epic, C.rare, C.boss, C.exotic];
+  const m = st.mp, cols = [C.accent, C.money, C.epic, C.rare, C.legendary, C.exotic];
   const ids = Object.keys(m.members).sort((a, b) => (m.members[a].joined || 0) - (m.members[b].joined || 0));
   return cols[Math.max(0, ids.indexOf(id)) % cols.length];
 }
