@@ -1,6 +1,6 @@
 // NeoN+1 corps/twinlink.js
 'use strict';
-NEON_FILES.push(['corps/twinlink.js', 'v13.15']);
+NEON_FILES.push(['corps/twinlink.js', 'v13.17']);
 // Its boss mod: LINKUP (linkup), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -11,7 +11,7 @@ SONGS.plusone = { name: 'PLUS ONE', from: 'dancealone', bpm: 112, root: 44, scal
   bassVoice: 'pluck', bassLine: '0 . 7 . 0 . 7 . 0 . 7 . 0 . 7 .', stab: 'x.x.x.x.x.x.x.x.', stabVoice: 'keys',
   melody: ['. . 2 - 4 - 2 - 0 - . . . . . .', '. . 2 - 4 - 5 - 4 - 2 - . . . .', '. . 4 - 6 - 4 - 2 - . . 0 - 2 -', '1 - - - - - - - . . . . . . . .'],
   leadVoice: 'keys', arpVoice: 'glass', arpLine: '. . . . . . . . . . . . 3 . 4 .' };
-MUSIC_FOR.twinlink = 'plusone';
+MUSIC_FOR.twinlink = 'velvetrope';   // VELVET ROPE (in data/music.js; the user, 2026-10-25). Its own track above is unused now.
 
 // ---- the corp
 CORPS.twinlink = {

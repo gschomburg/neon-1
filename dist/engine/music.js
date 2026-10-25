@@ -1,6 +1,6 @@
 // NeoN+1 engine/music.js: The music engine (generated music).
 'use strict';
-NEON_FILES.push(['engine/music.js', 'v13.15']);
+NEON_FILES.push(['engine/music.js', 'v13.17']);
 
 // A track (data/music.js, corps/) picks its band. Everything is optional; left out, it's the original
 // synthwave sound (so older tracks play exactly as before):
@@ -22,6 +22,14 @@ NEON_FILES.push(['engine/music.js', 'v13.15']);
 //   gate       chops the pad into hits, e.g. 'x.xx.xx.x.xx.xx.' (a trance gate).
 //   breakdown  n: every n-th time through the chords, the drums and bass drop out.
 //   sevenths   true: four-note chords.
+// Sections and fills (2026-10-25). One time through the chords (prog) is a "pass"; passes make the sections:
+//   B          { ...anything above }: a B section. On a B pass these replace the track's own (chords, melody,
+//              beat, bassLine, voices...). Also C, D. Not meter or bpm. A track without one plays as before.
+//   form       the order of the sections, e.g. 'AABA' (the default when there's a B), 'AB', 'AABC'.
+//   fills      false: no drum fills. They're on by default: the last beat of every second pass (and of the pass
+//              before a new section) is a fill, a snare roll, a tom run or a kick-snare pickup, and the next
+//              bar lands on a crash. Tracks with a roll of their own (march, shanty) keep theirs.
+//   fill       { kick, snare, ... } like beat: your own fill, the whole last bar of a fill pass.
 // The track for a place (menu, map, omni or a corp key). A corp without one of its own plays the map track.
 function trackFor(place) { const k = MUSIC_FOR[place]; return k && SONGS[k] ? k : MUSIC_FOR.map; }
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -84,12 +92,21 @@ function beatOf(song) {
 }
 // a part's bar (a part is one string, or a list of bars that plays in turn)
 const partBar = (part, n) => parsePart(Array.isArray(part) ? part[n % part.length] : part);
+// Sections: which letter a pass plays, and the track as that section hears it (B's parts over the track's own).
+const formOf = sg => sg.form || (sg.B ? 'AABA' : 'A');
+const sectionAt = (sg, p) => { const f = formOf(sg); return f[p % f.length]; };
+// (made fresh each pass, so the music tool's live changes reach the B part too)
+function sectionSong(sg, letter) {
+  if (letter === 'A' || !sg[letter]) return sg;
+  return Object.assign({}, sg, sg[letter], { meter: sg.meter, bpm: sg.bpm });   // the meter and tempo stay the track's
+}
 
 const Music = (() => {
   let ac = null, out = null, songG = null, pump = null, echo = null, noiseBuf = null;
-  let key = null, song = null, step = 0, nextTime = 0, getState = null, echoDelay = null, echoFb = null;
+  let key = null, song = null, base = null, step = 0, nextTime = 0, getState = null, echoDelay = null, echoFb = null;
   let pulseWave = null, driveCurve = null;
   let pass = 0;   // how many times through the chords (written parts and breakdowns count bars with it)
+  let crashNext = false;   // a fill just played: the next bar starts on a crash
   // A power-down (lose) or power-up (boss beaten) in progress:
   //   { dir: -1 | 1, t0, beats: [3 beat times], end, hold }
   // Down: the tempo drops each beat and the pitch sags (to -8 semitones).
@@ -175,11 +192,12 @@ const Music = (() => {
     songG.gain.cancelScheduledValues(now);
     songG.gain.setValueAtTime(songG.gain.value, now);
     songG.gain.linearRampToValueAtTime(0, now + (first ? 0.01 : 0.35));
-    song = null;
+    song = null; base = null;
     setTimeout(() => {
-      song = SONGS[key] || null;
+      base = SONGS[key] || null;
+      song = base && sectionSong(base, sectionAt(base, 0));
       if (!song) return;
-      step = 0; pass = 0; nextTime = ac.currentTime + 0.05;
+      step = 0; pass = 0; crashNext = false; nextTime = ac.currentTime + 0.05;
       echoDelay.delayTime.setTargetAtTime(song.echo || 0.32, ac.currentTime, 0.05);
       echoFb.gain.setTargetAtTime(song.feedback || 0.3, ac.currentTime, 0.05);
       pump.gain.cancelScheduledValues(ac.currentTime);
@@ -211,7 +229,7 @@ const Music = (() => {
       playStep(step, nextTime + late, spb, s);
       nextTime += spb;
       step = (step + 1) % (bs * song.prog.length);
-      if (step === 0) pass++;
+      if (step === 0) { pass++; song = sectionSong(base, sectionAt(base, pass)); }   // the next section
     }
   }
 
@@ -312,6 +330,24 @@ const Music = (() => {
       ghost: t => hit(0.07, { vol: 0.08, freq: 2400, q: 0.8, t }),
     },
   };
+
+  // Fill sounds every kit shares: a crash, and toms (a pitched thump; n = 0 high .. 3 low).
+  function crash(t) { hit(1.4, { vol: 0.075, freq: 5200, type: 'highpass', t }); hit(0.5, { vol: 0.04, freq: 3000, q: 0.6, t }); }
+  function tom(t, n, vol = 0.45) { const f = [210, 165, 130, 100][clamp(n, 0, 3)]; thump(t, { type: 'sine', from: f * 1.5, to: f, fall: 0.05, dur: 0.28, vol }); }
+  // the fill on the last beat (beat = steps in a beat; j = 0 .. beat-1 counts through it)
+  function autoFill(kit, style, j, beat, t) {
+    const last = j === beat - 1;
+    if (style === 0) { if (j < beat / 2) kit.ghost(t); else kit.snare(t); if (last) kit.kick(t); }   // a snare roll, louder at the end
+    else if (style === 1) { tom(t, Math.floor(j * 4 / beat)); if (j === 0) kit.snare(t); }          // a tom run, high to low
+    else { if (j % 2 === 0) kit.snare(t); else kit.kick(t); if (last) kit.snare(t); }                // kick-snare pickup
+  }
+  // Is this pass's last bar a fill? Every second pass, and before a new section; not into or out of a breakdown.
+  function fillPass(p) {
+    if (song.fills === false) return false;
+    const brkAt = q => base.breakdown && q % base.breakdown === base.breakdown - 1;
+    if (brkAt(p) || brkAt(p + 1)) return false;
+    return p % 2 === 1 || sectionAt(base, p + 1) !== sectionAt(base, p);
+  }
 
   // ---- the band: bass, pad, arp and lead, each in the voice the track picked
   function bassNote(n, t, spb, cut) {
@@ -434,14 +470,24 @@ const Music = (() => {
     }
     // Drums
     if (lvl >= 1 && !brk) {
-      const d = song.beat ? beatOf(song) : DRUMS[song.drums] || DRUMS.four, kit = KITS[song.kit] || KITS.synth;
-      if (d.kick.includes(k)) { kit.kick(t); duck(t, spb); }
-      if (d.snare.includes(k) || (d.roll && bar === song.prog.length - 1 && d.roll.includes(k))) kit.snare(t);
-      if (d.clap && d.clap.includes(k)) kit.clap(t);
-      if (d.ghost && d.ghost.includes(k)) kit.ghost(t);
-      const fast = song.tick ? u > 0.45 : lvl >= 3;
-      if (d.hat.includes(k) || (fast && k % 2 === 1)) kit.hat(t, song.tick ? 0.12 : 0.07);
-      if (d.open && d.open.includes(k)) kit.open(t);
+      let d = song.beat ? beatOf(song) : DRUMS[song.drums] || DRUMS.four;
+      const kit = KITS[song.kit] || KITS.synth, beat = beatSteps(song);
+      if (k === 0 && crashNext) crash(t);
+      if (k === 0) crashNext = false;
+      // A fill: the track's own (the whole last bar), or the automatic one (the last beat), then a crash.
+      const fillHere = bar === song.prog.length - 1 && !d.roll && fillPass(pass);
+      if (fillHere && k === bs - 1) crashNext = true;
+      if (fillHere && song.fill) d = beatOf({ beat: song.fill });
+      else if (fillHere && k >= bs - beat) { autoFill(kit, Math.floor(pass / 2) % 3, k - (bs - beat), beat, t); d = null; }
+      if (d) {
+        if (d.kick.includes(k)) { kit.kick(t); duck(t, spb); }
+        if (d.snare.includes(k) || (d.roll && bar === song.prog.length - 1 && d.roll.includes(k))) kit.snare(t);
+        if (d.clap && d.clap.includes(k)) kit.clap(t);
+        if (d.ghost && d.ghost.includes(k)) kit.ghost(t);
+        const fast = song.tick ? u > 0.45 : lvl >= 3;
+        if (d.hat.includes(k) || (fast && k % 2 === 1)) kit.hat(t, song.tick ? 0.12 : 0.07);
+        if (d.open && d.open.includes(k)) kit.open(t);
+      }
     } else if (k % beatSteps(song) === 0 && !brk) duck(t, spb);
     // Arp: a written line (chord tones), or a pattern
     if (lvl >= 2) {

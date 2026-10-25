@@ -1,6 +1,6 @@
 // NeoN+1 corps/channel9.js
 'use strict';
-NEON_FILES.push(['corps/channel9.js', 'v13.15']);
+NEON_FILES.push(['corps/channel9.js', 'v13.17']);
 // Its boss mod: REMOTE (remote), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -11,7 +11,7 @@ SONGS.breaking = { name: 'BREAKING', from: 'dropzone', bpm: 140, root: 38, scale
   bassVoice: 'acid', bassLine: '0 0 . 0 0 . 0 0 3 3 . 3 6 6 . 6',
   melody: ['. . . . . . . . 7 - - - 7 - 9 -', '. . . . . . . . 7 - 6 - 4 - - -'],
   leadVoice: 'brass', stab: 'x.......x.......', stabVoice: 'brass', stabAt: 3, arpVoice: 'chip', arpLine: '. . . . . . . . . . . . 3 4 5 4' };
-MUSIC_FOR.channel9 = 'breaking';
+MUSIC_FOR.channel9 = 'velvetrope';   // VELVET ROPE (in data/music.js; the user, 2026-10-25). Its own track above is unused now.
 
 // ---- the corp
 CORPS.channel9 = {

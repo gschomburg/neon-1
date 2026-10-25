@@ -6,6 +6,24 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **The new editor: `tools/neon_editor.html`** (v13.17, 2026-10-25). Open it in Chrome. MUSIC mode (the default):
+  click a corp, the game on the left shows one of its layers and plays its track. If there's no sound, click the game
+  once (browsers want a click inside the frame). Try: up / down through the corps, the level buttons (and "game"), the
+  scene buttons over the game (boss, a miss), "try another band" while it plays, the PALETTE mode (same as the palette
+  editor, and the corp picker now lists every corp). Notes on what doesn't fit or feel right: the layout was a first pass.
+
+- [ ] **Header, play stats, tester mode** (v13.16, 2026-10-25).
+  - The header says **NeoN+1**; in a run, tap it (or Esc) for the menu. `[MENU]` is gone.
+  - **Upload** `dist/` (the game) and the greglytics `server/` files (`admin/index.php`, `api/version.php`); then
+    `node greglytics/check-version.js` should say 1.2, all ok.
+  - **On your phone, open the game once with `?dev=1`** so your test runs go to the dev data, not the real stats and
+    leaderboard. The dev menu shows `[ stats: TESTER (dev data) ]`; `?dev=0` turns it off.
+  - **Dashboard** (s3iz.com/glx/admin/): pick "dev / testing" for the **clear dev data** button. Try a breakdown:
+    `node` by `secs` where `corp=seekr` (time in a corp), `mod_pick` by `taken` (most-taken mods) or `offered`,
+    `exotic` by `key`, `run_end` by `at` (where runs die).
+- [ ] **Two talks to have: reputation (REP) and money balancing** (2026-10-25). Notes in SPEC §16f ("Talks to have").
+  Once real stats come in, they help both (what runs earn, what people buy).
+
 - [ ] **Meat notes filed, and the music notes compiled** (2026-10-24). New: **`docs/MUSIC.md`**, everything about the
   music in one place (what's built, the plans, your inspirations incl. Robyn / Monkey Island / the Amiga intros link).
   The SPEC's music plan now points there. Filed: the alarm corp (CORPS.md A31), the rival waiting its turn (CORPS.md
@@ -140,7 +158,6 @@ to build stays in `docs/SPEC.md` §16f.)
   straight into the join).
 - [ ] **PROFILE and CORP BREACHED logo block** (v11.04). Logo + name (+ stats on PROFILE) now sit on
   your color style's background as one block, with the PROFILE controls under the card.
-- [ ] **The in-game header still says `BETA_RUNNER`.** Switch it to NeoN+1?
 - [ ] **The new corps: CIPHER, HYDRA, BLACKOUT** (v11.00). Tells, bosses, mods (PARITY, HEADCOUNT,
   FLARE) and difficulty were Claude's calls (measured about x2 over blind). Their map letters
   `{` `(` `5` are placeholders (the 3-letter map codes on the backlog would replace them). Their
@@ -155,4 +172,4 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Done
 
-(nothing yet)
+- [x] **The in-game header still says `BETA_RUNNER`.** Done in v13.16: it says NeoN+1 and is the menu button.

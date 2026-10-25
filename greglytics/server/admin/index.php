@@ -57,6 +57,17 @@ $dev = !empty($_GET['dev']) ? 1 : 0;
 $days = in_array((int)($_GET['days'] ?? 7), [1, 7, 30, 365], true) ? (int)$_GET['days'] : 7;
 $since = time() - $days * 86400;
 $dayExpr = gl_driver() === 'sqlite' ? '(at / 86400)' : '(at DIV 86400)';
+if (empty($_SESSION['token'])) $_SESSION['token'] = bin2hex(random_bytes(16));
+
+// Clear dev data: deletes this app's dev / testing events and scores (never the real ones)
+if (isset($_POST['clear_dev']) && hash_equals($_SESSION['token'], (string)($_POST['token'] ?? ''))) {
+  $capp = in_array($_POST['clear_dev'], $apps, true) ? $_POST['clear_dev'] : '';
+  if ($capp !== '') {
+    $q = $db->prepare('DELETE FROM events WHERE app = ? AND dev = 1'); $q->execute([$capp]); $ne = $q->rowCount();
+    $q = $db->prepare('DELETE FROM scores WHERE app = ? AND dev = 1'); $q->execute([$capp]); $ns = $q->rowCount();
+    header('Location: ./?' . http_build_query(['app' => $capp, 'dev' => 1, 'days' => $days, 'cleared' => "$ne,$ns"])); exit;
+  }
+}
 
 // CSV of the events in range
 if (isset($_GET['csv'])) {
@@ -83,7 +94,13 @@ $versions = $all('SELECT version, COUNT(DISTINCT device) AS u FROM events WHERE 
 // breakdown: an event's data field, counted by value (dotted paths reach inside: end.corp)
 $bName = (string)($_GET['bn'] ?? ($byName[0]['name'] ?? ''));
 $bField = trim((string)($_GET['bf'] ?? ''));
-$fields = []; $counts = [];
+// only rows where a field has a value: "corp=seekr" (dotted paths work here too)
+$bWhere = trim((string)($_GET['bw'] ?? ''));
+[$wField, $wVal] = strpos($bWhere, '=') !== false ? array_map('trim', explode('=', $bWhere, 2)) : ['', ''];
+$pick = function ($d, string $path) { foreach (explode('.', $path) as $p) $d = is_array($d) && array_key_exists($p, $d) ? $d[$p] : null; return $d; };
+$label = fn($v) => $v === null ? '(none)' : (is_bool($v) ? ($v ? 'true' : 'false') : (is_array($v) ? json_encode($v) : (string)$v));
+$isList = fn($v) => is_array($v) && ($v === [] || array_keys($v) === range(0, count($v) - 1));
+$fields = []; $counts = []; $nums = []; $rowsIn = 0;
 if ($bName !== '') {
   $q = $db->prepare('SELECT data FROM events WHERE app = ? AND dev = ? AND at >= ? AND name = ? ORDER BY at DESC LIMIT 100000');
   $q->execute([$app, $dev, $since, $bName]);
@@ -91,16 +108,24 @@ if ($bName !== '') {
     $d = $r['data'] !== null ? json_decode($r['data'], true) : null;
     if (!is_array($d)) continue;
     foreach ($d as $k => $v) $fields[$k] = true;
+    if ($wField !== '' && $label($pick($d, $wField)) !== $wVal) continue;
+    $rowsIn++;
     if ($bField === '') continue;
-    $v = $d;
-    foreach (explode('.', $bField) as $p) $v = is_array($v) && array_key_exists($p, $v) ? $v[$p] : null;
-    $key = is_array($v) ? json_encode($v) : ($v === null ? '(none)' : (is_bool($v) ? ($v ? 'true' : 'false') : (string)$v));
-    $counts[$key] = ($counts[$key] ?? 0) + 1;
+    $v = $pick($d, $bField);
+    if (is_int($v) || is_float($v)) $nums[] = $v;
+    // a list (offered mods, a run's mods): count each thing in it
+    foreach ($isList($v) ? $v : [$v] as $one) { $key = $label($one); $counts[$key] = ($counts[$key] ?? 0) + 1; }
   }
   arsort($counts);
 }
+// a number field: count, average, median, min, max
+$stat = null;
+if (count($nums) >= 1 && count($nums) >= 0.8 * $rowsIn) {
+  sort($nums); $c = count($nums);
+  $stat = ['n' => $c, 'avg' => array_sum($nums) / $c, 'med' => $c % 2 ? $nums[intdiv($c, 2)] : ($nums[$c / 2 - 1] + $nums[$c / 2]) / 2, 'min' => $nums[0], 'max' => $nums[$c - 1]];
+}
 $boards = $all('SELECT board, COUNT(*) AS n, COUNT(DISTINCT device) AS u, MAX(at) AS last FROM scores WHERE app = ? AND dev = ? GROUP BY board ORDER BY last DESC LIMIT 20', [$app, $dev]);
-$qs = fn(array $over) => '?' . http_build_query(array_merge(['app' => $app, 'dev' => $dev, 'days' => $days, 'bn' => $bName, 'bf' => $bField], $over));
+$qs = fn(array $over) => '?' . http_build_query(array_merge(['app' => $app, 'dev' => $dev, 'days' => $days, 'bn' => $bName, 'bf' => $bField, 'bw' => $bWhere], $over));
 $bars = function (array $rows, string $label, string $num = 'n') use ($h) {
   $max = max(1, ...array_map(fn($r) => (int)$r[$num], $rows ?: [['n' => 1, 'u' => 1]]));
   foreach ($rows as $r) echo '<tr><td>' . $h($r[$label]) . '</td><td class="n">' . (int)$r[$num] . '</td><td style="width:45%"><div class="bar" style="width:' . round(100 * (int)$r[$num] / $max, 1) . '%"></div></td></tr>';
@@ -131,10 +156,17 @@ page_head("greglytics · $app"); ?>
       <select name="bn"><?php foreach ($byName as $r): ?><option<?= $r['name'] === $bName ? ' selected' : '' ?>><?= $h($r['name']) ?></option><?php endforeach; ?></select>
       by <input name="bf" value="<?= $h($bField) ?>" placeholder="a data field, e.g. corp" list="fields">
       <datalist id="fields"><?php foreach (array_keys($fields) as $f): ?><option value="<?= $h($f) ?>"><?php endforeach; ?></datalist>
+      where <input name="bw" value="<?= $h($bWhere) ?>" placeholder="optional: corp=seekr" size="14">
       <button>Show</button>
       <?php if ($fields): ?><span class="mute">fields: <?= $h(implode(', ', array_keys($fields))) ?></span><?php endif; ?>
     </form>
+    <?php if ($stat): $f = fn($x) => rtrim(rtrim(number_format((float)$x, 2, '.', ''), '0'), '.'); ?>
+      <div class="kpis" style="margin-bottom:10px">
+        <?php foreach (['avg' => 'average', 'med' => 'median', 'min' => 'min', 'max' => 'max', 'n' => 'values'] as $k => $l): ?><div><div class="big"><?= $f($stat[$k]) ?></div><div class="mute"><?= $l ?></div></div><?php endforeach; ?>
+      </div>
+    <?php endif; ?>
     <?php if ($bField !== ''): $rows = []; foreach (array_slice($counts, 0, 40, true) as $k => $n) $rows[] = ['v' => $k, 'n' => $n]; ?>
+      <p class="mute"><?= $rowsIn ?> <?= $h($bName) ?> events<?= $wField !== '' ? ' where ' . $h($bWhere) : '' ?>. A list field counts each thing in it.</p>
       <table><?php $bars($rows, 'v'); ?></table><?php if (!$rows): ?><p class="mute">No values.</p><?php endif; ?>
     <?php endif; ?>
   </section>
@@ -143,4 +175,13 @@ page_head("greglytics · $app"); ?>
     <?php if (!$boards): ?><p class="mute">No scores yet.</p><?php endif; ?>
     <table><?php foreach ($boards as $b): ?><tr><td><?= $h($b['board']) ?></td><td class="n"><?= (int)$b['u'] ?> players</td><td class="n mute"><?= gmdate('M j', (int)$b['last']) ?></td></tr><?php endforeach; ?></table>
   </section>
+  <?php if ($dev): ?>
+  <section><h2>Dev data</h2>
+    <?php if (isset($_GET['cleared'])): [$ce, $cs] = array_map('intval', explode(',', (string)$_GET['cleared']) + [0, 0]); ?><p>Cleared <?= $ce ?> events and <?= $cs ?> scores.</p><?php endif; ?>
+    <form method="post" onsubmit="return confirm('Delete all dev / testing events and scores for <?= $h($app) ?>? Real data is not touched.')">
+      <input type="hidden" name="token" value="<?= $h($_SESSION['token']) ?>"><input type="hidden" name="clear_dev" value="<?= $h($app) ?>">
+      <button>Clear dev data for <?= $h($app) ?></button> <span class="mute">events and scores marked dev (file / localhost pages and tester devices)</span>
+    </form>
+  </section>
+  <?php endif; ?>
 </main></body></html>

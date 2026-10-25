@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v13.15']);
+NEON_FILES.push(['engine/dev.js', 'v13.17']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
@@ -172,6 +172,7 @@ function devMenuLines() {
   B(`[ show real node: ${st.debug ? 'ON ' : 'OFF'} ]`, 'dbg', () => { st.debug = !st.debug; if (run) run.practice = true; Sound.ui(); });
   B(`[ god: ${st.god ? 'ON ' : 'OFF'} ]`, 'god', () => { st.god = !st.god; if (run) run.practice = true; Sound.ui(); });
   B(`[ free travel: ${st.freeTravel ? 'ON ' : 'OFF'} ]`, 'free', () => { st.freeTravel = !st.freeTravel; if (run) run.practice = true; st.mapSel = null; Sound.ui(); });
+  { const gl = lbClient(); B(`[ stats: ${gl && gl.dev ? (window.Greglytics.tester() ? 'TESTER (dev data)' : 'LOCAL (dev data) ') : 'REAL             '} ]`, 'tester', lbToggleTester); }
   B(`[ title pulse: ${(st.pulseStyle || 'color').toUpperCase().padEnd(5)} ]`, 'pulse', () => { st.pulseStyle = PULSE_STYLES[(PULSE_STYLES.indexOf(st.pulseStyle || 'color') + 1) % PULSE_STYLES.length]; Sound.ui(); });
   // the boot / login intro: replay the first-boot version (as if new) or the short one
   lines.push({ row: [

@@ -1,12 +1,12 @@
 // NeoN+1 corps/cloneworks.js
 'use strict';
-NEON_FILES.push(['corps/cloneworks.js', 'v13.15']);
+NEON_FILES.push(['corps/cloneworks.js', 'v13.17']);
 // Its boss mod: TWIN LOCK (twinlock), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
 SONGS.mitosis = { name: 'MITOSIS',        bpm: 108, root: 44, scale: 'harmonic', prog: [0, 0, 5, 5], bass: 'eighths', drums: 'four',  arp: 'mirror', pingpong: true };
-MUSIC_FOR.cloneworks = 'mitosis';
+MUSIC_FOR.cloneworks = 'downward';   // DOWNWARD (in data/music.js; the user, 2026-10-25). Its own track above is unused now.
 
 // ---- the corp
 CORPS.cloneworks = {

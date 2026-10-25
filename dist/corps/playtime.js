@@ -1,6 +1,6 @@
 // NeoN+1 corps/playtime.js
 'use strict';
-NEON_FILES.push(['corps/playtime.js', 'v13.15']);
+NEON_FILES.push(['corps/playtime.js', 'v13.17']);
 // Its boss mod: JACK-IN-THE-BOX (jackbox), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -18,7 +18,7 @@ SONGS.winditup = { name: 'WIND IT UP', from: 'anthem', bpm: 132, root: 48, scale
   bassVoice: 'picked', bassLine: '0 . 0 . 0 . 0 . 0 . 0 . 4 . 4 .',
   melody: ['4 - - - 4 - 5 - 7 - - - 4 - - -', '5 - - - 5 - 4 - 3 - - - 1 - - -', '2 - - - 2 - 3 - 4 - - - 7 - - -', '4 - - - - - - - . . . . . . . .'],
   leadVoice: 'bell', arpVoice: 'chip', arp: 'updown' };
-MUSIC_FOR.playtime = 'winditup';
+MUSIC_FOR.playtime = 'lookbehind';   // LOOK BEHIND YOU (in data/music.js; the user, 2026-10-25). Its own track above is unused now.
 
 // ---- the corp
 CORPS.playtime = {

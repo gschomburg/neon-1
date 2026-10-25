@@ -1,6 +1,6 @@
 // NeoN+1 engine/greglytics.js: a copy of greglytics/client/greglytics.js (the scores service on s3iz.com/glx).
 // Change the original, then copy it here again (keep this stamp line).
-NEON_FILES.push(['engine/greglytics.js', 'v13.15']);
+NEON_FILES.push(['engine/greglytics.js', 'v13.17']);
 // greglytics: the browser side. Copy this file into a project and include it with a script tag; then:
 //   const gl = Greglytics.init({ endpoint: 'https://your.domain/api/', app: 'neon', version: '13.09' });
 //   gl.track('run_end', { layers: 21, mods: 3 });
@@ -11,6 +11,7 @@ NEON_FILES.push(['engine/greglytics.js', 'v13.15']);
 // No cookies. An anonymous random id per device (localStorage), a new session id per page load.
 // Events are batched: sent every 20 events or 30 seconds, and when the page is hidden or closed.
 // Pages opened from a file or from localhost count as dev (kept apart from the real data), unless dev is set.
+// A tester device counts as dev everywhere: Greglytics.tester(true) remembers it on the device (e.g. a ?dev=1 page).
 (function (root) {
   'use strict';
   const KEY = 'greglytics.';
@@ -19,13 +20,16 @@ NEON_FILES.push(['engine/greglytics.js', 'v13.15']);
     set(k, v) { try { if (v == null) localStorage.removeItem(KEY + k); else localStorage.setItem(KEY + k, v); } catch (e) { /* private mode */ } },
   };
   const rid = n => { const a = new Uint8Array(n); (root.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => { a[i] = Math.random() * 256; }); return Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); };
+  const isTester = () => store.get('tester') === '1';
+  // a tester device: everything it sends is dev. Clients made after this pick it up.
+  const tester = on => { if (on !== undefined) store.set('tester', on ? '1' : null); return isTester(); };
   const isDevPage = () => { const p = root.location || {}; return p.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(p.hostname || ''); };
 
   function init(opts) {
     if (!opts || !opts.endpoint || !opts.app) throw new Error('greglytics: endpoint and app are needed');
     const base = opts.endpoint.replace(/\/?$/, '/');
     const app = String(opts.app), version = String(opts.version || '');
-    const dev = typeof opts.dev === 'boolean' ? opts.dev : isDevPage();
+    const dev = typeof opts.dev === 'boolean' ? opts.dev : isTester() || isDevPage();
     let device = store.get('device'); if (!device) { device = rid(8); store.set('device', device); }
     const session = rid(6);
     const pendingKey = 'pending.' + app;
@@ -86,5 +90,5 @@ NEON_FILES.push(['engine/greglytics.js', 'v13.15']);
 
     return { track, flush: () => flush(false), submitScore, scores, setName, optOut, isOptedOut: out, device, session, dev, app };
   }
-  root.Greglytics = { init };
+  root.Greglytics = { init, tester };
 })(typeof window !== 'undefined' ? window : this);

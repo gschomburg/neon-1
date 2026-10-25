@@ -1,6 +1,6 @@
 // NeoN+1 corps/luckeez.js
 'use strict';
-NEON_FILES.push(['corps/luckeez.js', 'v13.15']);
+NEON_FILES.push(['corps/luckeez.js', 'v13.17']);
 // Its boss mod: LET IT RIDE (letitride), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -15,7 +15,7 @@ SONGS.luckystreak = { name: 'LUCKY STREAK', from: 'dancealone', bpm: 122, root: 
   bassVoice: 'pluck', bassLine: '0 . 7 . 0 . 7 . 0 . 7 . 0 7 0 7', stab: 'x..x..x.x..x..x.', stabVoice: 'saw',
   melody: ['. . 4 - 4 - 4 - 5 - 4 - 2 - . .', '. . 4 - 4 - 4 - 6 - 7 - . . . .', '. . 5 - 5 - 5 - 4 - 2 - . . 0 -', '1 - - - 2 - - - 0 - - - . . . .'],
   leadVoice: 'chip', arpVoice: 'bell', arpLine: '. . . . . . . . 3 4 5 4 3 . . .' };
-MUSIC_FOR.luckeez = 'luckystreak';
+MUSIC_FOR.luckeez = 'lookbehind';   // LOOK BEHIND YOU (in data/music.js; the user, 2026-10-25). Its own track above is unused now.
 
 // ---- the corp
 CORPS.luckeez = {

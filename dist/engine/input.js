@@ -1,9 +1,9 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.15']);
+NEON_FILES.push(['engine/input.js', 'v13.17']);
 
 // ---------------- Pause menu ----------------
-// [MENU] in the header or Esc during a run. Stops clocks. Abandon goes to the title.
+// the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
 function togglePause() {
   if (st.dev) return;
   if (!st.pause && (!st.run || st.busy || st.transitioning || st.wipe)) { Sound.deny(); return; }
@@ -61,6 +61,7 @@ function pauseLines() {
 function abandonRun() {
   if (!st.abandonArmed) { st.abandonArmed = true; Sound.deny(); return; }
   const run = st.run;
+  statQuit(run);
   run.ended = true; clearRun();
   save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, win: false, abandoned: true, practice: run.practice, at: Date.now() });
   save.history = save.history.slice(0, 20);

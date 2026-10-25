@@ -60,12 +60,14 @@ gl.optOut(true);                                  // stop sending events (rememb
 ```
 
 Dev is automatic: pages on `file://`, `localhost` or `127.0.0.1` are dev (or pass `dev: true / false`).
+A **tester device** is dev everywhere: `Greglytics.tester(true)` remembers it (neon sets it from `?dev=1`).
 
 ## Dashboard (`/admin/`)
 
 Password from the config. Pick an app, real / dev, last 1 / 7 / 30 / 365 days: events per day, events by name, a
 **breakdown** (an event name + a data field: counts by value, e.g. `run_end` by `corp`), the boards with their top
-entries, CSV export of events.
+entries, CSV export of events. Number fields show average / median / min / max; list fields count each
+thing in them; a `where` filter (`corp=seekr`) narrows the rows. On dev data: a **clear dev data** button (1.2).
 
 ## Setup on DreamHost (see README)
 
@@ -74,6 +76,6 @@ apps and their allowed sites, admin password hash) one level above the web folde
 
 ## Later
 
-- neon: hook in (`run_end`, corp results, mod offers / picks, ...), the title-screen best / board line, a SCORES screen.
-- Rollups if the events table gets big (counts per day per name), and pruning dev data.
+- neon: hooked in (v13.16, engine/stats.js). Still to do: the title-screen best / board line.
+- Rollups if the events table gets big (counts per day per name).
 - Break out into its own repo.

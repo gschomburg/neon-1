@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.15']);
+NEON_FILES.push(['engine/run.js', 'v13.17']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -38,6 +38,7 @@ async function startRun(seed, practice) {
   };
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
   for (const x of st.run.items) markSeen(x.key);
+  statRunStart(); statNodeStart(st.run.map['0:1']);   // play stats (engine/stats.js)
   clearRun();
   st.result = null;
   st.transitioning = false;
@@ -46,6 +47,7 @@ async function startRun(seed, practice) {
 }
 
 function toMap(fromSector) {
+  if (st.run && st.run.stat && st.run.stat.node) statNodeEnd('done');   // a market / cache / safehouse left
   st.corp = null; st.lv = null; st.timer = null;
   scenePalette(null);
   st.mapSel = null; st.hoverNode = null;
@@ -96,6 +98,7 @@ async function enterNode(node, warp = false) {
   await wipeOut(0);
   run.at = node.id;
   run.visited.push(node.id);
+  statNodeStart(node);
   st.transitioning = false;
   if (node.type === 'shop') return openShop(node);
   if (node.type === 'cache') return openCache(node);
@@ -673,6 +676,7 @@ async function onSafe(t) {
     if (bonus) { run.credits += bonus; run.earned += bonus; setMsg(c.rival.hp <= 0 ? `> rival flatlined. +${bonus}cr` : `> you beat ${c.rival.name.toLowerCase()}. +${bonus}cr`, C.money); }
   }
   lightsOn();
+  statNodeEnd(c.bossSkipped ? 'skipped' : 'cleared');
   if (c.hasBoss && c.def.onClear) {
     const m = c.def.onClear(c);
     if (m) { const o = typeof m === 'string' ? { text: m, col: C.danger, bad: true } : m; setMsg(o.text, o.col); if (o.bad) Sound.trap(); else Sound.loot(); }
@@ -1466,6 +1470,7 @@ async function endRun(win) {
   st.busy = true;
   st.timer = null;
   run.ended = true;
+  statRunEnd(run, win);
   clearRun();
   if (!win) {
     // Losing: the whole screen glitches out.

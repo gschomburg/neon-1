@@ -1,6 +1,6 @@
 // NeoN+1 data/music.js: Music: scales, every track, and which track plays where.
 'use strict';
-NEON_FILES.push(['data/music.js', 'v13.15']);
+NEON_FILES.push(['data/music.js', 'v13.17']);
 
 // ---------------- Music ----------------
 // Generated 80s-style synthwave: pad, bass, drums, arp and lead, scheduled a little
@@ -38,7 +38,11 @@ Object.assign(SONGS, {
     beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.', open: '..............x.' },
     bassLine: '0 7 0 7 0 7 0 7 0 7 0 7 0 7 0 7',
     melody: ['7 . 7 . 6 . 7 . 4 . . . 3 . 4 .', '7 . 7 . 6 . 7 . 9 . . . 7 . 6 .', '5 . 5 . 4 . 5 . 2 . . . 1 . 2 .', '3 . 3 . 4 . 3 . 0 . 0 . 1 . 2 .'],
-    leadVoice: 'dist', arpVoice: 'chip', arpLine: '. . 3 . . . 4 . . . 5 . . . 4 .', stab: 'x...............', stabVoice: 'brass', stabAt: 2 },
+    leadVoice: 'dist', arpVoice: 'chip', arpLine: '. . 3 . . . 4 . . . 5 . . . 4 .', stab: 'x...............', stabVoice: 'brass', stabAt: 2,
+    // B (v13.16): a half-time bridge, long bass notes and a slow brass line, before the riff comes back
+    B: { prog: [3, 3, 5, 6], bassLine: '0 - - - - - - - 0 - - - 7 - - -', stab: 'x.......x.......',
+      beat: { kick: 'x.......x.......', snare: '........x.......', hat: '..x...x...x...x.' },
+      melody: ['5 - - - - - - - 4 - - - 3 - - -', '5 - - - - - - - 7 - - - - - - -', '8 - - - - - - - 7 - - - 5 - - -', '6 - - - - - - - 4 - 5 - 6 - 7 -'] } },
   // Nine Inch Nails: an industrial kit, a chugging phrygian riff, a lonely piano over it, breakdowns
   machineheart: { name: 'MACHINE HEART', bpm: 104, root: 40, scale: 'phrygian', prog: [0, 0, 1, 0], kit: 'industrial', pump: 0.2, padVoice: 'choir', breakdown: 4,
     beat: { kick: 'x.....x.x.......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', ghost: '...........x...x' },
@@ -50,7 +54,10 @@ Object.assign(SONGS, {
     beat: { kick: 'x.......x.......', snare: '....x.......x...', hat: '..x...x...x...x.' },
     bassLine: '0 - - - - - - - 0 - - - 0 - 0 -',
     melody: ['4 - - - - - 3 - 2 - - - 0 - - -', '2 - - - - - - - . . . . . . . .', '5 - - - - - 4 - 3 - - - 2 - - -', '4 - - - - - - - . . . . . . 2 3'],
-    leadVoice: 'saw' },
+    leadVoice: 'saw',
+    // B (v13.16): the chords climb (Bb C Db Eb) under a higher line; played A A B
+    form: 'AAB', B: { prog: [3, 4, 5, 6],
+      melody: ['7 - - - 5 - - - 3 - - - - - - -', '8 - - - 6 - - - 4 - - - - - - -', '9 - - - 7 - - - 5 - - - - - - -', '10 - - - - - - - 8 - - - 7 - - -'] } },
   // Goblin, Suspiria / Profondo Rosso: a prog-rock bass ostinato, a church organ, a music-box melody
   reddeep: { name: 'RED DEEP', bpm: 120, root: 45, scale: 'harmonic', prog: [0, 0, 5, 4], kit: 'break', pump: 0, padVoice: 'organ', echo: 0.35, feedback: 0.4,
     beat: { kick: 'x.....x...x.....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
@@ -86,7 +93,11 @@ Object.assign(SONGS, {
     beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', open: '......x.......x.' },
     bassVoice: 'pluck', bassLine: '0 . 7 . 0 . 7 . 0 . 7 . 0 . 7 .', stab: 'x.x.x.x.x.x.x.x.', stabVoice: 'saw',
     melody: ['. . 4 - 4 - 4 - 3 - 2 - . . . .', '. . 4 - 4 - 4 - 5 - 4 - . . . .', '. . 4 - 4 - 4 - 3 - 2 - . . 0 -', '2 - - - - - - - . . . . . . . .'],
-    leadVoice: 'keys', arpVoice: 'glass', arpLine: '. . . . . . . . . . . . 3 . 4 .' },
+    leadVoice: 'keys', arpVoice: 'glass', arpLine: '. . . . . . . . . . . . 3 . 4 .',
+    // B (v13.16): the chorus, up on B C# D, a higher line, busier glass and open hats on the off-beats
+    B: { prog: [3, 4, 5, 5], arpLine: '3 . 4 . 5 . 4 . 3 . 4 . 5 . 4 .',
+      beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', open: '..x...x...x...x.' },
+      melody: ['7 - 7 - 7 - 6 - 7 - - - 4 - - -', '8 - 8 - 8 - 7 - 8 - - - 4 - - -', '9 - 9 - 9 - 8 - 7 - - - 5 - - -', '7 - - - - - - - . . . . 4 - 5 -'] } },
   // Moby ("ah-ah") and Amiga cracktros: a breakbeat, "ah-ah" vocal stabs, a chip melody, fast chip arpeggios
   tracker: { name: 'TRACKER', bpm: 136, root: 40, scale: 'minor', prog: [0, 5, 3, 6], kit: 'break', drums: 'break', pump: 0.4, padVoice: 'none',
     bassVoice: 'sub', bassLine: '0 . . 0 . . 0 . . . 0 . 3 . . .', stab: 'x..x....x..x....', stabVoice: 'vox',
@@ -102,5 +113,34 @@ Object.assign(SONGS, {
     melody: ['0 - 4 - 7 - 4 - 2 - 4 - 7 - 4 -', '5 - 9 - 12 - 9 - 7 - 9 - 12 - 9 -', '2 - 6 - 9 - 6 - 4 - 6 - 9 - 6 -', '6 - 10 - 13 - 10 - 8 - 10 - 13 - 10 -'],
     melodyAt: 0, melodyOct: -1, leadVoice: 'keys',
     stab: 'x.x.xx.x.x.xx.x.', stabVoice: 'saw', stabAt: 2,
-    arpVoice: 'glass', arpLine: '. . . . . . . . 5 - - - 4 - - -' },
+    arpVoice: 'glass', arpLine: '. . . . . . . . 5 - - - 4 - - -',
+    // B (v13.16): the chorus. It lifts to C D Em, and a sung "ah" line takes over from the piano.
+    B: { prog: [5, 6, 0, 0], leadVoice: 'vox', stab: 'x.x.x.x.x.x.x.x.',
+      melody: ['7 - - - - - - - 9 - - - 7 - 6 -', '8 - - - - - - - 10 - - - 8 - 6 -', '7 - - - - - - - 4 - - - 6 - - -', '7 - - - - - - - . . . . . . . .'] } },
+  // Three more (2026-10-25), not playing anywhere yet (the user picks):
+  // Monkey Island: a lazy Caribbean bounce. One-drop reggae drums, an organ skank on the off-beats, a plucked
+  // bass that walks the chord, and a steel-drum-ish bell tune (E minor: Em C D Em).
+  lookbehind: { name: 'LOOK BEHIND YOU', bpm: 104, root: 40, scale: 'minor', prog: [0, 5, 6, 0], kit: 'break', pump: 0, padVoice: 'none', swing: 0.22, echo: 0.3,
+    beat: { kick: '........x.......', snare: '........x.......', hat: '..x...x...x...x.', ghost: '.....x.......x..' },
+    bassVoice: 'acid', bassLine: '0 - . 0 4 . . 2 0 - . . 4 . 6 .',
+    stab: '..x...x...x...x.', stabVoice: 'organ', stabAt: 0,
+    melody: ['4 . 7 . 7 . 6 7 9 . 7 . 4 - - .', '5 . 7 . 9 . 7 5 4 . 2 . 4 - - .', '6 . 8 . 10 . 8 6 5 . 4 . 3 . 2 .', '4 - 2 . 4 - 7 . 6 . 4 . 0 - - .'],
+    leadVoice: 'bell', arpVoice: 'pluck', arpLine: '0 . 2 . 1 . 2 . 0 . 2 . 1 . 2 .', drums: 'trap' },
+  // Pixel Grip: cold Chicago darkwave. Four on the floor, a sequenced 16th bass, a gated pad, and a deadpan
+  // sung line that mostly sits on one note (A minor: Am Am F G).
+  velvetrope: { name: 'VELVET ROPE', bpm: 122, root: 45, scale: 'minor', prog: [0, 0, 5, 6], kit: '808', pump: 0.4, padVoice: 'glass', echo: 0.28,
+    beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.', open: '..............x.' },
+    bassVoice: 'saw', bassLine: '0 0 7 0 0 0 7 0 0 0 7 0 0 7 0 7',
+    gate: 'x.xx.x.xx.x.xx.x',
+    melody: ['4 . 4 . 4 . 3 . 4 - - - . . . .', '4 . 4 . 4 . 3 . 2 - - - . . . .', '5 . 5 . 5 . 4 . 2 - - - 0 - - -', '6 . 6 . 6 . 5 . 4 - - - . . 3 4'],
+    leadVoice: 'vox', stab: '......x.......x.', stabVoice: 'saw', stabAt: 2,
+    arpVoice: 'glass', arpLine: '0 . 3 . 1 . 4 . 2 . 5 . 1 . 4 .' },
+  // Nine Inch Nails again, the Closer / Downward Spiral side: slow and mechanical, a squelching bass, a pad
+  // that stutters, a distorted lead that keeps falling (D phrygian). 120 bpm (the user, 2026-10-25).
+  downward: { name: 'DOWNWARD', bpm: 120, root: 38, scale: 'phrygian', prog: [0, 0, 5, 1], kit: 'industrial', pump: 0.3, breakdown: 4, swing: 0.08, echo: 0.25,
+    beat: { kick: 'x..x....x.x.....', snare: '....x.......x...', hat: '..x...x...x...x.', ghost: '.......x.......x', clap: '............x...' },
+    bassVoice: 'acid', bassLine: '0 - - 0 . . 0 . 0 - . 7 . . 6 .',
+    gate: 'x..x..x.x..x..x.',
+    melody: ['7 - - - 6 - - - 5 - - - 4 - - -', '3 - - - 4 - - - 1 - - - - - - -', '7 - - - 6 - - - 5 - - - 4 - 5 -', '1 - - - - - - - 0 - - - - - - -'],
+    melodyAt: 2, leadVoice: 'dist', arpLine: '0 0 . 0 0 . 1 . 0 0 . 0 2 . 1 .' },
 });

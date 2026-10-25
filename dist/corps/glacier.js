@@ -1,6 +1,6 @@
 // NeoN+1 corps/glacier.js
 'use strict';
-NEON_FILES.push(['corps/glacier.js', 'v13.15']);
+NEON_FILES.push(['corps/glacier.js', 'v13.17']);
 // Its boss mod: ICEBOX (icebox), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

@@ -1,6 +1,6 @@
 // NeoN+1 corps/blackout.js
 'use strict';
-NEON_FILES.push(['corps/blackout.js', 'v13.15']);
+NEON_FILES.push(['corps/blackout.js', 'v13.17']);
 // Its boss mod: FLARE (flare), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -11,7 +11,7 @@ SONGS.powercut = { name: 'POWER CUT', from: 'reddeep', bpm: 100, root: 38, scale
   bassLine: '0 . 0 . 0 . 1 . 0 . 0 . 0 . -1 .',
   melody: ['. . . . 4 - - - 3 - - - 4 - - -', '. . . . 4 - - - 7 - - - 6 - - -', '. . . . 4 - - - 3 - - - 1 - - -', '0 - - - - - - - . . . . . . . .'],
   leadVoice: 'keys', arpVoice: 'pluck', arpLine: '. . . . . . . . 0 . 1 . 2 . 1 .' };
-MUSIC_FOR.blackout = 'powercut';
+MUSIC_FOR.blackout = 'downward';   // DOWNWARD (in data/music.js; the user, 2026-10-25). Its own track above is unused now.
 
 // ---- the corp
 CORPS.blackout = {

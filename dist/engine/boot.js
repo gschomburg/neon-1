@@ -1,10 +1,20 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v13.15']);
+NEON_FILES.push(['engine/boot.js', 'v13.17']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
+// The editor's music tab (tools/neon_editor.html, engine/editor.js) can pick the track and level itself.
 function musicState() {
+  const s = gameMusicState(), m = EDITOR && st.editorMusic;
+  if (!m) return s;
+  if (!m.playing) return Object.assign(s, { song: 'none' });
+  const song = m.key && SONGS[m.key] ? m.key : s.song, level = m.level != null ? m.level : s.level;
+  const urgency = m.urgency || s.urgency, tr = SONGS[song];
+  return Object.assign(s, { song, level, urgency, low: !!m.low || s.low,
+    tempo: (1 + (tr && tr.tick ? urgency * 0.25 : 0) + (level >= 3 ? 0.05 : 0)) * (s.pitch < 1 ? 0.55 : 1) });
+}
+function gameMusicState() {
   // The dev music player takes over while it's open.
   if (st.dev && st.devPage === 'tracks' && st.preview) {
     const p = st.preview, tr = SONGS[p.key];

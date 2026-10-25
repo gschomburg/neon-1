@@ -3,20 +3,32 @@
 // as soon as it ends (so it's never lost, and the rank comes back right away). Ranked by layers reached; fewer
 // mods breaks a tie. Each device's best counts. Then the end screen asks for 3-letter initials (big Bigfig
 // letters) and UPLOAD sends them: the server keeps one name per device and shows it on all its entries.
-// Pages opened from a file or localhost use the test boards (kept apart on the server).
+// Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
+// device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v13.15']);
+NEON_FILES.push(['engine/leaders.js', 'v13.17']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }];
 const LB_ROWS = 10;
 let lbGl;   // the greglytics client (null if it couldn't start)
+let lbUrlDone = false;
 function lbClient() {
   if (lbGl === undefined) {
-    try { lbGl = window.Greglytics ? Greglytics.init({ endpoint: LB_ENDPOINT, app: 'neon', version: VERSION.slice(1) }) : null; }
+    try {
+      if (window.Greglytics && params.get('dev') && !lbUrlDone) Greglytics.tester(params.get('dev') === '1');   // once per page load
+      lbUrlDone = true;
+      lbGl = window.Greglytics ? Greglytics.init({ endpoint: LB_ENDPOINT, app: 'neon', version: VERSION.slice(1) }) : null;
+    }
     catch (e) { lbGl = null; }
   }
   return lbGl;
+}
+// dev menu: turn this device's tester mode on / off (a new client picks it up)
+function lbToggleTester() {
+  if (!window.Greglytics) return Sound.deny();
+  if (lbGl) lbGl.flush();   // send what's queued under the old setting first
+  Greglytics.tester(!Greglytics.tester()); lbGl = undefined; Sound.ui();
 }
 const lbBoard = (key, t = Date.now()) => key === 'day' ? 'day-' + new Date(t).toISOString().slice(0, 10) : 'all';
 
@@ -222,7 +234,7 @@ function openLeaders() {
       T('');
     }
     const gl = lbClient();
-    T(gl && gl.dev ? 'test board (opened from a file)' : tab().key === 'day' ? 'today = the UTC day' : 'most layers. fewer mods wins ties.', C.dim);
+    T(gl && gl.dev ? 'test board (tester / local page)' : tab().key === 'day' ? 'today = the UTC day' : 'most layers. fewer mods wins ties.', C.dim);
     T('');
     B('[ BACK ]', 'back', () => swapTo(showTitle));
   }, '> pulling the board.', { full: true });

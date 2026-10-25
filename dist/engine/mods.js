@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.15']);
+NEON_FILES.push(['engine/mods.js', 'v13.17']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -115,7 +115,9 @@ const modLocked = key => !!(MODS[key] && MODS[key].locked);
 function exoticOffer(seed, where, id, chance) {
   const r = rngFor(seed, 'exotic', where, id);
   if (r() >= chance) return [];
-  return pickMods(r, modsOfKind('exotic').filter(k => !clashLockedOut(k)), 1);
+  const got = pickMods(r, modsOfKind('exotic').filter(k => !clashLockedOut(k)), 1);
+  if (got.length) statExotic(where, id, got[0].key);   // play stats: does anyone find one
+  return got;
 }
 // Can't be offered: it would replace a locked mod (ZOMBIE's slot).
 const clashLockedOut = key => { const c = clashWith(key); return !!(c && modLocked(c)); };

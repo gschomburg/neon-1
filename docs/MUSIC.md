@@ -46,7 +46,14 @@ note, `-` holds it, `.` is a rest; a list of bars plays in turn). All optional, 
 `melody` (the track's hook, from level `melodyAt`, doubled for bosses), `bassLine` (a riff), `arpLine`, `beat` (its own
 drum pattern, `x...x...`), `stab` (chord stabs, `stabVoice`), `gate` (a chopped pad), `breakdown` (every n-th time
 through the chords the drums and bass drop out), `sevenths`. New voices: **keys** (electric piano), **vox** (an "ah"
-choir), **saw** (a supersaw lead). Still to come: A / B sections with their own chords, fills; the tool as a full editor.
+choir), **saw** (a supersaw lead). **Sections and fills (v13.17, 2026-10-25):** one time through the chords is a *pass*. A track can add a `B: {...}`
+(also C, D) with anything that should change on B passes (chords, melody, beat, bass, voices; not meter or bpm), and
+`form` sets the order (`'AABA'` by default). **Fills** are automatic on every track with drums: the last beat of every
+second pass, and of the pass before a new section, becomes a snare roll, a tom run or a kick-snare pickup (taking
+turns), landing on a crash. `fills: false` turns them off, `fill: { snare: '...' }` writes your own (the whole last
+bar). Tracks with their own roll (march, shanty) keep it, and nothing fills into or out of a breakdown. B sections so far:
+HOLLOW (a sung chorus on C D Em), DANCE ALONE (the chorus, up on B C# D), LIGHT CYCLE (a half-time bridge), NIGHT
+DRIVE (climbing chords, played A A B). Still to come: the tool as a full editor.
 
 **10 new tracks (2026-10-24), one per inspiration**, in `data/music.js`, not playing anywhere yet (the user picks):
 | Track | Inspired by | What makes it |
@@ -62,7 +69,12 @@ choir), **saw** (a supersaw lead). Still to come: A / B sections with their own 
 | DANCE ALONE | Robyn, *Dancing On My Own* | 118 bpm, pulsing eighth-note chords, four on the floor, claps |
 | TRACKER | Moby ("ah-ah") + Amiga cracktros | 136 bpm breakbeat, "ah-ah" vocal stabs, chip melody, chip arpeggios |
 | HOLLOW | Evanescence (added after, v13.14) | 90 bpm, E minor; light at first (choir pad, sub bass, a piano figure from level 0), then half-time rock drums, chugging saw chords and a glass line; the piano doubles for bosses; every 4th pass drops to piano alone |
-Not done yet: Pixel Grip, and the Monkey Island shanty (CAST ON in 6/8 covers some of that).
+**Three more (v13.16, 2026-10-25)**, no variations (the user): LOOK BEHIND YOU on PLAYTIME (1) and LUCKEEZ (2), VELVET ROPE on CHANNEL 9 (3, a timer) and TWINLINK (4, can be a sector boss), DOWNWARD on CLONEWORKS (2) and BLACKOUT (3). Their old tracks (WIND IT UP, LUCKY STREAK, BREAKING, PLUS ONE, MITOSIS, POWER CUT) stay in the files, unused.
+| Track | Inspired by | What makes it |
+|---|---|---|
+| LOOK BEHIND YOU | *Monkey Island* | 104 bpm E minor, one-drop reggae drums with swing, an organ skank on the off-beats, a walking plucked bass, a steel-drum-ish bell tune |
+| VELVET ROPE | Pixel Grip | 122 bpm A minor darkwave, four on the floor, a sequenced 16th bass, a gated pad, a deadpan "vox" line that sits on one note |
+| DOWNWARD | Nine Inch Nails (*Closer*, *The Downward Spiral*) | 96 bpm D phrygian, a slow mechanical groove, a squelching acid bass, a stuttering gated pad, a distorted lead that keeps falling, breakdowns |
 
 **It reacts to the game:**
 - **Layers build up inside a corp:** layer 1 = pad + bass, 2 = + drums, 3 = + arp, boss = + lead and a bit
@@ -77,6 +89,15 @@ Not done yet: Pixel Grip, and the Monkey Island shanty (CAST ON in 6/8 covers so
 - **Corp effects:** slow motion (`def.slowmo`: the music slows and drops in pitch, BULLET TIME), and
   `Music.focus()` muffles it (DECIBEL, STETHOSCOPE: the music clears near the real node).
 - Tracks cross-fade between screens.
+
+**The editor: `tools/neon_editor.html`** (v13.17, 2026-10-25): the music tool and the palette editor in one page. The game
+runs on the left; MUSIC and PALETTE are the two modes up top. In MUSIC the list starts on the corps (sorted by level):
+pick one and the game shows one of its layers in its own palette *and plays its track itself*, so what you hear is what
+the game plays. The level buttons pick how much of the band plays (0-4), or "game" (what the screen gives it). Up /
+down walks through the corps. Everything else works as in the music tool below (stars, tags, notes, the tracks view,
+try another band, assignments); changes are remembered in the browser and copied out for Claude, and the game frame
+gets them live. The stars, notes and changes are shared with the old music tool (same browser storage). The old
+`music.html` and `palette_editor.html` stay for now.
 
 **The music tool: `tools/music.html`** (2026-10-24). Open it in Chrome from the repo. Every track in a sortable,
 filterable list (tempo, key, groove, bass, arp, where it plays); click one to play it, and push it like the game does

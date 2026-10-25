@@ -1,6 +1,7 @@
-// NeoN+1 engine/editor.js: The palette editor bridge (only with ?editor=1), and the debug hook for tests.
+// NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
+// ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.15']);
+NEON_FILES.push(['engine/editor.js', 'v13.17']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -85,6 +86,49 @@ if (EDITOR) {
       queue = queue.then(() => SCENES[m.name](m.opts || {}))
         .then(() => post({ type: 'scene', name: m.name, ok: true, info: { mode: st.mode, corp: st.corp && st.corp.def.name, boss: !!(st.lv && st.lv.boss), bg: C.bg, accent: C.accent } }))
         .catch(err => post({ type: 'scene', name: m.name, ok: false, error: String((err && err.message) || err) }));
+    }
+  });
+  // ---- The music tab (tools/neon_editor.html). The music plays here, in the game, so you hear what the game plays.
+  // 'music-data' { songs: { key: track }, assign: { place: key or '' } }: the tab's changed tracks and assignments
+  //   (live only; the files don't change). Tracks it no longer sends go back to the game's own.
+  // 'music-ctl' { playing, key (a track, or null: what this screen plays), level (null: the game's), urgency, low, sfx }
+  // 'music-test' { kind: 'win' | 'death' }: an end jingle over the track, then it starts again.
+  // The game sends back 'beat' { key, lit, bs, beat, level }: what's playing and where it is in the bar.
+  const ownSongs = {}, ownFor = Object.assign({}, MUSIC_FOR);
+  const swapSong = (k, t) => { const s = SONGS[k]; if (!s) { SONGS[k] = t; return; } for (const f of Object.keys(s)) delete s[f]; Object.assign(s, t); };
+  const musicData = m => {
+    const songs = m.songs || {};
+    for (const k of Object.keys(ownSongs)) if (!songs[k]) { if (ownSongs[k]) swapSong(k, ownSongs[k]); else delete SONGS[k]; delete ownSongs[k]; }
+    for (const [k, t] of Object.entries(songs)) { if (!(k in ownSongs)) ownSongs[k] = SONGS[k] ? JSON.parse(JSON.stringify(SONGS[k])) : null; swapSong(k, JSON.parse(JSON.stringify(t))); }
+    for (const k of Object.keys(MUSIC_FOR)) if (!(k in ownFor)) delete MUSIC_FOR[k];
+    Object.assign(MUSIC_FOR, ownFor);
+    for (const [pl, k] of Object.entries(m.assign || {})) { if (!k) delete MUSIC_FOR[pl]; else if (SONGS[k]) MUSIC_FOR[pl] = k; }
+  };
+  let beatT = 0, lastBeatMsg = '';
+  let lastRestart = 0;
+  const musicCtl = m => {
+    st.editorMusic = m;
+    if (m.restart && m.restart !== lastRestart) { lastRestart = m.restart; setTimeout(() => Music.restart(), 0); }   // the track from the top
+    save.musicOn = !!m.playing; save.musicVol = m.volume != null ? m.volume : 0.8; save.muted = !m.sfx; save.sfxVol = 0.8;
+    Sound.init(); Sound.levels();
+    clearInterval(beatT);
+    if (m.playing) beatT = setInterval(() => {
+      const b = Music.beat(), key = Music.current(), sg = SONGS[key];
+      let lit = -1;
+      if (b && sg) { const into = (performance.now() - b.perf) / b.ms, bs = barSteps(sg), bt = beatSteps(sg); if (into >= 0 && into < 1.5) lit = ((b.n % (bs / bt)) * bt + Math.floor(into * bt)) % bs; }
+      const ms = musicState(), msg = { type: 'beat', key: ms.song, lit, bs: sg ? barSteps(sg) : 16, beat: sg ? beatSteps(sg) : 4, level: ms.level, audio: !!b };
+      const sig = JSON.stringify(msg);
+      if (sig !== lastBeatMsg) { lastBeatMsg = sig; post(msg); }
+    }, 40);
+  };
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.to !== 'neon-game') return;
+    if (m.type === 'music-data') musicData(m);
+    if (m.type === 'music-ctl') musicCtl(m);
+    if (m.type === 'music-test' && st.editorMusic && st.editorMusic.playing) {
+      Sound.init(); (m.kind === 'win' ? Sound.bossWin : Sound.death)();
+      setTimeout(() => Music.restart(), m.kind === 'win' ? 3600 : 3800);
     }
   });
   post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES) });

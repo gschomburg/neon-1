@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.15']);
+NEON_FILES.push(['engine/panels.js', 'v13.17']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -107,7 +107,7 @@ function openShop(node) {
     if (o.sold || !canSpend(price)) return Sound.deny();
     if (o.kind === 'repair' && !canHeal()) return Sound.deny();
     const name = defOf(o).name.toLowerCase();
-    const finish = () => { run.credits -= price; if (o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
+    const finish = () => { statBuy(o, price); run.credits -= price; if (o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
     // No room: pick one of yours to replace (the purchase goes through after the swap).
     if (o.kind === 'item') { if (!itemRoom(o.key, o.tier)) return openSwap('item', o.key, o.tier, finish); addItem(o.key, o.tier); }
     if (o.kind === 'mod') {
@@ -176,11 +176,12 @@ function openShop(node) {
 // A reward screen: header lines, then a list of mods to pick one from (or skip).
 // next: where to go after (default: the map).
 function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null }) {
-  let sel = 0;
+  let sel = 0, picked = false;
   const leave = () => next ? (st.transitioning ? null : swapTo(next)) : leavePanel();
   const take = o => {
     if (st.transitioning) return;
     if (o && locked) return Sound.deny();
+    if (!picked && !locked && options.length) { picked = true; statPick(title, options, o); }   // play stats
     if (o) {
       if (clashWith(o.key)) return openClash(o.key, o.tier, () => leave());   // same rule slot: replace it?
       if (!modRoom(o.key)) return openSwap('mod', o.key, o.tier, () => leave());   // full: pick one to replace

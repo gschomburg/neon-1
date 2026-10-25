@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.15']);
+NEON_FILES.push(['engine/scene.js', 'v13.17']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -77,15 +77,20 @@ function buildScene(now, collectHits, raw = false) {
   } else {
 
   // Header
-  put(0, 0, 'BETA_RUNNER', C.accent);
   const headerBtn = (x, label, id, onTap, active) => {
     put(x, 0, label, active ? C.accent : C.mid, 'ui');
     if (st.hoverBtn === id) bg(x, 0, label.length, C.accent, 0.2);
     addHit(x, 0, label.length, 1, { kind: 'btn', id, onTap, noFocus: true });
   };
+  // The name is the menu button during a run (no [MENU] of its own).
+  const menuOk = !st.mp && run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel');
+  put(0, 0, 'NeoN+1', C.accent, menuOk ? 'ui' : undefined, menuOk && st.pause);
+  if (menuOk) {
+    if (st.hoverBtn === 'menu' || st.pause) bg(0, 0, 6, C.accent, 0.2);
+    addHit(0, 0, 6, 1, { kind: 'btn', id: 'menu', onTap: togglePause, noFocus: true });
+  }
   if (st.mp) headerBtn(12, '[LEAVE]', 'leave', mpLeave, false);
-  else if (run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel')) headerBtn(12, '[MENU]', 'menu', togglePause, st.pause);
-  else put(12, 0, `// ${VERSION}`, C.dim);
+  else if (!menuOk) put(12, 0, `// ${VERSION}`, C.dim);
   put(0, 1, rule(L.wc), C.dim);
 
   // HUD
