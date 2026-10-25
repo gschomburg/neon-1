@@ -1,6 +1,6 @@
 // NeoN+1 corps/channel9.js
 'use strict';
-NEON_FILES.push(['corps/channel9.js', 'v13.11']);
+NEON_FILES.push(['corps/channel9.js', 'v13.13']);
 // Its boss mod: REMOTE (remote), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

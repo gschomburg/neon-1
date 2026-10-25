@@ -1,11 +1,11 @@
 // NeoN+1 corps/purlwise.js
 'use strict';
-NEON_FILES.push(['corps/purlwise.js', 'v13.11']);
+NEON_FILES.push(['corps/purlwise.js', 'v13.13']);
 // Its boss mod: UNRAVEL (unravel), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.caston = { name: 'CAST ON',        bpm: 92,  root: 47, scale: 'dorian',   prog: [0, 4, 3, 4], bass: 'pulse',   drums: 'half',  arp: 'mirror', pingpong: true };
+SONGS.caston = { name: 'CAST ON',        bpm: 136, root: 47, scale: 'dorian',   prog: [0, 4, 3, 4], bass: 'jig',     drums: 'shanty', arp: 'mirror', pingpong: true, meter: 6, swing: 0.46 };   // 6/8 (the user, 2026-10-24)
 MUSIC_FOR.purlwise = 'caston';
 
 // ---- the corp

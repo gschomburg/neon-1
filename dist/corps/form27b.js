@@ -1,6 +1,6 @@
 // NeoN+1 corps/form27b.js
 'use strict';
-NEON_FILES.push(['corps/form27b.js', 'v13.11']);
+NEON_FILES.push(['corps/form27b.js', 'v13.13']);
 // Its boss mod: QUEUE NUMBER (queuenumber), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

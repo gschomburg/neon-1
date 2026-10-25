@@ -25,6 +25,44 @@ where they play; `MUSIC_FOR` assigns them (one line to move a track).
 progression, echo, and picks from a few patterns: 4 drum patterns (four, march, half, heavy), a handful of
 bass patterns (eighths, offbeat, gallop...) and one shared lead melody (`LEAD_DEGREES`).
 
+**The engine upgrade, phases 1 and 2 (2026-10-24):** a track can now pick its band. All optional; a track that
+doesn't set them sounds exactly as before (every game track today).
+- **Bass sound** `bassVoice`: saw (the original), acid (squelchy 303), sub (deep sine), pluck, picked. `bassOct`: every
+  other bass note an octave up.
+- **Pad** `padVoice`: saw (the original), glass, organ (drawbars), choir (vowel-ish), none.
+- **Arp sound** `arpVoice`: square (the original), chip (a thin 12.5% pulse: Amiga / Game Boy), bell, pluck, glass.
+- **Lead** `leadVoice`: square (the original), chip, bell, brass, dist (distorted).
+- **Drum kit** `kit`: synth (the original), 808 (boomy kick, clap), chip (8-bit), industrial (distorted kick, metal),
+  break (tight and live-feeling).
+- **Grooves** (`drums`): four, march, half, heavy (the originals), plus disco (open hats, clap), two (two-step), break,
+  trap, waltz (3/4), shanty (6/8). Bass patterns (`bass`): plus syncopated, acid, sparse, waltz, jig.
+- **Meter** `meter`: 4 (4/4), 3 (3/4, a waltz), 6 (6/8, the shanty lilt; the bpm counts the two big beats).
+- **Swing** `swing` 0-0.5 (pushes every second 16th late), **pump** `pump` 1 (full sidechain) .. 0 (none).
+- In the music tool: **"try another band"** swaps any of these on any track, live, and **"copy track"** copies the result
+  as a line of code. **9 engine demos** (marked *demo*, only in the tool) show the range: ACID RAIN, CRYPT ORGAN, CHIP
+  RUNNER, RUST BELT, SEA LEGS (6/8), ORBIT CLUB (disco), BROKEN SIGNAL, CLOCKWORK WALTZ (3/4), TRAP DOOR.
+**Phase 3, the written parts (2026-10-24):** a track can carry its own parts, one token per 16th (a number is a
+note, `-` holds it, `.` is a rest; a list of bars plays in turn). All optional, details at the top of `engine/music.js`:
+`melody` (the track's hook, from level `melodyAt`, doubled for bosses), `bassLine` (a riff), `arpLine`, `beat` (its own
+drum pattern, `x...x...`), `stab` (chord stabs, `stabVoice`), `gate` (a chopped pad), `breakdown` (every n-th time
+through the chords the drums and bass drop out), `sevenths`. New voices: **keys** (electric piano), **vox** (an "ah"
+choir), **saw** (a supersaw lead). Still to come: A / B sections with their own chords, fills; the tool as a full editor.
+
+**10 new tracks (2026-10-24), one per inspiration**, in `data/music.js`, not playing anywhere yet (the user picks):
+| Track | Inspired by | What makes it |
+|---|---|---|
+| LIGHT CYCLE | Daft Punk, *Tron: Legacy* | 128 bpm D minor, 16th octave bass, gritty staccato riff, brass hits |
+| MACHINE HEART | Nine Inch Nails | 104 bpm E phrygian, industrial kit, chugging riff, lonely piano, breakdowns |
+| NIGHT DRIVE | Kavinsky, *Nightcall* | 92 bpm F minor, the big pumping pad, a long supersaw line |
+| RED DEEP | Goblin (*Suspiria*, *Profondo Rosso*) | 120 bpm A harmonic minor, bass ostinato, church organ, music box |
+| ANTHEM | Arcade Fire | 128 bpm G major, driving eighths, organ, glockenspiel, a "whoa-oh" chant |
+| DROP ZONE | Skrillex | 140 bpm half-time, wobbling acid bass, screaming lead, breakdown before the drop |
+| DEADPAN | Ladytron | 124 bpm electroclash, deadpan line, gated pad, octave-bouncing bass |
+| SLOW TIDE | The Album Leaf | 84 bpm C major, electric piano, glockenspiel, brushed beat with swing |
+| DANCE ALONE | Robyn, *Dancing On My Own* | 118 bpm, pulsing eighth-note chords, four on the floor, claps |
+| TRACKER | Moby ("ah-ah") + Amiga cracktros | 136 bpm breakbeat, "ah-ah" vocal stabs, chip melody, chip arpeggios |
+Not done yet: Pixel Grip, and the Monkey Island shanty (CAST ON in 6/8 covers some of that).
+
 **It reacts to the game:**
 - **Layers build up inside a corp:** layer 1 = pad + bass, 2 = + drums, 3 = + arp, boss = + lead and a bit
   faster, final boss = a louder lead.
@@ -77,6 +115,19 @@ Clean up the tracks; not every corp needs its own. Maybe:
 - **A music tool outside the game: BUILT** as `tools/music.html` (above). The original note (the user, 2026-10-24, meat notes): a music preview tool in a NeoN+1 tool
   suite (with asXii and the palette editor), so the music player doesn't all live inside the game. Music is
   the one thing that seems better out of the game. (Today's dev music player would move there.)
+
+## The user's ratings (2026-10-24, first listen in the music tool)
+
+- **5 stars:** NIGHT RAIN (title + menus), GRIDLOCK (map), OVERDRIVE (CHRONOS).
+- **4 stars:** VELVET HEX (SIGIL), CAST ON (PURLWISE), VITALS (MEDIX). CAST ON and VITALS with the user's own new-band
+  mixes, now in the game: CAST ON in 6/8 (shanty groove, jig bass, swing 0.46, 136 bpm); VITALS with the break groove,
+  industrial kit, sub bass and a bell arp going up and down.
+- **3 stars:** PLAIN TEXT (BASIC), QUERY (SEEKR), MITOSIS (CLONEWORKS), CONVEYOR (PARCELNET), FORGET (FORGET-ME-NOT),
+  PIKO PIKO (MOCHI MOCHI), NEWS DESK (HEADLINE), FALLOUT (HALFLIFE), INSERT COIN (CHUCK E. CACHE'S), SLOW MOTION
+  (BULLET TIME), and **all 9 engine demos** (the user likes the variety, though they all carry the same tune: phase 3).
+- **2 stars:** LOW PRESSURE (NIMBUS), QUIET PLEASE (DEWEY), GRAVE SHIFT (BONEYARD).
+- **1 star:** the other 61 corp tracks, and MELTDOWN (OMNI//CORE).
+- None tagged keep / maybe / cut yet.
 
 ## Inspirations
 

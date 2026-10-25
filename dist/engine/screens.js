@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.11']);
+NEON_FILES.push(['engine/screens.js', 'v13.13']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -315,14 +315,19 @@ function swapLines() {
     lines.push({ text: '[ KEEP WHAT I HAVE ]', id: 'swkeep', onTap: () => { st.swap = null; Sound.ui(); } });
     return lines;
   }
+  // Two steps (a mis-tap on a phone used to throw away the wrong one): tap one of yours to pick it, which
+  // shows what it does; then the SWAP button does it. sw.sel = the picked one's index.
   T(sw.kind === 'mod' ? 'MOD SLOTS FULL' : 'ITEM BELT FULL', C.danger);
   T('');
+  const pick = i => () => { if (sw.sel !== i) { sw.sel = i; Sound.tick(); } };
+  const DESC_ROWS = 2;
+  const desc = str => { const dl = wrapText(str || '', 34); for (let r = 0; r < DESC_ROWS; r++) T(dl[r] || '', C.text); };
+  let go = null, outName = '';
   if (sw.kind === 'mod') {
     const v = modView(sw.key, sw.tier);
     T('to take', C.mid);
     lines.push({ badge: sw.key, badgeTier: sw.tier });
-    T(`replace one of your ${modSlots()} mods:`, C.mid);
-    T('');
+    T(`pick one of your ${modSlots()} mods to replace:`, C.mid);
     run.mods.forEach((k, i) => {
       const o = modView(k);
       if (modLocked(k)) {   // locked in: can't be swapped out
@@ -331,23 +336,37 @@ function swapLines() {
         return;
       }
       lines.push({ list: true, id: 'sw' + i, badge: k, badgeTier: o.tier, name: o.name, col: C.bright, right: tierLabel(o), rightCol: C.mid, rightChips: true,
-        onTap: () => { removeMod(k); addMod(sw.key, sw.tier); Sound.buy(); setMsg(`> swapped ${o.name.toLowerCase()} for ${v.name.toLowerCase()}.`, C.accent); done(); } });
+        sel: sw.sel === i, onTap: pick(i) });
     });
+    T(SEP, C.dim);
+    const k = sw.sel != null && run.mods[sw.sel], o = k && !modLocked(k) ? modView(k) : null;
+    if (o) {
+      lines.push({ badge: k, badgeTier: o.tier });
+      desc(o.tip || o.desc);
+      outName = o.name.toLowerCase();
+      go = () => { removeMod(k); addMod(sw.key, sw.tier); Sound.buy(); setMsg(`> swapped ${outName} for ${v.name.toLowerCase()}.`, C.accent); done(); };
+    } else { T('tap one of yours to see it.', C.dim); desc(''); }
   } else {
     const v = itemView(sw.key, sw.tier);
     T('to take', C.mid);
     lines.push({ text: `[${v.name}]`, chip: v.rarity, bold: true });
-    T('replace one of your items:', C.mid);
-    T('');
+    T('pick one of your items to replace:', C.mid);
     run.items.forEach((s, i) => {
       const o = itemView(s.key, s.tier);
       lines.push({ list: true, id: 'sw' + i, name: itemLabel(s), chip: o.rarity, right: s.n > 1 ? `all ${s.n}` : 'item', rightCol: C.mid,
-        onTap: () => { run.items.splice(i, 1); addItem(sw.key, sw.tier); Sound.buy(); setMsg(`> swapped for ${v.name.toLowerCase()}.`, C.accent); done(); } });
+        sel: sw.sel === i, onTap: pick(i) });
     });
+    T(SEP, C.dim);
+    const s = sw.sel != null && run.items[sw.sel], o = s ? itemView(s.key, s.tier) : null;
+    if (o) {
+      lines.push({ text: itemLabel(s), chip: o.rarity, bold: true });
+      desc(o.tip || o.desc);
+      outName = o.name.toLowerCase();
+      go = () => { run.items.splice(sw.sel, 1); addItem(sw.key, sw.tier); Sound.buy(); setMsg(`> swapped ${outName} for ${v.name.toLowerCase()}.`, C.accent); done(); };
+    } else { T('tap one of yours to see it.', C.dim); desc(''); }
   }
-  T('');
-  T('the one you replace is gone.', C.dim);
-  T('');
+  lines.push({ box: true, text: 'S W A P', sub: go ? `- ${outName} is gone -`.slice(0, 26) : '- pick one above -', id: 'swgo', minW: 22,
+    disabled: !go, onTap: () => { if (go) go(); else Sound.deny(); } });
   lines.push({ text: '[ KEEP WHAT I HAVE ]', id: 'swkeep', onTap: () => { st.swap = null; Sound.ui(); } });
   return lines;
 }

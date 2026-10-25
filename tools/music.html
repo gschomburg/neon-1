@@ -98,6 +98,22 @@
 <script src="../dist/corps/hydra.js"></script>
 <script src="../dist/corps/blackout.js"></script>
 <!-- corps: end -->
+<script>
+  // Engine demos: tracks that show off what the engine can do now (instruments, kits, grooves, meters).
+  // They live only in this tool, not in the game. A track that's liked gets written into the game for real.
+  const DEMOS = {
+    demo_acid:    { name: 'ACID RAIN',      bpm: 124, root: 45, scale: 'minor',    prog: [0, 0, 5, 3], bass: 'acid', bassOct: true, bassVoice: 'acid', drums: 'four', kit: '808', padVoice: 'glass', arp: 'up', arpVoice: 'pluck', pump: 0.5 },
+    demo_crypt:   { name: 'CRYPT ORGAN',    bpm: 100, root: 38, scale: 'harmonic', prog: [0, 5, 1, 4], bass: 'syncopated', bassVoice: 'sub', drums: 'half', kit: 'synth', padVoice: 'organ', arp: 'updown', arpVoice: 'bell', leadVoice: 'brass', pump: 0, echo: 0.42, feedback: 0.42 },
+    demo_chip:    { name: 'CHIP RUNNER',    bpm: 140, root: 48, scale: 'major',    prog: [0, 5, 3, 4], bass: 'eighths', bassVoice: 'pluck', drums: 'four', kit: 'chip', padVoice: 'none', arp: 'up', arpVoice: 'chip', leadVoice: 'chip', pump: 0, echo: 0.21 },
+    demo_rust:    { name: 'RUST BELT',      bpm: 96,  root: 40, scale: 'phrygian', prog: [0, 1, 0, 6], bass: 'gallop', bassVoice: 'picked', drums: 'heavy', kit: 'industrial', padVoice: 'choir', arp: 'down', arpVoice: 'pluck', leadVoice: 'dist', pump: 0.3 },
+    demo_shanty:  { name: 'SEA LEGS',       bpm: 66,  root: 50, scale: 'dorian',   prog: [0, 6, 0, 4], meter: 6, bass: 'jig', bassVoice: 'picked', drums: 'shanty', kit: 'break', padVoice: 'organ', arp: 'updown', arpVoice: 'bell', leadVoice: 'brass', pump: 0, echo: 0.3 },
+    demo_disco:   { name: 'ORBIT CLUB',     bpm: 120, root: 42, scale: 'minor',    prog: [0, 5, 2, 6], bass: 'offbeat', bassOct: true, bassVoice: 'pluck', drums: 'disco', kit: '808', padVoice: 'glass', arp: 'up', arpVoice: 'glass', leadVoice: 'bell', pump: 0.6, swing: 0.08 },
+    demo_break:   { name: 'BROKEN SIGNAL',  bpm: 132, root: 43, scale: 'minor',    prog: [0, 3, 5, 4], bass: 'sparse', bassVoice: 'sub', drums: 'break', kit: 'break', padVoice: 'choir', arp: 'mirror', arpVoice: 'glass', leadVoice: 'square', pump: 0.2, swing: 0.18 },
+    demo_waltz:   { name: 'CLOCKWORK WALTZ', bpm: 132, root: 45, scale: 'harmonic', prog: [0, 3, 4, 0], meter: 3, bass: 'waltz', bassVoice: 'sub', drums: 'waltz', kit: 'synth', padVoice: 'glass', arp: 'up', arpVoice: 'bell', leadVoice: 'bell', pump: 0 },
+    demo_trap:    { name: 'TRAP DOOR',      bpm: 140, root: 41, scale: 'minor',    prog: [0, 0, 5, 6], bass: 'sparse', bassVoice: 'sub', drums: 'trap', kit: '808', padVoice: 'choir', arp: 'up', arpVoice: 'chip', leadVoice: 'dist', pump: 0.3 },
+  };
+  for (const k of Object.keys(DEMOS)) SONGS[k] = DEMOS[k];
+</script>
 <style>
   :root {
     --bg: #15171a; --panel: #1d2024; --line: #2c3036; --text: #d6dade; --mid: #8b929a; --dim: #5d636b; --hi: #ffffff;
@@ -140,6 +156,12 @@
   .tag.keep { background: #173d24; color: var(--ok); }
   .tag.maybe { background: #3d3317; color: var(--warn); }
   .tag.cut { background: #3d1a1f; color: var(--bad); }
+  .stars { white-space: nowrap; letter-spacing: 1px; font-size: 15px; line-height: 1; user-select: none; }
+  .stars span { cursor: pointer; color: #3a3f46; padding: 0 1px; }
+  .stars span.on { color: #ffd23f; }
+  .stars:hover span { color: #ffd23f; }
+  .stars span:hover ~ span { color: #3a3f46; }
+  #pstars { font-size: 22px; }
 
   /* right: the player */
   #player { flex: 0 0 340px; padding: 6px 16px 16px; overflow: auto; background: var(--panel); }
@@ -158,6 +180,11 @@
   #keys { color: var(--dim); font-size: 12px; line-height: 1.6; }
   #keys b { color: var(--mid); font-weight: 600; }
   #errors { color: var(--bad); white-space: pre-wrap; font-size: 12px; }
+  select { padding: 3px 6px; min-width: 110px; }
+  td.band { color: var(--mid); font-size: 12px; white-space: normal; min-width: 160px; }
+  tr.demo td.name::after { content: ' demo'; color: var(--warn); font-size: 10px; font-weight: 600; letter-spacing: 0.06em; vertical-align: 1px; }
+  .edited { color: var(--warn); }
+  #tryinfo { color: var(--dim); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -171,7 +198,7 @@
   <div id="scroll"><table>
     <thead><tr>
       <th data-k="name">track</th><th data-k="bpm">bpm</th><th data-k="key">key</th><th data-k="style">groove</th>
-      <th data-k="bass">bass</th><th data-k="arp">arp</th><th data-k="used">plays for</th><th data-k="tag">tag</th>
+      <th data-k="bass">bass</th><th data-k="arp">arp</th><th data-k="band">band</th><th data-k="used">plays for</th><th data-k="stars">stars</th><th data-k="tag">tag</th>
     </tr></thead>
     <tbody id="rows"></tbody>
   </table></div>
@@ -192,7 +219,13 @@
   <div class="row"><label>test</label><button id="win">boss win</button><button id="death">game over</button></div>
   <div class="row"><label>volume</label><input id="vol" type="range" min="0" max="1" step="0.05" value="0.8"></div>
 
+  <h2>Try another band <span id="edited" class="edited"></span></h2>
+  <div id="try"></div>
+  <div class="row"><button id="tryReset">reset to the track's own</button><button id="tryCopy">copy track</button><button id="tryAll">copy all changes</button></div>
+  <div id="tryinfo">Changes play live and are remembered in this browser (the game's files don't change). "copy track" / "copy all changes" copy them as lines of code, to paste into a chat or the game.</div>
+
   <h2>Narrowing down</h2>
+  <div class="row"><label>stars</label><span id="pstars" class="stars"></span></div>
   <div class="row"><button id="tKeep">keep</button><button id="tMaybe">maybe</button><button id="tCut">cut</button><button id="tClear">clear</button></div>
   <textarea id="note" placeholder="a note on this track"></textarea>
   <div class="row"><button id="export">copy the list</button><span id="copied" class="dim"></span></div>
@@ -201,6 +234,7 @@
   <div id="keys">
     <b>space</b> play / stop &nbsp; <b>up / down</b> track<br>
     <b>0-4</b> level &nbsp; <b>h</b> heartbeat<br>
+    <b>shift + 1-5</b> stars (shift + 0 clears)<br>
     <b>k / y / x</b> keep / maybe / cut
   </div>
   <div id="errors"></div>
@@ -218,9 +252,14 @@
 
   // Where each track plays: the corps by name, plus the shared spots.
   const PLACES = { menu: 'title + menus', map: 'map, markets, caches', omni: 'OMNI//CORE', theme: 'theme' };
-  const usedBy = k => Object.keys(MUSIC_FOR).filter(p => MUSIC_FOR[p] === k).map(p => PLACES[p] || (CORPS[p] && CORPS[p].name) || p.toUpperCase());
+  const usedBy = k => k in DEMOS ? ['engine demo (not in the game)'] : Object.keys(MUSIC_FOR).filter(p => MUSIC_FOR[p] === k).map(p => PLACES[p] || (CORPS[p] && CORPS[p].name) || p.toUpperCase());
   const keyName = s => `${NOTE_NAMES[s.root % 12]} ${s.scale}`;
-  const groove = s => s.style === 'ambient' ? 'ambient' : s.drums || '';
+  const groove = s => s.style === 'ambient' ? 'ambient' : (s.drums || '') + (s.meter === 3 ? ' 3/4' : s.meter === 6 ? ' 6/8' : '') + (s.swing ? ' swing' : '');
+  // the band: what differs from the original synthwave sound
+  const band = s => s.style === 'ambient' ? '' : [s.kit && s.kit !== 'synth' ? s.kit + ' kit' : '', s.bassVoice && s.bassVoice !== 'saw' ? s.bassVoice + ' bass' : '',
+    s.padVoice && s.padVoice !== 'saw' ? (s.padVoice === 'none' ? 'no pad' : s.padVoice + ' pad') : '', s.arpVoice && s.arpVoice !== 'square' ? s.arpVoice + ' arp' : '',
+    s.leadVoice && s.leadVoice !== 'square' ? s.leadVoice + ' lead' : '', s.pump != null && s.pump < 1 ? (s.pump ? 'light pump' : 'no pump') : '',
+    s.melody ? 'own melody' : '', s.bassLine ? 'bass riff' : '', s.beat ? 'own beat' : '', s.stab ? 'stabs' : '', s.gate ? 'gated pad' : '', s.breakdown ? 'breakdowns' : ''].filter(Boolean).join(', ');
   const tracks = Object.keys(SONGS).map(k => ({ k, s: SONGS[k], used: usedBy(k) }));
 
   // ---- the player state the engine reads (the same shape as the game's)
@@ -235,13 +274,13 @@
   // ---- the list
   let sortK = 'order', sortDir = 1, filter = '', tagFilter = 'all';
   const val = (t, k) => k === 'name' ? t.s.name : k === 'bpm' ? t.s.bpm : k === 'key' ? keyName(t.s) : k === 'style' ? groove(t.s)
-    : k === 'bass' ? (t.s.bass || '') : k === 'arp' ? (t.s.arp || '') + (t.s.pingpong ? ' ping-pong' : '') : k === 'used' ? t.used.join(', ') : k === 'tag' ? (tags[t.k] && tags[t.k].tag) || '' : 0;
+    : k === 'bass' ? (t.s.bass || '') : k === 'arp' ? (t.s.arp || '') + (t.s.pingpong ? ' ping-pong' : '') : k === 'band' ? band(t.s) : k === 'used' ? t.used.join(', ') : k === 'tag' ? (tags[t.k] && tags[t.k].tag) || '' : k === 'stars' ? starsOf(t.k) : 0;
   function visible() {
     const f = filter.toLowerCase();
     let out = tracks.filter(t => {
       const tg = (tags[t.k] && tags[t.k].tag) || '';
       if (tagFilter === 'none' ? tg : tagFilter !== 'all' && tg !== tagFilter) return false;
-      return !f || [t.s.name, keyName(t.s), groove(t.s), t.s.bass, t.s.arp, t.used.join(' '), t.s.bpm].join(' ').toLowerCase().includes(f);
+      return !f || [t.s.name, keyName(t.s), groove(t.s), band(t.s), t.s.bass, t.s.arp, t.used.join(' '), t.s.bpm].join(' ').toLowerCase().includes(f);
     });
     if (sortK !== 'order') out = out.slice().sort((a, b) => { const x = val(a, sortK), y = val(b, sortK); return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
     return out;
@@ -250,19 +289,26 @@
     const vis = visible();
     $('#rows').innerHTML = vis.map(t => {
       const tg = tags[t.k] && tags[t.k].tag;
-      return `<tr class="track${t.k === p.key ? ' playing' : ''}" data-k="${t.k}">
+      return `<tr class="track${t.k === p.key ? ' playing' : ''}${t.k in DEMOS ? ' demo' : ''}" data-k="${t.k}">
         <td class="name">${t.s.name}</td><td class="num mono">${t.s.bpm}</td><td class="mono">${keyName(t.s)}</td><td>${groove(t.s)}</td>
         <td>${t.s.bass || ''}</td><td>${t.s.arp || ''}${t.s.pingpong ? ' <span class="dim">ping-pong</span>' : ''}${t.s.tick ? ' <span class="dim">tick</span>' : ''}</td>
+        <td class="band">${band(t.s)}${orig[t.k] ? ' <span class="edited">(tried)</span>' : ''}</td>
         <td class="used">${t.used.join(', ') || '<span class="dim">unused</span>'}</td>
+        <td>${starsHtml(t.k)}</td>
         <td>${tg ? `<span class="tag ${tg}">${tg}</span>` : ''}${tags[t.k] && tags[t.k].note ? ' <span class="dim" title="has a note">*</span>' : ''}</td></tr>`;
     }).join('');
     const n = k => Object.values(tags).filter(x => x.tag === k).length;
-    $('#count').textContent = `${vis.length} of ${tracks.length} tracks · keep ${n('keep')} · maybe ${n('maybe')} · cut ${n('cut')}`;
+    $('#count').textContent = `${vis.length} of ${tracks.length} tracks · rated ${Object.values(tags).filter(x => x.stars).length} · keep ${n('keep')} · maybe ${n('maybe')} · cut ${n('cut')}`;
     document.querySelectorAll('th').forEach(th => th.classList.toggle('sorted', th.dataset.k === sortK));
   }
-  $('#rows').addEventListener('click', e => { const tr = e.target.closest('tr.track'); if (tr) pick(tr.dataset.k, true); });
+  $('#rows').addEventListener('click', e => {
+    const st = e.target.closest('.stars span');
+    if (st) { setStars(st.parentNode.dataset.k, +st.dataset.n); return; }
+    const tr = e.target.closest('tr.track'); if (tr) pick(tr.dataset.k, true);
+  });
   document.querySelectorAll('th').forEach(th => th.addEventListener('click', () => {
-    if (sortK === th.dataset.k) { if (sortDir === 1) sortDir = -1; else { sortK = 'order'; sortDir = 1; } } else { sortK = th.dataset.k; sortDir = 1; }
+    const first = th.dataset.k === 'stars' ? -1 : 1;   // stars: best first
+    if (sortK === th.dataset.k) { if (sortDir === first) sortDir = -first; else { sortK = 'order'; sortDir = 1; } } else { sortK = th.dataset.k; sortDir = first; }
     renderList();
   }));
   $('#filter').addEventListener('input', e => { filter = e.target.value; renderList(); });
@@ -285,6 +331,82 @@
     const i = vis.findIndex(t => t.k === p.key);
     pick(vis[(i + d + vis.length) % vis.length].k, true);
   }
+  // ---- try another band: change the playing track's settings live (kept in this page only)
+  const orig = {};   // track -> its settings before any change
+  // Changed tracks are remembered in the browser (like the stars), so a reload keeps them. The game's files
+  // never change from here: "copy track" / "copy all changes" hand them over.
+  const EDITS_KEY = 'neon.music.edits';
+  function saveEdits() {
+    const e = {}; for (const k of Object.keys(orig)) if (SONGS[k]) e[k] = SONGS[k];
+    try { localStorage.setItem(EDITS_KEY, JSON.stringify(e)); } catch (err) { /* private mode */ }
+    const n = Object.keys(orig).length;
+    $('#tryAll').textContent = n ? `copy all changes (${n})` : 'copy all changes';
+  }
+  try {
+    const e = JSON.parse(localStorage.getItem(EDITS_KEY) || '{}');
+    for (const [k, s] of Object.entries(e)) if (SONGS[k]) {
+      orig[k] = JSON.parse(JSON.stringify(SONGS[k]));
+      for (const f of Object.keys(SONGS[k])) delete SONGS[k][f];
+      Object.assign(SONGS[k], s);
+    }
+  } catch (err) { /* nothing saved */ }
+  const TRY = [
+    ['kit', 'kit', MUSIC_VOICES.kit], ['drums', 'drums', Object.keys(DRUMS)], ['bassVoice', 'bass sound', MUSIC_VOICES.bassVoice],
+    ['bass', 'bass notes', Object.keys(BASS_STEPS)], ['padVoice', 'pad', MUSIC_VOICES.padVoice], ['arpVoice', 'arp sound', MUSIC_VOICES.arpVoice],
+    ['arp', 'arp notes', ['up', 'down', 'updown', 'mirror']], ['leadVoice', 'lead', MUSIC_VOICES.leadVoice], ['stabVoice', 'stab sound', MUSIC_VOICES.stabVoice], ['meter', 'meter', MUSIC_VOICES.meter],
+  ];
+  const DEFAULTS = { stabVoice: 'saw', kit: 'synth', bassVoice: 'saw', padVoice: 'saw', arpVoice: 'square', leadVoice: 'square', meter: 4, arp: 'up', pump: 1, swing: 0 };
+  const meterName = m => ({ 4: '4/4', 3: '3/4 (waltz)', 6: '6/8 (lilt)' })[m] || m;
+  function renderTry() {
+    const s = SONGS[p.key], box = $('#try');
+    if (!s || s.style === 'ambient') { box.innerHTML = '<div class="dim">' + (s ? 'ambient tracks have their own sound.' : 'pick a track.') + '</div>'; return; }
+    const cur = k => s[k] != null ? s[k] : DEFAULTS[k];
+    box.innerHTML = TRY.map(([k, label, opts]) => `<div class="row"><label>${label}</label><select data-k="${k}">${opts.map(o =>
+      `<option value="${o}"${String(cur(k)) === String(o) ? ' selected' : ''}>${k === 'meter' ? meterName(o) : o}</option>`).join('')}</select></div>`).join('') +
+      `<div class="row"><label>pump</label><input type="range" data-k="pump" min="0" max="1" step="0.1" value="${cur('pump')}"><span class="mono dim">${(+cur('pump')).toFixed(1)}</span></div>` +
+      `<div class="row"><label>swing</label><input type="range" data-k="swing" min="0" max="0.5" step="0.02" value="${cur('swing')}"><span class="mono dim">${(+cur('swing')).toFixed(2)}</span></div>` +
+      `<div class="row"><label>tempo</label><input type="range" data-k="bpm" min="50" max="180" step="1" value="${s.bpm}"><span class="mono dim">${s.bpm}</span></div>`;
+    $('#edited').textContent = orig[p.key] ? '(changed)' : '';
+  }
+  function tryChange(k, v) {
+    const s = SONGS[p.key]; if (!s) return;
+    if (!orig[p.key]) orig[p.key] = JSON.parse(JSON.stringify(s));
+    s[k] = k === 'meter' || k === 'pump' || k === 'swing' || k === 'bpm' ? +v : v;
+    if (k === 'meter') {   // a pattern that fits the new bar length
+      if (s.meter === 6) { s.drums = 'shanty'; s.bass = 'jig'; }
+      else if (s.meter === 3) { s.drums = 'waltz'; s.bass = 'waltz'; }
+      else if (['shanty', 'waltz'].includes(s.drums)) { s.drums = 'four'; s.bass = 'eighths'; }
+    }
+    renderTry(); renderList(); renderSteps(); saveEdits();
+    const i = document.querySelector(`#try [data-k="${k}"]`); if (i && i.type === 'range') i.focus();
+  }
+  $('#try').addEventListener('change', e => { if (e.target.dataset.k) tryChange(e.target.dataset.k, e.target.value); });
+  $('#try').addEventListener('input', e => { if (e.target.type === 'range') { e.target.nextElementSibling.textContent = e.target.value; const s = SONGS[p.key]; if (s) { if (!orig[p.key]) orig[p.key] = JSON.parse(JSON.stringify(s)); s[e.target.dataset.k] = +e.target.value; $('#edited').textContent = '(changed)'; saveEdits(); } } });
+  $('#tryReset').addEventListener('click', () => {
+    const s = SONGS[p.key]; if (!s || !orig[p.key]) return;
+    for (const k of Object.keys(s)) delete s[k];
+    Object.assign(s, orig[p.key]); delete orig[p.key];
+    renderTry(); renderList(); renderSteps(); renderPlayer(); saveEdits();
+  });
+  // A track as a line of code (the way the game writes its tracks), to paste.
+  const trackLine = key => {
+    const s = SONGS[key];
+    const body = Object.entries(s).filter(([k, v]) => v != null && !(k in DEFAULTS && DEFAULTS[k] === v))
+      .map(([k, v]) => `${k}: ${typeof v === 'string' ? "'" + v + "'" : JSON.stringify(v).replace(/,/g, ', ')}`).join(', ');
+    return `SONGS.${key} = { ${body} };`;
+  };
+  const copyText = (txt, msg) => {
+    const done = () => { $('#tryinfo').textContent = msg; };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => prompt('copy this:', txt)); else prompt('copy this:', txt);
+  };
+  $('#tryCopy').addEventListener('click', () => { if (SONGS[p.key]) { const txt = trackLine(p.key); copyText(txt, 'copied: ' + txt); } });
+  $('#tryAll').addEventListener('click', () => {
+    const keys = Object.keys(orig).filter(k => SONGS[k]);
+    if (!keys.length) { $('#tryinfo').textContent = 'no changed tracks yet.'; return; }
+    copyText(keys.map(trackLine).join('\n'), `copied ${keys.length} changed track${keys.length > 1 ? 's' : ''}: ${keys.map(k => SONGS[k].name).join(', ')}.`);
+  });
+  saveEdits();
+
   function renderPlayer() {
     const s = SONGS[p.key];
     $('#now').textContent = s ? s.name : 'pick a track';
@@ -295,7 +417,9 @@
     $('#levelname').textContent = s && s.style === 'ambient' ? 'ambient: no levels or drums' : LEVELS[p.level];
     $('#low').textContent = p.low ? 'on' : 'off'; $('#low').classList.toggle('on', p.low);
     $('#urgency').value = p.urgency; $('#urgv').textContent = p.urgency.toFixed(2);
+    renderTry(); renderSteps();
     const t = tags[p.key] || {};
+    $('#pstars').outerHTML = starsHtml(p.key, 'pstars');
     for (const [k, sel] of [['keep', '#tKeep'], ['maybe', '#tMaybe'], ['cut', '#tCut']]) $(sel).classList.toggle('on', t.tag === k);
     if (document.activeElement !== $('#note')) $('#note').value = t.note || '';
   }
@@ -313,11 +437,22 @@
   $('#death').addEventListener('click', test(() => Sound.death(), 3800));
 
   // ---- tags and notes
+  // ---- stars: 1-5 (click the same star again to clear)
+  const starsOf = k => (tags[k] && tags[k].stars) || 0;
+  const starsHtml = (k, id) => `<span class="stars"${id ? ` id="${id}"` : ''} data-k="${k || ''}">${[1, 2, 3, 4, 5].map(n => `<span data-n="${n}" class="${n <= starsOf(k) ? 'on' : ''}">★</span>`).join('')}</span>`;
+  function setStars(k, n) {
+    if (!k) return;
+    const t = tags[k] = tags[k] || {};
+    if (!n || t.stars === n) delete t.stars; else t.stars = n;
+    if (!t.tag && !t.note && !t.stars) delete tags[k];
+    saveTags(); renderList(); renderPlayer();
+  }
+  $('#player').addEventListener('click', e => { const st = e.target.closest('#pstars span'); if (st) setStars(p.key, +st.dataset.n); });
   function setTag(tag) {
     if (!p.key) return;
     const t = tags[p.key] = tags[p.key] || {};
     if (tag && t.tag !== tag) t.tag = tag; else delete t.tag;
-    if (!t.tag && !t.note) delete tags[p.key];
+    if (!t.tag && !t.note && !t.stars) delete tags[p.key];
     saveTags(); renderPlayer(); renderList();
   }
   $('#tKeep').addEventListener('click', () => setTag('keep'));
@@ -333,8 +468,8 @@
   });
   // The list as text, to paste into a chat or a doc.
   $('#export').addEventListener('click', () => {
-    const line = t => `- ${t.s.name} (${t.s.bpm} bpm, ${keyName(t.s)}, ${groove(t.s)}; ${t.used.join(', ') || 'unused'})${tags[t.k] && tags[t.k].note ? ': ' + tags[t.k].note : ''}`;
-    const group = (title, f) => { const ts = tracks.filter(f); return ts.length ? `${title} (${ts.length})\n${ts.map(line).join('\n')}\n` : ''; };
+    const line = t => `- ${starsOf(t.k) ? '★'.repeat(starsOf(t.k)) + ' ' : ''}${t.s.name} (${t.s.bpm} bpm, ${keyName(t.s)}, ${groove(t.s)}; ${t.used.join(', ') || 'unused'})${tags[t.k] && tags[t.k].note ? ': ' + tags[t.k].note : ''}`;
+    const group = (title, f) => { const ts = tracks.filter(f).sort((a, b) => starsOf(b.k) - starsOf(a.k)); return ts.length ? `${title} (${ts.length})\n${ts.map(line).join('\n')}\n` : ''; };
     const tg = t => (tags[t.k] && tags[t.k].tag) || '';
     const txt = [group('KEEP', t => tg(t) === 'keep'), group('MAYBE', t => tg(t) === 'maybe'), group('CUT', t => tg(t) === 'cut'),
       group('NOT TAGGED YET', t => !tg(t))].filter(Boolean).join('\n');
@@ -352,17 +487,26 @@
     else if (k === 'arrowup') { e.preventDefault(); step(-1); }
     else if (/^[0-4]$/.test(k)) { p.level = +k; renderPlayer(); }
     else if (k === 'h') { p.low = !p.low; renderPlayer(); }
+    else if (e.shiftKey && /^Digit[0-5]$/.test(e.code)) setStars(p.key, +e.code.slice(5));
     else if (k === 'k') setTag('keep'); else if (k === 'y') setTag('maybe'); else if (k === 'x') setTag('cut');
   });
 
   // ---- the step lights: where the track is in its bar
   const steps = $('#steps');
-  steps.innerHTML = Array.from({ length: 16 }, (_, i) => `<i class="${i % 4 === 0 ? 'beat' : ''}"></i>`).join('');
-  const cells = [...steps.children];
+  let cells = [], cellsFor = '';
+  function renderSteps() {
+    const s = SONGS[p.key], bs = barSteps(s), beat = beatSteps(s), sig = bs + '/' + beat;
+    if (sig === cellsFor) return;
+    cellsFor = sig;
+    steps.style.gridTemplateColumns = `repeat(${bs}, 1fr)`;
+    steps.innerHTML = Array.from({ length: bs }, (_, i) => `<i class="${i % beat === 0 ? 'beat' : ''}"></i>`).join('');
+    cells = [...steps.children];
+  }
+  renderSteps();
   (function tick() {
     const b = Music.beat();
     let lit = -1;
-    if (b && p.playing) { const into = (performance.now() - b.perf) / b.ms; if (into >= 0 && into < 1.5) lit = ((b.n % 4) * 4 + Math.floor(into * 4)) % 16; }
+    if (b && p.playing) { const into = (performance.now() - b.perf) / b.ms; if (into >= 0 && into < 1.5) { const s = SONGS[p.key], bs = barSteps(s), beat = beatSteps(s); lit = ((b.n % (bs / beat)) * beat + Math.floor(into * beat)) % bs; } }
     cells.forEach((c, i) => c.classList.toggle('on', i === lit));
     requestAnimationFrame(tick);
   })();

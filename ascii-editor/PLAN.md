@@ -507,6 +507,10 @@ mode, animation, built-in art.
   - The outlines of where a new block / shape will go should **pop more** (stronger, thicker, higher contrast).
   - The block (or face) the pointer is actually hitting should **show a hover state**, e.g. that face lit up lighter,
     so you can see which cube the click is going off of.
+- **To discuss: color in asXii?** (the user, 2026-10-24: "do we want to add color to asxii?"). Open question, not
+  decided. Things to weigh when we talk: per-cell foreground (and maybe background) color vs. per-layer color; how it
+  exports (plain text drops it; HTML / ANSI / an image keep it); a palette (the game's palettes?); whether the Unicode
+  focus and "text you paste anywhere" stay the main use.
 - **Done v0.105: Select all takes everything** (the user, 2026-10-24). Ctrl A selected only the canvas area, leaving
   characters outside it out, and the user mostly uses Ctrl A to clear everything. Now **Ctrl A** selects a rectangle
   covering the canvas and everything drawn outside it on any layer; **Ctrl Shift A** (Edit › Select canvas) selects
