@@ -6,7 +6,7 @@
 // Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
 // device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v13.17']);
+NEON_FILES.push(['engine/leaders.js', 'v13.18']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }];
@@ -180,6 +180,25 @@ function lbOverKeys(prev) {
   };
   h.typing = true;   // letters reach it before the game's own letter keys (M mute, N music)
   return h;
+}
+
+// ---------------- The title screen's line ----------------
+// Where your best run stands: "board: #5 all time · #2 today". Fetched quietly (at most once a minute while the
+// title shows); nothing until there's an answer, and nothing when you're not on a board (or offline).
+let lbTitle = { at: -1e9, busy: false, all: null, day: null };
+function lbTitleLine() {
+  const gl = lbClient();
+  if (!gl || EDITOR || (navigator.webdriver && !window.LB_TEST)) return null;
+  if (!lbTitle.busy && performance.now() - lbTitle.at > 60000) {
+    lbTitle.busy = true; lbTitle.at = performance.now();
+    const you = name => gl.scores(name, { limit: 1 }).then(d => d && d.you ? d.you.rank : null, () => undefined);
+    lbFlush().then(() => Promise.all([you(lbBoard('all')), you(lbBoard('day'))])).then(([all, day]) => {
+      if (all !== undefined) lbTitle.all = all;
+      if (day !== undefined) lbTitle.day = day;
+    }).finally(() => { lbTitle.busy = false; });
+  }
+  if (!lbTitle.all && !lbTitle.day) return null;
+  return [lbTitle.all ? `#${lbTitle.all} all time` : '', lbTitle.day ? `#${lbTitle.day} today` : ''].filter(Boolean).join(' · ');
 }
 
 // ---------------- The leaderboard screen ----------------

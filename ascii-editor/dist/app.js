@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.140';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.141';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -56,7 +56,10 @@ const S = {
   ch2: null,
   activeSlot: 'draw',   // the selected chip in the tool panel: picking a character fills it ('draw' or 'right')            // the right-button character for Pencil and Brush (null = erase); Shift or right-click with the Picker sets it
   mirror: 'off',        // Pencil / Brush / Eraser paint a mirrored copy: off | h (left-right) | v (top-bottom) | both
-  mirrorUse: { pencil: true, brush: true, eraser: true },   // which tools mirror (the toggle in the bar; TOOLBAR.md 7)
+  mirrorUse: { pencil: true, brush: true, eraser: true, shade: true },   // which tools mirror (the toggle in the bar; TOOLBAR.md 7)
+  // Shade: darker / lighter, one step per cell per stroke. strength: how far a step goes (like a brush's opacity, %).
+  // set: 'all' (every character, by how much ink it has in the font) or a ramp's name. lines: replace line characters too
+  shade: { size: 3, tip: 'round', dir: 'dark', strength: 30, set: 'all', lines: false },
   panels: {},           // right-pane panels that are folded: { id: true }
   sideW: 0,             // the right pane's width, if you resized it (0 = the default)
   mirrorFlip: true,     // mirrored copies flip their characters (/ becomes \); off = the same characters
@@ -938,7 +941,7 @@ function typeChar(c) {
 }
 
 // ---------- painting ----------
-const toolSize = () => S.tool === 'pencil' ? S.pencil : S.brush;
+const toolSize = () => S.tool === 'pencil' ? S.pencil : S.tool === 'shade' ? S.shade : S.brush;
 function brushOffsets(size, tip) {
   const w = size, h = Math.max(1, Math.round(size * S.cw / S.ch));   // look square on tall cells
   const out = [];
@@ -1030,6 +1033,81 @@ function stamp(x, y, c, only) {
     if (c !== undefined) { putCell(lay, X, Y, c, only); continue; }
     const p = paintChar(X, Y, false);
     if (p !== undefined) putCell(lay, X, Y, p);
+  }
+  return blocked;
+}
+
+// ---------- Shade: darker / lighter (the user, 2026-10-25; a tool for now, maybe a Paint mode later) ----------
+// Every character has an ink amount (0 blank .. 1 the densest), measured in the editor's font. A step moves a cell's
+// ink toward full (darker) or toward blank (lighter) by the Strength, like painting at that opacity, then takes the
+// character closest to that. Line characters (\ / | - _ ( ) box lines, auto cells) are left alone unless Lines is on.
+const SHADE_LINE = /[\\/|\-_()<>\[\]{}]|[\u2500-\u257F]/;
+const isLineCh = c => SHADE_LINE.test(c);
+let inkCache = { font: '', map: new Map(), max: 0, all: null };
+let inkCanvas = null;
+function rawInk(c) {   // how many pixels a character covers, drawn big in the editor's font
+  if (!inkCanvas) inkCanvas = document.createElement('canvas');
+  const W = 40, H = 64;
+  inkCanvas.width = W; inkCanvas.height = H;
+  const g = inkCanvas.getContext('2d', { willReadFrequently: true });
+  g.clearRect(0, 0, W, H); g.fillStyle = '#000'; g.font = '48px "' + S.font + '", monospace'; g.textBaseline = 'middle'; g.textAlign = 'center';
+  g.fillText(c, W / 2, H / 2);
+  const d = g.getImageData(0, 0, W, H).data; let n = 0;
+  for (let i = 3; i < d.length; i += 4) n += d[i];
+  return n / 255;
+}
+function inkOf(c) {
+  if (c == null || c === ' ' || c === CLEAR) return 0;
+  if (inkCache.font !== S.font) inkCache = { font: S.font, map: new Map(), max: 0, all: null };
+  if (!inkCache.max) {   // the scale: the densest of the usual dark ones
+    for (const d of '@#%MW8B') inkCache.max = Math.max(inkCache.max, rawInk(d));
+    inkCache.max = inkCache.max || 1;
+  }
+  if (!inkCache.map.has(c)) inkCache.map.set(c, Math.min(1, rawInk(c) / inkCache.max));
+  return inkCache.map.get(c);
+}
+// What a stroke can turn a cell into: [character, ink] from lightest to darkest (blank first)
+function shadeSet() {
+  const sh = S.shade;
+  if (sh.set !== 'all') {
+    const r = allRamps().find(x => x.name === sh.set), cs = chars((r && r.set) || RAMPS.Classic).filter(c => c !== ' ');
+    return [[null, 0], ...cs.map((c, i) => [c, (i + 1) / cs.length])];
+  }
+  inkOf('.');   // (sets the cache up for this font)
+  if (!inkCache.all) {
+    const out = [];
+    for (let i = 33; i < 127; i++) { const c = String.fromCharCode(i); if (!isLineCh(c)) out.push([c, inkOf(c)]); }
+    inkCache.all = [[null, 0], ...out.sort((a, b) => a[1] - b[1])];
+  }
+  return inkCache.all;
+}
+// The next character for cur (null = blank). undefined leaves the cell as it is.
+function shadeChar(cur, dir) {
+  const sh = S.shade, s = clamp(sh.strength, 1, 100) / 100;
+  const blank = cur == null || cur === ' ' || cur === CLEAR;
+  if (cur === SOLID) return undefined;
+  const set = shadeSet(), here = set.find(([c]) => c === cur);
+  if (!blank && !here && !sh.lines && (isAuto(cur) || isLineCh(cur))) return undefined;   // (a ramp's own - or = are fine)
+  const d = blank ? 0 : here ? here[1] : isAuto(cur) ? 0.4 : inkOf(cur);
+  const target = dir === 'dark' ? d + s * (1 - d) : d - s * d;
+  let best = null;
+  for (const [c, v] of set) {
+    if (dir === 'dark' ? v <= d : v >= d) continue;   // a step always goes the right way
+    if (!best || Math.abs(v - target) < Math.abs(best[1] - target)) best = [c, v];
+  }
+  return best ? best[0] : undefined;
+}
+// One stamp of the Shade brush: each cell once per stroke (go over it again for another step)
+function shadeStamp(x, y, d) {
+  const lay = L(); let blocked = false;
+  const ts = toolSize();
+  for (const [dx, dy] of brushOffsets(ts.size, ts.tip)) {
+    const X = x + dx, Y = y + dy, k = K(X, Y);
+    if (!editable(X, Y)) { blocked = true; continue; }
+    if (d.done.has(k)) continue;
+    d.done.add(k);
+    const v = shadeChar(lay.cells.has(k) ? lay.cells.get(k) : null, d.dir);
+    if (v !== undefined) putCell(lay, X, Y, v);
   }
   return blocked;
 }
@@ -2259,7 +2337,7 @@ function render() {
   }
 
   // brush preview
-  if ((S.tool === 'pencil' || S.tool === 'brush' || S.tool === 'eraser') && S.hover && !S.drag) {
+  if ((S.tool === 'pencil' || S.tool === 'brush' || S.tool === 'eraser' || S.tool === 'shade') && S.hover && !S.drag) {
     ctx.strokeStyle = C['c-cursor']; ctx.globalAlpha = 0.7;
     const ts = toolSize();
     for (const [dx, dy] of brushOffsets(ts.size, ts.tip)) {
@@ -2366,6 +2444,7 @@ function cursorFor() {
     if (d.kind === 'shape') return curImage('cross', S.shape.kind);
     if (d.kind === 'paint' && d.right) return t === 'eraser' ? curImage('eraser', 'charA') : d.ch == null ? curImage('eraser') : curImage('fine', 'two');
     if (d.kind === 'paint' || d.kind === 'stroke') return curImage('fine', d.kind === 'stroke' ? 'wait' : mirrorOn() ? 'mirror' : null);
+    if (d.kind === 'shade') return curImage('fine', mirrorOn() ? 'mirror' : null);
   }
   if (S.spaceDown || t === 'hand') return 'grab';
   const mh = S.hoverPt && mirrorHandleAt(S.hoverPt.px, S.hoverPt.py);   // over a mirror line's handle: drag to move it
@@ -2389,6 +2468,11 @@ function cursorFor() {
   }
   if (t === 'type') return 'text';
   if (t === 'font') return c && textLayerAt(c) >= 0 ? move() : 'text';   // over text: click edits it, drag moves it; elsewhere: new text
+  if (t === 'shade') {
+    if (blocked) return 'not-allowed';
+    if (m.shift && S.lastPaint) return curImage('fine', 'line');
+    return curImage('fine', mirrorOn() ? 'mirror' : null);
+  }
   if (t === 'pencil' || t === 'brush' || t === 'eraser') {
     if (blocked) return 'not-allowed';
     if (m.alt && t !== 'eraser') return curImage('picker', null, false, 'cell');
@@ -2431,7 +2515,7 @@ function inFloat(c) { const f = S.float; return f && c.x >= f.x && c.y >= f.y &&
 
 // The right button works with these tools: Block (3D), Pencil / Brush (the right-button character), Eraser (only the
 // brush character), Picker (picks the right-button character)
-const rightButtonTool = () => ['block', 'pencil', 'brush', 'eraser', 'picker'].includes(S.tool);
+const rightButtonTool = () => ['block', 'pencil', 'brush', 'eraser', 'picker', 'shade'].includes(S.tool);
 vp.addEventListener('pointerdown', e => {
   if (S.spring) S.spring.used = true;   // a held tool key was used: letting go of it goes back
   if (e.button === 2 && !rightButtonTool()) return;
@@ -2447,7 +2531,7 @@ vp.addEventListener('pointerdown', e => {
   const t = S.tool;
   const mh = e.button === 0 && mirrorHandleAt(px, py);   // grab a mirror line by its handle
   if (mh) { S.drag = { kind: 'mirror', axis: mh }; redraw(); return; }
-  if (!S.float && ['pencil', 'brush', 'eraser', 'shape', 'fill'].includes(t) && textLock({ pencil: 'Drawing', brush: 'Painting', eraser: 'Erasing', shape: 'Drawing', fill: 'Filling' }[t])) return;
+  if (!S.float && ['pencil', 'brush', 'eraser', 'shape', 'fill', 'shade'].includes(t) && textLock({ pencil: 'Drawing', brush: 'Painting', eraser: 'Erasing', shape: 'Drawing', fill: 'Filling', shade: 'Shading' }[t])) return;
   if ((t === 'move' || (t === 'select' && (e.ctrlKey || e.metaKey))) && !S.float && textLocked()) {   // a protected text layer moves whole
     const l = L(); pushUndo(); S.sel = null; S.drag = { kind: 'textmove', id: l.id, sx: c.x, sy: c.y, ox: l.text.x, oy: l.text.y }; redraw(); return;
   }
@@ -2486,6 +2570,16 @@ vp.addEventListener('pointerdown', e => {
     }
   } else if (t === 'type') {
     commitFloat(); setCursor(c.x, c.y);
+  } else if (t === 'shade') {
+    // darker (or lighter: the setting); Alt or the right button: the other way. Shift-click: a straight line
+    commitFloat(); pushUndo();
+    const flip = e.altKey || e.button === 2, dir = (S.shade.dir === 'dark') !== flip ? 'dark' : 'light';
+    const d = { kind: 'shade', lx: c.x, ly: c.y, dir, done: new Set(), warned: false };
+    let blocked = false;
+    if (e.shiftKey && S.lastPaint) line(S.lastPaint.x, S.lastPaint.y, c.x, c.y, (x, y) => { if (shadeStamp(x, y, d)) blocked = true; });
+    else blocked = shadeStamp(c.x, c.y, d);
+    if (blocked) { warnOutside('Shading'); d.warned = true; }
+    S.drag = d; changed();
   } else if ((t === 'pencil' || t === 'brush' || t === 'fill') && e.altKey) {   // hold Alt: pick a character without leaving the tool
     const got = pickAt(c, 'all') || CLEAR;   // an empty cell is Clear
     pickInto(got); toast(`${S.activeSlot === 'draw' ? 'Primary' : 'Secondary'}: ${chName(got)}`);
@@ -2591,6 +2685,10 @@ vp.addEventListener('pointermove', e => {
       S.float.x = d.fx + dx; S.float.y = d.fy + dy;
     }
     if (d.kind === 'outline' && moved) { S.sel = shiftSet(d.base, c.x - d.sx, c.y - d.sy); }
+    if (d.kind === 'shade' && moved) {
+      line(d.lx, d.ly, c.x, c.y, (x, y) => { if (shadeStamp(x, y, d) && !d.warned) { d.warned = true; warnOutside('Shading'); } });
+      d.lx = c.x; d.ly = c.y; changed();
+    }
     if (d.kind === 'paint' && moved) {
       line(d.lx, d.ly, c.x, c.y, (x, y) => { if (stamp(x, y, d.ch, d.only) && !d.warned) { d.warned = true; warnOutside(d.what); } });
       d.lx = c.x; d.ly = c.y; changed();
@@ -2606,7 +2704,7 @@ function endDrag() {
   }
   const d = S.drag; S.drag = null;
   if (!d) return;
-  if (d.kind === 'paint') S.lastPaint = { x: d.lx, y: d.ly };
+  if (d.kind === 'paint' || d.kind === 'shade') S.lastPaint = { x: d.lx, y: d.ly };
   if (d.kind === 'mirror') { changed(); renderOptions(); }   // saved with the document; Center can be used now
   if (d.kind === 'rect') {
     if (d.ax === d.cx && d.ay === d.cy && d.mode === 'new') { S.sel = null; updateInfo(); }   // a plain click deselects
@@ -2792,6 +2890,7 @@ window.addEventListener('keydown', e => {
     case 'f': case 'F': setTool('font'); break;
     case 's': case 'S': if (S.tool === 'pencil') { S.pencil.smart = !S.pencil.smart; savePrefs(); renderOptions(); toast(S.pencil.smart ? 'Smart line: ' + SMART_STYLES[S.pencil.style] : 'Character'); } break;
     case 'e': case 'E': setTool('eraser'); break;
+    case 'r': case 'R': setTool('shade'); break;
     case 'i': case 'I': setTool('picker'); break;
     case 'h': case 'H': setTool('hand'); break;
     case 'z': case 'Z': setTool('zoom'); break;
@@ -2816,7 +2915,7 @@ function nudge(dx, dy, ctrl) {
   else if (S.tool === 'select') { if (S.float) commitFloat(); moveOutline(dx, dy); }
   else if (S.float) moveFloat(dx, dy);
 }
-const SPRING_KEYS = ['m', 'w', 'v', 'p', 'b', 'e', 'u', 'g', 'i', 'h', 'z'], SPRING_MS = 400;
+const SPRING_KEYS = ['m', 'w', 'v', 'p', 'b', 'e', 'r', 'u', 'g', 'i', 'h', 'z'], SPRING_MS = 400;
 window.addEventListener('keyup', e => {
   const sp = S.spring;
   if (sp && e.key.toLowerCase() === sp.key) {
@@ -3354,7 +3453,7 @@ function savePrefs() {
   try {
     const tb = $('#toolbox');
     localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid, showSolid: S.showSolid,
-      brush: S.brush, pencil: S.pencil, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, activeSlot: S.activeSlot, mirrorUse: S.mirrorUse, panels: S.panels, sideW: S.sideW, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, showAuto: S.showAuto, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
+      brush: S.brush, pencil: S.pencil, shade: S.shade, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, activeSlot: S.activeSlot, mirrorUse: S.mirrorUse, panels: S.panels, sideW: S.sideW, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, protectText: S.protectText, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, showAuto: S.showAuto, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || null; } catch { return null; } }
@@ -3539,6 +3638,8 @@ const HELP = {
     keys: [['Shift', 'click: a straight line from the last stroke'], ['Alt', 'click: pick a character'], ['Right', 'paint the Secondary character'], ['[ ]', 'size'], ['X', 'swap Primary and Secondary']] },
   eraser: { sum: 'Drag to erase on the active layer.',
     keys: [['Shift', 'click: a straight line from the last stroke'], ['Right', 'erase only the Primary character'], ['[ ]', 'size']] },
+  shade: { sum: 'Drag to make characters darker (or lighter), one step a stroke, like painting at the Strength. Go over it again for more.',
+    keys: [['Alt', 'the other way (lighter / darker)'], ['Right', 'the other way'], ['Shift', 'click: a straight line from the last stroke'], ['[ ]', 'size']] },
   shape: { sum: 'Drag to draw the shape. Polygon: click the corners.',
     keys: [['Enter', 'Polygon: finish it open'], ['Backspace', 'Polygon: take back a point'], ['Esc', 'Polygon: cancel']],
     drag: [['Shift', 'square / circle / straight'], ['Alt', 'from the center'], ['Space', 'move it']] },
@@ -4513,8 +4614,8 @@ function bindShapeOptions(o) {
   $$('[data-shapek]', o).forEach(b => b.addEventListener('click', () => { S.shape.kind = b.dataset.shapek; S.poly = null; savePrefs(); renderOptions(); redraw(); }));
 }
 // The tools that can mirror what they do (each has a "uses mirror" toggle in the bar; the lines are set up in Symmetry)
-const MIRROR_TOOLS = ['select', 'move', 'type', 'font', 'pencil', 'brush', 'eraser', 'shape', 'block', 'fill'];
-const TOOL_NAMES = { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Brush', font: 'Font', shape: 'Shape', block: 'Block', eraser: 'Eraser', fill: 'Fill', picker: 'Picker', hand: 'Hand', zoom: 'Zoom' };
+const MIRROR_TOOLS = ['select', 'move', 'type', 'font', 'pencil', 'brush', 'eraser', 'shade', 'shape', 'block', 'fill'];
+const TOOL_NAMES = { select: 'Select', move: 'Move', type: 'Type', pencil: 'Pencil', brush: 'Brush', font: 'Font', shape: 'Shape', block: 'Block', eraser: 'Eraser', shade: 'Shade', fill: 'Fill', picker: 'Picker', hand: 'Hand', zoom: 'Zoom' };
 const toolName = () => S.tool === 'select' && S.selShape === 'wand' ? 'Magic wand' : TOOL_NAMES[S.tool] || '';
 const paintUsed = () => S.tool === 'brush' || S.tool === 'fill' || (S.tool === 'shape' && S.shape.fill && S.shape.kind !== 'line');
 // The settings bar (one row: the tool's main settings), its … menu (the secondary ones), and the Paint and Symmetry
@@ -4571,6 +4672,7 @@ function pickChoice(key, v) {
   if (key === 'shapestyle') { S.shape[S.shape.kind] = v; savePrefs(); renderOptions(); redraw(); }
   else if (key === 'flayout') setFigFont(S.figfont.name, v);
   else if (key === 'fws') setFigFont(S.figfont.name, S.figfont.layout, v);
+  else if (key === 'shset') { S.shade.set = v; savePrefs(); renderOptions(); }
 }
 document.addEventListener('pointerdown', e => { if (!e.target.closest('#choiceMenu, [data-choice]')) closeChoice(); });
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#choiceMenu').hidden) { closeChoice(); e.stopImmediatePropagation(); } }, true);
@@ -4614,6 +4716,14 @@ function renderOptions() {
   }
   if (t === 'brush') { brushStrokeOptions(add); add(sizeCtl()); }
   if (t === 'eraser') add(sizeCtl() + tipCtl());
+  if (t === 'shade') {
+    const sh = S.shade;
+    add('<span class="seg"><button class="btn' + (sh.dir === 'dark' ? ' on' : '') + '" data-shdir="dark" title="Each stroke makes characters denser (Alt: lighter)">Darker</button><button class="btn' + (sh.dir === 'light' ? ' on' : '') + '" data-shdir="light" title="Each stroke makes characters lighter, down to blank (Alt: darker)">Lighter</button></span>');
+    add(sep + stepper('Strength', 'data-shstr="-10"', '<span class="bminv">' + sh.strength + '%</span>', 'data-shstr="10"', "How far one step goes, like a brush's opacity: 30% moves a cell 30% of the way to solid (or to blank)"));
+    add(sep + sizeCtl() + tipCtl());
+    add(sep + choiceBtn('shset', 'The characters it steps through: every character (by how much ink it has), or a ramp', [['all', 'All characters'], ...allRamps().map(r => [r.name, r.name])], sh.set));
+    add(sep + well('<button class="btn' + (sh.lines ? ' on' : '') + '" data-shlines title="' + (sh.lines ? 'Line characters (\\ / | - _ box lines) get shaded too' : 'Line characters (\\ / | - _ box lines) are left alone') + '">Lines</button>'));
+  }
   if (t === 'shape') shapeOptions(add);
   if (t === 'block') blockOptions(add);
   if (t === 'fill') add(well(togBtn('fillContig', 'contig', 'Contiguous: on, the connected area; off, every cell with that character (Shift-click does the other one)')) + sep + lookAt('data-sample', S.fillSample, 'Fill the area as it is on'));
@@ -4676,6 +4786,9 @@ function bindOptions(o) {
     obj[last] = !obj[last]; savePrefs(); renderOptions(); redraw();
   }));
   $$('[data-choice]', o).forEach(b => b.addEventListener('click', () => openChoice(b)));
+  $$('[data-shdir]', o).forEach(b => b.addEventListener('click', () => { S.shade.dir = b.dataset.shdir; savePrefs(); renderOptions(); }));
+  $$('[data-shstr]', o).forEach(b => b.addEventListener('click', () => { S.shade.strength = clamp(S.shade.strength + +b.dataset.shstr, 10, 100); savePrefs(); renderOptions(); }));
+  $$('[data-shlines]', o).forEach(b => b.addEventListener('click', () => { S.shade.lines = !S.shade.lines; savePrefs(); renderOptions(); }));
   $$('[data-blank]', o).forEach(b => b.addEventListener('click', () => { S.spacesErase = b.dataset.blank === '1'; savePrefs(); renderOptions(); redraw(); }));
   const sf = $('.selfixed', o); if (sf) sf.addEventListener('change', () => { S.selFixed = sf.checked; sf.blur(); savePrefs(); });
   const sc = $('.selcenter', o); if (sc) sc.addEventListener('change', () => { S.selCenter = sc.checked; sc.blur(); savePrefs(); });
@@ -5131,6 +5244,8 @@ function start() {
   if (Array.isArray(p.myShapes)) S.myShapes = p.myShapes.filter(m => m && typeof m.name === 'string' && Array.isArray(m.cells));
   if (p.galWs && ['clear', 'shape', 'box'].includes(p.galWs.mode)) S.galWs = { mode: p.galWs.mode, gap: clamp(p.galWs.gap | 0, 0, 4) };
   if (p.figfont && (window.ASXII_FONTS || {})[p.figfont.name]) S.figfont = { name: p.figfont.name, layout: ['default', 'full', 'fit', 'smush'].includes(p.figfont.layout) ? p.figfont.layout : 'default', ws: ['inside', 'block'].includes(p.figfont.ws) ? p.figfont.ws : 'clear', ls: clamp(p.figfont.ls | 0, -3, 20), lh: clamp(p.figfont.lh | 0, -30, 20) };
+  if (p.shade) S.shade = { size: clamp(Math.round(+p.shade.size) || 3, 1, 25), tip: p.shade.tip === 'square' ? 'square' : 'round', dir: p.shade.dir === 'light' ? 'light' : 'dark',
+    strength: clamp(Math.round((+p.shade.strength || 30) / 10) * 10, 10, 100), set: typeof p.shade.set === 'string' ? p.shade.set : 'all', lines: !!p.shade.lines };
   if (p.pencil) S.pencil = { size: clamp(Math.round(+p.pencil.size) || 1, 1, 25), tip: p.pencil.tip === 'round' ? 'round' : 'square', smart: !!p.pencil.smart, style: SMART_STYLES[p.pencil.style] ? p.pencil.style : 'ascii' };
   renderSlots();
   S.spacesErase = !!p.spacesErase;
@@ -5174,7 +5289,7 @@ function start() {
 }
 
 // Hooks for the headless self-test (index.html?selftest)
-window.asxii = { S, CMDS, loadStart, showWelcome, loadB3Example, openB3Examples, placeBlocksInView, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
+window.asxii = { S, CMDS, shadeChar, shadeSet, shadeStamp, inkOf, L, K, loadStart, showWelcome, loadB3Example, openB3Examples, placeBlocksInView, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
   undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render,
   AUTO_SETS, autoOf, autoThumb, glyphAt, resolveAt, compositeRaw, copyRaw, bakeAuto, makeAuto, autoPreview, setSlot, pickAt };

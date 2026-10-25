@@ -6,6 +6,12 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **Small batch** (v13.18, 2026-10-25). BLACKOUT's boss layer now and then says `it is pitch black. a grue is near.`;
+  pick screens tag offers `mod` / `mod+`; the game-over screen scrolls your mods and items with the map; the title shows
+  your board rank; and the hosted game offers `[ vX is out: UPDATE ]` when a newer build is uploaded (upload
+  `dist/version.json` with the rest of `dist/`). My test runs put a few scores on the **dev** boards: the dashboard's
+  "clear dev data" (dev / testing view) cleans them up.
+
 - [ ] **The new editor: `tools/neon_editor.html`** (v13.17, 2026-10-25). Open it in Chrome. MUSIC mode (the default):
   click a corp, the game on the left shows one of its layers and plays its track. If there's no sound, click the game
   once (browsers want a click inside the frame). Try: up / down through the corps, the level buttons (and "game"), the

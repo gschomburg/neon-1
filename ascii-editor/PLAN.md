@@ -63,6 +63,17 @@ flatten / merge down. A floating selection (below) already works like a temporar
   static `#%&@`, glitch `/\|-_`, the game's own noise characters), and weights (some characters more often). Great for
   texture, static, and glitch fills.
 
+- **Shade** (the user, 2026-10-25; BUILT v0.141 as its own tool, key R): a brush that makes what's there lighter or
+  darker instead of painting a set character, like drawing at an opacity: `.` becomes `;` going darker, the other way
+  going lighter. The user's notes: a ramp of all the characters light to dark, an opacity slider, a toggle for whether it
+  replaces line characters like `\`; it could open up other draw modes. As built: every printable character gets an ink
+  amount measured in the editor's font; Strength (10-100%) is the opacity (a step moves a cell that far toward solid or
+  blank, then takes the closest character, always at least one step); Darker / Lighter (Alt or the right button: the
+  other way); each cell steps once per stroke; Characters: All (by ink) or any ramp; Lines off leaves `\ / | - _ ( )`,
+  box lines and auto cells alone. **Later (the user):** it probably ends up as a mode of the Paint panel (next to
+  Character / Noise / Pattern / Ramp) more than its own tool. Ideas: dither (random cells per stroke), build-up while
+  held, shading a selection or the whole layer at once.
+
 ## How the conversion picks characters
 
 *(Claude)* Sample each path about 8 points per cell, noting where in the cell each point falls and which way

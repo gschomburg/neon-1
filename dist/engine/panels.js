@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.17']);
+NEON_FILES.push(['engine/panels.js', 'v13.18']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -208,7 +208,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
       X({
         list: true, id: 'opt' + i, onTap: () => { sel = i; Sound.tick(); },
         sel: i === sel, badge: o.key, badgeTier: v.tier, name: v.name + (up ? ' +' : ''), col: mc, faded: locked,
-        right: up ? `> ${tierLabel(v)}` : tierLabel(v), rightCol: mc, rightChips: true,
+        right: `${((up ? '> ' : '') + tierLabel(v)).padStart(6)} ${up ? 'mod+' : 'mod '}`, rightCol: mc, rightChips: true,   // says it's a mod (mod+: an upgrade), like the market
         reveal: i, revealId: 'opt' + i, rarity: v.rarity, seenKey: o.key,
       });
     });

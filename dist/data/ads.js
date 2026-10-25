@@ -1,6 +1,6 @@
 // NeoN+1 data/ads.js: the fake ads: their screens, text and art. (Shown by engine/ads.js.)
 'use strict';
-NEON_FILES.push(['data/ads.js', 'v13.17']);
+NEON_FILES.push(['data/ads.js', 'v13.18']);
 
 // An ad is 1 or 2 screens. A screen is a list of lines, up to ADS_W characters, drawn inside
 // the ad box from the top. A line: { t: text, c: color (a palette slot: text, dim, mid, bright,

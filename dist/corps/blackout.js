@@ -1,6 +1,6 @@
 // NeoN+1 corps/blackout.js
 'use strict';
-NEON_FILES.push(['corps/blackout.js', 'v13.17']);
+NEON_FILES.push(['corps/blackout.js', 'v13.18']);
 // Its boss mod: FLARE (flare), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -41,14 +41,16 @@ CORPS.blackout = {
     const e = g * (2 - g);
     return { gc: mixHex(C.text, PAL_LIT.bright, e), fc: mixHex(C.mid, PAL_LIT.text, e) };
   },
-  hint(lv) {
+  hint(lv, now = performance.now()) {
     const d = lv.dark || 0, bars = Math.round((1 - d) * 8);
+    // nearly black (the boss): now and then, Zork's grue (the user, 2026-10-23)
+    if (d > 0.7 && (now - (lv.shownAt || 0)) % 9000 > 6500) return { text: 'it is pitch black. a grue is near.', col: C.danger };
     return { text: `power [${'#'.repeat(bars).padEnd(8, '.')}]`, col: d > 0.5 ? C.danger : C.mid };
   },
 };
 
 // the codex, once you've beaten it
-CORP_TELL.blackout = "when the lights flash (a layer opening, every ICE hit), every node lights up and fades. the real node glows longest. deeper, a decoy glows long too. it gets darker every layer; the nodes you hit stay red.";
+CORP_TELL.blackout = "when the lights flash (a layer opening, every ICE hit), every node lights up and fades. the real node glows longest. deeper, a decoy glows long too. it gets darker every layer; the nodes you hit stay red. (in the dark, you are likely to be eaten by a grue.)";
 
 // intro art
 CORP_ART.blackout = [

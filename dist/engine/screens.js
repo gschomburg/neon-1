@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.17']);
+NEON_FILES.push(['engine/screens.js', 'v13.18']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -111,6 +111,7 @@ function titleLines(now) {
   lines.push(...titleArtLines(now));
   T('network intrusion // prototype', C.dim);
   if (st.fileWarn) { T(st.fileWarn, C.danger); T('reload, or upload the files again.', C.danger); }   // version stamps (boot)
+  if (st.newVersion) lines.push({ text: `[ ${st.newVersion} is out: UPDATE ]`, id: 'update', onTap: updateGame, col: C.accent });   // boot.js
   T('');
   const saved = st.savedRun;
   if (saved) lines.push({ box: true, text: 'C O N T I N U E', sub: `- sector ${(saved.run.sector || 0) + 1}  layer ${pad2(saved.run.depth)} -`, id: 'start', onTap: resumeRun, minW: 26 });
@@ -132,6 +133,7 @@ function titleLines(now) {
   T('');
   { const prof = profile(); lines.push({ text: `[ ${logoMark(prof.logo)} ${prof.name} ]`, id: 'profile', style: styleOf(prof.style), onTap: () => swapTo(openProfile) }); }
   T(`best ${pad2(save.best)}  runs ${save.runs}  wins ${save.wins}  rep ${save.rep || 0}`, C.mid);
+  { const b = lbTitleLine(); T(b ? `board: ${b}` : '', C.money); }   // engine/leaders.js (its row is kept, so nothing jumps)
   // Seed: tap to roll a new one.
   lines.push({ gap: 1, row: [
     { text: 'seed' },
@@ -253,12 +255,13 @@ function overLines() {
     const txt = `breached ${marks || 'none'}`;
     lines.push({ text: txt, colorAt: i => i < 9 ? C.mid : marks ? C.accent : C.dim }); }
   T('');
-  // mods, drawn like the tray
+  // mods (drawn like the tray) and items: they scroll together with the map below them (the user, 2026-10-22)
+  const extras = [];
   if (r.mods.length) {
-    for (let i = 0; i < r.mods.length; i += 5) lines.push({ gap: 2, row: r.mods.slice(i, i + 5).map(k => ({ badge: k, plain: true, tier: r.modTier[k] || 0 })) });
-  } else T('no mods: a naked run', C.dim);
-  lines.push(r.items.length ? { gap: 1, row: r.items.map(x => ({ text: itemLabel(x), chip: itemView(x.key, x.tier).rarity })) } : { text: 'no items', col: C.dim });
-  T('');
+    for (let i = 0; i < r.mods.length; i += 5) extras.push({ gap: 2, row: r.mods.slice(i, i + 5).map(k => ({ badge: k, plain: true, tier: r.modTier[k] || 0 })) });
+  } else extras.push({ text: 'no mods: a naked run', col: C.dim });
+  extras.push(r.items.length ? { gap: 1, row: r.items.map(x => ({ text: itemLabel(x), chip: itemView(x.key, x.tier).rarity })) } : { text: 'no items', col: C.dim });
+  extras.push({ text: '' });
   // the bottom: the leaderboard block (ranks, initials, UPLOAD) until you upload, then the buttons
   const lb = lbOverLines(), lbOpen = lb && !(st.lbPost && st.lbPost.uploaded);
   const bottom = [...(lb || []), ...(lbOpen ? [] : [
@@ -266,16 +269,22 @@ function overLines() {
     { text: '[ RETRY SEED ]', id: 'retry', onTap: retry },
     { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
   ])];
-  // the map, with the path you took (scrolls when it's taller than the space left)
+  // the scrolling area: the mods and items, then the map with the path you took
   const rest = 1 + bottom.reduce((a, ln) => a + (ln.box ? (ln.sub ? 4 : 3) : 1), 0);   // gap + the bottom
   const used = lines.reduce((a, ln) => a + (ln.box ? 3 : 1), 0);
-  const view = clamp(L.hc - 2 - used - rest, 5, mapRows(r.map));
+  const E = extras.length, total = E + mapRows(r.map);
+  const view = clamp(L.hc - 2 - used - rest, 5, total);
   const om = st.overMap || (st.overMap = { top: null });
-  const atRow = mapRowOf(r.map[r.at], r.map);
-  if (om.top == null) om.top = atRow - Math.floor(view / 2);
-  om.top = clamp(om.top, 0, mapRows(r.map) - view);
-  om.view = view;
-  lines.push({ mapView: true, h: view, top: om.top, r });
+  const atRow = E + mapRowOf(r.map[r.at], r.map);
+  if (om.top == null) om.top = atRow - view + 2;   // as high as it goes with where the run ended in view: the mods first
+  om.top = clamp(om.top, 0, total - view);
+  om.view = view; om.total = total;
+  const shown = extras.slice(om.top, om.top + view);
+  if (shown.length && om.top > 0) shown[0] = Object.assign({}, shown[0], { arrowUp: true });   // more above
+  const mapH = view - shown.length;
+  if (!mapH && shown.length) shown[shown.length - 1] = Object.assign({}, shown[shown.length - 1], { arrowDown: true });
+  lines.push(...shown);
+  if (mapH) lines.push({ mapView: true, h: mapH, top: Math.max(0, om.top - E), r, above: om.top > 0 && !shown.length });
   T('');
   lines.push(...bottom);
   return lines;

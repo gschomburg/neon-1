@@ -3,7 +3,7 @@
 //   node tools/bump.js v12.01      (or: node tools/bump.js minor / major)
 //   node tools/bump.js music       (only: refresh the corp file lists in tools/music.html and tools/neon_editor.html)
 //
-// Updates VERSION in dist/engine/core.js, the stamp line at the top of every game file
+// Updates VERSION in dist/engine/core.js, dist/version.json, the stamp line at the top of every game file
 // (NEON_FILES.push([..., 'v12.01'])), and the ?v= on every local script link in dist/index.html
 // (so phones fetch the new files), palettes.js included (the palette editor writes the stamp it
 // gets from the game, so reload the editor after a bump).
@@ -46,6 +46,8 @@ walk(DIST);
 fs.writeFileSync(core, fs.readFileSync(core, 'utf8').replace(/const VERSION = 'v[\d.]+';/, `const VERSION = '${v}';`));
 const html = path.join(DIST, 'index.html');
 fs.writeFileSync(html, fs.readFileSync(html, 'utf8').replace(/(<script src="(?!https?:)[^"?]+)\?v=[\d.]+"/g, `$1?v=${num}"`));
-console.log(`build ${v}: VERSION, ${n} file stamps, and the script links.`);
+// dist/version.json: the hosted game checks it and offers an update when the server has a newer build
+fs.writeFileSync(path.join(DIST, 'version.json'), JSON.stringify({ version: v }) + String.fromCharCode(10));
+console.log(`build ${v}: VERSION, ${n} file stamps, the script links and version.json.`);
 syncMusicTool();
 if (min === 0) console.log(`new major: give it a new save slot (STORE_KEY in engine/core.js, beta_runner.v${maj}.save) and copy the old one over, like v12 does.`);

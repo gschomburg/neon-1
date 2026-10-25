@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.17']);
+NEON_FILES.push(['engine/run.js', 'v13.18']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -1425,7 +1425,7 @@ function grantLoot(r, tier) {
   // an item (more often with a higher STASH), at a rolled tier, if there's room
   if (r() < (has('stash') ? tv('stash', [0.4, 0.6, 1]) : 0.4)) {
     const key = pickR(Object.keys(ITEMS), r), tier = rollTier(r, ITEMS[key]);
-    if (addItem(key, tier)) return `got ${ITEMS[key].name}${tier ? ' ' + RARITY[itemView(key, tier).rarity].label.toLowerCase() : ''}.`;
+    if (addItem(key, tier)) return `got item: ${ITEMS[key].name}${tier ? ' ' + RARITY[itemView(key, tier).rarity].label.toLowerCase() : ''}.`;
   }
   const cr = Math.round(12 + tier * 8 + r() * 12);
   run.credits += cr; run.earned += cr;
@@ -1519,7 +1519,7 @@ async function endRun(win) {
   {
     const scrollMap = d => {
       const om = st.overMap; if (!om || om.view == null) return;
-      const t = clamp(om.top + d, 0, mapRows(st.result.map) - om.view);
+      const t = clamp(om.top + d, 0, (om.total || mapRows(st.result.map)) - om.view);
       if (t !== om.top) { om.top = t; Sound.tick(); }
     };
     st.scroll = scrollMap;

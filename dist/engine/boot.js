@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v13.17']);
+NEON_FILES.push(['engine/boot.js', 'v13.18']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -64,6 +64,21 @@ try {
   const bad = want.filter(f => got.get(f) !== VERSION);
   if (bad.length) st.fileWarn = `${bad.length} game file${bad.length > 1 ? 's' : ''} not ${VERSION}: ${bad[0]}${bad.length > 1 ? '...' : ''}`;
 } catch (e) { /* no document (tests) */ }
+// A newer build on the server (dist/version.json, written by tools/bump.js): the title offers an update.
+// Checked a few seconds after load, when you come back to the tab, and every 10 minutes. Not from a file.
+const verNum = v => { const [a, b] = String(v).replace('v', '').split('.').map(n => parseInt(n, 10) || 0); return a * 1000 + b; };
+let verCheckAt = 0;
+function checkVersion(force) {
+  if (location.protocol === 'file:' || EDITOR || (!force && Date.now() - verCheckAt < 60000)) return;
+  verCheckAt = Date.now();
+  fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+    .then(d => { if (d && verNum(d.version) > verNum(VERSION)) st.newVersion = d.version; }).catch(() => {});
+}
+// the update: load the page again past the cache (the new index.html brings new ?v= tags for every file)
+function updateGame() { const u = new URL(location.href); u.searchParams.set('u', Date.now()); location.replace(u.toString()); }
+setTimeout(() => checkVersion(true), 4000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkVersion(); });
+setInterval(() => checkVersion(true), 600000);
 showTitle();
 if (!EDITOR && !params.get('room') && !params.get('nointro')) startIntro();   // the boot / login intro over the title
 // A shared room link (?room=CODE): straight to multiplayer, code filled in, and join.

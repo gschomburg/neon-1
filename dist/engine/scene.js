@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.17']);
+NEON_FILES.push(['engine/scene.js', 'v13.18']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -785,7 +785,7 @@ function drawMapView(ctx, y, ln) {
   // more above / below: arrows in both margins (clear of the nodes)
   const blink = Math.floor(performance.now() / 600) % 2 ? C.mid : C.dim;
   const first = ln.k == null || ln.k === 0, last = ln.k == null || ln.k === h - 1;
-  if (top > 0 && first) { put(0, y, '^', blink, 'board'); put(L.wc - 1, y, '^', blink, 'board'); }
+  if ((top > 0 || ln.above) && first) { put(0, y, '^', blink, 'board'); put(L.wc - 1, y, '^', blink, 'board'); }
   if (top + h < mapRows(map) && last) { put(0, y + h - 1, 'v', blink, 'board'); put(L.wc - 1, y + h - 1, 'v', blink, 'board'); }
 }
 
@@ -985,6 +985,8 @@ function buildTextBoard(ctx, lines, area = null) {
       if (collectHits && !st.revealed.has(rid)) { st.revealed.add(rid); popFx(ln, y); }
     }
     const startIdx = cells.length;
+    // a scrolling area's first / last line: arrows in both margins when there's more (the game-over screen)
+    if (ln.arrowUp || ln.arrowDown) { const ch = ln.arrowUp ? '^' : 'v', blink = Math.floor(now / 600) % 2 ? C.mid : C.dim; put(0, y, ch, blink, 'board'); put(L.wc - 1, y, ch, blink, 'board'); }
 
     if (ln.box) drawBox(ctx, y, ln);
     else if (ln.tileInfo) {

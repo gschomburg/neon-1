@@ -116,6 +116,7 @@ Main settings sit in the bar; secondary ones in the **…** menu. Every tool tha
 | Pencil | Character / Smart, Style (Smart), Size | Tip |
 | Brush | Brush ▾ (presets, Customize), Size | |
 | Eraser | Size | Tip |
+| Shade (v0.141) | Darker / Lighter, Strength, Size, Tip, Characters (All / a ramp), Lines | |
 | Shape | Shape kind, Style | Fixed aspect, From center, Fill inside |
 | Block | Angle, Show (ASCII / Shapes) | Block size |
 | Fill | Contiguous | Look at |
