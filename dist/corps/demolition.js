@@ -1,12 +1,17 @@
 // NeoN+1 corps/demolition.js
 'use strict';
-NEON_FILES.push(['corps/demolition.js', 'v13.13']);
+NEON_FILES.push(['corps/demolition.js', 'v13.15']);
 // Its boss mod: CONTROLLED BLAST (blast), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.wreckingball = { name: 'WRECKING BALL', bpm: 100, root: 38, scale: 'minor',   prog: [0, 6, 5, 4], bass: 'eighths', drums: 'heavy', arp: 'up' };
-MUSIC_FOR.demolition = 'wreckingball';
+// Made from MACHINE HEART: the same band, its own tune.
+SONGS.impact = { name: 'IMPACT', from: 'machineheart', bpm: 120, root: 41, scale: 'phrygian', prog: [0, 0, 6, 1], kit: 'industrial', pump: 0.2, padVoice: 'choir', breakdown: 4,
+  beat: { kick: 'x..x....x..x....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassVoice: 'picked', bassLine: '0 0 . 0 0 . 0 . 0 0 . 0 0 . 1 .', stab: 'x..x..x.........', stabVoice: 'saw', stabAt: 2,
+  melody: ['. . . . . . . . 7 - - - 8 - 7 -', '. . . . . . . . 4 - - - - - - -', '. . . . . . . . 7 - - - 8 - 10 -', '. . . . . . . . 8 - - - 7 - - -'],
+  leadVoice: 'dist', arpVoice: 'pluck', arpLine: '0 . . 0 . . 0 . 1 . . 1 . . 2 .' };
+MUSIC_FOR.demolition = 'impact';
 
 // ---- the corp
 CORPS.demolition = {

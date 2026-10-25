@@ -1,6 +1,6 @@
 // NeoN+1 corps/spectra.js
 'use strict';
-NEON_FILES.push(['corps/spectra.js', 'v13.13']);
+NEON_FILES.push(['corps/spectra.js', 'v13.15']);
 // Its boss mod: PRISM (prism), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -12,8 +12,13 @@ const RAINBOW = [
 ];
 
 // ---- its music
-SONGS.prismatic = { name: 'PRISMATIC',      bpm: 112, root: 49, scale: 'dorian',   prog: [0, 2, 4, 5], bass: 'offbeat', drums: 'four',  arp: 'mirror', pingpong: true };
-MUSIC_FOR.spectra = 'prismatic';
+// Made from SLOW TIDE: the same band, its own tune.
+SONGS.lightleak = { name: 'LIGHT LEAK', from: 'slowtide', bpm: 88, root: 49, scale: 'major', prog: [0, 3, 5, 4], kit: 'break', pump: 0, swing: 0.1, padVoice: 'glass', echo: 0.45, feedback: 0.45,
+  beat: { kick: 'x.......x.x.....', snare: '....x.......x...', ghost: '.......x.....x..', hat: '..x...x...x...x.' },
+  bassVoice: 'sub', bassLine: '0 - - - - - - - 4 - - - - - - -',
+  melody: ['. . . . 4 - - - 2 - . . 4 - - -', '. . . . 5 - - - 4 - . . 2 - - -', '. . . . 7 - - - 5 - . . 4 - - -', '. . . . 4 - - - 1 - - - . . . .'],
+  melodyAt: 0, melodyOct: -1, leadVoice: 'keys', arpVoice: 'bell', arpLine: '0 . 2 . 4 . 5 . 4 . 2 . 1 . 2 .' };
+MUSIC_FOR.spectra = 'lightleak';
 
 // ---- the corp
 // ---- Tier 2, group 6: node colors (each color also has its own shape, for color-blind

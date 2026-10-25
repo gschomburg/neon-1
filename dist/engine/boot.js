@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v13.13']);
+NEON_FILES.push(['engine/boot.js', 'v13.15']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -15,7 +15,7 @@ function musicState() {
   let song = 'theme', level = 1, urgency = 0;
   if (st.mp && st.mp.state && st.mode === 'play' && st.lv && st.lv.spec) {
     const sp = st.lv.spec;
-    return { song: MUSIC_FOR[sp.corp], level: sp.boss ? 3 : clamp(sp.pos, 0, 2), urgency: 0, low: mpPlaying() && st.mp.state.hp[st.mp.me] <= 1, tempo: sp.boss ? 1.05 : 1 };
+    return { song: trackFor(sp.corp), level: sp.boss ? 3 : clamp(sp.pos, 0, 2), urgency: 0, low: mpPlaying() && st.mp.state.hp[st.mp.me] <= 1, tempo: sp.boss ? 1.05 : 1 };
   }
   // Menus (title, settings, codex, how to play, profile, multiplayer menu / lobby,
   // game over) get the mellow menu track; gameplay keeps the theme and corp songs.
@@ -35,7 +35,7 @@ function musicState() {
   const low = !!(run && st.mode === 'play' && (zombie() ? (run.rot || 0) >= ROT.max - 30 : bloodMoney() ? run.credits < bloodCost(1) : run.integrity <= 1) && !st.dying);
   const slowmo = !!(st.mode === 'play' && st.corp && st.corp.hasBoss && st.corp.def.slowmo && st.lv);   // BULLET TIME
   const tempo = (1 + (song === 'chronos' ? urgency * 0.25 : 0) + (level >= 3 ? 0.05 : 0)) * (slowmo ? 0.55 : 1);
-  const track = song === 'none' ? 'none' : MUSIC_FOR[song === 'theme' ? 'map' : song] || song;
+  const track = song === 'none' ? 'none' : trackFor(song === 'theme' ? 'map' : song);
   return { song: track, level, urgency, low, tempo, pitch: slowmo ? 0.8 : 1 };
 }
 Music.setSource(musicState);

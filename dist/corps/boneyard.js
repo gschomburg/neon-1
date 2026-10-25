@@ -1,12 +1,12 @@
 // NeoN+1 corps/boneyard.js
 'use strict';
-NEON_FILES.push(['corps/boneyard.js', 'v13.13']);
+NEON_FILES.push(['corps/boneyard.js', 'v13.15']);
 // Its boss mod: GRAVE ROBBER (graverobber), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
 SONGS.graveshift = { name: 'GRAVE SHIFT',    bpm: 76,  root: 38, scale: 'harmonic', prog: [0, 5, 1, 4], bass: 'pulse',   drums: 'half',  arp: 'down', echo: 0.5, feedback: 0.45 };
-MUSIC_FOR.boneyard = 'graveshift';
+MUSIC_FOR.boneyard = 'reddeep';   // RED DEEP (in data/music.js). Its old track above isn't playing anywhere now.
 
 // ---- the corp
 CORPS.boneyard = {

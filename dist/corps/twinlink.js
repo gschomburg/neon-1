@@ -1,12 +1,17 @@
 // NeoN+1 corps/twinlink.js
 'use strict';
-NEON_FILES.push(['corps/twinlink.js', 'v13.13']);
+NEON_FILES.push(['corps/twinlink.js', 'v13.15']);
 // Its boss mod: LINKUP (linkup), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.duet = { name: 'DUET',           bpm: 110, root: 44, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'offbeat', drums: 'four',  arp: 'mirror', pingpong: true };
-MUSIC_FOR.twinlink = 'duet';
+// Made from DANCE ALONE: the same band, its own tune.
+SONGS.plusone = { name: 'PLUS ONE', from: 'dancealone', bpm: 112, root: 44, scale: 'minor', prog: [0, 5, 3, 6], kit: '808', pump: 0.6, padVoice: 'none',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', open: '......x.......x.' },
+  bassVoice: 'pluck', bassLine: '0 . 7 . 0 . 7 . 0 . 7 . 0 . 7 .', stab: 'x.x.x.x.x.x.x.x.', stabVoice: 'keys',
+  melody: ['. . 2 - 4 - 2 - 0 - . . . . . .', '. . 2 - 4 - 5 - 4 - 2 - . . . .', '. . 4 - 6 - 4 - 2 - . . 0 - 2 -', '1 - - - - - - - . . . . . . . .'],
+  leadVoice: 'keys', arpVoice: 'glass', arpLine: '. . . . . . . . . . . . 3 . 4 .' };
+MUSIC_FOR.twinlink = 'plusone';
 
 // ---- the corp
 CORPS.twinlink = {

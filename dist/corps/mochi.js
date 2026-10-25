@@ -1,6 +1,6 @@
 // NeoN+1 corps/mochi.js
 'use strict';
-NEON_FILES.push(['corps/mochi.js', 'v13.13']);
+NEON_FILES.push(['corps/mochi.js', 'v13.15']);
 // Its boss mod: FRIENDSHIP (friendship), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -12,7 +12,7 @@ const MOCHI_BOTS = [' u u ', ' <3  ', '  w  ', ' ) ( ', ' v v ', ' " " '];
 
 // ---- its music
 SONGS.pikopiko = { name: 'PIKO PIKO',      bpm: 136, root: 52, scale: 'major',    prog: [0, 4, 5, 3], bass: 'offbeat', drums: 'four',  arp: 'up', pingpong: true };
-MUSIC_FOR.mochi = 'pikopiko';
+MUSIC_FOR.mochi = 'dancealone';   // DANCE ALONE (in data/music.js). Its old track above isn't playing anywhere now (PIKO PIKO moved to BYTEPETS).
 
 // ---- the corp
 CORPS.mochi = {

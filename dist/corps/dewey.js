@@ -1,12 +1,11 @@
 // NeoN+1 corps/dewey.js
 'use strict';
-NEON_FILES.push(['corps/dewey.js', 'v13.13']);
+NEON_FILES.push(['corps/dewey.js', 'v13.15']);
 // Its boss mod: INDEX (index), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.quietplease = { name: 'QUIET PLEASE',   bpm: 70,  root: 44, scale: 'dorian',   prog: [0, 3, 0, 4], style: 'ambient', echo: 0.6, feedback: 0.5 };
-MUSIC_FOR.dewey = 'quietplease';
+MUSIC_FOR.dewey = 'hollow';   // HOLLOW (in data/music.js)
 
 // ---- the corp
 CORPS.dewey = {

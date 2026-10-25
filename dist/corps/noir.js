@@ -1,6 +1,6 @@
 // NeoN+1 corps/noir.js
 'use strict';
-NEON_FILES.push(['corps/noir.js', 'v13.13']);
+NEON_FILES.push(['corps/noir.js', 'v13.15']);
 // Its boss mod: INTERROGATE (interrogate), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -27,8 +27,13 @@ function noirSide(t, q, r) {
 }
 
 // ---- its music
-SONGS.gumshoe = { name: 'GUMSHOE',        bpm: 72,  root: 45, scale: 'harmonic', prog: [0, 5, 3, 4], bass: 'pulse',   drums: 'half',  arp: 'down', echo: 0.55, feedback: 0.45 };
-MUSIC_FOR.noir = 'gumshoe';
+// Made from NIGHT DRIVE: the same band, its own tune.
+SONGS.rainonglass = { name: 'RAIN ON GLASS', from: 'nightdrive', bpm: 80, root: 40, scale: 'harmonic', prog: [0, 3, 5, 4], sevenths: true, kit: 'break', swing: 0.2, echo: 0.45,
+  beat: { kick: 'x.......x.......', snare: '....x.......x...', hat: 'x..x..x.x..x..x.' },
+  bassLine: '0 - - - - - - - 0 - - - 0 - 0 -',
+  melody: ['4 - - - 3 - 2 - 4 - - - - - - -', '2 - - - 1 - 0 - -1 - - - - - - -', '4 - - - 5 - 6 - 7 - - - 6 - 4 -', '2 - - - - - - - . . . . . . . .'],
+  leadVoice: 'brass' };
+MUSIC_FOR.noir = 'rainonglass';
 
 // ---- the corp
 CORPS.noir = {

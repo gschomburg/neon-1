@@ -1,6 +1,6 @@
 // NeoN+1 corps/pawnbros.js
 'use strict';
-NEON_FILES.push(['corps/pawnbros.js', 'v13.13']);
+NEON_FILES.push(['corps/pawnbros.js', 'v13.15']);
 // Its boss mod: CHANCE CARD (chancecard), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -16,8 +16,12 @@ function boardLoop(cols, rows) {
 }
 
 // ---- its music
-SONGS.freeparking = { name: 'FREE PARKING',   bpm: 112, root: 47, scale: 'major',    prog: [0, 5, 3, 4], bass: 'march',   drums: 'march', arp: 'up' };
-MUSIC_FOR.pawnbros = 'freeparking';
+// Made from CAST ON: the same band, its own tune.
+SONGS.boardwalk = { name: 'BOARDWALK', from: 'caston', bpm: 152, root: 40, scale: 'dorian', prog: [0, 3, 4, 0], meter: 6, swing: 0.46, bass: 'jig', drums: 'shanty', arp: 'mirror', pingpong: true, kit: 'break',
+  bassVoice: 'picked',
+  melody: ['7 - 7 7 - 6 4 - - 2 - -', '3 - 3 3 - 4 6 - - 4 - -', '7 - 7 7 - 9 10 - 9 7 - 6', '4 - - 2 - - 0 - - - - -'],
+  leadVoice: 'dist' };
+MUSIC_FOR.pawnbros = 'boardwalk';
 
 // ---- the corp
 CORPS.pawnbros = {

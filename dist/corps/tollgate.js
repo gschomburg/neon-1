@@ -1,12 +1,17 @@
 // NeoN+1 corps/tollgate.js
 'use strict';
-NEON_FILES.push(['corps/tollgate.js', 'v13.13']);
+NEON_FILES.push(['corps/tollgate.js', 'v13.15']);
 // Its boss mod: EZPASS (ezpass), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.tollroad = { name: 'TOLL ROAD',      bpm: 116, root: 43, scale: 'minor',    prog: [0, 5, 6, 4], bass: 'eighths', drums: 'four',  arp: 'up' };
-MUSIC_FOR.tollgate = 'tollroad';
+// Made from NIGHT DRIVE: the same band, its own tune.
+SONGS.exactchange = { name: 'EXACT CHANGE', from: 'nightdrive', bpm: 96, root: 43, scale: 'minor', prog: [0, 3, 5, 4], echo: 0.4,
+  beat: { kick: 'x.......x.......', snare: '....x.......x...', hat: '..x...x...x...x.' },
+  bassLine: '0 - - - 0 - - - 0 - - - 0 - 0 -',
+  melody: ['4 - - - 2 - 0 - 2 - - - 4 - - -', '5 - - - - - - - . . . . . . . .', '4 - - - 2 - 0 - -1 - - - 0 - - -', '1 - - - - - - - . . . . . . 2 3'],
+  leadVoice: 'saw' };
+MUSIC_FOR.tollgate = 'exactchange';
 
 // ---- the corp
 CORPS.tollgate = {

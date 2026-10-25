@@ -1,12 +1,17 @@
 // NeoN+1 corps/carapace.js
 'use strict';
-NEON_FILES.push(['corps/carapace.js', 'v13.13']);
+NEON_FILES.push(['corps/carapace.js', 'v13.15']);
 // Its boss mod: ROLL UP (rollup), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.shellshock = { name: 'SHELL SHOCK',    bpm: 108, root: 40, scale: 'phrygian', prog: [0, 1, 5, 0], bass: 'eighths', drums: 'heavy', arp: 'down' };
-MUSIC_FOR.carapace = 'shellshock';
+// Made from MACHINE HEART: the same band, its own tune.
+SONGS.exoskeleton = { name: 'EXOSKELETON', from: 'machineheart', bpm: 110, root: 40, scale: 'minor', prog: [0, 3, 0, 5], kit: 'industrial', pump: 0.2, padVoice: 'choir', breakdown: 4,
+  beat: { kick: 'x.......x.......', snare: '....x.......x.xx', hat: 'x.x.x.x.x.x.x.x.' },
+  bassVoice: 'picked', bassLine: '0 . 0 . 0 0 . 0 . 0 0 . 0 . 3 .',
+  melody: ['0 - - - 0 - 4 - 4 - - - 3 - - -', '2 - - - 2 - 3 - 4 - - - - - - -', '0 - - - 0 - 4 - 7 - - - 6 - - -', '4 - - - 3 - - - 0 - - - . . . .'],
+  leadVoice: 'brass', arpVoice: 'pluck', arpLine: '0 . . 0 . . 0 . 1 . . 1 . . 2 .' };
+MUSIC_FOR.carapace = 'exoskeleton';
 
 // ---- the corp
 CORPS.carapace = {

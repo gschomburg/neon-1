@@ -1,6 +1,6 @@
 // NeoN+1 corps/squalor.js
 'use strict';
-NEON_FILES.push(['corps/squalor.js', 'v13.13']);
+NEON_FILES.push(['corps/squalor.js', 'v13.15']);
 // Its boss mod: INFLUENCER (influencer), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -8,8 +8,13 @@ NEON_FILES.push(['corps/squalor.js', 'v13.13']);
 const SQ_FACES = ['[@_@]', '[o_o]', '[^_^]', '[-_-]', '[*_*]', '[>_<]', '[._.]', '[0_0]', '[=_=]', '[u_u]', '[x_x]', '[;_;]'];
 
 // ---- its music
-SONGS.doomscroll = { name: 'DOOMSCROLL',     bpm: 128, root: 49, scale: 'major',    prog: [0, 5, 3, 4], bass: 'offbeat', drums: 'four',  arp: 'up', pingpong: true, tick: true };
-MUSIC_FOR.squalor = 'doomscroll';
+// Made from DANCE ALONE: the same band, its own tune.
+SONGS.likeme = { name: 'LIKE ME', from: 'dancealone', bpm: 124, root: 40, scale: 'minor', prog: [0, 3, 5, 4], kit: '808', pump: 0.5, padVoice: 'none',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', open: '..............x.' },
+  bassVoice: 'pluck', bassLine: '0 . 0 . 7 . 0 . 0 . 0 . 7 . 5 .', stab: 'x.x.x.x.x.x.x.x.', stabVoice: 'saw',
+  melody: ['7 - - - 6 - 4 - . . 4 - 6 - 4 -', '3 - - - . . . . . . 3 - 4 - 6 -', '7 - - - 6 - 4 - . . 4 - 6 - 7 -', '8 - - - 7 - - - 6 - - - . . . .'],
+  leadVoice: 'vox', arpVoice: 'chip', arpLine: '. . . . . . . . . . . . 5 . 3 .' };
+MUSIC_FOR.squalor = 'likeme';
 
 // ---- the corp
 CORPS.squalor = {

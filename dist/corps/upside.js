@@ -1,6 +1,6 @@
 // NeoN+1 corps/upside.js
 'use strict';
-NEON_FILES.push(['corps/upside.js', 'v13.13']);
+NEON_FILES.push(['corps/upside.js', 'v13.15']);
 // Its boss mod: INVERSION (inversion), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -8,8 +8,13 @@ NEON_FILES.push(['corps/upside.js', 'v13.13']);
 const UP_WORDS = ['REAL', 'TRUE', 'YES', 'NODE', 'KEY', 'UP', 'SKY', 'RISE', 'GO', 'DATA', 'LIFT', 'HERE', 'GATE', 'CORE', 'ROOT', 'PATH'];
 
 // ---- its music
-SONGS.flipside = { name: 'FLIP SIDE',      bpm: 104, root: 47, scale: 'dorian',   prog: [0, 4, 3, 0], bass: 'offbeat', drums: 'half',  arp: 'down', pingpong: true };
-MUSIC_FOR.upside = 'flipside';
+// Made from NIGHT DRIVE: the same band, its own tune.
+SONGS.inverted = { name: 'INVERTED', from: 'nightdrive', bpm: 92, root: 41, scale: 'minor', prog: [6, 2, 5, 0], echo: 0.4, pingpong: true,
+  beat: { kick: 'x.......x.......', snare: '....x.......x...', hat: '..x...x...x...x.' },
+  bassLine: '0 - - - - - - - 0 - - - 0 - 0 -',
+  melody: ['4 - - - - - 5 - 6 - - - 8 - - -', '6 - - - - - - - . . . . . . . .', '3 - - - - - 4 - 5 - - - 6 - - -', '4 - - - - - - - . . . . . . 6 5'],
+  leadVoice: 'saw' };
+MUSIC_FOR.upside = 'inverted';
 
 // ---- the corp
 CORPS.upside = {

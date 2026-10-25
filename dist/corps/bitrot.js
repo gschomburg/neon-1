@@ -1,12 +1,16 @@
 // NeoN+1 corps/bitrot.js
 'use strict';
-NEON_FILES.push(['corps/bitrot.js', 'v13.13']);
+NEON_FILES.push(['corps/bitrot.js', 'v13.15']);
 // Its boss mod: LAST BYTE (lastbyte), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.corrupted = { name: 'CORRUPTED',      bpm: 114, root: 39, scale: 'phrygian', prog: [0, 1, 0, 6], bass: 'gallop',  drums: 'heavy', arp: 'mirror', tick: true };
-MUSIC_FOR.bitrot = 'corrupted';
+// Made from TRACKER: the same band, its own tune.
+SONGS.badsector = { name: 'BAD SECTOR', from: 'tracker', bpm: 144, root: 39, scale: 'phrygian', prog: [0, 1, 0, 6], kit: 'chip', drums: 'break', pump: 0.4, padVoice: 'none', breakdown: 4,
+  bassVoice: 'acid', bassLine: '0 . . 0 . . 0 . . . 0 . 1 . . .', stab: 'x..x.x..x..x.x..', stabVoice: 'vox',
+  melody: ['0 0 . 0 . 1 . . 0 0 . 3 . 1 . .', '0 0 . 0 . 1 . . 4 4 . 3 . 1 . .', '7 7 . 7 . 8 . . 7 7 . 5 . 4 . .', '3 . 1 . 0 . . . . . . . -1 . 0 .'],
+  leadVoice: 'chip', arpVoice: 'chip', arp: 'mirror' };
+MUSIC_FOR.bitrot = 'badsector';
 
 // ---- the corp
 CORPS.bitrot = {

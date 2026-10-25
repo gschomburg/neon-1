@@ -1,6 +1,6 @@
 // NeoN+1 corps/lexicon.js
 'use strict';
-NEON_FILES.push(['corps/lexicon.js', 'v13.13']);
+NEON_FILES.push(['corps/lexicon.js', 'v13.15']);
 // Its boss mod: SPELLBOUND (spellbound), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -14,8 +14,13 @@ const LEX_WORDS = {
 const LETTERS = 'ABCDEFGHIJKLMNOPRSTUVWY';
 
 // ---- its music
-SONGS.typeset = { name: 'TYPESET',        bpm: 100, root: 48, scale: 'minor',    prog: [0, 3, 6, 5], bass: 'march',   drums: 'four',  arp: 'up' };
-MUSIC_FOR.lexicon = 'typeset';
+// Made from DEADPAN: the same band, its own tune.
+SONGS.definition = { name: 'DEFINITION', from: 'deadpan', bpm: 116, root: 40, scale: 'minor', prog: [0, 5, 3, 4], kit: '808', pump: 0.3, gate: 'x.x.x.x.x.x.x.x.',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.' },
+  bassVoice: 'pluck', bassLine: '0 . 0 7 . 0 0 . 0 . 0 7 . 0 3 .',
+  melody: ['2 . 2 . 2 . 2 . 4 - - - . . . .', '2 . 2 . 2 . 3 . 2 - - - . . . .', '0 . 0 . 0 . 0 . 2 - - - . . . .', '1 . 1 . 1 . 2 . -1 - - - . . . .'],
+  leadVoice: 'vox', arpVoice: 'chip', arpLine: '. . . . 0 . . . . . . . 2 . . .' };
+MUSIC_FOR.lexicon = 'definition';
 
 // ---- the corp
 CORPS.lexicon = {

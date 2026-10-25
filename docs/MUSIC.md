@@ -61,6 +61,7 @@ choir), **saw** (a supersaw lead). Still to come: A / B sections with their own 
 | SLOW TIDE | The Album Leaf | 84 bpm C major, electric piano, glockenspiel, brushed beat with swing |
 | DANCE ALONE | Robyn, *Dancing On My Own* | 118 bpm, pulsing eighth-note chords, four on the floor, claps |
 | TRACKER | Moby ("ah-ah") + Amiga cracktros | 136 bpm breakbeat, "ah-ah" vocal stabs, chip melody, chip arpeggios |
+| HOLLOW | Evanescence (added after, v13.14) | 90 bpm, E minor; light at first (choir pad, sub bass, a piano figure from level 0), then half-time rock drums, chugging saw chords and a glass line; the piano doubles for bosses; every 4th pass drops to piano alone |
 Not done yet: Pixel Grip, and the Monkey Island shanty (CAST ON in 6/8 covers some of that).
 
 **It reacts to the game:**
@@ -82,6 +83,14 @@ filterable list (tempo, key, groove, bass, arp, where it plays); click one to pl
 (level 0-4, urgency, heartbeat, the boss-win / game-over tests). For narrowing down: tag each track keep / maybe /
 cut with a note (kept in the browser), then **copy the list** to paste into a chat. It loads the game's own music
 files, so it always plays what the game plays; `tools/bump.js` keeps its list of corp files in step.
+
+**Families and the corps view** (2026-10-24). The list shows how each track is **made**: "written" (its own
+melody / riff / beat), "recipe" (the engine builds it from picks: bass, drums and arp patterns, scale, chords), or
+ambient. **family / like** names the closest other track and what they share. Recipe tracks with the same bass,
+drums, arp and scale are one family (the same song in another key and tempo; GRIDLOCK ×6 is the biggest). A track
+made from another one carries `from: 'thatkey'` and joins its family. The **corps** view lists every place a track
+plays, flags the ones whose track is cut or 1 star ("needs a track"), and has a picker to change it (plays right
+away, kept in the browser); **copy assignments** hands over the `MUSIC_FOR` lines.
 
 **Controls:** music and effects each have on/off and a volume bar (settings and the pause menu); N = music,
 M = effects. The **dev music player** (dev menu `[music player]`) lists every track (shared ones first, then
@@ -128,6 +137,31 @@ Clean up the tracks; not every corp needs its own. Maybe:
 - **2 stars:** LOW PRESSURE (NIMBUS), QUIET PLEASE (DEWEY), GRAVE SHIFT (BONEYARD).
 - **1 star:** the other 61 corp tracks, and MELTDOWN (OMNI//CORE).
 - None tagged keep / maybe / cut yet.
+- **Round 2 (2026-10-24): the cut.** The user cut 64 tracks: all the 1-star corp tracks, MELTDOWN, QUIET PLEASE (2 stars)
+  and the TRAP DOOR demo. They're gone from the files (git has them). The 62 corps that lost their track play the map
+  track (GRIDLOCK) until they get a new one: `trackFor()` in engine/music.js; the music tool's corps view lists them as
+  "needs a track". OMNI//CORE now plays DROP ZONE.
+  New tracks rated: 5 stars MACHINE HEART ("good for slow corp"), DROP ZONE ("boss"), DEADPAN, DANCE ALONE; 4 stars LIGHT
+  CYCLE ("boss or race"), RED DEEP ("spooky"), ANTHEM; 3 stars NIGHT DRIVE, SLOW TIDE ("super slow"), TRACKER. VITALS
+  went up to 5 stars. Kept from before: NIGHT RAIN, GRIDLOCK, OVERDRIVE, VELVET HEX, CAST ON, VITALS, the 3-star corp tracks,
+  LOW PRESSURE and GRAVE SHIFT (2 stars), and 8 engine demos (3 stars). HOLLOW (v13.14) isn't rated yet.
+- **Round 3 (2026-10-24, v13.15): building back up.** Every new track went to its best corp (the user's notes), then
+  55 variations filled the other corps: each made `from:` one of the 12 (the same band and groove, its own melody, key,
+  tempo and chords), written in the corp's own file. Spread so every family plays somewhere at levels 1-2. DANCE ALONE
+  took MOCHI MOCHI (PIKO PIKO moved to BYTEPETS), SLOW TIDE took NIMBUS, TRACKER took SEEKR, RED DEEP took BONEYARD, so
+  QUERY, LOW PRESSURE and GRAVE SHIFT play nowhere now. OMNI//CORE: DROP ZONE.
+  - **HOLLOW** (5): DEWEY SYSTEMS (L2): HOLLOW **(the original)**; DEEP FREEZE (L4): DEEP FREEZE; PING (L3): PING; VESPERS (L3): VESPERS; FAR SIDE (L5): FAR SIDE
+  - **DANCE ALONE** (5): PIKO PIKO (L1): DANCE ALONE **(the original)**; BE THE BEAT (L3): BE THE BEAT; LUCKY STREAK (L2): LUCKY STREAK; LIKE ME (L3): LIKE ME; PLUS ONE (L4): PLUS ONE
+  - **SLOW TIDE** (6): REFLECTION (L2): REFLECTION; LOW PRESSURE (L1): SLOW TIDE **(the original)**; MOSS (L3): MOSS; PLEASE HOLD (L3): PLEASE HOLD; LIGHT LEAK (L3): LIGHT LEAK; SIX AM AGAIN (L5): SIX AM AGAIN
+  - **TRACKER** (5): QUERY (L1): TRACKER **(the original)**; HANDSHAKE 56K (L2): HANDSHAKE 56K; LINE CLEAR (L3): LINE CLEAR; BAD SECTOR (L5): BAD SECTOR; CRACKTRO (L4): CRACKTRO
+  - **DEADPAN** (6): PRICE CHECK (L1): PRICE CHECK; HAUTE//COUTURE (L2): DEADPAN **(the original)**; DEFINITION (L3): DEFINITION; SANS (L3): SANS; NEURAL (L4): NEURAL; HELLO YOU (L5): HELLO YOU
+  - **DROP ZONE** (5): ESPRESSO (L2): ESPRESSO; SWARM (L3): SWARM; BREAKING (L3): BREAKING; CHAOS THEORY (L4): CHAOS THEORY; REDLINE (L5): REDLINE; OMNI//CORE: DROP ZONE **(the original)**
+  - **ANTHEM** (6): ORDER UP (L1): ORDER UP; THAT'S NUMBERWONG (L4): THAT'S NUMBERWONG; WIND IT UP (L1): WIND IT UP; GOING UP (L3): GOING UP; SOLD! (L3): SOLD!; PLAYBALL (L5): ANTHEM **(the original)**
+  - **RED DEEP** (6): SPECIMEN (L3): SPECIMEN; RETROGRADE MOON (L2): RETROGRADE MOON; GRAVE SHIFT (L3): RED DEEP **(the original)**; VENDETTA (L3): VENDETTA; HEAT SIGNATURE (L4): HEAT SIGNATURE; POWER CUT (L3): POWER CUT
+  - **NIGHT DRIVE** (6): RYDR (L2): NIGHT DRIVE **(the original)**; EXACT CHANGE (L2): EXACT CHANGE; STILL WATCHING (L3): STILL WATCHING; RUSH HOUR (L4): RUSH HOUR; RAIN ON GLASS (L4): RAIN ON GLASS; INVERTED (L5): INVERTED
+  - **MACHINE HEART** (6): FORTIFY (L1): FORTIFY; in reading order (L4): IN TRIPLICATE; EXOSKELETON (L3): EXOSKELETON; IMPACT (L4): IMPACT; AEGIS DEFENSE (L4): MACHINE HEART **(the original)**; TWO MORE HEADS (L3): TWO MORE HEADS
+  - **LIGHT CYCLE** (6): BALANCE SHEET (L2): BALANCE SHEET; KERNEL (L3): LIGHT CYCLE **(the original)**; HIGH VOLTAGE (L2): HIGH VOLTAGE; ON CAMERA (L3): ON CAMERA; SHELL GAME (L4): SHELL GAME; ESCAPE VELOCITY (L5): ESCAPE VELOCITY
+  - **CAST ON** (4): DRY DOCK (L2): DRY DOCK; PIECES OF EIGHT (L2): PIECES OF EIGHT; CAST ON (L2): CAST ON **(the original)**; BOARDWALK (L3): BOARDWALK
 
 ## Inspirations
 

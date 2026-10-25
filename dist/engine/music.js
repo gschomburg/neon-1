@@ -1,6 +1,6 @@
 // NeoN+1 engine/music.js: The music engine (generated music).
 'use strict';
-NEON_FILES.push(['engine/music.js', 'v13.13']);
+NEON_FILES.push(['engine/music.js', 'v13.15']);
 
 // A track (data/music.js, corps/) picks its band. Everything is optional; left out, it's the original
 // synthwave sound (so older tracks play exactly as before):
@@ -22,6 +22,8 @@ NEON_FILES.push(['engine/music.js', 'v13.13']);
 //   gate       chops the pad into hits, e.g. 'x.xx.xx.x.xx.xx.' (a trance gate).
 //   breakdown  n: every n-th time through the chords, the drums and bass drop out.
 //   sevenths   true: four-note chords.
+// The track for a place (menu, map, omni or a corp key). A corp without one of its own plays the map track.
+function trackFor(place) { const k = MUSIC_FOR[place]; return k && SONGS[k] ? k : MUSIC_FOR.map; }
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const BASS_STEPS = {
   eighths: [0, 2, 4, 6, 8, 10, 12, 14], march: [0, 3, 6, 8, 11, 14], pulse: [0, 4, 8, 12],

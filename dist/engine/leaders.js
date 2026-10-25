@@ -5,7 +5,7 @@
 // letters) and UPLOAD sends them: the server keeps one name per device and shows it on all its entries.
 // Pages opened from a file or localhost use the test boards (kept apart on the server).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v13.13']);
+NEON_FILES.push(['engine/leaders.js', 'v13.15']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }];

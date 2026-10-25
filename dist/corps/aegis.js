@@ -1,6 +1,6 @@
 // NeoN+1 corps/aegis.js
 'use strict';
-NEON_FILES.push(['corps/aegis.js', 'v13.13']);
+NEON_FILES.push(['corps/aegis.js', 'v13.15']);
 // Its boss mod: AMBUSH (ambush), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -30,8 +30,7 @@ async function aegisBreach(lv) {
 }
 
 // ---- its music
-SONGS.warpath = { name: 'WAR PATH',       bpm: 108, root: 40, scale: 'minor',    prog: [0, 0, 5, 6], bass: 'march',   drums: 'march', arp: 'up' };
-MUSIC_FOR.aegis = 'warpath';
+MUSIC_FOR.aegis = 'machineheart';   // MACHINE HEART (in data/music.js)
 
 // ---- the corp
 CORPS.aegis = {

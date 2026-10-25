@@ -1,12 +1,16 @@
 // NeoN+1 corps/safeharbor.js
 'use strict';
-NEON_FILES.push(['corps/safeharbor.js', 'v13.13']);
+NEON_FILES.push(['corps/safeharbor.js', 'v13.15']);
 // Its boss mod: POLICY (policy), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.fineprint = { name: 'FINE PRINT',     bpm: 88,  root: 43, scale: 'dorian',   prog: [0, 3, 5, 4], bass: 'pulse',   drums: 'half',  arp: 'updown' };
-MUSIC_FOR.safeharbor = 'fineprint';
+// Made from CAST ON: the same band, its own tune.
+SONGS.drydock = { name: 'DRY DOCK', from: 'caston', bpm: 120, root: 45, scale: 'dorian', prog: [0, 3, 0, 4], meter: 6, swing: 0.4, bass: 'jig', drums: 'shanty', arp: 'mirror', pingpong: true, kit: 'break', padVoice: 'organ',
+  bassVoice: 'picked',
+  melody: ['0 - - 2 - 4 7 - - 4 - -', '3 - - 5 - 7 10 - - 7 - -', '0 - - 2 - 4 7 - 9 7 - 4', '4 - - 6 - 4 2 - - - - -'],
+  leadVoice: 'square' };
+MUSIC_FOR.safeharbor = 'drydock';
 
 // ---- the corp
 CORPS.safeharbor = {

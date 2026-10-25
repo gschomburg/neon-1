@@ -110,7 +110,6 @@
     demo_disco:   { name: 'ORBIT CLUB',     bpm: 120, root: 42, scale: 'minor',    prog: [0, 5, 2, 6], bass: 'offbeat', bassOct: true, bassVoice: 'pluck', drums: 'disco', kit: '808', padVoice: 'glass', arp: 'up', arpVoice: 'glass', leadVoice: 'bell', pump: 0.6, swing: 0.08 },
     demo_break:   { name: 'BROKEN SIGNAL',  bpm: 132, root: 43, scale: 'minor',    prog: [0, 3, 5, 4], bass: 'sparse', bassVoice: 'sub', drums: 'break', kit: 'break', padVoice: 'choir', arp: 'mirror', arpVoice: 'glass', leadVoice: 'square', pump: 0.2, swing: 0.18 },
     demo_waltz:   { name: 'CLOCKWORK WALTZ', bpm: 132, root: 45, scale: 'harmonic', prog: [0, 3, 4, 0], meter: 3, bass: 'waltz', bassVoice: 'sub', drums: 'waltz', kit: 'synth', padVoice: 'glass', arp: 'up', arpVoice: 'bell', leadVoice: 'bell', pump: 0 },
-    demo_trap:    { name: 'TRAP DOOR',      bpm: 140, root: 41, scale: 'minor',    prog: [0, 0, 5, 6], bass: 'sparse', bassVoice: 'sub', drums: 'trap', kit: '808', padVoice: 'choir', arp: 'up', arpVoice: 'chip', leadVoice: 'dist', pump: 0.3 },
   };
   for (const k of Object.keys(DEMOS)) SONGS[k] = DEMOS[k];
 </script>
@@ -185,22 +184,55 @@
   tr.demo td.name::after { content: ' demo'; color: var(--warn); font-size: 10px; font-weight: 600; letter-spacing: 0.06em; vertical-align: 1px; }
   .edited { color: var(--warn); }
   #tryinfo { color: var(--dim); font-size: 12px; }
+  /* families */
+  td.like { font-size: 12px; white-space: normal; min-width: 170px; color: var(--mid); }
+  td.like b { color: var(--text); font-weight: 600; }
+  .fam { display: inline-block; border-radius: 3px; padding: 0 5px; margin-right: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; background: #22303a; color: #8fcbe8; }
+  .made { font-size: 11px; color: var(--dim); }
+  .made.written { color: var(--ok); }
+  /* the corps view */
+  .view { display: flex; gap: 0; }
+  .view button { border-radius: 0; }
+  .view button:first-child { border-radius: 4px 0 0 4px; }
+  .view button:last-child { border-radius: 0 4px 4px 0; }
+  #cbar { display: none; gap: 8px; align-items: center; flex-wrap: wrap; }
+  body.corps #cbar { display: flex; }
+  body.corps #tbar, body.corps #trackTable { display: none; }
+  #tbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #corpTable { display: none; }
+  body.corps #corpTable { display: table; }
+  tr.place { cursor: pointer; }
+  tr.place:hover td { background: #1c2026; }
+  tr.place.playing td { background: #10303f; }
+  td.pname { color: var(--hi); font-weight: 600; }
+  .need { color: var(--bad); font-weight: 600; font-size: 12px; }
+  .weak { color: var(--warn); font-size: 12px; }
+  .chg { color: var(--warn); font-size: 12px; }
+  .sm { font-size: 12px; padding: 2px 7px; }
+  td select { min-width: 220px; }
 </style>
 </head>
 <body>
 <section id="list">
   <div id="bar">
     <h1>NeoN+1 music</h1>
-    <input id="filter" type="text" placeholder="filter: name, corp, scale..." autocomplete="off">
-    <button id="fAll" class="on">all</button><button id="fKeep">keep</button><button id="fMaybe">maybe</button><button id="fCut">cut</button><button id="fNone">untagged</button>
+    <span class="view"><button id="vTracks" class="on">tracks</button><button id="vCorps">corps</button></span>
+    <input id="filter" type="text" placeholder="filter: name, corp, family..." autocomplete="off">
+    <span id="tbar"><button id="fAll" class="on">all</button><button id="fKeep">keep</button><button id="fMaybe">maybe</button><button id="fCut">cut</button><button id="fNone">untagged</button></span>
+    <span id="cbar"><button id="cAll" class="on">all</button><button id="cNeed">needs a track</button><button id="cChanged">changed</button>
+      <button id="cCopy">copy assignments</button><button id="cReset">undo all</button></span>
     <span id="count"></span>
   </div>
-  <div id="scroll"><table>
+  <div id="scroll"><table id="trackTable">
     <thead><tr>
-      <th data-k="name">track</th><th data-k="bpm">bpm</th><th data-k="key">key</th><th data-k="style">groove</th>
+      <th data-k="name">track</th><th data-k="made">made</th><th data-k="like">family / like</th><th data-k="bpm">bpm</th><th data-k="key">key</th><th data-k="style">groove</th>
       <th data-k="bass">bass</th><th data-k="arp">arp</th><th data-k="band">band</th><th data-k="used">plays for</th><th data-k="stars">stars</th><th data-k="tag">tag</th>
     </tr></thead>
     <tbody id="rows"></tbody>
+  </table>
+  <table id="corpTable">
+    <thead><tr><th>plays at</th><th>track</th><th>stars</th><th>made</th><th>family / like</th><th></th><th>change to</th></tr></thead>
+    <tbody id="crows"></tbody>
   </table></div>
 </section>
 
@@ -260,7 +292,76 @@
     s.padVoice && s.padVoice !== 'saw' ? (s.padVoice === 'none' ? 'no pad' : s.padVoice + ' pad') : '', s.arpVoice && s.arpVoice !== 'square' ? s.arpVoice + ' arp' : '',
     s.leadVoice && s.leadVoice !== 'square' ? s.leadVoice + ' lead' : '', s.pump != null && s.pump < 1 ? (s.pump ? 'light pump' : 'no pump') : '',
     s.melody ? 'own melody' : '', s.bassLine ? 'bass riff' : '', s.beat ? 'own beat' : '', s.stab ? 'stabs' : '', s.gate ? 'gated pad' : '', s.breakdown ? 'breakdowns' : ''].filter(Boolean).join(', ');
+  // ---- where tracks play: changes made in the corps view, remembered in this browser like the stars.
+  // The game's files don't change; "copy assignments" hands them over.
+  const ASSIGN_KEY = 'neon.music.assign';
+  const ORIG_FOR = Object.assign({}, MUSIC_FOR);
+  try {
+    const a = JSON.parse(localStorage.getItem(ASSIGN_KEY) || '{}');
+    for (const [pl, k] of Object.entries(a)) if (pl in MUSIC_FOR || pl in CORPS) { if (!k) delete MUSIC_FOR[pl]; else if (SONGS[k]) MUSIC_FOR[pl] = k; }
+  } catch (e) { /* nothing saved */ }
+  // every place: the shared ones, then each corp (a corp may have no track of its own: it plays the map track)
+  const ALL_PLACES = [...new Set([...Object.keys(MUSIC_FOR), ...Object.keys(CORPS)])];
+  const changedPlaces = () => ALL_PLACES.filter(pl => MUSIC_FOR[pl] !== ORIG_FOR[pl]);
+  const saveAssign = () => {
+    const a = {}; for (const pl of changedPlaces()) a[pl] = MUSIC_FOR[pl] || '';
+    try { localStorage.setItem(ASSIGN_KEY, JSON.stringify(a)); } catch (e) { /* private mode */ }
+  };
+
   const tracks = Object.keys(SONGS).map(k => ({ k, s: SONGS[k], used: usedBy(k) }));
+  const refreshUsed = () => { for (const t of tracks) t.used = usedBy(t.k); };
+  const order = {}; tracks.forEach((t, i) => { order[t.k] = i; });
+
+  // ---- families: which tracks are built alike.
+  // "written": the track has its own melody / riff / beat. "recipe": the engine builds it from a few picks
+  // (bass, drums and arp patterns, scale, chords), so recipe tracks that share those picks sound like one song.
+  // A track made from another one says so with from: 'thatkey' in its line, and joins that track's family.
+  const WRITTEN = ['melody', 'bassLine', 'beat', 'arpLine', 'stab'];
+  const madeOf = s => s.style === 'ambient' ? 'ambient' : WRITTEN.some(f => s[f]) ? 'written' : 'recipe';
+  const soundOf = s => [s.kit || 'synth', s.bassVoice || 'saw', s.padVoice || 'saw', s.arpVoice || 'square'].join();
+  function likeness(a, b) {
+    if ((a.meter || 4) !== (b.meter || 4)) return { same: [], score: 0 };
+    const same = ['bass', 'drums', 'arp', 'scale'].filter(f => a[f] && a[f] === b[f]);
+    if (a.prog && b.prog && a.prog.join() === b.prog.join()) same.push('chords');
+    return { same, score: same.length + (Math.abs(a.bpm - b.bpm) <= 8 ? 0.5 : 0) + (soundOf(a) === soundOf(b) ? 0.5 : 0) };
+  }
+  let fam = {};   // track -> { made, like, same, root, size, kids }
+  function families() {
+    fam = {};
+    const parent = {};
+    const find = k => parent[k] === k ? k : (parent[k] = find(parent[k]));
+    const join = (a, b) => { a = find(a); b = find(b); if (a !== b) { if (order[a] < order[b]) parent[b] = a; else parent[a] = b; } };
+    for (const t of tracks) { parent[t.k] = t.k; fam[t.k] = { made: madeOf(t.s), like: '', same: [], kids: 0 }; }
+    for (const t of tracks) {
+      const f = fam[t.k], s = t.s;
+      // made from another track: that track names the family
+      if (s.from && SONGS[s.from]) { f.like = s.from; f.from = true; const a = find(t.k), b = find(s.from); if (a !== b) parent[a] = b; fam[s.from].kids++; continue; }
+      if (f.made !== 'recipe') continue;
+      let best = null, bestL = null;
+      for (const o of tracks) {
+        if (o.k === t.k || fam[o.k].made !== 'recipe') continue;
+        const l = likeness(s, o.s);
+        if (!bestL || l.score > bestL.score) { best = o.k; bestL = l; }
+        // the same bass, drums, arp and scale: the same song in another key / tempo
+        if (['bass', 'drums', 'arp', 'scale'].every(x => l.same.includes(x))) join(t.k, o.k);
+      }
+      if (best && bestL.score >= 2) { f.like = best; f.same = bestL.same; }
+    }
+    const size = {};
+    for (const t of tracks) { const r = find(t.k); fam[t.k].root = r; size[r] = (size[r] || 0) + 1; }
+    for (const t of tracks) fam[t.k].size = size[fam[t.k].root];
+  }
+  families();
+  const famName = k => fam[k] && fam[k].size > 1 ? SONGS[fam[k].root].name : '';
+  const likeHtml = k => {
+    const f = fam[k]; if (!f) return '';
+    const chip = f.size > 1 ? `<span class="fam" title="${f.size} tracks in this family">${SONGS[f.root].name} ×${f.size}</span>` : '';
+    if (f.from) return `${chip}from <b>${SONGS[f.like].name}</b>`;
+    if (f.made === 'written') return `${chip}<span class="dim">its own parts</span>${f.kids ? ` · ${f.kids} made from it` : ''}`;
+    if (f.made === 'ambient') return '<span class="dim">ambient</span>';
+    return chip + (f.like ? `like <b>${SONGS[f.like].name}</b> <span class="dim">(same ${f.same.join(', ')})</span>` : '<span class="dim">nothing close</span>');
+  };
+  const likeText = k => { const f = fam[k]; return f ? [famName(k), f.like ? (f.from ? 'from ' : 'like ') + SONGS[f.like].name : '', f.made].filter(Boolean).join(' ') : ''; };
 
   // ---- the player state the engine reads (the same shape as the game's)
   const p = { key: null, playing: false, level: 2, urgency: 0, low: false };
@@ -273,24 +374,26 @@
 
   // ---- the list
   let sortK = 'order', sortDir = 1, filter = '', tagFilter = 'all';
-  const val = (t, k) => k === 'name' ? t.s.name : k === 'bpm' ? t.s.bpm : k === 'key' ? keyName(t.s) : k === 'style' ? groove(t.s)
+  const val = (t, k) => k === 'name' ? t.s.name : k === 'made' ? fam[t.k].made : k === 'like' ? (famName(t.k) || '~') + '|' + (fam[t.k].like ? SONGS[fam[t.k].like].name : '') + '|' + t.s.name :k === 'bpm' ? t.s.bpm : k === 'key' ? keyName(t.s) : k === 'style' ? groove(t.s)
     : k === 'bass' ? (t.s.bass || '') : k === 'arp' ? (t.s.arp || '') + (t.s.pingpong ? ' ping-pong' : '') : k === 'band' ? band(t.s) : k === 'used' ? t.used.join(', ') : k === 'tag' ? (tags[t.k] && tags[t.k].tag) || '' : k === 'stars' ? starsOf(t.k) : 0;
   function visible() {
     const f = filter.toLowerCase();
     let out = tracks.filter(t => {
       const tg = (tags[t.k] && tags[t.k].tag) || '';
       if (tagFilter === 'none' ? tg : tagFilter !== 'all' && tg !== tagFilter) return false;
-      return !f || [t.s.name, keyName(t.s), groove(t.s), band(t.s), t.s.bass, t.s.arp, t.used.join(' '), t.s.bpm].join(' ').toLowerCase().includes(f);
+      return !f || [t.s.name, keyName(t.s), groove(t.s), band(t.s), t.s.bass, t.s.arp, t.used.join(' '), t.s.bpm, likeText(t.k)].join(' ').toLowerCase().includes(f);
     });
     if (sortK !== 'order') out = out.slice().sort((a, b) => { const x = val(a, sortK), y = val(b, sortK); return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
     return out;
   }
   function renderList() {
+    families();
+    if (document.body.classList.contains('corps')) renderCorps();
     const vis = visible();
     $('#rows').innerHTML = vis.map(t => {
       const tg = tags[t.k] && tags[t.k].tag;
       return `<tr class="track${t.k === p.key ? ' playing' : ''}${t.k in DEMOS ? ' demo' : ''}" data-k="${t.k}">
-        <td class="name">${t.s.name}</td><td class="num mono">${t.s.bpm}</td><td class="mono">${keyName(t.s)}</td><td>${groove(t.s)}</td>
+        <td class="name">${t.s.name}</td><td><span class="made ${fam[t.k].made}">${fam[t.k].made}</span></td><td class="like">${likeHtml(t.k)}</td><td class="num mono">${t.s.bpm}</td><td class="mono">${keyName(t.s)}</td><td>${groove(t.s)}</td>
         <td>${t.s.bass || ''}</td><td>${t.s.arp || ''}${t.s.pingpong ? ' <span class="dim">ping-pong</span>' : ''}${t.s.tick ? ' <span class="dim">tick</span>' : ''}</td>
         <td class="band">${band(t.s)}${orig[t.k] ? ' <span class="edited">(tried)</span>' : ''}</td>
         <td class="used">${t.used.join(', ') || '<span class="dim">unused</span>'}</td>
@@ -298,15 +401,89 @@
         <td>${tg ? `<span class="tag ${tg}">${tg}</span>` : ''}${tags[t.k] && tags[t.k].note ? ' <span class="dim" title="has a note">*</span>' : ''}</td></tr>`;
     }).join('');
     const n = k => Object.values(tags).filter(x => x.tag === k).length;
-    $('#count').textContent = `${vis.length} of ${tracks.length} tracks · rated ${Object.values(tags).filter(x => x.stars).length} · keep ${n('keep')} · maybe ${n('maybe')} · cut ${n('cut')}`;
-    document.querySelectorAll('th').forEach(th => th.classList.toggle('sorted', th.dataset.k === sortK));
+    if (!document.body.classList.contains('corps'))
+      $('#count').textContent = `${vis.length} of ${tracks.length} tracks · rated ${Object.values(tags).filter(x => x.stars).length} · keep ${n('keep')} · maybe ${n('maybe')} · cut ${n('cut')}`;
+    document.querySelectorAll('#trackTable th').forEach(th => th.classList.toggle('sorted', th.dataset.k === sortK));
   }
+
+  // ---- the corps view: every place a track plays, which ones need a new track, and a picker to change it
+  let corpFilter = 'all';
+  const placeName = pl => PLACES[pl] || (CORPS[pl] && CORPS[pl].name) || pl.toUpperCase();
+  const needOf = pl => {   // 2: needs a track (cut or 1 star), 1: weak (2 stars)
+    const k = MUSIC_FOR[pl], tg = tags[k] && tags[k].tag, n = starsOf(k);
+    return !k || !SONGS[k] || tg === 'cut' || n === 1 ? 2 : n === 2 ? 1 : 0;
+  };
+  function trackOptions(cur) {
+    const opt = t => `<option value="${t.k}"${t.k === cur ? ' selected' : ''}>${starsOf(t.k) ? '★' + starsOf(t.k) + ' ' : ''}${t.s.name}${t.k in DEMOS ? ' (demo)' : ''}${famName(t.k) && famName(t.k) !== t.s.name ? ' · ' + famName(t.k) : ''}${tags[t.k] && tags[t.k].tag === 'cut' ? ' · cut' : ''}</option>`;
+    const by = ts => ts.slice().sort((a, b) => starsOf(b.k) - starsOf(a.k) || a.s.name.localeCompare(b.s.name)).map(opt).join('');
+    const used = new Set(Object.values(MUSIC_FOR));
+    return (cur ? '' : `<option value="" selected>(none: plays the map track)</option>`) + `<optgroup label="written (own parts)">${by(tracks.filter(t => fam[t.k].made === 'written'))}</optgroup>` +
+      `<optgroup label="free (playing nowhere)">${by(tracks.filter(t => fam[t.k].made !== 'written' && !used.has(t.k)))}</optgroup>` +
+      `<optgroup label="already playing somewhere">${by(tracks.filter(t => fam[t.k].made !== 'written' && used.has(t.k)))}</optgroup>`;
+  }
+  function renderCorps() {
+    const f = filter.toLowerCase();
+    const places = ALL_PLACES.filter(pl => {
+      if (corpFilter === 'need' && needOf(pl) < 2) return false;
+      if (corpFilter === 'changed' && MUSIC_FOR[pl] === ORIG_FOR[pl]) return false;
+      const k = MUSIC_FOR[pl];
+      return !f || [placeName(pl), SONGS[k] ? SONGS[k].name : 'map track', likeText(k)].join(' ').toLowerCase().includes(f);
+    });
+    $('#crows').innerHTML = places.map(pl => {
+      const k = MUSIC_FOR[pl], s = SONGS[k], nd = needOf(pl), ch = MUSIC_FOR[pl] !== ORIG_FOR[pl];
+      return `<tr class="place${trackFor(pl) === p.key ? ' playing' : ''}" data-pl="${pl}">
+        <td class="pname">${placeName(pl)}</td><td>${s ? s.name : `<span class="dim">none (map track: ${SONGS[MUSIC_FOR.map].name})</span>`}${ch ? ` <span class="chg" title="was ${wasName(pl)}">changed</span>` : ''}</td>
+        <td>${s ? starsHtml(k) : ''}</td><td><span class="made ${fam[k] ? fam[k].made : ''}">${fam[k] ? fam[k].made : ''}</span></td><td class="like">${likeHtml(k)}</td>
+        <td>${nd === 2 ? '<span class="need">needs a track</span>' : nd === 1 ? '<span class="weak">weak</span>' : ''}${ch ? ` <button class="sm" data-undo="${pl}">undo</button>` : ''}</td>
+        <td><select data-pl="${pl}">${trackOptions(k)}</select></td></tr>`;
+    }).join('');
+    const all = ALL_PLACES;
+    $('#count').textContent = `${places.length} of ${all.length} places · ${all.filter(pl => needOf(pl) === 2).length} need a track · ${changedPlaces().length} changed`;
+  }
+  const wasName = pl => SONGS[ORIG_FOR[pl]] ? SONGS[ORIG_FOR[pl]].name : 'none (the map track)';
+  function assign(pl, k) {
+    if (k) MUSIC_FOR[pl] = k; else delete MUSIC_FOR[pl];
+    saveAssign(); refreshUsed(); renderList(); pick(trackFor(pl), true);
+  }
+  $('#crows').addEventListener('change', e => { const sel = e.target.closest('select[data-pl]'); if (sel) assign(sel.dataset.pl, sel.value); });
+  $('#crows').addEventListener('click', e => {
+    if (e.target.closest('select')) return;
+    const st = e.target.closest('.stars span');
+    if (st) { setStars(st.parentNode.dataset.k, +st.dataset.n); return; }
+    const u = e.target.closest('[data-undo]');
+    if (u) { assign(u.dataset.undo, ORIG_FOR[u.dataset.undo]); return; }
+    const tr = e.target.closest('tr.place'); if (tr) pick(trackFor(tr.dataset.pl), true);
+  });
+  const corpBtns = { all: '#cAll', need: '#cNeed', changed: '#cChanged' };
+  for (const [k, sel] of Object.entries(corpBtns)) $(sel).addEventListener('click', () => {
+    corpFilter = k; for (const [k2, s2] of Object.entries(corpBtns)) $(s2).classList.toggle('on', k2 === k); renderCorps();
+  });
+  $('#cCopy').addEventListener('click', () => {
+    const ch = changedPlaces();
+    if (!ch.length) { $('#count').textContent = 'no changed places yet.'; return; }
+    const txt = ch.map(pl => MUSIC_FOR[pl] ? `MUSIC_FOR.${pl} = '${MUSIC_FOR[pl]}';   // ${placeName(pl)}: ${SONGS[MUSIC_FOR[pl]].name}${MUSIC_FOR[pl] in DEMOS ? ' (a demo: needs writing into the game)' : ''}, was ${wasName(pl)}`
+      : `delete MUSIC_FOR.${pl};   // ${placeName(pl)}: back to the map track, was ${wasName(pl)}`).join('\n');
+    const done = () => { $('#count').textContent = `copied ${ch.length} assignment${ch.length > 1 ? 's' : ''}.`; };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => prompt('copy this:', txt)); else prompt('copy this:', txt);
+  });
+  $('#cReset').addEventListener('click', () => {
+    if (!changedPlaces().length || !confirm('Put every place back on its own track?')) return;
+    for (const pl of ALL_PLACES) { if (ORIG_FOR[pl]) MUSIC_FOR[pl] = ORIG_FOR[pl]; else delete MUSIC_FOR[pl]; } saveAssign(); refreshUsed(); renderList();
+  });
+  const setView = v => {
+    document.body.classList.toggle('corps', v === 'corps');
+    $('#vTracks').classList.toggle('on', v !== 'corps'); $('#vCorps').classList.toggle('on', v === 'corps');
+    try { localStorage.setItem('neon.music.view', v); } catch (e) { /* private mode */ }
+    renderList();
+  };
+  $('#vTracks').addEventListener('click', () => setView('tracks'));
+  $('#vCorps').addEventListener('click', () => setView('corps'));
   $('#rows').addEventListener('click', e => {
     const st = e.target.closest('.stars span');
     if (st) { setStars(st.parentNode.dataset.k, +st.dataset.n); return; }
     const tr = e.target.closest('tr.track'); if (tr) pick(tr.dataset.k, true);
   });
-  document.querySelectorAll('th').forEach(th => th.addEventListener('click', () => {
+  document.querySelectorAll('#trackTable th').forEach(th => th.addEventListener('click', () => {
     const first = th.dataset.k === 'stars' ? -1 : 1;   // stars: best first
     if (sortK === th.dataset.k) { if (sortDir === first) sortDir = -first; else { sortK = 'order'; sortDir = 1; } } else { sortK = th.dataset.k; sortDir = first; }
     renderList();
@@ -468,7 +645,7 @@
   });
   // The list as text, to paste into a chat or a doc.
   $('#export').addEventListener('click', () => {
-    const line = t => `- ${starsOf(t.k) ? '★'.repeat(starsOf(t.k)) + ' ' : ''}${t.s.name} (${t.s.bpm} bpm, ${keyName(t.s)}, ${groove(t.s)}; ${t.used.join(', ') || 'unused'})${tags[t.k] && tags[t.k].note ? ': ' + tags[t.k].note : ''}`;
+    const line = t => `- ${starsOf(t.k) ? '★'.repeat(starsOf(t.k)) + ' ' : ''}${t.s.name} (${t.s.bpm} bpm, ${keyName(t.s)}, ${groove(t.s)}; ${t.used.join(', ') || 'unused'}; ${fam[t.k].made}${fam[t.k].like ? (fam[t.k].from ? ', from ' : ', like ') + SONGS[fam[t.k].like].name : ''}${famName(t.k) && famName(t.k) !== t.s.name ? ', family ' + famName(t.k) : ''})${tags[t.k] && tags[t.k].note ? ': ' + tags[t.k].note : ''}`;
     const group = (title, f) => { const ts = tracks.filter(f).sort((a, b) => starsOf(b.k) - starsOf(a.k)); return ts.length ? `${title} (${ts.length})\n${ts.map(line).join('\n')}\n` : ''; };
     const tg = t => (tags[t.k] && tags[t.k].tag) || '';
     const txt = [group('KEEP', t => tg(t) === 'keep'), group('MAYBE', t => tg(t) === 'maybe'), group('CUT', t => tg(t) === 'cut'),
@@ -480,7 +657,7 @@
 
   // ---- keys
   document.addEventListener('keydown', e => {
-    if ((e.target.matches && e.target.matches('input[type=text], textarea')) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if ((e.target.matches && e.target.matches('input[type=text], textarea, select')) ||e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
     if (k === ' ') { e.preventDefault(); $('#play').click(); }
     else if (k === 'arrowdown') { e.preventDefault(); step(1); }
@@ -513,7 +690,8 @@
 
   if (window.LOAD_ERRORS && window.LOAD_ERRORS.length) $('#errors').textContent = 'some files had errors (their tracks may still be fine):\n' + window.LOAD_ERRORS.slice(0, 6).join('\n');
   if (typeof SONGS === 'undefined') document.body.textContent = "Couldn't load the game's music. Open this page from the repo's tools/ folder.";
-  renderList(); renderPlayer();
+  let view = 'tracks'; try { view = localStorage.getItem('neon.music.view') || 'tracks'; } catch (e) { /* private mode */ }
+  setView(view); renderPlayer();
 })();
 </script>
 </body>

@@ -1,6 +1,6 @@
 // NeoN+1 corps/playball.js
 'use strict';
-NEON_FILES.push(['corps/playball.js', 'v13.13']);
+NEON_FILES.push(['corps/playball.js', 'v13.15']);
 // Its boss mod: OVERTIME (overtime), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -46,8 +46,7 @@ function pbStep(lv, b, h, now) {
 }
 
 // ---- its music
-SONGS.seventhinning = { name: 'SEVENTH INNING', bpm: 132, root: 50, scale: 'major', prog: [0, 3, 4, 3], bass: 'eighths', drums: 'four',  arp: 'updown', pingpong: true };
-MUSIC_FOR.playball = 'seventhinning';
+MUSIC_FOR.playball = 'anthem';   // ANTHEM (in data/music.js)
 
 // ---- the corp
 CORPS.playball = {

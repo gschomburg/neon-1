@@ -1,12 +1,17 @@
 // NeoN+1 corps/glacier.js
 'use strict';
-NEON_FILES.push(['corps/glacier.js', 'v13.13']);
+NEON_FILES.push(['corps/glacier.js', 'v13.15']);
 // Its boss mod: ICEBOX (icebox), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.permafrost = { name: 'PERMAFROST',     bpm: 70,  root: 40, scale: 'minor',    prog: [0, 5, 3, 6], style: 'ambient', echo: 0.7, feedback: 0.6 };
-MUSIC_FOR.glacier = 'permafrost';
+// Made from HOLLOW: the same band, its own tune.
+SONGS.deepfreeze = { name: 'DEEP FREEZE', from: 'hollow', bpm: 80, root: 38, scale: 'minor', prog: [0, 5, 3, 6], kit: 'industrial', pump: 0.2, padVoice: 'glass', breakdown: 4, echo: 0.55, feedback: 0.45,
+  beat: { kick: 'x.........x.....', snare: '........x.......', hat: 'x.x.x.x.x.x.x.x.' },
+  bassVoice: 'sub', bassLine: '0 - - - - - - - - - - - - - - -',
+  melody: ['7 . 4 . 7 . 4 . 2 . 4 . 7 . 4 .', '12 . 9 . 12 . 9 . 7 . 9 . 12 . 9 .', '10 . 7 . 10 . 7 . 5 . 7 . 10 . 7 .', '13 . 10 . 13 . 10 . 8 . 10 . 13 . 11 .'],
+  melodyAt: 0, melodyOct: -1, leadVoice: 'bell', stab: 'x.x.xx.x.x.xx.x.', stabVoice: 'saw', stabAt: 2, arpVoice: 'glass', arpLine: '. . . . . . . . 5 - - - 3 - - -' };
+MUSIC_FOR.glacier = 'deepfreeze';
 
 // ---- the corp
 // ---- Tier 2, group 2: timed board effects (corp `tick`). tick(lv, lt, dt, now) runs every

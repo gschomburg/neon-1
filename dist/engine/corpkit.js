@@ -38,7 +38,7 @@
 //   engine/mods.js      zombie, ROT
 //
 'use strict';
-NEON_FILES.push(['engine/corpkit.js', 'v13.13']);
+NEON_FILES.push(['engine/corpkit.js', 'v13.15']);
 
 // ---------------- Content ----------------
 // tell: how the corp picks its safe tile. bossTell: the boss layer's twist.
@@ -79,7 +79,7 @@ const cellZone = (t, lv) => { const e = (t.col === 0 || t.col === lv.cols - 1) +
 function beatClock(now) {
   const b = Music.beat && Music.beat();
   if (b && b.ms > 0) { const d = (now - b.perf) / b.ms; return { phase: ((d % 1) + 1) % 1, n: b.n + Math.floor(d), bpm: 60000 / b.ms }; }
-  const sg = SONGS[MUSIC_FOR[st.corp && st.corp.def.key]] || { bpm: 120 }, ms = 60000 / sg.bpm, d = now / ms;
+  const sg = SONGS[trackFor(st.corp && st.corp.def.key)] || { bpm: 120 }, ms = 60000 / sg.bpm, d = now / ms;
   return { phase: d % 1, n: Math.floor(d), bpm: sg.bpm };
 }
 // LIFTCO (and EXPRESS): a lift that runs up and down the rows and stops longer on one.

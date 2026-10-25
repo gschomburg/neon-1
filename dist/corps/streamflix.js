@@ -1,12 +1,17 @@
 // NeoN+1 corps/streamflix.js
 'use strict';
-NEON_FILES.push(['corps/streamflix.js', 'v13.13']);
+NEON_FILES.push(['corps/streamflix.js', 'v13.15']);
 // Its boss mod: FREEZE FRAME (freezeframe), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.buffering = { name: 'BUFFERING',      bpm: 104, root: 41, scale: 'minor',    prog: [0, 6, 5, 6], bass: 'offbeat', drums: 'four',  arp: 'down', echo: 0.4, feedback: 0.35 };
-MUSIC_FOR.streamflix = 'buffering';
+// Made from NIGHT DRIVE: the same band, its own tune.
+SONGS.stillwatching = { name: 'STILL WATCHING', from: 'nightdrive', bpm: 84, root: 46, scale: 'minor', prog: [0, 6, 5, 6], sevenths: true, padVoice: 'glass', echo: 0.45,
+  beat: { kick: 'x.......x.......', snare: '....x.......x...', hat: '..x...x...x...x.' },
+  bassLine: '0 - - - - - - - 0 - - - 0 - 0 -',
+  melody: ['2 - - - - - 0 - -1 - - - 0 - - -', '4 - - - - - - - . . . . . . . .', '2 - - - - - 4 - 5 - - - 4 - - -', '2 - - - - - - - . . . . . . . .'],
+  leadVoice: 'keys' };
+MUSIC_FOR.streamflix = 'stillwatching';
 
 // ---- the corp
 CORPS.streamflix = {

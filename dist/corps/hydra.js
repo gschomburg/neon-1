@@ -1,6 +1,6 @@
 // NeoN+1 corps/hydra.js
 'use strict';
-NEON_FILES.push(['corps/hydra.js', 'v13.13']);
+NEON_FILES.push(['corps/hydra.js', 'v13.15']);
 // Its boss mod: HEADCOUNT (headcount), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -18,8 +18,13 @@ function freeNear(lv, t, r) {
 }
 
 // ---- its music
-SONGS.manyheads = { name: 'MANY HEADS',     bpm: 112, root: 40, scale: 'harmonic', prog: [0, 1, 0, 5], bass: 'gallop',  drums: 'heavy', arp: 'updown' };
-MUSIC_FOR.hydra = 'manyheads';
+// Made from MACHINE HEART: the same band, its own tune.
+SONGS.twomoreheads = { name: 'TWO MORE HEADS', from: 'machineheart', bpm: 96, root: 38, scale: 'phrygian', prog: [0, 1, 0, 1], kit: 'industrial', pump: 0.2, padVoice: 'choir', breakdown: 3,
+  beat: { kick: 'x.....x.x.......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', ghost: '...........x...x' },
+  bassVoice: 'picked', bassLine: '0 . 0 . 1 . 0 . 0 . 0 . 1 . 3 .',
+  melody: ['0 - - - 1 - - - 0 - - - -1 - - -', '0 - - - 1 - - - 3 - - - 1 - - -', '4 - - - 5 - - - 4 - - - 3 - - -', '1 - - - - - - - 0 - - - - - - -'],
+  melodyAt: 0, leadVoice: 'keys', arpVoice: 'pluck', arpLine: '0 . . 0 . . 1 . 0 . . 0 . . 2 .' };
+MUSIC_FOR.hydra = 'twomoreheads';
 
 // ---- the corp
 CORPS.hydra = {

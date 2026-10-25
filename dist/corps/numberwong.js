@@ -1,6 +1,6 @@
 // NeoN+1 corps/numberwong.js
 'use strict';
-NEON_FILES.push(['corps/numberwong.js', 'v13.13']);
+NEON_FILES.push(['corps/numberwong.js', 'v13.15']);
 // Its boss mod: PENCIL MARKS (pencil), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -8,8 +8,13 @@ NEON_FILES.push(['corps/numberwong.js', 'v13.13']);
 const IS_PRIME = v => { if (v < 2) return false; for (let d = 2; d * d <= v; d++) if (v % d === 0) return false; return true; };
 
 // ---- its music
-SONGS.numberwong = { name: 'NUMBERWONG',     bpm: 132, root: 50, scale: 'harmonic', prog: [0, 5, 4, 0], bass: 'gallop',  drums: 'heavy', arp: 'updown', tick: true };
-MUSIC_FOR.numberwong = 'numberwong';
+// Made from ANTHEM: the same band, its own tune.
+SONGS.thatsnumberwong = { name: "THAT'S NUMBERWONG", from: 'anthem', bpm: 140, root: 43, scale: 'major', prog: [0, 5, 1, 4], kit: 'break', pump: 0, padVoice: 'organ', echo: 0.3,
+  beat: { kick: 'x...x...x...x...', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassVoice: 'picked', bassLine: '0 . 0 . 4 . 0 . 0 . 0 . 4 . 0 .',
+  melody: ['7 . 4 . 7 . 4 . 8 - 7 - 4 - . .', '5 . 3 . 5 . 3 . 6 - 5 - 3 - . .', '4 . 2 . 4 . 2 . 5 - 4 - 2 - . .', '0 - 4 - 7 - - - . . 14 - - - . .'],
+  leadVoice: 'chip', arpVoice: 'bell', arp: 'updown' };
+MUSIC_FOR.numberwong = 'thatsnumberwong';
 
 // ---- the corp
 CORPS.numberwong = {

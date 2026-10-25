@@ -1,12 +1,17 @@
 // NeoN+1 corps/predator.js
 'use strict';
-NEON_FILES.push(['corps/predator.js', 'v13.13']);
+NEON_FILES.push(['corps/predator.js', 'v13.15']);
 // Its boss mod: INFRARED (infrared), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.thermal = { name: 'THERMAL',        bpm: 86,  root: 38, scale: 'minor',    prog: [0, 6, 0, 5], bass: 'pulse',   drums: 'half',  arp: 'down', echo: 0.55, feedback: 0.5 };
-MUSIC_FOR.predator = 'thermal';
+// Made from RED DEEP: the same band, its own tune.
+SONGS.heatsignature = { name: 'HEAT SIGNATURE', from: 'reddeep', bpm: 112, root: 40, scale: 'harmonic', prog: [0, 0, 5, 4], kit: 'industrial', pump: 0, padVoice: 'choir', echo: 0.45, feedback: 0.45,
+  beat: { kick: 'x.....x...x.....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassLine: '0 . . 0 . . 0 . 0 . . 0 . . 1 .',
+  melody: ['. . . . . . . . 11 - - - 10 - - -', '. . . . . . . . 7 - - - - - - -', '. . . . . . . . 11 - - - 12 - - -', '. . . . . . . . 13 - - - 11 - - -'],
+  leadVoice: 'saw', arpVoice: 'pluck', arpLine: '. . . . . . . . 0 . 1 . 2 . 1 .' };
+MUSIC_FOR.predator = 'heatsignature';
 
 // ---- the corp
 CORPS.predator = {

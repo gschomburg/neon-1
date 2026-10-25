@@ -1,6 +1,6 @@
 // NeoN+1 data/music.js: Music: scales, every track, and which track plays where.
 'use strict';
-NEON_FILES.push(['data/music.js', 'v13.13']);
+NEON_FILES.push(['data/music.js', 'v13.15']);
 
 // ---------------- Music ----------------
 // Generated 80s-style synthwave: pad, bass, drums, arp and lead, scheduled a little
@@ -19,18 +19,19 @@ const SONGS = {
   // bell notes into a long echo, no drums. (echo/feedback: per-track delay.)
   night_rain: { name: 'NIGHT RAIN',     bpm: 64,  root: 40, scale: 'minor',    prog: [0, 5, 3, 6], style: 'ambient', echo: 0.62, feedback: 0.55 },
   gridlock:   { name: 'GRIDLOCK',       bpm: 96,  root: 45, scale: 'minor',    prog: [0, 5, 3, 4], bass: 'eighths', drums: 'four',  arp: 'up' },
-  meltdown:   { name: 'MELTDOWN',       bpm: 112, root: 38, scale: 'harmonic', prog: [0, 5, 1, 4], bass: 'gallop',  drums: 'heavy', arp: 'down' },
 };
 // Where each track plays: menus, the map (+ market, caches, safehouses), and each corp.
+// A corp with no track of its own plays the map track (trackFor in engine/music.js).
 const MUSIC_FOR = {
   menu: 'night_rain', map: 'gridlock',
-  omni: 'meltdown',
+  omni: 'dropzone',   // DROP ZONE (the user's note: "boss"); MELTDOWN was cut 2026-10-24
 };
 
 // ---------------- New tracks (2026-10-24), not playing anywhere yet ----------------
 // One per artist the user named as an inspiration (docs/MUSIC.md), each with its own melody, bass riff and beat
 // (the written parts: see the top of engine/music.js). To use one, point a MUSIC_FOR line at it.
 // Scale degrees: 0 = the root, 7 = an octave up. Bars play in turn.
+// A track made from another one says so with from: 'thatkey' (the game ignores it; the music tool groups them).
 Object.assign(SONGS, {
   // Daft Punk, Tron: Legacy: a 16th-note octave bass, a gritty staccato riff, brass hits on the bar
   lightcycle: { name: 'LIGHT CYCLE', bpm: 128, root: 38, scale: 'minor', prog: [0, 0, 5, 3], kit: '808', pump: 0.7, padVoice: 'glass',
@@ -91,4 +92,15 @@ Object.assign(SONGS, {
     bassVoice: 'sub', bassLine: '0 . . 0 . . 0 . . . 0 . 3 . . .', stab: 'x..x....x..x....', stabVoice: 'vox',
     melody: ['7 . 7 9 . 7 . 4 . . 5 . 4 . 2 .', '4 . 4 5 . 4 . 2 . . 0 . . . . .', '5 . 5 7 . 5 . 3 . . 4 . 3 . 0 .', '6 . 6 8 . 6 . 4 . . 5 . 4 . 1 .'],
     leadVoice: 'chip', arpVoice: 'chip', arp: 'up' },
+  // Evanescence: light and haunting at first (a choir pad, a held sub bass, a piano figure from the start), then the
+  // build: half-time rock drums, chugging power chords and a high glass line, the piano doubled up for bosses.
+  // Every 4th time round the drums and bass drop out and the piano is alone again.
+  hollow: { name: 'HOLLOW', bpm: 90, root: 40, scale: 'minor', prog: [0, 5, 2, 6], kit: 'industrial', pump: 0.2, padVoice: 'choir', breakdown: 4,
+    echo: 0.5, feedback: 0.45,
+    beat: { kick: 'x.........x.....', snare: '........x.......', hat: 'x...x...x...x...', ghost: '.............x.x' },
+    bassVoice: 'sub', bassLine: '0 - - - - - - - - - - - 0 - 4 -',
+    melody: ['0 - 4 - 7 - 4 - 2 - 4 - 7 - 4 -', '5 - 9 - 12 - 9 - 7 - 9 - 12 - 9 -', '2 - 6 - 9 - 6 - 4 - 6 - 9 - 6 -', '6 - 10 - 13 - 10 - 8 - 10 - 13 - 10 -'],
+    melodyAt: 0, melodyOct: -1, leadVoice: 'keys',
+    stab: 'x.x.xx.x.x.xx.x.', stabVoice: 'saw', stabAt: 2,
+    arpVoice: 'glass', arpLine: '. . . . . . . . 5 - - - 4 - - -' },
 });

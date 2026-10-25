@@ -1,6 +1,6 @@
 // NeoN+1 corps/zodiac.js
 'use strict';
-NEON_FILES.push(['corps/zodiac.js', 'v13.13']);
+NEON_FILES.push(['corps/zodiac.js', 'v13.15']);
 // Its boss mod: HOROSCOPE (horoscope), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -13,8 +13,13 @@ const ELEMENT_MARK = { fire: '^ ^ ^', earth: '# # #', air: '= = =', water: '~ ~ 
 const ELEMENT_OPPOSITE = { fire: 'air', air: 'fire', earth: 'water', water: 'earth' };
 
 // ---- its music
-SONGS.retrograde = { name: 'RETROGRADE',     bpm: 84,  root: 46, scale: 'phrygian', prog: [0, 6, 5, 1], bass: 'offbeat', drums: 'half',  arp: 'mirror', pingpong: true, echo: 0.5, feedback: 0.45 };
-MUSIC_FOR.zodiac = 'retrograde';
+// Made from RED DEEP: the same band, its own tune.
+SONGS.retrogrademoon = { name: 'RETROGRADE MOON', from: 'reddeep', bpm: 108, root: 44, scale: 'harmonic', prog: [0, 5, 0, 4], kit: 'break', pump: 0, padVoice: 'choir', echo: 0.35, feedback: 0.4,
+  beat: { kick: 'x.....x...x.....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassLine: '0 . 4 . 7 . 4 . 0 . 4 . 7 . 4 .',
+  melody: ['7 . 8 . 7 . 4 . 7 . 8 . 7 . 4 .', '7 . 8 . 11 . 10 . 8 - - - . . . .', '5 . 6 . 5 . 2 . 5 . 6 . 5 . 2 .', '4 . 6 . 8 . 11 . 10 - - - . . . .'],
+  leadVoice: 'bell', arpVoice: 'pluck', arpLine: '. . . . . . . . 0 . 1 . 2 . 1 .' };
+MUSIC_FOR.zodiac = 'retrogrademoon';
 
 // ---- the corp
 CORPS.zodiac = {

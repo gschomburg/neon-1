@@ -1,12 +1,17 @@
 // NeoN+1 corps/apiary.js
 'use strict';
-NEON_FILES.push(['corps/apiary.js', 'v13.13']);
+NEON_FILES.push(['corps/apiary.js', 'v13.15']);
 // Its boss mod: HONEYCOMB (honeycomb), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.hive = { name: 'HIVE MIND',      bpm: 112, root: 46, scale: 'harmonic', prog: [0, 1, 0, 5], bass: 'eighths', drums: 'four',  arp: 'mirror', pingpong: true };
-MUSIC_FOR.apiary = 'hive';
+// Made from DROP ZONE: the same band, its own tune.
+SONGS.swarm = { name: 'SWARM', from: 'dropzone', bpm: 138, root: 46, scale: 'harmonic', prog: [0, 0, 1, 0], kit: 'industrial', pump: 0.4, padVoice: 'choir', breakdown: 4,
+  beat: { kick: 'x.........x.....', snare: '........x.......', hat: 'x.x.x.x.x.x.x.x.', open: '..............x.' },
+  bassVoice: 'acid', bassLine: '0 1 0 1 0 1 0 1 0 1 0 1 3 3 1 1',
+  melody: ['. . . . . . . . 4 5 4 5 4 - - -', '. . . . . . . . 7 8 7 8 7 - 6 -'],
+  leadVoice: 'dist', arpVoice: 'chip', arpLine: '. . . . . . . . . . . . 0 1 0 1' };
+MUSIC_FOR.apiary = 'swarm';
 
 // ---- the corp
 CORPS.apiary = {

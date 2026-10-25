@@ -1,12 +1,16 @@
 // NeoN+1 corps/dialtone.js
 'use strict';
-NEON_FILES.push(['corps/dialtone.js', 'v13.13']);
+NEON_FILES.push(['corps/dialtone.js', 'v13.15']);
 // Its boss mod: HANDSHAKE (handshake), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.handshake = { name: 'HANDSHAKE',      bpm: 110, root: 46, scale: 'dorian',   prog: [0, 3, 4, 3], bass: 'offbeat', drums: 'four',  arp: 'updown', tick: true };
-MUSIC_FOR.dialtone = 'handshake';
+// Made from TRACKER: the same band, its own tune.
+SONGS.handshake56k = { name: 'HANDSHAKE 56K', from: 'tracker', bpm: 128, root: 45, scale: 'minor', prog: [0, 3, 4, 0], kit: 'chip', drums: 'break', pump: 0.4, padVoice: 'none',
+  bassVoice: 'sub', bassLine: '0 . . 0 . . 0 . . . 0 . 4 . . .', stab: 'x..x....x..x....', stabVoice: 'vox',
+  melody: ['0 . 4 . 7 . 4 . 9 . 7 . 4 . 2 .', '3 . 5 . 8 . 5 . 10 . 8 . 5 . 3 .', '4 . 6 . 9 . 6 . 11 . 9 . 6 . 4 .', '7 . . . 6 . . . 4 . . . 2 . . .'],
+  leadVoice: 'chip', arpVoice: 'chip', arp: 'up' };
+MUSIC_FOR.dialtone = 'handshake56k';
 
 // ---- the corp
 // ---- Tier 2, group 3: sound tells (each also shows on the hint row, for muted players).

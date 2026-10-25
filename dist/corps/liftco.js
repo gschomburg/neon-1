@@ -1,12 +1,17 @@
 // NeoN+1 corps/liftco.js
 'use strict';
-NEON_FILES.push(['corps/liftco.js', 'v13.13']);
+NEON_FILES.push(['corps/liftco.js', 'v13.15']);
 // Its boss mod: EXPRESS (express), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.muzak = { name: 'MUZAK',          bpm: 92,  root: 53, scale: 'major',    prog: [0, 5, 3, 4], bass: 'pulse',   drums: 'half',  arp: 'updown' };
-MUSIC_FOR.liftco = 'muzak';
+// Made from ANTHEM: the same band, its own tune.
+SONGS.goingup = { name: 'GOING UP', from: 'anthem', bpm: 120, root: 46, scale: 'major', prog: [0, 1, 3, 4], sevenths: true, kit: 'break', pump: 0, padVoice: 'organ', echo: 0.3,
+  beat: { kick: 'x...x...x...x...', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassVoice: 'picked', bassLine: '0 . 0 . 0 . 0 . 0 . 0 . 0 . 2 .',
+  melody: ['0 - 1 - 2 - 3 - 4 - - - . . . .', '1 - 2 - 3 - 4 - 5 - - - . . . .', '2 - 3 - 4 - 5 - 6 - - - . . . .', '7 - - - 4 - - - 0 - - - . . . .'],
+  leadVoice: 'keys', arpVoice: 'bell', arp: 'up' };
+MUSIC_FOR.liftco = 'goingup';
 
 // ---- the corp
 CORPS.liftco = {

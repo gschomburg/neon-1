@@ -1,6 +1,6 @@
 // NeoN+1 corps/monte.js
 'use strict';
-NEON_FILES.push(['corps/monte.js', 'v13.13']);
+NEON_FILES.push(['corps/monte.js', 'v13.15']);
 // Its boss mod: QUICK EYE (quickeye), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -30,8 +30,13 @@ async function monteShuffle(lv, count, ms, boss) {
 }
 
 // ---- its music
-SONGS.threecard = { name: 'THREE CARD',     bpm: 118, root: 45, scale: 'harmonic', prog: [0, 4, 0, 5], bass: 'offbeat', drums: 'four',  arp: 'mirror', pingpong: true };
-MUSIC_FOR.monte = 'threecard';
+// Made from LIGHT CYCLE: the same band, its own tune.
+SONGS.shellgame = { name: 'SHELL GAME', from: 'lightcycle', bpm: 136, root: 43, scale: 'harmonic', prog: [0, 5, 4, 0], kit: '808', pump: 0.7, padVoice: 'glass',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.', open: '......x.......x.' },
+  bassLine: '0 7 0 7 0 7 0 7 0 7 0 7 0 7 0 7',
+  melody: ['4 . 6 . 7 . 6 . 4 . 6 . 7 . 6 .', '5 . 7 . 8 . 7 . 5 . 7 . 8 . 7 .', '4 . 6 . 7 . 9 . 11 . 9 . 7 . 6 .', '4 . . . 6 . . . 7 . . . . . . .'],
+  leadVoice: 'saw', arpVoice: 'chip', arpLine: '. . 3 . . . 4 . . . 5 . . . 4 .', stab: 'x.......x.......', stabVoice: 'brass', stabAt: 2 };
+MUSIC_FOR.monte = 'shellgame';
 
 // ---- the corp
 CORPS.monte = {

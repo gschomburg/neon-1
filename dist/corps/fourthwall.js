@@ -1,6 +1,6 @@
 // NeoN+1 corps/fourthwall.js
 'use strict';
-NEON_FILES.push(['corps/fourthwall.js', 'v13.13']);
+NEON_FILES.push(['corps/fourthwall.js', 'v13.15']);
 // Its boss mod: SPOILER (spoiler), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -20,8 +20,13 @@ function fwLines(top, colTop) {
 const FW_BUTTONS = ['  OK ', 'RETRY', ' SEND', ' HELP', ' [X] ', ' (x) ', ' [+] ', ' {x} ', ' [*] ', 'CLOSE', ' x   ', ' [k] '];
 
 // ---- its music
-SONGS.bluescreen = { name: 'BLUE SCREEN',    bpm: 100, root: 45, scale: 'phrygian', prog: [0, 1, 0, 1], bass: 'offbeat', drums: 'four',  arp: 'down', tick: true };
-MUSIC_FOR.fourthwall = 'bluescreen';
+// Made from DEADPAN: the same band, its own tune.
+SONGS.helloyou = { name: 'HELLO YOU', from: 'deadpan', bpm: 132, root: 45, scale: 'minor', prog: [0, 0, 5, 4], kit: '808', pump: 0.3, gate: 'x...x...x...x...',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.' },
+  bassVoice: 'pluck', bassLine: '0 . 0 7 . 0 0 . 0 . 0 7 . 0 3 .',
+  melody: ['4 . 4 . 4 . 5 . 4 - - - . . . .', '4 . 4 . 4 . 3 . 4 - - - . . . .', '3 . 3 . 3 . 4 . 5 - - - . . . .', '6 . 6 . 5 . 6 . 7 - - - . . . .'],
+  leadVoice: 'chip', arpVoice: 'chip', arpLine: '. . . . 0 . . . . . . . 2 . . .' };
+MUSIC_FOR.fourthwall = 'helloyou';
 
 // ---- the corp
 CORPS.fourthwall = {

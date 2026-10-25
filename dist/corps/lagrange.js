@@ -1,6 +1,6 @@
 // NeoN+1 corps/lagrange.js
 'use strict';
-NEON_FILES.push(['corps/lagrange.js', 'v13.13']);
+NEON_FILES.push(['corps/lagrange.js', 'v13.15']);
 // Its boss mod: PRECOG (precog), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -23,8 +23,13 @@ function lagLand(lv, cell) {
 }
 
 // ---- its music
-SONGS.lightlag = { name: 'LIGHT LAG',      bpm: 92,  root: 46, scale: 'dorian',   prog: [0, 3, 5, 4], bass: 'pulse',   drums: 'half',  arp: 'updown', echo: 0.75, feedback: 0.55 };
-MUSIC_FOR.lagrange = 'lightlag';
+// Made from HOLLOW: the same band, its own tune.
+SONGS.farside = { name: 'FAR SIDE', from: 'hollow', bpm: 70, root: 45, scale: 'minor', prog: [0, 6, 5, 6], sevenths: true, kit: 'industrial', pump: 0.2, padVoice: 'choir', breakdown: 3, echo: 0.7, feedback: 0.6,
+  beat: { kick: 'x.........x.....', snare: '........x.......', hat: '....x.......x...' },
+  bassVoice: 'sub', bassLine: '0 - - - - - - - - - - - 0 - - -',
+  melody: ['0 - 4 - 7 - 9 - 7 - 4 - 2 - 4 -', '6 - 10 - 13 - 15 - 13 - 10 - 8 - 10 -', '5 - 9 - 12 - 14 - 12 - 9 - 7 - 9 -', '6 - 10 - 13 - - - - - - - - - - -'],
+  melodyAt: 0, melodyOct: -1, leadVoice: 'keys', stab: 'x-------x-------', stabVoice: 'brass', stabAt: 3, arpVoice: 'glass', arpLine: '. . . . 5 - - - . . . . 3 - - -' };
+MUSIC_FOR.lagrange = 'farside';
 
 // ---- the corp
 CORPS.lagrange = {

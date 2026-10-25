@@ -1,6 +1,6 @@
 // NeoN+1 corps/gravitas.js
 'use strict';
-NEON_FILES.push(['corps/gravitas.js', 'v13.13']);
+NEON_FILES.push(['corps/gravitas.js', 'v13.15']);
 // Its boss mod: ANTIGRAV (antigrav), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -33,8 +33,13 @@ async function gravDrop(lv, own = true) {
 }
 
 // ---- its music
-SONGS.freefall = { name: 'FREE FALL',      bpm: 100, root: 43, scale: 'dorian',   prog: [0, 6, 5, 4], bass: 'eighths', drums: 'four',  arp: 'down', echo: 0.45, feedback: 0.45 };
-MUSIC_FOR.gravitas = 'freefall';
+// Made from LIGHT CYCLE: the same band, its own tune.
+SONGS.escapevelocity = { name: 'ESCAPE VELOCITY', from: 'lightcycle', bpm: 140, root: 41, scale: 'minor', prog: [0, 6, 5, 3], kit: '808', pump: 0.8, padVoice: 'glass',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.', open: '..............x.' },
+  bassLine: '0 7 0 7 0 7 0 7 0 7 0 7 0 7 0 7',
+  melody: ['0 . 2 . 4 . 7 . 9 . . . 7 . . .', '2 . 4 . 6 . 9 . 11 . . . 9 . . .', '3 . 5 . 7 . 10 . 12 . . . 10 . . .', '14 . 12 . 11 . 9 . 7 . . . . . . .'],
+  leadVoice: 'dist', arpVoice: 'chip', arpLine: '. . 3 . . . 4 . . . 5 . . . 4 .', stab: 'x...............', stabVoice: 'brass', stabAt: 2 };
+MUSIC_FOR.gravitas = 'escapevelocity';
 
 // ---- the corp
 CORPS.gravitas = {

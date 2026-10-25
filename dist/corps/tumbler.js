@@ -1,12 +1,15 @@
 // NeoN+1 corps/tumbler.js
 'use strict';
-NEON_FILES.push(['corps/tumbler.js', 'v13.13']);
+NEON_FILES.push(['corps/tumbler.js', 'v13.15']);
 // Its boss mod: PICKSET (pickset), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.tumblers = { name: 'TUMBLERS',       bpm: 104, root: 41, scale: 'phrygian', prog: [0, 1, 0, 5], bass: 'march',   drums: 'march', arp: 'up' };
-MUSIC_FOR.tumbler = 'tumblers';
+// Made from CAST ON: the same band, its own tune.
+SONGS.piecesofeight = { name: 'PIECES OF EIGHT', from: 'caston', bpm: 144, root: 38, scale: 'minor', prog: [0, 6, 5, 4], meter: 6, swing: 0.46, bass: 'jig', drums: 'shanty', arp: 'mirror', pingpong: true, kit: 'break', padVoice: 'organ',
+  melody: ['4 - 4 4 - 2 0 - - 2 - -', '3 - 3 3 - 1 -1 - - 1 - -', '2 - 2 2 - 4 5 - 4 2 - 0', '1 - - -1 - - 0 - - - - -'],
+  leadVoice: 'brass' };
+MUSIC_FOR.tumbler = 'piecesofeight';
 
 // ---- the corp
 CORPS.tumbler = {

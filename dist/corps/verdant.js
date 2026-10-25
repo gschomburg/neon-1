@@ -1,12 +1,17 @@
 // NeoN+1 corps/verdant.js
 'use strict';
-NEON_FILES.push(['corps/verdant.js', 'v13.13']);
+NEON_FILES.push(['corps/verdant.js', 'v13.15']);
 // Its boss mod: COMPOST (compost), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.regrowth = { name: 'REGROWTH',       bpm: 96,  root: 47, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'pulse',   drums: 'half',  arp: 'mirror', pingpong: true };
-MUSIC_FOR.verdant = 'regrowth';
+// Made from SLOW TIDE: the same band, its own tune.
+SONGS.moss = { name: 'MOSS', from: 'slowtide', bpm: 76, root: 43, scale: 'major', prog: [0, 3, 4, 0], kit: 'break', pump: 0, swing: 0.14, padVoice: 'glass', echo: 0.45, feedback: 0.45,
+  beat: { kick: 'x.......x.......', snare: '....x.......x...', ghost: '...........x....', hat: '..x...x...x...x.' },
+  bassVoice: 'sub', bassLine: '0 - - - - - - - 4 - - - 2 - - -',
+  melody: ['. . . . 2 - - - 4 - - - . . . .', '. . . . 3 - - - 5 - - - . . . .', '. . . . 4 - - - 6 - - - 7 - - -', '. . . . 4 - - - 2 - - - . . . .'],
+  melodyAt: 0, melodyOct: -1, leadVoice: 'bell', arpVoice: 'pluck', arpLine: '0 . . 2 . . 4 . . 2 . . 1 . . .' };
+MUSIC_FOR.verdant = 'moss';
 
 // ---- the corp
 CORPS.verdant = {

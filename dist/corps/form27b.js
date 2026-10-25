@@ -1,6 +1,6 @@
 // NeoN+1 corps/form27b.js
 'use strict';
-NEON_FILES.push(['corps/form27b.js', 'v13.13']);
+NEON_FILES.push(['corps/form27b.js', 'v13.15']);
 // Its boss mod: QUEUE NUMBER (queuenumber), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -14,8 +14,13 @@ const FORM_ORDERS = [
 ];
 
 // ---- its music
-SONGS.redtape = { name: 'RED TAPE',       bpm: 90,  root: 43, scale: 'minor',    prog: [0, 0, 3, 4], bass: 'march',   drums: 'march', arp: 'up' };
-MUSIC_FOR.form27b = 'redtape';
+// Made from MACHINE HEART: the same band, its own tune.
+SONGS.triplicate = { name: 'IN TRIPLICATE', from: 'machineheart', bpm: 112, root: 45, scale: 'phrygian', prog: [0, 0, 1, 6], kit: 'industrial', pump: 0.2, padVoice: 'choir', breakdown: 4,
+  beat: { kick: 'x...x...x...x...', snare: '....x.......x...', ghost: '.x.x.x.x.x.x.x.x', hat: '..x...x...x...x.' },
+  bassVoice: 'picked', bassLine: '0 . 0 . 0 . 0 . 1 . 1 . 0 . 0 .',
+  melody: ['0 . 0 . 0 . . . 1 - - - . . . .', '0 . 0 . 0 . . . -1 - - - . . . .', '3 . 3 . 3 . . . 4 - - - . . . .', '1 . 1 . 1 . . . 0 - - - . . . .'],
+  melodyAt: 0, leadVoice: 'keys', arpVoice: 'pluck', arpLine: '0 . . 0 . . 0 . 1 . . 1 . . 2 .' };
+MUSIC_FOR.form27b = 'triplicate';
 
 // ---- the corp
 // ---- Tier 2, group 5: new pick rules (corp `tap` takes over a tap; true = handled).

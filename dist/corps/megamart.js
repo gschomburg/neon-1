@@ -1,12 +1,17 @@
 // NeoN+1 corps/megamart.js
 'use strict';
-NEON_FILES.push(['corps/megamart.js', 'v13.13']);
+NEON_FILES.push(['corps/megamart.js', 'v13.15']);
 // Its boss mod: COUPON (coupon), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.aisle9 = { name: 'AISLE 9',        bpm: 96,  root: 45, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'pulse',   drums: 'half',  arp: 'up' };
-MUSIC_FOR.megamart = 'aisle9';
+// Made from DEADPAN: the same band, its own tune.
+SONGS.pricecheck = { name: 'PRICE CHECK', from: 'deadpan', bpm: 120, root: 41, scale: 'dorian', prog: [0, 0, 6, 3], kit: '808', pump: 0.3, gate: 'x..x..x.x..x..x.',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.' },
+  bassVoice: 'pluck', bassLine: '0 . 0 7 . 0 0 . 0 . 0 7 . 0 4 .',
+  melody: ['0 . 0 . 0 . 1 . 0 - - - . . . .', '0 . 0 . 0 . 3 . 2 - - - . . . .', '4 . 4 . 4 . 3 . 2 - - - . . . .', '1 . 1 . 2 . 1 . 0 - - - . . . .'],
+  leadVoice: 'square', arpVoice: 'chip', arpLine: '. . . . 0 . . . . . . . 2 . . .' };
+MUSIC_FOR.megamart = 'pricecheck';
 
 // ---- the corp
 CORPS.megamart = {

@@ -1,12 +1,17 @@
 // NeoN+1 corps/brightline.js
 'use strict';
-NEON_FILES.push(['corps/brightline.js', 'v13.13']);
+NEON_FILES.push(['corps/brightline.js', 'v13.15']);
 // Its boss mod: GROUNDED (grounded), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.brownout = { name: 'BROWNOUT',       bpm: 100, root: 45, scale: 'minor',    prog: [0, 5, 3, 4], bass: 'pulse',   drums: 'four',  arp: 'up', tick: true };
-MUSIC_FOR.brightline = 'brownout';
+// Made from LIGHT CYCLE: the same band, its own tune.
+SONGS.highvoltage = { name: 'HIGH VOLTAGE', from: 'lightcycle', bpm: 124, root: 40, scale: 'minor', prog: [0, 3, 5, 6], kit: '808', pump: 0.7, padVoice: 'glass',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.', open: '..............x.' },
+  bassLine: '0 7 0 7 0 7 0 7 0 7 0 7 0 7 0 7',
+  melody: ['7 . 7 . 9 . 7 . 4 . . . 2 . 4 .', '7 . 7 . 9 . 10 . 9 . . . 7 . 4 .', '5 . 5 . 7 . 5 . 2 . . . 0 . 2 .', '6 . 6 . 4 . 6 . 7 . . . . . . .'],
+  leadVoice: 'saw', arpVoice: 'chip', arpLine: '. . 3 . . . 4 . . . 5 . . . 4 .', stab: 'x.......x.......', stabVoice: 'brass', stabAt: 2 };
+MUSIC_FOR.brightline = 'highvoltage';
 
 // ---- the corp
 // ---- Tier 2, group 1: node animation (corp `fx`). fx(t, ft, lv) runs every frame for

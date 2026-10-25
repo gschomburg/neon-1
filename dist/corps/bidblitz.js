@@ -1,6 +1,6 @@
 // NeoN+1 corps/bidblitz.js
 'use strict';
-NEON_FILES.push(['corps/bidblitz.js', 'v13.13']);
+NEON_FILES.push(['corps/bidblitz.js', 'v13.15']);
 // Its boss mod: SNIPE (snipe), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -9,8 +9,13 @@ const AUCTION_CALLS = ['going once!', 'going twice!', 'do I hear 10?', 'bid now!
 const AUCTION_SOLD = ['SOLD!', 'SOLD to the runner!', 'SOLD! another?', 'what a steal!'];
 
 // ---- its music
-SONGS.pennybid = { name: 'PENNY BID',      bpm: 140, root: 48, scale: 'major',    prog: [0, 4, 5, 3], bass: 'gallop',  drums: 'four',  arp: 'updown', tick: true };
-MUSIC_FOR.bidblitz = 'pennybid';
+// Made from ANTHEM: the same band, its own tune.
+SONGS.sold = { name: 'SOLD!', from: 'anthem', bpm: 144, root: 50, scale: 'major', prog: [0, 4, 5, 4], kit: 'break', pump: 0, padVoice: 'organ', echo: 0.3,
+  beat: { kick: 'x...x...x...x...', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassVoice: 'picked', bassLine: '0 . 0 . 0 . 0 . 0 . 0 . 0 . 0 .',
+  melody: ['4 - - - 4 - 4 - 5 - 4 - 2 - - -', '4 - - - 4 - 4 - 7 - 5 - 4 - - -', '2 - - - 2 - 2 - 4 - 2 - 1 - - -', '0 - - - - - - - . . . . . . . .'],
+  leadVoice: 'vox', arpVoice: 'bell', arp: 'up' };
+MUSIC_FOR.bidblitz = 'sold';
 
 // ---- the corp
 // ---- Tier 2, group 4: corps with a button on the hint row (corp `action`) or a choice.

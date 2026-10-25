@@ -1,12 +1,17 @@
 // NeoN+1 corps/coldbrew.js
 'use strict';
-NEON_FILES.push(['corps/coldbrew.js', 'v13.13']);
+NEON_FILES.push(['corps/coldbrew.js', 'v13.15']);
 // Its boss mod: ESPRESSO (espresso), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.doubleshot = { name: 'DOUBLE SHOT',    bpm: 118, root: 47, scale: 'dorian',   prog: [0, 3, 4, 0], bass: 'offbeat', drums: 'four',  arp: 'updown' };
-MUSIC_FOR.coldbrew = 'doubleshot';
+// Made from DROP ZONE: the same band, its own tune.
+SONGS.espresso = { name: 'ESPRESSO', from: 'dropzone', bpm: 150, root: 43, scale: 'minor', prog: [0, 0, 3, 5], kit: '808', pump: 0.4, padVoice: 'choir', breakdown: 4,
+  beat: { kick: 'x.........x.....', snare: '........x.......', hat: 'x.x.x.x.x.x.x.x.', open: '......x.......x.' },
+  bassVoice: 'acid', bassLine: '0 . 0 0 . 0 0 . 3 . 3 3 . 5 7 .',
+  melody: ['. . . . . . . . 4 - 3 - 4 - . .', '. . . . . . . . 7 - 6 - 4 - 3 -'],
+  leadVoice: 'saw', arpVoice: 'chip', arpLine: '. . . . . . . . . . . . 3 5 4 3' };
+MUSIC_FOR.coldbrew = 'espresso';
 
 // ---- the corp
 CORPS.coldbrew = {

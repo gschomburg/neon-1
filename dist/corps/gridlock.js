@@ -1,6 +1,6 @@
 // NeoN+1 corps/gridlock.js
 'use strict';
-NEON_FILES.push(['corps/gridlock.js', 'v13.13']);
+NEON_FILES.push(['corps/gridlock.js', 'v13.15']);
 // Its boss mod: GREEN WAVE (greenwave), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -9,8 +9,13 @@ NEON_FILES.push(['corps/gridlock.js', 'v13.13']);
 const lightOf = (lv, t, now) => { const c = lv.lights.cyc, p = (now + (t.ph || 0)) % c; return p < c * 0.42 ? 'green' : p < c * 0.58 ? 'amber' : 'red'; };
 
 // ---- its music
-SONGS.redlight = { name: 'RED LIGHT',      bpm: 120, root: 45, scale: 'phrygian', prog: [0, 1, 0, 6], bass: 'eighths', drums: 'four',  arp: 'up', tick: true };
-MUSIC_FOR.gridlock = 'redlight';
+// Made from NIGHT DRIVE: the same band, its own tune.
+SONGS.rushhour = { name: 'RUSH HOUR', from: 'nightdrive', bpm: 100, root: 45, scale: 'minor', prog: [0, 3, 6, 5], echo: 0.4,
+  beat: { kick: 'x.......x.......', snare: '....x.......x...', hat: '..x...x...x...x.' },
+  bassLine: '0 . 0 . 0 . 0 . 0 . 0 . 0 . 0 .', stab: 'x.......x.......', stabVoice: 'brass', stabAt: 3,
+  melody: ['7 - - - - - 6 - 4 - - - 2 - - -', '4 - - - - - - - . . . . . . . .', '7 - - - - - 9 - 10 - - - 9 - - -', '7 - - - - - - - . . . . . . . .'],
+  leadVoice: 'saw' };
+MUSIC_FOR.gridlock = 'rushhour';
 
 // ---- the corp
 CORPS.gridlock = {

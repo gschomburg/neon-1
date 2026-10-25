@@ -1,12 +1,17 @@
 // NeoN+1 corps/blackout.js
 'use strict';
-NEON_FILES.push(['corps/blackout.js', 'v13.13']);
+NEON_FILES.push(['corps/blackout.js', 'v13.15']);
 // Its boss mod: FLARE (flare), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.lightsout = { name: 'LIGHTS OUT',     bpm: 80,  root: 38, scale: 'minor',    prog: [0, 6, 5, 6], style: 'ambient', echo: 0.7, feedback: 0.6 };
-MUSIC_FOR.blackout = 'lightsout';
+// Made from RED DEEP: the same band, its own tune.
+SONGS.powercut = { name: 'POWER CUT', from: 'reddeep', bpm: 100, root: 38, scale: 'harmonic', prog: [0, 0, 1, 0], kit: 'industrial', pump: 0, padVoice: 'organ', breakdown: 4, echo: 0.4, feedback: 0.45,
+  beat: { kick: 'x.....x...x.....', snare: '....x.......x...', hat: 'x...x...x...x...' },
+  bassLine: '0 . 0 . 0 . 1 . 0 . 0 . 0 . -1 .',
+  melody: ['. . . . 4 - - - 3 - - - 4 - - -', '. . . . 4 - - - 7 - - - 6 - - -', '. . . . 4 - - - 3 - - - 1 - - -', '0 - - - - - - - . . . . . . . .'],
+  leadVoice: 'keys', arpVoice: 'pluck', arpLine: '. . . . . . . . 0 . 1 . 2 . 1 .' };
+MUSIC_FOR.blackout = 'powercut';
 
 // ---- the corp
 CORPS.blackout = {

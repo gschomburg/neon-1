@@ -1,6 +1,6 @@
 // NeoN+1 corps/playtime.js
 'use strict';
-NEON_FILES.push(['corps/playtime.js', 'v13.13']);
+NEON_FILES.push(['corps/playtime.js', 'v13.15']);
 // Its boss mod: JACK-IN-THE-BOX (jackbox), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -12,8 +12,13 @@ const TOY_GLYPHS = [
 ].map(normMotif);
 
 // ---- its music
-SONGS.windup = { name: 'WIND UP',        bpm: 124, root: 50, scale: 'major',    prog: [0, 3, 4, 0], bass: 'march',   drums: 'march', arp: 'updown' };
-MUSIC_FOR.playtime = 'windup';
+// Made from ANTHEM: the same band, its own tune.
+SONGS.winditup = { name: 'WIND IT UP', from: 'anthem', bpm: 132, root: 48, scale: 'major', prog: [0, 3, 4, 0], kit: 'break', pump: 0, padVoice: 'organ', echo: 0.3,
+  beat: { kick: 'x...x...x...x...', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassVoice: 'picked', bassLine: '0 . 0 . 0 . 0 . 0 . 0 . 4 . 4 .',
+  melody: ['4 - - - 4 - 5 - 7 - - - 4 - - -', '5 - - - 5 - 4 - 3 - - - 1 - - -', '2 - - - 2 - 3 - 4 - - - 7 - - -', '4 - - - - - - - . . . . . . . .'],
+  leadVoice: 'bell', arpVoice: 'chip', arp: 'updown' };
+MUSIC_FOR.playtime = 'winditup';
 
 // ---- the corp
 CORPS.playtime = {

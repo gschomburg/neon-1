@@ -1,12 +1,17 @@
 // NeoN+1 corps/famiglia.js
 'use strict';
-NEON_FILES.push(['corps/famiglia.js', 'v13.13']);
+NEON_FILES.push(['corps/famiglia.js', 'v13.15']);
 // Its boss mod: OMERTA (omerta), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.omerta = { name: 'OMERTA',         bpm: 84,  root: 43, scale: 'harmonic', prog: [0, 3, 4, 0], bass: 'march',   drums: 'half',  arp: 'down' };
-MUSIC_FOR.famiglia = 'omerta';
+// Made from RED DEEP: the same band, its own tune.
+SONGS.vendetta = { name: 'VENDETTA', from: 'reddeep', bpm: 126, root: 43, scale: 'harmonic', prog: [0, 3, 4, 0], kit: 'break', pump: 0, padVoice: 'organ', echo: 0.35, feedback: 0.4,
+  beat: { kick: 'x.....x...x.....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassLine: '0 . 4 . 7 . 4 . 0 . 4 . 7 . 6 .',
+  melody: ['4 4 4 4 3 3 3 3 4 - - - . . . .', '5 5 5 5 4 4 4 4 3 - - - . . . .', '6 6 6 6 5 5 5 5 6 - - - 4 - - -', '4 4 4 4 3 3 2 2 0 - - - . . . .'],
+  leadVoice: 'keys', arpVoice: 'pluck', arpLine: '. . . . . . . . 0 . 1 . 2 . 1 .' };
+MUSIC_FOR.famiglia = 'vendetta';
 
 // ---- the corp
 CORPS.famiglia = {

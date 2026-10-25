@@ -1,6 +1,6 @@
 // NeoN+1 corps/entropy.js
 'use strict';
-NEON_FILES.push(['corps/entropy.js', 'v13.13']);
+NEON_FILES.push(['corps/entropy.js', 'v13.15']);
 // Its boss mod: ANCHOR (anchor), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -25,8 +25,13 @@ function entropyShuffle(lv) {
 }
 
 // ---- its music
-SONGS.scramble = { name: 'SCRAMBLE',       bpm: 136, root: 41, scale: 'phrygian', prog: [0, 1, 6, 1], bass: 'gallop',  drums: 'heavy', arp: 'updown', tick: true };
-MUSIC_FOR.entropy = 'scramble';
+// Made from DROP ZONE: the same band, its own tune.
+SONGS.chaostheory = { name: 'CHAOS THEORY', from: 'dropzone', bpm: 145, root: 37, scale: 'phrygian', prog: [0, 1, 6, 0], kit: '808', pump: 0.4, padVoice: 'choir', breakdown: 3,
+  beat: { kick: 'x.........x..x..', snare: '........x.......', hat: 'x.xxx.x.x.xxx.x.', open: '..............x.' },
+  bassVoice: 'acid', bassLine: '0 . 0 . 0 0 0 . 1 . 1 . 1 1 1 .',
+  melody: ['. . . . . . . . 0 - 1 - 0 - . .', '. . . . . . . . 3 - 1 - 0 - -1 -'],
+  leadVoice: 'dist', arpVoice: 'chip', arpLine: '. . . . . . . . . . . . 5 2 4 1' };
+MUSIC_FOR.entropy = 'chaostheory';
 
 // ---- the corp
 CORPS.entropy = {

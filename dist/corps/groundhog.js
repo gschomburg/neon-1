@@ -1,12 +1,17 @@
 // NeoN+1 corps/groundhog.js
 'use strict';
-NEON_FILES.push(['corps/groundhog.js', 'v13.13']);
+NEON_FILES.push(['corps/groundhog.js', 'v13.15']);
 // Its boss mod: DEJA VU (dejavu), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.sixam = { name: 'SIX AM',         bpm: 96,  root: 48, scale: 'major',    prog: [0, 3, 4, 0], bass: 'pulse',   drums: 'half',  arp: 'up', echo: 0.5, feedback: 0.6 };
-MUSIC_FOR.groundhog = 'sixam';
+// Made from SLOW TIDE: the same band, its own tune.
+SONGS.sixamagain = { name: 'SIX AM AGAIN', from: 'slowtide', bpm: 72, root: 46, scale: 'major', prog: [0, 4, 5, 3], meter: 3, kit: 'break', pump: 0, swing: 0.1, padVoice: 'glass', echo: 0.45, feedback: 0.45,
+  beat: { kick: 'x...........', snare: '....x...x...', ghost: '..........x.', hat: '..x...x...x.' },
+  bassVoice: 'sub', bassLine: '0 - - - - - - - 4 - - -',
+  melody: ['. . . . 7 - - - 9 - - -', '. . . . 7 - - - 5 - - -', '. . . . 7 - - - 5 - - -', '. . . . 6 - - - 4 - - -'],
+  melodyAt: 0, melodyOct: -1, leadVoice: 'bell', arpVoice: 'keys', arpLine: '0 . 2 . 4 . 2 . 1 . 2 .' };
+MUSIC_FOR.groundhog = 'sixamagain';
 
 // ---- the corp
 CORPS.groundhog = {

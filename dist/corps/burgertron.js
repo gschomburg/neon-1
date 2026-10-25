@@ -1,12 +1,17 @@
 // NeoN+1 corps/burgertron.js
 'use strict';
-NEON_FILES.push(['corps/burgertron.js', 'v13.13']);
+NEON_FILES.push(['corps/burgertron.js', 'v13.15']);
 // Its boss mod: SUPERSIZE (supersize), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.drivethru = { name: 'DRIVE THRU',     bpm: 126, root: 48, scale: 'dorian',   prog: [0, 3, 4, 3], bass: 'offbeat', drums: 'four',  arp: 'updown' };
-MUSIC_FOR.burgertron = 'drivethru';
+// Made from ANTHEM: the same band, its own tune.
+SONGS.orderup = { name: 'ORDER UP', from: 'anthem', bpm: 136, root: 45, scale: 'major', prog: [0, 5, 3, 4], kit: 'break', pump: 0, padVoice: 'organ', echo: 0.3,
+  beat: { kick: 'x...x...x...x...', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassVoice: 'picked', bassLine: '0 . 0 . 0 . 0 . 0 . 0 . 0 . 0 .', stab: 'x.......x.x.....', stabVoice: 'brass', stabAt: 2,
+  melody: ['0 - 2 - 4 - 7 - - - 4 - 5 - 4 -', '2 - - - . . . . . . . . . . . .', '0 - 2 - 4 - 7 - - - 9 - 8 - 7 -', '7 - - - . . . . . . . . . . . .'],
+  leadVoice: 'brass', arpVoice: 'bell', arp: 'updown' };
+MUSIC_FOR.burgertron = 'orderup';
 
 // ---- the corp
 CORPS.burgertron = {

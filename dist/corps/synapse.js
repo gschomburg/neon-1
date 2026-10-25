@@ -1,6 +1,6 @@
 // NeoN+1 corps/synapse.js
 'use strict';
-NEON_FILES.push(['corps/synapse.js', 'v13.13']);
+NEON_FILES.push(['corps/synapse.js', 'v13.15']);
 // Its boss mod: TURING (turing), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -8,8 +8,13 @@ NEON_FILES.push(['corps/synapse.js', 'v13.13']);
 const habitTop = hb => ['corner', 'edge', 'middle'].sort((a, b) => hb[b] - hb[a])[0] + 's';
 
 // ---- its music
-SONGS.deeplearning = { name: 'DEEP LEARNING', bpm: 116, root: 42, scale: 'dorian',  prog: [0, 4, 5, 3], bass: 'offbeat', drums: 'four',  arp: 'mirror', pingpong: true };
-MUSIC_FOR.synapse = 'deeplearning';
+// Made from DEADPAN: the same band, its own tune.
+SONGS.neural = { name: 'NEURAL', from: 'deadpan', bpm: 130, root: 42, scale: 'minor', prog: [0, 0, 5, 6], sevenths: true, kit: '808', pump: 0.3, gate: 'x.xx.xx.x.xx.xx.',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.' },
+  bassVoice: 'pluck', bassLine: '0 . 0 7 . 0 0 . 0 . 0 7 . 0 3 .',
+  melody: ['7 . . 7 . . 7 . 6 . . . 4 . . .', '7 . . 7 . . 7 . 9 . . . 7 . . .', '5 . . 5 . . 5 . 4 . . . 2 . . .', '6 . . 6 . . 6 . 4 - - - . . . .'],
+  leadVoice: 'saw', arpVoice: 'glass', arpLine: '. . . . 0 . . . . . . . 2 . . .' };
+MUSIC_FOR.synapse = 'neural';
 
 // ---- the corp
 CORPS.synapse = {

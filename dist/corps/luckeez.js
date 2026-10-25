@@ -1,6 +1,6 @@
 // NeoN+1 corps/luckeez.js
 'use strict';
-NEON_FILES.push(['corps/luckeez.js', 'v13.13']);
+NEON_FILES.push(['corps/luckeez.js', 'v13.15']);
 // Its boss mod: LET IT RIDE (letitride), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -9,8 +9,13 @@ NEON_FILES.push(['corps/luckeez.js', 'v13.13']);
 const SLOT_SYMS = '7$@*%&#';
 
 // ---- its music
-SONGS.jackpot = { name: 'JACKPOT',        bpm: 126, root: 50, scale: 'dorian',   prog: [0, 3, 0, 4], bass: 'offbeat', drums: 'four',  arp: 'up', pingpong: true };
-MUSIC_FOR.luckeez = 'jackpot';
+// Made from DANCE ALONE: the same band, its own tune.
+SONGS.luckystreak = { name: 'LUCKY STREAK', from: 'dancealone', bpm: 122, root: 45, scale: 'major', prog: [0, 4, 5, 3], kit: '808', pump: 0.6, padVoice: 'none',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', open: '......x.......x.' },
+  bassVoice: 'pluck', bassLine: '0 . 7 . 0 . 7 . 0 . 7 . 0 7 0 7', stab: 'x..x..x.x..x..x.', stabVoice: 'saw',
+  melody: ['. . 4 - 4 - 4 - 5 - 4 - 2 - . .', '. . 4 - 4 - 4 - 6 - 7 - . . . .', '. . 5 - 5 - 5 - 4 - 2 - . . 0 -', '1 - - - 2 - - - 0 - - - . . . .'],
+  leadVoice: 'chip', arpVoice: 'bell', arpLine: '. . . . . . . . 3 4 5 4 3 . . .' };
+MUSIC_FOR.luckeez = 'luckystreak';
 
 // ---- the corp
 CORPS.luckeez = {

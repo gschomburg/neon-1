@@ -1,12 +1,17 @@
 // NeoN+1 corps/kerning.js
 'use strict';
-NEON_FILES.push(['corps/kerning.js', 'v13.13']);
+NEON_FILES.push(['corps/kerning.js', 'v13.15']);
 // Its boss mod: PIXEL PEEP (pixelpeep), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.leading = { name: 'LEADING',        bpm: 96,  root: 43, scale: 'minor',    prog: [0, 3, 5, 4], bass: 'march',   drums: 'half',  arp: 'up' };
-MUSIC_FOR.kerning = 'leading';
+// Made from DEADPAN: the same band, its own tune.
+SONGS.sans = { name: 'SANS', from: 'deadpan', bpm: 128, root: 43, scale: 'minor', prog: [0, 3, 0, 4], kit: '808', pump: 0.3, gate: 'xx.xx.xx.xx.xx.x',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.' },
+  bassVoice: 'pluck', bassLine: '0 . 0 7 . 0 0 . 0 . 0 7 . 0 3 .',
+  melody: ['4 . . . 4 . . . 3 . 4 . . . . .', '4 . . . 4 . . . 5 . 4 . . . . .', '2 . . . 2 . . . 1 . 2 . . . . .', '3 . . . 2 . . . 1 . 0 . . . . .'],
+  leadVoice: 'saw', arpVoice: 'chip', arpLine: '. . . . 0 . . . . . . . 3 . . .' };
+MUSIC_FOR.kerning = 'sans';
 
 // ---- the corp
 CORPS.kerning = {

@@ -1,12 +1,17 @@
 // NeoN+1 corps/decibel.js
 'use strict';
-NEON_FILES.push(['corps/decibel.js', 'v13.13']);
+NEON_FILES.push(['corps/decibel.js', 'v13.15']);
 // Its boss mod: STETHOSCOPE (stethoscope), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.loudness = { name: 'LOUDNESS WAR',   bpm: 122, root: 42, scale: 'minor',    prog: [0, 3, 6, 5], bass: 'eighths', drums: 'heavy', arp: 'updown' };
-MUSIC_FOR.decibel = 'loudness';
+// Made from DROP ZONE: the same band, its own tune.
+SONGS.redline = { name: 'REDLINE', from: 'dropzone', bpm: 150, root: 40, scale: 'minor', prog: [0, 0, 5, 3], kit: '808', pump: 0.8, padVoice: 'choir', breakdown: 4,
+  beat: { kick: 'x.........x.....', snare: '........x.......', hat: 'x.x.x.x.x.xxx.x.', open: '..............x.' },
+  bassVoice: 'acid', bassLine: '0 0 0 0 0 0 0 0 4 4 4 4 7 7 5 5',
+  melody: ['. . . . . . . . 11 - 9 - 11 - . .', '. . . . . . . . 14 - 11 - 9 - 7 -'],
+  leadVoice: 'dist', arpVoice: 'chip', arpLine: '. . . . . . . . . . . . 3 4 5 4' };
+MUSIC_FOR.decibel = 'redline';
 
 // ---- the corp
 CORPS.decibel = {

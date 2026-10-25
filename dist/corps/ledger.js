@@ -1,6 +1,6 @@
 // NeoN+1 corps/ledger.js
 'use strict';
-NEON_FILES.push(['corps/ledger.js', 'v13.13']);
+NEON_FILES.push(['corps/ledger.js', 'v13.15']);
 // Its boss mod: INTEREST (interest), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -8,8 +8,13 @@ NEON_FILES.push(['corps/ledger.js', 'v13.13']);
 const digitSum = s => [...s].reduce((t, d) => t + (+d || 0), 0);
 
 // ---- its music
-SONGS.compound = { name: 'COMPOUND',       bpm: 90,  root: 43, scale: 'minor',    prog: [0, 3, 5, 4], bass: 'march',   drums: 'half',  arp: 'updown' };
-MUSIC_FOR.ledger = 'compound';
+// Made from LIGHT CYCLE: the same band, its own tune.
+SONGS.balancesheet = { name: 'BALANCE SHEET', from: 'lightcycle', bpm: 118, root: 45, scale: 'minor', prog: [0, 5, 6, 4], kit: '808', pump: 0.7, padVoice: 'glass',
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.', open: '..............x.' },
+  bassLine: '0 . 7 . 0 . 7 . 0 . 7 . 0 7 0 7',
+  melody: ['4 . 4 . 2 . 4 . 7 . . . 4 . . .', '5 . 5 . 4 . 5 . 9 . . . 7 . . .', '6 . 6 . 4 . 6 . 8 . . . 6 . . .', '4 . 2 . 1 . 2 . 4 . . . . . . .'],
+  leadVoice: 'square', arpVoice: 'chip', arpLine: '. . 3 . . . 4 . . . 5 . . . 4 .', stab: 'x...............', stabVoice: 'brass', stabAt: 2 };
+MUSIC_FOR.ledger = 'balancesheet';
 
 // ---- the corp
 CORPS.ledger = {

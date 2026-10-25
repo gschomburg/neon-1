@@ -1,6 +1,6 @@
 // NeoN+1 corps/telephonix.js
 'use strict';
-NEON_FILES.push(['corps/telephonix.js', 'v13.13']);
+NEON_FILES.push(['corps/telephonix.js', 'v13.15']);
 // Its boss mod: CALLER ID (callerid), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -9,8 +9,13 @@ NEON_FILES.push(['corps/telephonix.js', 'v13.13']);
 const PHONE_KEYS = [['1', ''], ['2', 'ABC'], ['3', 'DEF'], ['4', 'GHI'], ['5', 'JKL'], ['6', 'MNO'], ['7', 'PQRS'], ['8', 'TUV'], ['9', 'WXYZ'], ['*', ''], ['0', ''], ['#', '']];
 
 // ---- its music
-SONGS.onhold = { name: 'ON HOLD',        bpm: 88,  root: 50, scale: 'major',    prog: [0, 5, 3, 4], bass: 'pulse',   drums: 'half',  arp: 'up' };
-MUSIC_FOR.telephonix = 'onhold';
+// Made from SLOW TIDE: the same band, its own tune.
+SONGS.pleasehold = { name: 'PLEASE HOLD', from: 'slowtide', bpm: 96, root: 50, scale: 'major', prog: [0, 5, 1, 4], sevenths: true, kit: 'break', pump: 0, swing: 0.2, padVoice: 'glass', echo: 0.35, feedback: 0.4,
+  beat: { kick: 'x.......x.x.....', snare: '....x.......x...', ghost: '.......x.....x..', hat: 'x..x..x.x..x..x.' },
+  bassVoice: 'pluck', bassLine: '0 . . . 2 . . . 4 . . . 5 . . .',
+  melody: ['4 - 2 - 4 - - - 7 - - - 6 - 4 -', '2 - - - . . . . . . 0 - 2 - 4 -', '5 - 4 - 5 - - - 8 - - - 7 - 5 -', '4 - - - - - - - . . . . . . . .'],
+  melodyAt: 0, melodyOct: -1, leadVoice: 'keys', arpVoice: 'keys', arpLine: '0 . . 1 . . 2 . . . 1 . . . . .' };
+MUSIC_FOR.telephonix = 'pleasehold';
 
 // ---- the corp
 CORPS.telephonix = {

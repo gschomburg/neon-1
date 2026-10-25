@@ -1,12 +1,17 @@
 // NeoN+1 corps/gencorp.js
 'use strict';
-NEON_FILES.push(['corps/gencorp.js', 'v13.13']);
+NEON_FILES.push(['corps/gencorp.js', 'v13.15']);
 // Its boss mod: MUTATE (mutate), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.splice = { name: 'SPLICE',         bpm: 108, root: 39, scale: 'harmonic', prog: [0, 1, 5, 4], bass: 'eighths', drums: 'four',  arp: 'down' };
-MUSIC_FOR.gencorp = 'splice';
+// Made from RED DEEP: the same band, its own tune.
+SONGS.specimen = { name: 'SPECIMEN', from: 'reddeep', bpm: 116, root: 41, scale: 'harmonic', prog: [0, 5, 1, 4], sevenths: true, kit: 'break', pump: 0, padVoice: 'organ', echo: 0.35, feedback: 0.4,
+  beat: { kick: 'x.....x...x.....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+  bassLine: '0 . 7 . 5 . 7 . 4 . 7 . 5 . 2 .',
+  melody: ['7 . 9 . 10 . 9 . 7 . 9 . 10 . 9 .', '7 . 9 . 10 . 12 . 11 - - - . . . .', '5 . 6 . 8 . 6 . 5 . 6 . 8 . 6 .', '4 . 6 . 7 . 9 . 11 - - - . . . .'],
+  leadVoice: 'bell', arpVoice: 'pluck', arpLine: '. . . . . . . . 0 . 1 . 2 . 1 .' };
+MUSIC_FOR.gencorp = 'specimen';
 
 // ---- the corp
 CORPS.gencorp = {

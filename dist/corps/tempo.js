@@ -1,12 +1,17 @@
 // NeoN+1 corps/tempo.js
 'use strict';
-NEON_FILES.push(['corps/tempo.js', 'v13.13']);
+NEON_FILES.push(['corps/tempo.js', 'v13.15']);
 // Its boss mod: ON BEAT (onbeat), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.fourfloor = { name: 'FOUR TO THE FLOOR', bpm: 124, root: 45, scale: 'minor', prog: [0, 0, 5, 6], bass: 'eighths', drums: 'four',  arp: 'up' };
-MUSIC_FOR.tempo = 'fourfloor';
+// Made from DANCE ALONE: the same band, its own tune.
+SONGS.bethebeat = { name: 'BE THE BEAT', from: 'dancealone', bpm: 126, root: 43, scale: 'minor', prog: [0, 0, 3, 4], kit: '808', pump: 0.6, padVoice: 'glass', swing: 0.08,
+  beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: 'xxxxxxxxxxxxxxxx', open: '..x...x...x...x.' },
+  bassVoice: 'pluck', bassLine: '0 . 7 0 . 7 0 . 0 . 7 0 . 7 0 .', stab: 'x.x.x.x.x.x.x.x.', stabVoice: 'saw', stabAt: 1,
+  melody: ['4 - 4 - . . 4 - 5 - 4 - 2 - . .', '4 - 4 - . . 4 - 5 - 7 - 5 - . .', '2 - 2 - . . 2 - 3 - 2 - 0 - . .', '4 - - - 3 - - - 1 - - - . . . .'],
+  leadVoice: 'saw', arpVoice: 'glass', arpLine: '. . . . . . . . . . . . 3 . 4 .' };
+MUSIC_FOR.tempo = 'bethebeat';
 
 // ---- the corp
 CORPS.tempo = {

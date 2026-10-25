@@ -1,6 +1,6 @@
 // NeoN+1 corps/choir.js
 'use strict';
-NEON_FILES.push(['corps/choir.js', 'v13.13']);
+NEON_FILES.push(['corps/choir.js', 'v13.15']);
 // Its boss mod: SACRIFICE (sacrifice), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -8,8 +8,13 @@ NEON_FILES.push(['corps/choir.js', 'v13.13']);
 const FACE_CH = ['\\', '^', '/', '<', 'o', '>', '/', 'v', '\\'];
 
 // ---- its music
-SONGS.hymnal = { name: 'HYMNAL',         bpm: 66,  root: 41, scale: 'major',    prog: [0, 3, 4, 0], style: 'ambient', echo: 0.7, feedback: 0.55 };
-MUSIC_FOR.choir = 'hymnal';
+// Made from HOLLOW: the same band, its own tune.
+SONGS.vespers = { name: 'VESPERS', from: 'hollow', bpm: 76, root: 43, scale: 'dorian', prog: [0, 6, 3, 0], meter: 3, kit: 'industrial', pump: 0.2, padVoice: 'choir', breakdown: 4, echo: 0.55, feedback: 0.5,
+  beat: { kick: 'x...........', snare: '........x...', hat: '..x...x...x.' },
+  bassVoice: 'sub', bassLine: '0 - - - - - - - 4 - - -',
+  melody: ['0 - 2 - 4 - 7 - 4 - 2 -', '6 - 8 - 10 - 13 - 10 - 8 -', '3 - 5 - 7 - 10 - 7 - 5 -', '0 - 2 - 4 - 7 - - - - -'],
+  melodyAt: 0, melodyOct: -1, leadVoice: 'keys', stab: 'x-----------', stabVoice: 'vox', stabAt: 2, arpVoice: 'glass', arpLine: '. . . . . . . . 5 - - -' };
+MUSIC_FOR.choir = 'vespers';
 
 // ---- the corp
 CORPS.choir = {

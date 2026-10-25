@@ -1,12 +1,12 @@
 // NeoN+1 corps/nimbus.js
 'use strict';
-NEON_FILES.push(['corps/nimbus.js', 'v13.13']);
+NEON_FILES.push(['corps/nimbus.js', 'v13.15']);
 // Its boss mod: FORECAST (forecast), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
 SONGS.lowpressure = { name: 'LOW PRESSURE',   bpm: 76,  root: 42, scale: 'minor',    prog: [0, 5, 3, 6], bass: 'pulse',   drums: 'half',  arp: 'down', echo: 0.5, feedback: 0.4 };
-MUSIC_FOR.nimbus = 'lowpressure';
+MUSIC_FOR.nimbus = 'slowtide';   // SLOW TIDE (in data/music.js). Its old track above isn't playing anywhere now.
 
 // ---- the corp
 CORPS.nimbus = {

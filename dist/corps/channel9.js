@@ -1,12 +1,17 @@
 // NeoN+1 corps/channel9.js
 'use strict';
-NEON_FILES.push(['corps/channel9.js', 'v13.13']);
+NEON_FILES.push(['corps/channel9.js', 'v13.15']);
 // Its boss mod: REMOTE (remote), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.snow = { name: 'SNOW',           bpm: 96,  root: 44, scale: 'minor',    prog: [0, 6, 5, 4], bass: 'pulse',   drums: 'half',  arp: 'mirror', echo: 0.45, feedback: 0.4 };
-MUSIC_FOR.channel9 = 'snow';
+// Made from DROP ZONE: the same band, its own tune.
+SONGS.breaking = { name: 'BREAKING', from: 'dropzone', bpm: 140, root: 38, scale: 'minor', prog: [0, 5, 6, 4], kit: '808', pump: 0.4, padVoice: 'choir', breakdown: 4,
+  beat: { kick: 'x.........x.....', snare: '........x.......', hat: 'x.x.x.x.x.xxx.x.', open: '..............x.' },
+  bassVoice: 'acid', bassLine: '0 0 . 0 0 . 0 0 3 3 . 3 6 6 . 6',
+  melody: ['. . . . . . . . 7 - - - 7 - 9 -', '. . . . . . . . 7 - 6 - 4 - - -'],
+  leadVoice: 'brass', stab: 'x.......x.......', stabVoice: 'brass', stabAt: 3, arpVoice: 'chip', arpLine: '. . . . . . . . . . . . 3 4 5 4' };
+MUSIC_FOR.channel9 = 'breaking';
 
 // ---- the corp
 CORPS.channel9 = {

@@ -1,12 +1,17 @@
 // NeoN+1 corps/echo.js
 'use strict';
-NEON_FILES.push(['corps/echo.js', 'v13.13']);
+NEON_FILES.push(['corps/echo.js', 'v13.15']);
 // Its boss mod: FOGHORN (foghorn), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.sonar = { name: 'SONAR',          bpm: 76,  root: 44, scale: 'minor',    prog: [0, 5, 6, 4], style: 'ambient', echo: 0.7, feedback: 0.6 };
-MUSIC_FOR.echo = 'sonar';
+// Made from HOLLOW: the same band, its own tune.
+SONGS.ping = { name: 'PING', from: 'hollow', bpm: 84, root: 42, scale: 'minor', prog: [0, 3, 5, 4], kit: 'industrial', pump: 0.2, padVoice: 'glass', breakdown: 4, echo: 0.6, feedback: 0.55,
+  beat: { kick: 'x.........x.....', snare: '........x.......', hat: '....x.......x...' },
+  bassVoice: 'sub', bassLine: '0 - - - - - - - 4 - - - - - - -',
+  melody: ['0 - 2 - 4 - 7 - - - 4 - 2 - - -', '3 - 5 - 7 - 10 - - - 7 - 5 - - -', '5 - 7 - 9 - 12 - - - 9 - 7 - - -', '4 - 6 - 8 - 11 - - - 8 - 6 - 4 -'],
+  melodyAt: 0, melodyOct: -1, leadVoice: 'bell', stab: 'x-------........', stabVoice: 'organ', stabAt: 2, arpVoice: 'glass', arpLine: '0 . . . . . . . 3 . . . . . . .' };
+MUSIC_FOR.echo = 'ping';
 
 // ---- the corp
 CORPS.echo = {

@@ -1,12 +1,16 @@
 // NeoN+1 corps/cipher.js
 'use strict';
-NEON_FILES.push(['corps/cipher.js', 'v13.13']);
+NEON_FILES.push(['corps/cipher.js', 'v13.15']);
 // Its boss mod: PARITY (parity), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its music
-SONGS.enigma = { name: 'ENIGMA',         bpm: 104, root: 43, scale: 'phrygian', prog: [0, 1, 5, 6], bass: 'offbeat', drums: 'four',  arp: 'mirror', tick: true };
-MUSIC_FOR.cipher = 'enigma';
+// Made from TRACKER: the same band, its own tune.
+SONGS.cracktro = { name: 'CRACKTRO', from: 'tracker', bpm: 132, root: 38, scale: 'harmonic', prog: [0, 6, 5, 4], kit: 'break', drums: 'break', pump: 0.4, padVoice: 'none',
+  bassVoice: 'sub', bassLine: '0 . . 0 . . 0 . . . 0 . 3 . . .', stab: 'x...x...x...x.x.', stabVoice: 'vox',
+  melody: ['7 . 6 . 7 . 4 . 2 . 4 . 0 . . .', '6 . 5 . 6 . 3 . 1 . 3 . -1 . . .', '5 . 4 . 5 . 2 . 0 . 2 . -2 . . .', '4 . 6 . 8 . 11 . 10 . 8 . 6 . 4 .'],
+  leadVoice: 'chip', arpVoice: 'chip', arp: 'down' };
+MUSIC_FOR.cipher = 'cracktro';
 
 // ---- the corp
 CORPS.cipher = {
