@@ -168,28 +168,39 @@ input:focus, select:focus { outline: 1px solid var(--accent); outline-offset: 0;
 .anchor .btn { width: 14px; height: 14px; padding: 0; border-radius: 3px; }
 .anchor .btn.on { background: var(--accent); }
 
-.layer-settings { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); }
 .check { display: flex; align-items: center; gap: 7px; cursor: pointer; }
 .check input { accent-color: var(--accent); margin: 0; }
-/* a fixed-height list (about 5 layers) that scrolls, so the panel does not jump as layers come and go */
-#layers {
-  display: flex; flex-direction: column; gap: 2px; height: 170px; overflow-y: auto; padding: 2px 4px 2px 2px;
-  border: 1px solid var(--line); border-radius: 6px; background: var(--bg);
-}
-.layer { flex: none; }
+/* Layers (layers.html L5b): a quiet list. A kind icon (art # or text T), the name, the cell count and the eye on each row;
+   drag a row to reorder. A fixed height (about 6 layers) that scrolls, so the panel does not jump as layers come and go */
+.lib { display: grid; place-items: center; width: 22px; height: 20px; padding: 0; border: 1px solid transparent; border-radius: 5px; background: none; color: var(--mute); cursor: pointer; flex: none; }
+.lib:hover { color: var(--text); background: var(--panel-2); }
+.lib.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.lib.danger:hover { color: #ff6b6b; }
+.lib svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; display: block; }
+#rightpane h2 .ltoggles { margin-left: auto; display: flex; gap: 2px; text-transform: none; letter-spacing: 0; }
+#rightpane section.folded h2 .ltoggles { display: none; }
+#layers { position: relative; display: flex; flex-direction: column; height: 176px; overflow-y: auto; }
 .layer {
-  display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 5px;
-  border: 1px solid transparent; cursor: pointer;
+  position: relative; flex: none; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 4px 0 6px;
+  border-radius: 5px; cursor: pointer;
 }
 .layer:hover { background: var(--panel-2); }
-.layer.on { background: var(--panel-2); border-color: var(--accent); }
-.layer .eye { width: 22px; text-align: center; color: var(--mute); cursor: pointer; font-family: "JetBrains Mono", monospace; }
-.layer .eye.off { opacity: 0.35; }
+.layer.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.layer .kind { color: var(--mute); display: grid; place-items: center; }
+.layer.on .kind { color: var(--accent); }
+.layer .kind svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; display: block; }
 .layer .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .layer .count { color: var(--mute); font-size: 11px; font-family: "JetBrains Mono", monospace; }
-.layer input { flex: 1; min-width: 0; padding: 1px 4px; }
-.layerbtns { flex-wrap: wrap; }
-.layerbtns .btn { padding: 3px 7px; }
+.layer.off .name, .layer.off .kind, .layer.off .count { opacity: 0.4; }
+.layer input { flex: 1; min-width: 0; padding: 0 4px; border-color: var(--accent); }
+.layer.dragging { opacity: 0.3; }
+.layer.ghost { position: fixed; z-index: 100; pointer-events: none; opacity: 0.92; background: var(--panel-2); border: 1px solid var(--accent); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); }
+.layerdrop { position: absolute; left: 2px; right: 2px; height: 2px; margin-top: -1px; background: var(--accent); border-radius: 1px; pointer-events: none; z-index: 2; }
+.layerdrop::before { content: ''; position: absolute; left: -3px; top: -3px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--accent); background: var(--panel); box-sizing: border-box; }
+.layerbar { display: flex; gap: 2px; margin-top: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 2px; }
+.layerbar .lib { flex: 1; width: auto; height: 24px; }
+.layerbar .lib svg { width: 16px; height: 16px; }
+.lib:disabled { opacity: 0.35; cursor: default; background: none; color: var(--mute); }
 
 #toast {
   position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(10px);
@@ -422,7 +433,6 @@ body[data-theme="light"], body[data-theme="green"] { --warn: #8a5a00; --warn-bg:
 .fontitem .pname { display: block; font-size: 11px; color: var(--mute); margin-bottom: 2px; }
 .fontitem .fprev { margin: 0; font-family: "JetBrains Mono", Consolas, monospace; font-size: 11px; line-height: 1.15; color: var(--text); white-space: pre; overflow: hidden; }
 .opts .fontbtn { display: inline-flex; align-items: center; gap: 6px; }
-.layer .ltag { font-size: 10px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 0 4px; margin-right: 6px; line-height: 14px; }
 
 /* Gallery pane (File > Gallery) */
 #gallery {
