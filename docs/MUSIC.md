@@ -129,6 +129,16 @@ The creak is a low saw gliding up through a narrow band, chopped unevenly (the h
 ~2s; the owl is four soft sine hoots (hoo, hoo-hoo, hooo) pitched to the track's root, panned, into the echo. Here
 a door creaks every other time through.
 
+**Music View** (2026-10-25): `tools/music_view.html`, a sequencer-style look inside one track (the music tool links
+to it). A piano roll per part (melody, arp, stabs, pad, bass, drums, sound fx), each in the numbers the track is
+written in: melody in degrees from the root, bass in steps from the chord root, arp in chord tones 0-5. On top: the
+chords (roman numerals and names) and the form as a strip of passes, lettered by section, with fills and breakdowns
+marked; click a pass to jump there, loop it, or switch to the song view (every pass left to right). Parts the
+engine makes itself (patterns, the stock boss lead, fills) are drawn hollow; parts above the current level are
+dimmed. Mute / solo per part and per drum row, a playhead, levels 0-4 and urgency like the game. It uses four
+small hooks in engine/music.js (`Music.position / mute / seek / loop`) that the game never calls.
+`node tools/music_view_check.js` proves the view matches the engine. Plan and what's next: docs/MUSIC_VIEW.md.
+
 ## Plans
 
 ### The music engine pass (noted 2026-10-20)

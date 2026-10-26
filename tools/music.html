@@ -240,6 +240,7 @@
   <div id="now">-</div>
   <div id="nowinfo" class="mono"></div>
   <div id="nowused"></div>
+  <div class="row"><a id="openView" href="music_view.html" style="color: var(--acc)" title="This track's parts as a piano roll: sections, form, levels, mute / solo">open in Music View ›</a></div>
   <div id="steps"></div>
   <div class="row"><button id="play" class="primary">play</button><button id="prev">prev</button><button id="next">next</button></div>
 
@@ -589,6 +590,7 @@
     $('#now').textContent = s ? s.name : 'pick a track';
     $('#nowinfo').textContent = s ? `${s.bpm} bpm · ${keyName(s)} · ${groove(s)}${s.bass ? ' · bass ' + s.bass : ''}${s.arp ? ' · arp ' + s.arp : ''}` : '';
     $('#nowused').textContent = s ? 'plays for: ' + (usedBy(p.key).join(', ') || 'nothing (unused)') : '';
+    $('#openView').href = 'music_view.html' + (s && !(p.key in DEMOS) ? '?track=' + p.key : '');
     $('#play').textContent = p.playing ? 'stop' : 'play';
     $('#levels').innerHTML = LEVELS.map((_, i) => `<button data-l="${i}" class="${i === p.level ? 'on' : ''}">${i}</button>`).join(' ');
     $('#levelname').textContent = s && s.style === 'ambient' ? 'ambient: no levels or drums' : LEVELS[p.level];
