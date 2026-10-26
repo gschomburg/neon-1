@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>asXii layers panel</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* the app's theme tokens (from style.css), so each option is seen in the colors it will live in */
+  :root, body[data-theme="blue"] {
+    --bg: #0d121c; --panel: #151c2b; --panel-2: #1b2437; --line: #27334b; --text: #c8d3ea; --mute: #7e8aa5;
+    --accent: #6cb6ff; --accent-ink: #08121f; --c-paper: #111a29; --c-ink: #d9e4f8;
+  }
+  body[data-theme="dark"] { --bg: #0b0b0c; --panel: #151517; --panel-2: #1c1c1f; --line: #2c2c31; --text: #d6d6d9; --mute: #85858d; --accent: #e0e0e4; --accent-ink: #111; --c-paper: #121214; --c-ink: #e6e6ea; }
+  body[data-theme="light"] { --bg: #dcdcdf; --panel: #f3f3f4; --panel-2: #e8e8ea; --line: #cfcfd4; --text: #24242a; --mute: #6d6d77; --accent: #2b62d9; --accent-ink: #fff; --c-paper: #ffffff; --c-ink: #1b1b20; }
+  body[data-theme="green"] { --bg: #d5e2d2; --panel: #edf4eb; --panel-2: #e1ece0; --line: #c3d4c0; --text: #1f3324; --mute: #5f7a64; --accent: #2a8a55; --accent-ink: #fff; --c-paper: #f8fcf6; --c-ink: #17301f; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 20px 24px 8px; font-family: "JetBrains Mono", Consolas, monospace; }
+  h1 { margin: 0 0 6px; font-size: 18px; }
+  header p { margin: 4px 0; color: var(--mute); max-width: 900px; }
+  header label { color: var(--mute); }
+  select { background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 3px 6px; color: var(--text); font: inherit; }
+  main { padding: 12px 24px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+  .card { background: color-mix(in srgb, var(--panel) 60%, var(--bg)); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .card .id { font: 700 13px "JetBrains Mono", Consolas, monospace; }
+  .card .id .n { color: var(--accent); margin-right: 6px; }
+  .card ul { margin: 0; padding-left: 16px; color: var(--mute); font-size: 12px; }
+  .card ul li { margin: 2px 0; }
+  .card .reset { align-self: flex-start; font-size: 11px; color: var(--mute); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+
+  /* the right pane, as in the app: 250px wide */
+  .pane { width: 250px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; user-select: none; position: relative; }
+  .pane h2 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--mute); }
+  .head { display: flex; align-items: center; gap: 2px; margin-bottom: 8px; min-height: 22px; }
+  .head h2 { flex: 1; }
+
+  /* icons: the toolbox's style (20 × 20, 1.5 stroke) */
+  svg.i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; display: block; flex: none; }
+  .ib { display: grid; place-items: center; width: 26px; height: 24px; border-radius: 5px; border: 1px solid transparent; background: none; color: var(--mute); cursor: pointer; padding: 0; }
+  .ib:hover { color: var(--text); background: var(--panel-2); }
+  .ib.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .ib.danger:hover { color: #ff6b6b; }
+  .ib:disabled { opacity: 0.35; cursor: default; background: none; }
+  .ib.sm { width: 22px; height: 20px; }
+  .ib.sm svg.i { width: 14px; height: 14px; }
+
+  .list { position: relative; display: flex; flex-direction: column; overflow-y: auto; }
+  .row { position: relative; display: flex; align-items: center; cursor: pointer; }
+  .row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row input.nm { background: var(--panel-2); border: 1px solid var(--accent); border-radius: 4px; padding: 0 4px; color: var(--text); font: inherit; outline: 0; }
+  .row.hid .nm, .row.hid .thumb, .row.hid .meta { opacity: 0.4; }
+  .count { color: var(--mute); font: 11px "JetBrains Mono", Consolas, monospace; }
+  .eye { color: var(--mute); cursor: pointer; display: grid; place-items: center; }
+  .eye:hover { color: var(--text); }
+  canvas.thumb { display: block; flex: none; background: var(--c-paper); border: 1px solid var(--line); border-radius: 2px; }
+  .tag { font: 700 10px "JetBrains Mono", monospace; color: var(--mute); border: 1px solid var(--line); border-radius: 3px; padding: 0 3px; line-height: 14px; }
+
+  /* drag and drop */
+  .drop { position: absolute; left: 2px; right: 2px; height: 2px; margin-top: -1px; background: var(--accent); border-radius: 1px; pointer-events: none; display: none; z-index: 2; }
+  .drop::before { content: ''; position: absolute; left: -3px; top: -3px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--accent); background: var(--panel); box-sizing: border-box; }
+  .row.dragging { opacity: 0.3; }
+  .ghost { position: fixed; pointer-events: none; z-index: 100; opacity: 0.92; box-shadow: 0 6px 20px rgba(0,0,0,.35); border-radius: 5px; background: var(--panel-2); border: 1px solid var(--accent); }
+  .menu { position: absolute; z-index: 50; min-width: 150px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+  .menu button { display: flex; width: 100%; gap: 8px; align-items: center; background: none; border: 0; color: var(--text); padding: 4px 8px; border-radius: 4px; cursor: pointer; font: inherit; text-align: left; }
+  .menu button:hover { background: var(--panel-2); }
+  .menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 2px; }
+  .menu kbd { margin-left: auto; color: var(--mute); font: 11px "JetBrains Mono", monospace; }
+
+  /* ----- L1 Photoshop ----- */
+  .o1 .list { height: 196px; border: 1px solid var(--line); background: var(--bg); }
+  .o1 .row { height: 38px; border-bottom: 1px solid var(--line); gap: 7px; padding-right: 8px; }
+  .o1 .row .eye { width: 28px; align-self: stretch; border-right: 1px solid var(--line); }
+  .o1 .row:hover { background: var(--panel-2); }
+  .o1 .row.on { background: color-mix(in srgb, var(--accent) 22%, var(--panel)); }
+  .o1 .foot { display: flex; justify-content: flex-end; gap: 1px; margin-top: 6px; }
+  .o1 .foot .sep { flex: 1; }
+
+  /* ----- L2 Compact ----- */
+  .o2 .chips { display: flex; gap: 4px; margin-bottom: 6px; }
+  .o2 .chip { font-size: 11px; display: flex; align-items: center; gap: 4px; padding: 1px 7px 1px 5px; border: 1px solid var(--line); border-radius: 10px; color: var(--mute); background: none; cursor: pointer; }
+  .o2 .chip.on { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .o2 .chip svg.i { width: 12px; height: 12px; }
+  .o2 .list { height: 150px; gap: 1px; padding: 2px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+  .o2 .row { height: 25px; gap: 5px; padding: 0 6px 0 2px; border-radius: 4px; }
+  .o2 .row:hover { background: var(--panel-2); }
+  .o2 .row.on { background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--accent); }
+  .o2 .grip { width: 10px; color: var(--mute); opacity: 0; cursor: grab; }
+  .o2 .row:hover .grip { opacity: 0.8; }
+  .o2 .eye { width: 20px; }
+  .o2 .kind { color: var(--mute); width: 14px; text-align: center; font: 700 11px "JetBrains Mono", monospace; }
+  .o2 .foot { display: flex; gap: 2px; margin-top: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 2px; }
+  .o2 .foot .ib { flex: 1; }
+
+  /* ----- L3 Cards ----- */
+  .o3 .list { height: 232px; gap: 4px; }
+  .o3 .row { gap: 8px; padding: 5px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
+  .o3 .row:hover { border-color: var(--mute); }
+  .o3 .row.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
+  .o3 .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .o3 .meta { color: var(--mute); font-size: 11px; display: flex; gap: 6px; align-items: center; }
+  .o3 .eye { width: 24px; height: 24px; border-radius: 5px; }
+  .o3 .eye:hover { background: var(--panel-2); }
+  .o3 .foot { display: flex; gap: 2px; margin-top: 8px; align-items: center; }
+  .o3 .new { flex: 1; display: flex; gap: 6px; align-items: center; justify-content: center; height: 26px; border-radius: 5px; border: 1px dashed var(--line); background: none; color: var(--mute); cursor: pointer; font: inherit; }
+  .o3 .new:hover { color: var(--text); border-color: var(--mute); }
+
+  /* ----- L4 Header tools ----- */
+  .o4 .list { height: 176px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .o4 .row { height: 30px; gap: 6px; padding: 0 6px 0 9px; }
+  .o4 .row::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: 2px; background: transparent; }
+  .o4 .row.on::before { background: var(--accent); }
+  .o4 .row.on { background: var(--panel-2); }
+  .o4 .row:hover { background: var(--panel-2); }
+  .o4 .eye { width: 22px; height: 22px; }
+  .o4 .opts { display: flex; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--mute); }
+  .o4 .opts label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .o4 .opts input { accent-color: var(--accent); margin: 0; }
+
+  /* ----- L5 Quiet ----- */
+  .o5 .list { height: 176px; }
+  .o5 .row { height: 28px; gap: 8px; padding: 0 4px 0 6px; border-radius: 5px; }
+  .o5 .row:hover { background: var(--panel-2); }
+  .o5 .row.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+  .o5 .row.on .kind { color: var(--accent); }
+  .o5 .kind { color: var(--mute); display: grid; place-items: center; }
+  .o5 .tools { display: flex; gap: 0; opacity: 0; }
+  .o5 .row:hover .tools, .o5 .row.hid .tools { opacity: 1; }
+  .o5 .row.hid .tools .dup { visibility: hidden; }
+  .o5 .row .count { opacity: 0; }
+  .o5 .row:hover .count { opacity: 1; }
+  .o5.steady .tools, .o5.steady .row .count { opacity: 1; }
+  .o5 .foot { display: flex; gap: 2px; margin-top: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 2px; }
+  .o5 .foot .ib { flex: 1; }
+  .variants { grid-column: 1 / -1; margin: 14px 0 -4px; font: 700 14px "JetBrains Mono", Consolas, monospace; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  .o5 .bar { display: flex; align-items: center; gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 11px; color: var(--mute); }
+</style>
+</head>
+<body data-theme="blue">
+<header>
+  <h1>asXii layers panel: 5 options</h1>
+  <p>Five takes on a cleaned-up Layers panel, each at the right pane's real width (250px) and in the app's colors. They all work:
+    click a layer to make it active, click the eye to show / hide it (Alt-click: show only that one, like Photoshop),
+    double-click the name to rename it, and drag a layer up or down to reorder it. The buttons and menus do what they say on this
+    sample stack. Numbered so you can point at one ("L3, but with L1's footer").</p>
+  <p>Drag and drop replaces the ▲ ▼ buttons; the text buttons become icons with tooltips. Nothing here is wired into the editor yet.
+    <label style="margin-left:12px">Theme <select id="theme"><option value="blue">Blue</option><option value="dark">Dark</option><option value="light">Light</option><option value="green">Green</option></select></label></p>
+</header>
+<main id="opts"></main>
+
+<script>
+'use strict';
+// ---------- icons (20 × 20, like the toolbox) ----------
+const ICON = {
+  eye:     '<path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z"/><circle cx="10" cy="10" r="2.3"/>',
+  eyeOff:  '<path d="M3 3l14 14M8.2 4.8A8 8 0 0 1 10 4.5c5 0 8 5.5 8 5.5a14 14 0 0 1-2.2 2.9M5 6.4A14 14 0 0 0 2 10s3 5.5 8 5.5a7.6 7.6 0 0 0 3.4-.8"/>',
+  newL:    '<rect x="3.5" y="3.5" width="13" height="13" rx="1.5"/><path d="M10 7v6M7 10h6"/>',
+  dup:     '<rect x="6.5" y="6.5" width="10" height="10" rx="1.5"/><path d="M13.5 3.5h-8a2 2 0 0 0-2 2v8"/>',
+  merge:   '<path d="M3.5 4.5h13M3.5 8.5h13M10 11v6M7 14l3 3 3-3"/>',
+  flatten: '<path d="M3.5 4h13M5.5 7.5h9M7.5 11h5M3.5 16.5h13"/>',
+  trash:   '<path d="M3.5 5.5h13M8 5.5V3.5h4v2M5 5.5l.8 11h8.4l.8-11M8.5 8.5v5.5M11.5 8.5v5.5"/>',
+  focus:   '<circle cx="10" cy="10" r="6.5"/><circle cx="10" cy="10" r="2" fill="currentColor"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2"/>',
+  protect: '<path d="M3 4.5h8M7 4.5v10"/><rect x="11.5" y="11" width="6" height="5.5" rx="1"/><path d="M12.8 11V9.5a1.7 1.7 0 0 1 3.4 0V11"/>',
+  text:    '<path d="M4.5 5.5V4h11v1.5M10 4v12M7.5 16h5"/>',
+  art:     '<path d="M7 3.5v13M13 3.5v13M3.5 7h13M3.5 13h13"/>',
+  grip:    '<circle cx="7" cy="5" r=".9" fill="currentColor"/><circle cx="13" cy="5" r=".9" fill="currentColor"/><circle cx="7" cy="10" r=".9" fill="currentColor"/><circle cx="13" cy="10" r=".9" fill="currentColor"/><circle cx="7" cy="15" r=".9" fill="currentColor"/><circle cx="13" cy="15" r=".9" fill="currentColor"/>',
+  more:    '<circle cx="4.5" cy="10" r="1" fill="currentColor"/><circle cx="10" cy="10" r="1" fill="currentColor"/><circle cx="15.5" cy="10" r="1" fill="currentColor"/>',
+};
+const svg = n => `<svg class="i" viewBox="0 0 20 20">${ICON[n]}</svg>`;
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---------- the sample stack (top first) ----------
+const SAMPLE = [
+  { name: 'Title', text: true, rows: ['  __ _ ___ __ __ _ _', ' / _` / __|\\ \\/ /| | |', '| (_| \\__ \\ >  < | | |', ' \\__,_|___//_/\\_\\|_|_|'] },
+  { name: 'Stars', rows: ['  .      *        .    ', '     .        .      * ', ' *       .   *        ', '    .  *          .   '] },
+  { name: 'Ship', rows: ['        /\\        ', '       /##\\       ', '      /####\\      ', '     /_/||\\_\\     ', '       ^^^^       '] },
+  { name: 'Shading', hidden: true, rows: ['::::::::::::::::::', '%%%%%%%%%%%%%%%%%%', '@@@@@@@@@@@@@@@@@@'] },
+  { name: 'Background', rows: ['..................', '.                 .', '.                 .', '..................'] },
+];
+const fresh = () => {
+  const ls = SAMPLE.map(s => ({ name: s.name, text: !!s.text, visible: !s.hidden, rows: s.rows, cells: s.rows.join('').replace(/ /g, '').length }));
+  return { layers: ls, active: ls[2], focus: false, protect: true, n: 1 };
+};
+
+// a little picture of the layer: each character a dot, as dark as it has ink
+function thumb(l, w, h) {
+  const c = document.createElement('canvas'), dpr = window.devicePixelRatio || 1;
+  c.className = 'thumb'; c.width = w * dpr; c.height = h * dpr; c.style.width = w + 'px'; c.style.height = h + 'px';
+  const g = c.getContext('2d'), cs = getComputedStyle(document.body);
+  g.scale(dpr, dpr); g.fillStyle = cs.getPropertyValue('--c-ink').trim();
+  const cols = Math.max(...l.rows.map(r => r.length)), rows = l.rows.length;
+  const cw = Math.min((w - 4) / cols, (h - 4) / rows / 1.8), ch = cw * 1.8;
+  const ox = (w - cols * cw) / 2, oy = (h - rows * ch) / 2;
+  const ink = ch => ' .\'`,-:;'.includes(ch) ? 0.35 : '*+=~^/\\|_()<>'.includes(ch) ? 0.65 : 1;
+  l.rows.forEach((r, y) => [...r].forEach((k, x) => { if (k === ' ') return; g.globalAlpha = ink(k); g.fillRect(ox + x * cw, oy + y * ch + ch * 0.15, Math.max(cw * 0.8, 0.8), ch * 0.7); }));
+  return c;
+}
+
+// ---------- shared actions ----------
+function act(st, what, l) {
+  const ls = st.layers, i = ls.indexOf(l || st.active);
+  if (what === 'new') { const nl = { name: 'Layer ' + (++st.n + ls.length), text: false, visible: true, rows: [''], cells: 0 }; ls.splice(Math.max(i, 0), 0, nl); st.active = nl; }
+  if (what === 'dup') { const s = ls[i], nl = { ...s, name: s.name + ' copy' }; ls.splice(i, 0, nl); st.active = nl; }
+  if (what === 'del' && ls.length > 1) { ls.splice(i, 1); st.active = ls[Math.min(i, ls.length - 1)]; }
+  if (what === 'merge' && i < ls.length - 1) { const a = ls[i], b = ls[i + 1]; b.rows = [...a.rows, ...b.rows]; b.cells += a.cells; b.text = false; b.visible = true; ls.splice(i, 1); st.active = b; }
+  if (what === 'flatten') { const vis = ls.filter(x => x.visible); const f = { name: 'Flattened', text: false, visible: true, rows: vis.flatMap(x => x.rows), cells: vis.reduce((s, x) => s + x.cells, 0) }; ls.length = 0; ls.push(f); st.active = f; }
+  if (what === 'focus') st.focus = !st.focus;
+  if (what === 'protect') st.protect = !st.protect;
+}
+function toggleEye(st, l, solo) {
+  if (solo) { const only = st.layers.every(x => x === l || !x.visible) && l.visible; st.layers.forEach(x => x.visible = only || x === l); }
+  else l.visible = !l.visible;
+}
+
+// rows: [data-i] on each row, [data-eye] on its eye. Wires click, Alt-click, rename, drag to reorder and the right-click menu.
+function wire(card, st, render, opt = {}) {
+  const list = card.querySelector('.list'), drop = document.createElement('div');
+  drop.className = 'drop'; list.appendChild(drop);
+  list.querySelectorAll('.row').forEach(row => {
+    const l = st.layers[+row.dataset.i];
+    row.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || e.target.closest('[data-eye],button,input')) return;
+      if (opt.handle && !e.target.closest(opt.handle)) { st.active = l; render(); return; }
+      startDrag(e, row, l);
+    });
+    row.querySelector('[data-eye]').addEventListener('click', e => { e.stopPropagation(); toggleEye(st, l, e.altKey); render(); });
+    row.querySelectorAll('[data-row]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); act(st, b.dataset.row, l); render(); }));
+    const nm = row.querySelector('.nm');
+    nm.addEventListener('dblclick', () => {
+      const inp = document.createElement('input'); inp.className = 'nm'; inp.value = l.name; nm.replaceWith(inp); inp.focus(); inp.select();
+      const done = () => { if (inp.value.trim()) l.name = inp.value.trim(); render(); };
+      inp.addEventListener('blur', done); inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = l.name; inp.blur(); } });
+    });
+    if (opt.menu) row.addEventListener('contextmenu', e => { e.preventDefault(); st.active = l; render(); openMenu(card, st, render, e); });
+  });
+  card.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', e => {
+    if (b.dataset.act === 'more') { openMenu(card, st, render, e, b); return; }
+    act(st, b.dataset.act); render();
+  }));
+
+  function startDrag(e, row, l) {
+    const sy = e.clientY, sx = e.clientX; let ghost = null, at = -1;
+    const rows = [...list.querySelectorAll('.row')];
+    const move = ev => {
+      if (!ghost) {
+        if (Math.abs(ev.clientY - sy) + Math.abs(ev.clientX - sx) < 5) return;
+        const r = row.getBoundingClientRect();
+        ghost = row.cloneNode(true); ghost.classList.add('ghost'); ghost.style.width = r.width + 'px'; ghost.style.height = r.height + 'px';
+        ghost.dy = sy - r.top; document.body.appendChild(ghost); row.classList.add('dragging'); document.body.style.cursor = 'grabbing';
+      }
+      ghost.style.left = row.getBoundingClientRect().left + 'px'; ghost.style.top = (ev.clientY - ghost.dy) + 'px';
+      // the gap the pointer is nearest: before row n (0 = top), or after the last
+      at = rows.length;
+      for (let n = 0; n < rows.length; n++) { const r = rows[n].getBoundingClientRect(); if (ev.clientY < r.top + r.height / 2) { at = n; break; } }
+      const lr = list.getBoundingClientRect(), ref = rows[at] ? rows[at].getBoundingClientRect().top : rows[rows.length - 1].getBoundingClientRect().bottom;
+      const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
+      drop.style.display = 'block'; drop.style.top = (ref - lr.top + list.scrollTop - (rows[at] && at > 0 ? gap / 2 : 0)) + 'px';
+      // scroll the list when dragging near its ends
+      if (ev.clientY < lr.top + 14) list.scrollTop -= 6; else if (ev.clientY > lr.bottom - 14) list.scrollTop += 6;
+    };
+    const up = () => {
+      removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+      document.body.style.cursor = '';
+      if (!ghost) { st.active = l; render(); return; }
+      ghost.remove(); drop.style.display = 'none';
+      const ls = st.layers, from = ls.indexOf(l);
+      if (at >= 0 && at !== from && at !== from + 1) { ls.splice(from, 1); ls.splice(at > from ? at - 1 : at, 0, l); }
+      st.active = l; render();
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  }
+}
+function openMenu(card, st, render, e, anchor) {
+  closeMenus();
+  const m = document.createElement('div'), pane = card.querySelector('.pane'), pr = pane.getBoundingClientRect();
+  const last = st.layers.indexOf(st.active) === st.layers.length - 1;
+  m.className = 'menu';
+  m.innerHTML = `<button data-m="rename">Rename<kbd>dbl-click</kbd></button><button data-m="dup">${svg('dup')}Duplicate</button>
+    <button data-m="merge" ${last ? 'disabled style="opacity:.4"' : ''}>${svg('merge')}Merge down</button><button data-m="flatten">${svg('flatten')}Flatten</button><hr>
+    <button data-m="del">${svg('trash')}Delete layer</button>`;
+  const r = anchor ? anchor.getBoundingClientRect() : { left: e.clientX, bottom: e.clientY };
+  m.style.left = Math.min(r.left - pr.left, pr.width - 160) + 'px'; m.style.top = (r.bottom - pr.top + 2) + 'px';
+  pane.appendChild(m);
+  m.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-m]'); if (!b || b.disabled) return;
+    m.remove();
+    if (b.dataset.m === 'rename') { const row = card.querySelector('.row.on .nm'); row && row.dispatchEvent(new MouseEvent('dblclick')); return; }
+    act(st, b.dataset.m); render();
+  });
+  setTimeout(() => addEventListener('pointerdown', function off(ev) { if (!m.contains(ev.target)) { m.remove(); removeEventListener('pointerdown', off); } }));
+}
+function closeMenus() { document.querySelectorAll('.menu').forEach(m => m.remove()); }
+
+const eye = (l, extra = '') => `<span class="eye ${extra}" data-eye title="Show / hide (Alt-click: show only this one)">${svg(l.visible ? 'eye' : 'eyeOff')}</span>`;
+const ib = (a, icon, title, cls = '') => `<button class="ib ${cls}" data-act="${a}" title="${title}">${svg(icon)}</button>`;
+const rowAttrs = (st, l, i, cls = '') => `class="row ${cls}${l === st.active ? ' on' : ''}${l.visible ? '' : ' hid'}" data-i="${i}"`;
+const lastActive = st => st.layers.indexOf(st.active) === st.layers.length - 1;
+
+// ---------- the options ----------
+const OPTIONS = [
+  { name: 'Photoshop',
+    notes: ['The closest to Photoshop: an eye column, a thumbnail of each layer, the name, and a T badge on text layers.',
+      'The footer is Photoshop\'s icon row: the two toggles on the left; new, duplicate, merge down, flatten and delete on the right.',
+      'The active layer is a solid highlight; the whole row drags.'],
+    html: st => `<div class="head"><h2>Layers</h2></div>
+      <div class="list">${st.layers.map((l, i) => `<div ${rowAttrs(st, l, i)}>${eye(l)}<span class="tslot"></span>
+        <span class="nm" title="Double-click to rename">${esc(l.name)}</span>${l.text ? '<span class="tag" title="A text layer">T</span>' : ''}</div>`).join('')}</div>
+      <div class="foot">${ib('focus', 'focus', 'Layer focus: dim the others (L)', st.focus ? 'on' : '')}${ib('protect', 'protect', 'Protect text layers', st.protect ? 'on' : '')}<span class="sep"></span>
+        ${ib('new', 'newL', 'New layer')}${ib('dup', 'dup', 'Duplicate layer')}${ib('merge', 'merge', 'Merge down')}${ib('flatten', 'flatten', 'Flatten')}${ib('del', 'trash', 'Delete layer', 'danger')}</div>`,
+    thumbs: [40, 26] },
+
+  { name: 'Compact',
+    notes: ['One-line rows (25px), so more layers fit without scrolling. A grip appears on hover; drag by it, click anywhere else to select.',
+      'Layer focus and Protect text become chips above the list. A # or T says what kind of layer it is; the cell count stays on the right.',
+      'One even row of icon buttons underneath, in a well.'],
+    html: st => `<div class="head"><h2>Layers</h2></div>
+      <div class="chips"><button class="chip ${st.focus ? 'on' : ''}" data-act="focus" title="Dim every layer but the active one (L)">${svg('focus')}Focus</button>
+        <button class="chip ${st.protect ? 'on' : ''}" data-act="protect" title="Text layers only change with the Font tool">${svg('protect')}Protect text</button></div>
+      <div class="list">${st.layers.map((l, i) => `<div ${rowAttrs(st, l, i)}><span class="grip" title="Drag to reorder">${svg('grip')}</span>${eye(l)}
+        <span class="kind" title="${l.text ? 'Text layer' : 'Art layer'}">${l.text ? 'T' : '#'}</span><span class="nm" title="Double-click to rename">${esc(l.name)}</span><span class="count">${l.cells}</span></div>`).join('')}</div>
+      <div class="foot">${ib('new', 'newL', 'New layer')}${ib('dup', 'dup', 'Duplicate layer')}${ib('merge', 'merge', 'Merge down')}${ib('flatten', 'flatten', 'Flatten')}${ib('del', 'trash', 'Delete layer', 'danger')}</div>`,
+    handle: '.grip' },
+
+  { name: 'Cards',
+    notes: ['Bigger rows with a large thumbnail, the name, and a second line saying what it is ("Text · 60 cells").',
+      'Easiest to tell layers apart at a glance, at the cost of height: about four fit before it scrolls.',
+      'A wide dashed "New layer" button; the other actions are icons beside it. The eye sits on the right.'],
+    html: st => `<div class="head"><h2>Layers</h2>${ib('focus', 'focus', 'Layer focus: dim the others (L)', 'sm ' + (st.focus ? 'on' : ''))}${ib('protect', 'protect', 'Protect text layers', 'sm ' + (st.protect ? 'on' : ''))}</div>
+      <div class="list">${st.layers.map((l, i) => `<div ${rowAttrs(st, l, i)}><span class="tslot"></span><span class="txt"><span class="nm" title="Double-click to rename">${esc(l.name)}</span>
+        <span class="meta">${l.text ? 'Text' : 'Art'} · ${l.cells} cells</span></span>${eye(l)}</div>`).join('')}</div>
+      <div class="foot"><button class="new" data-act="new">${svg('newL')}New layer</button>${ib('dup', 'dup', 'Duplicate layer')}${ib('merge', 'merge', 'Merge down')}${ib('flatten', 'flatten', 'Flatten')}${ib('del', 'trash', 'Delete layer', 'danger')}</div>`,
+    thumbs: [56, 36] },
+
+  { name: 'Header tools',
+    notes: ['No footer: new, duplicate and delete live in the panel\'s title row, and the rest (merge down, flatten, rename) is in the ⋯ menu and on right-click.',
+      'The active layer gets an accent bar on its left edge rather than a full outline. Small thumbnails.',
+      'Layer focus and Protect text stay as checkboxes, under the list, so they still read as settings.'],
+    html: st => `<div class="head"><h2>Layers</h2>${ib('new', 'newL', 'New layer', 'sm')}${ib('dup', 'dup', 'Duplicate layer', 'sm')}${ib('del', 'trash', 'Delete layer', 'sm danger')}${ib('more', 'more', 'More', 'sm')}</div>
+      <div class="list">${st.layers.map((l, i) => `<div ${rowAttrs(st, l, i)}>${eye(l)}<span class="tslot"></span><span class="nm" title="Double-click to rename">${esc(l.name)}</span>${l.text ? '<span class="tag">T</span>' : ''}</div>`).join('')}</div>
+      <div class="opts"><label title="Dim every layer but the active one (L)"><input type="checkbox" data-chk="focus" ${st.focus ? 'checked' : ''}>Layer focus</label>
+        <label title="Text layers only change with the Font tool"><input type="checkbox" data-chk="protect" ${st.protect ? 'checked' : ''}>Protect text</label></div>`,
+    thumbs: [30, 20], menu: true },
+
+  { name: 'Quiet',
+    notes: ['The least chrome, like Figma\'s layer list: a kind icon (grid or T) and the name. The eye and a duplicate button only show on hover, so the list is calm until you point at it.',
+      'Hidden layers keep their crossed-out eye showing and are dimmed, so you can see at a glance what\'s off.',
+      'The toggles and actions sit in one thin bar underneath; merge and flatten are in ⋯ and on right-click.'],
+    html: st => `<div class="head"><h2>Layers</h2>${ib('new', 'newL', 'New layer', 'sm')}</div>
+      <div class="list">${st.layers.map((l, i) => `<div ${rowAttrs(st, l, i)}><span class="kind">${svg(l.text ? 'text' : 'art')}</span>
+        <span class="nm" title="Double-click to rename">${esc(l.name)}</span><span class="count">${l.cells}</span>
+        <span class="tools"><button class="ib sm dup" data-row="dup" title="Duplicate">${svg('dup')}</button>${eye(l, 'ib sm')}</span></div>`).join('')}</div>
+      <div class="bar">${ib('focus', 'focus', 'Layer focus: dim the others (L)', 'sm ' + (st.focus ? 'on' : ''))}${ib('protect', 'protect', 'Protect text layers', 'sm ' + (st.protect ? 'on' : ''))}
+        <span style="flex:1"></span>${ib('more', 'more', 'Merge down, flatten…', 'sm')}${ib('del', 'trash', 'Delete layer', 'sm danger')}</div>`,
+    menu: true },
+
+  // ----- variations on L5 -----
+  { id: 'L5a', name: 'Quiet + L2 footer', group: 'Variations on L5', cls: 'o5',
+    notes: ['L5\'s rows: a kind icon and the name, with the eye and duplicate showing on hover.',
+      'Layer focus and Protect text as small icon toggles in the title row, as in L3.',
+      'L2\'s footer: new, duplicate, merge down, flatten and delete as one even row of icons in a well, so nothing hides in a menu (right-click still works).'],
+    html: st => `<div class="head"><h2>Layers</h2>${ib('focus', 'focus', 'Layer focus: dim the others (L)', 'sm ' + (st.focus ? 'on' : ''))}${ib('protect', 'protect', 'Protect text layers', 'sm ' + (st.protect ? 'on' : ''))}</div>
+      <div class="list">${st.layers.map((l, i) => `<div ${rowAttrs(st, l, i)}><span class="kind">${svg(l.text ? 'text' : 'art')}</span>
+        <span class="nm" title="Double-click to rename">${esc(l.name)}</span><span class="count">${l.cells}</span>
+        <span class="tools"><button class="ib sm dup" data-row="dup" title="Duplicate">${svg('dup')}</button>${eye(l, 'ib sm')}</span></div>`).join('')}</div>
+      <div class="foot">${ib('new', 'newL', 'New layer')}${ib('dup', 'dup', 'Duplicate layer')}${ib('merge', 'merge', 'Merge down')}${ib('flatten', 'flatten', 'Flatten')}${ib('del', 'trash', 'Delete layer', 'danger')}</div>`,
+    menu: true },
+
+  { id: 'L5b', name: 'L5a, nothing on hover', group: 'Variations on L5', cls: 'o5 steady',
+    notes: ['L5a without the hover duplicate button, since Duplicate is already in the footer.',
+      'The eye and the cell count show all the time, so the rows don\'t change as you move over them.'],
+    html: st => `<div class="head"><h2>Layers</h2>${ib('focus', 'focus', 'Layer focus: dim the others (L)', 'sm ' + (st.focus ? 'on' : ''))}${ib('protect', 'protect', 'Protect text layers', 'sm ' + (st.protect ? 'on' : ''))}</div>
+      <div class="list">${st.layers.map((l, i) => `<div ${rowAttrs(st, l, i)}><span class="kind">${svg(l.text ? 'text' : 'art')}</span>
+        <span class="nm" title="Double-click to rename">${esc(l.name)}</span><span class="count">${l.cells}</span>
+        <span class="tools">${eye(l, 'ib sm')}</span></div>`).join('')}</div>
+      <div class="foot">${ib('new', 'newL', 'New layer')}${ib('dup', 'dup', 'Duplicate layer')}${ib('merge', 'merge', 'Merge down')}${ib('flatten', 'flatten', 'Flatten')}${ib('del', 'trash', 'Delete layer', 'danger')}</div>`,
+    menu: true },
+];
+
+const main = document.getElementById('opts');
+OPTIONS.forEach((o, n) => {
+  if (o.group && o.group !== (OPTIONS[n - 1] || {}).group) main.insertAdjacentHTML('beforeend', `<div class="variants">${o.group}</div>`);
+  const card = document.createElement('section'); card.className = 'card';
+  card.innerHTML = `<div class="id"><span class="n">${o.id || 'L' + (n + 1)}</span>${o.name}</div><div class="pane ${o.cls || 'o' + (n + 1)}"></div><ul>${o.notes.map(t => `<li>${t}</li>`).join('')}</ul><button class="reset">reset this one</button>`;
+  main.appendChild(card);
+  let st = fresh();
+  const pane = card.querySelector('.pane');
+  const render = () => {
+    closeMenus();
+    pane.innerHTML = o.html(st);
+    if (o.thumbs) pane.querySelectorAll('.row').forEach(r => r.querySelector('.tslot').replaceWith(thumb(st.layers[+r.dataset.i], ...o.thumbs)));
+    pane.querySelectorAll('[data-act="merge"]').forEach(b => b.disabled = lastActive(st));
+    pane.querySelectorAll('[data-act="del"]').forEach(b => b.disabled = st.layers.length < 2);
+    pane.querySelectorAll('[data-chk]').forEach(c => c.addEventListener('change', () => { act(st, c.dataset.chk); render(); }));
+    wire(card, st, render, { handle: o.handle, menu: o.menu });
+  };
+  card.querySelector('.reset').addEventListener('click', () => { st = fresh(); render(); });
+  card.render = render; render();
+});
+document.getElementById('theme').addEventListener('change', e => { document.body.dataset.theme = e.target.value; document.querySelectorAll('.card').forEach(c => c.render()); });
+</script>
+</body>
+</html>
