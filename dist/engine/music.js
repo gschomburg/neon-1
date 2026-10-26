@@ -109,6 +109,13 @@ const Music = (() => {
   let pulseWave = null, driveCurve = null;
   let pass = 0;   // how many times through the chords (written parts and breakdowns count bars with it)
   let crashNext = false;   // a fill just played: the next bar starts on a crash
+  // Music View (tools/music_view.html) only; the game never sets these, so it plays as before:
+  //   muted   parts to leave out: pad stab bass kick snare hat open clap ghost fill arp melody lead sfx
+  //   seekTo  start this pass on the next step; loopPass  keep playing this pass instead of moving on
+  //   played  what was scheduled lately ({ t, step, pass }), so the playhead can follow what you hear
+  let muted = new Set(), seekTo = null, loopPass = null;
+  const played = [];
+  const on = part => !muted.has(part);
   // A power-down (lose) or power-up (boss beaten) in progress:
   //   { dir: -1 | 1, t0, beats: [3 beat times], end, hold }
   // Down: the tempo drops each beat and the pitch sags (to -8 semitones).
@@ -199,7 +206,8 @@ const Music = (() => {
       base = SONGS[key] || null;
       song = base && sectionSong(base, sectionAt(base, 0));
       if (!song) return;
-      step = 0; pass = 0; crashNext = false; nextTime = ac.currentTime + 0.05;
+      step = 0; pass = loopPass != null ? loopPass : 0; crashNext = false; nextTime = ac.currentTime + 0.05; played.length = 0;
+      song = sectionSong(base, sectionAt(base, pass));
       echoDelay.delayTime.setTargetAtTime(song.echo || 0.32, ac.currentTime, 0.05);
       echoFb.gain.setTargetAtTime(song.feedback || 0.3, ac.currentTime, 0.05);
       pump.gain.cancelScheduledValues(ac.currentTime);
@@ -218,6 +226,7 @@ const Music = (() => {
     // A new track waits for a boss fanfare (and its silence) to finish.
     if (s.song !== key && !(fx && fx.dir > 0 && ac.currentTime < fx.hold)) switchTo(s.song);
     if (!song) return;
+    if (seekTo != null) { pass = seekTo; seekTo = null; step = 0; crashNext = false; song = sectionSong(base, sectionAt(base, pass)); nextTime = ac.currentTime + 0.05; }
     // After a stall (background tab), skip ahead instead of playing a burst of missed notes.
     if (nextTime < ac.currentTime - 0.2) nextTime = ac.currentTime + 0.02;
     while (nextTime < ac.currentTime + 0.12) {
@@ -229,9 +238,10 @@ const Music = (() => {
       if (step % beat === 0) lastBeat = { perf: performance.now() + (nextTime - ac.currentTime) * 1000, ms: spb * beat * 1000, n: step / beat };   // TEMPO's beat clock
       const late = song.swing && step % 2 === 1 ? song.swing * spb : 0;   // swing: every second 16th comes late
       playStep(step, nextTime + late, spb, s);
+      played.push({ t: nextTime, step, pass }); if (played.length > 64) played.shift();
       nextTime += spb;
       step = (step + 1) % (bs * song.prog.length);
-      if (step === 0) { pass++; song = sectionSong(base, sectionAt(base, pass)); }   // the next section
+      if (step === 0) { pass = loopPass != null ? loopPass : pass + 1; song = sectionSong(base, sectionAt(base, pass)); }   // the next section
     }
   }
 
@@ -502,17 +512,19 @@ const Music = (() => {
     const brk = song.breakdown && pass % song.breakdown === song.breakdown - 1;   // a breakdown pass: no drums or bass
 
     // Pad: a held chord each bar, or chopped into hits (gate).
-    if (song.gate) { const g = partBar(song.gate, barN)[k]; if (g) padChord(chordN, t, spb * g.len * 0.85, cut); }
+    if (!on('pad')) { /* muted */ }
+    else if (song.gate) { const g = partBar(song.gate, barN)[k]; if (g) padChord(chordN, t, spb * g.len * 0.85, cut); }
     else if (k === 0) padChord(chordN, t, spb * bs, cut);
     // Sound effects (the GRAVE ROBBER track)
-    if (lvl >= (song.sfxAt || 0)) {
+    if (lvl >= (song.sfxAt || 0) && on('sfx')) {
       if (song.creak && partBar(song.creak, barN)[k]) creak(t);
       if (song.owl && partBar(song.owl, barN)[k]) owl(t, song.root + 24);
     }
     // Chord stabs
-    if (song.stab && lvl >= (song.stabAt || 0)) { const g = partBar(song.stab, barN)[k]; if (g) stabChord(chordN, t, spb * g.len * 0.8); }
+    if (song.stab && lvl >= (song.stabAt || 0) && on('stab')) { const g = partBar(song.stab, barN)[k]; if (g) stabChord(chordN, t, spb * g.len * 0.8); }
     // Bass: a written line (scale steps from the chord root), or a pattern (bassOct: every other note an octave up)
-    if (!brk && song.bassLine) { const b = partBar(song.bassLine, barN)[k]; if (b) bassNote(note(deg + b.v), t, spb * Math.max(1, b.len * 0.6), cut); }
+    if (!on('bass')) { /* muted */ }
+    else if (!brk && song.bassLine) { const b = partBar(song.bassLine, barN)[k]; if (b) bassNote(note(deg + b.v), t, spb * Math.max(1, b.len * 0.6), cut); }
     else if (!brk) {
       const bassSteps = BASS_STEPS[song.bass] || BASS_STEPS.eighths;
       if (bassSteps.includes(k)) bassNote(note(deg) + (song.bassOct && bassSteps.indexOf(k) % 2 === 1 ? 12 : 0), t, spb, cut);
@@ -521,25 +533,25 @@ const Music = (() => {
     if (lvl >= 1 && !brk) {
       let d = song.beat ? beatOf(song) : DRUMS[song.drums] || DRUMS.four;
       const kit = KITS[song.kit] || KITS.synth, beat = beatSteps(song);
-      if (k === 0 && crashNext) crash(t);
+      if (k === 0 && crashNext && on('fill')) crash(t);
       if (k === 0) crashNext = false;
       // A fill: the track's own (the whole last bar), or the automatic one (the last beat), then a crash.
       const fillHere = bar === song.prog.length - 1 && !d.roll && fillPass(pass);
       if (fillHere && k === bs - 1) crashNext = true;
-      if (fillHere && song.fill) d = beatOf({ beat: song.fill });
-      else if (fillHere && k >= bs - beat) { autoFill(kit, Math.floor(pass / 2) % 3, k - (bs - beat), beat, t); d = null; }
+      if (fillHere && song.fill && on('fill')) d = beatOf({ beat: song.fill });
+      else if (fillHere && k >= bs - beat) { if (on('fill')) autoFill(kit, Math.floor(pass / 2) % 3, k - (bs - beat), beat, t); d = null; }
       if (d) {
-        if (d.kick.includes(k)) { kit.kick(t); duck(t, spb); }
-        if (d.snare.includes(k) || (d.roll && bar === song.prog.length - 1 && d.roll.includes(k))) kit.snare(t);
-        if (d.clap && d.clap.includes(k)) kit.clap(t);
-        if (d.ghost && d.ghost.includes(k)) kit.ghost(t);
+        if (d.kick.includes(k)) { if (on('kick')) kit.kick(t); duck(t, spb); }
+        if (d.snare.includes(k) || (d.roll && bar === song.prog.length - 1 && d.roll.includes(k))) { if (on('snare')) kit.snare(t); }
+        if (d.clap && d.clap.includes(k) && on('clap')) kit.clap(t);
+        if (d.ghost && d.ghost.includes(k) && on('ghost')) kit.ghost(t);
         const fast = song.tick ? u > 0.45 : lvl >= 3;
-        if (d.hat.includes(k) || (fast && k % 2 === 1)) kit.hat(t, song.tick ? 0.12 : 0.07);
-        if (d.open && d.open.includes(k)) kit.open(t);
+        if ((d.hat.includes(k) || (fast && k % 2 === 1)) && on('hat')) kit.hat(t, song.tick ? 0.12 : 0.07);
+        if (d.open && d.open.includes(k) && on('open')) kit.open(t);
       }
     } else if (k % beatSteps(song) === 0 && !brk) duck(t, spb);
     // Arp: a written line (chord tones), or a pattern
-    if (lvl >= 2) {
+    if (lvl >= 2 && on('arp')) {
       const tones = [...chordN.slice(0, 3), ...chordN.slice(0, 3).map(n => n + 12)].map(n => n + 12);
       const pan = song.pingpong ? (k % 2 ? 0.6 : -0.6) : 0;
       if (song.arpLine) { const a = partBar(song.arpLine, barN)[k]; if (a) arpNote(tones[clamp(a.v, 0, 5)], t, spb, u, pan, spb * a.len); }
@@ -553,14 +565,14 @@ const Music = (() => {
     // A written melody (the track's hook), from level melodyAt; bosses double it an octave up.
     if (song.melody) {
       const m = lvl >= (song.melodyAt != null ? song.melodyAt : 1) && partBar(song.melody, barN)[k];
-      if (m) {
+      if (m && on('melody')) {
         const n = song.root + 24 + 12 * (song.melodyOct || 0) + sc[((m.v % 7) + 7) % 7] + 12 * Math.floor(m.v / 7);
         leadNote(n, t, spb, lvl >= 4, spb * m.len * 0.95);
         if (lvl >= 3) leadNote(n + 12, t, spb, false, spb * m.len * 0.95, 0.35);
       }
     }
     // Lead (bosses), when the track has no melody of its own
-    else if (lvl >= 3 && LEAD_STEPS.includes(k)) {
+    else if (lvl >= 3 && LEAD_STEPS.includes(k) && on('lead')) {
       const dg = deg + LEAD_DEGREES[(bar * LEAD_STEPS.length + LEAD_STEPS.indexOf(k)) % LEAD_DEGREES.length];
       leadNote(note(dg, 2), t, spb, lvl >= 4);
     }
@@ -576,6 +588,18 @@ const Music = (() => {
   let lastBeat = null;
   return { init, volume, setSource: fn => { getState = fn; }, current: () => key, beat: () => (ac && ac.state === 'running' && song ? lastBeat : null), keyInfo: () => Object.assign(keyInfo(), { bend: () => 1 }), powerDown, powerUp,
     restart: () => { if (ac && key) switchTo(key); },
+    // Music View: what's playing now ({ step, pass, bar, section } as heard, or null), parts to leave out,
+    // jump to a pass, hold on one pass (null: follow the form again)
+    position: () => {
+      if (!ac || !base) return null;
+      let p = null; for (const e of played) if (e.t <= ac.currentTime) p = e;
+      if (!p) return null;
+      const bs = barSteps(base);
+      return { step: p.step % bs, bar: Math.floor(p.step / bs), pass: p.pass, section: sectionAt(base, p.pass), t: p.t };
+    },
+    mute: parts => { muted = new Set(parts || []); },
+    seek: p => { seekTo = Math.max(0, p | 0); played.length = 0; },
+    loop: p => { loopPass = p == null ? null : Math.max(0, p | 0); },
     muffle: on => { focused = false; if (ac && muff) muff.frequency.setTargetAtTime(on ? 380 : 20000, ac.currentTime, on ? 0.08 : 0.12); },
     // DECIBEL / STETHOSCOPE: 0 = muffled .. 1 = clear. null hands it back.
     focus: v => {
