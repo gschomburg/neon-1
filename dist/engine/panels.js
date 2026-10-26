@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.28']);
+NEON_FILES.push(['engine/panels.js', 'v13.35']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -245,7 +245,7 @@ function openStartReward(node) {
   openChoice({
     title: 'LINK ESTABLISHED', col: C.accent,
     head: [['you are in. pick a starter perk.', C.text]],
-    options: pickMods(r, modsOfKind('minor'), 3),
+    options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, modsOfKind('minor'), 3),   // the training run: TRACER
     skipLabel: '[ SKIP  +15cr ]',
     onSkip: () => { run.credits += 15; run.earned += 15; },
     msg: '> link established.',

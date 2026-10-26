@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v13.28']);
+NEON_FILES.push(['engine/codex.js', 'v13.35']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);

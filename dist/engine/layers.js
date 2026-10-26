@@ -1,6 +1,6 @@
 // NeoN+1 engine/layers.js: Layers: the grid, picking the real node, glyphs, the corp dressing a layer.
 'use strict';
-NEON_FILES.push(['engine/layers.js', 'v13.28']);
+NEON_FILES.push(['engine/layers.js', 'v13.35']);
 
 // ---------------- Layers ----------------
 function gridFor(n) {
@@ -93,7 +93,7 @@ function genLayer(ctx) {
   if (n === 1) tiles[0].glyph = JACK_GLYPH;
 
   // Loaded ICE: a known trap that drops loot when hit.
-  if (loot && n >= (ctx.lootMore ? 3 : 4) && r() < (ctx.lootMore ? 0.85 : CONFIG.lootChance)) {
+  if (loot && (ctx.lootSure || (n >= (ctx.lootMore ? 3 : 4) && r() < (ctx.lootMore ? 0.85 : CONFIG.lootChance)))) {   // lootSure: the training
     const opts = tiles.filter(t => !t.safe && !t.marked);
     if (opts.length) { const t = pickR(opts, r); t.loaded = true; t.glyph = LOOT_GLYPH; }
   }

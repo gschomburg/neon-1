@@ -6,6 +6,13 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **The training** (v13.29, 2026-10-26; the popups v13.30; POPS + round 2 v13.31). Play it on your phone. Check: POPS's lines (the neon editor's TRAINING tab: show jumps the game to any line, edits are live, save writes data/tutorial.js), the banter timers, the minimized POPS (find the [ ], the boss, the boss reward), the speed (`TUT.anim`), the blip, his face (`TUT.face`, the user's asXii art since v13.34: check it reads at phone size), and the stroke style (S2, on; `TUT.style` back to shadow if it reads worse on the phone). Title: **[ TUTORIAL ]** under JACK IN (it goes away once you finish it;
+  HOW TO PLAY has it next to BACK for good). Play it through on your phone. Check: the wording of the 22 popups (all in
+  `dist/engine/tutorial.js`, `tutScript`, easy to edit), the pacing (too many taps?), where each box sits (does one
+  cover something it shouldn't?), the palette (SAFEHARBOR, navy + teal; `TUT.palette` to change it), and the corp being
+  3 layers (2, 3, 4 nodes). My calls: the starter reward offers only TRACER; you start with a PATCH and no PURGE; it
+  can't be lost; quitting from the pause menu just ends it. Not in yet: markets, the codex, tap mods, sectors.
+
 - [ ] **The art catalog** (v13.27-v13.28, asXii v0.143, 2026-10-26). `tools/neon_editor.html`, the **ART** tab. The art
   now lives in `dist/data/art/`: glyphs.js, logos.js (every logo: players' and corps'), worldmap.js. Try: pick
   KERNING under corp logos, **edit in asXii** (Chrome may ask to allow the pop-up), draw, **send back to NeoN+1** in the

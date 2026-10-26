@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v13.28']);
+NEON_FILES.push(['engine/save.js', 'v13.35']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -56,7 +56,7 @@ function repFor(run) {
 const RUN_KEY = STORE_KEY + '.run';
 function runSnapshot() {
   const run = st.run;
-  if (!run || run.ended || st.mp || st.dying || run.integrity <= 0) return null;
+  if (!run || run.ended || run.tutorial || st.mp || st.dying || run.integrity <= 0) return null;
   const c = st.corp;
   const corp = c && c.node ? {
     node: c.node.id, idx: c.idx, prevSafe: c.prevSafe, bulwarkUsed: !!c.bulwarkUsed, contUsed: !!c.contUsed, burnerUsed: Number(c.burnerUsed || 0),

@@ -1,6 +1,6 @@
 // NeoN+1 corps/sigil.js
 'use strict';
-NEON_FILES.push(['corps/sigil.js', 'v13.28']);
+NEON_FILES.push(['corps/sigil.js', 'v13.35']);
 // Its boss mod: SIGSCAN (sigscan), FORGERY (forgery), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

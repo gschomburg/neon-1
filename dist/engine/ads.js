@@ -1,6 +1,6 @@
 // NeoN+1 engine/ads.js: the fake ads: when they show up, the ad box, and its two-screen turn.
 'use strict';
-NEON_FILES.push(['engine/ads.js', 'v13.28']);
+NEON_FILES.push(['engine/ads.js', 'v13.35']);
 
 // An ad comes up over whatever is on screen, in a bordered box nearly the screen's width, and
 // blocks everything under it until you close it. [x] (top right) shows up after a few seconds
@@ -21,7 +21,7 @@ const adsOn = () => save.ads !== false && !!st.run && !st.mp && !EDITOR;
 // together. Returns a promise that settles when the ad (if any) is closed.
 function adBreak(where) {
   const run = st.run;
-  if (!adsOn() || !run.corps) return Promise.resolve();
+  if (!adsOn() || !run.corps || run.tutorial) return Promise.resolve();
   run.adGap = (run.adGap || 0) + 1;
   const c = st.corp;
   if (where === 'layer' && (!c || c.adShown || c.idx >= c.counts.length - 1)) return Promise.resolve();   // (next is the boss)

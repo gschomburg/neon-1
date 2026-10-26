@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.28']);
+NEON_FILES.push(['engine/editor.js', 'v13.35']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -199,6 +199,23 @@ if (EDITOR) {
     Sound.buy();
     sendMods(true);
     post({ type: 'mod-set', ok: true, key: m.key });
+  });
+  // The TRAINING tab: its lines live in the game as you type, a jump to any line (engine/tutorial.js
+  // plays forward to it), and which line is up now.
+  let lastTut = '';
+  setInterval(() => {
+    const T = st.tut, s = T ? (T.pop ? T.pop.id : '') + '|' + (T.at || '') + '|' + (T.auto || '') : 'off';
+    if (s !== lastTut) { lastTut = s; post({ type: 'tut-at', on: !!T, id: T && T.pop ? T.pop.id : null, last: T ? T.at || null : null, auto: T ? T.auto || null : null }); }
+  }, 200);
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.to !== 'neon-game') return;
+    if (m.type === 'tut-copy' && Array.isArray(m.copy)) {
+      TUT_COPY.length = 0; TUT_COPY.push(...m.copy);
+      const p = st.tut && st.tut.pop;
+      if (p) { const c = tutLine(p.id); p.text = tutFill(c.text); if (!p.ok) p.act = tutFill(c.act); else p.timer = c.timer || 0; }
+    }
+    if (m.type === 'tut-jump' && m.id) tutJump(m.id);
   });
   post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES),
     corpNames: Object.fromEntries(Object.entries(CORPS).map(([k, c]) => [k, c.name])) });

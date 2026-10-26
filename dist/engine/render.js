@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.28']);
+NEON_FILES.push(['engine/render.js', 'v13.35']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -68,6 +68,7 @@ function render(now) {
     else g.fillText(pch, p.x, p.y);
   }
   g.globalAlpha = 1;
+  if (st.tut) drawTutorial(now);   // the training run's popup (POPS), over everything
   const fk = (now - flashFx.t0) / 1000;
   if (fk < flashFx.dur) {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);

@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.28']);
+NEON_FILES.push(['engine/run.js', 'v13.35']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -20,7 +20,7 @@ function rerollSeed() {
   setMsg('> new seed rolled.');
 }
 
-async function startRun(seed, practice) {
+async function startRun(seed, practice, opts = {}) {
   if (st.transitioning) return;
   st.transitioning = true;
   Sound.ui();
@@ -37,6 +37,7 @@ async function startRun(seed, practice) {
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
+  if (opts.tutorial) tutorialRun(st.run);   // the training run (engine/tutorial.js)
   for (const x of st.run.items) markSeen(x.key);
   statRunStart(); statNodeStart(st.run.map['0:1']);   // play stats (engine/stats.js)
   clearRun();
@@ -86,6 +87,7 @@ function stepMapView(now) {
 
 function selectNode(id) {
   if (st.transitioning || !availableNodes().includes(id)) return;
+  if (!tutAllows('node', id)) return tutNo();
   if (st.mapSel === id) return enterNode(st.run.map[id]);
   st.mapSel = id;
   Sound.ui();
@@ -113,7 +115,8 @@ async function startCorp(node, startIdx = 0, restore = null) {
     if (pool.length) def = omniCopy(pickR(pool, rngFor(st.run.seed, 'omnicopy', node.sector || 0)), pool);
   }
   const t = node.tier;
-  const counts = node.type === 'start' ? [1] : Array.from({ length: CONFIG.corpLayers }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
+  const counts = node.type === 'start' ? [1] : st.run.tutorial && node.id === TUT.corpNode ? TUT.counts.slice()
+    : Array.from({ length: CONFIG.corpLayers }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
   const sector = node.sector || 0;
   // OMNI borrows a tell, a new one each sector
   let tell = node.type === 'final' && node.corp === 'omni' && !def.copied ? ((node.sector || 0) === 0 ? st.run.finalTell : pickR(['corner', 'mark', 'mirror'], rngFor(st.run.seed, 'final', node.sector))) : def.tell;
@@ -243,9 +246,9 @@ async function enterLayer() {
   const boss = c.hasBoss && c.idx === c.counts.length - 1;
   let tell = c.tell;
   if (boss && c.def.bossTell) tell = c.def.bossTell;
-  const lv = genLayer({ seed: run.seed, nodeId: c.node.id, idx: c.idx, n, tell, prevSafe: c.prevSafe, loot: !boss && c.hasBoss, mark: c.mark,
+  const lv = genLayer({ seed: run.seed, nodeId: c.node.id, idx: c.idx, n, tell, prevSafe: c.prevSafe, loot: !boss && c.hasBoss && (!run.tutorial || c.idx === 1), lootSure: !!run.tutorial && c.idx === 1, mark: c.mark,
     tellStr: c.tellStr, salt: run.resumes || 0, dress: c.hasBoss ? c.def.dress : null, tier: c.tier, boss,
-    alwaysFollow: !!c.def.alwaysFollow, carry: c.carry || null, lootMore: c.mod === 'loaded' });
+    alwaysFollow: !!c.def.alwaysFollow || !!run.tutorial, carry: c.carry || null, lootMore: c.mod === 'loaded' });
   lv.after = c.prevSafe;       // last layer's real node, for AFTERIMAGE
   if (c.mod === 'branded' && n > 2) {   // BRANDED: about a third of the ICE wear the sigil
     const ice = shuffle(lv.tiles.filter(t => !t.safe && !t.loaded), rngFor(run.seed, 'brand', c.node.id, c.idx));
@@ -563,6 +566,7 @@ async function pick(i) {
   { const byp = st.lagBypass; st.lagBypass = false;   // corp kit: LAGRANGE holds taps back
     if (!byp && st.mode === 'play' && !st.busy && st.corp && st.corp.hasBoss && st.corp.def.intercept && st.lv && st.lv.tiles[i] && st.corp.def.intercept(i)) return; }
   if (st.mode !== 'play' || st.busy) return;
+  if (!tutAllows('pick', i)) return tutNo();
   const t = st.lv.tiles[i];
   if (!t || t.state !== 'closed') return;
   // ZOMBIE: weak taps. A node takes tapsToBreak() taps; the ones before the last only crack it
@@ -946,6 +950,7 @@ function hurt(n) {
   if (zombie()) return addRot(n * ROT.ice);
   if (bloodMoney()) return payBlood(n);
   run.integrity -= n;
+  if (run.tutorial) run.integrity = Math.max(1, run.integrity);   // the training run can't be lost
 }
 function heal(n) {
   const run = st.run;

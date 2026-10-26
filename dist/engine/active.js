@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.28']);
+NEON_FILES.push(['engine/active.js', 'v13.35']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -30,6 +30,7 @@ function modSpent(key) {
 }
 
 function activateMod(key) {
+  if (!tutAllows('mod', key)) return tutNo();
   const run = st.run;
   if (!modUsable(key)) { Sound.deny(); return; }
   st.selMod = -1;
@@ -185,6 +186,7 @@ function canUse(stack) {
 function useItem(slot) {
   const run = st.run;
   if (!run || st.transitioning) return;
+  if (!tutAllows('item', slot)) return tutNo();
   const stack = run.items[slot];
   if (!stack) return;
   if (!canUse(stack)) {   // say why, where the info was, and shake the item
@@ -272,6 +274,7 @@ function cyclePalette() {
 // The palette for what's on screen: inside a corp, that corp's own (if corp colors
 // are on); everywhere else, the player's palette from settings.
 function scenePalette(corpKey) {
+  if (st.run && st.run.tutorial && PALETTES[TUT.palette]) return applyPalette(TUT.palette, true, 0);   // the training run: one palette throughout
   if (EDITOR && st.editorPal && PALETTES[st.editorPal]) return applyPalette(st.editorPal, true, st.editorDark || 0);   // the palette being edited, everywhere
   const ck = corpKey && save.corpColors ? 'c_' + corpKey : null;
   const c = st.corp, dark = corpKey && c && c.def.key === corpKey && c.def.dark && st.lv ? st.lv.dark || 0 : 0;   // BLACKOUT

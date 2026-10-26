@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.28']);
+NEON_FILES.push(['engine/scene.js', 'v13.35']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -45,7 +45,8 @@ function buildScene(now, collectHits, raw = false) {
     let x = L.ox + cx * L.cw, y = L.oy + cy * L.chh, pw = w * L.cw, ph = h * L.chh;
     if (ph < 40) { y -= (40 - ph) / 2; ph = 40; }   // finger-sized tap targets
     if (pw < 40) { x -= (40 - pw) / 2; pw = 40; }
-    hits.push(Object.assign({ x, y, w: pw, h: ph }, hit));
+    if (hit.kind === 'btn' && hit.onTap && st.tut && !tutAllows('btn', hit.id)) hit = Object.assign({}, hit, { onTap: tutNo });   // the training run: only what it asks for
+    hits.push(Object.assign({ x, y, w: pw, h: ph, cr: [cx, cy, w, h] }, hit));
   };
   const ctx = { now, put, putC, putR, addHit, bg, cells, collectHits };
 
@@ -297,7 +298,15 @@ function buildScene(now, collectHits, raw = false) {
     buildAd(Object.assign({}, ctx, { put: aput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result, under: true }), now);
     result = result.concat(ac);
   }
-  if (collectHits) bgs = (st.wipe && !st.dev ? (st.wipe.full ? [] : frameBgs.filter(b => b.cy < BOARD_Y || b.cy >= boardEnd)) : frameBgs).concat(adBgs);
+  // The training run's popup (engine/tutorial.js): over everything but an ad, the same way.
+  if (st.tut && st.tut.pop && !st.dev && !st.ad && (!st.wipe || st.tut.curtain)) {
+    const tc = [];
+    const tput = (cx, cy, str, col, own = 'tut', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') tc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
+    buildTutorial(Object.assign({}, ctx, { put: tput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }) }), now, result);
+    result = result.concat(tc);
+  }
+  const wTop = st.wipe && st.wipe.top != null ? st.wipe.top : BOARD_Y, wBot = st.wipe && st.wipe.bot != null ? st.wipe.bot : boardEnd;
+  if (collectHits) bgs = (st.wipe && !st.dev ? (st.wipe.full && st.wipe.top == null ? [] : frameBgs.filter(b => b.cy < wTop || b.cy >= wBot)) : frameBgs).concat(adBgs);
   if (collectHits) st.focusables = hits.filter(h => h.kind === 'btn' && !h.noFocus).sort((a, b) => a.y - b.y || a.x - b.x).map(h => ({ id: h.id, onTap: h.onTap }));
   return result;
 }
@@ -902,6 +911,7 @@ function buildMap(ctx) {
     if (sel) { put(p.x - 3, y, '>', C.accent, 'map'); put(p.x + 3, y, '<', C.accent, 'map'); }
     else if (run.at === n.id) put(p.x - 3, y, '@', C.bright, 'map');
     if (available && settled) addHit(p.x - 1, y, 3, 1, { kind: 'node', id: n.id });
+    if (st.tut) st.tut.spots[n.id] = [p.x - 1, y];   // the training points at map spots
   }
   // Which sector you're looking at, and arrows when there's more map below.
   if (run.sector > 0) {

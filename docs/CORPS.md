@@ -707,6 +707,12 @@ common the deeper you go (e.g. 0% in sector 1, then 10% and +5% per sector).
   hacker into your game"). The ICE isn't just a wall: tripping it alerts an enemy hacker, who jumps into the corp
   (a RIVAL-style bot shows up mid-corp). Maybe this is how the enemy hacker stage / corp event works: in that
   stage, ICE hits can bring a hacker in (ICE MAN would fit: the hacker who comes out of the ICE).
+- **Hacker / NPC name pool** (2026-10-26, from naming the tutorial's handler; the user picked **POPS**, keep the rest for
+  adversaries or other NPCs): **DOC** (the handler's first name), **SYSOP** (an old BBS admin, online since 300 baud),
+  **NANA** (a retired hacker grandma, sweet and ruthless), **DIALUP** (an old-timer who still hears the modem in his
+  dreams), **KLUDGE** (a duct-tape veteran), **ROOT** (an AI that lives in your deck), **MOTHER** (a calm AI, a little
+  too caring), **NULL** (a dry, deadpan AI), **HCF** ("halt and catch fire": a burnt-out ICE-breaker AI), **BAUD** (slow
+  talking, fast hands). None clash with a corp, mod or item.
 
 ### THIEF (the user's mod thief idea)
 - Hitting ICE steals one of your mods (the rightmost, or a random one), and it shows up in the

@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v13.28']);
+NEON_FILES.push(['engine/sound.js', 'v13.35']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -83,6 +83,7 @@ const Sound = (() => {
   return {
     init, levels,
     tick: () => tone(1800, 0.018, { vol: 0.12 }),
+    talk: () => tone([520, 600, 680, 760][Math.floor(Math.random() * 4)], 0.035, { type: 'triangle', vol: 0.16 }),   // POPS talking, a blip a line
     clock: () => tone(1400, 0.03, { vol: 0.25 }),
     ui: () => tone(990, 0.04, { vol: 0.3 }),
     deny: () => tone(160, 0.12, { type: 'square', vol: 0.3 }),

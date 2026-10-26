@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.28']);
+NEON_FILES.push(['engine/screens.js', 'v13.35']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -116,7 +116,8 @@ function titleLines(now) {
   const saved = st.savedRun;
   if (saved) lines.push({ box: true, text: 'C O N T I N U E', sub: `- sector ${(saved.run.sector || 0) + 1}  layer ${pad2(saved.run.depth)} -`, id: 'start', onTap: resumeRun, minW: 26 });
   else lines.push({ box: true, text: 'J A C K   I N', sub: '- start a run -', id: 'start', onTap: jackIn, minW: 26 });
-  T('');
+  if (!save.tutorialDone && !saved) lines.push({ text: '[ TRAINING ]', id: 'tutorial', onTap: startTutorial, col: C.accent });   // until you've done it (then: HOW TO PLAY)
+  else T('');
   lines.push({ row: [
     { text: '[ HOW TO PLAY ]', id: 'help', onTap: () => swapTo(openHelp) },
     { text: '[ CODEX ]', id: 'codex', onTap: () => swapTo(openCodex) },

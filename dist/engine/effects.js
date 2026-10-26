@@ -1,6 +1,6 @@
 // NeoN+1 engine/effects.js: Particles, flashes, shakes, and the scroll-fill wipe.
 'use strict';
-NEON_FILES.push(['engine/effects.js', 'v13.28']);
+NEON_FILES.push(['engine/effects.js', 'v13.35']);
 
 // ---------------- Effects ----------------
 const parts = [];
@@ -228,7 +228,7 @@ const charJitter = (cx, cy, salt) => (hash2(Math.round(cx * 2) + salt, Math.roun
 
 function applyWipe(cells, now) {
   const w = st.wipe;
-  const top = w.full ? 0 : BOARD_Y, bot = w.full ? L.hc : BOARD_Y + L.gh;
+  const top = w.top != null ? w.top : w.full ? 0 : BOARD_Y, bot = w.bot != null ? w.bot : w.full ? L.hc : BOARD_Y + L.gh;
   const inB = c => c.cy >= top && c.cy < bot;
   const out = cells.filter(c => !inB(c));
   const outT = WIPE_TIME[w.level];
@@ -331,6 +331,7 @@ async function wipeOut(level = 0, lit = null, quiet = false) {
 // Start the new screen's front. Without a wipe in progress, just decode in.
 function wipeIn() {
   const w = st.wipe;
+  if (w && w.tIn == null && st.tut && st.tut.curtain) return;   // the training's opening: the lines hold until POPS is done
   if (w && w.tIn == null) {
     const now = performance.now();
     w.tIn = now;

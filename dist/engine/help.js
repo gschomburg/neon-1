@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.28']);
+NEON_FILES.push(['engine/help.js', 'v13.35']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -189,7 +189,7 @@ function openHelp() {
     for (; used < CONTENT_ROWS - (w.hasDown ? 1 : 0); used++) T('');
     if (w.hasDown) X({ text: '[ v v v  more  v v v ]', invert: true, id: 'hdn', onTap: () => scrollBy(1) });
     T(SEP, C.dim);
-    B('[ BACK ]', 'back', () => swapTo(showTitle));
+    X({ row: [{ text: '[ TRAINING ]', id: 'tutorial', onTap: startTutorial }, { text: '[ BACK ]', id: 'back', onTap: () => swapTo(showTitle) }] });
   }, '> manual loaded.', { full: true });
   st.scroll = scrollBy;   // mouse wheel and swipe
   // Keys: left/right or 1-4 = tabs, up/down = scroll (when the page scrolls), esc = back.

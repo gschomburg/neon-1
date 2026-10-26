@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.28']);
+NEON_FILES.push(['engine/input.js', 'v13.35']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -63,7 +63,7 @@ function abandonRun() {
   const run = st.run;
   statQuit(run);
   run.ended = true; clearRun();
-  save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, win: false, abandoned: true, practice: run.practice, at: Date.now() });
+  if (!run.tutorial) save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, win: false, abandoned: true, practice: run.practice, at: Date.now() });   // (the training run leaves no history)
   save.history = save.history.slice(0, 20);
   persist();
   st.pause = false; st.abandonArmed = false; st.timer = null;
@@ -173,6 +173,7 @@ cv.addEventListener('pointerdown', e => {
   if (st.intro) { st.intro.skip = true; return; }   // tap skips a corp intro
   if (st.bossIntro) { st.bossIntro.skip = true; return; }   // ...and a boss entrance
   let h = hitAt(...ptXY(e));
+  if (st.tut && st.tut.pop && !st.pause && !st.dev && tutTap(h)) return;   // the training run's popup (POPS)
   if (h && h.kind === 'tile' && upsideMirror()) { const m = hitAt(e.clientX, e.clientY); h = m && m.kind === 'tile' ? m : null; }   // UPSIDE boss
   st.drag = activeScroll() ? { y: e.clientY } : null;
   // Ignore taps during a wipe, except the header buttons.
@@ -226,7 +227,8 @@ cv.addEventListener('pointermove', e => {
     const dy = e.clientY - st.drag.y;
     if (Math.abs(dy) > L.chh) { activeScroll()(dy < 0 ? 1 : -1); st.drag.y = e.clientY; }
   }
-  const h = hitAt(...ptXY(e));
+  let h = hitAt(...ptXY(e));
+  if (h && st.tut && !tutHoverOk(h)) h = null;   // the training: what you can't tap now doesn't light up
   const tile = h && h.kind === 'tile' ? h.i : -1;
   if (tile !== st.hover && tile >= 0 && !st.busy) Sound.tick();
   st.hover = tile;
@@ -300,7 +302,8 @@ document.addEventListener('keydown', e => {
     if (st.run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel')) return togglePause();
     return;
   }
-  if (st.transitioning || st.wipe) return;
+  if ((st.transitioning || st.wipe) && !(st.tut && st.tut.curtain)) return;   // (the training's opening is a held wipe: its popups still take keys)
+  if (st.tut && st.tut.pop && st.tut.pop.ok && !st.dev && !st.pause) { if (k === 'enter' || k === ' ') tutDismiss(); return; }   // (the curtain: see above)   // the training run's popup
   const overlay = st.dev || st.pause;
   if (!overlay) {
     if (st.keyHandler && st.keyHandler(k)) return;
