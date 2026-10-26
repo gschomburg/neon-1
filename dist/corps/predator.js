@@ -1,6 +1,6 @@
 // NeoN+1 corps/predator.js
 'use strict';
-NEON_FILES.push(['corps/predator.js', 'v13.26']);
+NEON_FILES.push(['corps/predator.js', 'v13.28']);
 // Its boss mod: INFRARED (infrared), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -61,12 +61,3 @@ CORPS.predator = {
 
 // the codex, once you've beaten it
 CORP_TELL.predator = "heat vision. the real node runs warmest on average, but every reading is noisy, and they wander. watch a few seconds.";
-
-// intro art
-CORP_ART.predator = [
-  " .:-=+*#%@%#*+=-:.",
-  "    <  ( @ )  >",
-  " .:-=+*#%@%#*+=-:.",
-  "",
-  " P R E D A T O R",
-];

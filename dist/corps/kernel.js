@@ -1,6 +1,6 @@
 // NeoN+1 corps/kernel.js
 'use strict';
-NEON_FILES.push(['corps/kernel.js', 'v13.26']);
+NEON_FILES.push(['corps/kernel.js', 'v13.28']);
 // Its boss mod: SEED READER (seedreader), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -37,12 +37,3 @@ CORPS.kernel = {
 
 // the codex, once you've beaten it
 CORP_TELL.kernel = "the hint lights a character of your seed. the real node has it; decoys have other seed characters. boss: two lit, the real node has both.";
-
-// intro art
-CORP_ART.kernel = [
-  "   ___________",
-  "  | > kernel  |",
-  "  | 0x1F 0x2A |",
-  "  | seed: ??? |",
-  "  '-----------'",
-];

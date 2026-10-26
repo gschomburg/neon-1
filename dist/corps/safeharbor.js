@@ -1,6 +1,6 @@
 // NeoN+1 corps/safeharbor.js
 'use strict';
-NEON_FILES.push(['corps/safeharbor.js', 'v13.26']);
+NEON_FILES.push(['corps/safeharbor.js', 'v13.28']);
 // Its boss mod: POLICY (policy), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -40,13 +40,3 @@ CORPS.safeharbor = {
 
 // the codex, once you've beaten it
 CORP_TELL.safeharbor = "the fine print: a dot in the bottom right corner of the real node. deeper, decoys have dots in other corners; boss: a comma in the same one.";
-
-// intro art
-CORP_ART.safeharbor = [
-  "      _|_",
-  "     /_|_\\",
-  "   ____|____",
-  "   \\_______/",
-  "  ~~~~~~~~~~~~",
-  "   SAFEHARBOR",
-];

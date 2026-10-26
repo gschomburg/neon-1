@@ -1,6 +1,6 @@
 // NeoN+1 corps/boneyard.js
 'use strict';
-NEON_FILES.push(['corps/boneyard.js', 'v13.26']);
+NEON_FILES.push(['corps/boneyard.js', 'v13.28']);
 // Its boss mod: GRAVE ROBBER (graverobber), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -57,12 +57,3 @@ CORPS.boneyard = {
 
 // the codex, once you've beaten it
 CORP_TELL.boneyard = "the dead cast no shadow: every node casts a faint shadow except the real one (and a ghost or two). boss: after every miss, a ghost drifts to a new spot. the real node never moves.";
-
-// intro art
-CORP_ART.boneyard = [
-  "      .-----.",
-  "     / x   x \\",
-  "     |   ^   |",
-  "      \\ vvv /",
-  "   B O N E Y A R D",
-];

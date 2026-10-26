@@ -1,6 +1,6 @@
 // NeoN+1 corps/dewey.js
 'use strict';
-NEON_FILES.push(['corps/dewey.js', 'v13.26']);
+NEON_FILES.push(['corps/dewey.js', 'v13.28']);
 // Its boss mod: INDEX (index), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -39,12 +39,3 @@ CORPS.dewey = {
 
 // the codex, once you've beaten it
 CORP_TELL.dewey = "the real node is misfiled: its call number is from another section. tier 1: another hundred (300s among 600s). deeper: another ten. boss: two digits swapped.";
-
-// intro art
-CORP_ART.dewey = [
-  " |=||#||=|| ||=|",
-  " | || || || || |",
-  " |_||_||_||_||_|",
-  " ===============",
-  "   DEWEY  SYS",
-];

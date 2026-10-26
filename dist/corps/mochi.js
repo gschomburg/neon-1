@@ -1,6 +1,6 @@
 // NeoN+1 corps/mochi.js
 'use strict';
-NEON_FILES.push(['corps/mochi.js', 'v13.26']);
+NEON_FILES.push(['corps/mochi.js', 'v13.28']);
 // Its boss mod: FRIENDSHIP (friendship), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -49,12 +49,3 @@ CORPS.mochi = {
 
 // the codex, once you've beaten it
 CORP_TELL.mochi = "the real node waves at you: a double bounce, hi hi! deeper, some decoys bob once. ICE costs 10cr instead of integrity (boss: 20cr).";
-
-// intro art
-CORP_ART.mochi = [
-  "    /\\_/\\   /\\_/\\",
-  "   ( ^.^ ) ( o.o )",
-  "    (   )   (   )",
-  "     u u     u u",
-  "   mochi mochi <3",
-];

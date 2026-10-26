@@ -1,6 +1,6 @@
 // NeoN+1 corps/bitrot.js
 'use strict';
-NEON_FILES.push(['corps/bitrot.js', 'v13.26']);
+NEON_FILES.push(['corps/bitrot.js', 'v13.28']);
 // Its boss mod: LAST BYTE (lastbyte), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -63,12 +63,3 @@ CORPS.bitrot = {
 
 // the codex, once you've beaten it
 CORP_TELL.bitrot = "the real node is made only of characters on your HUD: your credit digits and #. each decoy has an odd one. the longer you wait, the more rots away.";
-
-// intro art
-CORP_ART.bitrot = [
-  " 0110 1#0 ,1.0 ;1",
-  " 1.1 0  1# 0 .:",
-  " 0 1 . # ;  ,",
-  "",
-  "  B I T R O T",
-];

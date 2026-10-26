@@ -1,6 +1,6 @@
 // NeoN+1 corps/pawnbros.js
 'use strict';
-NEON_FILES.push(['corps/pawnbros.js', 'v13.26']);
+NEON_FILES.push(['corps/pawnbros.js', 'v13.28']);
 // Its boss mod: CHANCE CARD (chancecard), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -62,12 +62,3 @@ CORPS.pawnbros = {
 
 // the codex, once you've beaten it
 CORP_TELL.pawnbros = "the board's outer ring is a loop from GO (top left), clockwise. the real node is the dice roll's number of squares from GO. boss: plus a Chance card.";
-
-// intro art
-CORP_ART.pawnbros = [
-  "  +--+--+--+--+",
-  "  |GO|  |  |  |",
-  "  +--+--+--+--+",
-  "      [5][2]",
-  "  P A W N  B R O S",
-];

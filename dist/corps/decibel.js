@@ -1,6 +1,6 @@
 // NeoN+1 corps/decibel.js
 'use strict';
-NEON_FILES.push(['corps/decibel.js', 'v13.26']);
+NEON_FILES.push(['corps/decibel.js', 'v13.28']);
 // Its boss mod: STETHOSCOPE (stethoscope), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -49,14 +49,3 @@ CORPS.decibel = {
 
 // the codex, once you've beaten it
 CORP_TELL.decibel = "hot and cold by ear: the music is muffled far from the real node and clears up as your pointer gets close. the waveform shows it too.";
-
-// intro art
-CORP_ART.decibel = [
-  "      _.-^-._",
-  "  .-^'       '^-.",
-  " ~   ) ) )o( ( (   ~",
-  "  '-._       _.-'",
-  "      '-.v.-'",
-  "",
-  " D E C I B E L",
-];

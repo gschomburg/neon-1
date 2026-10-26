@@ -1,6 +1,6 @@
 // NeoN+1 corps/glacier.js
 'use strict';
-NEON_FILES.push(['corps/glacier.js', 'v13.26']);
+NEON_FILES.push(['corps/glacier.js', 'v13.28']);
 // Its boss mod: ICEBOX (icebox), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -55,13 +55,3 @@ CORPS.glacier = {
 
 // the codex, once you've beaten it
 CORP_TELL.glacier = "frost locks a node every few seconds, from the edges in, and each one cuts the pay. the real node freezes last: if the frost reaches it, frostbite (-1), but the layer counts.";
-
-// intro art
-CORP_ART.glacier = [
-  "   *   .  *   .",
-  "  .-----------.",
-  "  | []  []  []|",
-  "  | []  []  []|",
-  "  '-----------'",
-  "   G L A C I E R",
-];

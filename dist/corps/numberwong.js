@@ -1,6 +1,6 @@
 // NeoN+1 corps/numberwong.js
 'use strict';
-NEON_FILES.push(['corps/numberwong.js', 'v13.26']);
+NEON_FILES.push(['corps/numberwong.js', 'v13.28']);
 // Its boss mod: PENCIL MARKS (pencil), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -42,12 +42,3 @@ CORPS.numberwong = {
 
 // the codex, once you've beaten it
 CORP_TELL.numberwong = "tier 1: the only prime. deeper: the only number that is not a multiple of 3. boss: the only prime, and no decoy is even or ends in 5.";
-
-// intro art
-CORP_ART.numberwong = [
-  " .---. .---. .---.",
-  " | 7 | |13 | |42 |",
-  " '---' '---' '---'",
-  "   N U M B E R",
-  "     W O N G",
-];

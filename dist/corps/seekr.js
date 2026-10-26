@@ -1,6 +1,6 @@
 // NeoN+1 corps/seekr.js
 'use strict';
-NEON_FILES.push(['corps/seekr.js', 'v13.26']);
+NEON_FILES.push(['corps/seekr.js', 'v13.28']);
 // Its boss mod: AUTOCOMPLETE (autocomplete), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -39,14 +39,3 @@ CORPS.seekr = {
 
 // the codex, once you've beaten it
 CORP_TELL.seekr = "the search bar autocompletes the real node's glyph. deeper: one line is missing. boss: \"did you mean\", and one line is a decoy's.";
-
-// intro art
-CORP_ART.seekr = [
-  '      .-----.',
-  '     /  ? ?  \\',
-  '    |   ???   |',
-  '     \\  ? ?  /',
-  "      '-----'\\",
-  '              \\\\',
-  '               \\\\',
-];

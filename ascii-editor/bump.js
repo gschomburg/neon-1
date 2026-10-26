@@ -23,7 +23,7 @@ const v = `${maj}.${String(min).padStart(2, '0')}`;
 app = app.replace(/const VERSION = '[^']*';/, `const VERSION = '${v}';`);
 html = html.replace(/(<span class="ver">)v[^<]*(<\/span>)/, `$1v${v}$2`)
   .replace(/(href="style\.css)(\?v=[^"]*)?"/, `$1?v=${v}"`)
-  .replace(/(src="(?:app|cursors|fonts|gallery)\.js)(\?v=[^"]*)?"/g, `$1?v=${v}"`);
+  .replace(/(src="(?:app|cursors|fonts|gallery|neon-link)\.js)(\?v=[^"]*)?"/g, `$1?v=${v}"`);
 fs.writeFileSync(appPath, app);
 fs.writeFileSync(htmlPath, html);
 const note = (process.argv[3] || '').trim();

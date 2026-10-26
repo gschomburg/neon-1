@@ -1,6 +1,6 @@
 // NeoN+1 corps/luckeez.js
 'use strict';
-NEON_FILES.push(['corps/luckeez.js', 'v13.26']);
+NEON_FILES.push(['corps/luckeez.js', 'v13.28']);
 // Its boss mod: LET IT RIDE (letitride), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -57,11 +57,3 @@ CORPS.luckeez = {
 
 // the codex, once you've beaten it
 CORP_TELL.luckeez = "the real node shows three of a kind. deeper, decoys show pairs. boss: the reels spin first. DBL DOWN: x2 pay if real, x2 damage if ICE.";
-
-// intro art
-CORP_ART.luckeez = [
-  "  .-----------.",
-  "  | 7 | 7 | 7 |o",
-  "  '-----------'|",
-  "   L U C K E E Z",
-];

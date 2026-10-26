@@ -1,6 +1,6 @@
 // NeoN+1 corps/watchpoint.js
 'use strict';
-NEON_FILES.push(['corps/watchpoint.js', 'v13.26']);
+NEON_FILES.push(['corps/watchpoint.js', 'v13.28']);
 // Its boss mod: CCTV (cctv), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -44,12 +44,3 @@ CORPS.watchpoint = {
 
 // the codex, once you've beaten it
 CORP_TELL.watchpoint = "the camera sweeps the rows. each sweep catches one ICE: it flashes ### as the camera passes. boss: some sweeps catch nothing.";
-
-// intro art
-CORP_ART.watchpoint = [
-  "   ___________",
-  "  [__(  o  )__]==",
-  "      |   |",
-  "      '---'",
-  "  W A T C H P O I N T",
-];

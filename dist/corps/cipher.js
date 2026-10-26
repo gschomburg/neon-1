@@ -1,6 +1,6 @@
 // NeoN+1 corps/cipher.js
 'use strict';
-NEON_FILES.push(['corps/cipher.js', 'v13.26']);
+NEON_FILES.push(['corps/cipher.js', 'v13.28']);
 // Its boss mod: PARITY (parity), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -43,12 +43,3 @@ CORPS.cipher = {
 
 // the codex, once you've beaten it
 CORP_TELL.cipher = "the key line says ROW or COL and a number: that's where the real node is (most of the time). learn which symbols spell ROW and which spell COL; the messages you already know help. boss: the cipher shifts after every miss.";
-
-// intro art
-CORP_ART.cipher = [
-  "  .---------------.",
-  "  | A > ◆ | B > ▲ |",
-  "  | C > ● | D > ★ |",
-  "  '---------------'",
-  "     C I P H E R",
-];

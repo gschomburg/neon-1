@@ -1,6 +1,6 @@
 // NeoN+1 corps/fourthwall.js
 'use strict';
-NEON_FILES.push(['corps/fourthwall.js', 'v13.26']);
+NEON_FILES.push(['corps/fourthwall.js', 'v13.28']);
 // Its boss mod: SPOILER (spoiler), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -86,14 +86,3 @@ CORPS.fourthwall = {
 
 // the codex, once you've beaten it
 CORP_TELL.fourthwall = "it knows where you like to pick (every pick you've made) and hides the real node somewhere else, and it tells you so. boss: the real node is the [x].";
-
-// intro art
-CORP_ART.fourthwall = [
-  " .----------------.",
-  " | ERROR      [x] |",
-  " | you are here.  |",
-  " |  [ OK ]        |",
-  " '----------------'",
-  "",
-  " F O U R T H  W A L L",
-];

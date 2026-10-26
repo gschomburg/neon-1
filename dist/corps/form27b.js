@@ -1,6 +1,6 @@
 // NeoN+1 corps/form27b.js
 'use strict';
-NEON_FILES.push(['corps/form27b.js', 'v13.26']);
+NEON_FILES.push(['corps/form27b.js', 'v13.28']);
 // Its boss mod: QUEUE NUMBER (queuenumber), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -63,13 +63,3 @@ CORPS.form27b = {
 
 // the codex, once you've beaten it
 CORP_TELL.form27b = "1. read the form on the hint row (the order to tap in). 2. tap nodes in that order (the next one is lit): ICE in order is FILED, no damage, but a fee off the pay. 3. a tap out of order is REJECTED and hits you, unless it's the real node: then you jumped the queue.";
-
-// intro art
-CORP_ART.form27b = [
-  "   .----------.",
-  "   | FORM 27B |",
-  "   | [x] [ ]  |",
-  "   | ____  ## |",
-  "   '----------'",
-  "  REJECTED. NEXT.",
-];

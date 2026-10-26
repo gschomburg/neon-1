@@ -6,6 +6,16 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **The art catalog** (v13.27-v13.28, asXii v0.143, 2026-10-26). `tools/neon_editor.html`, the **ART** tab. The art
+  now lives in `dist/data/art/`: glyphs.js, logos.js (every logo: players' and corps'), worldmap.js. Try: pick
+  KERNING under corp logos, **edit in asXii** (Chrome may ask to allow the pop-up), draw, **send back to NeoN+1** in the
+  bar at the bottom of asXii; **show in game**; **+ glyph** / **+ logo** (name, lore, id, mark, kind); **save** (the
+  first time, pick the `dist/data/art` folder). In the game: beat a corp, then its logo is in your profile's logo
+  picker. Check: every logo now sits in one 24 x 7 box (player logos have a blank row above and below), CORP BREACHED
+  after a boss win lost its two blank rows to fit, corp marks are their map codes (`KN3`; OMNI `[!]`), and asXii
+  loading art replaces its canvas (Ctrl Z there brings yours back). The title art isn't in (it's built from parts).
+  Tell Justin: asXii has a new `neon-link.js` and app.js's `window.asxii` exposes changed / zoomFit / toast.
+
 - [ ] **The to-do batch** (v13.26, 2026-10-25). Play and listen:
   - **KERNING**: a whole line of the real node is off now, and by more. Still easy enough at layer 3 / deep corps?
   - **The real-node sound**: a climbing "yes!" with a held high note. Bad hits add a falling "uh-oh". Too much / too long?

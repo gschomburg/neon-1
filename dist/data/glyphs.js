@@ -1,28 +1,10 @@
 // NeoN+1 data/glyphs.js: Node glyphs (the ASCII art on nodes) and their helpers.
 'use strict';
-NEON_FILES.push(['data/glyphs.js', 'v13.26']);
+NEON_FILES.push(['data/glyphs.js', 'v13.28']);
 
 // ---------------- Glyphs ----------------
-const MOTIFS_RAW = [
-  [' / \\ ', '<   >', ' \\ / '],
-  ['\\ /', ' X ', '/ \\'],
-  ['[===]', '[   ]', '[===]'],
-  [' .-. ', '( o )', " '-' "],
-  ['~ ~ ~', ' ~ ~ ', '~ ~ ~'],
-  ['# #', ' # ', '# #'],
-  ['  ^  ', ' /|\\ ', '  |  '],
-  ['o-+  ', '  |  ', '  +-o'],
-  ['0110', '1001', '0110'],
-  ['(o.o)', ' |=| '],
-  ['+-+-+', '| | |', '+-+-+'],
-  ['  |  ', '--+--', '  |  '],
-  ['. : .', ': . :', '. : .'],
-  ['>>>', '>>>'],
-  [' .-. ', ' | | ', '[###]'],
-  ['%#@', '@ %', '#%@'],
-  ['{ }', '{*}', '{ }'],
-  ['=====', ' === ', '  =  '],
-];
+// The art, names and lore are in data/art/glyphs.js (ART_GLYPHS), edited in the neon editor.
+const MOTIFS_RAW = ART_GLYPHS.map(g => g.art);
 function normMotif(m) {
   let lines = m.slice(0, 3);
   if (lines.length === 1) lines = ['', lines[0], ''];
@@ -34,42 +16,22 @@ function normMotif(m) {
   });
 }
 const MOTIFS = MOTIFS_RAW.map(normMotif);
-const JACK_GLYPH = normMotif(['', '>_', '']);
-const LOOT_GLYPH = normMotif(['$ $', '[$]', '$ $']);
-const BONE_GLYPH = normMotif(['o=o', 'o=$=o', 'o=o']); // BONEYARD's $ nodes: bone piles
-const MASK_GLYPH = normMotif(['', '???', '']);
+const JACK_GLYPH = normMotif(ART_SPECIAL.jack.art);
+const LOOT_GLYPH = normMotif(ART_SPECIAL.loot.art);
+const BONE_GLYPH = normMotif(ART_SPECIAL.bone.art); // BONEYARD's $ nodes: bone piles
+const MASK_GLYPH = normMotif(ART_SPECIAL.mask.art);
 const X_SHAPE = normMotif(['\\ /', ' X ', '/ \\']);
 const shapeOf = gl => gl.map(l => l.replace(/[^ ]/g, '#')).join('|');
 const X_MASK = shapeOf(X_SHAPE);
 const MARK_CHARS = '#%@*+=o0&';
 
-// Codex entries for every tile glyph: a name and some (unreliable) lore.
-// Lore lines stay under 26 characters so they fit next to the tile art.
-const GLYPH_LORE = [
-  ['DIAMOND',      ['a rhombus with ambition.', 'every corp logo is this', 'plus a gradient.']],
-  ['THE CROSS',    ['marks the spot.', 'the spot is usually', 'a trap.']],
-  ['STORAGE UNIT', ['contents: nothing.', 'a firewall\'s lunchbox.']],
-  ['THE WATCHER',  ['it saw you jack in.', 'it says nothing.', 'it judges.']],
-  ['SIGNAL NOISE', ['the sound of 4,000', 'routers screaming', 'in harmony.']],
-  ['HASHTAG X',    ['deprecated social rune.', 'still trending', 'somewhere awful.']],
-  ['UPLINK',       ['points up.', 'management loves it.']],
-  ['TRACE PATH',   ['a wire that took the', 'long way round to', 'avoid the tolls.']],
-  ['BINARY',       ['spells "i" if you squint.', 'the rest is a typo.']],
-  ['SYSADMIN',     ['on call since 2071.', 'please be gentle.']],
-  ['LATTICE',      ['a very small fence', 'for very small data.']],
-  ['JUNCTION',     ['four roads.', 'no lights.', 'all cops.']],
-  ['STATIC',       ['what is left when a', 'hard drive dreams.']],
-  ['FAST FORWARD', ['skips the ads.', 'there are always', 'more ads.']],
-  ['PADLOCK',      ['the oldest security', 'tech in the net.', 'still mostly works.']],
-  ['CORRUPTION',   ['a file that got too', 'close to a magnet once.', 'it does not talk about it.']],
-  ['BRACKET STAR', ['a JSON object that', 'reached enlightenment.']],
-  ['FUNNEL',       ['data goes in.', 'invoices come out.']],
-];
+// Codex entries for every tile glyph: a name and some (unreliable) lore (data/art/glyphs.js).
+const GLYPH_LORE = ART_GLYPHS.map(g => [g.name, g.lore]);
 const SPECIAL_GLYPHS = [
-  { key: 'gjack', name: 'PROMPT',          glyphOf: () => JACK_GLYPH, lore: ['where every bad', 'decision starts.'] },
-  { key: 'gloot', name: 'LOADED NODE',     glyphOf: () => LOOT_GLYPH, lore: ['always ICE.', 'always worth it?', 'never sure.'] },
+  { key: 'gjack', name: ART_SPECIAL.jack.name, glyphOf: () => JACK_GLYPH, lore: ART_SPECIAL.jack.lore },
+  { key: 'gloot', name: ART_SPECIAL.loot.name, glyphOf: () => LOOT_GLYPH, lore: ART_SPECIAL.loot.lore },
   { key: 'gsig',  name: 'SIGIL SIGNATURE', glyphOf: () => X_SHAPE,    lore: ['sigil signs its work.', 'the signature changes.', 'the habit does not.'] },
-  { key: 'gmask', name: 'REDACTED',        glyphOf: () => MASK_GLYPH, lore: ['the sigil boss forgot', 'what it signed.', 'you should not.'] },
+  { key: 'gmask', name: ART_SPECIAL.mask.name, glyphOf: () => MASK_GLYPH, lore: ART_SPECIAL.mask.lore },
 ];
 const GLYPHS = [
   ...GLYPH_LORE.map(([name, lore], i) => ({ key: 'g' + i, name, lore, glyphOf: () => MOTIFS[i] })),

@@ -1,6 +1,6 @@
 // NeoN+1 corps/kerning.js
 'use strict';
-NEON_FILES.push(['corps/kerning.js', 'v13.26']);
+NEON_FILES.push(['corps/kerning.js', 'v13.28']);
 // Its boss mod: PIXEL PEEP (pixelpeep), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -41,12 +41,3 @@ CORPS.kerning = {
 
 // the codex, once you've beaten it
 CORP_TELL.kerning = "KERNING's whole board has OCD about pixels. one line of the real node is a few pixels off, and once you see it you can't unsee it. boss: every decoy is off; the real node is the aligned one.";
-
-// intro art
-CORP_ART.kerning = [
-  "  K E R N I N G",
-  "  K  E R  N I N G",
-  "  KE R N IN G",
-  "  K E R N I N G",
-  "    fixed. FIXED.",
-];

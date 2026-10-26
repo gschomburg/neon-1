@@ -1,6 +1,6 @@
 // NeoN+1 corps/verdant.js
 'use strict';
-NEON_FILES.push(['corps/verdant.js', 'v13.26']);
+NEON_FILES.push(['corps/verdant.js', 'v13.28']);
 // Its boss mod: COMPOST (compost), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -48,12 +48,3 @@ CORPS.verdant = {
 
 // the codex, once you've beaten it
 CORP_TELL.verdant = "the real node has a leaf % on its frame, and so do 1-2 decoys. ICE you hit grows back a few seconds later, with a leaf.";
-
-// intro art
-CORP_ART.verdant = [
-  "      _%_",
-  "    %(   )%",
-  "     \\ | /",
-  "    __\\|/__",
-  "     V E R D A N T",
-];

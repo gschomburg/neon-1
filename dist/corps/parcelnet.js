@@ -1,6 +1,6 @@
 // NeoN+1 corps/parcelnet.js
 'use strict';
-NEON_FILES.push(['corps/parcelnet.js', 'v13.26']);
+NEON_FILES.push(['corps/parcelnet.js', 'v13.28']);
 // Its boss mod: PRIORITY (priority), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -31,13 +31,3 @@ CORPS.parcelnet = {
 
 // the codex, once you've beaten it
 CORP_TELL.parcelnet = "the real node's tracking number ends in the layer number (1-4). boss: ends in 0. deeper, decoys end in the numbers next to it.";
-
-// intro art
-CORP_ART.parcelnet = [
-  "   ___________",
-  "  /          /|",
-  " /__________/ |",
-  " | PARCELNET| |",
-  " |  [====]  | /",
-  " |__________|/",
-];

@@ -1,6 +1,6 @@
 // NeoN+1 corps/forgetmenot.js
 'use strict';
-NEON_FILES.push(['corps/forgetmenot.js', 'v13.26']);
+NEON_FILES.push(['corps/forgetmenot.js', 'v13.28']);
 // Its boss mod: PHOTOGRAPHIC (photographic), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -29,13 +29,3 @@ CORPS.forgetmenot = {
 
 // the codex, once you've beaten it
 CORP_TELL.forgetmenot = "look fast: the glyphs turn face down after 2 seconds (deeper 1.5, boss 1). then the hint shows the real node's glyph.";
-
-// intro art
-CORP_ART.forgetmenot = [
-  "     .-.  .-.",
-  "    ( * )( * )",
-  "     '-'()'-'",
-  "       |  |",
-  "     .-'  '-.",
-  "   forget-me-not",
-];

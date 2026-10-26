@@ -1,6 +1,6 @@
 // NeoN+1 corps/sigil.js
 'use strict';
-NEON_FILES.push(['corps/sigil.js', 'v13.26']);
+NEON_FILES.push(['corps/sigil.js', 'v13.28']);
 // Its boss mod: SIGSCAN (sigscan), FORGERY (forgery), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -19,14 +19,3 @@ CORPS.sigil = {
 
 // the codex, once you've beaten it
 CORP_TELL.sigil = 'the real node always wears the signature, and so do some decoys. the boss signature fades.';
-
-// intro art
-CORP_ART.sigil = [
-  "        .-'''-.",
-  "     .-'   X   '-.",
-  '    /  \\       /  \\',
-  '   |    >-(*)-<    |',
-  '    \\  /       \\  /',
-  "     '-.   X   .-'",
-  "        '-...-'",
-];

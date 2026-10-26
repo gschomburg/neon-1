@@ -1,6 +1,6 @@
 // NeoN+1 corps/perimeter.js
 'use strict';
-NEON_FILES.push(['corps/perimeter.js', 'v13.26']);
+NEON_FILES.push(['corps/perimeter.js', 'v13.28']);
 // Its boss mod: FENCELINE (corners), BULWARK (bulwark), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -24,14 +24,3 @@ CORPS.perimeter = {
 
 // the codex, once you've beaten it
 CORP_TELL.perimeter = 'the real node is usually in a corner. deeper: on any edge. boss: the center.';
-
-// intro art
-CORP_ART.perimeter = [
-  ' +==+==============+==+',
-  ' |##|              |##|',
-  ' +==+  PERIMETER   +==+',
-  '    |    [ SYS ]   |',
-  ' +==+              +==+',
-  ' |##|              |##|',
-  ' +==+==============+==+',
-];

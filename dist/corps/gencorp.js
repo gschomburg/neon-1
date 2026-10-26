@@ -1,6 +1,6 @@
 // NeoN+1 corps/gencorp.js
 'use strict';
-NEON_FILES.push(['corps/gencorp.js', 'v13.26']);
+NEON_FILES.push(['corps/gencorp.js', 'v13.28']);
 // Its boss mod: MUTATE (mutate), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -46,13 +46,3 @@ CORPS.gencorp = {
 
 // the codex, once you've beaten it
 CORP_TELL.gencorp = "the hint shows the parent: last layer's real node. the real node is its child, the same with one line changed.";
-
-// intro art
-CORP_ART.gencorp = [
-  "  o-o   o-o   o-o",
-  "   \\ \\ / / \\ / /",
-  "    >-X-<   X",
-  "   / / \\ \\ / \\ \\",
-  "  o-o   o-o   o-o",
-  "   G E N C O R P",
-];

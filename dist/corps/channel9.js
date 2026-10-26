@@ -1,6 +1,6 @@
 // NeoN+1 corps/channel9.js
 'use strict';
-NEON_FILES.push(['corps/channel9.js', 'v13.26']);
+NEON_FILES.push(['corps/channel9.js', 'v13.28']);
 // Its boss mod: REMOTE (remote), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -53,13 +53,3 @@ CORPS.channel9 = {
 
 // the codex, once you've beaten it
 CORP_TELL.channel9 = "static on every node. flip the channel (1s each): on one channel the real node comes in clear.";
-
-// intro art
-CORP_ART.channel9 = [
-  "   \\    /",
-  "  .-\\--/-----.",
-  "  |  .::.:. 9|",
-  "  | .:.:.::  |",
-  "  '----------'",
-  "  CHANNEL 9",
-];

@@ -1,6 +1,6 @@
 // NeoN+1 corps/basic.js
 'use strict';
-NEON_FILES.push(['corps/basic.js', 'v13.26']);
+NEON_FILES.push(['corps/basic.js', 'v13.28']);
 // Its boss mod: BASIC TRAINING (basictraining), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -25,14 +25,3 @@ CORPS.basic = {
 
 // the codex, once you've beaten it
 CORP_TELL.basic = 'the real node is the plain one: [ ]. that is the whole trick.';
-
-// intro art
-CORP_ART.basic = [
-  '+------------------+',
-  '|                  |',
-  '|   B A S I C      |',
-  '|   ----------     |',
-  '|   corp.  inc.    |',
-  '|                  |',
-  '+------------------+',
-];

@@ -1,6 +1,6 @@
 // NeoN+1 corps/demolition.js
 'use strict';
-NEON_FILES.push(['corps/demolition.js', 'v13.26']);
+NEON_FILES.push(['corps/demolition.js', 'v13.28']);
 // Its boss mod: CONTROLLED BLAST (blast), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -49,12 +49,3 @@ CORPS.demolition = {
 
 // the codex, once you've beaten it
 CORP_TELL.demolition = "reverse rules: break all the ICE, not the real one. broken ICE shows 1 if the real node is next to it (diagonals too), 0 if not. tapping the real node hurts. boss: the numbers fade.";
-
-// intro art
-CORP_ART.demolition = [
-  "        __",
-  "   ____|  |___",
-  "  |  BOOM!   |=o",
-  "  '----------'",
-  "  D E M O L I T I O N",
-];

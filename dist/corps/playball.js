@@ -1,6 +1,6 @@
 // NeoN+1 corps/playball.js
 'use strict';
-NEON_FILES.push(['corps/playball.js', 'v13.26']);
+NEON_FILES.push(['corps/playball.js', 'v13.28']);
 // Its boss mod: OVERTIME (overtime), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -114,14 +114,3 @@ CORPS.playball = {
 
 // the codex, once you've beaten it
 CORP_TELL.playball = "pong over the grid. the ball bumps nodes: ICE cracks after 2 bumps, the real node rings (a chime and a flash). keep the ball in.";
-
-// intro art
-CORP_ART.playball = [
-  "   =========",
-  "  |    o     |",
-  "  |  [] []   |",
-  "  |  [] []   |",
-  "   =========",
-  "",
-  "  P L A Y B A L L",
-];

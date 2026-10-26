@@ -1,6 +1,6 @@
 // NeoN+1 corps/carapace.js
 'use strict';
-NEON_FILES.push(['corps/carapace.js', 'v13.26']);
+NEON_FILES.push(['corps/carapace.js', 'v13.28']);
 // Its boss mod: ROLL UP (rollup), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -44,12 +44,3 @@ CORPS.carapace = {
 
 // the codex, once you've beaten it
 CORP_TELL.carapace = "every node wears armor. the real node has a thin spot (-) in its top edge. deeper, every node has one: the real node's is on top, the decoys' on the bottom. every ICE you hit points toward the real node.";
-
-// intro art
-CORP_ART.carapace = [
-  "      _____",
-  "    .#=====#.",
-  "   /#=#=#=#=#\\",
-  "  (_o_________)",
-  "  C A R A P A C E",
-];

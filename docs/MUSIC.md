@@ -157,6 +157,9 @@ Clean up the tracks; not every corp needs its own. Maybe:
 - **A title track**, and maybe an **overworld (map) track**.
 
 ### Smaller ideas
+- **The engine demos go to new corps** (the user, 2026-10-25): ACID RAIN, CRYPT ORGAN, CHIP RUNNER, RUST BELT, SEA
+  LEGS, ORBIT CLUB, BROKEN SIGNAL, CLOCKWORK WALTZ are pocketed: when a new corp is built, give it one of these
+  (not the existing corps; the music is in a good place, the user says).
 - **Music per sector** (SPEC §17): sector 2+ shifts the music (key / tempo up, an extra layer) so you can
   feel the progress.
 - **Sound for the boot intro** (SPEC §16f, the intro follow-ups): a modem handshake / dial-up screech under

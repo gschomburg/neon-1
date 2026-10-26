@@ -1,6 +1,6 @@
 // NeoN+1 corps/telephonix.js
 'use strict';
-NEON_FILES.push(['corps/telephonix.js', 'v13.26']);
+NEON_FILES.push(['corps/telephonix.js', 'v13.28']);
 // Its boss mod: CALLER ID (callerid), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -52,13 +52,3 @@ CORPS.telephonix = {
 
 // the codex, once you've beaten it
 CORP_TELL.telephonix = "the nodes are phone keys. the hint dials a number; the last digit is the real key. then the line goes on hold. boss: the last digit is dialed as a letter (2 = ABC).";
-
-// intro art
-CORP_ART.telephonix = [
-  "     ________",
-  "    /  ____  \\",
-  "   |  [1 2 3] |",
-  "   |  [4 5 6] |",
-  "   |  [7 8 9] |",
-  "  T E L E P H O N I X",
-];

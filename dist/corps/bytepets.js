@@ -1,6 +1,6 @@
 // NeoN+1 corps/bytepets.js
 'use strict';
-NEON_FILES.push(['corps/bytepets.js', 'v13.26']);
+NEON_FILES.push(['corps/bytepets.js', 'v13.28']);
 // Its boss mod: COMPANION (companion), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -51,12 +51,3 @@ CORPS.bytepets = {
 
 // the codex, once you've beaten it
 CORP_TELL.bytepets = "CALL the pets (a 1cr treat): they all turn their heads, and the real one comes a step toward you. boss: a cat. it ignores half your calls.";
-
-// intro art
-CORP_ART.bytepets = [
-  "    .------.",
-  "   | /\\_/\\  |",
-  "   | (o.o)  |",
-  "   '-o--o--'",
-  "  B Y T E P E T S",
-];

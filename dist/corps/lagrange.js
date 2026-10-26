@@ -1,6 +1,6 @@
 // NeoN+1 corps/lagrange.js
 'use strict';
-NEON_FILES.push(['corps/lagrange.js', 'v13.26']);
+NEON_FILES.push(['corps/lagrange.js', 'v13.28']);
 // Its boss mod: PRECOG (precog), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -93,13 +93,3 @@ CORPS.lagrange = {
 
 // the codex, once you've beaten it
 CORP_TELL.lagrange = "the grid slides one column right every 1.5s, and a tap lands after the next slide. just before each slide, * * marks where the real node will land: tap there.";
-
-// intro art
-CORP_ART.lagrange = [
-  "  o --------> o",
-  "     L1  L2",
-  "   . . . . . .",
-  "  (   1.5s   )",
-  "",
-  " L A G R A N G E",
-];

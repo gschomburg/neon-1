@@ -1,6 +1,6 @@
 // NeoN+1 corps/coldbrew.js
 'use strict';
-NEON_FILES.push(['corps/coldbrew.js', 'v13.26']);
+NEON_FILES.push(['corps/coldbrew.js', 'v13.28']);
 // Its boss mod: ESPRESSO (espresso), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -44,13 +44,3 @@ CORPS.coldbrew = {
 
 // the codex, once you've beaten it
 CORP_TELL.coldbrew = "the real node steams: a wisp rises off it every couple of seconds. deeper, decoys give off a faint dot. the clock loses 1s every layer.";
-
-// intro art
-CORP_ART.coldbrew = [
-  "      ) ) )",
-  "     ( ( (",
-  "    .-----.",
-  "    |     |]",
-  "    '-----'",
-  "   C O L D B R E W",
-];

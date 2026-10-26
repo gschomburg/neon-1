@@ -1,6 +1,6 @@
 // NeoN+1 corps/groundhog.js
 'use strict';
-NEON_FILES.push(['corps/groundhog.js', 'v13.26']);
+NEON_FILES.push(['corps/groundhog.js', 'v13.28']);
 // Its boss mod: DEJA VU (dejavu), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -57,13 +57,3 @@ CORPS.groundhog = {
 
 // the codex, once you've beaten it
 CORP_TELL.groundhog = "a miss loops the layer: everything closes again, but the spots you hit keep a red x. each loop one node moves (it flashes): watch it, or your marks lie.";
-
-// intro art
-CORP_ART.groundhog = [
-  "    .---.",
-  "   ( o o )   6:00",
-  "    ) - (    6:00",
-  "   (_____)   6:00",
-  "",
-  " G R O U N D H O G",
-];

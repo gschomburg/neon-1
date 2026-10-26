@@ -1,6 +1,6 @@
 // NeoN+1 corps/chuckecache.js
 'use strict';
-NEON_FILES.push(['corps/chuckecache.js', 'v13.26']);
+NEON_FILES.push(['corps/chuckecache.js', 'v13.28']);
 // Its boss mod: CONTINUE? (continue), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -54,12 +54,3 @@ CORPS.chuckecache = {
 
 // the codex, once you've beaten it
 CORP_TELL.chuckecache = "the real node is the 1UP: it blinks on every tick of the score. decoys blink at random (deeper, on ticks too, but they skip some). pay comes in tickets, x1.5 at the prize counter when you beat the corp.";
-
-// intro art
-CORP_ART.chuckecache = [
-  "   .---------.",
-  "   | 1UP 000 |",
-  "   |  (o o)  |",
-  "   '---o-o---'",
-  "  CHUCK E. CACHE'S",
-];
