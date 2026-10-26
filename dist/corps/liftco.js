@@ -1,6 +1,6 @@
 // NeoN+1 corps/liftco.js
 'use strict';
-NEON_FILES.push(['corps/liftco.js', 'v13.26']);
+NEON_FILES.push(['corps/liftco.js', 'v13.28']);
 // Its boss mod: EXPRESS (express), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -34,13 +34,3 @@ CORPS.liftco = {
 
 // the codex, once you've beaten it
 CORP_TELL.liftco = "the lift runs up and down the floors (the lit row). it stops a beat longer on the real node's floor.";
-
-// intro art
-CORP_ART.liftco = [
-  "   [ 1 2 3 4 ^ ]",
-  "   .-----------.",
-  "   |  ||   ||  |",
-  "   |  ||   ||  |",
-  "   '-----------'",
-  "     L I F T C O",
-];

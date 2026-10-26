@@ -1,6 +1,6 @@
 // NeoN+1 corps/upside.js
 'use strict';
-NEON_FILES.push(['corps/upside.js', 'v13.26']);
+NEON_FILES.push(['corps/upside.js', 'v13.28']);
 // Its boss mod: INVERSION (inversion), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -36,12 +36,3 @@ CORPS.upside = {
 
 // the codex, once you've beaten it
 CORP_TELL.upside = "the screen is upside down. every node shows a word; the real one is the only one that reads right side up. boss: taps land on the mirrored node.";
-
-// intro art
-CORP_ART.upside = [
-  "  /\\  /\\  /\\",
-  "  \\/  \\/  \\/",
-  "  |  UP  |  SIDE",
-  "",
-  "  U P S I D E",
-];

@@ -1,6 +1,6 @@
 // NeoN+1 corps/monte.js
 'use strict';
-NEON_FILES.push(['corps/monte.js', 'v13.26']);
+NEON_FILES.push(['corps/monte.js', 'v13.28']);
 // Its boss mod: QUICK EYE (quickeye), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -69,12 +69,3 @@ CORPS.monte = {
 
 // the codex, once you've beaten it
 CORP_TELL.monte = "a shell game: the ball shows under one cup, then the cups shuffle. follow it. a miss shuffles twice more.";
-
-// intro art
-CORP_ART.monte = [
-  "  ___    ___    ___",
-  " /   \\  /   \\  /   \\",
-  " '---'  '---'  '-o-'",
-  "",
-  "    M  O  N  T  E",
-];

@@ -1,6 +1,6 @@
 // NeoN+1 corps/blackout.js
 'use strict';
-NEON_FILES.push(['corps/blackout.js', 'v13.26']);
+NEON_FILES.push(['corps/blackout.js', 'v13.28']);
 // Its boss mod: FLARE (flare), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -51,12 +51,3 @@ CORPS.blackout = {
 
 // the codex, once you've beaten it
 CORP_TELL.blackout = "when the lights flash (a layer opening, every ICE hit), every node lights up and fades. the real node glows longest. deeper, a decoy glows long too. it gets darker every layer; the nodes you hit stay red. (in the dark, you are likely to be eaten by a grue.)";
-
-// intro art
-CORP_ART.blackout = [
-  "      .---.",
-  "     (  x  )",
-  "      '|=|'",
-  "       '-'",
-  "  B L A C K O U T",
-];

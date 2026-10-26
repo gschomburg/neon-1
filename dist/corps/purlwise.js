@@ -1,6 +1,6 @@
 // NeoN+1 corps/purlwise.js
 'use strict';
-NEON_FILES.push(['corps/purlwise.js', 'v13.26']);
+NEON_FILES.push(['corps/purlwise.js', 'v13.28']);
 // Its boss mod: UNRAVEL (unravel), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -32,12 +32,3 @@ CORPS.purlwise = {
 
 // the codex, once you've beaten it
 CORP_TELL.purlwise = "every node has the same stitch pattern (deeper: one pattern per row). the real node has a dropped stitch: an o (boss: a V).";
-
-// intro art
-CORP_ART.purlwise = [
-  "    .-~~~-.",
-  "   (  @@@  )--.",
-  "    '-~~~-'    \\",
-  "      v-v-v     )",
-  "      -v-v-    /",
-];

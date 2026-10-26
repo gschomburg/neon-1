@@ -1,6 +1,6 @@
 // NeoN+1 corps/gridlock.js
 'use strict';
-NEON_FILES.push(['corps/gridlock.js', 'v13.26']);
+NEON_FILES.push(['corps/gridlock.js', 'v13.28']);
 // Its boss mod: GREEN WAVE (greenwave), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -52,13 +52,3 @@ CORPS.gridlock = {
 
 // the codex, once you've beaten it
 CORP_TELL.gridlock = "every node is a traffic light. the decoys change together (deeper: in two groups); the real one is out of sync. ICE on green: 0 damage, amber 1, red 2.";
-
-// intro art
-CORP_ART.gridlock = [
-  "    .-.   .-.",
-  "    (@)   ( )",
-  "    ( )   (@)",
-  "    ( )   ( )",
-  "     |     |",
-  "  G R I D L O C K",
-];

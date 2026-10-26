@@ -1,6 +1,6 @@
 // NeoN+1 corps/squalor.js
 'use strict';
-NEON_FILES.push(['corps/squalor.js', 'v13.26']);
+NEON_FILES.push(['corps/squalor.js', 'v13.28']);
 // Its boss mod: INFLUENCER (influencer), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -72,14 +72,3 @@ CORPS.squalor = {
 
 // the codex, once you've beaten it
 CORP_TELL.squalor = "move the pointer around: the crowd reacts with more hearts the closer you get. boss: the hate gets louder near the real one. a hit trends: +1 on the next for 5s.";
-
-// intro art
-CORP_ART.squalor = [
-  " .------------.",
-  " | [^_^] <3 99|",
-  " | like  share|",
-  " '------------'",
-  "    :) +1 ;)",
-  "",
-  " S Q U A L O R",
-];

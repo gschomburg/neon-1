@@ -1,6 +1,6 @@
 // NeoN+1 corps/twinlink.js
 'use strict';
-NEON_FILES.push(['corps/twinlink.js', 'v13.26']);
+NEON_FILES.push(['corps/twinlink.js', 'v13.28']);
 // Its boss mod: LINKUP (linkup), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -72,12 +72,3 @@ CORPS.twinlink = {
 
 // the codex, once you've beaten it
 CORP_TELL.twinlink = "linked pairs flip together. the real node is never linked. boss: double-width nodes are always ICE, and hit for 2.";
-
-// intro art
-CORP_ART.twinlink = [
-  "  [o]==[o]",
-  "        |",
-  "  [o]  [o]==[o]",
-  "",
-  "  T W I N L I N K",
-];

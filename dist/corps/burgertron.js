@@ -1,6 +1,6 @@
 // NeoN+1 corps/burgertron.js
 'use strict';
-NEON_FILES.push(['corps/burgertron.js', 'v13.26']);
+NEON_FILES.push(['corps/burgertron.js', 'v13.28']);
 // Its boss mod: SUPERSIZE (supersize), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -39,13 +39,3 @@ CORPS.burgertron = {
 
 // the codex, once you've beaten it
 CORP_TELL.burgertron = "the hint names the combo of the day. boss: the first combo is wrong; wait for the menu update.";
-
-// intro art
-CORP_ART.burgertron = [
-  "   .-''''''''-.",
-  "  /  o  o  o   \\",
-  " |~~~~~~~~~~~~~~|",
-  " |##############|",
-  " |~~~~~~~~~~~~~~|",
-  "  \\____________/",
-];

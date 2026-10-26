@@ -1,6 +1,6 @@
 // NeoN+1 engine/intro.js: the boot / login intro before the title.
 'use strict';
-NEON_FILES.push(['engine/intro.js', 'v13.26']);
+NEON_FILES.push(['engine/intro.js', 'v13.28']);
 
 // A terminal login: a prompt, your runner name typing in, a boot log scrolling (the game's real
 // files, plus some fake jargon) with a progress bar, a world map with your spot blinking, then
@@ -9,17 +9,7 @@ NEON_FILES.push(['engine/intro.js', 'v13.26']);
 
 // The world map: our own small drawing (fake-ish continents), in the line style of the old
 // ASCII world maps. WHERE: spots on land your location can blink at.
-const INTRO_MAP = [
-  " ,-''-._       ,-.  ,-----.___    ",
-  "(       `.   _/  `-'          `-. ",
-  " `.  ,.  ) _(  ,-.   ,--.     ,-' ",
-  "   \\/  \\/ (   (   `-'   `.  ,'    ",
-  "    \\     )  ,'    ,-.   ( (      ",
-  "     `.  /  (     (   )   `.`.    ",
-  "       )(    `.    `-'     ,-'    ",
-  "      ( (      )        .-'  .-.  ",
-  "       `'      `'           (__)  ",
-];
+const INTRO_MAP = ART_MAP;   // data/art/worldmap.js
 const INTRO_WHERE = [[4, 1], [8, 3], [6, 5], [14, 2], [16, 5], [24, 1], [28, 2], [25, 4], [30, 7]];
 const INTRO_JARGON = [
   'routing via proxy 3/7', 'spoofing mac 4e:7a:..:c1', 'opening socket :1337', 'bouncing off relay.kr',

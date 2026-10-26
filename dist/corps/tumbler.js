@@ -1,6 +1,6 @@
 // NeoN+1 corps/tumbler.js
 'use strict';
-NEON_FILES.push(['corps/tumbler.js', 'v13.26']);
+NEON_FILES.push(['corps/tumbler.js', 'v13.28']);
 // Its boss mod: PICKSET (pickset), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -32,14 +32,3 @@ CORPS.tumbler = {
 
 // the codex, once you've beaten it
 CORP_TELL.tumbler = "every pin sits at a height. the real pin is the one height no decoy has.";
-
-// intro art
-CORP_ART.tumbler = [
-  "    .-----.",
-  "   / .---. \\",
-  "   | |   | |",
-  " .-'-'---'-'-.",
-  " |    (o)    |",
-  " |     |     |",
-  " '-----------'",
-];

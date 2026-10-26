@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.26']);
+NEON_FILES.push(['engine/editor.js', 'v13.28']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -28,7 +28,15 @@ if (EDITOR) {
       await wait(40);
     }
   };
-  const endRun = () => { if (st.run) { st.run.ended = true; clearRun(); } st.pause = false; st.dev = false; showTitle(); };
+  // The corpintro scene holds a corp's intro screen up; any next scene lets it go first.
+  const INTRO_HOLD = CONFIG.introHold;
+  const letGo = async () => { if (CONFIG.introHold !== INTRO_HOLD) { CONFIG.introHold = INTRO_HOLD; if (st.intro) st.intro.skip = true; await settle(); } };
+  let logoWas = null;   // the profile scene's borrowed logo
+  const endRun = () => {
+    if (logoWas != null) { profile().logo = logoWas; logoWas = null; persist(); }
+    if (st.run) { st.run.ended = true; clearRun(); }
+    st.pause = false; st.dev = false; showTitle();
+  };
   // A practice run on the map, with a mod of every rarity and a few items in the tray.
   const mapRun = async () => {
     endRun();
@@ -54,8 +62,20 @@ if (EDITOR) {
     help: async () => { endRun(); openHelp(); },
     codex: async () => { endRun(); openCodex(); },
     settings: async () => { endRun(); openSettings(); },
-    profile: async () => { endRun(); openProfile(); },
+    // the profile; opts.logo shows it wearing that logo (put back at the next scene)
+    profile: async o => { endRun(); if (o.logo && LOGO_BY_ID[o.logo]) { const p = profile(); if (logoWas == null) logoWas = p.logo; p.logo = o.logo; } openProfile(); },
     map: mapRun,
+    intro: async () => { endRun(); save.bootSeen = false; startIntro(); },   // the first-boot intro (the world map shows ~3-5s in)
+    // a corp's intro screen (its art), held up until the next scene
+    corpintro: async o => {
+      await mapRun();
+      const run = st.run, id = availableNodes().find(x => run.map[x].type === 'corp');
+      Object.assign(run.map[id], { corp: CORPS[o.corp] ? o.corp : 'basic', tier: 1 });
+      delete run.map[id].mod;
+      CONFIG.introHold = 1e9;
+      enterNode(run.map[id], true);
+      for (let i = 0; i < 100 && !st.intro; i++) await wait(40);
+    },
     layer: o => enterCorp(o.corp, false),
     boss: o => enterCorp(o.corp, true),
     // a layer after a miss (red node), with one ICE switched off (locked) and the cursor on a node
@@ -76,14 +96,34 @@ if (EDITOR) {
       await settle();
     },
   };
+  // New art from the editor's ART tab (live; the files change only when the editor saves them).
+  // a = { glyphs: [{ name, lore, art }], special: { k: { art } }, logos: [{ id, ..., art }], map }, any of them.
+  // Everything made from the art at load is changed in place, so the game's lists keep working.
+  // (A new glyph shows on nodes right away; the codex lists it after a reload.)
+  const same = (to, from) => { to.length = 0; to.push(...from); };
+  const trimLead = rows => { const lead = Math.min(...rows.filter(l => l.trim()).map(l => l.length - l.trimStart().length)); return rows.map(l => l.slice(isFinite(lead) ? lead : 0).trimEnd()); };
+  const loadArt = a => {
+    if (!a) return;
+    if (a.glyphs) { same(ART_GLYPHS, a.glyphs); same(MOTIFS, a.glyphs.map(g => normMotif(g.art))); same(GLYPH_LORE, a.glyphs.map(g => [g.name, g.lore])); }
+    if (a.special) for (const [k, g] of [['jack', JACK_GLYPH], ['loot', LOOT_GLYPH], ['bone', BONE_GLYPH], ['mask', MASK_GLYPH]]) if (a.special[k]) same(g, normMotif(a.special[k].art));
+    if (a.logos) {
+      same(ART_LOGOS, a.logos);
+      for (const k of Object.keys(LOGO_BY_ID)) delete LOGO_BY_ID[k];
+      for (const l of a.logos) LOGO_BY_ID[l.id] = l;
+      same(PLAYER_LOGOS, a.logos.filter(l => l.kind === 'player'));
+      for (const l of a.logos) if (l.kind === 'corp' && l.corp) CORP_ART[l.corp] = trimLead(l.art);
+    }
+    if (a.map) same(INTRO_MAP, a.map);
+  };
   let queue = Promise.resolve();
   window.addEventListener('message', e => {
     const m = e.data;
     if (!m || m.to !== 'neon-game') return;
     if (m.type === 'palettes') loadPaletteData(m.data);
+    if (m.type === 'art') loadArt(m.art);
     if (m.type === 'show') { st.editorPal = m.key; st.editorDark = m.dark || 0; refreshPalette(); post({ type: 'shown', key: m.key, bg: C.bg, accent: C.accent }); }
     if (m.type === 'scene' && SCENES[m.name]) {
-      queue = queue.then(() => SCENES[m.name](m.opts || {}))
+      queue = queue.then(letGo).then(() => SCENES[m.name](m.opts || {}))
         .then(() => post({ type: 'scene', name: m.name, ok: true, info: { mode: st.mode, corp: st.corp && st.corp.def.name, boss: !!(st.lv && st.lv.boss), bg: C.bg, accent: C.accent } }))
         .catch(err => post({ type: 'scene', name: m.name, ok: false, error: String((err && err.message) || err) }));
     }
@@ -160,7 +200,8 @@ if (EDITOR) {
     sendMods(true);
     post({ type: 'mod-set', ok: true, key: m.key });
   });
-  post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES) });
+  post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES),
+    corpNames: Object.fromEntries(Object.entries(CORPS).map(([k, c]) => [k, c.name])) });
 }
 
 // Debug hook for the console and automated tests.

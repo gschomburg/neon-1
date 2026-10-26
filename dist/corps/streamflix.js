@@ -1,6 +1,6 @@
 // NeoN+1 corps/streamflix.js
 'use strict';
-NEON_FILES.push(['corps/streamflix.js', 'v13.26']);
+NEON_FILES.push(['corps/streamflix.js', 'v13.28']);
 // Its boss mod: FREEZE FRAME (freezeframe), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -46,13 +46,3 @@ CORPS.streamflix = {
 
 // the codex, once you've beaten it
 CORP_TELL.streamflix = "every node is playing. when the screen buffers, everything freezes except the live node: the real one.";
-
-// intro art
-CORP_ART.streamflix = [
-  "  .-------------.",
-  "  |   |\\        |",
-  "  |   | >       |",
-  "  |   |/        |",
-  "  '-------------'",
-  "   S T R E A M F L I X",
-];

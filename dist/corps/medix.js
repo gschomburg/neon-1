@@ -1,6 +1,6 @@
 // NeoN+1 corps/medix.js
 'use strict';
-NEON_FILES.push(['corps/medix.js', 'v13.26']);
+NEON_FILES.push(['corps/medix.js', 'v13.28']);
 // Its boss mod: TRIAGE (triage), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -40,13 +40,3 @@ CORPS.medix = {
 
 // the codex, once you've beaten it
 CORP_TELL.medix = "the real node has a steady heartbeat, lub-dub. decoys flicker unevenly. the first ICE hit each layer only bruises (not the boss).";
-
-// intro art
-CORP_ART.medix = [
-  "      ___",
-  "     |   |",
-  "  ___|   |___",
-  " |___  +  ___|",
-  "     |   |",
-  "     |___|  MEDIX",
-];

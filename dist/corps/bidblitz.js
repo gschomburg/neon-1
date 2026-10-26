@@ -1,6 +1,6 @@
 // NeoN+1 corps/bidblitz.js
 'use strict';
-NEON_FILES.push(['corps/bidblitz.js', 'v13.26']);
+NEON_FILES.push(['corps/bidblitz.js', 'v13.28']);
 // Its boss mod: SNIPE (snipe), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -50,12 +50,3 @@ CORPS.bidblitz = {
 
 // the codex, once you've beaten it
 CORP_TELL.bidblitz = "no tell. bid to lock ICE: every bid costs more than the last and cuts the pay. SNIPE: hold 100cr and the first lock is free.";
-
-// intro art
-CORP_ART.bidblitz = [
-  "    __",
-  "   |__|____",
-  "      |    SOLD!",
-  "     _|_",
-  "  B I D B L I T Z",
-];

@@ -1,6 +1,6 @@
 // NeoN+1 corps/lexicon.js
 'use strict';
-NEON_FILES.push(['corps/lexicon.js', 'v13.26']);
+NEON_FILES.push(['corps/lexicon.js', 'v13.28']);
 // Its boss mod: SPELLBOUND (spellbound), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -44,12 +44,3 @@ CORPS.lexicon = {
 
 // the codex, once you've beaten it
 CORP_TELL.lexicon = "a 5-letter word, one letter per layer. the hint shows the category and the letters so far. the real node is the next letter.";
-
-// intro art
-CORP_ART.lexicon = [
-  "  .-.-.-.-.-.",
-  "  |L|E|X|I|C|",
-  "  '-'-'-'-'-'",
-  "  |O|N|",
-  "  '-'-'",
-];

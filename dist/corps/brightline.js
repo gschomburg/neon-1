@@ -1,6 +1,6 @@
 // NeoN+1 corps/brightline.js
 'use strict';
-NEON_FILES.push(['corps/brightline.js', 'v13.26']);
+NEON_FILES.push(['corps/brightline.js', 'v13.28']);
 // Its boss mod: GROUNDED (grounded), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -43,13 +43,3 @@ CORPS.brightline = {
 
 // the codex, once you've beaten it
 CORP_TELL.brightline = "brownouts: every few seconds the decoys go dark. the real node has a backup and stays lit. deeper and boss: shorter dips.";
-
-// intro art
-CORP_ART.brightline = [
-  "     ___|___",
-  "    |  /|  |   ~~",
-  "    | /_|_ |  ~~~",
-  "    |   |/ |   ~~",
-  "    |___|__|",
-  "  B R I G H T L I N E",
-];

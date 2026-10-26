@@ -1,6 +1,6 @@
 // NeoN+1 corps/tollgate.js
 'use strict';
-NEON_FILES.push(['corps/tollgate.js', 'v13.26']);
+NEON_FILES.push(['corps/tollgate.js', 'v13.28']);
 // Its boss mod: EZPASS (ezpass), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -39,12 +39,3 @@ CORPS.tollgate = {
 
 // the codex, once you've beaten it
 CORP_TELL.tollgate = "the toll booth |=| sits over the real node's column. deeper and boss: that column or the one next to it. every pick costs 2cr.";
-
-// intro art
-CORP_ART.tollgate = [
-  "  _____  ________",
-  " | |=| ||========",
-  " | | | ||   ||",
-  " |_|_|_||   ||",
-  "   T O L L G A T E",
-];

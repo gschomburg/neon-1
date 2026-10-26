@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.26']);
+NEON_FILES.push(['engine/panels.js', 'v13.28']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -220,7 +220,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
       });
     });
     if (options.length) {
-      T('');
+      if (!by) T('');   // with the logo (LOGO_H rows) there's no room for the gaps
       const o = options[sel], v = viewOf(o);
       const shown = now >= st.panelT0 + sel * CONFIG.revealGap;
       T(SEP, C.dim);
@@ -233,7 +233,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
       } else { T('...', C.dim); T(''); T(''); T(''); T(''); T(''); }
       T(SEP, C.dim);
     }
-    T('');
+    if (!by) T('');
     B(options.length && skipLabel ? skipLabel : '[ CONTINUE ]', 'skip', () => take(null));
   }, msg, { reveal });
 }

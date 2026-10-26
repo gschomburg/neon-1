@@ -1,6 +1,6 @@
 // NeoN+1 corps/spectra.js
 'use strict';
-NEON_FILES.push(['corps/spectra.js', 'v13.26']);
+NEON_FILES.push(['corps/spectra.js', 'v13.28']);
 // Its boss mod: PRISM (prism), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -65,12 +65,3 @@ CORPS.spectra = {
 
 // the codex, once you've beaten it
 CORP_TELL.spectra = "first layer: the odd color out (every other color shows up twice or more). then the colors run in order (red, orange, yellow, green, blue, violet): the real node is the color after the last real one. each color has its own shape. boss: backwards.";
-
-// intro art
-CORP_ART.spectra = [
-  "        /\\",
-  "   ----/  \\ ===",
-  "      /    \\ ~~~",
-  "     '------' ###",
-  "   S P E C T R A",
-];

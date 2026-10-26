@@ -1,6 +1,6 @@
 // NeoN+1 corps/gravitas.js
 'use strict';
-NEON_FILES.push(['corps/gravitas.js', 'v13.26']);
+NEON_FILES.push(['corps/gravitas.js', 'v13.28']);
 // Its boss mod: ANTIGRAV (antigrav), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -77,14 +77,3 @@ CORPS.gravitas = {
 
 // the codex, once you've beaten it
 CORP_TELL.gravitas = "a second in, and after every miss, gravity: everything falls and stacks. the real node is lighter than air: it rises a row.";
-
-// intro art
-CORP_ART.gravitas = [
-  "     .--.",
-  "    (    )",
-  "     '--'",
-  "      ||",
-  "      vv",
-  " ============",
-  " G R A V I T A S",
-];

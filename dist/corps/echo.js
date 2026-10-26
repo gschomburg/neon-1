@@ -1,6 +1,6 @@
 // NeoN+1 corps/echo.js
 'use strict';
-NEON_FILES.push(['corps/echo.js', 'v13.26']);
+NEON_FILES.push(['corps/echo.js', 'v13.28']);
 // Its boss mod: FOGHORN (foghorn), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -49,11 +49,3 @@ CORPS.echo = {
 
 // the codex, once you've beaten it
 CORP_TELL.echo = "the nodes ping one after another. the real node pings lower and its ring goes in, not out. boss: every ping sounds the same; watch the rings.";
-
-// intro art
-CORP_ART.echo = [
-  "   (  (  ( . )  )  )",
-  "",
-  "      E C H O",
-  "      L A B S",
-];

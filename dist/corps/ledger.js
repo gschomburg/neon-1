@@ -1,6 +1,6 @@
 // NeoN+1 corps/ledger.js
 'use strict';
-NEON_FILES.push(['corps/ledger.js', 'v13.26']);
+NEON_FILES.push(['corps/ledger.js', 'v13.28']);
 // Its boss mod: INTEREST (interest), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -36,14 +36,3 @@ CORPS.ledger = {
 
 // the codex, once you've beaten it
 CORP_TELL.ledger = "the real node's balance: its digits add up to 10. deeper balances are longer.";
-
-// intro art
-CORP_ART.ledger = [
-  '    _____________',
-  '   /   LEDGER    \\',
-  '  /_______________\\',
-  '   | |  | |  | | |',
-  '   | |  | |  | | |',
-  '  _|_|__|_|__|_|_|_',
-  ' [_________________]',
-];

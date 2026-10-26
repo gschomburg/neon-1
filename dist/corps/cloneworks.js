@@ -1,6 +1,6 @@
 // NeoN+1 corps/cloneworks.js
 'use strict';
-NEON_FILES.push(['corps/cloneworks.js', 'v13.26']);
+NEON_FILES.push(['corps/cloneworks.js', 'v13.28']);
 // Its boss mod: TWIN LOCK (twinlock), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -34,12 +34,3 @@ CORPS.cloneworks = {
 
 // the codex, once you've beaten it
 CORP_TELL.cloneworks = 'every glyph has a twin except the real node. deeper: the twin is a mirror image. boss: the twin is one character off.';
-
-// intro art
-CORP_ART.cloneworks = [
-  ' \\    /    \\    /',
-  '  \\  /      \\  /',
-  '   ><  ====  ><',
-  '  /  \\      /  \\',
-  ' /    \\    /    \\',
-];

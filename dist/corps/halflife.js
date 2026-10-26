@@ -1,6 +1,6 @@
 // NeoN+1 corps/halflife.js
 'use strict';
-NEON_FILES.push(['corps/halflife.js', 'v13.26']);
+NEON_FILES.push(['corps/halflife.js', 'v13.28']);
 // Its boss mod: LEAD LINING (leadlining), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -65,12 +65,3 @@ CORPS.halflife = {
 
 // the codex, once you've beaten it
 CORP_TELL.halflife = "the geiger counter sweeps the nodes. the real node reads full ::::: and the ones near it click faster. too slow and the radiation costs 1 at the end.";
-
-// intro art
-CORP_ART.halflife = [
-  "      .-.",
-  "   .-(   )-.",
-  "  (   \\./   )",
-  "   '-'   '-'",
-  "  H A L F L I F E",
-];

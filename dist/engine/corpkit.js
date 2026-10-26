@@ -1,10 +1,11 @@
-// NeoN+1 engine/corpkit.js: the corp kit. CORPS / CORP_TELL / CORP_ART start here, every corps/ file adds
+// NeoN+1 engine/corpkit.js: the corp kit. CORPS / CORP_TELL / CORP_ART start here (the art comes from data/art/logos.js), every corps/ file adds
 // its own corp, and the shared helpers for corp tells come after.
 //
 // ADDING A CORP
 //   1. Copy a corp file in corps/ (corps/boneyard.js is a good one) to corps/KEY.js. It sets
 //      CORPS.KEY (the definition and its hooks, see below), CORP_TELL.KEY (the codex text, shown
-//      once you beat it) and CORP_ART.KEY (the intro art).
+//      once you beat it). Its intro art is its logo in data/art/logos.js (kind 'corp', corp: KEY):
+//      the neon editor's ART tab adds and edits it (tools/neon_editor.html), or add it there by hand.
 //   2. Add <script src="corps/KEY.js?v=..."></script> to index.html after the other corps (the
 //      order of the corps is the order the map picks from, so new ones go at the end).
 //   3. Optional: its palette in palettes.js (c_KEY); its music in its own file (SONGS.<track> +
@@ -38,7 +39,7 @@
 //   engine/mods.js      zombie, ROT
 //
 'use strict';
-NEON_FILES.push(['engine/corpkit.js', 'v13.26']);
+NEON_FILES.push(['engine/corpkit.js', 'v13.28']);
 
 // ---------------- Content ----------------
 // tell: how the corp picks its safe tile. bossTell: the boss layer's twist.
@@ -229,15 +230,5 @@ const CORP_TELL = {   // the corps/ files add their own
   omni: 'it copies one corp you beat in this sector: its tell, its twists. the intro lists which ones it could be. ICE hits for 2 on its boss.',
 };
 
-// Corp intro ("boot up") art. Rows get padded to the same width so they line up.
-const CORP_ART = {   // the corps/ files add their own
-  omni: [
-    '          _______',
-    "      .-''       ''-.",
-    '     /    .-----.    \\',
-    '    |    (   @   )    |',
-    "     \\    '-----'    /",
-    "      '-._       _.-'",
-    "          '''''''",
-  ],
-};
+// Corp intro ("boot up") art, by corp key: each corp's logo in data/art/logos.js (ART_LOGOS), edited in the neon editor.
+const CORP_ART = Object.fromEntries(ART_LOGOS.filter(l => l.kind === 'corp').map(l => [l.corp, l.art]));

@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.142';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.143';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -5413,7 +5413,7 @@ function start() {
 // Hooks for the headless self-test (index.html?selftest)
 window.asxii = { S, CMDS, shadeChar, shadeSet, shadeStamp, inkOf, L, K, loadStart, showWelcome, loadB3Example, openB3Examples, placeBlocksInView, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
-  undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render,
+  undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render, changed, zoomFit, toast,
   AUTO_SETS, autoOf, autoThumb, glyphAt, resolveAt, compositeRaw, copyRaw, bakeAuto, makeAuto, autoPreview, setSlot, pickAt };
 
 start();

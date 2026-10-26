@@ -1,6 +1,6 @@
 // NeoN+1 corps/rydr.js
 'use strict';
-NEON_FILES.push(['corps/rydr.js', 'v13.26']);
+NEON_FILES.push(['corps/rydr.js', 'v13.28']);
 // Its boss mod: SURGE (surge), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -28,11 +28,3 @@ CORPS.rydr = {
 
 // the codex, once you've beaten it
 CORP_TELL.rydr = "fakes rate a perfect 5.0. the real driver is the 4.9. deeper, some fakes are 4.8. pays more the later you pick.";
-
-// intro art
-CORP_ART.rydr = [
-  "      ______",
-  "  ___/  ||  \\___",
-  " |  _  RYDR  _  |",
-  " '-(_)------(_)-'",
-];

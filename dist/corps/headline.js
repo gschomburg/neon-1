@@ -1,6 +1,6 @@
 // NeoN+1 corps/headline.js
 'use strict';
-NEON_FILES.push(['corps/headline.js', 'v13.26']);
+NEON_FILES.push(['corps/headline.js', 'v13.28']);
 // Its boss mod: SCOOP (scoop), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -46,13 +46,3 @@ CORPS.headline = {
 
 // the codex, once you've beaten it
 CORP_TELL.headline = "one headline on the ticker says where the real node is. deeper, BREAKING names a row or column, and RUMOR names a wrong one.";
-
-// intro art
-CORP_ART.headline = [
-  "  .--------------.",
-  "  | HEADLINE  NEWS|",
-  "  |  ____  ~~~~~  |",
-  "  | |    | ~~~~~  |",
-  "  '--------------'",
-  "  +++ breaking +++",
-];

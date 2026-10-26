@@ -1,6 +1,6 @@
 // NeoN+1 corps/nimbus.js
 'use strict';
-NEON_FILES.push(['corps/nimbus.js', 'v13.26']);
+NEON_FILES.push(['corps/nimbus.js', 'v13.28']);
 // Its boss mod: FORECAST (forecast), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -29,12 +29,3 @@ CORPS.nimbus = {
 
 // the codex, once you've beaten it
 CORP_TELL.nimbus = "the forecast names a row or column, and it is right exactly as often as it says. the storm boss: 50-60%.";
-
-// intro art
-CORP_ART.nimbus = [
-  "        .--.",
-  "     .-(    ).",
-  "    (___.__)__)",
-  "     ' ' ' ' '",
-  "    ' ' ' ' '",
-];

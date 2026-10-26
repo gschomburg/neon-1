@@ -1,6 +1,6 @@
 // NeoN+1 engine/multiplayer.js: Online multiplayer, profiles, INFO.
 'use strict';
-NEON_FILES.push(['engine/multiplayer.js', 'v13.26']);
+NEON_FILES.push(['engine/multiplayer.js', 'v13.28']);
 
 // ---------------- Online multiplayer ----------------
 // 2-6 players take turns on one seeded run ("Jenga" rules, elimination):
@@ -56,13 +56,25 @@ const Net = window.__fakeNet || (() => {
   }
   return { init, get, set, update, push, remove, onDisconnectSet, onDisconnectRemove, watch };
 })();
-const LOGOS = HACKER_LOGOS.map(l => l.mark);
-const logoOf = i => HACKER_LOGOS[((i % HACKER_LOGOS.length) + HACKER_LOGOS.length) % HACKER_LOGOS.length];
-// A logo's art with the blank columns every row shares trimmed off, rows padded to one width.
-function hackerArt(i) {
-  const rows = logoOf(i).art, lead = Math.min(...rows.filter(l => l.trim()).map(l => l.length - l.trimStart().length));
-  const out = rows.map(l => l.slice(lead).trimEnd()), w = Math.max(...out.map(l => l.length));
-  return out.map(l => l.padEnd(w));
+// Logos (data/art/logos.js): players' logos, corps' (unlocked by beating the corp) and later rival
+// hackers'. A profile keeps its logo's id; old saves kept a number (the place in the player logos'
+// list then), which still reads as that logo.
+const LOGO_W = 24, LOGO_H = 7;   // every logo is drawn in this box, centered
+const LOGO_BY_ID = Object.fromEntries(ART_LOGOS.map(l => [l.id, l]));
+const PLAYER_LOGOS = ART_LOGOS.filter(l => l.kind === 'player');
+const logoOf = id => LOGO_BY_ID[id] || (typeof id === 'number' && PLAYER_LOGOS.length ? PLAYER_LOGOS[((id % PLAYER_LOGOS.length) + PLAYER_LOGOS.length) % PLAYER_LOGOS.length] : PLAYER_LOGOS[0]);
+const logoUnlocked = l => l.kind === 'player' || (l.kind === 'corp' && corpStat(l.corp).breached > 0) || (l.kind === 'hacker' && !!(save.hackersBeaten || {})[l.hacker]);
+const myLogos = () => ART_LOGOS.filter(logoUnlocked);
+const randomLogo = () => pickR(PLAYER_LOGOS, Math.random).id;
+// A logo's art in the logo box: the blank columns every row shares trimmed off, then centered in
+// LOGO_W x LOGO_H (every row LOGO_W wide), so every screen knows how much room a logo takes.
+function hackerArt(id) {
+  const rows = (logoOf(id).art || []).slice(0, LOGO_H), lead = Math.min(...rows.filter(l => l.trim()).map(l => l.length - l.trimStart().length));
+  const out = rows.map(l => l.slice(isFinite(lead) ? lead : 0).trimEnd()), w = Math.min(LOGO_W, Math.max(0, ...out.map(l => l.length)));
+  const left = Math.floor((LOGO_W - w) / 2), top = Math.floor((LOGO_H - out.length) / 2);
+  const box = Array.from({ length: LOGO_H }, () => ' '.repeat(LOGO_W));
+  out.forEach((l, k) => { box[top + k] = (' '.repeat(left) + l.slice(0, LOGO_W)).padEnd(LOGO_W); });
+  return box;
 }
 // Logo + name as one block on your color style's background (dark styles used to vanish on a dark
 // screen). Every row the same width, with a space of background on each side.
@@ -75,7 +87,7 @@ function logoBlock(logo, name, sty) {
 // RANDOMIZE ALL: a new name, logo and color at once.
 function randomizeProfile(prof) {
   prof.name = randomName();
-  prof.logo = Math.floor(Math.random() * HACKER_LOGOS.length);
+  prof.logo = randomLogo();
   prof.style = Math.floor(Math.random() * PLAYER_STYLES.length);
   persist();
 }
@@ -89,12 +101,19 @@ const randomName = () => {
   return Math.random() < 0.5 ? pickR(NAME_A, Math.random) + '_' + mid : mid + '_' + pickR(NAME_C, Math.random);
 };
 function profile() {
-  if (!save.profile) { save.profile = { name: randomName(), logo: Math.floor(Math.random() * LOGOS.length) }; persist(); }
+  if (!save.profile) { save.profile = { name: randomName(), logo: randomLogo() }; persist(); }
+  if (typeof save.profile.logo !== 'string' || !LOGO_BY_ID[save.profile.logo]) { save.profile.logo = logoOf(save.profile.logo).id; persist(); }   // old saves: a number
   if (save.profile.style == null) { save.profile.style = Math.floor(Math.random() * PLAYER_STYLES.length); persist(); }
   return save.profile;
 }
-const logoMark = i => LOGOS[((i % LOGOS.length) + LOGOS.length) % LOGOS.length];
-const logoChar = i => logoMark(i)[1];
+const logoMark = id => logoOf(id).mark;
+const logoChar = id => { const m = [...logoMark(id)]; return m[1] || m[0] || '@'; };
+// Step through the logos you've unlocked (the profile's < > and the multiplayer menu's [ LOGO ]).
+function stepLogo(prof, d) {
+  const list = myLogos(), i = list.findIndex(l => l.id === logoOf(prof.logo).id);
+  prof.logo = list[((i < 0 ? 0 : i + d) % list.length + list.length) % list.length].id;
+  persist(); Sound.tick();
+}
 const EMOTES = ['GG', 'GL', 'NICE', 'OOF', 'LOL', 'HURRY', '\\o/', 'x_x', 'o_O', '>:)'];
 const MP_MAX = 6;
 
@@ -184,7 +203,7 @@ function openMultiplayer() {
     { const sty = styleOf(prof.style); X({ text: ` ${logoMark(prof.logo)} ${prof.name} `, col: sty.fg, bgCol: sty.bg, bold: true }); }
     X({ row: [
       { text: '[ NEW NAME ]', id: 'mpname', onTap: () => { prof.name = randomName(); persist(); Sound.tick(); } },
-      { text: '[ LOGO ]', id: 'mplogo', onTap: () => { prof.logo = (prof.logo + 1) % LOGOS.length; persist(); Sound.tick(); } },
+      { text: '[ LOGO ]', id: 'mplogo', onTap: () => stepLogo(prof, 1) },
       { text: '[ COLOR ]', id: 'mpcolor', onTap: () => { prof.style = (prof.style + 1) % PLAYER_STYLES.length; persist(); Sound.tick(); } },
     ] });
     B('[ RANDOMIZE ALL ]', 'mprand', () => { randomizeProfile(prof); Sound.ui(); });
@@ -251,7 +270,7 @@ function openProfile() {
     card(row(`best ${pad2(save.best)}   runs ${save.runs}`));
     card(row(`wins ${save.wins}    codex ${found}`));
     T(edge, C.mid);
-    const step = d => { prof.logo = (prof.logo + d + HACKER_LOGOS.length) % HACKER_LOGOS.length; persist(); Sound.tick(); };
+    const step = d => stepLogo(prof, d);
     X({ row: [
       { text: '[ < ]', id: 'plogoL', onTap: () => step(-1) },
       { text: (' '.repeat(Math.floor((17 - logoOf(prof.logo).name.length) / 2)) + logoOf(prof.logo).name).padEnd(17), id: 'plogoN', onTap: () => step(1) },

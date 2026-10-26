@@ -1,6 +1,6 @@
 // NeoN+1 corps/tempo.js
 'use strict';
-NEON_FILES.push(['corps/tempo.js', 'v13.26']);
+NEON_FILES.push(['corps/tempo.js', 'v13.28']);
 // Its boss mod: ON BEAT (onbeat), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -44,12 +44,3 @@ CORPS.tempo = {
 
 // the codex, once you've beaten it
 CORP_TELL.tempo = "every node pulses with the music. the real node lands right on the beat (watch the metronome); decoys are a hair early or late. boss: the real node is on the off-beat.";
-
-// intro art
-CORP_ART.tempo = [
-  "     ___",
-  "    / o \\  ~ ~",
-  "   | (_) |  ~",
-  "    \\___/",
-  "  T E M P O  rec.",
-];

@@ -1,6 +1,6 @@
 // NeoN+1 corps/megamart.js
 'use strict';
-NEON_FILES.push(['corps/megamart.js', 'v13.26']);
+NEON_FILES.push(['corps/megamart.js', 'v13.28']);
 // Its boss mod: COUPON (coupon), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -42,13 +42,3 @@ CORPS.megamart = {
 
 // the codex, once you've beaten it
 CORP_TELL.megamart = 'the real node is on sale: the lowest price. deeper and the boss: the one price that ends in .00. something else is cheaper.';
-
-// intro art
-CORP_ART.megamart = [
-  ' _________________',
-  ' \\ M E G A M A R T|',
-  '  \\_______________|',
-  '   \\             /',
-  "    '-----------'",
-  '     (o)     (o)',
-];

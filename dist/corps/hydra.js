@@ -1,6 +1,6 @@
 // NeoN+1 corps/hydra.js
 'use strict';
-NEON_FILES.push(['corps/hydra.js', 'v13.26']);
+NEON_FILES.push(['corps/hydra.js', 'v13.28']);
 // Its boss mod: HEADCOUNT (headcount), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -106,12 +106,3 @@ CORPS.hydra = {
 
 // the codex, once you've beaten it
 CORP_TELL.hydra = "heads grow from the body. the head nodes are ICE, and they grow next to the real node, and so does every new head after a hit. deeper, one young head grows anywhere and new heads look like any node: watch them grow in. boss: two per hit.";
-
-// intro art
-CORP_ART.hydra = [
-  "   ,^,  ,^,  ,^,",
-  "   \\ \\  | |  / /",
-  "    \\ \\_| |_/ /",
-  "     '-.___.-'",
-  "      H Y D R A",
-];

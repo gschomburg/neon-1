@@ -1,6 +1,6 @@
 // NeoN+1 corps/noir.js
 'use strict';
-NEON_FILES.push(['corps/noir.js', 'v13.26']);
+NEON_FILES.push(['corps/noir.js', 'v13.28']);
 // Its boss mod: INTERROGATE (interrogate), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -69,12 +69,3 @@ CORPS.noir = {
 
 // the codex, once you've beaten it
 CORP_TELL.noir = "every node makes a statement. exactly one tells the truth, and that's the real node. only one answer fits.";
-
-// intro art
-CORP_ART.noir = [
-  "     _____",
-  "   _|_____|_",
-  "     (. .)  ~",
-  "     /|=|\\",
-  "  NOIR & ASSOCIATES",
-];

@@ -1,6 +1,6 @@
 // NeoN+1 corps/zodiac.js
 'use strict';
-NEON_FILES.push(['corps/zodiac.js', 'v13.26']);
+NEON_FILES.push(['corps/zodiac.js', 'v13.28']);
 // Its boss mod: HOROSCOPE (horoscope), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -46,13 +46,3 @@ CORPS.zodiac = {
 
 // the codex, once you've beaten it
 CORP_TELL.zodiac = "each sign shows its element (^ fire, # earth, = air, ~ water). the real node is the only sign of the lucky element. boss, retrograde: of the opposite one (fire-air, earth-water).";
-
-// intro art
-CORP_ART.zodiac = [
-  "     *    .   *",
-  "  .    \\ /      .",
-  "   * -- O -- *",
-  "  .    / \\   .",
-  "     *    .   *",
-  "   ZODIAC HOUSE",
-];

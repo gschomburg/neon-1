@@ -1,6 +1,6 @@
 // NeoN+1 corps/aegis.js
 'use strict';
-NEON_FILES.push(['corps/aegis.js', 'v13.26']);
+NEON_FILES.push(['corps/aegis.js', 'v13.28']);
 // Its boss mod: AMBUSH (ambush), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -84,14 +84,3 @@ CORPS.aegis = {
 
 // the codex, once you've beaten it
 CORP_TELL.aegis = "the formation advances a row every few seconds. the real node holds back: it skips every other advance. at the bottom, a breach: -1 integrity.";
-
-// intro art
-CORP_ART.aegis = [
-  "  .-------.",
-  "  |  /|\\  |",
-  "  |   |   |",
-  "   \\     /",
-  "    '---'",
-  "",
-  "  A E G I S",
-];

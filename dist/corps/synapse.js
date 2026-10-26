@@ -1,6 +1,6 @@
 // NeoN+1 corps/synapse.js
 'use strict';
-NEON_FILES.push(['corps/synapse.js', 'v13.26']);
+NEON_FILES.push(['corps/synapse.js', 'v13.28']);
 // Its boss mod: TURING (turing), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -43,12 +43,3 @@ CORPS.synapse = {
 
 // the codex, once you've beaten it
 CORP_TELL.synapse = "it learns where you pick (corners, edges, middle, columns) and hides the real node where you pick least. the meter shows how sure it is. pick where you never would.";
-
-// intro art
-CORP_ART.synapse = [
-  "   o--o   o--o",
-  "    \\  \\ /  /",
-  "     o--o--o",
-  "    /  / \\  \\",
-  "   S Y N A P S E",
-];

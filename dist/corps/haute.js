@@ -1,6 +1,6 @@
 // NeoN+1 corps/haute.js
 'use strict';
-NEON_FILES.push(['corps/haute.js', 'v13.26']);
+NEON_FILES.push(['corps/haute.js', 'v13.28']);
 // Its boss mod: RUNWAY (runway), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -31,13 +31,3 @@ CORPS.haute = {
 
 // the codex, once you've beaten it
 CORP_TELL.haute = 'every node wears the label. each knockoff is one character off; the real node is the original. FORGERY makes one knockoff free.';
-
-// intro art
-CORP_ART.haute = [
-  '        ( )',
-  '         |',
-  "    .-'' ''-.",
-  "  .'  HAUTE  '.",
-  " '-------------'",
-  '     COUTURE',
-];

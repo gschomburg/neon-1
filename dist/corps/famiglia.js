@@ -1,6 +1,6 @@
 // NeoN+1 corps/famiglia.js
 'use strict';
-NEON_FILES.push(['corps/famiglia.js', 'v13.26']);
+NEON_FILES.push(['corps/famiglia.js', 'v13.28']);
 // Its boss mod: OMERTA (omerta), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -46,12 +46,3 @@ CORPS.famiglia = {
 
 // the codex, once you've beaten it
 CORP_TELL.famiglia = "protection money: once a layer, pay to lock 1 ICE. after every miss, a decoy snitches on another (RAT: ruled out).";
-
-// intro art
-CORP_ART.famiglia = [
-  "     _____",
-  "   _|_____|_",
-  "    ( -_- )",
-  "     /|$|\\",
-  "  LA  FAMIGLIA",
-];

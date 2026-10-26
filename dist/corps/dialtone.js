@@ -1,6 +1,6 @@
 // NeoN+1 corps/dialtone.js
 'use strict';
-NEON_FILES.push(['corps/dialtone.js', 'v13.26']);
+NEON_FILES.push(['corps/dialtone.js', 'v13.28']);
 // Its boss mod: HANDSHAKE (handshake), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -43,12 +43,3 @@ CORPS.dialtone = {
 
 // the codex, once you've beaten it
 CORP_TELL.dialtone = "the modem screeches, then beeps: the count is the real node's place in reading order (1 = top left; $ nodes count too). dots on the hint row. boss: counted from the end.";
-
-// intro art
-CORP_ART.dialtone = [
-  "   .-----------.",
-  "   | o  o  o  o|",
-  "   '-----------'",
-  "  ~~ eeeEEEkk ~~",
-  "  D I A L T O N E",
-];
