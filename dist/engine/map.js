@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v13.25']);
+NEON_FILES.push(['engine/map.js', 'v13.26']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -10,6 +10,7 @@ NEON_FILES.push(['engine/map.js', 'v13.25']);
 const MAP_STEPS = 6;
 const SECTOR_STEPS = MAP_STEPS - 1;
 const SIDE_LINK = 0.25;    // chance of a sideways link between two neighbors in a step
+const REST_STOPS = 2;     // rest stops (market, data cache, safehouse) a stage at most; the market always one
 const sectorOf = step => Math.max(0, Math.ceil(step / SECTOR_STEPS) - 1); // a sector's top (its OMNI) belongs to it
 const localStep = n => n.step - SECTOR_STEPS * (n.sector || 0);
 // Corp tier by sector and step: +1 tier each sector.
@@ -81,8 +82,13 @@ function addSector(nodes, seed, s) {
     ['corp', 'corp', 'shop'],
     ['corp', 'corp', r() < 0.5 ? 'cache' : 'repair'],
   ];
+  // Rest stops: at most REST_STOPS a stage. The market (row 3) always stays; the other stop is
+  // one of the remaining rows' stops; the rest of those rows are all corps.
+  const rr = rngFor(seed, 'rest', s), stopRows = [1, 2, 4].filter(ls => specs[ls].some(t => t !== 'corp'));
+  const keep = new Set([3, ...shuffle(stopRows, rr).slice(0, REST_STOPS - 1)]);
   const test = testSeed(seed), order = corpsByLevel();
   for (let ls = 1; ls <= 4; ls++) {
+    if (!keep.has(ls)) specs[ls] = specs[ls].map(() => 'corp');
     const types = test ? ['corp', 'corp', 'corp'] : shuffle(specs[ls].slice(), r);
     const corps = test === 'all' ? [0, 1, 2].map(j => order[(s * 12 + (ls - 1) * 3 + j) % order.length])
       : test ? [test, test, test] : pickCorps(r, targetLevel(s, ls), 3);

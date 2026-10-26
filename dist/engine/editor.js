@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.25']);
+NEON_FILES.push(['engine/editor.js', 'v13.26']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -130,6 +130,35 @@ if (EDITOR) {
       Sound.init(); (m.kind === 'win' ? Sound.bossWin : Sound.death)();
       setTimeout(() => Music.restart(), m.kind === 'win' ? 3600 : 3800);
     }
+  });
+  // Mods (the editor's items & mods tab): it sees what the run holds, at what step, and can
+  // add a mod at a step, move it to another step, or take it away. The run turns practice.
+  const modsNow = () => {
+    const run = st.run && !st.run.ended ? st.run : null;
+    return { type: 'mods', run: !!run, mods: run ? run.mods.map(k => [k, modTier(k)]) : [], slots: run ? modSlots() : 0 };
+  };
+  let lastMods = '';
+  const sendMods = force => { const m = modsNow(), s = JSON.stringify(m); if (force || s !== lastMods) { lastMods = s; post(m); } };
+  setInterval(sendMods, 300);
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.to !== 'neon-game') return;
+    if (m.type === 'mods-get') sendMods(true);
+    if (m.type !== 'mod-set' || !MODS[m.key]) return;
+    const run = st.run;
+    if (!run || run.ended) return post({ type: 'mod-set', ok: false, error: 'no run: start one (the map scene)' });
+    run.practice = true;
+    const top = tierCount(MODS[m.key]) - 1;
+    if (m.tier == null || m.tier < 0) removeMod(m.key);
+    else if (!run.mods.includes(m.key)) addMod(m.key, Math.min(m.tier, top));
+    else {   // another step of a mod it holds (down too)
+      const was = run.modTier[m.key] || 0, to = clamp(m.tier, 0, top);
+      run.modTier[m.key] = to;
+      if (m.key === 'buffer') { run.maxInt += to - was; run.integrity = clamp(run.integrity + to - was, 1, run.maxInt); }
+    }
+    Sound.buy();
+    sendMods(true);
+    post({ type: 'mod-set', ok: true, key: m.key });
   });
   post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES) });
 }

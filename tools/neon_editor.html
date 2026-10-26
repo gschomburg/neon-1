@@ -236,6 +236,17 @@
   table.ilad td.n small { display: block; color: var(--mid); font-weight: normal; font-family: system-ui, sans-serif; }
   table.ilad td.s { border-left: 3px solid transparent; }
   table.ilad td.s i { font-style: normal; color: var(--mid); }
+  /* the mod picker: what the game's run holds, and buttons to give / change / remove */
+  #iGame { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--mid); }
+  #iGame .held { color: var(--acc); }
+  #items td.igive { width: 64px; text-align: right; }
+  #items button.give { font-size: 11px; padding: 2px 6px; }
+  #items button.give.on { color: var(--acc); border-color: var(--acc); }
+  .icard.has { border-color: var(--acc); }
+  .icard .ihave { color: var(--acc); font-size: 12px; }
+  table.ilad td.s.pick { cursor: pointer; }
+  table.ilad td.s.pick:hover { background: #1a2027; }
+  table.ilad td.s.on { outline: 2px solid var(--acc); outline-offset: -2px; color: var(--acc); }
   #panel { min-width: 0; }
   #music { flex-direction: row; }
   #music .dim { color: var(--dim, #5d636b); }
@@ -369,6 +380,7 @@
     <span id="iCount"></span>
   </div>
   <div id="iLadder"></div>
+  <div id="iGame"></div>
   <div id="iBody"></div>
 </section>
 <section id="panel" class="mode">
@@ -1528,7 +1540,7 @@
     for (const k of ['music', 'pal', 'items']) document.body.classList.toggle('mode-' + k, m === k);
     for (const b of document.querySelectorAll('#modes button')) b.classList.toggle('on', b.dataset.mode === m);
     $('#modehint').textContent = { music: 'pick a corp: the game shows it and plays its track', pal: 'palettes: save writes dist/palettes.js',
-      items: 'read-only, from dist/data/mods.js: every step is the base plus its own changes' }[m];
+      items: 'from dist/data/mods.js. give / change / remove mods on the running game (the copy is read-only)' }[m];
     try { localStorage.setItem('neon.editor.mode', m); } catch (e) { /* private mode */ }
   };
   for (const b of document.querySelectorAll('#modes button')) b.addEventListener('click', () => setMode(b.dataset.mode));
@@ -1555,6 +1567,24 @@
   for (const [k, d] of Object.entries(MODS)) all.push({ key: k, kind: d.kind, d });
   for (const e of all) e.steps = (e.d.tiers || [{}]).map(t => Object.assign({}, e.d, t));
 
+  // the mod picker: the game tells us what its run holds (engine/editor.js), we send mod-set
+  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
+  let game = { run: false, mods: [], slots: 0 }, held = {};
+  const setMod = (key, tier) => toGame({ type: 'mod-set', key, tier });
+  const gameBar = () => {
+    const names = game.mods.map(([k, t]) => { const d = MODS[k], st = d && Object.assign({}, d, (d.tiers || [])[t]); return d ? `<span class="held">${esc(d.short || d.name)}</span> ${st && (d.tiers || []).length > 1 ? chip(st.rarity) : ''}` : esc(k); });
+    $('#iGame').innerHTML = game.run
+      ? `in the game: ${game.mods.length}/${game.slots} mods ${names.join(' · ') || '(none)'} <span style="margin-left:auto">give a mod at any step below; the run becomes practice</span>`
+      : 'the game has no run: <button id="iStart">start a test run</button> (the map scene) to give it mods';
+    const b = $('#iStart'); if (b) b.onclick = () => toGame({ type: 'scene', name: 'map', opts: {} });
+  };
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.from !== 'neon-game') return;
+    if (m.type === 'ready') toGame({ type: 'mods-get' });
+    if (m.type === 'mods') { game = m; held = Object.fromEntries(m.mods); render(); }
+  });
+
   let view = 'cards', kind = 'all', q = '';
   try { view = localStorage.getItem('neon.items.view') || 'cards'; kind = localStorage.getItem('neon.items.kind') || 'all'; } catch (e) { /* private mode */ }
   const shown = () => all.filter(e => (kind === 'all' || e.kind === kind) && (!q || [e.key, e.d.name, e.d.short, e.d.corp && corpName(e.d.corp), e.d.slot, e.d.codex,
@@ -1570,17 +1600,25 @@
     const flags = [d.active && 'tap to use', d.slot && 'slot: ' + d.slot, d.locked && 'locked in'].filter(Boolean).map(f => `<span class="flag">${esc(f)}</span>`);
     return bits.join(' · ') + ' ' + flags.join(' ');
   };
-  const card = e => `<div class="icard"><div class="ihead"><span class="iname">${esc(e.d.name)}</span><span class="imeta">${meta(e)}</span></div>
-    <table>${e.steps.map(s => `<tr><td class="ichip">${chip(s.rarity)}</td><td class="itip">${esc(s.tip)}</td><td>${esc(s.desc)}</td></tr>`).join('')}</table>
+  const giveBtn = (e, i) => {
+    if (e.kind === 'item') return '';
+    const on = held[e.key] === i;
+    return `<td class="igive"><button class="give${on ? ' on' : ''}" data-key="${esc(e.key)}" data-tier="${on ? -1 : i}" title="${on ? 'held at this step: click to remove it' : (e.key in held ? 'move it to this step' : 'give it at this step')}"${game.run ? '' : ' disabled'}>${on ? 'held ✕' : e.key in held ? 'set' : 'give'}</button></td>`;
+  };
+  const card = e => `<div class="icard${e.key in held ? ' has' : ''}"><div class="ihead"><span class="iname">${esc(e.d.name)}</span><span class="imeta">${meta(e)}</span>${e.key in held ? '<span class="ihave">held</span>' : ''}</div>
+    <table>${e.steps.map((s, i) => `<tr><td class="ichip">${chip(s.rarity)}</td><td class="itip">${esc(s.tip)}</td><td>${esc(s.desc)}</td>${giveBtn(e, i)}</tr>`).join('')}</table>
     ${e.d.codex ? `<div class="icodex"><b>codex:</b> ${esc(e.d.codex)}</div>` : ''}</div>`;
   const ladder = list => {
     const cols = LADDER.map(r => `<th>${chip(r)}</th>`).join('');
     const rows = list.map(e => {
-      const at = {}; for (const s of e.steps) at[s.rarity] = s;
+      const at = {}; e.steps.forEach((s, i) => { at[s.rarity] = s; s.i = i; });
       const first = RARITY[e.steps[0].rarity].lvl, last = RARITY[e.steps[e.steps.length - 1].rarity].lvl;
       return `<tr><td class="n">${esc(e.d.name)}<small>${e.kind === 'item' ? 'item' : e.kind}${e.d.corp ? ' · ' + esc(corpName(e.d.corp)) : ''}</small></td>` + LADDER.map(r => {
         const s = at[r], l = RARITY[r].lvl, c = chips[r] || {};
-        if (s) return `<td class="s" style="border-left-color:${c.bg}" title="${esc(s.desc)}">${esc(s.tip)}</td>`;
+        if (s) {
+          const mod = e.kind !== 'item' && game.run, on = held[e.key] === s.i;
+          return `<td class="s${mod ? ' pick' : ''}${on ? ' on' : ''}" style="border-left-color:${c.bg}" title="${esc(s.desc)}${mod ? (on ? '&#10;(held: click to remove)' : '&#10;(click: give it at this step)') : ''}"${mod ? ` data-key="${esc(e.key)}" data-tier="${on ? -1 : s.i}"` : ''}>${esc(s.tip)}</td>`;
+        }
         return `<td class="s">${l > first && l < last ? '<i>(skips)</i>' : ''}</td>`;
       }).join('') + '</tr>';
     }).join('');
@@ -1588,6 +1626,7 @@
   };
 
   const render = () => {
+    gameBar();
     for (const b of document.querySelectorAll('#iView button')) b.classList.toggle('on', b.dataset.v === view);
     for (const b of document.querySelectorAll('#iKind button')) b.classList.toggle('on', b.dataset.k === kind);
     const list = shown();
@@ -1616,7 +1655,10 @@
     const done = ok => { b.textContent = ok ? 'copied' : "couldn't copy"; setTimeout(() => { b.textContent = 'copy as text'; }, 1200); };
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => done(true), () => done(false)); else done(false);
   });
-  $('#iBody').addEventListener('click', ev => { const a = ev.target.closest('a[data-corp]'); if (a && window.NE) window.NE.showCorp(a.dataset.corp); });
+  $('#iBody').addEventListener('click', ev => {
+    const a = ev.target.closest('a[data-corp]'); if (a && window.NE) window.NE.showCorp(a.dataset.corp);
+    const g = ev.target.closest('[data-key][data-tier]'); if (g && game.run) setMod(g.dataset.key, +g.dataset.tier);
+  });
   window.NE_ITEMS = { render, asText };
   render();
 })();

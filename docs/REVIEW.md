@@ -6,6 +6,16 @@ to build stays in `docs/SPEC.md` §16f.)
 
 ## Open
 
+- [ ] **The to-do batch** (v13.26, 2026-10-25). Play and listen:
+  - **KERNING**: a whole line of the real node is off now, and by more. Still easy enough at layer 3 / deep corps?
+  - **The real-node sound**: a climbing "yes!" with a held high note. Bad hits add a falling "uh-oh". Too much / too long?
+  - **X-AXIS / Y-AXIS**: the color band along the row / column, from your tap to the real node (a miss fills the whole
+    line, dim, and fades).
+  - **Rest stops**: 2 a stage on the map. My call: the market (row 3) always stays, plus one random stop from the other
+    rows (data cache or safehouse, sometimes a second market). If you'd rather have the cap on the path instead, say so.
+  - **Editor mod picker**: `tools/neon_editor.html`, ITEMS & MODS. The bar at the top says what the game's run holds.
+    Click give / set on any step (cards), or a cell (ladder); `held ✕` removes. No slot limit there (it's for testing).
+
 - [ ] **Items & mods page in the editor** (2026-10-25): `tools/neon_editor.html`, the ITEMS & MODS tab. Every item and mod with its rarity steps (chip, tip, full text) and codex text; **ladder** view puts one mod per row, one column per rarity; filter by kind or text; **copy as text** for notes. Click a corp mod's corp to show it in the game. Read-only for now: say if you want to edit copy there.
 - [ ] **The new rarity ladder** (v13.19, 2026-10-25). SCRAP white, COMMON green, RARE blue, EPIC purple, LEGEND orange
   (was BOSS), EXOTIC gold. My rebalance calls, for you to check in play: PATCH / PURGE / COOLANT start at scrap, BURNER is

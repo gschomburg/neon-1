@@ -870,17 +870,17 @@ Agreed changes not built yet.
 - **Integrity animations** (meat notes, 2026-10-25): at 1 integrity the HUD # blinks a little (close to death); gaining
   integrity scales the # up past the grid a moment; losing one makes the # explode and fall (like the other break-apart
   effects). **BUILT v13.22** (see the version log).
-- **Fewer rest stops per stage** (meat notes, 2026-10-25): maybe cap the markets, data caches and safehouses at 2 per stage,
+- **Fewer rest stops per stage** (meat notes, 2026-10-25): **BUILT v13.26** (2 a stage on the map, the market always one). maybe cap the markets, data caches and safehouses at 2 per stage,
   picked from those (and any other "rest" node). *(Claude)* today each stage's 4 rows of 3 hold 3-4 of them (rows 2-4
   always have one, row 1 too after sector 1: engine/map.js addSector), but a path only passes one per row. Open: cap what
   the map shows (2 per stage, the rest become corps), or what a path can reach?
-- **Mod picker out of the dev menu, into the neon editor** (meat notes, 2026-10-25): the dev menu's mod list doesn't
+- **Mod picker out of the dev menu, into the neon editor** (meat notes, 2026-10-25): **BUILT v13.26** (the items & mods tab; the dev menu list stays too). the dev menu's mod list doesn't
   show clearly that you have a mod or at what step. Move it to the editor (the items & mods tab could add / upgrade /
   remove mods on the running game through the bridge), and show the step you hold.
-- **KERNING: make the tell a whole row, and bigger** (the user, 2026-10-25). Today one character of the real node is
+- **KERNING: make the tell a whole row, and bigger** (the user, 2026-10-25). **BUILT v13.26.** Today one character of the real node is
   nudged 3 / 2.5 / 2 px (deeper corps 2.5 / 2 / 1.5; boss 2.5). Change: nudge the **whole row** of the glyph (one line
   of the real node), and by a bit more. Keep it shrinking layer by layer (the user likes that).
-- **A happier success sound on layers** (the user, meat notes 2026-10-25): "it's not always clear you got a node successfully." The real-node
+- **A happier success sound on layers** (the user, meat notes 2026-10-25): **BUILT v13.26.** "it's not always clear you got a node successfully." The real-node
   sound needs to read as a win (brighter, rising, more "yes!"), and the fail sound could differ more from it too.
 - **Mod notes (the user, from 2026-10-25, while playing v13.19).** Collect them here, then rebalance in a batch.
   - **BUILT v13.21 (meat notes, "mod rarity notes"):** FAILSAFE epic recharges each stage, legendary (new) each corp;
@@ -937,7 +937,7 @@ Agreed changes not built yet.
     - Credits balance pass: POLICY, SUPERSIZE, EZPASS, LEVERAGE's payment all wait on it. The user: soon, not yet.
     - **BLOOD MONEY is too strong** (the user, meat notes 2026-10-25): "super powerful, basically immortal." Hits should cost more; maybe perfect
       combos don't add up (perfects pay you credits = heal you). For the balance pass.
-    - **X-AXIS / Y-AXIS need a better "it fired" moment** (the user, meat notes 2026-10-25): the timing is fine, the indicator isn't. Idea: a
+    - **X-AXIS / Y-AXIS need a better "it fired" moment** (the user, meat notes 2026-10-25): **BUILT v13.26** (the band). the timing is fine, the indicator isn't. Idea: a
       background color fills along the row / column, starting at the node you tapped and sweeping to the real node.
   - **Mod and item ideas (the user, meat notes 2026-10-25)** (not designed yet):
     - **Sell at markets:** sell mods or items back at a store. Gives a reason to carry scrap: junk items that are only
@@ -1867,6 +1867,7 @@ New builds are listed below as before.
 - **v13.20** (2026-10-25): **leaderboard initials take digits and symbols** (the user): 0-9 (0 slashed, so it isn't O) and `* # $ ! ? +` after Z on the up / down cycle, and you can type them. `#` is a solid 3x3 block of #, `*` a burst. greglytics name.php keeps those symbols (needs uploading; until then the server drops them from the name). Also: the editor's ITEMS & MODS tab (tools/neon_editor.html).
 - **v13.21** (2026-10-25): **mod rarity notes** (meat notes): FAILSAFE recharges (epic each stage, legendary each corp), VIRUS legendary spreads up to 4, SKIMMER 25/50/75%, BUFFER +1..+4 (common to legendary), BURNER 1x/2x/3x per corp, X-AXIS / Y-AXIS epic. BURNER's per-corp use is a count in the save now (old saves read true as 1).
 - **v13.22** (2026-10-25): **integrity animations** (meat notes): the HUD bar is drawn a char at a time. A gain pops each new # up past the grid and back (bright, staggered when it's several); a loss breaks each lost # into red bits that hop and fall (explode()); at 1 left the # beats like a heart (two quick bright blinks every 1.4s). Cells can carry a scale (`sc`, engine/render.js). Reduced motion: no pops or bits. FAILSAFE's save reads as a loss then a gain. Filed the rest of the misc notes (2018 setting in §1; rest-stop cap and dev-menu mod picker in the pending list).
+- **v13.26** (2026-10-25): **the to-do batch** (the user's list). **KERNING**: the tell nudges a whole line of the real node (was one character), by more (4.5 / 3.5 / 2.5 px; deeper corps 3.5 / 2.5 / 2; boss 3, every decoy off), still shrinking layer by layer. **Sounds**: the real node plays a bright climbing C-E-G-C with a held high note and sparkle (`Sound.safe`); every bad hit (`Sound.trap`) adds a falling two-note "uh-oh" over its buzz. **X-AXIS / Y-AXIS**: a color band fills along the scanned row / column at the scan's pace, from the tapped node to the real node, and the real node pulses when it's reached; a miss fills out to both edges, dimmer, and fades (engine/scene.js buildBoard). **Rest stops**: at most 2 a stage (`REST_STOPS`, engine/map.js): the market (row 3) always stays, plus one of the other rows' stops; the rest become corps. **Editor mod picker**: the ITEMS & MODS tab shows what the game's run holds and at what step; every mod step has give / set / remove (cards) or a clickable cell (ladder), through the bridge (`mods` / `mod-set` messages, engine/editor.js). The run turns practice. "start a test run" when there's none.
 - **v13.25** (2026-10-25): **GRAVE ROBBER's track** (the user): a new 5/4 track inspired by Halloween (a high piano figure over moving chords, the bass sinking a half step in B), with the first sound effects in a track: a door creaking open and an owl's call. It replaces the map music while you hold GRAVE ROBBER. The music engine learned 5/4 (`meter: 5`) and `creak` / `owl` patterns; the music tool shows 5/4.
 - **v13.24** (2026-10-25): **SURGE** reworked (the user): every corp layer has a clock (15s if the corp has none) and a real pick in the last 3 seconds heals 1, instead of paying x1.5. AFTERIMAGE stays as is.
 - **v13.23** (2026-10-25): **leg + exotic mod notes** (meat notes): ICE EATER's real node bites for 3 (not death); LEVERAGE takes a loan payment every layer; CORNERS became FENCELINE (locks a whole edge); BULWARK recharges on a perfect; COUPON makes one market offer free; SUPERSIZE pays x2 on every layer; MUTATE is rare or better and flashes what it became; TRIAGE gives a PATCH; CONTINUE? once per corp at a climbing price; ready tap mods pulse and get a first-time hint; COMPOST shows its count. Discussion items are in the mod notes list.

@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v13.25']);
+NEON_FILES.push(['engine/sound.js', 'v13.26']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -98,7 +98,15 @@ const Sound = (() => {
       arp([440, 659, 880], 0.1, { vol: 0.35, delay: 0.6 });
       tone(1318, 0.5, { type: 'triangle', vol: 0.3, delay: 0.9 });
     },
-    safe: () => arp([523, 784, 1046], 0.07, { vol: 0.55 }),
+    // The real node: a bright "yes!" that climbs (C E G C), lands on a held top note with a
+    // sparkle. Major and rising, so it can't be mistaken for a hit (low and falling).
+    safe: () => {
+      arp([523, 659, 784, 1046], 0.055, { vol: 0.5 });
+      tone(1318, 0.38, { type: 'triangle', vol: 0.42, delay: 0.22 });
+      tone(1568, 0.3, { type: 'sine', vol: 0.18, delay: 0.22 });
+      tone(2093, 0.12, { type: 'sine', vol: 0.12, delay: 0.3 });
+      noise(0.25, { vol: 0.12, freq: 8000, type: 'highpass', delay: 0.22 });
+    },
     jingle: () => arp([784, 988, 1175, 1568], 0.06, { vol: 0.4 }),
     modem: () => { noise(0.5, { vol: 0.16, freq: 1200, to: 2600 }); tone(980, 0.25, { vol: 0.14, slide: 1.4 }); tone(2100, 0.2, { vol: 0.1, delay: 0.3 }); },
     beep: () => tone(1250, 0.07, { type: 'sine', vol: 0.4 }),
@@ -169,7 +177,8 @@ const Sound = (() => {
       noise(0.8, { vol: 0.2, freq: 7000, type: 'highpass', delay: 0.33 });
     },
     // Bad things keep the low buzz, so it always means "bad".
-    trap: () => { tone(110, 0.35, { type: 'sawtooth', vol: 0.7, slide: 0.5 }); noise(0.25, { vol: 0.6, freq: 900 }); },
+    // Falling "uh-oh" on top of the buzz, the opposite of the real node's climb.
+    trap: () => { tone(110, 0.35, { type: 'sawtooth', vol: 0.7, slide: 0.5 }); noise(0.25, { vol: 0.6, freq: 900 }); tone(330, 0.1, { type: 'square', vol: 0.18 }); tone(233, 0.22, { type: 'square', vol: 0.18, slide: 0.8, delay: 0.1 }); },
     yourTurn: () => { tone(880, 0.08, { type: 'triangle', vol: 0.45 }); tone(1320, 0.16, { type: 'triangle', vol: 0.45, delay: 0.09 }); },
     shield: () => { tone(1200, 0.15, { type: 'triangle', vol: 0.5, slide: 0.5 }); noise(0.15, { vol: 0.3, freq: 3000 }); },
     loot: () => { for (let i = 0; i < 4; i++) tone(1200 + i * 200, 0.05, { vol: 0.25, delay: i * 0.05 }); },

@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.25']);
+NEON_FILES.push(['engine/scene.js', 'v13.26']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -450,6 +450,35 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     const { tx, ty } = tileOrigin(t);
     for (let k = 0; k < TILE_H; k++) bg(tx, ty + k, TILE_W, C.accent, 0.12);
   }
+  // X-AXIS / Y-AXIS: a color band fills along the scanned line at the scan's pace. A hit fills
+  // from the tapped node to the real node and stays (the real node glows); a miss fills out
+  // to both edges, dimmer, and fades.
+  const sc = lv.scan;
+  if (sc && bg && sc.from) for (const ax of sc.axes) {
+    const across = ax === 'xaxis', f0 = sc.from, a = tileOrigin(f0);
+    const prog = (now - sc.t0) / SCAN_STEP;   // in nodes
+    const pos = across ? f0.col : f0.row, n = across ? lv.cols : lv.rows;
+    let lo = 0, hi = 0, alpha = 0.22, done = 0;
+    if (sc.real) {
+      const d = (across ? sc.real.col : sc.real.row) - pos;
+      if (d > 0) hi = Math.min(prog, d); else lo = Math.min(prog, -d);
+    } else {
+      lo = Math.min(prog, pos); hi = Math.min(prog, n - 1 - pos); done = Math.max(pos, n - 1 - pos);
+      alpha = 0.14 * Math.max(0, 1 - Math.max(0, now - sc.t0 - done * SCAN_STEP) / 450);
+    }
+    if (alpha <= 0) continue;
+    if (across) {
+      const p = TILE_W + GAP_X, x0 = a.tx - lo * p, x1 = a.tx + TILE_W + hi * p;
+      for (let k = 0; k < TILE_H; k++) bg(x0, a.ty + k, x1 - x0, C.accent, alpha);
+    } else {
+      const p = TILE_H + GAP_Y, y0 = Math.round(a.ty - lo * p), y1 = Math.round(a.ty + TILE_H + hi * p);
+      for (let y = y0; y < y1; y++) bg(a.tx, y, TILE_W, C.accent, alpha);
+    }
+    if (sc.real && prog >= scanDist(f0, sc.real)) {   // reached: the real node glows, pulsing
+      const r = tileOrigin(sc.real), pulse = 0.25 + 0.15 * Math.sin((now - sc.t0) / 70);
+      for (let k = 0; k < TILE_H; k++) bg(r.tx, r.ty + k, TILE_W, C.accent, pulse);
+    }
+  }
   const used = new Set();
   const masked = lv.maskAt && now > lv.maskAt;
   const boardDef = st.corp && st.corp.hasBoss ? st.corp.def : null;
@@ -591,7 +620,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
         if (lv.freeze && now - lv.freeze.from < 200) dx += 0.18 * Math.sin((now - lv.freeze.from) / 16);
       }
     }
-    if (kern) glyph = glyph.map((l, k) => k === kern.ln ? l.slice(0, kern.x) + ' ' + l.slice(kern.x + 1) : l);
+    if (kern) glyph = glyph.map((l, k) => k === kern.ln ? ' '.repeat(l.length) : l);
     // UPSIDE: the real node is drawn the right way up (its cells get turned back)
     const upr = !!(boardDef && boardDef.flip && t.safe && t.state === 'closed' && !masked && cells);
     if (upr) glyph = glyph.slice().reverse().map(l => [...l].reverse().join(''));
@@ -624,7 +653,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
       put(ox + TILE_W - 1, oy + k, r[TILE_W - 1], fc, own);
     });
     if (upr) for (let k = c0; k < cells.length; k++) cells[k].r180 = true;
-    if (kern) put(ox + 1 + kern.x + kern.px / L.cw, oy + 1 + kern.ln + kern.py / L.chh, t.glyph[kern.ln][kern.x], gc, own, bold);
+    if (kern) put(ox + 1 + kern.px / L.cw, oy + 1 + kern.ln + kern.py / L.chh, t.glyph[kern.ln], gc, own, bold);
     if (over) for (const o of over) put(ox + o.dx, oy + o.dy, o.ch, o.col || gc, 'fx');
     if (corner) put(ox + TILE_W - 1, oy, corner.corner, corner.cornerCol || gc, own, true);
     if (st.debug && t.safe && t.state === 'closed') put(tx + TILE_W - 1, ty, '*', C.accent, own);
