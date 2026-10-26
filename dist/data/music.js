@@ -161,4 +161,9 @@ Object.assign(SONGS, {
     gate: 'x..x..x.x..x..x.',
     melody: ['7 - - - 6 - - - 5 - - - 4 - - -', '3 - - - 4 - - - 1 - - - - - - -', '7 - - - 6 - - - 5 - - - 4 - 5 -', '1 - - - - - - - 0 - - - - - - -'],
     melodyAt: 2, leadVoice: 'dist', arpLine: '0 0 . 0 0 . 1 . 0 0 . 0 2 . 1 .' },
+  upword: { name: 'UPWORD', bpm: 120, root: 38, scale: 'minor', prog: [0, 4, 5, 3], kit: 'industrial', padVoice: 'none', pump: 0.0, breakdown: 0, swing: 0.00, echo: 0.25,
+    beat: { kick: '..x. ..x. ..x. xxxx', snare: 'x...x...x...x...', hat: '..x...x...x...x.', ghost: '.......x.......x', clap: '............x...' },
+    bassVoice: 'pluck', bassLine: '0 . 0 . 0 . 0 . 0 . 0 . 0 . 0 .',
+    melody: ['5 4 3 4 3 2 3 2 1 2 1 0 1 2 3 4', '6 5 4 5 4 3 4 3 2 3 2 1 2 1 0 4', '5 4 3 4 3 2 3 2 1 2 1 0 1 2 3 4', '5 4 3 4 3 2 3 2 1 2 1 0 1 2 3 4'],
+    melodyAt: 2, leadVoice: 'saw', arpLine: '0 0 . 0 0 . 0 . 0 0 . 0 0 . 0 .' },
 });
