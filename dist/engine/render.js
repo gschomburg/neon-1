@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.20']);
+NEON_FILES.push(['engine/render.js', 'v13.25']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -54,6 +54,7 @@ function render(now) {
       if (!!c.bold !== bold) continue;
       g.fillStyle = c.col;
       if (c.r180) { g.save(); g.translate(pxX(c.cx), pxY(c.cy)); g.rotate(Math.PI); g.fillText(c.ch, 0, 0); g.restore(); }
+      else if (c.sc && c.sc !== 1) { g.save(); g.translate(pxX(c.cx), pxY(c.cy)); g.scale(c.sc, c.sc); g.fillText(c.ch, 0, 0); g.restore(); }   // a pop (HUD integrity)
       else g.fillText(c.ch, pxX(c.cx), pxY(c.cy));
     }
   }

@@ -61,7 +61,7 @@ The codex only shows a corp's tell after you've beaten it.
   - **Tier 2 layers:** 75% of the time it's on **any edge cell** (12 of 16 on a 4x4), a much weaker hint.
   - **Boss:** 75% of the time the real node is in the **center** (any cell not on the grid's edge;
     on a 4x4 that's the middle 2x2).
-- **Boss mods:** CORNERS, BULWARK
+- **Boss mods:** FENCELINE (was CORNERS), BULWARK
 - **Odds feel:** on a 4x4, corners are 4 of 16 cells, so "pick a corner" is a strong play,
   but 1 time in 4 it's anywhere.
 
@@ -244,8 +244,8 @@ turns boss skips off.
 
 | Mod | Code | Corp | Tray tip | Description | Notes |
 |---|---|---|---|---|---|
-| CORNERS | CNR | PERIMETER | lock 1 corner ICE. | layer start: lock 1 ICE node in a corner. | |
-| BULWARK | BLW | PERIMETER | block 1st hit/corp. | the first ICE hit in each corp is blocked. | |
+| FENCELINE | FNC | PERIMETER | lock the ICE on 1 edge. | layer start: every ICE node along one random edge locks. | was CORNERS (1 corner ICE) until v13.23; key still `corners` |
+| BULWARK | BLW | PERIMETER | block 1st hit/corp. | the first ICE hit in each corp is blocked. a perfect recharges it. | |
 | SIGSCAN | SIG | SIGIL | lock 1 signed ICE. | layer start: lock 1 ICE node wearing the Sigil signature. | only does something where the mark tell is active |
 | FORGERY | FRG | SIGIL | $ nodes do no damage. | $ nodes no longer cost integrity. | you still get the $ loot |
 | OVERCLOCK | OVC | CHRONOS | late clock purges ICE | adds a 15s clock to every corp layer (corps with a clock keep theirs); at 6s, 4s and 2s left it purges one ICE (max 3 a layer); each purge cuts that layer's pay 20%. | |

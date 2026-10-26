@@ -1,6 +1,6 @@
 // NeoN+1 corps/chuckecache.js
 'use strict';
-NEON_FILES.push(['corps/chuckecache.js', 'v13.20']);
+NEON_FILES.push(['corps/chuckecache.js', 'v13.25']);
 // Its boss mod: CONTINUE? (continue), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

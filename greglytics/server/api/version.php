@@ -14,4 +14,4 @@ foreach (['e.php', 'lib.php', 'name.php', 'scores.php', 'version.php'] as $f) {
 $admin = dirname(__DIR__) . '/admin/index.php';
 $files['admin/index.php'] = is_file($admin) ? substr(md5(str_replace("\r\n", "\n", file_get_contents($admin))), 0, 8) : 'missing';
 
-echo json_encode(['app' => 'greglytics', 'version' => '1.2', 'files' => $files], JSON_PRETTY_PRINT);
+echo json_encode(['app' => 'greglytics', 'version' => '1.3', 'files' => $files], JSON_PRETTY_PRINT);

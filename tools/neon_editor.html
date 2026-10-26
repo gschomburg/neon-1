@@ -1057,7 +1057,7 @@
   const PLACES = { menu: 'title + menus', map: 'map, markets, caches', omni: 'OMNI//CORE', theme: 'theme' };
   const usedBy = k => k in DEMOS ? ['engine demo (not in the game)'] : Object.keys(MUSIC_FOR).filter(p => MUSIC_FOR[p] === k).map(p => PLACES[p] || (CORPS[p] && CORPS[p].name) || p.toUpperCase());
   const keyName = s => `${NOTE_NAMES[s.root % 12]} ${s.scale}`;
-  const groove = s => s.style === 'ambient' ? 'ambient' : (s.drums || '') + (s.meter === 3 ? ' 3/4' : s.meter === 6 ? ' 6/8' : '') + (s.swing ? ' swing' : '');
+  const groove = s => s.style === 'ambient' ? 'ambient' : (s.drums || '') + (s.meter === 3 ? ' 3/4' : s.meter === 6 ? ' 6/8' : s.meter === 5 ? ' 5/4' : '') + (s.swing ? ' swing' : '');
   // the band: what differs from the original synthwave sound
   const band = s => s.style === 'ambient' ? '' : [s.kit && s.kit !== 'synth' ? s.kit + ' kit' : '', s.bassVoice && s.bassVoice !== 'saw' ? s.bassVoice + ' bass' : '',
     s.padVoice && s.padVoice !== 'saw' ? (s.padVoice === 'none' ? 'no pad' : s.padVoice + ' pad') : '', s.arpVoice && s.arpVoice !== 'square' ? s.arpVoice + ' arp' : '',
@@ -1342,7 +1342,7 @@
     ['arp', 'arp notes', ['up', 'down', 'updown', 'mirror']], ['leadVoice', 'lead', MUSIC_VOICES.leadVoice], ['stabVoice', 'stab sound', MUSIC_VOICES.stabVoice], ['meter', 'meter', MUSIC_VOICES.meter],
   ];
   const DEFAULTS = { stabVoice: 'saw', kit: 'synth', bassVoice: 'saw', padVoice: 'saw', arpVoice: 'square', leadVoice: 'square', meter: 4, arp: 'up', pump: 1, swing: 0 };
-  const meterName = m => ({ 4: '4/4', 3: '3/4 (waltz)', 6: '6/8 (lilt)' })[m] || m;
+  const meterName = m => ({ 4: '4/4', 3: '3/4 (waltz)', 6: '6/8 (lilt)', 5: '5/4' })[m] || m;
   function renderTry() {
     const s = SONGS[p.key], box = $('#try');
     if (!s || s.style === 'ambient') { box.innerHTML = '<div class="dim">' + (s ? 'ambient tracks have their own sound.' : 'pick a track.') + '</div>'; return; }

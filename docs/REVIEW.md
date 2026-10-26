@@ -183,6 +183,10 @@ to build stays in `docs/SPEC.md` §16f.)
   traces, and pulses running out from the head. Dev menu `[ title pulse: COLOR / CHAR / BOTH ]` to
   compare the spark styles. Next idea to try: traces in from the left, out the right.
 
+- [ ] **Leg + exotic mod changes** (v13.23). Try: ICE EATER (real node -3, not death), FENCELINE (was
+  CORNERS: a whole edge of ICE locks; is the name OK?), MUTATE (the tray flash on a new corp), COUPON (one free
+  market offer), CONTINUE? (once per corp, price climbs), the pulsing [brackets] on ready tap mods. Open questions
+  are in SPEC.md under "Mod notes" > "To talk about".
 ## Done
 
 - [x] **The in-game header still says `BETA_RUNNER`.** Done in v13.16: it says NeoN+1 and is the menu button.

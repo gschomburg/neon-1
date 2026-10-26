@@ -45,7 +45,7 @@ server/                    upload this folder's contents to the greglytics domai
 - `track(name, data)`: an event; `data` is any small JSON (up to 4 KB).
 - `submitScore(board, { score, tie, player, logo, data })`: a board is any name (`all`, `daily-2026-10-24`). Ranks
   by score (high first, unless the app's config says `order: asc`), then tie (low first: neon's mods taken).
-  Each device's best counts. Returns `{ ok, rank, of, run, best }`: your best's place, this run's place, and whether this run is your best.
+  Every run is its own entry, so a player can be on a board many times (an app's config `'scores' => ['per' => 'device']` keeps only each device's best). Returns `{ ok, rank, of, run, best }`: your best's place, this run's place, and whether this run is your best.
 - `scores(board, { limit })`: `{ entries: [{ rank, player, logo, score, tie, at, data, me }], you, of }`.
 - `setName('VWD')`: this device's name on every board (renames its old entries too). Letters and digits, up to 12.
 - `optOut(true)`: stop sending events (remembered on this device). Tell players what's sent, and give them the switch.

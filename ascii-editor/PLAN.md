@@ -73,6 +73,16 @@ flatten / merge down. A floating selection (below) already works like a temporar
   box lines and auto cells alone. **Later (the user):** it probably ends up as a mode of the Paint panel (next to
   Character / Noise / Pattern / Ramp) more than its own tool. Ideas: dither (random cells per stroke), build-up while
   held, shading a selection or the whole layer at once.
+- **Gradient fill** (the user, 2026-10-25; idea, not built): like the pattern fill, but a light-to-dark ramp across the
+  area. Pick Fill, then set the angle (drag a line across the area, the way gradient tools in paint apps work: start =
+  one end of the ramp, end = the other). Presets that look good: white to black, white > black > white (a band), and the
+  saved ramps from the Paint panel (Bubbles, Dots, Shade, Blocks, Fine...), or type your own ramp. **Dithering options**
+  for the steps between characters: none (hard bands), ordered (a Bayer-style grid), random (noise), maybe error
+  diffusion. *(Claude)*: could also do radial (from a center point out) next to linear, and a Reverse button; the fill
+  area is whatever flood fill / a selection would take, and Shade's ink-sorted "All" set works as a ramp too.
+- **Transform** (the user, meat notes 2026-10-25): resize a selection or a layer. Needs smart settings for scaling text art (ASCII "aliasing":
+  which characters stand in when a line gets thicker or thinner).
+- **Pen / bezier tool** (the user, meat notes 2026-10-25): draw a shape with bezier curves, turned into characters (smart lines for curves).
 
 ## How the conversion picks characters
 
@@ -309,6 +319,8 @@ The Photoshop setup:
 
 ## Reference apps (the user, 2026-10-23)
 
+- **[Ascii-Motion](https://github.com/cameronfoxly/Ascii-Motion)** (the user, meat notes 2026-10-25): keep it around as a reference for
+  animation.
 - **[ASCII Art Sketchpad](https://patorjk.com/ascii-art-sketchpad/)** (patorjk): great drawing and shape tools, and line
   style options.
 - **[dnascii](https://dnascii.com/)** ([GitHub](https://github.com/dnisdv/ascii-editor)): has the select-and-move the

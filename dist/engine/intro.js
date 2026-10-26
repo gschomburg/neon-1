@@ -1,6 +1,6 @@
 // NeoN+1 engine/intro.js: the boot / login intro before the title.
 'use strict';
-NEON_FILES.push(['engine/intro.js', 'v13.20']);
+NEON_FILES.push(['engine/intro.js', 'v13.25']);
 
 // A terminal login: a prompt, your runner name typing in, a boot log scrolling (the game's real
 // files, plus some fake jargon) with a progress bar, a world map with your spot blinking, then

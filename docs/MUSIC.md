@@ -118,6 +118,17 @@ M = effects. The **dev music player** (dev menu `[music player]`) lists every tr
 the corps in order), shows where each plays, and can push one like the game does: level 0-4, urgency,
 heartbeat, `[ boss win ]`, `[ game over ]`.
 
+**GRAVE ROBBER** (v13.25, 2026-10-25, the user: "inspired by the halloween theme... some sort of creaky door opening...
+owl hoots"). Key `graverobber` in data/music.js (not `graveshift`: that's BONEYARD's old GRAVE SHIFT). It plays in
+place of the map track while you hold the GRAVE ROBBER mod (engine/boot.js, `GRAVE_TRACK`); corps keep their own.
+5/4 (new: `meter: 5`, 20 steps a bar, parts written 20 tokens long), 150 bpm, F# harmonic minor. A high piano
+figure (3 + 3 + 4 eighths, its own notes) never stops while the chords move under it (i, i, VI, V); the B section
+drops the bass a half step under the figure (F under F#), thins the drums, and an owl calls. Form AABA.
+**Sound effects in tracks** (new): `creak` and `owl` are patterns like `stab` ('x' = one), from level `sfxAt`.
+The creak is a low saw gliding up through a narrow band, chopped unevenly (the hinge sticking and slipping) over
+~2s; the owl is four soft sine hoots (hoo, hoo-hoo, hooo) pitched to the track's root, panned, into the echo. Here
+a door creaks every other time through.
+
 ## Plans
 
 ### The music engine pass (noted 2026-10-20)

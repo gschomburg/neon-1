@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.20']);
+NEON_FILES.push(['engine/panels.js', 'v13.25']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -37,10 +37,15 @@ function addMod(key, tier = 0) {
   const run = st.run;
   if (!MODS[key]) return null;          // a mod that no longer exists (old saves / tests)
   markSeen(key);
-  if (run.mods.includes(key)) { run.modTier[key] = upgradeTo(key, tier); return 'up'; }
+  if (run.mods.includes(key)) {
+    const was = modTier(key);
+    run.modTier[key] = upgradeTo(key, tier);
+    if (key === 'buffer') { const d = run.modTier[key] - was; run.maxInt += d; run.integrity += d; }   // each step: +1 more, healed
+    return 'up';
+  }
   run.mods.push(key);
   run.modTier[key] = clamp(tier, 0, tierCount(MODS[key]) - 1);
-  if (key === 'buffer') { run.maxInt++; run.integrity++; }
+  if (key === 'buffer') { run.maxInt += run.modTier[key] + 1; run.integrity += run.modTier[key] + 1; }   // +1 common ... +4 legendary
   if (key === 'stash') run.beltSlots++;
   if (key === 'ramdoubler') {   // the belt goes: what you hold is sold for half
     const cash = run.items.reduce((a, s) => a + Math.floor(itemView(s.key, s.tier).price * TIER_PRICE[s.tier || 0] / 2) * s.n, 0);
@@ -55,8 +60,9 @@ function removeMod(key) {
   const run = st.run;
   if (!run.mods.includes(key)) return;
   run.mods = run.mods.filter(k => k !== key);
+  const tierWas = run.modTier[key] || 0;
   delete run.modTier[key];
-  if (key === 'buffer') { run.maxInt--; run.integrity = Math.min(run.integrity, run.maxInt); }
+  if (key === 'buffer') { run.maxInt -= tierWas + 1; run.integrity = Math.min(run.integrity, run.maxInt); }
   if (key === 'stash') { run.beltSlots--; run.items = run.items.slice(0, run.beltSlots); }
 }
 const modRoom = key => has(key) || st.run.mods.length < modSlots();
@@ -86,7 +92,7 @@ function pickMods(r, pool, k, exclude = []) {
   return shuffle(pool.filter(ok), r).slice(0, k).map(key => ({ key, tier: rollTier(r, MODS[key]) }));
 }
 
-const priceOf = o => o.kind === 'repair' ? o.price : Math.round(o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', [0.25, 0.35, 0.5]) : 1));
+const priceOf = o => o.free ? 0 : o.kind === 'repair' ? o.price : Math.round(o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', [0.25, 0.35, 0.5]) : 1));
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
 function openShop(node) {
@@ -98,6 +104,7 @@ function openShop(node) {
   for (const o of pickMods(r, modsOfKind('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
   for (const o of exoticOffer(run.seed, 'shop', node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
   offers = shuffle(offers, r);   // random order: any slot could be the good one
+  if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
   offers.push({ kind: 'repair', key: 'repair', price: 20, sold: false });
 
   // What an offer is: items at their tier; mods as what you'd end up with (upgrades).
@@ -135,7 +142,7 @@ function openShop(node) {
     offers.forEach((o, k) => {
       const def = defOf(o);
       const isMod = o.kind === 'mod', up = isMod && has(o.key);
-      const price = o.sold ? 'SOLD' : `${priceOf(o)}cr`;
+      const price = o.sold ? 'SOLD' : o.free ? 'FREE' : `${priceOf(o)}cr`;
       const tag = isMod ? (up ? 'mod+' : 'mod') : o.kind === 'item' ? 'item' : 'svc';   // an item's rarity shows on its name chip
       const col = C.bright;
       X({
@@ -166,7 +173,7 @@ function openShop(node) {
       }
       T(def.tip || def.desc, C.text);   // the short text: long item descs ran off the screen
       if (why) { T(''); T(why, C.dangerDim); T(''); T(''); }
-      else X({ box: true, text: 'B U Y', sub: `${priceOf(o)}cr`, id: 'buy', onTap: () => buy(o), minW: 18 });
+      else X({ box: true, text: 'B U Y', sub: o.free ? 'FREE' : `${priceOf(o)}cr`, id: 'buy', onTap: () => buy(o), minW: 18 });
     }
     T(SEP, C.dim);
     B('[ LEAVE ]', 'leave', leavePanel);

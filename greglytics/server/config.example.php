@@ -13,7 +13,8 @@ return [
   'apps' => [
     'neon' => [
       'origins' => ['https://gregschomburg.com', 'https://www.gregschomburg.com'],
-      'scores' => ['order' => 'desc', 'tie' => 'asc'],   // more layers first; fewer mods breaks ties
+      'scores' => ['order' => 'desc', 'tie' => 'asc'],   // more layers first; fewer mods breaks ties. Every run is an
+      // entry (one player can be on a board many times); add 'per' => 'device' to keep only each device's best.
     ],
     'asxii' => [
       'origins' => ['https://gregschomburg.com'],

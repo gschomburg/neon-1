@@ -1,6 +1,6 @@
 // NeoN+1 data/music.js: Music: scales, every track, and which track plays where.
 'use strict';
-NEON_FILES.push(['data/music.js', 'v13.20']);
+NEON_FILES.push(['data/music.js', 'v13.25']);
 
 // ---------------- Music ----------------
 // Generated 80s-style synthwave: pad, bass, drums, arp and lead, scheduled a little
@@ -27,12 +27,30 @@ const MUSIC_FOR = {
   omni: 'dropzone',   // DROP ZONE (the user's note: "boss"); MELTDOWN was cut 2026-10-24
 };
 
+// GRAVE ROBBER (BONEYARD's mod): while you hold it, this plays instead of the map track (engine/boot.js).
+const GRAVE_TRACK = 'graverobber';
+
 // ---------------- New tracks (2026-10-24), not playing anywhere yet ----------------
 // One per artist the user named as an inspiration (docs/MUSIC.md), each with its own melody, bass riff and beat
 // (the written parts: see the top of engine/music.js). To use one, point a MUSIC_FOR line at it.
 // Scale degrees: 0 = the root, 7 = an octave up. Bars play in turn.
 // A track made from another one says so with from: 'thatkey' (the game ignores it; the music tool groups them).
 Object.assign(SONGS, {
+  // GRAVE ROBBER (2026-10-25): inspired by John Carpenter's Halloween, its own notes. 5/4, a high piano figure
+  // (3 + 3 + 4 eighths) that never stops while the chords move under it; the B section drops the bass a half step
+  // under the figure. A door creaks open every other time through, an owl calls in the B section.
+  graverobber: { name: 'GRAVE ROBBER', bpm: 150, root: 42, scale: 'harmonic', meter: 5, prog: [0, 0, 5, 4], kit: 'synth', pump: 0,
+    padVoice: 'choir', bassVoice: 'sub', echo: 0.5, feedback: 0.45, form: 'AABA',
+    beat: { kick: 'x...........x.......', snare: '........x.......x...', hat: 'x...x...x...x...x...' },
+    bassLine: '0 - - . 0 - - . 0 - - . 0 - - . 0 - 7 .',
+    melody: ['7 . 2 . 4 . 7 . 2 . 4 . 9 . 7 . 4 . 2 .', '7 . 2 . 4 . 7 . 2 . 4 . 9 . 7 . 4 . 2 .',
+      '7 . 2 . 4 . 7 . 2 . 4 . 8 . 7 . 4 . 2 .', '7 . 2 . 4 . 7 . 2 . 4 . 5 . 4 . 2 . 1 .'],
+    melodyAt: 0, leadVoice: 'keys', arpVoice: 'glass', arpLine: '. . . . . . . . . . 5 . . . . . . . 4 .',
+    creak: ['x...................', '....................', '....................', '....................', '....................', '....................', '....................', '....................'],
+    // B: the bass sinks a half step (F over the F# figure), the drums thin out, the owl
+    B: { prog: [6, 6, 5, 5], bassLine: '-7 - - . -7 - - . -7 - - . -7 - - . -7 - 0 .',
+      beat: { kick: 'x...................', snare: '................x...', hat: 'x.......x.......x...' },
+      owl: ['....................', '....x...............', '....................', '....................'] } },
   // Daft Punk, Tron: Legacy: a 16th-note octave bass, a gritty staccato riff, brass hits on the bar
   lightcycle: { name: 'LIGHT CYCLE', bpm: 128, root: 38, scale: 'minor', prog: [0, 0, 5, 3], kit: '808', pump: 0.7, padVoice: 'glass',
     beat: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.', open: '..............x.' },

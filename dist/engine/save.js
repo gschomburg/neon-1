@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v13.20']);
+NEON_FILES.push(['engine/save.js', 'v13.25']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -59,7 +59,7 @@ function runSnapshot() {
   if (!run || run.ended || st.mp || st.dying || run.integrity <= 0) return null;
   const c = st.corp;
   const corp = c && c.node ? {
-    node: c.node.id, idx: c.idx, prevSafe: c.prevSafe, bulwarkUsed: !!c.bulwarkUsed, burnerUsed: !!c.burnerUsed,
+    node: c.node.id, idx: c.idx, prevSafe: c.prevSafe, bulwarkUsed: !!c.bulwarkUsed, contUsed: !!c.contUsed, burnerUsed: Number(c.burnerUsed || 0),
     wallAll: !!c.wallAll, ice: c.ice || 0, perfects: c.perfects || 0, scored: c.scored || 0,
     carry: c.carry || null, pins: c.pins || 0, friendUsed: !!c.friendUsed, tapUsed: c.tapUsed || null, rad: c.rad || 0, ride: c.ride || 0, petIdx: c.petIdx, tickets: c.tickets || 0, stolen: c.stolen || null, rival: c.rival || null,
   } : null;

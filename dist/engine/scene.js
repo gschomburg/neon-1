@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.20']);
+NEON_FILES.push(['engine/scene.js', 'v13.25']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -10,6 +10,25 @@ const rule = w => '- '.repeat(Math.ceil(w / 2)).slice(0, w);
 const decodeDelay = (cx, cy) => 40 + ((((Math.round(cx * 2) + 1) * 374761393) ^ ((Math.round(cy * 2) + 1) * 668265263)) >>> 0) % 380;
 
 // raw = skip transitions (used for snapshots).
+// HUD integrity: watch the shown value. A gain pops each new # (HP_POP ms, scaled past the grid); a loss breaks each
+// lost # into bits that hop and fall. Only the live frame (collectHits) watches, so snapshots don't double it.
+const HP_POP = 520;
+const hpFx = { run: null, shown: null, x0: 0, gain: {} };
+function hpWatch(cur, x0, bar, now) {
+  const run = st.run;
+  if (hpFx.run !== run || hpFx.shown == null) { Object.assign(hpFx, { run, shown: cur, x0, gain: {} }); return; }
+  const was = hpFx.shown;
+  if (cur > was && !reduced()) { if (bar) for (let i = was; i < cur; i++) hpFx.gain[i] = now + (i - was) * 90; else hpFx.gain.all = now; }
+  if (cur < was && !reduced() && bar) {
+    for (let i = cur; i < was; i++) {
+      const x = pxX(hpFx.x0 + i), y = pxY(2);
+      const bits = ['#', '+', '=', '.', "'"].map(ch => ({ ch, x: x + rand(-0.3, 0.3) * L.cw, y: y + rand(-0.3, 0.3) * L.chh, col: C.danger }));
+      explode(bits, x, y + L.chh * 0.8, { col: C.danger, power: 0.35, grav: 1, life: [0.55, 0.95] });
+    }
+  }
+  hpFx.shown = cur; hpFx.x0 = x0;
+}
+
 function buildScene(now, collectHits, raw = false) {
   const cells = [];
   const frameBgs = [];
@@ -127,7 +146,16 @@ function buildScene(now, collectHits, raw = false) {
       put(L.wc - txt.length - 5, 2, 'LIFE', C.mid);
       put(L.wc - txt.length - 5 - 9, 2, `hit-${cost}`, C.dim);
     } else {
-      putR(2, bar, fsBlink ? C.bright : cur <= 1 ? C.danger : C.accent);
+      const x0 = L.wc - bar.length, base = fsBlink ? C.bright : cur <= 1 ? C.danger : C.accent;
+      if (collectHits) hpWatch(cur, x0, run.maxInt <= 10, now);
+      // one char at a time: a new # pops up past the grid; at 1 left it beats like a heart (two quick blinks)
+      const beat = cur === 1 && !fsBlink && (now % 1400 < 90 || (now % 1400 > 200 && now % 1400 < 290));
+      for (let i = 0; i < bar.length; i++) {
+        const t0 = hpFx.gain[run.maxInt <= 10 ? i : 'all'], k = t0 != null ? (now - t0) / HP_POP : 1;
+        const pop = k >= 0 && k < 1, isHash = run.maxInt > 10 || bar[i] === '#';
+        cells.push({ ch: bar[i], cx: x0 + i, cy: 2, own: 'hud', col: pop && k < 0.6 ? C.bright : beat && isHash ? C.bright : base,
+          bold: pop || (beat && isHash), sc: pop ? 1 + 0.75 * Math.sin(Math.PI * k) : beat && isHash ? 1.15 : 1 });
+      }
       put(L.wc - bar.length - 10, 2, 'INTEGRITY', C.mid);
     }
     const fw = st.corp && st.corp.wallAll ? 'FW*' : run.shield ? `FW${run.shield}` : '';
@@ -349,11 +377,13 @@ function buildTray(ctx, y) {
     const spent = modSpent(key) || modOffHere(key), usable = !!m.active && modUsable(key);   // (off in this corp: drawn dim like spent)
     let w;
     if (m.active) {
-      const bc = spent ? C.danger : usable ? C.accent : C.dim;
+      const bc = spent ? C.danger : usable ? (Math.floor(now / 450) % 2 ? C.bright : C.accent) : C.dim;   // ready: the brackets pulse
       put(x, ry, '[', bc, 'tray', true);
       const bw = drawBadge(put, now, x + 1, ry, key, i, { dim: !usable, tier: modTier(key), bg, selected: sel, fireKey: key === 'mutate' ? run.mutateAs : key });
       put(x + 1 + bw, ry, ']', bc, 'tray', true);
       w = bw + 2;
+    } else if (key === 'mutate' && run.mutateAs && MODS[run.mutateAs] && now - (st.mutateAt || -1e9) >= 0 && now - st.mutateAt < 2400 && Math.floor((now - st.mutateAt) / 400) % 2 === 0) {
+      w = drawBadge(put, now, x, ry, run.mutateAs, i, { tier: run.mutateTier || 0, bg, selected: sel });   // MUTATE just mutated: flicks between MUT and what it became
     } else w = drawBadge(put, now, x, ry, key, i, { dim: spent, tier: modTier(key), bg, selected: sel, fireKey: key === 'mutate' ? run.mutateAs : key });
     if (hov && !sel) bg(x, ry, w, C.accent, 0.12);
     addHit(x, ry, w, 1, { kind: 'mod', i });
@@ -367,9 +397,11 @@ function buildTray(ctx, y) {
     const key = run.mods[mi], m = modView(key);
     put(0, y + 1, '\\_', C.mid);
     putChip(put, bg, 2, y + 1, m.short, m.rarity, 'tray', true);
-    const tip = key === 'mutate' && run.mutateAs && MODS[run.mutateAs] ? `now: ${MODS[run.mutateAs].name.toLowerCase()}.`
+    const mv = key === 'mutate' && run.mutateAs && MODS[run.mutateAs] ? modView(run.mutateAs, run.mutateTier || 0) : null;
+    const tip = mv ? `now: ${mv.name.toLowerCase()} (${RARITY[mv.rarity].label.toLowerCase()}). ${mv.tip}`
+      : key === 'compost' ? `compost ${(run.compost || 0) % 3}/3. ${m.tip}`
       : key === 'honeycomb' ? `honey ${run.honey || 0}/3. ${m.tip}`
-      : key === 'leverage' ? (run.credits < 0 ? `debt shield ${Math.round(debtShield() * 100)}%. limit ${creditFloor()}.` : `no debt. limit ${creditFloor()}.`)
+      : key === 'leverage' ? (run.credits < 0 ? `debt shield ${Math.round(debtShield() * 100)}%. limit ${creditFloor()}.` : `no debt. limit ${creditFloor()}.`) + ` loan ${DEBT.payment + DEBT.paymentSector * (run.sector || 0)}cr/layer.`
       : key === 'zombie' ? `rot ${run.rot || 0}/${ROT.max}. ${tapsToBreak()} taps a node.` : m.tip;
     const offTip = modOffHere(key) ? 'off in this corp.' : null;   // this corp switches it off
     put(6, y + 1, offTip || tip, offTip ? C.dangerDim : C.text);

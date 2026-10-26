@@ -221,6 +221,8 @@ and the debt idea).
 
 ## Ad ideas
 
+- **NeoN+2** (the user, meat notes 2026-10-25): an intense hacker shooter game, still a little ASCII art platformer. "coming in 2020"
+  (the game is set in 2018, SPEC §1).
 - *(Claude)* **MEGAMART:** "everything you need. nothing you asked for."
 - *(Claude)* **BURGERTRON:** "now with 30% more meat-adjacent product."
 - *(Claude)* **RYDR:** "your driver is 2 minutes away. he has been 2 minutes away for an hour."

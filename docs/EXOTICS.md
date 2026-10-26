@@ -17,6 +17,18 @@ exotic items **PARADOX**, **ENTANGLE**, **NUKE** (with the hidden quest). Also p
 the ads, see ADS.md), promoting some wild corp boss mods to exotic, MEMORY DOUBLER as a spare name, and SNOOZE's
 "backlog comes due" rule if it plays too strong.
 
+## New exotic ideas, 2026-10-25 (the user, meat notes; not designed)
+
+- **All items:** your mod slots become item slots (the full slot count), and rewards turn into items. Maybe one more
+  bonus: some random items every corp. (The mirror of RAM DOUBLER.)
+- **HIGHLANDER** *(Claude)* name, from the user's "highlander or immortal reference? there can be only one": every
+  corp you beat raises your max integrity, up to ~10. Not healing, just a bigger bar.
+- **Health as money:** spend integrity like credits (buy at markets with health). The reverse of BLOOD MONEY, where
+  credits are your health.
+- **Stronger when hurt:** the less integrity you have, the better the chance an ICE hit does nothing. The user's
+  numbers: 50% at 1 integrity, falling as you heal, "up to 20? at full health" (*(Claude)* reading: 20% at full).
+  *(Claude)* names: BERSERK, LAST STAND, DEATH WISH.
+
 ## Questions for all exotics
 
 **Decided (the user, 2026-10-22):**
@@ -74,6 +86,8 @@ mod that works in every corp. DEMOLITION's code already does most of it (`corps/
 
 **Decided (the user, 2026-10-22):**
 - **The real node is instant death.** (FAILSAFE can still catch it once: that's what it's for.)
+  **Changed v13.23 (the user, 2026-10-25: "everytime i got ice eater i died with the one hit pretty quick"):** the real
+  node now bites for 3 integrity and the layer passes with no pay. FAILSAFE catches it if the 3 would kill you.
 - **Pay per ICE eaten:** what the layer would pay for finding the real node, divided by its ICE count, paid
   bite by bite. Eat all the ICE, get the full layer's pay.
 - **Mods that find the real node don't tap it for you.** X-AXIS / Y-AXIS mark the line instead: "it's in this

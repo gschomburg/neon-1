@@ -14,6 +14,8 @@ The hook: **the safe tile isn't purely random.** Each corp picks it with its own
 
 Theme is cyberpunk / network intrusion, but kept **light** for now. Gameplay first.
 
+**Setting: the game takes place in 2018. That's canon** (the user, 2026-10-25). Ads and lore should fit it (e.g. the NeoN+2 ad says "coming in 2020").
+
 Inspiration: `reference/1TD.html` (One True Door). Its run structure, items/relics, and keep-between-runs progression are a good base. Its weakness, which we want to fix: every pick is pure chance, so there are few real decisions.
 
 ## 2. Core rules (v01)
@@ -865,13 +867,90 @@ Agreed changes not built yet.
       (blue), epic (purple), legendary (orange), exotic (gold)** (the usual loot colors). *(Claude)*: that ladder would
       leave BOSS out; it could become a tag (where it drops) rather than a rarity.
 
+- **Integrity animations** (meat notes, 2026-10-25): at 1 integrity the HUD # blinks a little (close to death); gaining
+  integrity scales the # up past the grid a moment; losing one makes the # explode and fall (like the other break-apart
+  effects). **BUILT v13.22** (see the version log).
+- **Fewer rest stops per stage** (meat notes, 2026-10-25): maybe cap the markets, data caches and safehouses at 2 per stage,
+  picked from those (and any other "rest" node). *(Claude)* today each stage's 4 rows of 3 hold 3-4 of them (rows 2-4
+  always have one, row 1 too after sector 1: engine/map.js addSector), but a path only passes one per row. Open: cap what
+  the map shows (2 per stage, the rest become corps), or what a path can reach?
+- **Mod picker out of the dev menu, into the neon editor** (meat notes, 2026-10-25): the dev menu's mod list doesn't
+  show clearly that you have a mod or at what step. Move it to the editor (the items & mods tab could add / upgrade /
+  remove mods on the running game through the bridge), and show the step you hold.
+- **KERNING: make the tell a whole row, and bigger** (the user, 2026-10-25). Today one character of the real node is
+  nudged 3 / 2.5 / 2 px (deeper corps 2.5 / 2 / 1.5; boss 2.5). Change: nudge the **whole row** of the glyph (one line
+  of the real node), and by a bit more. Keep it shrinking layer by layer (the user likes that).
+- **A happier success sound on layers** (the user, meat notes 2026-10-25): "it's not always clear you got a node successfully." The real-node
+  sound needs to read as a win (brighter, rising, more "yes!"), and the fail sound could differ more from it too.
 - **Mod notes (the user, from 2026-10-25, while playing v13.19).** Collect them here, then rebalance in a batch.
+  - **BUILT v13.21 (meat notes, "mod rarity notes"):** FAILSAFE epic recharges each stage, legendary (new) each corp;
+    VIRUS legendary spreads through touching ICE, up to 4 locked (never the last ICE); SKIMMER common +25% > rare +50% >
+    epic +75%; BUFFER common +1 > rare +2 > epic +3 > legendary +4 max integrity (each step heals what it adds); BURNER
+    common 1x > rare 2x > epic 3x per corp; X-AXIS and Y-AXIS epic (80cr), kept as two mods. COOLANT and SKIPJACK fine as is.
+    Answered in chat: STASH's "loot" is loot nodes in corps and data cache drops (not markets); CACHEKEY adds extra drops
+    (common 2 total, rare 3, epic 4: each credits or an item) and raises the cache's exotic chance, not more choices.
   - **FAILSAFE: once per run, then a dead slot.** It saves one killing hit (leaves you at 1), then sits in the tray
     "(spent)" for the rest of the run, taking a slot; nothing resets it and it has one step (epic), so a second copy does
     nothing. *(Claude)* ideas: (1) a **legendary step that recharges** (each sector, or each corp boss); (2) **spent but
     useful**: sell it back, or it turns into something small (+1 max integrity) once it fires; (3) legendary **saves
     twice**. Other legendary-step candidates from the rarity pass: SKIMMER, and the minor mods' top steps (each needs a
     new effect, not just a new label).
+  - **BUILT v13.23 (meat notes, "mod notes leg+exotics"):**
+    - ICE EATER: the real node bites for 3 (was instant death) and the layer passes with no pay; FAILSAFE catches it if
+      the 3 would kill you. ("everytime i got ice eater i died with the one hit pretty quick")
+    - LEVERAGE: every corp layer takes a loan payment (5cr, +5 each sector), in debt or not, never past the limit, so
+      you stay in debt. The tray tip shows it.
+    - CORNERS is now **FENCELINE** (FNC, key still `corners`): every layer locks all the ICE along one random edge,
+      always leaving 1+ ICE. An edge with one node left standing points at the real node. Name open if you want another.
+    - BULWARK: a perfect in the same corp charges it back up ("bulwark up" on the message).
+    - COUPON: markets also make one random offer FREE (plus the extra offer it already gave).
+    - SUPERSIZE: every layer pays x2 (was boss layers x1.5). Recheck in the credits balance pass.
+    - MUTATE: what it becomes is always rare or better (any step of that mod, legendary included; a mod with no steps
+      comes at its top). New each corp: the tray badge flicks between MUT and the new mod for ~2s and the message
+      says "mutate: now coolant (rare)". The tray tip shows its name, rarity and tip.
+    - TRIAGE: beating a corp drops a PATCH on your belt (they stack up); belt full or RAM DOUBLER: heals as before.
+    - CONTINUE?: once per corp (was once per run); 100cr, +100 every time you use it (200, 300...).
+    - Tap mods stand out more: a ready tap mod's [brackets] pulse, and the first time each one is ready in a run the
+      message line says "[BLS] is ready: tap it in your mods."
+    - COMPOST's tray tip shows its count (compost 2/3).
+    - Answers: **COMPOST** hurts first and then heals, both before the death check, so the 3rd hit nets 0 and can't kill
+      you (a 2-damage hit still nets -1). **TWIN LOCK** has no distance limit already: outside CLONEWORKS it locks the
+      closed ICE whose glyph shares the most characters, anywhere on the board, so it plays like a random second lock.
+      **INDEX** marks the ICE you hit with >>> (the real node is later in reading order) or <<< (earlier); X/Y-AXIS scan
+      a whole row or column, and QUEUE NUMBER shows the exact count (+3).
+    - Keepers as is: the pet one (COMPANION), POLICY, UNRAVEL, TRIAGE (now with the patch), CONTINUE.
+  - **To talk about (leg+exotics notes):**
+    - FORGERY's partner: something else that plays with $ nodes. The user's idea: a mod that turns $ nodes into exotic
+      mod nodes. The user: "it would probably need to be pretty rare." Still open: what one costs to open (a hit, like
+      $ nodes now?).
+    - AFTERIMAGE: the user, 2026-10-25: keep it as is.
+    - **BUILT v13.24: SURGE** (the user: "layer has a clock and heal if it's the last 3 seconds"): every corp layer
+      has a clock (OVERCLOCK's 15s when the corp has none, no purges), and a real pick in the last 3 seconds heals 1
+      (was x1.5 pay).
+    - EZPASS is weak (+2cr a layer): health instead, or wait for the credits balance pass. Bigger point: **a corp's
+      boss mod should match its difficulty** (harder corps give better mods), so EZPASS can stay small if TOLLGATE is
+      an easy corp. Worth a pass over all 78 corps' mods by corp tier.
+    - **BUILT v13.25: GRAVE ROBBER's track.** Holding the mod, its own track (GRAVE ROBBER: 5/4, Halloween-inspired,
+      a creaking door and an owl) plays instead of the map track. Corps keep their own. See docs/MUSIC.md.
+    - CONTINUE? vs FAILSAFE: now both once per corp (FAILSAFE legendary), CONTINUE costs credits that climb. Check after
+      some play which one is better.
+    - Credits balance pass: POLICY, SUPERSIZE, EZPASS, LEVERAGE's payment all wait on it. The user: soon, not yet.
+    - **BLOOD MONEY is too strong** (the user, meat notes 2026-10-25): "super powerful, basically immortal." Hits should cost more; maybe perfect
+      combos don't add up (perfects pay you credits = heal you). For the balance pass.
+    - **X-AXIS / Y-AXIS need a better "it fired" moment** (the user, meat notes 2026-10-25): the timing is fine, the indicator isn't. Idea: a
+      background color fills along the row / column, starting at the node you tapped and sweeping to the real node.
+  - **Mod and item ideas (the user, meat notes 2026-10-25)** (not designed yet):
+    - **Sell at markets:** sell mods or items back at a store. Gives a reason to carry scrap: junk items that are only
+      worth credits, sold when you find a market.
+    - **More scrap mods:** one that is literally just scrap ("BOX OF WIRES: i'm not going to sort these"), maybe 2
+      worthless ones. And **one scrap mod that climbs all the way to legendary and is then super good** (the joke mod
+      that pays off if you stick with it). Ties to the quest "carry a worthless scrap mod through 3 stages" (§17 quests).
+    - **Random items on perfects** (a mod).
+    - **Travel any direction on the map** (a mod; the rules question is in §17 "Moving backwards on the map").
+    - **Better drops:** any mod / item you get has a 10-20% chance to come one rarity step higher.
+    - **VIRUS, bigger:** a mod (or a VIRUS step) that breaks *all* the connected ICE. (VIRUS legendary does up to 4 today.)
+    - **A glyph mod:** changes the glyph characters (or upper / lower case: see CORPS.md #50).
+    - Exotics from the same notes are in EXOTICS.md ("New exotic ideas, 2026-10-25").
 
 - **DONE v13.18: Game over: your mods and items go in the scrolling area with the map** (2026-10-22, the user). Today the death
   screen lists the run's mods in rows of 5 above the run's map (which scrolls). Move the mods and the items you held
@@ -1786,6 +1865,12 @@ New builds are listed below as before.
 - **v13.18** (2026-10-25): a batch of small ones. **BLACKOUT's grue:** on the nearly black boss layer the power line sometimes reads `it is pitch black. a grue is near.`, and its codex entry ends with a Zork nod. **Mod tags on the pick screens:** every offer on the starter perk, cache, safehouse and boss reward screens says `mod` (or `mod+` for an upgrade) after its rarity, like the market; a cache's item loot says `got item: NAME`. **Game over:** the mods and items scroll together with the map (it starts as high as it can with where the run ended in view; arrows show more above / below). **Title:** a `board: #5 all time · #2 today` line under your stats (fetched quietly, once a minute at most). **Updates:** `tools/bump.js` writes `dist/version.json`; the hosted game checks it (a few seconds after loading, coming back to the tab, every 10 minutes) and the title shows `[ v13.19 is out: UPDATE ]`, which reloads past the cache.
 - **v13.19** (2026-10-25): **the rarity ladder** (the user): SCRAP (white) > COMMON (green) > RARE (blue) > EPIC (purple) > LEGENDARY (orange, `LEGEND` on screen to fit the 6-letter slot) > EXOTIC (gold). BOSS is gone: the 82 corp mods are legendary and never upgrade; legendary is as high as any upgrade goes; exotics sit above it. No more LV2 / LV3 labels: those mods climb rarities. Rebalance (Claude's calls): PATCH, PURGE and COOLANT start at scrap (scrap > common > rare); BURNER is common; TRACER rare > epic; KEYLOGGER rare > epic > legendary (the whole glyph); SNIFFER and VIRUS get a legendary step (2 ICE locked each layer when there are 3+ ICE; the infection spreads twice, never into the last ICE). A legendary step only rolls in the top 5% of finds (or take the mod twice). Chip colors: palettes.js `chips` (and the editor's rarity chips tab).
 - **v13.20** (2026-10-25): **leaderboard initials take digits and symbols** (the user): 0-9 (0 slashed, so it isn't O) and `* # $ ! ? +` after Z on the up / down cycle, and you can type them. `#` is a solid 3x3 block of #, `*` a burst. greglytics name.php keeps those symbols (needs uploading; until then the server drops them from the name). Also: the editor's ITEMS & MODS tab (tools/neon_editor.html).
+- **v13.21** (2026-10-25): **mod rarity notes** (meat notes): FAILSAFE recharges (epic each stage, legendary each corp), VIRUS legendary spreads up to 4, SKIMMER 25/50/75%, BUFFER +1..+4 (common to legendary), BURNER 1x/2x/3x per corp, X-AXIS / Y-AXIS epic. BURNER's per-corp use is a count in the save now (old saves read true as 1).
+- **v13.22** (2026-10-25): **integrity animations** (meat notes): the HUD bar is drawn a char at a time. A gain pops each new # up past the grid and back (bright, staggered when it's several); a loss breaks each lost # into red bits that hop and fall (explode()); at 1 left the # beats like a heart (two quick bright blinks every 1.4s). Cells can carry a scale (`sc`, engine/render.js). Reduced motion: no pops or bits. FAILSAFE's save reads as a loss then a gain. Filed the rest of the misc notes (2018 setting in §1; rest-stop cap and dev-menu mod picker in the pending list).
+- **v13.25** (2026-10-25): **GRAVE ROBBER's track** (the user): a new 5/4 track inspired by Halloween (a high piano figure over moving chords, the bass sinking a half step in B), with the first sound effects in a track: a door creaking open and an owl's call. It replaces the map music while you hold GRAVE ROBBER. The music engine learned 5/4 (`meter: 5`) and `creak` / `owl` patterns; the music tool shows 5/4.
+- **v13.24** (2026-10-25): **SURGE** reworked (the user): every corp layer has a clock (15s if the corp has none) and a real pick in the last 3 seconds heals 1, instead of paying x1.5. AFTERIMAGE stays as is.
+- **v13.23** (2026-10-25): **leg + exotic mod notes** (meat notes): ICE EATER's real node bites for 3 (not death); LEVERAGE takes a loan payment every layer; CORNERS became FENCELINE (locks a whole edge); BULWARK recharges on a perfect; COUPON makes one market offer free; SUPERSIZE pays x2 on every layer; MUTATE is rare or better and flashes what it became; TRIAGE gives a PATCH; CONTINUE? once per corp at a climbing price; ready tap mods pulse and get a first-time hint; COMPOST shows its count. Discussion items are in the mod notes list.
+- **greglytics 1.3** (2026-10-25, the user): **every run is its own leaderboard entry**, so one player can be on a board many times (was: each device's best only). The end screen's rank is this run's place among all entries; the title line still shows your best. A device's initials (name.php) still show on all its entries. An app's config can go back to one per device with 'scores' => ['per' => 'device']. Needs uploading: api/scores.php, api/version.php.
 - **v13.11** (2026-10-24): **leaderboard initials on the end screen** (the user): a run still posts as it ends (so the rank comes back at once and is never lost); the bottom of the results then shows this run's places (`#11 ALL TIME   #5 TODAY`, gold with `**` for a top 10), 3-letter initials drawn big in **Bigfig** (the user's pick from asXii's fonts) with [^]/[v] to change each (or type them; arrows, backspace, enter), and **U P L O A D** in place of NEW RUN. Uploading sets your name on the server (one per device, shown on all your entries: new `name.php`), saves the initials for next time, then the NEW RUN / RETRY / BACK buttons come back. Fanfare: #1 all time = fireworks + victory; top 10 = fireworks + win; a personal best = a flash. A short rude-word list blocks UPLOAD. LEADERBOARD rows show the initials, with the hacker name dimmed beside them. Server: upload `lib.php`, `scores.php` and the new `name.php` before this build.
 - **v13.10** (2026-10-24): **online LEADERBOARD** (the user): a new title-menu screen (next to THE BOARD; NEW RUN moves to its own row under them) with TODAY (the UTC day) and ALL TIME tabs, top 10 plus your own row. A finished run (not practice, not multiplayer) sends its layers, ranked by layers with fewer mods winning ties, each device's best counting. Runs on greglytics (`greglytics/` in the repo, live at s3iz.com/glx): `engine/greglytics.js` is a copy of its browser script, `engine/leaders.js` the screen and the sending (kept in the save until it goes through, so offline runs send later). Pages opened from a file or localhost use separate test boards. The death and REP screens don't show it yet (kept apart for this first pass).
 - **v13.09** (2026-10-22): ad bars can be sized, timed and reversed (the user): `{bar:20}` (width inside the brackets, default 10), `{bar:20:6s}` (fill time, default most of the screen's time), `{rbar...}` empties instead of filling. Several per line work.
@@ -2023,6 +2108,8 @@ Not yet placed in a version.
 
 - **Big ASCII art for player logos.** Each player logo keeps its short 3-character form (`<#>`, `{@}`) for tight spots (HUD, cursors, lists), but also gets a bigger ASCII illustration like the in-game corps' intro art (~5-7 rows). Used on the profile / runner card, the multiplayer lobby and results, maybe a short "player intro" when a multiplayer game starts or when it's your turn. More big logos could be achievement / REP unlocks.
 - **Achievements + persona unlocks.** Achievements for things like a first win, a naked (0 mod) win, beating each corp, perfect streaks, reaching layer X, winning a multiplayer game. They unlock cosmetics for your persona / runner card: more logos, **hats** and accessories (ASCII bits above or beside the logo), card frames and colors, titles under your name ("SIGIL BREAKER"). Could tie into REP (buy some with REP, earn others only via achievements). Shown on the profile card and to other players in multiplayer.
+  - **Easy ones too** (the user, meat notes 2026-10-25): things people trigger anyway: die on the first corp, spend 1000 credits, earn 1000 credits
+    and then get back down to 0. Beating G0D is the top one (see REP ideas below).
 - **Leaderboards / scores, front and center.** Show how you're doing right on the title screen, e.g. a small panel or line: `TODAY 07   ALL TIME 21`, plus a `[ SCORES ]` screen.
   - **Daily vs all time:** pairs with the daily seed idea; everyone plays the same seed today, so a daily board is fair.
   - **Local first (easy):** your own best today / this week / all time, and a top-10 list of your runs (seed, depth, corps, date) from saved history. Works offline in the browser.
@@ -2311,6 +2398,33 @@ Not yet placed in a version.
   - **Boss twist:** the ghost moves. One ICE node drifts to a new spot when you aren't looking, either after each tap or on a timer.
   - **Boss mod seed:** something like GRAVE ROBBER, where each ICE hit drops a bone you can cash in at the end.
   - **Look and feel:** a sickly green and purple palette, a minor or harmonic theme with an organ-like pad, and a skull for the intro art.
+- **NeoN+m: co-op** (the user, meat notes 2026-10-25). A co-op multiplayer mode, like Keep Talking and Nobody Explodes: one player hacks, the
+  others hold the information. Maybe you need to be in the same room, like Spaceteam.
+- **Encrypted codex** (the user, meat notes 2026-10-25). Most codex entries aren't "???" but scrambled, encrypted-looking text that decrypts over
+  time as you beat corps, so the codex has content to scroll from the start. Maybe decryption isn't tied to corps, so
+  you can unscramble things you haven't seen yet.
+- **Hackers** (the user, 2026-10-25): ICE MAN is one of the adversary hackers you go up against, and hitting ICE could
+  call an enemy hacker into your corp (part of the enemy hacker stage / corp event). Filed with RIVAL in CORPS.md
+  ("Corp modifiers" > RIVAL).
+- **REP ideas** (the user, meat notes 2026-10-25):
+  - Levels of unlocks.
+  - A booster that picks corps you haven't beaten more often.
+  - Unlocking all corps (or the whole codex) unlocks new REP options.
+  - **Unlock mods into the starter pool:** choose 3 mods; one of them has a chance to show up at the start.
+  - **Nemesis:** mark a corp as your nemesis and it shows up more often.
+  - **Beat G0D** is the top achievement: first unlock G0D through REP rewards, then a quest to defeat it.
+- **Quests and story** (the user, meat notes 2026-10-25):
+  - **Start with just one quest.**
+  - Get through the first OMNI stage with fewer mods (no mods, or nothing above epic).
+  - Carry a worthless scrap mod through 3 stages (see the scrap mods in the mod notes).
+  - "You thought this was a game": a REP unlock that changes the game, e.g. unlocks quests.
+  - **The call:** someone calls; you choose whether to answer. They might give you a quest (go raid this corp), or
+    just offer you something. Maybe a whole meta quest line that continues across runs.
+  - The call as an item: call them to heal you or to take you to a totally different level; random, or expensive.
+    (PATCH already heals, so it should do something more than that.)
+  - Other things a call could do: soften the stage / corp events, or cancel them.
+  - An emoji (like INFLUENCER's) could have a special purpose in a quest.
+  - Hidden quests in ads are in ADS.md ("Secret ads").
 - **Music: the engine pass, fewer / better tracks, inspirations: all in [MUSIC.md](MUSIC.md)** (moved there
   2026-10-24, with everything else about the music).
 - **A NeoN+1 tool suite** (the user, 2026-10-24, meat notes): put asXii, the palette editor and any other tools

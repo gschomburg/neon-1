@@ -1,6 +1,6 @@
 // NeoN+1 engine/music.js: The music engine (generated music).
 'use strict';
-NEON_FILES.push(['engine/music.js', 'v13.20']);
+NEON_FILES.push(['engine/music.js', 'v13.25']);
 
 // A track (data/music.js, corps/) picks its band. Everything is optional; left out, it's the original
 // synthwave sound (so older tracks play exactly as before):
@@ -8,9 +8,11 @@ NEON_FILES.push(['engine/music.js', 'v13.20']);
 //   padVoice   saw | glass | organ | choir | none
 //   arpVoice   square | chip | bell | pluck | glass       leadVoice  square | chip | bell | brass | dist
 //   kit        synth | 808 | chip | industrial | break    pump  1 (full) .. 0 (off)
-//   meter      4 (4/4) | 3 (3/4, waltz) | 6 (6/8, a lilt: bpm counts the two big beats)
+//   meter      4 (4/4) | 3 (3/4, waltz) | 6 (6/8, a lilt: bpm counts the two big beats) | 5 (5/4: 20 steps a bar)
 //   swing      0 (straight) .. 0.5 (heavy shuffle): pushes every second 16th late
-//   bass / drums: the patterns below (12-step ones are for 3/4 and 6/8)
+//   bass / drums: the patterns below (12-step ones are for 3/4 and 6/8; 5/4 parts are written out, 20 tokens a bar)
+//   creak, owl sound effects on a pattern like stab ('x' = one), from level sfxAt (0): a door creaking open, an owl's
+//              call (pitched to the track's root). GRAVE ROBBER (the track) uses them.
 // A track can also carry its own parts (phase 3), written one token per 16th: a number is a note, '-' holds
 // the note before it, '.' is a rest (spaces between tokens). A list of bars plays bar by bar, then loops.
 //   melody     the hook: scale degrees from the track's root (0 = root, 7 = an octave up), two octaves above the
@@ -55,14 +57,14 @@ const DRUMS = {
 const LEAD_STEPS = [0, 3, 6, 10, 12];
 const LEAD_DEGREES = [4, 2, 0, 2, 4, 5, 4, 2];
 // steps in a bar, and in a beat (what the beat clock counts)
-const barSteps = sg => sg && (sg.meter === 3 || sg.meter === 6) ? 12 : 16;
+const barSteps = sg => sg && (sg.meter === 3 || sg.meter === 6) ? 12 : sg && sg.meter === 5 ? 20 : 16;
 const beatSteps = sg => sg && sg.meter === 6 ? 6 : 4;
 // the voices and kits there are (the music tool lists them)
 const MUSIC_VOICES = {
   bassVoice: ['saw', 'acid', 'sub', 'pluck', 'picked'], padVoice: ['saw', 'glass', 'organ', 'choir', 'none'],
   arpVoice: ['square', 'chip', 'bell', 'pluck', 'glass', 'keys'], leadVoice: ['square', 'chip', 'bell', 'brass', 'dist', 'keys', 'vox', 'saw'],
   stabVoice: ['saw', 'brass', 'organ', 'keys', 'vox', 'chip'],
-  kit: ['synth', '808', 'chip', 'industrial', 'break'], meter: [4, 3, 6],
+  kit: ['synth', '808', 'chip', 'industrial', 'break'], meter: [4, 3, 6, 5],
 };
 // A written part ('0 - . 4 ...') as steps: each step a { v: number, len: steps held } or null.
 const PART_CACHE = new Map();
@@ -420,6 +422,48 @@ const Music = (() => {
     voice('square', f, t, dur, { vol, cut: 3200, attack: 0.02, release: 0.1, send: 0.5 });   // square: the original
   }
 
+  // A door creaking open: a low saw gliding up through a narrow band, chopped unevenly (the hinge sticks
+  // and slips), swelling in and out over ~2 seconds.
+  function creak(t) {
+    const dur = 1.5 + Math.random() * 0.7, f0 = 75 + Math.random() * 25;
+    const o = ac.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(f0 * bend(t) * pitchMul, t);
+    o.frequency.linearRampToValueAtTime(f0 * 2.1, t + dur * 0.6);
+    o.frequency.linearRampToValueAtTime(f0 * 1.5, t + dur);
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 6;
+    bp.frequency.setValueAtTime(650, t); bp.frequency.linearRampToValueAtTime(1600, t + dur);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t);
+    for (let x = t; x < t + dur;) {
+      const gap = 0.022 + Math.random() * 0.03, u = (x - t) / dur;
+      const v = 1.1 * Math.sqrt(Math.sin(Math.PI * u)) * (0.45 + Math.random() * 0.55) + 0.0002;
+      g.gain.setValueAtTime(0.0002, x); g.gain.linearRampToValueAtTime(v, x + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0002, x + gap * 0.9);
+      x += gap;
+    }
+    o.connect(bp); bp.connect(g); g.connect(pump);
+    const sg = ac.createGain(); sg.gain.value = 0.35; g.connect(sg); sg.connect(echo);
+    o.start(t); o.stop(t + dur + 0.1);
+  }
+  // An owl: hoo, hoo-hoo, hooo. Soft sine hoots that sag a little in pitch, into the echo.
+  function owl(t, midi) {
+    const f = mtof(midi), pan = Math.random() < 0.5 ? -0.5 : 0.5;
+    for (const [d, len, up] of [[0, 0.32, 1], [0.62, 0.14, 1.04], [0.8, 0.3, 1], [1.3, 0.5, 0.97]]) {
+      const at = t + d, o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o2.type = 'sine';
+      o.frequency.setValueAtTime(f * up * 1.03 * bend(at) * pitchMul, at); o.frequency.exponentialRampToValueAtTime(f * up * 0.94, at + len);
+      o2.frequency.setValueAtTime(f * up * 2.06, at); o2.frequency.exponentialRampToValueAtTime(f * up * 1.88, at + len);
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.2, at + 0.06);
+      g.gain.setValueAtTime(0.2, at + len * 0.5); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+      const g2 = ac.createGain(); g2.gain.value = 0.12;
+      o.connect(g); o2.connect(g2); g2.connect(g);
+      let node = g;
+      if (ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = pan; g.connect(p); node = p; }
+      node.connect(pump);
+      const sg = ac.createGain(); sg.gain.value = 0.7; node.connect(sg); sg.connect(echo);
+      o.start(at); o2.start(at); o.stop(at + len + 0.05); o2.stop(at + len + 0.05);
+    }
+  }
+
   // Ambient songs (the menu track): pads, a brass swell, bells. No drums or pumping.
   function ambientStep(i, t, spb) {
     const sc = SCALES[song.scale];
@@ -460,6 +504,11 @@ const Music = (() => {
     // Pad: a held chord each bar, or chopped into hits (gate).
     if (song.gate) { const g = partBar(song.gate, barN)[k]; if (g) padChord(chordN, t, spb * g.len * 0.85, cut); }
     else if (k === 0) padChord(chordN, t, spb * bs, cut);
+    // Sound effects (the GRAVE ROBBER track)
+    if (lvl >= (song.sfxAt || 0)) {
+      if (song.creak && partBar(song.creak, barN)[k]) creak(t);
+      if (song.owl && partBar(song.owl, barN)[k]) owl(t, song.root + 24);
+    }
     // Chord stabs
     if (song.stab && lvl >= (song.stabAt || 0)) { const g = partBar(song.stab, barN)[k]; if (g) stabChord(chordN, t, spb * g.len * 0.8); }
     // Bass: a written line (scale steps from the chord root), or a pattern (bassOct: every other note an octave up)

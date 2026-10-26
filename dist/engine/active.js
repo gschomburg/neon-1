@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.20']);
+NEON_FILES.push(['engine/active.js', 'v13.25']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -14,14 +14,16 @@ function modUsable(key) {
   if (!m || !m.active || !run || st.transitioning || st.dev || st.wipe) return false;
   if (m.active === 'layer') {
     if (st.mode !== 'play' || st.busy || !st.lv || !st.corp || !st.corp.hasBoss) return false;
-    if (key === 'burner') return !st.corp.burnerUsed && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
+    if (key === 'burner') return burnerLeft() > 0 && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
     if (TAP_FX[key]) return !(st.corp.tapUsed && st.corp.tapUsed[key]) && TAP_FX[key].ok(st.lv);
   }
   return false;
 }
-// Used up for now: BURNER after its use in this corp, FAILSAFE after it saved you.
+// BURNER's uses left in this corp: 1 / 2 / 3 by tier (burnerUsed counts them; old saves have true = 1)
+const burnerLeft = () => tv('burner', [1, 2, 3]) - Number((st.corp && st.corp.burnerUsed) || 0);
+// Used up for now: BURNER after its uses in this corp, FAILSAFE after it saved you (until it recharges).
 function modSpent(key) {
-  if (key === 'burner') return !!(st.mode === 'play' && st.corp && st.corp.hasBoss && st.corp.burnerUsed);
+  if (key === 'burner') return !!(st.mode === 'play' && st.corp && st.corp.hasBoss && burnerLeft() <= 0);
   if (TAP_FX[key]) return !!(st.mode === 'play' && st.corp && st.corp.hasBoss && st.corp.tapUsed && st.corp.tapUsed[key]);
   if (key === 'failsafe') return !!(st.run && st.run.failsafeUsed);
   return false;
@@ -36,9 +38,11 @@ function activateMod(key) {
     const lv = st.lv;
     let opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.loaded);
     if (!opts.length) opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe);
-    lockTile(pickR(opts, rngFor(run.seed, 'burner', st.corp.node.id, st.corp.idx)), C.accent, 'burner');
-    st.corp.burnerUsed = true;
-    setMsg('> burner: 1 ICE locked.', C.accent);
+    const used = Number(st.corp.burnerUsed || 0);
+    lockTile(pickR(opts, used ? rngFor(run.seed, 'burner', st.corp.node.id, st.corp.idx, used) : rngFor(run.seed, 'burner', st.corp.node.id, st.corp.idx)), C.accent, 'burner');
+    st.corp.burnerUsed = used + 1;
+    const left = burnerLeft();
+    setMsg(left > 0 ? `> burner: 1 ICE locked (${left} left this corp).` : '> burner: 1 ICE locked.', C.accent);
   }
   if (TAP_FX[key]) {
     const c = st.corp;

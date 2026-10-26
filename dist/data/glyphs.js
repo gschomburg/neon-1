@@ -1,6 +1,6 @@
 // NeoN+1 data/glyphs.js: Node glyphs (the ASCII art on nodes) and their helpers.
 'use strict';
-NEON_FILES.push(['data/glyphs.js', 'v13.20']);
+NEON_FILES.push(['data/glyphs.js', 'v13.25']);
 
 // ---------------- Glyphs ----------------
 const MOTIFS_RAW = [

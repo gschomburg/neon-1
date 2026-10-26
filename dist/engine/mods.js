@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.20']);
+NEON_FILES.push(['engine/mods.js', 'v13.25']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -150,6 +150,8 @@ const DEBT = {
   interest: 0.10,   // debt grows this much every layer (at least 2cr)
   shieldPer: 250,   // ICE does nothing with odds debt / shieldPer, up to
   shieldMax: 0.6,
+  payment: 5,       // every corp layer takes a loan payment, debt or not, plus
+  paymentSector: 5, // this much more each sector
 };
 const leverage = () => has('leverage');
 // The lowest your credits can go: 0, or the debt limit with LEVERAGE.
@@ -204,7 +206,7 @@ const tierCount = def => def.tiers ? def.tiers.length : 1;
 const tierView = (def, tier = 0) => def.tiers ? Object.assign({}, def, def.tiers[clamp(tier, 0, def.tiers.length - 1)], { tier: clamp(tier, 0, def.tiers.length - 1) }) : Object.assign({}, def, { tier: 0 });
 const modView = (key, tier) => tierView(MODS[key], tier == null ? modTier(key) : tier);
 const itemView = (key, tier = 0) => tierView(ITEMS[key], tier);
-const modTier = key => (st.run && st.run.modTier && st.run.modTier[key]) || 0;
+const modTier = key => (st.run && st.run.modTier && st.run.modTier[key]) || (st.run && key && key === st.run.mutateAs && st.run.mods.includes('mutate') && st.run.mutateTier) || 0;   // MUTATE: what it became, at its rolled tier
 const tv = (key, values) => values[clamp(modTier(key), 0, values.length - 1)]; // a value by your tier
 const tierLabel = v => v.lvlTag ? `LV${v.tier + 1}` : RARITY[v.rarity].label;
 function rollTier(r, def) {

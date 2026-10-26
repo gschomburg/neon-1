@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.20']);
+NEON_FILES.push(['engine/run.js', 'v13.25']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -133,14 +133,21 @@ async function startCorp(node, startIdx = 0, restore = null) {
     sector, tellStr: Math.max(0.55, CONFIG.tellStrength - CONFIG.sectorHeat * sector),
     prevSafe: null,
   };
+  // FAILSAFE legendary recharges each corp you go into (not on a resume: that would refill it for free)
+  if (!restore && st.corp.hasBoss && has('failsafe') && modTier('failsafe') >= 1 && !has('zombie')) st.run.failsafeUsed = false;
   if (restore) {   // a resumed save: what this corp had used up so far
-    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival']) if (restore[k] != null) st.corp[k] = restore[k];
+    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival']) if (restore[k] != null) st.corp[k] = restore[k];
   }
   if (st.corp.hasBoss) {
     // MUTATE: this corp, it counts as a random other mod.
     if (st.run.mods.includes('mutate')) {
       const pool = modsOfKind('gen', 'minor').filter(k => !st.run.mods.includes(k) && !['buffer', 'stash', 'burner'].includes(k));
       st.run.mutateAs = pickR(pool, rngFor(st.run.seed, 'mutate', node.id));
+      // at rare or better (any step of it that is; a mod with none comes at its top step)
+      const md = MODS[st.run.mutateAs], steps = (md.tiers || [{}]).map((s, i) => ({ i, lvl: RARITY[s.rarity || md.rarity].lvl }));
+      const good = steps.filter(s => s.lvl >= RARITY.rare.lvl);
+      st.run.mutateTier = good.length ? pickR(good, rngFor(st.run.seed, 'mutatet', node.id)).i : steps.length - 1;
+      if (!restore) st.corp.mutateNew = true;   // the tray flashes what it became
     }
     // HOROSCOPE: one lucky layer per corp
     st.corp.luckyIdx = Math.floor(rngFor(st.run.seed, 'lucky', node.id)() * counts.length);
@@ -329,6 +336,17 @@ async function enterLayer() {
   for (const key of modsAt('start')) {
     const f = starts[key];
     if (!f || n < 2) continue;   // AFTERIMAGE is START too, but it only draws a mark
+    if (key === 'corners') {   // FENCELINE: every ICE on one random edge (never all of the ICE)
+      const edges = [t => t.row === 0, t => t.row === lv.rows - 1, t => t.col === 0, t => t.col === lv.cols - 1].map(iceWhere).filter(e => e.length);
+      if (!edges.length) continue;
+      const left = iceWhere(() => true).length;
+      const edge = pickR(edges, rngFor(run.seed, key, c.node.id, c.idx)).slice(0, left - 1);
+      if (!edge.length) continue;
+      for (const t of edge) lockTile(t, C.mid, key);
+      setMsg(`> fenceline: ${edge.length} ICE locked.`, C.mid);
+      await wait(250);
+      continue;
+    }
     const opts = iceWhere(f);
     if (!opts.length) continue;
     const first = pickR(opts, rngFor(run.seed, key, c.node.id, c.idx));
@@ -374,6 +392,21 @@ async function enterLayer() {
   lv.readyAt = performance.now();
   lv.shownAt = lv.readyAt;   // unlike readyAt, this one doesn't reset after a miss
   c.express = false;
+  // MUTATE: say what it became (the tray flashes it too)
+  if (c.mutateNew && run.mutateAs && MODS[run.mutateAs]) {
+    c.mutateNew = false; st.mutateAt = performance.now(); modFired('mutate'); Sound.probe();
+    const mv = modView(run.mutateAs, run.mutateTier || 0);
+    setMsg(`> mutate: now ${mv.name.toLowerCase()} (${RARITY[mv.rarity].label.toLowerCase()}).`, C.accent);
+  } else if (c.hasBoss && n > 1) {
+    // tap-to-use mods: the first time each one is ready in a run, say so
+    const k = run.mods.find(k => MODS[k].active && modUsable(k) && !(run.tapHinted || []).includes(k));
+    if (k) { run.tapHinted = (run.tapHinted || []).concat(k); setMsg(`> [${MODS[k].short}] is ready: tap it in your mods.`, C.accent); }
+  }
+  // LEVERAGE: every corp layer takes a loan payment, in debt or not (never past the limit)
+  if (leverage() && n > 1 && c.hasBoss) {
+    const cut = Math.min(DEBT.payment + DEBT.paymentSector * (run.sector || 0), Math.max(0, run.credits - creditFloor()));
+    if (cut > 0) { run.credits -= cut; modFired('leverage'); }
+  }
   // LEVERAGE: debt grows every layer; past the limit the collectors take 1 integrity
   if (leverage() && run.credits < 0 && n > 1 && c.hasBoss) {
     run.credits -= Math.max(2, Math.round(-run.credits * DEBT.interest));
@@ -387,7 +420,7 @@ async function enterLayer() {
 // Clock for this layer: the corp's own, or one added by OVERCLOCK.
 function makeTimer() {
   const c = st.corp, lv = st.lv;
-  let max = c.timer || (has('overclock') && c.hasBoss ? CONFIG.overclockClock : 0) || (c.mod === 'rush' ? 10 : 0);
+  let max = c.timer || ((has('overclock') || has('surge')) && c.hasBoss ? CONFIG.overclockClock : 0) || (c.mod === 'rush' ? 10 : 0);
   if (!max) return null;
   if (lv && lv.boss && c.def.bossShrink) max = Math.max(3, max - 3 * lv.misses);
   if (c.def.shot) max = Math.max(5, max - c.idx);   // COLDBREW: another shot
@@ -614,12 +647,11 @@ function payFor(lv) {
   let mult = c.pay || 1;
   if (c.stageBoss) mult *= 1.5;   // a corp as the sector boss pays more
   if ((lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned) mult *= 1 + 0.5 * (lv.n - 1);   // ICE EATER: every clear is clean
-  if (has('skimmer')) mult *= 1.5;
+  if (has('skimmer')) mult *= tv('skimmer', [1.25, 1.5, 1.75]);
   mult *= coinMult();   // COIN FLIP: the streak multiplier
   if (has('quantum') && lv.tiles.some(t => t.quantum)) mult *= 0.5;   // QUANTUM: 2 real, half pay
   if (has('fastpay') && lv.fast) mult *= 1.5;
-  if (has('surge') && lv.late) mult *= 1.5;
-  if (has('supersize') && lv.boss) mult *= 1.5;
+  if (has('supersize')) mult *= 2;
   if (c.def.surge) mult *= 1 + 0.8 * (lv.surgeF || 0);   // RYDR: pays more the later you pick
   if (has('onbeat') && lv.onBeat) mult *= 1.5;
   if (c.mod === 'loaded') mult *= 1.2;
@@ -636,19 +668,25 @@ async function onSafe(t) {
   if (c.hasBoss && lv.n > 1) run.lastReal = { col: t.col, row: t.row };   // DEJA VU
   if (lv.n > 1) { c.scored = (c.scored || 0) + 1; if (perfect) { c.perfects = (c.perfects || 0) + 1; run.perfects = (run.perfects || 0) + 1; } }
   const pay = lv.eater ? Math.max(0, payFor(lv) - (lv.eatPaid || 0)) : payFor(lv);   // ICE EATER: the rest of the layer's pay
-  if (pay) for (const [k, on] of [['skimmer', true], ['fastpay', lv.fast], ['surge', lv.late], ['supersize', lv.boss], ['onbeat', lv.onBeat]]) if (on && has(k)) modFired(k);   // pay boosts
+  if (pay) for (const [k, on] of [['skimmer', true], ['fastpay', lv.fast], ['supersize', true], ['onbeat', lv.onBeat]]) if (on && has(k)) modFired(k);   // pay boosts
   const tix = c.hasBoss && c.def.tickets;   // CHUCK E. CACHE'S pays in tickets
   if (tix) c.tickets = (c.tickets || 0) + pay;
   else { run.credits += pay; run.earned += pay; }
   lv.paid = tix ? 0 : pay;
   let healed = false;
   if (perfect && canHeal() && c.mod !== 'cursed') { heal(CONFIG.perfectHeal); healed = true; }
+  const surged = has('surge') && lv.late && canHeal() && c.hasBoss;   // SURGE: a real pick in the last 3s heals 1
+  if (surged) { heal(1); modFired('surge'); }
+  const rewall = perfect && c.hasBoss && c.bulwarkUsed && has('bulwark');   // BULWARK: a perfect charges it back up
+  if (rewall) { c.bulwarkUsed = false; modFired('bulwark'); }
   if (!lv.boss) Sound.safe();
   if (c.hasBoss && c.def.onSafe) c.def.onSafe(t, lv);   // corp kit: SQUALOR's likes
   flash(C.accent, 0.12, 0.3);
   let msg = perfect ? '> perfect.' : '> access granted.';
   if (pay) msg += tix ? ` +${pay} tix` : ` +${pay}cr`;
   if (healed) msg += ' +1 int';
+  if (rewall) msg += ' bulwark up';
+  if (surged) msg += ' surge +1 int';
   setMsg(msg, C.accent);
   const land = lv.boss ? Sound.bossWin() : 0;   // boss: the fanfare replaces the safe sound (s until it lands)
   await wait(380);
@@ -758,7 +796,8 @@ const END_FX = {
     const run = st.run, c = st.corp;
     if (!c.hasBoss || c.idx < c.counts.length) return false;
     if (zombie()) heal(1);
-    else if (run.integrity < run.maxInt) run.integrity++;
+    else if (addItem('patch', 0)) { /* a PATCH on the belt (stores up) */ }
+    else if (run.integrity < run.maxInt) run.integrity++;   // no room (or RAM DOUBLER): heal instead
     else { run.maxInt++; run.integrity++; }
     Sound.shield();
   },
@@ -797,7 +836,7 @@ const END_FX = {
 };
 
 // CONTINUE?: a 10 second countdown.
-function askContinue() {
+function askContinue(price = 100) {
   return new Promise(res => {
     let done = false;
     const t0 = performance.now();
@@ -810,10 +849,10 @@ function askContinue() {
       T('');
       X({ text: String(left), col: C.bright, bold: true });
       T('');
-      T('insert 100cr to keep going.', C.text);
+      T(`insert ${price}cr to keep going.`, C.text);
       T('you come back at 1 integrity.', C.mid);
       T('');
-      X({ box: true, text: 'PAY 100cr', id: 'cont', onTap: () => choose(true), minW: 18 });
+      X({ box: true, text: `PAY ${price}cr`, id: 'cont', onTap: () => choose(true), minW: 18 });
       T('');
       B('[ GAME OVER ]', 'giveup', () => choose(false));
     }, { text: '> integrity gone. or is it?', col: C.danger });
@@ -937,7 +976,7 @@ function payBlood(n) {
 }
 
 // ---- ICE EATER (docs/EXOTICS.md). Tapping ICE eats it, eating all the ICE clears the layer,
-// the real node kills you. Each bite pays the layer's pay / its ICE count; onSafe pays the rest.
+// the real node bites back (-3). Each bite pays the layer's pay / its ICE count; onSafe pays the rest.
 function eatPay() {
   const run = st.run, lv = st.lv;
   const share = Math.max(1, Math.round(payFor(lv) / Math.max(1, lv.iceTotal)));
@@ -952,18 +991,19 @@ function eatBite(t) {
   if (zombie()) addRot(ROT.ice);   // you still broke it
   return `> ICE eaten. +${pay}cr${zombie() ? ` rot +${ROT.ice}` : ''}`;
 }
-// You bit the real node. Instant death; FAILSAFE catches it once (no pay, the layer passes);
-// ZOMBIE can't die from it, it rots a lot instead.
+// You bit the real node. It bites back for 3 and the layer passes with no pay; FAILSAFE catches
+// it if that would kill you. ZOMBIE can't die from it, it rots a lot instead.
+const EATER_BITE = 3;   // was instant death (2026-10-25: too harsh)
 async function eaterBit(t) {
   const run = st.run, lv = st.lv;
   t.state = 'reveal';
   Sound.trap(); shake(14, 0.6); flash(C.danger, 0.3, 0.5);
   modFired('iceeater');
-  setMsg('> that was the real one.', C.danger);
+  setMsg(`> that was the real one. -${EATER_BITE}.`, C.danger);
   if (st.god) { /* dev: no death */ }
   else if (zombie()) addRot(ROT.realTap);
-  else if (has('failsafe') && !run.failsafeUsed) { run.failsafeUsed = true; run.integrity = 1; st.fsAt = performance.now(); lv.failsafeNow = true; }
-  else run.integrity = 0;
+  else if (has('failsafe') && !run.failsafeUsed && !bloodMoney() && run.integrity <= EATER_BITE) { run.failsafeUsed = true; run.integrity = 1; st.fsAt = performance.now(); lv.failsafeNow = true; }
+  else hurt(EATER_BITE);
   await failsafeBeat(lv);
   await wait(600);
   if (run.integrity <= 0) return die();
@@ -1262,7 +1302,7 @@ function blockHit(t, i) {
     shake(9);
     flash(C.danger, 0.18, 0.35);
     msg = run.integrity > 0 ? `> ICE. integrity -${dmg}.` : '> ICE. integrity gone.';
-    // FAILSAFE: once per run, a killing hit leaves you at 1 (failsafeBeat plays it out: the HUD
+    // FAILSAFE: a killing hit (once, then it recharges each stage / legendary each corp) leaves you at 1 (failsafeBeat plays it out: the HUD
     // shows 0 until st.fsAt + FAILSAFE_BEAT, then the save)
     if (run.integrity <= 0 && has('failsafe') && !run.failsafeUsed) {
       run.failsafeUsed = true; run.integrity = 1;
@@ -1402,13 +1442,17 @@ const BOARD_FX = {
     setMsg('> twin lock: its twin went too.', C.mid);
     await wait(200);
   },
-  // VIRUS: the infection spreads to one ICE node right next to the one you hit.
-  async virus(t, again = false) {
+  // VIRUS: the infection spreads to one ICE node right next to the one you hit. Legendary: it keeps going,
+  // one node at a time, into ICE touching any node it took, up to 4 (never the last ICE: you still pick).
+  async virus(t, chain = null) {
     const lv = st.lv;
-    const nb = lv.tiles.filter(o => o.state === 'closed' && !o.safe && Math.abs(o.col - t.col) + Math.abs(o.row - t.row) === 1);
+    const from = chain || [t];
+    const near = o => from.some(f => Math.abs(o.col - f.col) + Math.abs(o.row - f.row) === 1);
+    const nb = lv.tiles.filter(o => o.state === 'closed' && !o.safe && near(o));
     if (!nb.length) return;
+    const n = chain ? chain.length - 1 : 0;   // how many it has taken so far
     // the node next to it glitches a moment (infecting), then locks
-    const v = pickR(nb, rngFor(st.run.seed, again ? 'virus2' : 'virus', st.corp.node.id, st.corp.idx, lv.misses));
+    const v = pickR(nb, rngFor(st.run.seed, n ? 'virus' + (n + 1) : 'virus', st.corp.node.id, st.corp.idx, lv.misses));
     v.infectAt = performance.now();
     modFired('virus');
     Sound.probe();
@@ -1417,10 +1461,10 @@ const BOARD_FX = {
     v.infectAt = null;
     if (v.state !== 'closed') return;
     lockTile(v, C.accent, 'virus');
-    setMsg('> virus: infected the next node.', C.accent);
-    await wait(450);
-    // legendary: it spreads once more, from the node it just took (and never takes the last ICE: you still pick)
-    if (!again && tv('virus', [1, 2]) > 1 && lv.tiles.filter(o => o.state === 'closed' && !o.safe).length > 1) await BOARD_FX.virus(v, true);
+    setMsg(n ? `> virus: ${n + 1} nodes infected.` : '> virus: infected the next node.', C.accent);
+    await wait(n ? 300 : 450);
+    // legendary: on through touching ICE, up to 4 (and never the last ICE)
+    if (tv('virus', [1, 4]) > n + 1 && lv.tiles.filter(o => o.state === 'closed' && !o.safe).length > 1) await BOARD_FX.virus(t, from.concat(v));
   },
 };
 
@@ -1439,14 +1483,14 @@ function grantLoot(r, tier) {
 }
 
 async function die() {
-  // CONTINUE?: once per run, 10 seconds to pay 100cr and keep going
-  const run0 = st.run;
-  if (run0 && has('continue') && !zombie() && !run0.continueUsed && canSpend(100) && st.lv && !st.mp) {
-    run0.continueUsed = true;
+  // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
+  const run0 = st.run, contPrice = 100 * ((run0 && run0.continues || 0) + 1);
+  if (run0 && has('continue') && !zombie() && st.corp && !st.corp.contUsed && canSpend(contPrice) && st.lv && !st.mp) {
+    st.corp.contUsed = true;
     modFired('continue');
-    const go = await askContinue();
+    const go = await askContinue(contPrice);
     if (go) {
-      run0.credits -= 100; run0.integrity = 1;
+      run0.credits -= contPrice; run0.integrity = 1; run0.continues = (run0.continues || 0) + 1;
       await wipeOut(0);
       showBoard('play');
       resetTimer();
@@ -1544,6 +1588,7 @@ async function sectorClear(skipped) {
   const run = st.run;
   run.sectorsCleared = (run.sectorsCleared || 0) + 1;
   run.pending = { kind: 'sector', skipped };
+  if (has('failsafe') && !has('zombie')) run.failsafeUsed = false;   // FAILSAFE recharges each stage
   if (!run.practice && run.sectorsCleared > (save.bestSector || 0)) { save.bestSector = run.sectorsCleared; persist(); }
   st.corp = null; st.lv = null; st.timer = null; st.dying = false;
   saveRun();

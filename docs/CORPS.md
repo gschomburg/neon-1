@@ -372,7 +372,7 @@ made up, not real brands.
 ### 9. BURGERTRON (fast food)
 - **Special:** nodes are combo numbers (#1 to #9).
 - **Tell:** the intel line names the combo of the day. On the boss, the menu changes halfway.
-- **Mod:** SUPERSIZE (ALWAYS ON): boss layers pay x1.5.
+- **Mod:** SUPERSIZE (ALWAYS ON): every layer pays x2 (was boss layers x1.5 until v13.23).
 - **Works with:** FASTPAY (fast food).
 
 ### 10. DIALTONE ONLINE (old dial-up ISP)
@@ -403,7 +403,7 @@ made up, not real brands.
 - **Special:** surge pricing. A layer pays more the less time is left on its clock.
 - **Tell:** nodes have star ratings, and the real one is the odd 4.9 among 5.0s (fakes rate
   perfectly).
-- **Mod:** SURGE (ALWAYS ON): picks in the last 3 seconds of a clock pay x1.5.
+- **Mod:** SURGE (ALWAYS ON): every corp layer has a clock (15s if the corp has none); a real pick in its last 3 seconds heals 1 (was x1.5 pay until v13.24).
 - **Works with:** OVERCLOCK (its late purges are worth even more), FASTPAY (the opposite bet).
 
 ### 14. APIARY * (bees, agriculture; or BEZ, BZZ)
@@ -643,6 +643,35 @@ made up, not real brands.
 - **Mod:** TIMEWARP (TAP TO USE): once per corp, the clock runs at half speed for one layer.
 - **Works with:** QUICK EYE, FREEZE FRAME, the clock mods.
 
+### 49. (name open) the chain corp: each layer picks up where the last one left off (the user, 2026-10-25)
+- **Name ideas** *(Claude)*: TICKERTAPE (a stock exchange: the glyphs are a ticker scrolling left), DOMINO (logistics),
+  FREIGHTLINE (shipping), FILMSTRIP (a film lab), CONVEYOR.
+- **Tell (the user):** like dominoes. The real node's **left side is the last layer's real node's right side**, as if
+  the picture scrolled left. With numbers: 4-digit codes, and the real one's first 2 digits are the last real one's last
+  2 (`4723` > `23xx`). With glyphs: the 3-line glyph is a window on a long strip moving left, so the real node's left
+  columns are the last real node's right columns. Like KEYLOGGER, but sideways and across layers.
+- **Layer 1** has no last node: the corp's intro or the hint hands you the start (an order number, the first frame).
+- **Deeper decoys** *(Claude)*: some carry the right piece on the wrong side (the last real one's *first* columns /
+  digits), some carry it reversed (`32` for `23`), and some chain off a **decoy** of the last layer, so you need to have
+  followed the real one, not just any. Boss: the strip wraps, so its right side is layer 1's left side.
+- **Memory:** maybe the hint shows the last real node (like GENCORP shows the parent) at low tiers, and stops at deeper
+  ones, so you have to remember it.
+- **Related:** GENCORP (child of the last real node, one line changed), SPECTRA (the color after the last), MIRRORLINE
+  (mirrors the last position), PARCELNET (number tells).
+
+### 50. (name open) the case corp: upper and lower case (the user, meat notes 2026-10-25)
+
+- A corp (or a mod) that plays with **upper and lower case** glyphs, or changes the glyph characters.
+- *(Claude)* tell ideas: the real node is the only one in a different case (subtle with a mixed-case board); or every
+  node shouts in CAPS and the real one whispers; boss: the case flips every layer. Names: CAPSLOCK, SHIFT KEY,
+  LOWERCASE, sHIFT. A mod version: re-case every decoy so only the real node keeps its case (one layer per corp).
+
+### 51. (name open) the stock market corp (the user, meat notes 2026-10-25)
+
+- A corp based on the **stock market**. Not designed. *(Claude)*: it pairs with #49: TICKERTAPE's scrolling strip
+  is a stock ticker. Ideas: nodes as tickers with prices that move each layer, the real one "trending"; buy low / sell
+  high with your credits; a crash event in the boss. Names: BULL & BEAR, WALLST.EXE, TICKER, BLUE CHIP.
+
 ---
 
 # Corp modifiers (new idea)
@@ -671,6 +700,13 @@ common the deeper you go (e.g. 0% in sector 1, then 10% and +5% per sector).
 - Mod they could drop: DRAFTING (ALWAYS ON): after your 2nd miss in a layer, one ICE locks itself.
 - **The user, 2026-10-24:** the rival should **wait for you to tap a node before it starts** tapping. Maybe
   it waits and goes **every other turn** (you, then it); you can still outrace it.
+- **Named adversary hackers** (the user, 2026-10-25): RIVAL is one of a cast of enemy hackers you go up against.
+  **ICE MAN** is one of them (the user's note "hacker ICE man"). *(Claude)*: each one could have its own name, logo,
+  style and dropped mod, like the corps do.
+- **Hitting ICE can call a hacker in** (the user, 2026-10-25: "i also like the idea of hitting ICE actually triggering a
+  hacker into your game"). The ICE isn't just a wall: tripping it alerts an enemy hacker, who jumps into the corp
+  (a RIVAL-style bot shows up mid-corp). Maybe this is how the enemy hacker stage / corp event works: in that
+  stage, ICE hits can bring a hacker in (ICE MAN would fit: the hacker who comes out of the ICE).
 
 ### THIEF (the user's mod thief idea)
 - Hitting ICE steals one of your mods (the rightmost, or a random one), and it shows up in the

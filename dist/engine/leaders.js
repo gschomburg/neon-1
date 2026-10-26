@@ -1,12 +1,12 @@
 // NeoN+1 engine/leaders.js: the online leaderboard (greglytics, on s3iz.com/glx).
 // A finished run (not practice, not multiplayer) posts its depth to two boards: today's (UTC day) and all time,
 // as soon as it ends (so it's never lost, and the rank comes back right away). Ranked by layers reached; fewer
-// mods breaks a tie. Each device's best counts. Then the end screen asks for 3-letter initials (big Bigfig
+// mods breaks a tie. Every run is its own entry (one player can be on a board many times). Then the end screen asks for 3-letter initials (big Bigfig
 // letters) and UPLOAD sends them: the server keeps one name per device and shows it on all its entries.
 // Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
 // device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v13.20']);
+NEON_FILES.push(['engine/leaders.js', 'v13.25']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }];
