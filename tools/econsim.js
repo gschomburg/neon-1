@@ -113,6 +113,8 @@ const BOT = `(async () => {
       st.god = true;
       // mod:KEY or mod:KEY:STEP: start the run already holding that mod (the mod pass)
       for (const w of W.filter(w => w.startsWith('mod:'))) { const [, k, t] = w.split(':'); if (!MODS[k]) throw new Error('what-if: no mod ' + k); B.addMod(k, +(t || 0)); }
+      // gear:KEY or gear:KEY:STEP: start holding that gear (a test of SELL / cashing in)
+      for (const w of W.filter(w => w.startsWith('gear:'))) { const [, k, t] = w.split(':'); if (!ITEMS[k]) throw new Error('what-if: no gear ' + k); B.addItem(k, +(t || 0)); }
       let downNow = false;
       newSector(0);
       let lastLv = null;
@@ -162,6 +164,20 @@ const BOT = `(async () => {
               if (o.kind === 'mod' && (!modRoom(o.key) || clashWith(o.key))) continue;
               if (o.kind === 'item' && !itemRoom(o.key, o.tier)) continue;
               await buy(k);
+            }
+            // what-if "market": sell value gear (SHARD, BOND), and reroll while it has credits to spare, buying again
+            if (W.includes('market')) {
+              for (let i = run.items.length - 1; i >= 0; i--) if (ITEMS[run.items[i].key].value) { sh.sellAt(i); await settle('sell'); m.sold = (m.sold || 0) + 1; }
+              while (sh.rerollsLeft() > 0 && run.credits > sh.rerollPrice() * 3) {
+                const before = run.credits; sh.reroll(); await settle('reroll'); m.rerolls = (m.rerolls || 0) + 1; sec.spent.reroll = (sec.spent.reroll || 0) + before - run.credits;
+                for (const k of sh.offers.map((o, k) => k).sort((a, b) => P(sh.offers[b]) - P(sh.offers[a]))) {
+                  const o = sh.offers[k];
+                  if (o.kind === 'repair' || o.sold || !canSpend(P(o))) continue;
+                  if (o.kind === 'mod' && (!modRoom(o.key) || clashWith(o.key))) continue;
+                  if (o.kind === 'item' && !itemRoom(o.key, o.tier)) continue;
+                  await buy(k);
+                }
+              }
             }
             m.left = run.credits;
             sec.markets.push(m);

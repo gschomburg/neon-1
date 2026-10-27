@@ -480,7 +480,7 @@
 </section>
 
 <div id="right">
-<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">items &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><span id="modehint"></span></div>
+<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">gear &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><span id="modehint"></span></div>
 <section id="art" class="mode">
   <div id="aBar">
     <button id="aSave" class="primary" title="Write the files in dist/data/art/ that changed (Ctrl S)">save</button>
@@ -524,7 +524,7 @@
 <section id="items" class="mode">
   <div id="iBar">
     <span class="seg" id="iView"><button data-v="cards" class="on">cards</button><button data-v="ladder">ladder</button></span>
-    <span class="seg" id="iKind"><button data-k="all" class="on">all</button><button data-k="item">items</button><button data-k="gen">general</button><button data-k="minor">minor</button><button data-k="exotic">exotic</button><button data-k="corp">corp</button></span>
+    <span class="seg" id="iKind"><button data-k="all" class="on">all</button><button data-k="item">gear</button><button data-k="gen">general</button><button data-k="minor">minor</button><button data-k="exotic">exotic</button><button data-k="corp">corp</button></span>
     <input id="iFilter" type="text" placeholder="filter: name, text, corp..." autocomplete="off">
     <button id="iCopy" title="Copy what's shown as plain text, to paste into notes or a chat">copy as text</button>
     <span id="iCount"></span>
@@ -1767,7 +1767,7 @@
     const rows = list.map(e => {
       const at = {}; e.steps.forEach((s, i) => { at[s.rarity] = s; s.i = i; });
       const first = RARITY[e.steps[0].rarity].lvl, last = RARITY[e.steps[e.steps.length - 1].rarity].lvl;
-      return `<tr><td class="n">${esc(e.d.name)}<small>${e.kind === 'item' ? 'item' : e.kind}${e.d.corp ? ' · ' + esc(corpName(e.d.corp)) : ''}</small></td>` + LADDER.map(r => {
+      return `<tr><td class="n">${esc(e.d.name)}<small>${e.kind === 'item' ? 'gear' : e.kind}${e.d.corp ? ' · ' + esc(corpName(e.d.corp)) : ''}</small></td>` + LADDER.map(r => {
         const s = at[r], l = RARITY[r].lvl, c = chips[r] || {};
         if (s) {
           const mod = e.kind !== 'item' && game.run, on = held[e.key] === s.i;

@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v13.46']);
+NEON_FILES.push(['engine/dev.js', 'v13.50']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
@@ -215,7 +215,7 @@ function devMenuLines() {
   lines.push({ row: [
     { text: '[+100cr]', id: 'cr', onTap: cheat(() => { run.credits += 100; }), disabled: !run },
     { text: '[heal]', id: 'hp', onTap: cheat(() => { run.integrity = run.maxInt; }), disabled: !run },
-    { text: '[fill belt]', id: 'belt', onTap: cheat(() => { for (const k of Object.keys(ITEMS)) addItem(k, 0); }), disabled: !run },
+    { text: '[fill gear]', id: 'belt', onTap: cheat(() => { for (const k of Object.keys(ITEMS)) addItem(k, 0); }), disabled: !run },
   ] });
   B('[unlock codex]', 'seenall', () => {
     for (const k of [...Object.keys(MODS), ...Object.keys(ITEMS), ...GLYPHS.map(gl => gl.key), ...CODEX_CORPS.map(c => 'corp_' + c)]) save.seen[k] = true;

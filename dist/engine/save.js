@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v13.46']);
+NEON_FILES.push(['engine/save.js', 'v13.50']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -39,7 +39,9 @@ const LEGACY = [
   { key: 'hard',  name: 'HARDENED',   desc: '+1 starting integrity.',          costs: [40, 100] },
   { key: 'cash',  name: 'SEED MONEY', desc: 'start with +25cr.',               costs: [20, 40, 80] },
   { key: 'kit',   name: 'FIELD KIT',  desc: 'start with a PATCH.',             costs: [50] },
-  { key: 'belt',  name: 'WIDE BELT',  desc: '+1 item slot.',                   costs: [120] },
+  { key: 'belt',  name: 'GEAR SLOT',  desc: '+1 gear slot.',                   costs: [120] },
+  { key: 'restock', name: 'RESTOCK',  desc: '+1 reroll at every market.',      costs: [30, 60],
+    levels: ['2 rerolls at every market (was 1).', '3 rerolls at every market.'] },
   { key: 'picky', name: 'SHORTLIST',  desc: 'the starter perk offers 4 mods.', costs: [60] },
   { key: 'dms',   name: 'DEADMAN',    desc: 'dying keeps 25% of the REP you would have banked.', costs: [80, 200],
     levels: ['dying keeps 25% of the REP you would have banked.', 'dying keeps 50% of the REP you would have banked.'] },

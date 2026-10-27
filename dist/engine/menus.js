@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v13.46']);
+NEON_FILES.push(['engine/menus.js', 'v13.50']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -11,7 +11,7 @@ function openSettings() {
     B(`[ palette: ${PALETTES[save.palette].name.padEnd(11)} ]`, 'pal', cyclePalette);
     B(`[ corp colors: ${save.corpColors ? 'ON ' : 'OFF'} ]`, 'ccol', toggleCorpColors);
     B(`[ effects: ${save.effects === 'full' ? 'FULL   ' : 'REDUCED'} ]`, 'fx', toggleEffects);
-    B(`[ items: ${save.tapMode === 'two' ? 'TAP TWICE' : 'TAP ONCE '} ]`, 'tap', toggleTapMode);
+    B(`[ gear: ${save.tapMode === 'two' ? 'TAP TWICE' : 'TAP ONCE '} ]`, 'tap', toggleTapMode);
     B(`[ ads: ${save.ads === false ? 'OFF' : 'ON '} ]`, 'ads', () => { save.ads = save.ads === false; persist(); Sound.ui(); });   // the fake ads
     T('');
     audioLines(X, 's_');

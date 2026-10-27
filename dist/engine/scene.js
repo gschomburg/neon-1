@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.46']);
+NEON_FILES.push(['engine/scene.js', 'v13.50']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -157,10 +157,10 @@ function buildScene(now, collectHits, raw = false) {
         cells.push({ ch: bar[i], cx: x0 + i, cy: 2, own: 'hud', col: pop && k < 0.6 ? C.bright : beat && isHash ? C.bright : base,
           bold: pop || (beat && isHash), sc: pop ? 1 + 0.75 * Math.sin(Math.PI * k) : beat && isHash ? 1.15 : 1 });
       }
-      put(L.wc - bar.length - 10, 2, 'INTEGRITY', C.mid);
+      put(L.wc - bar.length - 4, 2, 'INT', C.mid);   // (was INTEGRITY; the user, 2026-10-26)
     }
     const fw = st.corp && st.corp.wallAll ? 'FW*' : run.shield ? `FW${run.shield}` : '';
-    if (fw) put(L.wc - bar.length - 10 - 1 - fw.length, 2, fw, C.accent);
+    if (fw) put(L.wc - bar.length - 4 - 1 - fw.length, 2, fw, C.accent);
 
     let where = run.sector ? `OVERWORLD // SECTOR ${run.sector + 1}` : 'OVERWORLD';
     if (st.mode === 'play' && st.corp) {
@@ -962,7 +962,7 @@ function nodeInfo(n) {
     { const off = modsOffIn(d); if (off.length) T(`off here: ${off.map(k => MODS[k].name.toLowerCase()).join(', ')}.`, C.dangerDim); }   // e.g. COIN FLIP in a drag corp
     return { lines, action: 'B R E A C H' };
   }
-  if (n.type === 'shop') { T('BLACK MARKET', C.money); T('items and mods for credits.'); }
+  if (n.type === 'shop') { T('BLACK MARKET', C.money); T('gear and mods for credits.'); }
   if (n.type === 'cache') { T('DATA CACHE', C.money); T('loot, then pick a mod.'); }
   if (n.type === 'repair') { T('SAFEHOUSE', C.accent); T(`heal ${CONFIG.repairAmount}, then pick a mod.`); }
   return { lines, action: 'E N T E R' };

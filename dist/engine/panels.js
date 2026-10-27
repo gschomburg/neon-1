@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.46']);
+NEON_FILES.push(['engine/panels.js', 'v13.50']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -48,9 +48,9 @@ function addMod(key, tier = 0) {
   if (key === 'buffer') { run.maxInt += run.modTier[key] + 1; run.integrity += run.modTier[key] + 1; }   // +1 common ... +4 legendary
   if (key === 'stash') run.beltSlots++;
   if (key === 'ramdoubler') {   // the belt goes: what you hold is sold for half
-    const cash = run.items.reduce((a, s) => a + Math.floor(itemView(s.key, s.tier).price * TIER_PRICE[s.tier || 0] * priceScale() * ECON.mods.ramDoublerSell) * s.n, 0);
+    const cash = run.items.reduce((a, s) => a + (ITEMS[s.key].value ? gearValue(s.key, s.tier) : Math.floor(itemView(s.key, s.tier).price * TIER_PRICE[s.tier || 0] * priceScale() * ECON.mods.ramDoublerSell)) * s.n, 0);
     run.items = []; run.credits += cash; run.earned += cash;
-    if (cash) setTimeout(() => setMsg(`> ram doubler: items sold, +${cash}cr.`, C.money), 400);
+    if (cash) setTimeout(() => setMsg(`> ram doubler: gear sold, +${cash}cr.`, C.money), 400);
   }
   if (key === 'bloodmoney') { run.credits += BLOOD.bonus; run.earned += BLOOD.bonus; }
   if (key === 'zombie') { run.rot = 0; if (has('failsafe')) run.failsafeUsed = true; }   // dead: FAILSAFE has nothing to save
@@ -95,20 +95,56 @@ function pickMods(r, pool, k, exclude = []) {
 const priceOf = o => o.free ? 0 : o.kind === 'repair' ? o.price : Math.round(o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale());   // (priceScale: data/economy.js)
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
+// What a market pays for one of a gear stack: value gear (SHARD, BOND) its worth, the rest a share of its price.
+function gearValue(key, tier = 0) {
+  if (key === 'shard') return Math.round(earnCr(ECON.gear.shard) * TIER_PRICE[tier || 0]);
+  if (key === 'bond') return earnInt(ECON.gear.bond) * ((st.run && st.run.sector || 0) + 1);
+  return Math.max(1, Math.floor(ITEMS[key].price * TIER_PRICE[tier || 0] * priceScale() * ECON.gear.sellPct));
+}
+const marketRerolls = () => 1 + legacyLv('restock');   // per market (RESTOCK on THE BOARD: up to 3)
+const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value);   // value gear is loot only
+
 function openShop(node) {
   const run = st.run;
-  const r = rngFor(run.seed, 'shop', node.id);
-  const itemKeys = has('ramdoubler') ? [] : shuffle(Object.keys(ITEMS), r).slice(0, 3);   // RAM DOUBLER: no items for sale
-  let offers = itemKeys.map(k => ({ kind: 'item', key: k, tier: rollTier(r, ITEMS[k]), price: ITEMS[k].price, sold: false }));
+  // the offers: roll 0 is the market as it opens; each reroll is a new roll of the same seed
+  const roll = n => {
+    const r = n ? rngFor(run.seed, 'shop', node.id, 'reroll', n) : rngFor(run.seed, 'shop', node.id);
+    const itemKeys = has('ramdoubler') ? [] : shuffle(shopGear(), r).slice(0, 3);   // RAM DOUBLER: no gear for sale
+    let offers = itemKeys.map(k => ({ kind: 'item', key: k, tier: rollTier(r, ITEMS[k]), price: ITEMS[k].price, sold: false }));
+    for (const o of pickMods(r, modsOfKind('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
+    for (const o of exoticOffer(run.seed, 'shop', n ? node.id + 'r' + n : node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
+    offers = shuffle(offers, r);   // random order: any slot could be the good one
+    if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
+    return offers;
+  };
   for (const k of ['coupon', 'haggle']) if (has(k)) modFired(k);   // the market they change opens
-  for (const o of pickMods(r, modsOfKind('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
-  for (const o of exoticOffer(run.seed, 'shop', node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
-  offers = shuffle(offers, r);   // random order: any slot could be the good one
-  if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
-  offers.push({ kind: 'repair', key: 'repair', price: costInt(ECON.repair), sold: false });
-  st.shop = { node: node.id, offers, priceOf, buyAt: k => buy(offers[k]) };   // (read by tools/econsim.js)
+  const repair = { kind: 'repair', key: 'repair', price: costInt(ECON.repair), sold: false };
+  let offers = roll(0).concat([repair]), rolls = 0, view = 'buy', sel = 0, sellSel = 0;
+  const rerollsLeft = () => marketRerolls() - rolls;
+  const rerollPrice = () => costInt(ECON.reroll) * (rolls + 1);   // more each time, in the same market
+  const reroll = () => {
+    if (st.transitioning) return;
+    const price = rerollPrice();
+    if (rerollsLeft() <= 0 || !canSpend(price)) return Sound.deny();
+    run.credits -= price; rolls++;
+    offers = roll(rolls).concat([repair]);
+    sel = 0; st.revealed = new Set(); st.panelT0 = performance.now() + CONFIG.revealDelay;   // the new offers pop in
+    Sound.whoosh(); setMsg(`> restocked. -${price}cr.`, C.money);
+  };
+  const sell = i => {
+    const s = run.items[i];
+    if (!s || st.transitioning) return Sound.deny();
+    const cr = gearValue(s.key, s.tier), name = ITEMS[s.key].name.toLowerCase(), value = !!ITEMS[s.key].value;
+    s.n--; if (s.n <= 0) run.items.splice(i, 1);
+    st.selItem = -1; st.hoverItem = -1;
+    run.credits += cr; if (value) run.earned += cr;   // (only value gear counts as earned: buying and selling back isn't)
+    sellSel = Math.min(sellSel, Math.max(0, run.items.length - 1));
+    Sound.buy(); setMsg(`> sold ${name}. +${cr}cr.`, C.money);
+    if (!run.items.length) view = 'buy';
+  };
+  st.shop = { node: node.id, get offers() { return offers; }, priceOf, buyAt: k => buy(offers[k]), reroll, rerollsLeft, rerollPrice, sellAt: sell };   // (read by tools/econsim.js)
 
-  // What an offer is: items at their tier; mods as what you'd end up with (upgrades).
+  // What an offer is: gear at its tier; mods as what you'd end up with (upgrades).
   const defOf = o => o.kind === 'item' ? itemView(o.key, o.tier) : o.kind === 'mod' ? modView(o.key, upgradeTo(o.key, o.tier)) : { name: 'REPAIR', desc: 'restore 1 integrity.', rarity: 'common', tier: 0 };
   const buy = o => {
     const price = priceOf(o);
@@ -127,7 +163,6 @@ function openShop(node) {
     finish();
   };
 
-  let sel = 0;
   const whyNot = o => {
     if (o.sold) return 'sold out.';
     if (o.kind === 'repair' && !canHeal()) return zombie() ? 'no rot to fix.' : 'integrity is full.';
@@ -135,16 +170,39 @@ function openShop(node) {
     return null;
   };
 
+  // SELL: your gear, what the market pays for one of each
+  const drawSell = (T, B, X) => {
+    T('sell your gear:', C.mid);
+    run.items.forEach((s, i) => {
+      const v = itemView(s.key, s.tier);
+      X({ list: true, id: 'sl' + i, onTap: () => { sellSel = i; Sound.tick(); }, sel: i === sellSel,
+        name: itemLabel(s), chip: v.rarity, col: C.bright, right: `${gearValue(s.key, s.tier)}cr`.padStart(6), rightCol: C.money });
+    });
+    if (!run.items.length) T('nothing to sell.', C.dim);
+    T('');
+    T(SEP, C.dim);
+    const s = run.items[sellSel];
+    if (s) {
+      const v = itemView(s.key, s.tier);
+      X({ text: v.name, chip: v.rarity, bold: true });
+      T(v.tip || v.desc, C.text);
+      X({ box: true, text: 'S E L L', sub: `+${gearValue(s.key, s.tier)}cr`, id: 'sell', onTap: () => sell(sellSel), minW: 18 });
+    } else for (let i = 0; i < 5; i++) T('');
+    T(SEP, C.dim);
+    B('[ BACK ]', 'back', () => { view = 'buy'; Sound.ui(); });
+  };
+
   openPanel('BLACK MARKET', (T, B, X) => {
     const now = performance.now();
     T('BLACK MARKET', C.money);
     T(`credits ${run.credits}${leverage() ? `  (limit ${creditFloor()})` : ''}${has('haggle') ? `  (haggle -${Math.round(tv('haggle', ECON.haggle) * 100)}%)` : ''}`, run.credits < 0 ? C.danger : C.money);   // LEVERAGE: the limit
     T('');
+    if (view === 'sell') return drawSell(T, B, X);
     offers.forEach((o, k) => {
       const def = defOf(o);
       const isMod = o.kind === 'mod', up = isMod && has(o.key);
       const price = o.sold ? 'SOLD' : o.free ? 'FREE' : `${priceOf(o)}cr`;
-      const tag = isMod ? (up ? 'mod+' : 'mod') : o.kind === 'item' ? 'item' : 'svc';   // an item's rarity shows on its name chip
+      const tag = isMod ? (up ? 'mod+' : 'mod') : o.kind === 'item' ? 'gear' : 'svc';   // gear's rarity shows on its name chip
       const col = C.bright;
       X({
         list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
@@ -170,14 +228,20 @@ function openShop(node) {
         X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(def)}` : `${tierLabel(def)} mod`, col: C.text, chips: true });
       } else {
         if (o.kind === 'item') X({ text: def.name, chip: def.rarity, bold: true }); else T(def.name, C.bright);
-        X({ text: o.kind === 'item' ? `${def.tier ? RARITY[def.rarity].label + ' ' : ''}item // single use` : 'service', col: C.mid, chips: true });
+        X({ text: o.kind === 'item' ? `${def.tier ? RARITY[def.rarity].label + ' ' : ''}gear // single use` : 'service', col: C.mid, chips: true });
       }
-      T(def.tip || def.desc, C.text);   // the short text: long item descs ran off the screen
+      T(def.tip || def.desc, C.text);   // the short text: long gear descs ran off the screen
       if (why) { T(''); T(why, C.dangerDim); T(''); T(''); }
       else X({ box: true, text: 'B U Y', sub: o.free ? 'FREE' : `${priceOf(o)}cr`, id: 'buy', onTap: () => buy(o), minW: 18 });
     }
     T(SEP, C.dim);
-    B('[ LEAVE ]', 'leave', leavePanel);
+    // REROLL (new offers; 1 a market, more with RESTOCK), SELL (your gear), LEAVE
+    const left = rerollsLeft(), rp = rerollPrice();
+    X({ gap: 1, row: [
+      { text: left > 0 ? `[ REROLL ${rp}cr ]` : '[ REROLLED ]', id: 'reroll', onTap: reroll, disabled: left <= 0 || !canSpend(rp) },
+      { text: '[ SELL ]', id: 'sellv', onTap: () => { view = 'sell'; sellSel = 0; Sound.ui(); }, disabled: !run.items.length },
+      { text: '[ LEAVE ]', id: 'leave', onTap: leavePanel },
+    ] });
   }, '> the market is open.');
 }
 

@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.46']);
+NEON_FILES.push(['data/mods.js', 'v13.50']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -29,6 +29,15 @@ const ITEMS = {
   warp:  { key: 'warp',  name: 'WARP',  price: 50, rarity: 'exotic', desc: 'on the map: warp to a random node ahead.', tip: 'random jump ahead.' },
   allin: { key: 'allin', name: 'ALL-IN', price: 60, rarity: 'epic', desc: 'in a corp layer: 50/50. the layer clears, or 2 more ICE nodes show up.', tip: '50/50: clear it or +2 ICE.',
     codex: 'use it in a corp layer: half the time the layer clears on the spot (the real node opens, normal pay, no perfect); the other half two new ICE nodes appear, copies of the decoys already there. not in corps with their own tap rules.' },
+  // value gear (the user: "more gear that has more bonuses, even if it's just selling them"): loot only, never for sale.
+  // A market buys it (SELL) for its worth; used anywhere, it cashes in for half. Their worth: ECON.gear.
+  shard: { key: 'shard', name: 'SHARD', price: 30, rarity: 'scrap', value: true, where: '$ nodes, caches.',
+    desc: 'stolen data: a market buys it. or use it anywhere for half.', tip: 'sell it at a market.',
+    codex: 'stolen data, worth credits. sell it at a black market (SELL) for its full worth, or use it anywhere to cash it in for half. rarer shards are worth more. gear costs nothing at the uplink.',
+    tiers: [{}, { rarity: 'common', desc: 'better data: worth more at a market.', tip: 'worth more.' }, { rarity: 'rare', desc: 'prime data: worth a lot at a market.', tip: 'worth a lot.' }] },
+  bond:  { key: 'bond',  name: 'BOND',  price: 40, rarity: 'rare', value: true, where: '$ nodes, caches.',
+    desc: 'a bearer bond: worth more every sector. sell it at a market, or use it anywhere for half.', tip: 'worth more each sector.',
+    codex: 'a bearer bond. it is worth more the deeper you are: sector 2 pays twice what sector 1 does, sector 3 three times. sell it at a black market (SELL), or use it anywhere to cash it in for half. hold it through the uplink for free.' },
 };
 const ITEM_WHERE = 'market, $ nodes, caches.';
 
@@ -68,8 +77,8 @@ const MODS = {
   yaxis:    { name: 'Y-AXIS',   short: 'YAX', kind: 'gen', rarity: 'epic',   icon: '|!|!', anim: 'wave',     price: 80, tip: 'column scan finds real.', desc: "tap ICE in the real node's column: the scan catches it. no perfect.",
     codex: "tap ICE in the same column as the real node and the scan catches it: no damage, the layer counts as found. it just isn't a perfect (no perfect pay or heal). a column without it hits you like normal." },
   // Minor (they tier up: COMMON, RARE, EPIC)
-  stash:    { name: 'STASH',    short: 'STS', kind: 'minor', rarity: 'common', icon: '=#=#', anim: 'blink',    price: 35, tip: '+1 item slot.',       desc: '+1 slot on your item belt.',
-    tiers: [{}, { rarity: 'rare', tip: 'same slot. loot: an item more often.', desc: 'still +1 item slot (not another), and loot is an item more often.' }, { rarity: 'epic', tip: 'same slot. loot: always an item.', desc: 'still +1 item slot (not another), and loot is always an item when there is room.' }] },
+  stash:    { name: 'STASH',    short: 'STS', kind: 'minor', rarity: 'common', icon: '=#=#', anim: 'blink',    price: 35, tip: '+1 gear slot.',       desc: '+1 gear slot.',
+    tiers: [{}, { rarity: 'rare', tip: 'same slot. loot: gear more often.', desc: 'still +1 gear slot (not another), and loot is gear more often.' }, { rarity: 'epic', tip: 'same slot. loot: always gear.', desc: 'still +1 gear slot (not another), and loot is always gear when there is room.' }] },
   haggle:   { name: 'HAGGLE',   short: 'HGL', kind: 'minor', rarity: 'common', icon: '%%/%', anim: 'scramble', price: 30, tip: `market prices -${Math.round((ECON.haggle[0]) * 100)}%.`, desc: `black market prices are ${Math.round((ECON.haggle[0]) * 100)}% lower.`,
     tiers: [{}, { rarity: 'rare', tip: `market prices -${Math.round((ECON.haggle[1]) * 100)}%.`, desc: `black market prices are ${Math.round((ECON.haggle[1]) * 100)}% lower.` }, { rarity: 'epic', tip: `market prices -${Math.round((ECON.haggle[2]) * 100)}%.`, desc: `black market prices are ${Math.round((ECON.haggle[2]) * 100)}% lower.` }] },
   cachekey: { name: 'CACHEKEY', short: 'KEY', kind: 'minor', rarity: 'common', icon: 'o-o=', anim: 'wave',     price: 30, tip: `caches drop x${ECON.modx.cachekey[0] + 1}.`, desc: `data caches drop their loot ${ECON.modx.cachekey[0] + 1} times.`,
@@ -119,7 +128,7 @@ const MODS = {
   espresso:      { name: 'ESPRESSO',       short: 'ESP', kind: 'corp', corp: 'coldbrew', rarity: 'legendary', icon: 'c[]~', anim: 'wave', active: 'layer', tip: 'clock stops 5s. 1x', desc: 'tap in a layer with a clock: the clock stops for 5 seconds. once per corp.' },
   friendship:    { name: 'FRIENDSHIP',     short: 'FRN', kind: 'corp', corp: 'mochi', rarity: 'legendary', icon: '^_^~', anim: 'wave', tip: `1 ICE/corp costs ${costInt(ECON.friendship)}cr.`, desc: `once per corp, an ICE hit costs ${costInt(ECON.friendship)}cr instead of integrity.` },
   jackbox:       { name: 'JACK-IN-THE-BOX', short: 'JCK', kind: 'corp', corp: 'playtime', rarity: 'legendary', icon: '[?]!', anim: 'blink', tip: '1 ICE pops each corp.', desc: 'once per corp, at a random moment, one ICE pops out (locks) with a jingle.' },
-  triage:        { name: 'TRIAGE',         short: 'TRG', kind: 'corp', corp: 'medix', rarity: 'legendary', icon: '+!+.', anim: 'blink', tip: 'beat a corp: get a PATCH.', desc: 'every corp you beat drops a PATCH on your belt. belt full: heal 1 (at full: +1 max integrity).' },
+  triage:        { name: 'TRIAGE',         short: 'TRG', kind: 'corp', corp: 'medix', rarity: 'legendary', icon: '+!+.', anim: 'blink', tip: 'beat a corp: get a PATCH.', desc: 'every corp you beat earns you a PATCH. no room: heal 1 (at full: +1 max integrity).' },
   honeycomb:     { name: 'HONEYCOMB',      short: 'HNY', kind: 'corp', corp: 'apiary', rarity: 'legendary', icon: '<o>o', anim: 'cycle', tip: '3 perfects: heal 1.', desc: `every perfect stores a drop of honey. 3 drops heal 1. at full, a drop is +${earnInt(ECON.mods.honeycomb)}cr.` },
   pixelpeep:     { name: 'PIXEL PEEP',     short: 'PXP', kind: 'corp', corp: 'kerning', rarity: 'legendary', icon: 'Aa.A', anim: 'scramble', tip: 'hit ICE: real nudges 1s.', desc: 'after an ICE hit, the real node is nudged a couple of pixels for a second.' },
   freezeframe:   { name: 'FREEZE FRAME',   short: 'FRZ', kind: 'corp', corp: 'streamflix', rarity: 'legendary', icon: '[||]', anim: 'blink', active: 'layer', tip: 'freeze 1s. 1x/corp', desc: 'tap in a layer: the board (and clock) freeze for a second. only the real node keeps moving. once per corp.' },
@@ -186,7 +195,7 @@ const MODS = {
     codex: 'credits can go negative, down to a limit (-150, and -100 more each sector): buy on credit, pay for things you can\x27t afford. the deeper in debt, the better the chance an ICE hit does no damage (up to 60%). every corp layer takes a loan payment (5cr, +5 each sector) whether you are in debt or not, so the money keeps draining. debt also grows 10% every layer, and past the limit the collectors take 1 integrity a layer.' },
   quantum:       { name: 'QUANTUM',        short: 'QTM', kind: 'exotic', rarity: 'exotic', slot: 'real', icon: 'o.O0', anim: 'exotic', price: 140,
     tip: `2 real nodes. pay x${ECON.modx.quantum}.`, desc: `every layer (3+ nodes) has two real nodes: either one passes. layers pay x${ECON.modx.quantum}.`,
-    codex: 'every layer with 3 or more nodes has a second real node; tap either one and the layer passes. the corp\x27s tell points to the first one as usual; the second is random, no tell. layers pay half. with ICE EATER both real nodes bite.' },
+    codex: 'every layer with 3 or more nodes has a second real node; tap either one and the layer passes. the corp\x27s tell points to the first one as usual; the second is random, no tell. layers pay x' + ECON.modx.quantum + '. with ICE EATER both real nodes bite.' },
   coinflip:      { name: 'COIN FLIP',      short: 'FLP', kind: 'exotic', rarity: 'exotic', slot: 'tap', icon: 'o0O0', anim: 'exotic', price: 130,
     tip: 'hold a node: flip a coin on it.', desc: `hold a node to flip a coin first: call a side (♥ or $), win its prize or lose it. wins raise a pay multiplier (to x${ECON.modx.coinMax}).`,
     codex: 'hold a node (or drag up from it) and a coin comes up with two faces: ♥ (integrity) or $ (credits), sometimes both the same, sometimes a big one. drag to a side and let go to call it: if the coin lands on it you win that prize, if not you lose it. then the node opens as usual. each win raises a multiplier on all your pay (up to x5), each loss drops it one. a quick tap is a normal pick; let go anywhere else to skip the flip. keys: C on a node, left / right, enter.' },
@@ -194,6 +203,6 @@ const MODS = {
     tip: 'half your ICE hits: later.', desc: 'half the ICE you hit does no damage now. it follows you into the next layer instead, with a z in its glyph.',
     codex: 'procrastinate: half the time an ICE hit does no damage and that ICE carries over into the next layer as one more ICE node (in the same spot if it can). it comes back looking like the other nodes there, except one character of its glyph is a z. it stacks: snoozed ICE can be snoozed again.' },
   ramdoubler:  { name: 'RAM DOUBLER',    short: 'RAM', kind: 'exotic', rarity: 'exotic', slot: 'slots', locked: true, icon: '#=#-', anim: 'exotic', price: 140,
-    tip: 'no items. twice the mod slots.', desc: 'get your memory chromed up: twice the mod slots (12), but your item belt is gone (what you hold is sold for half). locked in.',
-    codex: 'the memory doubler: your head gets chromed up for twice the mods. the item belt goes away (items you hold are sold for half their price) and you get 12 mod slots, the second six on the row where the belt was. any item you would find becomes credits instead, and the market stops selling items. locked in for the run.' },
+    tip: 'no gear. twice the mod slots.', desc: 'get your memory chromed up: replace your gear slots with mods (12 mod slots). the gear you hold is sold for half. locked in.',
+    codex: 'the memory doubler: your head gets chromed up for twice the mods. your gear slots are replaced with mods: 12 mod slots, the second six where your gear was. the gear you hold is sold for half its price, any gear you would find becomes credits instead, and the market stops selling gear. locked in for the run.' },
 };

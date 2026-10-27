@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v13.46']);
+NEON_FILES.push(['data/economy.js', 'v13.50']);
 
 const ECON = {
   // ---- Units
@@ -33,7 +33,7 @@ const ECON = {
     base: 1.2,   // earn: loot: base (a loot node you hit (or a data cache roll) pays this...)
     perTier: 0.8,   // earn: loot: per corp level (...plus this for each corp level (caches count as level 2)...)
     roll: 1.2,   // earn: loot: random extra (...plus a random amount up to this)
-    itemChance: 0.4,   // %: loot: an item instead (the chance a loot roll gives an item instead of credits (STASH raises it))
+    itemChance: 0.4,   // %: loot: gear instead (the chance a loot roll gives gear instead of credits (STASH raises it))
   },
   skip: {
     starter: 1.5,   // earn: skip the starter perk (take credits instead of a mod at the start of a run)
@@ -46,16 +46,16 @@ const ECON = {
   },
   // ---- Earning: mods that pay credits
   mods: {
-    ezpass: 0.2,   // earn: EZPASS (every layer you beat pays this bonus)
-    policy: 0.8,   // earn: POLICY (every time you hit ICE, the insurance pays this)
+    ezpass: 0.6,   // earn: EZPASS (every layer you beat pays this bonus)
+    policy: 2,   // earn: POLICY (every time you hit ICE, the insurance pays this)
     graverobber: 0.2,   // earn: GRAVE ROBBER (beating a layer pays this for each ICE you never touched)
     honeycomb: 1,   // earn: HONEYCOMB (a honey drop when your integrity is already full pays this instead)
     interestPct: 0.05,   // %: INTEREST (beating a corp pays this share of the credits you hold...)
-    interestMax: 2,   // earn: INTEREST: cap (...but never more than this)
-    chancecard: 1,   // earn: CHANCE CARD (drawing the credits card pays this)
+    interestMax: 5,   // earn: INTEREST: cap (...but never more than this)
+    chancecard: 3,   // earn: CHANCE CARD (drawing the credits card pays this)
     coinCr: 1,   // earn: COIN FLIP: $ face (a $ side wins (or loses) this, times your streak multiplier)
     coinBigCr: 2.5,   // earn: COIN FLIP: big $ face (a big $ side wins (or loses) this, times your streak multiplier)
-    ramDoublerSell: 0.5,   // %: RAM DOUBLER: items sold for (taking it sells every item on your belt for this share of its price)
+    ramDoublerSell: 0.5,   // %: RAM DOUBLER: gear sold for (taking it sells all the gear you hold for this share of its price)
   },
   blood: {
     bonus: 10,   // earn: BLOOD MONEY: when you take it (paid once, the moment you take the mod)
@@ -67,27 +67,34 @@ const ECON = {
   },
   // ---- Earning: mod multipliers
   modx: {
-    supersize: 2,   // x: SUPERSIZE (every layer pays this many times more)
-    skimmer: [1.25, 1.5, 1.75],   // x list: SKIMMER (every payout is multiplied by this, by rarity step)
-    fastpay: 1.5,   // x: FASTPAY (a layer you beat within 3 seconds pays this many times more)
+    supersize: 1.6,   // x: SUPERSIZE (every layer pays this many times more)
+    skimmer: [1.2, 1.3, 1.4],   // x list: SKIMMER (every payout is multiplied by this, by rarity step)
+    fastpay: 1.35,   // x: FASTPAY (a layer you beat within 3 seconds pays this many times more)
     onbeat: 1.5,   // x: ON BEAT (a real pick on the beat of the music pays this many times more)
     letitride: 2,   // x: LET IT RIDE (a perfect's pay bets on the next layer: another perfect pays the bet back this many times)
     coinMax: 5,   // x: COIN FLIP: top streak (each win raises the streak multiplier by 1, up to this)
-    quantum: 0.5,   // x: QUANTUM (every layer has two real nodes, but pays only this much)
+    quantum: 0.75,   // x: QUANTUM (every layer has two real nodes, but pays only this much)
     overclockCut: 0.2,   // %: OVERCLOCK (each ICE the late clock purges cuts that layer's pay by this)
     priority: 2,   // count: PRIORITY (a loot node delivers its loot this many times)
-    stash: [0.4, 0.6, 1],   // % list: STASH (the chance a loot roll is an item, by rarity step (the first is the normal chance))
+    stash: [0.4, 0.6, 1],   // % list: STASH (the chance a loot roll is gear, by rarity step (the first is the normal chance))
     cachekey: [1, 2, 3],   // count list: CACHEKEY (extra loot rolls in every data cache, by rarity step)
+  },
+  // ---- Earning: selling gear
+  gear: {
+    sellPct: 0.5,   // %: gear resale (normal gear sells at a market for this share of its price)
+    shard: 3,   // earn: SHARD (what a SHARD sells for (its rarer steps: times the price by rarity step))
+    bond: 4,   // earn: BOND (what a BOND sells for, times the sector you are in (1, 2, 3...))
   },
   // ---- Spending: markets
   tierPrice: [1, 1.6, 2.5],   // x list: price by rarity step (a mod or item at its 1st / 2nd / 3rd rarity step costs its price times this)
   haggle: [0.25, 0.35, 0.5],   // % list: HAGGLE (market prices are this much lower, by rarity step)
   repair: 2,   // spend: repair (a market repair costs this for each integrity point)
+  reroll: 1.5,   // spend: market reroll (new offers at a market: costs this, and this much more each time in the same market (1 a market, RESTOCK on THE BOARD adds up to 2))
   // ---- Spending: mods that cost credits
   continue: 10,   // spend: CONTINUE? (keep going after you would die: costs this, and this much more each time you use it)
   bloodHit: {
-    base: 2,   // spend: BLOOD MONEY: a hit (with BLOOD MONEY, each point of damage costs this...)
-    perSector: 1,   // spend: BLOOD MONEY: more per sector (...plus this for each sector you are in past the first)
+    base: 4,   // spend: BLOOD MONEY: a hit (with BLOOD MONEY, each point of damage costs this...)
+    perSector: 2,   // spend: BLOOD MONEY: more per sector (...plus this for each sector you are in past the first)
   },
   debt: {
     limit: 15,   // spend: LEVERAGE: debt limit (with LEVERAGE, your credits can go this far below 0...)

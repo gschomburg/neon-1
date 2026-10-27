@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.46']);
+NEON_FILES.push(['engine/active.js', 'v13.50']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -173,6 +173,7 @@ function canUse(stack) {
   const run = st.run;
   if (!run || st.wipe || !stack) return false;
   const key = stack.key, tier = stack.tier || 0;
+  if (ITEMS[key].value) return !st.transitioning;   // value gear: cash it in anywhere
   if (key === 'patch') return canHeal();
   if (key === 'wall') return tier < 2 ? true : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll;
   if (key === 'route' || key === 'warp') return st.mode === 'map' && !st.busy && !st.transitioning && nodesAhead().length > 0;
@@ -200,6 +201,11 @@ function useItem(slot) {
   if (stack.n <= 0) run.items.splice(slot, 1);
   st.hoverItem = -1; st.selItem = -1;
   const lv = st.lv;
+  if (ITEMS[key].value) {   // value gear: half its worth, here and now (a market pays it all)
+    const worth = gearValue(key, tier), cr = Math.floor(worth / 2);
+    run.credits += cr; run.earned += cr;
+    Sound.buy(); setMsg(`> cashed ${ITEMS[key].name.toLowerCase()}: +${cr}cr. (a market pays ${worth})`, C.money);
+  }
   if (key === 'patch') {
     const before = run.integrity;
     heal(tier + 1);

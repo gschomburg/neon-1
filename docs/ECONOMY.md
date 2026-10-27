@@ -235,3 +235,63 @@ sells its cheapest mods when short). Held at each uplink -> its bill, mods sold;
 - **Items as a store of value:** items could be worth more: sell them at black markets, and they cost nothing at the
   uplink (only mods do). Carry value through the checkpoint as items.
 - **TIME IS MONEY:** a corp's clock drains your credits as it runs; maybe an event for a whole stage.
+
+## Mod pass (2026-10-26, v13.47: flat x2 perfects + THE UPLINK, 5 runs each, 3 sectors)
+
+Each money mod held from the start vs no mod.
+
+| mod | earned (3 sectors) | vs none | held at end of s3 | uplinks paid | mods sold | deaths (would-be) | runs ok |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| skimmer      | 6998 | +52% | 5015 | 1622 | 0.0 | 0.0 | 5/5 |
+| supersize    | 6855 | +49% | 4830 | 1614 | 0.6 | 0.0 | 5/5 |
+| fastpay      | 6607 | +44% | 4721 | 1522 | 1.0 | 0.0 | 5/5 |
+| bloodmoney   | 5316 | +16% | 3252 | 1486 | 1.0 | 0.0 | 5/5 |
+| letitride    | 5246 | +14% | 2967 | 1490 | 1.4 | 0.0 | 5/5 |
+| graverobber  | 5091 | +11% | 3213 | 1522 | 1.0 | 0.0 | 5/5 |
+| onbeat       | 5036 | +10% | 3159 | 1522 | 1.0 | 0.0 | 5/5 |
+| honeycomb    | 5025 | +9% | 3176 | 1512 | 1.2 | 0.0 | 5/5 |
+| interest     | 4947 | +8% | 3105 | 1512 | 1.2 | 0.0 | 5/5 |
+| ezpass       | 4864 | +6% | 3022 | 1512 | 1.2 | 0.0 | 5/5 |
+| policy       | 4786 | +4% | 2901 | 1522 | 1.0 | 0.0 | 5/5 |
+| chancecard   | 4636 | +1% | 2801 | 1502 | 1.4 | 0.0 | 5/5 |
+| (no mod)     | 4590 | - | 2857 | 1380 | 1.4 | 0.0 | 5/5 |
+| omerta       | 4575 | 0% | 2744 | 1502 | 1.4 | 0.0 | 5/5 |
+| friendship   | 4571 | 0% | 2744 | 1502 | 1.4 | 0.0 | 5/5 |
+| companion    | 4569 | 0% | 2738 | 1502 | 1.4 | 0.0 | 5/5 |
+| overclock    | 4552 | -1% | 2721 | 1502 | 1.4 | 0.0 | 5/5 |
+| priority     | 4548 | -1% | 2735 | 1480 | 1.4 | 0.0 | 5/5 |
+| iceeater     | 4482 | -2% | 3078 | 1122 | 5.4 | 0.0 | 5/5 |
+| leverage     | 4388 | -4% | 2034 | 1406 | 0.4 | 0.2 | 4/5 |
+| ramdoubler   | 4310 | -6% | 2266 | 1886 | 5.0 | 0.0 | 5/5 |
+| cachekey     | 3823 | -17% | 2023 | 1420 | 1.4 | 0.0 | 5/5 |
+| haggle       | 3753 | -18% | 2074 | 1488 | 0.8 | 0.0 | 5/5 |
+| stash        | 3747 | -18% | 1972 | 1472 | 1.0 | 0.0 | 5/5 |
+| quantum      | 3436 | -25% | 1925 | 1254 | 4.2 | 0.0 | 5/5 |
+
+SKIMMER, SUPERSIZE and FASTPAY are far ahead (+44-52%). BLOOD MONEY: +16%, and no would-be deaths in these runs, so its "immortal" problem does not show up here (needs a weaker bot or deeper runs). CACHE KEY, HAGGLE, STASH and QUANTUM come out behind: they pay in gear or discounts the bot does not cash, or cost mod slots.
+
+## Retune (v13.49, the same sim, 5 runs each)
+
+Targets (vs no mod): common +10-15%, rare / epic +15-25%, legendary +20-30%, exotic up to ~40% with a real downside.
+
+| mod | was | now | earned vs none, before > after |
+| --- | --- | --- | --- |
+| SKIMMER (epic step) | x1.75 | x1.4 | +52% > +16% |
+| SKIMMER (common step) | x1.25 | x1.2 | not run > -1% |
+| SUPERSIZE | x2 | x1.6 | +49% > +20% |
+| FASTPAY | x1.5 | x1.35 | +44% > +14% |
+| POLICY | 8cr a hit | 20cr | +4% > 0% |
+| INTEREST | cap 20cr | cap 50cr | +8% > -2% |
+| EZPASS | 2cr a layer | 6cr | +6% > -5% |
+| CHANCE CARD | 10cr | 30cr | +1% > -7% |
+
+The small mods moved the wrong way: 5 runs are only good to about +-7%, so anything under ~10% is noise. The big three
+came down past their targets. The user: test these live.
+
+## Market rerolls and selling gear (v13.49)
+
+- REROLL: 1 a market (ECON.reroll 1.5 = 15cr, x2 the second time, x3 the third), RESTOCK on THE BOARD makes it 2 / 3.
+- SELL: normal gear sells for ECON.gear.sellPct (half) of its price; that is not counted as earned (so no REP from
+  buying and selling back). Value gear (SHARD, BOND) sells for its worth and counts as earned.
+- SHARD 3 earn (x the price by rarity step: 30 / 48 / 75cr); BOND 4 earn x the sector (40, 80+, 120+). Gear pays no
+  uplink fee, so it carries value through the checkpoint.

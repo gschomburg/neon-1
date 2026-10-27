@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.46']);
+NEON_FILES.push(['engine/help.js', 'v13.50']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -11,6 +11,7 @@ const HELP_PAGES = [
     nodeTile: true, lootTile: true },
   { title: 'THE NET', tab: 'NET', build: buildNetPage },
   { title: 'THE TRAY', tab: 'TRAY', build: buildTrayPage },
+  { title: 'ADVANCED', tab: 'MORE', build: buildAdvancedPage },
 ];
 
 // ---- How to play page builders. One style everywhere: section headers in the
@@ -66,7 +67,7 @@ function buildNetPage(T, X) {
     X({ text: `[${ch}]  ${name}`.padEnd(HELP_W), colorAt: i => i < 3 ? C.bright : C.money, bold: true });
     P(desc, 5);
   };
-  stop('$', 'BLACK MARKET', 'buy items, mods and repairs with your credits.');
+  stop('$', 'BLACK MARKET', 'buy gear, mods and repairs. REROLL for new offers, SELL your gear.');
   stop('?', 'DATA CACHE', 'free loot, then pick a mod.');
   stop('+', 'SAFEHOUSE', 'heal 2 integrity, then pick a mod.');
   T('');
@@ -80,6 +81,28 @@ function buildNetPage(T, X) {
   H('SECTORS');
   P('beating OMNI//CORE clears the sector. CASH OUT to end the run and bank REP, or PUSH ON: the net goes on from there, a little harder each sector. die and you bank nothing.');
   P('spend REP on THE BOARD, from the title screen.');
+}
+
+// ADVANCED: the things the other pages and the training don't cover (the user, 2026-10-26).
+function buildAdvancedPage(T, X) {
+  const { H, P } = helpKit(T, X);
+  T('ADVANCED'.padEnd(HELP_W), C.bright);
+  T('');
+  H('INT');
+  P("INT is your integrity: your health. ICE takes 1 (a boss can take more), a perfect pick heals 1. at 0 you're traced and the run is over.");
+  T('');
+  H('THE SEED');
+  P('every run grows from a seed: the same seed makes the same map, the same corps and the same layers. the title shows yours: tap it to roll a new one. after a run, RETRY SEED plays the same one again (as practice).');
+  T('');
+  H('REPUTATION (REP)');
+  P('cash out and you bank REP: for how deep you got, the corps you breached, your perfects, the credits you earned and the sectors you cleared. die and you bank nothing. spend REP at THE BOARD on upgrades for every run after.');
+  T('');
+  H('CORP EVENTS');
+  P('some corps on the map carry a tag next to their code. each one changes how that corp plays:');
+  for (const m of Object.values(CORP_MODS)) X({ text: `${m.tag} ${m.name.padEnd(8)} ${m.desc}`.slice(0, HELP_W).padEnd(HELP_W), colorAt: i => i === 0 ? C.money : i < 10 ? C.accent : C.text });
+  T('');
+  H('THE UPLINK');
+  P('beat a sector boss and you can push on to the next sector, but carrying your mods costs bandwidth: every mod has a fee by its rarity. keep what you can pay for, sell the rest, or cash out.');
 }
 
 function buildTrayPage(T, X) {
@@ -102,11 +125,11 @@ function buildTrayPage(T, X) {
   P('inside a stage, mods fire left to right on the bar. a corp\'s own tricks go after your mods. BLOCK is the one exception: free blocks first, then FWALL, and FAILSAFE last.');
   P('the codex shows each mod\'s stage.');
   T('');
-  H('ITEMS');
-  P('single use, in the slots below the mods. you start with one PURGE. the same item stacks in one slot (PURGEx3).');
+  H('GEAR');
+  P('single use, in the slots below the mods. you start with one PURGE. the same gear stacks in one slot (PURGEx3).');
   T('');
   H('USING THEM');
-  P('tap a mod or item to see what it does, tap again to use it. on desktop, hover for info; number keys use items.');
+  P('tap a mod or gear to see what it does, tap again to use it. on desktop, hover for info; number keys use gear.');
   T('');
   H('MOD RARITY');
   const ex = { scrap: 'the basics', common: 'small perks', rare: 'solid upgrades', epic: 'build-defining', legendary: 'boss mods, top upgrades', exotic: 'they bend the rules' };
@@ -151,12 +174,12 @@ function openHelp() {
       T('');
       X({ tileInfo: LOOT_GLYPH, frameCol: C.dangerDim, glyphCol: C.money, lines: [
         { text: 'LOOT NODE', col: C.accent }, { text: 'always ICE: costs 1', col: C.text },
-        { text: 'integrity, but drops', col: C.text }, { text: 'credits or an item.', col: C.text },
+        { text: 'integrity, but drops', col: C.text }, { text: 'credits or gear.', col: C.text },
         { text: 'a trade, not a trap.', col: C.mid },
       ] });
     }
     if (p.rarity) {
-      T('mods and items come in six tiers:');
+      T('mods and gear come in six tiers:');
       T('');
       const ex = { scrap: 'the basics.', common: 'small perks.', rare: 'solid upgrades.', epic: 'build-defining.', legendary: 'boss mods, top upgrades.', exotic: 'they bend the rules.' };
       for (const r of Object.keys(RARITY)) X({ text: `${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(30), col: C.text, chips: true });

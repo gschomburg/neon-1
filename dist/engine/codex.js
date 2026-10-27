@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v13.46']);
+NEON_FILES.push(['engine/codex.js', 'v13.50']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -39,7 +39,7 @@ function nextTop(top, d, max) {
 }
 
 function openCodex() {
-  const TABS = [['mods', 'MODS', 'tabm'], ['items', 'ITEMS', 'tabi'], ['glyphs', 'GLYPHS', 'tabg'], ['corps', 'CORPS', 'tabc']];
+  const TABS = [['mods', 'MODS', 'tabm'], ['items', 'GEAR', 'tabi'], ['glyphs', 'GLYPHS', 'tabg'], ['corps', 'CORPS', 'tabc']];
   let tab = 'mods', sel = 0, top = 0, shownPal = null;
   const entries = () => tab === 'mods' ? codexMods() : tab === 'items' ? Object.keys(ITEMS)
     : tab === 'glyphs' ? GLYPHS.map(gl => gl.key) : CODEX_CORPS.map(k => 'corp_' + k);
@@ -116,11 +116,11 @@ function openCodex() {
       for (let i = 3 + d.length + tiers.length + (tiers.length ? 1 : 0); i < 12; i++) T('');
     } else {
       const it = ITEMS[k], tiers = it.tiers ? it.tiers.map((_, i) => tierView(it, i)) : [];
-      X({ text: it.name, chip: it.rarity, bold: true }); X({ text: `${!['scrap', 'common'].includes(it.rarity) ? RARITY[it.rarity].label + ' ' : ''}item // single use`, col: C.mid, chips: true });
+      X({ text: it.name, chip: it.rarity, bold: true }); X({ text: `${!['scrap', 'common'].includes(it.rarity) ? RARITY[it.rarity].label + ' ' : ''}gear // single use`, col: C.mid, chips: true });
       const dl = wrapText(it.codex || it.desc, 34).slice(0, 12 - 3 - tiers.length - (tiers.length ? 1 : 0));
       dl.forEach(l => T(l.padEnd(34), C.text));
       if (tiers.length) { T(''); tiers.forEach(v => X({ text: `${RARITY[v.rarity].label.padEnd(7)}${v.tip}`.padEnd(34), col: C.text, chips: true })); }
-      T(`from: ${ITEM_WHERE}`, C.mid);
+      T(`from: ${it.where || ITEM_WHERE}`, C.mid);
       for (let i = 3 + dl.length + tiers.length + (tiers.length ? 1 : 0); i < 12; i++) T('');
     }
     T(SEP, C.dim);
@@ -146,7 +146,7 @@ function openCodex() {
         X(Object.assign(base, {
           badge: isMod && seenK ? key : null,
           name: seenK ? def.name : '???', col: seenK ? C.bright : C.dim, chip: seenK && !isMod ? def.rarity : null,
-          right: isMod ? (seenK ? RARITY[def.rarity].label : '') : 'item', rightCol: C.mid, rightChips: seenK,
+          right: isMod ? (seenK ? RARITY[def.rarity].label : '') : 'gear', rightCol: C.mid, rightChips: seenK,
         }));
       }
       used++;

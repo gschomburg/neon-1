@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.46']);
+NEON_FILES.push(['engine/screens.js', 'v13.50']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -259,7 +259,7 @@ function overLines() {
   if (r.mods.length) {
     for (let i = 0; i < r.mods.length; i += 5) extras.push({ gap: 2, row: r.mods.slice(i, i + 5).map(k => ({ badge: k, plain: true, tier: r.modTier[k] || 0 })) });
   } else extras.push({ text: 'no mods: a naked run', col: C.dim });
-  extras.push(r.items.length ? { gap: 1, row: r.items.map(x => ({ text: itemLabel(x), chip: itemView(x.key, x.tier).rarity })) } : { text: 'no items', col: C.dim });
+  extras.push(r.items.length ? { gap: 1, row: r.items.map(x => ({ text: itemLabel(x), chip: itemView(x.key, x.tier).rarity })) } : { text: 'no gear', col: C.dim });
   extras.push({ text: '' });
   // the bottom: the leaderboard block (ranks, initials, UPLOAD) until you upload, then the buttons
   const lb = lbOverLines(), lbOpen = lb && !(st.lbPost && st.lbPost.uploaded);
@@ -325,7 +325,7 @@ function swapLines() {
   }
   // Two steps (a mis-tap on a phone used to throw away the wrong one): tap one of yours to pick it, which
   // shows what it does; then the SWAP button does it. sw.sel = the picked one's index.
-  T(sw.kind === 'mod' ? 'MOD SLOTS FULL' : 'ITEM BELT FULL', C.danger);
+  T(sw.kind === 'mod' ? 'MOD SLOTS FULL' : 'GEAR SLOTS FULL', C.danger);
   T('');
   const pick = i => () => { if (sw.sel !== i) { sw.sel = i; Sound.tick(); } };
   const DESC_ROWS = 2;
@@ -358,10 +358,10 @@ function swapLines() {
     const v = itemView(sw.key, sw.tier);
     T('to take', C.mid);
     lines.push({ text: `[${v.name}]`, chip: v.rarity, bold: true });
-    T('pick one of your items to replace:', C.mid);
+    T('pick the gear to replace:', C.mid);
     run.items.forEach((s, i) => {
       const o = itemView(s.key, s.tier);
-      lines.push({ list: true, id: 'sw' + i, name: itemLabel(s), chip: o.rarity, right: s.n > 1 ? `all ${s.n}` : 'item', rightCol: C.mid,
+      lines.push({ list: true, id: 'sw' + i, name: itemLabel(s), chip: o.rarity, right: s.n > 1 ? `all ${s.n}` : 'gear', rightCol: C.mid,
         sel: sw.sel === i, onTap: pick(i) });
     });
     T(SEP, C.dim);
