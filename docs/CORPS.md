@@ -3,7 +3,7 @@
 Since v12, each built corp lives in its own file, `dist/corps/<key>.js`. How to add one, and what a corp file can use: the top of `dist/engine/corpkit.js`.
 
 A brainstorm, kept out of SPEC.md. Two parts:
-- **Part A:** the user's own corp ideas (first logged in SPEC §17), written up in the same format.
+- **Part A:** the user's own corp ideas (first logged in the archived SPEC §17 (docs/archive)), written up in the same format.
 - **Part B:** Claude's 50, revised 2026-10-20 after the user's review.
 
 Each corp has:
@@ -14,6 +14,7 @@ Each corp has:
   corp (SIGSCAN for Sigil, the clock mods for Chronos) should also matter in some other corps, so
   mods and corps cross over.
 
+`(built)` on a heading: it is in the game (dist/corps/). Not built yet (2026-10-26): A28 FOSSIL, A29 UNICORN, A30 MAGIC, A31 ALARMS, #49 the chain corp, #50 the case corp, #51 the stock market corp (also in BACKLOG.md).
 `*` after a name marks something the user changed or asked for in the review. Names are parodies or
 made up, not real brands.
 
@@ -36,14 +37,14 @@ made up, not real brands.
 
 # Part A: the user's corps
 
-### A1. BASIC (working name; could stay BASIC, or ACME, GENERICORP)
+### A1. BASIC (working name; could stay BASIC, or ACME, GENERICORP) (built)
 - **Special:** nothing. 3-4 nodes, low pay, plain grey, a simple chiptune. A breather or filler slot
   anywhere.
 - **Tell:** strong and simple: the real node is the only one with a plain frame.
 - **Mod:** BASIC TRAINING (LAYER START): the first layer of every corp starts with 1 ICE locked.
 - **Works with:** everything. Also a good test corp for new mods.
 
-### A2. MEDIX (medical; or VITALIS, ST. CYBER)
+### A2. MEDIX (medical; or VITALIS, ST. CYBER) (built)
 - **Special:** hits bruise first. The first ICE hit in a layer does no damage but marks you; the next
   one hurts.
 - **Tell:** the real node has a heartbeat: its glyph pulses on a steady rhythm, while the decoys
@@ -52,7 +53,7 @@ made up, not real brands.
   you're full, +1 max integrity.
 - **Works with:** BUFFER, FAILSAFE, the perfect heal; TEMPO (the heartbeat is a beat).
 
-### A3. SYNAPSE (AI; or NEURALINE)
+### A3. SYNAPSE (AI; or NEURALINE) (built)
 - **Special:** it learns you. It tracks where you pick this run (corners, center, a favorite column)
   and puts the real node away from your habits. A "model confidence" meter in the HUD fills as it
   learns.
@@ -60,7 +61,7 @@ made up, not real brands.
 - **Mod:** TURING (ON HIT): after a miss, one node says `NOT ME`. It's true 75% of the time.
 - **Works with:** NOIR (talking nodes), FOURTH WALL; X-AXIS / Y-AXIS (it learns your rows too).
 
-### A4. GENCORP (genetics)
+### A4. GENCORP (genetics) (built)
 - **Special:** glyphs mutate between layers. The real node's glyph changes by one line each layer, so
   the real nodes form a family line.
 - **Tell:** the real node is the next mutation of the last layer's real glyph (one line changed).
@@ -68,7 +69,7 @@ made up, not real brands.
   new one every corp (or on every ICE hit). The tray shows what it is right now.
 - **Works with:** KEYLOGGER, AFTERIMAGE, CLONEWORKS.
 
-### A5. AEGIS (military that hunts you; or IRONCLAD, BLACKWATCH)
+### A5. AEGIS (military that hunts you; or IRONCLAD, BLACKWATCH) (built)
 - **Special:** the nodes advance toward the bottom edge one row every few seconds. One reaching the
   bottom is a hit. The boss adds a search beam.
 - **Tell:** the real node holds back: it's last in the formation.
@@ -76,7 +77,7 @@ made up, not real brands.
 - **Works with:** the clock mods (the advance is a clock); CORNERS, X-AXIS / Y-AXIS; PREDATOR (both
   hunters).
 
-### A6. CARAPACE (armadillo armor; or SHELLCO, ARMATEK)
+### A6. CARAPACE (armadillo armor; or SHELLCO, ARMATEK) (built)
 - **Special:** the nodes have armor (a thick `#=====#` frame) that you break first. Breaking it hurts
   like ICE, but every time you take damage you get a hint about the real node.
 - **Tell:** the real node's armor is thinner: it cracks in 1 hit, not 2.
@@ -84,7 +85,7 @@ made up, not real brands.
   nothing.
 - **Works with:** SHATTER (cracks armor in one hit), BULWARK, TRACER (as the hint).
 
-### A7. MONTE (shell game; or THREE CARD)
+### A7. MONTE (shell game; or THREE CARD) (built)
 - **Special:** the real node moves. The nodes shuffle like cups sliding, and you can follow it if
   you're sharp. The boss shuffles more and faster.
 - **Tell:** follow it with your eyes.
@@ -92,7 +93,7 @@ made up, not real brands.
   helps in every moving corp.
 - **Works with:** ENTROPY, PREDATOR, GRAVITAS, LAGRANGE; it breaks TRACER (the arrows go stale).
 
-### A8. LUCKEEZ * (gambling; the user's name)
+### A8. LUCKEEZ * (gambling; the user's name) (built)
 - **Special:** double down, the user's idea. Before you tap, you can bet: double pay if it's real,
   double damage if it's ICE.
 - **Tell:** slot glyphs: the real node shows three matching symbols. Deeper, the decoys show two
@@ -101,7 +102,7 @@ made up, not real brands.
   nothing.
 - **Works with:** SKIMMER, FASTPAY, SKIPJACK (luck stacks); a cousin of the roulette multiplayer mode.
 
-### A9. THE CHOIR (church / cult; or ASCENSION, SAINT.EXE)
+### A9. THE CHOIR (church / cult; or ASCENSION, SAINT.EXE) (built)
 - **Special:** tithing. Pay credits before a layer for a revelation (a hint), or go on faith (no
   tell, x2 pay). The boss is the prophet.
 - **Tell:** the followers: decoy glyphs face or lean toward the real node. They all wear a holy mark.
@@ -109,7 +110,7 @@ made up, not real brands.
 - **Works with:** **SIGSCAN** (the holy marks count as the signature, so it locks a follower);
   FAILSAFE (a miracle).
 
-### A10. ENTROPY (chaos; or FLUX, SCRAMBLE.NET)
+### A10. ENTROPY (chaos; or FLUX, SCRAMBLE.NET) (built)
 - **Special:** the nodes reshuffle, either on an ICE break or on a timer (still to decide; the boss
   does both).
 - **Tell:** the real node keeps its tell through every shuffle, so you track it.
@@ -118,7 +119,7 @@ made up, not real brands.
 - **Works with:** QUICK EYE, AFTERIMAGE (marks the spot before the shuffle); close to MONTE (which only
   moves the real node).
 
-### A11. NUMBERWONG * (numbers only; the user's name)
+### A11. NUMBERWONG * (numbers only; the user's name) (built)
 - **Special:** every node is a number. The intel line plays along: `> that's numberwong!` when you
   hit ICE.
 - **Tell:** a number rule that changes as you go deeper:
@@ -129,14 +130,14 @@ made up, not real brands.
 - **Mod:** PENCIL MARKS (ON HIT): a miss pencils a dot on one other ICE in the same row.
 - **Works with:** X-AXIS / Y-AXIS, VIRUS.
 
-### A12. PAWN BROS (board game, a Parker Bros parody; or BOARDWALK INC, MONOPOLE)
+### A12. PAWN BROS (board game, a Parker Bros parody; or BOARDWALK INC, MONOPOLE) (built)
 - **Special:** a die roll each layer. The grid is a board loop with a GO square.
 - **Tell:** the real node is the die roll's number of spaces from GO. The boss adds Chance cards.
 - **Mod:** CHANCE CARD (LAYER START): every corp, you draw a card: lock 1 ICE, +10cr, +3s, nothing, or
   (rarely) -1 integrity.
 - **Works with:** CORNERS (board corners are GO / Jail), LUCKEEZ.
 
-### A13. SQUALOR * (social media, amped up)
+### A13. SQUALOR * (social media, amped up) (built)
 - **Special:** the whole screen turns into a feed.
   - Every node shows like and follower counts.
   - **Emotes fly around**, reusing the multiplayer emotes (they float up and fade), plus social
@@ -158,13 +159,13 @@ made up, not real brands.
 - **Works with:** VIRUS (viral), SKIMMER, FASTPAY; the multiplayer emotes; DECIBEL and PEEPHOLE (the
   same hover / drag).
 
-### A14. DROP-4 (Connect 4)
+### A14. DROP-4 (Connect 4) (built)
 - **Special:** the nodes drop in from the top like chips, in two colors.
 - **Tell:** the real node is the chip that would make 4 in a row.
 - **Mod:** FOUR IN A ROW (LAYER END): 4 perfects in a row, and the next boss starts with 2 ICE locked.
 - **Works with:** Y-AXIS (columns), CORNERS (the bottom row), GRAVITAS (falling), SPECTRA (color).
 
-### A15. LEXICON (word corp; or SPELLCORP)
+### A15. LEXICON (word corp; or SPELLCORP) (built)
 - **Special:** each real node carries a letter, and over 5 layers they spell a 5-letter word.
 - **Tell:** by layer 3-4 you can guess the word (`C R A _ _`) and look for the next letter. The boss
   is the last letter, with decoys that also make real words.
@@ -172,27 +173,27 @@ made up, not real brands.
   or C: top, bottom, left, right, center).
 - **Works with:** KEYLOGGER (letters as glyph lines), AFTERIMAGE, SEEKR.
 
-### A16. SPECTRA (chroma)
+### A16. SPECTRA (chroma) (built)
 - **Special:** color is the whole game; the glyphs are all the same.
 - **Tell:** the real node is the odd hue out, or the next color in a sequence across layers (R, G,
   B...). Each color also gets a shape, for color-blind players.
 - **Mod:** PRISM (ON HIT): a miss tints the nodes in the real node's row one shade.
 - **Works with:** X-AXIS, DROP-4; the corp-colored map icons.
 
-### A17. PURLWISE (yarn, knit and purl; or SKEIN)
+### A17. PURLWISE (yarn, knit and purl; or SKEIN) (built)
 - **Special:** a stitch pattern: knit `v` and purl `-` glyphs across the grid.
 - **Tell:** the real node is the dropped stitch, the one that breaks the pattern.
 - **Mod:** UNRAVEL (BOARD): an ICE hit unravels its row, which locks one more ICE in that row.
 - **Works with:** X-AXIS, CLONEWORKS (both pattern corps).
 
-### A18. MOCHI MOCHI (pink anime, Sanrio-ish; or KAWAII.SYS, PIKOPIKO)
+### A18. MOCHI MOCHI (pink anime, Sanrio-ish; or KAWAII.SYS, PIKOPIKO) (built)
 - **Special:** it wants you to find the node. Cute glyphs, and hits cost 10cr instead of integrity
   ("sorry!!").
 - **Tell:** the real node waves at you (a little bounce). Easy on purpose.
 - **Mod:** FRIENDSHIP (BLOCK): once per corp, an ICE hit costs 10cr instead of integrity.
 - **Works with:** fills a BASIC slot; shares a look with PLAYTIME.
 
-### A19. KERNEL (seed corp; or SEEDLING)
+### A19. KERNEL (seed corp; or SEEDLING) (built)
 - **Special:** the run seed is the clue. The boss can **reseed**: the map ahead is rebuilt from a new
   seed (needs care with saves and multiplayer).
 - **Tell:** the seed's characters map to positions (e.g. the 3rd character is the column). The HUD
@@ -201,7 +202,7 @@ made up, not real brands.
   the boss's real column.
 - **Works with:** the daily seed idea, the ROUTE and WARP items.
 
-### A20. DEMOLITION (destroy the ICE, not the node)
+### A20. DEMOLITION (destroy the ICE, not the node) (built)
 - **Special:** reverse rules. Clear all the ICE without touching the real node. Tapping the real
   node is what hurts. Like minesweeper.
 - **Tell:** each broken ICE shows a number: how many ICE are next to it.
@@ -209,7 +210,7 @@ made up, not real brands.
   real node was in it, it shows, but the layer pays nothing.
 - **Works with:** VIRUS, SHATTER, the minesweeper mod ideas.
 
-### A21. HALFLIFE (radiation)
+### A21. HALFLIFE (radiation) (built)
 - **Special:** radiation builds each layer, and at the end of the corp it costs integrity unless you
   were fast.
 - **Tell:** a Geiger counter: the clicks speed up near the real node, with a `.:` meter for muted
@@ -218,7 +219,7 @@ made up, not real brands.
   idea as an EXOTIC item: wipe a whole corp node off the map (you get past it, no reward).
 - **Works with:** the clock mods, FASTPAY; uses the same "closer = louder" tech as DECIBEL.
 
-### A22. BYTEPETS * (digital pets; or DIGIPETZ, TAMAGOTCHU, KIBBLE.EXE)
+### A22. BYTEPETS * (digital pets; or DIGIPETZ, TAMAGOTCHU, KIBBLE.EXE) (built)
 - **Special:** the nodes are little digital pets, like a keychain pet toy. Tap CALL in the HUD and
   they all turn their heads.
 - **Tell:** the real node is the one that comes when called: it moves a step toward the CALL button.
@@ -228,7 +229,7 @@ made up, not real brands.
   sniffing. Let it go hungry for a whole sector and it sulks (it skips its next lock).
 - **Works with:** SNIFFER (they stack).
 
-### A23. TWINLINK (linked / double-size nodes)
+### A23. TWINLINK (linked / double-size nodes) (built)
 - **Special:** linked pairs, drawn with a line between them, flip together. That helps or hurts.
   The boss adds 2x nodes that take two cells.
 - **Tell:** the real node is never linked, and a 2x node is always ICE.
@@ -236,7 +237,7 @@ made up, not real brands.
   node mirrored across the center.
 - **Works with:** MIRRORLINE (mirrors are links), AFTERIMAGE.
 
-### A24. HAUTE//COUTURE * (art / clothing): the corp built for the Sigil mods
+### A24. HAUTE//COUTURE * (art / clothing): the corp built for the Sigil mods (built)
 - **Special:** every node wears a designer label, which works as the Sigil signature. Most are
   knockoffs.
 - **Tell:** the real node is the original: every fake label is one character off. Each layer is a
@@ -246,14 +247,14 @@ made up, not real brands.
 - **Works with:** **SIGSCAN** (every ICE is signed here, so it always finds one); **FORGERY** (the
   first knockoff you hit each layer is free); KEYLOGGER.
 
-### A25. PLAYTIME (toy corp; or WINDUP)
+### A25. PLAYTIME (toy corp; or WINDUP) (built)
 - **Special:** the nodes are toys: a top, a robot, a jack-in-the-box.
 - **Tell:** the real node is wound up: it hops now and then.
 - **Mod:** JACK-IN-THE-BOX (LAYER START): in every corp, at a random moment, one ICE pops (locks)
   with a jingle.
 - **Works with:** shares a look with MOCHI MOCHI; FREEZE FRAME (it catches the hop).
 
-### A26. KERNING * (misalignment)
+### A26. KERNING * (misalignment) (built)
 - **Copy * (the user wants OCD named in the corp's copy):** keep it playful, about the corp, never
   mocking the player.
   - intel line: `"everything in its place. EVERYTHING."`
@@ -267,7 +268,7 @@ made up, not real brands.
 - **Mod:** PIXEL PEEP (ON HIT): after a hit, the real node is nudged 1px for a second.
 - **Works with:** any corp, as an extra tell layered on top.
 
-### A27. PLAYBALL * (sport, with a pong / breakout game on top)
+### A27. PLAYBALL * (sport, with a pong / breakout game on top) (built)
 - **Special:** you play pong while you pick. A ball bounces around the grid, with walls on the left
   and right and a paddle at the top and the bottom. Both paddles move together with one control.
   Layers are quarters on a scoreboard, and the boss is overtime (two balls).
@@ -305,7 +306,7 @@ made up, not real brands.
 
 ### A31. ALARMS (working name) (the user, 2026-10-24; not designed)
 - A corp with **alarms that go off when you hit ICE**. The user wasn't sure it was noted already: the closest
-  is SPEC §17's trap ideas ("alarm (raises a corp-wide trace meter)", "trace meter: misses raise alarm across a
+  is the archived SPEC §17 (docs/archive)'s trap ideas ("alarm (raises a corp-wide trace meter)", "trace meter: misses raise alarm across a
   corp; at max, the boss arrives early or ICE hunts you"). *(Claude)*: so the alarm could be that meter, made
   into a corp: each ICE hit raises it, and at full the corp does something nasty (the boss comes early, a clock
   starts, ICE starts moving).
@@ -318,64 +319,64 @@ made up, not real brands.
 
 ## Simple (1-10)
 
-### 1. SEEKR (web search)
+### 1. SEEKR (web search) (built)
 - **Special:** the intel line types a search as you enter: `> seekr: +-+ | | ...` with autocomplete.
 - **Tell:** the top autocomplete suggestion is the real node's glyph. Deeper layers only show part
   of it, and the boss shows "did you mean...?" with a near-miss glyph.
 - **Mod:** AUTOCOMPLETE (ON HIT): your first miss each layer strikes out one ICE node.
 - **Works with:** KEYLOGGER; could merge with SYNAPSE.
 
-### 2. BRIGHTLINE POWER (utility company)
+### 2. BRIGHTLINE POWER (utility company) (built)
 - **Special:** the grid flickers like a brownout; every few seconds the screen dims for a moment.
 - **Tell:** decoys flicker with the power, and the real node stays steady (it has a backup).
 - **Mod:** GROUNDED (BLOCK): ICE that would hit for 2 hits for 1.
 - **Works with:** OMNI's and boss damage; FREEZE FRAME.
 
-### 3. MEGAMART (big box retail)
+### 3. MEGAMART (big box retail) (built)
 - **Special:** every node wears a price tag (`$4.99`).
 - **Tell:** the real node is the one on sale, the lowest price. Deeper, the cheapest is a trap and
   the real one is the price that ends in .00.
 - **Mod:** COUPON (ALWAYS ON): markets show one extra offer.
 - **Works with:** HAGGLE; FORGERY (fake price tags).
 
-### 4. PARCELNET (shipping)
+### 4. PARCELNET (shipping) (built)
 - **Special:** nodes are boxes with tracking numbers.
 - **Tell:** the real node's tracking number ends in the layer number.
 - **Mod:** PRIORITY (ALWAYS ON): the map shows how many layers each corp node has.
 - **Works with:** the map, ROUTE.
 
-### 5. COLDBREW (coffee chain)
+### 5. COLDBREW (coffee chain) (built)
 - **Special:** each layer's clock is 1s shorter than the last ("another shot").
 - **Tell:** the real node steams: a `~` drifts up above it now and then.
 - **Mod:** ESPRESSO (TAP TO USE): pause the clock for 5 seconds, once per corp.
 - **Works with:** OVERCLOCK, FASTPAY, COOLANT.
 
-### 6. TOLLGATE (highway tolls)
+### 6. TOLLGATE (highway tolls) (built)
 - **Special:** every pick costs 2cr, but layers pay a bit more.
 - **Tell:** a toll booth `|=|` sits above one column, and the real node is in that column (or next
   to it, deeper).
 - **Mod:** EZPASS (ALWAYS ON): +2cr for every layer you pass.
 - **Works with:** Y-AXIS (the toll column).
 
-### 7. NIMBUS (weather service)
+### 7. NIMBUS (weather service) (built)
 - **Special:** the intel line gives a forecast: `> 70% chance: top row`.
 - **Tell:** the forecast is right as often as it says, so 70% means 70%.
 - **Mod:** FORECAST (LAYER START): every corp gets a forecast line (a row or column, 60% right).
 - **Works with:** X-AXIS / Y-AXIS (a forecast row plus a scan).
 
-### 8. LEDGER TRUST (bank)
+### 8. LEDGER TRUST (bank) (built)
 - **Special:** nodes show account balances.
 - **Tell:** the real node's balance is the only one whose digits add up to 10.
 - **Mod:** INTEREST (LAYER END): when a corp ends, +5% of your credits (up to 20cr).
 - **Works with:** FORGERY (fake balances count as $ nodes: free to hit), SKIMMER.
 
-### 9. BURGERTRON (fast food)
+### 9. BURGERTRON (fast food) (built)
 - **Special:** nodes are combo numbers (#1 to #9).
 - **Tell:** the intel line names the combo of the day. On the boss, the menu changes halfway.
 - **Mod:** SUPERSIZE (ALWAYS ON): every layer pays x2 (was boss layers x1.5 until v13.23).
 - **Works with:** FASTPAY (fast food).
 
-### 10. DIALTONE ONLINE (old dial-up ISP)
+### 10. DIALTONE ONLINE (old dial-up ISP) (built)
 - **Special:** a modem screech plays as each layer connects.
 - **Tell:** the screech has a few clear beeps; their count is the real node's place in reading order.
   It also shows as dots in the HUD, so it works muted.
@@ -384,13 +385,13 @@ made up, not real brands.
 
 ## Medium (11-40)
 
-### 11. DEWEY SYSTEMS (library)
+### 11. DEWEY SYSTEMS (library) (built)
 - **Special:** nodes show call numbers (`613.7`) that should be in order across the grid.
 - **Tell:** the real node is the one shelved out of order.
 - **Mod:** INDEX (ON HIT): ICE you hit shows HI or LO: is the real node's number higher or lower?
 - **Works with:** NUMBERWONG.
 
-### 12. STREAMFLIX (streaming)
+### 12. STREAMFLIX (streaming) (built)
 - **Special:** the screen buffers. Every few seconds everything freezes for half a second, with a
   spinner.
 - **Tell:** during the freeze, the real node keeps animating, because it's the one that's live.
@@ -399,27 +400,27 @@ made up, not real brands.
   node twitches once.
 - **Works with:** every animation corp: COLDBREW, TEMPO, APIARY, PLAYTIME, BULLET TIME.
 
-### 13. RYDR (rideshare)
+### 13. RYDR (rideshare) (built)
 - **Special:** surge pricing. A layer pays more the less time is left on its clock.
 - **Tell:** nodes have star ratings, and the real one is the odd 4.9 among 5.0s (fakes rate
   perfectly).
 - **Mod:** SURGE (ALWAYS ON): every corp layer has a clock (15s if the corp has none); a real pick in its last 3 seconds heals 1 (was x1.5 pay until v13.24).
 - **Works with:** OVERCLOCK (its late purges are worth even more), FASTPAY (the opposite bet).
 
-### 14. APIARY * (bees, agriculture; or BEZ, BZZ)
+### 14. APIARY * (bees, agriculture; or BEZ, BZZ) (built)
 - **Special:** the nodes are a hive; worker nodes slowly drift a pixel at a time toward the queen.
 - **Tell:** the real node is the queen. Watch where the others lean.
 - **Mod (new) *:** HONEYCOMB (LAYER END): every perfect stores a drop of honey (in the HUD). At 3
   drops, you heal 1. If you're full, each drop is +10cr.
 - **Works with:** VIRUS (a swarm), FREEZE FRAME.
 
-### 16. TEMPO RECORDS (music label)
+### 16. TEMPO RECORDS (music label) (built)
 - **Special:** the corp's music has a strong beat, and the boss changes tempo.
 - **Tell:** the real node pulses on the beat; decoys pulse just off it. A sound and animation tell.
 - **Mod:** ON BEAT (ON PICK): a pick made on the beat pays x1.5 (the beat shows in the HUD).
 - **Works with:** MEDIX (heartbeat), FREEZE FRAME.
 
-### 17. ECHO LABS * (sonar; BEACON merged in)
+### 17. ECHO LABS * (sonar; BEACON merged in) (built)
 - **Special:** every few seconds, all the nodes ping, with small rings and a soft blip. It's minimal:
   no beam.
 - **Tell:** the real node pings differently: a different pitch, and its ring goes the other way
@@ -428,14 +429,14 @@ made up, not real brands.
   shows as bars.
 - **Works with:** DECIBEL, HALFLIFE (closer = louder).
 
-### 18. HEADLINE (24-hour news)
+### 18. HEADLINE (24-hour news) (built)
 - **Special:** a news ticker scrolls along the top of the grid.
 - **Tell:** one headline names where the real node is (`...MARKETS FALL IN THE TOP LEFT...`).
   Deeper, some headlines are fake news; the boss ticker is all lies except one.
 - **Mod:** SCOOP (LAYER START): every corp gets a ticker with one true row hint.
 - **Works with:** X-AXIS (a row hint plus a row scan).
 
-### 19. GLACIER (cold storage)
+### 19. GLACIER (cold storage) (built)
 - **Special:** frost spreads in from the edges, one node every few seconds. A frozen node can't
   be picked.
 - **Tell:** the real node freezes last, but if the frost reaches it you take a hit. Waiting narrows
@@ -443,14 +444,14 @@ made up, not real brands.
 - **Mod:** ICEBOX (BLOCK): the first hit in each corp's first layer is free.
 - **Works with:** COOLANT (slower frost), ANCHOR (stops the frost), CORNERS (the frost starts there).
 
-### 20. TUMBLER (locksmiths)
+### 20. TUMBLER (locksmiths) (built)
 - **Special:** nodes are lock pins sitting at different heights in their frames.
 - **Tell:** the real node's pin sits at the shear line, the one height that differs.
 - **Mod (new) *:** PICKSET (ON HIT): every ICE hit sets a pin, shown in the HUD. At 3 pins in one
   corp, the next layer opens with the real node's row lit.
 - **Works with:** X-AXIS (the lit row plus a scan).
 
-### 22. WATCHPOINT * (security cameras)
+### 22. WATCHPOINT * (security cameras) (built)
 - **Special:** a camera sweeps the grid row by row.
 - **Tell:** nodes under the camera show their real faces for a moment: ICE flashes as `###`.
 - **Mod (new) *:** PEEPHOLE (ALWAYS ON): hover with the mouse, or touch and drag, and a small camera
@@ -458,35 +459,35 @@ made up, not real brands.
   drag tech as DECIBEL, with the same guard against accidental picks.
 - **Works with:** DECIBEL (drag), PREDATOR (a view of a moving target).
 
-### 23. TELEPHONIX (phone company)
+### 23. TELEPHONIX (phone company) (built)
 - **Special:** nodes are a keypad (1-9, *, 0, #).
 - **Tell:** the intel plays dial tones: the real node's number. Muted players see the digits flash
   once.
 - **Mod:** CALLER ID (ON HIT): a hit plays the tone for the real node's row.
 - **Works with:** DIALTONE.
 
-### 25. CLONEWORKS (cloning lab)
+### 25. CLONEWORKS (cloning lab) (built)
 - **Special:** every glyph shows up exactly twice, except one.
 - **Tell:** the real node is the only glyph without a twin. Deeper, twins differ by one character.
 - **Mod (new) *:** TWIN LOCK (BOARD): ICE you hit also locks every other closed node with the exact
   same glyph. Strong here; in normal corps, decoy glyphs repeat often enough that it still helps.
 - **Works with:** KEYLOGGER, GENCORP, PURLWISE.
 
-### 26. LA FAMIGLIA * (organized crime)
+### 26. LA FAMIGLIA * (organized crime) (built)
 - **Special:** protection money. Each layer offers a lock on 1 ICE for 15cr.
 - **Tell:** after each miss, a decoy snitches: it points at another decoy.
 - **Mod (changed) *:** OMERTA (BLOCK): an ICE hit costs 10% of your credits (at least 15cr)
   instead of integrity, while you can pay. The richer you are, the more it costs.
 - **Works with:** SKIMMER, INTEREST (more credits, pricier protection).
 
-### 28. SAFEHARBOR INSURANCE (insurance)
+### 28. SAFEHARBOR INSURANCE (insurance) (built)
 - **Special:** pay a premium as you enter (10cr) and every hit in the corp pays a claim.
 - **Tell:** the fine print: a tiny dot in one corner of the real node's frame.
 - **Mod:** POLICY (ON HIT): every ICE hit pays 8cr.
 - **Works with:** **SIGSCAN** (the fine-print dot counts as a mark, but here it's on the *real* node
   and the decoys get a fake dot, so it locks a fake).
 
-### 29. CHUCK E. CACHE'S * (arcade, pizza and games; or CHEDDAR CHIP'S)
+### 29. CHUCK E. CACHE'S * (arcade, pizza and games; or CHEDDAR CHIP'S) (built)
 - **Special:** layers are levels with a score on screen; the boss's nodes have health bars and take
   2 taps. Tickets instead of credits for this corp, cashed in at the end.
 - **Tell:** the real node is the 1UP; it blinks in time with the score counter.
@@ -494,7 +495,7 @@ made up, not real brands.
   keep going.
 - **Works with:** FAILSAFE (they're similar; maybe CONTINUE? only works after FAILSAFE is spent).
 
-### 30. ZODIAC HOUSE * (astrology; was STARFALL)
+### 30. ZODIAC HOUSE * (astrology; was STARFALL) (built)
 - **Special:** the nodes are the twelve signs, drawn as small constellations. The intel line gives
   today's horoscope. The boss is MERCURY RETROGRADE: the tell runs backward.
 - **Tell:** the horoscope names your lucky sign, and the real node is in that sign's constellation
@@ -503,41 +504,41 @@ made up, not real brands.
   most days).
 - **Works with:** X-AXIS (the lucky row), MIRRORLINE (retrograde = mirrored).
 
-### 31. NOIR & ASSOCIATES (detective agency)
+### 31. NOIR & ASSOCIATES (detective agency) (built)
 - **Special:** every node makes a short statement (`NOT 3`, `2 LIES`, `I'M REAL`).
 - **Tell:** a logic puzzle: exactly one node tells the truth, and that's the real one.
 - **Mod:** INTERROGATE (TAP TO USE): once per corp, one node is forced to tell the truth.
 - **Works with:** SYNAPSE (`NOT ME` hints).
 
-### 32. PREDATOR * (heat vision hunter; was THERMAL)
+### 32. PREDATOR * (heat vision hunter; was THERMAL) (built)
 - **Special:** the nodes move around slowly, wandering the grid. A Predator-style heat-vision look:
   the ramp (` .:-=+*#%@`) as a thermal background, with that targeting clicking sound.
 - **Tell:** the real node is the warmest, but the heat blurs and fades every second, and it moves.
 - **Mod:** INFRARED (LAYER START): every corp gets a 1-second heat flash at the start.
 - **Works with:** AEGIS (hunters), QUICK EYE, PEEPHOLE; TRACER goes stale here.
 
-### 33. FORGET-ME-NOT * (memory clinic)
+### 33. FORGET-ME-NOT * (memory clinic) (built)
 - **Special:** the glyphs show for 2 seconds, then every node flips face down (a memory game).
 - **Tell:** the intel line shows the real node's glyph after they flip, so you remember where it was.
 - **Mod (new) *:** PHOTOGRAPHIC (LAYER START): in every corp, the real node's glyph flashes in the
   intel line for a split second (0.3s; 0.5s rare; 0.8s epic). Useful anywhere, if you're quick.
 - **Works with:** KEYLOGGER (the same idea, on a timer instead of a miss).
 
-### 34. GRIDLOCK (traffic control)
+### 34. GRIDLOCK (traffic control) (built)
 - **Special:** nodes are traffic lights cycling red, amber and green. ICE hits for 2 on red and 0 on
   green.
 - **Tell:** the real node's light runs out of sync with the others.
 - **Mod:** GREEN WAVE (BLOCK): an ICE hit while the clock's seconds are even is free.
 - **Works with:** the clock mods, TEMPO (timing).
 
-### 35. VERDANT * (recycling, eco)
+### 35. VERDANT * (recycling, eco) (built)
 - **Special:** after the first ICE hit in a layer, locked ICE starts growing back as new nodes (one
   every 3 picks). Before that hit, nothing regrows, so the tell isn't given away right away.
 - **Tell:** the real node has a leaf in its frame corner, and so do the regrown ones.
 - **Mod:** COMPOST (ON HIT): every 3rd ICE hit heals 1.
 - **Works with:** **SIGSCAN** (leaves count as marks: it locks a regrown one), VIRUS.
 
-### 36. BIDBLITZ * (penny auction / live-stream shopping; was GAVEL & CO)
+### 36. BIDBLITZ * (penny auction / live-stream shopping; was GAVEL & CO) (built)
 - **Special:** the same mechanic in the theme the user suggested: a live penny auction. Before each
   layer, you bid credits; every 10cr locks one ICE, but every bid also adds 2s to the "auction
   clock" and cuts the pay. Hosts shout in the intel line.
@@ -545,13 +546,13 @@ made up, not real brands.
 - **Mod:** SNIPE (LAYER START): if you hold 100cr or more, 1 ICE is locked for free.
 - **Works with:** SKIMMER, INTEREST (money corps); the clock mods.
 
-### 37. LIFTCO (elevators)
+### 37. LIFTCO (elevators) (built)
 - **Special:** a floor indicator above the grid counts 1, 2, 3... through the rows and loops.
 - **Tell:** it stops a beat longer on the real node's row.
 - **Mod:** EXPRESS (LAYER END): after a perfect, the next layer's indicator shows in every corp.
 - **Works with:** X-AXIS.
 
-### 38. FORM 27B * (bureaucracy)
+### 38. FORM 27B * (bureaucracy) (built)
 - **Special:** paperwork. The intel line gives a rule (`corners first`), and you have to follow it
   before the real node can be picked.
 - **Tell:** the real node only opens once the form is filled in. Breaking the rule gets you a
@@ -563,7 +564,7 @@ made up, not real brands.
   in reading order.
 - **Works with:** CORNERS (the corners-first form).
 
-### 40. CHANNEL 9 (broadcast TV)
+### 40. CHANNEL 9 (broadcast TV) (built)
 - **Special:** static over the grid. Tapping the channel number in the HUD flips the channel, which
   re-rolls the decoys' glyphs.
 - **Tell:** on one channel, the real node's glyph comes in clear. Each flip costs 1 second.
@@ -572,21 +573,21 @@ made up, not real brands.
 
 ## Bonkers (41-50)
 
-### 41. GRAVITAS (gravity research)
+### 41. GRAVITAS (gravity research) (built)
 - **Special:** every miss, gravity pulls the grid down like a falling-block game. Locked ICE piles up
   and the nodes above slide down.
 - **Tell:** the real node is lighter than air: it slides up a row when the rest fall.
 - **Mod:** ANTIGRAV (BOARD): after a hit, one locked ICE drops off the grid and opens space.
 - **Works with:** DROP-4, QUICK EYE.
 
-### 42. UPSIDE (mirror universe)
+### 42. UPSIDE (mirror universe) (built)
 - **Special:** the whole screen turns upside down, HUD and tray too, and a tap picks the node mirrored
   across the center.
 - **Tell:** the real node's glyph is the only one that reads right side up.
 - **Mod:** INVERSION (BLOCK, EXOTIC): once per corp, an ICE hit heals 1 instead of hurting.
 - **Works with:** MIRRORLINE, LINKUP.
 
-### 43. LAGRANGE NET (high latency)
+### 43. LAGRANGE NET (high latency) (built)
 - **Special:** your taps land 1.5 seconds late, and the grid slides one step in between. You pick
   where a node will be.
 - **Tell:** the sounds come early. The real node's chime plays before it slides into place.
@@ -594,7 +595,7 @@ made up, not real brands.
   layer appears.
 - **Works with:** QUICK EYE, ANCHOR.
 
-### 44. FOURTH WALL * (a corp that knows it's a game)
+### 44. FOURTH WALL * (a corp that knows it's a game) (built)
 - **Special:** it talks to you, not your runner. It reads your save
   (`> 14 deaths to CHRONOS. again?`) and comments on your mods.
 - **Tell:** it hides the real node where it knows you won't look: away from your most-picked spots
@@ -605,7 +606,7 @@ made up, not real brands.
   corps you haven't met.
 - **Works with:** SYNAPSE (also reads you).
 
-### 45. GROUNDHOG (time loop)
+### 45. GROUNDHOG (time loop) (built)
 - **Special:** the corp repeats the same layer until you get a perfect. Every loop costs 1 integrity,
   but ICE you hit stays marked across loops.
 - **Tell:** your notes from the last loop. Each loop moves one node.
@@ -613,7 +614,7 @@ made up, not real brands.
   corp's last layer.
 - **Works with:** AFTERIMAGE (made for it).
 
-### 46. DECIBEL * (sound lab)
+### 46. DECIBEL * (sound lab) (built)
 - **Special:** hot and cold by ear. On mobile you drag your finger around the grid; on desktop you
   hover.
 - **Tell:** the music gets louder and clearer as you near the real node, and muffled far away. A
@@ -624,7 +625,7 @@ made up, not real brands.
 - **Mod:** STETHOSCOPE (ALWAYS ON): in every corp, the music swells slightly near the real node.
 - **Works with:** PEEPHOLE (the same drag), ECHO LABS, HALFLIFE.
 
-### 47. BITROT * (data corruption)
+### 47. BITROT * (data corruption) (built)
 - **Special:** the screen decays. Characters from the HUD and tray drift into the grid and nodes
   lose pieces; the corruption grows the longer you take.
 - **Tell:** the real node's glyph is built out of HUD characters (your credit digits, your
@@ -636,7 +637,7 @@ made up, not real brands.
   survives (e.g. it could go into REP mod storage).
 - **Works with:** FAILSAFE (both are about the edge).
 
-### 48. BULLET TIME INC (slow motion)
+### 48. BULLET TIME INC (slow motion) (built)
 - **Special:** everything runs at 20% speed: animations, wipes, sound (pitched down). The clock
   still runs in real time.
 - **Tell:** the real node animates at normal speed, the one thing not slowed.
@@ -784,6 +785,9 @@ Make corps plug-ins instead of special cases. A corp can supply hooks:
 
 The multiplayer layer setup uses the same code. After that, a tier 1 corp is mostly data plus one
 glyph function.
+
+> **Note (2026-10-26):** the tier 1-3 plan below is history: all of these corps are built (78 in dist/corps/, incl.
+> MONTE, ENTROPY, PREDATOR, GRAVITAS, TWINLINK, PLAYBALL). Kept for the record.
 
 ## Tier 1: quick (glyphs, intel line, position rules, small number tweaks)
 No new systems. A few hours each, after the kit.
@@ -986,7 +990,7 @@ weighting barely matters yet. It matters once tier 1 corps land, so build it int
     taps yet. Full list in SPEC §16l.
   - Left for tier 3: SQUALOR, MONTE, ENTROPY, PREDATOR, AEGIS, GRAVITAS, DECIBEL, BULLET TIME,
     UPSIDE, BITROT, LAGRANGE, GROUNDHOG, FOURTH WALL, PLAYBALL, TWINLINK, RIVAL, and the stage boss
-    rethink (SPEC §17).
+    rethink (the archived SPEC §17 (docs/archive)).
 - **Built in v09, tier 3 (2026-10-21):** all 15, so **74 corps** (+ OMNI): every corp in this doc.
   Also the RIVAL modifier and the new sector bosses. Details: SPEC §16l "Tier 3".
   - Moving nodes: MONTE (QUICK EYE), ENTROPY (ANCHOR), PREDATOR (INFRARED), AEGIS (AMBUSH),

@@ -6,6 +6,8 @@ keep, change or cut. The screen is 36 columns wide, so short copy works best.
 
 ## Built (v13.05)
 
+- **The user, 2026-10-26: the two built ads are good. More ads to come** (pick from the ideas below when we get to it).
+
 The ad box and two ads: **SPONSORED STORIES** (chumbox) and **VIRUSHIELD PRO** (antivirus, two screens). Adding an ad = its
 screens in `dist/data/ads.js` (30 wide, up to 18 lines; block letters with `adBig`). How often / when: `AD_CFG` in
 `dist/engine/ads.js`. Not yet: ads that do something when tapped (free trials, secret ads), AD BLOCKER.
@@ -14,7 +16,7 @@ screens in `dist/data/ads.js` (30 wide, up to 18 lines; block letters with `adBi
 
 - **Interstitials** between parts of a run: after a boss, or on the way into a safehouse or black market.
 - **Ads for the game's own corps** (most of the list below).
-- A **corp built around ads**: pop-ups and banners over the board (see SPEC §17).
+- A **corp built around ads**: pop-ups and banners over the board (see the archived SPEC §17 (docs/archive)).
 - *(Claude)* A banner strip on the map screen, or a "sponsored" line on the loading / layer messages.
 - *(Claude)* A "skip ad in 5..." button that does something (or doesn't).
 
@@ -58,7 +60,7 @@ The user's headlines:
 Most ads do nothing when you tap them (that's the joke). But **one particular ad, if you actually tap it,
 gives you something special**. Or it needs a combination: **own a certain mod, and when a certain ad shows
 up, tap it** to trigger something, like an extra EXOTIC mod. A hidden quest, the kind players whisper about.
-It joins the **nuke quest** (SPEC §17, "Remove a corp from the run": a nuked or removed corp's node stays on
+It joins the **nuke quest** (the archived SPEC §17 (docs/archive), "Remove a corp from the run": a nuked or removed corp's node stays on
 the map, and going there starts a strange hidden quest line).
 
 *(Claude)* ideas to react to:
@@ -86,7 +88,7 @@ way real ads push them.
 
 ## Gun ads and cyberware ads (the user, 2026-10-22)
 
-Ads for guns (maybe from an arms-dealer corp, SPEC §17) and for **cyberware**: a way to lean the world more
+Ads for guns (maybe from an arms-dealer corp, the archived SPEC §17 (docs/archive)) and for **cyberware**: a way to lean the world more
 cyberpunk without changing the gameplay. The ads are where the setting can show: implants, chrome, body mods,
 sold like phones and supplements.
 
@@ -126,7 +128,7 @@ The podcast-read VPN ad, in a game about getting traced. *(Claude)* names: NORDV
 TUNNEL.ME, PRIVATE PROXY (just "PROXY").
 
 *(Claude)* drafts:
-- "your IP address is showing. (it's 10.0.4.17.)" (the same fake address as the boot screen: SPEC §16f)
+- "your IP address is showing. (it's 10.0.4.17.)" (the same fake address as the boot screen: the archived SPEC §16f (docs/archive))
 - "hackers can see everything you do. we would know."
 - "watch STREAMFLIX shows from other sectors!"
 - "military-grade encryption. (the military is us. we're one guy.)"
@@ -142,7 +144,7 @@ A way to "go ad free", or an **ad to go ad free**. *(Claude)* takes on it:
 - **A real option that's a joke:** a setting / purchase (in credits) called `AD FREE`. It works, but the
   loading line says "ad free (sponsored by VIRUSHIELD PRO)", or ads come back as "partner messages".
 - **A mod:** AD BLOCKER (EXOTIC?): no ads, but you also lose the free trials and secret ads (a real trade-off
-  with the hidden quests). Or a corp mod from the ad corp (SPEC §17).
+  with the hidden quests). Or a corp mod from the ad corp (the archived SPEC §17 (docs/archive)).
 - **For the player who really doesn't want them:** a plain settings toggle that turns the ads off for real
   (no joke), next to REDUCED effects, so the bit never gets in anyone's way.
 
@@ -165,7 +167,7 @@ DRAGON THRONE: AWAKENING, RAID OF LEGENDS, QUEENS OF KALDOR, EMPIRE OF DESIRE (s
 - the art: a small ASCII bust / pin-up in the old textmode style (the scene's own pin-up pieces are a good
   reference; keep it suggestive, the joke is how shameless the ad is).
 
-## Leaderboard ads (the user, 2026-10-22; once there's a leaderboard, SPEC §17)
+## Leaderboard ads (the user, 2026-10-22; once there's a leaderboard, the archived SPEC §17 (docs/archive))
 
 An ad that shows the leaderboard. *(Claude)*: "TOP RUNNERS THIS WEEK" with the real top 3 (names, layers,
 logos), sold like a sports ad or a dating ad: "GHOST_RAT reached sector 4. what's your excuse?", "you are
@@ -232,6 +234,6 @@ and the debt idea).
 - *(Claude)* **LUCKEEZ CASINO:** "the house always wins. you could be the house. (you can't.)"
 - *(Claude)* **NIMBUS WEATHER:** "100% chance of forecast."
 - *(Claude)* **MEDIX:** "side effects may include: side effects."
-- *(Claude)* **LEDGER TRUST:** "your balance is our business. your debt is our pleasure." (ties to the debt idea, SPEC §16f)
-- *(Claude)* **The dating corp** (idea in SPEC §17): "someone in your area wants to breach you."
+- *(Claude)* **LEDGER TRUST:** "your balance is our business. your debt is our pleasure." (ties to the debt idea, the archived SPEC §16f (docs/archive))
+- *(Claude)* **The dating corp** (idea in the archived SPEC §17 (docs/archive)): "someone in your area wants to breach you."
 - *(Claude)* **OMNI//CORE:** "you shouldn't be here. but since you are: try OMNI premium."

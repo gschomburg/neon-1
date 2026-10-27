@@ -5,7 +5,7 @@ bend the rules of the game, not just give bigger numbers. Several change how a l
 thinking through before it's built. **ICE EATER and ZOMBIE are built (v12.14), BLOOD MONEY (v12.15), LEVERAGE (v12.16), QUANTUM (v12.17), COIN FLIP (v12.19), SNOOZE (v12.23), RAM DOUBLER (v12.24, was CHROMED UP)**, with the exotic system (where they drop, rule slots, locked mods); the rest isn't. *(Claude)* marks my drafts; the rest is the
 user's.
 
-Mods for corps that don't exist yet stay with those corp ideas (SPEC §17). Mods that need the fake ads
+Mods for corps that don't exist yet stay with those corp ideas (the archived SPEC §17 (docs/archive)). Mods that need the fake ads
 (free trials, AD BLOCKER, secret ads) stay in [ADS.md](ADS.md) until the ads exist; the user likes AD BLOCKER.
 
 ---
@@ -130,7 +130,7 @@ gives you a big enough bonus that there are ways to **deflect** ICE hits. Rule s
 *(Claude)* takes, to react to:
 - **Credits are your health.** Integrity is locked at 1 (the bar shows `$`). An ICE hit costs credits instead
   (a set price, or a % of what you have, growing deeper in the run); at 0 credits the next hit kills you, or
-  you go **into debt** (ties to the debt idea, SPEC §16f, and LEDGER TRUST). Pay is your healing: every layer you
+  you go **into debt** (ties to the debt idea, the archived SPEC §16f (docs/archive), and LEDGER TRUST). Pay is your healing: every layer you
   clear "heals" you. Spending at the market is spending your life. Names: BLOOD MONEY, PAY TO LIVE,
   CREDIT LINE, INSURED.
 - **The deflect version:** integrity drops to 1, but you get a big credit bonus and every ICE hit can be paid
@@ -208,7 +208,7 @@ slot: `health` (it rewrites what a hit costs: there's nothing left to lose), so 
   zombie take on your palette (washed-out green). The death screen could say "you died. again."
 - Pairs: with ICE EATER it's a feeding game. With money for health: same slot, can't have both.
 
-## LEVERAGE — BUILT v12.16 (the user's debt idea, 2026-10-22; was in SPEC §16f)
+## LEVERAGE — BUILT v12.16 (the user's debt idea, 2026-10-22; was in the archived SPEC §16f (docs/archive))
 
 Credits can go negative, and debt makes you stronger. One mod for both halves of the idea. Built:
 - Credits can go below 0, down to a **limit** (-150, and -100 more each sector). Buy on credit, tithe, bid, pay
@@ -304,5 +304,5 @@ ICE you carry stays *dead* (locked) so the next layer is bigger but partly solve
 - **PARADOX:** undo your last ICE hit (integrity back, the node closes again).
 - **ENTANGLE:** link two nodes; if either is real, both open.
 - **NUKE** (HALFLIFE's idea): wipe a corp node off the map, get past it with no reward; leads into the
-  hidden quest (SPEC §17).
+  hidden quest (the archived SPEC §17 (docs/archive)).
 - Exotic versions of existing items (e.g. an EXOTIC SPLIT that leaves only the real node and one ICE).

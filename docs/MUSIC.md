@@ -160,9 +160,9 @@ Clean up the tracks; not every corp needs its own. Maybe:
 - **The engine demos go to new corps** (the user, 2026-10-25): ACID RAIN, CRYPT ORGAN, CHIP RUNNER, RUST BELT, SEA
   LEGS, ORBIT CLUB, BROKEN SIGNAL, CLOCKWORK WALTZ are pocketed: when a new corp is built, give it one of these
   (not the existing corps; the music is in a good place, the user says).
-- **Music per sector** (SPEC §17): sector 2+ shifts the music (key / tempo up, an extra layer) so you can
+- **Music per sector** (the archived SPEC §17 (docs/archive)): sector 2+ shifts the music (key / tempo up, an extra layer) so you can
   feel the progress.
-- **Sound for the boot intro** (SPEC §16f, the intro follow-ups): a modem handshake / dial-up screech under
+- **Sound for the boot intro** (the archived SPEC §16f (docs/archive), the intro follow-ups): a modem handshake / dial-up screech under
   the boot log, key clicks as the login types, a beep per `ok` (a buzz on `FAIL`), a chirp on
   `handshake complete`, the title theme fading in. The catch: browsers block audio until the first tap or key,
   so the first boot plays silent (the fix: open on `>_ press any key to connect`).
