@@ -103,7 +103,7 @@ const BOT = `(async () => {
     const rng = rngOf(seed + ':' + cfg.skill);
     const rec = { seed, skill: cfg.skill, sectors: [], end: '' };
     let sec = null;
-    const newSector = s => { sec = { sector: s + 1, earnedAt: st.run.earned, creditsAt: st.run.credits, layers: 0, perfects: 0, pay: 0, corps: 0, tolls: 0, tollsOwed: 0, unpaid: 0, stageFee: 0, stageShort: 0, heldAtGate: 0,
+    const newSector = s => { sec = { sector: s + 1, earnedAt: st.run.earned, creditsAt: st.run.credits, layers: 0, perfects: 0, pay: 0, corps: 0, tolls: 0, tollsOwed: 0, unpaid: 0, deaths: 0, stageFee: 0, stageShort: 0, heldAtGate: 0,
       markets: [], spent: { mod: 0, item: 0, repair: 0 }, rewards: { mod: 0, credits: 0 }, cache: 0 }; rec.sectors.push(sec); };
     const closeSector = () => { if (!sec) return; sec.earned = st.run.earned - sec.earnedAt; sec.creditsEnd = st.run.credits; delete sec.earnedAt; };
     try {
@@ -111,12 +111,17 @@ const BOT = `(async () => {
       B.showTitle(); await sleep(50);
       B.startRun(seed, true); await settle('start');
       st.god = true;
+      // mod:KEY or mod:KEY:STEP: start the run already holding that mod (the mod pass)
+      for (const w of W.filter(w => w.startsWith('mod:'))) { const [, k, t] = w.split(':'); if (!MODS[k]) throw new Error('what-if: no mod ' + k); B.addMod(k, +(t || 0)); }
+      let downNow = false;
       newSector(0);
       let lastLv = null;
       for (let step = 0; step < 4000; step++) {
         if (step % cfg.every === 0) { out.partial = rec; report(); }
         await settle('step');
         const run = st.run;
+        // a death the bot would have had (it never dies: god mode); integrity at 0 counts once until it's back up
+        if (run && sec) { const down = run.integrity <= 0; if (down && !downNow) sec.deaths++; downNow = down; }
         (rec.trace = rec.trace || []).push([step, st.mode, st.panelTitle || '', run && run.at, st.corp ? st.corp.def.key + ':' + st.corp.idx : '', run && run.credits, run && run.mods.join(','), run && run.items.map(x => x.key).join(',')]); if (rec.trace.length > 12) rec.trace.shift();
         if (!run) { rec.end = 'no run'; break; }
         if (run.sector + 1 !== sec.sector && st.mode === 'map') { closeSector(); newSector(run.sector); }

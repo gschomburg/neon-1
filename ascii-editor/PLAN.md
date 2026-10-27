@@ -546,3 +546,12 @@ export, and a point-to-point pen. Curve handles later. Tiny art (5x3 glyphs) is 
 mostly a starting point for touch-up; bigger pieces (ads, corp art, maps) are where it shines.
 
 Built like the game's palette editor: one HTML page, open it in Chrome, no setup.
+
+## Notes (the user, meat notes 2026-10-26)
+- **3D blocks tool:** needs a **bake** button in the UI. A rotate in the 3D preview that turns all the blocks 90 degrees
+  each time around x, y or z (around the center of the shape). The clear button goes by add / remove, to their left,
+  and says **clear all**.
+- **Select several layers and move their contents** together.
+- **Dragging a layer vs the selection:** clicking a layer and moving it turns that layer into a selection; select
+  another layer and the selection stays, so dragging that layer moves only the old selection. (In Photoshop, dragging
+  a layer doesn't select anything, so it's never a problem.)

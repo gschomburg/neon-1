@@ -228,3 +228,10 @@ sells its cheapest mods when short). Held at each uplink -> its bill, mods sold;
 - **With flat x2 perfects it does what we wanted:** everyone pays real money at each checkpoint, carries ~200-800cr into
   the next sector, and usually sells about one mod at the 2nd uplink. Nobody was forced to cash out.
 - The bill is ~400-450 at the 1st and ~900-1,000 at the 2nd (6 mods). The sector 3 pile (~2,750) is what the 3rd would take.
+
+## More money ideas (the user, meat notes 2026-10-26)
+
+- **THROTTLE:** a mod that makes the uplink bandwidth cheaper (or HAGGLE's legendary step does it).
+- **Items as a store of value:** items could be worth more: sell them at black markets, and they cost nothing at the
+  uplink (only mods do). Carry value through the checkpoint as items.
+- **TIME IS MONEY:** a corp's clock drains your credits as it runs; maybe an event for a whole stage.

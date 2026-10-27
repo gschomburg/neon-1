@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.42']);
+NEON_FILES.push(['engine/panels.js', 'v13.45']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -92,7 +92,7 @@ function pickMods(r, pool, k, exclude = []) {
   return shuffle(pool.filter(ok), r).slice(0, k).map(key => ({ key, tier: rollTier(r, MODS[key]) }));
 }
 
-const priceOf = o => o.free ? 0 : o.kind === 'repair' ? o.price : Math.round(o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', [0.25, 0.35, 0.5]) : 1) * priceScale());   // (priceScale: data/economy.js)
+const priceOf = o => o.free ? 0 : o.kind === 'repair' ? o.price : Math.round(o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale());   // (priceScale: data/economy.js)
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
 function openShop(node) {
@@ -138,7 +138,7 @@ function openShop(node) {
   openPanel('BLACK MARKET', (T, B, X) => {
     const now = performance.now();
     T('BLACK MARKET', C.money);
-    T(`credits ${run.credits}${leverage() ? `  (limit ${creditFloor()})` : ''}${has('haggle') ? `  (haggle -${Math.round(tv('haggle', [0.25, 0.35, 0.5]) * 100)}%)` : ''}`, run.credits < 0 ? C.danger : C.money);   // LEVERAGE: the limit
+    T(`credits ${run.credits}${leverage() ? `  (limit ${creditFloor()})` : ''}${has('haggle') ? `  (haggle -${Math.round(tv('haggle', ECON.haggle) * 100)}%)` : ''}`, run.credits < 0 ? C.danger : C.money);   // LEVERAGE: the limit
     T('');
     offers.forEach((o, k) => {
       const def = defOf(o);
@@ -264,7 +264,7 @@ function openCache(node) {
   const run = st.run;
   const r = rngFor(run.seed, 'cache', node.id);
   const got = [grantLoot(r, 2)];
-  for (let i = 0; i < (has('cachekey') ? tv('cachekey', [1, 2, 3]) : 0); i++) got.push(grantLoot(r, 2));
+  for (let i = 0; i < (has('cachekey') ? tv('cachekey', ECON.modx.cachekey) : 0); i++) got.push(grantLoot(r, 2));
   if (has('cachekey')) modFired('cachekey');
   openChoice({
     title: 'DATA CACHE', col: C.money,

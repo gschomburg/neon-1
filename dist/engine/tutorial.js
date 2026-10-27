@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v13.42']);
+NEON_FILES.push(['engine/tutorial.js', 'v13.45']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -109,14 +109,14 @@ function tutTap(h) {
 // ---- start / end
 // auto: a line id to play forward to (the neon editor's TRAINING tab): the lines before it are skipped
 // and what they ask for is done for you.
-function startTutorial(auto = null, seedWas = st.seed) {
+function startTutorial(auto = null, seedWas = st.seed, practiceWas = st.practice) {
   if (st.transitioning || st.tut) return;
   if (typeof auto !== 'string') auto = null;   // (a button's tap passes its event)
-  const T = st.tut = { pop: null, allow: null, seedWas, spots: {}, auto, curtain: !auto || TUT.curtain.includes(auto) };
+  const T = st.tut = { pop: null, allow: null, seedWas, practiceWas, spots: {}, auto, curtain: !auto || TUT.curtain.includes(auto) };
   startRun(TUT.seed, true, { tutorial: true });
   tutScript(T).catch(() => {}).then(() => {   // ends when it's done, or when the run is gone (abandoned)
     if (st.tut === T) st.tut = null;
-    st.seed = T.seedWas;
+    st.seed = T.seedWas; st.practice = !!T.practiceWas;   // your own seed and run type back (not the training's practice run)
   });
 }
 // The tutorial's run: a fixed seed, a PATCH on the belt, BASIC CORP on the first map step.
@@ -149,12 +149,12 @@ async function tutJump(id) {
     return;
   }
   // start over (a new run replaces this one; the old script sees it's no longer the training and stops)
-  const seedWas = T ? T.seedWas : st.seed;
+  const seedWas = T ? T.seedWas : st.seed, practiceWas = T ? T.practiceWas : st.practice;
   if (T) st.tut = null;
   for (let i = 0; i < 100 && (st.transitioning || st.wipe); i++) await wait(50);
   if (st.pause) togglePause();
   st.transitioning = false;
-  startTutorial(id, seedWas);
+  startTutorial(id, seedWas, practiceWas);
 }
 // Playing forward: do what a popup asks (a pick, an item, a map node, a button), one step at a time.
 function tutAuto(T, allow) {
@@ -364,6 +364,7 @@ function buildTutorial(ctx, now, under) {
   if (!p || !tutOn()) return;
   const r = tutRect(p.target, under);
   p.lay = p.mini ? tutMiniLayout(p, r, under) : tutLayout(p, r);
+  T.head = under.filter(c => Math.round(c.cy) === 0 && c.ch && c.ch !== ' ');   // the header row (NeoN+1, the menu): drawn again on top
   // the target pulses (scales up and down around its middle) once the arrow has landed: nodes and the
   // HUD only (on buttons, items and map nodes the letters would slide off their color chips)
   const t = now - p.t0, land = tutTimes(p).land;
@@ -434,7 +435,7 @@ function tutMiniLayout(p, r, cells = []) {
   const span = Math.ceil((F.h + 6 * k) / L.chh / 2), wCells = 6 + p.act.length + 4;
   let below = r ? r.y + r.h + 1 : 6;
   if (r && p.near === 'below') for (let y = r.y + r.h + span; y < L.hc - span - 1; y++) if (!used(y - span, y + span, wCells)) { below = y; break; }
-  const row = r && p.near === 'below' ? below : r && p.near === 'right' ? r.y + (r.h - 1) / 2 : 6;
+  const row = r && p.near === 'below' ? below : r && p.near === 'right' ? r.y - 1 : 6;   // (right: a row above, clear of the item's description under it)
   const label = '> ' + p.act, cy = L.oy + (row + 0.5) * L.chh;
   const fx = r && p.near === 'right' ? L.ox + (r.x + r.w + 1) * L.cw : L.ox + 3 * k, px = fx + F.w + 10 * k, pw = g.measureText(label).width + 20 * k;
   return { mini: true, msgRow: row === 6, k, fs, label, rows: [], fx, fy: cy - F.h / 2, pill: { x: px, y: cy - ph / 2, w: pw, h: ph },
@@ -454,6 +455,14 @@ function drawTutorial(now) {
     else drawTutPop(T, T.leaving.pop, now, te);
   }
   if (T.pop && T.pop.lay) drawTutPop(T, T.pop, now, -1);
+  // the header row stays on top of the popups, on a solid background (the menu has to stay reachable and readable)
+  if (T.head && (T.pop || T.leaving)) {
+    g.save();
+    g.fillStyle = C.bg; g.fillRect(L.ox, L.oy, L.wc * L.cw, L.chh);
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (const c of T.head) { g.font = `${c.bold ? DRAW_FONT.bold : DRAW_FONT.weight} ${L.fs * DRAW_FONT.scale}px ${DRAW_FONT.family}`; g.fillStyle = c.col; g.fillText(c.ch, pxX(c.cx), pxY(c.cy)); }
+    g.restore();
+  }
 }
 // The yellow under-layer and fill: a dark drop shadow, or a yellow line along the right and bottom.
 function tutBack(x, y, w, h, k) {

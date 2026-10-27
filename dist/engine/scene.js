@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.42']);
+NEON_FILES.push(['engine/scene.js', 'v13.45']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -193,7 +193,13 @@ function buildScene(now, collectHits, raw = false) {
     }
   }
 
-  if (st.msg) put(0, 6, st.msg.slice(0, Math.min(L.wc, Math.floor((now - st.msgT) / 16))), (st.msgSlot && C[st.msgSlot]) || st.msgCol || C.text);
+  // The terminal line: inverted, on a band of its color across the whole row, so it reads as its own thing
+  // (players missed it under the HUD). It types in as before.
+  if (st.msg) {
+    const col = (st.msgSlot && C[st.msgSlot]) || st.msgCol || C.text;
+    bg(0, 6, L.wc, col, 1);
+    put(0, 6, st.msg.slice(0, Math.min(L.wc, Math.floor((now - st.msgT) / 16))), C.bg, 'hud', true);
+  }
 
   // Row 7: clock or boss warning
   if (st.mode === 'play' && st.lv) {

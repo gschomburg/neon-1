@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.42']);
+NEON_FILES.push(['engine/run.js', 'v13.45']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -461,7 +461,7 @@ function updateTimer(dt) {
     if (opts.length > 0 && candidates().length > 1) {
       lockTile(opts[Math.floor(Math.random() * opts.length)], C.mid, 'overclock');
       lv.ocCount++;
-      lv.payCut = Math.min(0.9, lv.payCut + CONFIG.overclockCut);
+      lv.payCut = Math.min(0.9, lv.payCut + ECON.modx.overclockCut);
       setMsg(`> overclock: purged 1. pay -${Math.round(lv.payCut * 100)}%`, C.mid);
     }
   }
@@ -652,13 +652,13 @@ function payFor(lv) {
   let mult = c.pay || 1;
   if (c.stageBoss) mult *= ECON.pay.stageBoss;   // a corp as the sector boss pays more
   if ((lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned) mult *= ECON.pay.perfect + ECON.pay.perfectPerNode * (lv.n - 1);   // ICE EATER: every clear is clean
-  if (has('skimmer')) mult *= tv('skimmer', [1.25, 1.5, 1.75]);
+  if (has('skimmer')) mult *= tv('skimmer', ECON.modx.skimmer);   // (the mod numbers: data/economy.js ECON.modx)
   mult *= coinMult();   // COIN FLIP: the streak multiplier
-  if (has('quantum') && lv.tiles.some(t => t.quantum)) mult *= 0.5;   // QUANTUM: 2 real, half pay
-  if (has('fastpay') && lv.fast) mult *= 1.5;
-  if (has('supersize')) mult *= 2;
+  if (has('quantum') && lv.tiles.some(t => t.quantum)) mult *= ECON.modx.quantum;   // QUANTUM: 2 real, half pay
+  if (has('fastpay') && lv.fast) mult *= ECON.modx.fastpay;
+  if (has('supersize')) mult *= ECON.modx.supersize;
   if (c.def.surge) mult *= 1 + 0.8 * (lv.surgeF || 0);   // RYDR: pays more the later you pick
-  if (has('onbeat') && lv.onBeat) mult *= 1.5;
+  if (has('onbeat') && lv.onBeat) mult *= ECON.modx.onbeat;
   if (c.mod === 'loaded') mult *= 1.2;
   if (c.hasBoss && c.def.faith && !lv.tithed) mult *= 2;   // THE CHOIR: on faith
   if (lv.dd) mult *= 2;                                    // LUCKEEZ: double down
@@ -778,7 +778,7 @@ const END_FX = {
     const run = st.run, c = st.corp, lv = st.lv;
     if (!c.hasBoss) return false;
     if (c.ride) {
-      if (perfect) { run.credits += 2 * c.ride; run.earned += c.ride; Sound.loot(); setMsg(`> let it ride: +${2 * c.ride}cr!`, C.money); }
+      if (perfect) { const back = Math.round(ECON.modx.letitride * c.ride); run.credits += back; run.earned += back - c.ride; Sound.loot(); setMsg(`> let it ride: +${back}cr!`, C.money); }
       else setMsg(`> let it ride: lost ${c.ride}cr.`, C.danger);
       c.ride = 0;
     } else if (perfect && c.idx < c.counts.length && lv.paid > 0) {
@@ -907,7 +907,7 @@ async function onTrap(t, i) {
   if (t.loaded) {
     const lr = rngFor(run.seed, 'loot', st.corp.node.id, st.corp.idx);
     msg += ' ' + grantLoot(lr, st.corp.tier);
-    if (has('priority')) { msg += ' ' + grantLoot(lr, st.corp.tier); modFired('priority'); }   // PRIORITY: delivered twice
+    if (has('priority')) { for (let i = 1; i < ECON.modx.priority; i++) msg += ' ' + grantLoot(lr, st.corp.tier); modFired('priority'); }   // PRIORITY: delivered more than once
   }
   // a HIT mod fires unless it returns false (nothing happened); a callout fires it later
   for (const k of modsAt('hit')) {
@@ -1480,7 +1480,7 @@ function grantLoot(r, tier) {
   const run = st.run;
   Sound.loot();
   // an item (more often with a higher STASH), at a rolled tier, if there's room
-  if (r() < (has('stash') ? tv('stash', [0.4, 0.6, 1]) : ECON.loot.itemChance)) {
+  if (r() < (has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance)) {
     const key = pickR(Object.keys(ITEMS), r), tier = rollTier(r, ITEMS[key]);
     if (addItem(key, tier)) return `got item: ${ITEMS[key].name}${tier ? ' ' + RARITY[itemView(key, tier).rarity].label.toLowerCase() : ''}.`;
   }

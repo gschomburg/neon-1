@@ -707,6 +707,10 @@ common the deeper you go (e.g. 0% in sector 1, then 10% and +5% per sector).
   hacker into your game"). The ICE isn't just a wall: tripping it alerts an enemy hacker, who jumps into the corp
   (a RIVAL-style bot shows up mid-corp). Maybe this is how the enemy hacker stage / corp event works: in that
   stage, ICE hits can bring a hacker in (ICE MAN would fit: the hacker who comes out of the ICE).
+- **Ally hackers** (the user, meat notes 2026-10-26): an item that calls a hacker (POPS?) who has health and goes and hits nodes for you; maybe he
+  has mods so his effects matter, or he just eliminates nodes. Upgrade your hackers and give them mods of their own
+  (unlock POPS, then give him TRACER); maybe linked to REP or to your experience with that hacker; maybe a hacker
+  comes with a mod already and you upgrade it. Some allies just stand there and take the hits for you (you still tap).
 - **Hacker / NPC name pool** (2026-10-26, from naming the tutorial's handler; the user picked **POPS**, keep the rest for
   adversaries or other NPCs): **DOC** (the handler's first name), **SYSOP** (an old BBS admin, online since 300 baud),
   **NANA** (a retired hacker grandma, sweet and ruthless), **DIALUP** (an old-timer who still hears the modem in his
@@ -722,6 +726,14 @@ common the deeper you go (e.g. 0% in sector 1, then 10% and +5% per sector).
 - Ties into REP mod storage and the ripper doc (store a mod to keep it safe).
 
 ### More modifier seeds (Claude)
+- **New event / modifier ideas** (the user, meat notes 2026-10-26):
+  - **FLUSH:** tons of extra loot nodes.
+  - **BLACK ICE:** the ICE is extra deadly, or each ICE has a random chance to be black ICE, which can take all your
+    integrity but 1. (Also as its own node type: "what if ICE isn't the only bad node type".)
+  - **An extra layer in every corp.**
+  - **Every corp is a stage boss** (or OMNI), or there are **2 bosses**.
+  - **The stage flipped:** you fight the boss first.
+  - **TIME IS MONEY:** the clock costs you credits as it runs. Maybe an event for a whole stage, not a corp.
 - **ARMORED:** the nodes have CARAPACE's armor.
 - **CURSED:** no perfect heals in this corp.
 - **RUSH:** every layer gets a clock (the clock mods matter more).
@@ -1009,6 +1021,13 @@ weighting barely matters yet. It matters once tier 1 corps land, so build it int
 5. Pick one tier 3 feature at a time. Moving nodes unlocks the most.
 
 ## Notes
+- **Mod ideas** (the user, meat notes 2026-10-26):
+  - **Open map:** a mod that opens the map so you can go any direction; or an item that adds pathways; or WARP lets you
+    choose the node you go to (or any in the same row).
+  - **THROTTLE:** cheaper uplink bandwidth at the end of a sector (or HAGGLE's legendary step does it). See ECONOMY.md.
+  - **DIGIPET's pet on screen:** it hangs out on your screen, you see it go up and sniff the node, and you can pet it
+    (an achievement for petting it).
+
 - **Good first builds:** they only need code that's already there (glyph / frame changes, the intel
   line, lockTile): BASIC, SEEKR, MEGAMART, PARCELNET, LEDGER TRUST, CLONEWORKS, DEWEY, HAUTE//COUTURE
   (reuses the Sigil signature).

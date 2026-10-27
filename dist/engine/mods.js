@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.42']);
+NEON_FILES.push(['engine/mods.js', 'v13.45']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -178,7 +178,7 @@ const COIN = {
   bigChance: 0.2,    // each face can be a big one
   hp: 1, bigHp: 2,   // a ♥ face: integrity won / lost
   get cr() { return earnInt(ECON.mods.coinCr); }, get bigCr() { return earnInt(ECON.mods.coinBigCr); },   // a $ face: credits won / lost, x the multiplier (data/economy.js)
-  max: 5,            // the multiplier tops out here
+  get max() { return ECON.modx.coinMax; },   // the multiplier tops out here (data/economy.js)
 };
 // Mods some corps switch off: COIN FLIP in the drag corps (DECIBEL, SQUALOR, PLAYBALL: holding and
 // dragging already mean something there), QUANTUM in corps with their own tap rules (DEMOLITION,

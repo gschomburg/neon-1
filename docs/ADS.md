@@ -53,6 +53,7 @@ The user's headlines:
 - "your sector's top-rated safehouse (it's not what you think)"
 
 ## Secret ads: hidden quests (the user, 2026-10-22)
+- **Ads you can actually buy from** (the user, meat notes 2026-10-26): e.g. buy a puppy item for a quest.
 
 Most ads do nothing when you tap them (that's the joke). But **one particular ad, if you actually tap it,
 gives you something special**. Or it needs a combination: **own a certain mod, and when a certain ad shows

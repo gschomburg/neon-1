@@ -7,7 +7,7 @@
 //   4. A first run: NEWB or LEET, under your logo and name (tap them to shuffle). NEWB starts the training, LEET the title.
 // Screens change with the game's wipe. A tap skips ahead.
 'use strict';
-NEON_FILES.push(['engine/intro.js', 'v13.42']);
+NEON_FILES.push(['engine/intro.js', 'v13.45']);
 
 // For now (the user, 2026-10-26, while we work on it): every launch plays all of it, NEWB / LEET too.
 // Later: NEWB / LEET only the first time (save.bootSeen).
@@ -53,7 +53,7 @@ const INTRO_CARD = [
   "",
   "            NeoN+1",
   "     ____________________",
-  "       corporate/action",
+  "network intrusion // prototype",
 ];
 const INTRO_CARD_AT = [2, 4];
 // Timing (ms). The login screen: from the tap; the card: from when it's in.
@@ -127,20 +127,29 @@ async function introGo(stage) {
 // After the card: a first run picks NEWB or LEET; otherwise the title.
 function introAfterCard() { const b = st.boot; if (b.first) introGo('pick'); else introDone(); }
 // To the title: wipe out of the intro, and the title (already underneath) comes in.
+// Leaving the intro: the music powers up and lands on a chord (like beating a boss), then the next track
+// eases in (the user: the cut from ON CAMERA to the title was rough).
+async function introOut(b) {
+  const s = b.music && typeof Sound.bossWin === 'function' ? Sound.bossWin() : 0;
+  if (s > 0) await wait(Math.max(0, s * 1000 - 120));
+}
 async function introDone() {
   const b = st.boot;
   if (!b || b.going) return;
   b.going = true;
-  await wipeOut(0);
+  await introOut(b);
+  await wipeOut(1);
   endIntro();
   wipeIn();
 }
-function introLeet() { save.leet = true; persist(); introDone(); }
+function introLeet() { if (st.boot && st.boot.going) return; Sound.ui(); save.leet = true; persist(); introDone(); }
 // NEWB: the training (its start wipes this screen out, then POPS says hello over the lines).
-function introNewb() {
+async function introNewb() {
   const b = st.boot;
   if (!b || b.going) return;
   b.going = true;
+  Sound.ui();
+  await introOut(b);
   startTutorial();   // (startRun captures this screen for its wipe right away)
   endIntro();
 }
@@ -243,7 +252,7 @@ function introCard(ctx, now, t) {
   INTRO_CARD.forEach((row, y) => {
     const s = row.trim();
     if (s === 'NeoN+1') return put(x0 + row.indexOf(s), y0 + y, s, C.bright, 'hud', true);
-    if (/^[a-z/ ]+$/.test(s)) return put(x0 + row.indexOf(s), y0 + y, s, C.mid);
+    if (/^[a-z/ ]+$/.test(s)) return put(x0 + row.indexOf(s), y0 + y, s, C.mid);   // the copy line
     [...row].forEach((ch, x) => { if (ch !== ' ') put(x0 + x, y0 + y, ch, ';:.'.includes(ch) ? C.dim : '_'.includes(ch) && /^_+$/.test(s) ? C.dim : C.accent); });
   });
   if (t > 1200 && Math.floor(now / 600) % 2) ctx.putC(L.hc - 2, 'tap to continue', C.dim);

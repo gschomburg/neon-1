@@ -7,114 +7,129 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v13.42']);
+NEON_FILES.push(['data/economy.js', 'v13.45']);
 
 const ECON = {
   // ---- Units
   earn: {
-    unit: 10,   // cr: earn unit (credits per earn unit)
-    grow: 0,   // grow: earn growth (everything you earn grows this much a sector (0.35 = +35%))
+    unit: 10,   // cr: earn unit (how many credits one earn unit is)
+    grow: 0,   // grow: earn growth (everything you earn grows this much each sector (0.35 = +35% a sector))
   },
   spend: {
-    unit: 10,   // cr: spend unit (credits per spend unit)
-    grow: 0,   // grow: spend growth (everything you spend grows this much a sector)
+    unit: 10,   // cr: spend unit (how many credits one spend unit is)
+    grow: 0,   // grow: spend growth (everything you spend grows this much each sector)
   },
   // ---- Earning: layer pay
   pay: {
-    base: 0.4,   // earn: base (every layer)
-    perNode: 0.2,   // earn: per node (x the nodes on the layer)
-    boss: 3,   // x: boss layer (the boss pays this many times more)
-    stageBoss: 1.5,   // x: sector boss corp (a corp that is the sector boss)
-    perfect: 2,   // x: perfect (a perfect pays x(this + per node x (nodes - 1)))
-    perfectPerNode: 0,   // x: perfect, per node (the old curve was perfect 1, per node 0.5 (x2 on 3 nodes up to x6.5 on 12); flat x2 since v13.41)
+    base: 0.4,   // earn: base (what every layer pays before its nodes count)
+    perNode: 0.2,   // earn: per node (added for each node on the layer (bigger layers pay more))
+    boss: 3,   // x: boss layer (a corp's boss layer pays this many times a normal one)
+    stageBoss: 1.5,   // x: sector boss corp (when a corp is the sector boss, all its layers pay this many times more)
+    perfect: 2,   // x: perfect (finding the real node on the first try multiplies that layer's pay by this)
+    perfectPerNode: 0,   // x: perfect, per node (adds this much more to the perfect multiplier for each node past the first (0 = a flat perfect; the old curve was perfect 1, per node 0.5))
   },
-  // ---- Earning: loot, rewards
+  // ---- Earning: loot and rewards
   loot: {
-    base: 1.2,   // earn: loot: base (a loot node, or a data cache roll)
-    perTier: 0.8,   // earn: loot: per level (x the corp level (caches roll at 2))
-    roll: 1.2,   // earn: loot: random (plus up to this)
-    itemChance: 0.4,   // %: loot: an item instead (the chance a loot roll is an item (STASH raises it))
+    base: 1.2,   // earn: loot: base (a loot node you hit (or a data cache roll) pays this...)
+    perTier: 0.8,   // earn: loot: per corp level (...plus this for each corp level (caches count as level 2)...)
+    roll: 1.2,   // earn: loot: random extra (...plus a random amount up to this)
+    itemChance: 0.4,   // %: loot: an item instead (the chance a loot roll gives an item instead of credits (STASH raises it))
   },
   skip: {
-    starter: 1.5,   // earn: skip: starter perk ("take credits instead")
-    boss: 2,   // earn: skip: boss reward
-    sector: 4,   // earn: skip: sector boss reward
+    starter: 1.5,   // earn: skip the starter perk (take credits instead of a mod at the start of a run)
+    boss: 2,   // earn: skip a boss's reward (take credits instead of a mod after beating a corp)
+    sector: 4,   // earn: skip the sector boss's reward (take credits instead of a mod after the uplink)
   },
   rival: {
-    flatlined: 3,   // earn: RIVAL: flatlined (you knocked the rival out)
-    beat: 1.5,   // earn: RIVAL: beat clean (it stole nothing)
+    flatlined: 3,   // earn: RIVAL: knocked out (beat the rival hacker by knocking it out)
+    beat: 1.5,   // earn: RIVAL: beat it clean (beat the rival hacker without it stealing anything)
   },
-  // ---- Earning: mods
+  // ---- Earning: mods that pay credits
   mods: {
-    ezpass: 0.2,   // earn: EZPASS (every layer)
-    policy: 0.8,   // earn: POLICY (every ICE hit)
-    graverobber: 0.2,   // earn: GRAVE ROBBER (per untouched ICE)
-    honeycomb: 1,   // earn: HONEYCOMB (a drop at full integrity)
-    interestPct: 0.05,   // %: INTEREST (of your credits, per corp...)
-    interestMax: 2,   // earn: INTEREST: cap (...up to this)
-    chancecard: 1,   // earn: CHANCE CARD (the credits card)
-    coinCr: 1,   // earn: COIN FLIP: $ face (x the streak multiplier)
-    coinBigCr: 2.5,   // earn: COIN FLIP: big $ face
-    ramDoublerSell: 0.5,   // %: RAM DOUBLER: sells items for (of their price)
+    ezpass: 0.2,   // earn: EZPASS (every layer you beat pays this bonus)
+    policy: 0.8,   // earn: POLICY (every time you hit ICE, the insurance pays this)
+    graverobber: 0.2,   // earn: GRAVE ROBBER (beating a layer pays this for each ICE you never touched)
+    honeycomb: 1,   // earn: HONEYCOMB (a honey drop when your integrity is already full pays this instead)
+    interestPct: 0.05,   // %: INTEREST (beating a corp pays this share of the credits you hold...)
+    interestMax: 2,   // earn: INTEREST: cap (...but never more than this)
+    chancecard: 1,   // earn: CHANCE CARD (drawing the credits card pays this)
+    coinCr: 1,   // earn: COIN FLIP: $ face (a $ side wins (or loses) this, times your streak multiplier)
+    coinBigCr: 2.5,   // earn: COIN FLIP: big $ face (a big $ side wins (or loses) this, times your streak multiplier)
+    ramDoublerSell: 0.5,   // %: RAM DOUBLER: items sold for (taking it sells every item on your belt for this share of its price)
   },
   blood: {
-    bonus: 10,   // earn: BLOOD MONEY: when you take it
-    heal: 1.5,   // earn: BLOOD MONEY: per heal (healing pays this instead)
+    bonus: 10,   // earn: BLOOD MONEY: when you take it (paid once, the moment you take the mod)
+    heal: 1.5,   // earn: BLOOD MONEY: per heal (anything that would heal you pays this per point instead)
   },
   corps: {
-    safeharborClaim: 0.5,   // earn: SAFEHARBOR: claim (an ICE hit pays this)
-    chuckecacheTicket: 1.5,   // x: CHUCK E. CACHE: per ticket (credits per ticket at the prize counter)
+    safeharborClaim: 0.5,   // earn: SAFEHARBOR: insurance claim (inside SAFEHARBOR, every ICE hit pays this)
+    chuckecacheTicket: 1.5,   // x: CHUCK E. CACHE: ticket value (inside CHUCK E. CACHE layers pay in tickets; beating it cashes each ticket in for this many credits)
+  },
+  // ---- Earning: mod multipliers
+  modx: {
+    supersize: 2,   // x: SUPERSIZE (every layer pays this many times more)
+    skimmer: [1.25, 1.5, 1.75],   // x list: SKIMMER (every payout is multiplied by this, by rarity step)
+    fastpay: 1.5,   // x: FASTPAY (a layer you beat within 3 seconds pays this many times more)
+    onbeat: 1.5,   // x: ON BEAT (a real pick on the beat of the music pays this many times more)
+    letitride: 2,   // x: LET IT RIDE (a perfect's pay bets on the next layer: another perfect pays the bet back this many times)
+    coinMax: 5,   // x: COIN FLIP: top streak (each win raises the streak multiplier by 1, up to this)
+    quantum: 0.5,   // x: QUANTUM (every layer has two real nodes, but pays only this much)
+    overclockCut: 0.2,   // %: OVERCLOCK (each ICE the late clock purges cuts that layer's pay by this)
+    priority: 2,   // count: PRIORITY (a loot node delivers its loot this many times)
+    stash: [0.4, 0.6, 1],   // % list: STASH (the chance a loot roll is an item, by rarity step (the first is the normal chance))
+    cachekey: [1, 2, 3],   // count list: CACHEKEY (extra loot rolls in every data cache, by rarity step)
   },
   // ---- Spending: markets
-  tierPrice: [1, 1.6, 2.5],   // x: price by rarity step (x a mod / item price at each rarity step)
-  repair: 2,   // spend: repair (per integrity, at a market)
-  // ---- Spending: mods
-  continue: 10,   // spend: CONTINUE? (the first time; this again more each time after)
+  tierPrice: [1, 1.6, 2.5],   // x list: price by rarity step (a mod or item at its 1st / 2nd / 3rd rarity step costs its price times this)
+  haggle: [0.25, 0.35, 0.5],   // % list: HAGGLE (market prices are this much lower, by rarity step)
+  repair: 2,   // spend: repair (a market repair costs this for each integrity point)
+  // ---- Spending: mods that cost credits
+  continue: 10,   // spend: CONTINUE? (keep going after you would die: costs this, and this much more each time you use it)
   bloodHit: {
-    base: 2,   // spend: BLOOD MONEY: a hit (per point of damage...)
-    perSector: 1,   // spend: BLOOD MONEY: per sector (...plus this x the sector)
+    base: 2,   // spend: BLOOD MONEY: a hit (with BLOOD MONEY, each point of damage costs this...)
+    perSector: 1,   // spend: BLOOD MONEY: more per sector (...plus this for each sector you are in past the first)
   },
   debt: {
-    limit: 15,   // spend: LEVERAGE: debt limit (how far below 0...)
-    limitPerSector: 10,   // spend: LEVERAGE: limit per sector (...plus this x the sector)
-    payment: 0.5,   // spend: LEVERAGE: loan payment (every corp layer...)
-    paymentPerSector: 0.5,   // spend: LEVERAGE: payment per sector (...plus this x the sector)
-    interestPct: 0.1,   // %: LEVERAGE: interest (debt grows this much a layer...)
-    interestMin: 0.2,   // spend: LEVERAGE: least interest (...at least this)
-    shieldPer: 25,   // spend: LEVERAGE: shield per (ICE does nothing with odds debt / this...)
+    limit: 15,   // spend: LEVERAGE: debt limit (with LEVERAGE, your credits can go this far below 0...)
+    limitPerSector: 10,   // spend: LEVERAGE: limit per sector (...plus this much deeper for each sector)
+    payment: 0.5,   // spend: LEVERAGE: loan payment (every corp layer takes this payment, in debt or not...)
+    paymentPerSector: 0.5,   // spend: LEVERAGE: payment per sector (...plus this for each sector)
+    interestPct: 0.1,   // %: LEVERAGE: interest (while in debt, the debt grows by this share every layer...)
+    interestMin: 0.2,   // spend: LEVERAGE: least interest (...but at least this)
+    shieldPer: 25,   // spend: LEVERAGE: shield per debt (the deeper in debt, the more often ICE does nothing: the odds are your debt / this...)
     shieldMax: 0.6,   // %: LEVERAGE: shield max (...up to this)
   },
   omerta: {
-    pct: 0.1,   // %: OMERTA: a hit costs (of your credits...)
-    min: 1.5,   // spend: OMERTA: at least
+    pct: 0.1,   // %: OMERTA: a hit costs (with OMERTA, an ICE hit costs this share of your credits instead of integrity...)
+    min: 1.5,   // spend: OMERTA: at least (...but at least this)
   },
-  friendship: 1,   // spend: FRIENDSHIP (the hit it takes instead)
-  companion: 0.1,   // spend: COMPANION (the treat)
+  friendship: 1,   // spend: FRIENDSHIP (once per corp, an ICE hit costs this instead of integrity)
+  companion: 0.1,   // spend: COMPANION (the treat your pet takes each time it sniffs out an ICE)
   // ---- Spending: the uplink
   uplink: {
-    min: 5,   // spend: minimum (everyone pays this)
-    scrap: 2,   // spend: a scrap mod
-    common: 3,   // spend: a common mod
-    rare: 5,   // spend: a rare mod
-    epic: 8,   // spend: an epic mod
-    legendary: 12,   // spend: a legendary mod (corp mods, and fully upgraded ones)
-    exotic: 10,   // spend: an exotic mod
-    sellPct: 0.33,   // %: selling pays back (of that mod's fee)
+    min: 5,   // spend: minimum (everyone pays this to push on, mods or not)
+    scrap: 2,   // spend: a scrap mod (to carry one scrap mod)
+    common: 3,   // spend: a common mod (to carry one common mod)
+    rare: 5,   // spend: a rare mod (to carry one rare mod)
+    epic: 8,   // spend: an epic mod (to carry one epic mod)
+    legendary: 12,   // spend: a legendary mod (to carry one legendary mod (every corp mod, and fully upgraded ones))
+    exotic: 10,   // spend: an exotic mod (to carry one exotic mod)
+    sellPct: 0.33,   // %: selling pays back (a mod you sell at the uplink pays back this share of what keeping it would cost)
   },
   // ---- Spending: corps
   corpCosts: {
-    tollgatePick: 0.2,   // spend: TOLLGATE: a pick
-    safeharborPremium: 1,   // spend: SAFEHARBOR: premium (when you enter (up to))
-    famiglia: 1.5,   // spend: LA FAMIGLIA: protection
-    famigliaBoss: 2.5,   // spend: LA FAMIGLIA: boss protection
-    choirTithe: 1,   // spend: THE CHOIR: tithe
-    choirTitheBoss: 2,   // spend: THE CHOIR: boss tithe
-    bidblitz: 1,   // spend: BIDBLITZ: a bid
-    bidblitzBoss: 1.5,   // spend: BIDBLITZ: a boss bid
-    bidblitzStep: 0.5,   // spend: BIDBLITZ: each bid raises it
-    mochi: 1,   // spend: MOCHI: an ICE hit
-    mochiBoss: 2,   // spend: MOCHI: a boss ICE hit
-    bytepetsCall: 0.1,   // spend: BYTEPETS: a call
+    tollgatePick: 0.2,   // spend: TOLLGATE: a pick (every node you tap costs this)
+    safeharborPremium: 1,   // spend: SAFEHARBOR: premium (entering takes this insurance premium (if you have it))
+    famiglia: 1.5,   // spend: LA FAMIGLIA: protection (paying protection locks one ICE on a layer)
+    famigliaBoss: 2.5,   // spend: LA FAMIGLIA: boss protection (the same on the boss layer)
+    choirTithe: 1,   // spend: THE CHOIR: tithe (paying the tithe gives you a sign (but loses the faith bonus))
+    choirTitheBoss: 2,   // spend: THE CHOIR: boss tithe (the same on the boss layer)
+    bidblitz: 1,   // spend: BIDBLITZ: a bid (a bid locks one ICE...)
+    bidblitzBoss: 1.5,   // spend: BIDBLITZ: a boss bid (...on the boss layer it starts here...)
+    bidblitzStep: 0.5,   // spend: BIDBLITZ: each bid raises it (...and every bid costs this much more than the last)
+    mochi: 1,   // spend: MOCHI: an ICE hit (ICE costs this instead of integrity)
+    mochiBoss: 2,   // spend: MOCHI: a boss ICE hit (the same on the boss layer)
+    bytepetsCall: 0.1,   // spend: BYTEPETS: a call (calling the pets costs this treat)
   },
 };
 

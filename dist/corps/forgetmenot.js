@@ -1,6 +1,6 @@
 // NeoN+1 corps/forgetmenot.js
 'use strict';
-NEON_FILES.push(['corps/forgetmenot.js', 'v13.42']);
+NEON_FILES.push(['corps/forgetmenot.js', 'v13.45']);
 // Its boss mod: PHOTOGRAPHIC (photographic), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

@@ -9,7 +9,7 @@
 //   of:    said in place of that popup's do-this line (a wrong tap, the boss beaten): one way to say it per line,
 //          picked at random.
 'use strict';
-NEON_FILES.push(['data/tutorial.js', 'v13.42']);
+NEON_FILES.push(['data/tutorial.js', 'v13.45']);
 
 const TUT_COPY = [
   // the public net
@@ -36,12 +36,12 @@ const TUT_COPY = [
   { id: "hurt", text: "-1 INTEGRITY. you're down to {int}. hit zero and the run's over.", arrow: false },
   { id: "traced", text: "but TRACER went off: that ICE now has arrows pointing toward the real node.", arrow: false },
   { id: "terminal", text: "and keep an eye on this line up top: the terminal. it tells you what just happened, and sometimes it drops a clue." },
-  { id: "ouch", text: "stings, don't it? ICE always does. let's patch you up.", timer: 4000 },
+  { id: "ouch", text: "stings, don't it? ICE always does. let's patch you up." },
   { id: "items", text: "ITEMS are one use each, on your belt. you find them at markets, data caches and loot nodes.\n\nPATCH heals 1 INTEGRITY: tap it to see it, tap again to use it.", act: "patch up" },
   { id: "items2", of: "items", text: "tap again to use it" },
   { id: "real", text: "now follow the arrows on that ICE. they point at the real node.", act: "tap the real node" },
   // layer 2: the tell
-  { id: "layerdone", part: "layer 2: the tell", text: "one layer down. not bad, {name}.", timer: 3000 },
+  { id: "layerdone", part: "layer 2: the tell", text: "one layer down. not bad, {name}." },
   { id: "tell", text: "every corp hides its real node its own way. that's its TELL." },
   { id: "basictell", text: "BASIC CORP's tell: the real node is the plain one, [ ].\n\nlearn a corp's tell and you can read it every time." },
   { id: "loot", text: "see that one? a LOOT node. it's ICE, so it still bites, but it pays out: credits or an item. your call.\n\nand keep your eyes open. there's weirder stuff than loot floating around out there." },
@@ -53,12 +53,12 @@ const TUT_COPY = [
   { id: "breachit", text: "", act: "breach it" },
   { id: "bosswin", of: "breachit", text: "nailed it.\nthat's how it's done.\nboom. breached." },
   // the breach
-  { id: "breached", part: "the breach", text: "ha! look at that. corp breached, {name}.", timer: 3500 },
+  { id: "breached", part: "the breach", text: "ha! look at that. corp breached, {name}." },
   { id: "bossmods", text: "a beaten boss gives you a pick of mods. one of them is the corp's own." },
   { id: "pick", text: "", act: "pick one, or skip" },
   // out
   { id: "loop", part: "out", text: "that's the loop: pick a path, breach corps, grab rewards, shop at markets." },
   { id: "sector", text: "a SECTOR BOSS waits at the top of every sector. and the CODEX keeps every tell you learn." },
   { id: "bye", text: "that's all i got, {name}. keep your integrity up and your head down.\n\ngood luck out there." },
-  { id: "out", text: "jacking you out.", timer: 2000 },
+  { id: "out", text: "jacking you out." },
 ];
