@@ -5,7 +5,8 @@
 //   GET  ?app=neon&board=all&limit=10&device=…&dev=0              -> {board, entries: [...], you: {...}|null}
 // A board is any name a game picks (daily-2026-10-24, all, naked...). Every run is its own entry, so one player can be
 // on a board many times (config 'scores' => ['per' => 'device'] keeps only each device's best instead).
-// A name set with name.php shows on all that device's entries (so a player's latest initials are what you see).
+// An entry shows the name it was entered with (name.php can set it for one run); older entries without a data.run
+// still show their device's latest name (as before 1.4).
 // Order per app (config 'scores'): score high to low by default, then tie (e.g. neon's mods taken) low to high.
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
@@ -48,7 +49,7 @@ $bests = function () use ($db, $app, $dev, $board, $better, $perDevice): array {
   $names->execute([$app, $dev]);
   $nameOf = [];
   foreach ($names as $n) $nameOf[$n['device']] = $n['name'];
-  foreach ($all as &$r) if (isset($nameOf[$r['device']])) $r['player'] = $nameOf[$r['device']];
+  foreach ($all as &$r) if (isset($nameOf[$r['device']]) && strpos((string)$r['data'], '"run":') === false) $r['player'] = $nameOf[$r['device']];   // older entries only
   unset($r);
   usort($all, fn($a, $b) => $better($a, $b) ? -1 : ($better($b, $a) ? 1 : 0));
   return $all;

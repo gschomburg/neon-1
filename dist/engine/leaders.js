@@ -6,7 +6,7 @@
 // Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
 // device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v13.45']);
+NEON_FILES.push(['engine/leaders.js', 'v13.46']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }];
@@ -70,7 +70,7 @@ function lbSubmit(run, win) {
     if (navigator.webdriver && !window.LB_TEST) return;
     const prof = profile(), at = Date.now(), ini = lbInitials();
     const s = { at, score: run.depth, tie: run.mods.length, player: ini, logo: logoMark(prof.logo),
-      data: { hacker: prof.name, style: prof.style, win: !!win, sector: (run.sector || 0) + 1, v: VERSION } };
+      data: { hacker: prof.name, style: prof.style, win: !!win, sector: (run.sector || 0) + 1, v: VERSION, run: at } };   // run: the initials name just this run's scores
     st.lbPost = { at, score: s.score, tie: s.tie, ranks: {}, state: 'send', letters: ini.split(''), cur: 0, uploaded: false };
     save.lbQueue = (save.lbQueue || []).concat(LB_TABS.map(t => Object.assign({ board: lbBoard(t.key, at), tab: t.key }, s))).slice(-12);
     persist();
@@ -88,7 +88,7 @@ function lbFlush() {
     const q = save.lbQueue;
     if (!q || !q.length) return null;
     const it = q[0];
-    const send = it.kind === 'name' ? gl.setName(it.name) : gl.submitScore(it.board, it);
+    const send = it.kind === 'name' ? gl.setName(it.name, it.run) : gl.submitScore(it.board, it);
     return send.then(r => {
       const retry = r && r.error && /slow down|server|database|config/.test(r.error);
       if (retry) return null;
@@ -111,7 +111,7 @@ function lbUpload() {
   const ini = p.letters.join('');
   if (lbRude(ini)) { Sound.deny(); setMsg('> pick other letters.', C.danger); return; }
   save.initials = ini;
-  save.lbQueue = (save.lbQueue || []).filter(x => x.kind !== 'name').concat([{ kind: 'name', name: ini }]);
+  save.lbQueue = (save.lbQueue || []).filter(x => x.kind !== 'name').concat([{ kind: 'name', name: ini, run: p.at }]);
   persist();
   p.uploaded = true;
   Sound.buy(); flash(C.accent, 0.12, 0.3);

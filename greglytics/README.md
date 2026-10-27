@@ -55,3 +55,13 @@ server/                    upload this folder's contents to the greglytics domai
 
 With PHP installed: copy `config.example.php` to `server/config.php` (git-ignored), switch it to the SQLite line,
 then `php -S localhost:8080 -t server` and use `http://localhost:8080/api/` as the endpoint.
+
+## 1.4 (2026-10-26): names stay with their scores
+
+Before, `name.php` set a device's name and `scores.php` showed it on every entry from that device, so new
+initials renamed your old scores. Now a score's entry keeps the name it was entered with:
+- send `data.run` (any id for the run, e.g. its start time in ms) with each score;
+- `gl.setName(name, run)` names just the entries with that `data.run` (`name.php` gets `run`, answers `renamed`);
+- entries from before 1.4 (no `data.run`) still show their device's latest name, as they always did.
+
+Upload `api/name.php`, `api/scores.php` and `api/version.php` (now 1.4). No database change.
