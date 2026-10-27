@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v13.50']);
+NEON_FILES.push(['engine/codex.js', 'v13.55']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -39,10 +39,10 @@ function nextTop(top, d, max) {
 }
 
 function openCodex() {
-  const TABS = [['mods', 'MODS', 'tabm'], ['items', 'GEAR', 'tabi'], ['glyphs', 'GLYPHS', 'tabg'], ['corps', 'CORPS', 'tabc']];
+  const TABS = [['mods', 'MODS', 'tabm'], ['items', 'GEAR', 'tabi'], ['glyphs', 'GLYPHS', 'tabg'], ['corps', 'CORPS', 'tabc'], ['sectors', 'SECTORS', 'tabs']];
   let tab = 'mods', sel = 0, top = 0, shownPal = null;
   const entries = () => tab === 'mods' ? codexMods() : tab === 'items' ? Object.keys(ITEMS)
-    : tab === 'glyphs' ? GLYPHS.map(gl => gl.key) : CODEX_CORPS.map(k => 'corp_' + k);
+    : tab === 'glyphs' ? GLYPHS.map(gl => gl.key) : tab === 'sectors' ? Object.keys(SECTOR_EVENTS).map(k => 'ev_' + k) : CODEX_CORPS.map(k => 'corp_' + k);
   // Corps: a short list and a taller details box.
   const rowsFor = () => tab === 'corps' ? CODEX_ROWS - 5 : tab === 'glyphs' ? CODEX_ROWS : CODEX_ROWS - 7;   // details: corps 10 rows, mods / items 12, glyphs 5
   const setTab = name => { tab = name; sel = 0; top = 0; Sound.tick(); };
@@ -65,7 +65,7 @@ function openCodex() {
     top = clamp(top, 0, maxTop(n, rows));
     const found = list.filter(k => save.seen[k]).length;
     T(`CODEX  ${tab} ${found}/${n} found`, C.accent);
-    X({ gap: 1, row: TABS.map(([name, label, id]) => ({ text: `[${label}]`, id, sel: tab === name, onTap: () => setTab(name) })) });
+    X({ gap: 0, row: TABS.map(([name, label, id]) => ({ text: `[${label}]`, id, sel: tab === name, onTap: () => setTab(name) })) });   // (5 tabs: no gaps, to fit 36 wide)
 
     // Details of the selected entry (5 rows; 10 for corps).
     T(SEP, C.dim);
@@ -91,6 +91,22 @@ function openCodex() {
         tell.forEach((t, i) => T(t, rec.breached ? C.accent : i === 0 ? C.mid : C.dim));
         T(d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
         T(`breached ${rec.breached}   lost ${rec.lost}`, C.text);
+      }
+    } else if (tab === 'sectors') {
+      // 12 rows: the card's picture with its name and kind, what the card says (at sector 2), the anomaly
+      const ev = k.slice(3), E = SECTOR_EVENTS[ev];
+      if (!seen) {
+        X({ tileInfo: MASK_GLYPH, lines: [{ text: '???', col: C.dim }, { text: 'not found yet.', col: C.mid }, { text: 'sectors 2 and up roll one.', col: C.dim }] });
+        for (let i = 0; i < 7; i++) T('');
+      } else {
+        const a = E.kind === 'anomaly' && E.anomaly !== 'any' ? ANOMALIES[E.anomaly] : null;
+        X({ tileInfo: normMotif(E.art), lines: [{ text: E.name, col: C.accent }, { text: 'sector event', col: C.mid },
+          { text: E.kind === 'sector' ? 'the whole sector' : a ? `anomaly: ${a.tag} ${a.name}` : 'anomaly: any one', col: C.text }] });
+        const ls = eventLines(ev, 1), tag = eventTagLine(ev);
+        ls.forEach(l => T(l, C.text));
+        T('');
+        T(tag || 'no anomalies: the boss is plain.', tag ? C.money : C.mid);
+        for (let i = ls.length + 2; i < 7; i++) T('');
       }
     } else if (tab === 'glyphs') {
       const gl = GLYPH_BY_KEY[k];
@@ -132,7 +148,10 @@ function openCodex() {
     for (let idx = top; idx < top + w.shown; idx++) {
       const key = list[idx], seenK = !!save.seen[key];
       const base = { list: true, id: 'cx' + idx, onTap: () => { sel = idx; Sound.tick(); }, sel: idx === sel };
-      if (tab === 'glyphs') {
+      if (tab === 'sectors') {
+        const E = SECTOR_EVENTS[key.slice(3)];
+        X(Object.assign(base, { name: seenK ? E.name : '???', col: seenK ? C.bright : C.dim, right: seenK ? (E.kind === 'sector' ? 'sector' : 'anomaly') : '', rightCol: C.mid }));
+      } else if (tab === 'glyphs') {
         X(Object.assign(base, { name: seenK ? GLYPH_BY_KEY[key].name : '???', col: seenK ? C.bright : C.dim, right: `#${pad2(idx + 1)}`, rightCol: C.mid }));
       } else if (tab === 'corps') {
         const ck = key.slice(5), d = corpDef(ck), rec = corpStat(ck);

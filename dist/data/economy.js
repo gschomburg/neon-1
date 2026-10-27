@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v13.50']);
+NEON_FILES.push(['data/economy.js', 'v13.55']);
 
 const ECON = {
   // ---- Units
@@ -82,14 +82,38 @@ const ECON = {
   // ---- Earning: selling gear
   gear: {
     sellPct: 0.5,   // %: gear resale (normal gear sells at a market for this share of its price)
-    shard: 3,   // earn: SHARD (what a SHARD sells for (its rarer steps: times the price by rarity step))
-    bond: 4,   // earn: BOND (what a BOND sells for, times the sector you are in (1, 2, 3...))
+    duds: 0.5,   // earn: DUDS (scrap) (what one DUDS sells for)
+    sim: 1.5,   // earn: SIM (common) (what one SIM sells for)
+    shard: 4,   // earn: SHARD (rare) (what one SHARD sells for)
+    bond: 4,   // earn: BOND (rare) (what a BOND sells for, times the sector you are in (1, 2, 3...))
+    chrome: 10,   // earn: CHROME (epic) (what one CHROME sells for)
+    wallet: 25,   // earn: WALLET (legend) (what one WALLET sells for)
+  },
+  // ---- Gear: how often each shows up
+  drop: {
+    scrap: 1,   // x: scrap gear (PATCH, PURGE, SHOE)
+    common: 1,   // x: common gear (FWALL, SPLIT, SHAKE, FRAG, REWIND)
+    rare: 0.7,   // x: rare gear (ROUTE, WARP, TUNNEL, TILT)
+    epic: 0.4,   // x: epic gear (ALL-IN, MESH, PASS)
+    duds: 1,   // x: DUDS (its weight)
+    sim: 0.7,   // x: SIM (its weight)
+    shard: 0.5,   // x: SHARD (its weight)
+    bond: 0.4,   // x: BOND (its weight)
+    chrome: 0.15,   // x: CHROME (its weight)
+    wallet: 0.05,   // x: WALLET (its weight)
   },
   // ---- Spending: markets
-  tierPrice: [1, 1.6, 2.5],   // x list: price by rarity step (a mod or item at its 1st / 2nd / 3rd rarity step costs its price times this)
+  tierPrice: [1, 1.6, 2.5, 4],   // x list: price by rarity step (a mod or item at its 1st / 2nd / 3rd / 4th rarity step costs its price times this (only FRAG has a 4th))
   haggle: [0.25, 0.35, 0.5],   // % list: HAGGLE (market prices are this much lower, by rarity step)
   repair: 2,   // spend: repair (a market repair costs this for each integrity point)
   reroll: 1.5,   // spend: market reroll (new offers at a market: costs this, and this much more each time in the same market (1 a market, RESTOCK on THE BOARD adds up to 2))
+  stock: {
+    scrap: 0.5,   // %: more copies: scrap gear (a market gear offer can come with more than one copy: the chance of each extra copy, by its rarity...)
+    common: 0.35,   // %: more copies: common gear
+    rare: 0.2,   // %: more copies: rare gear
+    epic: 0.08,   // %: more copies: epic gear
+    max: 3,   // count: most copies (...up to this many of one gear)
+  },
   // ---- Spending: mods that cost credits
   continue: 10,   // spend: CONTINUE? (keep going after you would die: costs this, and this much more each time you use it)
   bloodHit: {
@@ -121,7 +145,13 @@ const ECON = {
     epic: 8,   // spend: an epic mod (to carry one epic mod)
     legendary: 12,   // spend: a legendary mod (to carry one legendary mod (every corp mod, and fully upgraded ones))
     exotic: 10,   // spend: an exotic mod (to carry one exotic mod)
+    pass: 0.5,   // %: PASS (the PASS gear cuts the whole uplink fee by this)
     sellPct: 0.33,   // %: selling pays back (a mod you sell at the uplink pays back this share of what keeping it would cost)
+  },
+  // ---- Sector events
+  events: {
+    fireSale: 0.3,   // %: FIRE SALE (market prices are this much lower in that sector)
+    timeCr: 0.1,   // spend: TIME IS MONEY (every second a clock runs in that sector costs this)
   },
   // ---- Spending: corps
   corpCosts: {

@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.50']);
+NEON_FILES.push(['engine/active.js', 'v13.55']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -153,6 +153,120 @@ function rerouteMap() {
   }
 }
 
+// TUNNEL: the nodes in your row you haven't been to (any lane, linked or not).
+function rowMates() {
+  const run = st.run, cur = run.map[run.at];
+  return Object.values(run.map).filter(n => n.step === cur.step && n.id !== cur.id && !run.visited.includes(n.id));
+}
+
+// ---------------- Layer gear (the user, 2026-10-26) ----------------
+// REWIND epic: every timer in this layer stops: the clock and the corp's own clock (ESPRESSO's hold, forever),
+// and ANCHOR (what moves stays put; LAGRANGE's taps land at once).
+function freezeLayer(lv) { lv.holdUntil = Infinity; lv.anchor = true; }
+// Corps with their own tap rules (FORM 27B, DEMOLITION...): gear never clears the layer for you there.
+const gearMayClear = () => !(st.corp && st.corp.def.tap);
+// FRAG / SHOE hit the real node: the layer clears, no pay (like BLAST).
+function gearClear(lv, t, msg) {
+  lv.payCut = 1; lv.scanned = true;
+  setMsg(msg, C.money);
+  st.busy = true;
+  onSafe(t);
+}
+// TILT: every closed node slides as far as it can, up or down (a coin flip). Nodes that are open or locked stay.
+async function tiltBoard(lv) {
+  const r = rngFor(st.run.seed, 'tilt', st.corp.node.id, st.corp.idx, lv.tilts = (lv.tilts || 0) + 1);
+  if (lv.grav) { setMsg('> tilt: gravity takes over.', C.accent); return gravDrop(lv); }   // GRAVITAS: a free drop (the real node rises)
+  const up = r() < 0.5;
+  st.busy = true;
+  let moved = false;
+  for (let col = 0; col < lv.cols; col++) {
+    const here = lv.tiles.filter(t => t.col === col);
+    const fixed = new Set(here.filter(t => t.state !== 'closed').map(t => t.row));
+    const movers = here.filter(t => t.state === 'closed').sort((a, b) => up ? a.row - b.row : b.row - a.row);
+    const free = [...Array(lv.rows).keys()].filter(rw => !fixed.has(rw));
+    if (!up) free.reverse();
+    movers.forEach((t, i) => { const cell = free[i] * lv.cols + col; if (cell !== t.cell) { slideTo(lv, t, cell, 420); moved = true; } });
+  }
+  setMsg(`> tilt: everything slides ${up ? 'up' : 'down'}.`, C.accent);
+  if (moved) { Sound.whoosh(); await wait(slideMs(420) + 40); shake(2); }
+  if (st.lv === lv) st.busy = false;
+}
+// SHAKE: every closed node slides a step or two, to a free spot nearby (or swaps with a neighbor when packed).
+async function shakeBoard(lv) {
+  const r = rngFor(st.run.seed, 'shake', st.corp.node.id, st.corp.idx, lv.shakes = (lv.shakes || 0) + 1);
+  st.busy = true;
+  shake(4);
+  if (lv.ent) { entropyShuffle(lv); setMsg('> shake: the board scrambles itself.', C.accent); }   // ENTROPY: its own shuffle, early
+  else {
+    const at = new Map(lv.tiles.map(t => [t.cell, t])), done = new Set();
+    const near = (t, d) => {
+      const out = [];
+      for (let dr = -d; dr <= d; dr++) for (let dc = -d; dc <= d; dc++) {
+        const c = t.col + dc, rw = t.row + dr;
+        if ((dc || dr) && c >= 0 && c < lv.cols && rw >= 0 && rw < lv.rows) out.push(rw * lv.cols + c);
+      }
+      return out;
+    };
+    for (const t of shuffle(lv.tiles.filter(o => o.state === 'closed'), r)) {
+      if (done.has(t)) continue;
+      const free = near(t, 2).filter(c => !at.has(c));
+      if (free.length) {
+        const c = pickR(free, r);
+        at.delete(t.cell); at.set(c, t); slideTo(lv, t, c, 380, r() < 0.5 ? 0.3 : -0.3); done.add(t);
+        continue;
+      }
+      const mates = near(t, 1).map(c => at.get(c)).filter(o => o && o.state === 'closed' && !done.has(o));
+      if (!mates.length) continue;
+      const o = pickR(mates, r), a = t.cell, b = o.cell;
+      at.set(a, o); at.set(b, t); slideTo(lv, t, b, 380, 0.4); slideTo(lv, o, a, 380, -0.4); done.add(t); done.add(o);
+    }
+    setMsg('> shake: the nodes jostle.', C.accent);
+  }
+  Sound.whoosh();
+  await wait(slideMs(460) + 40);
+  if (st.lv === lv) st.busy = false;
+}
+// FRAG: hits random closed nodes (3 / 4 / 5 / 5 by step). ICE breaks; the real node clears the layer, no pay
+// (never at the legendary step, and never in corps with their own tap rules).
+async function fragBoard(lv, tier) {
+  const r = rngFor(st.run.seed, 'frag', st.corp.node.id, st.corp.idx, lv.frags = (lv.frags || 0) + 1);
+  const spare = tier >= 3 || !gearMayClear();
+  const pool = lv.tiles.filter(t => t.state === 'closed' && !(spare && isReal(t)));
+  const hits = shuffle(pool, r).slice(0, [3, 4, 5, 5][tier] || 3);
+  st.busy = true;
+  Sound.trap(); shake(6); flash(C.danger, 0.15, 0.3);
+  let broke = 0;
+  for (const t of hits) {
+    await wait(150);
+    if (st.lv !== lv) return;
+    shake(4);
+    if (isReal(t)) return gearClear(lv, t, '> FRAG hit the real node. layer clear, no pay.');
+    lockTile(t, C.danger, 'frag'); broke++;
+  }
+  setMsg(broke ? `> frag: ${broke} ICE down.` : '> frag: nothing to hit.', C.danger);
+  await wait(120);
+  if (st.lv === lv) st.busy = false;
+}
+// SHOE: throw it. 1%: it hits the real node (the layer clears, no pay); 10%: it breaks an ICE; else, a joke.
+const SHOE_MISS = ['> you throw a shoe. the firewall is unimpressed.', '> it bounces off. a sysadmin somewhere laughs.', '> clonk.',
+  '> the shoe is in the server room now. it lives there.', '> it hits nothing. you are down a shoe.', '> thunk. the ICE does not care.'];
+function throwShoe(lv) {
+  const run = st.run, r = rngFor(run.seed, 'shoe', st.corp.node.id, st.corp.idx, run.shoes = (run.shoes || 0) + 1), u = r();
+  shake(2); Sound.tick();
+  const real = lv.tiles.find(t => t.state === 'closed' && isReal(t));
+  if (u < 0.01 && real && gearMayClear()) { flash(C.money, 0.3, 0.5); return gearClear(lv, real, '> THE SHOE HIT THE REAL NODE. no way. layer clear, no pay.'); }
+  const ice = lv.tiles.filter(t => t.state === 'closed' && !isReal(t));
+  if (u < 0.11 && ice.length) { lockTile(pickR(ice, r), C.accent, 'shoe'); setMsg('> the shoe breaks an ICE. sabotage.', C.accent); return; }
+  setMsg(pickR(SHOE_MISS, r), C.mid);
+}
+// Take one of a gear (PASS at the uplink).
+function takeItem(key) {
+  const i = st.run.items.findIndex(s => s.key === key);
+  if (i < 0) return false;
+  if (--st.run.items[i].n <= 0) st.run.items.splice(i, 1);
+  return true;
+}
+
 // ---------------- Items ----------------
 // Items some corps switch off (like MOD_OFF): ALL-IN in corps with their own tap rules.
 const ITEM_OFF = { allin: def => !!def.tap };
@@ -162,7 +276,10 @@ function whyNotItem(stack) {
   const key = stack.key, inCorp = st.mode === 'play' && st.corp && st.corp.hasBoss;
   if (itemOffHere(key)) return 'off in this corp.';
   if (key === 'patch') return zombie() ? 'no rot to fix.' : 'integrity is full.';
-  if (key === 'route' || key === 'warp') return st.mode !== 'map' ? 'only on the map.' : 'nowhere to go.';
+  if (key === 'route' || key === 'warp' || key === 'tunnel' || key === 'mesh') return st.mode !== 'map' ? 'only on the map.' : st.run.warpAim || st.run.tunnel || st.run.mesh === st.run.sector ? 'already open: pick a node.' : 'nowhere to go.';
+  if (key === 'pass') return 'use it on the UPLINK screen.';
+  if (key === 'rewind' && inCorp && st.corp.frozen) return 'time already stopped.';
+  if (key === 'rewind' && inCorp && (stack.tier || 0) < 2 && !st.timer) return 'no clock running.';
   if (key === 'wall') return 'only inside a corp.';
   if (!inCorp && key !== 'wall') return 'only inside a corp layer.';
   if (st.busy) return 'wait a moment.';
@@ -176,11 +293,22 @@ function canUse(stack) {
   if (ITEMS[key].value) return !st.transitioning;   // value gear: cash it in anywhere
   if (key === 'patch') return canHeal();
   if (key === 'wall') return tier < 2 ? true : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll;
-  if (key === 'route' || key === 'warp') return st.mode === 'map' && !st.busy && !st.transitioning && nodesAhead().length > 0;
+  const onMap = st.mode === 'map' && !st.busy && !st.transitioning;
+  if (key === 'route') return onMap && nodesAhead().length > 0;
+  if (key === 'warp') return onMap && nodesAhead().length > 0 && !(tier >= 1 && run.warpAim);
+  if (key === 'tunnel') return onMap && !run.tunnel && !!run.at && rowMates().length > 0;
+  if (key === 'mesh') return onMap && run.mesh !== run.sector && nodesAhead().length > 0;
+  if (key === 'pass') return false;   // on the UPLINK screen
   const inLayer = st.mode === 'play' && !st.busy && st.lv;
   if (key === 'purge') return !!inLayer && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
   if (key === 'split') return !!inLayer && !st.lv.split && candidates().length > 1;
   if (key === 'allin') return !!inLayer && st.corp.hasBoss && !itemOffHere(key) && st.lv.n > 1 && st.lv.tiles[st.lv.safe].state === 'closed';
+  const layerGear = !!inLayer && !!st.corp && st.corp.hasBoss && st.lv.n > 1;
+  const closed = layerGear ? st.lv.tiles.filter(t => t.state === 'closed') : [];
+  if (key === 'tilt') return layerGear && st.lv.rows > 1 && closed.length > 1;
+  if (key === 'shake') return layerGear && closed.length > 1;
+  if (key === 'frag' || key === 'shoe') return layerGear && closed.some(t => !isReal(t));
+  if (key === 'rewind') return layerGear && !st.corp.frozen && (tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer);
   return false;
 }
 
@@ -255,10 +383,26 @@ function useItem(slot) {
     Sound.whoosh();
     setMsg('> rerouted. the net shifts.', C.accent);
   }
-  if (key === 'warp') {
+  if (key === 'warp' && tier >= 1) {   // epic: you aim it
+    run.warpAim = true; st.mapSel = null;
+    Sound.whoosh(); setMsg('> warp open: pick any node ahead.', C.accent);
+  } else if (key === 'warp') {
     const target = pickR(nodesAhead(), rngFor(run.seed, 'warp', run.at, run.depth));
     setMsg('> warp open...', C.accent);
     enterNode(target, true);
+  }
+  if (key === 'tunnel') { run.tunnel = true; st.mapSel = null; Sound.whoosh(); setMsg('> tunnel dug: go to any node in this row.', C.accent); }
+  if (key === 'mesh') { run.mesh = run.sector; st.mapSel = null; Sound.whoosh(); setMsg('> mesh up: every node links to the next row, all sector.', C.accent); }
+  if (key === 'tilt') tiltBoard(lv);
+  if (key === 'shake') shakeBoard(lv);
+  if (key === 'frag') fragBoard(lv, tier);
+  if (key === 'shoe') throwShoe(lv);
+  if (key === 'rewind') {
+    const tm = st.timer;
+    if (tier >= 2) { st.corp.frozen = true; freezeLayer(lv); setMsg('> rewind: time stops. for this whole corp.', C.accent); }
+    else if (tier === 1) { tm.left = tm.max; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: the clock is full again.', C.accent); }
+    else { tm.max += 5; tm.left += 5; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: +5 seconds.', C.accent); }
+    Sound.shield();
   }
 }
 

@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.50']);
+NEON_FILES.push(['engine/mods.js', 'v13.55']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -203,7 +203,7 @@ function rollCoin(i) {
 // levels). Finds roll a tier; finding a mod you have upgrades it (see addMod).
 const MOD_SLOTS = 6;                 // mods you can hold; more means swapping one out
 const modSlots = () => MOD_SLOTS * (has('ramdoubler') ? 2 : 1);   // RAM DOUBLER: twice as many (a second full row)
-const TIER_ODDS = [0.70, 0.95];      // a find is its first step under 0.70, the second under 0.95, else the third
+const TIER_ODDS = [0.70, 0.95, 0.99];   // a find is its first step under 0.70, the second under 0.95, else the third (gear with a 4th step, FRAG: the top 1%)
 const TIER_PRICE = ECON.tierPrice;    // market price by tier
 const STACK_MAX = 15;                // items stack up to F (counts are hex)
 const tierCount = def => def.tiers ? def.tiers.length : 1;
@@ -217,7 +217,7 @@ const tierLabel = v => v.lvlTag ? `LV${v.tier + 1}` : RARITY[v.rarity].label;
 function rollTier(r, def) {
   if (!def.tiers) return 0;
   const u = r();
-  let t = Math.min(def.tiers.length - 1, u < TIER_ODDS[0] ? 0 : u < TIER_ODDS[1] ? 1 : 2);
+  let t = Math.min(def.tiers.length - 1, u < TIER_ODDS[0] ? 0 : u < TIER_ODDS[1] ? 1 : u < TIER_ODDS[2] || ITEMS[def.key] !== def ? 2 : 3);
   while (t > 0 && tierView(def, t).rarity === 'legendary' && u < TIER_ODDS[1]) t--;   // a legendary step: only the top 5% (or take it twice)
   return t;
 }

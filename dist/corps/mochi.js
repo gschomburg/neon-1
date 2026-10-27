@@ -1,6 +1,6 @@
 // NeoN+1 corps/mochi.js
 'use strict';
-NEON_FILES.push(['corps/mochi.js', 'v13.50']);
+NEON_FILES.push(['corps/mochi.js', 'v13.55']);
 // Its boss mod: FRIENDSHIP (friendship), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

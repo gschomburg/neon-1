@@ -31,7 +31,7 @@ function load(file) {
   }
   // a hook that hands the game's tables to this tool, put where the debug hook is made
   const NAMES = ['CONFIG', 'CORPS', 'FINAL', 'PUBLIC', 'CORP_TELL', 'CORP_ART', 'CODEX_CORPS', 'MODS', 'ITEMS', 'RARITY',
-    'STAGES', 'MOD_STAGE', 'CORP_MODS', 'LEGACY', 'SONGS', 'MUSIC_FOR', 'SCALES', 'MOTIFS', 'GLYPHS', 'HACKER_LOGOS',
+    'STAGES', 'MOD_STAGE', 'ANOMALIES', 'LEGACY', 'SONGS', 'MUSIC_FOR', 'SCALES', 'MOTIFS', 'GLYPHS',
     'NAME_A', 'NAME_B', 'NAME_C', 'HELP_PAGES', 'PALETTES', 'PLAYER_STYLES', 'LOCK_LABEL', 'TITLE', 'COVER',
     'START_NOTE', 'HIT_FX', 'END_FX', 'TAP_FX', 'BOARD_FX', 'CIPHER_SYMS', 'RAINBOW', 'ZODIAC', 'LEX_WORDS'];
   const hook = `window.__check = { genLayer, genMap, pickCorps, ${NAMES.join(', ')} };\n`;
@@ -54,6 +54,7 @@ function load(file) {
     navigator: {}, history: { replaceState: noop },
     document: { getElementById: () => canvas, addEventListener: noop, createElement: () => ({ style: {}, setAttribute: noop, addEventListener: noop }),
       documentElement: { style: {} }, body: { style: {}, appendChild: noop }, fonts: null, querySelector: () => null },
+    fetch: () => new Promise(() => {}),   // offline: the intro asks the leaderboard (it never answers here)
     window: { innerWidth: 390, innerHeight: 844, devicePixelRatio: 1, addEventListener: noop, matchMedia: () => ({ matches: false }) },
   };
   sandbox.window.window = sandbox.window;

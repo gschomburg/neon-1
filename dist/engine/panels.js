@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.50']);
+NEON_FILES.push(['engine/panels.js', 'v13.55']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -92,25 +92,37 @@ function pickMods(r, pool, k, exclude = []) {
   return shuffle(pool.filter(ok), r).slice(0, k).map(key => ({ key, tier: rollTier(r, MODS[key]) }));
 }
 
-const priceOf = o => o.free ? 0 : o.kind === 'repair' ? o.price : Math.round(o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale());   // (priceScale: data/economy.js)
+const priceOf = o => o.free ? 0 : Math.round((sectorEvent() === 'firesale' ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale()));   // (priceScale: data/economy.js)
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
-// What a market pays for one of a gear stack: value gear (SHARD, BOND) its worth, the rest a share of its price.
+// What a market pays for one of a gear stack: value gear (DUDS ... WALLET) its worth, the rest a share of its price.
 function gearValue(key, tier = 0) {
-  if (key === 'shard') return Math.round(earnCr(ECON.gear.shard) * TIER_PRICE[tier || 0]);
   if (key === 'bond') return earnInt(ECON.gear.bond) * ((st.run && st.run.sector || 0) + 1);
+  if (ITEMS[key].value) return earnInt(ECON.gear[key]);
   return Math.max(1, Math.floor(ITEMS[key].price * TIER_PRICE[tier || 0] * priceScale() * ECON.gear.sellPct));
 }
 const marketRerolls = () => 1 + legacyLv('restock');   // per market (RESTOCK on THE BOARD: up to 3)
 const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value);   // value gear is loot only
+// How often a gear shows up (loot and markets): normal gear by its rarity, value gear its own (ECON.drop).
+const gearWeight = k => { const w = ECON.drop[ITEMS[k].value ? k : ITEMS[k].rarity]; return w == null ? 1 : w; };
+// One key, picked by weight.
+function pickWeighted(keys, w, r) {
+  let x = r() * keys.reduce((a, k) => a + w(k), 0);
+  for (const k of keys) if ((x -= w(k)) < 0) return k;
+  return keys[keys.length - 1];
+}
 
 function openShop(node) {
   const run = st.run;
   // the offers: roll 0 is the market as it opens; each reroll is a new roll of the same seed
   const roll = n => {
     const r = n ? rngFor(run.seed, 'shop', node.id, 'reroll', n) : rngFor(run.seed, 'shop', node.id);
-    const itemKeys = has('ramdoubler') ? [] : shuffle(shopGear(), r).slice(0, 3);   // RAM DOUBLER: no gear for sale
+    const itemKeys = [];   // 3 gear, picked by weight (rarer gear shows up less); RAM DOUBLER: no gear for sale
+    for (let pool = has('ramdoubler') ? [] : shopGear(); itemKeys.length < 3 && pool.length;) { const k = pickWeighted(pool, gearWeight, r); itemKeys.push(k); pool = pool.filter(o => o !== k); }
     let offers = itemKeys.map(k => ({ kind: 'item', key: k, tier: rollTier(r, ITEMS[k]), price: ITEMS[k].price, sold: false }));
+    // More than one copy now and then (commoner gear more often; ECON.stock). Its own roll: the rest of the market stays the same.
+    const rs = n ? rngFor(run.seed, 'shop', node.id, 'stock', n) : rngFor(run.seed, 'shop', node.id, 'stock');
+    for (const o of offers) { o.n = 1; const p = ECON.stock[ITEMS[o.key].rarity] || 0; while (o.n < ECON.stock.max && rs() < p) o.n++; }
     for (const o of pickMods(r, modsOfKind('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
     for (const o of exoticOffer(run.seed, 'shop', n ? node.id + 'r' + n : node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
     offers = shuffle(offers, r);   // random order: any slot could be the good one
@@ -151,7 +163,7 @@ function openShop(node) {
     if (o.sold || !canSpend(price)) return Sound.deny();
     if (o.kind === 'repair' && !canHeal()) return Sound.deny();
     const name = defOf(o).name.toLowerCase();
-    const finish = () => { statBuy(o, price); run.credits -= price; if (o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
+    const finish = () => { statBuy(o, price); run.credits -= price; o.free = false; if (o.kind === 'item' ? --o.n <= 0 : o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
     // No room: pick one of yours to replace (the purchase goes through after the swap).
     if (o.kind === 'item') { if (!itemRoom(o.key, o.tier)) return openSwap('item', o.key, o.tier, finish); addItem(o.key, o.tier); }
     if (o.kind === 'mod') {
@@ -207,7 +219,7 @@ function openShop(node) {
       X({
         list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
         sel: k === sel, faded: !!whyNot(o),
-        badge: isMod ? o.key : null, badgeTier: def.tier, name: def.name + (up ? ' +' : ''), col,
+        badge: isMod ? o.key : null, badgeTier: def.tier, name: def.name + (up ? ' +' : '') + (o.n > 1 ? ' x' + o.n : ''), col,   // x2: copies left
         chip: o.kind === 'item' ? def.rarity : null,
         right: `${tag.padEnd(4)} ${price.padStart(5)}`, rightCol: C.money, rightChips: true,
         tint: o.kind === 'repair' ? C.accent : null,
@@ -227,7 +239,7 @@ function openShop(node) {
         X({ badge: o.key, badgeTier: def.tier });
         X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(def)}` : `${tierLabel(def)} mod`, col: C.text, chips: true });
       } else {
-        if (o.kind === 'item') X({ text: def.name, chip: def.rarity, bold: true }); else T(def.name, C.bright);
+        if (o.kind === 'item') X({ text: def.name + (o.n > 1 ? ` x${o.n}` : ''), chip: def.rarity, bold: true }); else T(def.name, C.bright);
         X({ text: o.kind === 'item' ? `${def.tier ? RARITY[def.rarity].label + ' ' : ''}gear // single use` : 'service', col: C.mid, chips: true });
       }
       T(def.tip || def.desc, C.text);   // the short text: long gear descs ran off the screen

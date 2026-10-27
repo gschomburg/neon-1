@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.50']);
+NEON_FILES.push(['engine/help.js', 'v13.55']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -97,9 +97,12 @@ function buildAdvancedPage(T, X) {
   H('REPUTATION (REP)');
   P('cash out and you bank REP: for how deep you got, the corps you breached, your perfects, the credits you earned and the sectors you cleared. die and you bank nothing. spend REP at THE BOARD on upgrades for every run after.');
   T('');
-  H('CORP EVENTS');
-  P('some corps on the map carry a tag next to their code. each one changes how that corp plays:');
-  for (const m of Object.values(CORP_MODS)) X({ text: `${m.tag} ${m.name.padEnd(8)} ${m.desc}`.slice(0, HELP_W).padEnd(HELP_W), colorAt: i => i === 0 ? C.money : i < 10 ? C.accent : C.text });
+  H('SECTOR EVENTS');
+  P('from sector 2 on, every sector rolls an event: a card tells you what it is when the sector starts (tap the sector name on the map to see it again). most events put an anomaly on some of its corps, and on its boss; others change the whole sector: one corp everywhere, cheap markets, more loot, clocks that cost money.');
+  T('');
+  H('ANOMALIES');
+  P('a corp with an anomaly carries a tag next to its code. each one changes how that corp plays:');
+  for (const m of Object.values(ANOMALIES)) X({ text: `${m.tag} ${m.name.padEnd(8)} ${m.desc}`.slice(0, HELP_W).padEnd(HELP_W), colorAt: i => i === 0 ? C.money : i < 10 ? C.accent : C.text });
   T('');
   H('THE UPLINK');
   P('beat a sector boss and you can push on to the next sector, but carrying your mods costs bandwidth: every mod has a fee by its rarity. keep what you can pay for, sell the rest, or cash out.');

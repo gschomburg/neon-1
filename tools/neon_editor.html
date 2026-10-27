@@ -235,6 +235,19 @@
   body.mode-art #art { display: flex; }
   body.mode-tut #tut { display: flex; }
   body.mode-econ #econ { display: flex; }
+  body.mode-test #test { display: flex; }
+  /* testing: cheats and jumps on the running game */
+  #test { flex-direction: column; overflow: auto; padding: 10px 14px; gap: 4px; }
+  #test h2 { margin: 14px 0 4px; }
+  #test h2 small { text-transform: none; letter-spacing: 0; font-weight: normal; margin-left: 6px; color: var(--mid); }
+  #test .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  #test .row input[type=number] { width: 70px; }
+  #test .ev { display: inline-flex; flex-direction: column; align-items: flex-start; min-width: 150px; text-align: left; }
+  #test .ev small { color: var(--mid); font-size: 11px; }
+  #test #xState { font: 12px/1.5 "JetBrains Mono", Consolas, monospace; color: var(--hi); background: var(--panel); padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px; }
+  #test #xLog { font-size: 12px; color: var(--mid); min-height: 1.5em; }
+  #test #xLog.bad { color: #f77; }
+
 
   /* economy: every money number (dist/data/economy.js) */
   #econ { flex-direction: column; }
@@ -500,7 +513,7 @@
 </section>
 
 <div id="right">
-<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">gear &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><span id="modehint"></span><button id="helpBtn" title="How this tab works, and how saving works (F1)">? help</button></div>
+<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">gear &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><button data-mode="test">testing</button><span id="modehint"></span><button id="helpBtn" title="How this tab works, and how saving works (F1)">? help</button></div>
 <div id="help"><div id="helpNav"></div><div id="helpBody"></div></div>
 <section id="art" class="mode">
   <div id="aBar">
@@ -542,9 +555,38 @@
   </div>
   <div id="tList"></div>
 </section>
+<section id="test" class="mode">
+  <div id="xState">the game isn't ready yet</div>
+  <div id="xLog"></div>
+  <h2>Run <small>every cheat makes the run practice (not scored)</small></h2>
+  <div class="row">
+    <button data-x="fresh">new test run</button>
+    <button data-x="god" class="tg">god</button>
+    <button data-x="debug" class="tg">show real node</button>
+    <button data-x="free" class="tg">free travel</button>
+  </div>
+  <div class="row">
+    credits <input id="xCr" type="number" value="500"> <button data-x="credits">set</button>
+    &nbsp; INT <input id="xInt" type="number" value="5" min="1"> <button data-x="int">set</button> <button data-x="heal">heal</button>
+  </div>
+  <h2>Sector events <small>click one: a new run, straight to sector 2 with that event (its card first)</small></h2>
+  <div class="row" id="xEvents"></div>
+  <h2>Jump</h2>
+  <div class="row">
+    <button data-x="sector" data-n="2">sector 2</button><button data-x="sector" data-n="3">sector 3</button><button data-x="sector" data-n="4">sector 4</button><button data-x="sector" data-n="5">sector 5</button>
+    &nbsp; <button data-x="boss">sector boss now</button> <button data-x="clear">clear this sector</button> <button data-x="uplink">the uplink</button>
+  </div>
+  <h2>Anomaly on the next corps <small>the corps you can go to from where you are</small></h2>
+  <div class="row" id="xAnoms"></div>
+  <h2>THE FENCE</h2>
+  <div class="row"><button data-x="steal">steal my last mod</button> <span class="dim">it goes to THE FENCE (one is added next to this sector's boss if there isn't one)</span></div>
+  <h2>Give <small>a mod (at a step) or a gear; the gear &amp; mods tab has the full list</small></h2>
+  <div class="row"><select id="xGive"></select> <select id="xTier"></select> <button id="xGiveBtn">give</button></div>
+</section>
 <section id="items" class="mode">
   <div id="iBar">
     <span class="seg" id="iView"><button data-v="cards" class="on">cards</button><button data-v="ladder">ladder</button></span>
+    <span class="seg" id="iSort" title="sort order: as in the file, by the corp's level (corp mods; the rest keep file order, first), by name, by rarity"><button data-s="file" class="on">file</button><button data-s="level">corp level</button><button data-s="name">a-z</button><button data-s="rarity">rarity</button></span>
     <span class="seg" id="iKind"><button data-k="all" class="on">all</button><button data-k="item">gear</button><button data-k="gen">general</button><button data-k="minor">minor</button><button data-k="exotic">exotic</button><button data-k="corp">corp</button></span>
     <input id="iFilter" type="text" placeholder="filter: name, text, corp..." autocomplete="off">
     <button id="iCopy" title="Copy what's shown as plain text, to paste into notes or a chat">copy as text</button>
@@ -1708,19 +1750,71 @@
 
   // ---- the two modes (music / palette), remembered
   const setMode = m => {
-    if (!['music', 'pal', 'items', 'art', 'tut', 'econ'].includes(m)) m = 'music';
-    for (const k of ['music', 'pal', 'items', 'art', 'tut', 'econ']) document.body.classList.toggle('mode-' + k, m === k);
+    if (!['music', 'pal', 'items', 'art', 'tut', 'econ', 'test'].includes(m)) m = 'music';
+    for (const k of ['music', 'pal', 'items', 'art', 'tut', 'econ', 'test']) document.body.classList.toggle('mode-' + k, m === k);
     for (const b of document.querySelectorAll('#modes button[data-mode]')) b.classList.toggle('on', b.dataset.mode === m);
     $('#modehint').textContent = { music: 'pick a corp: the game shows it and plays its track', pal: 'palettes: save writes dist/palettes.js',
       items: 'from dist/data/mods.js. give / change / remove mods on the running game (the copy is read-only)',
       art: 'dist/data/art/: glyphs, logos, world map. edit here or in asXii; save writes the files',
       tut: 'dist/data/tutorial.js: what POPS says. show plays the training to that line; edits show live',
-      econ: 'dist/data/economy.js: every money number, in units. edits go to the game live; save writes the file' }[m];
+      econ: 'dist/data/economy.js: every money number, in units. edits go to the game live; save writes the file',
+      test: 'cheats and jumps on the running game, for testing (nothing is saved)' }[m];
     try { localStorage.setItem('neon.editor.mode', m); } catch (e) { /* private mode */ }
   };
   for (const b of document.querySelectorAll('#modes button[data-mode]')) b.addEventListener('click', () => setMode(b.dataset.mode));
   let mode = 'music'; try { mode = localStorage.getItem('neon.editor.mode') || 'music'; } catch (e) { /* private mode */ }
   setMode(mode);
+})();
+</script>
+<script>
+// ---------------- Testing: cheats and jumps on the running game (engine/editor.js 'test') ----------------
+(() => {
+  const $ = s => document.querySelector(s);
+  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  let state = null, evNames = {};
+  const log = (t, bad) => { const l = $('#xLog'); l.textContent = t; l.classList.toggle('bad', !!bad); };
+  const send = (act, extra = {}) => { log(act + '...'); toGame(Object.assign({ type: 'test', act }, extra)); };
+  const drawState = () => {
+    const x = state;
+    for (const b of document.querySelectorAll('#test button.tg')) b.classList.toggle('on', !!(x && x[b.dataset.x]));
+    if (!x || !x.run) { $('#xState').textContent = 'no run: click "new test run" or a sector event'; return; }
+    $('#xState').textContent = `sector ${x.sector}${x.event ? ' // ' + (evNames[x.event] || x.event) : ''}  ·  ${x.credits}cr  ·  INT ${x.int}/${x.maxInt}  ·  ${x.mods} mods${x.fence ? '  ·  fence: ' + x.fence : ''}  ·  ${x.mode}${x.god ? '  ·  GOD' : ''}${x.free ? '  ·  free travel' : ''}`;
+  };
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.from !== 'neon-game') return;
+    if (m.type === 'ready') {
+      evNames = Object.fromEntries((m.events || []).map(([k, n]) => [k, n]));
+      const an = Object.fromEntries((m.anomalies || []).map(a => [a[0], a]));
+      $('#xEvents').innerHTML = (m.events || []).map(([k, n, kind, a]) => `<button class="ev" data-x="event" data-key="${esc(k)}">${esc(n)}<small>${kind === 'anomaly' ? (a === 'any' ? 'any anomaly' : esc(an[a] ? an[a][1] : a)) : 'whole sector'}</small></button>`).join('');
+      $('#xAnoms').innerHTML = (m.anomalies || []).map(([k, n, tag, d]) => `<button data-x="anomaly" data-key="${esc(k)}" title="${esc(d)}">${esc(tag)} ${esc(n)}</button>`).join('') + '<button data-x="anomaly" data-key="">none</button>';
+    }
+    if (m.type === 'test-state') { state = m; drawState(); }
+    if (m.type === 'test-done') log(m.ok ? m.act + ': done' : m.act + ': ' + m.error, !m.ok);
+    if (m.type === 'mod-set' && m.ok === false) log('give: ' + m.error, true);
+  });
+  $('#test').addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-x]'); if (!b) return;
+    const act = b.dataset.x;
+    if (act === 'fresh') return send('sector', { n: 1 });
+    if (act === 'credits') return send('credits', { n: $('#xCr').value });
+    if (act === 'int') return send('int', { n: $('#xInt').value });
+    if (act === 'sector') return send('sector', { n: +b.dataset.n });
+    if (act === 'event' || act === 'anomaly') return send(act, { key: b.dataset.key });
+    send(act);
+  });
+  // give: every mod and gear (from dist/data/mods.js, loaded for the gear & mods tab)
+  if (typeof MODS !== 'undefined' && typeof ITEMS !== 'undefined') {
+    const steps = d => (d.tiers || [{}]).map(t => Object.assign({}, d, t).rarity);
+    const opt = (k, d, kind) => `<option value="${esc(k)}">${esc(d.name)} (${kind})</option>`;
+    const groups = [['gear', Object.entries(ITEMS)], ...['gen', 'minor', 'exotic', 'corp'].map(k => [k + ' mods', Object.entries(MODS).filter(([, d]) => d.kind === k)])];
+    $('#xGive').innerHTML = groups.map(([g, list]) => `<optgroup label="${g}">${list.sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([k, d]) => opt(k, d, g === 'gear' ? 'gear' : d.kind)).join('')}</optgroup>`).join('');
+    const tiers = () => { const k = $('#xGive').value, d = ITEMS[k] || MODS[k]; $('#xTier').innerHTML = steps(d).map((r, i) => `<option value="${i}">${esc(r)}</option>`).join(''); };
+    $('#xGive').addEventListener('change', tiers); tiers();
+    $('#xGiveBtn').addEventListener('click', () => { if (!state || !state.run) return log('give: no run: start one first', true); toGame({ type: 'mod-set', key: $('#xGive').value, tier: +$('#xTier').value }); log('gave ' + $('#xGive').selectedOptions[0].textContent); });
+  }
+  drawState();
 })();
 </script>
 <script>
@@ -1760,23 +1854,31 @@
     if (m.type === 'mods') { game = m; held = Object.fromEntries(m.mods); render(); }
   });
 
-  let view = 'cards', kind = 'all', q = '';
-  try { view = localStorage.getItem('neon.items.view') || 'cards'; kind = localStorage.getItem('neon.items.kind') || 'all'; } catch (e) { /* private mode */ }
+  let view = 'cards', kind = 'all', q = '', sort = 'file';
+  try { view = localStorage.getItem('neon.items.view') || 'cards'; kind = localStorage.getItem('neon.items.kind') || 'all'; sort = localStorage.getItem('neon.items.sort') || 'file'; } catch (e) { /* private mode */ }
+  all.forEach((e, i) => { e.i = i; });
+  const corpLv = e => e.d.corp ? (e.d.corp === 'omni' ? 9 : (CORPS[e.d.corp] && CORPS[e.d.corp].level) || 1) : 0;   // OMNI (the final) last
+  const SORTS = {
+    file: (a, b) => a.i - b.i,
+    level: (a, b) => corpLv(a) - corpLv(b) || (a.d.corp ? corpName(a.d.corp).localeCompare(corpName(b.d.corp)) : 0) || a.i - b.i,
+    name: (a, b) => a.d.name.localeCompare(b.d.name),
+    rarity: (a, b) => RARITY[a.steps[0].rarity].lvl - RARITY[b.steps[0].rarity].lvl || a.d.name.localeCompare(b.d.name),
+  };
   const shown = () => all.filter(e => (kind === 'all' || e.kind === kind) && (!q || [e.key, e.d.name, e.d.short, e.d.corp && corpName(e.d.corp), e.d.slot, e.d.codex,
-    ...e.steps.flatMap(s => [s.tip, s.desc, s.rarity])].join(' ').toLowerCase().includes(q)));
+    ...e.steps.flatMap(s => [s.tip, s.desc, s.rarity])].join(' ').toLowerCase().includes(q))).sort(SORTS[sort] || SORTS.file);
 
   const meta = e => {
     const d = e.d, bits = [];
     if (d.short) bits.push(`<span class="mono">${esc(d.short)}</span>`);
     bits.push(e.kind === 'item' ? 'item' : e.kind + ' mod');
     if (d.price) bits.push(d.price + 'cr');
-    if (d.corp) bits.push(`from <a data-corp="${esc(d.corp)}" title="show this corp in the game">${esc(corpName(d.corp))}</a>`);
+    if (d.corp) bits.push(`from <a data-corp="${esc(d.corp)}" title="show this corp in the game">${esc(corpName(d.corp))}</a>${CORPS[d.corp] ? ' LV' + (CORPS[d.corp].level || 1) : ''}`);
     if (d.icon) bits.push(`icon <span class="mono">${esc(d.icon)}</span>` + (d.anim ? ' ' + esc(d.anim) : ''));
     const flags = [d.active && 'tap to use', d.slot && 'slot: ' + d.slot, d.locked && 'locked in'].filter(Boolean).map(f => `<span class="flag">${esc(f)}</span>`);
     return bits.join(' · ') + ' ' + flags.join(' ');
   };
   const giveBtn = (e, i) => {
-    if (e.kind === 'item') return '';
+    if (e.kind === 'item') return `<td class="igive"><button class="give" data-key="${esc(e.key)}" data-tier="${i}" title="give one at this step (it goes in your gear slots)"${game.run ? '' : ' disabled'}>+1</button></td>`;
     const on = held[e.key] === i;
     return `<td class="igive"><button class="give${on ? ' on' : ''}" data-key="${esc(e.key)}" data-tier="${on ? -1 : i}" title="${on ? 'held at this step: click to remove it' : (e.key in held ? 'move it to this step' : 'give it at this step')}"${game.run ? '' : ' disabled'}>${on ? 'held ✕' : e.key in held ? 'set' : 'give'}</button></td>`;
   };
@@ -1788,7 +1890,7 @@
     const rows = list.map(e => {
       const at = {}; e.steps.forEach((s, i) => { at[s.rarity] = s; s.i = i; });
       const first = RARITY[e.steps[0].rarity].lvl, last = RARITY[e.steps[e.steps.length - 1].rarity].lvl;
-      return `<tr><td class="n">${esc(e.d.name)}<small>${e.kind === 'item' ? 'gear' : e.kind}${e.d.corp ? ' · ' + esc(corpName(e.d.corp)) : ''}</small></td>` + LADDER.map(r => {
+      return `<tr><td class="n">${esc(e.d.name)}<small>${e.kind === 'item' ? 'gear' : e.kind}${e.d.corp ? ' · ' + esc(corpName(e.d.corp)) + (CORPS[e.d.corp] ? ' LV' + (CORPS[e.d.corp].level || 1) : '') : ''}</small></td>` + LADDER.map(r => {
         const s = at[r], l = RARITY[r].lvl, c = chips[r] || {};
         if (s) {
           const mod = e.kind !== 'item' && game.run, on = held[e.key] === s.i;
@@ -1804,6 +1906,7 @@
     gameBar();
     for (const b of document.querySelectorAll('#iView button')) b.classList.toggle('on', b.dataset.v === view);
     for (const b of document.querySelectorAll('#iKind button')) b.classList.toggle('on', b.dataset.k === kind);
+    for (const b of document.querySelectorAll('#iSort button')) b.classList.toggle('on', b.dataset.s === sort);
     const list = shown();
     $('#iCount').textContent = `${list.length} of ${all.length}`;
     // the ladder strip: how many things reach each rarity (at any step)
@@ -1824,6 +1927,7 @@
 
   $('#iView').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; view = b.dataset.v; try { localStorage.setItem('neon.items.view', view); } catch (e) { /* */ } render(); });
   $('#iKind').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; kind = b.dataset.k; try { localStorage.setItem('neon.items.kind', kind); } catch (e) { /* */ } render(); });
+  $('#iSort').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; sort = b.dataset.s; try { localStorage.setItem('neon.items.sort', sort); } catch (e) { /* */ } render(); });
   $('#iFilter').addEventListener('input', ev => { q = ev.target.value.trim().toLowerCase(); render(); });
   $('#iCopy').addEventListener('click', () => {
     const t = asText(), b = $('#iCopy');
@@ -2511,11 +2615,13 @@
 <h2>Looking</h2>
 <ul>
 <li><b>cards</b>: one card each, every rarity step. <b>ladder</b>: one row each, a column per rarity.</li>
+<li>Sort: <b>file</b> (as in data/mods.js), <b>corp level</b> (corp mods by their corp's level, LV1 first, OMNI last; pick <b>corp</b> to see only those), <b>a-z</b>, <b>rarity</b> (by the first step).</li>
 <li>Filter by kind (gear, general, minor, exotic, corp) or by text. A corp mod's corp name shows that corp in the game.</li>
 </ul>
 <h2>Testing in the game</h2>
 <ul>
 <li><b>give</b> / <b>set</b> on a step puts that mod, at that step, on the run in the game. The bar at the top shows what the run holds; <b>held ✕</b> removes one. No slot limit here.</li>
+<li><b>+1</b> on a gear step puts one of that gear, at that step, in the run's gear slots (if there's room).</li>
 </ul>
 <h2>Changing the words</h2>
 <ul>
@@ -2578,8 +2684,21 @@
 <p><b>revert</b> on a row puts it back. <b>save</b> writes the file (the first time, pick the ${F('dist/data')} folder). More: ${go('saving', 'how saving works')}.</p>
 <h2>Checking a change</h2>
 <p>Ask Claude to run the economy sim (${F('tools/econsim.js')}): a bot plays whole runs and reports what they earn and hold. Results go in ${F('docs/ECONOMY.md')}.</p>` },
+    test: { name: 'testing', html: `
+<h1>Testing</h1>
+<p class="lead">Cheats and jumps on the game on the left, for playing things through. Nothing here writes a file. Every cheat makes the run practice (not scored).</p>
+<ul>
+<li><b>Run:</b> a new test run (on the map, after the public net); god (no damage), show the real node, free travel (go to any node); set credits and INT, heal.</li>
+<li><b>Sector events:</b> click one and the game starts a new run and climbs straight to sector 2 with that event: its card comes up first. The sector name on the map shows the card again.</li>
+<li><b>Jump:</b> to sector 2-5 (events rolled as usual); into this sector's boss; clear the sector (the success screen); or straight to the uplink.</li>
+<li><b>Anomaly on the next corps:</b> puts that anomaly on the corps you can go to next (THIEF also adds THE FENCE); <b>none</b> takes them off.</li>
+<li><b>THE FENCE:</b> steal my last mod sends it to THE FENCE, next to the sector boss, to buy back.</li>
+<li><b>Give:</b> any mod at a step, or a gear. The gear &amp; mods tab has every one, with its text.</li>
+</ul>
+<p>The line at the top is the game right now: sector, its event, credits, INT, and what's on.</p>` },
+
   };
-  const ORDER = ['saving', null, 'music', 'pal', 'items', 'art', 'tut', 'econ'];
+  const ORDER = ['saving', null, 'music', 'pal', 'items', 'art', 'tut', 'econ', 'test'];
   let open = false, at = 'saving';
   const modeNow = () => (document.body.className.match(/mode-(\w+)/) || [])[1] || 'music';
   const nav = $('#helpNav');

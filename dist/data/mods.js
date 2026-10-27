@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.50']);
+NEON_FILES.push(['data/mods.js', 'v13.55']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -26,18 +26,56 @@ const ITEMS = {
   split: { key: 'split', name: 'SPLIT', price: 34, rarity: 'common', desc: 'rule out half the grid.', tip: 'rule out half.',
     tiers: [{}, { rarity: 'rare', desc: 'rule out two thirds of the ICE.', tip: 'rule out 2/3 ICE.' }, { rarity: 'epic', desc: 'rule out all but one ICE node.', tip: 'leave real + 1 ICE.' }] },
   route: { key: 'route', name: 'ROUTE', price: 45, rarity: 'rare',   desc: 'on the map: reshuffle every node ahead.', tip: 'shuffle map ahead.' },
-  warp:  { key: 'warp',  name: 'WARP',  price: 50, rarity: 'exotic', desc: 'on the map: warp to a random node ahead.', tip: 'random jump ahead.' },
+  warp:  { key: 'warp',  name: 'WARP',  price: 45, rarity: 'rare', desc: 'on the map: warp to a random node ahead.', tip: 'random jump ahead.',
+    codex: 'on the map: a warp opens to a random node ahead in this sector, any row. it can skip a lot (and the pay and REP in it). the epic one lets you aim.',
+    tiers: [{}, { rarity: 'epic', desc: 'on the map: warp to any node ahead. you pick.', tip: 'jump anywhere ahead.' }] },
   allin: { key: 'allin', name: 'ALL-IN', price: 60, rarity: 'epic', desc: 'in a corp layer: 50/50. the layer clears, or 2 more ICE nodes show up.', tip: '50/50: clear it or +2 ICE.',
     codex: 'use it in a corp layer: half the time the layer clears on the spot (the real node opens, normal pay, no perfect); the other half two new ICE nodes appear, copies of the decoys already there. not in corps with their own tap rules.' },
+  // map gear (the user, 2026-10-26): TUNNEL, MESH (and WARP above). They add nodes you can go to (availableNodes).
+  tunnel: { key: 'tunnel', name: 'TUNNEL', price: 35, rarity: 'rare', desc: 'on the map: your next move can be any node in your row.', tip: 'go across the row.',
+    codex: 'on the map: dig across. your next move can be any node in the row you are on, linked or not: get over to that market. it is your move.' },
+  mesh:  { key: 'mesh',  name: 'MESH',  price: 80, rarity: 'epic', desc: 'on the map: every node links to every node in the next row, for the rest of this sector.', tip: 'link the whole sector.',
+    codex: 'on the map: a full mesh. for the rest of this sector, every node links to every node in the row after it: go wherever you like, a row at a time.' },
+  // layer gear (the user, 2026-10-26): TILT, SHAKE, FRAG, REWIND, SHOE.
+  tilt:  { key: 'tilt',  name: 'TILT',  price: 30, rarity: 'rare', desc: 'in a layer: every closed node slides to the top or the bottom (random).', tip: 'slide them up or down.',
+    codex: 'in a layer: tilt the board. every node still closed slides as far as it can, up or down (a coin flip). watch the real one go: tells about where a node sits go stale, but your mods might like a packed board. some corps react.' },
+  shake: { key: 'shake', name: 'SHAKE', price: 18, rarity: 'common', desc: 'in a layer: every closed node slides a step or two.', tip: 'jostle the nodes.',
+    codex: 'in a layer: shake the board. every node still closed slides a step or two to a spot nearby. follow the real one with your eyes. some corps react.' },
+  frag:  { key: 'frag',  name: 'FRAG',  price: 28, rarity: 'common', desc: 'in a layer: hits 3 random nodes. ICE breaks. hit the real one: the layer clears, no pay.', tip: '3 random hits.',
+    codex: 'in a layer: a frag grenade. it hits random nodes still closed: the ICE it hits breaks. if it hits the real node, the layer clears but pays nothing. the legendary one never hits the real node.',
+    tiers: [{}, { rarity: 'rare', desc: 'in a layer: hits 4 random nodes. ICE breaks. hit the real one: the layer clears, no pay.', tip: '4 random hits.' },
+      { rarity: 'epic', desc: 'in a layer: hits 5 random nodes. ICE breaks. hit the real one: the layer clears, no pay.', tip: '5 random hits.' },
+      { rarity: 'legendary', desc: 'in a layer: hits 5 random nodes, never the real one. ICE breaks.', tip: '5 hits, never the real.' }] },
+  rewind: { key: 'rewind', name: 'REWIND', price: 25, rarity: 'common', desc: 'with a clock running: +5 seconds.', tip: '+5s on the clock.',
+    codex: 'wind the clock back. the epic one stops every timer in the corp for the rest of it: the clock, and anything that moves or runs on time.',
+    tiers: [{}, { rarity: 'rare', desc: 'with a clock running: the clock back to full.', tip: 'clock back to full.' },
+      { rarity: 'epic', desc: 'in a corp: every timer stops (the clock, and what moves), for the rest of the corp.', tip: 'stop all timers, this corp.' }] },
+  shoe:  { key: 'shoe',  name: 'SHOE',  price: 4,  rarity: 'scrap', desc: 'in a layer: throw it. it probably does nothing.', tip: 'throw it. probably nothing.',
+    codex: 'a shoe. throw it at the machine: it worked in 1910, maybe. (sabotage comes from sabot, the wooden shoe.) now and then it breaks an ICE. once in a blue moon it hits the real node: the layer clears, no pay.' },
+  // the uplink (the user, 2026-10-26)
+  pass:  { key: 'pass',  name: 'PASS',  price: 90, rarity: 'epic', where: 'market, $ nodes, caches. used at the uplink.', desc: 'at the uplink: the bandwidth fee is half.', tip: 'half off the uplink.',
+    codex: 'an uplink pass. at the end of a sector it cuts the bandwidth fee in half (tap it on the UPLINK screen). keep it for a deep sector: the fee grows every sector.' },
   // value gear (the user: "more gear that has more bonuses, even if it's just selling them"): loot only, never for sale.
-  // A market buys it (SELL) for its worth; used anywhere, it cashes in for half. Their worth: ECON.gear.
-  shard: { key: 'shard', name: 'SHARD', price: 30, rarity: 'scrap', value: true, where: '$ nodes, caches.',
+  // One per rarity, no rarity steps (so each always stacks). A market buys it (SELL) for its worth; used anywhere,
+  // it cashes in for half. Their worth: ECON.gear; how often each drops: ECON.drop.
+  duds:  { key: 'duds',  name: 'DUDS',  price: 5,  rarity: 'scrap', value: true, where: '$ nodes, caches.',
+    desc: 'dead chips. junk, but a market gives you a little for them.', tip: 'junk: sell it.',
+    codex: 'a handful of dead chips. worth almost nothing, but they stack: fill a slot and sell the lot at a black market (SELL), or use them anywhere to cash in for half.' },
+  sim:   { key: 'sim',   name: 'SIM',   price: 15, rarity: 'common', value: true, where: '$ nodes, caches.',
+    desc: 'a burner SIM: a market buys it. or use it anywhere for half.', tip: 'sell it at a market.',
+    codex: 'a burner SIM, still live. sell it at a black market (SELL) for its full worth, or use it anywhere to cash it in for half.' },
+  shard: { key: 'shard', name: 'SHARD', price: 40, rarity: 'rare', value: true, where: '$ nodes, caches.',
     desc: 'stolen data: a market buys it. or use it anywhere for half.', tip: 'sell it at a market.',
-    codex: 'stolen data, worth credits. sell it at a black market (SELL) for its full worth, or use it anywhere to cash it in for half. rarer shards are worth more. gear costs nothing at the uplink.',
-    tiers: [{}, { rarity: 'common', desc: 'better data: worth more at a market.', tip: 'worth more.' }, { rarity: 'rare', desc: 'prime data: worth a lot at a market.', tip: 'worth a lot.' }] },
+    codex: 'stolen data, worth credits. sell it at a black market (SELL) for its full worth, or use it anywhere to cash it in for half. gear costs nothing at the uplink.' },
   bond:  { key: 'bond',  name: 'BOND',  price: 40, rarity: 'rare', value: true, where: '$ nodes, caches.',
     desc: 'a bearer bond: worth more every sector. sell it at a market, or use it anywhere for half.', tip: 'worth more each sector.',
     codex: 'a bearer bond. it is worth more the deeper you are: sector 2 pays twice what sector 1 does, sector 3 three times. sell it at a black market (SELL), or use it anywhere to cash it in for half. hold it through the uplink for free.' },
+  chrome: { key: 'chrome', name: 'CHROME', price: 100, rarity: 'epic', value: true, where: '$ nodes, caches.',
+    desc: 'a cyber-arm off a dead runner: a market pays well. or use it anywhere for half.', tip: 'sell it: worth a lot.',
+    codex: 'a cyber-arm, pulled off a runner who did not make it. a black market pays well for it (SELL), or use it anywhere to cash it in for half.' },
+  wallet: { key: 'wallet', name: 'WALLET', price: 250, rarity: 'legendary', value: true, where: '$ nodes, caches.',
+    desc: 'a cold crypto wallet: the jackpot. sell it at a market, or use it anywhere for half.', tip: 'the jackpot: sell it.',
+    codex: 'a cold crypto wallet, keys and all. the rarest find there is: a black market pays a fortune for it (SELL), or use it anywhere to cash it in for half.' },
 };
 const ITEM_WHERE = 'market, $ nodes, caches.';
 

@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v13.50']);
+NEON_FILES.push(['engine/dev.js', 'v13.55']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
@@ -173,7 +173,7 @@ function devMenuLines() {
   B(`[ god: ${st.god ? 'ON ' : 'OFF'} ]`, 'god', () => { st.god = !st.god; if (run) run.practice = true; Sound.ui(); });
   B(`[ free travel: ${st.freeTravel ? 'ON ' : 'OFF'} ]`, 'free', () => { st.freeTravel = !st.freeTravel; if (run) run.practice = true; st.mapSel = null; Sound.ui(); });
   { const gl = lbClient(); B(`[ stats: ${gl && gl.dev ? (window.Greglytics.tester() ? 'TESTER (dev data)' : 'LOCAL (dev data) ') : 'REAL             '} ]`, 'tester', lbToggleTester); }
-  B(`[ title pulse: ${(st.pulseStyle || 'color').toUpperCase().padEnd(5)} ]`, 'pulse', () => { st.pulseStyle = PULSE_STYLES[(PULSE_STYLES.indexOf(st.pulseStyle || 'color') + 1) % PULSE_STYLES.length]; Sound.ui(); });
+  B(`[ title pulse: ${(st.pulseStyle || 'color').toUpperCase().padEnd(5)} ]`, 'pulse', () => { st.pulseStyle = PULSE_STYLES[(PULSE_STYLES.indexOf(st.pulseStyle || 'color') + 1) % PULSE_STYLES.length]; Sound.ui(); });
   // the boot / login intro: replay the first-boot version (as if new) or the short one
   lines.push({ row: [
     { text: '[intro: first boot]', id: 'introfull', onTap: () => { save.bootSeen = false; persist(); toggleDev(); startIntro(); } },
@@ -187,8 +187,8 @@ function devMenuLines() {
   const tc = st.devCorp && CORPS[st.devCorp] ? st.devCorp : 'basic', td = CORPS[tc];
   st.devTier = st.devTier || 1;
   B(`[ corp: ${(corpCode(td) + ' ' + td.name).slice(0, 16).padEnd(16)} LV${td.level || 1} v ]`, 'dcorp', () => { st.devPage = 'corps'; st.devTop = 0; Sound.ui(); });
-  const cmKeys = [null, ...Object.keys(CORP_MODS)];
-  B(`[ modifier: ${(st.devCMod ? CORP_MODS[st.devCMod].name : 'none').padEnd(8)} ]`, 'dcmod', () => { st.devCMod = cmKeys[(cmKeys.indexOf(st.devCMod || null) + 1) % cmKeys.length]; Sound.tick(); });
+  const cmKeys = [null, ...Object.keys(ANOMALIES)];
+  B(`[ anomaly: ${(st.devCMod ? ANOMALIES[st.devCMod].name : 'none').padEnd(8)} ]`, 'dcmod', () => { st.devCMod = cmKeys[(cmKeys.indexOf(st.devCMod || null) + 1) % cmKeys.length]; Sound.tick(); });
   lines.push({ row: [
     { text: `[tier ${st.devTier}]`, id: 'dtier', onTap: () => { st.devTier = st.devTier % 3 + 1; Sound.tick(); } },
     { text: '[breach now]', id: 'dbreach', onTap: () => devBreach(tc, st.devTier), disabled: !idle || st.mode !== 'map' },
@@ -199,18 +199,7 @@ function devMenuLines() {
   ] });
   if (st.mode !== 'map') T('(breach now: be on the map)', C.dim);
   T('');
-  T('mods (by rarity, tap to add/remove)', C.mid);
-  const toggleMod = k => cheat(() => {
-    if (!run.mods.includes(k)) return addMod(k);
-    removeMod(k);
-  });
-  const keys = codexMods();
-  for (let i = 0; i < keys.length; i += 4) {
-    lines.push({ gap: 3, row: keys.slice(i, i + 4).map(k => ({
-      badge: k, on: !!(run && run.mods.includes(k)),
-      id: 'mod_' + k, onTap: toggleMod(k), disabled: !run,
-    })) });
-  }
+  T('mods / gear: the neon editor', C.dim);
   T('');
   lines.push({ row: [
     { text: '[+100cr]', id: 'cr', onTap: cheat(() => { run.credits += 100; }), disabled: !run },
@@ -218,7 +207,7 @@ function devMenuLines() {
     { text: '[fill gear]', id: 'belt', onTap: cheat(() => { for (const k of Object.keys(ITEMS)) addItem(k, 0); }), disabled: !run },
   ] });
   B('[unlock codex]', 'seenall', () => {
-    for (const k of [...Object.keys(MODS), ...Object.keys(ITEMS), ...GLYPHS.map(gl => gl.key), ...CODEX_CORPS.map(c => 'corp_' + c)]) save.seen[k] = true;
+    for (const k of [...Object.keys(MODS), ...Object.keys(ITEMS), ...GLYPHS.map(gl => gl.key), ...CODEX_CORPS.map(c => 'corp_' + c), ...Object.keys(SECTOR_EVENTS).map(e => 'ev_' + e)]) save.seen[k] = true;
     for (const c of CODEX_CORPS) if (!corpStat(c).breached) corpStat(c).breached = 1;
     persist(); Sound.buy();
   });

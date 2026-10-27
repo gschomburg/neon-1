@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.50']);
+NEON_FILES.push(['engine/render.js', 'v13.55']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -93,7 +93,13 @@ function availableNodes() {
   // Dev "free travel": every node except the one you're on.
   if (st.freeTravel) return Object.keys(run.map).filter(id => id !== run.at && id !== '0:1');
   // Links out of where you are, minus stops you've been to (sideways links go both ways).
-  return run.at ? run.map[run.at].next.filter(id => !run.visited.includes(id)) : ['0:1'];
+  if (!run.at) return ['0:1'];
+  const cur = run.map[run.at], out = new Set(cur.next);
+  // map gear: TUNNEL (any node in your row), MESH (every node in the next row, all sector), aimed WARP (anything ahead)
+  if (run.tunnel) for (const n of rowMates()) out.add(n.id);
+  if (run.mesh === run.sector) for (const n of Object.values(run.map)) if (n.step === cur.step + 1 && (n.sector || 0) === run.sector) out.add(n.id);
+  if (run.warpAim) for (const n of nodesAhead()) out.add(n.id);
+  return [...out].filter(id => !run.visited.includes(id));
 }
 
 function showBoard(mode) {

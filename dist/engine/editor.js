@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.50']);
+NEON_FILES.push(['engine/editor.js', 'v13.55']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -206,10 +206,15 @@ if (EDITOR) {
     const m = e.data;
     if (!m || m.to !== 'neon-game') return;
     if (m.type === 'mods-get') sendMods(true);
-    if (m.type !== 'mod-set' || !MODS[m.key]) return;
+    if (m.type !== 'mod-set' || !(MODS[m.key] || ITEMS[m.key])) return;
     const run = st.run;
     if (!run || run.ended) return post({ type: 'mod-set', ok: false, error: 'no run: start one (the map scene)' });
     run.practice = true;
+    if (ITEMS[m.key]) {   // gear: one more at that step (gear keys never match mod keys)
+      if (!addItem(m.key, clamp(m.tier || 0, 0, tierCount(ITEMS[m.key]) - 1))) return post({ type: 'mod-set', ok: false, error: 'no room in the gear slots' });
+      Sound.buy();
+      return sendMods(true);
+    }
     const top = tierCount(MODS[m.key]) - 1;
     if (m.tier == null || m.tier < 0) removeMod(m.key);
     else if (!run.mods.includes(m.key)) addMod(m.key, Math.min(m.tier, top));
@@ -245,7 +250,81 @@ if (EDITOR) {
       put(ECON, m.econ);
     }
   });
+  // ---- The TESTING tab (meat testing): cheats on the running game, and jumps to a sector with any event.
+  // 'test' { act, ... }; the game sends 'test-state' (what the run looks like now) whenever it changes.
+  const freshRun = async () => {   // a practice run, on the map after the public net
+    endRun();
+    startRun('TEST' + Math.floor(Math.random() * 90000 + 10000), true);
+    await settle();
+    if (st.mode === 'play' && st.lv) { await pick(st.lv.safe); await settle(); }
+    if (st.mode !== 'map') { toMap(); await settle(); }
+  };
+  const onMap = async () => { if (!st.run || st.run.ended) await freshRun(); if (st.panel || st.mode !== 'map') { toMap(); await settle(); } };
+  // Climb to sector `to` (1-based sectors: to 2 = the 2nd), with `ev` as that sector's event (the rest roll as usual).
+  const toSector = async (to, ev) => {
+    if (ev || !st.run || st.run.ended || st.run.sector >= to - 1) await freshRun(); else await onMap();
+    const run = st.run;
+    run.practice = true;
+    while (run.sector < to - 1) {
+      const old = run.sector, boss = bossIdOf(old);
+      run.at = boss; if (!run.visited.includes(boss)) run.visited.push(boss);
+      run.sector++; run.sectorsCleared = (run.sectorsCleared || 0) + 1;
+      addSector(run.map, run.seed, run.sector, run.sector === to - 1 ? ev || null : null);
+      run.fence = [];
+      if (run.sector < to - 1) (run.evSeen = run.evSeen || []).push(run.sector);   // only the last one's card comes up
+      if (run.sector === to - 1) { await swapTo(() => toMap(old)); await settle(); }
+    }
+  };
+  const TEST = {
+    god: () => { st.god = !st.god; },
+    debug: () => { st.debug = !st.debug; },
+    free: () => { st.freeTravel = !st.freeTravel; st.mapSel = null; },
+    credits: m => { st.run.credits = Math.round(+m.n || 0); },
+    int: m => { const n = Math.max(1, Math.round(+m.n || 1)); st.run.maxInt = Math.max(st.run.maxInt, n); st.run.integrity = n; },
+    heal: () => { st.run.integrity = st.run.maxInt; },
+    event: m => toSector(2, m.key),
+    sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),
+    boss: async () => { await onMap(); const n = st.run.map[bossIdOf(st.run.sector)]; await enterNode(n, true); await settle(); },
+    clear: async () => { await onMap(); const run = st.run, b = bossIdOf(run.sector); run.at = b; if (!run.visited.includes(b)) run.visited.push(b); await sectorClear(false); await settle(); },
+    uplink: async () => { await TEST.clear(); await swapTo(openUplink); await settle(); },
+    anomaly: async m => {   // on the corps you can go to next
+      await onMap();
+      const run = st.run;
+      for (const id of availableNodes()) { const n = run.map[id]; if (n.type === 'corp' || n.type === 'final') { if (m.key) n.mod = m.key; else delete n.mod; } }
+      if (m.key === 'thief') addFence(run.map, run.seed, run.sector);
+    },
+    steal: async () => {   // your last mod goes to THE FENCE (made if this sector has none)
+      const run = st.run;
+      if (!run.mods.length) return;
+      const key = run.mods.pop();
+      (run.fence = run.fence || []).push({ key, tier: (run.modTier || {})[key] || 0 });
+      addFence(run.map, run.seed, run.sector);
+      setMsg(`> test: ${MODS[key].name} stolen. it's at THE FENCE.`, C.danger);
+    },
+  };
+  const NEEDS_RUN = ['god', 'debug', 'free', 'credits', 'int', 'heal', 'steal'];
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.to !== 'neon-game' || m.type !== 'test' || !TEST[m.act]) return;
+    if (NEEDS_RUN.includes(m.act) && (!st.run || st.run.ended)) return post({ type: 'test-done', act: m.act, ok: false, error: 'no run: start one first' });
+    if (st.run) st.run.practice = true;
+    queue = queue.then(letGo).then(() => TEST[m.act](m))
+      .then(() => post({ type: 'test-done', act: m.act, ok: true }))
+      .catch(err => post({ type: 'test-done', act: m.act, ok: false, error: String((err && err.message) || err) }));
+  });
+  let lastTest = '';
+  setInterval(() => {
+    const run = st.run && !st.run.ended ? st.run : null, ev = run ? sectorEvent(run.sector) : null;
+    const m = { type: 'test-state', run: !!run, god: !!st.god, debug: !!st.debug, free: !!st.freeTravel, mode: st.mode,
+      credits: run ? run.credits : 0, int: run ? run.integrity : 0, maxInt: run ? run.maxInt : 0, sector: run ? run.sector + 1 : 0,
+      event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0 };
+    const s = JSON.stringify(m);
+    if (s !== lastTest) { lastTest = s; post(m); }
+  }, 300);
+
   post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES),
+    events: Object.entries(SECTOR_EVENTS).map(([k, e]) => [k, e.name, e.kind, e.anomaly || null]),
+    anomalies: Object.entries(ANOMALIES).map(([k, a]) => [k, a.name, a.tag, a.desc]),
     corpNames: Object.fromEntries(Object.entries(CORPS).map(([k, c]) => [k, c.name])) });
 }
 

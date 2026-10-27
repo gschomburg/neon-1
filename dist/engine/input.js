@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.50']);
+NEON_FILES.push(['engine/input.js', 'v13.55']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -170,6 +170,7 @@ cv.addEventListener('pointerdown', e => {
   Field.blur();   // tapping anywhere else finishes typing (phones don't always do this)
   if (st.boot) { introTap(hitAt(...ptXY(e))); return; }   // the intro: LOGIN, skip ahead, its buttons (engine/intro.js)
   if (st.ad) return adTap(hitAt(...ptXY(e)), performance.now());   // an ad is up: it takes the tap
+  if (st.evCard && !st.dev) return evTap(hitAt(...ptXY(e)));   // a SECTOR EVENT card (engine/events.js)
   if (st.intro) { st.intro.skip = true; return; }   // tap skips a corp intro
   if (st.bossIntro) { st.bossIntro.skip = true; return; }   // ...and a boss entrance
   let h = hitAt(...ptXY(e));
@@ -288,6 +289,7 @@ document.addEventListener('keydown', e => {
   if (arrow || k === ' ' || k === 'enter') e.preventDefault();
   if (st.boot && e.key !== '`') { introKey(e.key.toLowerCase()); return; }   // the intro: Enter / Space start and skip, N / L pick
   if (st.ad && e.key !== '`') { e.preventDefault(); return adKey(e.key.toLowerCase(), performance.now()); }   // an ad is up
+  if (st.evCard && !st.dev && e.key !== '`') { e.preventDefault(); return evKey(k); }   // a SECTOR EVENT card
   if (st.intro && e.key !== '`') { st.intro.skip = true; return; }   // any key skips a corp intro
   if (st.bossIntro && e.key !== '`') { st.bossIntro.skip = true; return; }
   if (e.key === '`') return toggleDev();

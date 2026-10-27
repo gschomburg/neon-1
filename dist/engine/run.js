@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.50']);
+NEON_FILES.push(['engine/run.js', 'v13.55']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -61,7 +61,10 @@ function toMap(fromSector) {
   st.busy = false;
   setMsg(st.run.sector ? `> sector ${st.run.sector + 1}. choose your next target.` : '> choose your next target.');
   saveRun();
-  adBreak('map');   // maybe an ad, over the map
+  // A new sector's event: its card, once (after the map's climb settles); otherwise maybe an ad
+  const ev = sectorEvent();
+  if (ev && !(st.run.evSeen || []).includes(st.run.sector)) showEventCard(st.run.sector);
+  else adBreak('map');   // maybe an ad, over the map
 }
 
 // Map rows count down from the top of the whole map; a sector view starts at its OMNI.
@@ -97,6 +100,7 @@ async function enterNode(node, warp = false) {
   if (st.transitioning || !node || (!warp && !availableNodes().includes(node.id))) return;
   st.transitioning = true;
   const run = st.run;
+  run.tunnel = false; run.warpAim = false;   // TUNNEL, aimed WARP: this was the move
   await wipeOut(0);
   run.at = node.id;
   run.visited.push(node.id);
@@ -105,6 +109,7 @@ async function enterNode(node, warp = false) {
   if (node.type === 'shop') return openShop(node);
   if (node.type === 'cache') return openCache(node);
   if (node.type === 'repair') return openRepair(node);
+  if (node.type === 'fence') return openFence(node);
   startCorp(node);
 }
 
@@ -130,7 +135,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
   st.corp = {
     def, node, tier: t, idx: Math.min(startIdx, counts.length - 1), counts,
     hasBoss: node.type !== 'start',
-    tell, mark, mod: (node.type === 'corp' || node.type === 'final') && CORP_MODS[node.mod] ? node.mod : null,
+    tell, mark, mod: (node.type === 'corp' || node.type === 'final') && ANOMALIES[node.mod] ? node.mod : null,
     stageBoss: node.type === 'final' && node.corp !== 'omni',
     timer: def.timer ? Math.max(6, corpTimer(def, t) - sector) : 0, pay: corpPay(def, t),
     sector, tellStr: Math.max(0.55, CONFIG.tellStrength - CONFIG.sectorHeat * sector),
@@ -139,7 +144,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
   // FAILSAFE legendary recharges each corp you go into (not on a resume: that would refill it for free)
   if (!restore && st.corp.hasBoss && has('failsafe') && modTier('failsafe') >= 1 && !has('zombie')) st.run.failsafeUsed = false;
   if (restore) {   // a resumed save: what this corp had used up so far
-    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival']) if (restore[k] != null) st.corp[k] = restore[k];
+    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen']) if (restore[k] != null) st.corp[k] = restore[k];
   }
   if (st.corp.hasBoss) {
     // MUTATE: this corp, it counts as a random other mod.
@@ -225,7 +230,7 @@ async function corpIntro() {
     T(c.tier ? `TIER ${c.tier}${def.level ? '   LV ' + def.level : ''}` : '', C.mid);
     T(def.intel, C.text);
     T(rules, C.mid);
-    if (c.mod) T(`+ ${CORP_MODS[c.mod].name}: ${CORP_MODS[c.mod].desc}`, C.money);
+    if (c.mod) T(`+ ${ANOMALIES[c.mod].name}: ${ANOMALIES[c.mod].desc}`, C.money);
     spoilLines.slice(0, 3).forEach((l, j) => T(j === 2 && spoilLines.length > 3 ? l.slice(0, 28) + '...' : l, C.money));
     T('');
     boot.forEach(([text, col], i) => X({ text: text.padEnd(31), col, reveal: i, revealId: 'boot' + i }));
@@ -248,7 +253,7 @@ async function enterLayer() {
   if (boss && c.def.bossTell) tell = c.def.bossTell;
   const lv = genLayer({ seed: run.seed, nodeId: c.node.id, idx: c.idx, n, tell, prevSafe: c.prevSafe, loot: !boss && c.hasBoss && (!run.tutorial || c.idx === 1), lootSure: !!run.tutorial && c.idx === 1, mark: c.mark,
     tellStr: c.tellStr, salt: run.resumes || 0, dress: c.hasBoss ? c.def.dress : null, tier: c.tier, boss,
-    alwaysFollow: !!c.def.alwaysFollow || !!run.tutorial, carry: c.carry || null, lootMore: c.mod === 'loaded' });
+    alwaysFollow: !!c.def.alwaysFollow || !!run.tutorial, carry: c.carry || null, lootMore: c.mod === 'loaded' || sectorEvent(c.sector) === 'flush' });   // FLUSH: more $ nodes
   lv.after = c.prevSafe;       // last layer's real node, for AFTERIMAGE
   if (c.mod === 'branded' && n > 2) {   // BRANDED: about a third of the ICE wear the sigil
     const ice = shuffle(lv.tiles.filter(t => !t.safe && !t.loaded), rngFor(run.seed, 'brand', c.node.id, c.idx));
@@ -393,7 +398,8 @@ async function enterLayer() {
   if (has('jackbox') && c.hasBoss && n > 2 && c.jackIdx === c.idx) lv.jackAt = performance.now() + 1000 + rngFor(run.seed, 'jackt', c.node.id)() * 2000;
   st.busy = false;
   lv.readyAt = performance.now();
-  lv.shownAt = lv.readyAt;   // unlike readyAt, this one doesn't reset after a miss
+  lv.shownAt = lv.readyAt;
+  if (c.frozen) freezeLayer(lv);   // REWIND epic: every timer stays stopped, the whole corp   // unlike readyAt, this one doesn't reset after a miss
   c.express = false;
   // MUTATE: say what it became (the tray flashes it too)
   if (c.mutateNew && run.mutateAs && MODS[run.mutateAs]) {
@@ -452,7 +458,10 @@ function updateTimer(dt) {
   if (st.lv && st.lv.holdUntil && performance.now() < st.lv.holdUntil) return;   // ESPRESSO, FREEZE FRAME
   tm.left -= dt * ((st.lv && st.lv.clockRate) || 1);   // TIMEWARP
   const sec = Math.ceil(tm.left);
-  if (sec < tm.lastSec) { tm.lastSec = sec; if (sec <= 3 && sec > 0) Sound.clock(); }
+  if (sec < tm.lastSec) {
+    tm.lastSec = sec; if (sec <= 3 && sec > 0) Sound.clock();
+    if (st.corp && sectorEvent(st.corp.sector) === 'timeismoney' && st.run.credits > 0) st.run.credits = Math.max(0, st.run.credits - costInt(ECON.events.timeCr));   // TIME IS MONEY
+  }
   // OVERCLOCK: near the end, purge ICE one by one; each purge cuts the payout.
   const lv = st.lv;
   if (has('overclock') && tm.left <= tm.ocNext && tm.left > 0.5 && lv.ocCount < 3) {
@@ -732,7 +741,13 @@ async function onSafe(t) {
   run.corps++;
   if (c.node.type === 'corp') { run.beat = run.beat || {}; (run.beat[c.sector] = run.beat[c.sector] || []).push(c.def.key); }
   corpStat(c.def.key).breached++; persist();   // codex record
-  if (c.stolen && c.stolen.length && !c.bossSkipped) { run.mods.push(...c.stolen.reverse()); c.stolen = []; }   // THIEF: you got them back
+  // THIEF: what it took goes to THE FENCE (bought back there); a sector boss's thief gives them back when you win
+  if (c.stolen && c.stolen.length) {
+    const fence = c.node.type === 'corp' && Object.values(run.map).some(n => n.type === 'fence' && n.sector === c.sector);
+    if (fence) run.fence = (run.fence || []).concat(c.stolen.map(key => ({ key, tier: (run.modTier || {})[key] || 0 })));
+    else if (!c.bossSkipped) run.mods.push(...c.stolen.reverse());
+    c.stolen = [];
+  }
   if (c.node.type === 'final') return sectorClear(!!c.bossSkipped);
   run.pending = { kind: 'reward', id: c.node.id, skipped: !!c.bossSkipped };
   saveRun();
@@ -1475,13 +1490,16 @@ const BOARD_FX = {
   },
 };
 
+// Which gear a loot roll gives: by weight (gearWeight, ECON.drop).
+const pickGearDrop = r => pickWeighted(Object.keys(ITEMS), gearWeight, r);
+
 // Credits or an item. Returns a short text for the message line.
 function grantLoot(r, tier) {
   const run = st.run;
   Sound.loot();
   // an item (more often with a higher STASH), at a rolled tier, if there's room
   if (r() < (has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance)) {
-    const key = pickR(Object.keys(ITEMS), r), tier = rollTier(r, ITEMS[key]);
+    const key = pickGearDrop(r), tier = rollTier(r, ITEMS[key]);
     if (addItem(key, tier)) return `got gear: ${ITEMS[key].name}${tier ? ' ' + RARITY[itemView(key, tier).rarity].label.toLowerCase() : ''}.`;
   }
   const cr = Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier) + r() * earnCr(ECON.loot.roll));
@@ -1621,7 +1639,8 @@ async function pushOn() {
   if (st.transitioning || !run) return;
   const old = run.sector, skipped = !!(run.pending && run.pending.skipped);
   run.sector++;
-  addSector(run.map, run.seed, run.sector);
+  addSector(run.map, run.seed, run.sector, run.forceEvent || null);   // (forceEvent: the editor's TESTING tab)
+  run.forceEvent = null; run.fence = [];   // what THE FENCE didn't sell back is gone
   st.result = null;
   // Beat OMNI (not skipped): its boss reward first, then the map climbs from the old
   // sector to the new one. Cashing out skips it (the run ends anyway).
@@ -1645,10 +1664,14 @@ function openUplink() {
   if (!run) return;
   const keep = Object.fromEntries(run.mods.map(k => [k, true]));
   let sel = 0;
+  // PASS (gear): the whole fee is cut (ECON.uplink.pass); on by default when you hold one, tap to save it
+  const hasPass = () => run.items.some(s => s.key === 'pass');
+  let usePass = hasPass();
   const tally = () => {
     let fee = uplinkMin(), sold = 0;
     for (const k of run.mods) if (keep[k]) fee += uplinkFee(k); else sold += uplinkSell(k);
-    return { fee, sold, net: fee - sold };
+    const cut = usePass && hasPass() ? Math.round(fee * ECON.uplink.pass) : 0;
+    return { fee: fee - cut, raw: fee, cut, sold, net: fee - cut - sold };
   };
   const canGo = () => run.credits - tally().net >= creditFloor();
   const go = () => {
@@ -1656,15 +1679,17 @@ function openUplink() {
     if (!canGo()) return Sound.deny();
     const t = tally(), sold = run.mods.filter(k => !keep[k]);
     for (const k of sold) removeMod(k);
+    if (t.cut) takeItem('pass');
     run.credits -= t.net;
     run.uplinks = (run.uplinks || 0) + 1; run.uplinkPaid = (run.uplinkPaid || 0) + t.fee;
     Sound.buy();
     st.uplink = null;
     pushOn();
-    setMsg(`> uplink: -${t.fee}cr${sold.length ? `, sold ${sold.length} for +${t.sold}cr` : ''}.`, C.money);
+    setMsg(`> uplink: -${t.fee}cr${t.cut ? ' (pass used)' : ''}${sold.length ? `, sold ${sold.length} for +${t.sold}cr` : ''}.`, C.money);
   };
+  const togglePass = () => { if (!hasPass()) return Sound.deny(); usePass = !usePass; Sound.tick(); };
   const toggle = k => { if (UPLINK_LOCKED.includes(k)) return Sound.deny(); keep[k] = !keep[k]; Sound.tick(); };
-  st.uplink = { keep, tally, canGo, toggle, push: go, cash: cashOut, fee: uplinkFee, sell: uplinkSell, locked: UPLINK_LOCKED };   // (read by tools/econsim.js)
+  st.uplink = { keep, tally, canGo, toggle, togglePass, push: go, cash: cashOut, fee: uplinkFee, sell: uplinkSell, locked: UPLINK_LOCKED };   // (read by tools/econsim.js)
   openPanel('UPLINK', (T, B, X) => {
     const t = tally(), ok = canGo(), mods = run.mods;
     T('U P L I N K', C.accent);
@@ -1681,8 +1706,13 @@ function openUplink() {
     });
     if (!mods.length) T('no mods to carry.', C.dim);
     if (mods.some(k => UPLINK_LOCKED.includes(k))) T('* part of you now. it comes along.', C.dim);
+    if (hasPass()) {
+      T('');
+      X({ list: true, id: 'pass', onTap: togglePass, faded: !usePass, name: '[PASS]', chip: ITEMS.pass.rarity,
+        right: usePass ? `use  ${('-' + t.cut).padStart(4)}cr` : 'save it', rightCol: usePass ? C.money : C.accent });
+    }
     T('');
-    T(`uplink ${uplinkMin()} + mods ${t.fee - uplinkMin()}${t.sold ? ` - sold ${t.sold}` : ''} = ${t.net}cr`, C.text);
+    T(`uplink ${uplinkMin()} + mods ${t.raw - uplinkMin()}${t.cut ? ` - pass ${t.cut}` : ''}${t.sold ? ` - sold ${t.sold}` : ''} = ${t.net}cr`, C.text);
     T('');
     const subPush = ok ? `- pay ${t.net}cr, then the loot -` : '- not enough: sell mods -';
     const subCash = run.practice ? '- end the run here -' : `- end the run: +${repFor(run)} REP -`;

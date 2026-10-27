@@ -28,6 +28,8 @@ unlocked by REP, and some quests unlock REP.
   - **Palettes unlock** by beating their corp (not built: SETTINGS offers every palette today). Big logos as unlocks.
   - Difficulty levels unlocked with REP that add drains (money or mods taken away) and pay more REP.
   - **Unlock G0D** through REP, then a quest to beat it (the top achievement).
+  - **Better drops** (the user, 2026-10-26): a BOARD unlock that raises the rarity of drops (gear steps, e.g. FRAG's
+    legendary) and mods: both in one unlock, or two separate unlocks (gear / mods). Same idea as the parked "better drops" mod (10-20% one step up).
 
 ### 2. Quests and RPG elements
 - **The first one to make: defeat d0g.** The quest gives you a seed; entering it unlocks god (H3AV3N).
@@ -39,20 +41,23 @@ unlocked by REP, and some quests unlock REP.
 - Challenge quests: the first OMNI stage with few mods (none, or nothing above epic); carry a worthless scrap mod
   through 3 stages.
 - "You thought this was a game": a REP unlock that changes the game (unlocks quests).
+- **Quest items (the user, 2026-10-26):** MOUSE (an old ball mouse) and MUG (a cold coffee mug off a sysadmin's desk).
 - **Hidden entrances:** a nuked / removed corp's node stays on the map and leads somewhere strange; a secret ad (or an
   ad + a mod you own) starts something (ADS.md "Secret ads"); ads you can buy from (a puppy for a quest); an emoji
   with a quest purpose.
 - **The feel: FTL's quests and interactions.** Brainstorm together.
 
-### 3. Corp events (needs a name: "mods" is taken; Claude's pick ANOMALY, also ALERT, PROTOCOL, INCIDENT)
-- **Built (v09-v12), as tags on map nodes:** RIVAL, THIEF, ARMORED, CURSED, RUSH, LOADED, BRANDED (`CORP_MODS`,
-  engine/map.js; HOW TO PLAY's MORE tab lists them).
-- **Ideas:** FLUSH (lots of loot nodes); BLACK ICE (a hit can take all your integrity but 1; or its own node type);
-  an extra layer; every corp a boss, or 2 bosses; the stage flipped (boss first); TIME IS MONEY (the clock drains
-  credits); money / mod drains (TAXED, AUDITED, RANSOM); BACKWARDS (the corp mirrored, taps too); two events stacked
-  on a sector boss; trap types and a trace meter (misses raise an alarm; at max the boss comes early).
-- **Stage-wide events**, not just one corp (e.g. "this sector has more rival hackers").
-- Details: CORPS.md "Corp modifiers".
+### 3. Anomalies and sector events (named 2026-10-26)
+- **Built v13.54** (design: `docs/SECTOR_EVENTS.md`): 14 sector events, the SECTOR EVENT card, BLINDERS, THE FENCE,
+  the editor's TESTING tab (SPEC version log).
+- **Built v13.55:** the codex SECTORS tab.
+- **Still open:** the user's art for the 14 card pictures (5 x 3 placeholders
+  in data/events.js); a THREAT level later; a REP option to turn events on in sector 1; tying the sector boss to the
+  event (parked).
+- **More event ideas:** BLACK ICE (a hit can take all your integrity but 1; or its own node type); an extra layer;
+  every corp a boss, or 2 bosses; the sector flipped (boss first); money / mod drains (TAXED, AUDITED, RANSOM);
+  BACKWARDS (the corp mirrored, taps too); two events stacked; trap types and a trace meter (misses raise an alarm;
+  at max the boss comes early). Details: CORPS.md "Corp modifiers".
 
 ### 4. Enemy and ally hackers (about 10% there: RIVAL)
 - RIVAL is a bot second player (health, burns ICE, steals pay). Not built: the named cast, each with a logo (beat
@@ -62,8 +67,29 @@ unlocked by REP, and some quests unlock REP.
 - Details: CORPS.md "Corp modifiers" > RIVAL; the hacker / NPC name pool in CORPS.md.
 
 ### 5. Scrap mods and new gear
-- **Scrap mods:** one that is just scrap (BOX OF WIRES: "i'm not going to sort these"), maybe 2 worthless ones, and
-  one joke scrap mod that climbs all the way to legendary and is then great (pairs with the carry-a-scrap-mod quest).
+- **Built v13.52:** TUNNEL, MESH, WARP steps, TILT, SHAKE, FRAG, REWIND, SHOE, PASS (SPEC version log).
+- **Going back a row** on the map is a can of worms: save it for an exotic mod (the user thinks it could be good).
+- More map gear ideas (Claude): SCOUT (see the corps / anomalies ahead), SKIP (jump over the next row).
+- Exotic gear is empty now (WARP went to rare / epic): PARADOX / ENTANGLE / NUKE / BITFLIP (below).
+- **Codex hints for the gear reactions** (not written yet): GRAVITAS (TILT = a free gravity drop), ENTROPY (SHAKE
+  sets off its shuffle). Could go in each corp's codex entry.
+- **BOX OF WIRES (the user, 2026-10-26):** a mod, not gear: starts at scrap ("i'm not going to sort these") and does
+  something really cool only once you have upgraded it all the way to legendary (pairs with the carry-a-scrap-mod quest).
+- **Corp mods -> gear (the user, 2026-10-27):** maybe turn some corp mods into gear (one-shot ones that fit
+  single use better than a slot). Go through the corp mod list and pick.
+- **Corp rewards can be gear (the user, 2026-10-27):** a corp's reward pick is all mods today; let some options be
+  gear (its own corp gear, or a rolled gear).
+- **Gear ideas (the user, 2026-10-27):**
+  - **SHORT** (short circuit; 6 letters max): fries 2 ICE that sit next to each other.
+  - **Call a market:** gear that opens a black market right where you are (maybe a smaller one). Goes with **ads you
+    can buy from**: an ad that is a market, or that sells one thing (see "Hidden entrances" in item 2, More fake ads).
+  - **STIM:** INT +50% for one corp, and you gain the health that comes with it. When you leave the corp your max INT
+    goes back down, but you keep the health you have (2 left stays 2; only health above the normal max is lost).
+  - **CHECKPOINT** (exotic; could be a corp reward if some corp rewards become gear): use it in a corp; if you die in
+    that corp, you start over at its first layer. Variations: pay credits to come back; or come back with no mods or
+    gear. Close to CONTINUE? (CHUCK E. CACHE's legendary corp mod: pay to keep going at 1 INT, once per corp).
+    CHECKPOINT would be a weaker, one-shot cousin that sends you back to the start of the corp.
+- **Scrap mods:** maybe 2 other worthless ones.
 - **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first, v13.49).
   Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), NUKE (wipe a corp off the map), DECODER
   (read CIPHER for a layer), the call as an item, exotic tiers of today's gear. EXOTICS.md has more.
@@ -71,7 +97,7 @@ unlocked by REP, and some quests unlock REP.
 ### 6. The map and run structure
 - More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
 - Moving backwards / the frontier (pick any node linked to one you've visited), or allow clearing the whole map.
-  An "open map" mod or a WARP you aim.
+  An "open map" mod (the aimed WARP is built: epic WARP, v13.52).
 - Node count that keeps climbing; past the 4x4 grid (phones fit ~6 columns).
 - More final bosses, each its own mechanic (OMNI is the only one).
 - Long-run issues: power creep, a guaranteed heal each sector.
@@ -137,6 +163,7 @@ unlocked by REP, and some quests unlock REP.
 
 ## Parked mod ideas (the user, 2026-10-26: "we have enough mods for now")
 Where they are, for when mods open up again:
+- **CLUSTER** (the user, 2026-10-26): a mod name to build something around; no idea for it yet.
 - CORPS.md "Notes": open map, THROTTLE (cheaper uplink), DIGIPET's pet on screen.
 - ECONOMY.md: chained perfects, TIME IS MONEY, items as a store of value.
 - EXOTICS.md: "New exotic ideas, 2026-10-25".

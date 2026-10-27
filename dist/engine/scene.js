@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.50']);
+NEON_FILES.push(['engine/scene.js', 'v13.55']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -303,6 +303,13 @@ function buildScene(now, collectHits, raw = false) {
     const aput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ac.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
     buildAd(Object.assign({}, ctx, { put: aput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result, under: true }), now);
     result = result.concat(ac);
+  }
+  // A SECTOR EVENT card (engine/events.js): over the map, the same way.
+  if (st.evCard && !st.dev && !st.ad) {
+    const ec = [];
+    const eput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ec.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
+    buildEventCard(Object.assign({}, ctx, { put: eput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
+    result = result.concat(ec);
   }
   // The training run's popup (engine/tutorial.js): over everything but an ad, the same way.
   if (st.tut && st.tut.pop && !st.dev && !st.ad && (!st.wipe || st.tut.curtain)) {
@@ -824,7 +831,7 @@ function linkDots(a, b, f) {
 // background is too close to the map's, use the corp's dim color instead so it reads.
 const hexLum = h => { const v = parseInt(String(h).slice(1), 16); return ((v >> 16) * 0.299 + ((v >> 8) & 255) * 0.587 + (v & 255) * 0.114) / 255; };
 function corpIconCols(n) {
-  if (n.type !== 'corp' && n.type !== 'final') return null;
+  if ((n.type !== 'corp' && n.type !== 'final') || blinded(n)) return null;   // (BLINDERS: plain, no corp colors)
   const p = PALETTES['c_' + n.corp];
   if (!p) return null;
   const bgc = Math.abs(hexLum(p.bg) - hexLum(C.bg)) < 0.08 ? p.dim : p.bg;
@@ -913,7 +920,7 @@ function buildMap(ctx) {
     else if (cc) { ctx.bg(p.x - 1, y, 3, cc.bg, available ? 1 : 0.55); put(p.x - 1, y, '[', col, 'map'); put(p.x, y, label[1], available ? cc.fg : col, 'map', available); put(p.x + 1, y, ']', col, 'map'); }
     else put(p.x - 1, y, label, col, 'map');
     if (hov) ctx.bg(p.x - 1, y, 3, C.accent, 0.25);
-    if (n.mod && CORP_MODS[n.mod] && !visited) put(p.x + 2, y, CORP_MODS[n.mod].tag, C.money, 'map', true);   // corp modifier
+    if (n.mod && ANOMALIES[n.mod] && !visited) put(p.x + 2, y, ANOMALIES[n.mod].tag, C.money, 'map', true);   // corp modifier
     if (sel) { put(p.x - 3, y, '>', C.accent, 'map'); put(p.x + 3, y, '<', C.accent, 'map'); }
     else if (run.at === n.id) put(p.x - 3, y, '@', C.bright, 'map');
     if (available && settled) addHit(p.x - 1, y, 3, 1, { kind: 'node', id: n.id });
@@ -922,7 +929,9 @@ function buildMap(ctx) {
   // Which sector you're looking at, and arrows when there's more map below.
   if (run.sector > 0) {
     const v = mv.sector, blink = Math.floor(now / 600) % 2 ? C.mid : C.dim;
-    put(0, BOARD_Y, `SECTOR ${v + 1}`, v === run.sector ? C.mid : C.accent, 'map');
+    const evk = sectorEvent(v), label = `SECTOR ${v + 1}` + (evk ? `: ${SECTOR_EVENTS[evk].name}` : '');
+    put(0, BOARD_Y, label, v === run.sector ? C.mid : C.accent, 'map');
+    if (evk && settled) addHit(0, BOARD_Y, label.length, 1, { kind: 'btn', id: 'evlabel', noFocus: true, onTap: () => { showEventCard(v, true); Sound.ui(); } });   // see the card again
     if (v > 0) { put(0, BOARD_Y + SECTOR_ROWS - 1, 'v', blink, 'map'); put(L.wc - 1, BOARD_Y + SECTOR_ROWS - 1, 'v', blink, 'map'); }
     if (v < run.sector) { put(L.wc - 1, BOARD_Y, '^', blink, 'map'); }
   }
@@ -952,19 +961,27 @@ function nodeInfo(n) {
   const T = (text, col = C.text) => lines.push({ text, col });
   if (n.type === 'corp' || n.type === 'final' || n.type === 'start') {
     const d = corpDef(n.corp);
+    if (blinded(n)) {   // BLINDERS: only the level and the anomaly
+      if (n.type === 'final') T('SECTOR BOSS', C.danger);
+      T(`UNKNOWN CORP // TIER ${n.tier}${n.type === 'final' ? '' : ' LV' + (d.level || 1)}`, n.type === 'final' ? C.danger : C.accent);
+      T('no intel.', C.dim);
+      T(`+ ${ANOMALIES.blinders.name}: ${ANOMALIES.blinders.desc}`, C.money);
+      return { lines, action: 'B R E A C H' };
+    }
     if (n.type === 'final' && n.corp !== 'omni') T('SECTOR BOSS', C.danger);
     T(n.tier ? `${d.name} // TIER ${n.tier}${d.level ? ' LV' + d.level : ''}` : d.name, n.type === 'final' ? C.danger : C.accent);
     T(d.intel, C.text);
     const rules = corpRules(d, n.tier);
     if (rules) T(rules, C.mid);
     if (d.bossDesc) T(d.bossDesc, C.dangerDim);
-    if (n.mod && CORP_MODS[n.mod]) T(`+ ${CORP_MODS[n.mod].name}: ${CORP_MODS[n.mod].desc}`, C.money);
+    if (n.mod && ANOMALIES[n.mod]) T(`+ ${ANOMALIES[n.mod].name}: ${ANOMALIES[n.mod].desc}`, C.money);
     { const off = modsOffIn(d); if (off.length) T(`off here: ${off.map(k => MODS[k].name.toLowerCase()).join(', ')}.`, C.dangerDim); }   // e.g. COIN FLIP in a drag corp
     return { lines, action: 'B R E A C H' };
   }
   if (n.type === 'shop') { T('BLACK MARKET', C.money); T('gear and mods for credits.'); }
   if (n.type === 'cache') { T('DATA CACHE', C.money); T('loot, then pick a mod.'); }
   if (n.type === 'repair') { T('SAFEHOUSE', C.accent); T(`heal ${CONFIG.repairAmount}, then pick a mod.`); }
+  if (n.type === 'fence') { const k = (st.run.fence || []).length; T('THE FENCE', C.money); T(k ? `${k} stolen mod${k > 1 ? 's' : ''} for sale. yours.` : 'stolen mods end up here.'); T('then on to the sector boss.', C.dim); }
   return { lines, action: 'E N T E R' };
 }
 

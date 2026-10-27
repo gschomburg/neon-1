@@ -14,6 +14,29 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Sector events** (v13.54, 2026-10-27): built from `docs/SECTOR_EVENTS.md`. Try it from the neon editor's new
+  **TESTING** tab (each event is a button: a new run, straight to sector 2 with it). Look at: the card (its look, and
+  the 14 placeholder pictures: yours to draw, in data/events.js); the card text I wrote; BLINDERS on the map; THE FENCE.
+  My calls (top of SECTOR_EVENTS.md): the share grows 10% a sector after the 2nd (to 80%); DEAD AIR rolls a third as
+  often; TIME IS MONEY makes timed corps 3x as likely and costs 1cr a second; FIRE SALE -30% (repairs too). The codex has a SECTORS
+  tab (v13.55): each event logs the first time its card shows.
+- [ ] **TESTING tab** (v13.54): the cheats and jumps you asked for; the dev menu's mod grid is gone (the tab's give
+  box and the gear & mods tab do that). Tell me what else you want on it.
+
+- [ ] **More than one copy at a market** (v13.53, 2026-10-27): a gear offer can be PATCH x2 or x3. Odds per extra copy (ECONOMY tab, "more copies"): scrap 50% / common 35% / rare 20% / epic 8%, up to 3. So half of scrap offers come as x2 or more, a quarter as x3; an epic x2 is about 1 in 13. Too many? COUPON only makes the first copy free.
+
+- [ ] **Nine new gear** (v13.52, 2026-10-27): TUNNEL, MESH, WARP (rare random / epic aimed), TILT, SHAKE, FRAG, REWIND,
+  SHOE, PASS. Dev panel [fill gear] gives one of each (scrap / first step); the neon editor's items page sets the step.
+  Look at: the codex text I wrote (CODEX > GEAR) and SHOE's miss lines (engine/active.js SHOE_MISS); prices (TUNNEL 35,
+  MESH 80, WARP 45, TILT 30, SHAKE 18, FRAG 28, REWIND 25, SHOE 4, PASS 90). Three calls for you:
+  - **FRAG on small layers:** 3 hits on a 2-3 node layer always hit the real node: a sure free clear (no pay). Fine, or
+    cap the hits (e.g. never more than half the closed nodes)?
+  - **Gear odds by rarity** (ECONOMY tab, "Gear: how often each shows up"): markets now pick by weight, so PATCH is in
+    ~25% of markets (was ~43%: 15 gear share the shelf now) and ALL-IN / MESH / PASS ~10%.
+  - **WARP** never lands on the sector boss itself (both steps): the rows before it only.
+
+- [ ] **Value gear ladder** (v13.51, 2026-10-26): DUDS / SIM / SHARD / BOND / CHROME / WALLET. Check the codex text (CODEX > GEAR) I wrote for DUDS, SIM, CHROME, WALLET; the worth (5 / 15 / 40 / 100 / 250cr) and drop weights in the ECONOMY tab ("selling gear", "Loot: which gear drops"); a WALLET is about 1 in 500 loot rolls. Dev panel [fill gear] gives one of each.
+
 ## Done
 
 - [x] **The art catalog** (v13.27-v13.28, asXii v0.143, 2026-10-26): closed 2026-10-26, in use; the editor has its own ? help now.

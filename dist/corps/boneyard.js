@@ -1,6 +1,6 @@
 // NeoN+1 corps/boneyard.js
 'use strict';
-NEON_FILES.push(['corps/boneyard.js', 'v13.50']);
+NEON_FILES.push(['corps/boneyard.js', 'v13.55']);
 // Its boss mod: GRAVE ROBBER (graverobber), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
