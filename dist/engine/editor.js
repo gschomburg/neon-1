@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.41']);
+NEON_FILES.push(['engine/editor.js', 'v13.42']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -93,6 +93,28 @@ if (EDITOR) {
       const id = Object.keys(st.run.map).find(k => st.run.map[k].type === 'shop');
       st.run.credits = 48;   // a mix: the items and repair are affordable, most mods aren't (to see both looks)
       openShop(id ? st.run.map[id] : { id: 'editor' });
+      await settle();
+    },
+    // the end of a sector: its boss (OMNI in sector 1), the sector clear screen, the uplink
+    sectorboss: async () => {
+      await mapRun();
+      const run = st.run, node = Object.values(run.map).find(n => n.type === 'final' && (n.sector || 0) === 0);
+      run.practice = true; run.at = node.id; run.visited.push(node.id);
+      startCorp(node, 99);   // straight to its boss layer
+      await settle();
+    },
+    sectorclear: async () => {
+      await mapRun();
+      const run = st.run;
+      Object.assign(run, { credits: 600, sectorsCleared: 1, corps: 4, depth: 20, pending: { kind: 'sector', skipped: false } });
+      showSectorClear(false, false);
+      await settle();
+    },
+    uplink: async () => {
+      await mapRun();
+      const run = st.run;
+      Object.assign(run, { credits: 600, sectorsCleared: 1, corps: 4, depth: 20, pending: { kind: 'sector', skipped: false } });
+      openUplink();
       await settle();
     },
   };

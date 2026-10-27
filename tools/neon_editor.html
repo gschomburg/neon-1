@@ -834,7 +834,7 @@
   });
   function loadGame() { gameReady = false; $('#scenestate').textContent = 'loading the game...'; frame.src = '../dist/index.html?editor=1&t=' + Date.now(); }
 
-  const SCENES = [['title', 'title'], ['map', 'map'], ['layer', 'layer'], ['hit', 'a miss'], ['boss', 'boss'], ['shop', 'shop'], ['help', 'how to play'], ['codex', 'codex'], ['settings', 'settings'], ['profile', 'profile']];
+  const SCENES = [['title', 'title'], ['map', 'map'], ['layer', 'layer'], ['hit', 'a miss'], ['boss', 'boss'], ['shop', 'shop'], ['sectorboss', 'sector boss'], ['sectorclear', 'sector clear'], ['uplink', 'uplink'], ['help', 'how to play'], ['codex', 'codex'], ['settings', 'settings'], ['profile', 'profile']];
   for (const [k, label] of SCENES) {
     const b = el('button', { textContent: label, onclick: () => runScene(k), title: `show the ${label} screen` });
     b.dataset.scene = k;

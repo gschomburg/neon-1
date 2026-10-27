@@ -1,6 +1,6 @@
 // NeoN+1 data/personas.js: Persona names and hacker logos.
 'use strict';
-NEON_FILES.push(['data/personas.js', 'v13.41']);
+NEON_FILES.push(['data/personas.js', 'v13.42']);
 
 // ---- player profile: a generated handle (no typing, so nothing to moderate) + a logo
 // Persona names: a middle word, with either a word before it (IRON_POTATO)
