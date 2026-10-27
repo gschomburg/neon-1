@@ -1,6 +1,6 @@
 // NeoN+1 corps/choir.js
 'use strict';
-NEON_FILES.push(['corps/choir.js', 'v13.35']);
+NEON_FILES.push(['corps/choir.js', 'v13.41']);
 // Its boss mod: SACRIFICE (sacrifice), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -21,8 +21,8 @@ CORPS.choir = {
   key: 'choir', name: 'THE CHOIR', code: 'CH', level: 3,
   intel: '"have faith. or pay. both work."',
   tell: null, faith: true,
-  bossDesc: 'boss: the prophet. tithe 20cr.',
-  rules: () => 'faith pays x2. tithe 10cr: a sign.',
+  bossDesc: `boss: the prophet. tithe ${costInt(ECON.corpCosts.choirTitheBoss)}cr.`,
+  rules: () => `faith pays x2. tithe ${costInt(ECON.corpCosts.choirTithe)}cr: a sign.`,
   mods: ['sacrifice'],
   // Every follower wears the holy mark and keeps its eyes down. Pick on faith (no tell)
   // and the layer pays x2. Or tithe, and the followers turn to face the real node.
@@ -50,7 +50,7 @@ CORPS.choir = {
       t.face = t.dir ? FACE_CH[(t.dir[1] + 1) * 3 + t.dir[0] + 1] : '.';
       t.glyph = normMotif(['+', '(.)', '/|\\']);
     });
-    lv.tithe = { price: k.boss ? 20 : 10, paid: false };
+    lv.tithe = { price: costInt(k.boss ? ECON.corpCosts.choirTitheBoss : ECON.corpCosts.choirTithe), paid: false };
   },
   action(lv) {
     const ti = lv.tithe;

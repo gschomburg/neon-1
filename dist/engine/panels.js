@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.35']);
+NEON_FILES.push(['engine/panels.js', 'v13.41']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -48,7 +48,7 @@ function addMod(key, tier = 0) {
   if (key === 'buffer') { run.maxInt += run.modTier[key] + 1; run.integrity += run.modTier[key] + 1; }   // +1 common ... +4 legendary
   if (key === 'stash') run.beltSlots++;
   if (key === 'ramdoubler') {   // the belt goes: what you hold is sold for half
-    const cash = run.items.reduce((a, s) => a + Math.floor(itemView(s.key, s.tier).price * TIER_PRICE[s.tier || 0] / 2) * s.n, 0);
+    const cash = run.items.reduce((a, s) => a + Math.floor(itemView(s.key, s.tier).price * TIER_PRICE[s.tier || 0] * priceScale() * ECON.mods.ramDoublerSell) * s.n, 0);
     run.items = []; run.credits += cash; run.earned += cash;
     if (cash) setTimeout(() => setMsg(`> ram doubler: items sold, +${cash}cr.`, C.money), 400);
   }
@@ -92,7 +92,7 @@ function pickMods(r, pool, k, exclude = []) {
   return shuffle(pool.filter(ok), r).slice(0, k).map(key => ({ key, tier: rollTier(r, MODS[key]) }));
 }
 
-const priceOf = o => o.free ? 0 : o.kind === 'repair' ? o.price : Math.round(o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', [0.25, 0.35, 0.5]) : 1));
+const priceOf = o => o.free ? 0 : o.kind === 'repair' ? o.price : Math.round(o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', [0.25, 0.35, 0.5]) : 1) * priceScale());   // (priceScale: data/economy.js)
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
 function openShop(node) {
@@ -105,7 +105,8 @@ function openShop(node) {
   for (const o of exoticOffer(run.seed, 'shop', node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
   offers = shuffle(offers, r);   // random order: any slot could be the good one
   if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
-  offers.push({ kind: 'repair', key: 'repair', price: 20, sold: false });
+  offers.push({ kind: 'repair', key: 'repair', price: costInt(ECON.repair), sold: false });
+  st.shop = { node: node.id, offers, priceOf, buyAt: k => buy(offers[k]) };   // (read by tools/econsim.js)
 
   // What an offer is: items at their tier; mods as what you'd end up with (upgrades).
   const defOf = o => o.kind === 'item' ? itemView(o.key, o.tier) : o.kind === 'mod' ? modView(o.key, upgradeTo(o.key, o.tier)) : { name: 'REPAIR', desc: 'restore 1 integrity.', rarity: 'common', tier: 0 };
@@ -185,6 +186,7 @@ function openShop(node) {
 function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null }) {
   let sel = 0, picked = false;
   const leave = () => next ? (st.transitioning ? null : swapTo(next)) : leavePanel();
+  st.choice = { title, options: options.slice(), skip: !!skipLabel, take: o => take(o) };   // (read by tools/econsim.js)
   const take = o => {
     if (st.transitioning) return;
     if (o && locked) return Sound.deny();
@@ -246,8 +248,8 @@ function openStartReward(node) {
     title: 'LINK ESTABLISHED', col: C.accent,
     head: [['you are in. pick a starter perk.', C.text]],
     options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, modsOfKind('minor'), 3),   // the training run: TRACER
-    skipLabel: '[ SKIP  +15cr ]',
-    onSkip: () => { run.credits += 15; run.earned += 15; },
+    skipLabel: `[ SKIP  +${earnInt(ECON.skip.starter)}cr ]`,
+    onSkip: () => { const cr = earnInt(ECON.skip.starter); run.credits += cr; run.earned += cr; },
     msg: '> link established.',
   });
 }
@@ -310,7 +312,7 @@ function openReward(node, skipped = false) {
     by: skipped ? null : profile(),
     options, locked: skipped,
     skipLabel: skipped ? '[ CONTINUE ]' : '[ SKIP  +20cr ]',
-    onSkip: skipped ? null : () => { run.credits += 20; run.earned += 20; Sound.loot(); },
+    onSkip: skipped ? null : () => { const cr = earnInt(ECON.skip.boss); run.credits += cr; run.earned += cr; Sound.loot(); },
     msg: skipped ? { text: '> skipjack: boss skipped.', col: C.dangerDim } : breachSummary(),
   });
 }

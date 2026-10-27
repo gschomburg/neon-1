@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.35']);
+NEON_FILES.push(['engine/mods.js', 'v13.41']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -136,24 +136,29 @@ const ROT = {
 };
 const zombie = () => has('zombie');
 // ---- BLOOD MONEY: credits are your health. Numbers to tune:
+// (its numbers are in data/economy.js)
 const BLOOD = {
-  bonus: 100,     // credits when you take it
-  hit: 20,        // what a hit costs (x damage), plus
-  perSector: 10,  // this much more each sector
-  heal: 15,       // each point of healing pays this
+  get bonus() { return earnInt(ECON.blood.bonus); },           // credits when you take it
+  get hit() { return costInt(ECON.bloodHit.base); },           // what a hit costs (x damage), plus
+  get perSector() { return costInt(ECON.bloodHit.perSector); },   // this much more each sector
+  get heal() { return earnInt(ECON.blood.heal); },             // each point of healing pays this
 };
 const bloodMoney = () => has('bloodmoney');
 // ---- LEVERAGE: credits can go negative. Numbers to tune:
+// (its numbers are in data/economy.js)
 const DEBT = {
-  limit: 150,       // how far below 0 you can go, plus
-  perSector: 100,   // this much more each sector
-  interest: 0.10,   // debt grows this much every layer (at least 2cr)
-  shieldPer: 250,   // ICE does nothing with odds debt / shieldPer, up to
-  shieldMax: 0.6,
-  payment: 5,       // every corp layer takes a loan payment, debt or not, plus
-  paymentSector: 5, // this much more each sector
+  get limit() { return costInt(ECON.debt.limit); },                   // how far below 0 you can go, plus
+  get perSector() { return costInt(ECON.debt.limitPerSector); },      // this much more each sector
+  get interest() { return ECON.debt.interestPct; },                   // debt grows this much every layer, at least
+  get interestMin() { return costInt(ECON.debt.interestMin); },
+  get shieldPer() { return costInt(ECON.debt.shieldPer); },           // ICE does nothing with odds debt / shieldPer, up to
+  get shieldMax() { return ECON.debt.shieldMax; },
+  get payment() { return costInt(ECON.debt.payment); },               // every corp layer takes a loan payment, debt or not, plus
+  get paymentSector() { return costInt(ECON.debt.paymentPerSector); },   // this much more each sector
 };
 const leverage = () => has('leverage');
+// OMERTA: an ICE hit costs a share of your credits (at least a minimum) instead of integrity
+const omertaCost = () => Math.max(costInt(ECON.omerta.min), Math.floor(Math.max(0, st.run.credits) * ECON.omerta.pct));
 // The lowest your credits can go: 0, or the debt limit with LEVERAGE.
 const creditFloor = () => leverage() ? -(DEBT.limit + DEBT.perSector * ((st.run && st.run.sector) || 0)) : 0;
 // Can you spend n credits (into debt, with LEVERAGE)?
@@ -172,7 +177,7 @@ const COIN = {
   faces: [['hp', 'cr', 50], ['hp', 'hp', 25], ['cr', 'cr', 25]],   // face pairs, % odds
   bigChance: 0.2,    // each face can be a big one
   hp: 1, bigHp: 2,   // a ♥ face: integrity won / lost
-  cr: 10, bigCr: 25, // a $ face: credits won / lost, x the multiplier
+  get cr() { return earnInt(ECON.mods.coinCr); }, get bigCr() { return earnInt(ECON.mods.coinBigCr); },   // a $ face: credits won / lost, x the multiplier (data/economy.js)
   max: 5,            // the multiplier tops out here
 };
 // Mods some corps switch off: COIN FLIP in the drag corps (DECIBEL, SQUALOR, PLAYBALL: holding and
@@ -199,7 +204,7 @@ function rollCoin(i) {
 const MOD_SLOTS = 6;                 // mods you can hold; more means swapping one out
 const modSlots = () => MOD_SLOTS * (has('ramdoubler') ? 2 : 1);   // RAM DOUBLER: twice as many (a second full row)
 const TIER_ODDS = [0.70, 0.95];      // a find is its first step under 0.70, the second under 0.95, else the third
-const TIER_PRICE = [1, 1.6, 2.5];    // market price by tier
+const TIER_PRICE = ECON.tierPrice;    // market price by tier
 const STACK_MAX = 15;                // items stack up to F (counts are hex)
 const tierCount = def => def.tiers ? def.tiers.length : 1;
 // A mod / item as it is at a tier (its rarity, tip and text for that step).

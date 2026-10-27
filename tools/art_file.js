@@ -10,7 +10,7 @@
     glyphs:  { label: 'node glyphs',         file: 'glyphs.js',   w: 5,  h: 3,  fixedH: true, note: 'drawn on the nodes, each line centered by itself; up to 5 x 3' },
     special: { label: 'special node glyphs', file: 'glyphs.js',   w: 5,  h: 3,  fixedH: true, note: 'the prompt, loaded nodes, bone piles, the ??? mask' },
     logos:   { label: 'logos',               file: 'logos.js',    w: 24, h: 7,  note: 'every logo sits in the same 24 x 7 box, centered; corp logos are also the corp\'s intro art' },
-    map:     { label: 'intro world map',     file: 'worldmap.js', w: 34, h: 9,  fixedH: true, single: true, note: 'the boot intro map; keep it 34 x 9 (the blinking spots are set by position)' },
+    map:     { label: 'intro world map',     file: 'worldmap.js', w: 34, h: 12, fixedH: true, single: true, note: 'the boot intro map (the login screen\'s box); keep it 34 x 12. its 0 o x [] blink, and your spot is picked inside the land' },
   };
   const LOGO_KINDS = ['player', 'corp', 'hacker'];
   const q = s => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
@@ -60,7 +60,7 @@
 
   function mapText(map, build) {
     const out = head('worldmap.js', 'the boot intro\'s world map.', build,
-      ['// 34 x 9. engine/intro.js INTRO_WHERE marks spots on it by position (where your location blinks).']);
+      ['// 34 x 12, in the login screen box. Its 0 o x [] blink; your spot (@) is picked inside the land (engine/intro.js).']);
     out.push('const ART_MAP = ' + tall(map, '') + ';');
     return out.join('\n') + '\n';
   }

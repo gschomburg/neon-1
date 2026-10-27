@@ -1,6 +1,6 @@
 // NeoN+1 corps/bidblitz.js
 'use strict';
-NEON_FILES.push(['corps/bidblitz.js', 'v13.35']);
+NEON_FILES.push(['corps/bidblitz.js', 'v13.41']);
 // Its boss mod: SNIPE (snipe), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -28,7 +28,7 @@ CORPS.bidblitz = {
   mods: ['snipe'],
   // No tell: you buy information. Each bid locks one ICE, costs more than the last (it's
   // a penny auction) and cuts the pay. The host shouts on the hint row.
-  dress(lv, k) { lv.auction = { price: k.boss ? 15 : 10, step: 5, bids: 0 }; },
+  dress(lv, k) { lv.auction = { price: costInt(k.boss ? ECON.corpCosts.bidblitzBoss : ECON.corpCosts.bidblitz), step: costInt(ECON.corpCosts.bidblitzStep), bids: 0 }; },
   hint(lv, now) {
     if (!lv.auction) return null;
     const a = lv.auction, shout = a.bids ? AUCTION_SOLD[(a.bids - 1) % AUCTION_SOLD.length] : AUCTION_CALLS[Math.floor(now / 1800) % AUCTION_CALLS.length];

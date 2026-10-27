@@ -1,6 +1,6 @@
 // NeoN+1 corps/mochi.js
 'use strict';
-NEON_FILES.push(['corps/mochi.js', 'v13.35']);
+NEON_FILES.push(['corps/mochi.js', 'v13.41']);
 // Its boss mod: FRIENDSHIP (friendship), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -19,8 +19,8 @@ CORPS.mochi = {
   key: 'mochi', name: 'MOCHI MOCHI', code: 'MO', level: 1,
   intel: '"you found us!! yay!!"',
   tell: null,
-  bossDesc: 'boss: they all wave. ICE: 20cr.',
-  rules: () => 'ICE costs 10cr, not integrity.',
+  bossDesc: `boss: they all wave. ICE: ${costInt(ECON.corpCosts.mochiBoss)}cr.`,
+  rules: () => `ICE costs ${costInt(ECON.corpCosts.mochi)}cr, not integrity.`,
   mods: ['friendship'],
   // It wants you to find it: the real node waves (a double bounce, "hi hi!"). Deeper and
   // the boss: some decoys bob too, but only once.
@@ -40,7 +40,7 @@ CORPS.mochi = {
   },
   // ICE costs credits instead of integrity, while you have them
   block(t, lv) {
-    const run = st.run, cost = lv.boss ? 20 : 10;
+    const run = st.run, cost = costInt(lv.boss ? ECON.corpCosts.mochiBoss : ECON.corpCosts.mochi);
     if (!canSpend(cost)) return null;
     run.credits -= cost; Sound.shield(); flash(C.accent, 0.1, 0.3);
     return `> ICE. "sorry!!" -${cost}cr.`;
@@ -48,4 +48,4 @@ CORPS.mochi = {
 };
 
 // the codex, once you've beaten it
-CORP_TELL.mochi = "the real node waves at you: a double bounce, hi hi! deeper, some decoys bob once. ICE costs 10cr instead of integrity (boss: 20cr).";
+CORP_TELL.mochi = `the real node waves at you: a double bounce, hi hi! deeper, some decoys bob once. ICE costs ${costInt(ECON.corpCosts.mochi)}cr instead of integrity (boss: ${costInt(ECON.corpCosts.mochiBoss)}cr).`;

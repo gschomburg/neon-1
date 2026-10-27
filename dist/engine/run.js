@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.35']);
+NEON_FILES.push(['engine/run.js', 'v13.41']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -412,7 +412,7 @@ async function enterLayer() {
   }
   // LEVERAGE: debt grows every layer; past the limit the collectors take 1 integrity
   if (leverage() && run.credits < 0 && n > 1 && c.hasBoss) {
-    run.credits -= Math.max(2, Math.round(-run.credits * DEBT.interest));
+    run.credits -= Math.max(DEBT.interestMin, Math.round(-run.credits * DEBT.interest));
     modFired('leverage');
     if (run.credits < creditFloor()) { hurt(1); Sound.trap(); flash(C.danger, 0.15, 0.3); setMsg('> the collectors came. -1.', C.danger); if (run.integrity <= 0) return die(); }
   }
@@ -501,12 +501,13 @@ function layerTick(now) {
   if (lv.petAt && now > lv.petAt) {
     lv.petAt = null;
     const opts = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
-    if (!canSpend(1)) setMsg('> no treats, no sniffing. (0cr)', C.mid);
+    const treat = costInt(ECON.companion);
+    if (!canSpend(treat)) setMsg('> no treats, no sniffing. (0cr)', C.mid);
     else if (opts.length && candidates().length > 1) {
-      st.run.credits -= 1;
+      st.run.credits -= treat;
       lockTile(pickR(opts, rngFor(st.run.seed, 'pet', st.corp.node.id, st.corp.idx)), C.accent, 'companion');
       Sound.jingle();
-      setMsg('> sniff sniff. 1 ICE found. -1cr', C.accent);
+      setMsg(`> sniff sniff. 1 ICE found. -${treat}cr`, C.accent);
     }
   }
   if (lv.holdUntil && now < lv.holdUntil) return;   // ESPRESSO / FREEZE FRAME stop the layer's clock too
@@ -534,7 +535,7 @@ function chanceCard(lv, c, run) {
     const ice = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
     if (ice.length > 1) { lockTile(pickR(ice, rngFor(run.seed, 'chancelock', c.node.id)), C.money, 'chancecard'); return 'chance: 1 ICE locked'; }
   }
-  if (u < 0.55 || (u < 0.7 && !st.timer)) { run.credits += 10; run.earned += 10; return 'chance: +10cr'; }
+  if (u < 0.55 || (u < 0.7 && !st.timer)) { const cr = earnInt(ECON.mods.chancecard); run.credits += cr; run.earned += cr; return `chance: +${cr}cr`; }
   if (u < 0.7) { st.timer.max += 3; st.timer.left += 3; return 'chance: +3s'; }
   if (u < 0.92) return 'chance: nothing';
   if (zombie()) { addRot(ROT.ice); return 'chance: rot!'; }
@@ -646,11 +647,11 @@ async function onScan(t, real, axis) {
 
 function payFor(lv) {
   const c = st.corp;
-  let base = 4 + 2 * lv.n;
-  if (lv.boss) base *= 3;
+  let base = earnCr(ECON.pay.base) + earnCr(ECON.pay.perNode) * lv.n;   // (data/economy.js)
+  if (lv.boss) base *= ECON.pay.boss;
   let mult = c.pay || 1;
-  if (c.stageBoss) mult *= 1.5;   // a corp as the sector boss pays more
-  if ((lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned) mult *= 1 + 0.5 * (lv.n - 1);   // ICE EATER: every clear is clean
+  if (c.stageBoss) mult *= ECON.pay.stageBoss;   // a corp as the sector boss pays more
+  if ((lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned) mult *= ECON.pay.perfect + ECON.pay.perfectPerNode * (lv.n - 1);   // ICE EATER: every clear is clean
   if (has('skimmer')) mult *= tv('skimmer', [1.25, 1.5, 1.75]);
   mult *= coinMult();   // COIN FLIP: the streak multiplier
   if (has('quantum') && lv.tiles.some(t => t.quantum)) mult *= 0.5;   // QUANTUM: 2 real, half pay
@@ -718,7 +719,7 @@ async function onSafe(t) {
   if (c.idx < c.counts.length) { saveRun(); await adBreak('layer'); return enterLayer(); }   // (maybe an ad between layers)
   // Corp finished
   if (c.mod === 'rival' && c.rival) {   // RIVAL: beat it
-    const bonus = c.rival.hp <= 0 ? 30 : c.rival.stole === 0 ? 15 : 0;
+    const bonus = c.rival.hp <= 0 ? earnInt(ECON.rival.flatlined) : c.rival.stole === 0 ? earnInt(ECON.rival.beat) : 0;
     if (bonus) { run.credits += bonus; run.earned += bonus; setMsg(c.rival.hp <= 0 ? `> rival flatlined. +${bonus}cr` : `> you beat ${c.rival.name.toLowerCase()}. +${bonus}cr`, C.money); }
   }
   lightsOn();
@@ -762,13 +763,14 @@ const START_NOTE = {
 
 // LAYER END stage: what each mod does once a layer is passed.
 const END_FX = {
-  ezpass() { st.run.credits += 2; st.run.earned += 2; },
+  ezpass() { const cr = earnInt(ECON.mods.ezpass); st.run.credits += cr; st.run.earned += cr; },
   // GRAVE ROBBER: every ICE you never touched is a grave to rob
   graverobber() {
     const lv = st.lv, n = lv ? lv.tiles.filter(t => !t.safe && !(t.state === 'locked' && t.lockedBy === 'hit')).length : 0;
     if (!n) return false;
-    st.run.credits += 2 * n; st.run.earned += 2 * n;
-    setMsg(`> grave robber: ${n} graves. +${2 * n}cr`, C.money); Sound.loot();
+    const cr = earnInt(ECON.mods.graverobber) * n;
+    st.run.credits += cr; st.run.earned += cr;
+    setMsg(`> grave robber: ${n} graves. +${cr}cr`, C.money); Sound.loot();
   },
   // LET IT RIDE: a perfect bets its pay on the next layer: another perfect pays it back
   // double, anything else loses it.
@@ -809,7 +811,7 @@ const END_FX = {
   honeycomb(perfect) {
     const run = st.run;
     if (!perfect) return false;
-    if (!canHeal()) { run.credits += 10; run.earned += 10; return; }
+    if (!canHeal()) { const cr = earnInt(ECON.mods.honeycomb); run.credits += cr; run.earned += cr; return; }
     run.honey = (run.honey || 0) + 1;
     if (run.honey >= 3) { run.honey = 0; heal(1); Sound.shield(); }
     else return false;   // storing honey
@@ -818,7 +820,7 @@ const END_FX = {
   async interest() {
     const run = st.run, c = st.corp;
     if (!c.hasBoss || c.idx < c.counts.length) return false;
-    const cr = Math.min(20, Math.floor(run.credits * 0.05));
+    const cr = Math.min(earnInt(ECON.mods.interestMax), Math.floor(run.credits * ECON.mods.interestPct));
     if (cr > 0) { run.credits += cr; run.earned += cr; Sound.loot(); }
     else return false;
   },
@@ -1267,19 +1269,19 @@ function blockHit(t, i) {
     Sound.shield(); flash(C.accent, 0.12, 0.3);
     modFired('greenwave');
     msg = '> ICE. green wave: no damage.';
-  } else if (has('omerta') && canSpend(Math.max(15, Math.floor(Math.max(0, run.credits) * 0.1)))) {
-    const cost = Math.max(15, Math.floor(Math.max(0, run.credits) * 0.1));
+  } else if (has('omerta') && canSpend(omertaCost())) {
+    const cost = omertaCost();
     run.credits -= cost;
     Sound.shield(); flash(C.money, 0.1, 0.3);
     modFired('omerta');
     msg = `> ICE. omerta: -${cost}cr. say nothing.`;
   } else if (st.corp.hasBoss && st.corp.def.block && (msg = st.corp.def.block(t, lv))) {
     // a corp's own rule took the hit (the message is set)
-  } else if (has('friendship') && !st.corp.friendUsed && canSpend(10)) {
-    st.corp.friendUsed = true; run.credits -= 10;
+  } else if (has('friendship') && !st.corp.friendUsed && canSpend(costInt(ECON.friendship))) {
+    st.corp.friendUsed = true; run.credits -= costInt(ECON.friendship);
     Sound.shield(); flash(C.accent, 0.1, 0.3);
     modFired('friendship');
-    msg = '> ICE. friendship: -10cr instead.';
+    msg = `> ICE. friendship: -${costInt(ECON.friendship)}cr instead.`;
   } else if (has('inversion') && st.corp.hasBoss && !st.corp.invUsed) {
     st.corp.invUsed = true;
     heal(1);
@@ -1329,7 +1331,7 @@ const HIT_FX = {
   },
   // INDEX: >>> the real node comes later in reading order, <<< earlier
   index(t) { const s = st.lv.tiles[st.lv.safe]; t.glyph = normMotif(['', s.cell > t.cell ? '>>>' : '<<<', '']); },
-  policy() { st.run.credits += 8; st.run.earned += 8; },
+  policy() { const cr = earnInt(ECON.mods.policy); st.run.credits += cr; st.run.earned += cr; },
   pixelpeep() { st.lv.peepAt = performance.now(); },
   prism() { st.lv.prismRow = st.lv.tiles[st.lv.safe].row; },
   queuenumber(t) {
@@ -1478,18 +1480,18 @@ function grantLoot(r, tier) {
   const run = st.run;
   Sound.loot();
   // an item (more often with a higher STASH), at a rolled tier, if there's room
-  if (r() < (has('stash') ? tv('stash', [0.4, 0.6, 1]) : 0.4)) {
+  if (r() < (has('stash') ? tv('stash', [0.4, 0.6, 1]) : ECON.loot.itemChance)) {
     const key = pickR(Object.keys(ITEMS), r), tier = rollTier(r, ITEMS[key]);
     if (addItem(key, tier)) return `got item: ${ITEMS[key].name}${tier ? ' ' + RARITY[itemView(key, tier).rarity].label.toLowerCase() : ''}.`;
   }
-  const cr = Math.round(12 + tier * 8 + r() * 12);
+  const cr = Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier) + r() * earnCr(ECON.loot.roll));
   run.credits += cr; run.earned += cr;
   return `+${cr}cr`;
 }
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
-  const run0 = st.run, contPrice = 100 * ((run0 && run0.continues || 0) + 1);
+  const run0 = st.run, contPrice = costInt(ECON.continue) * ((run0 && run0.continues || 0) + 1);
   if (run0 && has('continue') && !zombie() && st.corp && !st.corp.contUsed && canSpend(contPrice) && st.lv && !st.mp) {
     st.corp.contUsed = true;
     modFired('continue');
@@ -1628,6 +1630,67 @@ async function pushOn() {
   saveRun();
   await swapTo(() => openOmniReward(old));
 }
+// ---- THE UPLINK: the checkpoint between sectors (the user's idea, 2026-10-26). Pushing on costs bandwidth: a fee
+// for every mod you carry, by its rarity, plus a minimum, all x the sector you're leaving (data/economy.js
+// ECON.uplink). The mods you don't keep are sold for a share of their fee. Then the sector boss's reward (free).
+// CASH OUT ends the run here. BLOOD MONEY and ZOMBIE can't be sold (they rewrite your health); LEVERAGE can
+// cover the fee (into debt).
+const UPLINK_LOCKED = ['bloodmoney', 'zombie'];
+const uplinkMult = () => ((st.run && st.run.sector) || 0) + 1;
+const uplinkMin = () => costInt(ECON.uplink.min) * uplinkMult();
+const uplinkFee = key => costInt(ECON.uplink[modView(key).rarity] != null ? ECON.uplink[modView(key).rarity] : ECON.uplink.common) * uplinkMult();
+const uplinkSell = key => Math.floor(uplinkFee(key) * ECON.uplink.sellPct);
+function openUplink() {
+  const run = st.run;
+  if (!run) return;
+  const keep = Object.fromEntries(run.mods.map(k => [k, true]));
+  let sel = 0;
+  const tally = () => {
+    let fee = uplinkMin(), sold = 0;
+    for (const k of run.mods) if (keep[k]) fee += uplinkFee(k); else sold += uplinkSell(k);
+    return { fee, sold, net: fee - sold };
+  };
+  const canGo = () => run.credits - tally().net >= creditFloor();
+  const go = () => {
+    if (st.transitioning) return;
+    if (!canGo()) return Sound.deny();
+    const t = tally(), sold = run.mods.filter(k => !keep[k]);
+    for (const k of sold) removeMod(k);
+    run.credits -= t.net;
+    run.uplinks = (run.uplinks || 0) + 1; run.uplinkPaid = (run.uplinkPaid || 0) + t.fee;
+    Sound.buy();
+    st.uplink = null;
+    pushOn();
+    setMsg(`> uplink: -${t.fee}cr${sold.length ? `, sold ${sold.length} for +${t.sold}cr` : ''}.`, C.money);
+  };
+  const toggle = k => { if (UPLINK_LOCKED.includes(k)) return Sound.deny(); keep[k] = !keep[k]; Sound.tick(); };
+  st.uplink = { keep, tally, canGo, toggle, push: go, cash: cashOut, fee: uplinkFee, sell: uplinkSell, locked: UPLINK_LOCKED };   // (read by tools/econsim.js)
+  openPanel('UPLINK', (T, B, X) => {
+    const t = tally(), ok = canGo(), mods = run.mods;
+    T('U P L I N K', C.accent);
+    T(`bandwidth into sector ${run.sector + 2}. every mod costs.`, C.text);
+    T(`credits ${run.credits}${leverage() ? `  (limit ${creditFloor()})` : ''}`, run.credits < 0 ? C.danger : C.money);
+    T('');
+    if (mods.length) T('tap a mod: keep it, or sell it.', C.mid);
+    mods.forEach((k, i) => {
+      const v = modView(k), locked = UPLINK_LOCKED.includes(k);
+      X({ list: true, id: 'up' + i, onTap: () => { sel = i; toggle(k); }, sel: i === sel, faded: !keep[k],
+        badge: k, badgeTier: run.modTier[k] || 0, name: v.name, col: keep[k] ? C.bright : C.mid,
+        right: locked ? `keep ${String(uplinkFee(k)).padStart(4)}cr*` : keep[k] ? `keep ${String(uplinkFee(k)).padStart(4)}cr` : `sell ${('+' + uplinkSell(k)).padStart(4)}cr`,
+        rightCol: keep[k] ? C.money : C.accent });
+    });
+    if (!mods.length) T('no mods to carry.', C.dim);
+    if (mods.some(k => UPLINK_LOCKED.includes(k))) T('* part of you now. it comes along.', C.dim);
+    T('');
+    T(`uplink ${uplinkMin()} + mods ${t.fee - uplinkMin()}${t.sold ? ` - sold ${t.sold}` : ''} = ${t.net}cr`, C.text);
+    T('');
+    const subPush = ok ? `- pay ${t.net}cr, then the loot -` : '- not enough: sell mods -';
+    const subCash = run.practice ? '- end the run here -' : `- end the run: +${repFor(run)} REP -`;
+    const w = Math.max(28, subPush.length + 8, subCash.length + 8);   // the two buttons the same width
+    X({ box: true, text: 'P U S H   O N', sub: subPush, id: 'push', onTap: go, minW: w, disabled: !ok });
+    X({ box: true, text: 'C A S H   O U T', sub: subCash, id: 'cash', onTap: cashOut, minW: w });
+  }, '> uplink: what do you carry?', { full: true });
+}
 // OMNI is every corp at once: a boss mod from any corp, a general mod, and one more.
 function openOmniReward(from) {
   const run = st.run;
@@ -1640,8 +1703,8 @@ function openOmniReward(from) {
     title: 'OMNI//CORE BREACHED', col: C.accent,
     head: [[`sector ${from + 1} spoils. take one.`, C.text]],
     options: shuffle(corpPick.concat(gen, third), r).concat(exotic),
-    skipLabel: '[ SKIP  +40cr ]',
-    onSkip: () => { run.credits += 40; run.earned += 40; Sound.loot(); },
+    skipLabel: `[ SKIP  +${earnInt(ECON.skip.sector)}cr ]`,
+    onSkip: () => { const cr = earnInt(ECON.skip.sector); run.credits += cr; run.earned += cr; Sound.loot(); },
     msg: '> the core is open.',
     next: () => toMap(from),
   });

@@ -17,6 +17,7 @@
   window.addEventListener('error', e => { (window.LOAD_ERRORS = window.LOAD_ERRORS || []).push(e.filename + ': ' + e.message); });
 </script>
 <script src="../dist/palettes.js"></script>
+<script src="../dist/data/economy.js"></script>
 <script src="../dist/data/music.js"></script>
 <script src="../dist/engine/music.js"></script>
 <script src="../dist/data/mods.js"></script>
@@ -26,6 +27,7 @@
 <script src="art_file.js"></script>
 <script src="../dist/data/tutorial.js"></script>
 <script src="tutorial_file.js"></script>
+<script src="economy_file.js"></script>
 <!-- the corps (each one's track sits at the top of its file). tools/bump.js keeps this list in step with dist/index.html. -->
 <!-- corps: begin -->
 <script src="../dist/corps/perimeter.js"></script>
@@ -212,6 +214,41 @@
   body.mode-items #items { display: flex; }
   body.mode-art #art { display: flex; }
   body.mode-tut #tut { display: flex; }
+  body.mode-econ #econ { display: flex; }
+
+  /* economy: every money number (dist/data/economy.js) */
+  #econ { flex-direction: column; }
+  #eBar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  #eFile { color: var(--mid); font-size: 12px; }
+  #eFile.dirty { color: var(--warn); }
+  #eBar .seg button.on { background: #12384a; }
+  #eMain { flex: 1; min-height: 0; display: flex; }
+  /* the units: their own bar that stays put (every earn / spend number below is a count of them) */
+  #eUnits { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 24px; padding: 6px 16px 8px; border-bottom: 1px solid var(--line); background: #14181d; }
+  #eUnits .eu-h { grid-column: 1 / -1; color: var(--mid); font-size: 12px; margin: 2px 0 2px 6px; }
+  #eUnits .eu-h b { color: var(--hi); font-size: 13px; margin-right: 8px; }
+  #eUnits .er { grid-template-columns: 120px 110px 1fr; }
+  #eList { flex: 1; min-width: 0; overflow: auto; padding: 4px 16px 40px; }
+  #ePrev { flex: 0 0 380px; overflow: auto; border-left: 1px solid var(--line); padding: 8px 14px 40px; }
+  #eList h2, #ePrev h2 { margin: 16px 0 4px; }
+  #eList .snote { color: var(--mid); font-size: 12px; margin: 0 0 6px; }
+  #econ .er { display: grid; grid-template-columns: 230px 140px 1fr; gap: 10px; align-items: center; padding: 4px 6px; border-radius: 4px; }
+  #econ .er:hover { background: #1a2027; }
+  #econ .er.ch { background: #2a2414; }
+  #econ .er .lab b { font-weight: 600; color: var(--hi); }
+  #econ .er .lab .k { font: 11px "JetBrains Mono", Consolas, monospace; color: var(--mid); margin-left: 6px; }
+  #econ .er .lab .n { display: block; color: var(--mid); font-size: 11px; }
+  #econ .er input { width: 70px; font: 13px "JetBrains Mono", Consolas, monospace; }
+  #econ .er input.l { width: 40px; }
+  #econ .er .v { font: 12px "JetBrains Mono", Consolas, monospace; color: #e8d27a; }
+  #econ .er .v i { font-style: normal; color: var(--mid); }
+  #econ .er .rv { visibility: hidden; margin-left: 6px; font-size: 11px; padding: 1px 6px; }
+  #econ .er.ch .rv { visibility: visible; }
+  #ePrev table { border-collapse: collapse; width: 100%; font: 12px "JetBrains Mono", Consolas, monospace; }
+  #ePrev th, #ePrev td { text-align: right; padding: 2px 6px; border-bottom: 1px solid #1e252c; }
+  #ePrev th:first-child, #ePrev td:first-child { text-align: left; }
+  #ePrev th { color: var(--mid); font-weight: normal; }
+  #ePrev .note { color: var(--mid); font-size: 11px; margin: 4px 0; }
 
   /* training: what POPS says (dist/data/tutorial.js) */
   #tut { flex-direction: column; }
@@ -433,7 +470,7 @@
 </section>
 
 <div id="right">
-<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">items &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><span id="modehint"></span></div>
+<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">items &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><span id="modehint"></span></div>
 <section id="art" class="mode">
   <div id="aBar">
     <button id="aSave" class="primary" title="Write the files in dist/data/art/ that changed (Ctrl S)">save</button>
@@ -446,6 +483,20 @@
   <div id="aMain">
     <div id="aList"></div>
     <div id="aDetail"></div>
+  </div>
+</section>
+<section id="econ" class="mode">
+  <div id="eBar">
+    <button id="eSave" class="primary" title="Write dist/data/economy.js (Ctrl S)">save</button>
+    <button id="eReload" title="Load dist/data/economy.js again (drops unsaved changes)">reload</button>
+    <span id="eFile"></span>
+    <span style="margin-left:auto;color:var(--mid);font-size:12px">show credits at sector</span>
+    <span class="seg" id="eSec"><button data-s="0" class="on">1</button><button data-s="1">2</button><button data-s="2">3</button></span>
+  </div>
+  <div id="eUnits"></div>
+  <div id="eMain">
+    <div id="eList"></div>
+    <div id="ePrev"></div>
   </div>
 </section>
 <section id="tut" class="mode">
@@ -1116,7 +1167,7 @@
   $('#undo').onclick = () => stepHistory(undo, redo); $('#redo').onclick = () => stepHistory(redo, undo);
   document.addEventListener('keydown', e => {
     const mod = e.ctrlKey || e.metaKey;
-    if (document.body.classList.contains('mode-art') || document.body.classList.contains('mode-tut')) return;   // the art and training tabs have their own keys
+    if (document.body.classList.contains('mode-art') || document.body.classList.contains('mode-tut') || document.body.classList.contains('mode-econ')) return;   // the art, training and economy tabs have their own keys
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
     else if (mod && e.key.toLowerCase() === 'z' && !(e.target.matches && e.target.matches('input[type=text]'))) { e.preventDefault(); e.shiftKey ? stepHistory(redo, undo) : stepHistory(undo, redo); }
     else if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); stepHistory(redo, undo); }
@@ -1626,13 +1677,14 @@
 
   // ---- the two modes (music / palette), remembered
   const setMode = m => {
-    if (!['music', 'pal', 'items', 'art', 'tut'].includes(m)) m = 'music';
-    for (const k of ['music', 'pal', 'items', 'art', 'tut']) document.body.classList.toggle('mode-' + k, m === k);
+    if (!['music', 'pal', 'items', 'art', 'tut', 'econ'].includes(m)) m = 'music';
+    for (const k of ['music', 'pal', 'items', 'art', 'tut', 'econ']) document.body.classList.toggle('mode-' + k, m === k);
     for (const b of document.querySelectorAll('#modes button')) b.classList.toggle('on', b.dataset.mode === m);
     $('#modehint').textContent = { music: 'pick a corp: the game shows it and plays its track', pal: 'palettes: save writes dist/palettes.js',
       items: 'from dist/data/mods.js. give / change / remove mods on the running game (the copy is read-only)',
       art: 'dist/data/art/: glyphs, logos, world map. edit here or in asXii; save writes the files',
-      tut: 'dist/data/tutorial.js: what POPS says. show plays the training to that line; edits show live' }[m];
+      tut: 'dist/data/tutorial.js: what POPS says. show plays the training to that line; edits show live',
+      econ: 'dist/data/economy.js: every money number, in units. edits go to the game live; save writes the file' }[m];
     try { localStorage.setItem('neon.editor.mode', m); } catch (e) { /* private mode */ }
   };
   for (const b of document.querySelectorAll('#modes button')) b.addEventListener('click', () => setMode(b.dataset.mode));
@@ -2165,6 +2217,169 @@
   $('#tReload').onclick = reload;
   document.addEventListener('keydown', e => {
     if (!document.body.classList.contains('mode-tut')) return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(); }
+  });
+  window.addEventListener('beforeunload', e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });
+  renderList();
+})();
+</script>
+<script>
+// ---------------- Economy: every money number (dist/data/economy.js), in units ----------------
+// The numbers on the left, grouped (each with its credits at the sector you pick); on the right, what they add up to:
+// layer pay by nodes, a corp by level, and market prices. Edits go to the game as you type; "save" writes the file
+// (tools/economy_file.js). Mod and item prices are edited with the mods (data/mods.js); they show here scaled.
+(() => {
+  const $ = s => document.querySelector(s);
+  const F = window.NEON_ECON_FILE;
+  if (typeof ECON === 'undefined' || !F) { $('#eList').textContent = "Couldn't load ../dist/data/economy.js or economy_file.js."; return; }
+  const esc = x => String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const build = ((window.NEON_FILES || []).find(f => f[0] === 'data/economy.js') || [])[1] || 'v0';
+  let econ = F.pick(ECON), saved = F.pick(ECON), sector = 0, dir = null;
+  const toast = t => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2400); };
+  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
+  const dirty = () => JSON.stringify(econ) !== JSON.stringify(saved);
+  let sendT = 0;
+  const send = () => { clearTimeout(sendT); sendT = setTimeout(() => toGame({ type: 'econ', econ }), 120); };
+  // credits for u units of a side, at a sector (0 = the first)
+  const unitAt = (side, s) => econ[side].unit * (1 + econ[side].grow * s);
+  const cr = (side, u, s = sector) => Math.round(u * unitAt(side, s));
+
+  // ---- the numbers
+  // the units (earn.* / spend.*) go in their own bar at the top; everything else in the list
+  const isUnit = it => it.path ? /^(earn|spend)\./.test(it.path) : it.sec === 'Units';
+  function renderList() {
+    const units = F.INFO.find(it => it.sec === 'Units');
+    $('#eUnits').innerHTML = '<div class="eu-h"><b>UNITS</b>' + esc(units ? units.note : '') + '</div>' + F.INFO.filter(it => it.path && isUnit(it)).map(row).join('');
+    $('#eList').innerHTML = F.INFO.filter(it => !isUnit(it)).map(row).join('');
+    values();
+  }
+  function row(it) {
+      if (it.sec) return '<h2>' + esc(it.sec) + '</h2>' + (it.note ? '<p class="snote">' + esc(it.note) + '</p>' : '');
+      const v = F.get(econ, it.path);
+      const inp = it.kind === 'xlist'
+        ? v.map((x, i) => '<input class="l" type="number" step="0.1" data-p="' + it.path + '" data-i="' + i + '" value="' + x + '">').join(' ')
+        : '<input type="number" step="' + (it.kind === 'pct' || it.kind === 'grow' ? '0.01' : it.kind === 'cr' ? '1' : '0.1') + '" data-p="' + it.path + '" value="' + v + '">';
+      return '<div class="er" data-p="' + it.path + '"><div class="lab"><b>' + esc(it.label) + '</b><span class="k">' + it.kind + '</span>' +
+        (it.note ? '<span class="n">' + esc(it.note) + '</span>' : '') + '</div><div>' + inp + '<button class="rv" title="Back to the saved value">revert</button></div><div class="v"></div></div>';
+  }
+  // each row's credits (and which rows changed)
+  function values() {
+    for (const row of document.querySelectorAll('#econ .er')) {
+      const it = F.INFO.find(i => i.path === row.dataset.p), v = F.get(econ, it.path);
+      let t = '';
+      if (it.kind === 'earn' || it.kind === 'spend') {
+        t = '= ' + cr(it.kind, v) + 'cr';
+        if (econ[it.kind].grow) t += ' <i>(' + [0, 1, 2].map(s => 's' + (s + 1) + ' ' + cr(it.kind, v, s)).join(' · ') + ')</i>';
+      } else if (it.kind === 'pct') t = '= ' + Math.round(v * 1000) / 10 + '%';
+      else if (it.kind === 'grow') t = v ? '+' + Math.round(v * 100) + '% a sector <i>(x' + [0, 1, 2].map(s => (1 + v * s).toFixed(2)).join(' / ') + ')</i>' : 'no growth';
+      else if (it.kind === 'x') t = 'x' + v;
+      else if (it.kind === 'xlist') t = v.map(x => 'x' + x).join(' / ');
+      else if (it.kind === 'cr') t = v + 'cr';
+      row.querySelector('.v').innerHTML = t;
+      row.classList.toggle('ch', JSON.stringify(v) !== JSON.stringify(F.get(saved, it.path)));
+    }
+    const d = dirty();
+    $('#eFile').textContent = (dir ? dir.name + '/' : 'dist/data/') + 'economy.js · ' + (d ? 'unsaved' : 'saved');
+    $('#eFile').classList.toggle('dirty', d);
+    preview();
+  }
+  $('#econ').addEventListener('input', e => {
+    const el = e.target.closest('input[data-p]');
+    if (!el) return;
+    const v = +el.value;
+    if (!isFinite(v)) return;
+    if (el.dataset.i != null) F.get(econ, el.dataset.p)[+el.dataset.i] = v; else F.set(econ, el.dataset.p, v);
+    send(); values();
+  });
+  $('#econ').addEventListener('click', e => {
+    const b = e.target.closest('.rv'), row = e.target.closest('.er');
+    if (!b || !row) return;
+    F.set(econ, row.dataset.p, JSON.parse(JSON.stringify(F.get(saved, row.dataset.p))));
+    send(); renderList();
+  });
+  for (const b of document.querySelectorAll('#eSec button')) b.addEventListener('click', () => {
+    sector = +b.dataset.s;
+    for (const x of document.querySelectorAll('#eSec button')) x.classList.toggle('on', x === b);
+    values();
+  });
+
+  // ---- what it adds up to
+  // a layer's pay, the way the game works it out (engine/run.js payFor), without mods or corp twists
+  const layerPay = (n, boss, perfect, s = sector) => {
+    if (n <= 1) return 0;
+    let base = (econ.pay.base + econ.pay.perNode * n) * unitAt('earn', s);
+    if (boss) base *= econ.pay.boss;
+    const mult = perfect ? econ.pay.perfect + econ.pay.perfectPerNode * (n - 1) : 1;
+    return Math.round(base * mult);
+  };
+  const corpPay = (lvl, perfect) => [0, 1, 2, 3, 4].reduce((a, i) => a + layerPay(Math.max(2, Math.min(12, lvl + 1 + i)), i === 4, perfect), 0);
+  function preview() {
+    const s = sector, rows = [];
+    rows.push('<h2>A layer pays</h2><p class="note">sector ' + (s + 1) + ', before mods and corp twists</p><table><tr><th>nodes</th><th>normal</th><th>perfect</th><th>boss</th><th>boss perfect</th></tr>');
+    for (const n of [2, 3, 4, 6, 8, 10, 12]) rows.push('<tr><td>' + n + '</td><td>' + layerPay(n, 0, 0) + '</td><td>' + layerPay(n, 0, 1) + '</td><td>' + layerPay(n, 1, 0) + '</td><td>' + layerPay(n, 1, 1) + '</td></tr>');
+    rows.push('</table>');
+    rows.push('<h2>A corp pays (5 layers)</h2><table><tr><th>level</th><th>no perfects</th><th>all perfect</th></tr>');
+    for (let l = 1; l <= 6; l++) rows.push('<tr><td>LV' + l + '</td><td>' + corpPay(l, 0) + '</td><td>' + corpPay(l, 1) + '</td></tr>');
+    rows.push('</table>');
+    // market prices: what the game charges (price x rarity step x the spend unit / 10)
+    const scale = unitAt('spend', s) / 10, tp = econ.tierPrice;
+    const price = (p, t) => Math.round(p * tp[t] * scale);
+    rows.push('<h2>Market prices</h2><p class="note">sector ' + (s + 1) + '. at each rarity step (edit base prices in data/mods.js). repair: ' + cr('spend', econ.repair) + 'cr</p>');
+    rows.push('<table><tr><th>item</th><th>base</th><th>step 1</th><th>step 2</th><th>step 3</th></tr>');
+    for (const d of Object.values(ITEMS).sort((a, b) => a.price - b.price)) rows.push('<tr><td>' + esc(d.name) + '</td><td>' + d.price + '</td><td>' + price(d.price, 0) + '</td><td>' + price(d.price, 1) + '</td><td>' + price(d.price, 2) + '</td></tr>');
+    rows.push('</table><table style="margin-top:8px"><tr><th>mod</th><th>base</th><th>step 1</th><th>step 2</th><th>step 3</th></tr>');
+    for (const d of Object.values(MODS).filter(d => d.price).sort((a, b) => a.price - b.price)) rows.push('<tr><td>' + esc(d.name) + '</td><td>' + d.price + '</td><td>' + price(d.price, 0) + '</td><td>' + price(d.price, 1) + '</td><td>' + price(d.price, 2) + '</td></tr>');
+    rows.push('</table>');
+    $('#ePrev').innerHTML = rows.join('');
+  }
+
+  // ---- the game: our numbers when it (re)loads
+  window.addEventListener('message', e => { const m = e.data; if (m && m.from === 'neon-game' && m.type === 'ready') send(); });
+
+  // ---- saving: the dist/data folder (the same one the TRAINING tab uses, picked once)
+  const idb = (mode, fn) => new Promise((res, rej) => {
+    const open = indexedDB.open('neon-tut-editor', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('h');
+    open.onerror = () => rej(open.error);
+    open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
+  });
+  idb('readonly', st => st.get('datadir')).then(h => { if (h) { dir = h; values(); } }).catch(() => {});
+  async function ensureDir() {
+    if (dir && ((await dir.queryPermission({ mode: 'readwrite' })) === 'granted' || (await dir.requestPermission({ mode: 'readwrite' })) === 'granted')) return dir;
+    toast('pick the dist/data folder');
+    const h = await window.showDirectoryPicker({ id: 'neon-data', mode: 'readwrite' });
+    let ok = true; try { await h.getFileHandle('economy.js'); } catch (e) { ok = false; }
+    if (!ok && !confirm('The folder ' + h.name + ' has no economy.js: is it dist/data? Use it anyway?')) throw new Error('cancelled');
+    dir = h; idb('readwrite', st => st.put(h, 'datadir')).catch(() => {});
+    return h;
+  }
+  async function saveFile() {
+    if (!dirty()) return toast('nothing to save');
+    const text = F.text(econ, build);
+    if (!window.showDirectoryPicker) {
+      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([text], { type: 'text/javascript' })), download: 'economy.js' });
+      document.body.append(a); a.click(); a.remove(); saved = JSON.parse(JSON.stringify(econ)); values(); toast('downloaded economy.js'); return;
+    }
+    try {
+      const d = await ensureDir(), h = await d.getFileHandle('economy.js', { create: true }), w = await h.createWritable();
+      await w.write(text); await w.close();
+      saved = JSON.parse(JSON.stringify(econ)); values(); toast('saved economy.js');
+    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('save failed: ' + e.message); }
+  }
+  async function reload() {
+    if (dirty() && !confirm('Drop your unsaved economy changes and load the file again?')) return;
+    try {
+      if (!window.showDirectoryPicker) { location.reload(); return; }
+      const d = await ensureDir(), t = await (await (await d.getFileHandle('economy.js')).getFile()).text();
+      const e = F.parse(t), lost = F.unknown(e);
+      if (lost.length) toast('the file has numbers this tab doesn\'t know: ' + lost.join(', '));
+      econ = F.pick(e); saved = F.pick(e); renderList(); send(); toast('loaded economy.js');
+    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
+  }
+  $('#eSave').onclick = saveFile;
+  $('#eReload').onclick = reload;
+  document.addEventListener('keydown', e => {
+    if (!document.body.classList.contains('mode-econ')) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(); }
   });
   window.addEventListener('beforeunload', e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });

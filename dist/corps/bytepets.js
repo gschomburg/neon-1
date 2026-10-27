@@ -1,6 +1,6 @@
 // NeoN+1 corps/bytepets.js
 'use strict';
-NEON_FILES.push(['corps/bytepets.js', 'v13.35']);
+NEON_FILES.push(['corps/bytepets.js', 'v13.41']);
 // Its boss mod: COMPANION (companion), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -17,7 +17,7 @@ CORPS.bytepets = {
   intel: '"they love you! feed them!"',
   tell: null,
   bossDesc: 'boss: a cat. it might not come.',
-  rules: () => 'CALL (1cr): the real pet comes.',
+  rules: () => `CALL (${costInt(ECON.corpCosts.bytepetsCall)}cr): the real pet comes.`,
   mods: ['companion'],
   // The nodes are little digital pets. CALL them (a 1cr treat): they all turn their heads,
   // and the real one comes a step toward the button. Boss: a cat; half the time it ignores you.
@@ -39,15 +39,16 @@ CORPS.bytepets = {
   action(lv) {
     const pt = lv.pets;
     if (!pt) return null;
-    return { label: 'CALL 1cr', ok: canSpend(1), use() {
-      st.run.credits -= 1; pt.calls++;
+    const call = costInt(ECON.corpCosts.bytepetsCall);
+    return { label: `CALL ${call}cr`, ok: canSpend(call), use() {
+      st.run.credits -= call; pt.calls++;
       pt.at = performance.now();
       pt.comes = !pt.boss || h01(pt.seed, pt.calls) < 0.5;
       Sound.jingle();
-      setMsg('> here, pets! (-1cr treat)', C.accent);
+      setMsg(`> here, pets! (-${call}cr treat)`, C.accent);
     } };
   },
 };
 
 // the codex, once you've beaten it
-CORP_TELL.bytepets = "CALL the pets (a 1cr treat): they all turn their heads, and the real one comes a step toward you. boss: a cat. it ignores half your calls.";
+CORP_TELL.bytepets = `CALL the pets (a ${costInt(ECON.corpCosts.bytepetsCall)}cr treat): they all turn their heads, and the real one comes a step toward you. boss: a cat. it ignores half your calls.`;

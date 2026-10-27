@@ -1,6 +1,6 @@
 // NeoN+1 corps/safeharbor.js
 'use strict';
-NEON_FILES.push(['corps/safeharbor.js', 'v13.35']);
+NEON_FILES.push(['corps/safeharbor.js', 'v13.41']);
 // Its boss mod: POLICY (policy), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -18,7 +18,7 @@ CORPS.safeharbor = {
   intel: '"read the fine print."',
   tell: null,
   bossDesc: 'boss: the fakes forge the print.',
-  rules: () => 'premium 10cr. hits pay 5cr claims.',
+  rules: () => `premium ${costInt(ECON.corpCosts.safeharborPremium)}cr. hits pay ${earnInt(ECON.corps.safeharborClaim)}cr claims.`,
   mods: ['policy'],
   // The fine print: a tiny dot in the bottom right corner of the real node's glyph.
   // Deeper: decoys get dots in other corners. Boss: decoys get a , in the same corner.
@@ -34,8 +34,8 @@ CORPS.safeharbor = {
       t.glyph = g;
     });
   },
-  onEnter() { const run = st.run, p = Math.max(0, Math.min(10, run.credits - creditFloor())); run.credits -= p; if (p) setMsg(`> premium paid: -${p}cr`, C.money); },
-  onHit() { st.run.credits += 5; st.run.earned += 5; },
+  onEnter() { const run = st.run, p = Math.max(0, Math.min(costInt(ECON.corpCosts.safeharborPremium), run.credits - creditFloor())); run.credits -= p; if (p) setMsg(`> premium paid: -${p}cr`, C.money); },
+  onHit() { const cr = earnInt(ECON.corps.safeharborClaim); st.run.credits += cr; st.run.earned += cr; },
 };
 
 // the codex, once you've beaten it

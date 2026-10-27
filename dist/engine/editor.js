@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.35']);
+NEON_FILES.push(['engine/editor.js', 'v13.41']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -216,6 +216,12 @@ if (EDITOR) {
       if (p) { const c = tutLine(p.id); p.text = tutFill(c.text); if (!p.ok) p.act = tutFill(c.act); else p.timer = c.timer || 0; }
     }
     if (m.type === 'tut-jump' && m.id) tutJump(m.id);
+    // the ECONOMY tab: its numbers, live (changed in place, so everything holding ECON / TIER_PRICE sees them)
+    if (m.type === 'econ' && m.econ) {
+      const put = (to, from) => { for (const [k, v] of Object.entries(from)) {
+        if (Array.isArray(v)) { to[k].length = 0; to[k].push(...v); } else if (v && typeof v === 'object') put(to[k], v); else to[k] = v; } };
+      put(ECON, m.econ);
+    }
   });
   post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES),
     corpNames: Object.fromEntries(Object.entries(CORPS).map(([k, c]) => [k, c.name])) });

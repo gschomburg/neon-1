@@ -1,6 +1,6 @@
 // NeoN+1 corps/chuckecache.js
 'use strict';
-NEON_FILES.push(['corps/chuckecache.js', 'v13.35']);
+NEON_FILES.push(['corps/chuckecache.js', 'v13.41']);
 // Its boss mod: CONTINUE? (continue), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -18,7 +18,7 @@ CORPS.chuckecache = {
   intel: '"where a hacker can be a kid!"',
   tell: null, tickets: true,
   bossDesc: 'boss: the score runs fast.',
-  rules: () => 'pays in tickets: x1.5 at the end.',
+  rules: () => `pays in tickets: x${ECON.corps.chuckecacheTicket} at the end.`,
   mods: ['continue'],
   // Arcade. A score counter ticks on the hint row; the real node is the 1UP: it blinks on
   // every tick. Decoys blink at random (deeper: on ticks too, but they skip some). Pay comes
@@ -46,7 +46,7 @@ CORPS.chuckecache = {
   onClear(c) {
     const tix = c.tickets || 0;
     if (!tix) return null;
-    const cr = Math.round(tix * 1.5);
+    const cr = Math.round(tix * ECON.corps.chuckecacheTicket);
     st.run.credits += cr; st.run.earned += cr;
     return { text: `> prize counter: ${tix} tickets = ${cr}cr!`, col: C.money };
   },

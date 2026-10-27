@@ -1,6 +1,6 @@
 // NeoN+1 corps/famiglia.js
 'use strict';
-NEON_FILES.push(['corps/famiglia.js', 'v13.35']);
+NEON_FILES.push(['corps/famiglia.js', 'v13.41']);
 // Its boss mod: OMERTA (omerta), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -18,12 +18,12 @@ CORPS.famiglia = {
   key: 'famiglia', name: 'LA FAMIGLIA', code: 'FA', level: 3,
   intel: '"nice node you got. shame if..."',
   tell: null,
-  bossDesc: 'boss: protection costs 25cr.',
-  rules: () => 'protection: 15cr locks 1 ICE.',
+  bossDesc: `boss: protection costs ${costInt(ECON.corpCosts.famigliaBoss)}cr.`,
+  rules: () => `protection: ${costInt(ECON.corpCosts.famiglia)}cr locks 1 ICE.`,
   mods: ['omerta'],
   // Protection money: once a layer, 15cr locks one ICE. After every miss, a decoy snitches:
   // another decoy is ratted out (dimmed, ruled out).
-  dress(lv, k) { lv.protect = { price: k.boss ? 25 : 15, paid: false }; },
+  dress(lv, k) { lv.protect = { price: costInt(k.boss ? ECON.corpCosts.famigliaBoss : ECON.corpCosts.famiglia), paid: false }; },
   action(lv) {
     const pr = lv.protect;
     if (!pr) return null;

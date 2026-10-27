@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.35']);
+NEON_FILES.push(['engine/screens.js', 'v13.41']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -116,8 +116,7 @@ function titleLines(now) {
   const saved = st.savedRun;
   if (saved) lines.push({ box: true, text: 'C O N T I N U E', sub: `- sector ${(saved.run.sector || 0) + 1}  layer ${pad2(saved.run.depth)} -`, id: 'start', onTap: resumeRun, minW: 26 });
   else lines.push({ box: true, text: 'J A C K   I N', sub: '- start a run -', id: 'start', onTap: jackIn, minW: 26 });
-  if (!save.tutorialDone && !saved) lines.push({ text: '[ TRAINING ]', id: 'tutorial', onTap: startTutorial, col: C.accent });   // until you've done it (then: HOW TO PLAY)
-  else T('');
+  T('');   // (the training: NEWB on a first run, and HOW TO PLAY)
   lines.push({ row: [
     { text: '[ HOW TO PLAY ]', id: 'help', onTap: () => swapTo(openHelp) },
     { text: '[ CODEX ]', id: 'codex', onTap: () => swapTo(openCodex) },
@@ -226,8 +225,7 @@ function overLines() {
     else lines.push({ text: `cash out now: +${r.rep} REP`, col: C.money, bold: true });
     T(legacyLv('dms') ? `dying keeps ${[0, 25, 50][legacyLv('dms')]}% of your REP.` : 'die later and you bank nothing.', C.dim);
     T('');
-    lines.push({ box: true, text: 'P U S H   O N', sub: r.skipped ? `- into sector ${r.n + 1} -` : '- boss loot, then onward -', id: 'push', onTap: pushOn, minW: 26 });
-    lines.push({ text: '[ CASH OUT ]', id: 'cash', onTap: cashOut });
+    lines.push({ box: true, text: 'S E C T O R   C L E A R E D', sub: '- the uplink: push on or cash out -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
     return lines;
   }
   if (r.win) {

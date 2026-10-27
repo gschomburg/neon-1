@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v13.35']);
+NEON_FILES.push(['engine/boot.js', 'v13.41']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -23,6 +23,8 @@ function gameMusicState() {
   }
   const run = st.run;
   let song = 'theme', level = 1, urgency = 0;
+  // the intro, from the title card on: its own track (engine/intro.js INTRO_MUSIC)
+  if (st.boot && st.boot.music && SONGS[INTRO_MUSIC.song]) return { song: INTRO_MUSIC.song, level: INTRO_MUSIC.level, urgency: 0, low: false, tempo: 1, pitch: 1 };
   if (st.mp && st.mp.state && st.mode === 'play' && st.lv && st.lv.spec) {
     const sp = st.lv.spec;
     return { song: trackFor(sp.corp), level: sp.boss ? 3 : clamp(sp.pos, 0, 2), urgency: 0, low: mpPlaying() && st.mp.state.hp[st.mp.me] <= 1, tempo: sp.boss ? 1.05 : 1 };
@@ -30,7 +32,8 @@ function gameMusicState() {
   // Menus (title, settings, codex, how to play, profile, multiplayer menu / lobby,
   // game over) get the mellow menu track; gameplay keeps the theme and corp songs.
   const inMenu = st.mode === 'title' || st.mode === 'over' || (!st.run && !(st.mp && st.mp.state && st.mode === 'play'));
-  if (st.hideAll && !st.dying) song = 'none';           // the end-of-run screen glitch: silence (a death powers down instead)
+  if (st.boot && !st.boot.music) song = 'none';         // the intro: quiet until the title card
+  else if (st.hideAll && !st.dying) song = 'none';           // the end-of-run screen glitch: silence (a death powers down instead)
   else if (inMenu) song = 'menu';
   else if (st.corp && st.corp.hasBoss) {
     song = st.corp.def.key;
