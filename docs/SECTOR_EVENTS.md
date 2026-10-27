@@ -167,3 +167,16 @@ flipped (boss first), a trace meter, two events stacked.
    PAWN if the user prefers.
 10. **THIEF on the sector boss** (STICKY FINGERS' boss): after the boss there's no pawn shop to go to. Claude's
     pick: the boss's thief works like today: beat it and you get those mods back.
+
+## The next batch (the user, 2026-10-27): 1-4 built in v13.58
+
+Easiest to hardest. Built in v13.58: GRIND, COLD SNAP / BLACK ICE, RIGHT ANGLES, GAUNTLET (card text and pictures are Claude's placeholders). BLACK ICE as built: about a quarter of a layer's ICE (at least 1); shields and blocks stop it like any ICE; GROUNDED takes 1 off; ZOMBIE: twice the rot; BLOOD MONEY: the credits for that many hits. RIGHT ANGLES: sideways links 60% (25% normally). GAUNTLET: the middle lane only, the market in row 3. EENY MEENY (the 2 bosses idea, as 3) built in v13.59. HEAD FIRST built in v13.60: the whole batch is in.
+
+1. **GRIND** (the user's name): every corp in the sector has an extra layer. Card opens "are we there yet?". Pays more (one more layer's pay).
+2. **BLACK ICE** (new anomaly) and its event **COLD SNAP** (the user, 2026-10-27; "don't slip"): corps with it have random black ICE. **A hit takes you down to 1 INT, but never below 1** (it can't kill you by itself; at 1 INT it does nothing more). **No tell** (hidden like ICE). **A big hit animation**, so it's clear you got hit hard. Interactions to settle at build: BLOOD MONEY (hits cost credits; a black ICE hit = the credits for that many hits? see BACKLOG "BLOOD MONEY scaling"), ZOMBIE (rot instead of damage), FAILSAFE / shields.
+3. **RIGHT ANGLES** (the user: "right angles only"; no diagonals): map links only go straight up or sideways; TUNNEL / MESH / WARP worth more. Claude: add more sideways links in this sector (25% today) so rows still give a choice.
+4. **GAUNTLET** (the user's name): the sector is one line, no choices. Claude: keep one market in the line.
+5. **EENY MEENY** (the user, 2026-10-27; built v13.59): **three** bosses at the top, one per lane, so you can pick any of them; the one you beat starts the next sector. No FENCE question: sector-wide events have no anomalies, so no THIEF (CHEF'S CHOICE rolling a THIEF already gets THE FENCE).: two boss nodes at the top, one each side; your path decides which you fight; the beaten one starts the next sector. With THE FENCE: it sits in the middle.
+6. **HEAD FIRST** (built v13.60; the user's flipped sector; card: "no diving."; the exit market's button is JACK OUT): the sector boss is the first node, its reward right after (an early exotic chance); the last node is a black market; closing it goes to SECTOR CLEARED, then the uplink (no reward screen). The code assumes the sector ends at its boss in a few places (the event is kept there, the next sector starts there): medium, the riskiest. Claude: not in sector 2.
+
+Also logged: **ICE STORM** (the user: another ice event, maybe with its own ice anomaly; not designed). Claude's, not picked: TAXED, AUDITED, RANSOM (money drains), BACKWARDS (mirrored corps), a trace meter, two events stacked (a later severity step).

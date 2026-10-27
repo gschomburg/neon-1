@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v13.55']);
+NEON_FILES.push(['engine/map.js', 'v13.60']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -28,7 +28,12 @@ function eventOrder(seed) {
   }
   return out;
 }
-const rollEvent = (seed, s) => { if (!s) return null; const o = eventOrder(seed); return o[(s - 1) % o.length]; };
+const rollEvent = (seed, s) => {
+  if (!s) return null;
+  const o = eventOrder(seed);
+  if (o[0] === 'headfirst') [o[0], o[1]] = [o[1], o[0]];   // HEAD FIRST never in sector 2
+  return o[(s - 1) % o.length];
+};
 // Its share of the sector's corps: grows 10% a sector after the 2nd, up to 80%.
 const eventShare = (ev, s) => Math.min(0.8, (SECTOR_EVENTS[ev].share || 0) + 0.1 * Math.max(0, s - 1));
 // The event of sector s (kept on that sector's boss node), or null.
@@ -40,7 +45,8 @@ const timedCorp = key => !!(CORPS[key] && (CORPS[key].timer || CORPS[key].tick))
 function addFence(nodes, seed, s) {
   const base = SECTOR_STEPS * s, boss = nodes[bossIdOf(s)];
   if (!boss || Object.values(nodes).some(n => n.type === 'fence' && n.sector === s)) return;
-  const id = `${base + 5}:${rngFor(seed, 'fence', s)() < 0.5 ? 0 : 2}`;
+  const first = rngFor(seed, 'fence', s)() < 0.5 ? 0 : 2, id = [first, 2 - first].map(l => `${base + 5}:${l}`).find(x => !nodes[x]);
+  if (!id) return;   // (both sides taken: EENY MEENY's bosses)
   nodes[id] = { id, step: base + 5, lane: +id.split(':')[1], sector: s, type: 'fence', next: [boss.id] };
   for (let lane = 0; lane < 3; lane++) { const n = nodes[`${base + 4}:${lane}`]; if (n && !n.next.includes(id)) n.next.push(id); }
 }
@@ -108,6 +114,7 @@ function addSector(nodes, seed, s, force = null) {
   const ev = s === 0 ? null : force && SECTOR_EVENTS[force] ? force : test ? null : rollEvent(seed, s);
   const same = ev === 'copypaste' ? pickCorps(rngFor(seed, 'copy', s), targetLevel(s, 3), 1)[0] : null;   // COPY PASTE: one corp everywhere
   const boost = ev === 'timeismoney' ? k => timedCorp(k) ? 3 : 1 : null;   // TIME IS MONEY: timed corps come up more
+  const lanes = ev === 'gauntlet' ? [1] : [0, 1, 2];   // GAUNTLET: one line, no choices (a market in row 3)
   for (let ls = 1; ls <= 4; ls++) {
     if (!keep.has(ls) && ev !== 'flush') specs[ls] = specs[ls].map(() => 'corp');   // FLUSH keeps every rest stop...
     let types = test ? ['corp', 'corp', 'corp'] : shuffle(specs[ls].slice(), r);
@@ -115,7 +122,9 @@ function addSector(nodes, seed, s, force = null) {
     let corps = test === 'all' ? [0, 1, 2].map(j => order[(s * 12 + (ls - 1) * 3 + j) % order.length])
       : test ? [test, test, test] : pickCorps(r, targetLevel(s, ls), 3, boost);
     if (same) corps = [same, same, same];
-    types.forEach((type, lane) => add(base + ls, lane, type, type === 'corp' ? { corp: corps[lane], tier: tierAt(s, ls) } : {}));
+    if (ev === 'gauntlet') types[1] = ls === 3 ? 'shop' : 'corp';
+    if (ev === 'headfirst' && ls === 1) continue;   // HEAD FIRST: row 1 is the boss (below)
+    types.forEach((type, lane) => lanes.includes(lane) && add(base + ls, lane, type, type === 'corp' ? { corp: corps[lane], tier: tierAt(s, ls) } : {}));
   }
   // The event's anomaly on its share of the sector's corps (an exact count, at least 1). CHEF'S CHOICE: any one.
   const E = ev && SECTOR_EVENTS[ev], er = rngFor(seed, 'evtag', s);
@@ -127,28 +136,45 @@ function addSector(nodes, seed, s, force = null) {
   // The sector boss: OMNI in sector 1. After that, a third of the time OMNI, otherwise a LV4-5 corp. It carries the
   // event's anomaly (a sector-wide event: none). The event is kept on it (sectorEvent).
   const fr = rngFor(seed, 'stageboss', s);
+  const bossAt = ev === 'headfirst' ? [base + 1, { head: true }] : [base + 5, {}];   // HEAD FIRST: the boss is the first node
   const bossMod = E && E.kind === 'anomaly' ? { mod: E.anomaly === 'any' ? anyAnomaly() : E.anomaly } : {};
-  if (s === 0 || test || fr() < 1 / 3) add(base + 5, 1, 'final', Object.assign({ corp: 'omni', tier: 3 + s }, bossMod));
+  if (s === 0 || test || fr() < 1 / 3) add(bossAt[0], 1, 'final', Object.assign({ corp: 'omni', tier: 3 + s }, bossMod, bossAt[1]));
   else {
     const hard = Object.keys(CORPS).filter(k => (CORPS[k].level || 1) >= 4).sort();
-    add(base + 5, 1, 'final', Object.assign({ corp: pickR(hard, fr), tier: 3 + s }, bossMod));
+    add(bossAt[0], 1, 'final', Object.assign({ corp: pickR(hard, fr), tier: 3 + s }, bossMod, bossAt[1]));
   }
-  if (ev) nodes[bossIdOf(s)].ev = ev;
-  const start = nodes[`${base}:1`];
-  for (let lane = 0; lane < 3; lane++) start.next.push(`${base + 1}:${lane}`);
-  for (let ls = 1; ls <= 3; ls++) {
-    for (let lane = 0; lane < 3; lane++) {
-      const n = nodes[`${base + ls}:${lane}`];
-      n.next.push(`${base + ls + 1}:${lane}`);
-      for (const d of [-1, 1]) if (lane + d >= 0 && lane + d < 3 && r() < 0.45) n.next.push(`${base + ls + 1}:${lane + d}`);
+  if (ev === 'headfirst') {   // ...and the way out is a black market at the top (leaving it clears the sector)
+    add(base + 5, 1, 'shop', { exit: true });
+  }
+  // EENY MEENY: two more bosses, left and right of the first (LV4-5 corps, all different)
+  if (ev === 'eenymeeny') {
+    const er2 = rngFor(seed, 'eeny', s), used = [nodes[bossIdOf(s)].corp];
+    for (const lane of [0, 2]) {
+      const pool = Object.keys(CORPS).filter(k => (CORPS[k].level || 1) >= 4 && !used.includes(k)).sort(), k = pickR(pool, er2);
+      used.push(k); add(base + 5, lane, 'final', { corp: k, tier: 3 + s });
     }
   }
-  for (let lane = 0; lane < 3; lane++) nodes[`${base + 4}:${lane}`].next.push(`${base + 5}:1`);
+  if (ev) nodes[bossIdOf(s)].ev = ev;   // (the middle boss keeps the event)
+  const starts = Object.values(nodes).filter(n => n.step === base && (n.type === 'start' || n.type === 'final' || n.exit));   // (EENY MEENY: up to 3; HEAD FIRST: its exit market)
+  const firstRow = lanes.filter(lane => nodes[`${base + 1}:${lane}`]);   // (HEAD FIRST: the boss only)
+  for (const start of starts) for (const lane of firstRow) start.next.push(`${base + 1}:${lane}`);
+  for (let ls = 1; ls <= 3; ls++) {
+    for (const lane of lanes) {
+      const n = nodes[`${base + ls}:${lane}`];
+      if (!n) continue;
+      if (n.head) { for (const l2 of lanes) n.next.push(`${base + 2}:${l2}`); continue; }   // HEAD FIRST: the boss opens onto all of row 2
+      n.next.push(`${base + ls + 1}:${lane}`);
+      for (const d of [-1, 1]) if (lane + d >= 0 && lane + d < 3 && r() < 0.45 && ev !== 'rightangles' && ev !== 'gauntlet') n.next.push(`${base + ls + 1}:${lane + d}`);   // (RIGHT ANGLES: no diagonals)
+    }
+  }
+  if (ev === 'eenymeeny') {   // each lane to its boss, and now and then a diagonal to a neighbor's
+    for (const lane of lanes) { const n = nodes[`${base + 4}:${lane}`]; n.next.push(`${base + 5}:${lane}`); for (const d of [-1, 1]) if (lane + d >= 0 && lane + d < 3 && r() < 0.45) n.next.push(`${base + 5}:${lane + d}`); }
+  } else for (const lane of lanes) nodes[`${base + 4}:${lane}`].next.push(`${base + 5}:1`);
   // Sideways links (both ways) between neighbors in a step. Visited nodes can't be
   // entered again, so a sideways link just lets you take one more stop in that step.
   for (let ls = 1; ls <= 4; ls++) {
     for (const lane of [0, 1]) {
-      if (side() >= SIDE_LINK) continue;
+      if (side() >= (ev === 'rightangles' ? 0.6 : SIDE_LINK) || ev === 'gauntlet' || (ev === 'headfirst' && ls === 1)) continue;   // RIGHT ANGLES: more sideways links, so rows still give a choice
       const a = nodes[`${base + ls}:${lane}`], b = nodes[`${base + ls}:${lane + 1}`];
       a.next.push(b.id); b.next.push(a.id);
     }

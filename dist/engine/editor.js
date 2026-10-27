@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.55']);
+NEON_FILES.push(['engine/editor.js', 'v13.60']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -167,11 +167,15 @@ if (EDITOR) {
     for (const [pl, k] of Object.entries(m.assign || {})) { if (!k) delete MUSIC_FOR[pl]; else if (SONGS[k]) MUSIC_FOR[pl] = k; }
   };
   let beatT = 0, lastBeatMsg = '';
-  let lastRestart = 0;
+  let lastRestart = 0, tabPlaying = false, gameMusicOn = save.musicOn, lastSfx = null;   // the game's own music setting, kept while the tab plays
   const musicCtl = m => {
     st.editorMusic = m;
     if (m.restart && m.restart !== lastRestart) { lastRestart = m.restart; setTimeout(() => Music.restart(), 0); }   // the track from the top
-    save.musicOn = !!m.playing; save.musicVol = m.volume != null ? m.volume : 0.8; save.muted = !m.sfx; save.sfxVol = 0.8;
+    // The tab takes the music over only while it plays a track; stopped, the game plays its own (its settings decide).
+    if (m.playing && !tabPlaying) gameMusicOn = save.musicOn;
+    if (m.playing) save.musicOn = true; else if (tabPlaying) save.musicOn = gameMusicOn;
+    tabPlaying = !!m.playing;
+    save.musicVol = m.volume != null ? m.volume : 0.8; if (m.sfx !== lastSfx) { lastSfx = m.sfx; save.muted = !m.sfx; } save.sfxVol = 0.8;   // (sfx: only when the tab's switch changes; the TESTING tab has one too)
     Sound.init(); Sound.levels();
     clearInterval(beatT);
     if (m.playing) beatT = setInterval(() => {
@@ -279,12 +283,15 @@ if (EDITOR) {
     god: () => { st.god = !st.god; },
     debug: () => { st.debug = !st.debug; },
     free: () => { st.freeTravel = !st.freeTravel; st.mapSel = null; },
+    // the game's own music setting (while the music tab plays a track, it comes back when the tab stops) and sound effects
+    music: () => { if (tabPlaying) gameMusicOn = !gameMusicOn; else save.musicOn = !save.musicOn; Sound.init(); Sound.levels(); },
+    sfx: () => { save.muted = !save.muted; Sound.init(); Sound.levels(); if (!save.muted) Sound.ui(); },
     credits: m => { st.run.credits = Math.round(+m.n || 0); },
     int: m => { const n = Math.max(1, Math.round(+m.n || 1)); st.run.maxInt = Math.max(st.run.maxInt, n); st.run.integrity = n; },
     heal: () => { st.run.integrity = st.run.maxInt; },
     event: m => toSector(2, m.key),
     sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),
-    boss: async () => { await onMap(); const n = st.run.map[bossIdOf(st.run.sector)]; await enterNode(n, true); await settle(); },
+    boss: async () => { await onMap(); const n = Object.values(st.run.map).find(x => x.type === 'final' && x.sector === st.run.sector) || st.run.map[bossIdOf(st.run.sector)]; await enterNode(n, true); await settle(); },   // (HEAD FIRST: the boss is the first node)
     clear: async () => { await onMap(); const run = st.run, b = bossIdOf(run.sector); run.at = b; if (!run.visited.includes(b)) run.visited.push(b); await sectorClear(false); await settle(); },
     uplink: async () => { await TEST.clear(); await swapTo(openUplink); await settle(); },
     anomaly: async m => {   // on the corps you can go to next
@@ -316,6 +323,7 @@ if (EDITOR) {
   setInterval(() => {
     const run = st.run && !st.run.ended ? st.run : null, ev = run ? sectorEvent(run.sector) : null;
     const m = { type: 'test-state', run: !!run, god: !!st.god, debug: !!st.debug, free: !!st.freeTravel, mode: st.mode,
+      music: tabPlaying ? !!gameMusicOn : !!save.musicOn, sfx: !save.muted, tabMusic: tabPlaying,
       credits: run ? run.credits : 0, int: run ? run.integrity : 0, maxInt: run ? run.maxInt : 0, sector: run ? run.sector + 1 : 0,
       event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0 };
     const s = JSON.stringify(m);

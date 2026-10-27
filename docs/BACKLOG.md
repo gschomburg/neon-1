@@ -54,10 +54,9 @@ unlocked by REP, and some quests unlock REP.
 - **Still open:** the user's art for the 14 card pictures (5 x 3 placeholders
   in data/events.js); a THREAT level later; a REP option to turn events on in sector 1; tying the sector boss to the
   event (parked).
-- **More event ideas:** BLACK ICE (a hit can take all your integrity but 1; or its own node type); an extra layer;
-  every corp a boss, or 2 bosses; the sector flipped (boss first); money / mod drains (TAXED, AUDITED, RANSOM);
-  BACKWARDS (the corp mirrored, taps too); two events stacked; trap types and a trace meter (misses raise an alarm;
-  at max the boss comes early). Details: CORPS.md "Corp modifiers".
+- **Next batch (the user, 2026-10-27)** (docs/SECTOR_EVENTS.md "The next batch"): built v13.58: GRIND, BLACK ICE + COLD SNAP,
+  RIGHT ANGLES, GAUNTLET; v13.59: EENY MEENY (3 bosses); v13.60: HEAD FIRST. Idea: ICE STORM.
+- **Other ideas (Claude's):** TAXED, AUDITED, RANSOM, BACKWARDS, a trace meter, two events stacked.
 
 ### 4. Enemy and ally hackers (about 10% there: RIVAL)
 - RIVAL is a bot second player (health, burns ICE, steals pay). Not built: the named cast, each with a logo (beat
@@ -126,6 +125,7 @@ unlocked by REP, and some quests unlock REP.
 - Something in the game itself you can hack, like the seed.
 
 ## Medium and small
+- **BLOOD MONEY scaling** (the user, 2026-10-27): its hit cost in credits should scale like the rest of the economy (ECONOMY tab), though credits have no cap the way INT does. And new things that rewrite INT need a BLOOD MONEY rule: BLACK ICE (down to 1 INT) would cost the credits for that many hits.
 - **Boss rewards by difficulty:** a corp's boss mod should match how hard it is (a pass over all 78 corps; settles
   weak ones like EZPASS). With it: show corp difficulty in game (`DIFF ###--`), the tell balance pass
   (`tools/tell_odds.js`).

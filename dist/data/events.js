@@ -1,7 +1,7 @@
 // NeoN+1 data/events.js: anomalies (a tag on one corp) and sector events (what each sector rolls).
 // The design: docs/SECTOR_EVENTS.md. Sector 1 has no event; every sector after rolls one (seeded, no repeats).
 'use strict';
-NEON_FILES.push(['data/events.js', 'v13.55']);
+NEON_FILES.push(['data/events.js', 'v13.60']);
 
 // Anomalies: a tag on a corp node on the map. It changes how that corp plays. tag: the mark next to the node.
 const ANOMALIES = {
@@ -13,6 +13,7 @@ const ANOMALIES = {
   armored:  { name: 'ARMORED',  tag: '#', desc: 'hits point at the real.' },
   rival:    { name: 'RIVAL',    tag: 'V', desc: 'a rival races you for it.' },
   blinders: { name: 'BLINDERS', tag: '*', desc: 'you find out when you get in.' },
+  blackice: { name: 'BLACK ICE', tag: 'B', desc: 'some ICE drops you to 1 INT.' },
 };
 
 // Sector events. kind 'anomaly': puts its anomaly on a share of the sector's corps (an exact count) and on the
@@ -48,6 +49,9 @@ const SECTOR_EVENTS = {
   chef:        { name: "CHEF'S CHOICE", kind: 'anomaly', anomaly: 'any', share: 0.5,
     art: [' ___ ', '(___)', ' |#| '],
     lines: ['a little of everything:', '{pct} of the corps here get', 'a random anomaly.'] },
+  coldsnap:    { name: 'COLD SNAP', kind: 'anomaly', anomaly: 'blackice', share: 0.4,
+    art: ['\\ | /', '- * -', '/ | \\'],
+    lines: ["don't slip. {pct} of the", 'corps here have black ICE:', 'a hit drops you to 1 INT.', 'it never takes the last one.'] },
   copypaste:   { name: 'COPY PASTE', kind: 'sector',
     art: ['A1 A1', ' A1  ', 'A1 A1'],
     lines: ['every corp in this sector', 'is the same corp.', 'learn it once.'] },
@@ -60,6 +64,21 @@ const SECTOR_EVENTS = {
   timeismoney: { name: 'TIME IS MONEY', kind: 'sector',
     art: [' _$_ ', '(1:0)', ' --- '],
     lines: ['every clock in this sector', 'costs you {cr}cr a second.', 'timed corps come up more.'] },
+  grind:       { name: 'GRIND', kind: 'sector',
+    art: ['@=@=@', '=@=@=', '@=@=@'],
+    lines: ['are we there yet?', 'every corp in this sector', 'has one more layer.', 'more layers, more pay.'] },
+  rightangles: { name: 'RIGHT ANGLES', kind: 'sector',
+    art: ['|    ', '|    ', '+----'],
+    lines: ['right angles only.', 'no diagonal links here:', 'up, or sideways.', 'TUNNEL and MESH help.'] },
+  gauntlet:    { name: 'GAUNTLET', kind: 'sector',
+    art: ['  |  ', '  |  ', '  |  '],
+    lines: ['one way through.', 'no choices. one market.', 'good luck.'] },
+  eenymeeny:   { name: 'EENY MEENY', kind: 'sector',
+    art: ['! ! !', '| | |', '\\ | /'],
+    lines: ['eeny, meeny, miny, mo.', 'three sector bosses.', 'your path picks one.', 'the other two walk.'] },
+  headfirst:   { name: 'HEAD FIRST', kind: 'sector',
+    art: ['__o  ', '   \\ ', '~~~~~'],
+    lines: ['no diving.', 'the sector boss is the', 'first thing here; its', 'spoils come right away.', 'the way out: a market.'] },
   deadair:     { name: 'DEAD AIR', kind: 'sector', weight: 0.3,
     art: ['     ', ' ... ', '     '],
     lines: ['quiet sector.', 'enjoy it.'] },

@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.55']);
+NEON_FILES.push(['engine/run.js', 'v13.60']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -121,7 +121,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
   }
   const t = node.tier;
   const counts = node.type === 'start' ? [1] : st.run.tutorial && node.id === TUT.corpNode ? TUT.counts.slice()
-    : Array.from({ length: CONFIG.corpLayers }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
+    : Array.from({ length: CONFIG.corpLayers + (sectorEvent(node.sector || 0) === 'grind' ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
   const sector = node.sector || 0;
   // OMNI borrows a tell, a new one each sector
   let tell = node.type === 'final' && node.corp === 'omni' && !def.copied ? ((node.sector || 0) === 0 ? st.run.finalTell : pickR(['corner', 'mark', 'mirror'], rngFor(st.run.seed, 'final', node.sector))) : def.tell;
@@ -258,6 +258,10 @@ async function enterLayer() {
   if (c.mod === 'branded' && n > 2) {   // BRANDED: about a third of the ICE wear the sigil
     const ice = shuffle(lv.tiles.filter(t => !t.safe && !t.loaded), rngFor(run.seed, 'brand', c.node.id, c.idx));
     for (const t of ice.slice(0, Math.max(1, Math.round(ice.length / 3)))) { t.marked = true; t.brand = true; }
+  }
+  if (c.mod === 'blackice' && n > 1) {   // BLACK ICE: about a quarter of the ICE (at least 1); no tell
+    const ice = shuffle(lv.tiles.filter(t => !t.safe && !t.loaded), rngFor(run.seed, 'blackice', c.node.id, c.idx));
+    for (const t of ice.slice(0, Math.max(1, Math.round(ice.length / 4)))) t.black = true;
   }
   if (has('dejavu') && c.hasBoss && c.idx === 0 && n > 1 && run.lastReal && run.lastReal.col < lv.cols && run.lastReal.row < lv.rows) {
     const real = lv.tiles[lv.safe], cell = run.lastReal.row * lv.cols + run.lastReal.col, other = lv.tiles.find(t => t.cell === cell);
@@ -748,6 +752,11 @@ async function onSafe(t) {
     else if (!c.bossSkipped) run.mods.push(...c.stolen.reverse());
     c.stolen = [];
   }
+  if (c.node.type === 'final' && c.node.head) {   // HEAD FIRST: its spoils now, then the rest of the sector
+    if (c.bossSkipped) { saveRun(); return swapTo(() => toMap()); }
+    run.pending = { kind: 'omni', from: c.sector }; saveRun();
+    return openOmniReward(c.sector);
+  }
   if (c.node.type === 'final') return sectorClear(!!c.bossSkipped);
   run.pending = { kind: 'reward', id: c.node.id, skipped: !!c.bossSkipped };
   saveRun();
@@ -1205,6 +1214,12 @@ async function failsafeBeat(lv) {
   modFired('failsafe');
   setMsg(bloodMoney() ? '> FAILSAFE: you live. broke.' : '> FAILSAFE: held at 1 integrity.', C.accent);
 }
+// BLACK ICE: a hit you feel. A big burst off the node, a long red flash, a hard shake.
+function blackIceFx(t, i) {
+  const { x, y } = tileCenter(t);
+  explode(snapshot(cl => cl.own === 't' + i), x, y, { col: C.danger, power: 1.8 });
+  Sound.shatter(); flash(C.danger, 0.55, 1.1); shake(16, 0.8);
+}
 // Queue a line for after the hit (see onTrap): a mod saying what it just showed you.
 // fn(now) runs as the line shows (that's when the change appears on the node).
 const callout = (key, text, fn) => (st.lv.callouts = st.lv.callouts || []).push({ key, text, fn });
@@ -1217,7 +1232,7 @@ function blockHit(t, i) {
   const run = st.run, lv = st.lv;
   let msg;
   if (zombie() && !st.god) {
-    addRot(ROT.ice);
+    addRot(ROT.ice * (t.black ? 2 : 1));   // (BLACK ICE: twice the rot)
     Sound.shatter(); shake(4);
     msg = run.integrity > 0 ? `> ICE broken. rot +${ROT.ice}.` : '> ICE broken. you fall apart.';
   } else if (st.god) {
@@ -1310,10 +1325,13 @@ function blockHit(t, i) {
     shake(4);
     msg = '> ICE. firewall absorbed it.';
   } else {
-    const raw = st.corp.hasBoss && st.corp.def.hitDmg ? Math.max(lv.dmg, st.corp.def.hitDmg(t, lv)) : lv.dmg;   // GRIDLOCK: red hits for 2
+    let raw = st.corp.hasBoss && st.corp.def.hitDmg ? Math.max(lv.dmg, st.corp.def.hitDmg(t, lv)) : lv.dmg;   // GRIDLOCK: red hits for 2
+    if (t.black) raw = Math.max(0, run.integrity - 1);   // BLACK ICE: down to 1 INT, never below (BLOOD MONEY: that many hits)
     const dmg = has('grounded') && raw >= 2 ? raw - 1 : raw;   // GROUNDED
     if (dmg < raw) modFired('grounded');
+    if (t.black) blackIceFx(t, i);
     if (bloodMoney()) {   // BLOOD MONEY: the hit costs credits
+      if (!dmg) return '> BLACK ICE. nothing left to take.';
       const cost = payBlood(dmg);
       Sound.trap(); shake(9); flash(C.money, 0.18, 0.35);
       msg = run.integrity > 0 ? `> ICE. -${cost}cr. blood money.` : '> ICE. you can\x27t pay.';
@@ -1323,7 +1341,8 @@ function blockHit(t, i) {
     Sound.trap();
     shake(9);
     flash(C.danger, 0.18, 0.35);
-    msg = run.integrity > 0 ? `> ICE. integrity -${dmg}.` : '> ICE. integrity gone.';
+    msg = t.black ? (dmg ? `> BLACK ICE. down to ${run.integrity}.` : '> BLACK ICE. nothing left to take.')
+      : run.integrity > 0 ? `> ICE. integrity -${dmg}.` : '> ICE. integrity gone.';
     // FAILSAFE: a killing hit (once, then it recharges each stage / legendary each corp) leaves you at 1 (failsafeBeat plays it out: the HUD
     // shows 0 until st.fsAt + FAILSAFE_BEAT, then the save)
     if (run.integrity <= 0 && has('failsafe') && !run.failsafeUsed) {
@@ -1644,7 +1663,7 @@ async function pushOn() {
   st.result = null;
   // Beat OMNI (not skipped): its boss reward first, then the map climbs from the old
   // sector to the new one. Cashing out skips it (the run ends anyway).
-  if (skipped) { run.pending = null; return swapTo(() => toMap(old)); }
+  if (skipped || sectorEvent(old) === 'headfirst') { run.pending = null; return swapTo(() => toMap(old)); }   // (HEAD FIRST: its spoils came first)
   run.pending = { kind: 'omni', from: old };
   saveRun();
   await swapTo(() => openOmniReward(old));

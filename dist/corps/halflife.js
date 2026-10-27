@@ -1,6 +1,6 @@
 // NeoN+1 corps/halflife.js
 'use strict';
-NEON_FILES.push(['corps/halflife.js', 'v13.55']);
+NEON_FILES.push(['corps/halflife.js', 'v13.60']);
 // Its boss mod: LEAD LINING (leadlining), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

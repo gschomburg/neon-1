@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.55']);
+NEON_FILES.push(['engine/scene.js', 'v13.60']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -807,7 +807,7 @@ function drawBox(ctx, y, ln) {
 // x for a node; start / final nodes sit in the middle lane.
 const mapX = n => {
   const mid = Math.floor(L.wc / 2);
-  return n.type === 'start' || n.type === 'final' ? mid : mid + (n.lane - 1) * 11;
+  return n.type === 'start' || (n.type === 'final' && n.lane === 1) ? mid : mid + (n.lane - 1) * 11;   // (EENY MEENY's other bosses: in their lanes)
 };
 
 // Rows of the whole map (top = the newest OMNI), and a node's row in it.
@@ -978,7 +978,7 @@ function nodeInfo(n) {
     { const off = modsOffIn(d); if (off.length) T(`off here: ${off.map(k => MODS[k].name.toLowerCase()).join(', ')}.`, C.dangerDim); }   // e.g. COIN FLIP in a drag corp
     return { lines, action: 'B R E A C H' };
   }
-  if (n.type === 'shop') { T('BLACK MARKET', C.money); T('gear and mods for credits.'); }
+  if (n.type === 'shop') { T('BLACK MARKET', C.money); T('gear and mods for credits.'); if (n.exit) T('the way out: leave it and the sector is clear.', C.accent); }
   if (n.type === 'cache') { T('DATA CACHE', C.money); T('loot, then pick a mod.'); }
   if (n.type === 'repair') { T('SAFEHOUSE', C.accent); T(`heal ${CONFIG.repairAmount}, then pick a mod.`); }
   if (n.type === 'fence') { const k = (st.run.fence || []).length; T('THE FENCE', C.money); T(k ? `${k} stolen mod${k > 1 ? 's' : ''} for sale. yours.` : 'stolen mods end up here.'); T('then on to the sector boss.', C.dim); }

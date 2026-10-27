@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.55']);
+NEON_FILES.push(['engine/panels.js', 'v13.60']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -252,7 +252,7 @@ function openShop(node) {
     X({ gap: 1, row: [
       { text: left > 0 ? `[ REROLL ${rp}cr ]` : '[ REROLLED ]', id: 'reroll', onTap: reroll, disabled: left <= 0 || !canSpend(rp) },
       { text: '[ SELL ]', id: 'sellv', onTap: () => { view = 'sell'; sellSel = 0; Sound.ui(); }, disabled: !run.items.length },
-      { text: '[ LEAVE ]', id: 'leave', onTap: leavePanel },
+      { text: node.exit ? '[ JACK OUT ]' : '[ LEAVE ]', id: 'leave', onTap: node.exit ? () => { if (!st.transitioning) swapTo(() => sectorClear(false)); } : leavePanel },   // HEAD FIRST's exit market: the sector is clear
     ] });
   }, '> the market is open.');
 }

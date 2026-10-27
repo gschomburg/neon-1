@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v13.55']);
+NEON_FILES.push(['engine/boot.js', 'v13.60']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -8,7 +8,7 @@ NEON_FILES.push(['engine/boot.js', 'v13.55']);
 function musicState() {
   const s = gameMusicState(), m = EDITOR && st.editorMusic;
   if (!m) return s;
-  if (!m.playing) return Object.assign(s, { song: 'none' });
+  if (!m.playing) return s;   // the tab isn't playing: the game's own music (if its settings have music on)
   const song = m.key && SONGS[m.key] ? m.key : s.song, level = m.level != null ? m.level : s.level;
   const urgency = m.urgency || s.urgency, tr = SONGS[song];
   return Object.assign(s, { song, level, urgency, low: !!m.low || s.low,
