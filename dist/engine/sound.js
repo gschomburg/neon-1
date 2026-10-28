@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v13.71']);
+NEON_FILES.push(['engine/sound.js', 'v13.73']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -290,6 +290,8 @@ const Sound = (() => {
       noise(0.6, { vol: 0.18, freq: 9000, delay: 0.62 });
     },
     burst: () => { noise(0.25, { vol: 0.22, freq: 6000 + Math.random() * 3000 }); tone(1200 + Math.random() * 1200, 0.08, { type: 'triangle', vol: 0.18 }); },
+    // gear dragged to the TRASH: a crunch and a thunk
+    trash: () => { noise(0.2, { vol: 0.5, freq: 1400, to: 300 }); tone(180, 0.14, { type: 'square', vol: 0.3, slide: 0.5, delay: 0.05 }); },
     // ---- Fishing (engine/fishing.js)
     // the cast: the line whizzing out and the hook falling (it lands with fishPlop)
     fishCast: () => {

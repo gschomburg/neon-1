@@ -5,16 +5,21 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v13.71']);
+NEON_FILES.push(['engine/fishing.js', 'v13.73']);
 
 const FISH_LANES = 7;
-const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish);
+const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
+// What KEEP puts in your gear: a catch becomes the PHISH of its rarity (so they stack); gear and shoes stay themselves
+const fishKeepKey = out => out.kind === 'fish' && ITEMS['phish_' + out.rarity] ? 'phish_' + out.rarity : out.key;
 const FISH_RARITY = ['scrap', 'common', 'rare', 'epic', 'legendary'];
 // Shapes: most are little <>< ones. A few are bigger, and only FISH_BIG_MAX big ones swim at once (the user, v13.70).
 // The big ones lean rare: every epic or legendary fish is big (a hint, not a promise: some big ones are junk).
 // They swim left: the head is the left end. Everything in a lane moves at that lane's speed (some lanes run faster).
 const FISH_LOOKS = { small: ['<><', '<><', "<'><"], mid: ["<')><", "<'))><"], big: ["<')))><", "<'))))><"] };
 const FISH_BIG_MAX = 3;
+// Lanes run both ways (random each visit). A fish going right is drawn mirrored (<')>< becomes ><('>), head first.
+const fishMirror = t => [...t].reverse().map(c => ({ '<': '>', '>': '<', '(': ')', ')': '(' })[c] || c).join('');
+const fishHead = s => s.dir > 0 ? s.x + s.look.length - 1 : s.x;   // the head's column (it noses the hook)
 // The PIER's music: one of these at random each visit, level 3 while you reel (engine/boot.js)
 const FISH_TRACKS = ['lowpressure', 'plusone', 'sealegs'];
 const fishCost = () => costInt(ECON.fish.cast);
@@ -34,6 +39,7 @@ function openPier(node) {
   st.fish = {
     node, r, t: performance.now(), hook: null, hold: false, reel: null, card: null, shapes: [], spawnAt: 0,
     lanes: Array.from({ length: FISH_LANES }, () => 0.6 + r() * 1.1),   // some lanes run faster (random, not by depth)
+    dirs: Array.from({ length: FISH_LANES }, () => Math.random() < 0.5 ? -1 : 1),   // and some run the other way (-1 left, 1 right)
     track: pickR(FISH_TRACKS.filter(k => SONGS[k]), Math.random) || null,
   };
   showBoard('fish');
@@ -94,6 +100,7 @@ function fishPointer(kind, e) {
       if (!canSpend(cost)) { Sound.deny(); setMsg(`> a cast is ${cost}cr.`, C.danger); return true; }
       st.run.credits -= cost;
       st.run.pierCasts[f.node.id] = fishCasts() + 1;
+      tally('casts');   // THE RECORD (CAST AWAY)
       // the cast: the hook drops straight to the lane you tapped (then hold and drag to move it)
       f.hook = { x: L.wc * 0.42, y: fishGeo().surface, lane: fishLaneAt(y), bite: null, drop: true, row: null };
       Sound.fishCast();
@@ -115,7 +122,10 @@ function fishReelIn() {
 function fishStartReel() {
   const f = st.fish, s = f.hook.bite;
   s.hooked = true;
-  f.reel = { s, catch: 0.35, win: 0.45, winV: 0, mark: 0.5, w: { scrap: 0.34, common: 0.3, rare: 0.24, epic: 0.2, legendary: 0.16 }[s.out.rarity] || 0.28 };
+  // it starts where the fish was: the @ on the fish, the target centered on it (your eyes are already there)
+  const w = { scrap: 0.34, common: 0.3, rare: 0.24, epic: 0.2, legendary: 0.16 }[s.out.rarity] || 0.28, bw = L.wc - 6;
+  const mark = clamp((fishHead(s) - 4) / (bw - 3), 0, 1);
+  f.reel = { s, catch: 0.35, win: clamp(mark - w / 2, 0, 1 - w), winV: 0, mark, w };
   f.hold = false;
   Sound.fishBite(); Sound.fishReelIn();
   setMsg('> HOOKED. hold to pull it in.', C.money);
@@ -131,12 +141,13 @@ function fishTick(now) {
   // (everything in a lane moves at the lane's speed, so nothing catches up; a new one waits for room)
   if (now > f.spawnAt) {
     f.spawnAt = now + 650 + f.r() * 1000;
-    const lane = Math.floor(f.r() * FISH_LANES), out = fishOutcome(f.r), { size, look } = fishLookFor(out, f);
-    const room = f.shapes.every(s => s.lane !== lane || s.x + s.look.length + 4 < L.wc + 1);
-    if (room) f.shapes.push({ lane, x: L.wc + 1, out, look, size, spd: 3 * f.lanes[lane], nosed: false });
+    const lane = Math.floor(f.r() * FISH_LANES), out = fishOutcome(f.r), lk = fishLookFor(out, f), dir = f.dirs[lane];
+    const look = dir > 0 ? fishMirror(lk.look) : lk.look, x0 = dir > 0 ? -look.length - 1 : L.wc + 1;
+    const room = f.shapes.every(s => s.lane !== lane || (dir > 0 ? s.x > x0 + look.length + 4 : s.x + s.look.length + 4 < x0));
+    if (room) f.shapes.push({ lane, x: x0, dir, out, look, size: lk.size, spd: 3 * f.lanes[lane], nosed: false });
   }
-  for (const s of f.shapes) if (!s.hooked && !(f.hook && f.hook.bite === s)) s.x -= s.spd * dt * (s.flee ? 2.5 : 1);
-  f.shapes = f.shapes.filter(s => s.x > -12 || s.hooked);
+  for (const s of f.shapes) if (!s.hooked && !(f.hook && f.hook.bite === s)) s.x += s.dir * s.spd * dt * (s.flee ? 2.5 : 1);
+  f.shapes = f.shapes.filter(s => s.hooked || (s.dir > 0 ? s.x < L.wc + 12 : s.x > -12));
   // the hook: drifts left and right; held, it sinks (or rises) to the lane under your finger
   const hk = f.hook;
   if (hk && !f.reel) {
@@ -156,9 +167,9 @@ function fishTick(now) {
     } else if (inLane) {
       for (const s of f.shapes) {
         if (s.lane !== hk.lane || s.nosed || s.flee) continue;
-        if (Math.abs(s.x - hk.x) < 1) {
+        if (Math.abs(fishHead(s) - hk.x) < 1) {
           s.nosed = true;
-          if (f.r() < 0.5) { s.at = now; hk.bite = s; s.x = hk.x; Sound.fishBite(); setMsg('> BITE! TAP THE STREAM!', C.danger); }
+          if (f.r() < 0.5) { s.at = now; hk.bite = s; s.x += hk.x - fishHead(s); Sound.fishBite(); setMsg('> BITE! TAP THE STREAM!', C.danger); }
           else setMsg("> something's curious...", C.mid);
           break;
         }
@@ -188,10 +199,10 @@ function fishCaught() {
   f.reel = null; f.hook = null;
   // its size (made up): phish by their kind's range in KB; a shoe gets a weight
   const kb = out.kind === 'fish' ? fishKB(out.key, Math.random) : null, lb = out.kind === 'shoe' ? 0.9 + Math.random() * 1.6 : null;
-  const record = out.kind === 'fish' && kb > statOf('phishKB');
+  const record = out.kind === 'fish' && counting() && kb > statOf('phishKB');   // (practice runs, e.g. the editor's jumps, don't keep records: no BIGGEST YET there)
   f.card = { out, look: s.look, kb, lb, record, t0: performance.now() };
   markSeen(out.key);
-  if (out.kind === 'fish') { tally('fish'); if (out.rarity === 'legendary') tally('fishLeg'); best('phishKB', kb); }
+  if (out.kind === 'fish') { tally('fish'); if (out.rarity === 'legendary') tally('fishLeg'); best('phishKB', kb); if (kb >= 10 * 1048576) tally('phishBig'); }   // (BIG DATA: 10 GB+)
   if (out.kind === 'shoe') tally('fishShoe');
   fishFanfare(out, fishGeo().top + 3);
   setMsg(out.kind === 'fish' ? `> phished: ${fmtKB(kb)}.` : out.kind === 'shoe' ? "> ...it's a shoe." : '> just gear.', C.money);
@@ -217,9 +228,10 @@ function fishFanfare(out, y) {
 function fishKeep() {
   const f = st.fish, out = f && f.card && f.card.out;
   if (!out) return;
-  if (!itemRoom(out.key, out.tier)) return Sound.deny();
-  addItem(out.key, out.tier);
-  Sound.buy(); setMsg(`> ${ITEMS[out.key].name.toLowerCase()} in your gear.`, C.accent);
+  const key = fishKeepKey(out);
+  if (!itemRoom(key, out.tier)) return Sound.deny();
+  addItem(key, out.tier);
+  Sound.buy(); setMsg(`> ${ITEMS[key].name.toLowerCase()} in your gear.`, C.accent);
   f.card = null;
 }
 function fishThrowBack() { const f = st.fish; if (!f || !f.card) return; f.card = null; Sound.tick(); setMsg('> back in the stream.', C.mid); }
@@ -236,7 +248,7 @@ function buildFish(ctx) {
   for (let i = 0; i < FISH_LANES; i++) {
     if (quiet && !(rl && i === rl.s.lane)) continue;   // reeling (or the card is up): the other lanes go still (they fade back)
     const y = g.laneY(i), off = Math.floor(now / (220 / f.lanes[i])) % 4;
-    put(0, y, [...Array(W)].map((_, k) => (k + off) % 4 === 0 ? '.' : ' ').join(''), C.dim, 'board');
+    put(0, y, [...Array(W)].map((_, k) => (((k - f.dirs[i] * off) % 4) + 4) % 4 === 0 ? '.' : ' ').join(''), C.dim, 'board');   // (the dots flow the lane's way)
   }
   // the shapes (all the same color: you can't tell what they are; red when one bites)
   // (the one on the hook is drawn alone: the others in its lane slip under it)
@@ -317,9 +329,9 @@ function buildFish(ctx) {
     put(x0 + 2 + it.name.length + 2, y0 + 3, RARITY[it.rarity].label, C.mid, 'hud');
     wrapText(it.info || it.desc || '', w - 4).slice(0, 3).forEach((ln, i) => put(x0 + 2, y0 + 5 + i, ln, C.text, 'hud'));
     if (out.kind === 'fish') put(x0 + 2, y0 + 8, `a black market buys it: ${fishWorth(out.key)}cr`, C.money, 'hud');
-    const room = itemRoom(out.key, out.tier);
+    const room = itemRoom(fishKeepKey(out), out.tier);
     const kx = x0 + 2, tx = x0 + w - 16;
-    if (!room) put(kx, y0 + 9, 'gear slots full', C.dangerDim, 'hud');
+    if (!room) put(kx, y0 + 9, 'slots full: drag gear to the trash', C.dangerDim, 'hud');
     bg(kx, y0 + 10, 8, room ? C.accent : C.dim, 1); put(kx, y0 + 10, '[ KEEP ]', C.bg, 'hud', true);
     if (room) addHit(kx, y0 + 10, 8, 1, { kind: 'btn', id: 'fkeep', onTap: fishKeep });
     bg(tx, y0 + 10, 14, C.danger, 1); put(tx, y0 + 10, '[ THROW BACK ]', C.bg, 'hud', true);

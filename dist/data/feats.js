@@ -20,7 +20,7 @@
 //   once-offs (counted when they happen):  diedFirst (died in your first corp)  nakedSector (cleared a sector with no
 //   mods)  bossAt1 (beat a boss layer at 1 INT)  easyCome (earned 1000cr in a run and ended it with under 10)
 'use strict';
-NEON_FILES.push(['data/feats.js', 'v13.71']);
+NEON_FILES.push(['data/feats.js', 'v13.73']);
 
 const FEATS = [
   // ---- the basics: runs
@@ -86,6 +86,10 @@ const FEATS = [
     say: "a legendary catch. nobody's going to believe you." },
   { id: 'fishshoe', name: 'OLD BOOT', group: 'odd', text: 'catch a shoe.', stat: 'fishShoe', n: 1,
     say: "you caught a shoe. it's wet. it's a shoe." },
+  { id: 'castaway', name: 'CAST AWAY', group: 'odd', text: 'cast 250 times.', stat: 'casts', n: 250, title: 'CAST AWAY',
+    say: 'two hundred and fifty casts. do you even remember what a corp looks like?' },
+  { id: 'bigdata', name: 'BIG DATA', group: 'odd', text: 'land a catch of 10 GB or more.', stat: 'phishBig', n: 1,
+    say: "ten gigs off one hook. somebody's IT department is crying." },
   { id: 'petpet', name: 'GOOD PET', group: 'odd', text: 'pet your pet 50 times.', stat: 'pets', n: 50, title: 'PET PERSON',
     say: "fifty pets. it's the only thing on the net that likes you." },
   { id: 'gearhead', name: 'GEARHEAD', group: 'odd', text: 'use 100 gear.', stat: 'gear', n: 100,

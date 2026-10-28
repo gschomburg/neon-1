@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v13.71']);
+NEON_FILES.push(['engine/menus.js', 'v13.73']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -117,7 +117,7 @@ function boardStatRows() {
     ['deepest layer', statOf('bestDepth')], ['sectors cleared', statOf('sectors')], ['most sectors in a run', statOf('bestSectors')],
     ['ICE hits', statOf('ice')], ['credits earned', statOf('earned')], ['most credits held', statOf('bestHeld')],
     ['most spent in a run', statOf('bestSpent')], ['REP banked', statOf('repBanked')], ['gear used', statOf('gear')],
-    ['ads closed', statOf('ads')], ['phish landed', statOf('fish')], ['biggest catch', statOf('phishKB') ? fmtKB(statOf('phishKB')) : '-'],
+    ['ads closed', statOf('ads')], ['casts', statOf('casts')], ['phish landed', statOf('fish')], ['biggest catch', statOf('phishKB') ? fmtKB(statOf('phishKB')) : '-'],
     ['rivals beaten', HK_RIVALS.reduce((a, id) => a + statOf('hack:beat:' + id), 0)], ['crew called', HK_CREW.reduce((a, id) => a + statOf('hack:call:' + id), 0)], ['feats', `${done}/${featsShown().length}`],
   ];
 }

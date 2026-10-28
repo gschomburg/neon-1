@@ -170,8 +170,8 @@ unlocked by REP, and some quests unlock REP.
       white, or matching the target's cyan; when it's on the target it changes (white or something else). The target design is good.
     - (built v13.71) After a catch, keep the stream dimmed behind the CAUGHT card until you KEEP or THROW BACK.
     - (built v13.71) Terminal: the cast message, then once you drag it changes to "drag up and down to move the hook" (it only moves up and down).
-    - You can get health (INT) back from fishing.
-    - A title, CAST AWAY: spend 60 minutes fishing (a time stat).
+    - (dropped, the user 2026-10-28) INT back from fishing: a PATCH can already come up on the line, which does the same.
+    - (built v13.72) CAST AWAY: a title for casting 250 times (not 60 minutes); BIG DATA for a 10 GB+ catch; the biggest catch is a stat.
     - Mods or gear that affect fishing? (a note for now, the user 2026-10-28; the first notes said no fishing upgrades)
     - (built v13.71) **PHISHING retheme:** what you catch is corp data, not fish: corp passwords, elderly social security numbers, corpo
       credentials, blackmail material. Gear still comes up, but the catches get a little description of what info you got.
@@ -208,6 +208,15 @@ unlocked by REP, and some quests unlock REP.
 - Something in the game itself you can hack, like the seed.
 
 ## Medium and small
+- **UI feedback on the recent updates (built v13.73)** (the user, meat notes 2026-10-28):
+  - **Sector event line on the map:** with a sector event on, its text overlaps the top of the map (sector 1 is fine: its boss is
+    in the center). Bump the whole sector line up one, right under the terminal.
+  - **Gear in the black market:** the gear bar is in its disabled look there; show the rarity colors anyway, so you can see
+    what level your PURGE etc. is.
+  - **The SELL list** shows each row's type tag (gear) like the buy list, the same look.
+  - **BUY / SELL as two modes of one screen** (not SELL as a screen deeper in with BACK): the buy view's nav is SELL and
+    LEAVE stacked (LEAVE always at the bottom, the same spot on both); REROLL becomes an item in the list (like REPAIR); the
+    sell view has the list, the SELL button, and BUY + LEAVE.
 - **BLOOD MONEY scaling** (the user, 2026-10-27): its hit cost in credits should scale like the rest of the economy (ECONOMY tab), though credits have no cap the way INT does. And new things that rewrite INT need a BLOOD MONEY rule: BLACK ICE (down to 1 INT) would cost the credits for that many hits.
 - **Boss rewards by difficulty:** a corp's boss mod should match how hard it is (a pass over all 78 corps; settles
   weak ones like EZPASS). The user's read of the corp mods (2026-10-27): all fine; none too strong low or too weak
@@ -227,6 +236,9 @@ unlocked by REP, and some quests unlock REP.
 - **Faces in the art catalog** (POPS's face and the coming NPCs, with the asXii round trip).
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 - **Going public:** drop the page's `noindex`; maybe the game's own domain.
+- **Tidy dist/** (the user, meat notes 2026-10-28): pack things into folders more; the palettes (palettes.js, palettes_v1.js) go in data/ instead of the root.
+- **A taller leaderboard screen** (the user, meat notes 2026-10-28).
+- **Dropping gear (built v13.72: drag to the TRASH)** (the user, meat notes 2026-10-28): a way to throw gear away. Drag and drop in the layer? Or a trash that appears and you drag it there?
 
 ## Parked passes (later, when the user says)
 - **INTRO PASS:** after the user has lived with it. The intro keeps playing every time; the NEWB / LEET screen only on

@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.71']);
+NEON_FILES.push(['data/mods.js', 'v13.73']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -168,6 +168,18 @@ const ITEMS = {
     info: "the master keys to a whole corp network. somebody's getting fired.",
     desc: "the master keys to a whole corp network. somebody's getting fired. a black market buys it.", tip: 'stolen data: sell it.',
     codex: "the master keys to a whole corp network. somebody's getting fired. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+  // PHISH in your gear: kept, any catch becomes the PHISH of its rarity (they stack; the catch names are flavor).
+  // bag: true = not a catch (FISH_KEYS skips them; the codex too).
+  phish_scrap: { key: 'phish_scrap', name: 'PHISH', price: 0, rarity: 'scrap', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
+  phish_common: { key: 'phish_common', name: 'PHISH', price: 0, rarity: 'common', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
+  phish_rare: { key: 'phish_rare', name: 'PHISH', price: 0, rarity: 'rare', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
+  phish_epic: { key: 'phish_epic', name: 'PHISH', price: 0, rarity: 'epic', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
+  phish_legendary: { key: 'phish_legendary', name: 'PHISH', price: 0, rarity: 'legendary', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
 };
 const ITEM_WHERE = 'market, $ nodes, caches.';
 

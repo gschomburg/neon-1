@@ -6,7 +6,7 @@
 // Each look is 2 lines (it can overlap the lines above and below). Walking and dancing have 2 frames. They face right;
 // facing left they're mirrored ( ) / \ < > swapped). Hand edits are fine: keep each line about 8 wide.
 'use strict';
-NEON_FILES.push(['data/pets.js', 'v13.71']);
+NEON_FILES.push(['data/pets.js', 'v13.73']);
 
 const PET_NAMES = ['BYTE', 'CHIP', 'NIBBLE', 'PIXEL', 'BITSY', 'PING', 'GIGA', 'SOCKET', 'DOT', 'MODEM', 'ZIP', 'TOFU', 'WIDGET', 'JPEG', 'CRUMB', 'PATCHY'];
 

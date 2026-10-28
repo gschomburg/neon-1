@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.71']);
+NEON_FILES.push(['engine/help.js', 'v13.73']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -136,7 +136,7 @@ function buildTrayPage(T, X) {
   P('the codex shows each mod\'s stage.');
   T('');
   H('GEAR');
-  P('single use, in the slots below the mods. you start with one PURGE. the same gear stacks in one slot (PURGEx3). some corp bosses give a stack of their own legendary gear (FLAREx3); a boss reward can be a stack of market gear too.');
+  P('single use, in the slots below the mods. you start with one PURGE. the same gear stacks in one slot (PURGEx3). some corp bosses give a stack of their own legendary gear (FLAREx3); a boss reward can be a stack of market gear too. to throw gear away, drag it up: a TRASH comes up over the mods; drop it there and one goes (no money back).');
   T('');
   H('USING THEM');
   P('tap a mod or gear to see what it does, tap again to use it. on desktop, hover for info; number keys use gear.');

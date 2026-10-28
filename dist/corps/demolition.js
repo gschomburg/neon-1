@@ -1,6 +1,6 @@
 // NeoN+1 corps/demolition.js
 'use strict';
-NEON_FILES.push(['corps/demolition.js', 'v13.71']);
+NEON_FILES.push(['corps/demolition.js', 'v13.73']);
 // Its boss reward: BLAST gear x2 (blast), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

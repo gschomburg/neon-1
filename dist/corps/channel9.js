@@ -1,6 +1,6 @@
 // NeoN+1 corps/channel9.js
 'use strict';
-NEON_FILES.push(['corps/channel9.js', 'v13.71']);
+NEON_FILES.push(['corps/channel9.js', 'v13.73']);
 // Its boss reward: REMOTE gear x3 (remote), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

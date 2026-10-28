@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.71']);
+NEON_FILES.push(['engine/active.js', 'v13.73']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -344,6 +344,42 @@ function canUse(stack) {
   if (key === 'rewind') return layerGear && !st.corp.frozen && (tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer);
   if (BOSS_GEAR[key]) return layerGear && BOSS_GEAR[key].ok(st.lv);
   return false;
+}
+
+// ---- Gear: a tap, or dragged to the TRASH (the user, 2026-10-28). A drag on a gear item brings up [ TRASH ] centered
+// on the line above the mod row; drop it there and one of it is gone (one at a time from a stack). No money, no undo:
+// the terminal says it's trashed. Anywhere in a run (layers too: the clock keeps going); not in the training.
+const gearDragOk = () => !!(st.run && !st.tut && !st.mp && !st.transitioning && !st.pause && !st.dev);
+function gearRelease(gp) {
+  if (!gp.moved) {   // a tap: two-tap mode shows its info first, then uses it
+    st.selMod = -1;
+    if (save.tapMode === 'one' || st.selItem === gp.i) useItem(gp.i);
+    else { st.selItem = gp.i; Sound.tick(); }
+    return;
+  }
+  st.selItem = -1;
+  if (gearOverTrash()) trashItem(gp.i);
+}
+// The TRASH: its spot (cells), and whether the pointer is over it (a generous target: a row above and below too)
+function trashSpot() { const w = 11; return { x: Math.floor((L.wc - w) / 2), y: BOARD_Y + L.gh + 1, w }; }   // (the rule line above the mod row)
+function gearOverTrash() {
+  if (!st.ptr) return false;
+  const t = trashSpot(), cx = (st.ptr.x - L.ox) / L.cw, cy = (st.ptr.y - L.oy) / L.chh;
+  return cx >= t.x - 3 && cx <= t.x + t.w + 3 && cy >= t.y - 1.5 && cy <= t.y + 2;
+}
+function trashItem(slot) {
+  const run = st.run, stack = run && run.items[slot];
+  if (!stack || !gearDragOk()) return;
+  const name = ITEMS[stack.key].name;
+  if (--stack.n <= 0) run.items.splice(slot, 1);
+  st.selItem = -1; st.hoverItem = -1;
+  Sound.trash();
+  setMsg(`> trashed ${name.toLowerCase()}.`, C.mid);
+  if (!reduced()) {   // it crumbles into the bin
+    const t = trashSpot(), col = rarityCol(ITEMS[stack.key].rarity);
+    const cells = [...('[' + name + ']')].map((ch, i) => ({ ch, x: pxX(t.x + t.w / 2 - name.length / 2 + i), y: pxY(t.y), col }));
+    explode(cells, pxX(t.x + t.w / 2), pxY(t.y + 0.5), { power: 0.35, grav: 1.2, life: [0.3, 0.6] });
+  }
 }
 
 function useItem(slot) {

@@ -1,6 +1,6 @@
 // NeoN+1 corps/streamflix.js
 'use strict';
-NEON_FILES.push(['corps/streamflix.js', 'v13.71']);
+NEON_FILES.push(['corps/streamflix.js', 'v13.73']);
 // Its boss reward: FREEZE gear x3 (freeze), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

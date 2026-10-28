@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.71']);
+NEON_FILES.push(['engine/panels.js', 'v13.73']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -142,7 +142,7 @@ function openShop(node) {
     if (rerollsLeft() <= 0 || !canSpend(price)) return Sound.deny();
     run.credits -= price; rolls++;
     offers = roll(rolls).concat([repair]);
-    sel = 0; st.revealed = new Set(); st.panelT0 = performance.now() + CONFIG.revealDelay;   // the new offers pop in
+    sel = offers.length; st.revealed = new Set();   // (the selection stays on the REROLL row: it's the last row) st.panelT0 = performance.now() + CONFIG.revealDelay;   // the new offers pop in
     Sound.whoosh(); setMsg(`> restocked. -${price}cr.`, C.money);
   };
   const sell = i => {
@@ -154,12 +154,13 @@ function openShop(node) {
     run.credits += cr; if (value) run.earned += cr;   // (only value gear counts as earned: buying and selling back isn't)
     sellSel = Math.min(sellSel, Math.max(0, run.items.length - 1));
     Sound.buy(); setMsg(`> sold ${name}. +${cr}cr.`, C.money);
-    if (!run.items.length) view = 'buy';
   };
   st.shop = { node: node.id, get offers() { return offers; }, priceOf, buyAt: k => buy(offers[k]), reroll, rerollsLeft, rerollPrice, sellAt: sell };   // (read by tools/econsim.js)
 
   // What an offer is: gear at its tier; mods as what you'd end up with (upgrades).
-  const defOf = o => o.kind === 'item' ? itemView(o.key, o.tier) : o.kind === 'mod' ? modView(o.key, upgradeTo(o.key, o.tier)) : { name: 'REPAIR', desc: 'restore 1 integrity.', rarity: 'common', tier: 0 };
+  const defOf = o => o.kind === 'item' ? itemView(o.key, o.tier) : o.kind === 'mod' ? modView(o.key, upgradeTo(o.key, o.tier))
+    : o.kind === 'reroll' ? { name: 'REROLL', desc: `new offers. ${rerollsLeft()} left here.`, rarity: 'common', tier: 0 }
+    : { name: 'REPAIR', desc: 'restore 1 integrity.', rarity: 'common', tier: 0 };
   const buy = o => {
     const price = priceOf(o);
     if (o.sold || !canSpend(price)) return Sound.deny();
@@ -178,21 +179,36 @@ function openShop(node) {
   };
 
   const whyNot = o => {
+    if (o.kind === 'reroll') return rerollsLeft() <= 0 ? 'no rerolls left in this market.' : !canSpend(rerollPrice()) ? (leverage() ? 'past your credit limit.' : 'not enough credits.') : null;
     if (o.sold) return 'sold out.';
     if (o.kind === 'repair' && !canHeal()) return zombie() ? 'no rot to fix.' : 'integrity is full.';
     if (!canSpend(priceOf(o))) return leverage() ? 'past your credit limit.' : 'not enough credits.';
     return null;
   };
 
-  // SELL: your gear, what the market pays for one of each
+  // The REROLL row (the last row of the buy list; not one of the offers, so st.shop.offers / econsim never see it)
+  const rerollRow = { kind: 'reroll', key: 'reroll' };
+  const rowsOf = () => offers.concat([rerollRow]);
+  // Both modes share one layout: the list area is listRows() tall, then the details box (7 rows), then the nav buttons,
+  // so [ SELL ] / [ BUY ] and [ LEAVE ] sit in the same spots on both.
+  const listRows = () => Math.max(rowsOf().length, 1 + run.beltSlots);
+  const pad = (T, used) => { for (let i = used; i < listRows(); i++) T(''); };
+  const nav = B => {
+    if (view === 'buy') B('[ SELL ]', 'sellv', () => { view = 'sell'; sellSel = 0; Sound.ui(); }, !run.items.length);
+    else B('[ BUY ]', 'buyv', () => { view = 'buy'; Sound.ui(); });
+    B(node.exit ? '[ JACK OUT ]' : '[ LEAVE ]', 'leave', node.exit ? () => { if (!st.transitioning) swapTo(() => sectorClear(false)); } : leavePanel);   // HEAD FIRST's exit market: the sector is clear
+  };
+
+  // SELL: your gear, what the market pays for one of each (the same look as the buy list: a type tag and the price)
   const drawSell = (T, B, X) => {
     T('sell your gear:', C.mid);
     run.items.forEach((s, i) => {
       const v = itemView(s.key, s.tier);
       X({ list: true, id: 'sl' + i, onTap: () => { sellSel = i; Sound.tick(); }, sel: i === sellSel,
-        name: itemLabel(s), chip: v.rarity, col: C.bright, right: `${gearValue(s.key, s.tier)}cr`.padStart(6), rightCol: C.money });
+        name: itemLabel(s), chip: v.rarity, col: C.bright, right: `${'gear'.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: C.money, rightChips: true });
     });
     if (!run.items.length) T('nothing to sell.', C.dim);
+    pad(T, 1 + Math.max(1, run.items.length));
     T('');
     T(SEP, C.dim);
     const s = run.items[sellSel];
@@ -200,10 +216,11 @@ function openShop(node) {
       const v = itemView(s.key, s.tier);
       X({ text: v.name, chip: v.rarity, bold: true });
       T(v.tip || v.desc, C.text);
+      T('');
       X({ box: true, text: 'S E L L', sub: `+${gearValue(s.key, s.tier)}cr`, id: 'sell', onTap: () => sell(sellSel), minW: 18 });
-    } else for (let i = 0; i < 5; i++) T('');
+    } else for (let i = 0; i < 7; i++) T('');
     T(SEP, C.dim);
-    B('[ BACK ]', 'back', () => { view = 'buy'; Sound.ui(); });
+    nav(B);
   };
 
   openPanel('BLACK MARKET', (T, B, X) => {
@@ -212,32 +229,36 @@ function openShop(node) {
     T(`credits ${run.credits}${leverage() ? `  (limit ${creditFloor()})` : ''}${has('haggle') ? `  (haggle -${Math.round(tv('haggle', ECON.haggle) * 100)}%)` : ''}`, run.credits < 0 ? C.danger : C.money);   // LEVERAGE: the limit
     T('');
     if (view === 'sell') return drawSell(T, B, X);
-    offers.forEach((o, k) => {
+    const rows = rowsOf();
+    rows.forEach((o, k) => {
       const def = defOf(o);
-      const isMod = o.kind === 'mod', up = isMod && has(o.key);
-      const price = o.sold ? 'SOLD' : o.free ? 'FREE' : `${priceOf(o)}cr`;
+      const isMod = o.kind === 'mod', up = isMod && has(o.key), rr = o.kind === 'reroll';
+      const price = rr ? (rerollsLeft() > 0 ? `${rerollPrice()}cr` : 'DONE') : o.sold ? 'SOLD' : o.free ? 'FREE' : `${priceOf(o)}cr`;
       const tag = isMod ? (up ? 'mod+' : 'mod') : o.kind === 'item' ? 'gear' : 'svc';   // gear's rarity shows on its name chip
       const col = C.bright;
       X({
         list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
         sel: k === sel, faded: !!whyNot(o),
-        badge: isMod ? o.key : null, badgeTier: def.tier, name: def.name + (up ? ' +' : '') + (o.n > 1 ? ' x' + o.n : ''), col,   // x2: copies left
+        badge: isMod ? o.key : null, badgeTier: def.tier, name: rr ? `REROLL (${rerollsLeft()} left)` : def.name + (up ? ' +' : '') + (o.n > 1 ? ' x' + o.n : ''), col,   // x2: copies left
         chip: o.kind === 'item' ? def.rarity : null,
         right: `${tag.padEnd(4)} ${price.padStart(5)}`, rightCol: C.money, rightChips: true,
-        tint: o.kind === 'repair' ? C.accent : null,
+        tint: o.kind === 'repair' || rr ? C.accent : null,
         reveal: k, revealId: 'offer' + k,
-        rarity: o.kind === 'repair' ? null : def.rarity, seenKey: o.kind === 'repair' ? null : o.key,
+        rarity: o.kind === 'repair' || rr ? null : def.rarity, seenKey: o.kind === 'repair' || rr ? null : o.key,
       });
     });
+    pad(T, rows.length);
     T('');
     // Details box for the selected offer (once it has popped in).
-    const o = offers[sel], def = defOf(o), why = whyNot(o);
+    sel = Math.min(sel, rowsOf().length - 1);
+    const o = rowsOf()[sel], def = defOf(o), why = whyNot(o);
     const shown = now >= st.panelT0 + sel * CONFIG.revealGap;
     // Fixed height (7 rows) so the layout never jumps while offers pop in.
     T(SEP, C.dim);
     if (!shown) { T('...', C.dim); for (let i = 0; i < 6; i++) T(''); }
     else {
-      if (o.kind === 'mod') {
+      if (o.kind === 'reroll') { T('REROLL', C.bright); T('service', C.mid); }
+      else if (o.kind === 'mod') {
         X({ badge: o.key, badgeTier: def.tier });
         X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(def)}` : `${tierLabel(def)} mod`, col: C.text, chips: true });
       } else {
@@ -246,16 +267,12 @@ function openShop(node) {
       }
       T(def.tip || def.desc, C.text);   // the short text: long gear descs ran off the screen
       if (why) { T(''); T(why, C.dangerDim); T(''); T(''); }
+      else if (o.kind === 'reroll') X({ box: true, text: 'R E R O L L', sub: `${rerollPrice()}cr`, id: 'buy', onTap: reroll, minW: 18 });
       else X({ box: true, text: 'B U Y', sub: o.free ? 'FREE' : `${priceOf(o)}cr`, id: 'buy', onTap: () => buy(o), minW: 18 });
     }
     T(SEP, C.dim);
-    // REROLL (new offers; 1 a market, more with RESTOCK), SELL (your gear), LEAVE
-    const left = rerollsLeft(), rp = rerollPrice();
-    X({ gap: 1, row: [
-      { text: left > 0 ? `[ REROLL ${rp}cr ]` : '[ REROLLED ]', id: 'reroll', onTap: reroll, disabled: left <= 0 || !canSpend(rp) },
-      { text: '[ SELL ]', id: 'sellv', onTap: () => { view = 'sell'; sellSel = 0; Sound.ui(); }, disabled: !run.items.length },
-      { text: node.exit ? '[ JACK OUT ]' : '[ LEAVE ]', id: 'leave', onTap: node.exit ? () => { if (!st.transitioning) swapTo(() => sectorClear(false)); } : leavePanel },   // HEAD FIRST's exit market: the sector is clear
-    ] });
+    // SELL (the other mode) over LEAVE (REROLL is a row in the list, 1 a market, more with RESTOCK)
+    nav(B);
   }, '> the market is open.');
 }
 

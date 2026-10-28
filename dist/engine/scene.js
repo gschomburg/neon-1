@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.71']);
+NEON_FILES.push(['engine/scene.js', 'v13.73']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -461,11 +461,29 @@ function buildTray(ctx, y) {
     const ok = canUse(stack), v = itemView(stack.key, stack.tier);
     const sel = st.selItem === i, hov = st.hoverItem === i;
     const lab = itemLabel(stack), nameLen = stack.n > 1 ? ITEMS[stack.key].name.length : lab.length;
-    if (ok) putChip(put, bg, ix, y + 2, lab.slice(0, nameLen), v.rarity, 'tray', v.tier > 0);   // on its rarity chip
+    const listy = st.mode === 'panel' || st.mode === 'fish';   // a list screen: you compare your gear with what's on offer
+    if (ok || listy) putChip(put, bg, ix, y + 2, lab.slice(0, nameLen), v.rarity, 'tray', v.tier > 0);   // on its rarity chip
     else put(ix, y + 2, lab.slice(0, nameLen), C.mid, 'tray');
     if (stack.n > 1) put(ix + nameLen, y + 2, lab.slice(nameLen), ok ? C.text : C.dim, 'tray');   // x3: the count, dimmer
     if (sel || hov) bg(ix, y + 2, 7, C.accent, sel ? 0.25 : 0.12);
     addHit(ix, y + 2, 7, 1, { kind: 'item', i });
+  }
+
+  // Dragging gear: the TRASH (centered on the line above the mods), the gear under your finger
+  const gp = st.gearPress;
+  if (gp && gp.moved && run.items[gp.i] && st.ptr) {
+    const t = trashSpot(), over = gearOverTrash(), s = run.items[gp.i], name = '[' + ITEMS[s.key].name + ']';
+    // over the trash, the gear drops into it: the trash shows its name (solid red); otherwise [ TRASH ] and the gear on your
+    // cursor (a finger covers it, so on touch it rides one row up)
+    const lab = over ? name : '[ TRASH ]', tw = Math.max(t.w, lab.length + 2), tx = Math.floor((L.wc - tw) / 2);
+    clearRect(ctx.cells, tx, t.y, tw, 1);   // (the rule line doesn't show through)
+    bg(tx, t.y, tw, C.danger, over ? 1 : 0.25);
+    put(tx + Math.floor((tw - lab.length) / 2), t.y, lab, over ? C.bg : C.danger, 'fx', true);
+    if (!over) {
+      const cx = Math.round((st.ptr.x - L.ox) / L.cw - name.length / 2), cy = Math.floor((st.ptr.y - L.oy) / L.chh) - (gp.touch ? 1 : 0);
+      bg(cx, cy, name.length, C.bg, 0.85);
+      put(cx, cy, name, rarityCol(ITEMS[s.key].rarity), 'fx', true);
+    }
   }
 
   // Item info line, right under the belt
@@ -946,10 +964,10 @@ function buildMap(ctx) {
   if (run.sector > 0) {
     const v = mv.sector, blink = Math.floor(now / 600) % 2 ? C.mid : C.dim;
     const evk = sectorEvent(v), label = `SECTOR ${v + 1}` + (evk ? `: ${SECTOR_EVENTS[evk].name}` : '');
-    put(0, BOARD_Y, label, v === run.sector ? C.mid : C.accent, 'map');
-    if (evk && settled) addHit(0, BOARD_Y, label.length, 1, { kind: 'btn', id: 'evlabel', noFocus: true, onTap: () => { showEventCard(v, true); Sound.ui(); } });   // see the card again
+    put(0, BOARD_Y - 1, label, v === run.sector ? C.mid : C.accent, 'map');   // (one up: under the terminal, clear of the map's top row)
+    if (evk && settled) addHit(0, BOARD_Y - 1, label.length, 1, { kind: 'btn', id: 'evlabel', noFocus: true, onTap: () => { showEventCard(v, true); Sound.ui(); } });   // see the card again
     if (v > 0) { put(0, BOARD_Y + SECTOR_ROWS - 1, 'v', blink, 'map'); put(L.wc - 1, BOARD_Y + SECTOR_ROWS - 1, 'v', blink, 'map'); }
-    if (v < run.sector) { put(L.wc - 1, BOARD_Y, '^', blink, 'map'); }
+    if (v < run.sector) { put(L.wc - 1, BOARD_Y - 1, '^', blink, 'map'); }
   }
 
   // Info panel under the map
