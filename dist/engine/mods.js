@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.64']);
+NEON_FILES.push(['engine/mods.js', 'v13.71']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -219,6 +219,7 @@ function rollTier(r, def) {
   const u = r();
   let t = Math.min(def.tiers.length - 1, u < TIER_ODDS[0] ? 0 : u < TIER_ODDS[1] ? 1 : u < TIER_ODDS[2] || ITEMS[def.key] !== def ? 2 : 3);
   while (t > 0 && tierView(def, t).rarity === 'legendary' && u < TIER_ODDS[1]) t--;   // a legendary step: only the top 5% (or take it twice)
+  if (legacyLv('drops') && t < def.tiers.length - 1 && !(st.run && st.run.tutorial) && r() < 0.1 * legacyLv('drops')) t++;   // BETTER DROPS (THE BOARD): a step rarer
   return t;
 }
 // What owning `key` becomes if you take it at `tier`: at or below yours = up one step,

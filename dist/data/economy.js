@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v13.64']);
+NEON_FILES.push(['data/economy.js', 'v13.71']);
 
 const ECON = {
   // ---- Units
@@ -141,6 +141,20 @@ const ECON = {
   },
   friendship: 1,   // spend: FRIENDSHIP (once per corp, an ICE hit costs this instead of integrity)
   companion: 0.1,   // spend: COMPANION (the treat your pet takes each time it sniffs out an ICE)
+  // ---- Fishing: the PIER
+  fish: {
+    cast: 0.4,   // spend: a cast (paid each time the hook goes in (reel in empty and it's spent))
+    casts: 30,   // count: casts per pier (how many casts one pier allows)
+    gear: 0.3,   // %: gear on the line (the chance what bites is gear (from the loot pool))
+    shoe: 0.1,   // %: a shoe on the line (the chance what bites is a SHOE)
+    odds: [3, 5, 2, 0.6, 0.15],   // count list: fish by rarity (how often each fish rarity bites, as weights (scrap, common, rare, epic, legendary))
+    damp: 0.5,   // x: gear: less rare (gear from the water: each rarity step up is this much rarer than normal loot)
+    scrap: 0.2,   // earn: fish worth: scrap (what a black market pays for a scrap fish)
+    common: 0.4,   // earn: fish worth: common (a common fish)
+    rare: 1,   // earn: fish worth: rare (a rare fish)
+    epic: 2.5,   // earn: fish worth: epic (an epic fish)
+    legendary: 6,   // earn: fish worth: legendary (a legendary fish)
+  },
   // ---- Spending: the uplink
   uplink: {
     min: 5,   // spend: minimum (everyone pays this to push on, mods or not)

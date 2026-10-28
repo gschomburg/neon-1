@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v13.64']);
+NEON_FILES.push(['engine/tutorial.js', 'v13.71']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -130,6 +130,7 @@ function tutorialRun(run) {
 }
 async function endTutorial() {
   save.tutorialDone = true; persist();
+  featTrained();   // the NEWB feat (its FEAT box comes up on the title)
   const run = st.run;
   if (run) run.ended = true;
   const held = st.wipe && st.wipe.tIn == null;

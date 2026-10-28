@@ -23,6 +23,7 @@
 <script src="../dist/data/mods.js"></script>
 <script src="../dist/data/ads.js"></script>
 <script src="../dist/data/hackers.js"></script>
+<script src="../dist/data/feats.js"></script>
 <script src="../dist/data/art/glyphs.js"></script>
 <script src="../dist/data/art/logos.js"></script>
 <script src="../dist/data/art/faces.js"></script>
@@ -242,6 +243,7 @@
   body.mode-test #test { display: flex; }
   body.mode-ads #ads { display: flex; }
   body.mode-hack #hack { display: flex; }
+  .xfeats { flex-wrap: wrap; gap: 6px; } .xfeats .xf { display: inline-flex; gap: 1px; } .xfeats button.on { background: #a27ef5; color: #0b0d10; } .xfeats button.sm { font-size: 11px; opacity: .8; }
   /* hackers: the cast (dist/data/hackers.js), face + logo + who they are */
   #hack { flex-direction: column; }
   #hkBar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
@@ -631,7 +633,7 @@
   <h2>Jump</h2>
   <div class="row">
     <button data-x="sector" data-n="2">sector 2</button><button data-x="sector" data-n="3">sector 3</button><button data-x="sector" data-n="4">sector 4</button><button data-x="sector" data-n="5">sector 5</button>
-    &nbsp; <button data-x="boss">sector boss now</button> <button data-x="clear">clear this sector</button> <button data-x="uplink">the uplink</button>
+    &nbsp; <button data-x="boss">sector boss now</button> <button data-x="clear">clear this sector</button> <button data-x="uplink">the uplink</button> <button data-x="pier" title="a PIER (fishing), with at least 100cr">go fishing</button>
   </div>
   <h2>Anomaly on the next corps <small>the corps you can go to from where you are</small></h2>
   <div class="row" id="xAnoms"></div>
@@ -639,6 +641,11 @@
   <div class="row"><button data-x="steal">steal my last mod</button> <span class="dim">it goes to THE FENCE (one is added next to this sector's boss if there isn't one)</span></div>
   <h2>Give <small>a mod (at a step) or a gear; the gear &amp; mods tab has the full list</small></h2>
   <div class="row"><select id="xGive"></select> <select id="xTier"></select> <button id="xGiveBtn">give</button></div>
+  <h2>Hackers <small>bring one into the corp layer you're in: a rival, or crew as if you'd called them (CALL gear is under Give too)</small></h2>
+  <div class="row"><select id="xHk"></select> <button data-x="hacker">bring in</button></div>
+  <h2>Feats <small>click one to grant it or take it back (lit = done); "box" shows its FEAT box once the game is calm</small></h2>
+  <div class="row xfeats" id="xFeats"></div>
+  <div class="row"><button data-x="wipe">wipe progression</button> <span class="dim">your own save: REP back for THE BOARD's posts; feats, titles and the record cleared</span></div>
 </section>
 <section id="items" class="mode">
   <div id="iBar">
@@ -1924,6 +1931,7 @@
   const drawState = () => {
     const x = state;
     for (const b of document.querySelectorAll('#test button.tg')) b.classList.toggle('on', !!(x && x[b.dataset.x]));
+    for (const b of document.querySelectorAll('#xFeats button[data-x="feat"]')) b.classList.toggle('on', !!(x && (x.feats || []).includes(b.dataset.key)));
     if (!x || !x.run) { $('#xState').textContent = 'no run: click "new test run" or a sector event'; return; }
     $('#xState').textContent = `sector ${x.sector}${x.event ? ' // ' + (evNames[x.event] || x.event) : ''}  ·  ${x.credits}cr  ·  INT ${x.int}/${x.maxInt}  ·  ${x.mods} mods${x.fence ? '  ·  fence: ' + x.fence : ''}  ·  ${x.mode}${x.god ? '  ·  GOD' : ''}${x.free ? '  ·  free travel' : ''}${x.tabMusic ? '  ·  music tab playing' : ''}`;
   };
@@ -1948,6 +1956,9 @@
     if (act === 'int') return send('int', { n: $('#xInt').value });
     if (act === 'sector') return send('sector', { n: +b.dataset.n });
     if (act === 'event' || act === 'anomaly') return send(act, { key: b.dataset.key });
+    if (act === 'feat') return send('feat', { key: b.dataset.key, on: !(state && (state.feats || []).includes(b.dataset.key)) });
+    if (act === 'featbox') return send('featbox', { key: b.dataset.key });
+    if (act === 'hacker') return send('hacker', { key: $('#xHk').value });
     send(act);
   });
   // give: every mod and gear (from dist/data/mods.js, loaded for the gear & mods tab)
@@ -1960,6 +1971,9 @@
     $('#xGive').addEventListener('change', tiers); tiers();
     $('#xGiveBtn').addEventListener('click', () => { if (!state || !state.run) return log('give: no run: start one first', true); toGame({ type: 'mod-set', key: $('#xGive').value, tier: +$('#xTier').value }); log('gave ' + $('#xGive').selectedOptions[0].textContent); });
   }
+  if (typeof HACKERS !== 'undefined') $('#xHk').innerHTML = ['bad', 'good'].map(sd => `<optgroup label="${sd === 'bad' ? 'rivals' : 'crew'}">${Object.entries(HACKERS).filter(([, h]) => h.side === sd).map(([k, h]) => `<option value="${esc(k)}">${esc(h.name)}</option>`).join('')}</optgroup>`).join('');
+  // feats (dist/data/feats.js): a button each (lit when done) and its "box"
+  if (typeof FEATS !== 'undefined') $('#xFeats').innerHTML = FEATS.map(f => `<span class="xf"><button data-x="feat" data-key="${esc(f.id)}" title="${esc(f.text + (f.title ? ' (title: ' + f.title + ')' : ''))}">${esc(f.name)}</button><button data-x="featbox" data-key="${esc(f.id)}" class="sm">box</button></span>`).join('');
   drawState();
 })();
 </script>
@@ -2861,10 +2875,11 @@
 <ul>
 <li><b>Run:</b> a new test run (on the map, after the public net); god (no damage), show the real node, free travel (go to any node); music and sfx (the game's own; the music tab takes over while it plays a track); set credits and INT, heal.</li>
 <li><b>Sector events:</b> click one and the game starts a new run and climbs straight to sector 2 with that event: its card comes up first. The sector name on the map shows the card again.</li>
-<li><b>Jump:</b> to sector 2-5 (events rolled as usual); into this sector's boss; clear the sector (the success screen); or straight to the uplink.</li>
+<li><b>Jump:</b> to sector 2-5 (events rolled as usual); into this sector's boss; clear the sector (the success screen); straight to the uplink; or <b>go fishing</b> (a PIER, with at least 100cr).</li>
 <li><b>Anomaly on the next corps:</b> puts that anomaly on the corps you can go to next (THIEF also adds THE FENCE); <b>none</b> takes them off.</li>
 <li><b>THE FENCE:</b> steal my last mod sends it to THE FENCE, next to the sector boss, to buy back.</li>
 <li><b>Give:</b> any mod at a step, or a gear. The gear &amp; mods tab has every one, with its text.</li>
+<li><b>Feats:</b> click one to grant it (lit) or take it back; <b>box</b> shows its FEAT box once the game is calm (on a menu or the map). <b>wipe progression</b> does the version wipe on your own save: REP back for THE BOARD's posts, feats, titles and the record cleared. THE BOARD: the <b>board</b> scene button, or the title.</li>
 </ul>
 <p>The line at the top is the game right now: sector, its event, credits, INT, and what's on.</p>` },
 

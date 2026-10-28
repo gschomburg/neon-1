@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.64']);
+NEON_FILES.push(['engine/scene.js', 'v13.71']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -50,7 +50,7 @@ function buildScene(now, collectHits, raw = false) {
   };
   const ctx = { now, put, putC, putR, addHit, bg, cells, collectHits };
 
-  if (st.hideAll) { if (collectHits) bgs = []; return cells; }
+  if (st.hideAll) { if (st.hkDeath && !st.dev) buildHkDeath(ctx, now); if (collectHits) bgs = frameBgs.slice(); return cells; }   // (a hacker's last word over the fall-out)
   const run = st.run;
 
   const boardEnd = BOARD_Y + L.gh;
@@ -103,7 +103,7 @@ function buildScene(now, collectHits, raw = false) {
     addHit(x, 0, label.length, 1, { kind: 'btn', id, onTap, noFocus: true });
   };
   // The name is the menu button during a run (no [MENU] of its own).
-  const menuOk = !st.mp && run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel');
+  const menuOk = !st.mp && run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel' || st.mode === 'fish');
   put(0, 0, 'NeoN+1', C.accent, menuOk ? 'ui' : undefined, menuOk && st.pause);
   if (menuOk) {
     if (st.hoverBtn === 'menu' || st.pause) bg(0, 0, 6, C.accent, 0.2);
@@ -168,6 +168,7 @@ function buildScene(now, collectHits, raw = false) {
       const prog = c.hasBoss ? (st.lv && st.lv.boss ? 'BOSS' : `${c.idx + 1}/${c.counts.length - 1}`) : '';
       where = `${c.def.name} ${prog}`;
     } else if (st.mode === 'panel') where = st.panelTitle || '';
+    else if (st.mode === 'fish') where = 'THE PIER';
     put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.danger : C.text);
     // LEVERAGE: in debt the credits go red, with your limit after them (CR -120/-150)
     const crTxt = `${(st.mode === 'play' && st.corp && st.corp.def.money) || 'CR'} ${run.credits}${leverage() && run.credits < 0 ? '/' + creditFloor() : ''}`;
@@ -266,12 +267,14 @@ function buildScene(now, collectHits, raw = false) {
       else { if (st.mp) mpTurnFrame(ctx); buildBoard(ctx); if (st.mp) { mpDrawCursors(ctx); mpTurnBanner(ctx); } }
     }
     else if (st.mode === 'map') buildMap(ctx);
+    else if (st.mode === 'fish') buildFish(ctx);   // the PIER (engine/fishing.js)
     else buildTextBoard(ctx, panelLines());
   }
 
   // Tray: mods, items, info
   put(0, boardEnd + 1, rule(L.wc), ruleCol);
   buildTray(ctx, boardEnd + 2);
+  buildPet(ctx, boardEnd + 2);   // the pet, on the tray line (engine/pet.js)
 
   // Footer: the run's seed, small and out of the way.
   // Left side of the footer, clipped so it never runs into [DEV] / the version.
@@ -310,6 +313,22 @@ function buildScene(now, collectHits, raw = false) {
     const eput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ec.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
     buildEventCard(Object.assign({}, ctx, { put: eput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
     result = result.concat(ec);
+  }
+  // A hacker's card (engine/hackers.js): a rival coming in, crew you called. Over the layer; its clock holds.
+  if (collectHits) hkCardTick(now);
+  if (st.hkCard && !st.dev && !st.ad) {
+    const hc = [];
+    const hput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') hc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
+    buildHkCard(Object.assign({}, ctx, { put: hput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
+    result = result.concat(hc);
+  }
+  // The FEAT box (engine/feats.js): when there's news and things are calm, over everything but an ad or a card.
+  if (collectHits) featBoxTick(now);
+  if (st.featBox && !st.dev && !st.ad && !st.evCard) {
+    const fc = [];
+    const fput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') fc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
+    buildFeatBox(Object.assign({}, ctx, { put: fput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
+    result = result.concat(fc);
   }
   // The training run's popup (engine/tutorial.js): over everything but an ad, the same way.
   if (st.tut && st.tut.pop && !st.dev && !st.ad && (!st.wipe || st.tut.curtain)) {
@@ -705,10 +724,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     put(tx - 1, ty + 2, m.l || '>', m.col, 'fx', true); put(tx + TILE_W, ty + 2, m.r || '<', m.col, 'fx', true);
   }
   if (boardDef && boardDef.draw) boardDef.draw(put, lv, now);
-  if (lv.rv && lv.rv.aim && lv.rv.aim.t.state === 'closed' && Math.floor(now / 120) % 2) {   // RIVAL: where it's about to pick
-    const { tx, ty } = tileOrigin(lv.rv.aim.t);
-    put(tx - 1, ty + 2, '>', C.danger, 'fx', true); put(tx + TILE_W, ty + 2, '<', C.danger, 'fx', true);
-  }
+  if (lv.hks) buildHackers({ put, bg }, lv, now);   // hackers: cursors, faces, emote covers, DENIED, fire, tape (engine/hackers.js)
   // AFTERIMAGE: cyan corners where the last layer's real node was.
   if (has('afterimage') && lv.after && lv.after.col < lv.cols && lv.after.row < lv.rows) {
     if (lv.shownAt != null) modFiredOnce('afterimage', lv);
@@ -867,6 +883,7 @@ function drawMapView(ctx, y, ln) {
   // more above / below: arrows in both margins (clear of the nodes)
   const blink = Math.floor(performance.now() / 600) % 2 ? C.mid : C.dim;
   const first = ln.k == null || ln.k === 0, last = ln.k == null || ln.k === h - 1;
+  if (ln.noArrows) return;   // (the game-over screen has "more" rows instead)
   if ((top > 0 || ln.above) && first) { put(0, y, '^', blink, 'board'); put(L.wc - 1, y, '^', blink, 'board'); }
   if (top + h < mapRows(map) && last) { put(0, y + h - 1, 'v', blink, 'board'); put(L.wc - 1, y + h - 1, 'v', blink, 'board'); }
 }
@@ -947,6 +964,7 @@ function buildMap(ctx) {
     putC(y0 + 1, 'choose a target.', C.text, 'map');
     putC(y0 + 3, 'AB3 = corp, level 3   ! = final', C.dim, 'map');
     putC(y0 + 4, '$ = market  ? = cache  + = repair', C.dim, 'map');
+    if (Object.values(run.map).some(n => n.type === 'pier' && n.sector === mv.sector)) putC(y0 + 5, '~ = pier: phishing', C.dim, 'map');
     if (run.sector > 0) putC(y0 + 5, 'scroll for older sectors.', C.dim, 'map');
     return;
   }
@@ -979,6 +997,7 @@ function nodeInfo(n) {
   }
   if (n.type === 'shop') { T('BLACK MARKET', C.money); T('gear and mods for credits.'); if (n.exit) T('the way out: leave it and the sector is clear.', C.accent); }
   if (n.type === 'cache') { T('DATA CACHE', C.money); T('loot, then pick a mod.'); }
+  if (n.type === 'pier') { T('THE PIER', C.accent); T(`phish the data stream. ${fishCost()}cr a cast.`); T('who knows what bites.', C.dim); }
   if (n.type === 'repair') { T('SAFEHOUSE', C.accent); T(`heal ${CONFIG.repairAmount}, then pick a mod.`); }
   if (n.type === 'fence') { const k = (st.run.fence || []).length; T('THE FENCE', C.money); T(k ? `${k} stolen mod${k > 1 ? 's' : ''} for sale. yours.` : 'stolen mods end up here.'); T('then on to the sector boss.', C.dim); }
   return { lines, action: 'E N T E R' };

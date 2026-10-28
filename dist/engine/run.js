@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.64']);
+NEON_FILES.push(['engine/run.js', 'v13.71']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -37,7 +37,19 @@ async function startRun(seed, practice, opts = {}) {
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
+  if (legacyLv('lucky') && !opts.tutorial) {   // LUCKY START (THE BOARD): a random common gear
+    const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
+    if (pool.length) st.run.items.push({ key: pickR(pool, rngFor(seed, 'lucky')), tier: 0, n: 1 });
+  }
   if (opts.tutorial) tutorialRun(st.run);   // the training run (engine/tutorial.js)
+  st.petS = null;   // (a new run: the pet starts fresh)
+  featRunStart(st.run);   // engine/feats.js: the run's starting credits; NEWB if you skipped the training
+  // LOCKER (THE BOARD): the mod you put away when you last cashed out (not into practice runs or the training)
+  if (save.locker && !practice && !opts.tutorial) {
+    const lk = save.locker;
+    save.locker = null; persist();
+    if (MODS[lk.key]) { addMod(lk.key, lk.tier || 0); FEAT_QUEUE.push({ head: 'LOCKER', lines: [`${MODS[lk.key].name} came out of the locker.`, "it's on your bar."] }); }
+  }
   for (const x of st.run.items) markSeen(x.key);
   statRunStart(); statNodeStart(st.run.map['0:1']);   // play stats (engine/stats.js)
   clearRun();
@@ -108,6 +120,7 @@ async function enterNode(node, warp = false) {
   st.transitioning = false;
   if (node.type === 'shop') return openShop(node);
   if (node.type === 'cache') return openCache(node);
+  if (node.type === 'pier') return openPier(node);   // fishing (engine/fishing.js)
   if (node.type === 'repair') return openRepair(node);
   if (node.type === 'fence') return openFence(node);
   startCorp(node);
@@ -144,8 +157,9 @@ async function startCorp(node, startIdx = 0, restore = null) {
   // FAILSAFE legendary recharges each corp you go into (not on a resume: that would refill it for free)
   if (!restore && st.corp.hasBoss && has('failsafe') && modTier('failsafe') >= 1 && !has('zombie')) st.run.failsafeUsed = false;
   if (restore) {   // a resumed save: what this corp had used up so far
-    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen', 'slomo', 'anchored', 'bees']) if (restore[k] != null) st.corp[k] = restore[k];
+    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen', 'slomo', 'anchored', 'bees', 'hk', 'hkRival', 'hypeRow', 'kludgeHealed']) if (restore[k] != null) st.corp[k] = restore[k];
   }
+  if (!restore && st.corp.mod === 'rival') st.corp.hkRival = hkRivalFor(node);   // RIVAL: one of the cast (engine/hackers.js)
   if (st.corp.hasBoss) {
     // MUTATE: this corp, it counts as a random other mod.
     if (st.run.mods.includes('mutate')) {
@@ -521,7 +535,9 @@ function layerTick(now) {
     if (!canSpend(treat)) setMsg('> no treats, no sniffing. (0cr)', C.mid);
     else if (opts.length && candidates().length > 1) {
       st.run.credits -= treat;
-      lockTile(pickR(opts, rngFor(st.run.seed, 'pet', st.corp.node.id, st.corp.idx)), C.accent, 'companion');
+      const sniffed = pickR(opts, rngFor(st.run.seed, 'pet', st.corp.node.id, st.corp.idx));
+      lockTile(sniffed, C.accent, 'companion');
+      petSniff(sniffed);   // the pet runs over to it
       Sound.jingle();
       setMsg(`> sniff sniff. 1 ICE found. -${treat}cr`, C.accent);
     }
@@ -540,7 +556,11 @@ function layerTick(now) {
     const nt = (lv.notes = lv.notes || []).find(n2 => n2.tag === 'infl');
     if (nt) nt.text = `@you ${kfmt(run.fol)}`; else lv.notes.push({ text: `@you ${kfmt(run.fol)}`, tag: 'infl' });
   }
-  if (def && st.corp.mod === 'rival') { rivalTick(lv, now); if (st.busy) return; }   // RIVAL
+  if (def) {   // hackers (engine/hackers.js): a RIVAL corp's rival comes in on its first layer; then everyone plays
+    if (st.corp.hkRival && !hkList().some(h => h.id === st.corp.hkRival) && (st.corp.hkRival !== 'iceman' || st.corp.ice > 0)) hkSpawn(st.corp.hkRival, 'rival');   // (ICE MAN waits for your first ICE hit)
+    hkTick(lv, now);
+    if (st.busy) return;
+  }
   if (def && def.tick) def.tick(lv, lv.lt, dt, now);
 }
 
@@ -587,6 +607,7 @@ async function pick(i) {
   if (!tutAllows('pick', i)) return tutNo();
   const t = st.lv.tiles[i];
   if (!t || t.state !== 'closed') return;
+  if (hkDenied(t)) return;   // SYSOP: ACCESS DENIED
   // ZOMBIE: weak taps. A node takes tapsToBreak() taps; the ones before the last only crack it
   // (the same for ICE and the real node: a crack never tells you which it is).
   if (zombie() && st.corp && st.corp.hasBoss) {
@@ -599,6 +620,7 @@ async function pick(i) {
     }
     t.cracks = 0;
   }
+  hkYouTap(t);   // D0PPEL copies it
   st.busy = true;
   st.sel = -1;
   st.selItem = -1; st.selMod = -1;
@@ -637,6 +659,7 @@ async function pick(i) {
   // A scan that misses still lights its line (dim, quick), so you see what it checked.
   const axes = modsAt('pick').filter(k => scans[k]);
   if (axes.length && real.state === 'closed') st.lv.scan = { t0: performance.now(), from: t, axes, real: null };
+  if (hkStopTap(t)) { st.busy = false; return; }   // MOTHER: not at your last integrity
   await onTrap(t, i);
 }
 
@@ -679,6 +702,7 @@ function payFor(lv) {
   if (c.mod === 'loaded') mult *= 1.2;
   if (c.hasBoss && c.def.faith && !lv.tithed) mult *= 2;   // THE CHOIR: on faith
   if (lv.dd) mult *= 2;                                    // LUCKEEZ: double down
+  mult *= hkPayMult(lv);   // LEECH takes a cut, HYPE cheers streaks (engine/hackers.js)
   mult *= 1 - (lv.payCut || 0);
   return lv.n === 1 ? 0 : Math.round(base * mult);
 }
@@ -695,6 +719,8 @@ async function onSafe(t) {
   if (tix) c.tickets = (c.tickets || 0) + pay;
   else { run.credits += pay; run.earned += pay; }
   lv.paid = tix ? 0 : pay;
+  tallyLayer(run, lv, perfect);   // THE RECORD (engine/feats.js)
+  hkOnClear(lv, perfect); hkAfterPay(pay);   // hackers: bars off rivals, NANA heals, LEECH feeds
   let healed = false;
   if (perfect && canHeal() && c.mod !== 'cursed') { heal(CONFIG.perfectHeal); healed = true; }
   const surged = has('surge') && lv.late && canHeal() && c.hasBoss;   // SURGE: a real pick in the last 3s heals 1
@@ -735,10 +761,7 @@ async function onSafe(t) {
   for (const k of modsAt('end')) if (END_FX[k] && await END_FX[k](perfect) !== false) modFired(k);   // false: nothing happened
   if (c.idx < c.counts.length) { saveRun(); await adBreak('layer'); return enterLayer(); }   // (maybe an ad between layers)
   // Corp finished
-  if (c.mod === 'rival' && c.rival) {   // RIVAL: beat it
-    const bonus = c.rival.hp <= 0 ? earnInt(ECON.rival.flatlined) : c.rival.stole === 0 ? earnInt(ECON.rival.beat) : 0;
-    if (bonus) { run.credits += bonus; run.earned += bonus; setMsg(c.rival.hp <= 0 ? `> rival flatlined. +${bonus}cr` : `> you beat ${c.rival.name.toLowerCase()}. +${bonus}cr`, C.money); }
-  }
+  hkCorpEnd(c);   // hackers: the rivals you beat (the record, the bonus)
   lightsOn();
   statNodeEnd(c.bossSkipped ? 'skipped' : 'cleared');
   if (c.hasBoss && c.def.onClear) {
@@ -749,6 +772,7 @@ async function onSafe(t) {
   run.corps++;
   if (c.node.type === 'corp') { run.beat = run.beat || {}; (run.beat[c.sector] = run.beat[c.sector] || []).push(c.def.key); }
   corpStat(c.def.key).breached++; persist();   // codex record
+  tallyCorp(c.def.key);   // THE RECORD
   // THIEF: what it took goes to THE FENCE (bought back there); a sector boss's thief gives them back when you win
   if (c.stolen && c.stolen.length) {
     const fence = c.node.type === 'corp' && Object.values(run.map).some(n => n.type === 'fence' && n.sector === c.sector);
@@ -915,6 +939,8 @@ async function onTrap(t, i) {
   const run = st.run, lv = st.lv;
   lv.misses++;
   run.iceHits = (run.iceHits || 0) + 1;
+  tally('ice');   // THE RECORD
+  hkOnIce(t);   // hackers: LEECH and ICE MAN feed, NANA locks 2
   if (st.corp) st.corp.ice = (st.corp.ice || 0) + 1;
   t.state = 'locked';
   t.lockedBy = 'hit';
@@ -1233,6 +1259,8 @@ function blockHit(t, i) {
   } else if (st.god) {
     Sound.shield();
     msg = '> ICE. god mode: no damage.';
+  } else if (hkUp('brick')) {   // BRICK (crew) takes it
+    msg = hkTakeHit();
   } else if (has('forgery') && (t.loaded || (t.forged && !lv.forgeUsed))) {
     Sound.shield();
     if (!t.loaded) lv.forgeUsed = true;   // a counterfeit (HAUTE//COUTURE): one free per layer
@@ -1505,7 +1533,7 @@ const BOARD_FX = {
 };
 
 // Which gear a loot roll gives: by weight (gearWeight, ECON.drop).
-const pickGearDrop = r => pickWeighted(Object.keys(ITEMS).filter(k => !ITEMS[k].corp), gearWeight, r);   // (boss gear: only from its boss)
+const pickGearDrop = r => pickWeighted(Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && gearAllowed(k)), gearWeight, r);   // (fish: only from a PIER)   // (boss gear: only from its boss)
 
 // Credits or an item. Returns a short text for the message line.
 function grantLoot(r, tier) {
@@ -1550,6 +1578,8 @@ async function die() {
   st.dying = true;      // the music powers down instead of cutting out
   Sound.death();
   await wait(1100);
+  st.hkDeath = hkDeathFor();   // a hacker's last word as the screen falls apart
+  if (st.hkDeath) st.hkDeath.t0 = performance.now();
   await endRun(false);
 }
 
@@ -1568,7 +1598,8 @@ async function endRun(win) {
     st.wipe = null;
     const ms = fallOut(cells); flash(C.danger, 0.2, 0.4);
     Sound.collapse(ms / 1000);
-    await wait(ms + 150);
+    await wait(ms + 150 + (st.hkDeath ? 1600 : 0));
+    st.hkDeath = null;
   }
   // Winning: the final boss's success wipe carries straight into the results screen.
 
@@ -1583,6 +1614,7 @@ async function endRun(win) {
   const rep = run.practice ? 0 : win ? repWorth : Math.floor(repWorth * [0, 0.25, 0.5][legacyLv('dms')]);
   if (rep) { save.rep = (save.rep || 0) + rep; save.repTotal = (save.repTotal || 0) + rep; }
   if (win && !run.practice) save.cashouts = (save.cashouts || 0) + 1;
+  tallyRunEnd(run, win, rep);   // THE RECORD (the FEAT box comes up over the end screen)
   save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, sector: (run.sector || 0) + 1, win, rep, practice: run.practice, at: Date.now() });
   save.history = save.history.slice(0, 20);
   persist();
@@ -1608,7 +1640,7 @@ async function endRun(win) {
   {
     const scrollMap = d => {
       const om = st.overMap; if (!om || om.view == null) return;
-      const t = clamp(om.top + d, 0, (om.total || mapRows(st.result.map)) - om.view);
+      const t = nextTop(om.top, d, om.max != null ? om.max : (om.total || mapRows(st.result.map)) - om.view);   // (the shared scroll area's steps)
       if (t !== om.top) { om.top = t; Sound.tick(); }
     };
     st.scroll = scrollMap;
@@ -1627,6 +1659,7 @@ async function sectorClear(skipped) {
   const run = st.run;
   run.sectorsCleared = (run.sectorsCleared || 0) + 1;
   run.pending = { kind: 'sector', skipped };
+  tallySector(run);   // THE RECORD
   if (has('failsafe') && !has('zombie')) run.failsafeUsed = false;   // FAILSAFE recharges each stage
   if (!run.practice && run.sectorsCleared > (save.bestSector || 0)) { save.bestSector = run.sectorsCleared; persist(); }
   st.corp = null; st.lv = null; st.timer = null; st.dying = false;
@@ -1653,6 +1686,7 @@ async function pushOn() {
   if (st.transitioning || !run) return;
   const old = run.sector, skipped = !!(run.pending && run.pending.skipped);
   run.sector++;
+  if (legacyLv('wind') && run.integrity < run.maxInt && !zombie()) run.integrity++;   // SECOND WIND (THE BOARD)
   addSector(run.map, run.seed, run.sector, run.forceEvent || null);   // (forceEvent: the editor's TESTING tab)
   run.forceEvent = null; run.fence = [];   // what THE FENCE didn't sell back is gone
   st.result = null;
@@ -1755,11 +1789,42 @@ function openOmniReward(from) {
 }
 async function cashOut() {
   if (st.transitioning || !st.run) return;
+  // LOCKER (THE BOARD): first, put one mod away for your next run
+  const run = st.run;
+  if (legacyLv('locker') && !run.practice && !run.tutorial && !run.lockerAsked && run.mods.some(k => !UPLINK_LOCKED.includes(k))) {
+    run.lockerAsked = true;
+    return swapTo(openLocker);
+  }
   st.transitioning = true;
   Sound.ui();
   await wipeOut(0);
   st.transitioning = false;
   endRun(true);
+}
+
+// LOCKER: pick one of your mods to put away (a step lower), or none. Then the run ends as a cash out.
+function openLocker() {
+  const run = st.run, mods = run.mods.filter(k => !UPLINK_LOCKED.includes(k));
+  let sel = 0;
+  const lower = k => Math.max(0, ((run.modTier || {})[k] || 0) - 1);
+  const put = k => {
+    if (k) { save.locker = { key: k, tier: lower(k) }; persist(); Sound.buy(); setMsg(`> ${MODS[k].name.toLowerCase()} is in the locker.`, C.rep); }
+    cashOut();
+  };
+  openPanel('LOCKER', (T, B, X) => {
+    T('L O C K E R', C.rep);
+    T('put one mod away for your next run.', C.text);
+    T('it comes back a step lower.', C.mid);
+    T('');
+    mods.forEach((k, i) => {
+      const v = modView(k), dn = modView(k, lower(k));
+      X({ list: true, id: 'lk' + i, onTap: () => { sel = i; Sound.tick(); }, sel: i === sel, badge: k, badgeTier: run.modTier[k] || 0, name: v.name,
+        right: `back as ${dn.tier === v.tier ? 'is' : RARITY[dn.rarity].label}`, rightCol: C.mid });
+    });
+    T('');
+    X({ box: true, text: 'P U T   I T   A W A Y', sub: `- ${MODS[mods[sel]].name.toLowerCase()} -`, id: 'lkput', onTap: () => put(mods[sel]), minW: 28 });
+    B('[ NOTHING: CASH OUT ]', 'lknone', () => put(null));
+  }, '> locker: one mod to keep.', { full: true });
 }
 
 const jackIn = () => startRun(st.seed, st.practice);

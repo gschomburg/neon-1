@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v13.64']);
+NEON_FILES.push(['engine/map.js', 'v13.71']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -113,12 +113,15 @@ function addSector(nodes, seed, s, force = null) {
   const test = testSeed(seed), order = corpsByLevel();
   const ev = s === 0 ? null : force && SECTOR_EVENTS[force] ? force : test ? null : rollEvent(seed, s);
   const same = ev === 'copypaste' ? pickCorps(rngFor(seed, 'copy', s), targetLevel(s, 3), 1)[0] : null;   // COPY PASTE: one corp everywhere
-  const boost = ev === 'timeismoney' ? k => timedCorp(k) ? 3 : 1 : null;   // TIME IS MONEY: timed corps come up more
+  const evBoost = ev === 'timeismoney' ? k => timedCorp(k) ? 3 : 1 : null;   // TIME IS MONEY: timed corps come up more
+  const nem = typeof save !== 'undefined' && legacyLv('nemesis') && save.nemesis && CORPS[save.nemesis] ? save.nemesis : null;   // NEMESIS (THE BOARD): 3x
+  const boost = evBoost || nem ? k => (evBoost ? evBoost(k) : 1) * (k === nem ? 3 : 1) : null;
   const lanes = ev === 'gauntlet' ? [1] : [0, 1, 2];   // GAUNTLET: one line, no choices (a market in row 3)
   for (let ls = 1; ls <= 4; ls++) {
     if (!keep.has(ls) && ev !== 'flush') specs[ls] = specs[ls].map(() => 'corp');   // FLUSH keeps every rest stop...
     let types = test ? ['corp', 'corp', 'corp'] : shuffle(specs[ls].slice(), r);
     if (ev === 'flush') types = types.map(t => t === 'repair' ? 'cache' : t);   // ...as caches (the market stays)
+    else if (typeof pierOn === 'function' && pierOn()) { const pr = rngFor(seed, 'pier', s, ls); types = types.map(t => t === 'cache' && pr() < 0.5 ? 'pier' : t); }   // PIER: as common as a cache (engine/fishing.js)
     let corps = test === 'all' ? [0, 1, 2].map(j => order[(s * 12 + (ls - 1) * 3 + j) % order.length])
       : test ? [test, test, test] : pickCorps(r, targetLevel(s, ls), 3, boost);
     if (same) corps = [same, same, same];
@@ -187,5 +190,5 @@ const mapTop = map => Math.max(...Object.values(map).map(n => n.step));
 // What a node shows on the map, 3 cells: [$] [?] [+] for stops, a corp's code (SK1) for corps.
 // BLINDERS: the corp is hidden (its level shows) until you've been in.
 const blinded = n => n.mod === 'blinders' && !(st.run && st.run.visited.includes(n.id));
-const nodeLabel = n => n.type === 'shop' ? '[$]' : n.type === 'cache' ? '[?]' : n.type === 'repair' ? '[+]' : n.type === 'fence' ? '[&]'
+const nodeLabel = n => n.type === 'shop' ? '[$]' : n.type === 'cache' ? '[?]' : n.type === 'repair' ? '[+]' : n.type === 'pier' ? '[~]' : n.type === 'fence' ? '[&]'
   : blinded(n) ? (n.type === 'final' ? '???' : '??' + (corpDef(n.corp).level || 1)) : corpCode(corpDef(n.corp));

@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.64']);
+NEON_FILES.push(['engine/editor.js', 'v13.71']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -62,6 +62,7 @@ if (EDITOR) {
     help: async () => { endRun(); openHelp(); },
     codex: async () => { endRun(); openCodex(); },
     settings: async () => { endRun(); openSettings(); },
+    board: async () => { endRun(); openBoard(); },   // THE BOARD (YOU / REP / FEATS / STATS)
     // the profile; opts.logo shows it wearing that logo (put back at the next scene)
     profile: async o => { endRun(); if (o.logo && LOGO_BY_ID[o.logo]) { const p = profile(); if (logoWas == null) logoWas = p.logo; p.logo = o.logo; } openProfile(); },
     map: mapRun,
@@ -295,6 +296,7 @@ if (EDITOR) {
     sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),
     boss: async () => { await onMap(); const n = Object.values(st.run.map).find(x => x.type === 'final' && x.sector === st.run.sector) || st.run.map[bossIdOf(st.run.sector)]; await enterNode(n, true); await settle(); },   // (HEAD FIRST: the boss is the first node)
     clear: async () => { await onMap(); const run = st.run, b = bossIdOf(run.sector); run.at = b; if (!run.visited.includes(b)) run.visited.push(b); await sectorClear(false); await settle(); },
+    pier: async () => { await onMap(); st.run.credits = Math.max(st.run.credits, 100); await swapTo(() => openPier({ id: 'test-pier', sector: st.run.sector, type: 'pier' })); await settle(); },   // fishing (engine/fishing.js)
     uplink: async () => { await TEST.clear(); await swapTo(openUplink); await settle(); },
     anomaly: async m => {   // on the corps you can go to next
       await onMap();
@@ -302,6 +304,12 @@ if (EDITOR) {
       for (const id of availableNodes()) { const n = run.map[id]; if (n.type === 'corp' || n.type === 'final') { if (m.key) n.mod = m.key; else delete n.mod; } }
       if (m.key === 'thief') addFence(run.map, run.seed, run.sector);
     },
+    // feats (engine/feats.js): grant / take back one, show its FEAT box (when things are calm), wipe progression
+    // hackers (engine/hackers.js): bring one into the layer you're in (a rival, or crew as if you'd called them)
+    hacker: m => { if (!HACKERS[m.key] || !st.corp || !st.corp.hasBoss || !st.lv) throw new Error('get into a corp layer first'); hkSpawn(m.key, HACKERS[m.key].side === 'bad' ? 'rival' : 'call'); },
+    feat: m => { if (!FEAT_BY_ID[m.key]) return; if (m.on) grantFeat(m.key); else ungrantFeat(m.key); },
+    featbox: m => { if (FEAT_BY_ID[m.key]) FEAT_QUEUE.push({ feat: m.key }); },
+    wipe: () => { const w = wipeProgress(); FEAT_QUEUE.push({ head: 'THE BOARD', lines: ['progression wiped (test).', '', `refunded: ${w.refund} REP.`] }); },
     steal: async () => {   // your last mod goes to THE FENCE (made if this sector has none)
       const run = st.run;
       if (!run.mods.length) return;
@@ -327,7 +335,7 @@ if (EDITOR) {
     const m = { type: 'test-state', run: !!run, god: !!st.god, debug: !!st.debug, free: !!st.freeTravel, mode: st.mode,
       music: tabPlaying ? !!gameMusicOn : !!save.musicOn, sfx: !save.muted, tabMusic: tabPlaying,
       credits: run ? run.credits : 0, int: run ? run.integrity : 0, maxInt: run ? run.maxInt : 0, sector: run ? run.sector + 1 : 0,
-      event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0 };
+      event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0, feats: Object.keys(save.feats || {}), rep: save.rep || 0 };
     const s = JSON.stringify(m);
     if (s !== lastTest) { lastTest = s; post(m); }
   }, 300);
@@ -340,7 +348,7 @@ if (EDITOR) {
 
 // Debug hook for the console and automated tests.
 window.__br = {
-  state: st, save, C, Music, musicState, CORPS, FINAL, DRAW_FONT, SONGS, MUSIC_FOR, openTrackPlayer, trackLines, HELP_PAGES, Net, openMultiplayer, mpHost, mpLayer, mpSpec, mpStartRound, mpNextGame, mpSendEmote, mpLeave, amHost, mpKick, openProfile, genLayer, genMap, CONFIG, MODS, ITEMS,
+  state: st, save, C, Music, musicState, CORPS, FINAL, DRAW_FONT, SONGS, MUSIC_FOR, openTrackPlayer, trackLines, HELP_PAGES, Net, openMultiplayer, mpHost, mpLayer, mpSpec, mpStartRound, mpNextGame, mpSendEmote, mpLeave, amHost, mpKick, openProfile, tally, best, grantFeat, ungrantFeat, wipeProgress, FEATS, FEAT_QUEUE, featDone, statOf, genLayer, genMap, CONFIG, MODS, ITEMS,
   startRun, selectNode, enterNode, pick, useItem, activateMod, modUsable, modSpent, layerTick, predHeat, tilePos, tileCenter, nearness, pointerCell, parts, addMod, removeMod, addItem, pickMods, swapLines,
   toggleDev, devLines, availableNodes, panelLines, swapTo, openHelp, openCodex, openSettings, showTitle, buildScene,
   addSector, sectorClear, showSectorClear, pushOn, cashOut, openOmniReward, STAGES, modsAt, resumeRun, openBoard, LEGACY, legacyLv, repFor, saveRun, savedRun, clearRun,

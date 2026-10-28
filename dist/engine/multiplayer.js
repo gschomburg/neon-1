@@ -1,6 +1,6 @@
 // NeoN+1 engine/multiplayer.js: Online multiplayer, profiles, INFO.
 'use strict';
-NEON_FILES.push(['engine/multiplayer.js', 'v13.64']);
+NEON_FILES.push(['engine/multiplayer.js', 'v13.71']);
 
 // ---------------- Online multiplayer ----------------
 // 2-6 players take turns on one seeded run ("Jenga" rules, elimination):
@@ -63,7 +63,7 @@ const LOGO_W = 24, LOGO_H = 7;   // every logo is drawn in this box, centered
 const LOGO_BY_ID = Object.fromEntries(ART_LOGOS.map(l => [l.id, l]));
 const PLAYER_LOGOS = ART_LOGOS.filter(l => l.kind === 'player');
 const logoOf = id => LOGO_BY_ID[id] || (typeof id === 'number' && PLAYER_LOGOS.length ? PLAYER_LOGOS[((id % PLAYER_LOGOS.length) + PLAYER_LOGOS.length) % PLAYER_LOGOS.length] : PLAYER_LOGOS[0]);
-const logoUnlocked = l => l.kind === 'player' || (l.kind === 'corp' && corpStat(l.corp).breached > 0) || (l.kind === 'hacker' && !!(save.hackersBeaten || {})[l.hacker]);
+const logoUnlocked = l => l.kind === 'player' || (l.kind === 'corp' && corpStat(l.corp).breached > 0) || (l.kind === 'hacker' && (featDone('beat_' + l.hacker) || featDone('call_' + l.hacker)));   // a rival beaten 5 times, crew called 5 times
 const myLogos = () => ART_LOGOS.filter(logoUnlocked);
 const randomLogo = () => pickR(PLAYER_LOGOS, Math.random).id;
 // A logo's art in the logo box: the blank columns every row shares trimmed off, then centered in
@@ -251,45 +251,8 @@ function openInfo() {
 }
 
 // Your runner persona: a card with your logo, name and record. Used everywhere.
-function openProfile() {
-  openPanel('PROFILE', (T, B, X) => {
-    const prof = profile();
-    const found = Object.keys(save.seen).length;
-    const W = 29, row = t => `: ${t.padEnd(W - 4)} :`, edge = '+' + ' -'.repeat((W - 3) / 2) + ' +';
-    T('RUNNER PROFILE', C.accent);
-    T('');
-    const sty = styleOf(prof.style);
-    // The card: logo, name and record as one block in your style; the controls go under it.
-    const card = (text, extra = {}) => X(Object.assign({ text, col: sty.fg, bgCol: sty.bg }, extra));
-    const center = s => ' '.repeat(Math.max(0, Math.floor((W - 4 - s.length) / 2))) + s;
-    T(edge, C.mid);
-    card(row(''));
-    for (const l of hackerArt(prof.logo)) card(row(center(l)), { bold: true });
-    card(row(center(`${logoMark(prof.logo)} ${prof.name}`)), { bold: true });
-    card(row(''));
-    card(row(`best ${pad2(save.best)}   runs ${save.runs}`));
-    card(row(`wins ${save.wins}    codex ${found}`));
-    T(edge, C.mid);
-    const step = d => stepLogo(prof, d);
-    X({ row: [
-      { text: '[ < ]', id: 'plogoL', onTap: () => step(-1) },
-      { text: (' '.repeat(Math.floor((17 - logoOf(prof.logo).name.length) / 2)) + logoOf(prof.logo).name).padEnd(17), id: 'plogoN', onTap: () => step(1) },
-      { text: '[ > ]', id: 'plogo', onTap: () => step(1) },
-    ] });
-    T(`color: ${sty.name}`, C.mid);
-    X({ row: [
-      { text: '[ NEW NAME ]', id: 'pname', onTap: () => { prof.name = randomName(); persist(); Sound.tick(); } },
-      { text: '[ COLOR ]', id: 'pcolor', onTap: () => { prof.style = (prof.style + 1) % PLAYER_STYLES.length; persist(); Sound.tick(); } },
-    ] });
-    B('[ RANDOMIZE ALL ]', 'prand', () => { randomizeProfile(prof); Sound.ui(); });
-    T('');
-    T('your persona shows on your runs,', C.dim);
-    T('boss wins and in multiplayer.', C.dim);
-    T('');
-    B('[ BACK ]', 'back', () => swapTo(showTitle));
-  }, '> profile.', { full: true });
-  st.keyHandler = k => { if (k === 'escape') { swapTo(showTitle); return true; } return false; };
-}
+// The profile is THE BOARD's YOU tab now (engine/menus.js).
+function openProfile() { openBoard('you'); }
 
 async function mpHost() {
   if (st.mpBusy) return;

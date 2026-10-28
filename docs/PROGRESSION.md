@@ -56,7 +56,13 @@ BACKLOG items 1 (REP and THE BOARD), 2 (quests), 4 (hackers) and 7 (achievements
 - **The rep color** (built v13.64): a palette role like money, in every palette (blue-violet, lime on 3). Everything
   progression uses it: THE BOARD's header, REP amounts, the feat band, the unlock box, the `*` marks, done ticks. The
   feat band is rep behind the palette's background color (the message band, inverted). Tune any in the palette tab.
-- **No hacker colors of their own:** the game's colors (rivals in the danger color, crew in the accent color).
+- **Hacker colors** (changed, meat notes 2026-10-28): each hacker gets colors of their own, for their cursor on the board
+  and their lines in the terminal. The full list of how a hacker shows up (intro card, emotes, INT, bouncing face,
+  defeat, death taunts, the crew's "snake!") is in BACKLOG item 4.
+- **Hacker cursors** (the user, 2026-10-28): each hacker has a color style like the player ones (a text color on a
+  background; the same set their logo uses). One cursor for hackers and multiplayer players alike: the full 3-character
+  mark on its background (full strength; today's multiplayer cursor is one character on a faint one), the name tag under
+  it, gliding between nodes so you see where a rival is heading. Multiplayer moves to it too.
 
 ## 1. THE RECORD (stats)
 
@@ -136,6 +142,15 @@ BACKLOG items 1 (REP and THE BOARD), 2 (quests), 4 (hackers) and 7 (achievements
 9. **In a layer:** the gold band. **When calm:** the unlock box.
 
 ## 8. Build order
+
+**Step 3 built v13.67**: hackers in play (engine/hackers.js): rivals via RIVAL, crew via CALL gear, cards, cursors, colors,
+faces, death taunts, rival / crew feats, CREW posts and LVL 2, the CREW tab, locked logos in the picker, the codex HACKERS tab.
+Not yet: ICE MAN called in by an ICE hit (he comes with RIVAL like the rest), special per-hacker emotes, multiplayer on the
+new cursor. **Step 2 built v13.66**: the levels, PRIVATE MESSAGES (BOSS LOOT via BOSS HUNTER), the access level, GUEST + USER posts
+(SECOND WIND, LUCKY START, BETTER DROPS, LOCKER, NEMESIS, STARTER POOL). ELITE and SYSOP are open levels with nothing
+posted yet (HEAT, the quests, THE ARCHIVE). **Step 1 built v13.65** (SPEC version log). Not in it yet: CREW (step 3), REP's tiers (step 2), the access level on the card
+(step 2), locked rival logos in the picker (step 3).
+
 
 1. **The record, feats and the hub:** save.stats, data/feats.js, tally(), ~25 feats (corps, runs, odd), the hub (YOU,
    REP as today's board, FEATS, STATS), the title buttons, `*` marks, the gold band + the unlock box queue, titles,

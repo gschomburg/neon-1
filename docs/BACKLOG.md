@@ -54,6 +54,20 @@ unlocked by REP, and some quests unlock REP.
   with a quest purpose.
 - **The feel: FTL's quests and interactions.** Brainstorm together.
 - **FLOPPY** (the user, 2026-10-27): a floppy disk gear you insert in a terminal somewhere to start a quest.
+- **G0D: how you "beat" the game** (the user, meat notes 2026-10-28):
+  - G0D is a corp in heaven. Entering the H3AV3N seed opens a special network that reaches it.
+  - You need d0g on your crew to get past heaven's first sector (maybe he has a special ability for it).
+  - G0D has several stages: you fight it in the first sector, then again as the final boss of the second; then, after the
+    success screen, one more stage opens: you think you've beaten the game, but there's one more set of layers.
+  - Then G0D unlocks some cool hacking things?
+- **A gear quest** (meat notes 2026-10-28): go find a particular gear and cash out with it; that unlocks the next step.
+- **More quests** (the user, meat notes 2026-10-28):
+  - **The symbol path:** you find a symbol that is a path through a network (a very simple treasure map). Go through a
+    sector that way and you get a bonus, or the final node turns into a special boss. Needs a special sector map, e.g.:
+    `.-.-X` / ` \.-.` / `   /` / `  .`
+  - **POPS's old corp:** a quest that unlocks when you call POPS in the corp he used to work for.
+  - **Flip a rival:** turn one particular rival to your side. Maybe part of the d0g quest: once you beat d0g, it turns
+    out he's POPS's son or protégé; then he's on your side and helps you beat G0D.
 
 ### 3. Anomalies and sector events (named 2026-10-26)
 - **Built v13.54** (design: `docs/SECTOR_EVENTS.md`): 14 sector events, the SECTOR EVENT card, BLINDERS, THE FENCE,
@@ -66,7 +80,9 @@ unlocked by REP, and some quests unlock REP.
   RIGHT ANGLES, GAUNTLET; v13.59: EENY MEENY (3 bosses); v13.60: HEAD FIRST. Idea: ICE STORM.
 - **Other ideas (Claude's):** TAXED, AUDITED, RANSOM, BACKWARDS, a trace meter, two events stacked.
 
-### 4. Enemy and ally hackers (about 10% there: RIVAL)
+### 4. Enemy and ally hackers (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
+- **Still open:** ICE MAN called in by an ICE hit; special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
+  COMPANION's pet; balance from play.
 - RIVAL is a bot second player (health, burns ICE, steals pay).
 - **The cast, written v13.63** (the user, 2026-10-28): 10 bad and 10 good hackers in `dist/data/hackers.js`, each with
   a face (5 x 3, like POPS's: `data/art/faces.js`, new), a logo (`logos.js`, kind hacker), lore, a shtick, how its AI
@@ -82,8 +98,25 @@ unlocked by REP, and some quests unlock REP.
 - **Allies:** an item that calls a hacker (POPS?) with health who clears nodes for you, or stands and takes hits;
   upgrade them, give them mods (POPS with TRACER), tie them to REP or to your history with that hacker.
 - Details: CORPS.md "Corp modifiers" > RIVAL; the hacker / NPC name pool in CORPS.md.
-- **COMPANION's pet on screen** (the user, 2026-10-27): BYTEPETS' mod gets a little animated pet that is on screen
+- **COMPANION's pet on screen: built v13.68** (engine/pet.js; open: other ways to get a pet). (the user, 2026-10-27): BYTEPETS' mod gets a little animated pet that is on screen
   much of the time, and you can pet it. No change to what it does. Look at it with the hackers (they're almost pets).
+  More (meat notes 2026-10-28): it's a cat or a dog; it sits on the tray or dances to the music; it also sleeps and walks
+  back and forth. Does it interact with hackers at all? Would MOTHER point it out?
+- **RTFM** (the user, meat notes 2026-10-28): a hacker. Its line: not "real time fun machine".
+- **How a hacker shows up and plays out** (the user, meat notes 2026-10-28; for step 3 of docs/PROGRESSION.md):
+  - **The intro:** a short card when a rival invades, and the same when you call in crew: it shows the logo. Either it
+    goes on by itself or you tap to close; the clocks stop while it's up.
+  - **Their colors:** each hacker gets colors (this replaces "no colors of their own"). Their **cursor** moves around
+    the board in their colors, and the **terminal** takes on their colors for their lines.
+  - **Emotes:** hackers emote, maybe with special emotes of their own.
+  - **The terminal:** rivals taunt there; crew give clues; whatever a hacker does shows up there.
+  - **Their INT** is on screen.
+  - **Their face** pops up and bounces like POPS's in the training, maybe in the terminal when they're talking.
+  - **Defeated:** a little animation (their face icon going away) and a line in the terminal. It matters most for
+    rivals, but crew get one too, a goodbye like "that's all i got left" or "they got me".
+  - **You die with a rival in the layer** (or to one): their logo comes up as the screen falls apart, with a taunt.
+  - **You die with crew still going:** their face comes up as the screen falls apart, calling your name, like the
+    Metal Gear Solid game over ("snaaake! snake!"). Each crew member has their own line.
 
 ### 5. Scrap mods and new gear
 - **Built v13.52:** TUNNEL, MESH, WARP steps, TILT, SHAKE, FRAG, REWIND, SHOE, PASS (SPEC version log).
@@ -115,6 +148,34 @@ unlocked by REP, and some quests unlock REP.
   (read CIPHER for a layer), the call as an item, exotic tiers of today's gear. EXOTICS.md has more.
 
 ### 6. The map and run structure
+- **Fishing: built v13.69** (engine/fishing.js; open: unlock the PIER with a feat, a quest item on the line, more UI after play). (the user, meat notes 2026-10-28): a PIER node on the map where you fish for loot.
+  - Fishing costs credits.
+  - You find gear and things (maybe a particular quest item), and you catch fish to sell: little fish to big fish, by
+    rarity up to legendary; black markets buy them. Fish can be thrown like SHOE? You can definitely catch shoes.
+  - The tap game: tap to cast, wait for a bite; when the bobber goes, tap again (then maybe reel in).
+  - Fishing feats, of course. No fishing upgrades.
+  - Its own view, different from the board (the note trails off: "i'm thinking different than...").
+  - **The view: PHISHING** (the user picked it, 2026-10-28; mockups on the "NeoN+1 Fishing" page, idea D): the board area is
+    a data stream, lanes sliding left. Hold and the hook sinks from the top toward your finger. Shapes drift by and nose the
+    hook; when one bites it turns red: tap anywhere to start the reel. Miss it and it swims off. The reel: keep it inside a
+    moving window (hold to pull, let go to slack) until the catch bar fills; try it, pull it out if it isn't fun. A mystery:
+    every shape looks like a fish, but some are fish, some gear, sometimes a shoe; you only see what it is on the CAUGHT card.
+    The user, after: holding / dragging only moves the hook up and down (which lane); it drifts left and right on its
+    own. A [ REEL IN ] button pulls an empty hook back (to recast, or to leave for the next node). More UI to work out after
+    playing it.
+  - **Round 2 built v13.70** (7 lanes, small fish mostly, sounds, weights, pier music, menu at the pier, taps on the stream only, ripples, the reel in the fish's lane).
+  - **Fishing meat notes (the user, 2026-10-28, after playing v13.70), open:**
+    - (built v13.71) **Reel UI pass:** off the target, the whole bar goes red (but keep the target visible: it could tint a little pink when
+      you're off it). The cursor: a bigger shape (# or @) that REPLACES the - under it (it overlaps now, which makes it less clear),
+      white, or matching the target's cyan; when it's on the target it changes (white or something else). The target design is good.
+    - (built v13.71) After a catch, keep the stream dimmed behind the CAUGHT card until you KEEP or THROW BACK.
+    - (built v13.71) Terminal: the cast message, then once you drag it changes to "drag up and down to move the hook" (it only moves up and down).
+    - You can get health (INT) back from fishing.
+    - A title, CAST AWAY: spend 60 minutes fishing (a time stat).
+    - Mods or gear that affect fishing? (a note for now, the user 2026-10-28; the first notes said no fishing upgrades)
+    - (built v13.71) **PHISHING retheme:** what you catch is corp data, not fish: corp passwords, elderly social security numbers, corpo
+      credentials, blackmail material. Gear still comes up, but the catches get a little description of what info you got.
+      Keep the random weights (maybe not pounds) and the BIGGEST YET stuff.
 - More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
 - Moving backwards / the frontier (pick any node linked to one you've visited), or allow clearing the whole map.
   An "open map" mod (the aimed WARP is built: epic WARP, v13.52).

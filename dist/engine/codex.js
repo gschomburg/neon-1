@@ -1,11 +1,11 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v13.64']);
+NEON_FILES.push(['engine/codex.js', 'v13.71']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
 const codexMods = () => Object.keys(MODS).sort((a, b) => RARITY_ORDER.indexOf(MODS[a].rarity) - RARITY_ORDER.indexOf(MODS[b].rarity) || MODS[a].name.localeCompare(MODS[b].name));
-const CODEX_ROWS = 24; // height of the list window, including "more" rows
+const CODEX_ROWS = 23; // height of the list window, including "more" rows (the tabs take two rows)
 
 function wrapText(str, w) {
   const lines = [];
@@ -38,11 +38,39 @@ function nextTop(top, d, max) {
   return clamp(t, 0, max);
 }
 
+// The scroll area every list uses (THE BOARD's tabs; the codex draws the same thing by hand): `rows` lines high,
+// with the "more" rows at the top / bottom when there's more that way, the wheel and swipes scroll it.
+// s: { top } (the caller keeps it). items: X specs, one per line. Always draws exactly `rows` lines.
+function scrollArea(X, T, s, items, rows, idp = 'sa') {
+  const n = items.length, max = maxTop(n, rows);
+  s.top = clamp(s.top || 0, 0, max);
+  const by = d => { const t = nextTop(s.top, d, maxTop(n, rows)); if (t !== s.top) { s.top = t; Sound.tick(); } };
+  const w = listWindow(s.top, n, rows);
+  let used = 0;
+  if (w.hasUp) { X({ text: '[ ^ ^ ^  more  ^ ^ ^ ]', invert: true, id: idp + 'up', onTap: () => by(-1) }); used++; }
+  for (let i = s.top; i < s.top + w.shown; i++) { X(items[i]); used++; }
+  if (w.hasDown) { X({ text: '[ v v v  more  v v v ]', invert: true, id: idp + 'dn', onTap: () => by(1) }); used++; }
+  for (; used < rows; used++) T('');
+  st.scroll = by;
+  return w;
+}
+// Keep line idx inside a scroll area's window.
+function scrollFollow(s, idx, n, rows) {
+  for (let i = 0; i < 4; i++) {
+    const w = listWindow(s.top, n, rows);
+    if (idx < s.top) s.top = idx;
+    else if (idx >= s.top + w.shown) s.top = idx - w.shown + 1;
+    else break;
+    s.top = clamp(s.top, 0, maxTop(n, rows));
+  }
+}
+
 function openCodex() {
-  const TABS = [['mods', 'MODS', 'tabm'], ['items', 'GEAR', 'tabi'], ['glyphs', 'GLYPHS', 'tabg'], ['corps', 'CORPS', 'tabc'], ['sectors', 'SECTORS', 'tabs']];
+  const TABS = [['mods', 'MODS', 'tabm'], ['items', 'GEAR', 'tabi'], ['glyphs', 'GLYPHS', 'tabg'], ['corps', 'CORPS', 'tabc'], ['sectors', 'SECTORS', 'tabs'], ['hackers', 'HACKERS', 'tabh']];
   let tab = 'mods', sel = 0, top = 0, shownPal = null;
   const entries = () => tab === 'mods' ? codexMods() : tab === 'items' ? Object.keys(ITEMS)
-    : tab === 'glyphs' ? GLYPHS.map(gl => gl.key) : tab === 'sectors' ? Object.keys(SECTOR_EVENTS).map(k => 'ev_' + k) : CODEX_CORPS.map(k => 'corp_' + k);
+    : tab === 'glyphs' ? GLYPHS.map(gl => gl.key) : tab === 'sectors' ? Object.keys(SECTOR_EVENTS).map(k => 'ev_' + k)
+    : tab === 'hackers' ? [...HK_RIVALS, ...HK_CREW].map(k => 'hk_' + k) : CODEX_CORPS.map(k => 'corp_' + k);
   // Corps: a short list and a taller details box.
   const rowsFor = () => tab === 'corps' ? CODEX_ROWS - 5 : tab === 'glyphs' ? CODEX_ROWS : CODEX_ROWS - 7;   // details: corps 10 rows, mods / items 12, glyphs 5
   const setTab = name => { tab = name; sel = 0; top = 0; Sound.tick(); };
@@ -65,7 +93,9 @@ function openCodex() {
     top = clamp(top, 0, maxTop(n, rows));
     const found = list.filter(k => save.seen[k]).length;
     T(`CODEX  ${tab} ${found}/${n} found`, C.accent);
-    X({ gap: 0, row: TABS.map(([name, label, id]) => ({ text: `[${label}]`, id, sel: tab === name, onTap: () => setTab(name) })) });   // (5 tabs: no gaps, to fit 36 wide)
+    const tabBtn = ([name, label, id]) => ({ text: `[${label}]`, id, sel: tab === name, onTap: () => setTab(name) });
+    X({ gap: 0, row: TABS.slice(0, 4).map(tabBtn) });   // (two rows: 36 wide)
+    X({ gap: 0, row: TABS.slice(4).map(tabBtn) });
 
     // Details of the selected entry (5 rows; 10 for corps).
     T(SEP, C.dim);
@@ -91,6 +121,19 @@ function openCodex() {
         tell.forEach((t, i) => T(t, rec.breached ? C.accent : i === 0 ? C.mid : C.dim));
         T(d.gear ? `boss gear: ${ITEMS[d.gear.key].name} x${d.gear.n}` : d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
         T(`breached ${rec.breached}   lost ${rec.lost}`, C.text);
+      }
+    } else if (tab === 'hackers') {
+      // 12 rows: the face in their colors, name and side, the shtick, the lore
+      const id = k.slice(3), h = HACKERS[id], sty = hkStyle(id), face = (ART_FACES[id] || { art: ['', '', ''] }).art;
+      if (!seen) {
+        T('???', C.dim); T('not met yet.', C.mid); T(h.side === 'bad' ? 'rivals show up in RIVAL corps.' : 'CALL gear brings crew in.', C.dim);
+        for (let i = 0; i < 9; i++) T('');
+      } else {
+        const side = h.side === 'bad' ? 'RIVAL' : 'CREW', ink = hkInk(id);
+        face.forEach((l, i) => { const txt = i === 0 ? hkName(id) : i === 1 ? side : `${'#'.repeat(h.hp)} bars`; const line = (l.padEnd(5) + '   ' + txt).padEnd(32); X({ text: line, colorAt: c => c < 5 ? ink : i === 0 ? C.bright : i === 1 ? (h.side === 'bad' ? C.danger : C.accent) : C.mid, bold: i === 0 }); });
+        const sh = wrapText(`"${h.shtick}"`, 34), lore = wrapText(h.lore.join(' '), 34);
+        T(sh[0] || '', ink); T(sh[1] || '', ink);
+        for (let i = 0; i < 7; i++) T(lore[i] || '', C.mid);
       }
     } else if (tab === 'sectors') {
       // 12 rows: the card's picture with its name and kind, what the card says (at sector 2), the anomaly
@@ -149,7 +192,10 @@ function openCodex() {
     for (let idx = top; idx < top + w.shown; idx++) {
       const key = list[idx], seenK = !!save.seen[key];
       const base = { list: true, id: 'cx' + idx, onTap: () => { sel = idx; Sound.tick(); }, sel: idx === sel };
-      if (tab === 'sectors') {
+      if (tab === 'hackers') {
+        const h = HACKERS[key.slice(3)];
+        X(Object.assign(base, { name: seenK ? hkName(key.slice(3)) : '???', col: seenK ? C.bright : C.dim, right: seenK ? (h.side === 'bad' ? 'RIVAL' : 'CREW') : '', rightCol: h.side === 'bad' ? C.danger : C.accent }));
+      } else if (tab === 'sectors') {
         const E = SECTOR_EVENTS[key.slice(3)];
         X(Object.assign(base, { name: seenK ? E.name : '???', col: seenK ? C.bright : C.dim, right: seenK ? (E.kind === 'sector' ? 'sector' : 'anomaly') : '', rightCol: C.mid }));
       } else if (tab === 'glyphs') {

@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.64']);
+NEON_FILES.push(['engine/help.js', 'v13.71']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -70,6 +70,7 @@ function buildNetPage(T, X) {
   stop('$', 'BLACK MARKET', 'buy gear, mods and repairs. REROLL for new offers, SELL your gear.');
   stop('?', 'DATA CACHE', 'free loot, then pick a mod.');
   stop('+', 'SAFEHOUSE', 'heal 2 integrity, then pick a mod.');
+  stop('~', 'THE PIER', 'phish the data stream: tap to cast, drag the hook up and down, tap when something bites (red), then hold to reel it in. what you land is stolen data: black markets buy it. sometimes it\'s gear. sometimes a shoe.');
   T('');
   H('CORPS');
   P('4 layers and a boss. each corp hides the real node its own way: its tell. the quote on the map is a hint.');
@@ -96,6 +97,12 @@ function buildAdvancedPage(T, X) {
   T('');
   H('REPUTATION (REP)');
   P('cash out and you bank REP: for how deep you got, the corps you breached, your perfects, the credits you earned and the sectors you cleared. die and you bank nothing. spend REP at THE BOARD on upgrades for every run after.');
+  T('');
+  H('HACKERS');
+  P('RIVALS come into corps with the RIVAL anomaly (V): each one has its own trick (stealing the pay, denying nodes, covering glyphs...). breach the corp and you beat them; beat one 5 times for its logo. CREW come in when you use CALL gear and help for the rest of the corp. call one 5 times and they can join your crew on THE BOARD; then their own call gear turns up.');
+  T('');
+  H('THE BOARD AND FEATS');
+  P('THE BOARD (on the title, or tap your name) keeps what lasts between runs: YOU (your card: logo, title, color), REP (upgrades to buy: buy enough on one level and the next opens, and some feats open private posts), FEATS and STATS. feats are things to do (breach 10 corps, 10 perfects in a row...); some give a title for your card. a * means something new.');
   T('');
   H('SECTOR EVENTS');
   P('from sector 2 on, every sector rolls an event: a card tells you what it is when the sector starts (tap the sector name on the map to see it again). most events put an anomaly on some of its corps, and on its boss; others change the whole sector: one corp everywhere, cheap markets, more loot, clocks that cost money.');

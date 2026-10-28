@@ -14,6 +14,35 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Phishing** (v13.71): the catches are stolen data now (names + info lines + sizes are mine: SPAM LIST, REUSED PASSWORD, LOYALTY ACCOUNT, SOC SEC NUMBER, CORPO LOGIN, PAYROLL DUMP, BLACKMAIL, ROOT KEYS), the LANDED card, ANGLER is now PHISHER. Reel UI: @ cursor, red bar / pink target off it. Stream dim behind the card; the drag message.
+- [ ] **Fishing round 2** (v13.70): 7 lanes, fewer and mostly little fish (max 3 big), the cast drops to your tap, reel clicks / ratchet sounds, bite + snap + shoe sounds, market pop on a catch (confetti on legendary), weights on the card (BIGGEST YET), the pier tracks (LOW PRESSURE / PLUS ONE / SEA LEGS, level 3 while reeling). Round 2b: menu at the pier, taps only on the stream, louder sounds + cast spin, ripples, the reel replaces the fish's lane. Listen to the sounds; is level 3 enough of a lift (4 is the boss level)?
+- [ ] **Fishing** (v13.69, 2026-10-28): the PIER is in (the editor's TESTING tab > go fishing, or find a [~] on the map). Hold to
+  sink the hook, tap when one bites (red), hold to reel. Play it and tell me what to change: the bite window (0.7s), the bite chance
+  (half), the reel (too easy / hard?), lane speeds, the 30-cast limit, prices (ECONOMY tab > Fishing). The fish names and lines
+  are mine. Not gated by a feat yet.
+
+- [ ] **The pet** (v13.68, 2026-10-28): take COMPANION (TESTING > Give) and a cat or dog with a name follows you on the
+  tray line: walks, sits, sleeps when you're idle, dances to the music, runs to what it sniffs out; tap to pet it. Its looks
+  (2 lines), names and hacker lines are in dist/data/pets.js: redraw freely. ICE MAN now waits for your first ICE hit.
+
+- [ ] **Hackers in play** (v13.67, 2026-10-28): RIVAL corps now bring in one of the 10 rivals, and CALL gear (rare, in markets and
+  loot) brings in crew. Every rule, line and color is mine (dist/data/hackers.js for colors and lines; engine/hackers.js HK_AI for
+  how they play): tune freely. Try it fast: the editor's TESTING tab > Hackers > bring in, while in a corp layer. Look at: the
+  card, the cursors, their terminal lines, the face pop when they talk, dying with one up, THE BOARD > CREW, the codex HACKERS tab.
+  Balance is untested by a person: d0g and HCF might steal a lot; LEECH and SYSOP might feel slow.
+
+- [ ] **REP's levels** (v13.66, 2026-10-28): THE BOARD > REP is now GUEST / USER / ELITE / SYSOP (buy 4 on GUEST for USER, 3 on
+  USER for ELITE). New posts, all mine: SECOND WIND and LUCKY START (GUEST); BETTER DROPS, LOCKER, NEMESIS, STARTER POOL (USER);
+  BOSS LOOT as the first PRIVATE MESSAGE (feat BOSS HUNTER: clear 10 sectors). Prices and the 4 / 3 / 2 counts are guesses.
+  ELITE and SYSOP open with nothing on them yet. Also fixed: SHORTLIST never worked. Quick test: the TESTING tab's credits
+  don't give REP; use the dev menu's +100 REP.
+
+- [ ] **Feats and THE BOARD** (v13.65, 2026-10-28): progression step 1. On the title: [ THE BOARD ] and your name both open the
+  new hub (YOU / REP / FEATS / STATS). 25 feats in `dist/data/feats.js` (names, POPS's lines, which give titles: all mine, edit
+  freely). Try: the editor's TESTING tab > Feats (grant one, "box" shows its FEAT box), or just play. Your save was wiped on
+  load (REP refunded for THE BOARD buys) since this is the fresh start. Check: the FEAT box, the rep-colored terminal line
+  in a layer, the YOU card, the * marks, STATS, the game-over screen's new "more" rows.
+
 - [ ] **REP colors** (v13.64, 2026-10-28): every palette has a new **rep** color (blue-violet; lime on 3 where violet was
   near their own colors). Look them over in the neon editor's palette tab (a new rep row, and REP in the samples) or on the
   "NeoN+1 REP Colors" page; change any you don't like. Nothing in the game uses it yet: it's for the feats / THE BOARD screens.

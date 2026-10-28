@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.64']);
+NEON_FILES.push(['engine/screens.js', 'v13.71']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -126,12 +126,12 @@ function titleLines(now) {
     { text: '[ MULTIPLAYER ]', id: 'mp', onTap: () => swapTo(openMultiplayer) },
   ] });
   lines.push({ row: [
-    { text: '[ THE BOARD ]', id: 'board', onTap: () => swapTo(openBoard) },
+    { text: '[ THE BOARD ]' + (boardNew() ? '*' : ''), id: 'board', onTap: () => swapTo(() => openBoard()) },   // (a * when a feat is new)
     { text: '[ LEADERBOARD ]', id: 'leaders', onTap: () => swapTo(openLeaders) },
   ] });
   if (saved) lines.push({ row: [{ text: st.newArmed ? '[ DROP SAVE? ]' : '[ NEW RUN ]', id: 'newrun', onTap: newOverSave }] });
   T('');
-  { const prof = profile(); lines.push({ text: `[ ${logoMark(prof.logo)} ${prof.name} ]`, id: 'profile', style: styleOf(prof.style), onTap: () => swapTo(openProfile) }); }
+  { const prof = profile(); lines.push({ text: `[ ${logoMark(prof.logo)} ${prof.name} ]${save.newTitle ? '*' : ''}`, id: 'profile', style: styleOf(prof.style), onTap: () => swapTo(() => openBoard('you')) }); }   // THE BOARD's YOU tab (a * for a new title)
   T(`best ${pad2(save.best)}  runs ${save.runs}  wins ${save.wins}  rep ${save.rep || 0}`, C.mid);
   { const b = lbTitleLine(); T(b ? `board: ${b}` : '', C.money); }   // engine/leaders.js (its row is kept, so nothing jumps)
   // Seed: tap to roll a new one.
@@ -276,14 +276,17 @@ function overLines() {
   const om = st.overMap || (st.overMap = { top: null });
   const atRow = E + mapRowOf(r.map[r.at], r.map);
   if (om.top == null) om.top = atRow - view + 2;   // as high as it goes with where the run ended in view: the mods first
-  om.top = clamp(om.top, 0, total - view);
+  // the scroll area every list uses (engine/codex.js): a "more" row at the top / bottom when there's more that way
+  om.max = maxTop(total, view);
+  om.top = clamp(om.top, 0, om.max);
   om.view = view; om.total = total;
-  const shown = extras.slice(om.top, om.top + view);
-  if (shown.length && om.top > 0) shown[0] = Object.assign({}, shown[0], { arrowUp: true });   // more above
-  const mapH = view - shown.length;
-  if (!mapH && shown.length) shown[shown.length - 1] = Object.assign({}, shown[shown.length - 1], { arrowDown: true });
+  const w = listWindow(om.top, total, view);
+  const shown = extras.slice(om.top, om.top + w.shown);
+  const mapH = w.shown - shown.length;
+  if (w.hasUp) lines.push({ text: '[ ^ ^ ^  more  ^ ^ ^ ]', invert: true, id: 'omup', onTap: () => st.scroll && st.scroll(-1) });
   lines.push(...shown);
-  if (mapH) lines.push({ mapView: true, h: mapH, top: Math.max(0, om.top - E), r, above: om.top > 0 && !shown.length });
+  if (mapH) lines.push({ mapView: true, h: mapH, top: Math.max(0, om.top - E), r, noArrows: true });
+  if (w.hasDown) lines.push({ text: '[ v v v  more  v v v ]', invert: true, id: 'omdn', onTap: () => st.scroll && st.scroll(1) });
   T('');
   lines.push(...bottom);
   return lines;

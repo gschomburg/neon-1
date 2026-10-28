@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.64']);
+NEON_FILES.push(['engine/input.js', 'v13.71']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -166,11 +166,15 @@ if (!window.PointerEvent) {
 }
 
 cv.addEventListener('pointerdown', e => {
+  st.lastInput = performance.now();   // (the pet falls asleep when you're idle)
   Sound.init();
   Field.blur();   // tapping anywhere else finishes typing (phones don't always do this)
   if (st.boot) { introTap(hitAt(...ptXY(e))); return; }   // the intro: LOGIN, skip ahead, its buttons (engine/intro.js)
   if (st.ad) return adTap(hitAt(...ptXY(e)), performance.now());   // an ad is up: it takes the tap
   if (st.evCard && !st.dev) return evTap(hitAt(...ptXY(e)));   // a SECTOR EVENT card (engine/events.js)
+  if (st.featBox && !st.dev) return featTap(hitAt(...ptXY(e)));   // the FEAT box (engine/feats.js)
+  if (st.hkCard && !st.dev) return hkCardTap();   // a hacker's card (engine/hackers.js)
+  if (st.mode === 'fish' && !st.dev && !st.pause && fishPointer('down', e)) return;   // the PIER (engine/fishing.js)
   if (st.intro) { st.intro.skip = true; return; }   // tap skips a corp intro
   if (st.bossIntro) { st.bossIntro.skip = true; return; }   // ...and a boss entrance
   let h = hitAt(...ptXY(e));
@@ -219,6 +223,7 @@ cv.addEventListener('pointerdown', e => {
 });
 
 cv.addEventListener('pointermove', e => {
+  if (st.mode === 'fish' && st.fish && st.fish.hold) fishPointer('move', e);   // the PIER: the hook follows your finger up and down
   { const [px, py] = ptXY(e); st.ptr = { x: px, y: py }; st.ptrAt = performance.now(); }
   if (st.press && Math.hypot(e.clientX - st.press.x, e.clientY - st.press.y) > 12) st.press.moved = true;
   if (st.coinPress) coinDrag(e);   // COIN FLIP
@@ -242,6 +247,7 @@ cv.addEventListener('pointermove', e => {
   cv.style.cursor = h ? 'pointer' : 'default';
 });
 cv.addEventListener('pointerup', e => {
+  if (st.mode === 'fish' && st.fish) fishPointer('up', e);
   st.drag = null;
   if (st.coinPress) {   // COIN FLIP: let go: a quick tap picks, on a side flips, anywhere else skips
     const cp = st.coinPress;
@@ -257,7 +263,7 @@ cv.addEventListener('pointerup', e => {
   const h = hitAt(...ptXY(e));   // a drag: lifting selects (a second tap confirms)
   if (h && h.kind === 'tile' && st.mode === 'play' && !st.busy) { st.sel = h.i; Sound.tick(); }
 });
-cv.addEventListener('pointercancel', () => { st.press = null; if (st.coinPress) { st.coinPress = null; coinCancel(); } });
+cv.addEventListener('pointercancel', () => { if (st.fish) st.fish.hold = false; st.press = null; if (st.coinPress) { st.coinPress = null; coinCancel(); } });
 // COIN FLIP: while held, dragging up opens the coin and picks a side (left / right of the node).
 function coinDrag(e) {
   const p = st.coinPress, t = st.lv && st.lv.tiles[p.i];
@@ -282,6 +288,7 @@ cv.addEventListener('wheel', e => {
 }, { passive: false });
 
 document.addEventListener('keydown', e => {
+  st.lastInput = performance.now();
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   Sound.init();
   const k = e.key.toLowerCase();
@@ -290,6 +297,8 @@ document.addEventListener('keydown', e => {
   if (st.boot && e.key !== '`') { introKey(e.key.toLowerCase()); return; }   // the intro: Enter / Space start and skip, N / L pick
   if (st.ad && e.key !== '`') { e.preventDefault(); return adKey(e.key.toLowerCase(), performance.now()); }   // an ad is up
   if (st.evCard && !st.dev && e.key !== '`') { e.preventDefault(); return evKey(k); }   // a SECTOR EVENT card
+  if (st.featBox && !st.dev && e.key !== '`') { e.preventDefault(); return featKey(k); }   // the FEAT box
+  if (st.hkCard && !st.dev && e.key !== '`') { e.preventDefault(); return hkCardKey(k); }   // a hacker's card
   if (st.intro && e.key !== '`') { st.intro.skip = true; return; }   // any key skips a corp intro
   if (st.bossIntro && e.key !== '`') { st.bossIntro.skip = true; return; }
   if (e.key === '`') return toggleDev();
@@ -301,7 +310,7 @@ document.addEventListener('keydown', e => {
     if (st.pause) return togglePause();
     if (st.keyHandler && st.keyHandler(k)) return;
     if (st.coin) return coinCancel();   // COIN FLIP: skip the flip
-    if (st.run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel')) return togglePause();
+    if (st.run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel' || st.mode === 'fish')) return togglePause();
     return;
   }
   if ((st.transitioning || st.wipe) && !(st.tut && st.tut.curtain)) return;   // (the training's opening is a held wipe: its popups still take keys)

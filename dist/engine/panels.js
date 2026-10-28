@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.64']);
+NEON_FILES.push(['engine/panels.js', 'v13.71']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -37,6 +37,7 @@ function addMod(key, tier = 0) {
   const run = st.run;
   if (!MODS[key]) return null;          // a mod that no longer exists (old saves / tests)
   markSeen(key);
+  if (key === 'companion') petRoll(run, 'companion');   // COMPANION: a pet for the run (engine/pet.js)
   if (run.mods.includes(key)) {
     const was = modTier(key);
     run.modTier[key] = upgradeTo(key, tier);
@@ -98,11 +99,12 @@ const SEP = '+ - - - - - - - - - - - - - - - +';
 // What a market pays for one of a gear stack: value gear (DUDS ... WALLET) its worth, the rest a share of its price.
 function gearValue(key, tier = 0) {
   if (key === 'bond') return earnInt(ECON.gear.bond) * ((st.run && st.run.sector || 0) + 1);
+  if (ITEMS[key].fish) return fishWorth(key);   // a fish (ECON.fish, by rarity)
   if (ITEMS[key].value) return earnInt(ECON.gear[key]);
   return Math.max(1, Math.floor(ITEMS[key].price * TIER_PRICE[tier || 0] * priceScale() * ECON.gear.sellPct));
 }
 const marketRerolls = () => 1 + legacyLv('restock');   // per market (RESTOCK on THE BOARD: up to 3)
-const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value && !ITEMS[k].corp);   // value gear is loot only; boss gear comes from its boss
+const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value && (!ITEMS[k].corp || legacyLv('bossloot')) && gearAllowed(k));   // value gear is loot only; boss gear comes from its boss (BOSS LOOT on THE BOARD: markets too)
 // How often a gear shows up (loot and markets): normal gear by its rarity, value gear its own (ECON.drop).
 const gearWeight = k => { const w = ECON.drop[ITEMS[k].value ? k : ITEMS[k].rarity]; return w == null ? 1 : w; };
 // One key, picked by weight.
@@ -348,7 +350,7 @@ function openStartReward(node) {
   openChoice({
     title: 'LINK ESTABLISHED', col: C.accent,
     head: [['you are in. pick a starter perk.', C.text]],
-    options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, modsOfKind('minor'), 3),   // the training run: TRACER
+    options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, legacyLv('starter') ? modsOfKind('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky')),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.starter)}cr ]`,
     onSkip: () => { const cr = earnInt(ECON.skip.starter); run.credits += cr; run.earned += cr; },
     msg: '> link established.',

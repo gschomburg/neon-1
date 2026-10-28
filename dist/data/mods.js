@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.64']);
+NEON_FILES.push(['data/mods.js', 'v13.71']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -109,6 +109,65 @@ const ITEMS = {
   bees:   { key: 'bees',   name: 'BEES',   price: 50, rarity: 'legendary', corp: 'apiary',
     desc: 'in a layer: a swarm eats 3 ICE, then 1 more in every layer left in this corp. never the real node.', tip: 'a swarm eats ICE.',
     codex: 'in a layer: let the bees out. the swarm climbs the board and eats 3 ICE, then stays: 1 more ICE in every layer left in that corp. it never touches the real node. (the bees are not real. nobody has seen a real bee in years.)' },
+  // CALL gear (engine/hackers.js): a crew hacker comes in for the rest of the corp. CALL brings a random one; each
+  // call counts toward them (5 calls: CREW on THE BOARD). A crew member's own gear (crew:) only turns up once they're in your crew.
+  call:   { key: 'call',   name: 'CALL',   price: 34, rarity: 'rare', desc: 'in a corp: call in a random crew hacker for the rest of the corp.', tip: 'call in a hacker.',
+    codex: 'in a corp: a burner phone with a number on it. somebody picks up: a random crew hacker comes in and helps for the rest of the corp. call the same one 5 times and THE BOARD posts them as crew.' },
+  call_pops: { key: 'call_pops', name: 'POPS', price: 40, rarity: 'rare', crew: 'pops', desc: 'in a corp: call POPS in for the rest of the corp (burns the ICE he can read).', tip: 'call POPS.',
+    codex: 'in a corp: POPS\'s number. POPS comes in and helps for the rest of the corp (burns the ICE he can read). only turns up once POPS is in your crew.' },
+  call_brick: { key: 'call_brick', name: 'BRICK', price: 40, rarity: 'rare', crew: 'brick', desc: 'in a corp: call BRICK in for the rest of the corp (takes your ICE hits).', tip: 'call BRICK.',
+    codex: 'in a corp: BRICK\'s number. BRICK comes in and helps for the rest of the corp (takes your ICE hits). only turns up once BRICK is in your crew.' },
+  call_null: { key: 'call_null', name: 'NULL', price: 40, rarity: 'rare', crew: 'null', desc: 'in a corp: call NULL in for the rest of the corp (hunts rival hackers).', tip: 'call NULL.',
+    codex: 'in a corp: NULL\'s number. NULL comes in and helps for the rest of the corp (hunts rival hackers). only turns up once NULL is in your crew.' },
+  call_nana: { key: 'call_nana', name: 'NANA', price: 40, rarity: 'rare', crew: 'nana', desc: 'in a corp: call NANA in for the rest of the corp (heals you; spite-locks ICE).', tip: 'call NANA.',
+    codex: 'in a corp: NANA\'s number. NANA comes in and helps for the rest of the corp (heals you; spite-locks ICE). only turns up once NANA is in your crew.' },
+  call_dialup: { key: 'call_dialup', name: 'DIALUP', price: 40, rarity: 'rare', crew: 'dialup', desc: 'in a corp: call DIALUP in for the rest of the corp (connects, then rules out half).', tip: 'call DIALUP.',
+    codex: 'in a corp: DIALUP\'s number. DIALUP comes in and helps for the rest of the corp (connects, then rules out half). only turns up once DIALUP is in your crew.' },
+  call_baud: { key: 'call_baud', name: 'BAUD', price: 40, rarity: 'rare', crew: 'baud', desc: 'in a corp: call BAUD in for the rest of the corp (burns ICE fast).', tip: 'call BAUD.',
+    codex: 'in a corp: BAUD\'s number. BAUD comes in and helps for the rest of the corp (burns ICE fast). only turns up once BAUD is in your crew.' },
+  call_mother: { key: 'call_mother', name: 'MOTHER', price: 40, rarity: 'rare', crew: 'mother', desc: 'in a corp: call MOTHER in for the rest of the corp (stops your last-INT ICE tap).', tip: 'call MOTHER.',
+    codex: 'in a corp: MOTHER\'s number. MOTHER comes in and helps for the rest of the corp (stops your last-INT ICE tap). only turns up once MOTHER is in your crew.' },
+  call_root: { key: 'call_root', name: 'ROOT', price: 40, rarity: 'rare', crew: 'root', desc: 'in a corp: call ROOT in for the rest of the corp (marks an ICE each layer).', tip: 'call ROOT.',
+    codex: 'in a corp: ROOT\'s number. ROOT comes in and helps for the rest of the corp (marks an ICE each layer). only turns up once ROOT is in your crew.' },
+  call_kludge: { key: 'call_kludge', name: 'KLUDGE', price: 40, rarity: 'rare', crew: 'kludge', desc: 'in a corp: call KLUDGE in for the rest of the corp (tapes nodes shut).', tip: 'call KLUDGE.',
+    codex: 'in a corp: KLUDGE\'s number. KLUDGE comes in and helps for the rest of the corp (tapes nodes shut). only turns up once KLUDGE is in your crew.' },
+  call_hype: { key: 'call_hype', name: 'HYPE', price: 40, rarity: 'rare', crew: 'hype', desc: 'in a corp: call HYPE in for the rest of the corp (cheers: streaks pay more).', tip: 'call HYPE.',
+    codex: 'in a corp: HYPE\'s number. HYPE comes in and helps for the rest of the corp (cheers: streaks pay more). only turns up once HYPE is in your crew.' },
+  // PHISH (engine/fishing.js): stolen data you land at a PIER (the stream's shapes still look like fish: it's phishing).
+  // Keys stay fish_* (saves). Value gear: a black market pays their worth (ECON.fish by rarity), or cash one in anywhere
+  // for half. Never loot or in markets. kb: [min, max] its size in KB (made up; the CAUGHT card shows it). info: what you got.
+  fish_sprat: { key: 'fish_sprat', kb: [40, 900], name: 'SPAM LIST', price: 0, rarity: 'scrap', value: true, fish: true, where: 'phishing at a PIER.',
+    info: "4,000 email addresses. most of them bounce.",
+    desc: "4,000 email addresses. most of them bounce. a black market buys it.", tip: 'stolen data: sell it.',
+    codex: "4,000 email addresses. most of them bounce. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+  fish_guppy: { key: 'fish_guppy', kb: [0.008, 0.03], name: 'REUSED PASSWORD', price: 0, rarity: 'common', value: true, fish: true, where: 'phishing at a PIER.',
+    info: "hunter2. it opens their email, their bank and their smart fridge.",
+    desc: "hunter2. it opens their email, their bank and their smart fridge. a black market buys it.", tip: 'stolen data: sell it.',
+    codex: "hunter2. it opens their email, their bank and their smart fridge. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+  fish_carp: { key: 'fish_carp', kb: [2, 60], name: 'LOYALTY ACCOUNT', price: 0, rarity: 'common', value: true, fish: true, where: 'phishing at a PIER.',
+    info: "a burger chain rewards account. 41,000 points. free fries for life.",
+    desc: "a burger chain rewards account. 41,000 points. free fries for life. a black market buys it.", tip: 'stolen data: sell it.',
+    codex: "a burger chain rewards account. 41,000 points. free fries for life. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+  fish_eel: { key: 'fish_eel', kb: [0.01, 0.02], name: 'SOC SEC NUMBER', price: 0, rarity: 'rare', value: true, fish: true, where: 'phishing at a PIER.',
+    info: "a retiree's social security number, typed into a 'you won a cruise' form.",
+    desc: "a retiree's social security number, typed into a 'you won a cruise' form. a black market buys it.", tip: 'stolen data: sell it.',
+    codex: "a retiree's social security number, typed into a 'you won a cruise' form. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+  fish_koi: { key: 'fish_koi', kb: [0.05, 2], name: 'CORPO LOGIN', price: 0, rarity: 'rare', value: true, fish: true, where: 'phishing at a PIER.',
+    info: "a middle manager's corp login. the password is the company name and a 1.",
+    desc: "a middle manager's corp login. the password is the company name and a 1. a black market buys it.", tip: 'stolen data: sell it.',
+    codex: "a middle manager's corp login. the password is the company name and a 1. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+  fish_marlin: { key: 'fish_marlin', kb: [20000, 900000], name: 'PAYROLL DUMP', price: 0, rarity: 'epic', value: true, fish: true, where: 'phishing at a PIER.',
+    info: "every salary at a corp. the CEO's is a lot. the interns' is not.",
+    desc: "every salary at a corp. the CEO's is a lot. the interns' is not. a black market buys it.", tip: 'stolen data: sell it.',
+    codex: "every salary at a corp. the CEO's is a lot. the interns' is not. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+  fish_puffer: { key: 'fish_puffer', kb: [3000, 400000], name: 'BLACKMAIL', price: 0, rarity: 'epic', value: true, fish: true, where: 'phishing at a PIER.',
+    info: "photos of a VP at the company retreat. he'd pay a lot to make these go away.",
+    desc: "photos of a VP at the company retreat. he'd pay a lot to make these go away. a black market buys it.", tip: 'stolen data: sell it.',
+    codex: "photos of a VP at the company retreat. he'd pay a lot to make these go away. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+  fish_kraken: { key: 'fish_kraken', kb: [1000000, 60000000], name: 'ROOT KEYS', price: 0, rarity: 'legendary', value: true, fish: true, where: 'phishing at a PIER.',
+    info: "the master keys to a whole corp network. somebody's getting fired.",
+    desc: "the master keys to a whole corp network. somebody's getting fired. a black market buys it.", tip: 'stolen data: sell it.',
+    codex: "the master keys to a whole corp network. somebody's getting fired. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
 };
 const ITEM_WHERE = 'market, $ nodes, caches.';
 

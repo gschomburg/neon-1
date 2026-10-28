@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.64']);
+NEON_FILES.push(['engine/active.js', 'v13.71']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -359,6 +359,7 @@ function useItem(slot) {
     return;
   }
   const key = stack.key, tier = stack.tier || 0;
+  tally('gear');   // THE RECORD (engine/feats.js)
   stack.n--;
   if (stack.n <= 0) run.items.splice(slot, 1);
   st.hoverItem = -1; st.selItem = -1;

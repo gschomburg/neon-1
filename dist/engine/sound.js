@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v13.64']);
+NEON_FILES.push(['engine/sound.js', 'v13.71']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -290,6 +290,29 @@ const Sound = (() => {
       noise(0.6, { vol: 0.18, freq: 9000, delay: 0.62 });
     },
     burst: () => { noise(0.25, { vol: 0.22, freq: 6000 + Math.random() * 3000 }); tone(1200 + Math.random() * 1200, 0.08, { type: 'triangle', vol: 0.18 }); },
+    // ---- Fishing (engine/fishing.js)
+    // the cast: the line whizzing out and the hook falling (it lands with fishPlop)
+    fishCast: () => {
+      noise(0.32, { vol: 0.4, freq: 3200, to: 700 }); tone(1500, 0.3, { type: 'sine', vol: 0.16, slide: 0.45 });
+      // ...over the reel spinning out (fast clicks slowing down as the hook falls)
+      for (let i = 0; i < 12; i++) { const d = 0.02 + i * 0.028 + i * i * 0.0016; tone(1700 - i * 25, 0.012, { type: 'square', vol: 0.16, delay: d }); noise(0.012, { vol: 0.1, freq: 4200, delay: d }); }
+    },
+    fishPlop: () => { tone(380, 0.09, { type: 'sine', vol: 0.8, slide: 2.2 }); noise(0.08, { vol: 0.24, freq: 900, delay: 0.02 }); },
+    // the hook moving a lane: one click of the reel (up = a little higher)
+    fishClick: up => { tone(up ? 2100 : 1700, 0.012, { type: 'square', vol: 0.2 }); noise(0.012, { vol: 0.16, freq: 4200 }); },
+    // something's on: two quick bloops and an alert
+    fishBite: () => { tone(520, 0.06, { type: 'sine', vol: 0.8, slide: 1.6 }); tone(620, 0.06, { type: 'sine', vol: 0.8, slide: 1.6, delay: 0.08 }); tone(1320, 0.12, { type: 'triangle', vol: 0.6, delay: 0.16 }); },
+    // the reel, one tick: holding = a fast, high ratchet; let go = slower, lower slack ticks.
+    // In the window it's louder and brighter, with a note that climbs as the catch fills (you're doing it).
+    fishReel: (hold, inside, p) => {
+      if (hold) { tone(inside ? 1900 : 1500, 0.014, { type: 'square', vol: inside ? 0.4 : 0.18 }); noise(0.014, { vol: inside ? 0.28 : 0.14, freq: 4500 }); }
+      else { tone(inside ? 900 : 650, 0.02, { type: 'square', vol: inside ? 0.28 : 0.12 }); noise(0.02, { vol: 0.1, freq: 1800 }); }
+      if (inside) tone(440 * Math.pow(2, p * 1.5), 0.05, { type: 'triangle', vol: hold ? 0.24 : 0.12 });
+    },
+    fishSnap: () => { noise(0.18, { vol: 0.6, freq: 5000, type: 'highpass' }); tone(900, 0.25, { type: 'sawtooth', vol: 0.36, slide: 0.25 }); },
+    fishReelIn: () => { for (let i = 0; i < 7; i++) tone(1500 + i * 60, 0.012, { type: 'square', vol: 0.16, delay: i * 0.035 }); },
+    // a shoe: a sad little wah-wah
+    fishShoe: () => [392, 370, 349, 311].forEach((f, i) => tone(f, i === 3 ? 0.5 : 0.18, { type: 'sawtooth', vol: 0.24, delay: i * 0.2, slide: i === 3 ? 0.94 : 1 })),
     // BONEYARD: a skeleton's clack, a handful of dry clicks
     rattle: () => { for (let i = 0; i < 6; i++) { const d = 0.05 + i * 0.045 + Math.random() * 0.02; tone(900 + Math.random() * 700, 0.02, { vol: 0.12, delay: d }); noise(0.03, { vol: 0.15, freq: 2500, delay: d }); } },
   };

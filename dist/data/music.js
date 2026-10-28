@@ -1,6 +1,6 @@
 // NeoN+1 data/music.js: Music: scales, every track, and which track plays where.
 'use strict';
-NEON_FILES.push(['data/music.js', 'v13.64']);
+NEON_FILES.push(['data/music.js', 'v13.71']);
 
 // ---------------- Music ----------------
 // Generated 80s-style synthwave: pad, bass, drums, arp and lead, scheduled a little
@@ -167,3 +167,6 @@ Object.assign(SONGS, {
     melody: ['5 4 3 4 3 2 3 2 1 2 1 0 1 2 3 4', '6 5 4 5 4 3 4 3 2 3 2 1 2 1 0 4', '5 4 3 4 3 2 3 2 1 2 1 0 1 2 3 4', '5 4 3 4 3 2 3 2 1 2 1 0 1 2 3 4'],
     melodyAt: 2, leadVoice: 'saw', arpLine: '0 0 . 0 0 . 0 . 0 0 . 0 0 . 0 .' },
 });
+
+// SEA LEGS (from the music tool's demo_shanty): one of the PIER tracks (engine/boot.js, FISH_TRACKS in engine/fishing.js)
+SONGS.sealegs = { name: 'SEA LEGS', bpm: 66, root: 50, scale: 'dorian', prog: [0, 6, 0, 4], meter: 6, bass: 'jig', bassVoice: 'picked', drums: 'shanty', kit: 'break', padVoice: 'organ', arp: 'updown', arpVoice: 'bell', leadVoice: 'brass', pump: 0, echo: 0.3 };
