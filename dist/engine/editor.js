@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.60']);
+NEON_FILES.push(['engine/editor.js', 'v13.61']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -286,6 +286,7 @@ if (EDITOR) {
     // the game's own music setting (while the music tab plays a track, it comes back when the tab stops) and sound effects
     music: () => { if (tabPlaying) gameMusicOn = !gameMusicOn; else save.musicOn = !save.musicOn; Sound.init(); Sound.levels(); },
     sfx: () => { save.muted = !save.muted; Sound.init(); Sound.levels(); if (!save.muted) Sound.ui(); },
+    ad: m => { if (!ADS[m.key]) return; if (st.ad) closeAd(); st.dev = false; showAd(m.key); },   // the ADS tab: put that ad up now
     credits: m => { st.run.credits = Math.round(+m.n || 0); },
     int: m => { const n = Math.max(1, Math.round(+m.n || 1)); st.run.maxInt = Math.max(st.run.maxInt, n); st.run.integrity = n; },
     heal: () => { st.run.integrity = st.run.maxInt; },

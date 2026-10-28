@@ -14,6 +14,9 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **15 new fake ads** (v13.61, 2026-10-27): all my copy and ASCII art. Look in the neon editor's new **ads** tab (each one
+  drawn as text; "show in the game" puts it up). Cut, rewrite or redraw anything; QUEENS OF KALDOR is kept cheeky, not explicit.
+
 - [ ] **Sector events** (v13.54, 2026-10-27): built from `docs/SECTOR_EVENTS.md`. Try it from the neon editor's new
   **TESTING** tab (each event is a button: a new run, straight to sector 2 with it). Look at: the card (its look, and
   the 14 placeholder pictures: yours to draw, in data/events.js); the card text I wrote; BLINDERS on the map; THE FENCE.

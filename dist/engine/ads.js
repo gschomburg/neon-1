@@ -1,6 +1,6 @@
 // NeoN+1 engine/ads.js: the fake ads: when they show up, the ad box, and its two-screen turn.
 'use strict';
-NEON_FILES.push(['engine/ads.js', 'v13.60']);
+NEON_FILES.push(['engine/ads.js', 'v13.61']);
 
 // An ad comes up over whatever is on screen, in a bordered box nearly the screen's width, and
 // blocks everything under it until you close it. [x] (top right) shows up after a few seconds

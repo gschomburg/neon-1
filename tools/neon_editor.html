@@ -21,6 +21,7 @@
 <script src="../dist/data/music.js"></script>
 <script src="../dist/engine/music.js"></script>
 <script src="../dist/data/mods.js"></script>
+<script src="../dist/data/ads.js"></script>
 <script src="../dist/data/art/glyphs.js"></script>
 <script src="../dist/data/art/logos.js"></script>
 <script src="../dist/data/art/worldmap.js"></script>
@@ -237,6 +238,21 @@
   body.mode-tut #tut { display: flex; }
   body.mode-econ #econ { display: flex; }
   body.mode-test #test { display: flex; }
+  body.mode-ads #ads { display: flex; }
+  /* ads: every fake ad, drawn as text */
+  #ads { flex-direction: column; }
+  #adBar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  #adBody { overflow: auto; padding: 8px 14px 40px; }
+  .adcard { margin: 10px 0 18px; }
+  .adhead { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+  .adscreens { display: flex; flex-wrap: wrap; gap: 12px; }
+  .adscr .adn { font-size: 11px; color: var(--mid); margin-bottom: 2px; }
+  .adscr pre { margin: 0; padding: 6px 8px; background: #0b0d10; color: #5c6370; font: 12px/1.25 "JetBrains Mono", Consolas, monospace; border-radius: 4px; }
+  .adscr .s-text { color: #c9d1d9; } .adscr .s-dim { color: #5c6370; } .adscr .s-mid { color: #8b949e; } .adscr .s-bright { color: #fff; }
+  .adscr .s-accent { color: #4fd1c5; } .adscr .s-danger { color: #ff5c5c; } .adscr .s-money { color: #f2c94c; }
+  .adscr .b { font-weight: 700; } .adscr .inv { color: #0b0d10 !important; background: currentColor; }
+  .adscr .inv.s-accent { background: #4fd1c5; } .adscr .inv.s-danger { background: #ff5c5c; } .adscr .inv.s-money { background: #f2c94c; } .adscr .inv.s-text { background: #c9d1d9; }
+  .adscr .btn { text-decoration: underline; cursor: help; }
   /* testing: cheats and jumps on the running game */
   #test { flex-direction: column; overflow: auto; padding: 10px 14px; gap: 4px; }
   #test h2 { margin: 14px 0 4px; }
@@ -509,7 +525,7 @@
 </section>
 
 <div id="right">
-<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">gear &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><button data-mode="test">testing</button><span id="modehint"></span><button id="helpBtn" title="How this tab works, and how saving works (F1)">? help</button></div>
+<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">gear &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><button data-mode="ads">ads</button><button data-mode="test">testing</button><span id="modehint"></span><button id="helpBtn" title="How this tab works, and how saving works (F1)">? help</button></div>
 <div id="help"><div id="helpNav"></div><div id="helpBody"></div></div>
 <section id="art" class="mode">
   <div id="aBar">
@@ -550,6 +566,15 @@
     <span id="tAt"></span>
   </div>
   <div id="tList"></div>
+</section>
+<section id="ads" class="mode">
+  <div id="adBar">
+    <input id="adFilter" type="text" placeholder="filter: name, text..." autocomplete="off">
+    <button id="adRandom" title="Show a random ad in the game">show a random one</button>
+    <span id="adCount"></span>
+    <span class="dim">from dist/data/ads.js (read-only here); underlined lines are buttons (hover: what they say after)</span>
+  </div>
+  <div id="adBody"></div>
 </section>
 <section id="test" class="mode">
   <div id="xState">the game isn't ready yet</div>
@@ -1753,20 +1778,57 @@
 
   // ---- the two modes (music / palette), remembered
   const setMode = m => {
-    if (!['music', 'pal', 'items', 'art', 'tut', 'econ', 'test'].includes(m)) m = 'music';
-    for (const k of ['music', 'pal', 'items', 'art', 'tut', 'econ', 'test']) document.body.classList.toggle('mode-' + k, m === k);
+    if (!['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'test'].includes(m)) m = 'music';
+    for (const k of ['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'test']) document.body.classList.toggle('mode-' + k, m === k);
     for (const b of document.querySelectorAll('#modes button[data-mode]')) b.classList.toggle('on', b.dataset.mode === m);
     $('#modehint').textContent = { music: 'pick a corp: the game shows it and plays its track', pal: 'palettes: save writes dist/palettes.js',
       items: 'from dist/data/mods.js. give / change / remove mods on the running game (the copy is read-only)',
       art: 'dist/data/art/: glyphs, logos, world map. edit here or in asXii; save writes the files',
       tut: 'dist/data/tutorial.js: what POPS says. show plays the training to that line; edits show live',
       econ: 'dist/data/economy.js: every money number, in units. edits go to the game live; save writes the file',
+      ads: 'dist/data/ads.js: every fake ad as text; show one in the game (edit the file to change them)',
       test: 'cheats and jumps on the running game, for testing (nothing is saved)' }[m];
     try { localStorage.setItem('neon.editor.mode', m); } catch (e) { /* private mode */ }
   };
   for (const b of document.querySelectorAll('#modes button[data-mode]')) b.addEventListener('click', () => setMode(b.dataset.mode));
   let mode = 'music'; try { mode = localStorage.getItem('neon.editor.mode') || 'music'; } catch (e) { /* private mode */ }
   setMode(mode);
+})();
+</script>
+<script>
+// ---------------- Ads: every fake ad (dist/data/ads.js), drawn as text; "show" puts it up in the game ----------------
+(() => {
+  const $ = s => document.querySelector(s);
+  if (typeof ADS === 'undefined') { $('#adBody').textContent = "Couldn't load ../dist/data/ads.js."; return; }
+  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  let q = '';
+  // one screen as the game draws it: ADS_W x ADS_H inside a frame, bars half full
+  const screenHtml = (sc, n, of) => {
+    const rows = [];
+    for (let r = 0; r < ADS_H; r++) {
+      const ln = sc[r];
+      if (!ln) { rows.push(' '.repeat(ADS_W)); continue; }
+      let t = (ln.t || '').replace(/{(r?)bar(?::(\d+))?(?::[\d.]+s)?}/g, (m, rev, w) => { const k = w ? +w : 10, f = Math.round(k / 2); return '[' + '#'.repeat(f) + '-'.repeat(k - f) + ']'; }).slice(0, ADS_W);
+      const x = ln.x === 'c' ? Math.floor((ADS_W - t.length) / 2) : (ln.x || 0);
+      const cls = ['s-' + (ln.c || 'text'), ln.b ? 'b' : '', ln.inv ? 'inv' : '', ln.btn ? 'btn' : ''].filter(Boolean).join(' ');
+      const after = Math.max(0, ADS_W - x - t.length);
+      rows.push(' '.repeat(x) + `<span class="${cls}"${ln.btn ? ` title="tap: closes the ad, then shows &quot;${esc(ln.btn)}&quot;"` : ''}>${esc(t)}</span>` + ' '.repeat(after));
+    }
+    const top = '+[ AD ]' + '-'.repeat(ADS_W + 2 - 7 - 3) + '[x]+';
+    return `<div class="adscr"><div class="adn">screen ${n + 1} of ${of}</div><pre>${top}\n${rows.map(r => '| ' + r + ' |').join('\n')}\n+${'-'.repeat(ADS_W + 2)}+</pre></div>`;
+  };
+  const render = () => {
+    const list = Object.entries(ADS).filter(([k, a]) => !q || (k + ' ' + a.name + ' ' + a.screens.flat().map(l => (l.t || '') + ' ' + (l.btn || '')).join(' ')).toLowerCase().includes(q));
+    $('#adCount').textContent = `${list.length} of ${Object.keys(ADS).length} ads`;
+    $('#adBody').innerHTML = list.map(([k, a]) => `<div class="adcard"><div class="adhead"><b>${esc(a.name)}</b> <span class="mono dim">${esc(k)}</span>
+      <span class="dim">${a.screens.length} screen${a.screens.length > 1 ? 's' : ''}</span> <button data-ad="${esc(k)}">show in the game</button></div>
+      <div class="adscreens">${a.screens.map((sc, n) => screenHtml(sc, n, a.screens.length)).join('')}</div></div>`).join('') || '<p>nothing matches.</p>';
+  };
+  $('#adFilter').addEventListener('input', e => { q = e.target.value.trim().toLowerCase(); render(); });
+  $('#adBody').addEventListener('click', e => { const b = e.target.closest('button[data-ad]'); if (b) toGame({ type: 'test', act: 'ad', key: b.dataset.ad }); });
+  $('#adRandom').addEventListener('click', () => { const ks = Object.keys(ADS); toGame({ type: 'test', act: 'ad', key: ks[Math.floor(Math.random() * ks.length)] }); });
+  render();
 })();
 </script>
 <script>
@@ -2688,6 +2750,15 @@
 <p><b>revert</b> on a row puts it back. <b>save</b> writes the file (the first time, pick the ${F('dist/data')} folder). More: ${go('saving', 'how saving works')}.</p>
 <h2>Checking a change</h2>
 <p>Ask Claude to run the economy sim (${F('tools/econsim.js')}): a bot plays whole runs and reports what they earn and hold. Results go in ${F('docs/ECONOMY.md')}.</p>` },
+    ads: { name: 'ads', html: `
+<h1>Ads</h1>
+<p class="lead">Every fake ad in ${F('dist/data/ads.js')}, drawn the way the game draws it (30 x 18 inside the box). Read-only here: ads are changed in the file (or ask Claude).</p>
+<ul>
+<li><b>show in the game</b> puts that ad up over whatever the game shows (two-screen ads turn on their own). <b>show a random one</b>: any ad.</li>
+<li>Underlined lines are buttons: tapping one closes the ad and shows a line (hover to read it).</li>
+<li>Bars (<code>{bar}</code>) are drawn half full here; in the game they fill while the screen is up.</li>
+<li>How often ads come up: ${F('dist/engine/ads.js')} (AD_CFG). The ideas list: ${F('docs/ADS.md')}.</li>
+</ul>` },
     test: { name: 'testing', html: `
 <h1>Testing</h1>
 <p class="lead">Cheats and jumps on the game on the left, for playing things through. Nothing here writes a file. Every cheat makes the run practice (not scored).</p>
@@ -2702,7 +2773,7 @@
 <p>The line at the top is the game right now: sector, its event, credits, INT, and what's on.</p>` },
 
   };
-  const ORDER = ['saving', null, 'music', 'pal', 'items', 'art', 'tut', 'econ', 'test'];
+  const ORDER = ['saving', null, 'music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'test'];
   let open = false, at = 'saving';
   const modeNow = () => (document.body.className.match(/mode-(\w+)/) || [])[1] || 'music';
   const nav = $('#helpNav');

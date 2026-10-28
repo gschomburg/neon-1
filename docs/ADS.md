@@ -7,6 +7,13 @@ keep, change or cut. The screen is 36 columns wide, so short copy works best.
 ## Built (v13.05)
 
 - **The user, 2026-10-26: the two built ads are good. More ads to come** (pick from the ideas below when we get to it).
+- **v13.61 (2026-10-27): 15 more**, drafted by Claude from the ideas below (the user asked for 15): SPONSORED STORIES 2
+  (chumbox), GUNMETAL SMARTGUN 9 (guns), MEDIX CHROME CLINIC (cyberware), NORDVEIL VPN (2 screens), GO AD FREE,
+  QUEENS OF KALDOR (fantasy game, 2 screens: the pitch, then a 4x4 grid "find the real one, my lord."), OMNINET
+  ONLINE (the floppy), LUCKEEZ SPORTSBOOK (gambling), NeoN+2 ("coming 2020"), MEGAMART, BURGERTRON, RYDR, STREAMFLIX
+  (2 screens: "are you still watching? we are."), SPARKD (dating: "someone in your area wants to breach you"),
+  OMNI//CORE PREMIUM. 17 ads. All in dist/data/ads.js; the neon editor's **ads** tab shows each one as text and puts it
+  up in the game. Still not built: ads that do something (free trials, secret ads), AD BLOCKER, the leaderboard ad.
 
 The ad box and two ads: **SPONSORED STORIES** (chumbox) and **VIRUSHIELD PRO** (antivirus, two screens). Adding an ad = its
 screens in `dist/data/ads.js` (30 wide, up to 18 lines; block letters with `adBig`). How often / when: `AD_CFG` in
