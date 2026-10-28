@@ -1,8 +1,8 @@
 // NeoN+1 corps/streamflix.js
 'use strict';
-NEON_FILES.push(['corps/streamflix.js', 'v13.61']);
-// Its boss mod: FREEZE FRAME (freezeframe), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/streamflix.js', 'v13.64']);
+// Its boss reward: FREEZE gear x3 (freeze), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its music
 // Made from NIGHT DRIVE: the same band, its own tune.
@@ -19,7 +19,7 @@ CORPS.streamflix = {
   intel: '"are you still watching?"',
   tell: null,
   bossDesc: 'boss: buffering... buffering...',
-  mods: ['freezeframe'],
+  gear: { key: 'freeze', n: 3 },   // its boss reward: a stack of gear
   // Every node is playing (a playhead runs along its bottom line). Every few seconds the
   // screen buffers and everything freezes, except the live node: that's the real one.
   dress(lv, k) {

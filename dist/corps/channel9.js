@@ -1,8 +1,8 @@
 // NeoN+1 corps/channel9.js
 'use strict';
-NEON_FILES.push(['corps/channel9.js', 'v13.61']);
-// Its boss mod: REMOTE (remote), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/channel9.js', 'v13.64']);
+// Its boss reward: REMOTE gear x3 (remote), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its music
 // Made from DROP ZONE: the same band, its own tune.
@@ -20,7 +20,7 @@ CORPS.channel9 = {
   tell: null, timer: 14, pay: 1.3,
   bossDesc: 'boss: more channels.',
   rules: () => '14s clock. CH+ costs 1s. pays x1.3',
-  mods: ['remote'],
+  gear: { key: 'remote', n: 3 },   // its boss reward: a stack of gear
   // Static over every node. Flip the channel (CH+, 1s of clock each): on one channel the
   // real node comes in clear. Every flip re-rolls the pictures. Deeper and the boss:
   // more channels.

@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.61']);
+NEON_FILES.push(['engine/scene.js', 'v13.64']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -422,7 +422,6 @@ function buildTray(ctx, y) {
     const mv = key === 'mutate' && run.mutateAs && MODS[run.mutateAs] ? modView(run.mutateAs, run.mutateTier || 0) : null;
     const tip = mv ? `now: ${mv.name.toLowerCase()} (${RARITY[mv.rarity].label.toLowerCase()}). ${mv.tip}`
       : key === 'compost' ? `compost ${(run.compost || 0) % 3}/3. ${m.tip}`
-      : key === 'honeycomb' ? `honey ${run.honey || 0}/3. ${m.tip}`
       : key === 'leverage' ? (run.credits < 0 ? `debt shield ${Math.round(debtShield() * 100)}%. limit ${creditFloor()}.` : `no debt. limit ${creditFloor()}.`) + ` loan ${DEBT.payment + DEBT.paymentSector * (run.sector || 0)}cr/layer.`
       : key === 'zombie' ? `rot ${run.rot || 0}/${ROT.max}. ${tapsToBreak()} taps a node.` : m.tip;
     const offTip = modOffHere(key) ? 'off in this corp.' : null;   // this corp switches it off
@@ -612,7 +611,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     let glyph = masked && t.state === 'closed' && !t.loaded ? MASK_GLYPH : t.glyph;
     // Node animation (corp fx), plus PIXEL PEEP and FREEZE FRAME's twitch on the real node.
     let dx = 0, dy = 0, kern = null, over = null, corner = null, frame = null, clip = false;
-    if (t.say && t.state === 'closed') glyph = normMotif(['', ...t.say]);   // TURING, INTERROGATE
+    if (t.say && t.state === 'closed') glyph = normMotif(t.say.length > 2 ? t.say : ['', ...t.say]);   // TURING, SNITCH (3 lines: NOT / ME / its arrow)
     if (t.brand && t.state === 'closed') corner = { corner: 's', cornerCol: C.money };   // BRANDED
     if (st.corp && st.corp.mod === 'armored' && t.state === 'closed') frame = { frame: ['#=====#', '#=====#'], side: '#' };   // ARMORED
     // CCTV: one ICE flashes ### a second into the layer

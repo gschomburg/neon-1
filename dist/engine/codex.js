@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v13.61']);
+NEON_FILES.push(['engine/codex.js', 'v13.64']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -89,7 +89,7 @@ function openCodex() {
         const tell = rec.breached ? pad(wrapText('tell: ' + CORP_TELL[key], 34), 3)
           : ['tell: ???', 'beat this corp to log its tell.', ''];
         tell.forEach((t, i) => T(t, rec.breached ? C.accent : i === 0 ? C.mid : C.dim));
-        T(d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
+        T(d.gear ? `boss gear: ${ITEMS[d.gear.key].name} x${d.gear.n}` : d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
         T(`breached ${rec.breached}   lost ${rec.lost}`, C.text);
       }
     } else if (tab === 'sectors') {
@@ -136,7 +136,8 @@ function openCodex() {
       const dl = wrapText(it.codex || it.desc, 34).slice(0, 12 - 3 - tiers.length - (tiers.length ? 1 : 0));
       dl.forEach(l => T(l.padEnd(34), C.text));
       if (tiers.length) { T(''); tiers.forEach(v => X({ text: `${RARITY[v.rarity].label.padEnd(7)}${v.tip}`.padEnd(34), col: C.text, chips: true })); }
-      T(`from: ${it.where || ITEM_WHERE}`, C.mid);
+      const boss = it.corp && CORPS[it.corp];   // boss gear: which boss gives it, how many
+      T(`from: ${boss ? `${boss.name} boss (x${boss.gear ? boss.gear.n : 1}).` : it.where || ITEM_WHERE}`, C.mid);
       for (let i = 3 + dl.length + tiers.length + (tiers.length ? 1 : 0); i < 12; i++) T('');
     }
     T(SEP, C.dim);

@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.61']);
+NEON_FILES.push(['engine/mods.js', 'v13.64']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -37,20 +37,20 @@ const MOD_STAGE = {
   sniffer: 'start', corners: 'start', sigscan: 'start', afterimage: 'start', basictraining: 'start', runway: 'start',
   forecast: 'start', spellbound: 'start', seedreader: 'start', photographic: 'start',
   prism: 'hit', fourinarow: 'end',
-  queuenumber: 'hit', rollup: 'tap', blast: 'tap', interrogate: 'tap', turing: 'hit',
-  handshake: 'start', callerid: 'hit', snipe: 'start', omerta: 'block', sacrifice: 'tap', letitride: 'end', remote: 'tap', chancecard: 'start',
+  queuenumber: 'hit', turing: 'hit',
+  handshake: 'start', callerid: 'hit', snipe: 'start', omerta: 'block', letitride: 'end', chancecard: 'start',
   icebox: 'block', greenwave: 'block', leadlining: 'block', express: 'end', scoop: 'start', cctv: 'start', compost: 'hit', foghorn: 'hit',
-  grounded: 'block', friendship: 'block', jackbox: 'start', triage: 'end', honeycomb: 'end', pixelpeep: 'hit', espresso: 'tap', freezeframe: 'tap',
+  grounded: 'block', friendship: 'block', jackbox: 'start', triage: 'end', pixelpeep: 'hit',
   horoscope: 'block', index: 'hit', policy: 'hit', pickset: 'hit', pencil: 'hit', unravel: 'board', ezpass: 'end',
   xaxis: 'pick', yaxis: 'pick',
   bulwark: 'block', forgery: 'block', shatter: 'block', failsafe: 'block',
   tracer: 'hit', keylogger: 'hit',
   virus: 'board', autocomplete: 'board', twinlock: 'board',
   skipjack: 'end', interest: 'end', graverobber: 'end',
-  parity: 'hit', headcount: 'start', flare: 'tap',
+  parity: 'hit', headcount: 'start',
   burner: 'tap', overclock: 'clock',
-  anchor: 'tap', infrared: 'start', ambush: 'block', antigrav: 'board',
-  timewarp: 'tap', inversion: 'block', lastbyte: 'hit', precog: 'start',
+  infrared: 'start', ambush: 'block', antigrav: 'board',
+  inversion: 'block', lastbyte: 'hit', precog: 'start',
   dejavu: 'start', spoiler: 'start', linkup: 'board',
 };
 for (const k of Object.keys(MODS)) MODS[k].stage = MOD_STAGE[k] || 'always';

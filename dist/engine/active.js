@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.61']);
+NEON_FILES.push(['engine/active.js', 'v13.64']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -15,7 +15,6 @@ function modUsable(key) {
   if (m.active === 'layer') {
     if (st.mode !== 'play' || st.busy || !st.lv || !st.corp || !st.corp.hasBoss) return false;
     if (key === 'burner') return burnerLeft() > 0 && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
-    if (TAP_FX[key]) return !(st.corp.tapUsed && st.corp.tapUsed[key]) && TAP_FX[key].ok(st.lv);
   }
   return false;
 }
@@ -24,7 +23,6 @@ const burnerLeft = () => tv('burner', [1, 2, 3]) - Number((st.corp && st.corp.bu
 // Used up for now: BURNER after its uses in this corp, FAILSAFE after it saved you (until it recharges).
 function modSpent(key) {
   if (key === 'burner') return !!(st.mode === 'play' && st.corp && st.corp.hasBoss && burnerLeft() <= 0);
-  if (TAP_FX[key]) return !!(st.mode === 'play' && st.corp && st.corp.hasBoss && st.corp.tapUsed && st.corp.tapUsed[key]);
   if (key === 'failsafe') return !!(st.run && st.run.failsafeUsed);
   return false;
 }
@@ -45,99 +43,134 @@ function activateMod(key) {
     const left = burnerLeft();
     setMsg(left > 0 ? `> burner: 1 ICE locked (${left} left this corp).` : '> burner: 1 ICE locked.', C.accent);
   }
-  if (TAP_FX[key]) {
-    const c = st.corp;
-    c.tapUsed = Object.assign({}, c.tapUsed, { [key]: true });
-    TAP_FX[key].use(st.lv, performance.now());
-  }
 }
-// Tap-to-use corp mods: once per corp each. ok: can it be used right now.
+// ---------------- Boss gear (the user, 2026-10-27) ----------------
+// The tap-to-use corp mods became gear: stacks you win from that corp's boss (data/mods.js: ITEMS with corp:,
+// the corp's def: gear { key, n }). ok: can it be used in this layer; why: what it says when it can't; use: do it.
 const iceOpen = lv => lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
-const TAP_FX = {
-  timewarp: {
-    ok: lv => !!st.timer && !lv.clockRate,
-    use(lv) { lv.clockRate = 0.5; Sound.shield(); setMsg('> timewarp: half-speed clock.', C.accent); },
+const gearRng = (key, lv) => rngFor(st.run.seed, key, st.corp.node.id, st.corp.idx, lv.gearUses = (lv.gearUses || 0) + 1);
+const BOSS_GEAR = {
+  slomo: {
+    ok: () => !!st.timer && !st.corp.slomo,
+    why: () => st.timer ? 'already in slomo.' : 'no clock running.',
+    use(lv) { st.corp.slomo = true; lv.clockRate = 0.5; Sound.shield(); setMsg('> slomo: half-speed clock, this whole corp.', C.accent); },
   },
   anchor: {
-    ok: lv => !lv.anchor && (!!st.corp.def.moves || !!st.timer),
+    ok: lv => st.corp.def.moves ? !st.corp.anchored : !!st.timer && !(lv.holdUntil > performance.now()),
+    why: () => st.corp.def.moves ? 'already anchored.' : 'nothing moves, no clock.',
     use(lv, now) {
-      lv.anchor = true;
-      if (!st.corp.def.moves) lv.holdUntil = now + 3000;
-      Sound.shield(); setMsg(st.corp.def.moves ? '> anchor: nothing moves this layer.' : '> anchor: clock stopped 3s.', C.accent);
+      if (st.corp.def.moves) { st.corp.anchored = true; lv.anchor = true; setMsg('> anchor: nothing moves, this whole corp.', C.accent); }
+      else { lv.holdUntil = now + 5000; setMsg('> anchor: nothing moves here. clock stopped 5s.', C.accent); }
+      Sound.shield();
     },
   },
-  espresso: {
-    ok: lv => !!st.timer && !(lv.holdUntil > performance.now()),
-    use(lv, now) { lv.holdUntil = now + 5000; Sound.shield(); setMsg('> espresso: clock stopped 5s.', C.accent); },
-  },
-  freezeframe: {
+  freeze: {
     ok: lv => !(lv.holdUntil > performance.now()),
-    use(lv, now) { lv.holdUntil = now + 1000; lv.freeze = { from: now, until: now + 1000 }; Sound.shield(); setMsg('> freeze frame.', C.accent); },
+    why: () => 'already frozen.',
+    use(lv, now) { lv.holdUntil = now + 2000; lv.freeze = { from: now, until: now + 2000 }; Sound.shield(); setMsg('> freeze frame. what still moves?', C.accent); },
   },
-  sacrifice: {
-    ok: lv => (zombie() || st.run.integrity > 1) && iceOpen(lv).length >= 2,
+  tithe: {
+    ok: lv => gearMayClear() && (zombie() || st.run.integrity > 1) && lv.tiles[lv.safe].state === 'closed',
+    why: () => !gearMayClear() ? 'off in this corp.' : 'not with your last integrity.',
     use(lv) {
-      const ice = shuffle(iceOpen(lv), rngFor(st.run.seed, 'sac', st.corp.node.id, st.corp.idx));
       hurt(1);   // ZOMBIE: rot instead
-      ice.slice(0, Math.floor(ice.length / 2)).forEach(t => lockTile(t, C.money, 'sacrifice'));
-      flash(C.money, 0.2, 0.5); shake(5);
-      setMsg('> sacrifice: -1 int. the ICE parts.', C.money);
+      lv.tithe = true;   // the layer counts as a perfect (onSafe)
+      flash(C.money, 0.25, 0.6); shake(5); Sound.shield();
+      setMsg('> tithe: -1 int. the layer is given to you.', C.money);
+      st.busy = true;
+      onSafe(lv.tiles[lv.safe]);
     },
   },
   rollup: {
     ok: lv => !lv.rolled,
-    use(lv) { lv.rolled = true; Sound.shield(); setMsg('> curled up: 1 hit blocked, no pay.', C.accent); },
+    why: () => 'already curled up.',
+    use(lv) { lv.rolled = true; lv.payCut = 1; Sound.shield(); setMsg('> curled up: no hits this layer. no pay.', C.accent); },
   },
-  // FLARE: split the board down the middle (columns or rows); the half without the real
-  // node lights up and its ICE is ruled out.
+  // FLARE: the board is cut in half both ways; the 3 quarters without the real node light up and their ICE is
+  // ruled out (a board one row or column wide: halves).
   flare: {
     ok: lv => iceOpen(lv).some(t => !t.ruledOut) && (lv.cols > 1 || lv.rows > 1),
+    why: () => 'nothing left to light.',
     use(lv) {
-      const real = lv.tiles[lv.safe], r = rngFor(st.run.seed, 'flare', st.corp.node.id, st.corp.idx);
-      const byCol = lv.rows < 2 || (lv.cols > 1 && r() < 0.5), n = byCol ? lv.cols : lv.rows, at = byCol ? real.col : real.row;
-      const mid = n / 2, realLow = at < mid;
-      const out = iceOpen(lv).filter(t => { const v = byCol ? t.col : t.row; return realLow ? v >= Math.ceil(mid) : v < Math.floor(mid); });
+      const real = lv.tiles[lv.safe];
+      const away = (n, at, v) => { if (n < 2) return false; const mid = n / 2; return at < mid ? v >= Math.ceil(mid) : v < Math.floor(mid); };
+      const out = iceOpen(lv).filter(t => !t.ruledOut && (away(lv.cols, real.col, t.col) || away(lv.rows, real.row, t.row)));
       for (const t of out) t.ruledOut = true;
-      flash(C.money, 0.25, 0.5); Sound.shield();
+      flash(C.money, 0.3, 0.6); Sound.shield();
       setMsg(`> flare: ${out.length} ICE in the light.`, C.money);
     },
   },
-  interrogate: {
-    ok: lv => iceOpen(lv).filter(t => !t.say).length > 0,
+  // SNITCH: one ICE says NOT ME, with an arrow toward the real node (from where it sits now).
+  snitch: {
+    ok: lv => iceOpen(lv).some(t => !t.say),
+    why: () => 'nobody left to talk.',
     use(lv) {
-      const t = pickR(iceOpen(lv).filter(o => !o.say), rngFor(st.run.seed, 'interrogate', st.corp.node.id, st.corp.idx));
-      t.say = ['NOT', 'ME']; t.ruledOut = true;
-      Sound.ui(); setMsg('> interrogate: one of them talked.', C.accent);
+      const real = lv.tiles[lv.safe], t = pickR(iceOpen(lv).filter(o => !o.say), gearRng('snitch', lv));
+      const dr = Math.sign(real.row - t.row), dc = Math.sign(real.col - t.col);
+      t.say = ['NOT', 'ME', (dr < 0 ? '^' : dr > 0 ? 'v' : '') + (dc < 0 ? '<' : dc > 0 ? '>' : '')];
+      t.ruledOut = true;
+      Sound.ui(); setMsg('> snitch: one of them talked. it points.', C.accent);
     },
   },
+  // BLAST: arm it; the next tap on a node picks where it goes off (blastAt).
   blast: {
-    ok: lv => lv.cols > 1 && lv.rows > 1 && lv.tiles.some(t => t.state === 'closed' && !t.safe),
-    use(lv) {
-      let best = null, bn = -1;
-      const r = rngFor(st.run.seed, 'blast', st.corp.node.id, st.corp.idx);
-      for (let c0 = 0; c0 < lv.cols - 1; c0++) for (let r0 = 0; r0 < lv.rows - 1; r0++) {
-        const n = lv.tiles.filter(t => t.state === 'closed' && t.col >= c0 && t.col <= c0 + 1 && t.row >= r0 && t.row <= r0 + 1).length + r() * 0.5;
-        if (n > bn) { bn = n; best = [c0, r0]; }
-      }
-      const inB = lv.tiles.filter(t => t.state === 'closed' && t.col >= best[0] && t.col <= best[0] + 1 && t.row >= best[1] && t.row <= best[1] + 1);
-      shake(8); flash(C.money, 0.2, 0.4);
-      for (const t of inB) if (!t.safe) lockTile(t, C.money, 'blast');
-      const real = inB.find(t => t.safe);
-      if (real) { lv.payCut = 1; lv.scanned = true; setMsg('> BLAST! got the real one. no pay.', C.money); st.busy = true; onSafe(real); }
-      else setMsg(`> BLAST! ${inB.length} ICE gone.`, C.money);
-    },
+    ok: lv => lv.cols > 1 && lv.rows > 1 && !lv.blastAim && lv.tiles.some(t => t.state === 'closed' && !isReal(t)),
+    why: lv => lv.blastAim ? 'armed: tap a node.' : 'no room for a 2x2.',
+    use(lv) { lv.blastAim = true; Sound.tick(); setMsg('> blast armed: tap a node. its 2x2 goes up.', C.money); },
   },
   remote: {
     ok: lv => iceOpen(lv).length > 0,
+    why: () => 'nothing to re-roll.',
     use(lv) {
-      const r = rngFor(st.run.seed, 'remote', st.corp.node.id, st.corp.idx), used = new Set(lv.tiles.map(t => t.glyph));
-      const deck = shuffle(MOTIFS.filter(m => !used.has(m)), r);
+      const used = new Set(lv.tiles.map(t => t.glyph)), deck = shuffle(MOTIFS.filter(m => !used.has(m)), gearRng('remote', lv));
       iceOpen(lv).forEach((t, i) => { if (deck.length) t.glyph = deck[i % deck.length]; });
       Sound.ui(); flash(C.accent, 0.1, 0.25);
       setMsg('> remote: new channel. new decoys.', C.accent);
     },
   },
+  bees: {
+    ok: lv => iceOpen(lv).length > 0,
+    why: () => 'no ICE for the bees.',
+    use(lv) { st.corp.bees = true; beeSwarm(lv, 3); },
+  },
 };
+// BLAST, aimed: of the 2x2 blocks with the tapped node in them, the busiest goes up. Its ICE breaks; the real node
+// in it clears the layer, no pay (not in corps with their own tap rules: there it's spared).
+function blastAt(lv, t) {
+  lv.blastAim = false;
+  const inBlock = (c0, r0) => lv.tiles.filter(o => o.state === 'closed' && o.col >= c0 && o.col <= c0 + 1 && o.row >= r0 && o.row <= r0 + 1);
+  let best = null;
+  for (const c0 of [t.col - 1, t.col]) for (const r0 of [t.row - 1, t.row]) {
+    if (c0 < 0 || r0 < 0 || c0 > lv.cols - 2 || r0 > lv.rows - 2) continue;
+    const b = inBlock(c0, r0);
+    if (!best || b.length > best.length) best = b;
+  }
+  best = best || [t];
+  shake(8); flash(C.money, 0.2, 0.4); Sound.trap();
+  const ice = best.filter(o => !isReal(o));
+  for (const o of ice) lockTile(o, C.money, 'blast');
+  const real = best.find(o => isReal(o));
+  if (real && gearMayClear()) return gearClear(lv, real, '> BLAST! got the real one. layer clear, no pay.');
+  setMsg(`> BLAST! ${ice.length} ICE gone.`, C.money);
+}
+// BEES: the swarm climbs the board from the bottom and eats ICE, one at a time (never the real node).
+// quiet: a later layer of the same corp (1 ICE).
+async function beeSwarm(lv, n, quiet = false) {
+  const ice = shuffle(iceOpen(lv), rngFor(st.run.seed, 'bees', st.corp.node.id, st.corp.idx, lv.beeRuns = (lv.beeRuns || 0) + 1)).slice(0, n).sort((a, b) => b.row - a.row);
+  if (!ice.length) return;
+  st.busy = true;
+  setMsg(quiet ? '> the bees are still here. bzz.' : '> BEES. (the bees are not real.)', C.money);
+  for (const t of ice) {
+    await wait(quiet ? 160 : 260);
+    if (st.lv !== lv) return;
+    if (t.state !== 'closed') continue;
+    Sound.tick(); lockTile(t, C.money, 'bees');
+  }
+  await wait(120);
+  if (st.lv !== lv) return;
+  st.busy = false;
+  if (!quiet) setMsg(`> the swarm ate ${ice.length} ICE. bzzz.`, C.money);
+}
 
 // Re-roll the type and corp of every node ahead (links stay the same).
 function rerouteMap() {
@@ -160,9 +193,8 @@ function rowMates() {
 }
 
 // ---------------- Layer gear (the user, 2026-10-26) ----------------
-// REWIND epic: every timer in this layer stops: the clock and the corp's own clock (ESPRESSO's hold, forever),
-// and ANCHOR (what moves stays put; LAGRANGE's taps land at once).
-function freezeLayer(lv) { lv.holdUntil = Infinity; lv.anchor = true; }
+// REWIND epic: every clock in this layer stops: yours and the corp's own (a hold, forever). What moves still moves (ANCHOR).
+function freezeLayer(lv) { lv.holdUntil = Infinity; }
 // Corps with their own tap rules (FORM 27B, DEMOLITION...): gear never clears the layer for you there.
 const gearMayClear = () => !(st.corp && st.corp.def.tap);
 // FRAG / SHOE hit the real node: the layer clears, no pay (like BLAST).
@@ -283,6 +315,7 @@ function whyNotItem(stack) {
   if (key === 'wall') return 'only inside a corp.';
   if (!inCorp && key !== 'wall') return 'only inside a corp layer.';
   if (st.busy) return 'wait a moment.';
+  if (BOSS_GEAR[key] && st.lv && st.lv.n > 1) return BOSS_GEAR[key].why(st.lv);
   if (key === 'split' && st.lv && st.lv.split) return 'already split this layer.';
   return 'nothing to use it on.';
 }
@@ -309,6 +342,7 @@ function canUse(stack) {
   if (key === 'shake') return layerGear && closed.length > 1;
   if (key === 'frag' || key === 'shoe') return layerGear && closed.some(t => !isReal(t));
   if (key === 'rewind') return layerGear && !st.corp.frozen && (tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer);
+  if (BOSS_GEAR[key]) return layerGear && BOSS_GEAR[key].ok(st.lv);
   return false;
 }
 
@@ -397,9 +431,10 @@ function useItem(slot) {
   if (key === 'shake') shakeBoard(lv);
   if (key === 'frag') fragBoard(lv, tier);
   if (key === 'shoe') throwShoe(lv);
+  if (BOSS_GEAR[key]) BOSS_GEAR[key].use(lv, performance.now());
   if (key === 'rewind') {
     const tm = st.timer;
-    if (tier >= 2) { st.corp.frozen = true; freezeLayer(lv); setMsg('> rewind: time stops. for this whole corp.', C.accent); }
+    if (tier >= 2) { st.corp.frozen = true; freezeLayer(lv); setMsg('> rewind: every clock stops. for this whole corp.', C.accent); }
     else if (tier === 1) { tm.left = tm.max; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: the clock is full again.', C.accent); }
     else { tm.max += 5; tm.left += 5; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: +5 seconds.', C.accent); }
     Sound.shield();

@@ -195,7 +195,7 @@ const BOT = `(async () => {
           if (st.choice && st.choice.title === st.panelTitle) {
             const ch = st.choice; st.choice = null;
             const before = run.credits;
-            const o = ch.options.find(o => modRoom(o.key) && !clashWith(o.key));
+            const o = ch.options.find(o => o.kind !== 'gear' && modRoom(o.key) && !clashWith(o.key));
             if (st.panelTitle === 'DATA CACHE') sec.cache++;
             if (o) { sec.rewards.mod++; ch.take(o); } else { ch.take(null); sec.rewards.credits += run.credits - before; }
             continue;

@@ -1,8 +1,8 @@
 // NeoN+1 corps/demolition.js
 'use strict';
-NEON_FILES.push(['corps/demolition.js', 'v13.61']);
-// Its boss mod: CONTROLLED BLAST (blast), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/demolition.js', 'v13.64']);
+// Its boss reward: BLAST gear x2 (blast), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its music
 // Made from MACHINE HEART: the same band, its own tune.
@@ -20,7 +20,7 @@ CORPS.demolition = {
   tell: null,
   bossDesc: 'boss: the numbers fade.',
   rules: () => 'break all the ICE. not the real one.',
-  mods: ['blast'],
+  gear: { key: 'blast', n: 2 },   // its boss reward: a stack of gear
   // Reverse rules, like minesweeper. Tapping ICE breaks it safely and it shows a number: 1 if
   // the real node is next to it (diagonals too), 0 if not. Clear every ICE to pass. Tap the
   // real node and it hurts (the layer passes, no pay). Boss: the numbers fade after a second.

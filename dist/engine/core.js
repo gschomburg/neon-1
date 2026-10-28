@@ -1,6 +1,6 @@
 // NeoN+1 engine/core.js: Tuning, the build number, constants, the palettes (resolved from palettes.js), the seeded RNG.
 'use strict';
-NEON_FILES.push(['engine/core.js', 'v13.61']);
+NEON_FILES.push(['engine/core.js', 'v13.64']);
 
 // ---------------- Tuning ----------------
 const CONFIG = {
@@ -31,7 +31,7 @@ const CONFIG = {
 
 // Build number: vMAJOR.MINOR. The minor ticks (+.01) with every update; the major changes only on
 // the user's call. The save slot follows the major only, so minor updates keep your progress.
-const VERSION = 'v13.61';
+const VERSION = 'v13.64';
 // In the palette editor (index.html?editor=1) the game keeps its own save, so yours is never touched.
 const EDITOR = /[?&]editor=1(&|$)/.test(location.search);
 const STORE_KEY = EDITOR ? 'beta_runner.editor.save' : 'beta_runner.v13.save';
@@ -60,17 +60,17 @@ const LINE_H = 1.22;
 const FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
 
 // Current colors. Filled from a palette at boot. Slots (see palettes.js): bg dim mid text bright
-// accent (buttons, logo) danger (ICE, damage) dangerDim money (credits). The 5 rarity colors are the
+// accent (buttons, logo) danger (ICE, damage) dangerDim money (credits) rep (REP, feats, unlocks). The 5 rarity colors are the
 // rarity chips' key colors (below): the same in every palette.
 const C = {
-  bg: '', dim: '', mid: '', text: '', bright: '', accent: '', danger: '', dangerDim: '', money: '',
+  bg: '', dim: '', mid: '', text: '', bright: '', accent: '', danger: '', dangerDim: '', money: '', rep: '',
   common: '', rare: '', epic: '', exotic: '', boss: '',
 };
 
 // Palettes live in palettes.js (loaded before this script). If the file didn't load, BASIC keeps
 // the game running.
 const PALETTE_DATA = window.NEON_PALETTES || { palettes: {
-  c_basic: { name: 'BASIC', bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', accent: '#3cf0ff', danger: '#ff3b4e', dangerDim: '#7a2630', money: '#e8c66a' },
+  c_basic: { name: 'BASIC', bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', accent: '#3cf0ff', danger: '#ff3b4e', dangerDim: '#7a2630', money: '#e8c66a', rep: '#a27ef5' },
 } };
 const PALETTES = {};
 for (const [key, p] of Object.entries(PALETTE_DATA.palettes)) PALETTES[key] = Object.assign({}, p);
@@ -115,6 +115,7 @@ function applyPalette(key, instant = false, dark = 0) {
   PAL_LIT = p;
   const to = {};
   for (const k of Object.keys(C)) if (p[k] && !CHIPS[k]) to[k] = dark && k !== 'bg' && k !== 'danger' ? mixHex(p[k], p.bg, dark) : p[k];
+  if (!p.rep) to.rep = to.accent;   // a palette from before rep (v13.64): its accent stands in
   if (instant || !C.bg || save.effects === 'reduced') { Object.assign(C, to); paletteFade = null; }
   else paletteFade = { from: Object.assign({}, C), to, t0: performance.now() };
   const f = p.font || {};

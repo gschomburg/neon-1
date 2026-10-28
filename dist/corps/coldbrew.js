@@ -1,8 +1,8 @@
 // NeoN+1 corps/coldbrew.js
 'use strict';
-NEON_FILES.push(['corps/coldbrew.js', 'v13.61']);
-// Its boss mod: ESPRESSO (espresso), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/coldbrew.js', 'v13.64']);
+// Its boss reward: REWIND (epic) gear x2 (rewind; it was ESPRESSO), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its music
 // Made from DROP ZONE: the same band, its own tune.
@@ -20,7 +20,7 @@ CORPS.coldbrew = {
   tell: null, timer: 12, pay: 1.3, shot: true,
   bossDesc: 'boss: decaf steam. barely.',
   rules: () => 'clock: 1s less each layer. pays x1.3',
-  mods: ['espresso'],
+  gear: { key: 'rewind', tier: 2, n: 2 },   // its boss reward: a stack of gear
   // The real node steams: a wisp rises off it every couple of seconds. Deeper: decoys
   // give off a faint dot now and then. Boss: the steam is rare.
   dress(lv, k) {

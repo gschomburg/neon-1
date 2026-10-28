@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.61']);
+NEON_FILES.push(['engine/editor.js', 'v13.64']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -119,7 +119,7 @@ if (EDITOR) {
     },
   };
   // New art from the editor's ART tab (live; the files change only when the editor saves them).
-  // a = { glyphs: [{ name, lore, art }], special: { k: { art } }, logos: [{ id, ..., art }], map }, any of them.
+  // a = { glyphs: [{ name, lore, art }], special: { k: { art } }, logos: [{ id, ..., art }], map, faces: { id: { name, art } } }, any of them.
   // Everything made from the art at load is changed in place, so the game's lists keep working.
   // (A new glyph shows on nodes right away; the codex lists it after a reload.)
   const same = (to, from) => { to.length = 0; to.push(...from); };
@@ -136,6 +136,7 @@ if (EDITOR) {
       for (const l of a.logos) if (l.kind === 'corp' && l.corp) CORP_ART[l.corp] = trimLead(l.art);
     }
     if (a.map) same(INTRO_MAP, a.map);
+    if (a.faces && typeof ART_FACES !== 'undefined') Object.assign(ART_FACES, a.faces);   // hacker faces (POPS's popups)
   };
   let queue = Promise.resolve();
   window.addEventListener('message', e => {
@@ -345,5 +346,5 @@ window.__br = {
   addSector, sectorClear, showSectorClear, pushOn, cashOut, openOmniReward, STAGES, modsAt, resumeRun, openBoard, LEGACY, legacyLv, repFor, saveRun, savedRun, clearRun,
   askSkip, scrollMapSector, sectorViewRow, SKIP_BOSS, toMap, startCorp, pickCorps, targetLevel, CORP_TELL, CODEX_CORPS, openShop,
   togglePause, pauseLines, abandonRun, moveFocus, moveTileCursor, moveMapCursor,
-  cipherNow, TAP_FX, PALETTES, clashWith, exoticOffer, tapsToBreak, openCache, openClash, bloodCost, coinOpen, coinFlip, tileCenter, COIN, showAd, closeAd, adBreak,
+  cipherNow, BOSS_GEAR, PALETTES, clashWith, exoticOffer, tapsToBreak, openCache, openClash, bloodCost, coinOpen, coinFlip, tileCenter, COIN, showAd, closeAd, adBreak,
 };

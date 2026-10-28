@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.61']);
+NEON_FILES.push(['engine/panels.js', 'v13.64']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -102,7 +102,7 @@ function gearValue(key, tier = 0) {
   return Math.max(1, Math.floor(ITEMS[key].price * TIER_PRICE[tier || 0] * priceScale() * ECON.gear.sellPct));
 }
 const marketRerolls = () => 1 + legacyLv('restock');   // per market (RESTOCK on THE BOARD: up to 3)
-const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value);   // value gear is loot only
+const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value && !ITEMS[k].corp);   // value gear is loot only; boss gear comes from its boss
 // How often a gear shows up (loot and markets): normal gear by its rarity, value gear its own (ECON.drop).
 const gearWeight = k => { const w = ECON.drop[ITEMS[k].value ? k : ITEMS[k].rarity]; return w == null ? 1 : w; };
 // One key, picked by weight.
@@ -267,6 +267,19 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     if (st.transitioning) return;
     if (o && locked) return Sound.deny();
     if (!picked && !locked && options.length) { picked = true; statPick(title, options, o); }   // play stats
+    if (o && o.kind === 'gear') {   // a stack of gear (corp boss rewards): onto the belt, all of it
+      const v = itemView(o.key, o.tier);
+      if (has('ramdoubler')) {   // RAM DOUBLER: no belt, so it's sold
+        const cr = gearValue(o.key, o.tier) * o.n;
+        st.run.credits += cr; st.run.earned += cr;
+        Sound.buy(); setMsg(`> ram doubler: ${v.name.toLowerCase()} x${o.n} sold, +${cr}cr.`, C.money);
+        return leave();
+      }
+      const done = () => { for (let k = 1; k < o.n; k++) addItem(o.key, o.tier); Sound.buy(); setMsg(`> took ${v.name.toLowerCase()} x${o.n}.`, C.accent); leave(); };
+      if (!itemRoom(o.key, o.tier)) return openSwap('item', o.key, o.tier, done);   // full: pick one to replace
+      addItem(o.key, o.tier);
+      return done();
+    }
     if (o) {
       if (clashWith(o.key)) return openClash(o.key, o.tier, () => leave());   // same rule slot: replace it?
       if (!modRoom(o.key)) return openSwap('mod', o.key, o.tier, () => leave());   // full: pick one to replace
@@ -285,11 +298,16 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
       for (const h of head) T(`breached ${h[0].toLowerCase()}`, C.mid);
     } else for (const h of head) T(h[0], h[1]);
     if (!by) T('');   // (with the logo, the screen is full: no gap)
-    if (options.length) T(locked ? 'what you could have had:' : options.length > 1 ? 'choose one mod:' : 'mod found:', C.mid);
+    if (options.length) T(locked ? 'what you could have had:' : options.length > 1 ? (options.some(o => o.kind === 'gear') ? 'choose one:' : 'choose one mod:') : 'mod found:', C.mid);
     // each offer shows what you'd end up with (a mod you have = an upgrade, "+")
-    const viewOf = o => modView(o.key, upgradeTo(o.key, o.tier));
+    const viewOf = o => o.kind === 'gear' ? itemView(o.key, o.tier) : modView(o.key, upgradeTo(o.key, o.tier));
     options.forEach((o, i) => {
-      const v = viewOf(o), up = has(o.key), mc = locked ? C.dim : C.bright;
+      const v = viewOf(o), up = o.kind !== 'gear' && has(o.key), mc = locked ? C.dim : C.bright;
+      if (o.kind === 'gear') {   // a stack of gear: its name on its rarity chip, xN
+        X({ list: true, id: 'opt' + i, onTap: () => { sel = i; Sound.tick(); }, sel: i === sel, name: `${v.name} x${o.n}`, chip: v.rarity, col: mc, faded: locked,
+          right: `${(v.tier ? RARITY[v.rarity].label : '').padStart(6)} gear`, rightCol: mc, reveal: i, revealId: 'opt' + i, rarity: v.rarity, seenKey: o.key });
+        return;
+      }
       X({
         list: true, id: 'opt' + i, onTap: () => { sel = i; Sound.tick(); },
         sel: i === sel, badge: o.key, badgeTier: v.tier, name: v.name + (up ? ' +' : ''), col: mc, faded: locked,
@@ -302,7 +320,14 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
       const o = options[sel], v = viewOf(o);
       const shown = now >= st.panelT0 + sel * CONFIG.revealGap;
       T(SEP, C.dim);
-      if (shown) {
+      if (shown && o.kind === 'gear') {
+        const room = itemRoom(o.key, o.tier) && !has('ramdoubler');
+        X({ text: `${v.name} x${o.n}`, chip: v.rarity, bold: true });
+        T(v.tip || v.desc, C.text);
+        X({ text: has('ramdoubler') ? 'ram doubler: it gets sold.' : room ? `gear // ${o.n} uses` : "gear slots full: you'll swap one", col: room ? C.mid : C.dangerDim, chips: true });
+        if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
+        else X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
+      } else if (shown) {
         X({ badge: o.key, badgeTier: v.tier });
         T(v.tip, C.text);
         X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(v)}` : !modRoom(o.key) ? `mod slots full (${modSlots()}): you'll swap one` : '', col: has(o.key) ? C.text : C.dangerDim, chips: true });
@@ -373,13 +398,23 @@ function breachSummary() {
   return { text: `> perfect ${p}/${n}   ice hit ${ice}${ice === 0 ? '  FLAWLESS' : ''}`, col: ice === 0 ? C.accent : C.text };
 }
 
+// A boss reward's gear stack (the random third pick, ECON.reward): shop gear picked by rarity (weight), with more
+// of the commoner ones (min / max by rarity). Rare and epic gear rolls its tier; scrap and common come plain.
+const GEAR_STEP = { scrap: 0, common: 1, rare: 2, epic: 3 };
+function rewardGear(r) {
+  const R = ECON.reward, pool = shopGear().filter(k => GEAR_STEP[ITEMS[k].rarity] != null);
+  const key = pickWeighted(pool, k => R.weight[GEAR_STEP[ITEMS[k].rarity]] || 0, r), s = GEAR_STEP[ITEMS[key].rarity];
+  return { kind: 'gear', key, tier: s >= 2 ? rollTier(r, ITEMS[key]) : 0, n: R.min[s] + Math.floor(r() * (R.max[s] - R.min[s] + 1)) };
+}
 function openReward(node, skipped = false) {
   const run = st.run;
   const r = rngFor(run.seed, 'reward', node.id);
   const def = corpDef(node.corp);
-  const corpPick = pickMods(r, def.mods || [], 1);
+  // the corp's own pick: its boss gear (a stack: def.gear), or its corp mod
+  const corpPick = def.gear ? [{ kind: 'gear', key: def.gear.key, tier: def.gear.tier || 0, n: def.gear.n || 1 }] : pickMods(r, def.mods || [], 1);
   const gen = pickMods(r, modsOfKind('gen'), 1, corpPick);
-  const third = pickMods(r, modsOfKind('gen', 'minor'), 1, corpPick.concat(gen));
+  const third = r() < ECON.reward.gear ? [rewardGear(r)] : pickMods(r, modsOfKind('gen', 'minor'), 1, corpPick.concat(gen));
+
   const options = shuffle(corpPick.concat(gen, third), r);
   openChoice({
     reveal: st.breachReveal,

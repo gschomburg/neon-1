@@ -1,8 +1,8 @@
 // NeoN+1 corps/apiary.js
 'use strict';
-NEON_FILES.push(['corps/apiary.js', 'v13.61']);
-// Its boss mod: HONEYCOMB (honeycomb), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/apiary.js', 'v13.64']);
+// Its boss reward: BEES gear x3 (bees), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its music
 // Made from DROP ZONE: the same band, its own tune.
@@ -19,7 +19,7 @@ CORPS.apiary = {
   intel: '"long live the queen."',
   tell: null,
   bossDesc: 'boss: half the hive swarms.',
-  mods: ['honeycomb'],
+  gear: { key: 'bees', n: 3 },   // its boss reward: a stack of gear
   // The real node is the queen. The workers slowly lean toward her; she never moves.
   // Deeper: they lean less. Boss: half of them swarm (buzz around, no lean).
   dress(lv, k) {

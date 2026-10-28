@@ -1,8 +1,8 @@
 // NeoN+1 corps/noir.js
 'use strict';
-NEON_FILES.push(['corps/noir.js', 'v13.61']);
-// Its boss mod: INTERROGATE (interrogate), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/noir.js', 'v13.64']);
+// Its boss reward: SNITCH gear x3 (snitch), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its own helpers
 // NOIR: one statement for node t. true: it must be true if q is the real node (q tells the
@@ -42,7 +42,7 @@ CORPS.noir = {
   tell: null,
   bossDesc: 'boss: no confessions.',
   rules: () => 'one node tells the truth: the real.',
-  mods: ['interrogate'],
+  gear: { key: 'snitch', n: 3 },   // its boss reward: a stack of gear
   // A logic puzzle. Every node makes a statement; exactly one tells the truth, and that one
   // is the real node. (Only one answer fits.) Deeper: no "I AM REAL" or "X IS REAL". Boss:
   // only positions and liars.

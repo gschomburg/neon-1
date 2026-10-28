@@ -220,12 +220,12 @@
   const BASE = [
     ['bg', 'background'], ['dim', 'faint text, dividers'], ['mid', 'secondary text, labels'], ['text', 'normal text'],
     ['bright', 'headings, emphasis'], ['accent', 'buttons, the logo, highlights'], ['danger', 'ICE, damage, warnings'],
-    ['dangerDim', 'locked nodes, dark red frames'], ['money', 'credits, rewards'],
+    ['dangerDim', 'locked nodes, dark red frames'], ['money', 'credits, rewards'], ['rep', 'REP, feats, unlocks (THE BOARD)'],
   ];
   const RAR = [['scrap', 'scrap: the basics'], ['common', 'common'], ['rare', 'rare'], ['epic', 'epic'], ['legendary', 'legendary: corp mods, top upgrades'], ['exotic', 'exotic']];
   // how readable each color should be on the background (contrast ratio): dim and dangerDim are faint on purpose
-  const NEED = { dim: 1.2, mid: 3, text: 4.5, bright: 4.5, accent: 3, danger: 3, dangerDim: 1.2, money: 3 };
-  const PAIRS = [['accent', 'money'], ['accent', 'danger'], ['danger', 'money'], ['accent', 'bright'], ['money', 'bright'], ['text', 'bright'], ['mid', 'text'], ['dim', 'mid']];
+  const NEED = { dim: 1.2, mid: 3, text: 4.5, bright: 4.5, accent: 3, danger: 3, dangerDim: 1.2, money: 3, rep: 3 };
+  const PAIRS = [['accent', 'money'], ['accent', 'danger'], ['danger', 'money'], ['accent', 'bright'], ['money', 'bright'], ['rep', 'money'], ['rep', 'accent'], ['rep', 'danger'], ['rep', 'bright'], ['text', 'bright'], ['mid', 'text'], ['dim', 'mid']];
 
   const clone = o => JSON.parse(JSON.stringify(o));
   if (!window.NEON_PALETTES) { document.body.textContent = "Couldn't load ../dist/palettes.js. Open this page from the repo's tools/ folder."; return; }
@@ -270,7 +270,7 @@
 //   dim        faint text, dividers     danger     ICE, damage, warnings
 //   mid        secondary text, labels   dangerDim  locked nodes, dark red frames
 //   text       normal text              money      credits, rewards, gold glows
-//   bright     headings, emphasis
+//   bright     headings, emphasis       rep        REP, feats, unlocks (THE BOARD)
 // hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
 // Rarity colors aren't in the palettes: every mod and item shows its rarity as a chip (chips, below),
 // the same in every palette.
@@ -475,6 +475,10 @@
     let Hm = rnd(38, 55);
     for (let k = 0; k < 12 && (hueGap(Hm, Ha) < 40 || hueGap(Hm, hueOf(out.danger)) < 30); k++) Hm += 30;
     out.money = keep('money') ? p.money : toContrast(Hm, rnd(0.7, 0.95), rnd(5, 8), bg, dark);
+    // rep: blue-violet, or lime when violet lands near the accent, money or danger
+    let Hr = rnd(245, 270);
+    if ([Ha, hueOf(out.danger), Hm].some(h => hueGap(Hr, h) < 35)) Hr = rnd(84, 100);
+    out.rep = keep('rep') ? p.rep : toContrast(Hr, 0.85, rnd(4.5, 6.5), bg, dark);
     return out;
   }
   function wildPalette(p) {
@@ -519,7 +523,7 @@
       sp('accent', 'NeoN+1', true) + ' ' + sp('dim', '// ' + r.name.toLowerCase()) + '\n' +
       sp('dim', '- - - - - - - - - - - - - - - -') + '\n' +
       sp('mid', 'LAYER ') + sp('bright', '04') + '   ' + sp('mid', 'INTEGRITY ') + sp('accent', '###') + sp('danger', '#') + '\n' +
-      sp('text', 'PERIMETER SYS 2/4') + '        ' + sp('money', 'CR 32') + '\n' +
+      sp('text', 'PERIMETER SYS 2/4') + '  ' + sp('rep', 'REP 9') + '  ' + sp('money', 'CR 32') + '\n' +
       sp('danger', '> ICE. -1 integrity.') + '\n' +
       sp('text', 'a ') + sp('bright', 'real node', true) + sp('text', ', a ') + sp('danger', 'locked', false) + sp('text', ' one: ') + sp('dangerDim', '[INERT]') + '\n' +
       sp('accent', '[ JACK IN ]') + '  ' + sp('text', '[ CODEX ]') + '\n' +
@@ -564,7 +568,7 @@
       card.style.background = r.bg;
       card.innerHTML = `<span class="tag" style="color:${r.mid}">${data.palettes[k].hidden ? 'locked' : 'starter'}${n ? ' · ' + n + '!' : ''}</span>` +
         sp('bright', r.name, true) + '\n' + sp('text', 'text ') + sp('mid', 'mid ') + sp('dim', 'dim') + '\n' +
-        sp('accent', '[ GO ]') + ' ' + sp('danger', 'ICE') + ' ' + sp('money', 'CR 32') + '\n' +
+        sp('accent', '[ GO ]') + ' ' + sp('danger', 'ICE') + ' ' + sp('money', 'CR 32') + ' ' + sp('rep', 'REP') + '\n' +
         RAR.map(([s]) => chipHtml(s, s[0].toUpperCase())).join(' ');
       card.onclick = () => { select(k); showTab('pal'); };
       g.append(card);

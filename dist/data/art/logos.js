@@ -6,7 +6,7 @@
 // also the corp's intro art) or hacker (unlocked by beating that hacker), and the art: up to 24 x 7, shown in a
 // 24 x 7 box, centered.
 'use strict';
-NEON_FILES.push(['data/art/logos.js', 'v13.61']);
+NEON_FILES.push(['data/art/logos.js', 'v13.64']);
 
 const ART_LOGOS = [
   { id: 'skull', name: 'SKULL', mark: '{x}', kind: 'player', art: [
@@ -712,5 +712,136 @@ const ART_LOGOS = [
     ' \\    \'-----\'    /',
     '  \'-._       _.-\'',
     '      \'\'\'\'\'\'\'',
+  ] },
+  { id: 'pops', name: 'POPS', mark: 'POP', kind: 'hacker', hacker: 'pops', art: [
+    '.-----------.',
+    '|  P O P S  |',
+    '\'-----------\'',
+    '',
+    '  est. 2047',
+  ] },
+  { id: 'iceman', name: 'ICE MAN', mark: '*I*', kind: 'hacker', hacker: 'iceman', art: [
+    '   *  |  *',
+    '    \\ | /',
+    ' -- ICE MAN --',
+    '    / | \\',
+    '   *  |  *',
+  ] },
+  { id: 'ggez', name: 'GG_EZ', mark: 'GG!', kind: 'hacker', hacker: 'ggez', art: [
+    '  ___   ___',
+    ' / __| / __|',
+    '| (_ || (_ |',
+    ' \\___| \\___|',
+    '    E Z  :P',
+  ] },
+  { id: 'turbo', name: 'TURBO', mark: '>>>', kind: 'hacker', hacker: 'turbo', art: [
+    '>>>>>>>>>>>>>',
+    '  T U R B O',
+    '>>>>>>>>>>>>>',
+  ] },
+  { id: 'doppel', name: 'D0PPEL', mark: 'oIo', kind: 'hacker', hacker: 'doppel', art: [
+    ' .--.  .--.',
+    '( oo )( oo )',
+    ' \'--\'  \'--\'',
+    '',
+    'D 0 P P 3 L',
+  ] },
+  { id: 'sysop', name: 'SYSOP', mark: '#BB', kind: 'hacker', hacker: 'sysop', art: [
+    '.-----------.',
+    '| SYSOP BBS |',
+    '| 300  BAUD |',
+    '\'-----------\'',
+  ] },
+  { id: 'vulture', name: 'VULTURE', mark: 'VvV', kind: 'hacker', hacker: 'vulture', art: [
+    '  __       __',
+    ' /  \\_.v._/  \\',
+    '     ( . )',
+    '',
+    ' V U L T U R E',
+  ] },
+  { id: 'phish', name: 'PH1SH', mark: '><>', kind: 'hacker', hacker: 'phish', art: [
+    '      |',
+    '      J   ><((o>',
+    '',
+    '   P H 1 S H',
+  ] },
+  { id: 'd0g', name: 'd0g', mark: 'd0g', kind: 'hacker', hacker: 'd0g', art: [
+    '  /\\_/\\',
+    ' ( 0 0 )',
+    '  > w <',
+    '',
+    '   d 0 g',
+  ] },
+  { id: 'hcf', name: 'HCF', mark: '!F!', kind: 'hacker', hacker: 'hcf', art: [
+    '  ) ( ) ( ) (',
+    ' ( ) ( ) ( ) )',
+    '  [  H C F  ]',
+    '',
+    'halt & catch fire',
+  ] },
+  { id: 'leech', name: 'LEECH', mark: 'oOo', kind: 'hacker', hacker: 'leech', art: [
+    ' .-~-~-~-~-.',
+    '(  L E E C H )',
+    ' \'-o-o-o-o-\'',
+  ] },
+  { id: 'brick', name: 'BRICK', mark: '[#]', kind: 'hacker', hacker: 'brick', art: [
+    ' ___ ___ ___',
+    '|___|___|___|',
+    '  |___|___|',
+    '',
+    '  B R I C K',
+  ] },
+  { id: 'null', name: 'NULL', mark: '[ ]', kind: 'hacker', hacker: 'null', art: [
+    '.---------.',
+    '|         |',
+    '|    _    |',
+    '\'---------\'',
+    '  N U L L',
+  ] },
+  { id: 'nana', name: 'NANA', mark: '<3N', kind: 'hacker', hacker: 'nana', art: [
+    ' .-.   .-.',
+    '(   \\ /   )',
+    ' \\  NANA  /',
+    '   \\    /',
+    '    \\  /',
+    '     \\/',
+  ] },
+  { id: 'dialup', name: 'DIALUP', mark: '~~~', kind: 'hacker', hacker: 'dialup', art: [
+    '.----------.',
+    '|[]   ~~~~ |',
+    '\'----------\'',
+    '',
+    'D I A L U P',
+  ] },
+  { id: 'baud', name: 'BAUD', mark: '~>~', kind: 'hacker', hacker: 'baud', art: [
+    '0101 0110 1001',
+    '   B A U D',
+    '1100 1001 0110',
+  ] },
+  { id: 'mother', name: 'MOTHER', mark: '(o)', kind: 'hacker', hacker: 'mother', art: [
+    '    .---.',
+    '  .\'  _  \'.',
+    ' (   (o)   )',
+    '  \'.     .\'',
+    '    \'---\'',
+    '',
+    ' M O T H E R',
+  ] },
+  { id: 'root', name: 'ROOT', mark: '#>_', kind: 'hacker', hacker: 'root', art: [
+    'root@deck:~# _',
+    '',
+    '   R O O T',
+  ] },
+  { id: 'kludge', name: 'KLUDGE', mark: '=X=', kind: 'hacker', hacker: 'kludge', art: [
+    '==+==+==+==+==',
+    '  K L U D G E',
+    '==+==+==+==+==',
+  ] },
+  { id: 'hype', name: 'HYPE', mark: '\\o/', kind: 'hacker', hacker: 'hype', art: [
+    ' \\o/   \\o/',
+    '  |     |',
+    ' / \\   / \\',
+    '',
+    ' H Y P E !',
   ] },
 ];

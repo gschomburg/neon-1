@@ -1,8 +1,8 @@
 // NeoN+1 corps/blackout.js
 'use strict';
-NEON_FILES.push(['corps/blackout.js', 'v13.61']);
-// Its boss mod: FLARE (flare), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/blackout.js', 'v13.64']);
+// Its boss reward: FLARE gear x3 (flare), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its music
 // Made from RED DEEP: the same band, its own tune.
@@ -20,7 +20,7 @@ CORPS.blackout = {
   tell: null,
   bossDesc: 'boss: nearly black. short glow.',
   rules: () => 'it gets darker every layer.',
-  mods: ['flare'],
+  gear: { key: 'flare', n: 3 },   // its boss reward: a stack of gear
   // Darker every layer (the palette fades into the background, except red: the nodes
   // you hit stay bright). Afterglow: when the lights flash (the layer opening, and every
   // ICE hit), every node lights up and fades; the real node glows longest. Deeper, a

@@ -1,8 +1,8 @@
 // NeoN+1 corps/choir.js
 'use strict';
-NEON_FILES.push(['corps/choir.js', 'v13.61']);
-// Its boss mod: SACRIFICE (sacrifice), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/choir.js', 'v13.64']);
+// Its boss reward: TITHE gear x2 (tithe), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its own helpers
 const FACE_CH = ['\\', '^', '/', '<', 'o', '>', '/', 'v', '\\'];
@@ -23,7 +23,7 @@ CORPS.choir = {
   tell: null, faith: true,
   bossDesc: `boss: the prophet. tithe ${costInt(ECON.corpCosts.choirTitheBoss)}cr.`,
   rules: () => `faith pays x2. tithe ${costInt(ECON.corpCosts.choirTithe)}cr: a sign.`,
-  mods: ['sacrifice'],
+  gear: { key: 'tithe', n: 2 },   // its boss reward: a stack of gear
   // Every follower wears the holy mark and keeps its eyes down. Pick on faith (no tell)
   // and the layer pays x2. Or tithe, and the followers turn to face the real node.
   // Deeper: a heretic or two faces the wrong way. SIGSCAN treats the mark as a signature.

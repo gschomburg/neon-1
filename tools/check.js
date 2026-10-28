@@ -33,7 +33,7 @@ function load(file) {
   const NAMES = ['CONFIG', 'CORPS', 'FINAL', 'PUBLIC', 'CORP_TELL', 'CORP_ART', 'CODEX_CORPS', 'MODS', 'ITEMS', 'RARITY',
     'STAGES', 'MOD_STAGE', 'ANOMALIES', 'LEGACY', 'SONGS', 'MUSIC_FOR', 'SCALES', 'MOTIFS', 'GLYPHS',
     'NAME_A', 'NAME_B', 'NAME_C', 'HELP_PAGES', 'PALETTES', 'PLAYER_STYLES', 'LOCK_LABEL', 'TITLE', 'COVER',
-    'START_NOTE', 'HIT_FX', 'END_FX', 'TAP_FX', 'BOARD_FX', 'CIPHER_SYMS', 'RAINBOW', 'ZODIAC', 'LEX_WORDS'];
+    'START_NOTE', 'HIT_FX', 'END_FX', 'BOSS_GEAR', 'BOARD_FX', 'CIPHER_SYMS', 'RAINBOW', 'ZODIAC', 'LEX_WORDS'];
   const hook = `window.__check = { genLayer, genMap, pickCorps, ${NAMES.join(', ')} };\n`;
   const hi = scripts.findIndex(s => s.code.includes('window.__br = {'));
   if (hi < 0) throw new Error('no window.__br in the game');

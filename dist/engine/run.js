@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.61']);
+NEON_FILES.push(['engine/run.js', 'v13.64']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -144,7 +144,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
   // FAILSAFE legendary recharges each corp you go into (not on a resume: that would refill it for free)
   if (!restore && st.corp.hasBoss && has('failsafe') && modTier('failsafe') >= 1 && !has('zombie')) st.run.failsafeUsed = false;
   if (restore) {   // a resumed save: what this corp had used up so far
-    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen']) if (restore[k] != null) st.corp[k] = restore[k];
+    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen', 'slomo', 'anchored', 'bees']) if (restore[k] != null) st.corp[k] = restore[k];
   }
   if (st.corp.hasBoss) {
     // MUTATE: this corp, it counts as a random other mod.
@@ -395,6 +395,7 @@ async function enterLayer() {
     if (c.express && !lv.lift) lv.lift = makeLift(lv.tiles[lv.safe].row, rngFor(run.seed, 'express', c.node.id, c.idx), 1150);
     if (has('pickset') && (c.pins || 0) >= 3) { modFired('pickset'); c.pins = 0; lv.litRow = lv.tiles[lv.safe].row; lv.notes.push({ text: `pins set: ${ROW_NAMES(lv.rows, lv.litRow)}` }); }
   }
+  if (c.anchored) lv.anchor = true;   // ANCHOR (gear): nothing moves, the whole corp
   if (c.hasBoss && c.def.intro && n > 1) { await c.def.intro(lv, c); if (st.lv !== lv) return; }   // corp kit: MONTE's shuffle
   if (lv.maskMs) lv.maskAt = performance.now() + lv.maskMs;   // corp kit: FORGET-ME-NOT
   // JACK-IN-THE-BOX: in one layer per corp, an ICE pops out 1-3s in (layerTick does it)
@@ -403,6 +404,8 @@ async function enterLayer() {
   st.busy = false;
   lv.readyAt = performance.now();
   lv.shownAt = lv.readyAt;
+  if (c.slomo) lv.clockRate = 0.5;   // SLOMO (gear): the whole corp
+  if (c.bees && n > 1) beeSwarm(lv, 1, true);   // BEES (gear): the swarm stays for the corp
   if (c.frozen) freezeLayer(lv);   // REWIND epic: every timer stays stopped, the whole corp   // unlike readyAt, this one doesn't reset after a miss
   c.express = false;
   // MUTATE: say what it became (the tray flashes it too)
@@ -577,6 +580,7 @@ function resetTimer() {
 
 async function pick(i) {
   if (st.mp) return mpTap(i);
+  if (st.mode === 'play' && !st.busy && st.lv && st.lv.blastAim && st.lv.tiles[i] && st.lv.tiles[i].state === 'closed') return blastAt(st.lv, st.lv.tiles[i]);   // BLAST (gear): this tap aims it
   { const byp = st.lagBypass; st.lagBypass = false;   // corp kit: LAGRANGE holds taps back
     if (!byp && st.mode === 'play' && !st.busy && st.corp && st.corp.hasBoss && st.corp.def.intercept && st.lv && st.lv.tiles[i] && st.corp.def.intercept(i)) return; }
   if (st.mode !== 'play' || st.busy) return;
@@ -682,7 +686,7 @@ function payFor(lv) {
 async function onSafe(t) {
   const run = st.run, lv = st.lv, c = st.corp;
   t.state = 'safe';
-  const perfect = (lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned;
+  const perfect = (lv.misses === 0 || lv.eater || lv.tithe) && lv.n > 1 && !lv.scanned;   // TITHE (gear): a perfect, whatever came before
   if (c.hasBoss && lv.n > 1) run.lastReal = { col: t.col, row: t.row };   // DEJA VU
   if (lv.n > 1) { c.scored = (c.scored || 0) + 1; if (perfect) { c.perfects = (c.perfects || 0) + 1; run.perfects = (run.perfects || 0) + 1; } }
   const pay = lv.eater ? Math.max(0, payFor(lv) - (lv.eatPaid || 0)) : payFor(lv);   // ICE EATER: the rest of the layer's pay
@@ -830,15 +834,6 @@ const END_FX = {
     else if (run.integrity < run.maxInt) run.integrity++;   // no room (or RAM DOUBLER): heal instead
     else { run.maxInt++; run.integrity++; }
     Sound.shield();
-  },
-  // HONEYCOMB: perfects store honey; 3 drops heal 1. At full, a drop is +10cr.
-  honeycomb(perfect) {
-    const run = st.run;
-    if (!perfect) return false;
-    if (!canHeal()) { const cr = earnInt(ECON.mods.honeycomb); run.credits += cr; run.earned += cr; return; }
-    run.honey = (run.honey || 0) + 1;
-    if (run.honey >= 3) { run.honey = 0; heal(1); Sound.shield(); }
-    else return false;   // storing honey
   },
   // INTEREST: a corp you finish pays 5% of your credits (up to 20).
   async interest() {
@@ -1281,10 +1276,10 @@ function blockHit(t, i) {
     Sound.shield(); flash(C.accent, 0.1, 0.3);
     modFired('snooze');
     msg = '> ICE. snoozed: later.';
-  } else if (lv.rolled && !lv.rollUsed) {
-    lv.rollUsed = true; lv.payCut = 1;
+  } else if (lv.rolled) {   // ROLLUP (gear): every hit, the rest of the layer
+    lv.payCut = 1;
     Sound.shield(); flash(C.accent, 0.14, 0.3); shake(4);
-    msg = '> ICE. rolled up: no damage, no pay.';
+    msg = '> ICE. rolled up: no damage.';
   } else if (has('icebox') && st.corp.hasBoss && st.corp.idx === 0 && !lv.iceboxUsed) {
     lv.iceboxUsed = true;
     Sound.shield(); flash(C.accent, 0.12, 0.3);
@@ -1510,7 +1505,7 @@ const BOARD_FX = {
 };
 
 // Which gear a loot roll gives: by weight (gearWeight, ECON.drop).
-const pickGearDrop = r => pickWeighted(Object.keys(ITEMS), gearWeight, r);
+const pickGearDrop = r => pickWeighted(Object.keys(ITEMS).filter(k => !ITEMS[k].corp), gearWeight, r);   // (boss gear: only from its boss)
 
 // Credits or an item. Returns a short text for the message line.
 function grantLoot(r, tier) {

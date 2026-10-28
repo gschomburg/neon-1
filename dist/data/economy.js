@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v13.61']);
+NEON_FILES.push(['data/economy.js', 'v13.64']);
 
 const ECON = {
   // ---- Units
@@ -40,6 +40,12 @@ const ECON = {
     boss: 2,   // earn: skip a boss's reward (take credits instead of a mod after beating a corp)
     sector: 4,   // earn: skip the sector boss's reward (take credits instead of a mod after the uplink)
   },
+  reward: {
+    gear: 0.35,   // %: boss reward: gear pick (the chance a corp boss reward's random third pick is a stack of gear instead of a mod)
+    weight: [0.5, 0.7, 1, 0.8],   // x list: boss reward gear: how likely (which gear it is, by rarity: scrap / common / rare / epic)
+    min: [6, 3, 2, 1],   // count list: boss reward gear: fewest (how many come in the stack, by rarity: scrap / common / rare / epic...)
+    max: [8, 4, 3, 2],   // count list: boss reward gear: most (...up to this many)
+  },
   rival: {
     flatlined: 3,   // earn: RIVAL: knocked out (beat the rival hacker by knocking it out)
     beat: 1.5,   // earn: RIVAL: beat it clean (beat the rival hacker without it stealing anything)
@@ -49,7 +55,6 @@ const ECON = {
     ezpass: 0.6,   // earn: EZPASS (every layer you beat pays this bonus)
     policy: 2,   // earn: POLICY (every time you hit ICE, the insurance pays this)
     graverobber: 0.2,   // earn: GRAVE ROBBER (beating a layer pays this for each ICE you never touched)
-    honeycomb: 1,   // earn: HONEYCOMB (a honey drop when your integrity is already full pays this instead)
     interestPct: 0.05,   // %: INTEREST (beating a corp pays this share of the credits you hold...)
     interestMax: 5,   // earn: INTEREST: cap (...but never more than this)
     chancecard: 3,   // earn: CHANCE CARD (drawing the credits card pays this)

@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v13.61']);
+NEON_FILES.push(['engine/tutorial.js', 'v13.64']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -19,7 +19,7 @@ const TUT = {
   // out: a row folds away per `out` ms, then he pops out; between: a beat before the next popup;
   // mini: the small version (just his face and the "do this" line, up by the message line) slides out
   anim: { pop: 240, line: 60, gap: 80, arrow: 200, out: 25, faceOut: 140, between: 120, mini: 160 },
-  face: [" '-, ", '┌@\\@┐', '╯{=╭╰'],   // POPS (the user's, made in asXii)
+  face: [" '-, ", '┌@\\@┐', '╯{=╭╰'],   // POPS (the user's, made in asXii); data/art/faces.js has it now (ART_FACES.pops), this is the stand-in
   curtain: ['hello', 'runner'],
   curtainEnd: ['bye', 'out'],   // ...and the last ones: the game goes out to the lines again, and the title comes in from them   // said over the wipe's lines, held (the menu button and the footer stay), before the game comes in
   timerChars: '@Oo.',        // a banter timer's spinners: each one steps through these, then it's gone
@@ -483,7 +483,7 @@ function tutDrawFace(cx, cy, s, k) {
   g.fillStyle = col.tag; g.fillRect(-F.w / 2 - 1 * k, -F.h / 2 - 1 * k, F.w + 2 * k, F.h + 2 * k);
   g.fillStyle = col.ink; g.fillRect(-F.w / 2, -F.h / 2, F.w, F.h);
   g.font = `400 ${F.fs}px ${FONT}`; g.fillStyle = col.tag; g.textAlign = 'center'; g.textBaseline = 'middle';
-  TUT.face.forEach((ln, i) => g.fillText(ln, 0, (i - 1) * 1.12 * F.fs));
+  ((typeof ART_FACES !== 'undefined' && ART_FACES.pops && ART_FACES.pops.art) || TUT.face).forEach((ln, i) => g.fillText(ln, 0, (i - 1) * 1.12 * F.fs));
   g.restore();
 }
 const tutPopIn = u => (u < 0.6 ? 1.25 * (u / 0.6) : 1.25 - 0.25 * (u - 0.6) / 0.4);   // his pop: overshoot, settle

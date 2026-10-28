@@ -1,8 +1,8 @@
 // NeoN+1 corps/entropy.js
 'use strict';
-NEON_FILES.push(['corps/entropy.js', 'v13.61']);
-// Its boss mod: ANCHOR (anchor), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/entropy.js', 'v13.64']);
+// Its boss reward: ANCHOR gear x2 (anchor), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its own helpers
 // ENTROPY: everything still in play jumps to new cells; the decoys get new glyphs.
@@ -40,7 +40,7 @@ CORPS.entropy = {
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: every hit shuffles too.',
   rules: () => 'it reshuffles every few seconds.',
-  mods: ['anchor'],
+  gear: { key: 'anchor', n: 2 },   // its boss reward: a stack of gear
   // Every few seconds every node jumps to a new cell and the decoys get new glyphs. The
   // real node keeps its glyph: the one that survives a shuffle. Deeper: one decoy keeps
   // its glyph through the first shuffle too. Boss: faster, and each hit shuffles.

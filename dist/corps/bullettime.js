@@ -1,8 +1,8 @@
 // NeoN+1 corps/bullettime.js
 'use strict';
-NEON_FILES.push(['corps/bullettime.js', 'v13.61']);
-// Its boss mod: TIMEWARP (timewarp), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/bullettime.js', 'v13.64']);
+// Its boss reward: SLOMO gear x2 (slomo), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its own helpers
 const BT_SPIN = '|/-\\';
@@ -18,7 +18,7 @@ CORPS.bullettime = {
   tell: null, alwaysFollow: true, timer: 14, pay: 1.2,
   bossDesc: 'boss: two decoys almost keep up.',
   rules: () => 'slow motion. the clock is not.',
-  mods: ['timewarp'],
+  gear: { key: 'slomo', n: 2 },   // its boss reward: a stack of gear
   // Everything runs in slow motion (the music too), but the clock runs in real time. Every
   // node ticks; the real one ticks at full speed. Deeper: the decoys run a little faster.
   // Boss: two decoys run at 70%.

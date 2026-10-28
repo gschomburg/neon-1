@@ -1,8 +1,8 @@
 // NeoN+1 corps/carapace.js
 'use strict';
-NEON_FILES.push(['corps/carapace.js', 'v13.61']);
-// Its boss mod: ROLL UP (rollup), defined with the others in data/mods.js (their order there
-// decides reward rolls), its effect in engine/run.js or engine/active.js.
+NEON_FILES.push(['corps/carapace.js', 'v13.64']);
+// Its boss reward: ROLLUP gear x2 (rollup), defined with the gear in data/mods.js (ITEMS),
+// its effect in engine/active.js.
 
 // ---- its music
 // Made from MACHINE HEART: the same band, its own tune.
@@ -20,7 +20,7 @@ CORPS.carapace = {
   tell: null,
   bossDesc: 'boss: no thin spots.',
   rules: () => 'armor: every hit points at the real.',
-  mods: ['rollup'],
+  gear: { key: 'rollup', n: 2 },   // its boss reward: a stack of gear
   // Every node wears armor (# frame). The real node has a thin spot (a - in the top edge).
   // Deeper: every node has one; the real node's is on top, the decoys' on the bottom. Boss: no
   // thin spots. Every ICE you hit points toward the real node.

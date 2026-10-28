@@ -14,6 +14,17 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **REP colors** (v13.64, 2026-10-28): every palette has a new **rep** color (blue-violet; lime on 3 where violet was
+  near their own colors). Look them over in the neon editor's palette tab (a new rep row, and REP in the samples) or on the
+  "NeoN+1 REP Colors" page; change any you don't like. Nothing in the game uses it yet: it's for the feats / THE BOARD screens.
+
+- [ ] **The hacker cast** (v13.63, 2026-10-28): 10 bad + 10 good hackers, all mine but POPS: names, faces (5 x 3), logos,
+  lore, shticks, how each AI plays, and who counters whom. Look in the neon editor's new **hackers** tab; redraw the faces
+  and logos in the art tab (new **hacker faces** group, asXii works). Placeholder art throughout. Your two AI ideas are
+  GG_EZ (only emotes) and TURBO (taps everything fast); the take-your-hits assist is BRICK. Questions for you: is D0PPEL
+  the right home for today's RIVAL? do bad hackers' logos unlock by beating them and good ones' by calling them?
+
+- [ ] **Boss gear** (v13.62, 2026-10-27): the 10 tap mods are gear stacks now, with the changes from our overlap talk. New names (gear names fit 6 letters): FREEZE FRAME -> **FREEZE**, CONTROLLED BLAST -> **BLAST**, INTERROGATE -> **SNITCH**, SACRIFICE -> **TITHE**, TIMEWARP -> **SLOMO**, ROLL UP -> **ROLLUP**, HONEYCOMB -> **BEES**. ESPRESSO is cut (COLDBREW gives REWIND epic x2). Stack sizes: 3 for the light ones (FLARE, REMOTE, FREEZE, SNITCH, BEES), 2 for the strong ones. Try them: the TESTING tab's give gear, or beat those corps. BLAST is aimed (use it, then tap a node). The boss reward's third pick is gear 35% of the time (ECONOMY tab, "boss reward"). Old saves: those mods vanish from a run in progress.
 - [ ] **15 new fake ads** (v13.61, 2026-10-27): all my copy and ASCII art. Look in the neon editor's new **ads** tab (each one
   drawn as text; "show in the game" puts it up). Cut, rewrite or redraw anything; QUEENS OF KALDOR is kept cheeky, not explicit.
 

@@ -28,6 +28,10 @@
     { path: 'skip.starter', kind: 'earn', label: 'skip the starter perk', note: 'take credits instead of a mod at the start of a run' },
     { path: 'skip.boss', kind: 'earn', label: "skip a boss's reward", note: 'take credits instead of a mod after beating a corp' },
     { path: 'skip.sector', kind: 'earn', label: "skip the sector boss's reward", note: 'take credits instead of a mod after the uplink' },
+    { path: 'reward.gear', kind: 'pct', label: 'boss reward: gear pick', note: "the chance a corp boss reward's random third pick is a stack of gear instead of a mod" },
+    { path: 'reward.weight', kind: 'xlist', label: 'boss reward gear: how likely', note: 'which gear it is, by rarity: scrap / common / rare / epic' },
+    { path: 'reward.min', kind: 'nlist', label: 'boss reward gear: fewest', note: 'how many come in the stack, by rarity: scrap / common / rare / epic...' },
+    { path: 'reward.max', kind: 'nlist', label: 'boss reward gear: most', note: '...up to this many' },
     { path: 'rival.flatlined', kind: 'earn', label: 'RIVAL: knocked out', note: 'beat the rival hacker by knocking it out' },
     { path: 'rival.beat', kind: 'earn', label: 'RIVAL: beat it clean', note: 'beat the rival hacker without it stealing anything' },
 
@@ -35,7 +39,6 @@
     { path: 'mods.ezpass', kind: 'earn', label: 'EZPASS', note: 'every layer you beat pays this bonus' },
     { path: 'mods.policy', kind: 'earn', label: 'POLICY', note: 'every time you hit ICE, the insurance pays this' },
     { path: 'mods.graverobber', kind: 'earn', label: 'GRAVE ROBBER', note: 'beating a layer pays this for each ICE you never touched' },
-    { path: 'mods.honeycomb', kind: 'earn', label: 'HONEYCOMB', note: 'a honey drop when your integrity is already full pays this instead' },
     { path: 'mods.interestPct', kind: 'pct', label: 'INTEREST', note: 'beating a corp pays this share of the credits you hold...' },
     { path: 'mods.interestMax', kind: 'earn', label: 'INTEREST: cap', note: '...but never more than this' },
     { path: 'mods.chancecard', kind: 'earn', label: 'CHANCE CARD', note: 'drawing the credits card pays this' },
