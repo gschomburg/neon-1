@@ -14,6 +14,7 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **10 new glyphs** (v13.82): the ART tab, node glyphs (the last 10): GIBBERLINK, SHREDDER, OFFICE FERN, SECURITY CAM, WEB CRAWLER, COOKIE, BARCODE, SATELLITE, GHOST USER, CHECKSUM. Redo the art and lore as you like.
 - [ ] **FIRST BREACH** (v13.81): beat a corp you have never beaten (or reset your codex record): FIRST BREACH, its logo and tell, SEE THE CORE, then the rewards. Rivals still go DEFEATED first. The leaderboard shows 15. Hacker lines: they clear after a few seconds and the tip comes back; random chatter doesn't step on a fresh tip.
 - [ ] **Small fixes** (v13.81): POPS on TUMBLER LOCKS (black on yellow now); the dev menu's [ go fishing ]; REROLL brings the offers in again one row at a time.
 - [ ] **The new UPLINK and SECTOR CLEARED** (v13.80): play to a sector boss. SECTOR CLEARED's ROOT picture is random (4; the ART tab, "sector clear"). On the UPLINK: tap rows (toggle + ticker), try it with lots of mods (scrolls) and too few credits (REMOVE MODS). The ROOT SHELL picture says "ghost": it could say your name.

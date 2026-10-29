@@ -4,7 +4,7 @@
 // A glyph is up to 5 x 3; each line is centered on the node by itself. Lore lines stay under 26 characters.
 // Their order matters: the codex keys are g0, g1... and the game picks from the whole list.
 'use strict';
-NEON_FILES.push(['data/art/glyphs.js', 'v13.81']);
+NEON_FILES.push(['data/art/glyphs.js', 'v13.82']);
 
 const ART_GLYPHS = [
   { name: 'DIAMOND', lore: ['a rhombus with ambition.', 'every corp logo is this', 'plus a gradient.'], art: [' / \\ ', '<   >', ' \\ / '] },
@@ -25,6 +25,16 @@ const ART_GLYPHS = [
   { name: 'CORRUPTION', lore: ['a file that got too', 'close to a magnet once.', 'it does not talk about it.'], art: ['%#@', '@ %', '#%@'] },
   { name: 'BRACKET STAR', lore: ['a JSON object that', 'reached enlightenment.'], art: ['{ }', '{*}', '{ }'] },
   { name: 'FUNNEL', lore: ['data goes in.', 'invoices come out.'], art: ['=====', ' === ', '  =  '] },
+  { name: 'GIBBERLINK', lore: ['two AIs found a faster', 'way to talk. it sounds', 'like a modem in love.'], art: ['>-<>-', '-<>-<', '<>-<>'] },
+  { name: 'SHREDDER', lore: ['the paper trail ends', 'here, in strips.', 'tape it back. we dare ya.'], art: ['[___]', '|||||', '| | |'] },
+  { name: 'OFFICE FERN', lore: ['the only living thing', 'on the server floor.', 'nobody waters it.'], art: [' \\|/ ', '  |  ', ' \\_/ '] },
+  { name: 'SECURITY CAM', lore: ['smile. it records', 'everything except', 'the crimes.'], art: ['.---.', '|(o)|', '\'---\''] },
+  { name: 'WEB CRAWLER', lore: ['it indexes everything.', 'it indexed you', 'while you slept.'], art: ['\\ | /', '-(o)-', '/ | \\'] },
+  { name: 'COOKIE', lore: ['tracking you since', 'you clicked accept.'], art: [' .-. ', '(::.)', ' \'-\' '] },
+  { name: 'BARCODE', lore: ['price: one soul.', 'please scan again.'], art: ['||| |', '|| ||', '| |||'] },
+  { name: 'SATELLITE', lore: ['beams the ads down', 'from orbit.', 'no off switch.'], art: [' \\ / ', '=[o]=', ' / \\ '] },
+  { name: 'GHOST USER', lore: ['deleted in 2069.', 'never logged out.'], art: [' .-. ', '(o o)', ' vvv '] },
+  { name: 'CHECKSUM', lore: ['it all adds up.', 'mostly.'], art: ['+-=-+', '= ? =', '+-=-+'] },
 ];
 // The special node glyphs (code uses them by key).
 const ART_SPECIAL = {

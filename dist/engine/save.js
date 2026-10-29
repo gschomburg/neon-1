@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v13.81']);
+NEON_FILES.push(['engine/save.js', 'v13.82']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({

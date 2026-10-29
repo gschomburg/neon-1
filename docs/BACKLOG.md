@@ -271,23 +271,19 @@ unlocked by REP, and some quests unlock REP.
 ## Medium and small
 - **Tells, intel** (the user, meat notes 2026-10-29; FIRST BREACH built v13.81 shows the tell the first time): open: some way to know if a tell is right (what that means: ask the user).
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Cold Brew's boss reward
-  is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to".
-- **BLOOD MONEY scaling** (the user, 2026-10-27): its hit cost in credits should scale like the rest of the economy (ECONOMY tab), though credits have no cap the way INT does. And new things that rewrite INT need a BLOOD MONEY rule: BLACK ICE (down to 1 INT) would cost the credits for that many hits.
+  is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is (the user 2026-10-29: "i still ran out of cash and couldn't get past the uplink"); it already scales by sector and BLACK ICE costs that many hits.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.
 - **COUPON -> COUPON CUTTER?** (the user, 2026-10-27): maybe rename MEGAMART's mod.
 - **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle.
 - **A general popup over a node:** pull COIN FLIP's hold / drag box into one shared piece (`nodePopup`).
 - **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open).
-- **10 more glyphs** (22 to 32), with names and lore; re-save the check baseline after.
 - **Ads that do things** (later, the user 2026-10-28; the fake ads are done and great): an ad that sells you gear or a mod; a free trial of a corp's mod; AD BLOCKER.
 - **A daily seed** and a daily leaderboard (none today).
 - **The corp's logo on the boss intro.**
 - **Browser back = BACK** on menu pages (and ask before leaving a run or a room).
 - **Flipped characters:** MIRRORLINE's glyphs flip with its mirror; a backwards mod.
-- **Faces in the art catalog** (POPS's face and the coming NPCs, with the asXii round trip).
 - **Going public:** drop the page's `noindex`; maybe the game's own domain.
 - **Tidy dist/** (the user, meat notes 2026-10-28): pack things into folders more; the palettes (palettes.js, palettes_v1.js) go in data/ instead of the root.
-- **A taller leaderboard screen** (the user, meat notes 2026-10-28).
 
 ## Parked (later, when the user says)
 - **MULTIPLAYER: shelved** (it works and stays in; finish the core game first). Later: maybe p5.party instead of
