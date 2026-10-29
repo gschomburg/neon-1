@@ -5,7 +5,7 @@
 <title>NeoN+1 palette editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- The palettes, the same file the game loads. -->
-<script src="../dist/palettes.js"></script>
+<script src="../dist/data/palettes.js"></script>
 <style>
   :root {
     --bg: #15171a; --panel: #1d2024; --line: #2c3036; --text: #d6dade; --mid: #8b929a; --hi: #ffffff;
@@ -121,7 +121,7 @@
     <button id="redo" title="Redo (Ctrl+Shift+Z)">redo</button>
     <button id="reload" title="Load palettes.js again from disk (drops unsaved changes)">reload file</button>
     <button id="export" title="Copy the whole palettes.js text to the clipboard, and download it">export</button>
-    <button id="save" class="primary" title="Write dist/palettes.js (Ctrl+S)">save palettes.js</button>
+    <button id="save" class="primary" title="Write dist/data/palettes.js (Ctrl+S)">save palettes.js</button>
   </div>
   <div id="tabs">
     <button data-tab="pal" class="on">palette</button>
@@ -228,14 +228,14 @@
   const PAIRS = [['accent', 'money'], ['accent', 'danger'], ['danger', 'money'], ['accent', 'bright'], ['money', 'bright'], ['rep', 'money'], ['rep', 'accent'], ['rep', 'danger'], ['rep', 'bright'], ['text', 'bright'], ['mid', 'text'], ['dim', 'mid']];
 
   const clone = o => JSON.parse(JSON.stringify(o));
-  if (!window.NEON_PALETTES) { document.body.textContent = "Couldn't load ../dist/palettes.js. Open this page from the repo's tools/ folder."; return; }
+  if (!window.NEON_PALETTES) { document.body.textContent = "Couldn't load ../dist/data/palettes.js. Open this page from the repo's tools/ folder."; return; }
   let data = clone(window.NEON_PALETTES);
   let sel = Object.keys(data.palettes)[0];
 
   // a palette as the game sees it (palettes are self-contained since v12: no shared rarity set)
   const resolved = key => Object.assign({}, data.palettes[key]);
   // the build to stamp into palettes.js: the game's own (from its 'ready' message), else the stamp the file came with
-  let build = ((window.NEON_FILES || []).find(f => f[0] === 'palettes.js') || [])[1] || 'v12.00';
+  let build = ((window.NEON_FILES || []).find(f => f[0] === 'data/palettes.js') || [])[1] || 'v12.00';
 
   // ---------------- Color math ----------------
   const isHex = s => /^#[0-9a-f]{6}$/i.test(s);
@@ -289,7 +289,7 @@
     const starters = keys.filter(k => !data.palettes[k].hidden), locked = keys.filter(k => data.palettes[k].hidden);
     const chips = RAR.map(([r]) => `    ${(r + ':').padEnd(8)} { fg: ${q(data.chips[r].fg)}, bg: ${q(data.chips[r].bg)} },`);
     const styles = data.styles.map(s => `    { name: ${(q(s.name) + ',').padEnd(9)} fg: ${q(s.fg)}, bg: ${q(s.bg)} },`);
-    return HEADER + `(window.NEON_FILES = window.NEON_FILES || []).push(['palettes.js', '${build}']);   // the build it's from (see index.html)\n` +
+    return HEADER + `(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes.js', '${build}']);   // the build it's from (see index.html)\n` +
       'window.NEON_PALETTES = {\n' +
       '  // Rarity chips: a text color on its own background, for each rarity (bg = the rarity\'s key color).\n' +
       '  chips: {\n' + chips.join('\n') + '\n  },\n  palettes: {\n' +
@@ -635,7 +635,7 @@
   let handle = null;   // the palettes.js file on disk (Chrome / Edge)
   function renderFileState() {
     const d = dirty();
-    $('#filestate').innerHTML = (handle ? `file: <span class="mono">${handle.name}</span>` : 'file: not linked yet (save asks for dist/palettes.js)') + (d ? ' · <b>unsaved changes</b>' : ' · saved');
+    $('#filestate').innerHTML = (handle ? `file: <span class="mono">${handle.name}</span>` : 'file: not linked yet (save asks for dist/data/palettes.js)') + (d ? ' · <b>unsaved changes</b>' : ' · saved');
     $('#undo').disabled = !undo.length; $('#redo').disabled = !redo.length;
     document.title = (d ? '* ' : '') + 'NeoN+1 palette editor';
   }
@@ -649,8 +649,8 @@
     open.onerror = () => rej(open.error);
     open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
   });
-  const rememberHandle = h => idb('readwrite', s => s.put(h, 'palettes')).catch(() => {});
-  idb('readonly', s => s.get('palettes')).then(h => { if (h) { handle = h; renderFileState(); } }).catch(() => {});
+  const rememberHandle = h => idb('readwrite', s => s.put(h, 'palettes-data')).catch(() => {});
+  idb('readonly', s => s.get('palettes-data')).then(h => { if (h) { handle = h; renderFileState(); } }).catch(() => {});
 
   async function ensureHandle() {
     if (handle) {

@@ -1,6 +1,6 @@
 // NeoN+1 corps/bullettime.js
 'use strict';
-NEON_FILES.push(['corps/bullettime.js', 'v13.82']);
+NEON_FILES.push(['corps/bullettime.js', 'v13.83']);
 // Its boss reward: SLOMO gear x2 (slomo), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

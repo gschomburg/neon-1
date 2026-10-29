@@ -58,7 +58,7 @@ Open `dist/index.html` in a browser (or upload the `dist/` folder to a web host)
 - `docs/SPEC.md`: the living design doc: what's built, version by version, plus the backlog.
 - `docs/CORPS.md`: every corp, its tell, its mod, and the build plan by tier.
 - `docs/CONTENT.md`, `docs/NAMES.md`, `docs/ART.md`: content reference, naming, art drop-off.
-- `tools/palette_editor.html`: the palette editor (open it in Chrome): edit `dist/palettes.js` with the game
+- `tools/palette_editor.html`: the palette editor (open it in Chrome): edit `dist/data/palettes.js` with the game
   running beside it, and save straight to the file.
 - `tools/check.js` and `tools/playtest.js`: "did anything change?" A fingerprint of the game (every corp's
   layers, maps, data, code) and a headless playthrough of every corp, compared to a saved baseline.

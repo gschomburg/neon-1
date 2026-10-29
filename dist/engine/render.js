@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.82']);
+NEON_FILES.push(['engine/render.js', 'v13.83']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;

@@ -5,7 +5,7 @@
 <title>NeoN+1 editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- NeoN+1 editor: the game on the left (index.html?editor=1, engine/editor.js), and three modes on the right:
-     MUSIC (every corp's track, played by the game itself), PALETTE (edits dist/palettes.js) and ITEMS & MODS
+     MUSIC (every corp's track, played by the game itself), PALETTE (edits dist/data/palettes.js) and ITEMS & MODS
      (read-only: every item and mod, its rarity steps and its copy, from dist/data/mods.js).
      First, stand-ins for the bits of the game the music and corp files expect, then the game's own files. -->
 <script>
@@ -16,7 +16,7 @@
   const normMotif = m => m;   // (some corps shape their glyphs at the top of the file)
   window.addEventListener('error', e => { (window.LOAD_ERRORS = window.LOAD_ERRORS || []).push(e.filename + ': ' + e.message); });
 </script>
-<script src="../dist/palettes.js"></script>
+<script src="../dist/data/palettes.js"></script>
 <script src="../dist/data/economy.js"></script>
 <script src="../dist/data/music.js"></script>
 <script src="../dist/engine/music.js"></script>
@@ -721,7 +721,7 @@
     <button id="redo" title="Redo (Ctrl+Shift+Z)">redo</button>
     <button id="reload" title="Load palettes.js again from disk (drops unsaved changes)">reload file</button>
     <button id="export" title="Copy the whole palettes.js text to the clipboard, and download it">export</button>
-    <button id="save" class="primary" title="Write dist/palettes.js (Ctrl+S)">save palettes.js</button>
+    <button id="save" class="primary" title="Write dist/data/palettes.js (Ctrl+S)">save palettes.js</button>
     <span class="grp" title="BLACKOUT's darkness (a corp palette effect): every color but danger fades into the background">
       <label for="dark">darkness</label>
       <input id="dark" type="range" min="0" max="0.8" step="0.02" value="0">
@@ -894,14 +894,14 @@
   const PAIRS = [['accent', 'money'], ['accent', 'danger'], ['danger', 'money'], ['accent', 'bright'], ['money', 'bright'], ['rep', 'money'], ['rep', 'accent'], ['rep', 'danger'], ['rep', 'bright'], ['text', 'bright'], ['mid', 'text'], ['dim', 'mid']];
 
   const clone = o => JSON.parse(JSON.stringify(o));
-  if (!window.NEON_PALETTES) { document.body.textContent = "Couldn't load ../dist/palettes.js. Open this page from the repo's tools/ folder."; return; }
+  if (!window.NEON_PALETTES) { document.body.textContent = "Couldn't load ../dist/data/palettes.js. Open this page from the repo's tools/ folder."; return; }
   let data = clone(window.NEON_PALETTES);
   let sel = Object.keys(data.palettes)[0];
 
   // a palette as the game sees it (palettes are self-contained since v12: no shared rarity set)
   const resolved = key => Object.assign({}, data.palettes[key]);
   // the build to stamp into palettes.js: the game's own (from its 'ready' message), else the stamp the file came with
-  let build = ((window.NEON_FILES || []).find(f => f[0] === 'palettes.js') || [])[1] || 'v12.00';
+  let build = ((window.NEON_FILES || []).find(f => f[0] === 'data/palettes.js') || [])[1] || 'v12.00';
 
   // ---------------- Color math ----------------
   const isHex = s => /^#[0-9a-f]{6}$/i.test(s);
@@ -955,7 +955,7 @@
     const starters = keys.filter(k => !data.palettes[k].hidden), locked = keys.filter(k => data.palettes[k].hidden);
     const chips = RAR.map(([r]) => `    ${(r + ':').padEnd(8)} { fg: ${q(data.chips[r].fg)}, bg: ${q(data.chips[r].bg)} },`);
     const styles = data.styles.map(s => `    { name: ${(q(s.name) + ',').padEnd(9)} fg: ${q(s.fg)}, bg: ${q(s.bg)} },`);
-    return HEADER + `(window.NEON_FILES = window.NEON_FILES || []).push(['palettes.js', '${build}']);   // the build it's from (see index.html)\n` +
+    return HEADER + `(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes.js', '${build}']);   // the build it's from (see index.html)\n` +
       'window.NEON_PALETTES = {\n' +
       '  // Rarity chips: a text color on its own background, for each rarity (bg = the rarity\'s key color).\n' +
       '  chips: {\n' + chips.join('\n') + '\n  },\n  palettes: {\n' +
@@ -1303,7 +1303,7 @@
   let handle = null;   // the palettes.js file on disk (Chrome / Edge)
   function renderFileState() {
     const d = dirty();
-    $('#filestate').innerHTML = (handle ? `file: <span class="mono">${handle.name}</span>` : 'file: not linked yet (save asks for dist/palettes.js)') + (d ? ' · <b>unsaved changes</b>' : ' · saved');
+    $('#filestate').innerHTML = (handle ? `file: <span class="mono">${handle.name}</span>` : 'file: not linked yet (save asks for dist/data/palettes.js)') + (d ? ' · <b>unsaved changes</b>' : ' · saved');
     $('#undo').disabled = !undo.length; $('#redo').disabled = !redo.length;
     document.title = (d ? '* ' : '') + 'NeoN+1 palette editor';
   }
@@ -1317,8 +1317,8 @@
     open.onerror = () => rej(open.error);
     open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
   });
-  const rememberHandle = h => idb('readwrite', s => s.put(h, 'palettes')).catch(() => {});
-  idb('readonly', s => s.get('palettes')).then(h => { if (h) { handle = h; renderFileState(); } }).catch(() => {});
+  const rememberHandle = h => idb('readwrite', s => s.put(h, 'palettes-data')).catch(() => {});
+  idb('readonly', s => s.get('palettes-data')).then(h => { if (h) { handle = h; renderFileState(); } }).catch(() => {});
 
   async function ensureHandle() {
     if (handle) {
@@ -1880,7 +1880,7 @@
     if (!['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test', 'g0d'].includes(m)) m = 'music';
     for (const k of ['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test', 'g0d']) document.body.classList.toggle('mode-' + k, m === k);
     for (const b of document.querySelectorAll('#modes button[data-mode]')) b.classList.toggle('on', b.dataset.mode === m);
-    $('#modehint').textContent = { music: 'pick a corp: the game shows it and plays its track', pal: 'palettes: save writes dist/palettes.js',
+    $('#modehint').textContent = { music: 'pick a corp: the game shows it and plays its track', pal: 'palettes: save writes dist/data/palettes.js',
       items: 'from dist/data/mods.js. give / change / remove mods on the running game (the copy is read-only)',
       art: 'dist/data/art/: glyphs, logos, hacker faces, world map. edit here or in asXii; save writes the files',
       tut: 'dist/data/tutorial.js: what POPS says. show plays the training to that line; edits show live',
@@ -2842,7 +2842,7 @@
 <h2>The first save</h2>
 <ol>
 <li>Chrome (or Edge) asks you to pick the file or folder. The hint at the top right of each tab names it:
-  <ul><li>palette: the file ${F('dist/palettes.js')}</li><li>art: the folder ${F('dist/data/art')}</li><li>training and economy: the folder ${F('dist/data')}</li></ul></li>
+  <ul><li>palette: the file ${F('dist/data/palettes.js')}</li><li>art: the folder ${F('dist/data/art')}</li><li>training and economy: the folder ${F('dist/data')}</li></ul></li>
 <li>Allow it to edit files. The editor remembers the choice, so later saves just save.</li>
 </ol>
 <p>Another browser can't write files: save downloads the file instead. Put it in that folder by hand, over the old one.</p>
@@ -2883,7 +2883,7 @@
 
     pal: { name: 'palette', html: `
 <h1>Palette</h1>
-<p class="lead">The game's color palettes, the rarity chips and the player styles. Saves ${F('dist/palettes.js')}.</p>
+<p class="lead">The game's color palettes, the rarity chips and the player styles. Saves ${F('dist/data/palettes.js')}.</p>
 <h2>Editing a palette</h2>
 <ul>
 <li>Pick one with &lt; / &gt; or the list. Name, note, and <b>starter</b> (offered in SETTINGS from the start).</li>
@@ -2899,7 +2899,7 @@
 <li><b>player styles</b>: name and logo colors. New ones go at the end; none can be removed (saved profiles point at them by place).</li>
 </ul>
 <h2>Saving</h2>
-<p><b>undo</b> / <b>redo</b> (Ctrl Z / Ctrl Shift Z). <b>save palettes.js</b> writes the file (the first time, pick ${F('dist/palettes.js')}). <b>export</b> copies the whole file and downloads it. More: ${go('saving', 'how saving works')}.</p>` },
+<p><b>undo</b> / <b>redo</b> (Ctrl Z / Ctrl Shift Z). <b>save palettes.js</b> writes the file (the first time, pick ${F('dist/data/palettes.js')}). <b>export</b> copies the whole file and downloads it. More: ${go('saving', 'how saving works')}.</p>` },
 
     items: { name: 'gear & mods', html: `
 <h1>Gear &amp; mods</h1>

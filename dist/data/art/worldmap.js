@@ -3,7 +3,7 @@
 // Hand edits are fine too: inside the quotes a backslash is \\ and a quote \'.
 // 34 x 12, in the login screen box. Its 0 o x [] blink; your spot (@) is picked inside the land (engine/intro.js).
 'use strict';
-NEON_FILES.push(['data/art/worldmap.js', 'v13.82']);
+NEON_FILES.push(['data/art/worldmap.js', 'v13.83']);
 
 const ART_MAP = [
   '         ._._._._.  ╭──-  ╦─╮',

@@ -247,6 +247,7 @@ unlocked by REP, and some quests unlock REP.
     Metal Gear Solid game over ("snaaake! snake!"). Each crew member has their own line.
 
 ## Polish (the user, 2026-10-29: the finishing passes)
+- **Boss intro pass** (the user, 2026-10-29: "it's all working for now", but the whole boss intro could use a little more): the corp's logo on it, and more.
 - **INTRO PASS:** after the user has lived with it. The intro keeps playing every time; the NEWB / LEET screen only on
   a truly fresh start (maybe a URL switch keeps it all, for testing; `INTRO_ALWAYS` in engine/intro.js). Glitch /
   animation effects on the title card (noise in the log, the map drawing in with static, a burst on handshake, the
@@ -275,17 +276,16 @@ unlocked by REP, and some quests unlock REP.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.
 - **COUPON -> COUPON CUTTER?** (the user, 2026-10-27): maybe rename MEGAMART's mod.
 - **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle.
-- **A general popup over a node:** pull COIN FLIP's hold / drag box into one shared piece (`nodePopup`).
 - **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open).
 - **Ads that do things** (later, the user 2026-10-28; the fake ads are done and great): an ad that sells you gear or a mod; a free trial of a corp's mod; AD BLOCKER.
 - **A daily seed** and a daily leaderboard (none today).
-- **The corp's logo on the boss intro.**
-- **Browser back = BACK** on menu pages (and ask before leaving a run or a room).
-- **Flipped characters:** MIRRORLINE's glyphs flip with its mirror; a backwards mod.
+
+## Deploy and release (later: a browser-testing pass opens these)
+- **Browser back = BACK** on menu pages (the user, 2026-10-29: it only came up once; a can of worms for that pass) (and ask before leaving a run or a room).
 - **Going public:** drop the page's `noindex`; maybe the game's own domain.
-- **Tidy dist/** (the user, meat notes 2026-10-28): pack things into folders more; the palettes (palettes.js, palettes_v1.js) go in data/ instead of the root.
 
 ## Parked (later, when the user says)
+- **Not sure yet** (the user, 2026-10-29): **A general popup over a node:** pull COIN FLIP's hold / drag box into one shared piece (`nodePopup`). **Flipped characters:** MIRRORLINE's glyphs flip with its mirror; a backwards mod.
 - **MULTIPLAYER: shelved** (it works and stays in; finish the core game first). Later: maybe p5.party instead of
   Firebase; co-op (NeoN+m, Keep Talking style); a roulette mode.
 - **Music:** the engine pass and fewer, better tracks: docs/MUSIC.md.
