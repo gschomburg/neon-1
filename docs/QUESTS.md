@@ -5,7 +5,8 @@ Where quests sit in the progression: `docs/PROGRESSION.md`.
 
 ## The main quest: WHAT IS ALL THIS FOR? (POPS's son, d0g, G0D)
 
-**Its words (calls, scenes, step names) are in `dist/data/quests.js`:** read and edit them there.
+**Its words (calls, scenes, step names) are in `dist/data/quests.js`:** read and edit them there. As a script to read: `docs/QUEST_DIALOG.md`
+(generated: `node tools/quest_dialog.js` after editing).
 
 **Step names** (the user named the quest 2026-10-28; the step names are Claude's, to change): 1 THE DISC, 2 SAFEHOUSE,
 3 DOG DAYS, then (not built) TRACE ROUTE, PRODIGAL, NEW BLOOD, OMNI RAID, HEAVEN'S GATE, G0D MODE.
