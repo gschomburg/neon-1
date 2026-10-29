@@ -23,7 +23,7 @@
 //   lvl2    crew: their LVL 2 upgrade (THE BOARD), fixed
 // How each one plays is engine/hackers.js (HK_AI); they come in through the RIVAL anomaly (rivals) and CALL gear (crew).
 'use strict';
-NEON_FILES.push(['data/hackers.js', 'v13.77']);
+NEON_FILES.push(['data/hackers.js', 'v13.78']);
 
 const HACKERS = {
   // ================= bad hackers =================

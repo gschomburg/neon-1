@@ -65,6 +65,13 @@ unlocked by REP, and some quests unlock REP.
   - G0D has several stages: you fight it in the first sector, then again as the final boss of the second; then, after the
     success screen, one more stage opens: you think you've beaten the game, but there's one more set of layers.
   - Then G0D unlocks some cool hacking things?
+  - **The fights, after two pages of mockups** (2026-10-29): docs/QUESTS.md, "The mockups and where it's heading". All 20
+    ideas, and the mold effects for the map and the win screen, show in the game from the neon editor's **g0d** tab.
+  - **The g0d tab grows** (the user, 2026-10-29, thinking it through, not to build yet): more sections over time. One is
+    **the mold effects**, for iterating on them: the mold glitch, and **mold transitions** (the regular screen
+    transition, with mold in it to varying degrees). That section gets a **mold slider** that every effect in it reads:
+    the same button triggers the effect, and the slider sets how much mold, so each one can be seen at any intensity.
+    (Claude: the same 0-1 number could later be what the game itself turns up as the quest goes on and in heaven.)
   - (more, meat notes 2026-10-28) **Who G0D is:** a rogue AI trying to destroy the net. The corps built it by accident in
     their race for AI superiority: all the corps' AIs somehow fused into G0D. Its abilities: any corp at any time? No tells?
     Maybe you only beat it by replaying the seed (learning it).
@@ -277,6 +284,8 @@ unlocked by REP, and some quests unlock REP.
 - **MULTIPLAYER: shelved** (it works and stays in; finish the core game first). Later: maybe p5.party instead of
   Firebase; co-op (NeoN+m, Keep Talking style); a roulette mode.
 - **Music:** the engine pass and fewer, better tracks: docs/MUSIC.md.
+- **G0D's tracks** (the user, 2026-10-29): the G0D fights need their own music, and it has to kick ass: the maze, the
+  mold-armor fight, the part 2 on the map / the win screen, the last stand. (docs/QUESTS.md, G0D's fights.)
 - **Analytics:** the play stats are collected (greglytics); reading them (which corps beat people, what gets bought).
 
 ## Parked mod ideas (the user, 2026-10-26: "we have enough mods for now")

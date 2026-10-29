@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.77']);
+NEON_FILES.push(['engine/panels.js', 'v13.78']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -108,6 +108,8 @@ const marketRerolls = () => 1 + legacyLv('restock');   // per market (RESTOCK on
 const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value && (!ITEMS[k].corp || legacyLv('bossloot')) && gearAllowed(k));   // value gear is loot only; boss gear comes from its boss (BOSS LOOT on THE BOARD: markets too)
 // How often a gear shows up (loot and markets): normal gear by its rarity, value gear its own (ECON.drop).
 const gearWeight = k => { const w = ECON.drop[ITEMS[k].value ? k : ITEMS[k].rarity]; return w == null ? 1 : w; };
+// A market's gear: by rarity, with a plain CALL likelier (CALL_ODDS.shop, engine/hackers.js).
+const shopWeight = k => gearWeight(k) * (k === 'call' ? CALL_ODDS.shop : 1);
 // One key, picked by weight.
 function pickWeighted(keys, w, r) {
   let x = r() * keys.reduce((a, k) => a + w(k), 0);
@@ -121,7 +123,7 @@ function openShop(node) {
   const roll = n => {
     const r = n ? rngFor(run.seed, 'shop', node.id, 'reroll', n) : rngFor(run.seed, 'shop', node.id);
     const itemKeys = [];   // 3 gear, picked by weight (rarer gear shows up less); RAM DOUBLER: no gear for sale
-    for (let pool = has('ramdoubler') ? [] : shopGear(); itemKeys.length < 3 && pool.length;) { const k = pickWeighted(pool, gearWeight, r); itemKeys.push(k); pool = pool.filter(o => o !== k); }
+    for (let pool = has('ramdoubler') ? [] : shopGear(); itemKeys.length < 3 && pool.length;) { const k = pickWeighted(pool, shopWeight, r); itemKeys.push(k); pool = pool.filter(o => o !== k); }
     let offers = itemKeys.map(k => ({ kind: 'item', key: k, tier: rollTier(r, ITEMS[k]), price: ITEMS[k].price, sold: false }));
     // More than one copy now and then (commoner gear more often; ECON.stock). Its own roll: the rest of the market stays the same.
     const rs = n ? rngFor(run.seed, 'shop', node.id, 'stock', n) : rngFor(run.seed, 'shop', node.id, 'stock');

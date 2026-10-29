@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v13.77']);
+NEON_FILES.push(['engine/hackers.js', 'v13.78']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -543,12 +543,21 @@ function buildHackers(ctx, lv, now) {
 
 // ---------------- CALL gear ----------------
 // In a corp's layer: CALL brings a random crew member who isn't here; a named one brings them.
+// Who a plain CALL brings, by weight (the user, 2026-10-29): POPS is likelier until he's on your crew (the main quest
+// needs him); crew you've called fewer than 5 times (not posted on THE BOARD yet) are likelier than ones you have.
+// shop: how much likelier a plain CALL is in a market's gear than its rarity alone makes it.
+const CALL_ODDS = { pops: 6, fresh: 2, known: 1, shop: 3 };
+const callWeight = id => id === 'pops' && !hkCrewOn('pops') ? CALL_ODDS.pops : statOf('hack:call:' + id) < 5 ? CALL_ODDS.fresh : CALL_ODDS.known;
 const hkCallable = () => !!st.corp && st.corp.hasBoss && !!st.lv && st.lv.n > 1;
 const CALL_GEAR = {
   call: {
     ok: () => hkCallable() && HK_CREW.some(k => !hkUp(k)),
     why: () => !hkCallable() ? 'only in a corp.' : 'nobody left to call.',
-    use() { const id = pickR(HK_CREW.filter(k => !hkUp(k) && !(hkList().find(h => h.id === k))), Math.random) || pickR(HK_CREW.filter(k => !hkUp(k)), Math.random); Sound.ui(); hkSpawn(id, 'call'); },
+    use() {
+      const free = HK_CREW.filter(k => !hkUp(k)), fresh = free.filter(k => !hkList().find(h => h.id === k));
+      const id = pickWeighted(fresh.length ? fresh : free, callWeight, Math.random);
+      Sound.ui(); hkSpawn(id, 'call');
+    },
   },
 };
 for (const id of HK_CREW) CALL_GEAR['call_' + id] = {

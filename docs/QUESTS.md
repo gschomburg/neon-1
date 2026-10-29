@@ -100,6 +100,7 @@ The user's dump, 2026-10-28, put in order. More is coming.
     why he can trace G0D to heaven.
 - **The MOLD is the same on every run of the seed** to start (a memory test; with the same seed it always is, unless
   the mold changes the data). Try a more random mold later.
+- **Getting POPS on your crew** (the quest's gate, with a sector cleared): it took ~45 CALLs. v13.78 weights the plain CALL toward POPS until he's crew (~18 CALLs) and toward crew you've called under 5 times, and markets carry CALL more (41% of markets).
 - Not picked up (yet): G0D's eyes following your cursor; the boss mods as bits of corp AI (G0D is what they become).
 
 ## G0D's fights (the user's rough ideas, 2026-10-28)
@@ -131,6 +132,69 @@ Three fights, then the end. d0g on your crew should be very useful in them (in t
 
 ### The last stand
 - After fight 2: quick-time events. Tap G0D's weak points (or something like that) and it falls apart.
+
+### The mockups and where it's heading (the user, 2026-10-29)
+Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in the game: the neon editor's **g0d** tab
+(engine/g0d.js, previews only). What the user took from them:
+- **The mold is G0D's armor.** You break parts of it and see the structures underneath: sometimes nodes, sometimes the
+  bigger, scarier parts (an eye, a mouth). THE HUSK (scrape the mold) is the base idea.
+- **The mouth: less robot, more jack-o'-lantern, rakish, or Venom's mouth.** THE MAW (long thin teeth, strands, a
+  tongue) looks right.
+- **Motion like THE CORE's rings:** THE ONION (rings turning against each other: mold, circuits, the eye) is "super
+  solid".
+- **THE TENDRILS** as a stage of the fight when there's open space: tap the tentacle ends to stop them grabbing INT,
+  or tap them while they carry it up.
+- **THE HOST is the part 2** (the fight on the sector map), two ways it could go:
+  - **The win screen:** it feels like you beat him, the stats come up, then the mold comes back in and his boss bar
+    returns. (The g0d tab: NOT DEAD YET.)
+  - **The sector map:** fight 1 (the maze) was in layers; you come out of the maze, click the next boss node, and when
+    you breach, instead of the map changing, the whole network is eaten by mold and the boss bar comes up. (The g0d
+    tab: THE NETWORK GOES.)
+- **The giant boss bar:** keep it. Maybe it takes the header: G0D where LAYER nn is, the bar where the corp's name is (the g0d tab: THE HEALTH BAR, its own overlay with a few styles: HASHES and THIN sit better in the header than the blocks).
+- **Music:** these fights need their own tracks, and they have to be great (BACKLOG, Music).
+
+### The three stages, written out (the user, 2026-10-29; more coming)
+Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
+
+**G0D FIGHT: the wake-up (a scene on the sector map)**
+- Out of the maze you're on the sector map. The G0D node sits in the sector boss's spot. You pick it, BREACH: the boss
+  music starts, scary sounds.
+- The G0D node turns into a `(@)` eye and blinks at you. Mold creeps in from the sector's edges. The corp nodes you just
+  fought through shift and break free: **G0D is the sector.**
+- Somewhere in here G0D's health bar comes up and fills in, and the screen shakes a little as G0D wakes.
+- G0D talks: "you can't defeat me, you are just meat", and other dramatic threats.
+- The nodes shift around at random (a bit like ONION's second ring). The links between them all turn into the rounded box
+  characters ONION's circuit ring uses.
+- The mold fills in over everything. The eye moves to the middle of the screen and closes (hides). The mold covers the
+  screen and even spills out of the game area a bit.
+- POPS or d0g chime in on the terminal: encouragement, "we gotta break through that mold".
+
+**G0D FIGHT: the fight**
+- The goal: damage G0D in its eye. First you have to open it.
+- Tapping the mold breaks through to what's under it; the mold slowly fills back in.
+- Dig down to the right corp node (it has a symbol on it, fairly obvious) and trigger it: tap it, or maybe drag it
+  somewhere (into the gear trash?). The eye opens for 5 seconds; tapping the eye damages G0D. After 5s (or a damage
+  threshold) it closes and hides, and you find the corp node again.
+- Each stage: more corp nodes in the mold, or the mold grows faster. Hitting the wrong node damages you.
+- G0D needs an attack you shield yourself from: maybe something meta, like it trying to grab your INT.
+- A few threats worked in along the way.
+
+**G0D FIGHT: it dies (and doesn't)**
+- The last eye tap: the mold spills out and falls away, and you see the network layer under it clearly; then that
+  crumbles. The eye looks around frantically as its sector falls apart. A last threat as the eye fizzles out.
+- The layer area fades to dark, then the header and footer: the screen goes black.
+- **G0D BREACHED** comes up like the regular success screen and starts to animate in, but about 20% of the way the
+  animation glitches and freezes. In the middle a little mold appears and spreads fast over the whole screen; G0D's
+  health bar comes back and fills up. The terminal: a new threat ("you are just meat").
+
+**G0D FINAL STAND**
+- Pretty easy: a quick-time event. The mold fills and spreads out, and under it is the network again.
+- The mold is just a transition here: sparse bits, nicely animated (z-translated noise, maybe).
+- Instead of corp nodes, the nodes are all eyes `(@)`. Hitting the right eye destroys it and damages G0D.
+- A timer: POPS or d0g, "he's trying to escape to another sector, we must stop him". Not all his eyes in time = fail;
+  a fail replays the final stand.
+- Take out all his eyes: a last threat ("there will be others"), more death animations. The screen doesn't go to black:
+  it's all messed up from the fight. (More to come.)
 
 ### Still to decide
 - The end reward.

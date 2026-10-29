@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.77']);
+NEON_FILES.push(['engine/scene.js', 'v13.78']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -301,6 +301,8 @@ function buildScene(now, collectHits, raw = false) {
   // an ad is up; drawn under the wipe, the ad was invisible). Its characters and backgrounds are kept
   // apart and added on top; what was under the box is dropped.
   const adBgs = [];
+  // The editor's G0D tab (engine/g0d.js): a G0D design or effect drawn over this screen. Never in play.
+  if ((st.g0d || st.g0dBar) && !st.dev) result = g0dOverlay(result, now, adBgs);
   if (st.ad && !st.dev) {
     const ac = [];
     const aput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ac.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };

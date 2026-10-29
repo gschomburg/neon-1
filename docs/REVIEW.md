@@ -14,6 +14,10 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **CALL odds** (v13.78): a plain CALL brings POPS much more often until he's on your crew (27% a call, was 11%), and crew you've called under 5 times more often than the ones you have. CALL turns up in markets 41% of the time (was 17%). Numbers in CALL_ODDS (engine/hackers.js): say if POPS feels too common.
+
+- [ ] **The g0d tab** (v13.78): the neon editor has a **g0d** tab. Click a look and the game goes to its screen and draws it: the 20 fight mockups over a corp layer (squeezed to the board, the boss bar on top), THE NETWORK GOES (mold eats the sector map, the bar comes up), NOT DEAD YET (the win screen: the mold creeps back, the bar returns), MOLD GLITCH, G0D ON THE DEATH SCREEN (its logo; "it saw you." is a placeholder). prev / next, hold still, off, and **The health bar**, its own overlay: 4 styles (HASHES, BLOCKS, THIN in the header; or across the board), over any look; it takes hits so you can see it drop. The groups fold up. Previews only: nothing in a run.
+
 - [ ] **THE DISC quest** (v13.77): in the editor, TESTING > Quests: open the quest, start a run, give the DISC (or find one), beat a sector boss, CASH OUT. POPS's calls, the uplink line, TAKE IT TO POPS, the scene, THE BOARD > QUESTS. The words are all placeholders (QUEST_LINES / QUEST_SCENES in engine/quests.js): rewrite them. The odds (25% loot, 20% markets, 8% fishing) are guesses.
 - [ ] **Misc UI** (v13.75): the map's one-line hint (tap or hover a node you can't reach: its info); the pet on the rule; the uplink's sold badges dim; REROLL x1; [ SELL WARES ] / [ BUY WARES ]; the end screen's breached list cycling on a long run. Dead hackers should be quiet now: say if you still see one talk.
 - [ ] **Rivals going down** (v13.74): beat a rival in a layer (face blows up 3 times, the rest falls; crew float up), then after the boss CORP BREACHED builds in with their logo first: DEFEATED, yours over it, then the rest of the screen (one animation). The sounds and timing are first guesses.

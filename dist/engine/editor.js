@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.77']);
+NEON_FILES.push(['engine/editor.js', 'v13.78']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -316,6 +316,29 @@ if (EDITOR) {
     // hackers (engine/hackers.js): bring one into the layer you're in (a rival, or crew as if you'd called them)
     hacker: m => { if (!HACKERS[m.key] || !st.corp || !st.corp.hasBoss || !st.lv) throw new Error('get into a corp layer first'); hkSpawn(m.key, HACKERS[m.key].side === 'bad' ? 'rival' : 'call'); },
     feat: m => { if (!FEAT_BY_ID[m.key]) return; if (m.on) grantFeat(m.key); else ungrantFeat(m.key); },
+    // the G0D tab (engine/g0d.js): go to the screen a look belongs on, then draw it there ('' = off)
+    g0d: async m => {
+      if (!m.key) { st.g0d = null; return; }
+      const where = g0dWhere(m.key);
+      if (!where) throw new Error('no such G0D look');
+      st.g0d = null;
+      const live = st.run && !st.run.ended;
+      if (where === 'layer' && !(live && st.mode === 'play' && st.lv)) await enterCorp('basic', false);
+      if (where === 'map' && !(live && st.mode === 'map')) await onMap();
+      if (where === 'win' && !(st.mode === 'over' && st.result && (st.result.win || st.result.sector))) await SCENES.sectorclear();
+      if (where === 'death' && !(st.mode === 'over' && st.result && !st.result.win && !st.result.sector)) {
+        await enterCorp('basic', false); await window.endRun(false); await settle();
+      }
+      st.g0d = { key: m.key, t0: performance.now(), still: !!m.still };
+    },
+    // THE HEALTH BAR: its own overlay, over the look (or a corp layer if nothing with a header is up); '' = off
+    g0dhp: async m => {
+      st.g0dBar = null;
+      if (!m.key) return;
+      if (!(st.run && !st.run.ended && (st.mode === 'play' || st.mode === 'map'))) { st.g0d = null; await enterCorp('basic', false); }
+      st.g0dBar = m.key; st.g0dBarT0 = performance.now();
+    },
+    g0dstill: m => { if (st.g0d) { st.g0d.still = !!m.on; st.g0d.t0 = performance.now(); } },
     featbox: m => { if (FEAT_BY_ID[m.key]) FEAT_QUEUE.push({ feat: m.key }); },
     wipe: () => { const w = wipeProgress(); FEAT_QUEUE.push({ head: 'THE BOARD', lines: ['progression wiped (test).', '', `refunded: ${w.refund} REP.`] }); },
     steal: async () => {   // your last mod goes to THE FENCE (made if this sector has none)
@@ -343,7 +366,8 @@ if (EDITOR) {
     const m = { type: 'test-state', run: !!run, god: !!st.god, debug: !!st.debug, free: !!st.freeTravel, stopclocks: st.editorHold !== false, mode: st.mode,
       music: tabPlaying ? !!gameMusicOn : !!save.musicOn, sfx: !save.muted, tabMusic: tabPlaying,
       credits: run ? run.credits : 0, int: run ? run.integrity : 0, maxInt: run ? run.maxInt : 0, sector: run ? run.sector + 1 : 0,
-      event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0, feats: Object.keys(save.feats || {}), rep: save.rep || 0, quest: (save.quests && save.quests.pops && save.quests.pops.step) || 'none', qopen: questOpen() };
+      event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0, feats: Object.keys(save.feats || {}), rep: save.rep || 0, quest: (save.quests && save.quests.pops && save.quests.pops.step) || 'none', qopen: questOpen(),
+      g0d: st.g0d ? st.g0d.key : '', g0dStill: !!(st.g0d && st.g0d.still), g0dBar: st.g0dBar || '' };
     const s = JSON.stringify(m);
     if (s !== lastTest) { lastTest = s; post(m); }
   }, 300);
@@ -351,7 +375,7 @@ if (EDITOR) {
   post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES),
     events: Object.entries(SECTOR_EVENTS).map(([k, e]) => [k, e.name, e.kind, e.anomaly || null]),
     anomalies: Object.entries(ANOMALIES).map(([k, a]) => [k, a.name, a.tag, a.desc]),
-    corpNames: Object.fromEntries(Object.entries(CORPS).map(([k, c]) => [k, c.name])) });
+    corpNames: Object.fromEntries(Object.entries(CORPS).map(([k, c]) => [k, c.name])), g0d: g0dList(), g0dHp: g0dHpList() });
 }
 
 // Debug hook for the console and automated tests.

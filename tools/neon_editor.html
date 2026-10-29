@@ -241,6 +241,7 @@
   body.mode-tut #tut { display: flex; }
   body.mode-econ #econ { display: flex; }
   body.mode-test #test { display: flex; }
+  body.mode-g0d #g0d { display: flex; }
   body.mode-ads #ads { display: flex; }
   body.mode-hack #hack { display: flex; }
   .xfeats { flex-wrap: wrap; gap: 6px; } .xfeats .xf { display: inline-flex; gap: 1px; } .xfeats button.on { background: #a27ef5; color: #0b0d10; } .xfeats button.sm { font-size: 11px; opacity: .8; }
@@ -283,13 +284,13 @@
   /* testing: cheats and jumps on the running game */
   #test { flex-direction: column; overflow: auto; padding: 10px 14px; gap: 4px; }
   #test h2 { margin: 14px 0 4px; }
-  #test details.xgrp { margin: 14px 0 0; border-top: 1px solid var(--line, #333); padding-top: 4px; }
-  #test details.xgrp > summary { cursor: pointer; list-style: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--acc); padding: 4px 0; user-select: none; }
-  #test details.xgrp > summary::-webkit-details-marker { display: none; }
-  #test details.xgrp > summary::before { content: '\25B8'; display: inline-block; width: 1.1em; transition: transform 0.12s; }
-  #test details.xgrp[open] > summary::before { transform: rotate(90deg); }
-  #test details.xgrp > summary small { text-transform: none; letter-spacing: 0; font-weight: normal; margin-left: 6px; color: var(--mid); font-size: 12px; }
-  #test details.xgrp > h2:first-of-type { margin-top: 6px; }
+  #test details.xgrp, #g0d details.xgrp { margin: 14px 0 0; border-top: 1px solid var(--line, #333); padding-top: 4px; }
+  #test details.xgrp > summary, #g0d details.xgrp > summary { cursor: pointer; list-style: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--acc); padding: 4px 0; user-select: none; }
+  #test details.xgrp > summary::-webkit-details-marker, #g0d details.xgrp > summary::-webkit-details-marker { display: none; }
+  #test details.xgrp > summary::before, #g0d details.xgrp > summary::before { content: '\25B8'; display: inline-block; width: 1.1em; transition: transform 0.12s; }
+  #test details.xgrp[open] > summary::before, #g0d details.xgrp[open] > summary::before { transform: rotate(90deg); }
+  #test details.xgrp > summary small, #g0d details.xgrp > summary small { text-transform: none; letter-spacing: 0; font-weight: normal; margin-left: 6px; color: var(--mid); font-size: 12px; }
+  #test details.xgrp > h2:first-of-type, #g0d details.xgrp > h2:first-of-type { margin-top: 6px; }
   #test h2 small { text-transform: none; letter-spacing: 0; font-weight: normal; margin-left: 6px; color: var(--mid); }
   #test .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   #test .row input[type=number] { width: 70px; }
@@ -298,6 +299,16 @@
   #test #xState { font: 12px/1.5 "JetBrains Mono", Consolas, monospace; color: var(--hi); background: var(--panel); padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px; }
   #test #xLog { font-size: 12px; color: var(--mid); min-height: 1.5em; }
   #test #xLog.bad { color: #f77; }
+  /* G0D: previews of G0D designs and effects in the game (engine/g0d.js) */
+  #g0d { flex-direction: column; overflow: auto; padding: 10px 14px; gap: 4px; }
+  #g0d h2 { margin: 14px 0 4px; }
+  #g0d h2 small { text-transform: none; letter-spacing: 0; font-weight: normal; margin-left: 6px; color: var(--mid); }
+  #g0d .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  #g0d .look { display: inline-flex; flex-direction: column; align-items: flex-start; min-width: 150px; max-width: 230px; text-align: left; }
+  #g0d .look small { color: var(--mid); font-size: 11px; white-space: normal; }
+  #g0d #gState { font: 12px/1.5 "JetBrains Mono", Consolas, monospace; color: var(--hi); background: var(--panel); padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px; }
+  #g0d #gLog { font-size: 12px; color: var(--mid); min-height: 1.5em; }
+  #g0d #gLog.bad { color: #f77; }
 
 
   /* economy: every money number (dist/data/economy.js) */
@@ -559,7 +570,7 @@
 </section>
 
 <div id="right">
-<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">gear &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><button data-mode="ads">ads</button><button data-mode="hack">hackers</button><button data-mode="test">testing</button><span id="modehint"></span><button id="helpBtn" title="How this tab works, and how saving works (F1)">? help</button></div>
+<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">gear &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><button data-mode="ads">ads</button><button data-mode="hack">hackers</button><button data-mode="test">testing</button><button data-mode="g0d">g0d</button><span id="modehint"></span><button id="helpBtn" title="How this tab works, and how saving works (F1)">? help</button></div>
 <div id="help"><div id="helpNav"></div><div id="helpBody"></div></div>
 <section id="art" class="mode">
   <div id="aBar">
@@ -665,6 +676,28 @@
   <details class="xgrp" data-g="feats"><summary>Feats <small>click one to grant it or take it back (lit = done); "box" shows its FEAT box once the game is calm</small></summary>
   <div class="row xfeats" id="xFeats"></div>
   <div class="row"><button data-x="wipe">wipe progression</button> <span class="dim">your own save: REP back for THE BOARD's posts; feats, titles and the record cleared</span></div>
+  </details>
+</section>
+<section id="g0d" class="mode">
+  <div id="gState">pick a look: the game goes to the screen it belongs on and draws it there</div>
+  <div id="gLog"></div>
+  <div class="row">
+    <button data-g="prev">&lt; prev</button> <button data-g="next">next &gt;</button>
+    <button data-g="still" class="tg" title="stop the animation on one frame">hold still</button>
+    <button data-g="off">off</button>
+    <span class="dim">mockups, not the game: nothing here is saved or played in a run</span>
+  </div>
+  <details class="xgrp" data-g="hp"><summary>The health bar <small>its own overlay: over the look you're on, or a corp layer; click again for off</small></summary>
+  <div class="row" id="gHp"></div>
+  </details>
+  <details class="xgrp" data-g="set1"><summary>The fight: first mockups <small>over a corp layer (G0D MODE): the face, the eye, the core...</small></summary>
+  <div class="row" id="gSet1"></div>
+  </details>
+  <details class="xgrp" data-g="set2"><summary>The fight: mold armor <small>over a corp layer (G0D MODE II): husk, maw, onion, tendrils, the host...</small></summary>
+  <div class="row" id="gSet2"></div>
+  </details>
+  <details class="xgrp" data-g="fx"><summary>On other screens <small>the map, the win screen, the death screen</small></summary>
+  <div class="row" id="gFx"></div>
   </details>
 </section>
 <section id="items" class="mode">
@@ -1843,8 +1876,8 @@
 
   // ---- the two modes (music / palette), remembered
   const setMode = m => {
-    if (!['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test'].includes(m)) m = 'music';
-    for (const k of ['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test']) document.body.classList.toggle('mode-' + k, m === k);
+    if (!['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test', 'g0d'].includes(m)) m = 'music';
+    for (const k of ['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test', 'g0d']) document.body.classList.toggle('mode-' + k, m === k);
     for (const b of document.querySelectorAll('#modes button[data-mode]')) b.classList.toggle('on', b.dataset.mode === m);
     $('#modehint').textContent = { music: 'pick a corp: the game shows it and plays its track', pal: 'palettes: save writes dist/palettes.js',
       items: 'from dist/data/mods.js. give / change / remove mods on the running game (the copy is read-only)',
@@ -1853,7 +1886,8 @@
       econ: 'dist/data/economy.js: every money number, in units. edits go to the game live; save writes the file',
       ads: 'dist/data/ads.js: every fake ad as text; show one in the game (edit the file to change them)',
       hack: 'dist/data/hackers.js: the hacker cast, with faces and logos (not in play yet)',
-      test: 'cheats and jumps on the running game, for testing (nothing is saved)' }[m];
+      test: 'cheats and jumps on the running game, for testing (nothing is saved)',
+      g0d: 'G0D designs and effects, drawn in the running game (engine/g0d.js; previews only)' }[m];
     try { localStorage.setItem('neon.editor.mode', m); } catch (e) { /* private mode */ }
   };
   for (const b of document.querySelectorAll('#modes button[data-mode]')) b.addEventListener('click', () => setMode(b.dataset.mode));
@@ -1937,6 +1971,57 @@
   // redraw when the tab opens (the art tab may have changed a face)
   for (const b of document.querySelectorAll('#modes button[data-mode="hack"]')) b.addEventListener('click', render);
   render();
+})();
+</script>
+<script>
+// ---------------- G0D: previews of G0D's fight designs and effects in the game (engine/g0d.js, 'test' act 'g0d') ----------------
+(() => {
+  const $ = s => document.querySelector(s);
+  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  let looks = [], cur = '', still = false, bar = '';
+  const WHERE = { layer: 'a corp layer', map: 'the sector map', win: 'the win screen', death: 'the death screen' };
+  const log = (t, bad) => { const l = $('#gLog'); l.textContent = t; l.classList.toggle('bad', !!bad); };
+  const show = key => { log(key ? 'going there...' : 'off'); toGame({ type: 'test', act: 'g0d', key, still }); };
+  const draw = () => {
+    for (const b of document.querySelectorAll('#g0d button.look')) b.classList.toggle('on', b.dataset.key === cur);
+    const lit = document.querySelector('#g0d button.look.on'), grp = lit && lit.closest('details');
+    if (grp && !grp.open) grp.open = true;
+    $('#g0d button[data-g="still"]').classList.toggle('on', still);
+    for (const b of document.querySelectorAll('#g0d button.hp')) b.classList.toggle('on', b.dataset.key === bar);
+    const l = looks.find(x => x[0] === cur);
+    $('#gState').textContent = l ? `${l[1]}  ·  on ${WHERE[l[3]] || l[3]}  ·  ${l[4]}` : 'pick a look: the game goes to the screen it belongs on and draws it there';
+  };
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.from !== 'neon-game') return;
+    if (m.type === 'ready' && m.g0d) {
+      looks = m.g0d;
+      const btns = g => looks.filter(l => l[2] === g).map(l => `<button class="look" data-key="${esc(l[0])}" title="${esc(l[4])}">${esc(l[1])}<small>${esc(l[4])}</small></button>`).join('');
+      $('#gHp').innerHTML = (m.g0dHp || []).map(([k, n, note]) => `<button class="look hp" data-key="${esc(k)}" title="${esc(note)}">${esc(n)}<small>${esc(note)}</small></button>`).join('');
+      $('#gSet1').innerHTML = btns('set1'); $('#gSet2').innerHTML = btns('set2'); $('#gFx').innerHTML = btns('fx');
+      draw();
+    }
+    if (m.type === 'test-state') { cur = m.g0d || ''; bar = m.g0dBar || ''; draw(); }
+    if (m.type === 'test-done' && m.act === 'g0dhp') log(m.ok ? (bar ? 'health bar on (it takes a hit every 1.6s)' : 'health bar off') : m.error, !m.ok);
+    if (m.type === 'test-done' && m.act === 'g0d') log(m.ok ? (cur ? 'showing' : 'off') : m.error, !m.ok);
+  });
+  for (const d of document.querySelectorAll('#g0d details.xgrp')) {   // open / closed is remembered
+    try { d.open = localStorage.getItem('neonEditor.g0d.' + d.dataset.g) === '1'; } catch (e) { /* no storage */ }
+    d.addEventListener('toggle', () => { try { localStorage.setItem('neonEditor.g0d.' + d.dataset.g, d.open ? '1' : '0'); } catch (e) { /* no storage */ } });
+  }
+  $('#g0d').addEventListener('click', ev => {
+    const hp = ev.target.closest('button.hp');
+    if (hp) { const k = hp.dataset.key === bar ? '' : hp.dataset.key; log(k ? 'the health bar...' : 'health bar off'); return toGame({ type: 'test', act: 'g0dhp', key: k }); }
+    const look = ev.target.closest('button.look'); if (look) return show(look.dataset.key);
+    const b = ev.target.closest('button[data-g]'); if (!b) return;
+    const g = b.dataset.g;
+    if (g === 'off') return show('');
+    if (g === 'still') { still = !still; draw(); return toGame({ type: 'test', act: 'g0dstill', on: still }); }
+    if (!looks.length) return;
+    const i = looks.findIndex(x => x[0] === cur), n = looks.length;
+    show(looks[((i < 0 ? (g === 'next' ? -1 : 0) : i) + (g === 'next' ? 1 : -1) + n) % n][0]);
+  });
 })();
 </script>
 <script>
@@ -2917,9 +3002,19 @@
 <li><b>Feats:</b> click one to grant it (lit) or take it back; <b>box</b> shows its FEAT box once the game is calm (on a menu or the map). <b>wipe progression</b> does the version wipe on your own save: REP back for THE BOARD's posts, feats, titles and the record cleared. THE BOARD: the <b>board</b> scene button, or the title.</li>
 </ul>
 <p>The line at the top is the game right now: sector, its event, credits, INT, and what's on.</p>` },
+    g0d: { name: 'g0d', html: `
+<h1>G0D</h1>
+<p class="lead">G0D's fight designs and effects, drawn in the game on the left so they can be judged on a real screen. They're mockups: nothing here is in a run, and nothing is saved.</p>
+<ul>
+<li><b>Click a look</b> and the game goes to the screen it belongs on (a corp layer, the sector map, the win screen, the death screen), then draws it there. <b>prev / next</b> step through them all; <b>hold still</b> stops the animation; <b>off</b> takes it away.</li>
+<li><b>The health bar</b> is its own overlay, so the designs don't carry one: pick a style (in the header: G0D where LAYER was, the bar where the corp's name was; or across the board's top row) and it goes over whatever look is up (or a corp layer). It takes a hit every 1.6s, then fills back up. Click it again for off.</li>
+<li><b>The fight</b> (both mockup pages): the design takes the board of a corp layer, squeezed to the board's width. Its top row is G0D's boss bar; its bottom row says what's going on.</li>
+<li><b>On other screens:</b> THE NETWORK GOES (the mold eats the sector map, then the bar comes up), NOT DEAD YET (the win screen: the mold creeps back and the bar returns), MOLD GLITCH (bits of the screen flicker to mold), G0D ON THE DEATH SCREEN (its spilling logo). The effects loop.</li>
+</ul>
+<p>The code: dist/engine/g0d.js. The design notes: docs/QUESTS.md, "G0D's fights".</p>` },
 
   };
-  const ORDER = ['saving', null, 'music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test'];
+  const ORDER = ['saving', null, 'music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test', 'g0d'];
   let open = false, at = 'saving';
   const modeNow = () => (document.body.className.match(/mode-(\w+)/) || [])[1] || 'music';
   const nav = $('#helpNav');
