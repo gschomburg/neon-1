@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v13.80']);
+NEON_FILES.push(['engine/dev.js', 'v13.81']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
@@ -218,6 +218,7 @@ function devMenuLines() {
   const bossLabel = inCorp ? '[ jump to this boss ]' : selCorp ? `[ jump to ${corpCode(corpDef(selCorp.corp))} boss ]` : '[ jump to boss ]';
   B(bossLabel, 'boss', cheat(() => jumpToBoss(selCorp)), !idle || !(inCorp || selCorp));
   if (!inCorp && !selCorp) T('(select a corp on the map first)', C.dim);
+  B('[ go fishing ]', 'fish', cheat(() => { if (st.dev) toggleDev(); swapTo(() => openPier({ id: 'dev-pier', sector: run.sector, type: 'pier' })); }), !idle || st.mode !== 'map');   // the PIER (engine/fishing.js)
   B('[ clear this sector ]', 'sclr', cheat(() => {
     const omni = `${SECTOR_STEPS * (run.sector + 1)}:1`;
     run.at = omni; if (!run.visited.includes(omni)) run.visited.push(omni);

@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.80']);
+NEON_FILES.push(['engine/scene.js', 'v13.81']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -196,10 +196,18 @@ function buildScene(now, collectHits, raw = false) {
 
   // The terminal line: inverted, on a band of its color across the whole row, so it reads as its own thing
   // (players missed it under the HUD). It types in as before.
+  // a hacker's line has had its time: the game's line from before comes back, as it was (engine/hackers.js hkSay)
+  if (st.msgChat && now > st.msgChat.until) {
+    const w = st.msgChat.was; st.msgChat = null;
+    if (w.lv === st.lv) { if (w.msg) { setMsg(w.msg, w.col, w.ink); st.msgT = now - 1e5; } else st.msg = ''; }
+  }
   if (st.msg) {
     const col = (st.msgSlot && C[st.msgSlot]) || st.msgCol || C.text;
     bg(0, 6, L.wc, col, 1);
-    put(0, 6, st.msg.slice(0, Math.min(L.wc, Math.floor((now - st.msgT) / 16))), C.bg, 'hud', true);
+    // the text: the palette's background, unless the band is about as light (POPS's yellow on a light palette): then its text color
+    const lum = c => /^#[0-9a-f]{6}$/i.test(c) ? hexLum(c) : 0.5;
+    const dBg = Math.abs(lum(col) - lum(C.bg)), ink = st.msgInk ? st.msgInk : dBg < 0.25 && Math.abs(lum(col) - lum(C.text)) > dBg ? C.text : C.bg;   // (only when it can't be read: every other band stays as it was)
+    put(0, 6, st.msg.slice(0, Math.min(L.wc, Math.floor((now - st.msgT) / 16))), ink, 'hud', true);
   }
 
   // Row 7: clock or boss warning

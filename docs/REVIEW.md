@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **FIRST BREACH** (v13.81): beat a corp you have never beaten (or reset your codex record): FIRST BREACH, its logo and tell, SEE THE CORE, then the rewards. Rivals still go DEFEATED first. The leaderboard shows 15. Hacker lines: they clear after a few seconds and the tip comes back; random chatter doesn't step on a fresh tip.
+- [ ] **Small fixes** (v13.81): POPS on TUMBLER LOCKS (black on yellow now); the dev menu's [ go fishing ]; REROLL brings the offers in again one row at a time.
 - [ ] **The new UPLINK and SECTOR CLEARED** (v13.80): play to a sector boss. SECTOR CLEARED's ROOT picture is random (4; the ART tab, "sector clear"). On the UPLINK: tap rows (toggle + ticker), try it with lots of mods (scrolls) and too few credits (REMOVE MODS). The ROOT SHELL picture says "ghost": it could say your name.
 - [ ] **CALL stacks from bosses** (v13.79): half the corp bosses have a 4th pick: CALL x3, or (with crew, half the time) one of your crew's own CALLs x1-2. You still choose one. Say if it's too much now.
 - [ ] **CALL odds** (v13.78): a plain CALL brings POPS much more often until he's on your crew (27% a call, was 11%), and crew you've called under 5 times more often than the ones you have. CALL turns up in markets 41% of the time (was 17%). Numbers in CALL_ODDS (engine/hackers.js): say if POPS feels too common.

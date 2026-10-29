@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.80']);
+NEON_FILES.push(['engine/screens.js', 'v13.81']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -162,10 +162,13 @@ const RIVAL_REVEAL = { stamp: 400, letter: 70, swap: 1160, row: 150, hold: 2900 
 function buildReveal(ctx, now, rv, all) {
   const title = all[0].text;
   let logoAt = null;
-  const typed = clamp(Math.floor((now - rv.t0) / REVEAL.type), 0, title.length);
+  // rv.pre: lines already on screen (FIRST BREACH's header): they show at once and the rest build in under them
+  const pre = rv.pre || 0;
+  const typed = pre ? title.length : clamp(Math.floor((now - rv.t0) / REVEAL.type), 0, title.length);
   // when each line shows up (blank lines come with the next one)
-  let k = 1, t = rv.t0 + title.length * REVEAL.type + REVEAL.hold, firstPop = null;
+  let k = 1, t = pre ? rv.t0 : rv.t0 + title.length * REVEAL.type + REVEAL.hold, firstPop = null;
   for (let i = 1; i < all.length; i++) {
+    if (i < pre) { k = i + 1; continue; }
     if (all[i].reveal != null) {
       if (firstPop == null) firstPop = rv.firstPop || (rv.firstPop = t);
       t = Math.max(t, firstPop + all[i].reveal * CONFIG.revealGap);
@@ -208,6 +211,7 @@ function buildReveal(ctx, now, rv, all) {
   if (ctx.collectHits) {
     if (typed > rv.typed) { rv.typed = typed; Sound.tick(); }
     if (k > rv.shown) {
+      for (let i = rv.shown; i < k; i++) if (all[i] && all[i].onShow) all[i].onShow();   // a line's moment (FIRST BREACH's fanfare)
       rv.shown = k;
       const ln = all[k - 1];
       if (k > 1 && ln.mapView) Sound.tick();
@@ -215,7 +219,7 @@ function buildReveal(ctx, now, rv, all) {
       else if (k > 1 && (ln.text || ln.box || ln.row || ln.list)) rv.sound === 'climb' ? Sound.climb(rv.climbs = (rv.climbs || 0) + 1) : Sound.ui();
     }
     // all in and settled: hand back to the normal screen (header, HUD, tray return)
-    if (k === all.length && now > t + 350 && Math.abs(rv.y - target) < 0.05 && rv.center === 'board' && !rv.done) {
+    if (k === all.length && now > t + 350 && Math.abs(rv.y - target) < 0.05 && rv.center === 'board' && !rv.done && !rv.hold) {
       rv.done = true; Sound.ui();
       if (rv.msg) setMsg(rv.msg.text, rv.msg.col);   // the header's line types in as it comes back
     }

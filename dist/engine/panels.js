@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.80']);
+NEON_FILES.push(['engine/panels.js', 'v13.81']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -146,7 +146,8 @@ function openShop(node) {
     if (rerollsLeft() <= 0 || !canSpend(price)) return Sound.deny();
     run.credits -= price; rolls++;
     offers = roll(rolls).concat([repair]);
-    sel = offers.length; st.revealed = new Set();   // (the selection stays on the REROLL row: it's the last row) st.panelT0 = performance.now() + CONFIG.revealDelay;   // the new offers pop in
+    sel = offers.length;   // (the selection stays on the REROLL row: it's the last row)
+    st.revealed = new Set(); st.panelT0 = performance.now() + CONFIG.revealDelay;   // the new offers come in again, one row at a time
     Sound.whoosh(); setMsg(`> restocked. -${price}cr.`, C.money);
   };
   const sell = i => {
@@ -284,8 +285,19 @@ function openShop(node) {
 
 // A reward screen: header lines, then a list of mods to pick one from (or skip).
 // next: where to go after (default: the map).
-function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null }) {
+function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, first = null }) {
   let sel = 0, picked = false;
+  // first: { key, art, tell }: FIRST BREACH shows under the header (title, logos, breached line) and holds the reveal;
+  // SEE THE CORE swaps it for the rewards, which build in under the header the same way (buildReveal's pre)
+  let firstUp = !!(first && reveal), headN = 0;
+  const fanfare = () => { flash(C.money, 0.25, 0.7); shake(5, 0.35); Sound.bossWin(); fireworkShow(6, 240, 'panel'); };
+  const toCore = () => {
+    if (!firstUp) return;
+    firstUp = false; Sound.ui();
+    const rv = st.panelReveal;
+    if (rv) Object.assign(rv, { t0: performance.now(), pre: headN, shown: headN, done: false, hold: false, firstPop: null, rival: null });
+    st.panelT0 = Infinity; st.revealed = new Set();   // the offers pop as their lines come in
+  };
   st.breachRival = null;
   const leave = () => next ? (st.transitioning ? null : swapTo(next)) : leavePanel();
   st.choice = { title, options: options.slice(), skip: !!skipLabel, take: o => take(o) };   // (read by tools/econsim.js)
@@ -315,7 +327,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     } else if (onSkip) onSkip();
     leave();
   };
-  openPanel(title, (T, B, X) => {
+  openPanel(title, (T, B, X, lines) => {
     const now = performance.now();
     T(title, col);
     if (by) {   // a boss win: the hacker who did it
@@ -327,6 +339,20 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
       mine.forEach((ln, k) => X(Object.assign({}, ln, { text: fit(ln.text), logoRow: k, rivalRow: theirs ? Object.assign({}, theirs[k], { text: fit(theirs[k].text) }) : null })));
       for (const h of head) T(`breached ${h[0].toLowerCase()}`, C.mid);
     } else for (const h of head) T(h[0], h[1]);
+    if (firstUp) {   // FIRST BREACH: the corp's logo and its tell, then on to the rewards
+      headN = lines.length;
+      T('');
+      X({ text: 'F I R S T   B R E A C H', col: C.money, bold: true, onShow: fanfare });
+      T('');
+      const aw = Math.max(0, ...first.art.map(l => l.length));
+      for (const l of first.art) T(l.padEnd(aw), C.accent);
+      T('');
+      for (const l of wrapText('tell: ' + first.tell, 34)) T(l, C.accent);
+      T('logged in your codex.', C.dim);
+      T('');
+      X({ box: true, text: 'S E E   T H E   C O R E', sub: '- your rewards -', id: 'core', onTap: toCore, minW: 30 });
+      return;
+    }
     if (!by) T('');   // (with the logo, the screen is full: no gap)
     if (options.length) T(locked ? 'what you could have had:' : options.length > 1 ? (options.some(o => o.kind === 'gear') ? 'choose one:' : 'choose one mod:') : 'mod found:', C.mid);
     // each offer shows what you'd end up with (a mod you have = an upgrade, "+")
@@ -369,6 +395,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     if (!by) T('');
     B(options.length && skipLabel ? skipLabel : '[ CONTINUE ]', 'skip', () => take(null));
   }, msg, { reveal, rival });
+  if (firstUp && st.panelReveal) st.panelReveal.hold = true;   // the header comes back after the rewards, not before
 }
 
 // PUBLIC NET done: a small starting perk.
@@ -448,7 +475,12 @@ function openReward(node, skipped = false) {
   const options = shuffle(corpPick.concat(gen, third), r);
   const calls = callReward(rngFor(run.seed, 'callreward', node.id));   // half the bosses: an extra pick, a CALL stack (engine/hackers.js)
   if (calls) options.push(calls);
+  // FIRST BREACH (the user, 2026-10-29): the first time you ever beat this corp, its logo and its tell come before the
+  // rewards (only as the screen builds in after the boss; corpStat counted this breach already)
+  const first = st.breachReveal && !run.tutorial && node.type === 'corp' && corpStat(def.key).breached === 1 && CORP_TELL[def.key]
+    ? { key: def.key, art: CORP_ART[def.key] || [], tell: CORP_TELL[def.key] } : null;
   openChoice({
+    first,
     reveal: st.breachReveal,
     rival: st.breachReveal && !skipped ? st.breachRival : null,   // a rival here: their logo comes in first, DEFEATED, then yours
     title: 'CORP BREACHED', col: C.accent,

@@ -14,7 +14,36 @@ Checked against the code 2026-10-26.
 The user, 2026-10-26: these are the features still to flesh out. REP and quests tie together: some quests are
 unlocked by REP, and some quests unlock REP.
 
-### 1. REP and THE BOARD (a talk first: what REP is for, how it feels over many runs)
+### 1. Gear and scrap mods (HIGH PRIORITY: the user 2026-10-29, "it's better, but we could still use some more powerful items")
+- **Built v13.52:** TUNNEL, MESH, WARP steps, TILT, SHAKE, FRAG, REWIND, SHOE, PASS (SPEC version log).
+- **Going back a row** on the map is a can of worms: save it for an exotic mod (the user thinks it could be good).
+- More map gear ideas (Claude): SCOUT (see the corps / anomalies ahead), SKIP (jump over the next row).
+- Exotic gear is empty now (WARP went to rare / epic): PARADOX / ENTANGLE / NUKE / BITFLIP (below).
+- **Codex hints for the gear reactions** (not written yet): GRAVITAS (TILT = a free gravity drop), ENTROPY (SHAKE
+  sets off its shuffle). Could go in each corp's codex entry.
+- **BOX OF WIRES (the user, 2026-10-26):** a mod, not gear: starts at scrap ("i'm not going to sort these") and does
+  something really cool only once you have upgraded it all the way to legendary (pairs with the carry-a-scrap-mod quest).
+- **Built v13.62:** the tap-to-use corp mods are boss gear stacks now (FLARE, REMOTE, ROLLUP, FREEZE, BLAST, SNITCH,
+  TITHE, ANCHOR, SLOMO, BEES; ESPRESSO folded into REWIND), and a boss reward's third pick can be a gear stack.
+- **More corp mods -> gear?** (the user, 2026-10-27, after the v13.62 pass): only the tap-to-use ones moved. Others
+  that could: none picked yet.
+- **Gear ideas (the user, 2026-10-27):**
+  - **SHORT** (short circuit; 6 letters max): fries 2 ICE that sit next to each other. (v13.62: BLAST is now an aimed
+    2x2, so SHORT is close to a small BLAST. Keep it only if it gets its own twist.)
+  - **Call a market:** gear that opens a black market right where you are (maybe a smaller one). Goes with **ads you
+    can buy from**: an ad that is a market, or that sells one thing (see "Hidden entrances" in item 2, More fake ads).
+  - **STIM:** INT +50% for one corp, and you gain the health that comes with it. When you leave the corp your max INT
+    goes back down, but you keep the health you have (2 left stays 2; only health above the normal max is lost).
+  - **CHECKPOINT** (exotic; could be a corp reward if some corp rewards become gear): use it in a corp; if you die in
+    that corp, you start over at its first layer. Variations: pay credits to come back; or come back with no mods or
+    gear. Close to CONTINUE? (CHUCK E. CACHE's legendary corp mod: pay to keep going at 1 INT, once per corp).
+    CHECKPOINT would be a weaker, one-shot cousin that sends you back to the start of the corp.
+- **Scrap mods:** maybe 2 other worthless ones.
+- **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first, v13.49).
+  Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), NUKE (wipe a corp off the map), DECODER
+  (read CIPHER for a layer), the call as an item, exotic tiers of today's gear. EXOTICS.md has more.
+
+### 2. REP and THE BOARD (a talk first: what REP is for, how it feels over many runs)
 - **The plan (2026-10-28, round 2 with the user's notes): `docs/PROGRESSION.md`** (screen mockups on a page): one hub
   (PROFILE / STORE / FEATS / CREW / STATS; title buttons REP STORE + your name), THE RECORD, FEATS (no REP; bad
   hackers' beat counts), the REP store in tiers with PRIVATE MESSAGES on top, the CREW (random CALL gear -> 5 calls ->
@@ -32,7 +61,6 @@ unlocked by REP, and some quests unlock REP.
   - Unlock mods into the starter pool (choose 3; one may show up at the start).
   - **Palettes unlock** by beating their corp (not built: SETTINGS offers every palette today). Big logos as unlocks.
   - Difficulty levels unlocked with REP that add drains (money or mods taken away) and pay more REP.
-  - **Unlock G0D** through REP, then a quest to beat it (the top achievement).
   - **Boss loot in markets** (the user, 2026-10-27): a chance for a boss's own mods and gear (FLARE, BEES...) to show
     up in black markets (tie it to REP).
   - **Feat ideas** (the user, meat notes 2026-10-28): replay a seed and get further than before; call 2 hackers in the same
@@ -44,10 +72,8 @@ unlocked by REP, and some quests unlock REP.
     (and maybe a REP unlock: fence prices -10%).
   - **REP unlocks you can switch on and off** (the user, meat notes 2026-10-29), e.g. +1 to the default corp layer count
     (makes higher layer counts easier in the early sectors).
-  - **G0D's rewards** (the user, meat notes 2026-10-29): replaying seeds for real (not as practice), looks like a REP buy;
-    a mod you always start with.
 
-### 2. Quests and RPG elements
+### 3. Quests and RPG elements
 - **The quest doc: `docs/QUESTS.md`** (2026-10-28). The first quest to build out: POPS's son (the quest item, POPS's calls, the
   UPLINK hand-in, defeat d0g 10 times on a quest seed, the trace, d0g is POPS's son and joins the crew).
 - **The first one to make: defeat d0g.** The quest gives you a seed; entering it unlocks god (H3AV3N).
@@ -92,19 +118,89 @@ unlocked by REP, and some quests unlock REP.
   - **Safehouses need something cooler** (the user, meat notes 2026-10-29): they keep some mods from a run you died in,
     or offer crew CALL gear. Probably a REP unlock. Or simpler: a boosted safehouse, 2 INT and an item or two.
   - **The quest object sparkles** (the user, meat notes 2026-10-29): a twinkle / glitter effect on it.
+- **G0D (everything G0D lives here for now, the user 2026-10-29):**
+  - **Unlock G0D** through REP, then a quest to beat it (the top achievement).
+  - **G0D's rewards** (the user, meat notes 2026-10-29): replaying seeds for real (not as practice), looks like a REP buy;
+    a mod you always start with.
+  - **G0D flashing in on SECTOR CLEARED** now and then (the user, meat notes 2026-10-29; the rest of that note is built, v13.80).
+  - **G0D's tracks** (the user, 2026-10-29): the G0D fights need their own music, and it has to kick ass: the maze, the
+    mold-armor fight, the part 2 on the map / the win screen, the last stand. (docs/QUESTS.md, G0D's fights.)
 
-### 3. Anomalies and sector events (named 2026-10-26)
+### 4. The map and run structure
+- **Fishing: built v13.69** (engine/fishing.js; open: unlock the PIER with a feat, a quest item on the line, more UI after play). (the user, meat notes 2026-10-28): a PIER node on the map where you fish for loot.
+  - Fishing costs credits.
+  - You find gear and things (maybe a particular quest item), and you catch fish to sell: little fish to big fish, by
+    rarity up to legendary; black markets buy them. Fish can be thrown like SHOE? You can definitely catch shoes.
+  - The tap game: tap to cast, wait for a bite; when the bobber goes, tap again (then maybe reel in).
+  - Fishing feats, of course. No fishing upgrades.
+  - Its own view, different from the board (the note trails off: "i'm thinking different than...").
+  - **The view: PHISHING** (the user picked it, 2026-10-28; mockups on the "NeoN+1 Fishing" page, idea D): the board area is
+    a data stream, lanes sliding left. Hold and the hook sinks from the top toward your finger. Shapes drift by and nose the
+    hook; when one bites it turns red: tap anywhere to start the reel. Miss it and it swims off. The reel: keep it inside a
+    moving window (hold to pull, let go to slack) until the catch bar fills; try it, pull it out if it isn't fun. A mystery:
+    every shape looks like a fish, but some are fish, some gear, sometimes a shoe; you only see what it is on the CAUGHT card.
+    The user, after: holding / dragging only moves the hook up and down (which lane); it drifts left and right on its
+    own. A [ REEL IN ] button pulls an empty hook back (to recast, or to leave for the next node). More UI to work out after
+    playing it.
+  - **Round 2 built v13.70** (7 lanes, small fish mostly, sounds, weights, pier music, menu at the pier, taps on the stream only, ripples, the reel in the fish's lane).
+  - **Fishing meat notes (the user, 2026-10-28, after playing v13.70), open:**
+    - (built v13.71) **Reel UI pass:** off the target, the whole bar goes red (but keep the target visible: it could tint a little pink when
+      you're off it). The cursor: a bigger shape (# or @) that REPLACES the - under it (it overlaps now, which makes it less clear),
+      white, or matching the target's cyan; when it's on the target it changes (white or something else). The target design is good.
+    - (built v13.71) After a catch, keep the stream dimmed behind the CAUGHT card until you KEEP or THROW BACK.
+    - (built v13.71) Terminal: the cast message, then once you drag it changes to "drag up and down to move the hook" (it only moves up and down).
+    - (dropped, the user 2026-10-28) INT back from fishing: a PATCH can already come up on the line, which does the same.
+    - (built v13.72) CAST AWAY: a title for casting 250 times (not 60 minutes); BIG DATA for a 10 GB+ catch; the biggest catch is a stat.
+    - Mods or gear that affect fishing? (a note for now, the user 2026-10-28; the first notes said no fishing upgrades)
+    - (built v13.71) **PHISHING retheme:** what you catch is corp data, not fish: corp passwords, elderly social security numbers, corpo
+      credentials, blackmail material. Gear still comes up, but the catches get a little description of what info you got.
+      Keep the random weights (maybe not pounds) and the BIGGEST YET stuff.
+- **Different markets** (the user, meat notes 2026-10-28): black market / grey market / open market.
+- **MESH at the last row (built v13.75)**: it links the nodes on either side of you there; they still go to the boss.
+- More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
+- Moving backwards / the frontier (pick any node linked to one you've visited), or allow clearing the whole map.
+  An "open map" mod (the aimed WARP is built: epic WARP, v13.52).
+- Node count that keeps climbing; past the 4x4 grid (phones fit ~6 columns).
+- More final bosses, each its own mechanic (OMNI is the only one).
+- Long-run issues: power creep, a guaranteed heal each sector.
+
+### 5. Anomalies and sector events (named 2026-10-26)
 - **Built v13.54** (design: `docs/SECTOR_EVENTS.md`): 14 sector events, the SECTOR EVENT card, BLINDERS, THE FENCE,
   the editor's TESTING tab (SPEC version log).
 - **Built v13.55:** the codex SECTORS tab.
-- **Still open:** the user's art for the 14 card pictures (5 x 3 placeholders
-  in data/events.js); a THREAT level later; a REP option to turn events on in sector 1; tying the sector boss to the
+- **Still open:** a THREAT level later; a REP option to turn events on in sector 1; tying the sector boss to the
   event (parked).
 - **Next batch (the user, 2026-10-27)** (docs/SECTOR_EVENTS.md "The next batch"): built v13.58: GRIND, BLACK ICE + COLD SNAP,
   RIGHT ANGLES, GAUNTLET; v13.59: EENY MEENY (3 bosses); v13.60: HEAD FIRST. Idea: ICE STORM.
 - **Other ideas (Claude's):** TAXED, AUDITED, RANSOM, BACKWARDS, a trace meter, two events stacked.
 
-### 4. Enemy and ally hackers (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
+### 6. New corps
+- From CORPS.md, not built: FOSSIL (a dig site), UNICORN (very rare), MAGIC (stage magic), ALARMS, the chain corp,
+  the case corp (upper / lower case), the stock market corp.
+- From the old ideas list, not built: bad security (passwords that rotate: BUDGETWALL / PASSWORD123), the dating app (SPARKD, a catfish
+  boss), an arms dealer (GUNMETAL), the punk corp (details to come from the user), sudoku / crossword, the seed corp
+  (uses or changes the run seed). THE CHOIR as a "ministry" (a per-corp word instead of "corp").
+- A second boss mod for the corps that have one (71 corp mods left; 11 corps give boss gear instead, v13.62).
+- **A drug dealer corp** (the user, 2026-10-27).
+- CORPS.md marks every built corp `(built)` on its heading.
+
+### 7. Achievements and cosmetics
+- First win, a naked (0 mod) win, beat each corp, perfect streaks, reach layer X; easy ones too (die on the first
+  corp, spend 1000cr, earn 1000cr then get back to 0); beat G0D at the top.
+- Unlock cosmetics: logos, hats / accessories, card frames, titles ("SIGIL BREAKER"). Some bought with REP.
+
+### 8. The encrypted codex
+- Unfound entries show scrambled text that decrypts (as you beat corps, or over time) instead of "???".
+
+### 9. Lean more cyberpunk
+- Cyberware in names and flavor (implants as gear, MEDIX as a chrome clinic, chrome on the runner card), the ads.
+
+### 10. Make it more of a hacking game
+- Something in the game itself you can hack, like the seed.
+
+## Low priority
+
+### Enemy and ally hackers (low: the user 2026-10-29, "we don't need any more"; the lore was great) (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
 - **Still open:** special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
   COMPANION's pet; balance from play.
 - **Rival notes (built v13.74)** (the user, meat notes 2026-10-28):
@@ -150,128 +246,32 @@ unlocked by REP, and some quests unlock REP.
   - **You die with crew still going:** their face comes up as the screen falls apart, calling your name, like the
     Metal Gear Solid game over ("snaaake! snake!"). Each crew member has their own line.
 
-### 5. Scrap mods and new gear
-- **Built v13.52:** TUNNEL, MESH, WARP steps, TILT, SHAKE, FRAG, REWIND, SHOE, PASS (SPEC version log).
-- **Going back a row** on the map is a can of worms: save it for an exotic mod (the user thinks it could be good).
-- More map gear ideas (Claude): SCOUT (see the corps / anomalies ahead), SKIP (jump over the next row).
-- Exotic gear is empty now (WARP went to rare / epic): PARADOX / ENTANGLE / NUKE / BITFLIP (below).
-- **Codex hints for the gear reactions** (not written yet): GRAVITAS (TILT = a free gravity drop), ENTROPY (SHAKE
-  sets off its shuffle). Could go in each corp's codex entry.
-- **BOX OF WIRES (the user, 2026-10-26):** a mod, not gear: starts at scrap ("i'm not going to sort these") and does
-  something really cool only once you have upgraded it all the way to legendary (pairs with the carry-a-scrap-mod quest).
-- **Built v13.62:** the tap-to-use corp mods are boss gear stacks now (FLARE, REMOTE, ROLLUP, FREEZE, BLAST, SNITCH,
-  TITHE, ANCHOR, SLOMO, BEES; ESPRESSO folded into REWIND), and a boss reward's third pick can be a gear stack.
-- **More corp mods -> gear?** (the user, 2026-10-27, after the v13.62 pass): only the tap-to-use ones moved. Others
-  that could: none picked yet.
-- **Gear ideas (the user, 2026-10-27):**
-  - **SHORT** (short circuit; 6 letters max): fries 2 ICE that sit next to each other. (v13.62: BLAST is now an aimed
-    2x2, so SHORT is close to a small BLAST. Keep it only if it gets its own twist.)
-  - **Call a market:** gear that opens a black market right where you are (maybe a smaller one). Goes with **ads you
-    can buy from**: an ad that is a market, or that sells one thing (see "Hidden entrances" in item 2, More fake ads).
-  - **STIM:** INT +50% for one corp, and you gain the health that comes with it. When you leave the corp your max INT
-    goes back down, but you keep the health you have (2 left stays 2; only health above the normal max is lost).
-  - **CHECKPOINT** (exotic; could be a corp reward if some corp rewards become gear): use it in a corp; if you die in
-    that corp, you start over at its first layer. Variations: pay credits to come back; or come back with no mods or
-    gear. Close to CONTINUE? (CHUCK E. CACHE's legendary corp mod: pay to keep going at 1 INT, once per corp).
-    CHECKPOINT would be a weaker, one-shot cousin that sends you back to the start of the corp.
-- **Scrap mods:** maybe 2 other worthless ones.
-- **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first, v13.49).
-  Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), NUKE (wipe a corp off the map), DECODER
-  (read CIPHER for a layer), the call as an item, exotic tiers of today's gear. EXOTICS.md has more.
-
-### 6. The map and run structure
-- **Fishing: built v13.69** (engine/fishing.js; open: unlock the PIER with a feat, a quest item on the line, more UI after play). (the user, meat notes 2026-10-28): a PIER node on the map where you fish for loot.
-  - Fishing costs credits.
-  - You find gear and things (maybe a particular quest item), and you catch fish to sell: little fish to big fish, by
-    rarity up to legendary; black markets buy them. Fish can be thrown like SHOE? You can definitely catch shoes.
-  - The tap game: tap to cast, wait for a bite; when the bobber goes, tap again (then maybe reel in).
-  - Fishing feats, of course. No fishing upgrades.
-  - Its own view, different from the board (the note trails off: "i'm thinking different than...").
-  - **The view: PHISHING** (the user picked it, 2026-10-28; mockups on the "NeoN+1 Fishing" page, idea D): the board area is
-    a data stream, lanes sliding left. Hold and the hook sinks from the top toward your finger. Shapes drift by and nose the
-    hook; when one bites it turns red: tap anywhere to start the reel. Miss it and it swims off. The reel: keep it inside a
-    moving window (hold to pull, let go to slack) until the catch bar fills; try it, pull it out if it isn't fun. A mystery:
-    every shape looks like a fish, but some are fish, some gear, sometimes a shoe; you only see what it is on the CAUGHT card.
-    The user, after: holding / dragging only moves the hook up and down (which lane); it drifts left and right on its
-    own. A [ REEL IN ] button pulls an empty hook back (to recast, or to leave for the next node). More UI to work out after
-    playing it.
-  - **Round 2 built v13.70** (7 lanes, small fish mostly, sounds, weights, pier music, menu at the pier, taps on the stream only, ripples, the reel in the fish's lane).
-  - **Fishing meat notes (the user, 2026-10-28, after playing v13.70), open:**
-    - (built v13.71) **Reel UI pass:** off the target, the whole bar goes red (but keep the target visible: it could tint a little pink when
-      you're off it). The cursor: a bigger shape (# or @) that REPLACES the - under it (it overlaps now, which makes it less clear),
-      white, or matching the target's cyan; when it's on the target it changes (white or something else). The target design is good.
-    - (built v13.71) After a catch, keep the stream dimmed behind the CAUGHT card until you KEEP or THROW BACK.
-    - (built v13.71) Terminal: the cast message, then once you drag it changes to "drag up and down to move the hook" (it only moves up and down).
-    - (dropped, the user 2026-10-28) INT back from fishing: a PATCH can already come up on the line, which does the same.
-    - (built v13.72) CAST AWAY: a title for casting 250 times (not 60 minutes); BIG DATA for a 10 GB+ catch; the biggest catch is a stat.
-    - Mods or gear that affect fishing? (a note for now, the user 2026-10-28; the first notes said no fishing upgrades)
-    - (built v13.71) **PHISHING retheme:** what you catch is corp data, not fish: corp passwords, elderly social security numbers, corpo
-      credentials, blackmail material. Gear still comes up, but the catches get a little description of what info you got.
-      Keep the random weights (maybe not pounds) and the BIGGEST YET stuff.
-- **Different markets** (the user, meat notes 2026-10-28): black market / grey market / open market.
-- **MESH at the last row (built v13.75)**: it links the nodes on either side of you there; they still go to the boss.
-- More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
-- Moving backwards / the frontier (pick any node linked to one you've visited), or allow clearing the whole map.
-  An "open map" mod (the aimed WARP is built: epic WARP, v13.52).
-- Node count that keeps climbing; past the 4x4 grid (phones fit ~6 columns).
-- More final bosses, each its own mechanic (OMNI is the only one).
-- Long-run issues: power creep, a guaranteed heal each sector.
-
-### 7. Achievements and cosmetics
-- First win, a naked (0 mod) win, beat each corp, perfect streaks, reach layer X; easy ones too (die on the first
-  corp, spend 1000cr, earn 1000cr then get back to 0); beat G0D at the top.
-- Unlock cosmetics: logos, hats / accessories, card frames, titles ("SIGIL BREAKER"). Some bought with REP.
-
-### 8. The encrypted codex
-- Unfound entries show scrambled text that decrypts (as you beat corps, or over time) instead of "???".
-
-### 9. New corps
-- From CORPS.md, not built: FOSSIL (a dig site), UNICORN (very rare), MAGIC (stage magic), ALARMS, the chain corp,
-  the case corp (upper / lower case), the stock market corp.
-- From the old ideas list, not built: bad security (passwords that rotate: BUDGETWALL / PASSWORD123), the dating app (SPARKD, a catfish
-  boss), an arms dealer (GUNMETAL), the punk corp (details to come from the user), sudoku / crossword, the seed corp
-  (uses or changes the run seed). THE CHOIR as a "ministry" (a per-corp word instead of "corp").
-- A second boss mod for the corps that have one (71 corp mods left; 11 corps give boss gear instead, v13.62).
-- **A drug dealer corp** (the user, 2026-10-27).
-- CORPS.md marks every built corp `(built)` on its heading.
-
-### 10. Lean more cyberpunk
-- Cyberware in names and flavor (implants as gear, MEDIX as a chrome clinic, chrome on the runner card), the ads.
-
-### 11. Make it more of a hacking game
-- Something in the game itself you can hack, like the seed.
+## Polish (the user, 2026-10-29: the finishing passes)
+- **INTRO PASS:** after the user has lived with it. The intro keeps playing every time; the NEWB / LEET screen only on
+  a truly fresh start (maybe a URL switch keeps it all, for testing; `INTRO_ALWAYS` in engine/intro.js). Glitch /
+  animation effects on the title card (noise in the log, the map drawing in with static, a burst on handshake, the
+  logo decoding in). The title card art round (the user is trying things in asXii first; the old lettering samples:
+  `docs/art/logotype_round4.png`, `logotype_n1.png`, `logotype_round5.png`, text in NAMES.md; the title switching
+  between the face and the lettering). Your profile shuffling as you log in. The maps more animated (the user,
+  2026-10-27): the white path lines light up, or each continent lights up with brighter white borders.
+  The music going from the NEON screen to the title needs a different transition (the user, meat notes 2026-10-29).
+- **Sector event cards:** the user's art for the 14 card pictures (5 x 3 placeholders in data/events.js).
+- **COPY PASS (text):** a terminology pass on the whole game, to lock the terms down. Settled so far (the user, 2026-10-29):
+  **going deeper** = moving on through the sectors (the UPLINK says it; push on, next sector... say it this way). The INFO page, the training (POPS's lines), the mod and gear descriptions, and the ~180
+  "integrity" mentions (the header says INT; INT everywhere, or only where space is tight).
+- **Codex and menus pass** (with HOW TO PLAY):
+  - **HOW TO PLAY pass:** touch it up (corps and tells on THE BASICS; gestures, exotics, ads, run resume).
+  - **Keyword highlighting in text** (started v13.75 on HOW TO PLAY > THE BASICS: ICE, INT, credits; next the other HOW TO PLAY pages and the codex, the user's aim: neater): ICE in red, credits in money, mod names in their rarity...
+- **PHONE PASS:** bigger, roomier buttons (the tray, lists; ~44px); more room for long text (codex, mod
+  descriptions, detail boxes, the clash screen); the swap screen's row spacing; the spacing / copy on the pick
+  screens; the header menu button right-aligned?; the palette warnings (40 palettes; MOCHI MOCHI is hard to read,
+  the user will probably change it).
+- **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
-- **G0D flashing in on SECTOR CLEARED** now and then (the user, meat notes 2026-10-29; the rest of that note is built, v13.80).
-- **Tells, intel** (the user, meat notes 2026-10-29): the first time you breach a corp, show its intel (the tell) from the
-  codex; the reward screen shows the tell the first time you beat a corp; some way to know if a tell is right.
-- **REROLL animation** (the user, meat notes 2026-10-29): the list comes in again one row at a time.
-- **A fishing button in the dev menu** (the user, meat notes 2026-10-29).
-- **Terminal chat covers the tips** (the user, meat notes 2026-10-29): crew (and rival) lines often sit over the tips. No
-  fix picked yet.
-- **Bug: POPS's line on TUMBLER LOCKS' palette** (the user, meat notes 2026-10-29): the yellow box is right but the text
-  takes the palette's light background color, not POPS's black.
-- **Bug: BLOOD MONEY repairs pay in sector 3** (the user, meat notes 2026-10-29): with BLOOD MONEY a repair "heals" into
-  credits (heal pays ECON.blood.heal per point) and in sector 3 that's worth 1cr more than the repair costs, so
-  tapping REPAIR farms money (slowly). Sector 4 repairs lose money. Fix: a repair can't pay more than it costs (or no
-  REPAIR under BLOOD MONEY). The user finds it a fun glitch; pick one.
+- **Tells, intel** (the user, meat notes 2026-10-29; FIRST BREACH built v13.81 shows the tell the first time): open: some way to know if a tell is right (what that means: ask the user).
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Cold Brew's boss reward
-  is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working.
-- **Your rank under the leaderboard** (the user, 2026-10-29): on the leaderboard after a run, if you're not in the top 10
-  (or however many it shows), still show your rank: a row of your own under the list, set apart from it.
-- **Misc UI notes (built v13.75)** (the user, meat notes 2026-10-28): the map's legend down to one line (tap / hover any node
-  to see it), the UPLINK's sold badges dim, the pet on the rule, dead hackers quiet, REROLL x1, SELL WARES / BUY WARES, the
-  end screen's breached list cycling; a rival beaten at a sector boss counts (checked).
-  - (the user, 2026-10-28: v13.75's map info is good; the move-things-down idea dropped: not enough room)
-- **UI feedback on the recent updates (built v13.73)** (the user, meat notes 2026-10-28):
-  - **Sector event line on the map:** with a sector event on, its text overlaps the top of the map (sector 1 is fine: its boss is
-    in the center). Bump the whole sector line up one, right under the terminal.
-  - **Gear in the black market:** the gear bar is in its disabled look there; show the rarity colors anyway, so you can see
-    what level your PURGE etc. is.
-  - **The SELL list** shows each row's type tag (gear) like the buy list, the same look.
-  - **BUY / SELL as two modes of one screen** (not SELL as a screen deeper in with BACK): the buy view's nav is SELL and
-    LEAVE stacked (LEAVE always at the bottom, the same spot on both); REROLL becomes an item in the list (like REPAIR); the
-    sell view has the list, the SELL button, and BUY + LEAVE.
+  is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to".
 - **BLOOD MONEY scaling** (the user, 2026-10-27): its hit cost in credits should scale like the rest of the economy (ECONOMY tab), though credits have no cap the way INT does. And new things that rewrite INT need a BLOOD MONEY rule: BLACK ICE (down to 1 INT) would cost the credits for that many hits.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.
 - **COUPON -> COUPON CUTTER?** (the user, 2026-10-27): maybe rename MEGAMART's mod.
@@ -282,38 +282,17 @@ unlocked by REP, and some quests unlock REP.
 - **Ads that do things** (later, the user 2026-10-28; the fake ads are done and great): an ad that sells you gear or a mod; a free trial of a corp's mod; AD BLOCKER.
 - **A daily seed** and a daily leaderboard (none today).
 - **The corp's logo on the boss intro.**
-- **Keyword highlighting in text** (started v13.75 on HOW TO PLAY > THE BASICS: ICE, INT, credits; next the other HOW TO PLAY pages and the codex, the user's aim: neater): ICE in red, credits in money, mod names in their rarity...
 - **Browser back = BACK** on menu pages (and ask before leaving a run or a room).
 - **Flipped characters:** MIRRORLINE's glyphs flip with its mirror; a backwards mod.
 - **Faces in the art catalog** (POPS's face and the coming NPCs, with the asXii round trip).
-- **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 - **Going public:** drop the page's `noindex`; maybe the game's own domain.
 - **Tidy dist/** (the user, meat notes 2026-10-28): pack things into folders more; the palettes (palettes.js, palettes_v1.js) go in data/ instead of the root.
 - **A taller leaderboard screen** (the user, meat notes 2026-10-28).
-- **Dropping gear (built v13.72: drag to the TRASH)** (the user, meat notes 2026-10-28): a way to throw gear away. Drag and drop in the layer? Or a trash that appears and you drag it there?
 
-## Parked passes (later, when the user says)
-- **INTRO PASS:** after the user has lived with it. The intro keeps playing every time; the NEWB / LEET screen only on
-  a truly fresh start (maybe a URL switch keeps it all, for testing; `INTRO_ALWAYS` in engine/intro.js). Glitch /
-  animation effects on the title card (noise in the log, the map drawing in with static, a burst on handshake, the
-  logo decoding in). The title card art round (the user is trying things in asXii first; the old lettering samples:
-  `docs/art/logotype_round4.png`, `logotype_n1.png`, `logotype_round5.png`, text in NAMES.md; the title switching
-  between the face and the lettering). Your profile shuffling as you log in. The maps more animated (the user,
-  2026-10-27): the white path lines light up, or each continent lights up with brighter white borders.
-  The music going from the NEON screen to the title needs a different transition (the user, meat notes 2026-10-29).
-- **PHONE PASS:** bigger, roomier buttons (the tray, lists; ~44px); more room for long text (codex, mod
-  descriptions, detail boxes, the clash screen); the swap screen's row spacing; the spacing / copy on the pick
-  screens; the header menu button right-aligned?; the palette warnings (40 palettes; MOCHI MOCHI is hard to read,
-  the user will probably change it).
-- **COPY PASS (text):** a terminology pass on the whole game, to lock the terms down. Settled so far (the user, 2026-10-29):
-  **going deeper** = moving on through the sectors (the UPLINK says it; push on, next sector... say it this way). The INFO page, the training (POPS's lines), the mod and gear descriptions, and the ~180
-  "integrity" mentions (the header says INT; INT everywhere, or only where space is tight).
-- **HOW TO PLAY pass:** touch it up (corps and tells on THE BASICS; gestures, exotics, ads, run resume).
+## Parked (later, when the user says)
 - **MULTIPLAYER: shelved** (it works and stays in; finish the core game first). Later: maybe p5.party instead of
   Firebase; co-op (NeoN+m, Keep Talking style); a roulette mode.
 - **Music:** the engine pass and fewer, better tracks: docs/MUSIC.md.
-- **G0D's tracks** (the user, 2026-10-29): the G0D fights need their own music, and it has to kick ass: the maze, the
-  mold-armor fight, the part 2 on the map / the win screen, the last stand. (docs/QUESTS.md, G0D's fights.)
 - **Analytics:** the play stats are collected (greglytics); reading them (which corps beat people, what gets bought).
 
 ## Parked mod ideas (the user, 2026-10-26: "we have enough mods for now")

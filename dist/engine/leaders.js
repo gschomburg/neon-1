@@ -6,11 +6,11 @@
 // Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
 // device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v13.80']);
+NEON_FILES.push(['engine/leaders.js', 'v13.81']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }];
-const LB_ROWS = 10;
+const LB_ROWS = 15;   // (the user, 2026-10-29: there's room for 15)
 let lbGl;   // the greglytics client (null if it couldn't start)
 let lbUrlDone = false;
 function lbClient() {

@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v13.80']);
+NEON_FILES.push(['engine/tutorial.js', 'v13.81']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run

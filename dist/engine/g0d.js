@@ -6,7 +6,7 @@
 // each string keeps its letters, only where it starts is scaled. The sketch's top row is G0D's boss bar and its
 // bottom row the line that says what's going on.
 'use strict';
-NEON_FILES.push(['engine/g0d.js', 'v13.80']);
+NEON_FILES.push(['engine/g0d.js', 'v13.81']);
 
 const G0D_LOOKS = (() => {
   const W = 44, H = 22;

@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v13.80']);
+NEON_FILES.push(['engine/hackers.js', 'v13.81']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -104,10 +104,18 @@ function buildHkCard(ctx, now) {
 
 // ---------------- Talking ----------------
 // A hacker's line in the terminal, in their colors, with their face bouncing by their cursor.
-function hkSay(h, text, last = false) {
+// The terminal (the user, 2026-10-29: hacker lines sat on top of the game's tips): a hacker's line goes away after a while
+// and the game's line comes back (scene.js); chat (taunts, clues, emotes) skips its turn when the game just said something.
+const HK_MSG = { chat: 3500, line: 6000, fresh: 3000 };
+function hkSay(h, text, last = false, chat = false) {
   if (!text || (h.out && !last)) return;   // out is out: a late line (a timer, a hook) doesn't get through
+  const now = performance.now();
+  if (chat && !st.msgChat && st.msg && now - st.msgT < HK_MSG.fresh) return;
+  const was = st.msgChat ? st.msgChat.was : { msg: st.msg, col: st.msgCol, ink: st.msgInk, lv: st.lv };
   const sty = hkStyle(h.id);
-  setMsg(`> ${hkName(h.id).toLowerCase()}: ${text}`, hkInk(h.id));
+  const band = hkInk(h.id);
+  setMsg(`> ${hkName(h.id).toLowerCase()}: ${text}`, band, band === sty.bg ? sty.fg : null);   // POPS: his black on his yellow, on any palette
+  st.msgChat = { was, until: now + (chat ? HK_MSG.chat : HK_MSG.line) };
   if (st.lv) { const s = hkS(st.lv, h); s.faceAt = performance.now(); }
 }
 // Out: beaten (rivals) or out of bars (crew). Their face glitches away by their cursor.
@@ -159,8 +167,8 @@ function hkTick(lv, now) {
     if (!s.cur) s.cur = { x: to.x, y: to.y - 2 };
     s.cur.x += (to.x - s.cur.x) * 0.12; s.cur.y += (to.y - s.cur.y) * 0.12;
     if (!s.aim && Math.random() < 0.01) s.home = null;
-    if (h.side === 'good' || HK_AI[h.id].emotes) { if (!s.emoteAt || now > s.emoteAt) { s.emoteAt = now + 5000 + Math.random() * 6000; if (Math.random() < 0.5) hkSay(h, hkLine(h, h.side === 'bad' ? 'taunt' : 'clue')); } }
-    else if (!s.tauntAt || now > s.tauntAt) { s.tauntAt = now + 6000 + Math.random() * 6000; if (s.tauntAt && Math.random() < 0.4) hkSay(h, hkLine(h, 'taunt')); }
+    if (h.side === 'good' || HK_AI[h.id].emotes) { if (!s.emoteAt || now > s.emoteAt) { s.emoteAt = now + 5000 + Math.random() * 6000; if (Math.random() < 0.5) hkSay(h, hkLine(h, h.side === 'bad' ? 'taunt' : 'clue'), false, true); } }
+    else if (!s.tauntAt || now > s.tauntAt) { s.tauntAt = now + 6000 + Math.random() * 6000; if (s.tauntAt && Math.random() < 0.4) hkSay(h, hkLine(h, 'taunt'), false, true); }
   }
   hkNotes(lv);
 }
@@ -175,7 +183,7 @@ function hkTap(lv, h, t, iceCost = 1) {
   if (isReal(t)) return hkSteal(lv, h, t);
   lockTile(t, C.danger, 'rival');
   if (iceCost) hkHurt(h, iceCost);
-  if (!h.out && Math.random() < 0.3) hkSay(h, hkLine(h, 'taunt'));
+  if (!h.out && Math.random() < 0.3) hkSay(h, hkLine(h, 'taunt'), false, true);
 }
 function hkSteal(lv, h, t, burned = false) {
   h.stole++; lv.payCut = 1; lv.scanned = true; st.busy = true;
