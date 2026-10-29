@@ -3,7 +3,12 @@
 The quest design doc (started 2026-10-28). The open list is still `docs/BACKLOG.md` item 2; the details live here.
 Where quests sit in the progression: `docs/PROGRESSION.md`.
 
-## The main quest: POPS's son, d0g, G0D (the example quest to build out)
+## The main quest: WHAT IS ALL THIS FOR? (POPS's son, d0g, G0D)
+
+**Its words (calls, scenes, step names) are in `dist/data/quests.js`:** read and edit them there.
+
+**Step names** (the user named the quest 2026-10-28; the step names are Claude's, to change): 1 THE DISC, 2 SAFEHOUSE,
+3 DOG DAYS, then (not built) TRACE ROUTE, PRODIGAL, NEW BLOOD, OMNI RAID, HEAVEN'S GATE, G0D MODE.
 
 In short: a quest item -> POPS -> beat d0g 10 times -> d0g is POPS's son, joins you -> raid OMNI with d0g -> he finds
 G0D in heaven -> the H3AV3N seed -> beat G0D.
@@ -13,7 +18,7 @@ The user's dump, 2026-10-28, put in order. More is coming.
 ### When it can start
 - Only after you've gotten past the first sector (at least once, ever), and maybe only once POPS is on your crew.
 
-### Step 1: the quest item drops (the DISC: see "The story")
+### Step 1: the quest item drops (the DISC: see "The story") (steps 1-4 built v13.77: engine/quests.js)
 - Once it's unlocked, the quest item can start dropping anywhere loot drops: markets, fishing, loot nodes.
 - It has a special look: the REP color (the quest color), maybe tagged QUEST instead of gear, or maybe just legendary.
 - It's gear: it goes in your gear slots.

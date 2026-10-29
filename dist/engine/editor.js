@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.76']);
+NEON_FILES.push(['engine/editor.js', 'v13.77']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -45,7 +45,7 @@ if (EDITOR) {
     if (st.mode === 'play' && st.lv) { await pick(st.lv.safe); await settle(); }   // the public net
     if (st.mode !== 'map') { toMap(); await settle(); }
     st.god = true;
-    for (const r of Object.keys(RARITY)) { const k = Object.keys(MODS).find(m => MODS[m].rarity === r && MODS[m].kind !== 'exotic' && !st.run.mods.includes(m)); if (k) addMod(k); }
+    for (const r of Object.keys(RARITY).filter(r => !RARITY[r].hidden)) { const k = Object.keys(MODS).find(m => MODS[m].rarity === r && MODS[m].kind !== 'exotic' && !st.run.mods.includes(m)); if (k) addMod(k); }
     for (const k of Object.keys(ITEMS).slice(0, 3)) addItem(k);
   };
   const enterCorp = async (corp, boss) => {
@@ -294,6 +294,12 @@ if (EDITOR) {
     int: m => { const n = Math.max(1, Math.round(+m.n || 1)); st.run.maxInt = Math.max(st.run.maxInt, n); st.run.integrity = n; },
     heal: () => { st.run.integrity = st.run.maxInt; },
     rep: m => { save.rep = Math.max(0, Math.round(+m.n || 0)); persist(); },   // REP (the editor's save; no run needed)
+    // quests (engine/quests.js): open the DISC quest (a sector cleared + POPS on the crew), give it, set the step, the scene, the call
+    qopen: () => { save.stats = save.stats || {}; save.stats.sectors = Math.max(1, save.stats.sectors || 0); save.legacy = save.legacy || {}; save.legacy.crew_pops = Math.max(1, save.legacy.crew_pops || 0); persist(); },
+    qdisc: () => { if (st.run && !holdingDisc()) addItem('disc', 0); },
+    qstep: m => { save.quests = save.quests || {}; if (m.step === 'none') delete save.quests.pops; else Object.assign(questOf('pops'), { step: m.step, seen: true, news: true }); persist(); },
+    qscene: () => playScene('disc'),
+    qcall: () => queueCall('pops', QUEST_LINES.found),
     event: m => toSector(2, m.key),
     sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),
     boss: async () => { await onMap(); const n = Object.values(st.run.map).find(x => x.type === 'final' && x.sector === st.run.sector) || st.run.map[bossIdOf(st.run.sector)]; await enterNode(n, true); await settle(); },   // (HEAD FIRST: the boss is the first node)
@@ -337,7 +343,7 @@ if (EDITOR) {
     const m = { type: 'test-state', run: !!run, god: !!st.god, debug: !!st.debug, free: !!st.freeTravel, stopclocks: st.editorHold !== false, mode: st.mode,
       music: tabPlaying ? !!gameMusicOn : !!save.musicOn, sfx: !save.muted, tabMusic: tabPlaying,
       credits: run ? run.credits : 0, int: run ? run.integrity : 0, maxInt: run ? run.maxInt : 0, sector: run ? run.sector + 1 : 0,
-      event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0, feats: Object.keys(save.feats || {}), rep: save.rep || 0 };
+      event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0, feats: Object.keys(save.feats || {}), rep: save.rep || 0, quest: (save.quests && save.quests.pops && save.quests.pops.step) || 'none', qopen: questOpen() };
     const s = JSON.stringify(m);
     if (s !== lastTest) { lastTest = s; post(m); }
   }, 300);

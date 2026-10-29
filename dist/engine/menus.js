@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v13.76']);
+NEON_FILES.push(['engine/menus.js', 'v13.77']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -59,7 +59,7 @@ function resetSave() {
 // (the posts you buy with REP), FEATS, STATS. The BBS header sits over the tabs on every tab, the body is always
 // BOARD_BODY lines and BACK stays in one spot. The title's [ THE BOARD ] opens it (on FEATS when a feat is new,
 // else on REP); your name opens it on YOU.
-const BOARD_TABS = [['you', 'YOU', 'tby'], ['rep', 'REP', 'tbr'], ['feats', 'FEATS', 'tbf'], ['crew', 'CREW', 'tbc']];   // (STATS is under the feats list)
+const BOARD_TABS = [['you', 'YOU', 'tby'], ['rep', 'REP', 'tbr'], ['feats', 'FEATS', 'tbf'], ['crew', 'CREW', 'tbc'], ['quests', 'QUESTS', 'tbq']];   // (STATS is under the feats list)
 const BOARD_BODY = 24;
 const FEAT_GROUPS = [['runs', 'RUNS'], ['corps', 'CORPS'], ['odd', 'ODD'], ['rivals', 'RIVALS'], ['crew', 'CREW']];
 // A hacker's feats show once you've met them (a rival came in, you called the crew member).
@@ -196,7 +196,7 @@ function openBoard(tab) {
     T('+------------------------------+', C.dim);
     X({ text: '|  T H E   B O A R D   //  BBS |', colorAt: i => i === 0 || i === 31 ? C.dim : C.rep, bold: true });
     T('+------------------------------+', C.dim);
-    const star = k => (k === 'feats' && Object.keys(save.unseen || {}).length > 0) || (k === 'rep' && repNew()) || (k === 'you' && save.newTitle);
+    const star = k => (k === 'feats' && Object.keys(save.unseen || {}).length > 0) || (k === 'rep' && repNew()) || (k === 'you' && save.newTitle) || (k === 'quests' && questsNew());
     X({ gap: 1, row: BOARD_TABS.map(([k, label, id]) => ({ text: `[${label}${star(k) ? '*' : ''}]`, id, sel: tab === k, onTap: () => setTab(k) })) });
     T('');
     let used = 0;
@@ -284,7 +284,7 @@ function openBoard(tab) {
       scrollArea(x, t, featS, items, FEAT_LIST_ROWS, 'fl');
     } else if (tab === 'crew') {
       scrollArea(x, t, crewS, crewItems(), BOARD_BODY, 'cl');
-    }
+    } else if (tab === 'quests') questBoardLines(t, x);   // engine/quests.js
     for (; used < BOARD_BODY; used++) T('');
     T('');
     B('[ BACK ]', 'back', back);

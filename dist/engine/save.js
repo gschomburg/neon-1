@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v13.76']);
+NEON_FILES.push(['engine/save.js', 'v13.77']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -66,7 +66,7 @@ const LEGACY = [
 // (once they're crew). needs: shown only once that post is bought.
 for (const [id, h] of Object.entries(HACKERS)) if (h.side === 'good') LEGACY.push(
   { key: 'crew_' + id, pm: 'call_' + id, crew: id, name: 'CREW: ' + h.name, desc: h.name + ' joins your crew: their own call gear turns up in markets and loot.', costs: [120] },
-  { key: 'crew2_' + id, pm: 'call10_' + id, needs: 'crew_' + id, crew: id, name: h.name + ' LVL 2', desc: h.lvl2 || '', costs: [200] });
+  { key: 'crew2_' + id, pm: 'call10_' + id, needs: 'crew_' + id, crew: id, name: 'CREW: ' + h.name + ' LVL 2', desc: h.lvl2 || '', costs: [200] });
 const legacyLv = key => (save.legacy && save.legacy[key]) || 0;
 const boughtOn = t => LEGACY.filter(u => u.tier === t && legacyLv(u.key) > 0).length;
 // Your access level: 1 GUEST ... 4 SYSOP (the highest level that's open).

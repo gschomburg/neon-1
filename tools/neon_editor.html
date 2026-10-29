@@ -283,6 +283,13 @@
   /* testing: cheats and jumps on the running game */
   #test { flex-direction: column; overflow: auto; padding: 10px 14px; gap: 4px; }
   #test h2 { margin: 14px 0 4px; }
+  #test details.xgrp { margin: 14px 0 0; border-top: 1px solid var(--line, #333); padding-top: 4px; }
+  #test details.xgrp > summary { cursor: pointer; list-style: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--acc); padding: 4px 0; user-select: none; }
+  #test details.xgrp > summary::-webkit-details-marker { display: none; }
+  #test details.xgrp > summary::before { content: '\25B8'; display: inline-block; width: 1.1em; transition: transform 0.12s; }
+  #test details.xgrp[open] > summary::before { transform: rotate(90deg); }
+  #test details.xgrp > summary small { text-transform: none; letter-spacing: 0; font-weight: normal; margin-left: 6px; color: var(--mid); font-size: 12px; }
+  #test details.xgrp > h2:first-of-type { margin-top: 6px; }
   #test h2 small { text-transform: none; letter-spacing: 0; font-weight: normal; margin-left: 6px; color: var(--mid); }
   #test .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   #test .row input[type=number] { width: 70px; }
@@ -630,6 +637,14 @@
     &nbsp; INT <input id="xInt" type="number" value="5" min="1"> <button data-x="int">set</button> <button data-x="heal">heal</button>
     &nbsp; REP <input id="xRep" type="number" value="500" min="0"> <button data-x="rep">set</button>
   </div>
+  <h2>Quests <small>THE DISC (POPS): docs/QUESTS.md</small></h2>
+  <div class="row">
+    <button data-x="qopen" title="marks a sector cleared and puts POPS on your crew, so the DISC can drop">open the quest</button>
+    <button data-x="qdisc" title="into your gear (a run needed)">give the DISC</button>
+    &nbsp; step <select id="xQStep"><option value="none">not started</option><option value="find">find the DISC</option><option value="deliver">take it to POPS</option><option value="d0g">scene done (d0g next)</option></select> <button data-x="qstep">set</button>
+    &nbsp; <button data-x="qcall">POPS calls</button> <button data-x="qscene">play the scene</button>
+  </div>
+  <details class="xgrp" data-g="sector"><summary>Sector <small>events, jumps, anomalies, THE FENCE</small></summary>
   <h2>Sector events <small>click one: a new run, straight to sector 2 with that event (its card first)</small></h2>
   <div class="row" id="xEvents"></div>
   <h2>Jump</h2>
@@ -641,14 +656,16 @@
   <div class="row" id="xAnoms"></div>
   <h2>THE FENCE</h2>
   <div class="row"><button data-x="steal">steal my last mod</button> <span class="dim">it goes to THE FENCE (one is added next to this sector's boss if there isn't one)</span></div>
+  </details>
   <h2>Give <small>a mod (at a step) or gear; the gear &amp; mods tab has the full list</small></h2>
   <div class="row">mod <select id="xGiveMod"></select> <select id="xTierMod"></select> <button id="xGiveModBtn">give</button></div>
   <div class="row">gear <select id="xGiveGear"></select> <select id="xTierGear"></select> <button id="xGiveGearBtn">give</button></div>
   <h2>Hackers <small>bring one into the corp layer you're in: a rival, or crew as if you'd called them (CALL gear is under Give too)</small></h2>
   <div class="row"><select id="xHk"></select> <button data-x="hacker">bring in</button></div>
-  <h2>Feats <small>click one to grant it or take it back (lit = done); "box" shows its FEAT box once the game is calm</small></h2>
+  <details class="xgrp" data-g="feats"><summary>Feats <small>click one to grant it or take it back (lit = done); "box" shows its FEAT box once the game is calm</small></summary>
   <div class="row xfeats" id="xFeats"></div>
   <div class="row"><button data-x="wipe">wipe progression</button> <span class="dim">your own save: REP back for THE BOARD's posts; feats, titles and the record cleared</span></div>
+  </details>
 </section>
 <section id="items" class="mode">
   <div id="iBar">
@@ -1936,7 +1953,7 @@
     for (const b of document.querySelectorAll('#test button.tg')) b.classList.toggle('on', !!(x && x[b.dataset.x]));
     for (const b of document.querySelectorAll('#xFeats button[data-x="feat"]')) b.classList.toggle('on', !!(x && (x.feats || []).includes(b.dataset.key)));
     if (!x || !x.run) { $('#xState').textContent = 'no run: click "new test run" or a sector event'; return; }
-    $('#xState').textContent = `sector ${x.sector}${x.event ? ' // ' + (evNames[x.event] || x.event) : ''}  ·  ${x.credits}cr  ·  INT ${x.int}/${x.maxInt}  ·  REP ${x.rep}  ·  ${x.mods} mods${x.fence ? '  ·  fence: ' + x.fence : ''}  ·  ${x.mode}${x.god ? '  ·  GOD' : ''}${x.free ? '  ·  free travel' : ''}${x.tabMusic ? '  ·  music tab playing' : ''}`;
+    $('#xState').textContent = `sector ${x.sector}${x.event ? ' // ' + (evNames[x.event] || x.event) : ''}  ·  ${x.credits}cr  ·  INT ${x.int}/${x.maxInt}  ·  REP ${x.rep}  ·  quest: ${x.quest}${x.qopen ? '' : ' (closed)'}  ·  ${x.mods} mods${x.fence ? '  ·  fence: ' + x.fence : ''}  ·  ${x.mode}${x.god ? '  ·  GOD' : ''}${x.free ? '  ·  free travel' : ''}${x.tabMusic ? '  ·  music tab playing' : ''}`;
   };
   window.addEventListener('message', e => {
     const m = e.data;
@@ -1951,6 +1968,10 @@
     if (m.type === 'test-done') log(m.ok ? m.act + ': done' : m.act + ': ' + m.error, !m.ok);
     if (m.type === 'mod-set' && m.ok === false) log('give: ' + m.error, true);
   });
+  for (const d of document.querySelectorAll('#test details.xgrp')) {   // open / closed is remembered
+    try { d.open = localStorage.getItem('neonEditor.test.' + d.dataset.g) === '1'; } catch (e) { /* no storage */ }
+    d.addEventListener('toggle', () => { try { localStorage.setItem('neonEditor.test.' + d.dataset.g, d.open ? '1' : '0'); } catch (e) { /* no storage */ } });
+  }
   $('#test').addEventListener('click', ev => {
     const b = ev.target.closest('button[data-x]'); if (!b) return;
     const act = b.dataset.x;
@@ -1958,6 +1979,7 @@
     if (act === 'credits') return send('credits', { n: $('#xCr').value });
     if (act === 'int') return send('int', { n: $('#xInt').value });
     if (act === 'rep') return send('rep', { n: $('#xRep').value });
+    if (act === 'qstep') return send('qstep', { step: $('#xQStep').value });
     if (act === 'sector') return send('sector', { n: +b.dataset.n });
     if (act === 'event' || act === 'anomaly') return send(act, { key: b.dataset.key });
     if (act === 'feat') return send('feat', { key: b.dataset.key, on: !(state && (state.feats || []).includes(b.dataset.key)) });
@@ -2886,6 +2908,7 @@
 <p class="lead">Cheats and jumps on the game on the left, for playing things through. Nothing here writes a file. Every cheat makes the run practice (not scored).</p>
 <ul>
 <li><b>Run:</b> a new test run (on the map, after the public net); god (no damage), show the real node, free travel (go to any node); stop clocks (on by default: layer timers hold still; turn it off to test timed corps and TIME IS MONEY); music and sfx (the game's own; the music tab takes over while it plays a track); set credits and INT, heal; set REP (your saved REP: works without a run).</li>
+<li><b>Quests:</b> open the quest (marks a sector cleared and puts POPS on your crew), give the DISC (a run needed), set the quest step, make POPS call, play the scene.</li>
 <li><b>Sector events:</b> click one and the game starts a new run and climbs straight to sector 2 with that event: its card comes up first. The sector name on the map shows the card again.</li>
 <li><b>Jump:</b> to sector 2-5 (events rolled as usual); into this sector's boss; clear the sector (the success screen); straight to the uplink; or <b>go fishing</b> (a PIER, with at least 100cr).</li>
 <li><b>Anomaly on the next corps:</b> puts that anomaly on the corps you can go to next (THIEF also adds THE FENCE); <b>none</b> takes them off.</li>

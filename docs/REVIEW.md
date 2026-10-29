@@ -14,6 +14,7 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **THE DISC quest** (v13.77): in the editor, TESTING > Quests: open the quest, start a run, give the DISC (or find one), beat a sector boss, CASH OUT. POPS's calls, the uplink line, TAKE IT TO POPS, the scene, THE BOARD > QUESTS. The words are all placeholders (QUEST_LINES / QUEST_SCENES in engine/quests.js): rewrite them. The odds (25% loot, 20% markets, 8% fishing) are guesses.
 - [ ] **Misc UI** (v13.75): the map's one-line hint (tap or hover a node you can't reach: its info); the pet on the rule; the uplink's sold badges dim; REROLL x1; [ SELL WARES ] / [ BUY WARES ]; the end screen's breached list cycling on a long run. Dead hackers should be quiet now: say if you still see one talk.
 - [ ] **Rivals going down** (v13.74): beat a rival in a layer (face blows up 3 times, the rest falls; crew float up), then after the boss CORP BREACHED builds in with their logo first: DEFEATED, yours over it, then the rest of the screen (one animation). The sounds and timing are first guesses.
 - [ ] **UI pass** (v13.73): the black market's BUY / SELL modes (REROLL row in the list, SELL / BUY over LEAVE), the map's sector line one up, gear colors on list screens, the trash drag (gear on the cursor, drops into the trash).

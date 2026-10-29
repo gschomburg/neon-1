@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v13.76']);
+NEON_FILES.push(['engine/fishing.js', 'v13.77']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -59,6 +59,7 @@ const fishLaneAt = y => { const g = fishGeo(); return clamp(Math.round((y - g.to
 
 // ---------------- What bites: a fish, gear or a shoe ----------------
 function fishOutcome(r) {
+  if (discDrops(r, 'fish')) return { kind: 'gear', key: 'disc', tier: 0, rarity: 'quest' };   // the quest (engine/quests.js)
   const u = r();
   if (u < ECON.fish.shoe) return { kind: 'shoe', key: 'shoe', tier: 0, rarity: ITEMS.shoe ? ITEMS.shoe.rarity : 'common' };
   if (u < ECON.fish.shoe + ECON.fish.gear) {   // the loot pool, each rarity step damped

@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.76']);
+NEON_FILES.push(['engine/panels.js', 'v13.77']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -78,6 +78,7 @@ function addItem(key, tier = 0) {
   if (stack) { stack.n++; return true; }
   if (run.items.length >= run.beltSlots) return false;
   run.items.push({ key, tier, n: 1 });
+  if (ITEMS[key].quest) questGot(key);   // quest gear: its quest moves (engine/quests.js)
   return true;
 }
 const itemRoom = (key, tier) => st.run.items.some(s => s.key === key && s.tier === tier && s.n < STACK_MAX) || st.run.items.length < st.run.beltSlots;
@@ -127,6 +128,7 @@ function openShop(node) {
     for (const o of offers) { o.n = 1; const p = ECON.stock[ITEMS[o.key].rarity] || 0; while (o.n < ECON.stock.max && rs() < p) o.n++; }
     for (const o of pickMods(r, modsOfKind('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
     for (const o of exoticOffer(run.seed, 'shop', n ? node.id + 'r' + n : node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
+    if (discDrops(rngFor(run.seed, 'shop', node.id, 'disc', n), 'shop')) offers.push({ kind: 'item', key: 'disc', tier: 0, price: ITEMS.disc.price, sold: false, n: 1 });   // the quest (engine/quests.js)
     offers = shuffle(offers, r);   // random order: any slot could be the good one
     if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
     return offers;
@@ -148,6 +150,7 @@ function openShop(node) {
   const sell = i => {
     const s = run.items[i];
     if (!s || st.transitioning) return Sound.deny();
+    if (ITEMS[s.key].quest) { setMsg('> not for sale. POPS wants that.', C.rep); return Sound.deny(); }
     const cr = gearValue(s.key, s.tier), name = ITEMS[s.key].name.toLowerCase(), value = !!ITEMS[s.key].value;
     s.n--; if (s.n <= 0) run.items.splice(i, 1);
     st.selItem = -1; st.hoverItem = -1;
@@ -205,7 +208,7 @@ function openShop(node) {
     run.items.forEach((s, i) => {
       const v = itemView(s.key, s.tier);
       X({ list: true, id: 'sl' + i, onTap: () => { sellSel = i; Sound.tick(); }, sel: i === sellSel,
-        name: itemLabel(s), chip: v.rarity, col: C.bright, right: `${'gear'.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: C.money, rightChips: true });
+        name: itemLabel(s), chip: v.rarity, col: C.bright, right: ITEMS[s.key].quest ? 'QUEST  keep' : `${'gear'.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: ITEMS[s.key].quest ? C.rep : C.money, rightChips: true });
     });
     if (!run.items.length) T('nothing to sell.', C.dim);
     pad(T, 1 + Math.max(1, run.items.length));
@@ -217,7 +220,8 @@ function openShop(node) {
       X({ text: v.name, chip: v.rarity, bold: true });
       T(v.tip || v.desc, C.text);
       T('');
-      X({ box: true, text: 'S E L L', sub: `+${gearValue(s.key, s.tier)}cr`, id: 'sell', onTap: () => sell(sellSel), minW: 18 });
+      if (ITEMS[s.key].quest) X({ box: true, text: 'S E L L', sub: 'POPS wants it', id: 'sell', onTap: () => sell(sellSel), minW: 18, disabled: true });
+      else X({ box: true, text: 'S E L L', sub: `+${gearValue(s.key, s.tier)}cr`, id: 'sell', onTap: () => sell(sellSel), minW: 18 });
     } else for (let i = 0; i < 7; i++) T('');
     T(SEP, C.dim);
     nav(B);

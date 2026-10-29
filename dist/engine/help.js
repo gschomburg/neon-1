@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.76']);
+NEON_FILES.push(['engine/help.js', 'v13.77']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -152,7 +152,7 @@ function buildTrayPage(T, X) {
   T('');
   H('MOD RARITY');
   const ex = { scrap: 'the basics', common: 'small perks', rare: 'solid upgrades', epic: 'build-defining', legendary: 'boss mods, top upgrades', exotic: 'they bend the rules' };
-  for (const r of Object.keys(RARITY)) X({ text: `${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(HELP_W), col: C.text, chips: true });
+  for (const r of Object.keys(RARITY).filter(r => !RARITY[r].hidden)) X({ text: `${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(HELP_W), col: C.text, chips: true });
 }
 
 function openHelp() {
@@ -205,7 +205,7 @@ function openHelp() {
       T('mods and gear come in six tiers:');
       T('');
       const ex = { scrap: 'the basics.', common: 'small perks.', rare: 'solid upgrades.', epic: 'build-defining.', legendary: 'boss mods, top upgrades.', exotic: 'they bend the rules.' };
-      for (const r of Object.keys(RARITY)) X({ text: `${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(30), col: C.text, chips: true });
+      for (const r of Object.keys(RARITY).filter(r => !RARITY[r].hidden)) X({ text: `${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(30), col: C.text, chips: true });
     }
     return out;
   }

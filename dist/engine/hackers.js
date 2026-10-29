@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v13.76']);
+NEON_FILES.push(['engine/hackers.js', 'v13.77']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -558,4 +558,4 @@ for (const id of HK_CREW) CALL_GEAR['call_' + id] = {
 };
 Object.assign(BOSS_GEAR, CALL_GEAR);   // engine/active.js runs them like the boss gear
 // A crew member's own gear only turns up once they're in your crew (engine/panels.js shopGear, engine/run.js loot).
-const gearAllowed = k => !ITEMS[k].crew || hkCrewOn(ITEMS[k].crew);
+const gearAllowed = k => !ITEMS[k].quest && (!ITEMS[k].crew || hkCrewOn(ITEMS[k].crew));   // (quest gear drops by its quest's rules: engine/quests.js)

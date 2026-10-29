@@ -1,7 +1,7 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v13.76']);
+NEON_FILES.push(['engine/feats.js', 'v13.77']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
@@ -111,7 +111,7 @@ function stepTitle(prof, d) {
 // ---------------- The * marks ----------------
 // A new feat is starred (on its row, the FEATS tab, THE BOARD on the title) until you've looked at it; a new title
 // stars YOU and your name on the title until you open YOU.
-const boardNew = () => Object.keys(save.unseen || {}).length > 0 || repNew();
+const boardNew = () => Object.keys(save.unseen || {}).length > 0 || repNew() || (typeof questsNew === 'function' && questsNew());
 const repNew = () => Object.keys(save.unseenPosts || {}).length > 0;   // a new post on REP (a level opened, a PRIVATE MESSAGE)
 const postUnseen = key => !!(save.unseenPosts && save.unseenPosts[key]);
 function seePost(key) { if (postUnseen(key)) { delete save.unseenPosts[key]; persist(); } }

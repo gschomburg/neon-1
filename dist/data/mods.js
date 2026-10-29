@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.76']);
+NEON_FILES.push(['data/mods.js', 'v13.77']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -12,9 +12,13 @@ const RARITY = {
   epic:      { label: 'EPIC',   lvl: 3 },
   legendary: { label: 'LEGEND', lvl: 4 },
   exotic:    { label: 'EXOTIC', lvl: 5 },
+  quest:     { label: 'QUEST',  lvl: 4, hidden: true },   // quest gear (engine/quests.js): its chip is the REP color; not a real rarity step
 };
 
 const ITEMS = {
+  // THE DISC: quest gear (engine/quests.js, docs/QUESTS.md). Never sold, trashed or bought in the normal way; drops by the quest's rules.
+  disc: { key: 'disc', name: 'DISC', price: 60, rarity: 'quest', quest: 'pops', bag: true, desc: "an old disc, encrypted. POPS wants it: beat the sector boss, then CASH OUT with it.", tip: 'quest: cash out with it.',
+    where: 'anywhere loot drops, once POPS is on your crew.' },
   patch: { key: 'patch', name: 'PATCH', price: 25, rarity: 'scrap', desc: 'restore 1 integrity.', tip: '+1 integrity.',
     tiers: [{}, { rarity: 'common', desc: 'restore 2 integrity.', tip: '+2 integrity.' }, { rarity: 'rare', desc: 'restore 3 integrity.', tip: '+3 integrity.' }] },
   purge: { key: 'purge', name: 'PURGE', price: 22, rarity: 'scrap', desc: 'lock out one ICE node.', tip: 'lock out 1 ICE.',

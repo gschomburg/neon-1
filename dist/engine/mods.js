@@ -1,11 +1,11 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.76']);
+NEON_FILES.push(['engine/mods.js', 'v13.77']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
 // (SCRAP COMMON RARE EPIC LEGEND EXOTIC) in a line, so only those words get chipped.
-const chipOf = r => CHIPS[r] || CHIPS.common;
+const chipOf = r => r === 'quest' ? { fg: '#140a26', bg: C.rep || '#9b7bff' } : CHIPS[r] || CHIPS.common;   // (quest gear: the REP color)
 const RARITY_OF_LABEL = Object.fromEntries(Object.entries(RARITY).map(([k, v]) => [v.label, k]));
 const RARITY_WORDS = new RegExp('\\b(' + Object.keys(RARITY_OF_LABEL).join('|') + ')\\b', 'g');
 const rarityChips = text => [...String(text).matchAll(RARITY_WORDS)].map(m => ({ from: m.index, len: m[0].length, r: RARITY_OF_LABEL[m[0]] }));

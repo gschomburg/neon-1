@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.76']);
+NEON_FILES.push(['engine/run.js', 'v13.77']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -1540,6 +1540,8 @@ const pickGearDrop = r => pickWeighted(Object.keys(ITEMS).filter(k => !ITEMS[k].
 function grantLoot(r, tier) {
   const run = st.run;
   Sound.loot();
+  // the quest's DISC (engine/quests.js), if it's your turn for it
+  if (discDrops(r, 'loot') && addItem('disc', 0)) return 'got gear: DISC. (a quest)';
   // an item (more often with a higher STASH), at a rolled tier, if there's room
   if (r() < (has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance)) {
     const key = pickGearDrop(r), tier = rollTier(r, ITEMS[key]);
@@ -1591,6 +1593,7 @@ async function endRun(win) {
   st.timer = null;
   run.ended = true;
   statRunEnd(run, win);
+  questRunEnd(run, win);   // died with the DISC: it drops again (engine/quests.js)
   clearRun();
   if (!win) {
     // Losing: the whole screen glitches out.
@@ -1739,6 +1742,7 @@ function openUplink() {
   const togglePass = () => { if (!hasPass()) return Sound.deny(); usePass = !usePass; Sound.tick(); };
   const toggle = k => { if (UPLINK_LOCKED.includes(k)) return Sound.deny(); keep[k] = !keep[k]; Sound.tick(); };
   st.uplink = { keep, tally, canGo, toggle, togglePass, push: go, cash: cashOut, fee: uplinkFee, sell: uplinkSell, locked: UPLINK_LOCKED };   // (read by tools/econsim.js)
+  questUplink();   // with the DISC: POPS reminds you (engine/quests.js)
   openPanel('UPLINK', (T, B, X) => {
     const t = tally(), ok = canGo(), mods = run.mods;
     T('U P L I N K', C.accent);
@@ -1768,6 +1772,7 @@ function openUplink() {
     const w = Math.max(28, subPush.length + 8, subCash.length + 8);   // the two buttons the same width
     X({ box: true, text: 'P U S H   O N', sub: subPush, id: 'push', onTap: go, minW: w, disabled: !ok });
     X({ box: true, text: 'C A S H   O U T', sub: subCash, id: 'cash', onTap: cashOut, minW: w });
+    if (holdingDisc() && questRun() && questOf('pops').step === 'find') T('+ cash out to bring POPS the DISC', C.rep);
   }, '> uplink: what do you carry?', { full: true });
 }
 // OMNI is every corp at once: a boss mod from any corp, a general mod, and one more.
@@ -1798,6 +1803,7 @@ async function cashOut() {
   }
   st.transitioning = true;
   Sound.ui();
+  questCashOut(run);   // out with the DISC: POPS asks for it (engine/quests.js)
   await wipeOut(0);
   st.transitioning = false;
   endRun(true);

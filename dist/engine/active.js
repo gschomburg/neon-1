@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.76']);
+NEON_FILES.push(['engine/active.js', 'v13.77']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -315,6 +315,7 @@ const itemOffHere = key => !!(st.mode === 'play' && st.corp && st.corp.hasBoss &
 // Why an item can't be used right now (shown when you try): a short line for the info row.
 function whyNotItem(stack) {
   const key = stack.key, inCorp = st.mode === 'play' && st.corp && st.corp.hasBoss;
+  if (ITEMS[key].quest) return 'POPS wants it: CASH OUT with it.';
   if (itemOffHere(key)) return 'off in this corp.';
   if (key === 'patch') return zombie() ? 'no rot to fix.' : 'integrity is full.';
   if (key === 'route' || key === 'warp' || key === 'tunnel' || key === 'mesh') return st.mode !== 'map' ? 'only on the map.' : st.run.warpAim || st.run.tunnel || st.run.mesh === st.run.sector ? 'already open: pick a node.' : 'nowhere to go.';
@@ -332,6 +333,7 @@ function canUse(stack) {
   const run = st.run;
   if (!run || st.wipe || !stack) return false;
   const key = stack.key, tier = stack.tier || 0;
+  if (ITEMS[key].quest) return false;   // quest gear: it's carried, not used
   if (ITEMS[key].value) return !st.transitioning;   // value gear: cash it in anywhere
   if (key === 'patch') return canHeal();
   if (key === 'wall') return tier < 2 ? true : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll;
@@ -379,6 +381,7 @@ function gearOverTrash() {
 function trashItem(slot) {
   const run = st.run, stack = run && run.items[slot];
   if (!stack || !gearDragOk()) return;
+  if (ITEMS[stack.key].quest) { setMsg('> you can\'t trash that. POPS wants it.', C.rep); return Sound.deny(); }
   const name = ITEMS[stack.key].name;
   if (--stack.n <= 0) run.items.splice(slot, 1);
   st.selItem = -1; st.hoverItem = -1;

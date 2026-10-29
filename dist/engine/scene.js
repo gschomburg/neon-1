@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.76']);
+NEON_FILES.push(['engine/scene.js', 'v13.77']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -329,6 +329,21 @@ function buildScene(now, collectHits, raw = false) {
     const fput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') fc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
     buildFeatBox(Object.assign({}, ctx, { put: fput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
     result = result.concat(fc);
+  }
+  // A CALL (engine/quests.js): a hacker's face and lines, when things are calm (after the FEAT box).
+  if (collectHits) callTick(now);
+  if (st.callBox && !st.dev && !st.ad && !st.evCard && !st.featBox) {
+    const cc = [];
+    const cput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') cc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
+    buildCallBox(Object.assign({}, ctx, { put: cput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
+    result = result.concat(cc);
+  }
+  // A quest scene (engine/quests.js): full screen, over everything.
+  if (st.qScene && !st.dev) {
+    const qc = [];
+    const qput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') qc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
+    buildScene_(Object.assign({}, ctx, { put: qput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
+    result = result.concat(qc);
   }
   // The training run's popup (engine/tutorial.js): over everything but an ad, the same way.
   if (st.tut && st.tut.pop && !st.dev && !st.ad && (!st.wipe || st.tut.curtain)) {

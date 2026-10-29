@@ -1,6 +1,6 @@
 // NeoN+1 corps/tollgate.js
 'use strict';
-NEON_FILES.push(['corps/tollgate.js', 'v13.76']);
+NEON_FILES.push(['corps/tollgate.js', 'v13.77']);
 // Its boss mod: EZPASS (ezpass), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
