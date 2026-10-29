@@ -4,16 +4,31 @@ misc notes
 misc mod and items
 **********************
 
+feats
+*************
+
+G0D
+**********
+
 training
 *****************
+
+fishing
+*************
+
+current corp mod feedback
+******************
 
 intro
 ***********
 
-hackers
+rivals
 *************
 
-event/corp modifiers
+neon editor
+*************
+
+sector events / corp anomalies
 ****************
 
 ads
@@ -24,6 +39,9 @@ reputation
 
 quests and rpg story ideas
 *****************
+
+cut scenes
+*************
 
 asXii
 ********************
