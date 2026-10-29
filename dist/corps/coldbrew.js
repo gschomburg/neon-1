@@ -1,6 +1,6 @@
 // NeoN+1 corps/coldbrew.js
 'use strict';
-NEON_FILES.push(['corps/coldbrew.js', 'v13.78']);
+NEON_FILES.push(['corps/coldbrew.js', 'v13.79']);
 // Its boss reward: REWIND (epic) gear x2 (rewind; it was ESPRESSO), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

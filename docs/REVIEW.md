@@ -14,6 +14,7 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **CALL stacks from bosses** (v13.79): half the corp bosses have a 4th pick: CALL x3, or (with crew, half the time) one of your crew's own CALLs x1-2. You still choose one. Say if it's too much now.
 - [ ] **CALL odds** (v13.78): a plain CALL brings POPS much more often until he's on your crew (27% a call, was 11%), and crew you've called under 5 times more often than the ones you have. CALL turns up in markets 41% of the time (was 17%). Numbers in CALL_ODDS (engine/hackers.js): say if POPS feels too common.
 
 - [ ] **The g0d tab** (v13.78): the neon editor has a **g0d** tab. Click a look and the game goes to its screen and draws it: the 20 fight mockups over a corp layer (squeezed to the board, the boss bar on top), THE NETWORK GOES (mold eats the sector map, the bar comes up), NOT DEAD YET (the win screen: the mold creeps back, the bar returns), MOLD GLITCH, G0D ON THE DEATH SCREEN (its logo; "it saw you." is a placeholder). prev / next, hold still, off, and **The health bar**, its own overlay: 4 styles (HASHES, BLOCKS, THIN in the header; or across the board), over any look; it takes hits so you can see it drop. The groups fold up. Previews only: nothing in a run.

@@ -1,6 +1,6 @@
 // NeoN+1 corps/choir.js
 'use strict';
-NEON_FILES.push(['corps/choir.js', 'v13.78']);
+NEON_FILES.push(['corps/choir.js', 'v13.79']);
 // Its boss reward: TITHE gear x2 (tithe), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

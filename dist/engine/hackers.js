@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v13.78']);
+NEON_FILES.push(['engine/hackers.js', 'v13.79']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -546,8 +546,21 @@ function buildHackers(ctx, lv, now) {
 // Who a plain CALL brings, by weight (the user, 2026-10-29): POPS is likelier until he's on your crew (the main quest
 // needs him); crew you've called fewer than 5 times (not posted on THE BOARD yet) are likelier than ones you have.
 // shop: how much likelier a plain CALL is in a market's gear than its rarity alone makes it.
-const CALL_ODDS = { pops: 6, fresh: 2, known: 1, shop: 3 };
+// boss: the chance a corp boss's reward has an extra pick, a CALL stack; own: with crew, the chance it's one of your
+// crew's own CALLs. plainN: how many plain CALLs; ownN: how many of a crew member's (fewest, most).
+const CALL_ODDS = { pops: 6, fresh: 2, known: 1, shop: 3, boss: 0.5, own: 0.5, plainN: 3, ownN: [1, 2] };
 const callWeight = id => id === 'pops' && !hkCrewOn('pops') ? CALL_ODDS.pops : statOf('hack:call:' + id) < 5 ? CALL_ODDS.fresh : CALL_ODDS.known;
+// A corp boss's extra pick, a CALL stack (the user, 2026-10-29: CALL gear was still rare), or null: plain CALL x3, or
+// (with crew) one of your crew's own x1-2. Its own roll, so the rest of the reward stays the same.
+function callReward(r) {
+  if (r() >= CALL_ODDS.boss) return null;
+  const crew = HK_CREW.filter(hkCrewOn);
+  if (crew.length && r() < CALL_ODDS.own) {
+    const key = 'call_' + pickR(crew, r), [lo, hi] = CALL_ODDS.ownN;
+    if (ITEMS[key]) return { kind: 'gear', key, tier: 0, n: lo + Math.floor(r() * (hi - lo + 1)) };
+  }
+  return { kind: 'gear', key: 'call', tier: 0, n: CALL_ODDS.plainN };
+}
 const hkCallable = () => !!st.corp && st.corp.hasBoss && !!st.lv && st.lv.n > 1;
 const CALL_GEAR = {
   call: {

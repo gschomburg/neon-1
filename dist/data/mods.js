@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.78']);
+NEON_FILES.push(['data/mods.js', 'v13.79']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -115,8 +115,8 @@ const ITEMS = {
     codex: 'in a layer: let the bees out. the swarm climbs the board and eats 3 ICE, then stays: 1 more ICE in every layer left in that corp. it never touches the real node. (the bees are not real. nobody has seen a real bee in years.)' },
   // CALL gear (engine/hackers.js): a crew hacker comes in for the rest of the corp. CALL brings a random one; each
   // call counts toward them (5 calls: CREW on THE BOARD). A crew member's own gear (crew:) only turns up once they're in your crew.
-  call:   { key: 'call',   name: 'CALL',   price: 34, rarity: 'rare', desc: 'in a corp: call in a random crew hacker for the rest of the corp.', tip: 'call in a hacker.',
-    codex: 'in a corp: a burner phone with a number on it. somebody picks up: a random crew hacker comes in and helps for the rest of the corp. call the same one 5 times and THE BOARD posts them as crew.' },
+  call:   { key: 'call',   name: 'CALL',   price: 34, rarity: 'rare', where: 'market, $ nodes, caches, corp bosses.', desc: 'in a corp: call in a random crew hacker for the rest of the corp.', tip: 'call in a hacker.',
+    codex: 'in a corp: a burner phone with a number on it. somebody picks up: a random crew hacker comes in and helps for the rest of the corp. call the same one 5 times and THE BOARD posts them as crew. half the corp bosses offer a stack.' },
   call_pops: { key: 'call_pops', name: 'POPS', price: 40, rarity: 'rare', crew: 'pops', desc: 'in a corp: call POPS in for the rest of the corp (burns the ICE he can read).', tip: 'call POPS.',
     codex: 'in a corp: POPS\'s number. POPS comes in and helps for the rest of the corp (burns the ICE he can read). only turns up once POPS is in your crew.' },
   call_brick: { key: 'call_brick', name: 'BRICK', price: 40, rarity: 'rare', crew: 'brick', desc: 'in a corp: call BRICK in for the rest of the corp (takes your ICE hits).', tip: 'call BRICK.',

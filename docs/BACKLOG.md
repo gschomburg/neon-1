@@ -40,6 +40,12 @@ unlocked by REP, and some quests unlock REP.
     cut-off text is fixed, v13.74.)
   - **Better drops** (the user, 2026-10-26): a BOARD unlock that raises the rarity of drops (gear steps, e.g. FRAG's
     legendary) and mods: both in one unlock, or two separate unlocks (gear / mods). Same idea as the parked "better drops" mod (10-20% one step up).
+  - **More feats** (the user, meat notes 2026-10-29): sell 30 PHISH; catch a biiiig PHISH; buy a mod back from the fence
+    (and maybe a REP unlock: fence prices -10%).
+  - **REP unlocks you can switch on and off** (the user, meat notes 2026-10-29), e.g. +1 to the default corp layer count
+    (makes higher layer counts easier in the early sectors).
+  - **G0D's rewards** (the user, meat notes 2026-10-29): replaying seeds for real (not as practice), looks like a REP buy;
+    a mod you always start with.
 
 ### 2. Quests and RPG elements
 - **The quest doc: `docs/QUESTS.md`** (2026-10-28). The first quest to build out: POPS's son (the quest item, POPS's calls, the
@@ -83,6 +89,9 @@ unlocked by REP, and some quests unlock REP.
   - **POPS's old corp:** a quest that unlocks when you call POPS in the corp he used to work for.
   - **Flip a rival:** turn one particular rival to your side. Maybe part of the d0g quest: once you beat d0g, it turns
     out he's POPS's son or protégé; then he's on your side and helps you beat G0D.
+  - **Safehouses need something cooler** (the user, meat notes 2026-10-29): they keep some mods from a run you died in,
+    or offer crew CALL gear. Probably a REP unlock. Or simpler: a boosted safehouse, 2 INT and an item or two.
+  - **The quest object sparkles** (the user, meat notes 2026-10-29): a twinkle / glitter effect on it.
 
 ### 3. Anomalies and sector events (named 2026-10-26)
 - **Built v13.54** (design: `docs/SECTOR_EVENTS.md`): 14 sector events, the SECTOR EVENT card, BLINDERS, THE FENCE,
@@ -233,6 +242,26 @@ unlocked by REP, and some quests unlock REP.
 - Something in the game itself you can hack, like the seed.
 
 ## Medium and small
+- **The UPLINK and the screens around it** (the user, meat notes 2026-10-29):
+  - **SECTOR CLEARED needs some love:** drop "die later and you bank nothing" and the REP line (they go to the UPLINK, if
+    they aren't there already); better ROOT art; G0D flashing in now and then.
+  - **The UPLINK should show what the mods do** better.
+- **Tells, intel** (the user, meat notes 2026-10-29): the first time you breach a corp, show its intel (the tell) from the
+  codex; the reward screen shows the tell the first time you beat a corp; some way to know if a tell is right.
+- **REROLL animation** (the user, meat notes 2026-10-29): the list comes in again one row at a time.
+- **A fishing button in the dev menu** (the user, meat notes 2026-10-29).
+- **Terminal chat covers the tips** (the user, meat notes 2026-10-29): crew (and rival) lines often sit over the tips. No
+  fix picked yet.
+- **Bug: POPS's line on TUMBLER LOCKS' palette** (the user, meat notes 2026-10-29): the yellow box is right but the text
+  takes the palette's light background color, not POPS's black.
+- **Bug: BLOOD MONEY repairs pay in sector 3** (the user, meat notes 2026-10-29): with BLOOD MONEY a repair "heals" into
+  credits (heal pays ECON.blood.heal per point) and in sector 3 that's worth 1cr more than the repair costs, so
+  tapping REPAIR farms money (slowly). Sector 4 repairs lose money. Fix: a repair can't pay more than it costs (or no
+  REPAIR under BLOOD MONEY). The user finds it a fun glitch; pick one.
+- (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Cold Brew's boss reward
+  is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working.
+- **Your rank under the leaderboard** (the user, 2026-10-29): on the leaderboard after a run, if you're not in the top 10
+  (or however many it shows), still show your rank: a row of your own under the list, set apart from it.
 - **Misc UI notes (built v13.75)** (the user, meat notes 2026-10-28): the map's legend down to one line (tap / hover any node
   to see it), the UPLINK's sold badges dim, the pet on the rule, dead hackers quiet, REROLL x1, SELL WARES / BUY WARES, the
   end screen's breached list cycling; a rival beaten at a sector boss counts (checked).
@@ -274,6 +303,7 @@ unlocked by REP, and some quests unlock REP.
   `docs/art/logotype_round4.png`, `logotype_n1.png`, `logotype_round5.png`, text in NAMES.md; the title switching
   between the face and the lettering). Your profile shuffling as you log in. The maps more animated (the user,
   2026-10-27): the white path lines light up, or each continent lights up with brighter white borders.
+  The music going from the NEON screen to the title needs a different transition (the user, meat notes 2026-10-29).
 - **PHONE PASS:** bigger, roomier buttons (the tray, lists; ~44px); more room for long text (codex, mod
   descriptions, detail boxes, the clash screen); the swap screen's row spacing; the spacing / copy on the pick
   screens; the header menu button right-aligned?; the palette warnings (40 palettes; MOCHI MOCHI is hard to read,

@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.78']);
+NEON_FILES.push(['engine/panels.js', 'v13.79']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -446,6 +446,8 @@ function openReward(node, skipped = false) {
   const third = r() < ECON.reward.gear ? [rewardGear(r)] : pickMods(r, modsOfKind('gen', 'minor'), 1, corpPick.concat(gen));
 
   const options = shuffle(corpPick.concat(gen, third), r);
+  const calls = callReward(rngFor(run.seed, 'callreward', node.id));   // half the bosses: an extra pick, a CALL stack (engine/hackers.js)
+  if (calls) options.push(calls);
   openChoice({
     reveal: st.breachReveal,
     rival: st.breachReveal && !skipped ? st.breachRival : null,   // a rival here: their logo comes in first, DEFEATED, then yours
