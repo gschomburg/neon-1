@@ -42,6 +42,8 @@ unlocked by REP, and some quests unlock REP.
     legendary) and mods: both in one unlock, or two separate unlocks (gear / mods). Same idea as the parked "better drops" mod (10-20% one step up).
 
 ### 2. Quests and RPG elements
+- **The quest doc: `docs/QUESTS.md`** (2026-10-28). The first quest to build out: POPS's son (the quest item, POPS's calls, the
+  UPLINK hand-in, defeat d0g 10 times on a quest seed, the trace, d0g is POPS's son and joins the crew).
 - **The first one to make: defeat d0g.** The quest gives you a seed; entering it unlocks god (H3AV3N).
 - **Break a fellow hacker out of a corp:** one spot on the map is that corp; maybe offered after a stage, with the next
   stage built around it; you can turn it down; beating it unlocks the meta thing.

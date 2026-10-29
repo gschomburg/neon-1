@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.75']);
+NEON_FILES.push(['engine/help.js', 'v13.76']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -111,7 +111,7 @@ function buildAdvancedPage(T, X) {
   P('RIVALS come into corps with the RIVAL anomaly (V): each one has its own trick (stealing the pay, denying nodes, covering glyphs...). breach the corp and you beat them; beat one 5 times for its logo. CREW come in when you use CALL gear and help for the rest of the corp. call one 5 times and they can join your crew on THE BOARD; then their own call gear turns up.');
   T('');
   H('THE BOARD AND FEATS');
-  P('THE BOARD (on the title, or tap your name) keeps what lasts between runs: YOU (your card: logo, title, color), REP (upgrades to buy: buy enough on one level and the next opens, and some feats open private posts), FEATS and STATS. feats are things to do (breach 10 corps, 10 perfects in a row...); some give a title for your card. a * means something new.');
+  P('THE BOARD (on the title, or tap your name) keeps what lasts between runs: YOU (your card: logo, title, color), REP (upgrades to buy: buy enough on one level and the next opens, and some feats open private posts), FEATS (your stats are under the list) and CREW. feats are things to do (breach 10 corps, 10 perfects in a row...); some give a title for your card. a * means something new.');
   T('');
   H('SECTOR EVENTS');
   P('from sector 2 on, every sector rolls an event: a card tells you what it is when the sector starts (tap the sector name on the map to see it again). most events put an anomaly on some of its corps, and on its boss; others change the whole sector: one corp everywhere, cheap markets, more loot, clocks that cost money.');

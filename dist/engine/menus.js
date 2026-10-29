@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v13.75']);
+NEON_FILES.push(['engine/menus.js', 'v13.76']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -59,7 +59,7 @@ function resetSave() {
 // (the posts you buy with REP), FEATS, STATS. The BBS header sits over the tabs on every tab, the body is always
 // BOARD_BODY lines and BACK stays in one spot. The title's [ THE BOARD ] opens it (on FEATS when a feat is new,
 // else on REP); your name opens it on YOU.
-const BOARD_TABS = [['you', 'YOU', 'tby'], ['rep', 'REP', 'tbr'], ['feats', 'FEATS', 'tbf'], ['crew', 'CREW', 'tbc'], ['stats', 'STATS', 'tbs']];
+const BOARD_TABS = [['you', 'YOU', 'tby'], ['rep', 'REP', 'tbr'], ['feats', 'FEATS', 'tbf'], ['crew', 'CREW', 'tbc']];   // (STATS is under the feats list)
 const BOARD_BODY = 24;
 const FEAT_GROUPS = [['runs', 'RUNS'], ['corps', 'CORPS'], ['odd', 'ODD'], ['rivals', 'RIVALS'], ['crew', 'CREW']];
 // A hacker's feats show once you've met them (a rival came in, you called the crew member).
@@ -106,6 +106,14 @@ function stepNemesis(d) {
   const i = pool.indexOf(save.nemesis);
   save.nemesis = pool[((i < 0 ? 0 : i + d) % pool.length + pool.length) % pool.length];
   persist(); Sound.tick();
+}
+// STATS: one column, values on the right, every other line shaded (under the feats list)
+function boardStatItems() {
+  return boardStatRows().map(([label, v], i) => {
+    const val = typeof v === 'number' ? v.toLocaleString('en-US') : String(v);
+    const s = label + ' '.repeat(Math.max(1, 32 - label.length - val.length)) + val;
+    return { text: s, colorAt: k => k >= s.length - val.length ? C.bright : C.text, bgCol: i % 2 ? C.dim : null, bgA: 0.35 };
+  });
 }
 // STATS: the record, one line each.
 function boardStatRows() {
@@ -272,17 +280,10 @@ function openBoard(tab) {
         : { list: true, id: 'ft' + i, onTap: () => { featSel = i; Sound.tick(); }, sel: i === featSel,
           name: (featUnseen(l.f.id) ? '*' : '') + l.f.name, col: featDone(l.f.id) ? C.rep : C.bright,
           right: featProgText(l.f), rightCol: featDone(l.f.id) ? C.rep : C.mid });
+      items.push({ text: '' }, { text: '-- STATS '.padEnd(32, '-'), col: C.mid }, ...boardStatItems());   // the record, under the feats
       scrollArea(x, t, featS, items, FEAT_LIST_ROWS, 'fl');
     } else if (tab === 'crew') {
       scrollArea(x, t, crewS, crewItems(), BOARD_BODY, 'cl');
-    } else if (tab === 'stats') {
-      // one column: values on the right, every other line shaded
-      const items = boardStatRows().map(([label, v], i) => {
-        const val = typeof v === 'number' ? v.toLocaleString('en-US') : String(v);
-        const s = label + ' '.repeat(Math.max(1, 32 - label.length - val.length)) + val;
-        return { text: s, colorAt: k => k >= s.length - val.length ? C.bright : C.text, bgCol: i % 2 ? C.dim : null, bgA: 0.35 };
-      });
-      scrollArea(x, t, statS, items, BOARD_BODY, 'sl');
     }
     for (; used < BOARD_BODY; used++) T('');
     T('');
@@ -310,7 +311,7 @@ function openBoard(tab) {
         scrollFollow(featS, featSel, lines.length, FEAT_LIST_ROWS); Sound.tick();
         return true;
       }
-      if (tab === 'stats' || tab === 'crew') { if (st.scroll) st.scroll(d); return true; }
+      if (tab === 'crew') { if (st.scroll) st.scroll(d); return true; }
     }
     return false;
   };

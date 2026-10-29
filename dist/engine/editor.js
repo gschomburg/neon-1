@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.75']);
+NEON_FILES.push(['engine/editor.js', 'v13.76']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -62,7 +62,7 @@ if (EDITOR) {
     help: async () => { endRun(); openHelp(); },
     codex: async () => { endRun(); openCodex(); },
     settings: async () => { endRun(); openSettings(); },
-    board: async () => { endRun(); openBoard(); },   // THE BOARD (YOU / REP / FEATS / STATS)
+    board: async () => { endRun(); openBoard(); },   // THE BOARD (YOU / REP / FEATS + stats / CREW)
     // the profile; opts.logo shows it wearing that logo (put back at the next scene)
     profile: async o => { endRun(); if (o.logo && LOGO_BY_ID[o.logo]) { const p = profile(); if (logoWas == null) logoWas = p.logo; p.logo = o.logo; } openProfile(); },
     map: mapRun,
