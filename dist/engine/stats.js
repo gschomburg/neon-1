@@ -12,7 +12,7 @@
 //              rep, mins, ice, perfects, reroutes, resumes, at (where you died: corp + layer)
 //   run_quit   abandoned from the menu: layers, sector, at
 'use strict';
-NEON_FILES.push(['engine/stats.js', 'v13.73']);
+NEON_FILES.push(['engine/stats.js', 'v13.74']);
 
 // Off for multiplayer, the editor and automated test runs (the playtest tools).
 function statOn() { return !!(st.run && !st.run.tutorial && !st.mp && !EDITOR && !(navigator.webdriver && !window.LB_TEST) && lbClient()); }

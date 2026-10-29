@@ -1,10 +1,16 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.73']);
+NEON_FILES.push(['engine/render.js', 'v13.74']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
 function frame(now) {
+  // One frame. An error in it is logged (once a second at most) and the loop goes on: before, one bad frame stopped
+  // drawing for good and left the screen black.
+  try { frameBody(now); } catch (e) { if (now - (frame.errAt || 0) > 1000) { frame.errAt = now; console.error('[neon] frame error:', e); } }
+  requestAnimationFrame(frame);
+}
+function frameBody(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   updateParts(dt);
@@ -22,7 +28,6 @@ function frame(now) {
   Field.sync();
   Music.focus(st.mode === 'play' && st.lv && st.lv.focus != null && !st.pause && !st.bossIntro && !st.wipe ? st.lv.focus : null);
   { const ta = dragCorp() ? 'none' : ''; if (cv.style.touchAction !== ta) cv.style.touchAction = ta; }   // drags don't scroll the page
-  requestAnimationFrame(frame);
 }
 
 function render(now) {

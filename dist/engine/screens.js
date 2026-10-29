@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.73']);
+NEON_FILES.push(['engine/screens.js', 'v13.74']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -154,8 +154,13 @@ function buildOverReveal(ctx, now) {
 // Show `all` building up: line 0 types in at the middle and holds, then the rest come
 // in one at a time below it, the block gliding up to stay centered. Lines with an
 // offer `reveal` index wait for their pop (st.panelT0 is set from the first one).
+// A rival breach (rv.rival, the user 2026-10-28): the logo rows come in as the RIVAL's; once they're all in, the reveal
+// holds: DEFEATED lands across them (in your colors), your logo replaces theirs a row at a time, the stamp lifts, and
+// the rest of the screen carries on building in. (Times from when the last logo row shows.)
+const RIVAL_REVEAL = { stamp: 400, swap: 1000, row: 150, lift: 2500, hold: 2800 };
 function buildReveal(ctx, now, rv, all) {
   const title = all[0].text;
+  let logoAt = null;
   const typed = clamp(Math.floor((now - rv.t0) / REVEAL.type), 0, title.length);
   // when each line shows up (blank lines come with the next one)
   let k = 1, t = rv.t0 + title.length * REVEAL.type + REVEAL.hold, firstPop = null;
@@ -166,13 +171,19 @@ function buildReveal(ctx, now, rv, all) {
     }
     if (now < t) break;
     k = i + 1;
+    if (rv.rival && all[i].logoRow != null && !(all[i + 1] && all[i + 1].logoRow != null)) { logoAt = t; t += RIVAL_REVEAL.hold; }   // the rival's moment
     if (all[i].mapView) t += REVEAL.mapGap;
     else if (all[i].text || all[i].box || all[i].row || all[i].list) t += REVEAL.gap;
   }
   if (rv.firstPop && st.panelT0 === Infinity) st.panelT0 = rv.firstPop;
   if (now < rv.t0) k = 0;
   rv.total = all.length; rv.vis = k;   // (the leaderboard fanfare waits for the last line)
-  const vis = all.slice(0, k);
+  let vis = all.slice(0, k);
+  if (rv.rival) {   // rows not swapped yet show the rival's logo
+    const sw = logoAt == null ? 0 : Math.max(0, Math.floor((now - logoAt - RIVAL_REVEAL.swap) / RIVAL_REVEAL.row) + 1);
+    if (ctx.collectHits && sw > (rv.sw || 0) && logoAt != null && now - logoAt >= RIVAL_REVEAL.swap) { rv.sw = sw; Sound.tick(); }
+    vis = vis.map(ln => ln.logoRow != null && ln.rivalRow && ln.logoRow >= sw ? Object.assign({}, ln, ln.rivalRow) : ln);
+  }
   if (vis.length && typed < title.length) {
     const cursor = Math.floor(now / 250) % 2 ? '_' : ' ';
     vis[0] = Object.assign({}, vis[0], { text: (title.slice(0, typed) + cursor).padEnd(title.length) });
@@ -186,6 +197,11 @@ function buildReveal(ctx, now, rv, all) {
   else rv.y += (target - rv.y) * Math.min(1, (now - rv.lt) / 1000 * 9);
   rv.lt = now;
   if (vis.length) buildTextBoard(ctx, vis, { top: rv.y, h: H });
+  if (rv.rival && logoAt != null && now - logoAt >= RIVAL_REVEAL.stamp && now - logoAt < RIVAL_REVEAL.lift) {   // DEFEATED, across the logo's middle
+    if (ctx.collectHits && !rv.stamped) { rv.stamped = true; Sound.hkStamp(); shake(4, 0.25); }
+    const first = all.findIndex(ln => ln.logoRow != null);
+    hkStamp(ctx, rv.y + first + 2);
+  }
   if (ctx.collectHits) {
     if (typed > rv.typed) { rv.typed = typed; Sound.tick(); }
     if (k > rv.shown) {

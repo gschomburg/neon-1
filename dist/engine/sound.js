@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v13.73']);
+NEON_FILES.push(['engine/sound.js', 'v13.74']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -290,6 +290,11 @@ const Sound = (() => {
       noise(0.6, { vol: 0.18, freq: 9000, delay: 0.62 });
     },
     burst: () => { noise(0.25, { vol: 0.22, freq: 6000 + Math.random() * 3000 }); tone(1200 + Math.random() * 1200, 0.08, { type: 'triangle', vol: 0.18 }); },
+    // ---- Hackers going down (engine/hackers.js)
+    hkBoom: () => { noise(0.4, { vol: 0.55, freq: 700, to: 120, type: 'lowpass' }); tone(95, 0.32, { type: 'sawtooth', vol: 0.4, slide: 0.4 }); for (let i = 0; i < 4; i++) tone(1400 + Math.random() * 1800, 0.03, { type: 'square', vol: 0.08, delay: 0.03 + i * 0.04 }); },
+    hkFall: () => { tone(520, 0.7, { type: 'square', vol: 0.12, slide: 0.2 }); noise(0.5, { vol: 0.15, freq: 2000, to: 300 }); },
+    hkRise: () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.25, { type: 'triangle', vol: 0.22, delay: i * 0.09 })); noise(0.5, { vol: 0.08, freq: 6000, delay: 0.2 }); },
+    hkStamp: () => { tone(110, 0.18, { type: 'square', vol: 0.5, slide: 0.5 }); noise(0.14, { vol: 0.55, freq: 900 }); tone(55, 0.3, { type: 'sine', vol: 0.6 }); },
     // gear dragged to the TRASH: a crunch and a thunk
     trash: () => { noise(0.2, { vol: 0.5, freq: 1400, to: 300 }); tone(180, 0.14, { type: 'square', vol: 0.3, slide: 0.5, delay: 0.05 }); },
     // ---- Fishing (engine/fishing.js)

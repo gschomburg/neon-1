@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.73']);
+NEON_FILES.push(['engine/editor.js', 'v13.74']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -292,6 +292,7 @@ if (EDITOR) {
     credits: m => { st.run.credits = Math.round(+m.n || 0); },
     int: m => { const n = Math.max(1, Math.round(+m.n || 1)); st.run.maxInt = Math.max(st.run.maxInt, n); st.run.integrity = n; },
     heal: () => { st.run.integrity = st.run.maxInt; },
+    rep: m => { save.rep = Math.max(0, Math.round(+m.n || 0)); persist(); },   // REP (the editor's save; no run needed)
     event: m => toSector(2, m.key),
     sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),
     boss: async () => { await onMap(); const n = Object.values(st.run.map).find(x => x.type === 'final' && x.sector === st.run.sector) || st.run.map[bossIdOf(st.run.sector)]; await enterNode(n, true); await settle(); },   // (HEAD FIRST: the boss is the first node)

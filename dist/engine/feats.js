@@ -1,7 +1,7 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v13.73']);
+NEON_FILES.push(['engine/feats.js', 'v13.74']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
@@ -140,7 +140,7 @@ function featNews(f) {
   FEAT_QUEUE.push({ feat: f.id });
   if (!save.featsIntro) {   // the first feat ever: where they live
     save.featsIntro = true;
-    FEAT_QUEUE.push({ head: 'FEAT', lines: ['feats live on THE BOARD:', 'tap THE BOARD on the title, then FEATS.', '', 'titles you earn go on your card:', 'THE BOARD > YOU.'] });
+    FEAT_QUEUE.push({ head: 'FEAT', lines: ['feats live on THE BOARD:', 'tap THE BOARD on the title, then FEATS.', '', 'your titles go on your card:', 'THE BOARD > YOU.'] });
   }
 }
 const featCalm = () => !st.ad && !st.evCard && !st.dev && !st.mp && !st.boot && !st.transitioning && !st.wipe && !st.dying && !st.hideAll
@@ -183,7 +183,8 @@ function featPage(it) {
     if (f.logo) { out.push({ t: '' }); out.push({ t: `unlocked logo: ${HACKERS[f.logo].name}`, col: C.rep, bold: true }); }
     for (const u of LEGACY.filter(u => u.pm === f.id)) { out.push({ t: '' }); out.push({ t: `new post: ${u.name}`, col: C.rep, bold: true }); out.push({ t: '(THE BOARD > REP)', col: C.mid }); }
   } else for (const l of it.lines) out.push({ t: l, col: C.text });
-  return out;
+  // every line wraps to the box (the how-it-works page's lines were cut off)
+  return out.flatMap(r => r.t.length > FEAT_W - 2 ? wrapText(r.t, FEAT_W - 2).map(t => Object.assign({}, r, { t })) : [r]);
 }
 // Drawn over everything (engine/scene.js), like the SECTOR EVENT card.
 function buildFeatBox(ctx, now) {

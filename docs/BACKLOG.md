@@ -83,6 +83,12 @@ unlocked by REP, and some quests unlock REP.
 ### 4. Enemy and ally hackers (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
 - **Still open:** ICE MAN called in by an ICE hit; special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
   COMPANION's pet; balance from play.
+- **Rival notes (built v13.74)** (the user, meat notes 2026-10-28):
+  - **A bigger rival death:** more effect when a rival dies, almost like when you fail.
+  - **A rival-defeated beat after a corp:** at the end of the corp, a note that you beat them and who they were. Maybe in the
+    CORP BREACHED screen: CORP BREACHED, then the rival's logo (you defeated them), then the logo goes away (or is replaced by
+    your own), then the screen / animation as it is now.
+  - **Breaching a corp while its rival is still alive counts as beating them** (the beat tally, the feats).
 - RIVAL is a bot second player (health, burns ICE, steals pay).
 - **The cast, written v13.63** (the user, 2026-10-28): 10 bad and 10 good hackers in `dist/data/hackers.js`, each with
   a face (5 x 3, like POPS's: `data/art/faces.js`, new), a logo (`logos.js`, kind hacker), lore, a shtick, how its AI

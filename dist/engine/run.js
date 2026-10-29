@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.73']);
+NEON_FILES.push(['engine/run.js', 'v13.74']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -749,6 +749,7 @@ async function onSafe(t) {
     const ms = riseOut(new Set(lit.map(cl => cl.cx + ',' + cl.cy)), clamp((land * 1000 - 380 - 100) / full, 0.5, 1.3));
     st.hideAll = true; st.wipe = null;
     await wait(ms);
+    st.breachRival = ((c.hk || []).find(h => h.side === 'bad') || {}).id || null;   // a rival here: the reveal shows them DEFEATED
     st.breachReveal = true;
   } else {
     // Success wipe: the real node stays lit while the fill rises. Bigger for perfect.

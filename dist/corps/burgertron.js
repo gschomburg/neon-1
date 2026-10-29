@@ -1,6 +1,6 @@
 // NeoN+1 corps/burgertron.js
 'use strict';
-NEON_FILES.push(['corps/burgertron.js', 'v13.73']);
+NEON_FILES.push(['corps/burgertron.js', 'v13.74']);
 // Its boss mod: SUPERSIZE (supersize), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

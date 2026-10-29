@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v13.73']);
+NEON_FILES.push(['engine/hackers.js', 'v13.74']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -116,7 +116,7 @@ function hkOut(h, text) {
   h.out = true; h.hp = 0;
   hkSay(h, text || hkLine(h, 'out'));
   if (st.lv) { const s = hkS(st.lv, h); s.goneAt = performance.now(); }
-  Sound.collapse ? Sound.collapse(0.4) : Sound.trap();
+  hkDieFx(h);   // their face pops up and goes to pieces (rivals blow up and fall, crew float up)
   if (h.side === 'bad' && h.took) {   // LEECH coughs up half
     const back = Math.floor(h.took / 2); st.run.credits += back;
     setMsg(`> ${hkName(h.id).toLowerCase()} dropped off. +${back}cr back.`, C.money);
@@ -447,6 +447,67 @@ function buildHkDeath(ctx, now) {
   put(Math.floor((L.wc - dd.text.length) / 2), y0 + rows.length + 1, text, hkInk(dd.id), 'hud', true);
 }
 
+// ---------------- Going down (the user, 2026-10-28) ----------------
+// A rival out: their face pops up mid-board and blows up in 3 bursts over ~1.2s (a boom each, a little shake); what's
+// left of the face and their cursor falls down like your own death. Crew out: no bursts; it all floats up instead.
+// The music is left alone. st.hkFx: the ones going (engine/scene.js draws them over the board).
+function hkDieFx(h) {
+  const s = st.lv && st.lv.hks && st.lv.hks[h.id], bad = h.side === 'bad';
+  if (reduced() || !st.lv) { if (bad) Sound.hkBoom(); else Sound.hkRise(); return; }
+  const face = (ART_FACES[h.id] || { art: [] }).art, fx = Math.floor((L.wc - 5) / 2), fy = BOARD_Y + Math.floor(L.gh / 2) - 2;
+  const cells = [];
+  face.forEach((l, k) => [...l].forEach((ch, i) => { if (ch !== ' ') cells.push({ ch, cx: fx + i, cy: fy + k, face: true }); }));
+  if (s && s.cur) {   // the cursor and its name tag go too
+    const x = Math.round(s.cur.x - 1), y = Math.round(s.cur.y);
+    [...logoMark(h.id)].forEach((ch, i) => cells.push({ ch, cx: x + i, cy: y }));
+    [...hkName(h.id).toLowerCase().slice(0, 8)].forEach((ch, i) => cells.push({ ch, cx: x + i, cy: y + 1 }));
+  }
+  (st.hkFx = st.hkFx || []).push({ id: h.id, bad, t0: performance.now(), cells, booms: bad ? [180, 600, 1050] : [], endAt: bad ? 1300 : 650, fx, fy });
+  if (!bad) Sound.hkRise();
+}
+function buildHkFx(ctx, now) {
+  const { put, bg } = ctx;
+  st.hkFx = (st.hkFx || []).filter(f => {
+    const sty = hkStyle(f.id), age = now - f.t0;
+    if (age > f.endAt + 3000) return false;   // (not drawn for a while: let it go)
+    const px = c => ({ ch: c.ch, x: pxX(c.cx), y: pxY(c.cy), col: sty.fg });
+    while (f.booms.length && age >= f.booms[0]) {   // a burst: a third of what's left blows apart
+      f.booms.shift();
+      const alive = f.cells.filter(c => !c.gone), n = f.booms.length ? Math.ceil(alive.length / 3) : Math.ceil(alive.length / 2);
+      const pick = shuffle(alive.slice(), Math.random).slice(0, n);
+      pick.forEach(c => { c.gone = true; });
+      const ox = pxX(f.fx + rand(0, 4)), oy = pxY(f.fy + rand(0, 2));
+      const junk = Array.from({ length: 8 }, () => ({ ch: noiseCh(), x: ox, y: oy, col: Math.random() < 0.5 ? sty.fg : C.danger }));
+      explode(pick.map(px).concat(junk), ox, oy, { power: 0.55, grav: 0.8, life: [0.4, 0.9] });
+      Sound.hkBoom(); shake(3, 0.2); flash(sty.fg, 0.07, 0.2);
+    }
+    if (age >= f.endAt) {   // the rest: falls (a rival) or floats up (crew)
+      const left = f.cells.filter(c => !c.gone).map(px), top = L.oy, h = L.hc * L.chh;
+      if (f.bad) {
+        for (const c of left) parts.push({ mode: 'fall', ch: c.ch, x: c.x, y: c.y, x0: c.x, y0: c.y, col: c.col, base: c.col, drop: Math.random() * 0.3, vy: 0, t: 0, life: 0, rot: 0, alpha: 1, scr: 0 });
+        Sound.hkFall();
+      } else for (const c of left) parts.push({ mode: 'rise', ch: c.ch, x: c.x, y: c.y, x0: c.x, y0: c.y, col: c.col, base: c.col, drop: Math.random() * 0.25, riseT: 0.8, vy: 0, t: 0, life: 0, rot: 0, alpha: 1, scr: 0 });
+      return false;
+    }
+    for (const c of f.cells) if (!c.gone) { bg(c.cx, c.cy, 1, sty.bg, 1); put(c.cx, c.cy, c.ch, sty.fg, 'fx', true); }
+    return true;
+  });
+  if (!st.hkFx.length) st.hkFx = null;
+}
+
+// ---------------- The rival defeated (the user, 2026-10-28) ----------------
+// CORP BREACHED's reveal (engine/screens.js buildReveal) brings the rival's logo in under the title, then this stamp
+// lands across it in your colors and your logo replaces theirs row by row. y: the stamp's top row (it's 3 tall).
+function hkStamp(ctx, y) {
+  const { put, bg, cells } = ctx, ms = styleOf(profile().style);
+  const word = ' D E F E A T E D ', sw = word.length + 2, sx = Math.floor((L.wc - sw) / 2);
+  clearRect(cells, sx, Math.round(y), sw, 3);   // (it covers what's under it)
+  for (let r = 0; r < 3; r++) bg(sx, y + r, sw, ms.bg, 1);
+  put(sx, y, '+' + '='.repeat(sw - 2) + '+', ms.fg, 'hud', true);
+  put(sx, y + 1, '|' + word + '|', ms.fg, 'hud', true);
+  put(sx, y + 2, '+' + '='.repeat(sw - 2) + '+', ms.fg, 'hud', true);
+}
+
 // ---------------- On the board ----------------
 // Cursors (the full mark on their colors, the name under it), faces when they talk, emote covers, denied nodes,
 // fire, tape. (engine/scene.js, after the board)
@@ -466,7 +527,7 @@ function buildHackers(ctx, lv, now) {
     if (!s || !s.cur) continue;
     const sty = hkStyle(h.id), mark = logoMark(h.id), x = Math.round(s.cur.x - 1), y = Math.round(s.cur.y);
     if (h.out) {   // gone: the face glitches out
-      if (s.goneAt && now - s.goneAt < 900) { const f = (ART_FACES[h.id] || { art: [] }).art; f.forEach((l, k) => put(x - 1, y - 3 + k, [...l].map(ch => Math.random() < (now - s.goneAt) / 900 ? ' ' : ch).join(''), sty.fg, 'fx', true)); }
+      if (reduced() && s.goneAt && now - s.goneAt < 900) { const f = (ART_FACES[h.id] || { art: [] }).art; f.forEach((l, k) => put(x - 1, y - 3 + k, [...l].map(ch => Math.random() < (now - s.goneAt) / 900 ? ' ' : ch).join(''), sty.fg, 'fx', true)); }
       continue;
     }
     bg(x, y, 3, sty.bg, 1); put(x, y, mark, sty.fg, 'fx', true);

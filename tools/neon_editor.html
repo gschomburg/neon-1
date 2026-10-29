@@ -627,6 +627,7 @@
   <div class="row">
     credits <input id="xCr" type="number" value="500"> <button data-x="credits">set</button>
     &nbsp; INT <input id="xInt" type="number" value="5" min="1"> <button data-x="int">set</button> <button data-x="heal">heal</button>
+    &nbsp; REP <input id="xRep" type="number" value="500" min="0"> <button data-x="rep">set</button>
   </div>
   <h2>Sector events <small>click one: a new run, straight to sector 2 with that event (its card first)</small></h2>
   <div class="row" id="xEvents"></div>
@@ -639,8 +640,9 @@
   <div class="row" id="xAnoms"></div>
   <h2>THE FENCE</h2>
   <div class="row"><button data-x="steal">steal my last mod</button> <span class="dim">it goes to THE FENCE (one is added next to this sector's boss if there isn't one)</span></div>
-  <h2>Give <small>a mod (at a step) or a gear; the gear &amp; mods tab has the full list</small></h2>
-  <div class="row"><select id="xGive"></select> <select id="xTier"></select> <button id="xGiveBtn">give</button></div>
+  <h2>Give <small>a mod (at a step) or gear; the gear &amp; mods tab has the full list</small></h2>
+  <div class="row">mod <select id="xGiveMod"></select> <select id="xTierMod"></select> <button id="xGiveModBtn">give</button></div>
+  <div class="row">gear <select id="xGiveGear"></select> <select id="xTierGear"></select> <button id="xGiveGearBtn">give</button></div>
   <h2>Hackers <small>bring one into the corp layer you're in: a rival, or crew as if you'd called them (CALL gear is under Give too)</small></h2>
   <div class="row"><select id="xHk"></select> <button data-x="hacker">bring in</button></div>
   <h2>Feats <small>click one to grant it or take it back (lit = done); "box" shows its FEAT box once the game is calm</small></h2>
@@ -1933,7 +1935,7 @@
     for (const b of document.querySelectorAll('#test button.tg')) b.classList.toggle('on', !!(x && x[b.dataset.x]));
     for (const b of document.querySelectorAll('#xFeats button[data-x="feat"]')) b.classList.toggle('on', !!(x && (x.feats || []).includes(b.dataset.key)));
     if (!x || !x.run) { $('#xState').textContent = 'no run: click "new test run" or a sector event'; return; }
-    $('#xState').textContent = `sector ${x.sector}${x.event ? ' // ' + (evNames[x.event] || x.event) : ''}  ·  ${x.credits}cr  ·  INT ${x.int}/${x.maxInt}  ·  ${x.mods} mods${x.fence ? '  ·  fence: ' + x.fence : ''}  ·  ${x.mode}${x.god ? '  ·  GOD' : ''}${x.free ? '  ·  free travel' : ''}${x.tabMusic ? '  ·  music tab playing' : ''}`;
+    $('#xState').textContent = `sector ${x.sector}${x.event ? ' // ' + (evNames[x.event] || x.event) : ''}  ·  ${x.credits}cr  ·  INT ${x.int}/${x.maxInt}  ·  REP ${x.rep}  ·  ${x.mods} mods${x.fence ? '  ·  fence: ' + x.fence : ''}  ·  ${x.mode}${x.god ? '  ·  GOD' : ''}${x.free ? '  ·  free travel' : ''}${x.tabMusic ? '  ·  music tab playing' : ''}`;
   };
   window.addEventListener('message', e => {
     const m = e.data;
@@ -1954,6 +1956,7 @@
     if (act === 'fresh') return send('sector', { n: 1 });
     if (act === 'credits') return send('credits', { n: $('#xCr').value });
     if (act === 'int') return send('int', { n: $('#xInt').value });
+    if (act === 'rep') return send('rep', { n: $('#xRep').value });
     if (act === 'sector') return send('sector', { n: +b.dataset.n });
     if (act === 'event' || act === 'anomaly') return send(act, { key: b.dataset.key });
     if (act === 'feat') return send('feat', { key: b.dataset.key, on: !(state && (state.feats || []).includes(b.dataset.key)) });
@@ -1964,12 +1967,20 @@
   // give: every mod and gear (from dist/data/mods.js, loaded for the gear & mods tab)
   if (typeof MODS !== 'undefined' && typeof ITEMS !== 'undefined') {
     const steps = d => (d.tiers || [{}]).map(t => Object.assign({}, d, t).rarity);
-    const opt = (k, d, kind) => `<option value="${esc(k)}">${esc(d.name)} (${kind})</option>`;
-    const groups = [['gear', Object.entries(ITEMS)], ...['gen', 'minor', 'exotic', 'corp'].map(k => [k + ' mods', Object.entries(MODS).filter(([, d]) => d.kind === k)])];
-    $('#xGive').innerHTML = groups.map(([g, list]) => `<optgroup label="${g}">${list.sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([k, d]) => opt(k, d, g === 'gear' ? 'gear' : d.kind)).join('')}</optgroup>`).join('');
-    const tiers = () => { const k = $('#xGive').value, d = ITEMS[k] || MODS[k]; $('#xTier').innerHTML = steps(d).map((r, i) => `<option value="${i}">${esc(r)}</option>`).join(''); };
-    $('#xGive').addEventListener('change', tiers); tiers();
-    $('#xGiveBtn').addEventListener('click', () => { if (!state || !state.run) return log('give: no run: start one first', true); toGame({ type: 'mod-set', key: $('#xGive').value, tier: +$('#xTier').value }); log('gave ' + $('#xGive').selectedOptions[0].textContent); });
+    const opt = (k, d) => `<option value="${esc(k)}">${esc(d.name)}${d.name !== k.toUpperCase() ? ' (' + esc(k) + ')' : ''}</option>`;
+    const fill = (groups) => groups.filter(([, list]) => list.length).map(([g, list]) => `<optgroup label="${g}">${list.sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([k, d]) => opt(k, d)).join('')}</optgroup>`).join('');
+    // mods by kind; gear by what it is (normal, value, boss gear, CALL gear, phish)
+    const gearKind = ([k, d]) => d.fish ? 'phish' : d.crew || k === 'call' ? 'CALL gear (crew)' : d.corp ? 'boss gear' : d.value ? 'value gear' : 'gear';
+    const gearGroups = ['gear', 'value gear', 'boss gear', 'CALL gear (crew)', 'phish'].map(g => [g, Object.entries(ITEMS).filter(e => gearKind(e) === g)]);
+    // one row each: a picker, its steps, a give button
+    const giveRow = (sel, tierSel, btn, groups, table, what) => {
+      $(sel).innerHTML = fill(groups);
+      const tiers = () => { const d = table[$(sel).value]; $(tierSel).innerHTML = d ? steps(d).map((r, i) => `<option value="${i}">${esc(r)}</option>`).join('') : ''; };
+      $(sel).addEventListener('change', tiers); tiers();
+      $(btn).addEventListener('click', () => { if (!state || !state.run) return log('give: no run: start one first', true); toGame({ type: 'mod-set', key: $(sel).value, tier: +$(tierSel).value }); log(`gave ${what} ${$(sel).selectedOptions[0].textContent}`); });
+    };
+    giveRow('#xGiveMod', '#xTierMod', '#xGiveModBtn', ['gen', 'minor', 'exotic', 'corp'].map(k => [k + ' mods', Object.entries(MODS).filter(([, d]) => d.kind === k)]), MODS, 'mod');
+    giveRow('#xGiveGear', '#xTierGear', '#xGiveGearBtn', gearGroups, ITEMS, 'gear');
   }
   if (typeof HACKERS !== 'undefined') $('#xHk').innerHTML = ['bad', 'good'].map(sd => `<optgroup label="${sd === 'bad' ? 'rivals' : 'crew'}">${Object.entries(HACKERS).filter(([, h]) => h.side === sd).map(([k, h]) => `<option value="${esc(k)}">${esc(h.name)}</option>`).join('')}</optgroup>`).join('');
   // feats (dist/data/feats.js): a button each (lit when done) and its "box"
@@ -2873,12 +2884,12 @@
 <h1>Testing</h1>
 <p class="lead">Cheats and jumps on the game on the left, for playing things through. Nothing here writes a file. Every cheat makes the run practice (not scored).</p>
 <ul>
-<li><b>Run:</b> a new test run (on the map, after the public net); god (no damage), show the real node, free travel (go to any node); music and sfx (the game's own; the music tab takes over while it plays a track); set credits and INT, heal.</li>
+<li><b>Run:</b> a new test run (on the map, after the public net); god (no damage), show the real node, free travel (go to any node); music and sfx (the game's own; the music tab takes over while it plays a track); set credits and INT, heal; set REP (your saved REP: works without a run).</li>
 <li><b>Sector events:</b> click one and the game starts a new run and climbs straight to sector 2 with that event: its card comes up first. The sector name on the map shows the card again.</li>
 <li><b>Jump:</b> to sector 2-5 (events rolled as usual); into this sector's boss; clear the sector (the success screen); straight to the uplink; or <b>go fishing</b> (a PIER, with at least 100cr).</li>
 <li><b>Anomaly on the next corps:</b> puts that anomaly on the corps you can go to next (THIEF also adds THE FENCE); <b>none</b> takes them off.</li>
 <li><b>THE FENCE:</b> steal my last mod sends it to THE FENCE, next to the sector boss, to buy back.</li>
-<li><b>Give:</b> any mod at a step, or a gear. The gear &amp; mods tab has every one, with its text.</li>
+<li><b>Give:</b> two rows: a <b>mod</b> at any step (by kind: gen, minor, exotic, corp), or <b>gear</b> (normal, value, boss gear, CALL gear, phish). The gear &amp; mods tab has every one, with its text.</li>
 <li><b>Feats:</b> click one to grant it (lit) or take it back; <b>box</b> shows its FEAT box once the game is calm (on a menu or the map). <b>wipe progression</b> does the version wipe on your own save: REP back for THE BOARD's posts, feats, titles and the record cleared. THE BOARD: the <b>board</b> scene button, or the title.</li>
 </ul>
 <p>The line at the top is the game right now: sector, its event, credits, INT, and what's on.</p>` },

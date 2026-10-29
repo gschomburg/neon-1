@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.73']);
+NEON_FILES.push(['engine/scene.js', 'v13.74']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -742,7 +742,8 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     put(tx - 1, ty + 2, m.l || '>', m.col, 'fx', true); put(tx + TILE_W, ty + 2, m.r || '<', m.col, 'fx', true);
   }
   if (boardDef && boardDef.draw) boardDef.draw(put, lv, now);
-  if (lv.hks) buildHackers({ put, bg }, lv, now);   // hackers: cursors, faces, emote covers, DENIED, fire, tape (engine/hackers.js)
+  if (lv.hks) buildHackers({ put, bg }, lv, now);
+  if (st.hkFx) buildHkFx({ put, bg }, now);   // a hacker going down (engine/hackers.js)   // hackers: cursors, faces, emote covers, DENIED, fire, tape (engine/hackers.js)
   // AFTERIMAGE: cyan corners where the last layer's real node was.
   if (has('afterimage') && lv.after && lv.after.col < lv.cols && lv.after.row < lv.rows) {
     if (lv.shownAt != null) modFiredOnce('afterimage', lv);

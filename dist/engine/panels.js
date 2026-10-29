@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.73']);
+NEON_FILES.push(['engine/panels.js', 'v13.74']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -13,7 +13,7 @@ function openPanel(title, fn, msg, opts = {}) {
   st.breachReveal = false;
   // Line-by-line reveal out of an empty screen (after a boss): the title types in,
   // then the lines come in under it. Header, HUD and tray come back when it's done.
-  st.panelReveal = opts.reveal ? { t0: performance.now() + 100, shown: 0, typed: 0, y: null, lt: 0, done: false, center: 'board', sound: 'climb' } : null;
+  st.panelReveal = opts.reveal ? { t0: performance.now() + 100, shown: 0, typed: 0, y: null, lt: 0, done: false, center: 'board', sound: 'climb', rival: opts.rival || null } : null;
   st.panelTitle = title;
   st.panelFn = fn;
   st.revealed = new Set();
@@ -278,8 +278,9 @@ function openShop(node) {
 
 // A reward screen: header lines, then a list of mods to pick one from (or skip).
 // next: where to go after (default: the map).
-function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null }) {
+function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null }) {
   let sel = 0, picked = false;
+  st.breachRival = null;
   const leave = () => next ? (st.transitioning ? null : swapTo(next)) : leavePanel();
   st.choice = { title, options: options.slice(), skip: !!skipLabel, take: o => take(o) };   // (read by tools/econsim.js)
   const take = o => {
@@ -312,8 +313,12 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     const now = performance.now();
     T(title, col);
     if (by) {   // a boss win: the hacker who did it
-      const sty = styleOf(by.style);
-      for (const ln of logoBlock(by.logo, by.name, sty)) X(ln);
+      const sty = styleOf(by.style), mine = logoBlock(by.logo, by.name, sty);
+      // a rival breach (the reveal, engine/screens.js): each row also has the rival's version, both the same width
+      const theirs = rival && HACKERS[rival] ? logoBlock(rival, hkName(rival), hkStyle(rival)) : null;
+      const w = Math.max(...mine.concat(theirs || []).map(l => l.text.length));
+      const fit = t => { const e = w - t.length, a = Math.floor(e / 2); return ' '.repeat(a) + t + ' '.repeat(e - a); };
+      mine.forEach((ln, k) => X(Object.assign({}, ln, { text: fit(ln.text), logoRow: k, rivalRow: theirs ? Object.assign({}, theirs[k], { text: fit(theirs[k].text) }) : null })));
       for (const h of head) T(`breached ${h[0].toLowerCase()}`, C.mid);
     } else for (const h of head) T(h[0], h[1]);
     if (!by) T('');   // (with the logo, the screen is full: no gap)
@@ -357,7 +362,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     }
     if (!by) T('');
     B(options.length && skipLabel ? skipLabel : '[ CONTINUE ]', 'skip', () => take(null));
-  }, msg, { reveal });
+  }, msg, { reveal, rival });
 }
 
 // PUBLIC NET done: a small starting perk.
@@ -437,6 +442,7 @@ function openReward(node, skipped = false) {
   const options = shuffle(corpPick.concat(gen, third), r);
   openChoice({
     reveal: st.breachReveal,
+    rival: st.breachReveal && !skipped ? st.breachRival : null,   // a rival here: their logo comes in first, DEFEATED, then yours
     title: 'CORP BREACHED', col: C.accent,
     head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]],
     by: skipped ? null : profile(),
