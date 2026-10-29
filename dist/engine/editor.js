@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.79']);
+NEON_FILES.push(['engine/editor.js', 'v13.80']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -104,11 +104,11 @@ if (EDITOR) {
       startCorp(node, 99);   // straight to its boss layer
       await settle();
     },
-    sectorclear: async () => {
+    sectorclear: async (o = {}) => {
       await mapRun();
       const run = st.run;
       Object.assign(run, { credits: 600, sectorsCleared: 1, corps: 4, depth: 20, pending: { kind: 'sector', skipped: false } });
-      showSectorClear(false, false);
+      showSectorClear(false, false, o.root || null);   // o.root: a ROOT picture (the ART tab's "show in game")
       await settle();
     },
     uplink: async () => {
@@ -138,6 +138,7 @@ if (EDITOR) {
     }
     if (a.map) same(INTRO_MAP, a.map);
     if (a.faces && typeof ART_FACES !== 'undefined') Object.assign(ART_FACES, a.faces);   // hacker faces (POPS's popups)
+    if (a.root) { for (const k of Object.keys(ART_ROOT)) if (!a.root[k]) delete ART_ROOT[k]; Object.assign(ART_ROOT, a.root); }   // the SECTOR CLEARED pictures
   };
   let queue = Promise.resolve();
   window.addEventListener('message', e => {

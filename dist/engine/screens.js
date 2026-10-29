@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.79']);
+NEON_FILES.push(['engine/screens.js', 'v13.80']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -228,10 +228,11 @@ function overLines() {
   const r = st.result;
   const statLine = txt => lines.push({ text: txt, colorAt: i => /\d/.test(txt[i]) ? C.bright : C.mid });
   if (r.sector) {
-    // Sector clear: an unlocked padlock, then cash out or push on.
-    for (const l of ['     .---.     ', '    /  _  \\    ', '    | | | |    ', '    | |        ', ' +===========+ ', ' |  R O O T  | ', ' +===========+ ']) {
-      lines.push({ text: l, col: C.money, bold: true });
-    }
+    // Sector clear: a ROOT picture (one of data/art/root.js, picked at random), the stats, the corps you breached in
+    // this sector, then on to the uplink (push on or cash out: the REP lines are there now).
+    { const art = (ART_ROOT[r.root] || Object.values(ART_ROOT)[0]).art, H = ROOT_ART_H;
+      const w = Math.max(...art.map(l => l.length)), top = Math.floor((H - art.length) / 2);
+      for (let i = 0; i < H; i++) { const l = art[i - top]; lines.push({ text: l == null ? '' : l.padEnd(w), col: C.money, bold: true }); } }
     T('');
     lines.push({ text: `SECTOR ${r.n} CLEARED`, col: C.accent, bold: true });
     T(r.skipped ? `${r.boss} skipped. no reward.` : `${r.boss} is yours.`, r.skipped ? C.dangerDim : C.text);
@@ -239,12 +240,11 @@ function overLines() {
       lines.push({ text: ` ${logoMark(prof.logo)} ${prof.name} `, col: sty.fg, bgCol: sty.bg, bold: true }); }
     T('');
     statLine(`layers ${pad2(r.depth)}   corps ${r.corps}   cr ${r.earned}`);
-    T('');
+    { const marks = (r.breached || []).map(k => corpCode(corpDef(k))).join(' '), txt = `breached ${marks || 'none'}`;
+      lines.push({ text: txt, colorAt: i => i < 9 ? C.mid : marks ? C.accent : C.dim }); }
     if (r.practice) T('practice run: no REP', C.dangerDim);
-    else lines.push({ text: `cash out now: +${r.rep} REP`, col: C.money, bold: true });
-    T(legacyLv('dms') ? `dying keeps ${[0, 25, 50][legacyLv('dms')]}% of your REP.` : 'die later and you bank nothing.', C.dim);
     T('');
-    lines.push({ box: true, text: 'S E C T O R   C L E A R E D', sub: '- the uplink: push on or cash out -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
+    lines.push({ box: true, text: 'T H E   U P L I N K', sub: '- push on or cash out -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
     return lines;
   }
   if (r.win) {

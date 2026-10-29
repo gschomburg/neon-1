@@ -242,10 +242,7 @@ unlocked by REP, and some quests unlock REP.
 - Something in the game itself you can hack, like the seed.
 
 ## Medium and small
-- **The UPLINK and the screens around it** (the user, meat notes 2026-10-29):
-  - **SECTOR CLEARED needs some love:** drop "die later and you bank nothing" and the REP line (they go to the UPLINK, if
-    they aren't there already); better ROOT art; G0D flashing in now and then.
-  - **The UPLINK should show what the mods do** better.
+- **G0D flashing in on SECTOR CLEARED** now and then (the user, meat notes 2026-10-29; the rest of that note is built, v13.80).
 - **Tells, intel** (the user, meat notes 2026-10-29): the first time you breach a corp, show its intel (the tell) from the
   codex; the reward screen shows the tell the first time you beat a corp; some way to know if a tell is right.
 - **REROLL animation** (the user, meat notes 2026-10-29): the list comes in again one row at a time.
@@ -308,7 +305,8 @@ unlocked by REP, and some quests unlock REP.
   descriptions, detail boxes, the clash screen); the swap screen's row spacing; the spacing / copy on the pick
   screens; the header menu button right-aligned?; the palette warnings (40 palettes; MOCHI MOCHI is hard to read,
   the user will probably change it).
-- **COPY PASS (text):** the INFO page, the training (POPS's lines), the mod and gear descriptions, and the ~180
+- **COPY PASS (text):** a terminology pass on the whole game, to lock the terms down. Settled so far (the user, 2026-10-29):
+  **going deeper** = moving on through the sectors (the UPLINK says it; push on, next sector... say it this way). The INFO page, the training (POPS's lines), the mod and gear descriptions, and the ~180
   "integrity" mentions (the header says INT; INT everywhere, or only where space is tight).
 - **HOW TO PLAY pass:** touch it up (corps and tells on THE BASICS; gestures, exotics, ads, run resume).
 - **MULTIPLAYER: shelved** (it works and stays in; finish the core game first). Later: maybe p5.party instead of

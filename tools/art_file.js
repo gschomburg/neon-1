@@ -4,6 +4,7 @@
 //   logos.js     ART_LOGOS: every logo (players', corps', and later rival hackers'), by id
 //   worldmap.js  ART_MAP: the boot intro's world map
 //   faces.js     ART_FACES: hackers' faces (POPS and the rest of data/hackers.js), by hacker id
+//   root.js      ART_ROOT: the SECTOR CLEARED pictures (one picked at random), by key
 (function (root) {
   'use strict';
   // Size limits. Logos all sit in one fixed box (LOGO_W x LOGO_H), centered, wherever they show.
@@ -12,6 +13,7 @@
     special: { label: 'special node glyphs', file: 'glyphs.js',   w: 5,  h: 3,  fixedH: true, note: 'the prompt, loaded nodes, bone piles, the ??? mask' },
     logos:   { label: 'logos',               file: 'logos.js',    w: 24, h: 7,  note: 'every logo sits in the same 24 x 7 box, centered; corp logos are also the corp\'s intro art' },
     faces:   { label: 'hacker faces',        file: 'faces.js',    w: 5,  h: 3,  fixedH: true, note: "a hacker's face: 5 x 3, drawn as is (not centered line by line): POPS's popups, the hacker cards" },
+    root:    { label: 'sector clear art',    file: 'root.js',     w: 30, h: 13, note: 'the SECTOR CLEARED picture: one of these at random each time. up to 30 x 13, drawn as is, centered in that box' },
     map:     { label: 'intro world map',     file: 'worldmap.js', w: 34, h: 12, fixedH: true, single: true, note: 'the boot intro map (the login screen\'s box); keep it 34 x 12. its 0 o x [] blink, and your spot is picked inside the land' },
   };
   const LOGO_KINDS = ['player', 'corp', 'hacker'];
@@ -77,9 +79,20 @@
     return out.join('\n') + '\n';
   }
 
-  // { 'glyphs.js': text, ... } for the whole art set { glyphs, special, logos, map, faces }
+  // root: { key: { name, art } }
+  function rootText(root, build) {
+    const out = head('root.js', 'the SECTOR CLEARED pictures, by key (one is picked at random).', build,
+      ['// Each is up to 30 x 13, drawn as is (not centered line by line), centered in a 30 x 13 box.']);
+    out.push('const ROOT_ART_H = 13;');
+    out.push('const ART_ROOT = {');
+    for (const [k, f] of Object.entries(root)) out.push(`  ${key(k)}: { name: ${q(f.name)}, art: ${tall(f.art, '  ')} },`);
+    out.push('};');
+    return out.join('\n') + '\n';
+  }
+
+  // { 'glyphs.js': text, ... } for the whole art set { glyphs, special, logos, map, faces, root }
   const files = (a, build) => ({ 'glyphs.js': glyphsText(a.glyphs, a.special, build), 'logos.js': logosText(a.logos, build), 'worldmap.js': mapText(a.map, build),
-    ...(a.faces ? { 'faces.js': facesText(a.faces, build) } : {}) });
+    ...(a.faces ? { 'faces.js': facesText(a.faces, build) } : {}), ...(a.root ? { 'root.js': rootText(a.root, build) } : {}) });
 
   // Problems with one piece of art for its kind: [] when it fits.
   function artProblems(kind, rows) {
@@ -119,9 +132,10 @@
     const run = (t, names) => new Function('NEON_FILES', t + '\n;return {' + names.join(',') + '};')([]);
     const g = run(texts['glyphs.js'], ['ART_GLYPHS', 'ART_SPECIAL']), l = run(texts['logos.js'], ['ART_LOGOS']), m = run(texts['worldmap.js'], ['ART_MAP']);
     const fc = texts['faces.js'] ? run(texts['faces.js'], ['ART_FACES']).ART_FACES : undefined;
-    return { glyphs: g.ART_GLYPHS, special: g.ART_SPECIAL, logos: l.ART_LOGOS, map: m.ART_MAP, faces: fc };
+    const rt = texts['root.js'] ? run(texts['root.js'], ['ART_ROOT']).ART_ROOT : undefined;
+    return { glyphs: g.ART_GLYPHS, special: g.ART_SPECIAL, logos: l.ART_LOGOS, map: m.ART_MAP, faces: fc, root: rt };
   }
 
-  const api = { KINDS, LOGO_KINDS, glyphsText, logosText, mapText, facesText, files, artProblems, logoProblems, rowsFromText, parse };
+  const api = { KINDS, LOGO_KINDS, glyphsText, logosText, mapText, facesText, rootText, files, artProblems, logoProblems, rowsFromText, parse };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.NEON_ART_FILE = api;
 })(this);

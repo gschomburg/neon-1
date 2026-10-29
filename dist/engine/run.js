@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.79']);
+NEON_FILES.push(['engine/run.js', 'v13.80']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -1670,10 +1670,14 @@ async function sectorClear(skipped) {
   saveRun();
   showSectorClear(skipped, true);
 }
-function showSectorClear(skipped, fanfare) {
+function showSectorClear(skipped, fanfare, root = null) {
   const run = st.run;
+  // the corps you breached in this sector (by code, like the end screen), and a ROOT picture (data/art/root.js)
+  const breached = run.visited.map(id => run.map[id]).filter(n => n && (n.sector || 0) === run.sector && (n.type === 'corp' || n.type === 'final')).map(n => n.corp);
+  const roots = Object.keys(ART_ROOT);
   st.result = { sector: true, skipped, depth: run.depth, corps: run.corps, earned: run.earned, n: run.sectorsCleared,
-    rep: repFor(run), practice: run.practice, seed: run.seed, boss: st.corp ? st.corp.def.name : FINAL.name };
+    rep: repFor(run), practice: run.practice, seed: run.seed, boss: st.corp ? st.corp.def.name : FINAL.name,
+    breached, root: root && ART_ROOT[root] ? root : roots[Math.floor(Math.random() * roots.length)] };
   st.corp = null; st.lv = null; st.timer = null;
   scenePalette(null);
   showBoard('over');
@@ -1715,7 +1719,6 @@ function openUplink() {
   const run = st.run;
   if (!run) return;
   const keep = Object.fromEntries(run.mods.map(k => [k, true]));
-  let sel = 0;
   // PASS (gear): the whole fee is cut (ECON.uplink.pass); on by default when you hold one, tap to save it
   const hasPass = () => run.items.some(s => s.key === 'pass');
   let usePass = hasPass();
@@ -1743,35 +1746,63 @@ function openUplink() {
   const toggle = k => { if (UPLINK_LOCKED.includes(k)) return Sound.deny(); keep[k] = !keep[k]; Sound.tick(); };
   st.uplink = { keep, tally, canGo, toggle, togglePass, push: go, cash: cashOut, fee: uplinkFee, sell: uplinkSell, locked: UPLINK_LOCKED };   // (read by tools/econsim.js)
   questUplink();   // with the DISC: POPS reminds you (engine/quests.js)
+  // The screen (the user's design, 2026-10-29): a checkbox list of your mods (unchecked = sold), each showing the
+  // tray's short text; tapping a row toggles it and runs its ticker (its name, then its whole description, scrolling).
+  // The list scrolls when it's long (RAM DOUBLER). Then the fees, their total and your credits (a sold mod's money
+  // is in them), and the two buttons: PAY XXXcr (push on) and EARN XX REP (cash out).
+  const area = { top: 0 };
+  let tick = null;   // { k, t0 }: the row whose ticker runs
+  const ticker = k => {
+    const v = modView(k), full = `${v.name}: ${v.desc}      `;
+    const steps = Math.max(0, Math.floor((performance.now() - tick.t0 - 900) / 140));   // a beat on the name, then it scrolls
+    const o = steps % full.length;
+    return (full + full).slice(o, o + 40);
+  };
+  const sp = s => String(s).split('').join(' ');   // P A Y
+  const feeLine = (label, val, col, bold = false) => {
+    const txt = label + val.padStart(32 - label.length);
+    return { text: txt, colorAt: i => i < label.length ? C.mid : col, bold };
+  };
   openPanel('UPLINK', (T, B, X) => {
     const t = tally(), ok = canGo(), mods = run.mods;
     T('U P L I N K', C.accent);
-    T(`bandwidth into sector ${run.sector + 2}. every mod costs.`, C.text);
-    T(`credits ${run.credits}${leverage() ? `  (limit ${creditFloor()})` : ''}`, run.credits < 0 ? C.danger : C.money);
+    T('going deeper costs credits.', C.mid);
+    T('each mod you carry costs more.', C.mid);
     T('');
-    if (mods.length) T('tap a mod: keep it, or sell it.', C.mid);
-    mods.forEach((k, i) => {
-      const v = modView(k), locked = UPLINK_LOCKED.includes(k);
-      X({ list: true, id: 'up' + i, onTap: () => { sel = i; toggle(k); }, sel: i === sel, faded: !keep[k],
-        badge: k, badgeTier: run.modTier[k] || 0, badgeDim: !keep[k], name: v.name, col: keep[k] ? C.bright : C.mid,
-        right: locked ? `keep ${String(uplinkFee(k)).padStart(4)}cr*` : keep[k] ? `keep ${String(uplinkFee(k)).padStart(4)}cr` : `sell ${('+' + uplinkSell(k)).padStart(4)}cr`,
-        rightCol: keep[k] ? C.money : C.accent });
+    const items = mods.map((k, i) => {
+      const v = modView(k), locked = UPLINK_LOCKED.includes(k), on = keep[k], ticking = tick && tick.k === k;
+      return { list: true, id: 'up' + i, onTap: () => { tick = { k, t0: performance.now() }; toggle(k); },
+        check: locked ? '*' : on ? 'x' : ' ', checkCol: locked ? C.dim : on ? C.accent : C.mid,
+        badge: k, badgeTier: run.modTier[k] || 0, badgeDim: !on,
+        name: ticking ? ticker(k) : (v.tip || v.desc), clip: ticking ? 'cut' : 'ellipsis', col: ticking ? C.bright : on ? C.text : C.mid,
+        right: on ? String(uplinkFee(k)) : '+' + uplinkSell(k), rightCol: on ? C.money : C.accent };
     });
-    if (!mods.length) T('no mods to carry.', C.dim);
-    if (mods.some(k => UPLINK_LOCKED.includes(k))) T('* part of you now. it comes along.', C.dim);
-    if (hasPass()) {
-      T('');
-      X({ list: true, id: 'pass', onTap: togglePass, faded: !usePass, name: '[PASS]', chip: ITEMS.pass.rarity,
-        right: usePass ? `use  ${('-' + t.cut).padStart(4)}cr` : 'save it', rightCol: usePass ? C.money : C.accent });
-    }
+    // PASS (gear): a row of its own at the end, checked = use it
+    if (hasPass()) items.push({ list: true, id: 'pass', onTap: togglePass, check: usePass ? 'x' : ' ', checkCol: usePass ? C.accent : C.mid,
+      name: 'PASS: half the fee', clip: 'ellipsis', col: usePass ? C.text : C.mid,
+      right: '-' + Math.round(t.raw * ECON.uplink.pass), rightCol: usePass ? C.money : C.dim });
+    // the list gets what the rest of the screen leaves (the rest: ~22 rows)
+    const rest = 23 + (leverage() ? 1 : 0) + (t.cut ? 1 : 0) + (holdingDisc() ? 1 : 0);
+    const rows = Math.max(1, Math.min(items.length, L.hc - 2 - rest));
+    if (items.length) scrollArea(X, T, area, items, rows, 'upl');
+    else T('no mods to carry.', C.dim);
     T('');
-    T(`uplink ${uplinkMin()} + mods ${t.raw - uplinkMin()}${t.cut ? ` - pass ${t.cut}` : ''}${t.sold ? ` - sold ${t.sold}` : ''} = ${t.net}cr`, C.text);
+    const have = run.credits + t.sold, short = creditFloor() - (have - t.fee);
+    X(feeLine('uplink fee', uplinkMin() + 'cr', C.money));
+    X(feeLine('mod fees', (t.raw - uplinkMin()) + 'cr', C.money));
+    if (t.cut) X(feeLine('pass', '-' + t.cut + 'cr', C.money));
+    X({ text: ' '.repeat(26) + '------', col: C.dim });
+    X(feeLine('total', t.fee + 'cr', C.money, true));
+    X(feeLine('your credits', have + 'cr', ok ? C.accent : C.danger));
+    if (leverage()) T(`leverage: you can go down to ${creditFloor()}cr`, C.dim);
     T('');
-    const subPush = ok ? `- pay ${t.net}cr, then the loot -` : '- not enough: sell mods -';
-    const subCash = run.practice ? '- end the run here -' : `- end the run: +${repFor(run)} REP -`;
-    const w = Math.max(28, subPush.length + 8, subCash.length + 8);   // the two buttons the same width
-    X({ box: true, text: 'P U S H   O N', sub: subPush, id: 'push', onTap: go, minW: w, disabled: !ok });
-    X({ box: true, text: 'C A S H   O U T', sub: subCash, id: 'cash', onTap: cashOut, minW: w });
+    const subPush = ok ? `- enter sector ${run.sector + 2} -` : `- need ${short}cr more to move on -`;
+    const subCash = run.practice ? '- practice: no REP -' : '- cash out: end the run -';
+    const w = Math.max(30, subPush.length + 8, subCash.length + 8);   // the two buttons the same width (drawBox pads 8)
+    X(ok ? { box: true, text: `${sp('PAY')}   ${sp(t.fee + 'cr')}`, sub: subPush, id: 'push', onTap: go, minW: w, col: C.money }
+      : { box: true, text: `${sp('REMOVE')}   ${sp('MODS')}`, sub: subPush, id: 'push', onTap: go, minW: w, disabled: true, disCol: C.danger });
+    X({ box: true, text: run.practice ? `${sp('END')}   ${sp('RUN')}` : `${sp('EARN')}   ${sp(repFor(run))}   ${sp('REP')}`, sub: subCash, id: 'cash', onTap: cashOut, minW: w, col: C.rep });
+    if (!run.practice) T(legacyLv('dms') ? `dying later keeps ${[0, 25, 50][legacyLv('dms')]}% of your REP.` : 'die later and you bank nothing.', C.dim);
     if (holdingDisc() && questRun() && questOf('pops').step === 'find') T('+ cash out to bring POPS the DISC', C.rep);
   }, '> uplink: what do you carry?', { full: true });
 }

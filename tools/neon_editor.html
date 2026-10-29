@@ -27,6 +27,7 @@
 <script src="../dist/data/art/glyphs.js"></script>
 <script src="../dist/data/art/logos.js"></script>
 <script src="../dist/data/art/faces.js"></script>
+<script src="../dist/data/art/root.js"></script>
 <script src="../dist/data/art/worldmap.js"></script>
 <script src="art_file.js"></script>
 <script src="../dist/data/tutorial.js"></script>
@@ -2235,11 +2236,11 @@
   }
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const clone = o => JSON.parse(JSON.stringify(o));
-  let art = clone({ glyphs: ART_GLYPHS, special: ART_SPECIAL, logos: ART_LOGOS, map: ART_MAP, faces: typeof ART_FACES !== 'undefined' ? ART_FACES : {} });
+  let art = clone({ glyphs: ART_GLYPHS, special: ART_SPECIAL, logos: ART_LOGOS, map: ART_MAP, faces: typeof ART_FACES !== 'undefined' ? ART_FACES : {}, root: typeof ART_ROOT !== 'undefined' ? ART_ROOT : {} });
   let saved = clone(art), sel = null, q = '';
   let build = ((window.NEON_FILES || []).find(f => f[0] === 'data/art/logos.js') || [])[1] || 'v0';
   let corpNames = {};
-  const fileOf = { glyphs: 'glyphs.js', special: 'glyphs.js', logos: 'logos.js', map: 'worldmap.js', faces: 'faces.js' };
+  const fileOf = { glyphs: 'glyphs.js', special: 'glyphs.js', logos: 'logos.js', map: 'worldmap.js', faces: 'faces.js', root: 'root.js' };
   const texts = a => F.files(a, build);
   const changedFiles = () => { const a = texts(art), b = texts(saved); return Object.keys(a).filter(f => a[f] !== b[f]); };
   const dirty = () => changedFiles().length > 0;
@@ -2255,13 +2256,14 @@
     ...Object.keys(art.special).map(k => ({ id: 'special:' + k, kind: 'special', k, label: art.special[k].name || k })),
     ...art.logos.map((l, i) => ({ id: 'logos:' + i, kind: 'logos', i, label: l.name || l.id, sub: l.kind, isNew: !saved.logos.some(s => s.id === l.id) })),
     ...Object.keys(art.faces).map(k => ({ id: 'faces:' + k, kind: 'faces', k, label: art.faces[k].name || k })),
+    ...Object.keys(art.root).map(k => ({ id: 'root:' + k, kind: 'root', k, label: art.root[k].name || k })),
     { id: 'map:', kind: 'map', label: 'WORLD MAP' },
   ];
-  const itemOf = p => p.kind === 'glyphs' ? art.glyphs[p.i] : p.kind === 'special' ? art.special[p.k] : p.kind === 'faces' ? art.faces[p.k] : p.kind === 'logos' ? art.logos[p.i] : null;
+  const itemOf = p => p.kind === 'glyphs' ? art.glyphs[p.i] : p.kind === 'special' ? art.special[p.k] : p.kind === 'faces' ? art.faces[p.k] : p.kind === 'root' ? art.root[p.k] : p.kind === 'logos' ? art.logos[p.i] : null;
   const getRows = p => p.kind === 'map' ? art.map : itemOf(p).art;
   const setRowsRaw = (p, rows) => { if (p.kind === 'map') art.map = rows; else itemOf(p).art = rows; };
   const setRows = (p, rows) => { setRowsRaw(p, rows); sendLive(p.kind); render(); };
-  const savedItem = p => p.kind === 'glyphs' ? saved.glyphs[p.i] : p.kind === 'special' ? saved.special[p.k] : p.kind === 'faces' ? saved.faces[p.k] : p.kind === 'logos' ? saved.logos.find(s => s.id === itemOf(p).id) : null;
+  const savedItem = p => p.kind === 'glyphs' ? saved.glyphs[p.i] : p.kind === 'special' ? saved.special[p.k] : p.kind === 'faces' ? saved.faces[p.k] : p.kind === 'root' ? saved.root[p.k] : p.kind === 'logos' ? saved.logos.find(s => s.id === itemOf(p).id) : null;
   const savedRows = p => p.kind === 'map' ? saved.map : (savedItem(p) || {}).art;
   const isChanged = p => p.kind === 'map' ? JSON.stringify(art.map) !== JSON.stringify(saved.map) : JSON.stringify(itemOf(p)) !== JSON.stringify(savedItem(p) || null);
   const findPiece = id => pieces().find(p => p.id === id);
@@ -2379,7 +2381,8 @@
       const d = await ensureDir(), t = {};
       for (const f of ['glyphs.js', 'logos.js', 'worldmap.js']) t[f] = await (await (await d.getFileHandle(f)).getFile()).text();
       try { t['faces.js'] = await (await (await d.getFileHandle('faces.js')).getFile()).text(); } catch (e) { t['faces.js'] = null; }
-      art = clone(F.parse(t)); art.faces = art.faces || {}; saved = clone(art); sel = null; render(); toGame({ type: 'art', art }); toast('loaded the art files');
+      try { t['root.js'] = await (await (await d.getFileHandle('root.js')).getFile()).text(); } catch (e) { t['root.js'] = null; }
+      art = clone(F.parse(t)); art.faces = art.faces || {}; art.root = art.root || {}; saved = clone(art); sel = null; render(); toGame({ type: 'art', art }); toast('loaded the art files');
     } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
   }
   function renderFile() {
@@ -2397,6 +2400,7 @@
     ['hacker logos', p => p.kind === 'logos' && p.sub === 'hacker', "hackers' logos (data/hackers.js; a bad hacker's is unlocked by beating them)"],
     ['other logos', p => p.kind === 'logos' && !F.LOGO_KINDS.includes(p.sub), ''],
     ['hacker faces', p => p.kind === 'faces', "hackers' faces, 5 x 3 (POPS's is the training handler's)"],
+    ['sector clear', p => p.kind === 'root', 'the SECTOR CLEARED pictures, up to 30 x 13 (one at random each time)'],
     ['map', p => p.kind === 'map', 'intro world map'],
   ];
   function renderList() {
@@ -2417,7 +2421,7 @@
     if (!p) { d.innerHTML = '<p class="note">Pick a piece on the left, or add one with <b>+ glyph</b> / <b>+ logo</b>. Edit the art in the box, or in asXii ("edit in asXii", then "send back to NeoN+1" there). The game shows changes right away; <b>save</b> writes the files that changed.</p>'; return; }
     const k = F.KINDS[p.kind], rows = getRows(p), probs = problems(p), it = itemOf(p);
     const w = Math.max(0, ...rows.map(r => [...r].length));
-    const show = p.kind === 'logos' ? (it.kind === 'corp' ? 'corpintro' : 'profile') : { glyphs: 'layer', special: 'layer', map: 'intro' }[p.kind];   // faces: nowhere to show yet (POPS's: play the training)
+    const show = p.kind === 'logos' ? (it.kind === 'corp' ? 'corpintro' : 'profile') : { glyphs: 'layer', special: 'layer', map: 'intro', root: 'sectorclear' }[p.kind];   // faces: nowhere to show yet (POPS's: play the training)
     let info = '';
     if (p.kind === 'glyphs' || p.kind === 'special') {
       info = `<div class="afields">${field('name', 'fName', it.name)}</div>
@@ -2445,7 +2449,7 @@
         <button id="aCopy" title="Copy the art as text">copy</button>
         <button id="aPaste" title="Replace the art with the text on the clipboard">paste</button>
         <button id="aRevert" ${isChanged(p) && !p.isNew ? '' : 'disabled'} title="Back to the saved version">revert</button>
-        ${show ? '' : '<!--'}<button id="aShow" title="${esc({ layer: 'a corp layer (glyphs come up at random)', profile: 'the profile screen, wearing this logo', corpintro: "this corp's intro screen", intro: 'the boot intro (the map shows a few seconds in)' }[show])}">show in game</button>${show ? '' : '-->'}
+        ${show ? '' : '<!--'}<button id="aShow" title="${esc({ layer: 'a corp layer (glyphs come up at random)', profile: 'the profile screen, wearing this logo', corpintro: "this corp's intro screen", intro: 'the boot intro (the map shows a few seconds in)', sectorclear: 'the SECTOR CLEARED screen, with this picture' }[show])}">show in game</button>${show ? '' : '-->'}
         ${p.kind === 'logos' ? '<button id="aUp" title="Earlier in the logo picker">&uarr;</button><button id="aDown" title="Later in the logo picker">&darr;</button>' : ''}
         ${(p.kind === 'glyphs' && p.isNew) || p.kind === 'logos' ? '<button id="aDel" title="Remove it">remove</button>' : ''}
       </div>
@@ -2459,6 +2463,7 @@
       sendLive(p.kind);
       setTimeout(() => {
         if (show === 'corpintro' || show === 'profile') toGame({ type: 'scene', name: show, opts: show === 'corpintro' ? { corp: it.corp } : { logo: it.id } });
+        else if (show === 'sectorclear') toGame({ type: 'scene', name: show, opts: { root: p.k } });
         else if (window.NE) NE.runScene(show);
       }, 200);   // after the live art
     };

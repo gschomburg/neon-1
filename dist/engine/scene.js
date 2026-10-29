@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.79']);
+NEON_FILES.push(['engine/scene.js', 'v13.80']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -836,8 +836,10 @@ function drawBox(ctx, y, ln) {
   const x = Math.floor((L.wc - w) / 2);
   const h = sub ? 4 : 3;
   const pulse = (Math.sin(now / 420) + 1) / 2;
-  const fcol = ln.disabled ? C.dim : C.accent;
-  const lcol = ln.disabled ? C.dim : pulse > 0.85 ? C.bright : C.accent;   // a slow, gentle pulse
+  // col: the box's color (default accent); disCol: its color when disabled (default dim)
+  const base = ln.col || C.accent, off = ln.disCol || C.dim;
+  const fcol = ln.disabled ? off : base;
+  const lcol = ln.disabled ? off : pulse > 0.85 ? C.bright : base;   // a slow, gentle pulse
   if (!ln.disabled && ctx.hl) ctx.hl(x, y, w, h, ln.id);
   let edge = '+' + '='.repeat(w - 2) + '+';
   // Occasional glitch on the frame.
@@ -1187,11 +1189,16 @@ function buildTextBoard(ctx, lines, area = null) {
       // The selection cursor sits outside the row, clear of its background color.
       if (ln.sel) put(x - 2, y, '>', C.accent, 'ui', true);
       let cx = x + 1;
+      // check: 'x' / ' ' / '*' (locked): a checkbox before the badge (the UPLINK)
+      if (ln.check != null) { put(cx, y, '[' + ln.check + ']', ln.checkCol || C.mid, 'ui', ln.check === 'x'); cx += 4; }
       if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg, dim: !!ln.badgeDim }) + 1;
       // faded (can't afford, sold, locked): the color bit stays (a mod's badge, an item's name chip),
       // everything else goes grey, so you see what you're missing
-      if (ln.chip) putChip(put, bg, cx, y, ln.name, ln.chip, 'ui', !!ln.sel);
-      else put(cx, y, ln.name, ln.faded ? C.mid : (ln.col || C.bright), 'ui', !!ln.sel);
+      // clip: the name stops a space short of the right text ('ellipsis' ends it with ...; 'cut' just cuts: a ticker)
+      let name = ln.name;
+      if (ln.clip) { const room = (ln.right ? x + LW - ln.right.length - 1 : x + LW) - cx; if (name.length > room) name = ln.clip === 'ellipsis' ? name.slice(0, Math.max(0, room - 2)) + '..' : name.slice(0, Math.max(0, room)); }
+      if (ln.chip) putChip(put, bg, cx, y, name, ln.chip, 'ui', !!ln.sel);
+      else put(cx, y, name, ln.faded ? C.mid : (ln.col || C.bright), 'ui', !!ln.sel);
       if (ln.right) {
         const rx = x + LW - ln.right.length;
         put(rx, y, ln.right, ln.faded ? C.dim : (ln.rightCol || C.mid), 'ui');
