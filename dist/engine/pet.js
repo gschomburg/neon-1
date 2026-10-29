@@ -3,7 +3,7 @@
 // and forth, sits now and then, sleeps when you've been idle, dances on the beat when the music plays, runs over when
 // it sniffs something out (COMPANION), and a tap pets it. Looks only: it never changes play.
 'use strict';
-NEON_FILES.push(['engine/pet.js', 'v13.74']);
+NEON_FILES.push(['engine/pet.js', 'v13.75']);
 
 // A pet for this run (when you take COMPANION, or anything else that gives one later): a cat or a dog, and a name.
 function petRoll(run, why = 'pet') {
@@ -43,7 +43,7 @@ function petHacker(h) {
   setTimeout(() => { if (petOf()) setMsg('> ' + line, C.accent); }, 2500);
 }
 
-// Drawn on the tray line (y = that line; its top line sits just above). In play and on the map.
+// Drawn on the rule over the tray (y = the rule; its top line sits just above). In play and on the map.
 function buildPet(ctx, y) {
   const p = petOf();
   if (!p || (st.mode !== 'play' && st.mode !== 'map') || st.mp) return;

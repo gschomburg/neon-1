@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.74']);
+NEON_FILES.push(['engine/active.js', 'v13.75']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -187,6 +187,15 @@ function rerouteMap() {
 }
 
 // TUNNEL: the nodes in your row you haven't been to (any lane, linked or not).
+// MESH in the row under the sector boss (the user, 2026-10-28): the next row is only the boss, so it links the nearest
+// node on each side of you instead (they still go on to the boss).
+function meshSides() {
+  const run = st.run, cur = run.at && run.map[run.at];
+  if (!cur || cur.step + 1 !== SECTOR_STEPS * (run.sector + 1)) return [];
+  const row = rowMates().filter(n => (n.sector || 0) === run.sector), x = mapX(cur);
+  const l = row.filter(n => mapX(n) < x).sort((a, b) => mapX(b) - mapX(a))[0], r = row.filter(n => mapX(n) > x).sort((a, b) => mapX(a) - mapX(b))[0];
+  return [l, r].filter(Boolean);
+}
 function rowMates() {
   const run = st.run, cur = run.map[run.at];
   return Object.values(run.map).filter(n => n.step === cur.step && n.id !== cur.id && !run.visited.includes(n.id));
@@ -330,7 +339,7 @@ function canUse(stack) {
   if (key === 'route') return onMap && nodesAhead().length > 0;
   if (key === 'warp') return onMap && nodesAhead().length > 0 && !(tier >= 1 && run.warpAim);
   if (key === 'tunnel') return onMap && !run.tunnel && !!run.at && rowMates().length > 0;
-  if (key === 'mesh') return onMap && run.mesh !== run.sector && nodesAhead().length > 0;
+  if (key === 'mesh') return onMap && run.mesh !== run.sector && (nodesAhead().length > 0 || meshSides().length > 0);
   if (key === 'pass') return false;   // on the UPLINK screen
   const inLayer = st.mode === 'play' && !st.busy && st.lv;
   if (key === 'purge') return !!inLayer && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);

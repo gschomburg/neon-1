@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.74']);
+NEON_FILES.push(['engine/render.js', 'v13.75']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -103,6 +103,7 @@ function availableNodes() {
   // map gear: TUNNEL (any node in your row), MESH (every node in the next row, all sector), aimed WARP (anything ahead)
   if (run.tunnel) for (const n of rowMates()) out.add(n.id);
   if (run.mesh === run.sector) for (const n of Object.values(run.map)) if (n.step === cur.step + 1 && (n.sector || 0) === run.sector) out.add(n.id);
+  if (run.mesh === run.sector) for (const n of meshSides()) out.add(n.id);   // the row under the boss: the nodes beside you too
   if (run.warpAim) for (const n of nodesAhead()) out.add(n.id);
   return [...out].filter(id => !run.visited.includes(id));
 }

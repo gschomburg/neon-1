@@ -14,6 +14,7 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Misc UI** (v13.75): the map's one-line hint (tap or hover a node you can't reach: its info); the pet on the rule; the uplink's sold badges dim; REROLL x1; [ SELL WARES ] / [ BUY WARES ]; the end screen's breached list cycling on a long run. Dead hackers should be quiet now: say if you still see one talk.
 - [ ] **Rivals going down** (v13.74): beat a rival in a layer (face blows up 3 times, the rest falls; crew float up), then after the boss CORP BREACHED builds in with their logo first: DEFEATED, yours over it, then the rest of the screen (one animation). The sounds and timing are first guesses.
 - [ ] **UI pass** (v13.73): the black market's BUY / SELL modes (REROLL row in the list, SELL / BUY over LEAVE), the map's sector line one up, gear colors on list screens, the trash drag (gear on the cursor, drops into the trash).
 - [ ] **Trash gear** (v13.72): drag a gear item up and drop it on [ TRASH ] (over the mod row). Try it on a phone: is the drag distance OK, is the target big enough, does a quick tap still feel the same (taps now fire on lift, not press)? Also v13.71 after the commit: kept phish stack by rarity (PHISHx2). And: lanes both ways, the reel starts on the fish, CAST AWAY = 250 casts (my number), BIG DATA = 10 GB+.

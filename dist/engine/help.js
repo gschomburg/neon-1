@@ -1,14 +1,15 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.74']);
+NEON_FILES.push(['engine/help.js', 'v13.75']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
   { title: 'THE BASICS', tab: 'BASIC',
-    paragraph: 'each layer is a grid of nodes. one is the real node, the rest are ICE. ' +
-      'guess which node is real and tap it. hit ICE and you lose 1 integrity, then guess again. ' +
-      "at 0 integrity you're out. find it on the first try for a PERFECT: +1 integrity and more credits.",
-    nodeTile: true, lootTile: true },
+    paragraph: "it's your job to breach the corps. each corp's data center is a stack of layers, each one a grid of nodes.\n" +
+      'one node per layer is real; the rest are ICE. guess the real node and tap it. ' +
+      'guess right and you move on to the next layer. guess wrong and the ICE hit costs you integrity\u00a0(INT). then keep guessing. ' +
+      'at 0 INT you crash. find the real node on the first try for bonus credits and +1 INT.',
+    training: true, nodeTile: true, lootTile: true },
   { title: 'THE NET', tab: 'NET', build: buildNetPage },
   { title: 'THE TRAY', tab: 'TRAY', build: buildTrayPage },
   { title: 'ADVANCED', tab: 'MORE', build: buildAdvancedPage },
@@ -17,6 +18,14 @@ const HELP_PAGES = [
 // ---- How to play page builders. One style everywhere: section headers in the
 // accent color, plain text under them, game things drawn the way they look in game.
 const HELP_W = 32;
+// Keywords in HOW TO PLAY text, in their game colors (the user, 2026-10-28; THE BASICS first): ICE in the danger color,
+// INT like the HUD's INT bars (not the word integrity), credits in money. kwCols(text) gives a colorAt for the line.
+const HELP_KW = [[/\bICE\b/g, 'danger'], [/\bINT\b/g, 'accent'], [/\bcredits?\b|\b\d+cr\b/g, 'money']];
+function kwCols(text, base = C.text) {
+  const at = [];
+  for (const [re, col] of HELP_KW) for (const m of String(text).matchAll(re)) for (let i = 0; i < m[0].length; i++) at[m.index + i] = col;
+  return i => at[i] ? C[at[i]] : base;
+}
 function helpKit(T, X) {
   const H = text => X({ text: text.padEnd(HELP_W), col: C.accent, bold: true });
   const P = (str, indent = 0) => wrapText(str, HELP_W - indent).forEach(l => T((' '.repeat(indent) + l).padEnd(HELP_W), C.text));
@@ -159,18 +168,22 @@ function openHelp() {
     const T = (text, col = C.text) => out.push({ text, col });
     const X = ln => out.push(ln);
     if (p.build) { p.build(T, X); return out; }
+    // THE BASICS: the training at the top, in the scroll area (the user, 2026-10-28)
+    if (p.training) { X({ box: true, text: 'C O R P   T R A I N I N G', sub: '- learn it firsthand -', id: 'tutorial', onTap: startTutorial, minW: 30 }); T(''); }
     // Sectioned pages skip the title (the tab names the page) and space their own sections.
     if (!p.sections) { T(p.title.padEnd(HELP_W), C.bright); T(''); }
     if (p.lines) for (const [text, col] of p.lines) T(text, col ? C[col] : C.text);
     // A paragraph, wrapped into a left-aligned block.
-    if (p.paragraph) for (const l of wrapText(p.paragraph, 32)) T(l.padEnd(32), C.text);
+    // (
+    // (\n starts a new line; a no-break space keeps two words together: integrity (INT))
+    if (p.paragraph) for (const part of p.paragraph.split('\n')) for (const w of wrapText(part, 32)) { const l = w.replace(/\u00a0/g, ' '); X({ text: l.padEnd(32), colorAt: kwCols(l) }); }
     // A node, cycling through the glyph designs nodes can have.
     if (p.nodeTile) {
       T('');
       const glyph = MOTIFS[Math.floor(performance.now() / 1100) % MOTIFS.length];
       X({ tileInfo: glyph, lines: [
         { text: 'NODE', col: C.accent }, { text: 'one per layer is real,', col: C.text },
-        { text: 'the rest are ICE.', col: C.text }, { text: 'the glyph can be a clue:', col: C.text },
+        { text: 'the rest are ICE.', col: C.text, kw: true }, { text: 'the glyph can be a clue:', col: C.text },
         { text: "a corp's tell.", col: C.mid },
       ] });
     }
@@ -183,8 +196,8 @@ function openHelp() {
     if (p.lootTile) {
       T('');
       X({ tileInfo: LOOT_GLYPH, frameCol: C.dangerDim, glyphCol: C.money, lines: [
-        { text: 'LOOT NODE', col: C.accent }, { text: 'always ICE: costs 1', col: C.text },
-        { text: 'integrity, but drops', col: C.text }, { text: 'credits or gear.', col: C.text },
+        { text: 'LOOT NODE', col: C.accent }, { text: 'always ICE: costs 1', col: C.text, kw: true },
+        { text: 'INT, but drops', col: C.text, kw: true }, { text: 'credits or gear.', col: C.text, kw: true },
         { text: 'a trade, not a trap.', col: C.mid },
       ] });
     }
@@ -199,7 +212,8 @@ function openHelp() {
 
   // Content as single rows: tiles are split into their 5 rows, so scrolling moves
   // one row at a time.
-  const flatRows = p => pageContent(p).flatMap(ln => ln.tileInfo ? Array.from({ length: TILE_H }, (_, k) => ({ tileRow: k, tile: ln })) : [ln]);
+  const flatRows = p => pageContent(p).flatMap(ln => ln.tileInfo ? Array.from({ length: TILE_H }, (_, k) => ({ tileRow: k, tile: ln }))
+    : ln.box ? [ln, ...Array.from({ length: (ln.sub ? 4 : 3) - 1 }, () => ({ pad: ln }))] : [ln]);
   const maxTopOf = rowsArr => maxTop(rowsArr.length, CONTENT_ROWS);
   const scrollBy = d => {
     const rowsArr = flatRows(HELP_PAGES[page]);
@@ -218,11 +232,18 @@ function openHelp() {
     // The up row is always the window's first row, the down row always its last.
     let used = 0;
     if (w.hasUp) { X({ text: '[ ^ ^ ^  more  ^ ^ ^ ]', invert: true, id: 'hup', onTap: () => scrollBy(-1) }); used++; }
-    for (let i = top; i < top + w.shown; i++) { X(rowsArr[i]); used++; }
+    const drawn = new Set();
+    for (let i = top; i < top + w.shown; i++) {
+      const r = rowsArr[i];
+      if (r.pad) { if (!drawn.has(r.pad)) T(''); }   // a box's lower rows: drawn by the box (blank when the box isn't)
+      else if (r.box && i + (r.sub ? 4 : 3) > top + w.shown) T('');   // (a box cut off at the bottom: wait for it)
+      else { X(r); if (r.box) drawn.add(r); }
+      used++;
+    }
     for (; used < CONTENT_ROWS - (w.hasDown ? 1 : 0); used++) T('');
     if (w.hasDown) X({ text: '[ v v v  more  v v v ]', invert: true, id: 'hdn', onTap: () => scrollBy(1) });
     T(SEP, C.dim);
-    X({ row: [{ text: '[ TRAINING ]', id: 'tutorial', onTap: startTutorial }, { text: '[ BACK ]', id: 'back', onTap: () => swapTo(showTitle) }] });
+    X({ text: '[ BACK ]', id: 'back', onTap: () => swapTo(showTitle) });   // (the training is a button at the top of THE BASICS)
   }, '> manual loaded.', { full: true });
   st.scroll = scrollBy;   // mouse wheel and swipe
   // Keys: left/right or 1-4 = tabs, up/down = scroll (when the page scrolls), esc = back.

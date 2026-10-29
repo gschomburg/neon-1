@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.74']);
+NEON_FILES.push(['engine/input.js', 'v13.75']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -186,7 +186,7 @@ cv.addEventListener('pointerdown', e => {
   // While paused, only buttons respond.
   if (st.pause && h && h.kind !== 'btn') return;
   if (!h) {
-    if (st.mode === 'map' && !st.dev && !st.pause) st.mapSel = null;
+    if (st.mode === 'map' && !st.dev && !st.pause) { st.mapSel = null; st.mapPeek = null; }
     st.selItem = -1; st.selMod = -1;
     return;
   }
@@ -205,7 +205,8 @@ cv.addEventListener('pointerdown', e => {
     } else pick(h.i);
   }
   else if (h.kind === 'cell') { if (st.corp && st.corp.def.cellTap && st.mode === 'play' && !st.busy) st.corp.def.cellTap(h.cell); }
-  else if (h.kind === 'node') selectNode(h.id);
+  else if (h.kind === 'node') { st.mapPeek = null; selectNode(h.id); }
+  else if (h.kind === 'peek') { st.mapSel = null; st.mapPeek = st.mapPeek === h.id ? null : h.id; Sound.tick(); }   // the map: what's that node?
   else if (h.kind === 'item') {
     // a press waits: lifted in place it's a tap (gearRelease: two-tap mode shows info, then uses);
     // dragged, the TRASH comes up (engine/active.js)
@@ -241,7 +242,7 @@ cv.addEventListener('pointermove', e => {
   st.kbGrid = false;
   st.kbFocus = null;   // the mouse takes over the cursor
   st.hoverBtn = h && h.kind === 'btn' ? h.id : null;
-  st.hoverNode = h && h.kind === 'node' ? h.id : null;
+  st.hoverNode = h && (h.kind === 'node' || h.kind === 'peek') ? h.id : null;
   st.hoverItem = h && h.kind === 'item' ? h.i : -1;
   st.hoverMod = h && h.kind === 'mod' ? h.i : -1;
   cv.style.cursor = h ? 'pointer' : 'default';

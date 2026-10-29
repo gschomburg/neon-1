@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.74']);
+NEON_FILES.push(['engine/scene.js', 'v13.75']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -274,7 +274,7 @@ function buildScene(now, collectHits, raw = false) {
   // Tray: mods, items, info
   put(0, boardEnd + 1, rule(L.wc), ruleCol);
   buildTray(ctx, boardEnd + 2);
-  buildPet(ctx, boardEnd + 2);   // the pet, on the tray line (engine/pet.js)
+  buildPet(ctx, boardEnd + 1);   // the pet, sitting on the rule over the tray (engine/pet.js)
 
   // Footer: the run's seed, small and out of the way.
   // Left side of the footer, clipped so it never runs into [DEV] / the version.
@@ -959,6 +959,7 @@ function buildMap(ctx) {
     if (sel) { put(p.x - 3, y, '>', C.accent, 'map'); put(p.x + 3, y, '<', C.accent, 'map'); }
     else if (run.at === n.id) put(p.x - 3, y, '@', C.bright, 'map');
     if (available && settled) addHit(p.x - 1, y, 3, 1, { kind: 'node', id: n.id });
+    else if (settled && !visited && run.at !== n.id) addHit(p.x - 1, y, 3, 1, { kind: 'peek', id: n.id, noFocus: true });   // out of reach: it only says what it is
     if (st.tut) st.tut.spots[n.id] = [p.x - 1, y];   // the training points at map spots
   }
   // Which sector you're looking at, and arrows when there's more map below.
@@ -974,6 +975,13 @@ function buildMap(ctx) {
   // Info panel under the map
   const y0 = BOARD_Y + SECTOR_ROWS;
   const id = st.mapSel || (avail.has(st.hoverNode) ? st.hoverNode : null);
+  const peek = !id && (st.hoverNode && map[st.hoverNode] && !avail.has(st.hoverNode) ? st.hoverNode : st.mapPeek && map[st.mapPeek] ? st.mapPeek : null);
+  if (peek) {   // a node you can't get to (yet): what it is, no button
+    const info = nodeInfo(map[peek]);
+    info.lines.forEach((ln, k) => putC(y0 + k, ln.text, ln.col, 'map'));
+    putC(y0 + info.lines.length + 1, 'out of reach from here.', C.dim, 'map');
+    return;
+  }
   if (!id) {
     if (mv.sector !== run.sector) {
       putC(y0 + 1, `sector ${mv.sector + 1}: cleared.`, C.text, 'map');
@@ -981,10 +989,8 @@ function buildMap(ctx) {
       return;
     }
     putC(y0 + 1, 'choose a target.', C.text, 'map');
-    putC(y0 + 3, 'AB3 = corp, level 3   ! = final', C.dim, 'map');
-    putC(y0 + 4, '$ = market  ? = cache  + = repair', C.dim, 'map');
-    if (Object.values(run.map).some(n => n.type === 'pier' && n.sector === mv.sector)) putC(y0 + 5, '~ = pier: phishing', C.dim, 'map');
-    if (run.sector > 0) putC(y0 + 5, 'scroll for older sectors.', C.dim, 'map');
+    putC(y0 + 3, 'tap any node to see what it is.', C.dim, 'map');   // (the legend was too many lines: the user, 2026-10-28)
+    if (run.sector > 0) putC(y0 + 4, 'scroll for older sectors.', C.dim, 'map');
     return;
   }
   const info = nodeInfo(map[id]);
@@ -1164,7 +1170,7 @@ function buildTextBoard(ctx, lines, area = null) {
       // The selection cursor sits outside the row, clear of its background color.
       if (ln.sel) put(x - 2, y, '>', C.accent, 'ui', true);
       let cx = x + 1;
-      if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg }) + 1;
+      if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg, dim: !!ln.badgeDim }) + 1;
       // faded (can't afford, sold, locked): the color bit stays (a mod's badge, an item's name chip),
       // everything else goes grey, so you see what you're missing
       if (ln.chip) putChip(put, bg, cx, y, ln.name, ln.chip, 'ui', !!ln.sel);
@@ -1250,7 +1256,8 @@ function drawTileRow(put, y, ln, k) {
   put(x + 1, y, r.slice(1, TILE_W - 1), k === 0 || k === TILE_H - 1 ? fc : gc, 'board');
   put(x + TILE_W - 1, y, r[TILE_W - 1], fc, 'board');
   const t = ln.lines[k];
-  if (t) put(x + TILE_W + 2, y, t.text, t.col, 'board', k === 0);
+  if (t && t.kw) { const ca = kwCols(t.text, t.col); for (let i = 0; i < t.text.length; i++) put(x + TILE_W + 2 + i, y, t.text[i], ca(i), 'board', k === 0); }   // keywords in color (HOW TO PLAY)
+  else if (t) put(x + TILE_W + 2, y, t.text, t.col, 'board', k === 0);
 }
 
 // Pop effect for an offer appearing: sound + burst scaled by rarity.

@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.74']);
+NEON_FILES.push(['engine/screens.js', 'v13.75']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -155,9 +155,10 @@ function buildOverReveal(ctx, now) {
 // in one at a time below it, the block gliding up to stay centered. Lines with an
 // offer `reveal` index wait for their pop (st.panelT0 is set from the first one).
 // A rival breach (rv.rival, the user 2026-10-28): the logo rows come in as the RIVAL's; once they're all in, the reveal
-// holds: DEFEATED lands across them (in your colors), your logo replaces theirs a row at a time, the stamp lifts, and
+// holds: DEFEATED lands across them a letter at a time (the rival's colors inverted), your logo replaces theirs a row at a time, the stamp lifts, and
 // the rest of the screen carries on building in. (Times from when the last logo row shows.)
-const RIVAL_REVEAL = { stamp: 400, swap: 1000, row: 150, lift: 2500, hold: 2800 };
+// (the letters land every 70ms: DEFEATED is in at +0.96s; a 0.2s beat, then your logo comes in over it, row by row)
+const RIVAL_REVEAL = { stamp: 400, letter: 70, swap: 1160, row: 150, hold: 2900 };
 function buildReveal(ctx, now, rv, all) {
   const title = all[0].text;
   let logoAt = null;
@@ -197,10 +198,12 @@ function buildReveal(ctx, now, rv, all) {
   else rv.y += (target - rv.y) * Math.min(1, (now - rv.lt) / 1000 * 9);
   rv.lt = now;
   if (vis.length) buildTextBoard(ctx, vis, { top: rv.y, h: H });
-  if (rv.rival && logoAt != null && now - logoAt >= RIVAL_REVEAL.stamp && now - logoAt < RIVAL_REVEAL.lift) {   // DEFEATED, across the logo's middle
+  if (rv.rival && logoAt != null && now - logoAt >= RIVAL_REVEAL.stamp) {   // DEFEATED, across the logo's middle (your rows cover it as they come in)
     if (ctx.collectHits && !rv.stamped) { rv.stamped = true; Sound.hkStamp(); shake(4, 0.25); }
     const first = all.findIndex(ln => ln.logoRow != null);
-    hkStamp(ctx, rv.y + first + 2);
+    const sw = Math.max(0, Math.floor((now - logoAt - RIVAL_REVEAL.swap) / RIVAL_REVEAL.row) + 1) * (now - logoAt >= RIVAL_REVEAL.swap ? 1 : 0);
+    const n = hkStamp(ctx, rv.y + first + 2, rv.rival, all[first].text.length, now - logoAt - RIVAL_REVEAL.stamp, RIVAL_REVEAL.letter, r => 2 + r < sw);
+    if (ctx.collectHits && n > (rv.letters || 0)) { rv.letters = n; if (n > 1) Sound.tick(); }   // a tick a letter
   }
   if (ctx.collectHits) {
     if (typed > rv.typed) { rv.typed = typed; Sound.tick(); }
@@ -266,9 +269,12 @@ function overLines() {
   else T(`best ${pad2(save.best)}   seed ${r.seed}`, C.mid);
   if (r.practice) T('practice run: not scored', C.dangerDim);
   // corps breached, by code
-  { const marks = r.breached.map(k => corpCode(corpDef(k))).join(' ');
-    const txt = `breached ${marks || 'none'}`;
-    lines.push({ text: txt, colorAt: i => i < 9 ? C.mid : marks ? C.accent : C.dim }); }
+  // (a long run's list doesn't fit: it shows a page at a time and cycles, with the page count)
+  { const codes = r.breached.map(k => corpCode(corpDef(k))), per = Math.max(1, Math.floor((L.wc - 9 - 7) / 4));
+    const pages = Math.max(1, Math.ceil(codes.length / per)), pg = pages > 1 ? Math.floor(performance.now() / 2500) % pages : 0;
+    const marks = codes.slice(pg * per, pg * per + per).join(' ');
+    const txt = `breached ${marks || 'none'}` + (pages > 1 ? `  ${pg + 1}/${pages}` : '');
+    lines.push({ text: txt, colorAt: i => i < 9 ? C.mid : i >= 9 + marks.length ? C.dim : marks ? C.accent : C.dim }); }
   T('');
   // mods (drawn like the tray) and items: they scroll together with the map below them (the user, 2026-10-22)
   const extras = [];

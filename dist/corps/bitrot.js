@@ -1,6 +1,6 @@
 // NeoN+1 corps/bitrot.js
 'use strict';
-NEON_FILES.push(['corps/bitrot.js', 'v13.74']);
+NEON_FILES.push(['corps/bitrot.js', 'v13.75']);
 // Its boss mod: LAST BYTE (lastbyte), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

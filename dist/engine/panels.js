@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.74']);
+NEON_FILES.push(['engine/panels.js', 'v13.75']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -194,8 +194,8 @@ function openShop(node) {
   const listRows = () => Math.max(rowsOf().length, 1 + run.beltSlots);
   const pad = (T, used) => { for (let i = used; i < listRows(); i++) T(''); };
   const nav = B => {
-    if (view === 'buy') B('[ SELL ]', 'sellv', () => { view = 'sell'; sellSel = 0; Sound.ui(); }, !run.items.length);
-    else B('[ BUY ]', 'buyv', () => { view = 'buy'; Sound.ui(); });
+    if (view === 'buy') B('[ SELL WARES ]', 'sellv', () => { view = 'sell'; sellSel = 0; Sound.ui(); }, !run.items.length);
+    else B('[ BUY WARES  ]', 'buyv', () => { view = 'buy'; Sound.ui(); });
     B(node.exit ? '[ JACK OUT ]' : '[ LEAVE ]', 'leave', node.exit ? () => { if (!st.transitioning) swapTo(() => sectorClear(false)); } : leavePanel);   // HEAD FIRST's exit market: the sector is clear
   };
 
@@ -239,7 +239,7 @@ function openShop(node) {
       X({
         list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
         sel: k === sel, faded: !!whyNot(o),
-        badge: isMod ? o.key : null, badgeTier: def.tier, name: rr ? `REROLL (${rerollsLeft()} left)` : def.name + (up ? ' +' : '') + (o.n > 1 ? ' x' + o.n : ''), col,   // x2: copies left
+        badge: isMod ? o.key : null, badgeTier: def.tier, name: rr ? 'REROLL' + (rerollsLeft() > 0 ? ' x' + rerollsLeft() : '') : def.name + (up ? ' +' : '') + (o.n > 1 ? ' x' + o.n : ''), col,   // x2: copies left
         chip: o.kind === 'item' ? def.rarity : null,
         right: `${tag.padEnd(4)} ${price.padStart(5)}`, rightCol: C.money, rightChips: true,
         tint: o.kind === 'repair' || rr ? C.accent : null,

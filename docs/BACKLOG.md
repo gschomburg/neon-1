@@ -35,6 +35,9 @@ unlocked by REP, and some quests unlock REP.
   - **Unlock G0D** through REP, then a quest to beat it (the top achievement).
   - **Boss loot in markets** (the user, 2026-10-27): a chance for a boss's own mods and gear (FLARE, BEES...) to show
     up in black markets (tie it to REP).
+  - **Feat ideas** (the user, meat notes 2026-10-28): replay a seed and get further than before; call 2 hackers in the same
+    layer. And the FEAT box over the win page: a solid background that isn't the screen's (the REP color?). (The FEAT box's
+    cut-off text is fixed, v13.74.)
   - **Better drops** (the user, 2026-10-26): a BOARD unlock that raises the rarity of drops (gear steps, e.g. FRAG's
     legendary) and mods: both in one unlock, or two separate unlocks (gear / mods). Same idea as the parked "better drops" mod (10-20% one step up).
 
@@ -60,6 +63,9 @@ unlocked by REP, and some quests unlock REP.
   - G0D has several stages: you fight it in the first sector, then again as the final boss of the second; then, after the
     success screen, one more stage opens: you think you've beaten the game, but there's one more set of layers.
   - Then G0D unlocks some cool hacking things?
+  - (more, meat notes 2026-10-28) **Who G0D is:** a rogue AI trying to destroy the net. The corps built it by accident in
+    their race for AI superiority: all the corps' AIs somehow fused into G0D. Its abilities: any corp at any time? No tells?
+    Maybe you only beat it by replaying the seed (learning it).
 - **A gear quest** (meat notes 2026-10-28): go find a particular gear and cash out with it; that unlocks the next step.
 - **More quests** (the user, meat notes 2026-10-28):
   - **The symbol path:** you find a symbol that is a path through a network (a very simple treasure map). Go through a
@@ -81,7 +87,7 @@ unlocked by REP, and some quests unlock REP.
 - **Other ideas (Claude's):** TAXED, AUDITED, RANSOM, BACKWARDS, a trace meter, two events stacked.
 
 ### 4. Enemy and ally hackers (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
-- **Still open:** ICE MAN called in by an ICE hit; special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
+- **Still open:** special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
   COMPANION's pet; balance from play.
 - **Rival notes (built v13.74)** (the user, meat notes 2026-10-28):
   - **A bigger rival death:** more effect when a rival dies, almost like when you fail.
@@ -89,6 +95,8 @@ unlocked by REP, and some quests unlock REP.
     CORP BREACHED screen: CORP BREACHED, then the rival's logo (you defeated them), then the logo goes away (or is replaced by
     your own), then the screen / animation as it is now.
   - **Breaching a corp while its rival is still alive counts as beating them** (the beat tally, the feats).
+- **Dying to a rival** (the user, meat notes 2026-10-28): better sounds on that screen (their logo over your death): a wah-wah,
+  but more jingly, bad-news sounding.
 - RIVAL is a bot second player (health, burns ICE, steals pay).
 - **The cast, written v13.63** (the user, 2026-10-28): 10 bad and 10 good hackers in `dist/data/hackers.js`, each with
   a face (5 x 3, like POPS's: `data/art/faces.js`, new), a logo (`logos.js`, kind hacker), lore, a shtick, how its AI
@@ -182,6 +190,8 @@ unlocked by REP, and some quests unlock REP.
     - (built v13.71) **PHISHING retheme:** what you catch is corp data, not fish: corp passwords, elderly social security numbers, corpo
       credentials, blackmail material. Gear still comes up, but the catches get a little description of what info you got.
       Keep the random weights (maybe not pounds) and the BIGGEST YET stuff.
+- **Different markets** (the user, meat notes 2026-10-28): black market / grey market / open market.
+- **MESH at the last row (built v13.75)**: it links the nodes on either side of you there; they still go to the boss.
 - More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
 - Moving backwards / the frontier (pick any node linked to one you've visited), or allow clearing the whole map.
   An "open map" mod (the aimed WARP is built: epic WARP, v13.52).
@@ -214,6 +224,10 @@ unlocked by REP, and some quests unlock REP.
 - Something in the game itself you can hack, like the seed.
 
 ## Medium and small
+- **Misc UI notes (built v13.75)** (the user, meat notes 2026-10-28): the map's legend down to one line (tap / hover any node
+  to see it), the UPLINK's sold badges dim, the pet on the rule, dead hackers quiet, REROLL x1, SELL WARES / BUY WARES, the
+  end screen's breached list cycling; a rival beaten at a sector boss counts (checked).
+  - (the user, 2026-10-28: v13.75's map info is good; the move-things-down idea dropped: not enough room)
 - **UI feedback on the recent updates (built v13.73)** (the user, meat notes 2026-10-28):
   - **Sector event line on the map:** with a sector event on, its text overlaps the top of the map (sector 1 is fine: its boss is
     in the center). Bump the whole sector line up one, right under the terminal.
@@ -224,19 +238,16 @@ unlocked by REP, and some quests unlock REP.
     LEAVE stacked (LEAVE always at the bottom, the same spot on both); REROLL becomes an item in the list (like REPAIR); the
     sell view has the list, the SELL button, and BUY + LEAVE.
 - **BLOOD MONEY scaling** (the user, 2026-10-27): its hit cost in credits should scale like the rest of the economy (ECONOMY tab), though credits have no cap the way INT does. And new things that rewrite INT need a BLOOD MONEY rule: BLACK ICE (down to 1 INT) would cost the credits for that many hits.
-- **Boss rewards by difficulty:** a corp's boss mod should match how hard it is (a pass over all 78 corps; settles
-  weak ones like EZPASS). The user's read of the corp mods (2026-10-27): all fine; none too strong low or too weak
-  high; a lot of overlap in what they do; the high-level ones are more novel (HEAT VISION, STETHOSCOPE), which is good. With it: show corp difficulty in game (`DIFF ###--`), the tell balance pass
-  (`tools/tell_odds.js`).
+- (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.
 - **COUPON -> COUPON CUTTER?** (the user, 2026-10-27): maybe rename MEGAMART's mod.
 - **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle.
 - **A general popup over a node:** pull COIN FLIP's hold / drag box into one shared piece (`nodePopup`).
 - **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open).
 - **10 more glyphs** (22 to 32), with names and lore; re-save the check baseline after.
-- **More fake ads** (the user: the two built are good). Ad mods: a free trial of a corp's mod, AD BLOCKER.
+- **Ads that do things** (later, the user 2026-10-28; the fake ads are done and great): an ad that sells you gear or a mod; a free trial of a corp's mod; AD BLOCKER.
 - **A daily seed** and a daily leaderboard (none today).
 - **The corp's logo on the boss intro.**
-- **Keyword highlighting in text:** ICE in red, credits in money, mod names in their rarity...
+- **Keyword highlighting in text** (started v13.75 on HOW TO PLAY > THE BASICS: ICE, INT, credits; next the other HOW TO PLAY pages and the codex, the user's aim: neater): ICE in red, credits in money, mod names in their rarity...
 - **Browser back = BACK** on menu pages (and ask before leaving a run or a room).
 - **Flipped characters:** MIRRORLINE's glyphs flip with its mirror; a backwards mod.
 - **Faces in the art catalog** (POPS's face and the coming NPCs, with the asXii round trip).

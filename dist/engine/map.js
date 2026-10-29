@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v13.74']);
+NEON_FILES.push(['engine/map.js', 'v13.75']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -41,14 +41,19 @@ const bossIdOf = s => `${SECTOR_STEPS * (s + 1)}:1`;
 const sectorEvent = (s = st.run ? st.run.sector : 0, map = st.run && st.run.map) => { const n = map && map[bossIdOf(s)]; return (n && n.ev) || null; };
 // The corps that come up more with TIME IS MONEY: their own clock, or a timed board.
 const timedCorp = key => !!(CORPS[key] && (CORPS[key].timer || CORPS[key].tick));
-// THE FENCE: a stop next to the sector boss, where THIEF's stolen mods are sold back (left or right of the boss).
+// THE FENCE: a stop next to the sector boss, where THIEF's stolen mods are sold back. One on each side of the boss
+// (the user, 2026-10-28: no long link drawn across the map), each reached from the two nodes under it; both sell the
+// same stolen mods (run.fence). If only one side is free, it takes links from the whole row.
 function addFence(nodes, seed, s) {
   const base = SECTOR_STEPS * s, boss = nodes[bossIdOf(s)];
   if (!boss || Object.values(nodes).some(n => n.type === 'fence' && n.sector === s)) return;
-  const first = rngFor(seed, 'fence', s)() < 0.5 ? 0 : 2, id = [first, 2 - first].map(l => `${base + 5}:${l}`).find(x => !nodes[x]);
-  if (!id) return;   // (both sides taken: EENY MEENY's bosses)
-  nodes[id] = { id, step: base + 5, lane: +id.split(':')[1], sector: s, type: 'fence', next: [boss.id] };
-  for (let lane = 0; lane < 3; lane++) { const n = nodes[`${base + 4}:${lane}`]; if (n && !n.next.includes(id)) n.next.push(id); }
+  const ids = [0, 2].map(l => `${base + 5}:${l}`).filter(x => !nodes[x]);
+  if (!ids.length) return;   // (both sides taken: EENY MEENY's bosses)
+  for (const id of ids) {
+    const lane = +id.split(':')[1];
+    nodes[id] = { id, step: base + 5, lane, sector: s, type: 'fence', next: [boss.id] };
+    for (const l of ids.length > 1 ? [lane, 1] : [0, 1, 2]) { const n = nodes[`${base + 4}:${l}`]; if (n && !n.next.includes(id)) n.next.push(id); }
+  }
 }
 // Corp levels: each step has a target level (sector + 1 early in a sector, + 2 late,
 // up to 5). Corps at the target come up most, easier ones now and then (breathers),

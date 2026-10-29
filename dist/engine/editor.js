@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.74']);
+NEON_FILES.push(['engine/editor.js', 'v13.75']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -285,6 +285,7 @@ if (EDITOR) {
     god: () => { st.god = !st.god; },
     debug: () => { st.debug = !st.debug; },
     free: () => { st.freeTravel = !st.freeTravel; st.mapSel = null; },
+    stopclocks: () => { st.editorHold = st.editorHold === false; },   // the layer clocks hold still (on: for looking at a scene) or run
     // the game's own music setting (while the music tab plays a track, it comes back when the tab stops) and sound effects
     music: () => { if (tabPlaying) gameMusicOn = !gameMusicOn; else save.musicOn = !save.musicOn; Sound.init(); Sound.levels(); },
     sfx: () => { save.muted = !save.muted; Sound.init(); Sound.levels(); if (!save.muted) Sound.ui(); },
@@ -333,7 +334,7 @@ if (EDITOR) {
   let lastTest = '';
   setInterval(() => {
     const run = st.run && !st.run.ended ? st.run : null, ev = run ? sectorEvent(run.sector) : null;
-    const m = { type: 'test-state', run: !!run, god: !!st.god, debug: !!st.debug, free: !!st.freeTravel, mode: st.mode,
+    const m = { type: 'test-state', run: !!run, god: !!st.god, debug: !!st.debug, free: !!st.freeTravel, stopclocks: st.editorHold !== false, mode: st.mode,
       music: tabPlaying ? !!gameMusicOn : !!save.musicOn, sfx: !save.muted, tabMusic: tabPlaying,
       credits: run ? run.credits : 0, int: run ? run.integrity : 0, maxInt: run ? run.maxInt : 0, sector: run ? run.sector + 1 : 0,
       event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0, feats: Object.keys(save.feats || {}), rep: save.rep || 0 };

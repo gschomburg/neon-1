@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.74']);
+NEON_FILES.push(['engine/run.js', 'v13.75']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -63,7 +63,7 @@ function toMap(fromSector) {
   if (st.run && st.run.stat && st.run.stat.node) statNodeEnd('done');   // a market / cache / safehouse left
   st.corp = null; st.lv = null; st.timer = null;
   scenePalette(null);
-  st.mapSel = null; st.hoverNode = null;
+  st.mapSel = null; st.hoverNode = null; st.mapPeek = null;
   st.run.pending = null;
   showBoard('map');
   // The map shows one sector at a time; scrolling moves a whole sector, line by line.
@@ -475,7 +475,7 @@ function lockTile(t, col, source = 'purge') {
 
 function updateTimer(dt) {
   const tm = st.timer;
-  if (!tm || st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.pause || EDITOR) return;   // the editor's scenes hold still
+  if (!tm || st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.pause || (EDITOR && st.editorHold !== false)) return;   // the editor holds the clocks still (TESTING tab: stop clocks, on by default)
   if (st.lv && st.lv.holdUntil && performance.now() < st.lv.holdUntil) return;   // ESPRESSO, FREEZE FRAME
   tm.left -= dt * ((st.lv && st.lv.clockRate) || 1);   // TIMEWARP
   const sec = Math.ceil(tm.left);
@@ -1749,7 +1749,7 @@ function openUplink() {
     mods.forEach((k, i) => {
       const v = modView(k), locked = UPLINK_LOCKED.includes(k);
       X({ list: true, id: 'up' + i, onTap: () => { sel = i; toggle(k); }, sel: i === sel, faded: !keep[k],
-        badge: k, badgeTier: run.modTier[k] || 0, name: v.name, col: keep[k] ? C.bright : C.mid,
+        badge: k, badgeTier: run.modTier[k] || 0, badgeDim: !keep[k], name: v.name, col: keep[k] ? C.bright : C.mid,
         right: locked ? `keep ${String(uplinkFee(k)).padStart(4)}cr*` : keep[k] ? `keep ${String(uplinkFee(k)).padStart(4)}cr` : `sell ${('+' + uplinkSell(k)).padStart(4)}cr`,
         rightCol: keep[k] ? C.money : C.accent });
     });

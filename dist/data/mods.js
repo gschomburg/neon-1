@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.74']);
+NEON_FILES.push(['data/mods.js', 'v13.75']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -34,8 +34,8 @@ const ITEMS = {
   // map gear (the user, 2026-10-26): TUNNEL, MESH (and WARP above). They add nodes you can go to (availableNodes).
   tunnel: { key: 'tunnel', name: 'TUNNEL', price: 35, rarity: 'rare', desc: 'on the map: your next move can be any node in your row.', tip: 'go across the row.',
     codex: 'on the map: dig across. your next move can be any node in the row you are on, linked or not: get over to that market. it is your move.' },
-  mesh:  { key: 'mesh',  name: 'MESH',  price: 80, rarity: 'epic', desc: 'on the map: every node links to every node in the next row, for the rest of this sector.', tip: 'link the whole sector.',
-    codex: 'on the map: a full mesh. for the rest of this sector, every node links to every node in the row after it: go wherever you like, a row at a time.' },
+  mesh:  { key: 'mesh',  name: 'MESH',  price: 80, rarity: 'epic', desc: 'on the map: every node links to every node in the next row, for the rest of this sector. under the boss: to the nodes beside you.', tip: 'link the whole sector.',
+    codex: 'on the map: a full mesh. for the rest of this sector, every node links to every node in the row after it: go wherever you like, a row at a time. in the row under the sector boss it links the nodes on either side of you.' },
   // layer gear (the user, 2026-10-26): TILT, SHAKE, FRAG, REWIND, SHOE.
   tilt:  { key: 'tilt',  name: 'TILT',  price: 30, rarity: 'rare', desc: 'in a layer: every closed node slides to the top or the bottom (random).', tip: 'slide them up or down.',
     codex: 'in a layer: tilt the board. every node still closed slides as far as it can, up or down (a coin flip). watch the real one go: tells about where a node sits go stale, but your mods might like a packed board. some corps react.' },

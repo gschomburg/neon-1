@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v13.74']);
+NEON_FILES.push(['engine/hackers.js', 'v13.75']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -104,8 +104,8 @@ function buildHkCard(ctx, now) {
 
 // ---------------- Talking ----------------
 // A hacker's line in the terminal, in their colors, with their face bouncing by their cursor.
-function hkSay(h, text) {
-  if (!text) return;
+function hkSay(h, text, last = false) {
+  if (!text || (h.out && !last)) return;   // out is out: a late line (a timer, a hook) doesn't get through
   const sty = hkStyle(h.id);
   setMsg(`> ${hkName(h.id).toLowerCase()}: ${text}`, hkInk(h.id));
   if (st.lv) { const s = hkS(st.lv, h); s.faceAt = performance.now(); }
@@ -114,7 +114,7 @@ function hkSay(h, text) {
 function hkOut(h, text) {
   if (!h || h.out) return;
   h.out = true; h.hp = 0;
-  hkSay(h, text || hkLine(h, 'out'));
+  hkSay(h, text || hkLine(h, 'out'), true);
   if (st.lv) { const s = hkS(st.lv, h); s.goneAt = performance.now(); }
   hkDieFx(h);   // their face pops up and goes to pieces (rivals blow up and fall, crew float up)
   if (h.side === 'bad' && h.took) {   // LEECH coughs up half
@@ -203,7 +203,7 @@ const HK_AI = {
       const t = pickR(lv.tiles.filter(o => !isReal(o) && ((o.state === 'locked' && o.lockedBy !== 'hit') || (o.state === 'closed' && o.ruledOut))), Math.random);
       if (!t) return;
       s.aim = { t, at: now + 400, fn: () => {} };
-      setTimeout(() => { if (st.lv !== lv) return; t.state = 'closed'; t.ruledOut = false; t.refrozen = true; delete t.lockedBy; s.aim = null; Sound.tick(); hkSay(h, 'refrozen.'); }, 400);
+      setTimeout(() => { if (st.lv !== lv || h.out) return; t.state = 'closed'; t.ruledOut = false; t.refrozen = true; delete t.lockedBy; s.aim = null; Sound.tick(); hkSay(h, 'refrozen.'); }, 400);
     },
     clear(lv, h, perfect) { if (perfect) hkHurt(h); },
     ice(h, t) { h.fed = (h.fed || 0) + 1; if (t.refrozen && hkUp('brick')) hkHurt(h); },   // BRICK hits back
@@ -431,7 +431,7 @@ function hkCorpEnd(c) {
 }
 // You died with hackers there: a rival's logo and taunt, or a crew member calling your name, as the screen falls apart.
 function hkDeathFor() {
-  const all = hkList(), r = all.find(h => h.side === 'bad'), crew = all.find(h => h.side === 'good' && !h.out);
+  const all = hkList(), r = all.find(h => h.side === 'bad' && !h.out), crew = all.find(h => h.side === 'good' && !h.out);
   if (r) return { id: r.id, side: 'bad', text: hkLine(r, 'kill') };
   if (crew) return { id: crew.id, side: 'good', text: hkLine(crew, 'snake').replace(/\{name\}/g, profile().name) };
   return null;
@@ -498,14 +498,15 @@ function buildHkFx(ctx, now) {
 // ---------------- The rival defeated (the user, 2026-10-28) ----------------
 // CORP BREACHED's reveal (engine/screens.js buildReveal) brings the rival's logo in under the title, then this stamp
 // lands across it in your colors and your logo replaces theirs row by row. y: the stamp's top row (it's 3 tall).
-function hkStamp(ctx, y) {
-  const { put, bg, cells } = ctx, ms = styleOf(profile().style);
-  const word = ' D E F E A T E D ', sw = word.length + 2, sx = Math.floor((L.wc - sw) / 2);
-  clearRect(cells, sx, Math.round(y), sw, 3);   // (it covers what's under it)
-  for (let r = 0; r < 3; r++) bg(sx, y + r, sw, ms.bg, 1);
-  put(sx, y, '+' + '='.repeat(sw - 2) + '+', ms.fg, 'hud', true);
-  put(sx, y + 1, '|' + word + '|', ms.fg, 'hud', true);
-  put(sx, y + 2, '+' + '='.repeat(sw - 2) + '+', ms.fg, 'hud', true);
+function hkStamp(ctx, y, id, w, age, every = 70, covered = () => false) {   // covered(r): your logo's row is over stamp row r
+  // the rival's colors inverted (their text color is the band), DEFEATED spread across the logo's width, a letter at a time
+  const { put, bg, cells } = ctx, sty = hkStyle(id), word = 'DEFEATED';
+  const gap = Math.max(1, Math.min(3, Math.floor((w - 2) / word.length) - 1));   // spaces between letters: as wide as fits
+  const text = [...word].join(' '.repeat(gap)), sx = Math.floor((L.wc - w) / 2), tx = sx + Math.floor((w - text.length) / 2);
+  for (let r = 0; r < 3; r++) if (!covered(r)) { clearRect(cells, sx, Math.round(y) + r, w, 1); bg(sx, y + r, w, sty.fg, 1); }   // (it covers the rival's logo; your rows cover it)
+  const n = clamp(Math.floor(age / every) + 1, 0, word.length);   // the letters land one at a time
+  if (!covered(1)) for (let i = 0; i < n; i++) put(tx + i * (gap + 1), y + 1, word[i], sty.bg, 'hud', true);
+  return n;
 }
 
 // ---------------- On the board ----------------
