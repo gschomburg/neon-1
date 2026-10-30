@@ -313,6 +313,7 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   blue background is on purpose: the eye you can hit now.
 - Round 8 (the user): no blue backgrounds for now (the hittable eye is just blue). Later, with more in, maybe a proper invert:
   a blue background with bg-colored letters.
+- Round 9 (the user): once you've uncovered what b0y was showing you (the eye node), or the eye is open, he goes back to rest.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 

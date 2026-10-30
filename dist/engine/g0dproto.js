@@ -121,7 +121,8 @@ function g0dpBoyTick1(p, now, dt, targets) {
   if (!G0DP.boy || !b) return;
   b.single = true;
   const c = b.curs[0], others = targets.others;
-  if (now > b.until) {
+  if (targets.done) { b.phase = 'rest'; b.until = now + 1500; c.tx = 2; c.ty = 0; }   // you found it: he goes back to rest (round 9)
+  else if (now > b.until) {
     const next = { rest: 'look1', look1: 'look2', look2: 'found', found: 'rest' }[b.phase] || 'look1';
     b.phase = next;
     if (next === 'look1' || next === 'look2') { const o = pickR(others, Math.random) || targets.right; if (o) { c.tx = o.x; c.ty = o.y; } b.until = now + 1700; }
@@ -360,7 +361,8 @@ function g0dpFightTick(p, now, dt) {
   // b0y: the eye node (or the open eye)
   const eyeN = f.nodes.find(n => n.kind === 'eye');
   const spot = n => ({ x: n.x + 4, y: n.y - 1 });   // the node's top right, never on its letters (round 7)
-  g0dpBoyTick1(p, now, dt, { right: f.eye ? { x: f.eye.x, y: f.eye.y - 2 } : eyeN ? spot(eyeN) : null, others: f.nodes.filter(n => n.kind === 'corp').map(spot) });
+  g0dpBoyTick1(p, now, dt, { right: eyeN ? spot(eyeN) : null, others: f.nodes.filter(n => n.kind === 'corp').map(spot),
+    done: !!(f.eye || f.opening || (eyeN && !eyeN.gone && g0dpShows(f, eyeN))) });   // uncovered (or the eye is open): nothing left to show
 }
 // Keep things apart: a pushed off b's spot if they're closer than w across / h down (cells), a little each frame.
 function g0dpPush(a, bx, by, w, h, dt, f) {
