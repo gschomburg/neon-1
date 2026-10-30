@@ -564,6 +564,8 @@
         <option value="720" selected>tablet 720</option>
       </select>
       <button id="reloadgame" title="Reload the game frame">reload game</button>
+      <button id="gameMusic" title="the game's own music on / off (the same switch as TESTING's music)">music</button>
+      <button id="gameSfx" title="the game's sound effects on / off (the same switch as TESTING's sfx)">sfx</button>
     </div>
   </div>
   <div id="framewrap"><iframe id="game" title="game preview" allow="autoplay"></iframe></div>
@@ -1057,6 +1059,13 @@
   const sizeStage = () => { const w = +$('#width').value; frame.style.width = w + 'px'; $('#stage').style.width = Math.max(w + 40, 430) + 'px'; };
   $('#width').onchange = sizeStage;
   $('#reloadgame').onclick = loadGame;
+  // music / sfx by the game frame: the game's own switches (engine/editor.js test acts 'music', 'sfx'); lit while on
+  for (const [id, act] of [['#gameMusic', 'music'], ['#gameSfx', 'sfx']]) $(id).onclick = () => { try { frame.contentWindow.postMessage({ to: 'neon-game', type: 'test', act }, '*'); } catch (e) { /* not loaded */ } };
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.from !== 'neon-game' || m.type !== 'test-state') return;
+    $('#gameMusic').classList.toggle('on', !!m.music); $('#gameSfx').classList.toggle('on', !!m.sfx);
+  });
   $('#dark').oninput = () => { $('#darkv').textContent = Math.round($('#dark').value * 100) + '%'; sendAll(); };
 
   // ---------------- The palette tab ----------------
@@ -2890,7 +2899,7 @@
 <ul>
 <li><b>reload</b>: load the file from disk again. Drops what you haven't saved.</li>
 <li><b>revert</b> (on one thing): back to its saved version.</li>
-<li><b>reload game</b> (over the game): starts the game frame fresh, with the files as they are on disk.</li>
+<li><b>reload game</b> (over the game): starts the game frame fresh, with the files as they are on disk. <b>music</b> and <b>sfx</b> beside it switch the game's music and sound effects (lit = on; the same switches as the TESTING tab's).</li>
 </ul>
 <h2>Saved files</h2>
 <p>Save rewrites the whole file in its own neat format, so a hand edit in the same file is fine as long as it keeps that format. (The economy file warns you about a number it doesn't know rather than drop it.)</p>
