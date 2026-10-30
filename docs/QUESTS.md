@@ -311,6 +311,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   needed it fully dug out. Now a node counts (and gets its frame) once every letter shows; b0y's fight cursor sits off to
   the node's top right. The blue bar on the big eye's top row (a glow that only covered one row) is gone. The final stand's
   blue background is on purpose: the eye you can hit now.
+- Round 8 (the user): no blue backgrounds for now (the hittable eye is just blue). Later, with more in, maybe a proper invert:
+  a blue background with bg-colored letters.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 

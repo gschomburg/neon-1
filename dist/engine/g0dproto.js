@@ -640,7 +640,7 @@ function g0dpStandDraw(p, put, bg, now) {
     const on = i === s.cur, blue = on && g0dpStandBlue(s, now), col = blue ? G0DP_BLUE : on ? G0DP_RED : C.dangerDim;
     const pupil = on ? '@' : 'o';
     const art = [' .-. ', `( ${pupil} )`, " '-' "];
-    art.forEach((l, k) => { bg(e.x - 2, Y + e.y - 1 + k, 5, blue ? G0DP_BLUE : C.bg, blue ? 0.35 : 1); put(e.x - 2, Y + e.y - 1 + k, l, col, 'fx', on); });
+    art.forEach((l, k) => { bg(e.x - 2, Y + e.y - 1 + k, 5, C.bg, 1);   /* (round 8: no blue background for now; later maybe a proper invert: blue with bg-colored letters) */ put(e.x - 2, Y + e.y - 1 + k, l, col, 'fx', on); });
   });
   bg(0, Y, L.wc, C.bg, 1);
   put(0, Y, `FINAL STAND   eyes ${s.eyes.length - s.cur}`, C.text, 'fx');
