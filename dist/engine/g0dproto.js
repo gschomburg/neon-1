@@ -385,6 +385,16 @@ function g0dpFreeSpot(f, others, w = 9, h = 3) {
   }
   return best;
 }
+// The eye node breaking apart: its pieces fly, a crack, a blue flash. It's gone until G0D's eye shuts again.
+function g0dpBurst(n, now) {
+  n.gone = true;
+  Sound.shatter(); shake(5, 0.25); flash(G0DP_BLUE, 0.15, 0.3);
+  if (reduced()) return;
+  const cx = pxX(n.x + 1.5), cy = pxY(BOARD_Y + n.y), cells = [];
+  for (const [k, ch] of [...'(o)'].entries()) cells.push({ ch, x: pxX(n.x + k + 0.5), y: cy, col: G0DP_BLUE });
+  for (let k = 0; k < 14; k++) cells.push({ ch: pickR(['.', '*', 'o', '-', '\'', '`'], Math.random), x: cx + rand(-1.5, 1.5) * L.cw, y: cy + rand(-0.4, 0.4) * L.chh, col: pickR([G0DP_BLUE, C.bright], Math.random) });
+  explode(cells, cx, cy, { power: 1.1, grav: 0.9, life: [0.4, 0.9] });
+}
 function g0dpEyeOpen(p, x, y, now) {
   const f = p.fight;
   f.eye = { x: clamp(x, 6, f.W - 7), y: clamp(y, 3, f.H - 3), until: now + G0DP.eyeOpen * 1000, hits: 0, at: now };
@@ -397,7 +407,7 @@ function g0dpEyeClose(p, now, why) {
   f.eye = null;
   for (let i = 0; i < f.m.length; i++) f.m[i] = Math.max(f.m[i], Math.min(3.2, f.m[i] + 1.4 + Math.random()));   // the mold grows back in
   const eyeN = f.nodes.find(n => n.kind === 'eye');
-  if (eyeN) { eyeN.x = 3 + Math.random() * (f.W - 9); eyeN.y = 3 + Math.random() * (f.H - 6); }   // its node goes somewhere else
+  if (eyeN) { eyeN.x = 3 + Math.random() * (f.W - 9); eyeN.y = 3 + Math.random() * (f.H - 6); eyeN.gone = false; }   // its node comes back, somewhere else
   if (why) setMsg('> ' + why + ' the M0LD grows back.', C.mid);
 }
 function g0dpFightTap(p, x, y, now) {
@@ -418,17 +428,20 @@ function g0dpFightTap(p, x, y, now) {
   // the burn: hands off
   if (f.hands && f.hands.burning) return g0dpHurt(p, 1, 'HANDS OFF. -1 INT.');
   // a node that shows
-  const n = f.nodes.find(o => g0dpShows(f, o) && x >= Math.round(o.x) - 1 && x <= Math.round(o.x) + 3 && y === Math.round(o.y));
+  const n = f.nodes.find(o => !o.gone && g0dpShows(f, o) && x >= Math.round(o.x) - 1 && x <= Math.round(o.x) + 3 && y === Math.round(o.y));
   if (n) {
-    if (n.kind === 'eye') {
+    if (n.kind === 'eye') {   // it bursts (round 5), then G0D's eye comes in
+      if (f.opening) return;
+      g0dpBurst(n, now);
+      let at;
       if (f.hands) {   // the counter: the attack stops, and one of its eyes is the real one
-        const e = pickR(f.hands.eyes, Math.random) || { x: n.x, y: n.y };
+        at = pickR(f.hands.eyes, Math.random) || { x: n.x, y: n.y };
         f.hands = null; f.nextHands = now + G0DP.handsEvery * 1000;
         setMsg('> countered! one of them is real.', G0DP_BLUE);
-        return g0dpEyeOpen(p, e.x, e.y, now);
-      }
-      const at = g0dpFreeSpot(f, []);   // somewhere clear of the nodes (round 4)
-      return g0dpEyeOpen(p, at.x, at.y, now);
+      } else at = g0dpFreeSpot(f, [], 9, 3);   // somewhere clear of the nodes (round 4)
+      f.opening = true;
+      setTimeout(() => { if (st.g0dp !== p || p.fight !== f) return; f.opening = false; g0dpEyeOpen(p, at.x, at.y, performance.now()); }, 320);
+      return;
     }
     if (n.kind === 'corp') { n.pin = now + 1200; return g0dpHurt(p, 1, `wrong node: ${n.label}. -1 INT.`); }
     if (n.kind === 'int') { g0dpHeal(n.amount); Sound.buy(); setMsg(`> got it back: +${n.amount} INT.`, C.accent); }
@@ -437,11 +450,18 @@ function g0dpFightTap(p, x, y, now) {
     return;
   }
   // the mold (round 1: a bigger scrape; the charge doesn't lock it, only the burn hurts)
-  const before = g0dpChunks(f, x, y, 2.3);
-  g0dpMold(f, x, y, 2.3, -2.0, false);
+  // it ripples (round 5): a tight break where you tap, then a wider, lighter ring a beat later
+  const before = g0dpChunks(f, x, y, 1.3);
+  g0dpMold(f, x, y, 1.3, -2.4, false);
   for (const o of f.nodes) if (Math.abs(o.x + 1 - x) < 4 && Math.abs(o.y - y) < 2) o.pin = now + 1200;   // scraped over a node: it holds still a moment
   Sound.tick();
-  g0dpCrumble(f, before, x, y);
+  g0dpCrumble(f, before, x, y, 0.35);
+  setTimeout(() => {
+    if (st.g0dp !== p || p.fight !== f) return;
+    const ring = g0dpChunks(f, x, y, 2.7).filter(([cx, cy]) => Math.hypot((cx - x) / 2.2, cy - y) >= 1);
+    g0dpMold(f, x, y, 2.7, -1.3, false);
+    g0dpCrumble(f, ring, x, y, 0.5);
+  }, 90);
 }
 // A tap on the mold over INT / CR: it scrapes the board's top right corner (where it climbs from), a wide swipe.
 function g0dpScrapeHud(p, x, now) {
@@ -463,7 +483,7 @@ function g0dpChunks(f, cx, cy, r) {
   }
   return out;
 }
-function g0dpCrumble(f, before, cx, cy) {
+function g0dpCrumble(f, before, cx, cy, power = 0.45) {
   if (reduced()) return;
   const cells = [];
   for (const [x, y, th, fr] of before) {
@@ -473,7 +493,7 @@ function g0dpCrumble(f, before, cx, cy) {
     cells.push({ ch, x: pxX(x), y: pxY(BOARD_Y + y), col: fr > 0.45 ? G0DP_FRESH : th > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim });
     if (cells.length >= 26) break;
   }
-  if (cells.length) explode(cells, pxX(cx), pxY(BOARD_Y + cy) - L.chh * 0.6, { power: 0.45, grav: 1.4, life: [0.35, 0.8] });
+  if (cells.length) explode(cells, pxX(cx), pxY(BOARD_Y + cy) - L.chh * 0.6, { power, grav: 1.4, life: [0.35, 0.8] });
 }
 const G0DP_SEE = 1.6;   // mold under this thickness (a . or ,) lets a node's letters show through (the user, round 2)
 function g0dpFightDraw(p, put, bg, now) {
@@ -485,7 +505,8 @@ function g0dpFightDraw(p, put, bg, now) {
   if (f.eye) {
     const x = Math.round(f.eye.x), y = Math.round(f.eye.y), left = (f.eye.until - now) / 1000;
     const pupil = now - f.hitAt < 250 ? 'X' : Math.floor(now / 400) % 4 === 3 ? 'o' : '@';
-    const art = ['  .---.  ', ` ( (${pupil}) ) `, "  '---'  ", `  ${Math.ceil(left)}s ${'*'.repeat(Math.max(0, G0DP.hitsPerEye - f.eye.hits))}`.padEnd(9)];
+    const age = now - f.eye.at, full = ['  .---.  ', ` ( (${pupil}) ) `, "  '---'  ", `  ${Math.ceil(left)}s ${'*'.repeat(Math.max(0, G0DP.hitsPerEye - f.eye.hits))}`.padEnd(9)];
+    const art = age < 110 ? ['         ', '   (o)   ', '         ', '         '] : age < 230 ? ['         ', `  ((${pupil}))  `, '   ---   ', '         '] : full;   // it opens (round 5)
     art.forEach((l, k) => { take(x - 4, y - 1 + k, 9); put(x - 4, Y + y - 1 + k, l, G0DP_BLUE, 'fx', k < 3); });
     bg(x - 4, Y + y - 1, 9, G0DP_BLUE, 0.12 + 0.08 * Math.sin(now / 90));
   }
@@ -496,6 +517,7 @@ function g0dpFightDraw(p, put, bg, now) {
   for (let y = 2; y < f.H; y += 2) for (let x = (y / 2) % 2 ? 1 : 3; x < f.W; x += 4) if (clear(x, y) && !taken.has(x + ',' + y)) put(x, Y + y, '·', C.dim);
   for (const n of f.nodes) {
     const x = Math.round(n.x), y = Math.round(n.y);
+    if (n.gone) continue;
     const lab = n.kind === 'eye' ? (f.hands ? '(@)' : Math.floor(now / 700) % 3 === 2 ? '(.)' : '(o)') : n.label;
     const col = n.kind === 'eye' ? (f.hands ? G0DP_RED : G0DP_BLUE) : n.kind === 'int' ? C.accent : n.kind === 'cr' ? C.money : C.text;   // the eye node: blue (round 1)
     if (g0dpShows(f, n)) { const fc = col === C.text ? C.mid : col; if (!taken.has((x - 1) + ',' + y)) { put(x - 1, Y + y, '[', fc, 'fx'); take(x - 1, y, 1); } if (!taken.has((x + 3) + ',' + y)) { put(x + 3, Y + y, ']', fc, 'fx'); take(x + 3, y, 1); } }   // dug out: framed, now it counts

@@ -3,6 +3,7 @@ god fight feedback
 
 misc notes
 ***********************
+- mimic
 
 misc mod and items
 **********************

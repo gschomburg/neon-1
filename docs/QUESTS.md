@@ -301,6 +301,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 - Round 4 (the user): the final stand's eyes drift now (a bit faster as you win) and the mold streams off them. In the fight
   an eye had slid under a corp node and made it unclickable: nodes push each other apart, the open eye and the HANDS OFF eyes
   open clear of nodes and push them away. Scraping drops more: the mold you knock off falls as its own characters.
+- Round 5 (the user: "these are feeling pretty nice"): tapping the eye node bursts it (its pieces fly, blue) and G0D's eye comes in a
+  beat later, opening in steps ((o), the ring, all of it). A scrape ripples: a tight break where you tap, then a wider ring.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
