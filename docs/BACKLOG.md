@@ -70,6 +70,17 @@ unlocked by REP, and some quests unlock REP.
     that corp, you start over at its first layer. Variations: pay credits to come back; or come back with no mods or
     gear. Close to CONTINUE? (CHUCK E. CACHE's legendary corp mod: pay to keep going at 1 INT, once per corp).
     CHECKPOINT would be a weaker, one-shot cousin that sends you back to the start of the corp.
+- **Gear and loot ideas (the user's iPhone notes, meat notes 2026-10-30):**
+  - **Gear names to use:** CHMOD, POKE, JUMP (no effects yet).
+  - **EXORCIST** (gear): kicks a rival hacker out of the layer; a higher rarity kicks them out of the run for good.
+  - **DELUX** (gear): gives you a random set of mods.
+  - **Item stacks become health** (a mod).
+  - **A mod that gives you more loot instead of money.**
+  - **Defeating a corp can give loot freely** (boss loot: Claude's proposal is waiting, 1-2 loot a corp boss, 2-3 a
+    sector boss, as CORP BREACHED builds; the pile animation stacks them).
+  - **Buy loot at a market?** And a **loot dealer** that uses the pound sign (the [£] bag button, v13.86, is a start).
+  - **Crafting: a shop with a grinder.** Drop mods, loot and gear in: you get parts (components, **COMPS**). Spend
+    COMPS to craft gear, mods, maybe exotics.
 - **Scrap mods:** maybe 2 other worthless ones.
 - **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first, v13.49).
   Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), NUKE (wipe a corp off the map), DECODER
@@ -254,6 +265,8 @@ unlocked by REP, and some quests unlock REP.
 ### Enemy and ally hackers (low: the user 2026-10-29, "we don't need any more"; the lore was great) (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
 - **Still open:** special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
   COMPANION's pet; balance from play.
+- **From the user's iPhone notes (meat notes 2026-10-30):** hacker names: **s3iz**, **alpha haxor**, **kupreg**,
+  **circo 77**, **Doctor kitten face**. Using a crew member's logo (as yours) makes their calls less rare.
 - **Rival notes (built v13.74)** (the user, meat notes 2026-10-28):
   - **A bigger rival death:** more effect when a rival dies, almost like when you fail.
   - **A rival-defeated beat after a corp:** at the end of the corp, a note that you beat them and who they were. Maybe in the
@@ -321,6 +334,9 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
+- **From the user's iPhone notes (meat notes 2026-10-30):** more companions (pets); **loot training** (the training run
+  could show the LOOT bag); a **phishing logo**; PIER names: **CATPHISH**, "phush you? no, phush me"; and three to ask
+  about: **Neon**, **Scam**, **Merch** (just the words in the notes).
 - **The seed decides the layers, always** (the user, 2026-10-30): resuming a run (closed the browser) stops rerolling the
   layers (drop the run.resumes salt in genLayer and the fcst / skip rolls). Also put on the seed: which crew answers a
   plain CALL, OVERCLOCK's purges, the clock-runs-out tap (Math.random today). Rivals' moves stay random (real-time).

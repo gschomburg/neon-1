@@ -5,7 +5,7 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v13.87']);
+NEON_FILES.push(['engine/g0dproto.js', 'v13.88']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -44,7 +44,14 @@ const G0DP_LINES = {
 // b0y's clue in the maze: the codex order, half eaten by the mold (two lines at the bottom of the board)
 const G0DP_CLUE = ['b0y: prompt. diamond. cross.', '     st#%age. upl@#k. wa%#...'];
 const g0dSay = (text, col = C.danger) => setMsg('> G0D: ' + text, col);
-const boySay = text => { if (G0DP.boy) setMsg('> b0y: ' + text, G0DP_BLUE); };
+// b0y's lines: in the terminal, and on the board's bottom row a few seconds (the terminal gets stepped on; the user, round 1)
+const boySay = text => { if (!G0DP.boy) return; setMsg('> b0y: ' + text, G0DP_BLUE); if (st.g0dp) st.g0dp.boyLine = { text, at: performance.now() }; };
+const g0dpBoyLineOn = (p, now) => !!(G0DP.boy && p.boyLine && now - p.boyLine.at < 4500);
+function g0dpBoyLineDraw(p, put, bg, now) {
+  if (!g0dpBoyLineOn(p, now)) return;
+  const y = BOARD_Y + L.gh - 1, t = ('b0y: ' + p.boyLine.text).slice(0, L.wc);
+  bg(0, y, L.wc, C.bg, 1); put(0, y, t, G0DP_BLUE, 'fx', true);
+}
 
 // ---------------- Start / stop ----------------
 // stage: 'maze' | 'fight' | 'stand'
@@ -105,10 +112,29 @@ function g0dpBoyTick(p, now, dt, targets) {
     c.x += (c.tx + jx - c.x) * Math.min(1, dt * 6); c.y += (c.ty - c.y) * Math.min(1, dt * 6);
   }
 }
+// The fight's b0y (round 1: three cursors got in the way): one cursor, and it takes him a while. He hops to a node or
+// two, then finds the right one and sits by it; then he goes off to look again.
+function g0dpBoyTick1(p, now, dt, targets) {
+  const b = p.boy;
+  if (!G0DP.boy || !b) return;
+  b.single = true;
+  const c = b.curs[0], others = targets.others;
+  if (now > b.until) {
+    const next = { rest: 'look1', look1: 'look2', look2: 'found', found: 'rest' }[b.phase] || 'look1';
+    b.phase = next;
+    if (next === 'look1' || next === 'look2') { const o = pickR(others, Math.random) || targets.right; if (o) { c.tx = o.x; c.ty = o.y; } b.until = now + 1700; }
+    if (next === 'found') b.until = now + 3000;
+    if (next === 'rest') { c.tx = 2; c.ty = 0; b.until = now + 3000; }
+  }
+  if (b.phase === 'found' && targets.right) { c.tx = targets.right.x; c.ty = targets.right.y; }
+  const jx = b.phase.startsWith('look') ? Math.sin(now / 200) * 0.8 : 0;
+  c.x += (c.tx + jx - c.x) * Math.min(1, dt * 3.5); c.y += (c.ty - c.y) * Math.min(1, dt * 3.5);
+}
 function g0dpBoyDraw(p, put, bg, now) {
   const b = p.boy;
   if (!G0DP.boy || !b) return;
   b.curs.forEach((c, i) => {
+    if (b.single && i > 0) return;
     const x = Math.round(c.x), y = BOARD_Y + Math.round(c.y);
     if (y < BOARD_Y || y >= BOARD_Y + L.gh) return;
     bg(x, y, 1, G0DP_BLUE, b.phase === 'hold' && now > b.until - 900 ? 0.35 : 1);
@@ -130,7 +156,8 @@ function g0dpMazeStart(p) {
   g0dpMazeLayer(p);
   boySay(G0DP_LINES.boyMaze);
 }
-function g0dpMazeLayer(p) {
+// slow: back at the start (after a hurt): a beat, then the nodes come in one at a time, slower (round 1)
+function g0dpMazeLayer(p, slow = false) {
   const m = p.maze, n = G0DP.mazeNodes[Math.min(m.depth - 1, G0DP.mazeNodes.length - 1)];
   const cols = Math.max(1, Math.floor((L.wc + 1) / 8)), rows = Math.max(1, Math.floor((L.gh - 2) / 6));
   const slots = shuffle([...Array(cols * rows).keys()], Math.random).slice(0, Math.min(n, cols * rows));
@@ -144,18 +171,23 @@ function g0dpMazeLayer(p) {
     else if (Math.random() < 0.3) { const others = m.seq.filter((_, k) => k !== m.path); glyph = others[Math.floor(Math.random() * others.length)]; }   // other path glyphs, out of order: a memory test
     return { x: ox + (s % cols) * 8, y: oy + Math.floor(s / cols) * 6, glyph, right: i === right };
   });
+  const now = performance.now();
+  shuffle(m.nodes.slice(), Math.random).forEach((n, k) => { n.showAt = now + (slow ? 700 + k * 140 : k * 45); n.on = false; });
+  m.reset = slow ? now : 0;
   m.left = G0DP.mazeTimer;
 }
 function g0dpMazeTick(p, now, dt) {
   const m = p.maze;
+  for (const n of m.nodes) if (!n.on && now >= n.showAt) { n.on = true; Sound.nodeOn(); }
+  if (m.nodes.some(n => now < n.showAt)) return;   // the clock waits for the nodes
   m.left -= dt;
   if (m.left <= 0) { m.left = G0DP.mazeTimer; g0dpHurt(p, 1, 'the clock ran out. -1 INT.'); }
   const r = m.nodes.find(n => n.right);
-  const spot = n => ({ x: n.x + 3, y: n.y - 1 });
+  const spot = n => ({ x: n.x + 3, y: n.y + 2 });   // on the node itself (round 1)
   g0dpBoyTick(p, now, dt, { right: r ? spot(r) : null, others: m.nodes.filter(n => !n.right).map(spot) });
 }
 function g0dpMazeTap(p, x, y) {
-  const m = p.maze, i = m.nodes.findIndex(n => x >= n.x && x < n.x + 7 && y >= n.y && y < n.y + 5);
+  const now = performance.now(), m = p.maze, i = m.nodes.findIndex(n => now >= n.showAt && x >= n.x && x < n.x + 7 && y >= n.y && y < n.y + 5);
   if (i < 0) return;
   const n = m.nodes[i], letter = String.fromCharCode(65 + i);
   g0dpHeal(1);   // every node is a perfect
@@ -164,8 +196,9 @@ function g0dpMazeTap(p, x, y) {
     g0dpHurt(p, 1, 'dead end. back to the start. -1 INT.');
     if (p.card) return;
     Object.assign(m, { depth: 1, path: 0, lost: 0, label: '1A' });
-    boySay('...we are back at the start. ' + G0DP_LINES.boyMaze);
-    return g0dpMazeLayer(p);
+    flash(C.danger, 0.35, 0.8); shake(10, 0.5);
+    boySay('...we are back at the start.');
+    return g0dpMazeLayer(p, true);
   }
   if (n.right) {
     m.path++;
@@ -188,7 +221,9 @@ function g0dpMazeDraw(p, put, bg, now) {
   const f = Math.max(0, m.left / G0DP.mazeTimer), bw = 10, n = Math.round(f * bw);
   put(L.wc - bw - 4, Y, '#'.repeat(n) + '.'.repeat(bw - n), f < 0.35 ? C.danger : C.accent);
   put(L.wc - 3, Y, Math.ceil(m.left) + 's', C.mid);
+  if (m.reset && now - m.reset < 900) { const t = 'BACK TO THE START'; put(Math.floor((L.wc - t.length) / 2), Y + Math.floor(L.gh / 2), t, C.danger, 'fx', true); }
   for (const n2 of m.nodes) {
+    if (now < n2.showAt) continue;
     const fc = C.mid, gc = C.text;
     put(n2.x, Y + n2.y, '+- - -+', fc);
     n2.glyph.forEach((l, k) => { put(n2.x, Y + n2.y + 1 + k, ':', fc); put(n2.x + 1, Y + n2.y + 1 + k, l, gc); put(n2.x + 6, Y + n2.y + 1 + k, ':', fc); });
@@ -197,7 +232,7 @@ function g0dpMazeDraw(p, put, bg, now) {
   if (G0DP.boy) G0DP_CLUE.forEach((l, k) => put(1, Y + L.gh - 3 + k, l, G0DP_BLUE));
   // the edges of the maze: a little mold
   const { hs, moldCh } = G0D_LOOKS, t = Math.floor(now / 160);
-  for (let x = 0; x < L.wc; x++) for (const y of [1, L.gh - 1]) if (hs(x * 3.3 + y) > 0.55) { const [c, k] = moldCh(x, y, t); if (c !== ' ') put(x, Y + y, c, g0dCol(k)); }
+  for (let x = 0; x < L.wc; x++) for (const y of [1]) if (hs(x * 3.3 + y) > 0.55) { const [c, k] = moldCh(x, y, t); if (c !== ' ') put(x, Y + y, c, g0dCol(k)); }
 }
 
 // ---------------- G0D FIGHT ----------------
@@ -238,9 +273,8 @@ function g0dpMold(f, cx, cy, r, amt, fresh) {
 }
 // Is a node showing (the mold over its label thin)?
 function g0dpShows(f, n) {
-  let s = 0;
-  for (let k = 0; k < 3; k++) { const i = g0dpIdx(f, Math.round(n.x) + k, Math.round(n.y)); s += i < 0 ? 0 : f.m[i]; }
-  return s / 3 < 0.7;
+  for (let k = 0; k < 3; k++) { const i = g0dpIdx(f, Math.round(n.x) + k, Math.round(n.y)); if (i >= 0 && f.m[i] >= 0.6) return false; }
+  return true;   // all of it dug out (round 1: a half-dug node doesn't count; a tap on one scrapes)
 }
 function g0dpFightTick(p, now, dt) {
   const f = p.fight;
@@ -312,7 +346,7 @@ function g0dpFightTick(p, now, dt) {
   // b0y: the eye node (or the open eye)
   const eyeN = f.nodes.find(n => n.kind === 'eye');
   const spot = n => ({ x: n.x + 1, y: n.y - 1 });
-  g0dpBoyTick(p, now, dt, { right: f.eye ? { x: f.eye.x, y: f.eye.y - 2 } : eyeN ? spot(eyeN) : null, others: f.nodes.filter(n => n.kind === 'corp').map(spot) });
+  g0dpBoyTick1(p, now, dt, { right: f.eye ? { x: f.eye.x, y: f.eye.y - 2 } : eyeN ? spot(eyeN) : null, others: f.nodes.filter(n => n.kind === 'corp').map(spot) });
 }
 function g0dpEyeOpen(p, x, y, now) {
   const f = p.fight;
@@ -347,7 +381,7 @@ function g0dpFightTap(p, x, y, now) {
   // the burn: hands off
   if (f.hands && f.hands.burning) return g0dpHurt(p, 1, 'HANDS OFF. -1 INT.');
   // a node that shows
-  const n = f.nodes.find(o => g0dpShows(f, o) && x >= Math.round(o.x) - 1 && x <= Math.round(o.x) + 3 && Math.abs(y - Math.round(o.y)) <= 0);
+  const n = f.nodes.find(o => g0dpShows(f, o) && x >= Math.round(o.x) - 1 && x <= Math.round(o.x) + 3 && y === Math.round(o.y));
   if (n) {
     if (n.kind === 'eye') {
       if (f.hands) {   // the counter: the attack stops, and one of its eyes is the real one
@@ -364,9 +398,8 @@ function g0dpFightTap(p, x, y, now) {
     f.nodes.splice(f.nodes.indexOf(n), 1);
     return;
   }
-  // the mold
-  if (f.hands) { Sound.deny(); return setMsg("> the M0LD won't budge.", G0DP_RED); }
-  g0dpMold(f, x, y, 1.6, -1.6, false);
+  // the mold (round 1: a bigger scrape; the charge doesn't lock it, only the burn hurts)
+  g0dpMold(f, x, y, 2.3, -2.0, false);
   for (const o of f.nodes) if (Math.abs(o.x + 1 - x) < 4 && Math.abs(o.y - y) < 2) o.pin = now + 1200;   // scraped over a node: it holds still a moment
   Sound.tick();
   if (!reduced()) explode([{ ch: pickR(['%', ';', '.', ','], Math.random), x: pxX(x), y: pxY(BOARD_Y + y), col: G0D_COLS.mold }], pxX(x), pxY(BOARD_Y + y) + 4, { power: 0.3, grav: 1.2, life: [0.2, 0.4] });
@@ -375,8 +408,7 @@ function g0dpFightTap(p, x, y, now) {
 function g0dpScrapeHud(p, x, now) {
   const f = p.fight;
   if (f.hands && f.hands.burning) return g0dpHurt(p, 1, 'HANDS OFF. -1 INT.');
-  if (f.hands) { Sound.deny(); return setMsg("> the M0LD won't budge.", G0DP_RED); }
-  g0dpMold(f, x, 0, 1.6, -2.2, false); g0dpMold(f, x, 2, 1.4, -1.6, false);
+  g0dpMold(f, x, 0, 1.8, -2.4, false); g0dpMold(f, x, 2, 1.4, -1.6, false);
   f.steal = Math.max(0, f.steal - 0.6);
   Sound.tick();
   if (!reduced()) explode([{ ch: pickR(['%', ';', '&'], Math.random), x: pxX(x), y: pxY(3), col: G0D_COLS.mold }], pxX(x), pxY(3) + 4, { power: 0.4, grav: 1.2, life: [0.2, 0.4] });
@@ -396,12 +428,14 @@ function g0dpFightDraw(p, put, bg, now) {
     bg(x - 4, Y + y - 1, 9, G0DP_BLUE, 0.12 + 0.08 * Math.sin(now / 90));
   }
   take(0, 0, L.wc);
+  if (g0dpBoyLineOn(p, now)) take(0, f.H - 1, L.wc);
   // the network under it, where the mold is thin: faint dots, then the nodes (a letter at a time as you dig)
   for (let y = 2; y < f.H; y += 2) for (let x = (y / 2) % 2 ? 1 : 3; x < f.W; x += 4) if (clear(x, y) && !taken.has(x + ',' + y)) put(x, Y + y, '·', C.dim);
   for (const n of f.nodes) {
     const x = Math.round(n.x), y = Math.round(n.y);
     const lab = n.kind === 'eye' ? (f.hands ? '(@)' : Math.floor(now / 700) % 3 === 2 ? '(.)' : '(o)') : n.label;
-    const col = n.kind === 'eye' ? (f.hands ? G0DP_RED : C.bright) : n.kind === 'int' ? C.accent : n.kind === 'cr' ? C.money : C.text;
+    const col = n.kind === 'eye' ? (f.hands ? G0DP_RED : G0DP_BLUE) : n.kind === 'int' ? C.accent : n.kind === 'cr' ? C.money : C.text;   // the eye node: blue (round 1)
+    if (g0dpShows(f, n)) { const fc = col === C.text ? C.mid : col; if (!taken.has((x - 1) + ',' + y)) { put(x - 1, Y + y, '[', fc, 'fx'); take(x - 1, y, 1); } if (!taken.has((x + 3) + ',' + y)) { put(x + 3, Y + y, ']', fc, 'fx'); take(x + 3, y, 1); } }   // dug out: framed, now it counts
     for (let k = 0; k < lab.length; k++) {
       if (!clear(x + k, y) || taken.has((x + k) + ',' + y)) continue;
       if (n.kind === 'corp') bg(x + k, Y + y, 1, C.dim, 0.8);
@@ -464,7 +498,8 @@ function g0dpStandTap(p, x, y, now) {
 function g0dpStandDraw(p, put, bg, now) {
   const s = p.stand, Y = BOARD_Y, { hs, moldCh } = G0D_LOOKS, t = Math.floor(now / 120);
   // sparse mold drifting through
-  for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
+  const lastRow = g0dpBoyLineOn(p, now) ? L.gh - 1 : L.gh;
+  for (let y = 1; y < lastRow; y++) for (let x = 0; x < L.wc; x++) {
     const v = hs(Math.floor(x / 3 + now / 900) * 1.7 + Math.floor(y / 2 - now / 1300) * 5.3);
     if (v > 0.86 && !s.eyes.some(e => e.alive && Math.abs(x - e.x) <= 2 && Math.abs(y - e.y) <= 1)) { const [c, k] = moldCh(x, y, t); if (c !== ' ') put(x, Y + y, c, g0dCol(k)); }
   }
@@ -501,6 +536,7 @@ function buildG0dp(ctx) {
   if (p.stage === 'fight') g0dpFightDraw(p, put, bg, now);
   if (p.stage === 'stand') g0dpStandDraw(p, put, bg, now);
   g0dpBoyDraw(p, put, bg, now);
+  g0dpBoyLineDraw(p, put, bg, now);
 }
 // A tap at (cx, cy) in cells (the whole screen). Returns true when the prototype took it.
 function g0dpTap(cx, cy) {

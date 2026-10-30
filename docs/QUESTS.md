@@ -286,6 +286,14 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 
 ### The three stages, written out (the user, 2026-10-29; more coming)
 **Prototype built v13.87** (engine/g0dproto.js; the neon editor's g0d tab, PLAY THE PROTOTYPE): all three stages playable, rough, with b0y on / off. What it does and what to judge: docs/REVIEW.md.
+**Prototype feedback, round 1** (the user, meat notes 2026-10-30; done in v13.88 unless marked):
+- Maze: interesting. b0y's chat in the terminal got lost (now his own line on the board). The mold isn't a factor there:
+  probably fine. Getting hurt and sent back should be clearer: the nodes come back in one at a time. The 5s timer is
+  short, maybe fine (kept). b0y's cursors should sit on the nodes themselves, not above.
+- Fight: digging, you often don't see a corp node until you tap it and get hurt (now: a node only counts once it's fully
+  dug out and framed; a tap on a half-dug one scrapes). The eye nodes should be **blue**. b0y's cursors get in the way:
+  one cursor on the board at a time, and he takes a while to find it. The scrape should be bigger. **The charge
+  shouldn't lock the mold:** when you see it charging you can still tap the mold off your INT (only the burn hurts).
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
