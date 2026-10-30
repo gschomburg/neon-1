@@ -283,8 +283,8 @@ function g0dpMold(f, cx, cy, r, amt, fresh) {
 }
 // Is a node showing (the mold over its label thin)?
 function g0dpShows(f, n) {
-  for (let k = 0; k < 3; k++) { const i = g0dpIdx(f, Math.round(n.x) + k, Math.round(n.y)); if (i >= 0 && f.m[i] >= 0.6) return false; }
-  return true;   // all of it dug out (round 1: a half-dug node doesn't count; a tap on one scrapes)
+  for (let k = 0; k < 3; k++) { const i = g0dpIdx(f, Math.round(n.x) + k, Math.round(n.y)); if (i >= 0 && f.m[i] >= G0DP_SEE) return false; }
+  return true;   // every letter shows (round 7: what you can see you can hit; a half-dug node doesn't count, a tap on one scrapes)
 }
 function g0dpFightTick(p, now, dt) {
   const f = p.fight;
@@ -359,7 +359,7 @@ function g0dpFightTick(p, now, dt) {
   }
   // b0y: the eye node (or the open eye)
   const eyeN = f.nodes.find(n => n.kind === 'eye');
-  const spot = n => ({ x: n.x + 1, y: n.y - 1 });
+  const spot = n => ({ x: n.x + 4, y: n.y - 1 });   // the node's top right, never on its letters (round 7)
   g0dpBoyTick1(p, now, dt, { right: f.eye ? { x: f.eye.x, y: f.eye.y - 2 } : eyeN ? spot(eyeN) : null, others: f.nodes.filter(n => n.kind === 'corp').map(spot) });
 }
 // Keep things apart: a pushed off b's spot if they're closer than w across / h down (cells), a little each frame.
@@ -508,7 +508,6 @@ function g0dpFightDraw(p, put, bg, now) {
     const age = now - f.eye.at, full = ['  .---.  ', ` ( (${pupil}) ) `, "  '---'  ", `  ${Math.ceil(left)}s ${'*'.repeat(Math.max(0, G0DP.hitsPerEye - f.eye.hits))}`.padEnd(9)];
     const art = age < 110 ? ['         ', '   (o)   ', '         ', '         '] : age < 230 ? ['         ', `  ((${pupil}))  `, '   ---   ', '         '] : full;   // it opens (round 5)
     art.forEach((l, k) => { take(x - 4, y - 1 + k, 9); put(x - 4, Y + y - 1 + k, l, G0DP_BLUE, 'fx', k < 3); });
-    bg(x - 4, Y + y - 1, 9, G0DP_BLUE, 0.12 + 0.08 * Math.sin(now / 90));
   }
   take(0, 0, L.wc);
   if (g0dpBoyLineOn(p, now)) take(0, f.H - 1, L.wc);

@@ -307,6 +307,10 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   With b0y: he chases the eye you're on, grabs it (blue: hit it now), it throws him off (red), he chases again. Without
   him: the eyes cycle on their own. And (the user: for later, with the animation pass) the network glows red as the clock
   runs out: a first go is in (under 10s the board pulses red, the mold trails turn red).
+- Round 7 (the user): couldn't hit an eye node b0y was near. The cause: letters showed through thin mold (round 2) but a tap
+  needed it fully dug out. Now a node counts (and gets its frame) once every letter shows; b0y's fight cursor sits off to
+  the node's top right. The blue bar on the big eye's top row (a glow that only covered one row) is gone. The final stand's
+  blue background is on purpose: the eye you can hit now.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
