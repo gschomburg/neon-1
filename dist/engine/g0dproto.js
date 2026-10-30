@@ -558,10 +558,31 @@ function g0dpStandStart(p) {
   }
   for (const e of eyes) { const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 2.5; e.vx = Math.cos(a) * v; e.vy = Math.sin(a) * v * 0.45; e.turnAt = 0; }
   p.stand = { eyes: shuffle(eyes, Math.random), cur: 0, cycleAt: performance.now() + 900, left: G0DP.standTime, trail: [], trailAt: 0 };
-  boySay(G0DP_LINES.boyStand);
+  boySay("i grab his eyes. you hit 'em!");
 }
 const g0dpStandRed = s => G0DP.red * Math.pow(0.9, s.cur);
-function g0dpStandBlue(s, now) { const e = (now - s.cycleAt) / 1000, red = g0dpStandRed(s); return e >= 0 && (e % (red + G0DP.blue)) >= red; }
+// Blue = you can hit it. With b0y: while he's latched onto it (round 6: he makes it vulnerable). Without him: it cycles.
+function g0dpStandBlue(s, now) {
+  if (G0DP.boy) return now < (s.latchUntil || 0);
+  const e = (now - s.cycleAt) / 1000, red = g0dpStandRed(s); return e >= 0 && (e % (red + G0DP.blue)) >= red;
+}
+// b0y in the final stand: one cursor. He chases the eye you're on; when he gets there he latches on (it goes blue) for a
+// moment, then it throws him off (red again) and he goes after it.
+function g0dpStandBoy(p, now, dt) {
+  const s = p.stand, b = p.boy, c = b.curs[0], e = s.eyes[s.cur];
+  b.single = true; b.phase = 'stand';
+  if (!e) return;
+  if (now < (s.latchUntil || 0)) { c.x = e.x; c.y = e.y - 1; return; }   // holding on
+  if (s.latchUntil && !s.thrown) {   // thrown off
+    s.thrown = true; s.offUntil = now + g0dpStandRed(s) * 1000;
+    const a = Math.random() * Math.PI * 2; c.tx = clamp(e.x + Math.cos(a) * 12, 1, L.wc - 2); c.ty = clamp(e.y + Math.sin(a) * 5, 1, L.gh - 2);
+    Sound.tick();
+  }
+  if (now < (s.offUntil || 0)) { c.x += (c.tx - c.x) * Math.min(1, dt * 5); c.y += (c.ty - c.y) * Math.min(1, dt * 5); return; }
+  const dx = e.x - c.x, dy = e.y - 1 - c.y, d = Math.hypot(dx / 2, dy), sp = 11 * dt;   // the chase
+  if (d < 0.8) { s.latchUntil = now + G0DP.blue * 1300; s.thrown = false; Sound.ping(1175); return; }
+  c.x += dx / Math.max(d * 2, 1e-6) * sp * 2; c.y += dy / Math.max(d, 1e-6) * sp;
+}
 function g0dpStandTick(p, now, dt) {
   const s = p.stand;
   s.left -= dt;
@@ -583,8 +604,7 @@ function g0dpStandTick(p, now, dt) {
     for (const e of live) s.trail.push({ x: e.x + rand(-2, 2), y: e.y + (Math.random() < 0.5 ? -1.5 : 1.5) + rand(-0.5, 0.5), at: now, k: Math.random() });
     s.trail = s.trail.filter(o => now - o.at < 1600);
   }
-  const cur = s.eyes[s.cur], spot = e => ({ x: Math.round(e.x), y: Math.round(e.y) - 2 });
-  g0dpBoyTick(p, now, dt, { right: cur ? spot(cur) : null, others: s.eyes.filter((e, i) => e.alive && i !== s.cur).map(spot) });
+  if (G0DP.boy) g0dpStandBoy(p, now, dt);
 }
 function g0dpStandTap(p, x, y, now) {
   const s = p.stand, i = s.eyes.findIndex(e => e.alive && Math.abs(x - Math.round(e.x)) <= 3 && Math.abs(y - Math.round(e.y)) <= 1);
@@ -592,7 +612,7 @@ function g0dpStandTap(p, x, y, now) {
   if (i !== s.cur) { Sound.deny(); return setMsg('> not that one. in order.', C.mid); }
   if (!g0dpStandBlue(s, now)) { s.left -= 2; Sound.deny(); flash(G0DP_RED, 0.15, 0.3); return setMsg('> red! not yet. -2s', G0DP_RED); }
   const e = s.eyes[i];
-  e.alive = false; s.cur++; s.cycleAt = now + 250;
+  e.alive = false; s.cur++; s.cycleAt = now + 250; s.latchUntil = 0; s.offUntil = 0; s.thrown = false;
   Sound.shatter(); shake(6, 0.3);
   if (!reduced()) { const cells = []; for (let k = 0; k < 14; k++) cells.push({ ch: pickR(['@', '(', ')', '*', '.'], Math.random), x: pxX(e.x + rand(-2, 2)), y: pxY(BOARD_Y + e.y), col: pickR([G0DP_BLUE, C.bright], Math.random) }); explode(cells, pxX(e.x), pxY(BOARD_Y + e.y), { power: 0.8 }); }
   if (s.cur >= s.eyes.length) {
@@ -604,13 +624,16 @@ function g0dpStandTap(p, x, y, now) {
 }
 function g0dpStandDraw(p, put, bg, now) {
   const s = p.stand, Y = BOARD_Y, { hs, moldCh } = G0D_LOOKS, t = Math.floor(now / 120);
+  // the clock running out (round 6, a first go at it): under 10s the board glows red, harder and faster as it drops
+  const doom = clamp(1 - s.left / 10, 0, 1);
+  if (doom > 0) { const pulse = 0.5 + 0.5 * Math.sin(now / (260 - doom * 160)); for (let y = 1; y < L.gh; y++) bg(0, Y + y, L.wc, G0DP_RED, doom * (0.06 + 0.12 * pulse)); }
   // the mold streaming off the eyes: thick and bright when fresh, thinning as it fades (round 4)
   const lastRow = g0dpBoyLineOn(p, now) ? L.gh - 1 : L.gh, onEye = (x, y) => s.eyes.some(e => e.alive && Math.abs(x - Math.round(e.x)) <= 2 && Math.abs(y - Math.round(e.y)) <= 1);
   for (const o of s.trail) {
     const x = Math.round(o.x), y = Math.round(o.y), age = (now - o.at) / 1600;
     if (y < 1 || y >= lastRow || x < 0 || x >= L.wc || onEye(x, y)) continue;
     const ch = '#&%;:,.'[Math.min(6, Math.floor(age * 7))];
-    put(x, Y + y, ch, age < 0.3 ? G0DP_FRESH : age < 0.65 ? G0D_COLS.mold : G0D_COLS.moldDim);
+    put(x, Y + y, ch, doom > 0 && G0D_LOOKS.hs(o.k * 91) < doom ? (age < 0.5 ? G0DP_RED : C.dangerDim) : age < 0.3 ? G0DP_FRESH : age < 0.65 ? G0D_COLS.mold : G0D_COLS.moldDim);
   }
   s.eyes.forEach((e0, i) => {
     if (!e0.alive) return;

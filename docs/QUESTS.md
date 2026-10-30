@@ -303,6 +303,10 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   open clear of nodes and push them away. Scraping drops more: the mold you knock off falls as its own characters.
 - Round 5 (the user: "these are feeling pretty nice"): tapping the eye node bursts it (its pieces fly, blue) and G0D's eye comes in a
   beat later, opening in steps ((o), the ring, all of it). A scrape ripples: a tight break where you tap, then a wider ring.
+- Round 6 (the user): b0y in the final stand only if he does something: **he latches onto the eye to make it vulnerable.**
+  With b0y: he chases the eye you're on, grabs it (blue: hit it now), it throws him off (red), he chases again. Without
+  him: the eyes cycle on their own. And (the user: for later, with the animation pass) the network glows red as the clock
+  runs out: a first go is in (under 10s the board pulses red, the mold trails turn red).
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
