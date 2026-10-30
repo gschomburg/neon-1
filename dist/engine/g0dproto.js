@@ -371,6 +371,16 @@ function g0dpFightTap(p, x, y, now) {
   Sound.tick();
   if (!reduced()) explode([{ ch: pickR(['%', ';', '.', ','], Math.random), x: pxX(x), y: pxY(BOARD_Y + y), col: G0D_COLS.mold }], pxX(x), pxY(BOARD_Y + y) + 4, { power: 0.3, grav: 1.2, life: [0.2, 0.4] });
 }
+// A tap on the mold over INT / CR: it scrapes the board's top right corner (where it climbs from), a wide swipe.
+function g0dpScrapeHud(p, x, now) {
+  const f = p.fight;
+  if (f.hands && f.hands.burning) return g0dpHurt(p, 1, 'HANDS OFF. -1 INT.');
+  if (f.hands) { Sound.deny(); return setMsg("> the M0LD won't budge.", G0DP_RED); }
+  g0dpMold(f, x, 0, 1.6, -2.2, false); g0dpMold(f, x, 2, 1.4, -1.6, false);
+  f.steal = Math.max(0, f.steal - 0.6);
+  Sound.tick();
+  if (!reduced()) explode([{ ch: pickR(['%', ';', '&'], Math.random), x: pxX(x), y: pxY(3), col: G0D_COLS.mold }], pxX(x), pxY(3) + 4, { power: 0.4, grav: 1.2, life: [0.2, 0.4] });
+}
 const G0DP_MOLD_CH = ' .:;%&#';
 function g0dpFightDraw(p, put, bg, now) {
   const f = p.fight, Y = BOARD_Y, { hs } = G0D_LOOKS, t = Math.floor(now / 140);
@@ -497,6 +507,8 @@ function g0dpTap(cx, cy) {
   const p = st.g0dp;
   if (!p || st.mode !== 'g0dp') return false;
   const x = Math.floor(cx), y = Math.floor(cy) - BOARD_Y, now = performance.now();
+  // the fight: the mold climbing onto INT / CR (the header's right side, down to the board) can be scraped right there
+  if (p.stage === 'fight' && !p.card && y < 0 && y >= 2 - BOARD_Y && x >= L.wc - 14) { g0dpScrapeHud(p, x, now); return true; }
   if (y < 0 || y >= L.gh) return false;
   if (p.card) { if (now - p.card.at > 500) { const go = p.card.next; p.card = null; go(); } return true; }
   if (p.stage === 'maze') g0dpMazeTap(p, x, y);

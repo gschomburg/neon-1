@@ -12,7 +12,7 @@ iphone notes
 [ ] Thing to deal with rivals hackers. Exorcist gear kicks em out of the layer
     - maybe higher rarity kicks them out completely
 [ ] Neon
-[ ] Gear to give you random set of mods
+[ ] Gear to give you random set of mods DELUX
 [ ] Loot dealer uses pond sign
 [ ] Scam
 [ ] Merch
