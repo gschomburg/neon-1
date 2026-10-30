@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.84']);
+NEON_FILES.push(['engine/active.js', 'v13.85']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -324,6 +324,171 @@ function lottoScratch() {
   }
   else { Sound.buy(); setMsg(`> lotto: +${cr}cr.`, C.money); }
 }
+// ---------------- The powerful gear (the user + Claude, 2026-10-30) ----------------
+// PING: an armed tap asks a node what it is (engine/run.js pick sends it here). No damage, no miss.
+function pingAt(lv, t) {
+  lv.pingAim = false;
+  takeItem('ping'); tally('gear');   // armed PING is spent as it fires
+  if (isReal(t)) { t.zd = true; Sound.ping(1568); flash(C.money, 0.1, 0.25); setMsg('> ping: clean. that one is real.', C.money); }
+  else { t.ruledOut = true; Sound.tick(); shake(1.5, 0.12); setMsg(t.loaded ? '> ping: a $ node. ICE.' : '> ping: ICE.', C.danger); }
+}
+// MAGNET: pull every $ node in the layer (its loot, as if hit; no damage). corpLong: the rare one, on all corp.
+function magnetPull(lv, corpLong) {
+  const run = st.run, c = st.corp, got = [];
+  if (corpLong) c.magnet = true;
+  for (const t of lv.tiles.filter(o => o.state === 'closed' && o.loaded)) {
+    lockTile(t, C.money, 'magnet');
+    const lr = rngFor(run.seed, 'loot', c.node.id, c.idx);   // the same roll a hit would get
+    got.push(grantLoot(lr, c.tier));
+    if (has('priority')) { for (let i = 1; i < ECON.modx.priority; i++) got.push(grantLoot(lr, c.tier)); modFired('priority'); }
+  }
+  setMsg(`> magnet: ${got.join(' ')}${corpLong ? ' (on, this corp)' : ''}`, C.money);
+}
+// STIM: max integrity +50% for this corp, healed to it. stimDown takes the extra back (you keep what fits).
+function stimUp() {
+  const run = st.run, add = Math.max(1, Math.round(run.maxInt / 2));
+  run.stim = { node: st.corp.node.id, add };
+  run.maxInt += add; run.integrity = run.maxInt;
+  Sound.shield(); flash(C.accent, 0.15, 0.35);
+  setMsg(`> stim: +${add} max int, this corp.`, C.accent);
+}
+function stimDown() {
+  const run = st.run;
+  if (!run || !run.stim) return;
+  run.maxInt -= run.stim.add; run.integrity = Math.min(run.integrity, run.maxInt);
+  run.stim = null;
+}
+// 0DAY: the real node, marked (t.zd, drawn gold). st.corp.zd: how many layers after this one get it too.
+const ZD_ALL = 99;   // legendary: every layer left (a number, not Infinity: it's saved)
+function zeroDay(lv, tier) {
+  const c = st.corp, more = [0, 1, ZD_ALL][tier] || 0, real = lv.tiles[lv.safe];
+  if (real.zd) c.zd = Math.min(ZD_ALL, (c.zd || 0) + 1 + more);   // already marked (PING, ENCORE): it reaches a layer further
+  else { real.zd = true; c.zd = Math.min(ZD_ALL, (c.zd || 0) + more); }
+  Sound.ping(1568); flash(C.money, 0.12, 0.3);
+  setMsg(c.zd >= ZD_ALL ? '> 0day: real node marked, all corp.' : c.zd ? `> 0day: marked, +${c.zd} layer${c.zd === 1 ? '' : 's'}.` : '> 0day: the real node, marked.', C.money);
+}
+// WORM: armed on the map, the next map tap picks a corp ahead (the sector boss too). Every layer there starts with a
+// third of its ICE eaten (never all of it).
+function wormTargets() {
+  const run = st.run, cur = run && run.at && run.map[run.at];
+  if (!cur) return [];
+  const top = SECTOR_STEPS * (run.sector + 1);
+  return Object.values(run.map).filter(n => n.step > cur.step && n.step <= top && (n.type === 'corp' || n.type === 'final') && !n.worm && !run.visited.includes(n.id));
+}
+function wormAt(id) {
+  const run = st.run, n = run.map[id];
+  if (!n || !wormTargets().includes(n)) { Sound.deny(); setMsg('> worm: tap a corp ahead.', C.mid); return; }
+  n.worm = true; run.wormAim = false; st.mapSel = null;
+  takeItem('worm'); tally('gear');   // spent as it goes
+  Sound.trap(); flash(C.accent, 0.1, 0.25);
+  setMsg('> worm sent. it waits in there.', C.accent);
+}
+function wormBite(lv, c, run) {
+  const ice = shuffle(lv.tiles.filter(t => !isReal(t) && !t.loaded && t.state === 'closed'), rngFor(run.seed, 'worm', c.node.id, c.idx));
+  const k = Math.min(ice.length - 1, Math.max(1, Math.round(ice.length / 3)));
+  if (k <= 0) return false;
+  for (const t of ice.slice(0, k)) lockTile(t, C.accent, 'worm');
+  setMsg(`> the worm was here: ${k} ICE eaten.`, C.accent);
+  return true;
+}
+// SKIP: any node two rows ahead, never onto the sector boss's row.
+function skipTargets() {
+  const run = st.run, cur = run && run.at && run.map[run.at];
+  if (!cur) return [];
+  const top = SECTOR_STEPS * (run.sector + 1);
+  return Object.values(run.map).filter(n => n.step === cur.step + 2 && n.step < top && (n.sector || 0) === run.sector && !run.visited.includes(n.id));
+}
+// SWAP: integrity and missing integrity trade places. Not at full (that's 0), not at exactly half (nothing changes).
+const swapOk = () => { const run = st.run; return (st.mode === 'map' || st.mode === 'play') && !st.busy && !st.transitioning && !zombie() && !bloodMoney() && run.integrity < run.maxInt && run.integrity * 2 !== run.maxInt; };
+function swapHealth() {
+  const run = st.run, was = run.integrity;
+  run.integrity = run.maxInt - was;
+  const up = run.integrity > was;
+  Sound.shield(); flash(up ? C.accent : C.danger, 0.2, 0.4); shake(up ? 3 : 6);
+  setMsg(`> swap: ${was} -> ${run.integrity} int.${up ? '' : ' ouch.'}`, up ? C.accent : C.danger);
+}
+// FAKE: armed, the next tap on a mod in the tray (engine/input.js) takes it up a step, for good.
+const fakeable = k => !!(MODS[k] && MODS[k].tiers) && !modMaxed(k);
+function fakeMod(key) {
+  const run = st.run;
+  st.selMod = -1;
+  if (!fakeable(key)) { Sound.deny(); setMsg(`> fake: ${MODS[key].name.toLowerCase()} is maxed.`, C.mid); return; }
+  addMod(key, modTier(key));   // as if found again: up one step (BUFFER heals what it adds)
+  run.fakeAim = false;
+  takeItem('fake'); tally('gear');   // spent as it takes
+  modFired(key); Sound.buy(); flash(C.accent, 0.12, 0.3);
+  setMsg(`> fake: ${MODS[key].name.toLowerCase()} is ${tierLabel(modView(key)).toLowerCase()} now.`, C.accent);
+}
+// NUKE: the corp is gone. It counts as beaten, the layers left (this one too) pay half, the boss reward still comes.
+async function nukeCorp(lv) {
+  const run = st.run, c = st.corp;
+  st.busy = true;
+  const left = c.counts.length - c.idx;
+  const cr = Math.round(payFor(lv) * left * 0.5);
+  Sound.trap(); setTimeout(() => Sound.shatter(), 120);
+  flash(C.bright, 0.7, 1.4); shake(18, 1);
+  setMsg('> NUKE.', C.danger);
+  for (const t of lv.tiles) {
+    if (!reduced()) { const i = lv.tiles.indexOf(t), { x, y } = tileCenter(t); explode(snapshot(cl => cl.own === 't' + i), x, y, { col: C.danger, power: 2 }); }
+    if (t.state === 'closed') { t.state = 'locked'; t.lockedBy = 'nuke'; }
+  }
+  await wait(1100);
+  if (st.lv !== lv) return;
+  run.credits += cr; run.earned += cr;
+  c.nuked = true; c.idx = c.counts.length;
+  Sound.loot(); setMsg(`> the corp is gone. +${cr}cr.`, C.money);
+  await wait(900);
+  await wipeOut(0);
+  return finishCorp();
+}
+// RELOAD (mod): going into a corp, every gear you hold only one of becomes two (engine/run.js startCorp).
+function reloadGear() {
+  const singles = st.run.items.filter(s => s.n === 1 && !isLoot(s.key));
+  for (const s of singles) s.n = 2;
+  if (singles.length) modFired('reload');
+}
+// ENCORE (the user, 2026-10-30): a tap turns it on (its chip glows on the belt) or off again. On, the next gear you use
+// goes off twice and one ENCORE is spent then. A stack of them still only doubles.
+function toggleEncore() {
+  const run = st.run;
+  run.encore = !run.encore;
+  st.hoverItem = -1; st.selItem = -1;
+  if (run.encore) { Sound.shield(); setMsg('> encore on: next gear goes twice.', C.accent); }
+  else { Sound.tick(); setMsg('> encore off.', C.mid); }
+}
+// ENCORE: the next gear you use goes off twice. Gear that moves you, aims, or clears / ends a layer can't go twice:
+// ENCORE stays primed for the next one that can.
+// Gear you arm (the user, 2026-10-30): a tap arms it (its chip glows), a second tap cancels, and it's only spent when it
+// fires (pingAt, fakeMod, wormAt). So a stray tap never wastes one.
+const holds = key => !!(st.run && st.run.items.some(s => s.key === key));
+const ARMS = {
+  ping: { on: () => !!(st.mode === 'play' && st.lv && st.lv.pingAim), set: v => { st.lv.pingAim = v; }, msg: '> ping armed: tap a node.' },
+  fake: { on: () => !!st.run.fakeAim, set: v => { st.run.fakeAim = v; }, msg: '> fake armed: tap a mod.' },
+  worm: { on: () => !!st.run.wormAim, set: v => { st.run.wormAim = v; st.mapSel = null; }, msg: '> worm armed: tap a corp ahead.' },
+};
+function toggleArm(key) {
+  const a = ARMS[key], on = !a.on();
+  a.set(on);
+  st.hoverItem = -1; st.selItem = -1;
+  if (on) { Sound.tick(); setMsg(a.msg, C.accent); }
+  else { Sound.tick(); setMsg(`> ${ITEMS[key].name.toLowerCase()} off.`, C.mid); }
+}
+// A gear's chip glows on the belt while it's on (ENCORE) or armed.
+const gearOn = key => key === 'encore' ? !!st.run.encore : ARMS[key] ? ARMS[key].on() && holds(key) : false;
+const ENCORE_NO = new Set(['encore', 'ping', 'route', 'warp', 'tunnel', 'mesh', 'skip', 'worm', 'nuke', 'swap', 'stim', 'fake', 'allin', 'tithe', 'blast', 'rollup', 'split', 'freeze', 'slomo', 'anchor', 'pass']);
+const encoreOk = key => !ENCORE_NO.has(key) && !key.startsWith('call');
+async function encoreAgain(key, tier, first) {
+  const lv = st.lv;
+  await first;
+  for (let i = 0; i < 80 && st.busy && st.lv === lv; i++) await wait(50);   // (BEES and the like: let the first one finish)
+  await wait(300);
+  if (!st.run || st.lv !== lv || st.transitioning) return;
+  if (!canUse({ key, tier, n: 1 })) { setMsg('> encore: nothing left to hit.', C.mid); return; }
+  Sound.ui();
+  gearFx(key, tier);
+  setMsg(`> encore! ${st.msg.replace(/^> /, '')}`, st.msgCol);
+}
+
 // Take one of a gear (PASS at the uplink).
 function takeItem(key) {
   const i = st.run.items.findIndex(s => s.key === key);
@@ -344,11 +509,20 @@ function whyNotItem(stack) {
   if (key === 'patch') return zombie() ? 'no rot to fix.' : 'integrity is full.';
   if (key === 'route' || key === 'warp' || key === 'tunnel' || key === 'mesh') return st.mode !== 'map' ? 'only on the map.' : st.run.warpAim || st.run.tunnel || st.run.mesh === st.run.sector ? 'already open: pick a node.' : 'nowhere to go.';
   if (key === 'pass') return 'use it on the UPLINK screen.';
+  if (key === 'swap') return zombie() || bloodMoney() ? 'nothing to swap.' : st.run.integrity >= st.run.maxInt ? 'that will kill you.' : st.run.integrity * 2 === st.run.maxInt ? 'half and half: nothing would change.' : 'wait a moment.';
+  if (key === 'fake') return 'no mod can go any higher.';
+  if (key === 'skip') return st.mode !== 'map' ? 'only on the map.' : st.run.skipAim ? 'already open: pick a node.' : 'the boss is in the way.';
+  if (key === 'worm') return st.mode !== 'map' ? 'only on the map.' : 'no corp ahead to send it to.';
   if (key === 'rewind' && inCorp && st.corp.frozen) return 'time already stopped.';
   if (key === 'rewind' && inCorp && (stack.tier || 0) < 2 && !st.timer) return 'no clock running.';
   if (key === 'wall') return 'only inside a corp.';
   if (!inCorp && key !== 'wall') return 'only inside a corp layer.';
+  if (key === 'nuke' && st.corp.node.type === 'final') return 'too big to nuke.';
+  if (key === 'nuke' && st.run.tutorial) return 'not in the training.';
   if (st.busy) return 'wait a moment.';
+  if (key === 'magnet') return 'no $ node to pull.';
+  if (key === 'stim') return st.run.stim ? 'already stimmed.' : 'nothing to stim.';
+  if (key === 'zeroday' && (st.corp.zd || 0) >= ZD_ALL) return 'already marked, all corp.';
   if (BOSS_GEAR[key] && st.lv && st.lv.n > 1) return BOSS_GEAR[key].why(st.lv);
   if (key === 'split' && st.lv && st.lv.split) return 'already split this layer.';
   return 'nothing to use it on.';
@@ -366,6 +540,11 @@ function canUse(stack) {
   if (key === 'warp') return onMap && nodesAhead().length > 0 && !(tier >= 1 && run.warpAim);
   if (key === 'tunnel') return onMap && !run.tunnel && !!run.at && rowMates().length > 0;
   if (key === 'mesh') return onMap && run.mesh !== run.sector && (nodesAhead().length > 0 || meshSides().length > 0);
+  if (key === 'skip') return onMap && !run.skipAim && skipTargets().length > 0;
+  if (key === 'worm') return !!run.wormAim || (onMap && wormTargets().length > 0);   // armed: a tap cancels
+  if (key === 'encore') return !st.transitioning;   // a tap turns it on or off
+  if (key === 'swap') return swapOk();
+  if (key === 'fake') return !!run.fakeAim || (!st.transitioning && run.mods.some(fakeable));   // armed: a tap cancels
   if (key === 'pass') return false;   // on the UPLINK screen
   const inLayer = st.mode === 'play' && !st.busy && st.lv;
   if (key === 'purge') return !!inLayer && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
@@ -376,6 +555,11 @@ function canUse(stack) {
   if (key === 'tilt') return layerGear && st.lv.rows > 1 && closed.length > 1;
   if (key === 'shake') return layerGear && closed.length > 1;
   if (key === 'frag' || key === 'shoe') return layerGear && closed.some(t => !isReal(t));
+  if (key === 'ping') return ARMS.ping.on() || (layerGear && closed.length > 1);   // armed: a tap cancels
+  if (key === 'magnet') return layerGear && closed.some(t => t.loaded);
+  if (key === 'zeroday') return layerGear && st.lv.tiles[st.lv.safe].state === 'closed' && (st.corp.zd || 0) < ZD_ALL;
+  if (key === 'stim') return layerGear && !run.stim && !zombie() && !bloodMoney();
+  if (key === 'nuke') return layerGear && st.corp.node.type === 'corp' && !run.tutorial && !st.mp;
   if (key === 'rewind') return layerGear && !st.corp.frozen && (tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer);
   if (BOSS_GEAR[key]) return layerGear && BOSS_GEAR[key].ok(st.lv);
   return false;
@@ -431,12 +615,28 @@ function useItem(slot) {
     return;
   }
   const key = stack.key, tier = stack.tier || 0;
+  if (key === 'encore') return toggleEncore();   // ENCORE: a switch; spent when it doubles something
+  if (ARMS[key]) return toggleArm(key);   // PING, FAKE, WORM: armed by a tap, cancelled by another, spent when they fire
   tally('gear');   // THE RECORD (engine/feats.js)
   stack.n--;
   if (stack.n <= 0) run.items.splice(slot, 1);
   st.hoverItem = -1; st.selItem = -1;
-  const lv = st.lv;
+  if (run.encore && !run.items.some(s => s.key === 'encore')) run.encore = false;   // (the ENCORE was sold or trashed)
+  const twice = !!run.encore && encoreOk(key);   // ENCORE: this one goes off twice, and one ENCORE is spent
+  if (twice) { run.encore = false; takeItem('encore'); tally('gear'); }
+  const first = gearFx(key, tier);
+  if (twice) encoreAgain(key, tier, first);
+}
+// What a gear does (useItem; ENCORE runs it again). Returns a promise for the ones that take a moment.
+function gearFx(key, tier) {
+  const run = st.run, lv = st.lv;
   if (key === 'lotto') lottoScratch();
+  if (key === 'magnet') magnetPull(lv, tier >= 1);
+  if (key === 'stim') stimUp();
+  if (key === 'zeroday') zeroDay(lv, tier);
+  if (key === 'skip') { run.skipAim = true; st.mapSel = null; Sound.whoosh(); setMsg('> skip: pick a node 2 rows ahead.', C.accent); }
+  if (key === 'swap') swapHealth();
+  if (key === 'nuke') return nukeCorp(lv);
   if (key === 'patch') {
     const before = run.integrity;
     heal(tier + 1);
@@ -496,9 +696,9 @@ function useItem(slot) {
   }
   if (key === 'tunnel') { run.tunnel = true; st.mapSel = null; Sound.whoosh(); setMsg('> tunnel dug: go to any node in this row.', C.accent); }
   if (key === 'mesh') { run.mesh = run.sector; st.mapSel = null; Sound.whoosh(); setMsg('> mesh up: every node links to the next row, all sector.', C.accent); }
-  if (key === 'tilt') tiltBoard(lv);
-  if (key === 'shake') shakeBoard(lv);
-  if (key === 'frag') fragBoard(lv, tier);
+  if (key === 'tilt') return tiltBoard(lv);
+  if (key === 'shake') return shakeBoard(lv);
+  if (key === 'frag') return fragBoard(lv, tier);
   if (key === 'shoe') throwShoe(lv);
   if (BOSS_GEAR[key]) BOSS_GEAR[key].use(lv, performance.now());
   if (key === 'rewind') {

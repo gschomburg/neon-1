@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.84']);
+NEON_FILES.push(['engine/panels.js', 'v13.85']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -134,7 +134,7 @@ function gearValue(key, tier = 0) {
   return Math.max(1, Math.floor(ITEMS[key].price * TIER_PRICE[tier || 0] * priceScale() * ECON.gear.sellPct));
 }
 const marketRerolls = () => 1 + legacyLv('restock');   // per market (RESTOCK on THE BOARD: up to 3)
-const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value && (!ITEMS[k].corp || legacyLv('bossloot')) && gearAllowed(k));   // value gear is loot only; boss gear comes from its boss (BOSS LOOT on THE BOARD: markets too)
+const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value && !ITEMS[k].find && (!ITEMS[k].corp || legacyLv('bossloot')) && gearAllowed(k));   // value gear is loot only; boss gear comes from its boss (BOSS LOOT on THE BOARD: markets too)
 // How often a gear shows up (loot and markets): normal gear by its rarity, value gear its own (ECON.drop).
 const gearWeight = k => { const w = ECON.drop[ITEMS[k].value ? k : ITEMS[k].rarity]; return w == null ? 1 : w; };
 // A market's gear: by rarity, with a plain CALL likelier (CALL_ODDS.shop, engine/hackers.js).
@@ -157,7 +157,7 @@ function openShop(node) {
     // More than one copy now and then (commoner gear more often; ECON.stock). Its own roll: the rest of the market stays the same.
     const rs = n ? rngFor(run.seed, 'shop', node.id, 'stock', n) : rngFor(run.seed, 'shop', node.id, 'stock');
     for (const o of offers) { o.n = 1; const p = ECON.stock[ITEMS[o.key].rarity] || 0; while (o.n < ECON.stock.max && rs() < p) o.n++; }
-    for (const o of pickMods(r, modsOfKind('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
+    for (const o of pickMods(r, modsFound('gen', 'minor'), has('coupon') ? 3 : 2)) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
     for (const o of exoticOffer(run.seed, 'shop', n ? node.id + 'r' + n : node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
     if (discDrops(rngFor(run.seed, 'shop', node.id, 'disc', n), 'shop')) offers.push({ kind: 'item', key: 'disc', tier: 0, price: ITEMS.disc.price, sold: false, n: 1 });   // the quest (engine/quests.js)
     offers = shuffle(offers, r);   // random order: any slot could be the good one
@@ -441,7 +441,7 @@ function openStartReward(node) {
   openChoice({
     title: 'LINK ESTABLISHED', col: C.accent,
     head: [['you are in. pick a starter perk.', C.text]],
-    options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, legacyLv('starter') ? modsOfKind('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky')),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
+    options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, legacyLv('starter') ? modsFound('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky')),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.starter)}cr ]`,
     onSkip: () => { const cr = earnInt(ECON.skip.starter); run.credits += cr; run.earned += cr; },
     msg: '> link established.',
@@ -450,7 +450,7 @@ function openStartReward(node) {
 
 // A cache's 2 mod offers; now and then one is an exotic (more often with CACHEKEY).
 function cacheOptions(r, node) {
-  const opts = pickMods(r, modsOfKind('gen', 'minor'), 2);
+  const opts = pickMods(r, modsFound('gen', 'minor'), 2);
   const ex = exoticOffer(st.run.seed, 'cache', node.id, has('cachekey') ? tv('cachekey', EXOTIC.cacheKeyChance) : EXOTIC.cacheChance);
   return ex.length ? [opts[0], ex[0]].filter(Boolean) : opts;
 }

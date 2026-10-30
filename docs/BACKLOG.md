@@ -35,7 +35,8 @@ unlocked by REP, and some quests unlock REP.
     At full health it won't go: a warning, "that will kill you."
   - **Dropped:** JACKPT (not that great), PARADOX (gets complicated). SCOUT: OK but not worth carrying around (it
     would mostly show the next sector's anomaly).
-- **Batch 2, agreed 2026-10-30 (next to build):** PING common 20cr (arm, tap a node: ICE or clean) · MAGNET common->rare
+- **Built v13.85 (batch 2):** PING, MAGNET, ENCORE, STIM, 0DAY, WORM, SKIP, SWAP, FAKE, NUKE and the RELOAD mod (SPEC
+  version log). What was agreed: PING common 20cr (arm, tap a node: ICE or clean) · MAGNET common->rare
   25cr · ENCORE rare 45cr · STIM rare 40cr (max INT +50% for the corp, healed to it; keep what fits after) · 0DAY
   rare->epic->legendary 50cr · WORM epic 70cr (on the map, aimed at a corp ahead: a third of its ICE burned) · SKIP epic
   70cr (two rows ahead; never onto a sector boss row) · SWAP epic 60cr · FAKE epic 80cr (tap it, then a mod: +1 tier for

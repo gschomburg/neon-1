@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v13.84']);
+NEON_FILES.push(['engine/save.js', 'v13.85']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -93,7 +93,7 @@ function runSnapshot() {
   const corp = c && c.node ? {
     node: c.node.id, idx: c.idx, prevSafe: c.prevSafe, bulwarkUsed: !!c.bulwarkUsed, contUsed: !!c.contUsed, burnerUsed: Number(c.burnerUsed || 0),
     wallAll: !!c.wallAll, ice: c.ice || 0, perfects: c.perfects || 0, scored: c.scored || 0,
-    carry: c.carry || null, pins: c.pins || 0, friendUsed: !!c.friendUsed, tapUsed: c.tapUsed || null, rad: c.rad || 0, ride: c.ride || 0, petIdx: c.petIdx, tickets: c.tickets || 0, stolen: c.stolen || null, rival: c.rival || null, hk: c.hk || null, hkRival: c.hkRival || null, hypeRow: c.hypeRow || 0, kludgeHealed: !!c.kludgeHealed, frozen: !!c.frozen, slomo: !!c.slomo, anchored: !!c.anchored, bees: !!c.bees,
+    carry: c.carry || null, pins: c.pins || 0, friendUsed: !!c.friendUsed, tapUsed: c.tapUsed || null, rad: c.rad || 0, ride: c.ride || 0, petIdx: c.petIdx, tickets: c.tickets || 0, stolen: c.stolen || null, rival: c.rival || null, hk: c.hk || null, hkRival: c.hkRival || null, hypeRow: c.hypeRow || 0, kludgeHealed: !!c.kludgeHealed, frozen: !!c.frozen, slomo: !!c.slomo, anchored: !!c.anchored, bees: !!c.bees, zd: c.zd || 0, magnet: !!c.magnet,
   } : null;
   // inside a layer, depth is saved as it was when the layer started (it comes back fresh)
   const r = c && st.lv && c.depthAt != null ? Object.assign({}, run, { depth: c.depthAt }) : run;

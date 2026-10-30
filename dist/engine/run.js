@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.84']);
+NEON_FILES.push(['engine/run.js', 'v13.85']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -112,7 +112,8 @@ async function enterNode(node, warp = false) {
   if (st.transitioning || !node || (!warp && !availableNodes().includes(node.id))) return;
   st.transitioning = true;
   const run = st.run;
-  run.tunnel = false; run.warpAim = false;   // TUNNEL, aimed WARP: this was the move
+  run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false;   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)
+  stimDown();   // STIM wears off once you leave its corp
   await wipeOut(0);
   run.at = node.id;
   run.visited.push(node.id);
@@ -157,13 +158,14 @@ async function startCorp(node, startIdx = 0, restore = null) {
   // FAILSAFE legendary recharges each corp you go into (not on a resume: that would refill it for free)
   if (!restore && st.corp.hasBoss && has('failsafe') && modTier('failsafe') >= 1 && !has('zombie')) st.run.failsafeUsed = false;
   if (restore) {   // a resumed save: what this corp had used up so far
-    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen', 'slomo', 'anchored', 'bees', 'hk', 'hkRival', 'hypeRow', 'kludgeHealed']) if (restore[k] != null) st.corp[k] = restore[k];
+    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen', 'slomo', 'anchored', 'bees', 'hk', 'hkRival', 'hypeRow', 'kludgeHealed', 'zd', 'magnet']) if (restore[k] != null) st.corp[k] = restore[k];
   }
-  if (!restore && st.corp.mod === 'rival') st.corp.hkRival = hkRivalFor(node);   // RIVAL: one of the cast (engine/hackers.js)
+  if (!restore && st.corp.mod === 'rival') st.corp.hkRival = hkRivalFor(node);
+  if (!restore && st.corp.hasBoss && has('reload')) reloadGear();   // RELOAD: singles get a second (engine/active.js)   // RIVAL: one of the cast (engine/hackers.js)
   if (st.corp.hasBoss) {
     // MUTATE: this corp, it counts as a random other mod.
     if (st.run.mods.includes('mutate')) {
-      const pool = modsOfKind('gen', 'minor').filter(k => !st.run.mods.includes(k) && !['buffer', 'stash', 'burner'].includes(k));
+      const pool = modsFound('gen', 'minor').filter(k => !st.run.mods.includes(k) && !['buffer', 'stash', 'burner'].includes(k));
       st.run.mutateAs = pickR(pool, rngFor(st.run.seed, 'mutate', node.id));
       // at rare or better (any step of it that is; a mod with none comes at its top step)
       const md = MODS[st.run.mutateAs], steps = (md.tiers || [{}]).map((s, i) => ({ i, lvl: RARITY[s.rarity || md.rarity].lvl }));
@@ -292,6 +294,7 @@ async function enterLayer() {
   lv.boss = boss;
   lv.misses = 0;
   lv.split = false;
+  if (c.zd > 0 && n > 1 && c.hasBoss) { lv.tiles[lv.safe].zd = true; c.zd--; }   // 0DAY (gear): the real node, marked
   if (has('quantum') && n >= 3 && c.hasBoss && !c.def.tap && !st.mp) {   // QUANTUM: a second real node, random
     const opts = lv.tiles.filter(t => !t.safe && !t.loaded);
     if (opts.length) pickR(opts, rngFor(run.seed, 'quantum', c.node.id, c.idx)).quantum = true;
@@ -389,6 +392,8 @@ async function enterLayer() {
     setMsg('> four in a row: 2 ICE down.', C.money);
     await wait(250);
   }
+  if (c.magnet && c.hasBoss && lv.tiles.some(t => t.state === 'closed' && t.loaded)) { magnetPull(lv, false); await wait(250); }   // MAGNET (rare): on all corp
+  if (c.node.worm && c.hasBoss && n > 2) { if (wormBite(lv, c, run)) await wait(250); }   // WORM: it got here first
   // START stage notes: hint mods put a short note on row 7 (left to right on the bar).
   lv.notes = [];
   if (n > 1 && c.hasBoss) {
@@ -600,6 +605,7 @@ function resetTimer() {
 
 async function pick(i) {
   if (st.mp) return mpTap(i);
+  if (st.mode === 'play' && !st.busy && st.lv && st.lv.pingAim && holds('ping') && st.lv.tiles[i] && st.lv.tiles[i].state === 'closed') return pingAt(st.lv, st.lv.tiles[i]);   // PING (gear): this tap asks
   if (st.mode === 'play' && !st.busy && st.lv && st.lv.blastAim && st.lv.tiles[i] && st.lv.tiles[i].state === 'closed') return blastAt(st.lv, st.lv.tiles[i]);   // BLAST (gear): this tap aims it
   { const byp = st.lagBypass; st.lagBypass = false;   // corp kit: LAGRANGE holds taps back
     if (!byp && st.mode === 'play' && !st.busy && st.corp && st.corp.hasBoss && st.corp.def.intercept && st.lv && st.lv.tiles[i] && st.corp.def.intercept(i)) return; }
@@ -761,7 +767,13 @@ async function onSafe(t) {
   // LAYER END stage, left to right on the bar.
   for (const k of modsAt('end')) if (END_FX[k] && await END_FX[k](perfect) !== false) modFired(k);   // false: nothing happened
   if (c.idx < c.counts.length) { saveRun(); await adBreak('layer'); return enterLayer(); }   // (maybe an ad between layers)
-  // Corp finished
+  return finishCorp();
+}
+
+// Corp finished: its last layer is passed (or a NUKE took it).
+function finishCorp() {
+  const run = st.run, c = st.corp;
+  stimDown();   // STIM wears off
   hkCorpEnd(c);   // hackers: the rivals you beat (the record, the bonus)
   lightsOn();
   statNodeEnd(c.bossSkipped ? 'skipped' : 'cleared');

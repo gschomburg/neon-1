@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.84']);
+NEON_FILES.push(['engine/scene.js', 'v13.85']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -491,6 +491,7 @@ function buildTray(ctx, y) {
     if (ok || listy) putChip(put, bg, ix, y + 2, lab.slice(0, nameLen), v.rarity, 'tray', v.tier > 0);   // on its rarity chip
     else put(ix, y + 2, lab.slice(0, nameLen), C.mid, 'tray');
     if (stack.n > 1) put(ix + nameLen, y + 2, lab.slice(nameLen), ok ? C.text : C.dim, 'tray');   // x3: the count, dimmer
+    if (gearOn(stack.key)) { bg(ix, y + 2, 7, C.accent, 0.3 + 0.25 * Math.sin(now / 160)); put(ix + 7 - 1, y + 2, '*', C.accent, 'tray', true); }   // ENCORE on: it glows
     if (sel || hov) bg(ix, y + 2, 7, C.accent, sel ? 0.25 : 0.12);
     addHit(ix, y + 2, 7, 1, { kind: 'item', i });
   }
@@ -523,7 +524,8 @@ function buildTray(ctx, y) {
     else {
       put(3 + it.name.length, y + 3, it.tip, C.text);
       const usable = canUse(stack);
-      put(4 + it.name.length + it.tip.length, y + 3, usable ? '>tap' : '(not now)', usable ? C.accent : C.dim);
+      const onOff = stack.key === 'encore' || ARMS[stack.key] ? (gearOn(stack.key) ? '>tap: off' : '>tap: on') : null;   // switches: ENCORE, and the gear you arm
+      put(4 + it.name.length + it.tip.length, y + 3, onOff || (usable ? '>tap' : '(not now)'), usable ? C.accent : C.dim);
     }
   }
 }
@@ -669,6 +671,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     }
     // ICE EATER: a scan found the real node's line (lv.warn): its nodes keep a red frame
     if (lv.warn && t.state === 'closed' && !solid && fc === C.mid && (lv.warn.row === t.row || lv.warn.col === t.col)) fc = C.danger;
+    if (t.zd && t.state === 'closed') { solid = true; fc = C.money; gc = C.money; bold = true; }   // 0DAY / PING: the real node, marked
     const edge = solid ? '+-----+' : '+- - -+';
     const side = solid ? '|' : ':';
     let glyph = masked && t.state === 'closed' && !t.loaded ? MASK_GLYPH : t.glyph;
@@ -984,6 +987,8 @@ function buildMap(ctx) {
     else put(p.x - 1, y, label, col, 'map');
     if (hov) ctx.bg(p.x - 1, y, 3, C.accent, 0.25);
     if (n.mod && ANOMALIES[n.mod] && !visited) put(p.x + 2, y, ANOMALIES[n.mod].tag, C.money, 'map', true);   // corp modifier
+    if (n.worm && !visited) put(p.x - 2, y, '~', C.accent, 'map', true);   // WORM: sent here
+    else if (run.wormAim && holds('worm') && !visited && wormTargets().includes(n) && Math.floor(now / 300) % 2) put(p.x - 2, y, '~', C.mid, 'map');   // WORM armed: where it can go
     if (sel) { put(p.x - 3, y, '>', C.accent, 'map'); put(p.x + 3, y, '<', C.accent, 'map'); }
     else if (run.at === n.id) put(p.x - 3, y, '@', C.bright, 'map');
     if (available && settled) addHit(p.x - 1, y, 3, 1, { kind: 'node', id: n.id });

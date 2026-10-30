@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.84']);
+NEON_FILES.push(['data/mods.js', 'v13.85']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -188,6 +188,30 @@ const ITEMS = {
   // for half"). Pays a random amount, now and then the jackpot (ECON.lotto). New gear goes at the end (seeded picks).
   lotto: { key: 'lotto', name: 'LOTTO', price: 15, rarity: 'common', desc: 'use any time: scratch it for a random amount of credits. sometimes the jackpot.', tip: 'random credits.',
     codex: 'a scratch ticket. use it any time, anywhere, for a random handful of credits; now and then it hits the jackpot. quick money for the uplink.' },
+  // The powerful gear (the user + Claude, 2026-10-30; docs/BACKLOG.md). Effects: engine/active.js.
+  ping:   { key: 'ping',   name: 'PING',   price: 20, rarity: 'common', desc: 'in a layer: arm it, then tap a node. it answers ICE or clean. no damage.', tip: 'tap a node: ICE or not?',
+    codex: 'in a layer: arm it, then tap any node. the ping comes back: ICE (the node is ruled out) or clean (the real node, marked for you). the tap costs nothing.' },
+  magnet: { key: 'magnet', name: 'MAGNET', price: 25, rarity: 'common', desc: 'in a layer with a $ node: pull its loot out. no damage.', tip: 'pull the $ node.',
+    codex: 'in a layer with a $ node: the magnet pulls its loot out, no hit, no damage. the rare one stays on: every $ node in the rest of the corp is pulled as its layer opens. no $ node, nothing to pull: it waits.',
+    tiers: [{}, { rarity: 'rare', desc: 'in a layer with a $ node: pull it, and every $ node in the rest of this corp.', tip: 'pull $, all corp.' }] },
+  encore: { key: 'encore', name: 'ENCORE', price: 45, rarity: 'rare', desc: 'tap to turn it on: the next gear you use goes off twice. tap again: off.', tip: 'next gear: twice.',
+    codex: 'one more time. tap it and it glows: the next gear you use goes off twice (two FRAGs, two PATCHes, two LOTTO tickets), and one ENCORE is spent then. tap it again to turn it off. gear that moves you, aims or clears a layer can\'t go twice: ENCORE stays on for the next one that can. a stack still only doubles.' },
+  stim:   { key: 'stim',   name: 'STIM',   price: 40, rarity: 'rare', desc: 'in a corp: max integrity +50% for this corp, healed up to it. after it, you keep what fits.', tip: '+50% int, this corp.',
+    codex: 'a combat stim. for the rest of this corp your max integrity is half again as big, and you heal up to it. when you leave the corp it wears off: max integrity goes back, and you keep what fits (2 left stays 2).' },
+  zeroday: { key: 'zeroday', name: '0DAY', price: 50, rarity: 'rare', desc: 'in a layer: the real node is marked.', tip: 'mark the real node.',
+    codex: 'an exploit nobody has patched yet. the real node is marked, gold. rare: this layer. epic: this layer and the next. legendary: every layer left in the corp, the boss too.',
+    tiers: [{}, { rarity: 'epic', desc: 'in a layer: the real node is marked, this layer and the next.', tip: 'mark the real, 2 layers.' },
+      { rarity: 'legendary', desc: 'in a corp: the real node is marked in every layer left.', tip: 'mark the real, all corp.' }] },
+  worm:   { key: 'worm',   name: 'WORM',   price: 70, rarity: 'epic', desc: 'on the map: tap it, then a corp ahead. a third of its ICE is eaten in every layer.', tip: 'pre-eat a corp\'s ICE.',
+    codex: 'on the map: send a worm ahead. tap it, then any corp ahead of you (the sector boss too): when you get there, a third of the ICE in every layer is already eaten. the corp shows a ~ on the map.' },
+  skip:   { key: 'skip',   name: 'SKIP',   price: 70, rarity: 'epic', desc: 'on the map: your next move can be any node two rows ahead. not onto the boss row.', tip: 'jump a row.',
+    codex: 'on the map: skip a row. your next move can be any node two rows ahead of you, linked or not. it never lands on the sector boss: the boss row is too well guarded.' },
+  swap:   { key: 'swap',   name: 'SWAP',   price: 60, rarity: 'epic', desc: 'your integrity and your missing integrity swap. 1 of 4 becomes 3 of 4.', tip: 'health <-> missing.',
+    codex: 'flip it: what you have and what you are missing trade places. at 1 of 4 you are back to 3 of 4. at 3 of 4 you drop to 1. at full it won\'t go: that would kill you.' },
+  fake:   { key: 'fake',   name: 'FAKE',   price: 80, rarity: 'epic', desc: 'tap it, then a mod: that mod goes up a step, for good.', tip: '+1 step on a mod.',
+    codex: 'fake it till you make it. tap it, then one of your mods: it goes up one rarity step for the rest of the run, as if you found it again. mods that can\'t go higher (corp mods, exotics, maxed ones) don\'t take it.' },
+  nuke:   { key: 'nuke',   name: 'NUKE',   price: 200, rarity: 'exotic', find: true, where: '$ nodes, caches. never in a market.', desc: 'in a corp: it\'s gone. it counts as beaten and the layers left pay half. not on a sector boss.', tip: 'breach the corp now.',
+    codex: 'the big one. in a corp, it ends it: the corp counts as beaten, the layers you didn\'t play pay half, and the boss still gives up its reward. sector bosses are too big to nuke. never sold: you find it, or you don\'t.' },
 };
 const ITEM_WHERE = 'market, $ nodes, caches.';
 
@@ -344,4 +368,9 @@ const MODS = {
   ramdoubler:  { name: 'RAM DOUBLER',    short: 'RAM', kind: 'exotic', rarity: 'exotic', slot: 'slots', locked: true, icon: '#=#-', anim: 'exotic', price: 140,
     tip: 'no gear. twice the mod slots.', desc: 'get your memory chromed up: replace your gear slots with mods (12 mod slots). the gear you hold is sold for half. locked in.',
     codex: 'the memory doubler: your head gets chromed up for twice the mods. your gear slots are replaced with mods: 12 mod slots, the second six where your gear was. the gear you hold is sold for half its price, any gear you would find becomes credits instead, and the market stops selling gear. locked in for the run.' },
+  // RELOAD (the user + Claude, 2026-10-30): a general mod that only corp bosses give (bossOnly: not in markets, caches
+  // or the start pick). Its effect: engine/run.js startCorp.
+  reload:      { name: 'RELOAD',      short: 'RLD', kind: 'gen', bossOnly: true, rarity: 'legendary', icon: '=>=>', anim: 'cycle', price: 150,
+    tip: 'singles top up each corp.', desc: 'at the start of every corp, any gear you hold just one of gets a second.',
+    codex: 'top up. every time you go into a corp, each gear you hold only one of becomes two. it never touches a stack of two or more, or your loot. only corp bosses give it.' },
 };

@@ -1,6 +1,6 @@
 // NeoN+1 data/glyphs.js: Node glyphs (the ASCII art on nodes) and their helpers.
 'use strict';
-NEON_FILES.push(['data/glyphs.js', 'v13.84']);
+NEON_FILES.push(['data/glyphs.js', 'v13.85']);
 
 // ---------------- Glyphs ----------------
 // The art, names and lore are in data/art/glyphs.js (ART_GLYPHS), edited in the neon editor.
@@ -45,4 +45,5 @@ const LOCK_LABEL = {
   sniffer: ['INERT', 'SNF'], corners: ['INERT', 'CNR'], sigscan: ['INERT', 'SIG'],
   overclock: ['INERT', 'OVC'], virus: ['INFCT', 'VRS'], xaxis: ['SCAN', 'XAX'], yaxis: ['SCAN', 'YAX'],
   basictraining: ['INERT', 'BSC'], autocomplete: ['NOPE', 'ACP'], twinlock: ['TWIN', 'TWN'], unravel: ['UNRVL', 'UNR'], jackbox: ['POP!', 'JCK'], frost: ['FROZE', ''], bid: ['SOLD', ''], protect: ['GONE', ''], snipe: ['INERT', 'SNP'], chancecard: ['CARD', 'CHC'], filed: ['FILED', ''], fourinarow: ['INERT', 'FIR'], breach: ['BRCH', ''], rival: ['RIVAL', ''], antigrav: ['DROP', 'AGV'], crack: ['CRACK', ''], link: ['LINK', ''], linkup: ['LINK', 'LNK'], blast: ['BLAST', 'BLS'], sacrifice: ['OFFER', 'SAC'], companion: ['SNIFF', 'PET'],
+  magnet: ['$$$', 'MAG'], worm: ['EATEN', 'WRM'], nuke: ['NUKED', ''],
 };

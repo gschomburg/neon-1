@@ -81,6 +81,7 @@
     { path: 'drop.common', kind: 'x', label: 'common gear', note: 'FWALL, SPLIT, SHAKE, FRAG, REWIND' },
     { path: 'drop.rare', kind: 'x', label: 'rare gear', note: 'ROUTE, WARP, TUNNEL, TILT' },
     { path: 'drop.epic', kind: 'x', label: 'epic gear', note: 'ALL-IN, MESH, PASS' },
+    { path: 'drop.exotic', kind: 'x', label: 'exotic gear', note: 'NUKE: finds only, never in a market' },
     { path: 'drop.duds', kind: 'x', label: 'DUDS', note: 'its weight' },
     { path: 'drop.sim', kind: 'x', label: 'SIM', note: 'its weight' },
     { path: 'drop.shard', kind: 'x', label: 'SHARD', note: 'its weight' },

@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.84']);
+NEON_FILES.push(['engine/input.js', 'v13.85']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -208,6 +208,7 @@ cv.addEventListener('pointerdown', e => {
     } else pick(h.i);
   }
   else if (h.kind === 'cell') { if (st.corp && st.corp.def.cellTap && st.mode === 'play' && !st.busy) st.corp.def.cellTap(h.cell); }
+  else if ((h.kind === 'node' || h.kind === 'peek') && st.run && st.run.wormAim && holds('worm') && !st.pause) wormAt(h.id);   // WORM: this tap sends it
   else if (h.kind === 'node') { st.mapPeek = null; selectNode(h.id); }
   else if (h.kind === 'peek') { st.mapSel = null; st.mapPeek = st.mapPeek === h.id ? null : h.id; Sound.tick(); }   // the map: what's that node?
   else if (h.kind === 'item') {
@@ -217,6 +218,7 @@ cv.addEventListener('pointerdown', e => {
   } else if (h.kind === 'mod') {
     st.selItem = -1;
     const key = st.run.mods[h.i];
+    if (st.run.fakeAim && holds('fake') && !st.pause) return fakeMod(key);   // FAKE: this tap picks the mod
     const active = MODS[key].active;
     if (active && (oneTap || st.selMod === h.i)) activateMod(key);
     else if (st.selMod === h.i) st.selMod = -1;

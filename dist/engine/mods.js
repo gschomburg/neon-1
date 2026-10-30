@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.84']);
+NEON_FILES.push(['engine/mods.js', 'v13.85']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -84,10 +84,13 @@ const modFired = key => {
 // For mods the screen shows on its own (drawn every frame): fire once per `holder` (the layer).
 const modFiredOnce = (key, holder) => { if (!holder || (holder.fired && holder.fired[key])) return; (holder.fired = holder.fired || {})[key] = true; modFired(key); };
 const modsOfKind = (...kinds) => Object.keys(MODS).filter(k => kinds.includes(MODS[k].kind));
+// Mods for markets, caches and the start pick: bossOnly mods (RELOAD) only come from a corp boss.
+const modsFound = (...kinds) => modsOfKind(...kinds).filter(k => !MODS[k].bossOnly);
 function modWhere(m) {
   if (m.kind === 'corp') return `from: ${corpDef(m.corp).name} boss.`;
   if (m.kind === 'minor') return 'from: start, safehouse, cache, shop.';
   if (m.kind === 'exotic') return 'from: sector bosses, rare in markets, caches.';
+  if (m.bossOnly) return 'from: corp bosses.';
   return 'from: bosses, caches, market.';
 }
 

@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.84']);
+NEON_FILES.push(['engine/render.js', 'v13.85']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -105,6 +105,7 @@ function availableNodes() {
   if (run.mesh === run.sector) for (const n of Object.values(run.map)) if (n.step === cur.step + 1 && (n.sector || 0) === run.sector) out.add(n.id);
   if (run.mesh === run.sector) for (const n of meshSides()) out.add(n.id);   // the row under the boss: the nodes beside you too
   if (run.warpAim) for (const n of nodesAhead()) out.add(n.id);
+  if (run.skipAim) for (const n of skipTargets()) out.add(n.id);   // SKIP: two rows ahead
   return [...out].filter(id => !run.visited.includes(id));
 }
 

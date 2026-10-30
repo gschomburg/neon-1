@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v13.84']);
+NEON_FILES.push(['data/economy.js', 'v13.85']);
 
 const ECON = {
   // ---- Units
@@ -106,6 +106,7 @@ const ECON = {
     common: 1,   // x: common gear (FWALL, SPLIT, SHAKE, FRAG, REWIND)
     rare: 0.7,   // x: rare gear (ROUTE, WARP, TUNNEL, TILT)
     epic: 0.4,   // x: epic gear (ALL-IN, MESH, PASS)
+    exotic: 0.05,   // x: exotic gear (NUKE: finds only, never in a market)
     duds: 1,   // x: DUDS (its weight)
     sim: 0.7,   // x: SIM (its weight)
     shard: 0.5,   // x: SHARD (its weight)
