@@ -298,6 +298,9 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   thin mold (a . or ,) lets them show through, dimmed, with the speck over them (G0DP_SEE). Taps still count only fully dug out.
 - Round 3 (the user): the maze feels better. b0y's cursors covered the glyphs: now two bob on the nodes' top right corners, and
   the third traces the clue at the bottom: the word you're after is lit, his cursor right after it.
+- Round 4 (the user): the final stand's eyes drift now (a bit faster as you win) and the mold streams off them. In the fight
+  an eye had slid under a corp node and made it unclickable: nodes push each other apart, the open eye and the HANDS OFF eyes
+  open clear of nodes and push them away. Scraping drops more: the mold you knock off falls as its own characters.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
