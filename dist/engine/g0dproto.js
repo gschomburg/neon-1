@@ -414,6 +414,7 @@ function g0dpScrapeHud(p, x, now) {
   if (!reduced()) explode([{ ch: pickR(['%', ';', '&'], Math.random), x: pxX(x), y: pxY(3), col: G0D_COLS.mold }], pxX(x), pxY(3) + 4, { power: 0.4, grav: 1.2, life: [0.2, 0.4] });
 }
 const G0DP_MOLD_CH = ' .:;%&#';
+const G0DP_SEE = 1.6;   // mold under this thickness (a . or ,) lets a node's letters show through (the user, round 2)
 function g0dpFightDraw(p, put, bg, now) {
   const f = p.fight, Y = BOARD_Y, { hs } = G0D_LOOKS, t = Math.floor(now / 140);
   const red = f.hands ? f.hands.red : 0, clear = (x, y) => { const i = g0dpIdx(f, x, y); return i < 0 || f.m[i] < 0.6; };
@@ -429,6 +430,7 @@ function g0dpFightDraw(p, put, bg, now) {
   }
   take(0, 0, L.wc);
   if (g0dpBoyLineOn(p, now)) take(0, f.H - 1, L.wc);
+  const underThin = new Set();   // node letters under thin mold
   // the network under it, where the mold is thin: faint dots, then the nodes (a letter at a time as you dig)
   for (let y = 2; y < f.H; y += 2) for (let x = (y / 2) % 2 ? 1 : 3; x < f.W; x += 4) if (clear(x, y) && !taken.has(x + ',' + y)) put(x, Y + y, '·', C.dim);
   for (const n of f.nodes) {
@@ -436,16 +438,20 @@ function g0dpFightDraw(p, put, bg, now) {
     const lab = n.kind === 'eye' ? (f.hands ? '(@)' : Math.floor(now / 700) % 3 === 2 ? '(.)' : '(o)') : n.label;
     const col = n.kind === 'eye' ? (f.hands ? G0DP_RED : G0DP_BLUE) : n.kind === 'int' ? C.accent : n.kind === 'cr' ? C.money : C.text;   // the eye node: blue (round 1)
     if (g0dpShows(f, n)) { const fc = col === C.text ? C.mid : col; if (!taken.has((x - 1) + ',' + y)) { put(x - 1, Y + y, '[', fc, 'fx'); take(x - 1, y, 1); } if (!taken.has((x + 3) + ',' + y)) { put(x + 3, Y + y, ']', fc, 'fx'); take(x + 3, y, 1); } }   // dug out: framed, now it counts
-    for (let k = 0; k < lab.length; k++) {
-      if (!clear(x + k, y) || taken.has((x + k) + ',' + y)) continue;
-      if (n.kind === 'corp') bg(x + k, Y + y, 1, C.dim, 0.8);
-      put(x + k, Y + y, lab[k], col, 'fx', n.kind !== 'corp');
+    for (let k = 0; k < lab.length; k++) {   // under thin mold (a . or ,) the letter shows through, dimmed; thick mold hides it
+      const i = g0dpIdx(f, x + k, y), th = i < 0 ? 0 : f.m[i];
+      if (th >= G0DP_SEE || taken.has((x + k) + ',' + y)) continue;
+      const thin = th >= 0.6;
+      if (thin) underThin.add((x + k) + ',' + y);
+      if (n.kind === 'corp') bg(x + k, Y + y, 1, C.dim, thin ? 0.4 : 0.8);
+      put(x + k, Y + y, lab[k], thin ? (n.kind === 'corp' ? C.mid : col) : col, 'fx', !thin && n.kind !== 'corp');
     }
   }
   // the M0LD
   for (let y = 0; y < f.H; y++) for (let x = 0; x < f.W; x++) {
     const i = y * f.W + x, th = f.m[i];
     if (th < 0.6 || taken.has(x + ',' + y)) continue;
+    if (underThin.has(x + ',' + y)) { put(x, Y + y, th < 1.1 ? '.' : ',', G0D_COLS.mold, 'fx', true); continue; }   // thin mold over a node: a speck over its letter
     const ch = G0DP_MOLD_CH[Math.min(6, Math.floor(th) + 1 + (hs(x * 7.1 + y * 3.3 + Math.floor(t / 6 + hs(x + y * 9) * 6)) > 0.85 ? 1 : 0))] || '#';
     let col = th > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim;
     if (f.fresh[i] > 0.45) col = G0DP_FRESH;

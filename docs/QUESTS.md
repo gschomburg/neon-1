@@ -294,6 +294,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   dug out and framed; a tap on a half-dug one scrapes). The eye nodes should be **blue**. b0y's cursors get in the way:
   one cursor on the board at a time, and he takes a while to find it. The scrape should be bigger. **The charge
   shouldn't lock the mold:** when you see it charging you can still tap the mold off your INT (only the burn hurts).
+- Round 2 (the user, 2026-10-30): a node's letters didn't show until all three were dug out. Now thick mold hides them, but
+  thin mold (a . or ,) lets them show through, dimmed, with the speck over them (G0DP_SEE). Taps still count only fully dug out.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
