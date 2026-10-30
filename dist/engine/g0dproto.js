@@ -327,6 +327,11 @@ function g0dpFightTick(p, now, dt) {
     if (G0DP.boy) setTimeout(() => { if (st.g0dp === p) boySay(G0DP_LINES.boyHands); }, 900);
     Sound.alarm();
   }
+  // the red traces (round 10): out of the network nodes while it charges, flat out in the burn, then they die away
+  f.traces = f.traces || [];
+  { const heat = f.hands ? Math.min(1, (now - f.hands.at) / 1000 / G0DP.charge) : 0;
+    if (f.hands) { f.traceAcc = (f.traceAcc || 0) + dt * (3 + 45 * heat * heat); while (f.traceAcc >= 1) { f.traceAcc -= 1; const n = pickR(f.nodes.filter(o => !o.gone), Math.random); if (n) g0dpTraceSpawn(f.traces, n.x + 1, n.y, heat); } }
+    g0dpTraceTick(f.traces, dt, f.hands ? heat : 1, f.W, f.H); }
   if (f.hands) {
     const h = f.hands, e = (now - h.at) / 1000;
     while (e < G0DP.charge && h.eyes.length < 1 + Math.floor(e / (G0DP.charge / 4))) { h.eyes.push(g0dpFreeSpot(f, h.eyes, 7, 2)); Sound.nodeOn(); }   // (never on a node: round 4)
@@ -475,6 +480,69 @@ function g0dpScrapeHud(p, x, now) {
   if (!reduced()) { const cells = []; for (let k = 0; k < 6; k++) cells.push({ ch: pickR(['%', ';', '&', ':'], Math.random), x: pxX(x + rand(-2, 2)), y: pxY(2 + Math.floor(Math.random() * 2)), col: pickR([G0D_COLS.mold, G0D_COLS.moldDim], Math.random) }); explode(cells, pxX(x), pxY(2), { power: 0.4, grav: 1.3, life: [0.3, 0.6] }); }
 }
 const G0DP_MOLD_CH = ' .:;%&#';
+// The flowing mold (round 10, the user): each thickness has its own ramp of characters, and a slow 3D noise (x, y, and
+// time as z) picks one per cell. It only changes the look: how thick the mold is (how many taps) never moves.
+const G0DP_RAMP = [null,
+  ['.', ',', '.', '`', "'", ',', '.', '.'],
+  [':', ',', ';', '.', ':', "'", ':', ';'],
+  [';', ':', 'i', ';', '!', ':', 'j', ';'],
+  ['%', 'x', '%', '*', '&', '%', '?', 'x'],
+  ['&', '%', '8', '&', 'B', '%', '&', '@'],
+  ['#', '@', '#', '8', 'M', '#', 'W', '@']];
+const G0DP_FLOW = { sx: 0.32, sy: 0.6, speed: 0.0011 };   // the noise: its scale across / down, and how fast z moves (per ms)
+function g0dpNoise3(x, y, z) {   // value noise, smooth, 0-1
+  const h = (a, b, c) => G0D_LOOKS.hs(a * 127.1 + b * 311.7 + c * 74.7);
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf), L2 = (a, b, k) => a + (b - a) * k;
+  const c = (dz) => L2(L2(h(xi, yi, zi + dz), h(xi + 1, yi, zi + dz), u), L2(h(xi, yi + 1, zi + dz), h(xi + 1, yi + 1, zi + dz), u), v);
+  return L2(c(0), c(1), w);
+}
+const g0dpMoldGlyph = (th, x, y, now) => { const ramp = G0DP_RAMP[Math.min(6, Math.floor(th) + 1)] || G0DP_RAMP[6]; return ramp[Math.min(ramp.length - 1, Math.floor(g0dpNoise3(x * G0DP_FLOW.sx, y * G0DP_FLOW.sy, now * G0DP_FLOW.speed) * ramp.length))]; };
+
+// The red traces (round 10, the user: like the title's circuit lights): they grow out of the network, run in straight
+// lines and turn at random, more and faster as the charge builds; at the top the burn hits. When it's over no new ones
+// start and the ones on screen eat themselves away from the tail. The final stand uses them as the clock runs down.
+// A trace: { pts: [[x, y, ch]], x, y, dx, dy, acc, len, done }
+const G0DP_TRACE = { max: 70, steps: [10, 34], life: [10, 34] };   // most at once; cells a second (slow -> fast); length
+const G0DP_CORNER = { '1,0>0,1': '╮', '1,0>0,-1': '╯', '-1,0>0,1': '╭', '-1,0>0,-1': '╰', '0,1>1,0': '╰', '0,1>-1,0': '╯', '0,-1>1,0': '╭', '0,-1>-1,0': '╮' };
+function g0dpTraceSpawn(list, x, y, heat) {
+  if (list.length >= G0DP_TRACE.max) return;
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]], [dx, dy] = dirs[Math.floor(Math.random() * 4)];
+  const len = Math.round(G0DP_TRACE.life[0] + (G0DP_TRACE.life[1] - G0DP_TRACE.life[0]) * (0.4 * Math.random() + 0.6 * heat));
+  list.push({ pts: [[Math.round(x), Math.round(y), dx ? '─' : '│']], x: Math.round(x), y: Math.round(y), dx, dy, acc: 0, len, done: false, heat });
+}
+// rate: new traces a second (0: none, the cool down); W, H: the board
+function g0dpTraceTick(list, dt, heat, W, H) {
+  const speed = G0DP_TRACE.steps[0] + (G0DP_TRACE.steps[1] - G0DP_TRACE.steps[0]) * heat;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const t = list[i];
+    t.acc += dt * speed * (t.dy ? 0.55 : 1);   // (cells are tall: down is slower)
+    while (t.acc >= 1) {
+      t.acc -= 1;
+      if (t.done || t.pts.length >= t.len) { t.done = true; t.pts.shift(); continue; }   // spent: it eats itself from the tail
+      let { dx, dy } = t;
+      if (Math.random() < 0.16) {   // a turn
+        const nd = dx ? [[0, 1], [0, -1]][Math.floor(Math.random() * 2)] : [[1, 0], [-1, 0]][Math.floor(Math.random() * 2)];
+        const last = t.pts[t.pts.length - 1];
+        last[2] = G0DP_CORNER[dx + ',' + dy + '>' + nd[0] + ',' + nd[1]] || '+';
+        [dx, dy] = nd; t.dx = dx; t.dy = dy;
+      }
+      t.x += dx; t.y += dy;
+      if (t.x < 0 || t.y < 1 || t.x >= W || t.y >= H) { t.done = true; continue; }
+      t.pts.push([t.x, t.y, dx ? '─' : '│']);
+    }
+    if (t.done && !t.pts.length) list.splice(i, 1);
+  }
+}
+// cells: Map 'x,y' -> [ch, col] (the head is bright, the line red, the tail end dim)
+function g0dpTraceCells(list, now) {
+  const out = new Map();
+  for (const t of list) t.pts.forEach(([x, y, ch], k) => {
+    const head = !t.done && k === t.pts.length - 1, fromTail = k / Math.max(1, t.pts.length - 1);
+    out.set(x + ',' + y, [head ? '•' : ch, head ? C.bright : fromTail < 0.25 ? C.dangerDim : G0DP_RED, head]);
+  });
+  return out;
+}
 // A scrape's falling bits (round 4: "the rest of the board could use some more"): the cells it thinned, before, as
 // [x, y, thickness]; then each one that lost mold drops its own character, more for thicker mold.
 function g0dpChunks(f, cx, cy, r) {
@@ -514,6 +582,10 @@ function g0dpFightDraw(p, put, bg, now) {
   take(0, 0, L.wc);
   if (g0dpBoyLineOn(p, now)) take(0, f.H - 1, L.wc);
   const underThin = new Set();   // node letters under thin mold
+  const nodeAt = new Set();
+  for (const n of f.nodes) if (!n.gone) for (let k = -1; k < 4; k++) nodeAt.add((Math.round(n.x) + k) + ',' + Math.round(n.y));
+  const traces = g0dpTraceCells(f.traces || [], now);
+  for (const [k, [ch, col, head]] of traces) { if (taken.has(k) || nodeAt.has(k)) continue; const [x, y] = k.split(',').map(Number); put(x, Y + y, ch, col, 'fx', head); taken.add(k); }
   // the network under it, where the mold is thin: faint dots, then the nodes (a letter at a time as you dig)
   for (let y = 2; y < f.H; y += 2) for (let x = (y / 2) % 2 ? 1 : 3; x < f.W; x += 4) if (clear(x, y) && !taken.has(x + ',' + y)) put(x, Y + y, '·', C.dim);
   for (const n of f.nodes) {
@@ -536,10 +608,10 @@ function g0dpFightDraw(p, put, bg, now) {
     const i = y * f.W + x, th = f.m[i];
     if (th < 0.6 || taken.has(x + ',' + y)) continue;
     if (underThin.has(x + ',' + y)) { put(x, Y + y, th < 1.1 ? '.' : ',', G0D_COLS.mold, 'fx', true); continue; }   // thin mold over a node: a speck over its letter
-    const ch = G0DP_MOLD_CH[Math.min(6, Math.floor(th) + 1 + (hs(x * 7.1 + y * 3.3 + Math.floor(t / 6 + hs(x + y * 9) * 6)) > 0.85 ? 1 : 0))] || '#';
+    const ch = g0dpMoldGlyph(th, x, y, now);   // the flow (round 10)
     let col = th > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim;
     if (f.fresh[i] > 0.45) col = G0DP_FRESH;
-    if (red && hs(x * 3.7 + y * 11.3) < red) col = th > 2.5 ? G0DP_RED : C.dangerDim;
+    if (f.hands && f.hands.burning) col = th > 2.5 ? G0DP_RED : C.dangerDim;   // the burn: all of it red (the charge is the traces now)
     put(x, Y + y, ch, col);
   }
   // the status line
@@ -590,6 +662,10 @@ function g0dpStandTick(p, now, dt) {
   if (s.left <= 0 && !p.card) { st.run.integrity = 0; return g0dpHurt(p, 0, 'he got away.'); }
   // the eyes drift (round 4) and keep apart; the mold streams off them, a trail that fades
   const W = L.wc, H = L.gh, live = s.eyes.filter(e => e.alive), fast = 1 + s.cur * 0.08;
+  s.traces = s.traces || [];
+  { const doom = clamp(1 - s.left / 12, 0, 1);   // the last 12s: traces off the eyes, more and faster (round 10)
+    if (doom > 0) { s.traceAcc = (s.traceAcc || 0) + dt * (2 + 40 * doom * doom); while (s.traceAcc >= 1) { s.traceAcc -= 1; const e = pickR(live, Math.random); if (e) g0dpTraceSpawn(s.traces, e.x + rand(-2, 2), e.y + (Math.random() < 0.5 ? -1 : 1), doom); } }
+    g0dpTraceTick(s.traces, dt, doom || 1, W, H); }
   for (const e of live) {
     if (now > e.turnAt) { const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 2.5; e.vx = Math.cos(a) * v; e.vy = Math.sin(a) * v * 0.45; e.turnAt = now + 1500 + Math.random() * 2000; }
     e.x += e.vx * dt * fast; e.y += e.vy * dt * fast;
@@ -626,13 +702,14 @@ function g0dpStandTap(p, x, y, now) {
 function g0dpStandDraw(p, put, bg, now) {
   const s = p.stand, Y = BOARD_Y, { hs, moldCh } = G0D_LOOKS, t = Math.floor(now / 120);
   // the clock running out (round 6, a first go at it): under 10s the board glows red, harder and faster as it drops
-  const doom = clamp(1 - s.left / 10, 0, 1);
-  if (doom > 0) { const pulse = 0.5 + 0.5 * Math.sin(now / (260 - doom * 160)); for (let y = 1; y < L.gh; y++) bg(0, Y + y, L.wc, G0DP_RED, doom * (0.06 + 0.12 * pulse)); }
+  const doom = clamp(1 - s.left / 10, 0, 1);   // (the traces do the warning now; the trails still turn red)
+  const stTr = g0dpTraceCells(s.traces || [], now), onEye0 = (x, y) => s.eyes.some(e => e.alive && Math.abs(x - Math.round(e.x)) <= 2 && Math.abs(y - Math.round(e.y)) <= 1);
+  for (const [k, [ch, col, head]] of stTr) { const [x, y] = k.split(',').map(Number); if (y >= 1 && y < (g0dpBoyLineOn(p, now) ? L.gh - 1 : L.gh) && !onEye0(x, y)) put(x, Y + y, ch, col, 'fx', head); }
   // the mold streaming off the eyes: thick and bright when fresh, thinning as it fades (round 4)
   const lastRow = g0dpBoyLineOn(p, now) ? L.gh - 1 : L.gh, onEye = (x, y) => s.eyes.some(e => e.alive && Math.abs(x - Math.round(e.x)) <= 2 && Math.abs(y - Math.round(e.y)) <= 1);
   for (const o of s.trail) {
     const x = Math.round(o.x), y = Math.round(o.y), age = (now - o.at) / 1600;
-    if (y < 1 || y >= lastRow || x < 0 || x >= L.wc || onEye(x, y)) continue;
+    if (y < 1 || y >= lastRow || x < 0 || x >= L.wc || onEye(x, y) || stTr.has(x + ',' + y)) continue;
     const ch = '#&%;:,.'[Math.min(6, Math.floor(age * 7))];
     put(x, Y + y, ch, doom > 0 && G0D_LOOKS.hs(o.k * 91) < doom ? (age < 0.5 ? G0DP_RED : C.dangerDim) : age < 0.3 ? G0DP_FRESH : age < 0.65 ? G0D_COLS.mold : G0D_COLS.moldDim);
   }

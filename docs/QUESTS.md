@@ -314,6 +314,12 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 - Round 8 (the user): no blue backgrounds for now (the hittable eye is just blue). Later, with more in, maybe a proper invert:
   a blue background with bg-colored letters.
 - Round 9 (the user): once you've uncovered what b0y was showing you (the eye node), or the eye is open, he goes back to rest.
+- Round 10 (the user: "just the right amount of hectic"; now graphics and animation): **the mold flows**: each thickness has
+  its own ramp of 8 characters and a slow 3D noise (x, y, time) picks one per cell, so it warps like liquid without changing
+  how thick it is (G0DP_RAMP, G0DP_FLOW). **The charge is red traces** (like the title's circuit lights): they grow out of
+  the network nodes in lines with rounded turns, more and faster as it builds; the burn turns the mold red; after, no new
+  ones and the rest eat themselves away from the tail (G0DP_TRACE). The final stand uses the traces too, off the eyes in
+  the last 12s (in place of the red glow).
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
