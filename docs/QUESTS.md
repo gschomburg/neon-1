@@ -296,6 +296,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   shouldn't lock the mold:** when you see it charging you can still tap the mold off your INT (only the burn hurts).
 - Round 2 (the user, 2026-10-30): a node's letters didn't show until all three were dug out. Now thick mold hides them, but
   thin mold (a . or ,) lets them show through, dimmed, with the speck over them (G0DP_SEE). Taps still count only fully dug out.
+- Round 3 (the user): the maze feels better. b0y's cursors covered the glyphs: now two bob on the nodes' top right corners, and
+  the third traces the clue at the bottom: the word you're after is lit, his cursor right after it.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 

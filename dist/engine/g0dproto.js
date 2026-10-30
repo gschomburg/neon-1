@@ -43,6 +43,8 @@ const G0DP_LINES = {
 };
 // b0y's clue in the maze: the codex order, half eaten by the mold (two lines at the bottom of the board)
 const G0DP_CLUE = ['b0y: prompt. diamond. cross.', '     st#%age. upl@#k. wa%#...'];
+// where each answer's word sits in the clue: [line, column, length] (path step 0-5)
+const G0DP_CLUE_AT = [[0, 5, 6], [0, 13, 7], [0, 22, 5], [1, 5, 7], [1, 14, 6], [1, 22, 4]];
 const g0dSay = (text, col = C.danger) => setMsg('> G0D: ' + text, col);
 // b0y's lines: in the terminal, and on the board's bottom row a few seconds (the terminal gets stepped on; the user, round 1)
 const boySay = text => { if (!G0DP.boy) return; setMsg('> b0y: ' + text, G0DP_BLUE); if (st.g0dp) st.g0dp.boyLine = { text, at: performance.now() }; };
@@ -135,11 +137,12 @@ function g0dpBoyDraw(p, put, bg, now) {
   if (!G0DP.boy || !b) return;
   b.curs.forEach((c, i) => {
     if (b.single && i > 0) return;
-    const x = Math.round(c.x), y = BOARD_Y + Math.round(c.y);
+    const maze = p.stage === 'maze', bob = maze && i < 2 && Math.abs(c.x - c.tx) < 0.5 && Math.floor((now + i * 170) / 260) % 2 ? 1 : 0;   // the maze: they bob on a node's corner
+    const x = Math.round(c.x), y = BOARD_Y + Math.round(c.y) - bob;
     if (y < BOARD_Y || y >= BOARD_Y + L.gh) return;
-    bg(x, y, 1, G0DP_BLUE, b.phase === 'hold' && now > b.until - 900 ? 0.35 : 1);
+    bg(x, y, 1, G0DP_BLUE, b.phase === 'hold' && now > b.until - 900 && !(maze && i === 2) ? 0.35 : 1);
     put(x, y, 'v', C.bg, 'fx', true);
-    if (i === 0) put(x + 1, y, 'b0y', G0DP_BLUE, 'fx');
+    if (i === 0 && !maze) put(x + 1, y, 'b0y', G0DP_BLUE, 'fx');
   });
 }
 
@@ -183,8 +186,10 @@ function g0dpMazeTick(p, now, dt) {
   m.left -= dt;
   if (m.left <= 0) { m.left = G0DP.mazeTimer; g0dpHurt(p, 1, 'the clock ran out. -1 INT.'); }
   const r = m.nodes.find(n => n.right);
-  const spot = n => ({ x: n.x + 3, y: n.y + 2 });   // on the node itself (round 1)
+  const spot = n => ({ x: n.x + 6, y: n.y });   // the node's top right corner, off the glyph (round 3)
   g0dpBoyTick(p, now, dt, { right: r ? spot(r) : null, others: m.nodes.filter(n => !n.right).map(spot) });
+  const w = G0DP_CLUE_AT[Math.min(m.path, G0DP_CLUE_AT.length - 1)], c2 = p.boy.curs[2];   // the third cursor: the word we're after
+  c2.tx = c2.x = 1 + w[1] + w[2]; c2.ty = c2.y = L.gh - 3 + w[0];   // (on the . right after the word)
 }
 function g0dpMazeTap(p, x, y) {
   const now = performance.now(), m = p.maze, i = m.nodes.findIndex(n => now >= n.showAt && x >= n.x && x < n.x + 7 && y >= n.y && y < n.y + 5);
@@ -229,7 +234,12 @@ function g0dpMazeDraw(p, put, bg, now) {
     n2.glyph.forEach((l, k) => { put(n2.x, Y + n2.y + 1 + k, ':', fc); put(n2.x + 1, Y + n2.y + 1 + k, l, gc); put(n2.x + 6, Y + n2.y + 1 + k, ':', fc); });
     put(n2.x, Y + n2.y + 4, '+- - -+', fc);
   }
-  if (G0DP.boy) G0DP_CLUE.forEach((l, k) => put(1, Y + L.gh - 3 + k, l, G0DP_BLUE));
+  if (G0DP.boy) {
+    G0DP_CLUE.forEach((l, k) => put(1, Y + L.gh - 3 + k, l, G0DP_BLUE));
+    const w = G0DP_CLUE_AT[Math.min(m.path, G0DP_CLUE_AT.length - 1)];   // the word we're after now: lit
+    bg(1 + w[1], Y + L.gh - 3 + w[0], w[2], G0DP_BLUE, 0.35);
+    put(1 + w[1], Y + L.gh - 3 + w[0], G0DP_CLUE[w[0]].slice(w[1], w[1] + w[2]), C.bright, 'fx', true);
+  }
   // the edges of the maze: a little mold
   const { hs, moldCh } = G0D_LOOKS, t = Math.floor(now / 160);
   for (let x = 0; x < L.wc; x++) for (const y of [1]) if (hs(x * 3.3 + y) > 0.55) { const [c, k] = moldCh(x, y, t); if (c !== ' ') put(x, Y + y, c, g0dCol(k)); }

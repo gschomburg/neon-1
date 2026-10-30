@@ -1,6 +1,3 @@
-iphone notes
-*************
-
 god fight feedback
 *********************
 
