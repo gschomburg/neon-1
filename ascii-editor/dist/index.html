@@ -7,13 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Mono&family=Fira+Code&family=Source+Code+Pro&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=0.143">
+<link rel="stylesheet" href="style.css?v=0.148">
 </head>
 <body data-theme="blue">
 
 <!-- Top bar: menus, document name, global view controls -->
 <header id="topbar">
-  <div class="brand">as<b>X</b>ii <span class="ver">v0.143</span></div>
+  <div class="brand">as<b>X</b>ii <span class="ver">v0.148</span></div>
   <nav class="menus">
     <div class="menu">
       <button class="btn menu-btn">File</button>
@@ -25,6 +25,7 @@
         <button class="btn" data-cmd="gallery" title="Built-in art: preview a piece on the canvas, then add it on a new layer">Gallery...</button>
         <hr>
         <button class="btn" data-cmd="importTxt">Import text file...</button>
+        <button class="btn" data-cmd="importImg" title="A picture to trace over, on its own layer (you can also drop or paste one on the canvas)">Import image...</button>
         <button class="btn" data-cmd="exportTxt">Export .txt</button>
         <hr>
         <button class="btn" data-cmd="copyText">Copy canvas as text</button>
@@ -73,6 +74,7 @@
         <button class="btn" data-cmd="layerDel">Delete layer</button>
         <hr>
         <button class="btn" data-cmd="rasterize">Rasterize text layer</button>
+        <button class="btn" data-cmd="imgBake" title="Turn an image layer's picture into characters on a new layer">Bake image to ASCII...</button>
         <button class="btn" data-cmd="mergeDown">Merge down</button>
         <button class="btn" data-cmd="flatten">Flatten all</button>
         <button class="btn" data-cmd="autoBake" title="The auto cells (in the selection, or the whole layer) become the characters they show, and stop re-picking">Bake auto cells</button>
@@ -95,6 +97,7 @@
           <b>Shapes</b> while dragging: Shift = square / circle, Alt = from the center (pressed after you start), hold Space to move it<br>
           <b>Select</b> rectangle, ellipse, lasso or polygon (Shift M cycles), or the magic wand (W: the same character; Contiguous off = everywhere); Shift adds, Alt takes away, Shift + Alt keeps the overlap; drag inside or arrows move the outline; Ctrl + drag / Ctrl + arrows move the content (+ Alt: a copy); Ctrl A selects everything, even outside the canvas; Ctrl Shift A just the canvas<br>
           <b>Move</b> drag moves what is selected (nothing selected = the whole layer); Alt + drag moves a copy; Shift locks it to one direction; Ctrl + click picks the layer under the pointer; Ctrl + Select moves too<br>
+          <b>Image layers</b> File › Import image (or drop / paste a picture): a picture to trace over, drawn under the art and never exported. The Move tool drags it, its corner scales it, and its bar has Opacity, Fit and Lock (the lock is on its row in Layers too). Layer › Bake image turns it into characters on a new layer<br>
           <b>Text layers</b> (T in Layers) only change with the Font tool; the Move tool moves the text whole, and pastes land on a new layer. Layer › Rasterize makes one plain art so other tools can paint on it<br>
           <b>Moving</b> arrows nudge (Shift = 5); Enter drops it; Esc puts it back<br>
           <b>Selection</b> while one is active, Brush, Eraser and Type only change cells inside it; Ctrl D clears it<br>
@@ -257,6 +260,7 @@
       <h2>Layers<span class="ltoggles"><button class="lib" id="focusBtn" data-cmd="focusToggle" title="Layer focus: dim every layer but the active one, and draw it on top (L)"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="6.5"/><circle cx="10" cy="10" r="2" fill="currentColor"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2"/></svg></button></span></h2>
       <div class="pbody">
       <div id="layers"></div>
+      <div id="layersGrip" title="Drag to make the list taller or shorter (double-click: back to normal)"></div>
       <div class="layerbar">
         <button class="lib" data-cmd="layerNew" title="New layer"><svg viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="13" height="13" rx="1.5"/><path d="M10 7v6M7 10h6"/></svg></button>
         <button class="lib" data-cmd="layerDup" title="Duplicate layer"><svg viewBox="0 0 20 20"><rect x="6.5" y="6.5" width="10" height="10" rx="1.5"/><path d="M13.5 3.5h-8a2 2 0 0 0-2 2v8"/></svg></button>
@@ -326,6 +330,8 @@
 <!-- Extrude (Select tool) -->
 <div id="extrudePop" class="brushpop" hidden></div>
 <div id="brushPop" class="brushpop" hidden></div>
+<!-- Bake image (Layer menu, or Bake... under Layers) -->
+<div id="imgBakePop" class="brushpop" hidden></div>
 
 <!-- New pattern dialog (Select tool: Make pattern) -->
 <div id="patDlg" class="modal" hidden>
@@ -344,11 +350,12 @@
 </div>
 <input type="file" id="fileOpen" accept=".json,.asxii,application/json" hidden>
 <input type="file" id="fileTxt" accept=".txt,text/plain" hidden>
+<input type="file" id="fileImg" accept="image/*" hidden>
 <pre id="selftest" hidden></pre>
 
-<script src="fonts.js?v=0.143"></script>
-<script src="cursors.js?v=0.143"></script>
-<script src="app.js?v=0.143"></script>
-<script src="neon-link.js?v=0.143"></script>
+<script src="fonts.js?v=0.148"></script>
+<script src="cursors.js?v=0.148"></script>
+<script src="app.js?v=0.148"></script>
+<script src="neon-link.js?v=0.148"></script>
 </body>
 </html>

@@ -20,6 +20,15 @@ every point (a painted image only gives pixels).
    turn its opacity down, and draw / trace ASCII over it. Shown only in the tool, never exported. *(Claude)*:
    lock it in place so it doesn't move by accident, toggle it on and off, and maybe a grayscale / contrast
    option so lines are easier to see.
+   **BUILT v0.144 as image layers** (the user, 2026-10-29): File › Import image (or drop / paste a picture) adds an
+   image layer: a real layer (eye, reorder, as many as you like) with no characters, drawn under all the art, never
+   exported. Move tool drags it, its corner handle scales it (aspect kept), arrows nudge. v0.146 (the user: follow the UI
+   cleanup in TOOLBAR.md): with an image layer active the Move bar shows Opacity, Fit and Lock (instead of White space),
+   its row in Layers has a lock icon next to the eye, and the canvas right-click menu has Bake, Fit and Lock / Unlock. Saved in the project file (pictures are scaled down on import to 256px on their longest side, v0.145; one too
+   big for the browser autosave is left out of it, with a warning). **Bake** (Layer menu, or Bake... under Layers):
+   brightness to characters on a new layer above, the image hidden. Characters: Classic (.:-=+*#%@) or Custom (light to
+   dark); Contrast, Brightness, Invert (off: dark parts dense, so line art on white comes out as its lines); the lightest
+   step and see-through parts stay blank; live preview on the canvas. Later: edges as line characters (/ \ | _).
 2. **Paths (vector):** import an SVG (paths, lines, curves, arcs); a pen tool to add and edit paths;
    move / scale / rotate them. This is what gets converted to characters.
 3. **The character grid** over everything, in the real cell shape: cells are tall (about 0.6 wide to 1
@@ -483,6 +492,8 @@ have letters only). The font list shows each font with a sample of your text. Sa
 mode, animation, built-in art.
 
 **To do (noted, not built):**
+- **Image layers still need work** (the user, 2026-10-30): v0.144-v0.148 is fine for now, but the feature isn't
+  finished; come back to it (see the BUILT v0.144 note under the plan's first point).
 - **Later pile: mazes** (the user, 2026-10-23). A **Maze** pattern fill, and maybe a whole maze tool (generate a maze in a
   box or selection, pick the wall style: `+--+` / `|` ASCII, box lines, blocks).
 - **Started v0.43: solid spaces.** A cell can hold a solid space (a no-break space): blank, but it covers the layers

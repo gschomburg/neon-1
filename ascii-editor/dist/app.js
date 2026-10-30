@@ -11,7 +11,7 @@ const unK = k => { const i = k.indexOf(','); return [+k.slice(0, i), +k.slice(i 
 const chars = s => Array.from(s);           // split by code point, so Unicode characters stay whole
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const VERSION = '0.143';   // change with: node ascii-editor/bump.js minor
+const VERSION = '0.148';   // change with: node ascii-editor/bump.js minor
 const BASE_FONT_PX = 16;
 const LINE_RATIO = 1.25;                     // cell height / font size
 const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6];
@@ -62,6 +62,7 @@ const S = {
   shade: { size: 3, tip: 'round', dir: 'dark', strength: 30, set: 'all', lines: false, skipBlanks: false, buildup: false },
   panels: { help: true },   // right-pane panels that are folded: { id: true } (Help starts folded)
   sideW: 0,             // the right pane's width, if you resized it (0 = the default)
+  layersH: 0,           // the Layers list's height, if you resized it (0 = the default)
   mirrorFlip: true,     // mirrored copies flip their characters (/ becomes \); off = the same characters
   mirrorAt: { x: null, y: null },   // where the mirror lines are, in cells from the canvas's left / top, in half-cell steps
                                     // (a whole number: between two cells; a half: through a cell). null = the middle. Saved with the document
@@ -93,6 +94,175 @@ const redraw = () => { dirty = true; };
 // ---------- layers ----------
 function makeLayer(name) { return { id: S.nextId++, name: name || 'Layer ' + S.nextId, visible: true, cells: new Map() }; }
 const L = () => S.layers[S.active];
+
+// ---------- image layers: a picture to trace over (File › Import image, or drop / paste one on the canvas) ----------
+// l.img = { src (a data URL), iw, ih (its pixels), x, y, w (where it sits, in cells, fractions allowed), opacity, locked,
+// bake (its Bake settings) }. Its height follows the picture's shape in the font's cells. It has no characters: it is
+// drawn under all the art, shown only in the editor and never exported. The Move tool drags it (its corner scales it).
+// Bake (Layer › Bake image) turns its brightness into characters on a new layer above it.
+const IMG_CACHE = new Map();
+function imgEl(src) {
+  let im = IMG_CACHE.get(src);
+  if (!im) { im = new Image(); im.onload = () => { bakeGrid = null; redraw(); if (imgBaking) renderImgBake(); }; im.src = src; IMG_CACHE.set(src, im); }
+  return im.complete && im.naturalWidth ? im : null;
+}
+const imgAspect = g => (g.ih / g.iw) * (S.cw / S.ch);   // rows per column
+const imgH = g => g.w * imgAspect(g);                  // its height in cells
+const imgLayer = () => (L() && L().img ? L() : null);
+const cloneImg = g => ({ ...g, bake: g.bake ? { ...g.bake } : undefined });
+const IMG_MAX = 256;   // pictures are scaled down on import so neither side is over this (keeps project files and autosave small)
+function importImageFile(file) {
+  if (!file || !/^image\//.test(file.type)) return toast('Not an image file', 'warn');
+  const r = new FileReader();
+  r.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      const k = Math.min(1, IMG_MAX / Math.max(im.naturalWidth, im.naturalHeight));
+      const iw = Math.max(1, Math.round(im.naturalWidth * k)), ih = Math.max(1, Math.round(im.naturalHeight * k));
+      const cv = document.createElement('canvas'); cv.width = iw; cv.height = ih;
+      const g = cv.getContext('2d', { willReadFrequently: true }); g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, iw, ih);
+      const d = g.getImageData(0, 0, iw, ih).data; let alpha = false;
+      for (let i = 3; i < d.length; i += 4) if (d[i] < 255) { alpha = true; break; }
+      const src = alpha ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.9);   // (see-through parts stay see-through)
+      addImageLayer(src, iw, ih, String(file.name || '').replace(/\.[^.]+$/, '') || 'Image');
+    };
+    im.onerror = () => toast("Couldn't read that image", 'warn');
+    im.src = r.result;
+  };
+  r.readAsDataURL(file);
+}
+function addImageLayer(src, iw, ih, name) {
+  commitFloat(); pushUndo();
+  const l = makeLayer(name);
+  l.img = { src, iw, ih, x: 0, y: 0, w: 1, opacity: 0.35, locked: false };
+  fitImage(l.img); imgEl(src);   // (start loading it now)
+  S.layers.splice(S.active + 1, 0, l); S.active++;
+  changed(true); toast('Image layer added');
+  return l;
+}
+function fitImage(g) {   // as big as fits on the canvas, centered
+  const a = imgAspect(g); g.w = S.w; if (g.w * a > S.h) g.w = S.h / a;
+  g.x = (S.w - g.w) / 2; g.y = (S.h - g.w * a) / 2;
+}
+const imgLockedToast = () => toast('This image layer is locked', 'warn');
+function imgFit() {
+  const l = imgLayer(); if (!l) return toast('Fit image: pick an image layer first', 'warn');
+  if (l.img.locked) return imgLockedToast();
+  pushUndo(); fitImage(l.img); changed(true);
+}
+// drawn under the characters, bottom layer first
+function drawImageLayers(ctx, px, py, act, focus) {
+  for (const l of S.layers) {
+    if (!l.visible || !l.img) continue;
+    const g = l.img, im = imgEl(g.src); if (!im) continue;
+    ctx.globalAlpha = g.opacity * (focus && l !== act ? 0.3 : 1);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(im, px(g.x), py(g.y), g.w * S.cw, imgH(g) * S.ch);
+  }
+  ctx.globalAlpha = 1;
+}
+// Move tool on an image layer: its box, and the scale handle at its bottom-right corner
+function drawImageFrame(ctx, C, px, py) {
+  const l = imgLayer(); if (!l || !l.visible || S.tool !== 'move') return;
+  const g = l.img, X = px(g.x), Y = py(g.y), W = g.w * S.cw, H = imgH(g) * S.ch;
+  ctx.save(); ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeStyle = C['c-cursor'];
+  ctx.strokeRect(Math.round(X) + 0.5, Math.round(Y) + 0.5, Math.round(W), Math.round(H));
+  if (!g.locked) { ctx.setLineDash([]); ctx.fillStyle = C['c-cursor']; ctx.fillRect(Math.round(X + W) - 4, Math.round(Y + H) - 4, 9, 9); }
+  ctx.restore();
+}
+function imgHandleAt(p) {
+  const l = imgLayer(); if (!p || !l || l.img.locked || !l.visible) return false;
+  const g = l.img, X = S.offX + (g.x + g.w) * S.cw, Y = S.offY + (g.y + imgH(g)) * S.ch;
+  return Math.abs(p.px - X) <= 8 && Math.abs(p.py - Y) <= 8;
+}
+// ---- Bake: brightness to characters ----
+// Each cell takes the picture's average brightness under it (mostly see-through cells stay empty). Dark parts get the
+// dense end of the ramp and the lightest step is a blank, so line art on white comes out as just the lines. Invert flips it.
+const BAKE_RAMPS = { classic: '.:-=+*#%@' };
+const IMG_BAKE_DEFAULT = { ramp: 'classic', custom: '.,-~:;=!*#$@', contrast: 0, brightness: 0, invert: false };
+function cleanBake(o) {
+  o = o && typeof o === 'object' ? o : {};
+  const n = (v, d) => typeof v === 'number' && isFinite(v) ? clamp(Math.round(v), -100, 100) : d;
+  return { ramp: o.ramp === 'custom' ? 'custom' : 'classic', custom: typeof o.custom === 'string' ? o.custom.slice(0, 120) : IMG_BAKE_DEFAULT.custom,
+    contrast: n(o.contrast, 0), brightness: n(o.brightness, 0), invert: !!o.invert };
+}
+let bakeGrid = null;   // the sampled picture, kept while only the Bake settings change
+function imgSample(l) {
+  const g = l.img, im = imgEl(g.src); if (!im) return null;
+  const key = [l.id, g.src.length, g.iw, g.ih, g.x, g.y, g.w, S.cw / S.ch].join('|');
+  if (bakeGrid && bakeGrid.key === key) return bakeGrid;
+  const h = imgH(g), c0 = Math.floor(g.x), r0 = Math.floor(g.y);
+  const cols = Math.max(1, Math.ceil(g.x + g.w) - c0), rows = Math.max(1, Math.ceil(g.y + h) - r0);
+  const sx = 4, sy = Math.max(4, Math.round(4 * S.ch / S.cw));   // samples per cell
+  const cv = document.createElement('canvas'); cv.width = cols * sx; cv.height = rows * sy;
+  const gx = cv.getContext('2d', { willReadFrequently: true }); gx.imageSmoothingQuality = 'high';
+  gx.drawImage(im, (g.x - c0) * sx, (g.y - r0) * sy, g.w * sx, h * sy);
+  const d = gx.getImageData(0, 0, cv.width, cv.height).data, lum = new Float32Array(cols * rows), al = new Float32Array(cols * rows);
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    let a = 0, s = 0;
+    for (let y = j * sy; y < (j + 1) * sy; y++) for (let x = i * sx; x < (i + 1) * sx; x++) {
+      const o = (y * cv.width + x) * 4, A = d[o + 3]; a += A; s += A * (0.299 * d[o] + 0.587 * d[o + 1] + 0.114 * d[o + 2]);
+    }
+    al[j * cols + i] = a / (sx * sy * 255); lum[j * cols + i] = a ? s / (a * 255) : 1;
+  }
+  return (bakeGrid = { key, c0, r0, cols, rows, lum, al });
+}
+const imgBakeSet = o => chars(o.ramp === 'custom' ? o.custom || '' : BAKE_RAMPS.classic).filter(c => c.trim());
+function imgBakeCells(l, o) {
+  const out = new Map(), gr = l && l.img ? imgSample(l) : null; if (!gr) return out;
+  o = cleanBake(o); const set = imgBakeSet(o), n = set.length; if (!n) return out;
+  const k = clamp(o.contrast / 100, -0.95, 0.95), f = (1 + k) / (1 - k), b = o.brightness / 100;
+  for (let j = 0; j < gr.rows; j++) for (let i = 0; i < gr.cols; i++) {
+    const at = j * gr.cols + i; if (gr.al[at] < 0.25) continue;   // see-through: nothing there
+    const v = clamp((gr.lum[at] + b - 0.5) * f + 0.5, 0, 1), idx = Math.round((o.invert ? v : 1 - v) * n);
+    if (idx >= 1) out.set(K(gr.c0 + i, gr.r0 + j), set[idx - 1]);   // (step 0 is a blank)
+  }
+  return out;
+}
+let imgBaking = null;   // the image layer's id while the Bake popover is open (the canvas previews the result)
+function openImgBake(btn) {
+  const l = imgLayer(); if (!l) return toast('Bake image: pick an image layer first (File › Import image... adds one)', 'warn');
+  commitFloat(); l.img.bake = cleanBake(l.img.bake); imgBaking = l.id;
+  const p = $('#imgBakePop'); renderImgBake();
+  if (btn) placeUnder(p, btn, 320);
+  else { const r = vp.getBoundingClientRect(); p.style.left = Math.max(8, r.right - 340) + 'px'; p.style.top = (r.top + 12) + 'px'; p.hidden = false; }
+  redraw();
+}
+function closeImgBake() { imgBaking = null; const p = $('#imgBakePop'); if (p) p.hidden = true; redraw(); }
+function renderImgBake() {
+  const p = $('#imgBakePop'), l = S.layers.find(q => q.id === imgBaking);
+  if (!l || !l.img) return closeImgBake();
+  const o = l.img.bake = cleanBake(l.img.bake);
+  const slider = (key, label, title) => `<div class="bp-row" title="${title}"><span class="bp-label">${label}</span><input type="range" class="ib-range" data-k="${key}" min="-100" max="100" value="${o[key]}"><span class="bp-note ib-val">${o[key]}</span></div>`;
+  p.innerHTML =
+    `<div class="bp-head"><span class="bp-title">Bake image</span><span class="bp-note">${esc(l.name)}</span></div>` +
+    `<div class="bp-row"><span class="bp-label">Characters</span><select class="ib-ramp"><option value="classic"${o.ramp === 'classic' ? ' selected' : ''}>Classic</option><option value="custom"${o.ramp === 'custom' ? ' selected' : ''}>Custom</option></select></div>` +
+    `<div class="bp-row" title="Light to dark: the first character is for the lightest parts, the last for the darkest. The lightest parts of all stay blank"><span class="bp-label">Light → dark</span><input type="text" class="ib-set" spellcheck="false" value="${esc(o.ramp === 'custom' ? o.custom : BAKE_RAMPS.classic)}"${o.ramp === 'custom' ? '' : ' disabled'}></div>` +
+    slider('contrast', 'Contrast', 'Pushes the tones apart (right) or together (left)') +
+    slider('brightness', 'Brightness', 'Lighter (right) gives fewer, lighter characters; darker (left) more and denser ones') +
+    `<div class="bp-row"><span class="bp-label">Invert</span><label class="label check" title="Off: dark parts get the dense characters (line art on white). On: light parts do (a light picture on a dark background)"><input type="checkbox" class="ib-inv"${o.invert ? ' checked' : ''}> light parts dense</label></div>` +
+    `<div class="bp-row"><span class="bp-note ib-count"></span></div>` +
+    `<div class="dlg-btns"><button class="btn ib-cancel">Cancel</button><button class="btn primary ib-go" title="The characters go on a new layer above the image; the image is hidden, not removed">Bake to a new layer</button></div>`;
+  const upd = () => { const n = imgBakeCells(l, o).size; $('.ib-count', p).textContent = n ? n + ' characters' : 'Every cell is blank'; redraw(); };
+  $('.ib-ramp', p).addEventListener('change', e => { o.ramp = e.target.value; renderImgBake(); });
+  $('.ib-set', p).addEventListener('input', e => { o.custom = e.target.value; upd(); });
+  $$('.ib-range', p).forEach(r => r.addEventListener('input', () => { o[r.dataset.k] = +r.value; r.nextElementSibling.textContent = r.value; upd(); }));
+  $$('.ib-range', p).forEach(r => r.addEventListener('dblclick', () => { r.value = 0; r.dispatchEvent(new Event('input')); }));   // double-click: back to 0
+  $('.ib-inv', p).addEventListener('change', e => { o.invert = e.target.checked; upd(); });
+  $('.ib-cancel', p).addEventListener('click', closeImgBake);
+  $('.ib-go', p).addEventListener('click', bakeImage);
+  upd();
+}
+function bakeImage() {
+  const l = S.layers.find(q => q.id === imgBaking); if (!l || !l.img) return closeImgBake();
+  const cells = imgBakeCells(l, l.img.bake);
+  if (!cells.size) return toast('Nothing to bake: every cell is blank', 'warn');
+  pushUndo();
+  const n = makeLayer(l.name + ' ASCII'); n.cells = cells;
+  const i = S.layers.indexOf(l); S.layers.splice(i + 1, 0, n); S.active = i + 1; l.visible = false;
+  closeImgBake(); changed(true);
+  toast('Baked ' + cells.size + ' characters to a new layer');
+}
 // The character you see at x, y (auto codes resolved); compositeRaw: what's stored there (auto codes as they are)
 function compositeAt(x, y) {
   const k = K(x, y);
@@ -261,6 +431,7 @@ function hiddenLock(what) {
 }
 function textLock(what) {
   if (hiddenLock(what)) return true;
+  if (L() && L().img) { toast(what + ': an image layer has no characters. Pick an art layer, or Layer › Bake image', 'warn'); return true; }
   if (!textLocked()) return false;
   toast(what + ': text layers only change with the Font tool (F). Layer › Rasterize to paint on it', 'warn');
   return true;
@@ -536,14 +707,15 @@ function showWelcome() {
 function snap() {
   return {
     w: S.w, h: S.h, active: S.active, nextId: S.nextId,
-    layers: S.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible, cells: new Map(l.cells), text: l.text ? { ...l.text } : null, autoName: l.autoName })),
+    layers: S.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible, cells: new Map(l.cells), text: l.text ? { ...l.text } : null, img: l.img ? cloneImg(l.img) : null, autoName: l.autoName })),
     sel: S.sel ? new Set(S.sel) : null,
     blocks: { ...S.blocks, cells: new Set(S.blocks.cells), dcells: new Set(S.blocks.dcells) },
   };
 }
 function restore(s) {
   S.w = s.w; S.h = s.h; S.active = s.active; S.nextId = s.nextId;
-  S.layers = s.layers.map(l => ({ ...l, cells: new Map(l.cells), text: l.text ? { ...l.text } : null }));
+  S.layers = s.layers.map(l => ({ ...l, cells: new Map(l.cells), text: l.text ? { ...l.text } : null, img: l.img ? cloneImg(l.img) : null }));
+  if (imgBaking && !S.layers.some(l => l.id === imgBaking && l.img)) closeImgBake();
   if (S.textEdit && !S.layers.some(l => l.id === S.textEdit && l.text)) S.textEdit = null;
   S.sel = s.sel ? new Set(s.sel) : null;
   if (s.blocks) S.blocks = { ...s.blocks, cells: new Set(s.blocks.cells), dcells: new Set(s.blocks.dcells || []) };
@@ -828,7 +1000,7 @@ function commitFloat(replaceBlanks) {
   if (!f) return;
   const erase = typeof replaceBlanks === 'boolean' ? replaceBlanks : S.spacesErase;
   if (!f.lifted) pushUndo();
-  if (textLocked()) { S.layers.splice(S.active + 1, 0, makeLayer('Layer ' + (S.layers.length + 1))); S.active++; toast('Dropped on a new layer (the active one is a text layer)'); }
+  if (textLocked() || imgLayer()) { const why = imgLayer() ? 'an image' : 'a text'; S.layers.splice(S.active + 1, 0, makeLayer('Layer ' + (S.layers.length + 1))); S.active++; toast('Dropped on a new layer (the active one is ' + why + ' layer)'); }
   const lay = L(), sel = new Set();
   // with mirror on (Move, or Select with Ctrl), the mirrored copy goes too: the mirrored original is lifted away
   // (unless this was a copy) and the block lands mirrored on the other side as well
@@ -2097,6 +2269,7 @@ function render() {
 
   // paper
   ctx.fillStyle = C['c-paper']; ctx.fillRect(px(0), py(0), S.w * cw, S.h * ch);
+  drawImageLayers(ctx, px, py, L(), S.focusLayer);
 
   // grid: dim everywhere, then stronger inside the canvas
   if (S.grid && cw >= 4) {
@@ -2229,6 +2402,15 @@ function render() {
       if (ed && (Date.now() / 530 | 0) % 2 === 0) { ctx.fillStyle = C['c-cursor']; ctx.fillRect(px(b.caretX) + 1, py(b.caretY), 2, b.ch * ch); }
     }
   }
+  if (imgBaking) {   // Bake image: what it would make
+    const bl = S.layers.find(q => q.id === imgBaking);
+    for (const [k, c] of imgBakeCells(bl, bl && bl.img && bl.img.bake)) {
+      const [x, y] = unK(k); if (!inView(x, y)) continue;
+      ctx.fillStyle = C['c-paper']; ctx.fillRect(px(x), py(y), cw, ch);
+      ctx.fillStyle = C['c-float-ink']; ctx.fillText(c, px(x) + cw / 2, py(y) + ty);
+    }
+  }
+  drawImageFrame(ctx, C, px, py);
   if (S.tool === 'block') {   // before baking: the ASCII it would make (pre-bake), or the shapes
     if (S.blocks.show === 'shapes') drawDiagBlocks(ctx, C, px, py);
     else for (const [k, c] of preBake()) {
@@ -2475,7 +2657,8 @@ function cursorFor() {
     if (d.kind === 'mirror') return curImage(d.axis === 'x' ? 'moveH' : 'moveV', null, false, d.axis === 'x' ? 'ew-resize' : 'ns-resize');
     if ((d.kind === 'rect' || d.kind === 'shape') && S.spaceDown) return move();   // Space mid-drag: moving the box
     if (d.kind === 'float') return d.axis ? curImage(d.axis === 'h' ? 'moveH' : 'moveV', null, false, 'move') : move(d.copy ? 'plus' : null);
-    if (d.kind === 'blockmove' || d.kind === 'textmove') return move();
+    if (d.kind === 'blockmove' || d.kind === 'textmove' || d.kind === 'imgmove') return move();
+    if (d.kind === 'imgscale') return 'nwse-resize';
     if (d.kind === 'outline') return curImage('arrow', 'dashbox', false, 'default');
     if (d.kind === 'rect') return curImage('cross', MODE_BADGE[d.mode] || (d.ellipse ? 'ellipse' : 'rect'));
     if (d.kind === 'lasso') return curImage('lasso', MODE_BADGE[d.mode]);
@@ -2500,6 +2683,7 @@ function cursorFor() {
   }
   if (t === 'move') {
     if (m.cmd) return curImage('arrow', 'layer', false, 'default');   // a click picks the layer under the pointer
+    if (imgLayer() && !S.float) return imgLayer().img.locked ? 'not-allowed' : imgHandleAt(S.hoverPt) ? 'nwse-resize' : move();
     if (m.alt) return move('plus');
     if (m.shift) return move('lock');
     return move(S.sel || S.float ? null : 'layer');
@@ -2571,6 +2755,10 @@ vp.addEventListener('pointerdown', e => {
   if (mh) { S.drag = { kind: 'mirror', axis: mh }; redraw(); return; }
   if (!S.float && ['pencil', 'brush', 'eraser', 'shape', 'fill', 'shade'].includes(t) && textLock({ pencil: 'Drawing', brush: 'Painting', eraser: 'Erasing', shape: 'Drawing', fill: 'Filling', shade: 'Shading' }[t])) return;
   if (t === 'move' && !S.float && !(e.ctrlKey || e.metaKey) && hiddenLock('Moving')) return;
+  if (t === 'move' && !S.float && !(e.ctrlKey || e.metaKey) && imgLayer()) {   // an image layer moves whole; its corner scales it
+    const g = L().img; if (g.locked) { imgLockedToast(); return; }
+    pushUndo(); S.sel = null; S.drag = { kind: imgHandleAt({ px, py }) ? 'imgscale' : 'imgmove', id: L().id, spx: px, spy: py, ox: g.x, oy: g.y, ow: g.w }; redraw(); return;
+  }
   if ((t === 'move' || (t === 'select' && (e.ctrlKey || e.metaKey))) && !S.float && textLocked()) {   // a text layer moves whole
     const l = L(); pushUndo(); S.sel = null; S.drag = { kind: 'textmove', id: l.id, sx: c.x, sy: c.y, ox: l.text.x, oy: l.text.y }; redraw(); return;
   }
@@ -2701,6 +2889,7 @@ vp.addEventListener('pointermove', e => {
   const wasOnHandle = S.hoverPt && mirrorHandleAt(S.hoverPt.px, S.hoverPt.py);
   S.hover = c; S.hoverPt = { px, py };
   if (S.mirror !== 'off' && wasOnHandle !== mirrorHandleAt(px, py)) redraw();   // the cursor changes over a handle
+  if (S.tool === 'move' && imgLayer()) redraw();   // (over the image's scale handle)
   const d = S.drag;
   if (d) {
     if (d.kind === 'pan') { S.offX = d.ox + px - d.sx; S.offY = d.oy + py - d.sy; S.viewTouched = true; redraw(); return; }
@@ -2709,6 +2898,16 @@ vp.addEventListener('pointermove', e => {
     if ((d.kind === 'rect' || d.kind === 'shape') && S.spaceDown) { d.ax += c.x - d.cx; d.ay += c.y - d.cy; }
     if (d.kind === 'rect') { d.cx = c.x; d.cy = c.y; dragBox(d, e.shiftKey, e.altKey); }
     if (d.kind === 'shape') { d.cx = c.x; d.cy = c.y; d.shift = e.shiftKey; if (d.shape !== 'line') dragBox(d, e.shiftKey, e.altKey); }
+    if (d.kind === 'imgmove' || d.kind === 'imgscale') {   // Shift: straight across or down
+      const l = S.layers.find(q => q.id === d.id);
+      if (l && l.img) {
+        const g = l.img, dx = (px - d.spx) / S.cw, dy = (py - d.spy) / S.ch;
+        if (d.kind === 'imgscale') g.w = Math.max(1, d.ow + dx);
+        else { const lock = e.shiftKey ? (Math.abs(px - d.spx) > Math.abs(py - d.spy) ? 'h' : 'v') : null; g.x = d.ox + (lock === 'v' ? 0 : dx); g.y = d.oy + (lock === 'h' ? 0 : dy); }
+        redraw();
+      }
+      return;
+    }
     if (d.kind === 'textmove' && moved) { const l = S.layers.find(q => q.id === d.id); if (l && l.text) { l.text.x = d.ox + c.x - d.sx; l.text.y = d.oy + c.y - d.sy; renderTextLayer(l); changed(); } }
     if (d.kind === 'blockmove' && moved) { S.blocks.ox = d.ox + c.x - d.sx; S.blocks.oy = d.oy + c.y - d.sy; S.blocks.placed = true; S.blocks.moved = true; changed(); }
     if (d.kind === 'stroke') {   // Shift: straight across or down
@@ -2756,6 +2955,7 @@ function endDrag() {
   }
   if (d.kind === 'outline' && d.wand && S.sel === d.base) applyCells(wandCells(d.wand.x, d.wand.y) || [], 'new');   // a Wand click, not a drag
   if (d.kind === 'pan') savePrefs();
+  if (d.kind === 'imgmove' || d.kind === 'imgscale') changed();
   redraw();
 }
 vp.addEventListener('pointerup', endDrag);
@@ -2813,6 +3013,7 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('#noiseMenu').hidden) { closeNoiseMenu(); return; }
   if (e.key === 'Escape' && !$('#setPop').hidden) { closeSetPop(); return; }
   if (e.key === 'Escape' && !$('#blockPop').hidden) { closeBlockPop(); return; }
+  if (e.key === 'Escape' && !$('#imgBakePop').hidden) { closeImgBake(); return; }
   if (extrude.open && (e.key === 'Escape' || e.key === 'Enter')) { e.preventDefault(); if (e.key === 'Enter') applyExtrude(); else closeExtrude(); return; }
   if (isField(document.activeElement)) {
     if (e.key === 'Escape' || (e.key === 'Enter' && document.activeElement.tagName !== 'TEXTAREA')) document.activeElement.blur();
@@ -2966,6 +3167,7 @@ window.addEventListener('keydown', e => {
 // Move: arrows move the content.
 function nudge(dx, dy, ctrl) {
   if (!S.float && (S.tool === 'move' || (S.tool === 'select' && ctrl)) && hiddenLock('Moving')) return;
+  if (!S.float && imgLayer() && S.tool === 'move') { const g = L().img; if (g.locked) return imgLockedToast(); pushUndo('inudge' + L().id); g.x += dx; g.y += dy; changed(); return; }
   if (!S.float && textLocked() && (S.tool === 'move' || (S.tool === 'select' && ctrl))) { const l = L(); pushUndo('tnudge' + l.id); l.text.x += dx; l.text.y += dy; renderTextLayer(l); changed(); return; }
   if (S.tool === 'move' || (S.tool === 'select' && ctrl)) moveFloat(dx, dy);
   else if (S.tool === 'select') { if (S.float) commitFloat(); moveOutline(dx, dy); }
@@ -3011,6 +3213,8 @@ document.addEventListener('cut', e => {
 const clipFor = t => S.clipRaw && t === S.clip ? S.clipRaw : t;
 document.addEventListener('paste', e => {
   if (isField(document.activeElement)) return;
+  const pic = [...(e.clipboardData.files || [])].find(f => /^image\//.test(f.type));
+  if (pic && !e.clipboardData.getData('text/plain')) { e.preventDefault(); importImageFile(pic); return; }   // a picture: a new image layer
   const t = e.clipboardData.getData('text/plain'); if (!t) return;
   if (S.tool === 'font' && editingText()) { e.preventDefault(); typeText(x => { x.str += t.replace(/\r\n?/g, '\n'); }); return; }   // pasting into the text
   e.preventDefault(); floatFromText(e.clipboardData.getData(CLIP_RAW) || clipFor(t));   // (an asXii copy: its auto cells stay auto)
@@ -3033,7 +3237,7 @@ function projectData() {
       view: S.blocks.view, size: S.blocks.size, dir: S.blocks.dir, level: S.blocks.level, flat: S.blocks.flat, ox: S.blocks.ox, oy: S.blocks.oy, placed: S.blocks.placed, moved: !!S.blocks.moved, dcells: [...S.blocks.dcells], cells: [...S.blocks.cells] },
     layers: S.layers.map(l => {
       const cells = [...l.cells.keys()];
-      if (!cells.length) return { name: l.name, visible: l.visible, x: 0, y: 0, rows: [], ...(l.text ? { text: { ...l.text }, autoName: !!l.autoName } : {}) };
+      if (!cells.length) return { name: l.name, visible: l.visible, x: 0, y: 0, rows: [], ...(l.text ? { text: { ...l.text }, autoName: !!l.autoName } : {}), ...(l.img ? { img: cloneImg(l.img) } : {}) };
       const b = selBounds(cells);
       const rows = [];
       for (let j = 0; j < b.h; j++) { let r = ''; for (let i = 0; i < b.w; i++) r += l.cells.get(K(b.x + i, b.y + j)) || ' '; rows.push(r.replace(/\s+$/, '')); }
@@ -3049,9 +3253,17 @@ function loadProject(d) {
     (ld.rows || []).forEach((r, j) => chars(r).forEach((c, i) => { if (c !== ' ') l.cells.set(K(ld.x + i, ld.y + j), c); }));
     const t = ld.text;
     if (t && typeof t === 'object' && (window.ASXII_FONTS || {})[t.font]) { l.text = { str: String(t.str || ''), font: t.font, layout: ['default', 'full', 'fit', 'smush'].includes(t.layout) ? t.layout : 'default', ws: ['inside', 'block'].includes(t.ws) ? t.ws : 'clear', ls: clamp(t.ls | 0, -3, 20), lh: clamp(t.lh | 0, -30, 20), x: t.x | 0, y: t.y | 0 }; l.autoName = !!ld.autoName; }
+    const im = ld.img;   // an image layer
+    if (im && typeof im === 'object' && typeof im.src === 'string' && /^data:image\//.test(im.src)) {
+      const num = (v, d) => typeof v === 'number' && isFinite(v) ? v : d;
+      l.img = { src: im.src, iw: Math.max(1, num(im.iw, 1)), ih: Math.max(1, num(im.ih, 1)), x: num(im.x, 0), y: num(im.y, 0), w: Math.max(1, num(im.w, 10)),
+        opacity: clamp(num(im.opacity, 0.5), 0.05, 1), locked: !!im.locked, bake: im.bake ? cleanBake(im.bake) : undefined };
+      imgEl(im.src);
+    }
     return l;
   });
   if (!S.layers.length) S.layers.push(makeLayer('Layer 1'));
+  if (imgBaking) closeImgBake();
   S.active = clamp(d.active | 0, 0, S.layers.length - 1);
   S.sel = null; S.float = null; S.cursor = null; S.textEdit = null;
   const half = (v, max) => typeof v === 'number' && isFinite(v) && v >= 0 && v <= max ? Math.round(v * 2) / 2 : null;
@@ -3498,18 +3710,37 @@ $('#fileOpen').addEventListener('change', async e => {
     changed(true); zoomFit(); toast('Opened ' + f.name);
   } catch (err) { toast('Could not open: ' + err.message); }
 });
+$('#fileImg').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) importImageFile(f); });
+// drop a picture on the canvas: a new image layer
+vp.addEventListener('dragover', e => { if ([...e.dataTransfer.items].some(i => i.kind === 'file')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } });
+vp.addEventListener('drop', e => {
+  const f = [...e.dataTransfer.files]; if (!f.length) return;
+  e.preventDefault();
+  const pic = f.find(x => /^image\//.test(x.type));
+  if (pic) importImageFile(pic); else toast('Drop a picture (PNG, JPG...) to add it as an image layer', 'warn');
+});
 $('#fileTxt').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   floatFromText(await f.text()); toast('Imported ' + f.name + ': drag it, then Enter to drop');
 });
 
 // ---------- autosave + prefs (browser storage is a convenience only) ----------
-function autosave() { try { localStorage.setItem(PROJECT_KEY, JSON.stringify(projectData())); } catch {} }
+let autosaveWarned = false;
+function autosave() {
+  try { localStorage.setItem(PROJECT_KEY, JSON.stringify(projectData())); }
+  catch {   // too big for the browser's storage (a big picture): keep the rest
+    try {
+      const d = projectData(); d.layers.forEach(l => { delete l.img; });
+      localStorage.setItem(PROJECT_KEY, JSON.stringify(d));
+      if (!autosaveWarned && S.layers.some(l => l.img)) { autosaveWarned = true; toast("The picture is too big for the browser's autosave: File › Save project keeps it", 'warn'); }
+    } catch {}
+  }
+}
 function savePrefs() {
   try {
     const tb = $('#toolbox');
     localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: S.theme, font: S.font, grid: S.grid, showSolid: S.showSolid,
-      brush: S.brush, pencil: S.pencil, shade: S.shade, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, activeSlot: S.activeSlot, mirrorUse: S.mirrorUse, panels: S.panels, sideW: S.sideW, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, showAuto: S.showAuto, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
+      brush: S.brush, pencil: S.pencil, shade: S.shade, figfont: S.figfont, shape: S.shape, recent: S.recent, selShape: S.selShape, lastMarquee: S.lastMarquee, wandContig: S.wandContig, selSample: S.selSample, fillContig: S.fillContig, pickSample: S.pickSample, ch2: S.ch2, mirror: S.mirror, activeSlot: S.activeSlot, mirrorUse: S.mirrorUse, panels: S.panels, sideW: S.sideW, layersH: S.layersH, mirrorFlip: S.mirrorFlip, typeInsert: S.typeInsert, selFixed: S.selFixed, selCenter: S.selCenter, blanksBrush: S.blanksBrush, blanksFill: S.blanksFill, paint: S.paint, fillSample: S.fillSample, spacesErase: S.spacesErase, dimOthers: S.focusLayer, galWs: S.galWs, b3big: S.b3big, b3color: S.b3color, b3brush: S.b3shape, myShapes: S.myShapes, showAuto: S.showAuto, toolbox: tb.dataset.moved ? { l: tb.style.left, t: tb.style.top } : null }));
   } catch {}
 }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || null; } catch { return null; } }
@@ -3520,6 +3751,10 @@ const CMDS = {
   open: () => $('#fileOpen').click(),
   save: saveProject,
   importTxt: () => $('#fileTxt').click(),
+  importImg: () => $('#fileImg').click(),
+  imgBake: () => openImgBake(),
+  imgFit: () => imgFit(),
+  imgLock: () => { const l = imgLayer(); if (!l) return; l.img.locked = !l.img.locked; changed(true); },
   gallery: () => gal.open ? closeGallery() : openGallery(),
   exportTxt: () => { commitFloat(); download(fileBase() + '.txt', canvasText() + '\n', 'text/plain'); toast('Exported ' + fileBase() + '.txt'); },
   copyMerged: () => copyMerged(),
@@ -3548,11 +3783,11 @@ const CMDS = {
   layerNew: () => { commitFloat(); pushUndo(); S.layers.splice(S.active + 1, 0, makeLayer('Layer ' + (S.layers.length + 1))); S.active++; changed(true); },
   layerDup: () => {
     commitFloat(); pushUndo(); const l = L(), n = makeLayer(l.name + ' copy');
-    n.cells = new Map(l.cells); n.visible = l.visible; n.text = l.text ? { ...l.text } : null; S.layers.splice(S.active + 1, 0, n); S.active++; changed(true);
+    n.cells = new Map(l.cells); n.visible = l.visible; n.text = l.text ? { ...l.text } : null; n.img = l.img ? cloneImg(l.img) : null; S.layers.splice(S.active + 1, 0, n); S.active++; changed(true);
   },
   layerDel: () => {
     commitFloat();
-    if (S.layers.length < 2) { pushUndo(); L().cells.clear(); changed(true); return toast('Cleared the last layer'); }
+    if (S.layers.length < 2) { pushUndo(); if (L().img) S.layers = [makeLayer('Layer 1')]; else L().cells.clear(); changed(true); return toast('Cleared the last layer'); }
     pushUndo(); S.layers.splice(S.active, 1); S.active = Math.max(0, S.active - 1); changed(true);
   },
   layerUp: () => moveLayer(1), layerDown: () => moveLayer(-1),
@@ -3566,6 +3801,7 @@ const CMDS = {
     commitFloat();
     if (S.active === 0) return toast('Nothing below to merge into', 'warn');
     if (S.layers[S.active - 1].text) return toast('Merge down: the layer below is a text layer. Layer › Rasterize it first', 'warn');
+    if (L().img || S.layers[S.active - 1].img) return toast('Merge down: image layers have no characters to merge. Layer › Bake image makes ASCII from one', 'warn');
     pushUndo(); const top = L(), below = S.layers[S.active - 1];
     if (top.id === S.textEdit) S.textEdit = null;
     below.text = null;   // merged: plain art for good
@@ -3577,7 +3813,8 @@ const CMDS = {
     if (S.layers.length < 2) return toast('Only one layer', 'warn');
     pushUndo(); const out = makeLayer('Layer 1');
     for (const l of S.layers) if (l.visible) for (const [k, c] of l.cells) out.cells.set(k, c);
-    S.layers = [out]; S.active = 0; changed(true); toast('Flattened (hidden layers were dropped)');
+    const imgs = S.layers.filter(l => l.img);   // image layers stay, under the art
+    S.layers = [...imgs, out]; S.active = imgs.length; changed(true); toast('Flattened (hidden layers were dropped' + (imgs.length ? ', image layers kept' : '') + ')');
   },
   zoomIn: () => zoomStep(1), zoomOut: () => zoomStep(-1), zoomFit, zoom100: () => setZoom(1),
   focusToggle: () => { S.focusLayer = !S.focusLayer; syncLayerToggles(); savePrefs(); redraw(); toast(S.focusLayer ? 'Layer focus on' : 'Layer focus off'); },
@@ -3682,7 +3919,7 @@ const HELP = {
     keys: [['Shift', 'add to the selection'], ['Alt', 'take away'], ['Shift Alt', 'keep only the overlap'], ['Backspace', 'take back a point'], ['Esc', 'cancel']] },
   wand: { sum: 'Click a character to select it: the connected ones, or every one with Contiguous off.',
     keys: [['Shift', 'add to the selection'], ['Alt', 'take away'], ['Shift Alt', 'keep only the overlap'], ['Drag', 'inside the selection: move its outline']] },
-  move: { sum: 'Drag to move the selection, or the whole layer when nothing is selected. A text layer moves whole.',
+  move: { sum: 'Drag to move the selection, or the whole layer when nothing is selected. A text or image layer moves whole; drag an image\'s corner to scale it.',
     keys: [['Alt', 'drag a copy'], ['Shift', 'lock to one direction'], ['Ctrl', 'click: pick the layer under the pointer'], ['Arrows', 'nudge (Shift: 5)'], ['Enter', 'drop it (Shift Enter: solid)'], ['Esc', 'put it back']],
     drag: [['Shift', 'lock to one direction']] },
   type: { sum: 'Click a cell and type.',
@@ -4697,6 +4934,8 @@ const OPT_ICONS = {
   layers: '<path d="M3 8l7-3.5L17 8l-7 3.5zM3 11.5l7 3.5 7-3.5"/>',
   tipSquare: '<rect x="5.5" y="5.5" width="9" height="9"/>',
   tipRound: '<circle cx="10" cy="10" r="4.8"/>',
+  fit: '<path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><rect x="6.5" y="6.5" width="7" height="7" rx="1"/>',
+  lock: '<rect x="4.5" y="9" width="11" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/>',
 };
 const optIcon = k => `<svg viewBox="0 0 20 20">${OPT_ICONS[k]}</svg>`;
 // an icon button; on = selected. tog: a setting it switches on and off ("selFixed", "shape.fill"...)
@@ -4756,7 +4995,13 @@ function renderOptions() {
     if (S.selShape === 'rect' || S.selShape === 'ellipse') add(sep + well(togBtn('selFixed', 'fixed', `Fixed aspect: keep it a ${S.selShape === 'ellipse' ? 'circle' : 'square'} (or hold Shift while dragging)`) + togBtn('selCenter', 'center', 'From center: grow from where you start (or hold Alt while dragging)')));
     if (S.selShape === 'wand') add(sep + well(togBtn('wandContig', 'contig', 'Contiguous: on, the connected cells with that character; off, every one')) + sep + lookAt('data-selsample', S.selSample, 'Match characters on'));
   }
-  if (t === 'move') add(`<span class="label" title="${WS_TIP}">White space</span><span class="seg"><button class="btn blanks${S.spacesErase ? ' on' : ''}" data-blank="1" title="${WS_SOLID}">Solid</button><button class="btn blanks${S.spacesErase ? '' : ' on'}" data-blank="0" title="${WS_CLEAR}">Clear</button></span>`);
+  const il = t === 'move' && imgLayer();
+  if (il) {
+    const pc = Math.round(il.img.opacity * 100);
+    add(`<span class="label" title="How strongly the picture shows (it is only a guide: never exported)">Opacity</span><input class="imgop" type="range" min="5" max="100" step="5" value="${pc}" title="Opacity"><span class="label imgopv">${pc}%</span>`);
+    add(sep + well(iconBtn('data-imgfit="1"', 'fit', 'Fit: size it to the canvas, centered') + iconBtn('data-imglock="1"', 'lock', "Lock: the Move tool can't move or scale it", il.img.locked)));
+  }
+  if (t === 'move' && !il) add(`<span class="label" title="${WS_TIP}">White space</span><span class="seg"><button class="btn blanks${S.spacesErase ? ' on' : ''}" data-blank="1" title="${WS_SOLID}">Solid</button><button class="btn blanks${S.spacesErase ? '' : ' on'}" data-blank="0" title="${WS_CLEAR}">Clear</button></span>`);
   if (t === 'type') add(`<span class="seg"><button class="btn${S.typeInsert ? '' : ' on'}" data-insert="0" title="Type over what's there (Insert key switches)">Overwrite</button><button class="btn${S.typeInsert ? ' on' : ''}" data-insert="1" title="Push the rest of the row along (Insert key switches)">Insert</button></span>`);
   if (t === 'font') {
     add(`<button class="btn dd fontbtn" title="Choose a font"><span class="pname">${esc(S.figfont.name)}</span><span class="caret">▾</span></button>`);
@@ -4851,6 +5096,13 @@ function bindOptions(o) {
   $$('[data-shblanks]', o).forEach(b => b.addEventListener('click', () => { S.shade.skipBlanks = !S.shade.skipBlanks; savePrefs(); renderOptions(); }));
   $$('[data-shbuild]', o).forEach(b => b.addEventListener('click', () => { S.shade.buildup = !S.shade.buildup; savePrefs(); renderOptions(); }));
   $$('[data-blank]', o).forEach(b => b.addEventListener('click', () => { S.spacesErase = b.dataset.blank === '1'; savePrefs(); renderOptions(); redraw(); }));
+  const iop = $('.imgop', o);
+  if (iop) {
+    iop.addEventListener('input', () => { const l = imgLayer(); if (!l) return; l.img.opacity = +iop.value / 100; $('.imgopv', o).textContent = iop.value + '%'; updateLayerCounts(); redraw(); });
+    iop.addEventListener('change', () => { iop.blur(); changed(); });
+  }
+  $$('[data-imgfit]', o).forEach(b => b.addEventListener('click', imgFit));
+  $$('[data-imglock]', o).forEach(b => b.addEventListener('click', () => CMDS.imgLock()));
   const sf = $('.selfixed', o); if (sf) sf.addEventListener('change', () => { S.selFixed = sf.checked; sf.blur(); savePrefs(); });
   const sc = $('.selcenter', o); if (sc) sc.addEventListener('change', () => { S.selCenter = sc.checked; sc.blur(); savePrefs(); });
   $$('[data-shape]', o).forEach(b => b.addEventListener('click', () => setSelShape(b.dataset.shape)));
@@ -5005,6 +5257,7 @@ function renderHelp(force) {
 function applyPanels() {
   $$('#rightpane section[data-panel]').forEach(sec => sec.classList.toggle('folded', !!S.panels[sec.dataset.panel]));
   if (S.sideW) $('#rightpane').style.width = S.sideW + 'px';
+  $('#layers').style.height = S.layersH ? S.layersH + 'px' : '';
 }
 $$('#rightpane section[data-panel] > h2').forEach(h => h.addEventListener('click', e => {
   if (e.target.closest('button')) return;   // a button in the title (Layers' toggles) doesn't fold it
@@ -5017,6 +5270,14 @@ $$('#rightpane section[data-panel] > h2').forEach(h => h.addEventListener('click
   const end = () => { if (!d) return; d = null; grip.classList.remove('drag'); savePrefs(); };
   grip.addEventListener('pointerup', end); grip.addEventListener('pointercancel', end);
   grip.addEventListener('dblclick', () => { S.sideW = 0; pane.style.width = ''; savePrefs(); });
+})();
+(() => {   // the handle under the Layers list: drag it to make the list taller or shorter
+  const grip = $('#layersGrip'), list = $('#layers'); let d = null;
+  grip.addEventListener('pointerdown', e => { try { grip.setPointerCapture(e.pointerId); } catch (_) {} d = { y: e.clientY, h: list.offsetHeight }; grip.classList.add('drag'); e.preventDefault(); });
+  grip.addEventListener('pointermove', e => { if (!d) return; S.layersH = clamp(Math.round(d.h + e.clientY - d.y), 60, 1200); list.style.height = S.layersH + 'px'; });
+  const end = () => { if (!d) return; d = null; grip.classList.remove('drag'); savePrefs(); };
+  grip.addEventListener('pointerup', end); grip.addEventListener('pointercancel', end);
+  grip.addEventListener('dblclick', () => { S.layersH = 0; list.style.height = ''; savePrefs(); });
 })();
 
 // ---------- right-click menu on the canvas (TOOLBAR.md 2) ----------
@@ -5037,6 +5298,7 @@ function openCtxMenu(x, y) {
   }
   if (S.float) { hr(); it('drop', 'Drop floating block', 'Enter'); it('dropReplace', 'Drop with solid white space', 'Shift Enter'); }
   if (L0 && L0.text) { hr(); it('rasterize', 'Rasterize text layer'); it('mergeDown', 'Merge down'); }
+  if (L0 && L0.img) { hr(); it('imgBake', 'Bake image to ASCII...'); it('imgFit', 'Fit image to canvas'); it('imgLock', L0.img.locked ? 'Unlock image' : 'Lock image'); }
   if (S.tool === 'block' || S.blocks.dcells.size) { hr(); it('blocks3d', 'Edit blocks in 3D...'); if (S.blocks.dcells.size) { it('blocksBake', 'Bake blocks to a new layer'); it('blocksClear', 'Clear blocks'); } }
   m.innerHTML = items.join('').replace(/(<hr>)+/g, '<hr>').replace(/^<hr>|<hr>$/g, '').replace(/Ctrl /g, isMac ? 'Cmd ' : 'Ctrl ');
   m.hidden = false;
@@ -5124,7 +5386,7 @@ function updateInfo() {
     `<div><span class="k">Canvas</span>${S.w} x ${S.h}</div>` +
     `<div><span class="k">Selection</span>${selTxt}</div>` +
     (S.tool === 'type' && S.cursor ? `<div><span class="k">Cursor</span>${S.cursor.x}, ${S.cursor.y}</div>` : '') +
-    `<div><span class="k">Layer</span>${esc(L() ? L().name : '')}</div>`;
+    `<div title="${esc(L() ? L().name : '')}"><span class="k">Layer</span>${esc(L() ? L().name : '')}</div>`;   // (a long name is cut off with …; hover for all of it)
 }
 function syncCanvasInputs() { $('#cw').value = S.w; $('#chh').value = S.h; }
 function renderAnchor() { $$('#anchor .btn').forEach(b => b.classList.toggle('on', +b.dataset.a === S.anchor)); }
@@ -5140,23 +5402,29 @@ $('#sizePreset').addEventListener('change', e => {
 const LAYER_ICONS = {
   art: '<svg viewBox="0 0 20 20"><path d="M7 3.5v13M13 3.5v13M3.5 7h13M3.5 13h13"/></svg>',
   text: '<svg viewBox="0 0 20 20"><path d="M4.5 5.5V4h11v1.5M10 4v12M7.5 16h5"/></svg>',
+  image: '<svg viewBox="0 0 20 20"><rect x="3.5" y="4.5" width="13" height="11" rx="1.5"/><path d="M4 14l4-4 3 3 2-2 3 3"/><circle cx="13" cy="8" r="1.2"/></svg>',
   eye: '<svg viewBox="0 0 20 20"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z"/><circle cx="10" cy="10" r="2.3"/></svg>',
+  lock: '<svg viewBox="0 0 20 20"><rect x="4.5" y="9" width="11" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg>',
+  unlock: '<svg viewBox="0 0 20 20"><rect x="4.5" y="9" width="11" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 5.8-1.1"/></svg>',
   eyeOff: '<svg viewBox="0 0 20 20"><path d="M3 3l14 14M8.2 4.8A8 8 0 0 1 10 4.5c5 0 8 5.5 8 5.5a14 14 0 0 1-2.2 2.9M5 6.4A14 14 0 0 0 2 10s3 5.5 8 5.5a7.6 7.6 0 0 0 3.4-.8"/></svg>',
 };
 function syncLayerToggles() { $('#focusBtn').classList.toggle('on', S.focusLayer); }
 syncLayerToggles();
 // Layers: the top layer first. Click: work on it. Eye: show / hide (Alt: show only this one, or all again).
 // Double-click the name: rename. Drag: reorder. Right-click: the layer menu
+let lastImgBar = '';
 function renderLayers() {
   checkTextLayers();
   const box = $('#layers');
   box.innerHTML = '';
   for (let i = S.layers.length - 1; i >= 0; i--) {
     const l = S.layers[i], row = document.createElement('div');
-    row.className = 'layer' + (i === S.active ? ' on' : '') + (l.visible ? '' : ' off'); if (l.text) row.dataset.text = '1';
-    row.innerHTML = `<span class="kind" title="${l.text ? 'A text layer: edit it with the Font tool (F). Layer › Rasterize to paint on it' : 'An art layer'}">${l.text ? LAYER_ICONS.text : LAYER_ICONS.art}</span>`
-      + `<span class="name" title="Double-click to rename">${esc(l.name)}</span><span class="count" title="Characters on this layer">${l.cells.size}</span>`
+    row.className = 'layer' + (i === S.active ? ' on' : '') + (l.visible ? '' : ' off'); if (l.text) row.dataset.text = '1'; if (l.img) row.dataset.img = '1';
+    row.innerHTML = `<span class="kind" title="${l.img ? 'An image layer: a picture to trace over, never exported. The Move tool moves and scales it; Layer › Bake image makes ASCII from it' : l.text ? 'A text layer: edit it with the Font tool (F). Layer › Rasterize to paint on it' : 'An art layer'}">${l.img ? LAYER_ICONS.image : l.text ? LAYER_ICONS.text : LAYER_ICONS.art}</span>`
+      + `<span class="name" title="Double-click to rename">${esc(l.name)}</span>` + (l.img ? `<span class="count" title="Opacity">${Math.round(l.img.opacity * 100)}%</span>` : `<span class="count" title="Characters on this layer">${l.cells.size}</span>`)
+      + (l.img ? `<button class="lib lock${l.img.locked ? ' on' : ''}" title="${l.img.locked ? 'Locked: click to unlock' : 'Lock it in place'}">${l.img.locked ? LAYER_ICONS.lock : LAYER_ICONS.unlock}</button>` : '')
       + `<button class="lib eye" title="Show / hide (Alt-click: show only this one)">${l.visible ? LAYER_ICONS.eye : LAYER_ICONS.eyeOff}</button>`;
+    const lk = row.querySelector('.lock'); if (lk) lk.addEventListener('click', e => { e.stopPropagation(); l.img.locked = !l.img.locked; changed(true); });
     row.querySelector('.eye').addEventListener('click', e => {
       e.stopPropagation();
       if (e.altKey) { const solo = S.layers.every(q => q === l || !q.visible) && l.visible; S.layers.forEach(q => { q.visible = solo || q === l; }); }
@@ -5176,6 +5444,8 @@ function renderLayers() {
     box.appendChild(row);
   }
   $$('.layerbar [data-cmd="mergeDown"]').forEach(b => { b.disabled = S.active === 0; });
+  const ik = S.tool === 'move' && imgLayer() ? L().id + (L().img.locked ? 'L' : '') : '';
+  if (ik !== lastImgBar) { lastImgBar = ik; renderOptions(); }
   const on = box.querySelector('.layer.on'); if (on) on.scrollIntoView({ block: 'nearest' });   // keep the active layer in view
 }
 function selectLayer(i) { if (S.active !== i) { commitFloat(); S.active = i; renderLayers(); updateInfo(); redraw(); } }
@@ -5215,7 +5485,7 @@ function dragLayer(e, row, i) {
 function openLayerMenu(x, y) {
   const m = $('#ctxMenu'), l = L(), it = (cmd, label) => `<button class="btn" data-cmd="${cmd}">${label}</button>`;
   m.innerHTML = it('layerRename', 'Rename') + it('layerDup', 'Duplicate layer') + (S.active > 0 ? it('mergeDown', 'Merge down') : '')
-    + (l.text ? it('rasterize', 'Rasterize text layer') : '') + it('flatten', 'Flatten') + '<hr>' + it('layerDel', 'Delete layer');
+    + (l.text ? it('rasterize', 'Rasterize text layer') : '') + (l.img ? it('imgBake', 'Bake image to ASCII...') + it('imgFit', 'Fit image to canvas') + it('imgLock', l.img.locked ? 'Unlock image' : 'Lock image') : '') + it('flatten', 'Flatten') + '<hr>' + it('layerDel', 'Delete layer');
   m.hidden = false;
   m.style.left = Math.min(x, window.innerWidth - m.offsetWidth - 6) + 'px';
   m.style.top = Math.min(y, window.innerHeight - m.offsetHeight - 6) + 'px';
@@ -5224,8 +5494,8 @@ function updateLayerCounts() {
   // a text layer that stopped being text (painted on, moved in part, rasterized) loses its T: redraw the list
   checkTextLayers();
   const rows = $$('#layers .layer');
-  if (rows.length !== S.layers.length || rows.some((r, n) => { const l = S.layers[S.layers.length - 1 - n]; return !l || !!r.dataset.text !== !!l.text; })) return renderLayers();
-  rows.forEach((r, n) => { const l = S.layers[S.layers.length - 1 - n]; if (l) r.querySelector('.count').textContent = l.cells.size; });
+  if (rows.length !== S.layers.length || rows.some((r, n) => { const l = S.layers[S.layers.length - 1 - n]; return !l || !!r.dataset.text !== !!l.text || !!r.dataset.img !== !!l.img; })) return renderLayers();
+  rows.forEach((r, n) => { const l = S.layers[S.layers.length - 1 - n]; if (l) r.querySelector('.count').textContent = l.img ? Math.round(l.img.opacity * 100) + '%' : l.cells.size; });
 }
 
 // ---------- top bar ----------
@@ -5335,6 +5605,7 @@ function start() {
   if (p.activeSlot === 'right') S.activeSlot = 'right';
   if (p.panels && typeof p.panels === 'object') S.panels = { help: true, ...p.panels };
   if (p.sideW) S.sideW = clamp(+p.sideW || 0, 240, 480);
+  if (p.layersH) S.layersH = clamp(+p.layersH || 0, 60, 1200);
   applyPanels();
   S.typeInsert = !!p.typeInsert;
   S.selFixed = !!p.selFixed; S.selCenter = !!p.selCenter;
@@ -5411,7 +5682,7 @@ function start() {
 }
 
 // Hooks for the headless self-test (index.html?selftest)
-window.asxii = { S, CMDS, shadeChar, shadeSet, shadeStamp, inkOf, L, K, loadStart, showWelcome, loadB3Example, openB3Examples, placeBlocksInView, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
+window.asxii = { S, CMDS, addImageLayer, importImageFile, imgBakeCells, openImgBake, closeImgBake, bakeImage, renderImgBake, imgFit, imgH, imgHandleAt, imgSample, shadeChar, shadeSet, shadeStamp, inkOf, L, K, loadStart, showWelcome, loadB3Example, openB3Examples, placeBlocksInView, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
   undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render, changed, zoomFit, toast,
   AUTO_SETS, autoOf, autoThumb, glyphAt, resolveAt, compositeRaw, copyRaw, bakeAuto, makeAuto, autoPreview, setSlot, pickAt };

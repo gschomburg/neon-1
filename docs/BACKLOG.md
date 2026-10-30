@@ -115,6 +115,8 @@ unlocked by REP, and some quests unlock REP.
   - **POPS's old corp:** a quest that unlocks when you call POPS in the corp he used to work for.
   - **Flip a rival:** turn one particular rival to your side. Maybe part of the d0g quest: once you beat d0g, it turns
     out he's POPS's son or protégé; then he's on your side and helps you beat G0D.
+    - **d0g's name on your crew** (the user, meat notes 2026-10-30): d0g becomes b0y when he joins your crew? Or maybe
+      b0y was just his old handle.
   - **Safehouses need something cooler** (the user, meat notes 2026-10-29): they keep some mods from a run you died in,
     or offer crew CALL gear. Probably a REP unlock. Or simpler: a boosted safehouse, 2 INT and an item or two.
   - **The quest object sparkles** (the user, meat notes 2026-10-29): a twinkle / glitter effect on it.
