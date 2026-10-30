@@ -330,7 +330,7 @@ function g0dpFightTick(p, now, dt) {
   // the red traces (round 10): out of the network nodes while it charges, flat out in the burn, then they die away
   f.traces = f.traces || [];
   { const heat = f.hands ? Math.min(1, (now - f.hands.at) / 1000 / G0DP.charge) : 0;
-    if (f.hands) { f.traceAcc = (f.traceAcc || 0) + dt * (3 + 45 * heat * heat); while (f.traceAcc >= 1) { f.traceAcc -= 1; const n = pickR(f.nodes.filter(o => !o.gone), Math.random); if (n) g0dpTraceSpawn(f.traces, n.x + 1, n.y, heat); } }
+    if (f.hands) { f.traceAcc = (f.traceAcc || 0) + dt * (3 + 45 * heat * heat); while (f.traceAcc >= 1) { f.traceAcc -= 1; const n = pickR(f.nodes.filter(o => !o.gone), Math.random); if (n) g0dpTraceSpawn(f.traces, n.x + 1, n.y, heat, Math.random() < 0.5 ? 'box' : 'tint'); } }
     g0dpTraceTick(f.traces, dt, f.hands ? heat : 1, f.W, f.H); }
   if (f.hands) {
     const h = f.hands, e = (now - h.at) / 1000;
@@ -505,11 +505,11 @@ const g0dpMoldGlyph = (th, x, y, now) => { const ramp = G0DP_RAMP[Math.min(6, Ma
 // A trace: { pts: [[x, y, ch]], x, y, dx, dy, acc, len, done }
 const G0DP_TRACE = { max: 70, steps: [10, 34], life: [10, 34] };   // most at once; cells a second (slow -> fast); length
 const G0DP_CORNER = { '1,0>0,1': '╮', '1,0>0,-1': '╯', '-1,0>0,1': '╭', '-1,0>0,-1': '╰', '0,1>1,0': '╰', '0,1>-1,0': '╯', '0,-1>1,0': '╭', '0,-1>-1,0': '╮' };
-function g0dpTraceSpawn(list, x, y, heat) {
+function g0dpTraceSpawn(list, x, y, heat, kind = 'box') {
   if (list.length >= G0DP_TRACE.max) return;
   const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]], [dx, dy] = dirs[Math.floor(Math.random() * 4)];
   const len = Math.round(G0DP_TRACE.life[0] + (G0DP_TRACE.life[1] - G0DP_TRACE.life[0]) * (0.4 * Math.random() + 0.6 * heat));
-  list.push({ pts: [[Math.round(x), Math.round(y), dx ? '─' : '│']], x: Math.round(x), y: Math.round(y), dx, dy, acc: 0, len, done: false, heat });
+  list.push({ pts: [[Math.round(x), Math.round(y), dx ? '─' : '│']], x: Math.round(x), y: Math.round(y), dx, dy, acc: 0, len, done: false, heat, kind });
 }
 // rate: new traces a second (0: none, the cool down); W, H: the board
 function g0dpTraceTick(list, dt, heat, W, H) {
@@ -534,14 +534,25 @@ function g0dpTraceTick(list, dt, heat, W, H) {
     if (t.done && !t.pts.length) list.splice(i, 1);
   }
 }
-// cells: Map 'x,y' -> [ch, col] (the head is bright, the line red, the tail end dim)
+// cells: Map 'x,y' -> [ch, col, head, tint] (the head is a white dot, the line red, the tail end dim). A tint trace's
+// cells have no character of their own (ch null): what's under them takes its red.
+const G0DP_TINTS = ['#ff6a6a', '#e83030', '#b81f2a', '#7a1620'];   // a tint trace, head to tail
 function g0dpTraceCells(list, now) {
   const out = new Map();
   for (const t of list) t.pts.forEach(([x, y, ch], k) => {
-    const head = !t.done && k === t.pts.length - 1, fromTail = k / Math.max(1, t.pts.length - 1);
-    out.set(x + ',' + y, [head ? '•' : ch, head ? C.bright : fromTail < 0.25 ? C.dangerDim : G0DP_RED, head]);
+    const head = !t.done && k === t.pts.length - 1, fromTail = k / Math.max(1, t.pts.length - 1), tint = t.kind === 'tint';
+    const key = x + ',' + y, had = out.get(key);
+    if (had && !had[3] && tint) return;   // a box line wins a cell over a tint
+    if (head) return out.set(key, ['•', C.bright, true, tint]);
+    out.set(key, tint ? [null, G0DP_TINTS[Math.min(3, Math.floor((1 - fromTail) * 4))], false, true] : [ch, fromTail < 0.25 ? C.dangerDim : G0DP_RED, false, false]);
   });
   return out;
+}
+// ONION's circuit ring (engine/g0d.js THE ONION), all over the board: the network the mold sits on. Rings around the
+// middle, turning slowly; what you see where you've dug through.
+function g0dpCircuitCh(x, y, now, W, H) {
+  const X = (x - W / 2) / 2.1, Y2 = y - H / 2, d = Math.hypot(X, Y2), a2 = Math.atan2(Y2, X) - now / 110 * 0.012;
+  return '─│┼┐└┘┌·'[Math.floor((a2 + 10) * 5 + d * 1.5) & 7];
 }
 // A scrape's falling bits (round 4: "the rest of the board could use some more"): the cells it thinned, before, as
 // [x, y, thickness]; then each one that lost mold drops its own character, more for thicker mold.
@@ -585,9 +596,19 @@ function g0dpFightDraw(p, put, bg, now) {
   const nodeAt = new Set();
   for (const n of f.nodes) if (!n.gone) for (let k = -1; k < 4; k++) nodeAt.add((Math.round(n.x) + k) + ',' + Math.round(n.y));
   const traces = g0dpTraceCells(f.traces || [], now);
-  for (const [k, [ch, col, head]] of traces) { if (taken.has(k) || nodeAt.has(k)) continue; const [x, y] = k.split(',').map(Number); put(x, Y + y, ch, col, 'fx', head); taken.add(k); }
+  const tint = new Map();
+  for (const [k, [ch, col, head, isTint]] of traces) {
+    if (taken.has(k) || nodeAt.has(k)) continue;
+    if (isTint && !head) { tint.set(k, col); continue; }   // it colors what's there (below)
+    const [x, y] = k.split(',').map(Number); put(x, Y + y, ch, col, 'fx', head); taken.add(k);
+  }
   // the network under it, where the mold is thin: faint dots, then the nodes (a letter at a time as you dig)
-  for (let y = 2; y < f.H; y += 2) for (let x = (y / 2) % 2 ? 1 : 3; x < f.W; x += 4) if (clear(x, y) && !taken.has(x + ',' + y)) put(x, Y + y, '·', C.dim);
+  for (let y = 1; y < f.H; y++) for (let x = 0; x < f.W; x++) {   // the circuit, where the mold is gone (round 11: ONION's network)
+    const k = x + ',' + y;
+    if (!clear(x, y) || taken.has(k) || nodeAt.has(k)) continue;
+    const tc = tint.get(k);
+    put(x, Y + y, g0dpCircuitCh(x, y, now, f.W, f.H), tc || (G0D_LOOKS.hs(x * 1.3 + y * 7.9) < 0.25 ? C.mid : C.dim));
+  }
   for (const n of f.nodes) {
     const x = Math.round(n.x), y = Math.round(n.y);
     if (n.gone) continue;
@@ -612,6 +633,7 @@ function g0dpFightDraw(p, put, bg, now) {
     let col = th > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim;
     if (f.fresh[i] > 0.45) col = G0DP_FRESH;
     if (f.hands && f.hands.burning) col = th > 2.5 ? G0DP_RED : C.dangerDim;   // the burn: all of it red (the charge is the traces now)
+    else if (tint.has(x + ',' + y)) col = tint.get(x + ',' + y);   // a tint trace running through the mold
     put(x, Y + y, ch, col);
   }
   // the status line

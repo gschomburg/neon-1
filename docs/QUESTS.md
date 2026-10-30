@@ -320,6 +320,10 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   the network nodes in lines with rounded turns, more and faster as it builds; the burn turns the mold red; after, no new
   ones and the rest eat themselves away from the tail (G0DP_TRACE). The final stand uses the traces too, off the eyes in
   the last 12s (in place of the red glow).
+- Round 11 (the user: neat, not what they expected, keep some): in the fight half the traces stay red box lines, the other half
+  only stain the mold red as they run through it (shades of red, head to tail); both keep the white dot heads. The final
+  stand's traces stay as they are ("what's happening when it's in danger mode is pretty great"). **The network under the
+  mold is ONION's circuit ring** now, all over the board, turning slowly: what you dig down to (tint traces color it too).
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
