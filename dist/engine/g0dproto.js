@@ -474,10 +474,12 @@ function g0dpFightTap(p, x, y, now) {
 function g0dpScrapeHud(p, x, now) {
   const f = p.fight;
   if (f.hands && f.hands.burning) return g0dpHurt(p, 1, 'HANDS OFF. -1 INT.');
+  const showing = f.press > 0.4, reach = Math.min(1, Math.max(0, (f.press - 0.4) / 0.3));   // is there mold on the readouts (g0dpOverlay draws it past 0.4)
   g0dpMold(f, x, 0, 1.8, -2.4, false); g0dpMold(f, x, 2, 1.4, -1.6, false);
   f.steal = Math.max(0, f.steal - 0.6);
+  if (!showing) return;   // nothing up there: no bits, no sound (round 12)
   Sound.tick();
-  if (!reduced()) { const cells = []; for (let k = 0; k < 6; k++) cells.push({ ch: pickR(['%', ';', '&', ':'], Math.random), x: pxX(x + rand(-2, 2)), y: pxY(2 + Math.floor(Math.random() * 2)), col: pickR([G0D_COLS.mold, G0D_COLS.moldDim], Math.random) }); explode(cells, pxX(x), pxY(2), { power: 0.4, grav: 1.3, life: [0.3, 0.6] }); }
+  if (!reduced()) { const cells = []; for (let k = 0; k < 2 + Math.round(5 * reach); k++) cells.push({ ch: pickR(['%', ';', '&', ':'], Math.random), x: pxX(x + rand(-2, 2)), y: pxY(2 + Math.floor(Math.random() * 2)), col: pickR([G0D_COLS.mold, G0D_COLS.moldDim], Math.random) }); explode(cells, pxX(x), pxY(2), { power: 0.4, grav: 1.3, life: [0.3, 0.6] }); }
 }
 const G0DP_MOLD_CH = ' .:;%&#';
 // The flowing mold (round 10, the user): each thickness has its own ramp of characters, and a slow 3D noise (x, y, and
