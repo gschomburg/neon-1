@@ -17,8 +17,8 @@ unlocked by REP, and some quests unlock REP.
 ### 1. Gear and scrap mods (HIGH PRIORITY: the user 2026-10-29, "it's better, but we could still use some more powerful items")
 - **Built v13.84: the LOOT bag** (SPEC version log): loot (value gear, PHISH) and quest items go in an unlimited bag, not
   the belt; [$] on the rule over the mods opens the LOOT screen; no more cash-in for half; LOTTO; FRAG's explosions;
-  the editor's LOOT dropdown. Still open from that talk:
-  - (Claude) **Same item, any tier, one slot:** a PATCH stack holds common and rare, the best used first. (Not decided.)
+  the editor's LOOT dropdown. (Decided 2026-10-30: gear stacks per rarity on the belt, not any tier in one slot;
+  the bag has a line per rarity with its count.)
 - **The powerful gear list** (the user + Claude, 2026-10-30). The worry: big gear that's all exotic is rare, so it barely
   shows. Spread it over the rarities with tiers (finds roll a tier: ~70% the low step, 25% the next, 5% the top).
   - **0DAY: make it.** Marks the real node: rare = this layer, epic = 2 layers, legendary = the whole corp.

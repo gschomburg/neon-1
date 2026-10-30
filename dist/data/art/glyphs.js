@@ -4,7 +4,7 @@
 // A glyph is up to 5 x 3; each line is centered on the node by itself. Lore lines stay under 26 characters.
 // Their order matters: the codex keys are g0, g1... and the game picks from the whole list.
 'use strict';
-NEON_FILES.push(['data/art/glyphs.js', 'v13.85']);
+NEON_FILES.push(['data/art/glyphs.js', 'v13.86']);
 
 const ART_GLYPHS = [
   { name: 'DIAMOND', lore: ['a rhombus with ambition.', 'every corp logo is this', 'plus a gradient.'], art: [' / \\ ', '<   >', ' \\ / '] },

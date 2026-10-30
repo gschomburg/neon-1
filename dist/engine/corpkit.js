@@ -39,7 +39,7 @@
 //   engine/mods.js      zombie, ROT
 //
 'use strict';
-NEON_FILES.push(['engine/corpkit.js', 'v13.85']);
+NEON_FILES.push(['engine/corpkit.js', 'v13.86']);
 
 // ---------------- Content ----------------
 // tell: how the corp picks its safe tile. bossTell: the boss layer's twist.

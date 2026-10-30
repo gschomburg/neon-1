@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v13.85']);
+NEON_FILES.push(['engine/dev.js', 'v13.86']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
@@ -57,14 +57,14 @@ function trackLines() {
   p.top = clamp(p.top || 0, 0, maxTop(n, rows));
   const w = listWindow(p.top, n, rows);
   let used = 0;
-  if (w.hasUp) { lines.push({ text: '[ ^ ^ ^  more  ^ ^ ^ ]', invert: true, id: 'trup', onTap: () => { p.top = nextTop(p.top, -1, maxTop(n, rows)); Sound.tick(); } }); used++; }
+  if (w.hasUp) { lines.push({ text: w.canUp ? '[ ^ ^ ^  more  ^ ^ ^ ]' : '', invert: true, id: 'trup', onTap: () => { p.top = nextTop(p.top, -1, maxTop(n, rows)); Sound.tick(); } }); used++; }
   for (let i = p.top; i < p.top + w.shown; i++) {
     const k = keys[i];
     lines.push({ list: true, id: 'tr_' + k, sel: k === p.key, name: SONGS[k].name, col: k === p.key && p.playing ? C.accent : C.bright,
       right: usedBy(k), rightCol: C.mid, onTap: () => set({ key: k, playing: true }) });
     used++;
   }
-  if (w.hasDown) { lines.push({ text: '[ v v v  more  v v v ]', invert: true, id: 'trdn', onTap: () => { p.top = nextTop(p.top, 1, maxTop(n, rows)); Sound.tick(); } }); used++; }
+  if (w.hasDown) { lines.push({ text: w.canDown ? '[ v v v  more  v v v ]' : '', invert: true, id: 'trdn', onTap: () => { p.top = nextTop(p.top, 1, maxTop(n, rows)); Sound.tick(); } }); used++; }
   for (; used < rows; used++) T('');
   T(SEP, C.dim);
   const tr = SONGS[p.key];
@@ -121,9 +121,9 @@ function devLines() {
   st.devScroll = max > 0 ? d => { const t = nextTop(st.devTop, d, max); if (t !== st.devTop) { st.devTop = t; Sound.tick(); return true; } return false; } : null;
   if (!max) return all;
   const w = listWindow(st.devTop, body.length, rows), out = [...head];
-  if (w.hasUp) out.push({ text: '[ ^ ^ ^  more  ^ ^ ^ ]', invert: true, id: 'devup', onTap: () => st.devScroll(-1) });
+  if (w.hasUp) out.push({ text: w.canUp ? '[ ^ ^ ^  more  ^ ^ ^ ]' : '', invert: true, id: 'devup', onTap: () => st.devScroll(-1) });
   out.push(...body.slice(st.devTop, st.devTop + w.shown));
-  if (w.hasDown) out.push({ text: '[ v v v  more  v v v ]', invert: true, id: 'devdn', onTap: () => st.devScroll(1) });
+  if (w.hasDown) out.push({ text: w.canDown ? '[ v v v  more  v v v ]' : '', invert: true, id: 'devdn', onTap: () => st.devScroll(1) });
   if (!w.hasDown && body.length && !body[body.length - 1].text) out.pop();   // no double gap at the bottom
   out.push({ text: '' }, ...foot);
   return out;

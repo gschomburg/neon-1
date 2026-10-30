@@ -1,7 +1,7 @@
 // NeoN+1 data/events.js: anomalies (a tag on one corp) and sector events (what each sector rolls).
 // The design: docs/SECTOR_EVENTS.md. Sector 1 has no event; every sector after rolls one (seeded, no repeats).
 'use strict';
-NEON_FILES.push(['data/events.js', 'v13.85']);
+NEON_FILES.push(['data/events.js', 'v13.86']);
 
 // Anomalies: a tag on a corp node on the map. It changes how that corp plays. tag: the mark next to the node.
 const ANOMALIES = {

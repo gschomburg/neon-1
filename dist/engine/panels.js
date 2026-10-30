@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.85']);
+NEON_FILES.push(['engine/panels.js', 'v13.86']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -98,7 +98,8 @@ function addLoot(key, tier = 0) {
   const stack = run.loot.find(s => s.key === key && s.tier === tier);
   if (stack) stack.n++;
   else run.loot.push({ key, tier, n: 1 });
-  st.lootNew = { key, tier, at: performance.now() };   // the [$] shows it going in (engine/loot.js)
+  st.lootNew = { key, tier, at: performance.now() };
+  lootQueue(key, tier);   // it piles up over the [$] and feeds in (engine/loot.js)
   if (ITEMS[key].quest && !stack) questGot(key);   // quest gear: its quest moves (engine/quests.js)
   return true;
 }

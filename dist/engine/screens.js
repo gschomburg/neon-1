@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.85']);
+NEON_FILES.push(['engine/screens.js', 'v13.86']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -309,10 +309,10 @@ function overLines() {
   const w = listWindow(om.top, total, view);
   const shown = extras.slice(om.top, om.top + w.shown);
   const mapH = w.shown - shown.length;
-  if (w.hasUp) lines.push({ text: '[ ^ ^ ^  more  ^ ^ ^ ]', invert: true, id: 'omup', onTap: () => st.scroll && st.scroll(-1) });
+  if (w.hasUp) lines.push({ text: w.canUp ? '[ ^ ^ ^  more  ^ ^ ^ ]' : '', invert: true, id: 'omup', onTap: () => st.scroll && st.scroll(-1) });
   lines.push(...shown);
   if (mapH) lines.push({ mapView: true, h: mapH, top: Math.max(0, om.top - E), r, noArrows: true });
-  if (w.hasDown) lines.push({ text: '[ v v v  more  v v v ]', invert: true, id: 'omdn', onTap: () => st.scroll && st.scroll(1) });
+  if (w.hasDown) lines.push({ text: w.canDown ? '[ v v v  more  v v v ]' : '', invert: true, id: 'omdn', onTap: () => st.scroll && st.scroll(1) });
   T('');
   lines.push(...bottom);
   return lines;

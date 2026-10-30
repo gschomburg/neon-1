@@ -9,7 +9,7 @@
 //   of:    said in place of that popup's do-this line (a wrong tap, the boss beaten): one way to say it per line,
 //          picked at random.
 'use strict';
-NEON_FILES.push(['data/tutorial.js', 'v13.85']);
+NEON_FILES.push(['data/tutorial.js', 'v13.86']);
 
 const TUT_COPY = [
   // the public net

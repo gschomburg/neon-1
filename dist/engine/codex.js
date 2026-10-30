@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v13.85']);
+NEON_FILES.push(['engine/codex.js', 'v13.86']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -20,23 +20,15 @@ function wrapText(str, w) {
 
 // Which entries fit in the list window when it starts at `top`.
 // A "more" row takes a slot at the top/bottom when there are entries that way.
+// A list that doesn't fit keeps both "more" rows (the user, 2026-10-30: a step is always one line): hasUp / hasDown say
+// the rows are there; canUp / canDown say there's more that way (a row with nothing more is drawn blank).
 function listWindow(top, n, rows = CODEX_ROWS) {
-  const hasUp = top > 0;
-  let shown = rows - (hasUp ? 1 : 0);
-  const hasDown = top + shown < n;
-  if (hasDown) shown -= 1;
-  return { hasUp, hasDown, shown: Math.min(shown, n - top) };
+  if (n <= rows) return { hasUp: false, hasDown: false, canUp: false, canDown: false, shown: n };
+  const shown = Math.min(rows - 2, n - top);
+  return { hasUp: true, hasDown: true, canUp: top > 0, canDown: top + rows - 2 < n, shown };
 }
-const maxTop = (n, rows = CODEX_ROWS) => n <= rows ? 0 : n - (rows - 1);
-// Scrolling off the very top makes a "more" row appear in the freed space, which would
-// look like nothing moved. So the first step down skips one extra line, and stepping
-// back to line 1 snaps to the top.
-function nextTop(top, d, max) {
-  let t = top + d;
-  if (top === 0 && d > 0) t += 1;
-  if (t === 1 && d < 0) t = 0;
-  return clamp(t, 0, max);
-}
+const maxTop = (n, rows = CODEX_ROWS) => n <= rows ? 0 : n - (rows - 2);
+const nextTop = (top, d, max) => clamp(top + d, 0, max);
 
 // The scroll area every list uses (THE BOARD's tabs; the codex draws the same thing by hand): `rows` lines high,
 // with the "more" rows at the top / bottom when there's more that way, the wheel and swipes scroll it.
@@ -47,15 +39,17 @@ function scrollArea(X, T, s, items, rows, idp = 'sa') {
   const by = d => { const t = nextTop(s.top, d, maxTop(n, rows)); if (t !== s.top) { s.top = t; Sound.tick(); } };
   const w = listWindow(s.top, n, rows);
   let used = 0;
-  if (w.hasUp) { X({ text: '[ ^ ^ ^  more  ^ ^ ^ ]', invert: true, id: idp + 'up', onTap: () => by(-1) }); used++; }
+  if (w.hasUp) { X({ text: w.canUp ? '[ ^ ^ ^  more  ^ ^ ^ ]' : '', invert: true, id: idp + 'up', onTap: () => by(-1) }); used++; }
   for (let i = s.top; i < s.top + w.shown; i++) { X(items[i]); used++; }
-  if (w.hasDown) { X({ text: '[ v v v  more  v v v ]', invert: true, id: idp + 'dn', onTap: () => by(1) }); used++; }
+  if (w.hasDown) { X({ text: w.canDown ? '[ v v v  more  v v v ]' : '', invert: true, id: idp + 'dn', onTap: () => by(1) }); used++; }
   for (; used < rows; used++) T('');
   st.scroll = by;
   return w;
 }
 // Keep line idx inside a scroll area's window.
 function scrollFollow(s, idx, n, rows) {
+  if (s.fIdx === idx && s.fN === n) return;   // only when the selection moves (else it fights a scroll by hand)
+  s.fIdx = idx; s.fN = n;
   for (let i = 0; i < 4; i++) {
     const w = listWindow(s.top, n, rows);
     if (idx < s.top) s.top = idx;
@@ -188,7 +182,7 @@ function openCodex() {
     // The list window, with "more" rows when there are entries above/below.
     const w = listWindow(top, n, rows);
     let used = 0;
-    if (w.hasUp) { X({ text: '[ ^ ^ ^  more  ^ ^ ^ ]', invert: true, id: 'moreup', onTap: () => scrollBy(-1) }); used++; }
+    if (w.hasUp) { X({ text: w.canUp ? '[ ^ ^ ^  more  ^ ^ ^ ]' : '', invert: true, id: 'moreup', onTap: () => scrollBy(-1) }); used++; }
     for (let idx = top; idx < top + w.shown; idx++) {
       const key = list[idx], seenK = !!save.seen[key];
       const base = { list: true, id: 'cx' + idx, onTap: () => { sel = idx; Sound.tick(); }, sel: idx === sel };
@@ -217,7 +211,7 @@ function openCodex() {
       }
       used++;
     }
-    if (w.hasDown) { X({ text: '[ v v v  more  v v v ]', invert: true, id: 'moredn', onTap: () => scrollBy(1) }); used++; }
+    if (w.hasDown) { X({ text: w.canDown ? '[ v v v  more  v v v ]' : '', invert: true, id: 'moredn', onTap: () => scrollBy(1) }); used++; }
     for (; used < rows; used++) T('');
     B('[ BACK ]', 'back', () => swapTo(showTitle));
   }, '> codex open.', { full: true });

@@ -672,7 +672,7 @@
   <h2>Give <small>a mod (at a step), gear or loot; the gear &amp; mods tab has the full list</small></h2>
   <div class="row">mod <select id="xGiveMod"></select> <select id="xTierMod"></select> <button id="xGiveModBtn">give</button></div>
   <div class="row">gear <select id="xGiveGear"></select> <select id="xTierGear"></select> <button id="xGiveGearBtn">give</button></div>
-  <div class="row">loot <select id="xGiveLoot"></select> <select id="xTierLoot"></select> <button id="xGiveLootBtn">give</button></div>
+  <div class="row">loot <select id="xGiveLoot"></select> <select id="xTierLoot"></select> <button id="xGiveLootBtn">give</button> <button id="xGiveLootRnd" title="2-5 random loot, one after another: the [$] pile">random 2-5</button></div>
   <h2>Hackers <small>bring one into the corp layer you're in: a rival, or crew as if you'd called them (CALL gear is under Give too)</small></h2>
   <div class="row"><select id="xHk"></select> <button data-x="hacker">bring in</button></div>
   <details class="xgrp" data-g="feats"><summary>Feats <small>click one to grant it or take it back (lit = done); "box" shows its FEAT box once the game is calm</small></summary>
@@ -2094,6 +2094,13 @@
     giveRow('#xGiveMod', '#xTierMod', '#xGiveModBtn', ['gen', 'minor', 'exotic', 'corp'].map(k => [k + ' mods', Object.entries(MODS).filter(([, d]) => d.kind === k)]), MODS, 'mod');
     giveRow('#xGiveGear', '#xTierGear', '#xGiveGearBtn', gearGroups, ITEMS, 'gear');
     giveRow('#xGiveLoot', '#xTierLoot', '#xGiveLootBtn', lootGroups, ITEMS, 'loot');
+    // random 2-5 loot at once (any loot, phish catches too): to watch them pile up over the [$]
+    $('#xGiveLootRnd').addEventListener('click', () => {
+      if (!state || !state.run) return log('give: no run: start one first', true);
+      const keys = Object.keys(ITEMS).filter(k => ITEMS[k].value), n = 2 + Math.floor(Math.random() * 4), got = [];
+      for (let i = 0; i < n; i++) { const k = keys[Math.floor(Math.random() * keys.length)]; got.push(ITEMS[k].name); toGame({ type: 'mod-set', key: k, tier: 0 }); }
+      log(`gave ${n} loot: ${got.join(', ')}`);
+    });
   }
   if (typeof HACKERS !== 'undefined') $('#xHk').innerHTML = ['bad', 'good'].map(sd => `<optgroup label="${sd === 'bad' ? 'rivals' : 'crew'}">${Object.entries(HACKERS).filter(([, h]) => h.side === sd).map(([k, h]) => `<option value="${esc(k)}">${esc(h.name)}</option>`).join('')}</optgroup>`).join('');
   // feats (dist/data/feats.js): a button each (lit when done) and its "box"
