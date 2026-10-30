@@ -115,20 +115,30 @@ unlocked by REP, and some quests unlock REP.
   - **POPS's old corp:** a quest that unlocks when you call POPS in the corp he used to work for.
   - **Flip a rival:** turn one particular rival to your side. Maybe part of the d0g quest: once you beat d0g, it turns
     out he's POPS's son or protégé; then he's on your side and helps you beat G0D.
-    - **d0g's name on your crew** (the user, meat notes 2026-10-30): d0g becomes b0y when he joins your crew? Or maybe
-      b0y was just his old handle.
+    - **d0g is b0y on your crew** (decided 2026-10-30): the d0g codex entry stays; b0y mentions he used to be d0g.
+      docs/QUESTS.md, step 8.
   - **Safehouses need something cooler** (the user, meat notes 2026-10-29): they keep some mods from a run you died in,
     or offer crew CALL gear. Probably a REP unlock. Or simpler: a boosted safehouse, 2 INT and an item or two.
   - **The quest object sparkles** (the user, meat notes 2026-10-29): a twinkle / glitter effect on it.
 - **G0D (everything G0D lives here for now, the user 2026-10-29):**
   - **Unlock G0D** through REP, then a quest to beat it (the top achievement).
-  - **G0D's rewards** (the user, meat notes 2026-10-29): replaying seeds for real (not as practice), looks like a REP buy;
-    a mod you always start with.
+  - **After G0D: see "4. The end game" below.**
   - **G0D flashing in on SECTOR CLEARED** now and then (the user, meat notes 2026-10-29; the rest of that note is built, v13.80).
   - **G0D's tracks** (the user, 2026-10-29): the G0D fights need their own music, and it has to kick ass: the maze, the
     mold-armor fight, the part 2 on the map / the win screen, the last stand. (docs/QUESTS.md, G0D's fights.)
 
-### 4. The map and run structure
+### 4. The end game (its own section, the user 2026-10-30; details: docs/ENDGAME.md)
+- **The ending:** cutscene, credits + thanks for playing, "there is more to explore", then the reward as a free REP
+  unlock.
+- **Seeds for real:** replaying a seed counts (not practice), maybe on its own leaderboard (scores need the seed).
+- **The 1UP:** hold one, refills each sector, a CONTINUE back to the corp's start (same layers: the seed is the seed),
+  fewer used = tie breaker, tracked. Any run.
+- **REPLAYS on the title:** your best 10 seeds + the 5 most recent.
+- **Replay H3AV3N** after winning (maybe its own leaderboard).
+- **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
+- **More rewards?** A mod you always start with (meat notes 2026-10-29).
+
+### 5. The map and run structure
 - **Fishing: built v13.69** (engine/fishing.js; open: unlock the PIER with a feat, a quest item on the line, more UI after play). (the user, meat notes 2026-10-28): a PIER node on the map where you fish for loot.
   - Fishing costs credits.
   - You find gear and things (maybe a particular quest item), and you catch fish to sell: little fish to big fish, by
@@ -166,7 +176,7 @@ unlocked by REP, and some quests unlock REP.
 - More final bosses, each its own mechanic (OMNI is the only one).
 - Long-run issues: power creep, a guaranteed heal each sector.
 
-### 5. Anomalies and sector events (named 2026-10-26)
+### 6. Anomalies and sector events (named 2026-10-26)
 - **Built v13.54** (design: `docs/SECTOR_EVENTS.md`): 14 sector events, the SECTOR EVENT card, BLINDERS, THE FENCE,
   the editor's TESTING tab (SPEC version log).
 - **Built v13.55:** the codex SECTORS tab.
@@ -175,8 +185,15 @@ unlocked by REP, and some quests unlock REP.
 - **Next batch (the user, 2026-10-27)** (docs/SECTOR_EVENTS.md "The next batch"): built v13.58: GRIND, BLACK ICE + COLD SNAP,
   RIGHT ANGLES, GAUNTLET; v13.59: EENY MEENY (3 bosses); v13.60: HEAD FIRST. Idea: ICE STORM.
 - **Other ideas (Claude's):** TAXED, AUDITED, RANSOM, BACKWARDS, a trace meter, two events stacked.
+- **MOLD, a sector event** (the user, 2026-10-30): explains the mold in heaven (docs/QUESTS.md, step 11); once
+  unlocked, it can come up as a random event in regular runs too.
+- **Event tiers, later** (the user, 2026-10-30: not now): harder events only deeper. For now the rule stands: sector 1
+  is clean, and from sector 2 any event can show up.
+- **d0g from sector 2** (the user, 2026-10-30): a RIVAL anomaly brings in any of the hackers, d0g too, from the first
+  sector that has events (sector 2). Today hkRivalFor (engine/hackers.js) keeps d0g out until sector 3 (`sector >= 2`,
+  0-based): drop that. (And once he's b0y on your crew, he's out of the pool: docs/QUESTS.md step 8.)
 
-### 6. New corps
+### 7. New corps
 - From CORPS.md, not built: FOSSIL (a dig site), UNICORN (very rare), MAGIC (stage magic), ALARMS, the chain corp,
   the case corp (upper / lower case), the stock market corp.
 - From the old ideas list, not built: bad security (passwords that rotate: BUDGETWALL / PASSWORD123), the dating app (SPARKD, a catfish
@@ -186,18 +203,18 @@ unlocked by REP, and some quests unlock REP.
 - **A drug dealer corp** (the user, 2026-10-27).
 - CORPS.md marks every built corp `(built)` on its heading.
 
-### 7. Achievements and cosmetics
+### 8. Achievements and cosmetics
 - First win, a naked (0 mod) win, beat each corp, perfect streaks, reach layer X; easy ones too (die on the first
   corp, spend 1000cr, earn 1000cr then get back to 0); beat G0D at the top.
 - Unlock cosmetics: logos, hats / accessories, card frames, titles ("SIGIL BREAKER"). Some bought with REP.
 
-### 8. The encrypted codex
+### 9. The encrypted codex
 - Unfound entries show scrambled text that decrypts (as you beat corps, or over time) instead of "???".
 
-### 9. Lean more cyberpunk
+### 10. Lean more cyberpunk
 - Cyberware in names and flavor (implants as gear, MEDIX as a chrome clinic, chrome on the runner card), the ads.
 
-### 10. Make it more of a hacking game
+### 11. Make it more of a hacking game
 - Something in the game itself you can hack, like the seed.
 
 ## Low priority
@@ -272,6 +289,9 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
+- **The seed decides the layers, always** (the user, 2026-10-30): resuming a run (closed the browser) stops rerolling the
+  layers (drop the run.resumes salt in genLayer and the fcst / skip rolls). Also put on the seed: which crew answers a
+  plain CALL, OVERCLOCK's purges, the clock-runs-out tap (Math.random today). Rivals' moves stay random (real-time).
 - **Tells, intel** (the user, meat notes 2026-10-29; FIRST BREACH built v13.81 shows the tell the first time): open: some way to know if a tell is right (what that means: ask the user).
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Cold Brew's boss reward
   is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is (the user 2026-10-29: "i still ran out of cash and couldn't get past the uplink"); it already scales by sector and BLACK ICE costs that many hits.

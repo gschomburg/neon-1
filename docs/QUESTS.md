@@ -46,6 +46,33 @@ The user's dump, 2026-10-28, put in order. More is coming.
 - POPS gives you a seed. Entering it does not make the run practice; maybe it's a **quest mode** run.
 - The seed is a special version of rivals where d0g is the only rival, and it can bring rivals into the first sector.
   You can play it over and over to get your d0g defeats.
+- **Building the d0g seed** (the user, 2026-10-30): a custom seed, built how we like: **d0g more common, and every
+  sector has RIVAL** (sector 1 too). Some **extra gear that slows d0g down**, which maybe unlocks for the regular game
+  once you beat the quest. **The seed's name: H3LL**, or something longer that still says hell (UNDERW0RLD?).
+  **Name, 2026-10-30: HADES** (what the user was reaching for), or maybe LIMBO. **d0g the only rival** (the custom
+  rivals version above) is fine.
+  (Claude: seeds can be up to 16 letters and digits; random ones are always 6 long and never use I, L, O, 0 or 1, so
+  HADES, LIMBO, H3LL can never come up by chance. H3AV3N (6 long, all allowed letters) could, about 1 in 900 million.
+  Gear names: LEASH (slows him), BONE (a decoy he chases instead of the real node), MUZZLE (he can't read the tell for
+  a while).)
+- **CERBERUS** (the user, 2026-10-30, asked: Hades' three-headed dog, guards the underworld's gate, keeps the dead in).
+  (Claude's ideas: on HADES d0g comes as Cerberus, three heads = three d0g cursors, all reading the tell; or CERBERUS the
+  corp, HADES's boss, a security firm, "nothing gets out"; POPS: "he's guarding something down there". Honey cakes put
+  Cerberus to sleep in the myths: a sleep gear, H0NEY, next to LEASH / BONE / MUZZLE.)
+  **Decided: both** (the user, 2026-10-30):
+  - **CERBERUS is a corp d0g built**, custom, HADES's **final sector boss**. Once you've beaten HADES it also shows up
+    in the regular world as a boss.
+  - **d0g's cursor splits into 3, now and then** (the user, 2026-10-30): everywhere he shows up (RIVAL corps too), not
+    always 3, and it doesn't change his abilities. Just a subtle thing when you fight him; maybe the player puts it
+    together (d0g = Cerberus).
+- **Not clearing the sector: an item** (the user, 2026-10-30). The seed is only there to make 10 d0g wins easier. After
+  the 10th win **a quest item drops**; like the DISC, you **cash out with it**. That moves the quest on: the cutscene,
+  and d0g turns into b0y. (Claude: name, 6 letters max: DOGTAG, his old tag with his real name on it, b0y, which is what
+  POPS traces.)
+- (Earlier the same day, now optional: HADES's sector boss as CIPHER, the crypto corp, or **a new corp with mold
+  powers**.) (Claude: a new
+  one, the first place you ever see the mold, close up: d0g was down here collecting data on it. Names: MYCONET
+  (mycelium is nature's network), SPORE, MILDEW, BLIGHT. BITROT, decay, is the nearest corp today.)
 
 ### Step 6: the trace
 - When you beat d0g the 10th time (it has to be during the quest seed), another POPS dialog: you run a trace on d0g to
@@ -57,6 +84,18 @@ The user's dump, 2026-10-28, put in order. More is coming.
 - After or during the scene, d0g decides to join your crew. He gives you his number.
 
 ### Step 8: d0g on the crew
+- **On your crew he's b0y** (the user, 2026-10-30): he changes his name back to b0y, to make it clear he's not a rival
+  any more. The d0g codex entry stays as it is (no updating it), and b0y mentions he used to be d0g.
+- **b0y is a guide** (the user, 2026-10-30): called in, his ability is different from d0g's. He knows the right nodes
+  but doesn't hit them for you (it fits the G0D fight). When he points at something it has to be clear what: his 3
+  cursors come together on it (they converge).
+  **How the cursors move** (the user, 2026-10-30): each at its own pace, doing different things. Each hovers around a
+  different node, so you can tell it's probably one of those 3; when they're ready they all go to the same one (maybe one
+  at a time). (Claude: so the hint sharpens over time, 3 maybes, then 2, then 1, and the clock or the maze drain is what
+  waiting costs.)
+- **Out of the rivals pool** (the user, 2026-10-30): once he's on your crew, d0g no longer shows up as a rival.
+  (Claude: hkRivalFor in engine/hackers.js picks from HK_RIVALS, d0g from sector 3 on; drop him there once b0y is crew.
+  A RIVAL corp that would have rolled d0g then rolls someone else: still fixed by the seed.)
 - With his number you can buy d0g onto your crew with REP.
 - You need to level him to LVL 2 before the next quest step.
 - While you're on this step: a bonus to how often d0g's CALL shows up (markets and so on; maybe always at safehouses).
@@ -74,6 +113,58 @@ The user's dump, 2026-10-28, put in order. More is coming.
 - From BACKLOG item 2 (earlier notes): G0D is a rogue AI, all the corps' AIs fused by accident; you need d0g on your crew
   to get past heaven's first sector; G0D is fought at the end of sector 1, then again as sector 2's final boss, then one
   more set of layers after the success screen; maybe no tells, maybe beaten only by learning the seed.
+
+**The H3AV3N run, settled** (the user, 2026-10-30):
+- **2 sectors** (the user, 2026-10-30, revised the same day: the maze is NOT sector 1's boss):
+  - **Sector 1 plays like a normal sector**, with a special boss: **CERBERUS** again. The mold gets worse as you go,
+    so by the boss you're basically tapping in the dark, with b0y's help.
+  - **After its boss: a different UPLINK.** It's broken: you can't cash out, but you don't have to pay either.
+  - **Sector 2:** G0D is the sector boss node at the top; right under it is **the maze**; a **store** off to the left or
+    right that you can go to after the maze (patch up, maybe buy something); below the maze, **3 rows of a "regular"
+    looking network**, moldy too, before you reach the maze.
+    ```
+           (G0D)
+             |
+          [MAZE] --- [$ store]   (after the maze)
+           / |           o  o  o      moldy corps / nodes, 3 rows
+          o  o  o
+          o  o  o
+             |
+          (start)
+    ```
+  - **G0D in sector 1: just glimpses** (the user, 2026-10-30), no fight. Maybe CERBERUS gets eyes like G0D's, or the
+    red / blue color code shows up there first.
+  - **Colors** (the user, 2026-10-30): probably a new palette for the heaven sectors, the map screen too, so the mold
+    effects behave the way we want and don't clash with the fights; the palette can swap to G0D's when the fight starts.
+    Corps in heaven can keep their own palettes, then: just **add a mold color to every palette**. (Claude: the g0d tab
+    already has G0D's own fixed colors, the same in every palette, like the rarity chips: G0D_COLS in engine/g0d.js,
+    mold #9fc13a / moldDim #4f6120. Either way works: a fixed mold color reads as something foreign in every palette; a
+    per-palette slot can be tuned where it clashes, e.g. a green corp palette. Could be fixed with optional overrides.
+   )
+    **Red / blue needs no fixed colors** (the user, 2026-10-30): CERBERUS and G0D have palettes we control, and the other
+    corps don't use the convention.
+  - **CERBERUS's tell** (the user, 2026-10-30): it has eyes, or red things, that sometimes turn blue; tapping a blue one
+    shows the real node for a second.
+    **Settled** (the user, 2026-10-30): **the eyes are on the nodes.** b0y doesn't help much in the CERBERUS fight: he
+    just tells you what to do. The eyes watch his cursors (they follow them around). Tap a blue eye and it **looks at
+    the real node**, and that node blinks for a second.
+    **The eyes aren't nodes** (the user, 2026-10-30): they sit on the nodes but don't break. **The eyes always show
+    through the mold**, and the mold is why b0y can't help as much here: you need CERBERUS's tells.
+    **Open: how mods and gear work with all this** (the eyes, the mold). (Claude: a simple rule: the mold only hides
+    what you see, it doesn't change what anything does. Mods and gear work as usual underneath; a mod that marks a node
+    (ROOT-style) marks it under the mold, and you see the mark only once the mold's off, or the mark shows through like
+    the eyes. BLEACH is the one thing made for the mold.)
+    **For now** (the user, 2026-10-30): a mod and gear pass, one by one, when we build heaven. First instinct: mods
+    behave as they do; the mold just obscures things, so it may cover some, may not. If the mold gets up into the
+    terminal, the hints are harder to see.
+  - (Claude: the mold climbing through sector 1 is the g0d tab's mold slider, 0 to 1, turned up by the game. b0y vs
+    CERBERUS, the corp he built: he knows its tricks, a good place for his lines.)
+- **Its corps: roll the dice** (it's a seed) and see what heaven comes up with, then tweak. Maybe one of every corp.
+- **Dying before the maze = a restart** of the run. You always start with b0y on your side; he's there every time.
+- **A MOLD sector event** explains the mold in heaven; once you've unlocked it, it can also come up as a random event in
+  regular runs.
+- **The name stays H3AV3N:** if it comes up at random or someone types it in, without b0y they probably won't get through.
+- **Replayable** after you win.
 
 ### Story still to fill in
 - The user, 2026-10-28: "some story elements i left out or that could be added". Roughly, the main quest is the above.
@@ -106,14 +197,54 @@ The user's dump, 2026-10-28, put in order. More is coming.
 ## G0D's fights (the user's rough ideas, 2026-10-28)
 Three fights, then the end. d0g on your crew should be very useful in them (in the maze above all).
 
-### Fight 1: the maze (end of heaven's sector 1)
+### Fight 1: the maze (sector 2, right under G0D: revised 2026-10-30, was the end of sector 1)
 - No ICE. Every node takes you down a layer, but it's a maze: each node leads to a different set of layers. A memory
   game.
 - On the wrong path you go deeper for a while, then take damage (maybe) and land back on the first layer.
 - The layers are labeled as you go in: 2A, 2B, 2C, then 3A, 3B... A clue to the right pattern is needed: maybe the
   labels spell something, or you learn the pattern somewhere along the quest line.
 
+- **The answer: the codex order** (the user, 2026-10-30, leaning this way). The right path follows the glyphs in the
+  order the codex lists them: DIAMOND, then THE CROSS, then STORAGE UNIT... Each maze layer has exactly one node with the
+  next glyph on the right path. No map: **d0g explains it**, maybe just by giving the names, so it makes most sense to
+  someone who has looked at the codex.
+- **5 right answers** (the user, 2026-10-30). Reorder the glyphs so the 5th is something good, like a key (there's no
+  key glyph). **Decided:** the 5th is THE WATCHER (the eye: the last thing you tap
+  before G0D is its symbol), with **PROMPT (`>_`, the public node's glyph) as glyph 0**: the maze starts on it, like a
+  regular run. So: PROMPT, then DIAMOND, THE CROSS, STORAGE UNIT, UPLINK (Claude: moved up to 4th, up to heaven), THE
+  WATCHER. (Claude: Codex order = the list in data/art/glyphs.js; reordering it
+  changes which glyph lands on which node for every seed (not where the real node is): do it before seeds matter.)
+- **Or a gear key** (the user, same day, not sure it's right): heaven's first corp is the cipher corp, and beating it
+  gives a gear item with infinite uses that shows the real node (only useful in the maze). The maze nodes are all moldy;
+  using it clears the mold so you can see what's on them.
+- (Claude) The two fit: the mold covers the maze's glyphs, so you need to **see** them (clear the mold: the gear, or d0g
+  doing it, which would also be his job in heaven) and **know** the order (the codex). And d0g's message could get eaten
+  by the mold partway ("diamond. cross. st#%@ge. wa%#..."): the codex fills in the rest.
+
+- **How the maze plays** (the user, 2026-10-30):
+  - **Lots of nodes** in every maze layer, even the first, maybe more the deeper you go: it has to be a challenge.
+  - **Any node you tap counts as a perfect:** it gives health (INT), maybe some cash. So you can just go and go.
+  - **Wrong paths go 6 layers deep.** On the 6th, lost, the node you tap does 1 damage and sends you back to the maze's start.
+  - **A timer on every maze layer, about 5 seconds:** when it runs out you lose 1 INT and it starts again. Going through
+    any node gets the health back, so it's easy to keep up.
+  - **d0g's lines** while you're lost: "i'm not sure this is the right way."...
+  - **Mods pay off here:** a timing mod buys you time.
+  - (Claude) Once you take a wrong node, everything below is wrong until you're sent back, so d0g's doubt can grow
+    with each lost layer ("this doesn't look right" ... "we're lost, man"). Mods that pay per perfect (money, streaks)
+    will spike here, since every node is one: fine as a treat, or capped. The right path: PROMPT + 5 layers, then out.
+
+- **Mods in heaven** (the user, 2026-10-30): they probably won't change the G0D fights much, but some particular mods
+  would be good there: sneak those into heaven's corps (rewards, markets) through the seed.
+- **The mold-clearing gear** (the user, 2026-10-30, liked): not infinite, just clears the mold: you can find a stack of
+  them somewhere in heaven. (Replaces "infinite uses, shows the real node".)
+- **b0y in heaven** (the user, 2026-10-30): works like a mod, always on in heaven: he comes into every corp with you.
+  His ability: helping you find the right node and giving clues. Every once in a while he hovers over the right node;
+  maybe he clears some mold.
+
 ### Fight 2: (end of heaven's sector 2)
+**Settled (the user, 2026-10-30): the face idea evolved into G0D FIGHT** as it stands (the eye in the mold). G0D is the
+network more than the layer. The face notes below are history.
+
 - Different, maybe more straightforward: something like blowing up all the ICE. G0D might be on the layers moving
   around, the way rivals do.
 
@@ -179,6 +310,47 @@ Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 - G0D needs an attack you shield yourself from: maybe something meta, like it trying to grab your INT.
 - A few threats worked in along the way.
 
+**G0D FIGHT: how the mold works** (the user, 2026-10-30): two layers that interact, the mold on top and the network
+under it.
+- **The network nodes make the mold.** The corp nodes floating around under it spew mold out above them, and it
+  spreads as they move. The mold creeps a little on its own too, but the nodes are the main source.
+- **You read the nodes through the mold:** not by seeing their [] icons, but because the mold above them changes:
+  it gets tougher, or changes color.
+- **Thick mold takes more taps:** where the spawners have passed over a spot several times, it takes a few taps to clear.
+- **Breaking mold above a node slows it down** and stops it spewing for a second.
+- **When G0D takes damage** (or reaches a damage threshold), all the mold grows back in fast: the board resets a little.
+- (Claude) Thickness shown by character and color (`.` `%` `#`, dim to bright); a fresh, thick, moving patch = a node
+  right under it. Tapping it pins the node for a second, so the chase is: spot the trail, tap to pin it, dig down before
+  it moves on. 
+- **The stolen `[#]` / `[$]` nodes sit still but still spew** (the user, 2026-10-30, not sure yet). (Claude: so they build
+  the thickest mounds: a still, very thick spot = loot; a moving streak = a corp node.)
+- **They spew in a radius:** a circle about 3 or 5 wide, not a single spot, and the overlay is feathered at the edges.
+- **Its name: M0LD** (the user, 2026-10-30): digital mold, spelled with a zero in the game.
+
+**G0D FIGHT: the mold steals, and HANDS OFF** (the user, 2026-10-30)
+- **The mold reaches for your INT and credits:** it grows up toward their readouts. Tap it to make it dissipate. If it
+  gets there it **steals** them.
+- **What it steals is in the network:** burst the mold open and the nodes floating underneath hold it, `[#]` (INT) and
+  `[$]` (credits). Tap them to get it back.
+- **HANDS OFF, G0D's eye attack:** the build-up is more eyes: one appears, then another... As it opens, everything
+  (the mold, the network nodes) turns shades of **red** for a few seconds: not a time to tap. It plays with the mold:
+  while the eye attack is going you can't tap the mold away, so it creeps up on your INT and credits.
+- **Colors say when:** the real eye, opened by breaking its network node, is **blue** (safe: hit it). Red = hands off.
+- **The counter:** while it's charging, find the eye-reveal node and tap it: the attack is stopped, and one of the eyes
+  turns into the right (blue) eye.
+- **Two beats** (the user, 2026-10-30): **the charge** (the eyes appearing, the red fading up) does no damage. A warning
+  shows in the terminal, if you can see it: if the mold isn't covering the terminal. **The burn** (all red): every tap
+  costs INT.
+- **Stolen INT / credits don't carry into the last stand:** it doesn't matter if you got them back; you shouldn't need
+  them there. (Still open: whether the mold also reaches for your mods, THE GRAB.)
+
+**G0D FIGHT: dying in it** (the user, 2026-10-30): **die and the fight restarts** (not the run). Going back through
+heaven's network and the maze again isn't fun, and by then they've likely played it a few times already. (Claude: you
+restart with the INT / credits / mods you had walking in; the wake-up scene gets shorter on a retry, tap to skip. So each
+stage is its own checkpoint: a wrong maze path sends you back to the maze's first layer, a G0D FIGHT death to the fight's
+start, a failed final stand replays the final stand.) No cashing out in the G0D fight (the user: no reason to bank;
+they'll have plenty of REP by then). They can still quit from the menu.
+
 **G0D FIGHT: it dies (and doesn't)**
 - The last eye tap: the mold spills out and falls away, and you see the network layer under it clearly; then that
   crumbles. The eye looks around frantically as its sector falls apart. A last threat as the eye fizzles out.
@@ -191,18 +363,32 @@ Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 - Pretty easy: a quick-time event. The mold fills and spreads out, and under it is the network again.
 - The mold is just a transition here: sparse bits, nicely animated (z-translated noise, maybe).
 - Instead of corp nodes, the nodes are all eyes `(@)`. Hitting the right eye destroys it and damages G0D.
+- **No mixed messages** (the user, 2026-10-30, after HANDS OFF made red eyes the ones not to tap): the last stand is
+  tapping his eyes to defeat him, and it has to be clear it's safe to tap them now: the eyes are the safe color (blue,
+  like the real eye in G0D FIGHT), never red.
+  Ways to do it (the user, 2026-10-30, the blue-is-hit rule carried through): (a) all the eyes blue; (b) red and blue
+  eyes, and each blue one you destroy turns another red one blue, one at a time; (c) every eye cycles red to blue and
+  you tap it while it's blue. (Claude: b and c mix well: eyes cycle, and destroying one makes the rest stay blue a
+  little longer, so it speeds up as you win. Tapping a red eye costs time on the clock, not INT.)
 - A timer: POPS or d0g, "he's trying to escape to another sector, we must stop him". Not all his eyes in time = fail;
   a fail replays the final stand.
 - Take out all his eyes: a last threat ("there will be others"), more death animations. The screen doesn't go to black:
   it's all messed up from the fight. (More to come.)
 
-### Still to decide
-- The end reward.
-- G0D's tell (the face's expressions, if fight 2 is the face).
-- Making the face fight hard (Claude's levers, 2026-10-28): the expressions come faster as it breaks; a tell window
-  (a real node is only safe to hit during one expression, ICE the rest of the time); the patch cursor races you, so
-  every miss costs ground; it repeats itself (learnable, like the seed) but mixes in a fake tell; your INT carries over
-  from the maze.
+### After the final stand
+The ending, the rewards for beating the game and the rest of the end game: **docs/ENDGAME.md**.
+
+### Settled 2026-10-30 (the user)
+- **The final stand: the cycle.** Every eye cycles red to blue, tap it while it's blue; they go **in order**, so it's
+  still one at a time. Not too hard, but stressful: whatever cranks the urgency and makes it feel dangerous.
+- **The mold only goes after your health** (no mods: THE GRAB is out). That's the real danger. You see it take your
+  money first, then maybe realize it's after your health too.
+- **The eye-reveal node looks like THE WATCHER glyph** (Claude's pick, the maze's last answer). It animates and looks
+  around; the o turns to @ when it's angry or charging; it can be smaller, just (o), as it animates up or takes damage.
+- **G0D's lines:** Claude writes them when we flesh this out. As its health gets low, its data falls apart: random facts,
+  and it starts sounding like corps you've fought (MEGAMART: "everyday low prices. everyday."; NIMBUS's forecasts:
+  "70% chance of ICE.").
+- (Old, from the face fight: G0D's tell, Claude's difficulty levers. Superseded by G0D FIGHT.)
 
 ## Knowing you're on a quest, and getting back on it (Claude's ideas, 2026-10-28, for the user to pick from)
 **Knowing:**
