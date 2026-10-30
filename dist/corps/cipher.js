@@ -1,6 +1,6 @@
 // NeoN+1 corps/cipher.js
 'use strict';
-NEON_FILES.push(['corps/cipher.js', 'v13.86']);
+NEON_FILES.push(['corps/cipher.js', 'v13.87']);
 // Its boss mod: PARITY (parity), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

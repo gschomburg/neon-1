@@ -689,6 +689,12 @@
     <button data-g="off">off</button>
     <span class="dim">mockups, not the game: nothing here is saved or played in a run</span>
   </div>
+  <h2>Play the prototype <small>G0D MAZE, G0D FIGHT, G0D FINAL STAND: playable, rough (engine/g0dproto.js). Tap on the game's board.</small></h2>
+  <div class="row">
+    <button class="gp" data-stage="maze">G0D MAZE</button> <button class="gp" data-stage="fight">G0D FIGHT</button> <button class="gp" data-stage="stand">FINAL STAND</button> <button class="gp" data-stage="">stop</button>
+    <label><input type="checkbox" id="gpBoy" checked> b0y helps</label>
+  </div>
+  <div class="row" id="gpNums"></div>
   <details class="xgrp" data-g="hp"><summary>The health bar <small>its own overlay: over the look you're on, or a corp layer; click again for off</small></summary>
   <div class="row" id="gHp"></div>
   </details>
@@ -2006,13 +2012,35 @@
     }
     if (m.type === 'test-state') { cur = m.g0d || ''; bar = m.g0dBar || ''; draw(); }
     if (m.type === 'test-done' && m.act === 'g0dhp') log(m.ok ? (bar ? 'health bar on (it takes a hit every 1.6s)' : 'health bar off') : m.error, !m.ok);
+    if (m.type === 'test-done' && m.act === 'g0dp') log(m.ok ? (gpStage || 'playing: tap on the game board') : m.error, !m.ok);
     if (m.type === 'test-done' && m.act === 'g0d') log(m.ok ? (cur ? 'showing' : 'off') : m.error, !m.ok);
   });
   for (const d of document.querySelectorAll('#g0d details.xgrp')) {   // open / closed is remembered
     try { d.open = localStorage.getItem('neonEditor.g0d.' + d.dataset.g) === '1'; } catch (e) { /* no storage */ }
     d.addEventListener('toggle', () => { try { localStorage.setItem('neonEditor.g0d.' + d.dataset.g, d.open ? '1' : '0'); } catch (e) { /* no storage */ } });
   }
+  // ---- the prototype: stages, b0y, the numbers (G0DP in engine/g0dproto.js)
+  const GP_NUMS = [['mazeTimer', 'maze clock s'], ['mazeLost', 'maze: lost layers'], ['hp', 'G0D hits'], ['hitsPerEye', 'hits per eye'], ['eyeOpen', 'eye open s'],
+    ['decoys', 'corp nodes'], ['spew', 'mold spew'], ['creep', 'mold creep'], ['handsEvery', 'HANDS OFF every s'], ['charge', 'charge s'], ['burn', 'burn s'],
+    ['stealEvery', 'steal after s'], ['standEyes', 'stand: eyes'], ['standTime', 'stand: clock s'], ['red', 'stand: red s'], ['blue', 'stand: blue s']];
+  let gpFilled = false, gpStage = '';
+  const gpSet = set => toGame({ type: 'test', act: 'g0dpset', set });
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.from !== 'neon-game' || m.type !== 'test-state') return;
+    gpStage = m.g0dp || '';
+    for (const b of document.querySelectorAll('#g0d button.gp')) b.classList.toggle('on', !!b.dataset.stage && b.dataset.stage === gpStage);
+    if (!gpFilled && m.g0dpCfg) {
+      gpFilled = true;
+      $('#gpNums').innerHTML = GP_NUMS.map(([k, label]) => `<label title="${esc(k)}">${esc(label)} <input type="number" step="any" data-k="${esc(k)}" value="${esc(m.g0dpCfg[k])}" style="width:4.5em"></label>`).join(' ');
+      $('#gpBoy').checked = !!m.g0dpCfg.boy;
+    }
+  });
+  $('#gpNums').addEventListener('change', ev => { const i = ev.target.closest('input[data-k]'); if (!i || i.value === '') return; gpSet({ [i.dataset.k]: Number(i.value) }); log(`${i.dataset.k} = ${i.value} (the next stage you start uses it)`); });
+  $('#gpBoy').addEventListener('change', () => { gpSet({ boy: $('#gpBoy').checked }); log($('#gpBoy').checked ? 'b0y is in' : 'b0y is out'); });
   $('#g0d').addEventListener('click', ev => {
+    const gp = ev.target.closest('button.gp');
+    if (gp) { log(gp.dataset.stage ? 'starting ' + gp.textContent + '...' : 'stopped'); return toGame({ type: 'test', act: 'g0dp', stage: gp.dataset.stage }); }
     const hp = ev.target.closest('button.hp');
     if (hp) { const k = hp.dataset.key === bar ? '' : hp.dataset.key; log(k ? 'the health bar...' : 'health bar off'); return toGame({ type: 'test', act: 'g0dhp', key: k }); }
     const look = ev.target.closest('button.look'); if (look) return show(look.dataset.key);

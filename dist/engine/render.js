@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.86']);
+NEON_FILES.push(['engine/render.js', 'v13.87']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -18,6 +18,7 @@ function frameBody(now) {
   layerTick(now);
   eaterWatch();   // ICE EATER: a layer with no ICE left clears
   coinTick(now);  // COIN FLIP: a held press brings the coin up
+  g0dpTick(now, dt);   // the G0D prototype (engine/g0dproto.js; the editor's g0d tab)
   stepPaletteFade(now);
   if (st.mp) { mpWatchdog(now); mpClockTick(now); }
   mpTabTitle(now);

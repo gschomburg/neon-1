@@ -285,6 +285,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 - **Music:** these fights need their own tracks, and they have to be great (BACKLOG, Music).
 
 ### The three stages, written out (the user, 2026-10-29; more coming)
+**Prototype built v13.87** (engine/g0dproto.js; the neon editor's g0d tab, PLAY THE PROTOTYPE): all three stages playable, rough, with b0y on / off. What it does and what to judge: docs/REVIEW.md.
+
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
 **G0D FIGHT: the wake-up (a scene on the sector map)**

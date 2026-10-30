@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.86']);
+NEON_FILES.push(['engine/editor.js', 'v13.87']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -341,6 +341,14 @@ if (EDITOR) {
       if (!(st.run && !st.run.ended && (st.mode === 'play' || st.mode === 'map'))) { st.g0d = null; await enterCorp('basic', false); }
       st.g0dBar = m.key; st.g0dBarT0 = performance.now();
     },
+    // the G0D PROTOTYPE (engine/g0dproto.js): play a stage ('' = stop); g0dpset: its numbers and b0y
+    g0dp: async m => {
+      if (!m.stage) { g0dpStop(); return; }
+      st.g0d = null; st.g0dBar = null;
+      await onMap();
+      g0dpStart(m.stage);
+    },
+    g0dpset: m => { for (const [k, v] of Object.entries(m.set || {})) if (k in G0DP && typeof G0DP[k] === typeof v) G0DP[k] = v; },
     g0dstill: m => { if (st.g0d) { st.g0d.still = !!m.on; st.g0d.t0 = performance.now(); } },
     featbox: m => { if (FEAT_BY_ID[m.key]) FEAT_QUEUE.push({ feat: m.key }); },
     wipe: () => { const w = wipeProgress(); FEAT_QUEUE.push({ head: 'THE BOARD', lines: ['progression wiped (test).', '', `refunded: ${w.refund} REP.`] }); },
@@ -370,7 +378,7 @@ if (EDITOR) {
       music: tabPlaying ? !!gameMusicOn : !!save.musicOn, sfx: !save.muted, tabMusic: tabPlaying,
       credits: run ? run.credits : 0, int: run ? run.integrity : 0, maxInt: run ? run.maxInt : 0, sector: run ? run.sector + 1 : 0,
       event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0, feats: Object.keys(save.feats || {}), rep: save.rep || 0, quest: (save.quests && save.quests.pops && save.quests.pops.step) || 'none', qopen: questOpen(),
-      g0d: st.g0d ? st.g0d.key : '', g0dStill: !!(st.g0d && st.g0d.still), g0dBar: st.g0dBar || '' };
+      g0d: st.g0d ? st.g0d.key : '', g0dStill: !!(st.g0d && st.g0d.still), g0dBar: st.g0dBar || '', g0dp: st.g0dp && st.mode === 'g0dp' ? st.g0dp.stage : '', g0dpCfg: G0DP };
     const s = JSON.stringify(m);
     if (s !== lastTest) { lastTest = s; post(m); }
   }, 300);

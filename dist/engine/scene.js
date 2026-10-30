@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.86']);
+NEON_FILES.push(['engine/scene.js', 'v13.87']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -169,6 +169,7 @@ function buildScene(now, collectHits, raw = false) {
       where = `${c.def.name} ${prog}`;
     } else if (st.mode === 'panel') where = st.panelTitle || '';
     else if (st.mode === 'fish') where = 'THE PIER';
+    else if (st.mode === 'g0dp' && st.g0dp) where = `G0D // ${{ maze: 'MAZE', fight: 'FIGHT', stand: 'FINAL STAND' }[st.g0dp.stage]}`;
     put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.danger : C.text);
     // LEVERAGE: in debt the credits go red, with your limit after them (CR -120/-150)
     const crTxt = `${(st.mode === 'play' && st.corp && st.corp.def.money) || 'CR'} ${run.credits}${leverage() && run.credits < 0 ? '/' + creditFloor() : ''}`;
@@ -275,6 +276,7 @@ function buildScene(now, collectHits, raw = false) {
       else { if (st.mp) mpTurnFrame(ctx); buildBoard(ctx); if (st.mp) { mpDrawCursors(ctx); mpTurnBanner(ctx); } }
     }
     else if (st.mode === 'map') buildMap(ctx);
+    else if (st.mode === 'g0dp') buildG0dp(ctx);   // the G0D prototype (engine/g0dproto.js)
     else if (st.mode === 'fish') buildFish(ctx);   // the PIER (engine/fishing.js)
     else buildTextBoard(ctx, panelLines());
   }
@@ -312,6 +314,7 @@ function buildScene(now, collectHits, raw = false) {
   const adBgs = [];
   // The editor's G0D tab (engine/g0d.js): a G0D design or effect drawn over this screen. Never in play.
   if ((st.g0d || st.g0dBar) && !st.dev) result = g0dOverlay(result, now, adBgs);
+  if (st.mode === 'g0dp' && !st.dev) result = g0dpOverlay(result, now);   // the G0D prototype: its bar, the mold on your INT
   if (st.ad && !st.dev) {
     const ac = [];
     const aput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ac.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
