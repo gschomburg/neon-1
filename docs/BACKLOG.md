@@ -15,6 +15,37 @@ The user, 2026-10-26: these are the features still to flesh out. REP and quests 
 unlocked by REP, and some quests unlock REP.
 
 ### 1. Gear and scrap mods (HIGH PRIORITY: the user 2026-10-29, "it's better, but we could still use some more powerful items")
+- **Built v13.84: the LOOT bag** (SPEC version log): loot (value gear, PHISH) and quest items go in an unlimited bag, not
+  the belt; [$] on the rule over the mods opens the LOOT screen; no more cash-in for half; LOTTO; FRAG's explosions;
+  the editor's LOOT dropdown. Still open from that talk:
+  - (Claude) **Same item, any tier, one slot:** a PATCH stack holds common and rare, the best used first. (Not decided.)
+- **The powerful gear list** (the user + Claude, 2026-10-30). The worry: big gear that's all exotic is rare, so it barely
+  shows. Spread it over the rarities with tiers (finds roll a tier: ~70% the low step, 25% the next, 5% the top).
+  - **0DAY: make it.** Marks the real node: rare = this layer, epic = 2 layers, legendary = the whole corp.
+  - **ENCORE** (rare): the next gear you use fires twice (named 2026-10-30).
+  - **PING** (common): tap a node, it says ICE or not. Liked. (PING is also a song name in ECHO LABS: fine?)
+  - **MAGNET**: this layer's $ node is safe to tap and pays (common; rare = the whole corp). Needs a $ node to use.
+  - **STIM**: +50% of your INT for one corp, and you keep the health.
+  - **SKIP** (epic): jump over the next row on the map. Good.
+  - **NUKE** (exotic): the corp you're in is breached on the spot, pays half. Good.
+  - **WORM** (epic; VIRUS is a mod): On the map, aimed at a corp ahead: its ICE is part-burned when you get there.
+  - **FAKE** ("fake it till you make it", was CLONE): one of your mods counts a tier higher. Tricky; maybe permanent,
+    so it's more of an upgrade choice, or a legendary version that makes it permanent.
+  - **SWAP** (epic, the user's idea): swaps your health and your missing health. Down to 1 of 4: swap, back to 3 of 4.
+    At full health it won't go: a warning, "that will kill you."
+  - **Dropped:** JACKPT (not that great), PARADOX (gets complicated). SCOUT: OK but not worth carrying around (it
+    would mostly show the next sector's anomaly).
+- **Batch 2, agreed 2026-10-30 (next to build):** PING common 20cr (arm, tap a node: ICE or clean) · MAGNET common->rare
+  25cr · ENCORE rare 45cr · STIM rare 40cr (max INT +50% for the corp, healed to it; keep what fits after) · 0DAY
+  rare->epic->legendary 50cr · WORM epic 70cr (on the map, aimed at a corp ahead: a third of its ICE burned) · SKIP epic
+  70cr (two rows ahead; never onto a sector boss row) · SWAP epic 60cr · FAKE epic 80cr (tap it, then a mod: +1 tier for
+  good) · NUKE exotic, finds only (not on the sector boss or the final corp: "too big to nuke") · RELOAD (legendary mod,
+  boss reward). PACK RAT waits. 0DAY and WORM work on bosses.
+- **A gear top-up mod** (the user, 2026-10-30): at the start of every corp, if you have any gear it gives you one more;
+  or, if you only have one of a gear item, another. Top up at the start of a corp. At least legendary: a boss reward,
+  or exotic as its own find. Maybe mixed into the exotic that turns your mod bar into gear slots (docs/EXOTICS.md, "All
+  items"): that would definitely be exotic. (Claude: **RELOAD**, legendary: singles get a second each corp; **PACK RAT**,
+  exotic: mod row = gear slots, rewards = gear, every stack +1 each corp.)
 - **Built v13.52:** TUNNEL, MESH, WARP steps, TILT, SHAKE, FRAG, REWIND, SHOE, PASS (SPEC version log).
 - **Going back a row** on the map is a can of worms: save it for an exotic mod (the user thinks it could be good).
 - More map gear ideas (Claude): SCOUT (see the corps / anomalies ahead), SKIP (jump over the next row).

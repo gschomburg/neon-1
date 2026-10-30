@@ -10,7 +10,7 @@
 // hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
 // Rarity colors aren't in the palettes: every mod and item shows its rarity as a chip (chips, below),
 // the same in every palette.
-(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes_v1.js', 'v13.83']);   // the build it's from (see index.html)
+(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes_v1.js', 'v13.84']);   // the build it's from (see index.html)
 window.NEON_PALETTES = {
   // Rarity chips: a text color on its own background, for each rarity (bg = the rarity's key color).
   chips: {

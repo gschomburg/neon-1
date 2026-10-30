@@ -165,9 +165,10 @@ const BOT = `(async () => {
               if (o.kind === 'item' && !itemRoom(o.key, o.tier)) continue;
               await buy(k);
             }
-            // what-if "market": sell value gear (SHARD, BOND), and reroll while it has credits to spare, buying again
+            // what-if "market": sell the LOOT (SHARD, BOND...: the sell list puts it first), and reroll while it has credits to
+            // spare, buying again
             if (W.includes('market')) {
-              for (let i = run.items.length - 1; i >= 0; i--) if (ITEMS[run.items[i].key].value) { sh.sellAt(i); await settle('sell'); m.sold = (m.sold || 0) + 1; }
+              for (let g = 0; g < 200 && (run.loot || []).some(s => !ITEMS[s.key].quest); g++) { sh.sellAt(0); await settle('sell'); m.sold = (m.sold || 0) + 1; }
               while (sh.rerollsLeft() > 0 && run.credits > sh.rerollPrice() * 3) {
                 const before = run.credits; sh.reroll(); await settle('reroll'); m.rerolls = (m.rerolls || 0) + 1; sec.spent.reroll = (sec.spent.reroll || 0) + before - run.credits;
                 for (const k of sh.offers.map((o, k) => k).sort((a, b) => P(sh.offers[b]) - P(sh.offers[a]))) {

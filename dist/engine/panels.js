@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v13.83']);
+NEON_FILES.push(['engine/panels.js', 'v13.84']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -72,6 +72,7 @@ const modRoom = key => has(key) || st.run.mods.length < modSlots();
 // slot. Returns false when there's no room.
 function addItem(key, tier = 0) {
   const run = st.run;
+  if (isLoot(key)) return addLoot(key, tier);   // loot goes in the LOOT bag, not the belt
   if (has('ramdoubler')) return false;   // RAM DOUBLER: nowhere to put it (finds turn into credits)
   markSeen(key);
   const stack = run.items.find(s => s.key === key && s.tier === tier && s.n < STACK_MAX);
@@ -81,10 +82,38 @@ function addItem(key, tier = 0) {
   if (ITEMS[key].quest) questGot(key);   // quest gear: its quest moves (engine/quests.js)
   return true;
 }
-const itemRoom = (key, tier) => st.run.items.some(s => s.key === key && s.tier === tier && s.n < STACK_MAX) || st.run.items.length < st.run.beltSlots;
+const itemRoom = (key, tier) => isLoot(key) || st.run.items.some(s => s.key === key && s.tier === tier && s.n < STACK_MAX) || st.run.items.length < st.run.beltSlots;
 // An item's belt label: [PURGE], or PURGEx3 when stacked (hex count, up to F).
 const itemLabel = s => s.n > 1 ? `${ITEMS[s.key].name}x${s.n.toString(16).toUpperCase()}` : `[${ITEMS[s.key].name}]`;
 const itemCol = v => rarityCol(v.rarity);   // an item's key color (its name sits on its rarity chip)
+
+// ---- LOOT (the user, 2026-10-30): everything that's only worth money (value gear, the PHISH you keep) and quest items.
+// It goes in the LOOT bag (run.loot), not the belt: no slots, no limit. Opened from [$] on the rule over the mods
+// (engine/loot.js). It sells at a black market; it can't be used.
+const isLoot = key => !!(ITEMS[key] && (ITEMS[key].value || ITEMS[key].quest));
+function addLoot(key, tier = 0) {
+  const run = st.run;
+  run.loot = run.loot || [];
+  markSeen(key);
+  const stack = run.loot.find(s => s.key === key && s.tier === tier);
+  if (stack) stack.n++;
+  else run.loot.push({ key, tier, n: 1 });
+  st.lootNew = { key, tier, at: performance.now() };   // the [$] shows it going in (engine/loot.js)
+  if (ITEMS[key].quest && !stack) questGot(key);   // quest gear: its quest moves (engine/quests.js)
+  return true;
+}
+const hasLoot = key => !!(st.run && st.run.loot && st.run.loot.some(s => s.key === key));
+// Old saves held loot on the belt: move it to the bag.
+function lootMigrate(run) {
+  if (!run) return;
+  run.loot = run.loot || [];
+  for (const s of (run.items || []).filter(s => isLoot(s.key))) {
+    const key = ITEMS[s.key].fish && !ITEMS[s.key].bag ? 'phish_' + ITEMS[s.key].rarity : s.key;   // a raw catch (the editor's old Give): its PHISH
+    const have = run.loot.find(o => o.key === key && o.tier === (s.tier || 0));
+    if (have) have.n += s.n; else run.loot.push({ key, tier: s.tier || 0, n: s.n });
+  }
+  run.items = (run.items || []).filter(s => !isLoot(s.key));
+}
 
 // Up to k mod offers ({ key, tier }) from a pool. Mods you have come back as upgrades
 // (tiered ones only, until they're maxed). Each offer rolls its tier.
@@ -150,15 +179,19 @@ function openShop(node) {
     st.revealed = new Set(); st.panelT0 = performance.now() + CONFIG.revealDelay;   // the new offers come in again, one row at a time
     Sound.whoosh(); setMsg(`> restocked. -${price}cr.`, C.money);
   };
+  // What you can sell: your LOOT first, then your gear. Each row: { s (the stack), list (the array it's in) }.
+  const sellRows = () => (run.loot || []).filter(s => !ITEMS[s.key].quest).map(s => ({ s, list: run.loot }))
+    .concat((run.loot || []).filter(s => ITEMS[s.key].quest).map(s => ({ s, list: run.loot })))
+    .concat(run.items.map(s => ({ s, list: run.items })));
   const sell = i => {
-    const s = run.items[i];
+    const row = sellRows()[i], s = row && row.s;
     if (!s || st.transitioning) return Sound.deny();
     if (ITEMS[s.key].quest) { setMsg('> not for sale. POPS wants that.', C.rep); return Sound.deny(); }
     const cr = gearValue(s.key, s.tier), name = ITEMS[s.key].name.toLowerCase(), value = !!ITEMS[s.key].value;
-    s.n--; if (s.n <= 0) run.items.splice(i, 1);
+    s.n--; if (s.n <= 0) row.list.splice(row.list.indexOf(s), 1);
     st.selItem = -1; st.hoverItem = -1;
-    run.credits += cr; if (value) run.earned += cr;   // (only value gear counts as earned: buying and selling back isn't)
-    sellSel = Math.min(sellSel, Math.max(0, run.items.length - 1));
+    run.credits += cr; if (value) run.earned += cr;   // (only loot counts as earned: buying and selling back isn't)
+    sellSel = Math.min(sellSel, Math.max(0, sellRows().length - 1));
     Sound.buy(); setMsg(`> sold ${name}. +${cr}cr.`, C.money);
   };
   st.shop = { node: node.id, get offers() { return offers; }, priceOf, buyAt: k => buy(offers[k]), reroll, rerollsLeft, rerollPrice, sellAt: sell };   // (read by tools/econsim.js)
@@ -198,26 +231,29 @@ function openShop(node) {
   // Both modes share one layout: the list area is listRows() tall, then the details box (7 rows), then the nav buttons,
   // so [ SELL ] / [ BUY ] and [ LEAVE ] sit in the same spots on both.
   const listRows = () => Math.max(rowsOf().length, 1 + run.beltSlots);
+  const sellArea = { top: 0 };   // the sell list scrolls (a big LOOT bag)
   const pad = (T, used) => { for (let i = used; i < listRows(); i++) T(''); };
   const nav = B => {
-    if (view === 'buy') B('[ SELL WARES ]', 'sellv', () => { view = 'sell'; sellSel = 0; Sound.ui(); }, !run.items.length);
+    if (view === 'buy') B('[ SELL WARES ]', 'sellv', () => { view = 'sell'; sellSel = 0; sellArea.top = 0; Sound.ui(); }, !sellRows().length);
     else B('[ BUY WARES  ]', 'buyv', () => { view = 'buy'; Sound.ui(); });
     B(node.exit ? '[ JACK OUT ]' : '[ LEAVE ]', 'leave', node.exit ? () => { if (!st.transitioning) swapTo(() => sectorClear(false)); } : leavePanel);   // HEAD FIRST's exit market: the sector is clear
   };
 
-  // SELL: your gear, what the market pays for one of each (the same look as the buy list: a type tag and the price)
+  // SELL: your LOOT and your gear, what the market pays for one of each (the same look as the buy list: a type tag and
+  // the price). A long list scrolls.
   const drawSell = (T, B, X) => {
-    T('sell your gear:', C.mid);
-    run.items.forEach((s, i) => {
-      const v = itemView(s.key, s.tier);
-      X({ list: true, id: 'sl' + i, onTap: () => { sellSel = i; Sound.tick(); }, sel: i === sellSel,
-        name: itemLabel(s), chip: v.rarity, col: C.bright, right: ITEMS[s.key].quest ? 'QUEST  keep' : `${'gear'.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: ITEMS[s.key].quest ? C.rep : C.money, rightChips: true });
+    T('sell your loot and gear:', C.mid);
+    const rows = sellRows();
+    const items = rows.map(({ s, list }, i) => {
+      const v = itemView(s.key, s.tier), q = ITEMS[s.key].quest, tag = list === run.loot ? 'loot' : 'gear';
+      return { list: true, id: 'sl' + i, onTap: () => { sellSel = i; Sound.tick(); }, sel: i === sellSel,
+        name: list === run.loot ? lootLabel(s) : itemLabel(s), chip: v.rarity, col: C.bright, right: q ? 'QUEST  keep' : `${tag.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: q ? C.rep : C.money, rightChips: true };
     });
-    if (!run.items.length) T('nothing to sell.', C.dim);
-    pad(T, 1 + Math.max(1, run.items.length));
+    if (!rows.length) { T('nothing to sell.', C.dim); pad(T, 2); }
+    else { scrollFollow(sellArea, sellSel, items.length, listRows() - 1); scrollArea(X, T, sellArea, items, listRows() - 1, 'sla'); }
     T('');
     T(SEP, C.dim);
-    const s = run.items[sellSel];
+    const s = rows[sellSel] && rows[sellSel].s;
     if (s) {
       const v = itemView(s.key, s.tier);
       X({ text: v.name, chip: v.rarity, bold: true });

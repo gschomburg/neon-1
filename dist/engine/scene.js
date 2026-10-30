@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.83']);
+NEON_FILES.push(['engine/scene.js', 'v13.84']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -104,9 +104,9 @@ function buildScene(now, collectHits, raw = false) {
   };
   // The name is the menu button during a run (no [MENU] of its own).
   const menuOk = !st.mp && run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel' || st.mode === 'fish');
-  put(0, 0, 'NeoN+1', C.accent, menuOk ? 'ui' : undefined, menuOk && st.pause);
+  put(0, 0, 'NeoN+1', C.accent, menuOk ? 'ui' : undefined, menuOk && st.pause === true);
   if (menuOk) {
-    if (st.hoverBtn === 'menu' || st.pause) bg(0, 0, 6, C.accent, 0.2);
+    if (st.hoverBtn === 'menu' || st.pause === true) bg(0, 0, 6, C.accent, 0.2);
     addHit(0, 0, 6, 1, { kind: 'btn', id: 'menu', onTap: togglePause, noFocus: true });
   }
   if (st.mp) headerBtn(12, '[LEAVE]', 'leave', mpLeave, false);
@@ -283,6 +283,7 @@ function buildScene(now, collectHits, raw = false) {
   put(0, boardEnd + 1, rule(L.wc), ruleCol);
   buildTray(ctx, boardEnd + 2);
   buildPet(ctx, boardEnd + 1);   // the pet, sitting on the rule over the tray (engine/pet.js)
+  buildLootBtn(ctx, boardEnd + 1);   // [$], the LOOT bag, at the rule's right end (engine/loot.js)
 
   // Footer: the run's seed, small and out of the way.
   // Left side of the footer, clipped so it never runs into [DEV] / the version.

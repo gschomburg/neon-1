@@ -14,6 +14,10 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The LOOT bag** (v13.84): loot (SIM, SHARD, CHROME, WALLET, PHISH...) and the DISC no longer take gear slots. Tap **[$]** at the right end of the line over the mods: the LOOT screen (the clock stops), total at the top, LOOT / QUEST on each row, tap one for its text, [ CLOSE ] or Esc. Pick something up: it shows on its chip by [$], then [$] blinks. Sell at a black market (SELL lists loot first). Things I picked: the counts in the bag are plain numbers (CHROMEx12, not hex like the belt, since the bag has no cap); the list puts the quest item first, then by worth; RAM DOUBLER keeps the bag. The three PHISH rows only differ by chip color: say if they need their rarity written.
+- [ ] **LOTTO** (v13.84): a new common gear (15cr): any time, 5-40cr, 5% a 150cr jackpot with confetti. Numbers in the ECONOMY tab (LOTTO). And **FRAG** has little explosions now.
+- [ ] **Editor** (v13.84): TESTING > Give has a loot row; giving CORPO LOGIN gives a PHISH (rare). The gear & mods tab has a loot filter.
+
 - [ ] **Palettes moved** (v13.83): the palette file is dist/data/palettes.js now. The first time you save palettes in the editor it asks for the file: pick dist/data/palettes.js (not the old dist/palettes.js, which is gone). Upload: the new data/palettes.js goes up with dist/; the old palettes.js on the server can be deleted.
 - [ ] **10 new glyphs** (v13.82): the ART tab, node glyphs (the last 10): GIBBERLINK, SHREDDER, OFFICE FERN, SECURITY CAM, WEB CRAWLER, COOKIE, BARCODE, SATELLITE, GHOST USER, CHECKSUM. Redo the art and lore as you like.
 - [ ] **FIRST BREACH** (v13.81): beat a corp you have never beaten (or reset your codex record): FIRST BREACH, its logo and tell, SEE THE CORE, then the rewards. Rivals still go DEFEATED first. The leaderboard shows 15. Hacker lines: they clear after a few seconds and the tip comes back; random chatter doesn't step on a fresh tip.

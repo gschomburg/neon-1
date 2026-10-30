@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v13.83']);
+NEON_FILES.push(['engine/quests.js', 'v13.84']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -17,7 +17,7 @@ const questOf = id => { save.quests = save.quests || {}; return save.quests[id] 
 const questOpen = () => statOf('sectors') >= 1 && hkCrewOn('pops');   // a sector cleared (ever) and POPS on the crew
 // Quests move in real runs (and in the neon editor, which has its own save); never in the training or multiplayer.
 const questRun = () => !!(st.run && !st.run.tutorial && !st.mp && (!st.run.practice || EDITOR));
-const holdingDisc = () => !!(st.run && st.run.items.some(s => s.key === 'disc'));
+const holdingDisc = () => hasLoot('disc');   // (in the LOOT bag)
 function questStep(id, step) { const q = questOf(id); q.step = step; q.news = true; persist(); }
 
 // ---------------- The DISC dropping ----------------
@@ -40,7 +40,7 @@ function questGot(key) {
 }
 // The run ends: died with it, and it can drop again (more often for a while).
 function questRunEnd(run, win) {
-  if (!run || !run.items || !run.items.some(s => s.key === 'disc')) return;
+  if (!run || !(run.loot || []).some(s => s.key === 'disc')) return;
   if (!win) { const q = questOf('pops'); q.lost = true; persist(); }
 }
 // The UPLINK with the DISC: POPS reminds you (once per uplink).
@@ -49,7 +49,7 @@ function questUplink() {
 }
 // CASH OUT with the DISC: the step is done (saved), and POPS asks for it once the results are up.
 function questCashOut(run) {
-  if (!questRun() || !run.items.some(s => s.key === 'disc') || questOf('pops').step !== 'find') return;
+  if (!questRun() || !(run.loot || []).some(s => s.key === 'disc') || questOf('pops').step !== 'find') return;
   questStep('pops', 'deliver');
   setTimeout(() => queueCall('pops', QUEST_LINES.deliver, { text: '[ TAKE IT TO POPS ]', onTap: () => playScene('disc') }), 600);
 }

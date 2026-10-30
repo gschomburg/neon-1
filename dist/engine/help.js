@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v13.83']);
+NEON_FILES.push(['engine/help.js', 'v13.84']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -76,7 +76,7 @@ function buildNetPage(T, X) {
     X({ text: `[${ch}]  ${name}`.padEnd(HELP_W), colorAt: i => i < 3 ? C.bright : C.money, bold: true });
     P(desc, 5);
   };
-  stop('$', 'BLACK MARKET', 'buy gear, mods and repairs. REROLL for new offers, SELL your gear.');
+  stop('$', 'BLACK MARKET', 'buy gear, mods and repairs. REROLL for new offers, SELL your loot and gear.');
   stop('?', 'DATA CACHE', 'free loot, then pick a mod.');
   stop('+', 'SAFEHOUSE', 'heal 2 integrity, then pick a mod.');
   stop('~', 'THE PIER', 'phish the data stream: tap to cast, drag the hook up and down, tap when something bites (red), then hold to reel it in. what you land is stolen data: black markets buy it. sometimes it\'s gear. sometimes a shoe.');
@@ -146,6 +146,9 @@ function buildTrayPage(T, X) {
   T('');
   H('GEAR');
   P('single use, in the slots below the mods. you start with one PURGE. the same gear stacks in one slot (PURGEx3). some corp bosses give a stack of their own legendary gear (FLAREx3); a boss reward can be a stack of market gear too. to throw gear away, drag it up: a TRASH comes up over the mods; drop it there and one goes (no money back).');
+  T('');
+  H('LOOT');
+  P("what's only worth money (SIM, SHARD, CHROME, WALLET, the PHISH you land...) is LOOT: it takes no gear slot. it all goes in your LOOT bag, as much as you find. tap [$] at the right end of the line over the mods to see it (the clock stops while it's open). sell it at a black market. quest items ride in there too.");
   T('');
   H('USING THEM');
   P('tap a mod or gear to see what it does, tap again to use it. on desktop, hover for info; number keys use gear.');

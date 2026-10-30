@@ -21,6 +21,8 @@ the ads, see ADS.md), promoting some wild corp boss mods to exotic, MEMORY DOUBL
 
 - **All items:** your mod slots become item slots (the full slot count), and rewards turn into items. Maybe one more
   bonus: some random items every corp. (The mirror of RAM DOUBLER.)
+  **2026-10-30 (the user): merge with a top-up idea** (below, RELOAD). Claude's name: **PACK RAT** (exotic): the mod
+  row becomes gear slots (~10, no mods), rewards turn into gear, and every corp start each gear stack gets +1.
 - **HIGHLANDER** *(Claude)* name, from the user's "highlander or immortal reference? there can be only one": every
   corp you beat raises your max integrity, up to ~10. Not healing, just a bigger bar.
 - **Health as money:** spend integrity like credits (buy at markets with health). The reverse of BLOOD MONEY, where

@@ -20,7 +20,7 @@
 //   once-offs (counted when they happen):  diedFirst (died in your first corp)  nakedSector (cleared a sector with no
 //   mods)  bossAt1 (beat a boss layer at 1 INT)  easyCome (earned 1000cr in a run and ended it with under 10)
 'use strict';
-NEON_FILES.push(['data/feats.js', 'v13.83']);
+NEON_FILES.push(['data/feats.js', 'v13.84']);
 
 const FEATS = [
   // ---- the basics: runs

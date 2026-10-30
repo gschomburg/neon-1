@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.83']);
+NEON_FILES.push(['engine/run.js', 'v13.84']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -32,7 +32,7 @@ async function startRun(seed, practice, opts = {}) {
     finalTell: pickR(['corner', 'mark', 'mirror'], rngFor(seed, 'final')),
     at: '0:1', visited: ['0:1'],
     integrity: CONFIG.startIntegrity + legacyLv('hard'), maxInt: CONFIG.startIntegrity + legacyLv('hard'), shield: 0,
-    credits: 25 * legacyLv('cash'), earned: 0, items: CONFIG.startItems.map(key => ({ key, tier: 0, n: 1 })), mods: [], modTier: {},
+    credits: 25 * legacyLv('cash'), earned: 0, items: CONFIG.startItems.map(key => ({ key, tier: 0, n: 1 })), loot: [], mods: [], modTier: {},
     beltSlots: CONFIG.beltSlots + legacyLv('belt'), reroutes: 0,
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
@@ -1541,11 +1541,11 @@ function grantLoot(r, tier) {
   const run = st.run;
   Sound.loot();
   // the quest's DISC (engine/quests.js), if it's your turn for it
-  if (discDrops(r, 'loot') && addItem('disc', 0)) return 'got gear: DISC. (a quest)';
+  if (discDrops(r, 'loot') && addItem('disc', 0)) return 'got loot: DISC. (a quest)';
   // an item (more often with a higher STASH), at a rolled tier, if there's room
   if (r() < (has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance)) {
     const key = pickGearDrop(r), tier = rollTier(r, ITEMS[key]);
-    if (addItem(key, tier)) return `got gear: ${ITEMS[key].name}${tier ? ' ' + RARITY[itemView(key, tier).rarity].label.toLowerCase() : ''}.`;
+    if (addItem(key, tier)) return `got ${isLoot(key) ? 'loot' : 'gear'}: ${ITEMS[key].name}${tier ? ' ' + RARITY[itemView(key, tier).rarity].label.toLowerCase() : ''}.`;
   }
   const cr = Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier) + r() * earnCr(ECON.loot.roll));
   run.credits += cr; run.earned += cr;

@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v13.83']);
+NEON_FILES.push(['engine/fishing.js', 'v13.84']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -232,7 +232,7 @@ function fishKeep() {
   const key = fishKeepKey(out);
   if (!itemRoom(key, out.tier)) return Sound.deny();
   addItem(key, out.tier);
-  Sound.buy(); setMsg(`> ${ITEMS[key].name.toLowerCase()} in your gear.`, C.accent);
+  Sound.buy(); setMsg(`> ${ITEMS[key].name.toLowerCase()} in your loot.`, C.accent);
   f.card = null;
 }
 function fishThrowBack() { const f = st.fish; if (!f || !f.card) return; f.card = null; Sound.tick(); setMsg('> back in the stream.', C.mid); }

@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v13.83']);
+NEON_FILES.push(['engine/active.js', 'v13.84']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -269,6 +269,13 @@ async function shakeBoard(lv) {
 }
 // FRAG: hits random closed nodes (3 / 4 / 5 / 5 by step). ICE breaks; the real node clears the layer, no pay
 // (never at the legendary step, and never in corps with their own tap rules).
+// FRAG: a little explosion on each node it hits (the user, 2026-10-30).
+function fragBurst(t) {
+  if (reduced()) return;
+  const c = tileCenter(t), cells = [], cols = [C.danger, C.money, C.bright];
+  for (let k = 0; k < 14; k++) cells.push({ ch: pickR(['*', '+', 'x', '#', '.', '`'], Math.random), x: c.x + rand(-1.5, 1.5) * L.cw, y: c.y + rand(-0.6, 0.6) * L.chh, col: pickR(cols, Math.random) });
+  explode(cells, c.x, c.y, { power: 0.55, grav: 0.5, life: [0.25, 0.55] });
+}
 async function fragBoard(lv, tier) {
   const r = rngFor(st.run.seed, 'frag', st.corp.node.id, st.corp.idx, lv.frags = (lv.frags || 0) + 1);
   const spare = tier >= 3 || !gearMayClear();
@@ -280,7 +287,7 @@ async function fragBoard(lv, tier) {
   for (const t of hits) {
     await wait(150);
     if (st.lv !== lv) return;
-    shake(4);
+    shake(4); fragBurst(t);
     if (isReal(t)) return gearClear(lv, t, '> FRAG hit the real node. layer clear, no pay.');
     lockTile(t, C.danger, 'frag'); broke++;
   }
@@ -299,6 +306,23 @@ function throwShoe(lv) {
   const ice = lv.tiles.filter(t => t.state === 'closed' && !isReal(t));
   if (u < 0.11 && ice.length) { lockTile(pickR(ice, r), C.accent, 'shoe'); setMsg('> the shoe breaks an ICE. sabotage.', C.accent); return; }
   setMsg(pickR(SHOE_MISS, r), C.mid);
+}
+// LOTTO: a scratch ticket. A random amount (ECON.lotto), now and then the jackpot. Seeded: the nth ticket of a run.
+function lottoScratch() {
+  const run = st.run, r = rngFor(run.seed, 'lotto', run.lottos = (run.lottos || 0) + 1);
+  const L2 = ECON.lotto, jack = r() < L2.jackpot;
+  const cr = jack ? earnInt(L2.win) : Math.round(earnCr(L2.lo) + r() * (earnCr(L2.hi) - earnCr(L2.lo)));
+  run.credits += cr; run.earned += cr;
+  if (jack) {   // the jackpot: confetti, like a legendary catch
+    Sound.buy(); setTimeout(() => Sound.pop(4), 140); setMsg(`> LOTTO: JACKPOT. +${cr}cr.`, C.money);
+    if (!reduced()) {
+      flash(C.money, 0.2, 0.4); shake(4, 0.3);
+      const x = pxX(L.wc / 2), py = pxY(BOARD_Y + L.gh / 2), cols = [C.money, C.accent, C.bright, C.exotic, C.epic, C.rare], cells = [];
+      for (let k = 0; k < 40; k++) cells.push({ ch: pickR(['$', '*', '+', '.', 'o'], Math.random), x: x + rand(-3, 3) * L.cw, y: py + rand(-1, 1) * L.chh, col: pickR(cols, Math.random) });
+      setTimeout(() => explode(cells, x, py + L.chh, { power: 0.9, grav: 0.7, life: [0.9, 1.6] }), 150);
+    }
+  }
+  else { Sound.buy(); setMsg(`> lotto: +${cr}cr.`, C.money); }
 }
 // Take one of a gear (PASS at the uplink).
 function takeItem(key) {
@@ -333,9 +357,9 @@ function canUse(stack) {
   const run = st.run;
   if (!run || st.wipe || !stack) return false;
   const key = stack.key, tier = stack.tier || 0;
-  if (ITEMS[key].quest) return false;   // quest gear: it's carried, not used
-  if (ITEMS[key].value) return !st.transitioning;   // value gear: cash it in anywhere
+  if (isLoot(key)) return false;   // loot (and quest gear) lives in the LOOT bag: it's carried and sold, not used
   if (key === 'patch') return canHeal();
+  if (key === 'lotto') return !st.transitioning;   // LOTTO: any time, anywhere
   if (key === 'wall') return tier < 2 ? true : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll;
   const onMap = st.mode === 'map' && !st.busy && !st.transitioning;
   if (key === 'route') return onMap && nodesAhead().length > 0;
@@ -412,11 +436,7 @@ function useItem(slot) {
   if (stack.n <= 0) run.items.splice(slot, 1);
   st.hoverItem = -1; st.selItem = -1;
   const lv = st.lv;
-  if (ITEMS[key].value) {   // value gear: half its worth, here and now (a market pays it all)
-    const worth = gearValue(key, tier), cr = Math.floor(worth / 2);
-    run.credits += cr; run.earned += cr;
-    Sound.buy(); setMsg(`> cashed ${ITEMS[key].name.toLowerCase()}: +${cr}cr. (a market pays ${worth})`, C.money);
-  }
+  if (key === 'lotto') lottoScratch();
   if (key === 'patch') {
     const before = run.integrity;
     heal(tier + 1);

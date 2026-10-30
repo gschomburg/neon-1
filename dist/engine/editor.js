@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.83']);
+NEON_FILES.push(['engine/editor.js', 'v13.84']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -217,8 +217,10 @@ if (EDITOR) {
     const run = st.run;
     if (!run || run.ended) return post({ type: 'mod-set', ok: false, error: 'no run: start one (the map scene)' });
     run.practice = true;
-    if (ITEMS[m.key]) {   // gear: one more at that step (gear keys never match mod keys)
-      if (!addItem(m.key, clamp(m.tier || 0, 0, tierCount(ITEMS[m.key]) - 1))) return post({ type: 'mod-set', ok: false, error: 'no room in the gear slots' });
+    if (ITEMS[m.key]) {   // gear: one more at that step (gear keys never match mod keys); a phish catch becomes the PHISH of
+      // its rarity, like keeping one at a PIER (fishKeepKey, engine/fishing.js); loot goes in the LOOT bag
+      const key = ITEMS[m.key].fish ? fishKeepKey({ kind: 'fish', key: m.key, rarity: ITEMS[m.key].rarity }) : m.key;
+      if (!addItem(key, clamp(m.tier || 0, 0, tierCount(ITEMS[key]) - 1))) return post({ type: 'mod-set', ok: false, error: 'no room in the gear slots' });
       Sound.buy();
       return sendMods(true);
     }

@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v13.83']);
+NEON_FILES.push(['data/economy.js', 'v13.84']);
 
 const ECON = {
   // ---- Units
@@ -34,6 +34,12 @@ const ECON = {
     perTier: 0.8,   // earn: loot: per corp level (...plus this for each corp level (caches count as level 2)...)
     roll: 1.2,   // earn: loot: random extra (...plus a random amount up to this)
     itemChance: 0.4,   // %: loot: gear instead (the chance a loot roll gives gear instead of credits (STASH raises it))
+  },
+  lotto: {
+    lo: 0.5,   // earn: LOTTO: least (a LOTTO pays a random amount from this...)
+    hi: 4,   // earn: LOTTO: most (...up to this)
+    jackpot: 0.05,   // %: LOTTO: jackpot chance (the chance it hits the jackpot instead)
+    win: 15,   // earn: LOTTO: jackpot (what the jackpot pays)
   },
   skip: {
     starter: 1.5,   // earn: skip the starter perk (take credits instead of a mod at the start of a run)
@@ -147,13 +153,13 @@ const ECON = {
     casts: 30,   // count: casts per pier (how many casts one pier allows)
     gear: 0.3,   // %: gear on the line (the chance what bites is gear (from the loot pool))
     shoe: 0.1,   // %: a shoe on the line (the chance what bites is a SHOE)
-    odds: [3, 5, 2, 0.6, 0.15],   // count list: fish by rarity (how often each fish rarity bites, as weights (scrap, common, rare, epic, legendary))
+    odds: [3, 5, 2, 0.6, 0.15],   // count list: phish by rarity (how often each phish rarity bites, as weights (scrap, common, rare, epic, legendary))
     damp: 0.5,   // x: gear: less rare (gear from the water: each rarity step up is this much rarer than normal loot)
-    scrap: 0.2,   // earn: fish worth: scrap (what a black market pays for a scrap fish)
-    common: 0.4,   // earn: fish worth: common (a common fish)
-    rare: 1,   // earn: fish worth: rare (a rare fish)
-    epic: 2.5,   // earn: fish worth: epic (an epic fish)
-    legendary: 6,   // earn: fish worth: legendary (a legendary fish)
+    scrap: 0.2,   // earn: phish worth: scrap (what a black market pays for a scrap catch)
+    common: 0.4,   // earn: phish worth: common (a common catch)
+    rare: 1,   // earn: phish worth: rare (a rare catch)
+    epic: 2.5,   // earn: phish worth: epic (an epic catch)
+    legendary: 6,   // earn: phish worth: legendary (a legendary catch)
   },
   // ---- Spending: the uplink
   uplink: {

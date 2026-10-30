@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.83']);
+NEON_FILES.push(['data/mods.js', 'v13.84']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -60,26 +60,26 @@ const ITEMS = {
   pass:  { key: 'pass',  name: 'PASS',  price: 90, rarity: 'epic', where: 'market, $ nodes, caches. used at the uplink.', desc: 'at the uplink: the bandwidth fee is half.', tip: 'half off the uplink.',
     codex: 'an uplink pass. at the end of a sector it cuts the bandwidth fee in half (tap it on the UPLINK screen). keep it for a deep sector: the fee grows every sector.' },
   // value gear (the user: "more gear that has more bonuses, even if it's just selling them"): loot only, never for sale.
-  // One per rarity, no rarity steps (so each always stacks). A market buys it (SELL) for its worth; used anywhere,
-  // it cashes in for half. Their worth: ECON.gear; how often each drops: ECON.drop.
+  // One per rarity, no rarity steps (so each always stacks). LOOT: it goes in the LOOT bag, not the belt
+  // (engine/loot.js); a market buys it (SELL) for its worth. Their worth: ECON.gear; how often each drops: ECON.drop.
   duds:  { key: 'duds',  name: 'DUDS',  price: 5,  rarity: 'scrap', value: true, where: '$ nodes, caches.',
     desc: 'dead chips. junk, but a market gives you a little for them.', tip: 'junk: sell it.',
-    codex: 'a handful of dead chips. worth almost nothing, but they stack: fill a slot and sell the lot at a black market (SELL), or use them anywhere to cash in for half.' },
+    codex: 'a handful of dead chips. worth almost nothing, but they stack: they pile up in your LOOT: sell the lot at a black market (SELL).' },
   sim:   { key: 'sim',   name: 'SIM',   price: 15, rarity: 'common', value: true, where: '$ nodes, caches.',
-    desc: 'a burner SIM: a market buys it. or use it anywhere for half.', tip: 'sell it at a market.',
-    codex: 'a burner SIM, still live. sell it at a black market (SELL) for its full worth, or use it anywhere to cash it in for half.' },
+    desc: 'a burner SIM: a market buys it.', tip: 'sell it at a market.',
+    codex: 'a burner SIM, still live. sell it at a black market (SELL) for its full worth.' },
   shard: { key: 'shard', name: 'SHARD', price: 40, rarity: 'rare', value: true, where: '$ nodes, caches.',
-    desc: 'stolen data: a market buys it. or use it anywhere for half.', tip: 'sell it at a market.',
-    codex: 'stolen data, worth credits. sell it at a black market (SELL) for its full worth, or use it anywhere to cash it in for half. gear costs nothing at the uplink.' },
+    desc: 'stolen data: a market buys it.', tip: 'sell it at a market.',
+    codex: 'stolen data, worth credits. sell it at a black market (SELL) for its full worth. gear costs nothing at the uplink.' },
   bond:  { key: 'bond',  name: 'BOND',  price: 40, rarity: 'rare', value: true, where: '$ nodes, caches.',
-    desc: 'a bearer bond: worth more every sector. sell it at a market, or use it anywhere for half.', tip: 'worth more each sector.',
-    codex: 'a bearer bond. it is worth more the deeper you are: sector 2 pays twice what sector 1 does, sector 3 three times. sell it at a black market (SELL), or use it anywhere to cash it in for half. hold it through the uplink for free.' },
+    desc: 'a bearer bond: worth more every sector. sell it at a market.', tip: 'worth more each sector.',
+    codex: 'a bearer bond. it is worth more the deeper you are: sector 2 pays twice what sector 1 does, sector 3 three times. sell it at a black market (SELL). hold it through the uplink for free.' },
   chrome: { key: 'chrome', name: 'CHROME', price: 100, rarity: 'epic', value: true, where: '$ nodes, caches.',
-    desc: 'a cyber-arm off a dead runner: a market pays well. or use it anywhere for half.', tip: 'sell it: worth a lot.',
-    codex: 'a cyber-arm, pulled off a runner who did not make it. a black market pays well for it (SELL), or use it anywhere to cash it in for half.' },
+    desc: 'a cyber-arm off a dead runner: a market pays well.', tip: 'sell it: worth a lot.',
+    codex: 'a cyber-arm, pulled off a runner who did not make it. a black market pays well for it (SELL).' },
   wallet: { key: 'wallet', name: 'WALLET', price: 250, rarity: 'legendary', value: true, where: '$ nodes, caches.',
-    desc: 'a cold crypto wallet: the jackpot. sell it at a market, or use it anywhere for half.', tip: 'the jackpot: sell it.',
-      codex: 'a cold crypto wallet, keys and all. the rarest find there is: a black market pays a fortune for it (SELL), or use it anywhere to cash it in for half.' },
+    desc: 'a cold crypto wallet: the jackpot. sell it at a market.', tip: 'the jackpot: sell it.',
+      codex: 'a cold crypto wallet, keys and all. the rarest find there is: a black market pays a fortune for it (SELL).' },
   // boss gear (the user, 2026-10-27): the tap-to-use corp mods became stacks you win from that corp's boss
   // (its def: gear { key, n }). Legendary; never in markets or loot (corp:). A market still buys them (SELL).
   // Their effects: engine/active.js (BOSS_GEAR).
@@ -138,52 +138,56 @@ const ITEMS = {
   call_hype: { key: 'call_hype', name: 'HYPE', price: 40, rarity: 'rare', crew: 'hype', desc: 'in a corp: call HYPE in for the rest of the corp (cheers: streaks pay more).', tip: 'call HYPE.',
     codex: 'in a corp: HYPE\'s number. HYPE comes in and helps for the rest of the corp (cheers: streaks pay more). only turns up once HYPE is in your crew.' },
   // PHISH (engine/fishing.js): stolen data you land at a PIER (the stream's shapes still look like fish: it's phishing).
-  // Keys stay fish_* (saves). Value gear: a black market pays their worth (ECON.fish by rarity), or cash one in anywhere
-  // for half. Never loot or in markets. kb: [min, max] its size in KB (made up; the CAUGHT card shows it). info: what you got.
+  // Keys stay fish_* (saves). LOOT: a black market pays their worth (ECON.fish by rarity).
+  // Never a loot drop or in markets. kb: [min, max] its size in KB (made up; the CAUGHT card shows it). info: what you got.
   fish_sprat: { key: 'fish_sprat', kb: [40, 900], name: 'SPAM LIST', price: 0, rarity: 'scrap', value: true, fish: true, where: 'phishing at a PIER.',
     info: "4,000 email addresses. most of them bounce.",
     desc: "4,000 email addresses. most of them bounce. a black market buys it.", tip: 'stolen data: sell it.',
-    codex: "4,000 email addresses. most of them bounce. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+    codex: "4,000 email addresses. most of them bounce. phished at a PIER. a black market buys it (SELL)." },
   fish_guppy: { key: 'fish_guppy', kb: [0.008, 0.03], name: 'REUSED PASSWORD', price: 0, rarity: 'common', value: true, fish: true, where: 'phishing at a PIER.',
     info: "hunter2. it opens their email, their bank and their smart fridge.",
     desc: "hunter2. it opens their email, their bank and their smart fridge. a black market buys it.", tip: 'stolen data: sell it.',
-    codex: "hunter2. it opens their email, their bank and their smart fridge. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+    codex: "hunter2. it opens their email, their bank and their smart fridge. phished at a PIER. a black market buys it (SELL)." },
   fish_carp: { key: 'fish_carp', kb: [2, 60], name: 'LOYALTY ACCOUNT', price: 0, rarity: 'common', value: true, fish: true, where: 'phishing at a PIER.',
     info: "a burger chain rewards account. 41,000 points. free fries for life.",
     desc: "a burger chain rewards account. 41,000 points. free fries for life. a black market buys it.", tip: 'stolen data: sell it.',
-    codex: "a burger chain rewards account. 41,000 points. free fries for life. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+    codex: "a burger chain rewards account. 41,000 points. free fries for life. phished at a PIER. a black market buys it (SELL)." },
   fish_eel: { key: 'fish_eel', kb: [0.01, 0.02], name: 'SOC SEC NUMBER', price: 0, rarity: 'rare', value: true, fish: true, where: 'phishing at a PIER.',
     info: "a retiree's social security number, typed into a 'you won a cruise' form.",
     desc: "a retiree's social security number, typed into a 'you won a cruise' form. a black market buys it.", tip: 'stolen data: sell it.',
-    codex: "a retiree's social security number, typed into a 'you won a cruise' form. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+    codex: "a retiree's social security number, typed into a 'you won a cruise' form. phished at a PIER. a black market buys it (SELL)." },
   fish_koi: { key: 'fish_koi', kb: [0.05, 2], name: 'CORPO LOGIN', price: 0, rarity: 'rare', value: true, fish: true, where: 'phishing at a PIER.',
     info: "a middle manager's corp login. the password is the company name and a 1.",
     desc: "a middle manager's corp login. the password is the company name and a 1. a black market buys it.", tip: 'stolen data: sell it.',
-    codex: "a middle manager's corp login. the password is the company name and a 1. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+    codex: "a middle manager's corp login. the password is the company name and a 1. phished at a PIER. a black market buys it (SELL)." },
   fish_marlin: { key: 'fish_marlin', kb: [20000, 900000], name: 'PAYROLL DUMP', price: 0, rarity: 'epic', value: true, fish: true, where: 'phishing at a PIER.',
     info: "every salary at a corp. the CEO's is a lot. the interns' is not.",
     desc: "every salary at a corp. the CEO's is a lot. the interns' is not. a black market buys it.", tip: 'stolen data: sell it.',
-    codex: "every salary at a corp. the CEO's is a lot. the interns' is not. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+    codex: "every salary at a corp. the CEO's is a lot. the interns' is not. phished at a PIER. a black market buys it (SELL)." },
   fish_puffer: { key: 'fish_puffer', kb: [3000, 400000], name: 'BLACKMAIL', price: 0, rarity: 'epic', value: true, fish: true, where: 'phishing at a PIER.',
     info: "photos of a VP at the company retreat. he'd pay a lot to make these go away.",
     desc: "photos of a VP at the company retreat. he'd pay a lot to make these go away. a black market buys it.", tip: 'stolen data: sell it.',
-    codex: "photos of a VP at the company retreat. he'd pay a lot to make these go away. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
+    codex: "photos of a VP at the company retreat. he'd pay a lot to make these go away. phished at a PIER. a black market buys it (SELL)." },
   fish_kraken: { key: 'fish_kraken', kb: [1000000, 60000000], name: 'ROOT KEYS', price: 0, rarity: 'legendary', value: true, fish: true, where: 'phishing at a PIER.',
     info: "the master keys to a whole corp network. somebody's getting fired.",
     desc: "the master keys to a whole corp network. somebody's getting fired. a black market buys it.", tip: 'stolen data: sell it.',
-    codex: "the master keys to a whole corp network. somebody's getting fired. phished at a PIER. a black market buys it (SELL), or cash it in anywhere for half." },
-  // PHISH in your gear: kept, any catch becomes the PHISH of its rarity (they stack; the catch names are flavor).
+    codex: "the master keys to a whole corp network. somebody's getting fired. phished at a PIER. a black market buys it (SELL)." },
+  // PHISH in your LOOT: kept, any catch becomes the PHISH of its rarity (they stack; the catch names are flavor).
   // bag: true = not a catch (FISH_KEYS skips them; the codex too).
   phish_scrap: { key: 'phish_scrap', name: 'PHISH', price: 0, rarity: 'scrap', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
-    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL).' },
   phish_common: { key: 'phish_common', name: 'PHISH', price: 0, rarity: 'common', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
-    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL).' },
   phish_rare: { key: 'phish_rare', name: 'PHISH', price: 0, rarity: 'rare', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
-    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL).' },
   phish_epic: { key: 'phish_epic', name: 'PHISH', price: 0, rarity: 'epic', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
-    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL).' },
   phish_legendary: { key: 'phish_legendary', name: 'PHISH', price: 0, rarity: 'legendary', value: true, fish: true, bag: true, where: 'phishing at a PIER.',
-    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL), or cash it in anywhere for half.' },
+    desc: 'stolen data. a black market buys it.', tip: 'phish: sell it.', codex: 'stolen data from a PIER. a black market buys it (SELL).' },
+  // LOTTO (the user, 2026-10-30): gear, not loot: a scratch ticket for quick cash anywhere (it took the old "cash in loot
+  // for half"). Pays a random amount, now and then the jackpot (ECON.lotto). New gear goes at the end (seeded picks).
+  lotto: { key: 'lotto', name: 'LOTTO', price: 15, rarity: 'common', desc: 'use any time: scratch it for a random amount of credits. sometimes the jackpot.', tip: 'random credits.',
+    codex: 'a scratch ticket. use it any time, anywhere, for a random handful of credits; now and then it hits the jackpot. quick money for the uplink.' },
 };
 const ITEM_WHERE = 'market, $ nodes, caches.';
 

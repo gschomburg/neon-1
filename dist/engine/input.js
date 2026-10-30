@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.83']);
+NEON_FILES.push(['engine/input.js', 'v13.84']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -37,6 +37,7 @@ function audioLines(X, prefix) {
 }
 
 function pauseLines() {
+  if (st.pause === 'loot') return lootLines();   // the LOOT bag (engine/loot.js) is a pause too
   const lines = [];
   const T = (text, col = C.text) => lines.push({ text, col });
   const B = (text, id, onTap) => lines.push({ text, id, onTap });

@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v13.83']);
+NEON_FILES.push(['engine/save.js', 'v13.84']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -115,6 +115,7 @@ function savedRun() {
       run.mods = run.mods.map(k => MOD_RENAMED[k] || k).filter(k => MODS[k]);
       for (const [from, to] of Object.entries(MOD_RENAMED)) if (from in tiers) { tiers[to] = tiers[from]; delete tiers[from]; }
     }
+    if (d && d.run && d.run.items) lootMigrate(d.run);   // saves from before the LOOT bag held loot on the belt
     return d && d.run && d.run.map && d.run.integrity > 0 ? d : null;
   } catch (e) { return null; }
 }

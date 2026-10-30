@@ -8,11 +8,11 @@
 //   mod_pick   a mod screen: at (the screen), offered, taken (null = skipped), exotic (if one was offered)
 //   buy        at the market: kind, key, tier, price
 //   exotic     an exotic offered: key, where (shop / cache / sector)
-//   run_end    end (cashout / died), layers, corps, sector, sectors, mods, tiers, items, credits, earned,
+//   run_end    end (cashout / died), layers, corps, sector, sectors, mods, tiers, items, loot, credits, earned,
 //              rep, mins, ice, perfects, reroutes, resumes, at (where you died: corp + layer)
 //   run_quit   abandoned from the menu: layers, sector, at
 'use strict';
-NEON_FILES.push(['engine/stats.js', 'v13.83']);
+NEON_FILES.push(['engine/stats.js', 'v13.84']);
 
 // Off for multiplayer, the editor and automated test runs (the playtest tools).
 function statOn() { return !!(st.run && !st.run.tutorial && !st.mp && !EDITOR && !(navigator.webdriver && !window.LB_TEST) && lbClient()); }
@@ -80,7 +80,7 @@ function statRunEnd(run, win) {
   stat('run_end', {
     end: win ? 'cashout' : 'died', practice: !!run.practice, layers: run.depth, corps: run.corps, sector: (run.sector || 0) + 1,
     sectors: run.sectorsCleared || 0, mods: run.mods.slice(), tiers: run.mods.map(k => `${k}:${(run.modTier[k] || 0) + 1}`),
-    items: run.items.map(x => x.key), credits: run.credits, earned: run.earned, rep: repFor(run),
+    items: run.items.map(x => x.key), loot: (run.loot || []).map(x => x.key + (x.n > 1 ? 'x' + x.n : '')), credits: run.credits, earned: run.earned, rep: repFor(run),
     mins: Math.round((Date.now() - s.t0) / 6000) / 10, ice: s.ice, perfects: run.perfects || 0, reroutes: run.reroutes || 0,
     resumes: run.resumes || 0, at: !win && c ? `${c.def.key} ${c.hasBoss ? (st.lv && st.lv.boss ? 'boss' : c.idx + 1) : ''}`.trim() : null,
   });

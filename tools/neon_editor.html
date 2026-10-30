@@ -669,9 +669,10 @@
   <h2>THE FENCE</h2>
   <div class="row"><button data-x="steal">steal my last mod</button> <span class="dim">it goes to THE FENCE (one is added next to this sector's boss if there isn't one)</span></div>
   </details>
-  <h2>Give <small>a mod (at a step) or gear; the gear &amp; mods tab has the full list</small></h2>
+  <h2>Give <small>a mod (at a step), gear or loot; the gear &amp; mods tab has the full list</small></h2>
   <div class="row">mod <select id="xGiveMod"></select> <select id="xTierMod"></select> <button id="xGiveModBtn">give</button></div>
   <div class="row">gear <select id="xGiveGear"></select> <select id="xTierGear"></select> <button id="xGiveGearBtn">give</button></div>
+  <div class="row">loot <select id="xGiveLoot"></select> <select id="xTierLoot"></select> <button id="xGiveLootBtn">give</button></div>
   <h2>Hackers <small>bring one into the corp layer you're in: a rival, or crew as if you'd called them (CALL gear is under Give too)</small></h2>
   <div class="row"><select id="xHk"></select> <button data-x="hacker">bring in</button></div>
   <details class="xgrp" data-g="feats"><summary>Feats <small>click one to grant it or take it back (lit = done); "box" shows its FEAT box once the game is calm</small></summary>
@@ -705,7 +706,7 @@
   <div id="iBar">
     <span class="seg" id="iView"><button data-v="cards" class="on">cards</button><button data-v="ladder">ladder</button></span>
     <span class="seg" id="iSort" title="sort order: as in the file, by the corp's level (corp mods; the rest keep file order, first), by name, by rarity"><button data-s="file" class="on">file</button><button data-s="level">corp level</button><button data-s="name">a-z</button><button data-s="rarity">rarity</button></span>
-    <span class="seg" id="iKind"><button data-k="all" class="on">all</button><button data-k="item">gear</button><button data-k="gen">general</button><button data-k="minor">minor</button><button data-k="exotic">exotic</button><button data-k="corp">corp</button></span>
+    <span class="seg" id="iKind"><button data-k="all" class="on">all</button><button data-k="item">gear</button><button data-k="loot">loot</button><button data-k="gen">general</button><button data-k="minor">minor</button><button data-k="exotic">exotic</button><button data-k="corp">corp</button></span>
     <input id="iFilter" type="text" placeholder="filter: name, text, corp..." autocomplete="off">
     <button id="iCopy" title="Copy what's shown as plain text, to paste into notes or a chat">copy as text</button>
     <span id="iCount"></span>
@@ -2078,9 +2079,11 @@
     const steps = d => (d.tiers || [{}]).map(t => Object.assign({}, d, t).rarity);
     const opt = (k, d) => `<option value="${esc(k)}">${esc(d.name)}${d.name !== k.toUpperCase() ? ' (' + esc(k) + ')' : ''}</option>`;
     const fill = (groups) => groups.filter(([, list]) => list.length).map(([g, list]) => `<optgroup label="${g}">${list.sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([k, d]) => opt(k, d)).join('')}</optgroup>`).join('');
-    // mods by kind; gear by what it is (normal, value, boss gear, CALL gear, phish)
-    const gearKind = ([k, d]) => d.fish ? 'phish' : d.crew || k === 'call' ? 'CALL gear (crew)' : d.corp ? 'boss gear' : d.value ? 'value gear' : 'gear';
-    const gearGroups = ['gear', 'value gear', 'boss gear', 'CALL gear (crew)', 'phish'].map(g => [g, Object.entries(ITEMS).filter(e => gearKind(e) === g)]);
+    // mods by kind; gear by what it is (normal, boss gear, CALL gear); loot (worth money: the LOOT bag) by what it is.
+    // A phish catch given turns into the PHISH of its rarity in the game, like keeping one at a PIER.
+    const gearKind = ([k, d]) => d.quest ? 'quest' : d.fish ? (d.bag ? '' : 'phish catches (become PHISH)') : d.value ? 'loot' : d.crew || k === 'call' ? 'CALL gear (crew)' : d.corp ? 'boss gear' : 'gear';
+    const gearGroups = ['gear', 'boss gear', 'CALL gear (crew)'].map(g => [g, Object.entries(ITEMS).filter(e => gearKind(e) === g)]);
+    const lootGroups = ['loot', 'phish catches (become PHISH)', 'quest'].map(g => [g, Object.entries(ITEMS).filter(e => gearKind(e) === g)]);
     // one row each: a picker, its steps, a give button
     const giveRow = (sel, tierSel, btn, groups, table, what) => {
       $(sel).innerHTML = fill(groups);
@@ -2090,6 +2093,7 @@
     };
     giveRow('#xGiveMod', '#xTierMod', '#xGiveModBtn', ['gen', 'minor', 'exotic', 'corp'].map(k => [k + ' mods', Object.entries(MODS).filter(([, d]) => d.kind === k)]), MODS, 'mod');
     giveRow('#xGiveGear', '#xTierGear', '#xGiveGearBtn', gearGroups, ITEMS, 'gear');
+    giveRow('#xGiveLoot', '#xTierLoot', '#xGiveLootBtn', lootGroups, ITEMS, 'loot');
   }
   if (typeof HACKERS !== 'undefined') $('#xHk').innerHTML = ['bad', 'good'].map(sd => `<optgroup label="${sd === 'bad' ? 'rivals' : 'crew'}">${Object.entries(HACKERS).filter(([, h]) => h.side === sd).map(([k, h]) => `<option value="${esc(k)}">${esc(h.name)}</option>`).join('')}</optgroup>`).join('');
   // feats (dist/data/feats.js): a button each (lit when done) and its "box"
@@ -2106,13 +2110,14 @@
   const chips = (window.NEON_PALETTES || {}).chips || {};
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const chip = r => { const c = chips[r] || { fg: '#000', bg: '#888' }; return `<span class="c" style="color:${c.fg};background:${c.bg}">${esc((RARITY[r] || { label: r }).label)}</span>`; };
-  const KINDS = [['item', 'Items', 'one use each, on the belt. ' + ITEM_WHERE], ['gen', 'General mods', 'the main pool'], ['minor', 'Minor mods', 'small perks'],
+  const KINDS = [['item', 'Gear', 'one use each, on the belt. ' + ITEM_WHERE], ['loot', 'Loot', 'worth money: it goes in the LOOT bag ([$]) and sells at a black market. quest items too.'], ['gen', 'General mods', 'the main pool'], ['minor', 'Minor mods', 'small perks'],
     ['exotic', 'Exotic mods', 'rule-benders: sector bosses, markets, caches'], ['corp', 'Corp mods', "only from that corp's boss; legendary, never upgrade"]];
   const corpName = k => (CORPS[k] && CORPS[k].name) || k;
 
   // one entry per item / mod, with its steps worked out the way the game does (base + that step's overrides)
   const all = [];
-  for (const [k, d] of Object.entries(ITEMS)) all.push({ key: k, kind: 'item', d });
+  for (const [k, d] of Object.entries(ITEMS)) all.push({ key: k, kind: d.value || d.quest ? 'loot' : 'item', d });
+  const isGearish = e => e.kind === 'item' || e.kind === 'loot';   // (gear and loot: given +1 at a time)
   for (const [k, d] of Object.entries(MODS)) all.push({ key: k, kind: d.kind, d });
   for (const e of all) e.steps = (e.d.tiers || [{}]).map(t => Object.assign({}, e.d, t));
 
@@ -2150,7 +2155,7 @@
   const meta = e => {
     const d = e.d, bits = [];
     if (d.short) bits.push(`<span class="mono">${esc(d.short)}</span>`);
-    bits.push(e.kind === 'item' ? 'item' : e.kind + ' mod');
+    bits.push(isGearish(e) ? (e.kind === 'loot' ? 'loot' : 'gear') : e.kind + ' mod');
     if (d.price) bits.push(d.price + 'cr');
     if (d.corp) bits.push(`from <a data-corp="${esc(d.corp)}" title="show this corp in the game">${esc(corpName(d.corp))}</a>${CORPS[d.corp] ? ' LV' + (CORPS[d.corp].level || 1) : ''}`);
     if (d.icon) bits.push(`icon <span class="mono">${esc(d.icon)}</span>` + (d.anim ? ' ' + esc(d.anim) : ''));
@@ -2158,7 +2163,7 @@
     return bits.join(' · ') + ' ' + flags.join(' ');
   };
   const giveBtn = (e, i) => {
-    if (e.kind === 'item') return `<td class="igive"><button class="give" data-key="${esc(e.key)}" data-tier="${i}" title="give one at this step (it goes in your gear slots)"${game.run ? '' : ' disabled'}>+1</button></td>`;
+    if (isGearish(e)) return `<td class="igive"><button class="give" data-key="${esc(e.key)}" data-tier="${i}" title="give one at this step (${e.kind === 'loot' ? 'it goes in your LOOT bag' : 'it goes in your gear slots'})"${game.run ? '' : ' disabled'}>+1</button></td>`;
     const on = held[e.key] === i;
     return `<td class="igive"><button class="give${on ? ' on' : ''}" data-key="${esc(e.key)}" data-tier="${on ? -1 : i}" title="${on ? 'held at this step: click to remove it' : (e.key in held ? 'move it to this step' : 'give it at this step')}"${game.run ? '' : ' disabled'}>${on ? 'held ✕' : e.key in held ? 'set' : 'give'}</button></td>`;
   };
@@ -2173,7 +2178,7 @@
       return `<tr><td class="n">${esc(e.d.name)}<small>${e.kind === 'item' ? 'gear' : e.kind}${e.d.corp ? ' · ' + esc(corpName(e.d.corp)) + (CORPS[e.d.corp] ? ' LV' + (CORPS[e.d.corp].level || 1) : '') : ''}</small></td>` + LADDER.map(r => {
         const s = at[r], l = RARITY[r].lvl, c = chips[r] || {};
         if (s) {
-          const mod = e.kind !== 'item' && game.run, on = held[e.key] === s.i;
+          const mod = !isGearish(e) && game.run, on = held[e.key] === s.i;
           return `<td class="s${mod ? ' pick' : ''}${on ? ' on' : ''}" style="border-left-color:${c.bg}" title="${esc(s.desc)}${mod ? (on ? '&#10;(held: click to remove)' : '&#10;(click: give it at this step)') : ''}"${mod ? ` data-key="${esc(e.key)}" data-tier="${on ? -1 : s.i}"` : ''}>${esc(s.tip)}</td>`;
         }
         return `<td class="s">${l > first && l < last ? '<i>(skips)</i>' : ''}</td>`;
@@ -2201,7 +2206,7 @@
 
   // plain text of what's shown, to paste into notes or a chat
   const asText = () => shown().map(e => {
-    const d = e.d, head = `${d.name}${d.short ? ' (' + d.short + ')' : ''}, ${e.kind === 'item' ? 'item' : e.kind + ' mod'}${d.price ? ', ' + d.price + 'cr' : ''}${d.corp ? ', from ' + corpName(d.corp) : ''}${d.slot ? ', slot ' + d.slot : ''}${d.locked ? ', locked' : ''}${d.active ? ', tap to use' : ''}`;
+    const d = e.d, head = `${d.name}${d.short ? ' (' + d.short + ')' : ''}, ${isGearish(e) ? (e.kind === 'loot' ? 'loot' : 'gear') : e.kind + ' mod'}${d.price ? ', ' + d.price + 'cr' : ''}${d.corp ? ', from ' + corpName(d.corp) : ''}${d.slot ? ', slot ' + d.slot : ''}${d.locked ? ', locked' : ''}${d.active ? ', tap to use' : ''}`;
     return [head, ...e.steps.map(s => `  ${RARITY[s.rarity].label.padEnd(7)} ${s.tip}  |  ${s.desc}`), ...(d.codex ? ['  codex: ' + d.codex] : [])].join('\n');
   }).join('\n\n');
 
@@ -3003,7 +3008,7 @@
 <li><b>Jump:</b> to sector 2-5 (events rolled as usual); into this sector's boss; clear the sector (the success screen); straight to the uplink; or <b>go fishing</b> (a PIER, with at least 100cr).</li>
 <li><b>Anomaly on the next corps:</b> puts that anomaly on the corps you can go to next (THIEF also adds THE FENCE); <b>none</b> takes them off.</li>
 <li><b>THE FENCE:</b> steal my last mod sends it to THE FENCE, next to the sector boss, to buy back.</li>
-<li><b>Give:</b> two rows: a <b>mod</b> at any step (by kind: gen, minor, exotic, corp), or <b>gear</b> (normal, value, boss gear, CALL gear, phish). The gear &amp; mods tab has every one, with its text.</li>
+<li><b>Give:</b> three rows: a <b>mod</b> at any step (by kind: gen, minor, exotic, corp), <b>gear</b> (normal, boss gear, CALL gear), or <b>loot</b> (loot, phish catches, which turn into PHISH like at a pier, and the quest DISC). The gear &amp; mods tab has every one, with its text.</li>
 <li><b>Feats:</b> click one to grant it (lit) or take it back; <b>box</b> shows its FEAT box once the game is calm (on a menu or the map). <b>wipe progression</b> does the version wipe on your own save: REP back for THE BOARD's posts, feats, titles and the record cleared. THE BOARD: the <b>board</b> scene button, or the title.</li>
 </ul>
 <p>The line at the top is the game right now: sector, its event, credits, INT, and what's on.</p>` },
