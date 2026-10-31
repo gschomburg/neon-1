@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.93']);
+NEON_FILES.push(['engine/run.js', 'v13.94']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -803,7 +803,8 @@ function finishCorp() {
     return openOmniReward(c.sector);
   }
   if (c.node.type === 'final') return sectorClear(!!c.bossSkipped);
-  if (c.def.noReward) { saveRun(); return swapTo(() => toMap()); }   // (G0D MAZE: no reward screen)
+  if (c.def.noReward) { saveRun(); return swapTo(() => toMap()); }   // (a corp with no reward screen)
+  if (c.def.reward) { saveRun(); return c.def.reward(c); }   // (its own: G0D MAZE's MAZE CLEARED)
   run.pending = { kind: 'reward', id: c.node.id, skipped: !!c.bossSkipped };
   saveRun();
   openReward(c.node, !!c.bossSkipped);

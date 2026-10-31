@@ -5,7 +5,7 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v13.93']);
+NEON_FILES.push(['engine/g0dproto.js', 'v13.94']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -81,6 +81,7 @@ function g0dpStart(stage, opts = null) {
   if (stage === 'fight') g0dpFightStart(p);
   if (stage === 'stand') g0dpStandStart(p);
   showBoard('g0dp');
+  if (opts && opts.noWipe) st.wipe = null;   // (the fake win cuts straight in: the stand's opening is the transition)
   Sound.bossDrop(); shake(6, 0.4);
 }
 function g0dpStop() { st.g0dp = null; if (st.mode === 'g0dp') toMap(); }
@@ -720,6 +721,7 @@ function g0dpTraceCells(list, now) {
     const key = x + ',' + y, had = out.get(key);
     if (had && !had[3] && tint) return;   // a box line wins a cell over a tint
     if (head) return out.set(key, ['•', C.bright, true, tint]);
+    if (t.kind === 'white') return out.set(key, [ch, fromTail < 0.3 ? C.dim : fromTail < 0.7 ? C.mid : C.text, false, false]);   // white / grey (the final stand's opening)
     out.set(key, tint ? [null, G0DP_TINTS[Math.min(3, Math.floor((1 - fromTail) * 4))], false, true] : [ch, fromTail < 0.25 ? C.dangerDim : G0DP_RED, false, false]);
   });
   return out;
@@ -832,10 +834,12 @@ function g0dpStandStart(p) {
     eyes.push({ x: Math.round(W / 2 + Math.cos(a) * rx * (0.6 + Math.random() * 0.4)), y: Math.round(H / 2 + Math.sin(a) * ry * (0.6 + Math.random() * 0.4)), alive: true });
   }
   for (const e of eyes) { const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 2.5; e.vx = Math.cos(a) * v; e.vy = Math.sin(a) * v * 0.45; e.turnAt = 0; }
-  p.stand = { eyes: shuffle(eyes, Math.random), cur: 0, cycleAt: performance.now() + 900, left: G0DP.standTime, trail: [], trailAt: 0 };
+  const now0 = performance.now();
+  p.stand = { eyes: shuffle(eyes, Math.random), cur: 0, cycleAt: now0 + G0D_STAND_OPEN + 600, left: G0DP.standTime, trail: [], trailAt: 0, openUntil: now0 + G0D_STAND_OPEN, traces: [] };
   boySay("i grab his eyes. you hit 'em!");
 }
 const g0dpStandRed = s => G0DP.red * Math.pow(0.9, s.cur);
+const G0D_STAND_OPEN = 1500;   // ms: the stand's opening (round 2 of the H3AV3N feedback): white traces, the network draws in
 // Blue = you can hit it. With b0y: while he's latched onto it (round 6: he makes it vulnerable). Without him: it cycles.
 function g0dpStandBlue(s, now) {
   if (s.forceBlue) return true;   // (a SHOE: it does not wait for blue)
@@ -861,6 +865,12 @@ function g0dpStandBoy(p, now, dt) {
 }
 function g0dpStandTick(p, now, dt) {
   const s = p.stand;
+  if (now < (s.openUntil || 0)) {   // the opening: white traces from all over, faster and more; no clock yet
+    s.traceAcc = (s.traceAcc || 0) + dt * 45;
+    while (s.traceAcc >= 1) { s.traceAcc -= 1; g0dpTraceSpawn(s.traces, Math.random() * L.wc, 1 + Math.random() * (L.gh - 2), 0.8, 'white'); }
+    g0dpTraceTick(s.traces, dt, 1, L.wc, L.gh);
+    return;
+  }
   s.left -= dt;
   if (s.left <= 0 && !p.card) { st.run.integrity = 0; return g0dpHurt(p, 0, 'he got away.', 'away'); }
   // the eyes drift (round 4) and keep apart; the mold streams off them, a trail that fades
@@ -887,6 +897,7 @@ function g0dpStandTick(p, now, dt) {
   if (G0DP.boy) g0dpStandBoy(p, now, dt);
 }
 function g0dpStandTap(p, x, y, now) {
+  if (now < (p.stand.openUntil || 0)) return;   // (the opening)
   const s = p.stand, i = s.eyes.findIndex(e => e.alive && Math.abs(x - Math.round(e.x)) <= 3 && Math.abs(y - Math.round(e.y)) <= 1);
   if (i < 0) return;
   if (i !== s.cur) { Sound.deny(); return g0dpMsg('> not that one. in order.', C.mid); }
@@ -909,12 +920,14 @@ function g0dpStandDraw(p, put, bg, now) {
   const doom = clamp((G0DP.standTime - s.left) / G0DP.standBurn, 0, 1);   // (the traces do the warning now; the trails turn red as it builds)
   const stTr = g0dpTraceCells(s.traces || [], now), onEye0 = (x, y) => s.eyes.some(e => e.alive && Math.abs(x - Math.round(e.x)) <= 2 && Math.abs(y - Math.round(e.y)) <= 1);
   for (const [k, [ch, col, head]] of stTr) { const [x, y] = k.split(',').map(Number); if (y >= 1 && y < (g0dpBoyLineOn(p, now) ? L.gh - 1 : L.gh) && !onEye0(x, y)) put(x, Y + y, ch, col, 'fx', head); }
+  const opening = now < (s.openUntil || 0), drawIn = opening ? 1 - (s.openUntil - now) / G0D_STAND_OPEN : 1;   // the network draws in during the opening
   // the network under it all (round 21: ONION's circuit, like the fight's); it goes dark red as the burn builds
   const trailAt = new Set(s.trail.map(o => Math.round(o.x) + ',' + Math.round(o.y)));
   for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
     const k = x + ',' + y;
-    if (stTr.has(k) || trailAt.has(k) || onEye0(x, y)) continue;
+    if (stTr.has(k) || trailAt.has(k) || (!opening && onEye0(x, y))) continue;
     const h = G0D_LOOKS.hs(x * 1.3 + y * 7.9);
+    if (opening && G0D_LOOKS.hs(x * 2.3 + y * 4.1) > drawIn) continue;
     put(x, Y + y, g0dpCircuitCh(x, y, now, L.wc, L.gh), h < doom * 0.6 ? C.dangerDim : h < 0.25 ? C.mid : C.dim);
   }
   // the mold streaming off the eyes: thick and bright when fresh, thinning as it fades (round 4)
@@ -926,7 +939,7 @@ function g0dpStandDraw(p, put, bg, now) {
     put(x, Y + y, ch, doom > 0 && G0D_LOOKS.hs(o.k * 91) < doom ? (age < 0.5 ? G0DP_RED : C.dangerDim) : age < 0.3 ? G0DP_FRESH : age < 0.65 ? G0D_COLS.mold : G0D_COLS.moldDim);
   }
   s.eyes.forEach((e0, i) => {
-    if (!e0.alive) return;
+    if (!e0.alive || opening) return;   // (the eyes come after the opening)
     const e = { x: Math.round(e0.x), y: Math.round(e0.y) };
     const on = i === s.cur, blue = on && g0dpStandBlue(s, now), col = blue ? G0DP_BLUE : on ? G0DP_RED : C.dangerDim;
     const pupil = on ? '@' : 'o';
@@ -950,7 +963,7 @@ function g0dpGearOk(stack) {
   const p = st.g0dp, key = stack.key, f = p && p.fight, s = p && p.stand;
   if (!p || p.card || st.busy) return false;
   if (key === 'stim') return !st.run.stim && !zombie() && !bloodMoney() && p.stage !== 'maze';
-  if (key === 'shoe') return (f && !!f.eye) || (s && s.cur < s.eyes.length);
+  if (key === 'shoe') return (f && !!f.eye) || (s && s.cur < s.eyes.length && performance.now() >= (s.openUntil || 0));
   if (key === 'frag') return !!f;
   if (key === 'purge') return !!f && f.nodes.some(n => n.kind === 'corp');
   if (key === 'rewind') return (f && !!f.eye) || !!s || (p.maze && true);

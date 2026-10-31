@@ -1,6 +1,6 @@
 // NeoN+1 corps/dialtone.js
 'use strict';
-NEON_FILES.push(['corps/dialtone.js', 'v13.93']);
+NEON_FILES.push(['corps/dialtone.js', 'v13.94']);
 // Its boss mod: HANDSHAKE (handshake), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v13.93']);
+NEON_FILES.push(['engine/heaven.js', 'v13.94']);
 
 const HEAVEN = {};
 
@@ -53,7 +53,16 @@ function heavenSetup() {
 HEAVEN.maze = {
   key: 'maze', name: 'G0D MAZE', letter: '#', level: 5,
   intel: '"prompt. diamond. cross. st#%age. upl@#k. wa%#..."',
-  tell: null, pay: 0.6, timer: 6, noLoot: true, noReward: true, noOdds: true,
+  tell: null, pay: 0.6, timer: 6, noLoot: true, noOdds: true,
+  // out of the maze: a real rewards screen (round 2 of the feedback: "more of a success thing")
+  reward(c) {
+    const run = st.run, r = rngFor(run.seed, 'mazereward', c.node.id);
+    const options = pickMods(r, modsFound('gen', 'minor'), 2).concat([rewardGear(r)]);
+    Sound.bossWin(); flash(G0DP_BLUE, 0.25, 0.6); shake(5, 0.35);
+    openChoice({ reveal: true, title: 'MAZE CLEARED', col: G0DP_BLUE, head: [['G0D MAZE', C.text], ['the eye is right above you.', C.mid]], by: profile(), options,
+      skipLabel: `[ SKIP  +${earnInt(ECON.skip.boss)}cr ]`, onSkip: () => { const cr = earnInt(ECON.skip.boss); run.credits += cr; run.earned += cr; Sound.loot(); },
+      msg: { text: '> b0y: we made it. G0D is right up there.', col: G0DP_BLUE } });
+  },
   layerMsg: (lv, c) => {
     if (!G0DP.boy || !c.maze) return `> layer ${c.maze ? c.maze.label : ''}. ${lv.n} ways on.`;
     const words = ['prompt', 'diamond', 'the cross', 'storage unit', 'uplink', 'the watcher'];   // (his tags name the glyphs now: the terminal just says what is next)
@@ -141,7 +150,9 @@ HEAVEN.maze = {
 // The wake-up (docs/QUESTS.md "G0D FIGHT: the wake-up"): you breach the node and the map doesn't change: G0D's node
 // opens into an eye (@) and blinks, the M0LD eats the network from the top down, his bar comes up and fills, he talks,
 // b0y says we gotta break through. A tap skips it (after a beat); the editor can skip it outright (G0DP.skipCine).
-const G0D_WAKE = { ms: 5200, beat: 700 };
+// (round 2 of the feedback: "more dramatic": before the mold closes in, the network breaks: the corp nodes shift and glitch to
+// red or to G0D, red traces run out of them over the circuit, little eyes open; then the mold.)
+const G0D_WAKE = { ms: 7600, beat: 700, breaks: [400, 2800], mold: [2800, 5400], bar: 5200 };
 function g0dWakeStart(node) {
   if (st.g0dWake) return;
   if (G0DP.skipCine) return g0dWakeEnd(node);
@@ -155,9 +166,21 @@ function g0dWakeTick(now) {
   const e = now - w.t0, say = (k, at, fn) => { if (e >= at && !w.said[k]) { w.said[k] = true; fn(); } };
   say('a', 300, () => g0dSay("you can't defeat me."));
   say('b', 900, () => { Sound.alarm(); shake(5, 0.4); });
-  say('c', 2300, () => g0dSay('you are just meat.'));
-  say('d', 3100, () => { Sound.bossBuild(); });
-  say('e', 4300, () => boySay('we gotta break through that mold.'));
+  say('b2', 1700, () => { Sound.alarm(); shake(7, 0.4); flash(C.danger, 0.15, 0.3); });
+  say('m', G0D_WAKE.mold[0], () => { Sound.trap(); shake(8, 0.5); });
+  say('c', 4300, () => g0dSay('you are just meat.'));
+  say('d', G0D_WAKE.bar, () => { Sound.bossBuild(); });
+  say('e', 6400, () => boySay('we gotta break through that mold.'));
+  // red traces out of the corp nodes, more and faster as the network breaks
+  const dt = Math.min(0.05, (now - (w.last || now)) / 1000); w.last = now; w.traces = w.traces || [];
+  if (e > G0D_WAKE.breaks[0] && e < G0D_WAKE.mold[1]) {
+    const heat = clamp((e - G0D_WAKE.breaks[0]) / (G0D_WAKE.breaks[1] - G0D_WAKE.breaks[0]), 0, 1), at = Object.values(w.nodesAt || {});
+    w.traceAcc = (w.traceAcc || 0) + dt * (4 + 36 * heat * heat);
+    while (w.traceAcc >= 1 && at.length) { w.traceAcc -= 1; const o = pickR(at, Math.random); g0dpTraceSpawn(w.traces, o.x + 1, o.y - BOARD_Y, heat, Math.random() < 0.5 ? 'box' : 'tint'); }
+  }
+  g0dpTraceTick(w.traces, dt, 1, L.wc, L.gh);
+  if (!w.eyes) { w.eyes = []; for (let k = 0; k < 5; k++) w.eyes.push({ x: 3 + Math.floor(Math.random() * (L.wc - 7)), y: BOARD_Y + 2 + Math.floor(Math.random() * (L.gh - 4)), at: 900 + k * 330 }); }
+  for (const ey of w.eyes) if (!ey.said && e >= ey.at) { ey.said = true; Sound.nodeOn(); }
   if (e >= G0D_WAKE.ms) g0dWakeEnd(w.node);
 }
 function g0dWakeSkip() { const w = st.g0dWake; if (G0DP.tapSkip && w && performance.now() - w.t0 > G0D_WAKE.beat) g0dWakeEnd(w.node); }
@@ -171,16 +194,41 @@ function g0dWakeEnd(node) {
 function g0dWakeOverlay(cells, now, bgs) {
   const w = st.g0dWake;
   if (!w || st.mode !== 'map') return cells;
-  const e = now - w.t0, t = Math.floor(e / 110) + 30, y0 = BOARD_Y, H = L.gh, W = L.wc, eye = w.eyeAt;
-  // it creeps in from every edge of the map; G0D's eye stays (it watches)
-  const R = Math.max(0, Math.min(1, (e - 700) / 2600)) * (Math.min(W / 4, H / 2) + 3);
+  const e = now - w.t0, t = Math.floor(e / 110) + 30, y0 = BOARD_Y, H = L.gh, W = L.wc, eye = w.eyeAt, hs = G0D_LOOKS.hs;
+  // first the network breaks: the corp nodes jitter, go red, flip to G0D; the circuit fades in under them; red traces
+  // run out of them; little eyes open
+  const brk = clamp((e - G0D_WAKE.breaks[0]) / (G0D_WAKE.breaks[1] - G0D_WAKE.breaks[0]), 0, 1);
+  if (brk > 0) {
+    const nodes = Object.values(w.nodesAt || {}), onNode = c => nodes.find(o => Math.round(c.cy) === o.y && c.cx >= o.x && c.cx <= o.x + 2);
+    cells = cells.map(c => {
+      const o = onNode(c); if (!o) return c;
+      const tick = Math.floor(now / 110), j = hs(o.x * 3 + o.y + tick) < brk * 0.5 ? (hs(o.x + tick * 7) < 0.5 ? -1 : 1) : 0;
+      const flip = hs(o.x * 9 + o.y * 5 + Math.floor(now / 400)) < brk * 0.35, ch = flip ? 'G0D'[Math.round(c.cx) - o.x] || c.ch : hs(c.cx * 7 + tick) < brk * 0.15 ? noiseCh() : c.ch;
+      return Object.assign({}, c, { cx: c.cx + j, ch, col: hs(c.cx * 3.3 + tick) < brk ? C.danger : c.col });
+    });
+    const used = new Set(cells.map(c => Math.round(c.cx) + ',' + Math.round(c.cy)));
+    const add = [];
+    for (let y = y0; y < y0 + H; y++) for (let x = 0; x < W; x++) {   // the circuit, fading in
+      if (used.has(x + ',' + y) || hs(x * 2.3 + y * 4.1) > brk * 0.85) continue;
+      add.push({ ch: g0dpCircuitCh(x, y - y0, w.t0, W, H), cx: x, cy: y, col: hs(x * 1.3 + y * 7.9) < 0.2 ? C.mid : C.dim, own: 'map', bold: false });
+    }
+    for (const [k, [ch, col, head, isTint]] of g0dpTraceCells(w.traces || [], now)) {   // the red traces (tints show as dim red lines here)
+      const [x, y] = k.split(',').map(Number); if (y < 0 || y >= H) continue;
+      add.push({ ch: ch || '·', cx: x, cy: y0 + y, col: isTint && !head ? col : col, own: 'map', bold: !!head });
+    }
+    for (const ey of w.eyes || []) if (e >= ey.at) { const blink = (now + ey.at) % 1500 < 120; [...(blink ? '(-)' : '(@)')].forEach((ch, k) => add.push({ ch, cx: ey.x + k, cy: ey.y, col: C.danger, own: 'map', bold: true })); }
+    const taken = new Set(add.filter(a => a.own === 'map' && a.bold).map(a => a.cx + ',' + a.cy));
+    cells = cells.filter(c => !taken.has(Math.round(c.cx) + ',' + Math.round(c.cy))).concat(add);
+  }
+  // then the mold creeps in from every edge of the map; G0D's eye stays (it watches)
+  const R = Math.max(0, Math.min(1, (e - G0D_WAKE.mold[0]) / (G0D_WAKE.mold[1] - G0D_WAKE.mold[0]))) * (Math.min(W / 4, H / 2) + 3);
   const edge = (x, y) => Math.min(x / 2, (W - 1 - x) / 2, y - y0, y0 + H - 1 - y) + G0D_LOOKS.hs(x * 7.3 + y * 3.1) * 2.5;
   const onEye = c => eye && Math.round(c.cy) === eye.y && c.cx >= eye.x - 1 && c.cx <= eye.x + 3;
   const keep = cells.filter(onEye);
   let out = g0dSpread(cells.filter(c => !onEye(c)), t, R, edge, y0, y0 + H, W).filter(c => !onEye(c)).concat(keep);
   if (eye && bgs) bgs.push({ cx: eye.x - 1, cy: eye.y, w: 5, col: C.bg, alpha: 1 });
   if (eye) out = out.map(c => onEye(c) && c.ch !== ' ' ? Object.assign({}, c, { col: C.danger, bold: true }) : c);
-  if (e > 3000) out = g0dpBar(out, bgs, { f: Math.min(1, (e - 3000) / 1200) });
+  if (e > G0D_WAKE.bar) out = g0dpBar(out, bgs, { f: Math.min(1, (e - G0D_WAKE.bar) / 1200) });
   if (G0DP.tapSkip && e > G0D_WAKE.beat) { const tip = 'tap to skip'; out.push(...[...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: y0 + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
   return out;
 }
@@ -222,7 +270,7 @@ function g0dFakeEnd() {
   const f = st.g0dFake; if (!f) return;
   st.g0dFake = null;
   boySay("he's not done. he's running!");
-  g0dpStart('stand', f.stand);
+  g0dpStart('stand', Object.assign({}, f.stand, { noWipe: true }));
 }
 // The win screen as it types in (frozen ~20% in, glitching), drawn on the board like a panel
 function buildG0dFake(ctx) {

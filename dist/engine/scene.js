@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.93']);
+NEON_FILES.push(['engine/scene.js', 'v13.94']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -987,6 +987,7 @@ function buildMap(ctx) {
     const cc = !visited ? corpIconCols(n) : null;
     const waking = st.g0dWake && n.heaven === 'g0d', label = waking ? ((now - st.g0dWake.t0) % 1400 < 160 ? '(-)' : '(@)') : nodeLabel(n);   // G0D wakes: its node is an eye
     if (waking) st.g0dWake.eyeAt = { x: p.x - 1, y };   // (the mold leaves it: engine/heaven.js)
+    else if (st.g0dWake && n.type === 'corp') (st.g0dWake.nodesAt = st.g0dWake.nodesAt || {})[n.id] = { x: p.x - 1, y };   // (they break apart: engine/heaven.js)
     if (cc && label[0] !== '[') {
       ctx.bg(p.x - 1, y, 3, cc.bg, available ? 1 : 0.55);
       // Nodes you can go to: a glint sweeps across the code now and then (that cell's colors

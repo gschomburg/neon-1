@@ -1,6 +1,6 @@
 // NeoN+1 engine/greglytics.js: a copy of greglytics/client/greglytics.js (the scores service on s3iz.com/glx).
 // Change the original, then copy it here again (keep this stamp line).
-NEON_FILES.push(['engine/greglytics.js', 'v13.93']);
+NEON_FILES.push(['engine/greglytics.js', 'v13.94']);
 // greglytics: the browser side. Copy this file into a project and include it with a script tag; then:
 //   const gl = Greglytics.init({ endpoint: 'https://your.domain/api/', app: 'neon', version: '13.09' });
 //   gl.track('run_end', { layers: 21, mods: 3 });

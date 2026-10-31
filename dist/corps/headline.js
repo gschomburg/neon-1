@@ -1,6 +1,6 @@
 // NeoN+1 corps/headline.js
 'use strict';
-NEON_FILES.push(['corps/headline.js', 'v13.93']);
+NEON_FILES.push(['corps/headline.js', 'v13.94']);
 // Its boss mod: SCOOP (scoop), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
