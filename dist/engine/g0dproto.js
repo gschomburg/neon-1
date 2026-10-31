@@ -45,15 +45,16 @@ const G0DP_LINES = {
 const G0DP_CLUE = ['b0y: prompt. diamond. cross.', '     st#%age. upl@#k. wa%#...'];
 // where each answer's word sits in the clue: [line, column, length] (path step 0-5)
 const G0DP_CLUE_AT = [[0, 5, 6], [0, 13, 7], [0, 22, 5], [1, 5, 7], [1, 14, 6], [1, 22, 4]];
-const g0dSay = (text, col = C.danger) => g0dpMsg('> G0D: ' + text, col);
+const G0DP_SAY_BG = '#2a070a';   // G0D's terminal lines: dark red with red text, apart from his bar (round 17)
+const g0dSay = text => g0dpMsg('> G0D: ' + text, G0DP_SAY_BG, G0DP_RED);
 // b0y's lines: in the terminal, and on the board's bottom row a few seconds (the terminal gets stepped on; the user, round 1)
 // (round 12: no line of his own at the bottom any more: his lines hold the terminal a moment and the rest wait)
 const G0DP_BOY_HOLD = 2600;
 const boySay = text => { if (!G0DP.boy) return; setMsg('> b0y: ' + text, G0DP_BLUE); if (st.g0dp) st.g0dp.boyHold = performance.now() + G0DP_BOY_HOLD; };
-function g0dpMsg(text, col) {   // the prototype's terminal lines: while b0y has the terminal, the newest one waits
+function g0dpMsg(text, col, ink = null) {   // the prototype's terminal lines: while b0y has the terminal, the newest one waits
   const p = st.g0dp;
-  if (p && performance.now() < (p.boyHold || 0)) { p.pend = [text, col]; return; }
-  setMsg(text, col);
+  if (p && performance.now() < (p.boyHold || 0)) { p.pend = [text, col, ink]; return; }
+  setMsg(text, col, ink);
 }
 const g0dpBoyLineOn = () => false;
 function g0dpBoyLineDraw() {}
@@ -429,11 +430,12 @@ function g0dpBurst(n, now) {
 const G0DP_BAR_ROW = BOARD_Y - 3;   // G0D's bar: the row over the terminal band (round 14)
 const G0DP_HEAD_LOW = G0DP_BAR_ROW - 1;   // the header's lowest row (the rule)
 // (round 14: never on the bar's row or the terminal band; the header grows straight off the board's top edge, behind them)
-const g0dpSpillRows = () => { const out = []; for (let y = 2; y <= G0DP_HEAD_LOW; y++) out.push(y); for (let y = BOARD_Y + L.gh; y <= BOARD_Y + L.gh + 4; y++) out.push(y); return out; };
+const g0dpSpillRows = () => { const out = []; for (let y = 2; y <= G0DP_HEAD_LOW; y++) out.push(y); out.push(BOARD_Y - 1); for (let y = BOARD_Y + L.gh; y <= BOARD_Y + L.gh + 4; y++) out.push(y); return out; };   // (round 17: + the line under the terminal)
 const g0dpReadout = (x, y) => y >= 2 && y <= 3 && x >= L.wc - 10;   // INT and CR
 function g0dpSpillCap(x, y) {
-  if (y < BOARD_Y && x >= L.wc - 12) return 4.2;   // it reaches for INT / CR
+  if (y <= G0DP_HEAD_LOW && x >= L.wc - 12) return 4.2;   // it reaches for INT / CR
   const patch = 0.25 + 1.0 * g0dpNoise3(x * 0.22, y * 0.6, 3.3);   // it spills in fingers, not a sheet
+  if (y === BOARD_Y - 1) return patch * 2.6;   // the line under the terminal
   if (y < BOARD_Y) return patch * [0, 1.6, 1.1, 0.8][Math.min(3, G0DP_HEAD_LOW - y + 1)];
   return patch * [0, 2.6, 2.2, 1.8, 1.4, 1.0][Math.min(5, y - (BOARD_Y + L.gh) + 1)];
 }
@@ -470,7 +472,7 @@ function g0dpSpillSmash(p, x, y) {
     if (Math.random() < 0.7) bits.push({ ch: g0dpMoldGlyph(was, xx, yy, performance.now()), x: pxX(xx), y: pxY(yy), col: was > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim });
   }
   if (!hit) return false;
-  if (y === G0DP_HEAD_LOW || y === G0DP_HEAD_LOW - 1) g0dpMold(f, x, 0, 1.6, -1.6, false);   // the header's low rows: the board's top edge that feeds them too
+  if (y === G0DP_HEAD_LOW || y === G0DP_HEAD_LOW - 1 || y === BOARD_Y - 1) g0dpMold(f, x, 0, 1.6, -1.6, false);   // the header's low rows: the board's top edge that feeds them too
   f.steal = Math.max(0, (f.steal || 0) - 0.6);
   Sound.tick();
   if (bits.length && !reduced()) explode(bits, pxX(x), pxY(y) - L.chh * 0.5, { power: 0.45, grav: 1.4, life: [0.3, 0.7] });
@@ -836,7 +838,7 @@ function g0dpStandDraw(p, put, bg, now) {
 function g0dpTick(now, dt) {
   const p = st.g0dp;
   if (!p || st.mode !== 'g0dp' || st.pause || st.dev || st.wipe || p.card) return;
-  if (p.pend && now >= (p.boyHold || 0)) { setMsg(p.pend[0], p.pend[1]); p.pend = null; }   // the line that waited for b0y
+  if (p.pend && now >= (p.boyHold || 0)) { setMsg(p.pend[0], p.pend[1], p.pend[2] || null); p.pend = null; }   // the line that waited for b0y
   if (p.stage === 'maze') g0dpMazeTick(p, now, dt);
   if (p.stage === 'fight') g0dpFightTick(p, now, dt);
   if (p.stage === 'stand') g0dpStandTick(p, now, dt);
@@ -898,12 +900,13 @@ function g0dpOverlay(cells, now, bgs) {
     const f = p.fight;
     out = g0dpBar(out, bgs, { f: f.hp / G0DP.hp, was: (f.hp + 1) / G0DP.hp, hit: now - f.hitAt < 260 });
     if (f.sp) {   // the spill (round 12)
-      const burn = f.hands && f.hands.burning, cover = new Set(), add = [];
+      const burn = f.hands && f.hands.burning, heat = f.hands ? Math.min(1, (now - f.hands.at) / 1000 / G0DP.charge) : 0, cover = new Set(), add = [];
       for (const y of g0dpSpillRows()) for (let x = 0; x < f.W; x++) {
         const th = f.sp[y * f.W + x]; if (!(th >= 0.6)) continue;
-        const col = burn ? (th > 2.5 ? G0DP_RED : C.dangerDim) : th > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim;
+        const red = burn || (heat && G0D_LOOKS.hs(x * 3.7 + y * 11.3) < heat * 0.7);   // the charge reddens it bit by bit, the burn all of it (round 17)
+        const col = red ? (th > 2.5 ? G0DP_RED : C.dangerDim) : th > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim;
         if (th >= G0DP_SEE) { cover.add(x + ',' + y); if (bgs) bgs.push({ cx: x, cy: y, w: 1, col: C.bg, alpha: 1 }); add.push({ ch: g0dpMoldGlyph(th, x, y, now), cx: x, cy: y, col, own: 'fx', bold: false }); }
-        else add.push({ ch: th < 1.1 ? '.' : ',', cx: x, cy: y, col: G0D_COLS.mold, own: 'fx', bold: true });   // thin: a speck over what's there
+        else add.push({ ch: g0dpMoldGlyph(th, x, y, now), cx: x, cy: y, col: red ? C.dangerDim : G0D_COLS.mold, own: 'fx', bold: true });   // thin: a speck over what's there (it flows too)
       }
       out = out.filter(c => !cover.has(Math.round(c.cx) + ',' + Math.round(c.cy))).concat(add);
     }
