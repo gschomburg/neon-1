@@ -827,6 +827,14 @@ function g0dpStandDraw(p, put, bg, now) {
   const doom = clamp((G0DP.standTime - s.left) / G0DP.standBurn, 0, 1);   // (the traces do the warning now; the trails turn red as it builds)
   const stTr = g0dpTraceCells(s.traces || [], now), onEye0 = (x, y) => s.eyes.some(e => e.alive && Math.abs(x - Math.round(e.x)) <= 2 && Math.abs(y - Math.round(e.y)) <= 1);
   for (const [k, [ch, col, head]] of stTr) { const [x, y] = k.split(',').map(Number); if (y >= 1 && y < (g0dpBoyLineOn(p, now) ? L.gh - 1 : L.gh) && !onEye0(x, y)) put(x, Y + y, ch, col, 'fx', head); }
+  // the network under it all (round 21: ONION's circuit, like the fight's); it goes dark red as the burn builds
+  const trailAt = new Set(s.trail.map(o => Math.round(o.x) + ',' + Math.round(o.y)));
+  for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
+    const k = x + ',' + y;
+    if (stTr.has(k) || trailAt.has(k) || onEye0(x, y)) continue;
+    const h = G0D_LOOKS.hs(x * 1.3 + y * 7.9);
+    put(x, Y + y, g0dpCircuitCh(x, y, now, L.wc, L.gh), h < doom * 0.6 ? C.dangerDim : h < 0.25 ? C.mid : C.dim);
+  }
   // the mold streaming off the eyes: thick and bright when fresh, thinning as it fades (round 4)
   const lastRow = g0dpBoyLineOn(p, now) ? L.gh - 1 : L.gh, onEye = (x, y) => s.eyes.some(e => e.alive && Math.abs(x - Math.round(e.x)) <= 2 && Math.abs(y - Math.round(e.y)) <= 1);
   for (const o of s.trail) {
