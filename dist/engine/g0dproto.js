@@ -693,8 +693,7 @@ function g0dpFightDraw(p, put, bg, now) {
     const art = age < 110 ? ['         ', '   (o)   ', '         ', '         '] : age < 230 ? ['         ', `  ((${pupil}))  `, '   ---   ', '         '] : full;   // it opens (round 5)
     art.forEach((l, k) => { take(x - 4, y - 1 + k, 9); put(x - 4, Y + y - 1 + k, l, G0DP_BLUE, 'fx', k < 3); });
   }
-  take(0, 0, L.wc);
-  if (g0dpBoyLineOn(p, now)) take(0, f.H - 1, L.wc);
+  if (g0dpBoyLineOn(p, now)) take(0, f.H - 1, L.wc);   // (round 19: no status line on the fight's top row: the mold has it)
   const underThin = new Set();   // node letters under thin mold
   const nodeAt = new Set();
   for (const n of f.nodes) if (!n.gone) for (let k = -1; k < 4; k++) nodeAt.add((Math.round(n.x) + k) + ',' + Math.round(n.y));
@@ -740,10 +739,6 @@ function g0dpFightDraw(p, put, bg, now) {
     else if (tint.has(x + ',' + y)) col = tint.get(x + ',' + y);   // a tint trace running through the mold
     put(x, Y + y, ch, col);
   }
-  // the status line
-  const status = f.eye ? 'THE EYE IS OPEN' : f.hands ? (f.hands.burning ? '!! HANDS OFF !!' : 'it is charging...') : 'dig. find the eye.';
-  put(0, Y, status, f.eye ? G0DP_BLUE : f.hands ? G0DP_RED : C.mid, 'fx', !!(f.eye || f.hands));
-  if (f.press > 0.4) put(L.wc - 11, Y, f.press > 0.66 ? 'IT STEALS^' : 'creeping ^', f.press > 0.66 ? C.danger : C.mid, 'fx');
 }
 
 // ---------------- G0D FINAL STAND ----------------

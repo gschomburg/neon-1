@@ -347,6 +347,9 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 - Round 18 (the user: the regrow after hitting the eye barely shows): every hit sends the mold surging back in, a wave out from
   the eye in 3 quick rings; holes fill the most, thick mold barely, nothing past mid thick; the new growth shows bright. The
   eye shutting sends a bigger wave (g0dpRegrow).
+- Round 19 (the user): the fight's status line (dig. find the eye / THE EYE IS OPEN / charging / HANDS OFF, creeping / IT
+  STEALS) is gone: the board shows all of it. The maze (layer label, its clock) and the final stand (eyes left, the clock)
+  keep theirs for now.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
