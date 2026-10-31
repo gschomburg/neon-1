@@ -337,6 +337,10 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   board's top edge, as if it seeps up behind them.
 - Round 15 (the user): the bar is one row, G0D in the middle: health left a solid red block (the text inverted in the
   background color), health gone a dim line (the text red); a hit flashes the chunk it took (g0dpBar).
+- Round 16 (the user): when the mold gets onto your INT / CR, b0y's cursor goes up there and points at it ("it's eating your
+  INT! scrape it!"). **Warnings about dying:** the FLATLINED card says what got you and how not to (the mold ate your INT;
+  you touched it in the burn; a corp node; the maze clock; too deep on a wrong path; he got away), and at 1 INT b0y warns you
+  about whatever just hurt you (G0DP_CAUSE).
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 

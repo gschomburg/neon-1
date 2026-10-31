@@ -75,15 +75,26 @@ function g0dpStop() { st.g0dp = null; if (st.mode === 'g0dp') toMap(); }
 // A card between stages (or after a fail): lines, then a tap goes on.
 function g0dpCard(p, lines, next, col = C.text) { p.card = { lines, next, col, at: performance.now() }; }
 // INT: lose some (0: the stage starts over), get some back
-function g0dpHurt(p, n, why) {
+// What hurt you (round 16): the flatline card says it, with how not to; at 1 INT b0y warns you about it.
+const G0DP_CAUSE = {
+  clock: { tip: "the clock ate you. any node heals: keep moving.", warn: 'keep moving! any node heals.' },
+  lost: { tip: "too deep on a wrong path. follow the codex order.", warn: "we're lost. the codex order!" },
+  steal: { tip: "the M0LD ate your INT. scrape it off your INT and credits before it gets there.", warn: "it's eating your INT! scrape it!" },
+  burn: { tip: "you touched it in the burn. when it all goes red: hands off.", warn: 'red means hands off!' },
+  corp: { tip: "that was a corp node. only the blue eye node (o) opens him up.", warn: 'only the blue (o)!' },
+  away: { tip: "he got away. hit each eye while it's blue.", warn: '' },
+};
+function g0dpHurt(p, n, why, cause) {
   const run = st.run;
   run.integrity = Math.max(0, run.integrity - n);
   Sound.trap(); flash(C.danger, 0.25, 0.5); shake(7, 0.35);
   if (why) g0dpMsg('> ' + why, C.danger);
+  const c = G0DP_CAUSE[cause];
+  if (run.integrity === 1 && c && c.warn && !p.card) boySay(c.warn);   // one left: b0y warns you (round 16)
   if (run.integrity <= 0 && !p.card) {
     g0dSay('you are just meat.');
-    const stage = p.stage;
-    g0dpCard(p, [stage === 'stand' ? 'HE GOT AWAY' : 'FLATLINED', '', stage === 'maze' ? 'the maze starts over.' : stage === 'fight' ? 'the fight starts over.' : 'the final stand starts over.', '', 'tap to go again'], () => {
+    const stage = p.stage, tip = c ? lootWrap(c.tip, 34) : [];
+    g0dpCard(p, [stage === 'stand' ? 'HE GOT AWAY' : 'FLATLINED', '', ...tip, '', stage === 'maze' ? 'the maze starts over.' : stage === 'fight' ? 'the fight starts over.' : 'the final stand starts over.', '', 'tap to go again'], () => {
       st.run.credits = p.startCr;
       g0dpStart(stage);
     }, C.danger);
@@ -124,7 +135,11 @@ function g0dpBoyTick1(p, now, dt, targets) {
   if (!G0DP.boy || !b) return;
   b.single = true;
   const c = b.curs[0], others = targets.others;
-  if (targets.done) { b.phase = 'rest'; b.until = now + 1500; c.tx = 2; c.ty = 0; }   // you found it: he goes back to rest (round 9)
+  if (targets.warn) {   // the mold is on your INT / CR: he goes up there and points at it (round 16)
+    if (b.phase !== 'warn') { b.phase = 'warn'; boySay("it's eating your INT! scrape it!"); }
+    c.tx = targets.warn.x; c.ty = targets.warn.y; b.until = now + 800;
+  }
+  else if (targets.done) { b.phase = 'rest'; b.until = now + 1500; c.tx = 2; c.ty = 0; }   // you found it: he goes back to rest (round 9)
   else if (now > b.until) {
     const next = { rest: 'look1', look1: 'look2', look2: 'found', found: 'rest' }[b.phase] || 'look1';
     b.phase = next;
@@ -143,7 +158,7 @@ function g0dpBoyDraw(p, put, bg, now) {
     if (b.single && i > 0) return;
     const maze = p.stage === 'maze', bob = maze && i < 2 && Math.abs(c.x - c.tx) < 0.5 && Math.floor((now + i * 170) / 260) % 2 ? 1 : 0;   // the maze: they bob on a node's corner
     const x = Math.round(c.x), y = BOARD_Y + Math.round(c.y) - bob;
-    if (y < BOARD_Y || y >= BOARD_Y + L.gh) return;
+    if (y < BOARD_Y || y >= BOARD_Y + L.gh) return;   // (up in the header: g0dpOverlay draws him, over the spill)
     bg(x, y, 1, G0DP_BLUE, b.phase === 'hold' && now > b.until - 900 && !(maze && i === 2) ? 0.35 : 1);
     put(x, y, 'v', C.bg, 'fx', true);
     if (i === 0 && !maze) put(x + 1, y, 'b0y', G0DP_BLUE, 'fx');
@@ -188,7 +203,7 @@ function g0dpMazeTick(p, now, dt) {
   for (const n of m.nodes) if (!n.on && now >= n.showAt) { n.on = true; Sound.nodeOn(); }
   if (m.nodes.some(n => now < n.showAt)) return;   // the clock waits for the nodes
   m.left -= dt;
-  if (m.left <= 0) { m.left = G0DP.mazeTimer; g0dpHurt(p, 1, 'the clock ran out. -1 INT.'); }
+  if (m.left <= 0) { m.left = G0DP.mazeTimer; g0dpHurt(p, 1, 'the clock ran out. -1 INT.', 'clock'); }
   const r = m.nodes.find(n => n.right);
   const spot = n => ({ x: n.x + 6, y: n.y });   // the node's top right corner, off the glyph (round 3)
   g0dpBoyTick(p, now, dt, { right: r ? spot(r) : null, others: m.nodes.filter(n => !n.right).map(spot) });
@@ -202,7 +217,7 @@ function g0dpMazeTap(p, x, y) {
   g0dpHeal(1);   // every node is a perfect
   Sound.safe(); flash(C.accent, 0.08, 0.2);
   if (m.lost >= G0DP.mazeLost) {   // too deep: back to the start
-    g0dpHurt(p, 1, 'dead end. back to the start. -1 INT.');
+    g0dpHurt(p, 1, 'dead end. back to the start. -1 INT.', 'lost');
     if (p.card) return;
     Object.assign(m, { depth: 1, path: 0, lost: 0, label: '1A' });
     flash(C.danger, 0.35, 0.8); shake(10, 0.5);
@@ -358,7 +373,7 @@ function g0dpFightTick(p, now, dt) {
       g0dpMsg(`> the M0LD took ${cr}cr. it's in there somewhere.`, C.money); Sound.trash();
     } else {
       f.nodes.push(Object.assign(g0dpNode(f, 'int', '[#]'), { amount: 1 }));
-      g0dpHurt(p, 1, 'the M0LD took 1 INT. it wants more.');
+      g0dpHurt(p, 1, 'the M0LD took 1 INT. it wants more.', 'steal');
     }
   }
   // G0D talks
@@ -372,7 +387,8 @@ function g0dpFightTick(p, now, dt) {
   const eyeN = f.nodes.find(n => n.kind === 'eye');
   const spot = n => ({ x: n.x + 4, y: n.y - 1 });   // the node's top right, never on its letters (round 7)
   g0dpBoyTick1(p, now, dt, { right: eyeN ? spot(eyeN) : null, others: f.nodes.filter(n => n.kind === 'corp').map(spot),
-    done: !!(f.eye || f.opening || (eyeN && !eyeN.gone && g0dpShows(f, eyeN))) });   // uncovered (or the eye is open): nothing left to show
+    done: !!(f.eye || f.opening || (eyeN && !eyeN.gone && g0dpShows(f, eyeN))),
+    warn: f.press > 0.45 ? g0dpWorstSpill(f) : null });   // uncovered (or the eye is open): nothing left to show
 }
 // Keep things apart: a pushed off b's spot if they're closer than w across / h down (cells), a little each frame.
 function g0dpPush(a, bx, by, w, h, dt, f) {
@@ -460,6 +476,12 @@ function g0dpSpillSmash(p, x, y) {
   if (bits.length && !reduced()) explode(bits, pxX(x), pxY(y) - L.chh * 0.5, { power: 0.45, grav: 1.4, life: [0.3, 0.7] });
   return true;
 }
+// Where the spill is thickest on INT / CR (board cells: a negative y is up in the header)
+function g0dpWorstSpill(f) {
+  let best = null, bv = 0;
+  for (let y = 2; y <= 3; y++) for (let x = f.W - 10; x < f.W; x++) { const v = f.sp[y * f.W + x]; if (v > bv) { bv = v; best = { x: x - 1, y: y - 1 - BOARD_Y }; } }
+  return best || { x: f.W - 6, y: 1 - BOARD_Y };
+}
 function g0dpEyeOpen(p, x, y, now) {
   const f = p.fight;
   f.eye = { x: clamp(x, 6, f.W - 7), y: clamp(y, 3, f.H - 3), until: now + G0DP.eyeOpen * 1000, hits: 0, at: now };
@@ -491,7 +513,7 @@ function g0dpFightTap(p, x, y, now) {
     return;
   }
   // the burn: hands off
-  if (f.hands && f.hands.burning) return g0dpHurt(p, 1, 'HANDS OFF. -1 INT.');
+  if (f.hands && f.hands.burning) return g0dpHurt(p, 1, 'HANDS OFF. -1 INT.', 'burn');
   // a node that shows
   const n = f.nodes.find(o => !o.gone && g0dpShows(f, o) && x >= Math.round(o.x) - 1 && x <= Math.round(o.x) + 3 && y === Math.round(o.y));
   if (n) {
@@ -508,7 +530,7 @@ function g0dpFightTap(p, x, y, now) {
       setTimeout(() => { if (st.g0dp !== p || p.fight !== f) return; f.opening = false; g0dpEyeOpen(p, at.x, at.y, performance.now()); }, 320);
       return;
     }
-    if (n.kind === 'corp') { n.pin = now + 1200; return g0dpHurt(p, 1, `wrong node: ${n.label}. -1 INT.`); }
+    if (n.kind === 'corp') { n.pin = now + 1200; return g0dpHurt(p, 1, `wrong node: ${n.label}. -1 INT.`, 'corp'); }
     if (n.kind === 'int') { g0dpHeal(n.amount); Sound.buy(); g0dpMsg(`> got it back: +${n.amount} INT.`, C.accent); }
     if (n.kind === 'cr') { run.credits += n.amount; Sound.buy(); g0dpMsg(`> got it back: +${n.amount}cr.`, C.money); }
     f.nodes.splice(f.nodes.indexOf(n), 1);
@@ -531,7 +553,7 @@ function g0dpFightTap(p, x, y, now) {
 // A tap on the mold over INT / CR: it scrapes the board's top right corner (where it climbs from), a wide swipe.
 function g0dpScrapeHud(p, x, now) {
   const f = p.fight;
-  if (f.hands && f.hands.burning) return g0dpHurt(p, 1, 'HANDS OFF. -1 INT.');
+  if (f.hands && f.hands.burning) return g0dpHurt(p, 1, 'HANDS OFF. -1 INT.', 'burn');
   const showing = f.press > 0.4, reach = Math.min(1, Math.max(0, (f.press - 0.4) / 0.3));   // is there mold on the readouts (g0dpOverlay draws it past 0.4)
   g0dpMold(f, x, 0, 1.8, -2.4, false); g0dpMold(f, x, 2, 1.4, -1.6, false);
   f.steal = Math.max(0, f.steal - 0.6);
@@ -742,7 +764,7 @@ function g0dpStandBoy(p, now, dt) {
 function g0dpStandTick(p, now, dt) {
   const s = p.stand;
   s.left -= dt;
-  if (s.left <= 0 && !p.card) { st.run.integrity = 0; return g0dpHurt(p, 0, 'he got away.'); }
+  if (s.left <= 0 && !p.card) { st.run.integrity = 0; return g0dpHurt(p, 0, 'he got away.', 'away'); }
   // the eyes drift (round 4) and keep apart; the mold streams off them, a trail that fades
   const W = L.wc, H = L.gh, live = s.eyes.filter(e => e.alive), fast = 1 + s.cur * 0.08;
   s.traces = s.traces || [];
@@ -843,7 +865,7 @@ function g0dpTap(cx, cy) {
   if (p.stage === 'fight' && !p.card && (y < 0 || y >= L.gh)) {
     const ay = y + BOARD_Y;
     if (!(g0dpAt(p.fight, x, ay) >= 0.6 || g0dpAt(p.fight, x - 1, ay) >= 0.6 || g0dpAt(p.fight, x + 1, ay) >= 0.6)) return false;
-    if (p.fight.hands && p.fight.hands.burning) { g0dpHurt(p, 1, 'HANDS OFF. -1 INT.'); return true; }
+    if (p.fight.hands && p.fight.hands.burning) { g0dpHurt(p, 1, 'HANDS OFF. -1 INT.', 'burn'); return true; }
     return g0dpSpillSmash(p, x, ay);
   }
   if (y < 0 || y >= L.gh) return false;
@@ -887,5 +909,14 @@ function g0dpOverlay(cells, now, bgs) {
     }
   }
   if (p.stage === 'stand') { const s = p.stand; out = g0dpBar(out, bgs, { f: (s.eyes.length - s.cur) / s.eyes.length }); }
+  if (p.stage === 'fight' && G0DP.boy && p.boy) {   // b0y up in the header (pointing at the mold on your INT)
+    const c = p.boy.curs[0], x = Math.round(c.x), y = BOARD_Y + Math.round(c.y);
+    if (y >= 1 && y < BOARD_Y) {
+      out = out.filter(o => !(Math.round(o.cy) === y && o.cx >= x - 3 && o.cx < x + 4));
+      if (bgs) bgs.push({ cx: x, cy: y, w: 1, col: G0DP_BLUE, alpha: 1 });
+      out.push({ ch: 'v', cx: x, cy: y, col: C.bg, own: 'fx', bold: true });
+      const tx = x + 4 > L.wc ? x - 3 : x + 1; [...'b0y'].forEach((ch, k) => out.push({ ch, cx: tx + k, cy: y, col: G0DP_BLUE, own: 'fx', bold: false }));   // (his tag on the left at the edge)
+    }
+  }
   return out;
 }
