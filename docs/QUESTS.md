@@ -335,6 +335,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 - Round 14 (the user): b0y's cursor stays on top of the mold. **G0D's bar is on the row over the terminal, BLOCKS, all the way
   across** (the header is the run's again). The mold never covers the bar or the terminal: the header's low row grows off the
   board's top edge, as if it seeps up behind them.
+- Round 15 (the user): the bar is one row, G0D in the middle: health left a solid red block (the text inverted in the
+  background color), health gone a dim line (the text red); a hit flashes the chunk it took (g0dpBar).
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 

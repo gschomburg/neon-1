@@ -854,13 +854,27 @@ function g0dpTap(cx, cy) {
   return true;
 }
 // Over the finished screen: G0D's bar in the header (the fight, the final stand), the mold reaching for your INT.
+// G0D's bar (round 15): one row, all the way across, G0D in the middle. Health left is a solid block (the text in the
+// background color on it), health gone is a dim line (the text in red). A hit flashes the chunk it took.
+function g0dpBar(cells, bgs, hp) {
+  const y = G0DP_BAR_ROW, w = L.wc, n = Math.max(0, Math.min(w, Math.round(hp.f * w))), was = hp.hit ? Math.round(hp.was * w) : n;
+  const label = ' G0D ', at = Math.floor((w - label.length) / 2);
+  const out = cells.filter(c => Math.round(c.cy) !== y);
+  for (let i = 0; i < w; i++) {
+    const full = i < n, lost = i >= n && i < was, tch = i >= at && i < at + label.length ? label[i - at] : null;
+    if ((full || lost) && bgs) bgs.push({ cx: i, cy: y, w: 1, col: lost ? C.bright : C.danger, alpha: 1 });
+    const ch = tch && tch !== ' ' ? tch : full || lost ? null : '─';
+    if (ch) out.push({ ch, cx: i, cy: y, col: full || lost ? C.bg : tch ? C.danger : C.dangerDim, own: 'hud', bold: !!tch });
+  }
+  return out;
+}
 function g0dpOverlay(cells, now, bgs) {
   const p = st.g0dp;
   if (!p || p.card) return cells;
   let out = cells;
   if (p.stage === 'fight') {
     const f = p.fight;
-    out = g0dBar(out, G0DP_BAR_ROW, { f: f.hp / G0DP.hp, was: (f.hp + 1) / G0DP.hp, hit: now - f.hitAt < 260 }, L.wc, G0D_HP.blocks);   // (round 14: the row above the terminal, BLOCKS)
+    out = g0dpBar(out, bgs, { f: f.hp / G0DP.hp, was: (f.hp + 1) / G0DP.hp, hit: now - f.hitAt < 260 });
     if (f.sp) {   // the spill (round 12)
       const burn = f.hands && f.hands.burning, cover = new Set(), add = [];
       for (const y of g0dpSpillRows()) for (let x = 0; x < f.W; x++) {
@@ -872,6 +886,6 @@ function g0dpOverlay(cells, now, bgs) {
       out = out.filter(c => !cover.has(Math.round(c.cx) + ',' + Math.round(c.cy))).concat(add);
     }
   }
-  if (p.stage === 'stand') { const s = p.stand; out = g0dBar(out, G0DP_BAR_ROW, { f: (s.eyes.length - s.cur) / s.eyes.length }, L.wc, G0D_HP.blocks); }
+  if (p.stage === 'stand') { const s = p.stand; out = g0dpBar(out, bgs, { f: (s.eyes.length - s.cur) / s.eyes.length }); }
   return out;
 }
