@@ -289,7 +289,11 @@ function overLines() {
   extras.push({ text: '' });
   // the bottom: the leaderboard block (ranks, initials, UPLOAD) until you upload, then the buttons
   const lb = lbOverLines(), lbOpen = lb && !(st.lbPost && st.lbPost.uploaded);
-  const bottom = [...(lb || []), ...(lbOpen ? [] : [
+  const bottom = [...(lb || []), ...(lbOpen ? [] : r.heaven && !r.win ? [   // died in H3AV3N: retrying heaven is the big one
+    { box: true, text: 'R E T R Y   H 3 A V 3 N', id: 'retryh', onTap: retryHeaven, minW: 28 },
+    { text: '[ NEW RUN ]', id: 'new', onTap: newRun },
+    { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
+  ] : [
     { box: true, text: 'N E W   R U N', id: 'new', onTap: newRun, minW: 24 },
     { text: '[ RETRY SEED ]', id: 'retry', onTap: retry },
     { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },

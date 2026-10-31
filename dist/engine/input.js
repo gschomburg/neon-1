@@ -350,7 +350,7 @@ document.addEventListener('keydown', e => {
       if ((k === 'enter' || k === ' ') && st.mapSel) return enterNode(st.run.map[st.mapSel]);
       return;
     }
-    if (st.mode === 'over' && k === 'r') return retry();
+    if (st.mode === 'over' && k === 'r') return st.result && st.result.heaven && !st.result.win ? retryHeaven() : retry();   // (died in H3AV3N: retry heaven)
   }
   // Everything else (title, panels, menus): a cursor over the buttons.
   if (arrow) return moveFocus(k === 'arrowup' || k === 'arrowleft' ? -1 : 1);

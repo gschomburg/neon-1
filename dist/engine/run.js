@@ -37,6 +37,7 @@ async function startRun(seed, practice, opts = {}) {
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
+  if (opts.heaven) heavenSetup();   // H3AV3N (engine/heaven.js): its sector map in place of the first sector
   if (legacyLv('lucky') && !opts.tutorial) {   // LUCKY START (THE BOARD): a random common gear
     const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
     if (pool.length) st.run.items.push({ key: pickR(pool, rngFor(seed, 'lucky')), tier: 0, n: 1 });
@@ -1644,7 +1645,7 @@ async function endRun(win) {
   const diedAt = !win && c ? `${c.def.name}${c.hasBoss ? (st.lv && st.lv.boss ? ' BOSS' : ` ${c.idx + 1}/${c.counts.length - 1}`) : ''}${run.sector ? `, sector ${run.sector + 1}` : ''}` : '';
   const breached = run.visited.map(id => run.map[id])
     .filter(n => (n.type === 'corp' || n.type === 'final') && (win || n.id !== run.at)).map(n => n.corp);
-  st.result = { win, depth: run.depth, corps: run.corps, earned: run.earned, newBest, practice: run.practice, seed: run.seed,
+  st.result = { win, depth: run.depth, corps: run.corps, earned: run.earned, newBest, practice: run.practice, seed: run.seed, heaven: !!run.heaven,
     rep, repWorth, sectors: run.sectorsCleared || 0,
     diedAt, breached, mods: run.mods.slice(), modTier: Object.assign({}, run.modTier), items: run.items.map(x => Object.assign({}, x)),
     map: run.map, visited: run.visited.slice(), at: run.at };
@@ -1882,4 +1883,6 @@ function openLocker() {
 
 const jackIn = () => startRun(st.seed, st.practice);
 const retry = () => startRun(st.result ? st.result.seed : st.seed, true);
+// Died in H3AV3N (engine/heaven.js): the same seed, back at the bottom of heaven's map (the user, 2026-10-30).
+const retryHeaven = () => startRun(st.result ? st.result.seed : st.seed, true, { heaven: true });
 const newRun = () => startRun(newSeed(), false);
