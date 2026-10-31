@@ -427,11 +427,14 @@ function g0dpAt(f, x, y) {
 function g0dpSpillTick(f, dt) {
   const W = f.W, rows = g0dpSpillRows();
   f.sp = f.sp || new Float32Array(W * (L.hc + 2));
-  for (let k = 0; k < 70; k++) {
+  const now = performance.now();
+  if (now < (f.spillAt || 0)) return;   // a step every 100ms, like the board's creep (round 13: it ran every frame, ~15x too fast)
+  f.spillAt = now + 100;
+  for (let k = 0; k < 40; k++) {
     const y = rows[Math.floor(Math.random() * rows.length)], x = Math.floor(Math.random() * W), i = y * W + x;
     const nb = Math.max(g0dpAt(f, x, y - 1), g0dpAt(f, x, y + 1), g0dpAt(f, x - 1, y), g0dpAt(f, x + 1, y));
     const cap = g0dpSpillCap(x, y);
-    if (nb > 1.0 && f.sp[i] < cap) f.sp[i] = Math.min(cap, f.sp[i] + G0DP.creep * 0.5 * (y < BOARD_Y && x >= L.wc - 12 ? 2 : 1));
+    if (nb > 1.0 && f.sp[i] < cap) f.sp[i] = Math.min(cap, f.sp[i] + G0DP.creep * 0.5 * (y < BOARD_Y && x >= L.wc - 12 ? 1.6 : 1));
   }
 }
 // smash it: around (x, y), a screen cell. Returns true if there was mold there.
@@ -439,11 +442,11 @@ function g0dpSpillSmash(p, x, y) {
   const f = p.fight;
   if (!f.sp) return false;
   let hit = 0; const bits = [];
-  for (let yy = y - 1; yy <= y + 1; yy++) for (let xx = x - 3; xx <= x + 3; xx++) {
+  for (let yy = y - 2; yy <= y + 2; yy++) for (let xx = x - 4; xx <= x + 4; xx++) {
     if (yy >= BOARD_Y && yy < BOARD_Y + f.H) continue;
     const i = yy * f.W + xx; if (xx < 0 || xx >= f.W || yy < 0 || !(f.sp[i] >= 0.6)) continue;
-    const d = Math.hypot((xx - x) / 2.2, yy - y); if (d > 1.6) continue;
-    hit++; const was = f.sp[i]; f.sp[i] = Math.max(0, was - 2.4 * (1 - d / 2));
+    const d = Math.hypot((xx - x) / 2.2, yy - y); if (d > 2) continue;
+    hit++; const was = f.sp[i]; f.sp[i] = d < 1 ? 0 : Math.max(0, was - 3 * (1 - d / 2.4));   // the middle clears outright (round 13)
     if (Math.random() < 0.7) bits.push({ ch: g0dpMoldGlyph(was, xx, yy, performance.now()), x: pxX(xx), y: pxY(yy), col: was > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim });
   }
   if (!hit) return false;

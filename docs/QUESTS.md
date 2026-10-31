@@ -329,6 +329,9 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   it). Thick spill hides what's under it, thin is a speck over it. A tap on spill smashes it (before your gear gets the
   tap). **It steals when it has crawled onto INT / CR** (no more painted-on effect from a corner of the board). b0y's line
   at the bottom of the board (round 1) is gone: his lines hold the terminal ~2.5s and other lines wait their turn.
+- Round 13 (the user: the header mold is super hard to remove): a bug, its growth ran every frame (~15x too fast); now a
+  step every 100ms (left alone 20s: a third of the area over the board, INT not reached yet). A smash clears its middle outright
+  and reaches further.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
