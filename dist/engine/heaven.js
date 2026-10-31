@@ -63,8 +63,9 @@ HEAVEN.maze = {
   // it; he hides when he's resting. (G0DP.boy off: no b0y.)
   overlay(ctx, lv, now) {
     const c = st.corp;
-    if (!G0DP.boy || !c || !c.maze || !lv || st.busy && !lv.tiles.some(t => t.state === 'closed')) return;
-    c.boy = c.boy || g0dpBoyNew();
+    if (!G0DP.boy || !c || !c.maze || !lv) return;
+    if (st.busy || lv.tiles.some(t => t.state === 'safe')) { c.boy = null; return; }   // a node's been taken: he clears out (the next layer starts him fresh)
+    if (!c.boy || c.boyLv !== lv) { c.boy = g0dpBoyNew(); c.boy.until = now + 300; c.boyLv = lv; }
     const dt = Math.min(0.05, (now - (c.boyLast || now)) / 1000); c.boyLast = now;
     const corner = t => { const o = tileOrigin(t); return { x: o.tx + TILE_W - 1, y: o.ty }; };
     const open = lv.tiles.filter(t => t.state === 'closed'), real = lv.tiles[lv.safe];

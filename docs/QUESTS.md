@@ -390,7 +390,7 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   real rewards screen, frozen partway; tap-to-skip off by default; b0y in the real maze (cursors, his clue in the terminal). b0y
   in heaven's other corps: later. Maybe a heaven sector event card that says b0y is with you.
 - **H3AV3N feedback, round 2** (the user, meat notes 2026-10-30; to do):
-  - **b0y lags on the maze nodes:** his cursors get there late.
+  - ~~b0y lags on the maze nodes~~ (done: once a node is taken he clears out, and he starts fresh ~0.3s into the next layer).
   - **Getting through the maze should feel like a success:** probably a real rewards screen.
   - **G0D taking over the network, more dramatic:** before the mold closes in, the corp nodes break apart, shift, move and
     glitch to red or to G0D; bring in the red network traces and the normal network background (the circuit), then the

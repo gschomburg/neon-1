@@ -230,6 +230,7 @@ function g0dpMazeTap(p, x, y) {
   const n = m.nodes[i], letter = String.fromCharCode(65 + i);
   g0dpHeal(1);   // every node is a perfect
   Sound.safe(); flash(C.accent, 0.08, 0.2);
+  p.boy = g0dpBoyNew(); p.boy.until = performance.now() + 300;   // b0y clears out and starts fresh on the next layer
   if (m.lost >= G0DP.mazeLost) {   // too deep: back to the start
     g0dpHurt(p, 1, 'dead end. back to the start. -1 INT.', 'lost');
     if (p.card) return;
