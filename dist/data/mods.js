@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v13.100']);
+NEON_FILES.push(['data/mods.js', 'v13.101']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -368,6 +368,10 @@ const MODS = {
   ramdoubler:  { name: 'RAM DOUBLER',    short: 'RAM', kind: 'exotic', rarity: 'exotic', slot: 'slots', locked: true, icon: '#=#-', anim: 'exotic', price: 140,
     tip: 'no gear. twice the mod slots.', desc: 'get your memory chromed up: replace your gear slots with mods (12 mod slots). the gear you hold is sold for half. locked in.',
     codex: 'the memory doubler: your head gets chromed up for twice the mods. your gear slots are replaced with mods: 12 mod slots, the second six where your gear was. the gear you hold is sold for half its price, any gear you would find becomes credits instead, and the market stops selling gear. locked in for the run.' },
+  // BLEACH: CERBERUS's (the H3AV3N seed's sector 1 boss). quest: only CERBERUS gives it (not in the boss reward pools).
+  // Against the M0LD: in a M0LD corp the mold hides less; your scrapes break more of it (CERBERUS, the G0D fight).
+  bleach:        { name: 'BLEACH',         short: 'BLC', kind: 'corp', corp: 'cerberus', rarity: 'legendary', quest: true, icon: '%:. ', anim: 'wave',
+    tip: 'mold: thinner. scrapes: bigger.', desc: 'the M0LD hides less of the board, and every tap breaks more of it (G0D\'s too).' },
   // !G0D (the user, 2026-10-31): the exotic on G0D BREACHED's rewards (the fake win), never yours: hidden (no drops,
   // no markets, not in the codex) and it does nothing. Its badge: G0D and g0d, flickering red (engine/scene.js drawBadge).
   g0dmold:       { name: '%#&@;:%#&',      short: 'G0D', kind: 'exotic', rarity: 'exotic', hidden: true, icon: '!¡!:', anim: 'g0d', price: 0,

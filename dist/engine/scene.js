@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.100']);
+NEON_FILES.push(['engine/scene.js', 'v13.101']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -789,7 +789,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
   }
   if (boardDef && boardDef.draw) boardDef.draw(put, lv, now);
   if (lv.hks) buildHackers({ put, bg }, lv, now);
-  if (st.corp && st.corp.hasBoss && st.corp.def.overlay) st.corp.def.overlay({ put, bg }, lv, now);   // a corp's own drawing over its board (G0D MAZE: b0y)
+  if (st.corp && st.corp.hasBoss && st.corp.def.overlay) st.corp.def.overlay({ put, bg, cells }, lv, now);   // a corp's own drawing over its board (G0D MAZE: b0y)
   if (st.hkFx) buildHkFx({ put, bg }, now);   // a hacker going down (engine/hackers.js)   // hackers: cursors, faces, emote covers, DENIED, fire, tape (engine/hackers.js)
   // AFTERIMAGE: cyan corners where the last layer's real node was.
   if (has('afterimage') && lv.after && lv.after.col < lv.cols && lv.after.row < lv.rows) {

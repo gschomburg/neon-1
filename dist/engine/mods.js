@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v13.100']);
+NEON_FILES.push(['engine/mods.js', 'v13.101']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -83,7 +83,7 @@ const modFired = key => {
 };
 // For mods the screen shows on its own (drawn every frame): fire once per `holder` (the layer).
 const modFiredOnce = (key, holder) => { if (!holder || (holder.fired && holder.fired[key])) return; (holder.fired = holder.fired || {})[key] = true; modFired(key); };
-const modsOfKind = (...kinds) => Object.keys(MODS).filter(k => kinds.includes(MODS[k].kind) && !MODS[k].hidden);   // (hidden: !G0D, never found)
+const modsOfKind = (...kinds) => Object.keys(MODS).filter(k => kinds.includes(MODS[k].kind) && !MODS[k].hidden && !MODS[k].quest);   // (hidden: !G0D, never found; quest: BLEACH, only from CERBERUS)
 // Mods for markets, caches and the start pick: bossOnly mods (RELOAD) only come from a corp boss.
 const modsFound = (...kinds) => modsOfKind(...kinds).filter(k => !MODS[k].bossOnly);
 function modWhere(m) {

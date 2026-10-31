@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v13.100']);
+NEON_FILES.push(['engine/heaven.js', 'v13.101']);
 
 const HEAVEN = {};
 
@@ -52,7 +52,8 @@ function questMold(run) {
   const r = rngFor(run.seed, 'mold', 0);
   const pool = shuffle(Object.values(run.map).filter(n => (n.sector || 0) === 0 && n.type === 'corp').sort((a, b) => a.step - b.step || a.lane - b.lane), r);
   for (const n of pool.slice(0, Math.max(1, Math.round(SECTOR_EVENTS.mold.share * pool.length)))) n.mod = 'mold';
-  if (run.map[bossIdOf(0)]) run.map[bossIdOf(0)].ev = 'mold';
+  const boss = run.map[bossIdOf(0)];
+  if (boss) { boss.ev = 'mold'; boss.corp = 'cerberus'; }   // (its boss: CERBERUS)
 }
 const questMarket = node => !!(st.run && st.run.quest === 'h3av3n' && (node.sector || 0) === 0);
 // The editor's jump (TESTING / g0d tab): a practice run whose first sector is heaven's sector 2.
@@ -821,12 +822,12 @@ function moldOverlay(cells, now, bgs) {
   if (!lvl) { st.moldFx = null; return cells; }
   let m = st.moldFx;
   if (!m || m.lv !== st.lv) m = st.moldFx = { lv: st.lv, patches: [], nextAt: now + 300, wipe: null, used: false };
-  const W = L.wc, y0 = BOARD_Y + 1, y1 = BOARD_Y + L.gh, hs = G0D_LOOKS.hs, cover = new Map(), bits = [];
+  const W = L.wc, y0 = BOARD_Y, y1 = BOARD_Y + L.gh, hs = G0D_LOOKS.hs, cover = new Map(), bits = [];
   // the light patches: spawn, grow, sit, crumble
   const live = m.patches.filter(p => now - p.born < MOLD_FX.grow + p.sit + MOLD_FX.crumble);
   m.patches = live;
   if (live.length < MOLD_FX.patches + (lvl === 'heavy' ? 1 : 0) && now >= m.nextAt) {
-    m.patches.push({ x: 4 + Math.random() * (W - 8), y: y0 + 1 + Math.random() * (L.gh - 4), r: MOLD_FX.r[0] + Math.random() * (MOLD_FX.r[1] - MOLD_FX.r[0]), born: now, sit: rand(MOLD_FX.sit[0], MOLD_FX.sit[1]), seed: Math.random() * 100, fell: new Set() });
+    m.patches.push({ x: 4 + Math.random() * (W - 8), y: y0 + 1 + Math.random() * (L.gh - 4), r: (MOLD_FX.r[0] + Math.random() * (MOLD_FX.r[1] - MOLD_FX.r[0])) * (has('bleach') ? 0.65 : 1) /* (BLEACH: smaller) */, born: now, sit: rand(MOLD_FX.sit[0], MOLD_FX.sit[1]), seed: Math.random() * 100, fell: new Set() });
     m.nextAt = now + rand(MOLD_FX.gap[0], MOLD_FX.gap[1]);
   }
   for (const p of m.patches) {
@@ -847,7 +848,7 @@ function moldOverlay(cells, now, bgs) {
   // the deep mold: nearly all of it, the holes drifting
   if (lvl === 'heavy') for (let y = y0; y < y1; y++) for (let x = 0; x < W; x++) {
     const v = g0dpNoise3(x * 0.16, y * 0.34, now * 0.00025);
-    if (v > MOLD_FX.heavy) cover.set(x + ',' + y, Math.max(cover.get(x + ',' + y) || 0, 1.2 + 3 * (v - MOLD_FX.heavy) / (1 - MOLD_FX.heavy)));
+    if (v > MOLD_FX.heavy + (has('bleach') ? 0.12 : 0)) cover.set(x + ',' + y, Math.max(cover.get(x + ',' + y) || 0, 1.2 + 3 * (v - MOLD_FX.heavy) / (1 - MOLD_FX.heavy)));
   }
   // b0y holds it back: a hole from the middle out, then it closes again
   if (m.wipe) {
@@ -881,7 +882,7 @@ function buildBoyBtn(ctx, y) {
   if (st.hoverBtn === 'b0y' && !out) bg(x, y, 3, G0DP_BLUE, 0.2);
   addHit(x, y, 3, 1, { kind: 'btn', id: 'b0y', onTap: boyCall, noFocus: true });
 }
-const BOY_TIPS = ['the mold comes and goes. wait it out.', "i'm here. tap [b] when you need me.", 'keep your INT up. patches.', "the corps up here are his. careful."];
+const BOY_TIPS = ['the mold comes and goes.', 'tap [b] when you need me.', 'keep your INT up. patches.', 'the corps up here are his.'];   // (the terminal fits ~30 after b0y:)
 function boyCall() {
   const now = performance.now(), c = st.corp, p = st.g0dp;
   Sound.ping(1175);
@@ -893,6 +894,7 @@ function boyCall() {
     c.boyCall = now + 7000; c.boy = null;
     return setMsg(MAZE_TIP(c), G0DP_BLUE);
   }
+  if (c && c.def && c.def.key === 'cerberus') return setMsg('> b0y: ' + pickR(CERB_TIPS, Math.random), G0DP_BLUE);   // CERBERUS: he tells you what to do
   const lvl = moldLevel();
   if (lvl && st.moldFx) {   // a M0LD corp: he holds it back, once a layer
     if (st.moldFx.used) { Sound.deny(); return setMsg("> b0y: can't. not again so soon.", G0DP_BLUE); }
@@ -906,6 +908,121 @@ const MAZE_TIP = c => {
   const words = ['prompt', 'diamond', 'the cross', 'storage unit', 'uplink', 'the watcher'];
   return c.maze && c.maze.lost ? '> b0y: hm. not sure about this.' : '> b0y: ' + words[(c.maze && c.maze.path) || 0] + ' next.';
 };
+
+// ---------------- CERBERUS (the H3AV3N seed's sector 1 boss; docs/QUESTS.md, settled 2026-10-30/31) ----------------
+// A corp d0g built. Three heads: three eyes, sitting on the nodes (they aren't nodes). Each goes red, then blue, then
+// hops to another node. Tap a blue eye: it looks at the real node, and the node blinks a second. Tap a red one: it
+// bites (-1 INT). The eyes show through everything. The board is under the M0LD, and here you can break it: a tap on a
+// node under mold scrapes it (the way you'll dig in the G0D fight); a node you can see is a pick. The mold grows back.
+// Its boss layer: thicker mold, faster eyes. b0y doesn't help much here: he tells you what to do ([b]: a tip).
+// Its mod: BLEACH (data/mods.js). Its music: ROOT ACCESS (the user's notes: "cerberus maybe").
+const CERB = { eyes: 3, red: 1.9, blue: 1.0, bossRed: 1.35, bossBlue: 0.75, mold: [1.7, 1.6], bossMold: [2.3, 1.6], regrow: 0.14, scrape: 2.1, look: 1100 };
+const CERB_TIPS = ['blue eye: tap it. it looks.', 'red eye: hands off. it bites.', 'the mold breaks here. dig.', 'i built this. wait for blue.'];   // (the terminal fits ~30 after b0y:)
+HEAVEN.cerberus = {
+  key: 'cerberus', name: 'CERBERUS', code: 'CB', level: 5,
+  intel: '"three heads. none of them sleep."',
+  tell: null, pay: 1.6, noOdds: true,
+  bossDesc: 'boss: thicker mold, faster eyes.',
+  rules: () => 'blue eye: tap it. red: hands off. dig through the mold.',
+  mods: ['bleach'],
+  onEnter() { setTimeout(() => { if (st.corp && st.corp.def.key === 'cerberus') setMsg("> b0y: CERBERUS. wait for blue.", G0DP_BLUE); }, 1400); },
+  layerMsg: (lv, c) => ({ text: lv.cb && lv.cb.boss ? '> faster eyes. thicker mold.' : `> ${lv.n} nodes. three eyes. one is real.`, col: C.text }),
+  dress(lv, k) {
+    lv.cb = { boss: k.boss, seed: k.r() * 1000, eyes: [], m: null, look: null, said: false };
+  },
+  hint(lv) { return lv.cb ? { text: 'blue: tap it. red: hands off. dig.', col: C.mid } : null; },
+  // a tap: an eye (blue: it looks; red: it bites), the mold (it breaks), or a pick
+  intercept(i) {
+    const lv = st.lv, cb = lv && lv.cb, t = lv && lv.tiles[i], now = performance.now();
+    if (!cb || !t || !cb.m || lv.shownAt == null) return false;
+    const e = cb.eyes.find(o => o.tile === t);
+    if (e) {
+      if (cerbBlue(e, now)) {   // it looks at the real node
+        cb.look = { from: t, at: now }; e.hop = true;
+        Sound.ping(1568); flash(G0DP_BLUE, 0.12, 0.25);
+        setMsg('> it looks. there.', G0DP_BLUE);
+      } else {   // it bites
+        hurt(1); Sound.trap(); flash(G0DP_RED, 0.25, 0.5); shake(7, 0.35);
+        setMsg('> red. it bites. -1 INT.', C.danger);
+        if (st.run.integrity <= 0) die();
+      }
+      return true;
+    }
+    const { tx, ty } = tileOrigin(t), W = L.wc;
+    let th = 0; for (let y = ty + 1; y <= ty + 3; y++) for (let x = tx + 1; x <= tx + 5; x++) th = Math.max(th, cb.m[y * W + x] || 0);
+    if (th >= 0.6) {   // under the mold: it breaks
+      const bl = has('bleach') ? 1.4 : 1, cx = tx + 3, cy = ty + 2, R = 1.8 * bl, bits = [];
+      for (let y = Math.floor(cy - R - 1); y <= Math.ceil(cy + R + 1); y++) for (let x = Math.floor(cx - R * 2.2); x <= Math.ceil(cx + R * 2.2); x++) {
+        if (x < 0 || x >= W || y < BOARD_Y || y >= BOARD_Y + L.gh) continue;
+        const d = Math.hypot((x - cx) / 2.2, y - cy) / R; if (d >= 1) continue;
+        const j = y * W + x, was = cb.m[j]; if (was < 0.6) continue;
+        cb.m[j] = Math.max(0, was - CERB.scrape * bl * (1 - d * 0.5));
+        if (bits.length < 18 && Math.random() < 0.6 && !reduced()) bits.push({ ch: g0dpMoldGlyph(was, x, y, now), x: pxX(x), y: pxY(y), col: g0dpMoldCol(was, 0) });
+      }
+      if (bits.length) explode(bits, pxX(cx), pxY(cy) - L.chh * 0.5, { power: 0.45, grav: 1.4, life: [0.3, 0.7] });
+      Sound.moldBreak(th);
+      if (!cb.said) { cb.said = true; setMsg('> the mold breaks here. dig it out.', G0D_COLS.mold); }
+      return true;
+    }
+    return false;   // you can see it: a pick
+  },
+  overlay(ctx, lv, now) {
+    const cb = lv.cb;
+    if (!cb || lv.shownAt == null) return;
+    const W = L.wc, Y = BOARD_Y, H = L.gh, hs = G0D_LOOKS.hs, dt = Math.min(0.05, (now - (cb.last || now)) / 1000); cb.last = now;
+    const base = cb.boss ? CERB.bossMold : CERB.mold;
+    if (!cb.m) {   // the mold over the whole board
+      cb.m = new Float32Array(W * L.hc); cb.cap = new Float32Array(W * L.hc);
+      for (let y = Y; y < Y + H; y++) for (let x = 0; x < W; x++) { const v = base[0] + base[1] * g0dpNoise3(x * 0.3, y * 0.5, cb.seed); cb.m[y * W + x] = cb.cap[y * W + x] = v; }
+    }
+    // it grows back (slowly; not where an eye just looked)
+    const lookOn = cb.look && now - cb.look.at < CERB.look;
+    if (!st.busy) for (let i = 0; i < cb.m.length; i++) if (cb.m[i] < cb.cap[i]) cb.m[i] = Math.min(cb.cap[i], cb.m[i] + CERB.regrow * dt * (cb.m[i] < 0.6 ? 0.35 : 1));
+    // the eyes: on closed nodes, red then blue, then they hop
+    const closed = lv.tiles.filter(t => t.state === 'closed' && !t.hidden), red = cb.boss ? CERB.bossRed : CERB.red, blue = cb.boss ? CERB.bossBlue : CERB.blue;
+    if (!cb.eyes.length && closed.length) for (let k = 0; k < Math.min(CERB.eyes, closed.length); k++) cb.eyes.push({ tile: null, at: now, wait: now + k * 520, red, blue, k });
+    for (const e of cb.eyes) {
+      if (e.wait) { if (now < e.wait) continue; e.wait = 0; }
+      const cyc = (red + blue) * 1000;
+      if (!e.tile || e.tile.state !== 'closed' || e.hop || now - e.at > cyc) {   // a new spot (not where another eye is)
+        const free = closed.filter(t => !cb.eyes.some(o => o !== e && o.tile === t));
+        e.tile = free.length ? pickR(free, Math.random) : null; e.at = now + (e.hop ? 250 : 0); e.hop = false;
+      }
+    }
+    // draw: the mold (it hides the nodes), the look, the eyes over everything
+    const covered = new Set();
+    for (let y = Y; y < Y + H; y++) for (let x = 0; x < W; x++) if (cb.m[y * W + x] >= 0.6) covered.add(x + ',' + y);
+    const keep = ctx.cells.filter(c => !covered.has(Math.round(c.cx) + ',' + Math.round(c.cy)));
+    ctx.cells.length = 0; ctx.cells.push(...keep);
+    for (const k of covered) { const [x, y] = k.split(',').map(Number), th = cb.m[y * W + x]; ctx.put(x, y, g0dpMoldGlyph(th, x, y, now), g0dpMoldCol(th, cb.boss ? 1 : 0), 'fx'); }
+    const real = lv.tiles[lv.safe];
+    if (lookOn && real && real.state === 'closed') {   // it looks: a line of dots to the real node; the node's corners blink
+      const a = tileOrigin(cb.look.from), b = tileOrigin(real), k = (now - cb.look.at) / CERB.look;
+      const steps = Math.max(Math.abs(b.tx - a.tx), Math.abs(b.ty - a.ty) * 2);
+      for (let s = 1; s < steps; s++) { if (s / steps > k * 2.2) break; const x = Math.round(a.tx + 3 + (b.tx - a.tx) * s / steps), y = Math.round(a.ty + 2 + (b.ty - a.ty) * s / steps); if (s % 2 === 0) ctx.put(x, y, '·', G0DP_BLUE, 'fx', true); }
+      if (Math.floor(now / 120) % 2) for (const [dx, dy, ch] of [[0, 0, '+'], [6, 0, '+'], [0, 4, '+'], [6, 4, '+']]) { ctx.bg(b.tx + dx, b.ty + dy, 1, G0DP_BLUE, 1); ctx.put(b.tx + dx, b.ty + dy, ch, C.bg, 'fx', true); }
+    }
+    const gt = Math.floor(now / 70);
+    for (const e of cb.eyes) {
+      if (!e.tile || now < e.at) continue;
+      const { tx, ty } = tileOrigin(e.tile), isBlue = cerbBlue(e, now), col = isBlue ? G0DP_BLUE : G0DP_RED;
+      const age = now - e.at, opening = age < 160, dart = Math.round(Math.sin(now / 380 + e.k * 2.1) * 1.2);
+      const mid = opening ? '( - )' : '(' + ' '.repeat(1 + dart) + '@' + ' '.repeat(1 - dart) + ')';
+      [' .-. ', mid, " '-' "].forEach((l, j) => {
+        for (let q = 0; q < 5; q++) {
+          const x = tx + 1 + q, y = ty + 1 + j, ch = l[q];
+          const inv = isBlue ? hs(x * 3.3 + y * 7.1 + gt) > 0.15 : hs(x * 3.3 + y * 7.1 + gt) < 0.2;   // blue: solid (glitching); red: a glitch now and then
+          if (inv) { ctx.bg(x, y, 1, col, 1); ctx.put(x, y, ch === ' ' ? ' ' : ch, C.bg, 'fx', true); }
+          else { ctx.bg(x, y, 1, C.bg, 1); if (ch !== ' ') ctx.put(x, y, ch, col, 'fx', true); }
+        }
+      });
+    }
+  },
+  counts: t => Array.from({ length: 4 }, (_, i) => clamp(t + 2 + i, 4, 9)),
+};
+const cerbBlue = (e, now) => (now - e.at) / 1000 >= e.red;
+CORP_TELL.cerberus = 'three eyes sit on the nodes. each goes red, then blue, then moves. tap a blue eye and it looks at the real node, which blinks. tap a red one and it bites. the board is under the mold: tap a node under it to break it, then pick it.';
+MUSIC_FOR.cerberus = 'rootaccess';
 
 // ---------------- The music (2026-10-31) ----------------
 // What the G0D fights play (engine/boot.js asks; null: not here). The tracks: data/music.js, the G0D section; which one

@@ -5,7 +5,7 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v13.100']);
+NEON_FILES.push(['engine/g0dproto.js', 'v13.101']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -669,15 +669,16 @@ function g0dpFightTap(p, x, y, now) {
   }
   // the mold (round 1: a bigger scrape; the charge doesn't lock it, only the burn hurts)
   // it ripples (round 5): a tight break where you tap, then a wider, lighter ring a beat later
-  const before = g0dpChunks(f, x, y, 1.3);
-  g0dpMold(f, x, y, 1.3, -2.4, false);
+  const bl = has('bleach') ? 1.4 : 1;   // BLEACH (CERBERUS's mod): bigger scrapes
+  const before = g0dpChunks(f, x, y, 1.3 * bl);
+  g0dpMold(f, x, y, 1.3 * bl, -2.4 * bl, false);
   for (const o of f.nodes) if (Math.abs(o.x + 1 - x) < 4 && Math.abs(o.y - y) < 2) o.pin = now + 1200;   // scraped over a node: it holds still a moment
   { const th = before.reduce((a, c) => Math.max(a, c[2]), 0); if (th >= 0.6) Sound.moldBreak(th); else Sound.tick(); }   // (round 5: you hear it break)
   g0dpCrumble(f, before, x, y, 0.35);
   setTimeout(() => {
     if (st.g0dp !== p || p.fight !== f) return;
-    const ring = g0dpChunks(f, x, y, 2.7).filter(([cx, cy]) => Math.hypot((cx - x) / 2.2, cy - y) >= 1);
-    g0dpMold(f, x, y, 2.7, -1.3, false);
+    const ring = g0dpChunks(f, x, y, 2.7 * bl).filter(([cx, cy]) => Math.hypot((cx - x) / 2.2, cy - y) >= 1);
+    g0dpMold(f, x, y, 2.7 * bl, -1.3 * bl, false);
     g0dpCrumble(f, ring, x, y, 0.5);
   }, 90);
 }

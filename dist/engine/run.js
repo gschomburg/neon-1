@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.100']);
+NEON_FILES.push(['engine/run.js', 'v13.101']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -1849,13 +1849,13 @@ function openBrokenUplink() {
 // OMNI is every corp at once: a boss mod from any corp, a general mod, and one more.
 function openOmniReward(from) {
   const run = st.run;
-  const r = rngFor(run.seed, 'omni', from);
-  const corpPick = pickMods(r, modsOfKind('corp'), 1);
+  const r = rngFor(run.seed, 'omni', from), boss = run.map[bossIdOf(from)], cerb = boss && boss.corp === 'cerberus';
+  const corpPick = cerb ? pickMods(r, ['bleach'], 1) : pickMods(r, modsOfKind('corp'), 1);   // (CERBERUS: its BLEACH)
   const gen = pickMods(r, modsOfKind('gen'), 1, corpPick);
   const third = pickMods(r, modsOfKind('gen', 'minor'), 1, corpPick.concat(gen));
   const exotic = exoticOffer(run.seed, 'sector', from, 1);   // the sector boss always has one (if any are left)
   openChoice({
-    title: 'OMNI//CORE BREACHED', col: C.accent,
+    title: cerb ? 'CERBERUS BREACHED' : 'OMNI//CORE BREACHED', col: C.accent,
     head: [[`sector ${from + 1} spoils. take one.`, C.text]],
     options: shuffle(corpPick.concat(gen, third), r).concat(exotic),
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.sector)}cr ]`,

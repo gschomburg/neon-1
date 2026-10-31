@@ -114,7 +114,7 @@ The user's dump, 2026-10-28, put in order. More is coming.
   to get past heaven's first sector; G0D is fought at the end of sector 1, then again as sector 2's final boss, then one
   more set of layers after the success screen; maybe no tells, maybe beaten only by learning the seed.
 
-**H3AV3N as a seed you can play** (the user, 2026-10-31). Batch 1 built v13.99 (the seed, the QUEST run, sector 1 with its market, the broken uplink, heaven as sector 2, the placeholder ending); batch 2 built v13.100 (the M0LD events, light and deep; the [b] button); still to build: CERBERUS.
+**H3AV3N as a seed you can play** (the user, 2026-10-31). Batch 1 built v13.99 (the seed, the QUEST run, sector 1 with its market, the broken uplink, heaven as sector 2, the placeholder ending); batch 2 built v13.100 (the M0LD events, light and deep; the [b] button); CERBERUS built v13.101 (three eyes, the breakable mold, BLEACH). Next: play it and tune.
 - **Typing H3AV3N is all it takes** for now: it assumes you're where the quest would have you (b0y unlocked, on your
   side). The rest of the quest chain (steps 5-10) can wait; filling in those steps' unlocks is fine if it makes this easier.
 - **You start with nothing** (a fresh run). You replay the seed until you learn it: that's the point.
