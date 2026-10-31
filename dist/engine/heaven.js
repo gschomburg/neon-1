@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v13.90']);
+NEON_FILES.push(['engine/heaven.js', 'v13.91']);
 
 const HEAVEN = {};
 
@@ -162,7 +162,75 @@ function g0dWakeOverlay(cells, now, bgs) {
   if (e > G0D_WAKE.beat) { const tip = 'tap to skip'; out.push(...[...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: y0 + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
   return out;
 }
-// The fight is won (steps 4-5 will put the fake win, the final stand and the collapse in between): back to the map.
+// ---------------- Step 4: the fake win ----------------
+// (docs/QUESTS.md "G0D FIGHT: it dies (and doesn't)") G0D BREACHED comes up like the win screen and types in; about 20%
+// of the way it glitches and freezes; a little M0LD in the middle spreads fast over the whole screen; G0D's bar comes back
+// and fills; "you are just meat."; then the final stand. A tap skips it (after a beat); G0DP.skipCine skips it outright.
+const G0D_FAKE = { type: 22, freeze: 0.22, glitch: 900, spread: 2200, bar: 1400, stand: 6200, beat: 700 };   // chars a second; the freeze (part typed); ms...
+function heavenFakeWin(p) {
+  const run = st.run, stand = Object.assign(g0dpAgain(p), { startInt: run.integrity, startCr: run.credits });
+  st.g0dp = null;
+  if (G0DP.skipCine) return g0dpStart('stand', stand);
+  const r = run;
+  st.g0dFake = { t0: performance.now(), stand, said: {}, lines: [
+    ['G0D BREACHED', 'accent', true], ['', ''], ['G0D', 'bright', true], ['the network is yours.', 'text'], ['', ''],
+    [`INT ${r.integrity}/${r.maxInt}    CR ${r.credits}`, 'mid'], [`depth ${r.depth}    corps ${r.corps || 0}`, 'mid'], ['', ''], ['[ CONTINUE ]', 'mid']] };
+  Sound.bossWin();
+  showBoard('g0dfake');
+}
+const g0dFakeChars = f => f.lines.reduce((a, l) => a + l[0].length, 0);
+function g0dFakeTick(now) {
+  const f = st.g0dFake;
+  if (!f || st.mode !== 'g0dfake' || st.pause || st.dev) return;
+  const e = now - f.t0, total = g0dFakeChars(f), frozeAt = total * G0D_FAKE.freeze / G0D_FAKE.type * 1000;
+  const say = (k, at, fn) => { if (e >= at && !f.said[k]) { f.said[k] = true; fn(); } };
+  f.frozeAt = frozeAt;
+  say('freeze', frozeAt, () => { Sound.shatter(); shake(6, 0.3); });
+  say('mold', frozeAt + G0D_FAKE.glitch, () => { Sound.alarm(); });
+  say('bar', frozeAt + G0D_FAKE.glitch + G0D_FAKE.spread * 0.6, () => { Sound.bossBuild(); });
+  say('meat', frozeAt + G0D_FAKE.glitch + G0D_FAKE.spread + 300, () => g0dSay('you are just meat.'));
+  if (e >= frozeAt + G0D_FAKE.stand - 1200 + G0D_FAKE.glitch) g0dFakeEnd();
+}
+function g0dFakeSkip() { const f = st.g0dFake; if (f && performance.now() - f.t0 > G0D_FAKE.beat) g0dFakeEnd(); }
+function g0dFakeEnd() {
+  const f = st.g0dFake; if (!f) return;
+  st.g0dFake = null;
+  boySay("he's not done. he's running!");
+  g0dpStart('stand', f.stand);
+}
+// The win screen as it types in (frozen ~20% in, glitching), drawn on the board like a panel
+function buildG0dFake(ctx) {
+  const f = st.g0dFake, { put, now } = ctx;
+  if (!f) return;
+  const e = now - f.t0, frozen = f.frozeAt != null && e >= f.frozeAt;
+  let left = Math.floor(Math.min(e, f.frozeAt != null ? f.frozeAt : e) / 1000 * G0D_FAKE.type);
+  const y0 = BOARD_Y + Math.floor((L.gh - f.lines.length) / 2);
+  f.lines.forEach(([text, col, bold], k) => {
+    const show = text.slice(0, Math.max(0, left)); left -= text.length;
+    let out = show;
+    if (frozen) out = [...show].map(ch => ch !== ' ' && Math.random() < 0.12 ? noiseCh() : ch).join('');   // stuck, glitching
+    const x = Math.floor((L.wc - text.length) / 2) + (frozen && Math.random() < 0.05 ? (Math.random() < 0.5 ? -1 : 1) : 0);
+    if (out) put(x, y0 + k, out, C[col] || C.text, 'ui', !!bold);
+    if (!frozen && show.length < text.length && show.length > 0 && Math.floor(now / 120) % 2) put(x + show.length, y0 + k, '_', C.bright, 'ui');   // the cursor
+  });
+}
+// Over it: the M0LD spreading from the middle, G0D's bar filling back up, "tap to skip"
+function g0dFakeOverlay(cells, now, bgs) {
+  const f = st.g0dFake;
+  if (!f || f.frozeAt == null) return cells;
+  const e = now - f.t0 - f.frozeAt - G0D_FAKE.glitch, t = Math.floor(now / 110), W = L.wc, Hh = L.hc, cx = W / 2, cy = BOARD_Y + L.gh / 2;
+  let out = cells;
+  if (e > 0) {
+    const R = Math.min(1, e / G0D_FAKE.spread) * (Math.hypot(W / 4, Hh / 2) + 4);
+    out = g0dSpread(out, t, R, (x, y) => Math.hypot((x - cx) / 2, y - cy) + G0D_LOOKS.hs(x * 7.3 + y * 3.1) * 2.5, 0, Hh, W);
+  }
+  const eb = e - G0D_FAKE.spread * 0.6;
+  if (eb > 0) out = g0dpBar(out, bgs, { f: Math.min(1, eb / G0D_FAKE.bar) - (G0D_LOOKS.hs(Math.floor(now / 90)) > 0.85 ? 0.06 : 0) });
+  if (now - f.t0 > G0D_FAKE.beat) { const tip = 'tap to skip'; out = out.concat([...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
+  return out;
+}
+
+// The fight is won (step 5 will put the collapse in between): back to the map.
 function heavenWon(p) {
   st.g0dp = null;
   setMsg('> G0D is down. (steps 4-5: the collapse, the ending)', G0DP_BLUE);

@@ -3,7 +3,7 @@
 // rule over the mods opens the LOOT screen: everything you have, how many, what it's worth together; tap one for
 // what it is. It's a pause (the clock stops). Loot sells at a black market (SELL); it can't be used.
 'use strict';
-NEON_FILES.push(['engine/loot.js', 'v13.90']);
+NEON_FILES.push(['engine/loot.js', 'v13.91']);
 
 // A loot stack's label: CHROME, or CHROMEx12 (no brackets (the user, 2026-10-30); a plain count: the bag has no cap, so no hex).
 const lootLabel = s => s.n > 1 ? `${ITEMS[s.key].name}x${s.n}` : ITEMS[s.key].name;

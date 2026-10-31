@@ -5,7 +5,7 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v13.90']);
+NEON_FILES.push(['engine/g0dproto.js', 'v13.91']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -565,6 +565,7 @@ function g0dpFightTap(p, x, y, now) {
     Sound.hkBoom(); shake(10, 0.45); flash(G0DP_BLUE, 0.3, 0.5);
     g0dSay(pickR(f.hp / G0DP.hp < 0.4 ? G0DP_LINES.g0dLow : G0DP_LINES.hit, Math.random));
     if (f.hp <= 0) {
+      if (p.real) return heavenFakeWin(p);   // the run: the fake win (engine/heaven.js), then the final stand
       Sound.bossWin();
       return g0dpCard(p, ['G0D BREACHED', '', 'it\'s... no.', 'the M0LD is coming back.', '', 'G0D: "you are just meat."', '', 'tap: G0D FINAL STAND'], () => g0dpStart('stand', p.real ? Object.assign(g0dpAgain(p), { startInt: st.run.integrity, startCr: st.run.credits }) : null), G0DP_RED);
     }

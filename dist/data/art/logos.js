@@ -6,7 +6,7 @@
 // also the corp's intro art) or hacker (unlocked by beating that hacker), and the art: up to 24 x 7, shown in a
 // 24 x 7 box, centered.
 'use strict';
-NEON_FILES.push(['data/art/logos.js', 'v13.90']);
+NEON_FILES.push(['data/art/logos.js', 'v13.91']);
 
 const ART_LOGOS = [
   { id: 'skull', name: 'SKULL', mark: '{x}', kind: 'player', art: [
