@@ -371,6 +371,10 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   blows the mold right round the eye out (it crumbles), then the regrow rushes back in; **the bar's chunk breaks off and
   falls**. **The combo** (the second eye): a ring pulses round the eye. **A stage break**: the eye screams shut (red), red
   traces fire out of it across the board, the mold slams back in from the edges. (Next: the cinematics.)
+- Round 27 (the user: no hit counter under the eye; let the eye's colors say it): **the eye is its own hit counter.** Blue =
+  hits left, scattered over it (not like a bar): one eye node found, it opens about half blue; both, all blue. Every hit
+  blasts some blue off (it flies) and that part turns red; all red, it shuts. No time / hits line under it: in its last 2s
+  the eye flickers. (No bloodshot-by-health any more: the bar says that.) Sfx for all of this: later.
 - **b0y, what's wrong (the user, 2026-10-30; not yet, later):** (1) his resting spot: he's still on screen, so it's confusing
   whether he's pointing at something: **he should hide when he isn't actively searching.** (2) it isn't clear when he's doing
   something: elsewhere (the hackers on the board) the cursor switches to a v to point; do the same here, **and put some of his

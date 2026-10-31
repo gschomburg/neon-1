@@ -512,7 +512,7 @@ function g0dpWorstSpill(f) {
 }
 function g0dpEyeOpen(p, x, y, now) {
   const f = p.fight;
-  f.eye = { x: clamp(x, 8, f.W - 9), y: clamp(y, 4, f.H - 4), until: now + G0DP.eyeOpen * 1000, hits: 0, at: now, cap: G0DP.hitsPerEye, bonus: false };
+  f.eye = { x: clamp(x, 8, f.W - 9), y: clamp(y, 4, f.H - 4), until: now + G0DP.eyeOpen * 1000, hits: 0, at: now, cap: G0DP.hitsPerEye, bonus: false, seed: Math.random() * 100 };
   g0dpMold(f, f.eye.x, f.eye.y, 4, -10, false);
   Sound.bossBuild(); flash(G0DP_BLUE, 0.2, 0.4);
   g0dpMsg('> the eye is open. hit it!', G0DP_BLUE);
@@ -548,14 +548,15 @@ function g0dpFightTap(p, x, y, now) {
   const f = p.fight, run = st.run;
   // the open eye
   if (f.eye && Math.abs(x - f.eye.x) <= 6 && Math.abs(y - f.eye.y) <= 2) {
+    const blueWas = g0dpEyeBlue(f.eye);
     f.hp--; f.eye.hits++; f.hitAt = now;
+    g0dpEyeChip(f.eye, blueWas);   // its blue blasts off (round 27)
     // round 26: the mold right round the eye recoils (a ring blown out), then the regrow rushes back in
     { const ring = g0dpChunks(f, f.eye.x, f.eye.y, 6).filter(([cx, cy]) => Math.hypot((cx - f.eye.x) / 2.2, cy - f.eye.y) > 3.2);
       g0dpMold(f, f.eye.x, f.eye.y, 6, -1.6, false); g0dpCrumble(f, ring, f.eye.x, f.eye.y, 1.1); }
     g0dpRegrow(p, f.eye.x, f.eye.y, 1.2, false, 260);   // every hit: the mold surges back in (round 18)
     g0dpBarBreak(f.hp + 1, f.hp);
     Sound.hkBoom(); shake(10, 0.45); flash(G0DP_BLUE, 0.3, 0.5);
-    if (!reduced()) { const cells = []; for (let k = 0; k < 18; k++) cells.push({ ch: pickR(['@', 'o', '*', '%', '#'], Math.random), x: pxX(f.eye.x + rand(-3, 3)), y: pxY(BOARD_Y + f.eye.y), col: pickR([G0DP_BLUE, C.bright, G0D_COLS.mold], Math.random) }); explode(cells, pxX(f.eye.x), pxY(BOARD_Y + f.eye.y), { power: 0.9 }); }
     g0dSay(pickR(f.hp / G0DP.hp < 0.4 ? G0DP_LINES.g0dLow : G0DP_LINES.hit, Math.random));
     if (f.hp <= 0) {
       Sound.bossWin();
@@ -981,14 +982,16 @@ function g0dpEyeDraw(p, f, put, bg, take, now, Y) {
     : ['   .-----.   ', " .'       '. ", '(' + iris + ')', " '.       .' ", "   '-----'   "];
   if (age < 110) art = ['             ', '             ', '     (o)     ', '             ', '             '];   // it opens (round 5)
   else if (age < 230) art = ['             ', '    .---.    ', '   ( (@) )   ', "    '---'    ", '             '];
-  const blood = 1 - f.hp / G0DP.hp;   // bloodshot: more red in the white as he weakens
+  // the eye is its own hit counter (round 27): blue = hits left, scattered over it; one eye node found: about half blue,
+  // both: all blue; every hit blasts some blue off and it turns red; all red: it shuts. Its last 2s it flickers.
+  const frac = g0dpEyeBlue(e), ending = left < 2 && Math.floor(now / (left < 1 ? 70 : 130)) % 2;
   art.forEach((l, j) => {
     take(x - 6, y - 2 + j, 13);
     for (let k = 0; k < l.length; k++) {
       const ch = l[k]; if (ch === ' ') continue;
       const inner = '()@oO><-'.includes(ch) && j === 2;
-      const red = !inner && hs(k * 7.7 + j * 3.1 + Math.floor(now / 600)) < blood * 0.75;
-      put(x - 6 + k, Y + y - 2 + j, red ? (blood > 0.5 && hs(k + j) < 0.5 ? '~' : ch) : ch, red ? G0DP_RED : hurt && inner ? C.bright : G0DP_BLUE, 'fx', inner || e.bonus);
+      const blue = hs(k * 7.7 + j * 3.1 + e.seed) < frac;
+      put(x - 6 + k, Y + y - 2 + j, ch, ending ? C.dim : hurt && inner ? C.bright : blue ? G0DP_BLUE : G0DP_RED, 'fx', inner || blue);
     }
   });
   if (e.bonus) {   // the combo: a ring pulses round it
@@ -996,10 +999,16 @@ function g0dpEyeDraw(p, f, put, bg, take, now, Y) {
     for (let k = -7; k <= 7; k += 2) { const cx = x + k + (pulse ? 1 : 0); put(cx, Y + y - 3, '·', G0DP_BLUE, 'fx', true); put(cx, Y + y + 3, '·', G0DP_BLUE, 'fx', true); take(cx, y - 3, 1); take(cx, y + 3, 1); }
     for (const dy of [-2, -1, 0, 1, 2]) { put(x - 8, Y + y + dy, ':', G0DP_BLUE, 'fx', !!pulse); put(x + 8, Y + y + dy, ':', G0DP_BLUE, 'fx', !!pulse); take(x - 8, y + dy, 1); take(x + 8, y + dy, 1); }
   }
-  // under it: a bar of time left, the hits left
-  const bw = 9, n = Math.round(Math.min(1, left / (G0DP.eyeOpen + (e.bonus ? G0DP.eyeBonusTime : 0))) * bw), row = y + (e.bonus ? 4 : 3);
-  const line = '[' + '='.repeat(n) + ' '.repeat(bw - n) + '] ' + '*'.repeat(Math.max(0, e.cap - e.hits));
-  take(x - 6, row, line.length); put(x - 6, Y + row, line, left < 2 && Math.floor(now / 150) % 2 ? C.bright : G0DP_BLUE, 'fx', !!e.bonus);
+}
+// How blue the eye is: hits left, out of what it can take (one eye node: half of it; both: all of it).
+const g0dpEyeBlue = e => Math.max(0, e.cap - e.hits) / (e.bonus ? e.cap : e.cap * 2);
+// A hit: the blue that turns red blasts off the eye (round 27).
+function g0dpEyeChip(e, before) {
+  if (reduced()) return;
+  const after = g0dpEyeBlue(e), hs = G0D_LOOKS.hs, cells = [], art = ['   .-----.   ', " .'       '. ", '(           )', " '.       .' ", "   '-----'   "];
+  art.forEach((l, j) => { for (let k = 0; k < l.length; k++) { if (l[k] === ' ') continue; const v = hs(k * 7.7 + j * 3.1 + e.seed); if (v < before && v >= after) cells.push({ ch: l[k], x: pxX(e.x - 6 + k), y: pxY(BOARD_Y + e.y - 2 + j), col: G0DP_BLUE }); } });
+  for (let k = 0; k < 8; k++) cells.push({ ch: pickR(['*', '.', 'o', ',', '`'], Math.random), x: pxX(e.x + rand(-5, 5)), y: pxY(BOARD_Y + e.y + rand(-2, 2)), col: pickR([G0DP_BLUE, C.bright], Math.random) });
+  explode(cells, pxX(e.x), pxY(BOARD_Y + e.y), { power: 1.2, grav: 0.9, life: [0.4, 0.9] });
 }
 // The chunk a hit takes off G0D's bar breaks off and falls (round 26).
 function g0dpBarBreak(from, to) {
