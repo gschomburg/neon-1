@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.95']);
+NEON_FILES.push(['engine/scene.js', 'v13.98']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -403,6 +403,7 @@ function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own 
   const phase = i * 0.77, t = (now / 1000 + phase) % 4;
   const icon = m.icon[Math.floor(now / 180 + i * 3) % m.icon.length];
   const label = m.short + (m.lvlTag && m.tier > 0 ? String(m.tier + 1) : '');   // TRC2 = level 2
+  const g0dm = m.anim === 'g0d';   // !G0D (data/mods.js): an exotic's wave and colors, G0D going to g0d, flickering red
   const anim = lvl <= 1 ? 'none' : m.rarity === 'exotic' ? 'exotic' : m.anim;
   const fire = k => fireKey ? modFireLook(fireKey, now, k) : null;
   if (fire(0)) dim = false;   // it just went off: play it, even if that spent it (FAILSAFE)
@@ -420,6 +421,7 @@ function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own 
     let ch = label[k], dy = 0, inv = selected || flash, chip = chip0;
     if (anim === 'wave' || anim === 'exotic') { const w = t - k * 0.09; if (w > 0 && w < 0.3) dy = -Math.sin(w / 0.3 * Math.PI) * 0.35; }
     if (anim === 'exotic' && !dim) chip = rainbow[Math.floor(now / 160 + k) % rainbow.length];
+    if (g0dm) { if (Math.floor(now / 420) % 3 === 1) ch = ch.toLowerCase(); if (!dim && G0D_LOOKS.hs(Math.floor(now / 90) * 1.7 + k * 7.3) < 0.3) chip = { bg: G0DP_RED, fg: C.bg }; }
     if (anim === 'cycle' && !selected && !dim) inv = Math.floor(now / 300 + k) % 4 === 1;
     if (anim === 'scramble' && t < 0.2 && Math.random() < 0.5) ch = noiseCh();
     cell(x + 1 + k, ch, inv, chip, dy, k + 1);

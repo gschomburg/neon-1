@@ -139,6 +139,47 @@ dimmed. Mute / solo per part and per drum row, a playhead, levels 0-4 and urgenc
 small hooks in engine/music.js (`Music.position / mute / seek / loop`) that the game never calls.
 `node tools/music_view_check.js` proves the view matches the engine. Plan and what's next: docs/MUSIC_VIEW.md.
 
+**The G0D fights (v13.96, 2026-10-31).** The user: "energetic but also menacing... the maze can be more mysterious, the
+boss fight and the last stand should be good... ramp up per stage... real variety... Daft Punk or NIN are always a plus."
+21 tracks, tag `g0d` in data/music.js. The fight's are **staged** (`stages: true`): the game picks the section, A in
+stage 1, B in stage 2, C in stage 3 (switching at the next bar, on a crash). The final stand's are staged by thirds of
+its 15s clock, with `tick` (the clock pushes the tempo up to +25%). The maze's build by layer like a corp's. Where they
+play: `MUSIC_FOR.maze`, `.g0d`, `.g0dstand` (first picks LABYRINTH, GOD MODE, LAST BREATH; the user picks; 2026-10-31 the fight: PURSUIT, to try).
+
+| Track | For | Inspired by | What makes it (stage 1 / 2 / 3) |
+|---|---|---|---|
+| GOD MODE | fight | Daft Punk, *Derezzed* | 128 D minor: 16th octave bass, gritty riff / brass hits, 16th hats / acid bass, supersaw line |
+| KILL SWITCH | fight | NIN, *March of the Pigs* | 142 E phrygian, lurching snare, chugging riff / choir, claps / double kick, acid, screamer |
+| MOLD BLOOM | fight | Goblin, *Tenebre* | 150 A harmonic: bass ostinato, organ, music box / vocoder line / distorted harmonic run |
+| OVERCLOCK | fight | Justice, *Genesis* | 118 F minor, heavy pump, distorted saw stabs, brass hook / busier stabs / chopped pad, acid |
+| ROOT ACCESS | fight | Carpenter Brut, Perturbator | 112 D harmonic, half-time, octave saw bass, square arp / four on the floor, brass / double kick |
+| FALSE IDOL | fight | Mick Gordon, *DOOM* | 5/4 at 130, C phrygian chug, choir / sung line / double kick, acid, screamer |
+| CATHEDRAL.EXE | fight | Castlevania x techno | 136 A harmonic, off-beat organ, choir, pulse hook / brass / supersaw |
+| HIVE MIND | fight | The Prodigy | 138 E phrygian breakbeat, acid riff, "hey" stab / choir / doubled break, 16th riff |
+| AUGMENT | fight | *Deus Ex* | 125 G minor cool breakbeat, sub, bells, keys / brass / acid, supersaw |
+| TERMINAL VELOCITY | fight | drum & bass, Pendulum | 172 D minor two-step, rolling sub / reese, racing arp / everything |
+| DANSE MACABRE | fight | a tarantella, Paganini | 6/8, A harmonic, organ gallop, music-box run / brass / everything |
+| ZERO DAY | fight | Skrillex, riddim | 150 half-time F minor, stuttering acid, screamer / 16th wobble, vocal stab / hat rolls |
+| PURSUIT | fight | Gesaffelstein | 126 C phrygian dark techno, off-beat bass, a half step in brass / 16th acid / chopped pad, dist line |
+| PANTHEON | fight | Hans Zimmer braams | 100 D minor, a BRAAM a bar, galloping strings, choir / drums / double time, brass line |
+| OVERFLOW | fight | chiptune metal | 164 A minor, chip kit, octave bass, pulse melody / gallop / double kick, an octave up |
+| LAST BREATH | final stand | | 160 E minor, 16th sub pulse, rising glass arp / climbing line / snare roll, screamer |
+| COUNTDOWN | final stand | | 140 D phrygian, ticking hats, heartbeat bass / four on the floor, brass / everything, siren |
+| EVENT HORIZON | final stand | | 150 F harmonic, chords climbing every bar / drums / everything, up a third |
+| LABYRINTH | maze | | 88 A harmonic, music box over choir and sub, heartbeat kick, glass echo; B drifts to VI and V |
+| CODEX | maze | | 5/4 at 108, D dorian, a pluck ostinato, an electric piano later |
+| WHISPER NET | maze | | 96 E phrygian, a two-note chant, a picked heartbeat, "vox" breaths |
+
+To listen: the neon editor's MUSIC mode (search the list, or the corps view's maze / g0d / g0dstand rows to assign one);
+the **stage** buttons (1 / 2 / 3) play a staged track's section; urgency pushes the final stand's. Or play H3AV3N.
+
+**The user's first listen (2026-10-31, stars and notes from the editor):**
+- ★★★★★ ZERO DAY ("maybe god"), PURSUIT ("god maybe")
+- ★★★★ HIVE MIND ("god maybe"), MOLD BLOOM, AUGMENT; CATHEDRAL.EXE ("maze maybe"); ROOT ACCESS, DANSE MACABRE,
+  PANTHEON (all "cerberus maybe": CERBERUS, HADES's boss, see QUESTS); OVERFLOW ("could use for a timer corp")
+- ★★★ KILL SWITCH, OVERCLOCK, TERMINAL VELOCITY
+- not rated yet: GOD MODE, FALSE IDOL, the final stand's three, the maze's three
+
 ## Plans
 
 ### The music engine pass (noted 2026-10-20)

@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v13.95']);
+NEON_FILES.push(['engine/heaven.js', 'v13.98']);
 
 const HEAVEN = {};
 
@@ -82,8 +82,8 @@ HEAVEN.maze = {
     const b = c.boy;
     if (b.phase === 'rest' || (b.phase === 'hold' && now > b.until - 900)) return;   // resting: hidden
     b.curs.slice(0, 2).forEach((cu, i) => {
-      const bob = Math.abs(cu.x - cu.tx) < 0.5 && Math.floor((now + i * 170) / 260) % 2 ? 1 : 0, x = Math.round(cu.x), y = Math.round(cu.y) - bob;
-      g0dpBoyMark(ctx.put, ctx.bg, x, y, cu.tag);
+      const dy = Math.abs(cu.x - cu.tx) < 0.5 ? g0dpBoyBob(now, i) : 0, x = Math.round(cu.x), y = Math.round(cu.y);   // (just the v slides)
+      g0dpBoyMark(ctx.put, ctx.bg, x, y, cu.tag, true, dy);
     });
   },
   rules: () => 'follow the codex. every node is a perfect.',
@@ -302,6 +302,7 @@ function g0dWakeDone(p) {
   f.traces = [];   // (the wake-up's run under the mold; the fight's draw on top of it: they'd pop out)
   f.nextHands = now + G0DP.handsEvery * 1000; f.nextLine = now + 8000; f.creepAt = 0;
   f.freshFrom = now;   // (the nodes' fresh-mold glow fades up from here)
+  f.fightAt = now;   // (the music kicks in from here)
   p.wake = null;
   boySay('wtf. ok. start digging.');
 }
@@ -365,7 +366,7 @@ function g0dWakeDraw(p, put, bg, now) {
   for (let y = 0; y < f.H; y++) for (let x = 0; x < f.W; x++) {
     const i = y * f.W + x, th = f.m[i];
     if (th < 0.6) continue;
-    put(x, Y + y, g0dpMoldGlyph(th, x, y, now), f.fresh[i] > 0.45 ? G0DP_FRESH : th > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim);
+    put(x, Y + y, g0dpMoldGlyph(th, x, y, now), f.fresh[i] > 0.45 ? G0DP_FRESH : g0dpMoldCol(th, 0));
   }
 }
 // Over the screen while it wakes: his bar. G, 0, D drop in from above with a bounce (red dust as each lands), then it
@@ -379,28 +380,76 @@ function g0dWakeOverlay(cells, now, bgs) { return g0dBarDrop(cells, bgs, st.g0dp
 // each cell in the hole falls out, background and all, mold coming in behind; then the mold spreads out of the hole over
 // the whole screen, fast, solid (nothing of the old screen shows through). Covered: the final stand starts under it
 // (its opening: wires and eyes come out of that hole; G0D's bar drops back in). G0DP.skipCine skips it outright.
-const G0D_FAKE = { pause: 1400, cap: 9000, hole: 1100, holeR: 3.4, spread: 1200, hold: 250, beat: 700 };
+const G0D_FAKE = { pause: 2400, cap: 10000, hole: 2000, plops: 6, holeR: 3.4, spread: 1800, hold: 250, beat: 700, specks: 4 };
+// (round 5: his bar comes back at the crack, the mold plopping in under it; it's mostly full when the tendrils go)
+const G0D_FAKE_BAR = { letters: [250, 280], fall: 450, fill: [950, 1000] };
+// (round 4, the user: the specks come in on the lines as they come in, and ride them up as new lines push the block up;
+// the spread isn't a circle: tendrils shoot out of the hole, wandering like the traces but outward, then grow wider and
+// fill in between them)
 function heavenFakeWin(stand) {
   st.g0dp = null;
   if (G0DP.skipCine) return g0dpStart('stand', stand);
   const run = st.run, r = rngFor(run.seed, 'g0dreward');
-  const options = pickMods(r, modsOfKind('exotic'), 1).concat(pickMods(r, modsOfKind('gen'), 2));
-  const specks = [0, 1, 2].map(() => ({ x: 5 + Math.random() * (L.wc - 10), y: BOARD_Y + 3 + Math.random() * (L.gh - 6), r: 0.9 + Math.random() * 0.6 }));
-  st.g0dFake = { t0: performance.now(), stand, said: {}, specks, fell: new Set() };
+  const options = shuffle([{ key: 'g0dmold', tier: 0 }].concat(pickMods(r, modsOfKind('exotic'), 2)), r);   // (round 5: all exotics, one of them his)
+  st.g0dFake = { t0: performance.now(), stand, said: {}, specks: [], picked: false, cov: null, fell: null, tendrils: [] };
   openChoice({ reveal: true, title: 'G0D BREACHED', col: C.accent, head: [['G0D', C.text]], by: profile(), options,
     skipLabel: '[ SKIP  +0cr ]', onSkip: () => {}, msg: { text: '> the network is yours.', col: C.accent } });
 }
 function g0dFakeTick(now) {
   const f = st.g0dFake;
-  if (!f || st.mode !== 'panel' || st.pause || st.dev) return;
+  if (!f) return;
+  const dt = Math.min(0.05, (now - (f.last || now)) / 1000); f.last = now;
+  if (st.mode !== 'panel' || st.pause || st.dev) return;
   const e = now - f.t0, rv = st.panelReveal;
   if (f.doneAt == null && (!rv || rv.done)) f.doneAt = e;
   if (f.holeAt == null && ((f.doneAt != null && e >= f.doneAt + G0D_FAKE.pause) || e >= G0D_FAKE.cap)) { f.holeAt = e; Sound.shatter(); shake(5, 0.3); }
   if (f.holeAt == null) return;
   const h = e - f.holeAt, say = (k, at, fn) => { if (h >= at && !f.said[k]) { f.said[k] = true; fn(); } };
   say('punch', 120, () => { Sound.trap(); shake(8, 0.4); });
+  for (let i = 0; i < G0D_FAKE.plops; i++) say('p' + i, 120 + i * (G0D_FAKE.hole - 200) / G0D_FAKE.plops, () => Sound.plop());
+  [0, 1, 2].forEach(i => say('L' + i, G0D_FAKE_BAR.letters[0] + i * G0D_FAKE_BAR.letters[1] + G0D_FAKE_BAR.fall, () => g0dWakeLand(i, true)));
+  say('fill', G0D_FAKE_BAR.fill[0], () => { Sound.bossBuild(); shake(6, 0.6); });
+  say('full', G0D_FAKE_BAR.fill[0] + G0D_FAKE_BAR.fill[1], () => { Sound.bossDrop(); flash(G0DP_RED, 0.2, 0.4); g0dSay('you are just meat.'); });
   say('spread', G0D_FAKE.hole, () => { Sound.alarm(); shake(6, 0.5); });
+  g0dFakeSpread(f, h, now, dt);
   if (h >= G0D_FAKE.hole + G0D_FAKE.spread + G0D_FAKE.hold) g0dFakeEnd();
+}
+// An outward trace: from (x, y), heading away from (cx, cy), its turns mostly away too (engine/g0dproto.js g0dpTraceTick)
+function g0dOutTrace(list, x, y, cx, cy, kind, len) {
+  const t = g0dpTraceSpawn(list, x, y, 1, kind); if (!t) return null;
+  const gx = x - cx, gy = y - cy, across = Math.abs(gx) / 2.2 > Math.abs(gy);
+  if (across ? Math.random() < 0.75 : Math.random() < 0.25) { t.dx = Math.sign(gx) || 1; t.dy = 0; } else { t.dx = 0; t.dy = Math.sign(gy) || 1; }
+  t.pts[0][2] = t.dx ? '─' : '│'; t.out = [cx, cy]; if (len) t.len = len;
+  return t;
+}
+// The mold coming through (f.cov: when each cell was taken, -1: not yet): the hole, then tendrils, then filling in
+function g0dFakeSpread(f, h, now, dt) {
+  const W = L.wc, Hh = L.hc, cx = (W - 1) / 2, cy = BOARD_Y + L.gh / 2;
+  if (!f.cov) f.cov = new Float64Array(W * Hh).fill(-1);
+  const cov = f.cov, set = (x, y) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < Hh && cov[y * W + x] < 0) cov[y * W + x] = now; };
+  const pk = Math.min(1, Math.floor(clamp((h - 120) / (G0D_FAKE.hole - 200), 0, 1) * G0D_FAKE.plops + 1) / G0D_FAKE.plops), R = G0D_FAKE.holeR * Math.sqrt(pk);   // (it plops in, a step at a time)
+  for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) if (g0dHoleD(x, y) < R) set(x, y);
+  if (h < G0D_FAKE.hole) return;
+  const sk = clamp((h - G0D_FAKE.hole) / G0D_FAKE.spread, 0, 1);
+  // tendrils: out of the hole's edge, or branching off one already out
+  f.tAcc = (f.tAcc || 0) + dt * (26 - 16 * sk);
+  while (f.tAcc >= 1) {
+    f.tAcc -= 1;
+    const from = f.tendrils.length && Math.random() < 0.5 ? pickR(f.tendrils, Math.random) : null, p0 = from && from.pts.length ? pickR(from.pts, Math.random) : null;
+    const a = Math.random() * Math.PI * 2;
+    g0dOutTrace(f.tendrils, p0 ? p0[0] : cx + Math.cos(a) * G0D_FAKE.holeR * 2.2, p0 ? p0[1] : cy + Math.sin(a) * G0D_FAKE.holeR, cx, cy, 'mold', 30 + Math.floor(Math.random() * 30));
+  }
+  g0dpTraceTick(f.tendrils, dt, 1, W, Hh);
+  for (const t of f.tendrils) for (const [x, y] of t.pts) set(x, y);
+  // and they grow wider: a cell next to mold that's been there a moment fills in, faster and faster
+  const rate = 0.8 + 16 * sk * sk, grow = [], old = j => cov[j] >= 0 && now - cov[j] > 90;
+  for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x; if (cov[i] >= 0) continue;
+    const n = (x > 0 && old(i - 1)) + (x < W - 1 && old(i + 1)) + 0.6 * ((y > 0 && old(i - W)) + (y < Hh - 1 && old(i + W)));
+    if (n && Math.random() < dt * rate * n) grow.push(i);
+  }
+  for (const i of grow) cov[i] = now;
+  if (sk >= 1) for (let i = 0; i < cov.length; i++) if (cov[i] < 0) cov[i] = now;   // (the last of it)
 }
 function g0dFakeSkip() { const f = st.g0dFake; if (G0DP.tapSkip && f && performance.now() - f.t0 > G0D_FAKE.beat) g0dFakeEnd(); }
 function g0dFakeEnd() {
@@ -413,75 +462,119 @@ function g0dFakeEnd() {
 const g0dCoverMold = (x, y, now) => { const th = 1.7 + G0D_LOOKS.hs(x * 3.7 + y * 1.3) * 3; return [g0dpMoldGlyph(th, x, y, now), th > 2.6 ? G0D_COLS.mold : G0D_COLS.moldDim]; };
 // Out from the hole (the middle of the board): how far a cell is (rows; across counts less: cells are tall)
 const g0dHoleD = (x, y) => Math.hypot((x - (L.wc - 1) / 2) / 2.2, y - (BOARD_Y + L.gh / 2)) + G0D_LOOKS.hs(x * 7.3 + y * 3.1) * 1.2;
-const g0dHoleMax = () => Math.hypot(L.wc / 4.4, Math.max(BOARD_Y + L.gh / 2, L.hc - BOARD_Y - L.gh / 2)) + 1.3;
 // a cell's background this frame (scene.js keeps them in st.frameBgs while it builds)
 function g0dBgAt(x, y) {
   const list = st.frameBgs || [];
   for (let i = list.length - 1; i >= 0; i--) { const b = list[i]; if (Math.round(b.cy) === y && x >= b.cx && x < b.cx + b.w && b.alpha >= 0.5) return b.col; }
   return null;
 }
+// The specks: a word on a line gets one as the line comes in (TAKE always; a few others at random), and it stays on
+// that word wherever the line goes (the block glides up as lines come in)
+function g0dFakeSpecks(f, cells, now) {
+  const W = L.wc, rows = new Map();
+  for (const c of cells) {
+    const y = Math.round(c.cy); if (y < BOARD_Y || y >= BOARD_Y + L.gh) continue;
+    let r = rows.get(y); if (!r) rows.set(y, r = { a: Array(W).fill(' '), fy: c.cy });
+    const x = Math.round(c.cx); if (x >= 0 && x < W && c.ch) r.a[x] = c.ch;
+  }
+  const strs = []; for (const [y, r] of rows) strs.push({ y, fy: r.fy, s: r.a.join('') });
+  if (!f.picked) {   // which words: ones the screen has just once (so a speck can't jump), a few at random, and TAKE
+    f.picked = true;
+    const text = panelLines().map(ln => ln.text || '').join(' | '), words = [...new Set(text.match(/[A-Za-z][A-Za-z0-9]{3,}/g) || [])];
+    const once = shuffle(words.filter(w => text.split(w).length === 2), Math.random).slice(0, G0D_FAKE.specks - 1);
+    f.specks = once.map(w => ({ word: w, off: Math.random() * (w.length - 1), r: 0.8 + Math.random() * 0.6, k: Math.floor(Math.random() * 40) }));
+    f.specks.push({ word: 'T A K E', off: 3, r: 1, k: 7 });
+  }
+  for (const s of f.specks) {   // where its word is now (it shows up once its line is in and readable; the nearest match)
+    let best = null;
+    for (const r of strs) { const i = r.s.indexOf(s.word); if (i >= 0 && (!best || (s.y != null && Math.abs(r.fy - s.y) < Math.abs(best.fy - s.y)))) best = { fy: r.fy, x: i }; }
+    if (best) { s.y = best.fy; s.x = best.x + s.off; if (s.born == null) s.born = now; }
+  }
+}
 // Over the rewards screen: the specks, the hole, the mold taking over (cover everything: own background, solid)
 function g0dFakeOverlay(cells, now, bgs) {
   const f = st.g0dFake;
   if (!f) return cells;
-  const e = now - f.t0, W = L.wc, Hh = L.hc, hs = G0D_LOOKS.hs;
-  if (!f.take && e > 1500) {   // a speck on TAKE (once it's there)
-    const rows = new Map();
-    for (const c of cells) { const y = Math.round(c.cy); if (!rows.has(y)) rows.set(y, []); rows.get(y)[Math.round(c.cx)] = c.ch; }
-    for (const [y, a] of rows) { const s = Array.from({ length: W }, (_, i) => a[i] || ' ').join(''), i = s.indexOf('TAKE'); if (i >= 0) { f.take = { x: i + 1.5, y, r: 1 }; break; } }
+  const e = now - f.t0, W = L.wc, Hh = L.hc, hs = G0D_LOOKS.hs, cov = f.cov, h = f.holeAt != null ? e - f.holeAt : 0;
+  g0dFakeSpecks(f, cells, now);
+  const spk = new Map();   // 'x,y' -> [fraction of a row it's off by (gliding), its own glyph spot]
+  for (const s of f.specks) {
+    if (s.y == null || s.born == null) continue;
+    const r = s.r * clamp((now - s.born) / 350, 0, 1); if (r <= 0) continue;
+    const yi = Math.round(s.y);
+    for (let y = yi - 1; y <= yi + 1; y++) for (let x = Math.floor(s.x - r * 2.2) - 1; x <= Math.ceil(s.x + r * 2.2) + 1; x++) {
+      if (x < 0 || x >= W || y < 0 || y >= Hh || Math.hypot((x - s.x) / 2.2, y - s.y) >= r || hs((x - Math.round(s.x)) * 9.1 + (y - yi) * 4.3 + s.k) <= 0.3) continue;
+      spk.set(x + ',' + y, [s.y - yi, x - Math.round(s.x) + s.k, y - yi + 50]);
+    }
   }
-  const specks = f.take ? f.specks.concat([f.take]) : f.specks;
-  const speck = (x, y) => specks.some(s => Math.hypot((x - s.x) / 2.2, y - s.y) < s.r && hs(x * 9.1 + y * 4.3) > 0.3);
-  let R = -1, h = 0;
-  if (f.holeAt != null) {
-    h = e - f.holeAt;
-    const hk = clamp(h / G0D_FAKE.hole, 0, 1), sk = clamp((h - G0D_FAKE.hole) / G0D_FAKE.spread, 0, 1);
-    R = G0D_FAKE.holeR * Math.sqrt(hk) + (g0dHoleMax() - G0D_FAKE.holeR) * (1 - Math.pow(1 - sk, 2));
-  }
-  const covered = (x, y) => (R > 0 && g0dHoleD(x, y) < R) || speck(x, y);
-  // what the hole takes falls out, background and all (the spread is too fast for all of it: some)
-  if (R > 0 && !reduced()) {
+  const taken = (x, y) => cov && cov[y * W + x] >= 0, covered = (x, y) => taken(x, y) || spk.has(x + ',' + y);
+  // what the mold takes falls out, background and all (the hole all of it; the spread some)
+  if (cov && !reduced()) {
+    if (!f.fell) f.fell = new Uint8Array(W * Hh);
     const at = new Map(); for (const c of cells) at.set(Math.round(c.cx) + ',' + Math.round(c.cy), c);
     const bits = [];
-    for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
-      const k = x + ',' + y;
-      if (f.fell.has(k) || g0dHoleD(x, y) >= R) continue;
-      f.fell.add(k);
-      if (h > G0D_FAKE.hole && Math.random() > 0.12) continue;
-      const c = at.get(k), bgc = g0dBgAt(x, y);
-      if (!c && !bgc) continue;
-      if (bits.length < 60) bits.push({ ch: c ? c.ch : ' ', x: pxX(x), y: pxY(y), col: c ? c.col : C.text, bg: bgc });
+    for (let i = 0; i < cov.length; i++) {
+      if (cov[i] < 0 || f.fell[i]) continue;
+      f.fell[i] = 1;
+      if (h > G0D_FAKE.hole && Math.random() > 0.15) continue;
+      const x = i % W, y = (i / W) | 0, c = at.get(x + ',' + y), bgc = g0dBgAt(x, y);
+      if ((!c && !bgc) || bits.length >= 60) continue;
+      bits.push({ ch: c ? c.ch : ' ', x: pxX(x), y: pxY(y), col: c ? c.col : C.text, bg: bgc });
     }
     if (bits.length) explode(bits, pxX((W - 1) / 2), pxY(BOARD_Y + L.gh / 2) - L.chh, { power: 0.35, grav: 1.6, life: [0.6, 1.2] });
   }
   const out = cells.filter(c => !covered(Math.round(c.cx), Math.round(c.cy)));
+  const spreading = h < G0D_FAKE.hole + G0D_FAKE.spread;
   for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
     if (!covered(x, y)) continue;
-    if (bgs) bgs.push({ cx: x, cy: y, w: 1, col: C.bg, alpha: 1 });
-    const [ch, col] = g0dCoverMold(x, y, now), edge = R > 0 && R - g0dHoleD(x, y) < 0.9 && h < G0D_FAKE.hole + G0D_FAKE.spread;
-    out.push({ ch, cx: x, cy: y, col: edge ? G0DP_FRESH : col, own: 'fx', bold: false });
+    const i = y * W + x, sp = taken(x, y) ? null : spk.get(x + ',' + y), fy = sp ? sp[0] : 0;
+    if (bgs) bgs.push({ cx: x, cy: y + fy, w: 1, col: C.bg, alpha: 1 });
+    const [ch, col] = sp ? g0dCoverMold(sp[1], sp[2], now) : g0dCoverMold(x, y, now), fresh = !sp && spreading && now - cov[i] < 170;
+    out.push({ ch, cx: x, cy: y + fy, col: fresh ? G0DP_FRESH : col, own: 'fx', bold: false });
   }
   if (G0DP.tapSkip && e > G0D_FAKE.beat) { const tip = 'tap to skip'; out.push(...[...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
-  return out;
+  return f.holeAt != null ? g0dBarDrop(out, bgs, h, G0D_FAKE_BAR, true) : out;   // his bar, over the mold
 }
 
 // ---------------- The final stand's opening, out of the hole (engine/g0dproto.js g0dpStandStart opts.hole) ----------------
 // The mold covers the screen (the fake win left it so). Wires come out of the hole in the middle and replace the mold, out
 // to the edges (the network, drawn in white as it comes); the eyes come out of the hole, (o) first, full size once
 // they're out, to their spots; G0D's bar drops back in (like the wake-up's, harder). Then the clock starts.
-const G0D_HOLE = { ms: 3900, clear: 2700, eyes: [450, 240], eyeMove: 950, letters: [650, 320], fall: 450, fill: [1850, 1000] };
-const g0dHoleClearAt = (x, y) => g0dHoleD(x, y) / g0dHoleMax() * G0D_HOLE.clear;
+const G0D_HOLE = { ms: 3900, hole: 1300, holeR: 3.4, drop: [1300, 3000], eyes: [1350, 230], eyeMove: 950, letters: [650, 320], fall: 450, fill: [1850, 1000] };
+// (round 4, the user: the wires pop out through the mold: out of the hole, grey (some red at first), the mold breaking
+// apart where they go; the hole opens to about 5 across; then the rest of the mold falls away all over, and the eyes
+// come out. s.clr: when each cell's mold went, -1: still there.)
+// the mold falling away all over: clumps (a few cells together), some cells on their own
+const g0dHoleFall = (x, y) => G0D_LOOKS.hs(Math.floor(x / 3) * 5.1 + Math.floor(y / 2) * 9.7) * 0.65 + G0D_LOOKS.hs(x * 7.7 + y * 3.3) * 0.35;
 function g0dHoleTick(p, s, now, dt) {
   const oe = now - s.openFrom, say = (k, at, fn) => { if (oe >= at && !s.said[k]) { s.said[k] = true; fn(); } };
-  [0, 1, 2].forEach(i => say('L' + i, G0D_HOLE.letters[0] + i * G0D_HOLE.letters[1] + G0D_HOLE.fall, () => g0dWakeLand(i, true)));
-  say('fill', G0D_HOLE.fill[0], () => { Sound.bossBuild(); shake(6, 0.6); });
-  say('full', G0D_HOLE.fill[0] + G0D_HOLE.fill[1], () => { Sound.bossDrop(); flash(G0DP_RED, 0.2, 0.4); g0dSay('you are just meat.'); });
+  say('drop', G0D_HOLE.drop[0], () => { Sound.shatter(); shake(5, 0.4); });
   s.eyes.forEach((e, i) => say('e' + i, G0D_HOLE.eyes[0] + i * G0D_HOLE.eyes[1], () => Sound.nodeOn()));
-  // wires out of the hole
-  s.traceAcc = (s.traceAcc || 0) + dt * 50;
-  const cx = (L.wc - 1) / 2, cy = L.gh / 2;
-  while (s.traceAcc >= 1) { s.traceAcc -= 1; g0dpTraceSpawn(s.traces, cx + rand(-3, 3), cy + rand(-1.5, 1.5), 0.9, 'white'); }
-  g0dpTraceTick(s.traces, dt, 1, L.wc, L.gh);
+  const W = L.wc, Hh = L.hc, cx = (W - 1) / 2, cy = L.gh / 2;
+  if (!s.clr) s.clr = new Float64Array(W * Hh).fill(-1);
+  const clr = s.clr, bits = [], clear = (x, y) => {
+    if (x < 0 || y < 0 || x >= W || y >= Hh) return;
+    const i = y * W + x; if (clr[i] >= 0) return;
+    clr[i] = now;
+    if (bits.length < 45 && !reduced()) { const [ch, col] = g0dCoverMold(x, y, now); bits.push({ ch, x: pxX(x), y: pxY(y), col }); }
+  };
+  // the hole opens (slowly: about 5 across)
+  const R = G0D_HOLE.holeR * Math.sqrt(clamp(oe / G0D_HOLE.hole, 0, 1));
+  if (R > 0.5) for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) if (g0dHoleD(x, y) < R) clear(x, y);
+  // wires out of it: grey (some red at first), mostly heading out; the mold breaks apart where they go
+  const early = oe < G0D_HOLE.hole;
+  s.traceAcc = (s.traceAcc || 0) + dt * (early ? 20 : 34);
+  while (s.traceAcc >= 1) {
+    s.traceAcc -= 1;
+    const a = Math.random() * Math.PI * 2, r0 = Math.max(0.6, R - 1.2);
+    g0dOutTrace(s.traces, cx + Math.cos(a) * r0 * 2.2, cy + Math.sin(a) * r0, cx, cy, Math.random() < (early ? 0.3 : 0.08) ? 'box' : 'white');
+  }
+  g0dpTraceTick(s.traces, dt, 1, W, L.gh);
+  for (const t of s.traces) for (const [x, y] of t.pts) clear(x, BOARD_Y + y);
+  // then the rest of it falls away, all over: clumps, faster and faster
+  const dk = clamp((oe - G0D_HOLE.drop[0]) / (G0D_HOLE.drop[1] - G0D_HOLE.drop[0]), 0, 1);
+  if (dk > 0) { const lim = dk * dk * 1.02; for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) if (g0dHoleFall(x, y) < lim) clear(x, y); }
+  if (bits.length) explode(bits, pxX(cx), pxY(BOARD_Y + cy), { power: 0.15, grav: 2, life: [0.5, 1.1] });
 }
 // where an eye is while it comes out of the hole (null: not out yet), and whether it's full size
 function g0dHoleEye(s, i, now) {
@@ -490,12 +583,12 @@ function g0dHoleEye(s, i, now) {
   const e = s.eyes[i], k = clamp(t / G0D_HOLE.eyeMove, 0, 1), ease = 1 - Math.pow(1 - k, 3), cx = (L.wc - 1) / 2, cy = L.gh / 2;
   return { x: cx + (e.x - cx) * ease, y: cy + (e.y - cy) * ease, big: k > 0.45 };
 }
-// Over the screen: the mold not cleared yet (solid), and his bar dropping back in
+// Over the screen: the mold still there (solid), and his bar dropping back in
 function g0dHoleOverlay(cells, now, bgs, s) {
-  const oe = now - s.openFrom, W = L.wc, Hh = L.hc;
+  const oe = now - s.openFrom, W = L.wc, Hh = L.hc, clr = s.clr;
   let out = cells;
-  if (oe < G0D_HOLE.clear + 400) {
-    const covered = (x, y) => g0dHoleClearAt(x, y) > oe;
+  if (oe < G0D_HOLE.drop[1] + 400) {
+    const covered = (x, y) => !clr || clr[y * W + x] < 0;
     out = out.filter(c => !covered(Math.round(c.cx), Math.round(c.cy)));
     for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
       if (!covered(x, y)) continue;
@@ -504,7 +597,7 @@ function g0dHoleOverlay(cells, now, bgs, s) {
       out.push({ ch, cx: x, cy: y, col, own: 'fx', bold: false });
     }
   }
-  return g0dBarDrop(out, bgs, oe, G0D_HOLE, true);
+  return g0dpBar(out, bgs, { f: 1 });   // (round 5: his bar came back in the fake win)
 }
 // G0D's bar coming in (the wake-up, the stand's opening): G, 0, D drop in from above with a bounce (red dust as each lands:
 // g0dWakeLand), then it fills out from the middle both ways. Filled, it's the fight's bar exactly.
@@ -531,15 +624,16 @@ function g0dBarDrop(cells, bgs, e, spec, hard = false) {
 // the circuit going from the outside in; the eye glitches harder and harder (its colors inverting), bursts into a smaller
 // eye, smaller still, then goes out like a TV (a line, a dot, nothing). Then it all fades: the board, then the header,
 // the terminal band (its background too, a letter at a time) and the footer. Then the rewards screen builds in.
-const G0D_DIE = { mold: [200, 1600], net: [1300, 3900], glitch: [1600, 4300], burst: 4300, small: 4900, off: 5600, offMs: 600, fade: [6300, 7400], end: 7800 };
+const G0D_DIE = { chrome: [150, 1100], boom: 4000, mold: [200, 1600], net: [1300, 3900], glitch: [1600, 4300], burst: 4300, small: 4900, off: 5600, offMs: 600, fade: [6300, 7400], end: 7800 };
 function heavenDie(p) {
   const f = p.fight, stand = Object.assign(g0dpAgain(p), { startInt: st.run.integrity, startCr: st.run.credits });
   st.g0dp = null;
   if (G0DP.skipCine) return heavenFakeWin(stand);
   const eye = f && f.eye ? { x: Math.round(f.eye.x), y: Math.round(f.eye.y) } : { x: Math.floor(L.wc / 2), y: Math.floor(L.gh / 2) };
-  st.g0dDie = { t0: performance.now(), stand, said: {}, gone: new Set(), eye, m: f ? f.m.slice() : new Float32Array(L.wc * L.gh).fill(2), sucks: [], dmax: 1 };
+  st.g0dDie = { t0: performance.now(), stand, said: {}, gone: new Set(), eye, stage: f ? f.stage || 0 : 2, m: f ? f.m.slice() : new Float32Array(L.wc * L.gh).fill(2), sucks: [], dmax: 1 };
   { let d = 0; for (const [x, y] of [[0, 1], [L.wc - 1, 1], [0, L.gh - 1], [L.wc - 1, L.gh - 1]]) d = Math.max(d, Math.hypot((x - eye.x) / 2.2, y - eye.y)); st.g0dDie.dmax = d; }
   Sound.hkBoom(); Sound.shatter(); flash(G0DP_BLUE, 0.6, 1.2); shake(16, 0.9);
+  Music.powerDown();   // his track sags and goes (the music: g0dMusic)
   showBoard('g0ddie'); st.wipe = null; st.boardStart = -1e9;
 }
 const g0dDieFrac = (e, [a, b]) => clamp((e - a) / (b - a), 0, 1);
@@ -644,113 +738,219 @@ function buildG0dDie(ctx) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     if (taken.has(x + ',' + y) || onEye(x, y)) continue;
     const th = f.m[y * W + x];
-    if (th >= 0.6 && hs(x * 2.7 + y * 5.3) >= moldGone) { put(x, Y + y, g0dpMoldGlyph(th, x, y, now), th > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim); continue; }   // the mold still on
+    if (th >= 0.6 && hs(x * 2.7 + y * 5.3) >= moldGone) { put(x, Y + y, g0dpMoldGlyph(th, x, y, now), g0dpMoldCol(th, f.stage)); continue; }   // the mold still on
     if (y >= 1 && !g0dDieNetGone(f, x, y, netK)) put(x, Y + y, g0dpCircuitCh(x, y, now, W, H), hs(x * 1.3 + y * 7.9) < 0.25 ? C.mid : C.dim);   // the network, until it's pulled in
   }
 }
-// Over it: G0D's bar (empty), then everything fades to black: the board first, then the header, the terminal band (its
-// background too) and the footer, a letter at a time
+// Over it (round 5, the user): the header, the tray and the rest go right away, a letter at a time; G0D's bar (empty)
+// and the terminal stay (he's still talking) until they blow off, a beat before the eye goes small; the eye's the last
+// thing; then the board's leftovers fade
 function g0dDieOverlay(cells, now, bgs) {
   const f = st.g0dDie;
   if (!f) return cells;
   const e = now - f.t0, k = g0dDieFrac(e, G0D_DIE.fade), hs = G0D_LOOKS.hs;
-  let out = e < G0D_DIE.fade[0] ? g0dpBar(cells, bgs, { f: 0 }) : cells;
-  if (k > 0) {
-    out = out.filter(c => { const onBoard = c.cy >= BOARD_Y && c.cy < BOARD_Y + L.gh, v = hs(Math.round(c.cx) * 3.1 + Math.round(c.cy) * 7.7); return onBoard ? v >= k * 1.4 : v >= (k - 0.45) * 1.8; });
-    if (bgs) for (let x = 0; x < L.wc; x++) if (hs(x * 3.1 + 6 * 7.7) < (k - 0.45) * 1.8) bgs.push({ cx: x, cy: 6, w: 1, col: C.bg, alpha: 1 });   // the terminal band
+  let out = e < G0D_DIE.boom ? g0dpBar(cells, bgs, { f: 0 }) : cells;
+  out = g0dChromeFade(out, bgs, g0dDieFrac(e, G0D_DIE.chrome));
+  out = g0dChromeBoom(f, out, bgs, G0D_DIE.boom, e);
+  if (k > 0) out = out.filter(c => !(c.cy >= BOARD_Y && c.cy < BOARD_Y + L.gh) || hs(Math.round(c.cx) * 3.1 + Math.round(c.cy) * 7.7) >= k * 1.4);
+  return out;
+}
+// The screen's chrome going (G0D's deaths): everything off the board but G0D's bar and the terminal, a letter at a time
+const G0D_KEEP_ROWS = () => [G0DP_BAR_ROW, BOARD_Y - 2];
+function g0dChromeFade(out, bgs, k) {
+  if (k <= 0) return out;
+  const keep = G0D_KEEP_ROWS(), hs = G0D_LOOKS.hs, gone = (x, y) => hs(x * 3.1 + y * 7.7) < k * 1.05;
+  const off = y => (y < BOARD_Y || y >= BOARD_Y + L.gh) && !keep.includes(y);
+  out = out.filter(c => { const x = Math.round(c.cx), y = Math.round(c.cy); return !(off(y) && gone(x, y)); });
+  if (bgs) for (let y = 0; y < L.hc; y++) { if (!off(y)) continue; for (let x = 0; x < L.wc; x++) if (gone(x, y)) bgs.push({ cx: x, cy: y, w: 1, col: C.bg, alpha: 1 }); }
+  return out;
+}
+// ...then G0D's bar and the terminal blow off (once, at `at`): their letters and their backgrounds fly; then they're gone
+function g0dChromeBoom(f, out, bgs, at, e) {
+  if (e < at) return out;
+  const rows = G0D_KEEP_ROWS();
+  if (!f.boomed) {
+    f.boomed = true; Sound.hkBoom(); Sound.shatter(); shake(10, 0.5);
+    if (!reduced()) {
+      const bits = [], has = new Set();
+      for (const c of out) { const x = Math.round(c.cx), y = Math.round(c.cy); if (!rows.includes(y) || !c.ch || c.ch === ' ' || bits.length >= 90) continue; has.add(x + ',' + y); bits.push({ ch: c.ch, x: pxX(x), y: pxY(y), col: c.col, bg: g0dBgAt(x, y) }); }
+      for (const y of rows) for (let x = 0; x < L.wc; x += 2) { const b = g0dBgAt(x, y); if (b && !has.has(x + ',' + y)) bits.push({ ch: ' ', x: pxX(x), y: pxY(y), col: C.bg, bg: b }); }
+      explode(bits, pxX(L.wc / 2), pxY(rows[0]) + L.chh, { power: 1.0, grav: 1.5, life: [0.6, 1.3] });
+    }
   }
+  out = out.filter(c => !rows.includes(Math.round(c.cy)));
+  if (bgs) for (const y of rows) bgs.push({ cx: 0, cy: y, w: L.wc, col: C.bg, alpha: 1 });
   return out;
 }
 
-// ---------------- Step 5: the collapse ----------------
-// (docs/QUESTS.md, the final stand: "take out all his eyes: a last threat ('there will be others'), more death
-// animations. The screen doesn't go to black: it's all messed up from the fight.") The last eye blows: a flash. His
-// network shows bare and crumbles away; one small eye left in the middle looks around, frantic, says its last line and
-// fizzles out; his bar shatters; what's left is a mess (static, debris), not black. Then a placeholder ending card
-// (the ending, the credits and the rewards: docs/ENDGAME.md), then back to the map.
-const G0D_END = { crumble: [700, 3400], fizzle: 3900, bar: 4300, card: 5600, beat: 700 };
-function heavenCollapse(p) {
-  st.g0dp = null;
-  st.g0dEnd = { t0: performance.now() - (G0DP.skipCine ? G0D_END.card : 0), node: p.node, said: {}, gone: new Set() };
-  Sound.shatter(); Sound.bossDrop(); flash(C.bright, 0.7, 1.4); shake(18, 1);
-  showBoard('g0dend');
+// ---------------- The music (2026-10-31) ----------------
+// What the G0D fights play (engine/boot.js asks; null: not here). The tracks: data/music.js, the G0D section; which one
+// plays: MUSIC_FOR maze (G0D MAZE: the real corp's track; the prototype's maze too), g0d (the fight), g0dstand.
+//   the wake-up: the fight's track coming in (pad and bass, then drums as his bar fills, then the arp as the mold rises)
+//   the fight (staged, stages: true; round 5): it kicks in on B at level 4 for two bars, then settles on A at 3; his
+//     stage 2 is B at 4, stage 3 C; his eye open lifts it (a level, the filter); HANDS OFF's charge is urgency
+//   G0D dies: the music powers down (heavenDie); the fake win: the rewards screen's own track, then at the crack the
+//     final stand's comes in low with his bar
+//   the final stand: its opening, then the clock: urgency, and its A, B, C by thirds of the clock
+//   the collapse: it powers down (heavenCollapse) and nothing comes back in
+function g0dMusic() {
+  const p = st.g0dp, now = performance.now(), o = (song, x) => Object.assign({ song: trackFor(song), level: 2, urgency: 0, low: false, tempo: 1, pitch: 1, section: 'A' }, x);
+  if (st.mode === 'g0dp' && p && !p.card) {
+    if (p.stage === 'maze') return o('maze', { level: clamp(1 + Math.floor(((p.maze && p.maze.path) || 0) / 2), 1, 3) });
+    if (p.stage === 'fight') {
+      const f = p.fight, w = p.wake;
+      if (w) return o('g0d', { level: w.e < G0D_WAKE.fill[0] ? 0 : w.e < G0D_WAKE.mold[0] ? 1 : 2 });
+      const stg = clamp(f.stage || 0, 0, 2), heat = f.hands ? clamp((now - f.hands.at) / 1000 / G0DP.charge, 0, 1) : 0;
+      const tr = SONGS[trackFor('g0d')], bar = tr ? (tr.meter || 4) * 60000 / tr.bpm : 2000;
+      const kick = stg === 0 && now - (f.fightAt || 0) < bar * 2.2, eye = f.eye ? 1 : 0;
+      return o('g0d', { level: Math.min(4, (kick ? 4 : [3, 4, 4][stg]) + eye), section: kick ? 'B' : 'ABC'[stg], urgency: Math.min(1, heat * 0.8 + eye * 0.45), tempo: 1.05 + stg * 0.03 + eye * 0.02, low: !!(st.run && st.run.integrity <= 1) });
+    }
+    if (p.stage === 'stand') {
+      const s = p.stand, tr = SONGS[trackFor('g0dstand')];
+      if (now < s.openUntil) return o('g0dstand', { level: now - s.openFrom < 1500 ? 1 : 2 });
+      const k = clamp(1 - s.left / G0DP.standTime, 0, 1);
+      return o('g0dstand', { level: 4, section: 'ABC'[Math.min(2, Math.floor(k * 3))], urgency: k, tempo: 1 + (tr && tr.tick ? k * 0.25 : 0) + 0.05, low: !!(st.run && st.run.integrity <= 1) });
+    }
+  }
+  if (st.mode === 'g0ddie' && st.g0dDie) return o('g0d', { level: 2, section: 'C' });   // (it powers down: heavenDie)
+  if (st.mode === 'g0dend' && st.g0dEnd) return o('g0dstand', { level: 4, section: 'C' });   // (it trails off: heavenCollapse; nothing else comes in)
+  const fk = st.g0dFake;
+  if (fk && fk.holeAt != null) return o('g0dstand', { level: performance.now() - fk.t0 - fk.holeAt < G0D_FAKE.hole ? 0 : 1 });   // the crack: the final stand's track comes in, low
+  return null;
 }
-const g0dEndCrumble = e => clamp((e - G0D_END.crumble[0]) / (G0D_END.crumble[1] - G0D_END.crumble[0]), 0, 1);
+// G0D's voice (round 5, the user): his terminal lines growl as they type (a deep modem); the more he's hurt, the higher
+// and chirpier (engine/sound.js g0dVoice). A syllable every few letters (every other one as he breaks down).
+function g0dVoiceTick(now) {
+  const m = st.msg || '';
+  if (!m.startsWith('> G0D: ') || now - st.msgT > 4000) return;
+  if (st.g0dVoiceT !== st.msgT) { st.g0dVoiceT = st.msgT; st.g0dVoiceN = 7; }
+  const n = Math.min(m.length, Math.floor((now - st.msgT) / 16)), hi = g0dVoiceHi(), every = hi > 0.5 ? 2 : 3;
+  for (let k = st.g0dVoiceN; k < n; k++) if (k % every === 0 && m[k] !== ' ') { Sound.g0dVoice(hi); break; }
+  st.g0dVoiceN = Math.max(st.g0dVoiceN, n);
+}
+const g0dVoiceHi = () => {
+  const p = st.g0dp;
+  if (st.g0dDie || st.g0dEnd) return 1;
+  if (st.g0dFake) return 0.8;
+  if (p && p.stand) return 0.75 + 0.25 * p.stand.cur / p.stand.eyes.length;
+  if (p && p.fight && !p.wake) return clamp(1 - p.fight.hp / G0DP.hp, 0, 1) * 0.85;
+  return 0;
+};
+
+// ---------------- Step 5: the collapse ----------------
+// The final stand won. (Round 5, the user: no junk left on the screen; the music trails off like a boss's, nothing else
+// comes in.) The header and the tray go first, a letter at a time; his network crumbles in bursts (some, a pause, more,
+// then all of it); G0D's bar and the terminal blow off; his last eye (where you got it) glitches harder and harder,
+// bursts small, goes off like a TV: black. G0D DEFEATED types in (and "..with a shoe" if it was); a beat; then a CALL:
+// go again (the maze, or the G0D fight). The ending, the credits and the rewards come later (docs/ENDGAME.md).
+const G0D_END = { chrome: [100, 900], crumble: [[500, 750, 0.16], [1500, 1750, 0.34], [2300, 2700, 1]], boom: 2900, burst: 3300, small: 3800, off: 4300, offMs: 600, title: 5300, shoe: 6300, call: 7300, beat: 700 };
+const G0D_END_TITLE = 'G0D DEFEATED';
+function heavenCollapse(p) {
+  const s = p.stand, le = s && s.eyes[s.cur - 1], eye = le ? { x: clamp(Math.round(le.x), 4, L.wc - 5), y: clamp(Math.round(le.y), 2, L.gh - 2) } : { x: Math.floor(L.wc / 2), y: Math.floor(L.gh / 2) };
+  st.g0dp = null;
+  st.g0dEnd = { t0: performance.now(), node: p.node, said: {}, gone: new Set(), eye, shoe: !!(s && s.shoeKill) };
+  if (G0DP.skipCine) g0dEndSkip(st.g0dEnd);
+  Sound.shatter(); flash(C.bright, 0.7, 1.4); shake(18, 1);
+  Music.powerDown();   // (it trails off like a boss's)
+  showBoard('g0dend'); st.wipe = null; st.boardStart = -1e9;
+}
+// how much of the network has gone (0..1): each burst eases out to its share; the last one is all of it at once
+const g0dEndCrumble = e => {
+  let v = 0;
+  for (const [a, b, to] of G0D_END.crumble) { if (e <= a) return v; const k = clamp((e - a) / (b - a), 0, 1), last = to >= 1; if (e < b) return v + (to - v) * (last ? k * k : 1 - Math.pow(1 - k, 2)); v = to; }
+  return v;
+};
+// which network cells go first: clumps (a few cells together), some on their own
+const g0dEndH = (x, y) => G0D_LOOKS.hs(Math.floor(x / 4) * 3.7 + Math.floor(y / 2) * 8.3) * 0.6 + G0D_LOOKS.hs(x * 1.9 + y * 5.3) * 0.4;
+function g0dEndSkip(f) {   // straight to G0D DEFEATED (the editor's skip, a tap)
+  f.t0 = performance.now() - G0D_END.title; f.boomed = true;
+  for (const k of ['a', 'b', 'k0', 'k1', 'k2', 'burst', 'small', 'off']) f.said[k] = true;
+}
 function g0dEndTick(now) {
   const f = st.g0dEnd;
   if (!f || st.mode !== 'g0dend' || st.pause || st.dev) return;
   const e = now - f.t0, say = (k, at, fn) => { if (e >= at && !f.said[k]) { f.said[k] = true; fn(); } };
-  say('a', 500, () => g0dSay('n0. n0. this is my netw0rk.'));
-  say('b', 2300, () => g0dSay('there will be others.'));
-  say('c', G0D_END.fizzle, () => { Sound.shatter(); shake(6, 0.4); });
-  say('d', G0D_END.bar, () => { Sound.trap(); shake(10, 0.5); g0dEndBarBreak(); });
-  say('e', G0D_END.card, () => { Sound.bossWin(); boySay("we did it. he's gone. ...right?"); });
-  // the network crumbling: what goes this frame falls (a few at a time)
-  if (!reduced() && e > G0D_END.crumble[0] && e < G0D_END.crumble[1] + 200) {
-    const frac = g0dEndCrumble(e), hs = G0D_LOOKS.hs, cells = [];
-    for (let k = 0; k < 40 && cells.length < 10; k++) {
-      const x = Math.floor(Math.random() * L.wc), y = 1 + Math.floor(Math.random() * (L.gh - 1)), key = x + ',' + y;
-      if (f.gone.has(key) || hs(x * 1.9 + y * 5.3) >= frac) continue;
+  say('a', 300, () => g0dSay('n0. n0. this is my netw0rk.'));
+  say('b', 1700, () => g0dSay('there will be others.'));
+  G0D_END.crumble.forEach(([a], i) => say('k' + i, a, () => { const last = i === G0D_END.crumble.length - 1; Sound.shatter(); if (last) Sound.hkBoom(); shake(last ? 14 : 6, last ? 0.7 : 0.35); }));
+  say('burst', G0D_END.burst, () => g0dDieBurst(f, 5, 3, 0.9));
+  say('small', G0D_END.small, () => g0dDieBurst(f, 3, 1, 0.6));
+  say('off', G0D_END.off, () => { Sound.shatter(); shake(6, 0.4); flash(C.bright, 0.15, 0.3); });
+  // the network crumbling: what goes this frame falls
+  const c0 = G0D_END.crumble[0][0], c1 = G0D_END.crumble[G0D_END.crumble.length - 1][1];
+  if (!reduced() && e > c0 && e < c1 + 200) {
+    const frac = g0dEndCrumble(e), cells = [];
+    for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
+      const key = x + ',' + y;
+      if (f.gone.has(key) || g0dEndH(x, y) >= frac) continue;
       f.gone.add(key);
-      cells.push({ ch: g0dpCircuitCh(x, y, f.t0, L.wc, L.gh), x: pxX(x), y: pxY(BOARD_Y + y), col: pickR([C.dim, C.mid, C.dangerDim], Math.random) });
+      if (cells.length < 70 && Math.random() < 0.6) cells.push({ ch: g0dpCircuitCh(x, y, f.t0, L.wc, L.gh), x: pxX(x), y: pxY(BOARD_Y + y), col: pickR([C.dim, C.mid, C.dangerDim], Math.random) });
     }
-    if (cells.length) explode(cells, pxX(L.wc / 2), pxY(BOARD_Y + L.gh / 2), { power: 0.35, grav: 1.6, life: [0.5, 1.1] });
+    if (cells.length) explode(cells, pxX(f.eye.x), pxY(BOARD_Y + f.eye.y), { power: 0.35, grav: 1.6, life: [0.5, 1.1] });
   }
+  if (e >= G0D_END.title) { const n = Math.min(G0D_END_TITLE.length, Math.floor((e - G0D_END.title) / 35)); if (n > (f.typed || 0)) { f.typed = n; Sound.tick(); } }
+  if (f.shoe) say('shoe', G0D_END.shoe, () => Sound.ui());
+  say('call', f.shoe ? G0D_END.call : G0D_END.call - 700, () => g0dEndCall(f));
 }
-function g0dEndBarBreak() {
-  if (reduced()) return;
-  const y = G0DP_BAR_ROW, cells = [];
-  for (let x = 0; x < L.wc; x++) if (Math.random() < 0.6) cells.push({ ch: pickR(['─', '▓', '#', '%', '-'], Math.random), x: pxX(x), y: pxY(y), col: pickR([G0DP_RED, C.danger, C.dangerDim], Math.random) });
-  explode(cells, pxX(L.wc / 2), pxY(y) - L.chh, { power: 1.1, grav: 1.5, life: [0.7, 1.4] });
+// The CALL (for now: the rest of the ending comes later): go again
+function g0dEndCall(f) {
+  const node = f.node, seed = st.run && st.run.seed;
+  st.kbFocus = st.hoverBtn = null; Sound.shield();
+  st.callBox = ({ t0: performance.now(), who: 'pops', lines: ['kid. you did it. G0D is down.', "b0y's okay. he says hi.", 'the rest comes later. for now: go again?'],
+    btns: [
+      { text: '[ THE MAZE ]', onTap: () => { st.g0dEnd = null; st.g0dp = null; startRun(seed, true, { heaven: true }); } },
+      { text: '[ G0D FIGHT ]', onTap: () => { st.g0dEnd = null; st.g0dp = null; toMap(); setTimeout(() => { if (st.mode === 'map' && st.run && !st.g0dp && node) g0dWakeStart(node); }, 700); } }],
+    onClose: () => heavenWon(f) });   // (straight up: it doesn't wait in the CALL queue)
 }
-// A tap: during the collapse, skip to the card (after a beat); on the card, go on.
+// A tap: skip to G0D DEFEATED (after a beat; G0DP.tapSkip). The CALL takes its own taps.
 function g0dEndTap() {
   const f = st.g0dEnd, e = performance.now() - f.t0;
-  if (e < G0D_END.beat) return;
-  if (e < G0D_END.card) { if (G0DP.tapSkip) f.t0 = performance.now() - G0D_END.card; return; }
-  if (e > G0D_END.card + 500) heavenWon(f);
+  if (e > G0D_END.beat && e < G0D_END.title && G0DP.tapSkip) g0dEndSkip(f);
 }
 function buildG0dEnd(ctx) {
   const f = st.g0dEnd, { put, bg, now } = ctx;
   if (!f) return;
-  const e = now - f.t0, Y = BOARD_Y, hs = G0D_LOOKS.hs, frac = g0dEndCrumble(e), mess = e > G0D_END.fizzle;
-  const cardW = 32, cardH = 9, cx0 = Math.floor((L.wc - cardW) / 2), cy0 = Math.floor((L.gh - cardH) / 2);
-  const inCard = (x, y) => e >= G0D_END.card && x >= cx0 && x < cx0 + cardW && y >= cy0 - 1 && y <= cy0 + cardH;   // (the card's box stays clear)
-  // the network, bare, crumbling away
+  const e = now - f.t0, Y = BOARD_Y, hs = G0D_LOOKS.hs, frac = g0dEndCrumble(e), ex = f.eye.x, ey = f.eye.y;
+  const live = e < G0D_END.off + G0D_END.offMs, onEye = (x, y) => live && Math.abs(x - ex) <= 4 && Math.abs(y - ey) <= 1;
+  // the network, bare, crumbling away (nothing's left behind)
   for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
-    if (hs(x * 1.9 + y * 5.3) < frac || inCard(x, y)) continue;
+    if (g0dEndH(x, y) < frac || onEye(x, y)) continue;
     put(x, Y + y, g0dpCircuitCh(x, y, f.t0, L.wc, L.gh), hs(x * 1.3 + y * 7.9) < 0.3 ? C.dangerDim : C.dim);
   }
-  // the mess left behind: static, debris, a little mold (it doesn't go black)
-  if (mess) for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
-    const v = hs(x * 3.7 + y * 11.1 + 7);
-    if (v > 0.13 || inCard(x, y)) continue;
-    const flick = hs(x + y * 31 + Math.floor(now / 140)) > 0.6;
-    put(x, Y + y, flick ? noiseCh() : '.,:;%#'[Math.floor(v * 46) % 6], v < 0.03 ? C.dangerDim : v < 0.07 ? G0D_COLS.moldDim : C.dim);
+  // his last eye: glitching harder and harder (inverting, G0D on it), bursts small, then off like a TV
+  if (live) {
+    const gk = clamp(e / G0D_END.burst, 0, 1), tick = Math.floor(now / 70), col = Math.floor(now / 60) % 2 ? G0DP_RED : G0DP_BLUE, off = e >= G0D_END.off;
+    const P = (x, y, ch, c) => {
+      if (ch === ' ') return;
+      const inv = hs(x * 3.3 + y * 7.1 + tick) < 0.15 + gk * 0.5, noise = hs(x * 5.7 + y * 1.9 + tick * 3) < gk * 0.3;
+      if (inv) { bg(x, Y + y, 1, c, 1); put(x, Y + y, noise ? noiseCh() : ch, C.bg, 'fx', true); } else put(x, Y + y, noise ? noiseCh() : ch, c, 'fx', true);
+    };
+    let art;
+    if (e < G0D_END.burst) { const d = Math.floor(now / 90) % 3 - 1; art = [' .-. ', hs(tick * 0.7) < 0.15 + gk * 0.3 ? '(G0D)' : '(' + ' '.repeat(1 + d) + '@' + ' '.repeat(1 - d) + ')', " '-' "]; }
+    else if (e < G0D_END.small) art = [Math.floor(now / 50) % 2 ? '(@)' : '(O)'];
+    else if (!off) art = [Math.floor(now / 70) % 2 ? '(.)' : ' · '];
+    else { const k = (e - G0D_END.off) / G0D_END.offMs; art = [k < 0.25 ? '-------' : k < 0.5 ? '-----' : k < 0.75 ? '-' : '·']; }
+    const jit = !off && hs(tick * 1.3) < gk * 0.35 ? (hs(tick) < 0.5 ? -1 : 1) : 0;
+    art.forEach((l, j) => { const x0 = ex - (l.length >> 1) + jit, y = ey - (art.length >> 1) + j; bg(x0, Y + y, l.length, C.bg, 1); for (let k = 0; k < l.length; k++) off ? put(x0 + k, Y + y, l[k], C.bright, 'fx', true) : P(x0 + k, y, l[k], col); });
   }
-  // the last eye: looks around, frantic; fizzles out
-  if (e < G0D_END.fizzle + 500) {
-    const cx = Math.floor(L.wc / 2), cy = Y + Math.floor(L.gh / 2), dart = Math.floor(now / 90) % 5 - 2;
-    const art = e < G0D_END.fizzle ? [' .-. ', '(' + ' '.repeat(Math.max(0, 1 + Math.sign(dart))) + '@' + ' '.repeat(Math.max(0, 1 - Math.sign(dart))) + ')', " '-' "]
-      : e < G0D_END.fizzle + 200 ? ['     ', ' (.) ', '     '] : ['     ', '  .  ', '     '];
-    art.forEach((l, k) => { bg(cx - 2, cy - 1 + k, 5, C.bg, 1); put(cx - 2, cy - 1 + k, l, Math.floor(now / 70) % 2 ? G0DP_RED : C.bright, 'fx', true); });
-  }
-  // the ending (a placeholder: docs/ENDGAME.md has the real one)
-  if (e >= G0D_END.card) {
-    const lines = [['G0D IS DOWN', G0DP_BLUE, true], ['', C.text], ['the network goes quiet.', C.text], ['for now.', C.mid], ['', C.text], ['(the ending, the credits and', C.dim], ['your reward: docs/ENDGAME.md)', C.dim], ['', C.text], ['tap: back to the map', Math.floor(now / 500) % 2 ? C.bright : C.mid]];
-    const y0 = Y + Math.floor((L.gh - lines.length) / 2), w = 32, x0 = Math.floor((L.wc - w) / 2);
-    for (let k = -1; k <= lines.length; k++) bg(x0, y0 + k, w, C.bg, 1);
-    lines.forEach(([t, col, b], k) => put(Math.floor((L.wc - t.length) / 2), y0 + k, t, col, 'ui', !!b));
+  // G0D DEFEATED (it types in, like G0D BREACHED did), and how
+  if (e >= G0D_END.title) {
+    const T = G0D_END_TITLE, n = Math.min(T.length, Math.floor((e - G0D_END.title) / 35)), x0 = Math.floor((L.wc - T.length) / 2);
+    const callAt = f.shoe ? G0D_END.call : G0D_END.call - 700, mid = Y + Math.floor(L.gh / 2) - 1, up = Math.max(BOARD_Y, Math.floor((L.hc - 13) / 2) - 4);   // (it rises out of the CALL's way as it comes in)
+    const y = Math.round(mid + (up - mid) * clamp((e - callAt + 450) / 450, 0, 1));
+    put(x0, y, T.slice(0, n) + (n < T.length && Math.floor(now / 250) % 2 ? '_' : ''), C.accent, 'ui', true);
+    if (f.shoe && e >= G0D_END.shoe) { const t = '..with a shoe'; put(Math.floor((L.wc - t.length) / 2), y + 2, t.slice(0, Math.floor((e - G0D_END.shoe) / 45)), C.mid, 'ui'); }
   }
 }
-// G0D's bar until it shatters (empty), "tap to skip"
+// Over it: G0D's bar (empty) and the terminal until they blow off; the header and the tray go first
 function g0dEndOverlay(cells, now, bgs) {
   const f = st.g0dEnd;
   if (!f) return cells;
   const e = now - f.t0;
-  let out = cells;
-  if (e < G0D_END.bar) out = g0dpBar(out, bgs, { f: 0 });
-  if (G0DP.tapSkip && e > G0D_END.beat && e < G0D_END.card) { const tip = 'tap to skip'; out = out.concat([...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
+  let out = e < G0D_END.boom ? g0dpBar(cells, bgs, { f: 0 }) : cells;
+  out = g0dChromeFade(out, bgs, g0dDieFrac(e, G0D_END.chrome));
+  out = g0dChromeBoom(f, out, bgs, G0D_END.boom, e);
+  if (G0DP.tapSkip && e > G0D_END.beat && e < G0D_END.title) { const tip = 'tap to skip'; out = out.concat([...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
   return out;
 }
 // It's over (the placeholder ending): back to the map.

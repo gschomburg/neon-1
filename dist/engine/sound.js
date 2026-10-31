@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v13.95']);
+NEON_FILES.push(['engine/sound.js', 'v13.98']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -83,6 +83,17 @@ const Sound = (() => {
   return {
     init, levels,
     tick: () => tone(1800, 0.018, { vol: 0.12 }),
+    // H3AV3N (round 5, the user): G0D's voice, a syllable as his terminal line types: a deep modem growl; hi (0-1, as he
+    // breaks down) brings in higher chirps, R2-ish, until it's mostly them
+    g0dVoice: hi => {
+      if (hi < 0.95) { tone(48 + Math.random() * 40, 0.08, { type: 'sawtooth', vol: 0.34 * (1 - hi * 0.7), slide: 0.75 + Math.random() * 0.5 }); noise(0.07, { vol: 0.16 * (1 - hi * 0.6), freq: 300 + Math.random() * 600 }); tone(140 + Math.random() * 90, 0.05, { type: 'square', vol: 0.05 * (1 - hi) }); }
+      if (hi > 0.15) tone(600 + Math.random() * 1900 * hi, 0.045 + Math.random() * 0.04, { type: 'sine', vol: 0.2 * hi, slide: Math.random() < 0.5 ? 1.9 : 0.5 });
+    },
+    moldBreak: (th = 1.5) => { noise(0.06 + 0.025 * th, { vol: 0.24 + 0.05 * th, freq: 2000 - th * 260 }); noise(0.04, { vol: 0.12, freq: 6000, type: 'highpass', delay: 0.012 }); tone(120 + Math.random() * 70, 0.05, { type: 'square', vol: 0.07, slide: 0.55 }); },   // a tap breaking the M0LD: a wet crunch
+    static: (dur = 0.45) => { noise(dur, { vol: 0.3, freq: 2600, to: 500 }); for (let i = 0; i < 6; i++) noise(0.03, { vol: 0.22, freq: 800 + Math.random() * 4200, delay: Math.random() * dur }); },   // G0D hurt in the final stand
+    pulse: v => { tone(58, 0.3, { type: 'sine', vol: Math.min(0.9, v * 2.4), slide: 0.6 }); noise(0.16, { vol: v * 0.8, freq: 380, type: 'lowpass' }); },   // a HANDS OFF burn flash
+    barPop: () => { noise(0.09, { vol: 0.3, freq: 5200, type: 'highpass' }); tone(900 + Math.random() * 500, 0.04, { type: 'square', vol: 0.12, slide: 0.4 }); },   // a chunk off G0D's bar
+    plop: () => tone(150 + Math.random() * 70, 0.09, { type: 'sine', vol: 0.4, slide: 0.45 }),   // the mold dropping in
     key: () => { tone(1100 + Math.random() * 700, 0.012, { type: 'square', vol: 0.06 }); noise(0.012, { vol: 0.07, freq: 3200 }); },   // the intro: a key typed
     blip: () => tone(1500 + Math.random() * 900, 0.016, { type: 'sine', vol: 0.07 }),   // the intro: a line flickering through
     lineOk: () => { tone(880, 0.035, { type: 'sine', vol: 0.16 }); tone(1320, 0.03, { type: 'sine', vol: 0.08, delay: 0.035 }); },   // ...and settling

@@ -114,6 +114,30 @@ The user's dump, 2026-10-28, put in order. More is coming.
   to get past heaven's first sector; G0D is fought at the end of sector 1, then again as sector 2's final boss, then one
   more set of layers after the success screen; maybe no tells, maybe beaten only by learning the seed.
 
+**H3AV3N as a seed you can play** (the user, 2026-10-31; plan: Claude, below):
+- **Typing H3AV3N is all it takes** for now: it assumes you're where the quest would have you (b0y unlocked, on your
+  side). The rest of the quest chain (steps 5-10) can wait; filling in those steps' unlocks is fine if it makes this easier.
+- **You start with nothing** (a fresh run). You replay the seed until you learn it: that's the point.
+- **A new kind of run: QUEST** (not practice): a special seed you typed, tracked as its own kind. A retry after a
+  death stays QUEST. Once you've beaten the game, every seed replay counts anyway (docs/ENDGAME.md, reward 1).
+- **Sector 1:** a normal sector, the corps rolled from the seed (we see what comes up, then tweak), a **shop**, and a
+  **light MOLD sector event** (an anomaly: not every corp has it). The light mold: it grows up in a few spots now and
+  then, sits a second or two, crumbles, while new mold grows somewhere else. **You can't break it** (tapping it does
+  nothing): it just hides part of the board for a moment.
+  - **The mods and gear on offer in sector 1** (the user's list): BUFFER, lots of PATCH, SHOE, FRAG, FWALL, WARP
+    (maybe), CALL, STIM, 0DAY, SWAP. A good buffer and patches should always be there.
+  - **Custom events for the mold and the anomaly**; b0y maybe gets an anomaly too, or he is part of the event (a
+    b0y CALL is always there).
+- **Calling b0y: a [b] button** (the user, 2026-10-31): not a gear or a locked mod. A [b] in b0y's blue, down on the
+  other side from the LOOT button. Tap it and b0y comes out to help; when he's not on screen he goes back down there.
+  So in the maze he isn't always out telling you exactly what to do: tap [b] and he comes out with a tip.
+- **CERBERUS** (sector 1's boss): its mod should be good against G0D, or for fighting the mold. On the boss the mold
+  may work differently: maybe that's where you get to break it (a function of the fight, not a mod).
+- **Sector 2** (built: the 3 rows of corps, the maze, the shop, G0D): very moldy, the corps nearly impossible to read
+  through it.
+- **The win** (placeholders for now: get it flowing, fill in later): docs/ENDGAME.md's ending: a cutscene, a brief
+  credits / thanks for playing, "there is more to explore", the reward (shown as a REP unlock, already paid).
+
 **The H3AV3N run, settled** (the user, 2026-10-30):
 - **2 sectors** (the user, 2026-10-30, revised the same day: the maze is NOT sector 1's boss):
   - **Sector 1 plays like a normal sector**, with a special boss: **CERBERUS** again. The mold gets worse as you go,
@@ -390,6 +414,45 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   real rewards screen, frozen partway; tap-to-skip off by default; b0y in the real maze (cursors, his clue in the terminal). b0y
   in heaven's other corps: later. Maybe a heaven sector event card that says b0y is with you.
 - **Later (the user): make the maze a little harder.** b0y in heaven's other corps.
+- **H3AV3N feedback, round 5** (the user, meat notes 2026-10-31, as written; all built v13.98, see SPEC):
+  - boy should maybe not have the V unless he's actually pointing.. like maybe it's just a : and then for pointing he switches to V.. and maybe the V part moves up and down like when he's pointing on the maze
+  - eyes on the last stand maybe need to stand out a little more.. maybe they hace the invert glitch a lot and when boy grabs them the blue is also inverted and glitchy. it's just kinda hard to read the screen with all the red lines, it camoflages the eyes right now a little too well
+  - at the end of the last stand you left a bunch of junk mold and network bits on the screen those don't need to be there. i think i said that at some point, but we don't need it.. i think we would probably have the screen go to mostly dark and have a quest dialog pop up with some little bit of boy/pops test and then a button and theat would take you to a cut scene.
+  - the god attack has a burst when the attack first can damage you, and there's like a flash of light i think there should be mmore flashes while he's all red and you're mpt supposed to tap and then they sort of get less and less powerful, maybe their timing is a little random so not even intervals but make the last one happen at the end of his dangerous state
+  - i think some of the mold is drawing on top of boy. boy should probably be on one of the top levels
+  - i think god needs some more sound effects.. like his terminal lines should make some menacing sounds, kinda darth vadery i'm thinking a deep modem. like each character that types. as you deal more damage and he start to glitch out his voice is more like r2d2 higher pitch maybe
+  - the fight music is good and i like the ramp up from the waking up to the then the fight, but it need s bit more having it bump right up to stage 2 means stage 2 doesn't get the bump it needs. maybe we add a stage 0 for the intro or maybe it just bumps up to stage 2 when the fight starts then drops back down to 1 after a bar or 2?
+  - also on the fight music, it might be good if when you get his eye to show up we ramp up a little bit. intensity or level i'm not sure all that's happening then back when he's gone
+  - god healthbar still needs some pops or explosions when they fall off
+  - boy
+      - go for his eyes!
+      - break the m0ld
+      - find the (0)
+      - protect your int is too long in the cursor. maybe "protect"
+      - "stop it" with the arrow
+  - in the fight death, the hud and tray and stuff transitions away. i think they transition away while god is dying, before he disappears so right when he dies at the begining of his animation transition out the mod tray and the header. keep the god health bar there and the terminal so he can talk, but then when the eye dies its the last thing on screen as it goe s to black. we probablye need to eplode the healthbar and the terminal some where there in his final death explosions where he gets smaller, maybe they happen a tiny bit before he himself starts to explode
+  - lets hold a little bit then on the god breached. like 2 more beats
+  - lets make the rewards all exotics and make an exotic on there that maybe just has the abrev !G0D. we will make a real mod for it later, or maybe just make it up now. just make it do nothing and not drop normally (we naver want people to have it), the abreve should be god and then the name should be a bunch of mold symbols. if you're doing animation for the abrev it should maybe swap to lower case g0d and also maybe flicker to red from the exotic colors (if color change isn't in the exotic anim tool kit already it can just behave like any other exotic animates it doens't need special treatment)
+  - for the final stand, lets have the god health bar come in earlier. right at the beginning of the mold coming in there is like a crack sound and then the mold starts plopping in.. lets bring the health bar back there. and maybe wait a few secodns with the mold breaking through.. maybe not a second but a moment. so the health bar is mostly filled out and then the mold tendrils shoot out. and the mold would be under the health bar.
+  - final stand also needs gods voice or angry sounds when you defeat his eyes, some sort of stattic maybe
+  - the music for the final stand should come in a little earlier while the mold is growing out, it would be on a lower level and then once the fight starts it pumps up. so i'm thinking music comes in/fades up? when the health bar starts to appear.
+  - the music once you defeat last stand should kinda trail off like when you defeat a boss the falling apart pitch change thing it normally does for now. the other baseline menu track should not come back in.. let do a thing for now where the screen goes down to black.. header and stuff go away while god dies again so they are gone and the eye is the last thing.. terminal and health bar can explode off but they stick around longer than the rest of the header.. in the last stand they maybe explode off before the final eye. the final eye also gets glitchy. then we will have the G0D Defeated text similar to the god breached. (if you did it with the shoe it should say underneith after a quick pause "..with a shoe") then we pause a second and then lets just have a quest dialog popup now with a button to replay maze or god fight. and we'll flesh out the other stuff like cut scenes later
+  - is there a sound when you're tapping to break mold? there should be
+  - i'm kind of curious about adding some color to the mold. like maybe more steps in the ramp. or maybe it shifts throughout the fight, maybe some cyans or yellows maybe that's a little bit of the clues of which nodes are the blue nodes under there, if it's a blue node it's a little more cyan or something
+  - i think there's maybe a little glitch with boy and his resting place? i see some text down by the mod tray that just says boy while i also see boys cursor moving around up by my INT
+- **H3AV3N feedback, round 4** (the user, 2026-10-31; built v13.97): the tracks and the transitions look pretty good.
+  - The rewards screen's mold specks: not just there; they come in on the lines as the lines come in, and scroll with them
+    (a word each: a few at random, words the screen has once, and T A K E).
+  - The fake win's spread was too circular: tendrils shoot out of the hole (wandering like the traces, mostly outward),
+    branch, then grow wider and fill in between.
+  - Into the final stand: wires pop out through the mold from the hole (grey, some red at first); the mold breaks apart
+    where they go; the hole opens to about 5 across, then the mold falls away all over (clumps) and the eyes come out.
+    Wires mostly white and grey so the red eyes read.
+  - The stand's eyes glitch a little (inverting cells, a jolt, G0D on one for a moment), more as you take them out. An
+    eye dying glitches out, bursts small and goes off like a TV (like his death in the fight).
+  - The last eye stays where you got it (it snapped to the middle). The network falls apart with some pacing: some,
+    a pause, some more, then all of it at once.
+  - Music: the wake-up is great; the fight kicks in with stage 2's section (B) right away, then B harder, then C.
 - **H3AV3N feedback, round 3** (the user, meat notes 2026-10-31):
   - **b0y in the fight** (done v13.95): during HANDS OFF no "here": he hides, and the terminal says "stop digging.
     he's charging up."; when the mold is on your INT his tag says "protect your INT". He only points at what is
@@ -413,7 +476,7 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
     the real game is here). Eyes come out of the hole too: (o) at first, growing once they're out; they all come out
     and start moving, then the clock starts. G0D's bar comes back in like the wake-up's (more dramatic). As eyes die,
     maybe fewer wires: the wire count is more about the clock and the urgency.
-  - **G0D's defeat:** his eye jumps to the middle (a cut, like the wake-up's was). Instead: the screen starts
+  - **(done v13.97) G0D's defeat:** his eye jumps to the middle (a cut, like the wake-up's was). Instead: the screen starts
     exploding around him, everything falls apart, the eye last; maybe it slowly drifts toward the middle, maybe not;
     maybe it blows up into a smaller eye, then that falls apart.
   - **Into the final stand:** G0D's bar should come back in the way it did in the fight (the wake-up's), maybe more

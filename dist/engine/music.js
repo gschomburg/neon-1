@@ -1,6 +1,6 @@
 // NeoN+1 engine/music.js: The music engine (generated music).
 'use strict';
-NEON_FILES.push(['engine/music.js', 'v13.95']);
+NEON_FILES.push(['engine/music.js', 'v13.98']);
 
 // A track (data/music.js, corps/) picks its band. Everything is optional; left out, it's the original
 // synthwave sound (so older tracks play exactly as before):
@@ -32,6 +32,9 @@ NEON_FILES.push(['engine/music.js', 'v13.95']);
 //              before a new section) is a fill, a snare roll, a tom run or a kick-snare pickup, and the next
 //              bar lands on a crash. Tracks with a roll of their own (march, shanty) keep theirs.
 //   fill       { kick, snare, ... } like beat: your own fill, the whole last bar of a fill pass.
+// Stages (2026-10-31, the G0D fights): stages: true and the track follows the game instead of its form: the music state
+// says which section ('A', 'B', 'C': the fight's stages 1-3), and when that changes the new section starts from its
+// top at the next bar, on a crash. Between changes the section just loops.
 // The track for a place (menu, map, omni or a corp key). A corp without one of its own plays the map track.
 function trackFor(place) { const k = MUSIC_FOR[place]; return k && SONGS[k] ? k : MUSIC_FOR.map; }
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -95,7 +98,7 @@ function beatOf(song) {
 // a part's bar (a part is one string, or a list of bars that plays in turn)
 const partBar = (part, n) => parsePart(Array.isArray(part) ? part[n % part.length] : part);
 // Sections: which letter a pass plays, and the track as that section hears it (B's parts over the track's own).
-const formOf = sg => sg.form || (sg.B ? 'AABA' : 'A');
+const formOf = sg => sg.stages ? 'A' : sg.form || (sg.B ? 'AABA' : 'A');
 const sectionAt = (sg, p) => { const f = formOf(sg); return f[p % f.length]; };
 // (made fresh each pass, so the music tool's live changes reach the B part too)
 function sectionSong(sg, letter) {
@@ -108,6 +111,7 @@ const Music = (() => {
   let key = null, song = null, base = null, step = 0, nextTime = 0, getState = null, echoDelay = null, echoFb = null;
   let pulseWave = null, driveCurve = null;
   let pass = 0;   // how many times through the chords (written parts and breakdowns count bars with it)
+  let pinned = null;   // a staged track (stages: true): the section the game asked for, playing now
   let crashNext = false;   // a fill just played: the next bar starts on a crash
   // Music View (tools/music_view.html) only; the game never sets these, so it plays as before:
   //   muted   parts to leave out: pad stab bass kick snare hat open clap ghost fill arp melody lead sfx
@@ -208,6 +212,8 @@ const Music = (() => {
       if (!song) return;
       step = 0; pass = loopPass != null ? loopPass : 0; crashNext = false; nextTime = ac.currentTime + 0.05; played.length = 0;
       song = sectionSong(base, sectionAt(base, pass));
+      pinned = null;
+      if (base.stages) { pinned = (getState && getState().section) || 'A'; song = sectionSong(base, pinned); }   // (a staged track starts where the game is)
       echoDelay.delayTime.setTargetAtTime(song.echo || 0.32, ac.currentTime, 0.05);
       echoFb.gain.setTargetAtTime(song.feedback || 0.3, ac.currentTime, 0.05);
       pump.gain.cancelScheduledValues(ac.currentTime);
@@ -231,6 +237,9 @@ const Music = (() => {
     if (nextTime < ac.currentTime - 0.2) nextTime = ac.currentTime + 0.02;
     while (nextTime < ac.currentTime + 0.12) {
       if (fx && nextTime > fx.end) return;        // powered down / fanfare over: silence until the next track
+      if (base.stages && (s.section || 'A') !== pinned && step % barSteps(song) === 0) {   // the game moved on a stage: the new section, from its top, on a crash
+        pinned = s.section || 'A'; song = sectionSong(base, pinned); step = 0; pass++; crashNext = true;
+      }
       const bs = barSteps(song), beat = beatSteps(song);
       // seconds per 16th note (6/8: the bpm counts dotted quarters, 6 sixteenths each)
       const spb = 60 / (song.bpm * s.tempo * slowAt(nextTime)) / beat;
@@ -241,7 +250,7 @@ const Music = (() => {
       played.push({ t: nextTime, step, pass }); if (played.length > 64) played.shift();
       nextTime += spb;
       step = (step + 1) % (bs * song.prog.length);
-      if (step === 0) { pass = loopPass != null ? loopPass : pass + 1; song = sectionSong(base, sectionAt(base, pass)); }   // the next section
+      if (step === 0) { pass = loopPass != null ? loopPass : pass + 1; song = sectionSong(base, pinned || sectionAt(base, pass)); }   // the next section (a staged track: the same one again)
     }
   }
 
@@ -595,7 +604,7 @@ const Music = (() => {
       let p = null; for (const e of played) if (e.t <= ac.currentTime) p = e;
       if (!p) return null;
       const bs = barSteps(base);
-      return { step: p.step % bs, bar: Math.floor(p.step / bs), pass: p.pass, section: sectionAt(base, p.pass), t: p.t };
+      return { step: p.step % bs, bar: Math.floor(p.step / bs), pass: p.pass, section: pinned || sectionAt(base, p.pass), t: p.t };
     },
     mute: parts => { muted = new Set(parts || []); },
     seek: p => { seekTo = Math.max(0, p | 0); played.length = 0; },

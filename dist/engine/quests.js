@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v13.95']);
+NEON_FILES.push(['engine/quests.js', 'v13.98']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -65,15 +65,15 @@ function callTick(now) {
   st.kbFocus = st.hoverBtn = null;
   Sound.shield();
 }
-function callClose() { st.callBox = null; Sound.ui(); }
+function callClose() { const b = st.callBox; st.callBox = null; Sound.ui(); if (b && b.onClose) b.onClose(); }   // (onClose: closed without a button)
 function callTap(h) {
   if (!h) return;
-  if (h.kind === 'btn' && (h.id === 'cok' || h.id === 'cgo')) return h.onTap();
+  if (h.kind === 'btn' && (h.id === 'cok' || h.id === 'cgo' || /^cb\d$/.test(h.id))) return h.onTap();
 }
 function callKey(k) {
   const b = st.callBox;
   if (k === 'escape' || k === 'x') return callClose();
-  if (k === 'enter' || k === ' ') { if (b && b.btn) { st.callBox = null; b.btn.onTap(); } else callClose(); }
+  if (k === 'enter' || k === ' ') { const go = b && (b.btns ? b.btns[0] : b.btn); if (go) { st.callBox = null; go.onTap(); } else callClose(); }
 }
 const CALL_W = 32;
 function buildCallBox(ctx, now) {
@@ -94,7 +94,8 @@ function buildCallBox(ctx, now) {
   put(x0 + 9, y0 + 3, 'is calling.', C.mid, 'hud');
   let budget = Math.floor((now - b.t0 - 300) / 18);
   rows.forEach((t, r) => { const shown = t.slice(0, Math.max(0, budget)); budget -= t.length; if (shown) put(x0 + 2, y0 + 6 + r, shown, C.text, 'hud'); });
-  const btns = b.btn ? [{ id: 'cgo', text: b.btn.text, onTap: () => { st.callBox = null; b.btn.onTap(); } }, { id: 'cok', text: '[ LATER ]', onTap: callClose }]
+  const btns = b.btns ? b.btns.map((x, i) => ({ id: 'cb' + i, text: x.text, onTap: () => { st.callBox = null; x.onTap(); } }))   // (its own buttons: the G0D ending)
+    : b.btn ? [{ id: 'cgo', text: b.btn.text, onTap: () => { st.callBox = null; b.btn.onTap(); } }, { id: 'cok', text: '[ LATER ]', onTap: callClose }]
     : [{ id: 'cok', text: '[ OK ]', onTap: callClose }];
   const bw = btns.reduce((s, x) => s + x.text.length, 0) + (btns.length - 1) * 2;
   let bx = x0 + Math.floor((w - bw) / 2);

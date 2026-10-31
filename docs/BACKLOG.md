@@ -249,6 +249,8 @@ unlocked by REP, and some quests unlock REP.
 - **MONTY** (the user, meat notes 2026-10-30): a corp of 16 doors (the Monty Hall problem): you choose one, it takes away every
   door but yours and one other, and you choose again.
 - **RED TAPE:** a mod or gear (just the name so far).
+- **B1BL3** (the user, meat notes 2026-10-31): a portable codex (gear).
+- **BEES** (the user, meat notes 2026-10-31) needs a better animation: a swarm of little bees flying over the whole map, then destroying the ICE.
 
 ### 8. Achievements and cosmetics
 - First win, a naked (0 mod) win, beat each corp, perfect streaks, reach layer X; easy ones too (die on the first

@@ -516,6 +516,7 @@
   #music select { padding: 3px 6px; min-width: 110px; }
   #music td.band { color: var(--mid); font-size: 12px; white-space: normal; min-width: 160px; }
   #music tr.demo td.name::after { content: ' demo'; color: var(--warn); font-size: 10px; font-weight: 600; letter-spacing: 0.06em; vertical-align: 1px; }
+  #music tr.god td.name::after { content: ' god'; color: var(--bad); font-size: 10px; font-weight: 600; letter-spacing: 0.06em; vertical-align: 1px; }   /* the G0D fight tracks (tag: 'g0d') */
   #music .edited { color: var(--warn); }
   #music #tryinfo { color: var(--dim); font-size: 12px; }
   /* families */
@@ -863,6 +864,7 @@
   <h2>Like the game does</h2>
   <div class="row"><label>level</label><span id="levels"></span></div>
   <div class="row"><label></label><span id="levelname"></span></div>
+  <div class="row"><label>stage</label><span id="stages"></span></div>
   <div class="row"><label>urgency</label><input id="urgency" type="range" min="0" max="1" step="0.05" value="0"><span id="urgv" class="mono dim">0</span></div>
   <div class="row"><label>heartbeat</label><button id="low">off</button></div>
   <div class="row"><label>test</label><button id="win">boss win</button><button id="death">game over</button></div>
@@ -1518,13 +1520,13 @@
   // level: 0-4, or 'game' (the level the game's screen gives it).
   const NE = window.NE;
   const PREF_KEY = 'neon.editor.music';
-  const p = { key: null, place: null, follow: false, playing: false, level: 2, urgency: 0, low: false, sfx: false, volume: 0.8, restart: 0 };
+  const p = { key: null, place: null, follow: false, playing: false, level: 2, urgency: 0, low: false, sfx: false, volume: 0.8, restart: 0, stage: null };
   try { const o = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); for (const k of ['level', 'sfx', 'volume']) if (k in o) p[k] = o[k]; } catch (e) { /* nothing saved */ }
   const savePrefs = () => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ level: p.level, sfx: p.sfx, volume: p.volume })); } catch (e) { /* private mode */ } };
   function sendCtl(restart) {
     if (restart) p.restart = Date.now();
     NE.toGame({ type: 'music-ctl', playing: p.playing, key: p.follow ? null : p.key, level: p.level === 'game' ? null : p.level,
-      urgency: p.urgency, low: p.low, sfx: p.sfx, volume: p.volume, restart: p.restart });
+      urgency: p.urgency, low: p.low, sfx: p.sfx, volume: p.volume, restart: p.restart, section: p.stage });
     savePrefs();
   }
   // the changed tracks (and the engine demos, which only live here) and changed assignments, to the game
@@ -1562,7 +1564,7 @@
     const vis = visible();
     $('#rows').innerHTML = vis.map(t => {
       const tg = tags[t.k] && tags[t.k].tag;
-      return `<tr class="track${t.k === p.key ? ' playing' : ''}${t.k in DEMOS ? ' demo' : ''}" data-k="${t.k}">
+      return `<tr class="track${t.k === p.key ? ' playing' : ''}${t.k in DEMOS ? ' demo' : ''}${SONGS[t.k] && SONGS[t.k].tag === 'g0d' ? ' god' : ''}" data-k="${t.k}">
         <td class="name">${t.s.name}</td><td><span class="made ${fam[t.k].made}">${fam[t.k].made}</span></td><td class="like">${likeHtml(t.k)}</td><td class="num mono">${t.s.bpm}</td><td class="mono">${keyName(t.s)}</td><td>${groove(t.s)}</td>
         <td>${t.s.bass || ''}</td><td>${t.s.arp || ''}${t.s.pingpong ? ' <span class="dim">ping-pong</span>' : ''}${t.s.tick ? ' <span class="dim">tick</span>' : ''}</td>
         <td class="band">${band(t.s)}${orig[t.k] ? ' <span class="edited">(tried)</span>' : ''}</td>
@@ -1783,6 +1785,8 @@
     $('#vol').value = p.volume;
     $('#low').textContent = p.low ? 'on' : 'off'; $('#low').classList.toggle('on', p.low);
     $('#urgency').value = p.urgency; $('#urgv').textContent = p.urgency.toFixed(2);
+    // stage: a staged track (the G0D fights) plays the section for the fight's stage 1 / 2 / 3; game: what the game says
+    $('#stages').innerHTML = s && s.stages ? ['A', 'B', 'C'].map((l, i) => `<button data-g="${l}" class="${p.stage === l ? 'on' : ''}">${i + 1}</button>`).join(' ') + ` <button data-g="" class="${!p.stage ? 'on' : ''}">game</button>` : '<span class="dim">(staged tracks only: the G0D fights)</span>';
     renderTry(); renderSteps();
     const t = tags[p.key] || {};
     $('#pstars').outerHTML = starsHtml(p.key, 'pstars');
@@ -1793,6 +1797,7 @@
   $('#mPrev').addEventListener('click', () => step(-1));
   $('#mNext').addEventListener('click', () => step(1));
   $('#levels').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { p.level = b.dataset.l === 'game' ? 'game' : +b.dataset.l; sendCtl(); renderPlayer(); } });
+  $('#stages').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { p.stage = b.dataset.g || null; sendCtl(); renderPlayer(); } });
   $('#urgency').addEventListener('input', e => { p.urgency = +e.target.value; $('#urgv').textContent = p.urgency.toFixed(2); sendCtl(); });
   $('#low').addEventListener('click', () => { p.low = !p.low; sendCtl(); renderPlayer(); });
   $('#vol').addEventListener('input', e => { p.volume = +e.target.value; sendCtl(); });

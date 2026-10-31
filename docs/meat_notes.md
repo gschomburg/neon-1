@@ -1,5 +1,17 @@
 god and heaven feedback
 *********************
+        - buffer
+        - lots of patches
+        - shoes
+        - frags
+        -  fwall
+        - warp (maybe)
+        - calls
+        - stim
+        - 0day
+        - swap
+
+
 
 misc notes
 ***********************

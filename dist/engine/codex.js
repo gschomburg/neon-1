@@ -1,10 +1,10 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v13.95']);
+NEON_FILES.push(['engine/codex.js', 'v13.98']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
-const codexMods = () => Object.keys(MODS).sort((a, b) => RARITY_ORDER.indexOf(MODS[a].rarity) - RARITY_ORDER.indexOf(MODS[b].rarity) || MODS[a].name.localeCompare(MODS[b].name));
+const codexMods = () => Object.keys(MODS).filter(k => !MODS[k].hidden).sort((a, b) => RARITY_ORDER.indexOf(MODS[a].rarity) - RARITY_ORDER.indexOf(MODS[b].rarity) || MODS[a].name.localeCompare(MODS[b].name));
 const CODEX_ROWS = 23; // height of the list window, including "more" rows (the tabs take two rows)
 
 function wrapText(str, w) {

@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v13.95']);
+NEON_FILES.push(['engine/boot.js', 'v13.98']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -11,7 +11,7 @@ function musicState() {
   if (!m.playing) return s;   // the tab isn't playing: the game's own music (if its settings have music on)
   const song = m.key && SONGS[m.key] ? m.key : s.song, level = m.level != null ? m.level : s.level;
   const urgency = m.urgency || s.urgency, tr = SONGS[song];
-  return Object.assign(s, { song, level, urgency, low: !!m.low || s.low,
+  return Object.assign(s, { song, level, urgency, low: !!m.low || s.low, section: m.section || s.section,   // (section: the editor's stage switch, for staged tracks)
     tempo: (1 + (tr && tr.tick ? urgency * 0.25 : 0) + (level >= 3 ? 0.05 : 0)) * (s.pitch < 1 ? 0.55 : 1) });
 }
 function gameMusicState() {
@@ -47,6 +47,7 @@ function gameMusicState() {
   } else if (st.corp) level = 0;                         // public net
   // the PIER: its own track (one of FISH_TRACKS, picked when you arrive), amped up while you reel one in
   if (st.mode === 'fish' && st.fish && SONGS[st.fish.track] && song !== 'none') return { song: st.fish.track, level: st.fish.reel ? 3 : 1, urgency: 0, low: false, tempo: 1, pitch: 1 };
+  const g0dm = g0dMusic(); if (g0dm) return g0dm;   // H3AV3N: the G0D fights (engine/heaven.js)
   const low = !!(run && st.mode === 'play' && (zombie() ? (run.rot || 0) >= ROT.max - 30 : bloodMoney() ? run.credits < bloodCost(1) : run.integrity <= 1) && !st.dying);
   const slowmo = !!(st.mode === 'play' && st.corp && st.corp.hasBoss && st.corp.def.slowmo && st.lv);   // BULLET TIME
   const tempo = (1 + (song === 'chronos' ? urgency * 0.25 : 0) + (level >= 3 ? 0.05 : 0)) * (slowmo ? 0.55 : 1);
