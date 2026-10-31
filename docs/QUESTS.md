@@ -354,6 +354,7 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   (standBurn): you fight him while it all burns out. To fit: 6 eyes, red / blue 0.7s each, b0y chases faster.
 - Round 21 (the user: the red ramp is great; 10s is a little short depending on b0y, keep it tight for now, maybe tune):
   the final stand has ONION's circuit under it all too, going dark red as the burn builds.
+- Round 22 (the user): the final stand clock is 15s (the burn still peaks by ~5.5s).
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 

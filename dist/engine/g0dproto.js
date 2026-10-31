@@ -25,7 +25,7 @@ const G0DP = {
   burn: 3,                   // s: the burn (all red: every tap costs 1 INT)
   stealEvery: 3,             // s of thick mold on the INT / credits corner before it steals
   // the final stand
-  standEyes: 6, standTime: 10, red: 0.7, blue: 0.7,   // eyes, the clock (s), an eye's red and blue (s; red gets shorter as you win) (round 20: 10s, it all burns)
+  standEyes: 6, standTime: 15, red: 0.7, blue: 0.7,   // eyes, the clock (s), an eye's red and blue (s; red gets shorter as you win) (round 20: 10s, it all burns)
   standBurn: 5.5,            // s into the final stand until the traces are at full danger
 };
 const G0DP_BLUE = '#4aa8ff', G0DP_RED = '#ff3b3b', G0DP_FRESH = '#d8ff70';
