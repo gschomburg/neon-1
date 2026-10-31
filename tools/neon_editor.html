@@ -675,7 +675,7 @@
   <div class="row">mod <select id="xGiveMod"></select> <select id="xTierMod"></select> <button id="xGiveModBtn">give</button></div>
   <div class="row">gear <select id="xGiveGear"></select> <select id="xTierGear"></select> <button id="xGiveGearBtn">give</button></div>
   <div class="row">loot <select id="xGiveLoot"></select> <select id="xTierLoot"></select> <button id="xGiveLootBtn">give</button> <button id="xGiveLootRnd" title="2-5 random loot, one after another: the [$] pile">random 2-5</button></div>
-  <div class="row">kit <button data-x="tank" title="a legendary BUFFER and 10 rare PATCHes, INT full (for getting through H3AV3N)">tank kit: legendary BUFFER + 10 rare PATCHes</button></div>
+  <div class="row">kit <button data-x="kit" data-key="tank" title="a legendary BUFFER, 10 rare PATCHes, INT full">tank kit</button> <button data-x="kit" data-key="tracker" title="TRACER and KEYLOGGER at their top steps">tracker kit</button> <button data-x="kit" data-key="crew" title="CALL x5 and 2 of each crew member's own CALL (as many as fit on the belt)">crew kit</button> <button data-x="kit" data-key="shop" title="+500 credits">shop kit</button> <span class="dim">they only add: nothing you have is replaced; what doesn't fit is skipped</span></div>
   <h2>Hackers <small>bring one into the corp layer you're in: a rival, or crew as if you'd called them (CALL gear is under Give too)</small></h2>
   <div class="row"><select id="xHk"></select> <button data-x="hacker">bring in</button></div>
   <details class="xgrp" data-g="feats"><summary>Feats <small>click one to grant it or take it back (lit = done); "box" shows its FEAT box once the game is calm</small></summary>
@@ -2122,6 +2122,7 @@
     if (act === 'feat') return send('feat', { key: b.dataset.key, on: !(state && (state.feats || []).includes(b.dataset.key)) });
     if (act === 'featbox') return send('featbox', { key: b.dataset.key });
     if (act === 'hacker') return send('hacker', { key: $('#xHk').value });
+    if (act === 'kit') return send('kit', { key: b.dataset.key });
     send(act);
   });
   // give: every mod and gear (from dist/data/mods.js, loaded for the gear & mods tab)

@@ -360,11 +360,28 @@ if (EDITOR) {
       if (m.where === 'stand') g0dpStart('stand', real());
       if (m.where === 'end') heavenCollapse({ node: g0dNode() });
     },
-    // TESTING: a legendary BUFFER and 10 rare PATCHes (to get through heaven)
-    tank: () => {
-      if (has('buffer')) { const was = modTier('buffer'); st.run.modTier.buffer = 3; st.run.maxInt += 3 - was; st.run.integrity += 3 - was; } else addMod('buffer', 3);
-      for (let k = 0; k < 10; k++) addItem('patch', 2);
-      st.run.integrity = st.run.maxInt;
+    // TESTING: kits. They only add: a mod you have only ever goes up, a mod with no free slot is skipped, gear that
+    // doesn't fit on the belt is skipped, nothing of yours is replaced. The terminal says what you got.
+    kit: m => {
+      const run = st.run, got = [], skipped = [];
+      const mod = (key, tier) => {
+        if (has(key)) {
+          const was = modTier(key);
+          if (tier <= was) return skipped.push(MODS[key].name + ' (have it)');
+          run.modTier[key] = tier;
+          if (key === 'buffer') { run.maxInt += tier - was; run.integrity += tier - was; }
+          return got.push(MODS[key].name + ' up');
+        }
+        if (!modRoom(key)) return skipped.push(MODS[key].name + ' (no slot)');
+        addMod(key, tier); got.push(MODS[key].name);
+      };
+      const gear = (key, tier, n) => { let k = 0; while (k < n && addItem(key, tier)) k++; if (k) got.push(ITEMS[key].name + (k > 1 ? 'x' + k : '')); if (k < n) skipped.push(ITEMS[key].name + ' (belt full)'); };
+      if (m.key === 'tank') { mod('buffer', 3); gear('patch', 2, 10); run.integrity = Math.max(run.integrity, run.maxInt); }
+      if (m.key === 'tracker') { mod('tracer', tierCount(MODS.tracer) - 1); mod('keylogger', tierCount(MODS.keylogger) - 1); }
+      if (m.key === 'crew') { gear('call', 0, 5); for (const id of HK_CREW) if (ITEMS['call_' + id]) gear('call_' + id, 0, 2); }
+      if (m.key === 'shop') { run.credits += 500; got.push('+500cr'); }
+      setMsg(`> ${m.key} kit: ${got.join(', ') || 'nothing new'}${skipped.length ? '. skipped: ' + skipped.join(', ') : ''}`.slice(0, 120), got.length ? C.accent : C.mid);
+      Sound.buy();
     },
     g0dpset: m => { for (const [k, v] of Object.entries(m.set || {})) if (k in G0DP && typeof G0DP[k] === typeof v) G0DP[k] = v; },
     g0dstill: m => { if (st.g0d) { st.g0d.still = !!m.on; st.g0d.t0 = performance.now(); } },
@@ -379,7 +396,7 @@ if (EDITOR) {
       setMsg(`> test: ${MODS[key].name} stolen. it's at THE FENCE.`, C.danger);
     },
   };
-  const NEEDS_RUN = ['god', 'debug', 'free', 'credits', 'int', 'heal', 'steal', 'tank'];
+  const NEEDS_RUN = ['god', 'debug', 'free', 'credits', 'int', 'heal', 'steal', 'kit'];
   window.addEventListener('message', e => {
     const m = e.data;
     if (!m || m.to !== 'neon-game' || m.type !== 'test' || !TEST[m.act]) return;
