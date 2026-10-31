@@ -324,6 +324,11 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   only stain the mold red as they run through it (shades of red, head to tail); both keep the white dot heads. The final
   stand's traces stay as they are ("what's happening when it's in danger mode is pretty great"). **The network under the
   mold is ONION's circuit ring** now, all over the board, turning slowly: what you dig down to (tint traces color it too).
+- Round 12 (the user): **the mold spills off the board for real** (its own field, f.sp): up through the terminal band and a
+  little into the header (patchy, thinner the higher), down over the tray (it covers your gear and gets in the way of using
+  it). Thick spill hides what's under it, thin is a speck over it. A tap on spill smashes it (before your gear gets the
+  tap). **It steals when it has crawled onto INT / CR** (no more painted-on effect from a corner of the board). b0y's line
+  at the bottom of the board (round 1) is gone: his lines hold the terminal ~2.5s and other lines wait their turn.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
