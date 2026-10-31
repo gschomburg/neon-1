@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v13.89']);
+NEON_FILES.push(['engine/heaven.js', 'v13.90']);
 
 const HEAVEN = {};
 
@@ -115,7 +115,61 @@ HEAVEN.maze = {
   },
 };
 
-// G0D: the boss spot. Step 3 makes it the fight; for now it says so.
+// ---------------- Step 3: G0D's node. The wake-up on the map, then the fight ----------------
+// The wake-up (docs/QUESTS.md "G0D FIGHT: the wake-up"): you breach the node and the map doesn't change: G0D's node
+// opens into an eye (@) and blinks, the M0LD eats the network from the top down, his bar comes up and fills, he talks,
+// b0y says we gotta break through. A tap skips it (after a beat); the editor can skip it outright (G0DP.skipCine).
+const G0D_WAKE = { ms: 5200, beat: 700 };
+function g0dWakeStart(node) {
+  if (st.g0dWake) return;
+  if (G0DP.skipCine) return g0dWakeEnd(node);
+  st.g0dWake = { t0: performance.now(), node, said: {} };
+  st.mapSel = null;
+  Sound.bossDrop(); shake(8, 0.5); flash(C.danger, 0.2, 0.4);
+}
+function g0dWakeTick(now) {
+  const w = st.g0dWake;
+  if (!w || st.mode !== 'map' || st.pause || st.dev) return;
+  const e = now - w.t0, say = (k, at, fn) => { if (e >= at && !w.said[k]) { w.said[k] = true; fn(); } };
+  say('a', 300, () => g0dSay("you can't defeat me."));
+  say('b', 900, () => { Sound.alarm(); shake(5, 0.4); });
+  say('c', 2300, () => g0dSay('you are just meat.'));
+  say('d', 3100, () => { Sound.bossBuild(); });
+  say('e', 4300, () => boySay('we gotta break through that mold.'));
+  if (e >= G0D_WAKE.ms) g0dWakeEnd(w.node);
+}
+function g0dWakeSkip() { const w = st.g0dWake; if (w && performance.now() - w.t0 > G0D_WAKE.beat) g0dWakeEnd(w.node); }
+function g0dWakeEnd(node) {
+  st.g0dWake = null;
+  const run = st.run;
+  run.at = node.id; if (!run.visited.includes(node.id)) run.visited.push(node.id);   // (you're at G0D now)
+  g0dpStart('fight', { real: true, node, startInt: run.integrity, startCr: run.credits });
+}
+// Drawn over the map (engine/scene.js): the M0LD from the top down, G0D's bar filling.
+function g0dWakeOverlay(cells, now, bgs) {
+  const w = st.g0dWake;
+  if (!w || st.mode !== 'map') return cells;
+  const e = now - w.t0, t = Math.floor(e / 110) + 30, y0 = BOARD_Y, H = L.gh, W = L.wc, eye = w.eyeAt;
+  // it creeps in from every edge of the map; G0D's eye stays (it watches)
+  const R = Math.max(0, Math.min(1, (e - 700) / 2600)) * (Math.min(W / 4, H / 2) + 3);
+  const edge = (x, y) => Math.min(x / 2, (W - 1 - x) / 2, y - y0, y0 + H - 1 - y) + G0D_LOOKS.hs(x * 7.3 + y * 3.1) * 2.5;
+  const onEye = c => eye && Math.round(c.cy) === eye.y && c.cx >= eye.x - 1 && c.cx <= eye.x + 3;
+  const keep = cells.filter(onEye);
+  let out = g0dSpread(cells.filter(c => !onEye(c)), t, R, edge, y0, y0 + H, W).filter(c => !onEye(c)).concat(keep);
+  if (eye && bgs) bgs.push({ cx: eye.x - 1, cy: eye.y, w: 5, col: C.bg, alpha: 1 });
+  if (eye) out = out.map(c => onEye(c) && c.ch !== ' ' ? Object.assign({}, c, { col: C.danger, bold: true }) : c);
+  if (e > 3000) out = g0dpBar(out, bgs, { f: Math.min(1, (e - 3000) / 1200) });
+  if (e > G0D_WAKE.beat) { const tip = 'tap to skip'; out.push(...[...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: y0 + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
+  return out;
+}
+// The fight is won (steps 4-5 will put the fake win, the final stand and the collapse in between): back to the map.
+function heavenWon(p) {
+  st.g0dp = null;
+  setMsg('> G0D is down. (steps 4-5: the collapse, the ending)', G0DP_BLUE);
+  toMap();
+}
+
+// G0D: the boss spot (its node: the wake-up, then the fight).
 HEAVEN.g0d = {
   key: 'g0d', name: 'G0D', letter: '@', level: 5, intel: '"you are just meat."', tell: null,
   rules: () => 'the network is me.',

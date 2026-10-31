@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.89']);
+NEON_FILES.push(['engine/scene.js', 'v13.90']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -103,7 +103,7 @@ function buildScene(now, collectHits, raw = false) {
     addHit(x, 0, label.length, 1, { kind: 'btn', id, onTap, noFocus: true });
   };
   // The name is the menu button during a run (no [MENU] of its own).
-  const menuOk = !st.mp && run && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel' || st.mode === 'fish');
+  const menuOk = !st.mp && run && !st.g0dWake && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel' || st.mode === 'fish' || (st.mode === 'g0dp' && st.g0dp && st.g0dp.real));   // (G0D's fight: you can still quit)
   put(0, 0, 'NeoN+1', C.accent, menuOk ? 'ui' : undefined, menuOk && st.pause === true);
   if (menuOk) {
     if (st.hoverBtn === 'menu' || st.pause === true) bg(0, 0, 6, C.accent, 0.2);
@@ -314,7 +314,8 @@ function buildScene(now, collectHits, raw = false) {
   const adBgs = [];
   // The editor's G0D tab (engine/g0d.js): a G0D design or effect drawn over this screen. Never in play.
   if ((st.g0d || st.g0dBar) && !st.dev) result = g0dOverlay(result, now, adBgs);
-  if (st.mode === 'g0dp' && !st.dev) result = g0dpOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
+  if (st.mode === 'g0dp' && !st.dev) result = g0dpOverlay(result, now, adBgs);
+  if (st.g0dWake && !st.dev) result = g0dWakeOverlay(result, now, adBgs);   // H3AV3N: the wake-up (engine/heaven.js)   // the G0D prototype: its bar, the mold on your INT
   if (st.ad && !st.dev) {
     const ac = [];
     const aput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ac.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
@@ -974,7 +975,8 @@ function buildMap(ctx) {
     if (available) col = sel ? C.accent : (Math.floor(now / 500) % 2 ? C.bright : C.text);
     // corps in their own colors (not once you've been there)
     const cc = !visited ? corpIconCols(n) : null;
-    const label = nodeLabel(n);
+    const waking = st.g0dWake && n.heaven === 'g0d', label = waking ? ((now - st.g0dWake.t0) % 1400 < 160 ? '(-)' : '(@)') : nodeLabel(n);   // G0D wakes: its node is an eye
+    if (waking) st.g0dWake.eyeAt = { x: p.x - 1, y };   // (the mold leaves it: engine/heaven.js)
     if (cc && label[0] !== '[') {
       ctx.bg(p.x - 1, y, 3, cc.bg, available ? 1 : 0.55);
       // Nodes you can go to: a glint sweeps across the code now and then (that cell's colors

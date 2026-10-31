@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v13.89']);
+NEON_FILES.push(['engine/input.js', 'v13.90']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -179,6 +179,7 @@ cv.addEventListener('pointerdown', e => {
   if (st.hkCard && !st.dev) return hkCardTap();   // a hacker's card (engine/hackers.js)
   if (st.mode === 'fish' && !st.dev && !st.pause && fishPointer('down', e)) return;   // the PIER (engine/fishing.js)
   if (st.intro) { st.intro.skip = true; return; }   // tap skips a corp intro
+  if (st.g0dWake && !st.pause) { g0dWakeSkip(); return; }   // G0D's wake-up: a tap skips it (after a beat)
   if (st.bossIntro) { st.bossIntro.skip = true; return; }   // ...and a boss entrance
   let h = hitAt(...ptXY(e));
   if (st.mode === 'g0dp' && !st.pause && !st.dev && !st.wipe && !(h && h.kind === 'btn')) { const [px, py] = ptXY(e); if (g0dpTap((px - L.ox) / L.cw, (py - L.oy) / L.chh)) return; }   // the G0D prototype takes board taps

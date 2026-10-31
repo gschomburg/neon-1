@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.89']);
+NEON_FILES.push(['engine/run.js', 'v13.90']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -110,7 +110,7 @@ function selectNode(id) {
 
 async function enterNode(node, warp = false) {
   if (st.transitioning || !node || (!warp && !availableNodes().includes(node.id))) return;
-  if (node.heaven === 'g0d') { setMsg('> G0D waits. (the fight comes in step 3)', C.danger); Sound.deny(); return; }   // (engine/heaven.js)
+  if (node.heaven === 'g0d') return g0dWakeStart(node);   // G0D: the wake-up on the map, then the fight (engine/heaven.js)
   st.transitioning = true;
   const run = st.run;
   run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false;   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)

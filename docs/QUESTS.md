@@ -381,6 +381,7 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   sector you can jump to, (2) the maze as real layers [both built v13.89: engine/heaven.js], (3) the fight as the boss, with
   the wake-up on the real map, (4) the fake win on the real G0D BREACHED screen, then the final stand, (5) the collapse and
   a placeholder ending. Cinematics: a tap skips (after a beat); the editor gets a jump per step and a skip-cinematics toggle.
+  Step 3 built v13.90: the wake-up on the real map, then the fight as the boss (the run's INT, restarts with what you walked in with).
 - **b0y, what's wrong (the user, 2026-10-30; not yet, later):** (1) his resting spot: he's still on screen, so it's confusing
   whether he's pointing at something: **he should hide when he isn't actively searching.** (2) it isn't clear when he's doing
   something: elsewhere (the hackers on the board) the cursor switches to a v to point; do the same here, **and put some of his

@@ -5,10 +5,11 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v13.89']);
+NEON_FILES.push(['engine/g0dproto.js', 'v13.90']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)
+  skipCine: false,           // H3AV3N: skip the cinematics (the editor's toggle; a tap skips one anyway)
   // the maze
   mazeTimer: 5,              // s: each maze layer's clock (out: -1 INT, it starts again)
   mazeLost: 6,               // wrong layers deep before the next tap sends you back (and costs 1 INT)
@@ -67,11 +68,14 @@ function g0dpBoyLineDraw() {}
 
 // ---------------- Start / stop ----------------
 // stage: 'maze' | 'fight' | 'stand'
-function g0dpStart(stage) {
+// opts.real (H3AV3N, engine/heaven.js): the run's own fight: its INT and credits as they are (a restart puts back what you
+// walked in with), and its node (the end leads back to the run). Without it: the editor's prototype (full INT).
+function g0dpStart(stage, opts = null) {
   const run = st.run;
   if (!run) return;
-  run.integrity = run.maxInt;
-  const p = st.g0dp = { stage, t0: performance.now(), boy: g0dpBoyNew(), startCr: run.credits };
+  if (!opts || !opts.real) run.integrity = run.maxInt;
+  const p = st.g0dp = { stage, t0: performance.now(), boy: g0dpBoyNew(), startCr: opts && opts.startCr != null ? opts.startCr : run.credits,
+    real: !!(opts && opts.real), node: opts && opts.node, startInt: opts && opts.startInt != null ? opts.startInt : run.integrity };
   if (stage === 'maze') g0dpMazeStart(p);
   if (stage === 'fight') g0dpFightStart(p);
   if (stage === 'stand') g0dpStandStart(p);
@@ -103,10 +107,12 @@ function g0dpHurt(p, n, why, cause) {
     const stage = p.stage, tip = c ? lootWrap(c.tip, 34) : [];
     g0dpCard(p, [stage === 'stand' ? 'HE GOT AWAY' : 'FLATLINED', '', ...tip, '', stage === 'maze' ? 'the maze starts over.' : stage === 'fight' ? 'the fight starts over.' : 'the final stand starts over.', '', 'tap to go again'], () => {
       st.run.credits = p.startCr;
-      g0dpStart(stage);
+      if (p.real) st.run.integrity = p.startInt;   // (the run: what you walked in with)
+      g0dpStart(stage, g0dpAgain(p));
     }, C.danger);
   }
 }
+const g0dpAgain = p => (p.real ? { real: true, node: p.node, startInt: p.startInt, startCr: p.startCr } : null);   // the same fight, again
 const g0dpHeal = n => { const run = st.run; run.integrity = Math.min(run.maxInt, run.integrity + n); };
 
 // ---------------- b0y: 3 cursors. They wander to 3 nodes (one is right), then come together on the right one. ----------------
@@ -560,7 +566,7 @@ function g0dpFightTap(p, x, y, now) {
     g0dSay(pickR(f.hp / G0DP.hp < 0.4 ? G0DP_LINES.g0dLow : G0DP_LINES.hit, Math.random));
     if (f.hp <= 0) {
       Sound.bossWin();
-      return g0dpCard(p, ['G0D BREACHED', '', 'it\'s... no.', 'the M0LD is coming back.', '', 'G0D: "you are just meat."', '', 'tap: G0D FINAL STAND'], () => g0dpStart('stand'), G0DP_RED);
+      return g0dpCard(p, ['G0D BREACHED', '', 'it\'s... no.', 'the M0LD is coming back.', '', 'G0D: "you are just meat."', '', 'tap: G0D FINAL STAND'], () => g0dpStart('stand', p.real ? Object.assign(g0dpAgain(p), { startInt: st.run.integrity, startCr: st.run.credits }) : null), G0DP_RED);
     }
     const st2 = f.hp <= G0DP.hp / 3 ? 2 : f.hp <= G0DP.hp * 2 / 3 ? 1 : 0;   // a stage break (round 24)
     if (st2 > (f.stage || 0)) {
@@ -869,6 +875,7 @@ function g0dpStandTap(p, x, y, now) {
   if (s.cur >= s.eyes.length) {
     Sound.victory ? Sound.victory() : Sound.bossWin();
     g0dSay('there will be others.');
+    if (p.real) return g0dpCard(p, ['G0D IS DOWN', '', 'there will be others.', '', '(the collapse and the ending:', 'steps 4-5, to come)', '', 'tap: back to the map'], () => heavenWon(p), G0DP_BLUE);
     return g0dpCard(p, ['G0D IS DOWN', '', 'there will be others.', '', '(the end: the prototype)', '', 'tap: back to the maze'], () => g0dpStart('maze'), G0DP_BLUE);
   }
   if (s.cur === s.eyes.length - 1) boySay('last one!');
