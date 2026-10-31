@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v13.98']);
+NEON_FILES.push(['engine/quests.js', 'v13.99']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -111,10 +111,10 @@ function buildCallBox(ctx, now) {
 
 // ---------------- The scene ----------------
 // Full screen: one line at a time, typed in; a tap (or a key) finishes the line, then moves on. The last tap ends it.
-function playScene(id) {
+function playScene(id, onEnd = null) {   // (onEnd: what comes after it: the H3AV3N ending)
   if (!QUEST_SCENES[id]) return;
   st.callBox = null;
-  st.qScene = { id, i: 0, t0: performance.now() };
+  st.qScene = { id, i: 0, t0: performance.now(), onEnd };
   st.kbFocus = st.hoverBtn = null;
   Sound.whoosh && Sound.whoosh();
 }
@@ -133,6 +133,7 @@ function sceneEnd() {
   st.qScene = null;
   Sound.ui();
   if (sc && sc.id === 'disc' && questOf('pops').step === 'deliver') questStep('pops', 'd0g');
+  if (sc && sc.onEnd) sc.onEnd();
 }
 function sceneKey(k) { if (k === 'escape') sceneEnd(); else if (k === 'enter' || k === ' ' || k === 'arrowright') sceneNext(); }
 function buildScene_(ctx, now) {

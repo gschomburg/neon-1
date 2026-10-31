@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.98']);
+NEON_FILES.push(['engine/run.js', 'v13.99']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -25,9 +25,11 @@ async function startRun(seed, practice, opts = {}) {
   st.transitioning = true;
   Sound.ui();
   await wipeOut(0);
+  const quest = opts.tutorial ? null : opts.quest || questSeed(seed);   // H3AV3N (engine/heaven.js): a QUEST run
+  if (quest) practice = !save.beatG0D;   // (not scored until you've beaten G0D once)
   st.seed = seed; st.practice = practice;
   st.run = {
-    seed, practice,
+    seed, practice, quest,
     map: genMap(seed),
     finalTell: pickR(['corner', 'mark', 'mirror'], rngFor(seed, 'final')),
     at: '0:1', visited: ['0:1'],
@@ -37,7 +39,8 @@ async function startRun(seed, practice, opts = {}) {
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
-  if (opts.heaven) heavenSetup();   // H3AV3N (engine/heaven.js): its sector map in place of the first sector
+  if (quest) st.run.heaven = true;   // (a heaven run from the start: its death screen retries it)
+  if (opts.heaven) heavenSetup();   // H3AV3N (engine/heaven.js): its sector map in place of the first sector (the editor's jump, the ending's THE MAZE)
   if (legacyLv('lucky') && !opts.tutorial) {   // LUCKY START (THE BOARD): a random common gear
     const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
     if (pool.length) st.run.items.push({ key: pickR(pool, rngFor(seed, 'lucky')), tier: 0, n: 1 });
@@ -1647,7 +1650,7 @@ async function endRun(win) {
   const diedAt = !win && c ? `${c.def.name}${c.hasBoss ? (st.lv && st.lv.boss ? ' BOSS' : ` ${c.idx + 1}/${c.counts.length - 1}`) : ''}${run.sector ? `, sector ${run.sector + 1}` : ''}` : '';
   const breached = run.visited.map(id => run.map[id])
     .filter(n => (n.type === 'corp' || n.type === 'final') && (win || n.id !== run.at)).map(n => n.corp);
-  st.result = { win, depth: run.depth, corps: run.corps, earned: run.earned, newBest, practice: run.practice, seed: run.seed, heaven: !!run.heaven,
+  st.result = { win, depth: run.depth, corps: run.corps, earned: run.earned, newBest, practice: run.practice, seed: run.seed, heaven: !!run.heaven, quest: run.quest || null,
     rep, repWorth, sectors: run.sectorsCleared || 0,
     diedAt, breached, mods: run.mods.slice(), modTier: Object.assign({}, run.modTier), items: run.items.map(x => Object.assign({}, x)),
     map: run.map, visited: run.visited.slice(), at: run.at };
@@ -1694,7 +1697,7 @@ function showSectorClear(skipped, fanfare, root = null) {
   const breached = run.visited.map(id => run.map[id]).filter(n => n && (n.sector || 0) === run.sector && (n.type === 'corp' || n.type === 'final')).map(n => n.corp);
   const roots = Object.keys(ART_ROOT);
   st.result = { sector: true, skipped, depth: run.depth, corps: run.corps, earned: run.earned, n: run.sectorsCleared,
-    rep: repFor(run), practice: run.practice, seed: run.seed, boss: st.corp ? st.corp.def.name : FINAL.name,
+    rep: repFor(run), practice: run.practice, quest: run.quest || null, broken: !!(run.quest && run.sector === 0), seed: run.seed, boss: st.corp ? st.corp.def.name : FINAL.name,
     breached, root: root && ART_ROOT[root] ? root : roots[Math.floor(Math.random() * roots.length)] };
   st.corp = null; st.lv = null; st.timer = null;
   scenePalette(null);
@@ -1713,7 +1716,8 @@ async function pushOn() {
   const old = run.sector, skipped = !!(run.pending && run.pending.skipped);
   run.sector++;
   if (legacyLv('wind') && run.integrity < run.maxInt && !zombie()) run.integrity++;   // SECOND WIND (THE BOARD)
-  addSector(run.map, run.seed, run.sector, run.forceEvent || null);   // (forceEvent: the editor's TESTING tab)
+  if (run.quest === 'h3av3n' && run.sector === 1) addHeavenSector(run.map, run.seed, 1);   // the H3AV3N seed: sector 2 is heaven (engine/heaven.js)
+  else addSector(run.map, run.seed, run.sector, run.forceEvent || null);   // (forceEvent: the editor's TESTING tab)
   run.forceEvent = null; run.fence = [];   // what THE FENCE didn't sell back is gone
   st.result = null;
   // Beat OMNI (not skipped): its boss reward first, then the map climbs from the old
@@ -1736,6 +1740,7 @@ const uplinkSell = key => Math.floor(uplinkFee(key) * ECON.uplink.sellPct);
 function openUplink() {
   const run = st.run;
   if (!run) return;
+  if (run.quest && run.sector === 0) return openBrokenUplink();   // the H3AV3N seed: it's broken
   const keep = Object.fromEntries(run.mods.map(k => [k, true]));
   // PASS (gear): the whole fee is cut (ECON.uplink.pass); on by default when you hold one, tap to save it
   const hasPass = () => run.items.some(s => s.key === 'pass');
@@ -1824,6 +1829,23 @@ function openUplink() {
     if (holdingDisc() && questRun() && questOf('pops').step === 'find') T('+ cash out to bring POPS the DISC', C.rep);
   }, '> uplink: what do you carry?', { full: true });
 }
+// The H3AV3N seed's uplink (docs/QUESTS.md): broken. No fee, no cash out: the only way is on, into heaven.
+function openBrokenUplink() {
+  const run = st.run, sp = s => String(s).split('').join(' ');
+  const go = () => { if (st.transitioning) return; Sound.ui(); pushOn(); setMsg('> b0y: the uplink\'s dead. we go up.', G0DP_BLUE); };
+  openPanel('UPLINK', (T, B, X) => {
+    T('U P L I N K', C.danger);
+    const t = 'the uplink is broken.';
+    T([...t].map((ch, i) => G0D_LOOKS.hs(i * 3.1 + Math.floor(performance.now() / 140)) < 0.08 ? noiseCh() : ch).join(''), C.danger);
+    T('no way out from here.', C.mid);
+    T('and nothing to pay.', C.mid);
+    T('');
+    T('your mods come with you.', C.dim);
+    T('');
+    X({ box: true, text: `${sp('PUSH')}   ${sp('ON')}`, sub: '- into H3AV3N -', id: 'push', onTap: go, minW: 30, col: C.danger });
+  }, '> uplink: no signal.', { full: true });
+  st.keyHandler = k => { if (k === 'enter' || k === ' ') { go(); return true; } return false; };
+}
 // OMNI is every corp at once: a boss mod from any corp, a general mod, and one more.
 function openOmniReward(from) {
   const run = st.run;
@@ -1884,7 +1906,7 @@ function openLocker() {
 }
 
 const jackIn = () => startRun(st.seed, st.practice);
-const retry = () => startRun(st.result ? st.result.seed : st.seed, true);
+const retry = () => startRun(st.result ? st.result.seed : st.seed, !save.beatG0D);   // (once you've beaten G0D, replayed seeds count)
 // Died in H3AV3N (engine/heaven.js): the same seed, back at the bottom of heaven's map (the user, 2026-10-30).
-const retryHeaven = () => startRun(st.result ? st.result.seed : st.seed, true, { heaven: true });
+const retryHeaven = () => st.result && st.result.quest ? startRun(st.result.seed, true) : startRun(st.result ? st.result.seed : st.seed, true, { heaven: true });   // (the H3AV3N seed: from the start, still QUEST)
 const newRun = () => startRun(newSeed(), false);

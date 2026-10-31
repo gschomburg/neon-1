@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.98']);
+NEON_FILES.push(['engine/scene.js', 'v13.99']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -297,7 +297,7 @@ function buildScene(now, collectHits, raw = false) {
   // Footer: the run's seed, small and out of the way.
   // Left side of the footer, clipped so it never runs into [DEV] / the version.
   const footRoom = L.wc - versionTag.length - (st.devAccess || st.dev ? 8 : 1) - 1;
-  if (run && st.mode !== 'over') put(0, boardEnd + 6, `seed ${run.seed}${run.practice ? ' practice' : ''}`.slice(0, footRoom), C.dim);
+  if (run && st.mode !== 'over') put(0, boardEnd + 6, `seed ${run.seed}${run.quest ? ' quest' : run.practice ? ' practice' : ''}`.slice(0, footRoom), C.dim);
   else if (st.mp) put(0, boardEnd + 6, `room ${st.mp.code}`, C.dim);
   footerRight();
   }

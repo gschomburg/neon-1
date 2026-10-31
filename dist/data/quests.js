@@ -14,7 +14,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v13.98']);
+NEON_FILES.push(['data/quests.js', 'v13.99']);
 
 const QUEST_INFO = {
   pops: {
@@ -43,6 +43,18 @@ const QUEST_LINES = {
 };
 
 const QUEST_SCENES = {
+  // H3AV3N: G0D is down (a placeholder: docs/ENDGAME.md has the real ending to write)
+  h3av3n: [
+    { title: ['G0D IS DOWN', 'H3AV3N'] },
+    { text: 'the network goes quiet. for the first time in years, nothing is watching.' },
+    { who: 'pops', text: 'kid. you did it.' },
+    { text: 'b0y logs off. across town, a light comes back on in a back room behind a laundromat.' },
+    { text: '(the real cutscene goes here: docs/ENDGAME.md)' },
+    { title: ['THANKS FOR PLAYING', 'NeoN+1'] },
+    { title: ['CREDITS', '(the credits go here)'] },
+    { title: ['THERE IS MORE TO EXPLORE', 'the net is still out there.'] },
+    { title: ['UNLOCKED: SEEDS FOR REAL', 'replayed seeds count now. already paid.'] },
+  ],
   // SAFEHOUSE: you bring POPS the DISC
   disc: [
     { title: ['WHAT IS ALL THIS FOR?', 'step 2: SAFEHOUSE'] },

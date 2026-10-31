@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v13.98']);
+NEON_FILES.push(['engine/menus.js', 'v13.99']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -16,7 +16,7 @@ function openSettings() {
     T('');
     audioLines(X, 's_');
     T('');
-    T(`next run seed${st.practice ? ' (practice)' : ''}`, C.text);
+    T(`next run seed${questSeed(st.seed) ? ' (quest)' : st.practice ? ' (practice)' : ''}`, C.text);
     X({ row: [
       { field: 'seed', width: 16, value: () => st.seed, clean: cleanSeed, onCommit: setSeed },
       { text: '[ NEW SEED ]', id: 'rseed', onTap: rerollSeed },
@@ -37,9 +37,9 @@ function setSeed(s) {
   if (!clean) return Sound.deny();      // empty: keep the old seed
   if (clean === st.seed) return;
   st.seed = clean;
-  st.practice = true;     // a chosen seed is a practice run
+  st.practice = !save.beatG0D;     // a chosen seed is a practice run (once you've beaten G0D, it counts)
   Sound.ui();
-  setMsg(`> seed set: ${clean}`);
+  setMsg(questSeed(clean) ? `> seed set: ${clean}. b0y's with you.` : `> seed set: ${clean}`, questSeed(clean) ? G0DP_BLUE : C.text);
 }
 
 function resetSave() {

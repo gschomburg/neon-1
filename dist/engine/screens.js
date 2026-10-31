@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v13.98']);
+NEON_FILES.push(['engine/screens.js', 'v13.99']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -138,7 +138,7 @@ function titleLines(now) {
   lines.push({ gap: 1, row: [
     { text: 'seed' },
     { text: `[${st.seed.slice(0, 10)}]`, id: 'seed', onTap: rerollSeed },
-    ...(st.practice ? [{ text: 'practice', col: C.dangerDim }] : []),
+    ...(questSeed(st.seed) ? [{ text: 'quest', col: G0DP_BLUE }] : st.practice ? [{ text: 'practice', col: C.dangerDim }] : []),
   ] });
   return lines;
 }
@@ -246,9 +246,9 @@ function overLines() {
     statLine(`layers ${pad2(r.depth)}   corps ${r.corps}   cr ${r.earned}`);
     { const marks = (r.breached || []).map(k => corpCode(corpDef(k))).join(' '), txt = `breached ${marks || 'none'}`;
       lines.push({ text: txt, colorAt: i => i < 9 ? C.mid : marks ? C.accent : C.dim }); }
-    if (r.practice) T('practice run: no REP', C.dangerDim);
+    if (r.practice) T(r.quest ? 'quest run: no REP' : 'practice run: no REP', C.dangerDim);
     T('');
-    lines.push({ box: true, text: 'T H E   U P L I N K', sub: '- push on or cash out -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
+    lines.push({ box: true, text: 'T H E   U P L I N K', sub: r.broken ? '- something is wrong -' : '- push on or cash out -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
     return lines;
   }
   if (r.win) {
@@ -271,7 +271,7 @@ function overLines() {
   }
   if (r.newBest) T('** new best **', C.accent);
   else T(`best ${pad2(save.best)}   seed ${r.seed}`, C.mid);
-  if (r.practice) T('practice run: not scored', C.dangerDim);
+  if (r.practice) T(r.quest ? 'quest run: not scored' : 'practice run: not scored', C.dangerDim);
   // corps breached, by code
   // (a long run's list doesn't fit: it shows a page at a time and cycles, with the page count)
   { const codes = r.breached.map(k => corpCode(corpDef(k))), per = Math.max(1, Math.floor((L.wc - 9 - 7) / 4));

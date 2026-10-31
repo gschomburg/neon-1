@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v13.98']);
+NEON_FILES.push(['engine/heaven.js', 'v13.99']);
 
 const HEAVEN = {};
 
@@ -36,6 +36,16 @@ function addHeavenSector(nodes, seed, s) {
   shop.next.push(g0d.id);
   return nodes;
 }
+// ---------------- H3AV3N as a seed (the user, 2026-10-31; docs/QUESTS.md "H3AV3N as a seed you can play") ----------------
+// Type H3AV3N and the run is a QUEST run: you start with nothing, b0y on your side. Sector 1 is a normal sector (rolled
+// from the seed, its market stocked for what's coming: QUEST_STOCK); its uplink is broken (no fee, no cash out); sector 2
+// is heaven (addHeavenSector: the corps, the maze, the shop, G0D). A QUEST run isn't scored (like practice) until you've
+// beaten G0D once (save.beatG0D): then every seed replay counts. Its death retry starts the seed over, still QUEST.
+const QUEST_SEEDS = { H3AV3N: 'h3av3n' };
+const questSeed = seed => QUEST_SEEDS[seed] || null;
+// Sector 1's market on the H3AV3N seed (the user's list): PATCH always (a few), BUFFER always, two of the rest
+const QUEST_STOCK = { patches: 3, gear: ['shoe', 'frag', 'fwall', 'warp', 'call', 'stim', 'zeroday', 'swap'], mods: ['buffer'] };
+const questMarket = node => !!(st.run && st.run.quest === 'h3av3n' && (node.sector || 0) === 0);
 // The editor's jump (TESTING / g0d tab): a practice run whose first sector is heaven's sector 2.
 function heavenSetup() {
   const run = st.run;
@@ -892,15 +902,24 @@ function g0dEndTick(now) {
   if (f.shoe) say('shoe', G0D_END.shoe, () => Sound.ui());
   say('call', f.shoe ? G0D_END.call : G0D_END.call - 700, () => g0dEndCall(f));
 }
-// The CALL (for now: the rest of the ending comes later): go again
+// The ending (a placeholder, docs/ENDGAME.md): on the H3AV3N seed, the cutscene, the credits, "there is more to
+// explore", the reward (SEEDS FOR REAL: replayed seeds count from now on); then POPS's CALL. The editor's jump: the CALL.
 function g0dEndCall(f) {
-  const node = f.node, seed = st.run && st.run.seed;
+  const run = st.run;
+  if (run && run.quest && !f.ended) {
+    f.ended = true;
+    if (!save.beatG0D) { save.beatG0D = true; persist(); }
+    save.g0dWins = (save.g0dWins || 0) + 1; persist();
+    stat('g0d_win', { quest: run.quest, seed: run.seed, shoe: !!f.shoe });
+    return playScene('h3av3n', () => g0dEndCall(f));
+  }
+  const node = f.node, seed = run && run.seed, quest = run && run.quest;
   st.kbFocus = st.hoverBtn = null; Sound.shield();
   st.callBox = ({ t0: performance.now(), who: 'pops', lines: ['kid. you did it. G0D is down.', "b0y's okay. he says hi.", 'the rest comes later. for now: go again?'],
     btns: [
-      { text: '[ THE MAZE ]', onTap: () => { st.g0dEnd = null; st.g0dp = null; startRun(seed, true, { heaven: true }); } },
+      { text: '[ THE MAZE ]', onTap: () => { st.g0dEnd = null; st.g0dp = null; startRun(seed, true, { heaven: true, quest }); } },
       { text: '[ G0D FIGHT ]', onTap: () => { st.g0dEnd = null; st.g0dp = null; toMap(); setTimeout(() => { if (st.mode === 'map' && st.run && !st.g0dp && node) g0dWakeStart(node); }, 700); } }],
-    onClose: () => heavenWon(f) });   // (straight up: it doesn't wait in the CALL queue)
+    onClose: () => { if (quest) { st.g0dEnd = null; st.g0dp = null; endRun(true); } else heavenWon(f); } });   // (straight up: it doesn't wait in the CALL queue) (the seed: the run ends, a win)
 }
 // A tap: skip to G0D DEFEATED (after a beat; G0DP.tapSkip). The CALL takes its own taps.
 function g0dEndTap() {

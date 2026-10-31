@@ -114,10 +114,11 @@ The user's dump, 2026-10-28, put in order. More is coming.
   to get past heaven's first sector; G0D is fought at the end of sector 1, then again as sector 2's final boss, then one
   more set of layers after the success screen; maybe no tells, maybe beaten only by learning the seed.
 
-**H3AV3N as a seed you can play** (the user, 2026-10-31; plan: Claude, below):
+**H3AV3N as a seed you can play** (the user, 2026-10-31). Batch 1 built v13.99 (the seed, the QUEST run, sector 1 with its market, the broken uplink, heaven as sector 2, the placeholder ending); still to build: the MOLD event (light in sector 1, heavy on sector 2's corps), the [b] button, CERBERUS.
 - **Typing H3AV3N is all it takes** for now: it assumes you're where the quest would have you (b0y unlocked, on your
   side). The rest of the quest chain (steps 5-10) can wait; filling in those steps' unlocks is fine if it makes this easier.
 - **You start with nothing** (a fresh run). You replay the seed until you learn it: that's the point.
+  Your REP unlocks (THE BOARD) carry in, like any run (the user, 2026-10-31).
 - **A new kind of run: QUEST** (not practice): a special seed you typed, tracked as its own kind. A retry after a
   death stays QUEST. Once you've beaten the game, every seed replay counts anyway (docs/ENDGAME.md, reward 1).
 - **Sector 1:** a normal sector, the corps rolled from the seed (we see what comes up, then tweak), a **shop**, and a
