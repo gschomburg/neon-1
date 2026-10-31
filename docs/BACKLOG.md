@@ -246,10 +246,17 @@ unlocked by REP, and some quests unlock REP.
 - **A drug dealer corp** (the user, 2026-10-27).
 - CORPS.md marks every built corp `(built)` on its heading.
 
+- **MONTY** (the user, meat notes 2026-10-30): a corp of 16 doors (the Monty Hall problem): you choose one, it takes away every
+  door but yours and one other, and you choose again.
+- **RED TAPE:** a mod or gear (just the name so far).
+
 ### 8. Achievements and cosmetics
 - First win, a naked (0 mod) win, beat each corp, perfect streaks, reach layer X; easy ones too (die on the first
   corp, spend 1000cr, earn 1000cr then get back to 0); beat G0D at the top.
 - Unlock cosmetics: logos, hats / accessories, card frames, titles ("SIGIL BREAKER"). Some bought with REP.
+
+- **INFIDEL** (the user, meat notes 2026-10-30): a feat (a title) for beating G0D with a SHOE. (So SHOE has to work in the
+  G0D fight.)
 
 ### 9. The encrypted codex
 - Unfound entries show scrambled text that decrypts (as you beat corps, or over time) instead of "???".
@@ -334,6 +341,12 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
+- **From the meat notes (the user, 2026-10-30):**
+  - **FIRST BREACH with a long tell** (SYNAPSE): the copy pushes SEE THE CORE off the bottom of the screen: make room for it.
+  - **UPSIDE's boss layer:** hard to tell where to tap (tried everywhere); SNIFFER may have broken an ICE and locked it.
+  - **A market bug:** buy a mod you own (an upgrade): the sold-out offer in the market turns to the next rarity's look
+    (blue bought to purple: the sold-out one shows legendary). It should stay the color you bought.
+  - **mimic** (just the word in the notes: ask).
 - **From the user's iPhone notes (meat notes 2026-10-30):** more companions (pets); **loot training** (the training run
   could show the LOOT bag); a **phishing logo**; PIER names: **CATPHISH**, "phush you? no, phush me"; and three to ask
   about: **Neon**, **Scam**, **Merch** (just the words in the notes).

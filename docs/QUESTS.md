@@ -389,6 +389,16 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   First play-through (the user: "this is so cool"): G0D dies before the fake win (as long as the collapse); the fake win is the
   real rewards screen, frozen partway; tap-to-skip off by default; b0y in the real maze (cursors, his clue in the terminal). b0y
   in heaven's other corps: later. Maybe a heaven sector event card that says b0y is with you.
+- **H3AV3N feedback, round 2** (the user, meat notes 2026-10-30; to do):
+  - **b0y lags on the maze nodes:** his cursors get there late.
+  - **Getting through the maze should feel like a success:** probably a real rewards screen.
+  - **G0D taking over the network, more dramatic:** before the mold closes in, the corp nodes break apart, shift, move and
+    glitch to red or to G0D; bring in the red network traces and the normal network background (the circuit), then the
+    mold; maybe some eyes too.
+  - **Gear in the G0D fight:** it doesn't work. STIM should, and probably a bunch more (some shouldn't). SHOE should
+    (see the INFIDEL feat).
+  - **The win screen to the final stand isn't smooth:** things seem to overlap. It should start with the random bar traces,
+    and the network lines could come out the same way, in white or grey.
 - **b0y, what's wrong (the user, 2026-10-30; not yet, later):** (1) his resting spot: he's still on screen, so it's confusing
   whether he's pointing at something: **he should hide when he isn't actively searching.** (2) it isn't clear when he's doing
   something: elsewhere (the hackers on the board) the cursor switches to a v to point; do the same here, **and put some of his
