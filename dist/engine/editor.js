@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.88']);
+NEON_FILES.push(['engine/editor.js', 'v13.89']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -347,6 +347,12 @@ if (EDITOR) {
       st.g0d = null; st.g0dBar = null;
       await onMap();
       g0dpStart(m.stage);
+    },
+    // H3AV3N in the real game (engine/heaven.js): its sector map, or straight into the maze
+    heaven: async m => {
+      g0dpStop(); st.g0d = null; st.g0dBar = null;
+      await freshRun(); heavenSetup(); toMap(); await settle();
+      if (m.to === 'maze') { const n = Object.values(st.run.map).find(o => o.heaven === 'maze'); await enterNode(n, true); await settle(); }
     },
     g0dpset: m => { for (const [k, v] of Object.entries(m.set || {})) if (k in G0DP && typeof G0DP[k] === typeof v) G0DP[k] = v; },
     g0dstill: m => { if (st.g0d) { st.g0d.still = !!m.on; st.g0d.t0 = performance.now(); } },

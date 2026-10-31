@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.88']);
+NEON_FILES.push(['engine/scene.js', 'v13.89']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -165,7 +165,7 @@ function buildScene(now, collectHits, raw = false) {
     let where = run.sector ? `OVERWORLD // SECTOR ${run.sector + 1}` : 'OVERWORLD';
     if (st.mode === 'play' && st.corp) {
       const c = st.corp;
-      const prog = c.hasBoss ? (st.lv && st.lv.boss ? 'BOSS' : `${c.idx + 1}/${c.counts.length - 1}`) : '';
+      const prog = c.def.progLabel ? c.def.progLabel(c) : c.hasBoss ? (st.lv && st.lv.boss ? 'BOSS' : `${c.idx + 1}/${c.counts.length - 1}`) : '';
       where = `${c.def.name} ${prog}`;
     } else if (st.mode === 'panel') where = st.panelTitle || '';
     else if (st.mode === 'fish') where = 'THE PIER';
@@ -186,7 +186,7 @@ function buildScene(now, collectHits, raw = false) {
     const cand = candidates().length, reals = Math.max(1, candidates().filter(isReal).length);
     const open = st.lv.tiles.filter(t => t.state === 'closed').length;
     put(0, 5, 'OPEN ', C.mid); put(5, 5, `${pad2(open)}/${pad2(st.lv.n)}`, C.text);
-    if (cand > 0) {
+    if (cand > 0 && !(st.corp && st.corp.def.noOdds)) {   // (G0D MAZE: no odds: every node goes somewhere)
       const pct = Math.round(100 * Math.min(reals, cand) / cand);   // QUANTUM: 2 IN n
       const col = cand <= reals ? C.accent : pct < 25 ? C.danger : C.text;
       const val = `${Math.min(reals, cand)} IN ${cand}  ${String(pct).padStart(3)}%`;

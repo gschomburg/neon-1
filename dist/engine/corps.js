@@ -1,6 +1,6 @@
 // NeoN+1 engine/corps.js: After the corps load: OMNI//CORE and the public net, corpDef, RIVAL, the codex corp order, intro art clean-up.
 'use strict';
-NEON_FILES.push(['engine/corps.js', 'v13.88']);
+NEON_FILES.push(['engine/corps.js', 'v13.89']);
 
 const FINAL = {
   key: 'omni', name: 'OMNI//CORE', letter: '!',
@@ -9,7 +9,7 @@ const FINAL = {
   bossDesc: 'boss: ICE hits for 2.',
 };
 const PUBLIC = { key: 'public', name: 'PUBLIC NET', letter: '>', intel: 'one node. it is real.', tell: null };
-const corpDef = key => CORPS[key] || (key === 'omni' ? FINAL : PUBLIC);
+const corpDef = key => CORPS[key] || (typeof HEAVEN !== 'undefined' && HEAVEN[key]) || (key === 'omni' ? FINAL : PUBLIC);   // (HEAVEN: the G0D corps, engine/heaven.js)
 // A corp's code on the map and in lists: its 2 letters and its level (SK1, BR5).
 // OMNI and the public net keep a symbol in brackets, like the other special nodes.
 const corpCode = d => d.code ? d.code + (d.level || 1) : `[${d.letter}]`;

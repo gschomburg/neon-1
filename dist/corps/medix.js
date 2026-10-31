@@ -1,6 +1,6 @@
 // NeoN+1 corps/medix.js
 'use strict';
-NEON_FILES.push(['corps/medix.js', 'v13.88']);
+NEON_FILES.push(['corps/medix.js', 'v13.89']);
 // Its boss mod: TRIAGE (triage), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

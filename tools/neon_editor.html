@@ -697,6 +697,11 @@
     <label><input type="checkbox" id="gpBoy" checked> b0y helps</label>
   </div>
   <div class="row" id="gpNums"></div>
+  <h2>In the game: H3AV3N <small>the real thing, a step at a time (engine/heaven.js): heaven's last sector as a real map, the maze as real layers</small></h2>
+  <div class="row">
+    <button class="hv" data-to="map">HEAVEN MAP</button> <button class="hv" data-to="maze">THE MAZE (real layers)</button>
+    <span class="dim">a practice run; G0D's node waits for step 3 (the fight)</span>
+  </div>
   <details class="xgrp" data-g="hp"><summary>The health bar <small>its own overlay: over the look you're on, or a corp layer; click again for off</small></summary>
   <div class="row" id="gHp"></div>
   </details>
@@ -2021,6 +2026,7 @@
     }
     if (m.type === 'test-state') { cur = m.g0d || ''; bar = m.g0dBar || ''; draw(); }
     if (m.type === 'test-done' && m.act === 'g0dhp') log(m.ok ? (bar ? 'health bar on (it takes a hit every 1.6s)' : 'health bar off') : m.error, !m.ok);
+    if (m.type === 'test-done' && m.act === 'heaven') log(m.ok ? 'there: tap on the game' : m.error, !m.ok);
     if (m.type === 'test-done' && m.act === 'g0dp') log(m.ok ? (gpStage || 'playing: tap on the game board') : m.error, !m.ok);
     if (m.type === 'test-done' && m.act === 'g0d') log(m.ok ? (cur ? 'showing' : 'off') : m.error, !m.ok);
   });
@@ -2048,6 +2054,8 @@
   $('#gpNums').addEventListener('change', ev => { const i = ev.target.closest('input[data-k]'); if (!i || i.value === '') return; gpSet({ [i.dataset.k]: Number(i.value) }); log(`${i.dataset.k} = ${i.value} (the next stage you start uses it)`); });
   $('#gpBoy').addEventListener('change', () => { gpSet({ boy: $('#gpBoy').checked }); log($('#gpBoy').checked ? 'b0y is in' : 'b0y is out'); });
   $('#g0d').addEventListener('click', ev => {
+    const hv = ev.target.closest('button.hv');
+    if (hv) { log(hv.dataset.to === 'maze' ? 'into the maze...' : 'heaven...'); return toGame({ type: 'test', act: 'heaven', to: hv.dataset.to }); }
     const gp = ev.target.closest('button.gp');
     if (gp) { log(gp.dataset.stage ? 'starting ' + gp.textContent + '...' : 'stopped'); return toGame({ type: 'test', act: 'g0dp', stage: gp.dataset.stage }); }
     const hp = ev.target.closest('button.hp');

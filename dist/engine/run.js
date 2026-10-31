@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.88']);
+NEON_FILES.push(['engine/run.js', 'v13.89']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -110,6 +110,7 @@ function selectNode(id) {
 
 async function enterNode(node, warp = false) {
   if (st.transitioning || !node || (!warp && !availableNodes().includes(node.id))) return;
+  if (node.heaven === 'g0d') { setMsg('> G0D waits. (the fight comes in step 3)', C.danger); Sound.deny(); return; }   // (engine/heaven.js)
   st.transitioning = true;
   const run = st.run;
   run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false;   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)
@@ -134,7 +135,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
     if (pool.length) def = omniCopy(pickR(pool, rngFor(st.run.seed, 'omnicopy', node.sector || 0)), pool);
   }
   const t = node.tier;
-  const counts = node.type === 'start' ? [1] : st.run.tutorial && node.id === TUT.corpNode ? TUT.counts.slice()
+  const counts = def.counts ? def.counts(node.tier) : node.type === 'start' ? [1] : st.run.tutorial && node.id === TUT.corpNode ? TUT.counts.slice()
     : Array.from({ length: CONFIG.corpLayers + (sectorEvent(node.sector || 0) === 'grind' ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
   const sector = node.sector || 0;
   // OMNI borrows a tell, a new one each sector
@@ -267,7 +268,7 @@ async function enterLayer() {
   const boss = c.hasBoss && c.idx === c.counts.length - 1;
   let tell = c.tell;
   if (boss && c.def.bossTell) tell = c.def.bossTell;
-  const lv = genLayer({ seed: run.seed, nodeId: c.node.id, idx: c.idx, n, tell, prevSafe: c.prevSafe, loot: !boss && c.hasBoss && (!run.tutorial || c.idx === 1), lootSure: !!run.tutorial && c.idx === 1, mark: c.mark,
+  const lv = genLayer({ seed: run.seed, nodeId: c.node.id, idx: c.idx, n, tell, prevSafe: c.prevSafe, loot: !boss && c.hasBoss && !c.def.noLoot && (!run.tutorial || c.idx === 1), lootSure: !!run.tutorial && c.idx === 1, mark: c.mark,
     tellStr: c.tellStr, salt: run.resumes || 0, dress: c.hasBoss ? c.def.dress : null, tier: c.tier, boss,
     alwaysFollow: !!c.def.alwaysFollow || !!run.tutorial, carry: c.carry || null, lootMore: c.mod === 'loaded' || sectorEvent(c.sector) === 'flush' });   // FLUSH: more $ nodes
   lv.after = c.prevSafe;       // last layer's real node, for AFTERIMAGE
@@ -343,7 +344,7 @@ async function enterLayer() {
   } else {
     showBoard('play');
     st.busy = true;
-    Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : `> ${lv.n} nodes. ${lv.tiles.some(t => t.quantum) ? 'two are' : 'one is'} real.`);
+    Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : c.def.layerMsg ? c.def.layerMsg(lv, c) : `> ${lv.n} nodes. ${lv.tiles.some(t => t.quantum) ? 'two are' : 'one is'} real.`);
     if (has('precog') && c.hasBoss && n > 1) {   // PRECOG: the real node shows up a beat early
       modFired('precog');
       for (const t of lv.tiles) if (!t.safe) t.hidden = true;
@@ -505,6 +506,7 @@ function updateTimer(dt) {
     Sound.shield(); setMsg('> overtime! +5s.', C.accent); modFired('overtime');
     return;
   }
+  if (tm.left <= 0 && st.corp && st.corp.hasBoss && st.corp.def.clockOut) { tm.left = 0; return st.corp.def.clockOut(); }   // a corp's own clock-out (G0D MAZE)
   if (tm.left <= 0 && (eaterOn() || zombie())) return clockHurts();   // no random tap: it costs you instead
   if (tm.left <= 0) {
     tm.left = 0;
@@ -799,6 +801,7 @@ function finishCorp() {
     return openOmniReward(c.sector);
   }
   if (c.node.type === 'final') return sectorClear(!!c.bossSkipped);
+  if (c.def.noReward) { saveRun(); return swapTo(() => toMap()); }   // (G0D MAZE: no reward screen)
   run.pending = { kind: 'reward', id: c.node.id, skipped: !!c.bossSkipped };
   saveRun();
   openReward(c.node, !!c.bossSkipped);

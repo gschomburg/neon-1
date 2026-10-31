@@ -377,6 +377,10 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   the eye flickers. (No bloodshot-by-health any more: the bar says that.) Sfx for all of this: later.
 - Round 28 (the user: it still needs a timer): the seconds left sit in the eye's bottom edge ('--7s-'): they count down,
   jump and flash white when the second eye adds time, go red under 2s and flicker with the eye.
+- **Into the real game** (the user, 2026-10-30: "would it make sense to work it more into the engine?"): 5 steps. (1) a heaven
+  sector you can jump to, (2) the maze as real layers [both built v13.89: engine/heaven.js], (3) the fight as the boss, with
+  the wake-up on the real map, (4) the fake win on the real G0D BREACHED screen, then the final stand, (5) the collapse and
+  a placeholder ending. Cinematics: a tap skips (after a beat); the editor gets a jump per step and a skip-cinematics toggle.
 - **b0y, what's wrong (the user, 2026-10-30; not yet, later):** (1) his resting spot: he's still on screen, so it's confusing
   whether he's pointing at something: **he should hide when he isn't actively searching.** (2) it isn't clear when he's doing
   something: elsewhere (the hackers on the board) the cursor switches to a v to point; do the same here, **and put some of his
