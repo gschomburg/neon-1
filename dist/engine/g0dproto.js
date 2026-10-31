@@ -14,9 +14,14 @@ const G0DP = {
   mazeLost: 6,               // wrong layers deep before the next tap sends you back (and costs 1 INT)
   mazeNodes: [8, 9, 10, 10, 12, 12],   // nodes per layer, by depth
   // the fight
-  hp: 12,                    // G0D's hits
-  hitsPerEye: 3,             // hits before the eye closes
-  eyeOpen: 5,                // s the eye stays open
+  hp: 18,                    // G0D's hits (round 24: tankier)
+  hitsPerEye: 2,             // hits before the eye closes (the first eye node)
+  eyeOpen: 7,                // s the eye stays open
+  eyeBonusTime: 4,           // the second eye node, found while the eye is open: this many more seconds...
+  eyeBonusHits: 3,           // ...and this many more hits
+  corpHeal: 1,               // a corp node tapped heals G0D this much (and costs you 1 INT)
+  // stages (round 24): G0D's health in thirds; each stage adds corp nodes, spews faster, HANDS OFF comes sooner
+  stageDecoys: 2, stageSpew: 0.3, stageHands: 0.23,   // per stage: + nodes, + spew (x), - HANDS OFF wait (x)
   decoys: 4,                 // corp nodes in the network (besides the eye's node)
   spew: 1.6,                 // mold a node spews a second (thickness, at its middle)
   creep: 0.25,               // how fast mold creeps on its own
@@ -83,7 +88,7 @@ const G0DP_CAUSE = {
   lost: { tip: "too deep on a wrong path. follow the codex order.", warn: "we're lost. the codex order!" },
   steal: { tip: "the M0LD ate your INT. scrape it off your INT and credits before it gets there.", warn: "it's eating your INT! scrape it!" },
   burn: { tip: "you touched it in the burn. when it all goes red: hands off.", warn: 'red means hands off!' },
-  corp: { tip: "that was a corp node. only the blue eye node (o) opens him up.", warn: 'only the blue (o)!' },
+  corp: { tip: "that was a corp node: it hurt you and fed him. only the blue (o) nodes open him up.", warn: 'only the blue (o)!' },
   away: { tip: "he got away. hit each eye while it's blue.", warn: '' },
 };
 function g0dpHurt(p, n, why, cause) {
@@ -282,9 +287,26 @@ function g0dpFightStart(p) {
   for (let y = 0; y < 4; y++) for (let x = W - 14; x < W; x++) f.m[y * W + x] *= 0.4;
   const corps = shuffle(Object.keys(CORPS), Math.random);
   for (let i = 0; i < G0DP.decoys; i++) f.nodes.push(g0dpNode(f, 'corp', corpCode(corpDef(corps[i]))));
-  f.nodes.push(g0dpNode(f, 'eye', '(o)'));
+  f.nodes.push(g0dpNode(f, 'eye', '(o)'), g0dpNode(f, 'eye', '(o)'));   // two eye nodes (round 24)
+  f.stage = 0;
   boySay(G0DP_LINES.boyFight[0]);
   setTimeout(() => { if (st.g0dp === p) g0dSay(G0DP_LINES.g0d[0]); }, 2200);
+}
+const g0dpSpewNow = f => G0DP.spew * (1 + G0DP.stageSpew * (f.stage || 0));
+const g0dpHandsNow = f => G0DP.handsEvery * Math.max(0.3, 1 - G0DP.stageHands * (f.stage || 0)) * 1000;
+const G0DP_STAGE_LINES = ['', 'you made me angry.', 'ENOUGH. I AM THE NETWORK.'];
+// A stage break (round 24): the eye slams shut, the mold surges, more corp nodes come up, G0D gets louder.
+function g0dpStageUp(p, stage, now) {
+  const f = p.fight;
+  f.stage = stage; f.stageAt = now;
+  if (f.eye) g0dpEyeClose(p, now, null);
+  g0dpRegrow(p, f.W / 2, f.H / 2, 2.6);
+  const corps = shuffle(Object.keys(CORPS), Math.random);
+  for (let i = 0; i < G0DP.stageDecoys; i++) f.nodes.push(g0dpNode(f, 'corp', corpCode(corpDef(corps[i]))));
+  f.nextHands = Math.min(f.nextHands, now + g0dpHandsNow(f));
+  Sound.bossDrop(); shake(14, 0.7); flash(G0DP_RED, 0.35, 0.8);
+  g0dSay(G0DP_STAGE_LINES[stage] || 'again.');
+  setTimeout(() => { if (st.g0dp === p) boySay(stage === 2 ? 'last stretch. keep digging!' : "he's mad. there's more of them!"); }, 1600);
 }
 function g0dpNode(f, kind, label, at) {
   const sp = kind === 'corp' || kind === 'eye' ? 1 : 0;
@@ -319,7 +341,7 @@ function g0dpFightTick(p, now, dt) {
       if (n.x < 2 || n.x > f.W - 5) { n.vx *= -1; n.x = clamp(n.x, 2, f.W - 5); }
       if (n.y < 2 || n.y > f.H - 2) { n.vy *= -1; n.y = clamp(n.y, 2, f.H - 2); }
     }
-    if (!pinned && !(f.eye && n.kind === 'eye')) g0dpMold(f, n.x + 1, n.y, n.kind === 'corp' || n.kind === 'eye' ? 2 : 2.4, G0DP.spew * dt, true);
+    if (!pinned && !(f.eye && n.kind === 'eye')) g0dpMold(f, n.x + 1, n.y, n.kind === 'corp' || n.kind === 'eye' ? 2 : 2.4, g0dpSpewNow(f) * dt, true);
   }
   // nothing overlaps (round 4): nodes push each other apart, and the open eye pushes them out of its way
   g0dpSpread(f.nodes, f, 6, 2, dt);
@@ -357,7 +379,7 @@ function g0dpFightTick(p, now, dt) {
     while (e < G0DP.charge && h.eyes.length < 1 + Math.floor(e / (G0DP.charge / 4))) { h.eyes.push(g0dpFreeSpot(f, h.eyes, 7, 2)); Sound.nodeOn(); }   // (never on a node: round 4)
     h.red = e < G0DP.charge ? 0.15 + 0.6 * e / G0DP.charge : 1;
     if (e >= G0DP.charge && !h.burning) { h.burning = true; Sound.bossDrop(); shake(8, 0.5); flash(G0DP_RED, 0.3, 0.6); }
-    if (e >= G0DP.charge + G0DP.burn) { f.hands = null; f.nextHands = now + G0DP.handsEvery * 1000; }
+    if (e >= G0DP.charge + G0DP.burn) { f.hands = null; f.nextHands = now + g0dpHandsNow(f); }
   }
   // the steal (round 12): the spill has to crawl up onto INT / CR; sitting on them long enough it takes your credits
   // (first), then INT
@@ -386,10 +408,10 @@ function g0dpFightTick(p, now, dt) {
     else g0dSay(pickR(low && Math.random() < 0.7 ? G0DP_LINES.g0dLow : G0DP_LINES.g0d, Math.random));
   }
   // b0y: the eye node (or the open eye)
-  const eyeN = f.nodes.find(n => n.kind === 'eye');
+  const eyeN = f.nodes.find(n => n.kind === 'eye' && !n.gone && !g0dpShows(f, n));   // one still buried (round 24: the second, once the eye is open)
   const spot = n => ({ x: n.x + 4, y: n.y - 1 });   // the node's top right, never on its letters (round 7)
   g0dpBoyTick1(p, now, dt, { right: eyeN ? spot(eyeN) : null, others: f.nodes.filter(n => n.kind === 'corp').map(spot),
-    done: !!(f.eye || f.opening || (eyeN && !eyeN.gone && g0dpShows(f, eyeN))),
+    done: !eyeN || !!(f.eye && f.eye.bonus) || !!f.opening,
     warn: f.press > 0.45 ? g0dpWorstSpill(f) : null });   // uncovered (or the eye is open): nothing left to show
 }
 // Keep things apart: a pushed off b's spot if they're closer than w across / h down (cells), a little each frame.
@@ -487,7 +509,7 @@ function g0dpWorstSpill(f) {
 }
 function g0dpEyeOpen(p, x, y, now) {
   const f = p.fight;
-  f.eye = { x: clamp(x, 6, f.W - 7), y: clamp(y, 3, f.H - 3), until: now + G0DP.eyeOpen * 1000, hits: 0, at: now };
+  f.eye = { x: clamp(x, 6, f.W - 7), y: clamp(y, 3, f.H - 3), until: now + G0DP.eyeOpen * 1000, hits: 0, at: now, cap: G0DP.hitsPerEye, bonus: false };
   g0dpMold(f, f.eye.x, f.eye.y, 3.5, -10, false);
   Sound.bossBuild(); flash(G0DP_BLUE, 0.2, 0.4);
   g0dpMsg('> the eye is open. hit it!', G0DP_BLUE);
@@ -514,8 +536,7 @@ function g0dpEyeClose(p, now, why) {
   const f = p.fight, ex = f.eye ? f.eye.x : f.W / 2, ey = f.eye ? f.eye.y : f.H / 2;
   f.eye = null;
   g0dpRegrow(p, ex, ey, 1.8);   // the mold grows back in (round 18: a wave)
-  const eyeN = f.nodes.find(n => n.kind === 'eye');
-  if (eyeN) { eyeN.x = 3 + Math.random() * (f.W - 9); eyeN.y = 3 + Math.random() * (f.H - 6); eyeN.gone = false; }   // its node comes back, somewhere else
+  for (const eyeN of f.nodes.filter(n => n.kind === 'eye')) { eyeN.x = 3 + Math.random() * (f.W - 9); eyeN.y = 3 + Math.random() * (f.H - 6); eyeN.gone = false; }   // the eye nodes come back, somewhere else
   if (why) g0dpMsg('> ' + why + ' the M0LD grows back.', C.mid);
 }
 function g0dpFightTap(p, x, y, now) {
@@ -531,7 +552,9 @@ function g0dpFightTap(p, x, y, now) {
       Sound.bossWin();
       return g0dpCard(p, ['G0D BREACHED', '', 'it\'s... no.', 'the M0LD is coming back.', '', 'G0D: "you are just meat."', '', 'tap: G0D FINAL STAND'], () => g0dpStart('stand'), G0DP_RED);
     }
-    if (f.eye.hits >= G0DP.hitsPerEye) g0dpEyeClose(p, now, 'it shuts.');
+    const st2 = f.hp <= G0DP.hp / 3 ? 2 : f.hp <= G0DP.hp * 2 / 3 ? 1 : 0;   // a stage break (round 24)
+    if (st2 > (f.stage || 0)) return g0dpStageUp(p, st2, now);
+    if (f.eye.hits >= f.eye.cap) g0dpEyeClose(p, now, 'it shuts.');
     return;
   }
   // the burn: hands off
@@ -539,20 +562,27 @@ function g0dpFightTap(p, x, y, now) {
   // a node that shows
   const n = f.nodes.find(o => !o.gone && g0dpShows(f, o) && x >= Math.round(o.x) - 1 && x <= Math.round(o.x) + 3 && y === Math.round(o.y));
   if (n) {
+    if (n.kind === 'eye' && (f.eye || f.opening)) {   // the second eye node, while it's open: more time, more hits (round 24)
+      g0dpBurst(n, now);
+      const give = () => { if (!f.eye) return; f.eye.until += G0DP.eyeBonusTime * 1000; f.eye.cap += G0DP.eyeBonusHits; f.eye.bonus = true; };
+      if (f.eye) give(); else setTimeout(give, 360);
+      Sound.bossBuild(); flash(G0DP_BLUE, 0.3, 0.5); shake(6, 0.3);
+      g0dpMsg(`> the second eye! +${G0DP.eyeBonusTime}s, +${G0DP.eyeBonusHits} hits. he's wide open.`, G0DP_BLUE);
+      return;
+    }
     if (n.kind === 'eye') {   // it bursts (round 5), then G0D's eye comes in
-      if (f.opening) return;
       g0dpBurst(n, now);
       let at;
       if (f.hands) {   // the counter: the attack stops, and one of its eyes is the real one
         at = pickR(f.hands.eyes, Math.random) || { x: n.x, y: n.y };
-        f.hands = null; f.nextHands = now + G0DP.handsEvery * 1000;
+        f.hands = null; f.nextHands = now + g0dpHandsNow(f);
         g0dpMsg('> countered! one of them is real.', G0DP_BLUE);
       } else at = g0dpFreeSpot(f, [], 9, 3);   // somewhere clear of the nodes (round 4)
       f.opening = true;
       setTimeout(() => { if (st.g0dp !== p || p.fight !== f) return; f.opening = false; g0dpEyeOpen(p, at.x, at.y, performance.now()); }, 320);
       return;
     }
-    if (n.kind === 'corp') { n.pin = now + 1200; return g0dpHurt(p, 1, `wrong node: ${n.label}. -1 INT.`, 'corp'); }
+    if (n.kind === 'corp') { n.pin = now + 1200; f.hp = Math.min(G0DP.hp, f.hp + G0DP.corpHeal); f.healAt = now; return g0dpHurt(p, 1, `wrong node: ${n.label}. G0D feeds. -1 INT.`, 'corp'); }   // (round 24: it heals him)
     if (n.kind === 'int') { g0dpHeal(n.amount); Sound.buy(); g0dpMsg(`> got it back: +${n.amount} INT.`, C.accent); }
     if (n.kind === 'cr') { run.credits += n.amount; Sound.buy(); g0dpMsg(`> got it back: +${n.amount}cr.`, C.money); }
     f.nodes.splice(f.nodes.indexOf(n), 1);
@@ -691,7 +721,7 @@ function g0dpFightDraw(p, put, bg, now) {
   if (f.eye) {
     const x = Math.round(f.eye.x), y = Math.round(f.eye.y), left = (f.eye.until - now) / 1000;
     const pupil = now - f.hitAt < 250 ? 'X' : Math.floor(now / 400) % 4 === 3 ? 'o' : '@';
-    const age = now - f.eye.at, full = ['  .---.  ', ` ( (${pupil}) ) `, "  '---'  ", `  ${Math.ceil(left)}s ${'*'.repeat(Math.max(0, G0DP.hitsPerEye - f.eye.hits))}`.padEnd(9)];
+    const age = now - f.eye.at, full = ['  .---.  ', ` ( (${pupil}) ) `, "  '---'  ", `  ${Math.ceil(left)}s ${'*'.repeat(Math.max(0, f.eye.cap - f.eye.hits))}`.padEnd(9)];
     const art = age < 110 ? ['         ', '   (o)   ', '         ', '         '] : age < 230 ? ['         ', `  ((${pupil}))  `, '   ---   ', '         '] : full;   // it opens (round 5)
     art.forEach((l, k) => { take(x - 4, y - 1 + k, 9); put(x - 4, Y + y - 1 + k, l, G0DP_BLUE, 'fx', k < 3); });
   }
@@ -931,7 +961,13 @@ function g0dpOverlay(cells, now, bgs) {
   let out = cells;
   if (p.stage === 'fight') {
     const f = p.fight;
-    out = g0dpBar(out, bgs, { f: f.hp / G0DP.hp, was: (f.hp + 1) / G0DP.hp, hit: now - f.hitAt < 260 });
+    out = g0dpBar(out, bgs, { f: f.hp / G0DP.hp, was: (f.hp + 1) / G0DP.hp, hit: now - f.hitAt < 260 || now - (f.healAt || 0) < 260 });
+    if (f.stageAt && now - f.stageAt < 1400 && Math.floor((now - f.stageAt) / 140) % 2 === 0) {   // STAGE 2 / 3 (round 24)
+      const t = `STAGE ${f.stage + 1}`, x0 = Math.floor((L.wc - t.length - 4) / 2), y = BOARD_Y + Math.floor(f.H / 2);
+      out = out.filter(c => !(Math.round(c.cy) === y && c.cx >= x0 && c.cx < x0 + t.length + 4));
+      if (bgs) bgs.push({ cx: x0, cy: y, w: t.length + 4, col: G0DP_RED, alpha: 1 });
+      [...('  ' + t + '  ')].forEach((ch, k) => out.push({ ch, cx: x0 + k, cy: y, col: C.bg, own: 'fx', bold: true }));
+    }
     if (f.sp) {   // the spill (round 12)
       const burn = f.hands && f.hands.burning, heat = f.hands ? Math.min(1, (now - f.hands.at) / 1000 / G0DP.charge) : 0, cover = new Set(), add = [];
       for (const y of g0dpSpillRows()) for (let x = 0; x < f.W; x++) {

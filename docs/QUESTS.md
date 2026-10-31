@@ -359,6 +359,11 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   time, letters swap out for noise now and then, and sometimes the whole label flips to G0D (on white) for a moment. (Also
   asked: the maze in the real game should be real layers, likely a special corp on the corp kit: wipes, node tiles, mods and
   b0y for free; the layer clock already holds through transitions and starts fresh each layer.)
+- Round 24 (the user: stages; G0D a little tankier; the two-eyes idea): **G0D has 18 hits; the eye gives 2 hits, open 7s.**
+  **Two eye nodes:** the first opens the eye; dig out the second while it's open: +4s and +3 hits (b0y hunts the one still
+  buried). **A corp node tapped heals G0D 1** (and still costs you 1 INT). **Three stages** (his health in thirds): at a break the
+  eye slams shut, the mold surges back, STAGE 2 / 3 flashes, 2 more corp nodes come up, mold spews faster, HANDS OFF comes
+  sooner; G0D gets louder. (b0y still needs work: more helpful, a better resting spot: later.)
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 

@@ -2029,7 +2029,7 @@
     d.addEventListener('toggle', () => { try { localStorage.setItem('neonEditor.g0d.' + d.dataset.g, d.open ? '1' : '0'); } catch (e) { /* no storage */ } });
   }
   // ---- the prototype: stages, b0y, the numbers (G0DP in engine/g0dproto.js)
-  const GP_NUMS = [['mazeTimer', 'maze clock s'], ['mazeLost', 'maze: lost layers'], ['hp', 'G0D hits'], ['hitsPerEye', 'hits per eye'], ['eyeOpen', 'eye open s'],
+  const GP_NUMS = [['mazeTimer', 'maze clock s'], ['mazeLost', 'maze: lost layers'], ['hp', 'G0D hits'], ['hitsPerEye', 'hits per eye'], ['eyeOpen', 'eye open s'], ['eyeBonusTime', '2nd eye: + s'], ['eyeBonusHits', '2nd eye: + hits'], ['corpHeal', 'corp node heals G0D'], ['stageDecoys', 'stage: + corp nodes'], ['stageSpew', 'stage: + spew x'], ['stageHands', 'stage: HANDS OFF sooner x'],
     ['decoys', 'corp nodes'], ['spew', 'mold spew'], ['creep', 'mold creep'], ['handsEvery', 'HANDS OFF every s'], ['charge', 'charge s'], ['burn', 'burn s'],
     ['stealEvery', 'steal after s'], ['standEyes', 'stand: eyes'], ['standTime', 'stand: clock s'], ['standBurn', 'stand: full burn by s'], ['red', 'stand: red s'], ['blue', 'stand: blue s']];
   let gpFilled = false, gpStage = '';

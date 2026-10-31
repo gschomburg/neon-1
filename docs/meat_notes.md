@@ -53,3 +53,4 @@ asXii
 corp/mod/item ideas
 ***********************
 - monty corp 16 doors, you choose one, then it removes all the doors except the one you clicked and another and lets you choose again "monty hall problem"
+- red tape mod? gear?
