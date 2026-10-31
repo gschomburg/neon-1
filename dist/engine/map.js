@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v13.99']);
+NEON_FILES.push(['engine/map.js', 'v13.100']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -20,7 +20,7 @@ const tierAt = (sector, ls) => (ls <= 2 ? 1 : 2) + sector;
 // The order a run's events come in: a weighted shuffle of them all from the seed (no repeats until all are used).
 function eventOrder(seed) {
   const r = rngFor(seed, 'events'), out = [];
-  let pool = Object.keys(SECTOR_EVENTS);
+  let pool = Object.keys(SECTOR_EVENTS).filter(k => !SECTOR_EVENTS[k].quest);   // (quest events: H3AV3N's, never rolled)
   while (pool.length) {
     let x = r() * pool.reduce((a, k) => a + (SECTOR_EVENTS[k].weight || 1), 0), i = 0;
     while ((x -= SECTOR_EVENTS[pool[i]].weight || 1) >= 0 && i < pool.length - 1) i++;
@@ -136,7 +136,7 @@ function addSector(nodes, seed, s, force = null) {
   }
   // The event's anomaly on its share of the sector's corps (an exact count, at least 1). CHEF'S CHOICE: any one.
   const E = ev && SECTOR_EVENTS[ev], er = rngFor(seed, 'evtag', s);
-  const anyAnomaly = () => pickR(Object.keys(ANOMALIES).sort(), er);
+  const anyAnomaly = () => pickR(Object.keys(ANOMALIES).filter(k => !ANOMALIES[k].quest).sort(), er);
   if (E && E.kind === 'anomaly') {
     const pool = shuffle(Object.values(nodes).filter(n => n.sector === s && n.type === 'corp').sort((a, b) => a.step - b.step || a.lane - b.lane), er);
     for (const n of pool.slice(0, Math.max(1, Math.round(eventShare(ev, s) * pool.length)))) n.mod = E.anomaly === 'any' ? anyAnomaly() : E.anomaly;

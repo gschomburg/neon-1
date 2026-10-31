@@ -5,7 +5,7 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v13.99']);
+NEON_FILES.push(['engine/g0dproto.js', 'v13.100']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -1279,10 +1279,5 @@ function g0dpOverlay(cells, now, bgs) {
       [...tag].forEach((ch, k) => out.push({ ch, cx: tx + 1 + k, cy: y, col: C.bg, own: 'fx', bold: true }));
     }
   }
-  if (G0DP.boy && p.boy && g0dpBoyResting(p.boy) && (p.stage === 'fight' || p.stage === 'maze')) {   // b0y, resting: in the tray, out of the way
-    const y = BOARD_Y + L.gh + 1, t = 'b0y';
-    out = out.filter(o => !(Math.round(o.cy) === y && o.cx >= 1 && o.cx < 1 + t.length));
-    [...t].forEach((ch, k) => out.push({ ch, cx: 1 + k, cy: y, col: G0DP_BLUE, own: 'fx', bold: false }));
-  }
-  return out;
+  return out;   // (b0y resting: the [b] button shows him, engine/heaven.js buildBoyBtn)
 }

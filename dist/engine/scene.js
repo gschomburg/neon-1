@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.99']);
+NEON_FILES.push(['engine/scene.js', 'v13.100']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -293,6 +293,7 @@ function buildScene(now, collectHits, raw = false) {
   buildTray(ctx, boardEnd + 2);
   buildPet(ctx, boardEnd + 1);   // the pet, sitting on the rule over the tray (engine/pet.js)
   buildLootBtn(ctx, boardEnd + 1);   // [$], the LOOT bag, at the rule's right end (engine/loot.js)
+  buildBoyBtn(ctx, boardEnd + 1);   // [b], b0y, at its left end (H3AV3N: engine/heaven.js)
 
   // Footer: the run's seed, small and out of the way.
   // Left side of the footer, clipped so it never runs into [DEV] / the version.
@@ -322,6 +323,7 @@ function buildScene(now, collectHits, raw = false) {
   // The editor's G0D tab (engine/g0d.js): a G0D design or effect drawn over this screen. Never in play.
   if ((st.g0d || st.g0dBar) && !st.dev) result = g0dOverlay(result, now, adBgs);
   if (st.mode === 'g0dp' && !st.dev) result = g0dpOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
+  if (st.mode === 'play' && !st.dev) result = moldOverlay(result, now, adBgs);   // H3AV3N: the M0LD in a corp
   if (st.g0dFake && !st.dev) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win (over the rewards screen)
   if (st.mode === 'g0ddie' && !st.dev) result = g0dDieOverlay(result, now, adBgs);   // H3AV3N: G0D dies
   if (st.mode === 'g0dend' && !st.dev) result = g0dEndOverlay(result, now, adBgs);   // H3AV3N: the collapse

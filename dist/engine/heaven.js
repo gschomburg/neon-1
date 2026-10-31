@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v13.99']);
+NEON_FILES.push(['engine/heaven.js', 'v13.100']);
 
 const HEAVEN = {};
 
@@ -21,6 +21,7 @@ function addHeavenSector(nodes, seed, s) {
     const corps = pickCorps(r, 5, 3);
     [0, 1, 2].forEach(lane => add(base + ls, lane, 'corp', { corp: corps[lane], tier: 4 }));
   }
+  for (const n of Object.values(nodes)) if (n.sector === s && n.type === 'corp' && n.step > base && !n.heaven) n.mod = 'mold';   // THE DEEP M0LD on every corp here (batch 2)
   const maze = add(base + 4, 1, 'corp', { corp: 'maze', tier: 4, heaven: 'maze' });
   const g0d = add(base + 5, 1, 'final', { corp: 'g0d', tier: 5, heaven: 'g0d' });
   const shop = add(base + 5, 0, 'shop', { heaven: 'shop' });
@@ -34,6 +35,7 @@ function addHeavenSector(nodes, seed, s) {
   for (const lane of [0, 1, 2]) nodes[`${base + 3}:${lane}`].next.push(maze.id);   // every road leads into the maze
   maze.next.push(g0d.id, shop.id);
   shop.next.push(g0d.id);
+  g0d.ev = 'deepmold';   // (its event card: data/events.js)
   return nodes;
 }
 // ---------------- H3AV3N as a seed (the user, 2026-10-31; docs/QUESTS.md "H3AV3N as a seed you can play") ----------------
@@ -45,6 +47,13 @@ const QUEST_SEEDS = { H3AV3N: 'h3av3n' };
 const questSeed = seed => QUEST_SEEDS[seed] || null;
 // Sector 1's market on the H3AV3N seed (the user's list): PATCH always (a few), BUFFER always, two of the rest
 const QUEST_STOCK = { patches: 3, gear: ['shoe', 'frag', 'fwall', 'warp', 'call', 'stim', 'zeroday', 'swap'], mods: ['buffer'] };
+// Sector 1's M0LD on the H3AV3N seed (data/events.js 'mold'): its share of the corps, and the event (its card)
+function questMold(run) {
+  const r = rngFor(run.seed, 'mold', 0);
+  const pool = shuffle(Object.values(run.map).filter(n => (n.sector || 0) === 0 && n.type === 'corp').sort((a, b) => a.step - b.step || a.lane - b.lane), r);
+  for (const n of pool.slice(0, Math.max(1, Math.round(SECTOR_EVENTS.mold.share * pool.length)))) n.mod = 'mold';
+  if (run.map[bossIdOf(0)]) run.map[bossIdOf(0)].ev = 'mold';
+}
 const questMarket = node => !!(st.run && st.run.quest === 'h3av3n' && (node.sector || 0) === 0);
 // The editor's jump (TESTING / g0d tab): a practice run whose first sector is heaven's sector 2.
 function heavenSetup() {
@@ -74,7 +83,7 @@ HEAVEN.maze = {
       msg: { text: '> b0y: we made it. G0D is right up there.', col: G0DP_BLUE } });
   },
   layerMsg: (lv, c) => {
-    if (!G0DP.boy || !c.maze) return `> layer ${c.maze ? c.maze.label : ''}. ${lv.n} ways on.`;
+    if (!G0DP.boy || !c.maze || !(c.boyCall && performance.now() < c.boyCall)) return `> layer ${c.maze ? c.maze.label : ''}. ${lv.n} ways on.`;   // (b0y only when you call him: [b])
     const words = ['prompt', 'diamond', 'the cross', 'storage unit', 'uplink', 'the watcher'];   // (his tags name the glyphs now: the terminal just says what is next)
     return { text: c.maze.lost ? '> b0y: hm. not sure about this.' : '> b0y: ' + words[c.maze.path] + ' next.', col: G0DP_BLUE };
   },
@@ -83,6 +92,7 @@ HEAVEN.maze = {
   overlay(ctx, lv, now) {
     const c = st.corp;
     if (!G0DP.boy || !c || !c.maze || !lv) return;
+    if (!(c.boyCall && now < c.boyCall)) { c.boy = null; return; }   // (batch 2: he only comes out when you call him: [b])
     if (st.busy || lv.tiles.some(t => t.state === 'safe')) { c.boy = null; return; }   // a node's been taken: he clears out (the next layer starts him fresh)
     if (!c.boy || c.boyLv !== lv) { c.boy = g0dpBoyNew(); c.boy.until = now + 300; c.boyLv = lv; }
     const dt = Math.min(0.05, (now - (c.boyLast || now)) / 1000); c.boyLast = now;
@@ -792,6 +802,110 @@ function g0dChromeBoom(f, out, bgs, at, e) {
   if (bgs) for (const y of rows) bgs.push({ cx: 0, cy: y, w: L.wc, col: C.bg, alpha: 1 });
   return out;
 }
+
+// ---------------- THE MOLD IN THE CORPS (batch 2 of H3AV3N as a seed; the user, 2026-10-31) ----------------
+// A corp tagged M0LD (data/events.js): the mold hides part of the board. Light (sector 1): a few patches grow up, sit a
+// second or two, crumble, while new ones grow somewhere else. Heavy (THE DEEP M0LD, heaven): it covers nearly all of
+// it, the holes drifting slowly. You can't scrape it (taps go through to what's under it: it only hides things).
+// b0y ([b]) holds it back once a layer: it clears from the middle out for a few seconds.
+const MOLD_FX = { patches: 2, gap: [400, 1300], r: [1.6, 3.3], grow: 600, sit: [1200, 2200], crumble: 700, heavy: 0.3, wipe: 3200 };
+function moldLevel() {
+  const run = st.run;
+  if (st.mode !== 'play' || !run || !st.lv || st.g0dp) return null;
+  const n = run.map[run.at];
+  if (!n || n.mod !== 'mold') return null;
+  return sectorEvent(n.sector || 0) === 'deepmold' ? 'heavy' : 'light';
+}
+function moldOverlay(cells, now, bgs) {
+  const lvl = moldLevel();
+  if (!lvl) { st.moldFx = null; return cells; }
+  let m = st.moldFx;
+  if (!m || m.lv !== st.lv) m = st.moldFx = { lv: st.lv, patches: [], nextAt: now + 300, wipe: null, used: false };
+  const W = L.wc, y0 = BOARD_Y + 1, y1 = BOARD_Y + L.gh, hs = G0D_LOOKS.hs, cover = new Map(), bits = [];
+  // the light patches: spawn, grow, sit, crumble
+  const live = m.patches.filter(p => now - p.born < MOLD_FX.grow + p.sit + MOLD_FX.crumble);
+  m.patches = live;
+  if (live.length < MOLD_FX.patches + (lvl === 'heavy' ? 1 : 0) && now >= m.nextAt) {
+    m.patches.push({ x: 4 + Math.random() * (W - 8), y: y0 + 1 + Math.random() * (L.gh - 4), r: MOLD_FX.r[0] + Math.random() * (MOLD_FX.r[1] - MOLD_FX.r[0]), born: now, sit: rand(MOLD_FX.sit[0], MOLD_FX.sit[1]), seed: Math.random() * 100, fell: new Set() });
+    m.nextAt = now + rand(MOLD_FX.gap[0], MOLD_FX.gap[1]);
+  }
+  for (const p of m.patches) {
+    const e = now - p.born, gk = 1 - Math.pow(1 - clamp(e / MOLD_FX.grow, 0, 1), 2), ck = clamp((e - MOLD_FX.grow - p.sit) / MOLD_FX.crumble, 0, 1), R = p.r * gk;
+    for (let y = Math.floor(p.y - p.r - 1); y <= Math.ceil(p.y + p.r + 1); y++) for (let x = Math.floor(p.x - p.r * 2.2 - 2); x <= Math.ceil(p.x + p.r * 2.2 + 2); x++) {
+      if (x < 0 || x >= W || y < y0 || y >= y1) continue;
+      const d = Math.hypot((x - p.x) / 2.2, y - p.y) + hs(x * 7.3 + y * 3.1 + p.seed) * 1.1;
+      if (d >= R) continue;
+      const k = x + ',' + y, v = hs(x * 2.9 + y * 5.7 + p.seed);
+      if (v < ck) {   // crumbled: it falls
+        if (!p.fell.has(k)) { p.fell.add(k); if (bits.length < 30 && !reduced()) { const th = 1 + 3 * (1 - d / p.r); bits.push({ ch: g0dpMoldGlyph(th, x, y, now), x: pxX(x), y: pxY(y), col: g0dpMoldCol(th, 0) }); } }
+        continue;
+      }
+      cover.set(k, Math.max(cover.get(k) || 0, 1 + 3 * clamp(1 - d / p.r, 0, 1)));
+    }
+  }
+  if (bits.length) explode(bits, pxX(W / 2), pxY(y0), { power: 0.12, grav: 2, life: [0.5, 1] });
+  // the deep mold: nearly all of it, the holes drifting
+  if (lvl === 'heavy') for (let y = y0; y < y1; y++) for (let x = 0; x < W; x++) {
+    const v = g0dpNoise3(x * 0.16, y * 0.34, now * 0.00025);
+    if (v > MOLD_FX.heavy) cover.set(x + ',' + y, Math.max(cover.get(x + ',' + y) || 0, 1.2 + 3 * (v - MOLD_FX.heavy) / (1 - MOLD_FX.heavy)));
+  }
+  // b0y holds it back: a hole from the middle out, then it closes again
+  if (m.wipe) {
+    const e = now - m.wipe.at;
+    if (e > MOLD_FX.wipe) m.wipe = null;
+    else {
+      const k = Math.min(1, e / 500) * (e > MOLD_FX.wipe - 700 ? (MOLD_FX.wipe - e) / 700 : 1), Rw = k * Math.hypot(W / 4.4, L.gh / 2) * 1.15, cx = (W - 1) / 2, cy = y0 + L.gh / 2;
+      for (const key of [...cover.keys()]) { const [x, y] = key.split(',').map(Number); if (Math.hypot((x - cx) / 2.2, y - cy) + hs(x * 1.7 + y * 9.1) * 1.5 < Rw) cover.delete(key); }
+    }
+  }
+  if (!cover.size) return cells;
+  const out = cells.filter(c => !cover.has(Math.round(c.cx) + ',' + Math.round(c.cy)));
+  for (const [k, th] of cover) {
+    const [x, y] = k.split(',').map(Number);
+    if (bgs) bgs.push({ cx: x, cy: y, w: 1, col: C.bg, alpha: 1 });
+    out.push({ ch: g0dpMoldGlyph(th, x, y, now), cx: x, cy: y, col: g0dpMoldCol(th, lvl === 'heavy' ? 1 : 0), own: 'fx', bold: false });
+  }
+  return out;
+}
+// b0y's button: [b] in his blue, at the rule's left end (across from LOOT). On a heaven run (the H3AV3N seed, the
+// editor's jump) and in the G0D prototype. Tap it: he comes out. In the maze he only comes out when called (his tip:
+// his cursors and the next glyph); in a M0LD corp he holds the mold back (once a layer); in the fight he comes out now.
+const boyOn = () => G0DP.boy && ((st.run && st.run.heaven) || st.mode === 'g0dp');
+function buildBoyBtn(ctx, y) {
+  if (!boyOn() || st.mode === 'title' || st.mode === 'over' || st.mp) return;
+  const { put, bg, addHit, now } = ctx, x = 0, c = st.corp, p = st.g0dp;
+  const out = (c && c.boyCall && now < c.boyCall) || (p && p.boy && !g0dpBoyResting(p.boy)) || (st.moldFx && st.moldFx.wipe);
+  clearRect(ctx.cells, x, y, 3, 1);
+  if (out) bg(x, y, 3, G0DP_BLUE, 1);
+  put(x, y, '[b]', out ? C.bg : G0DP_BLUE, 'ui', true);
+  if (st.hoverBtn === 'b0y' && !out) bg(x, y, 3, G0DP_BLUE, 0.2);
+  addHit(x, y, 3, 1, { kind: 'btn', id: 'b0y', onTap: boyCall, noFocus: true });
+}
+const BOY_TIPS = ['the mold comes and goes. wait it out.', "i'm here. tap [b] when you need me.", 'keep your INT up. patches.', "the corps up here are his. careful."];
+function boyCall() {
+  const now = performance.now(), c = st.corp, p = st.g0dp;
+  Sound.ping(1175);
+  if (p && p.boy) {   // the fight (and the prototype): he comes out now
+    if (g0dpBoyResting(p.boy)) { p.boy.until = 0; p.boy.phase = 'rest'; }
+    return;
+  }
+  if (c && c.def && c.def.key === 'maze' && st.lv) {   // the maze: one round of his help (his cursors, the next glyph)
+    c.boyCall = now + 7000; c.boy = null;
+    return setMsg(MAZE_TIP(c), G0DP_BLUE);
+  }
+  const lvl = moldLevel();
+  if (lvl && st.moldFx) {   // a M0LD corp: he holds it back, once a layer
+    if (st.moldFx.used) { Sound.deny(); return setMsg("> b0y: can't. not again so soon.", G0DP_BLUE); }
+    st.moldFx.used = true; st.moldFx.wipe = { at: now };
+    Sound.whoosh();
+    return setMsg("> b0y: i'll hold it back. quick!", G0DP_BLUE);
+  }
+  setMsg('> b0y: ' + pickR(BOY_TIPS, Math.random), G0DP_BLUE);
+}
+const MAZE_TIP = c => {
+  const words = ['prompt', 'diamond', 'the cross', 'storage unit', 'uplink', 'the watcher'];
+  return c.maze && c.maze.lost ? '> b0y: hm. not sure about this.' : '> b0y: ' + words[(c.maze && c.maze.path) || 0] + ' next.';
+};
 
 // ---------------- The music (2026-10-31) ----------------
 // What the G0D fights play (engine/boot.js asks; null: not here). The tracks: data/music.js, the G0D section; which one

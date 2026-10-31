@@ -1,7 +1,7 @@
 // NeoN+1 data/events.js: anomalies (a tag on one corp) and sector events (what each sector rolls).
 // The design: docs/SECTOR_EVENTS.md. Sector 1 has no event; every sector after rolls one (seeded, no repeats).
 'use strict';
-NEON_FILES.push(['data/events.js', 'v13.99']);
+NEON_FILES.push(['data/events.js', 'v13.100']);
 
 // Anomalies: a tag on a corp node on the map. It changes how that corp plays. tag: the mark next to the node.
 const ANOMALIES = {
@@ -14,6 +14,8 @@ const ANOMALIES = {
   rival:    { name: 'RIVAL',    tag: 'V', desc: 'a rival races you for it.' },
   blinders: { name: 'BLINDERS', tag: '*', desc: 'you find out when you get in.' },
   blackice: { name: 'BLACK ICE', tag: 'B', desc: 'some ICE drops you to 1 INT.' },
+  // H3AV3N (quest: only on the H3AV3N seed, never rolled; engine/heaven.js THE MOLD IN THE CORPS)
+  mold:     { name: 'M0LD',     tag: '%', desc: "mold grows over the board. tap [b].", quest: true },
 };
 
 // Sector events. kind 'anomaly': puts its anomaly on a share of the sector's corps (an exact count) and on the
@@ -22,6 +24,13 @@ const ANOMALIES = {
 // lines: the card's text, 27 characters a line at most; {pct} = the share, {sale} = FIRE SALE's cut,
 // {cr} = TIME IS MONEY's credits a second. weight: how often it rolls (1 = normal).
 const SECTOR_EVENTS = {
+  // H3AV3N (quest: only on the H3AV3N seed; never rolled): sector 1's light mold, heaven's deep mold. noBoss: not on its boss.
+  mold:        { name: 'M0LD', kind: 'anomaly', anomaly: 'mold', share: 0.5, quest: true, noBoss: true,
+    art: ['.%;:.', '%&#&%', "';%;'"],
+    lines: ['something grows in {pct}', 'of the corps here. it', "comes and goes. you can't", 'scrape it off. tap [b].'] },
+  deepmold:    { name: 'THE DEEP M0LD', kind: 'anomaly', anomaly: 'mold', share: 1, quest: true, noBoss: true,
+    art: ['#&@&#', '&@#@&', '#&@&#'],
+    lines: ["it's everywhere up here.", 'you can barely see the', 'nodes. tap [b]: b0y holds', 'it back for a moment.'] },
   ratrace:     { name: 'RAT RACE', kind: 'anomaly', anomaly: 'rival', share: 0.5,
     art: ['()_()', '(o.o)', ' ~~~ '],
     lines: ['rival hackers: {pct} of the', 'corps in this sector.', 'they burn ICE for you,', 'and they steal the pay.'] },

@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.99']);
+NEON_FILES.push(['engine/run.js', 'v13.100']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -39,7 +39,7 @@ async function startRun(seed, practice, opts = {}) {
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
-  if (quest) st.run.heaven = true;   // (a heaven run from the start: its death screen retries it)
+  if (quest) { st.run.heaven = true; questMold(st.run); }   // (a heaven run from the start: its death screen retries it; sector 1's M0LD)
   if (opts.heaven) heavenSetup();   // H3AV3N (engine/heaven.js): its sector map in place of the first sector (the editor's jump, the ending's THE MAZE)
   if (legacyLv('lucky') && !opts.tutorial) {   // LUCKY START (THE BOARD): a random common gear
     const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
