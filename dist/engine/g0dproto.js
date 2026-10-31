@@ -299,8 +299,11 @@ const G0DP_STAGE_LINES = ['', 'you made me angry.', 'ENOUGH. I AM THE NETWORK.']
 function g0dpStageUp(p, stage, now) {
   const f = p.fight;
   f.stage = stage; f.stageAt = now;
-  if (f.eye) g0dpEyeClose(p, now, null);
-  g0dpRegrow(p, f.W / 2, f.H / 2, 2.6);
+  const ex = f.eye ? f.eye.x : f.W / 2, ey = f.eye ? f.eye.y : f.H / 2;
+  if (f.eye) { f.shut = { x: f.eye.x, y: f.eye.y, at: now, scream: true }; g0dpEyeClose(p, now, null, true); }
+  g0dpRegrow(p, f.W / 2, f.H / 2, 2.6, true, 120);   // (round 26: in from the edges)
+  f.traces = f.traces || [];
+  for (let k = 0; k < 34; k++) g0dpTraceSpawn(f.traces, ex + rand(-3, 3), ey + rand(-1, 1), 1, k % 2 ? 'box' : 'tint');   // red traces fire out of it
   const corps = shuffle(Object.keys(CORPS), Math.random);
   for (let i = 0; i < G0DP.stageDecoys; i++) f.nodes.push(g0dpNode(f, 'corp', corpCode(corpDef(corps[i]))));
   f.nextHands = Math.min(f.nextHands, now + g0dpHandsNow(f));
@@ -345,7 +348,7 @@ function g0dpFightTick(p, now, dt) {
   }
   // nothing overlaps (round 4): nodes push each other apart, and the open eye pushes them out of its way
   g0dpSpread(f.nodes, f, 6, 2, dt);
-  if (f.eye) for (const n of f.nodes) g0dpPush(n, f.eye.x - 1, f.eye.y, 8, 3, dt, f);
+  if (f.eye) for (const n of f.nodes) g0dpPush(n, f.eye.x - 1, f.eye.y, 10, 4, dt, f);
   if (f.hands) for (const e of f.hands.eyes) for (const n of f.nodes) g0dpPush(n, e.x - 1, e.y, 6, 2, dt, f);   // and the HANDS OFF eyes
   // it creeps on its own, toward the top right (your INT and credits) more than anywhere
   if (now > f.creepAt) {
@@ -361,7 +364,7 @@ function g0dpFightTick(p, now, dt) {
   for (let i = 0; i < f.fresh.length; i++) if (f.fresh[i] > 0) f.fresh[i] = Math.max(0, f.fresh[i] - dt * 0.45);
   // the eye
   if (f.eye && now > f.eye.until) g0dpEyeClose(p, now, 'it closes.');
-  if (f.eye) g0dpMold(f, f.eye.x, f.eye.y, 3, -8 * dt, false);   // the open eye keeps itself clear
+  if (f.eye) g0dpMold(f, f.eye.x, f.eye.y, 3.6, -8 * dt, false);   // the open eye keeps itself clear
   // HANDS OFF
   if (!f.hands && !f.eye && now > f.nextHands) {
     f.hands = { at: now, eyes: [] };
@@ -509,43 +512,48 @@ function g0dpWorstSpill(f) {
 }
 function g0dpEyeOpen(p, x, y, now) {
   const f = p.fight;
-  f.eye = { x: clamp(x, 6, f.W - 7), y: clamp(y, 3, f.H - 3), until: now + G0DP.eyeOpen * 1000, hits: 0, at: now, cap: G0DP.hitsPerEye, bonus: false };
-  g0dpMold(f, f.eye.x, f.eye.y, 3.5, -10, false);
+  f.eye = { x: clamp(x, 8, f.W - 9), y: clamp(y, 4, f.H - 4), until: now + G0DP.eyeOpen * 1000, hits: 0, at: now, cap: G0DP.hitsPerEye, bonus: false };
+  g0dpMold(f, f.eye.x, f.eye.y, 4, -10, false);
   Sound.bossBuild(); flash(G0DP_BLUE, 0.2, 0.4);
   g0dpMsg('> the eye is open. hit it!', G0DP_BLUE);
 }
 // The mold grows back (round 18): a wave out from (cx, cy) in 3 quick rings. The holes fill the most, thick mold barely
 // moves, nothing past 3 (mid thick). New growth shows bright (fresh) so you see it come back.
-function g0dpRegrow(p, cx, cy, amt) {
+function g0dpRegrow(p, cx, cy, amt, inward = false, delay = 0) {
   const f = p.fight, far = Math.hypot(f.W / 2.2, f.H);
   [0, 1, 2].forEach(k => setTimeout(() => {
     if (st.g0dp !== p || p.fight !== f) return;
     for (let y = 0; y < f.H; y++) for (let x = 0; x < f.W; x++) {
-      const d = Math.hypot((x - cx) / 2.2, y - cy) / far;   // 0 (here) to ~1 (far side)
+      const d0 = Math.hypot((x - cx) / 2.2, y - cy) / far, d = inward ? Math.max(0, 0.75 - d0) : d0;   // 0 (here) to ~1 (far side); inward: the edges first
       if (d < k / 3 || d >= (k + 1) / 3 + (k === 2 ? 1 : 0)) continue;
-      if (f.eye && Math.abs(x - f.eye.x) <= 5 && Math.abs(y - f.eye.y) <= 2) continue;   // (the open eye keeps itself clear)
+      if (f.eye && Math.abs(x - f.eye.x) <= 7 && Math.abs(y - f.eye.y) <= 3) continue;   // (the open eye keeps itself clear)
       const i = y * f.W + x, m = f.m[i], add = amt * (m < 0.6 ? 1 : m < 1.6 ? 0.75 : m < 2.5 ? 0.35 : 0) * (0.7 + 0.6 * Math.random());
       if (add <= 0) continue;
       f.m[i] = Math.min(3, m + add);
       if (m < 1.6) f.fresh[i] = Math.max(f.fresh[i], 0.75);
     }
     if (k === 0) Sound.whoosh();
-  }, k * 140));
+  }, delay + k * 140));
 }
-function g0dpEyeClose(p, now, why) {
+function g0dpEyeClose(p, now, why, quiet = false) {
   const f = p.fight, ex = f.eye ? f.eye.x : f.W / 2, ey = f.eye ? f.eye.y : f.H / 2;
-  if ((f.pendStage || 0) > (f.stage || 0)) { const s2 = f.pendStage; f.pendStage = 0; f.eye = null; return g0dpStageUp(p, s2, now); }   // a break held back by a combo
+  if ((f.pendStage || 0) > (f.stage || 0)) { const s2 = f.pendStage; f.pendStage = 0; return g0dpStageUp(p, s2, now); }   // (it screams shut there)   // a break held back by a combo
+  if (!quiet && f.eye) f.shut = { x: f.eye.x, y: f.eye.y, at: now, scream: false };   // it shuts (drawn a moment: round 26)
   f.eye = null;
-  g0dpRegrow(p, ex, ey, 1.8);   // the mold grows back in (round 18: a wave)
+  if (!quiet) g0dpRegrow(p, ex, ey, 1.8);   // the mold grows back in (round 18: a wave)
   for (const eyeN of f.nodes.filter(n => n.kind === 'eye')) { eyeN.x = 3 + Math.random() * (f.W - 9); eyeN.y = 3 + Math.random() * (f.H - 6); eyeN.gone = false; }   // the eye nodes come back, somewhere else
   if (why) g0dpMsg('> ' + why + ' the M0LD grows back.', C.mid);
 }
 function g0dpFightTap(p, x, y, now) {
   const f = p.fight, run = st.run;
   // the open eye
-  if (f.eye && Math.abs(x - f.eye.x) <= 4 && Math.abs(y - f.eye.y) <= 1) {
+  if (f.eye && Math.abs(x - f.eye.x) <= 6 && Math.abs(y - f.eye.y) <= 2) {
     f.hp--; f.eye.hits++; f.hitAt = now;
-    g0dpRegrow(p, f.eye.x, f.eye.y, 1.2);   // every hit: the mold surges back in (round 18)
+    // round 26: the mold right round the eye recoils (a ring blown out), then the regrow rushes back in
+    { const ring = g0dpChunks(f, f.eye.x, f.eye.y, 6).filter(([cx, cy]) => Math.hypot((cx - f.eye.x) / 2.2, cy - f.eye.y) > 3.2);
+      g0dpMold(f, f.eye.x, f.eye.y, 6, -1.6, false); g0dpCrumble(f, ring, f.eye.x, f.eye.y, 1.1); }
+    g0dpRegrow(p, f.eye.x, f.eye.y, 1.2, false, 260);   // every hit: the mold surges back in (round 18)
+    g0dpBarBreak(f.hp + 1, f.hp);
     Sound.hkBoom(); shake(10, 0.45); flash(G0DP_BLUE, 0.3, 0.5);
     if (!reduced()) { const cells = []; for (let k = 0; k < 18; k++) cells.push({ ch: pickR(['@', 'o', '*', '%', '#'], Math.random), x: pxX(f.eye.x + rand(-3, 3)), y: pxY(BOARD_Y + f.eye.y), col: pickR([G0DP_BLUE, C.bright, G0D_COLS.mold], Math.random) }); explode(cells, pxX(f.eye.x), pxY(BOARD_Y + f.eye.y), { power: 0.9 }); }
     g0dSay(pickR(f.hp / G0DP.hp < 0.4 ? G0DP_LINES.g0dLow : G0DP_LINES.hit, Math.random));
@@ -568,7 +576,7 @@ function g0dpFightTap(p, x, y, now) {
   if (n) {
     if (n.kind === 'eye' && (f.eye || f.opening)) {   // the second eye node, while it's open: more time, more hits (round 24)
       g0dpBurst(n, now);
-      const give = () => { if (!f.eye) return; f.eye.until += G0DP.eyeBonusTime * 1000; f.eye.cap += G0DP.eyeBonusHits; f.eye.bonus = true; };
+      const give = () => { if (!f.eye) return; f.eye.until += G0DP.eyeBonusTime * 1000; f.eye.cap += G0DP.eyeBonusHits; f.eye.bonus = true; f.eye.bonusAt = performance.now(); };
       if (f.eye) give(); else setTimeout(give, 360);
       Sound.bossBuild(); flash(G0DP_BLUE, 0.3, 0.5); shake(6, 0.3);
       g0dpMsg(`> the second eye! +${G0DP.eyeBonusTime}s, +${G0DP.eyeBonusHits} hits. he's wide open.`, G0DP_BLUE);
@@ -581,7 +589,7 @@ function g0dpFightTap(p, x, y, now) {
         at = pickR(f.hands.eyes, Math.random) || { x: n.x, y: n.y };
         f.hands = null; f.nextHands = now + g0dpHandsNow(f);
         g0dpMsg('> countered! one of them is real.', G0DP_BLUE);
-      } else at = g0dpFreeSpot(f, [], 9, 3);   // somewhere clear of the nodes (round 4)
+      } else at = g0dpFreeSpot(f, [], 13, 4);   // somewhere clear of the nodes (round 4)
       f.opening = true;
       setTimeout(() => { if (st.g0dp !== p || p.fight !== f) return; f.opening = false; g0dpEyeOpen(p, at.x, at.y, performance.now()); }, 320);
       return;
@@ -722,12 +730,11 @@ function g0dpFightDraw(p, put, bg, now) {
   const taken = new Set(), take = (x, y, w) => { for (let k = 0; k < w; k++) taken.add((x + k) + ',' + y); };
   // on top of the mold: HANDS OFF's eyes, the open eye, the status line
   if (f.hands) for (const e of f.hands.eyes) { const x = Math.round(e.x), y = Math.round(e.y); take(x - 1, y, 5); put(x - 1, Y + y, f.hands.burning ? '(@@)' : ' (@) ', G0DP_RED, 'fx', true); }
-  if (f.eye) {
-    const x = Math.round(f.eye.x), y = Math.round(f.eye.y), left = (f.eye.until - now) / 1000;
-    const pupil = now - f.hitAt < 250 ? 'X' : Math.floor(now / 400) % 4 === 3 ? 'o' : '@';
-    const age = now - f.eye.at, full = ['  .---.  ', ` ( (${pupil}) ) `, "  '---'  ", `  ${Math.ceil(left)}s ${'*'.repeat(Math.max(0, f.eye.cap - f.eye.hits))}`.padEnd(9)];
-    const art = age < 110 ? ['         ', '   (o)   ', '         ', '         '] : age < 230 ? ['         ', `  ((${pupil}))  `, '   ---   ', '         '] : full;   // it opens (round 5)
-    art.forEach((l, k) => { take(x - 4, y - 1 + k, 9); put(x - 4, Y + y - 1 + k, l, G0DP_BLUE, 'fx', k < 3); });
+  if (f.eye) g0dpEyeDraw(p, f, put, bg, take, now, Y);
+  else if (f.shut && now - f.shut.at < 450) {   // shutting: a squeeze (a stage break: it screams, red)
+    const k = (now - f.shut.at) / 450, x = Math.round(f.shut.x), y = Math.round(f.shut.y), col = f.shut.scream ? (Math.floor(now / 60) % 2 ? G0DP_RED : C.bright) : G0DP_BLUE;
+    const art = f.shut.scream ? ['  \\ \\ | / //  ', '  ->>=XXX=<<-  ', '  // / | \\ \\  '] : k < 0.5 ? ['   .-----.   ', '  (---@---)   ', "   '-----'   "] : ['             ', '   --------  ', '             '];
+    art.forEach((l, j) => { take(x - 6, y - 1 + j, 13); put(x - 6, Y + y - 1 + j, l, col, 'fx', true); });
   }
   if (g0dpBoyLineOn(p, now)) take(0, f.H - 1, L.wc);   // (round 19: no status line on the fight's top row: the mold has it)
   const underThin = new Set();   // node letters under thin mold
@@ -958,6 +965,48 @@ function g0dpBar(cells, bgs, hp) {
     if (ch) out.push({ ch, cx: i, cy: y, col: full || lost ? C.bg : tch ? C.danger : C.dangerDim, own: 'hud', bold: !!tch });
   }
   return out;
+}
+// G0D's eye (round 26): 13 x 5. It looks around (the pupil slides), blinks now and then, flinches when hit (squeezes, jolts),
+// gets bloodshot as his health drops; found the second eye: it widens, a ring pulses round it. Under it: time left, hits left.
+function g0dpEyeDraw(p, f, put, bg, take, now, Y) {
+  const e = f.eye, hs = G0D_LOOKS.hs, age = now - e.at, hurt = now - f.hitAt < 320, left = Math.max(0, (e.until - now) / 1000);
+  const jolt = now - f.hitAt < 200 ? (Math.floor(now / 50) % 2 ? 1 : -1) : 0;
+  const x = Math.round(e.x) + jolt, y = Math.round(e.y);
+  const look = Math.round(Math.sin(now / 700 + e.at) * 1.6 + Math.sin(now / 263) * 0.6);   // -2..2: where it's looking
+  const blink = !hurt && (now + e.at) % 3400 < 140;
+  const pupil = hurt ? 'o' : e.bonus ? '@' : (Math.floor(now / 500) % 5 === 4 ? 'O' : '@');
+  const iris = '  ' + ' '.repeat(2 + look) + '(' + pupil + ')' + ' '.repeat(2 - look) + '  ';   // 11 wide
+  let art = blink || hurt
+    ? ['   .-----.   ', " .'       '. ", hurt ? '(  >-----<  )' : '(  -------  )', " '.       .' ", "   '-----'   "]
+    : ['   .-----.   ', " .'       '. ", '(' + iris + ')', " '.       .' ", "   '-----'   "];
+  if (age < 110) art = ['             ', '             ', '     (o)     ', '             ', '             '];   // it opens (round 5)
+  else if (age < 230) art = ['             ', '    .---.    ', '   ( (@) )   ', "    '---'    ", '             '];
+  const blood = 1 - f.hp / G0DP.hp;   // bloodshot: more red in the white as he weakens
+  art.forEach((l, j) => {
+    take(x - 6, y - 2 + j, 13);
+    for (let k = 0; k < l.length; k++) {
+      const ch = l[k]; if (ch === ' ') continue;
+      const inner = '()@oO><-'.includes(ch) && j === 2;
+      const red = !inner && hs(k * 7.7 + j * 3.1 + Math.floor(now / 600)) < blood * 0.75;
+      put(x - 6 + k, Y + y - 2 + j, red ? (blood > 0.5 && hs(k + j) < 0.5 ? '~' : ch) : ch, red ? G0DP_RED : hurt && inner ? C.bright : G0DP_BLUE, 'fx', inner || e.bonus);
+    }
+  });
+  if (e.bonus) {   // the combo: a ring pulses round it
+    const pulse = Math.floor((now - (e.bonusAt || now)) / 110) % 2;
+    for (let k = -7; k <= 7; k += 2) { const cx = x + k + (pulse ? 1 : 0); put(cx, Y + y - 3, '·', G0DP_BLUE, 'fx', true); put(cx, Y + y + 3, '·', G0DP_BLUE, 'fx', true); take(cx, y - 3, 1); take(cx, y + 3, 1); }
+    for (const dy of [-2, -1, 0, 1, 2]) { put(x - 8, Y + y + dy, ':', G0DP_BLUE, 'fx', !!pulse); put(x + 8, Y + y + dy, ':', G0DP_BLUE, 'fx', !!pulse); take(x - 8, y + dy, 1); take(x + 8, y + dy, 1); }
+  }
+  // under it: a bar of time left, the hits left
+  const bw = 9, n = Math.round(Math.min(1, left / (G0DP.eyeOpen + (e.bonus ? G0DP.eyeBonusTime : 0))) * bw), row = y + (e.bonus ? 4 : 3);
+  const line = '[' + '='.repeat(n) + ' '.repeat(bw - n) + '] ' + '*'.repeat(Math.max(0, e.cap - e.hits));
+  take(x - 6, row, line.length); put(x - 6, Y + row, line, left < 2 && Math.floor(now / 150) % 2 ? C.bright : G0DP_BLUE, 'fx', !!e.bonus);
+}
+// The chunk a hit takes off G0D's bar breaks off and falls (round 26).
+function g0dpBarBreak(from, to) {
+  if (reduced()) return;
+  const w = L.wc, a = Math.round(to / G0DP.hp * w), b = Math.round(from / G0DP.hp * w), y = G0DP_BAR_ROW, cells = [];
+  for (let x = a; x < Math.max(b, a + 1); x++) for (let k = 0; k < 2; k++) cells.push({ ch: pickR(['▓', '▒', '█', '#', '%'], Math.random), x: pxX(x + rand(-0.3, 0.3)), y: pxY(y), col: pickR([G0DP_RED, C.danger, C.bright], Math.random) });
+  explode(cells, pxX((a + b) / 2), pxY(y) - L.chh * 0.8, { power: 0.9, grav: 1.6, life: [0.5, 1.1] });
 }
 function g0dpOverlay(cells, now, bgs) {
   const p = st.g0dp;
