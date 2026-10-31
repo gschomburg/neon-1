@@ -364,6 +364,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   buried). **A corp node tapped heals G0D 1** (and still costs you 1 INT). **Three stages** (his health in thirds): at a break the
   eye slams shut, the mold surges back, STAGE 2 / 3 flashes, 2 more corp nodes come up, mold spews faster, HANDS OFF comes
   sooner; G0D gets louder. (b0y still needs work: more helpful, a better resting spot: later.)
+- Round 25 (the user: it sucks to lose a good combo to a stage break): with one eye the break slams it shut as before; with a
+  combo (the second eye found) the hits go through the stage line and the break comes when the eye shuts (f.pendStage).
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 

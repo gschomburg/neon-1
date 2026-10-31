@@ -534,6 +534,7 @@ function g0dpRegrow(p, cx, cy, amt) {
 }
 function g0dpEyeClose(p, now, why) {
   const f = p.fight, ex = f.eye ? f.eye.x : f.W / 2, ey = f.eye ? f.eye.y : f.H / 2;
+  if ((f.pendStage || 0) > (f.stage || 0)) { const s2 = f.pendStage; f.pendStage = 0; f.eye = null; return g0dpStageUp(p, s2, now); }   // a break held back by a combo
   f.eye = null;
   g0dpRegrow(p, ex, ey, 1.8);   // the mold grows back in (round 18: a wave)
   for (const eyeN of f.nodes.filter(n => n.kind === 'eye')) { eyeN.x = 3 + Math.random() * (f.W - 9); eyeN.y = 3 + Math.random() * (f.H - 6); eyeN.gone = false; }   // the eye nodes come back, somewhere else
@@ -553,7 +554,10 @@ function g0dpFightTap(p, x, y, now) {
       return g0dpCard(p, ['G0D BREACHED', '', 'it\'s... no.', 'the M0LD is coming back.', '', 'G0D: "you are just meat."', '', 'tap: G0D FINAL STAND'], () => g0dpStart('stand'), G0DP_RED);
     }
     const st2 = f.hp <= G0DP.hp / 3 ? 2 : f.hp <= G0DP.hp * 2 / 3 ? 1 : 0;   // a stage break (round 24)
-    if (st2 > (f.stage || 0)) return g0dpStageUp(p, st2, now);
+    if (st2 > (f.stage || 0)) {
+      if (!f.eye.bonus) return g0dpStageUp(p, st2, now);   // one eye: the break slams it shut
+      f.pendStage = Math.max(f.pendStage || 0, st2);   // a combo (both eyes): it plays out, the break waits for the eye to shut (round 25)
+    }
     if (f.eye.hits >= f.eye.cap) g0dpEyeClose(p, now, 'it shuts.');
     return;
   }
