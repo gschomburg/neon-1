@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.00']);
+NEON_FILES.push(['engine/editor.js', 'v14.04']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -302,6 +302,8 @@ if (EDITOR) {
     qdisc: () => { if (st.run && !holdingDisc()) addItem('disc', 0); },
     qstep: m => { save.quests = save.quests || {}; if (m.step === 'none') delete save.quests.pops; else Object.assign(questOf('pops'), { step: m.step, seen: true, news: true }); persist(); },
     qscene: () => playScene('disc'),
+    // the H3AV3N seed, as if you typed it: a QUEST run from the start (engine/heaven.js)
+    h3av3n: async () => { g0dpStop(); st.g0d = null; st.g0dBar = null; endRun(); st.seed = 'H3AV3N'; st.practice = !save.beatG0D; startRun('H3AV3N', st.practice); await settle(); },
     qcall: () => queueCall('pops', QUEST_LINES.found),
     event: m => toSector(2, m.key),
     sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),

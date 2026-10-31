@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v14.00']);
+NEON_FILES.push(['engine/sound.js', 'v14.04']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -86,8 +86,10 @@ const Sound = (() => {
     // H3AV3N (round 5, the user): G0D's voice, a syllable as his terminal line types: a deep modem growl; hi (0-1, as he
     // breaks down) brings in higher chirps, R2-ish, until it's mostly them
     g0dVoice: hi => {
-      if (hi < 0.95) { tone(48 + Math.random() * 40, 0.08, { type: 'sawtooth', vol: 0.34 * (1 - hi * 0.7), slide: 0.75 + Math.random() * 0.5 }); noise(0.07, { vol: 0.16 * (1 - hi * 0.6), freq: 300 + Math.random() * 600 }); tone(140 + Math.random() * 90, 0.05, { type: 'square', vol: 0.05 * (1 - hi) }); }
-      if (hi > 0.15) tone(600 + Math.random() * 1900 * hi, 0.045 + Math.random() * 0.04, { type: 'sine', vol: 0.2 * hi, slide: Math.random() < 0.5 ? 1.9 : 0.5 });
+      // (the user couldn't hear it: the growl sat at 48-88 Hz, under what phone and laptop speakers play; now it's 110-200 Hz
+      // with a modem buzz over it, in the band speakers do play, and louder)
+      if (hi < 0.95) { const f = 110 + Math.random() * 90, k = 1 - hi * 0.6; tone(f, 0.09, { type: 'sawtooth', vol: 0.5 * k, slide: 0.7 + Math.random() * 0.6 }); tone(f * 2.01, 0.07, { type: 'square', vol: 0.16 * k, slide: 0.8 }); noise(0.08, { vol: 0.3 * k, freq: 900 + Math.random() * 900 }); }
+      if (hi > 0.15) tone(700 + Math.random() * 1900 * hi, 0.05 + Math.random() * 0.04, { type: 'sine', vol: 0.32 * hi, slide: Math.random() < 0.5 ? 1.9 : 0.5 });
     },
     moldBreak: (th = 1.5) => { noise(0.06 + 0.025 * th, { vol: 0.24 + 0.05 * th, freq: 2000 - th * 260 }); noise(0.04, { vol: 0.12, freq: 6000, type: 'highpass', delay: 0.012 }); tone(120 + Math.random() * 70, 0.05, { type: 'square', vol: 0.07, slide: 0.55 }); },   // a tap breaking the M0LD: a wet crunch
     static: (dur = 0.45) => { noise(dur, { vol: 0.3, freq: 2600, to: 500 }); for (let i = 0; i < 6; i++) noise(0.03, { vol: 0.22, freq: 800 + Math.random() * 4200, delay: Math.random() * dur }); },   // G0D hurt in the final stand

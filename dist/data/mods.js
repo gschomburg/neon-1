@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.00']);
+NEON_FILES.push(['data/mods.js', 'v14.04']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -31,8 +31,8 @@ const ITEMS = {
     tiers: [{}, { rarity: 'rare', desc: 'rule out two thirds of the ICE.', tip: 'rule out 2/3 ICE.' }, { rarity: 'epic', desc: 'rule out all but one ICE node.', tip: 'leave real + 1 ICE.' }] },
   route: { key: 'route', name: 'ROUTE', price: 45, rarity: 'rare',   desc: 'on the map: reshuffle every node ahead.', tip: 'shuffle map ahead.' },
   warp:  { key: 'warp',  name: 'WARP',  price: 45, rarity: 'rare', desc: 'on the map: warp to a random node ahead.', tip: 'random jump ahead.',
-    codex: 'on the map: a warp opens to a random node ahead in this sector, any row. it can skip a lot (and the pay and REP in it). the epic one lets you aim.',
-    tiers: [{}, { rarity: 'epic', desc: 'on the map: warp to any node ahead. you pick.', tip: 'jump anywhere ahead.' }] },
+    codex: 'on the map: a warp opens to a random node ahead in this sector, any row. it can skip a lot (and the pay and REP in it). the epic one lets you aim: anywhere in the sector you have not been, behind you too.',
+    tiers: [{}, { rarity: 'epic', desc: "on the map: warp to any node you haven't been. you pick.", tip: 'jump anywhere new.' }] },
   allin: { key: 'allin', name: 'ALL-IN', price: 60, rarity: 'epic', desc: 'in a corp layer: 50/50. the layer clears, or 2 more ICE nodes show up.', tip: '50/50: clear it or +2 ICE.',
     codex: 'use it in a corp layer: half the time the layer clears on the spot (the real node opens, normal pay, no perfect); the other half two new ICE nodes appear, copies of the decoys already there. not in corps with their own tap rules.' },
   // map gear (the user, 2026-10-26): TUNNEL, MESH (and WARP above). They add nodes you can go to (availableNodes).

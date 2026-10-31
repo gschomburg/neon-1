@@ -1,12 +1,18 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.00']);
+NEON_FILES.push(['engine/active.js', 'v14.04']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
   const run = st.run, cur = run.map[run.at];
   const top = SECTOR_STEPS * (run.sector + 1);   // this sector's OMNI
   return Object.values(run.map).filter(n => n.step > cur.step && n.step < top && !run.visited.includes(n.id));
+}
+// The aimed WARP (the user, 2026-10-31: anywhere you haven't been): any node in this sector you haven't explored, behind
+// you too (not the start, not the boss). Land in a pocket and you can go out any of the ways up (availableNodes).
+function warpTargets() {
+  const run = st.run, base = SECTOR_STEPS * run.sector, top = SECTOR_STEPS * (run.sector + 1);
+  return Object.values(run.map).filter(n => (n.sector || 0) === run.sector && n.step > base && n.step < top && n.id !== run.at && !run.visited.includes(n.id));
 }
 
 function modUsable(key) {
@@ -539,7 +545,7 @@ function canUse(stack) {
   if (key === 'wall') return tier < 2 ? true : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll;
   const onMap = st.mode === 'map' && !st.busy && !st.transitioning;
   if (key === 'route') return onMap && nodesAhead().length > 0;
-  if (key === 'warp') return onMap && nodesAhead().length > 0 && !(tier >= 1 && run.warpAim);
+  if (key === 'warp') return onMap && (tier >= 1 ? warpTargets() : nodesAhead()).length > 0 && !(tier >= 1 && run.warpAim);
   if (key === 'tunnel') return onMap && !run.tunnel && !!run.at && rowMates().length > 0;
   if (key === 'mesh') return onMap && run.mesh !== run.sector && (nodesAhead().length > 0 || meshSides().length > 0);
   if (key === 'skip') return onMap && !run.skipAim && skipTargets().length > 0;
@@ -691,7 +697,7 @@ function gearFx(key, tier) {
   }
   if (key === 'warp' && tier >= 1) {   // epic: you aim it
     run.warpAim = true; st.mapSel = null;
-    Sound.whoosh(); setMsg('> warp open: pick any node ahead.', C.accent);
+    Sound.whoosh(); setMsg("> warp open: pick any node you haven't been.", C.accent);
   } else if (key === 'warp') {
     const target = pickR(nodesAhead(), rngFor(run.seed, 'warp', run.at, run.depth));
     setMsg('> warp open...', C.accent);

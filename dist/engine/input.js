@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.00']);
+NEON_FILES.push(['engine/input.js', 'v14.04']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -186,13 +186,25 @@ cv.addEventListener('pointerdown', e => {
   let h = hitAt(...ptXY(e));
   if (st.mode === 'g0dp' && !st.pause && !st.dev && !st.wipe && !(h && h.kind === 'btn')) { const [px, py] = ptXY(e); if (g0dpTap((px - L.ox) / L.cw, (py - L.oy) / L.chh)) return; }   // the G0D prototype takes board taps
   if (st.tut && st.tut.pop && !st.pause && !st.dev && tutTap(h)) return;   // the training run's popup (POPS)
-  if (h && h.kind === 'tile' && upsideMirror()) { const m = hitAt(e.clientX, e.clientY); h = m && m.kind === 'tile' ? m : null; }   // UPSIDE boss
+  if (h && h.kind === 'tile' && upsideMirror()) {   // UPSIDE boss: it lands on the mirrored node (the one lit up as you point)
+    const j = upsideTwin(st.lv, h.i), t = st.lv.tiles[j];
+    if (t && t.state === 'closed') h = { kind: 'tile', i: j };
+    else { Sound.deny(); setMsg(t ? '> upside: its mirror is locked.' : '> upside: nothing on the other side.', C.dangerDim); return; }
+  }
   st.drag = activeScroll() ? { y: e.clientY } : null;
   // Ignore taps during a wipe, except the header buttons.
   if (st.wipe && !(h && (h.id === 'snd' || h.id === 'dev'))) return;
   // While paused, only buttons respond.
   if (st.pause && h && h.kind !== 'btn') return;
   if (!h) {
+    if (st.mode === 'play' && !st.dev && !st.pause && !st.busy && st.corp && st.corp.hasBoss && st.corp.def.boardTap) {   // a corp that takes taps anywhere on its board (CERBERUS: digging)
+      const [px, py] = ptXY(e), cx = Math.floor((px - L.ox) / L.cw), cy = Math.floor((py - L.oy) / L.chh);
+      if (cy >= BOARD_Y && cy < BOARD_Y + L.gh && st.corp.def.boardTap(cx, cy)) return;
+    }
+    if (st.mode === 'play' && !st.dev && !st.pause && st.moldFx && st.moldFx.heavy) {   // the deep M0LD: a tap on it digs (engine/heaven.js)
+      const [px, py] = ptXY(e), cx = Math.floor((px - L.ox) / L.cw), cy = Math.floor((py - L.oy) / L.chh);
+      if (cy >= BOARD_Y && cy < BOARD_Y + L.gh && moldDig(cx, cy)) return;
+    }
     if (st.mode === 'map' && !st.dev && !st.pause) { st.mapSel = null; st.mapPeek = null; }
     st.selItem = -1; st.selMod = -1;
     return;
@@ -245,7 +257,8 @@ cv.addEventListener('pointermove', e => {
   }
   let h = hitAt(...ptXY(e));
   if (h && st.tut && !tutHoverOk(h)) h = null;   // the training: what you can't tap now doesn't light up
-  const tile = h && h.kind === 'tile' ? h.i : -1;
+  let tile = h && h.kind === 'tile' ? h.i : -1;
+  if (tile >= 0 && upsideMirror()) tile = upsideTwin(st.lv, tile);   // UPSIDE boss: what lights up is where the tap lands
   if (tile !== st.hover && tile >= 0 && !st.busy) Sound.tick();
   st.hover = tile;
   st.kbGrid = false;

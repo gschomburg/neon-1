@@ -170,6 +170,29 @@ unlocked by REP, and some quests unlock REP.
   - **G0D's tracks** (the user, 2026-10-29): the G0D fights need their own music, and it has to kick ass: the maze, the
     mold-armor fight, the part 2 on the map / the win screen, the last stand. (docs/QUESTS.md, G0D's fights.)
 
+- **H3AV3N seed playtest (the user, meat notes 2026-10-31, after v14.02):**
+  - (done v13.99: sector 1's market stock: BUFFER, patches, SHOE, FRAG, FWALL, WARP, CALL, STIM, 0DAY, SWAP.)
+  - (built v14.03: the H3AV3N notes below marked built) **Music:** the "plays for" id for the G0D fight should be GODFIGHT, not just g0d.
+  - (built v14.03) **G0D's voice:** the user still isn't hearing any of the G0D voice effects (check they play).
+  - (built v14.03) **After the last stand:** tiny bits of the mod and gear tray still show (the black box covering them as they
+    transition out?). Once that's covered, blank it all out.
+  - **Sector 1:**
+    - (built v14.03) The data cache needs a better item: maybe the extra items you get with the cache key mod, something legendary.
+    - (built v14.03) CERBERUS's description is too long for one line (goes off screen).
+    - (built v14.03) The layout: the cache shouldn't be the only thing right after the market; maybe swap it over to the right side.
+    - (built v14.03) Maybe a purple WARP here, maybe at the cache: go up to the cache, then warp down to a lower part of the map and
+      clear more corps.
+    - (built v14.03) No TUMBLR locks in sector 1.
+    - (built v14.03) Only one SEEKR: remove the higher-up one.
+    - (built v14.03) The UPLINK is cool; it could use some mold growing in and then falling off, like in the sector.
+  - **Sector 2:**
+    - (built v14.03) The mold doesn't seem clickable.
+    - (built v14.03) b0y holding it back is OK, but could be better.
+    - DECIBEL is a good corp here (its tell is where your cursor goes). (a note; nothing to change)
+    - (built v14.03) **Maze loot could be better:** maybe a blue BUFFER in case you don't have anything yet; maybe some gear; or a new
+      mod for the maze reward (once you beat the game, it opens up as a random drop).
+    - (built v14.03) **Market loot could be better:** maybe an exotic in the reroll (BLOOD MONEY?).
+    - (built v14.03) Maybe a b0y line if you tap him in the store.
 ### 4. The end game (its own section, the user 2026-10-30; details: docs/ENDGAME.md)
 - **The ending:** cutscene, credits + thanks for playing, "there is more to explore", then the reward as a free REP
   unlock.
@@ -180,6 +203,12 @@ unlocked by REP, and some quests unlock REP.
 - **Replay H3AV3N** after winning (maybe its own leaderboard).
 - **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
 - **More rewards?** A mod you always start with (meat notes 2026-10-29).
+
+- (built v14.03 as a placeholder: H3AV3N CLEARED, 150 / 50 REP, the four heaven feats) **The ending's rewards screen** (the user, meat notes 2026-10-31): somewhere in the ending, a rewards screen: your
+  logo, how you did, the REP reward for doing it (what you unlocked). No loot or mod list. Then maybe the quest feat-type
+  popup telling you about the seed unlocks (probably just the last feat unlock window). Feats: beating G0D, and a few
+  others for heaven: a perfect run, getting lost in the maze, etc.
+- **CODEX** (the track) might be good for the credits or the cutscenes (meat notes 2026-10-31).
 
 ### 5. The map and run structure
 - **Fishing: built v13.69** (engine/fishing.js; open: unlock the PIER with a feat, a quest item on the line, more UI after play). (the user, meat notes 2026-10-28): a PIER node on the map where you fish for loot.
@@ -212,6 +241,10 @@ unlocked by REP, and some quests unlock REP.
       Keep the random weights (maybe not pounds) and the BIGGEST YET stuff.
 - **Different markets** (the user, meat notes 2026-10-28): black market / grey market / open market.
 - **MESH at the last row (built v13.75)**: it links the nodes on either side of you there; they still go to the boss.
+- (built v14.03, the aimed WARP) **WARP anywhere** (the user, meat notes 2026-10-31): WARP can go anywhere except places you've already explored. Warp
+  into a pocket and you can leave by any of the upper links.
+- (built v14.04: market, PIER, an untaken cache; rollovers on visited nodes) **Going back into nodes** (meat notes 2026-10-31): at the store, LEAVE, then be able to go back in; maybe the cache and
+  phishing too. All the nodes you've visited could show a rollover to remind you what they were.
 - More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
 - Moving backwards / the frontier (pick any node linked to one you've visited), or allow clearing the whole map.
   An "open map" mod (the aimed WARP is built: epic WARP, v13.52).
@@ -340,15 +373,28 @@ unlocked by REP, and some quests unlock REP.
   descriptions, detail boxes, the clash screen); the swap screen's row spacing; the spacing / copy on the pick
   screens; the header menu button right-aligned?; the palette warnings (40 palettes; MOCHI MOCHI is hard to read,
   the user will probably change it).
+- **TERMINAL VELOCITY as the intro track** (the user, meat notes 2026-10-31), for the screens before the title, with some
+  adjustments: fade up at stage 1 level 0 when the map appears; the NEON screen goes to level 2 / stage 2; back down to
+  ~level 0 for the NEWB / LEET screen, bouncing a little between stages and levels while there; then fade down (or
+  whatever the transition is) into the next music.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
 - **From the meat notes (the user, 2026-10-30):**
-  - **FIRST BREACH with a long tell** (SYNAPSE): the copy pushes SEE THE CORE off the bottom of the screen: make room for it.
-  - **UPSIDE's boss layer:** hard to tell where to tap (tried everywhere); SNIFFER may have broken an ICE and locked it.
-  - **A market bug:** buy a mod you own (an upgrade): the sold-out offer in the market turns to the next rarity's look
+  - (fixed 2026-10-31: FIRST BREACH centers on the whole screen) **FIRST BREACH with a long tell** (SYNAPSE): the copy pushes SEE THE CORE off the bottom of the screen: make room for it.
+  - (fixed v14.04: mirrored across the board, the target lights up; SNIFFER was only its locked ICE) **UPSIDE's boss layer:** hard to tell where to tap (tried everywhere); SNIFFER may have broken an ICE and locked it.
+  - (fixed v14.04) **A market bug:** buy a mod you own (an upgrade): the sold-out offer in the market turns to the next rarity's look
     (blue bought to purple: the sold-out one shows legendary). It should stay the color you bought.
   - **mimic** (just the word in the notes: ask).
+- **From the meat notes (the user, 2026-10-31, misc):**
+  - **[b] cycles b / 0 / y** (the symbol). The same system could hide your companion, or switch between other pets.
+  - **Crew and rivals catch up to b0y:** they may need behavior updates for b0y's newer features, like text in their
+    cursors instead of the terminal sometimes.
+  - **Being able to point at things** (crew / rivals, like b0y does).
+  - (fixed 2026-10-31: centered on the whole screen while it holds, ~5 rows higher; glides back down for the rewards) **FIRST BREACH alignment, still:** PARCELNET pushes things too low: the whole screen up ~5 lines; then when the
+    rewards show, bring CORP BREACHED back down maybe?
+  - **An editor loot viewer:** click a node on the map, then a button in the editor shows everything that corp's loot could
+    be: loot nodes, what stores carry, rerolls.
 - **From the user's iPhone notes (meat notes 2026-10-30):** more companions (pets); **loot training** (the training run
   could show the LOOT bag); a **phishing logo**; PIER names: **CATPHISH**, "phush you? no, phush me"; and three to ask
   about: **Neon**, **Scam**, **Merch** (just the words in the notes).

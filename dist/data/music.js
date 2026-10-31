@@ -1,6 +1,6 @@
 // NeoN+1 data/music.js: Music: scales, every track, and which track plays where.
 'use strict';
-NEON_FILES.push(['data/music.js', 'v14.00']);
+NEON_FILES.push(['data/music.js', 'v14.04']);
 
 // ---------------- Music ----------------
 // Generated 80s-style synthwave: pad, bass, drums, arp and lead, scheduled a little
@@ -26,7 +26,7 @@ const MUSIC_FOR = {
   menu: 'night_rain', map: 'gridlock',
   omni: 'dropzone',   // DROP ZONE (the user's note: "boss"); MELTDOWN was cut 2026-10-24
   // H3AV3N (2026-10-31): first picks from the G0D tracks below; the user picks the real ones
-  maze: 'labyrinth', g0d: 'pursuit', g0dstand: 'lastbreath',
+  maze: 'labyrinth', godfight: 'pursuit', g0dstand: 'lastbreath',   // (godfight: the G0D fight; the user: not just g0d)
 };
 
 // GRAVE ROBBER (BONEYARD's mod): while you hold it, this plays instead of the map track (engine/boot.js).

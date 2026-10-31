@@ -39,7 +39,7 @@
 //   engine/mods.js      zombie, ROT
 //
 'use strict';
-NEON_FILES.push(['engine/corpkit.js', 'v14.00']);
+NEON_FILES.push(['engine/corpkit.js', 'v14.04']);
 
 // ---------------- Content ----------------
 // tell: how the corp picks its safe tile. bossTell: the boss layer's twist.
@@ -195,6 +195,12 @@ const kfmt = v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(Math.round(v)
 // on its boss, where tile taps land on the node mirrored across the center.
 const flipNow = () => !!(st.mode === 'play' && st.lv && st.corp && st.corp.hasBoss && st.corp.def.flip && !st.pause && !st.dev && !st.mp);
 const upsideMirror = () => !!(st.flipNow && st.lv && st.lv.boss);
+// UPSIDE's boss: the node a tap on node i lands on, mirrored across the board's grid (the user, 2026-10-30: it was
+// mirrored across the whole screen, so most taps landed in a gap or the header). -1: nothing there.
+function upsideTwin(lv, i) {
+  const t = lv.tiles[i]; if (!t) return -1;
+  return lv.tiles.findIndex(o => o.row === lv.rows - 1 - t.row && o.col === lv.cols - 1 - t.col);
+}
 const ptXY = e => st.flipNow ? [W - e.clientX, H - e.clientY] : [e.clientX, e.clientY];
 // LAGRANGE: everything slides one column right (wrapping) every beat.
 const lagNext = (lv, t) => t.row * lv.cols + (t.col + 1) % lv.cols;

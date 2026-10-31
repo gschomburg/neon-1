@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.00']);
+NEON_FILES.push(['engine/screens.js', 'v14.04']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -196,7 +196,7 @@ function buildReveal(ctx, now, rv, all) {
   const H = vis.reduce((a, ln) => a + hOf(ln), 0);
   // glide toward the centered spot (so new lines push the block up smoothly);
   // 'board' centers like a normal panel, so the finished screen lines up exactly
-  const target = rv.center === 'board' ? BOARD_Y + Math.max(0, Math.floor((L.gh - H) / 2)) : (L.hc - Math.max(1, H)) / 2;
+  const target = rv.whole ? Math.max(0, Math.floor((L.hc - H) / 2)) : rv.center === 'board' ? BOARD_Y + Math.max(0, Math.floor((L.gh - H) / 2)) : (L.hc - Math.max(1, H)) / 2;
   if (rv.y == null) rv.y = target;
   else rv.y += (target - rv.y) * Math.min(1, (now - rv.lt) / 1000 * 9);
   rv.lt = now;

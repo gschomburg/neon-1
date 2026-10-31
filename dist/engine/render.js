@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v14.00']);
+NEON_FILES.push(['engine/render.js', 'v14.04']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -110,9 +110,13 @@ function availableNodes() {
   if (run.tunnel) for (const n of rowMates()) out.add(n.id);
   if (run.mesh === run.sector) for (const n of Object.values(run.map)) if (n.step === cur.step + 1 && (n.sector || 0) === run.sector) out.add(n.id);
   if (run.mesh === run.sector) for (const n of meshSides()) out.add(n.id);   // the row under the boss: the nodes beside you too
-  if (run.warpAim) for (const n of nodesAhead()) out.add(n.id);
+  if (run.warpAim) for (const n of warpTargets()) out.add(n.id);   // (anywhere you haven't been, behind you too)
   if (run.skipAim) for (const n of skipTargets()) out.add(n.id);   // SKIP: two rows ahead
-  return [...out].filter(id => !run.visited.includes(id));
+  let ids = [...out].filter(id => !run.visited.includes(id));
+  // a pocket (WARP landed you where every way on is explored): any of the ways up, the next row with somewhere new
+  if (!ids.length && cur.type !== 'final') for (let s = cur.step + 1; s < SECTOR_STEPS * (run.sector + 1) + 1 && !ids.length; s++)
+    ids = Object.values(run.map).filter(n => n.step === s && (n.sector || 0) === (run.sector || 0) && !run.visited.includes(n.id)).map(n => n.id);
+  return ids;
 }
 
 function showBoard(mode) {

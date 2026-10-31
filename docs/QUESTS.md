@@ -132,6 +132,9 @@ The user's dump, 2026-10-28, put in order. More is coming.
 - **Calling b0y: a [b] button** (the user, 2026-10-31): not a gear or a locked mod. A [b] in b0y's blue, down on the
   other side from the LOOT button. Tap it and b0y comes out to help; when he's not on screen he goes back down there.
   So in the maze he isn't always out telling you exactly what to do: tap [b] and he comes out with a tip.
+- **Two CERBERUSes** (the user, 2026-10-31): this one is the moldy CERBERUS (the H3AV3N seed). If it goes into the
+  regular game, a version without the mold: the eyes alone are the tell (blue: it looks at the real node, then pick it).
+  (Claude: alone that may be too easy; add some bite: shorter blue, an eye that sometimes looks wrong, or a clock.)
 - **CERBERUS** (sector 1's boss): its mod should be good against G0D, or for fighting the mold. On the boss the mold
   may work differently: maybe that's where you get to break it (a function of the fight, not a mod).
 - **Sector 2** (built: the 3 rows of corps, the maze, the shop, G0D): very moldy, the corps nearly impossible to read
@@ -415,6 +418,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   real rewards screen, frozen partway; tap-to-skip off by default; b0y in the real maze (cursors, his clue in the terminal). b0y
   in heaven's other corps: later. Maybe a heaven sector event card that says b0y is with you.
 - **Later (the user): make the maze a little harder.** b0y in heaven's other corps.
+  (v14.03, the user: in the maze b0y gives the name clue every layer; [b] brings out his cursors, pointing. In the deep M0LD
+  corps his [b] holds the mold back with his blue edge and marks. The fight's nodes can't sit on top of each other now.)
 - **H3AV3N feedback, round 5** (the user, meat notes 2026-10-31, as written; all built v13.98, see SPEC):
   - boy should maybe not have the V unless he's actually pointing.. like maybe it's just a : and then for pointing he switches to V.. and maybe the V part moves up and down like when he's pointing on the maze
   - eyes on the last stand maybe need to stand out a little more.. maybe they hace the invert glitch a lot and when boy grabs them the blue is also inverted and glitchy. it's just kinda hard to read the screen with all the red lines, it camoflages the eyes right now a little too well

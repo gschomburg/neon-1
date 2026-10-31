@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v14.00']);
+NEON_FILES.push(['engine/menus.js', 'v14.04']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -61,10 +61,10 @@ function resetSave() {
 // else on REP); your name opens it on YOU.
 const BOARD_TABS = [['you', 'YOU', 'tby'], ['rep', 'REP', 'tbr'], ['feats', 'FEATS', 'tbf'], ['crew', 'CREW', 'tbc'], ['quests', 'QUESTS', 'tbq']];   // (STATS is under the feats list)
 const BOARD_BODY = 24;
-const FEAT_GROUPS = [['runs', 'RUNS'], ['corps', 'CORPS'], ['odd', 'ODD'], ['rivals', 'RIVALS'], ['crew', 'CREW']];
+const FEAT_GROUPS = [['runs', 'RUNS'], ['corps', 'CORPS'], ['odd', 'ODD'], ['rivals', 'RIVALS'], ['crew', 'CREW'], ['heaven', 'H3AV3N']];
 // A hacker's feats show once you've met them (a rival came in, you called the crew member).
 const hkMet = id => statOf('hack:met:' + id) > 0 || statOf('hack:call:' + id) > 0 || statOf('hack:beat:' + id) > 0;
-const featShown = f => !f.hacker || hkMet(f.hacker);
+const featShown = f => (!f.hacker || hkMet(f.hacker)) && (f.group !== 'heaven' || save.heavenSeen || featDone(f.id));   // (H3AV3N's: once you've been)
 const featsShown = () => FEATS.filter(featShown);
 const FEAT_LIST_ROWS = BOARD_BODY - 7;   // FEATS: 6 lines of detail, then the list
 // A progress bar: 10 wide (fewer for small counts).

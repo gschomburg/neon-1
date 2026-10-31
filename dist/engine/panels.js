@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.00']);
+NEON_FILES.push(['engine/panels.js', 'v14.04']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -161,7 +161,9 @@ function openShop(node) {
     for (const o of offers) { o.n = 1; const p = ECON.stock[ITEMS[o.key].rarity] || 0; while (o.n < ECON.stock.max && rs() < p) o.n++; if (qm && o.key === 'patch') o.n = Math.max(o.n, QUEST_STOCK.patches); }
     const qMods = qm ? pickMods(r, QUEST_STOCK.mods, QUEST_STOCK.mods.length) : [];   // (BUFFER, unless you can't take it again)
     for (const o of qMods.concat(pickMods(r, modsFound('gen', 'minor'), (has('coupon') ? 3 : 2) - qMods.length, qMods))) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
-    if (!qm) for (const o of exoticOffer(run.seed, 'shop', n ? node.id + 'r' + n : node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
+    const hvx = node.heaven === 'shop' && n >= 1 ? heavenExotic(r) : null;   // heaven's market: a reroll brings an exotic (engine/heaven.js)
+    if (hvx) offers.push({ kind: 'mod', key: hvx, tier: 0, price: MODS[hvx].price, sold: false });
+    else if (!qm) for (const o of exoticOffer(run.seed, 'shop', n ? node.id + 'r' + n : node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
     if (discDrops(rngFor(run.seed, 'shop', node.id, 'disc', n), 'shop')) offers.push({ kind: 'item', key: 'disc', tier: 0, price: ITEMS.disc.price, sold: false, n: 1 });   // the quest (engine/quests.js)
     offers = shuffle(offers, r);   // random order: any slot could be the good one
     if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
@@ -169,7 +171,11 @@ function openShop(node) {
   };
   for (const k of ['coupon', 'haggle']) if (has(k)) modFired(k);   // the market they change opens
   const repair = { kind: 'repair', key: 'repair', price: costInt(ECON.repair), sold: false };
-  let offers = roll(0).concat([repair]), rolls = 0, view = 'buy', sel = 0, sellSel = 0;
+  // a market you go back into (the user, 2026-10-31) is as you left it: run.shops keeps its offers and rerolls
+  const kept = (run.shops = run.shops || {})[node.id];
+  let offers = kept ? kept.offers : roll(0).concat([repair]), rolls = kept ? kept.rolls : 0, view = 'buy', sel = 0, sellSel = 0;
+  const keep = () => { run.shops[node.id] = { offers, rolls }; };
+  keep();
   const rerollsLeft = () => marketRerolls() - rolls;
   const rerollPrice = () => costInt(ECON.reroll) * (rolls + 1);   // more each time, in the same market
   const reroll = () => {
@@ -177,7 +183,7 @@ function openShop(node) {
     const price = rerollPrice();
     if (rerollsLeft() <= 0 || !canSpend(price)) return Sound.deny();
     run.credits -= price; rolls++;
-    offers = roll(rolls).concat([repair]);
+    offers = roll(rolls).concat([repair]); keep();
     sel = offers.length;   // (the selection stays on the REROLL row: it's the last row)
     st.revealed = new Set(); st.panelT0 = performance.now() + CONFIG.revealDelay;   // the new offers come in again, one row at a time
     Sound.whoosh(); setMsg(`> restocked. -${price}cr.`, C.money);
@@ -200,7 +206,7 @@ function openShop(node) {
   st.shop = { node: node.id, get offers() { return offers; }, priceOf, buyAt: k => buy(offers[k]), reroll, rerollsLeft, rerollPrice, sellAt: sell };   // (read by tools/econsim.js)
 
   // What an offer is: gear at its tier; mods as what you'd end up with (upgrades).
-  const defOf = o => o.kind === 'item' ? itemView(o.key, o.tier) : o.kind === 'mod' ? modView(o.key, upgradeTo(o.key, o.tier))
+  const defOf = o => o.kind === 'item' ? itemView(o.key, o.tier) : o.kind === 'mod' ? modView(o.key, o.sold && o.got != null ? o.got : upgradeTo(o.key, o.tier))   // (sold: what you bought, not the next step up: the user's bug)
     : o.kind === 'reroll' ? { name: 'REROLL', desc: `new offers. ${rerollsLeft()} left here.`, rarity: 'common', tier: 0 }
     : { name: 'REPAIR', desc: 'restore 1 integrity.', rarity: 'common', tier: 0 };
   const buy = o => {
@@ -208,7 +214,7 @@ function openShop(node) {
     if (o.sold || !canSpend(price)) return Sound.deny();
     if (o.kind === 'repair' && !canHeal()) return Sound.deny();
     const name = defOf(o).name.toLowerCase();
-    const finish = () => { statBuy(o, price); run.credits -= price; o.free = false; if (o.kind === 'item' ? --o.n <= 0 : o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
+    const finish = () => { statBuy(o, price); run.credits -= price; o.free = false; if (o.kind === 'mod') o.got = modTier(o.key); if (o.kind === 'item' ? --o.n <= 0 : o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
     // No room: pick one of yours to replace (the purchase goes through after the swap).
     if (o.kind === 'item') { if (!itemRoom(o.key, o.tier)) return openSwap('item', o.key, o.tier, finish); addItem(o.key, o.tier); }
     if (o.kind === 'mod') {
@@ -324,7 +330,7 @@ function openShop(node) {
 
 // A reward screen: header lines, then a list of mods to pick one from (or skip).
 // next: where to go after (default: the map).
-function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, first = null }) {
+function openChoice({ title, col, head = [], extra = [], onTake = null, options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, first = null }) {
   let sel = 0, picked = false;
   // first: { key, art, tell }: FIRST BREACH shows under the header (title, logos, breached line) and holds the reveal;
   // SEE THE CORE swaps it for the rewards, which build in under the header the same way (buildReveal's pre)
@@ -334,7 +340,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     if (!firstUp) return;
     firstUp = false; Sound.ui();
     const rv = st.panelReveal;
-    if (rv) Object.assign(rv, { t0: performance.now(), pre: headN, shown: headN, done: false, hold: false, firstPop: null, rival: null });
+    if (rv) Object.assign(rv, { t0: performance.now(), pre: headN, shown: headN, done: false, hold: false, whole: false, firstPop: null, rival: null });
     st.panelT0 = Infinity; st.revealed = new Set();   // the offers pop as their lines come in
   };
   st.breachRival = null;
@@ -344,6 +350,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     if (st.transitioning) return;
     if (o && locked) return Sound.deny();
     if (!picked && !locked && options.length) { picked = true; statPick(title, options, o); }   // play stats
+    if (o && !locked && onTake) onTake(o);   // (a cache: its pick's taken, no going back in for another)
     if (o && o.kind === 'gear') {   // a stack of gear (corp boss rewards): onto the belt, all of it
       const v = itemView(o.key, o.tier);
       if (has('ramdoubler')) {   // RAM DOUBLER: no belt, so it's sold
@@ -378,6 +385,7 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
       mine.forEach((ln, k) => X(Object.assign({}, ln, { text: fit(ln.text), logoRow: k, rivalRow: theirs ? Object.assign({}, theirs[k], { text: fit(theirs[k].text) }) : null })));
       for (const h of head) T(`breached ${h[0].toLowerCase()}`, C.mid);
     } else for (const h of head) T(h[0], h[1]);
+    for (const h of extra) T(h[0], h[1]);   // (more lines under it: the H3AV3N ending's rewards)
     if (firstUp) {   // FIRST BREACH: the corp's logo and its tell, then on to the rewards
       headN = lines.length;
       T('');
@@ -434,7 +442,8 @@ function openChoice({ title, col, head = [], options, skipLabel, onSkip, msg, re
     if (!by) T('');
     B(options.length && skipLabel ? skipLabel : '[ CONTINUE ]', 'skip', () => take(null));
   }, msg, { reveal, rival });
-  if (firstUp && st.panelReveal) st.panelReveal.hold = true;   // the header comes back after the rewards, not before
+  if (firstUp && st.panelReveal) Object.assign(st.panelReveal, { hold: true, whole: true });   // the header comes back after the rewards, not before;
+  // whole: no header yet, so FIRST BREACH centers on the whole screen (the user: PARCELNET pushed it off the bottom), then glides down to the rewards
 }
 
 // PUBLIC NET done: a small starting perk.
@@ -460,13 +469,16 @@ function cacheOptions(r, node) {
 function openCache(node) {
   const run = st.run;
   const r = rngFor(run.seed, 'cache', node.id);
-  const got = [grantLoot(r, 2)];
-  for (let i = 0; i < (has('cachekey') ? tv('cachekey', ECON.modx.cachekey) : 0); i++) got.push(grantLoot(r, 2));
-  if (has('cachekey')) modFired('cachekey');
+  const again = !!(run.caches = run.caches || {})[node.id], quest = questMarket(node);   // going back in: the loot's gone, the pick is still there
+  run.caches[node.id] = run.caches[node.id] || 'open';
+  const got = again ? ['already looted.'] : [grantLoot(r, 2)];   // (the H3AV3N seed's sector 1: as if you had the CACHE KEY, and better picks: engine/heaven.js)
+  if (!again) for (let i = 0; i < (has('cachekey') ? tv('cachekey', ECON.modx.cachekey) : quest ? 1 : 0); i++) got.push(grantLoot(r, 2));
+  if (has('cachekey') && !again) modFired('cachekey');
   openChoice({
     title: 'DATA CACHE', col: C.money,
-    head: got.map(g => [g, C.bright]),
-    options: cacheOptions(r, node),
+    head: got.map(g => [g, again ? C.dim : C.bright]),
+    options: quest ? questCacheOptions(r) : cacheOptions(r, node),
+    onTake: () => { run.caches[node.id] = 'taken'; },
     skipLabel: '[ SKIP ]',
     msg: '> cache cracked.',
   });

@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.00']);
+NEON_FILES.push(['engine/run.js', 'v14.04']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -104,6 +104,22 @@ function stepMapView(now) {
   if (mv.row % 3 === 0) Sound.tick();
 }
 
+// Going back in (the user, 2026-10-31): the node you're standing on, if it's a market, the PIER, or a cache you haven't
+// taken the pick from. It opens as you left it (engine/panels.js run.shops / run.caches).
+function canGoBack(n) {
+  const run = st.run;
+  if (!run || !n || run.at !== n.id || n.exit) return false;
+  return n.type === 'shop' || n.type === 'pier' || (n.type === 'cache' && run.caches && run.caches[n.id] === 'open');
+}
+async function goBackIn(n) {
+  if (st.transitioning || !canGoBack(n)) return;
+  st.transitioning = true; st.mapSel = st.mapPeek = null;
+  await wipeOut(0);
+  st.transitioning = false;
+  if (n.type === 'shop') return openShop(n);
+  if (n.type === 'cache') return openCache(n);
+  if (n.type === 'pier') return openPier(n);
+}
 function selectNode(id) {
   if (st.transitioning || !availableNodes().includes(id)) return;
   if (!tutAllows('node', id)) return tutNo();
@@ -616,6 +632,7 @@ async function pick(i) {
   if (st.mode === 'play' && !st.busy && st.lv && st.lv.blastAim && st.lv.tiles[i] && st.lv.tiles[i].state === 'closed') return blastAt(st.lv, st.lv.tiles[i]);   // BLAST (gear): this tap aims it
   { const byp = st.lagBypass; st.lagBypass = false;   // corp kit: LAGRANGE holds taps back
     if (!byp && st.mode === 'play' && !st.busy && st.corp && st.corp.hasBoss && st.corp.def.intercept && st.lv && st.lv.tiles[i] && st.corp.def.intercept(i)) return; }
+  if (st.mode === 'play' && !st.busy && st.lv && st.lv.tiles[i] && st.lv.tiles[i].state === 'closed' && moldDigTile(st.lv.tiles[i])) return;   // the deep M0LD over it: dig first (engine/heaven.js)
   if (st.mode !== 'play' || st.busy) return;
   if (!tutAllows('pick', i)) return tutNo();
   const t = st.lv.tiles[i];

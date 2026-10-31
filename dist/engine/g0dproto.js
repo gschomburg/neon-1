@@ -5,7 +5,7 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v14.00']);
+NEON_FILES.push(['engine/g0dproto.js', 'v14.04']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -35,7 +35,7 @@ const G0DP = {
   standEyes: 6, standTime: 15, red: 0.7, blue: 0.7,   // eyes, the clock (s), an eye's red and blue (s; red gets shorter as you win) (round 20: 10s, it all burns)
   standBurn: 5.5,            // s into the final stand until the traces are at full danger
 };
-const G0DP_BLUE = '#4aa8ff', G0DP_RED = '#ff3b3b', G0DP_FRESH = '#d8ff70';
+const G0DP_BLUE = '#4aa8ff', G0DP_RED = '#ff3b3b', G0DP_FRESH = MOLD.fresh;   // (the mold's colors: MOLD, engine/g0d.js)
 
 // ---------------- Lines ----------------
 // (the terminal fits about 37 characters after "> b0y: ": keep them short)
@@ -102,6 +102,7 @@ function g0dpHurt(p, n, why, cause) {
   const run = st.run;
   if (n > 0 && run.shield > 0) { run.shield--; Sound.shield(); flash(C.accent, 0.12, 0.3); g0dpMsg('> the firewall takes it.' + (run.shield ? ` FW${run.shield}` : ''), C.accent); return; }   // FWALL (gear in the fight)
   run.integrity = Math.max(0, run.integrity - n);
+  if (p.real && n > 0) run.g0dHurt = (run.g0dHurt || 0) + n;   // (the ending's UNTOUCHED: engine/heaven.js)
   Sound.trap(); flash(C.danger, 0.25, 0.5); shake(7, 0.35);
   if (why) g0dpMsg('> ' + why, C.danger);
   const c = G0DP_CAUSE[cause];
@@ -487,12 +488,24 @@ function g0dpPush(a, bx, by, w, h, dt, f) {
   const dx = a.x - bx, dy = a.y - by;
   if (Math.abs(dx) >= w || Math.abs(dy) >= h) return;
   const sx = dx === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(dx), sy = dy === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(dy);
-  if ((w - Math.abs(dx)) / w < (h - Math.abs(dy)) / h) a.x += sx * Math.min(w - Math.abs(dx), 14 * dt);   // the shorter way out
-  else a.y += sy * Math.min(h - Math.abs(dy), 6 * dt);
+  const x0 = a.x, y0 = a.y, alongX = (w - Math.abs(dx)) / w < (h - Math.abs(dy)) / h;   // the shorter way out
+  if (alongX) a.x += sx * Math.min(w - Math.abs(dx), 14 * dt); else a.y += sy * Math.min(h - Math.abs(dy), 6 * dt);
   a.x = clamp(a.x, 2, f.W - 5); a.y = clamp(a.y, 2, f.H - 2);
+  // against a wall that way (the user: nodes overlapping in the fight): out the other way instead
+  if (a.x === x0 && a.y === y0) {
+    if (alongX) { a.y = clamp(a.y + (a.y <= 2 ? 1 : a.y >= f.H - 2 ? -1 : sy) * 6 * dt, 2, f.H - 2); }
+    else { a.x = clamp(a.x + (a.x <= 2 ? 1 : a.x >= f.W - 5 ? -1 : sx) * 14 * dt, 2, f.W - 5); }
+  }
 }
 function g0dpSpread(list, f, w, h, dt) {
   for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) { const a = list[i], b = list[j]; g0dpPush(a, b.x, b.y, w, h, dt, f); g0dpPush(b, a.x, a.y, w, h, dt, f); }
+  // still on top of each other (drawn on the same row, labels touching): a row apart now, not a little each frame
+  for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+    const a = list[i], b = list[j];
+    if (Math.round(a.y) !== Math.round(b.y) || Math.abs(a.x - b.x) >= 5) continue;
+    const m = a.pin > performance.now() ? b : a, d = m.y <= 2 ? 1 : m.y >= f.H - 2 ? -1 : (m === a ? a.y - b.y : b.y - a.y) >= 0 ? 1 : -1;
+    m.y = clamp(Math.round(m.y) + d, 2, f.H - 2);
+  }
 }
 // A free spot for an eye: away from every node (and the other eyes), else the best try.
 function g0dpFreeSpot(f, others, w = 9, h = 3) {
@@ -560,7 +573,7 @@ function g0dpSpillSmash(p, x, y) {
     const i = yy * f.W + xx; if (xx < 0 || xx >= f.W || yy < 0 || !(f.sp[i] >= 0.6)) continue;
     const d = Math.hypot((xx - x) / 2.2, yy - y); if (d > 2) continue;
     hit++; const was = f.sp[i]; f.sp[i] = d < 1 ? 0 : Math.max(0, was - 3 * (1 - d / 2.4));   // the middle clears outright (round 13)
-    if (Math.random() < 0.7) bits.push({ ch: g0dpMoldGlyph(was, xx, yy, performance.now()), x: pxX(xx), y: pxY(yy), col: was > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim });
+    if (Math.random() < 0.7) bits.push({ ch: g0dpMoldGlyph(was, xx, yy, performance.now()), x: pxX(xx), y: pxY(yy), col: moldCol(was, f.stage) });
   }
   if (!hit) return false;
   if (y === G0DP_HEAD_LOW || y === G0DP_HEAD_LOW - 1 || y === BOARD_Y - 1) g0dpMold(f, x, 0, 1.6, -1.6, false);   // the header's low rows: the board's top edge that feeds them too
@@ -691,7 +704,7 @@ function g0dpScrapeHud(p, x, now) {
   f.steal = Math.max(0, f.steal - 0.6);
   if (!showing) return;   // nothing up there: no bits, no sound (round 12)
   Sound.tick();
-  if (!reduced()) { const cells = []; for (let k = 0; k < 2 + Math.round(5 * reach); k++) cells.push({ ch: pickR(['%', ';', '&', ':'], Math.random), x: pxX(x + rand(-2, 2)), y: pxY(2 + Math.floor(Math.random() * 2)), col: pickR([G0D_COLS.mold, G0D_COLS.moldDim], Math.random) }); explode(cells, pxX(x), pxY(2), { power: 0.4, grav: 1.3, life: [0.3, 0.6] }); }
+  if (!reduced()) { const cells = []; for (let k = 0; k < 2 + Math.round(5 * reach); k++) cells.push({ ch: pickR(['%', ';', '&', ':'], Math.random), x: pxX(x + rand(-2, 2)), y: pxY(2 + Math.floor(Math.random() * 2)), col: pickR([moldCol(2.6, f.stage), moldCol(1, f.stage)], Math.random) }); explode(cells, pxX(x), pxY(2), { power: 0.4, grav: 1.3, life: [0.3, 0.6] }); }
 }
 const G0DP_MOLD_CH = ' .:;%&#';
 const G0DP_CORP_RED = ['#ff3b3b', '#e02c2c', '#c21f26', '#ff5a4a', '#9e1a22'];   // a corp node's red shades (round 23)
@@ -712,20 +725,9 @@ function g0dpNoise3(x, y, z) {   // value noise, smooth, 0-1
   const c = (dz) => L2(L2(h(xi, yi, zi + dz), h(xi + 1, yi, zi + dz), u), L2(h(xi, yi + 1, zi + dz), h(xi + 1, yi + 1, zi + dz), u), v);
   return L2(c(0), c(1), w);
 }
-// Its colors (round 5, the user: more steps; it shifts through the fight; a little cyan over a buried eye node, a clue):
-// four by thickness, one ramp per stage (green, then yellower, then a sick amber)
-const G0DP_MOLD_RAMP = [['#4f6120', '#6f8a2a', '#9fc13a', '#c3e34e'], ['#5a6420', '#848e28', '#b8bd38', '#e2df58'], ['#62521e', '#917228', '#c69834', '#f0c252']];
-const G0DP_CLUE_CYAN = '#5fe0d8', g0dpMixCache = new Map();
-function g0dpHexMix(a, b, k) {
-  const key = a + b + k; let v = g0dpMixCache.get(key); if (v) return v;
-  const p = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), A = p(a), B = p(b);
-  v = '#' + A.map((c, i) => Math.round(c + (B[i] - c) * k).toString(16).padStart(2, '0')).join('');
-  g0dpMixCache.set(key, v); return v;
-}
-function g0dpMoldCol(th, stage = 0, cyan = 0) {
-  const r = G0DP_MOLD_RAMP[clamp(stage | 0, 0, 2)], c = r[th < 1.6 ? 0 : th < 2.5 ? 1 : th < 3.4 ? 2 : 3];
-  return cyan > 0.04 ? g0dpHexMix(c, G0DP_CLUE_CYAN, Math.round(cyan * 20) / 20) : c;
-}
+// Its colors (round 5, the user: more steps; it shifts through the fight; cyan over a buried eye node, a clue): MOLD and
+// moldCol in engine/g0d.js, the one place for every mold's colors.
+const g0dpMoldCol = moldCol;
 const g0dpMoldGlyph = (th, x, y, now) => { const ramp = G0DP_RAMP[Math.min(6, Math.floor(th) + 1)] || G0DP_RAMP[6]; return ramp[Math.min(ramp.length - 1, Math.floor(g0dpNoise3(x * G0DP_FLOW.sx, y * G0DP_FLOW.sy, now * G0DP_FLOW.speed) * ramp.length))]; };
 
 // The red traces (round 10, the user: like the title's circuit lights): they grow out of the network, run in straight
@@ -878,7 +880,7 @@ function g0dpFightDraw(p, put, bg, now) {
   for (let y = 0; y < f.H; y++) for (let x = 0; x < f.W; x++) {
     const i = y * f.W + x, th = f.m[i];
     if (th < 0.6 || taken.has(x + ',' + y)) continue;
-    if (underThin.has(x + ',' + y)) { put(x, Y + y, th < 1.1 ? '.' : ',', G0D_COLS.mold, 'fx', true); continue; }   // thin mold over a node: a speck over its letter
+    if (underThin.has(x + ',' + y)) { put(x, Y + y, th < 1.1 ? '.' : ',', moldCol(2.6, f.stage), 'fx', true); continue; }   // thin mold over a node: a speck over its letter
     const ch = g0dpMoldGlyph(th, x, y, now);   // the flow (round 10)
     let col = g0dpMoldCol(th, f.stage, cyan.get(x + ',' + y) || 0);
     if (f.fresh[i] * (f.freshFrom ? clamp((now - f.freshFrom) / 2500, 0, 1) : 1) > 0.45) col = G0DP_FRESH;   // (after the wake-up the glow fades up: no cut)
@@ -1010,7 +1012,7 @@ function g0dpStandDraw(p, put, bg, now) {
     const x = Math.round(o.x), y = Math.round(o.y), age = (now - o.at) / 1600;
     if (y < 1 || y >= lastRow || x < 0 || x >= L.wc || onEye(x, y) || stTr.has(x + ',' + y)) continue;
     const ch = '#&%;:,.'[Math.min(6, Math.floor(age * 7))];
-    put(x, Y + y, ch, doom > 0 && G0D_LOOKS.hs(o.k * 91) < doom ? (age < 0.5 ? G0DP_RED : C.dangerDim) : age < 0.3 ? G0DP_FRESH : age < 0.65 ? G0D_COLS.mold : G0D_COLS.moldDim);
+    put(x, Y + y, ch, doom > 0 && G0D_LOOKS.hs(o.k * 91) < doom ? (age < 0.5 ? G0DP_RED : C.dangerDim) : age < 0.3 ? G0DP_FRESH : moldCol(age < 0.65 ? 2.6 : 1, 2));   // (the final stand: stage 2's colors, out of the fight's end)
   }
   // (round 4) the eyes glitch a little: inverting cells, a jolt, G0D for a moment; more as you take them out
   const gl = 0.03 + 0.45 * Math.pow(s.cur / s.eyes.length, 1.3), gt = Math.floor(now / 70);
@@ -1261,7 +1263,7 @@ function g0dpOverlay(cells, now, bgs) {
         const red = burn || (heat && G0D_LOOKS.hs(x * 3.7 + y * 11.3) < heat * 0.7);   // the charge reddens it bit by bit, the burn all of it (round 17)
         const col = red ? (th > 2.5 ? G0DP_RED : C.dangerDim) : g0dpMoldCol(th, f.stage);
         if (th >= G0DP_SEE) { cover.add(x + ',' + y); if (bgs) bgs.push({ cx: x, cy: y, w: 1, col: C.bg, alpha: 1 }); add.push({ ch: g0dpMoldGlyph(th, x, y, now), cx: x, cy: y, col, own: 'fx', bold: false }); }
-        else add.push({ ch: g0dpMoldGlyph(th, x, y, now), cx: x, cy: y, col: red ? C.dangerDim : G0D_COLS.mold, own: 'fx', bold: true });   // thin: a speck over what's there (it flows too)
+        else add.push({ ch: g0dpMoldGlyph(th, x, y, now), cx: x, cy: y, col: red ? C.dangerDim : moldCol(2.6, f.stage), own: 'fx', bold: true });   // thin: a speck over what's there (it flows too)
       }
       out = out.filter(c => !cover.has(Math.round(c.cx) + ',' + Math.round(c.cy))).concat(add);
     }

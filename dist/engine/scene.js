@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.00']);
+NEON_FILES.push(['engine/scene.js', 'v14.04']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -323,7 +323,7 @@ function buildScene(now, collectHits, raw = false) {
   // The editor's G0D tab (engine/g0d.js): a G0D design or effect drawn over this screen. Never in play.
   if ((st.g0d || st.g0dBar) && !st.dev) result = g0dOverlay(result, now, adBgs);
   if (st.mode === 'g0dp' && !st.dev) result = g0dpOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
-  if (st.mode === 'play' && !st.dev) result = moldOverlay(result, now, adBgs);   // H3AV3N: the M0LD in a corp
+  if ((st.mode === 'play' || st.mode === 'panel') && !st.dev) result = moldOverlay(result, now, adBgs);   // H3AV3N: the M0LD in a corp (and on the broken UPLINK)
   if (st.g0dFake && !st.dev) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win (over the rewards screen)
   if (st.mode === 'g0ddie' && !st.dev) result = g0dDieOverlay(result, now, adBgs);   // H3AV3N: G0D dies
   if (st.mode === 'g0dend' && !st.dev) result = g0dEndOverlay(result, now, adBgs);   // H3AV3N: the collapse
@@ -1010,7 +1010,7 @@ function buildMap(ctx) {
     if (sel) { put(p.x - 3, y, '>', C.accent, 'map'); put(p.x + 3, y, '<', C.accent, 'map'); }
     else if (run.at === n.id) put(p.x - 3, y, '@', C.bright, 'map');
     if (available && settled) addHit(p.x - 1, y, 3, 1, { kind: 'node', id: n.id });
-    else if (settled && !visited && run.at !== n.id) addHit(p.x - 1, y, 3, 1, { kind: 'peek', id: n.id, noFocus: true });   // out of reach: it only says what it is
+    else if (settled) addHit(p.x - 1, y, 3, 1, { kind: 'peek', id: n.id, noFocus: true });   // out of reach (or been there: the user, a reminder): it only says what it is
     if (st.tut) st.tut.spots[n.id] = [p.x - 1, y];   // the training points at map spots
   }
   // Which sector you're looking at, and arrows when there's more map below.
@@ -1028,9 +1028,10 @@ function buildMap(ctx) {
   const id = st.mapSel || (avail.has(st.hoverNode) ? st.hoverNode : null);
   const peek = !id && (st.hoverNode && map[st.hoverNode] && !avail.has(st.hoverNode) ? st.hoverNode : st.mapPeek && map[st.mapPeek] ? st.mapPeek : null);
   if (peek) {   // a node you can't get to (yet): what it is, no button
-    const info = nodeInfo(map[peek]);
+    const pn = map[peek], info = nodeInfo(pn), been = run.visited.includes(pn.id);
     info.lines.forEach((ln, k) => putC(y0 + k, ln.text, ln.col, 'map'));
-    putC(y0 + info.lines.length + 1, 'out of reach from here.', C.dim, 'map');
+    if (canGoBack(pn)) drawBox(ctx, y0 + info.lines.length, { text: 'G O   B A C K   I N', id: 'goback', onTap: () => goBackIn(pn), minW: 22 });   // the market / PIER / cache you're on
+    else putC(y0 + info.lines.length + 1, run.at === pn.id ? 'you are here.' : been ? (pn.type === 'corp' || pn.type === 'final' ? 'breached.' : 'been there.') : 'out of reach from here.', C.dim, 'map');
     return;
   }
   if (!id) {
