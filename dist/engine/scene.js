@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.91']);
+NEON_FILES.push(['engine/scene.js', 'v13.92']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -170,6 +170,7 @@ function buildScene(now, collectHits, raw = false) {
     } else if (st.mode === 'panel') where = st.panelTitle || '';
     else if (st.mode === 'fish') where = 'THE PIER';
     else if (st.mode === 'g0dfake') where = 'G0D // BREACHED';
+    else if (st.mode === 'g0dend') where = 'G0D // DOWN';
     else if (st.mode === 'g0dp' && st.g0dp) where = `G0D // ${{ maze: 'MAZE', fight: 'FIGHT', stand: 'FINAL STAND' }[st.g0dp.stage]}`;
     put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.danger : C.text);
     // LEVERAGE: in debt the credits go red, with your limit after them (CR -120/-150)
@@ -279,6 +280,7 @@ function buildScene(now, collectHits, raw = false) {
     else if (st.mode === 'map') buildMap(ctx);
     else if (st.mode === 'g0dp') buildG0dp(ctx);   // the G0D prototype (engine/g0dproto.js)
     else if (st.mode === 'g0dfake') buildG0dFake(ctx);   // H3AV3N: the fake win (engine/heaven.js)
+    else if (st.mode === 'g0dend') buildG0dEnd(ctx);   // H3AV3N: the collapse
     else if (st.mode === 'fish') buildFish(ctx);   // the PIER (engine/fishing.js)
     else buildTextBoard(ctx, panelLines());
   }
@@ -319,6 +321,7 @@ function buildScene(now, collectHits, raw = false) {
   if (st.mode === 'g0dp' && !st.dev) result = g0dpOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
   if (st.g0dWake && !st.dev) result = g0dWakeOverlay(result, now, adBgs);   // H3AV3N: the wake-up (engine/heaven.js)
   if (st.mode === 'g0dfake' && !st.dev) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win
+  if (st.mode === 'g0dend' && !st.dev) result = g0dEndOverlay(result, now, adBgs);   // H3AV3N: the collapse
   if (st.ad && !st.dev) {
     const ac = [];
     const aput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ac.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };

@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v13.91']);
+NEON_FILES.push(['engine/heaven.js', 'v13.92']);
 
 const HEAVEN = {};
 
@@ -230,10 +230,101 @@ function g0dFakeOverlay(cells, now, bgs) {
   return out;
 }
 
-// The fight is won (step 5 will put the collapse in between): back to the map.
-function heavenWon(p) {
+// ---------------- Step 5: the collapse ----------------
+// (docs/QUESTS.md, the final stand: "take out all his eyes: a last threat ('there will be others'), more death
+// animations. The screen doesn't go to black: it's all messed up from the fight.") The last eye blows: a flash. His
+// network shows bare and crumbles away; one small eye left in the middle looks around, frantic, says its last line and
+// fizzles out; his bar shatters; what's left is a mess (static, debris), not black. Then a placeholder ending card
+// (the ending, the credits and the rewards: docs/ENDGAME.md), then back to the map.
+const G0D_END = { crumble: [700, 3400], fizzle: 3900, bar: 4300, card: 5600, beat: 700 };
+function heavenCollapse(p) {
   st.g0dp = null;
-  setMsg('> G0D is down. (steps 4-5: the collapse, the ending)', G0DP_BLUE);
+  st.g0dEnd = { t0: performance.now() - (G0DP.skipCine ? G0D_END.card : 0), node: p.node, said: {}, gone: new Set() };
+  Sound.shatter(); Sound.bossDrop(); flash(C.bright, 0.7, 1.4); shake(18, 1);
+  showBoard('g0dend');
+}
+const g0dEndCrumble = e => clamp((e - G0D_END.crumble[0]) / (G0D_END.crumble[1] - G0D_END.crumble[0]), 0, 1);
+function g0dEndTick(now) {
+  const f = st.g0dEnd;
+  if (!f || st.mode !== 'g0dend' || st.pause || st.dev) return;
+  const e = now - f.t0, say = (k, at, fn) => { if (e >= at && !f.said[k]) { f.said[k] = true; fn(); } };
+  say('a', 500, () => g0dSay('n0. n0. this is my netw0rk.'));
+  say('b', 2300, () => g0dSay('there will be others.'));
+  say('c', G0D_END.fizzle, () => { Sound.shatter(); shake(6, 0.4); });
+  say('d', G0D_END.bar, () => { Sound.trap(); shake(10, 0.5); g0dEndBarBreak(); });
+  say('e', G0D_END.card, () => { Sound.bossWin(); boySay("we did it. he's gone. ...right?"); });
+  // the network crumbling: what goes this frame falls (a few at a time)
+  if (!reduced() && e > G0D_END.crumble[0] && e < G0D_END.crumble[1] + 200) {
+    const frac = g0dEndCrumble(e), hs = G0D_LOOKS.hs, cells = [];
+    for (let k = 0; k < 40 && cells.length < 10; k++) {
+      const x = Math.floor(Math.random() * L.wc), y = 1 + Math.floor(Math.random() * (L.gh - 1)), key = x + ',' + y;
+      if (f.gone.has(key) || hs(x * 1.9 + y * 5.3) >= frac) continue;
+      f.gone.add(key);
+      cells.push({ ch: g0dpCircuitCh(x, y, f.t0, L.wc, L.gh), x: pxX(x), y: pxY(BOARD_Y + y), col: pickR([C.dim, C.mid, C.dangerDim], Math.random) });
+    }
+    if (cells.length) explode(cells, pxX(L.wc / 2), pxY(BOARD_Y + L.gh / 2), { power: 0.35, grav: 1.6, life: [0.5, 1.1] });
+  }
+}
+function g0dEndBarBreak() {
+  if (reduced()) return;
+  const y = G0DP_BAR_ROW, cells = [];
+  for (let x = 0; x < L.wc; x++) if (Math.random() < 0.6) cells.push({ ch: pickR(['─', '▓', '#', '%', '-'], Math.random), x: pxX(x), y: pxY(y), col: pickR([G0DP_RED, C.danger, C.dangerDim], Math.random) });
+  explode(cells, pxX(L.wc / 2), pxY(y) - L.chh, { power: 1.1, grav: 1.5, life: [0.7, 1.4] });
+}
+// A tap: during the collapse, skip to the card (after a beat); on the card, go on.
+function g0dEndTap() {
+  const f = st.g0dEnd, e = performance.now() - f.t0;
+  if (e < G0D_END.beat) return;
+  if (e < G0D_END.card) { f.t0 = performance.now() - G0D_END.card; return; }
+  if (e > G0D_END.card + 500) heavenWon(f);
+}
+function buildG0dEnd(ctx) {
+  const f = st.g0dEnd, { put, bg, now } = ctx;
+  if (!f) return;
+  const e = now - f.t0, Y = BOARD_Y, hs = G0D_LOOKS.hs, frac = g0dEndCrumble(e), mess = e > G0D_END.fizzle;
+  const cardW = 32, cardH = 9, cx0 = Math.floor((L.wc - cardW) / 2), cy0 = Math.floor((L.gh - cardH) / 2);
+  const inCard = (x, y) => e >= G0D_END.card && x >= cx0 && x < cx0 + cardW && y >= cy0 - 1 && y <= cy0 + cardH;   // (the card's box stays clear)
+  // the network, bare, crumbling away
+  for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
+    if (hs(x * 1.9 + y * 5.3) < frac || inCard(x, y)) continue;
+    put(x, Y + y, g0dpCircuitCh(x, y, f.t0, L.wc, L.gh), hs(x * 1.3 + y * 7.9) < 0.3 ? C.dangerDim : C.dim);
+  }
+  // the mess left behind: static, debris, a little mold (it doesn't go black)
+  if (mess) for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
+    const v = hs(x * 3.7 + y * 11.1 + 7);
+    if (v > 0.13 || inCard(x, y)) continue;
+    const flick = hs(x + y * 31 + Math.floor(now / 140)) > 0.6;
+    put(x, Y + y, flick ? noiseCh() : '.,:;%#'[Math.floor(v * 46) % 6], v < 0.03 ? C.dangerDim : v < 0.07 ? G0D_COLS.moldDim : C.dim);
+  }
+  // the last eye: looks around, frantic; fizzles out
+  if (e < G0D_END.fizzle + 500) {
+    const cx = Math.floor(L.wc / 2), cy = Y + Math.floor(L.gh / 2), dart = Math.floor(now / 90) % 5 - 2;
+    const art = e < G0D_END.fizzle ? [' .-. ', '(' + ' '.repeat(Math.max(0, 1 + Math.sign(dart))) + '@' + ' '.repeat(Math.max(0, 1 - Math.sign(dart))) + ')', " '-' "]
+      : e < G0D_END.fizzle + 200 ? ['     ', ' (.) ', '     '] : ['     ', '  .  ', '     '];
+    art.forEach((l, k) => { bg(cx - 2, cy - 1 + k, 5, C.bg, 1); put(cx - 2, cy - 1 + k, l, Math.floor(now / 70) % 2 ? G0DP_RED : C.bright, 'fx', true); });
+  }
+  // the ending (a placeholder: docs/ENDGAME.md has the real one)
+  if (e >= G0D_END.card) {
+    const lines = [['G0D IS DOWN', G0DP_BLUE, true], ['', C.text], ['the network goes quiet.', C.text], ['for now.', C.mid], ['', C.text], ['(the ending, the credits and', C.dim], ['your reward: docs/ENDGAME.md)', C.dim], ['', C.text], ['tap: back to the map', Math.floor(now / 500) % 2 ? C.bright : C.mid]];
+    const y0 = Y + Math.floor((L.gh - lines.length) / 2), w = 32, x0 = Math.floor((L.wc - w) / 2);
+    for (let k = -1; k <= lines.length; k++) bg(x0, y0 + k, w, C.bg, 1);
+    lines.forEach(([t, col, b], k) => put(Math.floor((L.wc - t.length) / 2), y0 + k, t, col, 'ui', !!b));
+  }
+}
+// G0D's bar until it shatters (empty), "tap to skip"
+function g0dEndOverlay(cells, now, bgs) {
+  const f = st.g0dEnd;
+  if (!f) return cells;
+  const e = now - f.t0;
+  let out = cells;
+  if (e < G0D_END.bar) out = g0dpBar(out, bgs, { f: 0 });
+  if (e > G0D_END.beat && e < G0D_END.card) { const tip = 'tap to skip'; out = out.concat([...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
+  return out;
+}
+// It's over (the placeholder ending): back to the map.
+function heavenWon(f) {
+  st.g0dEnd = null; st.g0dp = null;
+  setMsg('> G0D is down. the network goes quiet.', G0DP_BLUE);
   toMap();
 }
 

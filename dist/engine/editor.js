@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.91']);
+NEON_FILES.push(['engine/editor.js', 'v13.92']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -354,6 +354,10 @@ if (EDITOR) {
       await freshRun(); heavenSetup(); toMap(); await settle();
       if (m.to === 'maze') { const n = Object.values(st.run.map).find(o => o.heaven === 'maze'); await enterNode(n, true); await settle(); }
       if (m.to === 'fight') { const n = Object.values(st.run.map).find(o => o.heaven === 'g0d'); await enterNode(n, true); }
+      const g0dNode = () => Object.values(st.run.map).find(o => o.heaven === 'g0d'), real = () => ({ real: true, node: g0dNode(), startInt: st.run.integrity, startCr: st.run.credits });
+      if (m.to === 'fake') { g0dpStart('fight', real()); heavenFakeWin(st.g0dp); }   // the fake win, then the stand
+      if (m.to === 'stand') g0dpStart('stand', real());
+      if (m.to === 'end') heavenCollapse({ node: g0dNode() });
     },
     g0dpset: m => { for (const [k, v] of Object.entries(m.set || {})) if (k in G0DP && typeof G0DP[k] === typeof v) G0DP[k] = v; },
     g0dstill: m => { if (st.g0d) { st.g0d.still = !!m.on; st.g0d.t0 = performance.now(); } },

@@ -5,7 +5,7 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v13.91']);
+NEON_FILES.push(['engine/g0dproto.js', 'v13.92']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -876,7 +876,7 @@ function g0dpStandTap(p, x, y, now) {
   if (s.cur >= s.eyes.length) {
     Sound.victory ? Sound.victory() : Sound.bossWin();
     g0dSay('there will be others.');
-    if (p.real) return g0dpCard(p, ['G0D IS DOWN', '', 'there will be others.', '', '(the collapse and the ending:', 'steps 4-5, to come)', '', 'tap: back to the map'], () => heavenWon(p), G0DP_BLUE);
+    if (p.real) return heavenCollapse(p);   // the run: the collapse (engine/heaven.js), then the ending
     return g0dpCard(p, ['G0D IS DOWN', '', 'there will be others.', '', '(the end: the prototype)', '', 'tap: back to the maze'], () => g0dpStart('maze'), G0DP_BLUE);
   }
   if (s.cur === s.eyes.length - 1) boySay('last one!');

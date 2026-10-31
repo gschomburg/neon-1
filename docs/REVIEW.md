@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **H3AV3N, all five steps** (v13.89-v13.92): play it end to end from **HEAVEN MAP** (corps, the maze, the market, G0D: wake-up, the fight, the fake win, the final stand, the collapse, the ending card, back to the map), or jump in with the g0d tab's buttons (THE MAZE, G0D, FAKE WIN, FINAL STAND, THE COLLAPSE). **skip cinematics** skips the wake-up, the fake win and the collapse; a tap skips any of them after a beat. Placeholders: the ending card (the real ending, credits and reward: docs/ENDGAME.md), G0D's lines, no sfx / music of its own, b0y not in the real maze yet.
+
 - [ ] **H3AV3N step 3** (v13.90): the g0d tab, IN THE GAME: **G0D (wake-up, then the fight)**, or walk there from HEAVEN MAP. The wake-up: G0D's node turns into a red eye, the mold eats the map from the edges, his bar fills, he talks (tap to skip after a beat; **skip cinematics** in the tab skips it outright). Then the fight with your run's INT and credits (dying restarts it with what you had walking in), the final stand, and back to the map (the fake win and the collapse are steps 4-5).
 
 - [ ] **H3AV3N, steps 1-2** (v13.89): the editor's g0d tab, IN THE GAME: **HEAVEN MAP** (heaven's last sector: 3 rows of corps, the maze [#] under G0D [@], a market [$] beside them after the maze) and **THE MAZE** (straight in). The maze is real layers now: the node tiles, the wipe between layers (the clock holds through it and starts fresh each layer), mods, the layer label (LAYER 3C) in the header. Judge the pace of the wipes. G0D's node waits for step 3 (the fight). b0y isn't in the real maze yet (the clue is in the maze's intro line and the terminal).
