@@ -648,6 +648,7 @@
   </div>
   <div class="row">
     credits <input id="xCr" type="number" value="500"> <button data-x="credits">set</button>
+    <button data-x="tank" title="a legendary BUFFER and 10 rare PATCHes, INT full (for getting through H3AV3N)">tank kit</button>
     &nbsp; INT <input id="xInt" type="number" value="5" min="1"> <button data-x="int">set</button> <button data-x="heal">heal</button>
     &nbsp; REP <input id="xRep" type="number" value="500" min="0"> <button data-x="rep">set</button>
   </div>
@@ -699,8 +700,9 @@
   <div class="row" id="gpNums"></div>
   <h2>In the game: H3AV3N <small>the real thing, a step at a time (engine/heaven.js): heaven's last sector as a real map, the maze as real layers</small></h2>
   <div class="row">
-    <button class="hv" data-to="map">HEAVEN MAP</button> <button class="hv" data-to="maze">THE MAZE (real layers)</button> <button class="hv" data-to="fight">G0D (wake-up, then the fight)</button> <button class="hv" data-to="fake">FAKE WIN</button> <button class="hv" data-to="stand">FINAL STAND</button> <button class="hv" data-to="end">THE COLLAPSE</button>
-    <label title="the wake-up and (later) the other cinematics; a tap skips one anyway"><input type="checkbox" id="gpSkip"> skip cinematics</label>
+    <button class="hv" data-to="map">HEAVEN MAP</button> <button class="hv" data-to="maze">THE MAZE (real layers)</button> <button class="hv" data-to="fight">G0D (wake-up, then the fight)</button> <button class="hv" data-to="die">G0D DIES</button> <button class="hv" data-to="fake">FAKE WIN</button> <button class="hv" data-to="stand">FINAL STAND</button> <button class="hv" data-to="end">THE COLLAPSE</button>
+    <label title="the wake-up, G0D dying, the fake win, the collapse"><input type="checkbox" id="gpSkip"> skip cinematics</label>
+    <label title="a tap skips a cinematic (after a beat); off: they play out"><input type="checkbox" id="gpTap"> tap skips them</label>
     <span class="dim">a practice run</span>
   </div>
   <details class="xgrp" data-g="hp"><summary>The health bar <small>its own overlay: over the look you're on, or a corp layer; click again for off</small></summary>
@@ -2049,10 +2051,11 @@
     if (!gpFilled && m.g0dpCfg) {
       gpFilled = true;
       $('#gpNums').innerHTML = GP_NUMS.map(([k, label]) => `<label title="${esc(k)}">${esc(label)} <input type="number" step="any" data-k="${esc(k)}" value="${esc(m.g0dpCfg[k])}" style="width:4.5em"></label>`).join(' ');
-      $('#gpBoy').checked = !!m.g0dpCfg.boy; $('#gpSkip').checked = !!m.g0dpCfg.skipCine;
+      $('#gpBoy').checked = !!m.g0dpCfg.boy; $('#gpSkip').checked = !!m.g0dpCfg.skipCine; $('#gpTap').checked = !!m.g0dpCfg.tapSkip;
     }
   });
   $('#gpNums').addEventListener('change', ev => { const i = ev.target.closest('input[data-k]'); if (!i || i.value === '') return; gpSet({ [i.dataset.k]: Number(i.value) }); log(`${i.dataset.k} = ${i.value} (the next stage you start uses it)`); });
+  $('#gpTap').addEventListener('change', () => { gpSet({ tapSkip: $('#gpTap').checked }); log($('#gpTap').checked ? 'a tap skips cinematics' : 'cinematics play out'); });
   $('#gpSkip').addEventListener('change', () => { gpSet({ skipCine: $('#gpSkip').checked }); log($('#gpSkip').checked ? 'cinematics: skipped' : 'cinematics: played'); });
   $('#gpBoy').addEventListener('change', () => { gpSet({ boy: $('#gpBoy').checked }); log($('#gpBoy').checked ? 'b0y is in' : 'b0y is out'); });
   $('#g0d').addEventListener('click', ev => {

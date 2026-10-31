@@ -386,6 +386,9 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   Step 5 built v13.92: the collapse (the network crumbles, the last eye fizzles, the bar shatters, a mess not black), a placeholder ending card, back to the map. All five steps in.
   Dying in heaven (the user): the game over's top button is RETRY H3AV3N (big, where NEW RUN was; R too): the same seed, back at the
   bottom of heaven's map. NEW RUN and BACK under it. (The G0D fight's own deaths still restart the fight.)
+  First play-through (the user: "this is so cool"): G0D dies before the fake win (as long as the collapse); the fake win is the
+  real rewards screen, frozen partway; tap-to-skip off by default; b0y in the real maze (cursors, his clue in the terminal). b0y
+  in heaven's other corps: later. Maybe a heaven sector event card that says b0y is with you.
 - **b0y, what's wrong (the user, 2026-10-30; not yet, later):** (1) his resting spot: he's still on screen, so it's confusing
   whether he's pointing at something: **he should hide when he isn't actively searching.** (2) it isn't clear when he's doing
   something: elsewhere (the hackers on the board) the cursor switches to a v to point; do the same here, **and put some of his

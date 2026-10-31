@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.92']);
+NEON_FILES.push(['engine/scene.js', 'v13.93']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -171,6 +171,7 @@ function buildScene(now, collectHits, raw = false) {
     else if (st.mode === 'fish') where = 'THE PIER';
     else if (st.mode === 'g0dfake') where = 'G0D // BREACHED';
     else if (st.mode === 'g0dend') where = 'G0D // DOWN';
+    else if (st.mode === 'g0ddie') where = 'G0D // FIGHT';
     else if (st.mode === 'g0dp' && st.g0dp) where = `G0D // ${{ maze: 'MAZE', fight: 'FIGHT', stand: 'FINAL STAND' }[st.g0dp.stage]}`;
     put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.danger : C.text);
     // LEVERAGE: in debt the credits go red, with your limit after them (CR -120/-150)
@@ -281,6 +282,7 @@ function buildScene(now, collectHits, raw = false) {
     else if (st.mode === 'g0dp') buildG0dp(ctx);   // the G0D prototype (engine/g0dproto.js)
     else if (st.mode === 'g0dfake') buildG0dFake(ctx);   // H3AV3N: the fake win (engine/heaven.js)
     else if (st.mode === 'g0dend') buildG0dEnd(ctx);   // H3AV3N: the collapse
+    else if (st.mode === 'g0ddie') buildG0dDie(ctx);   // H3AV3N: G0D dies (before the fake win)
     else if (st.mode === 'fish') buildFish(ctx);   // the PIER (engine/fishing.js)
     else buildTextBoard(ctx, panelLines());
   }
@@ -320,7 +322,8 @@ function buildScene(now, collectHits, raw = false) {
   if ((st.g0d || st.g0dBar) && !st.dev) result = g0dOverlay(result, now, adBgs);
   if (st.mode === 'g0dp' && !st.dev) result = g0dpOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
   if (st.g0dWake && !st.dev) result = g0dWakeOverlay(result, now, adBgs);   // H3AV3N: the wake-up (engine/heaven.js)
-  if (st.mode === 'g0dfake' && !st.dev) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win
+  if (st.g0dFake && !st.dev) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win (over the rewards screen)
+  if (st.mode === 'g0ddie' && !st.dev) result = g0dDieOverlay(result, now, adBgs);   // H3AV3N: G0D dies
   if (st.mode === 'g0dend' && !st.dev) result = g0dEndOverlay(result, now, adBgs);   // H3AV3N: the collapse
   if (st.ad && !st.dev) {
     const ac = [];
@@ -782,6 +785,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
   }
   if (boardDef && boardDef.draw) boardDef.draw(put, lv, now);
   if (lv.hks) buildHackers({ put, bg }, lv, now);
+  if (st.corp && st.corp.hasBoss && st.corp.def.overlay) st.corp.def.overlay({ put, bg }, lv, now);   // a corp's own drawing over its board (G0D MAZE: b0y)
   if (st.hkFx) buildHkFx({ put, bg }, now);   // a hacker going down (engine/hackers.js)   // hackers: cursors, faces, emote covers, DENIED, fire, tape (engine/hackers.js)
   // AFTERIMAGE: cyan corners where the last layer's real node was.
   if (has('afterimage') && lv.after && lv.after.col < lv.cols && lv.after.row < lv.rows) {

@@ -1,6 +1,6 @@
 // NeoN+1 corps/pawnbros.js
 'use strict';
-NEON_FILES.push(['corps/pawnbros.js', 'v13.92']);
+NEON_FILES.push(['corps/pawnbros.js', 'v13.93']);
 // Its boss mod: CHANCE CARD (chancecard), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

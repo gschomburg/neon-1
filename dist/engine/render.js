@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.92']);
+NEON_FILES.push(['engine/render.js', 'v13.93']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -22,6 +22,7 @@ function frameBody(now) {
   g0dWakeTick(now);   // H3AV3N: G0D wakes up (engine/heaven.js)
   g0dFakeTick(now);   // H3AV3N: the fake win
   g0dEndTick(now);   // H3AV3N: the collapse
+  g0dDieTick(now);   // H3AV3N: G0D dies
   stepPaletteFade(now);
   if (st.mp) { mpWatchdog(now); mpClockTick(now); }
   mpTabTitle(now);

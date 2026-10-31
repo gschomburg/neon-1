@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v13.92']);
+NEON_FILES.push(['engine/editor.js', 'v13.93']);
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -355,9 +355,16 @@ if (EDITOR) {
       if (m.where === 'maze') { const n = Object.values(st.run.map).find(o => o.heaven === 'maze'); await enterNode(n, true); await settle(); }
       if (m.where === 'fight') { const n = Object.values(st.run.map).find(o => o.heaven === 'g0d'); await enterNode(n, true); }
       const g0dNode = () => Object.values(st.run.map).find(o => o.heaven === 'g0d'), real = () => ({ real: true, node: g0dNode(), startInt: st.run.integrity, startCr: st.run.credits });
-      if (m.where === 'fake') { g0dpStart('fight', real()); heavenFakeWin(st.g0dp); }   // the fake win, then the stand
+      if (m.where === 'fake') heavenFakeWin(real());   // the fake win (the rewards screen, frozen), then the stand
+      if (m.where === 'die') { g0dpStart('fight', real()); heavenDie(st.g0dp); }   // G0D dies, then the fake win
       if (m.where === 'stand') g0dpStart('stand', real());
       if (m.where === 'end') heavenCollapse({ node: g0dNode() });
+    },
+    // TESTING: a legendary BUFFER and 10 rare PATCHes (to get through heaven)
+    tank: () => {
+      if (has('buffer')) { const was = modTier('buffer'); st.run.modTier.buffer = 3; st.run.maxInt += 3 - was; st.run.integrity += 3 - was; } else addMod('buffer', 3);
+      for (let k = 0; k < 10; k++) addItem('patch', 2);
+      st.run.integrity = st.run.maxInt;
     },
     g0dpset: m => { for (const [k, v] of Object.entries(m.set || {})) if (k in G0DP && typeof G0DP[k] === typeof v) G0DP[k] = v; },
     g0dstill: m => { if (st.g0d) { st.g0d.still = !!m.on; st.g0d.t0 = performance.now(); } },
@@ -372,7 +379,7 @@ if (EDITOR) {
       setMsg(`> test: ${MODS[key].name} stolen. it's at THE FENCE.`, C.danger);
     },
   };
-  const NEEDS_RUN = ['god', 'debug', 'free', 'credits', 'int', 'heal', 'steal'];
+  const NEEDS_RUN = ['god', 'debug', 'free', 'credits', 'int', 'heal', 'steal', 'tank'];
   window.addEventListener('message', e => {
     const m = e.data;
     if (!m || m.to !== 'neon-game' || m.type !== 'test' || !TEST[m.act]) return;

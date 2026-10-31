@@ -3,7 +3,7 @@
 // Hand edits are fine too: inside the quotes a backslash is \\ and a quote \'.
 // A face is 5 x 3, drawn as is (the lines are not centered one by one). POPS's is the training handler's.
 'use strict';
-NEON_FILES.push(['data/art/faces.js', 'v13.92']);
+NEON_FILES.push(['data/art/faces.js', 'v13.93']);
 
 const ART_FACES = {
   pops: { name: 'POPS', art: [' \'-, ', '┌@\\@┐', '╯{=╭╰'] },

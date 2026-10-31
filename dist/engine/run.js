@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v13.92']);
+NEON_FILES.push(['engine/run.js', 'v13.93']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -345,7 +345,8 @@ async function enterLayer() {
   } else {
     showBoard('play');
     st.busy = true;
-    Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : c.def.layerMsg ? c.def.layerMsg(lv, c) : `> ${lv.n} nodes. ${lv.tiles.some(t => t.quantum) ? 'two are' : 'one is'} real.`);
+    { const lm = n > 1 && c.def.layerMsg ? c.def.layerMsg(lv, c) : null;   // (a corp's own line: a string or { text, col })
+      Sound.layer(run.depth); setMsg(n === 1 ? '> one node. it is real. jack in.' : lm ? (lm.text || lm) : `> ${lv.n} nodes. ${lv.tiles.some(t => t.quantum) ? 'two are' : 'one is'} real.`, lm && lm.col ? lm.col : C.text); }
     if (has('precog') && c.hasBoss && n > 1) {   // PRECOG: the real node shows up a beat early
       modFired('precog');
       for (const t of lv.tiles) if (!t.safe) t.hidden = true;

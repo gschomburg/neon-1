@@ -5,11 +5,12 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v13.92']);
+NEON_FILES.push(['engine/g0dproto.js', 'v13.93']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)
-  skipCine: false,           // H3AV3N: skip the cinematics (the editor's toggle; a tap skips one anyway)
+  skipCine: false,           // H3AV3N: skip the cinematics (the editor's toggle)
+  tapSkip: false,            // H3AV3N: a tap skips a cinematic (after a beat). Off by default (the user, 2026-10-30)
   // the maze
   mazeTimer: 5,              // s: each maze layer's clock (out: -1 INT, it starts again)
   mazeLost: 6,               // wrong layers deep before the next tap sends you back (and costs 1 INT)
@@ -565,7 +566,7 @@ function g0dpFightTap(p, x, y, now) {
     Sound.hkBoom(); shake(10, 0.45); flash(G0DP_BLUE, 0.3, 0.5);
     g0dSay(pickR(f.hp / G0DP.hp < 0.4 ? G0DP_LINES.g0dLow : G0DP_LINES.hit, Math.random));
     if (f.hp <= 0) {
-      if (p.real) return heavenFakeWin(p);   // the run: the fake win (engine/heaven.js), then the final stand
+      if (p.real) return heavenDie(p);   // the run: G0D dies (engine/heaven.js), the fake win, then the final stand
       Sound.bossWin();
       return g0dpCard(p, ['G0D BREACHED', '', 'it\'s... no.', 'the M0LD is coming back.', '', 'G0D: "you are just meat."', '', 'tap: G0D FINAL STAND'], () => g0dpStart('stand', p.real ? Object.assign(g0dpAgain(p), { startInt: st.run.integrity, startCr: st.run.credits }) : null), G0DP_RED);
     }
