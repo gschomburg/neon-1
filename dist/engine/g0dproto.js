@@ -98,6 +98,7 @@ const G0DP_CAUSE = {
 };
 function g0dpHurt(p, n, why, cause) {
   const run = st.run;
+  if (n > 0 && run.shield > 0) { run.shield--; Sound.shield(); flash(C.accent, 0.12, 0.3); g0dpMsg('> the firewall takes it.' + (run.shield ? ` FW${run.shield}` : ''), C.accent); return; }   // FWALL (gear in the fight)
   run.integrity = Math.max(0, run.integrity - n);
   Sound.trap(); flash(C.danger, 0.25, 0.5); shake(7, 0.35);
   if (why) g0dpMsg('> ' + why, C.danger);
@@ -108,7 +109,7 @@ function g0dpHurt(p, n, why, cause) {
     const stage = p.stage, tip = c ? lootWrap(c.tip, 34) : [];
     g0dpCard(p, [stage === 'stand' ? 'HE GOT AWAY' : 'FLATLINED', '', ...tip, '', stage === 'maze' ? 'the maze starts over.' : stage === 'fight' ? 'the fight starts over.' : 'the final stand starts over.', '', 'tap to go again'], () => {
       st.run.credits = p.startCr;
-      if (p.real) st.run.integrity = p.startInt;   // (the run: what you walked in with)
+      if (p.real) { stimDown(); st.run.integrity = p.startInt; }   // (the run: what you walked in with; a STIM wears off)
       g0dpStart(stage, g0dpAgain(p));
     }, C.danger);
   }
@@ -126,14 +127,14 @@ function g0dpBoyTick(p, now, dt, targets) {
     if (b.phase === 'rest' || b.phase === 'hold') {   // scatter: each to a different node, the right one among them
       const opts = targets.right ? [targets.right, ...shuffle(targets.others, Math.random).slice(0, 2)] : shuffle(targets.others, Math.random).slice(0, 3);
       const spots = shuffle(opts, Math.random);
-      b.curs.forEach((c, i) => { const s = spots[i % Math.max(1, spots.length)] || { x: c.x, y: c.y }; c.tx = s.x; c.ty = s.y; });
+      b.curs.forEach((c, i) => { const s = spots[i % Math.max(1, spots.length)] || { x: c.x, y: c.y }; c.tx = s.x; c.ty = s.y; c.tag = s.name ? s.name + '?' : ''; });
       b.phase = 'scatter'; b.until = now + 2300; b.right = targets.right;
     } else if (b.phase === 'scatter') {   // converge, one at a time
       b.phase = 'converge'; b.until = now + 1700; b.k = 0; b.kAt = now;
     } else if (b.phase === 'converge') { b.phase = 'hold'; b.until = now + 2600; }
   }
   if (b.phase === 'converge' && b.right) {
-    while (b.k < 3 && now - b.kAt > b.k * 380) { b.curs[b.k].tx = b.right.x; b.curs[b.k].ty = b.right.y; b.k++; }
+    while (b.k < 3 && now - b.kAt > b.k * 380) { const c = b.curs[b.k]; c.tx = b.right.x; c.ty = b.right.y; c.tag = b.k === 0 && b.right.name ? 'here: ' + b.right.name : ''; b.k++; }
   }
   if (b.phase === 'hold' && now > b.until - 900) b.curs.forEach((c, i) => { c.tx = 4 + i * 3; c.ty = 0; });   // drift off to rest
   if (b.phase === 'hold' && targets.right) b.right = targets.right;
@@ -149,34 +150,53 @@ function g0dpBoyTick1(p, now, dt, targets) {
   if (!G0DP.boy || !b) return;
   b.single = true;
   const c = b.curs[0], others = targets.others;
+  // b0y v2 (the user, 2026-10-30): hidden unless he's useful (resting, he sits in the tray); his cursor talks: dig?,
+  // here, watch out. Popping out, he comes up from the tray.
+  const popOut = () => { if (b.phase === 'rest') { c.x = 2; c.y = L.gh; } };
   if (targets.warn) {   // the mold is on your INT / CR: he goes up there and points at it (round 16)
-    if (b.phase !== 'warn') { b.phase = 'warn'; boySay("it's eating your INT! scrape it!"); }
-    c.tx = targets.warn.x; c.ty = targets.warn.y; b.until = now + 800;
+    if (b.phase !== 'warn') { popOut(); b.phase = 'warn'; }
+    c.tx = targets.warn.x; c.ty = targets.warn.y; c.tag = 'watch out'; b.until = now + 800;
   }
-  else if (targets.done) { b.phase = 'rest'; b.until = now + 1500; c.tx = 2; c.ty = 0; }   // you found it: he goes back to rest (round 9)
+  else if (targets.done) { b.phase = 'rest'; b.until = now + 1500; c.tag = ''; }   // you found it: back to the tray (round 9)
   else if (now > b.until) {
     const next = { rest: 'look1', look1: 'look2', look2: 'found', found: 'rest' }[b.phase] || 'look1';
+    if (next === 'look1') popOut();
     b.phase = next;
-    if (next === 'look1' || next === 'look2') { const o = pickR(others, Math.random) || targets.right; if (o) { c.tx = o.x; c.ty = o.y; } b.until = now + 1700; }
-    if (next === 'found') b.until = now + 3000;
-    if (next === 'rest') { c.tx = 2; c.ty = 0; b.until = now + 3000; }
+    if (next === 'look1' || next === 'look2') { const o = pickR(others, Math.random) || targets.right; if (o) { c.tx = o.x; c.ty = o.y; } b.until = now + 1500; c.tag = 'dig?'; }
+    if (next === 'found') { b.until = now + 3000; c.tag = 'here'; }
+    if (next === 'rest') { b.until = now + 2500; c.tag = ''; }
   }
   if (b.phase === 'found' && targets.right) { c.tx = targets.right.x; c.ty = targets.right.y; }
   const jx = b.phase.startsWith('look') ? Math.sin(now / 200) * 0.8 : 0;
   c.x += (c.tx + jx - c.x) * Math.min(1, dt * 3.5); c.y += (c.ty - c.y) * Math.min(1, dt * 3.5);
 }
+// b0y's cursor: a v on his blue, and what he's saying (his tag) beside it, on the left at the right edge.
+function g0dpBoyMark(put, bg, x, y, tag) {
+  bg(x, y, 1, G0DP_BLUE, 1); put(x, y, 'v', C.bg, 'fx', true);
+  if (!tag) return;
+  const tx = x + 1 + tag.length + 1 > L.wc ? x - tag.length - 1 : x + 1;
+  bg(tx, y, tag.length + 1, C.bg, 1); put(tx + (tx < x ? 0 : 1), y, tag, G0DP_BLUE, 'fx', true);
+}
+const g0dpBoyResting = b => b.phase === 'rest' || (b.phase === 'hold' && performance.now() > b.until - 900);
 function g0dpBoyDraw(p, put, bg, now) {
   const b = p.boy;
-  if (!G0DP.boy || !b) return;
+  if (!G0DP.boy || !b || g0dpBoyResting(b)) return;   // resting: hidden (the tray shows him: g0dpOverlay)
   b.curs.forEach((c, i) => {
     if (b.single && i > 0) return;
     const maze = p.stage === 'maze', bob = maze && i < 2 && Math.abs(c.x - c.tx) < 0.5 && Math.floor((now + i * 170) / 260) % 2 ? 1 : 0;   // the maze: they bob on a node's corner
     const x = Math.round(c.x), y = BOARD_Y + Math.round(c.y) - bob;
     if (y < BOARD_Y || y >= BOARD_Y + L.gh) return;   // (up in the header: g0dpOverlay draws him, over the spill)
-    bg(x, y, 1, G0DP_BLUE, b.phase === 'hold' && now > b.until - 900 && !(maze && i === 2) ? 0.35 : 1);
-    put(x, y, 'v', C.bg, 'fx', true);
-    if (i === 0 && !maze) put(x + 1, y, 'b0y', G0DP_BLUE, 'fx');
+    if (maze && i === 2) { bg(x, y, 1, G0DP_BLUE, 1); put(x, y, 'v', C.bg, 'fx', true); return; }   // (the clue's tracer)
+    g0dpBoyMark(put, bg, x, y, c.tag);
   });
+}
+
+// A glyph's name (the codex's), for b0y's tags: 'diamond', 'the cross'...
+function g0dpGlyphName(gl) {
+  if (!gl) return '';
+  if (sameGlyph(gl, JACK_GLYPH)) return 'prompt';
+  const i = MOTIFS.findIndex(m => sameGlyph(m, gl));
+  return i >= 0 && ART_GLYPHS[i] ? ART_GLYPHS[i].name.toLowerCase() : '';
 }
 
 // ---------------- G0D MAZE ----------------
@@ -219,7 +239,7 @@ function g0dpMazeTick(p, now, dt) {
   m.left -= dt;
   if (m.left <= 0) { m.left = G0DP.mazeTimer; g0dpHurt(p, 1, 'the clock ran out. -1 INT.', 'clock'); }
   const r = m.nodes.find(n => n.right);
-  const spot = n => ({ x: n.x + 6, y: n.y });   // the node's top right corner, off the glyph (round 3)
+  const spot = n => ({ x: n.x + 6, y: n.y - 1, name: g0dpGlyphName(n.glyph) });   // over the node's top right corner, off the glyph (round 3); its name on his tag
   g0dpBoyTick(p, now, dt, { right: r ? spot(r) : null, others: m.nodes.filter(n => !n.right).map(spot) });
   const w = G0DP_CLUE_AT[Math.min(m.path, G0DP_CLUE_AT.length - 1)], c2 = p.boy.curs[2];   // the third cursor: the word we're after
   c2.tx = c2.x = 1 + w[1] + w[2]; c2.ty = c2.y = L.gh - 3 + w[0];   // (on the . right after the word)
@@ -415,8 +435,7 @@ function g0dpFightTick(p, now, dt) {
   if (now > f.nextLine && !f.hands) {
     f.nextLine = now + 9000 + Math.random() * 6000;
     const low = f.hp / G0DP.hp < 0.4;
-    if (G0DP.boy && Math.random() < 0.35) boySay(pickR(G0DP_LINES.boyFight, Math.random));
-    else g0dSay(pickR(low && Math.random() < 0.7 ? G0DP_LINES.g0dLow : G0DP_LINES.g0d, Math.random));
+    g0dSay(pickR(low && Math.random() < 0.7 ? G0DP_LINES.g0dLow : G0DP_LINES.g0d, Math.random));
   }
   // b0y: the eye node (or the open eye)
   const eyeN = f.nodes.find(n => n.kind === 'eye' && !n.gone && !g0dpShows(f, n));   // one still buried (round 24: the second, once the eye is open)
@@ -819,6 +838,7 @@ function g0dpStandStart(p) {
 const g0dpStandRed = s => G0DP.red * Math.pow(0.9, s.cur);
 // Blue = you can hit it. With b0y: while he's latched onto it (round 6: he makes it vulnerable). Without him: it cycles.
 function g0dpStandBlue(s, now) {
+  if (s.forceBlue) return true;   // (a SHOE: it does not wait for blue)
   if (G0DP.boy) return now < (s.latchUntil || 0);
   const e = (now - s.cycleAt) / 1000, red = g0dpStandRed(s); return e >= 0 && (e % (red + G0DP.blue)) >= red;
 }
@@ -917,6 +937,77 @@ function g0dpStandDraw(p, put, bg, now) {
   put(0, Y, `FINAL STAND   eyes ${s.eyes.length - s.cur}`, C.text, 'fx');
   const urgent = s.left < 8 && Math.floor(now / 250) % 2;
   put(L.wc - 6, Y, `${Math.max(0, s.left).toFixed(1)}s`, urgent ? C.bright : C.danger, 'fx', true);
+}
+
+// ---------------- Gear in the G0D fight and the final stand (the user, 2026-10-30: "stim should work") ----------------
+// engine/active.js asks here when you're on this screen (canUse / whyNotItem / gearFx). What works: PATCH (as anywhere),
+// LOTTO, ENCORE; FWALL (it takes the next INT loss: g0dpHurt); STIM; SHOE (it hits the open eye; in the final stand it
+// takes out the eye you're on: INFIDEL); FRAG (big holes in the mold; it can hit the open eye); PURGE (corp nodes go);
+// REWIND (the eye stays open longer; the final stand's clock); SPLIT / 0DAY (the eye nodes show through); MAGNET (what
+// the mold stole comes back). Not: map gear, NUKE, the gear that clears a layer.
+const G0DP_GEAR = ['shoe', 'stim', 'frag', 'purge', 'rewind', 'split', 'zeroday', 'magnet'];
+function g0dpGearOk(stack) {
+  const p = st.g0dp, key = stack.key, f = p && p.fight, s = p && p.stand;
+  if (!p || p.card || st.busy) return false;
+  if (key === 'stim') return !st.run.stim && !zombie() && !bloodMoney() && p.stage !== 'maze';
+  if (key === 'shoe') return (f && !!f.eye) || (s && s.cur < s.eyes.length);
+  if (key === 'frag') return !!f;
+  if (key === 'purge') return !!f && f.nodes.some(n => n.kind === 'corp');
+  if (key === 'rewind') return (f && !!f.eye) || !!s || (p.maze && true);
+  if (key === 'split' || key === 'zeroday') return !!f && f.nodes.some(n => n.kind === 'eye' && !n.gone && !g0dpShows(f, n));
+  if (key === 'magnet') return !!f && f.nodes.some(n => n.kind === 'int' || n.kind === 'cr');
+  return false;
+}
+function g0dpGearWhy(stack) {
+  const key = stack.key, p = st.g0dp;
+  if (!G0DP_GEAR.includes(key) && !['patch', 'lotto', 'encore', 'wall'].includes(key)) return 'no use against G0D.';
+  if (key === 'shoe') return p && p.fight ? 'throw it at the open eye.' : 'nothing to throw it at.';
+  if (key === 'rewind') return 'when his eye is open.';
+  if (key === 'split' || key === 'zeroday') return 'no eye node buried.';
+  if (key === 'magnet') return 'nothing stolen to pull back.';
+  if (key === 'stim') return st.run.stim ? 'already stimmed.' : 'not now.';
+  return 'not now.';
+}
+function g0dpGearUse(key, tier) {
+  const p = st.g0dp, f = p.fight, s = p.stand, now = performance.now();
+  if (key === 'stim') { const run = st.run, add = Math.max(1, Math.round(run.maxInt / 2)); run.stim = { node: 'g0d', add }; run.maxInt += add; run.integrity = run.maxInt; Sound.shield(); flash(C.accent, 0.15, 0.35); return g0dpMsg(`> stim: +${add} max int.`, C.accent); }
+  if (key === 'shoe') {
+    if (s) { const e = s.eyes[s.cur]; if (e) { g0dpMsg('> THE SHOE. right in the eye.', C.bright); s.forceBlue = true; g0dpStandTap(p, Math.round(e.x), Math.round(e.y), now); s.forceBlue = false; return; } return; }
+    st.run.g0dShoe = true;   // (INFIDEL: G0D, beaten with a shoe)
+    g0dpMsg('> you throw a shoe. it hits him in the eye.', C.bright);
+    return g0dpFightTap(p, Math.round(f.eye.x), Math.round(f.eye.y), now);
+  }
+  if (key === 'frag') {
+    const n = [3, 4, 5, 5][tier] || 3;
+    Sound.trap(); shake(10, 0.5); flash(C.danger, 0.2, 0.4);
+    for (let k = 0; k < n; k++) setTimeout(() => {
+      if (st.g0dp !== p) return;
+      const x = 3 + Math.random() * (f.W - 6), y = 2 + Math.random() * (f.H - 4), before = g0dpChunks(f, x, y, 3);
+      g0dpMold(f, x, y, 3, -4, false); g0dpCrumble(f, before, x, y, 1); shake(5, 0.2);
+      if (f.eye && Math.random() < 0.3) { g0dpMsg('> frag: shrapnel in the eye!', C.bright); g0dpFightTap(p, Math.round(f.eye.x), Math.round(f.eye.y), performance.now()); }
+    }, k * 160);
+    return g0dpMsg(`> frag: ${n} blasts in the mold.`, C.danger);
+  }
+  if (key === 'purge') {
+    const gone = f.nodes.filter(n => n.kind === 'corp').slice(0, tier + 1);
+    for (const n of gone) { g0dpBurst(n, now); f.nodes.splice(f.nodes.indexOf(n), 1); }
+    return g0dpMsg(`> purged ${gone.length} corp node${gone.length === 1 ? '' : 's'}.`, C.accent);
+  }
+  if (key === 'rewind') {
+    if (s) { s.left += tier >= 1 ? 8 : 5; return g0dpMsg(`> rewind: +${tier >= 1 ? 8 : 5}s. he slows down.`, C.accent); }
+    if (f && f.eye) { f.eye.until += (tier >= 1 ? 5 : 3) * 1000; return g0dpMsg(`> rewind: his eye stays open +${tier >= 1 ? 5 : 3}s.`, C.accent); }
+    return;
+  }
+  if (key === 'split' || key === 'zeroday') {
+    const eyes = f.nodes.filter(n => n.kind === 'eye' && !n.gone && !g0dpShows(f, n)).slice(0, key === 'zeroday' && tier >= 1 ? 2 : 1);
+    for (const n of eyes) g0dpMold(f, n.x + 1, n.y, 1.4, -9, false);
+    Sound.ping(1568); return g0dpMsg('> ' + (key === 'split' ? 'split' : '0day') + ': an eye node, exposed.', G0DP_BLUE);
+  }
+  if (key === 'magnet') {
+    const back = f.nodes.filter(n => n.kind === 'int' || n.kind === 'cr');
+    for (const n of back) { if (n.kind === 'int') g0dpHeal(n.amount); else st.run.credits += n.amount; f.nodes.splice(f.nodes.indexOf(n), 1); }
+    Sound.buy(); return g0dpMsg('> magnet: what it stole, back.', C.money);
+  }
 }
 
 // ---------------- The loop, the board, taps (engine/render.js, engine/scene.js, engine/input.js) ----------------
@@ -1065,8 +1156,14 @@ function g0dpOverlay(cells, now, bgs) {
       out = out.filter(o => !(Math.round(o.cy) === y && o.cx >= x - 3 && o.cx < x + 4));
       if (bgs) bgs.push({ cx: x, cy: y, w: 1, col: G0DP_BLUE, alpha: 1 });
       out.push({ ch: 'v', cx: x, cy: y, col: C.bg, own: 'fx', bold: true });
-      const tx = x + 4 > L.wc ? x - 3 : x + 1; [...'b0y'].forEach((ch, k) => out.push({ ch, cx: tx + k, cy: y, col: G0DP_BLUE, own: 'fx', bold: false }));   // (his tag on the left at the edge)
+      const tag = c.tag || 'b0y', tx = x + tag.length + 1 > L.wc ? x - tag.length - 1 : x + 1;
+      [...tag].forEach((ch, k) => out.push({ ch, cx: tx + k, cy: y, col: G0DP_BLUE, own: 'fx', bold: true }));   // (his tag on the left at the edge)
     }
+  }
+  if (G0DP.boy && p.boy && g0dpBoyResting(p.boy) && (p.stage === 'fight' || p.stage === 'maze')) {   // b0y, resting: in the tray, out of the way
+    const y = BOARD_Y + L.gh + 1, t = 'b0y';
+    out = out.filter(o => !(Math.round(o.cy) === y && o.cx >= 1 && o.cx < 1 + t.length));
+    [...t].forEach((ch, k) => out.push({ ch, cx: 1 + k, cy: y, col: G0DP_BLUE, own: 'fx', bold: false }));
   }
   return out;
 }

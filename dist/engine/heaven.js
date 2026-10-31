@@ -56,8 +56,8 @@ HEAVEN.maze = {
   tell: null, pay: 0.6, timer: 6, noLoot: true, noReward: true, noOdds: true,
   layerMsg: (lv, c) => {
     if (!G0DP.boy || !c.maze) return `> layer ${c.maze ? c.maze.label : ''}. ${lv.n} ways on.`;
-    const words = ['prompt', 'diamond', 'cross', 'st#%age', 'upl@#k', 'wa%#'], at = c.maze.lost ? -1 : c.maze.path;
-    return { text: '> ' + words.map((w, i) => i === at ? w.toUpperCase() : w).join(' '), col: G0DP_BLUE };   // b0y's clue (round: b0y in the maze)
+    const words = ['prompt', 'diamond', 'the cross', 'storage unit', 'uplink', 'the watcher'];   // (his tags name the glyphs now: the terminal just says what is next)
+    return { text: c.maze.lost ? '> b0y: hm. not sure about this.' : '> b0y: ' + words[c.maze.path] + ' next.', col: G0DP_BLUE };
   },
   // b0y in the maze: two cursors on the nodes' top right corners (the one you're after among them), they come together on
   // it; he hides when he's resting. (G0DP.boy off: no b0y.)
@@ -67,14 +67,14 @@ HEAVEN.maze = {
     if (st.busy || lv.tiles.some(t => t.state === 'safe')) { c.boy = null; return; }   // a node's been taken: he clears out (the next layer starts him fresh)
     if (!c.boy || c.boyLv !== lv) { c.boy = g0dpBoyNew(); c.boy.until = now + 300; c.boyLv = lv; }
     const dt = Math.min(0.05, (now - (c.boyLast || now)) / 1000); c.boyLast = now;
-    const corner = t => { const o = tileOrigin(t); return { x: o.tx + TILE_W - 1, y: o.ty }; };
+    const corner = t => { const o = tileOrigin(t); return { x: o.tx + TILE_W - 1, y: o.ty - 1, name: g0dpGlyphName(t.glyph) }; };   // over the corner; the glyph name on his tag
     const open = lv.tiles.filter(t => t.state === 'closed'), real = lv.tiles[lv.safe];
     g0dpBoyTick({ boy: c.boy }, now, dt, { right: !c.maze.lost && real && real.state === 'closed' ? corner(real) : null, others: open.filter(t => t !== real).map(corner) });
     const b = c.boy;
     if (b.phase === 'rest' || (b.phase === 'hold' && now > b.until - 900)) return;   // resting: hidden
     b.curs.slice(0, 2).forEach((cu, i) => {
       const bob = Math.abs(cu.x - cu.tx) < 0.5 && Math.floor((now + i * 170) / 260) % 2 ? 1 : 0, x = Math.round(cu.x), y = Math.round(cu.y) - bob;
-      ctx.bg(x, y, 1, G0DP_BLUE, 1); ctx.put(x, y, 'v', C.bg, 'fx', true);
+      g0dpBoyMark(ctx.put, ctx.bg, x, y, cu.tag);
     });
   },
   rules: () => 'follow the codex. every node is a perfect.',
