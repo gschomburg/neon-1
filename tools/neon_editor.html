@@ -2057,7 +2057,7 @@
   $('#gpBoy').addEventListener('change', () => { gpSet({ boy: $('#gpBoy').checked }); log($('#gpBoy').checked ? 'b0y is in' : 'b0y is out'); });
   $('#g0d').addEventListener('click', ev => {
     const hv = ev.target.closest('button.hv');
-    if (hv) { log(hv.dataset.to === 'maze' ? 'into the maze...' : hv.dataset.to === 'fight' ? 'G0D wakes...' : 'heaven...'); return toGame({ type: 'test', act: 'heaven', to: hv.dataset.to }); }
+    if (hv) { log(hv.dataset.to === 'maze' ? 'into the maze...' : hv.dataset.to === 'fight' ? 'G0D wakes...' : 'heaven...'); return toGame({ type: 'test', act: 'heaven', where: hv.dataset.to }); }
     const gp = ev.target.closest('button.gp');
     if (gp) { log(gp.dataset.stage ? 'starting ' + gp.textContent + '...' : 'stopped'); return toGame({ type: 'test', act: 'g0dp', stage: gp.dataset.stage }); }
     const hp = ev.target.closest('button.hp');
