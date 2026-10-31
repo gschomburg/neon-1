@@ -289,7 +289,7 @@ function g0dpFightStart(p) {
 function g0dpNode(f, kind, label, at) {
   const sp = kind === 'corp' || kind === 'eye' ? 1 : 0;
   const a = Math.random() * Math.PI * 2, v = (2 + Math.random() * 2) * sp;
-  return { kind, label, x: at ? at.x : 3 + Math.random() * (f.W - 9), y: at ? at.y : 3 + Math.random() * (f.H - 6), vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.45, pin: 0, turnAt: 0, amount: 0 };
+  return { kind, label, gid: Math.random() * 1000, x: at ? at.x : 3 + Math.random() * (f.W - 9), y: at ? at.y : 3 + Math.random() * (f.H - 6), vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.45, pin: 0, turnAt: 0, amount: 0 };
 }
 const g0dpIdx = (f, x, y) => (x < 0 || y < 0 || x >= f.W || y >= f.H) ? -1 : y * f.W + x;
 // Mold in a feathered blob around (cx, cy): r is the radius in rows (twice that across: cells are tall)
@@ -584,6 +584,7 @@ function g0dpScrapeHud(p, x, now) {
   if (!reduced()) { const cells = []; for (let k = 0; k < 2 + Math.round(5 * reach); k++) cells.push({ ch: pickR(['%', ';', '&', ':'], Math.random), x: pxX(x + rand(-2, 2)), y: pxY(2 + Math.floor(Math.random() * 2)), col: pickR([G0D_COLS.mold, G0D_COLS.moldDim], Math.random) }); explode(cells, pxX(x), pxY(2), { power: 0.4, grav: 1.3, life: [0.3, 0.6] }); }
 }
 const G0DP_MOLD_CH = ' .:;%&#';
+const G0DP_CORP_RED = ['#ff3b3b', '#e02c2c', '#c21f26', '#ff5a4a', '#9e1a22'];   // a corp node's red shades (round 23)
 // The flowing mold (round 10, the user): each thickness has its own ramp of characters, and a slow 3D noise (x, y, and
 // time as z) picks one per cell. It only changes the look: how thick the mold is (how many taps) never moves.
 const G0DP_RAMP = [null,
@@ -715,16 +716,25 @@ function g0dpFightDraw(p, put, bg, now) {
   for (const n of f.nodes) {
     const x = Math.round(n.x), y = Math.round(n.y);
     if (n.gone) continue;
-    const lab = n.kind === 'eye' ? (f.hands ? '(@)' : Math.floor(now / 700) % 3 === 2 ? '(.)' : '(o)') : n.label;
+    const corp = n.kind === 'corp', hs = G0D_LOOKS.hs;
+    // a corp node glitches (round 23): now and then the whole label flips to G0D for a moment, and letters swap out
+    const flip = corp && hs(n.gid + Math.floor(now / 650) * 3.1) > 0.86;
+    let lab = n.kind === 'eye' ? (f.hands ? '(@)' : Math.floor(now / 700) % 3 === 2 ? '(.)' : '(o)') : flip ? 'G0D' : n.label;
+    if (corp && !flip) lab = [...lab].map((ch, k) => hs(n.gid * 1.7 + k * 13 + Math.floor(now / 90)) > 0.93 ? noiseCh() : ch).join('');
     const col = n.kind === 'eye' ? (f.hands ? G0DP_RED : G0DP_BLUE) : n.kind === 'int' ? C.accent : n.kind === 'cr' ? C.money : C.text;   // the eye node: blue (round 1)
-    if (g0dpShows(f, n)) { const fc = col === C.text ? C.mid : col; if (!taken.has((x - 1) + ',' + y)) { put(x - 1, Y + y, '[', fc, 'fx'); take(x - 1, y, 1); } if (!taken.has((x + 3) + ',' + y)) { put(x + 3, Y + y, ']', fc, 'fx'); take(x + 3, y, 1); } }   // dug out: framed, now it counts
+    if (g0dpShows(f, n)) { const fc = corp ? G0DP_RED : col === C.text ? C.mid : col; if (!taken.has((x - 1) + ',' + y)) { put(x - 1, Y + y, '[', fc, 'fx'); take(x - 1, y, 1); } if (!taken.has((x + 3) + ',' + y)) { put(x + 3, Y + y, ']', fc, 'fx'); take(x + 3, y, 1); } }   // dug out: framed, now it counts
     for (let k = 0; k < lab.length; k++) {   // under thin mold (a . or ,) the letter shows through, dimmed; thick mold hides it
       const i = g0dpIdx(f, x + k, y), th = i < 0 ? 0 : f.m[i];
       if (th >= G0DP_SEE || taken.has((x + k) + ',' + y)) continue;
       const thin = th >= 0.6;
       if (thin) underThin.add((x + k) + ',' + y);
-      if (n.kind === 'corp') bg(x + k, Y + y, 1, C.dim, thin ? 0.4 : 0.8);
-      put(x + k, Y + y, lab[k], thin ? (n.kind === 'corp' ? C.mid : col) : col, 'fx', !thin && n.kind !== 'corp');
+      if (corp) {   // shades of red behind dark letters, flickering a cell at a time (thin mold over it: dimmer)
+        const sh = G0DP_CORP_RED[Math.floor(hs(n.gid + k * 5.3 + Math.floor(now / 140)) * G0DP_CORP_RED.length)];
+        bg(x + k, Y + y, 1, flip ? C.bright : sh, thin ? 0.45 : 1);
+        put(x + k, Y + y, lab[k], thin ? C.danger : C.bg, 'fx', !thin);
+        continue;
+      }
+      put(x + k, Y + y, lab[k], thin ? col : col, 'fx', !thin);
     }
   }
   if (G0DP.boy && p.boy) p.boy.curs.forEach((c, i) => { if (p.boy.single && i > 0) return; const bx = Math.round(c.x), by = Math.round(c.y); take(bx, by, i === 0 ? 4 : 1); });   // b0y stays on top (round 14)

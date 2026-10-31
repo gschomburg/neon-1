@@ -355,6 +355,10 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 - Round 21 (the user: the red ramp is great; 10s is a little short depending on b0y, keep it tight for now, maybe tune):
   the final stand has ONION's circuit under it all too, going dark red as the burn builds.
 - Round 22 (the user): the final stand clock is 15s (the burn still peaks by ~5.5s).
+- Round 23 (the user): the fight's corp nodes are shades of red with dark letters, glitching: the red flickers a cell at a
+  time, letters swap out for noise now and then, and sometimes the whole label flips to G0D (on white) for a moment. (Also
+  asked: the maze in the real game should be real layers, likely a special corp on the corp kit: wipes, node tiles, mods and
+  b0y for free; the layer clock already holds through transitions and starts fresh each layer.)
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
