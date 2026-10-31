@@ -25,7 +25,8 @@ const G0DP = {
   burn: 3,                   // s: the burn (all red: every tap costs 1 INT)
   stealEvery: 3,             // s of thick mold on the INT / credits corner before it steals
   // the final stand
-  standEyes: 8, standTime: 30, red: 1.2, blue: 0.8,   // eyes, the clock (s), an eye's red and blue (s; red gets shorter as you win)
+  standEyes: 6, standTime: 10, red: 0.7, blue: 0.7,   // eyes, the clock (s), an eye's red and blue (s; red gets shorter as you win) (round 20: 10s, it all burns)
+  standBurn: 5.5,            // s into the final stand until the traces are at full danger
 };
 const G0DP_BLUE = '#4aa8ff', G0DP_RED = '#ff3b3b', G0DP_FRESH = '#d8ff70';
 
@@ -773,7 +774,7 @@ function g0dpStandBoy(p, now, dt) {
     Sound.tick();
   }
   if (now < (s.offUntil || 0)) { c.x += (c.tx - c.x) * Math.min(1, dt * 5); c.y += (c.ty - c.y) * Math.min(1, dt * 5); return; }
-  const dx = e.x - c.x, dy = e.y - 1 - c.y, d = Math.hypot(dx / 2, dy), sp = 11 * dt;   // the chase
+  const dx = e.x - c.x, dy = e.y - 1 - c.y, d = Math.hypot(dx / 2, dy), sp = 16 * dt;   // the chase
   if (d < 0.8) { s.latchUntil = now + G0DP.blue * 1300; s.thrown = false; Sound.ping(1175); return; }
   c.x += dx / Math.max(d * 2, 1e-6) * sp * 2; c.y += dy / Math.max(d, 1e-6) * sp;
 }
@@ -784,7 +785,7 @@ function g0dpStandTick(p, now, dt) {
   // the eyes drift (round 4) and keep apart; the mold streams off them, a trail that fades
   const W = L.wc, H = L.gh, live = s.eyes.filter(e => e.alive), fast = 1 + s.cur * 0.08;
   s.traces = s.traces || [];
-  { const doom = clamp(1 - s.left / 12, 0, 1);   // the last 12s: traces off the eyes, more and faster (round 10)
+  { const doom = clamp((G0DP.standTime - s.left) / G0DP.standBurn, 0, 1);   // from the start, up to full danger by standBurn (round 20)
     if (doom > 0) { s.traceAcc = (s.traceAcc || 0) + dt * (2 + 40 * doom * doom); while (s.traceAcc >= 1) { s.traceAcc -= 1; const e = pickR(live, Math.random); if (e) g0dpTraceSpawn(s.traces, e.x + rand(-2, 2), e.y + (Math.random() < 0.5 ? -1 : 1), doom); } }
     g0dpTraceTick(s.traces, dt, doom || 1, W, H); }
   for (const e of live) {
@@ -823,7 +824,7 @@ function g0dpStandTap(p, x, y, now) {
 function g0dpStandDraw(p, put, bg, now) {
   const s = p.stand, Y = BOARD_Y, { hs, moldCh } = G0D_LOOKS, t = Math.floor(now / 120);
   // the clock running out (round 6, a first go at it): under 10s the board glows red, harder and faster as it drops
-  const doom = clamp(1 - s.left / 10, 0, 1);   // (the traces do the warning now; the trails still turn red)
+  const doom = clamp((G0DP.standTime - s.left) / G0DP.standBurn, 0, 1);   // (the traces do the warning now; the trails turn red as it builds)
   const stTr = g0dpTraceCells(s.traces || [], now), onEye0 = (x, y) => s.eyes.some(e => e.alive && Math.abs(x - Math.round(e.x)) <= 2 && Math.abs(y - Math.round(e.y)) <= 1);
   for (const [k, [ch, col, head]] of stTr) { const [x, y] = k.split(',').map(Number); if (y >= 1 && y < (g0dpBoyLineOn(p, now) ? L.gh - 1 : L.gh) && !onEye0(x, y)) put(x, Y + y, ch, col, 'fx', head); }
   // the mold streaming off the eyes: thick and bright when fresh, thinning as it fades (round 4)

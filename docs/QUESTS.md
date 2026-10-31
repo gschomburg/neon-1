@@ -350,6 +350,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 - Round 19 (the user): the fight's status line (dig. find the eye / THE EYE IS OPEN / charging / HANDS OFF, creeping / IT
   STEALS) is gone: the board shows all of it. The maze (layer label, its clock) and the final stand (eyes left, the clock)
   keep theirs for now.
+- Round 20 (the user): the final stand is **10 seconds**, and the traces build from the first second to full danger by ~5.5s
+  (standBurn): you fight him while it all burns out. To fit: 6 eyes, red / blue 0.7s each, b0y chases faster.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
