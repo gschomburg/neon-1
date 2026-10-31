@@ -491,10 +491,28 @@ function g0dpEyeOpen(p, x, y, now) {
   Sound.bossBuild(); flash(G0DP_BLUE, 0.2, 0.4);
   g0dpMsg('> the eye is open. hit it!', G0DP_BLUE);
 }
+// The mold grows back (round 18): a wave out from (cx, cy) in 3 quick rings. The holes fill the most, thick mold barely
+// moves, nothing past 3 (mid thick). New growth shows bright (fresh) so you see it come back.
+function g0dpRegrow(p, cx, cy, amt) {
+  const f = p.fight, far = Math.hypot(f.W / 2.2, f.H);
+  [0, 1, 2].forEach(k => setTimeout(() => {
+    if (st.g0dp !== p || p.fight !== f) return;
+    for (let y = 0; y < f.H; y++) for (let x = 0; x < f.W; x++) {
+      const d = Math.hypot((x - cx) / 2.2, y - cy) / far;   // 0 (here) to ~1 (far side)
+      if (d < k / 3 || d >= (k + 1) / 3 + (k === 2 ? 1 : 0)) continue;
+      if (f.eye && Math.abs(x - f.eye.x) <= 5 && Math.abs(y - f.eye.y) <= 2) continue;   // (the open eye keeps itself clear)
+      const i = y * f.W + x, m = f.m[i], add = amt * (m < 0.6 ? 1 : m < 1.6 ? 0.75 : m < 2.5 ? 0.35 : 0) * (0.7 + 0.6 * Math.random());
+      if (add <= 0) continue;
+      f.m[i] = Math.min(3, m + add);
+      if (m < 1.6) f.fresh[i] = Math.max(f.fresh[i], 0.75);
+    }
+    if (k === 0) Sound.whoosh();
+  }, k * 140));
+}
 function g0dpEyeClose(p, now, why) {
-  const f = p.fight;
+  const f = p.fight, ex = f.eye ? f.eye.x : f.W / 2, ey = f.eye ? f.eye.y : f.H / 2;
   f.eye = null;
-  for (let i = 0; i < f.m.length; i++) f.m[i] = Math.max(f.m[i], Math.min(3.2, f.m[i] + 1.4 + Math.random()));   // the mold grows back in
+  g0dpRegrow(p, ex, ey, 1.8);   // the mold grows back in (round 18: a wave)
   const eyeN = f.nodes.find(n => n.kind === 'eye');
   if (eyeN) { eyeN.x = 3 + Math.random() * (f.W - 9); eyeN.y = 3 + Math.random() * (f.H - 6); eyeN.gone = false; }   // its node comes back, somewhere else
   if (why) g0dpMsg('> ' + why + ' the M0LD grows back.', C.mid);
@@ -504,6 +522,7 @@ function g0dpFightTap(p, x, y, now) {
   // the open eye
   if (f.eye && Math.abs(x - f.eye.x) <= 4 && Math.abs(y - f.eye.y) <= 1) {
     f.hp--; f.eye.hits++; f.hitAt = now;
+    g0dpRegrow(p, f.eye.x, f.eye.y, 1.2);   // every hit: the mold surges back in (round 18)
     Sound.hkBoom(); shake(10, 0.45); flash(G0DP_BLUE, 0.3, 0.5);
     if (!reduced()) { const cells = []; for (let k = 0; k < 18; k++) cells.push({ ch: pickR(['@', 'o', '*', '%', '#'], Math.random), x: pxX(f.eye.x + rand(-3, 3)), y: pxY(BOARD_Y + f.eye.y), col: pickR([G0DP_BLUE, C.bright, G0D_COLS.mold], Math.random) }); explode(cells, pxX(f.eye.x), pxY(BOARD_Y + f.eye.y), { power: 0.9 }); }
     g0dSay(pickR(f.hp / G0DP.hp < 0.4 ? G0DP_LINES.g0dLow : G0DP_LINES.hit, Math.random));

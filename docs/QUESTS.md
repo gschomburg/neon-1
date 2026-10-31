@@ -344,6 +344,9 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 - Round 17 (the user): G0D's terminal lines are dark red with red text (apart from his bar). The line under the terminal
   gets mold too. The spill reddens with the charge (bit by bit) and goes all red in the burn, and its thin specks flow like
   the rest.
+- Round 18 (the user: the regrow after hitting the eye barely shows): every hit sends the mold surging back in, a wave out from
+  the eye in 3 quick rings; holes fill the most, thick mold barely, nothing past mid thick; the new growth shows bright. The
+  eye shutting sends a bigger wave (g0dpRegrow).
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 
