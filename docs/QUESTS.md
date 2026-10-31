@@ -332,6 +332,9 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
 - Round 13 (the user: the header mold is super hard to remove): a bug, its growth ran every frame (~15x too fast); now a
   step every 100ms (left alone 20s: a third of the area over the board, INT not reached yet). A smash clears its middle outright
   and reaches further.
+- Round 14 (the user): b0y's cursor stays on top of the mold. **G0D's bar is on the row over the terminal, BLOCKS, all the way
+  across** (the header is the run's again). The mold never covers the bar or the terminal: the header's low row grows off the
+  board's top edge, as if it seeps up behind them.
 
 Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 

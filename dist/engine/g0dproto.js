@@ -410,12 +410,15 @@ function g0dpBurst(n, now) {
 // THE SPILL (round 12): the mold off the board. f.sp holds thickness for every screen row; the board's rows stay in f.m.
 // Up: through the terminal band and the rule into the header (thinner the higher, except over INT / CR, where it
 // reaches for you); down: over the tray (it covers things and gets in the way of your gear). A tap on it smashes it.
-const g0dpSpillRows = () => { const out = []; for (let y = 2; y < BOARD_Y; y++) out.push(y); for (let y = BOARD_Y + L.gh; y <= BOARD_Y + L.gh + 4; y++) out.push(y); return out; };
+const G0DP_BAR_ROW = BOARD_Y - 3;   // G0D's bar: the row over the terminal band (round 14)
+const G0DP_HEAD_LOW = G0DP_BAR_ROW - 1;   // the header's lowest row (the rule)
+// (round 14: never on the bar's row or the terminal band; the header grows straight off the board's top edge, behind them)
+const g0dpSpillRows = () => { const out = []; for (let y = 2; y <= G0DP_HEAD_LOW; y++) out.push(y); for (let y = BOARD_Y + L.gh; y <= BOARD_Y + L.gh + 4; y++) out.push(y); return out; };
 const g0dpReadout = (x, y) => y >= 2 && y <= 3 && x >= L.wc - 10;   // INT and CR
 function g0dpSpillCap(x, y) {
   if (y < BOARD_Y && x >= L.wc - 12) return 4.2;   // it reaches for INT / CR
   const patch = 0.25 + 1.0 * g0dpNoise3(x * 0.22, y * 0.6, 3.3);   // it spills in fingers, not a sheet
-  if (y < BOARD_Y) return patch * [0, 2.6, 2.0, 1.4, 1.0, 0.8, 0.7][Math.min(6, BOARD_Y - y)];
+  if (y < BOARD_Y) return patch * [0, 1.6, 1.1, 0.8][Math.min(3, G0DP_HEAD_LOW - y + 1)];
   return patch * [0, 2.6, 2.2, 1.8, 1.4, 1.0][Math.min(5, y - (BOARD_Y + L.gh) + 1)];
 }
 // thickness at a screen cell, on the board or off it
@@ -432,7 +435,8 @@ function g0dpSpillTick(f, dt) {
   f.spillAt = now + 100;
   for (let k = 0; k < 40; k++) {
     const y = rows[Math.floor(Math.random() * rows.length)], x = Math.floor(Math.random() * W), i = y * W + x;
-    const nb = Math.max(g0dpAt(f, x, y - 1), g0dpAt(f, x, y + 1), g0dpAt(f, x - 1, y), g0dpAt(f, x + 1, y));
+    const below = y === G0DP_HEAD_LOW ? g0dpAt(f, x, BOARD_Y) : g0dpAt(f, x, y + 1);   // the header's lowest row: fed from behind the terminal
+    const nb = Math.max(g0dpAt(f, x, y - 1), below, g0dpAt(f, x - 1, y), g0dpAt(f, x + 1, y));
     const cap = g0dpSpillCap(x, y);
     if (nb > 1.0 && f.sp[i] < cap) f.sp[i] = Math.min(cap, f.sp[i] + G0DP.creep * 0.5 * (y < BOARD_Y && x >= L.wc - 12 ? 1.6 : 1));
   }
@@ -450,7 +454,7 @@ function g0dpSpillSmash(p, x, y) {
     if (Math.random() < 0.7) bits.push({ ch: g0dpMoldGlyph(was, xx, yy, performance.now()), x: pxX(xx), y: pxY(yy), col: was > 2.5 ? G0D_COLS.mold : G0D_COLS.moldDim });
   }
   if (!hit) return false;
-  if (y < BOARD_Y && y >= BOARD_Y - 2) g0dpMold(f, x, 0, 1.6, -1.6, false);   // right over the board: its top edge too
+  if (y === G0DP_HEAD_LOW || y === G0DP_HEAD_LOW - 1) g0dpMold(f, x, 0, 1.6, -1.6, false);   // the header's low rows: the board's top edge that feeds them too
   f.steal = Math.max(0, (f.steal || 0) - 0.6);
   Sound.tick();
   if (bits.length && !reduced()) explode(bits, pxX(x), pxY(y) - L.chh * 0.5, { power: 0.45, grav: 1.4, life: [0.3, 0.7] });
@@ -680,6 +684,7 @@ function g0dpFightDraw(p, put, bg, now) {
       put(x + k, Y + y, lab[k], thin ? (n.kind === 'corp' ? C.mid : col) : col, 'fx', !thin && n.kind !== 'corp');
     }
   }
+  if (G0DP.boy && p.boy) p.boy.curs.forEach((c, i) => { if (p.boy.single && i > 0) return; const bx = Math.round(c.x), by = Math.round(c.y); take(bx, by, i === 0 ? 4 : 1); });   // b0y stays on top (round 14)
   // the M0LD
   for (let y = 0; y < f.H; y++) for (let x = 0; x < f.W; x++) {
     const i = y * f.W + x, th = f.m[i];
@@ -855,7 +860,7 @@ function g0dpOverlay(cells, now, bgs) {
   let out = cells;
   if (p.stage === 'fight') {
     const f = p.fight;
-    out = g0dHeader(out, { f: f.hp / G0DP.hp, was: (f.hp + 1) / G0DP.hp, hit: now - f.hitAt < 260 }, G0D_HP.thin);
+    out = g0dBar(out, G0DP_BAR_ROW, { f: f.hp / G0DP.hp, was: (f.hp + 1) / G0DP.hp, hit: now - f.hitAt < 260 }, L.wc, G0D_HP.blocks);   // (round 14: the row above the terminal, BLOCKS)
     if (f.sp) {   // the spill (round 12)
       const burn = f.hands && f.hands.burning, cover = new Set(), add = [];
       for (const y of g0dpSpillRows()) for (let x = 0; x < f.W; x++) {
@@ -867,6 +872,6 @@ function g0dpOverlay(cells, now, bgs) {
       out = out.filter(c => !cover.has(Math.round(c.cx) + ',' + Math.round(c.cy))).concat(add);
     }
   }
-  if (p.stage === 'stand') { const s = p.stand; out = g0dHeader(out, { f: (s.eyes.length - s.cur) / s.eyes.length }, G0D_HP.thin); }
+  if (p.stage === 'stand') { const s = p.stand; out = g0dBar(out, G0DP_BAR_ROW, { f: (s.eyes.length - s.cur) / s.eyes.length }, L.wc, G0D_HP.blocks); }
   return out;
 }
