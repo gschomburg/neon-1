@@ -375,6 +375,8 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   hits left, scattered over it (not like a bar): one eye node found, it opens about half blue; both, all blue. Every hit
   blasts some blue off (it flies) and that part turns red; all red, it shuts. No time / hits line under it: in its last 2s
   the eye flickers. (No bloodshot-by-health any more: the bar says that.) Sfx for all of this: later.
+- Round 28 (the user: it still needs a timer): the seconds left sit in the eye's bottom edge ('--7s-'): they count down,
+  jump and flash white when the second eye adds time, go red under 2s and flicker with the eye.
 - **b0y, what's wrong (the user, 2026-10-30; not yet, later):** (1) his resting spot: he's still on screen, so it's confusing
   whether he's pointing at something: **he should hide when he isn't actively searching.** (2) it isn't clear when he's doing
   something: elsewhere (the hackers on the board) the cursor switches to a v to point; do the same here, **and put some of his

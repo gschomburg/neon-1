@@ -989,11 +989,17 @@ function g0dpEyeDraw(p, f, put, bg, take, now, Y) {
     take(x - 6, y - 2 + j, 13);
     for (let k = 0; k < l.length; k++) {
       const ch = l[k]; if (ch === ' ') continue;
+      if (j === 4 && k >= 4 && k <= 8 && age >= 230) continue;   // (the timer's spot)
       const inner = '()@oO><-'.includes(ch) && j === 2;
       const blue = hs(k * 7.7 + j * 3.1 + e.seed) < frac;
       put(x - 6 + k, Y + y - 2 + j, ch, ending ? C.dim : hurt && inner ? C.bright : blue ? G0DP_BLUE : G0DP_RED, 'fx', inner || blue);
     }
   });
+  if (age >= 230) {   // the time left, in the bottom edge of the eye (round 28): '--7s-'; it flashes when the second eye adds time
+    const t = Math.ceil(left) + 's', mid = ('-'.repeat(Math.floor((5 - t.length) / 2)) + t).padEnd(5, '-').slice(0, 5);
+    const fresh = e.bonusAt && now - e.bonusAt < 500;
+    put(x - 6 + 4, Y + y + 2, mid, ending ? C.dim : fresh ? C.bright : left < 2 ? G0DP_RED : C.text, 'fx', true);
+  }
   if (e.bonus) {   // the combo: a ring pulses round it
     const pulse = Math.floor((now - (e.bonusAt || now)) / 110) % 2;
     for (let k = -7; k <= 7; k += 2) { const cx = x + k + (pulse ? 1 : 0); put(cx, Y + y - 3, '·', G0DP_BLUE, 'fx', true); put(cx, Y + y + 3, '·', G0DP_BLUE, 'fx', true); take(cx, y - 3, 1); take(cx, y + 3, 1); }
