@@ -390,6 +390,34 @@ Two pages of mockups (G0D MODE, G0D MODE II: 20 ideas), all of them viewable in 
   real rewards screen, frozen partway; tap-to-skip off by default; b0y in the real maze (cursors, his clue in the terminal). b0y
   in heaven's other corps: later. Maybe a heaven sector event card that says b0y is with you.
 - **Later (the user): make the maze a little harder.** b0y in heaven's other corps.
+- **H3AV3N feedback, round 3** (the user, meat notes 2026-10-31):
+  - **b0y in the fight** (done v13.95): during HANDS OFF no "here": he hides, and the terminal says "stop digging.
+    he's charging up."; when the mold is on your INT his tag says "protect your INT". He only points at what is
+    really there: wandering, his cursor just says "b0y"; when he finds it, "here", and he keeps up with the node as it
+    moves (he pointed at old spots).
+  - Can nodes overlap in the fight? They shouldn't.
+  - **(done v13.95) Failing the final stand takes you back to the start of the G0D fight** (the user, 2026-10-31: like most bosses, you
+    get through all the stages or start over; both fights are easy once you know them).
+  - **(built v13.95) G0D's first death (the fight won), v2** (the user, 2026-10-31): keep the mold exploding off (good). Not the
+    network lines exploding: they draw in toward his eye, grey, from the edges into the eye wherever it is (like the
+    attack's red traces). The eye stays where it is (no snap to the middle). More glitching on it, its colors
+    inverting, maybe it blows up into a smaller eye, more gradual. Keep the TV-off at the end (he sucks down to
+    nothing), a little more drama before it. The terminal band keeps its dark red background as its text goes: the
+    band should go too, letter by letter, like the header.
+  - **(built v13.95) The fake win, v3:** the rewards screen is great; a little pause on it. A bit of mold already on it as it draws
+    in (on TAKE, a few other places). Then a small hole in the middle: the mold punches through, each cell in the hole
+    falls out (background and all) and mold characters come in. With a big enough hole, the mold spreads out from it
+    over the whole screen, fast, and it really covers (solid background: nothing of the old screen shows through, like
+    the user logo's background did).
+  - **(built v13.95) Into the final stand:** wires come out of the hole the mold made and replace all the mold (maybe the hand-off to
+    the real game is here). Eyes come out of the hole too: (o) at first, growing once they're out; they all come out
+    and start moving, then the clock starts. G0D's bar comes back in like the wake-up's (more dramatic). As eyes die,
+    maybe fewer wires: the wire count is more about the clock and the urgency.
+  - **G0D's defeat:** his eye jumps to the middle (a cut, like the wake-up's was). Instead: the screen starts
+    exploding around him, everything falls apart, the eye last; maybe it slowly drifts toward the middle, maybe not;
+    maybe it blows up into a smaller eye, then that falls apart.
+  - **Into the final stand:** G0D's bar should come back in the way it did in the fight (the wake-up's), maybe more
+    dramatic. The layering and the cuts into the final stand need the same attention the wake-up got.
 - **H3AV3N feedback, round 2** (the user, meat notes 2026-10-30; all done v13.94, plus b0y v2):
   - ~~b0y lags on the maze nodes~~ (done: once a node is taken he clears out, and he starts fresh ~0.3s into the next layer).
   - **Getting through the maze should feel like a success:** probably a real rewards screen.
@@ -419,6 +447,25 @@ Names: **G0D MAZE** (fight 1, the maze), **G0D FIGHT**, **G0D FINAL STAND**.
 - The mold fills in over everything. The eye moves to the middle of the screen and closes (hides). The mold covers the
   screen and even spills out of the game area a bit.
 - POPS or d0g chime in on the terminal: encouragement, "we gotta break through that mold".
+
+- **The wake-up v3 (the user, 2026-10-30; built v13.95, to tune by feel):** v13.94 still cuts hard into the fight (a screen wipe, new mold,
+  the eyes / traces / nodes all gone in one frame). Pace it out more and make it one scene that becomes the fight:
+  - At the start, the sector map is swapped for things that animate (not an overlay on the map): the old map is gone.
+    The corp nodes become glitched G0D nodes that can move, off the grid a little (smoother, subtler moves).
+  - **First: the boss node breaks out** (wriggles free, maybe breaks the grid) and turns into the eye; it starts shooting
+    traces. **His bar appears right there**: G..0..D drop in from above one by one with a little bounce and red dust
+    breaking off each letter, then the bar fills out both ways.
+  - **The other nodes wake one at a time, unevenly** (x...x.x..xxxx): a little tension (a shiver) first, then their links
+    snap and the little dots explode off, and they break free and move. Red traces come out of them as they move. Some
+    can turn into eyes. The eye stays up near the top and moves less than the others.
+  - Once a few have broken out, the plain network (the circuit) comes in, and the old red traces fade down into grey
+    lines. New red traces the whole time: fast, like lightning strikes (not the attack's ramp).
+  - **Then the real in-game mold comes in from all the edges, mostly up from the bottom**, and covers the eye last.
+  - When it is pretty full, taps work and the fight is on (no wipe, no reset). b0y comes in: "wtf" or similar.
+  - How (the user): the wake-up can stay its own layer. The mold is the bridge: it is the fight's real mold, drawn on top of
+    the cinematic; once it covers the screen, the fight swaps in underneath and the same mold stays on top.
+  - Heaven's network (which corps, which links) isn't settled yet: the wake-up reads whatever the map shows when you
+    breach (each node, its spot, its label, its links, the boss node), nothing hard-coded.
 
 **G0D FIGHT: the fight**
 - The goal: damage G0D in its eye. First you have to open it.

@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v13.94']);
+NEON_FILES.push(['engine/render.js', 'v13.95']);
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;
@@ -19,7 +19,6 @@ function frameBody(now) {
   eaterWatch();   // ICE EATER: a layer with no ICE left clears
   coinTick(now);  // COIN FLIP: a held press brings the coin up
   g0dpTick(now, dt);   // the G0D prototype (engine/g0dproto.js; the editor's g0d tab)
-  g0dWakeTick(now);   // H3AV3N: G0D wakes up (engine/heaven.js)
   g0dFakeTick(now);   // H3AV3N: the fake win
   g0dEndTick(now);   // H3AV3N: the collapse
   g0dDieTick(now);   // H3AV3N: G0D dies
@@ -74,7 +73,8 @@ function render(now) {
     g.globalAlpha = Math.max(0, p.alpha);
     g.fillStyle = p.col;
     const pch = cipher ? cipher(p.ch) : p.ch;
-    if (p.rot) { g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.fillText(pch, 0, 0); g.restore(); }
+    if (p.bg) { g.save(); g.translate(p.x, p.y); if (p.rot) g.rotate(p.rot); g.fillStyle = p.bg; g.fillRect(-L.cw / 2, -L.chh / 2, L.cw, L.chh); g.fillStyle = p.col; g.fillText(pch, 0, 0); g.restore(); }   // a whole cell (its background too)
+    else if (p.rot) { g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.fillText(pch, 0, 0); g.restore(); }
     else g.fillText(pch, p.x, p.y);
   }
   g.globalAlpha = 1;

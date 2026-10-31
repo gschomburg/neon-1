@@ -3,7 +3,7 @@
 // Hand edits are fine too: inside the quotes a backslash is \\ and a quote \'.
 // Each is up to 30 x 13, drawn as is (not centered line by line), centered in a 30 x 13 box.
 'use strict';
-NEON_FILES.push(['data/art/root.js', 'v13.94']);
+NEON_FILES.push(['data/art/root.js', 'v13.95']);
 
 const ROOT_ART_H = 13;
 const ART_ROOT = {

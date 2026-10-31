@@ -7,7 +7,7 @@
 //   4. A first run: NEWB or LEET, under your logo and name (tap them to shuffle). NEWB starts the training, LEET the title.
 // Screens change with the game's wipe. A tap skips ahead.
 'use strict';
-NEON_FILES.push(['engine/intro.js', 'v13.94']);
+NEON_FILES.push(['engine/intro.js', 'v13.95']);
 
 // For now (the user, 2026-10-26, while we work on it): every launch plays all of it, NEWB / LEET too.
 // Later: NEWB / LEET only the first time (save.bootSeen).

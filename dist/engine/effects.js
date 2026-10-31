@@ -1,6 +1,6 @@
 // NeoN+1 engine/effects.js: Particles, flashes, shakes, and the scroll-fill wipe.
 'use strict';
-NEON_FILES.push(['engine/effects.js', 'v13.94']);
+NEON_FILES.push(['engine/effects.js', 'v13.95']);
 
 // ---------------- Effects ----------------
 const parts = [];
@@ -24,7 +24,7 @@ function explode(cells, ox, oy, { col = null, power = 1, grav = 1, life = [0.7, 
     const dx = c.x - ox, dy = c.y - oy, d = Math.hypot(dx, dy) || 1;
     const sp = rand(220, 600) * power * k;
     parts.push({
-      mode: 'explode', ch: c.ch, x: c.x, y: c.y, col: col || c.col,
+      mode: 'explode', ch: c.ch, x: c.x, y: c.y, col: col || c.col, bg: c.bg || null,   // (bg: a whole cell falls, its background with it)
       vx: dx / d * sp + rand(-60, 60) * k,
       vy: dy / d * sp - rand(80, 320) * power * k,
       rot: 0, vr: rand(-9, 9), g: grav,

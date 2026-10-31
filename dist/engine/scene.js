@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v13.94']);
+NEON_FILES.push(['engine/scene.js', 'v13.95']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -40,6 +40,7 @@ function buildScene(now, collectHits, raw = false) {
   const putC = (cy, str, col, own) => put(Math.floor((L.wc - str.length) / 2), cy, str, col, own);
   const putR = (cy, str, col, own) => put(L.wc - str.length, cy, str, col, own);
   const bg = (cx, cy, w, col, alpha) => frameBgs.push({ cx, cy, w, col, alpha });
+  st.frameBgs = frameBgs;   // (H3AV3N's fake win reads a cell's background: what falls out of the hole falls with it)
   const addHit = (cx, cy, w, h, hit) => {
     if (!collectHits) return;
     let x = L.ox + cx * L.cw, y = L.oy + cy * L.chh, pw = w * L.cw, ph = h * L.chh;
@@ -103,7 +104,7 @@ function buildScene(now, collectHits, raw = false) {
     addHit(x, 0, label.length, 1, { kind: 'btn', id, onTap, noFocus: true });
   };
   // The name is the menu button during a run (no [MENU] of its own).
-  const menuOk = !st.mp && run && !st.g0dWake && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel' || st.mode === 'fish' || (st.mode === 'g0dp' && st.g0dp && st.g0dp.real));   // (G0D's fight: you can still quit)
+  const menuOk = !st.mp && run && !(st.g0dp && st.g0dp.wake) && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel' || st.mode === 'fish' || (st.mode === 'g0dp' && st.g0dp && st.g0dp.real));   // (G0D's fight: you can still quit)
   put(0, 0, 'NeoN+1', C.accent, menuOk ? 'ui' : undefined, menuOk && st.pause === true);
   if (menuOk) {
     if (st.hoverBtn === 'menu' || st.pause === true) bg(0, 0, 6, C.accent, 0.2);
@@ -321,7 +322,6 @@ function buildScene(now, collectHits, raw = false) {
   // The editor's G0D tab (engine/g0d.js): a G0D design or effect drawn over this screen. Never in play.
   if ((st.g0d || st.g0dBar) && !st.dev) result = g0dOverlay(result, now, adBgs);
   if (st.mode === 'g0dp' && !st.dev) result = g0dpOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
-  if (st.g0dWake && !st.dev) result = g0dWakeOverlay(result, now, adBgs);   // H3AV3N: the wake-up (engine/heaven.js)
   if (st.g0dFake && !st.dev) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win (over the rewards screen)
   if (st.mode === 'g0ddie' && !st.dev) result = g0dDieOverlay(result, now, adBgs);   // H3AV3N: G0D dies
   if (st.mode === 'g0dend' && !st.dev) result = g0dEndOverlay(result, now, adBgs);   // H3AV3N: the collapse
@@ -985,9 +985,7 @@ function buildMap(ctx) {
     if (available) col = sel ? C.accent : (Math.floor(now / 500) % 2 ? C.bright : C.text);
     // corps in their own colors (not once you've been there)
     const cc = !visited ? corpIconCols(n) : null;
-    const waking = st.g0dWake && n.heaven === 'g0d', label = waking ? ((now - st.g0dWake.t0) % 1400 < 160 ? '(-)' : '(@)') : nodeLabel(n);   // G0D wakes: its node is an eye
-    if (waking) st.g0dWake.eyeAt = { x: p.x - 1, y };   // (the mold leaves it: engine/heaven.js)
-    else if (st.g0dWake && n.type === 'corp') (st.g0dWake.nodesAt = st.g0dWake.nodesAt || {})[n.id] = { x: p.x - 1, y };   // (they break apart: engine/heaven.js)
+    const label = nodeLabel(n);
     if (cc && label[0] !== '[') {
       ctx.bg(p.x - 1, y, 3, cc.bg, available ? 1 : 0.55);
       // Nodes you can go to: a glint sweeps across the code now and then (that cell's colors
