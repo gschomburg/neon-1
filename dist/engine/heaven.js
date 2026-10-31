@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.04']);
+NEON_FILES.push(['engine/heaven.js', 'v14.05']);
 
 const HEAVEN = {};
 
@@ -962,7 +962,9 @@ function buildBoyBtn(ctx, y) {
   const out = (c && c.boyCall && now < c.boyCall) || (p && p.boy && !g0dpBoyResting(p.boy)) || (st.moldFx && st.moldFx.wipe);
   clearRect(ctx.cells, x, y, 3, 1);
   if (out) bg(x, y, 3, G0DP_BLUE, 1);
-  put(x, y, '[b]', out ? C.bg : G0DP_BLUE, 'ui', true);
+  // (the user, 2026-10-31: it cycles b, 0, y: his name, a letter at a time; b most of the time)
+  const ph = Math.floor(now / 380) % 10, ch = ph === 7 ? '0' : ph === 8 ? 'y' : 'b';
+  put(x, y, '[' + ch + ']', out ? C.bg : G0DP_BLUE, 'ui', true);
   if (st.hoverBtn === 'b0y' && !out) bg(x, y, 3, G0DP_BLUE, 0.2);
   addHit(x, y, 3, 1, { kind: 'btn', id: 'b0y', onTap: boyCall, noFocus: true });
 }

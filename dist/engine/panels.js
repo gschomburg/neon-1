@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.04']);
+NEON_FILES.push(['engine/panels.js', 'v14.05']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -147,28 +147,31 @@ function pickWeighted(keys, w, r) {
   return keys[keys.length - 1];
 }
 
+// A market's offers: roll 0 is the market as it opens; each reroll is a new roll of the same seed (openShop; the editor's
+// loot viewer)
+function shopRoll(node, n) {
+  const run = st.run;
+  const r = n ? rngFor(run.seed, 'shop', node.id, 'reroll', n) : rngFor(run.seed, 'shop', node.id);
+  const itemKeys = [], qm = questMarket(node);   // 3 gear, picked by weight (rarer gear shows up less); RAM DOUBLER: no gear for sale
+  if (qm && !has('ramdoubler')) itemKeys.push('patch');   // (the H3AV3N seed's sector 1: PATCH always, then two of its list: engine/heaven.js QUEST_STOCK)
+  for (let pool = has('ramdoubler') ? [] : qm ? QUEST_STOCK.gear.filter(k => ITEMS[k]) : shopGear(); itemKeys.length < 3 && pool.length;) { const k = pickWeighted(pool, shopWeight, r); itemKeys.push(k); pool = pool.filter(o => o !== k); }
+  let offers = itemKeys.map(k => ({ kind: 'item', key: k, tier: rollTier(r, ITEMS[k]), price: ITEMS[k].price, sold: false }));
+  // More than one copy now and then (commoner gear more often; ECON.stock). Its own roll: the rest of the market stays the same.
+  const rs = n ? rngFor(run.seed, 'shop', node.id, 'stock', n) : rngFor(run.seed, 'shop', node.id, 'stock');
+  for (const o of offers) { o.n = 1; const p = ECON.stock[ITEMS[o.key].rarity] || 0; while (o.n < ECON.stock.max && rs() < p) o.n++; if (qm && o.key === 'patch') o.n = Math.max(o.n, QUEST_STOCK.patches); }
+  const qMods = qm ? pickMods(r, QUEST_STOCK.mods, QUEST_STOCK.mods.length) : [];   // (BUFFER, unless you can't take it again)
+  for (const o of qMods.concat(pickMods(r, modsFound('gen', 'minor'), (has('coupon') ? 3 : 2) - qMods.length, qMods))) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
+  const hvx = node.heaven === 'shop' && n >= 1 ? heavenExotic(r) : null;   // heaven's market: a reroll brings an exotic (engine/heaven.js)
+  if (hvx) offers.push({ kind: 'mod', key: hvx, tier: 0, price: MODS[hvx].price, sold: false });
+  else if (!qm) for (const o of exoticOffer(run.seed, 'shop', n ? node.id + 'r' + n : node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
+  if (discDrops(rngFor(run.seed, 'shop', node.id, 'disc', n), 'shop')) offers.push({ kind: 'item', key: 'disc', tier: 0, price: ITEMS.disc.price, sold: false, n: 1 });   // the quest (engine/quests.js)
+  offers = shuffle(offers, r);   // random order: any slot could be the good one
+  if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
+  return offers;
+}
 function openShop(node) {
   const run = st.run;
-  // the offers: roll 0 is the market as it opens; each reroll is a new roll of the same seed
-  const roll = n => {
-    const r = n ? rngFor(run.seed, 'shop', node.id, 'reroll', n) : rngFor(run.seed, 'shop', node.id);
-    const itemKeys = [], qm = questMarket(node);   // 3 gear, picked by weight (rarer gear shows up less); RAM DOUBLER: no gear for sale
-    if (qm && !has('ramdoubler')) itemKeys.push('patch');   // (the H3AV3N seed's sector 1: PATCH always, then two of its list: engine/heaven.js QUEST_STOCK)
-    for (let pool = has('ramdoubler') ? [] : qm ? QUEST_STOCK.gear.filter(k => ITEMS[k]) : shopGear(); itemKeys.length < 3 && pool.length;) { const k = pickWeighted(pool, shopWeight, r); itemKeys.push(k); pool = pool.filter(o => o !== k); }
-    let offers = itemKeys.map(k => ({ kind: 'item', key: k, tier: rollTier(r, ITEMS[k]), price: ITEMS[k].price, sold: false }));
-    // More than one copy now and then (commoner gear more often; ECON.stock). Its own roll: the rest of the market stays the same.
-    const rs = n ? rngFor(run.seed, 'shop', node.id, 'stock', n) : rngFor(run.seed, 'shop', node.id, 'stock');
-    for (const o of offers) { o.n = 1; const p = ECON.stock[ITEMS[o.key].rarity] || 0; while (o.n < ECON.stock.max && rs() < p) o.n++; if (qm && o.key === 'patch') o.n = Math.max(o.n, QUEST_STOCK.patches); }
-    const qMods = qm ? pickMods(r, QUEST_STOCK.mods, QUEST_STOCK.mods.length) : [];   // (BUFFER, unless you can't take it again)
-    for (const o of qMods.concat(pickMods(r, modsFound('gen', 'minor'), (has('coupon') ? 3 : 2) - qMods.length, qMods))) offers.push({ kind: 'mod', key: o.key, tier: o.tier, price: MODS[o.key].price, sold: false });
-    const hvx = node.heaven === 'shop' && n >= 1 ? heavenExotic(r) : null;   // heaven's market: a reroll brings an exotic (engine/heaven.js)
-    if (hvx) offers.push({ kind: 'mod', key: hvx, tier: 0, price: MODS[hvx].price, sold: false });
-    else if (!qm) for (const o of exoticOffer(run.seed, 'shop', n ? node.id + 'r' + n : node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
-    if (discDrops(rngFor(run.seed, 'shop', node.id, 'disc', n), 'shop')) offers.push({ kind: 'item', key: 'disc', tier: 0, price: ITEMS.disc.price, sold: false, n: 1 });   // the quest (engine/quests.js)
-    offers = shuffle(offers, r);   // random order: any slot could be the good one
-    if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
-    return offers;
-  };
+  const roll = n => shopRoll(node, n);
   for (const k of ['coupon', 'haggle']) if (has(k)) modFired(k);   // the market they change opens
   const repair = { kind: 'repair', key: 'repair', price: costInt(ECON.repair), sold: false };
   // a market you go back into (the user, 2026-10-31) is as you left it: run.shops keeps its offers and rerolls
@@ -514,18 +517,22 @@ function rewardGear(r) {
   const key = pickWeighted(pool, k => R.weight[GEAR_STEP[ITEMS[k].rarity]] || 0, r), s = GEAR_STEP[ITEMS[key].rarity];
   return { kind: 'gear', key, tier: s >= 2 ? rollTier(r, ITEMS[key]) : 0, n: R.min[s] + Math.floor(r() * (R.max[s] - R.min[s] + 1)) };
 }
-function openReward(node, skipped = false) {
-  const run = st.run;
-  const r = rngFor(run.seed, 'reward', node.id);
-  const def = corpDef(node.corp);
-  // the corp's own pick: its boss gear (a stack: def.gear), or its corp mod
+// A corp's boss reward picks (openReward; the editor's loot viewer)
+function rewardOptions(node) {
+  const run = st.run, r = rngFor(run.seed, 'reward', node.id), def = corpDef(node.corp);
   const corpPick = def.gear ? [{ kind: 'gear', key: def.gear.key, tier: def.gear.tier || 0, n: def.gear.n || 1 }] : pickMods(r, def.mods || [], 1);
   const gen = pickMods(r, modsOfKind('gen'), 1, corpPick);
   const third = r() < ECON.reward.gear ? [rewardGear(r)] : pickMods(r, modsOfKind('gen', 'minor'), 1, corpPick.concat(gen));
-
   const options = shuffle(corpPick.concat(gen, third), r);
-  const calls = callReward(rngFor(run.seed, 'callreward', node.id));   // half the bosses: an extra pick, a CALL stack (engine/hackers.js)
+  const calls = callReward(rngFor(run.seed, 'callreward', node.id));
   if (calls) options.push(calls);
+  return options;
+}
+function openReward(node, skipped = false) {
+  const run = st.run;
+  const def = corpDef(node.corp);
+  // the corp's own pick (its boss gear or its corp mod), a general mod, a random third, and half the time a CALL stack
+  const options = rewardOptions(node);
   // FIRST BREACH (the user, 2026-10-29): the first time you ever beat this corp, its logo and its tell come before the
   // rewards (only as the screen builds in after the boss; corpStat counted this breach already)
   const first = st.breachReveal && !run.tutorial && node.type === 'corp' && corpStat(def.key).breached === 1 && CORP_TELL[def.key]

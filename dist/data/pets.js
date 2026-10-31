@@ -6,7 +6,7 @@
 // Each look is 2 lines (it can overlap the lines above and below). Walking and dancing have 2 frames. They face right;
 // facing left they're mirrored ( ) / \ < > swapped). Hand edits are fine: keep each line about 8 wide.
 'use strict';
-NEON_FILES.push(['data/pets.js', 'v14.04']);
+NEON_FILES.push(['data/pets.js', 'v14.05']);
 
 const PET_NAMES = ['BYTE', 'CHIP', 'NIBBLE', 'PIXEL', 'BITSY', 'PING', 'GIGA', 'SOCKET', 'DOT', 'MODEM', 'ZIP', 'TOFU', 'WIDGET', 'JPEG', 'CRUMB', 'PATCHY'];
 
@@ -27,7 +27,36 @@ const PETS = {
     happy: ['  ,--, ', 'U(^o^)U'],
     alert: ['  ,--, ', 'U(O O)U'],
   },
+  // (the user, 2026-10-31: pets from other places than COMPANION) BUG: STRAY on THE BOARD (REP)
+  bug: {
+    sit:   [' ,\\/, ', '(o..o)'],
+    walk:  [[' ,\\/, ', '(o..o)~'], [' ,\\/, ', '(o..o)_']],
+    sleep: [' ,\\/, ', '(-..-)'],
+    dance: [['\\,\\/, ', '(^..^)/'], [' ,\\/,/', '\\(^..^)']],
+    happy: [' ,\\/, ', '(^..^)'],
+    alert: [' ,\\/, ', '(O..O)'],
+  },
+  // FISH (in its bowl): the CATPHISH feat
+  fish: {
+    sit:   [' .--. ', '( ><>)'],
+    walk:  [[' .--. ', '(><> )'], [' .--. ', '( ><>)']],
+    sleep: [' .--. ', '( -<>)'],
+    dance: [['\\.--. ', '(><> )/'], [' .--./', '\\( ><>)']],
+    happy: [' .--. ', '( ^<>)'],
+    alert: [' .--. ', '( O<>)'],
+  },
+  // CHICK: the EGG (gear) hatches it
+  chick: {
+    sit:   ['  ,_  ', ' (o> )'],
+    walk:  [['  ,_  ', ' (o> )~'], ['  ,_  ', ' (o> )_']],
+    sleep: ['  ,_  ', ' (-> )'],
+    dance: [['\\ ,_  ', ' (^> )/'], ['  ,_ /', '\\(^> )']],
+    happy: ['  ,_  ', ' (^> )'],
+    alert: ['  ,_  ', ' (O> )'],
+  },
 };
+// Where a pet comes from: COMPANION (a cat or a dog, and its trick), STRAY on THE BOARD (a bug, every run), the CATPHISH
+// feat (a fish, every run), the EGG (a chick). Owning both STRAY and CATPHISH: the run's seed picks which one comes.
 
 // What happens in the terminal when a hacker comes in and you have a pet (about half the time). {pet}: its name,
 // {hk}: the hacker's.

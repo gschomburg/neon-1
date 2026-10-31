@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.04']);
+NEON_FILES.push(['engine/active.js', 'v14.05']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -481,7 +481,7 @@ function toggleArm(key) {
 }
 // A gear's chip glows on the belt while it's on (ENCORE) or armed.
 const gearOn = key => key === 'encore' ? !!st.run.encore : ARMS[key] ? ARMS[key].on() && holds(key) : false;
-const ENCORE_NO = new Set(['encore', 'ping', 'route', 'warp', 'tunnel', 'mesh', 'skip', 'worm', 'nuke', 'swap', 'stim', 'fake', 'allin', 'tithe', 'blast', 'rollup', 'split', 'freeze', 'slomo', 'anchor', 'pass']);
+const ENCORE_NO = new Set(['egg', 'encore', 'ping', 'route', 'warp', 'tunnel', 'mesh', 'skip', 'worm', 'nuke', 'swap', 'stim', 'fake', 'allin', 'tithe', 'blast', 'rollup', 'split', 'freeze', 'slomo', 'anchor', 'pass']);
 const encoreOk = key => !ENCORE_NO.has(key) && !key.startsWith('call');
 async function encoreAgain(key, tier, first) {
   const lv = st.lv;
@@ -529,6 +529,7 @@ function whyNotItem(stack) {
   if (st.busy) return 'wait a moment.';
   if (key === 'magnet') return 'no $ node to pull.';
   if (key === 'stim') return st.run.stim ? 'already stimmed.' : 'nothing to stim.';
+  if (key === 'egg') return 'already hatched one.';
   if (key === 'zeroday' && (st.corp.zd || 0) >= ZD_ALL) return 'already marked, all corp.';
   if (BOSS_GEAR[key] && st.lv && st.lv.n > 1) return BOSS_GEAR[key].why(st.lv);
   if (key === 'split' && st.lv && st.lv.split) return 'already split this layer.';
@@ -551,6 +552,7 @@ function canUse(stack) {
   if (key === 'skip') return onMap && !run.skipAim && skipTargets().length > 0;
   if (key === 'worm') return !!run.wormAim || (onMap && wormTargets().length > 0);   // armed: a tap cancels
   if (key === 'encore') return !st.transitioning;   // a tap turns it on or off
+  if (key === 'egg') return !st.transitioning && !st.mp && !(run.pet && run.pet.kind === 'chick');   // EGG: anywhere (not twice)
   if (key === 'swap') return swapOk();
   if (key === 'fake') return !!run.fakeAim || (!st.transitioning && run.mods.some(fakeable));   // armed: a tap cancels
   if (key === 'pass') return false;   // on the UPLINK screen
@@ -642,6 +644,7 @@ function gearFx(key, tier) {
   if (key === 'lotto') lottoScratch();
   if (key === 'magnet') magnetPull(lv, tier >= 1);
   if (key === 'stim') stimUp();
+  if (key === 'egg') hatchEgg();   // a pet (engine/pet.js)
   if (key === 'zeroday') zeroDay(lv, tier);
   if (key === 'skip') { run.skipAim = true; st.mapSel = null; Sound.whoosh(); setMsg('> skip: pick a node 2 rows ahead.', C.accent); }
   if (key === 'swap') swapHealth();

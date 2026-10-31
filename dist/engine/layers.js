@@ -1,6 +1,6 @@
 // NeoN+1 engine/layers.js: Layers: the grid, picking the real node, glyphs, the corp dressing a layer.
 'use strict';
-NEON_FILES.push(['engine/layers.js', 'v14.04']);
+NEON_FILES.push(['engine/layers.js', 'v14.05']);
 
 // ---------------- Layers ----------------
 function gridFor(n) {
@@ -109,5 +109,8 @@ function genLayer(ctx) {
   }
 
   tiles.sort((a, b) => a.cell - b.cell);
+  // TELL LIGHT (THE BOARD): is this layer's tell on? (a tell here: a position tell with somewhere to point, or a corp's own)
+  lv.hasTell = n > 1 && (!!(targets && targets.length) || !!ctx.dress);
+  lv.tellOn = lv.hasTell && (follow || !!ctx.alwaysFollow);
   return Object.assign(lv, { safe: tiles.findIndex(t => t.safe), safeCell: { col: safe.col, row: safe.row } });
 }

@@ -1,7 +1,79 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.04']);
+NEON_FILES.push(['engine/editor.js', 'v14.05']);
+
+// The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
+// The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
+// A loot roll as grantLoot would give it, with nothing taken (the same rolls in the same order): what you'd get with
+// what you have now (STASH, a full belt, the DISC).
+function lootPreview(r, tier) {
+  if (discDrops(r, 'loot') && itemRoom('disc', 0)) return 'the DISC (the quest)';
+  if (r() < (has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance)) {
+    const key = pickGearDrop(r), t = rollTier(r, ITEMS[key]);
+    if (isLoot(key) || itemRoom(key, t)) return `${ITEMS[key].name}${t ? ' ' + RARITY[itemView(key, t).rarity].label.toLowerCase() : ''} (${isLoot(key) ? 'loot' : 'gear'})`;
+  }
+  return Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier) + r() * earnCr(ECON.loot.roll)) + 'cr';
+}
+// A corp's layers as the game will make them (the seed): which have a $ node, and what each pays you, as you are now
+function lootLayers(n) {
+  const run = st.run, def = corpDef(n.corp), t = n.tier, sector = n.sector || 0, out = [];
+  const counts = def.counts ? def.counts(t) : Array.from({ length: CONFIG.corpLayers + (sectorEvent(sector) === 'grind' ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
+  let tell = n.type === 'final' && n.corp === 'omni' ? (sector === 0 ? run.finalTell : pickR(['corner', 'mark', 'mirror'], rngFor(run.seed, 'final', n.sector))) : def.tell;
+  if (tell === 'mirror' && t >= 2) tell = 'vmirror';
+  if (tell === 'corner' && t >= 2 && n.type !== 'final') tell = 'edge';
+  const mark = tell === 'mark' ? { level: clamp(t, 1, 3), glyph: clamp(t, 1, 3) === 1 ? pickR(MOTIFS, rngFor(run.seed, 'sigil', n.id)) : null } : null;
+  let prev = null;
+  counts.forEach((cnt, idx) => {
+    const boss = idx === counts.length - 1;
+    const lv = genLayer({ seed: run.seed, nodeId: n.id, idx, n: cnt, tell: boss && def.bossTell ? def.bossTell : tell, prevSafe: prev, mark, salt: 0, dress: null, tier: t, boss,
+      loot: !boss && !def.noLoot, tellStr: Math.max(0.55, CONFIG.tellStrength - CONFIG.sectorHeat * sector), alwaysFollow: !!def.alwaysFollow,
+      lootMore: n.mod === 'loaded' || sectorEvent(sector) === 'flush' });
+    prev = lv.safeCell;
+    const label = `  layer ${idx + 1}${boss ? ' (boss)' : ''}: `;
+    if (!lv.tiles.some(o => o.loaded)) return out.push(label + 'no $ node');
+    const lr = rngFor(run.seed, 'loot', n.id, idx), got = [lootPreview(lr, t)];
+    if (has('priority')) for (let i = 1; i < ECON.modx.priority; i++) got.push(lootPreview(lr, t));
+    out.push(label + '$ node: ' + got.join(' + '));
+  });
+  return out;
+}
+function lootReport() {
+  const run = st.run, id = st.mapSel || st.mapPeek || st.hoverNode || run.at, n = run.map[id];
+  if (!n) return 'no node: pick one on the map.';
+  const pct = x => (x * 100).toFixed(x < 0.1 ? 1 : 0) + '%';
+  const name = o => o.kind === 'gear' || o.kind === 'item' ? `${itemView(o.key, o.tier).name} ${RARITY[itemView(o.key, o.tier).rarity].label.toLowerCase()} x${o.n || 1} (gear)`
+    : o.kind === 'repair' ? 'REPAIR (service)' : `${modView(o.key, o.tier).name} ${RARITY[modView(o.key, o.tier).rarity].label.toLowerCase()} (mod)`;
+  const drops = () => {   // a loot roll: gear (by weight), else credits
+    const pool = Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && gearAllowed(k)), tot = pool.reduce((a, k) => a + gearWeight(k), 0);
+    const ch = has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance;
+    return [`  gear ${pct(ch)} of the time, else credits. the gear, by weight:`]
+      .concat(pool.sort((a, b) => gearWeight(b) - gearWeight(a)).map(k => `    ${ITEMS[k].name.padEnd(10)} ${pct(gearWeight(k) / tot)}`));
+  };
+  const out = [`NODE ${n.id}  ${(n.type || '').toUpperCase()}${n.corp ? '  ' + corpDef(n.corp).name : ''}  (sector ${(n.sector || 0) + 1})`, ''];
+  if (n.type === 'shop') {
+    const left = run.shops && run.shops[n.id];
+    for (let k = 0; k <= marketRerolls(); k++) {
+      out.push(k ? `reroll ${k}:` : 'opens with:');
+      for (const o of (left && k === left.rolls ? left.offers.filter(o => o.kind !== 'repair') : shopRoll(n, k))) out.push(`  ${name(o)}${o.sold ? '  SOLD' : ''}${o.free ? '  FREE' : ''}`);
+    }
+    out.push('', `(${marketRerolls()} reroll${marketRerolls() > 1 ? 's' : ''} here; RESTOCK on THE BOARD adds more)`);
+  } else if (n.type === 'cache') {
+    const quest = questMarket(n), extra = has('cachekey') ? tv('cachekey', ECON.modx.cachekey) : quest ? 1 : 0;
+    out.push(`loot: ${1 + extra} roll${extra ? 's' : ''}${run.caches && run.caches[n.id] ? ' (already looted)' : ''}`);
+    out.push('then one pick of:');
+    if (quest) for (const o of questCacheOptions(rngFor(run.seed, 'cache', n.id))) out.push('  ' + name(o));
+    else out.push(`  2 mods from the general / minor ones you've found; an exotic instead of one ${pct(has('cachekey') ? tv('cachekey', EXOTIC.cacheKeyChance) : EXOTIC.cacheChance)} of the time`);
+    out.push('', 'a loot roll:', ...drops());
+  } else if (n.type === 'corp' || n.type === 'final') {
+    if (n.corp && corpDef(n.corp).reward) out.push('its reward: its own (a corp of its own: see its code)');
+    else { out.push('boss reward, pick one:'); for (const o of rewardOptions(n)) out.push('  ' + name(o)); }
+    out.push('', 'its layers (off the seed), what a $ node pays you with what you have now:', ...lootLayers(n));
+    if (n.corp === 'omni') out.push('  (OMNI copies a corp you beat: its layers can come out different)');
+    out.push('  (a corp that changes its layer sizes as you play can differ later on)', '', 'a loot roll, in general:', ...drops());
+  } else out.push('nothing to loot here.');
+  return out.join('\n');
+}
 
 // ---------------- Palette editor bridge ----------------
 // tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
@@ -303,6 +375,10 @@ if (EDITOR) {
     qstep: m => { save.quests = save.quests || {}; if (m.step === 'none') delete save.quests.pops; else Object.assign(questOf('pops'), { step: m.step, seen: true, news: true }); persist(); },
     qscene: () => playScene('disc'),
     // the H3AV3N seed, as if you typed it: a QUEST run from the start (engine/heaven.js)
+    // The loot viewer (the user, 2026-10-31): what the node picked on the map (or the one you're on) could give. Read
+    // straight off the seed, nothing taken: a market's offers and every reroll, a cache's loot and picks, a corp's boss
+    // reward, and the loot-drop odds for $ nodes.
+    lootview: () => post({ type: 'loot-view', text: lootReport() }),
     h3av3n: async () => { g0dpStop(); st.g0d = null; st.g0dBar = null; endRun(); st.seed = 'H3AV3N'; st.practice = !save.beatG0D; startRun('H3AV3N', st.practice); await settle(); },
     qcall: () => queueCall('pops', QUEST_LINES.found),
     event: m => toSector(2, m.key),
@@ -398,12 +474,12 @@ if (EDITOR) {
       setMsg(`> test: ${MODS[key].name} stolen. it's at THE FENCE.`, C.danger);
     },
   };
-  const NEEDS_RUN = ['god', 'debug', 'free', 'credits', 'int', 'heal', 'steal', 'kit'];
+  const NEEDS_RUN = ['god', 'debug', 'free', 'credits', 'int', 'heal', 'steal', 'kit', 'lootview'];
   window.addEventListener('message', e => {
     const m = e.data;
     if (!m || m.to !== 'neon-game' || m.type !== 'test' || !TEST[m.act]) return;
     if (NEEDS_RUN.includes(m.act) && (!st.run || st.run.ended)) return post({ type: 'test-done', act: m.act, ok: false, error: 'no run: start one first' });
-    if (st.run) st.run.practice = true;
+    if (st.run && m.act !== 'lootview') st.run.practice = true;   // (the loot viewer only reads)
     queue = queue.then(letGo).then(() => TEST[m.act](m))
       .then(() => post({ type: 'test-done', act: m.act, ok: true }))
       .catch(err => post({ type: 'test-done', act: m.act, ok: false, error: String((err && err.message) || err) }));

@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v14.04']);
+NEON_FILES.push(['engine/boot.js', 'v14.05']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -24,7 +24,7 @@ function gameMusicState() {
   const run = st.run;
   let song = 'theme', level = 1, urgency = 0;
   // the intro, from the title card on: its own track (engine/intro.js INTRO_MUSIC)
-  if (st.boot && st.boot.music && SONGS[INTRO_MUSIC.song]) return { song: INTRO_MUSIC.song, level: INTRO_MUSIC.level, urgency: 0, low: false, tempo: 1, pitch: 1 };
+  if (st.boot && st.boot.music && SONGS[INTRO_MUSIC.song]) return introMusic(st.boot, performance.now());   // (engine/intro.js: by stage)
   if (st.mp && st.mp.state && st.mode === 'play' && st.lv && st.lv.spec) {
     const sp = st.lv.spec;
     return { song: trackFor(sp.corp), level: sp.boss ? 3 : clamp(sp.pos, 0, 2), urgency: 0, low: mpPlaying() && st.mp.state.hp[st.mp.me] <= 1, tempo: sp.boss ? 1.05 : 1 };

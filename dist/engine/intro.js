@@ -7,14 +7,22 @@
 //   4. A first run: NEWB or LEET, under your logo and name (tap them to shuffle). NEWB starts the training, LEET the title.
 // Screens change with the game's wipe. A tap skips ahead.
 'use strict';
-NEON_FILES.push(['engine/intro.js', 'v14.04']);
+NEON_FILES.push(['engine/intro.js', 'v14.05']);
 
 // For now (the user, 2026-10-26, while we work on it): every launch plays all of it, NEWB / LEET too.
 // Later: NEWB / LEET only the first time (save.bootSeen).
 const INTRO_ALWAYS = true;
 
 // The music from the title card on (the NEWB / LEET pick too): WATCHPOINT's ON CAMERA, at level 2 (the user's pick).
-const INTRO_MUSIC = { song: 'oncamera', level: 2 };
+// The intro's music (the user, 2026-10-31: TERMINAL VELOCITY, with some adjustments): it fades up on stage 1 (A) at
+// level 0 when the map appears; the NEON card is stage 2 (B) at level 2; NEWB / LEET drops back to about level 0 and
+// bounces a little between stages and levels (pick: a step every 'step' ms); then it powers down into the title.
+const INTRO_MUSIC = { song: 'terminalvelocity', net: { level: 0, section: 'A' }, card: { level: 2, section: 'B' }, step: 3600,
+  pick: [{ level: 0, section: 'A' }, { level: 1, section: 'A' }, { level: 0, section: 'B' }, { level: 1, section: 'C' }] };
+function introMusic(b, now) {
+  const t = now - b.t0, at = b.stage === 'pick' ? INTRO_MUSIC.pick[Math.floor(t / INTRO_MUSIC.step) % INTRO_MUSIC.pick.length] : INTRO_MUSIC[b.stage] || INTRO_MUSIC.card;
+  return { song: INTRO_MUSIC.song, level: at.level, section: at.section, urgency: 0, low: false, tempo: 1, pitch: 1 };
+}
 const INTRO_MAP = ART_MAP;   // data/art/worldmap.js (the neon editor's ART tab)
 // What the > lines flicker through before they settle.
 const INTRO_JARGON = [
@@ -121,7 +129,7 @@ async function introGo(stage) {
   await wipeOut(0);
   if (st.boot !== b) return;
   b.stage = stage; b.t0 = performance.now(); b.going = false; b.said = {};
-  if (stage === 'card') b.music = true;   // the music comes in with the card
+  if (stage === 'card') b.music = true;   // (the music: in from the map, the net stage)
   wipeIn();
 }
 // After the card: a first run picks NEWB or LEET; otherwise the title.
@@ -159,7 +167,7 @@ function introTap(h) {
   if (!b || b.going) return;
   if (h && h.kind === 'btn' && h.onTap) return h.onTap();
   const t = performance.now() - b.t0;
-  if (b.stage === 'login') { b.stage = 'net'; b.t0 = performance.now(); b.said = {}; Sound.modem(); return; }
+  if (b.stage === 'login') { b.stage = 'net'; b.t0 = performance.now(); b.said = {}; b.music = true; Sound.modem(); return; }   // (the music fades up with the map)
   if (b.stage === 'net') { if (t < introNetEnd(b)) { b.t0 = performance.now() - introNetEnd(b); b.skipped = true; } else introGo('card'); return; }
   if (b.stage === 'card') introAfterCard();
 }

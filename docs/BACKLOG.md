@@ -373,7 +373,7 @@ unlocked by REP, and some quests unlock REP.
   descriptions, detail boxes, the clash screen); the swap screen's row spacing; the spacing / copy on the pick
   screens; the header menu button right-aligned?; the palette warnings (40 palettes; MOCHI MOCHI is hard to read,
   the user will probably change it).
-- **TERMINAL VELOCITY as the intro track** (the user, meat notes 2026-10-31), for the screens before the title, with some
+- (built v14.05: INTRO_MUSIC in engine/intro.js) **TERMINAL VELOCITY as the intro track** (the user, meat notes 2026-10-31), for the screens before the title, with some
   adjustments: fade up at stage 1 level 0 when the map appears; the NEON screen goes to level 2 / stage 2; back down to
   ~level 0 for the NEWB / LEET screen, bouncing a little between stages and levels while there; then fade down (or
   whatever the transition is) into the next music.
@@ -385,27 +385,27 @@ unlocked by REP, and some quests unlock REP.
   - (fixed v14.04: mirrored across the board, the target lights up; SNIFFER was only its locked ICE) **UPSIDE's boss layer:** hard to tell where to tap (tried everywhere); SNIFFER may have broken an ICE and locked it.
   - (fixed v14.04) **A market bug:** buy a mod you own (an upgrade): the sold-out offer in the market turns to the next rarity's look
     (blue bought to purple: the sold-out one shows legendary). It should stay the color you bought.
-  - **mimic** (just the word in the notes: ask).
+  - **mimic** (the user, 2026-10-31: a name idea for a mod or gear; see "Parked mod ideas").
 - **From the meat notes (the user, 2026-10-31, misc):**
-  - **[b] cycles b / 0 / y** (the symbol). The same system could hide your companion, or switch between other pets.
-  - **Crew and rivals catch up to b0y:** they may need behavior updates for b0y's newer features, like text in their
+  - (built v14.05; companions / pets on the button: later) **[b] cycles b / 0 / y** (the symbol). The same system could hide your companion, or switch between other pets.
+  - (built v14.05: chat in their cursor tags, a v over the node they aim at) **Crew and rivals catch up to b0y:** they may need behavior updates for b0y's newer features, like text in their
     cursors instead of the terminal sometimes.
-  - **Being able to point at things** (crew / rivals, like b0y does).
+  - (built v14.05) **Being able to point at things** (crew / rivals, like b0y does).
   - (fixed 2026-10-31: centered on the whole screen while it holds, ~5 rows higher; glides back down for the rewards) **FIRST BREACH alignment, still:** PARCELNET pushes things too low: the whole screen up ~5 lines; then when the
     rewards show, bring CORP BREACHED back down maybe?
-  - **An editor loot viewer:** click a node on the map, then a button in the editor shows everything that corp's loot could
+  - (built v14.05: TESTING > loot here) **An editor loot viewer:** click a node on the map, then a button in the editor shows everything that corp's loot could
     be: loot nodes, what stores carry, rerolls.
-- **From the user's iPhone notes (meat notes 2026-10-30):** more companions (pets); **loot training** (the training run
+- (built v14.05: pets from STRAY, CATPHISH, the EGG; loot training; a PHISHING logo; CATPHISH is a feat and title. The words: name ideas for mods / gear, see "Parked mod ideas") **From the user's iPhone notes (meat notes 2026-10-30):** more companions (pets); **loot training** (the training run
   could show the LOOT bag); a **phishing logo**; PIER names: **CATPHISH**, "phush you? no, phush me"; and three to ask
   about: **Neon**, **Scam**, **Merch** (just the words in the notes).
-- **The seed decides the layers, always** (the user, 2026-10-30): resuming a run (closed the browser) stops rerolling the
+- (built v14.05) **The seed decides the layers, always** (the user, 2026-10-30): resuming a run (closed the browser) stops rerolling the
   layers (drop the run.resumes salt in genLayer and the fcst / skip rolls). Also put on the seed: which crew answers a
   plain CALL, OVERCLOCK's purges, the clock-runs-out tap (Math.random today). Rivals' moves stay random (real-time).
-- **Tells, intel** (the user, meat notes 2026-10-29; FIRST BREACH built v13.81 shows the tell the first time): open: some way to know if a tell is right (what that means: ask the user).
+- (built v14.05: TELL LIGHT on THE BOARD) **Tells, intel** (the user, meat notes 2026-10-29; FIRST BREACH built v13.81 shows the tell the first time): open: some way to know if a tell is right (what that means: ask the user).
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Cold Brew's boss reward
   is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is (the user 2026-10-29: "i still ran out of cash and couldn't get past the uplink"); it already scales by sector and BLACK ICE costs that many hits.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.
-- **COUPON -> COUPON CUTTER?** (the user, 2026-10-27): maybe rename MEGAMART's mod.
+- (done v14.05: PUNCH CARD, the user: "it's a free item") **COUPON -> COUPON CUTTER?** (the user, 2026-10-27): maybe rename MEGAMART's mod.
 - **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle.
 - **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open).
 - **Ads that do things** (later, the user 2026-10-28; the fake ads are done and great): an ad that sells you gear or a mod; a free trial of a corp's mod; AD BLOCKER.
@@ -423,6 +423,7 @@ unlocked by REP, and some quests unlock REP.
 - **Analytics:** the play stats are collected (greglytics); reading them (which corps beat people, what gets bought).
 
 ## Parked mod ideas (the user, 2026-10-26: "we have enough mods for now")
+- **Name ideas** (the user's notes, 2026-10-31: "brain dumps of words that might be good mods or gear"): MIMIC, NEON, SCAM, MERCH.
 Where they are, for when mods open up again:
 - **CLUSTER** (the user, 2026-10-26): a mod name to build something around; no idea for it yet.
 - **A random gear every corp** (the user, 2026-10-27): a mod that gives you a new random loot gear at each corp's start.

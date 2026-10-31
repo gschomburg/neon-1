@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v14.04']);
+NEON_FILES.push(['engine/tutorial.js', 'v14.05']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -320,6 +320,8 @@ async function tutScript(T) {
   // 8. out
   await until(onMap);
   await say('loop');
+  if (!(st.run.loot || []).length && ITEMS.sim) addLoot('sim', 0);   // (the user: show the LOOT bag in the training; something in it)
+  await say('lootbag', { target: { btn: 'loot' } });
   await say('sector');
   // the send-off: the game goes out to the lines (held), like the opening
   if (!T.auto || TUT.curtainEnd.includes(T.auto)) {

@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.04']);
+NEON_FILES.push(['engine/run.js', 'v14.05']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -47,6 +47,7 @@ async function startRun(seed, practice, opts = {}) {
   }
   if (opts.tutorial) tutorialRun(st.run);   // the training run (engine/tutorial.js)
   st.petS = null;   // (a new run: the pet starts fresh)
+  if (!opts.tutorial) startPet(st.run);   // STRAY / CATPHISH: a pet from the start (engine/pet.js)
   featRunStart(st.run);   // engine/feats.js: the run's starting credits; NEWB if you skipped the training
   // LOCKER (THE BOARD): the mod you put away when you last cashed out (not into practice runs or the training)
   if (save.locker && !practice && !opts.tutorial) {
@@ -289,7 +290,8 @@ async function enterLayer() {
   let tell = c.tell;
   if (boss && c.def.bossTell) tell = c.def.bossTell;
   const lv = genLayer({ seed: run.seed, nodeId: c.node.id, idx: c.idx, n, tell, prevSafe: c.prevSafe, loot: !boss && c.hasBoss && !c.def.noLoot && (!run.tutorial || c.idx === 1), lootSure: !!run.tutorial && c.idx === 1, mark: c.mark,
-    tellStr: c.tellStr, salt: run.resumes || 0, dress: c.hasBoss ? c.def.dress : null, tier: c.tier, boss,
+    tellStr: c.tellStr, salt: 0,   // (the seed decides the layers, always: a resume brings back the same ones; the user, 2026-10-30)
+    dress: c.hasBoss ? c.def.dress : null, tier: c.tier, boss,
     alwaysFollow: !!c.def.alwaysFollow || !!run.tutorial, carry: c.carry || null, lootMore: c.mod === 'loaded' || sectorEvent(c.sector) === 'flush' });   // FLUSH: more $ nodes
   lv.after = c.prevSafe;       // last layer's real node, for AFTERIMAGE
   if (c.mod === 'branded' && n > 2) {   // BRANDED: about a third of the ICE wear the sigil
@@ -516,7 +518,7 @@ function updateTimer(dt) {
     tm.ocNext -= 2;
     const opts = lv.tiles.filter(t => !t.safe && t.state === 'closed');
     if (opts.length > 0 && candidates().length > 1) {
-      lockTile(opts[Math.floor(Math.random() * opts.length)], C.mid, 'overclock');
+      lockTile(opts[Math.floor(rngFor(st.run.seed, 'overclock', st.corp ? st.corp.node.id : '', st.corp ? st.corp.idx : 0, lv.ocCount)() * opts.length)], C.mid, 'overclock');   // (on the seed)
       lv.ocCount++;
       lv.payCut = Math.min(0.9, lv.payCut + ECON.modx.overclockCut);
       setMsg(`> overclock: purged 1. pay -${Math.round(lv.payCut * 100)}%`, C.mid);
@@ -532,7 +534,7 @@ function updateTimer(dt) {
   if (tm.left <= 0) {
     tm.left = 0;
     const opts = candidates().length ? candidates() : st.lv.tiles.filter(t => t.state === 'closed');
-    const t = opts[Math.floor(Math.random() * opts.length)];
+    const t = opts[Math.floor(rngFor(st.run.seed, 'clockout', st.corp ? st.corp.node.id : '', st.corp ? st.corp.idx : 0, (st.lv.clockOuts = (st.lv.clockOuts || 0) + 1))() * opts.length)];   // (on the seed)
     setMsg('> clock ran out.', C.danger);
     if (t) pick(st.lv.tiles.indexOf(t));
   }
@@ -838,7 +840,7 @@ const START_NOTE = {
     return { text: `heads: ${lv.tiles.filter(t => touching(t, real)).length}` };
   },
   forecast(lv, c, run) {
-    const r = rngFor(run.seed, 'fcst', c.node.id, c.idx, run.resumes || 0), real = lv.tiles[lv.safe];
+    const r = rngFor(run.seed, 'fcst', c.node.id, c.idx), real = lv.tiles[lv.safe];
     const byRow = r() < 0.5, n = byRow ? lv.rows : lv.cols, at = byRow ? real.row : real.col;
     const pick = r() < 0.6 ? at : pickR(Array.from({ length: n }, (_, i) => i).filter(i => i !== at), r);
     return { text: `fcst: ${byRow ? ROW_NAMES(lv.rows, pick) : COL_NAMES(lv.cols, pick)}?` };
@@ -910,7 +912,7 @@ const END_FX = {
   async skipjack(perfect) {
     const run = st.run, c = st.corp;
     if (!(perfect && c.hasBoss && c.idx < c.counts.length &&
-      rngFor(run.seed, 'skip', c.node.id, c.idx, run.resumes || 0)() < tv('skipjack', [0.15, 0.25, 0.4]))) return false;
+      rngFor(run.seed, 'skip', c.node.id, c.idx)() < tv('skipjack', [0.15, 0.25, 0.4]))) return false;
     const boss = c.idx === c.counts.length - 1;
     if (boss && !SKIP_BOSS) return false;
     modFired('skipjack');   // as the offer opens

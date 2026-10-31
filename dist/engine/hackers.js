@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.04']);
+NEON_FILES.push(['engine/hackers.js', 'v14.05']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -107,9 +107,12 @@ function buildHkCard(ctx, now) {
 // The terminal (the user, 2026-10-29: hacker lines sat on top of the game's tips): a hacker's line goes away after a while
 // and the game's line comes back (scene.js); chat (taunts, clues, emotes) skips its turn when the game just said something.
 const HK_MSG = { chat: 3500, line: 6000, fresh: 3000 };
+const HK_TAG_MAX = 20;   // a chat line this short can go in their cursor's tag
 function hkSay(h, text, last = false, chat = false) {
   if (!text || (h.out && !last)) return;   // out is out: a late line (a timer, a hook) doesn't get through
   const now = performance.now();
+  // (the user, 2026-10-31: the crew and rivals catch up to b0y) a short chat line, half the time: in their cursor's tag
+  if (chat && st.lv && text.length <= HK_TAG_MAX && Math.random() < 0.5) { const s = hkS(st.lv, h); s.bubble = { text, until: now + HK_MSG.chat }; s.faceAt = now; return; }
   if (chat && !st.msgChat && st.msg && now - st.msgT < HK_MSG.fresh) return;
   const was = st.msgChat ? st.msgChat.was : { msg: st.msg, col: st.msgCol, ink: st.msgInk, lv: st.lv };
   const sty = hkStyle(h.id);
@@ -540,8 +543,15 @@ function buildHackers(ctx, lv, now) {
       continue;
     }
     bg(x, y, 3, sty.bg, 1); put(x, y, mark, sty.fg, 'fx', true);
-    const tag = hkName(h.id).toLowerCase().slice(0, 8);
-    bg(x, y + 1, tag.length, sty.bg, 0.8); put(x, y + 1, tag, sty.fg, 'fx');
+    // their tag: their name, or what they're saying (a chat line in the cursor, like b0y's); kept on the screen
+    const talking = s.bubble && now < s.bubble.until, tag = talking ? ' ' + s.bubble.text + ' ' : hkName(h.id).toLowerCase().slice(0, 8);
+    const tx = clamp(x, 0, Math.max(0, L.wc - tag.length));
+    bg(tx, y + 1, tag.length, sty.bg, talking ? 1 : 0.8); put(tx, y + 1, tag, sty.fg, 'fx', talking);
+    // pointing: while they aim at a node, a v of theirs bobs over it (where their tap is going)
+    if (s.aim && s.aim.t && s.aim.t.state === 'closed' && now < s.aim.at) {
+      const o = tileOrigin(s.aim.t);
+      bg(o.tx + 3, o.ty - 1, 1, sty.bg, 1); put(o.tx + 3, o.ty - 1, 'v', sty.fg, 'fx', true);
+    }
     if (s.faceAt && now - s.faceAt < 1600) {   // talking: the face bounces up above the cursor
       const f = (ART_FACES[h.id] || { art: [] }).art, hop = Math.round(Math.abs(Math.sin((now - s.faceAt) / 120)) * 1);
       f.forEach((l, k) => { bg(x - 1, y - 4 + k - hop, 5, sty.bg, 1); put(x - 1, y - 4 + k - hop, l, sty.fg, 'fx', true); });
@@ -576,7 +586,7 @@ const CALL_GEAR = {
     why: () => !hkCallable() ? 'only in a corp.' : 'nobody left to call.',
     use() {
       const free = HK_CREW.filter(k => !hkUp(k)), fresh = free.filter(k => !hkList().find(h => h.id === k));
-      const id = pickWeighted(fresh.length ? fresh : free, callWeight, Math.random);
+      const c = st.corp, id = pickWeighted(fresh.length ? fresh : free, callWeight, rngFor(st.run.seed, 'call', c ? c.node.id : '', c ? c.idx : 0, (st.run.calls = (st.run.calls || 0) + 1)));   // (who answers: on the seed)
       Sound.ui(); hkSpawn(id, 'call');
     },
   },

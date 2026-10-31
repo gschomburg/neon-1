@@ -3,15 +3,30 @@
 // and forth, sits now and then, sleeps when you've been idle, dances on the beat when the music plays, runs over when
 // it sniffs something out (COMPANION), and a tap pets it. Looks only: it never changes play.
 'use strict';
-NEON_FILES.push(['engine/pet.js', 'v14.04']);
+NEON_FILES.push(['engine/pet.js', 'v14.05']);
 
 // A pet for this run (when you take COMPANION, or anything else that gives one later): a cat or a dog, and a name.
-function petRoll(run, why = 'pet') {
+function petRoll(run, why = 'pet', kind = null) {
   if (run.pet) return run.pet;
   const r = rngFor(run.seed, why, run.depth || 0, (run.mods || []).length);
-  run.pet = { kind: r() < 0.5 ? 'cat' : 'dog', name: pickR(PET_NAMES, r) };
+  run.pet = { kind: kind || (r() < 0.5 ? 'cat' : 'dog'), name: pickR(PET_NAMES, r) };
   if (st.mode === 'play' || st.mode === 'map' || st.mode === 'panel') setTimeout(() => setMsg(`> ${run.pet.name} the ${run.pet.kind} follows you.`, C.accent), 400);
   return run.pet;
+}
+// A run's starting pet (STRAY: a bug; CATPHISH: a fish)
+function startPet(run) {
+  const kinds = [];
+  if (legacyLv('stray')) kinds.push('bug');
+  if (featDone('catphish')) kinds.push('fish');
+  if (kinds.length) petRoll(run, 'start', pickR(kinds, rngFor(run.seed, 'petkind')));
+}
+// The EGG (gear): it hatches. A chick for the run (one you had waves goodbye).
+function hatchEgg() {
+  const run = st.run, old = run.pet;
+  run.pet = null; st.petS = null;
+  petRoll(run, 'egg', 'chick');
+  Sound.buy(); flash(C.money, 0.12, 0.3);
+  setTimeout(() => setMsg(old ? `> it hatches! ${old.name.toLowerCase()} waves bye. hi ${run.pet.name}.` : `> it hatches! ${run.pet.name} the chick.`, C.money), 450);
 }
 const petOf = () => (st.run && !st.run.ended && st.run.pet) || null;
 // Mirrored (facing left)

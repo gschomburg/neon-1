@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.04']);
+NEON_FILES.push(['engine/scene.js', 'v14.05']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -224,7 +224,8 @@ function buildScene(now, collectHits, raw = false) {
     // A corp's button (CALL, BID, TITHE...) sits on the right; notes give it the room.
     const act = st.corp && st.corp.hasBoss && st.corp.def.action && !st.mp ? st.corp.def.action(st.lv) : null;
     const actLabel = act ? `[${act.label}]` : '';
-    const notes = act ? '' : (brief.length ? brief : live).map(nt => nt.text).join('  ');
+    const tl = legacyLv('tellscope') && st.lv && st.lv.hasTell && !st.mp && st.corp && st.corp.hasBoss ? (st.lv.tellOn ? 'TELL ON' : 'TELL OFF') : '';   // TELL LIGHT (THE BOARD)
+    const notes = act ? '' : [tl].concat((brief.length ? brief : live).map(nt => nt.text)).filter(Boolean).join('  ');
     if (act) {
       const ax = L.wc - actLabel.length, canAct = act.ok && !st.busy;
       put(ax, 7, actLabel, act.hot ? C.danger : canAct ? C.accent : C.dim, 'ui', true);

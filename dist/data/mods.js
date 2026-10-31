@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.04']);
+NEON_FILES.push(['data/mods.js', 'v14.05']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -196,6 +196,8 @@ const ITEMS = {
     tiers: [{}, { rarity: 'rare', desc: 'in a layer with a $ node: pull it, and every $ node in the rest of this corp.', tip: 'pull $, all corp.' }] },
   encore: { key: 'encore', name: 'ENCORE', price: 45, rarity: 'rare', desc: 'tap to turn it on: the next gear you use goes off twice. tap again: off.', tip: 'next gear: twice.',
     codex: 'one more time. tap it and it glows: the next gear you use goes off twice (two FRAGs, two PATCHes, two LOTTO tickets), and one ENCORE is spent then. tap it again to turn it off. gear that moves you, aims or clears a layer can\'t go twice: ENCORE stays on for the next one that can. a stack still only doubles.' },
+  egg:    { key: 'egg',    name: 'EGG',    price: 30, rarity: 'common', desc: 'use it: it hatches. a pet for the run.', tip: 'hatch a pet.',
+    codex: 'warm, and it twitches. use it anywhere and it hatches a chick that follows you for the rest of the run. a pet you already had waves goodbye.' },
   stim:   { key: 'stim',   name: 'STIM',   price: 40, rarity: 'rare', desc: 'in a corp: max integrity +50% for this corp, healed up to it. after it, you keep what fits.', tip: '+50% int, this corp.',
     codex: 'a combat stim. for the rest of this corp your max integrity is half again as big, and you heal up to it. when you leave the corp it wears off: max integrity goes back, and you keep what fits (2 left stays 2).' },
   zeroday: { key: 'zeroday', name: '0DAY', price: 50, rarity: 'rare', desc: 'in a layer: the real node is marked.', tip: 'mark the real node.',
@@ -278,7 +280,7 @@ const MODS = {
   // Corp kit corps (v09)
   basictraining: { name: 'BASIC TRAINING', short: 'BSC', kind: 'corp', corp: 'basic', rarity: 'legendary', icon: '[ ]]', anim: 'blink', tip: '1st layer: lock 1 ICE.', desc: 'the first layer of every corp starts with 1 ICE locked.' },
   autocomplete:  { name: 'AUTOCOMPLETE',   short: 'ACP', kind: 'corp', corp: 'seekr', rarity: 'legendary', icon: '_>_ ', anim: 'cycle', tip: '1st miss: strike 1 ICE.', desc: 'your first miss in each layer strikes out 1 more ICE.' },
-  coupon:        { name: 'COUPON',         short: 'CPN', kind: 'corp', corp: 'megamart', rarity: 'legendary', icon: '%$%$', anim: 'cycle', tip: 'markets: +1 offer, 1 free.', desc: 'black markets show one extra offer, and one offer is free.' },
+  coupon:        { name: 'PUNCH CARD',       short: 'CPN', kind: 'corp', corp: 'megamart', rarity: 'legendary', icon: '%$%$', anim: 'cycle', tip: 'markets: +1 offer, 1 free.', desc: 'black markets show one extra offer, and one offer is free.' },
   twinlock:      { name: 'TWIN LOCK',      short: 'TWN', kind: 'corp', corp: 'cloneworks', rarity: 'legendary', icon: '=:=:', anim: 'blink', tip: 'hit ICE locks its twin.', desc: 'ICE you hit also locks the ICE that looks most like it.',
     codex: 'ICE you hit also locks the closed ICE whose glyph looks most like it (the most matching characters). in CLONEWORKS that is its twin.' },
   runway:        { name: 'RUNWAY',         short: 'RWY', kind: 'corp', corp: 'haute', rarity: 'legendary', icon: '/|\\|', anim: 'wave', tip: '1st layer: real walks last.', desc: 'the first layer of every corp walks in one node at a time. the real node walks in last.' },

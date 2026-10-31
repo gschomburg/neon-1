@@ -637,10 +637,12 @@
 <section id="test" class="mode">
   <div id="xState">the game isn't ready yet</div>
   <div id="xLog"></div>
+  <pre id="xLoot" style="display:none; max-height:340px; overflow:auto; margin:6px 0; padding:8px; background:#0b0f12; border:1px solid #234; font-size:12px; white-space:pre"></pre>
   <h2>Run <small>every cheat makes the run practice (not scored)</small></h2>
   <div class="row">
     <button data-x="fresh">new test run</button>
     <button data-x="h3av3n" title="the H3AV3N seed, as if you typed it: a QUEST run from sector 1 (CERBERUS, then heaven)">play H3AV3N</button>
+    <button data-x="lootview" title="tap a node on the game's map first (or it's the one you're on): everything it could give, off the seed">loot here</button>
     <button data-x="god" class="tg">god</button>
     <button data-x="debug" class="tg">show real node</button>
     <button data-x="free" class="tg">free travel</button>
@@ -2108,6 +2110,7 @@
       $('#xAnoms').innerHTML = (m.anomalies || []).map(([k, n, tag, d]) => `<button data-x="anomaly" data-key="${esc(k)}" title="${esc(d)}">${esc(tag)} ${esc(n)}</button>`).join('') + '<button data-x="anomaly" data-key="">none</button>';
     }
     if (m.type === 'test-state') { state = m; drawState(); }
+    if (m.type === 'loot-view') { const p = $('#xLoot'); p.textContent = m.text; p.style.display = 'block'; }
     if (m.type === 'test-done') log(m.ok ? m.act + ': done' : m.act + ': ' + m.error, !m.ok);
     if (m.type === 'mod-set' && m.ok === false) log('give: ' + m.error, true);
   });

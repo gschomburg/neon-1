@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v14.04']);
+NEON_FILES.push(['engine/fishing.js', 'v14.05']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -243,6 +243,12 @@ function buildFish(ctx) {
   if (!f) return;
   if (ctx.collectHits) fishTick(now);
   const g = fishGeo(), W = L.wc;
+  // the logo (the user's notes: a phishing logo): over the stream when there's room, the fish swimming at it
+  if (g.surface - BOARD_Y >= 1) {
+    const sw = Math.floor(now / 400) % 2, logo = (sw ? '><> ' : ' ><>') + ' P H I S H I N G ' + (sw ? ' <><' : '<>< ');
+    const lx = Math.floor((W - logo.length) / 2);
+    put(lx, BOARD_Y, logo.slice(0, 5), C.accent, 'board'); put(lx + 5, BOARD_Y, 'P H I S H I N G', C.bright, 'board', true); put(lx + 20, BOARD_Y, logo.slice(20), C.accent, 'board');
+  }
   // the stream
   for (let i = 0; i <= FISH_LANES; i++) put(0, g.top + i * 2, '='.repeat(W), C.dim, 'board');
   const rl = f.reel, quiet = !!(rl || f.card);

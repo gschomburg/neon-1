@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v14.04']);
+NEON_FILES.push(['engine/menus.js', 'v14.05']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -326,7 +326,7 @@ async function resumeRun() {
   await wipeOut(0);
   st.transitioning = false;
   const run = d.run;
-  run.resumes = (run.resumes || 0) + 1;   // layers come back different
+  run.resumes = (run.resumes || 0) + 1;   // (counted for the stats; the layers come back the same: the seed decides)
   st.run = run; st.seed = run.seed; st.practice = run.practice;
   st.result = null;
   const p = d.pending;
