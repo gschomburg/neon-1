@@ -1,19 +1,23 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.05']);
+NEON_FILES.push(['engine/editor.js', 'v14.11']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
 // A loot roll as grantLoot would give it, with nothing taken (the same rolls in the same order): what you'd get with
 // what you have now (STASH, a full belt, the DISC).
 function lootPreview(r, tier) {
-  if (discDrops(r, 'loot') && itemRoom('disc', 0)) return 'the DISC (the quest)';
-  if (r() < (has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance)) {
-    const key = pickGearDrop(r), t = rollTier(r, ITEMS[key]);
-    if (isLoot(key) || itemRoom(key, t)) return `${ITEMS[key].name}${t ? ' ' + RARITY[itemView(key, t).rarity].label.toLowerCase() : ''} (${isLoot(key) ? 'loot' : 'gear'})`;
-  }
-  return Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier) + r() * earnCr(ECON.loot.roll)) + 'cr';
+  const g = lootRoll(r, tier);   // (engine/run.js: the same roll the game makes)
+  if (g.key === 'disc') return 'the DISC (the quest)';
+  if (g.key) return `${ITEMS[g.key].name}${g.tier ? ' ' + RARITY[itemView(g.key, g.tier).rarity].label.toLowerCase() : ''} (${isLoot(g.key) ? 'loot' : 'gear'})`;
+  return g.cr + 'cr';
+}
+// The loot items dropLoot would give (engine/run.js), nothing taken
+function lootPick(r, n, rare = 0) {
+  const out = [];
+  for (let i = 0; i < n; i++) { const k = pickLootItem(r, rare); rollTier(r, ITEMS[k]); out.push(ITEMS[k].name); }
+  return out;
 }
 // A corp's layers as the game will make them (the seed): which have a $ node, and what each pays you, as you are now
 function lootLayers(n) {
@@ -44,11 +48,13 @@ function lootReport() {
   const pct = x => (x * 100).toFixed(x < 0.1 ? 1 : 0) + '%';
   const name = o => o.kind === 'gear' || o.kind === 'item' ? `${itemView(o.key, o.tier).name} ${RARITY[itemView(o.key, o.tier).rarity].label.toLowerCase()} x${o.n || 1} (gear)`
     : o.kind === 'repair' ? 'REPAIR (service)' : `${modView(o.key, o.tier).name} ${RARITY[modView(o.key, o.tier).rarity].label.toLowerCase()} (mod)`;
-  const drops = () => {   // a loot roll: gear (by weight), else credits
-    const pool = Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && gearAllowed(k)), tot = pool.reduce((a, k) => a + gearWeight(k), 0);
-    const ch = has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance;
-    return [`  gear ${pct(ch)} of the time, else credits. the gear, by weight:`]
-      .concat(pool.sort((a, b) => gearWeight(b) - gearWeight(a)).map(k => `    ${ITEMS[k].name.padEnd(10)} ${pct(gearWeight(k) / tot)}`));
+  const drops = () => {   // a loot roll: an item (half loot for the bag, half gear), else credits
+    const ch = has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance, list = (pool, share) => {
+      const tot = pool.reduce((a, k) => a + gearWeight(k), 0);
+      return pool.sort((a, b) => gearWeight(b) - gearWeight(a)).map(k => `    ${ITEMS[k].name.padEnd(10)} ${pct(share * gearWeight(k) / tot)}`);
+    };
+    return [`  an item ${pct(ch)} of the time, else credits.`, `  loot for the bag (${pct(ch * ECON.loot.valueShare)}):`, ...list(lootPool(), ch * ECON.loot.valueShare),
+      `  gear (${pct(ch * (1 - ECON.loot.valueShare))}):`, ...list(Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && !ITEMS[k].value && gearAllowed(k)), ch * (1 - ECON.loot.valueShare))];
   };
   const out = [`NODE ${n.id}  ${(n.type || '').toUpperCase()}${n.corp ? '  ' + corpDef(n.corp).name : ''}  (sector ${(n.sector || 0) + 1})`, ''];
   if (n.type === 'shop') {
@@ -61,6 +67,8 @@ function lootReport() {
   } else if (n.type === 'cache') {
     const quest = questMarket(n), extra = has('cachekey') ? tv('cachekey', ECON.modx.cachekey) : quest ? 1 : 0;
     out.push(`loot: ${1 + extra} roll${extra ? 's' : ''}${run.caches && run.caches[n.id] ? ' (already looted)' : ''}`);
+    { const lr = rngFor(run.seed, 'cacheloot', n.id), [lo, hi] = ECON.loot.sector;   // (panels.js openCache: the same rolls)
+      out.push(lr() < ECON.loot.cache ? '  and a pile of loot: ' + lootPick(lr, lo + Math.floor(lr() * (hi - lo + 1)), 0).join(', ') : '  no loot pile in this one'); }
     out.push('then one pick of:');
     if (quest) for (const o of questCacheOptions(rngFor(run.seed, 'cache', n.id))) out.push('  ' + name(o));
     else out.push(`  2 mods from the general / minor ones you've found; an exotic instead of one ${pct(has('cachekey') ? tv('cachekey', EXOTIC.cacheKeyChance) : EXOTIC.cacheChance)} of the time`);
@@ -68,6 +76,8 @@ function lootReport() {
   } else if (n.type === 'corp' || n.type === 'final') {
     if (n.corp && corpDef(n.corp).reward) out.push('its reward: its own (a corp of its own: see its code)');
     else { out.push('boss reward, pick one:'); for (const o of rewardOptions(n)) out.push('  ' + name(o)); }
+    { const sec = n.type === 'final', r = rngFor(run.seed, 'bossloot', n.id), [lo, hi] = sec ? ECON.loot.sector : ECON.loot.boss;   // (run.js bossLoot: the same rolls)
+      out.push(`the boss drops loot: ${run.bossLoot && run.bossLoot[n.id] ? '(already dropped)' : lootPick(r, lo + Math.floor(r() * (hi - lo + 1)), sec ? 1 : 0).join(', ')}`); }
     out.push('', 'its layers (off the seed), what a $ node pays you with what you have now:', ...lootLayers(n));
     if (n.corp === 'omni') out.push('  (OMNI copies a corp you beat: its layers can come out different)');
     out.push('  (a corp that changes its layer sizes as you play can differ later on)', '', 'a loot roll, in general:', ...drops());
@@ -479,7 +489,8 @@ if (EDITOR) {
     const m = e.data;
     if (!m || m.to !== 'neon-game' || m.type !== 'test' || !TEST[m.act]) return;
     if (NEEDS_RUN.includes(m.act) && (!st.run || st.run.ended)) return post({ type: 'test-done', act: m.act, ok: false, error: 'no run: start one first' });
-    if (st.run && m.act !== 'lootview') st.run.practice = true;   // (the loot viewer only reads)
+    if (m.act === 'lootview') { try { TEST.lootview(m); } catch (err) { post({ type: 'test-done', act: m.act, ok: false, error: String((err && err.message) || err) }); } return; }   // the loot viewer only reads: right away, outside the queue (it can run every second), and the run stays scored
+    if (st.run) st.run.practice = true;
     queue = queue.then(letGo).then(() => TEST[m.act](m))
       .then(() => post({ type: 'test-done', act: m.act, ok: true }))
       .catch(err => post({ type: 'test-done', act: m.act, ok: false, error: String((err && err.message) || err) }));

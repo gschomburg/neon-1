@@ -1,6 +1,30 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v14.05']);
+NEON_FILES.push(['engine/render.js', 'v14.11']);
+
+// ---------------- Popup looks (the user, 2026-10-31) ----------------
+// Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
+// type: add it to POPUP_LOOK (and to the table in docs/SPEC.md, "Popup looks").
+//   quest: a dark purple: the palette's REP color, POPUP_TINT of the way into its background (it follows the palette)
+//   plain: the palette's background color (not black: brown on PARCELNET, pink on MOCHI...)
+// (The training's POPS popup and the ads draw their own styles; the ads still fill through here, plain.)
+const POPUP_LOOK = { call: 'quest', feat: 'quest', scene: 'quest', hacker: 'plain', event: 'plain', ad: 'plain' };
+const POPUP_TINT = 0.16;
+const HEX6 = /^#[0-9a-f]{6}$/i;
+function popupCol(kind) {
+  if ((POPUP_LOOK[kind] || 'plain') !== 'quest' || !HEX6.test(C.bg) || !HEX6.test(C.rep)) return C.bg;
+  return moldMix(C.bg, C.rep, POPUP_TINT);
+}
+// A popup's box (cells): solid, with half-row overlaps so no hairlines show between the rows. A framed box (border, the
+// default) keeps its frame on the palette's background and its look inside it (the user, 2026-10-31); border: false
+// fills it all (the quest scenes: the whole screen, no frame).
+function popupBg(bg, kind, x0, y0, w, h, border = true) {
+  const fill = (x, y, ww, hh, col) => { for (let r = 0; r < hh; r++) { bg(x, y + r, ww, col, 1); if (r < hh - 1) bg(x, y + r + 0.5, ww, col, 1); } };
+  const col = popupCol(kind);
+  if (!border || col === C.bg || w < 3 || h < 3) return fill(x0, y0, w, h, col);
+  fill(x0, y0, w, h, C.bg);
+  fill(x0 + 1, y0 + 1, w - 2, h - 2, col);
+}
 
 // ---------------- Render loop ----------------
 let last = performance.now(), lastRunSave = 0;

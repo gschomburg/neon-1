@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.05']);
+NEON_FILES.push(['engine/active.js', 'v14.11']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -352,11 +352,27 @@ function magnetPull(lv, corpLong) {
 }
 // STIM: max integrity +50% for this corp, healed to it. stimDown takes the extra back (you keep what fits).
 function stimUp() {
-  const run = st.run, add = Math.max(1, Math.round(run.maxInt / 2));
+  const run = st.run;
+  if (zombie()) {   // ZOMBIE (the user's check, 2026-10-31): nothing to pump up, so it stops the rot, this corp
+    run.stim = { node: st.corp.node.id, add: 0, zombie: true };
+    Sound.shield(); flash(C.accent, 0.15, 0.35);
+    return setMsg('> stim: no rot, this corp.', C.accent);
+  }
+  const add = Math.max(1, Math.round(run.maxInt / 2));
   run.stim = { node: st.corp.node.id, add };
   run.maxInt += add; run.integrity = run.maxInt;
   Sound.shield(); flash(C.accent, 0.15, 0.35);
   setMsg(`> stim: +${add} max int, this corp.`, C.accent);
+}
+// EXORCIST (the user's notes, 2026-10-30; built 2026-10-31): the rival here is out (epic: out of the run, run.banned)
+function exorcise(tier) {
+  const run = st.run, h = hkList().find(o => o.side === 'bad' && !o.out);
+  if (!h) return;
+  h.exorcised = true;
+  if (tier >= 1) (run.banned = run.banned || []).push(h.id);
+  hkOut(h, tier >= 1 ? 'n0! not for good!' : 'fine. FINE. i\'m out.');
+  Sound.shatter(); flash(C.accent, 0.25, 0.5); shake(6, 0.3);
+  setTimeout(() => setMsg(`> exorcist: ${hkName(h.id).toLowerCase()} is out${tier >= 1 ? ', for good' : ''}.`, C.accent), 900);
 }
 function stimDown() {
   const run = st.run;
@@ -405,9 +421,15 @@ function skipTargets() {
   return Object.values(run.map).filter(n => n.step === cur.step + 2 && n.step < top && (n.sector || 0) === run.sector && !run.visited.includes(n.id));
 }
 // SWAP: integrity and missing integrity trade places. Not at full (that's 0), not at exactly half (nothing changes).
-const swapOk = () => { const run = st.run; return (st.mode === 'map' || st.mode === 'play') && !st.busy && !st.transitioning && !zombie() && !bloodMoney() && run.integrity < run.maxInt && run.integrity * 2 !== run.maxInt; };
+const swapOk = () => { const run = st.run; if (!((st.mode === 'map' || st.mode === 'play') && !st.busy && !st.transitioning && !bloodMoney())) return false;
+  return zombie() ? (run.rot || 0) * 2 > ROT.max : run.integrity < run.maxInt && run.integrity * 2 !== run.maxInt; };   // (ZOMBIE: only when it helps)
 function swapHealth() {
   const run = st.run, was = run.integrity;
+  if (zombie()) {   // ZOMBIE (the user's check): your rot flips, 120 of 150 becomes 30
+    const r0 = run.rot || 0; run.rot = ROT.max - r0;
+    Sound.shield(); flash(C.accent, 0.2, 0.4); shake(3);
+    return setMsg(`> swap: rot ${r0} -> ${run.rot}.`, C.accent);
+  }
   run.integrity = run.maxInt - was;
   const up = run.integrity > was;
   Sound.shield(); flash(up ? C.accent : C.danger, 0.2, 0.4); shake(up ? 3 : 6);
@@ -481,7 +503,7 @@ function toggleArm(key) {
 }
 // A gear's chip glows on the belt while it's on (ENCORE) or armed.
 const gearOn = key => key === 'encore' ? !!st.run.encore : ARMS[key] ? ARMS[key].on() && holds(key) : false;
-const ENCORE_NO = new Set(['egg', 'encore', 'ping', 'route', 'warp', 'tunnel', 'mesh', 'skip', 'worm', 'nuke', 'swap', 'stim', 'fake', 'allin', 'tithe', 'blast', 'rollup', 'split', 'freeze', 'slomo', 'anchor', 'pass']);
+const ENCORE_NO = new Set(['exorcist', 'egg', 'encore', 'ping', 'route', 'warp', 'tunnel', 'mesh', 'skip', 'worm', 'nuke', 'swap', 'stim', 'fake', 'allin', 'tithe', 'blast', 'rollup', 'split', 'freeze', 'slomo', 'anchor', 'pass']);
 const encoreOk = key => !ENCORE_NO.has(key) && !key.startsWith('call');
 async function encoreAgain(key, tier, first) {
   const lv = st.lv;
@@ -516,7 +538,7 @@ function whyNotItem(stack) {
   if (key === 'patch') return zombie() ? 'no rot to fix.' : 'integrity is full.';
   if (key === 'route' || key === 'warp' || key === 'tunnel' || key === 'mesh') return st.mode !== 'map' ? 'only on the map.' : st.run.warpAim || st.run.tunnel || st.run.mesh === st.run.sector ? 'already open: pick a node.' : 'nowhere to go.';
   if (key === 'pass') return 'use it on the UPLINK screen.';
-  if (key === 'swap') return zombie() || bloodMoney() ? 'nothing to swap.' : st.run.integrity >= st.run.maxInt ? 'that will kill you.' : st.run.integrity * 2 === st.run.maxInt ? 'half and half: nothing would change.' : 'wait a moment.';
+  if (key === 'swap') return bloodMoney() ? 'nothing to swap.' : zombie() ? 'not much rot yet: it would make it worse.' : st.run.integrity >= st.run.maxInt ? 'that will kill you.' : st.run.integrity * 2 === st.run.maxInt ? 'half and half: nothing would change.' : 'wait a moment.';
   if (key === 'fake') return 'no mod can go any higher.';
   if (key === 'skip') return st.mode !== 'map' ? 'only on the map.' : st.run.skipAim ? 'already open: pick a node.' : 'the boss is in the way.';
   if (key === 'worm') return st.mode !== 'map' ? 'only on the map.' : 'no corp ahead to send it to.';
@@ -528,8 +550,9 @@ function whyNotItem(stack) {
   if (key === 'nuke' && st.run.tutorial) return 'not in the training.';
   if (st.busy) return 'wait a moment.';
   if (key === 'magnet') return 'no $ node to pull.';
-  if (key === 'stim') return st.run.stim ? 'already stimmed.' : 'nothing to stim.';
+  if (key === 'stim') return st.run.stim ? 'already stimmed.' : bloodMoney() ? 'blood money: nothing to stim.' : 'nothing to stim.';
   if (key === 'egg') return 'already hatched one.';
+  if (key === 'exorcist') return 'no rival here to kick out.';
   if (key === 'zeroday' && (st.corp.zd || 0) >= ZD_ALL) return 'already marked, all corp.';
   if (BOSS_GEAR[key] && st.lv && st.lv.n > 1) return BOSS_GEAR[key].why(st.lv);
   if (key === 'split' && st.lv && st.lv.split) return 'already split this layer.';
@@ -568,7 +591,8 @@ function canUse(stack) {
   if (key === 'ping') return ARMS.ping.on() || (layerGear && closed.length > 1);   // armed: a tap cancels
   if (key === 'magnet') return layerGear && closed.some(t => t.loaded);
   if (key === 'zeroday') return layerGear && st.lv.tiles[st.lv.safe].state === 'closed' && (st.corp.zd || 0) < ZD_ALL;
-  if (key === 'stim') return layerGear && !run.stim && !zombie() && !bloodMoney();
+  if (key === 'stim') return layerGear && !run.stim && !bloodMoney();
+  if (key === 'exorcist') return !!inLayer && !!st.corp && hkList().some(h => h.side === 'bad' && !h.out);   // EXORCIST: a rival here   // (ZOMBIE: no rot this corp: stimUp)
   if (key === 'nuke') return layerGear && st.corp.node.type === 'corp' && !run.tutorial && !st.mp;
   if (key === 'rewind') return layerGear && !st.corp.frozen && (tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer);
   if (BOSS_GEAR[key]) return layerGear && BOSS_GEAR[key].ok(st.lv);
@@ -645,6 +669,7 @@ function gearFx(key, tier) {
   if (key === 'magnet') magnetPull(lv, tier >= 1);
   if (key === 'stim') stimUp();
   if (key === 'egg') hatchEgg();   // a pet (engine/pet.js)
+  if (key === 'exorcist') exorcise(tier);
   if (key === 'zeroday') zeroDay(lv, tier);
   if (key === 'skip') { run.skipAim = true; st.mapSel = null; Sound.whoosh(); setMsg('> skip: pick a node 2 rows ahead.', C.accent); }
   if (key === 'swap') swapHealth();

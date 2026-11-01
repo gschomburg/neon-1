@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v14.05']);
+NEON_FILES.push(['engine/mods.js', 'v14.11']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -36,7 +36,7 @@ const STAGES = {
 const MOD_STAGE = {
   sniffer: 'start', corners: 'start', sigscan: 'start', afterimage: 'start', basictraining: 'start', runway: 'start',
   forecast: 'start', spellbound: 'start', seedreader: 'start', photographic: 'start',
-  prism: 'hit', fourinarow: 'end',
+  prism: 'hit', fourinarow: 'end', pickpocket: 'end',
   queuenumber: 'hit', turing: 'hit',
   handshake: 'start', callerid: 'hit', snipe: 'start', omerta: 'block', letitride: 'end', chancecard: 'start',
   icebox: 'block', greenwave: 'block', leadlining: 'block', express: 'end', scoop: 'start', cctv: 'start', compost: 'hit', foghorn: 'hit',

@@ -1,6 +1,6 @@
 // NeoN+1 engine/screen.js: The canvas, layout, and the game state (st).
 'use strict';
-NEON_FILES.push(['engine/screen.js', 'v14.05']);
+NEON_FILES.push(['engine/screen.js', 'v14.11']);
 
 // ---------------- Canvas & layout ----------------
 const cv = document.getElementById('screen');
@@ -8,9 +8,24 @@ const g = cv.getContext('2d');
 let W = 0, H = 0, dpr = 1;
 let L = null;
 
+// The phone's safe area (the notch, the clock, the home bar): the page draws edge to edge (viewport-fit=cover), so as a
+// home-screen app (the user, 2026-10-31: no Safari bars) the game keeps its rows inside these margins. Read from CSS
+// env(safe-area-inset-*) through a hidden probe; all 0 on a desktop.
+let SAFE = { t: 0, r: 0, b: 0, l: 0 };
+function readSafe() {
+  let p = document.getElementById('safeProbe');
+  if (!p) {
+    p = document.createElement('div'); p.id = 'safeProbe';
+    p.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+    document.body.appendChild(p);
+  }
+  const cs = getComputedStyle(p), n = v => parseFloat(v) || 0;
+  SAFE = { t: n(cs.paddingTop), r: n(cs.paddingRight), b: n(cs.paddingBottom), l: n(cs.paddingLeft) };
+}
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 3);
   W = window.innerWidth; H = window.innerHeight;
+  readSafe();
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   computeLayout();
 }
@@ -24,15 +39,16 @@ function computeLayout() {
   g.font = `400 100px ${FONT}`;
   const ratio = (g.measureText('M').width / 100) || 0.6;
   const gutter = 12;
-  let fs = Math.min((W - 2 * gutter) / (wc * ratio), (H - 2 * gutter) / (hc * LINE_H));
+  const UW = W - SAFE.l - SAFE.r, UH = H - SAFE.t - SAFE.b;   // the usable area (inside the notch and the home bar)
+  let fs = Math.min((UW - 2 * gutter) / (wc * ratio), (UH - 2 * gutter) / (hc * LINE_H));
   fs = Math.max(7, Math.min(26, fs));
   const cw = fs * ratio, chh = fs * LINE_H;
   L = {
     fs, cw, chh, wc, hc, gw, gh,
     gx: Math.floor((wc - gw) / 2),
     cols: gd.cols, rows: gd.rows,
-    ox: Math.round((W - wc * cw) / 2),
-    oy: Math.round((H - hc * chh) / 2),
+    ox: Math.round(SAFE.l + (UW - wc * cw) / 2),
+    oy: Math.round(SAFE.t + (UH - hc * chh) / 2),
   };
 }
 const pxX = cx => L.ox + cx * L.cw + L.cw / 2;

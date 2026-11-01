@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v14.05']);
+NEON_FILES.push(['data/economy.js', 'v14.11']);
 
 const ECON = {
   // ---- Units
@@ -33,7 +33,11 @@ const ECON = {
     base: 1.2,   // earn: loot: base (a loot node you hit (or a data cache roll) pays this...)
     perTier: 0.8,   // earn: loot: per corp level (...plus this for each corp level (caches count as level 2)...)
     roll: 1.2,   // earn: loot: random extra (...plus a random amount up to this)
-    itemChance: 0.4,   // %: loot: gear instead (the chance a loot roll gives gear instead of credits (STASH raises it))
+    itemChance: 0.65,   // %: loot: an item instead (the chance a loot roll gives an item instead of credits (STASH raises it))
+    valueShare: 0.5,   // %: loot: a loot item (of those items, the share that's loot for the bag (DUDS ... WALLET), not gear)
+    boss: [1, 2],   // count list: loot: a corp boss drops (loot items into the bag: fewest, most)
+    sector: [2, 3],   // count list: loot: a sector boss drops (loot items into the bag, a little rarer: fewest, most)
+    cache: 0.5,   // %: loot: a cache drops loot (the chance a data cache also drops loot items, as many as a sector boss)
   },
   lotto: {
     lo: 0.5,   // earn: LOTTO: least (a LOTTO pays a random amount from this...)
@@ -87,7 +91,9 @@ const ECON = {
     quantum: 0.75,   // x: QUANTUM (every layer has two real nodes, but pays only this much)
     overclockCut: 0.2,   // %: OVERCLOCK (each ICE the late clock purges cuts that layer's pay by this)
     priority: 2,   // count: PRIORITY (a loot node delivers its loot this many times)
-    stash: [0.4, 0.6, 1],   // % list: STASH (the chance a loot roll is gear, by rarity step (the first is the normal chance))
+    pickpocket: [0.15, 0.25, 0.35],   // % list: PICKPOCKET (the chance each layer you clear drops a loot item, by rarity step)
+    pickpocketRare: [0, 1, 2],   // x list: PICKPOCKET: rarer (how much it leans to the rarer loot, by rarity step)
+    stash: [0.75, 0.88, 1],   // % list: STASH (the chance a loot roll is gear, by rarity step (the first is the normal chance))
     cachekey: [1, 2, 3],   // count list: CACHEKEY (extra loot rolls in every data cache, by rarity step)
   },
   // ---- Earning: selling gear

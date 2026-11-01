@@ -72,15 +72,19 @@ unlocked by REP, and some quests unlock REP.
     CHECKPOINT would be a weaker, one-shot cousin that sends you back to the start of the corp.
 - **Gear and loot ideas (the user's iPhone notes, meat notes 2026-10-30):**
   - **Gear names to use:** CHMOD, POKE, JUMP (no effects yet).
-  - **EXORCIST** (gear): kicks a rival hacker out of the layer; a higher rarity kicks them out of the run for good.
-  - **DELUX** (gear): gives you a random set of mods.
-  - **Item stacks become health** (a mod).
-  - **A mod that gives you more loot instead of money.**
-  - **Defeating a corp can give loot freely** (boss loot: Claude's proposal is waiting, 1-2 loot a corp boss, 2-3 a
-    sector boss, as CORP BREACHED builds; the pile animation stacks them).
-  - **Buy loot at a market?** And a **loot dealer** that uses the pound sign (the [£] bag button, v13.86, is a start).
-  - **Crafting: a shop with a grinder.** Drop mods, loot and gear in: you get parts (components, **COMPS**). Spend
-    COMPS to craft gear, mods, maybe exotics.
+  - **THE WORKSHOP (crafting)** (the user, 2026-10-31, talking it through):
+    - **A node on the map.** It may unlock through a safehouse: the safehouse gets a workshop added to it (or a
+      safehouse becomes one).
+    - **Shred** what you have (mods, gear, loot): you get components (**COMPS**).
+    - **Build** new gear or mods with COMPS.
+    - **Upgrade** a mod you have with COMPS.
+    - Or just **sell** the COMPS (so they're a run thing, worth credits).
+    - Open: how many COMPS each rarity gives; a set menu to build from, a rolled one (like a market), or pick anything;
+      whether exotics can be built (Claude: only from a blueprint you find, so they stay rare).
+    - **Decided (the user, 2026-10-31):** it lives in the **safehouse** (a THE BOARD buy, WORKBENCH: every safehouse
+      gets one; heal, then the bench), not a node of its own. **COMPS are for the run:** a stack in your LOOT bag (sell
+      what is left at any market). Claude's numbers to start: shred scrap 1 / common 2 / rare 4 / epic 8 / legendary 16
+      (loot by its worth); a mod step up 6 / 12 / 24; build: 3 rolled offers a visit, priced in COMPS.
 - **Scrap mods:** maybe 2 other worthless ones.
 - **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first, v13.49).
   Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), NUKE (wipe a corp off the map), DECODER
@@ -170,29 +174,6 @@ unlocked by REP, and some quests unlock REP.
   - **G0D's tracks** (the user, 2026-10-29): the G0D fights need their own music, and it has to kick ass: the maze, the
     mold-armor fight, the part 2 on the map / the win screen, the last stand. (docs/QUESTS.md, G0D's fights.)
 
-- **H3AV3N seed playtest (the user, meat notes 2026-10-31, after v14.02):**
-  - (done v13.99: sector 1's market stock: BUFFER, patches, SHOE, FRAG, FWALL, WARP, CALL, STIM, 0DAY, SWAP.)
-  - (built v14.03: the H3AV3N notes below marked built) **Music:** the "plays for" id for the G0D fight should be GODFIGHT, not just g0d.
-  - (built v14.03) **G0D's voice:** the user still isn't hearing any of the G0D voice effects (check they play).
-  - (built v14.03) **After the last stand:** tiny bits of the mod and gear tray still show (the black box covering them as they
-    transition out?). Once that's covered, blank it all out.
-  - **Sector 1:**
-    - (built v14.03) The data cache needs a better item: maybe the extra items you get with the cache key mod, something legendary.
-    - (built v14.03) CERBERUS's description is too long for one line (goes off screen).
-    - (built v14.03) The layout: the cache shouldn't be the only thing right after the market; maybe swap it over to the right side.
-    - (built v14.03) Maybe a purple WARP here, maybe at the cache: go up to the cache, then warp down to a lower part of the map and
-      clear more corps.
-    - (built v14.03) No TUMBLR locks in sector 1.
-    - (built v14.03) Only one SEEKR: remove the higher-up one.
-    - (built v14.03) The UPLINK is cool; it could use some mold growing in and then falling off, like in the sector.
-  - **Sector 2:**
-    - (built v14.03) The mold doesn't seem clickable.
-    - (built v14.03) b0y holding it back is OK, but could be better.
-    - DECIBEL is a good corp here (its tell is where your cursor goes). (a note; nothing to change)
-    - (built v14.03) **Maze loot could be better:** maybe a blue BUFFER in case you don't have anything yet; maybe some gear; or a new
-      mod for the maze reward (once you beat the game, it opens up as a random drop).
-    - (built v14.03) **Market loot could be better:** maybe an exotic in the reroll (BLOOD MONEY?).
-    - (built v14.03) Maybe a b0y line if you tap him in the store.
 ### 4. The end game (its own section, the user 2026-10-30; details: docs/ENDGAME.md)
 - **The ending:** cutscene, credits + thanks for playing, "there is more to explore", then the reward as a free REP
   unlock.
@@ -204,10 +185,6 @@ unlocked by REP, and some quests unlock REP.
 - **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
 - **More rewards?** A mod you always start with (meat notes 2026-10-29).
 
-- (built v14.03 as a placeholder: H3AV3N CLEARED, 150 / 50 REP, the four heaven feats) **The ending's rewards screen** (the user, meat notes 2026-10-31): somewhere in the ending, a rewards screen: your
-  logo, how you did, the REP reward for doing it (what you unlocked). No loot or mod list. Then maybe the quest feat-type
-  popup telling you about the seed unlocks (probably just the last feat unlock window). Feats: beating G0D, and a few
-  others for heaven: a perfect run, getting lost in the maze, etc.
 - **CODEX** (the track) might be good for the credits or the cutscenes (meat notes 2026-10-31).
 
 ### 5. The map and run structure
@@ -241,10 +218,6 @@ unlocked by REP, and some quests unlock REP.
       Keep the random weights (maybe not pounds) and the BIGGEST YET stuff.
 - **Different markets** (the user, meat notes 2026-10-28): black market / grey market / open market.
 - **MESH at the last row (built v13.75)**: it links the nodes on either side of you there; they still go to the boss.
-- (built v14.03, the aimed WARP) **WARP anywhere** (the user, meat notes 2026-10-31): WARP can go anywhere except places you've already explored. Warp
-  into a pocket and you can leave by any of the upper links.
-- (built v14.04: market, PIER, an untaken cache; rollovers on visited nodes) **Going back into nodes** (meat notes 2026-10-31): at the store, LEAVE, then be able to go back in; maybe the cache and
-  phishing too. All the nodes you've visited could show a rollover to remind you what they were.
 - More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
 - Moving backwards / the frontier (pick any node linked to one you've visited), or allow clearing the whole map.
   An "open map" mod (the aimed WARP is built: epic WARP, v13.52).
@@ -304,6 +277,11 @@ unlocked by REP, and some quests unlock REP.
 
 ## Low priority
 
+- **An AI crew member that plays the game** (the user, meat notes 2026-10-31): it learns as you beat corps: beat a corp
+  10 times and the AI knows its tell (it gets it right); beat all of them 10 times and you can let it run. It doesn't
+  use markets, but takes what lets it go deeper faster: SKIP, WARP, money boosters to get through the UPLINKs. You
+  bring it in with an exotic CALL item. Names: ZEUS? APOLLO?
+
 ### Enemy and ally hackers (low: the user 2026-10-29, "we don't need any more"; the lore was great) (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
 - **Still open:** special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
   COMPANION's pet; balance from play.
@@ -361,7 +339,6 @@ unlocked by REP, and some quests unlock REP.
   `docs/art/logotype_round4.png`, `logotype_n1.png`, `logotype_round5.png`, text in NAMES.md; the title switching
   between the face and the lettering). Your profile shuffling as you log in. The maps more animated (the user,
   2026-10-27): the white path lines light up, or each continent lights up with brighter white borders.
-  The music going from the NEON screen to the title needs a different transition (the user, meat notes 2026-10-29).
 - **Sector event cards:** the user's art for the 14 card pictures (5 x 3 placeholders in data/events.js).
 - **COPY PASS (text):** a terminology pass on the whole game, to lock the terms down. Settled so far (the user, 2026-10-29):
   **going deeper** = moving on through the sectors (the UPLINK says it; push on, next sector... say it this way). The INFO page, the training (POPS's lines), the mod and gear descriptions, and the ~180
@@ -373,39 +350,12 @@ unlocked by REP, and some quests unlock REP.
   descriptions, detail boxes, the clash screen); the swap screen's row spacing; the spacing / copy on the pick
   screens; the header menu button right-aligned?; the palette warnings (40 palettes; MOCHI MOCHI is hard to read,
   the user will probably change it).
-- (built v14.05: INTRO_MUSIC in engine/intro.js) **TERMINAL VELOCITY as the intro track** (the user, meat notes 2026-10-31), for the screens before the title, with some
-  adjustments: fade up at stage 1 level 0 when the map appears; the NEON screen goes to level 2 / stage 2; back down to
-  ~level 0 for the NEWB / LEET screen, bouncing a little between stages and levels while there; then fade down (or
-  whatever the transition is) into the next music.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
-- **From the meat notes (the user, 2026-10-30):**
-  - (fixed 2026-10-31: FIRST BREACH centers on the whole screen) **FIRST BREACH with a long tell** (SYNAPSE): the copy pushes SEE THE CORE off the bottom of the screen: make room for it.
-  - (fixed v14.04: mirrored across the board, the target lights up; SNIFFER was only its locked ICE) **UPSIDE's boss layer:** hard to tell where to tap (tried everywhere); SNIFFER may have broken an ICE and locked it.
-  - (fixed v14.04) **A market bug:** buy a mod you own (an upgrade): the sold-out offer in the market turns to the next rarity's look
-    (blue bought to purple: the sold-out one shows legendary). It should stay the color you bought.
-  - **mimic** (the user, 2026-10-31: a name idea for a mod or gear; see "Parked mod ideas").
-- **From the meat notes (the user, 2026-10-31, misc):**
-  - (built v14.05; companions / pets on the button: later) **[b] cycles b / 0 / y** (the symbol). The same system could hide your companion, or switch between other pets.
-  - (built v14.05: chat in their cursor tags, a v over the node they aim at) **Crew and rivals catch up to b0y:** they may need behavior updates for b0y's newer features, like text in their
-    cursors instead of the terminal sometimes.
-  - (built v14.05) **Being able to point at things** (crew / rivals, like b0y does).
-  - (fixed 2026-10-31: centered on the whole screen while it holds, ~5 rows higher; glides back down for the rewards) **FIRST BREACH alignment, still:** PARCELNET pushes things too low: the whole screen up ~5 lines; then when the
-    rewards show, bring CORP BREACHED back down maybe?
-  - (built v14.05: TESTING > loot here) **An editor loot viewer:** click a node on the map, then a button in the editor shows everything that corp's loot could
-    be: loot nodes, what stores carry, rerolls.
-- (built v14.05: pets from STRAY, CATPHISH, the EGG; loot training; a PHISHING logo; CATPHISH is a feat and title. The words: name ideas for mods / gear, see "Parked mod ideas") **From the user's iPhone notes (meat notes 2026-10-30):** more companions (pets); **loot training** (the training run
-  could show the LOOT bag); a **phishing logo**; PIER names: **CATPHISH**, "phush you? no, phush me"; and three to ask
-  about: **Neon**, **Scam**, **Merch** (just the words in the notes).
-- (built v14.05) **The seed decides the layers, always** (the user, 2026-10-30): resuming a run (closed the browser) stops rerolling the
-  layers (drop the run.resumes salt in genLayer and the fcst / skip rolls). Also put on the seed: which crew answers a
-  plain CALL, OVERCLOCK's purges, the clock-runs-out tap (Math.random today). Rivals' moves stay random (real-time).
-- (built v14.05: TELL LIGHT on THE BOARD) **Tells, intel** (the user, meat notes 2026-10-29; FIRST BREACH built v13.81 shows the tell the first time): open: some way to know if a tell is right (what that means: ask the user).
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Cold Brew's boss reward
   is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is (the user 2026-10-29: "i still ran out of cash and couldn't get past the uplink"); it already scales by sector and BLACK ICE costs that many hits.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.
-- (done v14.05: PUNCH CARD, the user: "it's a free item") **COUPON -> COUPON CUTTER?** (the user, 2026-10-27): maybe rename MEGAMART's mod.
 - **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle.
 - **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open).
 - **Ads that do things** (later, the user 2026-10-28; the fake ads are done and great): an ad that sells you gear or a mod; a free trial of a corp's mod; AD BLOCKER.
@@ -423,6 +373,8 @@ unlocked by REP, and some quests unlock REP.
 - **Analytics:** the play stats are collected (greglytics); reading them (which corps beat people, what gets bought).
 
 ## Parked mod ideas (the user, 2026-10-26: "we have enough mods for now")
+- **DELUX** (probably exotic; the user, 2026-10-31: parked): gives you a random set of mods.
+- **Item stacks become health** (probably an exotic mod; parked 2026-10-31): your gear stacks count as integrity.
 - **Name ideas** (the user's notes, 2026-10-31: "brain dumps of words that might be good mods or gear"): MIMIC, NEON, SCAM, MERCH.
 Where they are, for when mods open up again:
 - **CLUSTER** (the user, 2026-10-26): a mod name to build something around; no idea for it yet.

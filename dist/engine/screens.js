@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.05']);
+NEON_FILES.push(['engine/screens.js', 'v14.11']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -390,11 +390,11 @@ function swapLines() {
   } else {
     const v = itemView(sw.key, sw.tier);
     T('to take', C.mid);
-    lines.push({ text: `[${v.name}]`, chip: v.rarity, bold: true });
+    lines.push({ gearHead: sw.key, gearTier: sw.tier, text: v.name });
     T('pick the gear to replace:', C.mid);
     run.items.forEach((s, i) => {
       const o = itemView(s.key, s.tier);
-      lines.push({ list: true, id: 'sw' + i, name: itemLabel(s), chip: o.rarity, right: s.n > 1 ? `all ${s.n}` : 'gear', rightCol: C.mid,
+      lines.push({ list: true, id: 'sw' + i, name: o.name + (s.n > 1 ? ' x' + s.n : ''), gear: s.key, gearTier: s.tier, right: s.n > 1 ? `all ${s.n}` : 'gear', rightCol: C.mid,
         sel: sw.sel === i, onTap: pick(i) });
     });
     T(SEP, C.dim);

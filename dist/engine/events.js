@@ -1,7 +1,7 @@
 // NeoN+1 engine/events.js: the SECTOR EVENT card (what a new sector rolled) and THE FENCE (THIEF's stolen mods,
 // sold back). The events themselves: data/events.js; the roll: engine/map.js addSector.
 'use strict';
-NEON_FILES.push(['engine/events.js', 'v14.05']);
+NEON_FILES.push(['engine/events.js', 'v14.11']);
 
 // ---------------- The SECTOR EVENT card ----------------
 // It comes up over a new sector's map once the climb settles (toMap), and again from the map's sector label.
@@ -70,7 +70,7 @@ function buildEventCard(ctx, now) {
   const rows = eventCardRows(c.ev, c.sector);
   const w = EV_W + 2, h = rows.length + 2, x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
   clearRect(cells, x0, y0, w, h);
-  for (let r = 0; r < h; r++) bg(x0, y0 + r, w, C.bg, 1);
+  popupBg(bg, 'event', x0, y0, w, h);   // (its look: POPUP_LOOK, engine/render.js)
   addHit(x0, y0, w, h, { kind: 'evbox' });
   const frame = c.ev && SECTOR_EVENTS[c.ev].kind === 'anomaly' ? C.accent : C.mid;
   put(x0, y0, '#' + '='.repeat(w - 2) + '#', frame, 'hud', true);

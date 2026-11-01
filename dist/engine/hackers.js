@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.05']);
+NEON_FILES.push(['engine/hackers.js', 'v14.11']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -29,13 +29,15 @@ const hkLine = (h, k) => { const d = hkDef(h.id), l = d[k]; return Array.isArray
 // ---------------- Coming in ----------------
 // A rival for a corp with the RIVAL anomaly: one of the cast, fixed by the seed (d0g only from sector 3 on).
 function hkRivalFor(node) {
-  const pool = HK_RIVALS.filter(k => k !== 'd0g' || (node.sector || 0) >= 2);
+  const pool = HK_RIVALS.filter(k => (k !== 'd0g' || (node.sector || 0) >= 2) && !(st.run.banned || []).includes(k));   // (EXORCIST: not one thrown out)
+  if (!pool.length) return null;
   return pickR(pool, rngFor(st.run.seed, 'rival', node.id));
 }
 // Bring one in (its card first). how: 'rival' | 'call'
 function hkSpawn(id, how) {
   const c = st.corp, d = hkDef(id);
   if (!c || !d || hkUp(id)) return null;
+  if (d.side === 'bad' && st.run && (st.run.banned || []).includes(id)) return null;   // EXORCIST (epic): out of the run
   const lv2 = d.side === 'good' && hkLvl2(id);
   const max = d.hp + (lv2 && (id === 'brick') ? 2 : 0) + (lv2 && (id === 'baud' || id === 'mother') ? 2 : 0);
   const h = { id, side: d.side, hp: max, max, lv2, out: false, stole: 0, took: 0, row: 0 };
@@ -89,7 +91,7 @@ function buildHkCard(ctx, now) {
   ];
   const h = lines.length + 2, x0 = Math.max(0, Math.floor((L.wc - W) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
   clearRect(cells, x0, y0, W, h);
-  for (let r = 0; r < h; r++) bg(x0, y0 + r, W, C.bg, 1);
+  popupBg(bg, 'hacker', x0, y0, W, h);   // (its look: POPUP_LOOK, engine/render.js)
   addHit(x0, y0, W, h, { kind: 'hkcard' });
   const fc = d.side === 'bad' ? C.danger : C.accent, head = d.side === 'bad' ? ' RIVAL INCOMING ' : ' CREW ON THE LINE ';
   put(x0, y0, ('+-' + head + '-'.repeat(W)).slice(0, W - 1) + '+', fc, 'hud', true);
@@ -332,7 +334,7 @@ const HK_AI = {
       if (hkFire(lv, h, s, now) || now < s.next) return;
       s.next = now + (h.lv2 ? 2000 : 3000);
       const t = pickR(hkIce(lv).filter(o => !o.ruledOut), Math.random);
-      if (t && hkCands(lv).length > 2) hkAim(s, t, 500, x => { lockTile(x, C.accent, 'crew'); }, now);
+      if (t && hkCands(lv).length > 2) hkAim(s, t, 500, x => { lockTile(x, C.accent, 'crew'); hkHurt(h); }, now);   // (a bar a burn, like BAUD: the user, 2026-10-31)
     },
   },
   brick: {},   // takes your ICE hits (hkTakeHit)
@@ -436,7 +438,7 @@ function hkCorpEnd(c) {
   for (const h of c.hk || []) {
     if (h.side !== 'bad') continue;
     tally('hack:beat:' + h.id);
-    const bonus = h.out ? earnInt(ECON.rival.flatlined) : h.stole === 0 ? earnInt(ECON.rival.beat) : 0;
+    const bonus = h.exorcised ? 0 : h.out ? earnInt(ECON.rival.flatlined) : h.stole === 0 ? earnInt(ECON.rival.beat) : 0;   // (EXORCIST: thrown out, not beaten: no bonus)
     if (bonus) { run.credits += bonus; run.earned += bonus; setMsg(h.out ? `> ${hkName(h.id).toLowerCase()} flatlined. +${bonus}cr` : `> you beat ${hkName(h.id).toLowerCase()}. +${bonus}cr`, C.money); }
   }
 }

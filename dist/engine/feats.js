@@ -1,7 +1,7 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v14.05']);
+NEON_FILES.push(['engine/feats.js', 'v14.11']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
@@ -193,7 +193,7 @@ function buildFeatBox(ctx, now) {
   const rows = featPage(it), more = b.items.length > 1;
   const w = FEAT_W + 2, h = rows.length + 5, x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
   clearRect(cells, x0, y0, w, h);
-  for (let r = 0; r < h; r++) bg(x0, y0 + r, w, C.bg, 1);
+  popupBg(bg, 'feat', x0, y0, w, h);   // (its look: POPUP_LOOK, engine/render.js)
   addHit(x0, y0, w, h, { kind: 'fbox' });
   const head = it.head || 'FEAT', count = more ? ` ${b.i + 1} of ${b.items.length} -` : '';
   put(x0, y0, ('+- ' + head + ' ' + '-'.repeat(w)).slice(0, w - 1 - count.length) + count + '+', C.rep, 'hud', true);

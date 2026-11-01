@@ -1,6 +1,6 @@
 // NeoN+1 engine/ads.js: the fake ads: when they show up, the ad box, and its two-screen turn.
 'use strict';
-NEON_FILES.push(['engine/ads.js', 'v14.05']);
+NEON_FILES.push(['engine/ads.js', 'v14.11']);
 
 // An ad comes up over whatever is on screen, in a bordered box nearly the screen's width, and
 // blocks everything under it until you close it. [x] (top right) shows up after a few seconds
@@ -96,7 +96,7 @@ function buildAd(ctx, now) {
   if (!def) { closeAd(); return; }
   const w = ADS_W + 4, h = ADS_H + 2, x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
   clearRect(cells, x0, y0, w, h);
-  for (let r = 0; r < h; r++) bg(x0, y0 + r, w, C.bg, 1);
+  popupBg(bg, 'ad', x0, y0, w, h);   // (its look: POPUP_LOOK, engine/render.js)
   addHit(x0, y0, w, h, { kind: 'adbox' });
   // the frame: AD in the corner, then a countdown, then [x]
   const left = Math.max(0, Math.ceil((AD_CFG.closeMs - (now - ad.t0)) / 1000));

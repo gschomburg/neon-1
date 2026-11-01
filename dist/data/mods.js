@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.05']);
+NEON_FILES.push(['data/mods.js', 'v14.11']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -198,8 +198,11 @@ const ITEMS = {
     codex: 'one more time. tap it and it glows: the next gear you use goes off twice (two FRAGs, two PATCHes, two LOTTO tickets), and one ENCORE is spent then. tap it again to turn it off. gear that moves you, aims or clears a layer can\'t go twice: ENCORE stays on for the next one that can. a stack still only doubles.' },
   egg:    { key: 'egg',    name: 'EGG',    price: 30, rarity: 'common', desc: 'use it: it hatches. a pet for the run.', tip: 'hatch a pet.',
     codex: 'warm, and it twitches. use it anywhere and it hatches a chick that follows you for the rest of the run. a pet you already had waves goodbye.' },
+  exorcist: { key: 'exorcist', name: 'EXORCIST', price: 45, rarity: 'rare', desc: 'in a corp: a rival hacker is kicked out of this corp.', tip: 'kick a rival out.',
+    codex: 'the power of root compels you. in a corp with a rival hacker in it: they are thrown out, their bars and all, for the rest of the corp. the epic one throws them out of the whole run: they never come back.',
+    tiers: [{}, { rarity: 'epic', desc: 'in a corp: a rival hacker is kicked out, and never comes back this run.', tip: 'kick a rival out for good.' }] },
   stim:   { key: 'stim',   name: 'STIM',   price: 40, rarity: 'rare', desc: 'in a corp: max integrity +50% for this corp, healed up to it. after it, you keep what fits.', tip: '+50% int, this corp.',
-    codex: 'a combat stim. for the rest of this corp your max integrity is half again as big, and you heal up to it. when you leave the corp it wears off: max integrity goes back, and you keep what fits (2 left stays 2).' },
+    codex: 'a combat stim. for the rest of this corp your max integrity is half again as big, and you heal up to it. when you leave the corp it wears off: max integrity goes back, and you keep what fits (2 left stays 2). with ZOMBIE: no rot for the rest of the corp.' },
   zeroday: { key: 'zeroday', name: '0DAY', price: 50, rarity: 'rare', desc: 'in a layer: the real node is marked.', tip: 'mark the real node.',
     codex: 'an exploit nobody has patched yet. the real node is marked, gold. rare: this layer. epic: this layer and the next. legendary: every layer left in the corp, the boss too.',
     tiers: [{}, { rarity: 'epic', desc: 'in a layer: the real node is marked, this layer and the next.', tip: 'mark the real, 2 layers.' },
@@ -209,7 +212,7 @@ const ITEMS = {
   skip:   { key: 'skip',   name: 'SKIP',   price: 70, rarity: 'epic', desc: 'on the map: your next move can be any node two rows ahead. not onto the boss row.', tip: 'jump a row.',
     codex: 'on the map: skip a row. your next move can be any node two rows ahead of you, linked or not. it never lands on the sector boss: the boss row is too well guarded.' },
   swap:   { key: 'swap',   name: 'SWAP',   price: 60, rarity: 'epic', desc: 'your integrity and your missing integrity swap. 1 of 4 becomes 3 of 4.', tip: 'health <-> missing.',
-    codex: 'flip it: what you have and what you are missing trade places. at 1 of 4 you are back to 3 of 4. at 3 of 4 you drop to 1. at full it won\'t go: that would kill you.' },
+    codex: 'flip it: what you have and what you are missing trade places. at 1 of 4 you are back to 3 of 4. at 3 of 4 you drop to 1. at full it won\'t go: that would kill you. with ZOMBIE: your rot flips instead (120 of 150 becomes 30).' },
   fake:   { key: 'fake',   name: 'FAKE',   price: 80, rarity: 'epic', desc: 'tap it, then a mod: that mod goes up a step, for good.', tip: '+1 step on a mod.',
     codex: 'fake it till you make it. tap it, then one of your mods: it goes up one rarity step for the rest of the run, as if you found it again. mods that can\'t go higher (corp mods, exotics, maxed ones) don\'t take it.' },
   nuke:   { key: 'nuke',   name: 'NUKE',   price: 200, rarity: 'exotic', find: true, where: '$ nodes, caches. never in a market.', desc: 'in a corp: it\'s gone. it counts as beaten and the layers left pay half. not on a sector boss.', tip: 'breach the corp now.',
@@ -239,6 +242,10 @@ const MODS = {
   virus:    { name: 'VIRUS',    short: 'VRS', kind: 'gen', rarity: 'epic',   icon: '%*%+', anim: 'scramble', price: 80, tip: 'hit ICE infects 1 more.', desc: 'hit ICE: the infection spreads and locks one ICE node next to it.',
     codex: 'hit ICE: the infection spreads and locks one ICE node right next to it (up, down, left or right on the grid), if there is one. legendary: it keeps spreading through touching ICE, up to 4 nodes (never the last ICE: you still pick).',
     tiers: [{}, { rarity: 'legendary', tip: 'hit ICE: spreads, up to 4.', desc: 'hit ICE: the infection spreads through touching ICE nodes, locking up to 4.' }] },
+  pickpocket: { name: 'PICKPOCKET', short: 'PKP', kind: 'gen', rarity: 'rare', icon: '>$$<', anim: 'cycle', price: 80, tip: `${Math.round(ECON.modx.pickpocket[0] * 100)}%: a layer drops loot.`, desc: `each layer you clear: ${Math.round(ECON.modx.pickpocket[0] * 100)}% chance of a loot item for your bag.`,
+    codex: 'light fingers. every layer you clear, a chance something valuable walks out with you: a loot item (DUDS ... WALLET) into your LOOT bag. sell it at a market. the higher steps find it more often, and find better.',
+    tiers: [{}, { rarity: 'epic', tip: `${Math.round(ECON.modx.pickpocket[1] * 100)}%: loot, rarer.`, desc: `each layer you clear: ${Math.round(ECON.modx.pickpocket[1] * 100)}% chance of a loot item, leaning rarer.` },
+      { rarity: 'legendary', tip: `${Math.round(ECON.modx.pickpocket[2] * 100)}%: loot, rarest.`, desc: `each layer you clear: ${Math.round(ECON.modx.pickpocket[2] * 100)}% chance of a loot item, leaning rarest.` }] },
   skimmer:  { name: 'SKIMMER',  short: 'SKM', kind: 'gen', rarity: 'common', icon: '$$s$', anim: 'cycle',    price: 60, tip: `+${Math.round((ECON.modx.skimmer[0] - 1) * 100)}% credits.`, desc: `+${Math.round((ECON.modx.skimmer[0] - 1) * 100)}% credits from every payout.`,
     tiers: [{}, { rarity: 'rare', tip: `+${Math.round((ECON.modx.skimmer[1] - 1) * 100)}% credits.`, desc: `+${Math.round((ECON.modx.skimmer[1] - 1) * 100)}% credits from every payout.` }, { rarity: 'epic', tip: `+${Math.round((ECON.modx.skimmer[2] - 1) * 100)}% credits.`, desc: `+${Math.round((ECON.modx.skimmer[2] - 1) * 100)}% credits from every payout.` }] },
   buffer:   { name: 'BUFFER',   short: 'BUF', kind: 'gen', rarity: 'common', icon: '[]][', anim: 'blink',    price: 65, tip: '+1 max integrity.',     desc: '+1 max integrity, and heal 1.',

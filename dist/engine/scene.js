@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.05']);
+NEON_FILES.push(['engine/scene.js', 'v14.11']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -504,8 +504,9 @@ function buildTray(ctx, y) {
     if (!stack) { put(ix, y + 2, ':  .  :', C.dim, 'tray'); continue; }
     const ok = canUse(stack), v = itemView(stack.key, stack.tier);
     const sel = st.selItem === i, hov = st.hoverItem === i;
-    const lab = itemLabel(stack), nameLen = stack.n > 1 ? ITEMS[stack.key].name.length : lab.length;
+    const lab = beltLabel(stack), nameLen = stack.n > 1 ? itemShort(stack.key).length : lab.length;   // (its short code: engine/panels.js ITEM_SHORT)
     const listy = st.mode === 'panel' || st.mode === 'fish';   // a list screen: you compare your gear with what's on offer
+    if (st.gearPress && st.gearPress.moved && st.gearPress.i === i) { put(ix, y + 2, ':  .  :', C.dim, 'tray'); addHit(ix, y + 2, 7, 1, { kind: 'item', i }); continue; }   // dragged out: its slot is empty (the full name rides your finger)
     if (ok || listy) putChip(put, bg, ix, y + 2, lab.slice(0, nameLen), v.rarity, 'tray', v.tier > 0);   // on its rarity chip
     else put(ix, y + 2, lab.slice(0, nameLen), C.mid, 'tray');
     if (stack.n > 1) put(ix + nameLen, y + 2, lab.slice(nameLen), ok ? C.text : C.dim, 'tray');   // x3: the count, dimmer
@@ -540,10 +541,17 @@ function buildTray(ctx, y) {
     const dn = st.itemDeny && st.itemDeny.slot === ii ? now - st.itemDeny.at : 1e9;
     if (dn < 1800) put(3 + it.name.length, y + 3, st.itemDeny.text, C.danger);   // why it can't be used (a second or two)
     else {
-      put(3 + it.name.length, y + 3, it.tip, C.text);
       const usable = canUse(stack);
       const onOff = stack.key === 'encore' || ARMS[stack.key] ? (gearOn(stack.key) ? '>tap: off' : '>tap: on') : null;   // switches: ENCORE, and the gear you arm
-      put(4 + it.name.length + it.tip.length, y + 3, onOff || (usable ? '>tap' : '(not now)'), usable ? C.accent : C.dim);
+      const act = onOff || (usable ? '>tap' : '(not now)'), x0 = 3 + it.name.length, room = L.wc - x0 - act.length - 1;
+      let tip = (stack.n > 1 ? `x${stack.n} ` : '') + it.tip;
+      if (tip.length > room) {   // too long: it scrolls (a beat first), like the UPLINK's ticker
+        if (st.tipTick !== ii + ':' + stack.key) { st.tipTick = ii + ':' + stack.key; st.tipT0 = now; }
+        const full = tip + '     ', o = Math.max(0, Math.floor((now - st.tipT0 - 900) / 140)) % full.length;
+        tip = (full + full).slice(o, o + room);
+      }
+      put(x0, y + 3, tip, C.text);
+      put(x0 + Math.min(room, tip.length) + 1, y + 3, act, usable ? C.accent : C.dim);
     }
   }
 }
@@ -980,6 +988,21 @@ function buildMap(ctx) {
       for (const d of linkDots(pos(n), pos(m))) if (shown(d.row)) put(d.x, yOf(d.row), d.ch || '·', col, 'map');
     }
   }
+  // MESH (the user, 2026-10-31: its links didn't show): every node to every node in the next row, all sector (so they
+  // are still there after a corp), and on the row under the boss the nodes beside you; drawn after the map's own links, only where the cell is free (cells stack)
+  if (run.mesh === run.sector) {
+    const used = new Set(ctx.cells.filter(c => c.own === 'map').map(c => Math.round(c.cx) + ',' + Math.round(c.cy)));
+    const sec = run.sector || 0, linked = (a, b) => a.next.includes(b.id) || b.next.includes(a.id);
+    const meshLink = (n, m) => {
+      const vi = run.visited.indexOf(n.id), mi = run.visited.indexOf(m.id);
+      const onPath = (vi >= 0 && run.visited[vi + 1] === m.id) || (mi >= 0 && run.visited[mi + 1] === n.id);
+      const col = onPath ? C.accent : run.at === n.id && avail.has(m.id) ? C.mid : C.dim;
+      for (const d of linkDots(pos(n), pos(m))) { const y = yOf(d.row), k = Math.round(d.x) + ',' + Math.round(y); if (!shown(d.row) || used.has(k)) continue; used.add(k); const ch = d.ch || '·'; put(d.x, y, ch === '·' ? ':' : ch, col, 'map'); }
+    };
+    for (const n of nodes) if ((n.sector || 0) === sec) for (const m of nodes) if ((m.sector || 0) === sec && m.step === n.step + 1 && !linked(n, m)) meshLink(n, m);
+    const cur = map[run.at];
+    if (cur) for (const m of meshSides()) if (!linked(cur, m)) meshLink(cur, m);
+  }
   for (const n of nodes) {
     const p = pos(n);
     if (!shown(p.row)) continue;
@@ -1209,7 +1232,11 @@ function buildTextBoard(ctx, lines, area = null) {
         put(x0 + 9 + ITEMS.purge.tip.length, y, '>tap', C.accent, 'board');
       }
     }
-    else if (ln.badge && !ln.list) {
+    else if (ln.gearHead && !ln.list && ITEMS[ln.gearHead]) {   // a gear's header (the detail box): its code chip, then its name, like a mod's
+      const code = itemShort(ln.gearHead), name = ln.text || ITEMS[ln.gearHead].name, x = Math.floor((L.wc - (code.length + 2 + name.length)) / 2);
+      putChip(put, bg, x, y, code, itemView(ln.gearHead, ln.gearTier || 0).rarity, 'board', true);
+      put(x + code.length + 2, y, name, C.bright, 'board', true);
+    } else if (ln.badge && !ln.list) {
       const m = tierView(MODS[ln.badge], ln.badgeTier || 0);
       const bw = 1 + m.short.length + (m.lvlTag && m.tier > 0 ? 1 : 0);
       const x = Math.floor((L.wc - (bw + 2 + m.name.length)) / 2);
@@ -1226,6 +1253,8 @@ function buildTextBoard(ctx, lines, area = null) {
       // check: 'x' / ' ' / '*' (locked): a checkbox before the badge (the UPLINK)
       if (ln.check != null) { put(cx, y, '[' + ln.check + ']', ln.checkCol || C.mid, 'ui', ln.check === 'x'); cx += 4; }
       if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg, dim: !!ln.badgeDim }) + 1;
+      // gear: its code on its rarity chip, then its name (the user, 2026-10-31: the same as mods, in every list)
+      if (ln.gear && ITEMS[ln.gear]) { const code = itemShort(ln.gear); putChip(put, bg, cx, y, code, itemView(ln.gear, ln.gearTier || 0).rarity, 'ui', true); cx += Math.max(code.length + 1, 5); }   // (names line up with the mods': a badge is 4 wide)
       // faded (can't afford, sold, locked): the color bit stays (a mod's badge, an item's name chip),
       // everything else goes grey, so you see what you're missing
       // clip: the name stops a space short of the right text ('ellipsis' ends it with ...; 'cut' just cuts: a ticker)

@@ -7,7 +7,7 @@
 //   4. A first run: NEWB or LEET, under your logo and name (tap them to shuffle). NEWB starts the training, LEET the title.
 // Screens change with the game's wipe. A tap skips ahead.
 'use strict';
-NEON_FILES.push(['engine/intro.js', 'v14.05']);
+NEON_FILES.push(['engine/intro.js', 'v14.11']);
 
 // For now (the user, 2026-10-26, while we work on it): every launch plays all of it, NEWB / LEET too.
 // Later: NEWB / LEET only the first time (save.bootSeen).
@@ -135,11 +135,11 @@ async function introGo(stage) {
 // After the card: a first run picks NEWB or LEET; otherwise the title.
 function introAfterCard() { const b = st.boot; if (b.first) introGo('pick'); else introDone(); }
 // To the title: wipe out of the intro, and the title (already underneath) comes in.
-// Leaving the intro: the music powers up and lands on a chord (like beating a boss), then the next track
-// eases in (the user: the cut from ON CAMERA to the title was rough).
+// Leaving the intro: the music fades down (the user, 2026-10-31: not the corp-won transition), then the next track
+// eases in slowly (Music.fadeOut).
 async function introOut(b) {
-  const s = b.music && typeof Sound.bossWin === 'function' ? Sound.bossWin() : 0;
-  if (s > 0) await wait(Math.max(0, s * 1000 - 120));
+  const s = b.music && Music.fadeOut ? Music.fadeOut(1.4) : 0;
+  if (s > 0) await wait(s * 1000 * 0.75);   // (the wipe starts as it gets quiet)
 }
 async function introDone() {
   const b = st.boot;

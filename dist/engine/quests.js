@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.05']);
+NEON_FILES.push(['engine/quests.js', 'v14.11']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -82,7 +82,7 @@ function buildCallBox(ctx, now) {
   const rows = b.lines.flatMap(l => wrapText(l, CALL_W - 2));
   const w = CALL_W + 2, h = rows.length + 9, x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
   clearRect(cells, x0, y0, w, h);
-  for (let r = 0; r < h; r++) bg(x0, y0 + r, w, C.bg, 1);
+  popupBg(bg, 'call', x0, y0, w, h);   // (its look: POPUP_LOOK, engine/render.js)
   const head = 'CALL', ring = Math.floor((now - b.t0) / 400) % 2 && now - b.t0 < 1600 ? ' ((( ' : ' ';
   put(x0, y0, ('+- ' + head + ring + '-'.repeat(w)).slice(0, w - 1) + '+', C.rep, 'hud', true);
   put(x0, y0 + h - 1, '+' + '-'.repeat(w - 2) + '+', C.rep, 'hud', true);
@@ -139,7 +139,7 @@ function sceneKey(k) { if (k === 'escape') sceneEnd(); else if (k === 'enter' ||
 function buildScene_(ctx, now) {
   const { put, bg, cells, addHit } = ctx, sc = st.qScene, frames = QUEST_SCENES[sc.id], fr = frames[sc.i];
   clearRect(cells, 0, 0, L.wc, L.hc);
-  for (let r = 0; r < L.hc; r++) bg(0, r, L.wc, C.bg, 1);
+  { const ex = Math.ceil(L.ox / L.cw) + 1, ey = Math.ceil(L.oy / L.chh) + 1; popupBg(bg, 'scene', -ex, -ey, L.wc + 2 * ex, L.hc + 2 * ey, false); }   // the whole screen, past the content edges (POPUP_LOOK)
   addHit(0, 0, L.wc, L.hc, { kind: 'scene' });
   const W = 30, x0 = Math.floor((L.wc - W) / 2), mid = Math.floor(L.hc / 2);
   put(x0, mid - 8, `- ${String(sc.i + 1)} / ${frames.length} -`.padStart(W), C.dim, 'hud');

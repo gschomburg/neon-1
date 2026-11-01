@@ -3,7 +3,7 @@
 // rule over the mods opens the LOOT screen: everything you have, how many, what it's worth together; tap one for
 // what it is. It's a pause (the clock stops). Loot sells at a black market (SELL); it can't be used.
 'use strict';
-NEON_FILES.push(['engine/loot.js', 'v14.05']);
+NEON_FILES.push(['engine/loot.js', 'v14.11']);
 
 // A loot stack's label: CHROME, or CHROMEx12 (no brackets (the user, 2026-10-30); a plain count: the bag has no cap, so no hex).
 const lootLabel = s => s.n > 1 ? `${ITEMS[s.key].name}x${s.n}` : ITEMS[s.key].name;
@@ -138,7 +138,8 @@ function lootPileTick(now, x, y) {
 }
 function buildLootBtn(ctx, y) {
   const run = st.run;
-  if (!run || st.mp || run.tutorial || st.mode === 'title' || st.mode === 'over') { st.lootPile = []; return; }
+  // (the training: hidden until POPS shows it to you, or you've got loot in it; the user, 2026-10-31: it wasn't there)
+  if (!run || st.mp || (run.tutorial && !run.lootShown && !(run.loot || []).length) || st.mode === 'title' || st.mode === 'over') { st.lootPile = []; return; }
   const { now, put, addHit, bg } = ctx;
   const x = L.wc - 3, n = (run.loot || []).length;
   const fx = lootPileTick(now, x, y);

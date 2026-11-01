@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.05']);
+NEON_FILES.push(['engine/panels.js', 'v14.11']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -84,6 +84,18 @@ function addItem(key, tier = 0) {
 }
 const itemRoom = (key, tier) => isLoot(key) || st.run.items.some(s => s.key === key && s.tier === tier && s.n < STACK_MAX) || st.run.items.length < st.run.beltSlots;
 // An item's belt label: [PURGE], or PURGEx3 when stacked (hex count, up to F).
+// The belt's short codes (the user, 2026-10-31: high priority: the names were too long once the x2 went on, ENCORE ran
+// into FWALL): three letters like the mods. The full name shows everywhere else (the info line, a drag, the trash,
+// markets). A gear not listed here: the first three letters of its name.
+const ITEM_SHORT = { disc: 'DSC', patch: 'PCH', purge: 'PRG', wall: 'FWL', split: 'SPL', route: 'RTE', warp: 'WRP', allin: 'ALL',
+  tunnel: 'TUN', mesh: 'MSH', tilt: 'TLT', shake: 'SHK', frag: 'FRG', rewind: 'RWD', shoe: 'SHO', pass: 'PAS', flare: 'FLR',
+  remote: 'RMT', rollup: 'RLP', freeze: 'FRZ', blast: 'BLS', snitch: 'SNT', tithe: 'TTH', anchor: 'ANC', slomo: 'SLO', bees: 'BEE',
+  call: 'CAL', call_pops: 'POP', call_brick: 'BRK', call_null: 'NUL', call_nana: 'NAN', call_dialup: 'DIA', call_baud: 'BAU',
+  call_mother: 'MOM', call_root: 'ROO', call_kludge: 'KLG', call_hype: 'HYP', lotto: 'LTO', ping: 'PNG', magnet: 'MAG',
+  encore: 'ENC', egg: 'EGG', exorcist: 'EXO', stim: 'STM', zeroday: '0DY', worm: 'WRM', skip: 'SKP', swap: 'SWP', fake: 'FAK', nuke: 'NUK' };
+const itemShort = key => ITEM_SHORT[key] || ITEMS[key].name.replace(/[^A-Z0-9]/g, '').slice(0, 3);
+// On the belt: [PCH] for one, PCHx2 for a stack (the count in hex, as before: x10 is xA)
+const beltLabel = s => s.n > 1 ? `${itemShort(s.key)}x${s.n.toString(16).toUpperCase()}` : `[${itemShort(s.key)}]`;
 const itemLabel = s => s.n > 1 ? `${ITEMS[s.key].name}x${s.n.toString(16).toUpperCase()}` : `[${ITEMS[s.key].name}]`;
 const itemCol = v => rarityCol(v.rarity);   // an item's key color (its name sits on its rarity chip)
 
@@ -259,7 +271,7 @@ function openShop(node) {
     const items = rows.map(({ s, list }, i) => {
       const v = itemView(s.key, s.tier), q = ITEMS[s.key].quest, tag = list === run.loot ? 'loot' : 'gear';
       return { list: true, id: 'sl' + i, onTap: () => { sellSel = i; Sound.tick(); }, sel: i === sellSel,
-        name: list === run.loot ? lootLabel(s) : itemLabel(s), chip: v.rarity, col: C.bright, right: q ? 'QUEST  keep' : `${tag.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: q ? C.rep : C.money, rightChips: true };
+        name: list === run.loot ? lootLabel(s) : v.name + (s.n > 1 ? ' x' + s.n : ''), chip: list === run.loot ? v.rarity : null, gear: list === run.loot ? null : s.key, gearTier: s.tier, col: C.bright, right: q ? 'QUEST  keep' : `${tag.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: q ? C.rep : C.money, rightChips: true };
     });
     if (!rows.length) { T('nothing to sell.', C.dim); pad(T, 2); }
     else { scrollFollow(sellArea, sellSel, items.length, listRows() - 1); scrollArea(X, T, sellArea, items, listRows() - 1, 'sla'); }
@@ -268,7 +280,7 @@ function openShop(node) {
     const s = rows[sellSel] && rows[sellSel].s;
     if (s) {
       const v = itemView(s.key, s.tier);
-      X({ text: v.name, chip: v.rarity, bold: true });
+      X(isLoot(s.key) ? { text: v.name, chip: v.rarity, bold: true } : { gearHead: s.key, gearTier: s.tier, text: v.name });
       T(v.tip || v.desc, C.text);
       T('');
       if (ITEMS[s.key].quest) X({ box: true, text: 'S E L L', sub: 'POPS wants it', id: 'sell', onTap: () => sell(sellSel), minW: 18, disabled: true });
@@ -295,7 +307,7 @@ function openShop(node) {
         list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
         sel: k === sel, faded: !!whyNot(o),
         badge: isMod ? o.key : null, badgeTier: def.tier, name: rr ? 'REROLL' + (rerollsLeft() > 0 ? ' x' + rerollsLeft() : '') : def.name + (up ? ' +' : '') + (o.n > 1 ? ' x' + o.n : ''), col,   // x2: copies left
-        chip: o.kind === 'item' ? def.rarity : null,
+        gear: o.kind === 'item' ? o.key : null, gearTier: o.tier,   // (gear: its code chip, then its name)
         right: `${tag.padEnd(4)} ${price.padStart(5)}`, rightCol: C.money, rightChips: true,
         tint: o.kind === 'repair' || rr ? C.accent : null,
         reveal: k, revealId: 'offer' + k,
@@ -317,7 +329,7 @@ function openShop(node) {
         X({ badge: o.key, badgeTier: def.tier });
         X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(def)}` : `${tierLabel(def)} mod`, col: C.text, chips: true });
       } else {
-        if (o.kind === 'item') X({ text: def.name + (o.n > 1 ? ` x${o.n}` : ''), chip: def.rarity, bold: true }); else T(def.name, C.bright);
+        if (o.kind === 'item') X({ gearHead: o.key, gearTier: o.tier, text: def.name + (o.n > 1 ? ` x${o.n}` : '') }); else T(def.name, C.bright);
         X({ text: o.kind === 'item' ? `${def.tier ? RARITY[def.rarity].label + ' ' : ''}gear // single use` : 'service', col: C.mid, chips: true });
       }
       T(def.tip || def.desc, C.text);   // the short text: long gear descs ran off the screen
@@ -410,7 +422,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
     options.forEach((o, i) => {
       const v = viewOf(o), up = o.kind !== 'gear' && has(o.key), mc = locked ? C.dim : C.bright;
       if (o.kind === 'gear') {   // a stack of gear: its name on its rarity chip, xN
-        X({ list: true, id: 'opt' + i, onTap: () => { sel = i; Sound.tick(); }, sel: i === sel, name: `${v.name} x${o.n}`, chip: v.rarity, col: mc, faded: locked,
+        X({ list: true, id: 'opt' + i, onTap: () => { sel = i; Sound.tick(); }, sel: i === sel, name: `${v.name} x${o.n}`, gear: o.key, gearTier: o.tier, col: mc, faded: locked,
           right: `${(v.tier ? RARITY[v.rarity].label : '').padStart(6)} gear`, rightCol: mc, reveal: i, revealId: 'opt' + i, rarity: v.rarity, seenKey: o.key });
         return;
       }
@@ -428,7 +440,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
       T(SEP, C.dim);
       if (shown && o.kind === 'gear') {
         const room = itemRoom(o.key, o.tier) && !has('ramdoubler');
-        X({ text: `${v.name} x${o.n}`, chip: v.rarity, bold: true });
+        X({ gearHead: o.key, gearTier: o.tier, text: `${v.name} x${o.n}` });
         T(v.tip || v.desc, C.text);
         X({ text: has('ramdoubler') ? 'ram doubler: it gets sold.' : room ? `gear // ${o.n} uses` : "gear slots full: you'll swap one", col: room ? C.mid : C.dangerDim, chips: true });
         if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
@@ -477,6 +489,9 @@ function openCache(node) {
   const got = again ? ['already looted.'] : [grantLoot(r, 2)];   // (the H3AV3N seed's sector 1: as if you had the CACHE KEY, and better picks: engine/heaven.js)
   if (!again) for (let i = 0; i < (has('cachekey') ? tv('cachekey', ECON.modx.cachekey) : quest ? 1 : 0); i++) got.push(grantLoot(r, 2));
   if (has('cachekey') && !again) modFired('cachekey');
+  // and now and then a pile of loot for the bag (ECON.loot.cache: as many as a sector boss)
+  { const lr = rngFor(run.seed, 'cacheloot', node.id), [lo, hi] = ECON.loot.sector;
+    if (!again && lr() < ECON.loot.cache) { const l = dropLoot(lr, lo + Math.floor(lr() * (hi - lo + 1))); got.push('+ loot: ' + l.join(', ')); } }
   openChoice({
     title: 'DATA CACHE', col: C.money,
     head: got.map(g => [g, again ? C.dim : C.bright]),
@@ -533,6 +548,7 @@ function openReward(node, skipped = false) {
   const def = corpDef(node.corp);
   // the corp's own pick (its boss gear or its corp mod), a general mod, a random third, and half the time a CALL stack
   const options = rewardOptions(node);
+  const loot = skipped ? [] : bossLoot(node);   // loot for the bag (ECON.loot.boss; the user: bosses drop it)
   // FIRST BREACH (the user, 2026-10-29): the first time you ever beat this corp, its logo and its tell come before the
   // rewards (only as the screen builds in after the boss; corpStat counted this breach already)
   const first = st.breachReveal && !run.tutorial && node.type === 'corp' && corpStat(def.key).breached === 1 && CORP_TELL[def.key]
@@ -542,7 +558,7 @@ function openReward(node, skipped = false) {
     reveal: st.breachReveal,
     rival: st.breachReveal && !skipped ? st.breachRival : null,   // a rival here: their logo comes in first, DEFEATED, then yours
     title: 'CORP BREACHED', col: C.accent,
-    head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]],
+    head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]], extra: lootLine(loot),
     by: skipped ? null : profile(),
     options, locked: skipped,
     skipLabel: skipped ? '[ CONTINUE ]' : '[ SKIP  +20cr ]',

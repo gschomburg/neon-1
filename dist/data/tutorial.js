@@ -9,7 +9,7 @@
 //   of:    said in place of that popup's do-this line (a wrong tap, the boss beaten): one way to say it per line,
 //          picked at random.
 'use strict';
-NEON_FILES.push(['data/tutorial.js', 'v14.05']);
+NEON_FILES.push(['data/tutorial.js', 'v14.11']);
 
 const TUT_COPY = [
   // the public net
@@ -44,7 +44,8 @@ const TUT_COPY = [
   { id: "layerdone", part: "layer 2: the tell", text: "one layer down. not bad, {name}." },
   { id: "tell", text: "every corp hides its real node its own way. that's its TELL." },
   { id: "basictell", text: "BASIC CORP's tell: the real node is the plain one, [ ].\n\nlearn a corp's tell and you can read it every time." },
-  { id: "loot", text: "see that one? a LOOT node. it's ICE, so it still bites, but it pays out: credits or gear. your call.\n\nand keep your eyes open. there's weirder stuff than loot floating around out there." },
+  { id: "loot", text: "see that one? a LOOT node. it's ICE, so it still bites, but it pays out: loot, gear or credits.\n\ngo on. hit it.", act: "hit the LOOT node" },
+  { id: "lootbag", text: "there. that went in your LOOT bag, down here. wallets, duds, the stuff you can't use piles up in it.\n\nsell it at any market. bosses drop loot too." },
   { id: "findit", text: "", act: "find the [ ]" },
   { id: "oops", of: "findit", text: "ouch. not that one.\ntry again.\nnope. that's ICE.\nshake it off." },
   // the boss
@@ -58,7 +59,6 @@ const TUT_COPY = [
   { id: "pick", text: "", act: "pick one, or skip" },
   // out
   { id: "loop", part: "out", text: "that's the loop: pick a path, breach corps, grab rewards, shop at markets." },
-  { id: "lootbag", text: "and this is your LOOT bag. wallets, duds, the stuff you can't use piles up in here.\n\nsell it at any market. here's a little something to start you off." },
   { id: "sector", text: "a SECTOR BOSS waits at the top of every sector. and the CODEX keeps every tell you learn." },
   { id: "bye", text: "that's all i got, {name}. keep your integrity up and your head down.\n\ngood luck out there." },
   { id: "out", text: "jacking you out." },

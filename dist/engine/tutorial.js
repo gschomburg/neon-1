@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v14.05']);
+NEON_FILES.push(['engine/tutorial.js', 'v14.11']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -301,7 +301,13 @@ async function tutScript(T) {
   await say('tell');
   await say('basictell');
   const loot = lv.tiles.findIndex(t => t.loaded && t.state === 'closed');
-  if (loot >= 0) await say('loot', { target: { tile: loot } });
+  if (loot >= 0) {   // (the user, 2026-10-31: loot earlier, on purpose) hit it: a loot item, and the bag comes up
+    await ask('loot', { pick: [loot] }, () => lv.tiles[loot].state !== 'closed' && !st.busy, { target: { tile: loot } });
+    await wait(700);
+    st.run.lootShown = true;   // the [£] button (engine/loot.js)
+    if (!(st.run.loot || []).length && ITEMS.sim) addLoot('sim', 0);
+    await say('lootbag', { target: { btn: 'loot' } });
+  }
   await ask('findit', { pick: 'any' }, () => c.idx >= 2, { oops: 'oops' });
   const perfect = lv.misses === 0;
 
@@ -320,8 +326,6 @@ async function tutScript(T) {
   // 8. out
   await until(onMap);
   await say('loop');
-  if (!(st.run.loot || []).length && ITEMS.sim) addLoot('sim', 0);   // (the user: show the LOOT bag in the training; something in it)
-  await say('lootbag', { target: { btn: 'loot' } });
   await say('sector');
   // the send-off: the game goes out to the lines (held), like the opening
   if (!T.auto || TUT.curtainEnd.includes(T.auto)) {

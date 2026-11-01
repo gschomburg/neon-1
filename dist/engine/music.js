@@ -1,6 +1,6 @@
 // NeoN+1 engine/music.js: The music engine (generated music).
 'use strict';
-NEON_FILES.push(['engine/music.js', 'v14.05']);
+NEON_FILES.push(['engine/music.js', 'v14.11']);
 
 // A track (data/music.js, corps/) picks its band. Everything is optional; left out, it's the original
 // synthwave sound (so older tracks play exactly as before):
@@ -158,6 +158,18 @@ const Music = (() => {
     songG.gain.setTargetAtTime(0, info.beats[2], info.beat / 2.5);   // fade over the last beat
     return Object.assign(info, { bend });
   }
+  // Fade the playing track down (sec), no chord, no slowdown; the next track then eases in slowly (leaving the intro: the
+  // user, 2026-10-31: not the corp-won transition). Returns how long it takes.
+  let easeNext = false;
+  function fadeOut(sec = 1.4) {
+    if (!ac || !song) return 0;
+    const now = ac.currentTime;
+    songG.gain.cancelScheduledValues(now);
+    songG.gain.setValueAtTime(songG.gain.value, now);
+    songG.gain.linearRampToValueAtTime(0, now + sec);
+    easeNext = true;
+    return sec;
+  }
   // Push the playing track up over three beats, then cut to silence (boss beaten).
   // The next track waits a moment, then fades in slowly.
   function powerUp() {
@@ -199,7 +211,8 @@ const Music = (() => {
   function switchTo(next) {
     const first = key == null;
     key = next;
-    const slowIn = fx && fx.dir > 0;   // after a boss fanfare: ease the next track in
+    const slowIn = (fx && fx.dir > 0) || easeNext;   // after a boss fanfare (or a fade-out): ease the next track in
+    easeNext = false;
     fx = null;
     const now = ac.currentTime;
     songG.gain.cancelScheduledValues(now);
@@ -595,7 +608,7 @@ const Music = (() => {
   }
 
   let lastBeat = null;
-  return { init, volume, setSource: fn => { getState = fn; }, current: () => key, beat: () => (ac && ac.state === 'running' && song ? lastBeat : null), keyInfo: () => Object.assign(keyInfo(), { bend: () => 1 }), powerDown, powerUp,
+  return { init, volume, setSource: fn => { getState = fn; }, current: () => key, beat: () => (ac && ac.state === 'running' && song ? lastBeat : null), keyInfo: () => Object.assign(keyInfo(), { bend: () => 1 }), powerDown, powerUp, fadeOut,
     restart: () => { if (ac && key) switchTo(key); },
     // Music View: what's playing now ({ step, pass, bar, section } as heard, or null), parts to leave out,
     // jump to a pass, hold on one pass (null: follow the form again)

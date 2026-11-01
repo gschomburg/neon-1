@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.05']);
+NEON_FILES.push(['engine/run.js', 'v14.11']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -856,6 +856,15 @@ const START_NOTE = {
 
 // LAYER END stage: what each mod does once a layer is passed.
 const END_FX = {
+  // PICKPOCKET (the user, 2026-10-31): each layer you clear, a chance of a loot item (rarer at the higher steps)
+  pickpocket() {
+    const run = st.run, c = st.corp;
+    if (!c || !c.hasBoss || !st.lv || st.lv.n < 2) return false;
+    const r = rngFor(run.seed, 'pickpocket', c.node.id, c.idx);
+    if (r() >= tv('pickpocket', ECON.modx.pickpocket)) return false;
+    const got = dropLoot(r, 1, tv('pickpocket', ECON.modx.pickpocketRare));
+    setMsg(`> pickpocket: ${got[0]}.`, C.money); Sound.loot();
+  },
   ezpass() { const cr = earnInt(ECON.mods.ezpass); st.run.credits += cr; st.run.earned += cr; },
   // GRAVE ROBBER: every ICE you never touched is a grave to rob
   graverobber() {
@@ -1050,6 +1059,7 @@ function heal(n) {
 // (onTrap, the corps' own) end the run.
 function addRot(n) {
   const run = st.run;
+  if (run.stim && run.stim.zombie && n > 0) return;   // STIM with ZOMBIE: no rot this corp
   run.rot = (run.rot || 0) + n;
   if (run.rot >= ROT.max) { run.rot = ROT.max; run.integrity = 0; }
 }
@@ -1574,20 +1584,46 @@ const BOARD_FX = {
 };
 
 // Which gear a loot roll gives: by weight (gearWeight, ECON.drop).
-const pickGearDrop = r => pickWeighted(Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && gearAllowed(k)), gearWeight, r);   // (fish: only from a PIER)   // (boss gear: only from its boss)
+const pickGearDrop = r => pickWeighted(Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && !ITEMS[k].value && gearAllowed(k)), gearWeight, r);
+// A loot item for the bag (DUDS ... WALLET), by weight; rare leans it to the rarer ones (a sector boss, PICKPOCKET)
+const lootPool = () => Object.keys(ITEMS).filter(k => ITEMS[k].value && !ITEMS[k].fish && gearAllowed(k));
+const pickLootItem = (r, rare = 0) => pickWeighted(lootPool(), k => gearWeight(k) * (1 + rare * (RARITY[ITEMS[k].rarity].lvl || 0)), r);
+// A loot roll (the user, 2026-10-31: more loot, not mostly money): an item (a loot item for the bag or a gear) or credits.
+// Nothing taken: grantLoot gives it, the editor's loot viewer shows it. The training always gets a loot item (its lesson).
+function lootRoll(r, tier) {
+  if (st.run && st.run.tutorial) return { key: 'sim', tier: 0 };
+  if (discDrops(r, 'loot') && itemRoom('disc', 0)) return { key: 'disc', tier: 0 };
+  if (r() < (has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance)) {
+    const key = r() < ECON.loot.valueShare ? pickLootItem(r) : pickGearDrop(r), t = rollTier(r, ITEMS[key]);
+    if (isLoot(key) || itemRoom(key, t)) return { key, tier: t };
+  }
+  return { cr: Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier) + r() * earnCr(ECON.loot.roll)) };
+}
+// Loot items dropped into the bag (a boss, a cache): n of them; returns their names
+function dropLoot(r, n, rare = 0) {
+  const got = [];
+  for (let i = 0; i < n; i++) { const k = pickLootItem(r, rare), t = rollTier(r, ITEMS[k]); addLoot(k, t); got.push(ITEMS[k].name.toLowerCase()); }
+  return got;
+}
+// A boss's loot (once: a resumed reward screen doesn't drop it again): a corp boss ECON.loot.boss, a sector boss .sector
+function bossLoot(node, sector = false) {
+  const run = st.run; run.bossLoot = run.bossLoot || {};
+  if (!node || run.bossLoot[node.id]) return [];
+  run.bossLoot[node.id] = true;
+  const r = rngFor(run.seed, 'bossloot', node.id), [lo, hi] = sector ? ECON.loot.sector : ECON.loot.boss;
+  return dropLoot(r, lo + Math.floor(r() * (hi - lo + 1)), sector ? 1 : 0);
+}
+const lootLine = got => got.length ? [[('+ loot: ' + got.join(', ')).slice(0, 34), C.money]] : [];   // (fish: only from a PIER)   // (boss gear: only from its boss)
 
 // Credits or an item. Returns a short text for the message line.
 function grantLoot(r, tier) {
   const run = st.run;
   Sound.loot();
-  // the quest's DISC (engine/quests.js), if it's your turn for it
-  if (discDrops(r, 'loot') && addItem('disc', 0)) return 'got loot: DISC. (a quest)';
-  // an item (more often with a higher STASH), at a rolled tier, if there's room
-  if (r() < (has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance)) {
-    const key = pickGearDrop(r), tier = rollTier(r, ITEMS[key]);
-    if (addItem(key, tier)) return `got ${isLoot(key) ? 'loot' : 'gear'}: ${ITEMS[key].name}${tier ? ' ' + RARITY[itemView(key, tier).rarity].label.toLowerCase() : ''}.`;
-  }
-  const cr = Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier) + r() * earnCr(ECON.loot.roll));
+  // the roll (lootRoll): the quest's DISC, an item (more often with STASH; half of them loot for the bag), or credits
+  const g = lootRoll(r, tier);
+  if (g.key === 'disc' && addItem('disc', 0)) return 'got loot: DISC. (a quest)';
+  if (g.key && addItem(g.key, g.tier)) return `got ${isLoot(g.key) ? 'loot' : 'gear'}: ${ITEMS[g.key].name}${g.tier ? ' ' + RARITY[itemView(g.key, g.tier).rarity].label.toLowerCase() : ''}.`;
+  const cr = g.cr != null ? g.cr : Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier));
   run.credits += cr; run.earned += cr;
   return `+${cr}cr`;
 }
@@ -1873,9 +1909,10 @@ function openOmniReward(from) {
   const gen = pickMods(r, modsOfKind('gen'), 1, corpPick);
   const third = pickMods(r, modsOfKind('gen', 'minor'), 1, corpPick.concat(gen));
   const exotic = exoticOffer(run.seed, 'sector', from, 1);   // the sector boss always has one (if any are left)
+  const loot = bossLoot(boss, true);   // and loot for the bag (ECON.loot.sector)
   openChoice({
     title: cerb ? 'CERBERUS BREACHED' : 'OMNI//CORE BREACHED', col: C.accent,
-    head: [[`sector ${from + 1} spoils. take one.`, C.text]],
+    head: [[`sector ${from + 1} spoils. take one.`, C.text]], extra: lootLine(loot),
     options: shuffle(corpPick.concat(gen, third), r).concat(exotic),
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.sector)}cr ]`,
     onSkip: () => { const cr = earnInt(ECON.skip.sector); run.credits += cr; run.earned += cr; Sound.loot(); },

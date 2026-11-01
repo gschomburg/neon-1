@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v14.05']);
+NEON_FILES.push(['engine/codex.js', 'v14.11']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -169,7 +169,7 @@ function openCodex() {
       for (let i = 3 + d.length + tiers.length + (tiers.length ? 1 : 0); i < 12; i++) T('');
     } else {
       const it = ITEMS[k], tiers = it.tiers ? it.tiers.map((_, i) => tierView(it, i)) : [];
-      X({ text: it.name, chip: it.rarity, bold: true }); X({ text: `${!['scrap', 'common'].includes(it.rarity) ? RARITY[it.rarity].label + ' ' : ''}gear // single use`, col: C.mid, chips: true });
+      X(isLoot(k) ? { text: it.name, chip: it.rarity, bold: true } : { gearHead: k, gearTier: 0, text: it.name }); X({ text: `${!['scrap', 'common'].includes(it.rarity) ? RARITY[it.rarity].label + ' ' : ''}gear // single use`, col: C.mid, chips: true });
       const dl = wrapText(it.codex || it.desc, 34).slice(0, 12 - 3 - tiers.length - (tiers.length ? 1 : 0));
       dl.forEach(l => T(l.padEnd(34), C.text));
       if (tiers.length) { T(''); tiers.forEach(v => X({ text: `${RARITY[v.rarity].label.padEnd(7)}${v.tip}`.padEnd(34), col: C.text, chips: true })); }
@@ -205,7 +205,8 @@ function openCodex() {
         const def = isMod ? MODS[key] : ITEMS[key];
         X(Object.assign(base, {
           badge: isMod && seenK ? key : null,
-          name: seenK ? def.name : '???', col: seenK ? C.bright : C.dim, chip: seenK && !isMod ? def.rarity : null,
+          gear: seenK && !isMod && !isLoot(key) ? key : null,
+          name: seenK ? def.name : '???', col: seenK ? C.bright : C.dim, chip: seenK && !isMod && isLoot(key) ? def.rarity : null,
           right: isMod ? (seenK ? RARITY[def.rarity].label : '') : 'gear', rightCol: C.mid, rightChips: seenK,
         }));
       }
