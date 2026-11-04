@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.14']);
+NEON_FILES.push(['engine/active.js', 'v14.24']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -166,7 +166,45 @@ async function beeSwarm(lv, n, quiet = false) {
   if (!ice.length) return;
   st.busy = true;
   setMsg(quiet ? '> the bees are still here. bzz.' : '> BEES. (the bees are not real.)', C.money);
-  for (const t of ice) {
+  if (!reduced()) {
+    // the swarm: in from under the board, a lap over the whole board (not the quiet ones), then each ICE in turn
+    const lap = quiet ? 0 : 1.1, seg = quiet ? 0.5 : 0.62, enter = 0.45, out = 0.5;
+    const total = enter + lap + seg * ice.length + out;
+    const bx0 = pxX(0), bx1 = pxX(L.wc - 1), by0 = pxY(BOARD_Y), by1 = pxY(BOARD_Y + L.gh - 1), mx = (bx0 + bx1) / 2, my = (by0 + by1) / 2;
+    const centers = ice.map(t => tileCenter(t));
+    const center = s => {   // where the swarm is at s seconds
+      if (s < enter) { const k = s / enter; return { x: mx, y: by1 + L.chh * 6 * (1 - k) + (my - by1) * k * 0.5, r: 1.4 }; }
+      s -= enter;
+      if (s < lap) { const a = s / lap * Math.PI * 2; return { x: mx + Math.sin(a) * (bx1 - bx0) * 0.42, y: my + (Math.cos(a) * 0.5 + 0.25) * (by1 - by0) * 0.45, r: 1.6 }; }
+      s -= lap;
+      const i = Math.min(ice.length - 1, Math.floor(s / seg));
+      if (s < seg * ice.length) {
+        const k = (s - i * seg) / seg, from = i ? centers[i - 1] : { x: mx, y: my + (by1 - by0) * 0.11 }, to = centers[i], tr = Math.min(1, k / 0.45);
+        return { x: from.x + (to.x - from.x) * tr, y: from.y + (to.y - from.y) * tr, r: k < 0.45 ? 1.2 : 0.55 };
+      }
+      const k = (s - seg * ice.length) / out, last = centers[ice.length - 1];
+      return { x: last.x, y: last.y - (last.y - by0 + L.chh * 8) * k, r: 1.5 };
+    };
+    const nB = quiet ? 7 : 16;
+    for (let b = 0; b < nB; b++) {
+      const ph = b * 2.399, sp = 5 + (b % 5);
+      parts.push({ mode: 'path', ch: '*', col: C.money, alpha: 1, t: -b * 0.025, life: total,
+        path: k => {
+          const s = k * total, c = center(s), w = s * sp + ph, rad = c.r * L.cw * 2.2 * (0.6 + 0.4 * Math.sin(ph * 3));
+          return { x: c.x + Math.cos(w) * rad + Math.sin(s * 23 + b) * L.cw * 0.4, y: c.y + Math.sin(w * 1.3) * rad * 0.6 + Math.cos(s * 19 + b) * L.chh * 0.3,
+            ch: Math.floor(s * 18 + b) % 3 ? '*' : '+', alpha: k > 0.93 ? (1 - k) / 0.07 : 1 };
+        } });
+    }
+    Sound.buzz(total);
+    await wait((enter + lap) * 1000);
+    for (const t of ice) {
+      await wait(seg * 1000 * 0.75);
+      if (st.lv !== lv) return;
+      if (t.state === 'closed') { Sound.tick(); lockTile(t, C.money, 'bees'); }
+      await wait(seg * 1000 * 0.25);
+    }
+    await wait(out * 1000 * 0.5);
+  } else for (const t of ice) {
     await wait(quiet ? 160 : 260);
     if (st.lv !== lv) return;
     if (t.state !== 'closed') continue;
@@ -302,15 +340,42 @@ async function fragBoard(lv, tier) {
   if (st.lv === lv) st.busy = false;
 }
 // SHOE: throw it. 1%: it hits the real node (the layer clears, no pay); 10%: it breaks an ICE; else, a joke.
-const SHOE_MISS = ['> you throw a shoe. the firewall is unimpressed.', '> it bounces off. a sysadmin somewhere laughs.', '> clonk.',
-  '> the shoe is in the server room now. it lives there.', '> it hits nothing. you are down a shoe.', '> thunk. the ICE does not care.'];
-function throwShoe(lv) {
+const SHOE_MISS = ['> a shoe. the firewall shrugs.', '> it bounces off. someone laughs.', '> clonk.',
+  '> the shoe lives in the server now.', '> it hits nothing. one shoe down.', '> thunk. the ICE does not care.'];
+// The shoe in flight: an arc up from the tray onto a node, spinning; a miss bounces off and drops away.
+function shoeFlight(lv, t, hit) {
+  return new Promise(res => {
+    const c = tileCenter(t), sx = pxX(L.wc / 2), sy = pxY(BOARD_Y + L.gh + 2), up = L.chh * 6, dur = 0.55;
+    const after = { x: c.x + (Math.random() < 0.5 ? -1 : 1) * L.cw * 9, y: c.y + L.chh * 14 };
+    Sound.whiff();
+    const glyph = 'L__';
+    glyph.split('').forEach((ch, i) => parts.push({ mode: 'path', ch, col: C.bright, alpha: 1, t: 0, life: hit ? dur : dur + 0.5,
+      path: k => {
+        const tt = k * (hit ? 1 : (dur + 0.5) / dur), rot = tt * 9;
+        let x, y;
+        if (tt <= 1) { x = sx + (c.x - sx) * tt; y = sy + (c.y - sy) * tt - Math.sin(Math.PI * tt) * up; }
+        else { const q = tt - 1; x = c.x + (after.x - c.x) * q; y = c.y - Math.sin(Math.PI * Math.min(1, q * 1.4)) * L.chh * 2 + (after.y - c.y) * q * q; }
+        const off = (i - 1) * L.cw;
+        return { x: x + Math.cos(rot) * off, y: y + Math.sin(rot) * off, rot, alpha: tt > 1 ? Math.max(0, 1 - (tt - 1) * 2) : 1 };
+      },
+      onEnd: i === 0 && !hit ? res : null }));
+    setTimeout(() => { Sound.thunk(); shake(hit ? 5 : 3); if (hit) res(); }, dur * 1000);
+  });
+}
+async function throwShoe(lv) {
   const run = st.run, r = rngFor(run.seed, 'shoe', st.corp.node.id, st.corp.idx, run.shoes = (run.shoes || 0) + 1), u = r();
-  shake(2); Sound.tick();
   const real = lv.tiles.find(t => t.state === 'closed' && isReal(t));
-  if (u < 0.01 && real && gearMayClear()) { flash(C.money, 0.3, 0.5); return gearClear(lv, real, '> THE SHOE HIT THE REAL NODE. no way. layer clear, no pay.'); }
   const ice = lv.tiles.filter(t => t.state === 'closed' && !isReal(t));
-  if (u < 0.11 && ice.length) { lockTile(pickR(ice, r), C.accent, 'shoe'); setMsg('> the shoe breaks an ICE. sabotage.', C.accent); return; }
+  const hitReal = u < 0.01 && real && gearMayClear(), hitIce = !hitReal && u < 0.11 && ice.length;
+  const target = hitReal ? real : hitIce ? pickR(ice, r) : pickR(lv.tiles.filter(t => t.state === 'closed'), r);
+  if (!target) return setMsg(pickR(SHOE_MISS, r), C.mid);
+  st.busy = true;
+  setMsg('> you throw a shoe.', C.mid);
+  if (!reduced()) await shoeFlight(lv, target, hitReal || hitIce); else { Sound.thunk(); shake(2); }
+  if (st.lv !== lv) return;
+  st.busy = false;
+  if (hitReal) { flash(C.money, 0.3, 0.5); return gearClear(lv, real, '> THE SHOE GOT IT. no way. no pay.'); }
+  if (hitIce && target.state === 'closed') { lockTile(target, C.accent, 'shoe'); setMsg('> the shoe breaks an ICE!', C.accent); return; }
   setMsg(pickR(SHOE_MISS, r), C.mid);
 }
 // LOTTO: a scratch ticket. A random amount (ECON.lotto), now and then the jackpot. Seeded: the nth ticket of a run.

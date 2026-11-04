@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v14.14']);
+NEON_FILES.push(['engine/fishing.js', 'v14.24']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -65,7 +65,7 @@ function fishOutcome(r) {
   if (u < ECON.fish.shoe + ECON.fish.gear) {   // the loot pool, each rarity step damped
     const pool = Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && !ITEMS[k].crew && k !== 'shoe' && gearAllowed(k));
     const step = k => Math.max(0, RARITY_ORDER.indexOf(ITEMS[k].rarity) - RARITY_ORDER.indexOf('common'));
-    const key = pickWeighted(pool, k => gearWeight(k) * Math.pow(ECON.fish.damp, step(k)), r);
+    const key = pickWeighted(pool, k => gearWeight(k) * Math.pow(ECON.fish.damp, step(k)) * (ITEMS[k].corrupt ? 2 : 1), r);   // (corrupted software: it washes up here)
     return { kind: 'gear', key, tier: 0, rarity: ITEMS[key].rarity };
   }
   const rar = pickWeighted(FISH_RARITY, x => ECON.fish.odds[FISH_RARITY.indexOf(x)] || 0, r);

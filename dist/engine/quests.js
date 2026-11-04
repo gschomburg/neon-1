@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.14']);
+NEON_FILES.push(['engine/quests.js', 'v14.24']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -120,11 +120,279 @@ function playScene(id, onEnd = null) {   // (onEnd: what comes after it: the H3A
 }
 const sceneTyped = (sc, now) => Math.floor((now - sc.t0) / 28);
 const frameLen = fr => fr.title ? 0 : fr.text.length;   // a title card is up at once
+// ---- A strip scene (data/quests.js, disc): one tall page; each frame's art draws in, then its text types under it,
+// and the page scrolls up to keep the newest at the bottom. Timings (ms): gap / reveal = a layer's default start step
+// and draw-in time; type = a character; pause / comma = the extra wait after a sentence / a comma.
+const STRIP_CHIPS = ['d0g'];   // hackers whose names show on their own colors in a scene's text (the user, 2026-11-04)
+const STRIP = { w: 32, gap: 420, reveal: 700, type: 28, pause: 480, comma: 160, top: 3, foot: 4, ease: 3 };
+const isStrip = id => QUEST_SCENES[id].some(f => f.pic);
+const stripHash = (x, y, z = 0) => ((((x + 11) * 73856093) ^ ((y + 7) * 19349663) ^ ((z + 3) * 83492791)) >>> 0) % 1000 / 1000;
+// A frame's art: a scene_art.js canvas, or a hacker's full logo block (their logo + mark and name, on their colors:
+// logoBlock, engine/multiplayer.js) made into one.
+function stripLogo(id) {
+  const blk = logoBlock(id, HACKERS[id] ? HACKERS[id].name : id, hkStyle(id)), w = blk[0].text.length;
+  return { w: 36, h: blk.length, fg: blk[0].col, bgc: blk[0].bgCol, bw: w, layers: { logo: { x: Math.floor((36 - w) / 2), y: 0, rows: blk.map(b => b.text) } } };
+}
+const stripArt = pic => pic.logo ? stripLogo(pic.logo) : SCENE_ART[pic.art];
+const picRows = pic => pic.rows || [0, stripArt(pic).h - 1];
+const picLayers = pic => { if (!pic.logo) return pic.layers; const a = stripArt(pic); return [Object.assign({ n: 'logo', col: a.fg, glitch: true, dur: 900, box: { w: a.bw, col: a.bgc } }, pic.look || {})]; };
+const layerAt = (ly, k) => ly.at != null ? ly.at : k * STRIP.gap;
+const layerEnd = (ly, k) => layerAt(ly, k) + (ly.dur || STRIP.reveal) + (ly.slide ? (ly.slide.at || 0) + ly.slide.ms : 0);   // (a progress runs on past it: the text doesn't wait)
+const stripArtMs = fr => fr.pic ? Math.max(...picLayers(fr.pic).map(layerEnd)) + (fr.pic.hold || 0) : 0;
+// When each character of a line shows (ms from the start of its typing): a pause after a sentence, a short one after a comma.
+const stripTimes = new WeakMap();
+function textTimes(fr) {
+  if (!stripTimes.has(fr)) {
+    const out = [], s = fr.text; let t = 0;
+    for (let i = 0; i < s.length; i++) {
+      t += STRIP.type; out.push(t);
+      if (s[i + 1] === ' ' && /[.?!]/.test(s[i])) t += STRIP.pause;
+      else if (s[i + 1] === ' ' && /[,:;]/.test(s[i])) t += STRIP.comma;
+    }
+    stripTimes.set(fr, out);
+  }
+  return stripTimes.get(fr);
+}
+const typedBy = (fr, ms) => { const tt = textTimes(fr); let n = 0; while (n < tt.length && tt[n] <= ms) n++; return n; };
+const frameMs = fr => fr.title ? 0 : stripArtMs(fr) + (textTimes(fr).slice(-1)[0] || 0);
+function stripLayout(id) {   // where each frame sits on the page (rows)
+  let y = 0;
+  return QUEST_SCENES[id].map(fr => {
+    if (fr.title) return null;
+    const top = y, rr = fr.pic ? picRows(fr.pic) : null, artH = rr ? rr[1] - rr[0] + 1 : 0;
+    y += artH ? artH + 1 : 0;
+    const lines = wrapText(fr.text, STRIP.w), textTop = y + (fr.who ? 1 : 0);
+    y = textTop + lines.length;
+    const out = { top, artH, textTop, lines, bottom: y };
+    y += 2;
+    return out;
+  });
+}
+const stripCol = c => c && c[0] === '#' ? c : c && c.startsWith('ink:') ? hkInk(c.slice(4)) : C[c] || C.text;
+const GLITCH_SET = '#%&@$!?*<>/=+';
+function buildStrip(ctx, now, sc, frames) {
+  const { put, bg } = ctx, lay = sc.lay = sc.lay || stripLayout(sc.id), cur = lay[sc.i], fr0 = frames[sc.i];
+  sc.fired = sc.fired || new Set();
+  const once = (key, f) => { if (!sc.fired.has(key)) { sc.fired.add(key); f(); } };
+  // the camera: a frame with hold keeps its art in place until it's all in (and a beat more), then the page scrolls
+  const view = L.hc - STRIP.top - STRIP.foot, el0 = now - sc.t0;
+  const restAt = at => Math.max(0, at.top + at.artH - view);   // its art's bottom at the bottom of the view
+  const holding = fr0.pic && fr0.pic.hold && el0 < stripArtMs(fr0);
+  const target = holding ? restAt(cur) : Math.max(0, cur.bottom + 1 - view);
+  const dt = Math.min(0.1, Math.max(0, (now - (sc.last || now)) / 1000)); sc.last = now;
+  if (sc.cam == null) sc.cam = target;
+  sc.cam += (target - sc.cam) * (1 - Math.exp(-dt * STRIP.ease));
+  const cam = sc.cam, yOf = r => STRIP.top + r - Math.round(cam), inView = y => y >= STRIP.top && y < L.hc - STRIP.foot + 1;
+  for (let j = 0; j <= sc.i; j++) {
+    const fr = frames[j], at = lay[j];
+    if (!at) continue;
+    const el = j < sc.i ? Infinity : now - sc.t0, textStart = stripArtMs(fr);
+    if (fr.pic) {
+      const art = stripArt(fr.pic), [r0, r1] = picRows(fr.pic), x0 = Math.floor((L.wc - art.w) / 2), lys = picLayers(fr.pic);
+      const taken = new Set(), base = restAt(at);
+      // front to back: a mark hides what's behind it; a solid layer hides it all between its first and last mark on a row
+      lys.map((ly, k) => [ly, k]).reverse().forEach(([ly, k]) => {
+        const src = ly.fog || ly.fly ? null : art.layers[ly.n];
+        if (!ly.fog && !ly.fly && !src) return;
+        const t = el - layerAt(ly, k), dur = ly.dur || STRIP.reveal, p = Math.min(1, Math.max(0, t / dur)), col = stripCol(ly.col);
+        if (p <= 0) return;
+        const shift = ly.par ? Math.round(ly.par * Math.max(0, cam - base)) : 0;
+        // a slide: from an offset to where it's drawn, after it's in
+        let dx = ly.off ? ly.off[0] : 0, dy = ly.off ? ly.off[1] : 0;   // (off: drawn this far from where it is in the save)
+        if (ly.slide) {
+          const s = ly.slide, k2 = Math.min(1, Math.max(0, (t - dur - (s.at || 0)) / s.ms)), e = 1 - Math.pow(1 - k2, 3);
+          const to = s.to || [0, 0];
+          dx += Math.round(s.from[0] + (to[0] - s.from[0]) * e); dy += Math.round(s.from[1] + (to[1] - s.from[1]) * e);
+          if (k2 > 0 && s.startSound && j === sc.i) once(j + ':' + k + ':slide0', () => Sound[s.startSound] && Sound[s.startSound]((s.ms || 1000) / 1000));
+          if (k2 >= 1 && s.sound && j === sc.i) once(j + ':' + k + ':slide', () => Sound[s.sound] && Sound[s.sound]());
+        }
+        // FLY: things crossing the sky right to left, off the grid (smooth), behind whatever is in front
+        if (ly.fly) {
+          for (const v of ly.fly) {
+            const x = art.w + 1 - (((now + (v.delay || 0)) % v.every) / 1000) * v.speed, Y = v.y;
+            if (x < -v.art.length - 1 || Y < r0 || Y > r1) continue;
+            const sy = yOf(at.top + Y - r0 + shift);
+            if (!inView(sy)) continue;
+            for (let i = 0; i < v.art.length; i++) {
+              const X = x + i;
+              if (v.art[i] === ' ' || X < 0 || X > art.w - 1 || taken.has(Math.round(X) + ',' + sy)) continue;
+              put(x0 + X, sy, v.art[i], v.col ? stripCol(v.col) : col, 'hud');
+            }
+          }
+          return;
+        }
+        // GLOW: a light that throws a cone down (a lamp): a faint wash behind, and the marks in it lit
+        const G = ly.glow && t > dur * 0.7 ? ly.glow : null, gFl = G && stripHash(1, 2, Math.floor(now / 140)) < 0.05 ? 0.35 : 1;
+        const coneK = (X, Y) => { if (!G) return 0; const d = Y - G.y; if (d < 1 || d > G.rows || Math.abs(X - G.x) > d * (G.spread || 0.8)) return 0; return (1 - (d - 1) / G.rows) * gFl; };
+        if (G) for (let d = 1; d <= G.rows; d++) {
+          const Y = G.y + d, half = Math.round(d * (G.spread || 0.8));
+          if (Y < r0 || Y > r1) continue;
+          const sy = yOf(at.top + Y - r0 + shift);
+          if (inView(sy)) bg(x0 + G.x - half, sy, half * 2 + 1, stripCol(G.col), (G.alpha || 0.12) * (1 - (d - 1) / G.rows) * gFl);
+        }
+        const rows = ly.fog ? fogRows(ly.fog, now, art.w) : src.rows, sx = ly.fog ? 0 : src.x, syy = ly.fog ? ly.fog.rows[0] : src.y;
+        const bottom = syy + rows.length - 1;
+        // the cue: marks that stay dark until a word of the text types in, then glitch on (and flicker now and then)
+        let cueT = null;
+        if (ly.cue) { const i = fr.text.indexOf(ly.cue.word); cueT = i < 0 ? 0 : textStart + textTimes(fr)[i + ly.cue.word.length - 1]; }
+        rows.forEach((row, r) => {
+          const Y = syy + r + dy;
+          if (Y < r0 || Y > r1 || (ly.par && Y + shift > Math.min(bottom, r1))) return;
+          const sy = yOf(at.top + Y - r0 + shift);
+          if (!inView(sy)) return;
+          const cueAt = ly.cue ? row.indexOf(ly.cue.match) : -1, rel = (syy + r - r0) / Math.max(1, r1 - r0);
+          const hid = ly.hide ? new Set(ly.hide.flatMap(h => { const out = []; let i = row.indexOf(h); while (i >= 0) { for (let q = 0; q < h.length; q++) out.push(i + q); i = row.indexOf(h, i + 1); } return out; })) : null;
+          const blinkAt = ly.blink ? row.indexOf(ly.blink.match) : -1;
+          // TICS (a glitchy logo, like G0D's flickers): now and then a row tears sideways for a moment (tear), marks swap
+          // (swap: [from, to], e.g. d0g's d -> b), and little clusters flash to noise, all in tics.col
+          const TC = ly.tics && p >= 1 ? ly.tics : null;
+          let tear = 0;
+          if (TC) { const k = Math.floor(now / 1900); if (now % 1900 < 110 && stripHash(k, r, 2) < 0.35) tear = stripHash(k, r, 4) < 0.5 ? -1 : 1; }
+          if (ly.box) { const a = p < 1 ? (stripHash(r, 1, Math.floor(now / 60)) < p ? 1 : 0) : 1; bg(x0 + sx + dx + tear, sy, ly.box.w, stripCol(ly.box.col), a); if (r < rows.length - 1) bg(x0 + sx + dx + tear, sy + 0.5, ly.box.w, stripCol(ly.box.col), a); }   // a logo's block of color (the half step covers the gap between rows)
+          // PROGRESS: the mark after ly.progress.after on each row, top to bottom, lights up one by one, spinning
+          const prAt = ly.progress ? row.indexOf(ly.progress.after) : -1, prC = prAt >= 0 ? prAt + ly.progress.after.length : -1;
+          const prList = ly.progress ? (src._pr = src._pr || src.rows.map(rw => { const i = rw.indexOf(ly.progress.after); return i >= 0 && ly.progress.ch.includes(rw[i + ly.progress.after.length]); })) : null;
+          const prRank = prList && prList[r] ? prList.slice(0, r).filter(Boolean).length : -1, prN = prList ? prList.filter(Boolean).length : 0;
+          for (let c = 0; c < row.length; c++) {
+            let ch = row[c];
+            const X = sx + c + dx;
+            if (ch === ' ' || X < 0 || X >= art.w || taken.has(X + ',' + sy) || (hid && hid.has(c))) continue;
+            if (blinkAt >= 0 && c >= blinkAt && c < blinkAt + ly.blink.match.length) {   // BLINK: now and then (sometimes twice)
+              const B = ly.blink, per = B.every || 4200, n = Math.floor(now / per), ph = now % per - stripHash(n, 9) * per * 0.6, ms = B.ms || 160;
+              if ((ph >= 0 && ph < ms) || (stripHash(n, 4) < 0.25 && ph >= ms * 2 && ph < ms * 3)) ch = B.to[c - blinkAt];
+            }
+            const order = 0.6 * (ly.from === 'top' ? rel : 1 - rel) + 0.4 * stripHash(X, Y);
+            let ink = col;
+            if (p < 1) {
+              if (p < order) continue;
+              const fresh = p - order;
+              if (ly.flicker && fresh < 0.2 && stripHash(X, Y, Math.floor(now / 55)) < 0.5) continue;   // flickering on
+              if (ly.glitch && fresh < 0.3) { ch = GLITCH_SET[Math.floor(stripHash(X, Y, Math.floor(now / 70)) * GLITCH_SET.length)]; ink = C.bright; }
+              else if (fresh < 0.07) ink = C.bright;   // a flash as it lands
+            }
+            if (cueAt >= 0 && c >= cueAt && c < cueAt + ly.cue.match.length) {   // the cue's marks
+              const since = el - cueT;
+              if (!(since >= 0)) continue;
+              if (j === sc.i) once(j + ':' + k + ':cue', () => Sound.neonOn && Sound.neonOn());
+              ink = stripCol(ly.cue.col);
+              if (since < 700) { if (stripHash(X, Y, Math.floor(now / 50)) < 0.45) continue; if (stripHash(X, Y, Math.floor(now / 90)) < 0.35) ch = GLITCH_SET[Math.floor(stripHash(c, r, Math.floor(now / 90)) * GLITCH_SET.length)]; }
+              else if (stripHash(0, 0, Math.floor(now / 2600)) < 0.3 && Math.floor(now / 70) % 3 === 0) continue;   // it still flickers
+            }
+            if (ly.lights && ly.lights.ch.includes(ch)) {   // windows and LEDs: some go on and off, some (pulse) breathe
+              const L2 = ly.lights, h = stripHash(Y, X), lit = stripCol(L2.col), lv = L2.level || 1;
+              if (L2.pulse && h < L2.pulse) ink = mixHex(C.dim, lit, (0.15 + 0.85 * (0.5 + 0.5 * Math.sin(now / (L2.period || 2000) * 6.283 + h * 40))) * lv);
+              else if (stripHash(X, Y, Math.floor((now + h * L2.rate) / L2.rate)) >= (L2.off || 0.2)) ink = mixHex(C.dim, lit, lv);
+              else { ink = C.dim; if (L2.offCh) ch = L2.offCh; }
+            }
+            if (G) { const g = coneK(X, Y); if (X === G.x && Y === G.y) ink = mixHex(C.bright, stripCol(G.col), 0.5 * gFl + 0.2); else if (g > 0) ink = mixHex(ink, mixHex(C.bright, stripCol(G.col), 0.5), 0.6 * g); }
+            if (ly.spin && j === sc.i && ly.spin.ch.includes(ch) && t > dur + (ly.spin.after || 0)) ch = '%#%&'[(Math.floor(now / 160) + r) % 4];   // the drive spins up
+            if (prRank >= 0 && c === prC) {
+              const P = ly.progress, k2 = (t - (P.at || 0)) / (P.ms || 1800), lit = Math.floor(k2 * prN);
+              if (k2 >= 0 && P.sound && j === sc.i) once(j + ':' + k + ':prog', () => Sound[P.sound] && Sound[P.sound]((P.ms || 1800) / 1000));
+              if (k2 >= 0 && prRank <= lit) {
+                ink = stripCol(P.col || 'accent');
+                if (prRank === lit && k2 < 1) { ch = 'o0O@'[Math.floor(now / 70) % 4]; ink = C.bright; }   // the head of the bar
+                else if (k2 >= 1) ch = 'o0'[(Math.floor(now / 140) + prRank) % 2];   // all in: they spin
+              }
+            }
+            if (TC) {
+              if (TC.swap && now % 2600 < 320 && stripHash(Math.floor(now / 2600), 11) < 0.6) { const sw = TC.swap.find(s => s[0] === ch); if (sw) { ch = sw[1]; ink = stripCol(TC.col); } }
+              const kb = Math.floor(now / 1300);
+              if (now % 1300 < 190) {
+                const bx = stripHash(kb, 5) * art.w, by = r0 + stripHash(kb, 6) * (r1 - r0 + 1), rad = 1.2 + stripHash(kb, 7) * 2.2;
+                if (Math.hypot((X - bx) / 2, Y - by) < rad && stripHash(X * 13 + Y * 7, kb) > 0.3) { ch = '%&#*;:'[Math.floor(stripHash(X + Y, kb) * 6)]; ink = stripCol(TC.col); }
+              }
+            }
+            if (ly.ember && X === ly.ember.x && Y === ly.ember.y) {   // EMBER: a cigarette's tip, glowing up now and then
+              const E = ly.ember, ph = (now + 1000 * stripHash(X, Y)) % (E.every || 5000), ms = E.ms || 1300;
+              if (ph < ms) ink = mixHex(ink.length === 7 ? ink : C.text, stripCol(E.col || 'danger'), Math.sin(Math.PI * ph / ms));
+            }
+            put(x0 + X + tear, sy, ch, ink, 'hud');
+            taken.add(X + ',' + sy);
+          }
+          if (ly.cut && Y >= ly.cut.rows[0] && Y <= ly.cut.rows[1]) for (let X = 0; X < art.w; X++) if ((ly.cut.a || 1) * X + (ly.cut.b || 1) * Y >= ly.cut.c) taken.add(X + ',' + sy);   // CUT: hides what's behind past a line (a slot)
+          if (ly.solid && (p >= 1 || p >= order0(ly, rel))) {
+            const a = row.search(/\S/), b = row.length - 1 - [...row].reverse().join('').search(/\S/);
+            for (let c = a; c <= b; c++) taken.add((sx + c + dx) + ',' + sy);
+          }
+        });
+        if (ly.glitch && j === sc.i) once(j + ':' + k + ':glitch', () => Sound.static && Sound.static(0.35));
+        // SMOKE: puffs off a point, drifting up and fading out
+        if (ly.smoke && p >= 1) {
+          const s = ly.smoke, life = s.life || 2800, every = s.every || 700;
+          for (let n = Math.floor(now / every); n * every > now - life; n--) {
+            const age = (now - n * every) / life;
+            if (age < 0 || age > 1) continue;
+            const X = s.x + (s.dx || -2) * age + Math.sin(n * 1.7 + age * 6) * 0.7, Y = Math.round(s.y + (s.dy || -5) * age);
+            if (Y < r0 || Y > r1) continue;
+            const sy = yOf(at.top + Y - r0 + shift);
+            if (inView(sy)) put(x0 + X, sy, age < 0.18 ? (n % 2 ? '"' : '~') : age < 0.6 ? '~' : age < 0.85 ? '-' : '.', mixHex(C.mid, C.bg, age * 0.85), 'hud');
+          }
+        }
+      });
+    }
+    // its text, under the art (older frames dimmer), with a pause between sentences
+    let budget = j < sc.i ? Infinity : typedBy(fr, el - textStart);
+    if (j === sc.i) {   // a soft tick as each mark types in (a lower blip when someone's talking)
+      if (sc.typedAt !== j) { sc.typedAt = j; sc.typed = 0; }
+      const n = Math.min(budget, fr.text.length);
+      if (n > sc.typed) { if (fr.text[n - 1] !== ' ' && now - (sc.tickAt || 0) > 38 && Sound.typeTick) { Sound.typeTick(!!fr.who); sc.tickAt = now; } sc.typed = n; }
+    }
+    const tx = Math.floor((L.wc - STRIP.w) / 2), old = j < sc.i;
+    if (fr.who && budget > 0 && inView(yOf(at.textTop - 1))) put(tx, yOf(at.textTop - 1), (HACKERS[fr.who] ? HACKERS[fr.who].name : fr.who.toUpperCase()) + ':', old ? C.mid : hkInk(fr.who), 'hud', true);
+    at.lines.forEach((t, k) => {
+      const s = t.slice(0, Math.max(0, budget)); budget -= t.length + 1;
+      const y = yOf(at.textTop + k);
+      if (s && inView(y)) {
+        // a hacker's name in STRIP_CHIPS shows on their colors (d0g: white on his red), as much of it as has typed
+        let plain = s;
+        for (const id of STRIP_CHIPS) {
+          const nm = HACKERS[id] ? HACKERS[id].name : id, sty = hkStyle(id);
+          for (let i = t.indexOf(nm); i >= 0 && i < s.length; i = t.indexOf(nm, i + 1)) {
+            const part = s.slice(i, i + nm.length);
+            bg(tx + i, y, part.length, sty.bg, old ? 0.55 : 1);
+            put(tx + i, y, part, old ? mixHex(sty.fg, sty.bg, 0.35) : sty.fg, 'hud', true);
+            plain = plain.slice(0, i) + ' '.repeat(part.length) + plain.slice(i + part.length);
+          }
+        }
+        put(tx, y, plain, old ? C.mid : fr.who ? C.bright : C.text, 'hud', !!fr.who && !old);
+      }
+    });
+  }
+  put(1, 1, `- ${sc.i + 1} / ${frames.length} -`, C.dim, 'hud');
+  if (el0 >= frameMs(fr0) && Math.floor(now / 500) % 2) {
+    const t = sc.i < frames.length - 1 ? 'tap to go on' : 'tap to end';
+    put(Math.floor((L.wc - t.length) / 2), L.hc - 2, t, C.dim, 'hud');
+  }
+}
+const order0 = (ly, rel) => 0.6 * (ly.from === 'top' ? rel : 1 - rel);   // (a solid row hides what's behind once it starts in)
+// FOG: a band of dots and colons, drifting sideways slowly. { rows: [first, last], density, drift: columns a second }
+function fogRows(f, now, w) {
+  const off = Math.floor(now / 1000 * (f.drift || 0)), out = [];
+  for (let y = f.rows[0]; y <= f.rows[1]; y++) {
+    let s = '';
+    for (let x = 0; x < w; x++) { const v = stripHash(x + off, y, 5); s += v < (f.density || 0.15) * 0.35 ? ':' : v < (f.density || 0.15) ? '.' : ' '; }
+    out.push(s);
+  }
+  return out;
+}
+// A scene's music (data/quests.js SCENE_MUSIC): its song; each frame's mood (or the last one's) says the levels and
+// stages it wanders between, a new pick every step ms.
+function sceneMusic(sc, now) {
+  const M = SCENE_MUSIC[sc.id], frames = QUEST_SCENES[sc.id];
+  let mood = M.mood;
+  for (let j = 0; j <= sc.i; j++) if (frames[j].mood) mood = frames[j].mood;
+  sc.m0 = sc.m0 || now;
+  const n = Math.floor((now - sc.m0) / M.step);
+  return { song: M.song, level: mood.levels[Math.floor(stripHash(n, 3) * mood.levels.length)], section: mood.stages[Math.floor(stripHash(n, 8) * mood.stages.length)],
+    urgency: 0, low: false, tempo: 1, pitch: 1 };
+}
 function sceneNext() {
   const sc = st.qScene;
   if (!sc) return;
   const fr = QUEST_SCENES[sc.id][sc.i], now = performance.now();
-  if (sceneTyped(sc, now) < frameLen(fr)) { sc.t0 = now - frameLen(fr) * 28 - 1; return; }   // finish the line first
+  if (isStrip(sc.id)) { if (now - sc.t0 < frameMs(fr)) { sc.t0 = now - frameMs(fr) - 1; return; } }   // (a strip: finish the art and the line first)
+  else if (sceneTyped(sc, now) < frameLen(fr)) { sc.t0 = now - frameLen(fr) * 28 - 1; return; }   // finish the line first
   if (sc.i < QUEST_SCENES[sc.id].length - 1) { sc.i++; sc.t0 = now; Sound.tick(); return; }
   sceneEnd();
 }
@@ -139,10 +407,13 @@ function sceneKey(k) { if (k === 'escape') sceneEnd(); else if (k === 'enter' ||
 function buildScene_(ctx, now) {
   const { put, bg, cells, addHit } = ctx, sc = st.qScene, frames = QUEST_SCENES[sc.id], fr = frames[sc.i];
   clearRect(cells, 0, 0, L.wc, L.hc);
-  { const ex = Math.ceil(L.ox / L.cw) + 1, ey = Math.ceil(L.oy / L.chh) + 1; popupBg(bg, 'scene', -ex, -ey, L.wc + 2 * ex, L.hc + 2 * ey, false); }   // the whole screen, past the content edges (POPUP_LOOK)
+  const strip = isStrip(sc.id);
+  { const ex = Math.ceil(L.ox / L.cw) + 1, ey = Math.ceil(L.oy / L.chh) + 1;
+    if (strip) for (let y = -ey; y < L.hc + ey; y++) { bg(-ex, y, L.wc + 2 * ex, C.bg, 1); bg(-ex, y + 0.5, L.wc + 2 * ex, C.bg, 1); }   // a strip: the dark bg, light text (the user, 2026-11-04)
+    else popupBg(bg, 'scene', -ex, -ey, L.wc + 2 * ex, L.hc + 2 * ey, false); }   // the whole screen, past the content edges (POPUP_LOOK)
   addHit(0, 0, L.wc, L.hc, { kind: 'scene' });
   const W = 30, x0 = Math.floor((L.wc - W) / 2), mid = Math.floor(L.hc / 2);
-  put(x0, mid - 8, `- ${String(sc.i + 1)} / ${frames.length} -`.padStart(W), C.dim, 'hud');
+  if (!strip || fr.title) put(x0, mid - 8, `- ${String(sc.i + 1)} / ${frames.length} -`.padStart(W), C.dim, 'hud');   // (a strip: its own, top left)
   const skip = '[ SKIP ]';
   put(L.wc - skip.length - 1, 1, skip, st.hoverBtn === 'qskip' ? C.bright : C.mid, 'hud');
   addHit(L.wc - skip.length - 1, 1, skip.length, 1, { kind: 'btn', id: 'qskip', onTap: sceneEnd });
@@ -151,6 +422,7 @@ function buildScene_(ctx, now) {
     if (Math.floor(now / 500) % 2) { const t = 'tap to go on'; put(Math.floor((L.wc - t.length) / 2), mid + 6, t, C.dim, 'hud'); }
     return;
   }
+  if (strip) return buildStrip(ctx, now, sc, frames);
   if (fr.art) fr.art.forEach((l, k) => put(Math.floor((L.wc - l.length) / 2), mid - 6 + k, l, C.rep, 'hud', true));
   if (fr.who) {   // the speaker: face + name
     const face = (ART_FACES[fr.who] || { art: [] }).art, sty = hkStyle(fr.who), typing = sceneTyped(sc, now) < fr.text.length;
@@ -178,7 +450,7 @@ function questBoardLines(T, X) {
   if (!q || !q.seen) {
     T('no quests yet.', C.mid);
     T('');
-    for (const l of wrapText('keep breaching. someone out there will want something from you.', 32)) T(l, C.dim);
+    for (const l of wrapText('put a crew together and maybe you will find some. get to know the other hackers: call them.', 32)) T(l, C.dim);
     return;
   }
   q.news = false;

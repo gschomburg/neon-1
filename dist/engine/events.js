@@ -1,16 +1,16 @@
 // NeoN+1 engine/events.js: the SECTOR EVENT card (what a new sector rolled) and THE FENCE (THIEF's stolen mods,
 // sold back). The events themselves: data/events.js; the roll: engine/map.js addSector.
 'use strict';
-NEON_FILES.push(['engine/events.js', 'v14.14']);
+NEON_FILES.push(['engine/events.js', 'v14.24']);
 
 // ---------------- The SECTOR EVENT card ----------------
 // It comes up over a new sector's map once the climb settles (toMap), and again from the map's sector label.
 // Not an ad: narrower, its own frame, a system-message header, no countdown; CONTINUE closes it right away.
 const EV_W = 31;   // the card's inside width
 function showEventCard(sector, again = false) {
-  const ev = sectorEvent(sector);
+  const [ev, ev2] = sectorEvents(sector);
   if (!ev) return;
-  st.evCard = { ev, sector, again, t0: null };   // t0: set when it first shows (after the climb)
+  st.evCard = { ev, ev2: ev2 || null, sector, again, t0: null };   // t0: set when it first shows (after the climb)
 }
 function closeEventCard() {
   const c = st.evCard;
@@ -27,15 +27,15 @@ function eventLines(ev, sector) {
     .replace('{cr}', costInt(ECON.events.timeCr)));
 }
 // The tag line at the bottom: which anomaly (and that the sector boss has it too).
-function eventTagLine(ev) {
+function eventTagLine(ev, boss = true) {
   const E = SECTOR_EVENTS[ev];
   if (E.kind !== 'anomaly') return '';
-  if (E.anomaly === 'any') return 'the boss gets one too.';
+  if (E.anomaly === 'any') return boss ? 'the boss gets one too.' : '';
   const a = ANOMALIES[E.anomaly];
-  return E.noBoss ? `${a.tag} = ${a.name}` : `${a.tag} = ${a.name} (the boss too)`;
+  return E.noBoss || !boss ? `${a.tag} = ${a.name}` : `${a.tag} = ${a.name} (the boss too)`;
 }
 // The card as rows: { t, col, bold, x ('c' = centered), btn }.
-function eventCardRows(ev, sector) {
+function eventCardRows(ev, sector, ev2 = null) {
   const E = SECTOR_EVENTS[ev], rows = [];
   const R = (t, col = C.text, o = {}) => rows.push(Object.assign({ t, col }, o));
   R(`SECTOR ${sector + 1} // EVENT`, C.mid);
@@ -48,6 +48,18 @@ function eventCardRows(ev, sector) {
   for (const l of eventLines(ev, sector)) R(l);
   const tag = eventTagLine(ev);
   if (tag) { R(''); R(tag, C.money); }
+  if (ev2) {   // a 2nd event (data/events.js, Stacking): under a rule, its name and lines, no art
+    const E2 = SECTOR_EVENTS[ev2], against = E.feel !== 'mixed' && E2.feel !== 'mixed' && E.feel !== E2.feel;
+    R('');
+    R(against ? '- - -  b u t  - - -' : '- - -  a n d  - - -', C.dim, { x: 'c' });
+    R('');
+    const sp2 = E2.name.split('').join(' ');
+    R(sp2.length <= EV_W - 2 ? sp2 : E2.name, C.bright, { x: 'c', bold: true });
+    R('');
+    for (const l of eventLines(ev2, sector)) R(l);
+    const tag2 = eventTagLine(ev2, E.kind !== 'anomaly');
+    if (tag2) { R(''); R(tag2, C.money); }
+  }
   R('');
   R('[ CONTINUE ]', C.accent, { x: 'c', btn: true, bold: true });
   return rows;
@@ -66,13 +78,13 @@ function buildEventCard(ctx, now) {
   if (!SECTOR_EVENTS[c.ev]) { st.evCard = null; return; }
   const mv = st.mapView;
   if (st.mode !== 'map' || (mv && mv.row !== mv.target) || st.wipe || st.transitioning) return;
-  if (c.t0 == null) { c.t0 = now; Sound.shield(); markSeen('ev_' + c.ev); }   // its own alert sound; the codex logs it
-  const rows = eventCardRows(c.ev, c.sector);
+  if (c.t0 == null) { c.t0 = now; Sound.shield(); markSeen('ev_' + c.ev); if (c.ev2) markSeen('ev_' + c.ev2); }   // its own alert sound; the codex logs it
+  const rows = eventCardRows(c.ev, c.sector, c.ev2);
   const w = EV_W + 2, h = rows.length + 2, x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
   clearRect(cells, x0, y0, w, h);
   popupBg(bg, 'event', x0, y0, w, h);   // (its look: POPUP_LOOK, engine/render.js)
   addHit(x0, y0, w, h, { kind: 'evbox' });
-  const frame = c.ev && SECTOR_EVENTS[c.ev].kind === 'anomaly' ? C.accent : C.mid;
+  const frame = [c.ev, c.ev2].some(k => k && SECTOR_EVENTS[k].kind === 'anomaly') ? C.accent : C.mid;
   put(x0, y0, '#' + '='.repeat(w - 2) + '#', frame, 'hud', true);
   put(x0, y0 + h - 1, '#' + '='.repeat(w - 2) + '#', frame, 'hud', true);
   for (let r = 1; r < h - 1; r++) { put(x0, y0 + r, '|', frame, 'hud'); put(x0 + w - 1, y0 + r, '|', frame, 'hud'); }

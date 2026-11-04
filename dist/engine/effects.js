@@ -1,6 +1,6 @@
 // NeoN+1 engine/effects.js: Particles, flashes, shakes, and the scroll-fill wipe.
 'use strict';
-NEON_FILES.push(['engine/effects.js', 'v14.14']);
+NEON_FILES.push(['engine/effects.js', 'v14.24']);
 
 // ---------------- Effects ----------------
 const parts = [];
@@ -99,6 +99,11 @@ function updateParts(dt) {
     p.t += dt;
     if (p.t < 0) continue;
     const k = Math.min(1, p.t / p.life);
+    if (p.mode === 'path') {   // it follows p.path(k): { x, y, ch?, col?, alpha?, rot? }; p.onEnd when it's done
+      Object.assign(p, p.path(k, p));
+      if (p.t >= p.life) { parts.splice(i, 1); if (p.onEnd) p.onEnd(); }
+      continue;
+    }
     if (p.mode === 'float') {   // emotes: drift up and fade
       p.y -= 26 * (L.fs / 16) * dt;
       p.alpha = k > 0.6 ? Math.max(0, (1 - k) / 0.4) : 1;

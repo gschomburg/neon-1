@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v14.14']);
+NEON_FILES.push(['engine/bench.js', 'v14.24']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -242,12 +242,11 @@ function benchBuild(code = null, force = false) {
 function benchBuildDone(a) {
   const b = st.bench;
   b.anim = null;
-  if (!a.rc) { benchSay(`> build ${a.word}: nothing. the components burned.`); return; }
+  if (!a.rc) { benchSay(`> build ${a.word}: nothing. the components burned.`); return; }   // (the fizzle played as it crumbled)
   const nm = a.view.name + (a.n > 1 ? ` x${a.n}` : '');
   benchSay(`> build ${a.word}${a.lucky ? ' --force' : ''}: ${nm} -> ${a.where === 'loot' ? 'the loot bag' : a.where === 'locker' ? 'the locker' : 'your ' + a.where}.`);
   if (a.mult && a.rc.kind !== 'mod') benchSay(a.n > 1 ? `  x${a.mult}: it took. ${a.n} of them.` : `  x${a.mult}: it didn't take.`);
   b.flash = { to: a.where === 'loot' ? 'loot' : 'locker', t0: performance.now() };
-  Sound.buy();
 }
 
 // ---- shred: what you're carrying (mods, the belt, the LOOT bag) back into components
@@ -328,9 +327,9 @@ function benchKey(k) {
   if (benchBusy()) return k.length === 1;   // (swallow typing during a build / shred)
   if (k === 'escape') { benchLeave(); return true; }
   if (b.tab !== 'build') return false;
-  if (k.length === 1 && /[a-z0-9*]/.test(k)) { benchPlace(k.toUpperCase()); return true; }
-  if (k === 'backspace') { const i = [3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); return true; }
-  if (k === 'enter') { benchBuild(); return true; }
+  if (k.length === 1 && /[a-z0-9*]/.test(k)) { Sound.keyclick(); benchPlace(k.toUpperCase()); return true; }
+  if (k === 'backspace') { Sound.keyclick(); const i = [3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); return true; }
+  if (k === 'enter') { Sound.keyclick(); benchBuild(); return true; }
   return false;
 }
 
@@ -489,7 +488,6 @@ function benchBuildLines(T, B, X) {
       } else {
         const msg = !benchCount() ? '> no components. shred something.' : b.slots.some(Boolean) ? '> no code fits. a secret?' : '> select components';
         put(1, y, msg, C.mid, 'board');
-        if (blink) put(1 + msg.length, y, '_', C.accent, 'board', true);
       }
     } else if (j.kind === 'ok') {
       const v = recipeView(benchRecipes()[j.code]), tip = v.tip || '', rc = benchRecipes()[j.code];
@@ -535,7 +533,7 @@ function benchBuildAnim(ctx, a) {
     for (let i = 0; i < 3; i++) if (hh(i + 20, Math.floor(t / 70)) < k * 0.6) ctx.bg(a.x[i] + Math.floor(hh(i, Math.floor(t / 70)) * 3), a.y + Math.floor(hh(i + 9, Math.floor(t / 70)) * 3), 1, C.bright, 0.5);
     return;
   }
-  if (!a.formed && t >= e2 && a.rc) { a.formed = true; Sound.form(); }
+  if (!a.formed && t >= e2) { a.formed = true; if (a.rc) Sound.form(); else Sound.fizzle(); }
   if (t < e3 || !a.rc) {   // SPLIT, then FORM (or crumble)
     a.slots.forEach((ch, i) => {
       const chip = chipOf(letterTier(ch));
@@ -552,15 +550,17 @@ function benchBuildAnim(ctx, a) {
     if (!a.rc && t > e2 + 650) benchBuildDone(a);
     return;
   }
-  // HOLD, then FLY: what you built, as its code chip and name
-  const v = a.view, label = a.rc.code, name = v.name + (a.n > 1 ? ` x${a.n}` : ''), w = label.length + 1 + name.length;
+  // HOLD, then FLY: what you built, as just its code (3 letters, x2 if more). It arcs: out to the right first, then up
+  // to the LOCKER tab (or down to the [£]).
+  const v = a.view, label = a.rc.code + (a.n > 1 ? ` x${a.n}` : ''), w = label.length;
   const to = a.where === 'loot' ? benchLootSpot() : benchLockerSpot();
-  let x = cx - Math.floor(w / 2), y = cy, al = 1;
-  if (t >= e4) { const k = ease3(Math.min(1, (t - e4) / T.fly)); x += (to.x - w / 2 - x) * k; y += (to.y - y) * k; al = 1 - k * 0.4; }
+  const x0 = cx - Math.floor(w / 2), y0 = cy;
+  let x = x0, y = y0, al = 1;
+  if (t >= e4) { const k = Math.min(1, (t - e4) / T.fly); x = x0 + (to.x - w / 2 - x0) * (1 - Math.pow(1 - k, 2.4)); y = y0 + (to.y - y0) * Math.pow(k, 2.2); al = 1 - k * 0.3; }
   const ch = chipOf(v.rarity), glitch = t < e3 + 140 && Math.floor(t / 35) % 2;
-  if (!glitch) { ctx.bg(x, y, label.length, ch.bg, al); put(x, y, label, ch.fg, 'fx', true); put(x + label.length + 1, y, name, C.bright, 'fx', true); }
+  if (!glitch) { ctx.bg(x, y, a.rc.code.length, ch.bg, al); put(x, y, a.rc.code, ch.fg, 'fx', true); if (a.n > 1) put(x + 3, y, ` x${a.n}`, C.money, 'fx', true); }
   if (t < e3 + 200) for (let i = 0; i < 6; i++) put(cx - 4 + Math.floor(hh(i, Math.floor(t / 40)) * 9), cy - 1 + Math.floor(hh(i + 7, Math.floor(t / 40)) * 3), noiseCh(), C.bright, 'fx');
-  if (t >= e5) { benchConfetti(to.x, to.y, 16); benchBuildDone(a); }
+  if (t >= e5) { benchConfetti(to.x, to.y, 24); Sound.fanfare(); benchBuildDone(a); }
 }
 
 function benchShredLines(T, B, X) {
@@ -789,9 +789,9 @@ function benchKeys(now) {
   BENCH_KB.forEach((row, r) => {
     const extra = r === 3 ? 2 * (G.kw * 1.5) + 2 * G.gap : 0;
     let x = G.x0 + (G.gw - (row.length * G.kw + (row.length - 1) * G.gap + extra)) / 2;
-    if (r === 3) { key(x, y, G.kw * 1.5, 'DEL', 1, () => { const i = [3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); }, 'DEL', chipOf('scrap')); x += G.kw * 1.5 + G.gap; }
+    if (r === 3) { key(x, y, G.kw * 1.5, 'DEL', 1, () => { Sound.keyclick(); const i = [3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); }, 'DEL', chipOf('scrap')); x += G.kw * 1.5 + G.gap; }
     for (const ch of row) { key(x, y, G.kw, ch, benchHave(ch)); x += G.kw + G.gap; }
-    if (r === 3) key(x, y, G.kw * 1.5, 'ENTER', 1, () => benchBuild(), 'ENTER', { bg: C.accent, fg: C.bg });
+    if (r === 3) key(x, y, G.kw * 1.5, 'ENTER', 1, () => { Sound.keyclick(); benchBuild(); }, 'ENTER', { bg: C.accent, fg: C.bg });
     y += G.kh + G.gap;
   });
   // a key (or a slot's letter) riding your finger
@@ -822,7 +822,7 @@ function benchPointer(type, e) {
   if (type === 'down') {
     if (benchBusy() || b.tab !== 'build') return false;
     const h = hitAt(px, py);
-    if (h && h.kind === 'benchkey') { b.press = { kind: 'benchkey', key: h.key, x: px, y: py, moved: false }; return true; }
+    if (h && h.kind === 'benchkey') { b.press = { kind: 'benchkey', key: h.key, x: px, y: py, moved: false }; Sound.keyclick(); return true; }
     if (h && h.kind === 'benchslot' && b.slots[h.slot]) { b.press = { kind: 'benchslot', slot: h.slot, x: px, y: py, moved: false }; return true; }
     return false;
   }

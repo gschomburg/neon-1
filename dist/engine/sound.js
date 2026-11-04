@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v14.14']);
+NEON_FILES.push(['engine/sound.js', 'v14.24']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -319,7 +319,26 @@ const Sound = (() => {
     form: () => { noise(0.16, { vol: 0.22, freq: 7000, type: 'highpass' }); arp([880, 1175, 1568, 2093], 0.05, { vol: 0.32 }); },
     // a component landing (a letter into the locker)
     comp: () => { tone(1650 + Math.random() * 450, 0.035, { type: 'triangle', vol: 0.22 }); tone(2600, 0.045, { type: 'sine', vol: 0.1, delay: 0.035 }); },
+    // a key on the workbench keyboard: a click and a little thock
+    // a cutscene's lines typing in: a soft tick (low: someone talking, a lower blip)
+    typeTick: (low = false) => tone(low ? 480 + Math.random() * 90 : 1500 + Math.random() * 300, 0.02, { type: low ? 'triangle' : 'square', vol: low ? 0.24 : 0.1 }),
+    // a VCR (the user, 2026-11-04: the DISC going in): the tray pulling it in, the clunk as it seats, the motor spinning up
+    vcrIn: (dur = 1.3) => { noise(dur, { vol: 0.238, freq: 700, to: 260 }); tone(64, dur, { type: 'sawtooth', vol: 0.136, slide: 0.85 }); for (let i = 0; i < 6; i++) tone(800 + Math.random() * 600, 0.012, { type: 'square', vol: 0.085, delay: i * dur / 6 + Math.random() * 0.05 }); },
+    vcrClunk: () => { tone(120, 0.08, { type: 'square', vol: 0.51, slide: 0.6 }); noise(0.06, { vol: 0.68, freq: 900 }); tone(78, 0.14, { type: 'sine', vol: 0.9, slide: 0.7, delay: 0.15 }); noise(0.05, { vol: 0.51, freq: 600, delay: 0.15 }); tone(2600, 0.01, { type: 'square', vol: 0.102, delay: 0.17 }); },
+    vcrSpin: (dur = 1.8) => { tone(52, dur, { type: 'sawtooth', vol: 0.17, slide: 3.4 }); tone(104, dur, { type: 'triangle', vol: 0.102, slide: 3.2 }); noise(dur, { vol: 0.119, freq: 380, to: 2600 }); for (let i = 0; i < 9; i++) tone(1300, 0.01, { type: 'square', vol: 0.068, delay: dur * (1 - Math.pow(1 - i / 9, 1.6)) }); },
+    keyclick: () => { tone(1900 + Math.random() * 500, 0.008, { type: 'square', vol: 0.1 }); noise(0.018, { vol: 0.12, freq: 4200 }); tone(150 + Math.random() * 40, 0.035, { type: 'sine', vol: 0.28, slide: 0.7 }); },
+    // a build that didn't take: it fizzles and burns out
+    fizzle: () => { noise(0.55, { vol: 0.3, freq: 2600, to: 180 }); tone(240, 0.5, { type: 'sawtooth', vol: 0.16, slide: 0.3 }); for (let i = 0; i < 7; i++) noise(0.025, { vol: 0.2, freq: 1500 + Math.random() * 4000, delay: 0.05 + Math.random() * 0.4 }); tone(70, 0.3, { type: 'sine', vol: 0.4, slide: 0.6, delay: 0.35 }); },
+    // what you built lands in the locker: a little fanfare
+    fanfare: () => { arp([784, 988, 1175, 1568], 0.07, { vol: 0.42 }); tone(1568, 0.3, { type: 'triangle', vol: 0.3, delay: 0.3 }); tone(2093, 0.35, { type: 'triangle', vol: 0.2, delay: 0.34 }); noise(0.3, { vol: 0.12, freq: 8000, type: 'highpass', delay: 0.3 }); },
+    // SHOE: the throw (a whiff) and the hit (a thunk)
+    whiff: () => noise(0.22, { vol: 0.25, freq: 900, to: 3200 }),
+    thunk: () => { tone(95, 0.16, { type: 'sine', vol: 0.7, slide: 0.55 }); noise(0.08, { vol: 0.4, freq: 600 }); tone(240, 0.05, { type: 'square', vol: 0.12, slide: 0.6 }); },
+    // BEES: a buzzing swarm (dur seconds)
+    buzz: (dur = 1.5) => { const n = Math.round(dur / 0.09); for (let i = 0; i < n; i++) tone(170 + Math.random() * 90, 0.11, { type: 'sawtooth', vol: 0.09 + 0.05 * Math.sin(i / 2), delay: i * 0.09, slide: 1 + (Math.random() - 0.5) * 0.12 }); },
     // a letter blinking on (an old bulb)
+    // a neon sign stuttering on: clicks and a mains buzz
+    neonOn: () => { for (let i = 0; i < 4; i++) { noise(0.02, { vol: 0.3, freq: 3800, delay: i * 0.09 + Math.random() * 0.03 }); tone(2200 + Math.random() * 900, 0.012, { type: 'square', vol: 0.1, delay: i * 0.09 }); } tone(120, 0.5, { type: 'sawtooth', vol: 0.1, delay: 0.32 }); tone(240, 0.5, { type: 'square', vol: 0.04, delay: 0.32 }); },
     lamp: () => { noise(0.015, { vol: 0.08, freq: 5200 }); tone(2400 + Math.random() * 800, 0.01, { type: 'square', vol: 0.04 }); },
     // ---- Fishing (engine/fishing.js)
     // the cast: the line whizzing out and the hook falling (it lands with fishPlop)

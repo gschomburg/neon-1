@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.14']);
+NEON_FILES.push(['engine/run.js', 'v14.24']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -158,7 +158,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
   }
   const t = node.tier;
   const counts = def.counts ? def.counts(node.tier) : node.type === 'start' ? [1] : st.run.tutorial && node.id === TUT.corpNode ? TUT.counts.slice()
-    : Array.from({ length: CONFIG.corpLayers + (sectorEvent(node.sector || 0) === 'grind' ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
+    : Array.from({ length: CONFIG.corpLayers + (sectorHas('grind', node.sector || 0) ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
   const sector = node.sector || 0;
   // OMNI borrows a tell, a new one each sector
   let tell = node.type === 'final' && node.corp === 'omni' && !def.copied ? ((node.sector || 0) === 0 ? st.run.finalTell : pickR(['corner', 'mark', 'mirror'], rngFor(st.run.seed, 'final', node.sector))) : def.tell;
@@ -293,7 +293,7 @@ async function enterLayer() {
   const lv = genLayer({ seed: run.seed, nodeId: c.node.id, idx: c.idx, n, tell, prevSafe: c.prevSafe, loot: !boss && c.hasBoss && !c.def.noLoot && (!run.tutorial || c.idx === 1), lootSure: !!run.tutorial && c.idx === 1, mark: c.mark,
     tellStr: c.tellStr, salt: 0,   // (the seed decides the layers, always: a resume brings back the same ones; the user, 2026-10-30)
     dress: c.hasBoss ? c.def.dress : null, tier: c.tier, boss,
-    alwaysFollow: !!c.def.alwaysFollow || !!run.tutorial, carry: c.carry || null, lootMore: c.mod === 'loaded' || sectorEvent(c.sector) === 'flush' });   // FLUSH: more $ nodes
+    alwaysFollow: !!c.def.alwaysFollow || !!run.tutorial, carry: c.carry || null, lootMore: c.mod === 'loaded' || sectorHas('flush', c.sector) });   // FLUSH: more $ nodes
   lv.after = c.prevSafe;       // last layer's real node, for AFTERIMAGE
   if (c.mod === 'branded' && n > 2) {   // BRANDED: about a third of the ICE wear the sigil
     const ice = shuffle(lv.tiles.filter(t => !t.safe && !t.loaded), rngFor(run.seed, 'brand', c.node.id, c.idx));
@@ -511,7 +511,7 @@ function updateTimer(dt) {
   const sec = Math.ceil(tm.left);
   if (sec < tm.lastSec) {
     tm.lastSec = sec; if (sec <= 3 && sec > 0) Sound.clock();
-    if (st.corp && sectorEvent(st.corp.sector) === 'timeismoney' && st.run.credits > 0) st.run.credits = Math.max(0, st.run.credits - costInt(ECON.events.timeCr));   // TIME IS MONEY
+    if (st.corp && sectorHas('timeismoney', st.corp.sector) && st.run.credits > 0) st.run.credits = Math.max(0, st.run.credits - costInt(ECON.events.timeCr));   // TIME IS MONEY
   }
   // OVERCLOCK: near the end, purge ICE one by one; each purge cuts the payout.
   const lv = st.lv;
@@ -1778,7 +1778,7 @@ async function pushOn() {
   st.result = null;
   // Beat OMNI (not skipped): its boss reward first, then the map climbs from the old
   // sector to the new one. Cashing out skips it (the run ends anyway).
-  if (skipped || sectorEvent(old) === 'headfirst') { run.pending = null; return swapTo(() => toMap(old)); }   // (HEAD FIRST: its spoils came first)
+  if (skipped || sectorHas('headfirst', old)) { run.pending = null; return swapTo(() => toMap(old)); }   // (HEAD FIRST: its spoils came first)
   run.pending = { kind: 'omni', from: old };
   saveRun();
   await swapTo(() => openOmniReward(old));

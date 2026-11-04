@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v14.14']);
+NEON_FILES.push(['data/economy.js', 'v14.24']);
 
 const ECON = {
   // ---- Units
@@ -190,6 +190,33 @@ const ECON = {
   events: {
     fireSale: 0.3,   // %: FIRE SALE (market prices are this much lower in that sector)
     timeCr: 0.1,   // spend: TIME IS MONEY (every second a clock runs in that sector costs this)
+  },
+  // ---- Sector event odds
+  eventOdds: {
+    ratrace: 5,   // x: RAT RACE (its weight)
+    chef: 5,   // x: CHEF'S CHOICE (its weight)
+    blind: 1,   // x: WHERE AM I GOING? (its weight)
+    crunch: 2,   // x: CRUNCH TIME (its weight)
+    sticky: 1,   // x: STICKY FINGERS (its weight)
+    lockdown: 1,   // x: LOCKDOWN (its weight)
+    badjuju: 2,   // x: BAD JUJU (its weight)
+    payday: 1,   // x: PAYDAY (its weight)
+    brand: 1,   // x: BRAND SAFETY (its weight)
+    coldsnap: 2,   // x: COLD SNAP (its weight)
+    copypaste: 1,   // x: COPY PASTE (its weight)
+    firesale: 1,   // x: FIRE SALE (its weight)
+    flush: 1,   // x: FLUSH (its weight)
+    timeismoney: 2,   // x: TIME IS MONEY (its weight)
+    grind: 1,   // x: GRIND (its weight)
+    rightangles: 1,   // x: RIGHT ANGLES (its weight)
+    gauntlet: 1,   // x: GAUNTLET (its weight)
+    eenymeeny: 1,   // x: EENY MEENY (its weight)
+    headfirst: 2,   // x: HEAD FIRST (its weight)
+    deadair: 1,   // x: DEAD AIR (its weight)
+    second2: 0,   // %: 2nd event: sector 2 (the chance a sector gets a 2nd event)
+    second3: 0.35,   // %: 2nd event: sector 3 (the chance a sector gets a 2nd event)
+    second4: 0.5,   // %: 2nd event: sector 4 and on (the chance a sector gets a 2nd event)
+    afterD0g: 0.7,   // x: rivals, after d0g (once you have beaten d0g, RAT RACE and CHEF'S CHOICE weigh this many times less)
   },
   // ---- Spending: corps
   corpCosts: {

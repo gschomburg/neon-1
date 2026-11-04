@@ -130,7 +130,7 @@ unlocked by REP, and some quests unlock REP.
       wildcards from fishing; a use for digits in mods. Letter counts: no recipe uses I; digits 1-9 none; J, Q once.
       **Components in the LOCKER** (the user, 2026-11-04): the LOCKER's TAKE page lists every component and its count (they fly
       there on a shred). **Next idea (the user): JUMBLE loot**: new loot that is a jumble of letters; sell it for cash, or shred
-      it at the bench for its letters. A way to find components away from the bench (fishing, $ nodes, caches). **Built v14.14** as corrupted software: JUNK.DAT, CORRUPT.EXE, BAD SECTOR (glitchy names, loot drops; shred = random letters + digits + *). Open: fishing them up at the PIER.
+      it at the bench for its letters. A way to find components away from the bench (fishing, $ nodes, caches). **Built v14.14** as corrupted software: JUNK.DAT, CORRUPT.EXE, BAD SECTOR (glitchy names, loot drops; shred = random letters + digits + *). Open: fishing them up at the PIER. **Sounds** (the user, 2026-11-04): a sound for a failed craft (the components burning) and a sound pass on the whole bench (keys, slots, tabs, the locker, take / store). Better key-press sounds on the keyboard. **Keyboard look** (the user: leaning, just a note): the off-white / beige Commodore colors. **The build landing:** what you built shows as just its 3 letters (no name), with a little fanfare as it reaches the locker; its path arcs: it eases out to the right first, then curves up to the LOCKER tab (now it's a straight diagonal). The > select components line: no blinking _ (it fights the slot cursor).
 - **Scrap mods:** maybe 2 other worthless ones.
 - **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first, v13.49).
   Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), NUKE (wipe a corp off the map), DECODER
@@ -183,6 +183,9 @@ unlocked by REP, and some quests unlock REP.
   ad + a mod you own) starts something (ADS.md "Secret ads"); ads you can buy from (a puppy for a quest); an emoji
   with a quest purpose.
 - **The feel: FTL's quests and interactions.** Brainstorm together.
+- **Cutscene art (the user, 2026-11-04):** the DISC scene is a strip of the user's asXii drawings (built v14.17-v14.18: draw-in, parallax, lights, fog, the OPEN cue, the DISC sliding in, a POPS headshot, d0g's logo). Next: random traces running up that aren't in the drawings; more color work; the hand is out for now (the user: the pose isn't how you'd do it in ASCII). More art for the later frames maybe.
+- **Cutscene music:** EVENT HORIZON as a possible lighter cutscene track (the user, 2026-11-04); the DISC scene plays PANTHEON (SCENE_MUSIC).
+- **A quest popup after the DISC scene** (the user, 2026-11-04): when the scene ends, a popup that introduces the next step (beat d0g ten times). Today the scene only sets the QUESTS tab's new mark (questStep news); the DOG DAYS step itself is still 'coming soon'.
 - **A hint on the quests tab** (the user, meat notes 2026-11-03): when it's empty, something like "no quests yet. put a
   crew together and maybe you will discover some" / "get to know the other hackers, call them".
 - **FLOPPY** (the user, 2026-10-27): a floppy disk gear you insert in a terminal somewhere to start a quest.
@@ -289,17 +292,12 @@ unlocked by REP, and some quests unlock REP.
 - **Next batch (the user, 2026-10-27)** (docs/SECTOR_EVENTS.md "The next batch"): built v13.58: GRIND, BLACK ICE + COLD SNAP,
   RIGHT ANGLES, GAUNTLET; v13.59: EENY MEENY (3 bosses); v13.60: HEAD FIRST. Idea: ICE STORM.
 - **Other ideas (Claude's):** TAXED, AUDITED, RANSOM, BACKWARDS, a trace meter, two events stacked.
-- **Overlapping events and anomalies** (the user, meat notes 2026-11-03): some sector events could stack (RIGHT ANGLES
-  or any that change the board; good ones with bad ones). Maybe a mix: a chance of one that goes with anything, and a
-  chance of a second. A corp probably never gets 2 corp anomalies at once (check whether that has happened); maybe
-  deeper sectors allow more at once. For now, with two events in a sector, a corp gets none, A, or B, not A+B.
+- **Overlapping events: built v14.16** (stacking, weights as economy numbers, scales). Still open: more scales (quests, REP level: the user, 2026-11-04, 'quests or other things can start to scale those values'); the editor's TESTING picking a pair; turn RAT RACE / CHEF'S CHOICE down to 3-4 after the d0g quest is real (today the scale keys off beating d0g as a rival).
 - **MOLD, a sector event** (the user, 2026-10-30): explains the mold in heaven (docs/QUESTS.md, step 11); once
   unlocked, it can come up as a random event in regular runs too.
 - **Event tiers, later** (the user, 2026-10-30: not now): harder events only deeper. For now the rule stands: sector 1
   is clean, and from sector 2 any event can show up.
-- **d0g from sector 2** (the user, 2026-10-30): a RIVAL anomaly brings in any of the hackers, d0g too, from the first
-  sector that has events (sector 2). Today hkRivalFor (engine/hackers.js) keeps d0g out until sector 3 (`sector >= 2`,
-  0-based): drop that. (And once he's b0y on your crew, he's out of the pool: docs/QUESTS.md step 8.)
+
 
 ### 7. New corps
 - From CORPS.md, not built: FOSSIL (a dig site), UNICORN (very rare), MAGIC (stage magic), ALARMS, the chain corp,
@@ -315,7 +313,7 @@ unlocked by REP, and some quests unlock REP.
   door but yours and one other, and you choose again.
 - **RED TAPE:** a mod or gear (just the name so far).
 - **B1BL3** (the user, meat notes 2026-10-31): a portable codex (gear).
-- **BEES** (the user, meat notes 2026-10-31) needs a better animation: a swarm of little bees flying over the whole map, then destroying the ICE.
+- **BEES** (the user, meat notes 2026-10-31) needs a better animation: a swarm of little bees flying over the whole map, then destroying the ICE. **Built v14.15.**
 
 ### 8. Achievements and cosmetics
 - First win, a naked (0 mod) win, beat each corp, perfect streaks, reach layer X; easy ones too (die on the first
@@ -413,9 +411,10 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
-- **Sell page gear** (the user, meat notes 2026-11-03): gear on the sell page still shows [names]; make it match the buy page.
-- **SELL ALL LOOT** button in the store (the user, meat notes 2026-11-03).
-- **SHOE attack** (the user, meat notes 2026-11-03): needs an animation; its terminal text gets cut off.
+- **asXii size presets** (the user, 2026-11-04): update asXii's Presets list (ascii-editor/dist/index.html #sizePreset) to the game's real art sizes, and check the ones there. Today it has: node glyph 5 x 3 (right), corp art 24 x 12 (wrong: corp intro art is the logo, 24 x 7), ad box 30 x 18 (right: ADS_W / ADS_H), intro map 34 x 9 (the map is 34 x 12 now), title art 32 x 20 (check: TITLE_W is 31), terminal 80 x 24. Add: logo 24 x 7 (the name goes on row 8, LOGO_W / LOGO_H), hacker face 5 x 3, SECTOR CLEARED 30 x 13, sector event card 5 x 3, cutscene 36 wide (any height; the game's grid). asXii is Justin's too: check his recent commits first.
+- **Sell page gear**: built v14.15 (loot rows like gear rows).
+- **SELL ALL LOOT**: built v14.15 ([ ALL LOOT +XXcr ] on the sell page).
+- **SHOE attack**: built v14.15 (the throw, shorter lines).
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Cold Brew's boss reward
   is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is (the user 2026-10-29: "i still ran out of cash and couldn't get past the uplink"); it already scales by sector and BLACK ICE costs that many hits.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.

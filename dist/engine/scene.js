@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.14']);
+NEON_FILES.push(['engine/scene.js', 'v14.24']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -1040,7 +1040,8 @@ function buildMap(ctx) {
   // Which sector you're looking at, and arrows when there's more map below.
   if (run.sector > 0) {
     const v = mv.sector, blink = Math.floor(now / 600) % 2 ? C.mid : C.dim;
-    const evk = sectorEvent(v), label = `SECTOR ${v + 1}` + (evk ? `: ${SECTOR_EVENTS[evk].name}` : '');
+    const evs = sectorEvents(v), evk = evs[0], full = `SECTOR ${v + 1}` + (evk ? `: ${evs.map(k => SECTOR_EVENTS[k].name).join(' + ')}` : '');
+    const label = full.length <= L.wc - 2 ? full : `SECTOR ${v + 1}: ${SECTOR_EVENTS[evk].name} +1`;   // (2 events that don't fit: +1)
     put(0, BOARD_Y - 1, label, v === run.sector ? C.mid : C.accent, 'map');   // (one up: under the terminal, clear of the map's top row)
     if (evk && settled) addHit(0, BOARD_Y - 1, label.length, 1, { kind: 'btn', id: 'evlabel', noFocus: true, onTap: () => { showEventCard(v, true); Sound.ui(); } });   // see the card again
     if (v > 0) { put(0, BOARD_Y + SECTOR_ROWS - 1, 'v', blink, 'map'); put(L.wc - 1, BOARD_Y + SECTOR_ROWS - 1, 'v', blink, 'map'); }

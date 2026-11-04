@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.14']);
+NEON_FILES.push(['engine/editor.js', 'v14.24']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -22,7 +22,7 @@ function lootPick(r, n, rare = 0) {
 // A corp's layers as the game will make them (the seed): which have a $ node, and what each pays you, as you are now
 function lootLayers(n) {
   const run = st.run, def = corpDef(n.corp), t = n.tier, sector = n.sector || 0, out = [];
-  const counts = def.counts ? def.counts(t) : Array.from({ length: CONFIG.corpLayers + (sectorEvent(sector) === 'grind' ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
+  const counts = def.counts ? def.counts(t) : Array.from({ length: CONFIG.corpLayers + (sectorHas('grind', sector) ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
   let tell = n.type === 'final' && n.corp === 'omni' ? (sector === 0 ? run.finalTell : pickR(['corner', 'mark', 'mirror'], rngFor(run.seed, 'final', n.sector))) : def.tell;
   if (tell === 'mirror' && t >= 2) tell = 'vmirror';
   if (tell === 'corner' && t >= 2 && n.type !== 'final') tell = 'edge';
@@ -32,7 +32,7 @@ function lootLayers(n) {
     const boss = idx === counts.length - 1;
     const lv = genLayer({ seed: run.seed, nodeId: n.id, idx, n: cnt, tell: boss && def.bossTell ? def.bossTell : tell, prevSafe: prev, mark, salt: 0, dress: null, tier: t, boss,
       loot: !boss && !def.noLoot, tellStr: Math.max(0.55, CONFIG.tellStrength - CONFIG.sectorHeat * sector), alwaysFollow: !!def.alwaysFollow,
-      lootMore: n.mod === 'loaded' || sectorEvent(sector) === 'flush' });
+      lootMore: n.mod === 'loaded' || sectorHas('flush', sector) });
     prev = lv.safeCell;
     const label = `  layer ${idx + 1}${boss ? ' (boss)' : ''}: `;
     if (!lv.tiles.some(o => o.loaded)) return out.push(label + 'no $ node');

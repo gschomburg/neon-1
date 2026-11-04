@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.14']);
+NEON_FILES.push(['engine/panels.js', 'v14.24']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -138,7 +138,7 @@ function pickMods(r, pool, k, exclude = []) {
   return shuffle(pool.filter(ok), r).slice(0, k).map(key => ({ key, tier: rollTier(r, MODS[key]) }));
 }
 
-const priceOf = o => o.free ? 0 : Math.round((sectorEvent() === 'firesale' ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale()));   // (priceScale: data/economy.js)
+const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale()));   // (priceScale: data/economy.js)
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
 // What a market pays for one of a gear stack: value gear (DUDS ... WALLET) its worth, the rest a share of its price.
@@ -220,6 +220,16 @@ function openShop(node) {
     sellSel = Math.min(sellSel, Math.max(0, sellRows().length - 1));
     Sound.buy(); setMsg(`> sold ${name}. +${cr}cr.`, C.money);
   };
+  const sellAll = () => {
+    if (st.transitioning) return;
+    const keep = (run.loot || []).filter(s => ITEMS[s.key].quest), sold = (run.loot || []).filter(s => !ITEMS[s.key].quest);
+    if (!sold.length) return Sound.deny();
+    let cr = 0, n = 0;
+    for (const s of sold) { cr += gearValue(s.key, s.tier) * s.n; n += s.n; }
+    run.loot = keep; run.credits += cr; run.earned += cr;
+    sellSel = 0; sellArea.top = 0;
+    Sound.buy(); setTimeout(() => Sound.loot(), 120); setMsg(`> sold all loot (${n}). +${cr}cr.`, C.money);
+  };
   st.shop = { node: node.id, get offers() { return offers; }, priceOf, buyAt: k => buy(offers[k]), reroll, rerollsLeft, rerollPrice, sellAt: sell };   // (read by tools/econsim.js)
 
   // What an offer is: gear at its tier; mods as what you'd end up with (upgrades).
@@ -268,12 +278,15 @@ function openShop(node) {
   // SELL: your LOOT and your gear, what the market pays for one of each (the same look as the buy list: a type tag and
   // the price). A long list scrolls.
   const drawSell = (T, B, X) => {
-    T('sell your loot and gear:', C.mid);
+    // SELL ALL LOOT (the user, 2026-11-03): every loot stack but quest items, in one go
+    const allCr = (run.loot || []).reduce((a, s) => a + (ITEMS[s.key].quest ? 0 : gearValue(s.key, s.tier) * s.n), 0);
+    X({ gap: 2, row: [{ text: 'sell:', col: C.mid }, { text: allCr ? `[ ALL LOOT +${allCr}cr ]` : '[ ALL LOOT ]', id: 'sellall', disabled: !allCr, onTap: sellAll }] });
     const rows = sellRows();
     const items = rows.map(({ s, list }, i) => {
       const v = itemView(s.key, s.tier), q = ITEMS[s.key].quest, tag = list === run.loot ? 'loot' : 'gear';
       return { list: true, id: 'sl' + i, onTap: () => { sellSel = i; Sound.tick(); }, sel: i === sellSel,
-        name: list === run.loot ? lootLabel(s) : v.name + (s.n > 1 ? ' x' + s.n : ''), chip: list === run.loot ? v.rarity : null, gear: list === run.loot ? null : s.key, gearTier: s.tier, col: C.bright, right: q ? 'QUEST  keep' : `${tag.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: q ? C.rep : C.money, rightChips: true };
+        name: v.name + (s.n > 1 ? ' x' + s.n : ''), gear: s.key, gearTier: s.tier, col: C.bright,   // (loot too: its code chip, then its name, like the buy list)
+        right: q ? 'QUEST  keep' : `${tag.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: q ? C.rep : C.money, rightChips: true };
     });
     if (!rows.length) { T('nothing to sell.', C.dim); pad(T, 2); }
     else { scrollFollow(sellArea, sellSel, items.length, listRows() - 1); scrollArea(X, T, sellArea, items, listRows() - 1, 'sla'); }
@@ -282,7 +295,7 @@ function openShop(node) {
     const s = rows[sellSel] && rows[sellSel].s;
     if (s) {
       const v = itemView(s.key, s.tier);
-      X(isLoot(s.key) ? { text: v.name, chip: v.rarity, bold: true } : { gearHead: s.key, gearTier: s.tier, text: v.name });
+      X({ gearHead: s.key, gearTier: s.tier, text: v.name });
       T(v.tip || v.desc, C.text);
       T('');
       if (ITEMS[s.key].quest) X({ box: true, text: 'S E L L', sub: 'POPS wants it', id: 'sell', onTap: () => sell(sellSel), minW: 18, disabled: true });

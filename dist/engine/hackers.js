@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.14']);
+NEON_FILES.push(['engine/hackers.js', 'v14.24']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -15,7 +15,7 @@ const hkDef = id => HACKERS[id];
 const hkStyle = id => (hkDef(id) && hkDef(id).style) || { fg: C.bright, bg: C.dim };
 // Their color as text on the game's background: the style's text color, or its background when that's the light one (POPS).
 
-const hkInk = id => { const s = hkStyle(id); return hexLum(s.fg) < 0.25 ? s.bg : s.fg; };
+const hkInk = id => { const s = hkStyle(id); return s.ink || (hexLum(s.fg) < 0.25 ? s.bg : s.fg); };   // (style.ink: a text color of its own)
 // D0PPEL wears your name, glitched
 const hkName = id => id === 'doppel' ? String((profile().name || 'RUNNER')).toUpperCase().replace(/A/g, '4').replace(/E/g, '3').replace(/I/g, '1').replace(/O/g, '0').slice(0, 9) : hkDef(id).name;
 const hkList = () => (st.corp && st.corp.hk) || [];
@@ -27,9 +27,9 @@ const hkBars = h => '#'.repeat(Math.max(0, h.hp)) + '-'.repeat(Math.max(0, h.max
 const hkLine = (h, k) => { const d = hkDef(h.id), l = d[k]; return Array.isArray(l) ? pickR(l, Math.random) : l || ''; };
 
 // ---------------- Coming in ----------------
-// A rival for a corp with the RIVAL anomaly: one of the cast, fixed by the seed (d0g only from sector 3 on).
+// A rival for a corp with the RIVAL anomaly: one of the cast, fixed by the seed (d0g too, from sector 2: the user, 2026-10-30).
 function hkRivalFor(node) {
-  const pool = HK_RIVALS.filter(k => (k !== 'd0g' || (node.sector || 0) >= 2) && !(st.run.banned || []).includes(k));   // (EXORCIST: not one thrown out)
+  const pool = HK_RIVALS.filter(k => (k !== 'd0g' || (node.sector || 0) >= 1) && !(st.run.banned || []).includes(k));   // (EXORCIST: not one thrown out)
   if (!pool.length) return null;
   return pickR(pool, rngFor(st.run.seed, 'rival', node.id));
 }
