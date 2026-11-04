@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.11']);
+NEON_FILES.push(['engine/input.js', 'v14.13']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -178,6 +178,7 @@ cv.addEventListener('pointerdown', e => {
   if (st.callBox && !st.dev) return callTap(hitAt(...ptXY(e)));   // a CALL (engine/quests.js)
   if (st.hkCard && !st.dev) return hkCardTap();   // a hacker's card (engine/hackers.js)
   if (st.mode === 'fish' && !st.dev && !st.pause && fishPointer('down', e)) return;   // the PIER (engine/fishing.js)
+  if (st.bench && benchPointer('down', e)) return;   // the WORKBENCH keyboard and slots (engine/bench.js)
   if (st.intro) { st.intro.skip = true; return; }   // tap skips a corp intro
   if (st.g0dFake && !st.pause) { g0dFakeSkip(); return; }   // the fake win: the same (and its rewards screen takes no taps)
   if (st.g0dDie && st.mode === 'g0ddie' && !st.pause) { g0dDieSkip(); return; }   // G0D dying: the same
@@ -245,6 +246,7 @@ cv.addEventListener('pointerdown', e => {
 
 cv.addEventListener('pointermove', e => {
   if (st.mode === 'fish' && st.fish && st.fish.hold) fishPointer('move', e);   // the PIER: the hook follows your finger up and down
+  if (st.bench) benchPointer('move', e);   // the WORKBENCH: a key riding your finger
   { const [px, py] = ptXY(e); st.ptr = { x: px, y: py }; st.ptrAt = performance.now(); }
   if (st.press && Math.hypot(e.clientX - st.press.x, e.clientY - st.press.y) > 12) st.press.moved = true;
   if (st.gearPress && !st.gearPress.moved && Math.hypot(e.clientX - st.gearPress.x, e.clientY - st.gearPress.y) > 10 && gearDragOk()) { st.gearPress.moved = true; st.selItem = st.gearPress.i; Sound.tick(); }   // a drag: the TRASH
@@ -272,6 +274,7 @@ cv.addEventListener('pointermove', e => {
 cv.addEventListener('pointerup', e => {
   if (st.mode === 'fish' && st.fish) fishPointer('up', e);
   st.drag = null;
+  if (st.bench && benchPointer('up', e)) return;
   if (st.gearPress) { const gp = st.gearPress; st.gearPress = null; return gearRelease(gp); }   // gear: a tap, or a drop (on the TRASH?)
   if (st.coinPress) {   // COIN FLIP: let go: a quick tap picks, on a side flips, anywhere else skips
     const cp = st.coinPress;
@@ -287,7 +290,7 @@ cv.addEventListener('pointerup', e => {
   const h = hitAt(...ptXY(e));   // a drag: lifting selects (a second tap confirms)
   if (h && h.kind === 'tile' && st.mode === 'play' && !st.busy) { st.sel = h.i; Sound.tick(); }
 });
-cv.addEventListener('pointercancel', () => { if (st.fish) st.fish.hold = false; st.press = null; st.gearPress = null; if (st.coinPress) { st.coinPress = null; coinCancel(); } });
+cv.addEventListener('pointercancel', e => { if (st.bench) benchPointer('cancel', e); if (st.fish) st.fish.hold = false; st.press = null; st.gearPress = null; if (st.coinPress) { st.coinPress = null; coinCancel(); } });
 // COIN FLIP: while held, dragging up opens the coin and picks a side (left / right of the node).
 function coinDrag(e) {
   const p = st.coinPress, t = st.lv && st.lv.tiles[p.i];

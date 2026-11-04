@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v14.11']);
+NEON_FILES.push(['engine/render.js', 'v14.13']);
 
 // ---------------- Popup looks (the user, 2026-10-31) ----------------
 // Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
@@ -82,10 +82,11 @@ function render(now) {
   g.globalAlpha = 1;
   g.textAlign = 'center';
   g.textBaseline = 'middle';
+  for (const c of cells) if (c.piece) drawPiece(c);   // big letters, a piece per cell (the WORKBENCH: engine/bench.js)
   for (const bold of [false, true]) {
     g.font = `${bold ? DRAW_FONT.bold : DRAW_FONT.weight} ${L.fs * DRAW_FONT.scale}px ${DRAW_FONT.family}`;
     for (const c of cells) {
-      if (!!c.bold !== bold) continue;
+      if (!!c.bold !== bold || c.piece) continue;
       g.fillStyle = c.col;
       if (c.r180) { g.save(); g.translate(pxX(c.cx), pxY(c.cy)); g.rotate(Math.PI); g.fillText(c.ch, 0, 0); g.restore(); }
       else if (c.sc && c.sc !== 1) { g.save(); g.translate(pxX(c.cx), pxY(c.cy)); g.scale(c.sc, c.sc); g.fillText(c.ch, 0, 0); g.restore(); }   // a pop (HUD integrity)
@@ -103,6 +104,7 @@ function render(now) {
     else g.fillText(pch, p.x, p.y);
   }
   g.globalAlpha = 1;
+  if (st.bench) benchKeys(now);   // the WORKBENCH keyboard: its own layer, over the bottom of the screen
   if (st.tut) drawTutorial(now);   // the training run's popup (POPS), over everything
   const fk = (now - flashFx.t0) / 1000;
   if (fk < flashFx.dur) {

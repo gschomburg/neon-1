@@ -85,6 +85,49 @@ unlocked by REP, and some quests unlock REP.
       gets one; heal, then the bench), not a node of its own. **COMPS are for the run:** a stack in your LOOT bag (sell
       what is left at any market). Claude's numbers to start: shred scrap 1 / common 2 / rare 4 / epic 8 / legendary 16
       (loot by its worth); a mod step up 6 / 12 / 24; build: 3 rolled offers a visit, priced in COMPS.
+    - **LETTERS instead of COMPS? (the user, meat notes 2026-11-03: to talk through):** gear and mods shred into
+      their short-code letters (sometimes a random one too); you craft new things from letters, Minecraft-style
+      recipes; sometimes the shredder gives random letters; crafted things can stay at the safehouse for next time
+      (~5 slots), maybe you can bank letters; comp rarity helps you craft the mod you want, but a random letter might
+      still get you there; a recipe book in the workshop so people know what they can craft. This is also where you
+      reassemble G0D (G0D.exe, item 3). Clashes with "COMPS are for the run": talk first.
+    - **Decided (the user, 2026-11-03): LETTERS replace COMPS.** Recipes spell the **short code** (ITEM_SHORT: WARP,
+      SKIP...). **No limit on banked letters** for now (maybe later). The safehouse stores **5 slots** of things you
+      build (gear stacks: e.g. 3 mods + 2 gear stacks). Wildcards maybe; trying a random letter in a gap is already a
+      weak wildcard. Claude's ideas: rare letters (X Q Z, leet 0 3) worth more; unknown words = secret recipes; the
+      recipe book fills in like the codex; G0D = spell G0D with the 3 quest letters. **Next: 3 full-screen mockup
+      concepts (drag the letters, Minecraft-like; inventory + recipes on screen) before any build.**
+      Mockups (2026-11-03): docs/mockups/workshop.html, https://claude.ai/artifact/3FZCzcJtzcuMNXZRhPkhxw (A CRAFTING TABLE,
+      B TERMINAL keyboard bank + autocomplete + man pages, C THE BENCH loose tiles + jig + pins + drawer). Short codes are
+      3 letters (ITEM_SHORT / MODS short), so a recipe is always 3 slots. Near miss = 2 of 3 letters right, 50%.
+      The user likes **B TERMINAL** (the keyboard). Round 2: docs/mockups/workshop_terminal.html,
+      https://claude.ai/artifact/QawpRqyeA8peTZ41xgJvpZ : half-way (chunky HTML keys, game text around them) vs all on the
+      36x34 cell grid (2x2 keys, hex counts, codex [TAB] row, full-screen panel). Note: a LOCKER already exists (cash
+      out: keep 1 mod a step lower, engine/run.js openLocker); the workshop's 5 slots would replace or grow it.
+      **Round 3 (the user, 2026-11-03):** the all-cells keyboard is worse; go half-way, fixed: header = NeoN+1 +
+      SAFEHOUSE // WORKBENCH only (no LAYER / INT / cr); the keyboard is its own layer that **slides up from off screen**
+      on entering (the grid above keeps the normal transitions); tabs spaced; fewer terminal lines (history); the build
+      slots are **3x3 cells with the letter at 3x size, cut so each piece sits on a cell** (cell transitions move the
+      pieces); every other page (no keyboard) all on the grid: the recipe book like a codex page, SHRED like the market's
+      sell page (list + details first); keep recipe pins showing letters you have / are missing; a **special row** over the
+      keyboard for wildcards (*) and quest glyphs; **the G0D letters are red, a new rarity** (letters from G0D).
+      Mockup: docs/mockups/workshop_v3.html, https://claude.ai/artifact/1BZPZ4Gt7UJ5Tu71Tw6bvU
+      **Answers (the user, 2026-11-03):** tune BUILD in the game engine, not more mockups. The red rarity is **DIVINE**
+      (the G0D letters: later, once the rest is in). **Wildcards (*)** are random drops: shredding rarer things, maybe
+      shredded loot, maybe fishing. The tab is **BOOK**. **Built things go to the safehouse locker**; if it's full, you
+      can equip it. Open: how safehouse gear works (install anything? swap?). Leaning: you can't swap out an equipped
+      mod; maybe you can only shred it, or unequip it. The ^C button becomes [ CANCEL ]. **LOCKER page (the user, 2026-11-03):** [ TAKE ] / [ STORE ]
+      under the tabs (like the market's BUY / SELL), a rule above and below; TAKE lists the locker, STORE lists your tray (no
+      tray at the bottom: the user, 2026-11-04). **Built v14.12** (engine/bench.js; SPEC version log): all four tabs in the
+      game, the WORKBENCH post (USER, 150 REP), the editor's TESTING > safehouse + bench. Next: the user plays it, then fix
+      the list (how you get to the bench and back, the BUILD screen in the engine, DIVINE letters, blueprints, wildcards
+      from fishing).
+      **Round 2 built v14.13** (the user's notes 2026-11-04): safehouse goes straight to the bench after the pick (and back
+      in), 3 components on arrival, LEAVE, plain framed slots + cursor, > select components, bulb blink-in, the dramatic
+      build (charge / split / form / fly to LOCKER or [£]), the grinder shred, gear / mod / loot labels, loot from RUN
+      ANYWAY, magenta for missing, letter rarity from use, digits (x slot: a chance of that many), POPS first time.
+      **Still open:** keyboard design tweaks and the line over it (the user: not sure yet); DIVINE red letters; blueprints;
+      wildcards from fishing; a use for digits in mods. Letter counts: no recipe uses I; digits 1-9 none; J, Q once.
 - **Scrap mods:** maybe 2 other worthless ones.
 - **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first, v13.49).
   Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), NUKE (wipe a corp off the map), DECODER
@@ -137,6 +180,8 @@ unlocked by REP, and some quests unlock REP.
   ad + a mod you own) starts something (ADS.md "Secret ads"); ads you can buy from (a puppy for a quest); an emoji
   with a quest purpose.
 - **The feel: FTL's quests and interactions.** Brainstorm together.
+- **A hint on the quests tab** (the user, meat notes 2026-11-03): when it's empty, something like "no quests yet. put a
+  crew together and maybe you will discover some" / "get to know the other hackers, call them".
 - **FLOPPY** (the user, 2026-10-27): a floppy disk gear you insert in a terminal somewhere to start a quest.
 - **G0D: how you "beat" the game** (the user, meat notes 2026-10-28):
   - G0D is a corp in heaven. Entering the H3AV3N seed opens a special network that reaches it.
@@ -173,6 +218,13 @@ unlocked by REP, and some quests unlock REP.
   - **G0D flashing in on SECTOR CLEARED** now and then (the user, meat notes 2026-10-29; the rest of that note is built, v13.80).
   - **G0D's tracks** (the user, 2026-10-29): the G0D fights need their own music, and it has to kick ass: the maze, the
     mold-armor fight, the part 2 on the map / the win screen, the last stand. (docs/QUESTS.md, G0D's fights.)
+  - **G0D.exe** (the user, meat notes 2026-11-03): a personal AI hacker assistant, exotic gear. After you beat G0D, a
+    quest to reassemble it: find the G, the 0 and the D, then put G0D together at a workshop. It knows the tells of
+    every corp you've beaten more than ~5 times (feat unlocks). Activated, it plays perfectly: it knows the real nodes
+    (not just tells) and clicks them for you. It stays with you from corp to corp, uses gear, goes to stores and buys,
+    moves through the network, and goes for depth; it won't buy many mods unless they boost credits (for the UPLINKs).
+    Maybe a limit of 256 clicks; if so it tries to get another of itself to activate; it can call crew too. (Same idea
+    as "An AI crew member that plays the game" in Low priority: G0D.exe may be that one.)
 
 ### 4. The end game (its own section, the user 2026-10-30; details: docs/ENDGAME.md)
 - **The ending:** cutscene, credits + thanks for playing, "there is more to explore", then the reward as a free REP
@@ -234,6 +286,10 @@ unlocked by REP, and some quests unlock REP.
 - **Next batch (the user, 2026-10-27)** (docs/SECTOR_EVENTS.md "The next batch"): built v13.58: GRIND, BLACK ICE + COLD SNAP,
   RIGHT ANGLES, GAUNTLET; v13.59: EENY MEENY (3 bosses); v13.60: HEAD FIRST. Idea: ICE STORM.
 - **Other ideas (Claude's):** TAXED, AUDITED, RANSOM, BACKWARDS, a trace meter, two events stacked.
+- **Overlapping events and anomalies** (the user, meat notes 2026-11-03): some sector events could stack (RIGHT ANGLES
+  or any that change the board; good ones with bad ones). Maybe a mix: a chance of one that goes with anything, and a
+  chance of a second. A corp probably never gets 2 corp anomalies at once (check whether that has happened); maybe
+  deeper sectors allow more at once. For now, with two events in a sector, a corp gets none, A, or B, not A+B.
 - **MOLD, a sector event** (the user, 2026-10-30): explains the mold in heaven (docs/QUESTS.md, step 11); once
   unlocked, it can come up as a random event in regular runs too.
 - **Event tiers, later** (the user, 2026-10-30: not now): harder events only deeper. For now the rule stands: sector 1
@@ -281,6 +337,7 @@ unlocked by REP, and some quests unlock REP.
   10 times and the AI knows its tell (it gets it right); beat all of them 10 times and you can let it run. It doesn't
   use markets, but takes what lets it go deeper faster: SKIP, WARP, money boosters to get through the UPLINKs. You
   bring it in with an exotic CALL item. Names: ZEUS? APOLLO?
+  (2026-11-03: see G0D.exe in item 3; maybe the same thing.)
 
 ### Enemy and ally hackers (low: the user 2026-10-29, "we don't need any more"; the lore was great) (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
 - **Still open:** special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
@@ -346,13 +403,16 @@ unlocked by REP, and some quests unlock REP.
 - **Codex and menus pass** (with HOW TO PLAY):
   - **HOW TO PLAY pass:** touch it up (corps and tells on THE BASICS; gestures, exotics, ads, run resume).
   - **Keyword highlighting in text** (started v13.75 on HOW TO PLAY > THE BASICS: ICE, INT, credits; next the other HOW TO PLAY pages and the codex, the user's aim: neater): ICE in red, credits in money, mod names in their rarity...
-- **PHONE PASS:** bigger, roomier buttons (the tray, lists; ~44px); more room for long text (codex, mod
+- **PHONE PASS:** (the user, 2026-10-31, as a home-screen app on an older, smaller iPhone: it works, but everything feels small; the text size is set by the widest screens fitting the width) bigger, roomier buttons (the tray, lists; ~44px); more room for long text (codex, mod
   descriptions, detail boxes, the clash screen); the swap screen's row spacing; the spacing / copy on the pick
   screens; the header menu button right-aligned?; the palette warnings (40 palettes; MOCHI MOCHI is hard to read,
   the user will probably change it).
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
+- **Sell page gear** (the user, meat notes 2026-11-03): gear on the sell page still shows [names]; make it match the buy page.
+- **SELL ALL LOOT** button in the store (the user, meat notes 2026-11-03).
+- **SHOE attack** (the user, meat notes 2026-11-03): needs an animation; its terminal text gets cut off.
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Cold Brew's boss reward
   is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is (the user 2026-10-29: "i still ran out of cash and couldn't get past the uplink"); it already scales by sector and BLACK ICE costs that many hits.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.

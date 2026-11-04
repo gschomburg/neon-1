@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v14.11']);
+NEON_FILES.push(['engine/sound.js', 'v14.13']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -310,6 +310,17 @@ const Sound = (() => {
     hkStamp: () => { tone(110, 0.18, { type: 'square', vol: 0.5, slide: 0.5 }); noise(0.14, { vol: 0.55, freq: 900 }); tone(55, 0.3, { type: 'sine', vol: 0.6 }); },
     // gear dragged to the TRASH: a crunch and a thunk
     trash: () => { noise(0.2, { vol: 0.5, freq: 1400, to: 300 }); tone(180, 0.14, { type: 'square', vol: 0.3, slide: 0.5, delay: 0.05 }); },
+    // ---- The WORKBENCH (engine/bench.js)
+    // the shredder: a motor grinding under chunks of noise (dur seconds)
+    grind: (dur = 0.9) => { const n = Math.round(dur / 0.055); for (let i = 0; i < n; i++) { const d = i * 0.055; tone(58 + Math.random() * 34, 0.07, { type: 'sawtooth', vol: 0.32, delay: d, slide: 0.75 }); noise(0.05, { vol: 0.32, freq: 500 + Math.random() * 1400, delay: d }); if (Math.random() < 0.35) tone(1400 + Math.random() * 1800, 0.015, { type: 'square', vol: 0.07, delay: d + 0.02 }); } noise(dur, { vol: 0.22, freq: 260, to: 1300, type: 'lowpass' }); },
+    // a build charging up (dur seconds): a riser
+    charge: (dur = 0.9) => { noise(dur, { vol: 0.2, freq: 300, to: 5200 }); tone(95, dur, { type: 'sawtooth', vol: 0.14, slide: 5 }); tone(190, dur, { type: 'square', vol: 0.05, slide: 5 }); },
+    // ...and coming together
+    form: () => { noise(0.16, { vol: 0.22, freq: 7000, type: 'highpass' }); arp([880, 1175, 1568, 2093], 0.05, { vol: 0.32 }); },
+    // a component landing (a letter into the locker)
+    comp: () => { tone(1650 + Math.random() * 450, 0.035, { type: 'triangle', vol: 0.22 }); tone(2600, 0.045, { type: 'sine', vol: 0.1, delay: 0.035 }); },
+    // a letter blinking on (an old bulb)
+    lamp: () => { noise(0.015, { vol: 0.08, freq: 5200 }); tone(2400 + Math.random() * 800, 0.01, { type: 'square', vol: 0.04 }); },
     // ---- Fishing (engine/fishing.js)
     // the cast: the line whizzing out and the hook falling (it lands with fishPlop)
     fishCast: () => {

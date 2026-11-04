@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v14.11']);
+NEON_FILES.push(['engine/save.js', 'v14.13']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -57,6 +57,7 @@ const LEGACY = [
   { key: 'drops', tier: 2, name: 'BETTER DROPS', desc: '1 in 10 mods and gear roll a step rarer.', costs: [150, 300],
     levels: ['1 in 10 mods and gear roll a step rarer.', '1 in 5 mods and gear roll a step rarer.'] },
   { key: 'locker', tier: 2, name: 'LOCKER', desc: 'cash out and put one mod away (a step lower): your next run starts with it.', costs: [200] },
+  { key: 'bench', tier: 2, name: 'WORKBENCH', desc: 'every safehouse gets a workbench: shred gear and mods into letters, spell a code to build one.', costs: [150] },   // (engine/bench.js)
   { key: 'nemesis', tier: 2, name: 'NEMESIS', desc: 'pick a corp you have breached: it shows up 3x as often.', costs: [120] },
   { key: 'starter', tier: 2, name: 'STARTER POOL', desc: 'the starter perk can offer general mods too.', costs: [150] },
   { key: 'tellscope', tier: 2, name: 'TELL LIGHT', desc: 'every corp layer says if its tell is on: TELL ON / TELL OFF.', costs: [150] },   // (the user: know if a tell is active)

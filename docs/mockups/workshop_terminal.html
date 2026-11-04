@@ -1,0 +1,422 @@
+<title>Workbench Terminal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+/* layout: two phone frames side by side (half-way, all cells); both live. Colors = the BASIC palette + rarity chips */
+:root {
+  color-scheme: dark;
+  --bg: #06090a; --dim: #2c3a38; --mid: #5f7470; --text: #a9bdb7; --bright: #e6f4ef;
+  --accent: #3cf0ff; --danger: #ff3b4e; --money: #e8c66a; --rep: #a27ef5;
+  --scrap-fg: #1d2326; --scrap-bg: #d4dad9; --common-fg: #0c3318; --common-bg: #6fdc84;
+  --rare-fg: #0b2a55; --rare-bg: #7fb6ff; --epic-fg: #2d0a4e; --epic-bg: #c99bff;
+  --legendary-fg: #4a1300; --legendary-bg: #ff8a4a; --exotic-fg: #3a2800; --exotic-bg: #ffd84a;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+h1 { font-size: 26px; font-weight: 800; color: var(--bright); margin: 0; letter-spacing: 2px; }
+h1 b { color: var(--accent); }
+p { margin: 0; max-width: 74ch; }
+.frames { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.fcol { display: flex; flex-direction: column; gap: 8px; width: 380px; max-width: 100%; }
+.fcol h2 { margin: 0; font-size: 15px; color: var(--bright); letter-spacing: 1px; }
+.fcol h2 span { color: var(--accent); }
+.cap { font-size: 11px; color: var(--mid); }
+.cap b { color: var(--text); }
+.notes { border-left: 3px solid var(--money); padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; max-width: 80ch; }
+.notes b { color: var(--money); }
+
+/* ---------- A: half-way (HTML, game text dressing, chunky keys) ---------- */
+.half { position: relative; width: 380px; max-width: 100%; height: 760px; border: 1px solid var(--dim); background: var(--bg); overflow: hidden;
+  user-select: none; -webkit-user-select: none; touch-action: none; display: flex; flex-direction: column; padding: 8px 10px; font-size: 13px; line-height: 1.22; }
+.half .ln { white-space: pre; min-height: 1.22em; }
+.c-acc { color: var(--accent); } .c-dim { color: var(--dim); } .c-mid { color: var(--mid); } .c-br { color: var(--bright); } .c-money { color: var(--money); } .c-dan { color: var(--danger); } .c-rep { color: var(--rep); }
+.bold { font-weight: 700; }
+.half .tabs { display: flex; justify-content: center; }
+.half .tabs span { cursor: pointer; color: var(--bright); }
+.half .tabs span.on { color: var(--accent); font-weight: 700; background: rgba(60,240,255,.22); }
+.half .log { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; overflow: hidden; }
+.half .prompt { display: flex; align-items: center; gap: 8px; margin: 6px 0 2px; }
+.half .ps { color: var(--accent); font-weight: 700; }
+.slotA { position: relative; width: 64px; height: 70px; }
+.slotA pre { margin: 0; font: inherit; line-height: 1.08; color: var(--dim); position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.slotA.cur pre { color: var(--accent); }
+.slotA .tile { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.tile { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 40px; font-weight: 800; font-size: 17px; cursor: grab;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.3); }
+.tile i { position: absolute; right: 2px; bottom: 0; font-style: normal; font-size: 9px; font-weight: 700; opacity: .75; }
+.tile.dead { background: none !important; color: var(--dim) !important; box-shadow: inset 0 0 0 1px var(--dim); cursor: default; }
+.tile.q { outline: 1px solid var(--exotic-bg); outline-offset: 2px; }
+.t-scrap { background: var(--scrap-bg); color: var(--scrap-fg); } .t-common { background: var(--common-bg); color: var(--common-fg); }
+.t-rare { background: var(--rare-bg); color: var(--rare-fg); } .t-epic { background: var(--epic-bg); color: var(--epic-fg); }
+.t-legendary { background: var(--legendary-bg); color: var(--legendary-fg); } .t-exotic { background: var(--exotic-bg); color: var(--exotic-fg); }
+.chip { padding: 0 1px; font-weight: 700; }
+.half .ac { min-height: calc(4 * 1.22em + 4px); display: flex; flex-direction: column; }
+.half .row { display: flex; gap: 8px; white-space: pre; cursor: pointer; }
+.half .row .cur { color: var(--accent); width: 1ch; font-weight: 700; }
+.half .row .nm { color: var(--bright); flex: 1; }
+.half .row.faded .nm { color: var(--mid); }
+.half .row .rt { color: var(--mid); }
+.half .btnrow { display: flex; gap: 2ch; justify-content: center; }
+.half .btnrow span { cursor: pointer; }
+.kb { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.kb .r { display: flex; gap: 4px; justify-content: center; }
+.kb .wide { width: 52px; font-size: 11px; letter-spacing: 1px; }
+.kb .enter { background: var(--accent); color: var(--bg); }
+.ghost { position: fixed; z-index: 100; pointer-events: none; transform: translate(-50%, -60%) scale(1.2); opacity: .9; }
+.hot { outline: 2px dashed var(--accent); outline-offset: 2px; }
+.half .list { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: auto; }
+.boxbtn { margin: 6px auto 0; cursor: pointer; color: var(--accent); text-align: center; white-space: pre; line-height: 1.22; font-weight: 400; }
+.boxbtn b { font-weight: 700; }
+
+/* ---------- B: all cells (canvas, the game's own grid) ---------- */
+.cells { width: 380px; max-width: 100%; height: 760px; border: 1px solid var(--dim); background: var(--bg); touch-action: none; display: block; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>WORKBENCH <b>TERMINAL</b></h1>
+    <p>The keyboard concept, two ways. Left: the half-way version keeps chunky keys but dresses everything else in the game's text style. Right: everything on the game's own 36 x 34 cell grid, drawn the way the game draws (header, tabs, separators, list rows, box buttons). Both work: tap keys to type, drag a key up into a slot, tap a suggestion, switch tabs.</p>
+  </div>
+  <div class="frames">
+    <div class="fcol"><h2><span>1</span> · HALF-WAY</h2><div class="cap">Real keys you can drag. The game's header, tabs, separators and lists around them; prompt slots drawn like board nodes.</div><div class="half" id="half"></div></div>
+    <div class="fcol"><h2><span>2</span> · ALL CELLS</h2><div class="cap">Every character on the grid. Keys are 2 x 2 cells (letter, count in hex like the belt). The count only fits 10 keys a row with 1-cell gaps.</div><canvas class="cells" id="cells" width="380" height="760"></canvas></div>
+  </div>
+  <div class="notes">
+    <b>NOTES</b>
+    <div>The game already has a LOCKER: at cash out you keep one mod for the next run, a step lower (engine/run.js openLocker). The workshop's 5 slots would replace or grow that one.</div>
+    <div>All cells: the screen is a full-screen panel (no tray), like the LOCKER and THE BOARD. Tabs are the codex's [LABEL] row. Counts are hex (x10 = A), like gear stacks on the belt.</div>
+    <div>Quest letters (G 0 D) get their own row of gold keys over the keyboard when you have them.</div>
+  </div>
+</div>
+
+<script>
+(() => {
+// ---------- shared data + rules (same as the three-concept page) ----------
+const R = {
+  PCH:['PATCH','scrap','+1 integrity.'], PRG:['PURGE','scrap','lock out 1 ICE.'], SHO:['SHOE','scrap','throw it. probably nothing.'],
+  FWL:['FWALL','common','block next ICE hit.'], SPL:['SPLIT','common','rule out half.'], SHK:['SHAKE','common','jostle the nodes.'],
+  FRG:['FRAG','common','3 random hits.'], RWD:['REWIND','common','+5s on the clock.'], LTO:['LOTTO','common','random credits.'],
+  PNG:['PING','common','tap a node: ICE or not?'], MAG:['MAGNET','common','pull the $ node.'], EGG:['EGG','common','hatch a pet.'],
+  RTE:['ROUTE','rare','shuffle map ahead.'], WRP:['WARP','rare','random jump ahead.'], TUN:['TUNNEL','rare','go across the row.'],
+  TLT:['TILT','rare','slide them up or down.'], ENC:['ENCORE','rare','next gear: twice.'], STM:['STIM','rare','+50% int, this corp.'],
+  '0DY':['0DAY','rare','mark the real node.'], EXO:['EXORCIST','rare','kick a rival out.'],
+  ALL:['ALL-IN','epic','50/50: clear it or +2 ICE.'], MSH:['MESH','epic','link the whole sector.'], PAS:['PASS','epic','half off the uplink.'],
+  WRM:['WORM','epic',"pre-eat a corp's ICE."], SKP:['SKIP','epic','jump a row.'], SWP:['SWAP','epic','health <-> missing.'], FAK:['FAKE','epic','+1 step on a mod.'],
+  FLR:['FLARE','legendary','rule out 3/4.'], FRZ:['FREEZE','legendary','pause 2s. watch.'], BLS:['BLAST','legendary','aim a 2x2 blast.'],
+  BEE:['BEES','legendary','a swarm eats ICE.'], ANC:['ANCHOR','legendary','nothing moves.'], NUK:['NUKE','exotic','breach the corp now.'],
+  BUF:['BUFFER','common','+1 integrity. (mod)'], SKM:['SKIMMER','common','credits on hits. (mod)'], BRN:['BURNER','common','burn a node. (mod)'],
+  HGL:['HAGGLE','common','markets cost less. (mod)'], TRC:['TRACER','rare','hit ICE points to real. (mod)'], KLG:['KEYLOGGER','rare','miss logs a key line. (mod)'],
+  VRS:['VIRUS','epic','hit ICE infects 1 more. (mod)'], FSF:['FAILSAFE','epic','killing hit: 1 left. (mod)'],
+};
+const SECRET = { G0D:['G0D.exe','exotic','plays the game for you.'] };
+const EXTRA = { CHR:['CHROME','epic','sell it: worth a lot.'], DUD:['DUDS','scrap','junk: sell it.'] };
+const info = c => R[c] || SECRET[c] || EXTRA[c];
+const TIER = k => k.endsWith('*') ? 'exotic' : /[0-9]/.test(k) ? 'legendary' : 'EARSTIONL'.includes(k) ? 'common' : 'VJXQZ'.includes(k) ? 'epic' : 'rare';
+const CH = k => k.replace('*', '');
+const BONUS = 'EEEAAARRSSTTIONLPPKMCDHUBGWYFVXQZ013';
+const KB = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+const hex = n => n > 15 ? '+' : n.toString(16).toUpperCase();
+function fresh() {
+  return {
+    bank: { E:2, A:1, R:3, S:2, T:1, I:1, O:1, N:1, L:1, P:2, K:1, M:1, W:1, G:1, H:1, C:1, U:1, F:1, X:1, '0':1, 'G*':1, '0*':1, 'D*':1 },
+    bag: [{ c:'WRM', n:1 }, { c:'SHK', n:2 }, { c:'BUF', n:1 }, { c:'CHR', n:1 }, { c:'PNG', n:1 }],
+    locker: [{ c:'SKP', n:2 }, { c:'TRC', n:1 }, null, null, null],
+    slots: [null, null, null], tab: 'build', sel: 0, man: 'WRP',
+    log: ['> workbench --online', '  letters: 28   locker: 2/5', '> shred WORM', '  +W +R +M   bonus +Q', '> build SKP', '  built SKIP -> bag'],
+    msg: '> workbench: spell a code.', msgCol: 'mid', pend: null,
+  };
+}
+const count = st => Object.values(st.bank).reduce((a, b) => a + b, 0);
+const word = st => st.slots.map(s => s ? CH(s) : '').join('');
+const missing = (st, code) => { const b = { ...st.bank }; for (const s of st.slots) if (s) b[s] = (b[s] || 0) + 1; return code.split('').map(ch => (b[ch] > 0 ? (b[ch]--, '') : ch)).join(''); };
+const have = (st, c) => !missing(st, c);
+function judge(st) {
+  if (st.slots.some(s => !s)) return { kind: 'partial' };
+  const w = word(st);
+  if (w === 'G0D') return st.slots.every(s => s.endsWith('*')) ? { kind: 'ok', code: w } : { kind: 'needq', w };
+  if (R[w]) return R[w][1] === 'exotic' && w !== 'NUK' ? { kind: 'lock', w } : { kind: 'ok', code: w };
+  const near = Object.keys(R).find(c => R[c][1] !== 'exotic' && [0, 1, 2].filter(i => c[i] === w[i]).length === 2);
+  return near ? { kind: 'near', code: near, w } : { kind: 'bad', w };
+}
+const suggest = st => { const pre = st.slots.filter(Boolean).map(CH).join(''); return pre ? Object.keys(R).filter(c => c.startsWith(pre)).sort((a, b) => have(st, b) - have(st, a)).slice(0, 4) : []; };
+function place(st, k, i) {
+  if (!(st.bank[k] > 0)) return; if (i == null) i = st.slots.findIndex(s => !s); if (i < 0) return;
+  if (st.slots[i]) unplace(st, i); st.slots[i] = k; if (!--st.bank[k]) delete st.bank[k];
+}
+function unplace(st, i) { const k = st.slots[i]; if (!k) return; st.bank[k] = (st.bank[k] || 0) + 1; st.slots[i] = null; }
+function fill(st, c) {
+  for (let i = 0; i < 3; i++) unplace(st, i);
+  if (!have(st, c)) { st.msg = `> ${c}: missing ${missing(st, c)}.`; st.msgCol = 'dan'; return; }
+  c.split('').forEach((ch, i) => place(st, ch, i));
+}
+const addBag = (st, c) => { const s = st.bag.find(x => x.c === c); if (s) s.n++; else st.bag.push({ c, n: 1 }); };
+function build(st, force) {
+  const j = judge(st);
+  if (j.kind === 'ok') {
+    st.slots = [null, null, null]; addBag(st, j.code);
+    st.log.push(`> build ${j.code}`, j.code === 'G0D' ? '  ... something opens one eye.' : `  built ${info(j.code)[0]} -> bag`);
+    st.msg = j.code === 'G0D' ? '> G0D.exe is awake.' : `> built ${info(j.code)[0].toLowerCase()}.`; st.msgCol = j.code === 'G0D' ? 'money' : 'acc'; return;
+  }
+  if ((j.kind === 'near' || j.kind === 'bad') && force) {
+    const win = Math.random() < (j.kind === 'near' ? 0.5 : 0.1);
+    const got = win ? (j.kind === 'near' ? j.code : 'TRC') : 'DUD';
+    st.slots = [null, null, null]; addBag(st, got);
+    st.log.push(`> build ${j.w} --force`, win ? `  built ${info(got)[0]} -> bag (lucky)` : '  DUDS. the letters burned.');
+    st.msg = win ? `> lucky: ${info(got)[0].toLowerCase()}.` : '> duds.'; st.msgCol = win ? 'money' : 'dan'; return;
+  }
+  if (j.kind === 'partial') { st.msg = '> 3 letters first.'; st.msgCol = 'mid'; }
+}
+function shred(st, i) {
+  const it = st.bag[i]; if (!it) return;
+  const got = it.c.split(''), bonus = Math.random() < 0.25 ? BONUS[Math.floor(Math.random() * BONUS.length)] : null;
+  for (const k of got.concat(bonus ? [bonus] : [])) st.bank[k] = (st.bank[k] || 0) + 1;
+  if (!--it.n) st.bag.splice(i, 1);
+  st.log.push(`> shred ${info(it.c)[0]}`, `  +${got.join(' +')}${bonus ? `   bonus +${bonus}` : ''}`);
+  st.msg = `> ${info(it.c)[0].toLowerCase()}: +${got.join(' +')}${bonus ? ' +' + bonus : ''}`; st.msgCol = 'acc'; st.sel = Math.min(st.sel, Math.max(0, st.bag.length - 1));
+}
+function take(st, i) { const it = st.locker[i]; if (!it) return; for (let n = 0; n < it.n; n++) addBag(st, it.c); st.locker[i] = null; st.msg = `> took ${info(it.c)[0].toLowerCase()} out.`; st.msgCol = 'acc'; }
+const qKeys = st => Object.keys(st.bank).filter(k => k.endsWith('*'));
+const header = st => ['NeoN+1', '- '.repeat(18).slice(0, 36), 'LAYER 05 S2' + ' '.repeat(16) + 'INT ####-', 'SAFEHOUSE // WORKBENCH' + ' '.repeat(9) + '412cr'];
+
+// ======================= 1. HALF-WAY (HTML) =======================
+const H = { st: fresh(), el: document.getElementById('half') };
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const tileH = (k, n, drag, cls = '') => `<span class="tile t-${TIER(k)}${k.endsWith('*') ? ' q' : ''}${n === 0 ? ' dead' : ''} ${cls}" ${n === 0 ? '' : `data-drag="${drag}"`}>${CH(k)}${n != null && n !== 0 ? `<i>${hex(n)}</i>` : ''}</span>`;
+const chipS = (c, r) => `<span class="chip t-${r}">${c}</span>`;
+function listRow(sel, code, name, right, act, faded) {
+  const [ , r] = info(code) || ['', 'scrap'];
+  return `<div class="row${faded ? ' faded' : ''}" data-act="${act}"><span class="cur">${sel ? '>' : ' '}</span>${chipS(code, r)}<span class="nm">${esc(name)}</span><span class="rt">${esc(right)}</span></div>`;
+}
+const SEPH = '<div class="ln c-dim" style="text-align:center">+ - - - - - - - - - - - - - - - +</div>';
+function drawHalf() {
+  const st = H.st, h = header(st);
+  let o = `<div class="ln"><span class="c-acc">NeoN+1</span></div><div class="ln c-dim">${h[1]}</div>
+    <div class="ln"><span class="c-mid">LAYER </span><span class="c-br">05</span><span class="c-mid"> S</span><span class="c-br">2</span>${' '.repeat(16)}<span class="c-mid">INT </span><span class="c-acc">####</span><span class="c-acc">-</span></div>
+    <div class="ln"><span class="c-mid">SAFEHOUSE // </span><span class="c-br">WORKBENCH</span>${' '.repeat(9)}<span class="c-money">412cr</span></div>
+    <div class="ln"></div>
+    <div class="tabs">${['build', 'shred', 'locker', 'man'].map(t => `<span class="${st.tab === t ? 'on' : ''}" data-act="tab:${t}">[${t.toUpperCase()}]</span>`).join('')}</div>`;
+  if (st.tab === 'build') {
+    const j = judge(st), cur = st.slots.findIndex(s => !s), sug = suggest(st);
+    o += `<div class="log">${st.log.slice(-7).map(l => `<div class="ln ${l.startsWith('>') ? '' : l.includes('DUD') ? 'c-dan' : 'c-acc'}">${esc(l)}</div>`).join('')}</div>`;
+    o += `<div class="prompt"><span class="ps">$ build</span>${st.slots.map((s, i) => `<div class="slotA${i === cur ? ' cur' : ''}" data-drop="slot:${i}"><pre>+- - -+\n:     :\n:     :\n:     :\n+- - -+</pre>${s ? tileH(s, null, 'S:' + i) : ''}</div>`).join('')}</div>`;
+    let ac = '';
+    if (j.kind === 'partial') ac = sug.length ? sug.map((c, i) => listRow(i === 0, c, R[c][0], have(st, c) ? 'tap' : '-' + missing(st, c), 'fill:' + c, !have(st, c))).join('')
+      : `<div class="ln c-mid">${st.slots.some(Boolean) ? 'no code starts like that. a secret?' : 'type a code. tap a key, or drag it up.'}</div>`;
+    else if (j.kind === 'ok') ac = listRow(true, j.code, info(j.code)[0], 'ENTER', 'build', false) + `<div class="ln c-mid">  ${esc(info(j.code)[2])}</div>`;
+    else if (j.kind === 'near') ac = `<div class="ln c-money">${j.w}: command not found.</div><div class="ln c-money">did you mean ${j.code}? 50% it works.</div><div class="btnrow"><span class="c-money" data-act="force">[ RUN ANYWAY ]</span><span class="c-br" data-act="clear">[ ^C ]</span></div>`;
+    else if (j.kind === 'bad') ac = `<div class="ln c-dan">${j.w}: command not found.</div><div class="ln c-mid">a secret word? 10% it does something.</div><div class="btnrow"><span class="c-money" data-act="force">[ RUN ANYWAY ]</span><span class="c-br" data-act="clear">[ ^C ]</span></div>`;
+    else ac = `<div class="ln c-dan">${j.kind === 'lock' ? 'permission denied: needs a blueprint.' : 'G0D needs the gold letters.'}</div>`;
+    o += `<div class="ac">${ac}</div>${SEPH}`;
+    const q = qKeys(st), keys = r => KB[r].split('').map(ch => tileH(ch, st.bank[ch] || 0, 'L:' + ch)).join('');
+    o += `<div class="kb" data-drop="bank">${q.length ? `<div class="r">${q.map(k => tileH(k, st.bank[k], 'L:' + k)).join('')}</div>` : ''}
+      <div class="r">${keys(0)}</div><div class="r">${keys(1)}</div><div class="r">${keys(2)}</div>
+      <div class="r"><span class="tile t-scrap wide" data-act="del">DEL</span>${keys(3)}<span class="tile enter wide" data-act="build">ENTER</span></div></div>`;
+  } else if (st.tab === 'shred') {
+    o += `<div class="ln"></div><div class="ln c-danger" style="text-align:center;color:var(--danger)">S H R E D</div><div class="ln" style="text-align:center">its letters come back.</div><div class="ln c-mid" style="text-align:center">25% a bonus one.</div><div class="ln"></div>
+      <div class="list">${st.bag.map((it, i) => listRow(i === st.sel, it.c, info(it.c)[0] + (it.n > 1 ? ' x' + it.n : ''), '-> ' + it.c.split('').join(' '), 'sel:' + i)).join('')}</div>
+      ${st.bag[st.sel] ? `<div class="boxbtn" data-act="shred">+=====================+\n|    <b>S H R E D</b>        |\n|    - ${esc(info(st.bag[st.sel].c)[0].toLowerCase().padEnd(10))}-   |\n+=====================+</div>` : ''}`;
+  } else if (st.tab === 'locker') {
+    o += `<div class="ln"></div><div class="ln c-rep" style="text-align:center">L O C K E R</div><div class="ln" style="text-align:center">5 slots. kept for your next run.</div><div class="ln c-mid" style="text-align:center">gear stacks. tap one to take it.</div><div class="ln"></div>
+      <div class="list">${st.locker.map((it, i) => it ? listRow(false, it.c, info(it.c)[0], it.n > 1 ? 'x' + it.n : '', 'take:' + i) : `<div class="row faded"><span class="cur"> </span><span class="c-dim">:  .  :</span><span class="nm c-dim">empty</span></div>`).join('')}</div>`;
+  } else {
+    const c = st.man, [nm, r, tip] = info(c), m = missing(st, c);
+    o += `<div class="ln"></div><div class="list"><div class="ln"><span class="c-br bold">${c}(1)</span>      <span class="c-mid">WORKBENCH MANUAL</span></div><div class="ln"></div>
+      <div class="ln c-br bold">NAME</div><div class="ln">    ${c} - ${nm}  ${chipS(r, r)}</div><div class="ln"></div>
+      <div class="ln c-br bold">SYNOPSIS</div><div class="ln">    build ${c.split('').join(' ')}</div><div class="ln"></div>
+      <div class="ln c-br bold">DESCRIPTION</div><div class="ln">    ${esc(tip)}</div><div class="ln"></div>
+      <div class="ln c-br bold">LETTERS</div><div class="ln">    ${m ? `<span class="c-dan">missing: ${m.split('').join(' ')}</span>` : '<span class="c-acc">ready to build</span>'}</div><div class="ln"></div>
+      ${SEPH}<div class="ln c-mid">man -k (tap one)</div>
+      ${Object.keys(R).map(k => listRow(k === c, k, R[k][0], have(st, k) ? 'ready' : '', 'man:' + k, !have(st, k))).join('')}</div>`;
+  }
+  o += `<div class="ln c-${st.msgCol}" style="margin-top:6px">${esc(st.msg)}</div>`;
+  H.el.innerHTML = o;
+}
+function halfAct(a) {
+  const st = H.st, [cmd, v] = a.split(':');
+  if (cmd === 'tab') st.tab = v; else if (cmd === 'fill') fill(st, v); else if (cmd === 'build') build(st); else if (cmd === 'force') build(st, true);
+  else if (cmd === 'clear') { for (let i = 0; i < 3; i++) unplace(st, i); } else if (cmd === 'del') { const i = [2, 1, 0].find(i => st.slots[i]); if (i != null) unplace(st, i); }
+  else if (cmd === 'sel') st.sel = +v; else if (cmd === 'shred') shred(st, st.sel); else if (cmd === 'take') take(st, +v); else if (cmd === 'man') st.man = v;
+  drawHalf();
+}
+(() => {
+  let d = null;
+  const target = e => { const n = document.elementFromPoint(e.clientX, e.clientY); const t = n && n.closest('[data-drop]'); return t && H.el.contains(t) ? t : null; };
+  H.el.addEventListener('pointerdown', e => { const g = e.target.closest('[data-drag]'); if (!g) return; d = { src: g.dataset.drag, el: g, x: e.clientX, y: e.clientY, moved: false }; H.el.setPointerCapture(e.pointerId); e.preventDefault(); });
+  H.el.addEventListener('pointermove', e => {
+    if (!d) return;
+    if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) { d.moved = true; d.g = d.el.cloneNode(true); d.g.classList.add('ghost'); document.body.appendChild(d.g); }
+    if (d.moved) { d.g.style.left = e.clientX + 'px'; d.g.style.top = e.clientY + 'px'; H.el.querySelectorAll('.hot').forEach(n => n.classList.remove('hot')); const t = target(e); if (t) t.classList.add('hot'); }
+  });
+  H.el.addEventListener('pointerup', e => {
+    if (!d) return; const x = d; d = null; if (x.g) x.g.remove(); H.el.querySelectorAll('.hot').forEach(n => n.classList.remove('hot'));
+    const st = H.st, [t, v] = x.src.split(':');
+    if (!x.moved) { if (t === 'L') place(st, v); else if (t === 'S') unplace(st, +v); drawHalf(); return; }
+    const tg = target(e); if (!tg) return; const [dd, di] = tg.dataset.drop.split(':');
+    if (t === 'L' && dd === 'slot') place(st, v, +di);
+    else if (t === 'S' && dd === 'slot') { const a = st.slots[+v]; st.slots[+v] = st.slots[+di]; st.slots[+di] = a; }
+    else if (t === 'S' && dd === 'bank') unplace(st, +v);
+    drawHalf();
+  });
+  H.el.addEventListener('pointercancel', () => { if (d && d.g) d.g.remove(); d = null; });
+  H.el.addEventListener('click', e => { const a = e.target.closest('[data-act]'); if (a) halfAct(a.dataset.act); });
+})();
+drawHalf();
+
+// ======================= 2. ALL CELLS (canvas, the game's grid) =======================
+const CV = document.getElementById('cells'), g = CV.getContext('2d');
+const C = {}; const css = getComputedStyle(document.documentElement);
+for (const k of ['bg', 'dim', 'mid', 'text', 'bright', 'accent', 'danger', 'money', 'rep']) C[k] = css.getPropertyValue('--' + k).trim();
+const chipOf = r => ({ bg: css.getPropertyValue(`--${r}-bg`).trim(), fg: css.getPropertyValue(`--${r}-fg`).trim() });
+const WC = 36, HC = 34, LINE_H = 1.22, FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
+const G = { st: fresh(), L: null, cells: [], bgs: [], hits: [], drag: null, hover: null };
+G.st.msg = '> workbench: spell a code.';
+function layout() {
+  const r = CV.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 3);
+  CV.width = Math.round(r.width * dpr); CV.height = Math.round(r.height * dpr);
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.font = `400 100px ${FONT}`; const ratio = (g.measureText('M').width / 100) || 0.6;
+  const fs = Math.max(7, Math.min(26, Math.min((r.width - 24) / (WC * ratio), (r.height - 24) / (HC * LINE_H))));
+  const cw = fs * ratio, chh = fs * LINE_H;
+  G.L = { fs, cw, chh, ox: Math.round((r.width - WC * cw) / 2), oy: Math.round((r.height - HC * chh) / 2), w: r.width, h: r.height };
+}
+const put = (x, y, s, col, bold) => { for (let i = 0; i < s.length; i++) if (s[i] !== ' ') G.cells.push({ x: x + i, y, ch: s[i], col, bold }); };
+const bg = (x, y, w, col, a = 1, h = 1) => G.bgs.push({ x, y, w, h, col, a });
+const hit = (x, y, w, h, o) => G.hits.push({ x, y, w, h, ...o });
+const ctr = s => Math.floor((WC - s.length) / 2);
+const chip = (x, y, s, r, bold = true) => { const c = chipOf(r); bg(x, y, s.length, c.bg); put(x, y, s, c.fg, bold); };
+const SEP = '+ - - - - - - - - - - - - - - - +';
+function listRowG(y, sel, code, name, right, onTap, faded) {
+  const LW = 32, x = ctr(' '.repeat(LW)), r = (info(code) || ['', 'scrap'])[1];
+  if (G.hover === 'r' + y) bg(x, y, LW, C.accent, 0.2);
+  if (sel) put(x - 2, y, '>', C.accent, true);
+  chip(x + 1, y, code, r); put(x + 5, y, name.slice(0, 18), faded ? C.mid : C.bright, sel);
+  if (right) put(x + LW - right.length, y, right, faded ? C.dim : C.mid);
+  if (onTap) hit(x, y, LW, 1, { id: 'r' + y, onTap });
+}
+function boxBtn(y, title, sub, col, onTap) {
+  const w = 24, x = ctr(' '.repeat(w)), bar = '+' + '='.repeat(w - 2) + '+';
+  put(x, y, bar, col); put(x, y + 1, '|', col); put(x + w - 1, y + 1, '|', col); put(x, y + 2, '|', col); put(x + w - 1, y + 2, '|', col); put(x, y + 3, bar, col);
+  put(ctr(title), y + 1, title, col, true); put(ctr(sub), y + 2, sub, C.mid);
+  if (G.hover === 'box' + y) bg(x, y, w, col, 0.15, 4);
+  hit(x, y, w, 4, { id: 'box' + y, onTap });
+}
+function keyG(x, y, k, n, w = 2) {
+  const id = 'k' + k;
+  if (n > 0) {
+    const c = chipOf(TIER(k)); bg(x, y, w, c.bg, G.hover === id ? 0.75 : 1, 2);
+    put(x, y, CH(k), c.fg, true); put(x + w - 1, y + 1, hex(n), c.fg, false);
+    hit(x, y, w, 2, { id, drag: 'L:' + k, onTap: () => place(G.st, k) });
+  } else { bg(x, y, w, C.dim, 0.35, 2); put(x, y, CH(k), C.dim, false); }
+}
+function drawCells(now) {
+  const st = G.st; G.cells = []; G.bgs = []; G.hits = [];
+  // header (engine/scene.js): name, rule, LAYER / INT, where + credits
+  put(0, 0, 'NeoN+1', C.accent); put(0, 1, '- '.repeat(18).slice(0, WC), C.dim);
+  put(0, 2, 'LAYER ', C.mid); put(6, 2, '05', C.bright); put(9, 2, 'S', C.mid); put(10, 2, '2', C.bright); put(27, 2, 'INT', C.mid); put(31, 2, '####-', C.accent);
+  put(0, 3, 'SAFEHOUSE // ', C.mid); put(13, 3, 'WORKBENCH', C.bright); put(WC - 5, 3, '412cr', C.money);
+  // tabs: the codex's [LABEL] row, gap 0
+  const tabs = ['build', 'shred', 'locker', 'man'], labels = tabs.map(t => `[${t.toUpperCase()}]`);
+  let tx = ctr(labels.join(''));
+  tabs.forEach((t, i) => { const s = labels[i]; if (st.tab === t) bg(tx, 5, s.length, C.accent, 0.22); else if (G.hover === 'tab' + t) bg(tx, 5, s.length, C.accent, 0.2);
+    put(tx, 5, s, st.tab === t ? C.accent : C.bright, st.tab === t); hit(tx, 5, s.length, 1, { id: 'tab' + t, onTap: () => { st.tab = t; } }); tx += s.length; });
+  if (st.tab === 'build') {
+    // log (rows 7-12)
+    st.log.slice(-6).forEach((l, i) => put(1, 7 + i, l.slice(0, WC - 1), l.startsWith('>') ? C.text : l.includes('DUD') ? C.danger : C.accent));
+    // prompt (row 14): $ build [W] [_] [_]
+    put(1, 14, '$ build', C.accent, true);
+    const cur = st.slots.findIndex(s => !s), blink = Math.floor(now / 500) % 2;
+    st.slots.forEach((s, i) => {
+      const x = 10 + i * 4;
+      if (s) { const c = chipOf(TIER(s)); bg(x, 14, 3, c.bg); put(x + 1, 14, CH(s), c.fg, true); hit(x, 14, 3, 1, { id: 's' + i, slot: i, drag: 'S:' + i, onTap: () => unplace(st, i) }); }
+      else { put(x, 14, '[', i === cur ? C.accent : C.dim); put(x + 2, 14, ']', i === cur ? C.accent : C.dim); if (i === cur && blink) put(x + 1, 14, '_', C.accent, true); hit(x, 14, 3, 1, { id: 's' + i, slot: i }); }
+    });
+    const j = judge(st);
+    if (j.kind === 'ok') { put(23, 14, '=', C.mid); chip(25, 14, j.code, info(j.code)[1]); }
+    // suggestions / status (rows 16-19)
+    if (j.kind === 'partial') {
+      const sug = suggest(st);
+      if (sug.length) sug.forEach((c, i) => listRowG(16 + i, i === 0, c, R[c][0], have(st, c) ? 'tap' : '-' + missing(st, c), () => fill(st, c), !have(st, c)));
+      else put(2, 16, st.slots.some(Boolean) ? 'no code starts like that.' : 'type a code. tap or drag a key.', C.mid);
+    } else if (j.kind === 'ok') { listRowG(16, true, j.code, info(j.code)[0], 'ENTER', () => build(st), false); put(4, 17, info(j.code)[2].slice(0, 31), C.mid); }
+    else if (j.kind === 'near' || j.kind === 'bad') {
+      put(2, 16, `${j.w}: command not found.`, j.kind === 'near' ? C.money : C.danger);
+      put(2, 17, j.kind === 'near' ? `did you mean ${j.code}? 50% it works.` : 'a secret word? 10% something.', C.mid);
+      const a = '[ RUN ANYWAY ]', b = '[ ^C ]', x = ctr(a + '  ' + b);
+      if (G.hover === 'force') bg(x, 19, a.length, C.accent, 0.2); if (G.hover === 'cc') bg(x + a.length + 2, 19, b.length, C.accent, 0.2);
+      put(x, 19, a, C.money); put(x + a.length + 2, 19, b, C.bright);
+      hit(x, 19, a.length, 1, { id: 'force', onTap: () => build(st, true) }); hit(x + a.length + 2, 19, b.length, 1, { id: 'cc', onTap: () => { for (let i = 0; i < 3; i++) unplace(st, i); } });
+    } else put(2, 16, j.kind === 'lock' ? 'permission denied: blueprint.' : 'G0D needs the gold letters.', C.danger);
+    put(ctr(SEP), 20, SEP, C.dim);
+    // keyboard: 2x2 keys, 1-cell gaps (rows 22-32); quest keys on row 21 when you have them
+    const q = qKeys(st);
+    if (q.length) { put(1, 21, 'QUEST', C.money); q.forEach((k, i) => { const x = 8 + i * 3; const c = chipOf('exotic'); bg(x, 21, 2, c.bg, G.hover === 'k' + k ? 0.75 : 1); put(x, 21, CH(k), c.fg, true); hit(x, 21, 2, 1, { id: 'k' + k, drag: 'L:' + k, onTap: () => place(st, k) }); }); }
+    [0, 1, 2].forEach(r => { const row = KB[r], w = row.length * 3 - 1; let x = ctr(' '.repeat(w)); for (const ch of row) { keyG(x, 22 + r * 3, ch, st.bank[ch] || 0); x += 3; } });
+    let x = ctr(' '.repeat(30)), y = 31;
+    bg(x, y, 3, chipOf('scrap').bg, G.hover === 'del' ? 0.75 : 1, 2); put(x, y, 'DEL', chipOf('scrap').fg, true);
+    hit(x, y, 3, 2, { id: 'del', onTap: () => { const i = [2, 1, 0].find(i => st.slots[i]); if (i != null) unplace(st, i); } }); x += 4;
+    for (const ch of KB[3]) { keyG(x, y, ch, st.bank[ch] || 0); x += 3; }
+    bg(x, y, 5, C.accent, G.hover === 'ent' ? 0.75 : 1, 2); put(x, y, 'ENTER', C.bg, true); hit(x, y, 5, 2, { id: 'ent', onTap: () => build(st) });
+  } else if (st.tab === 'shred') {
+    put(ctr('S H R E D'), 7, 'S H R E D', C.danger); put(ctr('its letters come back.'), 8, 'its letters come back.', C.text); put(ctr('25% a bonus one.'), 9, '25% a bonus one.', C.mid);
+    st.bag.forEach((it, i) => listRowG(11 + i, i === st.sel, it.c, info(it.c)[0] + (it.n > 1 ? ' x' + it.n : ''), '> ' + it.c.split('').join(' '), () => { st.sel = i; }, false));
+    put(ctr(SEP), 18, SEP, C.dim);
+    if (st.bag[st.sel]) boxBtn(20, 'S H R E D', `- ${info(st.bag[st.sel].c)[0].toLowerCase()} -`, C.danger, () => shred(st, st.sel));
+    put(1, 26, `letters banked: ${count(st)}`, C.mid);
+  } else if (st.tab === 'locker') {
+    put(ctr('L O C K E R'), 7, 'L O C K E R', C.rep); put(ctr('5 slots. kept for your next run.'), 8, '5 slots. kept for your next run.', C.text); put(ctr('gear stacks. tap one to take it.'), 9, 'gear stacks. tap one to take it.', C.mid);
+    st.locker.forEach((it, i) => { if (it) listRowG(11 + i, false, it.c, info(it.c)[0], it.n > 1 ? 'x' + it.n : '', () => take(st, i), false); else { const x = ctr(' '.repeat(32)); put(x + 1, 11 + i, ':  .  :', C.dim); put(x + 9, 11 + i, 'empty', C.dim); } });
+    put(ctr(SEP), 17, SEP, C.dim);
+    put(2, 19, 'built things go to your bag.', C.mid); put(2, 20, 'mv one here from SHRED > bag.', C.mid);
+  } else {
+    const c = st.man, [nm, r, tip] = info(c), m = missing(st, c);
+    put(1, 7, `${c}(1)`, C.bright, true); put(14, 7, 'WORKBENCH MANUAL', C.mid);
+    put(1, 9, 'NAME', C.bright, true); put(5, 10, `${c} - ${nm}`, C.text); chip(5 + c.length + 3 + nm.length + 2, 10, r, r, false);
+    put(1, 12, 'SYNOPSIS', C.bright, true); put(5, 13, 'build ' + c.split('').join(' '), C.text);
+    put(1, 15, 'DESCRIPTION', C.bright, true); put(5, 16, tip.slice(0, 30), C.text);
+    put(1, 18, 'LETTERS', C.bright, true); put(5, 19, m ? 'missing: ' + m.split('').join(' ') : 'ready to build', m ? C.danger : C.accent);
+    put(ctr(SEP), 21, SEP, C.dim); put(1, 22, 'man -k', C.mid);
+    const ks = Object.keys(R), top = Math.max(0, Math.min(ks.indexOf(c) - 3, ks.length - 8));
+    const more = '[ v v v  more  v v v ]';
+    ks.slice(top, top + 8).forEach((k, i) => listRowG(23 + i, k === c, k, R[k][0], have(st, k) ? 'ready' : '', () => { st.man = k; }, !have(st, k)));
+    const mx = ctr(more); bg(mx, 31, more.length, G.hover === 'more' ? C.accent : C.text); put(mx, 31, more, C.bg, true);
+    hit(mx, 31, more.length, 1, { id: 'more', onTap: () => { const i = ks.indexOf(c); st.man = ks[Math.min(ks.length - 1, i + 1)]; } });
+  }
+  // the message line
+  put(0, 33, st.msg.slice(0, WC), C[{ acc: 'accent', dan: 'danger', mid: 'mid', money: 'money' }[st.msgCol]] || C.mid);
+  // drag ghost
+  if (G.drag && G.drag.moved) { const k = G.drag.src.split(':')[1]; const kk = G.drag.src.startsWith('S') ? st.slots[+k] : k; if (kk) { const c = chipOf(TIER(kk)); bg(G.drag.cx - 1, G.drag.cy, 3, c.bg); put(G.drag.cx, G.drag.cy, CH(kk), c.fg, true); } }
+  // paint
+  const { cw, chh, ox, oy, fs, w, h } = G.L;
+  g.fillStyle = C.bg; g.fillRect(0, 0, w, h);
+  for (const b of G.bgs) { g.globalAlpha = b.a; g.fillStyle = b.col; g.fillRect(ox + b.x * cw, oy + b.y * chh, b.w * cw, b.h * chh); }
+  g.globalAlpha = 1; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const c of G.cells) { g.font = `${c.bold ? 700 : 400} ${fs}px ${FONT}`; g.fillStyle = c.col; g.fillText(c.ch, ox + (c.x + 0.5) * cw, oy + (c.y + 0.5) * chh); }
+}
+const cellAt = e => { const r = CV.getBoundingClientRect(); return { cx: Math.floor((e.clientX - r.left - G.L.ox) / G.L.cw), cy: Math.floor((e.clientY - r.top - G.L.oy) / G.L.chh) }; };
+const hitAt = (cx, cy) => { for (let i = G.hits.length - 1; i >= 0; i--) { const h = G.hits[i]; if (cx >= h.x && cx < h.x + h.w && cy >= h.y && cy < h.y + h.h) return h; } return null; };
+CV.addEventListener('pointerdown', e => { const p = cellAt(e), h = hitAt(p.cx, p.cy); if (!h) return; G.drag = { h, src: h.drag, x: e.clientX, y: e.clientY, moved: false, ...p }; CV.setPointerCapture(e.pointerId); e.preventDefault(); });
+CV.addEventListener('pointermove', e => {
+  const p = cellAt(e);
+  if (G.drag) { if (G.drag.src && !G.drag.moved && Math.hypot(e.clientX - G.drag.x, e.clientY - G.drag.y) > 6) G.drag.moved = true; G.drag.cx = p.cx; G.drag.cy = p.cy; }
+  const h = hitAt(p.cx, p.cy); G.hover = h ? h.id : null; CV.style.cursor = h ? 'pointer' : 'default';
+});
+CV.addEventListener('pointerup', e => {
+  const d = G.drag; G.drag = null; if (!d) return; const st = G.st, p = cellAt(e);
+  if (!d.moved) { const h = hitAt(p.cx, p.cy); if (h && h.id === d.h.id && h.onTap) h.onTap(); return; }
+  const t = hitAt(p.cx, p.cy), [k, v] = d.src.split(':');
+  if (t && t.slot != null) { if (k === 'L') place(st, v, t.slot); else { const a = st.slots[+v]; st.slots[+v] = st.slots[t.slot]; st.slots[t.slot] = a; } }
+  else if (k === 'S' && p.cy >= 20) unplace(st, +v);
+});
+CV.addEventListener('pointercancel', () => { G.drag = null; });
+CV.addEventListener('pointerleave', () => { G.hover = null; });
+const loop = now => { drawCells(now); requestAnimationFrame(loop); };
+const start = () => { layout(); requestAnimationFrame(loop); };
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(start);
+window.addEventListener('resize', layout);
+})();
+</script>

@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.11']);
+NEON_FILES.push(['engine/run.js', 'v14.13']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -110,7 +110,7 @@ function stepMapView(now) {
 function canGoBack(n) {
   const run = st.run;
   if (!run || !n || run.at !== n.id || n.exit) return false;
-  return n.type === 'shop' || n.type === 'pier' || (n.type === 'cache' && run.caches && run.caches[n.id] === 'open');
+  return n.type === 'shop' || n.type === 'pier' || (n.type === 'cache' && run.caches && run.caches[n.id] === 'open') || (n.type === 'repair' && n.bench && benchOpen());   // (a safehouse: back to its WORKBENCH)
 }
 async function goBackIn(n) {
   if (st.transitioning || !canGoBack(n)) return;
@@ -120,6 +120,7 @@ async function goBackIn(n) {
   if (n.type === 'shop') return openShop(n);
   if (n.type === 'cache') return openCache(n);
   if (n.type === 'pier') return openPier(n);
+  if (n.type === 'repair') return openBench(n);
 }
 function selectNode(id) {
   if (st.transitioning || !availableNodes().includes(id)) return;

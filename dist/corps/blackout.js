@@ -1,6 +1,6 @@
 // NeoN+1 corps/blackout.js
 'use strict';
-NEON_FILES.push(['corps/blackout.js', 'v14.11']);
+NEON_FILES.push(['corps/blackout.js', 'v14.13']);
 // Its boss reward: FLARE gear x3 (flare), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

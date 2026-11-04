@@ -1,0 +1,499 @@
+<title>Workbench Round 3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+/* layout: one live phone frame (grid canvas + a keyboard that slides up over it), notes beside it */
+:root {
+  color-scheme: dark;
+  --bg: #06090a; --panel: #0b1112; --dim: #2c3a38; --mid: #5f7470; --text: #a9bdb7; --bright: #e6f4ef;
+  --accent: #3cf0ff; --danger: #ff3b4e; --dangerDim: #7a2630; --money: #e8c66a; --rep: #a27ef5;
+  --scrap-fg: #1d2326; --scrap-bg: #d4dad9; --common-fg: #0c3318; --common-bg: #6fdc84;
+  --rare-fg: #0b2a55; --rare-bg: #7fb6ff; --epic-fg: #2d0a4e; --epic-bg: #c99bff;
+  --legendary-fg: #4a1300; --legendary-bg: #ff8a4a; --exotic-fg: #3a2800; --exotic-bg: #ffd84a;
+  --g0d-fg: #fff1f2; --g0d-bg: #d10f2a;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px; }
+.wrap { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-size: 26px; font-weight: 800; color: var(--bright); margin: 0; letter-spacing: 2px; }
+h1 b { color: var(--accent); }
+p { margin: 0; max-width: 74ch; }
+.main { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.side { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 14px; }
+.side h3 { margin: 0; font-size: 12px; letter-spacing: 2px; color: var(--mid); font-weight: 400; }
+.side ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.side b { color: var(--bright); }
+.q { border-left: 3px solid var(--money); padding: 6px 12px; display: flex; flex-direction: column; gap: 6px; }
+.q b { color: var(--money); }
+.btn { font: inherit; font-size: 12px; color: var(--accent); background: none; border: 1px solid var(--accent); padding: 4px 10px; cursor: pointer; letter-spacing: 1px; align-self: flex-start; }
+.btn:focus-visible { outline: 2px solid var(--bright); outline-offset: 2px; }
+
+.phone { position: relative; width: 380px; max-width: 100%; height: 760px; border: 1px solid var(--dim); background: var(--bg); overflow: hidden;
+  user-select: none; -webkit-user-select: none; touch-action: none; }
+.phone canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* the keyboard: its own layer, slides up from off screen */
+.kbd { position: absolute; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--accent);
+  padding: 8px 6px 10px; display: flex; flex-direction: column; gap: 6px; transform: translateY(105%); transition: transform .42s cubic-bezier(.2, .9, .25, 1.05); }
+.kbd.up { transform: none; }
+.kbd .r { display: flex; gap: 4px; justify-content: center; }
+.kbd .special { display: flex; align-items: center; gap: 4px; padding-bottom: 6px; border-bottom: 1px dashed var(--dim); justify-content: center; }
+.kbd .special .lab { font-size: 10px; letter-spacing: 2px; color: var(--mid); margin-right: 6px; }
+.tile { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 40px; font-weight: 800; font-size: 18px; cursor: grab;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.3); }
+.tile i { position: absolute; right: 2px; bottom: 0; font-style: normal; font-size: 9px; font-weight: 700; opacity: .75; }
+.tile.dead { background: none !important; color: var(--dim) !important; box-shadow: inset 0 0 0 1px var(--dim); cursor: default; }
+.tile.open { background: none; box-shadow: inset 0 0 0 1px var(--dim); border: 1px dashed var(--dim); cursor: default; }
+.tile.wide { width: 54px; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
+.tile.enter { background: var(--accent); color: var(--bg); }
+.t-scrap { background: var(--scrap-bg); color: var(--scrap-fg); } .t-common { background: var(--common-bg); color: var(--common-fg); }
+.t-rare { background: var(--rare-bg); color: var(--rare-fg); } .t-epic { background: var(--epic-bg); color: var(--epic-fg); }
+.t-legendary { background: var(--legendary-bg); color: var(--legendary-fg); } .t-exotic { background: var(--exotic-bg); color: var(--exotic-fg); }
+.t-g0d { background: var(--g0d-bg); color: var(--g0d-fg); box-shadow: inset 0 -3px 0 rgba(0,0,0,.35), 0 0 8px rgba(209,15,42,.6); }
+.ghost { position: fixed; z-index: 100; pointer-events: none; transform: translate(-50%, -60%) scale(1.2); opacity: .9; }
+@media (prefers-reduced-motion: reduce) { .kbd { transition: none; } }
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>WORKBENCH <b>ROUND 3</b></h1>
+    <p>Your notes on the keyboard version. Everything above the keyboard is on the game's 36-column grid; the keyboard is its own layer that slides up when you're on BUILD and drops away on the other tabs. Switch tabs to see the grid pages, and the cells decode in like the game's transitions.</p>
+  </div>
+  <div class="main">
+    <div class="phone" id="phone"><canvas id="cv"></canvas><div class="kbd" id="kbd"></div></div>
+    <div class="side">
+      <button class="btn" id="replay">REPLAY THE WAY IN</button>
+      <div><h3>BUILD</h3><ul>
+        <li><b>Big slots:</b> each is 3 x 3 cells. A letter goes in at 3x size, cut into 9 cell pieces that fly up from the keyboard. Take one out and its pieces fall. Build and they rise into the terminal.</li>
+        <li><b>Pinned:</b> your pins with each letter you have (its color) or are missing (red). Tap one to fill the slots.</li>
+        <li><b>Matches:</b> as you type, the codes that start with your letters. That's what WARP and WORM were.</li>
+        <li><b>Special row:</b> over the keyboard. A wildcard <span style="background:var(--exotic-bg);color:var(--exotic-fg);font-weight:700;padding:0 3px">*</span> fills any slot; the red <span style="background:var(--g0d-bg);color:var(--g0d-fg);font-weight:700;padding:0 3px">G 0 D</span> letters are G0D's own rarity. Try * R P, or spell G0D with the red ones.</li>
+      </ul></div>
+      <div><h3>SHRED · BOOK · LOCKER</h3><ul>
+        <li><b>SHRED</b> is the market's sell page: a list, the details of the one you picked, and a S H R E D box. The letters you get back show on each row.</li>
+        <li><b>BOOK</b> is a codex page: details on top (the 3 letters as big blocks, lit or missing), PIN and BUILD buttons, the list below. Secret words show as ???.</li>
+        <li><b>LOCKER</b>: [ TAKE ] / [ STORE ] under the tabs, like the market's BUY / SELL. TAKE lists the locker; STORE lists your tray. Your tray sits at the bottom, drawn like the game's (mods, the belt, the info lines); tap one there to pick it. Storing a mod unequips it (still open: should that be allowed?).</li>
+      </ul></div>
+      <div class="q">
+        <b>QUESTIONS</b>
+        <div>1. The red letters: a rarity called G0D (or HOLY, DIVINE)? Do they only spell G0D, or do they do something in other words too?</div>
+        <div>2. Wildcards: where do you find them, and do they show in the book's "missing" count (1 missing, but you have a *)?</div>
+        <div>3. The tab: BOOK or MAN? I went with BOOK.</div>
+        <div>4. The LOCKER that's in the game now (keep 1 mod at cash out, a step lower): does the workshop's 5-slot one replace it?</div>
+        <div>5. Build: does it go to your bag, or ask bag / locker each time?</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+// ---------- data ----------
+const R = {
+  PCH:['PATCH','scrap','gear','+1 integrity.'], PRG:['PURGE','scrap','gear','lock out 1 ICE.'], SHO:['SHOE','scrap','gear','throw it. probably nothing.'],
+  FWL:['FWALL','common','gear','block next ICE hit.'], SPL:['SPLIT','common','gear','rule out half.'], SHK:['SHAKE','common','gear','jostle the nodes.'],
+  FRG:['FRAG','common','gear','3 random hits.'], RWD:['REWIND','common','gear','+5s on the clock.'], LTO:['LOTTO','common','gear','random credits.'],
+  PNG:['PING','common','gear','tap a node: ICE or not?'], MAG:['MAGNET','common','gear','pull the $ node.'], EGG:['EGG','common','gear','hatch a pet.'],
+  RTE:['ROUTE','rare','gear','shuffle map ahead.'], WRP:['WARP','rare','gear','random jump ahead.'], TUN:['TUNNEL','rare','gear','go across the row.'],
+  TLT:['TILT','rare','gear','slide them up or down.'], ENC:['ENCORE','rare','gear','next gear: twice.'], STM:['STIM','rare','gear','+50% int, this corp.'],
+  '0DY':['0DAY','rare','gear','mark the real node.'], EXO:['EXORCIST','rare','gear','kick a rival out.'],
+  ALL:['ALL-IN','epic','gear','50/50: clear it or +2 ICE.'], MSH:['MESH','epic','gear','link the whole sector.'], PAS:['PASS','epic','gear','half off the uplink.'],
+  WRM:['WORM','epic','gear',"pre-eat a corp's ICE."], SKP:['SKIP','epic','gear','jump a row.'], SWP:['SWAP','epic','gear','health <-> missing.'], FAK:['FAKE','epic','gear','+1 step on a mod.'],
+  FLR:['FLARE','legendary','gear','rule out 3/4.'], FRZ:['FREEZE','legendary','gear','pause 2s. watch.'], BLS:['BLAST','legendary','gear','aim a 2x2 blast.'],
+  BEE:['BEES','legendary','gear','a swarm eats ICE.'], ANC:['ANCHOR','legendary','gear','nothing moves.'], NUK:['NUKE','exotic','gear','breach the corp now.'],
+  BUF:['BUFFER','common','mod','+1 integrity.'], SKM:['SKIMMER','common','mod','credits on hits.'], BRN:['BURNER','common','mod','burn a node.'],
+  HGL:['HAGGLE','common','mod','markets cost less.'], TRC:['TRACER','rare','mod','hit ICE points to real.'], KLG:['KEYLOGGER','rare','mod','miss logs a key line.'],
+  VRS:['VIRUS','epic','mod','hit ICE infects 1 more.'], FSF:['FAILSAFE','epic','mod','killing hit: 1 left.'],
+};
+const SECRETS = 3;
+const EXTRA = { G0D:['G0D.exe','g0d','gear','plays the game for you.'], CHR:['CHROME','epic','loot','sell it: worth a lot.'], DUD:['DUDS','scrap','gear','junk: sell it.'] };
+const info = c => R[c] || EXTRA[c];
+// keys: plain letters; '*' a wildcard; 'G!' '0!' 'D!' the red letters
+const TIER = k => k === '*' ? 'exotic' : k.endsWith('!') ? 'g0d' : /[0-9]/.test(k) ? 'legendary' : 'EARSTIONL'.includes(k) ? 'common' : 'VJXQZ'.includes(k) ? 'epic' : 'rare';
+const CH = k => k.replace('!', '');
+const KB = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+const SPECIAL = ['*', 'G!', '0!', 'D!'];
+const hex = n => n > 15 ? '+' : n.toString(16).toUpperCase();
+const BONUS = 'EEEAAARRSSTTIONLPPKMCDHUBGWYFVXQZ013';
+
+const st = {
+  bank: { E:2, A:1, R:3, S:2, T:1, I:1, O:1, N:1, L:1, P:2, K:1, M:1, W:1, G:1, H:1, C:1, U:1, F:1, X:1, '0':1, '*':1, 'G!':1, '0!':1, 'D!':1 },
+  bag: [{ c:'WRM', n:1 }, { c:'SHK', n:2 }, { c:'BUF', n:1 }, { c:'CHR', n:1 }, { c:'PNG', n:1 }, { c:'TRC', n:1 }, { c:'FRG', n:3 }],
+  locker: [{ c:'SKP', n:2 }, { c:'TRC', n:1 }, null, null, null],
+  slots: [null, null, null], tab: 'build', pins: ['WRP', 'FRZ'],
+  log: ['> shred WORM: +W +R +M  bonus +Q', '> build SKP: SKIP -> bag', '> workbench: spell a code.'],
+  tray: { mods: ['TRC', 'SKM', 'BUF'], items: [{ c:'PCH', n:1 }, { c:'SHK', n:2 }, null, null] }, lkView: 'take', stSel: 0, trSel: null,
+  shSel: 0, bkSel: Object.keys(R).indexOf('WRP'), bkTop: 8, lkSel: 0,
+};
+const count = () => Object.values(st.bank).reduce((a, b) => a + b, 0);
+const letters = () => st.slots.map(s => s ? CH(s) : '');
+// missing letters for a code, counting what's in the slots as yours
+const missing = code => { const b = { ...st.bank }; for (const s of st.slots) if (s) b[s] = (b[s] || 0) + 1; return code.split('').map(ch => (b[ch] > 0 ? (b[ch]--, '') : ch)).join(''); };
+const have = code => !missing(code);
+const locked = c => R[c] && R[c][1] === 'exotic' && c !== 'NUK';
+function judge() {
+  if (st.slots.some(s => !s)) return { kind: 'partial' };
+  const L = letters(), w = L.join('');
+  if (st.slots.every(s => s.endsWith('!'))) return w === 'G0D' ? { kind: 'ok', code: 'G0D' } : { kind: 'bad', w };
+  if (L.includes('*')) {
+    const c = Object.keys(R).filter(c => !locked(c) && [0, 1, 2].every(i => L[i] === '*' || c[i] === L[i]));
+    return c.length === 1 ? { kind: 'ok', code: c[0], wild: true } : c.length ? { kind: 'pick', cands: c.slice(0, 3), n: c.length, w } : { kind: 'bad', w };
+  }
+  if (R[w]) return locked(w) ? { kind: 'lock', w } : { kind: 'ok', code: w };
+  const near = Object.keys(R).find(c => !locked(c) && [0, 1, 2].filter(i => c[i] === w[i]).length === 2);
+  return near ? { kind: 'near', code: near, w } : { kind: 'bad', w };
+}
+const matches = () => { const Lt = letters(); if (!Lt.some(Boolean)) return []; return Object.keys(R).filter(c => [0, 1, 2].every(i => !Lt[i] || Lt[i] === '*' || c[i] === Lt[i])).sort((a, b) => have(b) - have(a)).slice(0, 3); };
+const say = (l) => { st.log.push(l); };
+const addBag = c => { const s = st.bag.find(x => x.c === c); if (s) s.n++; else st.bag.push({ c, n: 1 }); };
+
+// ---------- grid ----------
+const cv = document.getElementById('cv'), g = cv.getContext('2d'), phone = document.getElementById('phone'), kbd = document.getElementById('kbd');
+const css = getComputedStyle(document.documentElement), V = n => css.getPropertyValue('--' + n).trim();
+const C = {}; for (const k of ['bg', 'dim', 'mid', 'text', 'bright', 'accent', 'danger', 'dangerDim', 'money', 'rep']) C[k] = V(k);
+const chipOf = r => ({ bg: V(r + '-bg'), fg: V(r + '-fg') });
+const WC = 36, HC = 34, LINE_H = 1.22, FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
+let L = null, cells = [], bgs = [], hits = [], big = [], hover = null, tabT0 = 0;
+const fx = [];        // pieces in flight: { k, sx, sy, piece, t0, mode }
+const slotIn = [0, 0, 0];   // when each slot's letter landed
+function layout() {
+  const r = phone.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 3);
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.font = `400 100px ${FONT}`; const ratio = (g.measureText('M').width / 100) || 0.6;
+  const fs = Math.max(7, Math.min(26, Math.min((r.width - 24) / (WC * ratio), (r.height - 24) / (HC * LINE_H))));
+  L = { fs, cw: fs * ratio, chh: fs * LINE_H, w: r.width, h: r.height };
+  L.ox = Math.round((r.width - WC * L.cw) / 2); L.oy = 12;
+}
+const put = (x, y, s, col, bold) => { for (let i = 0; i < s.length; i++) if (s[i] !== ' ') cells.push({ x: x + i, y, ch: s[i], col, bold }); };
+const bg = (x, y, w, col, a = 1, h = 1) => bgs.push({ x, y, w, h, col, a });
+const hit = (x, y, w, h, o) => hits.push({ x, y, w, h, ...o });
+const ctr = n => Math.floor((WC - n) / 2);
+const chip = (x, y, s, r, bold = true) => { const c = chipOf(r); bg(x, y, s.length, c.bg); put(x, y, s, c.fg, bold); };
+const SEP = '+ - - - - - - - - - - - - - - - +';
+const sep = y => put(ctr(SEP.length), y, SEP, C.dim);
+const T = (y, s, col, bold) => put(ctr(s.length), y, s, col, bold);
+function btn(x, y, s, col, id, onTap) { if (hover === id) bg(x, y, s.length, C.accent, 0.2); put(x, y, s, col); hit(x, y, s.length, 1, { id, onTap }); }
+function btnRow(y, list) { const w = list.reduce((a, b) => a + b[0].length, 0) + (list.length - 1) * 2; let x = ctr(w); for (const [s, col, id, f] of list) { btn(x, y, s, col, id, f); x += s.length + 2; } }
+function listRow(y, sel, code, name, right, onTap, faded, rightCol) {
+  const LW = 32, x = ctr(LW), r = info(code) ? info(code)[1] : 'scrap';
+  if (hover === 'r' + y) bg(x, y, LW, C.accent, 0.2);
+  if (sel) put(x - 2, y, '>', C.accent, true);
+  if (code === '???') put(x + 1, y, '???', C.dim); else chip(x + 1, y, code, r);
+  put(x + 5, y, name.slice(0, 16), faded ? C.mid : C.bright, sel);
+  if (right) put(x + LW - right.length, y, right, rightCol || (faded ? C.dim : C.mid));
+  if (onTap) hit(x, y, LW, 1, { id: 'r' + y, onTap });
+}
+function boxBtn(y, title, sub, col, id, onTap) {
+  const w = 22, x = ctr(w), bar = '+' + '='.repeat(w - 2) + '+';
+  if (hover === id) bg(x, y, w, col, 0.15, 4);
+  put(x, y, bar, col); put(x, y + 3, bar, col); for (const yy of [y + 1, y + 2]) { put(x, yy, '|', col); put(x + w - 1, yy, '|', col); }
+  T(y + 1, title, col, true); T(y + 2, sub, C.mid); hit(x, y, w, 4, { id, onTap });
+}
+// a letter at 3x size in a 3x3 cell block; drawn later, piece by piece
+const block = (x, y, k, opts = {}) => big.push({ x, y, k, ...opts });
+
+// ---------- pages ----------
+function header() {
+  put(0, 0, 'NeoN+1', C.accent); put(0, 1, '- '.repeat(18).slice(0, WC), C.dim);
+  put(0, 2, 'SAFEHOUSE // ', C.mid); put(13, 2, 'WORKBENCH', C.bright);
+  put(WC - 9, 2, `${String(count()).padStart(3)} ltrs`, C.mid);
+  const tabs = ['build', 'shred', 'book', 'locker'], lab = tabs.map(t => `[${t.toUpperCase()}]`), w = lab.join(' ').length;
+  let x = ctr(w);
+  tabs.forEach((t, i) => { const s = lab[i]; if (st.tab === t) bg(x, 4, s.length, C.accent, 0.22); else if (hover === 'tab' + t) bg(x, 4, s.length, C.accent, 0.2);
+    put(x, 4, s, st.tab === t ? C.accent : C.bright, st.tab === t); hit(x, 4, s.length, 1, { id: 'tab' + t, onTap: () => setTab(t) }); x += s.length + 1; });
+}
+function pageBuild(now) {
+  // terminal: the last 3 lines
+  st.log.slice(-3).forEach((l, i, a) => put(1, 6 + i, l.slice(0, WC - 1), i === a.length - 1 ? C.text : C.mid));
+  // pinned: each letter you have in its color, missing in red
+  put(1, 10, 'PINNED', C.mid);
+  st.pins.slice(0, 2).forEach((c, i) => {
+    const y = 11 + i, m = missing(c).split(''), taken = [...m];
+    if (hover === 'pin' + c) bg(1, y, 34, C.accent, 0.2);
+    put(1, y, '*', C.money); chip(3, y, c, R[c][1]); put(7, y, R[c][0].slice(0, 8), C.bright);
+    c.split('').forEach((ch, j) => { const miss = taken.includes(ch) && (taken.splice(taken.indexOf(ch), 1), true);
+      if (miss) { bg(17 + j * 2, y, 1, C.dangerDim); put(17 + j * 2, y, ch, C.danger, true); } else chip(17 + j * 2, y, ch, TIER(ch)); });
+    put(24, y, m.length ? 'need ' + m.join('') : 'ready', m.length ? C.danger : C.accent);
+    hit(1, y, 34, 1, { id: 'pin' + c, onTap: () => fillCode(c) });
+  });
+  // the prompt: $ build + three 3x3 slots
+  put(1, 15, '$', C.accent, true); put(3, 15, 'build', C.accent, true);
+  const cur = st.slots.findIndex(s => !s), blink = Math.floor(now / 500) % 2;
+  st.slots.forEach((s, i) => {
+    const x = 10 + i * 4, y = 14;
+    if (s) block(x, y, s, { t0: slotIn[i] }), hit(x, y, 3, 3, { id: 'slot' + i, slot: i, drag: 'S:' + i, onTap: () => unplace(i) });
+    else { const col = i === cur ? C.accent : C.dim; bg(x, y, 3, C.dim, 0.18, 3); put(x, y, '+', col); put(x + 2, y, '+', col); put(x, y + 2, '+', col); put(x + 2, y + 2, '+', col);
+      if (i === cur && blink) put(x + 1, y + 1, '_', C.accent, true); hit(x, y, 3, 3, { id: 'slot' + i, slot: i }); }
+  });
+  const j = judge();
+  if (j.kind === 'ok') { put(23, 15, '=', C.mid); chip(25, 14, j.code, info(j.code)[1]); put(25, 15, info(j.code)[0].slice(0, 10), C.bright, true); put(25, 16, j.wild ? 'via *' : 'ENTER', j.wild ? C.money : C.accent); }
+  // under the prompt: matches / status
+  if (j.kind === 'partial') {
+    const m = matches();
+    if (m.length) { put(1, 18, 'MATCHES', C.mid); m.forEach((c, i) => listRow(19 + i, false, c, R[c][0], have(c) ? 'tap: fill' : 'need ' + missing(c), () => fillCode(c), !have(c), have(c) ? C.accent : C.danger)); }
+    else if (st.slots.some(Boolean)) T(19, 'no code fits. a secret?', C.mid); else T(19, 'tap a key, or drag one up.', C.mid);
+  } else if (j.kind === 'ok') { T(19, info(j.code)[3], C.text); }
+  else if (j.kind === 'pick') { put(1, 18, `* FITS ${j.n}: PICK ONE`, C.money); j.cands.forEach((c, i) => listRow(19 + i, false, c, R[c][0], 'build', () => doBuild(c), false, C.accent)); }
+  else if (j.kind === 'near' || j.kind === 'bad') {
+    T(18, `${j.w}: command not found.`, j.kind === 'near' ? C.money : C.danger);
+    T(19, j.kind === 'near' ? `close to ${j.code}. 50% it works.` : 'a secret word? 10%.', C.mid);
+    btnRow(21, [['[ RUN ANYWAY ]', C.money, 'force', () => doBuild(null, true)], ['[ ^C ]', C.bright, 'cc', () => [0, 1, 2].forEach(unplace)]]);
+  } else T(19, 'permission denied: blueprint.', C.danger);
+}
+function bagRows() { return st.bag; }
+function pageShred() {
+  T(6, 'S H R E D', C.danger); T(7, 'its letters go to your bank.', C.text);
+  const rows = bagRows(); st.shSel = Math.min(st.shSel, rows.length - 1);
+  rows.slice(0, 9).forEach((it, i) => {
+    const y = 9 + i, [nm] = info(it.c);
+    listRow(y, i === st.shSel, it.c, nm + (it.n > 1 ? ' x' + it.n : ''), '', () => { st.shSel = i; }, false);
+    const x = ctr(32) + 32 - 5; it.c.split('').forEach((ch, k) => chip(x + k * 2, y, ch, TIER(ch), false));
+  });
+  sep(19);
+  const it = rows[st.shSel];
+  if (it) {
+    const [nm, r, kind, tip] = info(it.c), head = it.c.length + 2 + nm.length, hx = ctr(head);
+    chip(hx, 20, it.c, r); put(hx + it.c.length + 2, 20, nm, C.bright, true);
+    T(21, tip, C.text); T(22, `${r} ${kind}${it.n > 1 ? '   you have ' + it.n : ''}`, C.mid);
+    boxBtn(24, 'S H R E D', `- ${it.c.split('').join(' ')} + ? -`, C.danger, 'shred', () => shred(st.shSel));
+  }
+  sep(29);
+  T(31, '25% a bonus letter.', C.mid);
+  if (st.flash) T(33, st.flash, C.accent);
+}
+function pageBook() {
+  const ks = Object.keys(R), n = ks.length + SECRETS;
+  put(ctr(32), 6, 'BOOK', C.accent, true); put(ctr(32) + 6, 6, `${ks.length}/${n} found`, C.mid);
+  sep(7);
+  const c = ks[st.bkSel], [nm, r, kind, tip] = R[c], hx = ctr(c.length + 2 + nm.length);
+  chip(hx, 8, c, r); put(hx + c.length + 2, 8, nm, C.bright, true);
+  T(9, `${r} ${kind}`, C.mid); T(10, tip, C.text);
+  const m = missing(c).split(''), taken = [...m];
+  c.split('').forEach((ch, i) => { const miss = taken.includes(ch) && (taken.splice(taken.indexOf(ch), 1), true); block(12 + i * 4, 12, ch, { miss }); });
+  T(16, locked(c) ? 'needs a blueprint.' : m.length ? 'missing: ' + m.join(' ') : 'you have the letters.', locked(c) ? C.danger : m.length ? C.danger : C.accent);
+  const pinned = st.pins.includes(c);
+  btnRow(17, [[pinned ? '[ UNPIN ]' : '[ PIN ]', C.money, 'pin', () => { st.pins = pinned ? st.pins.filter(x => x !== c) : [c].concat(st.pins).slice(0, 2); }],
+    ['[ BUILD ]', have(c) && !locked(c) ? C.accent : C.dim, 'bbuild', () => { if (have(c) && !locked(c)) { fillCode(c); setTab('build'); } }]]);
+  sep(18);
+  // the list (12 rows + more bars), like the codex
+  const all = ks.concat(Array(SECRETS).fill('???')), rows = 12, top = st.bkTop = Math.max(0, Math.min(st.bkTop, all.length - rows));
+  const more = (y, up) => { const s = up ? '[ ^ ^ ^  more  ^ ^ ^ ]' : '[ v v v  more  v v v ]', x = ctr(s.length), id = up ? 'mup' : 'mdn';
+    bg(x, y, s.length, hover === id ? C.accent : C.text); put(x, y, s, C.bg, true); hit(x, y, s.length, 1, { id, onTap: () => { st.bkTop += up ? -4 : 4; } }); };
+  if (top > 0) more(19, true);
+  for (let i = 0; i < rows; i++) {
+    const k = all[top + i], y = 20 + i; if (!k) break;
+    if (k === '???') { listRow(y, false, '???', '???', 'secret', null, true); continue; }
+    const mm = missing(k), pin = st.pins.includes(k) ? '* ' : '';
+    listRow(y, top + i === st.bkSel, k, R[k][0], pin + (locked(k) ? 'blueprint' : mm ? 'need ' + mm : 'ready'), () => { st.bkSel = top + i; }, !!mm || locked(k), mm || locked(k) ? C.dangerDim : C.accent);
+  }
+  if (top + rows < all.length) more(32, false);
+}
+// ---- LOCKER: [ TAKE ] / [ STORE ] like the market's BUY / SELL; your tray at the bottom, drawn like the game's ----
+const MOD_SLOTS = 6, BELT = 4;
+const trayList = () => st.tray.mods.map((c, i) => ({ c, n: 1, mod: true, i })).concat(st.tray.items.map((s, i) => s && { ...s, i }).filter(Boolean));
+const beltLabel = s => s.n > 1 ? s.c + 'x' + hex(s.n) : '[' + s.c + ']';
+function toLocker(c, n) {
+  const same = st.locker.findIndex(x => x && x.c === c && R[c][2] !== 'mod');
+  if (same >= 0) { st.locker[same].n += n; return true; }
+  const e = st.locker.findIndex(x => !x); if (e < 0) return false; st.locker[e] = { c, n }; return true;
+}
+function takeOut(i) {
+  const it = st.locker[i]; if (!it) return; const nm = info(it.c)[0];
+  if (R[it.c][2] === 'mod') { if (st.tray.mods.length >= MOD_SLOTS) return say('> no free mod slot.'); st.tray.mods.push(it.c); }
+  else { const s = st.tray.items.find(x => x && x.c === it.c), e = st.tray.items.findIndex(x => !x);
+    if (s) s.n += it.n; else if (e >= 0) st.tray.items[e] = { c: it.c, n: it.n }; else return say('> your belt is full.'); }
+  st.locker[i] = null; say(`> took ${nm} out of the locker.`);
+}
+function storeIn(e) {
+  if (!e) return; const nm = info(e.c)[0];
+  if (!toLocker(e.c, e.n)) return say('> the locker is full.');
+  if (e.mod) st.tray.mods.splice(e.i, 1); else st.tray.items[e.i] = null;
+  st.stSel = Math.max(0, Math.min(st.stSel, trayList().length - 1)); st.trSel = null;
+  say(`> ${nm} -> locker${e.mod ? ' (unequipped)' : ''}.`);
+}
+function drawTray(y) {
+  put(0, y, '- '.repeat(18).slice(0, WC), C.dim);
+  // mods: an icon cell + the code, on its rarity chip, 2 apart
+  let x = 0;
+  st.tray.mods.forEach((c, i) => { const ch = chipOf(R[c][1]), on = st.trSel && st.trSel.mod && st.trSel.i === i;
+    bg(x, y + 1, 4, ch.bg); put(x, y + 1, '.', ch.fg); put(x + 1, y + 1, c, ch.fg, true);
+    if (on || hover === 'tm' + i) bg(x, y + 1, 4, C.accent, on ? 0.35 : 0.2);
+    hit(x, y + 1, 4, 1, { id: 'tm' + i, onTap: () => { st.trSel = { mod: true, i }; if (st.lkView === 'store') st.stSel = i; } }); x += 6; });
+  put(WC - 3, y + 1, `${st.tray.mods.length}/${MOD_SLOTS}`, C.dim);
+  // the belt: [PCH] for one, SHKx2 for a stack; an empty slot is :  .  :
+  for (let i = 0; i < BELT; i++) { const s = st.tray.items[i], ix = i * 8, on = st.trSel && !st.trSel.mod && st.trSel.i === i;
+    if (!s) { put(ix, y + 3, ':  .  :', C.dim); continue; }
+    const lab = beltLabel(s), nl = s.n > 1 ? s.c.length : lab.length;
+    chip(ix, y + 3, lab.slice(0, nl), R[s.c][1], false); if (s.n > 1) put(ix + nl, y + 3, lab.slice(nl), C.text);
+    if (on || hover === 'ti' + i) bg(ix, y + 3, 7, C.accent, on ? 0.25 : 0.12);
+    hit(ix, y + 3, 7, 1, { id: 'ti' + i, onTap: () => { st.trSel = { mod: false, i }; if (st.lkView === 'store') st.stSel = trayList().findIndex(e => !e.mod && e.i === i); } }); }
+  // info lines: \_ CODE tip (mods) and \_ NAME tip (gear)
+  const sel = st.trSel;
+  if (sel && sel.mod && st.tray.mods[sel.i]) { const c = st.tray.mods[sel.i]; put(0, y + 2, '\\_', C.mid); chip(2, y + 2, c, R[c][1]); put(6, y + 2, R[c][3], C.text); }
+  if (sel && !sel.mod && st.tray.items[sel.i]) { const s = st.tray.items[sel.i], [nm, r, , tip] = R[s.c]; put(0, y + 4, '\\_', C.mid); chip(2, y + 4, nm, r); put(3 + nm.length, y + 4, (s.n > 1 ? `x${s.n} ` : '') + tip, C.text); }
+}
+function pageLocker() {
+  const views = [['take', '[ TAKE ]'], ['store', '[ STORE ]']], w = views.reduce((a, v) => a + v[1].length, 0) + 3;
+  let x = ctr(w);
+  views.forEach(([v, s]) => { const on = st.lkView === v; if (on) bg(x, 6, s.length, C.accent, 0.22); else if (hover === 'lv' + v) bg(x, 6, s.length, C.accent, 0.2);
+    put(x, 6, s, on ? C.accent : C.bright, on); hit(x, 6, s.length, 1, { id: 'lv' + v, onTap: () => { st.lkView = v; tabT0 = performance.now(); } }); x += s.length + 3; });
+  if (st.lkView === 'take') {
+    T(8, `in the locker  ${st.locker.filter(Boolean).length}/5`, C.rep);
+    st.locker.forEach((it, i) => { const y = 10 + i;
+      if (it) listRow(y, i === st.lkSel, it.c, info(it.c)[0], it.n > 1 ? 'x' + it.n : info(it.c)[2], () => { st.lkSel = i; }, false);
+      else { const x = ctr(32); if (i === st.lkSel) put(x - 2, y, '>', C.accent, true); put(x + 1, y, ':  .  :', C.dim); put(x + 9, y, 'empty', C.dim); hit(x, y, 32, 1, { id: 'r' + y, onTap: () => { st.lkSel = i; } }); } });
+    sep(16);
+    const it = st.locker[st.lkSel];
+    if (it) { const [nm, r, kind, tip] = info(it.c), hx = ctr(it.c.length + 2 + nm.length); chip(hx, 17, it.c, r); put(hx + it.c.length + 2, 17, nm, C.bright, true); T(18, tip, C.text);
+      boxBtn(20, 'T A K E', kind === 'mod' ? '- into a mod slot -' : '- onto your belt -', C.accent, 'take', () => takeOut(st.lkSel)); }
+    else T(18, 'an empty slot. STORE fills it.', C.mid);
+  } else {
+    T(8, 'from your tray', C.rep);
+    const list = trayList(); st.stSel = Math.max(0, Math.min(st.stSel, list.length - 1));
+    list.slice(0, 6).forEach((e, i) => listRow(10 + i, i === st.stSel, e.c, info(e.c)[0], e.mod ? 'mod: equipped' : e.n > 1 ? 'x' + e.n : 'gear',
+      () => { st.stSel = i; st.trSel = { mod: !!e.mod, i: e.i }; }, false, e.mod ? C.money : C.mid));
+    sep(16);
+    const e = list[st.stSel];
+    if (e) { const [nm, r, kind, tip] = info(e.c), hx = ctr(e.c.length + 2 + nm.length); chip(hx, 17, e.c, r); put(hx + e.c.length + 2, 17, nm, C.bright, true); T(18, tip, C.text);
+      const full = !st.locker.some(x => !x) && !(R[e.c][2] !== 'mod' && st.locker.some(x => x && x.c === e.c));
+      boxBtn(20, 'S T O R E', full ? '- the locker is full -' : e.mod ? '- unequip it -' : `- ${e.n > 1 ? 'all ' + e.n : 'into the locker'} -`, full ? C.dim : C.rep, 'store', () => storeIn(e)); }
+    else T(18, 'your tray is empty.', C.mid);
+  }
+  sep(25);
+  T(26, st.log[st.log.length - 1].slice(2, 36), C.mid);
+  drawTray(28);
+}
+
+// ---------- actions ----------
+function place(k, i) {
+  if (!(st.bank[k] > 0)) return; if (i == null) i = st.slots.findIndex(s => !s); if (i < 0) return;
+  if (st.slots[i]) unplace(i);
+  st.slots[i] = k; if (!--st.bank[k]) delete st.bank[k]; slotIn[i] = performance.now(); drawKeys();
+}
+function unplace(i, quiet) {
+  const k = st.slots[i]; if (!k) return; st.bank[k] = (st.bank[k] || 0) + 1; st.slots[i] = null;
+  if (!quiet) for (let p = 0; p < 9; p++) fx.push({ k, sx: 10 + i * 4, sy: 14, p, t0: performance.now(), mode: 'fall' });
+  drawKeys();
+}
+function fillCode(c) { [0, 1, 2].forEach(i => unplace(i, true)); if (!have(c)) { say(`> ${c}: need ${missing(c)}.`); return; } c.split('').forEach((ch, i) => place(ch, i)); }
+function doBuild(code, force) {
+  const j = judge(); let got = code;
+  if (!got) {
+    if (j.kind === 'ok') got = j.code;
+    else if ((j.kind === 'near' || j.kind === 'bad') && force) got = Math.random() < (j.kind === 'near' ? 0.5 : 0.1) ? (j.kind === 'near' ? j.code : 'TRC') : 'DUD';
+    else return;
+  }
+  const now = performance.now();
+  st.slots.forEach((k, i) => { if (k) for (let p = 0; p < 9; p++) fx.push({ k, sx: 10 + i * 4, sy: 14, p, t0: now, mode: 'rise' }); });
+  const w = letters().join('');
+  st.slots = [null, null, null]; addBag(got);
+  say(got === 'G0D' ? '> G0D.exe: ... it opens one eye.' : got === 'DUD' ? `> build ${w}: DUDS. letters burned.` : `> build ${w}: ${info(got)[0]} -> bag${force ? ' (lucky)' : ''}`);
+  drawKeys();
+}
+function shred(i) {
+  const it = st.bag[i]; if (!it) return;
+  const got = it.c.split(''), bonus = Math.random() < 0.25 ? BONUS[Math.floor(Math.random() * BONUS.length)] : null;
+  for (const k of got.concat(bonus ? [bonus] : [])) st.bank[k] = (st.bank[k] || 0) + 1;
+  if (!--it.n) st.bag.splice(i, 1);
+  const msg = `> shred ${info(it.c)[0]}: +${got.join(' +')}${bonus ? '  bonus +' + bonus : ''}`; say(msg); st.flash = msg.slice(2, 36);
+  drawKeys();
+}
+function setTab(t) { if (st.tab === t) return; st.tab = t; tabT0 = performance.now(); st.flash = ''; kbd.classList.toggle('up', t === 'build'); }
+
+// ---------- the keyboard layer (HTML) ----------
+const tileH = (k, n, cls = '') => `<span class="tile t-${TIER(k)}${n ? '' : ' dead'} ${cls}" ${n ? `data-key="${k}"` : ''}>${CH(k)}${n ? `<i>${hex(n)}</i>` : ''}</span>`;
+function drawKeys() {
+  const sp = SPECIAL.filter(k => st.bank[k] > 0);
+  kbd.innerHTML = `<div class="special"><span class="lab">SPECIAL</span>${sp.map(k => tileH(k, st.bank[k])).join('')}${'<span class="tile open"></span>'.repeat(Math.max(0, 6 - sp.length))}</div>`
+    + KB.map((row, r) => `<div class="r">${r === 3 ? '<span class="tile t-scrap wide" data-act="del">DEL</span>' : ''}${row.split('').map(ch => tileH(ch, st.bank[ch] || 0)).join('')}${r === 3 ? '<span class="tile enter wide" data-act="enter">ENTER</span>' : ''}</div>`).join('');
+}
+(() => {
+  let d = null;
+  kbd.addEventListener('pointerdown', e => {
+    const a = e.target.closest('[data-act]'); if (a) { if (a.dataset.act === 'del') { const i = [2, 1, 0].find(i => st.slots[i]); if (i != null) unplace(i); } else doBuild(); return; }
+    const k = e.target.closest('[data-key]'); if (!k) return; d = { k: k.dataset.key, el: k, x: e.clientX, y: e.clientY, moved: false }; kbd.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  kbd.addEventListener('pointermove', e => {
+    if (!d) return;
+    if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) { d.moved = true; d.g = d.el.cloneNode(true); d.g.classList.add('ghost'); document.body.appendChild(d.g); }
+    if (d.moved) { d.g.style.left = e.clientX + 'px'; d.g.style.top = e.clientY + 'px'; const p = cellAt(e), h = hitAt(p.cx, p.cy); hover = h && h.slot != null ? h.id : null; }
+  });
+  kbd.addEventListener('pointerup', e => {
+    if (!d) return; const x = d; d = null; if (x.g) x.g.remove();
+    if (!x.moved) { place(x.k); return; }
+    const p = cellAt(e), h = hitAt(p.cx, p.cy); if (h && h.slot != null) place(x.k, h.slot);
+  });
+  kbd.addEventListener('pointercancel', () => { if (d && d.g) d.g.remove(); d = null; });
+})();
+
+// ---------- grid input ----------
+const cellAt = e => { const r = cv.getBoundingClientRect(); return { cx: Math.floor((e.clientX - r.left - L.ox) / L.cw), cy: Math.floor((e.clientY - r.top - L.oy) / L.chh) }; };
+const hitAt = (cx, cy) => { for (let i = hits.length - 1; i >= 0; i--) { const h = hits[i]; if (cx >= h.x && cx < h.x + h.w && cy >= h.y && cy < h.y + h.h) return h; } return null; };
+let gd = null;
+cv.addEventListener('pointerdown', e => { const p = cellAt(e), h = hitAt(p.cx, p.cy); if (!h) return; gd = { h, x: e.clientX, y: e.clientY, moved: false }; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => { const p = cellAt(e); if (gd && Math.hypot(e.clientX - gd.x, e.clientY - gd.y) > 6) gd.moved = true; const h = hitAt(p.cx, p.cy); hover = h ? h.id : null; cv.style.cursor = h ? 'pointer' : 'default'; });
+cv.addEventListener('pointerup', e => {
+  const d = gd; gd = null; if (!d) return; const p = cellAt(e), h = hitAt(p.cx, p.cy);
+  if (!d.moved) { if (h && h.id === d.h.id && h.onTap) h.onTap(); return; }
+  if (d.h.drag) { const i = +d.h.drag.split(':')[1]; if (h && h.slot != null && h.slot !== i) { const a = st.slots[i]; st.slots[i] = st.slots[h.slot]; st.slots[h.slot] = a; slotIn[i] = slotIn[h.slot] = performance.now(); } else if (!h || h.slot == null) unplace(i); }
+});
+cv.addEventListener('pointerleave', () => { hover = null; });
+
+// ---------- paint ----------
+const hash = (x, y) => (((x * 2 + 1) * 374761393) ^ ((y * 2 + 1) * 668265263)) >>> 0;
+const NOISE = '#%&@$=+*<>/\\|:;01';
+const ease = t => 1 - Math.pow(1 - t, 3);
+// one piece (p = 0..8) of a big letter: its cell of the 3x3 block, offset by (dx, dy) pixels
+function piece(bx, by, k, p, dx, dy, alpha = 1, miss = false) {
+  const { cw, chh, ox, oy, fs } = L, px = p % 3, py = Math.floor(p / 3);
+  const x = ox + (bx + px) * cw + dx, y = oy + (by + py) * chh + dy, c = miss ? { bg: C.dangerDim, fg: C.danger } : chipOf(TIER(k));
+  g.save(); g.globalAlpha = alpha; g.beginPath(); g.rect(x, y, cw + 0.6, chh + 0.6); g.clip();
+  g.fillStyle = c.bg; g.globalAlpha = alpha * (miss ? 0.35 : 1); g.fillRect(x, y, cw + 0.6, chh + 0.6); g.globalAlpha = alpha;
+  g.fillStyle = c.fg; g.font = `800 ${fs * 2.7}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(CH(k), ox + (bx + 1.5) * cw + dx, oy + (by + 1.55) * chh + dy);
+  g.restore();
+}
+function frame(now) {
+  cells = []; bgs = []; hits = []; big = [];
+  header();
+  ({ build: pageBuild, shred: pageShred, book: pageBook, locker: pageLocker })[st.tab](now);
+  const { cw, chh, ox, oy, fs, w, h } = L;
+  g.fillStyle = C.bg; g.fillRect(0, 0, w, h);
+  const age = now - tabT0;
+  const shown = (x, y) => y < 5 || age > 40 + hash(x, y) % 300;
+  for (const b of bgs) { if (!shown(b.x, b.y)) continue; g.globalAlpha = b.a; g.fillStyle = b.col; g.fillRect(ox + b.x * cw, oy + b.y * chh, b.w * cw, b.h * chh); }
+  g.globalAlpha = 1; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const c of cells) {
+    const d = 40 + hash(c.x, c.y) % 300, early = c.y >= 5 && age < d, noisy = c.y >= 5 && age >= d && age < d + 90;
+    if (early) continue;
+    g.font = `${c.bold ? 700 : 400} ${fs}px ${FONT}`; g.fillStyle = noisy ? C.mid : c.col;
+    g.fillText(noisy ? NOISE[(hash(c.x, c.y) + Math.floor(now / 40)) % NOISE.length] : c.ch, ox + (c.x + 0.5) * cw, oy + (c.y + 0.5) * chh);
+  }
+  // big letters: in the slots, pieces fly up from below (the keyboard) one by one
+  for (const b of big) for (let p = 0; p < 9; p++) {
+    const delay = (hash(p, 7) % 9) * 22, t = b.t0 ? Math.min(1, Math.max(0, (now - b.t0 - delay) / 260)) : 1;
+    if (t <= 0) continue;
+    const e = ease(t), dy = (1 - e) * (14 + (hash(p, 3) % 6)) * chh, dx = (1 - e) * ((hash(p, 5) % 7) - 3) * cw;
+    piece(b.x, b.y, b.k, p, dx, dy, 1, b.miss);
+  }
+  // pieces in flight: fall (taken out) or rise (built: up into the terminal)
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const f = fx[i], delay = (hash(f.p, 11) % 9) * 18, t = (now - f.t0 - delay) / (f.mode === 'rise' ? 520 : 480);
+    if (t > 1) { fx.splice(i, 1); continue; } if (t < 0) { piece(f.sx, f.sy, f.k, f.p, 0, 0); continue; }
+    const dx = ((hash(f.p, 13) % 9) - 4) * cw * t, dy = f.mode === 'rise' ? -ease(t) * (7 + hash(f.p, 2) % 4) * chh : t * t * 16 * chh;
+    piece(f.sx, f.sy, f.k, f.p, dx, dy, 1 - t * t);
+  }
+  requestAnimationFrame(frame);
+}
+function enter() {
+  kbd.classList.remove('up'); st.tab = 'build'; tabT0 = performance.now();
+  setTimeout(() => kbd.classList.add('up'), 450);
+}
+document.getElementById('replay').onclick = enter;
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => { layout(); drawKeys(); enter(); requestAnimationFrame(frame); });
+window.addEventListener('resize', layout);
+})();
+</script>

@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.11']);
+NEON_FILES.push(['engine/scene.js', 'v14.13']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -1181,7 +1181,7 @@ function drawField(ctx, x, y, b) {
 function buildTextBoard(ctx, lines, area = null) {
   const { now, put, putC, addHit, bg, cells, collectHits } = ctx;
   const hl = ctx.hl || (() => {});
-  const heightOf = ln => ln.box ? (ln.sub ? 4 : 3) : ln.tileInfo ? TILE_H : ln.mapView ? ln.h : 1;
+  const heightOf = ln => ln.box ? (ln.sub ? 4 : 3) : ln.tileInfo ? TILE_H : ln.mapView || ln.draw ? ln.h || 1 : 1;
   const total = lines.reduce((s, ln) => s + heightOf(ln), 0);
   const top = area ? area.top : BOARD_Y, areaH = area ? area.h : L.gh;
   let y = top + Math.max(0, Math.floor((areaH - total) / 2));
@@ -1202,6 +1202,7 @@ function buildTextBoard(ctx, lines, area = null) {
     if (ln.arrowUp || ln.arrowDown) { const ch = ln.arrowUp ? '^' : 'v', blink = Math.floor(now / 600) % 2 ? C.mid : C.dim; put(0, y, ch, blink, 'board'); put(L.wc - 1, y, ch, blink, 'board'); }
 
     if (ln.box) drawBox(ctx, y, ln);
+    else if (ln.draw) ln.draw(ctx, y);   // a line that draws itself, h rows (the WORKBENCH: engine/bench.js)
     else if (ln.tileInfo) {
       // A tile drawn like on the board, with text lines beside it.
       for (let k = 0; k < TILE_H; k++) drawTileRow(put, y + k, ln, k);

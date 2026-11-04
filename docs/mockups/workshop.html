@@ -1,0 +1,625 @@
+<title>NeoN+1 Workbench</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+/* layout: a page of phone-sized frames, one row per concept; the first frame of each row is live (drag the letters) */
+:root {
+  color-scheme: dark;
+  --bg: #06090a; --panel: #0b1112; --dim: #2c3a38; --mid: #5f7470; --text: #a9bdb7; --bright: #e6f4ef;
+  --accent: #3cf0ff; --danger: #ff3b4e; --money: #e8c66a; --rep: #a27ef5;
+  --scrap-fg: #1d2326; --scrap-bg: #d4dad9; --common-fg: #0c3318; --common-bg: #6fdc84;
+  --rare-fg: #0b2a55; --rare-bg: #7fb6ff; --epic-fg: #2d0a4e; --epic-bg: #c99bff;
+  --legendary-fg: #4a1300; --legendary-bg: #ff8a4a; --exotic-fg: #3a2800; --exotic-bg: #ffd84a;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px; }
+a { color: var(--accent); }
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1 { font-size: 28px; font-weight: 800; color: var(--bright); margin: 0; letter-spacing: 2px; text-wrap: balance; }
+h1 b { color: var(--accent); }
+h2 { font-size: 18px; color: var(--bright); margin: 0; letter-spacing: 1px; text-wrap: balance; }
+h2 span { color: var(--accent); }
+p { margin: 0; max-width: 72ch; }
+.lead { display: flex; flex-direction: column; gap: 10px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; border: 1px solid var(--dim); padding: 14px 16px; }
+.rules div { min-width: 0; }
+.rules b { color: var(--bright); }
+.k { color: var(--accent); }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); background: var(--bg); padding-block: 8px; z-index: 5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.tabs button { font: inherit; background: none; color: var(--mid); border: 1px solid var(--dim); padding: 6px 12px; cursor: pointer; letter-spacing: 1px; }
+.tabs button.on { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+.tabs button:focus-visible, button:focus-visible { outline: 2px solid var(--bright); outline-offset: 2px; }
+.concept { display: flex; flex-direction: column; gap: 14px; }
+.pitch { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 6px 28px; }
+.pitch > div { min-width: 0; }
+.pitch .lab { color: var(--mid); font-size: 11px; letter-spacing: 2px; }
+.pitch ul { margin: 2px 0 0; padding-left: 18px; }
+.frames { display: flex; flex-wrap: wrap; gap: 20px; }
+.fcol { display: flex; flex-direction: column; gap: 6px; width: 340px; max-width: 100%; }
+.fcap { font-size: 11px; color: var(--mid); letter-spacing: 1px; min-height: 2.9em; }
+.fcap b { color: var(--accent); font-weight: 700; }
+.fcap.live b { color: var(--money); }
+
+/* the phone */
+.phone { position: relative; width: 340px; max-width: 100%; height: 700px; background: var(--bg); border: 1px solid var(--dim);
+  overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none; display: flex; flex-direction: column; }
+.phone.still > * { pointer-events: none; }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--dim); color: var(--mid); font-size: 11px; letter-spacing: 1px; }
+.bar b { color: var(--bright); }
+.btn { font: inherit; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--accent); background: none; border: 1px solid var(--accent); padding: 3px 7px; cursor: pointer; }
+.btn.solid { color: var(--bg); background: var(--accent); }
+.btn.money { color: var(--bg); background: var(--money); border-color: var(--money); }
+.btn.dim { color: var(--mid); border-color: var(--dim); }
+.btn.danger { color: var(--danger); border-color: var(--danger); }
+.cr { color: var(--money); }
+.sec { padding: 6px 10px 2px; font-size: 10px; letter-spacing: 2px; color: var(--mid); display: flex; justify-content: space-between; }
+
+/* letter tiles: rarity chips */
+.tile { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 40px; font-weight: 800; font-size: 20px;
+  cursor: grab; border-radius: 3px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.28); }
+.tile i { position: absolute; right: 2px; bottom: 1px; font-style: normal; font-size: 9px; font-weight: 700; opacity: .8; }
+.tile.zero { background: none !important; color: var(--dim) !important; box-shadow: inset 0 0 0 1px var(--dim); cursor: default; }
+.tile.q::after { content: ""; position: absolute; inset: -3px; border: 1px solid var(--exotic-bg); border-radius: 5px; animation: glow 1.6s ease-in-out infinite; }
+@keyframes glow { 50% { opacity: .25; } }
+.t-scrap { background: var(--scrap-bg); color: var(--scrap-fg); } .t-common { background: var(--common-bg); color: var(--common-fg); }
+.t-rare { background: var(--rare-bg); color: var(--rare-fg); } .t-epic { background: var(--epic-bg); color: var(--epic-fg); }
+.t-legendary { background: var(--legendary-bg); color: var(--legendary-fg); } .t-exotic { background: var(--exotic-bg); color: var(--exotic-fg); }
+.chip { display: inline-block; padding: 0 4px; font-weight: 700; font-size: 11px; border-radius: 2px; }
+.ghost { position: fixed; z-index: 100; pointer-events: none; opacity: .9; transform: translate(-50%, -60%) scale(1.15); }
+.drop-hot { outline: 2px dashed var(--accent) !important; outline-offset: 2px; }
+
+/* items (gear / mods) */
+.item { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid var(--dim); cursor: grab; min-width: 0; }
+.item .nm { color: var(--bright); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; font-size: 11px; }
+.item .x { color: var(--mid); font-size: 10px; }
+.item.mod { border-style: dashed; }
+.empty { border: 1px dashed var(--dim); color: var(--dim); display: flex; align-items: center; justify-content: center; font-size: 10px; }
+
+/* craft slots */
+.slot { width: 52px; height: 56px; border: 2px dashed var(--mid); display: flex; align-items: center; justify-content: center; }
+.slot .tile { width: 44px; height: 48px; font-size: 24px; }
+.out { width: 92px; height: 56px; border: 2px solid var(--dim); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; font-size: 10px; }
+.out.ok { border-color: var(--accent); cursor: grab; }
+.out.near { border-color: var(--money); }
+.out.bad { border-color: var(--danger); }
+.out .big { font-size: 13px; font-weight: 800; color: var(--bright); }
+
+/* overlays */
+.ov { position: absolute; inset: 0; background: rgba(6,9,10,.82); display: flex; align-items: center; justify-content: center; padding: 14px; z-index: 4; }
+.pop { width: 100%; max-height: 100%; overflow: auto; background: var(--panel); border: 1px solid var(--accent); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.pop.gold { border-color: var(--exotic-bg); }
+.pop h3 { margin: 0; font-size: 13px; color: var(--bright); letter-spacing: 2px; display: flex; justify-content: space-between; align-items: center; }
+.pop .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.toast { position: absolute; left: 10px; right: 10px; bottom: 10px; background: var(--panel); border: 1px solid var(--money); color: var(--bright); padding: 6px 8px; font-size: 11px; z-index: 6; }
+.book { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.rec { display: flex; gap: 6px; align-items: center; padding: 3px 5px; border: 1px solid var(--dim); font-size: 11px; cursor: pointer; min-width: 0; }
+.rec .cd { font-weight: 800; color: var(--bright); letter-spacing: 1px; }
+.rec .nm2 { color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.rec.ready { border-color: var(--accent); } .rec.ready .nm2 { color: var(--text); }
+.rec.secret .cd { color: var(--dim); } .rec.lock { opacity: .55; }
+.note { font-size: 10px; color: var(--mid); }
+
+/* concept A */
+.a-craft { display: flex; align-items: center; gap: 6px; padding: 10px; justify-content: center; }
+.a-craft .eq { color: var(--mid); font-size: 18px; }
+.a-mid { display: grid; grid-template-columns: 1fr 112px; gap: 8px; padding: 0 10px; }
+.a-bag { display: flex; flex-direction: column; gap: 4px; max-height: 176px; overflow: auto; }
+.shred { border: 2px solid var(--danger); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--danger); font-size: 10px; text-align: center; padding: 6px; }
+.shred pre { margin: 0; font: inherit; font-size: 10px; line-height: 1.1; color: var(--danger); }
+.a-letters { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; padding: 4px 10px; }
+.a-letters .tile { width: 100%; height: 34px; font-size: 16px; }
+.locker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 4px 10px 10px; }
+.locker > * { height: 40px; }
+.locker .item { flex-direction: column; justify-content: center; gap: 0; padding: 2px; }
+.locker .item .nm { font-size: 10px; text-align: center; }
+
+/* concept B */
+.b-term { flex: 1; padding: 8px 10px; font-size: 11px; display: flex; flex-direction: column; gap: 2px; overflow: hidden; justify-content: flex-end; min-height: 0; }
+.b-term .ln { color: var(--mid); white-space: pre-wrap; } .b-term .ln.hi { color: var(--text); } .b-term .ln.ok { color: var(--accent); } .b-term .ln.warn { color: var(--money); }
+.b-prompt { padding: 8px 10px; border-top: 1px solid var(--dim); display: flex; align-items: center; gap: 6px; }
+.b-prompt .ps { color: var(--accent); font-weight: 800; }
+.b-prompt .slot { width: 40px; height: 44px; border-width: 0 0 2px; border-style: solid; }
+.b-prompt .slot .tile { width: 36px; height: 40px; font-size: 20px; }
+.b-prompt .slot.cur { border-color: var(--accent); animation: glow 1s steps(2) infinite; }
+.b-ac { padding: 0 10px 6px; display: flex; flex-direction: column; gap: 2px; min-height: 76px; }
+.b-ac .rec { border: none; padding: 1px 4px; }
+.b-ac .rec.ready { background: rgba(60,240,255,.08); }
+.kb { padding: 6px 4px 8px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--dim); }
+.kb .r { display: flex; gap: 3px; justify-content: center; }
+.kb .tile { width: 30px; height: 38px; font-size: 15px; }
+.kb .tile.zero { cursor: default; }
+.kb .wide { width: 52px; font-size: 10px; }
+.b-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--dim); }
+.b-tabs button { flex: 1; font: inherit; font-size: 11px; background: none; border: none; color: var(--mid); padding: 6px; cursor: pointer; letter-spacing: 1px; }
+.b-tabs button.on { color: var(--bg); background: var(--accent); }
+.b-list { flex: 1; overflow: auto; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.b-row { display: grid; grid-template-columns: 42px 1fr auto; gap: 6px; align-items: center; font-size: 11px; border-bottom: 1px solid var(--dim); padding-bottom: 4px; }
+.b-row .cd { font-weight: 800; }
+.man { white-space: pre-wrap; font-size: 11px; color: var(--text); margin: 0; font-family: inherit; }
+.man b { color: var(--bright); }
+
+/* concept C */
+.c-top { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; align-items: stretch; }
+.c-chute { width: 118px; border: 2px solid var(--danger); color: var(--danger); font-size: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4px; }
+.c-chute pre { margin: 0; font: inherit; line-height: 1.05; }
+.c-jig { border: 2px solid var(--mid); padding: 6px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.c-jig .slots { display: flex; gap: 4px; }
+.c-jig .slot { width: 42px; height: 46px; border-width: 1px; }
+.c-jig .slot .tile { width: 38px; height: 42px; font-size: 20px; }
+.c-table { position: relative; flex: 1; margin: 0 10px; min-height: 0; border: 1px solid var(--dim);
+  background-image: radial-gradient(var(--dim) 1px, transparent 1px); background-size: 14px 14px; }
+.c-table .pile { position: absolute; transform: translate(-50%, -50%); }
+.c-table .pile .tile { box-shadow: 2px 3px 0 rgba(0,0,0,.6), inset 0 -3px 0 rgba(0,0,0,.28); }
+.c-table .pile.stack .tile { box-shadow: 2px 3px 0 rgba(0,0,0,.6), 4px 6px 0 var(--dim), inset 0 -3px 0 rgba(0,0,0,.28); }
+.c-pins { display: flex; gap: 4px; padding: 6px 10px 0; flex-wrap: wrap; }
+.pin { font-size: 10px; border: 1px solid var(--money); color: var(--money); padding: 1px 5px; }
+.pin s { color: var(--danger); text-decoration: none; }
+.drawer { border-top: 2px solid var(--accent); background: var(--panel); display: flex; flex-direction: column; }
+.drawer .handle { display: flex; }
+.drawer .handle button { flex: 1; font: inherit; font-size: 11px; letter-spacing: 1px; background: none; border: none; color: var(--mid); padding: 7px 4px; cursor: pointer; }
+.drawer .handle button.on { color: var(--accent); }
+.drawer .body { padding: 6px 10px 10px; display: flex; flex-direction: column; gap: 6px; overflow: auto; }
+.drawer.open .body { height: 300px; }
+.drawer .body.short { height: auto; }
+.c-bag { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.bp { border: 1px solid var(--rare-bg); padding: 6px; display: flex; flex-direction: column; gap: 3px; font-size: 10px; background-image: linear-gradient(rgba(127,182,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(127,182,255,.07) 1px, transparent 1px); background-size: 8px 8px; cursor: pointer; }
+.bp .cd { font-size: 16px; font-weight: 800; color: var(--bright); letter-spacing: 3px; }
+.bp .cd s { color: var(--danger); text-decoration: none; }
+.bp.secret { border-color: var(--dim); }
+.bp.secret .cd { color: var(--dim); }
+.open-q { border-left: 3px solid var(--money); padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; }
+.open-q b { color: var(--money); }
+@media (prefers-reduced-motion: reduce) { .tile.q::after, .b-prompt .slot.cur { animation: none; } }
+</style>
+
+<div class="wrap">
+  <div class="lead">
+    <h1>THE <b>WORKBENCH</b></h1>
+    <p>Three ways the safehouse workshop could look. Shred gear and mods into their letters, then spell a 3-letter short code to build one. The first screen in each row works: drag letters into the slots, tap an item to shred it, tap a recipe to fill it in. The other screens show that concept's popups and pages.</p>
+  </div>
+  <div class="rules">
+    <div><b>Recipes = short codes.</b> WRP builds a WARP, SKP a SKIP, BUF a BUFFER. Every code is 3 letters.</div>
+    <div><b>Shred</b> = an item's letters, plus a chance of one random bonus letter.</div>
+    <div><b>Letter rarity:</b> <span class="chip t-common">E A R S</span> <span class="chip t-rare">P K W</span> <span class="chip t-epic">X Q Z</span> <span class="chip t-legendary">0 1 3</span> <span class="chip t-exotic">quest</span></div>
+    <div><b>No limit</b> on banked letters (for now). The <b>locker</b> keeps 5 built things for the next run; gear stacks.</div>
+    <div><b>No wildcards.</b> A word that's one letter off a recipe is a <span class="k">near miss</span>: try it, and it might work.</div>
+    <div><b>Secret words</b> show as ??? in the book. G0D needs the three quest letters.</div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button data-c="a" class="on">A · CRAFTING TABLE</button>
+    <button data-c="b">B · TERMINAL</button>
+    <button data-c="c">C · THE BENCH</button>
+    <button data-c="all">ALL</button>
+  </div>
+
+  <section class="concept" id="c-a">
+    <h2><span>A</span> · CRAFTING TABLE</h2>
+    <div class="pitch">
+      <div><div class="lab">THE IDEA</div>The closest to Minecraft. Everything is on one screen in fixed boxes: 3 slots and an output at the top, your bag next to the shredder, every letter you own in a grid, and the locker along the bottom.</div>
+      <div><div class="lab">GOOD</div><ul><li>Everything at a glance; nothing hidden.</li><li>The letter grid shows what's missing (empty tiles).</li><li>Easy to build: plain boxes.</li></ul></div>
+      <div><div class="lab">WATCH</div><ul><li>Tight on a phone; the letter grid gets long.</li><li>Feels more like a menu than a place.</li></ul></div>
+    </div>
+    <div class="frames" id="fa"></div>
+  </section>
+
+  <section class="concept" id="c-b" hidden>
+    <h2><span>B</span> · TERMINAL</h2>
+    <div class="pitch">
+      <div><div class="lab">THE IDEA</div>You're a hacker, so you type it. Your letter bank is a keyboard: each key shows how many of that letter you have, and keys you don't have are dead. The prompt autocompletes recipes as you go, like a shell. The book is a man page.</div>
+      <div><div class="lab">GOOD</div><ul><li>Very NeoN+1; typing seeds already works like this.</li><li>Autocomplete teaches recipes without a book.</li><li>Fits a phone: a keyboard is a phone thing.</li></ul></div>
+      <div><div class="lab">WATCH</div><ul><li>Less dragging, less Minecraft.</li><li>Shredding lives on another tab.</li></ul></div>
+    </div>
+    <div class="frames" id="fb"></div>
+  </section>
+
+  <section class="concept" id="c-c" hidden>
+    <h2><span>C</span> · THE BENCH</h2>
+    <div class="pitch">
+      <div><div class="lab">THE IDEA</div>A real tabletop. Letter tiles lie loose on the bench, stacked in piles, and you push them around wherever you want. Drop an item in the shredder and its letters land on the table. The jig has 3 slots and a PRESS. Pin recipes to the wall like a shopping list. The bag, locker and blueprints are in a drawer.</div>
+      <div><div class="lab">GOOD</div><ul><li>The most physical and toy-like: drag everything.</li><li>Pinned recipes show the letters you're missing.</li><li>Room for a big G0D moment.</li></ul></div>
+      <div><div class="lab">WATCH</div><ul><li>A messy table with lots of letters.</li><li>The most work to build.</li></ul></div>
+    </div>
+    <div class="frames" id="fc"></div>
+  </section>
+
+  <div class="open-q">
+    <b>OPEN</b>
+    <div>Can exotics be built (NUKE, ZOMBIE)? Here they need a <span class="k">blueprint</span> you find first.</div>
+    <div>Does a near miss eat your letters when it fails? Here it does, and you get DUDS.</div>
+    <div>Do loot items (CHROME, WALLET) shred too? Here they do: a worse sale, but rare letters.</div>
+    <div>Upgrading a mod (from the COMPS plan): spell its code again on top of it?</div>
+  </div>
+</div>
+
+<script>
+(() => {
+// ---------- data: real short codes (dist/engine/panels.js ITEM_SHORT, dist/data/mods.js short) ----------
+const R = {
+  PCH:['PATCH','scrap','gear','+1 integrity.'], PRG:['PURGE','scrap','gear','lock out 1 ICE.'], SHO:['SHOE','scrap','gear','throw it. probably nothing.'],
+  FWL:['FWALL','common','gear','block next ICE hit.'], SPL:['SPLIT','common','gear','rule out half.'], SHK:['SHAKE','common','gear','jostle the nodes.'],
+  FRG:['FRAG','common','gear','3 random hits.'], RWD:['REWIND','common','gear','+5s on the clock.'], LTO:['LOTTO','common','gear','random credits.'],
+  PNG:['PING','common','gear','tap a node: ICE or not?'], MAG:['MAGNET','common','gear','pull the $ node.'], EGG:['EGG','common','gear','hatch a pet.'],
+  RTE:['ROUTE','rare','gear','shuffle map ahead.'], WRP:['WARP','rare','gear','random jump ahead.'], TUN:['TUNNEL','rare','gear','go across the row.'],
+  TLT:['TILT','rare','gear','slide them up or down.'], ENC:['ENCORE','rare','gear','next gear: twice.'], STM:['STIM','rare','gear','+50% int, this corp.'],
+  '0DY':['0DAY','rare','gear','mark the real node.'], EXO:['EXORCIST','rare','gear','kick a rival out.'],
+  ALL:['ALL-IN','epic','gear','50/50: clear it or +2 ICE.'], MSH:['MESH','epic','gear','link the whole sector.'], PAS:['PASS','epic','gear','half off the uplink.'],
+  WRM:['WORM','epic','gear',"pre-eat a corp's ICE."], SKP:['SKIP','epic','gear','jump a row.'], SWP:['SWAP','epic','gear','health <-> missing.'], FAK:['FAKE','epic','gear','+1 step on a mod.'],
+  FLR:['FLARE','legendary','gear','rule out 3/4.'], FRZ:['FREEZE','legendary','gear','pause 2s. watch.'], BLS:['BLAST','legendary','gear','aim a 2x2 blast.'],
+  BEE:['BEES','legendary','gear','a swarm eats ICE.'], ANC:['ANCHOR','legendary','gear','nothing moves.'],
+  NUK:['NUKE','exotic','gear','breach the corp now.'],
+  CHR:['CHROME','epic','loot','sell it: worth a lot.'],
+  BUF:['BUFFER','common','mod','+1 integrity.'], SKM:['SKIMMER','common','mod','credits on hits.'], BRN:['BURNER','common','mod','burn a node.'], HGL:['HAGGLE','common','mod','markets cost less.'],
+  STS:['STASH','common','mod','keep credits.'], KEY:['CACHEKEY','common','mod','caches open free.'], TRC:['TRACER','rare','mod','hit ICE points to real.'],
+  KLG:['KEYLOGGER','rare','mod','miss logs a key line.'], PKP:['PICKPOCKET','rare','mod','loot on hits.'], SNF:['SNIFFER','epic','mod','lock 1 ICE each layer.'],
+  FSF:['FAILSAFE','epic','mod','killing hit: 1 left.'], VRS:['VIRUS','epic','mod','hit ICE infects 1 more.'], XAX:['X-AXIS','epic','mod','a row tell.'],
+  ZMB:['ZOMBIE','exotic','mod','come back once.'], RAM:['RAM DOUBLER','exotic','mod','double the RAM.'],
+};
+const SECRET = { '1UP':['1UP','exotic','gear','a continue: back to the corp start.'], CAT:['STRAY','rare','gear','a cat. it follows you. it does nothing.'], G0D:['G0D.exe','exotic','gear','plays the game for you. 256 clicks.'] };
+const BLUEPRINTS = new Set(['NUK']);   // exotics you can build (you found its blueprint)
+const TIER = ch => ch.endsWith('*') ? 'exotic' : /[0-9]/.test(ch) ? 'legendary' : 'EARSTIONL'.includes(ch) ? 'common' : 'VJXQZ'.includes(ch) ? 'epic' : 'rare';
+const CH = k => k.replace('*', '');
+const EXTRA = { DUD:['DUDS','scrap','gear','junk: sell it.'] };
+const info = code => R[code] || SECRET[code] || EXTRA[code];
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+const BONUS_POOL = 'EEEAAARRSSTTIONLPPKMCDHUBGWYFVXQZ013';
+
+function fresh() {
+  return {
+    bank: { E:2, A:1, R:3, S:2, T:1, I:1, O:1, N:1, L:1, P:2, K:1, M:1, W:1, G:1, H:1, C:1, U:1, F:1, X:1, '0':1 },
+    bag: [ { c:'WRM', n:1 }, { c:'SHK', n:2 }, { c:'BUF', n:1 }, { c:'CHR', n:1 }, { c:'PNG', n:1 } ],
+    locker: [ { c:'SKP', n:2 }, { c:'TRC', n:1 }, null, null, null ],
+    slots: [null, null, null],
+    ov: null, toast: '', log: ['> safehouse.workbench --online', '  letters banked: 25', '  locker: 2/5'],
+    tab: 'build', drawer: 'bag', drawerOpen: false, pins: ['WRP', 'FRZ', 'SKP'], piles: {}, cur: null,
+  };
+}
+const count = st => Object.values(st.bank).reduce((a, b) => a + b, 0);
+const have = (st, code) => { const need = {}; for (const ch of code) need[ch] = (need[ch] || 0) + 1;
+  for (const s of st.slots) if (s) need[CH(s)] = (need[CH(s)] || 0) - 1;
+  return Object.entries(need).every(([ch, n]) => n <= 0 || (st.bank[ch] || 0) >= n); };
+const missing = (st, code) => { const b = { ...st.bank }; return code.split('').map(ch => (b[ch] > 0 ? (b[ch]--, '') : ch)).join(''); };
+const word = st => st.slots.map(s => s ? CH(s) : '').join('');
+function judge(st) {
+  if (st.slots.some(s => !s)) return { kind: 'partial' };
+  const w = word(st);
+  if (w === 'G0D') return st.slots.every(s => s.endsWith('*')) ? { kind: 'ok', code: w, god: true } : { kind: 'needq', code: w };
+  if (SECRET[w]) return { kind: 'ok', code: w, secret: true };
+  if (R[w]) return R[w][1] === 'exotic' && !BLUEPRINTS.has(w) ? { kind: 'lock', code: w } : { kind: 'ok', code: w };
+  const near = Object.keys(R).find(c => R[c][1] !== 'exotic' && [0, 1, 2].filter(i => c[i] === w[i]).length === 2);
+  return near ? { kind: 'near', code: near, w } : { kind: 'bad', w };
+}
+const chipFor = r => `chip t-${r}`;
+const tileH = (k, n, drag, extra = '') => `<span class="tile t-${TIER(k)}${k.endsWith('*') ? ' q' : ''}${n === 0 ? ' zero' : ''} ${extra}" ${n === 0 ? '' : `data-drag="${drag}"`}>${CH(k)}${n != null ? `<i>${n}</i>` : ''}</span>`;
+const itemH = (it, drag) => { const [nm, r, kind] = info(it.c); return `<div class="item ${kind === 'mod' ? 'mod' : ''}" data-drag="${drag}"><span class="${chipFor(r)}">${it.c}</span><span class="nm">${nm}</span>${it.n > 1 ? `<span class="x">x${it.n}</span>` : ''}</div>`; };
+const lockerH = (st, wide) => `<div class="locker" data-drop="locker">${st.locker.map((it, i) => it ? `<div class="item ${info(it.c)[2] === 'mod' ? 'mod' : ''}" data-drag="K:${i}"><span class="${chipFor(info(it.c)[1])}">${it.c}</span><span class="nm">${wide ? info(it.c)[0] + (it.n > 1 ? ' x' + it.n : '') + ' <span class=\"note\">' + info(it.c)[2] + '</span>' : it.n > 1 ? 'x' + it.n : info(it.c)[2]}</span></div>` : `<div class="empty">${i + 1}</div>`).join('')}</div>`;
+const bookList = (st, cls = 'rec') => {
+  const codes = Object.keys(R).filter(c => R[c][2] !== 'loot');
+  return codes.map(c => { const [nm, r] = R[c]; const lock = r === 'exotic' && !BLUEPRINTS.has(c); const ok = !lock && have(st, c);
+    return `<div class="${cls}${ok ? ' ready' : ''}${lock ? ' lock' : ''}" data-act="fill:${c}"><span class="${chipFor(r)}">&nbsp;</span><span class="cd">${c}</span><span class="nm2">${lock ? 'blueprint?' : nm}</span></div>`; }).join('')
+    + Object.keys(SECRET).map(() => `<div class="${cls} secret"><span class="chip" style="background:var(--dim)">&nbsp;</span><span class="cd">???</span><span class="nm2">secret word</span></div>`).join('');
+};
+function outcomeBox(st, cls = 'out') {
+  const j = judge(st);
+  if (j.kind === 'partial') return `<div class="${cls}"><span class="note">spell a code</span></div>`;
+  if (j.kind === 'ok') { const [nm, r] = info(j.code); return `<div class="${cls} ok" data-drag="O" data-act="build"><span class="${chipFor(r)}">${j.code}</span><span class="big">${nm}</span></div>`; }
+  if (j.kind === 'near') return `<div class="${cls} near" data-act="build"><span class="big" style="color:var(--money)">${j.w}?</span><span class="note">close to ${j.code}</span></div>`;
+  if (j.kind === 'lock') return `<div class="${cls} bad"><span class="big">${j.code}</span><span class="note">needs a blueprint</span></div>`;
+  if (j.kind === 'needq') return `<div class="${cls} bad"><span class="big">G0D</span><span class="note">not these letters</span></div>`;
+  return `<div class="${cls} bad" data-act="build"><span class="big" style="color:var(--danger)">${j.w}</span><span class="note">no such code</span></div>`;
+}
+
+// ---------- shared overlays ----------
+function ovShred(st) {
+  const s = st.ov.shred, it = s.item || st.bag[s.i]; const [nm, r] = info(it.c);
+  const done = s.got;
+  return `<div class="ov"><div class="pop"><h3>SHRED <span class="${chipFor(r)}">${it.c}</span> ${nm}<button class="btn dim" data-act="close">X</button></h3>
+    ${done ? `<div class="note">out of the shredder:</div><div class="row">${done.map(k => tileH(k, null, '')).join('')}${s.bonus ? `<span class="note">+ bonus</span>${tileH(s.bonus, null, '', 'q-b')}` : ''}</div>
+      <div class="note">${s.bonus ? 'a random bonus letter came out too.' : 'no bonus letter this time (25% chance).'}</div><button class="btn solid" data-act="close">OK</button>`
+    : `<div class="note">you get its letters back, and maybe one random bonus letter. ${info(it.c)[2] === 'loot' ? 'loot sells for more than its letters, but they can be rare.' : ''}</div>
+      <div class="row">${it.c.split('').map(k => tileH(k, null, '')).join('')}<span class="note">+ ?</span></div>
+      <div class="row"><button class="btn danger" data-act="doshred">SHRED IT</button><button class="btn dim" data-act="close">KEEP</button></div>`}
+  </div></div>`;
+}
+function ovGamble(st) {
+  const j = st.ov.j; const res = st.ov.res;
+  if (res) return `<div class="ov"><div class="pop ${res.win ? '' : ''}"><h3>${res.win ? 'IT WORKED' : 'NOTHING'}<button class="btn dim" data-act="close">X</button></h3>
+    ${res.win ? `<div>${j.w} came out as <span class="${chipFor(info(j.code)[1])}">${j.code}</span> <b style="color:var(--bright)">${info(j.code)[0]}</b>. Into your bag.</div>` : `<div>The bench spits out <span class="chip t-scrap">DUD</span> DUDS. The letters are gone.</div>`}
+    <button class="btn solid" data-act="close">OK</button></div></div>`;
+  if (j.kind === 'near') return `<div class="ov"><div class="pop"><h3>NEAR MISS<button class="btn dim" data-act="close">X</button></h3>
+    <div class="row">${j.w.split('').map((ch, i) => tileH(ch, null, '', ch === j.code[i] ? '' : 'zero')).join('')}<span class="note">is one letter off</span><span class="${chipFor(info(j.code)[1])}">${j.code}</span></div>
+    <div>Try it anyway: <b style="color:var(--money)">50%</b> you get a ${info(j.code)[0]}. If not, the letters burn and you get DUDS.</div>
+    <div class="row"><button class="btn money" data-act="gamble">TRY IT</button><button class="btn dim" data-act="clear">TAKE THEM BACK</button></div></div></div>`;
+  return `<div class="ov"><div class="pop"><h3>NO SUCH CODE<button class="btn dim" data-act="close">X</button></h3>
+    <div><b style="color:var(--danger)">${j.w}</b> isn't a recipe you know. It might be a secret word. <b style="color:var(--money)">10%</b> something happens.</div>
+    <div class="row"><button class="btn money" data-act="gamble">PRESS ANYWAY</button><button class="btn dim" data-act="clear">TAKE THEM BACK</button></div></div></div>`;
+}
+function ovG0D(st, cls = 'pop gold') {
+  return `<div class="ov"><div class="${cls}"><h3 style="color:var(--exotic-bg)">G 0 D<button class="btn dim" data-act="close">X</button></h3>
+    <pre class="man" style="color:var(--exotic-bg);text-align:center;line-height:1.1">   .-""""-.
+  /  ()  () \\
+ |    .--.   |
+  \\  '----' /
+   '-.____.-'</pre>
+    <div class="row" style="justify-content:center">${['G*', '0*', 'D*'].map(k => tileH(k, null, '')).join('')}</div>
+    <div>The three letters you carried out of H3AV3N. The bench shakes. Something on the other side of the screen opens one eye.</div>
+    <div><span class="chip t-exotic">G0D</span> <b style="color:var(--bright)">G0D.exe</b> plays the game for you: it knows every tell you've beaten 5 times. 256 clicks.</div>
+    <div class="row"><button class="btn money" data-act="close">WAKE IT</button><button class="btn dim" data-act="close">NOT YET</button></div></div></div>`;
+}
+const ovBook = (st, title = 'RECIPE BOOK') => `<div class="ov"><div class="pop" style="height:100%"><h3>${title}<button class="btn dim" data-act="close">X</button></h3>
+  <div class="note">a code you've owned goes in the book. <span style="color:var(--accent)">lit</span> = you have the letters. tap one to fill the slots.</div>
+  <div class="book">${bookList(st)}</div></div></div>`;
+const toastH = st => st.toast ? `<div class="toast">${st.toast}</div>` : '';
+
+// ---------- concept A: crafting table ----------
+function renderA(st) {
+  const ov = st.ov ? ({ book: () => ovBook(st), shred: () => ovShred(st), gamble: () => ovGamble(st), g0d: () => ovG0D(st) })[st.ov.t]() : '';
+  return `<div class="bar"><span>SAFEHOUSE &gt; <b>WORKBENCH</b></span><span><button class="btn" data-act="book">BOOK</button> <button class="btn dim">X</button></span></div>
+  <div class="sec"><span>BUILD</span><span>spell a short code</span></div>
+  <div class="a-craft">${st.slots.map((s, i) => `<div class="slot" data-drop="slot:${i}">${s ? tileH(s, null, 'S:' + i) : ''}</div>`).join('')}<span class="eq">=</span>${outcomeBox(st)}</div>
+  <div class="sec"><span>BAG · tap or drag to shred</span><span>SHREDDER</span></div>
+  <div class="a-mid"><div class="a-bag" data-drop="bag">${st.bag.map((it, i) => itemH(it, 'I:' + i)).join('')}</div>
+    <div class="shred" data-drop="shred"><pre>\\|/\\|/\\|/
+/|\\/|\\/|\\</pre>drop gear or a mod here<pre>v v v v v</pre></div></div>
+  <div class="sec"><span>LETTERS</span><span>${count(st)} banked · no limit</span></div>
+  <div class="a-letters" data-drop="bank">${ALPHA.filter(ch => /[A-Z]/.test(ch) || st.bank[ch]).concat(Object.keys(st.bank).filter(k => k.endsWith('*'))).map(ch => tileH(ch, st.bank[ch] || 0, 'L:' + ch)).join('')}</div>
+  <div style="flex:1"></div>
+  <div class="sec"><span>LOCKER · kept for the next run</span><span>${st.locker.filter(Boolean).length}/5</span></div>
+  ${lockerH(st)}${ov}${toastH(st)}`;
+}
+
+// ---------- concept B: terminal ----------
+const KB = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+function renderB(st) {
+  const tabs = `<div class="b-tabs">${['build', 'shred', 'locker', 'man'].map(t => `<button class="${st.tab === t ? 'on' : ''}" data-act="tab:${t}">${t.toUpperCase()}</button>`).join('')}</div>`;
+  const bar = `<div class="bar"><span>root@safehouse:<b>~/bench</b></span><span>${count(st)} letters</span></div>`;
+  if (st.tab === 'shred') return bar + tabs + `<div class="b-list"><div class="note">$ ls ~/bag &nbsp; (shred = its letters + 25% a bonus one)</div>
+    ${st.bag.map((it, i) => { const [nm, r, kind] = info(it.c); return `<div class="b-row"><span class="${chipFor(r)} cd">${it.c}</span><span>${nm}${it.n > 1 ? ' x' + it.n : ''} <span class="note">${kind}</span></span><button class="btn danger" data-act="shredB:${i}">rm</button></div>`; }).join('')}
+    ${st.toast ? `<div class="ln ok" style="color:var(--accent)">${st.toast}</div>` : ''}</div>`;
+  if (st.tab === 'locker') return bar + tabs + `<div class="b-list"><div class="note">$ cat ~/locker &nbsp; (5 slots, kept between runs)</div>
+    ${st.locker.map((it, i) => it ? `<div class="b-row"><span class="${chipFor(info(it.c)[1])} cd">${it.c}</span><span>${info(it.c)[0]}${it.n > 1 ? ' x' + it.n : ''}</span><button class="btn dim" data-act="unlock:${i}">take</button></div>` : `<div class="b-row"><span class="note">slot ${i + 1}</span><span class="note">empty</span><span></span></div>`).join('')}
+    <div class="note" style="margin-top:8px">built things go to your bag. "mv WRP ~/locker" to keep one for next time.</div></div>`;
+  if (st.tab === 'man') { const c = st.man || 'WRP'; const [nm, r, kind, tip] = info(c);
+    return bar + tabs + `<div class="b-list"><pre class="man"><b>${c}(1)</b>              WORKBENCH MANUAL
+
+<b>NAME</b>
+    ${c} - ${nm} <span class="${chipFor(r)}">${r}</span> ${kind}
+
+<b>SYNOPSIS</b>
+    build ${c.split('').join(' ')}
+
+<b>DESCRIPTION</b>
+    ${tip}
+
+<b>LETTERS</b>
+    you have: ${c.split('').map(ch => `${ch}x${st.bank[ch] || 0}`).join('  ')}
+    ${missing(st, c) ? `<span style="color:var(--danger)">missing: ${missing(st, c).split('').join(' ')}</span>` : '<span style="color:var(--accent)">ready to build</span>'}
+
+<b>SEE ALSO</b>
+    ${Object.keys(R).filter(x => x !== c && R[x][1] === r).slice(0, 4).join(', ')}
+    ??? (3 secret words)</pre>
+    <div class="note">$ man -k: every recipe in the book</div><div class="book">${bookList(st).replace(/data-act="fill:/g, 'data-act="man:')}</div></div>`; }
+  const w = word(st), j = judge(st), pre = st.slots.filter(Boolean).map(CH).join('');
+  const ac = j.kind === 'partial' ? Object.keys(R).filter(c => c.startsWith(pre) && R[c][2] !== 'loot').sort((a, b) => have(st, b) - have(st, a)).slice(0, 4) : [];
+  const cur = st.slots.findIndex(s => !s);
+  let acH;
+  if (j.kind === 'partial') acH = pre ? (ac.length ? ac.map(c => `<div class="rec${have(st, c) ? ' ready' : ''}" data-act="fill:${c}"><span class="cd">${c}</span><span class="nm2">${R[c][0]} · ${have(st, c) ? 'tab to fill' : 'missing ' + missing(st, c)}</span></div>`).join('') : `<div class="note">no recipe starts with ${pre}. could be a secret.</div>`) : `<div class="note">type a code. tap a key, or drag it up.</div>`;
+  else if (j.kind === 'ok') acH = `<div class="rec ready"><span class="cd">${j.code}</span><span class="nm2">${info(j.code)[0]} · ENTER to build</span></div>`;
+  else if (j.kind === 'near') acH = `<div class="ln warn" style="color:var(--money)">${w}: command not found. did you mean ${j.code}?</div><div class="row"><button class="btn money" data-act="gamble">run anyway (50%)</button><button class="btn dim" data-act="clear">^C</button></div>`;
+  else if (j.kind === 'lock') acH = `<div class="note" style="color:var(--danger)">${w}: permission denied (needs a blueprint)</div>`;
+  else acH = `<div class="ln" style="color:var(--danger)">${w}: command not found.</div><div class="row"><button class="btn money" data-act="gamble">run anyway (10%)</button><button class="btn dim" data-act="clear">^C</button></div>`;
+  const keys = r => KB[r].split('').map(ch => tileH(ch, st.bank[ch] || 0, 'L:' + ch)).join('');
+  const q = Object.keys(st.bank).filter(k => k.endsWith('*'));
+  return bar + tabs + `<div class="b-term">${st.log.slice(-9).map(l => `<div class="ln ${l.startsWith('  +') || l.startsWith('  built') ? 'ok' : l.startsWith('>') ? 'hi' : ''}">${l}</div>`).join('')}</div>
+  <div class="b-prompt"><span class="ps">$ build</span>${st.slots.map((s, i) => `<div class="slot${i === cur ? ' cur' : ''}" data-drop="slot:${i}">${s ? tileH(s, null, 'S:' + i) : ''}</div>`).join('')}</div>
+  <div class="b-ac">${acH}</div>
+  <div class="kb" data-drop="bank">${q.length ? `<div class="r">${q.map(k => tileH(k, st.bank[k], 'L:' + k)).join('')}<span class="note" style="align-self:center">quest keys</span></div>` : ''}
+    <div class="r">${keys(0)}</div><div class="r">${keys(1)}</div><div class="r">${keys(2)}</div>
+    <div class="r"><span class="tile t-scrap wide" data-act="back">DEL</span>${keys(3)}<span class="tile t-common wide" data-act="build">ENTER</span></div></div>
+  ${st.ov && st.ov.t === 'gamble' && st.ov.res ? ovGamble(st) : ''}${st.ov && st.ov.t === 'g0d' ? ovG0D(st) : ''}`;
+}
+
+// ---------- concept C: the bench ----------
+function layPiles(st) {
+  let n = 0; const keys = Object.keys(st.bank).filter(k => st.bank[k] > 0);
+  for (const k of keys) if (!st.piles[k]) { const i = n++; st.piles[k] = { x: 9 + (i % 6) * 16.4 + ((i * 37) % 7 - 3), y: 10 + Math.floor(i / 6) * 22 + ((i * 53) % 9 - 4) }; }
+  for (const k of keys) n++;
+}
+function renderC(st) {
+  layPiles(st);
+  const j = judge(st);
+  const pins = st.pins.map(c => { const m = missing(st, c); return `<span class="pin" data-act="fill:${c}">${c} ${m ? `<s>-${m}</s>` : 'ready'}</span>`; }).join('');
+  const piles = Object.keys(st.bank).filter(k => st.bank[k] > 0).map(k => `<div class="pile${st.bank[k] > 1 ? ' stack' : ''}" style="left:${st.piles[k].x}%;top:${st.piles[k].y}%">${tileH(k, st.bank[k], 'L:' + k)}</div>`).join('');
+  const press = j.kind === 'ok' ? `<button class="btn solid" data-act="build">PRESS · ${info(j.code)[0]}</button>` : j.kind === 'near' || j.kind === 'bad' ? `<button class="btn money" data-act="build">PRESS ?</button>` : j.kind === 'lock' ? `<span class="note" style="color:var(--danger)">needs a blueprint</span>` : j.kind === 'needq' ? `<span class="note" style="color:var(--danger)">not these letters</span>` : `<span class="note">3 letters, then press</span>`;
+  let body = '';
+  if (st.drawerOpen) {
+    if (st.drawer === 'bag') body = `<div class="note">drag one up into the shredder, or tap it</div><div class="c-bag" data-drop="bag">${st.bag.map((it, i) => itemH(it, 'I:' + i)).join('')}</div>`;
+    if (st.drawer === 'locker') body = `<div class="note">5 slots, kept for your next run. gear stacks. drag here from the jig or the bag.</div>${lockerH(st, true).replace('class="locker"', 'class="locker" style="padding:0;grid-template-columns:1fr;gap:4px"').replace(/class="item(.*?)" data-drag/g, 'class="item$1" style="flex-direction:row;justify-content:flex-start;gap:8px" data-drag').replace(/<div class="empty">/g, '<div class="empty" style="height:34px">')}`;
+    if (st.drawer === 'book') body = `<div class="note">blueprints. tap = pin it to the wall. a pin shows the letters you're missing.</div><div class="c-bag">${['WRP', 'SKP', 'FRZ', 'BLS', 'WRM', 'STM', 'NUK', 'BUF', 'TRC', '0DY', 'SWP', 'PNG'].map(c => { const m = missing(st, c); const lock = R[c][1] === 'exotic' && !BLUEPRINTS.has(c);
+      return `<div class="bp" data-act="pin:${c}"><span class="cd">${c.split('').map(ch => m.includes(ch) ? `<s>${ch}</s>` : ch).join('')}</span><span><span class="${chipFor(R[c][1])}">${R[c][1]}</span> ${R[c][0]}</span><span class="note">${lock ? 'blueprint found' : st.pins.includes(c) ? 'pinned' : m ? 'missing ' + m : 'ready'}</span></div>`; }).join('')}
+      ${Object.keys(SECRET).map(() => `<div class="bp secret"><span class="cd">? ? ?</span><span class="note">a secret word</span></div>`).join('')}</div>`;
+  }
+  const hasQ = Object.keys(st.bank).some(k => k.endsWith('*')) || st.slots.some(s => s && s.endsWith('*'));
+  return `<div class="bar"><span>SAFEHOUSE &gt; <b>THE BENCH</b></span><span class="note">${count(st)} letters</span></div>
+  <div class="c-pins">${pins}<span class="note">&lt;- pinned</span></div>
+  <div class="c-top"><div class="c-chute" data-drop="shred"><pre>[=========]
+ \\ ' ' ' /
+  \\_____/</pre>SHREDDER<br>drop an item in</div>
+    <div class="c-jig" ${hasQ ? 'style="border-color:var(--exotic-bg)"' : ''}><span class="note">THE JIG</span><div class="slots">${st.slots.map((s, i) => `<div class="slot" data-drop="slot:${i}">${s ? tileH(s, null, 'S:' + i) : ''}</div>`).join('')}</div>${press}</div></div>
+  <div class="c-table" data-drop="table">${piles}</div>
+  <div class="drawer${st.drawerOpen ? ' open' : ''}"><div class="handle">${['bag', 'locker', 'book'].map(t => `<button class="${st.drawerOpen && st.drawer === t ? 'on' : ''}" data-act="drawer:${t}">${t === 'locker' ? `LOCKER ${st.locker.filter(Boolean).length}/5` : t.toUpperCase()}</button>`).join('')}<button data-act="drawer:x">${st.drawerOpen ? 'v' : '^'}</button></div>
+    ${st.drawerOpen ? `<div class="body" data-drop="${st.drawer === 'locker' ? 'locker' : st.drawer === 'bag' ? 'bag' : ''}">${body}</div>` : ''}</div>
+  ${st.ov ? ({ shred: () => ovShred(st), gamble: () => ovGamble(st), g0d: () => ovG0D(st) })[st.ov.t]() : ''}${toastH(st)}`;
+}
+
+// ---------- actions ----------
+function toast(f, msg) { f.st.toast = msg; clearTimeout(f.tt); f.tt = setTimeout(() => { f.st.toast = ''; f.draw(); }, 2400); }
+function logB(f, ...l) { f.st.log.push(...l); }
+function place(f, k, i) {
+  const st = f.st; if (!(st.bank[k] > 0)) return;
+  if (i == null) i = st.slots.findIndex(s => !s); if (i < 0) return;
+  if (st.slots[i]) unplace(f, i);
+  st.slots[i] = k; st.bank[k]--; if (!st.bank[k] && !k.endsWith('*')) delete st.bank[k]; else if (!st.bank[k]) delete st.bank[k];
+}
+function unplace(f, i) { const st = f.st, k = st.slots[i]; if (!k) return; st.bank[k] = (st.bank[k] || 0) + 1; st.slots[i] = null; }
+function addBag(st, c) { const s = st.bag.find(it => it.c === c && info(c)[2] !== 'mod'); if (s) s.n++; else st.bag.push({ c, n: 1 }); }
+function shred(f, i) {
+  const st = f.st, it = st.bag[i]; if (!it) return;
+  const got = it.c.split(''); const bonus = Math.random() < 0.25 ? BONUS_POOL[Math.floor(Math.random() * BONUS_POOL.length)] : null;
+  for (const k of got.concat(bonus ? [bonus] : [])) st.bank[k] = (st.bank[k] || 0) + 1;
+  const item = { ...it }; it.n--; if (!it.n) st.bag.splice(i, 1);
+  return { got, bonus, item };
+}
+function build(f) {
+  const st = f.st, j = judge(st);
+  if (j.kind === 'ok') {
+    if (j.god) { st.ov = { t: 'g0d' }; st.slots = [null, null, null]; return; }
+    addBag(st, j.code); st.slots = [null, null, null];
+    const msg = `built ${info(j.code)[0]} -> bag`; toast(f, msg); logB(f, `> build ${j.code}`, `  ${msg}`); return;
+  }
+  if (j.kind === 'near' || j.kind === 'bad') st.ov = { t: 'gamble', j };
+}
+function gamble(f) {
+  const st = f.st, j = st.ov.j; const win = Math.random() < (j.kind === 'near' ? 0.5 : 0.1);
+  let code = j.code;
+  if (j.kind === 'bad' && win) { const ks = Object.keys(R).filter(c => R[c][1] === 'rare'); code = ks[Math.floor(Math.random() * ks.length)]; j.code = code; }
+  st.slots = [null, null, null];
+  if (win) addBag(st, code); else addBag(st, 'DUD');
+  st.ov = { t: 'gamble', j, res: { win } };
+  logB(f, `> build ${j.w} --force`, win ? `  built ${info(code)[0]} -> bag (lucky)` : `  DUDS. letters burned.`);
+  if (f.c === 'b') st.ov = { t: 'gamble', j, res: { win } };
+}
+function fill(f, c) {
+  const st = f.st; for (let i = 0; i < 3; i++) unplace(f, i);
+  if (!have(st, c)) { toast(f, `${c}: missing ${missing(st, c)}`); return; }
+  c.split('').forEach((ch, i) => place(f, ch, i)); st.ov = null;
+}
+function toLocker(f, c, n, idx) {
+  const st = f.st; const same = st.locker.findIndex(x => x && x.c === c && info(c)[2] !== 'mod');
+  if (same >= 0) { st.locker[same].n += n; return true; }
+  const e = idx != null && !st.locker[idx] ? idx : st.locker.findIndex(x => !x); if (e < 0) { toast(f, 'locker full (5)'); return false; }
+  st.locker[e] = { c, n }; return true;
+}
+function act(f, a) {
+  const st = f.st; const [cmd, arg] = a.split(':');
+  if (cmd === 'close') st.ov = null;
+  else if (cmd === 'book') st.ov = { t: 'book' };
+  else if (cmd === 'build') build(f);
+  else if (cmd === 'gamble') gamble(f);
+  else if (cmd === 'clear') { for (let i = 0; i < 3; i++) unplace(f, i); st.ov = null; }
+  else if (cmd === 'fill') fill(f, arg);
+  else if (cmd === 'doshred') { const r = shred(f, st.ov.shred.i); st.ov.shred = { ...st.ov.shred, ...r }; }
+  else if (cmd === 'shredB') { const r = shred(f, +arg); if (r) toast(f, `$ rm ${r.item.c} &nbsp;-> +${r.got.join(' +')}${r.bonus ? ` &nbsp;bonus +${r.bonus}` : ''}`); }
+  else if (cmd === 'tab') st.tab = arg;
+  else if (cmd === 'man') st.man = arg;
+  else if (cmd === 'unlock') { const it = st.locker[+arg]; if (it) { for (let n = 0; n < it.n; n++) addBag(st, it.c); st.locker[+arg] = null; toast(f, `took ${it.c} out of the locker`); } }
+  else if (cmd === 'back') { const i = [2, 1, 0].find(i => st.slots[i]); if (i != null) unplace(f, i); }
+  else if (cmd === 'drawer') { if (arg === 'x') st.drawerOpen = !st.drawerOpen; else if (st.drawerOpen && st.drawer === arg) st.drawerOpen = false; else { st.drawer = arg; st.drawerOpen = true; } }
+  else if (cmd === 'pin') { st.pins = st.pins.includes(arg) ? st.pins.filter(x => x !== arg) : st.pins.concat(arg).slice(-3); }
+  f.draw();
+}
+function tap(f, src) {
+  const st = f.st; const [t, v] = src.split(':');
+  if (t === 'L') place(f, v);
+  else if (t === 'S') unplace(f, +v);
+  else if (t === 'I') st.ov = { t: 'shred', shred: { i: +v } };
+  else if (t === 'O') build(f);
+  else if (t === 'K') { const it = st.locker[+v]; toast(f, `${info(it.c)[0]}${it.n > 1 ? ' x' + it.n : ''}: kept for the next run`); }
+  f.draw();
+}
+function drop(f, src, tgt, pt) {
+  const st = f.st; const [t, v] = src.split(':'); const [d, di] = tgt.split(':');
+  if (t === 'L' && d === 'slot') place(f, v, +di);
+  else if (t === 'L' && d === 'table') { const r = f.el.querySelector('.c-table').getBoundingClientRect(); st.piles[v] = { x: Math.max(6, Math.min(94, (pt.x - r.left) / r.width * 100)), y: Math.max(8, Math.min(92, (pt.y - r.top) / r.height * 100)) }; }
+  else if (t === 'S' && d === 'slot') { const a = st.slots[+v]; st.slots[+v] = st.slots[+di]; st.slots[+di] = a; }
+  else if (t === 'S' && (d === 'bank' || d === 'table')) { const k = st.slots[+v]; unplace(f, +v);
+    if (d === 'table') { const r = f.el.querySelector('.c-table').getBoundingClientRect(); st.piles[k] = { x: (pt.x - r.left) / r.width * 100, y: (pt.y - r.top) / r.height * 100 }; } }
+  else if (t === 'I' && d === 'shred') { const r = shred(f, +v); if (r) { if (f.c === 'c') { toast(f, `the shredder spits out ${r.got.join(' ')}${r.bonus ? ` + a bonus ${r.bonus}` : ''}`); for (const k of r.got.concat(r.bonus || [])) { st.piles[k] = { x: 10 + Math.random() * 30, y: 8 + Math.random() * 20 }; } } else st.ov = { t: 'shred', shred: { i: +v, ...r } }; } }
+  else if (t === 'I' && d === 'locker') { const it = st.bag[+v]; if (toLocker(f, it.c, it.n, di != null ? +di : null)) { st.bag.splice(+v, 1); toast(f, `${it.c} -> locker (next run)`); } }
+  else if (t === 'O' && d === 'locker') { const j = judge(st); if (j.kind === 'ok' && !j.god && toLocker(f, j.code, 1)) { st.slots = [null, null, null]; toast(f, `built ${info(j.code)[0]} -> locker`); } }
+  else if (t === 'O' && d === 'bag') build(f);
+  else if (t === 'K' && d === 'bag') act(f, 'unlock:' + v);
+  f.draw();
+}
+
+// ---------- frames + drag ----------
+const RENDER = { a: renderA, b: renderB, c: renderC };
+function frame(host, c, cap, setup, live) {
+  const col = document.createElement('div'); col.className = 'fcol';
+  col.innerHTML = `<div class="fcap${live ? ' live' : ''}">${cap}</div><div class="phone${live ? '' : ' still'}"></div>`;
+  host.appendChild(col);
+  const f = { c, st: fresh(), el: col.querySelector('.phone') };
+  setup && setup(f.st, f);
+  f.draw = () => { f.el.innerHTML = RENDER[c](f.st); };
+  f.draw();
+  if (live) wire(f);
+  return f;
+}
+function wire(f) {
+  let drag = null;
+  f.el.addEventListener('pointerdown', e => {
+    const actEl = e.target.closest('[data-act]'), dragEl = e.target.closest('[data-drag]');
+    if (dragEl) {
+      drag = { src: dragEl.dataset.drag, el: dragEl, x: e.clientX, y: e.clientY, moved: false, ghost: null, act: actEl && actEl === dragEl ? actEl.dataset.act : null };
+      f.el.setPointerCapture(e.pointerId); e.preventDefault();
+    }
+  });
+  f.el.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 6) {
+      drag.moved = true; drag.ghost = drag.el.cloneNode(true); drag.ghost.classList.add('ghost');
+      drag.ghost.style.width = drag.el.offsetWidth + 'px'; document.body.appendChild(drag.ghost);
+    }
+    if (drag.moved) {
+      drag.ghost.style.left = e.clientX + 'px'; drag.ghost.style.top = e.clientY + 'px';
+      f.el.querySelectorAll('.drop-hot').forEach(n => n.classList.remove('drop-hot'));
+      const t = target(e); if (t) t.classList.add('drop-hot');
+    }
+  });
+  const end = e => {
+    if (!drag) return; const d = drag; drag = null;
+    if (d.ghost) d.ghost.remove();
+    f.el.querySelectorAll('.drop-hot').forEach(n => n.classList.remove('drop-hot'));
+    if (!d.moved) { if (d.act) act(f, d.act); else tap(f, d.src); return; }
+    const t = target(e); if (t) drop(f, d.src, t.dataset.drop, { x: e.clientX, y: e.clientY });
+  };
+  const target = e => { const n = document.elementFromPoint(e.clientX, e.clientY); const t = n && n.closest('[data-drop]'); return t && f.el.contains(t) && t.dataset.drop ? t : null; };
+  f.el.addEventListener('pointerup', end);
+  f.el.addEventListener('pointercancel', e => { if (drag && drag.ghost) drag.ghost.remove(); drag = null; });
+  f.el.addEventListener('click', e => { const a = e.target.closest('[data-act]'); if (a && !a.closest('[data-drag]') ) act(f, a.dataset.act); });
+}
+
+// concept A
+const fa = document.getElementById('fa');
+frame(fa, 'a', '<b>LIVE</b> · drag letters into the slots, an item onto the shredder, the result into the locker. Tap works too.', null, true);
+frame(fa, 'a', '<b>BOOK</b> · every code you\'ve owned. Lit = you have the letters. NUKE needs a blueprint. 3 secret words.', st => { st.ov = { t: 'book' }; });
+frame(fa, 'a', '<b>SHRED</b> · WORM goes in, W R M come out, plus a bonus Q.', st => { st.ov = { t: 'shred', shred: { i: 0, item: { c: 'WRM', n: 1 }, got: ['W', 'R', 'M'], bonus: 'Q' } }; });
+frame(fa, 'a', '<b>NEAR MISS</b> · WXP is one letter off WRP. Try it: 50%.', st => { st.bank.X = 1; st.slots = ['W', 'X', 'P']; st.ov = { t: 'gamble', j: { kind: 'near', code: 'WRP', w: 'WXP' } }; });
+
+// concept B
+const fb = document.getElementById('fb');
+frame(fb, 'b', '<b>LIVE</b> · tap keys to type; the prompt autocompletes. Try S, then K. Or type nonsense.', st => { st.log.push('> shred WORM', '  +W +R +M  bonus +Q', '> build SKP', '  built SKIP -> bag'); }, true);
+frame(fb, 'b', '<b>AUTOCOMPLETE</b> · typed W: WARP is ready; WORM is missing an M.', st => { st.slots = ['W', null, null]; delete st.bank.W; delete st.bank.M; });
+frame(fb, 'b', '<b>MAN PAGE</b> · the book. man WRP shows what it does and which letters you still need.', st => { st.tab = 'man'; st.man = 'WRP'; delete st.bank.W; });
+frame(fb, 'b', '<b>SHRED TAB</b> · your bag as a file list. rm = shred.', st => { st.tab = 'shred'; st.toast = '$ rm WRM &nbsp;-> +W +R +M &nbsp;bonus +Q'; });
+frame(fb, 'b', '<b>NOT FOUND</b> · WXP isn\'t a recipe. Did you mean WRP? run anyway = the near-miss gamble.', st => { st.slots = ['W', 'X', 'P']; });
+
+// concept C
+const fc = document.getElementById('fc');
+frame(fc, 'c', '<b>LIVE</b> · push tiles anywhere on the table. Open BAG and drag an item up into the shredder. Pins show what\'s missing.', null, true);
+frame(fc, 'c', '<b>BLUEPRINTS</b> · the drawer\'s book. Red letters = missing. Tap to pin to the wall.', st => { st.drawerOpen = true; st.drawer = 'book'; });
+frame(fc, 'c', '<b>LOCKER</b> · 5 slots for the next run: mods take one each, gear stacks.', st => { st.drawerOpen = true; st.drawer = 'locker'; st.locker = [{ c: 'SKP', n: 2 }, { c: 'TRC', n: 1 }, { c: 'BUF', n: 1 }, { c: 'FRZ', n: 1 }, { c: 'BLS', n: 3 }]; });
+frame(fc, 'c', '<b>G0D</b> · the three quest letters from H3AV3N in the jig. The bench goes gold.', st => { st.slots = ['G*', '0*', 'D*']; st.ov = { t: 'g0d' }; });
+const gl = frame(fc, 'c', '<b>LIVE · G0D</b> · this one has the quest letters on the table. Spell G0D with the gold ones.', st => { st.bank['G*'] = 1; st.bank['0*'] = 1; st.bank['D*'] = 1; }, true);
+
+// tabs
+const show = c => { document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.c === c));
+  ['a', 'b', 'c'].forEach(x => document.getElementById('c-' + x).hidden = !(c === 'all' || c === x)); };
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { show(b.dataset.c); try { history.replaceState(null, '', '#' + b.dataset.c); } catch (e) { location.hash = b.dataset.c; } });
+const h = location.hash.slice(1); if (['a', 'b', 'c', 'all'].includes(h)) show(h);
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (['a', 'b', 'c', 'all'].includes(h)) show(h); });
+})();
+</script>

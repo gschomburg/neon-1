@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.11']);
+NEON_FILES.push(['engine/panels.js', 'v14.13']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -345,7 +345,7 @@ function openShop(node) {
 
 // A reward screen: header lines, then a list of mods to pick one from (or skip).
 // next: where to go after (default: the map).
-function openChoice({ title, col, head = [], extra = [], onTake = null, options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, first = null }) {
+function openChoice({ title, col, head = [], extra = [], onTake = null, options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, first = null, more = [] }) {
   let sel = 0, picked = false;
   // first: { key, art, tell }: FIRST BREACH shows under the header (title, logos, breached line) and holds the reveal;
   // SEE THE CORE swaps it for the rewards, which build in under the header the same way (buildReveal's pre)
@@ -455,6 +455,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
       T(SEP, C.dim);
     }
     if (!by) T('');
+    for (const m of more) B(m.label, m.id, m.onTap);   // more buttons (the safehouse's [ WORKBENCH ])
     B(options.length && skipLabel ? skipLabel : '[ CONTINUE ]', 'skip', () => take(null));
   }, msg, { reveal, rival });
   if (firstUp && st.panelReveal) Object.assign(st.panelReveal, { hold: true, whole: true });   // the header comes back after the rewards, not before;
@@ -505,12 +506,17 @@ function openCache(node) {
 function openRepair(node) {
   const run = st.run;
   const r = rngFor(run.seed, 'rest', node.id);
-  const before = zombie() ? -(run.rot || 0) : run.integrity;
-  heal(CONFIG.repairAmount);
-  Sound.buy();
+  if (!node.rested) {   // heal once: back from the WORKBENCH it doesn't heal again
+    const before = zombie() ? -(run.rot || 0) : run.integrity;
+    heal(CONFIG.repairAmount);
+    Sound.buy();
+    node.rested = zombie() ? `rot -${-(run.rot || 0) - before}` : `integrity +${run.integrity - before}`;
+    if (benchOpen() && !run.mp) node.comps = benchArrive();   // the WORKBENCH: it leaves you a few components
+  }
   openChoice({
     title: 'SAFEHOUSE', col: C.accent,
-    head: [[zombie() ? `rot -${-(run.rot || 0) - before}` : `integrity +${run.integrity - before}`, C.bright]],
+    head: [[node.rested, C.bright]].concat(node.comps ? [[`+${node.comps.length} components: ${node.comps.join(' ')}`, C.money]] : []),
+    next: benchOpen() && !run.mp ? () => openBench(node) : null,   // the WORKBENCH: after the pick, straight to the bench (engine/bench.js)
     options: pickMods(r, modsOfKind('minor'), 2),
     skipLabel: '[ SKIP ]',
     msg: '> patched up.',

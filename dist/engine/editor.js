@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.11']);
+NEON_FILES.push(['engine/editor.js', 'v14.13']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -395,6 +395,16 @@ if (EDITOR) {
     sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),
     boss: async () => { await onMap(); const n = Object.values(st.run.map).find(x => x.type === 'final' && x.sector === st.run.sector) || st.run.map[bossIdOf(st.run.sector)]; await enterNode(n, true); await settle(); },   // (HEAD FIRST: the boss is the first node)
     clear: async () => { await onMap(); const run = st.run, b = bossIdOf(run.sector); run.at = b; if (!run.visited.includes(b)) run.visited.push(b); await sectorClear(false); await settle(); },
+    bench: async () => {   // a SAFEHOUSE with the WORKBENCH (engine/bench.js): the post unlocked, letters if you have none
+      await onMap();
+      save.legacy = save.legacy || {}; save.legacy.bench = Math.max(1, save.legacy.bench || 0);
+      const b = benchSave();
+      if (!benchCount()) Object.assign(b.letters, { E: 3, A: 2, R: 3, S: 2, T: 2, I: 1, O: 2, N: 1, L: 1, P: 3, K: 2, M: 1, W: 2, G: 2, H: 1, C: 1, U: 1, F: 1, Z: 1, '0': 1, '*': 1 });
+      persist();
+      const node = { id: 'test-rest' + Math.floor(Math.random() * 1e6), type: 'rest', sector: st.run.sector };
+      await swapTo(() => openRepair(node)); await settle();
+    },
+    letters: () => { const b = benchSave(); for (const ch of 'EEAARRSSTTPPKWMNGOZX0*') b.letters[ch] = (b.letters[ch] || 0) + 1; persist(); },
     pier: async () => { await onMap(); st.run.credits = Math.max(st.run.credits, 100); await swapTo(() => openPier({ id: 'test-pier', sector: st.run.sector, type: 'pier' })); await settle(); },   // fishing (engine/fishing.js)
     uplink: async () => { await TEST.clear(); await swapTo(openUplink); await settle(); },
     anomaly: async m => {   // on the corps you can go to next

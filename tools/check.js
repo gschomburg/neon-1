@@ -54,6 +54,7 @@ function load(file) {
     navigator: {}, history: { replaceState: noop },
     document: { getElementById: () => canvas, addEventListener: noop, createElement: () => ({ style: {}, setAttribute: noop, addEventListener: noop }),
       documentElement: { style: {} }, body: { style: {}, appendChild: noop }, fonts: null, querySelector: () => null },
+    getComputedStyle: () => ({}),   // (engine/screen.js reads the safe-area padding)
     fetch: () => new Promise(() => {}),   // offline: the intro asks the leaderboard (it never answers here)
     window: { innerWidth: 390, innerHeight: 844, devicePixelRatio: 1, addEventListener: noop, matchMedia: () => ({ matches: false }) },
   };
