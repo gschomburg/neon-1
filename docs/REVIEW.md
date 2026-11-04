@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Corrupted software** (v14.14): JUNK.DAT / CORRUPT.EXE / BAD SECTOR. Give them from the editor (gear & mods > give, loot) or find them on $ nodes and caches. Look at: the glitching names in the LOOT bag, the market's SELL list and the bench's SHRED list; what a shred gives. My numbers: drop weights 0.6 / 0.3 / 0.1 (WALLET is 0.05), worth 1 / 3 / 7 earn units (about 10 / 30 / 70cr in sector 1); letters 2-3 / 3-4 / 4-5, a digit 25% / 45% / 70%, a * 3% / 12% / 30%. Also: the LOCKER now lists your components.
+
 - [ ] **Workbench round 2** (v14.13): editor TESTING > safehouse + bench (it now opens the safehouse: TAKE or SKIP goes to the bench). Look at: the build show (about 2.7s: is it too long?), the shred show, the blink-in, the x slot (type 3 after a code), the [£] row over the keyboard, POPS's first call (it only comes once per save). My calls: 3 components on arrival; digits drop from rare+ shreds; x slot 50%; a digit with a mod does nothing (not spent).
 
 - [ ] **THE WORKBENCH** (v14.12): the neon editor, TESTING > **safehouse + bench** (unlocks the post, gives letters; **+ letters** for more). Things to look at: the keyboard sliding up / away between tabs; the 3x3 letters flying in, falling out, rising on a build; the [ WORKBENCH ] / [BACK] trip (the safehouse heals once); SHRED (the bonus letter and * odds: BENCH in engine/bench.js); the BOOK (??? until you have owned one); LOCKER TAKE / STORE. Then the list of what to fix.

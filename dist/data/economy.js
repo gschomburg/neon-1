@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v14.13']);
+NEON_FILES.push(['data/economy.js', 'v14.14']);
 
 const ECON = {
   // ---- Units
@@ -105,6 +105,9 @@ const ECON = {
     bond: 4,   // earn: BOND (rare) (what a BOND sells for, times the sector you are in (1, 2, 3...))
     chrome: 10,   // earn: CHROME (epic) (what one CHROME sells for)
     wallet: 25,   // earn: WALLET (legend) (what one WALLET sells for)
+    junkdata: 1,   // earn: JUNK.DAT (common) (what one JUNK.DAT sells for)
+    corrupt: 3,   // earn: CORRUPT.EXE (rare) (what one CORRUPT.EXE sells for)
+    badsector: 7,   // earn: BAD SECTOR (epic) (what one BAD SECTOR sells for)
   },
   // ---- Gear: how often each shows up
   drop: {
@@ -119,6 +122,9 @@ const ECON = {
     bond: 0.4,   // x: BOND (its weight)
     chrome: 0.15,   // x: CHROME (its weight)
     wallet: 0.05,   // x: WALLET (its weight)
+    junkdata: 0.6,   // x: JUNK.DAT (its weight)
+    corrupt: 0.3,   // x: CORRUPT.EXE (its weight)
+    badsector: 0.1,   // x: BAD SECTOR (its weight)
   },
   // ---- Spending: markets
   tierPrice: [1, 1.6, 2.5, 4],   // x list: price by rarity step (a mod or item at its 1st / 2nd / 3rd / 4th rarity step costs its price times this (only FRAG has a 4th))

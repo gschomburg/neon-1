@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.13']);
+NEON_FILES.push(['engine/panels.js', 'v14.14']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -93,6 +93,8 @@ const ITEM_SHORT = { disc: 'DSC', patch: 'PCH', purge: 'PRG', wall: 'FWL', split
   call: 'CAL', call_pops: 'POP', call_brick: 'BRK', call_null: 'NUL', call_nana: 'NAN', call_dialup: 'DIA', call_baud: 'BAU',
   call_mother: 'MOM', call_root: 'ROO', call_kludge: 'KLG', call_hype: 'HYP', lotto: 'LTO', ping: 'PNG', magnet: 'MAG',
   encore: 'ENC', egg: 'EGG', exorcist: 'EXO', stim: 'STM', zeroday: '0DY', worm: 'WRM', skip: 'SKP', swap: 'SWP', fake: 'FAK', nuke: 'NUK' };
+// corrupted software: its code glitches too (data/mods.js glitchName)
+Object.defineProperties(ITEM_SHORT, { junkdata: { get: () => glitchName(['JNK'], 1) }, corrupt: { get: () => glitchName(['CRP'], 2) }, badsector: { get: () => glitchName(['BAD'], 3) } });
 const itemShort = key => ITEM_SHORT[key] || ITEMS[key].name.replace(/[^A-Z0-9]/g, '').slice(0, 3);
 // On the belt: [PCH] for one, PCHx2 for a stack (the count in hex, as before: x10 is xA)
 const beltLabel = s => s.n > 1 ? `${itemShort(s.key)}x${s.n.toString(16).toUpperCase()}` : `[${itemShort(s.key)}]`;

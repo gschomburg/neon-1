@@ -75,6 +75,9 @@
     { path: 'gear.bond', kind: 'earn', label: 'BOND (rare)', note: 'what a BOND sells for, times the sector you are in (1, 2, 3...)' },
     { path: 'gear.chrome', kind: 'earn', label: 'CHROME (epic)', note: 'what one CHROME sells for' },
     { path: 'gear.wallet', kind: 'earn', label: 'WALLET (legend)', note: 'what one WALLET sells for' },
+    { path: 'gear.junkdata', kind: 'earn', label: 'JUNK.DAT (common)', note: 'what one JUNK.DAT sells for' },
+    { path: 'gear.corrupt', kind: 'earn', label: 'CORRUPT.EXE (rare)', note: 'what one CORRUPT.EXE sells for' },
+    { path: 'gear.badsector', kind: 'earn', label: 'BAD SECTOR (epic)', note: 'what one BAD SECTOR sells for' },
 
     { sec: 'Gear: how often each shows up', note: 'Loot rolls and market offers pick gear by weight. Normal gear weighs by its rarity (its first step); value gear (loot only) has its own. Higher = more often.' },
     { path: 'drop.scrap', kind: 'x', label: 'scrap gear', note: 'PATCH, PURGE, SHOE' },
@@ -88,6 +91,9 @@
     { path: 'drop.bond', kind: 'x', label: 'BOND', note: 'its weight' },
     { path: 'drop.chrome', kind: 'x', label: 'CHROME', note: 'its weight' },
     { path: 'drop.wallet', kind: 'x', label: 'WALLET', note: 'its weight' },
+    { path: 'drop.junkdata', kind: 'x', label: 'JUNK.DAT', note: 'its weight' },
+    { path: 'drop.corrupt', kind: 'x', label: 'CORRUPT.EXE', note: 'its weight' },
+    { path: 'drop.badsector', kind: 'x', label: 'BAD SECTOR', note: 'its weight' },
 
     { sec: 'Spending: markets', note: 'Mod and item prices live with the mods (data/mods.js), scaled by the spend unit.' },
     { path: 'tierPrice', kind: 'xlist', label: 'price by rarity step', note: 'a mod or item at its 1st / 2nd / 3rd / 4th rarity step costs its price times this (only FRAG has a 4th)' },

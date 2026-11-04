@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v14.13']);
+NEON_FILES.push(['engine/bench.js', 'v14.14']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -258,15 +258,25 @@ function benchShredList() {
   (run.loot || []).forEach(s => { if (!ITEMS[s.key].quest) out.push({ kind: 'loot', key: s.key, tier: s.tier || 0, n: s.n, stack: s, list: run.loot }); });
   return out;
 }
-const shredCode = e => e.kind === 'mod' ? MODS[e.key].short : itemShort(e.key);
+const shredCode = e => e.kind === 'mod' ? MODS[e.key].short : ITEMS[e.key].corrupt ? '???' : itemShort(e.key);
+// Corrupted software: random components (any letter, I likelier: no recipe uses it), maybe a digit, maybe a *.
+const BENCH_RANDOM = 'ABCDEFGHIIIJKLMNOPQRSTUVWXYZ0';
+function corruptShred(c) {
+  const got = [], n = c.n[0] + Math.floor(Math.random() * (c.n[1] - c.n[0] + 1));
+  for (let i = 0; i < n; i++) got.push(BENCH_RANDOM[Math.floor(Math.random() * BENCH_RANDOM.length)]);
+  if (Math.random() < c.digit) got.push(benchDigit());
+  if (Math.random() < c.wild) got.push('*');
+  return got;
+}
 const shredView = e => e.kind === 'mod' ? modView(e.key, e.tier) : itemView(e.key, e.tier);
 function benchShred(e) {
   const b = st.bench;
   if (!e || !b || benchBusy()) return;
-  const code = shredCode(e), letters = code.split('').filter(ch => /[A-Z0-9]/.test(ch)), v = shredView(e), got = letters.slice();
-  if (Math.random() < BENCH.bonus) got.push(benchBonusLetter());
-  if (Math.random() < (BENCH.wild[v.rarity] || 0)) got.push('*');
-  if (Math.random() < (BENCH.digit[v.rarity] || 0)) got.push(benchDigit());
+  const cor = e.kind !== 'mod' && ITEMS[e.key].corrupt, v = shredView(e);
+  const letters = cor ? ['?', '?', '?'] : shredCode(e).split('').filter(ch => /[A-Z0-9]/.test(ch)), got = cor ? corruptShred(cor) : letters.slice();
+  if (!cor && Math.random() < BENCH.bonus) got.push(benchBonusLetter());
+  if (!cor && Math.random() < (BENCH.wild[v.rarity] || 0)) got.push('*');
+  if (!cor && Math.random() < (BENCH.digit[v.rarity] || 0)) got.push(benchDigit());
   if (e.kind === 'mod') removeMod(e.key);
   else if (--e.stack.n <= 0) e.list.splice(e.list.indexOf(e.stack), 1);
   benchAdd(got);
@@ -579,7 +589,7 @@ function benchShredLines(T, B, X) {
     X(e.kind === 'mod' ? { badge: e.key, badgeTier: e.tier } : { gearHead: e.key, gearTier: e.tier, text: v.name });
     T(v.tip || v.desc || '', C.text);
     T(e.kind === 'mod' ? 'an equipped mod. it goes for good.' : e.kind === 'loot' ? `loot. it sells for ${gearValue(e.key, e.tier)}cr.` : `gear${e.n > 1 ? `, you have ${e.n}` : ''}.`, e.kind === 'mod' ? C.dangerDim : C.mid);
-    X({ box: true, text: 'S H R E D', sub: `- ${code.split('').join(' ')} + ? -`, id: 'bkshred', onTap: () => benchShred(benchShredList()[b.shSel]), minW: 22, col: C.danger });
+    X({ box: true, text: 'S H R E D', sub: ITEMS[e.key] && ITEMS[e.key].corrupt ? '- ? ? ? -' : `- ${code.split('').join(' ')} + ? -`, id: 'bkshred', onTap: () => benchShred(benchShredList()[b.shSel]), minW: 22, col: C.danger });
     T('');
   } else for (let i = 0; i < 8; i++) T('');
   T(SEP, C.dim);
@@ -688,6 +698,18 @@ function benchLockerLines(T, B, X) {
     b.lkSel = clamp(b.lkSel, 0, BENCH.locker - 1);
     lk.forEach((x, i) => x ? X(rowOf(x, i, i === b.lkSel, () => { b.lkSel = i; Sound.tick(); }, x.kind))
       : X({ list: true, id: 'lkempty' + i, sel: i === b.lkSel, onTap: () => { b.lkSel = i; Sound.tick(); }, name: ':  .  :  empty', faded: true }));
+    // the components you've banked, every one with its count (they live here too, between runs)
+    const letters = benchSave().letters, keys = Object.keys(letters).filter(ch => letters[ch] > 0)
+      .sort((p, q) => (p === '*') - (q === '*') || /[0-9]/.test(p) - /[0-9]/.test(q) || p.localeCompare(q));
+    T('');
+    T(`components  ${benchCount()}`, C.rep);
+    const per = 8, h = Math.max(1, Math.ceil(keys.length / per));
+    X({ h, draw: (ctx, y) => {
+      const x0 = Math.floor((L.wc - per * 4 + 1) / 2);
+      if (!keys.length) { ctx.put(Math.floor((L.wc - 22) / 2), y, 'none yet. shred things.', C.dim, 'ui'); return; }
+      keys.forEach((ch, i) => { const x = x0 + (i % per) * 4, yy = y + Math.floor(i / per), c = chipOf(letterTier(ch));
+        ctx.bg(x, yy, 1, c.bg, 1); ctx.put(x, yy, ch, c.fg, 'ui', true); ctx.put(x + 1, yy, String(letters[ch]), C.mid, 'ui'); });
+    } });
     e = lk[b.lkSel];
     if (e) box = { box: true, text: 'T A K E', sub: e.kind === 'mod' ? '- into a mod slot -' : '- onto your belt -', id: 'bktake', onTap: () => benchTake(b.lkSel), minW: 22 };
   } else {

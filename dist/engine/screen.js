@@ -1,6 +1,6 @@
 // NeoN+1 engine/screen.js: The canvas, layout, and the game state (st).
 'use strict';
-NEON_FILES.push(['engine/screen.js', 'v14.13']);
+NEON_FILES.push(['engine/screen.js', 'v14.14']);
 
 // ---------------- Canvas & layout ----------------
 const cv = document.getElementById('screen');

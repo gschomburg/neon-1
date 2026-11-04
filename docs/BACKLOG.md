@@ -128,6 +128,9 @@ unlocked by REP, and some quests unlock REP.
       ANYWAY, magenta for missing, letter rarity from use, digits (x slot: a chance of that many), POPS first time.
       **Still open:** keyboard design tweaks and the line over it (the user: not sure yet); DIVINE red letters; blueprints;
       wildcards from fishing; a use for digits in mods. Letter counts: no recipe uses I; digits 1-9 none; J, Q once.
+      **Components in the LOCKER** (the user, 2026-11-04): the LOCKER's TAKE page lists every component and its count (they fly
+      there on a shred). **Next idea (the user): JUMBLE loot**: new loot that is a jumble of letters; sell it for cash, or shred
+      it at the bench for its letters. A way to find components away from the bench (fishing, $ nodes, caches). **Built v14.14** as corrupted software: JUNK.DAT, CORRUPT.EXE, BAD SECTOR (glitchy names, loot drops; shred = random letters + digits + *). Open: fishing them up at the PIER.
 - **Scrap mods:** maybe 2 other worthless ones.
 - **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first, v13.49).
   Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), NUKE (wipe a corp off the map), DECODER

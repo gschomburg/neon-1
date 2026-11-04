@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.13']);
+NEON_FILES.push(['data/mods.js', 'v14.14']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -14,6 +14,17 @@ const RARITY = {
   exotic:    { label: 'EXOTIC', lvl: 5 },
   quest:     { label: 'QUEST',  lvl: 4, hidden: true },   // quest gear (engine/quests.js): its chip is the REP color; not a real rarity step
 };
+
+// Corrupted software (the user, 2026-11-04): loot whose name won't hold still. It swaps between its versions and
+// characters glitch out, a little differently every moment (a getter: every view of it is fresh).
+const GLITCH_CH = '#%&@$!?*<>/\\=+';
+function glitchName(alts, seed = 0) {
+  const now = typeof performance !== 'undefined' ? performance.now() : 0, f = Math.floor(now / 120);
+  const base = alts[Math.floor(now / 1700 + seed) % alts.length];
+  let out = '';
+  for (let i = 0; i < base.length; i++) { const h = (((i + 1) * 374761393) ^ ((f + seed * 7 + 1) * 668265263)) >>> 0; out += h % 100 < 12 && base[i] !== ' ' ? GLITCH_CH[h % GLITCH_CH.length] : base[i]; }
+  return out;
+}
 
 const ITEMS = {
   // THE DISC: quest gear (engine/quests.js, docs/QUESTS.md). Never sold, trashed or bought in the normal way; drops by the quest's rules.
@@ -80,6 +91,18 @@ const ITEMS = {
   wallet: { key: 'wallet', name: 'WALLET', price: 250, rarity: 'legendary', value: true, where: '$ nodes, caches.',
     desc: 'a cold crypto wallet: the jackpot. sell it at a market.', tip: 'the jackpot: sell it.',
       codex: 'a cold crypto wallet, keys and all. the rarest find there is: a black market pays a fortune for it (SELL).' },
+  // Corrupted software (the user, 2026-11-04): loot like the rest (a market buys it), but shredded at a WORKBENCH
+  // (engine/bench.js) it comes apart into random components: any letter (I too), often a digit, sometimes a *.
+  // corrupt: { n: [fewest, most] letters, digit: the chance of a digit, wild: of a * }
+  junkdata: { key: 'junkdata', get name() { return glitchName(['JUNK.DAT', 'J#NK.D4T', 'JUNK.???'], 1); }, price: 12, rarity: 'common', value: true, corrupt: { n: [2, 3], digit: 0.25, wild: 0.03 },
+    where: '$ nodes, caches.', desc: 'corrupted software. a market takes it. a workbench shreds it: who knows what comes out.', tip: 'sell it, or shred it.',
+    codex: 'a dump of corrupted files. a black market gives you a little for it (SELL). shredded at a workbench, it comes apart into random components: letters you can\'t get anywhere else, sometimes a digit.' },
+  corrupt: { key: 'corrupt', get name() { return glitchName(['CORRUPT.EXE', 'C0RRUPT.EX3', 'CORR#PT.???'], 2); }, price: 35, rarity: 'rare', value: true, corrupt: { n: [3, 4], digit: 0.45, wild: 0.12 },
+    where: '$ nodes, caches.', desc: 'a program that ate itself. sell it, or shred it at a workbench.', tip: 'sell it, or shred it.',
+    codex: 'a program that ate itself. a black market buys it (SELL). shredded at a workbench: random components, often a digit, sometimes a wildcard.' },
+  badsector: { key: 'badsector', get name() { return glitchName(['BAD SECTOR', 'B4D_S3CT0R', 'BAD.SECT??'], 3); }, price: 90, rarity: 'epic', value: true, corrupt: { n: [4, 5], digit: 0.7, wild: 0.3 },
+    where: '$ nodes, caches.', desc: 'a chunk of disk nothing can read. a market pays for it. a workbench breaks it open.', tip: 'sell it, or shred it.',
+    codex: 'a chunk of disk nothing can read. a black market pays well (SELL). shredded at a workbench it breaks into a handful of random components: digits and wildcards turn up most here.' },
   // boss gear (the user, 2026-10-27): the tap-to-use corp mods became stacks you win from that corp's boss
   // (its def: gear { key, n }). Legendary; never in markets or loot (corp:). A market still buys them (SELL).
   // Their effects: engine/active.js (BOSS_GEAR).
