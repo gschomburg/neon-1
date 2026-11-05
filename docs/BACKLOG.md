@@ -308,6 +308,12 @@ unlocked by REP, and some quests unlock REP.
 
 
 ### 7. New corps
+- **Next up (Greg, 2026-11-05): MONTY and FOSSIL.** Each needs a short design talk first (the tell, the boss, the corp
+  mod), then build. Not yet.
+  - **MONTY** (the user, meat notes 2026-10-30): a corp of 16 doors (the Monty Hall problem): you choose one, it takes away every
+    door but yours and one other, and you choose again. (Claude: needs a twist that makes it skill, not luck.)
+  - **FOSSIL** (docs/CORPS.md A28): a dig site; taps brush a node's glyph in a bit at a time; uncover a regular glyph
+    (not a fossil) and it's ICE. Open: what brushing costs.
 - From CORPS.md, not built: FOSSIL (a dig site), UNICORN (very rare), MAGIC (stage magic), ALARMS, the chain corp,
   the case corp (upper / lower case), the stock market corp.
 - From the old ideas list, not built: bad security (passwords that rotate: BUDGETWALL / PASSWORD123), the dating app (SPARKD, a catfish
@@ -317,8 +323,6 @@ unlocked by REP, and some quests unlock REP.
 - **A drug dealer corp** (the user, 2026-10-27).
 - CORPS.md marks every built corp `(built)` on its heading.
 
-- **MONTY** (the user, meat notes 2026-10-30): a corp of 16 doors (the Monty Hall problem): you choose one, it takes away every
-  door but yours and one other, and you choose again.
 - **RED TAPE:** a mod or gear (just the name so far).
 - **B1BL3** (the user, meat notes 2026-10-31): a portable codex (gear).
 - **BEES** (the user, meat notes 2026-10-31) needs a better animation: a swarm of little bees flying over the whole map, then destroying the ICE. **Built v14.15.**
