@@ -424,6 +424,12 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
+- [ ] **Code cleanups left from the arch pass** (the user, 2026-11-05: "keep those all around so we can hit them when it makes sense"). Do each one with the feature that needs it, not on its own. Details: docs/ARCHITECTURE.md.
+  - **One popup card (`drawCard`):** with the next new kind of popup.
+  - **Per-seed definitions:** when a new seed comes in (crew quests), so HAD3S / H3AV3N / the next one are mostly data.
+  - **`say()`, one way for characters to talk:** when crew quests add more voices.
+  - **The `MODES` registry:** with the next new screen mode, or if input bugs keep coming from pointerdown's early returns.
+  - **Hover / keyboard focus in popups:** with a desktop or accessibility pass.
 - **Hacker logo pass** (the user, 2026-11-04, looking at them now): the game always adds the name under a logo (logoBlock: mark + name; the hacker card's NAME // RIVAL line), so logos don't need the name in their art: 24 x 7 is all picture. 17 hacker logos spell their name in the art and show it twice: pops, iceman, turbo, sysop, vulture, phish, hcf, leech, brick, null, nana, dialup, baud, mother, root, kludge, hype (not ggez, doppel, d0g). Redraw them (art only, no code).
 - [x] **Effects library** (the user, 2026-11-04): built v14.32-v14.39 (engine/fx.js, data/fx.js, the editor FX tab, masks). Where it stands and the ideas kept: docs/EFFECTS.md.
 - **asXii size presets** (the user, 2026-11-04): update asXii's Presets list (ascii-editor/dist/index.html #sizePreset) to the game's real art sizes, and check the ones there. Today it has: node glyph 5 x 3 (right), corp art 24 x 12 (wrong: corp intro art is the logo, 24 x 7), ad box 30 x 18 (right: ADS_W / ADS_H), intro map 34 x 9 (the map is 34 x 12 now), title art 32 x 20 (check: TITLE_W is 31), terminal 80 x 24. Add: logo 24 x 7 (the name goes on row 8, LOGO_W / LOGO_H), hacker face 5 x 3, SECTOR CLEARED 30 x 13, sector event card 5 x 3, cutscene 36 wide (any height; the game's grid). asXii is Justin's too: check his recent commits first.
