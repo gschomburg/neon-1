@@ -57,6 +57,8 @@ Steps 1-3 change nothing you can see.
   - G0D's mold glitch (`g0dGlitch` -> `FX.burstCells` with its own settings).
 - Attach modes so far: a cutscene layer (its keys), a list of screen cells (`FX.burstCells`: any rectangle of the screen), a line of text (`FX.garble`).
 
+**The rule for where an effect sits:** key its randomness to the content (a mark's place in its art layer, a letter's index in its line plus that line's seed, a logo's own rows), and only turn that into a screen position when drawing. Then scrolling, parallax, slides and text pushing things up all carry the effect along. Key to the screen only for things that sit on the glass and are brief (the mold glitch, bursts on screen cells). Fixed for slides in v14.37.
+
 **Decided (Claude, 2026-11-05, for Greg to check):**
 - The one hash is the cutscenes' old `stripHash`, so the cutscenes stay exactly as they were. The loot names and the mold glitch moved onto it, so different letters and spots glitch than before; the look is the same.
 - One glitch set: `#%&@$!?*<>/=+`. The loot names lose the backslash they had.
