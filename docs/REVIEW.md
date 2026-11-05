@@ -14,6 +14,7 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **G0D's logo** (v14.43): the art (an eye in a triangle, mine: redraw if you like, editor > ART), its frame in the ending, the new lines on THERE IS MORE TO EXPLORE, H3AV3N CLEARED's list. With a G0D win it shows in the logo picker.
 - [ ] **Meat notes** (v14.42): UPSIDE's boss: tap near a gap or a hit ICE, the real node is always reachable (a node with nothing open across from it takes the tap itself). A fresh save: the first CALL that brings POPS puts him on your crew, with a call. On THE DISC step, MEDIX's boss loot has the DISC.
 - [ ] **The ending** (v14.41): editor > g0d > IN THE GAME, or play the H3AV3N seed to the end. Read the whole scene (the copy is a first pass; data/quests.js h3av3n), the placeholder art (redraw any of it in asXii: ascii-editor/saves/n_cutscene_04_ending), the credits and THANKS TO handles. Then the 1UP: die in a corp, USE 1UP, the same layers come back. REPLAYS on the title's seed row. (Your save needs a G0D win for both.)
 

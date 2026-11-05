@@ -60,6 +60,11 @@ those runs get **a leaderboard of their own** (any game played this way).
       "replay H3AV3N"'s leaderboard for free).
     - Random runs post to their seed's board (so a replay has your first run to beat) but not the front page.
     - Scores before v14.41 have no seed: the boards start empty.
+  - **Decided (Greg, 2026-11-05):** the seed boards aren't a reward; the ending mentions them as more to do (THERE IS
+    MORE TO EXPLORE: "every seed has a board. race your friends on one."; POPS: "send one to a friend. see who gets
+    deeper."). The reward instead: **G0D's logo** (built v14.43: data/art/logos.js `g0d`, an eye in a triangle; yours to
+    pick once you've beaten G0D; its own frame in the ending). H3AV3N CLEARED lists 1UP, REPLAYS, G0D. Until the seed
+    board is built, the old rule still runs (a typed seed counts only after G0D): build it before this ships.
   - **Leaning (Greg, 2026-11-05): seeds aren't an end-game reward any more.** Gating them behind G0D takes the fun out;
     better that anyone can compete on a seed without playing a ton first. Still track who has beaten the game.
     Claude's shape:

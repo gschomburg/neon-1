@@ -14,7 +14,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.42']);
+NEON_FILES.push(['data/quests.js', 'v14.43']);
 
 const QUEST_INFO = {
   pops: {
@@ -65,7 +65,8 @@ const SCENE_MUSIC = {
 const QUEST_SCENES = {
   // THE ENDING (docs/ENDGAME.md, the user 2026-11-05): G0D is gone for good (its code broken up across the net: the
   // seed of a G0D.exe quest later). Dawn over the city, POPS and b0y on the roof, the two rewards handed over (b0y: the
-  // 1UP, out of MEDIX; POPS: the seeds hold still now, and his log of your runs, REPLAYS), your logo, the credits.
+  // 1UP, out of MEDIX; POPS: the seeds hold still now, and his log of your runs, REPLAYS), G0D's mark (its logo, yours
+  // to wear), your logo, the credits. More to do: every seed has a board (the seed leaderboard, docs/ENDGAME.md).
   // Placeholder art (Claude's): ascii-editor/saves/n_cutscene_04_ending, to redraw.
   h3av3n: [
     { title: ['G0D IS DOWN', 'H3AV3N'], mood: { levels: [0], stages: 'A' } },
@@ -93,12 +94,14 @@ const QUEST_SCENES = {
     { who: 'b0y', text: "a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector." },
     { pic: { art: 'ending', rows: [44, 53], layers: [
       { n: 'terminal', col: 'text', flicker: true, dur: 800, cue: { match: ': ________', word: 'seeds', col: 'accent' } }] },
-      who: 'pops', text: "and now that the mold's gone, the seeds hold still. type one in and the net comes up the same, every time. it counts now." },
+      who: 'pops', text: "and now that the mold's gone, the seeds hold still. type one in and the net comes up the same, every time. send one to a friend. see who gets deeper." },
     { who: 'pops', text: "i've kept a log of every run you've made. your best ones are in there. run them again. see how deep you get." },
     { who: 'b0y', text: "come on, doc. let's go crack a corp.", mood: { levels: [1, 2], stages: 'AB' } },
     { who: 'pops', text: 'one. then breakfast.' },
+    { pic: { logo: 'g0d', name: 'the net', style: { fg: '#4aa8ff', bg: '#0a1626' } },
+      text: "G0D's mark is still burned into a few old terminals, an eye that doesn't see anything anymore. it's yours now. wear it." },
     { pic: { logo: '@you' }, text: "and you? you've got a seed to type in." },
-    { title: ['THERE IS MORE TO EXPLORE', 'the net is still out there.'] },
+    { title: ['THERE IS MORE TO EXPLORE', 'the net is still out there.', '', 'every seed has a board.', 'race your friends on one.'] },
     { title: ['THANKS FOR PLAYING', 'NeoN+1'] },
     { title: ['CREDITS', 'made by', 'greg schomburg', 'and claude', '', 'playtesting', 'justin bakse', 'and friends'] },
     { title: ['THANKS TO', 'zer0_c00l    ac1d_burn', 'ph4nt0m      l0rd_n1k0n', 'cr4sh_0verride   r00tk1d', 'n3on_ghost    s1lk_r0ad', 'b1t_r0t      c0ffee_h4x', 'and everyone still out there'] },

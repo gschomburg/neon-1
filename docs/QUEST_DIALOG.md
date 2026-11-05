@@ -95,13 +95,15 @@ From POPS.
 
 **B0Y:** a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector.
 
-**POPS:** and now that the mold's gone, the seeds hold still. type one in and the net comes up the same, every time. it counts now.
+**POPS:** and now that the mold's gone, the seeds hold still. type one in and the net comes up the same, every time. send one to a friend. see who gets deeper.
 
 **POPS:** i've kept a log of every run you've made. your best ones are in there. run them again. see how deep you get.
 
 **B0Y:** come on, doc. let's go crack a corp.
 
 **POPS:** one. then breakfast.
+
+*G0D's mark is still burned into a few old terminals, an eye that doesn't see anything anymore. it's yours now. wear it.*
 
 *and you? you've got a seed to type in.*
 

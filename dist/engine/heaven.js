@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.42']);
+NEON_FILES.push(['engine/heaven.js', 'v14.43']);
 
 const HEAVEN = {};
 
@@ -1302,7 +1302,7 @@ function heavenRewards(f, next) {
   extra.push(['', C.text]);
   if (runRep) extra.push([`+${runRep} REP   the run`, C.rep]);
   extra.push([`+${bonus} REP   H3AV3N`, C.rep], ['', C.text]);
-  if (!f.wasBeat) extra.push(['unlocked:', C.mid], ["1UP       b0y's crash unit", C.money], ['SEEDS     replays count now', C.money], ["REPLAYS   POPS's log, on the title", C.money]);   // (the ending hands them over: data/quests.js h3av3n)
+  if (!f.wasBeat) extra.push(['unlocked:', C.mid], ["1UP       b0y's crash unit", C.money], ["REPLAYS   POPS's log, on the title", C.money], ['G0D       its logo, yours', C.money]);   // (the ending hands them over: data/quests.js h3av3n)
   else extra.push([`G0D down x${save.g0dWins}.`, C.money]);
   openChoice({ reveal: true, title: 'H3AV3N CLEARED', col: G0DP_BLUE, by: profile(), head: [['G0D', C.text]], extra, options: [],
     skipLabel: '[ CONTINUE ]', msg: { text: "> b0y: we did it. it's quiet now.", col: G0DP_BLUE },

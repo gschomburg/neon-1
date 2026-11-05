@@ -1,6 +1,6 @@
 // NeoN+1 engine/multiplayer.js: Online multiplayer, profiles, INFO.
 'use strict';
-NEON_FILES.push(['engine/multiplayer.js', 'v14.42']);
+NEON_FILES.push(['engine/multiplayer.js', 'v14.43']);
 
 // ---------------- Online multiplayer ----------------
 // 2-6 players take turns on one seeded run ("Jenga" rules, elimination):
@@ -63,7 +63,7 @@ const LOGO_W = 24, LOGO_H = 7;   // every logo is drawn in this box, centered
 const LOGO_BY_ID = Object.fromEntries(ART_LOGOS.map(l => [l.id, l]));
 const PLAYER_LOGOS = ART_LOGOS.filter(l => l.kind === 'player');
 const logoOf = id => LOGO_BY_ID[id] || (typeof id === 'number' && PLAYER_LOGOS.length ? PLAYER_LOGOS[((id % PLAYER_LOGOS.length) + PLAYER_LOGOS.length) % PLAYER_LOGOS.length] : PLAYER_LOGOS[0]);
-const logoUnlocked = l => l.kind === 'player' || (l.kind === 'corp' && corpStat(l.corp).breached > 0) || (l.kind === 'hacker' && (featDone('beat_' + l.hacker) || featDone('call_' + l.hacker)));   // a rival beaten 5 times, crew called 5 times
+const logoUnlocked = l => l.kind === 'player' || (l.hacker === 'g0d' && !!save.beatG0D) || (l.kind === 'corp' && corpStat(l.corp).breached > 0) || (l.kind === 'hacker' && (featDone('beat_' + l.hacker) || featDone('call_' + l.hacker)));   // a rival beaten 5 times, crew called 5 times
 const myLogos = () => ART_LOGOS.filter(logoUnlocked);
 const randomLogo = () => pickR(PLAYER_LOGOS, Math.random).id;
 // A logo's art in the logo box: the blank columns every row shares trimmed off, then centered in

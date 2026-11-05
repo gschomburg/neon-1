@@ -242,6 +242,10 @@ unlocked by REP, and some quests unlock REP.
 - **Built v14.41:** the ending (cutscene, credits, "there is more to explore"), the 1UP and REPLAYS (SPEC version log;
   docs/ENDGAME.md). Open: the art (placeholders to redraw), the three unlocks as already-paid posts on THE BOARD.
 - **Seeds for real:** built (replays count once you've beaten G0D). Open: its own leaderboard (scores carry the seed now).
+  **Next (decided 2026-11-05):** the seed leaderboard for everyone, not a reward (docs/ENDGAME.md); the ending already
+  talks about it, so build it before the ending ships.
+- **G0D comes out of its own logo** (Greg, 2026-11-05: "god could have popped out of his own logo for the final
+  stand"): its logo (v14.43) up first in the final stand, then the eye tears out of the triangle.
 - **Replay H3AV3N** after winning (maybe its own leaderboard).
 - **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
 - **More rewards?** A mod you always start with (meat notes 2026-10-29).
