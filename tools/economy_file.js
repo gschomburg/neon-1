@@ -4,7 +4,10 @@
 //
 // Kinds: earn / spend = a count of that side's units; cr = credits; grow = a share added each sector;
 // x = a multiplier; pct = a share (0.05 = 5%); n = a count; xlist / pctlist / nlist = one per rarity step.
+// Needs tools/data_file_core.js loaded first in a page (node requires it).
 (function (root) {
+  const mod = typeof module !== 'undefined' ? module : null;
+  const C = mod && mod.exports ? require('./data_file_core.js') : root.NEON_DATA_FILE;
   const INFO = [
     { sec: 'Units', note: 'Every earn / spend number below is a count of these units. Change a unit and that whole side moves together.' },
     { path: 'earn.unit', kind: 'cr', label: 'earn unit', note: 'how many credits one earn unit is' },
@@ -226,7 +229,7 @@
   const num = v => Array.isArray(v) ? '[' + v.map(num).join(', ') + ']' : String(+v);
   // the file's text, from ECON and the build stamp
   function text(econ, build) {
-    const out = [...HEAD, `NEON_FILES.push(['data/economy.js', '${build || 'v0'}']);`, '', 'const ECON = {'];
+    const out = [...HEAD, C.stamp('data/economy.js', build), '', 'const ECON = {'];
     let open = null;   // the group object open now
     for (const it of INFO) {
       if (it.sec) { if (open) { out.push('  },'); open = null; } out.push(`  // ---- ${it.sec}`); continue; }
@@ -240,7 +243,7 @@
     return out.join('\n');
   }
   // ECON, from the file's text
-  function parse(src) { return new Function('NEON_FILES', src + '\nreturn ECON;')([]); }
+  function parse(src) { return C.run(src, 'ECON'); }
   // a deep copy of just the numbers INFO knows (what the editor edits and saves)
   function pick(econ) { const o = {}; for (const it of INFO) if (it.path) set(o, it.path, JSON.parse(JSON.stringify(get(econ, it.path)))); return o; }
   // anything in the file INFO doesn't know (a new number someone added by hand: it would be lost on save)
@@ -251,12 +254,10 @@
     return out;
   }
   const T = { INFO, text, parse, pick, unknown, get, set };
-  if (typeof module !== 'undefined' && module.exports) module.exports = T; else root.NEON_ECON_FILE = T;
-  if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
-    if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/economy_file.js   (rewrites dist/data/economy.js in its own format: a round-trip check)"); process.exit(0); }
-    const fs = require('fs'), path = require('path');
-    const f = path.join(__dirname, '..', 'dist', 'data', 'economy.js'), src = fs.readFileSync(f, 'utf8');
-    const build = (src.match(/NEON_FILES\.push\(\['data\/economy\.js', '([^']+)'\]\)/) || [])[1];
+  C.expose(root, mod, 'NEON_ECON_FILE', T);
+  C.main(mod, "usage: node tools/economy_file.js   (rewrites dist/data/economy.js in its own format: a round-trip check)", ({ fs, path, dist }) => {
+    const f = path.join(dist, 'data', 'economy.js'), src = fs.readFileSync(f, 'utf8');
+    const build = C.buildOf(src, 'data/economy.js');
     const econ = parse(src), lost = unknown(econ);
     if (lost.length) { console.log('economy.js has numbers tools/economy_file.js does not know (add them to INFO): ' + lost.join(', ')); process.exit(1); }
     const out = text(econ, build);
@@ -264,5 +265,5 @@
     if (!same) { console.log('round trip changed a value: not written'); process.exit(1); }
     fs.writeFileSync(f, out);
     console.log(`data/economy.js: ${INFO.filter(i => i.path).length} numbers, ${src === out ? 'unchanged' : 'rewritten'}`);
-  }
+  });
 })(this);

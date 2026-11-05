@@ -19,7 +19,7 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
 (async () => {
   if (!only.length) {
     // 1. round-trips: each writer rewrites its file; a change means the file and the writer disagree
-    for (const f of ['economy_file.js', 'fx_file.js', 'tutorial_file.js', 'art_file.js']) {
+    for (const f of ['economy_file.js', 'fx_file.js', 'tutorial_file.js', 'art_file.js', 'palette_file.js']) {
       const r = node(f);
       ok(r.ok && !/rewritten/.test(r.out), `${f}: ${last(r.out)}`);
     }

@@ -118,11 +118,12 @@ shares.
 - **Every test builds its own harness** (5 of them). **Change:** `tools/harness.js` (vm load, headless Chrome page)
   and one `tools/test.js` that runs the data round-trips, the golden and the playtest. Medium.
 - **No shared core for the `*_file.js` writers** (UMD wrapper, parse, stamp, quoting copied 3-4 times). **Change:**
-  `tools/data_file_core.js`. Medium.
+  `tools/data_file_core.js`. Medium. **Done (2026-11-05).**
 - **neon_editor.html is 3,407 lines** with `toGame`, `toast`, IndexedDB and save code copied per tab (TRAINING,
   ECONOMY and FX even share one IndexedDB key). **Change:** `tools/editor/common.js` and one file per tab. Medium.
+  **Done (2026-11-05):** the page is the HTML only; the three tabs share one dist/data folder handle on purpose.
 - **palette_editor.html is a full copy** of the editor's palette tab (two writers for palettes.js). Drop it or share
-  a `palette_file.js`. Small.
+  a `palette_file.js`. Small. **Done (2026-11-05):** both (palette_file.js has a round-trip check in test.js).
 - Small: `data/palettes_v1.js` is dead but still stamped; art_file has no round-trip check; faces.js has a hand
   comment the next save deletes; g0dproto.js ships to every player (could load only with ?editor / ?dev).
 

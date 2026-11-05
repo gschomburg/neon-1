@@ -355,7 +355,7 @@ neon+1/
       SPEC.md            <- this file
       CORPS.md, CONTENT.md, NAMES.md, ART.md
     tools/
-      palette_editor.html  <- edit dist/palettes.js with the game beside it
+      neon_editor.html   <- the editor: the game beside tabs that edit dist/data/ (code in tools/editor/)
       check.js           <- fingerprint the game (data, layers, maps, code) and compare builds
       playtest.js        <- play every corp in headless Chrome and compare builds
       bump.js            <- change the build number everywhere (node tools/bump.js minor)
@@ -1412,7 +1412,8 @@ Built in v11:
     - Palette pitch black + emergency yellow; track LIGHTS OUT (ambient).
   - Map letters `{` `(` `5` are placeholders (most letters are taken).
   - Also fixed: BONEYARD's intro skull was missing a backslash on its jaw line.
-- **Palette editor** (v11.03): open `tools/palette_editor.html` in Chrome (straight from the repo folder).
+- **Palette editor** (v11.03): open `tools/palette_editor.html` in Chrome (straight from the repo folder). (Since
+  2026-11-05 this is the neon editor's PALETTE tab, `tools/neon_editor.html`; palette_editor.html is gone.)
   - **Left: the game** in a frame (`dist/index.html?editor=1`), always painted in the palette you're editing.
     Scene buttons set up a screen with a canned run, no playing needed: title, map, layer, a miss (a red hit
     node, a locked node, the cursor on a node), boss, shop, how to play, codex, settings, profile. Layers use

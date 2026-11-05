@@ -1,233 +1,17 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>NeoN+1 palette editor</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- The palettes, the same file the game loads. -->
-<script src="../dist/data/palettes.js"></script>
-<style>
-  :root {
-    --bg: #15171a; --panel: #1d2024; --line: #2c3036; --text: #d6dade; --mid: #8b929a; --hi: #ffffff;
-    --acc: #5cc8ff; --warn: #ffb347; --bad: #ff5c6c; --ok: #5fd47a;
-    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
-  body { display: flex; overflow: hidden; }
-  button, select, input { font: inherit; color: var(--text); background: #262a2f; border: 1px solid var(--line); border-radius: 4px; }
-  button { padding: 4px 9px; cursor: pointer; white-space: nowrap; }
-  button:hover { border-color: var(--acc); }
-  button.on { background: #12384a; border-color: var(--acc); color: var(--hi); }
-  button.primary { background: #1d5a7a; border-color: #2c7ea8; color: var(--hi); }
-  button:disabled { opacity: 0.4; cursor: default; }
-  input[type=text], input[type=number], select { padding: 3px 6px; }
-  input[type=color] { width: 34px; height: 24px; padding: 0 2px; cursor: pointer; }
-  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mid); margin: 16px 0 6px; }
-  .mono { font-family: "JetBrains Mono", Consolas, monospace; }
-
-  /* left: the game */
-  #stage { display: flex; flex-direction: column; flex: 0 0 auto; min-width: 0; border-right: 1px solid var(--line); }
-  #stagebar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--line); background: var(--panel); max-width: 100%; }
-  #stagebar .grp { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-right: 8px; }
-  #stagebar label { color: var(--mid); }
-  #framewrap { flex: 1; display: flex; justify-content: center; background: #0c0d0f; overflow: hidden; }
-  #game { border: 0; height: 100%; background: #000; }
-  #scenestate { padding: 4px 8px; color: var(--mid); font-size: 12px; border-top: 1px solid var(--line); min-height: 22px; }
-
-  /* right: the form */
-  #panel { flex: 1; min-width: 440px; display: flex; flex-direction: column; }
-  #top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
-  #filestate { color: var(--mid); flex-basis: 100%; }
-  #filestate b { color: var(--warn); }
-  #tabs { display: flex; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--line); }
-  #tabs button { border-radius: 4px 4px 0 0; border-bottom: 0; }
-  #body { flex: 1; overflow: auto; padding: 4px 14px 40px; }
-  .tab { display: none; }
-  .tab.show { display: block; }
-
-  .pickrow { display: flex; gap: 6px; align-items: center; margin-top: 10px; }
-  .pickrow select { flex: 1; }
-  .meta { display: grid; grid-template-columns: 70px 1fr; gap: 6px 10px; align-items: center; margin-top: 10px; }
-  .meta label { color: var(--mid); }
-
-  table.slots { border-collapse: collapse; }
-  table.slots td { padding: 3px 6px 3px 0; vertical-align: middle; border-bottom: 1px solid #23262b; }
-  table.slots td.name { width: 82px; font-weight: 600; }
-  table.slots td.role { color: var(--mid); font-size: 12px; width: 230px; }
-  table.slots input.hex { width: 82px; }
-  table.slots td.cr { width: 70px; font-size: 12px; text-align: right; white-space: nowrap; }
-  .good { color: var(--ok); } .meh { color: var(--warn); } .badc { color: var(--bad); }
-  .chiprow { padding: 6px 9px; margin: 4px 0; border-radius: 5px; font: 12px/1.6 "JetBrains Mono", Consolas, monospace; }
-  .chiprow span.c { padding: 0 3px; margin-right: 6px; }
-  .randbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
-  .randbar .note { margin: 0; }
-  td.name input[type=checkbox] { margin: 0 5px 0 0; vertical-align: -2px; }
-  .inherited input[type=color], .inherited input.hex { opacity: 0.45; }
-
-  #sample { margin-top: 10px; padding: 10px 12px; border-radius: 6px; font: 13px/1.5 "JetBrains Mono", Consolas, monospace; white-space: pre; overflow: auto; }
-
-  ul.checks { margin: 6px 0; padding-left: 18px; }
-  ul.checks li { margin: 2px 0; }
-  ul.checks li.none { list-style: none; margin-left: -18px; color: var(--ok); }
-  a.jump { color: var(--acc); cursor: pointer; text-decoration: underline; }
-
-  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-top: 10px; }
-  .card { border-radius: 6px; padding: 8px 9px; cursor: pointer; font: 12px/1.45 "JetBrains Mono", Consolas, monospace; border: 2px solid transparent; white-space: pre; overflow: hidden; }
-  .card.sel { border-color: var(--acc); }
-  .card .tag { float: right; font-family: system-ui, sans-serif; font-size: 10px; opacity: 0.8; }
-  .gridbar { display: flex; gap: 6px; align-items: center; margin-top: 10px; }
-
-  .styles td { padding: 4px 8px 4px 0; }
-  .chip { padding: 1px 6px; font: 600 13px "JetBrains Mono", Consolas, monospace; }
-  .note { color: var(--mid); font-size: 12px; margin: 6px 0; }
-  #toast { position: fixed; bottom: 14px; right: 14px; background: #262a2f; border: 1px solid var(--line); padding: 8px 12px; border-radius: 6px; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
-  #toast.show { opacity: 1; }
-</style>
-</head>
-<body>
-
-<section id="stage">
-  <div id="stagebar">
-    <div class="grp" id="scenes"></div>
-    <div class="grp">
-      <label for="corpsel">corp</label>
-      <select id="corpsel"></select>
-    </div>
-    <div class="grp">
-      <label for="width">frame</label>
-      <select id="width">
-        <option value="390">phone 390</option>
-        <option value="360">small phone 360</option>
-        <option value="480">wide phone 480</option>
-        <option value="720">tablet 720</option>
-      </select>
-      <button id="reloadgame" title="Reload the game frame">reload game</button>
-    </div>
-    <div class="grp" title="BLACKOUT's darkness: every color but danger fades into the background">
-      <label for="dark">darkness</label>
-      <input id="dark" type="range" min="0" max="0.8" step="0.02" value="0">
-      <span id="darkv" class="mono">0%</span>
-    </div>
-  </div>
-  <div id="framewrap"><iframe id="game" title="game preview"></iframe></div>
-  <div id="scenestate">loading the game...</div>
-</section>
-
-<section id="panel">
-  <div id="top">
-    <span id="filestate"></span>
-    <button id="undo" title="Undo (Ctrl+Z)">undo</button>
-    <button id="redo" title="Redo (Ctrl+Shift+Z)">redo</button>
-    <button id="reload" title="Load palettes.js again from disk (drops unsaved changes)">reload file</button>
-    <button id="export" title="Copy the whole palettes.js text to the clipboard, and download it">export</button>
-    <button id="save" class="primary" title="Write dist/data/palettes.js (Ctrl+S)">save palettes.js</button>
-  </div>
-  <div id="tabs">
-    <button data-tab="pal" class="on">palette</button>
-    <button data-tab="all">all palettes</button>
-    <button data-tab="rar">rarity chips</button>
-    <button data-tab="sty">player styles</button>
-  </div>
-  <div id="body">
-
-    <div class="tab show" id="tab-pal">
-      <div class="pickrow">
-        <button id="prev" title="Previous palette">&lt;</button>
-        <select id="palsel"></select>
-        <button id="next" title="Next palette">&gt;</button>
-      </div>
-      <div class="meta">
-        <label for="pname">name</label><input id="pname" type="text">
-        <label>access</label>
-        <span><label><input id="pstarter" type="checkbox"> starter: offered in SETTINGS from the start</label></span>
-        <label for="pnote">note</label><input id="pnote" type="text">
-        <label>key</label><span id="pkey" class="mono"></span>
-      </div>
-
-      <h2>Colors</h2>
-      <div class="randbar">
-        <button id="rsmart" title="A palette that follows the rules: a dark or light background, a text ladder in one hue, an accent from a color-wheel scheme, danger reddish, money goldish, every color nudged to its contrast target">random: smart</button>
-        <button id="rwild" title="Every color fully random">random: wild</button>
-        <select id="rtone" title="smart only: a dark or a light background"><option value="any">dark or light</option><option value="dark">dark</option><option value="light">light</option></select>
-        <span class="note">tick a color's box to lock it</span>
-      </div>
-      <table class="slots" id="baseslots"></table>
-
-      <h2>Font</h2>
-      <div class="note">Only OMNI uses this (a heavier weight). Empty = the normal 400 / 700.</div>
-      <div class="meta">
-        <label for="fweight">weight</label><input id="fweight" type="number" min="100" max="900" step="100" placeholder="400">
-        <label for="fbold">bold</label><input id="fbold" type="number" min="100" max="900" step="100" placeholder="700">
-      </div>
-
-      <h2>Quick look</h2>
-      <div id="sample"></div>
-
-      <h2>Checks</h2>
-      <ul class="checks" id="checks"></ul>
-      <h2>Looks like</h2>
-      <ul class="checks" id="similar"></ul>
-    </div>
-
-    <div class="tab" id="tab-all">
-      <div class="gridbar">
-        <label>show</label>
-        <select id="gridfilter">
-          <option value="all">all</option>
-          <option value="starters">starters</option>
-          <option value="locked">locked</option>
-          <option value="warn">with warnings</option>
-        </select>
-        <label>order</label>
-        <select id="gridsort">
-          <option value="file">file order</option>
-          <option value="like">most like the selected one</option>
-          <option value="light">lightest background first</option>
-        </select>
-        <span id="gridcount" class="note"></span>
-      </div>
-      <div id="grid"></div>
-    </div>
-
-    <div class="tab" id="tab-rar">
-      <div class="note">Rarity chips: every mod and item shows its rarity as a chip, a text color on its own background,
-        the same in every palette (so it reads on all of them). The background is the rarity's key color. Mods in the tray,
-        item names, the RARE / EPIC labels and the rarity words in text all use these.</div>
-      <table class="slots" id="chipslots"></table>
-      <h2>On every palette</h2>
-      <div class="note">How the chips sit on each palette's background (they don't need to contrast with it: they bring their own).</div>
-      <div id="chipgrid"></div>
-    </div>
-
-    <div class="tab" id="tab-sty">
-      <div class="note">Your name and logo colors (PROFILE &gt; COLOR, multiplayer). Fixed colors: a player looks the same on every screen and palette. Saved profiles point at a style by its place in this list, so new ones go at the end and none can be removed.</div>
-      <table class="styles" id="styles"></table>
-      <button id="addstyle">add a style</button>
-    </div>
-
-  </div>
-</section>
-<div id="toast"></div>
-
-<script>
 (() => {
   'use strict';
-  const $ = s => document.querySelector(s);
+  const { $, toGame, onGame, clone } = NEON_ED;
   const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); for (const k of kids) e.append(k); return e; };
 
   // ---------------- Data ----------------
-  const BASE = [
-    ['bg', 'background'], ['dim', 'faint text, dividers'], ['mid', 'secondary text, labels'], ['text', 'normal text'],
-    ['bright', 'headings, emphasis'], ['accent', 'buttons, the logo, highlights'], ['danger', 'ICE, damage, warnings'],
-    ['dangerDim', 'locked nodes, dark red frames'], ['money', 'credits, rewards'], ['rep', 'REP, feats, unlocks (THE BOARD)'],
-  ];
-  const RAR = [['scrap', 'scrap: the basics'], ['common', 'common'], ['rare', 'rare'], ['epic', 'epic'], ['legendary', 'legendary: corp mods, top upgrades'], ['exotic', 'exotic']];
+  // the slots and rarities, and the palettes.js writer, are tools/palette_file.js's
+  const P = window.NEON_PALETTE_FILE;
+  if (!P) { document.body.textContent = "Couldn't load palette_file.js. Open this page from the repo's tools/ folder."; return; }
+  const BASE = P.BASE, RAR = P.RAR;
   // how readable each color should be on the background (contrast ratio): dim and dangerDim are faint on purpose
   const NEED = { dim: 1.2, mid: 3, text: 4.5, bright: 4.5, accent: 3, danger: 3, dangerDim: 1.2, money: 3, rep: 3 };
   const PAIRS = [['accent', 'money'], ['accent', 'danger'], ['danger', 'money'], ['accent', 'bright'], ['money', 'bright'], ['rep', 'money'], ['rep', 'accent'], ['rep', 'danger'], ['rep', 'bright'], ['text', 'bright'], ['mid', 'text'], ['dim', 'mid']];
 
-  const clone = o => JSON.parse(JSON.stringify(o));
   if (!window.NEON_PALETTES) { document.body.textContent = "Couldn't load ../dist/data/palettes.js. Open this page from the repo's tools/ folder."; return; }
   let data = clone(window.NEON_PALETTES);
   let sel = Object.keys(data.palettes)[0];
@@ -235,7 +19,7 @@
   // a palette as the game sees it (palettes are self-contained since v12: no shared rarity set)
   const resolved = key => Object.assign({}, data.palettes[key]);
   // the build to stamp into palettes.js: the game's own (from its 'ready' message), else the stamp the file came with
-  let build = ((window.NEON_FILES || []).find(f => f[0] === 'data/palettes.js') || [])[1] || 'v12.00';
+  let build = NEON_ED.buildOf('data/palettes.js', 'v12.00');
 
   // ---------------- Color math ----------------
   const isHex = s => /^#[0-9a-f]{6}$/i.test(s);
@@ -261,54 +45,11 @@
     return out;
   }
 
-  // ---------------- Writing palettes.js ----------------
-  const HEADER = `// NeoN+1 palettes. The game loads this file before its own scripts (so does the palette editor).
-// Edit with tools/palette_editor.html, or by hand: one palette per line, colors as '#rrggbb'.
-//
-// Slots (what each color is for):
-//   bg         background               accent     buttons, the logo, highlights (the "main" color)
-//   dim        faint text, dividers     danger     ICE, damage, warnings
-//   mid        secondary text, labels   dangerDim  locked nodes, dark red frames
-//   text       normal text              money      credits, rewards, gold glows
-//   bright     headings, emphasis       rep        REP, feats, unlocks (THE BOARD)
-// hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
-// Rarity colors aren't in the palettes: every mod and item shows its rarity as a chip (chips, below),
-// the same in every palette.
-`;
-  const q = s => `'${String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
-  function paletteLine(key, p) {
-    const parts = [`name: ${q(p.name)}`];
-    if (p.hidden) parts.push('hidden: true');
-    for (const [s] of BASE) parts.push(`${s}: ${q(p[s])}`);
-    if (p.font && (p.font.weight || p.font.bold)) parts.push(`font: { ${Object.entries(p.font).filter(([, v]) => v != null && v !== '').map(([k, v]) => `${k}: ${typeof v === 'string' ? q(v) : v}`).join(', ')} }`);
-    if (p.note) parts.push(`note: ${q(p.note)}`);
-    return `    ${(key + ':').padEnd(15)} { ${parts.join(', ')} },`;
-  }
-  function fileText() {
-    const keys = Object.keys(data.palettes);
-    const starters = keys.filter(k => !data.palettes[k].hidden), locked = keys.filter(k => data.palettes[k].hidden);
-    const chips = RAR.map(([r]) => `    ${(r + ':').padEnd(8)} { fg: ${q(data.chips[r].fg)}, bg: ${q(data.chips[r].bg)} },`);
-    const styles = data.styles.map(s => `    { name: ${(q(s.name) + ',').padEnd(9)} fg: ${q(s.fg)}, bg: ${q(s.bg)} },`);
-    return HEADER + `(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes.js', '${build}']);   // the build it's from (see index.html)\n` +
-      'window.NEON_PALETTES = {\n' +
-      '  // Rarity chips: a text color on its own background, for each rarity (bg = the rarity\'s key color).\n' +
-      '  chips: {\n' + chips.join('\n') + '\n  },\n  palettes: {\n' +
-      '    // starters: offered in SETTINGS from the start (the first one is the default for new players)\n' +
-      starters.map(k => paletteLine(k, data.palettes[k])).join('\n') + '\n' +
-      '    // locked: unlocked by beating the corp (for now: hidden from SETTINGS)\n' +
-      locked.map(k => paletteLine(k, data.palettes[k])).join('\n') + '\n  },\n' +
-      '  // Player color styles: the colors of your name and logo (PROFILE > COLOR, multiplayer). Saved\n' +
-      '  // profiles store a style by its position here, so add new ones at the end.\n' +
-      '  styles: [\n' + styles.join('\n') + '\n  ],\n};\n';
-  }
+  // ---------------- Writing palettes.js (tools/palette_file.js writes and reads it) ----------------
+  const fileText = () => P.text(data, build);
   // keep the file's order the way it's written: starters, then locked
-  function reorder() {
-    const keys = Object.keys(data.palettes), out = {};
-    for (const k of keys.filter(k => !data.palettes[k].hidden)) out[k] = data.palettes[k];
-    for (const k of keys.filter(k => data.palettes[k].hidden)) out[k] = data.palettes[k];
-    data.palettes = out;
-  }
-  const parseFile = text => { const w = {}; new Function('window', text)(w); if (!w.NEON_PALETTES || !w.NEON_PALETTES.palettes) throw new Error('no palettes in that file'); return w.NEON_PALETTES; };
+  const reorder = () => { P.reorder(data); };
+  const parseFile = P.parse;
 
   // ---------------- Undo / dirty ----------------
   let undo = [], redo = [], lastPush = 0, saved = JSON.stringify(data);
@@ -330,7 +71,6 @@
   // ---------------- The game frame ----------------
   const frame = $('#game');
   let gameReady = false, scene = 'title', sendQueued = false;
-  const toGame = m => { try { frame.contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
   function sendAll() {
     if (!gameReady || sendQueued) return;
     sendQueued = true;
@@ -349,9 +89,7 @@
     $('#scenestate').textContent = `setting up: ${name}${['layer', 'hit', 'boss'].includes(name) ? ' (' + corp + ')' : ''}...`;
     toGame({ type: 'scene', name, opts: { corp } });
   }
-  window.addEventListener('message', e => {
-    const m = e.data;
-    if (!m || m.from !== 'neon-game') return;
+  onGame('*', m => {
     if (m.type === 'ready') {
       gameReady = true;
       if (m.version) build = m.version;   // stamp palettes.js with the game's build
@@ -364,7 +102,7 @@
   });
   function loadGame() { gameReady = false; $('#scenestate').textContent = 'loading the game...'; frame.src = '../dist/index.html?editor=1&t=' + Date.now(); }
 
-  const SCENES = [['title', 'title'], ['map', 'map'], ['layer', 'layer'], ['hit', 'a miss'], ['boss', 'boss'], ['shop', 'shop'], ['help', 'how to play'], ['codex', 'codex'], ['settings', 'settings'], ['profile', 'profile']];
+  const SCENES = [['title', 'title'], ['intro', 'intro'], ['map', 'map'], ['layer', 'layer'], ['hit', 'a miss'], ['boss', 'boss'], ['shop', 'shop'], ['sectorboss', 'sector boss'], ['sectorclear', 'sector clear'], ['uplink', 'uplink'], ['help', 'how to play'], ['codex', 'codex'], ['settings', 'settings'], ['profile', 'profile']];
   for (const [k, label] of SCENES) {
     const b = el('button', { textContent: label, onclick: () => runScene(k), title: `show the ${label} screen` });
     b.dataset.scene = k;
@@ -374,7 +112,9 @@
     const s = $('#corpsel'), cur = s.value || 'auto';
     s.innerHTML = '';
     s.append(el('option', { value: 'auto', textContent: "this palette's corp" }));
-    for (const k of Object.keys(data.palettes).filter(k => k.startsWith('c_') && k !== 'c_omni').sort()) s.append(el('option', { value: k.slice(2), textContent: data.palettes[k].name }));
+    // every corp (the corp files are loaded for the music mode); a corp with a palette of its own is marked *
+    const keys = Object.keys(CORPS).sort((a, b) => (CORPS[a].level || 1) - (CORPS[b].level || 1) || CORPS[a].name.localeCompare(CORPS[b].name));
+    for (const k of keys) s.append(el('option', { value: k, textContent: `LV${CORPS[k].level || 1} ${CORPS[k].name}${data.palettes['c_' + k] ? ' *' : ''}` }));
     s.value = [...s.options].some(o => o.value === cur) ? cur : 'auto';
   }
   $('#corpsel').onchange = () => { if (['layer', 'hit', 'boss'].includes(scene)) runScene(scene); };
@@ -382,6 +122,11 @@
   const sizeStage = () => { const w = +$('#width').value; frame.style.width = w + 'px'; $('#stage').style.width = Math.max(w + 40, 430) + 'px'; };
   $('#width').onchange = sizeStage;
   $('#reloadgame').onclick = loadGame;
+  // music / sfx by the game frame: the game's own switches (engine/editor.js test acts 'music', 'sfx'); lit while on
+  for (const [id, act] of [['#gameMusic', 'music'], ['#gameSfx', 'sfx']]) $(id).onclick = () => toGame({ type: 'test', act });
+  onGame('test-state', m => {
+    $('#gameMusic').classList.toggle('on', !!m.music); $('#gameSfx').classList.toggle('on', !!m.sfx);
+  });
   $('#dark').oninput = () => { $('#darkv').textContent = Math.round($('#dark').value * 100) + '%'; sendAll(); };
 
   // ---------------- The palette tab ----------------
@@ -639,16 +384,10 @@
     $('#undo').disabled = !undo.length; $('#redo').disabled = !redo.length;
     document.title = (d ? '* ' : '') + 'NeoN+1 palette editor';
   }
-  let toastT = 0;
-  function toast(t) { $('#toast').textContent = t; $('#toast').classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => $('#toast').classList.remove('show'), 2200); }
+  const toast = t => NEON_ED.toast(t, 2200);
 
   // remember the linked file between sessions (IndexedDB can store file handles)
-  const idb = (mode, fn) => new Promise((res, rej) => {
-    const open = indexedDB.open('neon-palette-editor', 1);
-    open.onupgradeneeded = () => open.result.createObjectStore('h');
-    open.onerror = () => rej(open.error);
-    open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
-  });
+  const idb = NEON_ED.idb('neon-palette-editor', 1);
   const rememberHandle = h => idb('readwrite', s => s.put(h, 'palettes-data')).catch(() => {});
   idb('readonly', s => s.get('palettes-data')).then(h => { if (h) { handle = h; renderFileState(); } }).catch(() => {});
 
@@ -662,10 +401,7 @@
     handle = h; rememberHandle(h);
     return h;
   }
-  function download(text) {
-    const a = el('a', { href: URL.createObjectURL(new Blob([text], { type: 'text/javascript' })), download: 'palettes.js' });
-    document.body.append(a); a.click(); a.remove();
-  }
+  const download = text => NEON_ED.download('palettes.js', text);
   async function save() {
     reorder();
     const text = fileText();
@@ -676,7 +412,7 @@
       await w.write(text); await w.close();
       saved = JSON.stringify(data); renderFileState();
       toast('saved ' + h.name);
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('save failed: ' + e.message); }
+    } catch (e) { NEON_ED.failed('save', e); }
   }
   async function reloadFile() {
     if (dirty() && !confirm('Drop your unsaved changes and load the file again?')) return;
@@ -687,7 +423,7 @@
       data = clone(parseFile(text)); saved = JSON.stringify(data); undo = []; redo = [];
       if (!data.palettes[sel]) sel = Object.keys(data.palettes)[0];
       renderAll(); sendAll(); toast('loaded ' + handle.name);
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
+    } catch (e) { NEON_ED.failed('reload', e); }
   }
   async function exportText() {
     reorder();
@@ -699,6 +435,7 @@
   $('#undo').onclick = () => stepHistory(undo, redo); $('#redo').onclick = () => stepHistory(redo, undo);
   document.addEventListener('keydown', e => {
     const mod = e.ctrlKey || e.metaKey;
+    if (document.body.classList.contains('mode-art') || document.body.classList.contains('mode-tut') || document.body.classList.contains('mode-econ')) return;   // the art, training and economy tabs have their own keys
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
     else if (mod && e.key.toLowerCase() === 'z' && !(e.target.matches && e.target.matches('input[type=text]'))) { e.preventDefault(); e.shiftKey ? stepHistory(redo, undo) : stepHistory(undo, redo); }
     else if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); stepHistory(redo, undo); }
@@ -712,7 +449,17 @@
   renderAll();
   loadGame();
   window.__editor = { fileText, get data() { return data; } };   // for tests
+
+  // ---------------- The bridge for the music mode ----------------
+  // Show a corp in the game: its own palette when it has one, then one of its layers (or the boss / a miss, if
+  // that's what's up). The music mode asks for this when you pick a corp.
+  window.NE = {
+    toGame, runScene, ready: () => gameReady, scene: () => scene,
+    showCorp(corp) {
+      const pk = 'c_' + corp;
+      if (data.palettes[pk]) { $('#corpsel').value = 'auto'; sel = pk; renderAll(); sendAll(); }
+      else $('#corpsel').value = CORPS[corp] ? corp : 'auto';
+      runScene(['layer', 'hit', 'boss'].includes(scene) ? scene : 'layer');
+    },
+  };
 })();
-</script>
-</body>
-</html>

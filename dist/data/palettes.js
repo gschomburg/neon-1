@@ -1,5 +1,5 @@
 // NeoN+1 palettes. The game loads this file before its own scripts (so does the palette editor).
-// Edit with tools/palette_editor.html, or by hand: one palette per line, colors as '#rrggbb'.
+// Edit with the neon editor's PALETTE tab (tools/neon_editor.html), or by hand: one palette per line, colors as '#rrggbb'.
 //
 // Slots (what each color is for):
 //   bg         background               accent     buttons, the logo, highlights (the "main" color)

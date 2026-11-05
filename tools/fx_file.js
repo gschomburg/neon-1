@@ -5,7 +5,10 @@
 // Kinds: ms = milliseconds; share = 0-1 (a chance, or a part of something); num = a plain number; cells = a distance in
 // cells; pair = two numbers; col = a palette name (accent, danger, money...), '#hex', or 'ink:<hacker>'; chars = a few
 // characters; sound = a Sound.* name; set = one of the shared character sets (SETS), not edited per effect.
+// Needs tools/data_file_core.js loaded first in a page (node requires it).
 (function (root) {
+  const mod = typeof module !== 'undefined' ? module : null;
+  const C = mod && mod.exports ? require('./data_file_core.js') : root.NEON_DATA_FILE;
   // The shared character sets: written once at the top of the file, used by name in the looks.
   const SETS = [
     { name: 'FX_GLITCH', label: 'glitch characters', note: 'the glitch characters (one set everywhere: glitch, cue, garble)' },
@@ -96,12 +99,12 @@
     '// Times are in ms. "share" = the chance (0-1) per cell or per window. "set" = the characters it swaps in.',
     "'use strict';",
   ];
-  const quote = s => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+  const quote = C.quote;
   const val = v => Array.isArray(v) ? '[' + v.map(val).join(', ') + ']' : typeof v === 'string' ? quote(v) : String(+v);
   const wrap = (text, w) => { const out = []; let line = ''; for (const word of text.split(' ')) { if (line && (line + ' ' + word).length > w) { out.push(line); line = word; } else line = line ? line + ' ' + word : word; } if (line) out.push(line); return out; };
   // The file's text, from { sets: { FX_GLITCH, FX_NOISE }, looks: FX_LOOKS } and the build stamp.
   function text(m, build) {
-    const out = [...HEAD, `NEON_FILES.push(['data/fx.js', '${build || 'v0'}']);`, ''];
+    const out = [...HEAD, C.stamp('data/fx.js', build), ''];
     for (const s of SETS) out.push(`const ${s.name} = ${quote(m.sets[s.name])};   // ${s.note}`);
     out.push('', 'const FX_LOOKS = {');
     for (const L of LOOKS) {
@@ -113,7 +116,7 @@
     return out.join('\n');
   }
   // { sets, looks }, from the file's text
-  function parse(src) { return new Function('NEON_FILES', src + '\nreturn { sets: { FX_GLITCH, FX_NOISE }, looks: FX_LOOKS };')([]); }
+  function parse(src) { return C.run(src, '{ sets: { FX_GLITCH, FX_NOISE }, looks: FX_LOOKS }'); }
   // a deep copy of just what LOOKS knows (what the editor edits and saves); a set field is left out (it's a shared set)
   function pick(m) {
     const o = { sets: {}, looks: {} };
@@ -138,17 +141,15 @@
     return out;
   }
   const T = { SETS, LOOKS, text, parse, pick, expand, unknown };
-  if (typeof module !== 'undefined' && module.exports) module.exports = T; else root.NEON_FX_FILE = T;
-  if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
-    if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/fx_file.js   (rewrites dist/data/fx.js in its own format: a round-trip check)'); process.exit(0); }
-    const fs = require('fs'), path = require('path');
-    const file = path.join(__dirname, '..', 'dist', 'data', 'fx.js'), src = fs.readFileSync(file, 'utf8');
-    const build = (src.match(/NEON_FILES\.push\(\['data\/fx\.js', '([^']+)'\]\)/) || [])[1];
+  C.expose(root, mod, 'NEON_FX_FILE', T);
+  C.main(mod, 'usage: node tools/fx_file.js   (rewrites dist/data/fx.js in its own format: a round-trip check)', ({ fs, path, dist }) => {
+    const file = path.join(dist, 'data', 'fx.js'), src = fs.readFileSync(file, 'utf8');
+    const build = C.buildOf(src, 'data/fx.js');
     const m = parse(src), lost = unknown(m);
     if (lost.length) { console.log('fx.js has settings tools/fx_file.js does not know (add them to LOOKS): ' + lost.join(', ')); process.exit(1); }
     const out = text(m, build), back = parse(out);
     if (JSON.stringify(expand(pick(back))) !== JSON.stringify(expand(pick(m))) || JSON.stringify(back.looks) !== JSON.stringify(m.looks)) { console.log('round trip changed a value: not written'); process.exit(1); }
     fs.writeFileSync(file, out);
     console.log(`data/fx.js: ${LOOKS.length} effects, ${src === out ? 'unchanged' : 'rewritten'}`);
-  }
+  });
 })(this);
