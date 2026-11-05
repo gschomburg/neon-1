@@ -1,23 +1,28 @@
-# fingerprints from tools/check.js and tools/playtest.js (big, and easy to make again)
+# Fingerprints from tools/check.js, tools/playtest.js and tools/econsim.js: big, and easy to make again.
 tools/check/
 
-# ascii-art.de catalog: big reference copy, kept local only (the user, 2026-10-23)
+# The ascii-art.de catalog: a big reference copy, kept local only (the user, 2026-10-23).
 ascii-editor/reference/ascii-art-de/
 
-# OS files
+# macOS folder settings and resource forks: OS clutter, not project files.
 .DS_Store
 ._*
+# Windows thumbnail caches and folder settings: OS clutter.
 Thumbs.db
 desktop.ini
 
-# editors
+# Editor settings: personal, not part of the project.
 .vscode/
 .idea/
+# Vim swap files and backup copies: temporary.
 *.swp
 *~
 
-# tools and local settings
+# Installed Node packages: reinstalled from package files, never committed.
 node_modules/
+# Logs from tools and servers: temporary output.
 *.log
+# Local secrets.
 .env
+# Claude Code settings for this machine only.
 .claude/settings.local.json

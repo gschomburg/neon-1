@@ -1,3 +1,5 @@
+# Server configs hold the database password: one per server, never committed (see server/config.example.php).
 server/config.php
-server/*.sqlite*
 greglytics-config.php
+# The local SQLite database, for testing the PHP on your machine: dev data only.
+server/*.sqlite*
