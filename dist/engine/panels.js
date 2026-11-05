@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.39']);
+NEON_FILES.push(['engine/panels.js', 'v14.40']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -370,7 +370,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
     if (!firstUp) return;
     firstUp = false; Sound.ui();
     const rv = st.panelReveal;
-    if (rv) Object.assign(rv, { t0: performance.now(), pre: headN, shown: headN, done: false, hold: false, whole: false, firstPop: null, rival: null });
+    if (rv) Object.assign(rv, { t0: performance.now(), pre: headN, shown: headN, done: false, hold: false, whole: false, firstPop: null, rival: null, logoOut: !!by });
     st.panelT0 = Infinity; st.revealed = new Set();   // the offers pop as their lines come in
   };
   st.breachRival = null;
@@ -412,7 +412,14 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
       const theirs = rival && HACKERS[rival] ? logoBlock(rival, hkName(rival), hkStyle(rival)) : null;
       const w = Math.max(...mine.concat(theirs || []).map(l => l.text.length));
       const fit = t => { const e = w - t.length, a = Math.floor(e / 2); return ' '.repeat(a) + t + ' '.repeat(e - a); };
-      mine.forEach((ln, k) => X(Object.assign({}, ln, { text: fit(ln.text), logoRow: k, rivalRow: theirs ? Object.assign({}, theirs[k], { text: fit(theirs[k].text) }) : null })));
+      // the logo's art (all but its name line) goes once the rewards come in (buildReveal, engine/screens.js: LOGO_OUT);
+      // after the reveal, or with none, only the name line is left (the user, 2026-11-05: the screen was too tall)
+      const keepArt = firstUp || (reveal && st.panelReveal && !st.panelReveal.done);
+      mine.forEach((ln, k) => {
+        const art = k < mine.length - 1;
+        if (art && !keepArt) return;
+        X(Object.assign({}, ln, { text: fit(ln.text), logoRow: k, logoArt: art, rivalRow: theirs ? Object.assign({}, theirs[k], { text: fit(theirs[k].text) }) : null }));
+      });
       for (const h of head) T(`breached ${h[0].toLowerCase()}`, C.mid);
     } else for (const h of head) T(h[0], h[1]);
     for (const h of extra) T(h[0], h[1]);   // (more lines under it: the H3AV3N ending's rewards)
@@ -473,6 +480,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
     for (const m of more) B(m.label, m.id, m.onTap);   // more buttons (the safehouse's [ WORKBENCH ])
     B(options.length && skipLabel ? skipLabel : '[ CONTINUE ]', 'skip', () => take(null));
   }, msg, { reveal, rival });
+  if (by && !firstUp && st.panelReveal) st.panelReveal.logoOut = true;   // (FIRST BREACH: once SEE THE CORE is tapped, toCore)
   if (firstUp && st.panelReveal) Object.assign(st.panelReveal, { hold: true, whole: true });   // the header comes back after the rewards, not before;
   // whole: no header yet, so FIRST BREACH centers on the whole screen (the user: PARCELNET pushed it off the bottom), then glides down to the rewards
 }

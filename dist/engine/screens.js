@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.39']);
+NEON_FILES.push(['engine/screens.js', 'v14.40']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -159,6 +159,10 @@ function buildOverReveal(ctx, now) {
 // the rest of the screen carries on building in. (Times from when the last logo row shows.)
 // (the letters land every 70ms: DEFEATED is in at +0.96s; a 0.2s beat, then your logo comes in over it, row by row)
 const RIVAL_REVEAL = { stamp: 400, letter: 70, swap: 1160, row: 150, hold: 2900 };
+// THE LOGO GOES (a boss win, the user 2026-11-05: the rewards screen was too tall): `wait` ms after the line under the
+// logo ("breached ...") is in, its art rows go one at a time, bottom first, each glitching for `glitch` ms; the rest
+// glides up. The name line stays. (rv.logoOut, set by openChoice; its lines carry logoArt.)
+const LOGO_OUT = { wait: 300, row: 110, glitch: 90 };
 function buildReveal(ctx, now, rv, all) {
   const title = all[0].text;
   let logoAt = null;
@@ -166,15 +170,17 @@ function buildReveal(ctx, now, rv, all) {
   const pre = rv.pre || 0;
   const typed = pre ? title.length : clamp(Math.floor((now - rv.t0) / REVEAL.type), 0, title.length);
   // when each line shows up (blank lines come with the next one)
-  let k = 1, t = pre ? rv.t0 : rv.t0 + title.length * REVEAL.type + REVEAL.hold, firstPop = null;
+  let k = 1, t = pre ? rv.t0 : rv.t0 + title.length * REVEAL.type + REVEAL.hold, firstPop = null, outAt = null;
   for (let i = 1; i < all.length; i++) {
-    if (i < pre) { k = i + 1; continue; }
+    const underLogo = all[i - 1].logoRow != null && all[i].logoRow == null;   // the line under the logo: once it's in, the logo goes
+    if (i < pre) { k = i + 1; if (underLogo) outAt = rv.t0; continue; }
     if (all[i].reveal != null) {
       if (firstPop == null) firstPop = rv.firstPop || (rv.firstPop = t);
       t = Math.max(t, firstPop + all[i].reveal * CONFIG.revealGap);
     }
     if (now < t) break;
     k = i + 1;
+    if (underLogo) outAt = t;
     if (rv.rival && all[i].logoRow != null && !(all[i + 1] && all[i + 1].logoRow != null)) { logoAt = t; t += RIVAL_REVEAL.hold; }   // the rival's moment
     if (all[i].mapView) t += REVEAL.mapGap;
     else if (all[i].text || all[i].box || all[i].row || all[i].list) t += REVEAL.gap;
@@ -187,6 +193,15 @@ function buildReveal(ctx, now, rv, all) {
     const sw = logoAt == null ? 0 : Math.max(0, Math.floor((now - logoAt - RIVAL_REVEAL.swap) / RIVAL_REVEAL.row) + 1);
     if (ctx.collectHits && sw > (rv.sw || 0) && logoAt != null && now - logoAt >= RIVAL_REVEAL.swap) { rv.sw = sw; Sound.tick(); }
     vis = vis.map(ln => ln.logoRow != null && ln.rivalRow && ln.logoRow >= sw ? Object.assign({}, ln, ln.rivalRow) : ln);
+  }
+  if (rv.logoOut && outAt != null) {   // THE LOGO GOES, bottom row first (the lines stay in `all`, so the timing below doesn't move)
+    const arts = vis.filter(ln => ln.logoArt), since = now - outAt - LOGO_OUT.wait;
+    const n = clamp(Math.floor(since / LOGO_OUT.row) + 1, 0, arts.length), next = arts[arts.length - n - 1];
+    const gone = new Set(arts.slice(arts.length - n));
+    const dying = next && n < arts.length && since > -LOGO_OUT.glitch && (n * LOGO_OUT.row - since) < LOGO_OUT.glitch ? next : null;
+    vis = vis.filter(ln => !gone.has(ln)).map(ln => ln !== dying ? ln : Object.assign({}, ln, {
+      text: [...ln.text].map((ch, i) => ch === ' ' ? ' ' : FX.pick(FX_GLITCH, FX.hash(i, ln.logoRow, FX.step(now, 40)))).join('') }));
+    if (ctx.collectHits && n > (rv.outN || 0)) { rv.outN = n; Sound.tick(); }
   }
   if (vis.length && typed < title.length) {
     const cursor = Math.floor(now / 250) % 2 ? '_' : ' ';
