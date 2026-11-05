@@ -9,6 +9,7 @@ Greg's raw notes.
 ## Differences from web.md (keep these)
 - `dist/` is the hand-edited source and the deployed folder (there is no build). Don't rename it to `public/`.
 - Versions are `vMAJOR.MINOR` (minor zero-padded, +.01 per handoff; major only when the user says). Use `node tools/bump.js minor|major|vNN.NN`. It also updates the `NEON_FILES` stamps, the `?v=` busters, `version.json` and the corp lists in the tool HTML files. A new major needs a new save slot (`STORE_KEY`).
+- Release commits read "Version v14.32: summary" (or "Version v14.25-v14.31: summary" for a batch), with a bulleted body.
 - Never reindent files here. ASCII art lives in string and template literals, where leading spaces are part of the art, and `tools/*_file.js` writes the data files with spaces in a fixed format.
 
 ## Parts
