@@ -14,7 +14,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.37']);
+NEON_FILES.push(['data/quests.js', 'v14.38']);
 
 const QUEST_INFO = {
   pops: {
@@ -98,6 +98,9 @@ const QUEST_SCENES = {
 //   pic.look = layer options for a logo (a hacker's tics come from data/hackers.js).
 //   The effects' defaults (the global look) are data/fx.js FX_LOOKS: a layer only gives what's its own (where, which
 //   marks) and what it wants different. flicker / glitch take true or their own settings ({ glitch: { col: 'danger' } }).
+//   A mask (data/fx.js mask): glitch / flicker / tint with `where` show all along, in drifting patches of noise:
+//   { glitch: { where: true } } (the default mask), or where: { rect: [x, y, w, h] in the canvas's cells, density: 0.6,
+//   strength: 0.8, scale: 4, fade: 2000, ... }. tint = { col, amount, where }: the color pulls toward col there.
 //   mood (on any frame) = { levels, stages }: what the scene's music wanders between from that frame on (SCENE_MUSIC).
   disc: [
     { title: ['WHAT IS ALL THIS FOR?', 'step 2: SAFEHOUSE'], mood: { levels: [0], stages: 'A' } },

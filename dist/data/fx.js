@@ -4,7 +4,7 @@
 // (a cutscene layer: { n: 'logo', glitch: { col: 'ink:b0y' } }), without becoming its own effect.
 // Times are in ms. "share" = the chance (0-1) per cell or per window. "set" = the characters it swaps in.
 'use strict';
-NEON_FILES.push(['data/fx.js', 'v14.37']);
+NEON_FILES.push(['data/fx.js', 'v14.38']);
 
 const FX_GLITCH = '#%&@$!?*<>/=+';   // the glitch characters (one set everywhere: glitch, cue, garble)
 const FX_NOISE = '%&#*;:';   // the softer noise a burst flashes to (mold, d0g's tics)
@@ -13,10 +13,20 @@ const FX_LOOKS = {
   // DRAWING IN: each mark lands at its own moment: `pos` of it from where it is (top or bottom first), `jitter`
   // random. It flashes `flashCol` for the first `flash` of the draw-in. boxMs: a logo's color block flickers in.
   reveal: { pos: 0.6, jitter: 0.4, flash: 0.07, flashCol: 'bright', boxMs: 60 },
-  // FLICKER (drawing in): for the first `window` of a mark's draw-in, it blinks (share of the time off, every ms).
+  // MASK (where an effect sits): an effect with `where` only shows in drifting patches of noise, strongest in their
+  // middles. `scale` = blob size (cells), `drift` = how they move (cells a second), `density` = how much is covered,
+  // swinging up and down by `swing` over about `swingMs`; `soft` = the edge fade; `strength` = the most it gets;
+  // `fade` = ms to come in. A place can add rect: [x, y, w, h] to keep it in a box (in its art's cells).
+  mask: { scale: 6, drift: [0.8, -0.3], density: 0.4, swing: 0.15, swingMs: 4000, soft: 0.15, strength: 1, fade: 0, seed: 0 },
+  // FLICKER: drawing in: for the first `window` of a mark's draw-in, it blinks (share of the time off, every ms). With
+  // `where` (a mask): marks in it blink off share x strength of the time, all along.
   flicker: { window: 0.2, ms: 55, share: 0.5 },
-  // GLITCH (drawing in): for the first `window`, a mark is a random glitch character in col, new every ms.
-  glitch: { window: 0.3, ms: 70, set: FX_GLITCH, col: 'bright', sound: 'static', vol: 0.35 },
+  // GLITCH: drawing in: for the first `window`, a mark is a random glitch character in col, new every ms. With `where`
+  // (a mask): marks in it glitch `rate` x strength of the time, all along.
+  glitch: { window: 0.3, ms: 70, set: FX_GLITCH, col: 'bright', sound: 'static', vol: 0.35, rate: 0.4 },
+  // TINT: with `where` (a mask): marks in it pull toward col, `amount` x strength of the way (without one: the whole
+  // layer).
+  tint: { col: 'danger', amount: 0.7 },
   // CUE: marks stay dark until a word types in, then glitch on for `glitchMs` (hidden `hide` of the time, swapped
   // `swap` of it), then flicker now and then (`share` of the `every` windows, one frame in 3 of `flickMs`).
   cue: { col: 'accent', glitchMs: 700, hideMs: 50, hide: 0.45, swapMs: 90, swap: 0.35, set: FX_GLITCH, every: 2600, share: 0.3, flickMs: 70, sound: 'neonOn' },

@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.37']);
+NEON_FILES.push(['engine/quests.js', 'v14.38']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -270,6 +270,9 @@ function buildStrip(ctx, now, sc, frames) {
         const fl = ly.flicker ? FX.look('flicker', ly.flicker) : null, gl = ly.glitch ? FX.look('glitch', ly.glitch) : null;
         const BL = ly.blink && FX.look('blink', ly.blink), CU = ly.cue && FX.look('cue', ly.cue), LT = ly.lights && FX.look('lights', ly.lights);
         const SP = ly.spin && FX.look('spin', ly.spin), PR = ly.progress && FX.look('progress', ly.progress), EM = ly.ember && FX.look('ember', ly.ember);
+        // on a mask (an effect's where: data/fx.js mask): glitch / flicker all along in drifting patches, tint pulling the color there
+        const GW = gl && gl.where ? FX.where(gl.where) : null, FW = fl && fl.where ? FX.where(fl.where) : null;
+        const TN = ly.tint ? FX.look('tint', ly.tint) : null, TW = TN && TN.where ? FX.where(TN.where) : null;
         // TICS (a glitchy logo, like G0D's flickers): a row tears sideways, marks swap (tics.swap: [[from, to]], d0g's
         // d -> b), a little cluster flashes to noise; all in tics.col
         const TC = ly.tics && p >= 1 ? FX.look('tics', ly.tics) : null, TR = TC && FX.look('tear', TC.tear);
@@ -327,6 +330,9 @@ function buildStrip(ctx, now, sc, frames) {
               if (nz) { cell.ch = nz; cell.ink = FX.col(TC.col); }
             }
             if (EM && kx === EM.x && ky === EM.y) FX.ember(cell, EM, now);   // EMBER: a cigarette's tip, glowing up now and then
+            if (TN) FX.tint(cell, TN, TW ? FX.mask(TW, kx, ky, now, t) : 1);
+            if (GW) FX.glitchOn(cell, gl, FX.mask(GW, kx, ky, now, t), now);
+            if (FW && FX.flickerOff(cell, fl, FX.mask(FW, kx, ky, now, t), now)) continue;
             put(x0 + X + tear, sy, cell.ch, cell.ink, 'hud');
             taken.add(X + ',' + sy);
           }

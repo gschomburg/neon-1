@@ -4,7 +4,7 @@
 // corrupted loot names (data/mods.js glitchName) and G0D's mold glitch (engine/g0d.js).
 // (Particles, shakes and flashes are engine/effects.js: they work in pixels, not cells.)
 'use strict';
-NEON_FILES.push(['engine/fx.js', 'v14.37']);
+NEON_FILES.push(['engine/fx.js', 'v14.38']);
 
 const FX = (() => {
   // ---------- building blocks ----------
@@ -19,6 +19,30 @@ const FX = (() => {
   const col = c => c && c[0] === '#' ? c : c && c.startsWith('ink:') ? hkInk(c.slice(4)) : C[c] || C.text;
   // A look: the named settings, with a place's own over them (true = as they are).
   const look = (name, over) => over && typeof over === 'object' ? Object.assign({}, FX_LOOKS[name], over) : FX_LOOKS[name];
+
+  // ---------- smooth noise and the mask ----------
+  // Value noise: smooth blobs (0-1) instead of one random number per cell. noise1: the same along one line (time).
+  const smooth = t => t * t * (3 - 2 * t);
+  function noise2(x, y, z = 0) {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = smooth(x - xi), yf = smooth(y - yi);
+    const a = hash(xi, yi, z), b = hash(xi + 1, yi, z), c = hash(xi, yi + 1, z), d = hash(xi + 1, yi + 1, z);
+    const top = a + (b - a) * xf, bot = c + (d - c) * xf;
+    return top + (bot - top) * yf;
+  }
+  const noise1 = (t, z = 0) => { const i = Math.floor(t), f = smooth(t - i), a = hash(i, 0, z + 31), b = hash(i + 1, 0, z + 31); return a + (b - a) * f; };
+  // THE MASK (data/fx.js mask): where an effect sits, and how strongly. A cell's strength (0-1) at (X, Y), in the
+  // content's own coordinates (so it rides along with scrolling). W = FX.look('mask', ...): rect [x, y, w, h] (none = all
+  // of it), scale (blob size, cells), drift [x, y] (cells a second), density (how much is covered) swinging up and down
+  // by `swing` over about swingMs, soft (the edge fade), strength (the most it gets), fade (ms to come in, from t = 0).
+  function mask(W, X, Y, now, t = Infinity) {
+    if (W.rect) { const [rx, ry, rw, rh] = W.rect; if (X < rx || Y < ry || X >= rx + rw || Y >= ry + rh) return 0; }
+    const s = Math.max(0.5, W.scale), sec = now / 1000;
+    const v = noise2((X + W.drift[0] * sec) / s, (Y + W.drift[1] * sec) * 2 / s, W.seed);   // (cells are twice as tall as wide: blobs come out round)
+    const d = W.density + W.swing * (noise1(now / W.swingMs, W.seed) * 2 - 1);
+    const k = W.soft > 0 ? clamp01((d - v) / W.soft) : v < d ? 1 : 0;
+    return k * W.strength * (W.fade > 0 ? clamp01(t / W.fade) : 1);
+  }
+  const where = over => look('mask', over === true ? null : over);   // a place's `where` settings over the mask's
 
   // ---------- drawing in ----------
   // When a mark lands, 0-1 of the draw-in: by its row (rel: 0 top, 1 bottom; from: 'top' or 'bottom'), plus jitter.
@@ -35,6 +59,29 @@ const FX = (() => {
     return true;
   }
   const boxIn = (p, r, now) => p < 1 ? (hash(r, 1, step(now, FX_LOOKS.reveal.boxMs)) < p ? 1 : 0) : 1;   // a logo's color block, row r
+
+  // ---------- riding on a mask (an effect's `where`) ----------
+  // Each takes a cell { ch, ink, X, Y } and its mask strength s (0-1). GLITCH: it swaps to a glitch mark now and then
+  // (rate x s of the windows). FLICKER: it blinks off (share x s). TINT: its color pulls toward col (amount x s).
+  function glitchOn(c, G, s, now) {
+    if (s > 0 && hash(c.X, c.Y, step(now, G.ms) + 77) < s * G.rate) { c.ch = pick(G.set, hash(c.X, c.Y, step(now, G.ms))); c.ink = col(G.col); }
+  }
+  const flickerOff = (c, F, s, now) => s > 0 && hash(c.X, c.Y, step(now, F.ms) + 91) < s * F.share;
+  function tint(c, T, s) { if (s > 0) c.ink = mixHex(c.ink.length === 7 ? c.ink : C.text, col(T.col), clamp01(s * T.amount)); }
+  // Any of those over a list of screen cells ({ ch, cx, cy, col }): a new list. over = that effect's settings, with
+  // `where` for its mask; origin [x, y] = where the content's (0, 0) is on screen now (so the mask scrolls with it);
+  // t = ms since it started (for the mask's fade).
+  function apply(cells, name, over, now = performance.now(), t = Infinity, origin = [0, 0]) {
+    const E = look(name, over), W = where(E.where || true);
+    return cells.map(c => {
+      const s = mask(W, c.cx - origin[0], c.cy - origin[1], now, t);
+      if (s <= 0) return c;
+      const cell = { ch: c.ch, ink: c.col, X: Math.round(c.cx - origin[0]), Y: Math.round(c.cy - origin[1]) };
+      if (name === 'flicker') return flickerOff(cell, E, s, now) ? Object.assign({}, c, { ch: ' ' }) : c;
+      if (name === 'glitch') glitchOn(cell, E, s, now); else if (name === 'tint') tint(cell, E, s);
+      return Object.assign({}, c, { ch: cell.ch, col: cell.ink });
+    });
+  }
 
   // ---------- on and off ----------
   // BLINK: the mark to show for match position i right now, or null.
@@ -191,6 +238,6 @@ const FX = (() => {
   // A steady number for a string (a codex key): decrypt's seed.
   const seedOf = s => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100003; return h; };
 
-  return { hash, pick, step, cycle, clamp01, easeOut, col, look, decrypt, seedOf, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
+  return { hash, pick, step, cycle, clamp01, easeOut, col, look, decrypt, seedOf, noise1, noise2, mask, where, glitchOn, flickerOff, tint, apply, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
     glow, glowCone, glowCell, glowWash, tear, swapOn, burst, burstCh, burstCells, tics, putTics, smoke, fogRows, garble };
 })();

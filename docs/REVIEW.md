@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The mask** (v14.38): editor > fx > MASK: drag blob size, covers, swing, soft edge, strength and watch the preview (grey = strength; the sample skyline glitches and tints on it). When you polish a scene, tell me "glitch here, about this much" and it's a `where` on that layer.
+
 - [ ] **The mold transition** (v14.36): editor > g0d > "The mold effects". Drag the mold slider, click "a transition" at 0.3, 0.7, 1; then "the mold glitch". Its settings are on the fx tab (MOLD TRANSITION). Then your call: where does the game turn it up? (Easy hook: the M0LD events, light ~0.3 / heavy ~0.7. Or as the quest goes on.)
 
 - [ ] **The encrypted codex** (v14.35): open the codex. Unfound names are hex ciphertext at their real length; more letters show through as you find more (up to half). Find something new, open the codex: it decodes. A corp you've seen but not beaten: its tell is ciphertext; beat it, and it decodes. Hex, or a different cipher look (data/fx.js decrypt.set, or the FX tab)? Is half too much of a hint?

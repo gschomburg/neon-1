@@ -82,3 +82,15 @@ Steps 1-3 change nothing you can see.
   - The intro pass bits (BACKLOG Polish): the logo decoding in (decrypt), noise in the log, the map drawing in with static, a burst on the handshake. Wait for the user: the intro pass comes after they've lived with it.
 - Ideas with no place yet, kept (the user: "rain could be cool"): **rain** (a scene's weather, maybe the DISC city), **color cycling**, **dither fades**.
 - Maybe: tics on the breach screen's rival logo (see above).
+
+## The mask: where an effect sits (v14.38)
+
+**Decided (Greg, 2026-11-05):** not painted mask layers ("we don't need to be that specific"). Instead: pick an area, and the effect shows in drifting noise patches there, with a density (how much is covered, swinging up and down) and an intensity read off the noise (strongest in a patch's middle). The plan for polishing: Greg names an area and an effect, then turns density or strength up or down.
+
+- `FX.mask(W, X, Y, now, t)`: a cell's strength 0-1, from smooth value noise (`FX.noise2`; `FX.noise1` swings the density over time). Settings in data/fx.js `mask`: scale (blob size), drift, density, swing, swingMs, soft (the edge fade), strength, fade (ms to come in: any effect on a mask fades in), seed; a place adds `rect: [x, y, w, h]`.
+- Keyed to the content (the art's cells), so the patches ride along with scrolling.
+- Effects that take one (`where`): **glitch** (`rate` x strength, all along), **flicker** (blinks off `share` x strength), **tint** (new: the color pulls toward col, `amount` x strength).
+- In a cutscene layer: `{ n: 'a_skyline', glitch: { where: { rect: [0, 8, 20, 10], density: 0.5 } }, tint: { col: 'danger', where: true } }`.
+- On a screen: `FX.apply(cells, 'glitch', { where: {...} }, now, t, origin)`.
+- The FX tab's MASK and TINT cards play a live preview: grey = strength, sample art glitching and tinting on it.
+- Nothing in the game uses a mask yet. It's waiting for the polish pass.
