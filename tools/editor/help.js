@@ -16,7 +16,7 @@
 <h2>The first save</h2>
 <ol>
 <li>Chrome (or Edge) asks you to pick the file or folder. The hint at the top right of each tab names it:
-  <ul><li>palette: the file ${F('dist/data/palettes.js')}</li><li>art: the folder ${F('dist/data/art')}</li><li>training and economy: the folder ${F('dist/data')}</li></ul></li>
+  <ul><li>palette: the file ${F('dist/data/palettes.js')}</li><li>art: the folder ${F('dist/data/art')}</li><li>training, economy and fx: the folder ${F('dist/data')} (one pick for all three)</li></ul></li>
 <li>Allow it to edit files. The editor remembers the choice, so later saves just save.</li>
 </ol>
 <p>Another browser can't write files: save downloads the file instead. Put it in that folder by hand, over the old one.</p>
