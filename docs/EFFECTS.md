@@ -65,11 +65,14 @@ Steps 1-3 change nothing you can see.
 **v14.33:** a hacker's tics live in `data/hackers.js` (`HACKERS.d0g.tics`; w00f is a copy, so he has them too). The cutscene logo, the rival card and the death screen all read them: `FX.tics` + `FX.putTics` for a block of text rows. The d -> b swap is in his name, so it shows on the card's name line and the cutscene's tag; the death screen has no name, so it gets the tears and bursts only.
 - Not done: the breach screen, where a rival's logo is swapped for yours under DEFEATED. Those rows are plain one-color panel lines; tics there need a new option in the text board.
 
+**v14.34:** the neon editor's **FX tab** (step 4).
+- One card per effect: its note, its settings as draggable number fields (the shared scrub fields), colors and characters as text, and revert.
+- **show** puts up a place that uses the effect. That's the real thing, not sample art: a cutscene frame on a loop, d0g's rival card or death screen, or G0D's mold glitch. The garble card plays its own line.
+- Edits go to the game live, and save writes `dist/data/fx.js` in place (Ctrl S, the same dist/data folder as training and economy).
+- `tools/fx_file.js` reads and writes the file and holds each effect's note, settings and show list. `node tools/fx_file.js` is the round-trip check.
+- **Decided (Claude, 2026-11-05):** the preview uses the real scenes rather than sample art, so what you tune is what plays. A new effect gets a show once a scene uses it.
+
 ## Next
 
-- The editor's FX page (step 4).
-- New effects (step 5): decrypt for codex entries, dither fades, color cycling, rain.
-
-## Open questions
-
-- How the editor FX page should work (sample art, sliders, saving the settings). Saving needs a `tools/fx_file.js` writer for data/fx.js, like the other data files.
+- New effects (step 5): decrypt for codex entries, dither fades, color cycling, rain. Each one: code in engine/fx.js, settings in data/fx.js, an entry in tools/fx_file.js LOOKS.
+- Maybe: tics on the breach screen's rival logo (see above).

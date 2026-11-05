@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.33']);
+NEON_FILES.push(['engine/editor.js', 'v14.34']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -340,7 +340,23 @@ if (EDITOR) {
         if (Array.isArray(v)) { to[k].length = 0; to[k].push(...v); } else if (v && typeof v === 'object') put(to[k], v); else to[k] = v; } };
       put(ECON, m.econ);
     }
+    // the FX tab: the effects' settings, live (changed in place: the effects read FX_LOOKS every frame)
+    if (m.type === 'fx' && m.looks) for (const [k, v] of Object.entries(m.looks)) if (FX_LOOKS[k]) Object.assign(FX_LOOKS[k], v);
   });
+  // The FX tab's "show": a cutscene frame that plays over and over (a beat after it's all in, it starts again).
+  setInterval(() => {
+    const sc = st.qScene;
+    if (!sc || !sc.fxLoop) return;
+    const now = performance.now();
+    if (now - sc.t0 > frameMs(QUEST_SCENES[sc.id][sc.i]) + 2500) { sc.t0 = now; sc.fired = new Set(); sc.cam = null; }
+  }, 100);
+  function fxShowOff() {   // whatever the last "show" put up goes away
+    clearTimeout(fxShowOff.t);
+    if (st.qScene && st.qScene.fxLoop) st.qScene = null;
+    if (st.hkDeath && st.hideAll) { st.hkDeath = null; st.hideAll = false; }
+    st.hkCard = null;
+    if (st.g0d && st.g0d.key === 'glitch') st.g0d = null;
+  }
   // ---- The TESTING tab (meat testing): cheats on the running game, and jumps to a sector with any event.
   // 'test' { act, ... }; the game sends 'test-state' (what the run looks like now) whenever it changes.
   const freshRun = async () => {   // a practice run, on the map after the public net
@@ -398,6 +414,20 @@ if (EDITOR) {
       persist();
     },
     qscene: m => playScene(m && m.key && QUEST_SCENES[m.key] ? m.key : 'disc'),
+    // the FX tab's "show" (tools/fx_file.js LOOKS[].show): a scene frame on a loop, a hacker's card or death screen
+    fxoff: () => fxShowOff(),
+    fxscene: m => {
+      if (!QUEST_SCENES[m.key] || !QUEST_SCENES[m.key][m.frame]) throw new Error('no such scene frame');
+      fxShowOff(); playScene(m.key);
+      Object.assign(st.qScene, { i: m.frame, t0: performance.now(), fxLoop: true });
+    },
+    fxcard: m => { if (!HACKERS[m.key]) return; fxShowOff(); st.hkCard = { id: m.key, side: HACKERS[m.key].side, t0: performance.now() - 500 }; },
+    fxdeath: m => {
+      if (!HACKERS[m.key]) return;
+      fxShowOff();
+      st.hideAll = true; st.hkDeath = { id: m.key, side: HACKERS[m.key].side, text: hkLine({ id: m.key }, 'kill'), t0: performance.now() };
+      fxShowOff.t = setTimeout(fxShowOff, 8000);   // (the screen comes back)
+    },
     qcard: () => questCard('pops'),
     qtag: () => { if (st.run && !hasLoot('dogtag')) addItem('dogtag', 0); },
     qwins: m => { questOf('pops').d0g = clamp(Math.round(+m.n || 0), 0, 10); persist(); },

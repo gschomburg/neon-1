@@ -132,7 +132,8 @@ neon-1/
 │   ├── music.html          the music tool: which track plays where
 │   ├── music_view.html     Music View: a piano roll of any track
 │   ├── music_view_*.js     Music View's resolver, and the check that it matches the engine
-│   ├── *_file.js           shared readers and writers for the data files (art, economy, tutorial)
+│   ├── *_file.js           shared readers and writers for the data files (art, economy, tutorial, fx)
+│   ├── scrub-field.js/.css the editor's draggable number fields (a copy of gregfont's)
 │   ├── quest_dialog.js     writes docs/QUEST_DIALOG.md from dist/data/quests.js
 │   ├── scene_art.js        copies cutscene art from asXii saves into dist/data/scene_art.js
 │   └── check/              fingerprints and recordings (gitignored)
