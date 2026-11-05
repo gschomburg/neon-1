@@ -414,6 +414,26 @@ unlocked by REP, and some quests unlock REP.
 - **Hacker logo pass** (the user, 2026-11-04, looking at them now): the game always adds the name under a logo (logoBlock: mark + name; the hacker card's NAME // RIVAL line), so logos don't need the name in their art: 24 x 7 is all picture. 17 hacker logos spell their name in the art and show it twice: pops, iceman, turbo, sysop, vulture, phish, hcf, leech, brick, null, nana, dialup, baud, mother, root, kludge, hype (not ggez, doppel, d0g). Redraw them (art only, no code).
 - [ ] **Effects library** (the user, 2026-11-04): talked through; decided to pull the effects into one shared library (named effects with global settings and local overrides, one way to apply them, an editor FX page). Plan and steps in docs/EFFECTS.md. Not built.
 - **asXii size presets** (the user, 2026-11-04): update asXii's Presets list (ascii-editor/dist/index.html #sizePreset) to the game's real art sizes, and check the ones there. Today it has: node glyph 5 x 3 (right), corp art 24 x 12 (wrong: corp intro art is the logo, 24 x 7), ad box 30 x 18 (right: ADS_W / ADS_H), intro map 34 x 9 (the map is 34 x 12 now), title art 32 x 20 (check: TITLE_W is 31), terminal 80 x 24. Add: logo 24 x 7 (the name goes on row 8, LOGO_W / LOGO_H), hacker face 5 x 3, SECTOR CLEARED 30 x 13, sector event card 5 x 3, cutscene 36 wide (any height; the game's grid). asXii is Justin's too: check his recent commits first.
+- [ ] **Pull asXii out into its own repo** (the user, 2026-11-04). It's already separate in most ways: its own version,
+  bump script, README and docs, and no game code. What moving it would touch:
+  - **Keep its history:** split `ascii-editor/` out with `git subtree split` (or `git filter-repo`), so Justin's and
+    Greg's commits come with it. Then remove the folder here.
+  - **The neon editor's ART tab** opens asXii at `../ascii-editor/dist/index.html?neon=1`
+    (`tools/neon_editor.html`, `editInAsxii`) and talks to it with `postMessage`. After the move, that path has to
+    point somewhere else: a hosted copy (simplest, works from anywhere), or a sibling folder on disk
+    (`../../asxii/dist/`). The messages already check `from: 'asxii'`, so they work across sites;
+    `dist/neon-link.js` goes with asXii.
+  - **Cutscene art:** `tools/scene_art.js` reads the asXii saves in `ascii-editor/saves/` (gitignored, so they're
+    only on Greg's disk). Give it a path setting, or keep the cutscene saves in this repo (e.g. `art/scenes/`), since
+    they're the game's art more than asXii's.
+  - **Docs and settings to update:** CLAUDE.md (the asXii line), readme.md (the layout tree), SPEC §14 and §16f,
+    `.gitignore` (the ascii-art.de catalog line moves to asXii's), and the new repo's own CLAUDE.md, `.gitattributes`
+    and `.gitignore`. Comments in `dist/data/art/*.js` and `scene_art.js` that say "asXii" can stay.
+  - **Justin** needs access to the new repo, and his open branches (if any) need rebasing onto it.
+  - **Hosting:** asXii gets its own deploy (and its link-preview tags once it has an address). Its update notice
+    already works on its own (`version.json`).
+  - **Gains:** asXii can be public or shared on its own, and its commits stop mixing with the game's.
+    **Costs:** two repos to keep in step for the art round trip, and the neon editor depends on where asXii lives.
 - **Sell page gear**: built v14.15 (loot rows like gear rows).
 - **SELL ALL LOOT**: built v14.15 ([ ALL LOOT +XXcr ] on the sell page).
 - **SHOE attack**: built v14.15 (the throw, shorter lines).
