@@ -1,6 +1,7 @@
 // Writes docs/QUEST_DIALOG.md: every quest's calls and scenes from dist/data/quests.js, as a script to read.
 // The words live in dist/data/quests.js: edit them there, then run: node tools/quest_dialog.js
 'use strict';
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/quest_dialog.js   (rewrites docs/QUEST_DIALOG.md from dist/data/quests.js)"); process.exit(0); }
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
 const src = fs.readFileSync(path.join(ROOT, 'dist/data/quests.js'), 'utf8');

@@ -9,6 +9,7 @@
 // gets from the game, so reload the editor after a bump).
 // A new major also needs a new save slot (STORE_KEY in core.js): this tool reminds you.
 
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/bump.js v12.01 | minor | major | music"); process.exit(0); }
 const fs = require('fs'), path = require('path');
 const DIST = path.join(__dirname, '..', 'dist');
 const core = path.join(DIST, 'engine', 'core.js');

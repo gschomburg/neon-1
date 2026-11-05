@@ -14,6 +14,7 @@
 // The per-tier tell rules (deeper MIRRORLINE = top-bottom, deeper PERIMETER = edge, SIGIL signature level =
 // tier) mirror startCorp() in the game; keep them in sync if those change.
 
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/tell_odds.js [game.html] [runs]   (defaults: dist/index.html, 3000 runs)"); process.exit(0); }
 const fs = require('fs'), path = require('path'), vm = require('vm');
 
 const file = process.argv[2] || path.join(__dirname, '..', 'dist', 'index.html');

@@ -50,6 +50,7 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = T; else root.NEON_TUT_FILE = T;
   // node tools/tutorial_file.js: rewrite the file in this format
   if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
+    if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/tutorial_file.js   (rewrites dist/data/tutorial.js in its own format: a round-trip check)"); process.exit(0); }
     const fs = require('fs'), path = require('path');
     const f = path.join(__dirname, '..', 'dist', 'data', 'tutorial.js'), src = fs.readFileSync(f, 'utf8');
     const build = (src.match(/NEON_FILES\.push\(\['data\/tutorial\.js', '([^']+)'\]\)/) || [])[1];

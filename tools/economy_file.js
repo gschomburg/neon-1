@@ -247,6 +247,7 @@
   const T = { INFO, text, parse, pick, unknown, get, set };
   if (typeof module !== 'undefined' && module.exports) module.exports = T; else root.NEON_ECON_FILE = T;
   if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
+    if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/economy_file.js   (rewrites dist/data/economy.js in its own format: a round-trip check)"); process.exit(0); }
     const fs = require('fs'), path = require('path');
     const f = path.join(__dirname, '..', 'dist', 'data', 'economy.js'), src = fs.readFileSync(f, 'utf8');
     const build = (src.match(/NEON_FILES\.push\(\['data\/economy\.js', '([^']+)'\]\)/) || [])[1];

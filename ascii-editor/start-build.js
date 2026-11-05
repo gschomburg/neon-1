@@ -6,6 +6,7 @@
 // This bundles them into dist/start.js, which the app loads when it needs them (works from file:// and served).
 //   node ascii-editor/start-build.js      (bump.js runs it too)
 'use strict';
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node ascii-editor/start-build.js   (bundles dist/start/ into dist/start.js)"); process.exit(0); }
 const fs = require('fs'), path = require('path');
 function buildStart(quiet) {
   const dir = path.join(__dirname, 'dist', 'start'), bdir = path.join(dir, 'blocks');

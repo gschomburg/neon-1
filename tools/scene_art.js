@@ -2,6 +2,7 @@
 //   node tools/scene_art.js        rewrites the file from the saves listed in SOURCES
 // Each scene's art is the save's visible drawn layers (image tracing layers and hidden ones are skipped), by layer
 // name, at their canvas position. Which layers a scene shows, in what order and color: data/quests.js QUEST_SCENES.
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/scene_art.js   (rewrites dist/data/scene_art.js from the asXii saves in SOURCES)"); process.exit(0); }
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..');
 const SOURCES = { disc: 'ascii-editor/saves/n_cutscene_01_v02.asxii.json', popshead: 'ascii-editor/saves/n_cutscene_01_pops_head.asxii.json',

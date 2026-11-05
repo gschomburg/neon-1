@@ -14,6 +14,7 @@
 //   node tools/check.js [game.html]                 record "now" and compare it to "baseline"
 // game.html defaults to dist/index.html.
 
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/check.js [game.html] | save <name> [game.html] | diff <a> <b>   (fingerprint the game, compare to the baseline)"); process.exit(0); }
 const fs = require('fs'), path = require('path'), vm = require('vm'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..');
 const DIR = path.join(__dirname, 'check');

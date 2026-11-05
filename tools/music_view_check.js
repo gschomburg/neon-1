@@ -7,6 +7,7 @@
 //
 // Usage: node tools/music_view_check.js [track ...]      (no tracks: all of them)
 
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/music_view_check.js [track ...]   (no tracks: all of them)"); process.exit(0); }
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
 

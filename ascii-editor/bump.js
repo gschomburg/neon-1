@@ -5,6 +5,7 @@
 //   node ascii-editor/bump.js 0.20                        (set it)
 //   node ascii-editor/bump.js minor "Shape tool"          (optional: a short note shown with the update notice)
 'use strict';
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node ascii-editor/bump.js minor | major | 0.20 [\"note\"]"); process.exit(0); }
 const fs = require('fs'), path = require('path');
 const dist = path.join(__dirname, 'dist');
 const appPath = path.join(dist, 'app.js'), htmlPath = path.join(dist, 'index.html');

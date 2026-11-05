@@ -18,6 +18,7 @@
 //     20 x level and pay x1.5 (couldn't pay: it goes in anyway, counted); stagefeeNNN = pushing on costs NNN x the sector
 //     you leave; stagefeeNNpct = NN% of your credits (short: it pushes on anyway, counted: in the game you'd cash out);
 //     stagemodNN = pushing on costs NN per mod you hold x the sector you leave (short: how many mods you'd have to drop)
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/econsim.js | save <name> | diff <a> <b>   (env: SEEDS SECTORS SKILLS PARALLEL CHROME WHATIF; see the top of the file)"); process.exit(0); }
 const fs = require('fs'), path = require('path'), os = require('os'), { execFile } = require('child_process');
 const ROOT = path.join(__dirname, '..'), DIR = path.join(__dirname, 'check');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';

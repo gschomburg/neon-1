@@ -1,5 +1,6 @@
 // Compare the live greglytics server with the files here.
 //   node greglytics/check-version.js [https://s3iz.com/glx/]
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node greglytics/check-version.js [https://s3iz.com/glx/]   (compare the live server with the files here)"); process.exit(0); }
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const base = (process.argv[2] || 'https://s3iz.com/glx/').replace(/\/?$/, '/');
 const dir = path.join(__dirname, 'server');

@@ -7,6 +7,7 @@
 // - the order in index.json is the order in the gallery
 // bump.js runs this too, so a version bump never ships a stale bundle.
 'use strict';
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node ascii-editor/gallery-build.js   (syncs dist/gallery/index.json and makes the dist/gallery.js bundle)"); process.exit(0); }
 const fs = require('fs'), path = require('path');
 function buildGallery(quiet) {
   const dist = path.join(__dirname, 'dist'), dir = path.join(dist, 'gallery'), idxPath = path.join(dir, 'index.json');

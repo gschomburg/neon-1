@@ -10,6 +10,7 @@
 //   node tools/playtest.js [game.html]                play, save "now", compare to "baseline"
 // Needs Chrome (Windows default path, or set CHROME=...). Runs 4 Chromes side by side.
 
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/playtest.js [game.html] | save <name> [game.html] | diff <a> <b>   (plays every corp in headless Chrome)"); process.exit(0); }
 const fs = require('fs'), path = require('path'), os = require('os'), { execFile } = require('child_process');
 const ROOT = path.join(__dirname, '..'), DIR = path.join(__dirname, 'check');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
