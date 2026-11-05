@@ -55,10 +55,12 @@ node tools/test.js --quick     # the same without the playtest (about a minute)
 node tools/check.js            # fingerprint the game and compare it to tools/golden.json (--accept after a change on purpose)
 node tools/playtest.js         # play every corp in headless Chrome, compare to tools/golden-play.json
 node tools/tell_odds.js        # how much each corp's tell helps
+node tools/economy_file.js     # rewrite a data file through its writer (a round-trip check): also fx_, tutorial_,
+                               # art_ and palette_file.js; each prints "unchanged" when the file and writer agree
 ```
 
-The editors (`tools/neon_editor.html`, `tools/palette_editor.html`, `tools/music.html`, `tools/music_view.html`)
-open straight from disk in Chrome. They save into `dist/` with the File System Access API.
+The editors (`tools/neon_editor.html`, `tools/music.html`, `tools/music_view.html`) open straight from disk in
+Chrome. They save into `dist/` with the File System Access API.
 
 ## Version
 
@@ -133,12 +135,23 @@ neon-1/
 │   ├── golden*.json        what the game made last time it was accepted (committed)
 │   ├── econsim.js          play whole runs headless and report the credits (docs/ECONOMY.md)
 │   ├── tell_odds.js        how much each corp's tell helps
-│   ├── neon_editor.html    the editor: edits the data files in dist/ in place
-│   ├── palette_editor.html the older palette editor
+│   ├── neon_editor.html    the editor: edits the data files in dist/ in place (the page; its code is in editor/)
+│   ├── editor/             the editor's code: one file per tab, and what they share
+│   │   ├── common.js       helpers every tab uses (NEON_ED): the game frame, toasts, IndexedDB, saving a data file
+│   │   ├── editor.css      the editor's styles
+│   │   ├── palette.js      the game frame and its scene buttons, and the PALETTE tab (loads first)
+│   │   ├── music.js        MUSIC, and the mode switch for every tab
+│   │   ├── demos.js        the music tool's engine demo tracks
+│   │   ├── art.js, training.js, economy.js, fx.js   the tabs that save data files
+│   │   ├── items.js, ads.js, hackers.js             read-only views (ITEMS & MODS, ADS, HACKERS)
+│   │   ├── testing.js, g0d.js, g0d-mold.js          TESTING and G0D: cheats and previews on the running game
+│   │   └── help.js         the ? help, per tab
 │   ├── music.html          the music tool: which track plays where
 │   ├── music_view.html     Music View: a piano roll of any track
 │   ├── music_view_*.js     Music View's resolver, and the check that it matches the engine
-│   ├── *_file.js           shared readers and writers for the data files (art, economy, tutorial, fx)
+│   ├── *_file.js           readers and writers for the data files (art, economy, tutorial, fx, palette); the
+│   │                       editor saves with them, and `node tools/x_file.js` checks a file round-trips
+│   ├── data_file_core.js   what the *_file.js writers share: the stamp line, parsing, quoting, the round-trip main
 │   ├── scrub-field.js/.css the editor's draggable number fields (a copy of gregfont's)
 │   ├── quest_dialog.js     writes docs/QUEST_DIALOG.md from dist/data/quests.js
 │   ├── scene_art.js        copies cutscene art from asXii saves into dist/data/scene_art.js

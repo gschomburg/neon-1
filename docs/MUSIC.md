@@ -97,7 +97,7 @@ the game plays. The level buttons pick how much of the band plays (0-4), or "gam
 down walks through the corps. Everything else works as in the music tool below (stars, tags, notes, the tracks view,
 try another band, assignments); changes are remembered in the browser and copied out for Claude, and the game frame
 gets them live. The stars, notes and changes are shared with the old music tool (same browser storage). The old
-`music.html` and `palette_editor.html` stay for now.
+`music.html` stays for now (`palette_editor.html` was removed on 2026-11-05: the PALETTE tab replaces it).
 
 **The music tool: `tools/music.html`** (2026-10-24). Open it in Chrome from the repo. Every track in a sortable,
 filterable list (tempo, key, groove, bass, arp, where it plays); click one to play it, and push it like the game does
