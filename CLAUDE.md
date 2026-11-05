@@ -15,6 +15,6 @@ Greg's raw notes.
 ## Parts
 - Game: `dist/` (classic global scripts, load order set in `dist/index.html`). Runs from file://. Multiplayer uses the Firebase Realtime DB (`database.rules.json` is pasted into the console by hand).
 - `tools/neon_editor.html`: edits the game's data files in place (follows web.md's saving pattern). Shared file readers and writers are `tools/*_file.js`.
-- `ascii-editor/` (asXii): its own version (`node ascii-editor/bump.js`, `MAJOR.MINOR`, no "v"). Saves are download-only for now, and it has no unsaved-changes warning yet. `saves/` is gitignored.
+- `ascii-editor/` (asXii): its own version (`node ascii-editor/bump.js`, `MAJOR.MINOR`, no "v"). Saves follow web.md's saving pattern (in place in Chrome, a download elsewhere). Justin Bakse works on asXii too: fetch and check his commits before changing it. `saves/` is gitignored.
 - `greglytics/`: the shared events/leaderboard service. `dist/engine/greglytics.js` is a copy; change the original, then copy it in.
 - Deploy: the user uploads `dist/` to gregschomburg.com/neon/.
