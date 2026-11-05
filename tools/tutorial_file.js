@@ -1,7 +1,10 @@
 // NeoN+1 tools/tutorial_file.js: writes and reads dist/data/tutorial.js, the training's lines (what POPS says).
 // Used by the neon editor's TRAINING tab (save / reload) and by node:
 //   node tools/tutorial_file.js        rewrites the file in its own format (a check that it round-trips)
+// Needs tools/data_file_core.js loaded first in a page (node requires it).
 (function (root) {
+  const mod = typeof module !== 'undefined' ? module : null;
+  const C = mod && mod.exports ? require('./data_file_core.js') : root.NEON_DATA_FILE;
   const HEAD = [
     '// NeoN+1 data/tutorial.js: everything POPS says in the training run, in the order he says it.',
     "// The neon editor's TRAINING tab edits this file (tools/tutorial_file.js writes it). Each line:",
@@ -18,7 +21,7 @@
   const q = s => JSON.stringify(String(s == null ? '' : s));
   // the file's text, from a list of lines and the build stamp ('v13.30')
   function text(copy, build) {
-    const out = [...HEAD, `NEON_FILES.push(['data/tutorial.js', '${build || 'v0'}']);`, '', 'const TUT_COPY = ['];
+    const out = [...HEAD, C.stamp('data/tutorial.js', build), '', 'const TUT_COPY = ['];
     for (const l of copy) {
       if (l.part) out.push(`  // ${l.part}`);
       const f = [`id: ${q(l.id)}`];
@@ -35,7 +38,7 @@
   }
   // the lines, from the file's text
   function parse(src) {
-    return new Function('NEON_FILES', src + '\nreturn TUT_COPY;')([]);
+    return C.run(src, 'TUT_COPY');
   }
   // what looks wrong with a line (the editor shows these)
   function problems(l) {
@@ -47,15 +50,13 @@
     return p;
   }
   const T = { text, parse, problems };
-  if (typeof module !== 'undefined' && module.exports) module.exports = T; else root.NEON_TUT_FILE = T;
+  C.expose(root, mod, 'NEON_TUT_FILE', T);
   // node tools/tutorial_file.js: rewrite the file in this format
-  if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
-    if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/tutorial_file.js   (rewrites dist/data/tutorial.js in its own format: a round-trip check)"); process.exit(0); }
-    const fs = require('fs'), path = require('path');
-    const f = path.join(__dirname, '..', 'dist', 'data', 'tutorial.js'), src = fs.readFileSync(f, 'utf8');
-    const build = (src.match(/NEON_FILES\.push\(\['data\/tutorial\.js', '([^']+)'\]\)/) || [])[1];
+  C.main(mod, "usage: node tools/tutorial_file.js   (rewrites dist/data/tutorial.js in its own format: a round-trip check)", ({ fs, path, dist }) => {
+    const f = path.join(dist, 'data', 'tutorial.js'), src = fs.readFileSync(f, 'utf8');
+    const build = C.buildOf(src, 'data/tutorial.js');
     const copy = parse(src), out = text(copy, build);
     fs.writeFileSync(f, out);
     console.log(`data/tutorial.js: ${copy.length} lines, ${src === out ? 'unchanged' : 'rewritten'}`);
-  }
+  });
 })(this);

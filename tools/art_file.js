@@ -6,8 +6,11 @@
 //   faces.js     ART_FACES: hackers' faces (POPS and the rest of data/hackers.js), by hacker id
 //   root.js      ART_ROOT: the SECTOR CLEARED pictures (one picked at random), by key
 //   node tools/art_file.js    rewrites the five files in their own format (a round-trip check)
+// Needs tools/data_file_core.js loaded first in a page (node requires it).
 (function (root) {
   'use strict';
+  const mod = typeof module !== 'undefined' ? module : null;
+  const C = mod && mod.exports ? require('./data_file_core.js') : root.NEON_DATA_FILE;
   // Size limits. Logos all sit in one fixed box (LOGO_W x LOGO_H), centered, wherever they show.
   const KINDS = {
     glyphs:  { label: 'node glyphs',         file: 'glyphs.js',   w: 5,  h: 3,  fixedH: true, note: 'drawn on the nodes, each line centered by itself; up to 5 x 3' },
@@ -18,7 +21,7 @@
     map:     { label: 'intro world map',     file: 'worldmap.js', w: 34, h: 12, fixedH: true, single: true, note: 'the boot intro map (the login screen\'s box); keep it 34 x 12. its 0 o x [] blink, and your spot is picked inside the land' },
   };
   const LOGO_KINDS = ['player', 'corp', 'hacker'];
-  const q = s => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+  const q = C.quote;
   const key = k => /^[a-z_$][\w$]*$/i.test(k) ? k : q(k);
   const short = rows => '[' + rows.map(q).join(', ') + ']';
   const tall = (rows, pad) => rows.length ? '[\n' + rows.map(r => pad + '  ' + q(r) + ',').join('\n') + '\n' + pad + ']' : '[]';
@@ -28,7 +31,7 @@
     "// Hand edits are fine too: inside the quotes a backslash is \\\\ and a quote \\'.",
     ...more,
     "'use strict';",
-    `NEON_FILES.push(['data/art/${file}', '${build || 'v0'}']);`,
+    C.stamp(`data/art/${file}`, build),
     '',
   ];
 
@@ -130,7 +133,7 @@
 
   // Read the three files' text back into one art set (eval: they're our own files).
   function parse(texts) {
-    const run = (t, names) => new Function('NEON_FILES', t + '\n;return {' + names.join(',') + '};')([]);
+    const run = (t, names) => C.run(t, '{' + names.join(',') + '}');
     const g = run(texts['glyphs.js'], ['ART_GLYPHS', 'ART_SPECIAL']), l = run(texts['logos.js'], ['ART_LOGOS']), m = run(texts['worldmap.js'], ['ART_MAP']);
     const fc = texts['faces.js'] ? run(texts['faces.js'], ['ART_FACES']).ART_FACES : undefined;
     const rt = texts['root.js'] ? run(texts['root.js'], ['ART_ROOT']).ART_ROOT : undefined;
@@ -138,16 +141,15 @@
   }
 
   const api = { KINDS, LOGO_KINDS, glyphsText, logosText, mapText, facesText, rootText, files, artProblems, logoProblems, rowsFromText, parse };
-  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.NEON_ART_FILE = api;
-  if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
-    if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/art_file.js   (rewrites dist/data/art/*.js in their own format: a round-trip check)'); process.exit(0); }
-    const fs = require('fs'), path = require('path'), dir = path.join(__dirname, '..', 'dist', 'data', 'art'), texts = {};
+  C.expose(root, mod, 'NEON_ART_FILE', api);
+  C.main(mod, 'usage: node tools/art_file.js   (rewrites dist/data/art/*.js in their own format: a round-trip check)', ({ fs, path, dist }) => {
+    const dir = path.join(dist, 'data', 'art'), texts = {};
     for (const f of ['glyphs.js', 'logos.js', 'worldmap.js', 'faces.js', 'root.js']) texts[f] = fs.readFileSync(path.join(dir, f), 'utf8');
-    const build = (texts['logos.js'].match(/NEON_FILES\.push\(\['data\/art\/logos\.js', '([^']+)'\]\)/) || [])[1];
+    const build = C.buildOf(texts['logos.js'], 'data/art/logos.js');
     const a = parse(texts), out = files(a, build), back = parse(out);
     if (JSON.stringify(back) !== JSON.stringify(a)) { console.log('round trip changed the art: not written'); process.exit(1); }
     const changed = [];
     for (const [f, t] of Object.entries(out)) if (t !== texts[f]) { fs.writeFileSync(path.join(dir, f), t); changed.push(f); }
     console.log(`data/art: ${Object.keys(out).length} files, ${changed.length ? 'rewritten: ' + changed.join(', ') : 'unchanged'}`);
-  }
+  });
 })(this);
