@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.40']);
+NEON_FILES.push(['engine/heaven.js', 'v14.41']);
 
 const HEAVEN = {};
 
@@ -1244,8 +1244,8 @@ function g0dEndTick(now) {
   const f = st.g0dEnd;
   if (!f || st.mode !== 'g0dend' || st.pause || st.dev) return;
   const e = now - f.t0, say = (k, at, fn) => { if (e >= at && !f.said[k]) { f.said[k] = true; fn(); } };
-  say('a', 300, () => g0dSay('n0. n0. this is my netw0rk.'));
-  say('b', 1700, () => g0dSay('there will be others.'));
+  say('a', 300, () => g0dSay('n0. n0. i AM the net.'));   // (the user, 2026-11-05: it just dies. no "there will be others")
+  say('b', 1700, () => g0dSay('i am th3 n3t. i am th3 n%... i am'));   // its code coming apart (scattered across the net: the ending)
   G0D_END.crumble.forEach(([a], i) => say('k' + i, a, () => { const last = i === G0D_END.crumble.length - 1; Sound.shatter(); if (last) Sound.hkBoom(); shake(last ? 14 : 6, last ? 0.7 : 0.35); }));
   say('burst', G0D_END.burst, () => g0dDieBurst(f, 5, 3, 0.9));
   say('small', G0D_END.small, () => g0dDieBurst(f, 3, 1, 0.6));
@@ -1281,7 +1281,7 @@ function g0dEndCall(f) {
   }
   const node = f.node, seed = run && run.seed, quest = run && run.quest;
   st.kbFocus = st.hoverBtn = null; Sound.shield();
-  st.callBox = ({ t0: performance.now(), who: 'pops', lines: ['kid. you did it. G0D is down.', "b0y's okay. he says hi.", 'the rest comes later. for now: go again?'],
+  st.callBox = ({ t0: performance.now(), who: 'pops', lines: ['kid. you did it. G0D is down.', "b0y's up here with me. he says hi.", 'the net is yours. go again?'],
     btns: [
       { text: '[ THE MAZE ]', onTap: () => { st.g0dEnd = null; st.g0dp = null; startRun(seed, true, { heaven: true, quest }); } },
       { text: '[ G0D FIGHT ]', onTap: () => { st.g0dEnd = null; st.g0dp = null; toMap(); setTimeout(() => { if (st.mode === 'map' && st.run && !st.g0dp && node) g0dWakeStart(node); }, 700); } }],
@@ -1302,7 +1302,7 @@ function heavenRewards(f, next) {
   extra.push(['', C.text]);
   if (runRep) extra.push([`+${runRep} REP   the run`, C.rep]);
   extra.push([`+${bonus} REP   H3AV3N`, C.rep], ['', C.text]);
-  if (!f.wasBeat) extra.push(['unlocked: seeds for real.', C.money], ['replayed seeds count now.', C.mid]);
+  if (!f.wasBeat) extra.push(['unlocked:', C.mid], ["1UP       b0y's crash unit", C.money], ['SEEDS     replays count now', C.money], ["REPLAYS   POPS's log, on the title", C.money]);   // (the ending hands them over: data/quests.js h3av3n)
   else extra.push([`G0D down x${save.g0dWins}.`, C.money]);
   openChoice({ reveal: true, title: 'H3AV3N CLEARED', col: G0DP_BLUE, by: profile(), head: [['G0D', C.text]], extra, options: [],
     skipLabel: '[ CONTINUE ]', msg: { text: "> b0y: we did it. it's quiet now.", col: G0DP_BLUE },

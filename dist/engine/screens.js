@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.40']);
+NEON_FILES.push(['engine/screens.js', 'v14.41']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -139,6 +139,7 @@ function titleLines(now) {
     { text: 'seed' },
     { text: `[${st.seed.slice(0, 10)}]`, id: 'seed', onTap: rerollSeed },
     ...(questSeed(st.seed) ? [{ text: 'quest', col: G0DP_BLUE }] : st.practice ? [{ text: 'practice', col: C.dangerDim }] : []),
+    ...(replaysOpen() ? [{ text: '[REPLAYS]', id: 'replays', onTap: () => swapTo(openReplays) }] : []),   // (beat G0D: POPS's log, engine/menus.js)
   ] });
   return lines;
 }

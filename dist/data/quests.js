@@ -14,7 +14,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.40']);
+NEON_FILES.push(['data/quests.js', 'v14.41']);
 
 const QUEST_INFO = {
   pops: {
@@ -58,19 +58,48 @@ const SCENE_MUSIC = {
   disc: { song: 'pantheon', step: 6000, mood: { levels: [0, 1], stages: 'A' } },
   prodigal: { song: 'eventhorizon', step: 7000, mood: { levels: [0], stages: 'A' } },   // (the user: EVENT HORIZON, a lighter cutscene track)
   gate: { song: 'pantheon', step: 6000, mood: { levels: [2], stages: 'B' } },
+  h3av3n: { song: 'eventhorizon', step: 7000, mood: { levels: [0], stages: 'A' } },
 };
 const QUEST_SCENES = {
-  // H3AV3N: G0D is down (a placeholder: docs/ENDGAME.md has the real ending to write)
+  // THE ENDING (docs/ENDGAME.md, the user 2026-11-05): G0D is gone for good (its code broken up across the net: the
+  // seed of a G0D.exe quest later). Dawn over the city, POPS and b0y on the roof, the two rewards handed over (b0y: the
+  // 1UP, out of MEDIX; POPS: the seeds hold still now, and his log of your runs, REPLAYS), your logo, the credits.
+  // Placeholder art (Claude's): ascii-editor/saves/n_cutscene_04_ending, to redraw.
   h3av3n: [
-    { title: ['G0D IS DOWN', 'H3AV3N'] },
-    { text: 'the network goes quiet. for the first time in years, nothing is watching.' },
-    { who: 'pops', text: 'kid. you did it.' },
-    { text: 'b0y logs off. across town, a light comes back on in a back room behind a laundromat.' },
-    { text: '(the real cutscene goes here: docs/ENDGAME.md)' },
-    { title: ['THANKS FOR PLAYING', 'NeoN+1'] },
-    { title: ['CREDITS', '(the credits go here)'] },
+    { title: ['G0D IS DOWN', 'H3AV3N'], mood: { levels: [0], stages: 'A' } },
+    { pic: { art: 'ending', rows: [0, 11], hold: 1200, layers: [
+      { n: 'sun', col: 'money', at: 700, dur: 900, from: 'bottom', slide: { from: [0, 3], at: 0, ms: 3600 } },
+      { n: 'skyline', col: 'mid', solid: true, at: 0, dur: 1100, from: 'bottom', flicker: true,
+        lights: { ch: 'o', col: 'money', rate: 900, off: 0.55, level: 0.7 } },
+      { n: 'street', col: 'dim', at: 300, dur: 700 }] },
+      text: 'G0D comes apart the way a corp does when you breach it: all at once, then nothing. its code breaks into a million pieces and scatters across the net, too small to think.' },
+    { text: 'the mold goes with it. sector by sector the corps come back on, in their own colors, like nothing ever happened.', mood: { levels: [0, 1], stages: 'A' } },
+    { pic: { art: 'ending', rows: [16, 25], hold: 600, layers: [
+      { n: 'roof sky', col: 'dim', lights: { ch: '.', col: 'bright', rate: 1500, off: 0.5 } },
+      { n: 'roof', col: 'dim', at: 0, dur: 600 },
+      { n: 'people', col: 'text', at: 300, from: 'bottom', flicker: true, blink: { match: 'o o', to: '- -' } },
+      { n: 'mugs', col: 'mid', at: 900, smoke: { x: 15, y: 19, dx: -1, dy: -3, every: 900, life: 2400 } }] },
+      text: "the next morning, on POPS's roof. two mugs of burnt coffee. the sun coming up over a net with nobody watching it." },
+    { who: 'b0y', text: 'doc.' },
+    { who: 'pops', text: 'kid.' },
+    { text: "neither of them says much. they don't need to." },
+    { pic: { art: 'ending', rows: [30, 39], layers: [
+      { n: 'cable', col: 'dim' },
+      { n: 'unit', col: 'text', glitch: true, dur: 900, lights: { ch: '*', col: 'danger', rate: 600, off: 0.4, pulse: 1, period: 900 },
+        cue: { match: '[ 1UP ]', word: 'back', col: 'money' } }] },
+      who: 'b0y', text: 'here. i pulled this out of MEDIX on my way out of sub-basement three. they brought me back with it more times than i can count.', mood: { levels: [1], stages: 'A' } },
+    { who: 'b0y', text: "a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector." },
+    { pic: { art: 'ending', rows: [44, 53], layers: [
+      { n: 'terminal', col: 'text', flicker: true, dur: 800, cue: { match: ': ________', word: 'seeds', col: 'accent' } }] },
+      who: 'pops', text: "and now that the mold's gone, the seeds hold still. type one in and the net comes up the same, every time. it counts now." },
+    { who: 'pops', text: "i've kept a log of every run you've made. your best ones are in there. run them again. see how deep you get." },
+    { who: 'b0y', text: "come on, doc. let's go crack a corp.", mood: { levels: [1, 2], stages: 'AB' } },
+    { who: 'pops', text: 'one. then breakfast.' },
+    { pic: { logo: '@you' }, text: "and you? you've got a seed to type in." },
     { title: ['THERE IS MORE TO EXPLORE', 'the net is still out there.'] },
-    { title: ['UNLOCKED: SEEDS FOR REAL', 'replayed seeds count now. already paid.'] },
+    { title: ['THANKS FOR PLAYING', 'NeoN+1'] },
+    { title: ['CREDITS', 'made by', 'greg schomburg', 'and claude', '', 'playtesting', 'justin bakse', 'and friends'] },
+    { title: ['THANKS TO', 'zer0_c00l    ac1d_burn', 'ph4nt0m      l0rd_n1k0n', 'cr4sh_0verride   r00tk1d', 'n3on_ghost    s1lk_r0ad', 'b1t_r0t      c0ffee_h4x', 'and everyone still out there'] },
   ],
   // SAFEHOUSE: you bring POPS the DISC
   // A strip scene (the user, 2026-11-04): one tall page that scrolls up (engine/quests.js buildStrip).

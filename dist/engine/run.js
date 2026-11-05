@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.40']);
+NEON_FILES.push(['engine/run.js', 'v14.41']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -39,6 +39,7 @@ async function startRun(seed, practice, opts = {}) {
     beltSlots: CONFIG.beltSlots + legacyLv('belt'), reroutes: 0,
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
+  if (oneUpOpen(st.run, opts)) st.run.oneUp = 1;   // the 1UP (beat G0D): you start with one
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
   if (quest === 'had3s') st.run.items.push({ key: 'leash', tier: 0, n: 1 });   // HAD3S: you go in with a LEASH
   if (!opts.tutorial) questRunStart(st.run);   // the OMNI RAID: b0y's CALL (engine/quests.js)
@@ -154,6 +155,7 @@ async function enterNode(node, warp = false) {
 }
 
 async function startCorp(node, startIdx = 0, restore = null) {
+  if (!restore && startIdx === 0) oneUpSavePoint(node);   // the 1UP's save point: the run as you go in (before anything below)
   let def = corpDef(node.corp);
   if (node.type === 'final' && node.corp === 'omni') {   // OMNI copies one corp you beat in this sector
     const pool = ((st.run.beat || {})[node.sector || 0] || []).filter(k => CORPS[k]);
@@ -964,6 +966,51 @@ function askContinue(price = 100) {
   });
 }
 
+// ---------------- THE 1UP (docs/ENDGAME.md; b0y's crash unit from MEDIX, the reward for beating G0D) ----------------
+// You hold one at most; it charges again every sector. Die holding it and you can go back to the start of the corp you
+// died in, with what you had going in (run.oneUpSave, taken as you entered). The seed is the seed: its layers come back
+// exactly the same. No penalty: fewer used breaks a tie on the leaderboard (engine/leaders.js), and it's tracked.
+const oneUpOpen = (run, opts = {}) => !!save.beatG0D && !!run && !run.tutorial && !opts.tutorial && !run.mp && !st.mp;
+function oneUpSavePoint(node) {
+  const run = st.run;
+  if (!oneUpOpen(run) || node.type === 'start' || node.heaven) return;   // (not the public net, and not heaven's MAZE / G0D: their own rules)
+  const { oneUpSave, ...as } = run;
+  run.oneUpSave = JSON.parse(JSON.stringify(as)); run.oneUpAt = node.id;
+}
+const oneUpReady = run => !!run && run.oneUp > 0 && !!run.oneUpSave && !!st.corp && st.corp.node && st.corp.node.id === run.oneUpAt && !st.mp;
+function askOneUp() {
+  return new Promise(res => {
+    let done = false;
+    const choose = v => { if (done) return; done = true; Sound.ui(); res(v); };
+    const name = st.corp.def.name;
+    openPanel('1UP', (T, B, X) => {
+      X({ text: 'C O N T I N U E ?', col: Math.floor(performance.now() / 300) % 2 ? C.money : C.bright, bold: true });
+      T('');
+      T("b0y's crash unit is charged.", C.mid);
+      T('');
+      T('back to the start of', C.text);
+      X({ text: name, col: C.bright, bold: true });
+      T('with what you had going in.', C.text);
+      T('it charges again next sector.', C.mid);
+      T('');
+      X({ box: true, text: 'U S E   1 U P', id: 'oneup', onTap: () => choose(true), minW: 20 });
+      T('');
+      B('[ GAME OVER ]', 'giveup', () => choose(false));
+    }, { text: '> flatlined. the crash unit hums.', col: C.money });
+  });
+}
+async function useOneUp(run0) {
+  const c = st.corp, back = JSON.parse(JSON.stringify(run0.oneUpSave));
+  Object.assign(back, { oneUp: 0, oneUps: (run0.oneUps || 0) + 1, oneUpAt: run0.oneUpAt, oneUpSave: run0.oneUpSave, stat: run0.stat, resumes: run0.resumes });   // (the stats keep counting)
+  stat('oneup', { sector: (c.sector || 0) + 1, corp: c.def.key, layer: st.lv && st.lv.boss ? 'boss' : c.idx + 1 });
+  st.run = back; st.dying = false; st.timer = null; st.hkDeath = null;
+  Sound.shield(); flash(C.money, 0.25, 0.5);
+  await wipeOut(0);
+  st.busy = false;
+  setMsg(`> 1UP. back to the start of ${c.def.name.toLowerCase()}.`, C.money);
+  startCorp(back.map[back.oneUpAt]);
+}
+
 // SKIPJACK's question: skip the next layer (or the boss), or play it.
 const SKIP_BOSS = true; // switch: false = bosses can never be skipped
 function askSkip(boss) {
@@ -1653,6 +1700,7 @@ async function die() {
     await wipeOut(0);
     showBoard('play');
   }
+  if (oneUpReady(run0) && await askOneUp()) return useOneUp(run0);   // the 1UP: back to the start of this corp
   if (st.corp && st.corp.hasBoss) { corpStat(st.corp.def.key).lost++; persist(); }   // codex record
   lightsOn();
   st.busy = true;
@@ -1703,6 +1751,7 @@ async function endRun(win) {
   tallyRunEnd(run, win, rep);   // THE RECORD (the FEAT box comes up over the end screen)
   save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, sector: (run.sector || 0) + 1, win, rep, practice: run.practice, at: Date.now() });
   save.history = save.history.slice(0, 20);
+  bestSeedsNote(run);   // REPLAYS: your 10 deepest seeds (engine/menus.js)
   persist();
   lbSubmit(run, win);   // the online leaderboard (engine/leaders.js)
 
@@ -1777,6 +1826,7 @@ async function pushOn() {
   const old = run.sector, skipped = !!(run.pending && run.pending.skipped);
   run.sector++;
   if (legacyLv('wind') && run.integrity < run.maxInt && !zombie()) run.integrity++;   // SECOND WIND (THE BOARD)
+  if (oneUpOpen(run)) run.oneUp = 1;   // the 1UP charges again every sector (used or not, you hold one)
   if (run.quest === 'h3av3n' && run.sector === 1) addHeavenSector(run.map, run.seed, 1);   // the H3AV3N seed: sector 2 is heaven (engine/heaven.js)
   else addSector(run.map, run.seed, run.sector, run.forceEvent || null);   // (forceEvent: the editor's TESTING tab)
   run.forceEvent = null; run.fence = [];   // what THE FENCE didn't sell back is gone

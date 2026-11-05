@@ -1,7 +1,7 @@
 // NeoN+1 data/scene_art.js: cutscene art, drawn in asXii (ascii-editor/saves). Made by tools/scene_art.js: edit the
 // save and run it again, don't edit here. SCENE_ART[scene]: { src, w, h, layers: { name: { x, y, rows } } }.
 'use strict';
-NEON_FILES.push(['data/scene_art.js', 'v14.40']);
+NEON_FILES.push(['data/scene_art.js', 'v14.41']);
 
 const SCENE_ART = {
   disc: { src: "n_cutscene_01_v02.asxii.json", w: 36, h: 150, layers: {
@@ -225,6 +225,73 @@ const SCENE_ART = {
       "     \\_____ ___||___ ____/",
       "           X   ||   X",
       "          / \\  ||  / \\",
+    ] },
+  } },
+  ending: { src: "n_cutscene_04_ending.asxii.json", w: 36, h: 64, layers: {
+    "terminal": { x: 0, y: 44, rows: [
+      "  .------------------------------.",
+      "  | > seed: ________             |",
+      "  |                              |",
+      "  | log:                         |",
+      "  |  01  H4D3S       depth 12    |",
+      "  |  02  KITCHEN     depth  9    |",
+      "  |  03  ZER0        depth  7    |",
+      "  |  04  ...                     |",
+      "  '------------------------------'",
+      "  ________/____________\\________",
+    ] },
+    "cable": { x: 6, y: 38, rows: [
+      "     \\_____",
+      "           \\___ SB-3",
+    ] },
+    "unit": { x: 0, y: 30, rows: [
+      "  .------------------------------.",
+      "  |  MEDIX // CRASH UNIT  03     |",
+      "  |                              |",
+      "  |  __/\\  ___/\\  ___/\\  ___/\\_  |",
+      "  |      \\/     \\/     \\/       |",
+      "  |                              |",
+      "  |   [ 1UP ]          ( * )     |",
+      "  '------------------------------'",
+    ] },
+    "roof": { x: 0, y: 23, rows: [
+      "====================================",
+      " |  _____         _____         |",
+      " | |  |  |       |  |  |        |",
+    ] },
+    "people": { x: 0, y: 17, rows: [
+      "      .----.                .---.",
+      "     | -  - |              / o o \\",
+      "     |  __  |              \\  -  /",
+      "      \\____/                '---'",
+      "    __/    \\__            __/   \\__",
+      "   |          |          |         |",
+    ] },
+    "mugs": { x: 0, y: 20, rows: [
+      "             c[_]       [_]D",
+    ] },
+    "roof sky": { x: 0, y: 16, rows: [
+      "    .                  .        .",
+      "          .      .           .",
+    ] },
+    "street": { x: 0, y: 10, rows: [
+      "====================================",
+      " .   .   .   .   .   .   .   .   .",
+    ] },
+    "skyline": { x: 0, y: 4, rows: [
+      "          ___",
+      "    _    |   |        __         _",
+      "   | |   |o o|   ___ |  |   _   | |",
+      " __|o|__ |o o|  |o o||oo|__| |__|o|",
+      "|oo|o|oo||o o|__|o o||oo|oo|o|oo|o|_",
+      "|oo|o|oo||o o|oo|o o||oo|oo|o|oo|o|o|",
+    ] },
+    "sun": { x: 0, y: 0, rows: [
+      "                 |",
+      "         \\       |       /",
+      "           .   .---.   .",
+      "      --     /       \\     --",
+      "           /           \\",
     ] },
   } },
 };

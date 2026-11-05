@@ -10,6 +10,23 @@ After G0D FINAL STAND, in order:
 3. **"There is more to explore"** (or something like it).
 4. **The reward for beating the game.** It shows up as a REP unlock, but already bought: you don't pay for it.
 
+## Built v14.41: the ending, the 1UP, REPLAYS (2026-11-05)
+
+**Decided (Greg, 2026-11-05):**
+- G0D just dies: no "there will be others", no "it's not gone". Its last lines: "n0. n0. i AM the net." then it comes apart ("i am th3 n3t. i am th3 n%... i am"). The ending says its code broke into pieces and scattered across the net, too small to think: a quiet seed for the G0D.exe quest later (BACKLOG item 3).
+- A clean, happy ending: POPS and b0y reunite ("let's go crack a corp").
+- The rewards are handed over in the story: **b0y gives you the 1UP** (a crash unit he pulled out of MEDIX on his way out of sub-basement three); **POPS teaches you the seeds** (with the mold gone they hold still, so replays count) and gives you **his log of your runs** (REPLAYS). The gauntlet seed and G0D's eye: later.
+- Credits: made by Greg Schomburg and Claude; playtesting Justin Bakse and friends; then THANKS TO a list of made-up hacker handles.
+- New art, all placeholders for now (Claude's, ascii-editor/saves/n_cutscene_04_ending, to redraw in asXii): a skyline at dawn, the rooftop, the crash unit, the seed terminal; your own logo at the end.
+
+**The scene** (data/quests.js `h3av3n`, a strip; music EVENT HORIZON): G0D IS DOWN · dawn over the city, its lights going out (G0D's code scattered) · the mold goes with it · the rooftop, two mugs of coffee · "doc." / "kid." · the crash unit (b0y: the 1UP) · the seed terminal (POPS: seeds, his log) · "come on, doc. let's go crack a corp." / "one. then breakfast." · your logo: "and you? you've got a seed to type in." · THERE IS MORE TO EXPLORE · THANKS FOR PLAYING · CREDITS · THANKS TO. Then H3AV3N CLEARED lists the three unlocks, then POPS's call.
+
+**The 1UP** (engine/run.js, "THE 1UP"): as designed below. You start every run with one once you've beaten G0D, and it charges again every sector. The save point is the run as you enter a corp (`run.oneUpSave`; not the public net, not heaven's MAZE / G0D). Die holding it: a CONTINUE? screen; USE 1UP puts you back at the start of that corp with what you had going in, and the seed brings the same layers back. A gold 1UP shows next to INT while you hold one. Tracked: a `oneup` event (sector, corp, layer), `oneUps` on run_end. Leaderboard tie: 1UPs x 100 + mods (fewer 1UPs wins first; the board shows the mods), and every score now carries its seed and 1UPs in its data (for a seed board later).
+
+**REPLAYS** (engine/menus.js): a [REPLAYS] on the title's seed row once you've beaten G0D. POPS's log: your 10 deepest seeds (`save.bestSeeds`, built from your history the first time) and the 5 you played last. Tap one to run it.
+
+Not done: showing the three as already-paid posts on THE BOARD (they're listed on H3AV3N CLEARED); a seed leaderboard (the scores carry the seed now).
+
 ## Reward 1: seeds for real
 Replaying a seed no longer counts as practice, so the run goes on a leaderboard. Maybe
 those runs get **a leaderboard of their own** (any game played this way).

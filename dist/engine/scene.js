@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.40']);
+NEON_FILES.push(['engine/scene.js', 'v14.41']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -162,6 +162,7 @@ function buildScene(now, collectHits, raw = false) {
     }
     const fw = st.corp && st.corp.wallAll ? 'FW*' : run.shield ? `FW${run.shield}` : '';
     if (fw) put(L.wc - bar.length - 4 - 1 - fw.length, 2, fw, C.accent);
+    if (run.oneUp > 0) put(L.wc - bar.length - 4 - 1 - (fw ? fw.length + 1 : 0) - 3, 2, '1UP', C.money);   // the 1UP, charged (engine/run.js)
 
     let where = run.sector ? `OVERWORLD // SECTOR ${run.sector + 1}` : 'OVERWORLD';
     if (st.mode === 'play' && st.corp) {

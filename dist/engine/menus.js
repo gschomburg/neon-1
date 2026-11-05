@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v14.40']);
+NEON_FILES.push(['engine/menus.js', 'v14.41']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -40,6 +40,45 @@ function setSeed(s) {
   st.practice = !save.beatG0D;     // a chosen seed is a practice run (once you've beaten G0D, it counts)
   Sound.ui();
   setMsg(questSeed(clean) ? `> seed set: ${clean}. b0y's with you.` : `> seed set: ${clean}`, questSeed(clean) ? G0DP_BLUE : C.text);
+}
+
+// ---------------- REPLAYS (docs/ENDGAME.md: beat G0D, and POPS gives you his log of your runs) ----------------
+// The seed row's [REPLAYS] on the title: your 10 deepest seeds (save.bestSeeds: the history only keeps 20 runs) and the
+// 5 you played last. Tap one to run it (it counts: seeds for real).
+const replaysOpen = () => !!save.beatG0D;
+function bestSeedsNote(run) {   // a run ended: keep its seed if it's one of your 10 deepest (engine/run.js endRun)
+  if (!run || run.tutorial || run.mp || !run.seed) return;
+  const b = bestSeeds(), had = b.find(x => x.seed === run.seed);
+  if (had && had.depth >= run.depth) return;
+  save.bestSeeds = b.filter(x => x.seed !== run.seed).concat({ seed: run.seed, depth: run.depth, at: Date.now() }).sort((a, c) => c.depth - a.depth).slice(0, 10);
+}
+function bestSeeds() {   // (the first time: built from the run history)
+  if (!save.bestSeeds) {
+    const by = {};
+    for (const h of save.history || []) if (h.seed && (!by[h.seed] || h.depth > by[h.seed].depth)) by[h.seed] = { seed: h.seed, depth: h.depth, at: h.at };
+    save.bestSeeds = Object.values(by).sort((a, c) => c.depth - a.depth).slice(0, 10);
+  }
+  return save.bestSeeds;
+}
+function openReplays() {
+  const play = seed => { if (st.transitioning) return; st.seed = seed; st.practice = !save.beatG0D; startRun(seed, st.practice); };
+  openPanel('REPLAYS', (T, B, X) => {
+    T('REPLAYS', C.accent);
+    T("POPS's log. tap a seed to run it again.", C.mid);
+    T('the seed is the seed: same net, every time.', C.dim);
+    T('');
+    const row = (h, i, tag) => X({ list: true, id: tag + i, onTap: () => play(h.seed), name: h.seed, col: C.bright, right: `depth ${pad2(h.depth || 0)}`, rightCol: C.mid });
+    T('your deepest', C.text);
+    const best = bestSeeds();
+    if (best.length) best.forEach((h, i) => row(h, i, 'rb')); else T('nothing yet.', C.dim);
+    T('');
+    T('played lately', C.text);
+    const seen = new Set(), recent = (save.history || []).filter(h => h.seed && !seen.has(h.seed) && seen.add(h.seed)).slice(0, 5);
+    if (recent.length) recent.forEach((h, i) => row(h, i, 'rr')); else T('nothing yet.', C.dim);
+    T('');
+    B('[ BACK ]', 'back', () => swapTo(showTitle));
+  }, "> POPS's log.", { full: true });
+  st.keyHandler = k => { if (k === 'escape') { swapTo(showTitle); return true; } return false; };
 }
 
 function resetSave() {

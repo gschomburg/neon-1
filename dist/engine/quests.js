@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.40']);
+NEON_FILES.push(['engine/quests.js', 'v14.41']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -176,7 +176,8 @@ const isStrip = id => QUEST_SCENES[id].some(f => f.pic);
 // A frame's art: a scene_art.js canvas, or a hacker's full logo block (their logo + mark and name, on their colors:
 // logoBlock, engine/multiplayer.js) made into one.
 function stripLogo(id) {
-  const blk = logoBlock(id, HACKERS[id] ? HACKERS[id].name : id, hkStyle(id)), w = blk[0].text.length;
+  const p = id === '@you' ? profile() : null;   // '@you': your own logo, name and colors (the ending)
+  const blk = p ? logoBlock(p.logo, p.name, styleOf(p.style)) : logoBlock(id, HACKERS[id] ? HACKERS[id].name : id, hkStyle(id)), w = blk[0].text.length;
   return { w: 36, h: blk.length, fg: blk[0].col, bgc: blk[0].bgCol, bw: w, layers: { logo: { x: Math.floor((36 - w) / 2), y: 0, rows: blk.map(b => b.text) } } };
 }
 const stripArt = pic => pic.logo ? stripLogo(pic.logo) : SCENE_ART[pic.art];

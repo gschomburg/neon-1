@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The ending** (v14.41): editor > g0d > IN THE GAME, or play the H3AV3N seed to the end. Read the whole scene (the copy is a first pass; data/quests.js h3av3n), the placeholder art (redraw any of it in asXii: ascii-editor/saves/n_cutscene_04_ending), the credits and THANKS TO handles. Then the 1UP: die in a corp, USE 1UP, the same layers come back. REPLAYS on the title's seed row. (Your save needs a G0D win for both.)
+
 - [ ] **Boss rewards screen** (v14.40): beat a corp boss: after "breached ..." your logo folds away a row at a time and the rewards sit under your name line. Speed: engine/screens.js LOGO_OUT (wait 300, row 110, glitch 90 ms). Also try a first breach and a rival breach.
 
 - [ ] **Mold in the transitions, lagging behind** (v14.39): play the H3AV3N seed into a M0LD corp (light, then deepmold heavy): the wipes carry mold, and it hangs on after the new screen is in. Or editor > g0d > mold effects: slider 0.3 / 0.7 / 1, a transition. Too much at heavy? Settings: fx tab, MOLD TRANSITION (lag, light, heavy).

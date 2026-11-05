@@ -235,12 +235,9 @@ unlocked by REP, and some quests unlock REP.
     as "An AI crew member that plays the game" in Low priority: G0D.exe may be that one.)
 
 ### 4. The end game (its own section, the user 2026-10-30; details: docs/ENDGAME.md)
-- **The ending:** cutscene, credits + thanks for playing, "there is more to explore", then the reward as a free REP
-  unlock.
-- **Seeds for real:** replaying a seed counts (not practice), maybe on its own leaderboard (scores need the seed).
-- **The 1UP:** hold one, refills each sector, a CONTINUE back to the corp's start (same layers: the seed is the seed),
-  fewer used = tie breaker, tracked. Any run.
-- **REPLAYS on the title:** your best 10 seeds + the 5 most recent.
+- **Built v14.41:** the ending (cutscene, credits, "there is more to explore"), the 1UP and REPLAYS (SPEC version log;
+  docs/ENDGAME.md). Open: the art (placeholders to redraw), the three unlocks as already-paid posts on THE BOARD.
+- **Seeds for real:** built (replays count once you've beaten G0D). Open: its own leaderboard (scores carry the seed now).
 - **Replay H3AV3N** after winning (maybe its own leaderboard).
 - **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
 - **More rewards?** A mod you always start with (meat notes 2026-10-29).

@@ -6,7 +6,7 @@
 // Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
 // device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v14.40']);
+NEON_FILES.push(['engine/leaders.js', 'v14.41']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }];
@@ -69,8 +69,9 @@ function lbSubmit(run, win) {
     if (run.practice || st.mp || EDITOR || !(run.depth > 0) || !lbClient()) return;
     if (navigator.webdriver && !window.LB_TEST) return;
     const prof = profile(), at = Date.now(), ini = lbInitials();
-    const s = { at, score: run.depth, tie: run.mods.length, player: ini, logo: logoMark(prof.logo),
-      data: { hacker: prof.name, style: prof.style, win: !!win, sector: (run.sector || 0) + 1, v: VERSION, run: at } };   // run: the initials name just this run's scores
+    // tie: fewer 1UPs used wins, then fewer mods (1UPs x 100 + mods; the board shows the mods: tie % 100)
+    const s = { at, score: run.depth, tie: (run.oneUps || 0) * 100 + run.mods.length, player: ini, logo: logoMark(prof.logo),
+      data: { hacker: prof.name, style: prof.style, win: !!win, sector: (run.sector || 0) + 1, v: VERSION, run: at, seed: run.seed, oneUps: run.oneUps || 0 } };   // run: the initials name just this run's scores
     st.lbPost = { at, score: s.score, tie: s.tie, ranks: {}, state: 'send', letters: ini.split(''), cur: 0, uploaded: false };
     save.lbQueue = (save.lbQueue || []).concat(LB_TABS.map(t => Object.assign({ board: lbBoard(t.key, at), tab: t.key }, s))).slice(-12);
     persist();
@@ -228,7 +229,7 @@ function openLeaders() {
   const row = (e, X) => {
     const named = e.data && e.data.hacker;   // entries from before initials: the hacker name was the player
     const ini = named ? (e.player || '???') : '---', hk = (named ? e.data.hacker : e.player || '').slice(0, 13);
-    const text = `${String(e.rank).padStart(2)} ${(e.logo || '   ').padEnd(3).slice(0, 3)} ${ini.padEnd(3).slice(0, 3)} ${hk.padEnd(13)} ${pad2(e.score).padStart(3)} ${String(e.tie).padStart(3)}`;
+    const text = `${String(e.rank).padStart(2)} ${(e.logo || '   ').padEnd(3).slice(0, 3)} ${ini.padEnd(3).slice(0, 3)} ${hk.padEnd(13)} ${pad2(e.score).padStart(3)} ${String(e.tie % 100).padStart(3)}`;
     const sty = styleOf((e.data && e.data.style) || 0), mark = lbLum(sty.fg) >= lbLum(sty.bg) ? sty.fg : sty.bg;   // a style's brighter color reads on black
     X({ text, colorAt: i => i < 2 ? C.dim : i < 6 ? mark : i < 10 ? (e.me ? C.accent : C.bright) : i < 24 ? C.dim : i < 28 ? C.money : C.mid,
       bold: !!e.me, bgCol: e.me ? C.accent : null, bgA: 0.15 });
@@ -259,7 +260,7 @@ function openLeaders() {
       T('');
     }
     const gl = lbClient();
-    T(gl && gl.dev ? 'test board (tester / local page)' : tab().key === 'day' ? 'today = the UTC day' : 'most layers. fewer mods wins ties.', C.dim);
+    T(gl && gl.dev ? 'test board (tester / local page)' : tab().key === 'day' ? 'today = the UTC day' : 'most layers. fewer 1UPs, then mods, win ties.', C.dim);
     T('');
     B('[ BACK ]', 'back', () => swapTo(showTitle));
   }, '> pulling the board.', { full: true });
