@@ -1,0 +1,29 @@
+# Text files are stored with LF and checked out with LF, even on Windows.
+* text=auto eol=lf
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+
+# Audio
+*.mp3 binary
+*.wav binary
+*.ogg binary
+*.m4a binary
+
+# Video
+*.mp4 binary
+*.webm binary
+*.mov binary
+
+# Fonts
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# SVG stays text: it's XML, and diffs on it are useful.
