@@ -1,0 +1,30 @@
+# NeoN+1 on Apache (DreamHost). Upload it with the rest of dist/.
+#
+# Caching: index.html is always checked, so a new build shows up on the next load. It points at every
+# script with ?v=<build> (tools/bump.js sets those), so the scripts themselves can be cached for a year:
+# a new build asks for new URLs. If a script ever loads without ?v=, take .js out of the long rule.
+
+Options -Indexes
+
+<IfModule mod_headers.c>
+  # The page, the update check (engine/boot.js fetches version.json) and the manifest: always ask the server.
+  <FilesMatch "\.(html|json|webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  # Scripts: every one is linked with ?v=<build>.
+  <FilesMatch "\.js$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  # Icons and the link preview have no ?v=, so keep them short.
+  <FilesMatch "\.(png|svg|jpg)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript text/javascript application/json application/manifest+json image/svg+xml
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+</IfModule>
