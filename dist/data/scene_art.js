@@ -1,7 +1,7 @@
 // NeoN+1 data/scene_art.js: cutscene art, drawn in asXii (ascii-editor/saves). Made by tools/scene_art.js: edit the
 // save and run it again, don't edit here. SCENE_ART[scene]: { src, w, h, layers: { name: { x, y, rows } } }.
 'use strict';
-NEON_FILES.push(['data/scene_art.js', 'v14.24']);
+NEON_FILES.push(['data/scene_art.js', 'v14.31']);
 
 const SCENE_ART = {
   disc: { src: "n_cutscene_01_v02.asxii.json", w: 36, h: 150, layers: {
@@ -152,6 +152,79 @@ const SCENE_ART = {
       "",
       "",
       "",
+    ] },
+  } },
+  prodigal: { src: "n_cutscene_02_prodigal.asxii.json", w: 36, h: 40, layers: {
+    "eyes": { x: 16, y: 25, rows: [
+      "(o) (o)",
+    ] },
+    "hood": { x: 8, y: 22, rows: [
+      "     .-~~~~~~~~~-.",
+      "   .'   .-----.   '.",
+      "  /    / ##### \\    \\",
+      " |    |         |    |",
+      " |    |         |    |",
+      "  \\    \\  ---  /    /",
+      "   '.   '-----'   .'",
+      "     '-.._____..-'",
+    ] },
+    "basement": { x: 3, y: 8, rows: [
+      "    .----------.  .----------.",
+      "    | >_       |  | :::::::: |",
+      "    | >//////  |  | :::::::: |",
+      "    '----+-----'  '-----+----'",
+      "  ~~~~~~~|~~~~~~~~~~~~~~|~~~~~~",
+      "         |    .---.     |",
+      "         '---( d0g )----'",
+      "              /|   |\\",
+      "          ___/_|___|_\\___",
+      "         [_______________]",
+    ] },
+    "basement mold": { x: 0, y: 8, rows: [
+      "%&%                            &%%",
+      "&%                              %&",
+      "%                                %",
+      "&                                &",
+      "%%                              %&",
+      "&%&                            %&%",
+    ] },
+    "trace": { x: 1, y: 0, rows: [
+      "> trace: DOGTAG.name",
+      "[PX]--[KR]--[SG]--[BR]--[JP]",
+      "                          |",
+      "     .---------[MDX]------'",
+      "     |",
+      "     '--> MEDIX // SUB-BASEMENT 3",
+    ] },
+  } },
+  gate: { src: "n_cutscene_03_gate.asxii.json", w: 36, h: 32, layers: {
+    "gate mold": { x: 7, y: 13, rows: [
+      "       %&           &%",
+      "      %               &",
+      "      &%             %&",
+      "                      %",
+      "      %&%           %&%",
+    ] },
+    "gate": { x: 7, y: 13, rows: [
+      "       ______||______",
+      "      |  |   ||   |  |",
+      "      |  |   ||   |  |",
+      "      |  |   ||   |  |",
+      "      |__|___||___|__|",
+    ] },
+    "clouds": { x: 0, y: 10, rows: [
+      "   .-~~-.        .-~~~-.      .-~-.",
+      " (       )~~~~~~(       )~~~(     )",
+      "   '-..-'        '-...-'      '-.-'",
+    ] },
+    "omni core": { x: 4, y: 0, rows: [
+      "      .-----------------.",
+      "     /  .--.  OMNI  .--. \\",
+      "    |  ( !! )------( !! ) |",
+      "    |   '--'   ||   '--'  |",
+      "     \\_____ ___||___ ____/",
+      "           X   ||   X",
+      "          / \\  ||  / \\",
     ] },
   } },
 };

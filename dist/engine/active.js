@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.24']);
+NEON_FILES.push(['engine/active.js', 'v14.31']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -568,7 +568,7 @@ function toggleArm(key) {
 }
 // A gear's chip glows on the belt while it's on (ENCORE) or armed.
 const gearOn = key => key === 'encore' ? !!st.run.encore : ARMS[key] ? ARMS[key].on() && holds(key) : false;
-const ENCORE_NO = new Set(['exorcist', 'egg', 'encore', 'ping', 'route', 'warp', 'tunnel', 'mesh', 'skip', 'worm', 'nuke', 'swap', 'stim', 'fake', 'allin', 'tithe', 'blast', 'rollup', 'split', 'freeze', 'slomo', 'anchor', 'pass']);
+const ENCORE_NO = new Set(['leash', 'bone', 'muzzle', 'honey', 'exorcist', 'egg', 'encore', 'ping', 'route', 'warp', 'tunnel', 'mesh', 'skip', 'worm', 'nuke', 'swap', 'stim', 'fake', 'allin', 'tithe', 'blast', 'rollup', 'split', 'freeze', 'slomo', 'anchor', 'pass']);
 const encoreOk = key => !ENCORE_NO.has(key) && !key.startsWith('call');
 async function encoreAgain(key, tier, first) {
   const lv = st.lv;
@@ -618,6 +618,8 @@ function whyNotItem(stack) {
   if (key === 'stim') return st.run.stim ? 'already stimmed.' : bloodMoney() ? 'blood money: nothing to stim.' : 'nothing to stim.';
   if (key === 'egg') return 'already hatched one.';
   if (key === 'exorcist') return 'no rival here to kick out.';
+  if (['leash', 'muzzle', 'honey'].includes(key)) return 'no rival here.';
+  if (key === 'bone') return 'no rival here, or no ICE to throw it on.';
   if (key === 'zeroday' && (st.corp.zd || 0) >= ZD_ALL) return 'already marked, all corp.';
   if (BOSS_GEAR[key] && st.lv && st.lv.n > 1) return BOSS_GEAR[key].why(st.lv);
   if (key === 'split' && st.lv && st.lv.split) return 'already split this layer.';
@@ -657,6 +659,8 @@ function canUse(stack) {
   if (key === 'magnet') return layerGear && closed.some(t => t.loaded);
   if (key === 'zeroday') return layerGear && st.lv.tiles[st.lv.safe].state === 'closed' && (st.corp.zd || 0) < ZD_ALL;
   if (key === 'stim') return layerGear && !run.stim && !bloodMoney();
+  if (['leash', 'muzzle', 'honey'].includes(key)) return !!inLayer && !!st.corp && hkRivals().length > 0;   // rival gear: a rival here
+  if (key === 'bone') return !!inLayer && !!st.corp && hkRivals().length > 0 && hkIce(st.lv).length > 0 && !st.lv.bone;
   if (key === 'exorcist') return !!inLayer && !!st.corp && hkList().some(h => h.side === 'bad' && !h.out);   // EXORCIST: a rival here   // (ZOMBIE: no rot this corp: stimUp)
   if (key === 'nuke') return layerGear && st.corp.node.type === 'corp' && !run.tutorial && !st.mp;
   if (key === 'rewind') return layerGear && !st.corp.frozen && (tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer);
@@ -735,6 +739,10 @@ function gearFx(key, tier) {
   if (key === 'stim') stimUp();
   if (key === 'egg') hatchEgg();   // a pet (engine/pet.js)
   if (key === 'exorcist') exorcise(tier);
+  if (key === 'leash') hkLeash();
+  if (key === 'muzzle') hkMuzzle();
+  if (key === 'honey') hkHoney();
+  if (key === 'bone') hkBone(lv);
   if (key === 'zeroday') zeroDay(lv, tier);
   if (key === 'skip') { run.skipAim = true; st.mapSel = null; Sound.whoosh(); setMsg('> skip: pick a node 2 rows ahead.', C.accent); }
   if (key === 'swap') swapHealth();

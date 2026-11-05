@@ -1,7 +1,7 @@
 // NeoN+1 data/events.js: anomalies (a tag on one corp) and sector events (what each sector rolls).
 // The design: docs/SECTOR_EVENTS.md. Sector 1 has no event; every sector after rolls one (seeded, no repeats).
 'use strict';
-NEON_FILES.push(['data/events.js', 'v14.24']);
+NEON_FILES.push(['data/events.js', 'v14.31']);
 
 // Anomalies: a tag on a corp node on the map. It changes how that corp plays. tag: the mark next to the node.
 const ANOMALIES = {
@@ -25,6 +25,10 @@ const ANOMALIES = {
 // {cr} = TIME IS MONEY's credits a second. How often each one rolls: ECON.eventOdds (data/economy.js), scaled by
 // EVENT_SCALES (below). feel: good / bad / mixed. map: it changes the map's shape (one of those a sector at most).
 const SECTOR_EVENTS = {
+  // HAD3S (quest: only on the HAD3S seed, both sectors; never rolled): d0g in some of the corps and on the boss.
+  hunt:        { name: 'THE HUNT', kind: 'anomaly', anomaly: 'rival', share: 0.5, quest: true, feel: 'mixed',
+    art: ['/\\_/\\', '(o o)', ' >w< '],
+    lines: ['{dog} runs {pct} of the', 'corps here, and the boss.', "beat him to a corp's end:", "don't let him take the last."] },   // ({dog}: d0g, or w00f once b0y is crew)
   // H3AV3N (quest: only on the H3AV3N seed; never rolled): sector 1's light mold, heaven's deep mold. noBoss: not on its boss.
   mold:        { name: 'M0LD', kind: 'anomaly', anomaly: 'mold', share: 0.5, quest: true, noBoss: true,
     art: ['.%;:.', '%&#&%', "';%;'"],

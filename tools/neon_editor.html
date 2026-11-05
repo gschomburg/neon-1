@@ -663,12 +663,22 @@
   </div>
   <pre id="xLoot" style="display:none; max-height:420px; overflow:auto; margin:6px 0; padding:8px; background:#0b0f12; border:1px solid #234; font-size:12px; white-space:pre"></pre>
   </details>
-  <h2>Quests <small>THE DISC (POPS): docs/QUESTS.md</small></h2>
+  <h2>Quests <small>WHAT IS ALL THIS FOR? (POPS): docs/QUESTS.md. Set a step, then the button for it.</small></h2>
   <div class="row">
     <button data-x="qopen" title="marks a sector cleared and puts POPS on your crew, so the DISC can drop">open the quest</button>
-    <button data-x="qdisc" title="into your gear (a run needed)">give the DISC</button>
-    &nbsp; step <select id="xQStep"><option value="none">not started</option><option value="find">find the DISC</option><option value="deliver">take it to POPS</option><option value="d0g">scene done (d0g next)</option></select> <button data-x="qstep">set</button>
-    &nbsp; <button data-x="qcall">POPS calls</button> <button data-x="qscene">play the scene</button>
+    &nbsp; step <select id="xQStep"><option value="none">not started</option><option value="find">1 THE DISC: find it</option><option value="deliver">2 SAFEHOUSE: take it to POPS</option><option value="d0g">3 DOG DAYS: HAD3S, 10 d0g wins</option><option value="trace">4 TRACE ROUTE: go to POPS</option><option value="raid">5 OMNI RAID: b0y on OMNI</option><option value="g0d">6 G0D MODE: H3AV3N</option><option value="done">7 done</option></select> <button data-x="qstep" title="steps 5 and on put b0y on your crew (and d0g becomes w00f); earlier steps take him off">set</button>
+    &nbsp; <button data-x="qcard" title="the QUEST card for the step you're on">QUEST card</button> <button data-x="qcall">POPS calls</button>
+  </div>
+  <div class="row">
+    scenes: <button data-x="qscene" data-key="disc">DISC (safehouse)</button> <button data-x="qscene" data-key="prodigal">PRODIGAL (d0g)</button> <button data-x="qscene" data-key="gate">HEAVEN'S GATE</button>
+  </div>
+  <div class="row">
+    <button data-x="qdisc" title="into your loot (a run needed)">give the DISC</button> <button data-x="qtag" title="into your loot (a run needed); then CASH OUT">give the DOGTAG</button>
+    &nbsp; d0g wins <input id="xQWins" type="number" min="0" max="10" value="9" style="width:50px"> <button data-x="qwins" title="the next d0g win: 10 drops the DOGTAG">set</button>
+  </div>
+  <div class="row">
+    HAD3S: <button data-x="had3s" title="a HAD3S run, as if you typed the seed">run it</button> <button data-x="myconet" title="a HAD3S run, straight into sector 1's boss">MYCONET</button> <button data-x="cerberus" title="a HAD3S run, straight into sector 2's boss (no mold)">CERBERUS</button> <button data-x="rivalgear" title="LEASH, BONE, MUZZLE, H0NEY into your gear (a run needed)">+ rival gear</button>
+    &nbsp; <button data-x="b0yomni" title="sets OMNI RAID, a new run, straight into OMNI with b0y called in: break it for HEAVEN'S GATE">OMNI with b0y</button>
   </div>
   <details class="xgrp" data-g="sector"><summary>Sector <small>events, jumps, anomalies, THE FENCE</small></summary>
   <h2>Sector events <small>click one: a new run, straight to sector 2 with that event (its card first)</small></h2>
@@ -2136,6 +2146,8 @@
     if (act === 'int') return send('int', { n: $('#xInt').value });
     if (act === 'rep') return send('rep', { n: $('#xRep').value });
     if (act === 'qstep') return send('qstep', { step: $('#xQStep').value });
+    if (act === 'qwins') return send('qwins', { n: $('#xQWins').value });
+    if (act === 'qscene') return send('qscene', { key: b.dataset.key });
     if (act === 'sector') return send('sector', { n: +b.dataset.n });
     if (act === 'event' || act === 'anomaly') return send(act, { key: b.dataset.key });
     if (act === 'feat') return send('feat', { key: b.dataset.key, on: !(state && (state.feats || []).includes(b.dataset.key)) });

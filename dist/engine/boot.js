@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v14.24']);
+NEON_FILES.push(['engine/boot.js', 'v14.31']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -53,6 +53,10 @@ function gameMusicState() {
   const slowmo = !!(st.mode === 'play' && st.corp && st.corp.hasBoss && st.corp.def.slowmo && st.lv);   // BULLET TIME
   const tempo = (1 + (song === 'chronos' ? urgency * 0.25 : 0) + (level >= 3 ? 0.05 : 0)) * (slowmo ? 0.55 : 1);
   // GRAVE ROBBER: its own spooky track follows you around the map (corps keep theirs)
+  if (song === 'theme' && run && run.quest === 'had3s' && SONGS.zeroday) {   // HAD3S: ZERO DAY on the map, its stages wandering (corps keep their own tracks)
+    const k = Math.floor(performance.now() / 20000) % 2;
+    return { song: 'zeroday', level, urgency, low, tempo, pitch: slowmo ? 0.8 : 1, section: (run.sector ? 'BC' : 'AB')[k] };
+  }
   const track = song === 'none' ? 'none' : song === 'theme' && run && has('graverobber') && SONGS[GRAVE_TRACK] ? GRAVE_TRACK : trackFor(song === 'theme' ? 'map' : song);
   return { song: track, level, urgency, low, tempo, pitch: slowmo ? 0.8 : 1 };
 }

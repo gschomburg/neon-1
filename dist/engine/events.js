@@ -1,7 +1,7 @@
 // NeoN+1 engine/events.js: the SECTOR EVENT card (what a new sector rolled) and THE FENCE (THIEF's stolen mods,
 // sold back). The events themselves: data/events.js; the roll: engine/map.js addSector.
 'use strict';
-NEON_FILES.push(['engine/events.js', 'v14.24']);
+NEON_FILES.push(['engine/events.js', 'v14.31']);
 
 // ---------------- The SECTOR EVENT card ----------------
 // It comes up over a new sector's map once the climb settles (toMap), and again from the map's sector label.
@@ -23,7 +23,7 @@ function closeEventCard() {
 // What a line of the card says, filled in for that sector.
 function eventLines(ev, sector) {
   const pct = Math.round(eventShare(ev, sector) * 100) + '%';
-  return SECTOR_EVENTS[ev].lines.map(l => l.replace('{pct}', pct).replace('{sale}', Math.round(ECON.events.fireSale * 100) + '%')
+  return SECTOR_EVENTS[ev].lines.map(l => l.replace('{pct}', pct).replace('{dog}', hkCrewOn('b0y') ? 'w00f' : 'd0g').replace('{sale}', Math.round(ECON.events.fireSale * 100) + '%')
     .replace('{cr}', costInt(ECON.events.timeCr)));
 }
 // The tag line at the bottom: which anomaly (and that the sector boss has it too).

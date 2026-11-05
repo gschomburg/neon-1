@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v14.24']);
+NEON_FILES.push(['engine/map.js', 'v14.31']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -161,8 +161,9 @@ function addSector(nodes, seed, s, force = null) {
   const keep = new Set([3, ...shuffle(stopRows, rr).slice(0, REST_STOPS - 1)]);
   const test = testSeed(seed), order = corpsByLevel();
   const [fa, fb] = (force || '').split('+');   // (a forced pair: 'a+b', the editor)
-  const ev = s === 0 ? null : fa && SECTOR_EVENTS[fa] ? fa : test ? null : rollEvent(seed, s);
-  const ev2 = s === 0 || test ? null : force ? (fb && SECTOR_EVENTS[fb] ? fb : null) : rollEvent2(seed, s);   // a 2nd event, now and then
+  const qev = typeof questSeed === 'function' && questSeed(seed) === 'had3s' ? 'hunt' : null;   // HAD3S: THE HUNT in every sector (sector 1 too), nothing else
+  const ev = qev || (s === 0 ? null : fa && SECTOR_EVENTS[fa] ? fa : test ? null : rollEvent(seed, s));
+  const ev2 = qev || s === 0 || test ? null : force ? (fb && SECTOR_EVENTS[fb] ? fb : null) : rollEvent2(seed, s);   // a 2nd event, now and then
   const has = k => ev === k || ev2 === k;
   const same = has('copypaste') ? pickCorps(rngFor(seed, 'copy', s), targetLevel(s, 3), 1)[0] : null;   // COPY PASTE: one corp everywhere
   const evBoost = has('timeismoney') ? k => timedCorp(k) ? 3 : 1 : null;   // TIME IS MONEY: timed corps come up more
@@ -200,7 +201,8 @@ function addSector(nodes, seed, s, force = null) {
   const bossAt = has('headfirst') ? [base + 1, { head: true }] : [base + 5, {}];   // HEAD FIRST: the boss is the first node
   const bossE = tagEvs.length ? SECTOR_EVENTS[tagEvs[0]] : null;   // (the boss: the 1st tag event's anomaly)
   const bossMod = bossE && !bossE.noBoss ? { mod: bossE.anomaly === 'any' ? anyAnomaly() : bossE.anomaly } : {};
-  if (s === 0 || test || fr() < 1 / 3) add(bossAt[0], 1, 'final', Object.assign({ corp: 'omni', tier: 3 + s }, bossMod, bossAt[1]));
+  if (qev) add(bossAt[0], 1, 'final', Object.assign({ corp: s === 0 ? 'myconet' : 'cerberus', tier: 3 + s }, bossMod, bossAt[1]));   // HAD3S: MYCONET, then CERBERUS (engine/had3s.js)
+  else if (s === 0 || test || fr() < 1 / 3) add(bossAt[0], 1, 'final', Object.assign({ corp: 'omni', tier: 3 + s }, bossMod, bossAt[1]));
   else {
     const hard = Object.keys(CORPS).filter(k => (CORPS[k].level || 1) >= 4).sort();
     add(bossAt[0], 1, 'final', Object.assign({ corp: pickR(hard, fr), tier: 3 + s }, bossMod, bossAt[1]));

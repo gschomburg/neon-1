@@ -4,7 +4,8 @@
 // name, at their canvas position. Which layers a scene shows, in what order and color: data/quests.js QUEST_SCENES.
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..');
-const SOURCES = { disc: 'ascii-editor/saves/n_cutscene_01_v02.asxii.json', popshead: 'ascii-editor/saves/n_cutscene_01_pops_head.asxii.json' };
+const SOURCES = { disc: 'ascii-editor/saves/n_cutscene_01_v02.asxii.json', popshead: 'ascii-editor/saves/n_cutscene_01_pops_head.asxii.json',
+  prodigal: 'ascii-editor/saves/n_cutscene_02_prodigal.asxii.json', gate: 'ascii-editor/saves/n_cutscene_03_gate.asxii.json' };
 const VERSION = (fs.readFileSync(path.join(ROOT, 'dist/data/quests.js'), 'utf8').match(/NEON_FILES\.push\(\['data\/quests\.js', '([^']+)'\]\)/) || [, 'v0'])[1];
 
 const out = [

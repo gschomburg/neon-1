@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.24']);
+NEON_FILES.push(['engine/run.js', 'v14.31']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -26,7 +26,8 @@ async function startRun(seed, practice, opts = {}) {
   Sound.ui();
   await wipeOut(0);
   const quest = opts.tutorial ? null : opts.quest || questSeed(seed);   // H3AV3N (engine/heaven.js): a QUEST run
-  if (quest) practice = !save.beatG0D;   // (not scored until you've beaten G0D once)
+  if (quest === 'h3av3n') practice = !save.beatG0D;   // (not scored until you've beaten G0D once)
+  else if (quest === 'had3s') practice = false;   // HAD3S: a real run (engine/quests.js)
   st.seed = seed; st.practice = practice;
   st.run = {
     seed, practice, quest,
@@ -39,7 +40,9 @@ async function startRun(seed, practice, opts = {}) {
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
-  if (quest) { st.run.heaven = true; questMold(st.run); }   // (a heaven run from the start: its death screen retries it; sector 1's M0LD)
+  if (quest === 'had3s') st.run.items.push({ key: 'leash', tier: 0, n: 1 });   // HAD3S: you go in with a LEASH
+  if (!opts.tutorial) questRunStart(st.run);   // the OMNI RAID: b0y's CALL (engine/quests.js)
+  if (quest === 'h3av3n') { st.run.heaven = true; questMold(st.run); }   // (a heaven run from the start: its death screen retries it; sector 1's M0LD)
   if (opts.heaven) heavenSetup();   // H3AV3N (engine/heaven.js): its sector map in place of the first sector (the editor's jump, the ending's THE MAZE)
   if (legacyLv('lucky') && !opts.tutorial) {   // LUCKY START (THE BOARD): a random common gear
     const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
@@ -802,6 +805,8 @@ function finishCorp() {
   const run = st.run, c = st.corp;
   stimDown();   // STIM wears off
   hkCorpEnd(c);   // hackers: the rivals you beat (the record, the bonus)
+  questOmni(c);   // the OMNI RAID: OMNI broken with b0y there (engine/quests.js)
+  if (run.quest === 'had3s' && c.def.key === 'apiary') { addItem('honey'); setMsg('> APIARY left something sweet behind. H0NEY.', C.money); }   // HAD3S: H0NEY only comes from APIARY
   lightsOn();
   statNodeEnd(c.bossSkipped ? 'skipped' : 'cleared');
   if (c.hasBoss && c.def.onClear) {
@@ -1753,7 +1758,7 @@ function showSectorClear(skipped, fanfare, root = null) {
   const breached = run.visited.map(id => run.map[id]).filter(n => n && (n.sector || 0) === run.sector && (n.type === 'corp' || n.type === 'final')).map(n => n.corp);
   const roots = Object.keys(ART_ROOT);
   st.result = { sector: true, skipped, depth: run.depth, corps: run.corps, earned: run.earned, n: run.sectorsCleared,
-    rep: repFor(run), practice: run.practice, quest: run.quest || null, broken: !!(run.quest && run.sector === 0), seed: run.seed, boss: st.corp ? st.corp.def.name : FINAL.name,
+    rep: repFor(run), practice: run.practice, quest: run.quest || null, broken: !!(run.quest === 'h3av3n' && run.sector === 0), seed: run.seed, boss: st.corp ? st.corp.def.name : FINAL.name,
     breached, root: root && ART_ROOT[root] ? root : roots[Math.floor(Math.random() * roots.length)] };
   st.corp = null; st.lv = null; st.timer = null;
   scenePalette(null);
@@ -1796,7 +1801,8 @@ const uplinkSell = key => Math.floor(uplinkFee(key) * ECON.uplink.sellPct);
 function openUplink() {
   const run = st.run;
   if (!run) return;
-  if (run.quest && run.sector === 0) return openBrokenUplink();   // the H3AV3N seed: it's broken
+  if (run.quest === 'h3av3n' && run.sector === 0) return openBrokenUplink();   // the H3AV3N seed: it's broken
+  if (run.quest === 'had3s' && run.sector >= HAD3S_SECTORS - 1) { setMsg('> the bottom of HAD3S. nowhere deeper to go.', C.rep); return cashOut(); }   // HAD3S: two sectors, then out
   const keep = Object.fromEntries(run.mods.map(k => [k, true]));
   // PASS (gear): the whole fee is cut (ECON.uplink.pass); on by default when you hold one, tap to save it
   const hasPass = () => run.items.some(s => s.key === 'pass');
@@ -1861,7 +1867,7 @@ function openUplink() {
       name: 'PASS: half the fee', clip: 'ellipsis', col: usePass ? C.text : C.mid,
       right: '-' + Math.round(t.raw * ECON.uplink.pass), rightCol: usePass ? C.money : C.dim });
     // the list gets what the rest of the screen leaves (the rest: ~22 rows)
-    const rest = 23 + (leverage() ? 1 : 0) + (t.cut ? 1 : 0) + (holdingDisc() ? 1 : 0);
+    const rest = 23 + (leverage() ? 1 : 0) + (t.cut ? 1 : 0) + (holdingDisc() ? 1 : 0) + (hasLoot('dogtag') ? 1 : 0);
     const rows = Math.max(1, Math.min(items.length, L.hc - 2 - rest));
     if (items.length) scrollArea(X, T, area, items, rows, 'upl');
     else T('no mods to carry.', C.dim);
@@ -1883,6 +1889,7 @@ function openUplink() {
     X({ box: true, text: run.practice ? `${sp('END')}   ${sp('RUN')}` : `${sp('EARN')}   ${sp(repFor(run))}   ${sp('REP')}`, sub: subCash, id: 'cash', onTap: cashOut, minW: w, col: C.rep });
     if (!run.practice) T(legacyLv('dms') ? `dying later keeps ${[0, 25, 50][legacyLv('dms')]}% of your REP.` : 'die later and you bank nothing.', C.dim);
     if (holdingDisc() && questRun() && questOf('pops').step === 'find') T('+ cash out to bring POPS the DISC', C.rep);
+    if (hasLoot('dogtag') && questRun() && questOf('pops').step === 'd0g') T('+ cash out to bring POPS the DOGTAG', C.rep);
   }, '> uplink: what do you carry?', { full: true });
 }
 // The H3AV3N seed's uplink (docs/QUESTS.md): broken. No fee, no cash out: the only way is on, into heaven.

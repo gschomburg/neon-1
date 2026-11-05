@@ -3,7 +3,7 @@
 // Hand edits are fine too: inside the quotes a backslash is \\ and a quote \'.
 // A face is 5 x 3, drawn as is (the lines are not centered one by one). POPS's is the training handler's.
 'use strict';
-NEON_FILES.push(['data/art/faces.js', 'v14.24']);
+NEON_FILES.push(['data/art/faces.js', 'v14.31']);
 
 const ART_FACES = {
   pops: { name: 'POPS', art: [' \'-, ', '┌@\\@┐', '╯{=╭╰'] },
@@ -15,6 +15,8 @@ const ART_FACES = {
   vulture: { name: 'VULTURE', art: [' ,__ ', '(.v.)', '/| |\\'] },
   phish: { name: 'PH1SH', art: [' _J_ ', '(^_^)', ' >< '] },
   d0g: { name: 'd0g', art: ['/\\_/\\', '(0.0)', '  w  '] },
+  w00f: { name: 'w00f', art: ['/\\_/\\', '(0.0)', '  w  '] },   // (d0g's, the dog without the boy)
+  b0y: { name: 'b0y', art: ['/~~~\\', '|o o|', ' \\-/ '] },   // (a placeholder: the hood, d0g's ears gone)
   hcf: { name: 'HCF', art: [')(\\()', '[x_x]', ' ### '] },
   leech: { name: 'LEECH', art: ['.---.', '|ooo|', '\'-O-\''] },
   brick: { name: 'BRICK', art: ['.___.', '[-_-]', '|###|'] },

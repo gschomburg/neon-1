@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v14.24']);
+NEON_FILES.push(['engine/save.js', 'v14.31']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -67,7 +67,7 @@ const LEGACY = [
 ];
 // The crew's posts (PRIVATE MESSAGES): CREW: NAME opens at 5 calls (their own call gear then turns up), NAME LVL 2 at 10
 // (once they're crew). needs: shown only once that post is bought.
-for (const [id, h] of Object.entries(HACKERS)) if (h.side === 'good') LEGACY.push(
+for (const [id, h] of Object.entries(HACKERS)) if (h.side === 'good' && !h.quest) LEGACY.push(   // (quest crew, b0y: the quest puts him on the crew)
   { key: 'crew_' + id, pm: 'call_' + id, crew: id, name: 'CREW: ' + h.name, desc: h.name + ' joins your crew: their own call gear turns up in markets and loot.', costs: [120] },
   { key: 'crew2_' + id, pm: 'call10_' + id, needs: 'crew_' + id, crew: id, name: 'CREW: ' + h.name + ' LVL 2', desc: h.lvl2 || '', costs: [200] });
 const legacyLv = key => (save.legacy && save.legacy[key]) || 0;

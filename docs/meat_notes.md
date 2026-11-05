@@ -3,12 +3,19 @@ god and heaven feedback
 
 misc notes
 ***********************
+- if in the pops initial quest the disc will always drop from medix
 
 misc mod and items
 **********************
 
 workshops
 **************
+
+bosses
+************
+- psycho mantis
+    - (unplug internet)
+    - open inspector?
 
 feats
 *************
@@ -39,6 +46,7 @@ sector events / corp anomalies
 
 ads
 ****************
+- you are the product!
 
 reputation
 ***************

@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.24']);
+NEON_FILES.push(['data/mods.js', 'v14.31']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -30,6 +30,9 @@ const ITEMS = {
   // THE DISC: quest gear (engine/quests.js, docs/QUESTS.md). Never sold, trashed or bought in the normal way; drops by the quest's rules.
   disc: { key: 'disc', name: 'DISC', price: 60, rarity: 'quest', quest: 'pops', bag: true, desc: "an old disc, encrypted. POPS wants it: beat the sector boss, then CASH OUT with it.", tip: 'quest: cash out with it.',
     where: 'anywhere loot drops, once POPS is on your crew.' },
+  // THE DOGTAG: quest gear, the next one (docs/QUESTS.md step 5): it drops when you beat d0g with ten wins for POPS.
+  dogtag: { key: 'dogtag', name: 'DOGTAG', price: 60, rarity: 'quest', quest: 'pops', bag: true, desc: "d0g's old tag. there's a name scratched into it. CASH OUT with it: POPS can trace it.", tip: 'quest: cash out with it.',
+    where: 'beating d0g, once you have ten wins for POPS.' },
   patch: { key: 'patch', name: 'PATCH', price: 25, rarity: 'scrap', desc: 'restore 1 integrity.', tip: '+1 integrity.',
     tiers: [{}, { rarity: 'common', desc: 'restore 2 integrity.', tip: '+2 integrity.' }, { rarity: 'rare', desc: 'restore 3 integrity.', tip: '+3 integrity.' }] },
   purge: { key: 'purge', name: 'PURGE', price: 22, rarity: 'scrap', desc: 'lock out one ICE node.', tip: 'lock out 1 ICE.',
@@ -142,6 +145,8 @@ const ITEMS = {
     codex: 'in a corp: a burner phone with a number on it. somebody picks up: a random crew hacker comes in and helps for the rest of the corp. call the same one 5 times and THE BOARD posts them as crew. half the corp bosses offer a stack.' },
   call_pops: { key: 'call_pops', name: 'POPS', price: 40, rarity: 'rare', crew: 'pops', desc: 'in a corp: call POPS in for the rest of the corp (burns the ICE he can read).', tip: 'call POPS.',
     codex: 'in a corp: POPS\'s number. POPS comes in and helps for the rest of the corp (burns the ICE he can read). only turns up once POPS is in your crew.' },
+  call_b0y: { key: 'call_b0y', name: 'b0y', price: 40, rarity: 'rare', crew: 'b0y', desc: 'in a corp: call b0y in for the rest of the corp (he shows you the real node; he never taps it).', tip: 'call b0y.',
+    codex: "in a corp: b0y's number. he comes in and hovers over three maybes, then two, then the real one, which lights up. he never taps it for you. only turns up once b0y is in your crew." },
   call_brick: { key: 'call_brick', name: 'BRICK', price: 40, rarity: 'rare', crew: 'brick', desc: 'in a corp: call BRICK in for the rest of the corp (takes your ICE hits).', tip: 'call BRICK.',
     codex: 'in a corp: BRICK\'s number. BRICK comes in and helps for the rest of the corp (takes your ICE hits). only turns up once BRICK is in your crew.' },
   call_null: { key: 'call_null', name: 'NULL', price: 40, rarity: 'rare', crew: 'null', desc: 'in a corp: call NULL in for the rest of the corp (hunts rival hackers).', tip: 'call NULL.',
@@ -211,6 +216,17 @@ const ITEMS = {
   // for half"). Pays a random amount, now and then the jackpot (ECON.lotto). New gear goes at the end (seeded picks).
   lotto: { key: 'lotto', name: 'LOTTO', price: 15, rarity: 'common', desc: 'use any time: scratch it for a random amount of credits. sometimes the jackpot.', tip: 'random credits.',
     codex: 'a scratch ticket. use it any time, anywhere, for a random handful of credits; now and then it hits the jackpot. quick money for the uplink.' },
+  // Rival gear (the user, 2026-11-04; docs/QUESTS.md step 5, HAD3S): it works on any rival hacker. hunt: only in
+  // HAD3S for now (its markets and drops; you start it with a LEASH). only: dropped by that corp alone (H0NEY: APIARY).
+  // Effects: engine/hackers.js (Rival gear).
+  leash:  { key: 'leash',  name: 'LEASH',  price: 25, rarity: 'common', hunt: true, desc: 'in a corp with a rival: they move at half speed for the rest of the corp.', tip: 'rivals: half speed.',
+    codex: 'a short one. in a corp with a rival hacker in it: every rival there moves at half speed, their taps and their tricks, until you leave the corp.' },
+  bone:   { key: 'bone',   name: 'BONE',   price: 35, rarity: 'rare', hunt: true, desc: 'in a layer with a rival: a bone lands on an ICE node. rivals chase it for 8s, then chew the ICE up.', tip: 'decoy: rivals chase it.',
+    codex: 'good boy. in a layer with a rival hacker: a bone lands on one of the ICE. for 8 seconds every rival forgets the real node and circles it, and when they are done the ICE is chewed up (locked) for you.' },
+  muzzle: { key: 'muzzle', name: 'MUZZLE', price: 40, rarity: 'rare', hunt: true, desc: "in a layer with a rival: they can't take the real node, this layer and the next.", tip: "rivals can't take the real.",
+    codex: "in a layer with a rival hacker: this layer and the next, a rival that taps the real node just bounces off it (mmph), and d0g can't read the tell." },
+  honey:  { key: 'honey',  name: 'H0NEY',  price: 60, rarity: 'epic', hunt: true, only: 'apiary', desc: 'in a layer with a rival: they fall asleep, this layer and the next.', tip: 'rivals sleep: 2 layers.',
+    codex: 'a honey cake, the old way to get past the dog at the gate. in a layer with a rival hacker: every rival dozes off, this layer and the next. only APIARY makes it, and only down in HAD3S.' },
   // The powerful gear (the user + Claude, 2026-10-30; docs/BACKLOG.md). Effects: engine/active.js.
   ping:   { key: 'ping',   name: 'PING',   price: 20, rarity: 'common', desc: 'in a layer: arm it, then tap a node. it answers ICE or clean. no damage.', tip: 'tap a node: ICE or not?',
     codex: 'in a layer: arm it, then tap any node. the ping comes back: ICE (the node is ruled out) or clean (the real node, marked for you). the tap costs nothing.' },

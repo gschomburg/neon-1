@@ -167,6 +167,7 @@ unlocked by REP, and some quests unlock REP.
     (makes higher layer counts easier in the early sectors).
 
 ### 3. Quests and RPG elements
+- **Crew quests** (the user, 2026-11-04: a quest per crew member, some hidden): ideas in `docs/CREW_QUESTS.md` (each built on the crew member's counter-rival; ROOT and BRICK's unlock a crew member). To pick from.
 - **The quest doc: `docs/QUESTS.md`** (2026-10-28). The first quest to build out: POPS's son (the quest item, POPS's calls, the
   UPLINK hand-in, defeat d0g 10 times on a quest seed, the trace, d0g is POPS's son and joins the crew).
 - **The first one to make: defeat d0g.** The quest gives you a seed; entering it unlocks god (H3AV3N).
@@ -185,7 +186,6 @@ unlocked by REP, and some quests unlock REP.
 - **The feel: FTL's quests and interactions.** Brainstorm together.
 - **Cutscene art (the user, 2026-11-04):** the DISC scene is a strip of the user's asXii drawings (built v14.17-v14.18: draw-in, parallax, lights, fog, the OPEN cue, the DISC sliding in, a POPS headshot, d0g's logo). Next: random traces running up that aren't in the drawings; more color work; the hand is out for now (the user: the pose isn't how you'd do it in ASCII). More art for the later frames maybe.
 - **Cutscene music:** EVENT HORIZON as a possible lighter cutscene track (the user, 2026-11-04); the DISC scene plays PANTHEON (SCENE_MUSIC).
-- **A quest popup after the DISC scene** (the user, 2026-11-04): when the scene ends, a popup that introduces the next step (beat d0g ten times). Today the scene only sets the QUESTS tab's new mark (questStep news); the DOG DAYS step itself is still 'coming soon'.
 - **A hint on the quests tab** (the user, meat notes 2026-11-03): when it's empty, something like "no quests yet. put a
   crew together and maybe you will discover some" / "get to know the other hackers, call them".
 - **FLOPPY** (the user, 2026-10-27): a floppy disk gear you insert in a terminal somewhere to start a quest.
@@ -411,6 +411,8 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
+- **Hacker logo pass** (the user, 2026-11-04, looking at them now): the game always adds the name under a logo (logoBlock: mark + name; the hacker card's NAME // RIVAL line), so logos don't need the name in their art: 24 x 7 is all picture. 17 hacker logos spell their name in the art and show it twice: pops, iceman, turbo, sysop, vulture, phish, hcf, leech, brick, null, nana, dialup, baud, mother, root, kludge, hype (not ggez, doppel, d0g). Redraw them (art only, no code).
+- [ ] **Effects library** (the user, 2026-11-04): talked through; decided to pull the effects into one shared library (named effects with global settings and local overrides, one way to apply them, an editor FX page). Plan and steps in docs/EFFECTS.md. Not built.
 - **asXii size presets** (the user, 2026-11-04): update asXii's Presets list (ascii-editor/dist/index.html #sizePreset) to the game's real art sizes, and check the ones there. Today it has: node glyph 5 x 3 (right), corp art 24 x 12 (wrong: corp intro art is the logo, 24 x 7), ad box 30 x 18 (right: ADS_W / ADS_H), intro map 34 x 9 (the map is 34 x 12 now), title art 32 x 20 (check: TITLE_W is 31), terminal 80 x 24. Add: logo 24 x 7 (the name goes on row 8, LOGO_W / LOGO_H), hacker face 5 x 3, SECTOR CLEARED 30 x 13, sector event card 5 x 3, cutscene 36 wide (any height; the game's grid). asXii is Justin's too: check his recent commits first.
 - **Sell page gear**: built v14.15 (loot rows like gear rows).
 - **SELL ALL LOOT**: built v14.15 ([ ALL LOOT +XXcr ] on the sell page).

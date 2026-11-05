@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.24']);
+NEON_FILES.push(['engine/quests.js', 'v14.31']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -30,6 +30,7 @@ function discDrops(r, where) {
 }
 // Any DISC that lands in your gear (addItem): POPS calls.
 function questGot(key) {
+  if (key === 'dogtag' && questRun()) { const q = questOf('pops'); q.news = true; persist(); setTimeout(() => Sound.shield(), 120); queueCall('pops', QUEST_LINES.dogtag); return; }
   if (key !== 'disc' || !questRun()) return;
   const q = questOf('pops'), first = !q.seen;
   q.seen = true; q.news = true; persist();
@@ -46,12 +47,45 @@ function questRunEnd(run, win) {
 // The UPLINK with the DISC: POPS reminds you (once per uplink).
 function questUplink() {
   if (holdingDisc() && questRun() && questOf('pops').step === 'find') queueCall('pops', QUEST_LINES.uplink);
+  if (hasLoot('dogtag') && questRun() && questOf('pops').step === 'd0g') queueCall('pops', QUEST_LINES.tagUplink);
 }
 // CASH OUT with the DISC: the step is done (saved), and POPS asks for it once the results are up.
 function questCashOut(run) {
+  if (questRun() && (run.loot || []).some(s => s.key === 'dogtag') && questOf('pops').step === 'd0g') {   // the DOGTAG: on to the trace
+    questStep('pops', 'trace');
+    setTimeout(() => queueCall('pops', QUEST_LINES.traced, { text: '[ GO TO POPS ]', onTap: () => playScene('prodigal') }), 600);   // the trace: PRODIGAL
+    return;
+  }
   if (!questRun() || !(run.loot || []).some(s => s.key === 'disc') || questOf('pops').step !== 'find') return;
   questStep('pops', 'deliver');
   setTimeout(() => queueCall('pops', QUEST_LINES.deliver, { text: '[ TAKE IT TO POPS ]', onTap: () => playScene('disc') }), 600);
+}
+
+// ---------------- DOG DAYS (docs/QUESTS.md step 5) ----------------
+// The HAD3S seed: two sectors, THE HUNT in both (d0g in some corps and on the bosses), ZERO DAY on the map. A d0g win:
+// finishing a corp he's in before he takes its last node (else he escaped). Wins count anywhere while you're on the step.
+// At ten, the DOGTAG drops (again on the next win if you lose it); cash out with it and the trace starts.
+const HAD3S_SECTORS = 2;
+const d0gWinsNeeded = () => (QUEST_INFO.pops.steps.find(s => s.key === 'd0g') || {}).wins || 10;
+function questD0g(h) {
+  if (!questRun() || questOf('pops').step !== 'd0g' || h.exorcised) return;
+  const q = questOf('pops'), need = d0gWinsNeeded();
+  if (h.stoleLast) { setTimeout(() => setMsg("> d0g escaped. he got the corp's last node first.", C.danger), 900); return; }
+  q.d0g = (q.d0g || 0) + 1; q.news = true; persist();
+  setTimeout(() => setMsg(`> d0g beaten. ${Math.min(q.d0g, need)} / ${need} for POPS.`, C.rep), 900);
+  if (q.d0g >= need && !hasLoot('dogtag')) setTimeout(() => addItem('dogtag'), 1500);
+}
+const runHad3s = () => startRun('HAD3S', false);
+// OMNI RAID: break an OMNI boss with b0y there (engine/run.js finishCorp): HEAVEN'S GATE.
+function questOmni(c) {
+  if (!questRun() || questOf('pops').step !== 'raid' || !c || c.def.key !== 'omni' || !(c.hk || []).some(h => h.id === 'b0y')) return;
+  setTimeout(() => playScene('gate'), 900);
+}
+// A run starts on the OMNI RAID: b0y's number comes with you, and he calls (once).
+function questRunStart(run) {
+  if (!questRun() || questOf('pops').step !== 'raid' || !hkCrewOn('b0y')) return;
+  run.items.push({ key: 'call_b0y', tier: 0, n: 1 });
+  const q = questOf('pops'); if (!q.raidCalled) { q.raidCalled = true; persist(); setTimeout(() => queueCall('b0y', QUEST_LINES.raid), 2500); }
 }
 
 // The words (QUEST_INFO, QUEST_LINES, QUEST_SCENES) live in data/quests.js.
@@ -59,6 +93,11 @@ function questCashOut(run) {
 // ---------------- The CALL box ----------------
 const CALL_QUEUE = [];
 function queueCall(who, lines, btn = null) { CALL_QUEUE.push({ who, lines, btn }); }
+// A QUEST card (the call box, no face): the quest's name, the step you're on now, its goal (and seed).
+function questCard(id) {
+  const info = QUEST_INFO[id], q = questOf(id), at = Math.max(0, info.steps.findIndex(s => s.key === q.step)), step = info.steps[at];
+  CALL_QUEUE.push({ who: info.from.toLowerCase(), quest: { name: info.name, step: `STEP ${at + 1}: ${step.name}`, seed: step.seed }, lines: [step.goal] });
+}
 function callTick(now) {
   if (st.callBox || st.featBox || st.qScene || !CALL_QUEUE.length || !featCalm()) return;
   st.callBox = Object.assign(CALL_QUEUE.shift(), { t0: now });
@@ -83,15 +122,21 @@ function buildCallBox(ctx, now) {
   const w = CALL_W + 2, h = rows.length + 9, x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
   clearRect(cells, x0, y0, w, h);
   popupBg(bg, 'call', x0, y0, w, h);   // (its look: POPUP_LOOK, engine/render.js)
-  const head = 'CALL', ring = Math.floor((now - b.t0) / 400) % 2 && now - b.t0 < 1600 ? ' ((( ' : ' ';
+  const head = b.quest ? 'QUEST' : 'CALL', ring = !b.quest && Math.floor((now - b.t0) / 400) % 2 && now - b.t0 < 1600 ? ' ((( ' : ' ';
   put(x0, y0, ('+- ' + head + ring + '-'.repeat(w)).slice(0, w - 1) + '+', C.rep, 'hud', true);
   put(x0, y0 + h - 1, '+' + '-'.repeat(w - 2) + '+', C.rep, 'hud', true);
   for (let r = 1; r < h - 1; r++) { put(x0, y0 + r, '|', C.rep, 'hud'); put(x0 + w - 1, y0 + r, '|', C.rep, 'hud'); }
   // the face, bobbing a little while the lines type in (like the training's POPS), and the name beside it
   const bob = now - b.t0 < 1800 && Math.floor((now - b.t0) / 180) % 2 ? -1 : 0, sty = hkStyle(b.who);
-  face.forEach((l, k) => { bg(x0 + 2, y0 + 2 + k + bob, 5, sty.bg, 1); put(x0 + 2, y0 + 2 + k + bob, l, sty.fg, 'hud', true); });
-  put(x0 + 9, y0 + 2, d.name, ink, 'hud', true);
-  put(x0 + 9, y0 + 3, 'is calling.', C.mid, 'hud');
+  if (b.quest) {   // a QUEST card: the quest, the new step, its seed
+    put(x0 + 2, y0 + 2, b.quest.name, C.rep, 'hud', true);
+    put(x0 + 2, y0 + 3, b.quest.step, C.bright, 'hud', true);
+    if (b.quest.seed) { const t = 'seed: ', sx = x0 + 2 + t.length; put(x0 + 2, y0 + 4, t, C.mid, 'hud'); bg(sx, y0 + 4, b.quest.seed.length + 2, C.rep, 1); put(sx + 1, y0 + 4, b.quest.seed, C.bg, 'hud', true); }
+  } else {
+    face.forEach((l, k) => { bg(x0 + 2, y0 + 2 + k + bob, 5, sty.bg, 1); put(x0 + 2, y0 + 2 + k + bob, l, sty.fg, 'hud', true); });
+    put(x0 + 9, y0 + 2, d.name, ink, 'hud', true);
+    put(x0 + 9, y0 + 3, 'is calling.', C.mid, 'hud');
+  }
   let budget = Math.floor((now - b.t0 - 300) / 18);
   rows.forEach((t, r) => { const shown = t.slice(0, Math.max(0, budget)); budget -= t.length; if (shown) put(x0 + 2, y0 + 6 + r, shown, C.text, 'hud'); });
   const btns = b.btns ? b.btns.map((x, i) => ({ id: 'cb' + i, text: x.text, onTap: () => { st.callBox = null; x.onTap(); } }))   // (its own buttons: the G0D ending)
@@ -123,7 +168,9 @@ const frameLen = fr => fr.title ? 0 : fr.text.length;   // a title card is up at
 // ---- A strip scene (data/quests.js, disc): one tall page; each frame's art draws in, then its text types under it,
 // and the page scrolls up to keep the newest at the bottom. Timings (ms): gap / reveal = a layer's default start step
 // and draw-in time; type = a character; pause / comma = the extra wait after a sentence / a comma.
-const STRIP_CHIPS = ['d0g'];   // hackers whose names show on their own colors in a scene's text (the user, 2026-11-04)
+// Words that show on their own colors in a scene's text (the user, 2026-11-04): a hacker's id (their name, on their
+// colors: d0g white on red), or { word, fg, bg } (palette names: a seed in the quest color).
+const STRIP_CHIPS = ['d0g', 'b0y', { word: 'HAD3S', fg: 'bg', bg: 'rep' }, { word: 'H3AV3N', fg: 'bg', bg: 'rep' }];
 const STRIP = { w: 32, gap: 420, reveal: 700, type: 28, pause: 480, comma: 160, top: 3, foot: 4, ease: 3 };
 const isStrip = id => QUEST_SCENES[id].some(f => f.pic);
 const stripHash = (x, y, z = 0) => ((((x + 11) * 73856093) ^ ((y + 7) * 19349663) ^ ((z + 3) * 83492791)) >>> 0) % 1000 / 1000;
@@ -347,7 +394,7 @@ function buildStrip(ctx, now, sc, frames) {
         // a hacker's name in STRIP_CHIPS shows on their colors (d0g: white on his red), as much of it as has typed
         let plain = s;
         for (const id of STRIP_CHIPS) {
-          const nm = HACKERS[id] ? HACKERS[id].name : id, sty = hkStyle(id);
+          const hk = typeof id === 'string', nm = hk ? (HACKERS[id] ? HACKERS[id].name : id) : id.word, sty = hk ? hkStyle(id) : { fg: stripCol(id.fg), bg: stripCol(id.bg) };
           for (let i = t.indexOf(nm); i >= 0 && i < s.length; i = t.indexOf(nm, i + 1)) {
             const part = s.slice(i, i + nm.length);
             bg(tx + i, y, part.length, sty.bg, old ? 0.55 : 1);
@@ -400,7 +447,11 @@ function sceneEnd() {
   const sc = st.qScene;
   st.qScene = null;
   Sound.ui();
-  if (sc && sc.id === 'disc' && questOf('pops').step === 'deliver') questStep('pops', 'd0g');
+  if (sc && sc.id === 'disc' && questOf('pops').step === 'deliver') { questStep('pops', 'd0g'); questCard('pops'); }   // the next step, on a QUEST card
+  if (sc && sc.id === 'prodigal' && questOf('pops').step === 'trace') {   // b0y joins your crew (no REP, no LVL: the user, 2026-11-04)
+    save.legacy = save.legacy || {}; save.legacy.crew_b0y = 1; questStep('pops', 'raid'); questCard('pops');
+  }
+  if (sc && sc.id === 'gate' && questOf('pops').step === 'raid') { questStep('pops', 'g0d'); questCard('pops'); }   // the H3AV3N seed
   if (sc && sc.onEnd) sc.onEnd();
 }
 function sceneKey(k) { if (k === 'escape') sceneEnd(); else if (k === 'enter' || k === ' ' || k === 'arrowright') sceneNext(); }
@@ -460,9 +511,12 @@ function questBoardLines(T, X) {
   T('');
   X({ text: `STEP ${at + 1}: ${step.name}`, col: C.bright, bold: true });
   for (const l of wrapText(q.step === 'find' && q.lost && step.lost ? step.lost : step.goal, 32)) T(l, C.text);
+  if (step.wins) { T(''); X({ text: `d0g: ${Math.min(q.d0g || 0, step.wins)} / ${step.wins}`, col: C.bright, bold: true }); }   // (DOG DAYS: the wins so far)
+  if (step.seed) { T(''); X({ text: `seed: ${step.seed}`, col: C.rep, bold: true }); }   // (the seed POPS gave you)
   T('');
   info.steps.slice(0, at).forEach((s, i) => T(`x ${i + 1}. ${s.name}`, C.mid));   // the steps done
   T('');
   if (q.step === 'deliver') X({ box: true, text: 'T A K E   I T   T O   P O P S', id: 'qgive', onTap: () => playScene('disc'), minW: 30 });
-  else if (q.step === 'd0g') X({ text: '[ REPLAY THE SCENE ]', id: 'qreplay', onTap: () => playScene('disc') });
+  else if (q.step === 'trace') X({ box: true, text: 'G O   T O   P O P S', id: 'qgive', onTap: () => playScene('prodigal'), minW: 30 });
+  else { const last = { d0g: 'disc', raid: 'prodigal', g0d: 'gate', done: 'gate' }[q.step]; if (last) X({ text: '[ REPLAY THE SCENE ]', id: 'qreplay', onTap: () => playScene(last) }); }
 }

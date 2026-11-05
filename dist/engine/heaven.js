@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.24']);
+NEON_FILES.push(['engine/heaven.js', 'v14.31']);
 
 const HEAVEN = {};
 
@@ -43,7 +43,7 @@ function addHeavenSector(nodes, seed, s) {
 // from the seed, its market stocked for what's coming: QUEST_STOCK); its uplink is broken (no fee, no cash out); sector 2
 // is heaven (addHeavenSector: the corps, the maze, the shop, G0D). A QUEST run isn't scored (like practice) until you've
 // beaten G0D once (save.beatG0D): then every seed replay counts. Its death retry starts the seed over, still QUEST.
-const QUEST_SEEDS = { H3AV3N: 'h3av3n' };
+const QUEST_SEEDS = { H3AV3N: 'h3av3n', HAD3S: 'had3s' };   // (HAD3S: the d0g hunt, engine/quests.js)
 const questSeed = seed => QUEST_SEEDS[seed] || null;
 // Sector 1's market on the H3AV3N seed (the user's list): PATCH always (a few), BUFFER always, two of the rest
 const QUEST_STOCK = { patches: 3, gear: ['shoe', 'frag', 'fwall', 'warp', 'call', 'stim', 'zeroday', 'swap'], mods: ['buffer'] };
@@ -851,7 +851,7 @@ function g0dChromeBoom(f, out, bgs, at, e) {
 const MOLD_FX = { patches: 2, gap: [400, 1300], r: [1.6, 3.3], grow: 600, sit: [1200, 2200], crumble: 700, heavy: 0.3, wipe: 3200, hole: 3400, holeR: 2.2, holeClose: 900 };
 function moldLevel() {
   const run = st.run;
-  if (st.mode === 'panel' && st.panelTitle === 'UPLINK' && run && run.quest && (run.sector || 0) === 0 && !st.panelReveal) return 'light';   // the broken UPLINK (the user's playtest): the mold comes and goes on it too
+  if (st.mode === 'panel' && st.panelTitle === 'UPLINK' && run && run.quest === 'h3av3n' && (run.sector || 0) === 0 && !st.panelReveal) return 'light';   // the broken UPLINK (the user's playtest): the mold comes and goes on it too
   if (st.mode !== 'play' || !run || !st.lv || st.g0dp) return null;
   const n = run.map[run.at];
   if (!n || n.mod !== 'mold') return null;
@@ -1017,7 +1017,9 @@ const MAZE_TIP = c => {
 // on the first layer b0y walks you through it, a line as each thing happens; an eye that lands on the real node leaves
 // before it goes blue (it never sits there a whole cycle).
 // (A plain CERBERUS for the regular game, without the mold, is a note in docs/QUESTS.md.)
-const CERB = { eyes: 3, red: 1.9, blue: 1.0, bossRed: 1.35, bossBlue: 0.75, mold: [1.7, 1.6], bossMold: [2.3, 1.6], regrow: 0.14, scrape: 2.1, look: 1100, hold: 900, grow: 2800, cellGrow: 300 };   // (hold: the clear board a beat first)
+// HAD3S's CERBERUS (cb.plain, the user 2026-11-04): no mold at all, the eyes are the whole tell; blue is shorter
+// (CERB.plainBlue / plainBossBlue) so it still bites; b0y isn't with you yet: no teaching.
+const CERB = { eyes: 3, red: 1.9, blue: 1.0, bossRed: 1.35, bossBlue: 0.75, plainBlue: 0.8, plainBossBlue: 0.6, mold: [1.7, 1.6], bossMold: [2.3, 1.6], regrow: 0.14, scrape: 2.1, look: 1100, hold: 900, grow: 2800, cellGrow: 300 };   // (hold: the clear board a beat first)
 const CERB_TEACH = { grow: "it's growing over the nodes.", dig: 'tap the mold. it breaks here.', eyes: 'the eyes. wait for blue. tap.', look: "that's the real one. dig it!" };   // (b0y, the first layer; ~30 fit)
 const cerbTeach = (cb, k) => { if (!cb.teach || cb.taught[k] || !G0DP.boy) return; cb.taught[k] = true; setMsg('> b0y: ' + CERB_TEACH[k], G0DP_BLUE); };
 // Break the mold around a cell (screen x, y): returns how thick it was there (0: nothing to break)
@@ -1045,11 +1047,12 @@ HEAVEN.cerberus = {
   intel: '"three heads. none of them sleep."',
   tell: null, pay: 1.6, noOdds: true,
   bossDesc: 'boss: thicker mold, faster eyes.',
-  rules: () => 'tap blue eyes. dig the mold.',   // (the map's box: one line, the user)
+  rules: () => st.run && st.run.quest === 'had3s' ? 'tap blue eyes. red ones bite.' : 'tap blue eyes. dig the mold.',   // (the map's box: one line, the user)
   mods: ['bleach'],
   layerMsg: (lv, c) => ({ text: lv.cb && lv.cb.boss ? '> faster eyes. thicker mold.' : `> ${lv.n} nodes. three eyes. one is real.`, col: C.text }),
   dress(lv, k) {
-    lv.cb = { boss: k.boss, seed: k.r() * 1000, eyes: [], m: null, look: null, said: false, teach: k.idx === 0 && !(st.corp && st.corp.cbTaught), taught: {} };
+    const plain = !!(st.run && st.run.quest === 'had3s');   // HAD3S: no mold
+    lv.cb = { boss: k.boss, plain, seed: k.r() * 1000, eyes: [], m: null, look: null, said: false, teach: !plain && k.idx === 0 && !(st.corp && st.corp.cbTaught), taught: {} };
   },
   // a tap anywhere else on the board (not a node): it digs
   boardTap(x, y) {
@@ -1057,7 +1060,7 @@ HEAVEN.cerberus = {
     if (!cb || !cb.m || lv.shownAt == null || st.busy) return false;
     return !!cerbScrape(cb, x, y, performance.now());
   },
-  hint(lv) { return lv.cb ? { text: 'blue: tap it. red: hands off. dig.', col: C.mid } : null; },
+  hint(lv) { return lv.cb ? { text: lv.cb.plain ? 'blue: tap it. red: hands off.' : 'blue: tap it. red: hands off. dig.', col: C.mid } : null; },
   // a tap: an eye (blue: it looks; red: it bites), the mold (it breaks), or a pick
   intercept(i) {
     const lv = st.lv, cb = lv && lv.cb, t = lv && lv.tiles[i], now = performance.now();
@@ -1092,7 +1095,7 @@ HEAVEN.cerberus = {
       for (let y = Y; y < Y + H; y++) for (let x = 0; x < W; x++) {
         const i = y * W + x, sx = Math.min(x, W - 1 - x) / 2.2, sy = Math.min(y - Y, Y + H - 1 - y), e = Math.min(1, Math.min(sx, sy) / maxE);
         const n = sx < sy ? g0dpNoise3(x * 0.1, y * 0.55, cb.seed + 7) : g0dpNoise3(x * 0.5, y * 0.12, cb.seed + 7);   // (fingers: along the way in from the nearest edge)
-        cb.cap[i] = base[0] + base[1] * g0dpNoise3(x * 0.3, y * 0.5, cb.seed);
+        cb.cap[i] = cb.plain ? 0 : base[0] + base[1] * g0dpNoise3(x * 0.3, y * 0.5, cb.seed);   // (plain: no mold)
         cb.arr[i] = CERB.hold + e * CERB.grow * (0.12 + 0.88 * Math.pow(n, 1.6));
       }
     }
@@ -1108,8 +1111,9 @@ HEAVEN.cerberus = {
     const lookOn = cb.look && now - cb.look.at < CERB.look;
     if (!st.busy) for (let i = 0; i < cb.m.length; i++) if ((!growing || cb.scr[i]) && cb.m[i] < cb.cap[i]) cb.m[i] = Math.min(cb.cap[i], cb.m[i] + CERB.regrow * dt * (cb.m[i] < 0.6 ? 0.35 : 1));
     // the eyes: on closed nodes, red then blue, then they hop (once the mold is in); one on the real node leaves before blue
-    const closed = lv.tiles.filter(t => t.state === 'closed' && !t.hidden), red = cb.boss ? CERB.bossRed : CERB.red, blue = cb.boss ? CERB.bossBlue : CERB.blue, real0 = lv.tiles[lv.safe];
-    if (!cb.eyes.length && closed.length) for (let k = 0; k < Math.min(CERB.eyes, closed.length); k++) cb.eyes.push({ tile: null, at: now, wait: cb.t0 + CERB.hold + CERB.grow + k * 520, red, blue, k });
+    const closed = lv.tiles.filter(t => t.state === 'closed' && !t.hidden), red = cb.boss ? CERB.bossRed : CERB.red, real0 = lv.tiles[lv.safe];
+    const blue = cb.plain ? (cb.boss ? CERB.plainBossBlue : CERB.plainBlue) : cb.boss ? CERB.bossBlue : CERB.blue;
+    if (!cb.eyes.length && closed.length) for (let k = 0; k < Math.min(CERB.eyes, closed.length); k++) cb.eyes.push({ tile: null, at: now, wait: cb.t0 + (cb.plain ? 700 : CERB.hold + CERB.grow) + k * 520, red, blue, k });   // (plain: no mold to wait for)
     for (const e of cb.eyes) {
       if (e.wait) { if (now < e.wait) continue; e.wait = 0; if (cb.teach && cb.taught.dig) setTimeout(() => cerbTeach(cb, 'eyes'), 1600); }
       const cyc = (e.tile === real0 ? red : red + blue) * 1000;   // (on the real node: it leaves before it goes blue)
@@ -1272,6 +1276,7 @@ function g0dEndCall(f) {
     if (!save.beatG0D) { save.beatG0D = true; persist(); }
     save.g0dWins = (save.g0dWins || 0) + 1; persist();
     stat('g0d_win', { quest: run.quest, seed: run.seed, shoe: !!f.shoe });
+    if (questOf('pops').step === 'g0d') questStep('pops', 'done');   // the main quest: done
     return playScene('h3av3n', () => heavenRewards(f, () => { showBoard('g0dend'); st.wipe = null; g0dEndCall(f); }));
   }
   const node = f.node, seed = run && run.seed, quest = run && run.quest;

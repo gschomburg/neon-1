@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.24']);
+NEON_FILES.push(['engine/editor.js', 'v14.31']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -366,6 +366,15 @@ if (EDITOR) {
       if (run.sector === to - 1) { await swapTo(() => toMap(old)); await settle(); }
     }
   };
+  // HAD3S: straight into a sector's boss (0: MYCONET, 1: CERBERUS), past the public net
+  const had3sBoss = async s => {
+    if (st.lv && st.lv.safe != null) { await pick(st.lv.safe); await settle(); }
+    if (st.mode !== 'map') { toMap(); await settle(); }
+    if (st.evCard) closeEventCard();
+    const run = st.run;
+    if (s >= 1) { run.sector = 1; addSector(run.map, run.seed, 1); }
+    await enterNode(run.map[bossIdOf(s)], true); await settle();
+  };
   const TEST = {
     god: () => { st.god = !st.god; },
     debug: () => { st.debug = !st.debug; },
@@ -382,8 +391,29 @@ if (EDITOR) {
     // quests (engine/quests.js): open the DISC quest (a sector cleared + POPS on the crew), give it, set the step, the scene, the call
     qopen: () => { save.stats = save.stats || {}; save.stats.sectors = Math.max(1, save.stats.sectors || 0); save.legacy = save.legacy || {}; save.legacy.crew_pops = Math.max(1, save.legacy.crew_pops || 0); persist(); },
     qdisc: () => { if (st.run && !holdingDisc()) addItem('disc', 0); },
-    qstep: m => { save.quests = save.quests || {}; if (m.step === 'none') delete save.quests.pops; else Object.assign(questOf('pops'), { step: m.step, seen: true, news: true }); persist(); },
-    qscene: () => playScene('disc'),
+    qstep: m => {
+      save.quests = save.quests || {}; save.legacy = save.legacy || {};
+      if (m.step === 'none') delete save.quests.pops; else Object.assign(questOf('pops'), { step: m.step, seen: true, news: true });
+      if (['raid', 'g0d', 'done'].includes(m.step)) save.legacy.crew_b0y = 1; else delete save.legacy.crew_b0y;   // (b0y on the crew from step 5: d0g is w00f then)
+      persist();
+    },
+    qscene: m => playScene(m && m.key && QUEST_SCENES[m.key] ? m.key : 'disc'),
+    qcard: () => questCard('pops'),
+    qtag: () => { if (st.run && !hasLoot('dogtag')) addItem('dogtag', 0); },
+    qwins: m => { questOf('pops').d0g = clamp(Math.round(+m.n || 0), 0, 10); persist(); },
+    had3s: async () => { endRun(); st.seed = 'HAD3S'; startRun('HAD3S', false); await settle(); },
+    myconet: async () => { endRun(); startRun('HAD3S', false); await settle(); await had3sBoss(0); },
+    cerberus: async () => { endRun(); startRun('HAD3S', false); await settle(); await had3sBoss(1); },
+    rivalgear: () => { if (st.run) for (const k of ['leash', 'bone', 'muzzle', 'honey']) st.run.items.push({ key: k, tier: 0, n: 1 }); },
+    b0yomni: async () => {
+      Object.assign(questOf('pops'), { step: 'raid', seen: true }); save.legacy = save.legacy || {}; save.legacy.crew_b0y = 1; persist();
+      endRun(); startRun(newSeed(), false); await settle();
+      if (st.lv && st.lv.safe != null) { await pick(st.lv.safe); await settle(); }
+      if (st.mode !== 'map') { toMap(); await settle(); }
+      if (st.evCard) closeEventCard();
+      await enterNode(st.run.map[bossIdOf(0)], true); await settle();
+      await wait(1200); if (st.corp) hkSpawn('b0y', 'call');
+    },
     // the H3AV3N seed, as if you typed it: a QUEST run from the start (engine/heaven.js)
     // The loot viewer (the user, 2026-10-31): what the node picked on the map (or the one you're on) could give. Read
     // straight off the seed, nothing taken: a market's offers and every reroll, a cache's loot and picks, a corp's boss

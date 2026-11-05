@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.24']);
+NEON_FILES.push(['engine/screens.js', 'v14.31']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -269,6 +269,7 @@ function overLines() {
     if (r.rep) lines.push({ text: `+${r.rep} REP banked   ${save.rep} REP`, col: C.money, bold: !!r.win });
     else T(`REP lost: ${r.repWorth} (cash out to bank it)`, C.dim);
   }
+  if (r.quest === 'had3s' && save.quests && save.quests.pops && save.quests.pops.step === 'd0g') lines.push({ text: `d0g: ${Math.min(save.quests.pops.d0g || 0, d0gWinsNeeded())} / ${d0gWinsNeeded()} for POPS`, col: C.rep, bold: true });   // HAD3S
   if (r.newBest) T('** new best **', C.accent);
   else T(`best ${pad2(save.best)}   seed ${r.seed}`, C.mid);
   if (r.practice) T(r.quest ? 'quest run: not scored' : 'practice run: not scored', C.dangerDim);
@@ -289,7 +290,11 @@ function overLines() {
   extras.push({ text: '' });
   // the bottom: the leaderboard block (ranks, initials, UPLOAD) until you upload, then the buttons
   const lb = lbOverLines(), lbOpen = lb && !(st.lbPost && st.lbPost.uploaded);
-  const bottom = [...(lb || []), ...(lbOpen ? [] : r.heaven && !r.win ? [   // died in H3AV3N: retrying heaven is the big one
+  const bottom = [...(lb || []), ...(lbOpen ? [] : r.quest === 'had3s' ? [   // HAD3S: running it again is the big one
+    { box: true, text: 'R U N   H A D 3 S   A G A I N', id: 'had3s', onTap: runHad3s, minW: 30 },
+    { text: '[ NEW RUN ]', id: 'new', onTap: newRun },
+    { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
+  ] : r.heaven && !r.win ? [   // died in H3AV3N: retrying heaven is the big one
     { box: true, text: 'R E T R Y   H 3 A V 3 N', id: 'retryh', onTap: retryHeaven, minW: 28 },
     { text: '[ NEW RUN ]', id: 'new', onTap: newRun },
     { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },

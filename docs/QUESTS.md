@@ -3,6 +3,8 @@
 The quest design doc (started 2026-10-28). The open list is still `docs/BACKLOG.md` item 2; the details live here.
 Where quests sit in the progression: `docs/PROGRESSION.md`.
 
+**Crew quests** (a quest per crew member, ideas, 2026-11-04): `docs/CREW_QUESTS.md`.
+
 ## The main quest: WHAT IS ALL THIS FOR? (POPS's son, d0g, G0D)
 
 **Its words (calls, scenes, step names) are in `dist/data/quests.js`:** read and edit them there. As a script to read: `docs/QUEST_DIALOG.md`
@@ -42,7 +44,7 @@ The user's dump, 2026-10-28, put in order. More is coming.
   times? Then maybe one more time.)
 
 ### Step 5: the d0g seed
-- Maybe POPS has to be LVL 2 before he gives you the seed.
+- ~~Maybe POPS has to be LVL 2 before he gives you the seed.~~ **Dropped** (the user, 2026-11-04: leveling him is hard enough already): POPS gives you HADES at the end of the DISC scene (built v14.25), at any level.
 - POPS gives you a seed. Entering it does not make the run practice; maybe it's a **quest mode** run.
 - The seed is a special version of rivals where d0g is the only rival, and it can bring rivals into the first sector.
   You can play it over and over to get your d0g defeats.
@@ -65,6 +67,23 @@ The user's dump, 2026-10-28, put in order. More is coming.
   - **d0g's cursor splits into 3, now and then** (the user, 2026-10-30): everywhere he shows up (RIVAL corps too), not
     always 3, and it doesn't change his abilities. Just a subtle thing when you fight him; maybe the player puts it
     together (d0g = Cerberus).
+- **Built v14.25-v14.28:** the seed handoff, the QUEST card, the HAD3S run (THE HUNT, wins / escaped, the DOGTAG, TRACE ROUTE as a stub), the rival gear, MYCONET and CERBERUS (no mold). Still to do: TRACE ROUTE onward (steps 6-10); d0g's cursor splitting into 3; CERBERUS in the regular game after HAD3S; the gear outside HAD3S.
+- **Decided 2026-11-04 (the user), building HAD3S:**
+  - **The name: HAD3S** (the seed; POPS gives it at the end of the DISC scene, v14.25).
+  - **Two sectors**, scripted like H3AV3N. Tuned so 10 d0g wins can happen within the two sectors if you path well.
+  - **Sector 1's boss: a new mold corp** (MYCONET / SPORE / MILDEW / BLIGHT, see below; build it out). **Sector 2's
+    final boss: CERBERUS, no mold** (the eyes are the tell).
+  - **d0g wins count anywhere** while you're on DOG DAYS, HAD3S or not, if you run into him out there.
+  - **The gear:** you start HAD3S with one; the rest is hidden around HAD3S (drops). **H0NEY drops from APIARY** in
+    HAD3S. **Make the gear general purpose: it works on any rival**, not only d0g.
+  - **Music:** the map in HAD3S plays **ZERO DAY** (staged) in place of GRIDLOCK, HAD3S only (so the seed feels different); corps keep their own tracks.
+  - **Round 2 (the user, 2026-11-04):** a d0g win = beating a corp he's in, like the other rivals, as long as he doesn't
+    get the last node; if he does, he **escaped** (its own message), no win. No need to push 10 wins into one run (it's
+    the same seed again): d0g on both bosses and some corps (not all: breathing room). At the end of a HAD3S run a big
+    button to run it again (above all while you're under 10). Gear: start with LEASH; BONE and MUZZLE drop around HAD3S;
+    H0NEY from APIARY; all four work on any rival. The mold corp: MYCONET, start with scraping (maybe the ICE spawns
+    mold you have to scrape). The DOGTAG drops on the 10th win anywhere; if you don't cash out with it, it drops the
+    next time you beat him. Wins count from when POPS gives you the seed; THE BOARD > QUESTS shows d0g: n / 10.
 - **Not clearing the sector: an item** (the user, 2026-10-30). The seed is only there to make 10 d0g wins easier. After
   the 10th win **a quest item drops**; like the DISC, you **cash out with it**. That moves the quest on: the cutscene,
   and d0g turns into b0y. (Claude: name, 6 letters max: DOGTAG, his old tag with his real name on it, b0y, which is what
@@ -73,6 +92,18 @@ The user's dump, 2026-10-28, put in order. More is coming.
   powers**.) (Claude: a new
   one, the first place you ever see the mold, close up: d0g was down here collecting data on it. Names: MYCONET
   (mycelium is nature's network), SPORE, MILDEW, BLIGHT. BITROT, decay, is the nearest corp today.)
+
+### The story so far: THE BACKUP (Claude's pick, 2026-11-04, from the user's angles; to rewrite)
+- b0y went into the net on purpose: something in the corps was waking up (G0D) and he wanted to see it first. It saw
+  him first: it got into him and made him its dog, d0g. As d0g he built it CERBERUS, a gate down in HAD3S: nothing gets
+  in, nothing gets out. Part of him fought it: the DISC was his backup (himself), smuggled out where somebody would
+  find it. Every time you beat him its grip slipped, a little more of him came back: why it takes ten. POPS was a
+  medic at MEDIX once; only his son called him doc. The trace ends in MEDIX's sub-basement three.
+- Why it fits: the ten wins, CERBERUS, the mold in HAD3S (MYCONET), why b0y knows where G0D went and its tricks (he
+  built some of them), why he can't help much against heaven's CERBERUS (it was built to stop him), the DISC.
+- **Built v14.29:** steps 6-10 as: the DOGTAG cash-out -> POPS calls -> PRODIGAL (the trace + the d0g scene in one)
+  -> b0y on the crew (no REP buy, no LVL 2) -> OMNI RAID (his CALL each run; break an OMNI boss with him there) ->
+  HEAVEN'S GATE -> G0D MODE (the H3AV3N seed on a QUEST card) -> done when you beat G0D.
 
 ### Step 6: the trace
 - When you beat d0g the 10th time (it has to be during the quest seed), another POPS dialog: you run a trace on d0g to
@@ -93,6 +124,7 @@ The user's dump, 2026-10-28, put in order. More is coming.
   different node, so you can tell it's probably one of those 3; when they're ready they all go to the same one (maybe one
   at a time). (Claude: so the hint sharpens over time, 3 maybes, then 2, then 1, and the clock or the maze drain is what
   waiting costs.)
+- **w00f** (the user, 2026-11-04; built v14.30): once b0y is crew, a copy of d0g called w00f takes his place everywhere (the dog without the boy), so there are still ten rivals and HAD3S replays still have a dog in them.
 - **Out of the rivals pool** (the user, 2026-10-30): once he's on your crew, d0g no longer shows up as a rival.
   (Claude: hkRivalFor in engine/hackers.js picks from HK_RIVALS, d0g from sector 3 on; drop him there once b0y is crew.
   A RIVAL corp that would have rolled d0g then rolls someone else: still fixed by the seed.)

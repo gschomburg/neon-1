@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.24']);
+NEON_FILES.push(['engine/hackers.js', 'v14.31']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -29,7 +29,10 @@ const hkLine = (h, k) => { const d = hkDef(h.id), l = d[k]; return Array.isArray
 // ---------------- Coming in ----------------
 // A rival for a corp with the RIVAL anomaly: one of the cast, fixed by the seed (d0g too, from sector 2: the user, 2026-10-30).
 function hkRivalFor(node) {
-  const pool = HK_RIVALS.filter(k => (k !== 'd0g' || (node.sector || 0) >= 1) && !(st.run.banned || []).includes(k));   // (EXORCIST: not one thrown out)
+  const d0gGone = hkCrewOn('b0y');   // d0g is b0y now, on your crew: never a rival again (docs/QUESTS.md step 8)
+  const dog = d0gGone ? 'w00f' : 'd0g';   // (w00f: the dog without the boy, from then on)
+  if (st.run && st.run.quest === 'had3s') return (st.run.banned || []).includes(dog) ? null : dog;   // HAD3S: only ever the dog (thrown out: nobody)
+  const pool = HK_RIVALS.filter(k => (k !== 'd0g' && k !== 'w00f' || (k === dog && (node.sector || 0) >= 1)) && !(st.run.banned || []).includes(k));   // (EXORCIST: not one thrown out)
   if (!pool.length) return null;
   return pickR(pool, rngFor(st.run.seed, 'rival', node.id));
 }
@@ -165,7 +168,8 @@ function hkTick(lv, now) {
   for (const h of hkList()) {
     if (h.out) continue;
     const s = hkS(lv, h), ai = HK_AI[h.id];
-    if (ai && ai.tick && !st.busy && lv.readyAt != null && !(st.dying)) ai.tick(lv, h, s, now);
+    const held = h.side === 'bad' && hkHeld(lv, h, s, now);   // rival gear: asleep (H0NEY) or chasing the BONE
+    if (!held && ai && ai.tick && !st.busy && lv.readyAt != null && !(st.dying)) ai.tick(lv, h, s, h.side === 'bad' ? hkClock(s, now) : now);   // (LEASH: their clock runs at half speed)
     if (st.lv !== lv || st.busy && !s.aim) { /* a pick is resolving: cursors still move */ }
     // the cursor glides to its aim (or wanders near the middle)
     const to = s.aim && s.aim.t ? hkCell(s.aim.t) : s.home || (s.home = { x: L.gx + rand(2, Math.max(3, lv.cols * (TILE_W + GAP_X) - 2)), y: BOARD_Y + rand(1, Math.max(2, lv.rows * (TILE_H + GAP_Y) - 2)) });
@@ -180,17 +184,18 @@ function hkTick(lv, now) {
 // The notes row: each hacker's name and bars (rivals: vs NAME ###; crew: +NAME ###)
 function hkNotes(lv) {
   lv.notes = (lv.notes || []).filter(n => !n.hk);
-  for (const h of hkList()) lv.notes.push({ hk: true, text: h.out ? `${hkName(h.id).slice(0, 8).toLowerCase()} x_x` : `${h.side === 'bad' ? 'vs ' : '+'}${hkName(h.id).slice(0, 8)} ${hkBars(h)}`, tag: 'hk_' + h.id });
+  for (const h of hkList()) lv.notes.push({ hk: true, text: h.out ? `${hkName(h.id).slice(0, 8).toLowerCase()} x_x` : h.side === 'bad' && hkAsleep() ? `${hkName(h.id).slice(0, 8).toLowerCase()} zzz` : `${h.side === 'bad' ? 'vs ' : '+'}${hkName(h.id).slice(0, 8)} ${hkBars(h)}`, tag: 'hk_' + h.id });
 }
 // A rival taps a node: ICE locks for you (and maybe costs it a bar); the real node: it takes the layer's pay.
 function hkTap(lv, h, t, iceCost = 1) {
   if (!t || t.state !== 'closed') return;
-  if (isReal(t)) return hkSteal(lv, h, t);
+  if (isReal(t)) { if (hkMuzzled()) { if (Math.random() < 0.6) hkSay(h, 'mmph. MMPH.'); Sound.deny(); return; } return hkSteal(lv, h, t); }   // MUZZLE: they bounce off it
   lockTile(t, C.danger, 'rival');
   if (iceCost) hkHurt(h, iceCost);
   if (!h.out && Math.random() < 0.3) hkSay(h, hkLine(h, 'taunt'), false, true);
 }
 function hkSteal(lv, h, t, burned = false) {
+  const c = st.corp; if (c && c.counts && c.idx === c.counts.length - 1) h.stoleLast = true;   // (the corp's last node: they escaped, no win: DOG DAYS)
   h.stole++; lv.payCut = 1; lv.scanned = true; st.busy = true;
   Sound.trap(); flash(C.danger, 0.15, 0.3);
   setMsg(burned ? '> the fire got the real node. no pay.' : `> ${hkName(h.id).toLowerCase()} got it first. no pay.`, C.danger);
@@ -204,6 +209,39 @@ function hkFire(lv, h, s, now) {
   const a = s.aim; s.aim = null;
   if (a.t.state === 'closed') a.fn(a.t);
   return true;
+}
+
+// ---------------- Rival gear (data/mods.js: LEASH, BONE, MUZZLE, H0NEY) ----------------
+// (w00f plays as d0g does: HK_AI.w00f, set after HK_AI below)
+// On any rival. LEASH: the rest of the corp at half speed (their own clock: hkClock). MUZZLE / H0NEY: this layer and
+// the next (st.corp.muzzleTo / honeyTo: the last layer index it covers). BONE: lv.bone, an ICE node they all circle for
+// 8s; then it's chewed up (locked) for you.
+const hkRivals = () => hkList().filter(h => h.side === 'bad' && !h.out);
+const hkAsleep = () => !!(st.corp && st.corp.honeyTo != null && st.corp.idx <= st.corp.honeyTo);
+const hkMuzzled = () => !!(st.corp && st.corp.muzzleTo != null && st.corp.idx <= st.corp.muzzleTo);
+function hkClock(s, now) {
+  if (s.vt == null || !(st.corp && st.corp.leash)) { s.vt = now; s.vlast = now; return now; }
+  s.vt += (now - s.vlast) * 0.5; s.vlast = now;
+  return s.vt;
+}
+function hkHeld(lv, h, s, now) {
+  if (hkAsleep()) { s.aim = null; return true; }
+  const b = lv.bone;
+  if (!b) return false;
+  if (now < b.until && b.t.state === 'closed') { s.aim = { t: b.t, at: Infinity, fn: () => {} }; return true; }
+  lv.bone = null; s.aim = null;
+  if (b.t.state === 'closed' && !isReal(b.t)) { lockTile(b.t, C.mid, 'bone'); Sound.crunch ? Sound.crunch() : Sound.tick(); setMsg('> they chewed the bone up. that ICE is done.', C.accent); }
+  return false;
+}
+function hkLeash() { st.corp.leash = true; Sound.thunk(); setMsg('> leash on. the rivals move at half speed this corp.', C.accent); }
+function hkMuzzle() { st.corp.muzzleTo = st.corp.idx + 1; Sound.thunk(); setMsg("> muzzled. they can't take the real node: this layer and the next.", C.accent); }
+function hkHoney() { st.corp.honeyTo = st.corp.idx + 1; Sound.shield(); for (const h of hkRivals()) hkSay(h, 'zzz...', false, true); setMsg('> h0ney. the rivals doze off: this layer and the next.', C.money); }
+function hkBone(lv) {
+  const t = pickR(hkIce(lv), Math.random);
+  if (!t) return;
+  lv.bone = { t, until: performance.now() + 8000 };
+  t.hkCover = { text: 'o=o', until: lv.bone.until, col: C.bright };
+  Sound.whiff(); setMsg('> bone thrown. the rivals go after it.', C.accent);
 }
 
 // ---------------- How each one plays ----------------
@@ -299,7 +337,7 @@ const HK_AI = {
       if (hkFire(lv, h, s, now) || now < s.next) return;
       s.next = now + 2200 - Math.min(600, (st.corp.tier || 1) * 80);
       const c = hkCands(lv).filter(o => !o.ruledOut), real = c.find(isReal);
-      const read = !hkUp('null');   // NULL: he can't read it
+      const read = !hkUp('null') && !hkMuzzled();   // NULL: he can't read it (nor muzzled)
       const t = real && read && Math.random() < 0.3 + 0.5 / Math.max(1, c.length) ? real : pickR(c, Math.random);
       if (t) hkAim(s, t, 600, x => hkTap(lv, h, x, 0), now);   // ICE doesn't cost him
     },
@@ -371,6 +409,19 @@ const HK_AI = {
     },
   },
   mother: {},   // stops a tap on ICE at your last integrity (hkStopTap)
+  b0y: {   // a guide (docs/QUESTS.md): hovers over 3 maybes, then 2, then the real node lights up; he never taps it
+    tick(lv, h, s, now) {
+      const c = hkCands(lv), real = c.find(isReal);
+      if (!real) return;
+      if (!s.maybe || s.maybeLv !== lv) { s.maybeLv = lv; s.maybe = shuffle([real, ...shuffle(c.filter(o => o !== real), Math.random).slice(0, 2)], Math.random); s.m0 = now; s.mAt = 0; s.mi = 0; s.said = false; }
+      s.maybe = s.maybe.filter(t => t.state === 'closed');
+      const left = Math.max(1, 3 - Math.floor((now - s.m0) / (h.lv2 ? 2000 : 3200)));
+      while (s.maybe.length > left) { const i = s.maybe.findIndex(t => t !== real); if (i < 0) break; s.maybe.splice(i, 1); }
+      if (!s.maybe.length) return;
+      if (now > s.mAt) { s.mi = (s.mi + 1) % s.maybe.length; s.mAt = now + 650; s.aim = { t: s.maybe[s.mi], at: Infinity, fn: () => {} }; }
+      if (s.maybe.length === 1 && !s.said) { s.said = true; real.zd = true; Sound.ping(1568); hkSay(h, hkLine(h, 'clue')); }   // (lit up gold, like 0DAY)
+    },
+  },
   root: {   // marks ICE (LVL 2: 2) each layer
     layer(lv, h) { for (const t of shuffle(hkIce(lv).filter(o => !o.ruledOut), Math.random).slice(0, h.lv2 ? 2 : 1)) t.ruledOut = true; },
   },
@@ -384,6 +435,7 @@ const HK_AI = {
   },
   hype: {},   // cheers: a perfect streak pays more (hkPayMult)
 };
+HK_AI.w00f = HK_AI.d0g;   // w00f: d0g's game, nobody inside
 for (const k of ['ggez', 'hype']) HK_AI[k].emotes = true;
 
 // ---------------- Hooks (engine/run.js, engine/active.js) ----------------
@@ -438,6 +490,7 @@ function hkCorpEnd(c) {
   for (const h of c.hk || []) {
     if (h.side !== 'bad') continue;
     tally('hack:beat:' + h.id);
+    if (h.id === 'd0g') questD0g(h);   // DOG DAYS (engine/quests.js): a win for POPS, or he escaped
     const bonus = h.exorcised ? 0 : h.out ? earnInt(ECON.rival.flatlined) : h.stole === 0 ? earnInt(ECON.rival.beat) : 0;   // (EXORCIST: thrown out, not beaten: no bonus)
     if (bonus) { run.credits += bonus; run.earned += bonus; setMsg(h.out ? `> ${hkName(h.id).toLowerCase()} flatlined. +${bonus}cr` : `> you beat ${hkName(h.id).toLowerCase()}. +${bonus}cr`, C.money); }
   }
@@ -569,7 +622,8 @@ function buildHackers(ctx, lv, now) {
 // boss: the chance a corp boss's reward has an extra pick, a CALL stack; own: with crew, the chance it's one of your
 // crew's own CALLs. plainN: how many plain CALLs; ownN: how many of a crew member's (fewest, most).
 const CALL_ODDS = { pops: 6, fresh: 2, known: 1, shop: 3, boss: 0.5, own: 0.5, plainN: 3, ownN: [1, 2] };
-const callWeight = id => id === 'pops' && !hkCrewOn('pops') ? CALL_ODDS.pops : statOf('hack:call:' + id) < 5 ? CALL_ODDS.fresh : CALL_ODDS.known;
+const callWeight = id => id === 'pops' && !hkCrewOn('pops') ? CALL_ODDS.pops : id === 'b0y' && questOf('pops').step === 'raid' ? CALL_ODDS.pops : statOf('hack:call:' + id) < 5 ? CALL_ODDS.fresh : CALL_ODDS.known;   // (b0y: likelier while the OMNI RAID is on)
+const hkCallableId = k => !HACKERS[k].quest || hkCrewOn(k);   // (quest crew, b0y: only once he's on your crew)
 // A corp boss's extra pick, a CALL stack (the user, 2026-10-29: CALL gear was still rare), or null: plain CALL x3, or
 // (with crew) one of your crew's own x1-2. Its own roll, so the rest of the reward stays the same.
 function callReward(r) {
@@ -584,10 +638,10 @@ function callReward(r) {
 const hkCallable = () => !!st.corp && st.corp.hasBoss && !!st.lv && st.lv.n > 1;
 const CALL_GEAR = {
   call: {
-    ok: () => hkCallable() && HK_CREW.some(k => !hkUp(k)),
+    ok: () => hkCallable() && HK_CREW.some(k => !hkUp(k) && hkCallableId(k)),
     why: () => !hkCallable() ? 'only in a corp.' : 'nobody left to call.',
     use() {
-      const free = HK_CREW.filter(k => !hkUp(k)), fresh = free.filter(k => !hkList().find(h => h.id === k));
+      const free = HK_CREW.filter(k => !hkUp(k) && hkCallableId(k)), fresh = free.filter(k => !hkList().find(h => h.id === k));
       const c = st.corp, id = pickWeighted(fresh.length ? fresh : free, callWeight, rngFor(st.run.seed, 'call', c ? c.node.id : '', c ? c.idx : 0, (st.run.calls = (st.run.calls || 0) + 1)));   // (who answers: on the seed)
       Sound.ui(); hkSpawn(id, 'call');
     },
@@ -600,4 +654,4 @@ for (const id of HK_CREW) CALL_GEAR['call_' + id] = {
 };
 Object.assign(BOSS_GEAR, CALL_GEAR);   // engine/active.js runs them like the boss gear
 // A crew member's own gear only turns up once they're in your crew (engine/panels.js shopGear, engine/run.js loot).
-const gearAllowed = k => !ITEMS[k].quest && (!ITEMS[k].crew || hkCrewOn(ITEMS[k].crew));   // (quest gear drops by its quest's rules: engine/quests.js)
+const gearAllowed = k => !ITEMS[k].quest && !ITEMS[k].only && (!ITEMS[k].hunt || !!(st.run && st.run.quest === 'had3s')) && (!ITEMS[k].crew || hkCrewOn(ITEMS[k].crew));   // (quest gear drops by its quest's rules: engine/quests.js; hunt gear: HAD3S only; only: from its corp)

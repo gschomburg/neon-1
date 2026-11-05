@@ -14,7 +14,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.24']);
+NEON_FILES.push(['data/quests.js', 'v14.31']);
 
 const QUEST_INFO = {
   pops: {
@@ -23,7 +23,11 @@ const QUEST_INFO = {
       { key: 'find', name: 'THE DISC', goal: 'beat a sector boss with the DISC in your gear, then CASH OUT at the UPLINK.',
         lost: 'you lost the DISC. another copy is out there: loot nodes, markets, the PIER.' },
       { key: 'deliver', name: 'SAFEHOUSE', goal: 'you cashed out with the DISC. take it to POPS.' },
-      { key: 'd0g', name: 'DOG DAYS', goal: 'POPS wants d0g beaten. ten times. (this step is coming soon.)' },
+      { key: 'd0g', name: 'DOG DAYS', goal: "start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.", seed: 'HAD3S', wins: 10 },
+      { key: 'trace', name: 'TRACE ROUTE', goal: 'POPS got a hit on the name on the DOGTAG. go see him.' },
+      { key: 'raid', name: 'OMNI RAID', goal: "b0y is on your crew. call him in on an OMNI boss (his CALL, or a plain one) and break it with him there." },
+      { key: 'g0d', name: 'G0D MODE', goal: 'start a run with the seed H3AV3N and beat G0D. b0y goes with you.', seed: 'H3AV3N' },
+      { key: 'done', name: 'WHAT IT WAS ALL FOR', goal: 'you beat G0D. POPS has his boy back.' },
       // still to build (docs/QUESTS.md): TRACE ROUTE, PRODIGAL, NEW BLOOD, OMNI RAID, HEAVEN'S GATE, G0D MODE
     ],
   },
@@ -40,12 +44,20 @@ const QUEST_LINES = {
   uplink: ["you made the checkpoint with the disc.", "CASH OUT here and bring it to me."],
   // the results after cashing out with it ([ TAKE IT TO POPS ] / [ LATER ])
   deliver: ["you made it out with the disc.", "come by the safehouse. let's see what's on it."],
+  // DOG DAYS: the DOGTAG drops (ten wins), the UPLINK holding it, cashing out with it
+  dogtag: ["that's ten.", "he dropped something. an old tag, with a name scratched into it.", "CASH OUT with it. i'll run a trace."],
+  tagUplink: ["you've got his tag.", "CASH OUT here and bring it to me."],
+  traced: ["you got it out. good.", "i ran the name. i got a hit.", "come by. now."],
+  // OMNI RAID: b0y, once he's on your crew (each run while the step is on: you start with his CALL)
+  raid: ["it's me. b0y.", "it hid inside OMNI for years. call me in on one and i'll find where it went."],
 };
 
 // A scene's music (the user, 2026-11-04): its song, and a new pick of level and stage every step ms from the frame's mood
 // (engine/quests.js sceneMusic). Another one to try for a lighter scene: EVENT HORIZON (eventhorizon).
 const SCENE_MUSIC = {
   disc: { song: 'pantheon', step: 6000, mood: { levels: [0, 1], stages: 'A' } },
+  prodigal: { song: 'eventhorizon', step: 7000, mood: { levels: [0], stages: 'A' } },   // (the user: EVENT HORIZON, a lighter cutscene track)
+  gate: { song: 'pantheon', step: 6000, mood: { levels: [2], stages: 'B' } },
 };
 const QUEST_SCENES = {
   // H3AV3N: G0D is down (a placeholder: docs/ENDGAME.md has the real ending to write)
@@ -127,6 +139,53 @@ const QUEST_SCENES = {
     { pic: { logo: 'd0g', look: { tics: { swap: [['d', 'b']], col: '#4aa8ff' } } }, who: 'pops', text: 'and one name all over the logs. d0g.', mood: { levels: [2, 3], stages: 'B' } },
     { text: 'his jaw sets. the shake is gone.', mood: { levels: [2, 3], stages: 'BC' } },
     { who: 'pops', text: 'if d0g did something to my boy, i want him to feel it.', mood: { levels: [3], stages: 'C' } },
+    // POPS gives you the seed (the user, 2026-11-04: here, at the end of this scene; the quest card after says the rest)
+    { who: 'pops', text: 'his trail runs down deep. somewhere the logs call HAD3S.' },
+    { who: 'pops', text: "here. that's a seed: HAD3S. start a run with it and go hunting." },
     { who: 'pops', text: 'go find him. make him pay for it.' },
+  ],
+  // PRODIGAL (docs/QUESTS.md steps 6-7; the story: "THE BACKUP", Claude's pick 2026-11-04, to rewrite): the trace,
+  // MEDIX's basement, d0g, "doc", why he was d0g, and he's b0y again. Placeholder art: n_cutscene_02_prodigal.
+  prodigal: [
+    { title: ['WHAT IS ALL THIS FOR?', 'step 4: TRACE ROUTE'], mood: { levels: [0], stages: 'A' } },
+    { pic: { art: 'prodigal', rows: [0, 5], layers: [{ n: 'trace', col: 'accent', from: 'top', dur: 1600 }] },
+      text: 'POPS runs the name off the DOGTAG. the trace bounces through five relays, then dives.' },
+    { who: 'pops', text: "it doesn't end in a corp. it ends under one. MEDIX. sub-basement three." },
+    { who: 'pops', text: 'i worked there, a long time ago. i patched people up.' },
+    { pic: { art: 'prodigal', rows: [8, 17], hold: 600, layers: [
+      { n: 'basement mold', col: '#9fc13a', from: 'bottom', flicker: true, at: 600 },
+      { n: 'basement', col: 'text', from: 'bottom', flicker: true, at: 0, lights: { ch: '>:/', col: 'accent', rate: 900, off: 0.3 } }] },
+      text: 'you go down together. the lights are out. mold up the walls, and one screen still on in the dark.', mood: { levels: [0, 1], stages: 'A' } },
+    { text: "d0g is there, wired into it. he doesn't run." },
+    { pic: { art: 'prodigal', rows: [22, 29], layers: [{ n: 'hood', col: 'mid' }, { n: 'eyes', col: 'danger', at: 500, glitch: true }] },
+      who: 'd0g', text: "you're the one who keeps beating me.", mood: { levels: [1], stages: 'B' } },
+    { who: 'pops', text: 'kid. look at me.' },
+    { text: 'the eyes in the hood flicker. something in there is fighting something else.' },
+    { pic: { art: 'prodigal', rows: [22, 29], layers: [{ n: 'hood', col: 'mid' }, { n: 'eyes', col: '#4aa8ff', at: 300, glitch: true, tics: { swap: [['o', '@']], col: 'danger' } }] },
+      who: 'd0g', text: '...doc?', mood: { levels: [1, 2], stages: 'B' } },
+    { text: 'nobody has called POPS that in years. only one person ever did.', mood: { levels: [0, 1], stages: 'A' } },
+    { who: 'd0g', text: 'i went in after it. something in the corps was waking up. i wanted to see it first.' },
+    { who: 'd0g', text: 'it saw me first. it got in. it made me its dog.' },
+    { who: 'd0g', text: 'i built it a gate down there. CERBERUS. so nothing gets in. so nothing gets out.', mood: { levels: [1, 2], stages: 'B' } },
+    { who: 'd0g', text: 'every time you beat me, its grip slipped. a little more of me came back.' },
+    { who: 'd0g', text: 'the DISC was me. a backup. i got it out where somebody would find it.' },
+    { text: "POPS doesn't say anything. he just holds on to him.", mood: { levels: [0], stages: 'A' } },
+    { who: 'b0y', text: "don't call me d0g. that was its name for me. it's b0y." },
+    { who: 'b0y', text: "it's still out there. here's my number. when you're ready, we go get it.", mood: { levels: [1], stages: 'AB' } },
+  ],
+  // HEAVEN'S GATE (steps 9-10): breaking OMNI with b0y there; he finds where it went. Placeholder art: n_cutscene_03_gate.
+  gate: [
+    { title: ['WHAT IS ALL THIS FOR?', "HEAVEN'S GATE"], mood: { levels: [1], stages: 'A' } },
+    { pic: { art: 'gate', rows: [0, 6], layers: [{ n: 'omni core', col: 'danger', glitch: true, dur: 1200 }] },
+      text: "OMNI's core comes apart. b0y is already in it, faster than you've ever seen anybody move.", mood: { levels: [2], stages: 'B' } },
+    { who: 'b0y', text: 'it was here. for years. the corps were just its body.' },
+    { who: 'b0y', text: "it moved. somewhere the corps can't touch. it calls it heaven." },
+    { pic: { art: 'gate', rows: [10, 17], hold: 500, layers: [
+      { n: 'clouds', col: 'mid', par: 0.3, from: 'bottom', flicker: true },
+      { n: 'gate', col: 'bright', at: 700 },
+      { n: 'gate mold', col: '#9fc13a', at: 1400, flicker: true }] },
+      text: 'on the screen: a gate, up past the clouds. mold all over it.', mood: { levels: [2, 3], stages: 'BC' } },
+    { who: 'b0y', text: 'the way in is a seed. H3AV3N.' },
+    { who: 'b0y', text: "i'll be with you the whole way. i know its tricks. i built some of them.", mood: { levels: [3], stages: 'C' } },
   ],
 };

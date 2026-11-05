@@ -6,7 +6,7 @@
 // also the corp's intro art) or hacker (unlocked by beating that hacker), and the art: up to 24 x 7, shown in a
 // 24 x 7 box, centered.
 'use strict';
-NEON_FILES.push(['data/art/logos.js', 'v14.24']);
+NEON_FILES.push(['data/art/logos.js', 'v14.31']);
 
 const ART_LOGOS = [
   { id: 'skull', name: 'SKULL', mark: '{x}', kind: 'player', art: [
@@ -704,6 +704,15 @@ const ART_LOGOS = [
     '',
     'U P S I D E',
   ] },
+  { id: 'myconet', name: 'MYCONET', mark: 'MY4', kind: 'corp', corp: 'myconet', art: [
+    '  .-~~-.        .-~~-.',
+    ' (  ()  )~~~~~~(  ()  )',
+    '  \'-..-\'   ||   \'-..-\'',
+    '     \\  .-\'\'-.  /',
+    '      \'-(  ()  )-\'',
+    '         \'-..-\'',
+    '    M Y C O N E T',
+  ] },
   { id: 'omni', name: 'OMNI//CORE', mark: '[!]', kind: 'corp', corp: 'omni', art: [
     '      _______',
     '  .-\'\'       \'\'-.',
@@ -773,6 +782,24 @@ const ART_LOGOS = [
     '  vwv      vw      vwv',
     '       __      __',
     '[1]---/   [22]   \\---[3]',
+  ] },
+  { id: 'w00f', name: 'w00f', mark: 'w0f', kind: 'hacker', hacker: 'w00f', art: [
+    '-----\\   ,    .   /-----',
+    '      \'  |\\__/|  \'',
+    ' (\\_/)   {6--9}   (\\_/)',
+    ' {0y0)    "^^"    (0y0}',
+    '  vwv      vw      vwv',
+    '       __      __',
+    '[1]---/   [22]   \\---[3]',
+  ] },
+  { id: 'b0y', name: 'b0y', mark: 'b0y', kind: 'hacker', hacker: 'b0y', art: [
+    '      .-~~~~~~~~~-.',
+    '    .\'   .-----.   \'.',
+    '   /    / o   o \\    \\',
+    '  |    |    ^    |    |',
+    '   \\    \\  \'-\'  /    /',
+    '    \'.   \'-----\'   .\'',
+    '      \'-.._____..-\'',
   ] },
   { id: 'hcf', name: 'HCF', mark: '!F!', kind: 'hacker', hacker: 'hcf', art: [
     '  ) ( ) ( ) (',
