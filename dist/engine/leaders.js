@@ -73,7 +73,7 @@ function lbInitials() {
 function lbSubmit(run, win) {
   st.lbPost = null;
   try {
-    if (run.practice || st.mp || EDITOR || !(run.depth > 0) || !lbClient()) return;
+    if (run.practice || st.mp || EDITOR || !(run.depth > 0) || !lbClient()) return;   // (run kinds: engine/save.js)
     if (navigator.webdriver && !window.LB_TEST) return;
     const prof = profile(), at = Date.now(), ini = lbInitials();
     // tie: fewer 1UPs used wins, then fewer mods (1UPs x 100 + mods; the board shows the mods: tie % 100)

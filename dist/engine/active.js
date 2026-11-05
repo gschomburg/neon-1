@@ -383,7 +383,7 @@ function lottoScratch() {
   const run = st.run, r = rngFor(run.seed, 'lotto', run.lottos = (run.lottos || 0) + 1);
   const L2 = ECON.lotto, jack = r() < L2.jackpot;
   const cr = jack ? earnInt(L2.win) : Math.round(earnCr(L2.lo) + r() * (earnCr(L2.hi) - earnCr(L2.lo)));
-  run.credits += cr; run.earned += cr;
+  earn(cr, run);
   if (jack) {   // the jackpot: confetti, like a legendary catch
     Sound.buy(); setTimeout(() => Sound.pop(4), 140); setMsg(`> LOTTO: JACKPOT. +${cr}cr.`, C.money);
     if (!reduced()) {
@@ -527,7 +527,7 @@ async function nukeCorp(lv) {
   }
   await wait(1100);
   if (st.lv !== lv) return;
-  run.credits += cr; run.earned += cr;
+  earn(cr, run);
   c.nuked = true; c.idx = c.counts.length;
   Sound.loot(); setMsg(`> the corp is gone. +${cr}cr.`, C.money);
   await wait(900);

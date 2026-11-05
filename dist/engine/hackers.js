@@ -495,7 +495,7 @@ function hkCorpEnd(c) {
     tally('hack:beat:' + h.id);
     if (h.id === 'd0g') questD0g(h);   // DOG DAYS (engine/quests.js): a win for POPS, or he escaped
     const bonus = h.exorcised ? 0 : h.out ? earnInt(ECON.rival.flatlined) : h.stole === 0 ? earnInt(ECON.rival.beat) : 0;   // (EXORCIST: thrown out, not beaten: no bonus)
-    if (bonus) { run.credits += bonus; run.earned += bonus; setMsg(h.out ? `> ${hkName(h.id).toLowerCase()} flatlined. +${bonus}cr` : `> you beat ${hkName(h.id).toLowerCase()}. +${bonus}cr`, C.money); }
+    if (bonus) { earn(bonus, run); setMsg(h.out ? `> ${hkName(h.id).toLowerCase()} flatlined. +${bonus}cr` : `> you beat ${hkName(h.id).toLowerCase()}. +${bonus}cr`, C.money); }
   }
 }
 // You died with hackers there: a rival's logo and taunt, or a crew member calling your name, as the screen falls apart.

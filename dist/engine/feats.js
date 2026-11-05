@@ -8,7 +8,7 @@ NEON_FILES.push(['engine/feats.js', 'v14.44']);
 // Practice runs, the training and multiplayer don't count.
 const FEAT_BY_ID = Object.fromEntries(FEATS.map(f => [f.id, f]));
 const statOf = k => (save.stats && save.stats[k]) || 0;
-const counting = () => !(st.run && (st.run.practice || st.run.tutorial)) && !st.mp;
+const counting = () => !(st.run && (st.run.practice || st.run.tutorial)) && !st.mp;   // (run kinds: engine/save.js)
 function tally(stat, by = 1) {
   if (!counting() || !by) return;
   save.stats = save.stats || {};

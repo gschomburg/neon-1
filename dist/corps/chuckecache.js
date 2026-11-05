@@ -47,7 +47,7 @@ CORPS.chuckecache = {
     const tix = c.tickets || 0;
     if (!tix) return null;
     const cr = Math.round(tix * ECON.corps.chuckecacheTicket);
-    st.run.credits += cr; st.run.earned += cr;
+    earn(cr);
     return { text: `> prize counter: ${tix} tickets = ${cr}cr!`, col: C.money };
   },
 };

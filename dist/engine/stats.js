@@ -15,7 +15,8 @@
 NEON_FILES.push(['engine/stats.js', 'v14.44']);
 
 // Off for multiplayer, the editor and automated test runs (the playtest tools).
-function statOn() { return !!(st.run && !st.run.tutorial && !st.mp && !EDITOR && !(navigator.webdriver && !window.LB_TEST) && lbClient()); }
+function statOn() {   // (run kinds: engine/save.js)
+  return !!(st.run && !st.run.tutorial && !st.mp && !EDITOR && !(navigator.webdriver && !window.LB_TEST) && lbClient()); }
 function stat(name, data) {
   try {
     if (!statOn()) return;

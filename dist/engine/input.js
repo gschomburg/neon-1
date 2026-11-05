@@ -171,12 +171,7 @@ cv.addEventListener('pointerdown', e => {
   Sound.init();
   Field.blur();   // tapping anywhere else finishes typing (phones don't always do this)
   if (st.boot && !st.dev) { introTap(hitAt(...ptXY(e))); return; }   // the intro: LOGIN, skip ahead, its buttons (engine/intro.js)
-  if (st.ad && !st.dev) return adTap(hitAt(...ptXY(e)), performance.now());   // an ad is up: it takes the tap
-  if (st.evCard && !st.dev) return evTap(hitAt(...ptXY(e)));   // a SECTOR EVENT card (engine/events.js)
-  if (st.qScene && !st.dev) return sceneTap(hitAt(...ptXY(e)));   // a quest scene (engine/quests.js)
-  if (st.featBox && !st.dev) return featTap(hitAt(...ptXY(e)));   // the FEAT box (engine/feats.js)
-  if (st.callBox && !st.dev) return callTap(hitAt(...ptXY(e)));   // a CALL (engine/quests.js)
-  if (st.hkCard && !st.dev) return hkCardTap();   // a hacker's card (engine/hackers.js)
+  { const o = overlayTop(); if (o) return o.tap(hitAt(...ptXY(e))); }   // an ad, a card, a box, a scene: the top one takes the tap (OVERLAYS, engine/scene.js)
   if (st.mode === 'fish' && !st.dev && !st.pause && fishPointer('down', e)) return;   // the PIER (engine/fishing.js)
   if (st.bench && benchPointer('down', e)) return;   // the WORKBENCH keyboard and slots (engine/bench.js)
   if (st.intro) { st.intro.skip = true; return; }   // tap skips a corp intro
@@ -320,12 +315,7 @@ document.addEventListener('keydown', e => {
   const arrow = k.startsWith('arrow');
   if (arrow || k === ' ' || k === 'enter') e.preventDefault();
   if (st.boot && e.key !== '`') { introKey(e.key.toLowerCase()); return; }   // the intro: Enter / Space start and skip, N / L pick
-  if (st.ad && !st.dev && e.key !== '`') { e.preventDefault(); return adKey(e.key.toLowerCase(), performance.now()); }   // an ad is up
-  if (st.evCard && !st.dev && e.key !== '`') { e.preventDefault(); return evKey(k); }   // a SECTOR EVENT card
-  if (st.qScene && !st.dev && e.key !== '`') { e.preventDefault(); return sceneKey(k); }   // a quest scene
-  if (st.featBox && !st.dev && e.key !== '`') { e.preventDefault(); return featKey(k); }   // the FEAT box
-  if (st.callBox && !st.dev && e.key !== '`') { e.preventDefault(); return callKey(k); }   // a CALL
-  if (st.hkCard && !st.dev && e.key !== '`') { e.preventDefault(); return hkCardKey(k); }   // a hacker's card
+  { const o = e.key !== '`' && overlayTop(); if (o) { e.preventDefault(); return o.key(k); } }   // the top overlay takes the key (OVERLAYS, engine/scene.js)
   if (st.intro && e.key !== '`') { st.intro.skip = true; return; }   // any key skips a corp intro
   if (st.bossIntro && e.key !== '`') { st.bossIntro.skip = true; return; }
   if (st.g0dFake && !st.dev && e.key !== '`') return;   // H3AV3N's fake win: its rewards screen takes no keys either

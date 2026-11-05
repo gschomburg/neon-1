@@ -50,10 +50,10 @@ function addMod(key, tier = 0) {
   if (key === 'stash') run.beltSlots++;
   if (key === 'ramdoubler') {   // the belt goes: what you hold is sold for half
     const cash = run.items.reduce((a, s) => a + (ITEMS[s.key].value ? gearValue(s.key, s.tier) : Math.floor(itemView(s.key, s.tier).price * TIER_PRICE[s.tier || 0] * priceScale() * ECON.mods.ramDoublerSell)) * s.n, 0);
-    run.items = []; run.credits += cash; run.earned += cash;
+    run.items = []; earn(cash, run);
     if (cash) setTimeout(() => setMsg(`> ram doubler: gear sold, +${cash}cr.`, C.money), 400);
   }
-  if (key === 'bloodmoney') { run.credits += BLOOD.bonus; run.earned += BLOOD.bonus; }
+  if (key === 'bloodmoney') { earn(BLOOD.bonus, run); }
   if (key === 'zombie') { run.rot = 0; if (has('failsafe')) run.failsafeUsed = true; }   // dead: FAILSAFE has nothing to save
   return 'new';
 }
@@ -226,7 +226,7 @@ function openShop(node) {
     if (!sold.length) return Sound.deny();
     let cr = 0, n = 0;
     for (const s of sold) { cr += gearValue(s.key, s.tier) * s.n; n += s.n; }
-    run.loot = keep; run.credits += cr; run.earned += cr;
+    run.loot = keep; earn(cr, run);
     sellSel = 0; sellArea.top = 0;
     Sound.buy(); setTimeout(() => Sound.loot(), 120); setMsg(`> sold all loot (${n}). +${cr}cr.`, C.money);
   };
@@ -385,7 +385,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
       const v = itemView(o.key, o.tier);
       if (has('ramdoubler')) {   // RAM DOUBLER: no belt, so it's sold
         const cr = gearValue(o.key, o.tier) * o.n;
-        st.run.credits += cr; st.run.earned += cr;
+        earn(cr);
         Sound.buy(); setMsg(`> ram doubler: ${v.name.toLowerCase()} x${o.n} sold, +${cr}cr.`, C.money);
         return leave();
       }
@@ -494,7 +494,7 @@ function openStartReward(node) {
     head: [['you are in. pick a starter perk.', C.text]],
     options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, legacyLv('starter') ? modsFound('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky')),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.starter)}cr ]`,
-    onSkip: () => { const cr = earnInt(ECON.skip.starter); run.credits += cr; run.earned += cr; },
+    onSkip: () => { const cr = earnInt(ECON.skip.starter); earn(cr, run); },
     msg: '> link established.',
   });
 }
@@ -534,12 +534,12 @@ function openRepair(node) {
     heal(CONFIG.repairAmount);
     Sound.buy();
     node.rested = zombie() ? `rot -${-(run.rot || 0) - before}` : `integrity +${run.integrity - before}`;
-    if (benchOpen() && !run.mp) node.comps = benchArrive();   // the WORKBENCH: it leaves you a few components
+    if (benchOpen() && !st.mp) node.comps = benchArrive();   // the WORKBENCH: it leaves you a few components
   }
   openChoice({
     title: 'SAFEHOUSE', col: C.accent,
     head: [[node.rested, C.bright]].concat(node.comps ? [[`+${node.comps.length} components: ${node.comps.join(' ')}`, C.money]] : []),
-    next: benchOpen() && !run.mp ? () => openBench(node) : null,   // the WORKBENCH: after the pick, straight to the bench (engine/bench.js)
+    next: benchOpen() && !st.mp ? () => openBench(node) : null,   // the WORKBENCH: after the pick, straight to the bench (engine/bench.js)
     options: pickMods(r, modsOfKind('minor'), 2),
     skipLabel: '[ SKIP ]',
     msg: '> patched up.',
@@ -591,7 +591,7 @@ function openReward(node, skipped = false) {
     by: skipped ? null : profile(),
     options, locked: skipped,
     skipLabel: skipped ? '[ CONTINUE ]' : '[ SKIP  +20cr ]',
-    onSkip: skipped ? null : () => { const cr = earnInt(ECON.skip.boss); run.credits += cr; run.earned += cr; Sound.loot(); },
+    onSkip: skipped ? null : () => { const cr = earnInt(ECON.skip.boss); earn(cr, run); Sound.loot(); },
     msg: skipped ? { text: '> skipjack: boss skipped.', col: C.dangerDim } : breachSummary(),
   });
 }

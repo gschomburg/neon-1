@@ -39,7 +39,7 @@ CORPS.tollgate = {
 
 // ---- its boss mod's effect: EZPASS (the END stage, engine/mods.js; run from engine/run.js)
 defineModFx('ezpass', 'end', {
-  end() { const cr = earnInt(ECON.mods.ezpass); st.run.credits += cr; st.run.earned += cr; },
+  end() { const cr = earnInt(ECON.mods.ezpass); earn(cr); },
 });
 
 // the codex, once you've beaten it

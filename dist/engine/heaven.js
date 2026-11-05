@@ -113,7 +113,7 @@ HEAVEN.maze = {
     const options = buf.concat([gear], pickMods(r, modsFound('gen', 'minor'), 3 - buf.length - 1, buf));
     Sound.bossWin(); flash(G0DP_BLUE, 0.25, 0.6); shake(5, 0.35);
     openChoice({ reveal: true, title: 'MAZE CLEARED', col: G0DP_BLUE, head: [['G0D MAZE', C.text], ['the eye is right above you.', C.mid]], by: profile(), options,
-      skipLabel: `[ SKIP  +${earnInt(ECON.skip.boss)}cr ]`, onSkip: () => { const cr = earnInt(ECON.skip.boss); run.credits += cr; run.earned += cr; Sound.loot(); },
+      skipLabel: `[ SKIP  +${earnInt(ECON.skip.boss)}cr ]`, onSkip: () => { const cr = earnInt(ECON.skip.boss); earn(cr, run); Sound.loot(); },
       msg: { text: '> b0y: we made it. G0D is right up there.', col: G0DP_BLUE } });
   },
   layerMsg: (lv, c) => {

@@ -16,7 +16,7 @@ const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC
 const questOf = id => { save.quests = save.quests || {}; return save.quests[id] = save.quests[id] || { step: 'find' }; };
 const questOpen = () => statOf('sectors') >= 1 && hkCrewOn('pops');   // a sector cleared (ever) and POPS on the crew
 // Quests move in real runs (and in the neon editor, which has its own save); never in the training or multiplayer.
-const questRun = () => !!(st.run && !st.run.tutorial && !st.mp && (!st.run.practice || EDITOR));
+const questRun = () => !!(st.run && !st.run.tutorial && !st.mp && (!st.run.practice || EDITOR));   // (run kinds: engine/save.js)
 const holdingDisc = () => hasLoot('disc');   // (in the LOOT bag)
 function questStep(id, step) { const q = questOf(id); q.step = step; q.news = true; persist(); }
 

@@ -29,6 +29,29 @@ function hpWatch(cur, x0, bar, now) {
   hpFx.shown = cur; hpFx.x0 = x0;
 }
 
+// ---------- Overlays: the boxes that come up over everything ----------
+// In drawing order, bottom first. on(): it's up. shown(): not hidden by another (a card waits under an ad). The top
+// one that's up and shown takes taps and keys (overlayTop: engine/input.js), so what you see is what you tap. None of
+// them draw or take input while the dev menu is open. tick: runs every frame it's collected (timers, queues).
+// (The training's popup isn't here: it lets some taps through; boot, corp and boss intros are skipped by any tap.)
+const OVERLAYS = [
+  { id: 'ad', on: () => !!st.ad, shown: () => true, build: (c, now) => buildAd(Object.assign(c, { under: true }), now), tap: h => adTap(h, performance.now()), key: k => adKey(k, performance.now()) },   // engine/ads.js
+  { id: 'event', on: () => !!st.evCard, shown: () => !st.ad, build: (c, now) => buildEventCard(c, now), tap: h => evTap(h), key: k => evKey(k) },   // a SECTOR EVENT card, engine/events.js
+  { id: 'hacker', on: () => !!st.hkCard, shown: () => !st.ad, tick: now => hkCardTick(now), build: (c, now) => buildHkCard(c, now), tap: () => hkCardTap(), key: k => hkCardKey(k) },   // a rival coming in, crew you called: engine/hackers.js
+  { id: 'feat', on: () => !!st.featBox, shown: () => !st.ad && !st.evCard, tick: now => featBoxTick(now), build: (c, now) => buildFeatBox(c, now), tap: h => featTap(h), key: k => featKey(k) },   // engine/feats.js
+  { id: 'call', on: () => !!st.callBox, shown: () => !st.ad && !st.evCard && !st.featBox, tick: now => callTick(now), build: (c, now) => buildCallBox(c, now), tap: h => callTap(h), key: k => callKey(k) },   // a CALL, engine/quests.js
+  { id: 'scene', on: () => !!st.qScene, shown: () => true, build: (c, now) => buildScene_(c, now), tap: h => sceneTap(h), key: k => sceneKey(k) },   // a quest scene, full screen: engine/quests.js
+];
+const overlayTop = () => { if (st.dev) return null; for (let i = OVERLAYS.length - 1; i >= 0; i--) { const o = OVERLAYS[i]; if (o.on() && o.shown()) return o; } return null; };
+// A drawing layer over the scene: its own put (into cells, added after), bg into bgs. cells: what's already drawn.
+function layerCtx(ctx, cells, bgs, owner = 'hud') {
+  const out = [];
+  const put = (cx, cy, str, col, own = owner, bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') out.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
+  const c = Object.assign({}, ctx, { put, bg: (cx, cy, w, col, alpha) => bgs.push({ cx, cy, w, col, alpha }) });
+  if (cells) c.cells = cells;
+  return { ctx: c, cells: out };
+}
+
 function buildScene(now, collectHits, raw = false) {
   const cells = [];
   const frameBgs = [];
@@ -330,56 +353,16 @@ function buildScene(now, collectHits, raw = false) {
   if (st.g0dFake && !st.dev) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win (over the rewards screen)
   if (st.mode === 'g0ddie' && !st.dev) result = g0dDieOverlay(result, now, adBgs);   // H3AV3N: G0D dies
   if (st.mode === 'g0dend' && !st.dev) result = g0dEndOverlay(result, now, adBgs);   // H3AV3N: the collapse
-  if (st.ad && !st.dev) {
-    const ac = [];
-    const aput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ac.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
-    buildAd(Object.assign({}, ctx, { put: aput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result, under: true }), now);
-    result = result.concat(ac);
-  }
-  // A SECTOR EVENT card (engine/events.js): over the map, the same way.
-  if (st.evCard && !st.dev && !st.ad) {
-    const ec = [];
-    const eput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') ec.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
-    buildEventCard(Object.assign({}, ctx, { put: eput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
-    result = result.concat(ec);
-  }
-  // A hacker's card (engine/hackers.js): a rival coming in, crew you called. Over the layer; its clock holds.
-  if (collectHits) hkCardTick(now);
-  if (st.hkCard && !st.dev && !st.ad) {
-    const hc = [];
-    const hput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') hc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
-    buildHkCard(Object.assign({}, ctx, { put: hput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
-    result = result.concat(hc);
-  }
-  // The FEAT box (engine/feats.js): when there's news and things are calm, over everything but an ad or a card.
-  if (collectHits) featBoxTick(now);
-  if (st.featBox && !st.dev && !st.ad && !st.evCard) {
-    const fc = [];
-    const fput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') fc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
-    buildFeatBox(Object.assign({}, ctx, { put: fput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
-    result = result.concat(fc);
-  }
-  // A CALL (engine/quests.js): a hacker's face and lines, when things are calm (after the FEAT box).
-  if (collectHits) callTick(now);
-  if (st.callBox && !st.dev && !st.ad && !st.evCard && !st.featBox) {
-    const cc = [];
-    const cput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') cc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
-    buildCallBox(Object.assign({}, ctx, { put: cput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
-    result = result.concat(cc);
-  }
-  // A quest scene (engine/quests.js): full screen, over everything.
-  if (st.qScene && !st.dev) {
-    const qc = [];
-    const qput = (cx, cy, str, col, own = 'hud', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') qc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
-    buildScene_(Object.assign({}, ctx, { put: qput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }), cells: result }), now);
-    result = result.concat(qc);
+  // The overlays (OVERLAYS, below): bottom first, so the top one is drawn last.
+  for (const o of OVERLAYS) {
+    if (collectHits && o.tick) o.tick(now);
+    if (!st.dev && o.on() && o.shown()) { const lc = layerCtx(ctx, result, adBgs); o.build(lc.ctx, now); result = result.concat(lc.cells); }
   }
   // The training run's popup (engine/tutorial.js): over everything but an ad, the same way.
   if (st.tut && st.tut.pop && !st.dev && !st.ad && (!st.wipe || st.tut.curtain)) {
-    const tc = [];
-    const tput = (cx, cy, str, col, own = 'tut', bold = false) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ') tc.push({ ch: str[k], cx: cx + k, cy, col, own, bold }); };
-    buildTutorial(Object.assign({}, ctx, { put: tput, bg: (cx, cy, w, col, alpha) => adBgs.push({ cx, cy, w, col, alpha }) }), now, result);
-    result = result.concat(tc);
+    const lc = layerCtx(ctx, null, adBgs, 'tut');
+    buildTutorial(lc.ctx, now, result);
+    result = result.concat(lc.cells);
   }
   const wTop = st.wipe && st.wipe.top != null ? st.wipe.top : BOARD_Y, wBot = st.wipe && st.wipe.bot != null ? st.wipe.bot : boardEnd;
   if (collectHits) bgs = (st.wipe && !st.dev ? (st.wipe.full && st.wipe.top == null ? [] : frameBgs.filter(b => b.cy < wTop || b.cy >= wBot)) : frameBgs).concat(adBgs);

@@ -61,7 +61,7 @@ defineModFx('graverobber', 'end', {
     const lv = st.lv, n = lv ? lv.tiles.filter(t => !t.safe && !(t.state === 'locked' && t.lockedBy === 'hit')).length : 0;
     if (!n) return false;
     const cr = earnInt(ECON.mods.graverobber) * n;
-    st.run.credits += cr; st.run.earned += cr;
+    earn(cr);
     setMsg(`> grave robber: ${n} graves. +${cr}cr`, C.money); Sound.loot();
   },
 });

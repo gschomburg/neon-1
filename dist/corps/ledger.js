@@ -41,7 +41,7 @@ defineModFx('interest', 'end', {
     const run = st.run, c = st.corp;
     if (!c.hasBoss || c.idx < c.counts.length) return false;
     const cr = Math.min(earnInt(ECON.mods.interestMax), Math.floor(run.credits * ECON.mods.interestPct));
-    if (cr > 0) { run.credits += cr; run.earned += cr; Sound.loot(); }
+    if (cr > 0) { earn(cr, run); Sound.loot(); }
     else return false;
   },
 });

@@ -621,7 +621,7 @@ function chanceCard(lv, c, run) {
     const ice = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
     if (ice.length > 1) { lockTile(pickR(ice, rngFor(run.seed, 'chancelock', c.node.id)), C.money, 'chancecard'); return 'chance: 1 ICE locked'; }
   }
-  if (u < 0.55 || (u < 0.7 && !st.timer)) { const cr = earnInt(ECON.mods.chancecard); run.credits += cr; run.earned += cr; return `chance: +${cr}cr`; }
+  if (u < 0.55 || (u < 0.7 && !st.timer)) { const cr = earnInt(ECON.mods.chancecard); earn(cr, run); return `chance: +${cr}cr`; }
   if (u < 0.7) { st.timer.max += 3; st.timer.left += 3; return 'chance: +3s'; }
   if (u < 0.92) return 'chance: nothing';
   if (zombie()) { addRot(ROT.ice); return 'chance: rot!'; }
@@ -769,7 +769,7 @@ async function onSafe(t) {
   if (pay) for (const [k, on] of [['skimmer', true], ['fastpay', lv.fast], ['supersize', true], ['onbeat', lv.onBeat]]) if (on && has(k)) modFired(k);   // pay boosts
   const tix = c.hasBoss && c.def.tickets;   // CHUCK E. CACHE'S pays in tickets
   if (tix) c.tickets = (c.tickets || 0) + pay;
-  else { run.credits += pay; run.earned += pay; }
+  else { earn(pay, run); }
   lv.paid = tix ? 0 : pay;
   tallyLayer(run, lv, perfect);   // THE RECORD (engine/feats.js)
   hkOnClear(lv, perfect); hkAfterPay(pay);   // hackers: bars off rivals, NANA heals, LEECH feeds
@@ -914,7 +914,7 @@ function askContinue(price = 100) {
 // You hold one at most; it charges again every sector. Die holding it and you can go back to the start of the corp you
 // died in, with what you had going in (run.oneUpSave, taken as you entered). The seed is the seed: its layers come back
 // exactly the same. No penalty: fewer used breaks a tie on the leaderboard (engine/leaders.js), and it's tracked.
-const oneUpOpen = (run, opts = {}) => !!save.beatG0D && !!run && !run.tutorial && !opts.tutorial && !run.mp && !st.mp;
+const oneUpOpen = (run, opts = {}) => !!save.beatG0D && !!run && !run.tutorial && !opts.tutorial && !st.mp;   // (run kinds: engine/save.js)
 function oneUpSavePoint(node) {
   const run = st.run;
   if (!oneUpOpen(run) || node.type === 'start' || node.heaven) return;   // (not the public net, and not heaven's MAZE / G0D: their own rules)
@@ -1080,7 +1080,7 @@ function payBlood(n) {
 function eatPay() {
   const run = st.run, lv = st.lv;
   const share = Math.max(1, Math.round(payFor(lv) / Math.max(1, lv.iceTotal)));
-  run.credits += share; run.earned += share; lv.eatPaid = (lv.eatPaid || 0) + share;
+  earn(share, run); lv.eatPaid = (lv.eatPaid || 0) + share;
   return share;
 }
 // An ICE node you tapped (from onTrap, in place of blockHit). Returns the message.
@@ -1163,7 +1163,7 @@ async function coinFlip() {
   const what = f.kind === 'hp' ? `${v} ♥` : `${v}cr`;
   modFired('coinflip');
   if (win) {
-    if (f.kind === 'hp') heal(v); else { run.credits += v; run.earned += v; }
+    if (f.kind === 'hp') heal(v); else { earn(v, run); }
     Sound.loot(); setMsg(`> heads up: won ${what}.`, C.money);
   } else {
     if (f.kind === 'hp') hurt(v);
@@ -1522,7 +1522,7 @@ function grantLoot(r, tier) {
   if (g.key === 'disc' && addItem('disc', 0)) return 'got loot: DISC. (a quest)';
   if (g.key && addItem(g.key, g.tier)) return `got ${isLoot(g.key) ? 'loot' : 'gear'}: ${ITEMS[g.key].name}${g.tier ? ' ' + RARITY[itemView(g.key, g.tier).rarity].label.toLowerCase() : ''}.`;
   const cr = g.cr != null ? g.cr : Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier));
-  run.credits += cr; run.earned += cr;
+  earn(cr, run);
   return `+${cr}cr`;
 }
 
@@ -1817,7 +1817,7 @@ function openOmniReward(from) {
     head: [[`sector ${from + 1} spoils. take one.`, C.text]], extra: lootLine(loot),
     options: shuffle(corpPick.concat(gen, third), r).concat(exotic),
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.sector)}cr ]`,
-    onSkip: () => { const cr = earnInt(ECON.skip.sector); run.credits += cr; run.earned += cr; Sound.loot(); },
+    onSkip: () => { const cr = earnInt(ECON.skip.sector); earn(cr, run); Sound.loot(); },
     msg: '> the core is open.',
     next: () => toMap(from),
   });

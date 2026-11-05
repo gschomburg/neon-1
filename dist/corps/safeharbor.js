@@ -35,12 +35,12 @@ CORPS.safeharbor = {
     });
   },
   onEnter() { const run = st.run, p = Math.max(0, Math.min(costInt(ECON.corpCosts.safeharborPremium), run.credits - creditFloor())); run.credits -= p; if (p) setMsg(`> premium paid: -${p}cr`, C.money); },
-  onHit() { const cr = earnInt(ECON.corps.safeharborClaim); st.run.credits += cr; st.run.earned += cr; },
+  onHit() { const cr = earnInt(ECON.corps.safeharborClaim); earn(cr); },
 };
 
 // ---- its boss mod's effect: POLICY (the HIT stage, engine/mods.js; run from engine/run.js)
 defineModFx('policy', 'hit', {
-  hit() { const cr = earnInt(ECON.mods.policy); st.run.credits += cr; st.run.earned += cr; },
+  hit() { const cr = earnInt(ECON.mods.policy); earn(cr); },
 });
 
 // the codex, once you've beaten it
