@@ -60,6 +60,18 @@ those runs get **a leaderboard of their own** (any game played this way).
       "replay H3AV3N"'s leaderboard for free).
     - Random runs post to their seed's board (so a replay has your first run to beat) but not the front page.
     - Scores before v14.41 have no seed: the boards start empty.
+  - **Leaning (Greg, 2026-11-05): seeds aren't an end-game reward any more.** Gating them behind G0D takes the fun out;
+    better that anyone can compete on a seed without playing a ton first. Still track who has beaten the game.
+    Claude's shape:
+    - Today "practice" means two things: a typed seed before G0D, and cheats (dev menu, the editor's jumps). Split
+      them: typed seeds get their own flag; "practice" is only cheats, which stay off every board.
+    - Typed seeds post to the seed boards (`replays` and `seed-<SEED>`) for everyone, from the first run.
+    - Typed seeds never go on TODAY / ALL TIME, for anyone (memorizing a map shouldn't win the main boards).
+    - Each seed-board entry carries whether you'd beaten G0D; the board marks only those (gold rank or initials,
+      "gold = beat G0D"; or call it LEET). The only call-outs today: "practice" and "quest".
+    - Open: REP on typed seeds for everyone (Claude's pick: then typed seeds aren't practice at all) or none until G0D.
+    - The end-game rewards then: the 1UP, REPLAYS (POPS's log), the gold mark, and something fun instead (a G0D
+      palette, G0D's logo to use, later G0D's eye). POPS's ending line about replays counting gets rewritten.
   - Goes well with **a daily seed** (BACKLOG, parked): the same seed for everyone each day, its board the SEED tab. It
     would have to count for everyone, not only after G0D, since nobody picks it.
 
