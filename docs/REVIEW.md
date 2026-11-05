@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Mold in the transitions, lagging behind** (v14.39): play the H3AV3N seed into a M0LD corp (light, then deepmold heavy): the wipes carry mold, and it hangs on after the new screen is in. Or editor > g0d > mold effects: slider 0.3 / 0.7 / 1, a transition. Too much at heavy? Settings: fx tab, MOLD TRANSITION (lag, light, heavy).
+
 - [ ] **The mask** (v14.38): editor > fx > MASK: drag blob size, covers, swing, soft edge, strength and watch the preview (grey = strength; the sample skyline glitches and tints on it). When you polish a scene, tell me "glitch here, about this much" and it's a `where` on that layer.
 
 - [ ] **The mold transition** (v14.36): editor > g0d > "The mold effects". Drag the mold slider, click "a transition" at 0.3, 0.7, 1; then "the mold glitch". Its settings are on the fx tab (MOLD TRANSITION). Then your call: where does the game turn it up? (Easy hook: the M0LD events, light ~0.3 / heavy ~0.7. Or as the quest goes on.)

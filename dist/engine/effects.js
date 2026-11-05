@@ -1,6 +1,6 @@
 // NeoN+1 engine/effects.js: Particles, flashes, shakes, and the scroll-fill wipe.
 'use strict';
-NEON_FILES.push(['engine/effects.js', 'v14.38']);
+NEON_FILES.push(['engine/effects.js', 'v14.39']);
 
 // ---------------- Effects ----------------
 const parts = [];
@@ -231,9 +231,14 @@ const LIT_HOLD = 220; // wipe-time the real node stays lit after the front passe
 // Each character gets its own random delay and change speed, so swaps don't happen in a neat line.
 const charJitter = (cx, cy, salt) => (hash2(Math.round(cx * 2) + salt, Math.round(cy)) % 1000) / 1000;
 
-// MOLD IN THE TRANSITION (data/fx.js moldwipe): how much mold the wipes carry, 0-1. The editor's G0D tab sets st.moldDev;
-// the game doesn't turn it up yet (the same number could later rise as the quest goes on, and in heaven).
-const wipeMold = () => st.moldDev || 0;
+// MOLD IN THE TRANSITION (data/fx.js moldwipe): how much mold the wipes carry, 0-1. The editor's G0D tab's slider
+// (st.moldDev) wins while it's on; in the game it's the M0LD events (engine/heaven.js moldLevel(): light / heavy).
+// A wipe takes the most of it at its start and when the new screen comes in (so going into a mold corp counts too).
+function wipeMold() {
+  if (st.moldDev != null) return st.moldDev;
+  const lv = typeof moldLevel === 'function' ? moldLevel() : null, MW = FX_LOOKS.moldwipe;
+  return lv === 'heavy' ? MW.heavy : lv === 'light' ? MW.light : 0;
+}
 const moldInk = (cx, cy) => moldCol(1 + FX.hash(Math.round(cx), Math.round(cy), 11) * 3);   // (moldCol: engine/g0d.js)
 const moldCh = (cx, cy, now) => FX.pick(FX_LOOKS.moldwipe.set, FX.hash(Math.round(cx), Math.round(cy), FX.step(now, 140)));
 // A blotch of mold in the fill at (cx, cy), scrolling up with it (s = the fill's scroll); ragged at the edges.
@@ -244,7 +249,7 @@ function moldBlotch(cx, cy, s, m) {
 
 function applyWipe(cells, now) {
   const w = st.wipe;
-  const m = wipeMold(), MW = FX_LOOKS.moldwipe, moldy = () => m > 0 && Math.random() < m * MW.noise;
+  const m = w.mold || 0, MW = FX_LOOKS.moldwipe, moldy = () => m > 0 && Math.random() < m * MW.noise;
   const top = w.top != null ? w.top : w.full ? 0 : BOARD_Y, bot = w.bot != null ? w.bot : w.full ? L.hc : BOARD_Y + L.gh;
   const inB = c => c.cy >= top && c.cy < bot;
   const out = cells.filter(c => !inB(c));
@@ -284,17 +289,14 @@ function applyWipe(cells, now) {
       if (!inB(c) || busy.has(key(c.cx, c.cy))) continue;
       const hit = eIn - frac(Math.round(c.cy)) * inT.travel;
       if (hit < 0) continue;                                              // still under the fill
-      let t = hit - charJitter(c.cx, c.cy, 3) * CONFIG.wipeStagger;
+      const t = hit - charJitter(c.cx, c.cy, 3) * CONFIG.wipeStagger;
       const dec = inT.decay * (0.7 + 0.6 * charJitter(c.cx, c.cy, 4));
       if (t < 0) {                                                        // waiting its turn: cycling noise
         out.push({ ch: Math.random() < 0.5 ? decayCh() : noiseCh(), cx: c.cx, cy: c.cy, col: C.mid, own: 'wipe' });
         busy.add(key(c.cx, c.cy));
         continue;
       }
-      // mold lingers on some of the new screen's marks a moment before they build in
-      const lin = m > 0 && FX.hash(Math.round(c.cx), Math.round(c.cy), 12) < m * MW.stay ? MW.linger * m * (0.5 + 0.5 * FX.hash(Math.round(c.cx), Math.round(c.cy), 13)) : 0;
-      if (t < lin) { out.push({ ch: moldCh(c.cx, c.cy, now), cx: c.cx, cy: c.cy, col: moldInk(c.cx, c.cy), own: 'wipe' }); busy.add(key(c.cx, c.cy)); continue; }
-      t -= lin;
+      // (the mold that lingers on the new screen's marks is applyMoldLag's: it doesn't hold the wipe up)
       if (t >= dec) { out.push(c); continue; }
       const q = t / dec;
       let ch, col;
@@ -336,13 +338,42 @@ function applyWipe(cells, now) {
   return out;
 }
 
+// THE MOLD LAGS BEHIND (data/fx.js moldwipe.lag): drawn over the screen during the wipe and after it. A cell stays mold
+// if the fill had a blotch there when the new screen's front passed its row, until a time of its own (up to lag x mold
+// ms after the front). It doesn't hold up the wipe: taps work once the wipe is done, with the mold still clearing.
+function applyMoldLag(cells, now) {
+  const g = st.moldLag, MW = FX_LOOKS.moldwipe;
+  const top = g.top != null ? g.top : g.full ? 0 : BOARD_Y, bot = g.bot != null ? g.bot : g.full ? L.hc : BOARD_Y + L.gh;
+  const rowMs = g.travel / CONFIG.wipeSpeed, lag = MW.lag * g.m, lin = MW.linger * g.m;
+  if (now > g.t0 + rowMs + Math.max(lag, lin)) { st.moldLag = null; return cells; }
+  const marks = new Set(cells.map(c => Math.round(c.cx) + ',' + Math.round(c.cy))), stuck = new Map();
+  for (let cy = top; cy < bot; cy++) {
+    const passAt = g.t0 + (bot - 1 - cy) / Math.max(1, bot - top - 1) * rowMs;   // when the front passed this row (bottom row first)
+    if (now < passAt) continue;
+    const s = Math.floor(passAt * CONFIG.wipeSpeed / (g.level ? 45 : 75));         // the fill's scroll then (as fillChar)
+    for (let cx = 0; cx < L.wc; cx++) {
+      let until = 0;
+      if (lag > 0 && moldBlotch(cx, cy, s, g.m)) until = passAt + lag * (0.35 + 0.65 * FX.hash(cx, cy, 16));   // a blotch, left behind
+      if (lin > 0 && marks.has(cx + ',' + cy) && FX.hash(cx, cy, 12) < g.m * MW.stay) until = Math.max(until, passAt + lin * (0.5 + 0.5 * FX.hash(cx, cy, 13)));   // a mark still moldy
+      if (now >= until) continue;
+      if (until - now < 160 && FX.hash(cx, cy, FX.step(now, 50)) < 0.5) continue;   // flickering out
+      stuck.set(cx + ',' + cy, { ch: moldCh(cx, cy, now), cx, cy, col: moldInk(cx, cy), own: 'wipe' });
+    }
+  }
+  if (!stuck.size) return cells;
+  const out = cells.filter(c => !stuck.has(Math.round(c.cx) + ',' + Math.round(c.cy)));
+  for (const c of stuck.values()) out.push(c);
+  return out;
+}
+
 // Start wiping the board out. Resolves at the hand-off point, partway through,
 // so the caller can open the next screen while the old one is still going.
 async function wipeOut(level = 0, lit = null, quiet = false) {
   const now = performance.now();
   const cells = buildScene(now, false, true);   // whole screen; applyWipe uses the part in its region
   const pattern = pickR(level ? FILLS.success : FILLS.quiet, Math.random);   // new fill each wipe
-  st.wipe = { t0: now, level, cells, lit, pattern, tIn: null, full: fullScreen() };
+  st.wipe = { t0: now, level, cells, lit, pattern, tIn: null, full: fullScreen(), mold: wipeMold() };
+  st.moldLag = null;   // (the last wipe's left-behind mold goes)
   if (level) { if (quiet) Sound.whoosh(); else Sound.sweep(level); shake(level >= 2 ? 7 : 3, 0.3); if (level >= 2) flash(C.accent, 0.15, 0.4); }
   else Sound.whoosh();
   // Success wipes hand off later, so the lit node gets its moment.
@@ -359,12 +390,15 @@ function wipeIn() {
     w.tIn = now;
     if (fullScreen()) w.full = true;   // full-screen screens wipe the whole screen
     w.levelIn = Math.min(w.level, 1);   // the new screen always builds in calmly
+    w.mold = Math.max(w.mold || 0, wipeMold());   // (going into a mold corp: its mold counts too)
     const outT = WIPE_TIME[w.level], inT = WIPE_TIME[w.levelIn];
     const slack = CONFIG.wipeStagger;   // the last characters can start this much later, and change 1.3x slower
     const outEnd = w.t0 + (outT.travel + Math.max(outT.decay * 1.3 + slack, w.lit ? LIT_HOLD : 0)) / CONFIG.wipeSpeed;
-    const inEnd = now + (inT.travel + inT.decay * 1.3 + slack + wipeMold() * FX_LOOKS.moldwipe.linger) / CONFIG.wipeSpeed;   // (+ the mold's linger)
+    const inEnd = now + (inT.travel + inT.decay * 1.3 + slack) / CONFIG.wipeSpeed;
     w.dur = inEnd - now;                 // how long until the new screen is fully in
     w.endsAt = Math.max(outEnd, inEnd);
+    // the mold lags behind: the fill's blotches stay put as the new screen's front passes them, and clear late
+    if (w.mold > 0) st.moldLag = { t0: now, m: w.mold, level: w.level, travel: inT.travel, full: w.full, top: w.top, bot: w.bot };
   } else {
     st.wipe = null;
     st.boardStart = performance.now();

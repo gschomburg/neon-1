@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.38']);
+NEON_FILES.push(['engine/scene.js', 'v14.39']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -316,6 +316,7 @@ function buildScene(now, collectHits, raw = false) {
         }
       }
     }
+    if (st.moldLag && !st.dev) result = applyMoldLag(result, now);   // the mold a wipe left behind, clearing late (engine/effects.js)
   }
   // A fake ad goes over everything, after the wipe too (a wipe between layers holds the screen while
   // an ad is up; drawn under the wipe, the ad was invisible). Its characters and backgrounds are kept

@@ -203,7 +203,7 @@ unlocked by REP, and some quests unlock REP.
     the same button triggers the effect, and the slider sets how much mold, so each one can be seen at any intensity.
     (Claude: the same 0-1 number could later be what the game itself turns up as the quest goes on and in heaven.)
     **Built v14.36:** the g0d tab's "mold effects" group: the mold slider, a transition, the mold glitch. Open: where
-    the game turns it up. One easy hook: heaven.js moldLevel() (the M0LD events: light / heavy) -> e.g. 0.3 / 0.7.
+    the game turns it up. **Hooked v14.39** to the M0LD events (light 0.3 / heavy 0.7), and the mold lags behind the wipe. Later maybe: rising as the quest goes on.
   - (more, meat notes 2026-10-28) **Who G0D is:** a rogue AI trying to destroy the net. The corps built it by accident in
     their race for AI superiority: all the corps' AIs somehow fused into G0D. Its abilities: any corp at any time? No tells?
     Maybe you only beat it by replaying the seed (learning it).
