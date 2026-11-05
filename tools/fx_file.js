@@ -16,6 +16,7 @@
   const DISC_HEAD = { label: 'DISC: POPS up close', scene: 'disc', frame: 6 }, DISC_SLOT = { label: 'DISC: the slot', scene: 'disc', frame: 5 };
   const DISC_D0G = { label: 'DISC: d0g\'s logo', scene: 'disc', frame: 10 }, PROD_ROOM = { label: 'PRODIGAL: the room', scene: 'prodigal', frame: 4 };
   const PROD_EYES = { label: 'PRODIGAL: the eyes', scene: 'prodigal', frame: 9 }, GATE = { label: 'GATE', scene: 'gate', frame: 1 };
+  const CODEX = { label: 'the codex', codex: true };
   const CARD = { label: 'd0g\'s rival card', card: 'd0g' }, DEATH = { label: 'd0g\'s death screen', death: 'd0g' }, MOLD = { label: 'mold glitch (G0D)', g0d: 'glitch' };
   const f = (k, kind, label, extra) => Object.assign({ k, kind, label }, extra || {});
   const LOOKS = [
@@ -69,6 +70,9 @@
     { key: 'progress', title: 'PROGRESS', show: [DISC_SLOT],
       note: 'marks light up top to bottom over `ms`: the head cycles `head` (headMs), then all of them `done` (doneMs).',
       fields: [f('col', 'col', 'color'), f('at', 'ms', 'starts at'), f('ms', 'ms', 'takes'), f('head', 'chars', 'head'), f('headMs', 'ms', 'head step'), f('headCol', 'col', 'head color'), f('done', 'chars', 'done'), f('doneMs', 'ms', 'done step')] },
+    { key: 'decrypt', title: 'DECRYPT', show: [CODEX],
+      note: 'text as ciphertext (the codex\'s unfound entries): letters are `set` characters, re-rolled every `idleMs` at rest, every `ms` while decoding. As you find more of a codex tab, up to `hint` of each unfound name shows through; a newly found one decodes over `dur`.',
+      fields: [f('set', 'chars', 'cipher'), f('idleMs', 'ms', 'churn at rest'), f('ms', 'ms', 'churn decoding'), f('dur', 'ms', 'decode takes'), f('hint', 'share', 'shows through, all found')] },
     { key: 'garble', title: 'GARBLE', show: [],
       note: 'a line of text that won\'t hold still (corrupted loot names): it switches versions every `swapMs`, and `share` of its letters are glitch characters, re-rolled every ms.',
       fields: [f('ms', 'ms', 're-roll every'), f('swapMs', 'ms', 'version every'), f('share', 'share', 'glitched'), f('set', 'set', 'characters', { set: 'FX_GLITCH' })] },

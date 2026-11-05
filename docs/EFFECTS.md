@@ -74,5 +74,9 @@ Steps 1-3 change nothing you can see.
 
 ## Next
 
-- New effects (step 5): decrypt for codex entries, dither fades, color cycling, rain. Each one: code in engine/fx.js, settings in data/fx.js, an entry in tools/fx_file.js LOOKS.
+- New effects (step 5) go where a place needs them (**Decided (Greg, 2026-11-05):** build the ones with a place to go; keep the other ideas). Each one: code in engine/fx.js, settings in data/fx.js, an entry in tools/fx_file.js LOOKS.
+  - **Built v14.35: decrypt**, for the encrypted codex (BACKLOG 9). Unfound names are ciphertext (hex), at their real length. Up to `hint` (half) of the letters show through as you find more of that tab. A new find decodes the first time the codex shows it (`save.codexRead`; a save from before it counts everything found as read). A corp's tell is ciphertext until you breach it, then decodes once.
+  - The mold transition, with the mold slider (BACKLOG, G0D's fights: "the g0d tab grows").
+  - The intro pass bits (BACKLOG Polish): the logo decoding in (decrypt), noise in the log, the map drawing in with static, a burst on the handshake. Wait for the user: the intro pass comes after they've lived with it.
+- Ideas with no place yet, kept (the user: "rain could be cool"): **rain** (a scene's weather, maybe the DISC city), **color cycling**, **dither fades**.
 - Maybe: tics on the breach screen's rival logo (see above).

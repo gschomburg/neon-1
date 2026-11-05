@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The encrypted codex** (v14.35): open the codex. Unfound names are hex ciphertext at their real length; more letters show through as you find more (up to half). Find something new, open the codex: it decodes. A corp you've seen but not beaten: its tell is ciphertext; beat it, and it decodes. Hex, or a different cipher look (data/fx.js decrypt.set, or the FX tab)? Is half too much of a hint?
+
 - [ ] **The FX tab** (v14.34): open tools/neon_editor.html > fx. Click a show button, drag some numbers while it plays, save (Ctrl S). Do the cards read well? Are the notes clear? Is anything missing that you'd want to tune?
 
 - [ ] **d0g's tics everywhere** (v14.33): meet d0g (or w00f) in a run: the rival card's logo tears and bursts, and his name flickers to a blue b0g. Die with him in the layer: the death screen logo glitches too. Too much on the card, where you read it longer?

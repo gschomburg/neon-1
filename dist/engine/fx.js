@@ -4,7 +4,7 @@
 // corrupted loot names (data/mods.js glitchName) and G0D's mold glitch (engine/g0d.js).
 // (Particles, shakes and flashes are engine/effects.js: they work in pixels, not cells.)
 'use strict';
-NEON_FILES.push(['engine/fx.js', 'v14.34']);
+NEON_FILES.push(['engine/fx.js', 'v14.35']);
 
 const FX = (() => {
   // ---------- building blocks ----------
@@ -177,6 +177,20 @@ const FX = (() => {
     return out;
   }
 
-  return { hash, pick, step, cycle, clamp01, easeOut, col, look, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
+  // DECRYPT: a line as ciphertext, `k` of its letters (0-1, each in its own order) already clear. The rest churn through
+  // D.set: slowly at rest (idleMs), fast while it's decoding (fast: ms). seed: one per line (seedOf), so each scrambles its own way.
+  function decrypt(text, k, seed = 0, now = performance.now(), fast = false, D = FX_LOOKS.decrypt) {
+    const churn = step(now, fast ? D.ms : D.idleMs);
+    let out = '';
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      out += ch === ' ' || hash(i, seed, 7) < k ? ch : pick(D.set, hash(i, seed, churn));
+    }
+    return out;
+  }
+  // A steady number for a string (a codex key): decrypt's seed.
+  const seedOf = s => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100003; return h; };
+
+  return { hash, pick, step, cycle, clamp01, easeOut, col, look, decrypt, seedOf, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
     glow, glowCone, glowCell, glowWash, tear, swapOn, burst, burstCh, burstCells, tics, putTics, smoke, fogRows, garble };
 })();

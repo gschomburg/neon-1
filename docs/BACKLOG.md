@@ -324,7 +324,8 @@ unlocked by REP, and some quests unlock REP.
   G0D fight.)
 
 ### 9. The encrypted codex
-- Unfound entries show scrambled text that decrypts (as you beat corps, or over time) instead of "???".
+- **Built v14.35** (SPEC version log): unfound entries are ciphertext that shows more as you find more of a tab; a new
+  find decodes once; a corp's tell decodes once you breach it.
 
 ### 10. Lean more cyberpunk
 - Cyberware in names and flavor (implants as gear, MEDIX as a chrome clinic, chrome on the runner card), the ads.

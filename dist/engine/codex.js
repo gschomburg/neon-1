@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v14.34']);
+NEON_FILES.push(['engine/codex.js', 'v14.35']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -59,12 +59,33 @@ function scrollFollow(s, idx, n, rows) {
   }
 }
 
+// THE ENCRYPTED CODEX (BACKLOG 9): an entry you haven't found shows its real name as ciphertext (FX.decrypt, data/fx.js
+// decrypt). As you find more of that tab, more letters show through (up to decrypt.hint of them, all found). A newly
+// found entry decodes the first time the codex shows it; save.codexRead keeps the ones that have.
+const CX_DECODING = {};   // key -> when its decode started (this session)
+function cxName(key, real, seen, frac, now) {
+  const D = FX_LOOKS.decrypt, seed = FX.seedOf(key), hint = frac * D.hint;
+  if (!seen) return FX.decrypt(real, hint, seed, now);
+  if (save.codexRead[key]) return real;
+  if (!CX_DECODING[key]) { CX_DECODING[key] = now; if (Sound.static) Sound.static(0.15); }
+  const k = (now - CX_DECODING[key]) / D.dur;
+  if (k >= 1) { save.codexRead[key] = 1; persist(); delete CX_DECODING[key]; return real; }
+  return FX.decrypt(real, hint + (1 - hint) * k, seed, now, true);
+}
+
 function openCodex() {
+  // (first time with the encrypted codex: what you'd already found doesn't decode again)
+  if (!save.codexRead) { save.codexRead = {}; for (const k of Object.keys(save.seen || {})) if (save.seen[k]) save.codexRead[k] = 1;
+    for (const c of CODEX_CORPS) if (corpStat(c).breached) for (let i = 0; i < 3; i++) save.codexRead['tell_' + c + i] = 1;
+    persist(); }
   const TABS = [['mods', 'MODS', 'tabm'], ['items', 'GEAR', 'tabi'], ['glyphs', 'GLYPHS', 'tabg'], ['corps', 'CORPS', 'tabc'], ['sectors', 'SECTORS', 'tabs'], ['hackers', 'HACKERS', 'tabh']];
   let tab = 'mods', sel = 0, top = 0, shownPal = null;
   const entries = () => tab === 'mods' ? codexMods() : tab === 'items' ? Object.keys(ITEMS).filter(k => !ITEMS[k].bag)
     : tab === 'glyphs' ? GLYPHS.map(gl => gl.key) : tab === 'sectors' ? Object.keys(SECTOR_EVENTS).map(k => 'ev_' + k)
     : tab === 'hackers' ? [...HK_RIVALS, ...HK_CREW].map(k => 'hk_' + k) : CODEX_CORPS.map(k => 'corp_' + k);
+  // an entry's name, as the codex shows it once it's found (what the ciphertext hides)
+  const nameOf = key => tab === 'corps' ? (d => `${corpCode(d)}  ${d.name}`)(corpDef(key.slice(5))) : tab === 'hackers' ? hkName(key.slice(3))
+    : tab === 'sectors' ? SECTOR_EVENTS[key.slice(3)].name : tab === 'glyphs' ? GLYPH_BY_KEY[key].name : (tab === 'mods' ? MODS : ITEMS)[key].name;
   // Corps: a short list and a taller details box.
   const rowsFor = () => tab === 'corps' ? CODEX_ROWS - 5 : tab === 'glyphs' ? CODEX_ROWS : CODEX_ROWS - 7;   // details: corps 10 rows, mods / items 12, glyphs 5
   const setTab = name => { tab = name; sel = 0; top = 0; Sound.tick(); };
@@ -85,7 +106,8 @@ function openCodex() {
     const list = entries(), n = list.length, rows = rowsFor();
     sel = clamp(sel, 0, n - 1);
     top = clamp(top, 0, maxTop(n, rows));
-    const found = list.filter(k => save.seen[k]).length;
+    const found = list.filter(k => save.seen[k]).length, now = performance.now();
+    const cx = key => cxName(key, nameOf(key), !!save.seen[key], found / n, now);   // the name, or its ciphertext
     T(`CODEX  ${tab} ${found}/${n} found`, C.accent);
     const tabBtn = ([name, label, id]) => ({ text: `[${label}]`, id, sel: tab === name, onTap: () => setTab(name) });
     X({ gap: 0, row: TABS.slice(0, 4).map(tabBtn) });   // (two rows: 36 wide)
@@ -101,7 +123,7 @@ function openCodex() {
       const key = k.slice(5), d = corpDef(key), rec = corpStat(key);
       const pad = (arr, nRows) => { while (arr.length < nRows) arr.push(''); return arr.slice(0, nRows); };
       if (!seen) {
-        T('???', C.dim); T('not found yet.', C.mid); T('enter it on the map to log it.', C.dim);
+        T(cx(k), C.dim); T('not found yet.', C.mid); T('enter it on the map to log it.', C.dim);
         for (let i = 0; i < 7; i++) T('');
       } else {
         X({ text: `${corpCode(d)}  ${d.name}${d.level ? '  LV' + d.level : ''}`, col: key === 'omni' ? C.danger : C.accent, bold: true });
@@ -109,9 +131,10 @@ function openCodex() {
         T(corpRules(d, 1), C.mid);
         T(d.bossDesc || '', C.dangerDim);
         T('');
-        // The tell only appears once you've beaten this corp.
-        const tell = rec.breached ? pad(wrapText('tell: ' + CORP_TELL[key], 34), 3)
-          : ['tell: ???', 'beat this corp to log its tell.', ''];
+        // The tell: ciphertext until you've beaten this corp (its first line, and a hint), then it decodes once.
+        const tl = pad(wrapText('tell: ' + CORP_TELL[key], 34), 3), on = !!rec.breached;
+        const line = (t, i) => i ? cxName('tell_' + key + i, t, on, 0, now) : 'tell: ' + cxName('tell_' + key + i, t.slice(6), on, 0, now);   // ('tell: ' stays clear)
+        const tell = on ? tl.map(line) : [line(tl[0], 0), 'beat this corp to log its tell.', ''];
         tell.forEach((t, i) => T(t, rec.breached ? C.accent : i === 0 ? C.mid : C.dim));
         T(d.gear ? `boss gear: ${ITEMS[d.gear.key].name} x${d.gear.n}` : d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
         T(`breached ${rec.breached}   lost ${rec.lost}`, C.text);
@@ -120,7 +143,7 @@ function openCodex() {
       // 12 rows: the face in their colors, name and side, the shtick, the lore
       const id = k.slice(3), h = HACKERS[id], sty = hkStyle(id), face = (ART_FACES[id] || { art: ['', '', ''] }).art;
       if (!seen) {
-        T('???', C.dim); T('not met yet.', C.mid); T(h.side === 'bad' ? 'rivals show up in RIVAL corps.' : 'CALL gear brings crew in.', C.dim);
+        T(cx(k), C.dim); T('not met yet.', C.mid); T(h.side === 'bad' ? 'rivals show up in RIVAL corps.' : 'CALL gear brings crew in.', C.dim);
         for (let i = 0; i < 9; i++) T('');
       } else {
         const side = h.side === 'bad' ? 'RIVAL' : 'CREW', ink = hkInk(id);
@@ -133,7 +156,7 @@ function openCodex() {
       // 12 rows: the card's picture with its name and kind, what the card says (at sector 2), the anomaly
       const ev = k.slice(3), E = SECTOR_EVENTS[ev];
       if (!seen) {
-        X({ tileInfo: MASK_GLYPH, lines: [{ text: '???', col: C.dim }, { text: 'not found yet.', col: C.mid }, { text: 'sectors 2 and up roll one.', col: C.dim }] });
+        X({ tileInfo: MASK_GLYPH, lines: [{ text: cx(k), col: C.dim }, { text: 'not found yet.', col: C.mid }, { text: 'sectors 2 and up roll one.', col: C.dim }] });
         for (let i = 0; i < 7; i++) T('');
       } else {
         const a = E.kind === 'anomaly' && E.anomaly !== 'any' ? ANOMALIES[E.anomaly] : null;
@@ -149,9 +172,9 @@ function openCodex() {
       const gl = GLYPH_BY_KEY[k];
       X({ tileInfo: seen ? gl.glyphOf() : MASK_GLYPH, lines: seen
         ? [{ text: gl.name, col: C.accent }, ...gl.lore.map(t => ({ text: t, col: C.text }))]
-        : [{ text: '???', col: C.dim }, { text: 'not found yet.', col: C.mid }, { text: 'it shows up on a board.', col: C.dim }] });
+        : [{ text: cx(k), col: C.dim }, { text: 'not found yet.', col: C.mid }, { text: 'it shows up on a board.', col: C.dim }] });
     } else if (!seen) {
-      T('???', C.dim); T('not found yet.', C.mid);
+      T(cx(k), C.dim); T('not found yet.', C.mid);
       T(tab === 'mods' ? 'find it in a run to unlock it.' : 'pick one up to unlock it.', C.dim);
       for (let i = 0; i < 9; i++) T('');
     } else if (tab === 'mods') {
@@ -188,16 +211,16 @@ function openCodex() {
       const base = { list: true, id: 'cx' + idx, onTap: () => { sel = idx; Sound.tick(); }, sel: idx === sel };
       if (tab === 'hackers') {
         const h = HACKERS[key.slice(3)];
-        X(Object.assign(base, { name: seenK ? hkName(key.slice(3)) : '???', col: seenK ? C.bright : C.dim, right: seenK ? (h.side === 'bad' ? 'RIVAL' : 'CREW') : '', rightCol: h.side === 'bad' ? C.danger : C.accent }));
+        X(Object.assign(base, { name: cx(key), col: seenK ? C.bright : C.dim, right: seenK ? (h.side === 'bad' ? 'RIVAL' : 'CREW') : '', rightCol: h.side === 'bad' ? C.danger : C.accent }));
       } else if (tab === 'sectors') {
         const E = SECTOR_EVENTS[key.slice(3)];
-        X(Object.assign(base, { name: seenK ? E.name : '???', col: seenK ? C.bright : C.dim, right: seenK ? (E.kind === 'sector' ? 'sector' : 'anomaly') : '', rightCol: C.mid }));
+        X(Object.assign(base, { name: cx(key), col: seenK ? C.bright : C.dim, right: seenK ? (E.kind === 'sector' ? 'sector' : 'anomaly') : '', rightCol: C.mid }));
       } else if (tab === 'glyphs') {
-        X(Object.assign(base, { name: seenK ? GLYPH_BY_KEY[key].name : '???', col: seenK ? C.bright : C.dim, right: `#${pad2(idx + 1)}`, rightCol: C.mid }));
+        X(Object.assign(base, { name: cx(key), col: seenK ? C.bright : C.dim, right: `#${pad2(idx + 1)}`, rightCol: C.mid }));
       } else if (tab === 'corps') {
         const ck = key.slice(5), d = corpDef(ck), rec = corpStat(ck);
         X(Object.assign(base, {
-          name: seenK ? `${corpCode(d)}  ${d.name}` : '???', col: seenK ? C.bright : C.dim,
+          name: cx(key), col: seenK ? C.bright : C.dim,
           right: rec.breached ? 'BREACHED' : seenK ? 'SEEN' : '', rightCol: rec.breached ? C.accent : C.mid,
         }));
       } else {
@@ -206,7 +229,7 @@ function openCodex() {
         X(Object.assign(base, {
           badge: isMod && seenK ? key : null,
           gear: seenK && !isMod && !isLoot(key) ? key : null,
-          name: seenK ? def.name : '???', col: seenK ? C.bright : C.dim, chip: seenK && !isMod && isLoot(key) ? def.rarity : null,
+          name: cx(key), col: seenK ? C.bright : C.dim, chip: seenK && !isMod && isLoot(key) ? def.rarity : null,
           right: isMod ? (seenK ? RARITY[def.rarity].label : '') : 'gear', rightCol: C.mid, rightChips: seenK,
         }));
       }

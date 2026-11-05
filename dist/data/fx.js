@@ -4,7 +4,7 @@
 // (a cutscene layer: { n: 'logo', glitch: { col: 'ink:b0y' } }), without becoming its own effect.
 // Times are in ms. "share" = the chance (0-1) per cell or per window. "set" = the characters it swaps in.
 'use strict';
-NEON_FILES.push(['data/fx.js', 'v14.34']);
+NEON_FILES.push(['data/fx.js', 'v14.35']);
 
 const FX_GLITCH = '#%&@$!?*<>/=+';   // the glitch characters (one set everywhere: glitch, cue, garble)
 const FX_NOISE = '%&#*;:';   // the softer noise a burst flashes to (mold, d0g's tics)
@@ -51,6 +51,10 @@ const FX_LOOKS = {
   // PROGRESS: marks light up top to bottom over `ms`: the head cycles `head` (headMs), then all of them `done`
   // (doneMs).
   progress: { col: 'accent', at: 0, ms: 1800, head: 'o0O@', headMs: 70, headCol: 'bright', done: 'o0', doneMs: 140 },
+  // DECRYPT: text as ciphertext (the codex's unfound entries): letters are `set` characters, re-rolled every `idleMs`
+  // at rest, every `ms` while decoding. As you find more of a codex tab, up to `hint` of each unfound name shows
+  // through; a newly found one decodes over `dur`.
+  decrypt: { set: '0123456789ABCDEF', idleMs: 700, ms: 50, dur: 1100, hint: 0.5 },
   // GARBLE: a line of text that won't hold still (corrupted loot names): it switches versions every `swapMs`, and
   // `share` of its letters are glitch characters, re-rolled every ms.
   garble: { ms: 120, swapMs: 1700, share: 0.12, set: FX_GLITCH },
