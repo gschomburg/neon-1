@@ -1,20 +1,17 @@
 (() => {
   'use strict';
-  const $ = s => document.querySelector(s);
+  const { $, toGame, onGame, clone } = NEON_ED;
   const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); for (const k of kids) e.append(k); return e; };
 
   // ---------------- Data ----------------
-  const BASE = [
-    ['bg', 'background'], ['dim', 'faint text, dividers'], ['mid', 'secondary text, labels'], ['text', 'normal text'],
-    ['bright', 'headings, emphasis'], ['accent', 'buttons, the logo, highlights'], ['danger', 'ICE, damage, warnings'],
-    ['dangerDim', 'locked nodes, dark red frames'], ['money', 'credits, rewards'], ['rep', 'REP, feats, unlocks (THE BOARD)'],
-  ];
-  const RAR = [['scrap', 'scrap: the basics'], ['common', 'common'], ['rare', 'rare'], ['epic', 'epic'], ['legendary', 'legendary: corp mods, top upgrades'], ['exotic', 'exotic']];
+  // the slots and rarities, and the palettes.js writer, are tools/palette_file.js's
+  const P = window.NEON_PALETTE_FILE;
+  if (!P) { document.body.textContent = "Couldn't load palette_file.js. Open this page from the repo's tools/ folder."; return; }
+  const BASE = P.BASE, RAR = P.RAR;
   // how readable each color should be on the background (contrast ratio): dim and dangerDim are faint on purpose
   const NEED = { dim: 1.2, mid: 3, text: 4.5, bright: 4.5, accent: 3, danger: 3, dangerDim: 1.2, money: 3, rep: 3 };
   const PAIRS = [['accent', 'money'], ['accent', 'danger'], ['danger', 'money'], ['accent', 'bright'], ['money', 'bright'], ['rep', 'money'], ['rep', 'accent'], ['rep', 'danger'], ['rep', 'bright'], ['text', 'bright'], ['mid', 'text'], ['dim', 'mid']];
 
-  const clone = o => JSON.parse(JSON.stringify(o));
   if (!window.NEON_PALETTES) { document.body.textContent = "Couldn't load ../dist/data/palettes.js. Open this page from the repo's tools/ folder."; return; }
   let data = clone(window.NEON_PALETTES);
   let sel = Object.keys(data.palettes)[0];
@@ -22,7 +19,7 @@
   // a palette as the game sees it (palettes are self-contained since v12: no shared rarity set)
   const resolved = key => Object.assign({}, data.palettes[key]);
   // the build to stamp into palettes.js: the game's own (from its 'ready' message), else the stamp the file came with
-  let build = ((window.NEON_FILES || []).find(f => f[0] === 'data/palettes.js') || [])[1] || 'v12.00';
+  let build = NEON_ED.buildOf('data/palettes.js', 'v12.00');
 
   // ---------------- Color math ----------------
   const isHex = s => /^#[0-9a-f]{6}$/i.test(s);
@@ -48,54 +45,11 @@
     return out;
   }
 
-  // ---------------- Writing palettes.js ----------------
-  const HEADER = `// NeoN+1 palettes. The game loads this file before its own scripts (so does the palette editor).
-// Edit with tools/palette_editor.html, or by hand: one palette per line, colors as '#rrggbb'.
-//
-// Slots (what each color is for):
-//   bg         background               accent     buttons, the logo, highlights (the "main" color)
-//   dim        faint text, dividers     danger     ICE, damage, warnings
-//   mid        secondary text, labels   dangerDim  locked nodes, dark red frames
-//   text       normal text              money      credits, rewards, gold glows
-//   bright     headings, emphasis       rep        REP, feats, unlocks (THE BOARD)
-// hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
-// Rarity colors aren't in the palettes: every mod and item shows its rarity as a chip (chips, below),
-// the same in every palette.
-`;
-  const q = s => `'${String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
-  function paletteLine(key, p) {
-    const parts = [`name: ${q(p.name)}`];
-    if (p.hidden) parts.push('hidden: true');
-    for (const [s] of BASE) parts.push(`${s}: ${q(p[s])}`);
-    if (p.font && (p.font.weight || p.font.bold)) parts.push(`font: { ${Object.entries(p.font).filter(([, v]) => v != null && v !== '').map(([k, v]) => `${k}: ${typeof v === 'string' ? q(v) : v}`).join(', ')} }`);
-    if (p.note) parts.push(`note: ${q(p.note)}`);
-    return `    ${(key + ':').padEnd(15)} { ${parts.join(', ')} },`;
-  }
-  function fileText() {
-    const keys = Object.keys(data.palettes);
-    const starters = keys.filter(k => !data.palettes[k].hidden), locked = keys.filter(k => data.palettes[k].hidden);
-    const chips = RAR.map(([r]) => `    ${(r + ':').padEnd(8)} { fg: ${q(data.chips[r].fg)}, bg: ${q(data.chips[r].bg)} },`);
-    const styles = data.styles.map(s => `    { name: ${(q(s.name) + ',').padEnd(9)} fg: ${q(s.fg)}, bg: ${q(s.bg)} },`);
-    return HEADER + `(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes.js', '${build}']);   // the build it's from (see index.html)\n` +
-      'window.NEON_PALETTES = {\n' +
-      '  // Rarity chips: a text color on its own background, for each rarity (bg = the rarity\'s key color).\n' +
-      '  chips: {\n' + chips.join('\n') + '\n  },\n  palettes: {\n' +
-      '    // starters: offered in SETTINGS from the start (the first one is the default for new players)\n' +
-      starters.map(k => paletteLine(k, data.palettes[k])).join('\n') + '\n' +
-      '    // locked: unlocked by beating the corp (for now: hidden from SETTINGS)\n' +
-      locked.map(k => paletteLine(k, data.palettes[k])).join('\n') + '\n  },\n' +
-      '  // Player color styles: the colors of your name and logo (PROFILE > COLOR, multiplayer). Saved\n' +
-      '  // profiles store a style by its position here, so add new ones at the end.\n' +
-      '  styles: [\n' + styles.join('\n') + '\n  ],\n};\n';
-  }
+  // ---------------- Writing palettes.js (tools/palette_file.js writes and reads it) ----------------
+  const fileText = () => P.text(data, build);
   // keep the file's order the way it's written: starters, then locked
-  function reorder() {
-    const keys = Object.keys(data.palettes), out = {};
-    for (const k of keys.filter(k => !data.palettes[k].hidden)) out[k] = data.palettes[k];
-    for (const k of keys.filter(k => data.palettes[k].hidden)) out[k] = data.palettes[k];
-    data.palettes = out;
-  }
-  const parseFile = text => { const w = {}; new Function('window', text)(w); if (!w.NEON_PALETTES || !w.NEON_PALETTES.palettes) throw new Error('no palettes in that file'); return w.NEON_PALETTES; };
+  const reorder = () => { P.reorder(data); };
+  const parseFile = P.parse;
 
   // ---------------- Undo / dirty ----------------
   let undo = [], redo = [], lastPush = 0, saved = JSON.stringify(data);
@@ -117,7 +71,6 @@
   // ---------------- The game frame ----------------
   const frame = $('#game');
   let gameReady = false, scene = 'title', sendQueued = false;
-  const toGame = m => { try { frame.contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
   function sendAll() {
     if (!gameReady || sendQueued) return;
     sendQueued = true;
@@ -136,9 +89,7 @@
     $('#scenestate').textContent = `setting up: ${name}${['layer', 'hit', 'boss'].includes(name) ? ' (' + corp + ')' : ''}...`;
     toGame({ type: 'scene', name, opts: { corp } });
   }
-  window.addEventListener('message', e => {
-    const m = e.data;
-    if (!m || m.from !== 'neon-game') return;
+  onGame('*', m => {
     if (m.type === 'ready') {
       gameReady = true;
       if (m.version) build = m.version;   // stamp palettes.js with the game's build
@@ -172,10 +123,8 @@
   $('#width').onchange = sizeStage;
   $('#reloadgame').onclick = loadGame;
   // music / sfx by the game frame: the game's own switches (engine/editor.js test acts 'music', 'sfx'); lit while on
-  for (const [id, act] of [['#gameMusic', 'music'], ['#gameSfx', 'sfx']]) $(id).onclick = () => { try { frame.contentWindow.postMessage({ to: 'neon-game', type: 'test', act }, '*'); } catch (e) { /* not loaded */ } };
-  window.addEventListener('message', e => {
-    const m = e.data;
-    if (!m || m.from !== 'neon-game' || m.type !== 'test-state') return;
+  for (const [id, act] of [['#gameMusic', 'music'], ['#gameSfx', 'sfx']]) $(id).onclick = () => toGame({ type: 'test', act });
+  onGame('test-state', m => {
     $('#gameMusic').classList.toggle('on', !!m.music); $('#gameSfx').classList.toggle('on', !!m.sfx);
   });
   $('#dark').oninput = () => { $('#darkv').textContent = Math.round($('#dark').value * 100) + '%'; sendAll(); };
@@ -435,16 +384,10 @@
     $('#undo').disabled = !undo.length; $('#redo').disabled = !redo.length;
     document.title = (d ? '* ' : '') + 'NeoN+1 palette editor';
   }
-  let toastT = 0;
-  function toast(t) { $('#toast').textContent = t; $('#toast').classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => $('#toast').classList.remove('show'), 2200); }
+  const toast = t => NEON_ED.toast(t, 2200);
 
   // remember the linked file between sessions (IndexedDB can store file handles)
-  const idb = (mode, fn) => new Promise((res, rej) => {
-    const open = indexedDB.open('neon-palette-editor', 1);
-    open.onupgradeneeded = () => open.result.createObjectStore('h');
-    open.onerror = () => rej(open.error);
-    open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
-  });
+  const idb = NEON_ED.idb('neon-palette-editor', 1);
   const rememberHandle = h => idb('readwrite', s => s.put(h, 'palettes-data')).catch(() => {});
   idb('readonly', s => s.get('palettes-data')).then(h => { if (h) { handle = h; renderFileState(); } }).catch(() => {});
 
@@ -458,10 +401,7 @@
     handle = h; rememberHandle(h);
     return h;
   }
-  function download(text) {
-    const a = el('a', { href: URL.createObjectURL(new Blob([text], { type: 'text/javascript' })), download: 'palettes.js' });
-    document.body.append(a); a.click(); a.remove();
-  }
+  const download = text => NEON_ED.download('palettes.js', text);
   async function save() {
     reorder();
     const text = fileText();
@@ -472,7 +412,7 @@
       await w.write(text); await w.close();
       saved = JSON.stringify(data); renderFileState();
       toast('saved ' + h.name);
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('save failed: ' + e.message); }
+    } catch (e) { NEON_ED.failed('save', e); }
   }
   async function reloadFile() {
     if (dirty() && !confirm('Drop your unsaved changes and load the file again?')) return;
@@ -483,7 +423,7 @@
       data = clone(parseFile(text)); saved = JSON.stringify(data); undo = []; redo = [];
       if (!data.palettes[sel]) sel = Object.keys(data.palettes)[0];
       renderAll(); sendAll(); toast('loaded ' + handle.name);
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
+    } catch (e) { NEON_ED.failed('reload', e); }
   }
   async function exportText() {
     reorder();

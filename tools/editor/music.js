@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const $ = s => document.querySelector(s);
+  const { $ } = NEON_ED;
   const LEVELS = ['pad + bass', '+ drums', '+ arp', '+ lead (boss)', 'final boss'];
   const TAGS_KEY = 'neon.music.tags';
   let tags = {};
@@ -467,12 +467,8 @@
     ng.classList.remove('warn');
     ng.textContent = b && SONGS[b.key] ? `the game is playing ${SONGS[b.key].name} · level ${b.level}` : '';
   }
-  window.addEventListener('message', e => {
-    const m = e.data;
-    if (!m || m.from !== 'neon-game') return;
-    if (m.type === 'ready') { gameBeat = null; sendData(true); sendCtl(); showBeat(); }
-    if (m.type === 'beat') { gameBeat = m; showBeat(); }
-  });
+  NEON_ED.onGame('ready', () => { gameBeat = null; sendData(true); sendCtl(); showBeat(); });
+  NEON_ED.onGame('beat', m => { gameBeat = m; showBeat(); });
 
   if (window.LOAD_ERRORS && window.LOAD_ERRORS.length) $('#mErrors').textContent = 'some files had errors (their tracks may still be fine):\n' + window.LOAD_ERRORS.slice(0, 6).join('\n');
   if (typeof SONGS === 'undefined') document.body.textContent = "Couldn't load the game's music. Open this page from the repo's tools/ folder.";

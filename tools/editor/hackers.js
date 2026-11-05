@@ -1,8 +1,7 @@
 // ---------------- Hackers: the cast (dist/data/hackers.js), each with its face and logo (data/art/) ----------------
 (() => {
-  const $ = s => document.querySelector(s);
+  const { $, esc } = NEON_ED;
   if (typeof HACKERS === 'undefined') { $('#hkBody').textContent = "Couldn't load ../dist/data/hackers.js."; return; }
-  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   // the art tab's live copy when there is one (so edits there show here), else the files
   const artNow = () => (window.NE_ART && NE_ART.art) || { faces: typeof ART_FACES !== 'undefined' ? ART_FACES : {}, logos: typeof ART_LOGOS !== 'undefined' ? ART_LOGOS : [] };
   let side = 'all', q = '';

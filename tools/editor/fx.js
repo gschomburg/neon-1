@@ -2,18 +2,14 @@
 // tools/fx_file.js says what each setting is and where the effect shows; engine/fx.js draws them. "show" asks the game
 // (engine/editor.js fxscene / fxcard / fxdeath, or the G0D tab's mold glitch) to put the effect up on a loop.
 (() => {
-  const $ = q => document.querySelector(q);
+  const { $, toGame, onGame, toast, esc, clone } = NEON_ED;
   const F = window.NEON_FX_FILE;
   if (typeof FX_LOOKS === 'undefined' || !F) { $('#fxList').textContent = "Couldn't load ../dist/data/fx.js or fx_file.js."; return; }
-  const esc = x => String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const build = ((window.NEON_FILES || []).find(f => f[0] === 'data/fx.js') || [])[1] || 'v0';
-  const clone = o => JSON.parse(JSON.stringify(o));
-  let fx = F.pick({ sets: { FX_GLITCH, FX_NOISE }, looks: FX_LOOKS }), saved = clone(fx), dir = null;
+  const build = NEON_ED.buildOf('data/fx.js'), file = NEON_ED.dataFile('fx.js');
+  let fx = F.pick({ sets: { FX_GLITCH, FX_NOISE }, looks: FX_LOOKS }), saved = clone(fx);
   let lost = F.unknown({ sets: { FX_GLITCH, FX_NOISE }, looks: FX_LOOKS });   // settings this tab doesn't know: saving would drop them, so it won't save
   const MASK_W = 48, MASK_H = 14;   // the mask preview, in cells
   let maskT0 = performance.now();   // (its fade starts again when the mask changes)
-  const toast = t => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2400); };
-  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
   const dirty = () => JSON.stringify(fx) !== JSON.stringify(saved);
   // the game gets the looks with their shared sets filled in; this page's own FX_LOOKS too (the garble preview)
   let sendT = 0;
@@ -64,7 +60,7 @@
     }
     for (const c of document.querySelectorAll('#fx .fxc[data-l]')) c.classList.toggle('ch', JSON.stringify(fx.looks[c.dataset.l]) !== JSON.stringify(saved.looks[c.dataset.l]));
     const d = dirty();
-    $('#fxFile').textContent = (dir ? dir.name + '/' : 'dist/data/') + 'fx.js · ' + (d ? 'unsaved' : 'saved');
+    $('#fxFile').textContent = file.where() + ' · ' + (d ? 'unsaved' : 'saved');
     $('#fxFile').classList.toggle('dirty', d);
   }
   // an edit: typing, or a drag (scrub = live while dragging)
@@ -129,57 +125,28 @@
     }
   }, 50);
   // the game: our settings when it (re)loads
-  window.addEventListener('message', e => { const m = e.data; if (m && m.from === 'neon-game' && m.type === 'ready' && dirty()) send(); });
+  onGame('ready', () => { if (dirty()) send(); });
 
-  // ---- saving: the dist/data folder (the same one the TRAINING and ECONOMY tabs use, picked once)
-  const idb = (mode, fn) => new Promise((res, rej) => {
-    const open = indexedDB.open('neon-tut-editor', 1);
-    open.onupgradeneeded = () => open.result.createObjectStore('h');
-    open.onerror = () => rej(open.error);
-    open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
-  });
-  idb('readonly', st => st.get('datadir')).then(h => { if (h) { dir = h; marks(); } }).catch(() => {});
-  async function ensureDir() {
-    if (dir && ((await dir.queryPermission({ mode: 'readwrite' })) === 'granted' || (await dir.requestPermission({ mode: 'readwrite' })) === 'granted')) return dir;
-    toast('pick the dist/data folder');
-    const h = await window.showDirectoryPicker({ id: 'neon-data', mode: 'readwrite' });
-    let ok = true; try { await h.getFileHandle('fx.js'); } catch (e) { ok = false; }
-    if (!ok && !confirm('The folder ' + h.name + ' has no fx.js: is it dist/data? Use it anyway?')) throw new Error('cancelled');
-    dir = h; idb('readwrite', st => st.put(h, 'datadir')).catch(() => {});
-    return h;
-  }
-  const stamp = () => new Date().toTimeString().slice(0, 5);
+  // ---- saving: the dist/data folder (the same one the TRAINING and ECONOMY tabs use, picked once; common.js dataDir)
+  NEON_ED.dataDir.on(marks);
   async function saveFile() {
     if (lost.length) return toast('not saved: fx.js has settings this tab doesn\'t know (' + lost.join(', ') + '). add them to tools/fx_file.js first.');
     if (!dirty()) return toast('nothing to save');
-    const text = F.text(Object.assign(clone(fx), { looks: F.expand(fx) }), build);
-    if (!window.showDirectoryPicker) {
-      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([text], { type: 'text/javascript' })), download: 'fx.js' });
-      document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-      saved = clone(fx); marks(); toast('downloaded fx.js: put it in dist/data'); return;
-    }
-    try {
-      const d = await ensureDir(), h = await d.getFileHandle('fx.js', { create: true }), w = await h.createWritable();
-      await w.write(text); await w.close();
-      saved = clone(fx); marks(); toast('saved fx.js at ' + stamp());
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('save failed: ' + e.message); }
+    if (await file.save(F.text(Object.assign(clone(fx), { looks: F.expand(fx) }), build))) { saved = clone(fx); marks(); }
   }
   async function reload() {
     if (dirty() && !confirm('Drop your unsaved FX changes and load the file again?')) return;
+    const t = await file.load();
+    if (t == null) return;
     try {
-      if (!window.showDirectoryPicker) { location.reload(); return; }
-      const d = await ensureDir(), t = await (await (await d.getFileHandle('fx.js')).getFile()).text();
       const m = F.parse(t); lost = F.unknown(m);
       if (lost.length) toast('the file has settings this tab doesn\'t know (it won\'t save): ' + lost.join(', '));
       fx = F.pick(m); saved = clone(fx); render(); send(); toast('loaded fx.js');
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
+    } catch (e) { toast('reload failed: ' + e.message); }
   }
   $('#fxSave').onclick = saveFile;
   $('#fxReload').onclick = reload;
-  document.addEventListener('keydown', e => {
-    if (!document.body.classList.contains('mode-fx')) return;
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(); }
-  });
-  window.addEventListener('beforeunload', e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });
+  NEON_ED.saveKey('mode-fx', saveFile);
+  NEON_ED.warnUnsaved(dirty);
   render();
 })();

@@ -7,7 +7,10 @@
 <!-- NeoN+1 editor: the game on the left (index.html?editor=1, engine/editor.js), and three modes on the right:
      MUSIC (every corp's track, played by the game itself), PALETTE (edits dist/data/palettes.js) and ITEMS & MODS
      (read-only: every item and mod, its rarity steps and its copy, from dist/data/mods.js).
-     First, stand-ins for the bits of the game the music and corp files expect, then the game's own files. -->
+     First, stand-ins for the bits of the game the music and corp files expect, then the game's own files.
+     The page's own code is in editor/: common.js (helpers every tab shares, NEON_ED), then one file per tab, in
+     the order at the end of the body (palette.js first: it runs the game frame and sets NE for the music tab).
+     The data files are written by tools/*_file.js (on tools/data_file_core.js), loaded here too. -->
 <script>
   window.NEON_FILES = window.NEON_FILES || [];
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -32,6 +35,7 @@
 <script src="../dist/data/art/root.js"></script>
 <script src="../dist/data/art/worldmap.js"></script>
 <script src="data_file_core.js"></script>
+<script src="palette_file.js"></script>
 <script src="art_file.js"></script>
 <script src="../dist/data/tutorial.js"></script>
 <script src="tutorial_file.js"></script>
@@ -510,6 +514,7 @@
 </div>
 <div id="toast"></div>
 
+<script src="editor/common.js"></script>
 <script src="editor/palette.js"></script>
 <script src="editor/music.js"></script>
 <script src="editor/ads.js"></script>

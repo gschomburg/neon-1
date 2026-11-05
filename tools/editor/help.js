@@ -1,7 +1,7 @@
 // ---------------- Help: how each tab works, and how what you change gets into the game ----------------
 // (the user, 2026-10-26: the content editing guide lives in the editor, a help button that opens on the tab you're on)
 (() => {
-  const $ = q => document.querySelector(q);
+  const { $ } = NEON_ED;
   const F = p => '<code class="file">' + p + '</code>';
   const go = (k, t) => '<a data-go="' + k + '">' + (t || k) + '</a>';
   const HELP = {

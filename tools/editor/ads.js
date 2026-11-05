@@ -1,9 +1,7 @@
 // ---------------- Ads: every fake ad (dist/data/ads.js), drawn as text; "show" puts it up in the game ----------------
 (() => {
-  const $ = s => document.querySelector(s);
+  const { $, toGame, esc } = NEON_ED;
   if (typeof ADS === 'undefined') { $('#adBody').textContent = "Couldn't load ../dist/data/ads.js."; return; }
-  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
-  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   let q = '';
   // one screen as the game draws it: ADS_W x ADS_H inside a frame, bars half full
   const screenHtml = (sc, n, of) => {

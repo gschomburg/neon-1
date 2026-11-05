@@ -3,15 +3,11 @@
 // right away). "show" plays the training in the game to that line (engine/tutorial.js skips the lines
 // before it and does what they ask); back / next step through. "save" writes the file (tools/tutorial_file.js).
 (() => {
-  const $ = s => document.querySelector(s);
+  const { $, toGame, onGame, toast, esc, clone } = NEON_ED;
   const F = window.NEON_TUT_FILE;
   if (typeof TUT_COPY === 'undefined' || !F) { $('#tList').textContent = "Couldn't load ../dist/data/tutorial.js or tutorial_file.js."; return; }
-  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const clone = o => JSON.parse(JSON.stringify(o));
-  const build = ((window.NEON_FILES || []).find(f => f[0] === 'data/tutorial.js') || [])[1] || 'v0';
-  let copy = clone(TUT_COPY), saved = clone(copy), game = { on: false, id: null, last: null, auto: null }, dir = null;
-  const toast = t => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2400); };
-  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
+  const build = NEON_ED.buildOf('data/tutorial.js'), file = NEON_ED.dataFile('tutorial.js');
+  let copy = clone(TUT_COPY), saved = clone(copy), game = { on: false, id: null, last: null, auto: null };
   const dirty = () => F.text(copy, build) !== F.text(saved, build);
   let sendT = 0;
   const sendCopy = () => { clearTimeout(sendT); sendT = setTimeout(() => toGame({ type: 'tut-copy', copy }), 120); };
@@ -53,7 +49,7 @@
       el.querySelector('.warn').textContent = F.problems(l).join('; ');
     }
     const d = dirty();
-    $('#tFile').textContent = (dir ? dir.name + '/' : 'dist/data/') + 'tutorial.js · ' + (d ? 'unsaved' : 'saved');
+    $('#tFile').textContent = file.where() + ' · ' + (d ? 'unsaved' : 'saved');
     $('#tFile').classList.toggle('dirty', d);
     $('#tAt').innerHTML = !game.on ? 'the training isn\'t running' : game.auto ? 'playing to <b>' + esc(game.auto) + '</b>...' : game.id ? 'up now: <b>' + esc(game.id) + '</b>' : game.last ? 'after <b>' + esc(game.last) + '</b>' : 'starting...';
   }
@@ -82,63 +78,30 @@
   $('#tNext').onclick = () => step(1);
 
   // the game: our lines when it (re)loads, and which line is up
-  window.addEventListener('message', e => {
-    const m = e.data;
-    if (!m || m.from !== 'neon-game') return;
-    if (m.type === 'ready') sendCopy();
-    if (m.type === 'tut-at') {
-      game = m; marks();
-      const on = document.querySelector('#tList .tl.on');
-      if (on && document.body.classList.contains('mode-tut') && !on.contains(document.activeElement)) on.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
+  onGame('ready', sendCopy);
+  onGame('tut-at', m => {
+    game = m; marks();
+    const on = document.querySelector('#tList .tl.on');
+    if (on && document.body.classList.contains('mode-tut') && !on.contains(document.activeElement)) on.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   });
 
-  // saving: Chrome's file access, the dist/data folder (picked once, remembered)
-  const idb = (mode, fn) => new Promise((res, rej) => {
-    const open = indexedDB.open('neon-tut-editor', 1);
-    open.onupgradeneeded = () => open.result.createObjectStore('h');
-    open.onerror = () => rej(open.error);
-    open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
-  });
-  idb('readonly', s => s.get('datadir')).then(h => { if (h) { dir = h; marks(); } }).catch(() => {});
-  async function ensureDir() {
-    if (dir && ((await dir.queryPermission({ mode: 'readwrite' })) === 'granted' || (await dir.requestPermission({ mode: 'readwrite' })) === 'granted')) return dir;
-    toast('pick the dist/data folder');
-    const h = await window.showDirectoryPicker({ id: 'neon-data', mode: 'readwrite' });
-    let ok = true; try { await h.getFileHandle('tutorial.js'); } catch (e) { ok = false; }
-    if (!ok && !confirm('The folder ' + h.name + ' has no tutorial.js: is it dist/data? Use it anyway?')) throw new Error('cancelled');
-    dir = h; idb('readwrite', s => s.put(h, 'datadir')).catch(() => {});
-    return h;
-  }
+  // saving: Chrome's file access, the dist/data folder (picked once, remembered; common.js dataDir)
+  NEON_ED.dataDir.on(marks);
   async function saveFile() {
     if (!dirty()) return toast('nothing to save');
     const bad = copy.filter(l => F.problems(l).length);
     if (bad.length && !confirm(bad.length + ' line(s) have notes (' + bad.slice(0, 3).map(l => l.id).join(', ') + '). Save anyway?')) return;
-    const text = F.text(copy, build);
-    if (!window.showDirectoryPicker) {
-      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([text], { type: 'text/javascript' })), download: 'tutorial.js' });
-      document.body.append(a); a.click(); a.remove(); saved = clone(copy); marks(); toast('downloaded tutorial.js'); return;
-    }
-    try {
-      const d = await ensureDir(), h = await d.getFileHandle('tutorial.js', { create: true }), w = await h.createWritable();
-      await w.write(text); await w.close();
-      saved = clone(copy); marks(); toast('saved tutorial.js');
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('save failed: ' + e.message); }
+    if (await file.save(F.text(copy, build))) { saved = clone(copy); marks(); }
   }
   async function reload() {
     if (dirty() && !confirm('Drop your unsaved training changes and load the file again?')) return;
-    try {
-      if (!window.showDirectoryPicker) { location.reload(); return; }
-      const d = await ensureDir(), t = await (await (await d.getFileHandle('tutorial.js')).getFile()).text();
-      copy = clone(F.parse(t)); saved = clone(copy); renderList(); sendCopy(); toast('loaded tutorial.js');
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
+    const t = await file.load();
+    if (t == null) return;
+    try { copy = clone(F.parse(t)); saved = clone(copy); renderList(); sendCopy(); toast('loaded tutorial.js'); } catch (e) { toast('reload failed: ' + e.message); }
   }
   $('#tSave').onclick = saveFile;
   $('#tReload').onclick = reload;
-  document.addEventListener('keydown', e => {
-    if (!document.body.classList.contains('mode-tut')) return;
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(); }
-  });
-  window.addEventListener('beforeunload', e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });
+  NEON_ED.saveKey('mode-tut', saveFile);
+  NEON_ED.warnUnsaved(dirty);
   renderList();
 })();

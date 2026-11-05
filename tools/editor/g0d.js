@@ -1,8 +1,6 @@
 // ---------------- G0D: previews of G0D's fight designs and effects in the game (engine/g0d.js, 'test' act 'g0d') ----------------
 (() => {
-  const $ = s => document.querySelector(s);
-  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
-  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const { $, toGame, onGame, esc } = NEON_ED;
   let looks = [], cur = '', still = false, bar = '';
   const WHERE = { layer: 'a corp layer', map: 'the sector map', win: 'the win screen', death: 'the death screen' };
   const log = (t, bad) => { const l = $('#gLog'); l.textContent = t; l.classList.toggle('bad', !!bad); };
@@ -16,9 +14,7 @@
     const l = looks.find(x => x[0] === cur);
     $('#gState').textContent = l ? `${l[1]}  ·  on ${WHERE[l[3]] || l[3]}  ·  ${l[4]}` : 'pick a look: the game goes to the screen it belongs on and draws it there';
   };
-  window.addEventListener('message', e => {
-    const m = e.data;
-    if (!m || m.from !== 'neon-game') return;
+  onGame('*', m => {
     if (m.type === 'ready' && m.g0d) {
       looks = m.g0d;
       const btns = g => looks.filter(l => l[2] === g).map(l => `<button class="look" data-key="${esc(l[0])}" title="${esc(l[4])}">${esc(l[1])}<small>${esc(l[4])}</small></button>`).join('');
@@ -42,9 +38,7 @@
     ['stealEvery', 'steal after s'], ['standEyes', 'stand: eyes'], ['standTime', 'stand: clock s'], ['standBurn', 'stand: full burn by s'], ['red', 'stand: red s'], ['blue', 'stand: blue s']];
   let gpFilled = false, gpStage = '';
   const gpSet = set => toGame({ type: 'test', act: 'g0dpset', set });
-  window.addEventListener('message', e => {
-    const m = e.data;
-    if (!m || m.from !== 'neon-game' || m.type !== 'test-state') return;
+  onGame('test-state', m => {
     gpStage = m.g0dp || '';
     for (const b of document.querySelectorAll('#g0d button.gp')) b.classList.toggle('on', !!b.dataset.stage && b.dataset.stage === gpStage);
     if (!gpFilled && m.g0dpCfg) {

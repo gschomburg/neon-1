@@ -4,23 +4,19 @@
 // "send back to NeoN+1"), copy / paste, and show it in the game. Changes go to the game live; "save" writes the
 // files that changed (tools/art_file.js makes the text). "+ glyph" and "+ logo" add new ones at the end.
 (() => {
-  const $ = s => document.querySelector(s);
+  const { $, toGame, toast, esc, clone } = NEON_ED;
   const F = window.NEON_ART_FILE;
   if (typeof ART_GLYPHS === 'undefined' || typeof ART_LOGOS === 'undefined' || typeof ART_MAP === 'undefined' || !F) {
     $('#aDetail').textContent = "Couldn't load ../dist/data/art/*.js or art_file.js."; return;
   }
-  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const clone = o => JSON.parse(JSON.stringify(o));
   let art = clone({ glyphs: ART_GLYPHS, special: ART_SPECIAL, logos: ART_LOGOS, map: ART_MAP, faces: typeof ART_FACES !== 'undefined' ? ART_FACES : {}, root: typeof ART_ROOT !== 'undefined' ? ART_ROOT : {} });
   let saved = clone(art), sel = null, q = '';
-  let build = ((window.NEON_FILES || []).find(f => f[0] === 'data/art/logos.js') || [])[1] || 'v0';
+  let build = NEON_ED.buildOf('data/art/logos.js');
   let corpNames = {};
   const fileOf = { glyphs: 'glyphs.js', special: 'glyphs.js', logos: 'logos.js', map: 'worldmap.js', faces: 'faces.js', root: 'root.js' };
   const texts = a => F.files(a, build);
   const changedFiles = () => { const a = texts(art), b = texts(saved); return Object.keys(a).filter(f => a[f] !== b[f]); };
   const dirty = () => changedFiles().length > 0;
-  const toast = t => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2400); };
-  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
   const CORPS_ = typeof CORPS !== 'undefined' ? CORPS : {};   // (a top-level const: not on window)
   const corpName = k => k === 'omni' ? 'OMNI//CORE' : (corpNames[k] || (CORPS_[k] && CORPS_[k].name) || k);
   const corpKeys = () => [...Object.keys(CORPS_).sort((a, b) => corpName(a).localeCompare(corpName(b))), 'omni'];
@@ -118,24 +114,9 @@
   }
 
   // ---- the files: pick the dist/data/art folder once; save writes only the files that changed
-  let dir = null;
-  const idb = (mode, fn) => new Promise((res, rej) => {
-    const open = indexedDB.open('neon-art-editor', 2);
-    open.onupgradeneeded = () => { if (!open.result.objectStoreNames.contains('h')) open.result.createObjectStore('h'); };
-    open.onerror = () => rej(open.error);
-    open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
-  });
-  idb('readonly', s => s.get('artdir')).then(h => { if (h) dir = h; renderFile(); }).catch(() => {});
-  async function ensureDir() {
-    if (dir && ((await dir.queryPermission({ mode: 'readwrite' })) === 'granted' || (await dir.requestPermission({ mode: 'readwrite' })) === 'granted')) return dir;
-    toast('pick the dist/data/art folder');
-    const h = await window.showDirectoryPicker({ id: 'neon-art', mode: 'readwrite' });
-    let ok = true; try { await h.getFileHandle('logos.js'); } catch (e) { ok = false; }
-    if (!ok && !confirm(`The folder ${h.name} has no logos.js: is it dist/data/art? Use it anyway?`)) throw new Error('cancelled');
-    dir = h; idb('readwrite', s => s.put(h, 'artdir')).catch(() => {});
-    return h;
-  }
-  const download = (name, text) => { const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([text], { type: 'text/javascript' })), download: name }); document.body.append(a); a.click(); a.remove(); };
+  const artDir = NEON_ED.folder({ db: 'neon-art-editor', version: 2, key: 'artdir', id: 'neon-art', label: 'dist/data/art' });
+  artDir.on(renderFile);
+  const ensureDir = () => artDir.ensure('logos.js'), download = NEON_ED.download;
   async function save() {
     const files = changedFiles();
     if (!files.length) return toast('nothing to save');
@@ -162,7 +143,7 @@
   }
   function renderFile() {
     const f = $('#aFile'), ch = changedFiles();
-    f.textContent = (dir ? dir.name + '/' : 'dist/data/art/') + (ch.length ? ' · unsaved: ' + ch.join(', ') : ' · saved');
+    f.textContent = artDir.where() + (ch.length ? ' · unsaved: ' + ch.join(', ') : ' · saved');
     f.classList.toggle('dirty', ch.length > 0);
   }
 
@@ -269,11 +250,8 @@
   $('#aFilter').addEventListener('input', e => { q = e.target.value.trim().toLowerCase(); renderList(); });
   $('#aSave').onclick = save; $('#aReload').onclick = reload;
   $('#aAddGlyph').onclick = addGlyph; $('#aAddLogo').onclick = addLogo;
-  document.addEventListener('keydown', e => {
-    if (!document.body.classList.contains('mode-art')) return;
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
-  });
-  window.addEventListener('beforeunload', e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });
+  NEON_ED.saveKey('mode-art', save);
+  NEON_ED.warnUnsaved(dirty);
   window.NE_ART = { render, save, get art() { return art; }, pieces, setRows, findPiece, addGlyph, addLogo, changedFiles, texts };
   render();
 })();

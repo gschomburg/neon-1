@@ -1,8 +1,6 @@
 // ---------------- Testing: cheats and jumps on the running game (engine/editor.js 'test') ----------------
 (() => {
-  const $ = s => document.querySelector(s);
-  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
-  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const { $, toGame, onGame, esc } = NEON_ED;
   let state = null, evNames = {};
   const log = (t, bad) => { const l = $('#xLog'); l.textContent = t; l.classList.toggle('bad', !!bad); };
   const send = (act, extra = {}) => { if (act !== 'lootview') log(act + '...'); toGame(Object.assign({ type: 'test', act }, extra)); };
@@ -15,9 +13,7 @@
     if (!x || !x.run) { $('#xState').textContent = 'no run: click "new test run" or a sector event'; return; }
     $('#xState').textContent = `sector ${x.sector}${x.event ? ' // ' + (evNames[x.event] || x.event) : ''}  ·  ${x.credits}cr  ·  INT ${x.int}/${x.maxInt}  ·  REP ${x.rep}  ·  quest: ${x.quest}${x.qopen ? '' : ' (closed)'}  ·  ${x.mods} mods${x.fence ? '  ·  fence: ' + x.fence : ''}  ·  ${x.mode}${x.god ? '  ·  GOD' : ''}${x.free ? '  ·  free travel' : ''}${x.tabMusic ? '  ·  music tab playing' : ''}`;
   };
-  window.addEventListener('message', e => {
-    const m = e.data;
-    if (!m || m.from !== 'neon-game') return;
+  onGame('*', m => {
     if (m.type === 'ready') {
       evNames = Object.fromEntries((m.events || []).map(([k, n]) => [k, n]));
       const an = Object.fromEntries((m.anomalies || []).map(a => [a[0], a]));

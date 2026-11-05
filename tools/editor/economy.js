@@ -3,15 +3,12 @@
 // layer pay by nodes, a corp by level, and market prices. Edits go to the game as you type; "save" writes the file
 // (tools/economy_file.js). Mod and item prices are edited with the mods (data/mods.js); they show here scaled.
 (() => {
-  const $ = s => document.querySelector(s);
+  const { $, toGame, onGame, toast, esc, clone } = NEON_ED;
   const F = window.NEON_ECON_FILE;
   if (typeof ECON === 'undefined' || !F) { $('#eList').textContent = "Couldn't load ../dist/data/economy.js or economy_file.js."; return; }
-  const esc = x => String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const build = ((window.NEON_FILES || []).find(f => f[0] === 'data/economy.js') || [])[1] || 'v0';
-  let econ = F.pick(ECON), saved = F.pick(ECON), sector = 0, dir = null;
+  const build = NEON_ED.buildOf('data/economy.js'), file = NEON_ED.dataFile('economy.js');
+  let econ = F.pick(ECON), saved = F.pick(ECON), sector = 0;
   let lost = F.unknown(ECON);   // numbers the file has and this tab doesn't know: saving would drop them, so it won't save
-  const toast = t => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2400); };
-  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
   const dirty = () => JSON.stringify(econ) !== JSON.stringify(saved);
   let sendT = 0;
   const send = () => { clearTimeout(sendT); sendT = setTimeout(() => toGame({ type: 'econ', econ }), 120); };
@@ -65,7 +62,7 @@
       row.classList.toggle('ch', JSON.stringify(v) !== JSON.stringify(F.get(saved, it.path)));
     }
     const d = dirty();
-    $('#eFile').textContent = (dir ? dir.name + '/' : 'dist/data/') + 'economy.js · ' + (d ? 'unsaved' : 'saved');
+    $('#eFile').textContent = file.where() + ' · ' + (d ? 'unsaved' : 'saved');
     $('#eFile').classList.toggle('dirty', d);
     preview();
   }
@@ -120,55 +117,28 @@
   }
 
   // ---- the game: our numbers when it (re)loads
-  window.addEventListener('message', e => { const m = e.data; if (m && m.from === 'neon-game' && m.type === 'ready') send(); });
+  onGame('ready', send);
 
-  // ---- saving: the dist/data folder (the same one the TRAINING tab uses, picked once)
-  const idb = (mode, fn) => new Promise((res, rej) => {
-    const open = indexedDB.open('neon-tut-editor', 1);
-    open.onupgradeneeded = () => open.result.createObjectStore('h');
-    open.onerror = () => rej(open.error);
-    open.onsuccess = () => { const tx = open.result.transaction('h', mode), r = fn(tx.objectStore('h')); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
-  });
-  idb('readonly', st => st.get('datadir')).then(h => { if (h) { dir = h; values(); } }).catch(() => {});
-  async function ensureDir() {
-    if (dir && ((await dir.queryPermission({ mode: 'readwrite' })) === 'granted' || (await dir.requestPermission({ mode: 'readwrite' })) === 'granted')) return dir;
-    toast('pick the dist/data folder');
-    const h = await window.showDirectoryPicker({ id: 'neon-data', mode: 'readwrite' });
-    let ok = true; try { await h.getFileHandle('economy.js'); } catch (e) { ok = false; }
-    if (!ok && !confirm('The folder ' + h.name + ' has no economy.js: is it dist/data? Use it anyway?')) throw new Error('cancelled');
-    dir = h; idb('readwrite', st => st.put(h, 'datadir')).catch(() => {});
-    return h;
-  }
+  // ---- saving: the dist/data folder (the same one the TRAINING tab uses, picked once; common.js dataDir)
+  NEON_ED.dataDir.on(values);
   async function saveFile() {
     if (lost.length) return toast('not saved: economy.js has numbers this tab doesn\'t know (' + lost.join(', ') + '). add them to tools/economy_file.js INFO first.');
     if (!dirty()) return toast('nothing to save');
-    const text = F.text(econ, build);
-    if (!window.showDirectoryPicker) {
-      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([text], { type: 'text/javascript' })), download: 'economy.js' });
-      document.body.append(a); a.click(); a.remove(); saved = JSON.parse(JSON.stringify(econ)); values(); toast('downloaded economy.js'); return;
-    }
-    try {
-      const d = await ensureDir(), h = await d.getFileHandle('economy.js', { create: true }), w = await h.createWritable();
-      await w.write(text); await w.close();
-      saved = JSON.parse(JSON.stringify(econ)); values(); toast('saved economy.js');
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('save failed: ' + e.message); }
+    if (await file.save(F.text(econ, build))) { saved = clone(econ); values(); }
   }
   async function reload() {
     if (dirty() && !confirm('Drop your unsaved economy changes and load the file again?')) return;
+    const t = await file.load();
+    if (t == null) return;
     try {
-      if (!window.showDirectoryPicker) { location.reload(); return; }
-      const d = await ensureDir(), t = await (await (await d.getFileHandle('economy.js')).getFile()).text();
       const e = F.parse(t); lost = F.unknown(e);
       if (lost.length) toast('the file has numbers this tab doesn\'t know (it won\'t save): ' + lost.join(', '));
       econ = F.pick(e); saved = F.pick(e); renderList(); send(); toast('loaded economy.js');
-    } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
+    } catch (e) { toast('reload failed: ' + e.message); }
   }
   $('#eSave').onclick = saveFile;
   $('#eReload').onclick = reload;
-  document.addEventListener('keydown', e => {
-    if (!document.body.classList.contains('mode-econ')) return;
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(); }
-  });
-  window.addEventListener('beforeunload', e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });
+  NEON_ED.saveKey('mode-econ', saveFile);
+  NEON_ED.warnUnsaved(dirty);
   renderList();
 })();

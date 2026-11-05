@@ -1,10 +1,9 @@
 // ---------------- Items & mods: every item and mod, its rarity steps and its copy (read-only) ----------------
 (() => {
-  const $ = s => document.querySelector(s);
+  const { $, esc } = NEON_ED;
   if (typeof MODS === 'undefined' || typeof ITEMS === 'undefined') { $('#iBody').textContent = "Couldn't load ../dist/data/mods.js."; return; }
   const LADDER = Object.keys(RARITY).sort((a, b) => RARITY[a].lvl - RARITY[b].lvl);
   const chips = (window.NEON_PALETTES || {}).chips || {};
-  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const chip = r => { const c = chips[r] || { fg: '#000', bg: '#888' }; return `<span class="c" style="color:${c.fg};background:${c.bg}">${esc((RARITY[r] || { label: r }).label)}</span>`; };
   const KINDS = [['item', 'Gear', 'one use each, on the belt. ' + ITEM_WHERE], ['loot', 'Loot', 'worth money: it goes in the LOOT bag ([$]) and sells at a black market. quest items too.'], ['gen', 'General mods', 'the main pool'], ['minor', 'Minor mods', 'small perks'],
     ['exotic', 'Exotic mods', 'rule-benders: sector bosses, markets, caches'], ['corp', 'Corp mods', "only from that corp's boss; legendary, never upgrade"]];
@@ -18,7 +17,7 @@
   for (const e of all) e.steps = (e.d.tiers || [{}]).map(t => Object.assign({}, e.d, t));
 
   // the mod picker: the game tells us what its run holds (engine/editor.js), we send mod-set
-  const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
+  const { toGame, onGame } = NEON_ED;
   let game = { run: false, mods: [], slots: 0 }, held = {};
   const setMod = (key, tier) => toGame({ type: 'mod-set', key, tier });
   const gameBar = () => {
@@ -28,12 +27,8 @@
       : 'the game has no run: <button id="iStart">start a test run</button> (the map scene) to give it mods';
     const b = $('#iStart'); if (b) b.onclick = () => toGame({ type: 'scene', name: 'map', opts: {} });
   };
-  window.addEventListener('message', e => {
-    const m = e.data;
-    if (!m || m.from !== 'neon-game') return;
-    if (m.type === 'ready') toGame({ type: 'mods-get' });
-    if (m.type === 'mods') { game = m; held = Object.fromEntries(m.mods); render(); }
-  });
+  onGame('ready', () => toGame({ type: 'mods-get' }));
+  onGame('mods', m => { game = m; held = Object.fromEntries(m.mods); render(); });
 
   let view = 'cards', kind = 'all', q = '', sort = 'file';
   try { view = localStorage.getItem('neon.items.view') || 'cards'; kind = localStorage.getItem('neon.items.kind') || 'all'; sort = localStorage.getItem('neon.items.sort') || 'file'; } catch (e) { /* private mode */ }
