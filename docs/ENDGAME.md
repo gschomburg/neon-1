@@ -43,6 +43,23 @@ those runs get **a leaderboard of their own** (any game played this way).
   - The end screen: on a replayed seed, one more line, `#2 of 5 on K7XQ2M` (the rank line is near 32 columns already).
   - Before G0D, a typed seed is practice and doesn't post, so racing a chosen seed is end game only (fits the story).
   - Not possible without a server change: a "most played seeds" list across everyone (the server reads one board at a time).
+  - **Greg's shape (2026-11-05):** the SEED tab opens on the top scores from any seed, all replays, each showing its
+    seed (Claude: the hacker-name column shows the seed; long typed seeds scroll). Tap a row: a little menu, filter to
+    this seed or play it. A seed's own page shows just its scores. A way to enter a seed or filter on the front page.
+    Claude's take: the front page is one more board, `replays` (only replay runs post there); a seed's page is
+    `seed-<SEED>`. Front page: `[ FIND SEED ]` (a field like the title's) over the rows; tap a row: `[ THIS SEED ]
+    [ PLAY IT ] [ BACK ]`. A seed's page: header `SEED K7XQ2M`, `[ ALL SEEDS ]` and `[ PLAY IT ]`; esc / BACK steps back
+    one level (seed -> front page -> title). All time only.
+  - **Open (to decide):**
+    - Practice runs (a typed seed before G0D) post to nothing today, so a friend you send a seed to can't get on its
+      board. Claude: let them post to the seed boards only (never TODAY / ALL TIME): fair, since seed boards only
+      compare the same map. And on the `replays` front page too, or only the seed's own board?
+    - One player grinding a seed could fill the front page: show each player's best per seed (fetch more, dedupe in
+      the game).
+    - Quest seeds (HADES, H3AV3N, the gauntlet): Claude: off the front page, but each gets its own board (that's
+      "replay H3AV3N"'s leaderboard for free).
+    - Random runs post to their seed's board (so a replay has your first run to beat) but not the front page.
+    - Scores before v14.41 have no seed: the boards start empty.
   - Goes well with **a daily seed** (BACKLOG, parked): the same seed for everyone each day, its board the SEED tab. It
     would have to count for everyone, not only after G0D, since nobody picks it.
 
