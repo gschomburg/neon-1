@@ -189,7 +189,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
   // FAILSAFE legendary recharges each corp you go into (not on a resume: that would refill it for free)
   if (!restore && st.corp.hasBoss && has('failsafe') && modTier('failsafe') >= 1 && !has('zombie')) st.run.failsafeUsed = false;
   if (restore) {   // a resumed save: what this corp had used up so far
-    for (const k of ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins', 'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen', 'slomo', 'anchored', 'bees', 'hk', 'hkRival', 'hypeRow', 'kludgeHealed', 'zd', 'magnet']) if (restore[k] != null) st.corp[k] = restore[k];
+    for (const k of CORP_SAVE) if (restore[k] != null) st.corp[k] = restore[k];   // (engine/save.js)
   }
   if (!restore && st.corp.mod === 'rival') st.corp.hkRival = hkRivalFor(node);
   if (!restore && st.corp.hasBoss && has('reload')) reloadGear();   // RELOAD: singles get a second (engine/active.js)   // RIVAL: one of the cast (engine/hackers.js)
@@ -1753,8 +1753,7 @@ async function endRun(win) {
   if (rep) { save.rep = (save.rep || 0) + rep; save.repTotal = (save.repTotal || 0) + rep; }
   if (win && !run.practice) save.cashouts = (save.cashouts || 0) + 1;
   tallyRunEnd(run, win, rep);   // THE RECORD (the FEAT box comes up over the end screen)
-  save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, sector: (run.sector || 0) + 1, win, rep, practice: run.practice, seeded: !!run.seeded, at: Date.now() });
-  save.history = save.history.slice(0, 20);
+  noteHistory(run, { win, rep });
   bestSeedsNote(run);   // REPLAYS: your 10 deepest seeds (engine/menus.js)
   persist();
   lbSubmit(run, win);   // the online leaderboard (engine/leaders.js)

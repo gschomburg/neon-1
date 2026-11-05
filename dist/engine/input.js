@@ -64,8 +64,8 @@ function abandonRun() {
   const run = st.run;
   statQuit(run);
   run.ended = true; clearRun();
-  if (!run.tutorial) save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, win: false, abandoned: true, practice: run.practice, at: Date.now() });   // (the training run leaves no history)
-  save.history = save.history.slice(0, 20);
+  questRunEnd(run, false);   // walked away with the DISC: it's lost, like dying with it (engine/quests.js)
+  noteHistory(run, { win: false, abandoned: true });
   persist();
   st.pause = false; st.abandonArmed = false; st.timer = null;
   swapTo(showTitle);
@@ -170,8 +170,8 @@ cv.addEventListener('pointerdown', e => {
   st.lastInput = performance.now();   // (the pet falls asleep when you're idle)
   Sound.init();
   Field.blur();   // tapping anywhere else finishes typing (phones don't always do this)
-  if (st.boot) { introTap(hitAt(...ptXY(e))); return; }   // the intro: LOGIN, skip ahead, its buttons (engine/intro.js)
-  if (st.ad) return adTap(hitAt(...ptXY(e)), performance.now());   // an ad is up: it takes the tap
+  if (st.boot && !st.dev) { introTap(hitAt(...ptXY(e))); return; }   // the intro: LOGIN, skip ahead, its buttons (engine/intro.js)
+  if (st.ad && !st.dev) return adTap(hitAt(...ptXY(e)), performance.now());   // an ad is up: it takes the tap
   if (st.evCard && !st.dev) return evTap(hitAt(...ptXY(e)));   // a SECTOR EVENT card (engine/events.js)
   if (st.qScene && !st.dev) return sceneTap(hitAt(...ptXY(e)));   // a quest scene (engine/quests.js)
   if (st.featBox && !st.dev) return featTap(hitAt(...ptXY(e)));   // the FEAT box (engine/feats.js)
@@ -320,7 +320,7 @@ document.addEventListener('keydown', e => {
   const arrow = k.startsWith('arrow');
   if (arrow || k === ' ' || k === 'enter') e.preventDefault();
   if (st.boot && e.key !== '`') { introKey(e.key.toLowerCase()); return; }   // the intro: Enter / Space start and skip, N / L pick
-  if (st.ad && e.key !== '`') { e.preventDefault(); return adKey(e.key.toLowerCase(), performance.now()); }   // an ad is up
+  if (st.ad && !st.dev && e.key !== '`') { e.preventDefault(); return adKey(e.key.toLowerCase(), performance.now()); }   // an ad is up
   if (st.evCard && !st.dev && e.key !== '`') { e.preventDefault(); return evKey(k); }   // a SECTOR EVENT card
   if (st.qScene && !st.dev && e.key !== '`') { e.preventDefault(); return sceneKey(k); }   // a quest scene
   if (st.featBox && !st.dev && e.key !== '`') { e.preventDefault(); return featKey(k); }   // the FEAT box

@@ -2803,6 +2803,7 @@
   const esc = x => String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const build = ((window.NEON_FILES || []).find(f => f[0] === 'data/economy.js') || [])[1] || 'v0';
   let econ = F.pick(ECON), saved = F.pick(ECON), sector = 0, dir = null;
+  let lost = F.unknown(ECON);   // numbers the file has and this tab doesn't know: saving would drop them, so it won't save
   const toast = t => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2400); };
   const toGame = m => { try { $('#game').contentWindow.postMessage(Object.assign({ to: 'neon-game' }, m), '*'); } catch (e) { /* not loaded */ } };
   const dirty = () => JSON.stringify(econ) !== JSON.stringify(saved);
@@ -2933,6 +2934,7 @@
     return h;
   }
   async function saveFile() {
+    if (lost.length) return toast('not saved: economy.js has numbers this tab doesn\'t know (' + lost.join(', ') + '). add them to tools/economy_file.js INFO first.');
     if (!dirty()) return toast('nothing to save');
     const text = F.text(econ, build);
     if (!window.showDirectoryPicker) {
@@ -2950,8 +2952,8 @@
     try {
       if (!window.showDirectoryPicker) { location.reload(); return; }
       const d = await ensureDir(), t = await (await (await d.getFileHandle('economy.js')).getFile()).text();
-      const e = F.parse(t), lost = F.unknown(e);
-      if (lost.length) toast('the file has numbers this tab doesn\'t know: ' + lost.join(', '));
+      const e = F.parse(t); lost = F.unknown(e);
+      if (lost.length) toast('the file has numbers this tab doesn\'t know (it won\'t save): ' + lost.join(', '));
       econ = F.pick(e); saved = F.pick(e); renderList(); send(); toast('loaded economy.js');
     } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
   }
@@ -2977,6 +2979,7 @@
   const build = ((window.NEON_FILES || []).find(f => f[0] === 'data/fx.js') || [])[1] || 'v0';
   const clone = o => JSON.parse(JSON.stringify(o));
   let fx = F.pick({ sets: { FX_GLITCH, FX_NOISE }, looks: FX_LOOKS }), saved = clone(fx), dir = null;
+  let lost = F.unknown({ sets: { FX_GLITCH, FX_NOISE }, looks: FX_LOOKS });   // settings this tab doesn't know: saving would drop them, so it won't save
   const MASK_W = 48, MASK_H = 14;   // the mask preview, in cells
   let maskT0 = performance.now();   // (its fade starts again when the mask changes)
   const toast = t => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2400); };
@@ -3117,6 +3120,7 @@
   }
   const stamp = () => new Date().toTimeString().slice(0, 5);
   async function saveFile() {
+    if (lost.length) return toast('not saved: fx.js has settings this tab doesn\'t know (' + lost.join(', ') + '). add them to tools/fx_file.js first.');
     if (!dirty()) return toast('nothing to save');
     const text = F.text(Object.assign(clone(fx), { looks: F.expand(fx) }), build);
     if (!window.showDirectoryPicker) {
@@ -3135,8 +3139,8 @@
     try {
       if (!window.showDirectoryPicker) { location.reload(); return; }
       const d = await ensureDir(), t = await (await (await d.getFileHandle('fx.js')).getFile()).text();
-      const m = F.parse(t), lost = F.unknown(m);
-      if (lost.length) toast('the file has settings this tab doesn\'t know: ' + lost.join(', '));
+      const m = F.parse(t); lost = F.unknown(m);
+      if (lost.length) toast('the file has settings this tab doesn\'t know (it won\'t save): ' + lost.join(', '));
       fx = F.pick(m); saved = clone(fx); render(); send(); toast('loaded fx.js');
     } catch (e) { if (e.name !== 'AbortError' && e.message !== 'cancelled') toast('reload failed: ' + e.message); }
   }

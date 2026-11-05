@@ -89,15 +89,25 @@ function repFor(run) {
 // The run is saved as you go (map, every layer, every hit), so a reload or a closed
 // tab picks it up again. A layer you were in comes back as a fresh layer.
 const RUN_KEY = STORE_KEY + '.run';
+// What a corp has used up or set so far, saved with the run so a reload brings it back (engine/run.js startCorp
+// restores the same list). A new corp mechanic that keeps state on st.corp across layers adds its key here.
+const CORP_SAVE = ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins',
+  'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen', 'slomo', 'anchored', 'bees', 'hk', 'hkRival',
+  'hypeRow', 'kludgeHealed', 'zd', 'magnet',
+  'leash', 'muzzleTo', 'honeyTo', 'express', 'invUsed'];   // (these five were lost on a reload before v14.45)
+// A run's line in save.history (the last 20 runs): every way a run ends writes the same shape.
+function noteHistory(run, extra) {
+  if (run.tutorial) return;   // (the training run leaves no history)
+  save.history.unshift(Object.assign({ seed: run.seed, depth: run.depth, corps: run.corps, sector: (run.sector || 0) + 1,
+    practice: run.practice, seeded: !!run.seeded, at: Date.now() }, extra));
+  save.history = save.history.slice(0, 20);
+}
 function runSnapshot() {
   const run = st.run;
   if (!run || run.ended || run.tutorial || st.mp || st.dying || run.integrity <= 0) return null;
   const c = st.corp;
-  const corp = c && c.node ? {
-    node: c.node.id, idx: c.idx, prevSafe: c.prevSafe, bulwarkUsed: !!c.bulwarkUsed, contUsed: !!c.contUsed, burnerUsed: Number(c.burnerUsed || 0),
-    wallAll: !!c.wallAll, ice: c.ice || 0, perfects: c.perfects || 0, scored: c.scored || 0,
-    carry: c.carry || null, pins: c.pins || 0, friendUsed: !!c.friendUsed, tapUsed: c.tapUsed || null, rad: c.rad || 0, ride: c.ride || 0, petIdx: c.petIdx, tickets: c.tickets || 0, stolen: c.stolen || null, rival: c.rival || null, hk: c.hk || null, hkRival: c.hkRival || null, hypeRow: c.hypeRow || 0, kludgeHealed: !!c.kludgeHealed, frozen: !!c.frozen, slomo: !!c.slomo, anchored: !!c.anchored, bees: !!c.bees, zd: c.zd || 0, magnet: !!c.magnet,
-  } : null;
+  const corp = c && c.node ? { node: c.node.id, idx: c.idx } : null;
+  if (corp) for (const k of CORP_SAVE) if (c[k] != null) corp[k] = c[k];
   // inside a layer, depth is saved as it was when the layer started (it comes back fresh)
   const r = c && st.lv && c.depthAt != null ? Object.assign({}, run, { depth: c.depthAt }) : run;
   return { v: VERSION, run: r, corp: corp && corp.idx < (c.counts ? c.counts.length : 99) ? corp : null, pending: run.pending || null };
