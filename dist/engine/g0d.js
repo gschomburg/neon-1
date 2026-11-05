@@ -6,7 +6,7 @@
 // each string keeps its letters, only where it starts is scaled. The sketch's top row is G0D's boss bar and its
 // bottom row the line that says what's going on.
 'use strict';
-NEON_FILES.push(['engine/g0d.js', 'v14.31']);
+NEON_FILES.push(['engine/g0d.js', 'v14.32']);
 
 const G0D_LOOKS = (() => {
   const W = 44, H = 22;
@@ -617,12 +617,10 @@ function g0dWinBack(cells, ms, t) {
   return out;
 }
 // MOLD GLITCH (later sectors, any screen): every so often a few cells flicker to mold for a moment.
+// The library's burst (data/fx.js), more often and bigger than d0g's, over the whole screen.
+const G0D_GLITCH = { every: 700, ms: 240, size: [1.5, 3] };
 function g0dGlitch(cells, ms) {
-  const { hs } = G0D_LOOKS, k = Math.floor(ms / 700), into = ms % 700;
-  if (into > 240) return cells;
-  const cx = Math.floor(hs(k * 3.7) * L.wc), cy = Math.floor(hs(k * 5.3) * L.hc), r = 1.5 + hs(k) * 3;
-  return cells.map(c => Math.hypot((c.cx - cx) / 2, c.cy - cy) < r && hs(c.cx * 13 + c.cy * 7 + k) > 0.3
-    ? Object.assign({}, c, { ch: '%&#*;:'[Math.floor(hs(c.cx + c.cy + k) * 6)], col: G0D_COLS.mold }) : c);
+  return FX.burstCells(cells, FX.look('burst', Object.assign({ col: G0D_COLS.mold }, G0D_GLITCH)), ms, 0, 0, L.wc, L.hc);
 }
 // G0D ON THE DEATH SCREEN (dying with no crew in the layer): its spilling logo, eyes, a line.
 function g0dDeath(cells, ms, t, bgs) {

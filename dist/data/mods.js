@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.31']);
+NEON_FILES.push(['data/mods.js', 'v14.32']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -17,14 +17,8 @@ const RARITY = {
 
 // Corrupted software (the user, 2026-11-04): loot whose name won't hold still. It swaps between its versions and
 // characters glitch out, a little differently every moment (a getter: every view of it is fresh).
-const GLITCH_CH = '#%&@$!?*<>/\\=+';
-function glitchName(alts, seed = 0) {
-  const now = typeof performance !== 'undefined' ? performance.now() : 0, f = Math.floor(now / 120);
-  const base = alts[Math.floor(now / 1700 + seed) % alts.length];
-  let out = '';
-  for (let i = 0; i < base.length; i++) { const h = (((i + 1) * 374761393) ^ ((f + seed * 7 + 1) * 668265263)) >>> 0; out += h % 100 < 12 && base[i] !== ' ' ? GLITCH_CH[h % GLITCH_CH.length] : base[i]; }
-  return out;
-}
+// The look is FX_LOOKS.garble (data/fx.js), drawn by FX.garble (engine/fx.js). (No FX loaded, e.g. a Node tool: the first version.)
+function glitchName(alts, seed = 0) { return typeof FX !== 'undefined' ? FX.garble(alts, seed) : alts[0]; }
 
 const ITEMS = {
   // THE DISC: quest gear (engine/quests.js, docs/QUESTS.md). Never sold, trashed or bought in the normal way; drops by the quest's rules.

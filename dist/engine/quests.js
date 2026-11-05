@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.31']);
+NEON_FILES.push(['engine/quests.js', 'v14.32']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -173,7 +173,6 @@ const frameLen = fr => fr.title ? 0 : fr.text.length;   // a title card is up at
 const STRIP_CHIPS = ['d0g', 'b0y', { word: 'HAD3S', fg: 'bg', bg: 'rep' }, { word: 'H3AV3N', fg: 'bg', bg: 'rep' }];
 const STRIP = { w: 32, gap: 420, reveal: 700, type: 28, pause: 480, comma: 160, top: 3, foot: 4, ease: 3 };
 const isStrip = id => QUEST_SCENES[id].some(f => f.pic);
-const stripHash = (x, y, z = 0) => ((((x + 11) * 73856093) ^ ((y + 7) * 19349663) ^ ((z + 3) * 83492791)) >>> 0) % 1000 / 1000;
 // A frame's art: a scene_art.js canvas, or a hacker's full logo block (their logo + mark and name, on their colors:
 // logoBlock, engine/multiplayer.js) made into one.
 function stripLogo(id) {
@@ -215,8 +214,6 @@ function stripLayout(id) {   // where each frame sits on the page (rows)
     return out;
   });
 }
-const stripCol = c => c && c[0] === '#' ? c : c && c.startsWith('ink:') ? hkInk(c.slice(4)) : C[c] || C.text;
-const GLITCH_SET = '#%&@$!?*<>/=+';
 function buildStrip(ctx, now, sc, frames) {
   const { put, bg } = ctx, lay = sc.lay = sc.lay || stripLayout(sc.id), cur = lay[sc.i], fr0 = frames[sc.i];
   sc.fired = sc.fired || new Set();
@@ -241,13 +238,14 @@ function buildStrip(ctx, now, sc, frames) {
       lys.map((ly, k) => [ly, k]).reverse().forEach(([ly, k]) => {
         const src = ly.fog || ly.fly ? null : art.layers[ly.n];
         if (!ly.fog && !ly.fly && !src) return;
-        const t = el - layerAt(ly, k), dur = ly.dur || STRIP.reveal, p = Math.min(1, Math.max(0, t / dur)), col = stripCol(ly.col);
+        const t = el - layerAt(ly, k), dur = ly.dur || STRIP.reveal, p = Math.min(1, Math.max(0, t / dur)), col = FX.col(ly.col);
         if (p <= 0) return;
         const shift = ly.par ? Math.round(ly.par * Math.max(0, cam - base)) : 0;
+        const rowY = Y => yOf(at.top + Y - r0 + shift);   // a canvas row on the screen
         // a slide: from an offset to where it's drawn, after it's in
         let dx = ly.off ? ly.off[0] : 0, dy = ly.off ? ly.off[1] : 0;   // (off: drawn this far from where it is in the save)
         if (ly.slide) {
-          const s = ly.slide, k2 = Math.min(1, Math.max(0, (t - dur - (s.at || 0)) / s.ms)), e = 1 - Math.pow(1 - k2, 3);
+          const s = ly.slide, k2 = Math.min(1, Math.max(0, (t - dur - (s.at || 0)) / s.ms)), e = FX.easeOut(k2);
           const to = s.to || [0, 0];
           dx += Math.round(s.from[0] + (to[0] - s.from[0]) * e); dy += Math.round(s.from[1] + (to[1] - s.from[1]) * e);
           if (k2 > 0 && s.startSound && j === sc.i) once(j + ':' + k + ':slide0', () => Sound[s.startSound] && Sound[s.startSound]((s.ms || 1000) / 1000));
@@ -258,124 +256,88 @@ function buildStrip(ctx, now, sc, frames) {
           for (const v of ly.fly) {
             const x = art.w + 1 - (((now + (v.delay || 0)) % v.every) / 1000) * v.speed, Y = v.y;
             if (x < -v.art.length - 1 || Y < r0 || Y > r1) continue;
-            const sy = yOf(at.top + Y - r0 + shift);
+            const sy = rowY(Y);
             if (!inView(sy)) continue;
             for (let i = 0; i < v.art.length; i++) {
               const X = x + i;
               if (v.art[i] === ' ' || X < 0 || X > art.w - 1 || taken.has(Math.round(X) + ',' + sy)) continue;
-              put(x0 + X, sy, v.art[i], v.col ? stripCol(v.col) : col, 'hud');
+              put(x0 + X, sy, v.art[i], v.col ? FX.col(v.col) : col, 'hud');
             }
           }
           return;
         }
+        // the layer's effects: data/fx.js's looks, with the layer's own settings over them
+        const fl = ly.flicker ? FX.look('flicker', ly.flicker) : null, gl = ly.glitch ? FX.look('glitch', ly.glitch) : null;
+        const BL = ly.blink && FX.look('blink', ly.blink), CU = ly.cue && FX.look('cue', ly.cue), LT = ly.lights && FX.look('lights', ly.lights);
+        const SP = ly.spin && FX.look('spin', ly.spin), PR = ly.progress && FX.look('progress', ly.progress), EM = ly.ember && FX.look('ember', ly.ember);
+        // TICS (a glitchy logo, like G0D's flickers): a row tears sideways, marks swap (tics.swap: [[from, to]], d0g's
+        // d -> b), a little cluster flashes to noise; all in tics.col
+        const TC = ly.tics && p >= 1 ? FX.look('tics', ly.tics) : null, TR = TC && FX.look('tear', TC.tear);
+        const SWP = TC && TC.swap && FX.swapOn(FX_LOOKS.swap, now), BU = TC && FX.burst(FX.look('burst', TC.burst), now, 0, r0, art.w, r1 - r0 + 1);
         // GLOW: a light that throws a cone down (a lamp): a faint wash behind, and the marks in it lit
-        const G = ly.glow && t > dur * 0.7 ? ly.glow : null, gFl = G && stripHash(1, 2, Math.floor(now / 140)) < 0.05 ? 0.35 : 1;
-        const coneK = (X, Y) => { if (!G) return 0; const d = Y - G.y; if (d < 1 || d > G.rows || Math.abs(X - G.x) > d * (G.spread || 0.8)) return 0; return (1 - (d - 1) / G.rows) * gFl; };
-        if (G) for (let d = 1; d <= G.rows; d++) {
-          const Y = G.y + d, half = Math.round(d * (G.spread || 0.8));
-          if (Y < r0 || Y > r1) continue;
-          const sy = yOf(at.top + Y - r0 + shift);
-          if (inView(sy)) bg(x0 + G.x - half, sy, half * 2 + 1, stripCol(G.col), (G.alpha || 0.12) * (1 - (d - 1) / G.rows) * gFl);
-        }
-        const rows = ly.fog ? fogRows(ly.fog, now, art.w) : src.rows, sx = ly.fog ? 0 : src.x, syy = ly.fog ? ly.fog.rows[0] : src.y;
+        const GL = ly.glow ? FX.glow(FX.look('glow', ly.glow), now, t, dur) : null;
+        if (GL) FX.glowWash(GL, (X, Y, w, c, a) => { if (Y < r0 || Y > r1) return; const sy = rowY(Y); if (inView(sy)) bg(x0 + X, sy, w, c, a); });
+        const FG = ly.fog && FX.look('fog', ly.fog);
+        const rows = FG ? FX.fogRows(FG, now, art.w) : src.rows, sx = FG ? 0 : src.x, syy = FG ? FG.rows[0] : src.y;
         const bottom = syy + rows.length - 1;
         // the cue: marks that stay dark until a word of the text types in, then glitch on (and flicker now and then)
         let cueT = null;
-        if (ly.cue) { const i = fr.text.indexOf(ly.cue.word); cueT = i < 0 ? 0 : textStart + textTimes(fr)[i + ly.cue.word.length - 1]; }
+        if (CU) { const i = fr.text.indexOf(CU.word); cueT = i < 0 ? 0 : textStart + textTimes(fr)[i + CU.word.length - 1]; }
         rows.forEach((row, r) => {
           const Y = syy + r + dy;
           if (Y < r0 || Y > r1 || (ly.par && Y + shift > Math.min(bottom, r1))) return;
-          const sy = yOf(at.top + Y - r0 + shift);
+          const sy = rowY(Y);
           if (!inView(sy)) return;
-          const cueAt = ly.cue ? row.indexOf(ly.cue.match) : -1, rel = (syy + r - r0) / Math.max(1, r1 - r0);
+          const cueAt = CU ? row.indexOf(CU.match) : -1, rel = (syy + r - r0) / Math.max(1, r1 - r0);
           const hid = ly.hide ? new Set(ly.hide.flatMap(h => { const out = []; let i = row.indexOf(h); while (i >= 0) { for (let q = 0; q < h.length; q++) out.push(i + q); i = row.indexOf(h, i + 1); } return out; })) : null;
-          const blinkAt = ly.blink ? row.indexOf(ly.blink.match) : -1;
-          // TICS (a glitchy logo, like G0D's flickers): now and then a row tears sideways for a moment (tear), marks swap
-          // (swap: [from, to], e.g. d0g's d -> b), and little clusters flash to noise, all in tics.col
-          const TC = ly.tics && p >= 1 ? ly.tics : null;
-          let tear = 0;
-          if (TC) { const k = Math.floor(now / 1900); if (now % 1900 < 110 && stripHash(k, r, 2) < 0.35) tear = stripHash(k, r, 4) < 0.5 ? -1 : 1; }
-          if (ly.box) { const a = p < 1 ? (stripHash(r, 1, Math.floor(now / 60)) < p ? 1 : 0) : 1; bg(x0 + sx + dx + tear, sy, ly.box.w, stripCol(ly.box.col), a); if (r < rows.length - 1) bg(x0 + sx + dx + tear, sy + 0.5, ly.box.w, stripCol(ly.box.col), a); }   // a logo's block of color (the half step covers the gap between rows)
-          // PROGRESS: the mark after ly.progress.after on each row, top to bottom, lights up one by one, spinning
-          const prAt = ly.progress ? row.indexOf(ly.progress.after) : -1, prC = prAt >= 0 ? prAt + ly.progress.after.length : -1;
-          const prList = ly.progress ? (src._pr = src._pr || src.rows.map(rw => { const i = rw.indexOf(ly.progress.after); return i >= 0 && ly.progress.ch.includes(rw[i + ly.progress.after.length]); })) : null;
+          const blinkAt = BL ? row.indexOf(BL.match) : -1;
+          const tear = TC ? FX.tear(TR, now, r) : 0;
+          if (ly.box) { const a = FX.boxIn(p, r, now), bc = FX.col(ly.box.col); bg(x0 + sx + dx + tear, sy, ly.box.w, bc, a); if (r < rows.length - 1) bg(x0 + sx + dx + tear, sy + 0.5, ly.box.w, bc, a); }   // a logo's block of color (the half step covers the gap between rows)
+          // PROGRESS: the mark after progress.after on each row, top to bottom, lights up one by one, spinning
+          const prAt = PR ? row.indexOf(PR.after) : -1, prC = prAt >= 0 ? prAt + PR.after.length : -1;
+          const prList = PR ? (src._pr = src._pr || src.rows.map(rw => { const i = rw.indexOf(PR.after); return i >= 0 && PR.ch.includes(rw[i + PR.after.length]); })) : null;
           const prRank = prList && prList[r] ? prList.slice(0, r).filter(Boolean).length : -1, prN = prList ? prList.filter(Boolean).length : 0;
           for (let c = 0; c < row.length; c++) {
-            let ch = row[c];
             const X = sx + c + dx;
-            if (ch === ' ' || X < 0 || X >= art.w || taken.has(X + ',' + sy) || (hid && hid.has(c))) continue;
-            if (blinkAt >= 0 && c >= blinkAt && c < blinkAt + ly.blink.match.length) {   // BLINK: now and then (sometimes twice)
-              const B = ly.blink, per = B.every || 4200, n = Math.floor(now / per), ph = now % per - stripHash(n, 9) * per * 0.6, ms = B.ms || 160;
-              if ((ph >= 0 && ph < ms) || (stripHash(n, 4) < 0.25 && ph >= ms * 2 && ph < ms * 3)) ch = B.to[c - blinkAt];
-            }
-            const order = 0.6 * (ly.from === 'top' ? rel : 1 - rel) + 0.4 * stripHash(X, Y);
-            let ink = col;
-            if (p < 1) {
-              if (p < order) continue;
-              const fresh = p - order;
-              if (ly.flicker && fresh < 0.2 && stripHash(X, Y, Math.floor(now / 55)) < 0.5) continue;   // flickering on
-              if (ly.glitch && fresh < 0.3) { ch = GLITCH_SET[Math.floor(stripHash(X, Y, Math.floor(now / 70)) * GLITCH_SET.length)]; ink = C.bright; }
-              else if (fresh < 0.07) ink = C.bright;   // a flash as it lands
-            }
-            if (cueAt >= 0 && c >= cueAt && c < cueAt + ly.cue.match.length) {   // the cue's marks
+            if (row[c] === ' ' || X < 0 || X >= art.w || taken.has(X + ',' + sy) || (hid && hid.has(c))) continue;
+            const cell = { ch: row[c], ink: col, X, Y };
+            if (blinkAt >= 0 && c >= blinkAt && c < blinkAt + BL.match.length) { const b = FX.blink(BL, now, c - blinkAt); if (b != null) cell.ch = b; }
+            if (!FX.reveal(cell, p, FX.order(rel, ly.from, X, Y), fl, gl, now)) continue;
+            if (cueAt >= 0 && c >= cueAt && c < cueAt + CU.match.length) {   // the cue's marks
               const since = el - cueT;
-              if (!(since >= 0)) continue;
-              if (j === sc.i) once(j + ':' + k + ':cue', () => Sound.neonOn && Sound.neonOn());
-              ink = stripCol(ly.cue.col);
-              if (since < 700) { if (stripHash(X, Y, Math.floor(now / 50)) < 0.45) continue; if (stripHash(X, Y, Math.floor(now / 90)) < 0.35) ch = GLITCH_SET[Math.floor(stripHash(c, r, Math.floor(now / 90)) * GLITCH_SET.length)]; }
-              else if (stripHash(0, 0, Math.floor(now / 2600)) < 0.3 && Math.floor(now / 70) % 3 === 0) continue;   // it still flickers
+              if (since >= 0 && j === sc.i) once(j + ':' + k + ':cue', () => Sound[CU.sound] && Sound[CU.sound]());
+              if (!FX.cue(cell, CU, since, now, c, r)) continue;
             }
-            if (ly.lights && ly.lights.ch.includes(ch)) {   // windows and LEDs: some go on and off, some (pulse) breathe
-              const L2 = ly.lights, h = stripHash(Y, X), lit = stripCol(L2.col), lv = L2.level || 1;
-              if (L2.pulse && h < L2.pulse) ink = mixHex(C.dim, lit, (0.15 + 0.85 * (0.5 + 0.5 * Math.sin(now / (L2.period || 2000) * 6.283 + h * 40))) * lv);
-              else if (stripHash(X, Y, Math.floor((now + h * L2.rate) / L2.rate)) >= (L2.off || 0.2)) ink = mixHex(C.dim, lit, lv);
-              else { ink = C.dim; if (L2.offCh) ch = L2.offCh; }
-            }
-            if (G) { const g = coneK(X, Y); if (X === G.x && Y === G.y) ink = mixHex(C.bright, stripCol(G.col), 0.5 * gFl + 0.2); else if (g > 0) ink = mixHex(ink, mixHex(C.bright, stripCol(G.col), 0.5), 0.6 * g); }
-            if (ly.spin && j === sc.i && ly.spin.ch.includes(ch) && t > dur + (ly.spin.after || 0)) ch = '%#%&'[(Math.floor(now / 160) + r) % 4];   // the drive spins up
+            if (LT) FX.lights(cell, LT, now);   // windows and LEDs: some go on and off, some (pulse) breathe
+            if (GL) FX.glowCell(cell, GL);
+            if (SP && j === sc.i && SP.ch.includes(cell.ch) && t > dur + SP.after) cell.ch = FX.spin(SP, now, r);   // the drive spins up
             if (prRank >= 0 && c === prC) {
-              const P = ly.progress, k2 = (t - (P.at || 0)) / (P.ms || 1800), lit = Math.floor(k2 * prN);
-              if (k2 >= 0 && P.sound && j === sc.i) once(j + ':' + k + ':prog', () => Sound[P.sound] && Sound[P.sound]((P.ms || 1800) / 1000));
+              const k2 = (t - PR.at) / PR.ms, lit = Math.floor(k2 * prN);
+              if (k2 >= 0 && PR.sound && j === sc.i) once(j + ':' + k + ':prog', () => Sound[PR.sound] && Sound[PR.sound](PR.ms / 1000));
               if (k2 >= 0 && prRank <= lit) {
-                ink = stripCol(P.col || 'accent');
-                if (prRank === lit && k2 < 1) { ch = 'o0O@'[Math.floor(now / 70) % 4]; ink = C.bright; }   // the head of the bar
-                else if (k2 >= 1) ch = 'o0'[(Math.floor(now / 140) + prRank) % 2];   // all in: they spin
+                cell.ink = FX.col(PR.col);
+                if (prRank === lit && k2 < 1) { cell.ch = FX.cycle(PR.head, now, PR.headMs); cell.ink = FX.col(PR.headCol); }   // the head of the bar
+                else if (k2 >= 1) cell.ch = FX.cycle(PR.done, now, PR.doneMs, prRank);   // all in: they spin
               }
             }
             if (TC) {
-              if (TC.swap && now % 2600 < 320 && stripHash(Math.floor(now / 2600), 11) < 0.6) { const sw = TC.swap.find(s => s[0] === ch); if (sw) { ch = sw[1]; ink = stripCol(TC.col); } }
-              const kb = Math.floor(now / 1300);
-              if (now % 1300 < 190) {
-                const bx = stripHash(kb, 5) * art.w, by = r0 + stripHash(kb, 6) * (r1 - r0 + 1), rad = 1.2 + stripHash(kb, 7) * 2.2;
-                if (Math.hypot((X - bx) / 2, Y - by) < rad && stripHash(X * 13 + Y * 7, kb) > 0.3) { ch = '%&#*;:'[Math.floor(stripHash(X + Y, kb) * 6)]; ink = stripCol(TC.col); }
-              }
+              if (SWP) { const sw = TC.swap.find(s => s[0] === cell.ch); if (sw) { cell.ch = sw[1]; cell.ink = FX.col(TC.col); } }
+              const nz = FX.burstCh(BU, X, Y);
+              if (nz) { cell.ch = nz; cell.ink = FX.col(TC.col); }
             }
-            if (ly.ember && X === ly.ember.x && Y === ly.ember.y) {   // EMBER: a cigarette's tip, glowing up now and then
-              const E = ly.ember, ph = (now + 1000 * stripHash(X, Y)) % (E.every || 5000), ms = E.ms || 1300;
-              if (ph < ms) ink = mixHex(ink.length === 7 ? ink : C.text, stripCol(E.col || 'danger'), Math.sin(Math.PI * ph / ms));
-            }
-            put(x0 + X + tear, sy, ch, ink, 'hud');
+            if (EM && X === EM.x && Y === EM.y) FX.ember(cell, EM, now);   // EMBER: a cigarette's tip, glowing up now and then
+            put(x0 + X + tear, sy, cell.ch, cell.ink, 'hud');
             taken.add(X + ',' + sy);
           }
           if (ly.cut && Y >= ly.cut.rows[0] && Y <= ly.cut.rows[1]) for (let X = 0; X < art.w; X++) if ((ly.cut.a || 1) * X + (ly.cut.b || 1) * Y >= ly.cut.c) taken.add(X + ',' + sy);   // CUT: hides what's behind past a line (a slot)
-          if (ly.solid && (p >= 1 || p >= order0(ly, rel))) {
+          if (ly.solid && (p >= 1 || p >= FX.orderRow(rel, ly.from))) {   // (a solid row hides what's behind once it starts in)
             const a = row.search(/\S/), b = row.length - 1 - [...row].reverse().join('').search(/\S/);
             for (let c = a; c <= b; c++) taken.add((sx + c + dx) + ',' + sy);
           }
         });
-        if (ly.glitch && j === sc.i) once(j + ':' + k + ':glitch', () => Sound.static && Sound.static(0.35));
+        if (gl && j === sc.i) once(j + ':' + k + ':glitch', () => Sound[gl.sound] && Sound[gl.sound](gl.vol));
         // SMOKE: puffs off a point, drifting up and fading out
-        if (ly.smoke && p >= 1) {
-          const s = ly.smoke, life = s.life || 2800, every = s.every || 700;
-          for (let n = Math.floor(now / every); n * every > now - life; n--) {
-            const age = (now - n * every) / life;
-            if (age < 0 || age > 1) continue;
-            const X = s.x + (s.dx || -2) * age + Math.sin(n * 1.7 + age * 6) * 0.7, Y = Math.round(s.y + (s.dy || -5) * age);
-            if (Y < r0 || Y > r1) continue;
-            const sy = yOf(at.top + Y - r0 + shift);
-            if (inView(sy)) put(x0 + X, sy, age < 0.18 ? (n % 2 ? '"' : '~') : age < 0.6 ? '~' : age < 0.85 ? '-' : '.', mixHex(C.mid, C.bg, age * 0.85), 'hud');
-          }
-        }
+        if (ly.smoke && p >= 1) FX.smoke(FX.look('smoke', ly.smoke), now, (X, Y, ch, ink) => { if (Y < r0 || Y > r1) return; const sy = rowY(Y); if (inView(sy)) put(x0 + X, sy, ch, ink, 'hud'); });
       });
     }
     // its text, under the art (older frames dimmer), with a pause between sentences
@@ -394,7 +356,7 @@ function buildStrip(ctx, now, sc, frames) {
         // a hacker's name in STRIP_CHIPS shows on their colors (d0g: white on his red), as much of it as has typed
         let plain = s;
         for (const id of STRIP_CHIPS) {
-          const hk = typeof id === 'string', nm = hk ? (HACKERS[id] ? HACKERS[id].name : id) : id.word, sty = hk ? hkStyle(id) : { fg: stripCol(id.fg), bg: stripCol(id.bg) };
+          const hk = typeof id === 'string', nm = hk ? (HACKERS[id] ? HACKERS[id].name : id) : id.word, sty = hk ? hkStyle(id) : { fg: FX.col(id.fg), bg: FX.col(id.bg) };
           for (let i = t.indexOf(nm); i >= 0 && i < s.length; i = t.indexOf(nm, i + 1)) {
             const part = s.slice(i, i + nm.length);
             bg(tx + i, y, part.length, sty.bg, old ? 0.55 : 1);
@@ -412,17 +374,6 @@ function buildStrip(ctx, now, sc, frames) {
     put(Math.floor((L.wc - t.length) / 2), L.hc - 2, t, C.dim, 'hud');
   }
 }
-const order0 = (ly, rel) => 0.6 * (ly.from === 'top' ? rel : 1 - rel);   // (a solid row hides what's behind once it starts in)
-// FOG: a band of dots and colons, drifting sideways slowly. { rows: [first, last], density, drift: columns a second }
-function fogRows(f, now, w) {
-  const off = Math.floor(now / 1000 * (f.drift || 0)), out = [];
-  for (let y = f.rows[0]; y <= f.rows[1]; y++) {
-    let s = '';
-    for (let x = 0; x < w; x++) { const v = stripHash(x + off, y, 5); s += v < (f.density || 0.15) * 0.35 ? ':' : v < (f.density || 0.15) ? '.' : ' '; }
-    out.push(s);
-  }
-  return out;
-}
 // A scene's music (data/quests.js SCENE_MUSIC): its song; each frame's mood (or the last one's) says the levels and
 // stages it wanders between, a new pick every step ms.
 function sceneMusic(sc, now) {
@@ -431,7 +382,7 @@ function sceneMusic(sc, now) {
   for (let j = 0; j <= sc.i; j++) if (frames[j].mood) mood = frames[j].mood;
   sc.m0 = sc.m0 || now;
   const n = Math.floor((now - sc.m0) / M.step);
-  return { song: M.song, level: mood.levels[Math.floor(stripHash(n, 3) * mood.levels.length)], section: mood.stages[Math.floor(stripHash(n, 8) * mood.stages.length)],
+  return { song: M.song, level: mood.levels[Math.floor(FX.hash(n, 3) * mood.levels.length)], section: mood.stages[Math.floor(FX.hash(n, 8) * mood.stages.length)],
     urgency: 0, low: false, tempo: 1, pitch: 1 };
 }
 function sceneNext() {

@@ -14,7 +14,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.31']);
+NEON_FILES.push(['data/quests.js', 'v14.32']);
 
 const QUEST_INFO = {
   pops: {
@@ -94,8 +94,10 @@ const QUEST_SCENES = {
 //   slot's far side); progress = { after, ch, at, ms, col }: the mark after `after` on each row (if it's one of ch)
 //   lights up top to bottom, then they spin; off = [dx, dy]: drawn that far from where it sits in the save.
 //   Sounds: slide.startSound / slide.sound (as it starts / lands), progress.sound (as it starts): Sound.* names.
-//   tics = { swap: [[from, to]], col }: a glitchy logo (rows tear, marks swap, clusters flash to noise);
+//   tics = { swap: [[from, to]], col, tear, burst }: a glitchy logo (rows tear, marks swap, clusters flash to noise);
 //   pic.look = layer options for a logo.
+//   The effects' defaults (the global look) are data/fx.js FX_LOOKS: a layer only gives what's its own (where, which
+//   marks) and what it wants different. flicker / glitch take true or their own settings ({ glitch: { col: 'danger' } }).
 //   mood (on any frame) = { levels, stages }: what the scene's music wanders between from that frame on (SCENE_MUSIC).
   disc: [
     { title: ['WHAT IS ALL THIS FOR?', 'step 2: SAFEHOUSE'], mood: { levels: [0], stages: 'A' } },

@@ -1,6 +1,6 @@
-# Effects library (plan, not built)
+# Effects library
 
-Talked through with the user on 2026-11-04. Nothing here is built yet.
+Talked through with the user on 2026-11-04. Steps 1-3 built in v14.32 (2026-11-05); see "Where it stands" at the end.
 
 **Decided (Greg, 2026-11-04):** pull most of the ASCII effects into one shared library, with one locked-down way to apply them, so you can "add the glitch effect" anywhere in one line and change a look globally. Special cases stay special.
 
@@ -45,7 +45,29 @@ An **FX page in the neon editor**, like the g0d tab's mold slider: each effect p
 
 Steps 1-3 change nothing you can see.
 
+## Where it stands (v14.32, 2026-11-05)
+
+- `dist/engine/fx.js` is the library (`FX`): the building blocks (`hash`, `step`, `cycle`, `pick`, `easeOut`, `col`, `look`) and the effects built on them.
+- `dist/data/fx.js` is the global look (`FX_LOOKS`): every effect's numbers, each with a comment. They used to be written inline in the cutscene code.
+- `FX.look('glitch', { col: 'danger' })` gives the global settings with a place's own over them.
+- Named so far: `reveal`, `flicker`, `glitch`, `cue`, `lights`, `blink`, `ember`, `spin`, `glow`, `tear`, `swap`, `burst`, `smoke`, `fog`, `progress`, `garble`. `tics` is `tear` + `swap` + `burst` together.
+- Pointed at the library so far:
+  - The cutscene strips (`buildStrip` in engine/quests.js). Checked: 2,028 sampled frames of DISC, PRODIGAL and HEAVEN'S GATE are identical before and after, and all 78 corps play the same.
+  - Corrupted loot names (`glitchName` -> `FX.garble`).
+  - G0D's mold glitch (`g0dGlitch` -> `FX.burstCells` with its own settings).
+- Attach modes so far: a cutscene layer (its keys), a list of screen cells (`FX.burstCells`: any rectangle of the screen), a line of text (`FX.garble`).
+
+**Decided (Claude, 2026-11-05, for Greg to check):**
+- The one hash is the cutscenes' old `stripHash`, so the cutscenes stay exactly as they were. The loot names and the mold glitch moved onto it, so different letters and spots glitch than before; the look is the same.
+- One glitch set: `#%&@$!?*<>/=+`. The loot names lose the backslash they had.
+- G0D's own hash (`G0D_LOOKS.hs`) stays for now. The mold spread, CERBERUS and the H3AV3N fight use it about 20 times, and their shapes were tuned by eye. Switching would change them.
+
+## Next
+
+- d0g's tics on his rival card and death screen, not just the cutscene (one call each, the same look).
+- The editor's FX page (step 4).
+- New effects (step 5): decrypt for codex entries, dither fades, color cycling, rain.
+
 ## Open questions
 
-- Which effects get names first.
-- How the editor FX page should work (sample art, sliders, saving the settings).
+- How the editor FX page should work (sample art, sliders, saving the settings). Saving needs a `tools/fx_file.js` writer for data/fx.js, like the other data files.
