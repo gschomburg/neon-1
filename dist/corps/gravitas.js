@@ -75,5 +75,17 @@ CORPS.gravitas = {
   hint: lv => lv.grav ? { text: lv.anchor ? 'gravity> off.' : `gravity> ${lv.grav.n} drop${lv.grav.n === 1 ? '' : 's'}`, col: C.accent } : null,
 };
 
+// ---- its boss mod's effect: ANTIGRAV (the BOARD stage, engine/mods.js; run from engine/run.js)
+defineModFx('antigrav', 'board', {
+  // ANTIGRAV: the closest ICE above the hit node (same column) drops on it and locks
+  async board(t) {
+    const lv = st.lv, above = lv.tiles.filter(o => o.col === t.col && o.row < t.row && o.state === 'closed' && !o.safe).sort((a, b) => b.row - a.row);
+    if (!above.length) return;
+    lockTile(above[0], C.accent, 'antigrav');
+    setMsg('> antigrav: the ICE above came down.', C.accent);
+    await wait(200);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.gravitas = "a second in, and after every miss, gravity: everything falls and stacks. the real node is lighter than air: it rises a row.";

@@ -27,5 +27,10 @@ CORPS.forgetmenot = {
   },
 };
 
+// ---- its boss mod's effect: PHOTOGRAPHIC (the START stage, engine/mods.js; run from engine/run.js)
+defineModFx('photographic', 'start', {
+  note(lv) { return { text: 'photo>' + glyphLine(lv.tiles[lv.safe].glyph), ms: 450 }; },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.forgetmenot = "look fast: the glyphs turn face down after 2 seconds (deeper 1.5, boss 1). then the hint shows the real node's glyph.";

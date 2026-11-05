@@ -856,24 +856,6 @@ function finishCorp() {
 
 // START stage notes: short hints shown on row 7. ms: shown only that long after the layer opens.
 const START_NOTE = {
-  // HEADCOUNT: how many nodes touch the real node (the 8 cells around it)
-  headcount(lv) {
-    const real = lv.tiles[lv.safe];
-    return { text: `heads: ${lv.tiles.filter(t => touching(t, real)).length}` };
-  },
-  forecast(lv, c, run) {
-    const r = rngFor(run.seed, 'fcst', c.node.id, c.idx), real = lv.tiles[lv.safe];
-    const byRow = r() < 0.5, n = byRow ? lv.rows : lv.cols, at = byRow ? real.row : real.col;
-    const pick = r() < 0.6 ? at : pickR(Array.from({ length: n }, (_, i) => i).filter(i => i !== at), r);
-    return { text: `fcst: ${byRow ? ROW_NAMES(lv.rows, pick) : COL_NAMES(lv.cols, pick)}?` };
-  },
-  spellbound(lv) {
-    if (!lv.boss) return null;
-    const t = lv.tiles[lv.safe], edgeV = t.row === 0 ? 'T' : t.row === lv.rows - 1 ? 'B' : '', edgeH = t.col === 0 ? 'L' : t.col === lv.cols - 1 ? 'R' : '';
-    return { text: `spell: ${edgeV || edgeH || 'C'}` };
-  },
-  seedreader(lv) { return lv.boss ? { text: `seed: col ${lv.tiles[lv.safe].col + 1}` } : null; },
-  photographic(lv) { return { text: 'photo>' + glyphLine(lv.tiles[lv.safe].glyph), ms: 450 }; },
 };
 
 // LAYER END stage: what each mod does once a layer is passed.
@@ -886,58 +868,6 @@ const END_FX = {
     if (r() >= tv('pickpocket', ECON.modx.pickpocket)) return false;
     const got = dropLoot(r, 1, tv('pickpocket', ECON.modx.pickpocketRare));
     setMsg(`> pickpocket: ${got[0]}.`, C.money); Sound.loot();
-  },
-  ezpass() { const cr = earnInt(ECON.mods.ezpass); st.run.credits += cr; st.run.earned += cr; },
-  // GRAVE ROBBER: every ICE you never touched is a grave to rob
-  graverobber() {
-    const lv = st.lv, n = lv ? lv.tiles.filter(t => !t.safe && !(t.state === 'locked' && t.lockedBy === 'hit')).length : 0;
-    if (!n) return false;
-    const cr = earnInt(ECON.mods.graverobber) * n;
-    st.run.credits += cr; st.run.earned += cr;
-    setMsg(`> grave robber: ${n} graves. +${cr}cr`, C.money); Sound.loot();
-  },
-  // LET IT RIDE: a perfect bets its pay on the next layer: another perfect pays it back
-  // double, anything else loses it.
-  letitride(perfect) {
-    const run = st.run, c = st.corp, lv = st.lv;
-    if (!c.hasBoss) return false;
-    if (c.ride) {
-      if (perfect) { const back = Math.round(ECON.modx.letitride * c.ride); run.credits += back; run.earned += back - c.ride; Sound.loot(); setMsg(`> let it ride: +${back}cr!`, C.money); }
-      else setMsg(`> let it ride: lost ${c.ride}cr.`, C.danger);
-      c.ride = 0;
-    } else if (perfect && c.idx < c.counts.length && lv.paid > 0) {
-      c.ride = Math.min(lv.paid, Math.max(0, run.credits));   // (in debt: nothing to bet)
-      if (!c.ride) return false;
-      run.credits -= c.ride;
-      setMsg(`> let it ride: ${c.ride}cr riding.`, C.money);
-    } else return false;
-  },
-  // FOUR IN A ROW: 4 perfects in a row arm the next boss (2 ICE locked)
-  fourinarow(perfect) {
-    const run = st.run;
-    run.p4 = perfect ? (run.p4 || 0) + 1 : 0;
-    if (run.p4 >= 4) { run.p4 = 0; run.p4Ready = true; setMsg('> 4 in a row! next boss -2 ICE.', C.money); }
-    else return false;   // counting
-  },
-  // EXPRESS: a perfect gives the next layer a lift
-  express(perfect) { const c = st.corp; if (perfect && c.hasBoss && c.idx < c.counts.length) c.express = true; else return false; },
-  // TRIAGE: a corp you beat heals 1; at full, +1 max integrity
-  triage() {
-    const run = st.run, c = st.corp;
-    if (!c.hasBoss || c.idx < c.counts.length) return false;
-    if (zombie()) heal(1);
-    else if (addItem('patch', 0)) { /* a PATCH on the belt (stores up) */ }
-    else if (run.integrity < run.maxInt) run.integrity++;   // no room (or RAM DOUBLER): heal instead
-    else { run.maxInt++; run.integrity++; }
-    Sound.shield();
-  },
-  // INTEREST: a corp you finish pays 5% of your credits (up to 20).
-  async interest() {
-    const run = st.run, c = st.corp;
-    if (!c.hasBoss || c.idx < c.counts.length) return false;
-    const cr = Math.min(earnInt(ECON.mods.interestMax), Math.floor(run.credits * ECON.mods.interestPct));
-    if (cr > 0) { run.credits += cr; run.earned += cr; Sound.loot(); }
-    else return false;
   },
   // SKIPJACK: a perfect can open a skip past the next layer. The player chooses.
   async skipjack(perfect) {
@@ -1494,61 +1424,6 @@ function blockHit(t, i) {
 
 // HIT stage: what each mod does after an ICE hit (t = the node you hit).
 const HIT_FX = {
-  // LAST BYTE: down to 1 integrity, the HUD glitches and spells out the real column
-  lastbyte() {
-    const lv = st.lv;
-    if (st.run.integrity !== 1 || lv.lastByte) return false;
-    lv.lastByte = true;
-    flash(C.danger, 0.15, 0.3); shake(4);
-    lv.notes = (lv.notes || []).concat([{ text: `c0l_${lv.tiles[lv.safe].col + 1}`, tag: 'lastbyte' }]);
-  },
-  // INDEX: >>> the real node comes later in reading order, <<< earlier
-  index(t) { const s = st.lv.tiles[st.lv.safe]; t.glyph = normMotif(['', s.cell > t.cell ? '>>>' : '<<<', '']); },
-  policy() { const cr = earnInt(ECON.mods.policy); st.run.credits += cr; st.run.earned += cr; },
-  pixelpeep() { st.lv.peepAt = performance.now(); },
-  prism() { st.lv.prismRow = st.lv.tiles[st.lv.safe].row; },
-  queuenumber(t) {
-    if (t.loaded) return false;
-    const lv = st.lv, order = lv.tiles.slice().sort((a, b) => a.cell - b.cell), d = order.indexOf(lv.tiles[lv.safe]) - order.indexOf(t);
-    t.glyph = normMotif(['', `${d > 0 ? '+' : ''}${d}`, '']);
-  },
-  turing(t) {
-    const lv = st.lv, r = layerRng('turing', lv.misses);
-    const ice = lv.tiles.filter(o => o !== t && !o.safe && o.state === 'closed' && !o.say), real = lv.tiles[lv.safe];
-    const who = r() < 0.75 || real.state !== 'closed' ? pickR(ice, r) : real;
-    if (who) who.say = ['NOT', 'ME'];
-    else return false;
-  },
-  // PARITY: does the real node share this ICE's row or column?
-  parity(t) {
-    const lv = st.lv, s = lv.tiles[lv.safe], inLine = s.row === t.row || s.col === t.col;
-    lv.notes = (lv.notes || []).filter(nt => nt.tag !== 'par').concat([{ text: `par: ${inLine ? 'in line' : 'off line'}`, tag: 'par' }]);
-  },
-  callerid() {
-    const lv = st.lv, row = lv.tiles[lv.safe].row;
-    Sound.beeps(row + 1);
-    lv.notes = (lv.notes || []).filter(nt => nt.tag !== 'cid').concat([{ text: `cid: ${ROW_NAMES(lv.rows, row)}`, tag: 'cid' }]);
-  },
-  compost() {
-    const run = st.run;
-    run.compost = (run.compost || 0) + 1;
-    if (run.compost % 3 === 0 && canHeal()) { heal(1); Sound.shield(); }
-    else return false;   // only fires when it heals
-  },
-  // FOGHORN: louder the closer the real node is (bars on row 7)
-  foghorn(t) {
-    const lv = st.lv, s2 = lv.tiles[lv.safe], d = Math.max(Math.abs(s2.col - t.col), Math.abs(s2.row - t.row));
-    const bars = clamp(5 - d, 1, 4);
-    Sound.horn([0, 0.2, 0.35, 0.6, 1][bars]);
-    lv.notes = (lv.notes || []).filter(nt => nt.tag !== 'horn').concat([{ text: `horn ${'|'.repeat(bars).padEnd(4, '.')}`, tag: 'horn' }]);
-  },
-  pickset() { st.corp.pins = (st.corp.pins || 0) + 1; },
-  // PENCIL MARKS: rule out one other ICE in the same row
-  pencil(t) {
-    const lv = st.lv, opts = lv.tiles.filter(o => o !== t && o.row === t.row && o.state === 'closed' && !o.safe && !o.ruledOut);
-    if (!opts.length) return false;
-    pickR(opts, layerRng('pencil', lv.misses)).ruledOut = true;
-  },
   tracer(t) {
     // which way the real node is: level 1 the bigger direction (coin flip when even), level 2 both
     const lv = st.lv, s = lv.tiles[lv.safe], dx = Math.sign(s.col - t.col), dy = Math.sign(s.row - t.row);
@@ -1577,51 +1452,6 @@ const HIT_FX = {
 
 // BOARD stage: mods that change the grid after a hit.
 const BOARD_FX = {
-  // LINKUP: the hit node's partner (TWINLINK's link, or the node mirrored across the center)
-  async linkup(t) {
-    const lv = st.lv, p = t.partner || lv.tiles.find(o => o.col === lv.cols - 1 - t.col && o.row === lv.rows - 1 - t.row);
-    if (!p || p === t || p.safe || p.state !== 'closed') return;
-    lockTile(p, C.accent, 'linkup');
-    setMsg('> linkup: its partner went too.', C.accent);
-    await wait(200);
-  },
-  // ANTIGRAV: the closest ICE above the hit node (same column) drops on it and locks
-  async antigrav(t) {
-    const lv = st.lv, above = lv.tiles.filter(o => o.col === t.col && o.row < t.row && o.state === 'closed' && !o.safe).sort((a, b) => b.row - a.row);
-    if (!above.length) return;
-    lockTile(above[0], C.accent, 'antigrav');
-    setMsg('> antigrav: the ICE above came down.', C.accent);
-    await wait(200);
-  },
-  // UNRAVEL: one more ICE in the hit node's row locks
-  async unravel(t) {
-    const lv = st.lv, opts = lv.tiles.filter(o => o !== t && o.row === t.row && o.state === 'closed' && !o.safe);
-    if (!opts.length) return;
-    lockTile(pickR(opts, layerRng('unravel', lv.misses)), C.mid, 'unravel');
-    setMsg('> unravel: the row comes apart.', C.mid);
-    await wait(200);
-  },
-  // AUTOCOMPLETE: your first miss in a layer strikes out one more ICE.
-  async autocomplete(t) {
-    const lv = st.lv;
-    if (lv.misses !== 1) return;
-    const opts = lv.tiles.filter(o => o.state === 'closed' && !o.safe);
-    if (!opts.length) return;
-    lockTile(pickR(opts, layerRng('acp')), C.mid, 'autocomplete');
-    setMsg('> autocomplete: struck 1 ICE.', C.mid);
-    await wait(200);
-  },
-  // TWIN LOCK: the hit ICE takes the ICE that looks most like it with it.
-  async twinlock(t) {
-    const lv = st.lv;
-    const opts = lv.tiles.filter(o => o !== t && o.state === 'closed' && !o.safe && !o.loaded);
-    if (!opts.length) return;
-    const best = Math.max(...opts.map(o => glyphLikeness(o.glyph, t.glyph)));
-    const top = opts.filter(o => glyphLikeness(o.glyph, t.glyph) === best);
-    lockTile(pickR(top, layerRng('twin', lv.misses)), C.mid, 'twinlock');
-    setMsg('> twin lock: its twin went too.', C.mid);
-    await wait(200);
-  },
   // VIRUS: the infection spreads to one ICE node right next to the one you hit. Legendary: it keeps going,
   // one node at a time, into ICE touching any node it took, up to 4 (never the last ICE: you still pick).
   async virus(t, chain = null) {
@@ -1647,6 +1477,8 @@ const BOARD_FX = {
     if (tv('virus', [1, 4]) > n + 1 && lv.tiles.filter(o => o.state === 'closed' && !o.safe).length > 1) await BOARD_FX.virus(t, from.concat(v));
   },
 };
+// The corps' own boss mods register their effects in their corp files (defineModFx, engine/corpkit.js).
+for (const [k, f] of Object.entries(MOD_FX)) { if (f.note) START_NOTE[k] = f.note; if (f.end) END_FX[k] = f.end; if (f.hit) HIT_FX[k] = f.hit; if (f.board) BOARD_FX[k] = f.board; }
 
 // Which gear a loot roll gives: by weight (gearWeight, ECON.drop).
 const pickGearDrop = r => pickWeighted(Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && !ITEMS[k].value && gearAllowed(k)), gearWeight, r);

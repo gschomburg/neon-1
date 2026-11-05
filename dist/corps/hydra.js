@@ -103,5 +103,14 @@ CORPS.hydra = {
   },
 };
 
+// ---- its boss mod's effect: HEADCOUNT (the START stage, engine/mods.js; run from engine/run.js)
+defineModFx('headcount', 'start', {
+  // HEADCOUNT: how many nodes touch the real node (the 8 cells around it)
+  note(lv) {
+    const real = lv.tiles[lv.safe];
+    return { text: `heads: ${lv.tiles.filter(t => touching(t, real)).length}` };
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.hydra = "heads grow from the body. the head nodes are ICE, and they grow next to the real node, and so does every new head after a hit. deeper, one young head grows anywhere and new heads look like any node: watch them grow in. boss: two per hit.";

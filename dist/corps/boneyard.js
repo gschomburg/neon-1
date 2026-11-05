@@ -54,5 +54,17 @@ CORPS.boneyard = {
   },
 };
 
+// ---- its boss mod's effect: GRAVE ROBBER (the END stage, engine/mods.js; run from engine/run.js)
+defineModFx('graverobber', 'end', {
+  // GRAVE ROBBER: every ICE you never touched is a grave to rob
+  end() {
+    const lv = st.lv, n = lv ? lv.tiles.filter(t => !t.safe && !(t.state === 'locked' && t.lockedBy === 'hit')).length : 0;
+    if (!n) return false;
+    const cr = earnInt(ECON.mods.graverobber) * n;
+    st.run.credits += cr; st.run.earned += cr;
+    setMsg(`> grave robber: ${n} graves. +${cr}cr`, C.money); Sound.loot();
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.boneyard = "the dead cast no shadow: every node casts a faint shadow except the real one (and a ghost or two). boss: after every miss, a ghost drifts to a new spot. the real node never moves.";

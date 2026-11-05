@@ -32,5 +32,11 @@ CORPS.liftco = {
   },
 };
 
+// ---- its boss mod's effect: EXPRESS (the END stage, engine/mods.js; run from engine/run.js)
+defineModFx('express', 'end', {
+  // EXPRESS: a perfect gives the next layer a lift
+  end(perfect) { const c = st.corp; if (perfect && c.hasBoss && c.idx < c.counts.length) c.express = true; else return false; },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.liftco = "the lift runs up and down the floors (the lit row). it stops a beat longer on the real node's floor.";

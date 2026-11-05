@@ -35,25 +35,25 @@ const STAGES = {
 };
 const MOD_STAGE = {
   sniffer: 'start', corners: 'start', sigscan: 'start', afterimage: 'start', basictraining: 'start', runway: 'start',
-  forecast: 'start', spellbound: 'start', seedreader: 'start', photographic: 'start',
-  prism: 'hit', fourinarow: 'end', pickpocket: 'end',
-  queuenumber: 'hit', turing: 'hit',
-  handshake: 'start', callerid: 'hit', snipe: 'start', omerta: 'block', letitride: 'end', chancecard: 'start',
-  icebox: 'block', greenwave: 'block', leadlining: 'block', express: 'end', scoop: 'start', cctv: 'start', compost: 'hit', foghorn: 'hit',
-  grounded: 'block', friendship: 'block', jackbox: 'start', triage: 'end', pixelpeep: 'hit',
-  horoscope: 'block', index: 'hit', policy: 'hit', pickset: 'hit', pencil: 'hit', unravel: 'board', ezpass: 'end',
+  
+  pickpocket: 'end',
+  
+  handshake: 'start', snipe: 'start', omerta: 'block', chancecard: 'start',
+  icebox: 'block', greenwave: 'block', leadlining: 'block', scoop: 'start', cctv: 'start', 
+  grounded: 'block', friendship: 'block', jackbox: 'start', 
+  horoscope: 'block', 
   xaxis: 'pick', yaxis: 'pick',
   bulwark: 'block', forgery: 'block', shatter: 'block', failsafe: 'block',
   tracer: 'hit', keylogger: 'hit',
-  virus: 'board', autocomplete: 'board', twinlock: 'board',
-  skipjack: 'end', interest: 'end', graverobber: 'end',
-  parity: 'hit', headcount: 'start',
+  virus: 'board', 
+  skipjack: 'end', 
+  
   burner: 'tap', overclock: 'clock',
-  infrared: 'start', ambush: 'block', antigrav: 'board',
-  inversion: 'block', lastbyte: 'hit', precog: 'start',
-  dejavu: 'start', spoiler: 'start', linkup: 'board',
+  infrared: 'start', ambush: 'block', 
+  inversion: 'block', precog: 'start',
+  dejavu: 'start', spoiler: 'start', 
 };
-for (const k of Object.keys(MODS)) MODS[k].stage = MOD_STAGE[k] || 'always';
+for (const k of Object.keys(MODS)) MODS[k].stage = MOD_STAGE[k] || (MOD_FX[k] && MOD_FX[k].stage) || 'always';   // (a corp's boss mod: its corp file, defineModFx)
 // Your mods that fire in a stage, left to right on the bar.
 const modsAt = stage => st.run ? st.run.mods.map(k => k === 'mutate' ? st.run.mutateAs : k).filter(k => k && MODS[k] && MODS[k].stage === stage) : [];
 // ---- MOD FIRED: one animation for every mod. When a mod goes off, its tray badge plays this,

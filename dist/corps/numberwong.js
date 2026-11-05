@@ -40,5 +40,15 @@ CORPS.numberwong = {
   onHit() { setMsg("> that's numberwong!", C.danger); },
 };
 
+// ---- its boss mod's effect: PENCIL MARKS (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('pencil', 'hit', {
+  // PENCIL MARKS: rule out one other ICE in the same row
+  hit(t) {
+    const lv = st.lv, opts = lv.tiles.filter(o => o !== t && o.row === t.row && o.state === 'closed' && !o.safe && !o.ruledOut);
+    if (!opts.length) return false;
+    pickR(opts, layerRng('pencil', lv.misses)).ruledOut = true;
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.numberwong = "tier 1: the only prime. deeper: the only number that is not a multiple of 3. boss: the only prime, and no decoy is even or ends in 5.";

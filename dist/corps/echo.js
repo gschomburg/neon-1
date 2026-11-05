@@ -47,5 +47,16 @@ CORPS.echo = {
   },
 };
 
+// ---- its boss mod's effect: FOGHORN (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('foghorn', 'hit', {
+  // FOGHORN: louder the closer the real node is (bars on row 7)
+  hit(t) {
+    const lv = st.lv, s2 = lv.tiles[lv.safe], d = Math.max(Math.abs(s2.col - t.col), Math.abs(s2.row - t.row));
+    const bars = clamp(5 - d, 1, 4);
+    Sound.horn([0, 0.2, 0.35, 0.6, 1][bars]);
+    lv.notes = (lv.notes || []).filter(nt => nt.tag !== 'horn').concat([{ text: `horn ${'|'.repeat(bars).padEnd(4, '.')}`, tag: 'horn' }]);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.echo = "the nodes ping one after another. the real node pings lower and its ring goes in, not out. boss: every ping sounds the same; watch the rings.";

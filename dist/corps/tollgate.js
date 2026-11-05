@@ -37,5 +37,10 @@ CORPS.tollgate = {
   onPick() { const run = st.run, c = costInt(ECON.corpCosts.tollgatePick); if (canSpend(c)) run.credits -= c; },
 };
 
+// ---- its boss mod's effect: EZPASS (the END stage, engine/mods.js; run from engine/run.js)
+defineModFx('ezpass', 'end', {
+  end() { const cr = earnInt(ECON.mods.ezpass); st.run.credits += cr; st.run.earned += cr; },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.tollgate = `the toll booth |=| sits over the real node's column. deeper and boss: that column or the one next to it. every pick costs ${costInt(ECON.corpCosts.tollgatePick)}cr.`;

@@ -38,5 +38,19 @@ CORPS.medix = {
   },
 };
 
+// ---- its boss mod's effect: TRIAGE (the END stage, engine/mods.js; run from engine/run.js)
+defineModFx('triage', 'end', {
+  // TRIAGE: a corp you beat heals 1; at full, +1 max integrity
+  end() {
+    const run = st.run, c = st.corp;
+    if (!c.hasBoss || c.idx < c.counts.length) return false;
+    if (zombie()) heal(1);
+    else if (addItem('patch', 0)) { /* a PATCH on the belt (stores up) */ }
+    else if (run.integrity < run.maxInt) run.integrity++;   // no room (or RAM DOUBLER): heal instead
+    else { run.maxInt++; run.integrity++; }
+    Sound.shield();
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.medix = "the real node has a steady heartbeat, lub-dub. decoys flicker unevenly. the first ICE hit each layer only bruises (not the boss).";

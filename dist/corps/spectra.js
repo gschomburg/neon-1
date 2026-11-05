@@ -63,5 +63,10 @@ CORPS.spectra = {
   },
 };
 
+// ---- its boss mod's effect: PRISM (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('prism', 'hit', {
+  hit() { st.lv.prismRow = st.lv.tiles[st.lv.safe].row; },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.spectra = "first layer: the odd color out (every other color shows up twice or more). then the colors run in order (red, orange, yellow, green, blue, violet): the real node is the color after the last real one. each color has its own shape. boss: backwards.";

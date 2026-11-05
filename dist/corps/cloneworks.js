@@ -32,5 +32,20 @@ CORPS.cloneworks = {
   },
 };
 
+// ---- its boss mod's effect: TWIN LOCK (the BOARD stage, engine/mods.js; run from engine/run.js)
+defineModFx('twinlock', 'board', {
+  // TWIN LOCK: the hit ICE takes the ICE that looks most like it with it.
+  async board(t) {
+    const lv = st.lv;
+    const opts = lv.tiles.filter(o => o !== t && o.state === 'closed' && !o.safe && !o.loaded);
+    if (!opts.length) return;
+    const best = Math.max(...opts.map(o => glyphLikeness(o.glyph, t.glyph)));
+    const top = opts.filter(o => glyphLikeness(o.glyph, t.glyph) === best);
+    lockTile(pickR(top, layerRng('twin', lv.misses)), C.mid, 'twinlock');
+    setMsg('> twin lock: its twin went too.', C.mid);
+    await wait(200);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.cloneworks = 'every glyph has a twin except the real node. deeper: the twin is a mirror image. boss: the twin is one character off.';

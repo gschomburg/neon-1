@@ -27,5 +27,15 @@ CORPS.nimbus = {
   hint: lv => lv.forecast ? { text: `forecast> ${lv.forecast}`, col: C.accent } : null,
 };
 
+// ---- its boss mod's effect: FORECAST (the START stage, engine/mods.js; run from engine/run.js)
+defineModFx('forecast', 'start', {
+  note(lv, c, run) {
+    const r = rngFor(run.seed, 'fcst', c.node.id, c.idx), real = lv.tiles[lv.safe];
+    const byRow = r() < 0.5, n = byRow ? lv.rows : lv.cols, at = byRow ? real.row : real.col;
+    const pick = r() < 0.6 ? at : pickR(Array.from({ length: n }, (_, i) => i).filter(i => i !== at), r);
+    return { text: `fcst: ${byRow ? ROW_NAMES(lv.rows, pick) : COL_NAMES(lv.cols, pick)}?` };
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.nimbus = "the forecast names a row or column, and it is right exactly as often as it says. the storm boss: 50-60%.";

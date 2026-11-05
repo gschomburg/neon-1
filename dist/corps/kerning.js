@@ -39,5 +39,10 @@ CORPS.kerning = {
   fx: t => t.kern ? { kern: t.kern } : null,
 };
 
+// ---- its boss mod's effect: PIXEL PEEP (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('pixelpeep', 'hit', {
+  hit() { st.lv.peepAt = performance.now(); },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.kerning = "KERNING's whole board has OCD about pixels. one line of the real node is a few pixels off, and once you see it you can't unsee it. boss: every decoy is off; the real node is the aligned one.";

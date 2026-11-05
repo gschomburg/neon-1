@@ -66,5 +66,16 @@ CORPS.drop4 = {
   hint: lv => lv.drop ? { text: 'drop-4> find the blocker', col: C.accent } : null,
 };
 
+// ---- its boss mod's effect: FOUR IN A ROW (the END stage, engine/mods.js; run from engine/run.js)
+defineModFx('fourinarow', 'end', {
+  // FOUR IN A ROW: 4 perfects in a row arm the next boss (2 ICE locked)
+  end(perfect) {
+    const run = st.run;
+    run.p4 = perfect ? (run.p4 || 0) + 1 : 0;
+    if (run.p4 >= 4) { run.p4 = 0; run.p4Ready = true; setMsg('> 4 in a row! next boss -2 ICE.', C.money); }
+    else return false;   // counting
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.drop4 = "chips in two colors, stacked. exactly one line of four (across, down or diagonal) has three of one color and one of the other: that blocker is the real node.";

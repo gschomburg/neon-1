@@ -107,6 +107,10 @@ const glyphLikeness = (a, b) => { let n = 0; for (let y = 0; y < 3; y++) for (le
 const randInt = (r, a, b) => a + Math.floor(r() * (b - a + 1));
 // A seeded random for this layer of this corp visit: layerRng('monte', lv.misses) (same as rngFor(seed, label, node, layer, ...)).
 const layerRng = (label, ...a) => rngFor(st.run.seed, label, st.corp.node.id, st.corp.idx, ...a);
+// A corp's boss mod, defined in its corp file: defineModFx(key, stage, { note | end | hit | board }). The stage is when it
+// fires (engine/mods.js STAGES); the part is the function engine/run.js calls (START_NOTE, END_FX, HIT_FX, BOARD_FX).
+const MOD_FX = {};
+const defineModFx = (key, stage, fx) => { MOD_FX[key] = Object.assign({ stage }, fx); };
 // A corp hook handled a tap (or a move) itself and is done: the board takes taps again.
 const layerReady = lv => { st.busy = false; if (lv) lv.readyAt = performance.now(); };
 

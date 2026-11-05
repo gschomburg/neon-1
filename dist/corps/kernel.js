@@ -35,5 +35,10 @@ CORPS.kernel = {
   hint: lv => lv.seedShow ? { text: `seed> ${lv.seedShow}`, col: C.accent } : null,
 };
 
+// ---- its boss mod's effect: SEED READER (the START stage, engine/mods.js; run from engine/run.js)
+defineModFx('seedreader', 'start', {
+  note(lv) { return lv.boss ? { text: `seed: col ${lv.tiles[lv.safe].col + 1}` } : null; },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.kernel = "the hint lights a character of your seed. the real node has it; decoys have other seed characters. boss: two lit, the real node has both.";

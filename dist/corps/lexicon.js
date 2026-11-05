@@ -42,5 +42,14 @@ CORPS.lexicon = {
   hint: lv => lv.word ? { text: `${lv.word.cat}> ${lv.word.shown}`, col: C.accent } : null,
 };
 
+// ---- its boss mod's effect: SPELLBOUND (the START stage, engine/mods.js; run from engine/run.js)
+defineModFx('spellbound', 'start', {
+  note(lv) {
+    if (!lv.boss) return null;
+    const t = lv.tiles[lv.safe], edgeV = t.row === 0 ? 'T' : t.row === lv.rows - 1 ? 'B' : '', edgeH = t.col === 0 ? 'L' : t.col === lv.cols - 1 ? 'R' : '';
+    return { text: `spell: ${edgeV || edgeH || 'C'}` };
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.lexicon = "a 5-letter word, one letter per layer. the hint shows the category and the letters so far. the real node is the next letter.";

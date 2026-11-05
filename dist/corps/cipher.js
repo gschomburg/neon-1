@@ -41,5 +41,14 @@ CORPS.cipher = {
   },
 };
 
+// ---- its boss mod's effect: PARITY (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('parity', 'hit', {
+  // PARITY: does the real node share this ICE's row or column?
+  hit(t) {
+    const lv = st.lv, s = lv.tiles[lv.safe], inLine = s.row === t.row || s.col === t.col;
+    lv.notes = (lv.notes || []).filter(nt => nt.tag !== 'par').concat([{ text: `par: ${inLine ? 'in line' : 'off line'}`, tag: 'par' }]);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.cipher = "the key line says ROW or COL and a number: that's where the real node is (most of the time). learn which symbols spell ROW and which spell COL; the messages you already know help. boss: the cipher shifts after every miss.";

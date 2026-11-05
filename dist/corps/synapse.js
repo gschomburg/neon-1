@@ -41,5 +41,16 @@ CORPS.synapse = {
   hint: lv => lv.model ? { text: `model> ${lv.model.conf}% sure. you like: ${lv.model.like}`, col: C.accent } : null,
 };
 
+// ---- its boss mod's effect: TURING (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('turing', 'hit', {
+  hit(t) {
+    const lv = st.lv, r = layerRng('turing', lv.misses);
+    const ice = lv.tiles.filter(o => o !== t && !o.safe && o.state === 'closed' && !o.say), real = lv.tiles[lv.safe];
+    const who = r() < 0.75 || real.state !== 'closed' ? pickR(ice, r) : real;
+    if (who) who.say = ['NOT', 'ME'];
+    else return false;
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.synapse = "it learns where you pick (corners, edges, middle, columns) and hides the real node where you pick least. the meter shows how sure it is. pick where you never would.";

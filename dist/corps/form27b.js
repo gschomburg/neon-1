@@ -61,5 +61,14 @@ CORPS.form27b = {
   hint: lv => lv.form ? { text: `form 27B> file ${lv.form.name}`, col: C.accent } : null,
 };
 
+// ---- its boss mod's effect: QUEUE NUMBER (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('queuenumber', 'hit', {
+  hit(t) {
+    if (t.loaded) return false;
+    const lv = st.lv, order = lv.tiles.slice().sort((a, b) => a.cell - b.cell), d = order.indexOf(lv.tiles[lv.safe]) - order.indexOf(t);
+    t.glyph = normMotif(['', `${d > 0 ? '+' : ''}${d}`, '']);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.form27b = "1. read the form on the hint row (the order to tap in). 2. tap nodes in that order (the next one is lit): ICE in order is FILED, no damage, but a fee off the pay. 3. a tap out of order is REJECTED and hits you, unless it's the real node: then you jumped the queue.";

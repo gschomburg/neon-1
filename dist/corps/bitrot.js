@@ -61,5 +61,17 @@ CORPS.bitrot = {
   },
 };
 
+// ---- its boss mod's effect: LAST BYTE (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('lastbyte', 'hit', {
+  // LAST BYTE: down to 1 integrity, the HUD glitches and spells out the real column
+  hit() {
+    const lv = st.lv;
+    if (st.run.integrity !== 1 || lv.lastByte) return false;
+    lv.lastByte = true;
+    flash(C.danger, 0.15, 0.3); shake(4);
+    lv.notes = (lv.notes || []).concat([{ text: `c0l_${lv.tiles[lv.safe].col + 1}`, tag: 'lastbyte' }]);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.bitrot = "the real node is made only of characters on your HUD: your credit digits and #. each decoy has an odd one. the longer you wait, the more rots away.";

@@ -34,5 +34,17 @@ CORPS.ledger = {
   },
 };
 
+// ---- its boss mod's effect: INTEREST (the END stage, engine/mods.js; run from engine/run.js)
+defineModFx('interest', 'end', {
+  // INTEREST: a corp you finish pays 5% of your credits (up to 20).
+  async end() {
+    const run = st.run, c = st.corp;
+    if (!c.hasBoss || c.idx < c.counts.length) return false;
+    const cr = Math.min(earnInt(ECON.mods.interestMax), Math.floor(run.credits * ECON.mods.interestPct));
+    if (cr > 0) { run.credits += cr; run.earned += cr; Sound.loot(); }
+    else return false;
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.ledger = "the real node's balance: its digits add up to 10. deeper balances are longer.";

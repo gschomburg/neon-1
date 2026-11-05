@@ -55,5 +55,25 @@ CORPS.luckeez = {
   hitDmg: (t, lv) => lv.dd ? 2 * lv.dmg : lv.dmg,
 };
 
+// ---- its boss mod's effect: LET IT RIDE (the END stage, engine/mods.js; run from engine/run.js)
+defineModFx('letitride', 'end', {
+  // LET IT RIDE: a perfect bets its pay on the next layer: another perfect pays it back
+  // double, anything else loses it.
+  end(perfect) {
+    const run = st.run, c = st.corp, lv = st.lv;
+    if (!c.hasBoss) return false;
+    if (c.ride) {
+      if (perfect) { const back = Math.round(ECON.modx.letitride * c.ride); run.credits += back; run.earned += back - c.ride; Sound.loot(); setMsg(`> let it ride: +${back}cr!`, C.money); }
+      else setMsg(`> let it ride: lost ${c.ride}cr.`, C.danger);
+      c.ride = 0;
+    } else if (perfect && c.idx < c.counts.length && lv.paid > 0) {
+      c.ride = Math.min(lv.paid, Math.max(0, run.credits));   // (in debt: nothing to bet)
+      if (!c.ride) return false;
+      run.credits -= c.ride;
+      setMsg(`> let it ride: ${c.ride}cr riding.`, C.money);
+    } else return false;
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.luckeez = "the real node shows three of a kind. deeper, decoys show pairs. boss: the reels spin first. DBL DOWN: x2 pay if real, x2 damage if ICE.";

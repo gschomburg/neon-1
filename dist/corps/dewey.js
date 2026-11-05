@@ -37,5 +37,11 @@ CORPS.dewey = {
   },
 };
 
+// ---- its boss mod's effect: INDEX (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('index', 'hit', {
+  // INDEX: >>> the real node comes later in reading order, <<< earlier
+  hit(t) { const s = st.lv.tiles[st.lv.safe]; t.glyph = normMotif(['', s.cell > t.cell ? '>>>' : '<<<', '']); },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.dewey = "the real node is misfiled: its call number is from another section. tier 1: another hundred (300s among 600s). deeper: another ten. boss: two digits swapped.";

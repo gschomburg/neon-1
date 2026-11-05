@@ -70,5 +70,17 @@ CORPS.twinlink = {
   hint: lv => lv.links ? { text: `links> ${lv.links.length} pair${lv.links.length === 1 ? '' : 's'}`, col: C.accent } : null,
 };
 
+// ---- its boss mod's effect: LINKUP (the BOARD stage, engine/mods.js; run from engine/run.js)
+defineModFx('linkup', 'board', {
+  // LINKUP: the hit node's partner (TWINLINK's link, or the node mirrored across the center)
+  async board(t) {
+    const lv = st.lv, p = t.partner || lv.tiles.find(o => o.col === lv.cols - 1 - t.col && o.row === lv.rows - 1 - t.row);
+    if (!p || p === t || p.safe || p.state !== 'closed') return;
+    lockTile(p, C.accent, 'linkup');
+    setMsg('> linkup: its partner went too.', C.accent);
+    await wait(200);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.twinlink = "linked pairs flip together. the real node is never linked. boss: double-width nodes are always ICE, and hit for 2.";

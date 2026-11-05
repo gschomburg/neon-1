@@ -46,5 +46,15 @@ CORPS.verdant = {
   fx: t => t.leaf ? { corner: '%', cornerCol: C.accent } : null,
 };
 
+// ---- its boss mod's effect: COMPOST (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('compost', 'hit', {
+  hit() {
+    const run = st.run;
+    run.compost = (run.compost || 0) + 1;
+    if (run.compost % 3 === 0 && canHeal()) { heal(1); Sound.shield(); }
+    else return false;   // only fires when it heals
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.verdant = "the real node has a leaf % on its frame, and so do 1-2 decoys. ICE you hit grows back a few seconds later, with a leaf.";

@@ -37,5 +37,19 @@ CORPS.seekr = {
   },
 };
 
+// ---- its boss mod's effect: AUTOCOMPLETE (the BOARD stage, engine/mods.js; run from engine/run.js)
+defineModFx('autocomplete', 'board', {
+  // AUTOCOMPLETE: your first miss in a layer strikes out one more ICE.
+  async board(t) {
+    const lv = st.lv;
+    if (lv.misses !== 1) return;
+    const opts = lv.tiles.filter(o => o.state === 'closed' && !o.safe);
+    if (!opts.length) return;
+    lockTile(pickR(opts, layerRng('acp')), C.mid, 'autocomplete');
+    setMsg('> autocomplete: struck 1 ICE.', C.mid);
+    await wait(200);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.seekr = "the search bar autocompletes the real node's glyph. deeper: one line is missing. boss: \"did you mean\", and one line is a decoy's.";

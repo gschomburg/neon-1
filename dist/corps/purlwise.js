@@ -30,5 +30,17 @@ CORPS.purlwise = {
   },
 };
 
+// ---- its boss mod's effect: UNRAVEL (the BOARD stage, engine/mods.js; run from engine/run.js)
+defineModFx('unravel', 'board', {
+  // UNRAVEL: one more ICE in the hit node's row locks
+  async board(t) {
+    const lv = st.lv, opts = lv.tiles.filter(o => o !== t && o.row === t.row && o.state === 'closed' && !o.safe);
+    if (!opts.length) return;
+    lockTile(pickR(opts, layerRng('unravel', lv.misses)), C.mid, 'unravel');
+    setMsg('> unravel: the row comes apart.', C.mid);
+    await wait(200);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.purlwise = "every node has the same stitch pattern (deeper: one pattern per row). the real node has a dropped stitch: an o (boss: a V).";

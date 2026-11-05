@@ -50,5 +50,14 @@ CORPS.telephonix = {
   },
 };
 
+// ---- its boss mod's effect: CALLER ID (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('callerid', 'hit', {
+  hit() {
+    const lv = st.lv, row = lv.tiles[lv.safe].row;
+    Sound.beeps(row + 1);
+    lv.notes = (lv.notes || []).filter(nt => nt.tag !== 'cid').concat([{ text: `cid: ${ROW_NAMES(lv.rows, row)}`, tag: 'cid' }]);
+  },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.telephonix = "the nodes are phone keys. the hint dials a number; the last digit is the real key. then the line goes on hold. boss: the last digit is dialed as a letter (2 = ABC).";

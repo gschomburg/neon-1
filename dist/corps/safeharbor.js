@@ -38,5 +38,10 @@ CORPS.safeharbor = {
   onHit() { const cr = earnInt(ECON.corps.safeharborClaim); st.run.credits += cr; st.run.earned += cr; },
 };
 
+// ---- its boss mod's effect: POLICY (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('policy', 'hit', {
+  hit() { const cr = earnInt(ECON.mods.policy); st.run.credits += cr; st.run.earned += cr; },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.safeharbor = "the fine print: a dot in the bottom right corner of the real node. deeper, decoys have dots in other corners; boss: a comma in the same one.";

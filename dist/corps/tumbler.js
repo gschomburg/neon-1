@@ -30,5 +30,10 @@ CORPS.tumbler = {
   },
 };
 
+// ---- its boss mod's effect: PICKSET (the HIT stage, engine/mods.js; run from engine/run.js)
+defineModFx('pickset', 'hit', {
+  hit() { st.corp.pins = (st.corp.pins || 0) + 1; },
+});
+
 // the codex, once you've beaten it
 CORP_TELL.tumbler = "every pin sits at a height. the real pin is the one height no decoy has.";
