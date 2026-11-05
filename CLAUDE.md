@@ -18,3 +18,10 @@ Greg's raw notes.
 - `ascii-editor/` (asXii): its own version (`node ascii-editor/bump.js`, `MAJOR.MINOR`, no "v"). Saves follow web.md's saving pattern (in place in Chrome, a download elsewhere). Justin Bakse works on asXii too: fetch and check his commits before changing it. `saves/` is gitignored.
 - `greglytics/`: the shared events/leaderboard service. `dist/engine/greglytics.js` is a copy; change the original, then copy it in.
 - Deploy: the user uploads `dist/` to gregschomburg.com/neon/.
+
+## Screen space
+- On a phone the board is 23 rows. A panel that runs over spills onto the mod tray: `buildTextBoard` doesn't squeeze. Count rows when you add lines to a screen.
+- Tricks when a screen is tight:
+  - Fold away art once it's had its moment (the boss rewards logo: `LOGO_OUT` in engine/screens.js).
+  - One scrolling line instead of stacked, wrapped text (the UPLINK's `ticker` in engine/run.js: a beat on the name, then the description scrolls).
+- **Decided (Greg, 2026-11-05):** stacked text reads best where it fits (the rewards screen keeps it). The ticker is for when space is tight. The first time a second screen needs it, pull it out of run.js into a shared helper (engine/fx.js).
