@@ -64,15 +64,14 @@ CORPS.hydra = {
     const h = lv.hydra;
     if (!h || st.run.integrity <= 0) return;
     if (lv.eater && (lv.hydraGrew || 0) >= (h.boss ? 4 : 3)) return;   // ICE EATER: a head limit, so the eating ends
-    const real = lv.tiles[lv.safe], r = rngFor(st.run.seed, 'hydra', st.corp.node.id, st.corp.idx, lv.misses);
+    const real = lv.tiles[lv.safe], r = layerRng('hydra', lv.misses);
     const plain = h.boss || h.tier >= 2;
     const usedGlyphs = new Set(lv.tiles.map(o => o.glyph));
     let grew = 0;
     for (let i = 0; i < (h.boss ? 2 : 1); i++) {
       let cell = i === 0 ? freeNear(lv, real, r) : null;
       if (cell == null) {
-        const used = new Set(lv.tiles.map(o => o.cell)), free = [];
-        for (let c2 = 0; c2 < lv.cols * lv.rows; c2++) if (!used.has(c2)) free.push(c2);
+        const free = freeCells(lv);
         if (!free.length) break;
         cell = pickR(free, r);
       }

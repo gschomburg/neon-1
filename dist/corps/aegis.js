@@ -26,7 +26,7 @@ async function aegisBreach(lv) {
   const top = Math.min(...lv.tiles.map(t => t.row));
   for (const t of lv.tiles) slideTo(lv, t, t.cell - top * lv.cols, 520);
   await wait(slideMs(520));
-  st.busy = false; lv.readyAt = performance.now();
+  layerReady(lv);
 }
 
 // ---- its music

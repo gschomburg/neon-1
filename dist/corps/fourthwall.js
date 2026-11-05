@@ -5,6 +5,8 @@ NEON_FILES.push(['corps/fourthwall.js', 'v14.44']);
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its own helpers
+// FOURTH WALL: what it says to you (from your save). tell: the line that gives it away.
+const FW_ZONE = { corner: 'the corners', edge: 'the edges', middle: 'the middle' };
 function fwLines(top, colTop) {
   const chat = [];
   const killer = Object.entries(save.corpStats || {}).sort((a, b) => (b[1].lost || 0) - (a[1].lost || 0))[0];

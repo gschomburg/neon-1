@@ -549,7 +549,7 @@ function updateTimer(dt) {
     Sound.shield(); setMsg('> overtime! +5s.', C.accent); modFired('overtime');
     return;
   }
-  if (tm.left <= 0 && st.corp && st.corp.hasBoss && st.corp.def.clockOut) { tm.left = 0; return st.corp.def.clockOut(); }   // a corp's own clock-out (G0D MAZE)
+  if (tm.left <= 0 && corpHas('clockOut')) { tm.left = 0; return corpHook('clockOut'); }   // a corp's own clock-out (G0D MAZE)
   if (tm.left <= 0 && (eaterOn() || zombie())) return clockHurts();   // no random tap: it costs you instead
   if (tm.left <= 0) {
     tm.left = 0;
@@ -572,7 +572,7 @@ function layerTick(now) {
     lv.jackAt = null;
     const opts = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
     if (opts.length && candidates().length > 1) {
-      lockTile(pickR(opts, rngFor(st.run.seed, 'jackbox', st.corp.node.id, st.corp.idx)), C.money, 'jackbox');
+      lockTile(pickR(opts, layerRng('jackbox')), C.money, 'jackbox');
       Sound.jingle();
       setMsg('> jack-in-the-box: pop! 1 ICE out.', C.money);
     }
@@ -585,7 +585,7 @@ function layerTick(now) {
     if (!canSpend(treat)) setMsg('> no treats, no sniffing. (0cr)', C.mid);
     else if (opts.length && candidates().length > 1) {
       st.run.credits -= treat;
-      const sniffed = pickR(opts, rngFor(st.run.seed, 'pet', st.corp.node.id, st.corp.idx));
+      const sniffed = pickR(opts, layerRng('pet'));
       lockTile(sniffed, C.accent, 'companion');
       petSniff(sniffed);   // the pet runs over to it
       Sound.jingle();
@@ -653,7 +653,7 @@ async function pick(i) {
   if (st.mode === 'play' && !st.busy && st.lv && st.lv.pingAim && holds('ping') && st.lv.tiles[i] && st.lv.tiles[i].state === 'closed') return pingAt(st.lv, st.lv.tiles[i]);   // PING (gear): this tap asks
   if (st.mode === 'play' && !st.busy && st.lv && st.lv.blastAim && st.lv.tiles[i] && st.lv.tiles[i].state === 'closed') return blastAt(st.lv, st.lv.tiles[i]);   // BLAST (gear): this tap aims it
   { const byp = st.lagBypass; st.lagBypass = false;   // corp kit: LAGRANGE holds taps back
-    if (!byp && st.mode === 'play' && !st.busy && st.corp && st.corp.hasBoss && st.corp.def.intercept && st.lv && st.lv.tiles[i] && st.corp.def.intercept(i)) return; }
+    if (!byp && st.mode === 'play' && !st.busy && corpHas('intercept') && st.lv && st.lv.tiles[i] && corpHook('intercept', i)) return; }
   if (st.mode === 'play' && !st.busy && st.lv && st.lv.tiles[i] && st.lv.tiles[i].state === 'closed' && moldDigTile(st.lv.tiles[i])) return;   // the deep M0LD over it: dig first (engine/heaven.js)
   if (st.mode !== 'play' || st.busy) return;
   if (!tutAllows('pick', i)) return tutNo();
@@ -681,7 +681,7 @@ async function pick(i) {
   st.lv.surgeF = st.timer ? 1 - st.timer.left / st.timer.max : 0;
   st.lv.pickAt = performance.now();   // AMBUSH
   { const ph = beatClock(performance.now()).phase; st.lv.onBeat = ph < 0.15 || ph > 0.9; }   // ON BEAT
-  if (st.corp && st.corp.hasBoss && st.corp.def.onPick) st.corp.def.onPick(t);   // corp kit (TOLLGATE)
+  corpHook('onPick', t);   // corp kit (TOLLGATE)
   t.probing = true;
   Sound.probe();
   setMsg('> probing...', C.mid);
@@ -697,7 +697,7 @@ async function pick(i) {
   }
   if (eaterOn() && isReal(t)) return eaterBit(t);   // ICE EATER: the real node kills
   // A corp's own pick rule (FORM 27B, DEMOLITION) can take the tap.
-  if (st.corp && st.corp.hasBoss && st.corp.def.tap && st.corp.def.tap(t, i)) return;
+  if (corpHook('tap', t, i)) return;
   if (t.safe) return onSafe(t);
   if (t.quantum) { modFired('quantum'); return onSafe(t); }   // QUANTUM: the other real node
   if (eaterOn()) { eaterScan(t); return onTrap(t, i); }   // ICE EATER: eat it (scans only warn)
@@ -1079,7 +1079,7 @@ async function onTrap(t, i) {
   }
   if (t.rejected) msg = msg.replace('> ICE.', '> REJECTED.');   // FORM 27B
   setMsg(msg, t.loaded ? C.money : lv.eater ? C.accent : C.danger);
-  if (st.corp.hasBoss && st.corp.def.onHit) st.corp.def.onHit(t);   // corp twist, after your mods
+  corpHook('onHit', t);   // corp twist, after your mods
   // corp modifiers: ARMORED points at the real node, THIEF takes your last mod
   if (st.corp.mod === 'armored' && !t.dir) { const q = lv.tiles[lv.safe]; t.dir = Math.abs(q.col - t.col) >= Math.abs(q.row - t.row) ? { h: Math.sign(q.col - t.col), v: 0 } : { h: 0, v: Math.sign(q.row - t.row) }; }
   if (st.corp.mod === 'thief' && run.mods.length) {
@@ -1101,7 +1101,7 @@ async function onTrap(t, i) {
   }
   lv.callouts = [];
   for (const k of modsAt('board')) if (BOARD_FX[k]) await BOARD_FX[k](t);
-  if (st.corp.hasBoss && st.corp.def.afterHit && st.lv === lv) await st.corp.def.afterHit(t, lv);   // corp kit: MONTE, GRAVITAS move on a miss
+  if (corpHas('afterHit') && st.lv === lv) await corpHook('afterHit', t, lv);   // corp kit: MONTE, GRAVITAS move on a miss
   resetTimer();
   st.busy = false;
   lv.readyAt = performance.now();
@@ -1273,8 +1273,7 @@ function snoozeIn(lv, r) {
   const src = decoys.length ? decoys : lv.tiles.filter(t => !isReal(t));
   const left = [];
   for (const s of run.snoozed) {
-    const used = new Set(lv.tiles.map(t => t.cell)), free = [];
-    for (let k = 0; k < lv.cols * lv.rows; k++) if (!used.has(k)) free.push(k);
+    const free = freeCells(lv);
     if (!free.length || !src.length) { left.push(s); continue; }
     const same = s.col < lv.cols && s.row < lv.rows ? s.row * lv.cols + s.col : -1;
     const cell = free.includes(same) ? same : pickR(free, r);
@@ -1309,8 +1308,7 @@ function allIn() {
     (async () => { await wait(550); if (st.lv === lv) await onSafe(lv.tiles[lv.safe]); })();
     return;
   }
-  const used = new Set(lv.tiles.map(t => t.cell)), free = [];
-  for (let k = 0; k < lv.cols * lv.rows; k++) if (!used.has(k)) free.push(k);
+  const free = freeCells(lv);
   const decoys = lv.tiles.filter(t => !isReal(t) && !t.loaded);
   const src = decoys.length ? decoys : lv.tiles.filter(t => !isReal(t));
   const real = lv.tiles[lv.safe], now = performance.now();
@@ -1446,7 +1444,7 @@ function blockHit(t, i) {
     Sound.shield(); flash(C.money, 0.1, 0.3);
     modFired('omerta');
     msg = `> ICE. omerta: -${cost}cr. say nothing.`;
-  } else if (st.corp.hasBoss && st.corp.def.block && (msg = st.corp.def.block(t, lv))) {
+  } else if ((msg = corpHook('block', t, lv))) {
     // a corp's own rule took the hit (the message is set)
   } else if (has('friendship') && !st.corp.friendUsed && canSpend(costInt(ECON.friendship))) {
     st.corp.friendUsed = true; run.credits -= costInt(ECON.friendship);
@@ -1466,7 +1464,7 @@ function blockHit(t, i) {
     shake(4);
     msg = '> ICE. firewall absorbed it.';
   } else {
-    let raw = st.corp.hasBoss && st.corp.def.hitDmg ? Math.max(lv.dmg, st.corp.def.hitDmg(t, lv)) : lv.dmg;   // GRIDLOCK: red hits for 2
+    let raw = corpHas('hitDmg') ? Math.max(lv.dmg, corpHook('hitDmg', t, lv)) : lv.dmg;   // GRIDLOCK: red hits for 2
     if (t.black) raw = Math.max(0, run.integrity - 1);   // BLACK ICE: down to 1 INT, never below (BLOOD MONEY: that many hits)
     const dmg = has('grounded') && raw >= 2 ? raw - 1 : raw;   // GROUNDED
     if (dmg < raw) modFired('grounded');
@@ -1515,7 +1513,7 @@ const HIT_FX = {
     t.glyph = normMotif(['', `${d > 0 ? '+' : ''}${d}`, '']);
   },
   turing(t) {
-    const lv = st.lv, r = rngFor(st.run.seed, 'turing', st.corp.node.id, st.corp.idx, lv.misses);
+    const lv = st.lv, r = layerRng('turing', lv.misses);
     const ice = lv.tiles.filter(o => o !== t && !o.safe && o.state === 'closed' && !o.say), real = lv.tiles[lv.safe];
     const who = r() < 0.75 || real.state !== 'closed' ? pickR(ice, r) : real;
     if (who) who.say = ['NOT', 'ME'];
@@ -1549,14 +1547,14 @@ const HIT_FX = {
   pencil(t) {
     const lv = st.lv, opts = lv.tiles.filter(o => o !== t && o.row === t.row && o.state === 'closed' && !o.safe && !o.ruledOut);
     if (!opts.length) return false;
-    pickR(opts, rngFor(st.run.seed, 'pencil', st.corp.node.id, st.corp.idx, lv.misses)).ruledOut = true;
+    pickR(opts, layerRng('pencil', lv.misses)).ruledOut = true;
   },
   tracer(t) {
     // which way the real node is: level 1 the bigger direction (coin flip when even), level 2 both
     const lv = st.lv, s = lv.tiles[lv.safe], dx = Math.sign(s.col - t.col), dy = Math.sign(s.row - t.row);
     const gx = Math.abs(s.col - t.col), gy = Math.abs(s.row - t.row);
     if (modTier('tracer') >= 1) t.dir = { h: dx, v: dy };
-    else if (gx > gy || (gx === gy && rngFor(st.run.seed, 'tracer', st.corp.node.id, st.corp.idx, lv.misses)() < 0.5)) t.dir = { h: dx, v: 0 };
+    else if (gx > gy || (gx === gy && layerRng('tracer', lv.misses)() < 0.5)) t.dir = { h: dx, v: 0 };
     else t.dir = { h: 0, v: dy };
     // the arrows show up (blinking) with the callout, after the hit
     t.dirPending = true;
@@ -1599,7 +1597,7 @@ const BOARD_FX = {
   async unravel(t) {
     const lv = st.lv, opts = lv.tiles.filter(o => o !== t && o.row === t.row && o.state === 'closed' && !o.safe);
     if (!opts.length) return;
-    lockTile(pickR(opts, rngFor(st.run.seed, 'unravel', st.corp.node.id, st.corp.idx, lv.misses)), C.mid, 'unravel');
+    lockTile(pickR(opts, layerRng('unravel', lv.misses)), C.mid, 'unravel');
     setMsg('> unravel: the row comes apart.', C.mid);
     await wait(200);
   },
@@ -1609,7 +1607,7 @@ const BOARD_FX = {
     if (lv.misses !== 1) return;
     const opts = lv.tiles.filter(o => o.state === 'closed' && !o.safe);
     if (!opts.length) return;
-    lockTile(pickR(opts, rngFor(st.run.seed, 'acp', st.corp.node.id, st.corp.idx)), C.mid, 'autocomplete');
+    lockTile(pickR(opts, layerRng('acp')), C.mid, 'autocomplete');
     setMsg('> autocomplete: struck 1 ICE.', C.mid);
     await wait(200);
   },
@@ -1620,7 +1618,7 @@ const BOARD_FX = {
     if (!opts.length) return;
     const best = Math.max(...opts.map(o => glyphLikeness(o.glyph, t.glyph)));
     const top = opts.filter(o => glyphLikeness(o.glyph, t.glyph) === best);
-    lockTile(pickR(top, rngFor(st.run.seed, 'twin', st.corp.node.id, st.corp.idx, lv.misses)), C.mid, 'twinlock');
+    lockTile(pickR(top, layerRng('twin', lv.misses)), C.mid, 'twinlock');
     setMsg('> twin lock: its twin went too.', C.mid);
     await wait(200);
   },
@@ -1708,7 +1706,7 @@ async function die() {
       await wipeOut(0);
       showBoard('play');
       resetTimer();
-      st.busy = false; st.lv.readyAt = performance.now();
+      layerReady(st.lv);
       setMsg('> CONTINUE! 1 integrity left.', C.accent);
       return;
     }

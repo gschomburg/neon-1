@@ -147,6 +147,12 @@ if (cmd === 'save') {
   const fp = fingerprint(gameFile(cmd)), g = golden(fp);
   save('now', fp);   // (the full one, for a detailed diff: node tools/check.js diff <old> now)
   if (fp.loadErrors.length) { console.log('load errors: ' + fp.loadErrors.join(' | ')); process.exitCode = 1; }
+  // every key on a corp def must be a known hook (docs/CORP_HOOKS.md): a misspelled one would do nothing
+  const hooksDoc = fs.readFileSync(path.join(ROOT, 'docs', 'CORP_HOOKS.md'), 'utf8'), known = new Set();
+  for (const line of hooksDoc.split('\n')) if (line.startsWith('| `')) for (const m of line.split('|')[1].matchAll(/`(\w+)/g)) known.add(m[1]);
+  const { G } = load(gameFile(cmd)), odd = [];
+  for (const [k, d] of Object.entries(G.CORPS)) for (const key of Object.keys(d)) if (!known.has(key)) odd.push(`${k}.${key}`);
+  if (odd.length) { console.log('corp keys not in docs/CORP_HOOKS.md (typo, or document the new hook): ' + odd.join(', ')); process.exitCode = 1; }
   if (flags.includes('--accept') || !fs.existsSync(GOLDEN)) {
     fs.writeFileSync(GOLDEN, JSON.stringify(g, null, 1) + '\n');
     console.log(`wrote tools/golden.json: ${Object.keys(g.layers).length} layers, ${Object.keys(g.maps).length} maps, ${Object.keys(g.data).length} tables.`);

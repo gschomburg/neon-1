@@ -31,14 +31,14 @@ CORPS.famiglia = {
       const ice = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed');
       if (!ice.length) return;
       st.run.credits -= pr.price; pr.paid = true;
-      lockTile(pickR(ice, rngFor(st.run.seed, 'protect', st.corp.node.id, st.corp.idx)), C.money, 'protect');
+      lockTile(pickR(ice, layerRng('protect')), C.money, 'protect');
       setMsg('> a pleasure. 1 ICE gone.', C.money);
     } };
   },
   onHit() {
     const lv = st.lv, opts = lv.tiles.filter(t => !t.safe && !t.loaded && t.state === 'closed' && !t.ruledOut);
     if (opts.length < 2) return;
-    const rat = pickR(opts, rngFor(st.run.seed, 'rat', st.corp.node.id, st.corp.idx, lv.misses));
+    const rat = pickR(opts, layerRng('rat', lv.misses));
     rat.ruledOut = true; rat.glyph = normMotif(['', 'RAT', '']);
     setMsg(`${st.msg} a decoy snitched.`, C.danger);
   },

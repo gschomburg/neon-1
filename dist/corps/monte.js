@@ -11,7 +11,7 @@ const MONTE_BALL = normMotif([' ___ ', '/___\\', '  o  ']);
 async function monteShuffle(lv, count, ms, boss) {
   const m = lv.monte;
   m.moving = true;
-  const r = rngFor(st.run.seed, 'monte', st.corp.node.id, st.corp.idx, lv.misses);
+  const r = layerRng('monte', lv.misses);
   for (let i = 0; i < count && st.lv === lv; i++) {
     const cups = lv.tiles.filter(t => t.state === 'closed');
     if (cups.length < 2) break;

@@ -82,7 +82,7 @@ async function play(file) {
 
 // corps whose hint lines run on the clock (brownouts, a lift, typing...): they can differ run to run,
 // so a difference there only matters if it errors or ends somewhere else
-const TIMING = new Set(['bidblitz', 'brightline', 'liftco', 'seekr', 'squalor', 'streamflix', 'tempo']);
+const TIMING = new Set(['bidblitz', 'brightline', 'glacier', 'liftco', 'seekr', 'squalor', 'streamflix', 'tempo']);   // (GLACIER: its frost bar)
 const strip = r => r && JSON.stringify(Object.assign({}, r, { layers: (r.layers || []).map(l => Object.assign({}, l, { hint: undefined, missMsg: undefined })) }));
 function diff(a, b) {
   const out = [];

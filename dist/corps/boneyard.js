@@ -30,11 +30,10 @@ CORPS.boneyard = {
   onHit() { Sound.rattle(); },
   async afterHit(t, lv) {
     if (!lv.boss || lv.anchor || st.run.integrity <= 0) return;
-    const r = rngFor(st.run.seed, 'haunt', st.corp.node.id, st.corp.idx, lv.misses);
+    const r = layerRng('haunt', lv.misses);
     const ghost = pickR(lv.tiles.filter(o => o.ghost && !o.safe && o.state === 'closed' && !o.slide), r);
     if (!ghost) return;
-    const used = new Set(lv.tiles.map(o => o.cell)), free = [];
-    for (let c = 0; c < lv.cols * lv.rows; c++) if (!used.has(c)) free.push(c);
+    const free = freeCells(lv);
     if (!free.length) return;
     await wait(200);
     slideTo(lv, ghost, pickR(free, r), 900, 0.6);

@@ -42,7 +42,7 @@ CORPS.bidblitz = {
       if (!ice.length) return;
       st.run.credits -= a.price; a.bids++; a.price += a.step;
       lv.payCut = Math.min(0.9, (lv.payCut || 0) + 0.15);
-      lockTile(pickR(ice, rngFor(st.run.seed, 'bid', st.corp.node.id, st.corp.idx, a.bids)), C.money, 'bid');
+      lockTile(pickR(ice, layerRng('bid', a.bids)), C.money, 'bid');
       setMsg(`> SOLD! 1 ICE. pay -${Math.round(lv.payCut * 100)}%`, C.money);
     } };
   },

@@ -7,7 +7,7 @@ NEON_FILES.push(['corps/entropy.js', 'v14.44']);
 // ---- its own helpers
 // ENTROPY: everything still in play jumps to new cells; the decoys get new glyphs.
 function entropyShuffle(lv) {
-  const e = lv.ent, r = rngFor(st.run.seed, 'ent', st.corp.node.id, st.corp.idx, e.n++);
+  const e = lv.ent, r = layerRng('ent', e.n++);
   const movers = lv.tiles.filter(t => t.state === 'closed');
   const fixed = new Set(lv.tiles.filter(t => t.state !== 'closed').map(t => t.cell));
   const cells = [];

@@ -24,9 +24,9 @@
 //   data/music.js       MUSIC_FOR, SONGS
 //   engine/corpkit.js   CORP_ART, CORP_TELL, CORPS, randInt, h01, slideTo, slideMs, moveScale, setCellOf,
 //                       glyphLine, cellZone, COL_NAMES, mirrorGlyph, moveTile, mutateGlyph, nearness,
-//                       ROW_NAMES, sameGlyph, beatClock, floatText, FW_ZONE, heatCol, heatGlyph, ICE_FLASH,
-//                       kfmt, lagNext, liftRow, makeLift, NOIR_SIDES, predHeat, SQ_BAD, SQ_GOOD, SQ_MEH,
-//                       touching
+//                       ROW_NAMES, sameGlyph, beatClock, floatText, heatCol, heatGlyph, ICE_FLASH,
+//                       kfmt, liftRow, makeLift, predHeat, SQ_BAD, SQ_GOOD, SQ_MEH,
+//                       touching, freeCells, layerRng, layerReady
 //   engine/corps.js     corpDef
 //   engine/mods.js      tv
 //   engine/save.js      save
@@ -69,10 +69,6 @@ function mutateGlyph(g, r, sneaky = false) {
   return g.map((l, yy) => yy === y ? l.slice(0, x) + to + l.slice(x + 1) : l);
 }
 const sameGlyph = (a, b) => a.join('|') === b.join('|');
-const NOIR_SIDES = {
-  LEFT: { text: ['LEFT', 'OF ME'], test: t => x => x.col < t.col }, RIGHT: { text: ['RIGHT', 'OF ME'], test: t => x => x.col > t.col },
-  ABOVE: { text: ['ABOVE', 'ME'], test: t => x => x.row < t.row }, BELOW: { text: ['BELOW', 'ME'], test: t => x => x.row > t.row },
-};
 // SYNAPSE: where a pick was (by habit), and what you pick most.
 const cellZone = (t, lv) => { const e = (t.col === 0 || t.col === lv.cols - 1) + (t.row === 0 || t.row === lv.rows - 1); return e === 2 ? 'corner' : e === 1 ? 'edge' : 'middle'; };
 // TEMPO: where we are in the beat. The music's own clock when it's playing; otherwise a
@@ -109,6 +105,10 @@ const glyphLine = g => g.map(l => `[${l}]`).join('');
 // How alike two glyphs are: matching visible characters in the same spots.
 const glyphLikeness = (a, b) => { let n = 0; for (let y = 0; y < 3; y++) for (let x = 0; x < 5; x++) if (a[y][x] !== ' ' && a[y][x] === b[y][x]) n++; return n; };
 const randInt = (r, a, b) => a + Math.floor(r() * (b - a + 1));
+// A seeded random for this layer of this corp visit: layerRng('monte', lv.misses) (same as rngFor(seed, label, node, layer, ...)).
+const layerRng = (label, ...a) => rngFor(st.run.seed, label, st.corp.node.id, st.corp.idx, ...a);
+// A corp hook handled a tap (or a move) itself and is done: the board takes taps again.
+const layerReady = lv => { st.busy = false; if (lv) lv.readyAt = performance.now(); };
 
 // ---- The first kit corps (v09). Their tells are all on the glyphs.
 
@@ -128,6 +128,8 @@ const COL_NAMES = (cols, c) => c === 0 ? 'left column' : c === cols - 1 ? 'right
 // QUICK EYE makes every move 30% slower. ANCHOR stops them for a layer (lv.anchor).
 const moveScale = () => has('quickeye') ? 1.3 : 1;
 const slideMs = ms => ms * moveScale();
+// The empty cells of a layer's grid (where a node can move or spawn).
+function freeCells(lv) { const used = new Set(lv.tiles.map(t => t.cell)), free = []; for (let c = 0; c < lv.cols * lv.rows; c++) if (!used.has(c)) free.push(c); return free; }
 function setCellOf(lv, t, cell) { t.cell = cell; t.col = cell % lv.cols; t.row = Math.floor(cell / lv.cols); }
 // Where a node is drawn right now (part way through a slide). arc: a sideways bow, in cells.
 function tilePos(t, now) {
@@ -168,7 +170,7 @@ function predHeat(t, ft, p) {
 // ---- Tier 3, group 2: hot and cold by pointer. On desktop you hover; on touch you drag a
 // finger around (a drag never picks: lifting selects a node, a second tap confirms; a
 // plain tap still picks). nearness: how close the pointer is to a node (0 far .. 1 on it).
-const dragCorp = () => !!(st.mode === 'play' && st.corp && st.corp.hasBoss && st.corp.def.drag && !st.mp);
+const dragCorp = () => !!(st.mode === 'play' && corpHas('drag') && !st.mp);
 function pointerCell(lv) {
   if (st.kbGrid && st.hover >= 0 && lv.tiles[st.hover]) { const t = lv.tiles[st.hover]; return { col: t.col, row: t.row }; }
   const p = st.ptr;
@@ -193,7 +195,7 @@ const kfmt = v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(Math.round(v)
 // ---- Tier 3, group 3: time and screen tricks.
 // UPSIDE: the whole screen is drawn upside down (render) and taps are flipped back, except
 // on its boss, where tile taps land on the node mirrored across the center.
-const flipNow = () => !!(st.mode === 'play' && st.lv && st.corp && st.corp.hasBoss && st.corp.def.flip && !st.pause && !st.dev && !st.mp);
+const flipNow = () => !!(st.mode === 'play' && st.lv && corpHas('flip') && !st.pause && !st.dev && !st.mp);
 const upsideMirror = () => !!(st.flipNow && st.lv && st.lv.boss);
 // UPSIDE's boss: the node a tap on node i lands on, mirrored across the board's grid (the user, 2026-10-30: it was
 // mirrored across the whole screen, so most taps landed in a gap or the header). -1: nothing there.
@@ -209,18 +211,14 @@ function upsideLand(lv, i) {
   return t && t.state === 'closed' ? j : i;
 }
 const ptXY = e => st.flipNow ? [W - e.clientX, H - e.clientY] : [e.clientX, e.clientY];
-// LAGRANGE: everything slides one column right (wrapping) every beat.
-const lagNext = (lv, t) => t.row * lv.cols + (t.col + 1) % lv.cols;
 // ---- Tier 3, group 4: loops, the fourth wall, a ball game, and linked nodes.
-// FOURTH WALL: what it says to you (from your save). tell: the line that gives it away.
-const FW_ZONE = { corner: 'the corners', edge: 'the edges', middle: 'the middle' };
 
 // ---- v11 corps: CIPHER, HYDRA, BLACKOUT (SPEC §17 ideas, each with its own style).
 // CIPHER's alphabet: every letter on screen becomes one of these inside the corp.
 // Digits and punctuation stay readable. Shapes only (no card suits or emoji-prone signs).
 const CIPHER_SYMS = [...'◆◇▲△▼▽●○■□◐◑◒◓◢◣◤◥★☆✚⌘Ω∆∑¤'];
 const touching = (a, b) => a !== b && Math.abs(a.col - b.col) <= 1 && Math.abs(a.row - b.row) <= 1;
-const moveTile = (lv, t, cell) => { t.cell = cell; t.col = cell % lv.cols; t.row = Math.floor(cell / lv.cols); };
+const moveTile = setCellOf;   // (the same thing; both names are in use)
 // CIPHER: the letter-to-symbol map for this visit (a new one after each boss shift), or
 // null when the screen should read normally (outside CIPHER, menus, pause, dev menu).
 function cipherNow(now) {

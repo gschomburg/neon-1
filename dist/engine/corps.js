@@ -8,6 +8,16 @@ const FINAL = {
   timer: 12, pay: 2, bossDmg: 2,
   bossDesc: 'boss: ICE hits for 2.',
 };
+// ---------- A corp's hooks and flags ----------
+// They count only in a real corp visit (st.corp.hasBoss: the public net's start node has none). Every hook a corp can
+// have is listed in docs/CORP_HOOKS.md (tools/check.js flags a corp def key that isn't there: a typo does nothing).
+//   corpFlag('money')          the corp's value for it (or undefined)
+//   corpHas('tap')             it has one
+//   corpHook('onHit', t)       call it if it has one (undefined if not)
+const corpFlag = name => st.corp && st.corp.hasBoss ? st.corp.def[name] : undefined;
+const corpHas = name => !!corpFlag(name);
+const corpHook = (name, ...a) => corpHas(name) ? st.corp.def[name](...a) : undefined;
+
 const PUBLIC = { key: 'public', name: 'PUBLIC NET', letter: '>', intel: 'one node. it is real.', tell: null };
 const corpDef = key => CORPS[key] || (typeof HEAVEN !== 'undefined' && HEAVEN[key]) || (key === 'omni' ? FINAL : PUBLIC);   // (HEAVEN: the G0D corps, engine/heaven.js)
 // A corp's code on the map and in lists: its 2 letters and its level (SK1, BR5).

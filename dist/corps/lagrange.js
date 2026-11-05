@@ -5,6 +5,8 @@ NEON_FILES.push(['corps/lagrange.js', 'v14.44']);
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
 // ---- its own helpers
+// LAGRANGE: everything slides one column right (wrapping) every beat.
+const lagNext = (lv, t) => t.row * lv.cols + (t.col + 1) % lv.cols;
 function lagSlide(lv) {
   const now = performance.now();
   for (const t of lv.tiles) {

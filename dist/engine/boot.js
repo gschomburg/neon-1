@@ -50,7 +50,7 @@ function gameMusicState() {
   if (st.mode === 'fish' && st.fish && SONGS[st.fish.track] && song !== 'none') return { song: st.fish.track, level: st.fish.reel ? 3 : 1, urgency: 0, low: false, tempo: 1, pitch: 1 };
   const g0dm = g0dMusic(); if (g0dm) return g0dm;   // H3AV3N: the G0D fights (engine/heaven.js)
   const low = !!(run && st.mode === 'play' && (zombie() ? (run.rot || 0) >= ROT.max - 30 : bloodMoney() ? run.credits < bloodCost(1) : run.integrity <= 1) && !st.dying);
-  const slowmo = !!(st.mode === 'play' && st.corp && st.corp.hasBoss && st.corp.def.slowmo && st.lv);   // BULLET TIME
+  const slowmo = !!(st.mode === 'play' && corpHas('slowmo') && st.lv);   // BULLET TIME
   const tempo = (1 + (song === 'chronos' ? urgency * 0.25 : 0) + (level >= 3 ? 0.05 : 0)) * (slowmo ? 0.55 : 1);
   // GRAVE ROBBER: its own spooky track follows you around the map (corps keep theirs)
   if (song === 'theme' && run && run.quest === 'had3s' && SONGS.zeroday) {   // HAD3S: ZERO DAY on the map, its stages wandering (corps keep their own tracks)

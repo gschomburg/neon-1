@@ -44,8 +44,7 @@ CORPS.groundhog = {
     flash(C.accent, 0.15, 0.4); Sound.whoosh(); shake(3);
     for (const o of lv.tiles) if (o.state === 'locked' && o.lockedBy === 'hit' && !o.loaded) { o.state = 'closed'; o.lockedBy = null; o.dir = null; o.klog = false; o.glyph = o.g0 || o.glyph; }
     lv.payCut = Math.min(0.6, (lv.payCut || 0) + 0.15);
-    const used = new Set(lv.tiles.map(o => o.cell)), free = [];
-    for (let c = 0; c < lv.cols * lv.rows; c++) if (!used.has(c)) free.push(c);
+    const free = freeCells(lv);
     const movers = shuffle(lv.tiles.filter(o => o.state === 'closed'), g.r).slice(0, g.movers);
     for (const o of movers) { if (!free.length) break; const c = free.splice(Math.floor(g.r() * free.length), 1)[0]; free.push(o.cell); slideTo(lv, o, c, 560); }
     g.moved = movers; g.movedAt = performance.now();

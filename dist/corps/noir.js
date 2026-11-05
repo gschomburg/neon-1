@@ -5,6 +5,10 @@ NEON_FILES.push(['corps/noir.js', 'v14.44']);
 // its effect in engine/active.js.
 
 // ---- its own helpers
+const NOIR_SIDES = {
+  LEFT: { text: ['LEFT', 'OF ME'], test: t => x => x.col < t.col }, RIGHT: { text: ['RIGHT', 'OF ME'], test: t => x => x.col > t.col },
+  ABOVE: { text: ['ABOVE', 'ME'], test: t => x => x.row < t.row }, BELOW: { text: ['BELOW', 'ME'], test: t => x => x.row > t.row },
+};
 // NOIR: one statement for node t. true: it must be true if q is the real node (q tells the
 // truth, everyone else lies). test(x): is it true if x were the real node.
 function noirStatement(t, ts, lv, kind, r, truth, q) {

@@ -196,7 +196,7 @@ cv.addEventListener('pointerdown', e => {
   // While paused, only buttons respond.
   if (st.pause && h && h.kind !== 'btn') return;
   if (!h) {
-    if (st.mode === 'play' && !st.dev && !st.pause && !st.busy && st.corp && st.corp.hasBoss && st.corp.def.boardTap) {   // a corp that takes taps anywhere on its board (CERBERUS: digging)
+    if (st.mode === 'play' && !st.dev && !st.pause && !st.busy && corpHas('boardTap')) {   // a corp that takes taps anywhere on its board (CERBERUS: digging)
       const [px, py] = ptXY(e), cx = Math.floor((px - L.ox) / L.cw), cy = Math.floor((py - L.oy) / L.chh);
       if (cy >= BOARD_Y && cy < BOARD_Y + L.gh && st.corp.def.boardTap(cx, cy)) return;
     }
@@ -222,7 +222,7 @@ cv.addEventListener('pointerdown', e => {
       else st.press = { i: h.i, x: e.clientX, y: e.clientY, moved: false };
     } else pick(h.i);
   }
-  else if (h.kind === 'cell') { if (st.corp && st.corp.def.cellTap && st.mode === 'play' && !st.busy) st.corp.def.cellTap(h.cell); }
+  else if (h.kind === 'cell') { if (st.mode === 'play' && !st.busy) corpHook('cellTap', h.cell); }
   else if ((h.kind === 'node' || h.kind === 'peek') && st.run && st.run.wormAim && holds('worm') && !st.pause) wormAt(h.id);   // WORM: this tap sends it
   else if (h.kind === 'node') { st.mapPeek = null; selectNode(h.id); }
   else if (h.kind === 'peek') { st.mapSel = null; st.mapPeek = st.mapPeek === h.id ? null : h.id; Sound.tick(); }   // the map: what's that node?

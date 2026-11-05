@@ -48,10 +48,10 @@ CORPS.form27b = {
       return false;   // the real node (in order or not) opens; out of order ICE is a hit
     }
     lockTile(t, C.accent, 'filed');
-    if (t.loaded) setMsg('> FILED. ' + grantLoot(rngFor(st.run.seed, 'loot', st.corp.node.id, st.corp.idx), st.corp.tier), C.money);
+    if (t.loaded) setMsg('> FILED. ' + grantLoot(layerRng('loot'), st.corp.tier), C.money);
     lv.payCut = Math.min(0.9, (lv.payCut || 0) + f.fee);
     if (!t.loaded) setMsg(`> FILED. pay -${Math.round(lv.payCut * 100)}%`, C.accent);
-    st.busy = false; lv.readyAt = performance.now();
+    layerReady(lv);
     return true;
   },
   fx(t, ft, lv) {

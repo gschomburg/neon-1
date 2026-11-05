@@ -29,7 +29,7 @@ async function gravDrop(lv, own = true) {
     for (const [t, row] of place) if (row !== t.row) { slideTo(lv, t, row * lv.cols + col, 420); moved = true; }
   }
   if (moved) { Sound.whoosh(); await wait(slideMs(420) + 40); shake(2); }
-  if (own && st.lv === lv) { st.busy = false; lv.readyAt = performance.now(); }
+  if (own && st.lv === lv) layerReady(lv);
 }
 
 // ---- its music

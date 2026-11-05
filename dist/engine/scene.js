@@ -177,7 +177,7 @@ function buildScene(now, collectHits, raw = false) {
     else if (st.mode === 'g0dp' && st.g0dp) where = `G0D // ${{ maze: 'MAZE', fight: 'FIGHT', stand: 'FINAL STAND' }[st.g0dp.stage]}`;
     put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.danger : C.text);
     // LEVERAGE: in debt the credits go red, with your limit after them (CR -120/-150)
-    const crTxt = `${(st.mode === 'play' && st.corp && st.corp.def.money) || 'CR'} ${run.credits}${leverage() && run.credits < 0 ? '/' + creditFloor() : ''}`;
+    const crTxt = `${(st.mode === 'play' && corpFlag('money')) || 'CR'} ${run.credits}${leverage() && run.credits < 0 ? '/' + creditFloor() : ''}`;
     putR(3, crTxt, run.credits < 0 ? C.danger : C.money);
     if (has('coinflip')) { const m = run.coinMult || 1; put(L.wc - crTxt.length - 4, 3, `x${m}`, m >= COIN.max ? C.bright : m > 1 ? C.money : C.dim, 'hud', m > 1); }   // COIN FLIP: the multiplier
   } else {
@@ -191,7 +191,7 @@ function buildScene(now, collectHits, raw = false) {
     const cand = candidates().length, reals = Math.max(1, candidates().filter(isReal).length);
     const open = st.lv.tiles.filter(t => t.state === 'closed').length;
     put(0, 5, 'OPEN ', C.mid); put(5, 5, `${pad2(open)}/${pad2(st.lv.n)}`, C.text);
-    if (cand > 0 && !(st.corp && st.corp.def.noOdds)) {   // (G0D MAZE: no odds: every node goes somewhere)
+    if (cand > 0 && !corpFlag('noOdds')) {   // (G0D MAZE: no odds: every node goes somewhere)
       const pct = Math.round(100 * Math.min(reals, cand) / cand);   // QUANTUM: 2 IN n
       const col = cand <= reals ? C.accent : pct < 25 ? C.danger : C.text;
       const val = `${Math.min(reals, cand)} IN ${cand}  ${String(pct).padStart(3)}%`;
@@ -223,7 +223,7 @@ function buildScene(now, collectHits, raw = false) {
     const live = (lvn.notes || []).filter(nt => !nt.ms || (lvn.readyAt != null && now - lvn.readyAt < nt.ms));
     const brief = live.filter(nt => nt.ms);   // a brief note (PHOTOGRAPHIC) gets the row to itself
     // A corp's button (CALL, BID, TITHE...) sits on the right; notes give it the room.
-    const act = st.corp && st.corp.hasBoss && st.corp.def.action && !st.mp ? st.corp.def.action(st.lv) : null;
+    const act = !st.mp ? corpHook('action', st.lv) || null : null;
     const actLabel = act ? `[${act.label}]` : '';
     const tl = legacyLv('tellscope') && st.lv && st.lv.hasTell && !st.mp && st.corp && st.corp.hasBoss ? (st.lv.tellOn ? 'TELL ON' : 'TELL OFF') : '';   // TELL LIGHT (THE BOARD)
     const notes = act ? '' : [tl].concat((brief.length ? brief : live).map(nt => nt.text)).filter(Boolean).join('  ');
@@ -231,7 +231,7 @@ function buildScene(now, collectHits, raw = false) {
       const ax = L.wc - actLabel.length, canAct = act.ok && !st.busy;
       put(ax, 7, actLabel, act.hot ? C.danger : canAct ? C.accent : C.dim, 'ui', true);
       if (st.hoverBtn === 'corpact' && canAct) bg(ax, 7, actLabel.length, C.accent, 0.2);
-      addHit(ax, 7, actLabel.length, 1, { kind: 'btn', id: 'corpact', noFocus: true, onTap: () => { const a2 = st.corp && st.corp.def.action && st.corp.def.action(st.lv); if (a2 && a2.ok && !st.busy && st.mode === 'play') a2.use(); else Sound.deny(); } });
+      addHit(ax, 7, actLabel.length, 1, { kind: 'btn', id: 'corpact', noFocus: true, onTap: () => { const a2 = corpHook('action', st.lv); if (a2 && a2.ok && !st.busy && st.mode === 'play') a2.use(); else Sound.deny(); } });
     }
     if (st.timer) {
       const w = notes || act ? 10 : 20, f = Math.max(0, st.timer.left / st.timer.max);
@@ -261,7 +261,7 @@ function buildScene(now, collectHits, raw = false) {
     } else {
       // The corp's hint (corp kit), or the boss warning. Mod notes go on the right; if they
       // don't fit next to the hint, the two take turns.
-      const h = st.corp && st.corp.hasBoss && st.corp.def.hint ? st.corp.def.hint(st.lv, now) : null;
+      const h = corpHook('hint', st.lv, now) || null;
       const left = h ? h.text : st.lv.boss && st.corp ? '!! ' + st.corp.def.bossDesc : '';
       const fits = !notes || (h && h.x != null) || left.length + notes.length + 2 <= L.wc;
       const showNotes = notes && (fits || Math.floor(now / 2500) % 2);
@@ -800,7 +800,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
   }
   if (boardDef && boardDef.draw) boardDef.draw(put, lv, now);
   if (lv.hks) buildHackers({ put, bg }, lv, now);
-  if (st.corp && st.corp.hasBoss && st.corp.def.overlay) st.corp.def.overlay({ put, bg, cells }, lv, now);   // a corp's own drawing over its board (G0D MAZE: b0y)
+  corpHook('overlay', { put, bg, cells }, lv, now);   // a corp's own drawing over its board (G0D MAZE: b0y)
   if (st.hkFx) buildHkFx({ put, bg }, now);   // a hacker going down (engine/hackers.js)   // hackers: cursors, faces, emote covers, DENIED, fire, tape (engine/hackers.js)
   // AFTERIMAGE: cyan corners where the last layer's real node was.
   if (has('afterimage') && lv.after && lv.after.col < lv.cols && lv.after.row < lv.rows) {

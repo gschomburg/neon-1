@@ -42,7 +42,7 @@ CORPS.demolition = {
     Sound.shatter(); shake(3);
     setMsg(t.loaded ? '> boom. ' + grantLoot(rngFor(run.seed, 'loot', st.corp.node.id, st.corp.idx), st.corp.tier) : `> boom. ${t.demoN ? 'something is next to it.' : 'clear.'}`, t.loaded ? C.money : C.accent);
     if (!lv.tiles.some(o => !o.safe && o.state === 'closed')) { onSafe(q); return true; }
-    st.busy = false; lv.readyAt = performance.now();
+    layerReady(lv);
     return true;
   },
 };

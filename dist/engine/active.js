@@ -162,7 +162,7 @@ function blastAt(lv, t) {
 // BEES: the swarm climbs the board from the bottom and eats ICE, one at a time (never the real node).
 // quiet: a later layer of the same corp (1 ICE).
 async function beeSwarm(lv, n, quiet = false) {
-  const ice = shuffle(iceOpen(lv), rngFor(st.run.seed, 'bees', st.corp.node.id, st.corp.idx, lv.beeRuns = (lv.beeRuns || 0) + 1)).slice(0, n).sort((a, b) => b.row - a.row);
+  const ice = shuffle(iceOpen(lv), layerRng('bees', lv.beeRuns = (lv.beeRuns || 0) + 1)).slice(0, n).sort((a, b) => b.row - a.row);
   if (!ice.length) return;
   st.busy = true;
   setMsg(quiet ? '> the bees are still here. bzz.' : '> BEES. (the bees are not real.)', C.money);
@@ -249,7 +249,7 @@ function rowMates() {
 // REWIND epic: every clock in this layer stops: yours and the corp's own (a hold, forever). What moves still moves (ANCHOR).
 function freezeLayer(lv) { lv.holdUntil = Infinity; }
 // Corps with their own tap rules (FORM 27B, DEMOLITION...): gear never clears the layer for you there.
-const gearMayClear = () => !(st.corp && st.corp.def.tap);
+const gearMayClear = () => !corpHas('tap');
 // FRAG / SHOE hit the real node: the layer clears, no pay (like BLAST).
 function gearClear(lv, t, msg) {
   lv.payCut = 1; lv.scanned = true;
@@ -259,7 +259,7 @@ function gearClear(lv, t, msg) {
 }
 // TILT: every closed node slides as far as it can, up or down (a coin flip). Nodes that are open or locked stay.
 async function tiltBoard(lv) {
-  const r = rngFor(st.run.seed, 'tilt', st.corp.node.id, st.corp.idx, lv.tilts = (lv.tilts || 0) + 1);
+  const r = layerRng('tilt', lv.tilts = (lv.tilts || 0) + 1);
   if (lv.grav) { setMsg('> tilt: gravity takes over.', C.accent); return gravDrop(lv); }   // GRAVITAS: a free drop (the real node rises)
   const up = r() < 0.5;
   st.busy = true;
@@ -278,7 +278,7 @@ async function tiltBoard(lv) {
 }
 // SHAKE: every closed node slides a step or two, to a free spot nearby (or swaps with a neighbor when packed).
 async function shakeBoard(lv) {
-  const r = rngFor(st.run.seed, 'shake', st.corp.node.id, st.corp.idx, lv.shakes = (lv.shakes || 0) + 1);
+  const r = layerRng('shake', lv.shakes = (lv.shakes || 0) + 1);
   st.busy = true;
   shake(4);
   if (lv.ent) { entropyShuffle(lv); setMsg('> shake: the board scrambles itself.', C.accent); }   // ENTROPY: its own shuffle, early
@@ -321,7 +321,7 @@ function fragBurst(t) {
   explode(cells, c.x, c.y, { power: 0.55, grav: 0.5, life: [0.25, 0.55] });
 }
 async function fragBoard(lv, tier) {
-  const r = rngFor(st.run.seed, 'frag', st.corp.node.id, st.corp.idx, lv.frags = (lv.frags || 0) + 1);
+  const r = layerRng('frag', lv.frags = (lv.frags || 0) + 1);
   const spare = tier >= 3 || !gearMayClear();
   const pool = lv.tiles.filter(t => t.state === 'closed' && !(spare && isReal(t)));
   const hits = shuffle(pool, r).slice(0, [3, 4, 5, 5][tier] || 3);
@@ -846,5 +846,5 @@ function scenePalette(corpKey) {
 }
 const refreshPalette = () => scenePalette(st.corp && st.corp.hasBoss ? st.corp.def.key : null);
 // BLACKOUT: the lights come back on (corp beaten, or you're out)
-const lightsOn = () => { if (st.corp && st.corp.def.dark && st.lv && st.lv.dark) { st.lv.dark = 0; refreshPalette(); } };
+const lightsOn = () => { if (corpHas('dark') && st.lv && st.lv.dark) { st.lv.dark = 0; refreshPalette(); } };
 const toggleCorpColors = () => { save.corpColors = !save.corpColors; persist(); refreshPalette(); Sound.ui(); };

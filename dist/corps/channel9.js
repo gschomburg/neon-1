@@ -43,7 +43,7 @@ CORPS.channel9 = {
     return { label: 'CH+ 1s', ok: !!st.timer && st.timer.left > 1.5, use() {
       tv.ch = (tv.ch + 1) % tv.n;
       st.timer.left -= 1;
-      const r = rngFor(st.run.seed, 'ch9', st.corp.node.id, st.corp.idx, tv.ch, (lv.flips = (lv.flips || 0) + 1));
+      const r = layerRng('ch9', tv.ch, (lv.flips = (lv.flips || 0) + 1));
       const deck = shuffle(MOTIFS.slice(), r);
       lv.tiles.forEach((t, i) => { if (t.state === 'closed' && !t.loaded) t.glyph = deck[i % deck.length]; });
       Sound.ui();

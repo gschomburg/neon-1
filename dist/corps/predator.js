@@ -42,7 +42,7 @@ CORPS.predator = {
     if (p.next == null) p.next = lt + p.wander * moveScale();
     if (lt < p.next) return;
     p.next = lt + p.wander * moveScale();
-    const r = rngFor(st.run.seed, 'pred', st.corp.node.id, st.corp.idx, p.n++);
+    const r = layerRng('pred', p.n++);
     const used = new Set(lv.tiles.map(t => t.cell));
     const movers = shuffle(lv.tiles.filter(t => t.state === 'closed' && !t.slide), r).slice(0, r() < 0.5 ? 1 : 2);
     let moved = 0;
