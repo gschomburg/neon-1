@@ -1793,7 +1793,7 @@ function openBrokenUplink() {
   openPanel('UPLINK', (T, B, X) => {
     T('U P L I N K', C.danger);
     const t = 'the uplink is broken.';
-    T([...t].map((ch, i) => G0D_LOOKS.hs(i * 3.1 + Math.floor(performance.now() / 140)) < 0.08 ? noiseCh() : ch).join(''), C.danger);
+    T([...t].map((ch, i) => FX.hs(i * 3.1 + Math.floor(performance.now() / 140)) < 0.08 ? noiseCh() : ch).join(''), C.danger);
     T('no way out from here.', C.mid);
     T('and nothing to pay.', C.mid);
     T('');

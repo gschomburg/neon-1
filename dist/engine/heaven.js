@@ -241,7 +241,7 @@ function g0dWakeSnap(boss) {
 }
 // (engine/g0dfight.js g0dfFightStart, with a snapshot: the fight is set up, its mold held back in f.target)
 function g0dWakeNew(p, snap) {
-  const f = p.fight, W = f.W, H = f.H, [n0, n1] = G0D_WAKE.nodes, hs = G0D_LOOKS.hs;
+  const f = p.fight, W = f.W, H = f.H, [n0, n1] = G0D_WAKE.nodes, hs = FX.hs;
   const boss = snap.nodes.find(o => o.boss) || { id: '-', x: Math.floor(W / 2) - 1, y: 0, label: '(@)', boss: true };
   boss.ex = boss.x + 1; boss.ey = boss.y;
   const others = shuffle(snap.nodes.filter(o => !o.boss), Math.random);
@@ -270,7 +270,7 @@ function g0dWakeNew(p, snap) {
   }
   return { e: 0, boss, home, nodes: others, dots: snap.dots, traces: [], lit: new Map(), moldAt: at, said: {} };
 }
-const g0dWakeShake = (k, now, seed) => k <= 0 ? [0, 0] : [(G0D_LOOKS.hs(seed + Math.floor(now / 45)) - 0.5) * k * 0.9, (G0D_LOOKS.hs(seed * 3.3 + Math.floor(now / 45)) - 0.5) * k * 0.35];
+const g0dWakeShake = (k, now, seed) => k <= 0 ? [0, 0] : [(FX.hs(seed + Math.floor(now / 45)) - 0.5) * k * 0.9, (FX.hs(seed * 3.3 + Math.floor(now / 45)) - 0.5) * k * 0.35];
 function g0dWakeTick(p, now, dt) {
   const w = p.wake, f = p.fight, W = f.W, H = f.H, B = w.boss, [s0, s1] = G0D_WAKE.shiver;
   w.e += dt * 1000;
@@ -365,7 +365,7 @@ function g0dWakeDone(p) {
 function g0dWakeSkip() { const p = st.g0df; if (p && p.wake && G0DF.tapSkip && p.wake.e > G0D_WAKE.beat) g0dWakeDone(p); }
 // The board while it wakes (buildG0df): top to bottom, each thing takes its cells; the mold over all of it
 function g0dWakeDraw(p, put, bg, now) {
-  const w = p.wake, f = p.fight, e = w.e, Y = BOARD_Y, hs = G0D_LOOKS.hs, B = w.boss, [s0, s1] = G0D_WAKE.shiver;
+  const w = p.wake, f = p.fight, e = w.e, Y = BOARD_Y, hs = FX.hs, B = w.boss, [s0, s1] = G0D_WAKE.shiver;
   const moldOn = (x, y) => { const i = g0dfIdx(f, Math.round(x), Math.round(y)); return i >= 0 && f.m[i] >= 0.6; };
   const taken = new Set(), key = (x, y) => Math.round(x) + ',' + Math.round(y);
   const P = (x, y, ch, col, bold = false, bgc = null, ba = 1) => {
@@ -514,9 +514,9 @@ function g0dFakeEnd() {
   g0dfStart('stand', Object.assign({}, f.stand, { noWipe: true, hole: true }));
 }
 // The mold as a solid cover (the fake win, the stand's opening): the same look at a cell on both sides of the hand-off
-const g0dCoverMold = (x, y, now) => { const th = 1.7 + G0D_LOOKS.hs(x * 3.7 + y * 1.3) * 3; return [g0dfMoldGlyph(th, x, y, now), moldCol(th, 2)]; };   // (stage 2's colors: it comes out of his death)
+const g0dCoverMold = (x, y, now) => { const th = 1.7 + FX.hs(x * 3.7 + y * 1.3) * 3; return [g0dfMoldGlyph(th, x, y, now), moldCol(th, 2)]; };   // (stage 2's colors: it comes out of his death)
 // Out from the hole (the middle of the board): how far a cell is (rows; across counts less: cells are tall)
-const g0dHoleD = (x, y) => Math.hypot((x - (L.wc - 1) / 2) / 2.2, y - (BOARD_Y + L.gh / 2)) + G0D_LOOKS.hs(x * 7.3 + y * 3.1) * 1.2;
+const g0dHoleD = (x, y) => Math.hypot((x - (L.wc - 1) / 2) / 2.2, y - (BOARD_Y + L.gh / 2)) + FX.hs(x * 7.3 + y * 3.1) * 1.2;
 // a cell's background this frame (scene.js keeps them in st.frameBgs while it builds)
 function g0dBgAt(x, y) {
   const list = st.frameBgs || [];
@@ -550,7 +550,7 @@ function g0dFakeSpecks(f, cells, now) {
 function g0dFakeOverlay(cells, now, bgs) {
   const f = st.g0dFake;
   if (!f) return cells;
-  const e = now - f.t0, W = L.wc, Hh = L.hc, hs = G0D_LOOKS.hs, cov = f.cov, h = f.holeAt != null ? e - f.holeAt : 0;
+  const e = now - f.t0, W = L.wc, Hh = L.hc, hs = FX.hs, cov = f.cov, h = f.holeAt != null ? e - f.holeAt : 0;
   g0dFakeSpecks(f, cells, now);
   const spk = new Map();   // 'x,y' -> [fraction of a row it's off by (gliding), its own glyph spot]
   for (const s of f.specks) {
@@ -600,7 +600,7 @@ const G0D_HOLE = { ms: 3900, hole: 1300, holeR: 3.4, drop: [1300, 3000], eyes: [
 // apart where they go; the hole opens to about 5 across; then the rest of the mold falls away all over, and the eyes
 // come out. s.clr: when each cell's mold went, -1: still there.)
 // the mold falling away all over: clumps (a few cells together), some cells on their own
-const g0dHoleFall = (x, y) => G0D_LOOKS.hs(Math.floor(x / 3) * 5.1 + Math.floor(y / 2) * 9.7) * 0.65 + G0D_LOOKS.hs(x * 7.7 + y * 3.3) * 0.35;
+const g0dHoleFall = (x, y) => FX.hs(Math.floor(x / 3) * 5.1 + Math.floor(y / 2) * 9.7) * 0.65 + FX.hs(x * 7.7 + y * 3.3) * 0.35;
 function g0dHoleTick(p, s, now, dt) {
   const oe = now - s.openFrom, say = (k, at, fn) => { if (oe >= at && !s.said[k]) { s.said[k] = true; fn(); } };
   say('drop', G0D_HOLE.drop[0], () => { Sound.shatter(); shake(5, 0.4); });
@@ -693,7 +693,7 @@ function heavenDie(p) {
 }
 const g0dDieFrac = (e, [a, b]) => clamp((e - a) / (b - a), 0, 1);
 // the network, pulled in: a cell goes when the pull gets to it (the far ones first)
-const g0dDieNetGone = (f, x, y, k) => (1 - Math.hypot((x - f.eye.x) / 2.2, y - f.eye.y) / f.dmax) * 0.85 + G0D_LOOKS.hs(x * 1.9 + y * 5.3) * 0.15 < k;
+const g0dDieNetGone = (f, x, y, k) => (1 - Math.hypot((x - f.eye.x) / 2.2, y - f.eye.y) / f.dmax) * 0.85 + FX.hs(x * 1.9 + y * 5.3) * 0.15 < k;
 function g0dDieTick(now) {
   const f = st.g0dDie;
   if (!f || st.mode !== 'g0ddie' || st.pause || st.dev) return;
@@ -708,7 +708,7 @@ function g0dDieTick(now) {
   say('d', G0D_DIE.fade[0], () => Sound.bossDrop());
   // the mold blows off and falls (the fight's own)
   if (!reduced() && e >= G0D_DIE.mold[0] && e <= G0D_DIE.mold[1] + 200) {
-    const frac = g0dDieFrac(e, G0D_DIE.mold), hs = G0D_LOOKS.hs, cells = [];
+    const frac = g0dDieFrac(e, G0D_DIE.mold), hs = FX.hs, cells = [];
     for (let k = 0; k < 60 && cells.length < 16; k++) {
       const x = Math.floor(Math.random() * L.wc), y = Math.floor(Math.random() * L.gh), key = x + ',' + y, th = f.m[y * L.wc + x];
       if (f.gone.has(key) || th < 0.6 || hs(x * 2.7 + y * 5.3) >= frac) continue;
@@ -765,7 +765,7 @@ function g0dDieSkip() { const f = st.g0dDie; if (G0DF.tapSkip && f && performanc
 function buildG0dDie(ctx) {
   const f = st.g0dDie, { put, bg, now } = ctx;
   if (!f) return;
-  const e = now - f.t0, Y = BOARD_Y, hs = G0D_LOOKS.hs, W = L.wc, H = L.gh, moldGone = g0dDieFrac(e, G0D_DIE.mold), netK = g0dDieFrac(e, G0D_DIE.net);
+  const e = now - f.t0, Y = BOARD_Y, hs = FX.hs, W = L.wc, H = L.gh, moldGone = g0dDieFrac(e, G0D_DIE.mold), netK = g0dDieFrac(e, G0D_DIE.net);
   const ex = f.eye.x, ey = f.eye.y, taken = new Set();
   const eyeW = e < G0D_DIE.burst ? 6 : e < G0D_DIE.small ? 2 : 1, eyeH = e < G0D_DIE.burst ? 2 : e < G0D_DIE.small ? 1 : 0;
   const onEye = (x, y) => e < G0D_DIE.off + G0D_DIE.offMs && Math.abs(x - ex) <= eyeW + (e >= G0D_DIE.off ? 3 : 0) && Math.abs(y - ey) <= eyeH;
@@ -803,7 +803,7 @@ function buildG0dDie(ctx) {
 function g0dDieOverlay(cells, now, bgs) {
   const f = st.g0dDie;
   if (!f) return cells;
-  const e = now - f.t0, k = g0dDieFrac(e, G0D_DIE.fade), hs = G0D_LOOKS.hs;
+  const e = now - f.t0, k = g0dDieFrac(e, G0D_DIE.fade), hs = FX.hs;
   let out = e < G0D_DIE.boom ? g0dfBar(cells, bgs, { f: 0 }) : cells;
   out = g0dChromeFade(out, bgs, g0dDieFrac(e, G0D_DIE.chrome));
   out = g0dChromeBoom(f, out, bgs, G0D_DIE.boom, e);
@@ -816,7 +816,7 @@ function g0dDropBgs(bgs, rowGone) { let j = 0; for (const b of bgs) if (!rowGone
 const G0D_KEEP_ROWS = () => [G0DF_BAR_ROW, BOARD_Y - 2];
 function g0dChromeFade(out, bgs, k) {
   if (k <= 0) return out;
-  const keep = G0D_KEEP_ROWS(), hs = G0D_LOOKS.hs, gone = (x, y) => hs(x * 3.1 + y * 7.7) < k * 1.05;
+  const keep = G0D_KEEP_ROWS(), hs = FX.hs, gone = (x, y) => hs(x * 3.1 + y * 7.7) < k * 1.05;
   const off = y => (y < BOARD_Y || y >= BOARD_Y + L.gh) && !keep.includes(y);
   out = out.filter(c => { const x = Math.round(c.cx), y = Math.round(c.cy); return !(off(y) && gone(x, y)); });
   if (bgs && k >= 1) { g0dDropBgs(bgs, off); return out; }   // all gone: drop what was under it (covering it cell by cell left faint seams: the user)
@@ -863,7 +863,7 @@ function moldOverlay(cells, now, bgs) {
   let m = st.moldFx;
   if (!m || m.lv !== st.lv) m = st.moldFx = { lv: st.lv, patches: [], nextAt: now + 300, wipe: null, used: false, holes: [] };
   m.heavy = lvl === 'heavy';
-  const W = L.wc, y0 = BOARD_Y, y1 = BOARD_Y + L.gh, hs = G0D_LOOKS.hs, cover = new Map(), bits = [];
+  const W = L.wc, y0 = BOARD_Y, y1 = BOARD_Y + L.gh, hs = FX.hs, cover = new Map(), bits = [];
   // the light patches: spawn, grow, sit, crumble
   const live = m.patches.filter(p => now - p.born < MOLD_FX.grow + p.sit + MOLD_FX.crumble);
   m.patches = live;
@@ -1087,7 +1087,7 @@ HEAVEN.cerberus = {
   overlay(ctx, lv, now) {
     const cb = lv.cb;
     if (!cb || lv.shownAt == null) return;
-    const W = L.wc, Y = BOARD_Y, H = L.gh, hs = G0D_LOOKS.hs, dt = Math.min(0.05, (now - (cb.last || now)) / 1000); cb.last = now;
+    const W = L.wc, Y = BOARD_Y, H = L.gh, hs = FX.hs, dt = Math.min(0.05, (now - (cb.last || now)) / 1000); cb.last = now;
     const base = cb.boss ? CERB.bossMold : CERB.mold;
     if (!cb.m) {   // the mold: it grows in over the clear board, in fingers from the edges (arr: when it gets to a cell)
       cb.m = new Float32Array(W * L.hc); cb.cap = new Float32Array(W * L.hc); cb.arr = new Float32Array(W * L.hc); cb.scr = new Uint8Array(W * L.hc); cb.t0 = now;
@@ -1235,7 +1235,7 @@ const g0dEndCrumble = e => {
   return v;
 };
 // which network cells go first: clumps (a few cells together), some on their own
-const g0dEndH = (x, y) => G0D_LOOKS.hs(Math.floor(x / 4) * 3.7 + Math.floor(y / 2) * 8.3) * 0.6 + G0D_LOOKS.hs(x * 1.9 + y * 5.3) * 0.4;
+const g0dEndH = (x, y) => FX.hs(Math.floor(x / 4) * 3.7 + Math.floor(y / 2) * 8.3) * 0.6 + FX.hs(x * 1.9 + y * 5.3) * 0.4;
 function g0dEndSkip(f) {   // straight to G0D DEFEATED (the editor's skip, a tap)
   f.t0 = performance.now() - G0D_END.title; f.boomed = true;
   for (const k of ['a', 'b', 'k0', 'k1', 'k2', 'burst', 'small', 'off']) f.said[k] = true;
@@ -1316,7 +1316,7 @@ function g0dEndTap() {
 function buildG0dEnd(ctx) {
   const f = st.g0dEnd, { put, bg, now } = ctx;
   if (!f) return;
-  const e = now - f.t0, Y = BOARD_Y, hs = G0D_LOOKS.hs, frac = g0dEndCrumble(e), ex = f.eye.x, ey = f.eye.y;
+  const e = now - f.t0, Y = BOARD_Y, hs = FX.hs, frac = g0dEndCrumble(e), ex = f.eye.x, ey = f.eye.y;
   const live = e < G0D_END.off + G0D_END.offMs, onEye = (x, y) => live && Math.abs(x - ex) <= 4 && Math.abs(y - ey) <= 1;
   // the network, bare, crumbling away (nothing's left behind)
   for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {

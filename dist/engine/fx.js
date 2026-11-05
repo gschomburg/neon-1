@@ -238,6 +238,38 @@ const FX = (() => {
   // A steady number for a string (a codex key): decrypt's seed.
   const seedOf = s => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100003; return h; };
 
-  return { hash, pick, step, cycle, clamp01, easeOut, col, look, decrypt, seedOf, noise1, noise2, mask, where, glitchOn, flickerOff, tint, apply, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
+  // hs: a fast hash of one number to [0, 1) (G0D's looks, the mold: was G0D_LOOKS.hs). The other hashes in the game give
+  // other numbers, so they stay where they are (swapping one would change a look): h01 (engine/corpkit.js), hash2
+  // (engine/effects.js, the wipes), hh (engine/bench.js), decodeDelay (engine/scene.js).
+  const hs = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+  return { hs, hash, pick, step, cycle, clamp01, easeOut, col, look, decrypt, seedOf, noise1, noise2, mask, where, glitchOn, flickerOff, tint, apply, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
     glow, glowCone, glowCell, glowWash, tear, swapOn, burst, burstCh, burstCells, tics, putTics, smoke, fogRows, garble };
 })();
+
+// ---------- The M0LD's colors (moved here from engine/g0d.js: the fight, heaven, HAD3S, the wipes and events use them) ----------
+// ---------------- Over a screen ----------------
+// ---------------- THE MOLD's colors: one place for every mold in the game (the user, 2026-10-31) ----------------
+// Tweak them here and every mold follows: the G0D fight, the wake-up, his death, the fake win, the final stand, the
+// sector M0LD (light and deep), CERBERUS, the maze's edges, the spill, the editor's g0d tab.
+// ramps: four shades, thin to thick (steps: the thickness where each starts), one ramp per stage of how close G0D is
+// (it goes gradually more yellow): 0 green (sector 1's M0LD, CERBERUS, the wake-up, the fight's stage 1, the maze),
+// 1 yellower (heaven's deep M0LD, CERBERUS's boss layer, the fight's stage 2), 2 amber (the fight's stage 3, his
+// death, the fake win and the final stand that come out of it). fresh: new growth. clue: the cyan over a buried eye.
+const MOLD = {
+  ramps: [['#4f6120', '#6f8a2a', '#9fc13a', '#c3e34e'], ['#5a6420', '#848e28', '#b8bd38', '#e2df58'], ['#62521e', '#917228', '#c69834', '#f0c252']],
+  steps: [1.6, 2.5, 3.4],
+  fresh: '#d8ff70',
+  clue: '#5fe0d8',
+};
+const moldMixCache = new Map();
+function moldMix(a, b, k) {   // a hex color k of the way to b (cached)
+  const key = a + b + k; let v = moldMixCache.get(key); if (v) return v;
+  const p = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), A = p(a), B = p(b);
+  v = '#' + A.map((c, i) => Math.round(c + (B[i] - c) * k).toString(16).padStart(2, '0')).join('');
+  moldMixCache.set(key, v); return v;
+}
+// The mold's color at a thickness (0-5), a stage (0-2), and how much of the clue's cyan (0-1)
+function moldCol(th, stage = 0, clue = 0) {
+  const r = MOLD.ramps[clamp(stage | 0, 0, MOLD.ramps.length - 1)], s = MOLD.steps, c = r[th < s[0] ? 0 : th < s[1] ? 1 : th < s[2] ? 2 : 3];
+  return clue > 0.04 ? moldMix(c, MOLD.clue, Math.round(clue * 20) / 20) : c;
+}

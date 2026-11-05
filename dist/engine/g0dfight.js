@@ -620,7 +620,7 @@ const G0DF_RAMP = [null,
   ['#', '@', '#', '8', 'M', '#', 'W', '@']];
 const G0DF_FLOW = { sx: 0.32, sy: 0.6, speed: 0.0011 };   // the noise: its scale across / down, and how fast z moves (per ms)
 function g0dfNoise3(x, y, z) {   // value noise, smooth, 0-1
-  const h = (a, b, c) => G0D_LOOKS.hs(a * 127.1 + b * 311.7 + c * 74.7);
+  const h = (a, b, c) => FX.hs(a * 127.1 + b * 311.7 + c * 74.7);
   const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi;
   const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf), L2 = (a, b, k) => a + (b - a) * k;
   const c = (dz) => L2(L2(h(xi, yi, zi + dz), h(xi + 1, yi, zi + dz), u), L2(h(xi, yi + 1, zi + dz), h(xi + 1, yi + 1, zi + dz), u), v);
@@ -740,12 +740,12 @@ function g0dfFightDraw(p, put, bg, now) {
     const k = x + ',' + y;
     if (!clear(x, y) || taken.has(k) || nodeAt.has(k)) continue;
     const tc = tint.get(k);
-    put(x, Y + y, g0dfCircuitCh(x, y, now, f.W, f.H), tc || (G0D_LOOKS.hs(x * 1.3 + y * 7.9) < 0.25 ? C.mid : C.dim));
+    put(x, Y + y, g0dfCircuitCh(x, y, now, f.W, f.H), tc || (FX.hs(x * 1.3 + y * 7.9) < 0.25 ? C.mid : C.dim));
   }
   for (const n of f.nodes) {
     const x = Math.round(n.x), y = Math.round(n.y);
     if (n.gone) continue;
-    const corp = n.kind === 'corp', hs = G0D_LOOKS.hs;
+    const corp = n.kind === 'corp', hs = FX.hs;
     // a corp node glitches (round 23): now and then the whole label flips to G0D for a moment, and letters swap out
     const flip = corp && hs(n.gid + Math.floor(now / 650) * 3.1) > 0.86;
     let lab = n.kind === 'eye' ? (f.hands ? '(@)' : Math.floor(now / 700) % 3 === 2 ? '(.)' : '(o)') : flip ? 'G0D' : n.label;
@@ -900,8 +900,8 @@ function g0dfStandDraw(p, put, bg, now) {
   for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
     const k = x + ',' + y;
     if (stTr.has(k) || trailAt.has(k) || (!opening && onEye0(x, y))) continue;
-    const h = G0D_LOOKS.hs(x * 1.3 + y * 7.9);
-    if (opening && G0D_LOOKS.hs(x * 2.3 + y * 4.1) > drawIn) continue;
+    const h = FX.hs(x * 1.3 + y * 7.9);
+    if (opening && FX.hs(x * 2.3 + y * 4.1) > drawIn) continue;
     put(x, Y + y, g0dfCircuitCh(x, y, now, L.wc, L.gh), fresh(x, y) ? C.text : h < doom * 0.6 ? C.dangerDim : h < 0.25 ? C.mid : C.dim);
   }
   // the mold streaming off the eyes: thick and bright when fresh, thinning as it fades (round 4)
@@ -910,7 +910,7 @@ function g0dfStandDraw(p, put, bg, now) {
     const x = Math.round(o.x), y = Math.round(o.y), age = (now - o.at) / 1600;
     if (y < 1 || y >= lastRow || x < 0 || x >= L.wc || onEye(x, y) || stTr.has(x + ',' + y)) continue;
     const ch = '#&%;:,.'[Math.min(6, Math.floor(age * 7))];
-    put(x, Y + y, ch, doom > 0 && G0D_LOOKS.hs(o.k * 91) < doom ? (age < 0.5 ? G0DF_RED : C.dangerDim) : age < 0.3 ? G0DF_FRESH : moldCol(age < 0.65 ? 2.6 : 1, 2));   // (the final stand: stage 2's colors, out of the fight's end)
+    put(x, Y + y, ch, doom > 0 && FX.hs(o.k * 91) < doom ? (age < 0.5 ? G0DF_RED : C.dangerDim) : age < 0.3 ? G0DF_FRESH : moldCol(age < 0.65 ? 2.6 : 1, 2));   // (the final stand: stage 2's colors, out of the fight's end)
   }
   // (round 4) the eyes glitch a little: inverting cells, a jolt, G0D for a moment; more as you take them out
   const gl = 0.03 + 0.45 * Math.pow(s.cur / s.eyes.length, 1.3), gt = Math.floor(now / 70);
@@ -1081,7 +1081,7 @@ function g0dfBar(cells, bgs, hp) {
 // G0D's eye (round 26): 13 x 5. It looks around (the pupil slides), blinks now and then, flinches when hit (squeezes, jolts),
 // gets bloodshot as his health drops; found the second eye: it widens, a ring pulses round it. Under it: time left, hits left.
 function g0dfEyeDraw(p, f, put, bg, take, now, Y) {
-  const e = f.eye, hs = G0D_LOOKS.hs, age = now - e.at, hurt = now - f.hitAt < 320, left = Math.max(0, (e.until - now) / 1000);
+  const e = f.eye, hs = FX.hs, age = now - e.at, hurt = now - f.hitAt < 320, left = Math.max(0, (e.until - now) / 1000);
   const jolt = now - f.hitAt < 200 ? (Math.floor(now / 50) % 2 ? 1 : -1) : 0;
   const x = Math.round(e.x) + jolt, y = Math.round(e.y);
   const look = Math.round(Math.sin(now / 700 + e.at) * 1.6 + Math.sin(now / 263) * 0.6);   // -2..2: where it's looking
@@ -1122,7 +1122,7 @@ const g0dfEyeBlue = e => Math.max(0, e.cap - e.hits) / (e.bonus ? e.cap : e.cap 
 // A hit: the blue that turns red blasts off the eye (round 27).
 function g0dfEyeChip(e, before) {
   if (reduced()) return;
-  const after = g0dfEyeBlue(e), hs = G0D_LOOKS.hs, cells = [], art = ['   .-----.   ', " .'       '. ", '(           )', " '.       .' ", "   '-----'   "];
+  const after = g0dfEyeBlue(e), hs = FX.hs, cells = [], art = ['   .-----.   ', " .'       '. ", '(           )', " '.       .' ", "   '-----'   "];
   art.forEach((l, j) => { for (let k = 0; k < l.length; k++) { if (l[k] === ' ') continue; const v = hs(k * 7.7 + j * 3.1 + e.seed); if (v < before && v >= after) cells.push({ ch: l[k], x: pxX(e.x - 6 + k), y: pxY(BOARD_Y + e.y - 2 + j), col: G0DF_BLUE }); } });
   for (let k = 0; k < 8; k++) cells.push({ ch: pickR(['*', '.', 'o', ',', '`'], Math.random), x: pxX(e.x + rand(-5, 5)), y: pxY(BOARD_Y + e.y + rand(-2, 2)), col: pickR([G0DF_BLUE, C.bright], Math.random) });
   explode(cells, pxX(e.x), pxY(BOARD_Y + e.y), { power: 1.2, grav: 0.9, life: [0.4, 0.9] });
@@ -1154,7 +1154,7 @@ function g0dfOverlay(cells, now, bgs) {
       const burn = f.hands && f.hands.burning, heat = f.hands ? Math.min(1, (now - f.hands.at) / 1000 / G0DF.charge) : 0, cover = new Set(), add = [];
       for (const y of g0dfSpillRows()) for (let x = 0; x < f.W; x++) {
         const th = f.sp[y * f.W + x]; if (!(th >= 0.6)) continue;
-        const red = burn || (heat && G0D_LOOKS.hs(x * 3.7 + y * 11.3) < heat * 0.7);   // the charge reddens it bit by bit, the burn all of it (round 17)
+        const red = burn || (heat && FX.hs(x * 3.7 + y * 11.3) < heat * 0.7);   // the charge reddens it bit by bit, the burn all of it (round 17)
         const col = red ? (th > 2.5 ? G0DF_RED : C.dangerDim) : g0dfMoldCol(th, f.stage);
         if (th >= G0DF_SEE) { cover.add(x + ',' + y); if (bgs) bgs.push({ cx: x, cy: y, w: 1, col: C.bg, alpha: 1 }); add.push({ ch: g0dfMoldGlyph(th, x, y, now), cx: x, cy: y, col, own: 'fx', bold: false }); }
         else add.push({ ch: g0dfMoldGlyph(th, x, y, now), cx: x, cy: y, col: red ? C.dangerDim : moldCol(2.6, f.stage), own: 'fx', bold: true });   // thin: a speck over what's there (it flows too)

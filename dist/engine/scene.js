@@ -409,7 +409,7 @@ function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own 
     let ch = label[k], dy = 0, inv = selected || flash, chip = chip0;
     if (anim === 'wave' || anim === 'exotic') { const w = t - k * 0.09; if (w > 0 && w < 0.3) dy = -Math.sin(w / 0.3 * Math.PI) * 0.35; }
     if (anim === 'exotic' && !dim) chip = rainbow[Math.floor(now / 160 + k) % rainbow.length];
-    if (g0dm) { if (Math.floor(now / 420) % 3 === 1) ch = ch.toLowerCase(); if (!dim && G0D_LOOKS.hs(Math.floor(now / 90) * 1.7 + k * 7.3) < 0.3) chip = { bg: G0DF_RED, fg: C.bg }; }
+    if (g0dm) { if (Math.floor(now / 420) % 3 === 1) ch = ch.toLowerCase(); if (!dim && FX.hs(Math.floor(now / 90) * 1.7 + k * 7.3) < 0.3) chip = { bg: G0DF_RED, fg: C.bg }; }
     if (anim === 'cycle' && !selected && !dim) inv = Math.floor(now / 300 + k) % 4 === 1;
     if (anim === 'scramble' && t < 0.2 && Math.random() < 0.5) ch = noiseCh();
     cell(x + 1 + k, ch, inv, chip, dy, k + 1);

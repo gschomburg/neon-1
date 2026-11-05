@@ -1,6 +1,7 @@
-// NeoN+1 engine/g0d.js: G0D previews for the editor's G0D tab (tools/neon_editor.html). Nothing here runs in play:
-// only the editor sets st.g0d. The fight designs are mockups (docs/QUESTS.md, "G0D's fights"), drawn over a real
-// screen so they can be judged in the game: a corp layer, the sector map, the win screen, the death screen.
+// NeoN+1 engine/g0d.js: G0D's looks. Mostly previews for the editor's G0D tab (tools/neon_editor.html: only the editor
+// sets st.g0d): the fight designs as mockups (docs/QUESTS.md, "G0D's fights"), drawn over a real screen so they can be
+// judged in the game. Used in play too: the health bar (G0D_HP), G0D_COLS, g0dSay, and G0D_LOOKS.moldCh / LOGO by the
+// fight (engine/g0dfight.js, heaven.js). The mold's colors (MOLD, moldCol) and the hash are in engine/fx.js.
 //
 // The designs draw on a 44 x 22 sketch grid (the size of the mockup pages) and land on the board, squeezed to fit:
 // each string keeps its letters, only where it starts is scaled. The sketch's top row is G0D's boss bar and its
@@ -11,7 +12,7 @@ NEON_FILES.push(['engine/g0d.js', 'v14.44']);
 const G0D_LOOKS = (() => {
   const W = 44, H = 22;
   let SX = 1, SY = 1, GW = W, GH = H;
-  const hs = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+  const hs = FX.hs;   // (engine/fx.js: the same hash, shared)
   const sm = x => x * x * (3 - 2 * x);
   const mkGrid = (w, h, sx, sy) => {
     const ch = [], co = [];
@@ -501,32 +502,6 @@ const G0D_LOOKS = (() => {
   return { list, draw, hs, moldCh, LOGO };
 })();
 
-// ---------------- Over a screen ----------------
-// ---------------- THE MOLD's colors: one place for every mold in the game (the user, 2026-10-31) ----------------
-// Tweak them here and every mold follows: the G0D fight, the wake-up, his death, the fake win, the final stand, the
-// sector M0LD (light and deep), CERBERUS, the maze's edges, the spill, the editor's g0d tab.
-// ramps: four shades, thin to thick (steps: the thickness where each starts), one ramp per stage of how close G0D is
-// (it goes gradually more yellow): 0 green (sector 1's M0LD, CERBERUS, the wake-up, the fight's stage 1, the maze),
-// 1 yellower (heaven's deep M0LD, CERBERUS's boss layer, the fight's stage 2), 2 amber (the fight's stage 3, his
-// death, the fake win and the final stand that come out of it). fresh: new growth. clue: the cyan over a buried eye.
-const MOLD = {
-  ramps: [['#4f6120', '#6f8a2a', '#9fc13a', '#c3e34e'], ['#5a6420', '#848e28', '#b8bd38', '#e2df58'], ['#62521e', '#917228', '#c69834', '#f0c252']],
-  steps: [1.6, 2.5, 3.4],
-  fresh: '#d8ff70',
-  clue: '#5fe0d8',
-};
-const moldMixCache = new Map();
-function moldMix(a, b, k) {   // a hex color k of the way to b (cached)
-  const key = a + b + k; let v = moldMixCache.get(key); if (v) return v;
-  const p = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), A = p(a), B = p(b);
-  v = '#' + A.map((c, i) => Math.round(c + (B[i] - c) * k).toString(16).padStart(2, '0')).join('');
-  moldMixCache.set(key, v); return v;
-}
-// The mold's color at a thickness (0-5), a stage (0-2), and how much of the clue's cyan (0-1)
-function moldCol(th, stage = 0, clue = 0) {
-  const r = MOLD.ramps[clamp(stage | 0, 0, MOLD.ramps.length - 1)], s = MOLD.steps, c = r[th < s[0] ? 0 : th < s[1] ? 1 : th < s[2] ? 2 : 3];
-  return clue > 0.04 ? moldMix(c, MOLD.clue, Math.round(clue * 20) / 20) : c;
-}
 // G0D's own colors, the same in every palette. mold / moldDim: stage 0's thick and thin (from MOLD, for the older code)
 const G0D_COLS = { get mold() { return MOLD.ramps[0][2]; }, get moldDim() { return MOLD.ramps[0][0]; }, orange: '#ff8a4a' };
 const g0dCol = k => G0D_COLS[k] || (k === 'dd' ? C.dangerDim : C[k]) || C.text;
