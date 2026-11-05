@@ -1,4 +1,4 @@
-// NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
+// NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
 NEON_FILES.push(['engine/editor.js', 'v14.44']);
@@ -79,8 +79,8 @@ function lootReport() {
   return out.join('\n');
 }
 
-// ---------------- Palette editor bridge ----------------
-// tools/palette_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
+// ---------------- Editor bridge ----------------
+// tools/neon_editor.html opens the game as index.html?editor=1 in a frame and talks to it with
 // messages: 'palettes' (new palette data, live), 'show' (which palette to paint everything in, and
 // BLACKOUT's darkness), 'scene' (set up a screen to look at). None of this runs in normal play.
 if (EDITOR) {

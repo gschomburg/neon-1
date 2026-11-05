@@ -435,7 +435,7 @@
   $('#undo').onclick = () => stepHistory(undo, redo); $('#redo').onclick = () => stepHistory(redo, undo);
   document.addEventListener('keydown', e => {
     const mod = e.ctrlKey || e.metaKey;
-    if (document.body.classList.contains('mode-art') || document.body.classList.contains('mode-tut') || document.body.classList.contains('mode-econ')) return;   // the art, training and economy tabs have their own keys
+    if (document.body.classList.contains('mode-art') || document.body.classList.contains('mode-tut') || document.body.classList.contains('mode-econ') || document.body.classList.contains('mode-fx')) return;   // the art, training, economy and fx tabs have their own keys
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
     else if (mod && e.key.toLowerCase() === 'z' && !(e.target.matches && e.target.matches('input[type=text]'))) { e.preventDefault(); e.shiftKey ? stepHistory(redo, undo) : stepHistory(undo, redo); }
     else if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); stepHistory(redo, undo); }
