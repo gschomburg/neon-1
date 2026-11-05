@@ -39,52 +39,39 @@ All ASCII, mobile first, plain HTML/JS, no build step.
   fireworks, decoding screens. Mobile first, keyboard friendly.
 - A palette editor and a tell-odds tool for tuning (see Folders).
 
-## Play
+## How to run
 
-Open `dist/index.html` in a browser (or upload the `dist/` folder to a web host). That's it, no build step.
+Open `dist/index.html` in a browser. That's it: no build step, no server. It works straight from disk (file://).
 
 - `?seed=WORD` plays a fixed seed. A corp's name as the seed (`?seed=NOIR`) makes every node that corp.
 - `?dev=1` (or the backtick key) opens the dev menu.
 - Multiplayer (2-6 players, over Firebase): `[ MULTIPLAYER ]` on the title screen.
 
-## Folders
+The tools in `tools/` are Node scripts or HTML pages. Each script prints its usage with `--help`:
 
-- `dist/`: the game (upload the whole folder). `index.html` is the page; the code is in `engine/`, the data in
-  `data/`, each corp in its own file in `corps/`, every palette in `palettes.js`. The master copy, tracked in
-  git; the build number is `VERSION` in `engine/core.js` (`node tools/bump.js minor` ticks it everywhere).
-- `prototypes/`: the old versions, frozen, each a standalone snapshot (v01-v11; v08 is the online
-  test build, v09 the 74-corp build, v10 adds BONEYARD, v11 is where `dist/` started).
-- `docs/REVIEW.md`: my review list: things Claude built or decided that I still need to look at.
-- `docs/SPEC.md`: the living design doc: what's built, version by version, plus the backlog.
-- `docs/CORPS.md`: every corp, its tell, its mod, and the build plan by tier.
-- `docs/CONTENT.md`, `docs/NAMES.md`, `docs/ART.md`: content reference, naming, art drop-off.
-- `tools/palette_editor.html`: the palette editor (open it in Chrome): edit `dist/data/palettes.js` with the game
-  running beside it, and save straight to the file.
-- `tools/check.js` and `tools/playtest.js`: "did anything change?" A fingerprint of the game (every corp's
-  layers, maps, data, code) and a headless playthrough of every corp, compared to a saved baseline.
-- `tools/bump.js`: change the build number everywhere.
-- `tools/tell_odds.js`: `node tools/tell_odds.js` measures how much each corp's tell helps.
-- `reference/1TD.html`: One True Door, the game that inspired this one.
-- `ascii-editor/`: a standalone ASCII art tool (not part of the game, may get its own repo later). Its plan is
-  `ascii-editor/PLAN.md`.
-- `database.rules.json`: the Firebase Realtime Database rules (pasted into the Firebase console).
+```
+node tools/check.js            # fingerprint the game and compare it to the baseline
+node tools/playtest.js         # play every corp in headless Chrome (needs Chrome)
+node tools/tell_odds.js        # how much each corp's tell helps
+```
 
-## How it was made
+The editors (`tools/neon_editor.html`, `tools/palette_editor.html`, `tools/music.html`, `tools/music_view.html`)
+open straight from disk in Chrome. They save into `dist/` with the File System Access API.
 
-NeoN+1 was built in conversation with Claude, Anthropic's AI model, running in Claude Code.
+## Version
 
-- **The idea and the design are mine:** the original game idea, the game, the corps and their tells, what to build and when, and the
-  playtesting and feedback after every round.
-- **Claude wrote the code:** every version's HTML/JS, plus the generated music, the ASCII art
-  placeholders, and the headless tests and bots that check each corp's tell before a build ships.
-- **The docs are shared:** Claude keeps `docs/SPEC.md` and `docs/CORPS.md` up to date as the
-  living record of what was asked for, what got built and what changed along the way. My ideas go
-  into the backlog there until I say to build them.
-- **The history:** up to v11, each round of work started as a fresh copy of the last version (now in
-  `prototypes/`). Since v11 the game lives in `dist/` and git keeps the history; every update
-  ticks the build number (v11.00, v11.01...).
+The game is at **v14.31**. The build number is `VERSION` in `dist/engine/core.js`, and the intro screen shows it
+("neon+1 terminal // v14.31").
 
-## Version history
+- Versions are `vMAJOR.MINOR`. The minor goes up by .01 for each round of work; the major only when I say so.
+- `node tools/bump.js minor` (or `major`, or `v14.40`) changes it everywhere: `VERSION`, the stamp at the top of
+  every game file, the `?v=` on every script link in `index.html`, `dist/version.json`, and the corp lists in
+  the tool pages.
+- The hosted game reads `version.json` and offers an update on the title screen when the server has a newer build.
+- A new major needs a new save slot (`STORE_KEY` in `engine/core.js`). `bump.js` reminds you.
+- Every change, version by version, is in `docs/SPEC.md` (the version log, §16n).
+
+### Version history
 
 | Version | What it added |
 |---|---|
@@ -101,10 +88,87 @@ NeoN+1 was built in conversation with Claude, Anthropic's AI model, running in C
 | v11 | The NeoN+1 title, CIPHER, HYDRA and BLACKOUT, palettes in their own file, the palette editor, `dist/` |
 | v12 | The game split into files: engine, data, and one file per corp; version stamps; link previews |
 | v13 | EXOTIC mods that bend the rules (ICE EATER, ZOMBIE, BLOOD MONEY, LEVERAGE, QUANTUM, COIN FLIP, SNOOZE, RAM DOUBLER), the ALL-IN item, corp map codes with levels, mod effects you can see |
+| v14 | The H3AV3N release: the loot pass and new gear, H3AV3N and the G0D fight, quests (THE DISC, HAD3S, the main quest end to end), THE WORKBENCH |
 
-The full record (every change, and the ideas still waiting) is in `docs/SPEC.md`.
+## How to deploy
 
-## Related games
+The game lives at [www.gregschomburg.com/neon/](https://www.gregschomburg.com/neon/) (DreamHost, Apache).
+
+1. Commit first, so the bump is its own step.
+2. Bump the build: `node tools/bump.js minor`.
+3. Check nothing changed by accident: `node tools/check.js` (and `node tools/playtest.js` for a bigger round).
+4. Commit the bump: "Version v14.32: summary".
+5. Upload the whole `dist/` folder to `/neon/` by SFTP (FileZilla). Include `dist/.htaccess`: it makes phones
+   pick up the new build.
+6. If `database.rules.json` changed, paste it into the Firebase console (Realtime Database > Rules).
+7. Open the site and check the version on the intro screen.
+
+The leaderboard service (`greglytics/`) deploys on its own: see `greglytics/README.md`.
+
+## Project layout
+
+```
+neon-1/
+├── readme.md               this file
+├── CLAUDE.md               the short working guide for Claude
+├── database.rules.json     the Firebase Realtime Database rules (pasted into the console by hand)
+├── dist/                   the game: the hand-edited source and the folder you upload
+│   ├── index.html          the page; loads every script below in order
+│   ├── .htaccess           Apache caching and compression for the hosted copy
+│   ├── version.json        the current build, for the update check (written by tools/bump.js)
+│   ├── manifest.webmanifest, icon*.png, icon.svg, preview.png   home-screen app and link preview
+│   ├── engine/             the code, one file per part (run.js, scene.js, map.js, music.js, ...)
+│   ├── data/               the game's data: mods, economy, music, quests, palettes, tutorial, ...
+│   │   └── art/            the ASCII art: node glyphs, logos, faces, the world map, sector-clear pictures
+│   └── corps/              one file per corp (78)
+├── tools/                  dev scripts and editors (not deployed)
+│   ├── bump.js             change the build number everywhere
+│   ├── check.js            fingerprint the game, to prove a change didn't change anything else
+│   ├── playtest.js         play every corp in headless Chrome and compare to a baseline
+│   ├── econsim.js          play whole runs headless and report the credits (docs/ECONOMY.md)
+│   ├── tell_odds.js        how much each corp's tell helps
+│   ├── neon_editor.html    the editor: edits the data files in dist/ in place
+│   ├── palette_editor.html the older palette editor
+│   ├── music.html          the music tool: which track plays where
+│   ├── music_view.html     Music View: a piano roll of any track
+│   ├── music_view_*.js     Music View's resolver, and the check that it matches the engine
+│   ├── *_file.js           shared readers and writers for the data files (art, economy, tutorial)
+│   ├── quest_dialog.js     writes docs/QUEST_DIALOG.md from dist/data/quests.js
+│   ├── scene_art.js        copies cutscene art from asXii saves into dist/data/scene_art.js
+│   └── check/              fingerprints and recordings (gitignored)
+├── docs/                   the design docs
+│   ├── SPEC.md             the living spec: what's built, the version log (§16n), decisions (§18)
+│   ├── BACKLOG.md          open work: features and ideas waiting their turn
+│   ├── REVIEW.md           my review list: things Claude built or decided that I still need to look at
+│   ├── meat_notes.md       my raw notes, for Claude to sort
+│   ├── CORPS.md, QUESTS.md, PROGRESSION.md, ECONOMY.md, MUSIC.md, ...   topic docs
+│   ├── archive/            old planning lists
+│   ├── art/                logotype drafts
+│   └── mockups/            HTML mockups (the WORKBENCH)
+├── ascii-editor/           asXii, a standalone ASCII art editor with its own version (see its README)
+├── greglytics/             the shared events and leaderboard service (PHP/MySQL); dist/engine/greglytics.js is a copy
+├── prototypes/             the old versions, frozen (v01-v11; v11 is where dist/ started)
+└── reference/              One True Door (1TD.html), the game that inspired this one, and HackJack
+```
+
+## Credits
+
+### How it was made
+
+NeoN+1 was built in conversation with Claude, Anthropic's AI model, running in Claude Code.
+
+- **The idea and the design are mine:** the original game idea, the game, the corps and their tells, what to build and when, and the
+  playtesting and feedback after every round.
+- **Claude wrote the code:** every version's HTML/JS, plus the generated music, the ASCII art
+  placeholders, and the headless tests and bots that check each corp's tell before a build ships.
+- **The docs are shared:** Claude keeps `docs/SPEC.md` and `docs/CORPS.md` up to date as the
+  living record of what was asked for, what got built and what changed along the way. My ideas go
+  into the backlog there until I say to build them.
+- **The history:** up to v11, each round of work started as a fresh copy of the last version (now in
+  `prototypes/`). Since v11 the game lives in `dist/` and git keeps the history; every update
+  ticks the build number (v11.00, v11.01...).
+
+### Related games
 
 Three games, each built with Claude, each using the one before it as a reference:
 
