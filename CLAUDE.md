@@ -12,6 +12,13 @@ Greg's raw notes.
 - Release commits read "Version v14.32: summary" (or "Version v14.25-v14.31: summary" for a batch), with a bulleted body.
 - Never reindent files here. ASCII art lives in string and template literals, where leading spaces are part of the art, and `tools/*_file.js` writes the data files with spaces in a fixed format.
 
+## Checks
+- Run `node tools/test.js` (or `--quick`) before committing engine or data changes. It fails on any difference from
+  `tools/golden.json` / `tools/golden-play.json`. When a change is on purpose, re-accept with
+  `node tools/check.js --accept` / `node tools/playtest.js --accept` and say so in the commit.
+- New behavior worth keeping gets a check in `tools/tests/` (a page script; see tools/harness.js `pageKit`).
+- A test page's helpers live inside its function: the game's globals (`st`, `save`...) can't be redeclared.
+
 ## Parts
 - Game: `dist/` (classic global scripts, load order set in `dist/index.html`). Runs from file://. Multiplayer uses the Firebase Realtime DB (`database.rules.json` is pasted into the console by hand).
 - `tools/neon_editor.html`: edits the game's data files in place (follows web.md's saving pattern). Shared file readers and writers are `tools/*_file.js`.

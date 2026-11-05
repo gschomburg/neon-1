@@ -5,6 +5,7 @@
 //   worldmap.js  ART_MAP: the boot intro's world map
 //   faces.js     ART_FACES: hackers' faces (POPS and the rest of data/hackers.js), by hacker id
 //   root.js      ART_ROOT: the SECTOR CLEARED pictures (one picked at random), by key
+//   node tools/art_file.js    rewrites the five files in their own format (a round-trip check)
 (function (root) {
   'use strict';
   // Size limits. Logos all sit in one fixed box (LOGO_W x LOGO_H), centered, wherever they show.
@@ -74,7 +75,7 @@
     const out = head('faces.js', "hackers' faces, by hacker id (data/hackers.js has who they are).", build,
       ["// A face is 5 x 3, drawn as is (the lines are not centered one by one). POPS's is the training handler's."]);
     out.push('const ART_FACES = {');
-    for (const [k, f] of Object.entries(faces)) out.push(`  ${key(k)}: { name: ${q(f.name)}, art: ${short(f.art)} },`);
+    for (const [k, f] of Object.entries(faces)) out.push(`  ${key(k)}: { name: ${q(f.name)}, art: ${short(f.art)}${f.note ? `, note: ${q(f.note)}` : ''} },`);   // (note: for people, the game ignores it)
     out.push('};');
     return out.join('\n') + '\n';
   }
@@ -138,4 +139,15 @@
 
   const api = { KINDS, LOGO_KINDS, glyphsText, logosText, mapText, facesText, rootText, files, artProblems, logoProblems, rowsFromText, parse };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.NEON_ART_FILE = api;
+  if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
+    if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/art_file.js   (rewrites dist/data/art/*.js in their own format: a round-trip check)'); process.exit(0); }
+    const fs = require('fs'), path = require('path'), dir = path.join(__dirname, '..', 'dist', 'data', 'art'), texts = {};
+    for (const f of ['glyphs.js', 'logos.js', 'worldmap.js', 'faces.js', 'root.js']) texts[f] = fs.readFileSync(path.join(dir, f), 'utf8');
+    const build = (texts['logos.js'].match(/NEON_FILES\.push\(\['data\/art\/logos\.js', '([^']+)'\]\)/) || [])[1];
+    const a = parse(texts), out = files(a, build), back = parse(out);
+    if (JSON.stringify(back) !== JSON.stringify(a)) { console.log('round trip changed the art: not written'); process.exit(1); }
+    const changed = [];
+    for (const [f, t] of Object.entries(out)) if (t !== texts[f]) { fs.writeFileSync(path.join(dir, f), t); changed.push(f); }
+    console.log(`data/art: ${Object.keys(out).length} files, ${changed.length ? 'rewritten: ' + changed.join(', ') : 'unchanged'}`);
+  }
 })(this);

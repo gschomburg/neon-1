@@ -50,8 +50,10 @@ Open `dist/index.html` in a browser. That's it: no build step, no server. It wor
 The tools in `tools/` are Node scripts or HTML pages. Each script prints its usage with `--help`:
 
 ```
-node tools/check.js            # fingerprint the game and compare it to the baseline
-node tools/playtest.js         # play every corp in headless Chrome (needs Chrome)
+node tools/test.js             # every automatic check: data round-trips, check.js, tools/tests/, playtest (needs Chrome)
+node tools/test.js --quick     # the same without the playtest (about a minute)
+node tools/check.js            # fingerprint the game and compare it to tools/golden.json (--accept after a change on purpose)
+node tools/playtest.js         # play every corp in headless Chrome, compare to tools/golden-play.json
 node tools/tell_odds.js        # how much each corp's tell helps
 ```
 
@@ -96,7 +98,7 @@ The game lives at [www.gregschomburg.com/neon/](https://www.gregschomburg.com/ne
 
 1. Commit first, so the bump is its own step.
 2. Bump the build: `node tools/bump.js minor`.
-3. Check nothing changed by accident: `node tools/check.js` (and `node tools/playtest.js` for a bigger round).
+3. Check nothing changed by accident: `node tools/test.js` (it fails on any difference; `--accept` on check.js / playtest.js when a change is on purpose).
 4. Commit the bump: "Version v14.32: summary".
 5. Upload the whole `dist/` folder to `/neon/` by SFTP (FileZilla). Include `dist/.htaccess`: it makes phones
    pick up the new build.
@@ -123,8 +125,12 @@ neon-1/
 │   └── corps/              one file per corp (78)
 ├── tools/                  dev scripts and editors (not deployed)
 │   ├── bump.js             change the build number everywhere
-│   ├── check.js            fingerprint the game, to prove a change didn't change anything else
-│   ├── playtest.js         play every corp in headless Chrome and compare to a baseline
+│   ├── test.js             every automatic check in one go (exit 1 on a failure)
+│   ├── harness.js          runs the game headless: in a Node vm, or as a page in headless Chrome
+│   ├── tests/              test pages: play a bit, check things (fixes, the end game)
+│   ├── check.js            fingerprint the game, compare to golden.json (layers, maps, tables)
+│   ├── playtest.js         play every corp in headless Chrome, compare to golden-play.json
+│   ├── golden*.json        what the game made last time it was accepted (committed)
 │   ├── econsim.js          play whole runs headless and report the credits (docs/ECONOMY.md)
 │   ├── tell_odds.js        how much each corp's tell helps
 │   ├── neon_editor.html    the editor: edits the data files in dist/ in place

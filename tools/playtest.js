@@ -5,28 +5,16 @@
 // message after the miss, and anything that went wrong; then where the game ended up.
 //
 // Usage:
+//   node tools/playtest.js                            play, compare to tools/golden-play.json (exit 1 on a difference)
+//   node tools/playtest.js --accept                   the play changed on purpose: write tools/golden-play.json again
 //   node tools/playtest.js save <name> [game.html]   play and record (tools/check/play-<name>.json)
 //   node tools/playtest.js diff <a> <b>               compare two recordings
-//   node tools/playtest.js [game.html]                play, save "now", compare to "baseline"
-// Needs Chrome (Windows default path, or set CHROME=...). Runs 4 Chromes side by side.
+// Needs Chrome (Windows default path, or set CHROME=...). Runs 4 Chromes side by side (tools/harness.js).
 
-if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/playtest.js [game.html] | save <name> [game.html] | diff <a> <b>   (plays every corp in headless Chrome)"); process.exit(0); }
-const fs = require('fs'), path = require('path'), os = require('os'), { execFile } = require('child_process');
-const ROOT = path.join(__dirname, '..'), DIR = path.join(__dirname, 'check');
-const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/playtest.js [--accept] | save <name> [game.html] | diff <a> <b>   (plays every corp in headless Chrome)"); process.exit(0); }
+const fs = require('fs'), path = require('path'), H = require('./harness.js');
+const ROOT = path.join(__dirname, '..'), DIR = path.join(__dirname, 'check'), GOLDEN = path.join(__dirname, 'golden-play.json');
 const PARTS = 4;
-
-// One self-contained test page: every local script inlined in order, animation frames on a timer
-// (headless Chrome doesn't run them), and the player below.
-function testPage(file) {
-  const base = path.dirname(file);
-  let html = fs.readFileSync(file, 'utf8');
-  html = html.replace(/<script src="([^"]+)"><\/script>/g, (m, src) => /^https?:/.test(src) ? m :
-    '<script>' + fs.readFileSync(path.join(base, src.split('?')[0]), 'utf8').replace(/<\/script>/g, '<\\/script>') + '</script>');
-  html = html.replace(/<head>/, '<head><script>window.requestAnimationFrame = cb => setTimeout(() => cb(performance.now()), 16);</script>');
-  html = html.replace(/beta_runner\.v\d+\.save/g, 'beta_runner.playtest.save');
-  return html.replace('</body>', '<script>' + PLAYER + '</script></body>');
-}
 
 const PLAYER = `(async () => {
   const out = { corps: {}, errors: [] };
@@ -79,32 +67,16 @@ const PLAYER = `(async () => {
       rec.end = st.mode + (st.panelTitle ? ':' + st.panelTitle : '');
     } catch (e) { rec.error = e.message; }
   }
-  const p = document.createElement('pre'); p.id = 'playtest'; p.textContent = JSON.stringify(out); document.body.appendChild(p);
+  const p = document.createElement('pre'); p.id = 'out'; p.textContent = JSON.stringify(out); document.body.appendChild(p);
 })();`;
 
-function runChrome(page, hash, profile) {
-  return new Promise(res => {
-    execFile(CHROME, ['--headless=new', '--disable-gpu', '--window-size=420,860', '--virtual-time-budget=3000000',
-      `--user-data-dir=${profile}`, '--dump-dom', 'file:///' + page.replace(/\\/g, '/') + '#' + hash],
-      { maxBuffer: 1 << 28, timeout: 30 * 60 * 1000 }, (err, stdout) => {
-        const m = String(stdout || '').match(/<pre id="playtest">([\s\S]*?)<\/pre>/);
-        if (!m) return res({ corps: {}, errors: ['no report from chrome ' + hash + (err ? ': ' + err.message : '')] });
-        const txt = m[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
-        res(JSON.parse(txt));
-      });
-  });
-}
-
 async function play(file) {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'neon-playtest-'));
-  const page = path.join(tmp, 'play.html');
-  fs.writeFileSync(page, testPage(file));
-  const n = (fs.readFileSync(file, 'utf8').length, 100);   // more than the corps there are; the page slices
-  const step = Math.ceil(80 / PARTS);
-  const parts = await Promise.all(Array.from({ length: PARTS }, (_, i) => runChrome(page, `${i * step}:${(i + 1) * step + (i === PARTS - 1 ? 50 : 0)}`, path.join(tmp, 'p' + i))));
+  const page = H.testPage(file, PLAYER, { key: 'playtest' });
+  const step = Math.ceil(80 / PARTS);   // (the last part takes the rest: the page slices the corp list)
+  const parts = await Promise.all(Array.from({ length: PARTS }, (_, i) =>
+    H.runPage(page, { hash: `${i * step}:${(i + 1) * step + (i === PARTS - 1 ? 50 : 0)}`, ms: 3000000, size: '420,860', timeout: 30 * 60 * 1000 })));
   const all = { corps: {}, errors: [] };
-  for (const p of parts) { Object.assign(all.corps, p.corps); all.errors.push(...p.errors); }
-  try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) { /* chrome may still hold it */ }
+  for (const p of parts) { if (p.error) { all.errors.push(p.error); continue; } Object.assign(all.corps, p.corps); all.errors.push(...p.errors); }
   return all;
 }
 
@@ -130,18 +102,22 @@ function diff(a, b) {
 }
 
 (async () => {
-  const [cmd, a1, a2] = process.argv.slice(2);
+  const args = process.argv.slice(2), accept = args.includes('--accept'), [cmd, a1, a2] = args.filter(x => !x.startsWith('--'));
   fs.mkdirSync(DIR, { recursive: true });
   const save = (name, r) => fs.writeFileSync(path.join(DIR, 'play-' + name + '.json'), JSON.stringify(r, null, 1));
   const read = name => JSON.parse(fs.readFileSync(path.join(DIR, 'play-' + name + '.json'), 'utf8'));
-  const gameFile = f => f ? path.resolve(f) : path.join(ROOT, 'dist', 'index.html');
+  const gameFile = f => f ? path.resolve(f) : H.GAME;
   if (cmd === 'diff') return console.log(diff(read(a1), read(a2)).join('\n'));
-  const save1 = cmd === 'save' ? a1 : 'now';
   const r = await play(gameFile(cmd === 'save' ? a2 : cmd));
-  save(save1, r);
+  save(cmd === 'save' ? a1 : 'now', r);
   const nCorps = Object.keys(r.corps).length, nLayers = Object.values(r.corps).reduce((s, c) => s + (c.layers || []).length, 0);
   console.log(`played ${nCorps} corps, ${nLayers} layers${r.errors.length ? ', page errors: ' + [...new Set(r.errors)].join(' | ') : ''}`);
   const broken = Object.entries(r.corps).filter(([, c]) => c.error);
-  if (broken.length) console.log('stuck / failed: ' + broken.map(([k, c]) => `${k}: ${c.error}`).join(' | '));
-  if (cmd !== 'save' && fs.existsSync(path.join(DIR, 'play-baseline.json'))) console.log(diff(read('baseline'), r).join('\n'));
+  if (broken.length) { console.log('stuck / failed: ' + broken.map(([k, c]) => `${k}: ${c.error}`).join(' | ')); process.exitCode = 1; }
+  if (cmd === 'save') return;
+  if (accept || !fs.existsSync(GOLDEN)) { fs.writeFileSync(GOLDEN, JSON.stringify(r, null, 1) + '\n'); return console.log('wrote tools/golden-play.json.'); }
+  const d = diff(JSON.parse(fs.readFileSync(GOLDEN, 'utf8')), r);
+  console.log(d.join('\n'));
+  const m = d[d.findIndex(l => l.startsWith('corps:'))].match(/corps: (\d+) same of (\d+)/);
+  if (!m || m[1] !== m[2] || r.errors.length) { console.log('\ndifferent from tools/golden-play.json. on purpose? node tools/playtest.js --accept'); process.exitCode = 1; }
 })();

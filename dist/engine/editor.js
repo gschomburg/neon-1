@@ -21,18 +21,12 @@ function lootPick(r, n, rare = 0) {
 }
 // A corp's layers as the game will make them (the seed): which have a $ node, and what each pays you, as you are now
 function lootLayers(n) {
-  const run = st.run, def = corpDef(n.corp), t = n.tier, sector = n.sector || 0, out = [];
-  const counts = def.counts ? def.counts(t) : Array.from({ length: CONFIG.corpLayers + (sectorHas('grind', sector) ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
-  let tell = n.type === 'final' && n.corp === 'omni' ? (sector === 0 ? run.finalTell : pickR(['corner', 'mark', 'mirror'], rngFor(run.seed, 'final', n.sector))) : def.tell;
-  if (tell === 'mirror' && t >= 2) tell = 'vmirror';
-  if (tell === 'corner' && t >= 2 && n.type !== 'final') tell = 'edge';
-  const mark = tell === 'mark' ? { level: clamp(t, 1, 3), glyph: clamp(t, 1, 3) === 1 ? pickR(MOTIFS, rngFor(run.seed, 'sigil', n.id)) : null } : null;
+  const run = st.run, def = corpDef(n.corp), t = n.tier, out = [];
+  const plan = corpPlan(n, def, run), c = Object.assign({ def, node: n, tier: t, hasBoss: true, mod: n.mod }, plan), counts = plan.counts;
   let prev = null;
   counts.forEach((cnt, idx) => {
     const boss = idx === counts.length - 1;
-    const lv = genLayer({ seed: run.seed, nodeId: n.id, idx, n: cnt, tell: boss && def.bossTell ? def.bossTell : tell, prevSafe: prev, mark, salt: 0, dress: null, tier: t, boss,
-      loot: !boss && !def.noLoot, tellStr: Math.max(0.55, CONFIG.tellStrength - CONFIG.sectorHeat * sector), alwaysFollow: !!def.alwaysFollow,
-      lootMore: n.mod === 'loaded' || sectorHas('flush', sector) });
+    const lv = genLayer(Object.assign(layerSpec(c, run, idx, prev), { dress: null, lootSure: false, alwaysFollow: !!def.alwaysFollow }));   // (engine/run.js; no dress: the $ nodes are placed before it)
     prev = lv.safeCell;
     const label = `  layer ${idx + 1}${boss ? ' (boss)' : ''}: `;
     if (!lv.tiles.some(o => o.loaded)) return out.push(label + 'no $ node');

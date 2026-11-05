@@ -6,71 +6,33 @@
 //   - maps (genMap) for a few seeds, and which corps each map step picks
 //   - every data table: corps, mods, items, corp art and text, music, glyphs, logos, names, help
 //     pages, palettes, player styles...
-//   - a hash of every function's code (moving code is fine; editing it shows up here)
+//   - a hash of every function's code (only with --code: refactors change code on purpose)
+//
+// The golden file (tools/golden.json, committed) keeps a short hash of each layer, map and table. A plain run compares
+// the game to it and exits 1 on any difference, so a refactor that changes what the game makes is caught.
 //
 // Usage:
-//   node tools/check.js save <name> [game.html]    record a fingerprint (tools/check/<name>.json)
-//   node tools/check.js diff <a> <b>                compare two fingerprints
-//   node tools/check.js [game.html]                 record "now" and compare it to "baseline"
+//   node tools/check.js                             compare to tools/golden.json (exit 1 on a difference)
+//   node tools/check.js --accept                    the game changed on purpose: write tools/golden.json again
+//   node tools/check.js save <name> [game.html]    record a full fingerprint (tools/check/<name>.json, not committed)
+//   node tools/check.js diff <a> <b> [--code]      compare two full fingerprints in detail
 // game.html defaults to dist/index.html.
 
-if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/check.js [game.html] | save <name> [game.html] | diff <a> <b>   (fingerprint the game, compare to the baseline)"); process.exit(0); }
-const fs = require('fs'), path = require('path'), vm = require('vm'), crypto = require('crypto');
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/check.js [--accept] | save <name> [game.html] | diff <a> <b> [--code]   (fingerprint the game, compare to tools/golden.json)"); process.exit(0); }
+const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..');
 const DIR = path.join(__dirname, 'check');
 
-// ---- load the game into one headless context
+// ---- load the game into one headless context (tools/harness.js), with a hook that hands this tool the game's tables
+const NAMES = ['CONFIG', 'CORPS', 'FINAL', 'PUBLIC', 'CORP_TELL', 'CORP_ART', 'CODEX_CORPS', 'MODS', 'ITEMS', 'RARITY',
+  'STAGES', 'MOD_STAGE', 'ANOMALIES', 'LEGACY', 'SONGS', 'MUSIC_FOR', 'SCALES', 'MOTIFS', 'GLYPHS',
+  'NAME_A', 'NAME_B', 'NAME_C', 'HELP_PAGES', 'PALETTES', 'PLAYER_STYLES', 'LOCK_LABEL', 'TITLE', 'COVER',
+  'START_NOTE', 'HIT_FX', 'END_FX', 'BOSS_GEAR', 'BOARD_FX', 'CIPHER_SYMS', 'RAINBOW', 'ZODIAC', 'LEX_WORDS'];
 function load(file) {
-  const html = fs.readFileSync(file, 'utf8');
-  const base = path.dirname(file);
-  const scripts = [];
-  for (const m of html.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
-    const attrs = m[1] || '', src = (attrs.match(/src="([^"]+)"/) || [])[1];
-    if (src && /^https?:/.test(src)) continue;   // firebase etc.
-    if (src) scripts.push({ name: src, code: fs.readFileSync(path.join(base, src.split('?')[0]), 'utf8') });
-    else scripts.push({ name: 'inline', code: m[2] });
-  }
-  // a hook that hands the game's tables to this tool, put where the debug hook is made
-  const NAMES = ['CONFIG', 'CORPS', 'FINAL', 'PUBLIC', 'CORP_TELL', 'CORP_ART', 'CODEX_CORPS', 'MODS', 'ITEMS', 'RARITY',
-    'STAGES', 'MOD_STAGE', 'ANOMALIES', 'LEGACY', 'SONGS', 'MUSIC_FOR', 'SCALES', 'MOTIFS', 'GLYPHS',
-    'NAME_A', 'NAME_B', 'NAME_C', 'HELP_PAGES', 'PALETTES', 'PLAYER_STYLES', 'LOCK_LABEL', 'TITLE', 'COVER',
-    'START_NOTE', 'HIT_FX', 'END_FX', 'BOSS_GEAR', 'BOARD_FX', 'CIPHER_SYMS', 'RAINBOW', 'ZODIAC', 'LEX_WORDS'];
-  const hook = `window.__check = { genLayer, genMap, pickCorps, ${NAMES.join(', ')} };\n`;
-  const hi = scripts.findIndex(s => s.code.includes('window.__br = {'));
-  if (hi < 0) throw new Error('no window.__br in the game');
-  scripts[hi].code = scripts[hi].code.replace('window.__br = {', hook + 'window.__br = {');
-
-  const noop = () => {};
-  const errors = [];
-  const ctx2d = new Proxy({}, { get: (t, k) => k === 'measureText' ? () => ({ width: 60 }) : (k in t ? t[k] : noop), set: (t, k, v) => (t[k] = v, true) });
-  const canvas = { getContext: () => ctx2d, addEventListener: noop, style: {}, width: 0, height: 0 };
-  // a fixed clock, so anything that shows the time (FOURTH WALL) comes out the same every run
-  const FIXED = new Date('2026-01-01T12:00:00Z').getTime();
-  class FixedDate extends Date { constructor(...a) { super(...(a.length ? a : [FIXED])); } static now() { return FIXED; } }
-  const sandbox = {
-    performance: { now: () => 0 }, setTimeout: noop, setInterval: noop, clearTimeout: noop, clearInterval: noop,
-    requestAnimationFrame: noop, URLSearchParams, Math, JSON, Date: FixedDate, Object, Array, Set, Map, WeakMap, WeakSet, Promise, Number, String, RegExp, Proxy, Symbol, Error,
-    console: { log: noop, warn: noop, error: (...a) => errors.push(a.join(' ')) },
-    localStorage: { getItem: () => null, setItem: noop, removeItem: noop }, location: { search: '', href: 'file:///game/index.html', protocol: 'file:' },
-    navigator: {}, history: { replaceState: noop },
-    document: { getElementById: () => canvas, addEventListener: noop, createElement: () => ({ style: {}, setAttribute: noop, addEventListener: noop }),
-      documentElement: { style: {} }, body: { style: {}, appendChild: noop }, fonts: null, querySelector: () => null },
-    getComputedStyle: () => ({}),   // (engine/screen.js reads the safe-area padding)
-    fetch: () => new Promise(() => {}),   // offline: the intro asks the leaderboard (it never answers here)
-    window: { innerWidth: 390, innerHeight: 844, devicePixelRatio: 1, addEventListener: noop, matchMedia: () => ({ matches: false }) },
-  };
-  sandbox.window.window = sandbox.window;
-  sandbox.globalThis = sandbox;
-  vm.createContext(sandbox);
-  // the game sets window.X; in the browser window IS the global object, so mirror that
-  for (const s of scripts) {
-    try { vm.runInContext(s.code.replace(/\bwindow\./g, 'globalThis.window.'), sandbox, { filename: s.name }); }
-    catch (e) { throw new Error(`loading ${s.name}: ${e.stack || e.message}`); }
-    Object.assign(sandbox, sandbox.window);
-  }
-  const G = sandbox.window.__check;
+  const g = require('./harness.js').loadGame(file, { hook: `window.__check = { genLayer, genMap, pickCorps, corpPlan, layerSpec, ${NAMES.join(', ')} };` });
+  const G = g.window.__check;
   if (!G) throw new Error('the game loaded but the check hook is missing');
-  return { G, errors, files: scripts.map(s => s.name) };
+  return { G, errors: g.errors, files: g.files };
 }
 
 // ---- turn anything into plain, stable JSON
@@ -115,19 +77,18 @@ function fingerprint(file) {
     if (v && typeof v === 'object' && !Array.isArray(v)) for (const [h, f] of Object.entries(v)) if (typeof f === 'function') fp.code[`${tname}.${k}.${h}`] = fnHash(f);
     if (typeof v === 'function') fp.code[`${tname}.${k}`] = fnHash(v);
   }
-  // layers: every corp, tiers 1-3, 3 seeds, all layers
-  const LAYERS = G.CONFIG.corpLayers || 5;
+  // layers: every corp, tiers 1-3, 3 seeds, all layers, set up the way the game does (engine/run.js corpPlan / layerSpec)
   for (const key of Object.keys(G.CORPS)) {
     const def = G.CORPS[key];
     for (const tier of [1, 2, 3]) for (const seed of ['A', 'BB', 'C3']) {
-      let prev = null;
-      for (let i = 0; i < LAYERS; i++) {
-        const boss = i === LAYERS - 1, n = Math.min(G.CONFIG.maxNodes || 12, tier + 1 + i);
+      const run = { seed: 'check-' + seed, finalTell: 'corner' }, node = { id: '2:1', corp: key, tier, type: 'corp', sector: 0, mod: null };
+      let c, prev = null;
+      try { c = Object.assign({ def, node, tier, hasBoss: true, mod: null }, G.corpPlan(node, def, run)); }
+      catch (e) { fp.layers[`${key}/t${tier}/${seed}`] = 'ERROR: ' + e.message; continue; }
+      for (let i = 0; i < c.counts.length; i++) {
         const id = `${key}/t${tier}/${seed}/L${i}`;
         try {
-          const lv = G.genLayer({ seed: 'check-' + seed, nodeId: '2:1', idx: i, n, tell: boss && def.bossTell ? def.bossTell : def.tell || null,
-            prevSafe: prev, loot: !boss, mark: def.tell === 'mark' ? { level: Math.min(3, tier), glyph: ['  #  ', ' ### ', '  #  '] } : null,
-            dress: def.dress || null, tier, boss });
+          const lv = G.genLayer(G.layerSpec(c, run, i, prev));
           prev = lv.safeCell;
           fp.layers[id] = plainLayer(lv);
         } catch (e) { fp.layers[id] = 'ERROR: ' + e.message; }
@@ -141,9 +102,9 @@ function fingerprint(file) {
 }
 
 // ---- compare two fingerprints; layers that use Math.random (not seeded) are reported apart
-function diff(a, b) {
+function diff(a, b, withCode = false) {
   const out = [];
-  for (const sect of ['data', 'layers', 'maps', 'code']) {
+  for (const sect of ['data', 'layers', 'maps'].concat(withCode ? ['code'] : [])) {
     const keys = new Set([...Object.keys(a[sect] || {}), ...Object.keys(b[sect] || {})]);
     let same = 0;
     for (const k of [...keys].sort()) {
@@ -162,7 +123,15 @@ function diff(a, b) {
   return out;
 }
 
-const [cmd, a1, a2] = process.argv.slice(2);
+// ---- the golden file: a short hash per layer / map / table (no code), committed
+const GOLDEN = path.join(__dirname, 'golden.json');
+function golden(fp) {
+  const g = { note: 'Made by tools/check.js --accept. A hash of what the game makes; see the top of tools/check.js.' };
+  for (const sect of ['data', 'layers', 'maps']) { g[sect] = {}; for (const k of Object.keys(fp[sect]).sort()) g[sect][k] = hash(JSON.stringify(fp[sect][k]).replace(/"fn:[0-9a-f]{10}"/g, '"fn"')); }   // (a function in a table counts as there, not its code)
+  return g;
+}
+
+const args = process.argv.slice(2), flags = args.filter(x => x.startsWith('--')), [cmd, a1, a2] = args.filter(x => !x.startsWith('--'));
 fs.mkdirSync(DIR, { recursive: true });
 const save = (name, fp) => fs.writeFileSync(path.join(DIR, name + '.json'), JSON.stringify(fp));
 const read = name => JSON.parse(fs.readFileSync(path.join(DIR, name + '.json'), 'utf8'));
@@ -173,15 +142,27 @@ if (cmd === 'save') {
   save(a1, fp);
   console.log(`saved ${a1}: ${Object.keys(fp.layers).length} layers, ${Object.keys(fp.data).length} tables, ${Object.keys(fp.code).length} functions, files: ${fp.files.length}`);
 } else if (cmd === 'diff') {
-  console.log(diff(read(a1), read(a2)).join('\n'));
+  console.log(diff(read(a1), read(a2), flags.includes('--code')).join('\n'));
 } else {
-  const fp = fingerprint(gameFile(cmd));
-  save('now', fp);
-  if (!fs.existsSync(path.join(DIR, 'baseline.json'))) { save('baseline', fp); console.log('no baseline yet: saved this one as the baseline.'); }
-  else {
-    const d = diff(read('baseline'), fp);
-    console.log(d.join('\n'));
-    const changed = d.filter(l => /^\w+: [~+-] /.test(l)).length;
-    console.log(changed ? `\n${changed} differences from the baseline.` : '\nsame as the baseline.');
+  const fp = fingerprint(gameFile(cmd)), g = golden(fp);
+  save('now', fp);   // (the full one, for a detailed diff: node tools/check.js diff <old> now)
+  if (fp.loadErrors.length) { console.log('load errors: ' + fp.loadErrors.join(' | ')); process.exitCode = 1; }
+  if (flags.includes('--accept') || !fs.existsSync(GOLDEN)) {
+    fs.writeFileSync(GOLDEN, JSON.stringify(g, null, 1) + '\n');
+    console.log(`wrote tools/golden.json: ${Object.keys(g.layers).length} layers, ${Object.keys(g.maps).length} maps, ${Object.keys(g.data).length} tables.`);
+  } else {
+    const old = JSON.parse(fs.readFileSync(GOLDEN, 'utf8')), out = [];
+    for (const sect of ['data', 'layers', 'maps']) {
+      const keys = new Set([...Object.keys(old[sect] || {}), ...Object.keys(g[sect])]);
+      for (const k of [...keys].sort()) if ((old[sect] || {})[k] !== g[sect][k]) out.push(`${sect}: ${k}${old[sect][k] === undefined ? ' (new)' : g[sect][k] === undefined ? ' (gone)' : ''}`);
+    }
+    if (!out.length) console.log(`same as tools/golden.json (${Object.keys(g.layers).length} layers, ${Object.keys(g.maps).length} maps, ${Object.keys(g.data).length} tables).`);
+    else {
+      const bySect = s => out.filter(l => l.startsWith(s)).length;
+      console.log(out.slice(0, 40).join('\n') + (out.length > 40 ? `\n... and ${out.length - 40} more` : ''));
+      console.log(`\n${out.length} differences from tools/golden.json (data ${bySect('data')}, layers ${bySect('layers')}, maps ${bySect('maps')}).`);
+      console.log('on purpose? node tools/check.js --accept. details: save a fingerprint on the old commit (check.js save old), then check.js diff old now.');
+      process.exitCode = 1;
+    }
   }
 }

@@ -157,6 +157,35 @@ async function enterNode(node, warp = false) {
   startCorp(node);
 }
 
+// ---------- Layer plans (shared: the game, the editor's loot viewer, tools/check.js) ----------
+// A corp's plan for one visit: how many nodes each layer has, the tell (OMNI borrows one; deeper MIRRORLINE and
+// PERIMETER change theirs), the SIGIL mark, how strong the tell is this deep. run: { seed, tutorial, finalTell }.
+function corpPlan(node, def, run) {
+  const t = node.tier, sector = node.sector || 0;
+  const counts = def.counts ? def.counts(t) : node.type === 'start' ? [1] : run.tutorial && node.id === TUT.corpNode ? TUT.counts.slice()
+    : Array.from({ length: CONFIG.corpLayers + (sectorHas('grind', sector) ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
+  // OMNI borrows a tell, a new one each sector
+  let tell = node.type === 'final' && node.corp === 'omni' && !def.copied ? (sector === 0 ? run.finalTell : pickR(['corner', 'mark', 'mirror'], rngFor(run.seed, 'final', node.sector))) : def.tell;
+  if (tell === 'mirror' && t >= 2) tell = 'vmirror';   // deeper Mirrorlines mirror top-bottom
+  if (tell === 'corner' && t >= 2 && node.type !== 'final') tell = 'edge';   // deeper Perimeters: anywhere on the edge (OMNI keeps corners)
+  let mark = null;
+  if (tell === 'mark') {
+    const level = clamp(t, 1, 3);
+    mark = { level, glyph: level === 1 ? pickR(MOTIFS, rngFor(run.seed, 'sigil', node.id)) : null };
+  }
+  return { counts, sector, tell, mark, tellStr: Math.max(0.55, CONFIG.tellStrength - CONFIG.sectorHeat * sector) };
+}
+// What genLayer gets for layer idx of a corp visit. c: st.corp (or the same fields: def, node, tier, counts, tell, mark,
+// tellStr, hasBoss, mod, sector, carry).
+function layerSpec(c, run, idx, prevSafe) {
+  const n = c.counts[idx], boss = c.hasBoss && idx === c.counts.length - 1;
+  return { seed: run.seed, nodeId: c.node.id, idx, n, tell: boss && c.def.bossTell ? c.def.bossTell : c.tell, prevSafe,
+    loot: !boss && c.hasBoss && !c.def.noLoot && (!run.tutorial || idx === 1), lootSure: !!run.tutorial && idx === 1, mark: c.mark,
+    tellStr: c.tellStr, salt: 0,   // (the seed decides the layers, always: a resume brings back the same ones; the user, 2026-10-30)
+    dress: c.hasBoss ? c.def.dress : null, tier: c.tier, boss,
+    alwaysFollow: !!c.def.alwaysFollow || !!run.tutorial, carry: c.carry || null, lootMore: c.mod === 'loaded' || sectorHas('flush', c.sector) };   // FLUSH: more $ nodes
+}
+
 async function startCorp(node, startIdx = 0, restore = null) {
   if (!restore && startIdx === 0) oneUpSavePoint(node);   // the 1UP's save point: the run as you go in (before anything below)
   let def = corpDef(node.corp);
@@ -164,26 +193,14 @@ async function startCorp(node, startIdx = 0, restore = null) {
     const pool = ((st.run.beat || {})[node.sector || 0] || []).filter(k => CORPS[k]);
     if (pool.length) def = omniCopy(pickR(pool, rngFor(st.run.seed, 'omnicopy', node.sector || 0)), pool);
   }
-  const t = node.tier;
-  const counts = def.counts ? def.counts(node.tier) : node.type === 'start' ? [1] : st.run.tutorial && node.id === TUT.corpNode ? TUT.counts.slice()
-    : Array.from({ length: CONFIG.corpLayers + (sectorHas('grind', node.sector || 0) ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
-  const sector = node.sector || 0;
-  // OMNI borrows a tell, a new one each sector
-  let tell = node.type === 'final' && node.corp === 'omni' && !def.copied ? ((node.sector || 0) === 0 ? st.run.finalTell : pickR(['corner', 'mark', 'mirror'], rngFor(st.run.seed, 'final', node.sector))) : def.tell;
-  if (tell === 'mirror' && t >= 2) tell = 'vmirror';   // deeper Mirrorlines mirror top-bottom
-  if (tell === 'corner' && t >= 2 && node.type !== 'final') tell = 'edge';   // deeper Perimeters: anywhere on the edge (OMNI keeps corners)
-  let mark = null;
-  if (tell === 'mark') {
-    const level = clamp(t, 1, 3);
-    mark = { level, glyph: level === 1 ? pickR(MOTIFS, rngFor(st.run.seed, 'sigil', node.id)) : null };
-  }
+  const t = node.tier, { counts, sector, tell, mark, tellStr } = corpPlan(node, def, st.run);
   st.corp = {
     def, node, tier: t, idx: Math.min(startIdx, counts.length - 1), counts,
     hasBoss: node.type !== 'start',
     tell, mark, mod: (node.type === 'corp' || node.type === 'final') && ANOMALIES[node.mod] ? node.mod : null,
     stageBoss: node.type === 'final' && node.corp !== 'omni',
     timer: def.timer ? Math.max(6, corpTimer(def, t) - sector) : 0, pay: corpPay(def, t),
-    sector, tellStr: Math.max(0.55, CONFIG.tellStrength - CONFIG.sectorHeat * sector),
+    sector, tellStr,
     prevSafe: null,
   };
   // FAILSAFE legendary recharges each corp you go into (not on a resume: that would refill it for free)
@@ -294,14 +311,8 @@ async function corpIntro() {
 
 async function enterLayer() {
   const c = st.corp, run = st.run;
-  const n = c.counts[c.idx];
-  const boss = c.hasBoss && c.idx === c.counts.length - 1;
-  let tell = c.tell;
-  if (boss && c.def.bossTell) tell = c.def.bossTell;
-  const lv = genLayer({ seed: run.seed, nodeId: c.node.id, idx: c.idx, n, tell, prevSafe: c.prevSafe, loot: !boss && c.hasBoss && !c.def.noLoot && (!run.tutorial || c.idx === 1), lootSure: !!run.tutorial && c.idx === 1, mark: c.mark,
-    tellStr: c.tellStr, salt: 0,   // (the seed decides the layers, always: a resume brings back the same ones; the user, 2026-10-30)
-    dress: c.hasBoss ? c.def.dress : null, tier: c.tier, boss,
-    alwaysFollow: !!c.def.alwaysFollow || !!run.tutorial, carry: c.carry || null, lootMore: c.mod === 'loaded' || sectorHas('flush', c.sector) });   // FLUSH: more $ nodes
+  const spec = layerSpec(c, run, c.idx, c.prevSafe), n = spec.n, boss = spec.boss;
+  const lv = genLayer(spec);
   lv.after = c.prevSafe;       // last layer's real node, for AFTERIMAGE
   if (c.mod === 'branded' && n > 2) {   // BRANDED: about a third of the ICE wear the sigil
     const ice = shuffle(lv.tiles.filter(t => !t.safe && !t.loaded), rngFor(run.seed, 'brand', c.node.id, c.idx));

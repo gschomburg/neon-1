@@ -15,8 +15,8 @@ const ART_FACES = {
   vulture: { name: 'VULTURE', art: [' ,__ ', '(.v.)', '/| |\\'] },
   phish: { name: 'PH1SH', art: [' _J_ ', '(^_^)', ' >< '] },
   d0g: { name: 'd0g', art: ['/\\_/\\', '(0.0)', '  w  '] },
-  w00f: { name: 'w00f', art: ['/\\_/\\', '(0.0)', '  w  '] },   // (d0g's, the dog without the boy)
-  b0y: { name: 'b0y', art: ['/~~~\\', '|o o|', ' \\-/ '] },   // (a placeholder: the hood, d0g's ears gone)
+  w00f: { name: 'w00f', art: ['/\\_/\\', '(0.0)', '  w  '], note: 'd0g\'s, the dog without the boy' },
+  b0y: { name: 'b0y', art: ['/~~~\\', '|o o|', ' \\-/ '], note: 'a placeholder: the hood, d0g\'s ears gone' },
   hcf: { name: 'HCF', art: [')(\\()', '[x_x]', ' ### '] },
   leech: { name: 'LEECH', art: ['.---.', '|ooo|', '\'-O-\''] },
   brick: { name: 'BRICK', art: ['.___.', '[-_-]', '|###|'] },

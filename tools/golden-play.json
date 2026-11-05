@@ -1,0 +1,3364 @@
+{
+ "corps": {
+  "perimeter": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "sigil": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "chronos": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "mirror": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "basic": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "seekr": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "_",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "_",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "_",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "_",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "_",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "megamart": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "cloneworks": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 7,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 7
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "haute": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 7,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 7
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "ledger": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "parcelnet": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "burgertron": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "combo of the day: #2",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "combo of the day: #5",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "combo of the day: #6",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "combo of the day: #5",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "combo of the day: #7",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "nimbus": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "forecast> 80% chance: bottom row",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "forecast> 90% chance: column 2",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "forecast> 80% chance: column 2",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "forecast> 70% chance: column 3",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "forecast> 50% chance: column 2",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "dewey": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 7,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 7
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "rydr": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "safeharbor": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "tumbler": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 7,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 7
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "purlwise": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "numberwong": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> that's numberwong!",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> that's numberwong!",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> that's numberwong!",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> that's numberwong!",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> that's numberwong!",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "gencorp": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "parent> [o-+  ][  |  ][  +-o]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "parent> [\\ | /][  |  ][  +-o]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "parent> [ \\|/ ][  |  ][ \\_/ ]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "parent> [(o.o)][  |  ][ \\_/ ]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "parent> [(o.o)][= ? =][ \\_/ ]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "zodiac": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "horoscope> lucky element: earth",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "horoscope> lucky element: air",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "horoscope> lucky element: earth",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "horoscope> lucky element: fire",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "horoscope> lucky element: earth",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "lexicon": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "tech> _ _ _ _ _",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "tech> V _ _ _ _",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "tech> V I _ _ _",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "tech> V I R _ _",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "tech> V I R U _",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "kernel": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "seed> P L A [Y] T E S T",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "seed> P L A Y T [E] S T",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "seed> P L A Y [T] E S [T]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "seed> P L [A] Y T E S T",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "seed> [P] L A Y T [E] S T",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "forgetmenot": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "memorize the board...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "memorize the board...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "memorize the board...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "memorize the board...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "memorize the board...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "tollgate": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "|=|",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "|=|",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "|=|",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "|=|",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "|=|",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "brightline": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "!! brownout !!",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "grid: nominal",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "!! brownout !!",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "grid: nominal",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "grid: nominal",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "coldbrew": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "mochi": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "playtime": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "medix": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "apiary": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "kerning": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "streamflix": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "> now playing",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "> now playing",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "> now playing",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "> now playing",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "> now playing",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "glacier": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "frost [******]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "frost [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "frost [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "frost [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "frost [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "gridlock": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "liftco": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lift> floor 3 ^",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "lift> floor 3 v",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "lift> floor 1 ^",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "lift> floor 3 ^",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "lift> floor 3 ^",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "headline": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": " ALIENS LAND: BOTTOM ROW, COLUMN 3 +",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "IZZA RECALLED: TOP ROW, LEFT COLUMN ",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "OCAL MAN WINS NOTHING +++ CELEB SAYS",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "OCAL MAN WINS NOTHING +++ EXPERTS BA",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "+++ BREAKING: PIZZA RECALLED IN COLU",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "watchpoint": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "verdant": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "halflife": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "geiger [::...]  rad 0/40s",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "geiger [:....]  rad 0/40s",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "geiger [:::::]  rad 0/40s",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "geiger [::...]  rad 0/40s",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "geiger [:::..]  rad 0/40s",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "boneyard": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> something moved.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "echo": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "dialtone": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "connect> ...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "connect> ...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "connect> ...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "connect> ...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "connect> ...",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "telephonix": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "dial> ",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "dial> ",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "dial> ",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "dial> ",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "dial> ",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "tempo": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "tempo> . o . .  126 bpm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "tempo> . . . O  126 bpm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "tempo> . O . .  126 bpm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "tempo> . . . O  126 bpm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "tempo> . o . .  126 bpm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "bidblitz": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "look at this ICE!",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "going once!",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "do I hear 10?",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "bid now! BID NOW!",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "going twice!",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "famiglia": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage. a decoy snitched.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage. a decoy snitched.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage. a decoy snitched.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "choir": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "luckeez": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "channel9": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "tv> CH 2  ~static~",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "tv> CH 2  ~static~",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "tv> CH 2  ~static~",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "tv> CH 2  ~static~",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "tv> CH 2  ~static~",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "bytepets": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "pawnbros": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "rolled [2]  from GO >",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "rolled [5]  from GO >",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "rolled [3]  from GO >",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "rolled [2]  from GO >",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "rolled [3][4] chance: +2  from GO >",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "form27b": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "form 27B> file in reading order",
+     "missMsg": "> FILED. pay -15%",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "form 27B> file backwards",
+     "missMsg": "> REJECTED. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "form 27B> file in reading order",
+     "missMsg": "> REJECTED. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "form 27B> file in reading order",
+     "missMsg": "> FILED. pay -15%",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "form 27B> file by columns",
+     "missMsg": "> REJECTED. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "carapace": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "chuckecache": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "SCORE 000110  tix 0",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "SCORE 000470  tix 8",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "SCORE 000590  tix 18",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "SCORE 000540  tix 30",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "SCORE 000890  tix 44",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "demolition": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> 3 nodes. one is real.",
+     "after": "next"
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> boom. something is next to it.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> boom. something is next to it.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> boom. clear.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> boom. clear.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "noir": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "synapse": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "model> 0% sure. you like: nothing yet",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "model> 8% sure. you like: edges",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "model> 16% sure. you like: edges",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "model> 24% sure. you like: edges",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "model> 82% sure. you like: edges",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "spectra": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "spectrum> start: orange",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "spectrum> the odd one out",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "spectrum> the odd one out",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "spectrum> the odd one out",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "spectrum> last: orange <<",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "drop4": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 4,
+     "hint": "drop-4> find the blocker",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 5,
+     "hint": "drop-4> find the blocker",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 6,
+     "hint": "drop-4> find the blocker",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 7,
+     "hint": "drop-4> find the blocker",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 7
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 8,
+     "hint": "drop-4> find the blocker",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 8
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "monte": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "monte> where is the ball?",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "monte> where is the ball?",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "monte> where is the ball?",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "monte> where is the ball?",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "monte> where is the ball?",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "entropy": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "entropy [######]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "entropy [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "entropy [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "entropy [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "entropy [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "predator": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "thermal> the real one runs warm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "thermal> the real one runs warm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "thermal> the real one runs warm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "thermal> the real one runs warm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "thermal> the real one runs warm",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "aegis": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "advance [>>>>>>]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "advance [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "advance [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "advance [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "advance [......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "gravitas": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "gravity> 0 drops",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "gravity> 0 drops",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "gravity> 0 drops",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "gravity> 0 drops",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "gravity> 0 drops",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "decibel": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "db> hover or drag to listen",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "db> hover or drag to listen",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "db> hover or drag to listen",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "db> hover or drag to listen",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "db> hover or drag to listen",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "squalor": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "@you 115 fol  eng 1.9%  ^",
+     "missMsg": "> ICE. god mode: no damage. it's trending!",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "@you 214 fol  eng 8.1%  v",
+     "missMsg": "> ICE. god mode: no damage. it's trending!",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "@you 332 fol  eng 2.0%  ^",
+     "missMsg": "> ICE. god mode: no damage. it's trending!",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "@you 486 fol  eng 8.0%  v",
+     "missMsg": "> ICE. god mode: no damage. it's trending!",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "@you 757 fol  eng 9.0%  ^",
+     "missMsg": "> ICE. god mode: no damage. it's trending!",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "bullettime": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "bullet time> 20% speed",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "bullet time> 20% speed",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "bullet time> 20% speed",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "bullet time> 20% speed",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "bullet time> 20% speed",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "upside": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "upside> read the right one",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "upside> read the right one",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "upside> read the right one",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "upside> read the right one",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "upside> taps hit the mirror node",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "bitrot": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "rot>   6%  keep: 0 #",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "rot>  10%  keep: 8 #",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "rot>  10%  keep: 1 8 #",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "rot>  10%  keep: 3 0 #",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "rot>   1%  keep: 4 #",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "lagrange": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> tap where it will be",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    }
+   ],
+   "end": "play:LAGRANGE NET"
+  },
+  "groundhog": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "loop 1  marks 0",
+     "missMsg": "> loop 2. again.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "loop 1  marks 0",
+     "missMsg": "> loop 2. again.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "loop 1  marks 0",
+     "missMsg": "> loop 2. again.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "loop 1  marks 0",
+     "missMsg": "> loop 2. again.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "loop 1  marks 0",
+     "missMsg": "> loop 2. again.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "fourthwall": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "> i can see your cursor, you know.",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "> the edges? not today.",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "> 0 runs. 0 wins. hm.",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "> the edges? not today.",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "FATAL: close this window",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "playball": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "twinlink": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "links> 0 pairs",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "links> 0 pairs",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "links> 1 pair",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "links> 1 pair",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "links> 1 pair",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "cipher": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "key: ROW 4",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "key: COL 1",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "key: ROW 1",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "key: ROW 3",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "key: ROW 4",
+     "missMsg": "> the cipher shifts.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "hydra": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "heads grown: 0",
+     "missMsg": "> a new head grows.",
+     "after": 3
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "heads grown: 0",
+     "missMsg": "> a new head grows.",
+     "after": 4
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "heads grown: 0",
+     "missMsg": "> a new head grows.",
+     "after": 5
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "heads grown: 0",
+     "missMsg": "> a new head grows.",
+     "after": 6
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "heads grown: 0",
+     "missMsg": "> two heads grow back.",
+     "after": 8
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "blackout": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "power [########]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "power [######..]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "power [#####...]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "power [###.....]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "power [##......]",
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  }
+ },
+ "errors": []
+}
