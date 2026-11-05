@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- asXii's icon: the X from the logo on the Blue theme's colors (style.css: --panel, --accent, --text) -->
+  <rect width="512" height="512" rx="96" fill="#151c2b"/>
+  <text x="256" y="372" text-anchor="middle" font-family="JetBrains Mono, Consolas, monospace" font-weight="700" font-size="340" fill="#6cb6ff">X</text>
+  <text x="256" y="462" text-anchor="middle" font-family="JetBrains Mono, Consolas, monospace" font-size="64" fill="#c8d3ea" letter-spacing="4">asXii</text>
+</svg>
