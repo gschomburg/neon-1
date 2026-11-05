@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.36']);
+NEON_FILES.push(['engine/quests.js', 'v14.37']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -300,9 +300,10 @@ function buildStrip(ctx, now, sc, frames) {
           for (let c = 0; c < row.length; c++) {
             const X = sx + c + dx;
             if (row[c] === ' ' || X < 0 || X >= art.w || taken.has(X + ',' + sy) || (hid && hid.has(c))) continue;
-            const cell = { ch: row[c], ink: col, X, Y };
+            // (the effects key on the mark's place in its layer, kx / ky, not where it's drawn: they ride along with a slide)
+            const kx = sx + c, ky = syy + r, cell = { ch: row[c], ink: col, X: kx, Y: ky };
             if (blinkAt >= 0 && c >= blinkAt && c < blinkAt + BL.match.length) { const b = FX.blink(BL, now, c - blinkAt); if (b != null) cell.ch = b; }
-            if (!FX.reveal(cell, p, FX.order(rel, ly.from, X, Y), fl, gl, now)) continue;
+            if (!FX.reveal(cell, p, FX.order(rel, ly.from, kx, ky), fl, gl, now)) continue;
             if (cueAt >= 0 && c >= cueAt && c < cueAt + CU.match.length) {   // the cue's marks
               const since = el - cueT;
               if (since >= 0 && j === sc.i) once(j + ':' + k + ':cue', () => Sound[CU.sound] && Sound[CU.sound]());
@@ -322,10 +323,10 @@ function buildStrip(ctx, now, sc, frames) {
             }
             if (TC) {
               if (SWP) { const sw = TC.swap.find(s => s[0] === cell.ch); if (sw) { cell.ch = sw[1]; cell.ink = FX.col(TC.col); } }
-              const nz = FX.burstCh(BU, X, Y);
+              const nz = FX.burstCh(BU, kx, ky);
               if (nz) { cell.ch = nz; cell.ink = FX.col(TC.col); }
             }
-            if (EM && X === EM.x && Y === EM.y) FX.ember(cell, EM, now);   // EMBER: a cigarette's tip, glowing up now and then
+            if (EM && kx === EM.x && ky === EM.y) FX.ember(cell, EM, now);   // EMBER: a cigarette's tip, glowing up now and then
             put(x0 + X + tear, sy, cell.ch, cell.ink, 'hud');
             taken.add(X + ',' + sy);
           }
