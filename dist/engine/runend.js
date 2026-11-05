@@ -238,7 +238,7 @@ function openUplink() {
       name: 'PASS: half the fee', clip: 'ellipsis', col: usePass ? C.text : C.mid,
       right: '-' + Math.round(t.raw * ECON.uplink.pass), rightCol: usePass ? C.money : C.dim });
     // the list gets what the rest of the screen leaves (the rest: ~22 rows)
-    const rest = 23 + (leverage() ? 1 : 0) + (t.cut ? 1 : 0) + (holdingDisc() ? 1 : 0) + (hasLoot('dogtag') ? 1 : 0);
+    const rest = 23 + (leverage() ? 1 : 0) + (t.cut ? 1 : 0) + (questCarryLine() ? 1 : 0);   // (the quest's reminder line, below)
     const rows = Math.max(1, Math.min(items.length, L.hc - 2 - rest));
     if (items.length) scrollArea(X, T, area, items, rows, 'upl');
     else T('no mods to carry.', C.dim);
@@ -259,8 +259,7 @@ function openUplink() {
       : { box: true, text: `${sp('REMOVE')}   ${sp('MODS')}`, sub: subPush, id: 'push', onTap: go, minW: w, disabled: true, disCol: C.danger });
     X({ box: true, text: run.practice ? `${sp('END')}   ${sp('RUN')}` : `${sp('EARN')}   ${sp(repFor(run))}   ${sp('REP')}`, sub: subCash, id: 'cash', onTap: cashOut, minW: w, col: C.rep });
     if (!run.practice) T(legacyLv('dms') ? `dying later keeps ${[0, 25, 50][legacyLv('dms')]}% of your REP.` : 'die later and you bank nothing.', C.dim);
-    if (holdingDisc() && questRun() && questOf('pops').step === 'find') T('+ cash out to bring POPS the DISC', C.rep);
-    if (hasLoot('dogtag') && questRun() && questOf('pops').step === 'd0g') T('+ cash out to bring POPS the DOGTAG', C.rep);
+    { const ql = questCarryLine(); if (ql) T(ql, C.rep); }   // (the DISC, the DOGTAG: engine/quests.js)
   }, '> uplink: what do you carry?', { full: true });
 }
 // The H3AV3N seed's uplink (docs/QUESTS.md): broken. No fee, no cash out: the only way is on, into heaven.

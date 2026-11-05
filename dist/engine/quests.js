@@ -4,7 +4,8 @@
 // with it and he asks for it (a call with a button); then the scene. After that, the next step (d0g) is "coming".
 //
 // save.quests.pops: { step, seen, lost, news }
-//   step: 'find' (the DISC can drop) -> 'deliver' (cashed out with it; take it to POPS) -> 'd0g' (the scene is done)
+//   step: a key from QUEST_INFO.pops.steps (data/quests.js says how each one ends): find -> deliver -> d0g -> trace
+//         -> raid -> g0d -> done
 //   seen: you've had the DISC once (the quest shows on THE BOARD)   lost: died with it (it drops more for a while)
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
@@ -19,6 +20,23 @@ const questOpen = () => statOf('sectors') >= 1 && hkCrewOn('pops');   // a secto
 const questRun = () => !!(st.run && !st.run.tutorial && !st.mp && (!st.run.practice || EDITOR));   // (run kinds: engine/save.js)
 const holdingDisc = () => hasLoot('disc');   // (in the LOOT bag)
 function questStep(id, step) { const q = questOf(id); q.step = step; q.news = true; persist(); }
+// The steps and how each ends are data (QUEST_INFO in data/quests.js): the step you're on, and the one after it.
+const questStepInfo = id => QUEST_INFO[id].steps.find(s => s.key === questOf(id).step) || {};
+const questStepAfter = id => { const s = QUEST_INFO[id].steps; return s[s.findIndex(x => x.key === questOf(id).step) + 1] || null; };
+// On to the next step (crew: who joins now), with a QUEST card
+function questNext(id) {
+  const s = questStepInfo(id), n = questStepAfter(id);
+  if (!n) return;
+  if (s.crew) { save.legacy = save.legacy || {}; save.legacy['crew_' + s.crew] = 1; }   // (no REP, no LVL: the user, 2026-11-04)
+  questStep(id, n.key); questCard(id);
+}
+// T A K E   I T   T O   P O P S (a box's spaced-out words)
+const spacedOut = t => t.split(' ').map(w => [...w].join(' ')).join('   ');
+// The UPLINK's reminder line while you carry the step's item (engine/runend.js), or null
+function questCarryLine() {
+  const s = questStepInfo('pops');
+  return s.carry && hasLoot(s.carry) && questRun() ? `+ cash out to bring ${QUEST_INFO.pops.from} the ${ITEMS[s.carry].name}` : null;
+}
 
 // ---------------- The DISC dropping ----------------
 // where: 'loot' | 'shop' | 'fish'. r: the spot's own roll.
@@ -52,23 +70,19 @@ function questRunEnd(run, win) {
   if (!run || !(run.loot || []).some(s => s.key === 'disc')) return;
   if (!win) { const q = questOf('pops'); q.lost = true; persist(); }
 }
-// The UPLINK with the DISC: POPS reminds you (once per uplink).
+// The UPLINK with the step's item (the DISC, the DOGTAG): POPS reminds you (once per uplink).
 function questUplink() {
-  if (holdingDisc() && questRun() && questOf('pops').step === 'find') queueCall('pops', QUEST_LINES.uplink);
-  if (hasLoot('dogtag') && questRun() && questOf('pops').step === 'd0g') queueCall('pops', QUEST_LINES.tagUplink);
+  const s = questStepInfo('pops');
+  if (s.carry && hasLoot(s.carry) && questRun()) queueCall('pops', QUEST_LINES[s.uplinkLine]);
 }
-// CASH OUT with the DISC: the step is done (saved), and POPS asks for it once the results are up.
+// CASH OUT with the step's item: the step is done (saved), and POPS asks for it once the results are up (its button:
+// the next step's scene, e.g. the DISC -> TAKE IT TO POPS, the DOGTAG -> GO TO POPS, the trace).
 function questCashOut(run) {
-  if (questRun() && (run.loot || []).some(s => s.key === 'dogtag') && questOf('pops').step === 'd0g') {   // the DOGTAG: on to the trace
-    questStep('pops', 'trace');
-    setTimeout(() => queueCall('pops', QUEST_LINES.traced, { text: '[ GO TO POPS ]', onTap: () => playScene('prodigal') }), 600);   // the trace: PRODIGAL
-    return;
-  }
-  if (!questRun() || !(run.loot || []).some(s => s.key === 'disc') || questOf('pops').step !== 'find') return;
-  questStep('pops', 'deliver');
-  setTimeout(() => queueCall('pops', QUEST_LINES.deliver, { text: '[ TAKE IT TO POPS ]', onTap: () => playScene('disc') }), 600);
+  const s = questStepInfo('pops'), n = questStepAfter('pops');
+  if (!questRun() || !s.carry || !n || !(run.loot || []).some(x => x.key === s.carry)) return;
+  questStep('pops', n.key);
+  setTimeout(() => queueCall('pops', QUEST_LINES[s.doneLine], { text: `[ ${n.goTo} ]`, onTap: () => playScene(n.scene) }), 600);
 }
-
 // ---------------- DOG DAYS (docs/QUESTS.md step 5) ----------------
 // The HAD3S seed: two sectors, THE HUNT in both (d0g in some corps and on the bosses), ZERO DAY on the map. A d0g win:
 // finishing a corp he's in before he takes its last node (else he escaped). Wins count anywhere while you're on the step.
@@ -415,11 +429,7 @@ function sceneEnd() {
   const sc = st.qScene;
   st.qScene = null;
   Sound.ui();
-  if (sc && sc.id === 'disc' && questOf('pops').step === 'deliver') { questStep('pops', 'd0g'); questCard('pops'); }   // the next step, on a QUEST card
-  if (sc && sc.id === 'prodigal' && questOf('pops').step === 'trace') {   // b0y joins your crew (no REP, no LVL: the user, 2026-11-04)
-    save.legacy = save.legacy || {}; save.legacy.crew_b0y = 1; questStep('pops', 'raid'); questCard('pops');
-  }
-  if (sc && sc.id === 'gate' && questOf('pops').step === 'raid') { questStep('pops', 'g0d'); questCard('pops'); }   // the H3AV3N seed
+  if (sc && questStepInfo('pops').scene === sc.id) questNext('pops');   // the step's scene: on to the next step, on a QUEST card
   if (sc && sc.onEnd) sc.onEnd();
 }
 function sceneKey(k) { if (k === 'escape') sceneEnd(); else if (k === 'enter' || k === ' ' || k === 'arrowright') sceneNext(); }
@@ -484,7 +494,6 @@ function questBoardLines(T, X) {
   T('');
   info.steps.slice(0, at).forEach((s, i) => T(`x ${i + 1}. ${s.name}`, C.mid));   // the steps done
   T('');
-  if (q.step === 'deliver') X({ box: true, text: 'T A K E   I T   T O   P O P S', id: 'qgive', onTap: () => playScene('disc'), minW: 30 });
-  else if (q.step === 'trace') X({ box: true, text: 'G O   T O   P O P S', id: 'qgive', onTap: () => playScene('prodigal'), minW: 30 });
-  else { const last = { d0g: 'disc', raid: 'prodigal', g0d: 'gate', done: 'gate' }[q.step]; if (last) X({ text: '[ REPLAY THE SCENE ]', id: 'qreplay', onTap: () => playScene(last) }); }
+  if (step.goTo) X({ box: true, text: spacedOut(step.goTo), id: 'qgive', onTap: () => playScene(step.scene), minW: 30 });
+  else { const last = info.steps.slice(0, at).reverse().find(s => s.scene); if (last) X({ text: '[ REPLAY THE SCENE ]', id: 'qreplay', onTap: () => playScene(last.scene) }); }   // the last scene you saw
 }

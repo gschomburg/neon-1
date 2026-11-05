@@ -107,7 +107,10 @@ shares.
 - **g0d.js says "nothing here runs in play"** but `MOLD`, `moldCol` and its hash are used in 5+ files; four hashes
   exist though fx.js says "the one hash". **Change:** move them into fx.js unchanged (same output). Small.
 - **Quest steps are data, moving between them is code** (17 `.step === ` checks). **Change:** step fields
-  (`advanceOn`, `uplinkLine`, `counter`...) before the first crew quest. Medium.
+  (`advanceOn`, `uplinkLine`, `counter`...) before the first crew quest. Medium. **Done (2026-11-05):** how each step ends is data in
+  QUEST_INFO (`carry`, `uplinkLine`, `doneLine`, `scene`, `goTo`, `crew`; the next step is the next in the list). What
+  happens during a step (DISC drops, d0g wins, the OMNI raid) stays code until crew quests show what they share.
+  tools/tests/quests.js walks the chain.
 - **Six ways a character talks;** b0y alone four ways, `G0DP_BLUE` hard-coded 36 times. **Change:** one
   `say(who, text)` from the hacker's style. Small.
 - **Quest seeds are special-cased in the engine** (run.js, map.js, active.js, input.js). **Change:** a per-seed

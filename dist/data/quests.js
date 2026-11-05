@@ -6,6 +6,14 @@
 //   name: the step's name (THE BOARD > QUESTS shows "STEP 2: SAFEHOUSE")
 //   goal: the objective, plainly (THE BOARD > QUESTS)
 //   lost: (optional) the objective after you die holding the quest item
+// How a step ends (engine/quests.js reads these; the next step is the next one in the list):
+//   carry: cash out holding this loot (its key) and the step is done. While you hold it, the UPLINK says so.
+//   uplinkLine: what POPS says at the UPLINK while you carry it (a QUEST_LINES key)
+//   doneLine: what POPS says when you cash out with it (a QUEST_LINES key); its button is the next step's goTo
+//   scene: the cutscene that ends this step (a QUEST_SCENES id). Then a QUEST card shows the next step.
+//   goTo: the words on the button that plays the scene (THE BOARD > QUESTS, and the call before it)
+//   crew: a hacker who joins your crew when this step ends
+// What happens during a step (the DISC dropping, d0g's wins, the OMNI raid) is code in engine/quests.js.
 // QUEST_LINES: what POPS says on his CALLS. Each is a list of lines; each line wraps in the box.
 // QUEST_SCENES: the cutscenes, a frame per tap:
 //   who:  a hacker id (pops, d0g...): their face and name show, and the line is them talking
@@ -20,12 +28,12 @@ const QUEST_INFO = {
   pops: {
     name: 'WHAT IS ALL THIS FOR?', from: 'POPS',
     steps: [
-      { key: 'find', name: 'THE DISC', goal: 'beat a sector boss with the DISC in your gear, then CASH OUT at the UPLINK.',
+      { key: 'find', name: 'THE DISC', carry: 'disc', uplinkLine: 'uplink', doneLine: 'deliver', goal: 'beat a sector boss with the DISC in your gear, then CASH OUT at the UPLINK.',
         lost: 'you lost the DISC. another copy is out there: loot nodes, markets, the PIER.' },
-      { key: 'deliver', name: 'SAFEHOUSE', goal: 'you cashed out with the DISC. take it to POPS.' },
-      { key: 'd0g', name: 'DOG DAYS', goal: "start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.", seed: 'HAD3S', wins: 10 },
-      { key: 'trace', name: 'TRACE ROUTE', goal: 'POPS got a hit on the name on the DOGTAG. go see him.' },
-      { key: 'raid', name: 'OMNI RAID', goal: "b0y is on your crew. call him in on an OMNI boss (his CALL, or a plain one) and break it with him there." },
+      { key: 'deliver', name: 'SAFEHOUSE', scene: 'disc', goTo: 'TAKE IT TO POPS', goal: 'you cashed out with the DISC. take it to POPS.' },
+      { key: 'd0g', name: 'DOG DAYS', carry: 'dogtag', uplinkLine: 'tagUplink', doneLine: 'traced', goal: "start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.", seed: 'HAD3S', wins: 10 },
+      { key: 'trace', name: 'TRACE ROUTE', scene: 'prodigal', goTo: 'GO TO POPS', crew: 'b0y', goal: 'POPS got a hit on the name on the DOGTAG. go see him.' },
+      { key: 'raid', name: 'OMNI RAID', scene: 'gate', goal: "b0y is on your crew. call him in on an OMNI boss (his CALL, or a plain one) and break it with him there." },
       { key: 'g0d', name: 'G0D MODE', goal: 'start a run with the seed H3AV3N and beat G0D. b0y goes with you.', seed: 'H3AV3N' },
       { key: 'done', name: 'WHAT IT WAS ALL FOR', goal: 'you beat G0D. POPS has his boy back.' },
       // still to build (docs/QUESTS.md): TRACE ROUTE, PRODIGAL, NEW BLOOD, OMNI RAID, HEAVEN'S GATE, G0D MODE
