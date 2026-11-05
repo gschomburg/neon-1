@@ -14,7 +14,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.41']);
+NEON_FILES.push(['data/quests.js', 'v14.42']);
 
 const QUEST_INFO = {
   pops: {
@@ -34,6 +34,8 @@ const QUEST_INFO = {
 };
 
 const QUEST_LINES = {
+  // the first time you CALL him in (a real run): he joins your crew, free (engine/quests.js questCalled)
+  joined: ["you called. i came. that's how a crew works, kid.", "i'm on yours now. no charge.", "my own calls'll turn up in markets and loot. clear a sector and we'll talk."],
   // you pick up the DISC for the first time
   found: ["kid. that disc you just picked up.", "i know that label. don't lose it.", "take it through the next checkpoint: beat the sector boss and CASH OUT at the UPLINK with it.", "then bring it to me."],
   // you pick it up again (you'd had it before)

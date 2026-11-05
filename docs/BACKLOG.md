@@ -126,6 +126,9 @@ unlocked by REP, and some quests unlock REP.
       in), 3 components on arrival, LEAVE, plain framed slots + cursor, > select components, bulb blink-in, the dramatic
       build (charge / split / form / fly to LOCKER or [£]), the grinder shred, gear / mod / loot labels, loot from RUN
       ANYWAY, magenta for missing, letter rarity from use, digits (x slot: a chance of that many), POPS first time.
+      **Decided (Greg, 2026-11-05):** shredding gives one letter to start; higher rarity only raises the chance of more.
+      **Idea (Greg, 2026-11-05):** keep each letter's rarity, so the keyboard can show the colours. Open: what rarity
+      means once you craft with it (the rarities may mean different odds there).
       **Still open:** keyboard design tweaks and the line over it (the user: not sure yet); DIVINE red letters; blueprints;
       wildcards from fishing; a use for digits in mods. Letter counts: no recipe uses I; digits 1-9 none; J, Q once.
       **Components in the LOCKER** (the user, 2026-11-04): the LOCKER's TAKE page lists every component and its count (they fly
@@ -207,7 +210,8 @@ unlocked by REP, and some quests unlock REP.
   - (more, meat notes 2026-10-28) **Who G0D is:** a rogue AI trying to destroy the net. The corps built it by accident in
     their race for AI superiority: all the corps' AIs somehow fused into G0D. Its abilities: any corp at any time? No tells?
     Maybe you only beat it by replaying the seed (learning it).
-- **A gear quest** (meat notes 2026-10-28): go find a particular gear and cash out with it; that unlocks the next step.
+- [x] **A gear quest** (meat notes 2026-10-28): go find a particular gear and cash out with it; that unlocks the next step.
+  **Built** as THE DISC (v13.77, engine/quests.js): the user, 2026-11-05: that's the concept, reuse it for other quests.
 - **More quests** (the user, meat notes 2026-10-28):
   - **The symbol path:** you find a symbol that is a path through a network (a very simple treasure map). Go through a
     sector that way and you get a bonus, or the final node turns into a special boss. Needs a special sector map, e.g.:
@@ -294,6 +298,8 @@ unlocked by REP, and some quests unlock REP.
 - **Overlapping events: built v14.16** (stacking, weights as economy numbers, scales). Still open: more scales (quests, REP level: the user, 2026-11-04, 'quests or other things can start to scale those values'); the editor's TESTING picking a pair; turn RAT RACE / CHEF'S CHOICE down to 3-4 after the d0g quest is real (today the scale keys off beating d0g as a rival).
 - **MOLD, a sector event** (the user, 2026-10-30): explains the mold in heaven (docs/QUESTS.md, step 11); once
   unlocked, it can come up as a random event in regular runs too.
+- **Decided (Greg, 2026-11-05):** don't worry about sector event balance or tiers for now; the recent updates (stacking,
+  weights, scales) should even them out.
 - **Event tiers, later** (the user, 2026-10-30: not now): harder events only deeper. For now the rule stands: sector 1
   is clean, and from sector 2 any event can show up.
 

@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.41']);
+NEON_FILES.push(['engine/input.js', 'v14.42']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -188,9 +188,7 @@ cv.addEventListener('pointerdown', e => {
   if (st.mode === 'g0dp' && !st.pause && !st.dev && !st.wipe && !(h && h.kind === 'btn')) { const [px, py] = ptXY(e); if (g0dpTap((px - L.ox) / L.cw, (py - L.oy) / L.chh)) return; }   // the G0D prototype takes board taps
   if (st.tut && st.tut.pop && !st.pause && !st.dev && tutTap(h)) return;   // the training run's popup (POPS)
   if (h && h.kind === 'tile' && upsideMirror()) {   // UPSIDE boss: it lands on the mirrored node (the one lit up as you point)
-    const j = upsideTwin(st.lv, h.i), t = st.lv.tiles[j];
-    if (t && t.state === 'closed') h = { kind: 'tile', i: j };
-    else { Sound.deny(); setMsg(t ? '> upside: its mirror is locked.' : '> upside: nothing on the other side.', C.dangerDim); return; }
+    h = { kind: 'tile', i: upsideLand(st.lv, h.i) };   // (its own node when the mirror can't take it)
   }
   st.drag = activeScroll() ? { y: e.clientY } : null;
   // Ignore taps during a wipe, except the header buttons.
@@ -260,7 +258,7 @@ cv.addEventListener('pointermove', e => {
   let h = hitAt(...ptXY(e));
   if (h && st.tut && !tutHoverOk(h)) h = null;   // the training: what you can't tap now doesn't light up
   let tile = h && h.kind === 'tile' ? h.i : -1;
-  if (tile >= 0 && upsideMirror()) tile = upsideTwin(st.lv, tile);   // UPSIDE boss: what lights up is where the tap lands
+  if (tile >= 0 && upsideMirror()) tile = upsideLand(st.lv, tile);   // UPSIDE boss: what lights up is where the tap lands
   if (tile !== st.hover && tile >= 0 && !st.busy) Sound.tick();
   st.hover = tile;
   st.kbGrid = false;

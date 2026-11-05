@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.41']);
+NEON_FILES.push(['engine/run.js', 'v14.42']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -1664,7 +1664,8 @@ function bossLoot(node, sector = false) {
   if (!node || run.bossLoot[node.id]) return [];
   run.bossLoot[node.id] = true;
   const r = rngFor(run.seed, 'bossloot', node.id), [lo, hi] = sector ? ECON.loot.sector : ECON.loot.boss;
-  return dropLoot(r, lo + Math.floor(r() * (hi - lo + 1)), sector ? 1 : 0);
+  const disc = !sector && node.corp === DISC_CORP && discCan() && addItem('disc', 0) ? [ITEMS.disc.name.toLowerCase()] : [];   // the quest's DISC (engine/quests.js)
+  return disc.concat(dropLoot(r, lo + Math.floor(r() * (hi - lo + 1)), sector ? 1 : 0));
 }
 const lootLine = got => got.length ? [[('+ loot: ' + got.join(', ')).slice(0, 34), C.money]] : [];   // (fish: only from a PIER)   // (boss gear: only from its boss)
 

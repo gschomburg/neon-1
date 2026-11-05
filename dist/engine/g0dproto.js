@@ -5,7 +5,7 @@
 // credits, the board is the stage. Nothing here touches a real run's rules. Things will change in testing: the numbers
 // are all in G0DP, and the editor can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dproto.js', 'v14.41']);
+NEON_FILES.push(['engine/g0dproto.js', 'v14.42']);
 
 const G0DP = {
   boy: true,                 // b0y helps (his cursors and his lines)

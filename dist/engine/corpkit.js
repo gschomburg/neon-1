@@ -39,7 +39,7 @@
 //   engine/mods.js      zombie, ROT
 //
 'use strict';
-NEON_FILES.push(['engine/corpkit.js', 'v14.41']);
+NEON_FILES.push(['engine/corpkit.js', 'v14.42']);
 
 // ---------------- Content ----------------
 // tell: how the corp picks its safe tile. bossTell: the boss layer's twist.
@@ -200,6 +200,13 @@ const upsideMirror = () => !!(st.flipNow && st.lv && st.lv.boss);
 function upsideTwin(lv, i) {
   const t = lv.tiles[i]; if (!t) return -1;
   return lv.tiles.findIndex(o => o.row === lv.rows - 1 - t.row && o.col === lv.cols - 1 - t.col);
+}
+// Where a tap on node i lands: its twin, or i itself when the twin can't take it (a gap in the board, or a node
+// already open). Without that, a real node whose twin was a gap or a hit ICE could never be picked (meat notes
+// 2026-11-05: "you can't pass it"). Used by the tap and the hover light (engine/input.js), so they always agree.
+function upsideLand(lv, i) {
+  const j = upsideTwin(lv, i), t = lv.tiles[j];
+  return t && t.state === 'closed' ? j : i;
 }
 const ptXY = e => st.flipNow ? [W - e.clientX, H - e.clientY] : [e.clientX, e.clientY];
 // LAGRANGE: everything slides one column right (wrapping) every beat.

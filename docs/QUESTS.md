@@ -20,6 +20,9 @@ The user's dump, 2026-10-28, put in order. More is coming.
 
 ### When it can start
 - Only after you've gotten past the first sector (at least once, ever), and maybe only once POPS is on your crew.
+- **Built v14.42** (meat notes 2026-11-05): the first time you CALL POPS in, he joins your crew for free (a call:
+  "you called. i came."). The DISC can drop once he's crew and you've cleared a sector. **MEDIX's boss always drops
+  it** while you're looking (the story: b0y was in MEDIX's sub-basement).
 
 ### Step 1: the quest item drops (the DISC: see "The story") (steps 1-4 built v13.77: engine/quests.js)
 - Once it's unlocked, the quest item can start dropping anywhere loot drops: markets, fishing, loot nodes.

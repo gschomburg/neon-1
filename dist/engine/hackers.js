@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.41']);
+NEON_FILES.push(['engine/hackers.js', 'v14.42']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -47,6 +47,7 @@ function hkSpawn(id, how) {
   (c.hk = c.hk || []).push(h);
   markSeen('hk_' + id);   // the codex
   tally(how === 'call' ? 'hack:call:' + id : 'hack:met:' + id);
+  if (how === 'call') questCalled(id);   // POPS: the first call puts him on your crew (engine/quests.js)
   hkCard(h);
   petHacker(h);   // your pet notices (engine/pet.js)
   if (st.lv) hkLayerStart(st.lv);   // into the layer that's up

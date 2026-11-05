@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.41']);
+NEON_FILES.push(['engine/quests.js', 'v14.42']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -22,11 +22,19 @@ function questStep(id, step) { const q = questOf(id); q.step = step; q.news = tr
 
 // ---------------- The DISC dropping ----------------
 // where: 'loot' | 'shop' | 'fish'. r: the spot's own roll.
+const discCan = () => questRun() && questOpen() && !holdingDisc() && questOf('pops').step === 'find';
 function discDrops(r, where) {
-  if (!questRun() || !questOpen() || holdingDisc()) return false;
-  const q = questOf('pops');
-  if (q.step !== 'find') return false;
-  return r() < QUEST_ODDS[where] * (q.lost ? QUEST_ODDS.lost : 1);
+  return discCan() && r() < QUEST_ODDS[where] * (questOf('pops').lost ? QUEST_ODDS.lost : 1);
+}
+// MEDIX's boss always drops it while you're looking (meat notes 2026-11-05; the story: b0y was in MEDIX's
+// sub-basement). In its boss loot: engine/run.js bossLoot.
+const DISC_CORP = 'medix';
+// The quest's start (meat notes 2026-11-05): the first time you CALL POPS in, in a real run, he joins your crew for
+// free (CREW: POPS on THE BOARD shows as bought). Called by hkSpawn (engine/hackers.js).
+function questCalled(id) {
+  if (id !== 'pops' || hkCrewOn('pops') || !questRun()) return;
+  save.legacy = save.legacy || {}; save.legacy.crew_pops = 1; persist();
+  queueCall('pops', QUEST_LINES.joined);
 }
 // Any DISC that lands in your gear (addItem): POPS calls.
 function questGot(key) {

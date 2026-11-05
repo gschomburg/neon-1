@@ -20,6 +20,12 @@ From POPS.
 
 ### Calls
 
+**joined**
+
+> **POPS:** you called. i came. that's how a crew works, kid.  
+> **POPS:** i'm on yours now. no charge.  
+> **POPS:** my own calls'll turn up in markets and loot. clear a sector and we'll talk.  
+
 **found**: You pick up the DISC for the first time.
 
 > **POPS:** kid. that disc you just picked up.  
@@ -73,13 +79,31 @@ From POPS.
 
 #### G0D IS DOWN: H3AV3N (`h3av3n`)
 
-*the network goes quiet. for the first time in years, nothing is watching.*
+*G0D comes apart the way a corp does when you breach it: all at once, then nothing. its code breaks into a million pieces and scatters across the net, too small to think.*
 
-**POPS:** kid. you did it.
+*the mold goes with it. sector by sector the corps come back on, in their own colors, like nothing ever happened.*
 
-*b0y logs off. across town, a light comes back on in a back room behind a laundromat.*
+*the next morning, on POPS's roof. two mugs of burnt coffee. the sun coming up over a net with nobody watching it.*
 
-*(the real cutscene goes here: docs/ENDGAME.md)*
+**B0Y:** doc.
+
+**POPS:** kid.
+
+*neither of them says much. they don't need to.*
+
+**B0Y:** here. i pulled this out of MEDIX on my way out of sub-basement three. they brought me back with it more times than i can count.
+
+**B0Y:** a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector.
+
+**POPS:** and now that the mold's gone, the seeds hold still. type one in and the net comes up the same, every time. it counts now.
+
+**POPS:** i've kept a log of every run you've made. your best ones are in there. run them again. see how deep you get.
+
+**B0Y:** come on, doc. let's go crack a corp.
+
+**POPS:** one. then breakfast.
+
+*and you? you've got a seed to type in.*
 
 #### WHAT IS ALL THIS FOR?: step 2: SAFEHOUSE (`disc`)
 
