@@ -274,7 +274,7 @@ const g0dWakeShake = (k, now, seed) => k <= 0 ? [0, 0] : [(FX.hs(seed + Math.flo
 function g0dWakeTick(p, now, dt) {
   const w = p.wake, f = p.fight, W = f.W, H = f.H, B = w.boss, [s0, s1] = G0D_WAKE.shiver;
   w.e += dt * 1000;
-  const e = w.e, say = (k, t, fn) => { if (e >= t && !w.said[k]) { w.said[k] = true; fn(); } };
+  const e = w.e, say = Seq.cue(w, e);
   say('a', 450, () => g0dSay("you can't defeat me."));
   say('break', s1, () => g0dWakeBurst(w, B, true));
   [0, 1, 2].forEach(i => say('L' + i, G0D_WAKE.letters[0] + i * G0D_WAKE.letters[1] + G0D_WAKE.fall, () => g0dWakeLand(i)));
@@ -362,7 +362,7 @@ function g0dWakeDone(p) {
   boySay('wtf. ok. start digging.');
 }
 // A tap skips it (after a beat; off by default: G0DF.tapSkip)
-function g0dWakeSkip() { const p = st.g0df; if (p && p.wake && G0DF.tapSkip && p.wake.e > G0D_WAKE.beat) g0dWakeDone(p); }
+function g0dWakeSkip() { const p = st.g0df; if (p && p.wake && Seq.canSkip(p.wake.e, G0D_WAKE.beat)) g0dWakeDone(p); }
 // The board while it wakes (buildG0df): top to bottom, each thing takes its cells; the mold over all of it
 function g0dWakeDraw(p, put, bg, now) {
   const w = p.wake, f = p.fight, e = w.e, Y = BOARD_Y, hs = FX.hs, B = w.boss, [s0, s1] = G0D_WAKE.shiver;
@@ -459,7 +459,7 @@ function g0dFakeTick(now) {
   if (f.doneAt == null && (!rv || rv.done)) f.doneAt = e;
   if (f.holeAt == null && ((f.doneAt != null && e >= f.doneAt + G0D_FAKE.pause) || e >= G0D_FAKE.cap)) { f.holeAt = e; Sound.shatter(); shake(5, 0.3); }
   if (f.holeAt == null) return;
-  const h = e - f.holeAt, say = (k, at, fn) => { if (h >= at && !f.said[k]) { f.said[k] = true; fn(); } };
+  const h = e - f.holeAt, say = Seq.cue(f, h);
   say('punch', 120, () => { Sound.trap(); shake(8, 0.4); });
   for (let i = 0; i < G0D_FAKE.plops; i++) say('p' + i, 120 + i * (G0D_FAKE.hole - 200) / G0D_FAKE.plops, () => Sound.plop());
   [0, 1, 2].forEach(i => say('L' + i, G0D_FAKE_BAR.letters[0] + i * G0D_FAKE_BAR.letters[1] + G0D_FAKE_BAR.fall, () => g0dWakeLand(i, true)));
@@ -506,7 +506,7 @@ function g0dFakeSpread(f, h, now, dt) {
   for (const i of grow) cov[i] = now;
   if (sk >= 1) for (let i = 0; i < cov.length; i++) if (cov[i] < 0) cov[i] = now;   // (the last of it)
 }
-function g0dFakeSkip() { const f = st.g0dFake; if (G0DF.tapSkip && f && performance.now() - f.t0 > G0D_FAKE.beat) g0dFakeEnd(); }
+function g0dFakeSkip() { const f = st.g0dFake; if (f && Seq.canSkip(performance.now() - f.t0, G0D_FAKE.beat)) g0dFakeEnd(); }
 function g0dFakeEnd() {
   const f = st.g0dFake; if (!f) return;
   st.g0dFake = null;
@@ -587,7 +587,7 @@ function g0dFakeOverlay(cells, now, bgs) {
     const [ch, col] = sp ? g0dCoverMold(sp[1], sp[2], now) : g0dCoverMold(x, y, now), fresh = !sp && spreading && now - cov[i] < 170;
     out.push({ ch, cx: x, cy: y + fy, col: fresh ? G0DF_FRESH : col, own: 'fx', bold: false });
   }
-  if (G0DF.tapSkip && e > G0D_FAKE.beat) { const tip = 'tap to skip'; out.push(...[...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
+  out.push(...Seq.skipTip(e, G0D_FAKE.beat));
   return f.holeAt != null ? g0dBarDrop(out, bgs, h, G0D_FAKE_BAR, true) : out;   // his bar, over the mold
 }
 
@@ -602,7 +602,7 @@ const G0D_HOLE = { ms: 3900, hole: 1300, holeR: 3.4, drop: [1300, 3000], eyes: [
 // the mold falling away all over: clumps (a few cells together), some cells on their own
 const g0dHoleFall = (x, y) => FX.hs(Math.floor(x / 3) * 5.1 + Math.floor(y / 2) * 9.7) * 0.65 + FX.hs(x * 7.7 + y * 3.3) * 0.35;
 function g0dHoleTick(p, s, now, dt) {
-  const oe = now - s.openFrom, say = (k, at, fn) => { if (oe >= at && !s.said[k]) { s.said[k] = true; fn(); } };
+  const oe = now - s.openFrom, say = Seq.cue(s, oe);
   say('drop', G0D_HOLE.drop[0], () => { Sound.shatter(); shake(5, 0.4); });
   s.eyes.forEach((e, i) => say('e' + i, G0D_HOLE.eyes[0] + i * G0D_HOLE.eyes[1], () => Sound.nodeOn()));
   const W = L.wc, Hh = L.hc, cx = (W - 1) / 2, cy = L.gh / 2;
@@ -697,7 +697,7 @@ const g0dDieNetGone = (f, x, y, k) => (1 - Math.hypot((x - f.eye.x) / 2.2, y - f
 function g0dDieTick(now) {
   const f = st.g0dDie;
   if (!f || st.mode !== 'g0ddie' || st.pause || st.dev) return;
-  const e = now - f.t0, say = (k, at, fn) => { if (e >= at && !f.said[k]) { f.said[k] = true; fn(); } };
+  const e = now - f.t0, say = Seq.cue(f, e);
   const dt = Math.min(0.05, (now - (f.last || now)) / 1000); f.last = now;
   say('a', 400, () => g0dSay('n0. N0. N0000.'));
   say('b', 2600, () => g0dSay('this isn\'t... over...'));
@@ -761,7 +761,10 @@ function g0dDieBurst(f, w, h, power) {
   for (let j = 0; j < h; j++) for (let k = 0; k < w; k++) if (Math.random() < 0.7) cells.push({ ch: pickR(['(', ')', '-', "'", '.', '@', '*'], Math.random), x: pxX(f.eye.x - (w >> 1) + k), y: pxY(BOARD_Y + f.eye.y - (h >> 1) + j), col: pickR([G0DF_RED, G0DF_BLUE, C.bright], Math.random), bg: Math.random() < 0.3 ? G0DF_RED : null });
   explode(cells, pxX(f.eye.x), pxY(BOARD_Y + f.eye.y), { power, grav: 1.2, life: [0.5, 1.1] });
 }
-function g0dDieSkip() { const f = st.g0dDie; if (G0DF.tapSkip && f && performance.now() - f.t0 > G0D_END.beat) { st.g0dDie = null; heavenFakeWin(f.stand); } }
+function g0dDieSkip() {
+  const f = st.g0dDie;
+  if (f && Seq.canSkip(performance.now() - f.t0, G0D_END.beat)) { st.g0dDie = null; heavenFakeWin(f.stand); }   // (G0D_END's beat: G0D_DIE has none)
+}
 function buildG0dDie(ctx) {
   const f = st.g0dDie, { put, bg, now } = ctx;
   if (!f) return;
@@ -1243,7 +1246,7 @@ function g0dEndSkip(f) {   // straight to G0D DEFEATED (the editor's skip, a tap
 function g0dEndTick(now) {
   const f = st.g0dEnd;
   if (!f || st.mode !== 'g0dend' || st.pause || st.dev) return;
-  const e = now - f.t0, say = (k, at, fn) => { if (e >= at && !f.said[k]) { f.said[k] = true; fn(); } };
+  const e = now - f.t0, say = Seq.cue(f, e);
   say('a', 300, () => g0dSay('n0. n0. i AM the net.'));   // (the user, 2026-11-05: it just dies. no "there will be others")
   say('b', 1700, () => g0dSay('i am th3 n3t. i am th3 n%... i am'));   // its code coming apart (scattered across the net: the ending)
   G0D_END.crumble.forEach(([a], i) => say('k' + i, a, () => { const last = i === G0D_END.crumble.length - 1; Sound.shatter(); if (last) Sound.hkBoom(); shake(last ? 14 : 6, last ? 0.7 : 0.35); }));
@@ -1311,7 +1314,7 @@ function heavenRewards(f, next) {
 // A tap: skip to G0D DEFEATED (after a beat; G0DF.tapSkip). The CALL takes its own taps.
 function g0dEndTap() {
   const f = st.g0dEnd, e = performance.now() - f.t0;
-  if (e > G0D_END.beat && e < G0D_END.title && G0DF.tapSkip) g0dEndSkip(f);
+  if (e < G0D_END.title && Seq.canSkip(e, G0D_END.beat)) g0dEndSkip(f);
 }
 function buildG0dEnd(ctx) {
   const f = st.g0dEnd, { put, bg, now } = ctx;
@@ -1356,7 +1359,7 @@ function g0dEndOverlay(cells, now, bgs) {
   let out = e < G0D_END.boom ? g0dfBar(cells, bgs, { f: 0 }) : cells;
   out = g0dChromeFade(out, bgs, g0dDieFrac(e, G0D_END.chrome));
   out = g0dChromeBoom(f, out, bgs, G0D_END.boom, e);
-  if (G0DF.tapSkip && e > G0D_END.beat && e < G0D_END.title) { const tip = 'tap to skip'; out = out.concat([...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
+  if (e < G0D_END.title) out = out.concat(Seq.skipTip(e, G0D_END.beat));
   return out;
 }
 // It's over (the placeholder ending): back to the map.

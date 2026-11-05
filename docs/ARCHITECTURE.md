@@ -71,7 +71,9 @@ shares.
   the overlay list.
 - **Every G0D cinematic is a hand-rolled timeline:** five timing tables, five state slots, four copied skip
   functions. **Change:** a small `Seq` helper and one `st.cine` slot. Medium; timing is tuned by eye, port one at a
-  time.
+  time. **Done (2026-11-05):** `Seq` in engine/fx.js (`cue`, `canSkip`, `skipTip`) replaces the copied pieces;
+  every timing table is unchanged. tools/tests/cutscenes.js plays them with the cinematics on. Dropped: one `st.cine`
+  slot, because merging `st.g0dFake` / `g0dDie` / `g0dEnd` changes the input and overlay checks for no visible gain.
 - **Hover:** `hl()` exists but 21 places tint by hand; modals get no keyboard focus (a CALL's second button can't be
   reached by keys). Small.
 - **scene.js holds six subsystems** (1383 lines). Split into board / map view / text board files (only the script

@@ -273,3 +273,18 @@ function moldCol(th, stage = 0, clue = 0) {
   const r = MOLD.ramps[clamp(stage | 0, 0, MOLD.ramps.length - 1)], s = MOLD.steps, c = r[th < s[0] ? 0 : th < s[1] ? 1 : th < s[2] ? 2 : 3];
   return clue > 0.04 ? moldMix(c, MOLD.clue, Math.round(clue * 20) / 20) : c;
 }
+
+// ---------------- Seq: the cutscenes' shared timing pieces (G0D waking, dying, the fake win, the stand's hole, the end) ----------------
+// Each cutscene keeps its own timing table (G0D_WAKE, G0D_DIE... in engine/heaven.js, tuned by eye) and its own state.
+// cue(state, e): say(key, at, fn) runs fn once, the first frame e >= at (state.said remembers which ran).
+// canSkip(e, beat): a tap may skip it (G0DF.tapSkip on, and the first beat has passed).
+// skipTip(e, beat): the dim "tap to skip" cells, bottom right of the board (none when a tap can't skip).
+const Seq = {
+  cue: (state, e) => (k, at, fn) => { if (e >= at && !state.said[k]) { state.said[k] = true; fn(); } },
+  canSkip: (e, beat) => !!G0DF.tapSkip && e > beat,
+  skipTip: (e, beat) => {
+    if (!Seq.canSkip(e, beat)) return [];
+    const tip = 'tap to skip';
+    return [...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }));
+  },
+};
