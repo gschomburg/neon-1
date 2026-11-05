@@ -8,44 +8,45 @@ hooks). The friction is in four places: mod and gear effects inlined in the engi
 cinematics wired by hand into three files, run state that has to be listed by hand to survive a reload, and the
 tools (no shared file core, checks that no longer catch anything).
 
-Status: **not decided.** Greg picks what to do; tick items off here as they're done.
+Status: **mostly done (2026-11-05),** on branches arch-pass and arch-pass-2. Items below say Done, Partly done, or nothing
+(still open). Still open: popup cards (`drawCard`), the `MODES` registry, hover/focus, `say()`, per-seed definitions.
 
 ## Bugs found (verified)
 
-- [ ] **The economy tab drops 6 numbers on save.** `data/economy.js` has `loot.valueShare`, `loot.boss`,
+- [x] **The economy tab drops 6 numbers on save.** **Done (2026-11-05):** fcb24ed. `data/economy.js` has `loot.valueShare`, `loot.boss`,
   `loot.sector`, `loot.cache`, `modx.pickpocket`, `modx.pickpocketRare`; `tools/economy_file.js` doesn't know them
   and the editor's Ctrl S writes the file without them. Fix: add them to its INFO; refuse to save while any are unknown.
-- [ ] **A reload mid-corp loses some corp state.** `runSnapshot` (engine/save.js) lists ~30 corp fields by hand;
+- [x] **A reload mid-corp loses some corp state.** **Done (2026-11-05):** one CORP_SAVE list (fcb24ed). `runSnapshot` (engine/save.js) lists ~30 corp fields by hand;
   missing: `leash`, `muzzleTo`, `honeyTo` (engine/hackers.js: LEASH is a paid item), `express`, `invUsed` (run.js).
-- [ ] **Abandoning a run with the DISC doesn't mark it lost.** `abandonRun` (engine/input.js) writes its own history
+- [x] **Abandoning a run with the DISC doesn't mark it lost.** **Done (2026-11-05):** fcb24ed. `abandonRun` (engine/input.js) writes its own history
   entry and skips `questRunEnd` (also no `sector` / `seeded` in that entry).
-- [ ] **An ad takes taps while the dev menu hides it.** input.js: `if (st.ad) return adTap(...)` has no dev check; the
+- [x] **An ad takes taps while the dev menu hides it.** **Done (2026-11-05):** fcb24ed. input.js: `if (st.ad) return adTap(...)` has no dev check; the
   draw side skips the ad under the dev menu. (Same shape for the corp intro's tap.)
-- [ ] Small: the G0D DIE skip checks `G0D_END.beat` (heaven.js), not its own timing.
+- [ ] Small: the G0D DIE skip checks `G0D_END.beat` (heaven.js), not its own timing. (Still so; a comment marks it. Same 700ms.)
 
 ## 1. Content: mods, gear, corps (makes MONTY / FOSSIL / new mods cheap)
 
-- **Mod effects are inlined in the engine.** `has('...')` for 63 mods across 13 engine files (56 calls in run.js);
+- **Mod effects are inlined in the engine.** **Partly done (2026-11-05):** corp boss mods live in their corp files (`defineModFx`, 310299b); the other mods are still inline. `has('...')` for 63 mods across 13 engine files (56 calls in run.js);
   a corp's boss mod effect goes in run.js or active.js (corpkit.js says so). Partial tables exist (`START_NOTE`,
   `END_FX`, `HIT_FX`, `BOARD_FX`, `MOD_STAGE`). **Change:** one `MOD_FX[key] = { stage, start, note, pick, block,
   hit, board, end, pay }` registry; corp files register their boss mod's effects. `payFor`'s 10 inline multipliers
   become a `pay` entry. Medium, low risk (one table at a time).
-- **Gear is two parallel if-chains.** `canUse` and `gearFx` (active.js) each branch on ~35 keys (82 `key === `
+- **Gear is two parallel if-chains.** **Done (2026-11-05):** one `GEAR` table (ad24842). `canUse` and `gearFx` (active.js) each branch on ~35 keys (82 `key === `
   checks); `BOSS_GEAR` already uses `{ ok, why, use }`. **Change:** all gear in one `GEAR_FX` table of that shape.
   Medium, mechanical.
-- **Corp hooks are called ad hoc.** 21 sites spell `st.corp && st.corp.hasBoss && st.corp.def.X`, with guards that
+- **Corp hooks are called ad hoc.** **Done (2026-11-05):** `corpHook` / `corpHas` / `corpFlag` (955e3dc). 21 sites spell `st.corp && st.corp.hasBoss && st.corp.def.X`, with guards that
   disagree. **Change:** `corpHook(name, ...args)` / `corpFlag(name)`. Small.
-- **Corp hooks manage engine internals.** `tap` hooks reset `st.busy` / `lv.readyAt` themselves; the seed RNG line is
+- **Corp hooks manage engine internals.** **Partly done (2026-11-05):** `layerReady`, `layerRng` (955e3dc). `tap` hooks reset `st.busy` / `lv.readyAt` themselves; the seed RNG line is
   copied 22 times. **Change:** `tap` returns "handled", the engine resets; `corpRng(label, ...)`. Small.
 - **Ten flags used by exactly one corp** (`flip`, `cipher`, `dark`, `faith`, `surge`, `shot`, `tickets`,
   `bossFlash`, `bossShrink`, `maskMs`) and corp keys named in engine code (chronos, apiary, old tells). A few general
   hooks (`payMult`, `clockMax`, `layerStart`) absorb most. UPSIDE and CIPHER are screen-wide and fine in the engine.
   Medium, not urgent.
-- **Gear knows corps** (TILT / SHAKE check GRAVITAS / ENTROPY). **Change:** a corp `onGear(key, lv)` hook; MONTY and
+- **Gear knows corps** **Done (2026-11-05):** `onGear` (ca442f5). (TILT / SHAKE check GRAVITAS / ENTROPY). **Change:** a corp `onGear(key, lv)` hook; MONTY and
   FOSSIL will need it too. Small.
-- **Small duplicates:** `setCellOf` = `moveTile`; the free-cells loop copied 9 times; the decoy pick in 10 corps;
+- **Small duplicates:** **Done (2026-11-05):** 955e3dc. `setCellOf` = `moveTile`; the free-cells loop copied 9 times; the decoy pick in 10 corps;
   single-corp helpers living in corpkit.js. **Change:** `freeCells(lv)`, `decoys(k, n)`, move the rest home. Small.
-- **No list of all hooks;** a misspelled hook does nothing. **Change:** one hook reference, and a check that flags
+- **No list of all hooks;** **Done (2026-11-05):** docs/CORP_HOOKS.md, and check.js flags unknown keys (955e3dc). a misspelled hook does nothing. **Change:** one hook reference, and a check that flags
   unknown keys on a corp def. Small.
 
 **Adding a corp today:** its file, its logo, the script tag, its boss mod in data/mods.js, plus MOD_STAGE and an
@@ -56,12 +57,12 @@ shares.
 
 ## 2. Screens, input and cinematics
 
-- **Overlays are wired by hand in three places, in three orders.** Seven modal overlays (ad, event card, hacker card,
+- **Overlays are wired by hand in three places, in three orders.** **Done (2026-11-05):** `OVERLAYS` (89cdfd0). Seven modal overlays (ad, event card, hacker card,
   feat box, call box, cutscene, tutorial popup) plus boot, intros and the G0D sequences, each wired into
   `buildScene`, pointerdown and keydown separately; draw order and input order already disagree (the ad bug above).
   **Change:** one ordered `OVERLAYS` list `{ on, build, tap, key }` that all three loop over; hits tagged by layer.
   Medium.
-- **The cell-writer loop is copied 7 times in `buildScene`,** and 35 more times in g0dproto / heaven. **Change:** a
+- **The cell-writer loop is copied 7 times in `buildScene`,** **Done (2026-11-05):** `layerCtx()` (89cdfd0). and 35 more times in g0dproto / heaven. **Change:** a
   `layerCtx()` factory. Small; do it first.
 - **Popup cards are copy-pasted** in 6 files (frame, title bar, catch-all hit, typewriter budget in 3). **Change:**
   `drawCard(ctx, {...})`. Medium.
@@ -82,15 +83,15 @@ shares.
 
 ## 3. Run and state
 
-- **"Does this run count?" is five slightly different predicates** (`counting`, `questRun`, `statOn`, `oneUpOpen`,
+- **"Does this run count?" is five slightly different predicates** **Partly done (2026-11-05):** documented in engine/save.js 'Run kinds'; `run.mp` gone (89cdfd0). (`counting`, `questRun`, `statOn`, `oneUpOpen`,
   the leaderboard guard); `st.mp` checked 115 times, `.practice` 50, `.tutorial` 36, literal quest names 18; `run.mp`
   is never set (4 dead checks). **Change:** `engine/runkind.js` with named predicates (`runScored`, `runRanked`,
   `runSaves`, `isQuest(id)`). Small to medium.
-- **Run state for resume is a hand list** (the bug above). **Change:** corp state in one bag saved whole, or save
+- **Run state for resume is a hand list** **Done (2026-11-05):** CORP_SAVE (fcb24ed). (the bug above). **Change:** corp state in one bag saved whole, or save
   everything but a short runtime list. Medium; test resume.
-- **Credit math copied 25 times** (`credits += x; earned += x`), 5 adds skip `earned` with no note; REP banking
+- **Credit math copied 25 times** **Done (2026-11-05):** `earn()` (89cdfd0). (`credits += x; earned += x`), 5 adds skip `earned` with no note; REP banking
   copied twice. **Change:** `earn / spend / refund / bankRep`. Small.
-- **Four ways a run ends,** each recording differently. **Change:** one `finishRun(run, outcome)` and one history
+- **Four ways a run ends,** **Partly done (2026-11-05):** one `noteHistory()` (fcb24ed). each recording differently. **Change:** one `finishRun(run, outcome)` and one history
   entry builder. Medium.
 - **run.js is several systems in one file** (2030 lines): damage, the 1UP, the uplink, loot rolls, run end. Split by
   its section headers; loot is spread over three files. Large total, each move low risk. **Done (2026-11-05):** run.js is 994 lines; damage.js, hits.js,
@@ -100,11 +101,11 @@ shares.
 
 ## 4. Story and late game
 
-- **g0dproto.js is the real G0D fight** but named a prototype (`G0DP` 286 times there, 84 elsewhere). **Change:**
+- **g0dproto.js is the real G0D fight** **Done (2026-11-05):** engine/g0dfight.js (7534c0e). but named a prototype (`G0DP` 286 times there, 84 elsewhere). **Change:**
   rename to a fight module. Medium, mechanical; the editor's tuning keys move with it.
-- **Dead prototype code:** a second maze (the real one is `HEAVEN.maze`), non-`real` branches, empty stubs. About 150
+- **Dead prototype code:** **Done (2026-11-05):** 7534c0e. a second maze (the real one is `HEAVEN.maze`), non-`real` branches, empty stubs. About 150
   lines. Small.
-- **g0d.js says "nothing here runs in play"** but `MOLD`, `moldCol` and its hash are used in 5+ files; four hashes
+- **g0d.js says "nothing here runs in play"** **Done (2026-11-05):** 4bff70e. but `MOLD`, `moldCol` and its hash are used in 5+ files; four hashes
   exist though fx.js says "the one hash". **Change:** move them into fx.js unchanged (same output). Small.
 - **Quest steps are data, moving between them is code** (17 `.step === ` checks). **Change:** step fields
   (`advanceOn`, `uplinkLine`, `counter`...) before the first crew quest. Medium. **Done (2026-11-05):** how each step ends is data in
