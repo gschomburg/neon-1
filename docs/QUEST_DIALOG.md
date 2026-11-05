@@ -12,7 +12,11 @@ From POPS.
 1. **THE DISC**: beat a sector boss with the DISC in your gear, then CASH OUT at the UPLINK.
    - After losing the item: you lost the DISC. another copy is out there: loot nodes, markets, the PIER.
 2. **SAFEHOUSE**: you cashed out with the DISC. take it to POPS.
-3. **DOG DAYS**: POPS wants d0g beaten. ten times. (this step is coming soon.)
+3. **DOG DAYS**: start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.
+4. **TRACE ROUTE**: POPS got a hit on the name on the DOGTAG. go see him.
+5. **OMNI RAID**: b0y is on your crew. call him in on an OMNI boss (his CALL, or a plain one) and break it with him there.
+6. **G0D MODE**: start a run with the seed H3AV3N and beat G0D. b0y goes with you.
+7. **WHAT IT WAS ALL FOR**: you beat G0D. POPS has his boy back.
 
 ### Calls
 
@@ -43,7 +47,39 @@ From POPS.
 > **POPS:** you made it out with the disc.  
 > **POPS:** come by the safehouse. let's see what's on it.  
 
+**dogtag**
+
+> **POPS:** that's ten.  
+> **POPS:** he dropped something. an old tag, with a name scratched into it.  
+> **POPS:** CASH OUT with it. i'll run a trace.  
+
+**tagUplink**
+
+> **POPS:** you've got his tag.  
+> **POPS:** CASH OUT here and bring it to me.  
+
+**traced**
+
+> **POPS:** you got it out. good.  
+> **POPS:** i ran the name. i got a hit.  
+> **POPS:** come by. now.  
+
+**raid**
+
+> **POPS:** it's me. b0y.  
+> **POPS:** it hid inside OMNI for years. call me in on one and i'll find where it went.  
+
 ### Scenes
+
+#### G0D IS DOWN: H3AV3N (`h3av3n`)
+
+*the network goes quiet. for the first time in years, nothing is watching.*
+
+**POPS:** kid. you did it.
+
+*b0y logs off. across town, a light comes back on in a back room behind a laundromat.*
+
+*(the real cutscene goes here: docs/ENDGAME.md)*
 
 #### WHAT IS ALL THIS FOR?: step 2: SAFEHOUSE (`disc`)
 
@@ -54,12 +90,6 @@ From POPS.
 **POPS:** you brought it. let's see it.
 
 *you hand him the DISC. his hands shake, just a little. you've never seen them do that.*
-
-```
-.-------.
-|  (o)  |
-'-------'
-```
 
 *the DISC goes in. an old drive coughs, then spins up.*
 
@@ -77,4 +107,60 @@ From POPS.
 
 **POPS:** if d0g did something to my boy, i want him to feel it.
 
-**POPS:** beat d0g. ten times. then we talk.
+**POPS:** his trail runs down deep. somewhere the logs call HAD3S.
+
+**POPS:** here. that's a seed: HAD3S. start a run with it and go hunting.
+
+**POPS:** go find him. make him pay for it.
+
+#### WHAT IS ALL THIS FOR?: step 4: TRACE ROUTE (`prodigal`)
+
+*POPS runs the name off the DOGTAG. the trace bounces through five relays, then dives.*
+
+**POPS:** it doesn't end in a corp. it ends under one. MEDIX. sub-basement three.
+
+**POPS:** i worked there, a long time ago. i patched people up.
+
+*you go down together. the lights are out. mold up the walls, and one screen still on in the dark.*
+
+*d0g is there, wired into it. he doesn't run.*
+
+**d0g:** you're the one who keeps beating me.
+
+**POPS:** kid. look at me.
+
+*the eyes in the hood flicker. something in there is fighting something else.*
+
+**d0g:** ...doc?
+
+*nobody has called POPS that in years. only one person ever did.*
+
+**d0g:** i went in after it. something in the corps was waking up. i wanted to see it first.
+
+**d0g:** it saw me first. it got in. it made me its dog.
+
+**d0g:** i built it a gate down there. CERBERUS. so nothing gets in. so nothing gets out.
+
+**d0g:** every time you beat me, its grip slipped. a little more of me came back.
+
+**d0g:** the DISC was me. a backup. i got it out where somebody would find it.
+
+*POPS doesn't say anything. he just holds on to him.*
+
+**B0Y:** don't call me d0g. that was its name for me. it's b0y.
+
+**B0Y:** it's still out there. here's my number. when you're ready, we go get it.
+
+#### WHAT IS ALL THIS FOR?: HEAVEN'S GATE (`gate`)
+
+*OMNI's core comes apart. b0y is already in it, faster than you've ever seen anybody move.*
+
+**B0Y:** it was here. for years. the corps were just its body.
+
+**B0Y:** it moved. somewhere the corps can't touch. it calls it heaven.
+
+*on the screen: a gate, up past the clouds. mold all over it.*
+
+**B0Y:** the way in is a seed. H3AV3N.
+
+**B0Y:** i'll be with you the whole way. i know its tricks. i built some of them.
