@@ -34,6 +34,17 @@ those runs get **a leaderboard of their own** (any game played this way).
   the save's run history keeps each run's seed and practice flag.
 - Missing: leaderboard scores don't carry the seed (engine/leaders.js, lbSubmit's data). A seed board needs it.
 - (Claude) A seed board could group by seed: the best depth on each seed, so players race each other on the same one.
+- **The plan (talked through 2026-11-05, not built; Greg: just talk for now):**
+  - No server change: greglytics takes any board name, so each seed gets its own board, `seed-<SEED>` (like
+    `day-2026-11-05`). Every run that posts also posts to its seed's board, random seeds too, so a replay has your
+    first run to beat.
+  - A **SEED tab** on the LEADERBOARD (TODAY / ALL TIME / SEED): the board for the seed in the title's seed field, or
+    your last run's; the seed in its header. Same rows as the others.
+  - The end screen: on a replayed seed, one more line, `#2 of 5 on K7XQ2M` (the rank line is near 32 columns already).
+  - Before G0D, a typed seed is practice and doesn't post, so racing a chosen seed is end game only (fits the story).
+  - Not possible without a server change: a "most played seeds" list across everyone (the server reads one board at a time).
+  - Goes well with **a daily seed** (BACKLOG, parked): the same seed for everyone each day, its board the SEED tab. It
+    would have to count for everyone, not only after G0D, since nobody picks it.
 
 ## Your seeds: a REPLAYS button on the title (the user, 2026-10-30, a side note)
 Once the end game is unlocked, a new
