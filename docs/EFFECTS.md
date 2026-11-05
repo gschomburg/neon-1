@@ -62,9 +62,11 @@ Steps 1-3 change nothing you can see.
 - One glitch set: `#%&@$!?*<>/=+`. The loot names lose the backslash they had.
 - G0D's own hash (`G0D_LOOKS.hs`) stays for now. The mold spread, CERBERUS and the H3AV3N fight use it about 20 times, and their shapes were tuned by eye. Switching would change them.
 
+**v14.33:** a hacker's tics live in `data/hackers.js` (`HACKERS.d0g.tics`; w00f is a copy, so he has them too). The cutscene logo, the rival card and the death screen all read them: `FX.tics` + `FX.putTics` for a block of text rows. The d -> b swap is in his name, so it shows on the card's name line and the cutscene's tag; the death screen has no name, so it gets the tears and bursts only.
+- Not done: the breach screen, where a rival's logo is swapped for yours under DEFEATED. Those rows are plain one-color panel lines; tics there need a new option in the text board.
+
 ## Next
 
-- d0g's tics on his rival card and death screen, not just the cutscene (one call each, the same look).
 - The editor's FX page (step 4).
 - New effects (step 5): decrypt for codex entries, dither fades, color cycling, rain.
 

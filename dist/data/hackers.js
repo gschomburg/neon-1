@@ -23,7 +23,7 @@
 //   lvl2    crew: their LVL 2 upgrade (THE BOARD), fixed
 // How each one plays is engine/hackers.js (HK_AI); they come in through the RIVAL anomaly (rivals) and CALL gear (crew).
 'use strict';
-NEON_FILES.push(['data/hackers.js', 'v14.32']);
+NEON_FILES.push(['data/hackers.js', 'v14.33']);
 
 const HACKERS = {
   // ================= bad hackers =================
@@ -138,6 +138,7 @@ const HACKERS = {
   d0g: {
     name: 'd0g', side: 'bad', hp: 5,
     style: { fg: "#ffffff", bg: "#8a0f1c", ink: "#ff3348" },   // (white on blood red, the user 2026-11-04: not POPS's yellow; ink: his name and tags in red)
+    tics: { swap: [['d', 'b']], col: '#4aa8ff' },   // his logo glitches (d -> b, in b0y's blue) everywhere it shows: data/fx.js tics
     enter: "wow. such hacker.",
     taunt: ["much tell. very read.","wow.","so predict."],
     out: "such loss. much respect.",

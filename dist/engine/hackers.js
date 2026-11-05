@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.32']);
+NEON_FILES.push(['engine/hackers.js', 'v14.33']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -100,10 +100,12 @@ function buildHkCard(ctx, now) {
   put(x0, y0, ('+-' + head + '-'.repeat(W)).slice(0, W - 1) + '+', fc, 'hud', true);
   put(x0, y0 + h - 1, '+' + '-'.repeat(W - 2) + '+', fc, 'hud', true);
   for (let r = 1; r < h - 1; r++) { put(x0, y0 + r, '|', fc, 'hud'); put(x0 + W - 1, y0 + r, '|', fc, 'hud'); }
+  // a glitchy logo (d0g): data/hackers.js tics, on the logo and his name line (the d -> b swap is in his name)
+  const tc = d.tics ? FX.tics(lines.slice(0, art.length + 2).map(l => l.t.slice(0, W - 4)), FX.look('tics', d.tics), now) : null;
   lines.forEach((ln, r) => {
-    const t = ln.t.slice(0, W - 4), x = x0 + Math.floor((W - t.length) / 2), y = y0 + 1 + r;
-    if (ln.bgc) bg(x0 + 2, y, W - 4, ln.bgc, 1);
-    if (t) put(x, y, t, ln.col || C.text, 'hud', !!ln.bold);
+    const t = ln.t.slice(0, W - 4), x = x0 + Math.floor((W - t.length) / 2), y = y0 + 1 + r, tk = tc && r < tc.length ? tc[r] : null;
+    if (ln.bgc) bg(x0 + 2 + (tk ? tk.tear : 0), y, W - 4, ln.bgc, 1);
+    if (t) FX.putTics(put, x, y, t, tk, ln.col || C.text, 'hud', !!ln.bold);
   });
 }
 
@@ -508,7 +510,12 @@ function buildHkDeath(ctx, now) {
   const rows = dd.side === 'bad' ? hackerArt(dd.id) : (ART_FACES[dd.id] || { art: [] }).art;
   const y0 = Math.floor(L.hc / 2) - rows.length - 1, w = dd.side === 'bad' ? LOGO_W + 4 : 9, x0 = Math.floor((L.wc - w) / 2);
   const shakeX = dd.side === 'good' ? Math.round(Math.sin(age / 50) * (age < 1500 ? 1 : 0)) : 0;
-  rows.forEach((l, k) => { bg(x0 + shakeX, y0 + k, w, sty.bg, 1); put(x0 + shakeX + Math.floor((w - l.length) / 2), y0 + k, l, sty.fg, 'hud', true); });
+  const d = hkDef(dd.id), tc = dd.side === 'bad' && d && d.tics ? FX.tics(rows, FX.look('tics', d.tics), now) : null;   // a glitchy logo (d0g)
+  rows.forEach((l, k) => {
+    const tk = tc ? tc[k] : null;
+    bg(x0 + shakeX + (tk ? tk.tear : 0), y0 + k, w, sty.bg, 1);
+    FX.putTics(put, x0 + shakeX + Math.floor((w - l.length) / 2), y0 + k, l, tk, sty.fg, 'hud', true);
+  });
   const text = dd.text.slice(0, Math.floor((age - 250) / 40));
   put(Math.floor((L.wc - dd.text.length) / 2), y0 + rows.length + 1, text, hkInk(dd.id), 'hud', true);
 }

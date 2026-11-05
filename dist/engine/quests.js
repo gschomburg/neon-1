@@ -9,7 +9,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.32']);
+NEON_FILES.push(['engine/quests.js', 'v14.33']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -181,7 +181,7 @@ function stripLogo(id) {
 }
 const stripArt = pic => pic.logo ? stripLogo(pic.logo) : SCENE_ART[pic.art];
 const picRows = pic => pic.rows || [0, stripArt(pic).h - 1];
-const picLayers = pic => { if (!pic.logo) return pic.layers; const a = stripArt(pic); return [Object.assign({ n: 'logo', col: a.fg, glitch: true, dur: 900, box: { w: a.bw, col: a.bgc } }, pic.look || {})]; };
+const picLayers = pic => { if (!pic.logo) return pic.layers; const a = stripArt(pic); return [Object.assign({ n: 'logo', col: a.fg, glitch: true, dur: 900, box: { w: a.bw, col: a.bgc } }, HACKERS[pic.logo] && HACKERS[pic.logo].tics ? { tics: HACKERS[pic.logo].tics } : {}, pic.look || {})]; };   // (a hacker's tics: data/hackers.js)
 const layerAt = (ly, k) => ly.at != null ? ly.at : k * STRIP.gap;
 const layerEnd = (ly, k) => layerAt(ly, k) + (ly.dur || STRIP.reveal) + (ly.slide ? (ly.slide.at || 0) + ly.slide.ms : 0);   // (a progress runs on past it: the text doesn't wait)
 const stripArtMs = fr => fr.pic ? Math.max(...picLayers(fr.pic).map(layerEnd)) + (fr.pic.hold || 0) : 0;

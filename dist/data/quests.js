@@ -14,7 +14,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.32']);
+NEON_FILES.push(['data/quests.js', 'v14.33']);
 
 const QUEST_INFO = {
   pops: {
@@ -95,7 +95,7 @@ const QUEST_SCENES = {
 //   lights up top to bottom, then they spin; off = [dx, dy]: drawn that far from where it sits in the save.
 //   Sounds: slide.startSound / slide.sound (as it starts / lands), progress.sound (as it starts): Sound.* names.
 //   tics = { swap: [[from, to]], col, tear, burst }: a glitchy logo (rows tear, marks swap, clusters flash to noise);
-//   pic.look = layer options for a logo.
+//   pic.look = layer options for a logo (a hacker's tics come from data/hackers.js).
 //   The effects' defaults (the global look) are data/fx.js FX_LOOKS: a layer only gives what's its own (where, which
 //   marks) and what it wants different. flicker / glitch take true or their own settings ({ glitch: { col: 'danger' } }).
 //   mood (on any frame) = { levels, stages }: what the scene's music wanders between from that frame on (SCENE_MUSIC).
@@ -138,7 +138,7 @@ const QUEST_SCENES = {
     { text: "he doesn't look at you while he says it. he's looking at the label." },
     { who: 'pops', text: "it's encrypted. but there's a trail on it: an old terminal, somewhere deep.", mood: { levels: [1, 2], stages: 'B' } },
     // d0g's logo glitches: his d flips to a b now and then, flashes in b0y's blue (he's POPS's boy: docs/QUESTS.md)
-    { pic: { logo: 'd0g', look: { tics: { swap: [['d', 'b']], col: '#4aa8ff' } } }, who: 'pops', text: 'and one name all over the logs. d0g.', mood: { levels: [2, 3], stages: 'B' } },
+    { pic: { logo: 'd0g' }, who: 'pops', text: 'and one name all over the logs. d0g.', mood: { levels: [2, 3], stages: 'B' } },
     { text: 'his jaw sets. the shake is gone.', mood: { levels: [2, 3], stages: 'BC' } },
     { who: 'pops', text: 'if d0g did something to my boy, i want him to feel it.', mood: { levels: [3], stages: 'C' } },
     // POPS gives you the seed (the user, 2026-11-04: here, at the end of this scene; the quest card after says the rest)

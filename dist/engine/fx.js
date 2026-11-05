@@ -4,7 +4,7 @@
 // corrupted loot names (data/mods.js glitchName) and G0D's mold glitch (engine/g0d.js).
 // (Particles, shakes and flashes are engine/effects.js: they work in pixels, not cells.)
 'use strict';
-NEON_FILES.push(['engine/fx.js', 'v14.32']);
+NEON_FILES.push(['engine/fx.js', 'v14.33']);
 
 const FX = (() => {
   // ---------- building blocks ----------
@@ -113,6 +113,32 @@ const FX = (() => {
     if (!b || Math.hypot((X - b.bx) / 2, Y - b.by) >= b.rad || hash(X * 13 + Y * 7, b.k) <= b.B.gaps) return null;
     return pick(b.B.set, hash(X + Y, b.k));
   }
+  // TICS on a block of text rows (a hacker's logo: the rival card, the death screen). T = FX.look('tics', ...): { swap,
+  // col, tear, burst }. Gives each row's { tear: cells to shift it, marks: [[i, ch, ink]] to draw over it right now }.
+  // (The cutscenes do the same per cell in buildStrip, engine/quests.js: keep the two alike.)
+  function tics(rows, T, now) {
+    const w = Math.max(0, ...rows.map(r => r.length)), ink = col(T.col), TR = look('tear', T.tear);
+    const b = burst(look('burst', T.burst), now, 0, 0, w, rows.length), sw = T.swap && swapOn(FX_LOOKS.swap, now);
+    return rows.map((row, r) => {
+      const marks = [];
+      for (let i = 0; i < row.length; i++) {
+        if (row[i] === ' ') continue;
+        let ch = null;
+        if (sw) { const p = T.swap.find(s => s[0] === row[i]); if (p) ch = p[1]; }
+        ch = burstCh(b, i, r) || ch;
+        if (ch) marks.push([i, ch, ink]);
+      }
+      return { tear: tear(TR, now, r), marks };
+    });
+  }
+  // Draws a row with its tics: the plain marks, then the changed ones over the gaps left for them.
+  function putTics(put, x, y, text, tk, fg, own = 'hud', bold = true) {
+    if (!tk) return put(x, y, text, fg, own, bold);
+    const s = [...text];
+    for (const [i] of tk.marks) if (i < s.length) s[i] = ' ';
+    put(x + tk.tear, y, s.join(''), fg, own, bold);
+    for (const [i, ch, ink] of tk.marks) if (i < text.length) put(x + tk.tear + i, y, ch, ink, own, bold);
+  }
   // A burst over any list of screen cells ({ ch, cx, cy, col }): a new list, the ones in it swapped to noise.
   function burstCells(cells, B, now, x, y, w, h) {
     const b = burst(B, now, x, y, w, h);
@@ -152,5 +178,5 @@ const FX = (() => {
   }
 
   return { hash, pick, step, cycle, clamp01, easeOut, col, look, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
-    glow, glowCone, glowCell, glowWash, tear, swapOn, burst, burstCh, burstCells, smoke, fogRows, garble };
+    glow, glowCone, glowCell, glowWash, tear, swapOn, burst, burstCh, burstCells, tics, putTics, smoke, fogRows, garble };
 })();

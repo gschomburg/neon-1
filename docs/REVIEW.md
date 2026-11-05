@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **d0g's tics everywhere** (v14.33): meet d0g (or w00f) in a run: the rival card's logo tears and bursts, and his name flickers to a blue b0g. Die with him in the layer: the death screen logo glitches too. Too much on the card, where you read it longer?
+
 - [ ] **The effects library** (v14.32): nothing should look different; the cutscenes were checked frame by frame. Three of my calls to check (docs/EFFECTS.md, "Decided"): corrupted loot names and the mold glitch now glitch different letters and spots (same look); one glitch set (the loot names lose the backslash); G0D's own hash stays for now, so the mold shapes you tuned don't move. Want to try it: change a number in `dist/data/fx.js` (say `glitch.col` or `blink.every`) and play the DISC scene.
 
 - [ ] **The small batch** (v14.15): use a SHOE and BEES in a corp layer (the throw, the swarm: timing, the look of the * bees, the buzz); the market's SELL page ([ ALL LOOT ], loot rows); the bench build landing (the arc, the fanfare), a failed build (the fizzle), key clicks.
