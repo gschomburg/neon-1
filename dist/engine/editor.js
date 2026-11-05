@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html, and the older palette editor; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.35']);
+NEON_FILES.push(['engine/editor.js', 'v14.36']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -420,6 +420,13 @@ if (EDITOR) {
       if (!QUEST_SCENES[m.key] || !QUEST_SCENES[m.key][m.frame]) throw new Error('no such scene frame');
       fxShowOff(); playScene(m.key);
       Object.assign(st.qScene, { i: m.frame, t0: performance.now(), fxLoop: true });
+    },
+    // the mold slider (the G0D tab): how much mold the transitions and the mold glitch carry; null = off
+    moldlvl: m => { st.moldDev = m.m == null ? null : clamp(+m.m, 0, 1); },
+    moldwipe: async m => {   // a screen transition at the mold level (the same screen comes back)
+      if (m.m != null) st.moldDev = clamp(+m.m, 0, 1);
+      else if (st.moldDev == null) st.moldDev = 0.7;
+      fxShowOff(); await wipeOut(0); wipeIn();
     },
     fxcodex: () => {   // the codex, with the first found mod set to decode again (only the animation: nothing else changes)
       fxShowOff(); openCodex();

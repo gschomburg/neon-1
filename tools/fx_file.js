@@ -16,7 +16,7 @@
   const DISC_HEAD = { label: 'DISC: POPS up close', scene: 'disc', frame: 6 }, DISC_SLOT = { label: 'DISC: the slot', scene: 'disc', frame: 5 };
   const DISC_D0G = { label: 'DISC: d0g\'s logo', scene: 'disc', frame: 10 }, PROD_ROOM = { label: 'PRODIGAL: the room', scene: 'prodigal', frame: 4 };
   const PROD_EYES = { label: 'PRODIGAL: the eyes', scene: 'prodigal', frame: 9 }, GATE = { label: 'GATE', scene: 'gate', frame: 1 };
-  const CODEX = { label: 'the codex', codex: true };
+  const CODEX = { label: 'the codex', codex: true }, MOLDWIPE = { label: 'a transition (at the G0D tab\'s mold level)', moldwipe: true };
   const CARD = { label: 'd0g\'s rival card', card: 'd0g' }, DEATH = { label: 'd0g\'s death screen', death: 'd0g' }, MOLD = { label: 'mold glitch (G0D)', g0d: 'glitch' };
   const f = (k, kind, label, extra) => Object.assign({ k, kind, label }, extra || {});
   const LOOKS = [
@@ -73,6 +73,9 @@
     { key: 'decrypt', title: 'DECRYPT', show: [CODEX],
       note: 'text as ciphertext (the codex\'s unfound entries): letters are `set` characters, re-rolled every `idleMs` at rest, every `ms` while decoding. As you find more of a codex tab, up to `hint` of each unfound name shows through; a newly found one decodes over `dur`.',
       fields: [f('set', 'chars', 'cipher'), f('idleMs', 'ms', 'churn at rest'), f('ms', 'ms', 'churn decoding'), f('dur', 'ms', 'decode takes'), f('hint', 'share', 'shows through, all found')] },
+    { key: 'moldwipe', title: 'MOLD TRANSITION', show: [MOLDWIPE],
+      note: 'the screen transition with mold in it, at a mold level (0-1: the G0D tab\'s slider; the game doesn\'t turn it up yet). At full mold: blotches (`blotch` cells across) of `fill` of the fill, `noise` of the breakdown noise, and `stay` of the new screen\'s marks held as mold up to `linger` ms longer.',
+      fields: [f('set', 'set', 'characters', { set: 'FX_NOISE' }), f('fill', 'share', 'of the fill'), f('blotch', 'cells', 'blotch size'), f('noise', 'share', 'of the noise'), f('stay', 'share', 'lingers'), f('linger', 'ms', 'linger up to')] },
     { key: 'garble', title: 'GARBLE', show: [],
       note: 'a line of text that won\'t hold still (corrupted loot names): it switches versions every `swapMs`, and `share` of its letters are glitch characters, re-rolled every ms.',
       fields: [f('ms', 'ms', 're-roll every'), f('swapMs', 'ms', 'version every'), f('share', 'share', 'glitched'), f('set', 'set', 'characters', { set: 'FX_GLITCH' })] },

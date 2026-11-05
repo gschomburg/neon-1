@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The mold transition** (v14.36): editor > g0d > "The mold effects". Drag the mold slider, click "a transition" at 0.3, 0.7, 1; then "the mold glitch". Its settings are on the fx tab (MOLD TRANSITION). Then your call: where does the game turn it up? (Easy hook: the M0LD events, light ~0.3 / heavy ~0.7. Or as the quest goes on.)
+
 - [ ] **The encrypted codex** (v14.35): open the codex. Unfound names are hex ciphertext at their real length; more letters show through as you find more (up to half). Find something new, open the codex: it decodes. A corp you've seen but not beaten: its tell is ciphertext; beat it, and it decodes. Hex, or a different cipher look (data/fx.js decrypt.set, or the FX tab)? Is half too much of a hint?
 
 - [ ] **The FX tab** (v14.34): open tools/neon_editor.html > fx. Click a show button, drag some numbers while it plays, save (Ctrl S). Do the cards read well? Are the notes clear? Is anything missing that you'd want to tune?

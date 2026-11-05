@@ -4,7 +4,7 @@
 // (a cutscene layer: { n: 'logo', glitch: { col: 'ink:b0y' } }), without becoming its own effect.
 // Times are in ms. "share" = the chance (0-1) per cell or per window. "set" = the characters it swaps in.
 'use strict';
-NEON_FILES.push(['data/fx.js', 'v14.35']);
+NEON_FILES.push(['data/fx.js', 'v14.36']);
 
 const FX_GLITCH = '#%&@$!?*<>/=+';   // the glitch characters (one set everywhere: glitch, cue, garble)
 const FX_NOISE = '%&#*;:';   // the softer noise a burst flashes to (mold, d0g's tics)
@@ -55,6 +55,10 @@ const FX_LOOKS = {
   // at rest, every `ms` while decoding. As you find more of a codex tab, up to `hint` of each unfound name shows
   // through; a newly found one decodes over `dur`.
   decrypt: { set: '0123456789ABCDEF', idleMs: 700, ms: 50, dur: 1100, hint: 0.5 },
+  // MOLD TRANSITION: the screen transition with mold in it, at a mold level (0-1: the G0D tab's slider; the game
+  // doesn't turn it up yet). At full mold: blotches (`blotch` cells across) of `fill` of the fill, `noise` of the
+  // breakdown noise, and `stay` of the new screen's marks held as mold up to `linger` ms longer.
+  moldwipe: { set: FX_NOISE, fill: 0.8, blotch: 4, noise: 0.7, stay: 0.35, linger: 500 },
   // GARBLE: a line of text that won't hold still (corrupted loot names): it switches versions every `swapMs`, and
   // `share` of its letters are glitch characters, re-rolled every ms.
   garble: { ms: 120, swapMs: 1700, share: 0.12, set: FX_GLITCH },

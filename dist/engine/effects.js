@@ -1,6 +1,6 @@
 // NeoN+1 engine/effects.js: Particles, flashes, shakes, and the scroll-fill wipe.
 'use strict';
-NEON_FILES.push(['engine/effects.js', 'v14.35']);
+NEON_FILES.push(['engine/effects.js', 'v14.36']);
 
 // ---------------- Effects ----------------
 const parts = [];
@@ -231,8 +231,20 @@ const LIT_HOLD = 220; // wipe-time the real node stays lit after the front passe
 // Each character gets its own random delay and change speed, so swaps don't happen in a neat line.
 const charJitter = (cx, cy, salt) => (hash2(Math.round(cx * 2) + salt, Math.round(cy)) % 1000) / 1000;
 
+// MOLD IN THE TRANSITION (data/fx.js moldwipe): how much mold the wipes carry, 0-1. The editor's G0D tab sets st.moldDev;
+// the game doesn't turn it up yet (the same number could later rise as the quest goes on, and in heaven).
+const wipeMold = () => st.moldDev || 0;
+const moldInk = (cx, cy) => moldCol(1 + FX.hash(Math.round(cx), Math.round(cy), 11) * 3);   // (moldCol: engine/g0d.js)
+const moldCh = (cx, cy, now) => FX.pick(FX_LOOKS.moldwipe.set, FX.hash(Math.round(cx), Math.round(cy), FX.step(now, 140)));
+// A blotch of mold in the fill at (cx, cy), scrolling up with it (s = the fill's scroll); ragged at the edges.
+function moldBlotch(cx, cy, s, m) {
+  const MW = FX_LOOKS.moldwipe, B = Math.max(1, MW.blotch), j = FX.hash(cx, cy + s, 14) * B * 0.6;
+  return FX.hash(Math.floor((cx + j) / B), Math.floor((cy + s + j / 2) / (B / 2)), 15) < m * MW.fill;
+}
+
 function applyWipe(cells, now) {
   const w = st.wipe;
+  const m = wipeMold(), MW = FX_LOOKS.moldwipe, moldy = () => m > 0 && Math.random() < m * MW.noise;
   const top = w.top != null ? w.top : w.full ? 0 : BOARD_Y, bot = w.bot != null ? w.bot : w.full ? L.hc : BOARD_Y + L.gh;
   const inB = c => c.cy >= top && c.cy < bot;
   const out = cells.filter(c => !inB(c));
@@ -259,7 +271,7 @@ function applyWipe(cells, now) {
     const q = t / dec;
     let ch, col;
     if (q < 0.3) { ch = Math.random() < 0.5 ? c.ch : noiseCh(); col = Math.random() < 0.5 ? c.col : hitOut; }
-    else if (q < 0.7) { ch = noiseCh(); col = hitOut; }
+    else if (q < 0.7) { if (moldy()) { ch = moldCh(c.cx, c.cy, now); col = moldInk(c.cx, c.cy); } else { ch = noiseCh(); col = hitOut; } }
     else { ch = decayCh(); col = C.mid; }
     const dy = -Math.sin(Math.min(1, q * 2) * Math.PI) * (w.level ? 0.35 : 0.2);   // bumped by the front
     out.push({ ch, cx: c.cx, cy: c.cy + dy, col, own: 'wipe', bold: c.bold });
@@ -272,18 +284,22 @@ function applyWipe(cells, now) {
       if (!inB(c) || busy.has(key(c.cx, c.cy))) continue;
       const hit = eIn - frac(Math.round(c.cy)) * inT.travel;
       if (hit < 0) continue;                                              // still under the fill
-      const t = hit - charJitter(c.cx, c.cy, 3) * CONFIG.wipeStagger;
+      let t = hit - charJitter(c.cx, c.cy, 3) * CONFIG.wipeStagger;
       const dec = inT.decay * (0.7 + 0.6 * charJitter(c.cx, c.cy, 4));
       if (t < 0) {                                                        // waiting its turn: cycling noise
         out.push({ ch: Math.random() < 0.5 ? decayCh() : noiseCh(), cx: c.cx, cy: c.cy, col: C.mid, own: 'wipe' });
         busy.add(key(c.cx, c.cy));
         continue;
       }
+      // mold lingers on some of the new screen's marks a moment before they build in
+      const lin = m > 0 && FX.hash(Math.round(c.cx), Math.round(c.cy), 12) < m * MW.stay ? MW.linger * m * (0.5 + 0.5 * FX.hash(Math.round(c.cx), Math.round(c.cy), 13)) : 0;
+      if (t < lin) { out.push({ ch: moldCh(c.cx, c.cy, now), cx: c.cx, cy: c.cy, col: moldInk(c.cx, c.cy), own: 'wipe' }); busy.add(key(c.cx, c.cy)); continue; }
+      t -= lin;
       if (t >= dec) { out.push(c); continue; }
       const q = t / dec;
       let ch, col;
       if (q < 0.25) { ch = decayCh(); col = C.mid; }
-      else if (q < 0.65) { ch = noiseCh(); col = hitIn; }
+      else if (q < 0.65) { if (moldy()) { ch = moldCh(c.cx, c.cy, now); col = moldInk(c.cx, c.cy); } else { ch = noiseCh(); col = hitIn; } }
       else { ch = Math.random() < 0.6 ? c.ch : noiseCh(); col = Math.random() < 0.6 ? c.col : hitIn; }
       out.push({ ch, cx: c.cx, cy: c.cy, col, own: 'wipe', bold: c.bold });
       busy.add(key(c.cx, c.cy));
@@ -306,6 +322,7 @@ function applyWipe(cells, now) {
         if (tI < 60) { const ch = fillChar(cx, cy, now, inLvl, w.pattern); if (ch) out.push({ ch, cx, cy, col: hitIn, own: 'wipe' }); }
         continue;
       }
+      if (m > 0 && moldBlotch(cx, cy, Math.floor(now * CONFIG.wipeSpeed / (w.level ? 45 : 75)), m)) { out.push({ ch: moldCh(cx, cy, now), cx, cy, col: moldInk(cx, cy), own: 'wipe' }); continue; }   // (the same scroll as fillChar)
       const ch = fillChar(cx, cy, now, w.level, w.pattern);
       if (ch) out.push({ ch, cx, cy, col: fillCol(tO), own: 'wipe' });
     }
@@ -345,7 +362,7 @@ function wipeIn() {
     const outT = WIPE_TIME[w.level], inT = WIPE_TIME[w.levelIn];
     const slack = CONFIG.wipeStagger;   // the last characters can start this much later, and change 1.3x slower
     const outEnd = w.t0 + (outT.travel + Math.max(outT.decay * 1.3 + slack, w.lit ? LIT_HOLD : 0)) / CONFIG.wipeSpeed;
-    const inEnd = now + (inT.travel + inT.decay * 1.3 + slack) / CONFIG.wipeSpeed;
+    const inEnd = now + (inT.travel + inT.decay * 1.3 + slack + wipeMold() * FX_LOOKS.moldwipe.linger) / CONFIG.wipeSpeed;   // (+ the mold's linger)
     w.dur = inEnd - now;                 // how long until the new screen is fully in
     w.endsAt = Math.max(outEnd, inEnd);
   } else {
