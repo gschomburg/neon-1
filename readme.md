@@ -121,7 +121,7 @@ neon-1/
 │   ├── .htaccess           Apache caching and compression for the hosted copy
 │   ├── version.json        the current build, for the update check (written by tools/bump.js)
 │   ├── manifest.webmanifest, icon*.png, icon.svg, preview.png   home-screen app and link preview
-│   ├── engine/             the code, one file per part (run.js, scene.js, map.js, music.js, fx.js: the effects library, ...)
+│   ├── engine/             the code, one file per part (run.js, scene.js, board.js, map.js, music.js, fx.js: the effects library, ...)
 │   ├── data/               the game's data: mods, economy, music, quests, palettes, tutorial, fx (the effects' look), ...
 │   │   └── art/            the ASCII art: node glyphs, logos, faces, the world map, sector-clear pictures
 │   └── corps/              one file per corp (78)

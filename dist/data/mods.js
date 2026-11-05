@@ -415,7 +415,7 @@ const MODS = {
   bleach:        { name: 'BLEACH',         short: 'BLC', kind: 'corp', corp: 'cerberus', rarity: 'legendary', quest: true, icon: '%:. ', anim: 'wave',
     tip: 'mold: thinner. scrapes: bigger.', desc: 'the M0LD hides less of the board, and every tap breaks more of it (G0D\'s too).' },
   // !G0D (the user, 2026-10-31): the exotic on G0D BREACHED's rewards (the fake win), never yours: hidden (no drops,
-  // no markets, not in the codex) and it does nothing. Its badge: G0D and g0d, flickering red (engine/scene.js drawBadge).
+  // no markets, not in the codex) and it does nothing. Its badge: G0D and g0d, flickering red (engine/tray.js drawBadge).
   g0dmold:       { name: '%#&@;:%#&',      short: 'G0D', kind: 'exotic', rarity: 'exotic', hidden: true, icon: '!¡!:', anim: 'g0d', price: 0,
     tip: '&%#;. it is in you now.', desc: '%&#@;:. :;%&#@ .:;% ;&%#@:. it was never yours.', codex: 'it was never yours.' },
   // RELOAD (the user + Claude, 2026-10-30): a general mod that only corp bosses give (bossOnly: not in markets, caches

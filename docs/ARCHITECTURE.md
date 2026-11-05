@@ -75,7 +75,8 @@ shares.
 - **Hover:** `hl()` exists but 21 places tint by hand; modals get no keyboard focus (a CALL's second button can't be
   reached by keys). Small.
 - **scene.js holds six subsystems** (1383 lines). Split into board / map view / text board files (only the script
-  order changes). Medium, low risk.
+  order changes). Medium, low risk. **Done (2026-11-05):** scene.js is 371 lines (buildScene, overlays, layerCtx);
+  board.js, tray.js, mapview.js and textboard.js hold the rest.
 
 ## 3. Run and state
 

@@ -357,7 +357,7 @@ function tutRect(tg, cells) {
     return tg.found || { x: h.cr[0], y, w: h.cr[2], h: 1 };
   }
   if (tg.msg) return st.msg ? { x: 0, y: 6, w: Math.min(L.wc, st.msg.length), h: 1 } : null;   // the terminal line
-  if (tg.spot != null) {   // any map spot, tappable or not (scene.js notes where each was drawn)
+  if (tg.spot != null) {   // any map spot, tappable or not (mapview.js notes where each was drawn)
     const s = st.mode === 'map' && st.tut && st.tut.spots[tg.spot];
     return s ? { x: s[0], y: s[1], w: 3, h: 1 } : null;
   }

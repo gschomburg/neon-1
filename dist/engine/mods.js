@@ -67,7 +67,7 @@ const MOD_FIRE = {
   hopMs: 360,     // how long the wave takes to cross the badge
 };
 // How cell k of a firing badge looks right now (k: 0 = the icon, 1.. = the letters):
-// { inv, dy }, or null when the mod isn't firing. drawBadge (engine/scene.js) draws it.
+// { inv, dy }, or null when the mod isn't firing. drawBadge (engine/tray.js) draws it.
 function modFireLook(key, now, k) {
   const a = st.firedAt && st.firedAt[key], age = a == null ? -1 : now - a;
   if (age < 0 || age >= MOD_FIRE.ms) return null;

@@ -524,7 +524,7 @@ function buildHkDeath(ctx, now) {
 // ---------------- Going down (the user, 2026-10-28) ----------------
 // A rival out: their face pops up mid-board and blows up in 3 bursts over ~1.2s (a boom each, a little shake); what's
 // left of the face and their cursor falls down like your own death. Crew out: no bursts; it all floats up instead.
-// The music is left alone. st.hkFx: the ones going (engine/scene.js draws them over the board).
+// The music is left alone. st.hkFx: the ones going (engine/board.js draws them over the board).
 function hkDieFx(h) {
   const s = st.lv && st.lv.hks && st.lv.hks[h.id], bad = h.side === 'bad';
   if (reduced() || !st.lv) { if (bad) Sound.hkBoom(); else Sound.hkRise(); return; }
@@ -585,7 +585,7 @@ function hkStamp(ctx, y, id, w, age, every = 70, covered = () => false) {   // c
 
 // ---------------- On the board ----------------
 // Cursors (the full mark on their colors, the name under it), faces when they talk, emote covers, denied nodes,
-// fire, tape. (engine/scene.js, after the board)
+// fire, tape. (engine/board.js, after the board)
 function buildHackers(ctx, lv, now) {
   const { put, bg } = ctx;
   for (const t of lv.tiles) {
