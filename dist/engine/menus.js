@@ -39,7 +39,7 @@ function setSeed(s) {
   st.seed = clean;
   st.practice = false; st.seeded = !questSeed(clean);     // a chosen seed: ranked on the seed boards (engine/leaders.js)
   Sound.ui();
-  setMsg(questSeed(clean) ? `> seed set: ${clean}. b0y's with you.` : `> seed set: ${clean}`, questSeed(clean) ? G0DP_BLUE : C.text);
+  setMsg(questSeed(clean) ? `> seed set: ${clean}. b0y's with you.` : `> seed set: ${clean}`, questSeed(clean) ? G0DF_BLUE : C.text);
 }
 
 // ---------------- REPLAYS (docs/ENDGAME.md: beat G0D, and POPS gives you his log of your runs) ----------------

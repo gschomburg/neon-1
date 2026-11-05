@@ -596,7 +596,7 @@ const ITEM_OFF = { allin: def => !!def.tap };
 const itemOffHere = key => !!(st.mode === 'play' && st.corp && st.corp.hasBoss && ITEM_OFF[key] && ITEM_OFF[key](st.corp.def));
 // Why an item can't be used right now (shown when you try): a short line for the info row.
 function whyNotItem(stack) {
-  if (st.mode === 'g0dp' && st.g0dp) return g0dpGearWhy(stack);   // the G0D fight (engine/g0dproto.js)
+  if (st.mode === 'g0df' && st.g0df) return g0dfGearWhy(stack);   // the G0D fight (engine/g0dfight.js)
   const key = stack.key, inCorp = st.mode === 'play' && st.corp && st.corp.hasBoss;
   if (ITEMS[key].quest) return 'POPS wants it: CASH OUT with it.';
   if (itemOffHere(key)) return 'off in this corp.';
@@ -762,7 +762,7 @@ function canUse(stack) {
   if (!run || st.wipe || !stack) return false;
   const key = stack.key, tier = stack.tier || 0;
   if (isLoot(key)) return false;   // loot (and quest gear) lives in the LOOT bag: it's carried and sold, not used
-  if (key !== 'patch' && key !== 'lotto' && st.mode === 'g0dp' && st.g0dp && G0DP_GEAR.includes(key)) return g0dpGearOk(stack);   // the G0D fight (engine/g0dproto.js)
+  if (key !== 'patch' && key !== 'lotto' && st.mode === 'g0df' && st.g0df && G0DF_GEAR.includes(key)) return g0dfGearOk(stack);   // the G0D fight (engine/g0dfight.js)
   if (GEAR[key]) return GEAR[key].ok(gearCtx(tier));
   if (BOSS_GEAR[key]) { const c = gearCtx(tier); return c.layerGear && BOSS_GEAR[key].ok(st.lv); }
   return false;
@@ -833,7 +833,7 @@ function useItem(slot) {
 // What a gear does (useItem; ENCORE runs it again). Returns a promise for the ones that take a moment.
 function gearFx(key, tier) {
   const run = st.run, lv = st.lv;
-  if (st.mode === 'g0dp' && st.g0dp && G0DP_GEAR.includes(key)) return g0dpGearUse(key, tier);   // the G0D fight
+  if (st.mode === 'g0df' && st.g0df && G0DF_GEAR.includes(key)) return g0dfGearUse(key, tier);   // the G0D fight
   if (GEAR[key] && GEAR[key].use) return GEAR[key].use(tier, lv, run);
   if (BOSS_GEAR[key]) BOSS_GEAR[key].use(lv, performance.now());
 }

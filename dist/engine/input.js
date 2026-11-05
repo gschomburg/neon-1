@@ -180,7 +180,7 @@ cv.addEventListener('pointerdown', e => {
   if (st.g0dEnd && st.mode === 'g0dend' && !st.pause) { g0dEndTap(); return; }   // the collapse: skip it, then the ending card goes on
   if (st.bossIntro) { st.bossIntro.skip = true; return; }   // ...and a boss entrance
   let h = hitAt(...ptXY(e));
-  if (st.mode === 'g0dp' && !st.pause && !st.dev && !st.wipe && !(h && h.kind === 'btn')) { const [px, py] = ptXY(e); if (g0dpTap((px - L.ox) / L.cw, (py - L.oy) / L.chh)) return; }   // the G0D prototype takes board taps
+  if (st.mode === 'g0df' && !st.pause && !st.dev && !st.wipe && !(h && h.kind === 'btn')) { const [px, py] = ptXY(e); if (g0dfTap((px - L.ox) / L.cw, (py - L.oy) / L.chh)) return; }   // the G0D prototype takes board taps
   if (st.tut && st.tut.pop && !st.pause && !st.dev && tutTap(h)) return;   // the training run's popup (POPS)
   if (h && h.kind === 'tile' && upsideMirror()) {   // UPSIDE boss: it lands on the mirrored node (the one lit up as you point)
     h = { kind: 'tile', i: upsideLand(st.lv, h.i) };   // (its own node when the mirror can't take it)

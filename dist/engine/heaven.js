@@ -95,10 +95,10 @@ function heavenSetup() {
 }
 
 // ---------------- G0D MAZE: a corp ----------------
-// The right path is the codex order: PROMPT, DIAMOND, THE CROSS, STORAGE UNIT, UPLINK, THE WATCHER (G0DP_SEQ). Every
-// node is a perfect (+1 INT, pays). Off the path everything is wrong; G0DP.mazeLost wrong layers deep, the next tap
+// The right path is the codex order: PROMPT, DIAMOND, THE CROSS, STORAGE UNIT, UPLINK, THE WATCHER (G0DF_SEQ). Every
+// node is a perfect (+1 INT, pays). Off the path everything is wrong; G0DF.mazeLost wrong layers deep, the next tap
 // costs 1 INT and sends you back to the start. The clock: out, -1 INT, and it starts again (it holds through the wipes,
-// like every corp's). Nodes per layer: G0DP.mazeNodes by depth. Labels: 2A, 3C... (the depth and the node you took).
+// like every corp's). Nodes per layer: G0DF.mazeNodes by depth. Labels: 2A, 3C... (the depth and the node you took).
 HEAVEN.maze = {
   key: 'maze', name: 'G0D MAZE', letter: '#', level: 5,
   intel: '"prompt. diamond. cross. st#%age. upl@#k. wa%#..."',
@@ -111,43 +111,43 @@ HEAVEN.maze = {
     const buf = modMaxed('buffer') ? [] : [{ key: 'buffer', tier: has('buffer') ? upgradeTo('buffer', modTier('buffer')) : 1 }];
     let gear = rewardGear(r); for (let k = 0; k < 8 && (GEAR_STEP[ITEMS[gear.key].rarity] || 0) < 2; k++) gear = rewardGear(r);
     const options = buf.concat([gear], pickMods(r, modsFound('gen', 'minor'), 3 - buf.length - 1, buf));
-    Sound.bossWin(); flash(G0DP_BLUE, 0.25, 0.6); shake(5, 0.35);
-    openChoice({ reveal: true, title: 'MAZE CLEARED', col: G0DP_BLUE, head: [['G0D MAZE', C.text], ['the eye is right above you.', C.mid]], by: profile(), options,
+    Sound.bossWin(); flash(G0DF_BLUE, 0.25, 0.6); shake(5, 0.35);
+    openChoice({ reveal: true, title: 'MAZE CLEARED', col: G0DF_BLUE, head: [['G0D MAZE', C.text], ['the eye is right above you.', C.mid]], by: profile(), options,
       skipLabel: `[ SKIP  +${earnInt(ECON.skip.boss)}cr ]`, onSkip: () => { const cr = earnInt(ECON.skip.boss); earn(cr, run); Sound.loot(); },
-      msg: { text: '> b0y: we made it. G0D is right up there.', col: G0DP_BLUE } });
+      msg: { text: '> b0y: we made it. G0D is right up there.', col: G0DF_BLUE } });
   },
   layerMsg: (lv, c) => {
-    if (!G0DP.boy || !c.maze) return `> layer ${c.maze ? c.maze.label : ''}. ${lv.n} ways on.`;   // (the user, 2026-10-31: his name clue every layer; [b] brings out his cursors, pointing)
+    if (!G0DF.boy || !c.maze) return `> layer ${c.maze ? c.maze.label : ''}. ${lv.n} ways on.`;   // (the user, 2026-10-31: his name clue every layer; [b] brings out his cursors, pointing)
     const words = ['prompt', 'diamond', 'the cross', 'storage unit', 'uplink', 'the watcher'];   // (his tags name the glyphs now: the terminal just says what is next)
-    return { text: c.maze.lost ? '> b0y: hm. not sure about this.' : '> b0y: ' + words[c.maze.path] + ' next.', col: G0DP_BLUE };
+    return { text: c.maze.lost ? '> b0y: hm. not sure about this.' : '> b0y: ' + words[c.maze.path] + ' next.', col: G0DF_BLUE };
   },
   // b0y in the maze: two cursors on the nodes' top right corners (the one you're after among them), they come together on
-  // it; he hides when he's resting. (G0DP.boy off: no b0y.)
+  // it; he hides when he's resting. (G0DF.boy off: no b0y.)
   overlay(ctx, lv, now) {
     const c = st.corp;
-    if (!G0DP.boy || !c || !c.maze || !lv) return;
+    if (!G0DF.boy || !c || !c.maze || !lv) return;
     if (!(c.boyCall && now < c.boyCall)) { c.boy = null; return; }   // (batch 2: he only comes out when you call him: [b])
     if (st.busy || lv.tiles.some(t => t.state === 'safe')) { c.boy = null; return; }   // a node's been taken: he clears out (the next layer starts him fresh)
-    if (!c.boy || c.boyLv !== lv) { c.boy = g0dpBoyNew(); c.boy.until = now + 300; c.boyLv = lv; }
+    if (!c.boy || c.boyLv !== lv) { c.boy = g0dfBoyNew(); c.boy.until = now + 300; c.boyLv = lv; }
     const dt = Math.min(0.05, (now - (c.boyLast || now)) / 1000); c.boyLast = now;
-    const corner = t => { const o = tileOrigin(t); return { x: o.tx + TILE_W - 1, y: o.ty - 1, name: g0dpGlyphName(t.glyph) }; };   // over the corner; the glyph name on his tag
+    const corner = t => { const o = tileOrigin(t); return { x: o.tx + TILE_W - 1, y: o.ty - 1, name: g0dfGlyphName(t.glyph) }; };   // over the corner; the glyph name on his tag
     const open = lv.tiles.filter(t => t.state === 'closed'), real = lv.tiles[lv.safe];
-    g0dpBoyTick({ boy: c.boy }, now, dt, { right: !c.maze.lost && real && real.state === 'closed' ? corner(real) : null, others: open.filter(t => t !== real).map(corner) });
+    g0dfBoyTick({ boy: c.boy }, now, dt, { right: !c.maze.lost && real && real.state === 'closed' ? corner(real) : null, others: open.filter(t => t !== real).map(corner) });
     const b = c.boy;
     if (b.phase === 'rest' || (b.phase === 'hold' && now > b.until - 900)) return;   // resting: hidden
     b.curs.slice(0, 2).forEach((cu, i) => {
-      const dy = Math.abs(cu.x - cu.tx) < 0.5 ? g0dpBoyBob(now, i) : 0, x = Math.round(cu.x), y = Math.round(cu.y);   // (just the v slides)
-      g0dpBoyMark(ctx.put, ctx.bg, x, y, cu.tag, true, dy);
+      const dy = Math.abs(cu.x - cu.tx) < 0.5 ? g0dfBoyBob(now, i) : 0, x = Math.round(cu.x), y = Math.round(cu.y);   // (just the v slides)
+      g0dfBoyMark(ctx.put, ctx.bg, x, y, cu.tag, true, dy);
     });
   },
   rules: () => 'follow the codex. every node is a perfect.',
   bossDesc: '',
-  counts: () => Array.from({ length: 200 }, () => G0DP.mazeNodes[0]),
+  counts: () => Array.from({ length: 200 }, () => G0DF.mazeNodes[0]),
   onEnter(c) { c.maze = { depth: 1, path: 0, lost: 0, label: '1A' }; },
   progLabel: c => (c.maze ? 'LAYER ' + c.maze.label : ''),
   // the right node (if you're on the path) wears the next glyph; the rest are random, now and then another path glyph
   dress(lv, k) {
-    const c = st.corp, m = c.maze || (c.maze = { depth: 1, path: 0, lost: 0, label: '1A' }), seq = G0DP_SEQ();
+    const c = st.corp, m = c.maze || (c.maze = { depth: 1, path: 0, lost: 0, label: '1A' }), seq = G0DF_SEQ();
     const seqSet = new Set(seq.map(g => g.join('|')));
     const pool = shuffle(MOTIFS.filter(g => !seqSet.has(g.join('|'))), k.r);
     k.tiles.forEach((t, i) => {
@@ -161,8 +161,8 @@ HEAVEN.maze = {
   tap(t, i) {
     const c = st.corp, lv = st.lv, m = c.maze, run = st.run;
     const letter = String.fromCharCode(65 + lv.tiles.filter(o => o.cell < t.cell).length % 26);
-    const nextSize = () => G0DP.mazeNodes[Math.min(m.depth - 1, G0DP.mazeNodes.length - 1)];
-    if (m.lost >= G0DP.mazeLost) {   // too deep: back to the start
+    const nextSize = () => G0DF.mazeNodes[Math.min(m.depth - 1, G0DF.mazeNodes.length - 1)];
+    if (m.lost >= G0DF.mazeLost) {   // too deep: back to the start
       hurt(1);
       Object.assign(m, { depth: 1, path: 0, lost: 0, label: '1A' });
       flash(C.danger, 0.35, 0.8); shake(10, 0.5);
@@ -176,16 +176,16 @@ HEAVEN.maze = {
     }
     if (t === lv.tiles[lv.safe] && !m.lost) {
       m.path++;
-      if (m.path >= G0DP_SEQ().length) {   // out: the corp is done (no boss layer)
+      if (m.path >= G0DF_SEQ().length) {   // out: the corp is done (no boss layer)
         c.idx = c.counts.length - 1;
-        setMsg('> out of the maze. the eye is right above you.', G0DP_BLUE);
+        setMsg('> out of the maze. the eye is right above you.', G0DF_BLUE);
         onSafe(t);
         return true;
       }
-      if (m.path === G0DP_SEQ().length - 1) setMsg('> b0y: one more. the watcher.', G0DP_BLUE);
+      if (m.path === G0DF_SEQ().length - 1) setMsg('> b0y: one more. the watcher.', G0DF_BLUE);
     } else {
       m.lost++;
-      setMsg('> b0y: ' + G0DP_LINES.boyLost[Math.min(m.lost - 1, G0DP_LINES.boyLost.length - 1)], G0DP_BLUE);
+      setMsg('> b0y: ' + G0DF_LINES.boyLost[Math.min(m.lost - 1, G0DF_LINES.boyLost.length - 1)], G0DF_BLUE);
     }
     m.depth++; m.label = `${m.depth}${letter}`;
     c.counts[c.idx + 1] = nextSize();
@@ -203,7 +203,7 @@ HEAVEN.maze = {
 
 // ---------------- Step 3: G0D's node. The wake-up, then the fight ----------------
 // The wake-up v3 (the user, 2026-10-30: "pace it out more"; docs/QUESTS.md "The wake-up v3"). You breach and the sector
-// map turns into things that move. It's the fight's own screen from the first frame (st.mode 'g0dp', p.wake): the map
+// map turns into things that move. It's the fight's own screen from the first frame (st.mode 'g0df', p.wake): the map
 // is a snapshot of whatever heaven's map shows (its nodes, labels, links, G0D's node: nothing hard-coded), drawn here;
 // the fight's real mold rises over it; once it's covered, the fight is already under it and taps work. The beats (ms):
 //   G0D's node shivers, breaks out of the grid and opens into an eye; it floats up near the top, firing traces.
@@ -217,11 +217,11 @@ const G0D_WAKE = { shiver: [250, 1100], rise: 1100, letters: [1500, 380], fall: 
   circuit: [5200, 2800], mold: [7000, 4800], grow: 600, ms: 12600, beat: 700 };
 function g0dWakeStart(node) {
   const run = st.run;
-  if (!run || st.g0dp) return;
-  const snap = G0DP.skipCine ? null : g0dWakeSnap(node);   // (before the map changes: what it showed)
+  if (!run || st.g0df) return;
+  const snap = G0DF.skipCine ? null : g0dWakeSnap(node);   // (before the map changes: what it showed)
   run.at = node.id; if (!run.visited.includes(node.id)) run.visited.push(node.id);   // (you're at G0D now)
   st.mapSel = null;
-  g0dpStart('fight', { real: true, node, startInt: run.integrity, startCr: run.credits, wake: snap, noWipe: !!snap });
+  g0dfStart('fight', { real: true, node, startInt: run.integrity, startCr: run.credits, wake: snap, noWipe: !!snap });
 }
 // The sector map as it is on screen: its nodes (board cells) and the link dots between them.
 function g0dWakeSnap(boss) {
@@ -239,7 +239,7 @@ function g0dWakeSnap(boss) {
   }
   return { nodes, dots };
 }
-// (engine/g0dproto.js g0dpFightStart, with a snapshot: the fight is set up, its mold held back in f.target)
+// (engine/g0dfight.js g0dfFightStart, with a snapshot: the fight is set up, its mold held back in f.target)
 function g0dWakeNew(p, snap) {
   const f = p.fight, W = f.W, H = f.H, [n0, n1] = G0D_WAKE.nodes, hs = G0D_LOOKS.hs;
   const boss = snap.nodes.find(o => o.boss) || { id: '-', x: Math.floor(W / 2) - 1, y: 0, label: '(@)', boss: true };
@@ -288,7 +288,7 @@ function g0dWakeTick(p, now, dt) {
     const hx = w.home.x + Math.sin(e / 900) * 2.5, hy = w.home.y + Math.sin(e / 1300) * 0.6;
     B.ex = B.x + 1 + (hx - (B.x + 1)) * ease; B.ey = B.y + (hy - B.y) * ease;
     w.eyeTr = (w.eyeTr || 0) + dt * (e < G0D_WAKE.mold[0] + G0D_WAKE.mold[1] ? 5 : 1);   // lightning out of it
-    while (w.eyeTr >= 1) { w.eyeTr -= 1; g0dpTraceSpawn(w.traces, B.ex + rand(-2, 2), B.ey + rand(-1, 1), 1, 'box'); }
+    while (w.eyeTr >= 1) { w.eyeTr -= 1; g0dfTraceSpawn(w.traces, B.ex + rand(-2, 2), B.ey + rand(-1, 1), 1, 'box'); }
   }
   // the nodes: each wakes (a shiver), breaks free, wanders
   for (const o of w.nodes) {
@@ -305,7 +305,7 @@ function g0dWakeTick(p, now, dt) {
     if (o.y < 1 || o.y > H - 2) { o.vy *= -1; o.y = clamp(o.y, 1, H - 2); }
     if (w.said.break && Math.abs(o.x + 1 - B.ex) < 6 && Math.abs(o.y - B.ey) < 2.5) { o.x += Math.sign(o.x + 1 - B.ex || 1) * 8 * dt; o.y += Math.sign(o.y - B.ey || 1) * 3 * dt; }   // out of the eye's way
     o.tr = (o.tr || 0) + dt * (o.eye ? 2.5 : 1.6);
-    if (o.tr >= 1) { o.tr -= 1; g0dpTraceSpawn(w.traces, o.x + 1, o.y, 1, 'box'); }
+    if (o.tr >= 1) { o.tr -= 1; g0dfTraceSpawn(w.traces, o.x + 1, o.y, 1, 'box'); }
   }
   // the links snap: their dots burst
   const snapped = w.dots.filter(d => !d.gone && e >= d.at);
@@ -316,7 +316,7 @@ function g0dWakeTick(p, now, dt) {
   // the traces; where one burns out it leaves the network behind
   const before = new Set();
   for (const t of w.traces) for (const pt of t.pts) before.add(pt[0] + ',' + pt[1]);
-  g0dpTraceTick(w.traces, dt, 1, W, H);
+  g0dfTraceTick(w.traces, dt, 1, W, H);
   const still = new Set();
   for (const t of w.traces) for (const pt of t.pts) still.add(pt[0] + ',' + pt[1]);
   for (const k of before) if (!still.has(k) && !w.lit.has(k)) w.lit.set(k, e);
@@ -334,17 +334,17 @@ function g0dWakeBurst(w, o, boss) {
   if (boss) { Sound.shatter(); Sound.bossDrop(); shake(12, 0.6); flash(C.danger, 0.25, 0.5); }
   else { Sound.trap(); shake(3, 0.2); }
   if (reduced()) return;
-  const cells = [...o.label].map((ch, k) => ({ ch, x: pxX(o.x + k), y: pxY(BOARD_Y + o.y), col: boss ? G0DP_RED : C.danger }));
-  if (boss) for (let k = 0; k < 22; k++) cells.push({ ch: pickR(['·', '─', '│', '┼', '.', ':'], Math.random), x: pxX(o.x + 1 + rand(-6, 6)), y: pxY(BOARD_Y + Math.max(0, o.y + rand(-1, 2))), col: pickR([C.dim, C.mid, C.dangerDim, G0DP_RED], Math.random) });
+  const cells = [...o.label].map((ch, k) => ({ ch, x: pxX(o.x + k), y: pxY(BOARD_Y + o.y), col: boss ? G0DF_RED : C.danger }));
+  if (boss) for (let k = 0; k < 22; k++) cells.push({ ch: pickR(['·', '─', '│', '┼', '.', ':'], Math.random), x: pxX(o.x + 1 + rand(-6, 6)), y: pxY(BOARD_Y + Math.max(0, o.y + rand(-1, 2))), col: pickR([C.dim, C.mid, C.dangerDim, G0DF_RED], Math.random) });
   explode(cells, pxX(o.x + 1), pxY(BOARD_Y + o.y), { power: boss ? 0.9 : 0.5, grav: 1.4, life: [0.4, 1.0] });
 }
 // a letter of his bar lands: red dust off it
 function g0dWakeLand(i, hard = false) {
   Sound.trap(); shake(hard ? 7 : 3, hard ? 0.3 : 0.15);
-  if (hard) flash(G0DP_RED, 0.12, 0.25);
+  if (hard) flash(G0DF_RED, 0.12, 0.25);
   if (reduced()) return;
-  const x = Math.floor((L.wc - 5) / 2) + 1 + i, y = G0DP_BAR_ROW, cells = [];
-  for (let k = 0; k < (hard ? 16 : 9); k++) cells.push({ ch: pickR(['.', ',', '`', "'", '·', '*'], Math.random), x: pxX(x + rand(-0.6, 0.6)), y: pxY(y), col: pickR([G0DP_RED, C.danger, C.dangerDim], Math.random) });
+  const x = Math.floor((L.wc - 5) / 2) + 1 + i, y = G0DF_BAR_ROW, cells = [];
+  for (let k = 0; k < (hard ? 16 : 9); k++) cells.push({ ch: pickR(['.', ',', '`', "'", '·', '*'], Math.random), x: pxX(x + rand(-0.6, 0.6)), y: pxY(y), col: pickR([G0DF_RED, C.danger, C.dangerDim], Math.random) });
   explode(cells, pxX(x), pxY(y) - L.chh * 0.6, { power: 0.45, grav: 1.6, life: [0.35, 0.8] });
 }
 // Over: the fight, under the mold (it's the same mold). Its nodes go where the woken ones went.
@@ -355,18 +355,18 @@ function g0dWakeDone(p) {
   const spots = shuffle(w.nodes.slice(), Math.random);
   f.nodes.forEach((n, k) => { const o = spots[k % Math.max(1, spots.length)]; if (o) { n.x = clamp(o.x, 3, f.W - 6); n.y = clamp(o.y, 3, f.H - 3); } });
   f.traces = [];   // (the wake-up's run under the mold; the fight's draw on top of it: they'd pop out)
-  f.nextHands = now + G0DP.handsEvery * 1000; f.nextLine = now + 8000; f.creepAt = 0;
+  f.nextHands = now + G0DF.handsEvery * 1000; f.nextLine = now + 8000; f.creepAt = 0;
   f.freshFrom = now;   // (the nodes' fresh-mold glow fades up from here)
   f.fightAt = now;   // (the music kicks in from here)
   p.wake = null;
   boySay('wtf. ok. start digging.');
 }
-// A tap skips it (after a beat; off by default: G0DP.tapSkip)
-function g0dWakeSkip() { const p = st.g0dp; if (p && p.wake && G0DP.tapSkip && p.wake.e > G0D_WAKE.beat) g0dWakeDone(p); }
-// The board while it wakes (buildG0dp): top to bottom, each thing takes its cells; the mold over all of it
+// A tap skips it (after a beat; off by default: G0DF.tapSkip)
+function g0dWakeSkip() { const p = st.g0df; if (p && p.wake && G0DF.tapSkip && p.wake.e > G0D_WAKE.beat) g0dWakeDone(p); }
+// The board while it wakes (buildG0df): top to bottom, each thing takes its cells; the mold over all of it
 function g0dWakeDraw(p, put, bg, now) {
   const w = p.wake, f = p.fight, e = w.e, Y = BOARD_Y, hs = G0D_LOOKS.hs, B = w.boss, [s0, s1] = G0D_WAKE.shiver;
-  const moldOn = (x, y) => { const i = g0dpIdx(f, Math.round(x), Math.round(y)); return i >= 0 && f.m[i] >= 0.6; };
+  const moldOn = (x, y) => { const i = g0dfIdx(f, Math.round(x), Math.round(y)); return i >= 0 && f.m[i] >= 0.6; };
   const taken = new Set(), key = (x, y) => Math.round(x) + ',' + Math.round(y);
   const P = (x, y, ch, col, bold = false, bgc = null, ba = 1) => {
     const k = key(x, y);
@@ -378,22 +378,22 @@ function g0dWakeDraw(p, put, bg, now) {
   // G0D: his node shivers, then the eye
   if (e < s1) {
     const k = clamp((e - s0) / (s1 - s0), 0, 1), [dx, dy] = g0dWakeShake(k * 1.4, now, 7), lab = e < s0 ? B.label : (now % 700 < 110 ? '(-)' : '(@)');
-    [...lab].forEach((ch, j) => P(B.x + j + dx, B.y + dy, ch, k > 0 && Math.floor(now / 90) % 2 ? G0DP_RED : C.danger, true));
+    [...lab].forEach((ch, j) => P(B.x + j + dx, B.y + dy, ch, k > 0 && Math.floor(now / 90) % 2 ? G0DF_RED : C.danger, true));
   } else {
     const age = e - s1, look = Math.round(Math.sin(now / 600) * 1.2), blink = now % 2600 < 130;
     const art = age < 160 ? ['     ', ' (@) ', '     '] : [' .-. ', blink ? '( - )' : '(' + ' '.repeat(1 + look) + '@' + ' '.repeat(1 - look) + ')', " '-' "];
-    art.forEach((l, j) => { for (let k = 0; k < 5; k++) P(B.ex - 2 + k, B.ey - 1 + j, l[k], Math.floor(now / 110) % 7 === 0 ? C.bright : G0DP_RED, true); });
+    art.forEach((l, j) => { for (let k = 0; k < 5; k++) P(B.ex - 2 + k, B.ey - 1 + j, l[k], Math.floor(now / 110) % 7 === 0 ? C.bright : G0DF_RED, true); });
   }
   // the other nodes: as they were on the map; a shiver (the tension); free: G0D's (red, glitching); some are eyes
   for (const o of w.nodes) {
     const t = e - o.wake, tension = clamp(t / G0D_WAKE.tension, 0, 1);
-    if (o.eye) { const l = now % 1900 < 120 ? '(-)' : '(@)'; [...l].forEach((ch, k) => P(o.x + k, o.y, ch, G0DP_RED, true)); continue; }
+    if (o.eye) { const l = now % 1900 < 120 ? '(-)' : '(@)'; [...l].forEach((ch, k) => P(o.x + k, o.y, ch, G0DF_RED, true)); continue; }
     const [dx, dy] = o.free ? [0, 0] : g0dWakeShake(tension, now, o.gid);
     const flip = o.free && hs(o.gid + Math.floor(now / 650) * 3.1) > 0.86;
     [...(flip ? 'G0D' : o.label)].forEach((ch, k) => {
       const x = o.x + k + dx, y = o.y + dy;
       if (o.free || hs(o.gid + k * 5.3 + Math.floor(now / 120)) < tension * 0.8) {   // red: G0D's now (the fight's corp nodes)
-        const sh = G0DP_CORP_RED[Math.floor(hs(o.gid + k * 5.3 + Math.floor(now / 140)) * G0DP_CORP_RED.length)];
+        const sh = G0DF_CORP_RED[Math.floor(hs(o.gid + k * 5.3 + Math.floor(now / 140)) * G0DF_CORP_RED.length)];
         const glitch = hs(o.gid * 1.7 + k * 13 + Math.floor(now / 90)) > (o.free ? 0.93 : 1 - tension * 0.3);
         return P(x, y, glitch ? noiseCh() : ch, C.bg, true, flip ? C.bright : sh, 1);
       }
@@ -402,7 +402,7 @@ function g0dWakeDraw(p, put, bg, now) {
     });
   }
   // the red traces (lightning)
-  for (const [k, [ch, col, head]] of g0dpTraceCells(w.traces, now)) { const [x, y] = k.split(',').map(Number); if (ch) P(x, y, ch, col, head); }
+  for (const [k, [ch, col, head]] of g0dfTraceCells(w.traces, now)) { const [x, y] = k.split(',').map(Number); if (ch) P(x, y, ch, col, head); }
   // the links, until they snap (a shiver and red while an end is about to go)
   for (const d of w.dots) {
     if (d.gone) continue;
@@ -415,26 +415,26 @@ function g0dWakeDraw(p, put, bg, now) {
     const lt = w.lit.get(x + ',' + y);
     if (lt == null && hs(x * 2.3 + y * 4.1) >= cf * 0.92) continue;
     const age = lt == null ? 1e9 : e - lt;
-    P(x, y, g0dpCircuitCh(x, y, now, f.W, f.H), age < 250 ? C.dangerDim : age < 1400 ? C.mid : hs(x * 1.3 + y * 7.9) < 0.25 ? C.mid : C.dim);
+    P(x, y, g0dfCircuitCh(x, y, now, f.W, f.H), age < 250 ? C.dangerDim : age < 1400 ? C.mid : hs(x * 1.3 + y * 7.9) < 0.25 ? C.mid : C.dim);
   }
   // the M0LD (the fight's own), over all of it
   for (let y = 0; y < f.H; y++) for (let x = 0; x < f.W; x++) {
     const i = y * f.W + x, th = f.m[i];
     if (th < 0.6) continue;
-    put(x, Y + y, g0dpMoldGlyph(th, x, y, now), f.fresh[i] > 0.45 ? G0DP_FRESH : g0dpMoldCol(th, 0));
+    put(x, Y + y, g0dfMoldGlyph(th, x, y, now), f.fresh[i] > 0.45 ? G0DF_FRESH : g0dfMoldCol(th, 0));
   }
 }
 // Over the screen while it wakes: his bar. G, 0, D drop in from above with a bounce (red dust as each lands), then it
 // fills out from the middle both ways. Filled, it's the fight's bar exactly.
 const g0dBounce = k => { const n = 7.5625, d = 2.75; if (k < 1 / d) return n * k * k; if (k < 2 / d) return n * (k -= 1.5 / d) * k + 0.75; if (k < 2.5 / d) return n * (k -= 2.25 / d) * k + 0.9375; return n * (k -= 2.625 / d) * k + 0.984375; };
-function g0dWakeOverlay(cells, now, bgs) { return g0dBarDrop(cells, bgs, st.g0dp.wake.e, G0D_WAKE); }
+function g0dWakeOverlay(cells, now, bgs) { return g0dBarDrop(cells, bgs, st.g0df.wake.e, G0D_WAKE); }
 // ---------------- Step 4: the fake win ----------------
 // (docs/QUESTS.md "G0D FIGHT: it dies (and doesn't)"; v3, the user 2026-10-31.) The real rewards screen (openChoice: G0D
 // BREACHED, the rewards) builds in like after any boss, a few specks of M0LD already on it (on TAKE, a couple of other
 // spots); it sits there a moment (taps and keys take nothing). Then a small hole in the middle: the mold punches through,
 // each cell in the hole falls out, background and all, mold coming in behind; then the mold spreads out of the hole over
 // the whole screen, fast, solid (nothing of the old screen shows through). Covered: the final stand starts under it
-// (its opening: wires and eyes come out of that hole; G0D's bar drops back in). G0DP.skipCine skips it outright.
+// (its opening: wires and eyes come out of that hole; G0D's bar drops back in). G0DF.skipCine skips it outright.
 const G0D_FAKE = { pause: 2400, cap: 10000, hole: 2000, plops: 6, holeR: 3.4, spread: 1800, hold: 250, beat: 700, specks: 4 };
 // (round 5: his bar comes back at the crack, the mold plopping in under it; it's mostly full when the tendrils go)
 const G0D_FAKE_BAR = { letters: [250, 280], fall: 450, fill: [950, 1000] };
@@ -442,8 +442,8 @@ const G0D_FAKE_BAR = { letters: [250, 280], fall: 450, fill: [950, 1000] };
 // the spread isn't a circle: tendrils shoot out of the hole, wandering like the traces but outward, then grow wider and
 // fill in between them)
 function heavenFakeWin(stand) {
-  st.g0dp = null;
-  if (G0DP.skipCine) return g0dpStart('stand', stand);
+  st.g0df = null;
+  if (G0DF.skipCine) return g0dfStart('stand', stand);
   const run = st.run, r = rngFor(run.seed, 'g0dreward');
   const options = shuffle([{ key: 'g0dmold', tier: 0 }].concat(pickMods(r, modsOfKind('exotic'), 2)), r);   // (round 5: all exotics, one of them his)
   st.g0dFake = { t0: performance.now(), stand, said: {}, specks: [], picked: false, cov: null, fell: null, tendrils: [] };
@@ -464,14 +464,14 @@ function g0dFakeTick(now) {
   for (let i = 0; i < G0D_FAKE.plops; i++) say('p' + i, 120 + i * (G0D_FAKE.hole - 200) / G0D_FAKE.plops, () => Sound.plop());
   [0, 1, 2].forEach(i => say('L' + i, G0D_FAKE_BAR.letters[0] + i * G0D_FAKE_BAR.letters[1] + G0D_FAKE_BAR.fall, () => g0dWakeLand(i, true)));
   say('fill', G0D_FAKE_BAR.fill[0], () => { Sound.bossBuild(); shake(6, 0.6); });
-  say('full', G0D_FAKE_BAR.fill[0] + G0D_FAKE_BAR.fill[1], () => { Sound.bossDrop(); flash(G0DP_RED, 0.2, 0.4); g0dSay('you are just meat.'); });
+  say('full', G0D_FAKE_BAR.fill[0] + G0D_FAKE_BAR.fill[1], () => { Sound.bossDrop(); flash(G0DF_RED, 0.2, 0.4); g0dSay('you are just meat.'); });
   say('spread', G0D_FAKE.hole, () => { Sound.alarm(); shake(6, 0.5); });
   g0dFakeSpread(f, h, now, dt);
   if (h >= G0D_FAKE.hole + G0D_FAKE.spread + G0D_FAKE.hold) g0dFakeEnd();
 }
-// An outward trace: from (x, y), heading away from (cx, cy), its turns mostly away too (engine/g0dproto.js g0dpTraceTick)
+// An outward trace: from (x, y), heading away from (cx, cy), its turns mostly away too (engine/g0dfight.js g0dfTraceTick)
 function g0dOutTrace(list, x, y, cx, cy, kind, len) {
-  const t = g0dpTraceSpawn(list, x, y, 1, kind); if (!t) return null;
+  const t = g0dfTraceSpawn(list, x, y, 1, kind); if (!t) return null;
   const gx = x - cx, gy = y - cy, across = Math.abs(gx) / 2.2 > Math.abs(gy);
   if (across ? Math.random() < 0.75 : Math.random() < 0.25) { t.dx = Math.sign(gx) || 1; t.dy = 0; } else { t.dx = 0; t.dy = Math.sign(gy) || 1; }
   t.pts[0][2] = t.dx ? '─' : '│'; t.out = [cx, cy]; if (len) t.len = len;
@@ -494,7 +494,7 @@ function g0dFakeSpread(f, h, now, dt) {
     const a = Math.random() * Math.PI * 2;
     g0dOutTrace(f.tendrils, p0 ? p0[0] : cx + Math.cos(a) * G0D_FAKE.holeR * 2.2, p0 ? p0[1] : cy + Math.sin(a) * G0D_FAKE.holeR, cx, cy, 'mold', 30 + Math.floor(Math.random() * 30));
   }
-  g0dpTraceTick(f.tendrils, dt, 1, W, Hh);
+  g0dfTraceTick(f.tendrils, dt, 1, W, Hh);
   for (const t of f.tendrils) for (const [x, y] of t.pts) set(x, y);
   // and they grow wider: a cell next to mold that's been there a moment fills in, faster and faster
   const rate = 0.8 + 16 * sk * sk, grow = [], old = j => cov[j] >= 0 && now - cov[j] > 90;
@@ -506,15 +506,15 @@ function g0dFakeSpread(f, h, now, dt) {
   for (const i of grow) cov[i] = now;
   if (sk >= 1) for (let i = 0; i < cov.length; i++) if (cov[i] < 0) cov[i] = now;   // (the last of it)
 }
-function g0dFakeSkip() { const f = st.g0dFake; if (G0DP.tapSkip && f && performance.now() - f.t0 > G0D_FAKE.beat) g0dFakeEnd(); }
+function g0dFakeSkip() { const f = st.g0dFake; if (G0DF.tapSkip && f && performance.now() - f.t0 > G0D_FAKE.beat) g0dFakeEnd(); }
 function g0dFakeEnd() {
   const f = st.g0dFake; if (!f) return;
   st.g0dFake = null;
   boySay("he's not done. he's running!");
-  g0dpStart('stand', Object.assign({}, f.stand, { noWipe: true, hole: true }));
+  g0dfStart('stand', Object.assign({}, f.stand, { noWipe: true, hole: true }));
 }
 // The mold as a solid cover (the fake win, the stand's opening): the same look at a cell on both sides of the hand-off
-const g0dCoverMold = (x, y, now) => { const th = 1.7 + G0D_LOOKS.hs(x * 3.7 + y * 1.3) * 3; return [g0dpMoldGlyph(th, x, y, now), moldCol(th, 2)]; };   // (stage 2's colors: it comes out of his death)
+const g0dCoverMold = (x, y, now) => { const th = 1.7 + G0D_LOOKS.hs(x * 3.7 + y * 1.3) * 3; return [g0dfMoldGlyph(th, x, y, now), moldCol(th, 2)]; };   // (stage 2's colors: it comes out of his death)
 // Out from the hole (the middle of the board): how far a cell is (rows; across counts less: cells are tall)
 const g0dHoleD = (x, y) => Math.hypot((x - (L.wc - 1) / 2) / 2.2, y - (BOARD_Y + L.gh / 2)) + G0D_LOOKS.hs(x * 7.3 + y * 3.1) * 1.2;
 // a cell's background this frame (scene.js keeps them in st.frameBgs while it builds)
@@ -585,13 +585,13 @@ function g0dFakeOverlay(cells, now, bgs) {
     const i = y * W + x, sp = taken(x, y) ? null : spk.get(x + ',' + y), fy = sp ? sp[0] : 0;
     if (bgs) bgs.push({ cx: x, cy: y + fy, w: 1, col: C.bg, alpha: 1 });
     const [ch, col] = sp ? g0dCoverMold(sp[1], sp[2], now) : g0dCoverMold(x, y, now), fresh = !sp && spreading && now - cov[i] < 170;
-    out.push({ ch, cx: x, cy: y + fy, col: fresh ? G0DP_FRESH : col, own: 'fx', bold: false });
+    out.push({ ch, cx: x, cy: y + fy, col: fresh ? G0DF_FRESH : col, own: 'fx', bold: false });
   }
-  if (G0DP.tapSkip && e > G0D_FAKE.beat) { const tip = 'tap to skip'; out.push(...[...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
+  if (G0DF.tapSkip && e > G0D_FAKE.beat) { const tip = 'tap to skip'; out.push(...[...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
   return f.holeAt != null ? g0dBarDrop(out, bgs, h, G0D_FAKE_BAR, true) : out;   // his bar, over the mold
 }
 
-// ---------------- The final stand's opening, out of the hole (engine/g0dproto.js g0dpStandStart opts.hole) ----------------
+// ---------------- The final stand's opening, out of the hole (engine/g0dfight.js g0dfStandStart opts.hole) ----------------
 // The mold covers the screen (the fake win left it so). Wires come out of the hole in the middle and replace the mold, out
 // to the edges (the network, drawn in white as it comes); the eyes come out of the hole, (o) first, full size once
 // they're out, to their spots; G0D's bar drops back in (like the wake-up's, harder). Then the clock starts.
@@ -624,7 +624,7 @@ function g0dHoleTick(p, s, now, dt) {
     const a = Math.random() * Math.PI * 2, r0 = Math.max(0.6, R - 1.2);
     g0dOutTrace(s.traces, cx + Math.cos(a) * r0 * 2.2, cy + Math.sin(a) * r0, cx, cy, Math.random() < (early ? 0.3 : 0.08) ? 'box' : 'white');
   }
-  g0dpTraceTick(s.traces, dt, 1, W, L.gh);
+  g0dfTraceTick(s.traces, dt, 1, W, L.gh);
   for (const t of s.traces) for (const [x, y] of t.pts) clear(x, BOARD_Y + y);
   // then the rest of it falls away, all over: clumps, faster and faster
   const dk = clamp((oe - G0D_HOLE.drop[0]) / (G0D_HOLE.drop[1] - G0D_HOLE.drop[0]), 0, 1);
@@ -652,12 +652,12 @@ function g0dHoleOverlay(cells, now, bgs, s) {
       out.push({ ch, cx: x, cy: y, col, own: 'fx', bold: false });
     }
   }
-  return g0dpBar(out, bgs, { f: 1 });   // (round 5: his bar came back in the fake win)
+  return g0dfBar(out, bgs, { f: 1 });   // (round 5: his bar came back in the fake win)
 }
 // G0D's bar coming in (the wake-up, the stand's opening): G, 0, D drop in from above with a bounce (red dust as each lands:
 // g0dWakeLand), then it fills out from the middle both ways. Filled, it's the fight's bar exactly.
 function g0dBarDrop(cells, bgs, e, spec, hard = false) {
-  const y = G0DP_BAR_ROW, Wd = L.wc, at = Math.floor((Wd - 5) / 2), [l0, gap] = spec.letters;
+  const y = G0DF_BAR_ROW, Wd = L.wc, at = Math.floor((Wd - 5) / 2), [l0, gap] = spec.letters;
   if (e < l0) return cells;
   const fk = clamp((e - spec.fill[0]) / spec.fill[1], 0, 1), reach = (1 - Math.pow(1 - fk, 2)) * (Wd / 2 + 1), mid = Wd / 2;
   const out = cells.filter(c => Math.round(c.cy) !== y);
@@ -681,13 +681,13 @@ function g0dBarDrop(cells, bgs, e, spec, hard = false) {
 // the terminal band (its background too, a letter at a time) and the footer. Then the rewards screen builds in.
 const G0D_DIE = { chrome: [150, 1100], boom: 4000, mold: [200, 1600], net: [1300, 3900], glitch: [1600, 4300], burst: 4300, small: 4900, off: 5600, offMs: 600, fade: [6300, 7400], end: 7800 };
 function heavenDie(p) {
-  const f = p.fight, stand = Object.assign(g0dpAgain(p), { startInt: st.run.integrity, startCr: st.run.credits });
-  st.g0dp = null;
-  if (G0DP.skipCine) return heavenFakeWin(stand);
+  const f = p.fight, stand = Object.assign(g0dfAgain(p), { startInt: st.run.integrity, startCr: st.run.credits });
+  st.g0df = null;
+  if (G0DF.skipCine) return heavenFakeWin(stand);
   const eye = f && f.eye ? { x: Math.round(f.eye.x), y: Math.round(f.eye.y) } : { x: Math.floor(L.wc / 2), y: Math.floor(L.gh / 2) };
   st.g0dDie = { t0: performance.now(), stand, said: {}, gone: new Set(), eye, stage: f ? f.stage || 0 : 2, m: f ? f.m.slice() : new Float32Array(L.wc * L.gh).fill(2), sucks: [], dmax: 1 };
   { let d = 0; for (const [x, y] of [[0, 1], [L.wc - 1, 1], [0, L.gh - 1], [L.wc - 1, L.gh - 1]]) d = Math.max(d, Math.hypot((x - eye.x) / 2.2, y - eye.y)); st.g0dDie.dmax = d; }
-  Sound.hkBoom(); Sound.shatter(); flash(G0DP_BLUE, 0.6, 1.2); shake(16, 0.9);
+  Sound.hkBoom(); Sound.shatter(); flash(G0DF_BLUE, 0.6, 1.2); shake(16, 0.9);
   Music.powerDown();   // his track sags and goes (the music: g0dMusic)
   showBoard('g0ddie'); st.wipe = null; st.boardStart = -1e9;
 }
@@ -713,7 +713,7 @@ function g0dDieTick(now) {
       const x = Math.floor(Math.random() * L.wc), y = Math.floor(Math.random() * L.gh), key = x + ',' + y, th = f.m[y * L.wc + x];
       if (f.gone.has(key) || th < 0.6 || hs(x * 2.7 + y * 5.3) >= frac) continue;
       f.gone.add(key);
-      cells.push({ ch: g0dpMoldGlyph(th, x, y, now), x: pxX(x), y: pxY(BOARD_Y + y), col: pickR([moldCol(th, f.stage), moldCol(1, f.stage), MOLD.fresh], Math.random) });
+      cells.push({ ch: g0dfMoldGlyph(th, x, y, now), x: pxX(x), y: pxY(BOARD_Y + y), col: pickR([moldCol(th, f.stage), moldCol(1, f.stage), MOLD.fresh], Math.random) });
     }
     if (cells.length) explode(cells, pxX(f.eye.x), pxY(BOARD_Y + f.eye.y), { power: 0.45, grav: 1.8, life: [0.6, 1.2] });
   }
@@ -746,7 +746,7 @@ function g0dSuckTick(list, dt, ex, ey) {
       if (wrong || Math.random() < 0.14) {   // a turn: toward the eye on the other axis
         if (t.dx && gy) { ndx = 0; ndy = Math.sign(gy); } else if (t.dy && gx) { ndx = Math.sign(gx); ndy = 0; } else if (wrong) { ndx = Math.sign(gx); ndy = Math.sign(gy); if (ndx && ndy) ndy = 0; }
       }
-      if (ndx !== t.dx || ndy !== t.dy) { const last = t.pts[t.pts.length - 1]; last[2] = G0DP_CORNER[t.dx + ',' + t.dy + '>' + ndx + ',' + ndy] || '+'; t.dx = ndx; t.dy = ndy; }
+      if (ndx !== t.dx || ndy !== t.dy) { const last = t.pts[t.pts.length - 1]; last[2] = G0DF_CORNER[t.dx + ',' + t.dy + '>' + ndx + ',' + ndy] || '+'; t.dx = ndx; t.dy = ndy; }
       t.x += t.dx; t.y += t.dy;
       t.pts.push([t.x, t.y, t.dx ? '─' : '│']);
     }
@@ -755,13 +755,13 @@ function g0dSuckTick(list, dt, ex, ey) {
 }
 // the eye bursts into a smaller one: its letters blow off
 function g0dDieBurst(f, w, h, power) {
-  Sound.hkBoom(); shake(12, 0.5); flash(G0DP_RED, 0.25, 0.4);
+  Sound.hkBoom(); shake(12, 0.5); flash(G0DF_RED, 0.25, 0.4);
   if (reduced()) return;
   const cells = [];
-  for (let j = 0; j < h; j++) for (let k = 0; k < w; k++) if (Math.random() < 0.7) cells.push({ ch: pickR(['(', ')', '-', "'", '.', '@', '*'], Math.random), x: pxX(f.eye.x - (w >> 1) + k), y: pxY(BOARD_Y + f.eye.y - (h >> 1) + j), col: pickR([G0DP_RED, G0DP_BLUE, C.bright], Math.random), bg: Math.random() < 0.3 ? G0DP_RED : null });
+  for (let j = 0; j < h; j++) for (let k = 0; k < w; k++) if (Math.random() < 0.7) cells.push({ ch: pickR(['(', ')', '-', "'", '.', '@', '*'], Math.random), x: pxX(f.eye.x - (w >> 1) + k), y: pxY(BOARD_Y + f.eye.y - (h >> 1) + j), col: pickR([G0DF_RED, G0DF_BLUE, C.bright], Math.random), bg: Math.random() < 0.3 ? G0DF_RED : null });
   explode(cells, pxX(f.eye.x), pxY(BOARD_Y + f.eye.y), { power, grav: 1.2, life: [0.5, 1.1] });
 }
-function g0dDieSkip() { const f = st.g0dDie; if (G0DP.tapSkip && f && performance.now() - f.t0 > G0D_END.beat) { st.g0dDie = null; heavenFakeWin(f.stand); } }
+function g0dDieSkip() { const f = st.g0dDie; if (G0DF.tapSkip && f && performance.now() - f.t0 > G0D_END.beat) { st.g0dDie = null; heavenFakeWin(f.stand); } }
 function buildG0dDie(ctx) {
   const f = st.g0dDie, { put, bg, now } = ctx;
   if (!f) return;
@@ -778,7 +778,7 @@ function buildG0dDie(ctx) {
     if (inv) { bg(x, Y + y, 1, col, 1); put(x, Y + y, noise ? noiseCh() : ch, C.bg, 'fx', true); }
     else put(x, Y + y, noise ? noiseCh() : ch, col, 'fx', true);
   };
-  const col = Math.floor(now / 60) % 2 ? G0DP_RED : G0DP_BLUE, jit = hs(tick * 1.3) < gk * 0.3 ? (hs(tick) < 0.5 ? -1 : 1) : 0;
+  const col = Math.floor(now / 60) % 2 ? G0DF_RED : G0DF_BLUE, jit = hs(tick * 1.3) < gk * 0.3 ? (hs(tick) < 0.5 ? -1 : 1) : 0;
   let art = null;
   if (e < G0D_DIE.burst) { const dart = Math.floor(now / 80) % 5 - 2, iris = '  ' + ' '.repeat(2 + dart) + '(@)' + ' '.repeat(2 - dart) + '  '; art = ['   .-----.   ', " .'       '. ", '(' + iris + ')', " '.       .' ", "   '-----'   "]; }
   else if (e < G0D_DIE.small) { const d = Math.floor(now / 60) % 3 - 1; art = [' .-. ', '(' + ' '.repeat(1 + d) + '@' + ' '.repeat(1 - d) + ')', " '-' "]; }
@@ -789,12 +789,12 @@ function buildG0dDie(ctx) {
     art.forEach((l, j) => { const x0 = ex - (l.length >> 1) + (offk ? 0 : jit), y = ey - (art.length >> 1) + j; for (let k = 0; k < l.length; k++) offk ? (taken.add((x0 + k) + ',' + y), put(x0 + k, Y + y, l[k], C.bright, 'fx', true)) : P(x0 + k, y, l[k], col); });
   }
   // the grey lines running in
-  for (const [k, [ch, c2, head]] of g0dpTraceCells(f.sucks, now)) { const [x, y] = k.split(',').map(Number); if (y < 1 || y >= H || taken.has(k) || onEye(x, y)) continue; taken.add(k); put(x, Y + y, ch, c2, 'fx', head); }
+  for (const [k, [ch, c2, head]] of g0dfTraceCells(f.sucks, now)) { const [x, y] = k.split(',').map(Number); if (y < 1 || y >= H || taken.has(k) || onEye(x, y)) continue; taken.add(k); put(x, Y + y, ch, c2, 'fx', head); }
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     if (taken.has(x + ',' + y) || onEye(x, y)) continue;
     const th = f.m[y * W + x];
-    if (th >= 0.6 && hs(x * 2.7 + y * 5.3) >= moldGone) { put(x, Y + y, g0dpMoldGlyph(th, x, y, now), g0dpMoldCol(th, f.stage)); continue; }   // the mold still on
-    if (y >= 1 && !g0dDieNetGone(f, x, y, netK)) put(x, Y + y, g0dpCircuitCh(x, y, now, W, H), hs(x * 1.3 + y * 7.9) < 0.25 ? C.mid : C.dim);   // the network, until it's pulled in
+    if (th >= 0.6 && hs(x * 2.7 + y * 5.3) >= moldGone) { put(x, Y + y, g0dfMoldGlyph(th, x, y, now), g0dfMoldCol(th, f.stage)); continue; }   // the mold still on
+    if (y >= 1 && !g0dDieNetGone(f, x, y, netK)) put(x, Y + y, g0dfCircuitCh(x, y, now, W, H), hs(x * 1.3 + y * 7.9) < 0.25 ? C.mid : C.dim);   // the network, until it's pulled in
   }
 }
 // Over it (round 5, the user): the header, the tray and the rest go right away, a letter at a time; G0D's bar (empty)
@@ -804,7 +804,7 @@ function g0dDieOverlay(cells, now, bgs) {
   const f = st.g0dDie;
   if (!f) return cells;
   const e = now - f.t0, k = g0dDieFrac(e, G0D_DIE.fade), hs = G0D_LOOKS.hs;
-  let out = e < G0D_DIE.boom ? g0dpBar(cells, bgs, { f: 0 }) : cells;
+  let out = e < G0D_DIE.boom ? g0dfBar(cells, bgs, { f: 0 }) : cells;
   out = g0dChromeFade(out, bgs, g0dDieFrac(e, G0D_DIE.chrome));
   out = g0dChromeBoom(f, out, bgs, G0D_DIE.boom, e);
   if (k > 0) out = out.filter(c => !(c.cy >= BOARD_Y && c.cy < BOARD_Y + L.gh) || hs(Math.round(c.cx) * 3.1 + Math.round(c.cy) * 7.7) >= k * 1.4);
@@ -813,7 +813,7 @@ function g0dDieOverlay(cells, now, bgs) {
 // Take the backgrounds off some rows (in place: bgs is the frame's list)
 function g0dDropBgs(bgs, rowGone) { let j = 0; for (const b of bgs) if (!rowGone(Math.round(b.cy))) bgs[j++] = b; bgs.length = j; }
 // The screen's chrome going (G0D's deaths): everything off the board but G0D's bar and the terminal, a letter at a time
-const G0D_KEEP_ROWS = () => [G0DP_BAR_ROW, BOARD_Y - 2];
+const G0D_KEEP_ROWS = () => [G0DF_BAR_ROW, BOARD_Y - 2];
 function g0dChromeFade(out, bgs, k) {
   if (k <= 0) return out;
   const keep = G0D_KEEP_ROWS(), hs = G0D_LOOKS.hs, gone = (x, y) => hs(x * 3.1 + y * 7.7) < k * 1.05;
@@ -852,7 +852,7 @@ const MOLD_FX = { patches: 2, gap: [400, 1300], r: [1.6, 3.3], grow: 600, sit: [
 function moldLevel() {
   const run = st.run;
   if (st.mode === 'panel' && st.panelTitle === 'UPLINK' && run && run.quest === 'h3av3n' && (run.sector || 0) === 0 && !st.panelReveal) return 'light';   // the broken UPLINK (the user's playtest): the mold comes and goes on it too
-  if (st.mode !== 'play' || !run || !st.lv || st.g0dp) return null;
+  if (st.mode !== 'play' || !run || !st.lv || st.g0df) return null;
   const n = run.map[run.at];
   if (!n || n.mod !== 'mold') return null;
   return sectorEvent(n.sector || 0) === 'deepmold' ? 'heavy' : 'light';
@@ -879,7 +879,7 @@ function moldOverlay(cells, now, bgs) {
       if (d >= R) continue;
       const k = x + ',' + y, v = hs(x * 2.9 + y * 5.7 + p.seed);
       if (v < ck) {   // crumbled: it falls
-        if (!p.fell.has(k)) { p.fell.add(k); if (bits.length < 30 && !reduced()) { const th = 1 + 3 * (1 - d / p.r); bits.push({ ch: g0dpMoldGlyph(th, x, y, now), x: pxX(x), y: pxY(y), col: g0dpMoldCol(th, 0) }); } }
+        if (!p.fell.has(k)) { p.fell.add(k); if (bits.length < 30 && !reduced()) { const th = 1 + 3 * (1 - d / p.r); bits.push({ ch: g0dfMoldGlyph(th, x, y, now), x: pxX(x), y: pxY(y), col: g0dfMoldCol(th, 0) }); } }
         continue;
       }
       cover.set(k, Math.max(cover.get(k) || 0, 1 + 3 * clamp(1 - d / p.r, 0, 1)));
@@ -888,7 +888,7 @@ function moldOverlay(cells, now, bgs) {
   if (bits.length) explode(bits, pxX(W / 2), pxY(y0), { power: 0.12, grav: 2, life: [0.5, 1] });
   // the deep mold: nearly all of it, the holes drifting
   if (lvl === 'heavy') for (let y = y0; y < y1; y++) for (let x = 0; x < W; x++) {
-    const v = g0dpNoise3(x * 0.16, y * 0.34, now * 0.00025);
+    const v = g0dfNoise3(x * 0.16, y * 0.34, now * 0.00025);
     if (v > MOLD_FX.heavy + (has('bleach') ? 0.12 : 0)) cover.set(x + ',' + y, Math.max(cover.get(x + ',' + y) || 0, 1.2 + 3 * (v - MOLD_FX.heavy) / (1 - MOLD_FX.heavy)));
   }
   // b0y holds it back: a hole from the middle out, then it closes again
@@ -897,7 +897,7 @@ function moldOverlay(cells, now, bgs) {
     if (e > MOLD_FX.wipe) m.wipe = null;
     else {
       // (the user's playtest: it could be better) it opens to just short of the corners: his blue edge holds the mold
-      // there, trembling, his marks on it (engine/g0dproto.js g0dpBoyMark's look)
+      // there, trembling, his marks on it (engine/g0dfight.js g0dfBoyMark's look)
       const k = Math.min(1, e / 500) * (e > MOLD_FX.wipe - 700 ? (MOLD_FX.wipe - e) / 700 : 1), Rw = k * Math.hypot(W / 4.4, L.gh / 2) * 0.86 + Math.sin(now / 90) * 0.15, cx = (W - 1) / 2, cy = y0 + L.gh / 2;
       const dOf = (x, y) => Math.hypot((x - cx) / 2.2, y - cy) + hs(x * 1.7 + y * 9.1) * 1.5;
       for (const key of [...cover.keys()]) { const [x, y] = key.split(',').map(Number); if (dOf(x, y) < Rw) cover.delete(key); }
@@ -919,15 +919,15 @@ function moldOverlay(cells, now, bgs) {
     const [x, y] = k.split(',').map(Number), onRim = m.rim && m.rim.dOf(x, y) - m.rim.Rw < 1.1;
     if (bgs) bgs.push({ cx: x, cy: y, w: 1, col: C.bg, alpha: 1 });
     if (onRim) rim.push([x, y]);
-    out.push({ ch: g0dpMoldGlyph(th, x, y, now), cx: x, cy: y, col: onRim ? G0DP_BLUE : g0dpMoldCol(th, lvl === 'heavy' ? 1 : 0), own: 'fx', bold: onRim });
+    out.push({ ch: g0dfMoldGlyph(th, x, y, now), cx: x, cy: y, col: onRim ? G0DF_BLUE : g0dfMoldCol(th, lvl === 'heavy' ? 1 : 0), own: 'fx', bold: onRim });
   }
   if (rim.length > 4 && bgs) {   // b0y's marks on his edge: one up at the top left (his tag), one down at the bottom right
     const by = f => rim.reduce((a, c) => (f(c) < f(a) ? c : a));
     const marks = [[by(c => c[0] + 2.2 * (c[1] - y0)), 'hold'], [by(c => -(c[0] + 2.2 * (c[1] - y0))), '']];
     for (const [[x, y], tag] of marks) {
       const put = (cx, ch, col) => { const i = out.findIndex(c => Math.round(c.cx) === cx && Math.round(c.cy) === y); if (i >= 0) out.splice(i, 1); out.push({ ch, cx, cy: y, col, own: 'fx', bold: true }); };
-      bgs.push({ cx: x, cy: y, w: 1, col: G0DP_BLUE, alpha: 1 }); put(x, ':', C.bg);
-      if (tag) { const w = tag.length + 2, tx = x + 1 + w > W ? x - w : x + 1; bgs.push({ cx: tx, cy: y, w, col: G0DP_BLUE, alpha: 1 }); for (let q = 0; q < w; q++) put(tx + q, q === 0 || q === w - 1 ? ' ' : tag[q - 1], C.bg); }
+      bgs.push({ cx: x, cy: y, w: 1, col: G0DF_BLUE, alpha: 1 }); put(x, ':', C.bg);
+      if (tag) { const w = tag.length + 2, tx = x + 1 + w > W ? x - w : x + 1; bgs.push({ cx: tx, cy: y, w, col: G0DF_BLUE, alpha: 1 }); for (let q = 0; q < w; q++) put(tx + q, q === 0 || q === w - 1 ? ' ' : tag[q - 1], C.bg); }
     }
   }
   return out;
@@ -939,7 +939,7 @@ function moldDig(cx, cy) {
   let th = 0; for (let y = cy - 1; y <= cy + 1; y++) for (let x = cx - 2; x <= cx + 2; x++) th = Math.max(th, m.cover.get(x + ',' + y) || 0);
   if (!th) return false;
   m.holes.push({ x: cx, y: cy, at: now, r: MOLD_FX.holeR * (has('bleach') ? 1.4 : 1) });
-  if (!reduced()) { const bits = []; for (let k = 0; k < 14; k++) { const x = cx + Math.round(rand(-4, 4)), y = cy + Math.round(rand(-1.5, 1.5)), t = m.cover.get(x + ',' + y); if (t) bits.push({ ch: g0dpMoldGlyph(t, x, y, now), x: pxX(x), y: pxY(y), col: moldCol(t, 1) }); } if (bits.length) explode(bits, pxX(cx), pxY(cy) - L.chh * 0.5, { power: 0.45, grav: 1.4, life: [0.3, 0.7] }); }
+  if (!reduced()) { const bits = []; for (let k = 0; k < 14; k++) { const x = cx + Math.round(rand(-4, 4)), y = cy + Math.round(rand(-1.5, 1.5)), t = m.cover.get(x + ',' + y); if (t) bits.push({ ch: g0dfMoldGlyph(t, x, y, now), x: pxX(x), y: pxY(y), col: moldCol(t, 1) }); } if (bits.length) explode(bits, pxX(cx), pxY(cy) - L.chh * 0.5, { power: 0.45, grav: 1.4, life: [0.3, 0.7] }); }
   Sound.moldBreak(th);
   if (!m.dugMsg) { m.dugMsg = true; setMsg('> it breaks. it grows back. quick.', moldCol(2.6, 1)); }
   return true;
@@ -955,17 +955,17 @@ function moldDigTile(t) {
 // b0y's button: [b] in his blue, at the rule's left end (across from LOOT). On a heaven run (the H3AV3N seed, the
 // editor's jump) and in the G0D prototype. Tap it: he comes out. In the maze he only comes out when called (his tip:
 // his cursors and the next glyph); in a M0LD corp he holds the mold back (once a layer); in the fight he comes out now.
-const boyOn = () => G0DP.boy && ((st.run && st.run.heaven) || st.mode === 'g0dp');
+const boyOn = () => G0DF.boy && ((st.run && st.run.heaven) || st.mode === 'g0df');
 function buildBoyBtn(ctx, y) {
   if (!boyOn() || st.mode === 'title' || st.mode === 'over' || st.mp) return;
-  const { put, bg, addHit, now } = ctx, x = 0, c = st.corp, p = st.g0dp;
-  const out = (c && c.boyCall && now < c.boyCall) || (p && p.boy && !g0dpBoyResting(p.boy)) || (st.moldFx && st.moldFx.wipe);
+  const { put, bg, addHit, now } = ctx, x = 0, c = st.corp, p = st.g0df;
+  const out = (c && c.boyCall && now < c.boyCall) || (p && p.boy && !g0dfBoyResting(p.boy)) || (st.moldFx && st.moldFx.wipe);
   clearRect(ctx.cells, x, y, 3, 1);
-  if (out) bg(x, y, 3, G0DP_BLUE, 1);
+  if (out) bg(x, y, 3, G0DF_BLUE, 1);
   // (the user, 2026-10-31: it cycles b, 0, y: his name, a letter at a time; b most of the time)
   const ph = Math.floor(now / 380) % 10, ch = ph === 7 ? '0' : ph === 8 ? 'y' : 'b';
-  put(x, y, '[' + ch + ']', out ? C.bg : G0DP_BLUE, 'ui', true);
-  if (st.hoverBtn === 'b0y' && !out) bg(x, y, 3, G0DP_BLUE, 0.2);
+  put(x, y, '[' + ch + ']', out ? C.bg : G0DF_BLUE, 'ui', true);
+  if (st.hoverBtn === 'b0y' && !out) bg(x, y, 3, G0DF_BLUE, 0.2);
   addHit(x, y, 3, 1, { kind: 'btn', id: 'b0y', onTap: boyCall, noFocus: true });
 }
 // Heaven's market (the user's playtest): a REROLL there always brings an exotic. BLOOD MONEY first (it pays for INT).
@@ -979,26 +979,26 @@ function heavenExotic(r) {
 const BOY_SHOP = ['patches. lots of patches.', 'a BUFFER keeps you up.', 'reroll here. trust me.', 'shoes. he hates shoes.', 'FWALL. the eye bites.', 'buy now. no refunds later.'];
 const BOY_TIPS = ['the mold comes and goes.', 'tap [b] when you need me.', 'keep your INT up. patches.', 'the corps up here are his.'];   // (the terminal fits ~30 after b0y:)
 function boyCall() {
-  const now = performance.now(), c = st.corp, p = st.g0dp;
+  const now = performance.now(), c = st.corp, p = st.g0df;
   Sound.ping(1175);
   if (p && p.boy) {   // the fight (and the prototype): he comes out now
-    if (g0dpBoyResting(p.boy)) { p.boy.until = 0; p.boy.phase = 'rest'; }
+    if (g0dfBoyResting(p.boy)) { p.boy.until = 0; p.boy.phase = 'rest'; }
     return;
   }
   if (c && c.def && c.def.key === 'maze' && st.lv) {   // the maze: one round of his help (his cursors, the next glyph)
     c.boyCall = now + 7000; c.boy = null;
-    return setMsg(MAZE_TIP(c), G0DP_BLUE);
+    return setMsg(MAZE_TIP(c), G0DF_BLUE);
   }
-  if (c && c.def && c.def.key === 'cerberus') return setMsg('> b0y: ' + pickR(CERB_TIPS, Math.random), G0DP_BLUE);   // CERBERUS: he tells you what to do
+  if (c && c.def && c.def.key === 'cerberus') return setMsg('> b0y: ' + pickR(CERB_TIPS, Math.random), G0DF_BLUE);   // CERBERUS: he tells you what to do
   const lvl = moldLevel();
   if (lvl && st.moldFx) {   // a M0LD corp: he holds it back, once a layer
-    if (st.moldFx.used) { Sound.deny(); return setMsg("> b0y: can't. not again so soon.", G0DP_BLUE); }
+    if (st.moldFx.used) { Sound.deny(); return setMsg("> b0y: can't. not again so soon.", G0DF_BLUE); }
     st.moldFx.used = true; st.moldFx.wipe = { at: now };
     Sound.whoosh();
-    return setMsg("> b0y: i'll hold it back. quick!", G0DP_BLUE);
+    return setMsg("> b0y: i'll hold it back. quick!", G0DF_BLUE);
   }
-  if (st.mode === 'panel' && st.shop && st.run && st.shop.node === st.run.at && (st.run.map[st.run.at] || {}).type === 'shop') { Sound.ping(1568); return setMsg('> b0y: ' + pickR(BOY_SHOP, Math.random), G0DP_BLUE); }   // in a market: what to buy
-  setMsg('> b0y: ' + pickR(BOY_TIPS, Math.random), G0DP_BLUE);
+  if (st.mode === 'panel' && st.shop && st.run && st.shop.node === st.run.at && (st.run.map[st.run.at] || {}).type === 'shop') { Sound.ping(1568); return setMsg('> b0y: ' + pickR(BOY_SHOP, Math.random), G0DF_BLUE); }   // in a market: what to buy
+  setMsg('> b0y: ' + pickR(BOY_TIPS, Math.random), G0DF_BLUE);
 }
 const MAZE_TIP = c => {
   const words = ['prompt', 'diamond', 'the cross', 'storage unit', 'uplink', 'the watcher'];
@@ -1021,7 +1021,7 @@ const MAZE_TIP = c => {
 // (CERB.plainBlue / plainBossBlue) so it still bites; b0y isn't with you yet: no teaching.
 const CERB = { eyes: 3, red: 1.9, blue: 1.0, bossRed: 1.35, bossBlue: 0.75, plainBlue: 0.8, plainBossBlue: 0.6, mold: [1.7, 1.6], bossMold: [2.3, 1.6], regrow: 0.14, scrape: 2.1, look: 1100, hold: 900, grow: 2800, cellGrow: 300 };   // (hold: the clear board a beat first)
 const CERB_TEACH = { grow: "it's growing over the nodes.", dig: 'tap the mold. it breaks here.', eyes: 'the eyes. wait for blue. tap.', look: "that's the real one. dig it!" };   // (b0y, the first layer; ~30 fit)
-const cerbTeach = (cb, k) => { if (!cb.teach || cb.taught[k] || !G0DP.boy) return; cb.taught[k] = true; setMsg('> b0y: ' + CERB_TEACH[k], G0DP_BLUE); };
+const cerbTeach = (cb, k) => { if (!cb.teach || cb.taught[k] || !G0DF.boy) return; cb.taught[k] = true; setMsg('> b0y: ' + CERB_TEACH[k], G0DF_BLUE); };
 // Break the mold around a cell (screen x, y): returns how thick it was there (0: nothing to break)
 function cerbScrape(cb, cx, cy, now) {
   const W = L.wc, bl = has('bleach') ? 1.4 : 1, R = 1.8 * bl, bits = [];
@@ -1033,7 +1033,7 @@ function cerbScrape(cb, cx, cy, now) {
     if (was < 0.6) continue;
     th = Math.max(th, was);
     cb.m[j] = Math.max(0, was - CERB.scrape * bl * (1 - d * 0.5));
-    if (bits.length < 18 && Math.random() < 0.6 && !reduced()) bits.push({ ch: g0dpMoldGlyph(was, x, y, now), x: pxX(x), y: pxY(y), col: moldCol(was, cb.boss ? 1 : 0) });
+    if (bits.length < 18 && Math.random() < 0.6 && !reduced()) bits.push({ ch: g0dfMoldGlyph(was, x, y, now), x: pxX(x), y: pxY(y), col: moldCol(was, cb.boss ? 1 : 0) });
   }
   if (!th) return 0;
   if (bits.length) explode(bits, pxX(cx), pxY(cy) - L.chh * 0.5, { power: 0.45, grav: 1.4, life: [0.3, 0.7] });
@@ -1069,11 +1069,11 @@ HEAVEN.cerberus = {
     if (e) {
       if (cerbBlue(e, now)) {   // it looks at the real node
         cb.look = { from: t, at: now }; e.hop = true;
-        Sound.ping(1568); flash(G0DP_BLUE, 0.12, 0.25);
+        Sound.ping(1568); flash(G0DF_BLUE, 0.12, 0.25);
         if (cb.teach && !cb.taught.look) { cerbTeach(cb, 'look'); if (st.corp) st.corp.cbTaught = true; }
-        else setMsg('> it looks. there.', G0DP_BLUE);
+        else setMsg('> it looks. there.', G0DF_BLUE);
       } else {   // it bites
-        hurt(1); Sound.trap(); flash(G0DP_RED, 0.25, 0.5); shake(7, 0.35);
+        hurt(1); Sound.trap(); flash(G0DF_RED, 0.25, 0.5); shake(7, 0.35);
         setMsg('> red. it bites. -1 INT.', C.danger);
         if (st.run.integrity <= 0) die();
       }
@@ -1094,8 +1094,8 @@ HEAVEN.cerberus = {
       const maxE = Math.max(1, Math.min(W / 4.4, H / 2));
       for (let y = Y; y < Y + H; y++) for (let x = 0; x < W; x++) {
         const i = y * W + x, sx = Math.min(x, W - 1 - x) / 2.2, sy = Math.min(y - Y, Y + H - 1 - y), e = Math.min(1, Math.min(sx, sy) / maxE);
-        const n = sx < sy ? g0dpNoise3(x * 0.1, y * 0.55, cb.seed + 7) : g0dpNoise3(x * 0.5, y * 0.12, cb.seed + 7);   // (fingers: along the way in from the nearest edge)
-        cb.cap[i] = cb.plain ? 0 : base[0] + base[1] * g0dpNoise3(x * 0.3, y * 0.5, cb.seed);   // (plain: no mold)
+        const n = sx < sy ? g0dfNoise3(x * 0.1, y * 0.55, cb.seed + 7) : g0dfNoise3(x * 0.5, y * 0.12, cb.seed + 7);   // (fingers: along the way in from the nearest edge)
+        cb.cap[i] = cb.plain ? 0 : base[0] + base[1] * g0dfNoise3(x * 0.3, y * 0.5, cb.seed);   // (plain: no mold)
         cb.arr[i] = CERB.hold + e * CERB.grow * (0.12 + 0.88 * Math.pow(n, 1.6));
       }
     }
@@ -1127,18 +1127,18 @@ HEAVEN.cerberus = {
     for (let y = Y; y < Y + H; y++) for (let x = 0; x < W; x++) if (cb.m[y * W + x] >= 0.6) covered.add(x + ',' + y);
     const keep = ctx.cells.filter(c => !covered.has(Math.round(c.cx) + ',' + Math.round(c.cy)));
     ctx.cells.length = 0; ctx.cells.push(...keep);
-    for (const k of covered) { const [x, y] = k.split(',').map(Number), th = cb.m[y * W + x]; ctx.put(x, y, g0dpMoldGlyph(th, x, y, now), g0dpMoldCol(th, cb.boss ? 1 : 0), 'fx'); }
+    for (const k of covered) { const [x, y] = k.split(',').map(Number), th = cb.m[y * W + x]; ctx.put(x, y, g0dfMoldGlyph(th, x, y, now), g0dfMoldCol(th, cb.boss ? 1 : 0), 'fx'); }
     const real = lv.tiles[lv.safe];
     if (lookOn && real && real.state === 'closed') {   // it looks: a line of dots to the real node; the node's corners blink
       const a = tileOrigin(cb.look.from), b = tileOrigin(real), k = (now - cb.look.at) / CERB.look;
       const steps = Math.max(Math.abs(b.tx - a.tx), Math.abs(b.ty - a.ty) * 2);
-      for (let s = 1; s < steps; s++) { if (s / steps > k * 2.2) break; const x = Math.round(a.tx + 3 + (b.tx - a.tx) * s / steps), y = Math.round(a.ty + 2 + (b.ty - a.ty) * s / steps); if (s % 2 === 0) ctx.put(x, y, '·', G0DP_BLUE, 'fx', true); }
-      if (Math.floor(now / 120) % 2) for (const [dx, dy, ch] of [[0, 0, '+'], [6, 0, '+'], [0, 4, '+'], [6, 4, '+']]) { ctx.bg(b.tx + dx, b.ty + dy, 1, G0DP_BLUE, 1); ctx.put(b.tx + dx, b.ty + dy, ch, C.bg, 'fx', true); }
+      for (let s = 1; s < steps; s++) { if (s / steps > k * 2.2) break; const x = Math.round(a.tx + 3 + (b.tx - a.tx) * s / steps), y = Math.round(a.ty + 2 + (b.ty - a.ty) * s / steps); if (s % 2 === 0) ctx.put(x, y, '·', G0DF_BLUE, 'fx', true); }
+      if (Math.floor(now / 120) % 2) for (const [dx, dy, ch] of [[0, 0, '+'], [6, 0, '+'], [0, 4, '+'], [6, 4, '+']]) { ctx.bg(b.tx + dx, b.ty + dy, 1, G0DF_BLUE, 1); ctx.put(b.tx + dx, b.ty + dy, ch, C.bg, 'fx', true); }
     }
     const gt = Math.floor(now / 70);
     for (const e of cb.eyes) {
       if (!e.tile || now < e.at) continue;
-      const { tx, ty } = tileOrigin(e.tile), isBlue = cerbBlue(e, now), col = isBlue ? G0DP_BLUE : G0DP_RED;
+      const { tx, ty } = tileOrigin(e.tile), isBlue = cerbBlue(e, now), col = isBlue ? G0DF_BLUE : G0DF_RED;
       const age = now - e.at, opening = age < 160, dart = Math.round(Math.sin(now / 380 + e.k * 2.1) * 1.2);
       const mid = opening ? '( - )' : '(' + ' '.repeat(1 + dart) + '@' + ' '.repeat(1 - dart) + ')';
       [' .-. ', mid, " '-' "].forEach((l, j) => {
@@ -1168,13 +1168,13 @@ MUSIC_FOR.cerberus = 'rootaccess';
 //   the final stand: its opening, then the clock: urgency, and its A, B, C by thirds of the clock
 //   the collapse: it powers down (heavenCollapse) and nothing comes back in
 function g0dMusic() {
-  const p = st.g0dp, now = performance.now(), o = (song, x) => Object.assign({ song: trackFor(song), level: 2, urgency: 0, low: false, tempo: 1, pitch: 1, section: 'A' }, x);
-  if (st.mode === 'g0dp' && p && !p.card) {
+  const p = st.g0df, now = performance.now(), o = (song, x) => Object.assign({ song: trackFor(song), level: 2, urgency: 0, low: false, tempo: 1, pitch: 1, section: 'A' }, x);
+  if (st.mode === 'g0df' && p && !p.card) {
     if (p.stage === 'maze') return o('maze', { level: clamp(1 + Math.floor(((p.maze && p.maze.path) || 0) / 2), 1, 3) });
     if (p.stage === 'fight') {
       const f = p.fight, w = p.wake;
       if (w) return o('godfight', { level: w.e < G0D_WAKE.fill[0] ? 0 : w.e < G0D_WAKE.mold[0] ? 1 : 2 });
-      const stg = clamp(f.stage || 0, 0, 2), heat = f.hands ? clamp((now - f.hands.at) / 1000 / G0DP.charge, 0, 1) : 0;
+      const stg = clamp(f.stage || 0, 0, 2), heat = f.hands ? clamp((now - f.hands.at) / 1000 / G0DF.charge, 0, 1) : 0;
       const tr = SONGS[trackFor('godfight')], bar = tr ? (tr.meter || 4) * 60000 / tr.bpm : 2000;
       const kick = stg === 0 && now - (f.fightAt || 0) < bar * 2.2, eye = f.eye ? 1 : 0;
       return o('godfight', { level: Math.min(4, (kick ? 4 : [3, 4, 4][stg]) + eye), section: kick ? 'B' : 'ABC'[stg], urgency: Math.min(1, heat * 0.8 + eye * 0.45), tempo: 1.05 + stg * 0.03 + eye * 0.02, low: !!(st.run && st.run.integrity <= 1) });
@@ -1182,7 +1182,7 @@ function g0dMusic() {
     if (p.stage === 'stand') {
       const s = p.stand, tr = SONGS[trackFor('g0dstand')];
       if (now < s.openUntil) return o('g0dstand', { level: now - s.openFrom < 1500 ? 1 : 2 });
-      const k = clamp(1 - s.left / G0DP.standTime, 0, 1);
+      const k = clamp(1 - s.left / G0DF.standTime, 0, 1);
       return o('g0dstand', { level: 4, section: 'ABC'[Math.min(2, Math.floor(k * 3))], urgency: k, tempo: 1 + (tr && tr.tick ? k * 0.25 : 0) + 0.05, low: !!(st.run && st.run.integrity <= 1) });
     }
   }
@@ -1203,11 +1203,11 @@ function g0dVoiceTick(now) {
   st.g0dVoiceN = Math.max(st.g0dVoiceN, n);
 }
 const g0dVoiceHi = () => {
-  const p = st.g0dp;
+  const p = st.g0df;
   if (st.g0dDie || st.g0dEnd) return 1;
   if (st.g0dFake) return 0.8;
   if (p && p.stand) return 0.75 + 0.25 * p.stand.cur / p.stand.eyes.length;
-  if (p && p.fight && !p.wake) return clamp(1 - p.fight.hp / G0DP.hp, 0, 1) * 0.85;
+  if (p && p.fight && !p.wake) return clamp(1 - p.fight.hp / G0DF.hp, 0, 1) * 0.85;
   return 0;
 };
 
@@ -1221,9 +1221,9 @@ const G0D_END = { chrome: [100, 900], crumble: [[500, 750, 0.16], [1500, 1750, 0
 const G0D_END_TITLE = 'G0D DEFEATED';
 function heavenCollapse(p) {
   const s = p.stand, le = s && s.eyes[s.cur - 1], eye = le ? { x: clamp(Math.round(le.x), 4, L.wc - 5), y: clamp(Math.round(le.y), 2, L.gh - 2) } : { x: Math.floor(L.wc / 2), y: Math.floor(L.gh / 2) };
-  st.g0dp = null;
+  st.g0df = null;
   st.g0dEnd = { t0: performance.now(), node: p.node, said: {}, gone: new Set(), eye, shoe: !!(s && s.shoeKill) };
-  if (G0DP.skipCine) g0dEndSkip(st.g0dEnd);
+  if (G0DF.skipCine) g0dEndSkip(st.g0dEnd);
   Sound.shatter(); flash(C.bright, 0.7, 1.4); shake(18, 1);
   Music.powerDown();   // (it trails off like a boss's)
   showBoard('g0dend'); st.wipe = null; st.boardStart = -1e9;
@@ -1258,7 +1258,7 @@ function g0dEndTick(now) {
       const key = x + ',' + y;
       if (f.gone.has(key) || g0dEndH(x, y) >= frac) continue;
       f.gone.add(key);
-      if (cells.length < 70 && Math.random() < 0.6) cells.push({ ch: g0dpCircuitCh(x, y, f.t0, L.wc, L.gh), x: pxX(x), y: pxY(BOARD_Y + y), col: pickR([C.dim, C.mid, C.dangerDim], Math.random) });
+      if (cells.length < 70 && Math.random() < 0.6) cells.push({ ch: g0dfCircuitCh(x, y, f.t0, L.wc, L.gh), x: pxX(x), y: pxY(BOARD_Y + y), col: pickR([C.dim, C.mid, C.dangerDim], Math.random) });
     }
     if (cells.length) explode(cells, pxX(f.eye.x), pxY(BOARD_Y + f.eye.y), { power: 0.35, grav: 1.6, life: [0.5, 1.1] });
   }
@@ -1283,9 +1283,9 @@ function g0dEndCall(f) {
   st.kbFocus = st.hoverBtn = null; Sound.shield();
   st.callBox = ({ t0: performance.now(), who: 'pops', lines: ['kid. you did it. G0D is down.', "b0y's up here with me. he says hi.", 'the net is yours. go again?'],
     btns: [
-      { text: '[ THE MAZE ]', onTap: () => { st.g0dEnd = null; st.g0dp = null; startRun(seed, true, { heaven: true, quest }); } },
-      { text: '[ G0D FIGHT ]', onTap: () => { st.g0dEnd = null; st.g0dp = null; toMap(); setTimeout(() => { if (st.mode === 'map' && st.run && !st.g0dp && node) g0dWakeStart(node); }, 700); } }],
-    onClose: () => { if (quest) { st.g0dEnd = null; st.g0dp = null; endRun(true); } else heavenWon(f); } });   // (straight up: it doesn't wait in the CALL queue) (the seed: the run ends, a win)
+      { text: '[ THE MAZE ]', onTap: () => { st.g0dEnd = null; st.g0df = null; startRun(seed, true, { heaven: true, quest }); } },
+      { text: '[ G0D FIGHT ]', onTap: () => { st.g0dEnd = null; st.g0df = null; toMap(); setTimeout(() => { if (st.mode === 'map' && st.run && !st.g0df && node) g0dWakeStart(node); }, 700); } }],
+    onClose: () => { if (quest) { st.g0dEnd = null; st.g0df = null; endRun(true); } else heavenWon(f); } });   // (straight up: it doesn't wait in the CALL queue) (the seed: the run ends, a win)
 }
 // The ending's rewards screen (a placeholder, the user 2026-10-31): your logo, how you did, the REP (the run's, if it
 // was practice, plus H3AV3N's own), what it unlocked. No loot, no mods. Then the heaven feats (the FEAT boxes come once
@@ -1295,7 +1295,7 @@ function heavenRewards(f, next) {
   const run = st.run, bonus = f.wasBeat ? H3AV3N_REP.again : H3AV3N_REP.first, runRep = run.practice ? repFor(run) : 0, rep = bonus + runRep;
   save.rep = (save.rep || 0) + rep; save.repTotal = (save.repTotal || 0) + rep; persist();
   const clean = !run.g0dHurt;
-  Sound.bossWin(); flash(G0DP_BLUE, 0.25, 0.6);
+  Sound.bossWin(); flash(G0DF_BLUE, 0.25, 0.6);
   const extra = [['', C.text], [`INT left ${run.integrity}/${run.maxInt}`, C.text], [`corps ${run.corps || 0}   perfects ${run.perfects || 0}`, C.text]];
   if (f.shoe) extra.push(['..with a shoe', C.mid]);
   if (clean) extra.push(['G0D never touched you.', C.accent]);
@@ -1304,14 +1304,14 @@ function heavenRewards(f, next) {
   extra.push([`+${bonus} REP   H3AV3N`, C.rep], ['', C.text]);
   if (!f.wasBeat) extra.push(['unlocked:', C.mid], ["1UP       b0y's crash unit", C.money], ["REPLAYS   POPS's log, on the title", C.money], ['G0D       its logo, yours', C.money]);   // (the ending hands them over: data/quests.js h3av3n)
   else extra.push([`G0D down x${save.g0dWins}.`, C.money]);
-  openChoice({ reveal: true, title: 'H3AV3N CLEARED', col: G0DP_BLUE, by: profile(), head: [['G0D', C.text]], extra, options: [],
-    skipLabel: '[ CONTINUE ]', msg: { text: "> b0y: we did it. it's quiet now.", col: G0DP_BLUE },
+  openChoice({ reveal: true, title: 'H3AV3N CLEARED', col: G0DF_BLUE, by: profile(), head: [['G0D', C.text]], extra, options: [],
+    skipLabel: '[ CONTINUE ]', msg: { text: "> b0y: we did it. it's quiet now.", col: G0DF_BLUE },
     next: () => { for (const [id, on] of [['g0dslayer', true], ['g0dclean', clean], ['g0dshoe', f.shoe]]) if (on) grantFeat(id); next(); } });   // (the feats after the screen: their boxes come once the run's over)
 }
-// A tap: skip to G0D DEFEATED (after a beat; G0DP.tapSkip). The CALL takes its own taps.
+// A tap: skip to G0D DEFEATED (after a beat; G0DF.tapSkip). The CALL takes its own taps.
 function g0dEndTap() {
   const f = st.g0dEnd, e = performance.now() - f.t0;
-  if (e > G0D_END.beat && e < G0D_END.title && G0DP.tapSkip) g0dEndSkip(f);
+  if (e > G0D_END.beat && e < G0D_END.title && G0DF.tapSkip) g0dEndSkip(f);
 }
 function buildG0dEnd(ctx) {
   const f = st.g0dEnd, { put, bg, now } = ctx;
@@ -1321,11 +1321,11 @@ function buildG0dEnd(ctx) {
   // the network, bare, crumbling away (nothing's left behind)
   for (let y = 1; y < L.gh; y++) for (let x = 0; x < L.wc; x++) {
     if (g0dEndH(x, y) < frac || onEye(x, y)) continue;
-    put(x, Y + y, g0dpCircuitCh(x, y, f.t0, L.wc, L.gh), hs(x * 1.3 + y * 7.9) < 0.3 ? C.dangerDim : C.dim);
+    put(x, Y + y, g0dfCircuitCh(x, y, f.t0, L.wc, L.gh), hs(x * 1.3 + y * 7.9) < 0.3 ? C.dangerDim : C.dim);
   }
   // his last eye: glitching harder and harder (inverting, G0D on it), bursts small, then off like a TV
   if (live) {
-    const gk = clamp(e / G0D_END.burst, 0, 1), tick = Math.floor(now / 70), col = Math.floor(now / 60) % 2 ? G0DP_RED : G0DP_BLUE, off = e >= G0D_END.off;
+    const gk = clamp(e / G0D_END.burst, 0, 1), tick = Math.floor(now / 70), col = Math.floor(now / 60) % 2 ? G0DF_RED : G0DF_BLUE, off = e >= G0D_END.off;
     const P = (x, y, ch, c) => {
       if (ch === ' ') return;
       const inv = hs(x * 3.3 + y * 7.1 + tick) < 0.15 + gk * 0.5, noise = hs(x * 5.7 + y * 1.9 + tick * 3) < gk * 0.3;
@@ -1353,16 +1353,16 @@ function g0dEndOverlay(cells, now, bgs) {
   const f = st.g0dEnd;
   if (!f) return cells;
   const e = now - f.t0;
-  let out = e < G0D_END.boom ? g0dpBar(cells, bgs, { f: 0 }) : cells;
+  let out = e < G0D_END.boom ? g0dfBar(cells, bgs, { f: 0 }) : cells;
   out = g0dChromeFade(out, bgs, g0dDieFrac(e, G0D_END.chrome));
   out = g0dChromeBoom(f, out, bgs, G0D_END.boom, e);
-  if (G0DP.tapSkip && e > G0D_END.beat && e < G0D_END.title) { const tip = 'tap to skip'; out = out.concat([...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
+  if (G0DF.tapSkip && e > G0D_END.beat && e < G0D_END.title) { const tip = 'tap to skip'; out = out.concat([...tip].map((ch, k) => ({ ch, cx: L.wc - tip.length + k, cy: BOARD_Y + L.gh - 1, col: C.dim, own: 'fx', bold: false }))); }
   return out;
 }
 // It's over (the placeholder ending): back to the map.
 function heavenWon(f) {
-  st.g0dEnd = null; st.g0dp = null;
-  setMsg('> G0D is down. the network goes quiet.', G0DP_BLUE);
+  st.g0dEnd = null; st.g0df = null;
+  setMsg('> G0D is down. the network goes quiet.', G0DF_BLUE);
   toMap();
 }
 

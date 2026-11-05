@@ -127,7 +127,7 @@ function buildScene(now, collectHits, raw = false) {
     addHit(x, 0, label.length, 1, { kind: 'btn', id, onTap, noFocus: true });
   };
   // The name is the menu button during a run (no [MENU] of its own).
-  const menuOk = !st.mp && run && !(st.g0dp && st.g0dp.wake) && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel' || st.mode === 'fish' || (st.mode === 'g0dp' && st.g0dp && st.g0dp.real));   // (G0D's fight: you can still quit)
+  const menuOk = !st.mp && run && !(st.g0df && st.g0df.wake) && (st.mode === 'map' || st.mode === 'play' || st.mode === 'panel' || st.mode === 'fish' || (st.mode === 'g0df' && st.g0df && st.g0df.real));   // (G0D's fight: you can still quit)
   put(0, 0, 'NeoN+1', C.accent, menuOk ? 'ui' : undefined, menuOk && st.pause === true);
   if (menuOk) {
     if (st.hoverBtn === 'menu' || st.pause === true) bg(0, 0, 6, C.accent, 0.2);
@@ -197,7 +197,7 @@ function buildScene(now, collectHits, raw = false) {
     else if (st.mode === 'g0dfake') where = 'G0D // BREACHED';
     else if (st.mode === 'g0dend') where = 'G0D // DOWN';
     else if (st.mode === 'g0ddie') where = 'G0D // FIGHT';
-    else if (st.mode === 'g0dp' && st.g0dp) where = `G0D // ${{ maze: 'MAZE', fight: 'FIGHT', stand: 'FINAL STAND' }[st.g0dp.stage]}`;
+    else if (st.mode === 'g0df' && st.g0df) where = `G0D // ${{ maze: 'MAZE', fight: 'FIGHT', stand: 'FINAL STAND' }[st.g0df.stage]}`;
     put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.danger : C.text);
     // LEVERAGE: in debt the credits go red, with your limit after them (CR -120/-150)
     const crTxt = `${(st.mode === 'play' && corpFlag('money')) || 'CR'} ${run.credits}${leverage() && run.credits < 0 ? '/' + creditFloor() : ''}`;
@@ -305,7 +305,7 @@ function buildScene(now, collectHits, raw = false) {
       else { if (st.mp) mpTurnFrame(ctx); buildBoard(ctx); if (st.mp) { mpDrawCursors(ctx); mpTurnBanner(ctx); } }
     }
     else if (st.mode === 'map') buildMap(ctx);
-    else if (st.mode === 'g0dp') buildG0dp(ctx);   // the G0D prototype (engine/g0dproto.js)
+    else if (st.mode === 'g0df') buildG0df(ctx);   // the G0D prototype (engine/g0dfight.js)
     else if (st.mode === 'g0dfake') buildG0dFake(ctx);   // H3AV3N: the fake win (engine/heaven.js)
     else if (st.mode === 'g0dend') buildG0dEnd(ctx);   // H3AV3N: the collapse
     else if (st.mode === 'g0ddie') buildG0dDie(ctx);   // H3AV3N: G0D dies (before the fake win)
@@ -348,7 +348,7 @@ function buildScene(now, collectHits, raw = false) {
   const adBgs = [];
   // The editor's G0D tab (engine/g0d.js): a G0D design or effect drawn over this screen. Never in play.
   if ((st.g0d || st.g0dBar) && !st.dev) result = g0dOverlay(result, now, adBgs);
-  if (st.mode === 'g0dp' && !st.dev) result = g0dpOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
+  if (st.mode === 'g0df' && !st.dev) result = g0dfOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
   if ((st.mode === 'play' || st.mode === 'panel') && !st.dev) result = moldOverlay(result, now, adBgs);   // H3AV3N: the M0LD in a corp (and on the broken UPLINK)
   if (st.g0dFake && !st.dev) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win (over the rewards screen)
   if (st.mode === 'g0ddie' && !st.dev) result = g0dDieOverlay(result, now, adBgs);   // H3AV3N: G0D dies
@@ -409,7 +409,7 @@ function drawBadge(put, now, x, y, key, i, { selected = false, dim = false, own 
     let ch = label[k], dy = 0, inv = selected || flash, chip = chip0;
     if (anim === 'wave' || anim === 'exotic') { const w = t - k * 0.09; if (w > 0 && w < 0.3) dy = -Math.sin(w / 0.3 * Math.PI) * 0.35; }
     if (anim === 'exotic' && !dim) chip = rainbow[Math.floor(now / 160 + k) % rainbow.length];
-    if (g0dm) { if (Math.floor(now / 420) % 3 === 1) ch = ch.toLowerCase(); if (!dim && G0D_LOOKS.hs(Math.floor(now / 90) * 1.7 + k * 7.3) < 0.3) chip = { bg: G0DP_RED, fg: C.bg }; }
+    if (g0dm) { if (Math.floor(now / 420) % 3 === 1) ch = ch.toLowerCase(); if (!dim && G0D_LOOKS.hs(Math.floor(now / 90) * 1.7 + k * 7.3) < 0.3) chip = { bg: G0DF_RED, fg: C.bg }; }
     if (anim === 'cycle' && !selected && !dim) inv = Math.floor(now / 300 + k) % 4 === 1;
     if (anim === 'scramble' && t < 0.2 && Math.random() < 0.5) ch = noiseCh();
     cell(x + 1 + k, ch, inv, chip, dy, k + 1);

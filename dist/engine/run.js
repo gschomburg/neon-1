@@ -1789,7 +1789,7 @@ function openUplink() {
 // The H3AV3N seed's uplink (docs/QUESTS.md): broken. No fee, no cash out: the only way is on, into heaven.
 function openBrokenUplink() {
   const run = st.run, sp = s => String(s).split('').join(' ');
-  const go = () => { if (st.transitioning) return; Sound.ui(); pushOn(); setMsg('> b0y: the uplink\'s dead. we go up.', G0DP_BLUE); };
+  const go = () => { if (st.transitioning) return; Sound.ui(); pushOn(); setMsg('> b0y: the uplink\'s dead. we go up.', G0DF_BLUE); };
   openPanel('UPLINK', (T, B, X) => {
     T('U P L I N K', C.danger);
     const t = 'the uplink is broken.';

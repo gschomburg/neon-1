@@ -138,7 +138,7 @@ function titleLines(now) {
   lines.push({ gap: 1, row: [
     { text: 'seed' },
     { text: `[${st.seed.slice(0, 10)}]`, id: 'seed', onTap: rerollSeed },
-    ...(questSeed(st.seed) ? [{ text: 'quest', col: G0DP_BLUE }] : st.seeded ? [{ text: 'replay', col: C.mid }] : []),   // (a chosen seed: the seed boards)
+    ...(questSeed(st.seed) ? [{ text: 'quest', col: G0DF_BLUE }] : st.seeded ? [{ text: 'replay', col: C.mid }] : []),   // (a chosen seed: the seed boards)
     ...(replaysOpen() ? [{ text: '[REPLAYS]', id: 'replays', onTap: () => swapTo(openReplays) }] : []),   // (beat G0D: POPS's log, engine/menus.js)
   ] });
   return lines;

@@ -455,7 +455,7 @@ if (EDITOR) {
     // straight off the seed, nothing taken: a market's offers and every reroll, a cache's loot and picks, a corp's boss
     // reward, and the loot-drop odds for $ nodes.
     lootview: () => post({ type: 'loot-view', text: lootReport() }),
-    h3av3n: async () => { g0dpStop(); st.g0d = null; st.g0dBar = null; endRun(); st.seed = 'H3AV3N'; st.practice = !save.beatG0D; startRun('H3AV3N', st.practice); await settle(); },
+    h3av3n: async () => { g0dfStop(); st.g0d = null; st.g0dBar = null; endRun(); st.seed = 'H3AV3N'; st.practice = !save.beatG0D; startRun('H3AV3N', st.practice); await settle(); },
     qcall: () => queueCall('pops', QUEST_LINES.found),
     event: m => toSector(2, m.key),
     sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),
@@ -505,23 +505,22 @@ if (EDITOR) {
       if (!(st.run && !st.run.ended && (st.mode === 'play' || st.mode === 'map'))) { st.g0d = null; await enterCorp('basic', false); }
       st.g0dBar = m.key; st.g0dBarT0 = performance.now();
     },
-    // the G0D PROTOTYPE (engine/g0dproto.js): play a stage ('' = stop); g0dpset: its numbers and b0y
-    g0dp: async m => {
-      if (!m.stage) { g0dpStop(); return; }
-      st.g0d = null; st.g0dBar = null;
-      await onMap();
-      g0dpStart(m.stage);
+    // the g0d tab's stage buttons ('' = stop): the real H3AV3N, straight to that stage (the prototype's own stages are
+    // gone; engine/g0dfight.js). g0dfset: its numbers and b0y
+    g0df: async m => {
+      if (!m.stage) { g0dfStop(); return; }
+      return TEST.heaven({ where: m.stage });
     },
     // H3AV3N in the real game (engine/heaven.js): its sector map, or straight into the maze
     heaven: async m => {
-      g0dpStop(); st.g0d = null; st.g0dBar = null;
+      g0dfStop(); st.g0d = null; st.g0dBar = null;
       await freshRun(); heavenSetup(); toMap(); await settle();
       if (m.where === 'maze') { const n = Object.values(st.run.map).find(o => o.heaven === 'maze'); await enterNode(n, true); await settle(); }
       if (m.where === 'fight') { const n = Object.values(st.run.map).find(o => o.heaven === 'g0d'); await enterNode(n, true); }
       const g0dNode = () => Object.values(st.run.map).find(o => o.heaven === 'g0d'), real = () => ({ real: true, node: g0dNode(), startInt: st.run.integrity, startCr: st.run.credits });
       if (m.where === 'fake') heavenFakeWin(real());   // the fake win (the rewards screen, frozen), then the stand
-      if (m.where === 'die') { g0dpStart('fight', real()); heavenDie(st.g0dp); }   // G0D dies, then the fake win
-      if (m.where === 'stand') g0dpStart('stand', real());
+      if (m.where === 'die') { g0dfStart('fight', real()); heavenDie(st.g0df); }   // G0D dies, then the fake win
+      if (m.where === 'stand') g0dfStart('stand', real());
       if (m.where === 'end') heavenCollapse({ node: g0dNode() });
     },
     // TESTING: kits. They only add: a mod you have only ever goes up, a mod with no free slot is skipped, gear that
@@ -547,7 +546,7 @@ if (EDITOR) {
       setMsg(`> ${m.key} kit: ${got.join(', ') || 'nothing new'}${skipped.length ? '. skipped: ' + skipped.join(', ') : ''}`.slice(0, 120), got.length ? C.accent : C.mid);
       Sound.buy();
     },
-    g0dpset: m => { for (const [k, v] of Object.entries(m.set || {})) if (k in G0DP && typeof G0DP[k] === typeof v) G0DP[k] = v; },
+    g0dfset: m => { for (const [k, v] of Object.entries(m.set || {})) if (k in G0DF && typeof G0DF[k] === typeof v) G0DF[k] = v; },
     g0dstill: m => { if (st.g0d) { st.g0d.still = !!m.on; st.g0d.t0 = performance.now(); } },
     featbox: m => { if (FEAT_BY_ID[m.key]) FEAT_QUEUE.push({ feat: m.key }); },
     wipe: () => { const w = wipeProgress(); FEAT_QUEUE.push({ head: 'THE BOARD', lines: ['progression wiped (test).', '', `refunded: ${w.refund} REP.`] }); },
@@ -578,7 +577,7 @@ if (EDITOR) {
       music: tabPlaying ? !!gameMusicOn : !!save.musicOn, sfx: !save.muted, tabMusic: tabPlaying,
       credits: run ? run.credits : 0, int: run ? run.integrity : 0, maxInt: run ? run.maxInt : 0, sector: run ? run.sector + 1 : 0,
       event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0, feats: Object.keys(save.feats || {}), rep: save.rep || 0, quest: (save.quests && save.quests.pops && save.quests.pops.step) || 'none', qopen: questOpen(),
-      g0d: st.g0d ? st.g0d.key : '', g0dStill: !!(st.g0d && st.g0d.still), g0dBar: st.g0dBar || '', g0dp: st.g0dp && st.mode === 'g0dp' ? st.g0dp.stage : '', g0dpCfg: G0DP };
+      g0d: st.g0d ? st.g0d.key : '', g0dStill: !!(st.g0d && st.g0d.still), g0dBar: st.g0dBar || '', g0df: st.g0df && st.mode === 'g0df' ? st.g0df.stage : '', g0dfCfg: G0DF };
     const s = JSON.stringify(m);
     if (s !== lastTest) { lastTest = s; post(m); }
   }, 300);

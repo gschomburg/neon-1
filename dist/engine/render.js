@@ -42,7 +42,7 @@ function frameBody(now) {
   layerTick(now);
   eaterWatch();   // ICE EATER: a layer with no ICE left clears
   coinTick(now);  // COIN FLIP: a held press brings the coin up
-  g0dpTick(now, dt);   // the G0D prototype (engine/g0dproto.js; the editor's g0d tab)
+  g0dfTick(now, dt);   // the G0D prototype (engine/g0dfight.js; the editor's g0d tab)
   g0dFakeTick(now);   // H3AV3N: the fake win
   g0dVoiceTick(now);   // H3AV3N: G0D's lines make his voice as they type
   g0dEndTick(now);   // H3AV3N: the collapse

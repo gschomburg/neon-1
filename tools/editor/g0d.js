@@ -25,26 +25,26 @@
     if (m.type === 'test-state') { cur = m.g0d || ''; bar = m.g0dBar || ''; draw(); }
     if (m.type === 'test-done' && m.act === 'g0dhp') log(m.ok ? (bar ? 'health bar on (it takes a hit every 1.6s)' : 'health bar off') : m.error, !m.ok);
     if (m.type === 'test-done' && m.act === 'heaven') log(m.ok ? 'there: tap on the game' : m.error, !m.ok);
-    if (m.type === 'test-done' && m.act === 'g0dp') log(m.ok ? (gpStage || 'playing: tap on the game board') : m.error, !m.ok);
+    if (m.type === 'test-done' && m.act === 'g0df') log(m.ok ? (gpStage || 'playing: tap on the game board') : m.error, !m.ok);
     if (m.type === 'test-done' && m.act === 'g0d') log(m.ok ? (cur ? 'showing' : 'off') : m.error, !m.ok);
   });
   for (const d of document.querySelectorAll('#g0d details.xgrp')) {   // open / closed is remembered
     try { d.open = localStorage.getItem('neonEditor.g0d.' + d.dataset.g) === '1'; } catch (e) { /* no storage */ }
     d.addEventListener('toggle', () => { try { localStorage.setItem('neonEditor.g0d.' + d.dataset.g, d.open ? '1' : '0'); } catch (e) { /* no storage */ } });
   }
-  // ---- the prototype: stages, b0y, the numbers (G0DP in engine/g0dproto.js)
-  const GP_NUMS = [['mazeTimer', 'maze clock s'], ['mazeLost', 'maze: lost layers'], ['hp', 'G0D hits'], ['hitsPerEye', 'hits per eye'], ['eyeOpen', 'eye open s'], ['eyeBonusTime', '2nd eye: + s'], ['eyeBonusHits', '2nd eye: + hits'], ['corpHeal', 'corp node heals G0D'], ['stageDecoys', 'stage: + corp nodes'], ['stageSpew', 'stage: + spew x'], ['stageHands', 'stage: HANDS OFF sooner x'],
+  // ---- the prototype: stages, b0y, the numbers (G0DF in engine/g0dfight.js)
+  const GP_NUMS = [['mazeLost', 'maze: lost layers'], ['hp', 'G0D hits'], ['hitsPerEye', 'hits per eye'], ['eyeOpen', 'eye open s'], ['eyeBonusTime', '2nd eye: + s'], ['eyeBonusHits', '2nd eye: + hits'], ['corpHeal', 'corp node heals G0D'], ['stageDecoys', 'stage: + corp nodes'], ['stageSpew', 'stage: + spew x'], ['stageHands', 'stage: HANDS OFF sooner x'],
     ['decoys', 'corp nodes'], ['spew', 'mold spew'], ['creep', 'mold creep'], ['handsEvery', 'HANDS OFF every s'], ['charge', 'charge s'], ['burn', 'burn s'],
     ['stealEvery', 'steal after s'], ['standEyes', 'stand: eyes'], ['standTime', 'stand: clock s'], ['standBurn', 'stand: full burn by s'], ['red', 'stand: red s'], ['blue', 'stand: blue s']];
   let gpFilled = false, gpStage = '';
-  const gpSet = set => toGame({ type: 'test', act: 'g0dpset', set });
+  const gpSet = set => toGame({ type: 'test', act: 'g0dfset', set });
   onGame('test-state', m => {
-    gpStage = m.g0dp || '';
+    gpStage = m.g0df || '';
     for (const b of document.querySelectorAll('#g0d button.gp')) b.classList.toggle('on', !!b.dataset.stage && b.dataset.stage === gpStage);
-    if (!gpFilled && m.g0dpCfg) {
+    if (!gpFilled && m.g0dfCfg) {
       gpFilled = true;
-      $('#gpNums').innerHTML = GP_NUMS.map(([k, label]) => `<label title="${esc(k)}">${esc(label)} <input type="number" step="any" data-k="${esc(k)}" value="${esc(m.g0dpCfg[k])}" style="width:4.5em"></label>`).join(' ');
-      $('#gpBoy').checked = !!m.g0dpCfg.boy; $('#gpSkip').checked = !!m.g0dpCfg.skipCine; $('#gpTap').checked = !!m.g0dpCfg.tapSkip;
+      $('#gpNums').innerHTML = GP_NUMS.map(([k, label]) => `<label title="${esc(k)}">${esc(label)} <input type="number" step="any" data-k="${esc(k)}" value="${esc(m.g0dfCfg[k])}" style="width:4.5em"></label>`).join(' ');
+      $('#gpBoy').checked = !!m.g0dfCfg.boy; $('#gpSkip').checked = !!m.g0dfCfg.skipCine; $('#gpTap').checked = !!m.g0dfCfg.tapSkip;
     }
   });
   $('#gpNums').addEventListener('change', ev => { const i = ev.target.closest('input[data-k]'); if (!i || i.value === '') return; gpSet({ [i.dataset.k]: Number(i.value) }); log(`${i.dataset.k} = ${i.value} (the next stage you start uses it)`); });
@@ -55,7 +55,7 @@
     const hv = ev.target.closest('button.hv');
     if (hv) { log(hv.dataset.to === 'maze' ? 'into the maze...' : hv.dataset.to === 'fight' ? 'G0D wakes...' : 'heaven...'); return toGame({ type: 'test', act: 'heaven', where: hv.dataset.to }); }
     const gp = ev.target.closest('button.gp');
-    if (gp) { log(gp.dataset.stage ? 'starting ' + gp.textContent + '...' : 'stopped'); return toGame({ type: 'test', act: 'g0dp', stage: gp.dataset.stage }); }
+    if (gp) { log(gp.dataset.stage ? 'starting ' + gp.textContent + '...' : 'stopped'); return toGame({ type: 'test', act: 'g0df', stage: gp.dataset.stage }); }
     const hp = ev.target.closest('button.hp');
     if (hp) { const k = hp.dataset.key === bar ? '' : hp.dataset.key; log(k ? 'the health bar...' : 'health bar off'); return toGame({ type: 'test', act: 'g0dhp', key: k }); }
     const look = ev.target.closest('button.look'); if (look) return show(look.dataset.key);

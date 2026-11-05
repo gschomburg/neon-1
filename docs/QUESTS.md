@@ -5,6 +5,8 @@ Where quests sit in the progression: `docs/PROGRESSION.md`.
 
 **Crew quests** (a quest per crew member, ideas, 2026-11-04): `docs/CREW_QUESTS.md`.
 
+**Code names (2026-11-05):** the G0D fight lives in `dist/engine/g0dfight.js` (it was `g0dproto.js`; `G0DP` / `g0dp*` / `st.g0dp` / mode `'g0dp'` are now `G0DF` / `g0df*` / `st.g0df` / `'g0df'`). Older notes below use the old names.
+
 ## The main quest: WHAT IS ALL THIS FOR? (POPS's son, d0g, G0D)
 
 **Its words (calls, scenes, step names) are in `dist/data/quests.js`:** read and edit them there. As a script to read: `docs/QUEST_DIALOG.md`
