@@ -58,6 +58,8 @@ CORPS.entropy = {
     entropyShuffle(lv);
   },
   async afterHit(t, lv) { if (lv.ent && lv.ent.boss && !lv.anchor) { entropyShuffle(lv); await wait(slideMs(450)); } },
+  // SHAKE here: its own shuffle, early
+  onGear(key, lv) { if (key === 'shake' && lv.ent) { entropyShuffle(lv); setMsg('> shake: the board scrambles itself.', C.accent); return true; } },
   hint(lv) {
     const e = lv.ent;
     if (!e) return null;

@@ -260,7 +260,7 @@ function gearClear(lv, t, msg) {
 // TILT: every closed node slides as far as it can, up or down (a coin flip). Nodes that are open or locked stay.
 async function tiltBoard(lv) {
   const r = layerRng('tilt', lv.tilts = (lv.tilts || 0) + 1);
-  if (lv.grav) { setMsg('> tilt: gravity takes over.', C.accent); return gravDrop(lv); }   // GRAVITAS: a free drop (the real node rises)
+  const own = corpHook('onGear', 'tilt', lv); if (own) return own;   // a corp's own TILT (GRAVITAS: a free drop)
   const up = r() < 0.5;
   st.busy = true;
   let moved = false;
@@ -281,7 +281,7 @@ async function shakeBoard(lv) {
   const r = layerRng('shake', lv.shakes = (lv.shakes || 0) + 1);
   st.busy = true;
   shake(4);
-  if (lv.ent) { entropyShuffle(lv); setMsg('> shake: the board scrambles itself.', C.accent); }   // ENTROPY: its own shuffle, early
+  if (corpHook('onGear', 'shake', lv)) { /* a corp's own SHAKE (ENTROPY: its own shuffle) */ }
   else {
     const at = new Map(lv.tiles.map(t => [t.cell, t])), done = new Set();
     const near = (t, d) => {

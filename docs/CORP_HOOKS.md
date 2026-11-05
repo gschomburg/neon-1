@@ -69,6 +69,7 @@ new hook: add it here, in the right section, with where the engine calls it.
 | `onClear(c)` | the corp beaten; can return a message | run.js finishCorp |
 | `reward(c)` | its own reward screen instead of the normal one (G0D MAZE) | run.js finishCorp |
 | `clockOut()` | the clock ran out: its own outcome (G0D MAZE) | run.js |
+| `onGear(key, lv)` | a gear used here: truthy if the corp did its own thing (GRAVITAS's TILT, ENTROPY's SHAKE) | active.js |
 
 ## Flags the engine handles for one corp each
 These work, but each is engine code for one corp (docs/ARCHITECTURE.md: a general hook would be better).

@@ -72,6 +72,8 @@ CORPS.gravitas = {
     gravDrop(lv);
   },
   async afterHit(t, lv) { if (lv.grav && !lv.anchor) await gravDrop(lv, false); },
+  // TILT here: gravity takes over (a free drop; the real node rises)
+  onGear(key, lv) { if (key === 'tilt' && lv.grav) { setMsg('> tilt: gravity takes over.', C.accent); return gravDrop(lv); } },
   hint: lv => lv.grav ? { text: lv.anchor ? 'gravity> off.' : `gravity> ${lv.grav.n} drop${lv.grav.n === 1 ? '' : 's'}`, col: C.accent } : null,
 };
 
