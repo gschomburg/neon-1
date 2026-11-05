@@ -696,6 +696,7 @@ function welcomeDoc(st) {
 }
 // Help › Welcome: open the welcome document, like File › New (Ctrl Z brings back what was there)
 function showWelcome() {
+  if (!okToReplace()) return Promise.resolve();
   return loadStart().then(st => {
     if (!st.welcome) return toast('The welcome screen didn\'t load (start.js)', 'warn');
     commitFloat(); pushUndo(); loadProject(welcomeDoc(st)); S.blocks.moved = false;
@@ -710,6 +711,7 @@ function snap() {
     layers: S.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible, cells: new Map(l.cells), text: l.text ? { ...l.text } : null, img: l.img ? cloneImg(l.img) : null, autoName: l.autoName })),
     sel: S.sel ? new Set(S.sel) : null,
     blocks: { ...S.blocks, cells: new Set(S.blocks.cells), dcells: new Set(S.blocks.dcells) },
+    doc: { id: docId, file: fileHandle, saved: savedHash },   // undoing a New or an Open relinks the old file
   };
 }
 function restore(s) {
@@ -719,6 +721,7 @@ function restore(s) {
   if (S.textEdit && !S.layers.some(l => l.id === S.textEdit && l.text)) S.textEdit = null;
   S.sel = s.sel ? new Set(s.sel) : null;
   if (s.blocks) S.blocks = { ...s.blocks, cells: new Set(s.blocks.cells), dcells: new Set(s.blocks.dcells || []) };
+  if (s.doc && s.doc.id !== docId) { docId = s.doc.id; savedHash = s.doc.saved; setHandle(s.doc.file); }
   changed(true);
 }
 // tag groups repeated small edits (typing) into one undo step
@@ -3043,8 +3046,8 @@ window.addEventListener('keydown', e => {
     else if (lk === 'a') { e.preventDefault(); e.shiftKey ? selectCanvas() : selectAll(); }
     else if (lk === 'd') { e.preventDefault(); if (S.float && e.shiftKey) commitFloat(true); deselect(); }
     else if (lk === 'i' && e.shiftKey) { e.preventDefault(); selectInverse(); }
-    else if (lk === 's') { e.preventDefault(); saveProject(); }
-    else if (lk === 'o') { e.preventDefault(); $('#fileOpen').click(); }
+    else if (lk === 's') { e.preventDefault(); saveProject(e.shiftKey); }
+    else if (lk === 'o') { e.preventDefault(); openProject(); }
     else if (k === '=' || k === '+') { e.preventDefault(); zoomStep(1); }
     else if (k === '-') { e.preventDefault(); zoomStep(-1); }
     else if (k === '0') { e.preventDefault(); zoomFit(); }
@@ -3278,6 +3281,7 @@ function loadProject(d) {
     dcells: new Set(Array.isArray(bk.dcells) ? bk.dcells.filter(k => /^-?\d+,-?\d+(,-?\d+)?$/.test(k)).map(k => dkey(...dparse(k))) : []),
     level: clamp(bk.level | 0, 0, 20), flat: bk.flat !== false, ox: bk.ox | 0, oy: bk.oy | 0, placed: !!bk.placed, moved: !!bk.moved, show: S.blocks.show === 'shapes' ? 'shapes' : 'ascii' };
   if (d.name) $('#docname').value = d.name;
+  newDocument();
 }
 // ---------- Block tool (K): paint 3D blocks, then bake them to ASCII ----------
 // Blocks sit on a grid of w x h character cells and all extrude back by `depth` (oblique, grid-aligned: each step of
@@ -3683,8 +3687,110 @@ function download(name, text, type) {
   a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
-const fileBase = () => ($('#docname').value.trim() || 'untitled').replace(/[\\/:*?"<>|]+/g, '-');
-function saveProject() { commitFloat(); download(fileBase() + '.asxii.json', JSON.stringify(projectData(), null, 1), 'application/json'); toast('Saved ' + fileBase() + '.asxii.json'); }
+// File names: lowercase, runs of anything but a-z 0-9 _ - become "-" (the same slug() as Greg's other web tools).
+const slug = s => String(s || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'untitled';
+const fileBase = () => slug($('#docname').value);
+const hhmm = () => new Date().toTimeString().slice(0, 5);
+
+// ---------- saving and opening project files ----------
+// Save writes straight to the file with the File System Access API (Chrome, Edge), and the file stays linked:
+// the link is kept in IndexedDB (asxii-handles), so Ctrl S writes to the same file after a reload. Without the API
+// (Firefox, Safari), Save downloads the file and Open uses the hidden file input.
+// Unsaved changes: the project is compared (as a hash) with how it was when last saved or opened.
+// docId names the document the autosave holds, so a reload only relinks the file that goes with it.
+const FS_API = 'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
+const PICK = { id: 'asxii-project', types: [{ description: 'asXii project', accept: { 'application/json': ['.json'] } }] };
+const META_KEY = 'asxii.project-meta';   // { doc, saved }: next to PROJECT_KEY, written with it
+let fileHandle = null, docId = '', savedHash = '', unsaved = false;
+function hashText(s) {   // cyrb53: a quick 53-bit string hash
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+const hashDoc = d => hashText(JSON.stringify({ ...d, appVersion: '' }));   // a new asXii version alone isn't a change
+function setUnsaved(v) {
+  unsaved = v;
+  document.title = (v ? '* ' : '') + ($('#docname').value.trim() || 'untitled') + ' · asXii';
+  $('#docname').classList.toggle('unsaved', v);
+  $('#docname').title = 'Name used for saved and exported files' + (v ? ' (unsaved changes)' : '');
+}
+// a different document from here on: not linked to a file, and its current state counts as saved
+function newDocument() {
+  docId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  setHandle(null);
+  savedHash = hashDoc(projectData());
+  setUnsaved(false);
+}
+function idb(mode, fn) {
+  return new Promise((ok, no) => {
+    const r = indexedDB.open('asxii-handles', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('handles');
+    r.onerror = () => no(r.error);
+    r.onsuccess = () => {
+      const db = r.result, tx = db.transaction('handles', mode), q = fn(tx.objectStore('handles'));
+      tx.oncomplete = () => { db.close(); ok(q && q.result); };
+      tx.onerror = () => { db.close(); no(tx.error); };
+    };
+  });
+}
+function setHandle(h) {
+  if (h === fileHandle) return;
+  fileHandle = h || null;
+  try { idb('readwrite', s => fileHandle ? s.put({ doc: docId, handle: fileHandle }, 'project') : s.delete('project')).catch(() => {}); } catch (e) { /* no IndexedDB */ }
+}
+async function canWrite(h) {
+  const o = { mode: 'readwrite' };
+  try { return (await h.queryPermission(o)) === 'granted' || (await h.requestPermission(o)) === 'granted'; } catch (e) { return false; }
+}
+function markSaved() { savedHash = hashDoc(projectData()); autosave(); }
+// Save (Ctrl S) writes to the linked file; Save as (Ctrl Shift S), or no linked file yet, asks where.
+async function saveProject(as) {
+  commitFloat();
+  const name = fileBase() + '.asxii.json', text = JSON.stringify(projectData(), null, 2) + '\n';
+  const fallback = why => { download(name, text, 'application/json'); markSaved(); toast(`${why}Downloaded ${name} at ${hhmm()} (look in your Downloads folder)`, why ? 'warn' : undefined); };
+  if (!FS_API) return fallback('');
+  try {
+    let h = as ? null : fileHandle;
+    if (h && !(await canWrite(h))) h = null;
+    if (!h) h = await window.showSaveFilePicker({ ...PICK, suggestedName: name });
+    const w = await h.createWritable();
+    await w.write(text); await w.close();
+    setHandle(h); markSaved();
+    toast(`Saved ${h.name} at ${hhmm()}`);
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;   // the picker was cancelled
+    fallback(`Couldn't save in place (${err && err.message}). `);
+  }
+}
+// New, Open and Welcome replace the document: ask first when it has unsaved changes
+function okToReplace() {
+  autosave();   // brings `unsaved` up to date
+  return !unsaved || confirm(`"${$('#docname').value.trim() || 'untitled'}" has unsaved changes. Replace it anyway? (Ctrl Z still brings it back.)`);
+}
+async function openProject() {
+  if (!okToReplace()) return;
+  if (!FS_API) return $('#fileOpen').click();
+  let h;
+  try { [h] = await window.showOpenFilePicker({ ...PICK, multiple: false }); }
+  catch (err) { if (!err || err.name !== 'AbortError') toast('Could not open: ' + (err && err.message), 'warn'); return; }
+  openFile(await h.getFile(), h);
+}
+async function openFile(f, h) {
+  try {
+    const d = JSON.parse(await f.text());
+    commitFloat(); pushUndo(); loadProject(d);
+    if (!d.name) $('#docname').value = f.name.replace(/\.asxii\.json$|\.json$/i, '');
+    if (h) setHandle(h);
+    markSaved();
+    changed(true); zoomFit(); toast('Opened ' + f.name);
+  } catch (err) { toast('Could not open: ' + err.message); }
+}
+window.addEventListener('beforeunload', e => {
+  autosave();
+  if (unsaved) { e.preventDefault(); e.returnValue = ''; }
+});
 function canvasText() { return blockText((x, y) => compositeAt(x, y), 0, 0, S.w, S.h); }
 function codeLines() {
   const rows = [];
@@ -3695,20 +3801,16 @@ function codeLines() {
   return rows.join('\n');
 }
 function newDoc() {
+  if (!okToReplace()) return;
   commitFloat(); pushUndo();
   S.layers = [makeLayer('Layer 1')]; S.active = 0; S.sel = null; S.cursor = null;
   S.mirrorAt = { x: null, y: null };
   $('#docname').value = 'untitled';
+  newDocument();
   changed(true); zoomFit(); toast('New canvas (Ctrl Z brings the old one back)');
 }
-$('#fileOpen').addEventListener('change', async e => {
-  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  try {
-    const d = JSON.parse(await f.text());
-    commitFloat(); pushUndo(); loadProject(d);
-    if (!d.name) $('#docname').value = f.name.replace(/\.asxii\.json$|\.json$/i, '');
-    changed(true); zoomFit(); toast('Opened ' + f.name);
-  } catch (err) { toast('Could not open: ' + err.message); }
+$('#fileOpen').addEventListener('change', e => {
+  const f = e.target.files[0]; e.target.value = ''; if (f) openFile(f, null);
 });
 $('#fileImg').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) importImageFile(f); });
 // drop a picture on the canvas: a new image layer
@@ -3727,10 +3829,14 @@ $('#fileTxt').addEventListener('change', async e => {
 // ---------- autosave + prefs (browser storage is a convenience only) ----------
 let autosaveWarned = false;
 function autosave() {
-  try { localStorage.setItem(PROJECT_KEY, JSON.stringify(projectData())); }
+  clearTimeout(saveTimer);
+  const d = projectData();
+  setUnsaved(hashDoc(d) !== savedHash);
+  try { localStorage.setItem(META_KEY, JSON.stringify({ doc: docId, saved: savedHash })); } catch {}
+  try { localStorage.setItem(PROJECT_KEY, JSON.stringify(d)); }
   catch {   // too big for the browser's storage (a big picture): keep the rest
     try {
-      const d = projectData(); d.layers.forEach(l => { delete l.img; });
+      d.layers.forEach(l => { delete l.img; });
       localStorage.setItem(PROJECT_KEY, JSON.stringify(d));
       if (!autosaveWarned && S.layers.some(l => l.img)) { autosaveWarned = true; toast("The picture is too big for the browser's autosave: File › Save project keeps it", 'warn'); }
     } catch {}
@@ -3748,8 +3854,9 @@ function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS_KEY)) 
 // ---------- commands ----------
 const CMDS = {
   new: newDoc,
-  open: () => $('#fileOpen').click(),
-  save: saveProject,
+  open: openProject,
+  save: () => saveProject(false),
+  saveAs: () => saveProject(true),
   importTxt: () => $('#fileTxt').click(),
   importImg: () => $('#fileImg').click(),
   imgBake: () => openImgBake(),
@@ -5502,7 +5609,9 @@ function updateLayerCounts() {
 $('#themeSel').addEventListener('change', e => { setTheme(e.target.value); e.target.blur(); });
 $('#fontSel').addEventListener('change', e => { setFont(e.target.value); e.target.blur(); });
 $('#docname').addEventListener('change', () => { autosave(); });
-function setTheme(t) { S.theme = t; document.body.dataset.theme = t; $('#themeSel').value = t; readColors(); savePrefs(); redraw(); }
+function setTheme(t) { S.theme = t; document.body.dataset.theme = t; $('#themeSel').value = t; readColors(); themeColor(); savePrefs(); redraw(); }
+// the browser's own bars (theme-color) match the top bar
+function themeColor() { const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = getComputedStyle(document.body).getPropertyValue('--panel').trim() || m.content; }
 function setFont(f) {
   S.font = f; $('#fontSel').value = f;
   const apply = () => { measure(); if (!S.viewTouched) zoomFit(); savePrefs(); redraw(); };
@@ -5574,7 +5683,7 @@ function welcomeArt() {
 function start() {
   const p = loadPrefs() || {};
   readColors();
-  if (p.theme) setTheme(p.theme); else readColors();
+  if (p.theme) setTheme(p.theme); else { S.theme = document.body.dataset.theme || S.theme; $('#themeSel').value = S.theme; readColors(); themeColor(); }   // none stored: the one index.html picked from the system
   S.font = p.font || S.font; $('#fontSel').value = S.font;
   if (typeof p.grid === 'boolean') S.grid = p.grid;
   $('#gridBtn').classList.toggle('on', S.grid);
@@ -5650,13 +5759,23 @@ function start() {
   let loaded = false;
   if (!new URLSearchParams(location.search).has('fresh')) {
     try { const d = JSON.parse(localStorage.getItem(PROJECT_KEY)); if (d) { loadProject(d); loaded = true; } } catch {}
+    // The autosave's own id and saved state (none: an autosave from before v0.149, counted as saved).
+    // Its file is linked again only if the stored link is for this same document.
+    let meta = null;
+    try { meta = JSON.parse(localStorage.getItem(META_KEY)); } catch {}
+    if (loaded && meta && meta.doc) {
+      docId = meta.doc; savedHash = meta.saved || savedHash;
+      if (FS_API) try { idb('readonly', s => s.get('project')).then(r => { if (r && r.doc === docId && r.handle) fileHandle = r.handle; }).catch(() => {}); } catch (e) { /* no IndexedDB */ }
+    }
   }
   if (!loaded) {   // a first visit: the welcome document (drawn from welcomeArt until start.js has loaded, or if it can't)
     S.layers = [makeLayer('Layer 1')];
     const art = welcomeArt(), ox = 4, oy = 3;
     art.forEach((r, j) => chars(r).forEach((c, i) => setCell(S.layers[0], ox + i, oy + j, c)));
-    loadStart().then(st => { if (st.welcome && !S.undo.length && !S.float && S.tool === 'select' && !S.drag) { loadProject(welcomeDoc(st)); changed(true); clearTimeout(saveTimer); zoomFit(); } });   // showing the welcome isn't an edit: don't autosave it over anything
+    newDocument();
+    loadStart().then(st => { if (st.welcome && !S.undo.length && !S.float && S.tool === 'select' && !S.drag) { loadProject(welcomeDoc(st)); changed(true); clearTimeout(saveTimer); setUnsaved(false); zoomFit(); } });   // showing the welcome isn't an edit: don't autosave it over anything
   }
+  setUnsaved(hashDoc(projectData()) !== savedHash);
   fitView(); measure();
   renderLayers(); renderCharPane(); syncCanvasInputs(); renderAnchor();
   S.tool = '';
@@ -5684,6 +5803,7 @@ function start() {
 // Hooks for the headless self-test (index.html?selftest)
 window.asxii = { S, CMDS, addImageLayer, importImageFile, imgBakeCells, openImgBake, closeImgBake, bakeImage, renderImgBake, imgFit, imgH, imgHandleAt, imgSample, shadeChar, shadeSet, shadeStamp, inkOf, L, K, loadStart, showWelcome, loadB3Example, openB3Examples, placeBlocksInView, openB3Brush, closeB3Brush, b3brushLabel, b3brushRemove, b3removeCells, focus3d, b3dFrame, qView, camTurnTilt, b3dFloorAt, b3dProj, B3D_SHAPES, b3shapeCells, b3shapeGhost, b3shapePlace, setB3Tool, b3shapeTurn, gal, artSolid, setGalWs, loadGallery, openGallery, closeGallery, galPreview, galAdd, galStep, figRender, figFont, textCells, textIntact, textBox, editingText, endTextEdit, setFigFont, openFontMenu, strokeOutline, traceOutlines, smartPath, polyShape, preBake, setCamView, cam, open3d, close3d, preview3d, render3d, b3dFaces, b3dPick, placeBlocksInView, dkey, dparse, line4, diagBake, diagAt, diagXY, extrudeCells, extrude, applyExtrude, openExtrude, openBlockPop, blockPreview, bakeCells, SOLID, blockOutlineMap, blockFaceMap, bakeBlocks, blockFaces, openSetPop, setPopEdited, allNoises, setNoise, noisePatch, openNoiseMenu, allRamps, setRamp, rampMirror, openRampMenu, setBrushPreset, allBrushes, brushThumb, brushEdited, openBrushPop, openBrushMenu, rampChar, strokeRegion, strokeCells, commitStroke, mergedSelectionText, rectShape, ellipseShape, polyShape, commitShape, finishPolygon, currentShape, dragBox, floodFill, fillSelection, paintChar, setPattern, openPatternDialog, savePatternDraft, closePatternDialog, allPatterns, applyCells, ellipseCells, lassoCells, setSelShape, setTool, moveOutline, liftForMove, nudge, setCursor, typeChar, applyRect, liftSelection, moveFloat, commitFloat, cancelFloat,
   floatFromText, selectionText, deleteSelection, flip, stamp, resizeCanvas, canvasText, codeLines, projectData, loadProject,
+  slug, openFile, saveProject, fileState: () => ({ docId, savedHash, unsaved, file: fileHandle }),
   undo, redo, pushUndo, compositeAt, setBrushChar, setBrushSize, render, changed, zoomFit, toast,
   AUTO_SETS, autoOf, autoThumb, glyphAt, resolveAt, compositeRaw, copyRaw, bakeAuto, makeAuto, autoPreview, setSlot, pickAt };
 

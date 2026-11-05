@@ -4,12 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>asXii</title>
+<meta name="description" content="asXii, an ASCII art editor: draw, trace a picture, build 3D block lettering, then touch it up by hand.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#151c2b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Mono&family=Fira+Code&family=Source+Code+Pro&family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=0.148">
 </head>
 <body data-theme="blue">
+<script>
+// The theme before the first paint, so it doesn't flash: the stored one (app.js setTheme), else Light when the system is light.
+(() => {
+  let t = '';
+  try { t = (JSON.parse(localStorage.getItem('asxii.prefs')) || {}).theme || ''; } catch (e) { /* private mode */ }
+  document.body.dataset.theme = t || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'blue');
+})();
+</script>
 
 <!-- Top bar: menus, document name, global view controls -->
 <header id="topbar">
@@ -18,9 +32,10 @@
     <div class="menu">
       <button class="btn menu-btn">File</button>
       <div class="menu-list">
-        <button class="btn" data-cmd="new">New <kbd></kbd></button>
+        <button class="btn" data-cmd="new">New</button>
         <button class="btn" data-cmd="open">Open project... <kbd>Ctrl O</kbd></button>
-        <button class="btn" data-cmd="save">Save project <kbd>Ctrl S</kbd></button>
+        <button class="btn" data-cmd="save" title="Saves to the file it came from (Chrome, Edge); elsewhere it downloads">Save project <kbd>Ctrl S</kbd></button>
+        <button class="btn" data-cmd="saveAs" title="Save to a new file">Save as... <kbd>Ctrl Shift S</kbd></button>
         <hr>
         <button class="btn" data-cmd="gallery" title="Built-in art: preview a piece on the canvas, then add it on a new layer">Gallery...</button>
         <hr>

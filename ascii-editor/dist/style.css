@@ -69,6 +69,9 @@ select, input[type="number"], input[type="text"], .docname {
   background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 3px 6px;
 }
 input:focus, select:focus { outline: 1px solid var(--accent); outline-offset: 0; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }   /* keyboard focus always shows */
+input:focus-visible, select:focus-visible { outline-width: 1px; outline-offset: 0; }
 .spacer { flex: 1; }
 
 /* Top bar */
@@ -103,6 +106,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); outline-offset: 0;
 .help-text b { color: var(--accent); display: inline-block; width: 60px; }
 .docname { width: 140px; background: transparent; border-color: transparent; }
 .docname:hover { border-color: var(--line); }
+.docname.unsaved { font-style: italic; color: var(--accent); }   /* unsaved changes (the tab title gets a * too) */
 .global { display: flex; align-items: center; gap: 5px; }
 .zoomlabel { min-width: 56px; text-align: center; }
 
