@@ -8,12 +8,12 @@ NEON_FILES.push(['engine/editor.js', 'v14.44']);
 // A loot roll as grantLoot would give it, with nothing taken (the same rolls in the same order): what you'd get with
 // what you have now (STASH, a full belt, the DISC).
 function lootPreview(r, tier) {
-  const g = lootRoll(r, tier);   // (engine/run.js: the same roll the game makes)
+  const g = lootRoll(r, tier);   // (engine/loot.js: the same roll the game makes)
   if (g.key === 'disc') return 'the DISC (the quest)';
   if (g.key) return `${ITEMS[g.key].name}${g.tier ? ' ' + RARITY[itemView(g.key, g.tier).rarity].label.toLowerCase() : ''} (${isLoot(g.key) ? 'loot' : 'gear'})`;
   return g.cr + 'cr';
 }
-// The loot items dropLoot would give (engine/run.js), nothing taken
+// The loot items dropLoot would give (engine/loot.js), nothing taken
 function lootPick(r, n, rare = 0) {
   const out = [];
   for (let i = 0; i < n; i++) { const k = pickLootItem(r, rare); rollTier(r, ITEMS[k]); out.push(ITEMS[k].name); }
@@ -70,7 +70,7 @@ function lootReport() {
   } else if (n.type === 'corp' || n.type === 'final') {
     if (n.corp && corpDef(n.corp).reward) out.push('its reward: its own (a corp of its own: see its code)');
     else { out.push('boss reward, pick one:'); for (const o of rewardOptions(n)) out.push('  ' + name(o)); }
-    { const sec = n.type === 'final', r = rngFor(run.seed, 'bossloot', n.id), [lo, hi] = sec ? ECON.loot.sector : ECON.loot.boss;   // (run.js bossLoot: the same rolls)
+    { const sec = n.type === 'final', r = rngFor(run.seed, 'bossloot', n.id), [lo, hi] = sec ? ECON.loot.sector : ECON.loot.boss;   // (loot.js bossLoot: the same rolls)
       out.push(`the boss drops loot: ${run.bossLoot && run.bossLoot[n.id] ? '(already dropped)' : lootPick(r, lo + Math.floor(r() * (hi - lo + 1)), sec ? 1 : 0).join(', ')}`); }
     out.push('', 'its layers (off the seed), what a $ node pays you with what you have now:', ...lootLayers(n));
     if (n.corp === 'omni') out.push('  (OMNI copies a corp you beat: its layers can come out different)');

@@ -34,8 +34,11 @@
 //   engine/screen.js    st, g, tileOrigin, L, tileCenter, has
 //   engine/effects.js   shake, flash, rand, explode, snapshot
 //   engine/render.js    setMsg, wait, candidates, last
-//   engine/run.js       lockTile, pick, die, grantLoot, onSafe, blockHit, failsafeBeat, frostbite, hurt, heal,
-//                       addRot (ZOMBIE: corp damage goes through hurt so it turns into rot)
+//   engine/run.js       lockTile, pick, onSafe, frostbite
+//   engine/runend.js    die
+//   engine/loot.js      grantLoot
+//   engine/hits.js      blockHit
+//   engine/damage.js    failsafeBeat, hurt, heal, addRot (ZOMBIE: corp damage goes through hurt so it turns into rot)
 //   engine/mods.js      zombie, ROT
 //
 'use strict';
@@ -108,7 +111,7 @@ const randInt = (r, a, b) => a + Math.floor(r() * (b - a + 1));
 // A seeded random for this layer of this corp visit: layerRng('monte', lv.misses) (same as rngFor(seed, label, node, layer, ...)).
 const layerRng = (label, ...a) => rngFor(st.run.seed, label, st.corp.node.id, st.corp.idx, ...a);
 // A corp's boss mod, defined in its corp file: defineModFx(key, stage, { note | end | hit | board }). The stage is when it
-// fires (engine/mods.js STAGES); the part is the function engine/run.js calls (START_NOTE, END_FX, HIT_FX, BOARD_FX).
+// fires (engine/mods.js STAGES); the part is the function the engine calls (START_NOTE, END_FX in engine/run.js; HIT_FX, BOARD_FX in engine/hits.js).
 const MOD_FX = {};
 const defineModFx = (key, stage, fx) => { MOD_FX[key] = Object.assign({ stage }, fx); };
 // A corp hook handled a tap (or a move) itself and is done: the board takes taps again.

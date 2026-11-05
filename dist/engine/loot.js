@@ -157,3 +157,50 @@ function buildLootBtn(ctx, y) {
   if (hov && !blink) bg(x, y, 3, C.money, 0.2);
   addHit(x, y, 3, 1, { kind: 'btn', id: 'loot', onTap: openLoot, noFocus: true });
 }
+
+// ---------------- Loot rolls (moved here from engine/run.js, 2026-11-05) ----------------
+// Which gear a loot roll gives: by weight (gearWeight, ECON.drop).
+const pickGearDrop = r => pickWeighted(Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && !ITEMS[k].value && gearAllowed(k)), gearWeight, r);
+// A loot item for the bag (DUDS ... WALLET), by weight; rare leans it to the rarer ones (a sector boss, PICKPOCKET)
+const lootPool = () => Object.keys(ITEMS).filter(k => ITEMS[k].value && !ITEMS[k].fish && gearAllowed(k));
+const pickLootItem = (r, rare = 0) => pickWeighted(lootPool(), k => gearWeight(k) * (1 + rare * (RARITY[ITEMS[k].rarity].lvl || 0)), r);
+// A loot roll (the user, 2026-10-31: more loot, not mostly money): an item (a loot item for the bag or a gear) or credits.
+// Nothing taken: grantLoot gives it, the editor's loot viewer shows it. The training always gets a loot item (its lesson).
+function lootRoll(r, tier) {
+  if (st.run && st.run.tutorial) return { key: 'sim', tier: 0 };
+  if (discDrops(r, 'loot') && itemRoom('disc', 0)) return { key: 'disc', tier: 0 };
+  if (r() < (has('stash') ? tv('stash', ECON.modx.stash) : ECON.loot.itemChance)) {
+    const key = r() < ECON.loot.valueShare ? pickLootItem(r) : pickGearDrop(r), t = rollTier(r, ITEMS[key]);
+    if (isLoot(key) || itemRoom(key, t)) return { key, tier: t };
+  }
+  return { cr: Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier) + r() * earnCr(ECON.loot.roll)) };
+}
+// Loot items dropped into the bag (a boss, a cache): n of them; returns their names
+function dropLoot(r, n, rare = 0) {
+  const got = [];
+  for (let i = 0; i < n; i++) { const k = pickLootItem(r, rare), t = rollTier(r, ITEMS[k]); addLoot(k, t); got.push(ITEMS[k].name.toLowerCase()); }
+  return got;
+}
+// A boss's loot (once: a resumed reward screen doesn't drop it again): a corp boss ECON.loot.boss, a sector boss .sector
+function bossLoot(node, sector = false) {
+  const run = st.run; run.bossLoot = run.bossLoot || {};
+  if (!node || run.bossLoot[node.id]) return [];
+  run.bossLoot[node.id] = true;
+  const r = rngFor(run.seed, 'bossloot', node.id), [lo, hi] = sector ? ECON.loot.sector : ECON.loot.boss;
+  const disc = !sector && node.corp === DISC_CORP && discCan() && addItem('disc', 0) ? [ITEMS.disc.name.toLowerCase()] : [];   // the quest's DISC (engine/quests.js)
+  return disc.concat(dropLoot(r, lo + Math.floor(r() * (hi - lo + 1)), sector ? 1 : 0));
+}
+const lootLine = got => got.length ? [[('+ loot: ' + got.join(', ')).slice(0, 34), C.money]] : [];   // (fish: only from a PIER)   // (boss gear: only from its boss)
+
+// Credits or an item. Returns a short text for the message line.
+function grantLoot(r, tier) {
+  const run = st.run;
+  Sound.loot();
+  // the roll (lootRoll): the quest's DISC, an item (more often with STASH; half of them loot for the bag), or credits
+  const g = lootRoll(r, tier);
+  if (g.key === 'disc' && addItem('disc', 0)) return 'got loot: DISC. (a quest)';
+  if (g.key && addItem(g.key, g.tier)) return `got ${isLoot(g.key) ? 'loot' : 'gear'}: ${ITEMS[g.key].name}${g.tier ? ' ' + RARITY[itemView(g.key, g.tier).rarity].label.toLowerCase() : ''}.`;
+  const cr = g.cr != null ? g.cr : Math.round(earnCr(ECON.loot.base) + tier * earnCr(ECON.loot.perTier));
+  earn(cr, run);
+  return `+${cr}cr`;
+}

@@ -88,7 +88,7 @@ const postOpen = u => u.pm ? featDone(u.pm) : u.tier <= boardLevel();
 //   counting()   engine/feats.js     feats, the record                       not practice, not training, not mp
 //   questRun()   engine/quests.js    quests move                             not training, not mp; practice only in the editor
 //   statOn()     engine/stats.js     analytics events                        not training, not mp, not the editor or a test page
-//   oneUpOpen()  engine/run.js       the 1UP                                  beaten G0D; not training, not mp
+//   oneUpOpen()  engine/oneup.js     the 1UP                                  beaten G0D; not training, not mp
 //   lbSubmit     engine/leaders.js   the leaderboard                         not practice, not mp, not the editor; depth > 0
 // Credits you earned: what you have and what counts as earned (REP, the end screen) go up together. Credits that
 // aren't earnings (a refund, a cheat) add to run.credits alone.

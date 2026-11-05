@@ -27,7 +27,7 @@ function discDrops(r, where) {
   return discCan() && r() < QUEST_ODDS[where] * (questOf('pops').lost ? QUEST_ODDS.lost : 1);
 }
 // MEDIX's boss always drops it while you're looking (meat notes 2026-11-05; the story: b0y was in MEDIX's
-// sub-basement). In its boss loot: engine/run.js bossLoot.
+// sub-basement). In its boss loot: engine/loot.js bossLoot.
 const DISC_CORP = 'medix';
 // The quest's start (meat notes 2026-11-05): the first time you CALL POPS in, in a real run, he joins your crew for
 // free (CREW: POPS on THE BOARD shows as bought). Called by hkSpawn (engine/hackers.js).

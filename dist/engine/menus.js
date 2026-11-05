@@ -46,7 +46,7 @@ function setSeed(s) {
 // The seed row's [REPLAYS] on the title: your 10 deepest seeds (save.bestSeeds: the history only keeps 20 runs) and the
 // 5 you played last. Tap one to run it (on the seed boards).
 const replaysOpen = () => !!save.beatG0D;
-function bestSeedsNote(run) {   // a run ended: keep its seed if it's one of your 10 deepest (engine/run.js endRun)
+function bestSeedsNote(run) {   // a run ended: keep its seed if it's one of your 10 deepest (engine/runend.js endRun)
   if (!run || run.tutorial || st.mp || !run.seed) return;
   const b = bestSeeds(), had = b.find(x => x.seed === run.seed);
   if (had && had.depth >= run.depth) return;

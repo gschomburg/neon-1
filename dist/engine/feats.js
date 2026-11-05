@@ -49,7 +49,7 @@ function tallySector(run) {
   best('bestSectors', run.sectorsCleared || 0);
   if (!run.mods.length) tally('nakedSector');
 }
-// The run's end (engine/run.js endRun): win = cashed out.
+// The run's end (engine/runend.js endRun): win = cashed out.
 function tallyRunEnd(run, win, rep) {
   if (!counting()) return;
   tally('runs');

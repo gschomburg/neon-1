@@ -90,7 +90,8 @@ shares.
 - **Four ways a run ends,** each recording differently. **Change:** one `finishRun(run, outcome)` and one history
   entry builder. Medium.
 - **run.js is several systems in one file** (2030 lines): damage, the 1UP, the uplink, loot rolls, run end. Split by
-  its section headers; loot is spread over three files. Large total, each move low risk.
+  its section headers; loot is spread over three files. Large total, each move low risk. **Done (2026-11-05):** run.js is 994 lines; damage.js, hits.js,
+  oneup.js, runend.js hold the rest, and the loot rolls moved to loot.js.
 - Lifecycle hooks all fire from run.js (traceable). A small `Hooks.on('runStart' ...)` bus is optional, only with the
   split. Also: a `PENDING` resume table, an `askPanel` helper.
 
