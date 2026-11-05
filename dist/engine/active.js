@@ -625,46 +625,146 @@ function whyNotItem(stack) {
   if (key === 'split' && st.lv && st.lv.split) return 'already split this layer.';
   return 'nothing to use it on.';
 }
+// ---- GEAR: what each gear item does. ok(c): can it be used now; use(tier, lv, run): do it (return a promise for one
+// that takes a moment). c: { run, tier, onMap, inLayer, layerGear, closed } (gearCtx). A gear with no use is handled
+// before gearFx (ENCORE, the ARMS: PING, FAKE, WORM) or somewhere else (PASS: the UPLINK). Boss gear: BOSS_GEAR.
+// Why one can't be used: whyNotItem (its order matters: the general reasons come first). New gear: an entry here.
+function gearCtx(tier) {
+  const run = st.run, onMap = st.mode === 'map' && !st.busy && !st.transitioning, inLayer = st.mode === 'play' && !st.busy && st.lv;
+  const layerGear = !!inLayer && !!st.corp && st.corp.hasBoss && st.lv.n > 1;
+  return { run, tier, onMap, inLayer, layerGear, closed: layerGear ? st.lv.tiles.filter(t => t.state === 'closed') : [] };
+}
+const GEAR = {
+  patch: {
+    ok: () => canHeal(),
+    use(tier, lv, run) {
+      const before = run.integrity;
+      heal(tier + 1);
+      Sound.buy(); setMsg(`> patched. +${run.integrity - before} int`, C.accent);
+    },
+  },
+  lotto: { ok: () => !st.transitioning, use() { lottoScratch(); } },   // LOTTO: any time, anywhere
+  wall: {
+    ok: c => c.tier < 2 ? true : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll,
+    use(tier, lv, run) {
+      if (tier >= 2) { st.corp.wallAll = true; setMsg('> firewall: no hits for this corp.', C.accent); }
+      else { run.shield += tier + 1; setMsg(`> firewall up. FW${run.shield}`, C.accent); }
+      Sound.shield();
+    },
+  },
+  route: {
+    ok: c => c.onMap && nodesAhead().length > 0,
+    use() {
+      rerouteMap();
+      st.mapSel = null;
+      st.boardStart = performance.now();
+      Sound.whoosh();
+      setMsg('> rerouted. the net shifts.', C.accent);
+    },
+  },
+  warp: {
+    ok: c => c.onMap && (c.tier >= 1 ? warpTargets() : nodesAhead()).length > 0 && !(c.tier >= 1 && c.run.warpAim),
+    use(tier, lv, run) {
+      if (tier >= 1) {   // epic: you aim it
+        run.warpAim = true; st.mapSel = null;
+        Sound.whoosh(); setMsg("> warp open: pick any node you haven't been.", C.accent);
+      } else {
+        const target = pickR(nodesAhead(), rngFor(run.seed, 'warp', run.at, run.depth));
+        setMsg('> warp open...', C.accent);
+        enterNode(target, true);
+      }
+    },
+  },
+  tunnel: {
+    ok: c => c.onMap && !c.run.tunnel && !!c.run.at && rowMates().length > 0,
+    use(tier, lv, run) { run.tunnel = true; st.mapSel = null; Sound.whoosh(); setMsg('> tunnel dug: go to any node in this row.', C.accent); },
+  },
+  mesh: {
+    ok: c => c.onMap && c.run.mesh !== c.run.sector && (nodesAhead().length > 0 || meshSides().length > 0),
+    use(tier, lv, run) { run.mesh = run.sector; st.mapSel = null; Sound.whoosh(); setMsg('> mesh up: every node links to the next row, all sector.', C.accent); },
+  },
+  skip: {
+    ok: c => c.onMap && !c.run.skipAim && skipTargets().length > 0,
+    use(tier, lv, run) { run.skipAim = true; st.mapSel = null; Sound.whoosh(); setMsg('> skip: pick a node 2 rows ahead.', C.accent); },
+  },
+  worm: { ok: c => !!c.run.wormAim || (c.onMap && wormTargets().length > 0) },   // armed: a tap cancels (ARMS)
+  encore: { ok: () => !st.transitioning },   // a tap turns it on or off (toggleEncore)
+  egg: { ok: () => !st.transitioning && !st.mp && !(st.run.pet && st.run.pet.kind === 'chick'), use() { hatchEgg(); } },   // EGG: anywhere (not twice); a pet (engine/pet.js)
+  swap: { ok: () => swapOk(), use() { swapHealth(); } },
+  fake: { ok: c => !!c.run.fakeAim || (!st.transitioning && c.run.mods.some(fakeable)) },   // armed: a tap cancels (ARMS)
+  pass: { ok: () => false },   // on the UPLINK screen
+  purge: {
+    ok: c => !!c.inLayer && st.lv.tiles.some(t => t.state === 'closed' && !t.safe),
+    use(tier, lv, run) {
+      let locked = 0;
+      for (let k = 0; k <= tier; k++) {
+        let opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.loaded);
+        if (!opts.length) opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe);
+        if (!opts.length) break;
+        const r = rngFor(run.seed, 'purge', st.corp.node.id, st.corp.idx, lv.tiles.filter(t => t.state === 'locked').length);
+        lockTile(pickR(opts, r), C.accent, 'purge');
+        locked++;
+      }
+      setMsg(`> purged ${locked} ICE node${locked === 1 ? '' : 's'}.`, C.accent);
+    },
+  },
+  split: {
+    ok: c => !!c.inLayer && !st.lv.split && candidates().length > 1,
+    use(tier, lv, run) {
+      const s = lv.tiles[lv.safe];
+      if (tier === 0) {
+        const vertical = rngFor(run.seed, 'split', st.corp.node.id, st.corp.idx)() < 0.5;
+        for (const t of lv.tiles) {
+          const sameHalf = vertical ? (t.col < lv.cols / 2) === (s.col < lv.cols / 2) : (t.row < lv.rows / 2) === (s.row < lv.rows / 2);
+          if (!sameHalf) t.ruledOut = true;
+        }
+        setMsg(`> split: it is in the ${vertical ? (s.col < lv.cols / 2 ? 'left' : 'right') : (s.row < lv.rows / 2 ? 'top' : 'bottom')} half.`, C.accent);
+      } else {
+        // rare: rule out 2/3 of the ICE still in play; epic: all but one
+        const ice = shuffle(lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.ruledOut), rngFor(run.seed, 'split', st.corp.node.id, st.corp.idx));
+        const k = tier >= 2 ? Math.max(0, ice.length - 1) : Math.floor(ice.length * 2 / 3);
+        ice.slice(0, k).forEach(t => { t.ruledOut = true; });
+        setMsg(`> split: ${k} ICE ruled out.`, C.accent);
+      }
+      lv.split = true;
+      Sound.shield();
+    },
+  },
+  allin: { ok: c => !!c.inLayer && st.corp.hasBoss && !itemOffHere('allin') && st.lv.n > 1 && st.lv.tiles[st.lv.safe].state === 'closed', use() { allIn(); } },
+  tilt: { ok: c => c.layerGear && st.lv.rows > 1 && c.closed.length > 1, use: (tier, lv) => tiltBoard(lv) },
+  shake: { ok: c => c.layerGear && c.closed.length > 1, use: (tier, lv) => shakeBoard(lv) },
+  frag: { ok: c => c.layerGear && c.closed.some(t => !isReal(t)), use: (tier, lv) => fragBoard(lv, tier) },
+  shoe: { ok: c => c.layerGear && c.closed.some(t => !isReal(t)), use(tier, lv) { throwShoe(lv); } },
+  ping: { ok: c => ARMS.ping.on() || (c.layerGear && c.closed.length > 1) },   // armed: a tap cancels (ARMS)
+  magnet: { ok: c => c.layerGear && c.closed.some(t => t.loaded), use(tier, lv) { magnetPull(lv, tier >= 1); } },
+  zeroday: { ok: c => c.layerGear && st.lv.tiles[st.lv.safe].state === 'closed' && (st.corp.zd || 0) < ZD_ALL, use(tier, lv) { zeroDay(lv, tier); } },
+  stim: { ok: c => c.layerGear && !c.run.stim && !bloodMoney(), use() { stimUp(); } },
+  // rival gear: a rival here
+  leash: { ok: c => !!c.inLayer && !!st.corp && hkRivals().length > 0, use() { hkLeash(); } },
+  muzzle: { ok: c => !!c.inLayer && !!st.corp && hkRivals().length > 0, use() { hkMuzzle(); } },
+  honey: { ok: c => !!c.inLayer && !!st.corp && hkRivals().length > 0, use() { hkHoney(); } },
+  bone: { ok: c => !!c.inLayer && !!st.corp && hkRivals().length > 0 && hkIce(st.lv).length > 0 && !st.lv.bone, use(tier, lv) { hkBone(lv); } },
+  exorcist: { ok: c => !!c.inLayer && !!st.corp && hkList().some(h => h.side === 'bad' && !h.out), use(tier) { exorcise(tier); } },   // EXORCIST: a rival here   // (ZOMBIE: no rot this corp: stimUp)
+  nuke: { ok: c => c.layerGear && st.corp.node.type === 'corp' && !c.run.tutorial && !st.mp, use: (tier, lv) => nukeCorp(lv) },
+  rewind: {
+    ok: c => c.layerGear && !st.corp.frozen && (c.tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer),
+    use(tier, lv) {
+      const tm = st.timer;
+      if (tier >= 2) { st.corp.frozen = true; freezeLayer(lv); setMsg('> rewind: every clock stops. for this whole corp.', C.accent); }
+      else if (tier === 1) { tm.left = tm.max; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: the clock is full again.', C.accent); }
+      else { tm.max += 5; tm.left += 5; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: +5 seconds.', C.accent); }
+      Sound.shield();
+    },
+  },
+};
 function canUse(stack) {
   const run = st.run;
   if (!run || st.wipe || !stack) return false;
   const key = stack.key, tier = stack.tier || 0;
   if (isLoot(key)) return false;   // loot (and quest gear) lives in the LOOT bag: it's carried and sold, not used
-  if (key === 'patch') return canHeal();
-  if (key === 'lotto') return !st.transitioning;   // LOTTO: any time, anywhere
-  if (st.mode === 'g0dp' && st.g0dp && G0DP_GEAR.includes(key)) return g0dpGearOk(stack);   // the G0D fight (engine/g0dproto.js)
-  if (key === 'wall') return tier < 2 ? true : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll;
-  const onMap = st.mode === 'map' && !st.busy && !st.transitioning;
-  if (key === 'route') return onMap && nodesAhead().length > 0;
-  if (key === 'warp') return onMap && (tier >= 1 ? warpTargets() : nodesAhead()).length > 0 && !(tier >= 1 && run.warpAim);
-  if (key === 'tunnel') return onMap && !run.tunnel && !!run.at && rowMates().length > 0;
-  if (key === 'mesh') return onMap && run.mesh !== run.sector && (nodesAhead().length > 0 || meshSides().length > 0);
-  if (key === 'skip') return onMap && !run.skipAim && skipTargets().length > 0;
-  if (key === 'worm') return !!run.wormAim || (onMap && wormTargets().length > 0);   // armed: a tap cancels
-  if (key === 'encore') return !st.transitioning;   // a tap turns it on or off
-  if (key === 'egg') return !st.transitioning && !st.mp && !(run.pet && run.pet.kind === 'chick');   // EGG: anywhere (not twice)
-  if (key === 'swap') return swapOk();
-  if (key === 'fake') return !!run.fakeAim || (!st.transitioning && run.mods.some(fakeable));   // armed: a tap cancels
-  if (key === 'pass') return false;   // on the UPLINK screen
-  const inLayer = st.mode === 'play' && !st.busy && st.lv;
-  if (key === 'purge') return !!inLayer && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
-  if (key === 'split') return !!inLayer && !st.lv.split && candidates().length > 1;
-  if (key === 'allin') return !!inLayer && st.corp.hasBoss && !itemOffHere(key) && st.lv.n > 1 && st.lv.tiles[st.lv.safe].state === 'closed';
-  const layerGear = !!inLayer && !!st.corp && st.corp.hasBoss && st.lv.n > 1;
-  const closed = layerGear ? st.lv.tiles.filter(t => t.state === 'closed') : [];
-  if (key === 'tilt') return layerGear && st.lv.rows > 1 && closed.length > 1;
-  if (key === 'shake') return layerGear && closed.length > 1;
-  if (key === 'frag' || key === 'shoe') return layerGear && closed.some(t => !isReal(t));
-  if (key === 'ping') return ARMS.ping.on() || (layerGear && closed.length > 1);   // armed: a tap cancels
-  if (key === 'magnet') return layerGear && closed.some(t => t.loaded);
-  if (key === 'zeroday') return layerGear && st.lv.tiles[st.lv.safe].state === 'closed' && (st.corp.zd || 0) < ZD_ALL;
-  if (key === 'stim') return layerGear && !run.stim && !bloodMoney();
-  if (['leash', 'muzzle', 'honey'].includes(key)) return !!inLayer && !!st.corp && hkRivals().length > 0;   // rival gear: a rival here
-  if (key === 'bone') return !!inLayer && !!st.corp && hkRivals().length > 0 && hkIce(st.lv).length > 0 && !st.lv.bone;
-  if (key === 'exorcist') return !!inLayer && !!st.corp && hkList().some(h => h.side === 'bad' && !h.out);   // EXORCIST: a rival here   // (ZOMBIE: no rot this corp: stimUp)
-  if (key === 'nuke') return layerGear && st.corp.node.type === 'corp' && !run.tutorial && !st.mp;
-  if (key === 'rewind') return layerGear && !st.corp.frozen && (tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer);
-  if (BOSS_GEAR[key]) return layerGear && BOSS_GEAR[key].ok(st.lv);
+  if (key !== 'patch' && key !== 'lotto' && st.mode === 'g0dp' && st.g0dp && G0DP_GEAR.includes(key)) return g0dpGearOk(stack);   // the G0D fight (engine/g0dproto.js)
+  if (GEAR[key]) return GEAR[key].ok(gearCtx(tier));
+  if (BOSS_GEAR[key]) { const c = gearCtx(tier); return c.layerGear && BOSS_GEAR[key].ok(st.lv); }
   return false;
 }
 
@@ -734,90 +834,8 @@ function useItem(slot) {
 function gearFx(key, tier) {
   const run = st.run, lv = st.lv;
   if (st.mode === 'g0dp' && st.g0dp && G0DP_GEAR.includes(key)) return g0dpGearUse(key, tier);   // the G0D fight
-  if (key === 'lotto') lottoScratch();
-  if (key === 'magnet') magnetPull(lv, tier >= 1);
-  if (key === 'stim') stimUp();
-  if (key === 'egg') hatchEgg();   // a pet (engine/pet.js)
-  if (key === 'exorcist') exorcise(tier);
-  if (key === 'leash') hkLeash();
-  if (key === 'muzzle') hkMuzzle();
-  if (key === 'honey') hkHoney();
-  if (key === 'bone') hkBone(lv);
-  if (key === 'zeroday') zeroDay(lv, tier);
-  if (key === 'skip') { run.skipAim = true; st.mapSel = null; Sound.whoosh(); setMsg('> skip: pick a node 2 rows ahead.', C.accent); }
-  if (key === 'swap') swapHealth();
-  if (key === 'nuke') return nukeCorp(lv);
-  if (key === 'patch') {
-    const before = run.integrity;
-    heal(tier + 1);
-    Sound.buy(); setMsg(`> patched. +${run.integrity - before} int`, C.accent);
-  }
-  if (key === 'wall') {
-    if (tier >= 2) { st.corp.wallAll = true; setMsg('> firewall: no hits for this corp.', C.accent); }
-    else { run.shield += tier + 1; setMsg(`> firewall up. FW${run.shield}`, C.accent); }
-    Sound.shield();
-  }
-  if (key === 'purge') {
-    let locked = 0;
-    for (let k = 0; k <= tier; k++) {
-      let opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.loaded);
-      if (!opts.length) opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe);
-      if (!opts.length) break;
-      const r = rngFor(run.seed, 'purge', st.corp.node.id, st.corp.idx, lv.tiles.filter(t => t.state === 'locked').length);
-      lockTile(pickR(opts, r), C.accent, 'purge');
-      locked++;
-    }
-    setMsg(`> purged ${locked} ICE node${locked === 1 ? '' : 's'}.`, C.accent);
-  }
-  if (key === 'split') {
-    const s = lv.tiles[lv.safe];
-    if (tier === 0) {
-      const vertical = rngFor(run.seed, 'split', st.corp.node.id, st.corp.idx)() < 0.5;
-      for (const t of lv.tiles) {
-        const sameHalf = vertical ? (t.col < lv.cols / 2) === (s.col < lv.cols / 2) : (t.row < lv.rows / 2) === (s.row < lv.rows / 2);
-        if (!sameHalf) t.ruledOut = true;
-      }
-      setMsg(`> split: it is in the ${vertical ? (s.col < lv.cols / 2 ? 'left' : 'right') : (s.row < lv.rows / 2 ? 'top' : 'bottom')} half.`, C.accent);
-    } else {
-      // rare: rule out 2/3 of the ICE still in play; epic: all but one
-      const ice = shuffle(lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.ruledOut), rngFor(run.seed, 'split', st.corp.node.id, st.corp.idx));
-      const k = tier >= 2 ? Math.max(0, ice.length - 1) : Math.floor(ice.length * 2 / 3);
-      ice.slice(0, k).forEach(t => { t.ruledOut = true; });
-      setMsg(`> split: ${k} ICE ruled out.`, C.accent);
-    }
-    lv.split = true;
-    Sound.shield();
-  }
-  if (key === 'allin') allIn();
-  if (key === 'route') {
-    rerouteMap();
-    st.mapSel = null;
-    st.boardStart = performance.now();
-    Sound.whoosh();
-    setMsg('> rerouted. the net shifts.', C.accent);
-  }
-  if (key === 'warp' && tier >= 1) {   // epic: you aim it
-    run.warpAim = true; st.mapSel = null;
-    Sound.whoosh(); setMsg("> warp open: pick any node you haven't been.", C.accent);
-  } else if (key === 'warp') {
-    const target = pickR(nodesAhead(), rngFor(run.seed, 'warp', run.at, run.depth));
-    setMsg('> warp open...', C.accent);
-    enterNode(target, true);
-  }
-  if (key === 'tunnel') { run.tunnel = true; st.mapSel = null; Sound.whoosh(); setMsg('> tunnel dug: go to any node in this row.', C.accent); }
-  if (key === 'mesh') { run.mesh = run.sector; st.mapSel = null; Sound.whoosh(); setMsg('> mesh up: every node links to the next row, all sector.', C.accent); }
-  if (key === 'tilt') return tiltBoard(lv);
-  if (key === 'shake') return shakeBoard(lv);
-  if (key === 'frag') return fragBoard(lv, tier);
-  if (key === 'shoe') throwShoe(lv);
+  if (GEAR[key] && GEAR[key].use) return GEAR[key].use(tier, lv, run);
   if (BOSS_GEAR[key]) BOSS_GEAR[key].use(lv, performance.now());
-  if (key === 'rewind') {
-    const tm = st.timer;
-    if (tier >= 2) { st.corp.frozen = true; freezeLayer(lv); setMsg('> rewind: every clock stops. for this whole corp.', C.accent); }
-    else if (tier === 1) { tm.left = tm.max; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: the clock is full again.', C.accent); }
-    else { tm.max += 5; tm.left += 5; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: +5 seconds.', C.accent); }
-    Sound.shield();
-  }
 }
 
 function toggleMute() {
