@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v14.43']);
+NEON_FILES.push(['engine/tutorial.js', 'v14.44']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -112,11 +112,11 @@ function tutTap(h) {
 function startTutorial(auto = null, seedWas = st.seed, practiceWas = st.practice) {
   if (st.transitioning || st.tut) return;
   if (typeof auto !== 'string') auto = null;   // (a button's tap passes its event)
-  const T = st.tut = { pop: null, allow: null, seedWas, practiceWas, spots: {}, auto, curtain: !auto || TUT.curtain.includes(auto) };
+  const T = st.tut = { pop: null, allow: null, seedWas, practiceWas, seededWas: st.seeded, spots: {}, auto, curtain: !auto || TUT.curtain.includes(auto) };
   startRun(TUT.seed, true, { tutorial: true });
   tutScript(T).catch(() => {}).then(() => {   // ends when it's done, or when the run is gone (abandoned)
     if (st.tut === T) st.tut = null;
-    st.seed = T.seedWas; st.practice = !!T.practiceWas;   // your own seed and run type back (not the training's practice run)
+    st.seed = T.seedWas; st.practice = !!T.practiceWas; st.seeded = !!T.seededWas;   // your own seed and run type back (not the training's practice run)
   });
 }
 // The tutorial's run: a fixed seed, a PATCH on the belt, BASIC CORP on the first map step.

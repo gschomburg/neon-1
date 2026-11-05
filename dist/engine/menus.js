@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v14.43']);
+NEON_FILES.push(['engine/menus.js', 'v14.44']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -16,7 +16,7 @@ function openSettings() {
     T('');
     audioLines(X, 's_');
     T('');
-    T(`next run seed${questSeed(st.seed) ? ' (quest)' : st.practice ? ' (practice)' : ''}`, C.text);
+    T(`next run seed${questSeed(st.seed) ? ' (quest)' : st.seeded ? ' (seed boards)' : ''}`, C.text);
     X({ row: [
       { field: 'seed', width: 16, value: () => st.seed, clean: cleanSeed, onCommit: setSeed },
       { text: '[ NEW SEED ]', id: 'rseed', onTap: rerollSeed },
@@ -37,14 +37,14 @@ function setSeed(s) {
   if (!clean) return Sound.deny();      // empty: keep the old seed
   if (clean === st.seed) return;
   st.seed = clean;
-  st.practice = !save.beatG0D;     // a chosen seed is a practice run (once you've beaten G0D, it counts)
+  st.practice = false; st.seeded = !questSeed(clean);     // a chosen seed: ranked on the seed boards (engine/leaders.js)
   Sound.ui();
   setMsg(questSeed(clean) ? `> seed set: ${clean}. b0y's with you.` : `> seed set: ${clean}`, questSeed(clean) ? G0DP_BLUE : C.text);
 }
 
 // ---------------- REPLAYS (docs/ENDGAME.md: beat G0D, and POPS gives you his log of your runs) ----------------
 // The seed row's [REPLAYS] on the title: your 10 deepest seeds (save.bestSeeds: the history only keeps 20 runs) and the
-// 5 you played last. Tap one to run it (it counts: seeds for real).
+// 5 you played last. Tap one to run it (on the seed boards).
 const replaysOpen = () => !!save.beatG0D;
 function bestSeedsNote(run) {   // a run ended: keep its seed if it's one of your 10 deepest (engine/run.js endRun)
   if (!run || run.tutorial || run.mp || !run.seed) return;
@@ -61,7 +61,7 @@ function bestSeeds() {   // (the first time: built from the run history)
   return save.bestSeeds;
 }
 function openReplays() {
-  const play = seed => { if (st.transitioning) return; st.seed = seed; st.practice = !save.beatG0D; startRun(seed, st.practice); };
+  const play = seed => { if (st.transitioning) return; st.seed = seed; st.practice = false; st.seeded = true; startRun(seed, false, { seeded: true }); };
   openPanel('REPLAYS', (T, B, X) => {
     T('REPLAYS', C.accent);
     T("POPS's log. tap a seed to run it again.", C.mid);
@@ -366,7 +366,7 @@ async function resumeRun() {
   st.transitioning = false;
   const run = d.run;
   run.resumes = (run.resumes || 0) + 1;   // (counted for the stats; the layers come back the same: the seed decides)
-  st.run = run; st.seed = run.seed; st.practice = run.practice;
+  st.run = run; st.seed = run.seed; st.practice = run.practice; st.seeded = !!run.seeded;
   st.result = null;
   const p = d.pending;
   if (p && p.kind === 'sector') return showSectorClear(p.skipped, false);

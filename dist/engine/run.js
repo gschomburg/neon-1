@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.43']);
+NEON_FILES.push(['engine/run.js', 'v14.44']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -15,7 +15,7 @@ function showTitle() {
 
 function rerollSeed() {
   st.seed = newSeed();
-  st.practice = false;
+  st.practice = false; st.seeded = false;
   Sound.ui();
   setMsg('> new seed rolled.');
 }
@@ -28,9 +28,12 @@ async function startRun(seed, practice, opts = {}) {
   const quest = opts.tutorial ? null : opts.quest || questSeed(seed);   // H3AV3N (engine/heaven.js): a QUEST run
   if (quest === 'h3av3n') practice = !save.beatG0D;   // (not scored until you've beaten G0D once)
   else if (quest === 'had3s') practice = false;   // HAD3S: a real run (engine/quests.js)
-  st.seed = seed; st.practice = practice;
+  // seeded: a seed you chose (typed, REPLAYS, retry): a normal run, but it's ranked on the seed boards, not TODAY /
+  // ALL TIME (engine/leaders.js; docs/ENDGAME.md, decided 2026-11-05). Not a quest seed, not the training.
+  const seeded = !!opts.seeded && !quest && !opts.tutorial;
+  st.seed = seed; st.practice = practice; st.seeded = seeded;
   st.run = {
-    seed, practice, quest,
+    seed, practice, quest, seeded,
     map: genMap(seed),
     finalTell: pickR(['corner', 'mark', 'mirror'], rngFor(seed, 'final')),
     at: '0:1', visited: ['0:1'],
@@ -1750,7 +1753,7 @@ async function endRun(win) {
   if (rep) { save.rep = (save.rep || 0) + rep; save.repTotal = (save.repTotal || 0) + rep; }
   if (win && !run.practice) save.cashouts = (save.cashouts || 0) + 1;
   tallyRunEnd(run, win, rep);   // THE RECORD (the FEAT box comes up over the end screen)
-  save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, sector: (run.sector || 0) + 1, win, rep, practice: run.practice, at: Date.now() });
+  save.history.unshift({ seed: run.seed, depth: run.depth, corps: run.corps, sector: (run.sector || 0) + 1, win, rep, practice: run.practice, seeded: !!run.seeded, at: Date.now() });
   save.history = save.history.slice(0, 20);
   bestSeedsNote(run);   // REPLAYS: your 10 deepest seeds (engine/menus.js)
   persist();
@@ -2020,8 +2023,8 @@ function openLocker() {
   }, '> locker: one mod to keep.', { full: true });
 }
 
-const jackIn = () => startRun(st.seed, st.practice);
-const retry = () => startRun(st.result ? st.result.seed : st.seed, !save.beatG0D);   // (once you've beaten G0D, replayed seeds count)
+const jackIn = () => startRun(st.seed, st.practice, { seeded: st.seeded });
+const retry = () => startRun(st.result ? st.result.seed : st.seed, false, { seeded: true });   // (the same seed again: the seed boards)
 // Died in H3AV3N (engine/heaven.js): the same seed, back at the bottom of heaven's map (the user, 2026-10-30).
 const retryHeaven = () => st.result && st.result.quest ? startRun(st.result.seed, true) : startRun(st.result ? st.result.seed : st.seed, true, { heaven: true });   // (the H3AV3N seed: from the start, still QUEST)
 const newRun = () => startRun(newSeed(), false);

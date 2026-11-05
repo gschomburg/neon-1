@@ -5,11 +5,17 @@
 // letters) and UPLOAD sends them: the server keeps one name per device and shows it on all its entries.
 // Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
 // device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
+// SEED BOARDS (docs/ENDGAME.md, decided 2026-11-05): every seed has a board of its own (`seed-<SEED>`). A run on a seed
+// you chose (run.seeded: typed, REPLAYS, retry) goes on its seed's board and on `replays` (the SEEDS tab's front page),
+// never on TODAY / ALL TIME: memorizing a map shouldn't win those. Other runs go on TODAY / ALL TIME and their seed's
+// board (so a replay has the first run to beat). Every score says if you'd beaten G0D (data.g0d: tracked, not shown).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v14.43']);
+NEON_FILES.push(['engine/leaders.js', 'v14.44']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
-const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }];
+const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }, { key: 'seeds', label: 'SEEDS' }];
+const LB_MAIN = ['day', 'all'];   // the boards a normal run's rank line shows
+const LB_SEEDS_FETCH = 100;   // the SEEDS front page fetches this many, then keeps each player's best on each seed
 const LB_ROWS = 15;   // (the user, 2026-10-29: there's room for 15)
 let lbGl;   // the greglytics client (null if it couldn't start)
 let lbUrlDone = false;
@@ -30,7 +36,8 @@ function lbToggleTester() {
   if (lbGl) lbGl.flush();   // send what's queued under the old setting first
   Greglytics.tester(!Greglytics.tester()); lbGl = undefined; Sound.ui();
 }
-const lbBoard = (key, t = Date.now()) => key === 'day' ? 'day-' + new Date(t).toISOString().slice(0, 10) : 'all';
+const lbBoard = (key, t = Date.now()) => key === 'day' ? 'day-' + new Date(t).toISOString().slice(0, 10) : key === 'seeds' ? 'replays' : 'all';
+const lbSeedBoard = seed => 'seed-' + seed;   // (seeds are A-Z 0-9, up to 16: the server takes [A-Za-z0-9_.:-], 80 long)
 
 // ---------------- Initials ----------------
 // Bigfig (Glenn Chappell, a FIGlet font; from asXii's font list): 3 x 3 letters.
@@ -71,9 +78,13 @@ function lbSubmit(run, win) {
     const prof = profile(), at = Date.now(), ini = lbInitials();
     // tie: fewer 1UPs used wins, then fewer mods (1UPs x 100 + mods; the board shows the mods: tie % 100)
     const s = { at, score: run.depth, tie: (run.oneUps || 0) * 100 + run.mods.length, player: ini, logo: logoMark(prof.logo),
-      data: { hacker: prof.name, style: prof.style, win: !!win, sector: (run.sector || 0) + 1, v: VERSION, run: at, seed: run.seed, oneUps: run.oneUps || 0 } };   // run: the initials name just this run's scores
-    st.lbPost = { at, score: s.score, tie: s.tie, ranks: {}, state: 'send', letters: ini.split(''), cur: 0, uploaded: false };
-    save.lbQueue = (save.lbQueue || []).concat(LB_TABS.map(t => Object.assign({ board: lbBoard(t.key, at), tab: t.key }, s))).slice(-12);
+      data: { hacker: prof.name, style: prof.style, win: !!win, sector: (run.sector || 0) + 1, v: VERSION, run: at, seed: run.seed, oneUps: run.oneUps || 0,
+        seeded: !!run.seeded, g0d: !!save.beatG0D } };   // run: the initials name just this run's scores
+    // which boards: [tab, board]. tab 'seed' is the run's own seed's board.
+    const posts = (run.seeded ? [['seeds', lbBoard('seeds')]] : LB_MAIN.map(k => [k, lbBoard(k, at)])).concat([['seed', lbSeedBoard(run.seed)]]);
+    st.lbPost = { at, score: s.score, tie: s.tie, ranks: {}, of: {}, tabs: posts.map(p => p[0]), seed: run.seed, seeded: !!run.seeded,
+      state: 'send', letters: ini.split(''), cur: 0, uploaded: false };
+    save.lbQueue = (save.lbQueue || []).concat(posts.map(([tab, board]) => Object.assign({ board, tab }, s))).slice(-15);
     persist();
     lbFlush().then(() => { const p = st.lbPost; if (p && p.at === at && p.state === 'send') p.state = 'offline'; });
   } catch (e) { /* the leaderboard never gets in the way of the game */ }
@@ -96,8 +107,8 @@ function lbFlush() {
       save.lbQueue.shift(); persist();
       const p = st.lbPost;   // this run's ranks, for the end screen
       if (p && it.at === p.at && it.tab && r && r.ok) {
-        p.ranks[it.tab] = r.run;
-        if (LB_TABS.every(t => p.ranks[t.key] != null)) { p.state = 'ok'; lbFanfare(p); }
+        p.ranks[it.tab] = r.run; p.of[it.tab] = r.of;
+        if ((p.tabs || LB_MAIN).every(k => p.ranks[k] != null)) { p.state = 'ok'; lbFanfare(p); }
       }
       return next();
     }, () => null);
@@ -129,6 +140,12 @@ function lbFanfare(p) {
     if (st.lbPost !== p || st.mode !== 'over') return;
     const rv = st.overReveal;
     if (rv && !(rv.total && rv.vis >= rv.total)) return setTimeout(go, 200);
+    if (p.seeded) {   // a seed: #1 on it (with someone to beat), or a top 10 on the SEEDS front page
+      if (p.ranks.seed === 1 && p.of.seed > 1) { flash(C.money, 0.2, 0.5); shake(3, 0.3); Sound.win(); fireworkShow(5, 280, 'over'); }
+      else if (p.ranks.seeds <= 10) { flash(C.money, 0.18, 0.5); Sound.jingle(); }
+      else if (st.result && st.result.newBest) { flash(C.accent, 0.18, 0.5); Sound.jingle(); }
+      return;
+    }
     const best = Math.min(p.ranks.all, p.ranks.day);
     if (p.ranks.all === 1) { flash(C.money, 0.3, 0.8); shake(6, 0.5); Sound.victory(); fireworkShow(14, 220, 'over'); }
     else if (best <= 10) { flash(C.money, 0.2, 0.5); shake(3, 0.3); Sound.win(); fireworkShow(best <= 3 ? 9 : 5, 280, 'over'); }
@@ -144,9 +161,13 @@ function lbOverLines() {
   if (!p || !r || r.sector) return null;
   const out = [];
   // the ranks: this run's place on each board
-  if (p.state === 'ok') {
-    const top = LB_TABS.some(t => p.ranks[t.key] <= 10);
-    const txt = LB_TABS.slice().reverse().map(t => `#${p.ranks[t.key]} ${top ? t.label : t.label.toLowerCase()}`).join('   ');
+  if (p.state === 'ok' && p.seeded) {   // a seed: "#2 of 5 on K7XQ2M". (Not the SEEDS page's rank: that page counts each
+    // player once, the server's rank counts every run, so the two wouldn't match.)
+    const top = p.ranks.seed === 1 && p.of.seed > 1, txt = `#${p.ranks.seed} of ${p.of.seed} on ${p.seed}`;
+    out.push({ text: txt, col: top ? C.money : C.mid, bold: top });
+  } else if (p.state === 'ok') {
+    const tabs = LB_TABS.filter(t => LB_MAIN.includes(t.key)), top = tabs.some(t => p.ranks[t.key] <= 10);
+    const txt = tabs.slice().reverse().map(t => `#${p.ranks[t.key]} ${top ? t.label : t.label.toLowerCase()}`).join('   ');
     out.push({ text: top ? `** ${txt} **` : txt, col: top ? C.money : C.mid, bold: top });
   } else if (p.state === 'offline') out.push({ text: 'offline: it posts when you\'re back', col: C.dim });
   else out.push({ text: 'checking the board' + '.'.repeat(1 + Math.floor(performance.now() / 300) % 3).padEnd(3), col: C.dim });
@@ -212,61 +233,97 @@ function lbTitleLine() {
 const lbLum = hex => { const n = parseInt(String(hex).replace('#', '').slice(0, 6), 16) || 0; return 0.3 * (n >> 16) + 0.59 * ((n >> 8) & 255) + 0.11 * (n & 255); };
 function openLeaders() {
   const tab = () => LB_TABS.find(t => t.key === (st.lbTab || 'all')) || LB_TABS[1];
+  const seedsTab = () => tab().key === 'seeds';
+  // which board shows: TODAY, ALL TIME, the SEEDS front page (replays) or one seed's board (st.lbSeed)
+  const boardName = () => seedsTab() ? (st.lbSeed ? lbSeedBoard(st.lbSeed) : lbBoard('seeds')) : lbBoard(tab().key);
   const got = {};   // board name -> { state: 'load' | 'ok' | 'err', data }
   const load = (force) => {
-    const name = lbBoard(tab().key), gl = lbClient();
+    const name = boardName(), gl = lbClient();
     if (!gl) { got[name] = { state: 'err' }; return; }
     if (got[name] && got[name].state !== 'err' && !force) return;
     got[name] = { state: 'load', t: performance.now() };
-    lbFlush().then(() => gl.scores(name, { limit: LB_ROWS }))
-      .then(d => { got[name] = d && d.entries ? { state: 'ok', data: d } : { state: 'err' }; },
+    const front = seedsTab() && !st.lbSeed;
+    lbFlush().then(() => gl.scores(name, { limit: front ? LB_SEEDS_FETCH : LB_ROWS }))
+      .then(d => { got[name] = d && d.entries ? { state: 'ok', data: front ? lbBestPerSeed(d) : d } : { state: 'err' }; },
             () => { got[name] = { state: 'err' }; });
   };
-  const show = key => { if (st.lbTab === key) return; st.lbTab = key; Sound.tick(); load(); };
+  const show = key => { if (st.lbTab === key && !st.lbSeed) return; st.lbTab = key; st.lbSeed = null; st.lbPick = null; Sound.tick(); load(); };
   const go = d => { const i = LB_TABS.indexOf(tab()); show(LB_TABS[(i + d + LB_TABS.length) % LB_TABS.length].key); };
+  const openSeed = seed => { st.lbSeed = seed; st.lbPick = null; Sound.ui(); load(); };
+  const back = () => { if (seedsTab() && st.lbSeed) { st.lbSeed = null; Sound.tick(); load(); } else swapTo(showTitle); };
+  const playSeed = seed => { if (st.transitioning) return; st.seed = seed; st.practice = false; st.seeded = true; startRun(seed, false, { seeded: true }); };
 
-  // one row, 32 wide: rank, mark, initials, hacker name, layers, mods
-  const row = (e, X) => {
+  // one row, 32 wide: rank, mark, initials, hacker name (the SEEDS front page: the seed), layers, mods
+  const row = (e, X, opts = {}) => {
     const named = e.data && e.data.hacker;   // entries from before initials: the hacker name was the player
-    const ini = named ? (e.player || '???') : '---', hk = (named ? e.data.hacker : e.player || '').slice(0, 13);
-    const text = `${String(e.rank).padStart(2)} ${(e.logo || '   ').padEnd(3).slice(0, 3)} ${ini.padEnd(3).slice(0, 3)} ${hk.padEnd(13)} ${pad2(e.score).padStart(3)} ${String(e.tie % 100).padStart(3)}`;
+    const ini = named ? (e.player || '???') : '---', who = opts.seed ? String((e.data && e.data.seed) || '?') : named ? e.data.hacker : e.player || '';
+    const text = `${String(e.rank).padStart(2)} ${(e.logo || '   ').padEnd(3).slice(0, 3)} ${ini.padEnd(3).slice(0, 3)} ${who.slice(0, 13).padEnd(13)} ${pad2(e.score).padStart(3)} ${String(e.tie % 100).padStart(3)}`;
     const sty = styleOf((e.data && e.data.style) || 0), mark = lbLum(sty.fg) >= lbLum(sty.bg) ? sty.fg : sty.bg;   // a style's brighter color reads on black
-    X({ text, colorAt: i => i < 2 ? C.dim : i < 6 ? mark : i < 10 ? (e.me ? C.accent : C.bright) : i < 24 ? C.dim : i < 28 ? C.money : C.mid,
-      bold: !!e.me, bgCol: e.me ? C.accent : null, bgA: 0.15 });
+    const picked = opts.pick != null && st.lbPick === opts.pick;
+    X({ text, colorAt: i => i < 2 ? C.dim : i < 6 ? mark : i < 10 ? (e.me ? C.accent : C.bright) : i < 24 ? (opts.seed ? C.text : C.dim) : i < 28 ? C.money : C.mid,
+      bold: !!e.me || picked, bgCol: picked ? C.accent : e.me ? C.accent : null, bgA: picked ? 0.3 : 0.15,
+      tap: opts.pick != null ? { id: 'lbr' + opts.pick, onTap: () => { st.lbPick = st.lbPick === opts.pick ? null : opts.pick; Sound.tick(); } } : null });
   };
 
   openPanel('LEADERBOARD', (T, B, X) => {
-    const name = lbBoard(tab().key), g = got[name] || { state: 'load' };
+    const name = boardName(), g = got[name] || { state: 'load' }, front = seedsTab() && !st.lbSeed;
     if (!got[name]) load();
     T('L E A D E R B O A R D', C.accent);
     X({ gap: 2, row: LB_TABS.map(t => ({ text: `[ ${t.label} ]`, id: 'lbt' + t.key, sel: t === tab(), onTap: () => show(t.key) })) });
     T(SEP, C.dim);
-    T(` #     ${'who'.padEnd(17)} lyr mod`, C.dim);
+    // the SEEDS tab: a field to find a seed (front page), or the seed you're looking at and a way to play it
+    let rows = LB_ROWS;
+    if (front) {
+      X({ row: [{ text: 'find' }, { field: 'lbseed', width: 16, value: () => '', clean: cleanSeed, onCommit: s => { const c = cleanSeed(s); if (c) openSeed(c); } }] });
+      rows--;
+    } else if (seedsTab()) {
+      X({ row: [{ text: `seed ${st.lbSeed}`, col: C.accent }, { text: '[ PLAY IT ]', id: 'lbplay', onTap: () => playSeed(st.lbSeed) }] });
+      rows--;
+    }
+    T(` #     ${(front ? 'seed' : 'who').padEnd(17)} lyr mod`, C.dim);
     let used = 0;
     if (g.state === 'ok') {
-      const d = g.data;
-      for (const e of d.entries.slice(0, LB_ROWS)) { row(e, X); used++; }
-      if (!d.entries.length) { T(''); T(tab().key === 'day' ? 'no runs yet today.' : 'no runs yet.', C.mid); T('be the first.', C.dim); used += 3; }
-      for (; used < LB_ROWS; used++) T('');
+      const d = g.data, list = d.entries.slice(0, rows);
+      list.forEach((e, i) => { row(e, X, front ? { seed: true, pick: i } : {}); used++; });
+      if (!d.entries.length) {
+        T('');
+        T(front ? 'no replays yet.' : seedsTab() ? 'nobody on this seed yet.' : tab().key === 'day' ? 'no runs yet today.' : 'no runs yet.', C.mid);
+        T(front ? 'pick a seed and run it again.' : 'be the first.', C.dim); used += 3;
+      }
+      for (; used < rows; used++) T('');
       T(SEP, C.dim);
-      if (d.you && !d.entries.some(e => e.me)) row(d.you, X);
-      else T(d.you ? `${d.of} hacker${d.of === 1 ? '' : 's'} on the board` : 'finish a run to get on the board', C.dim);
+      const pick = front && st.lbPick != null ? list[st.lbPick] : null, pickSeed = pick && pick.data && pick.data.seed;
+      if (pickSeed) X({ gap: 2, row: [{ text: '[ THIS SEED ]', id: 'lbthis', onTap: () => openSeed(pickSeed) }, { text: '[ PLAY IT ]', id: 'lbplay', onTap: () => playSeed(pickSeed) }] });
+      else if (d.you && !d.entries.slice(0, rows).some(e => e.me)) row(d.you, X, front ? { seed: true } : {});
+      else T(front ? 'tap a run for its seed' : d.you ? `${d.of} run${d.of === 1 ? '' : 's'} on the board` : seedsTab() ? 'run this seed to get on it' : 'finish a run to get on the board', C.dim);
     } else {
       T('');
       if (g.state === 'err') { T('no signal.', C.danger); B('[ RETRY ]', 'lbretry', () => { Sound.ui(); load(true); }); used += 3; }
       else { T('connecting' + '.'.repeat(1 + Math.floor((performance.now() - (g.t || 0)) / 300) % 3).padEnd(3), C.mid); used += 2; }
-      for (; used < LB_ROWS; used++) T('');
+      for (; used < rows; used++) T('');
       T(SEP, C.dim);
       T('');
     }
     const gl = lbClient();
-    T(gl && gl.dev ? 'test board (tester / local page)' : tab().key === 'day' ? 'today = the UTC day' : 'most layers. fewer 1UPs, then mods, win ties.', C.dim);
+    T(gl && gl.dev ? 'test board (tester / local page)' : front ? 'replays: each player\'s best on each seed.' : seedsTab() ? 'everyone on this seed. most layers wins.'
+      : tab().key === 'day' ? 'today = the UTC day' : 'most layers. fewer 1UPs, then mods, win ties.', C.dim);
     T('');
-    B('[ BACK ]', 'back', () => swapTo(showTitle));
+    B(seedsTab() && st.lbSeed ? '[ ALL SEEDS ]' : '[ BACK ]', 'back', back);
   }, '> pulling the board.', { full: true });
   st.keyHandler = k => {
-    if (k === 'escape') { swapTo(showTitle); return true; }
+    if (k === 'escape') { back(); return true; }
     if (k === 'arrowleft' || k === 'arrowright') { go(k === 'arrowleft' ? -1 : 1); st.kbFocus = st.hoverBtn = 'lbt' + tab().key; return true; }
     return false;
   };
+}
+// The SEEDS front page: one row per player per seed (their best; the board comes best first), ranked again.
+function lbBestPerSeed(d) {
+  const seen = new Set(), entries = [];
+  for (const e of d.entries) {
+    const k = `${e.player}|${e.data && e.data.hacker}|${e.data && e.data.seed}`;
+    if (seen.has(k)) continue;
+    seen.add(k); entries.push(Object.assign({}, e, { rank: entries.length + 1 }));
+  }
+  const you = entries.find(e => e.me) || null;
+  return Object.assign({}, d, { entries, you });
 }

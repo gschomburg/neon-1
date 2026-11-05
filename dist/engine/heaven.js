@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.43']);
+NEON_FILES.push(['engine/heaven.js', 'v14.44']);
 
 const HEAVEN = {};
 
@@ -1267,7 +1267,7 @@ function g0dEndTick(now) {
   say('call', f.shoe ? G0D_END.call : G0D_END.call - 700, () => g0dEndCall(f));
 }
 // The ending (a placeholder, docs/ENDGAME.md): on the H3AV3N seed, the cutscene, the credits, "there is more to
-// explore", the reward (SEEDS FOR REAL: replayed seeds count from now on); then POPS's CALL. The editor's jump: the CALL.
+// explore", the rewards (the 1UP, REPLAYS, G0D's logo); then POPS's CALL. The editor's jump: the CALL.
 function g0dEndCall(f) {
   const run = st.run;
   if (run && run.quest && !f.ended) {

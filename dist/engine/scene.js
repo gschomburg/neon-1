@@ -1,6 +1,6 @@
 // NeoN+1 engine/scene.js: Building each frame: HUD, board, tray, map, text fields.
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.43']);
+NEON_FILES.push(['engine/scene.js', 'v14.44']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -300,7 +300,7 @@ function buildScene(now, collectHits, raw = false) {
   // Footer: the run's seed, small and out of the way.
   // Left side of the footer, clipped so it never runs into [DEV] / the version.
   const footRoom = L.wc - versionTag.length - (st.devAccess || st.dev ? 8 : 1) - 1;
-  if (run && st.mode !== 'over') put(0, boardEnd + 6, `seed ${run.seed}${run.quest ? ' quest' : run.practice ? ' practice' : ''}`.slice(0, footRoom), C.dim);
+  if (run && st.mode !== 'over') put(0, boardEnd + 6, `seed ${run.seed}${run.quest ? ' quest' : run.practice ? ' practice' : run.seeded ? ' replay' : ''}`.slice(0, footRoom), C.dim);
   else if (st.mp) put(0, boardEnd + 6, `room ${st.mp.code}`, C.dim);
   footerRight();
   }
@@ -1112,7 +1112,7 @@ function nodeInfo(n) {
 //   text {text,col}           button {text,id,onTap,disabled,sel,faded}
 //   box {box,text,sub,id}     row of small buttons {row:[...]}
 //   badge {badge}             list row {list,id,onTap,sel,name,right,badge,col,tint}
-//   gap {gap:n} (empty rows)
+//   gap {gap:n} (empty rows)   any text line: tap {id,onTap} makes it tappable
 // Any line can have `reveal` (index) and `rarity` to pop in one at a time.
 // area: where to center the lines (default: the board area).
 // ---- Text fields. The canvas can't take typing, so a real (invisible) input sits
@@ -1322,6 +1322,10 @@ function buildTextBoard(ctx, lines, area = null) {
         for (let i = 0; i < ln.text.length; i++) if (ln.text[i] !== ' ') put(x + i, y, ln.text[i], ln.colorAt(i), 'board', ln.boldAt ? !!ln.boldAt(i) : !!ln.bold);
       } else put(x, y, ln.text, ln.col, 'board', !!ln.bold);
       if (ln.bgCol) bg(x, y, ln.text.length, ln.bgCol, ln.bgA != null ? ln.bgA : 1);
+      if (ln.tap) {   // a tappable text line (a leaderboard row): {id, onTap}
+        if (st.hoverBtn === ln.tap.id) bg(x, y, ln.text.length, C.accent, 0.2);
+        addHit(x, y, ln.text.length, 1, { kind: 'btn', id: ln.tap.id, onTap: ln.tap.onTap });
+      }
     }
 
     // Glitch-in right after a reveal.

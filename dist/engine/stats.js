@@ -12,7 +12,7 @@
 //              rep, mins, ice, perfects, reroutes, resumes, at (where you died: corp + layer)
 //   run_quit   abandoned from the menu: layers, sector, at
 'use strict';
-NEON_FILES.push(['engine/stats.js', 'v14.43']);
+NEON_FILES.push(['engine/stats.js', 'v14.44']);
 
 // Off for multiplayer, the editor and automated test runs (the playtest tools).
 function statOn() { return !!(st.run && !st.run.tutorial && !st.mp && !EDITOR && !(navigator.webdriver && !window.LB_TEST) && lbClient()); }
@@ -33,7 +33,7 @@ function statRunStart() {
   statS();
   const unlocks = {};
   for (const u of LEGACY) if (legacyLv(u.key)) unlocks[u.key] = legacyLv(u.key);
-  stat('run_start', { seed: st.run.seed, practice: !!st.run.practice, quest: st.run.quest || undefined, unlocks });   // (quest: a QUEST seed, H3AV3N)
+  stat('run_start', { seed: st.run.seed, practice: !!st.run.practice, seeded: !!st.run.seeded || undefined, quest: st.run.quest || undefined, unlocks });   // (quest: a QUEST seed, H3AV3N)
 }
 
 // A map stop: started when you go in, sent when you leave it (or the run ends there).

@@ -25,7 +25,25 @@ After G0D FINAL STAND, in order:
 
 **REPLAYS** (engine/menus.js): a [REPLAYS] on the title's seed row once you've beaten G0D. POPS's log: your 10 deepest seeds (`save.bestSeeds`, built from your history the first time) and the 5 you played last. Tap one to run it.
 
-Not done: showing the three as already-paid posts on THE BOARD (they're listed on H3AV3N CLEARED); a seed leaderboard (the scores carry the seed now).
+Not done: showing the unlocks as already-paid posts on THE BOARD (they're listed on H3AV3N CLEARED).
+
+## Built v14.44: seed boards (2026-11-05)
+
+**Decided (Greg, 2026-11-05):** seeds are for everyone, not an end-game reward. A typed seed earns REP like any run.
+Whether you'd beaten G0D is tracked on every score (data.g0d), not shown.
+
+- A seed you chose (typed, REPLAYS, RETRY SEED) is a **seeded** run (`run.seeded`), not practice. Practice now only
+  means cheats (the dev menu, the editor's jumps), which post nowhere.
+- Seeded runs post to their seed's board (`seed-<SEED>`) and to `replays`, never TODAY / ALL TIME. Other runs post to
+  TODAY, ALL TIME and their seed's board (so a replay has the first run to beat). Quest seeds: as before, plus their
+  seed's board (H3AV3N's board: "replay H3AV3N"'s leaderboard).
+- LEADERBOARD > **SEEDS**: the front page is `replays`, each player's best on each seed (fetched 100, deduped in the
+  game), the seed in place of the hacker name. A `find` field opens a seed's board. Tap a row: `[ THIS SEED ]
+  [ PLAY IT ]`. A seed's page: `seed K7XQ2M [ PLAY IT ]`, everyone's runs on it; `[ ALL SEEDS ]` / esc goes back.
+- The end screen on a seeded run: `#2 of 5 on K7XQ2M` (the seed board's rank; not the front page's, which counts
+  each player once).
+- The title's seed tag reads `replay` (was `practice`); the help says where seeded runs are ranked.
+- engine/leaders.js (header comment), engine/run.js startRun (`opts.seeded`).
 
 ## Reward 1: seeds for real
 Replaying a seed no longer counts as practice, so the run goes on a leaderboard. Maybe

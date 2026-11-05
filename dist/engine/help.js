@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v14.43']);
+NEON_FILES.push(['engine/help.js', 'v14.44']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [
@@ -102,7 +102,7 @@ function buildAdvancedPage(T, X) {
   P("INT is your integrity: your health. ICE takes 1 (a boss can take more), a perfect pick heals 1. at 0 you're traced and the run is over.");
   T('');
   H('THE SEED');
-  P('every run grows from a seed: the same seed makes the same map, the same corps and the same layers. the title shows yours: tap it to roll a new one. after a run, RETRY SEED plays the same one again (as practice).');
+  P('every run grows from a seed: the same seed makes the same map, the same corps and the same layers. the title shows yours: tap it to roll a new one. after a run, RETRY SEED plays the same one again. a seed you pick (typed, or RETRY SEED) is ranked on its own board: LEADERBOARD > SEEDS, not TODAY or ALL TIME.');
   T('');
   H('REPUTATION (REP)');
   P('cash out and you bank REP: for how deep you got, the corps you breached, your perfects, the credits you earned and the sectors you cleared. die and you bank nothing. spend REP at THE BOARD on upgrades for every run after.');
