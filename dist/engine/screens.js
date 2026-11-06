@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.45']);
+NEON_FILES.push(['engine/screens.js', 'v14.46']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -221,7 +221,7 @@ function buildReveal(ctx, now, rv, all) {
     if (ctx.collectHits && !rv.stamped) { rv.stamped = true; Sound.hkStamp(); shake(4, 0.25); }
     const first = all.findIndex(ln => ln.logoRow != null);
     const sw = Math.max(0, Math.floor((now - logoAt - RIVAL_REVEAL.swap) / RIVAL_REVEAL.row) + 1) * (now - logoAt >= RIVAL_REVEAL.swap ? 1 : 0);
-    const n = hkStamp(ctx, rv.y + first + 2, rv.rival, all[first].text.length, now - logoAt - RIVAL_REVEAL.stamp, RIVAL_REVEAL.letter, r => 2 + r < sw);
+    const n = hkStamp(ctx, rv.y + first + 2, rv.rival, all[first].text.length, now - logoAt - RIVAL_REVEAL.stamp, RIVAL_REVEAL.letter, r => 2 + r < sw, rv.escaped ? 'ESCAPED' : 'DEFEATED');
     if (ctx.collectHits && n > (rv.letters || 0)) { rv.letters = n; if (n > 1) Sound.tick(); }   // a tick a letter
   }
   if (ctx.collectHits) {
@@ -258,7 +258,9 @@ function overLines() {
     T(r.skipped ? `${r.boss} skipped. no reward.` : `${r.boss} is yours.`, r.skipped ? C.dangerDim : C.text);
     { const prof = profile(), sty = styleOf(prof.style);
       lines.push({ text: ` ${logoMark(prof.logo)} ${prof.name} `, col: sty.fg, bgCol: sty.bg, bold: true }); }
-    T('');
+    // a rival on the boss: did you beat them, or did they take the last node? (on the blank line, so the screen's rows don't grow)
+    if (r.foe && HACKERS[r.foe.id]) T(r.foe.escaped ? `${hkName(r.foe.id).toLowerCase()} escaped. no win.` : `${hkName(r.foe.id).toLowerCase()} beaten.`, r.foe.escaped ? C.danger : C.rep);
+    else T('');
     statLine(`layers ${pad2(r.depth)}   corps ${r.corps}   cr ${r.earned}`);
     { const marks = (r.breached || []).map(k => corpCode(corpDef(k))).join(' '), txt = `breached ${marks || 'none'}`;
       lines.push({ text: txt, colorAt: i => i < 9 ? C.mid : marks ? C.accent : C.dim }); }

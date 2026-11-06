@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v14.45']);
+NEON_FILES.push(['engine/mods.js', 'v14.46']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -138,6 +138,8 @@ const ROT = {
   perTap: 5,      // taps to break a node = 1 + rot / perTap
 };
 const zombie = () => has('zombie');
+// the rot you fall apart at: ROT.max, or +50% with a STIM this corp (engine/active.js stimUp; the user, 2026-11-06)
+const rotMax = () => ROT.max + (st.run && st.run.stim && st.run.stim.zombie ? st.run.stim.add : 0);
 // ---- BLOOD MONEY: credits are your health. Numbers to tune:
 // (its numbers are in data/economy.js)
 const BLOOD = {

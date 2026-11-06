@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.45']);
+NEON_FILES.push(['engine/run.js', 'v14.46']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -142,6 +142,7 @@ async function enterNode(node, warp = false) {
   if (node.heaven === 'g0d') return g0dWakeStart(node);   // G0D: the wake-up on the map, then the fight (engine/heaven.js)
   st.transitioning = true;
   const run = st.run;
+  { const cur = run.at && run.map[run.at]; if (run.tunnel && cur && cur.step === node.step) (run.dug = run.dug || []).push([cur.id, node.id]); }   // TUNNEL: the dug path stays on the map (engine/mapview.js)
   run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false;   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)
   stimDown();   // STIM wears off once you leave its corp
   await wipeOut(0);
@@ -801,7 +802,9 @@ async function onSafe(t) {
     const ms = riseOut(new Set(lit.map(cl => cl.cx + ',' + cl.cy)), clamp((land * 1000 - 380 - 100) / full, 0.5, 1.3));
     st.hideAll = true; st.wipe = null;
     await wait(ms);
-    st.breachRival = ((c.hk || []).find(h => h.side === 'bad') || {}).id || null;   // a rival here: the reveal shows them DEFEATED
+    const foe = (c.hk || []).find(h => h.side === 'bad');
+    st.breachRival = foe ? foe.id : null;   // a rival here: the reveal shows them DEFEATED...
+    st.breachEscaped = !!(foe && foe.stoleLast);   // ...or ESCAPED, when they took the corp's last node (no win: engine/hackers.js hkSteal)
     st.breachReveal = true;
   } else {
     // Success wipe: the real node stays lit while the fill rises. Bigger for perfect.

@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v14.45']);
+NEON_FILES.push(['engine/map.js', 'v14.46']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -172,6 +172,7 @@ function addSector(nodes, seed, s, force = null) {
   const lanes = has('gauntlet') ? [1] : [0, 1, 2];   // GAUNTLET: one line, no choices (a market in row 3)
   for (let ls = 1; ls <= 4; ls++) {
     if (!keep.has(ls) && !has('flush')) specs[ls] = specs[ls].map(() => 'corp');   // FLUSH keeps every rest stop...
+    if (qev && s === 0) specs[ls] = specs[ls].map(t => t === 'repair' ? 'corp' : t);   // HAD3S sector 1: no safehouse, one more corp (the user, 2026-11-06)
     let types = test ? ['corp', 'corp', 'corp'] : shuffle(specs[ls].slice(), r);
     if (has('flush')) types = types.map(t => t === 'repair' ? 'cache' : t);   // ...as caches (the market stays)
     else if (typeof pierOn === 'function' && pierOn()) { const pr = rngFor(seed, 'pier', s, ls); types = types.map(t => t === 'cache' && pr() < 0.5 ? 'pier' : t); }   // PIER: as common as a cache (engine/fishing.js)
@@ -179,6 +180,7 @@ function addSector(nodes, seed, s, force = null) {
       : test ? [test, test, test] : pickCorps(r, targetLevel(s, ls), 3, boost);
     if (same) corps = [same, same, same];
     if (has('gauntlet')) types[1] = ls === 3 ? 'shop' : 'corp';
+    if (qev && s === 0 && ls === 2) { const lane = types.indexOf('corp'); if (lane >= 0) corps[lane] = 'medix'; }   // HAD3S: MEDIX in sector 1 (where b0y ended up: docs/QUESTS.md)
     if (has('headfirst') && ls === 1) continue;   // HEAD FIRST: row 1 is the boss (below)
     types.forEach((type, lane) => lanes.includes(lane) && add(base + ls, lane, type, type === 'corp' ? { corp: corps[lane], tier: tierAt(s, ls) } : {}));
   }
@@ -239,7 +241,7 @@ function addSector(nodes, seed, s, force = null) {
   // entered again, so a sideways link just lets you take one more stop in that step.
   for (let ls = 1; ls <= 4; ls++) {
     for (const lane of [0, 1]) {
-      if (side() >= (has('rightangles') ? 0.6 : SIDE_LINK) || has('gauntlet') || (has('headfirst') && ls === 1)) continue;   // RIGHT ANGLES: more sideways links, so rows still give a choice
+      if (side() >= (has('rightangles') || (qev && s === 0) ? 0.6 : SIDE_LINK) || has('gauntlet') || (has('headfirst') && ls === 1)) continue;   // RIGHT ANGLES: more sideways links, so rows still give a choice; HAD3S sector 1: more too (the user, 2026-11-06)
       const a = nodes[`${base + ls}:${lane}`], b = nodes[`${base + ls}:${lane + 1}`];
       a.next.push(b.id); b.next.push(a.id);
     }

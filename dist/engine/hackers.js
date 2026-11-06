@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.45']);
+NEON_FILES.push(['engine/hackers.js', 'v14.46']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -572,9 +572,9 @@ function buildHkFx(ctx, now) {
 // ---------------- The rival defeated (the user, 2026-10-28) ----------------
 // CORP BREACHED's reveal (engine/screens.js buildReveal) brings the rival's logo in under the title, then this stamp
 // lands across it in your colors and your logo replaces theirs row by row. y: the stamp's top row (it's 3 tall).
-function hkStamp(ctx, y, id, w, age, every = 70, covered = () => false) {   // covered(r): your logo's row is over stamp row r
+function hkStamp(ctx, y, id, w, age, every = 70, covered = () => false, word = 'DEFEATED') {   // covered(r): your logo's row is over stamp row r; word: ESCAPED when they took the last node
   // the rival's colors inverted (their text color is the band), DEFEATED spread across the logo's width, a letter at a time
-  const { put, bg, cells } = ctx, sty = hkStyle(id), word = 'DEFEATED';
+  const { put, bg, cells } = ctx, sty = hkStyle(id);
   const gap = Math.max(1, Math.min(3, Math.floor((w - 2) / word.length) - 1));   // spaces between letters: as wide as fits
   const text = [...word].join(' '.repeat(gap)), sx = Math.floor((L.wc - w) / 2), tx = sx + Math.floor((w - text.length) / 2);
   for (let r = 0; r < 3; r++) if (!covered(r)) { clearRect(cells, sx, Math.round(y) + r, w, 1); bg(sx, y + r, w, sty.fg, 1); }   // (it covers the rival's logo; your rows cover it)

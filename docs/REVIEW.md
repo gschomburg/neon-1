@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The playtest batch** (v14.46): lose a corp to d0g (he takes the last node): the reveal stamps ESCAPED, a line says "escaped. no win."; on a sector boss, SECTOR CLEARED says beaten / escaped. A market with 10+ rows (COUPON CUTTER): the list scrolls, LEAVE stays put. A CALL over the map: nothing under it lights up. POPS's face in a CALL (6-wide chip): square enough now? Gear x3 counts on their darker chips. STIM with ZOMBIE: rot limit 225 for the corp. TUNNEL: its = lines while armed, the dug path after. Music after a FIRST BREACH comes back. HAD3S: no safehouse in sector 1, MEDIX, more sideways links; POPS's LEASH call on the first run (a save that hasn't had it); THE BOARD > QUESTS: [ PLAY IT ].
+
 - [ ] **Seed boards** (v14.44): type a seed on the title (it says `replay`), play it, the end screen shows `#1 of 1 on SEED`. LEADERBOARD > SEEDS: the rows, tap one (THIS SEED / PLAY IT), the find field, a seed's page, esc back. Typed seeds earn REP now. (Off file:// they post to the test boards.)
 - [ ] **G0D's logo** (v14.43): the art (an eye in a triangle, mine: redraw if you like, editor > ART), its frame in the ending, the new lines on THERE IS MORE TO EXPLORE, H3AV3N CLEARED's list. With a G0D win it shows in the logo picker.
 - [ ] **Meat notes** (v14.42): UPSIDE's boss: tap near a gap or a hit ICE, the real node is always reachable (a node with nothing open across from it takes the tap itself). A fresh save: the first CALL that brings POPS puts him on your crew, with a call. On THE DISC step, MEDIX's boss loot has the DISC.

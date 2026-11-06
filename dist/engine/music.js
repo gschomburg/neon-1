@@ -1,6 +1,6 @@
 // NeoN+1 engine/music.js: The music engine (generated music).
 'use strict';
-NEON_FILES.push(['engine/music.js', 'v14.45']);
+NEON_FILES.push(['engine/music.js', 'v14.46']);
 
 // A track (data/music.js, corps/) picks its band. Everything is optional; left out, it's the original
 // synthwave sound (so older tracks play exactly as before):
@@ -242,8 +242,10 @@ const Music = (() => {
     if (!ac || ac.state !== 'running' || !getState) return;
     const s = getState();
     pitchMul = s.pitch || 1;
-    // A new track waits for a boss fanfare (and its silence) to finish.
-    if (s.song !== key && !(fx && fx.dir > 0 && ac.currentTime < fx.hold)) switchTo(s.song);
+    // A new track waits for a boss fanfare (and its silence) to finish. A fanfare over the track the game still wants
+    // (FIRST BREACH's, over the map track: the user, 2026-11-06, the music never came back) starts it again after.
+    const held = !!(fx && fx.dir > 0 && ac.currentTime < fx.hold), spent = !!(fx && fx.dir > 0) && !held;
+    if ((s.song !== key || spent) && !held) switchTo(s.song);
     if (!song) return;
     if (seekTo != null) { pass = seekTo; seekTo = null; step = 0; crashNext = false; song = sectionSong(base, sectionAt(base, pass)); nextTime = ac.currentTime + 0.05; }
     // After a stall (background tab), skip ahead instead of playing a burst of missed notes.

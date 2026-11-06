@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.45']);
+NEON_FILES.push(['engine/active.js', 'v14.46']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -418,10 +418,11 @@ function magnetPull(lv, corpLong) {
 // STIM: max integrity +50% for this corp, healed to it. stimDown takes the extra back (you keep what fits).
 function stimUp() {
   const run = st.run;
-  if (zombie()) {   // ZOMBIE (the user's check, 2026-10-31): nothing to pump up, so it stops the rot, this corp
-    run.stim = { node: st.corp.node.id, add: 0, zombie: true };
+  if (zombie()) {   // ZOMBIE (the user, 2026-11-06): the rot limit goes up by half this corp (150 + 75: rotMax)
+    const add = Math.round(ROT.max / 2);
+    run.stim = { node: st.corp.node.id, add, zombie: true };
     Sound.shield(); flash(C.accent, 0.15, 0.35);
-    return setMsg('> stim: no rot, this corp.', C.accent);
+    return setMsg(`> stim: rot limit +${add}, this corp.`, C.accent);
   }
   const add = Math.max(1, Math.round(run.maxInt / 2));
   run.stim = { node: st.corp.node.id, add };
@@ -442,6 +443,7 @@ function exorcise(tier) {
 function stimDown() {
   const run = st.run;
   if (!run || !run.stim) return;
+  if (run.stim.zombie) { run.stim = null; run.rot = Math.min(run.rot || 0, ROT.max - 1); return; }   // ZOMBIE: back to 150, you keep what fits
   run.maxInt -= run.stim.add; run.integrity = Math.min(run.integrity, run.maxInt);
   run.stim = null;
 }
@@ -487,11 +489,11 @@ function skipTargets() {
 }
 // SWAP: integrity and missing integrity trade places. Not at full (that's 0), not at exactly half (nothing changes).
 const swapOk = () => { const run = st.run; if (!((st.mode === 'map' || st.mode === 'play') && !st.busy && !st.transitioning && !bloodMoney())) return false;
-  return zombie() ? (run.rot || 0) * 2 > ROT.max : run.integrity < run.maxInt && run.integrity * 2 !== run.maxInt; };   // (ZOMBIE: only when it helps)
+  return zombie() ? (run.rot || 0) * 2 > rotMax() : run.integrity < run.maxInt && run.integrity * 2 !== run.maxInt; };   // (ZOMBIE: only when it helps)
 function swapHealth() {
   const run = st.run, was = run.integrity;
   if (zombie()) {   // ZOMBIE (the user's check): your rot flips, 120 of 150 becomes 30
-    const r0 = run.rot || 0; run.rot = ROT.max - r0;
+    const r0 = run.rot || 0; run.rot = rotMax() - r0;
     Sound.shield(); flash(C.accent, 0.2, 0.4); shake(3);
     return setMsg(`> swap: rot ${r0} -> ${run.rot}.`, C.accent);
   }

@@ -1,10 +1,11 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.45']);
+NEON_FILES.push(['engine/scene.js', 'v14.46']);
 
 // ---------------- Scene ----------------
 let hits = [];
+let overlayHits = 0;   // where the top overlay's hits start in `hits`: while one is up, only those take hovers (engine/input.js)
 let bgs = [];           // background-tinted cells for the current frame
 const pad2 = n => String(n).padStart(2, '0');
 const rule = w => '- '.repeat(Math.ceil(w / 2)).slice(0, w);
@@ -163,8 +164,8 @@ function buildScene(now, collectHits, raw = false) {
     const bar = run.maxInt <= 10 ? '#'.repeat(cur) + '-'.repeat(Math.max(0, run.maxInt - cur)) : `${cur}/${run.maxInt}`;
     const fsBlink = fsAge >= FAILSAFE_BEAT && fsAge < FAILSAFE_BEAT + 900 && Math.floor(fsAge / 110) % 2;
     if (zombie()) {   // ZOMBIE: rot in place of integrity, sickly as it climbs
-      const rot = run.rot || 0, txt = `${String(rot).padStart(3, '0')}/${ROT.max}`;
-      putR(2, txt, rot >= ROT.max - 30 ? C.danger : rot >= ROT.max / 2 ? C.money : C.accent);
+      const rot = run.rot || 0, txt = `${String(rot).padStart(3, '0')}/${rotMax()}`;
+      putR(2, txt, rot >= rotMax() - 30 ? C.danger : rot >= rotMax() / 2 ? C.money : C.accent);
       put(L.wc - txt.length - 4, 2, 'ROT', C.mid);
     } else if (bloodMoney()) {   // BLOOD MONEY: your credits are your life; red when one more hit breaks you
       const txt = `${run.credits}cr`, cost = bloodCost(1);
@@ -355,9 +356,10 @@ function buildScene(now, collectHits, raw = false) {
   if (st.mode === 'g0ddie' && !st.dev) result = g0dDieOverlay(result, now, adBgs);   // H3AV3N: G0D dies
   if (st.mode === 'g0dend' && !st.dev) result = g0dEndOverlay(result, now, adBgs);   // H3AV3N: the collapse
   // The overlays (OVERLAYS, below): bottom first, so the top one is drawn last.
+  if (collectHits) overlayHits = 0;
   for (const o of OVERLAYS) {
     if (collectHits && o.tick) o.tick(now);
-    if (!st.dev && o.on() && o.shown()) { const lc = layerCtx(ctx, result, adBgs); o.build(lc.ctx, now); result = result.concat(lc.cells); }
+    if (!st.dev && o.on() && o.shown()) { if (collectHits) overlayHits = hits.length; const lc = layerCtx(ctx, result, adBgs); o.build(lc.ctx, now); result = result.concat(lc.cells); }
   }
   // The training run's popup (engine/tutorial.js): over everything but an ad, the same way.
   if (st.tut && st.tut.pop && !st.dev && !st.ad && (!st.wipe || st.tut.curtain)) {

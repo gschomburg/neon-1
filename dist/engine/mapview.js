@@ -1,7 +1,7 @@
 // NeoN+1 engine/mapview.js: the run's map (buildMap), the results screen's map (drawMapView), and a node's info.
 // Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/mapview.js', 'v14.45']);
+NEON_FILES.push(['engine/mapview.js', 'v14.46']);
 
 // Map: final node at the top, start at the bottom. Edges are dotted lines.
 // x for a node; start / final nodes sit in the middle lane.
@@ -110,6 +110,17 @@ function buildMap(ctx) {
     for (const n of nodes) if ((n.sector || 0) === sec) for (const m of nodes) if ((m.sector || 0) === sec && m.step === n.step + 1 && !linked(n, m)) meshLink(n, m);
     const cur = map[run.at];
     if (cur) for (const m of meshSides()) if (!linked(cur, m)) meshLink(cur, m);
+  }
+  // TUNNEL (the user, 2026-11-06: it never drew): armed, a line from you to each node in your row you can dig to; dug,
+  // the path you took stays. '=' between the nodes, clear of any node in the way.
+  {
+    const cur = map[run.at], dig = (run.dug || []).filter(([a, b]) => map[a] && map[b]).map(([a, b]) => [map[a], map[b], true]);
+    if (run.tunnel && cur) for (const m of rowMates()) dig.push([cur, m, false]);
+    for (const [a, b, done] of dig) {
+      if (a.next.includes(b.id) || b.next.includes(a.id)) continue;   // (already linked: its own line shows)
+      const xs = nodes.filter(o => o.step === a.step).map(mapX);
+      for (const d of linkDots(pos(a), pos(b))) if (shown(d.row) && !xs.some(x => Math.abs(d.x - x) <= 2)) put(d.x, yOf(d.row), '=', done ? C.accent : C.mid, 'map');
+    }
   }
   for (const n of nodes) {
     const p = pos(n);

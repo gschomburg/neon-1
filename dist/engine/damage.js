@@ -1,7 +1,7 @@
 // NeoN+1 engine/damage.js: damage and healing (hurt, heal, ZOMBIE rot, BLOOD MONEY), and the exotic pick rules
 // that change them: ICE EATER, COIN FLIP, SNOOZE, ALL-IN, FAILSAFE, BLACK ICE. Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/damage.js', 'v14.45']);
+NEON_FILES.push(['engine/damage.js', 'v14.46']);
 
 // ---- Damage and healing outside an ICE hit go through these, so ZOMBIE can turn them into rot.
 // hurt: n integrity (ZOMBIE: rot instead). heal: up to n integrity (ZOMBIE: less rot).
@@ -22,9 +22,8 @@ function heal(n) {
 // (onTrap, the corps' own) end the run.
 function addRot(n) {
   const run = st.run;
-  if (run.stim && run.stim.zombie && n > 0) return;   // STIM with ZOMBIE: no rot this corp
   run.rot = (run.rot || 0) + n;
-  if (run.rot >= ROT.max) { run.rot = ROT.max; run.integrity = 0; }
+  if (run.rot >= rotMax()) { run.rot = rotMax(); run.integrity = 0; }   // (STIM: a higher limit this corp)
 }
 // LEVERAGE: the odds an ICE hit does nothing, from how deep in debt you are.
 const debtShield = () => Math.min(DEBT.shieldMax, Math.max(0, -st.run.credits) / DEBT.shieldPer);

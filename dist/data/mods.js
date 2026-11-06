@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.45']);
+NEON_FILES.push(['data/mods.js', 'v14.46']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -235,7 +235,7 @@ const ITEMS = {
     codex: 'the power of root compels you. in a corp with a rival hacker in it: they are thrown out, their bars and all, for the rest of the corp. the epic one throws them out of the whole run: they never come back.',
     tiers: [{}, { rarity: 'epic', desc: 'in a corp: a rival hacker is kicked out, and never comes back this run.', tip: 'kick a rival out for good.' }] },
   stim:   { key: 'stim',   name: 'STIM',   price: 40, rarity: 'rare', desc: 'in a corp: max integrity +50% for this corp, healed up to it. after it, you keep what fits.', tip: '+50% int, this corp.',
-    codex: 'a combat stim. for the rest of this corp your max integrity is half again as big, and you heal up to it. when you leave the corp it wears off: max integrity goes back, and you keep what fits (2 left stays 2). with ZOMBIE: no rot for the rest of the corp.' },
+    codex: 'a combat stim. for the rest of this corp your max integrity is half again as big, and you heal up to it. when you leave the corp it wears off: max integrity goes back, and you keep what fits (2 left stays 2). with ZOMBIE: your rot limit is half again as big (150 + 75) for the rest of the corp; after it, rot you are over by is gone.' },
   zeroday: { key: 'zeroday', name: '0DAY', price: 50, rarity: 'rare', desc: 'in a layer: the real node is marked.', tip: 'mark the real node.',
     codex: 'an exploit nobody has patched yet. the real node is marked, gold. rare: this layer. epic: this layer and the next. legendary: every layer left in the corp, the boss too.',
     tiers: [{}, { rarity: 'epic', desc: 'in a layer: the real node is marked, this layer and the next.', tip: 'mark the real, 2 layers.' },

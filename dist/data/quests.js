@@ -22,7 +22,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.45']);
+NEON_FILES.push(['data/quests.js', 'v14.46']);
 
 const QUEST_INFO = {
   pops: {
@@ -56,6 +56,8 @@ const QUEST_LINES = {
   deliver: ["you made it out with the disc.", "come by the safehouse. let's see what's on it."],
   // DOG DAYS: the DOGTAG drops (ten wins), the UPLINK holding it, cashing out with it
   dogtag: ["that's ten.", "he dropped something. an old tag, with a name scratched into it.", "CASH OUT with it. i'll run a trace."],
+  // HAD3S, your first run of it: the LEASH you go in with (engine/quests.js questRunStart)
+  leash: ["one more thing. you're going in with a LEASH.", "when d0g shows up in a corp, use it. he moves at half speed for the rest of that corp.", "there's more gear like it down there. pick it up."],
   tagUplink: ["you've got his tag.", "CASH OUT here and bring it to me."],
   traced: ["you got it out. good.", "i ran the name. i got a hit.", "come by. now."],
   // OMNI RAID: b0y, once he's on your crew (each run while the step is on: you start with his CALL)

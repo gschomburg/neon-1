@@ -1,7 +1,7 @@
 // NeoN+1 engine/tray.js: the mod tray and mod badges (drawBadge, putChip, buildTray). Moved out of engine/scene.js
 // (2026-11-05). buildScene (engine/scene.js) calls buildTray each frame.
 'use strict';
-NEON_FILES.push(['engine/tray.js', 'v14.45']);
+NEON_FILES.push(['engine/tray.js', 'v14.46']);
 
 // A mod's key color (its rarity chip's background).
 const modColor = m => rarityCol(m.rarity);
@@ -104,7 +104,7 @@ function buildTray(ctx, y) {
     const tip = mv ? `now: ${mv.name.toLowerCase()} (${RARITY[mv.rarity].label.toLowerCase()}). ${mv.tip}`
       : key === 'compost' ? `compost ${(run.compost || 0) % 3}/3. ${m.tip}`
       : key === 'leverage' ? (run.credits < 0 ? `debt shield ${Math.round(debtShield() * 100)}%. limit ${creditFloor()}.` : `no debt. limit ${creditFloor()}.`) + ` loan ${DEBT.payment + DEBT.paymentSector * (run.sector || 0)}cr/layer.`
-      : key === 'zombie' ? `rot ${run.rot || 0}/${ROT.max}. ${tapsToBreak()} taps a node.` : m.tip;
+      : key === 'zombie' ? `rot ${run.rot || 0}/${rotMax()}. ${tapsToBreak()} taps a node.` : m.tip;
     const offTip = modOffHere(key) ? 'off in this corp.' : null;   // this corp switches it off
     put(6, y + 1, offTip || tip, offTip ? C.dangerDim : C.text);
     const status = modSpent(key) ? ['(spent)', C.danger] : m.active ? (modUsable(key) ? ['>tap', C.accent] : ['(not now)', C.dim]) : null;
@@ -127,7 +127,11 @@ function buildTray(ctx, y) {
     if (st.gearPress && st.gearPress.moved && st.gearPress.i === i) { put(ix, y + 2, ':  .  :', C.dim, 'tray'); addHit(ix, y + 2, 7, 1, { kind: 'item', i }); continue; }   // dragged out: its slot is empty (the full name rides your finger)
     if (ok || listy) putChip(put, bg, ix, y + 2, lab.slice(0, nameLen), v.rarity, 'tray', v.tier > 0);   // on its rarity chip
     else put(ix, y + 2, lab.slice(0, nameLen), C.mid, 'tray');
-    if (stack.n > 1) put(ix + nameLen, y + 2, lab.slice(nameLen), ok ? C.text : C.dim, 'tray');   // x3: the count, dimmer
+    if (stack.n > 1) {   // x3: the count on a darker chip of the same rarity (the user, 2026-11-06: plain text was hard to read on some backgrounds)
+      const cnt = lab.slice(nameLen), ch = chipOf(v.rarity);
+      if (ok || listy) { bg(ix + nameLen, y + 2, cnt.length, mixHex(ch.bg, '#000000', 0.45), 1); put(ix + nameLen, y + 2, cnt, ch.bg, 'tray'); }
+      else put(ix + nameLen, y + 2, cnt, C.dim, 'tray');
+    }
     if (gearOn(stack.key)) { bg(ix, y + 2, 7, C.accent, 0.3 + 0.25 * Math.sin(now / 160)); put(ix + 7 - 1, y + 2, '*', C.accent, 'tray', true); }   // ENCORE on: it glows
     if (sel || hov) bg(ix, y + 2, 7, C.accent, sel ? 0.25 : 0.12);
     addHit(ix, y + 2, 7, 1, { kind: 'item', i });

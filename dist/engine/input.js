@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.45']);
+NEON_FILES.push(['engine/input.js', 'v14.46']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -132,8 +132,8 @@ function moveMapCursor(k) {
 // What the wheel / swipe scrolls: the dev menu while it's open, else the screen.
 const activeScroll = () => st.dev ? st.devScroll : st.scroll;
 
-function hitAt(x, y) {
-  for (let k = hits.length - 1; k >= 0; k--) {
+function hitAt(x, y, from = 0) {   // from: skip the hits before it (what's under an overlay: overlayHits, engine/scene.js)
+  for (let k = hits.length - 1; k >= from; k--) {
     const h = hits[k];
     if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) return h;
   }
@@ -171,7 +171,7 @@ cv.addEventListener('pointerdown', e => {
   Sound.init();
   Field.blur();   // tapping anywhere else finishes typing (phones don't always do this)
   if (st.boot && !st.dev) { introTap(hitAt(...ptXY(e))); return; }   // the intro: LOGIN, skip ahead, its buttons (engine/intro.js)
-  { const o = overlayTop(); if (o) return o.tap(hitAt(...ptXY(e))); }   // an ad, a card, a box, a scene: the top one takes the tap (OVERLAYS, engine/scene.js)
+  { const o = overlayTop(); if (o) return o.tap(hitAt(...ptXY(e), overlayHits)); }   // an ad, a card, a box, a scene: the top one takes the tap (OVERLAYS, engine/scene.js)
   if (st.mode === 'fish' && !st.dev && !st.pause && fishPointer('down', e)) return;   // the PIER (engine/fishing.js)
   if (st.bench && benchPointer('down', e)) return;   // the WORKBENCH keyboard and slots (engine/bench.js)
   if (st.intro) { st.intro.skip = true; return; }   // tap skips a corp intro
@@ -250,7 +250,7 @@ cv.addEventListener('pointermove', e => {
     const dy = e.clientY - st.drag.y;
     if (Math.abs(dy) > L.chh) { activeScroll()(dy < 0 ? 1 : -1); st.drag.y = e.clientY; }
   }
-  let h = hitAt(...ptXY(e));
+  let h = hitAt(...ptXY(e), overlayTop() ? overlayHits : 0);   // a box is up (a quest popup, an ad...): nothing under it lights up (the user, 2026-11-06)
   if (h && st.tut && !tutHoverOk(h)) h = null;   // the training: what you can't tap now doesn't light up
   let tile = h && h.kind === 'tile' ? h.i : -1;
   if (tile >= 0 && upsideMirror()) tile = upsideLand(st.lv, tile);   // UPSIDE boss: what lights up is where the tap lands

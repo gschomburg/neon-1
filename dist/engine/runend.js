@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v14.45']);
+NEON_FILES.push(['engine/runend.js', 'v14.46']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -114,7 +114,8 @@ async function endRun(win) {
 async function sectorClear(skipped) {
   const run = st.run;
   run.sectorsCleared = (run.sectorsCleared || 0) + 1;
-  run.pending = { kind: 'sector', skipped };
+  const c = st.corp, foe = c && (c.hk || []).find(h => h.side === 'bad');   // a rival on the boss: SECTOR CLEARED says how that went
+  run.pending = { kind: 'sector', skipped, boss: c ? c.def.name : null, foe: foe && !skipped ? { id: foe.id, escaped: !!foe.stoleLast } : null };
   tallySector(run);   // THE RECORD
   if (has('failsafe') && !has('zombie')) run.failsafeUsed = false;   // FAILSAFE recharges each stage
   if (!run.practice && run.sectorsCleared > (save.bestSector || 0)) { save.bestSector = run.sectorsCleared; persist(); }
@@ -128,7 +129,7 @@ function showSectorClear(skipped, fanfare, root = null) {
   const breached = run.visited.map(id => run.map[id]).filter(n => n && (n.sector || 0) === run.sector && (n.type === 'corp' || n.type === 'final')).map(n => n.corp);
   const roots = Object.keys(ART_ROOT);
   st.result = { sector: true, skipped, depth: run.depth, corps: run.corps, earned: run.earned, n: run.sectorsCleared,
-    rep: repFor(run), practice: run.practice, quest: run.quest || null, broken: !!(run.quest === 'h3av3n' && run.sector === 0), seed: run.seed, boss: st.corp ? st.corp.def.name : FINAL.name,
+    rep: repFor(run), practice: run.practice, quest: run.quest || null, broken: !!(run.quest === 'h3av3n' && run.sector === 0), seed: run.seed, boss: st.corp ? st.corp.def.name : (run.pending && run.pending.boss) || FINAL.name, foe: (run.pending && run.pending.foe) || null,
     breached, root: root && ART_ROOT[root] ? root : roots[Math.floor(Math.random() * roots.length)] };
   st.corp = null; st.lv = null; st.timer = null;
   scenePalette(null);

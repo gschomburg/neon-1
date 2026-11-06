@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.45']);
+NEON_FILES.push(['engine/panels.js', 'v14.46']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -13,7 +13,7 @@ function openPanel(title, fn, msg, opts = {}) {
   st.breachReveal = false;
   // Line-by-line reveal out of an empty screen (after a boss): the title types in,
   // then the lines come in under it. Header, HUD and tray come back when it's done.
-  st.panelReveal = opts.reveal ? { t0: performance.now() + 100, shown: 0, typed: 0, y: null, lt: 0, done: false, center: 'board', sound: 'climb', rival: opts.rival || null } : null;
+  st.panelReveal = opts.reveal ? { t0: performance.now() + 100, shown: 0, typed: 0, y: null, lt: 0, done: false, center: 'board', sound: 'climb', rival: opts.rival || null, escaped: !!opts.escaped } : null;
   st.panelTitle = title;
   st.panelFn = fn;
   st.revealed = new Set();
@@ -153,7 +153,7 @@ const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value && !ITEMS[
 // How often a gear shows up (loot and markets): normal gear by its rarity, value gear its own (ECON.drop).
 const gearWeight = k => { const w = ECON.drop[ITEMS[k].value ? k : ITEMS[k].rarity]; return w == null ? 1 : w; };
 // A market's gear: by rarity, with a plain CALL likelier (CALL_ODDS.shop, engine/hackers.js).
-const shopWeight = k => gearWeight(k) * (k === 'call' ? CALL_ODDS.shop : 1);
+const shopWeight = k => gearWeight(k) * (k === 'call' ? CALL_ODDS.shop : 1) * (st.run && st.run.quest === 'had3s' && (k === 'tunnel' || k === 'mesh') ? 4 : 1);   // (HAD3S: TUNNEL and MESH turn up more: the user, 2026-11-06)
 // One key, picked by weight.
 function pickWeighted(keys, w, r) {
   let x = r() * keys.reduce((a, k) => a + w(k), 0);
@@ -183,6 +183,7 @@ function shopRoll(node, n) {
   if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
   return offers;
 }
+const SHOP_LIST_ROWS = 9;   // a market's list area, at most (it scrolls past that)
 function openShop(node) {
   const run = st.run;
   const roll = n => shopRoll(node, n);
@@ -266,8 +267,10 @@ function openShop(node) {
   const rowsOf = () => offers.concat([rerollRow]);
   // Both modes share one layout: the list area is listRows() tall, then the details box (7 rows), then the nav buttons,
   // so [ SELL ] / [ BUY ] and [ LEAVE ] sit in the same spots on both.
-  const listRows = () => Math.max(rowsOf().length, 1 + run.beltSlots);
-  const sellArea = { top: 0 };   // the sell list scrolls (a big LOOT bag)
+  // At most SHOP_LIST_ROWS: past that the list scrolls (the user, 2026-11-06: 10 rows with COUPON CUTTER pushed LEAVE
+  // into the loot bar on a phone; engine/textboard.js doesn't squeeze, see CLAUDE.md "Screen space").
+  const listRows = () => Math.min(SHOP_LIST_ROWS, Math.max(rowsOf().length, 1 + run.beltSlots));
+  const sellArea = { top: 0 }, buyArea = { top: 0 };   // the lists scroll (a big LOOT bag; a long market)
   const pad = (T, used) => { for (let i = used; i < listRows(); i++) T(''); };
   const nav = B => {
     if (view === 'buy') B('[ SELL WARES ]', 'sellv', () => { view = 'sell'; sellSel = 0; sellArea.top = 0; Sound.ui(); }, !sellRows().length);
@@ -311,14 +314,15 @@ function openShop(node) {
     T(`credits ${run.credits}${leverage() ? `  (limit ${creditFloor()})` : ''}${has('haggle') ? `  (haggle -${Math.round(tv('haggle', ECON.haggle) * 100)}%)` : ''}`, run.credits < 0 ? C.danger : C.money);   // LEVERAGE: the limit
     T('');
     if (view === 'sell') return drawSell(T, B, X);
-    const rows = rowsOf();
+    const rows = rowsOf(), items = [];
     rows.forEach((o, k) => {
       const def = defOf(o);
       const isMod = o.kind === 'mod', up = isMod && has(o.key), rr = o.kind === 'reroll';
       const price = rr ? (rerollsLeft() > 0 ? `${rerollPrice()}cr` : 'DONE') : o.sold ? 'SOLD' : o.free ? 'FREE' : `${priceOf(o)}cr`;
-      const tag = isMod ? (up ? 'mod+' : 'mod') : o.kind === 'item' ? 'gear' : 'svc';   // gear's rarity shows on its name chip
+      const bag = o.kind === 'item' && (ITEMS[o.key].quest || ITEMS[o.key].value || ITEMS[o.key].bag);   // (the DISC and value gear go in the LOOT bag: the user, 2026-11-06)
+      const tag = isMod ? (up ? 'mod+' : 'mod') : bag ? 'loot' : o.kind === 'item' ? 'gear' : 'svc';   // gear's rarity shows on its name chip
       const col = C.bright;
-      X({
+      items.push({
         list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
         sel: k === sel, faded: !!whyNot(o),
         badge: isMod ? o.key : null, badgeTier: def.tier, name: rr ? 'REROLL' + (rerollsLeft() > 0 ? ' x' + rerollsLeft() : '') : def.name + (up ? ' +' : '') + (o.n > 1 ? ' x' + o.n : ''), col,   // x2: copies left
@@ -329,7 +333,8 @@ function openShop(node) {
         rarity: o.kind === 'repair' || rr ? null : def.rarity, seenKey: o.kind === 'repair' || rr ? null : o.key,
       });
     });
-    pad(T, rows.length);
+    if (items.length <= listRows()) { items.forEach(it => X(it)); pad(T, items.length); }
+    else { scrollFollow(buyArea, sel, items.length, listRows()); scrollArea(X, T, buyArea, items, listRows(), 'bla'); }
     T('');
     // Details box for the selected offer (once it has popped in).
     sel = Math.min(sel, rowsOf().length - 1);
@@ -345,7 +350,7 @@ function openShop(node) {
         X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(def)}` : `${tierLabel(def)} mod`, col: C.text, chips: true });
       } else {
         if (o.kind === 'item') X({ gearHead: o.key, gearTier: o.tier, text: def.name + (o.n > 1 ? ` x${o.n}` : '') }); else T(def.name, C.bright);
-        X({ text: o.kind === 'item' ? `${def.tier ? RARITY[def.rarity].label + ' ' : ''}gear // single use` : 'service', col: C.mid, chips: true });
+        X({ text: o.kind !== 'item' ? 'service' : ITEMS[o.key].quest ? 'quest loot // for POPS' : ITEMS[o.key].value ? 'loot // sell it' : `${def.tier ? RARITY[def.rarity].label + ' ' : ''}gear // single use`, col: C.mid, chips: true });
       }
       T(def.tip || def.desc, C.text);   // the short text: long gear descs ran off the screen
       if (why) { T(''); T(why, C.dangerDim); T(''); T(''); }
@@ -360,7 +365,7 @@ function openShop(node) {
 
 // A reward screen: header lines, then a list of mods to pick one from (or skip).
 // next: where to go after (default: the map).
-function openChoice({ title, col, head = [], extra = [], onTake = null, options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, first = null, more = [] }) {
+function openChoice({ title, col, head = [], extra = [], onTake = null, options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, escaped = false, first = null, more = [] }) {
   let sel = 0, picked = false;
   // first: { key, art, tell }: FIRST BREACH shows under the header (title, logos, breached line) and holds the reveal;
   // SEE THE CORE swaps it for the rewards, which build in under the header the same way (buildReveal's pre)
@@ -373,7 +378,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
     if (rv) Object.assign(rv, { t0: performance.now(), pre: headN, shown: headN, done: false, hold: false, whole: false, firstPop: null, rival: null, logoOut: !!by });
     st.panelT0 = Infinity; st.revealed = new Set();   // the offers pop as their lines come in
   };
-  st.breachRival = null;
+  st.breachRival = null; st.breachEscaped = false;
   const leave = () => next ? (st.transitioning ? null : swapTo(next)) : leavePanel();
   st.choice = { title, options: options.slice(), skip: !!skipLabel, take: o => take(o) };   // (read by tools/econsim.js)
   const take = o => {
@@ -479,7 +484,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
     if (!by) T('');
     for (const m of more) B(m.label, m.id, m.onTap);   // more buttons (the safehouse's [ WORKBENCH ])
     B(options.length && skipLabel ? skipLabel : '[ CONTINUE ]', 'skip', () => take(null));
-  }, msg, { reveal, rival });
+  }, msg, { reveal, rival, escaped });
   if (by && !firstUp && st.panelReveal) st.panelReveal.logoOut = true;   // (FIRST BREACH: once SEE THE CORE is tapped, toCore)
   if (firstUp && st.panelReveal) Object.assign(st.panelReveal, { hold: true, whole: true });   // the header comes back after the rewards, not before;
   // whole: no header yet, so FIRST BREACH centers on the whole screen (the user: PARCELNET pushed it off the bottom), then glides down to the rewards
@@ -548,6 +553,8 @@ function openRepair(node) {
 
 // Corp boss beaten: one corp-specific mod, one general mod, and a random third.
 // How the corp you just breached went, for the header line: perfects and ICE hits.
+// A rival took the corp's last node (engine/hackers.js hkSteal): a line under the corp's name says so.
+const escapedLine = () => st.breachEscaped && st.breachRival && HACKERS[st.breachRival] ? [[`${hkName(st.breachRival).toLowerCase()} escaped. no win.`, C.danger]] : [];
 function breachSummary() {
   const c = st.corp || {}, p = c.perfects || 0, n = c.scored || 0, ice = c.ice || 0;
   return { text: `> perfect ${p}/${n}   ice hit ${ice}${ice === 0 ? '  FLAWLESS' : ''}`, col: ice === 0 ? C.accent : C.text };
@@ -586,8 +593,9 @@ function openReward(node, skipped = false) {
     first,
     reveal: st.breachReveal,
     rival: st.breachReveal && !skipped ? st.breachRival : null,   // a rival here: their logo comes in first, DEFEATED, then yours
+    escaped: st.breachEscaped,   // (they took the last node: ESCAPED instead, and a line says so)
     title: 'CORP BREACHED', col: C.accent,
-    head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]], extra: lootLine(loot),
+    head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]].concat(escapedLine()), extra: lootLine(loot),
     by: skipped ? null : profile(),
     options, locked: skipped,
     skipLabel: skipped ? '[ CONTINUE ]' : '[ SKIP  +20cr ]',

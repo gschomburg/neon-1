@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v14.45']);
+NEON_FILES.push(['engine/boot.js', 'v14.46']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -49,7 +49,7 @@ function gameMusicState() {
   // the PIER: its own track (one of FISH_TRACKS, picked when you arrive), amped up while you reel one in
   if (st.mode === 'fish' && st.fish && SONGS[st.fish.track] && song !== 'none') return { song: st.fish.track, level: st.fish.reel ? 3 : 1, urgency: 0, low: false, tempo: 1, pitch: 1 };
   const g0dm = g0dMusic(); if (g0dm) return g0dm;   // H3AV3N: the G0D fights (engine/heaven.js)
-  const low = !!(run && st.mode === 'play' && (zombie() ? (run.rot || 0) >= ROT.max - 30 : bloodMoney() ? run.credits < bloodCost(1) : run.integrity <= 1) && !st.dying);
+  const low = !!(run && st.mode === 'play' && (zombie() ? (run.rot || 0) >= rotMax() - 30 : bloodMoney() ? run.credits < bloodCost(1) : run.integrity <= 1) && !st.dying);
   const slowmo = !!(st.mode === 'play' && corpHas('slowmo') && st.lv);   // BULLET TIME
   const tempo = (1 + (song === 'chronos' ? urgency * 0.25 : 0) + (level >= 3 ? 0.05 : 0)) * (slowmo ? 0.55 : 1);
   // GRAVE ROBBER: its own spooky track follows you around the map (corps keep theirs)

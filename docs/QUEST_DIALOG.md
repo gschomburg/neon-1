@@ -59,6 +59,12 @@ From POPS.
 > **POPS:** he dropped something. an old tag, with a name scratched into it.  
 > **POPS:** CASH OUT with it. i'll run a trace.  
 
+**leash**
+
+> **POPS:** one more thing. you're going in with a LEASH.  
+> **POPS:** when d0g shows up in a corp, use it. he moves at half speed for the rest of that corp.  
+> **POPS:** there's more gear like it down there. pick it up.  
+
 **tagUplink**
 
 > **POPS:** you've got his tag.  

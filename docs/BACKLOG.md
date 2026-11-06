@@ -179,28 +179,22 @@ unlocked by REP, and some quests unlock REP.
     always drops it). As soon as you have the DISC it becomes "get out with the disc". If you fail or lose the DISC,
     it points you back at MEDIX. (Today the DISC just starts dropping once POPS is crew and you've cleared a sector,
     v14.42, with no quest showing it.)
-  - **POPS's face in the call dialog looks squashed** next to the training's, where he looks squarish (the user,
-    2026-11-06). Make the call's face match the training's proportions.
   - **A beat after each cutscene:** the screen goes dark and the music fades down; a quest popup shows there if there
     is one; then a transition back to the last screen.
   - **More than one quest at a time:** a quest list that scrolls, with the active ones and the completed ones (a
     quest log).
   - **Bug? POPS's calls don't count in the editor:** the user's runs from the editor count as testing, but other
-    hackers' calls do count there, so it may be a POPS-only bug. They should count.
-  - **The HAD3S step's card: a link that launches the seed** and plays it from there.
+    hackers' calls do count there, so it may be a POPS-only bug. They should count. (Claude, v14.46: every call goes
+    through the same `tally('hack:call:' + id)` in hkSpawn, POPS's too, and practice runs count none of them. Where
+    did the count look wrong: the CREW tab's LVL 2 bar, the feats, something else?)
   - **Rename the quest?** Maybe change the name from "WHAT IS ALL THIS FOR?".
 - **HAD3S playtest** (the user, meat notes 2026-11-06). Liked: getting ZOMBIE in there, and RELOAD ("great for this").
-  - **Bug: losing to d0g still shows "d0g DEFEATED".** (Claude checked: engine/run.js sets `st.breachRival` from
-    any bad hacker in the corp, so the breach reveal stamps DEFEATED even when he escaped with the last node;
-    `h.stoleLast` is only read by DOG DAYS' message in engine/quests.js.)
-  - **Make it clearer when d0g beats you**, above all on the SECTOR CLEARED screen before the UPLINK.
   - **d0g's cursor never splits into 3** (not built yet: QUESTS.md step 5 lists it as still to do).
-  - **Introduce LEASH**, since you start with it: a POPS call the first time, before d0g shows up, or at the end of
-    the DISC cutscene.
+  - **Built v14.46:** ESCAPED on the breach reveal and SECTOR CLEARED; POPS's LEASH call; the map (no safehouse in
+    sector 1, MEDIX, more sideways links, TUNNEL / MESH likelier); [ PLAY IT ] on THE BOARD > QUESTS; POPS's square
+    face chip in a CALL (SPEC version log).
   - **Does d0g say anything in the terminal?** He has lines (data/hackers.js: enter, taunts, out, kill); the user
     hasn't been watching for them. Check they show in HAD3S.
-  - **The map:** get MEDIX in there somewhere; swap sector 1's safehouse for a corp; a couple more H links in
-    sector 1 between corps; TUNNEL or the web gear would be good to find here.
   - **The PRODIGAL cutscene:** beating d0g is mostly how you find where he is. POPS should use the DISC to bring b0y
     back. You find him in the basement, weak, maybe unconscious, and upload the DISC into him (or doc does the
     re-upload). He comes back as d0g for a flash, then clears up.
@@ -464,18 +458,8 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
-- **Bugs and weirdness** (the user, meat notes 2026-11-06; the quest and HAD3S bugs are under 3. Quests):
-  - **The black market runs too long:** with 10 items (repair and reroll included; COUPON CUTTER may have added one),
-    LEAVE gets pushed down into the loot bar. Fixes: the `+---` bars a line closer to the list, or let the list
-    scroll (the user leans toward scrolling).
-  - **The DISC should be listed as loot** in the store.
-  - **Quest popups should block hovers and clicks** on what's under them.
-  - **STIM with ZOMBIE:** STIM should work with it (a rot limit of 150 + 75?).
-  - **TUNNEL still doesn't draw its lines** on the sector map (the user isn't sure it's happened yet).
-  - **Music didn't come back** after a corp's rewards screen, going through HAD3S from the editor.
+- **Bugs and weirdness** (the user, meat notes 2026-11-06): **all built v14.46** (SPEC version log): the market list scrolls, the DISC is loot in a market, boxes block hovers, STIM + ZOMBIE = rot limit 225, TUNNEL's lines, the music after FIRST BREACH.
 - **Misc** (the user, meat notes 2026-11-06):
-  - **Gear stack counts:** the `x2` is hard to read on the gear's color. Give it a chip like the abbreviation's,
-    maybe a bit darker.
   - **COLD BREW's rewards aren't very good:** it needs something legendary.
   - **CHUCK E. CACHE has a 1UP in its logo:** do something with that once 1UPs are unlocked?
   - **Skip a corp's rewards for a heal:** an option, maybe a choice on the screen, maybe a REP unlock.

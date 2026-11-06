@@ -7,10 +7,11 @@
 //   step: a key from QUEST_INFO.pops.steps (data/quests.js says how each one ends): find -> deliver -> d0g -> trace
 //         -> raid -> g0d -> done
 //   seen: you've had the DISC once (the quest shows on THE BOARD)   lost: died with it (it drops more for a while)
+//   leashTold: POPS's LEASH call on your first HAD3S run (questRunStart)
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.45']);
+NEON_FILES.push(['engine/quests.js', 'v14.46']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -98,6 +99,12 @@ function questD0g(h) {
   if (q.d0g >= need && !hasLoot('dogtag')) setTimeout(() => addItem('dogtag'), 1500);
 }
 const runHad3s = () => startRun('HAD3S', false);
+// THE BOARD > QUESTS: [ PLAY IT ] on a step with a seed (HAD3S, H3AV3N): set it like a typed seed and start
+function questPlaySeed(seed) {
+  if (st.transitioning || st.run) return;
+  st.seed = seed; st.practice = false; st.seeded = false;
+  startRun(seed, false);
+}
 // OMNI RAID: break an OMNI boss with b0y there (engine/run.js finishCorp): HEAVEN'S GATE.
 function questOmni(c) {
   if (!questRun() || questOf('pops').step !== 'raid' || !c || c.def.key !== 'omni' || !(c.hk || []).some(h => h.id === 'b0y')) return;
@@ -105,6 +112,9 @@ function questOmni(c) {
 }
 // A run starts on the OMNI RAID: b0y's number comes with you, and he calls (once).
 function questRunStart(run) {
+  if (run.quest === 'had3s' && questRun()) {   // HAD3S, the first time: POPS tells you about the LEASH you start with (the user, 2026-11-06)
+    const q = questOf('pops'); if (!q.leashTold) { q.leashTold = true; persist(); setTimeout(() => queueCall('pops', QUEST_LINES.leash), 2500); }
+  }
   if (!questRun() || questOf('pops').step !== 'raid' || !hkCrewOn('b0y')) return;
   run.items.push({ key: 'call_b0y', tier: 0, n: 1 });
   const q = questOf('pops'); if (!q.raidCalled) { q.raidCalled = true; persist(); setTimeout(() => queueCall('b0y', QUEST_LINES.raid), 2500); }
@@ -155,9 +165,11 @@ function buildCallBox(ctx, now) {
     put(x0 + 2, y0 + 3, b.quest.step, C.bright, 'hud', true);
     if (b.quest.seed) { const t = 'seed: ', sx = x0 + 2 + t.length; put(x0 + 2, y0 + 4, t, C.mid, 'hud'); bg(sx, y0 + 4, b.quest.seed.length + 2, C.rep, 1); put(sx + 1, y0 + 4, b.quest.seed, C.bg, 'hud', true); }
   } else {
-    face.forEach((l, k) => { bg(x0 + 2, y0 + 2 + k + bob, 5, sty.bg, 1); put(x0 + 2, y0 + 2 + k + bob, l, sty.fg, 'hud', true); });
-    put(x0 + 9, y0 + 2, d.name, ink, 'hud', true);
-    put(x0 + 9, y0 + 3, 'is calling.', C.mid, 'hud');
+    // the chip is 6 cells wide, the face centered in it (half a cell in): 5 x 3 cells is taller than wide, and the face
+    // looked squashed next to the training's square chip (the user, 2026-11-06)
+    face.forEach((l, k) => { bg(x0 + 2, y0 + 2 + k + bob, 6, sty.bg, 1); put(x0 + 2.5, y0 + 2 + k + bob, l, sty.fg, 'hud', true); });
+    put(x0 + 10, y0 + 2, d.name, ink, 'hud', true);
+    put(x0 + 10, y0 + 3, 'is calling.', C.mid, 'hud');
   }
   let budget = Math.floor((now - b.t0 - 300) / 18);
   rows.forEach((t, r) => { const shown = t.slice(0, Math.max(0, budget)); budget -= t.length; if (shown) put(x0 + 2, y0 + 6 + r, shown, C.text, 'hud'); });
@@ -490,7 +502,11 @@ function questBoardLines(T, X) {
   X({ text: `STEP ${at + 1}: ${step.name}`, col: C.bright, bold: true });
   for (const l of wrapText(q.step === 'find' && q.lost && step.lost ? step.lost : step.goal, 32)) T(l, C.text);
   if (step.wins) { T(''); X({ text: `d0g: ${Math.min(q.d0g || 0, step.wins)} / ${step.wins}`, col: C.bright, bold: true }); }   // (DOG DAYS: the wins so far)
-  if (step.seed) { T(''); X({ text: `seed: ${step.seed}`, col: C.rep, bold: true }); }   // (the seed POPS gave you)
+  if (step.seed) {   // the seed POPS gave you, and (off the title, no run waiting) a link that starts it (the user, 2026-11-06)
+    T('');
+    if (st.run || st.savedRun) X({ text: `seed: ${step.seed}`, col: C.rep, bold: true });
+    else X({ gap: 2, row: [{ text: `seed: ${step.seed}`, col: C.rep }, { text: '[ PLAY IT ]', id: 'qplay', onTap: () => questPlaySeed(step.seed) }] });
+  }
   T('');
   info.steps.slice(0, at).forEach((s, i) => T(`x ${i + 1}. ${s.name}`, C.mid));   // the steps done
   T('');
