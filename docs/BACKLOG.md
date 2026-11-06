@@ -177,10 +177,6 @@ unlocked by REP, and some quests unlock REP.
   - **More than one quest at a time** (a quest log: a list that scrolls, the active quests, then the completed ones).
     **Decided (Greg, 2026-11-06):** wait until there's a second quest (probably the first crew quest). Until then, keep
     it in mind: anything added to this quest shouldn't assume it's the only one.
-  - **Bug? POPS's calls don't count in the editor:** the user's runs from the editor count as testing, but other
-    hackers' calls do count there, so it may be a POPS-only bug. They should count. (Claude, v14.46: every call goes
-    through the same `tally('hack:call:' + id)` in hkSpawn, POPS's too, and practice runs count none of them.) The
-    user didn't see it count up in the feats. They'll look again.
   - **The mold, more of it:** a short side quest that touches on it (the user's idea; held for now).
 - **Crew quests** (the user, 2026-11-04: a quest per crew member, some hidden): ideas in `docs/CREW_QUESTS.md` (each built on the crew member's counter-rival; ROOT and BRICK's unlock a crew member). To pick from.
 - **The quest doc: `docs/QUESTS.md`** (2026-10-28). The first quest to build out: POPS's son (the quest item, POPS's calls, the
