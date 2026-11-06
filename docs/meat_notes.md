@@ -1,8 +1,17 @@
-god and heaven feedback
+god and heaven quest
 *********************
+
+hades
+*******************
 
 misc notes
 ***********************
+
+bugs or weirdness
+********************
+
+neon editor
+***************
 
 misc mod and items
 **********************
@@ -12,9 +21,6 @@ workshops
 
 bosses
 ************
-- psycho mantis
-    - (unplug internet)
-    - open inspector?
 
 feats
 *************
@@ -45,15 +51,12 @@ sector events / corp anomalies
 
 ads
 ****************
-- you are the product!
 
 reputation
 ***************
 
 quests and rpg story ideas
 *****************
-- random encounter ftl type where you get to choose from 2 to 3 options. you might get reward
-
 
 cut scenes
 *************

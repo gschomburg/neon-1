@@ -170,6 +170,40 @@ unlocked by REP, and some quests unlock REP.
     (makes higher layer counts easier in the early sectors).
 
 ### 3. Quests and RPG elements
+- **Playtest of WHAT IS ALL THIS FOR?, up to b0y joining** (the user, meat notes 2026-11-06: "it's good").
+  - **Lore about the mold before the quest gets there:** something weird happening in the net. Options: a short
+    side quest that touches on it; an ad; lines in the first cutscene or when you find the DISC; POPS has been
+    tracking weird things in the net.
+  - **The quest's first steps, spelled out:** when POPS joins your crew, a quest opens: beat a sector. Once that's
+    done (and POPS is crew), the next quest points you at the DISC: maybe POPS wants you to take out MEDIX (its boss
+    always drops it). As soon as you have the DISC it becomes "get out with the disc". If you fail or lose the DISC,
+    it points you back at MEDIX. (Today the DISC just starts dropping once POPS is crew and you've cleared a sector,
+    v14.42, with no quest showing it.)
+  - **POPS's icon in the call dialog seems different than** ... (the note stops there: different from what? his
+    headshot in the cutscene?)
+  - **A beat after each cutscene:** the screen goes dark and the music fades down; a quest popup shows there if there
+    is one; then a transition back to the last screen.
+  - **More than one quest at a time:** a quest list that scrolls, with the active ones and the completed ones (a
+    quest log).
+  - **Bug? POPS's calls don't count in the editor:** the user's runs from the editor count as testing, but other
+    hackers' calls do count there, so it may be a POPS-only bug. They should count.
+  - **The HAD3S step's card: a link that launches the seed** and plays it from there.
+  - **Rename the quest?** Maybe change the name from "WHAT IS ALL THIS FOR?".
+- **HAD3S playtest** (the user, meat notes 2026-11-06). Liked: getting ZOMBIE in there, and RELOAD ("great for this").
+  - **Bug: losing to d0g still shows "d0g DEFEATED".** (Claude checked: engine/run.js sets `st.breachRival` from
+    any bad hacker in the corp, so the breach reveal stamps DEFEATED even when he escaped with the last node;
+    `h.stoleLast` is only read by DOG DAYS' message in engine/quests.js.)
+  - **Make it clearer when d0g beats you**, above all on the SECTOR CLEARED screen before the UPLINK.
+  - **d0g's cursor never splits into 3** (not built yet: QUESTS.md step 5 lists it as still to do).
+  - **Introduce LEASH**, since you start with it: a POPS call the first time, before d0g shows up, or at the end of
+    the DISC cutscene.
+  - **Does d0g say anything in the terminal?** He has lines (data/hackers.js: enter, taunts, out, kill); the user
+    hasn't been watching for them. Check they show in HAD3S.
+  - **The map:** get MEDIX in there somewhere; swap sector 1's safehouse for a corp; a couple more H links in
+    sector 1 between corps; TUNNEL or the web gear would be good to find here.
+  - **The PRODIGAL cutscene:** beating d0g is mostly how you find where he is. POPS should use the DISC to bring b0y
+    back. You find him in the basement, weak, maybe unconscious, and upload the DISC into him (or doc does the
+    re-upload). He comes back as d0g for a flash, then clears up.
 - **Crew quests** (the user, 2026-11-04: a quest per crew member, some hidden): ideas in `docs/CREW_QUESTS.md` (each built on the crew member's counter-rival; ROOT and BRICK's unlock a crew member). To pick from.
 - **The quest doc: `docs/QUESTS.md`** (2026-10-28). The first quest to build out: POPS's son (the quest item, POPS's calls, the
   UPLINK hand-in, defeat d0g 10 times on a quest seed, the trace, d0g is POPS's son and joins the crew).
@@ -187,6 +221,7 @@ unlocked by REP, and some quests unlock REP.
   ad + a mod you own) starts something (ADS.md "Secret ads"); ads you can buy from (a puppy for a quest); an emoji
   with a quest purpose.
 - **The feel: FTL's quests and interactions.** Brainstorm together.
+  - **Random encounters, FTL style** (the user, meat notes 2026-11-06): you choose from 2 or 3 options, and you might get a reward.
 - **Cutscene art (the user, 2026-11-04):** the DISC scene is a strip of the user's asXii drawings (built v14.17-v14.18: draw-in, parallax, lights, fog, the OPEN cue, the DISC sliding in, a POPS headshot, d0g's logo). Next: random traces running up that aren't in the drawings; more color work; the hand is out for now (the user: the pose isn't how you'd do it in ASCII). More art for the later frames maybe.
 - **Cutscene music:** EVENT HORIZON as a possible lighter cutscene track (the user, 2026-11-04); the DISC scene plays PANTHEON (SCENE_MUSIC).
 - **A hint on the quests tab** (the user, meat notes 2026-11-03): when it's empty, something like "no quests yet. put a
@@ -321,6 +356,11 @@ unlocked by REP, and some quests unlock REP.
   (uses or changes the run seed). THE CHOIR as a "ministry" (a per-corp word instead of "corp").
 - A second boss mod for the corps that have one (71 corp mods left; 11 corps give boss gear instead, v13.62).
 - **A drug dealer corp** (the user, 2026-10-27).
+- **The Simon corp** (the user, meat notes 2026-11-06): it shows you a pattern, and you play the pattern back. Its ICE
+  won't hurt you, but it doesn't break either. Do the pattern right and the last node is the real one. A wrong step
+  hurts like ICE but doesn't break it (or maybe it breaks and the pattern updates).
+- **A PSYCHO MANTIS boss** (the user, meat notes 2026-11-06): a boss that reaches outside the game: "unplug your
+  internet", "open the inspector"?
 - CORPS.md marks every built corp `(built)` on its heading.
 
 - **RED TAPE:** a mod or gear (just the name so far).
@@ -410,7 +450,7 @@ unlocked by REP, and some quests unlock REP.
   `docs/art/logotype_round4.png`, `logotype_n1.png`, `logotype_round5.png`, text in NAMES.md; the title switching
   between the face and the lettering). Your profile shuffling as you log in. The maps more animated (the user,
   2026-10-27): the white path lines light up, or each continent lights up with brighter white borders.
-- **Sector event cards:** the user's art for the 14 card pictures (5 x 3 placeholders in data/events.js).
+- **Sector event cards:** the user's art for the 14 card pictures (5 x 3 placeholders in data/events.js). (Still wanted: "update art for sector events", meat notes 2026-11-06.)
 - **COPY PASS (text):** a terminology pass on the whole game, to lock the terms down. Settled so far (the user, 2026-10-29):
   **going deeper** = moving on through the sectors (the UPLINK says it; push on, next sector... say it this way). The INFO page, the training (POPS's lines), the mod and gear descriptions, and the ~180
   "integrity" mentions (the header says INT; INT everywhere, or only where space is tight).
@@ -424,6 +464,26 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
+- **Bugs and weirdness** (the user, meat notes 2026-11-06; the quest and HAD3S bugs are under 3. Quests):
+  - **The black market runs too long:** with 10 items (repair and reroll included; COUPON CUTTER may have added one),
+    LEAVE gets pushed down into the loot bar. Fixes: the `+---` bars a line closer to the list, or let the list
+    scroll (the user leans toward scrolling).
+  - **The DISC should be listed as loot** in the store.
+  - **Quest popups should block hovers and clicks** on what's under them.
+  - **STIM with ZOMBIE:** STIM should work with it (a rot limit of 150 + 75?).
+  - **TUNNEL still doesn't draw its lines** on the sector map (the user isn't sure it's happened yet).
+  - **Music didn't come back** after a corp's rewards screen, going through HAD3S from the editor.
+- **Misc** (the user, meat notes 2026-11-06):
+  - **Gear stack counts:** the `x2` is hard to read on the gear's color. Give it a chip like the abbreviation's,
+    maybe a bit darker.
+  - **COLD BREW's rewards aren't very good:** it needs something legendary.
+  - **CHUCK E. CACHE has a 1UP in its logo:** do something with that once 1UPs are unlocked?
+  - **Skip a corp's rewards for a heal:** an option, maybe a choice on the screen, maybe a REP unlock.
+  - **Send a seed to a friend.**
+  - **The training sim** may need a little redesign.
+  - **Pull greglytics into its own repo**, like asXii (below).
+- **The neon editor** (the user, meat notes 2026-11-06): clean up the UI; terminal-style commands with
+  autocomplete?; Justin's music track viewer in the music tab?
 - [ ] **Code cleanups left from the arch pass** (the user, 2026-11-05: "keep those all around so we can hit them when it makes sense"). Do each one with the feature that needs it, not on its own. Details: docs/ARCHITECTURE.md.
   - **One popup card (`drawCard`):** with the next new kind of popup.
   - **Per-seed definitions:** when a new seed comes in (crew quests), so HAD3S / H3AV3N / the next one are mostly data.
@@ -461,6 +521,7 @@ unlocked by REP, and some quests unlock REP.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.
 - **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle.
 - **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open).
+- **Ad copy** (the user, meat notes 2026-11-06): "you are the product!"
 - **Ads that do things** (later, the user 2026-10-28; the fake ads are done and great): an ad that sells you gear or a mod; a free trial of a corp's mod; AD BLOCKER.
 - **A daily seed** and a daily leaderboard (none today).
 
