@@ -179,8 +179,8 @@ unlocked by REP, and some quests unlock REP.
     always drops it). As soon as you have the DISC it becomes "get out with the disc". If you fail or lose the DISC,
     it points you back at MEDIX. (Today the DISC just starts dropping once POPS is crew and you've cleared a sector,
     v14.42, with no quest showing it.)
-  - **POPS's icon in the call dialog seems different than** ... (the note stops there: different from what? his
-    headshot in the cutscene?)
+  - **POPS's face in the call dialog looks squashed** next to the training's, where he looks squarish (the user,
+    2026-11-06). Make the call's face match the training's proportions.
   - **A beat after each cutscene:** the screen goes dark and the music fades down; a quest popup shows there if there
     is one; then a transition back to the last screen.
   - **More than one quest at a time:** a quest list that scrolls, with the active ones and the completed ones (a
