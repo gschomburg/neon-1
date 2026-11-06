@@ -1,6 +1,6 @@
 // NeoN+1 data/ads.js: the fake ads: their screens, text and art. (Shown by engine/ads.js.)
 'use strict';
-NEON_FILES.push(['data/ads.js', 'v14.46']);
+NEON_FILES.push(['data/ads.js', 'v14.47']);
 
 // An ad is 1 or 2 screens. A screen is a list of lines, up to ADS_W characters, drawn inside
 // the ad box from the top. A line: { t: text, c: color (a palette slot: text, dim, mid, bright,
@@ -420,6 +420,28 @@ const ADS = {
     ]],
   },
   // OMNI//CORE sells itself.
+  // MEDIX CULTURE (the user, 2026-11-06: the mold, before the quest gets there): a wellness ad for something that grows
+  medixculture: {
+    name: 'MEDIX CULTURE',
+    screens: [[
+      { t: 'MEDIX', c: 'accent', x: 'c', b: true },
+      { t: 'C U L T U R E', c: 'text', x: 'c' },
+      { t: '' },
+      { t: '  .%&.  ;%.   .&%;  ', c: 'money', x: 'c' },
+      { t: ' %&@%&;%&@&%;%&@%&. ', c: 'money', x: 'c' },
+      { t: '  \'%&;\'  \'&%\'  ;&%\'  ', c: 'money', x: 'c' },
+      { t: '' },
+      { t: 'a living network', c: 'text', x: 'c' },
+      { t: 'for your living room.', c: 'text', x: 'c' },
+      { t: '' },
+      { t: '+ grows with you', c: 'text', x: 2 },
+      { t: '+ no setup. it finds you.', c: 'text', x: 2 },
+      { t: '+ quiets busy minds', c: 'text', x: 2 },
+      { t: '' },
+      { t: 'already in 1 in 3 servers.', c: 'dim', x: 'c' },
+      { t: '[ LET IT IN ]', c: 'accent', x: 'c', btn: '> culture started. it is already growing.' },
+    ]],
+  },
   omnipremium: {
     name: 'OMNI//CORE PREMIUM',
     screens: [[

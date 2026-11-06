@@ -23,7 +23,7 @@
 //   lvl2    crew: their LVL 2 upgrade (THE BOARD), fixed
 // How each one plays is engine/hackers.js (HK_AI); they come in through the RIVAL anomaly (rivals) and CALL gear (crew).
 'use strict';
-NEON_FILES.push(['data/hackers.js', 'v14.46']);
+NEON_FILES.push(['data/hackers.js', 'v14.47']);
 
 const HACKERS = {
   // ================= bad hackers =================
@@ -139,12 +139,15 @@ const HACKERS = {
     name: 'd0g', side: 'bad', hp: 5,
     style: { fg: "#ffffff", bg: "#8a0f1c", ink: "#ff3348" },   // (white on blood red, the user 2026-11-04: not POPS's yellow; ink: his name and tags in red)
     tics: { swap: [['d', 'b']], col: '#4aa8ff' },   // his logo glitches (d -> b, in b0y's blue) everywhere it shows: data/fx.js tics
-    enter: "wow. such hacker.",
-    taunt: ["much tell. very read.","wow.","so predict."],
-    out: "such loss. much respect.",
-    kill: "very traced. wow.",
+    // his lines (the user, 2026-11-06: no doge memes): G0D talking through the boy, cold and sure; now and then the boy
+    // slips through
+    enter: "you again. it said you'd come.",
+    taunt: ["every node here is ours.","your tell is loud.","i know where you tap.","it sees what i see.","you're standing in it.","get out while you c- no. stay."],
+    out: "the grip... slips.",
+    kill: "into the mold with you.",
     shtick: 'online now.',
-    lore: ['Nobody has seen d0g\'s face. Started as a meme account; the meme got root. The ads say D0G is online now.',
+    heads: 3,   // his cursor: three heads, one taps (engine/hackers.js hkHeads; w00f too)
+    lore: ['Nobody has seen d0g\'s face. He came out of nowhere already holding root. The ads say D0G is online now.',
       'They are always right.'],
     ai: 'The best there is. Picks every 1.5s, only nodes the tell allows, and reads every corp\'s tell right. Takes the pay ' +
       'when he wins. Rare, late sectors, and the "defeat d0g" quest (beating him gives the H3AV3N seed, BACKLOG item 2).',
@@ -340,10 +343,10 @@ const HACKERS = {
 // after: only once b0y is on your crew (engine/hackers.js hkRivalFor); d0g's never again then.
 HACKERS.w00f = Object.assign({}, HACKERS.d0g, {
   name: 'w00f', after: 'b0y',
-  enter: 'w00f.',
-  taunt: ['w00f.', 'good boy. good boy.', 'still guarding. still guarding.'],
-  out: 'w00f...',
-  kill: 'sit. stay.',
+  enter: 'WATCHDOG ONLINE.',
+  taunt: ['INTRUDER.', 'GATE HOLDS.', 'NO ONE IN. NO ONE OUT.', 'w00f.', 'STILL GUARDING.'],
+  out: 'WATCHDOG... RESTARTING.',
+  kill: 'INTRUDER REMOVED.',
   shtick: 'the dog without the boy.',
   lore: ['When b0y walked out of HAD3S, the dog kept running. It is everything d0g was, with nobody inside it: it',
     'guards the gate, reads the tell, and says one word.'],

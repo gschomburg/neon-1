@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.46']);
+NEON_FILES.push(['engine/hackers.js', 'v14.47']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -179,10 +179,20 @@ function hkTick(lv, now) {
     if (!s.cur) s.cur = { x: to.x, y: to.y - 2 };
     s.cur.x += (to.x - s.cur.x) * 0.12; s.cur.y += (to.y - s.cur.y) * 0.12;
     if (!s.aim && Math.random() < 0.01) s.home = null;
+    if (hkDef(h.id).heads) hkHeads(s, now);
     if (h.side === 'good' || HK_AI[h.id].emotes) { if (!s.emoteAt || now > s.emoteAt) { s.emoteAt = now + 5000 + Math.random() * 6000; if (Math.random() < 0.5) hkSay(h, hkLine(h, h.side === 'bad' ? 'taunt' : 'clue'), false, true); } }
     else if (!s.tauntAt || now > s.tauntAt) { s.tauntAt = now + 6000 + Math.random() * 6000; if (s.tauntAt && Math.random() < 0.4) hkSay(h, hkLine(h, 'taunt'), false, true); }
   }
   hkNotes(lv);
+}
+// d0g's three heads (data/hackers.js heads; the user, 2026-11-06): stacked as one while he thinks; as he's about to tap
+// (lead ms before) the other two burst out to the sides, hover there (hover ms after), then drift back in. Only the
+// middle one taps. spread: 0 (stacked) - 1 (apart), eased; out / back: how fast.
+const HK_HEADS = { lead: 450, hover: 900, out: 0.35, back: 0.08, offs: [[-5, -1.5], [5, -1]] };
+function hkHeads(s, now) {
+  if (s.aim && s.aim.t && now > s.aim.at - HK_HEADS.lead && now < s.aim.at) s.headsTill = now + HK_HEADS.hover;
+  const want = now < (s.headsTill || 0) ? 1 : 0;
+  s.spread = (s.spread || 0) + (want - (s.spread || 0)) * (want ? HK_HEADS.out : HK_HEADS.back);
 }
 // The notes row: each hacker's name and bars (rivals: vs NAME ###; crew: +NAME ###)
 function hkNotes(lv) {
@@ -605,6 +615,10 @@ function buildHackers(ctx, lv, now) {
       if (reduced() && s.goneAt && now - s.goneAt < 900) { const f = (ART_FACES[h.id] || { art: [] }).art; f.forEach((l, k) => put(x - 1, y - 3 + k, [...l].map(ch => Math.random() < (now - s.goneAt) / 900 ? ' ' : ch).join(''), sty.fg, 'fx', true)); }
       continue;
     }
+    if (hkDef(h.id).heads && s.spread > 0.03 && !reduced()) HK_HEADS.offs.forEach(([ox, oy], i) => {   // the other two heads
+      const hx = Math.round(x + ox * s.spread), hy = Math.round((y + oy * s.spread + Math.sin(now / 240 + i * 2.1) * 0.4 * s.spread) * 2) / 2;
+      bg(hx, hy, 3, sty.bg, 0.8); put(hx, hy, mark, mixHex(sty.fg, sty.bg, 0.3), 'fx', true);
+    });
     bg(x, y, 3, sty.bg, 1); put(x, y, mark, sty.fg, 'fx', true);
     // their tag: their name, or what they're saying (a chat line in the cursor, like b0y's); kept on the screen
     const talking = s.bubble && now < s.bubble.until, tag = talking ? ' ' + s.bubble.text + ' ' : hkName(h.id).toLowerCase().slice(0, 8);

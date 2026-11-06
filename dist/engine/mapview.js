@@ -1,7 +1,7 @@
 // NeoN+1 engine/mapview.js: the run's map (buildMap), the results screen's map (drawMapView), and a node's info.
 // Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/mapview.js', 'v14.46']);
+NEON_FILES.push(['engine/mapview.js', 'v14.47']);
 
 // Map: final node at the top, start at the bottom. Edges are dotted lines.
 // x for a node; start / final nodes sit in the middle lane.
@@ -150,6 +150,7 @@ function buildMap(ctx) {
     if (n.mod && ANOMALIES[n.mod] && !visited) put(p.x + 2, y, ANOMALIES[n.mod].tag, C.money, 'map', true);   // corp modifier
     if (n.worm && !visited) put(p.x - 2, y, '~', C.accent, 'map', true);   // WORM: sent here
     else if (run.wormAim && holds('worm') && !visited && wormTargets().includes(n) && Math.floor(now / 300) % 2) put(p.x - 2, y, '~', C.mid, 'map');   // WORM armed: where it can go
+    else if (!visited && questHintNode(n)) put(p.x - 2, y, '!', C.rep, 'map', true);   // THE DISC: POPS's hint (engine/quests.js)
     if (sel) { put(p.x - 3, y, '>', C.accent, 'map'); put(p.x + 3, y, '<', C.accent, 'map'); }
     else if (run.at === n.id) put(p.x - 3, y, '@', C.bright, 'map');
     if (available && settled) addHit(p.x - 1, y, 3, 1, { kind: 'node', id: n.id });
@@ -213,6 +214,7 @@ function nodeInfo(n) {
     if (rules) T(rules, C.mid);
     if (d.bossDesc) T(d.bossDesc, C.dangerDim);
     if (n.mod && ANOMALIES[n.mod]) T(`+ ${ANOMALIES[n.mod].name}: ${ANOMALIES[n.mod].desc}`, C.money);
+    if (questHintNode(n)) T('! POPS: the DISC could be in here.', C.rep);   // (engine/quests.js)
     { const off = modsOffIn(d); if (off.length) T(`off here: ${off.map(k => MODS[k].name.toLowerCase()).join(', ')}.`, C.dangerDim); }   // e.g. COIN FLIP in a drag corp
     return { lines, action: 'B R E A C H' };
   }

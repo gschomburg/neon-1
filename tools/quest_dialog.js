@@ -30,7 +30,7 @@ for (const [id, q] of Object.entries(QUEST_INFO)) {
   P('');
   P('### Steps');
   P('');
-  q.steps.forEach((s, i) => { P(`${i + 1}. **${s.name}**: ${s.goal}`); if (s.lost) P(`   - After losing the item: ${s.lost}`); });
+  q.steps.forEach((s, i) => { P(`${i + 1}. **${s.name}**: ${s.goal}`); if (s.held) P(`   - Holding the item, **${s.held.name}**: ${s.held.goal}`); if (s.lost) P(`   - After losing the item: ${s.lost}`); });
   P('');
   P('### Calls');
   P('');
@@ -49,6 +49,7 @@ for (const [id, q] of Object.entries(QUEST_INFO)) {
     for (const f of frames) {
       if (f.title) continue;
       if (f.art) { P('```'); for (const l of f.art) P(l); P('```'); P(''); }
+      if (f.upload) { P(`[ ${f.upload.from} >> ${f.upload.to}: the upload bar. A tap starts it; the mold pushes it back twice. ]`); P(''); }
       P(f.who ? `**${NAMES[f.who] || f.who.toUpperCase()}:** ${f.text}` : `*${f.text}*`);
       P('');
     }

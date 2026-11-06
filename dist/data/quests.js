@@ -6,6 +6,7 @@
 //   name: the step's name (THE BOARD > QUESTS shows "STEP 2: SAFEHOUSE")
 //   goal: the objective, plainly (THE BOARD > QUESTS)
 //   lost: (optional) the objective after you die holding the quest item
+//   held: (optional) { name, goal } while you hold the step's carry item (THE DISC: "get out with the disc")
 // How a step ends (engine/quests.js reads these; the next step is the next one in the list):
 //   carry: cash out holding this loot (its key) and the step is done. While you hold it, the UPLINK says so.
 //   uplinkLine: what POPS says at the UPLINK while you carry it (a QUEST_LINES key)
@@ -22,28 +23,39 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.46']);
+NEON_FILES.push(['data/quests.js', 'v14.47']);
 
 const QUEST_INFO = {
   pops: {
-    name: 'WHAT IS ALL THIS FOR?', from: 'POPS',
+    // (the user, 2026-11-06: was WHAT IS ALL THIS FOR?; the quest runs on past b0y to G0D and the end of the game)
+    name: 'SYSTEM FAILURE', from: 'POPS',
     steps: [
-      { key: 'find', name: 'THE DISC', carry: 'disc', uplinkLine: 'uplink', doneLine: 'deliver', goal: 'beat a sector boss with the DISC in your gear, then CASH OUT at the UPLINK.',
-        lost: 'you lost the DISC. another copy is out there: loot nodes, markets, the PIER.' },
+      // (the user, 2026-11-06) POPS joins your crew: this step opens. Clear a sector and the DISC step starts.
+      { key: 'sector', name: 'PROVE IT', goal: "POPS is on your crew now. beat a sector boss and show him what you've got." },
+      // MEDIX is a hint, not the only place: the DISC drops anywhere loot does (MEDIX's corp boss always has one)
+      { key: 'find', name: 'THE DISC', carry: 'disc', uplinkLine: 'uplink', doneLine: 'deliver',
+        goal: 'POPS wants an old DISC found. try MEDIX: its corp boss always has one. it can turn up anywhere loot drops, markets too.',
+        held: { name: 'GET OUT WITH THE DISC', goal: 'you have the DISC. beat the sector boss, then CASH OUT at the UPLINK with it.' },
+        lost: 'you lost the DISC. another copy is out there. try MEDIX again, or any loot node, market or the PIER.' },
       { key: 'deliver', name: 'SAFEHOUSE', scene: 'disc', goTo: 'TAKE IT TO POPS', goal: 'you cashed out with the DISC. take it to POPS.' },
       { key: 'd0g', name: 'DOG DAYS', carry: 'dogtag', uplinkLine: 'tagUplink', doneLine: 'traced', goal: "start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.", seed: 'HAD3S', wins: 10 },
       { key: 'trace', name: 'TRACE ROUTE', scene: 'prodigal', goTo: 'GO TO POPS', crew: 'b0y', goal: 'POPS got a hit on the name on the DOGTAG. go see him.' },
       { key: 'raid', name: 'OMNI RAID', scene: 'gate', goal: "b0y is on your crew. call him in on an OMNI boss (his CALL, or a plain one) and break it with him there." },
       { key: 'g0d', name: 'G0D MODE', goal: 'start a run with the seed H3AV3N and beat G0D. b0y goes with you.', seed: 'H3AV3N' },
-      { key: 'done', name: 'WHAT IT WAS ALL FOR', goal: 'you beat G0D. POPS has his boy back.' },
-      // still to build (docs/QUESTS.md): TRACE ROUTE, PRODIGAL, NEW BLOOD, OMNI RAID, HEAVEN'S GATE, G0D MODE
+      { key: 'done', name: 'SYSTEM RESTORED', goal: 'you beat G0D. POPS has his boy back.' },
     ],
   },
 };
 
 const QUEST_LINES = {
   // the first time you CALL him in (a real run): he joins your crew, free (engine/quests.js questCalled)
-  joined: ["you called. i came. that's how a crew works, kid.", "i'm on yours now. no charge.", "my own calls'll turn up in markets and loot. clear a sector and we'll talk."],
+  joined: ["you called. i came. that's how a crew works, kid.", "i'm on yours now. no charge.", "my own calls'll turn up in markets and loot.",
+    "clear a sector and we'll talk. something's off in the net lately. i want to know you can handle it."],
+  // PROVE IT: you clear a sector with him on your crew. The mold, before the quest gets there (the user, 2026-11-06).
+  sector: ["that's a sector. not bad, kid.", "i've been watching the net. corps going quiet. something growing in the logs, like mold.",
+    "MEDIX runs hottest. there's an old DISC in there i want back.", "break MEDIX if you see it. it could turn up anywhere, though."],
+  // the DISC for sale in a market (once a market)
+  shop: ["kid. that DISC in the market. that's the one.", "buy it. i'm good for it. mostly."],
   // you pick up the DISC for the first time
   found: ["kid. that disc you just picked up.", "i know that label. don't lose it.", "take it through the next checkpoint: beat the sector boss and CASH OUT at the UPLINK with it.", "then bring it to me."],
   // you pick it up again (you'd had it before)
@@ -147,7 +159,7 @@ const QUEST_SCENES = {
 //   strength: 0.8, scale: 4, fade: 2000, ... }. tint = { col, amount, where }: the color pulls toward col there.
 //   mood (on any frame) = { levels, stages }: what the scene's music wanders between from that frame on (SCENE_MUSIC).
   disc: [
-    { title: ['WHAT IS ALL THIS FOR?', 'step 2: SAFEHOUSE'], mood: { levels: [0], stages: 'A' } },
+    { title: ['SYSTEM FAILURE', 'step 3: SAFEHOUSE'], mood: { levels: [0], stages: 'A' } },
     // the laundromat first, then the city behind it, all flickering on in place; a beat; then the page pans down
     { pic: { art: 'disc', rows: [6, 39], hold: 900, layers: [
       { n: 'a skyline 2 way back', col: 'dim', par: 0.6, at: 1500, dur: 1000, from: 'bottom', flicker: true },
@@ -193,38 +205,50 @@ const QUEST_SCENES = {
     { who: 'pops', text: "here. that's a seed: HAD3S. start a run with it and go hunting." },
     { who: 'pops', text: 'go find him. make him pay for it.' },
   ],
-  // PRODIGAL (docs/QUESTS.md steps 6-7; the story: "THE BACKUP", Claude's pick 2026-11-04, to rewrite): the trace,
-  // MEDIX's basement, d0g, "doc", why he was d0g, and he's b0y again. Placeholder art: n_cutscene_02_prodigal.
+  // PRODIGAL (docs/QUESTS.md steps 6-7; rewritten with the user, 2026-11-06): beating d0g is how POPS finds him. MEDIX's
+  // basement: b0y, empty, wired into the wall. The DISC is his backup: you upload it (the upload frame: a tap starts it,
+  // the mold pushes back). d0g for a flash, in G0D's voice, then "doc". What got him (G0D, not by name), and he's b0y.
+  // Placeholder art: n_cutscene_02_prodigal.
+  // upload = { from, to }: a bar the mold has grown over; a tap fills it (engine/quests.js UPLOAD). Tap again to go on.
   prodigal: [
-    { title: ['WHAT IS ALL THIS FOR?', 'step 4: TRACE ROUTE'], mood: { levels: [0], stages: 'A' } },
+    { title: ['SYSTEM FAILURE', 'step 5: TRACE ROUTE'], mood: { levels: [0], stages: 'A' } },
     { pic: { art: 'prodigal', rows: [0, 5], layers: [{ n: 'trace', col: 'accent', from: 'top', dur: 1600 }] },
       text: 'POPS runs the name off the DOGTAG. the trace bounces through five relays, then dives.' },
+    { who: 'pops', text: 'every time you beat d0g, his signal came through a little cleaner. now i can see where it comes from.' },
     { who: 'pops', text: "it doesn't end in a corp. it ends under one. MEDIX. sub-basement three." },
     { who: 'pops', text: 'i worked there, a long time ago. i patched people up.' },
     { pic: { art: 'prodigal', rows: [8, 17], hold: 600, layers: [
       { n: 'basement mold', col: '#9fc13a', from: 'bottom', flicker: true, at: 600 },
       { n: 'basement', col: 'text', from: 'bottom', flicker: true, at: 0, lights: { ch: '>:/', col: 'accent', rate: 900, off: 0.3 } }] },
       text: 'you go down together. the lights are out. mold up the walls, and one screen still on in the dark.', mood: { levels: [0, 1], stages: 'A' } },
-    { text: "d0g is there, wired into it. he doesn't run." },
-    { pic: { art: 'prodigal', rows: [22, 29], layers: [{ n: 'hood', col: 'mid' }, { n: 'eyes', col: 'danger', at: 500, glitch: true }] },
-      who: 'd0g', text: "you're the one who keeps beating me.", mood: { levels: [1], stages: 'B' } },
+    { text: "he's there, slumped in front of it. cables run out of his arms and into the wall. thin. barely breathing." },
+    { who: 'pops', text: "kid. kid, it's me." },
+    { text: "nothing. POPS checks his pulse, his eyes, the cables. his hands remember what to do, even if he doesn't." },
+    { who: 'pops', text: "he's breathing. but there's nobody home. it took all of him." },
+    { who: 'pops', text: "...not all of him. the DISC. it was never a trail. it's him. a backup. he got it out before it took the rest.", mood: { levels: [1], stages: 'AB' } },
+    { who: 'pops', text: "i'll keep him breathing. you're the hacker. put him back." },
+    { upload: { from: 'DISC', to: 'b0y' }, text: 'you jack the DISC into the wall, into him. something in the wall pushes back.', mood: { levels: [2], stages: 'B' } },
+    { pic: { art: 'prodigal', rows: [22, 29], layers: [{ n: 'hood', col: 'mid' }, { n: 'eyes', col: 'danger', at: 300, glitch: true }] },
+      who: 'd0g', text: "no. this one is mine. you can't have hi-", mood: { levels: [2, 3], stages: 'BC' } },
     { who: 'pops', text: 'kid. look at me.' },
     { text: 'the eyes in the hood flicker. something in there is fighting something else.' },
     { pic: { art: 'prodigal', rows: [22, 29], layers: [{ n: 'hood', col: 'mid' }, { n: 'eyes', col: '#4aa8ff', at: 300, glitch: true, tics: { swap: [['o', '@']], col: 'danger' } }] },
       who: 'd0g', text: '...doc?', mood: { levels: [1, 2], stages: 'B' } },
     { text: 'nobody has called POPS that in years. only one person ever did.', mood: { levels: [0, 1], stages: 'A' } },
-    { who: 'd0g', text: 'i went in after it. something in the corps was waking up. i wanted to see it first.' },
-    { who: 'd0g', text: 'it saw me first. it got in. it made me its dog.' },
-    { who: 'd0g', text: 'i built it a gate down there. CERBERUS. so nothing gets in. so nothing gets out.', mood: { levels: [1, 2], stages: 'B' } },
-    { who: 'd0g', text: 'every time you beat me, its grip slipped. a little more of me came back.' },
-    { who: 'd0g', text: 'the DISC was me. a backup. i got it out where somebody would find it.' },
+    // G0D, set up (the user, 2026-11-06): not by name, what it is and what it wants
+    { who: 'd0g', text: 'i went in after it. something under the corps was waking up. i wanted to see it first.' },
+    { who: 'd0g', text: "it isn't a corp. it's under all of them. every corp you've ever cracked, it was in there, watching you do it." },
+    { who: 'd0g', text: "the mold is what it looks like when it grows. it doesn't want money. it wants the whole net quiet.", mood: { levels: [1, 2], stages: 'B' } },
+    { who: 'd0g', text: "one mind. nothing moving that it didn't move." },
+    { who: 'd0g', text: 'it got into me. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out.' },
+    { who: 'd0g', text: 'every time you beat me, its grip slipped. long enough to hide a copy of me where somebody would find it.' },
     { text: "POPS doesn't say anything. he just holds on to him.", mood: { levels: [0], stages: 'A' } },
     { who: 'b0y', text: "don't call me d0g. that was its name for me. it's b0y." },
-    { who: 'b0y', text: "it's still out there. here's my number. when you're ready, we go get it.", mood: { levels: [1], stages: 'AB' } },
+    { who: 'b0y', text: "it's still out there, and it knows your face now. here's my number. when you're ready, we go get it.", mood: { levels: [1], stages: 'AB' } },
   ],
   // HEAVEN'S GATE (steps 9-10): breaking OMNI with b0y there; he finds where it went. Placeholder art: n_cutscene_03_gate.
   gate: [
-    { title: ['WHAT IS ALL THIS FOR?', "HEAVEN'S GATE"], mood: { levels: [1], stages: 'A' } },
+    { title: ['SYSTEM FAILURE', "HEAVEN'S GATE"], mood: { levels: [1], stages: 'A' } },
     { pic: { art: 'gate', rows: [0, 6], layers: [{ n: 'omni core', col: 'danger', glitch: true, dur: 1200 }] },
       text: "OMNI's core comes apart. b0y is already in it, faster than you've ever seen anybody move.", mood: { levels: [2], stages: 'B' } },
     { who: 'b0y', text: 'it was here. for years. the corps were just its body.' },

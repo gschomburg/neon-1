@@ -3,20 +3,22 @@
 Every quest's calls and scenes, as a script. **This file is generated:** the words live in `dist/data/quests.js`.
 Edit them there, then run `node tools/quest_dialog.js` to rewrite this file.
 
-## WHAT IS ALL THIS FOR?
+## SYSTEM FAILURE
 
 From POPS.
 
 ### Steps
 
-1. **THE DISC**: beat a sector boss with the DISC in your gear, then CASH OUT at the UPLINK.
-   - After losing the item: you lost the DISC. another copy is out there: loot nodes, markets, the PIER.
-2. **SAFEHOUSE**: you cashed out with the DISC. take it to POPS.
-3. **DOG DAYS**: start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.
-4. **TRACE ROUTE**: POPS got a hit on the name on the DOGTAG. go see him.
-5. **OMNI RAID**: b0y is on your crew. call him in on an OMNI boss (his CALL, or a plain one) and break it with him there.
-6. **G0D MODE**: start a run with the seed H3AV3N and beat G0D. b0y goes with you.
-7. **WHAT IT WAS ALL FOR**: you beat G0D. POPS has his boy back.
+1. **PROVE IT**: POPS is on your crew now. beat a sector boss and show him what you've got.
+2. **THE DISC**: POPS wants an old DISC found. try MEDIX: its corp boss always has one. it can turn up anywhere loot drops, markets too.
+   - Holding the item, **GET OUT WITH THE DISC**: you have the DISC. beat the sector boss, then CASH OUT at the UPLINK with it.
+   - After losing the item: you lost the DISC. another copy is out there. try MEDIX again, or any loot node, market or the PIER.
+3. **SAFEHOUSE**: you cashed out with the DISC. take it to POPS.
+4. **DOG DAYS**: start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.
+5. **TRACE ROUTE**: POPS got a hit on the name on the DOGTAG. go see him.
+6. **OMNI RAID**: b0y is on your crew. call him in on an OMNI boss (his CALL, or a plain one) and break it with him there.
+7. **G0D MODE**: start a run with the seed H3AV3N and beat G0D. b0y goes with you.
+8. **SYSTEM RESTORED**: you beat G0D. POPS has his boy back.
 
 ### Calls
 
@@ -24,7 +26,20 @@ From POPS.
 
 > **POPS:** you called. i came. that's how a crew works, kid.  
 > **POPS:** i'm on yours now. no charge.  
-> **POPS:** my own calls'll turn up in markets and loot. clear a sector and we'll talk.  
+> **POPS:** my own calls'll turn up in markets and loot.  
+> **POPS:** clear a sector and we'll talk. something's off in the net lately. i want to know you can handle it.  
+
+**sector**
+
+> **POPS:** that's a sector. not bad, kid.  
+> **POPS:** i've been watching the net. corps going quiet. something growing in the logs, like mold.  
+> **POPS:** MEDIX runs hottest. there's an old DISC in there i want back.  
+> **POPS:** break MEDIX if you see it. it could turn up anywhere, though.  
+
+**shop**
+
+> **POPS:** kid. that DISC in the market. that's the one.  
+> **POPS:** buy it. i'm good for it. mostly.  
 
 **found**: You pick up the DISC for the first time.
 
@@ -113,7 +128,7 @@ From POPS.
 
 *and you? you've got a seed to type in.*
 
-#### WHAT IS ALL THIS FOR?: step 2: SAFEHOUSE (`disc`)
+#### SYSTEM FAILURE: step 3: SAFEHOUSE (`disc`)
 
 *POPS's safehouse is a back room behind a laundromat that closed years ago. the sign still flickers OPEN.*
 
@@ -145,9 +160,11 @@ From POPS.
 
 **POPS:** go find him. make him pay for it.
 
-#### WHAT IS ALL THIS FOR?: step 4: TRACE ROUTE (`prodigal`)
+#### SYSTEM FAILURE: step 5: TRACE ROUTE (`prodigal`)
 
 *POPS runs the name off the DOGTAG. the trace bounces through five relays, then dives.*
+
+**POPS:** every time you beat d0g, his signal came through a little cleaner. now i can see where it comes from.
 
 **POPS:** it doesn't end in a corp. it ends under one. MEDIX. sub-basement three.
 
@@ -155,9 +172,23 @@ From POPS.
 
 *you go down together. the lights are out. mold up the walls, and one screen still on in the dark.*
 
-*d0g is there, wired into it. he doesn't run.*
+*he's there, slumped in front of it. cables run out of his arms and into the wall. thin. barely breathing.*
 
-**d0g:** you're the one who keeps beating me.
+**POPS:** kid. kid, it's me.
+
+*nothing. POPS checks his pulse, his eyes, the cables. his hands remember what to do, even if he doesn't.*
+
+**POPS:** he's breathing. but there's nobody home. it took all of him.
+
+**POPS:** ...not all of him. the DISC. it was never a trail. it's him. a backup. he got it out before it took the rest.
+
+**POPS:** i'll keep him breathing. you're the hacker. put him back.
+
+[ DISC >> b0y: the upload bar. A tap starts it; the mold pushes it back twice. ]
+
+*you jack the DISC into the wall, into him. something in the wall pushes back.*
+
+**d0g:** no. this one is mine. you can't have hi-
 
 **POPS:** kid. look at me.
 
@@ -167,23 +198,25 @@ From POPS.
 
 *nobody has called POPS that in years. only one person ever did.*
 
-**d0g:** i went in after it. something in the corps was waking up. i wanted to see it first.
+**d0g:** i went in after it. something under the corps was waking up. i wanted to see it first.
 
-**d0g:** it saw me first. it got in. it made me its dog.
+**d0g:** it isn't a corp. it's under all of them. every corp you've ever cracked, it was in there, watching you do it.
 
-**d0g:** i built it a gate down there. CERBERUS. so nothing gets in. so nothing gets out.
+**d0g:** the mold is what it looks like when it grows. it doesn't want money. it wants the whole net quiet.
 
-**d0g:** every time you beat me, its grip slipped. a little more of me came back.
+**d0g:** one mind. nothing moving that it didn't move.
 
-**d0g:** the DISC was me. a backup. i got it out where somebody would find it.
+**d0g:** it got into me. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out.
+
+**d0g:** every time you beat me, its grip slipped. long enough to hide a copy of me where somebody would find it.
 
 *POPS doesn't say anything. he just holds on to him.*
 
 **B0Y:** don't call me d0g. that was its name for me. it's b0y.
 
-**B0Y:** it's still out there. here's my number. when you're ready, we go get it.
+**B0Y:** it's still out there, and it knows your face now. here's my number. when you're ready, we go get it.
 
-#### WHAT IS ALL THIS FOR?: HEAVEN'S GATE (`gate`)
+#### SYSTEM FAILURE: HEAVEN'S GATE (`gate`)
 
 *OMNI's core comes apart. b0y is already in it, faster than you've ever seen anybody move.*
 

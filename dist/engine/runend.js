@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v14.46']);
+NEON_FILES.push(['engine/runend.js', 'v14.47']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -117,6 +117,7 @@ async function sectorClear(skipped) {
   const c = st.corp, foe = c && (c.hk || []).find(h => h.side === 'bad');   // a rival on the boss: SECTOR CLEARED says how that went
   run.pending = { kind: 'sector', skipped, boss: c ? c.def.name : null, foe: foe && !skipped ? { id: foe.id, escaped: !!foe.stoleLast } : null };
   tallySector(run);   // THE RECORD
+  questSector();   // PROVE IT: POPS calls, THE DISC starts (engine/quests.js)
   if (has('failsafe') && !has('zombie')) run.failsafeUsed = false;   // FAILSAFE recharges each stage
   if (!run.practice && run.sectorsCleared > (save.bestSector || 0)) { save.bestSector = run.sectorsCleared; persist(); }
   st.corp = null; st.lv = null; st.timer = null; st.dying = false;

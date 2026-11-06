@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.46']);
+NEON_FILES.push(['engine/panels.js', 'v14.47']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -192,7 +192,7 @@ function openShop(node) {
   // a market you go back into (the user, 2026-10-31) is as you left it: run.shops keeps its offers and rerolls
   const kept = (run.shops = run.shops || {})[node.id];
   let offers = kept ? kept.offers : roll(0).concat([repair]), rolls = kept ? kept.rolls : 0, view = 'buy', sel = 0, sellSel = 0;
-  const keep = () => { run.shops[node.id] = { offers, rolls }; };
+  const keep = () => { run.shops[node.id] = { offers, rolls }; questShop(node, offers); };   // (the DISC for sale: POPS calls, engine/quests.js)
   keep();
   const rerollsLeft = () => marketRerolls() - rolls;
   const rerollPrice = () => costInt(ECON.reroll) * (rolls + 1);   // more each time, in the same market

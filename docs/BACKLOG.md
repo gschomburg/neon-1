@@ -170,21 +170,10 @@ unlocked by REP, and some quests unlock REP.
     (makes higher layer counts easier in the early sectors).
 
 ### 3. Quests and RPG elements
-- **Playtest of WHAT IS ALL THIS FOR?, up to b0y joining** (the user, meat notes 2026-11-06: "it's good"; talked
-  through 2026-11-06, decisions below).
-  - **Lore about the mold before the quest gets there.** **Decided (Greg, 2026-11-06):** POPS has been tracking weird
-    things in the net. Give him a line when he joins or when you find the DISC, something like "MEDIX's servers have
-    been running hot. something's growing in there." Add a creepy mold ad too. A side quest about it can wait.
-  - **The quest's first steps, spelled out.** **Decided (Greg, 2026-11-06):**
-    - When POPS joins your crew, a step opens: beat a sector. That makes his "clear a sector and we'll talk" line
-      official.
-    - Next, a step points you at the DISC. MEDIX is a hint for where to look ("take out MEDIX"), but the DISC still
-      drops from anywhere, as it does today (v14.42).
-    - As soon as you have the DISC, the step becomes "get out with the disc". If you die or lose it, the step goes
-      back to looking, with MEDIX as the hint again.
-    - The DISC can show up in a market, where you have to buy it. POPS gets an extra line for that ("get that disc").
-  - **A beat after each cutscene.** **Decided (Greg, 2026-11-06):** build it. The screen goes dark and the music fades
-    down. The QUEST card with the new step shows there if there is one, then a transition back to the last screen.
+- **Playtest of SYSTEM FAILURE (was WHAT IS ALL THIS FOR?), up to b0y joining** (the user, meat notes 2026-11-06:
+  "it's good"). **Built v14.47** (SPEC version log): the rename, PROVE IT and THE DISC steps (MEDIX as a hint, the
+  market DISC call), POPS's mold lines and the MEDIX CULTURE ad, the beat after each scene, the PRODIGAL rewrite with
+  the upload, d0g's three heads, d0g's and w00f's new lines. Still open:
   - **More than one quest at a time** (a quest log: a list that scrolls, the active quests, then the completed ones).
     **Decided (Greg, 2026-11-06):** wait until there's a second quest (probably the first crew quest). Until then, keep
     it in mind: anything added to this quest shouldn't assume it's the only one.
@@ -192,31 +181,7 @@ unlocked by REP, and some quests unlock REP.
     hackers' calls do count there, so it may be a POPS-only bug. They should count. (Claude, v14.46: every call goes
     through the same `tally('hack:call:' + id)` in hkSpawn, POPS's too, and practice runs count none of them.) The
     user didn't see it count up in the feats. They'll look again.
-  - **Rename the quest.** The quest runs past b0y, all the way to beating G0D and the ending, so it wants a bigger name.
-    The user's ideas: NETWORK COLLAPSE, SYSTEM FAILURE. (Claude's, for a b0y-only name: LOST AND FOUND, HOMECOMING,
-    SUB-BASEMENT THREE, BACKUP.) The ending's "WHAT IT WAS ALL FOR" step name pairs with the old name: change it too.
-    Not picked yet.
-- **HAD3S playtest** (the user, meat notes 2026-11-06). Liked: getting ZOMBIE in there, and RELOAD ("great for this").
-  - **d0g's cursor splitting into 3** (QUESTS.md step 5). CERBERUS's three heads. **Decided (Greg, 2026-11-06):**
-    there's still only one cursor that clicks. While he's thinking, the three stay together, stacked as one. When he's
-    about to click they burst apart. The one that clicks goes in, and the other two hover nearby for a little while.
-    Everywhere d0g shows up (RIVAL corps too).
-  - **Built v14.46:** ESCAPED on the breach reveal and SECTOR CLEARED; POPS's LEASH call; the map (no safehouse in
-    sector 1, MEDIX, more sideways links, TUNNEL / MESH likelier); [ PLAY IT ] on THE BOARD > QUESTS; POPS's square
-    face chip in a CALL (SPEC version log).
-  - **Rewrite d0g's terminal lines** (data/hackers.js: enter, taunt, out, kill, shtick, lore). The user (2026-11-06):
-    no doge-meme lines ("wow. such hacker.", "much tell. very read."). They should sound closer to G0D's dialog: G0D's
-    voice coming through the boy. Check w00f's lines too (they copy d0g's look). Also check the lines show in HAD3S.
-  - **The PRODIGAL cutscene, rewritten.** **Decided (Greg, 2026-11-06):**
-    - Beating d0g is mostly how you find where he is. The trace leads to MEDIX's sub-basement. b0y is there, weak,
-      barely on. POPS checks him over (the old medic).
-    - POPS uses the DISC (his backup: "the DISC was me") to bring him back. You do the upload, as one more tap in the
-      scene: a moldy upload bar animates in, you tap, and it fills, with the mold pushing back. Everything else in the
-      scene stays tap to advance.
-    - He comes back as d0g for a flash (the red eyes, one line in G0D's voice), then clears up (the blue eyes,
-      "...doc?").
-    - It sets up G0D: not by name, but b0y explains what he went in after and what got into him. That's the setup
-      the G0D steps need. His CERBERUS lines get shorter and come after he wakes.
+  - **The mold, more of it:** a short side quest that touches on it (the user's idea; held for now).
 - **Crew quests** (the user, 2026-11-04: a quest per crew member, some hidden): ideas in `docs/CREW_QUESTS.md` (each built on the crew member's counter-rival; ROOT and BRICK's unlock a crew member). To pick from.
 - **The quest doc: `docs/QUESTS.md`** (2026-10-28). The first quest to build out: POPS's son (the quest item, POPS's calls, the
   UPLINK hand-in, defeat d0g 10 times on a quest seed, the trace, d0g is POPS's son and joins the crew).

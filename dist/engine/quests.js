@@ -1,21 +1,23 @@
-// NeoN+1 engine/quests.js: quests (docs/QUESTS.md). The first piece of the main quest: THE DISC.
-// It opens once you've cleared a sector and POPS is on your crew. Then a DISC (quest gear) can turn up anywhere loot
-// drops: a loot node, a market, the PIER. Pick it up and POPS calls: cash out with it at the next UPLINK. Cash out
-// with it and he asks for it (a call with a button); then the scene. After that, the next step (d0g) is "coming".
+// NeoN+1 engine/quests.js: quests (docs/QUESTS.md). The main quest, SYSTEM FAILURE (POPS's).
+// It opens when POPS joins your crew: PROVE IT (clear a sector). Then THE DISC: a DISC (quest gear) can turn up anywhere
+// loot drops: a loot node, a market, the PIER (MEDIX's corp boss always has one: the map marks MEDIX). Pick it up and
+// POPS calls: cash out with it at the next UPLINK. Cash out with it and he asks for it (a call with a button); then the
+// scene, and on through the steps.
 //
 // save.quests.pops: { step, seen, lost, news }
-//   step: a key from QUEST_INFO.pops.steps (data/quests.js says how each one ends): find -> deliver -> d0g -> trace
-//         -> raid -> g0d -> done
-//   seen: you've had the DISC once (the quest shows on THE BOARD)   lost: died with it (it drops more for a while)
+//   step: a key from QUEST_INFO.pops.steps (data/quests.js says how each one ends): sector -> find -> deliver -> d0g
+//         -> trace -> raid -> g0d -> done (saves from before v14.47 start at find)
+//   seen: you've had the DISC once   lost: died with it (it drops more for a while)
+//   (the quest shows on THE BOARD once POPS is on your crew, or you've had the DISC)
 //   leashTold: POPS's LEASH call on your first HAD3S run (questRunStart)
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.46']);
+NEON_FILES.push(['engine/quests.js', 'v14.47']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
-const questOf = id => { save.quests = save.quests || {}; return save.quests[id] = save.quests[id] || { step: 'find' }; };
+const questOf = id => { save.quests = save.quests || {}; return save.quests[id] = save.quests[id] || { step: 'sector' }; };
 const questOpen = () => statOf('sectors') >= 1 && hkCrewOn('pops');   // a sector cleared (ever) and POPS on the crew
 // Quests move in real runs (and in the neon editor, which has its own save); never in the training or multiplayer.
 const questRun = () => !!(st.run && !st.run.tutorial && !st.mp && (!st.run.practice || EDITOR));   // (run kinds: engine/save.js)
@@ -34,6 +36,12 @@ function questNext(id) {
 // T A K E   I T   T O   P O P S (a box's spaced-out words)
 const spacedOut = t => t.split(' ').map(w => [...w].join(' ')).join('   ');
 // The UPLINK's reminder line while you carry the step's item (engine/runend.js), or null
+// What THE BOARD and the QUEST card show for the step: its name and goal (holding its item: held; lost it: lost)
+function questView(id) {
+  const info = QUEST_INFO[id], q = questOf(id), at = Math.max(0, info.steps.findIndex(s => s.key === q.step)), step = info.steps[at];
+  const held = step.held && step.carry && st.run && hasLoot(step.carry);
+  return { at, step, name: held ? step.held.name : step.name, goal: held ? step.held.goal : q.lost && step.lost ? step.lost : step.goal };
+}
 function questCarryLine() {
   const s = questStepInfo('pops');
   return s.carry && hasLoot(s.carry) && questRun() ? `+ cash out to bring ${QUEST_INFO.pops.from} the ${ITEMS[s.carry].name}` : null;
@@ -48,12 +56,32 @@ function discDrops(r, where) {
 // MEDIX's boss always drops it while you're looking (meat notes 2026-11-05; the story: b0y was in MEDIX's
 // sub-basement). In its boss loot: engine/loot.js bossLoot.
 const DISC_CORP = 'medix';
+// A node the map marks while you're looking: MEDIX (engine/mapview.js: a ! by it, and a line in its info)
+const questHintNode = n => !!(n && n.type === 'corp' && n.corp === DISC_CORP && discCan());
+// The DISC for sale in a market: POPS says so, once a market (engine/panels.js openShop, and its rerolls)
+function questShop(node, offers) {
+  const run = st.run;
+  if (!questRun() || !run || !offers.some(o => o.key === 'disc' && !o.sold)) return;
+  run.discShops = run.discShops || [];
+  if (run.discShops.includes(node.id)) return;
+  run.discShops.push(node.id);
+  setTimeout(() => queueCall('pops', QUEST_LINES.shop), 900);
+}
 // The quest's start (meat notes 2026-11-05): the first time you CALL POPS in, in a real run, he joins your crew for
 // free (CREW: POPS on THE BOARD shows as bought). Called by hkSpawn (engine/hackers.js).
 function questCalled(id) {
   if (id !== 'pops' || hkCrewOn('pops') || !questRun()) return;
-  save.legacy = save.legacy || {}; save.legacy.crew_pops = 1; persist();
+  save.legacy = save.legacy || {}; save.legacy.crew_pops = 1;
+  const q = questOf('pops'); if (q.step === 'find' && !q.seen) q.step = 'sector';   // (a save from before PROVE IT: start there)
+  q.news = true; persist();
   queueCall('pops', QUEST_LINES.joined);
+  questCard('pops');
+}
+// PROVE IT: a sector cleared with POPS on your crew (engine/runend.js sectorClear): he calls, and THE DISC starts.
+function questSector() {
+  if (!questRun() || questOf('pops').step !== 'sector' || !hkCrewOn('pops')) return;
+  queueCall('pops', QUEST_LINES.sector);
+  questNext('pops');
 }
 // Any DISC that lands in your gear (addItem): POPS calls.
 function questGot(key) {
@@ -65,6 +93,7 @@ function questGot(key) {
   if (st.mode === 'play' && st.lv) setMsg(`> QUEST: ${QUEST_INFO.pops.name}`, C.rep);
   queueCall('pops', first ? QUEST_LINES.found : q.lost ? QUEST_LINES.foundAgain : QUEST_LINES.foundOld);
   q.lost = false; persist();
+  if (questOf('pops').step === 'find') questCard('pops');   // the step turns into GET OUT WITH THE DISC
 }
 // The run ends: died with it, and it can drop again (more often for a while).
 function questRunEnd(run, win) {
@@ -127,11 +156,11 @@ const CALL_QUEUE = [];
 function queueCall(who, lines, btn = null) { CALL_QUEUE.push({ who, lines, btn }); }
 // A QUEST card (the call box, no face): the quest's name, the step you're on now, its goal (and seed).
 function questCard(id) {
-  const info = QUEST_INFO[id], q = questOf(id), at = Math.max(0, info.steps.findIndex(s => s.key === q.step)), step = info.steps[at];
-  CALL_QUEUE.push({ who: info.from.toLowerCase(), quest: { name: info.name, step: `STEP ${at + 1}: ${step.name}`, seed: step.seed }, lines: [step.goal] });
+  const info = QUEST_INFO[id], v = questView(id);
+  CALL_QUEUE.push({ who: info.from.toLowerCase(), quest: { name: info.name, step: `STEP ${v.at + 1}: ${v.name}`, seed: v.step.seed }, lines: [v.goal] });
 }
 function callTick(now) {
-  if (st.callBox || st.featBox || st.qScene || !CALL_QUEUE.length || !featCalm()) return;
+  if (st.callBox || st.featBox || (st.qScene && !sceneDark(now)) || !CALL_QUEUE.length || !featCalm()) return;   // (after a scene: over its dark)
   st.callBox = Object.assign(CALL_QUEUE.shift(), { t0: now });
   st.kbFocus = st.hoverBtn = null;
   Sound.shield();
@@ -220,7 +249,40 @@ const picRows = pic => pic.rows || [0, stripArt(pic).h - 1];
 const picLayers = pic => { if (!pic.logo) return pic.layers; const a = stripArt(pic); return [Object.assign({ n: 'logo', col: a.fg, glitch: true, dur: 900, box: { w: a.bw, col: a.bgc } }, HACKERS[pic.logo] && HACKERS[pic.logo].tics ? { tics: HACKERS[pic.logo].tics } : {}, pic.look || {})]; };   // (a hacker's tics: data/hackers.js)
 const layerAt = (ly, k) => ly.at != null ? ly.at : k * STRIP.gap;
 const layerEnd = (ly, k) => layerAt(ly, k) + (ly.dur || STRIP.reveal) + (ly.slide ? (ly.slide.at || 0) + ly.slide.ms : 0);   // (a progress runs on past it: the text doesn't wait)
-const stripArtMs = fr => fr.pic ? Math.max(...picLayers(fr.pic).map(layerEnd)) + (fr.pic.hold || 0) : 0;
+const stripArtMs = fr => fr.pic ? Math.max(...picLayers(fr.pic).map(layerEnd)) + (fr.pic.hold || 0) : fr.upload ? UPLOAD.in : 0;
+// ---- An upload frame (data/quests.js upload: PRODIGAL's DISC into b0y): a bar the mold has grown over draws in, the
+// line types, then a tap starts the fill. The mold pushes it back twice (back: [time, fill] points, 0-1), then it's
+// in. Its own tap to go on after. in / ms: how long the bar takes to draw in / to fill.
+const UPLOAD = { w: 26, rows: 3, in: 900, ms: 4200, back: [[0, 0], [0.28, 0.4], [0.36, 0.22], [0.6, 0.68], [0.68, 0.5], [1, 1]],
+  col: '#4aa8ff', moldCh: '%&#*@;' };
+const uploadFill = u => { const b = UPLOAD.back; for (let i = 1; i < b.length; i++) if (u <= b[i][0]) { const [t0, f0] = b[i - 1], [t1, f1] = b[i]; return f0 + (f1 - f0) * (u - t0) / (t1 - t0); } return 1; };
+const uploadU = (sc, now) => sc.upI === sc.i ? Math.min(1, (now - sc.up) / UPLOAD.ms) : -1;   // -1: not started
+function drawUpload(ctx, now, sc, fr, at, el, yOf, inView) {
+  const { put, bg } = ctx, W = UPLOAD.w, x0 = Math.floor((L.wc - W - 2) / 2), cur = sc.lay[sc.i] === at;
+  const u = cur ? uploadU(sc, now) : 1, fill = u < 0 ? 0 : uploadFill(u), lit = Math.round(fill * W), drawn = Math.min(1, el / UPLOAD.in);
+  const mold = G0D_COLS.mold, y0 = yOf(at.top), label = fr.upload.from + '  >>  ' + fr.upload.to;
+  if (inView(y0)) put(Math.floor((L.wc - label.length) / 2), y0, label, C.mid, 'hud');
+  const y1 = yOf(at.top + 1);
+  if (inView(y1)) {
+    put(x0, y1, '[', C.mid, 'hud'); put(x0 + W + 1, y1, ']', C.mid, 'hud');
+    for (let c = 0; c < W; c++) {
+      if (c / W > drawn) break;   // the mold creeps in from the left as the frame starts
+      if (c < lit) { bg(x0 + 1 + c, y1, 1, UPLOAD.col, 0.35); put(x0 + 1 + c, y1, u >= 1 ? '#' : '=', UPLOAD.col, 'hud', true); continue; }
+      const ch = UPLOAD.moldCh[Math.floor(FX.hash(c, 7, Math.floor(now / 260)) * UPLOAD.moldCh.length)];
+      put(x0 + 1 + c, y1, ch, c === lit && u > 0 && u < 1 ? C.danger : mold, 'hud');   // (where it meets the fill: the fight)
+    }
+  }
+  const y2 = yOf(at.top + 2);
+  if (inView(y2) && u >= 0) {
+    const t = u >= 1 ? 'UPLOAD COMPLETE' : 'uploading ' + Math.round(fill * 100) + '%';
+    put(Math.floor((L.wc - t.length) / 2), y2, t, u >= 1 ? UPLOAD.col : C.mid, 'hud', u >= 1);
+  }
+  if (cur && u > 0) {   // its sounds: a crackle each time the mold pushes it back, a rise when it's in
+    sc.fired = sc.fired || new Set();
+    UPLOAD.back.forEach(([t, f], k) => { if (k && f < UPLOAD.back[k - 1][1] && u >= UPLOAD.back[k - 1][0] && !sc.fired.has('up' + k)) { sc.fired.add('up' + k); Sound.static && Sound.static(0.3); } });
+    if (u >= 1 && !sc.fired.has('updone')) { sc.fired.add('updone'); Sound.hkRise && Sound.hkRise(); }
+  }
+}
 // When each character of a line shows (ms from the start of its typing): a pause after a sentence, a short one after a comma.
 const stripTimes = new WeakMap();
 function textTimes(fr) {
@@ -241,7 +303,7 @@ function stripLayout(id) {   // where each frame sits on the page (rows)
   let y = 0;
   return QUEST_SCENES[id].map(fr => {
     if (fr.title) return null;
-    const top = y, rr = fr.pic ? picRows(fr.pic) : null, artH = rr ? rr[1] - rr[0] + 1 : 0;
+    const top = y, rr = fr.pic ? picRows(fr.pic) : null, artH = rr ? rr[1] - rr[0] + 1 : fr.upload ? UPLOAD.rows : 0;
     y += artH ? artH + 1 : 0;
     const lines = wrapText(fr.text, STRIP.w), textTop = y + (fr.who ? 1 : 0);
     y = textTop + lines.length;
@@ -383,6 +445,7 @@ function buildStrip(ctx, now, sc, frames) {
         if (ly.smoke && p >= 1) FX.smoke(FX.look('smoke', ly.smoke), now, (X, Y, ch, ink) => { if (Y < r0 || Y > r1) return; const sy = rowY(Y); if (inView(sy)) put(x0 + X, sy, ch, ink, 'hud'); });
       });
     }
+    if (fr.upload) drawUpload(ctx, now, sc, fr, at, el, yOf, inView);
     // its text, under the art (older frames dimmer), with a pause between sentences
     let budget = j < sc.i ? Infinity : typedBy(fr, el - textStart);
     if (j === sc.i) {   // a soft tick as each mark types in (a lower blip when someone's talking)
@@ -412,9 +475,10 @@ function buildStrip(ctx, now, sc, frames) {
     });
   }
   put(1, 1, `- ${sc.i + 1} / ${frames.length} -`, C.dim, 'hud');
-  if (el0 >= frameMs(fr0) && Math.floor(now / 500) % 2) {
-    const t = sc.i < frames.length - 1 ? 'tap to go on' : 'tap to end';
-    put(Math.floor((L.wc - t.length) / 2), L.hc - 2, t, C.dim, 'hud');
+  const upU = fr0.upload ? uploadU(sc, now) : 1;   // (an upload frame: its own tap first, none while it fills)
+  if (el0 >= frameMs(fr0) && (upU < 0 || upU >= 1) && Math.floor(now / 500) % 2) {
+    const t = upU < 0 ? 'tap to upload' : sc.i < frames.length - 1 ? 'tap to go on' : 'tap to end';
+    put(Math.floor((L.wc - t.length) / 2), L.hc - 2, t, upU < 0 ? C.bright : C.dim, 'hud');
   }
 }
 // A scene's music (data/quests.js SCENE_MUSIC): its song; each frame's mood (or the last one's) says the levels and
@@ -433,26 +497,61 @@ function sceneNext() {
   if (!sc) return;
   const fr = QUEST_SCENES[sc.id][sc.i], now = performance.now();
   if (isStrip(sc.id)) { if (now - sc.t0 < frameMs(fr)) { sc.t0 = now - frameMs(fr) - 1; return; } }   // (a strip: finish the art and the line first)
+  if (fr.upload) {   // an upload frame: this tap starts it; taps while it fills do nothing
+    const u = uploadU(sc, now);
+    if (u < 0) { sc.up = now; sc.upI = sc.i; Sound.vcrSpin && Sound.vcrSpin(UPLOAD.ms / 1000 * 0.4); return; }
+    if (u < 1) return;
+  }
   else if (sceneTyped(sc, now) < frameLen(fr)) { sc.t0 = now - frameLen(fr) * 28 - 1; return; }   // finish the line first
   if (sc.i < QUEST_SCENES[sc.id].length - 1) { sc.i++; sc.t0 = now; Sound.tick(); return; }
   sceneEnd();
 }
+// The beat after a scene (the user, 2026-11-06): the screen goes dark (the scene breaks up into it) and the music fades
+// down; the QUEST card for the new step comes up there if there is one; then back to the screen you were on, decoding
+// in. dark: ms to go dark; hold: ms it stays dark at least; music: ms the scene's song takes to fade (then silent until
+// the next screen's); cardWait: ms it waits for the card to come up. (The editor's looped frames end at once.)
+const SCENE_OUT = { dark: 700, hold: 900, music: 1300, cardWait: 2500 };
+const sceneDark = now => !!(st.qScene && st.qScene.out && now - st.qScene.out.t0 >= SCENE_OUT.dark);
 function sceneEnd() {
   const sc = st.qScene;
-  st.qScene = null;
+  if (!sc || sc.out) return;
   Sound.ui();
-  if (sc && questStepInfo('pops').scene === sc.id) questNext('pops');   // the step's scene: on to the next step, on a QUEST card
-  if (sc && sc.onEnd) sc.onEnd();
+  const q0 = CALL_QUEUE.length;
+  if (questStepInfo('pops').scene === sc.id) questNext('pops');   // the step's scene: on to the next step, on a QUEST card
+  if (sc.fxLoop) { st.qScene = null; if (sc.onEnd) sc.onEnd(); return; }
+  sc.out = { t0: performance.now(), card: CALL_QUEUE.length > q0 };
+  st.hoverBtn = null;
+  Music.fadeOut(SCENE_OUT.music / 1000);
 }
-function sceneKey(k) { if (k === 'escape') sceneEnd(); else if (k === 'enter' || k === ' ' || k === 'arrowright') sceneNext(); }
-function buildScene_(ctx, now) {
-  const { put, bg, cells, addHit } = ctx, sc = st.qScene, frames = QUEST_SCENES[sc.id], fr = frames[sc.i];
+function sceneOutTick(now) {
+  const sc = st.qScene;
+  if (!sc || !sc.out) return;
+  const o = sc.out, el = now - o.t0;
+  if (st.callBox && st.callBox.quest) o.shown = true;
+  if (el < SCENE_OUT.dark + SCENE_OUT.hold || st.callBox || (o.card && !o.shown && el < SCENE_OUT.dark + SCENE_OUT.cardWait)) return;
+  st.qScene = null;
+  st.boardStart = now;   // the screen under it decodes back in
+  if (sc.onEnd) sc.onEnd();
+}
+// The music while it's dark (engine/boot.js): silent once the scene's song has faded
+const sceneOutMusic = now => st.qScene && st.qScene.out && now - st.qScene.out.t0 >= SCENE_OUT.music ? { song: 'none', level: 0, urgency: 0, low: false, tempo: 1, pitch: 1 } : null;
+function sceneKey(k) { if (st.qScene && st.qScene.out) return; if (k === 'escape') sceneEnd(); else if (k === 'enter' || k === ' ' || k === 'arrowright') sceneNext(); }
+function buildScene_(ctx0, now) {
+  const sc = st.qScene, frames = QUEST_SCENES[sc.id], fr = frames[sc.i], { cells } = ctx0;
   clearRect(cells, 0, 0, L.wc, L.hc);
-  const strip = isStrip(sc.id);
-  { const ex = Math.ceil(L.ox / L.cw) + 1, ey = Math.ceil(L.oy / L.chh) + 1;
-    if (strip) for (let y = -ey; y < L.hc + ey; y++) { bg(-ex, y, L.wc + 2 * ex, C.bg, 1); bg(-ex, y + 0.5, L.wc + 2 * ex, C.bg, 1); }   // a strip: the dark bg, light text (the user, 2026-11-04)
+  const strip = isStrip(sc.id), dark = sc.out ? Math.min(1, (now - sc.out.t0) / SCENE_OUT.dark) : 0;
+  { const ex = Math.ceil(L.ox / L.cw) + 1, ey = Math.ceil(L.oy / L.chh) + 1, bg = ctx0.bg;
+    if (strip || dark >= 0.5) for (let y = -ey; y < L.hc + ey; y++) { bg(-ex, y, L.wc + 2 * ex, C.bg, 1); bg(-ex, y + 0.5, L.wc + 2 * ex, C.bg, 1); }   // a strip: the dark bg, light text (the user, 2026-11-04)
     else popupBg(bg, 'scene', -ex, -ey, L.wc + 2 * ex, L.hc + 2 * ey, false); }   // the whole screen, past the content edges (POPUP_LOOK)
-  addHit(0, 0, L.wc, L.hc, { kind: 'scene' });
+  ctx0.addHit(0, 0, L.wc, L.hc, { kind: 'scene' });
+  if (dark >= 1) return;   // dark: the QUEST card (if any) comes up over it
+  // going dark: the scene breaks up, a mark at a time (each at its own point in the fade)
+  const gone = (x, y) => dark > 0 && FX.hash(Math.round(x * 2), Math.round(y * 2), 5) < dark;
+  const ctx = !dark ? ctx0 : Object.assign({}, ctx0, {
+    put: (x, y, str, col, own, bold) => { for (let k = 0; k < str.length; k++) if (str[k] !== ' ' && !gone(x + k, y)) ctx0.put(x + k, y, str[k], col, own, bold); },
+    bg: (x, y, w, col, a) => { if (!gone(x, y)) ctx0.bg(x, y, w, col, a); },
+    addHit: () => {} });
+  const { put, bg, addHit } = ctx;
   const W = 30, x0 = Math.floor((L.wc - W) / 2), mid = Math.floor(L.hc / 2);
   if (!strip || fr.title) put(x0, mid - 8, `- ${String(sc.i + 1)} / ${frames.length} -`.padStart(W), C.dim, 'hud');   // (a strip: its own, top left)
   const skip = '[ SKIP ]';
@@ -480,27 +579,28 @@ function buildScene_(ctx, now) {
   }
 }
 function sceneTap(h) {
+  if (st.qScene && st.qScene.out) return;   // (going dark: taps wait)
   if (h && h.kind === 'btn' && h.id === 'qskip') return h.onTap();
   sceneNext();
 }
 
 // ---------------- THE BOARD > QUESTS ----------------
-const questsNew = () => !!(save.quests && Object.values(save.quests).some(q => q.news && q.seen));
+const questsNew = () => !!(save.quests && Object.entries(save.quests).some(([id, q]) => q.news && (q.seen || (id === 'pops' && hkCrewOn('pops')))));
 function questBoardLines(T, X) {
   const q = save.quests && save.quests.pops;
-  if (!q || !q.seen) {
+  if (!q || !(q.seen || hkCrewOn('pops'))) {
     T('no quests yet.', C.mid);
     T('');
     for (const l of wrapText('put a crew together and maybe you will find some. get to know the other hackers: call them.', 32)) T(l, C.dim);
     return;
   }
   q.news = false;
-  const info = QUEST_INFO.pops, at = Math.max(0, info.steps.findIndex(s => s.key === q.step)), step = info.steps[at];
+  const info = QUEST_INFO.pops, v = questView('pops'), at = v.at, step = v.step;
   X({ text: info.name, col: C.rep, bold: true });
   T(`from ${info.from}`, C.mid);
   T('');
-  X({ text: `STEP ${at + 1}: ${step.name}`, col: C.bright, bold: true });
-  for (const l of wrapText(q.step === 'find' && q.lost && step.lost ? step.lost : step.goal, 32)) T(l, C.text);
+  X({ text: `STEP ${at + 1}: ${v.name}`, col: C.bright, bold: true });
+  for (const l of wrapText(v.goal, 32)) T(l, C.text);
   if (step.wins) { T(''); X({ text: `d0g: ${Math.min(q.d0g || 0, step.wins)} / ${step.wins}`, col: C.bright, bold: true }); }   // (DOG DAYS: the wins so far)
   if (step.seed) {   // the seed POPS gave you, and (off the title, no run waiting) a link that starts it (the user, 2026-11-06)
     T('');

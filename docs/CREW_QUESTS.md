@@ -12,7 +12,7 @@ their villains built in, and the counter you already see in play becomes the sto
 
 | Crew | Their rival | The counter today | The quest (below) |
 |---|---|---|---|
-| POPS | VULTURE | guards the last three | WHAT IS ALL THIS FOR? (built) + HOUSE CALL |
+| POPS | VULTURE | guards the last three | SYSTEM FAILURE (built) + HOUSE CALL |
 | b0y | w00f | (he was d0g) | PUT HIM DOWN (after the main quest) |
 | BRICK | ICE MAN | re-frozen ICE costs ICE MAN a bar | THAW: it **unlocks RTFM** |
 | NULL | DOPPEL (via d0g) | the one AI d0g can't read | THE LIST |

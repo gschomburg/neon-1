@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.46']);
+NEON_FILES.push(['engine/editor.js', 'v14.47']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -404,7 +404,7 @@ if (EDITOR) {
     qstep: m => {
       save.quests = save.quests || {}; save.legacy = save.legacy || {};
       if (m.step === 'none') delete save.quests.pops; else Object.assign(questOf('pops'), { step: m.step, seen: true, news: true });
-      if (['raid', 'g0d', 'done'].includes(m.step)) save.legacy.crew_b0y = 1; else delete save.legacy.crew_b0y;   // (b0y on the crew from step 5: d0g is w00f then)
+      if (['raid', 'g0d', 'done'].includes(m.step)) save.legacy.crew_b0y = 1; else delete save.legacy.crew_b0y;   // (b0y on the crew from step 6, OMNI RAID: d0g is w00f then)
       persist();
     },
     qscene: m => playScene(m && m.key && QUEST_SCENES[m.key] ? m.key : 'disc'),

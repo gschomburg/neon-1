@@ -17,6 +17,9 @@ module.exports = { name: 'fixes', body: `
   check(!hkCrewOn('pops'), 'POPS not crew on a fresh save');
   questCalled('pops');
   check(hkCrewOn('pops'), 'POPS joins on the first call');
+  check(questOf('pops').step === 'sector', 'his quest opens on PROVE IT: ' + questOf('pops').step);
+  questSector();   // (a sector cleared with him on the crew)
+  check(questOf('pops').step === 'find', 'a sector cleared: THE DISC: ' + questOf('pops').step);
   const got = bossLoot({ id: 9901, corp: 'medix' });
   check(got.includes('disc') && holdingDisc(), 'MEDIX boss drops the DISC: ' + got.join(','));
   check(!bossLoot({ id: 9902, corp: 'medix' }).includes('disc'), 'no second DISC while holding one');

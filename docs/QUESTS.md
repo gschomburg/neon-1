@@ -7,13 +7,20 @@ Where quests sit in the progression: `docs/PROGRESSION.md`.
 
 **Code names (2026-11-05):** the G0D fight lives in `dist/engine/g0dfight.js` (it was `g0dproto.js`; `G0DP` / `g0dp*` / `st.g0dp` / mode `'g0dp'` are now `G0DF` / `g0df*` / `st.g0df` / `'g0df'`). Older notes below use the old names.
 
-## The main quest: WHAT IS ALL THIS FOR? (POPS's son, d0g, G0D)
+## The main quest: SYSTEM FAILURE (POPS's son, d0g, G0D)
+
+**Renamed (Greg, 2026-11-06):** it was WHAT IS ALL THIS FOR?. The quest runs on past b0y to G0D and the end of the game, so
+it wanted a bigger name. The last step is SYSTEM RESTORED (was WHAT IT WAS ALL FOR).
 
 **Its words (calls, scenes, step names) are in `dist/data/quests.js`:** read and edit them there. As a script to read: `docs/QUEST_DIALOG.md`
 (generated: `node tools/quest_dialog.js` after editing).
 
-**Step names** (the user named the quest 2026-10-28; the step names are Claude's, to change): 1 THE DISC, 2 SAFEHOUSE,
-3 DOG DAYS, then (not built) TRACE ROUTE, PRODIGAL, NEW BLOOD, OMNI RAID, HEAVEN'S GATE, G0D MODE.
+**Step names** (as built, v14.47; the step names are Claude's, to change): 1 PROVE IT, 2 THE DISC (GET OUT WITH THE
+DISC while you hold it), 3 SAFEHOUSE, 4 DOG DAYS, 5 TRACE ROUTE (the PRODIGAL scene), 6 OMNI RAID, 7 G0D MODE,
+8 SYSTEM RESTORED.
+**Decided (Greg, 2026-11-06):** POPS joining your crew opens the quest on PROVE IT (clear a sector). Then THE DISC:
+MEDIX is a hint (marked on the map, its corp boss always has one), but the DISC drops anywhere, markets too (POPS calls
+when one's for sale).
 
 In short: a quest item -> POPS -> beat d0g 10 times -> d0g is POPS's son, joins you -> raid OMNI with d0g -> he finds
 G0D in heaven -> the H3AV3N seed -> beat G0D.
@@ -71,8 +78,9 @@ The user's dump, 2026-10-28, put in order. More is coming.
     in the regular world as a boss.
   - **d0g's cursor splits into 3, now and then** (the user, 2026-10-30): everywhere he shows up (RIVAL corps too), not
     always 3, and it doesn't change his abilities. Just a subtle thing when you fight him; maybe the player puts it
-    together (d0g = Cerberus).
-- **Built v14.25-v14.28:** the seed handoff, the QUEST card, the HAD3S run (THE HUNT, wins / escaped, the DOGTAG, TRACE ROUTE as a stub), the rival gear, MYCONET and CERBERUS (no mold). Still to do: TRACE ROUTE onward (steps 6-10); d0g's cursor splitting into 3; CERBERUS in the regular game after HAD3S; the gear outside HAD3S.
+    together (d0g = Cerberus). **Built v14.47** (the user, 2026-11-06: one cursor clicks; the three stay stacked while
+    he thinks, burst apart as he's about to tap, the other two hover a moment; engine/hackers.js `HK_HEADS`).
+- **Built v14.25-v14.28:** the seed handoff, the QUEST card, the HAD3S run (THE HUNT, wins / escaped, the DOGTAG, TRACE ROUTE as a stub), the rival gear, MYCONET and CERBERUS (no mold). Still to do: TRACE ROUTE onward (steps 6-10); CERBERUS in the regular game after HAD3S; the gear outside HAD3S.
 - **Decided 2026-11-04 (the user), building HAD3S:**
   - **The name: HAD3S** (the seed; POPS gives it at the end of the DISC scene, v14.25).
   - **Two sectors**, scripted like H3AV3N. Tuned so 10 d0g wins can happen within the two sectors if you path well.

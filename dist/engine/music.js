@@ -1,6 +1,6 @@
 // NeoN+1 engine/music.js: The music engine (generated music).
 'use strict';
-NEON_FILES.push(['engine/music.js', 'v14.46']);
+NEON_FILES.push(['engine/music.js', 'v14.47']);
 
 // A track (data/music.js, corps/) picks its band. Everything is optional; left out, it's the original
 // synthwave sound (so older tracks play exactly as before):
@@ -212,7 +212,7 @@ const Music = (() => {
     const first = key == null;
     key = next;
     const slowIn = (fx && fx.dir > 0) || easeNext;   // after a boss fanfare (or a fade-out): ease the next track in
-    easeNext = false;
+    if (SONGS[next]) easeNext = false;   // (a fade, then silence, then a track: the track still eases in: after a quest scene)
     fx = null;
     const now = ac.currentTime;
     songG.gain.cancelScheduledValues(now);
