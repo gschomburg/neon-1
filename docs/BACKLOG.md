@@ -274,6 +274,20 @@ unlocked by REP, and some quests unlock REP.
     BroadcastChannel / storage events; phones too). Hint: "i can only watch one of you."
   - **PHREAK:** a phone phreak. It talks in keypad tones; you play them back (the Simon corp's idea). Weird-hard: it
     wants 2600 Hz, whistled or played into the mic (asks for the mic; phones too). Seed: a PIER catch, or a payphone node.
+    - **The mic (Greg, 2026-11-06: analyze the frequency):** getUserMedia + an AnalyserNode (FFT ~8192 at 48 kHz: ~6 Hz a
+      bin). It counts within ~±40 Hz of 2600, held ~1s, with a meter showing how close you are. 2600 is a high whistle:
+      a tone app or another device counts too (that's phreaking). A way through without the mic (denied, or none): a
+      keypad of the tones, harder but possible. Say on the prompt that it only measures pitch, nothing is recorded or
+      sent. The mic needs a secure page (https is fine; test file://).
+    - **The hint (Greg likes it):** the real 2600 trick came from a cereal box toy whistle. A made-up cereal ad: "free
+      toy whistle inside!" The ad is where you find the seed.
+    - More with the same pitch check: match the boss's tone to break a shield; hum its keypad tones back.
+  - **The mic, more broadly** (Greg, 2026-11-06): pitch, loudness, silence and claps work offline in every browser
+    (shout to break a shield, blow on the mic to clear mold, ICE that wakes at a noise, clap a rhythm). Speech to text:
+    the browser's own (Web Speech API: Chrome / Edge send audio to Google / Microsoft, Safari to Apple or on device;
+    needs the net; not Firefox, so a typed fallback). Fully offline: a small model in the browser (a 40-75 MB download).
+    A paid service would need a server for the key (a PHP proxy on DreamHost): overkill for now. Speech to text is for
+    the special moments: saying a password, talking back to G0D.exe or MANTIS.
   - **SLEEPER:** it can't see you when you close your eyes. Turn the screen off or switch apps and its guard drops
     (page visibility).
   - **CRON:** only there at a real time ("come back at 3:33"). Ties to the daily seed (parked).
