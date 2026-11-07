@@ -21,8 +21,6 @@ workshops
 
 bosses
 ************
-- boss where you need to open the 'browser' inspector to defeat them
-    - maybe you gotta read the console and then type that in
 
 feats
 *************

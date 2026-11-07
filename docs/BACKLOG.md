@@ -261,6 +261,23 @@ unlocked by REP, and some quests unlock REP.
   HANDS. Still open:
   - **KITCHEN and ZER0** (the terminal's log in the ending) are only art today. Hide a seed or two in there that are
     real special seeds (the gauntlet, below, or fun made-up ones). **Decided (Greg, 2026-11-06):** not now; later.
+  - **b0y's pop-in on the OMNI quest** (meat notes 2026-11-06, later): make it clear you tap [b]. Like the training
+    popup but in the quest's colors, with an arrow at the [b]; or just bounce the [b] a bunch.
+  - **One b0y everywhere** (meat notes 2026-11-06, later): in H3AV3N and the boss fight he uses different chips (one
+    has a bg color). Make them look and behave the same. Then the same pass on rivals and crew (see "Enemy and ally
+    hackers" below): b0y's cursor types one-word lines like a terminal; every hacker should work the same way, or
+    have a reason not to.
+- **Playtest of HAD3S** (meat notes 2026-11-06, later):
+  - **CERBERUS (the final sector boss) is too tall on a phone:** the BREACH button's bottom line overlaps the loot bar
+    by one row. The rival plus the MOLD lines stack it up. Idea: all the anomalies on one line that swaps or ticks
+    through them (the UPLINK `ticker`; per CLAUDE.md "Screen space", this would be its second screen, so pull it into
+    engine/fx.js). Likely the same anywhere anomalies stack (the first sector boss too). "THREE HEADS" and the tap-blue-eyes
+    line could swap on that line too, if needed.
+  - **The pet on the bottom bar:** it blocks taps on the button when the button sits that low. Greg likes that. Give
+    the pet a bg color, so it covers the rest of the [L] loot bar and whatever it's over.
+  - **The end of HAD3S:** losing to d0g at CERBERUS shows an UPLINK button, but it goes to the clean jack-out screen.
+    When the sector boss is the last thing in the run, the button should say JACK OUT (or similar). Only HAD3S does
+    this today; H3AV3N is fine as is.
 - **An end game quest: from a hacking game to a hacker game** (Greg, 2026-11-06: "this and rebuilding god as a ai
   assistant i think would be interesting and take it up a notch"). After G0D, a quest that reaches outside the game:
   the PSYCHO MANTIS boss (section 7: go offline, a hidden word in the URL / tab title / console) and rebuilding G0D as
@@ -361,6 +378,9 @@ unlocked by REP, and some quests unlock REP.
   unlocked, it can come up as a random event in regular runs too.
 - **Decided (Greg, 2026-11-05):** don't worry about sector event balance or tiers for now; the recent updates (stacking,
   weights, scales) should even them out.
+- **New event ideas** (meat notes 2026-11-06, later):
+  - **Glitching up:** each ICE hit and derez adds more glitch filter over the screen, like chroma separation.
+  - **Dying moves you:** a death restarts you somewhere else.
 - **Event tiers, later** (the user, 2026-10-30: not now): harder events only deeper. For now the rule stands: sector 1
   is clean, and from sector 2 any event can show up.
 
@@ -430,6 +450,8 @@ unlocked by REP, and some quests unlock REP.
   (2026-11-03: see G0D.exe in item 3; maybe the same thing.)
 
 ### Enemy and ally hackers (low: the user 2026-10-29, "we don't need any more"; the lore was great) (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
+- **A consistency pass** (meat notes 2026-11-06): rivals and crew should look and act like b0y (his terminal-style
+  cursor lines), or have a reason not to. Details: section 4, "One b0y everywhere".
 - **Still open:** special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
   COMPANION's pet; balance from play.
 - **From the user's iPhone notes (meat notes 2026-10-30):** hacker names: **s3iz**, **alpha haxor**, **kupreg**,
@@ -508,6 +530,10 @@ unlocked by REP, and some quests unlock REP.
   - **Send a seed to a friend.**
   - **The training sim** may need a little redesign.
   - **Pull greglytics into its own repo**, like asXii (below).
+  - **The high score font** (meat notes 2026-11-06, later): Greg doesn't like it. Use the workbench's 3x3 letters instead.
+- **Bug: a stray `[` in a replayed cutscene** (meat notes 2026-11-06, later): replaying cutscene 1 (SYSTEM FAILURE)
+  from the QUESTS tab leaves a `[` near the top left. It's the edge of the board's [you] button: the cutscene covers
+  the page under it but misses that edge.
 - **The neon editor** (the user, meat notes 2026-11-06): clean up the UI; terminal-style commands with
   autocomplete?; Justin's music track viewer in the music tab?
 - [ ] **Code cleanups left from the arch pass** (the user, 2026-11-05: "keep those all around so we can hit them when it makes sense"). Do each one with the feature that needs it, not on its own. Details: docs/ARCHITECTURE.md.
