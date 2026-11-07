@@ -162,7 +162,7 @@ neon-1/
 │   ├── REVIEW.md           my review list: things Claude built or decided that I still need to look at
 │   ├── meat_notes.md       my raw notes, for Claude to sort
 │   ├── CORPS.md, QUESTS.md, PROGRESSION.md, ECONOMY.md, MUSIC.md, ...   topic docs
-│   ├── archive/            old planning lists
+│   ├── archive/            old planning lists, the v11-v13 version log, old backlog and review items
 │   ├── art/                logotype drafts
 │   └── mockups/            HTML mockups (the WORKBENCH)
 ├── ascii-editor/           asXii, a standalone ASCII art editor with its own version (see its README)
