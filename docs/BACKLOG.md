@@ -305,6 +305,10 @@ unlocked by REP, and some quests unlock REP.
   - **CRON:** only there at a real time ("come back at 3:33"). Ties to the daily seed (parked).
   - **OVERFLOW:** a buffer overflow. Its health counter wraps: heal it past its max and it rolls to zero. Or a long
     string typed into the seed field. (Section 11: something in the game you can hack.)
+    - **The long seed (Greg, 2026-11-07):** seeds stay capped at 16 (`cleanSeed` cuts the rest), so normal seeds never
+      break. OVERFLOW looks at the raw text before the cut: a `?seed=` link over 16 characters (or full of junk
+      symbols) wakes him instead of being trimmed. In settings the seed box could let you type past its edge, the text
+      glitching and spilling over the screen, and that wakes him too.
   - **SOURCE:** the word is in the page source / a code comment (desktop). Phones need the URL fallback (MANTIS): a
     stage of a fight, not a whole one.
   - **KONAMI:** too strong to beat, until you enter a cheat code mid-fight and the game's own dev menu opens against it.
