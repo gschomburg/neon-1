@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.54']);
+NEON_FILES.push(['engine/panels.js', 'v14.55']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -89,7 +89,7 @@ const itemRoom = (key, tier) => isLoot(key) || st.run.items.some(s => s.key === 
 // The belt's short codes (the user, 2026-10-31: high priority: the names were too long once the x2 went on, ENCORE ran
 // into FWALL): three letters like the mods. The full name shows everywhere else (the info line, a drag, the trash,
 // markets). A gear not listed here: the first three letters of its name.
-const ITEM_SHORT = { disc: 'DSC', dogtag: 'TAG', leash: 'LSH', bone: 'BNE', muzzle: 'MZL', honey: 'HNY', patch: 'PCH', purge: 'PRG', wall: 'FWL', split: 'SPL', route: 'RTE', warp: 'WRP', allin: 'ALL',
+const ITEM_SHORT = { repeat: 'RPT', disc: 'DSC', dogtag: 'TAG', leash: 'LSH', bone: 'BNE', muzzle: 'MZL', honey: 'HNY', patch: 'PCH', purge: 'PRG', wall: 'FWL', split: 'SPL', route: 'RTE', warp: 'WRP', allin: 'ALL',
   tunnel: 'TUN', mesh: 'MSH', tilt: 'TLT', shake: 'SHK', frag: 'FRG', rewind: 'RWD', shoe: 'SHO', pass: 'PAS', flare: 'FLR',
   remote: 'RMT', rollup: 'RLP', freeze: 'FRZ', blast: 'BLS', snitch: 'SNT', tithe: 'TTH', anchor: 'ANC', slomo: 'SLO', bees: 'BEE',
   call: 'CAL', call_pops: 'POP', call_b0y: 'B0Y', call_brick: 'BRK', call_null: 'NUL', call_nana: 'NAN', call_dialup: 'DIA', call_baud: 'BAU',

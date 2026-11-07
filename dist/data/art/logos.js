@@ -6,7 +6,7 @@
 // also the corp's intro art) or hacker (unlocked by beating that hacker), and the art: up to 24 x 7, shown in a
 // 24 x 7 box, centered.
 'use strict';
-NEON_FILES.push(['data/art/logos.js', 'v14.54']);
+NEON_FILES.push(['data/art/logos.js', 'v14.55']);
 
 const ART_LOGOS = [
   { id: 'skull', name: 'SKULL', mark: '{x}', kind: 'player', art: [
@@ -320,6 +320,14 @@ const ART_LOGOS = [
     '.    / \\   .',
     '   *    .   *',
     ' ZODIAC HOUSE',
+  ] },
+  { id: 'simon', name: 'SIMON', mark: 'SM2', kind: 'corp', corp: 'simon', art: [
+    '    .---------.',
+    '   / R  |  G  \\',
+    '  |-----+-----|',
+    '   \\ Y  |  B  /',
+    '    \'---------\'',
+    '   S I M O N',
   ] },
   { id: 'apiary', name: 'APIARY', mark: 'AP3', kind: 'corp', corp: 'apiary', art: [
     ' __    __',

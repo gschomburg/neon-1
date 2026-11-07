@@ -1,7 +1,7 @@
 // NeoN+1 engine/board.js: the layer's board (buildBoard) and COIN FLIP's coin box and multiplier pop.
 // Moved out of engine/scene.js (2026-11-05). buildScene (engine/scene.js) calls buildBoard each frame.
 'use strict';
-NEON_FILES.push(['engine/board.js', 'v14.54']);
+NEON_FILES.push(['engine/board.js', 'v14.55']);
 
 function buildBoard({ now, put, addHit, bg, cells }) {
   const lv = st.lv;
@@ -145,6 +145,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     // ICE EATER: a scan found the real node's line (lv.warn): its nodes keep a red frame
     if (lv.warn && t.state === 'closed' && !solid && fc === C.mid && (lv.warn.row === t.row || lv.warn.col === t.col)) fc = C.danger;
     if (t.zd && t.state === 'closed') { solid = true; fc = C.money; gc = C.money; bold = true; }   // 0DAY / PING: the real node, marked
+    if (lv.flashSeq && t.state === 'closed' && flashLit(lv, t, now)) { solid = true; fc = C.accent; gc = C.bright; bold = true; }   // REPEAT (gear): its flashes
     const edge = solid ? '+-----+' : '+- - -+';
     const side = solid ? '|' : ':';
     let glyph = masked && t.state === 'closed' && !t.loaded ? MASK_GLYPH : t.glyph;

@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.54']);
+NEON_FILES.push(['engine/active.js', 'v14.55']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -139,7 +139,26 @@ const BOSS_GEAR = {
     why: () => 'no ICE for the bees.',
     use(lv) { st.corp.bees = true; beeSwarm(lv, 3); },
   },
+  // REPEAT (SIMON's): 3 nodes and then the real one flash in turn, each with its tone (drawn by engine/board.js, lv.flashSeq)
+  repeat: {
+    ok: lv => lv.n > 1 && lv.tiles[lv.safe].state === 'closed' && !lv.flashSeq,
+    why: () => 'nothing to repeat.',
+    use(lv) {
+      const real = lv.tiles[lv.safe], seq = shuffle(lv.tiles.filter(t => t !== real && t.state === 'closed' && !t.ruledOut), layerRng('repeat')).slice(0, 3).concat([real]);
+      const F = lv.flashSeq = { seq, t0: performance.now() + 300, on: 260, gap: 140 };
+      seq.forEach((t, k) => setTimeout(() => { if (st.lv === lv) Sound.ping(SIMON.notes[t.cell % SIMON.notes.length]); }, 300 + k * (F.on + F.gap)));
+      setMsg('> repeat: watch the last one.', C.accent);
+    },
+  },
 };
+// REPEAT's flash: is node t lit right now? (engine/board.js; the sequence ends on its own)
+function flashLit(lv, t, now) {
+  const F = lv.flashSeq;
+  if (!F) return false;
+  if (now > F.t0 + F.seq.length * (F.on + F.gap)) { lv.flashSeq = null; return false; }
+  const k = F.seq.indexOf(t), a = F.t0 + k * (F.on + F.gap);
+  return k >= 0 && now >= a && now < a + F.on;
+}
 // BLAST, aimed: of the 2x2 blocks with the tapped node in them, the busiest goes up. Its ICE breaks; the real node
 // in it clears the layer, no pay (not in corps with their own tap rules: there it's spared).
 function blastAt(lv, t) {

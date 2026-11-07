@@ -14,7 +14,7 @@ Each corp has:
   corp (SIGSCAN for Sigil, the clock mods for Chronos) should also matter in some other corps, so
   mods and corps cross over.
 
-`(built)` on a heading: it is in the game (dist/corps/). Not built yet (2026-10-26): A28 FOSSIL, A29 UNICORN, A30 MAGIC, A31 ALARMS, #49 the chain corp, #50 the case corp, #51 the stock market corp (also in BACKLOG.md).
+`(built)` on a heading: it is in the game (dist/corps/). Not built yet (2026-10-26): A28 FOSSIL, A32 MONTY, A29 UNICORN, A30 MAGIC, A31 ALARMS, #49 the chain corp, #50 the case corp, #51 the stock market corp (also in BACKLOG.md).
 `*` after a name marks something the user changed or asked for in the review. Names are parodies or
 made up, not real brands.
 
@@ -289,12 +289,40 @@ made up, not real brands.
   pick.
 - **Works with:** the clock mods.
 
-### A28. FOSSIL (dig site; "we've been around a long time") (the user, 2026-10-23; not designed)
-- **Special:** digging for fossils. You brush the nodes off: a tap doesn't just break the node, it slowly
-  reveals its glyph, a bit more each tap.
-- **Tell:** some glyphs are the usual glyphs and some are fossils. Uncover a regular glyph and it's ICE: it
-  hurts you. *(Claude)*: open question is whether brushing costs anything (a tap, time) so you can't just
-  half-brush every node for free.
+### A28. FOSSIL (dig site; "we've been around a long time") (the user, 2026-10-23; designed 2026-11-07)
+- **Special:** digging for fossils. Every node starts buried. A tap brushes it: a bit more of its glyph shows.
+- **Tell:** some glyphs are the usual glyphs and some are fossils (bones). Read the bones from a half-dug glyph.
+- **Decided (Greg, 2026-11-07): the third brush commits.** Two brushes on a node are free and show 2/3 of its
+  glyph; the third uncovers it all and resolves it: a fossil is the real node (the layer clears), anything else is
+  ICE and hits you. Every brush costs a second off the dig clock, so you can't brush everything. Deeper tiers: only
+  one free brush.
+- **Boss:** one big skeleton spread across several nodes: find the skull.
+
+### A32. MONTY (16 doors, the Monty Hall problem) (the user, meat notes 2026-10-30; designed 2026-11-07)
+- **Special:** you pick a door (it holds, it doesn't open). MONTY opens every other door but one (all ICE, no
+  damage). Then you stay or switch.
+- **Decided (Greg, 2026-11-07): MONTY has a tell.** He isn't fair: when your first pick is the real door, he tries to
+  talk you off it. His line is the tell ("are you SURE?" against a shrug), different at every corp level, learned
+  like any corp's tell. Read him: stay or switch. (Plain Monty Hall would make switching right 15 times in 16.)
+- **Boss:** he swaps the two doors around while you decide.
+
+### A33. SIMON (the pattern toy) (the user, meat notes 2026-11-06; designed 2026-11-07) (built)
+- **Special:** SIMON plays a pattern: nodes light up one at a time, each with its own tone. You tap it back. The last
+  node of the pattern is the real one: finish the pattern and the layer clears. Its ICE never breaks.
+- **The nodes** (Greg, 2026-11-07): single-character glyphs, `[g]` `[X]` `[x]` `[#]`; upper and lower case are
+  different nodes. Deeper: look-alikes (`[x]` `[X]` `[%]` `[*]`).
+- **The terminal:** as SIMON plays, it types the pattern, `> simon: g-X-X-x-g`. On your turn the line clears and fills
+  in as you go (`g-X-_-_-_`).
+- **Decided (Greg, 2026-11-07): a wrong step hurts like ICE, then SIMON replays the pattern from the start.**
+  Patterns grow with the tier (4, 5, 6 steps). A gentle clock that waits while the pattern plays.
+- **Boss, "Simon says":** steps SIMON didn't say flash white (dim brackets in the terminal, `g-(X)-x-g`): skip them.
+- **Gear and mods (Greg, 2026-11-07):** the pattern is built only from nodes still in play. Anything that removes ICE
+  (PURGE, SPLIT, FLARE, FRAG, BLAST, BEES, ICE EATER, a rival) drops those nodes from the pattern: with one node left,
+  the whole pattern plays on it. Removed mid-pattern: their steps go, you carry on. Finders (0DAY, SNITCH, TRACER,
+  PING, KEYLOGGER) point at the last step: tapping the real node early clears the layer but pays nothing (FORM 27B's
+  rule). Hit blockers (FWALL, ROLLUP, FAILSAFE) block a wrong step's hit; it still replays. Movers (SHAKE, TILT): the
+  pattern follows the nodes. QUANTUM, SNOOZE and ALL-IN are off here (a `tap` corp). b0y and crew point at the next
+  step.
 
 ### A29. UNICORN (very rare) (the user, 2026-10-23; not designed)
 - A very rare corp. Maybe all its mod offers are EXOTIC, or its reward raises your odds of exotics and

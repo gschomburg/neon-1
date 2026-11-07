@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **SIMON** (v14.55): editor > TESTING, breach SIMON (or find it on the map, level 2). Watch the pattern, play it back; try a wrong step (it hurts, replays). Is 380ms a step too fast or slow? The tones (a C major run, by node), the four colors, the look-alike characters deep in (`[l]` `[I]` `[1]` `[|]`: maybe too mean?). The boss's white steps. My calls: level 2, 12s clock, REPEAT as its boss gear, TRACKER music, the logo.
+
 - [ ] **This session** (v14.50-v14.53, 2026-11-07): b0y's one cursor and his [b] hint on the OMNI RAID; the initials in the workbench letters; [SHARE] on the title and the results (open a `?seed=` link: it counts on the seed boards); open the game in two tabs (the second says PLAY HERE; tap it, the first goes quiet); REWIND legendary from COLDBREW's boss; CERBERUS's card on a phone; BOX OF WIRES (editor TESTING > Give it 6 times: every node opens). Is a box turning up 40% of the time while you carry one too often?
 
 - [ ] **H3AV3N fixes** (v14.48): CERBERUS with VIRUS (few nodes left): the eyes keep moving, the real node frees up. G0D MAZE's intro on a phone (the quote wraps). G0D DEFEATED: the mod chips go with their letters. The ending's last cards (THERE IS MORE TO EXPLORE, CREDITS): the tap line under the text, the counter top left. The OMNI RAID: [b] in the tray, tap it in a corp (once a corp; on the map he says wait); his three cursors closing in. After the credits: G0D FIGHT / TITLE. STEADY HANDS on THE BOARD (USER, 300): a legendary PHISH stays catchable.

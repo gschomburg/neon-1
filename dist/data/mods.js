@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.54']);
+NEON_FILES.push(['data/mods.js', 'v14.55']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -249,6 +249,10 @@ const ITEMS = {
     codex: 'flip it: what you have and what you are missing trade places. at 1 of 4 you are back to 3 of 4. at 3 of 4 you drop to 1. at full it won\'t go: that would kill you. with ZOMBIE: your rot flips instead (120 of 150 becomes 30).' },
   fake:   { key: 'fake',   name: 'FAKE',   price: 80, rarity: 'epic', desc: 'tap it, then a mod: that mod goes up a step, for good.', tip: '+1 step on a mod.',
     codex: 'fake it till you make it. tap it, then one of your mods: it goes up one rarity step for the rest of the run, as if you found it again. mods that can\'t go higher (corp mods, exotics, maxed ones) don\'t take it.' },
+  // REPEAT (SIMON's boss gear, corps/simon.js): a short pattern, the last flash is the real node. Effect: engine/active.js BOSS_GEAR.
+  repeat: { key: 'repeat', name: 'REPEAT', price: 50, rarity: 'legendary', corp: 'simon',
+    desc: 'in a layer: 4 nodes flash one by one, each with a tone. the last one is the real node.', tip: 'the last flash is real.',
+    codex: "in a layer: simon plays you a short pattern. 4 nodes flash one by one, each with its tone, and the last one is always the real node. it's quick: watch." },
   nuke:   { key: 'nuke',   name: 'NUKE',   price: 200, rarity: 'exotic', find: true, where: '$ nodes, caches. never in a market.', desc: 'in a corp: it\'s gone. it counts as beaten and the layers left pay half. not on a sector boss.', tip: 'breach the corp now.',
     codex: 'the big one. in a corp, it ends it: the corp counts as beaten, the layers you didn\'t play pay half, and the boss still gives up its reward. sector bosses are too big to nuke. never sold: you find it, or you don\'t.' },
 };

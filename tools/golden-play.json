@@ -1352,7 +1352,7 @@
      "idx": 2,
      "boss": false,
      "n": 4,
-     "hint": "> now playing",
+     "hint": "buffering \\",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 4
     },
@@ -1466,7 +1466,7 @@
      "idx": 0,
      "boss": false,
      "n": 2,
-     "hint": "lift> floor 3 ^",
+     "hint": "lift> floor 2 ^",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 2
     },
@@ -1474,7 +1474,7 @@
      "idx": 1,
      "boss": false,
      "n": 3,
-     "hint": "lift> floor 3 v",
+     "hint": "lift> floor 4 v",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 3
     },
@@ -1482,7 +1482,7 @@
      "idx": 2,
      "boss": false,
      "n": 4,
-     "hint": "lift> floor 1 ^",
+     "hint": "lift> floor 2 v",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 4
     },
@@ -1490,7 +1490,7 @@
      "idx": 3,
      "boss": false,
      "n": 5,
-     "hint": "lift> floor 3 ^",
+     "hint": "lift> floor 2 ^",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 5
     },
@@ -1498,7 +1498,7 @@
      "idx": 4,
      "boss": true,
      "n": 6,
-     "hint": "lift> floor 3 ^",
+     "hint": "lift> floor 2 ^",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 6
     }
@@ -1511,7 +1511,7 @@
      "idx": 0,
      "boss": false,
      "n": 2,
-     "hint": " ALIENS LAND: BOTTOM ROW, COLUMN 3 +",
+     "hint": "ALIENS LAND: BOTTOM ROW, COLUMN 3 ++",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 2
     },
@@ -2806,7 +2806,7 @@
      "idx": 0,
      "boss": false,
      "n": 2,
-     "hint": "@you 115 fol  eng 1.9%  ^",
+     "hint": "@you 115 fol  eng 2.0%  ^",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 2
     },
@@ -2814,7 +2814,7 @@
      "idx": 1,
      "boss": false,
      "n": 3,
-     "hint": "@you 214 fol  eng 8.1%  v",
+     "hint": "@you 215 fol  eng 8.0%  v",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 3
     },
@@ -2838,7 +2838,7 @@
      "idx": 4,
      "boss": true,
      "n": 6,
-     "hint": "@you 757 fol  eng 9.0%  ^",
+     "hint": "@you 758 fol  eng 8.9%  ^",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 6
     }
@@ -3354,6 +3354,46 @@
      "n": 6,
      "hint": "power [##......]",
      "missMsg": "> ICE. god mode: no damage.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "simon": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> simon: %-_-_-_",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> simon: w-_-_-_",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> simon: _-_-_-_",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> simon: _-_-_-_",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> simon: *-_-_-_-_-_",
      "after": 6
     }
    ],

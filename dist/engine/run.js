@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.54']);
+NEON_FILES.push(['engine/run.js', 'v14.55']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -344,7 +344,7 @@ async function enterLayer() {
     if (opts.length) pickR(opts, rngFor(run.seed, 'quantum', c.node.id, c.idx)).quantum = true;
   }
   if (run.snoozed && run.snoozed.length && n > 1 && c.hasBoss && !st.mp && !modOffIn('snooze', c.def)) snoozeIn(lv, rngFor(run.seed, 'snoozein', c.node.id, c.idx));
-  lv.eater = has('iceeater') && n > 1 && !st.mp;   // ICE EATER: eat the ICE (a 1-node layer is just the real one)
+  lv.eater = has('iceeater') && n > 1 && !st.mp && !modOffIn('iceeater', c.def);   // ICE EATER: eat the ICE (a 1-node layer is just the real one)
   lv.iceTotal = lv.tiles.filter(t => !isReal(t)).length; lv.eatPaid = 0;
   lv.dmg = boss && (c.def.bossDmg || c.stageBoss) ? (c.def.bossDmg || 2) : 1;   // sector bosses hit for 2
   st.lv = lv;
@@ -663,7 +663,7 @@ async function pick(i) {
   if (hkDenied(t)) return;   // SYSOP: ACCESS DENIED
   // ZOMBIE: weak taps. A node takes tapsToBreak() taps; the ones before the last only crack it
   // (the same for ICE and the real node: a crack never tells you which it is).
-  if (zombie() && st.corp && st.corp.hasBoss) {
+  if (zombie() && st.corp && st.corp.hasBoss && !st.corp.def.pattern) {   // (SIMON: a tap is a step, not a crack)
     const need = tapsToBreak();
     if ((t.cracks || 0) + 1 < need) {
       t.cracks = (t.cracks || 0) + 1; t.crackAt = performance.now();
