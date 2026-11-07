@@ -107,6 +107,18 @@ The game lives at [www.gregschomburg.com/neon/](https://www.gregschomburg.com/ne
 6. If `database.rules.json` changed, paste it into the Firebase console (Realtime Database > Rules).
 7. Open the site and check the version on the intro screen.
 
+**The editor online (optional):** `/neon/tools/neon_editor.html`, next to the game.
+
+1. After the bump: `node tools/deploy_editor.js`. It writes `deploy/neon/tools/` (gitignored): only the editor's
+   files, with `../dist/` made `../` and `?v=<build>` on every script (`/neon/.htaccess` caches scripts for a year).
+2. Upload the contents of `deploy/neon/tools/` to `/neon/tools/`, its `.htaccess` too (no caching, noindex).
+   Do it again after each bump, or its scripts point at the old build.
+3. Password-protect `/neon/tools/` (DreamHost panel: Htaccess/WebDAV, or an `.htpasswd` above the web root).
+
+Saving still writes to your own computer: Chrome asks for your repo's `dist/data` folder. Then upload `dist/` as usual.
+"edit in asXii" (the ART tab) doesn't work online: asXii isn't on the site.
+
+
 The leaderboard service (`greglytics/`) deploys on its own: see `greglytics/README.md`.
 
 ## Project layout
@@ -128,6 +140,7 @@ neon-1/
 ├── tools/                  dev scripts and editors (not deployed)
 │   ├── bump.js             change the build number everywhere
 │   ├── test.js             every automatic check in one go (exit 1 on a failure)
+│   ├── deploy_editor.js    builds deploy/neon/tools/: the editor ready to upload to /neon/tools/
 │   ├── neon_editor.html    the editor: edits the data files in dist/ in place (the page; its code is in editor/)
 │   ├── music_view.html     Music View: a piano roll of any track (the MUSIC tab's "piano roll" opens it)
 │   ├── checks/             the automatic checks
