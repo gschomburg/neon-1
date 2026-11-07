@@ -537,7 +537,7 @@ unlocked by REP, and some quests unlock REP.
   - **COLD BREW's rewards: built v14.52**: REWIND got a legendary tier (today's epic, the whole corp); its boss gives that x2.
   - **CHUCK E. CACHE has a 1UP in its logo:** do something with that once 1UPs are unlocked?
   - **Skip a corp's rewards for a heal:** an option, maybe a choice on the screen, maybe a REP unlock.
-  - **Send a seed to a friend.**
+  - **Send a seed to a friend: built v14.51** ([SHARE] on the title and the results).
   - **The training sim** may need a little redesign.
   - **Pull greglytics into its own repo**, like asXii (below).
   - **The high score font: built v14.50**: the initials use the workbench's big letters.
@@ -577,7 +577,7 @@ unlocked by REP, and some quests unlock REP.
 - **SELL ALL LOOT**: built v14.15 ([ ALL LOOT +XXcr ] on the sell page).
 - **SHOE attack**: built v14.15 (the throw, shorter lines).
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Cold Brew's boss reward
-  is the REWIND x2 epic stack, not boss loot (checked). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is (the user 2026-10-29: "i still ran out of cash and couldn't get past the uplink"); it already scales by sector and BLACK ICE costs that many hits.
+  is a REWIND x2 stack, not boss loot (checked; legendary since v14.52). Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is (the user 2026-10-29: "i still ran out of cash and couldn't get past the uplink"); it already scales by sector and BLACK ICE costs that many hits.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.
 - **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle.
 - **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open).
