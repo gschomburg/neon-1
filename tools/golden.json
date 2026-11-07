@@ -7,7 +7,7 @@
   "CIPHER_SYMS": "b0b538cdb6",
   "CODEX_CORPS": "1196fde5cb",
   "CONFIG": "b516b9c201",
-  "CORPS": "081fdc878d",
+  "CORPS": "f1dcd39088",
   "CORP_ART": "ac3f3ace24",
   "CORP_TELL": "66475a0839",
   "COVER": "099c0a3e23",
@@ -16,7 +16,7 @@
   "GLYPHS": "ce52b2b45a",
   "HELP_PAGES": "0e6b2b3da4",
   "HIT_FX": "1162396fb7",
-  "ITEMS": "89c2a2590e",
+  "ITEMS": "d41ddc7ddc",
   "LEGACY": "67448253cd",
   "LEX_WORDS": "32848cdc2e",
   "LOCK_LABEL": "f9b371e035",
@@ -36,7 +36,7 @@
   "SONGS": "e798be2bf8",
   "STAGES": "7026d4113d",
   "START_NOTE": "2e48e6e167",
-  "TITLE": "00055d4a59",
+  "TITLE": "243d112d2c",
   "ZODIAC": "11850882bd"
  },
  "layers": {

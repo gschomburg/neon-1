@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.51']);
+NEON_FILES.push(['data/mods.js', 'v14.52']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -59,9 +59,10 @@ const ITEMS = {
       { rarity: 'epic', desc: 'in a layer: hits 5 random nodes. ICE breaks. hit the real one: the layer clears, no pay.', tip: '5 random hits.' },
       { rarity: 'legendary', desc: 'in a layer: hits 5 random nodes, never the real one. ICE breaks.', tip: '5 hits, never the real.' }] },
   rewind: { key: 'rewind', name: 'REWIND', price: 25, rarity: 'common', desc: 'with a clock running: +5 seconds.', tip: '+5s on the clock.',
-    codex: "wind the clock back. the epic one stops every clock in the corp for the rest of it: yours, and the corp's own (what moves still moves: that's ANCHOR).",
+    codex: "wind the clock back. epic: every clock stops, the corp's too (not what moves: ANCHOR), for the layer. legendary: the corp.",
     tiers: [{}, { rarity: 'rare', desc: 'with a clock running: the clock back to full.', tip: 'clock back to full.' },
-      { rarity: 'epic', desc: "in a corp: every clock stops (yours and the corp's own), for the rest of the corp.", tip: 'stop the clock, this corp.' }] },
+      { rarity: 'epic', desc: "in a layer: every clock stops (yours and the corp's own), for the rest of the layer.", tip: 'stop the clock, this layer.' },
+      { rarity: 'legendary', desc: "in a corp: every clock stops (yours and the corp's own), for the rest of the corp.", tip: 'stop the clock, this corp.' }] },
   shoe:  { key: 'shoe',  name: 'SHOE',  price: 4,  rarity: 'scrap', desc: 'in a layer: throw it. it probably does nothing.', tip: 'throw it. probably nothing.',
     codex: 'a shoe. throw it at the machine: it worked in 1910, maybe. (sabotage comes from sabot, the wooden shoe.) now and then it breaks an ICE. once in a blue moon it hits the real node: the layer clears, no pay.' },
   // the uplink (the user, 2026-10-26)

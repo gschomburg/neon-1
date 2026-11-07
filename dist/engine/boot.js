@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v14.51']);
+NEON_FILES.push(['engine/boot.js', 'v14.52']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -94,6 +94,7 @@ setTimeout(() => checkVersion(true), 4000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkVersion(); });
 setInterval(() => checkVersion(true), 600000);
 showTitle();
+tabsStart();   // one tab at a time (engine/save.js TABS)
 if (!EDITOR && !params.get('room') && !params.get('nointro')) startIntro();   // the boot / login intro over the title
 // A shared seed link (?seed=XYZ, engine/screen.js urlSeed): the same as picking that seed in game, so it's ranked on
 // the seed boards (a quest seed is a quest). Then the seed comes out of the address bar, so a refresh doesn't

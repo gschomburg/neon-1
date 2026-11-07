@@ -30,5 +30,6 @@ Greg's raw notes.
 - On a phone the board is 23 rows. A panel that runs over spills onto the mod tray: `buildTextBoard` doesn't squeeze. Count rows when you add lines to a screen.
 - Tricks when a screen is tight:
   - Fold away art once it's had its moment (the boss rewards logo: `LOGO_OUT` in engine/screens.js).
-  - One scrolling line instead of stacked, wrapped text (the UPLINK's `ticker` in engine/runend.js: a beat on the name, then the description scrolls).
-- **Decided (Greg, 2026-11-05):** stacked text reads best where it fits (the rewards screen keeps it). The ticker is for when space is tight. The first time a second screen needs it, pull it out of runend.js into a shared helper (engine/fx.js).
+  - One scrolling line instead of stacked, wrapped text: `FX.ticker` (engine/fx.js: a beat on the start, then it scrolls). The UPLINK's rows and the tray's gear tips use it.
+  - Lines that take turns on one row: `FX.swapLines` (the map's node card when a boss has too many lines: mapview.js `swap` lines).
+- **Decided (Greg, 2026-11-05):** stacked text reads best where it fits (the rewards screen keeps it). The ticker is for when space is tight.

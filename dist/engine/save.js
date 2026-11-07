@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v14.51']);
+NEON_FILES.push(['engine/save.js', 'v14.52']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -20,7 +20,53 @@ const save = (() => {
   if (!PALETTES[d.palette]) d.palette = DEFAULT_PALETTE;   // a palette that's gone (or palettes.js didn't load)
   return d;
 })();
-const persist = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(save)); } catch (e) { /* ignore */ } };
+const persist = () => { if (TABS.away) return; try { localStorage.setItem(STORE_KEY, JSON.stringify(save)); } catch (e) { /* ignore */ } };
+
+// ---------- One tab at a time (2026-11-07) ----------
+// Two tabs of the game both wrote the save, and the last one won: progress could go missing. Now the tabs talk
+// (BroadcastChannel: same browser, same site) and only one plays. A tab that opens while another is playing waits:
+// "open in another tab", tap to play here. The tap tells the playing tab, which saves and goes quiet; then this tab
+// reloads, so it starts from that save. A quiet tab never writes the save (persist, saveRun, clearRun).
+// The editor's game has its own save (STORE_KEY) and its own channel. No BroadcastChannel (some file:// pages): no guard.
+const TABS = { away: false, id: Math.random().toString(36).slice(2), ch: null, taking: false };
+function tabsStart() {
+  if (typeof BroadcastChannel !== 'function') return;
+  try { TABS.ch = new BroadcastChannel('neon.tabs.' + STORE_KEY); } catch (e) { return; }
+  const t0 = performance.now();
+  TABS.ch.onmessage = e => {
+    const m = e.data || {};
+    if (m.t === 'hello' && !TABS.away) TABS.ch.postMessage({ t: 'here', id: TABS.id });   // a new tab: I'm playing
+    else if (m.t === 'here' && performance.now() - t0 < 1500 && !TABS.taking) tabsAway();   // one was already playing: wait
+    else if (m.t === 'take' && m.id !== TABS.id && !TABS.away) {   // another tab wants it: save, go quiet, say so
+      if (st.run) saveRun();
+      persist();
+      tabsAway();
+      TABS.ch.postMessage({ t: 'released', id: TABS.id });
+    } else if (m.t === 'released' && TABS.taking) location.reload();
+  };
+  TABS.ch.postMessage({ t: 'hello', id: TABS.id });
+}
+function tabsAway() {
+  TABS.away = true;
+  Field.blur && Field.blur();
+  Sound.hush();
+}
+function tabsTake() {   // PLAY HERE (a tap or a key on the quiet tab)
+  if (TABS.taking) return;
+  TABS.taking = true;
+  TABS.ch.postMessage({ t: 'take', id: TABS.id });
+  setTimeout(() => location.reload(), 1200);   // (nobody answered: the other tab is gone)
+}
+// The quiet tab's screen: the game stops (render.js frame skips it) and this is all it draws.
+function drawTabsAway() {
+  const w = cv.width, h = cv.height, fs = Math.max(12, Math.min(26, w / 26)) * 1;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = C.bg; g.fillRect(0, 0, w, h);
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  const lines = [['NeoN+1 is open in another tab.', C.text, 700], ['one tab plays at a time,', C.mid, 400], ['so your save stays whole.', C.mid, 400], ['', C.mid, 400],
+    [TABS.taking ? 'switching...' : '[ PLAY HERE ]', C.accent, 700]];
+  lines.forEach(([s, col, wt], k) => { g.font = `${wt} ${fs}px ${FONT}`; g.fillStyle = col; g.fillText(s, w / 2, h / 2 + (k - 2) * fs * 1.6); });
+}
 // Per-corp record for the codex.
 function corpStat(key) {
   if (!save.corpStats[key]) save.corpStats[key] = { breached: 0, lost: 0 };
@@ -126,11 +172,12 @@ function runSnapshot() {
   return { v: VERSION, run: r, corp: corp && corp.idx < (c.counts ? c.counts.length : 99) ? corp : null, pending: run.pending || null };
 }
 function saveRun() {
+  if (TABS.away) return;
   const snap = runSnapshot();
   if (!snap) return;
   try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch (e) { /* storage unavailable */ }
 }
-function clearRun() { try { localStorage.removeItem(RUN_KEY); } catch (e) { /* ignore */ } }
+function clearRun() { if (TABS.away) return; try { localStorage.removeItem(RUN_KEY); } catch (e) { /* ignore */ } }
 // Mods that changed their key: old saves get the new one (CHROMED UP became RAM DOUBLER in v13.08).
 const MOD_RENAMED = { chromed: 'ramdoubler' };
 function savedRun() {

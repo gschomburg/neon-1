@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v14.51']);
+NEON_FILES.push(['engine/menus.js', 'v14.52']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -236,7 +236,9 @@ function openBoard(tab) {
     X({ text: '|  T H E   B O A R D   //  BBS |', colorAt: i => i === 0 || i === 31 ? C.dim : C.rep, bold: true });
     T('+------------------------------+', C.dim);
     const star = k => (k === 'feats' && Object.keys(save.unseen || {}).length > 0) || (k === 'rep' && repNew()) || (k === 'you' && save.newTitle) || (k === 'quests' && questsNew());
-    X({ gap: 1, row: BOARD_TABS.map(([k, label, id]) => ({ text: `[${label}${star(k) ? '*' : ''}]`, id, sel: tab === k, onTap: () => setTab(k) })) });
+    { const row = BOARD_TABS.map(([k, label, id]) => ({ text: `[${label}${star(k) ? '*' : ''}]`, id, sel: tab === k, onTap: () => setTab(k) }));
+      const w = row.reduce((a, b) => a + b.text.length, 0) + row.length - 1;
+      X({ gap: w > L.wc ? 0 : 1, row }); }   // (two *s make it 37 wide: it ran off the left edge)
     T('');
     let used = 0;
     const t = (s, c) => { T(s, c); used++; }, x = o => { X(o); used += o.box ? (o.sub ? 4 : 3) : 1; };

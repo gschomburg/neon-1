@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.51']);
+NEON_FILES.push(['engine/input.js', 'v14.52']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -167,6 +167,7 @@ if (!window.PointerEvent) {
 }
 
 cv.addEventListener('pointerdown', e => {
+  if (TABS.away) return tabsTake();   // another tab has the game: this tap takes it (engine/save.js)
   st.lastInput = performance.now();   // (the pet falls asleep when you're idle)
   Sound.init();
   Field.blur();   // tapping anywhere else finishes typing (phones don't always do this)
@@ -309,6 +310,7 @@ cv.addEventListener('wheel', e => {
 }, { passive: false });
 
 document.addEventListener('keydown', e => {
+  if (TABS.away) { if (e.key === 'Enter' || e.key === ' ') tabsTake(); return; }
   st.lastInput = performance.now();
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   Sound.init();

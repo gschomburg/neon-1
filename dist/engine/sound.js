@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v14.51']);
+NEON_FILES.push(['engine/sound.js', 'v14.52']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -82,6 +82,7 @@ const Sound = (() => {
   const chord = (notes, dur, opts) => notes.forEach(f => tone(f, dur, opts));
   return {
     init, levels,
+    hush: () => { if (ac && ac.state === 'running') ac.suspend(); },   // all sound off (another tab took the game: engine/save.js TABS)
     tick: () => tone(1800, 0.018, { vol: 0.12 }),
     // H3AV3N (round 5, the user): G0D's voice, a syllable as his terminal line types: a deep modem growl; hi (0-1, as he
     // breaks down) brings in higher chirps, R2-ish, until it's mostly them

@@ -3,7 +3,7 @@
 // and forth, sits now and then, sleeps when you've been idle, dances on the beat when the music plays, runs over when
 // it sniffs something out (COMPANION), and a tap pets it. Looks only: it never changes play.
 'use strict';
-NEON_FILES.push(['engine/pet.js', 'v14.51']);
+NEON_FILES.push(['engine/pet.js', 'v14.52']);
 
 // A pet for this run (when you take COMPANION, or anything else that gives one later): a cat or a dog, and a name.
 function petRoll(run, why = 'pet', kind = null) {
@@ -90,6 +90,9 @@ function buildPet(ctx, y) {
   if (mode !== 'sniff') s.sniffX = null;
   if (!frame) frame = look.sit;   // (never draw nothing: a missing frame used to stop the whole game)
   const x = Math.round(s.x), rows = s.dir < 0 && (mode === 'walk' || mode === 'sniff') ? frame.map(petFlip) : frame;
+  // its own bg: it covers what it's over (the rule, the [$] loot bar, a low button: Greg, HAD3S playtest 2026-11-06)
+  rows.forEach((l, k) => { const a = l.search(/\S/), b = l.length - l.trimEnd().length; if (a < 0) return;
+    const w = l.length - a - b; if (ctx.cells) clearRect(ctx.cells, x + a, y - 1 + k, w, 1); ctx.bg(x + a, y - 1 + k, w, C.bg, 1); });
   rows.forEach((l, k) => put(x, y - 1 + k, l, mode === 'sleep' ? C.mid : C.bright, 'fx', false));
   if (mode === 'sleep') put(x + 7, y - 2 - (Math.floor(now / 700) % 2), 'z', C.mid, 'fx');
   if (mode === 'sniff' && now - s.sniffAt > 900) put(x + 3, y - 2, '!', C.accent, 'fx', true);

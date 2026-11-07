@@ -1,7 +1,7 @@
 // NeoN+1 engine/mapview.js: the run's map (buildMap), the results screen's map (drawMapView), and a node's info.
 // Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/mapview.js', 'v14.51']);
+NEON_FILES.push(['engine/mapview.js', 'v14.52']);
 
 // Map: final node at the top, start at the bottom. Edges are dotted lines.
 // x for a node; start / final nodes sit in the middle lane.
@@ -191,13 +191,22 @@ function buildMap(ctx) {
     return;
   }
   const info = nodeInfo(map[id]);
-  info.lines.forEach((ln, k) => putC(y0 + k, ln.text, ln.col, 'map'));
-  if (st.mapSel) drawBox(ctx, y0 + info.lines.length, { text: info.action, id: 'enter', onTap: () => enterNode(map[st.mapSel]), minW: 18 });
+  // Too tall for the room over the tray (a boss with a rival and its own rules: CERBERUS on a phone)? Its extra lines
+  // take turns on one row (engine/fx.js swapLines). The box's bottom must stay over the rule (BOARD_Y + L.gh + 1).
+  let lines = info.lines;
+  const room = BOARD_Y + L.gh + 1 - y0 - (st.mapSel ? 3 : 0), extra = lines.filter(ln => ln.swap);
+  if (lines.length > room && extra.length > 1) {
+    const sw = st.cardSwap && st.cardSwap.id === id ? st.cardSwap : (st.cardSwap = { id, t0: now });
+    const cur = FX.swapLines(extra.map(ln => ln.text), L.wc, sw.t0, now);
+    lines = lines.filter(ln => !ln.swap || ln === extra[0]).map(ln => ln === extra[0] ? { text: cur.text, col: extra[cur.k].col } : ln);
+  }
+  lines.forEach((ln, k) => putC(y0 + k, ln.text, ln.col, 'map'));
+  if (st.mapSel) drawBox(ctx, y0 + lines.length, { text: info.action, id: 'enter', onTap: () => enterNode(map[st.mapSel]), minW: 18 });
 }
 
 function nodeInfo(n) {
   const lines = [];
-  const T = (text, col = C.text) => lines.push({ text, col });
+  const T = (text, col = C.text, swap = false) => lines.push({ text, col, swap });   // swap: may share one row (mapview, too tall)
   if (n.type === 'corp' || n.type === 'final' || n.type === 'start') {
     const d = corpDef(n.corp);
     if (blinded(n)) {   // BLINDERS: only the level and the anomaly
@@ -212,10 +221,10 @@ function nodeInfo(n) {
     T(d.intel, C.text);
     const rules = corpRules(d, n.tier);
     if (rules) T(rules, C.mid);
-    if (d.bossDesc) T(d.bossDesc, C.dangerDim);
-    if (n.mod && ANOMALIES[n.mod]) T(`+ ${ANOMALIES[n.mod].name}: ${ANOMALIES[n.mod].desc}`, C.money);
-    if (questHintNode(n)) T('! POPS: the DISC could be in here.', C.rep);   // (engine/quests.js)
-    { const off = modsOffIn(d); if (off.length) T(`off here: ${off.map(k => MODS[k].name.toLowerCase()).join(', ')}.`, C.dangerDim); }   // e.g. COIN FLIP in a drag corp
+    if (d.bossDesc) T(d.bossDesc, C.dangerDim, true);
+    if (n.mod && ANOMALIES[n.mod]) T(`+ ${ANOMALIES[n.mod].name}: ${ANOMALIES[n.mod].desc}`, C.money, true);
+    if (questHintNode(n)) T('! POPS: the DISC could be in here.', C.rep, true);   // (engine/quests.js)
+    { const off = modsOffIn(d); if (off.length) T(`off here: ${off.map(k => MODS[k].name.toLowerCase()).join(', ')}.`, C.dangerDim, true); }   // e.g. COIN FLIP in a drag corp
     return { lines, action: 'B R E A C H' };
   }
   if (n.type === 'shop') { T('BLACK MARKET', C.money); T('gear and mods for credits.'); if (n.exit) T('the way out: leave it and the sector is clear.', C.accent); }

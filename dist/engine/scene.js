@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.51']);
+NEON_FILES.push(['engine/scene.js', 'v14.52']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -319,9 +319,9 @@ function buildScene(now, collectHits, raw = false) {
   // Tray: mods, items, info
   put(0, boardEnd + 1, rule(L.wc), ruleCol);
   buildTray(ctx, boardEnd + 2);
-  buildPet(ctx, boardEnd + 1);   // the pet, sitting on the rule over the tray (engine/pet.js)
   buildLootBtn(ctx, boardEnd + 1);   // [$], the LOOT bag, at the rule's right end (engine/loot.js)
   buildBoyBtn(ctx, boardEnd + 1);   // [b], b0y, at its left end (H3AV3N: engine/heaven.js)
+  buildPet(ctx, boardEnd + 1);   // the pet, sitting on the rule over the tray, over the buttons there too (engine/pet.js)
 
   // Footer: the run's seed, small and out of the way.
   // Left side of the footer, clipped so it never runs into [DEV] / the version.

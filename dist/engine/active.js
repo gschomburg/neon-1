@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.51']);
+NEON_FILES.push(['engine/active.js', 'v14.52']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -246,8 +246,9 @@ function rowMates() {
 }
 
 // ---------------- Layer gear (the user, 2026-10-26) ----------------
-// REWIND epic: every clock in this layer stops: yours and the corp's own (a hold, forever). What moves still moves (ANCHOR).
-function freezeLayer(lv) { lv.holdUntil = Infinity; }
+// REWIND epic / legendary: every clock in this layer stops: yours and the corp's own (a hold, forever). What moves still
+// moves (ANCHOR). lv.frozen: a hacker's card closing doesn't hand the clock back (engine/hackers.js hkCardClose).
+function freezeLayer(lv) { lv.holdUntil = Infinity; lv.frozen = true; }
 // Corps with their own tap rules (FORM 27B, DEMOLITION...): gear never clears the layer for you there.
 const gearMayClear = () => !corpHas('tap');
 // FRAG / SHOE hit the real node: the layer clears, no pay (like BLAST).
@@ -609,7 +610,7 @@ function whyNotItem(stack) {
   if (key === 'fake') return 'no mod can go any higher.';
   if (key === 'skip') return st.mode !== 'map' ? 'only on the map.' : st.run.skipAim ? 'already open: pick a node.' : 'the boss is in the way.';
   if (key === 'worm') return st.mode !== 'map' ? 'only on the map.' : 'no corp ahead to send it to.';
-  if (key === 'rewind' && inCorp && st.corp.frozen) return 'time already stopped.';
+  if (key === 'rewind' && inCorp && (st.corp.frozen || (st.lv && st.lv.frozen))) return 'time already stopped.';
   if (key === 'rewind' && inCorp && (stack.tier || 0) < 2 && !st.timer) return 'no clock running.';
   if (key === 'wall') return 'only inside a corp.';
   if (!inCorp && key !== 'wall') return 'only inside a corp layer.';
@@ -749,10 +750,12 @@ const GEAR = {
   exorcist: { ok: c => !!c.inLayer && !!st.corp && hkList().some(h => h.side === 'bad' && !h.out), use(tier) { exorcise(tier); } },   // EXORCIST: a rival here   // (ZOMBIE: no rot this corp: stimUp)
   nuke: { ok: c => c.layerGear && st.corp.node.type === 'corp' && !c.run.tutorial && !st.mp, use: (tier, lv) => nukeCorp(lv) },
   rewind: {
-    ok: c => c.layerGear && !st.corp.frozen && (c.tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer),
+    ok: c => c.layerGear && !st.corp.frozen && !st.lv.frozen && (c.tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer),
     use(tier, lv) {
       const tm = st.timer;
-      if (tier >= 2) { st.corp.frozen = true; freezeLayer(lv); setMsg('> rewind: every clock stops. for this whole corp.', C.accent); }
+      // (legendary: COLDBREW's boss gear, corps/coldbrew.js; it was the epic until v14.52)
+      if (tier >= 3) { st.corp.frozen = true; freezeLayer(lv); setMsg('> rewind: every clock stops. for this whole corp.', C.accent); }
+      else if (tier === 2) { freezeLayer(lv); setMsg('> rewind: every clock stops. this layer.', C.accent); }
       else if (tier === 1) { tm.left = tm.max; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: the clock is full again.', C.accent); }
       else { tm.max += 5; tm.left += 5; tm.lastSec = Math.ceil(tm.left); setMsg('> rewind: +5 seconds.', C.accent); }
       Sound.shield();

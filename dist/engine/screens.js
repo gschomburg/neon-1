@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.51']);
+NEON_FILES.push(['engine/screens.js', 'v14.52']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -270,7 +270,10 @@ function overLines() {
       lines.push({ text: txt, colorAt: i => i < 9 ? C.mid : marks ? C.accent : C.dim }); }
     if (r.practice) T(r.quest ? 'quest run: no REP' : 'practice run: no REP', C.dangerDim);
     T('');
-    lines.push({ box: true, text: 'T H E   U P L I N K', sub: r.broken ? '- something is wrong -' : '- push on or cash out -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
+    // (the bottom of HAD3S: no UPLINK, openUplink cashes you out, so the button says so)
+    const bottom = st.run && st.run.quest === 'had3s' && st.run.sector >= HAD3S_SECTORS - 1;
+    if (bottom) lines.push({ box: true, text: 'J A C K   O U T', sub: '- nowhere deeper to go -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
+    else lines.push({ box: true, text: 'T H E   U P L I N K', sub: r.broken ? '- something is wrong -' : '- push on or cash out -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
     return lines;
   }
   if (r.win) {

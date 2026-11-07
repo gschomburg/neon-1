@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.51']);
+NEON_FILES.push(['engine/run.js', 'v14.52']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -470,7 +470,7 @@ async function enterLayer() {
   lv.shownAt = lv.readyAt;
   if (c.slomo) lv.clockRate = 0.5;   // SLOMO (gear): the whole corp
   if (c.bees && n > 1) beeSwarm(lv, 1, true);   // BEES (gear): the swarm stays for the corp
-  if (c.frozen) freezeLayer(lv);   // REWIND epic: every timer stays stopped, the whole corp   // unlike readyAt, this one doesn't reset after a miss
+  if (c.frozen) freezeLayer(lv);   // REWIND legendary: every timer stays stopped, the whole corp   // unlike readyAt, this one doesn't reset after a miss
   c.express = false;
   // MUTATE: say what it became (the tray flashes it too)
   if (c.mutateNew && run.mutateAs && MODS[run.mutateAs]) {

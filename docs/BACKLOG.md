@@ -252,8 +252,6 @@ unlocked by REP, and some quests unlock REP.
   docs/ENDGAME.md). Open: the art (placeholders to redraw), the three unlocks as already-paid posts on THE BOARD.
 - **Seed boards: built v14.44** (docs/ENDGAME.md): a board per seed, LEADERBOARD > SEEDS, for everyone. Open: a
   daily seed (parked, below) would fit as a pinned row on the SEEDS page.
-- **G0D comes out of its own logo** (Greg, 2026-11-05: "god could have popped out of his own logo for the final
-  stand"): its logo (v14.43) up first in the final stand, then the eye tears out of the triangle.
 - **Playtest of H3AV3N, the rest of it** (the user, meat notes 2026-11-06). **Built v14.48-v14.49** (SPEC version log): the
   CERBERUS eye stuck red on the real node, the maze's intro running off the screen, the tray's chips outlasting G0D's
   collapse, the ending's long cards (the tap line over them, the counter low), b0y twice on a boss's rewards. Then (talked
@@ -263,16 +261,7 @@ unlocked by REP, and some quests unlock REP.
     real special seeds (the gauntlet, below, or fun made-up ones). **Decided (Greg, 2026-11-06):** not now; later.
   - **b0y's [b] hint and one b0y everywhere: built v14.50** (SPEC version log).
 - **Playtest of HAD3S** (meat notes 2026-11-06, later):
-  - **CERBERUS (the final sector boss) is too tall on a phone:** the BREACH button's bottom line overlaps the loot bar
-    by one row. The rival plus the MOLD lines stack it up. Idea: all the anomalies on one line that swaps or ticks
-    through them (the UPLINK `ticker`; per CLAUDE.md "Screen space", this would be its second screen, so pull it into
-    engine/fx.js). Likely the same anywhere anomalies stack (the first sector boss too). "THREE HEADS" and the tap-blue-eyes
-    line could swap on that line too, if needed.
-  - **The pet on the bottom bar:** it blocks taps on the button when the button sits that low. Greg likes that. Give
-    the pet a bg color, so it covers the rest of the [L] loot bar and whatever it's over.
-  - **The end of HAD3S:** losing to d0g at CERBERUS shows an UPLINK button, but it goes to the clean jack-out screen.
-    When the sector boss is the last thing in the run, the button should say JACK OUT (or similar). Only HAD3S does
-    this today; H3AV3N is fine as is.
+  - **CERBERUS too tall, the pet's bg, JACK OUT at the bottom of HAD3S: built v14.52** (SPEC version log; the node card's extra lines take turns on one row: FX.swapLines).
 - **An end game quest: from a hacking game to a hacker game** (Greg, 2026-11-06: "this and rebuilding god as a ai
   assistant i think would be interesting and take it up a notch"). After G0D, a quest that reaches outside the game:
   the PSYCHO MANTIS boss (section 7: go offline, a hidden word in the URL / tab title / console) and rebuilding G0D as
@@ -542,22 +531,17 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
-- **Two tabs eat the save** (found 2026-11-07, talking about TWIN): nothing knows about a second tab of the game, so
-  both write the save and the last one wins; opening the game twice can lose progress today. Fix: on start, ask
-  through a BroadcastChannel (or the browser's lock API, `navigator.locks`) whether another copy is running; one tab
-  owns the save, a second one says so (or joins as a twin that doesn't write it). TWIN and the second window need it.
+- **Two tabs eat the save: built v14.52** (SPEC version log): one tab plays, a second one waits with [ PLAY HERE ] (engine/save.js TABS).
 - **Bugs and weirdness** (the user, meat notes 2026-11-06): **all built v14.46** (SPEC version log): the market list scrolls, the DISC is loot in a market, boxes block hovers, STIM + ZOMBIE = rot limit 225, TUNNEL's lines, the music after FIRST BREACH.
 - **Misc** (the user, meat notes 2026-11-06):
-  - **COLD BREW's rewards aren't very good:** it needs something legendary.
+  - **COLD BREW's rewards: built v14.52**: REWIND got a legendary tier (today's epic, the whole corp); its boss gives that x2.
   - **CHUCK E. CACHE has a 1UP in its logo:** do something with that once 1UPs are unlocked?
   - **Skip a corp's rewards for a heal:** an option, maybe a choice on the screen, maybe a REP unlock.
   - **Send a seed to a friend.**
   - **The training sim** may need a little redesign.
   - **Pull greglytics into its own repo**, like asXii (below).
   - **The high score font: built v14.50**: the initials use the workbench's big letters.
-- **Bug: a stray `[` in a replayed cutscene** (meat notes 2026-11-06, later): replaying cutscene 1 (SYSTEM FAILURE)
-  from the QUESTS tab leaves a `[` near the top left. It's the edge of the board's [you] button: the cutscene covers
-  the page under it but misses that edge.
+- **Bug: a stray `[` in a replayed cutscene: built v14.52** (the board's tab row ran off the edge with two *s; a scene now covers past the edges).
 - **The neon editor** (the user, meat notes 2026-11-06): clean up the UI; terminal-style commands with
   autocomplete?; Justin's music track viewer in the music tab?
 - [ ] **Code cleanups left from the arch pass** (the user, 2026-11-05: "keep those all around so we can hit them when it makes sense"). Do each one with the feature that needs it, not on its own. Details: docs/ARCHITECTURE.md.
@@ -606,6 +590,8 @@ unlocked by REP, and some quests unlock REP.
 - **Going public:** drop the page's `noindex`; maybe the game's own domain.
 
 ## Parked (later, when the user says)
+- **G0D comes out of its own logo** (parked, Greg 2026-11-07: "it's pretty nice as it is right now"; Greg, 2026-11-05: "god could have popped out of his own logo for the final
+  stand"): its logo (v14.43) up first in the final stand, then the eye tears out of the triangle.
 - **Not sure yet** (the user, 2026-10-29): **A general popup over a node:** pull COIN FLIP's hold / drag box into one shared piece (`nodePopup`). **Flipped characters:** MIRRORLINE's glyphs flip with its mirror; a backwards mod.
 - **MULTIPLAYER: shelved** (it works and stays in; finish the core game first). Later: maybe p5.party instead of
   Firebase; co-op (NeoN+m, Keep Talking style); a roulette mode.

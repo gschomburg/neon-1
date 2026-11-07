@@ -4,7 +4,7 @@
 // corrupted loot names (data/mods.js glitchName) and G0D's mold glitch (engine/g0d.js).
 // (Particles, shakes and flashes are engine/effects.js: they work in pixels, not cells.)
 'use strict';
-NEON_FILES.push(['engine/fx.js', 'v14.51']);
+NEON_FILES.push(['engine/fx.js', 'v14.52']);
 
 const FX = (() => {
   // ---------- building blocks ----------
@@ -19,6 +19,26 @@ const FX = (() => {
   const col = c => c && c[0] === '#' ? c : c && c.startsWith('ink:') ? hkInk(c.slice(4)) : C[c] || C.text;
   // A look: the named settings, with a place's own over them (true = as they are).
   const look = (name, over) => over && typeof over === 'object' ? Object.assign({}, FX_LOOKS[name], over) : FX_LOOKS[name];
+
+  // ---------- the ticker: one line for text that doesn't fit (CLAUDE.md "Screen space") ----------
+  // A beat on the start, then it scrolls a character every `ms`, around and around. t0: when it started showing.
+  // Used by the UPLINK's rows (engine/runend.js), the tray's gear tips (engine/tray.js) and the map's node card.
+  const TICK = { beat: 900, ms: 140 };
+  function ticker(text, w, t0, now, gap = 5) {
+    if (text.length <= w) return text;
+    const full = text + ' '.repeat(gap), o = Math.max(0, Math.floor((now - t0 - TICK.beat) / TICK.ms)) % full.length;
+    return (full + full).slice(o, o + w);
+  }
+  // Lines that take turns on one row: each up for `hold` ms, or until its ticker has gone round once (a long one).
+  // Says { text, k } for now (k: which line).
+  function swapLines(lines, w, t0, now, hold = 2600) {
+    if (lines.length < 2) return { text: ticker(lines[0] || '', w, t0, now), k: 0 };
+    const dur = s => s.length <= w ? hold : TICK.beat + (s.length + 5) * TICK.ms;
+    const total = lines.reduce((a, s) => a + dur(s), 0);
+    let t = (now - t0) % total, k = 0;
+    while (t >= dur(lines[k])) { t -= dur(lines[k]); k++; }
+    return { text: ticker(lines[k], w, now - t, now), k };
+  }
 
   // ---------- smooth noise and the mask ----------
   // Value noise: smooth blobs (0-1) instead of one random number per cell. noise1: the same along one line (time).
@@ -242,7 +262,7 @@ const FX = (() => {
   // other numbers, so they stay where they are (swapping one would change a look): h01 (engine/corpkit.js), hash2
   // (engine/effects.js, the wipes), hh (engine/bench.js), decodeDelay (engine/scene.js).
   const hs = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
-  return { hs, hash, pick, step, cycle, clamp01, easeOut, col, look, decrypt, seedOf, noise1, noise2, mask, where, glitchOn, flickerOff, tint, apply, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
+  return { hs, hash, pick, step, cycle, clamp01, easeOut, col, look, ticker, swapLines, decrypt, seedOf, noise1, noise2, mask, where, glitchOn, flickerOff, tint, apply, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
     glow, glowCone, glowCell, glowWash, tear, swapOn, burst, burstCh, burstCells, tics, putTics, smoke, fogRows, garble };
 })();
 

@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v14.51']);
+NEON_FILES.push(['engine/runend.js', 'v14.52']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -210,12 +210,7 @@ function openUplink() {
   // is in them), and the two buttons: PAY XXXcr (push on) and EARN XX REP (cash out).
   const area = { top: 0 };
   let tick = null;   // { k, t0 }: the row whose ticker runs
-  const ticker = k => {
-    const v = modView(k), full = `${v.name}: ${v.desc}      `;
-    const steps = Math.max(0, Math.floor((performance.now() - tick.t0 - 900) / 140));   // a beat on the name, then it scrolls
-    const o = steps % full.length;
-    return (full + full).slice(o, o + 40);
-  };
+  const ticker = k => { const v = modView(k), s = `${v.name}: ${v.desc}`; return FX.ticker(s.padEnd(41), 40, tick.t0, performance.now(), 6); };   // a beat on the name, then it scrolls (engine/fx.js)
   const sp = s => String(s).split('').join(' ');   // P A Y
   const feeLine = (label, val, col, bold = false) => {
     const txt = label + val.padStart(32 - label.length);

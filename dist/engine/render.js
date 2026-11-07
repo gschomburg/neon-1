@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v14.51']);
+NEON_FILES.push(['engine/render.js', 'v14.52']);
 
 // ---------------- Popup looks (the user, 2026-10-31) ----------------
 // Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
@@ -31,7 +31,7 @@ let last = performance.now(), lastRunSave = 0;
 function frame(now) {
   // One frame. An error in it is logged (once a second at most) and the loop goes on: before, one bad frame stopped
   // drawing for good and left the screen black.
-  try { frameBody(now); } catch (e) { if (now - (frame.errAt || 0) > 1000) { frame.errAt = now; console.error('[neon] frame error:', e); } }
+  try { if (TABS.away) drawTabsAway(); else frameBody(now); } catch (e) { if (now - (frame.errAt || 0) > 1000) { frame.errAt = now; console.error('[neon] frame error:', e); } }
   requestAnimationFrame(frame);
 }
 function frameBody(now) {

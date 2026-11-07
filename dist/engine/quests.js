@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.51']);
+NEON_FILES.push(['engine/quests.js', 'v14.52']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -539,9 +539,9 @@ const sceneOutMusic = now => st.qScene && st.qScene.out && now - st.qScene.out.t
 function sceneKey(k) { if (st.qScene && st.qScene.out) return; if (k === 'escape') sceneEnd(); else if (k === 'enter' || k === ' ' || k === 'arrowright') sceneNext(); }
 function buildScene_(ctx0, now) {
   const sc = st.qScene, frames = QUEST_SCENES[sc.id], fr = frames[sc.i], { cells } = ctx0;
-  clearRect(cells, 0, 0, L.wc, L.hc);
   const strip = isStrip(sc.id), dark = sc.out ? Math.min(1, (now - sc.out.t0) / SCENE_OUT.dark) : 0;
   { const ex = Math.ceil(L.ox / L.cw) + 1, ey = Math.ceil(L.oy / L.chh) + 1, bg = ctx0.bg;
+    clearRect(cells, -ex, -ey, L.wc + 2 * ex, L.hc + 2 * ey);   // the page under it, past the content edges too (a stray [ of the board's [YOU] showed)
     if (strip || dark >= 0.5) for (let y = -ey; y < L.hc + ey; y++) { bg(-ex, y, L.wc + 2 * ex, C.bg, 1); bg(-ex, y + 0.5, L.wc + 2 * ex, C.bg, 1); }   // a strip: the dark bg, light text (the user, 2026-11-04)
     else popupBg(bg, 'scene', -ex, -ey, L.wc + 2 * ex, L.hc + 2 * ey, false); }   // the whole screen, past the content edges (POPUP_LOOK)
   ctx0.addHit(0, 0, L.wc, L.hc, { kind: 'scene' });

@@ -1,7 +1,7 @@
 // NeoN+1 corps/coldbrew.js
 'use strict';
-NEON_FILES.push(['corps/coldbrew.js', 'v14.51']);
-// Its boss reward: REWIND (epic) gear x2 (rewind; it was ESPRESSO), defined with the gear in data/mods.js (ITEMS),
+NEON_FILES.push(['corps/coldbrew.js', 'v14.52']);
+// Its boss reward: REWIND (legendary) gear x2 (rewind; it was ESPRESSO), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 
 // ---- its music
@@ -20,7 +20,7 @@ CORPS.coldbrew = {
   tell: null, timer: 12, pay: 1.3, shot: true,
   bossDesc: 'boss: decaf steam. barely.',
   rules: () => 'clock: 1s less each layer. pays x1.3',
-  gear: { key: 'rewind', tier: 2, n: 2 },   // its boss reward: a stack of gear
+  gear: { key: 'rewind', tier: 3, n: 2 },   // its boss reward: a stack of gear
   // The real node steams: a wisp rises off it every couple of seconds. Deeper: decoys
   // give off a faint dot now and then. Boss: the steam is rare.
   dress(lv, k) {

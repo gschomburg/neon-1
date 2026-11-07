@@ -1,7 +1,7 @@
 // NeoN+1 engine/tray.js: the mod tray and mod badges (drawBadge, putChip, buildTray). Moved out of engine/scene.js
 // (2026-11-05). buildScene (engine/scene.js) calls buildTray each frame.
 'use strict';
-NEON_FILES.push(['engine/tray.js', 'v14.51']);
+NEON_FILES.push(['engine/tray.js', 'v14.52']);
 
 // A mod's key color (its rarity chip's background).
 const modColor = m => rarityCol(m.rarity);
@@ -169,8 +169,7 @@ function buildTray(ctx, y) {
       let tip = (stack.n > 1 ? `x${stack.n} ` : '') + it.tip;
       if (tip.length > room) {   // too long: it scrolls (a beat first), like the UPLINK's ticker
         if (st.tipTick !== ii + ':' + stack.key) { st.tipTick = ii + ':' + stack.key; st.tipT0 = now; }
-        const full = tip + '     ', o = Math.max(0, Math.floor((now - st.tipT0 - 900) / 140)) % full.length;
-        tip = (full + full).slice(o, o + room);
+        tip = FX.ticker(tip, room, st.tipT0, now);   // (engine/fx.js)
       }
       put(x0, y + 3, tip, C.text);
       put(x0 + Math.min(room, tip.length) + 1, y + 3, act, usable ? C.accent : C.dim);
