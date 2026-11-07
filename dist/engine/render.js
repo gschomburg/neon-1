@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v14.58']);
+NEON_FILES.push(['engine/render.js', 'v14.59']);
 
 // ---------------- Popup looks (the user, 2026-10-31) ----------------
 // Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
@@ -132,7 +132,7 @@ const wiresOpen = () => !!st.run && has('wires') && modTier('wires') >= WIRES_EX
 function wiresUp(was) {   // it went up a step (engine/panels.js addMod)
   if (modTier('wires') >= WIRES_EXO && was < WIRES_EXO) setTimeout(() => setMsg('> box of wires: it all connects. the whole net is wired: any node, any order.', C.accent), 400);
 }
-function availableNodes() {
+function availableNodes(noCar = false) {   // (noCar: without the C.A.R.: the move that would spend it)
   const run = st.run;
   if (!run) return [];
   // Dev "free travel": every node except the one you're on.
@@ -145,7 +145,7 @@ function availableNodes() {
   if (run.mesh === run.sector) for (const n of Object.values(run.map)) if (n.step === cur.step + 1 && (n.sector || 0) === run.sector) out.add(n.id);
   if (run.mesh === run.sector) for (const n of meshSides()) out.add(n.id);   // the row under the boss: the nodes beside you too
   if (run.warpAim) for (const n of warpTargets()) out.add(n.id);
-  if (run.carAim) for (const n of carTargets()) out.add(n.id);   // the C.A.R. (MONTY's)   // (anywhere you haven't been, behind you too)
+  if (!noCar && carOn()) for (const n of carTargets()) out.add(n.id);   // the C.A.R. (MONTY's): until it's used this sector   // (anywhere you haven't been, behind you too)
   if (run.skipAim) for (const n of skipTargets()) out.add(n.id);   // SKIP: two rows ahead
   if (wiresOpen()) for (const n of Object.values(run.map)) if ((n.sector || 0) === (run.sector || 0) && n.id !== run.at) out.add(n.id);   // BOX OF WIRES
   let ids = [...out].filter(id => !run.visited.includes(id));

@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.58']);
+NEON_FILES.push(['engine/run.js', 'v14.59']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -142,8 +142,9 @@ async function enterNode(node, warp = false) {
   if (node.heaven === 'g0d') return g0dWakeStart(node);   // G0D: the wake-up on the map, then the fight (engine/heaven.js)
   st.transitioning = true;
   const run = st.run;
+  if (!warp && carOn() && !availableNodes(true).includes(node.id)) { run.carUsed = run.sector; modFired('car'); Sound.whoosh(); setMsg('> C.A.R.: complete assisted route. vroom.', C.accent); }   // off the links: that's the drive for this sector
   { const cur = run.at && run.map[run.at]; if (run.tunnel && cur && cur.step === node.step) (run.dug = run.dug || []).push([cur.id, node.id]); }   // TUNNEL: the dug path stays on the map (engine/mapview.js)
-  run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false; run.carAim = false;   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)
+  run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false;   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)
   stimDown();   // STIM wears off once you leave its corp
   await wipeOut(0);
   run.at = node.id;

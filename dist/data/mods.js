@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.58']);
+NEON_FILES.push(['data/mods.js', 'v14.59']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -444,7 +444,8 @@ const MODS = {
       { rarity: 'legendary', tip: 'almost. one more box.', desc: 'almost sorted. it does nothing yet. one more box.' },
       { rarity: 'exotic', tip: 'every sector wide open.', desc: 'wired: every node in every sector is open, the rest of the run. any node, any order, the boss too.' }] },
   // MONTY's prizes (corps/monty.js: which one is up to its boss layer, Greg 2026-11-07). A clean boss: the C.A.R.;
-  // ICE on the boss: the zonk, a GOAT. Effects: engine/active.js (CAR, tap-to-use on the map), engine/run.js + pet.js (GOAT).
-  car:      { name: 'C.A.R.', short: 'CAR', kind: 'corp', corp: 'monty', rarity: 'legendary', icon: 'o=o]', anim: 'wave', active: 'map', tip: 'once a sector: drive anywhere.', desc: 'complete assisted route. once a sector, on the map: tap it, then go to any node in the sector, linked or not. the boss too.' },
+  // ICE on the boss: the zonk, a GOAT. Effects: engine/render.js + run.js (CAR: no tap, every node in the sector is open
+  // until you drive somewhere off the links), engine/run.js + pet.js (GOAT).
+  car:      { name: 'C.A.R.', short: 'CAR', kind: 'corp', corp: 'monty', rarity: 'legendary', icon: 'o=o]', anim: 'wave', tip: 'once a sector: drive anywhere.', desc: 'complete assisted route. every node in the sector is open, the boss too. drive somewhere off the links and it\'s used for that sector.' },
   goat:     { name: 'GOAT', short: 'GOT', kind: 'corp', corp: 'monty', rarity: 'scrap', icon: ')_(~', anim: 'blink', tip: 'eats an ICE a corp. and your stuff.', desc: 'a goat (the zonk). it follows you. once a corp it eats an ICE; now and then it eats something from your LOOT bag too.' },
 };

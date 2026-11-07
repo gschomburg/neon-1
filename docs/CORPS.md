@@ -305,7 +305,7 @@ made up, not real brands.
   talk you off it. His line is the tell ("are you SURE?" against a shrug), different at every corp level, learned
   like any corp's tell. Read him: stay or switch. (Plain Monty Hall would make switching right 15 times in 16.)
 - **Boss:** he swaps the two doors around while you decide.
-- **The prize** (Greg, 2026-11-07): a clean boss wins the C.A.R. (complete assisted route: once a sector, drive to any node); ICE on the boss gets the zonk, a GOAT that eats things.
+- **The prize** (Greg, 2026-11-07): a clean boss wins the C.A.R. (complete assisted route: every node in the sector is open until you drive off the links, once a sector); ICE on the boss gets the zonk, a GOAT that eats things.
 
 ### A33. SIMON (the pattern toy) (the user, meat notes 2026-11-06; designed 2026-11-07) (built)
 - **Special:** SIMON plays a pattern: nodes light up one at a time, each with its own tone. You tap it back. The last

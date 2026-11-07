@@ -40,13 +40,14 @@ module.exports = { name: 'montyfossil', body: `
   check(rewardOptions(node).some(o => o.key === 'car'), 'a clean MONTY boss: the C.A.R. on the rewards');
   st.corp.zonk = true;
   check(rewardOptions(node).some(o => o.key === 'goat'), 'ICE on the boss: the GOAT');
-  // the C.A.R.: once a sector, any node in the sector
+  // the C.A.R.: no tap. every node in the sector is open until you drive off the links; then it's used for the sector
   st.run.mods.push('car'); st.run.modTier.car = 0; st.run.ended = false;
   st.corp = null; B.toMap(); await sleep(800);
-  check(modUsable('car'), 'the C.A.R. is ready on the map');
-  activateMod('car');
   const all = Object.values(st.run.map).filter(n => (n.sector || 0) === (st.run.sector || 0) && n.id !== st.run.at && !st.run.visited.includes(n.id));
-  check(all.every(n => availableNodes().includes(n.id)) && !modUsable('car'), 'driving: every node in the sector, once a sector');
+  check(all.every(n => availableNodes().includes(n.id)), 'the C.A.R.: every node in the sector is open');
+  const off = all.find(n => !availableNodes(true).includes(n.id) && n.type !== 'final');
+  enterNode(off); await sleep(1500); for (let i = 0; i < 40 && (st.busy || st.transitioning); i++) await sleep(100);
+  check(st.run.carUsed === st.run.sector && !carOn(), 'driving off the links uses it for the sector');
   // the GOAT: your pet is ZONK, and once a corp it eats an ICE
   addMod('goat');
   check(st.run.pet && st.run.pet.kind === 'goat' && st.run.pet.name === 'ZONK', 'the GOAT: a goat named ZONK follows you');

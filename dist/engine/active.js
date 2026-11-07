@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.58']);
+NEON_FILES.push(['engine/active.js', 'v14.59']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -15,15 +15,12 @@ function warpTargets() {
   return Object.values(run.map).filter(n => (n.sector || 0) === run.sector && n.step > base && n.step < top && n.id !== run.at && !run.visited.includes(n.id));
 }
 
-// The C.A.R.'s stops: any node in this sector you haven't been to (the boss too)
+// The C.A.R. (MONTY's): until you use it this sector, any node in it you haven't been to is open (the boss too)
+const carOn = () => !!(st.run && has('car') && st.run.carUsed !== st.run.sector);
 const carTargets = () => { const run = st.run; return Object.values(run.map).filter(n => (n.sector || 0) === (run.sector || 0) && n.id !== run.at && !run.visited.includes(n.id)); };
 function modUsable(key) {
   const m = MODS[key], run = st.run;
   if (!m || !m.active || !run || st.transitioning || st.dev || st.wipe) return false;
-  if (m.active === 'map') {   // the C.A.R. (MONTY's): once a sector, on the map
-    if (st.mode !== 'map' || st.busy || run.carAim) return false;
-    if (key === 'car') return run.carUsed !== run.sector && carTargets().length > 0;
-  }
   if (m.active === 'layer') {
     if (st.mode !== 'play' || st.busy || !st.lv || !st.corp || !st.corp.hasBoss) return false;
     if (key === 'burner') return burnerLeft() > 0 && st.lv.tiles.some(t => t.state === 'closed' && !t.safe);
@@ -46,11 +43,6 @@ function activateMod(key) {
   if (!modUsable(key)) { Sound.deny(); return; }
   st.selMod = -1;
   modFired(key);   // tap-to-use: plays as you use it
-  if (key === 'car') {   // C.A.R.: the next move can be any node in the sector
-    run.carAim = true; run.carUsed = run.sector; st.mapSel = null;
-    Sound.whoosh(); setMsg('> C.A.R.: complete assisted route. pick any node in the sector.', C.accent);
-    return;
-  }
   if (key === 'burner') {
     const lv = st.lv;
     let opts = lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.loaded);
