@@ -339,8 +339,9 @@ const hh = (a, b = 0) => ((((a * 2 + 1) * 374761393) ^ ((b * 2 + 1) * 668265263)
 // A letter at 3x size in a 3x3 block of cells: 9 cells, each with its piece of the letter (render.js drawPiece).
 // t0: when it went in: the pieces blink on like old bulbs (one lags, flickering; a cell's colors glitch).
 // miss: a letter you don't have (BOOK). ox, oy, a: an offset / fade for the whole block (the build).
-function benchBlock(ctx, x, y, ch, { t0 = 0, miss = false, ox = 0, oy = 0, a = 1, seed = 0 } = {}) {
-  const now = ctx.now, chip = miss ? BENCH_MISS : chipOf(letterTier(ch));
+// chip: its colors ({ fg, bg }), when it isn't a component (the leaderboard's initials: engine/leaders.js).
+function benchBlock(ctx, x, y, ch, { t0 = 0, miss = false, ox = 0, oy = 0, a = 1, seed = 0, chip: chipIn = null } = {}) {
+  const now = ctx.now, chip = chipIn || (miss ? BENCH_MISS : chipOf(letterTier(ch)));
   const age = t0 ? now - t0 : 1e9, lag = Math.floor(hh(seed + 3, Math.floor(t0) % 97) * 9);
   for (let p = 0; p < 9; p++) {
     const px = p % 3, py = Math.floor(p / 3);

@@ -1,8 +1,8 @@
 // NeoN+1 engine/leaders.js: the online leaderboard (greglytics, on s3iz.com/glx).
 // A finished run (not practice, not multiplayer) posts its depth to two boards: today's (UTC day) and all time,
 // as soon as it ends (so it's never lost, and the rank comes back right away). Ranked by layers reached; fewer
-// mods breaks a tie. Every run is its own entry (one player can be on a board many times). Then the end screen asks for 3-letter initials (big Bigfig
-// letters) and UPLOAD sends them: the server keeps one name per device and shows it on all its entries.
+// mods breaks a tie. Every run is its own entry (one player can be on a board many times). Then the end screen asks for 3-letter initials (big
+// letters, the WORKBENCH's) and UPLOAD sends them: the server keeps one name per device and shows it on all its entries.
 // Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
 // device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
 // SEED BOARDS (docs/ENDGAME.md, decided 2026-11-05): every seed has a board of its own (`seed-<SEED>`). A run on a seed
@@ -40,20 +40,8 @@ const lbBoard = (key, t = Date.now()) => key === 'day' ? 'day-' + new Date(t).to
 const lbSeedBoard = seed => 'seed-' + seed;   // (seeds are A-Z 0-9, up to 16: the server takes [A-Za-z0-9_.:-], 80 long)
 
 // ---------------- Initials ----------------
-// Bigfig (Glenn Chappell, a FIGlet font; from asXii's font list): 3 x 3 letters.
-const LB_FONT = {
-  A: [' _ ', '|_|', '| |'], B: [' _ ', '|_)', '|_)'], C: [' __', '/  ', '\\__'], D: [' _ ', '| \\', '|_/'], E: [' __', '|_ ', '|__'],
-  F: [' __', '|_ ', '|  '], G: [' __', '/__', '\\_|'], H: ['   ', '|_|', '| |'], I: ['___', ' | ', '_|_'], J: ['   ', '  |', '\\_|'],
-  K: ['   ', '|/ ', '|\\ '], L: ['   ', '|  ', '|__'], M: ['   ', '|V|', '| |'], N: ['   ', '|\\|', '| |'], O: [' _ ', '/ \\', '\\_/'],
-  P: [' _ ', '|_)', '|  '], Q: [' _ ', '/ \\', '\\_X'], R: [' _ ', '|_)', '| \\'], S: [' __', '(_ ', '__)'], T: ['___', ' | ', ' | '],
-  U: ['   ', '| |', '|_|'], V: ['\\ /', ' V ', '   '], W: ['   ', '| |', '|^|'], X: ['\\ /', ' X ', '/ \\'], Y: ['\\ /', ' Y ', ' | '],
-  Z: ['___', ' _/', '/__'],
-  // digits (0 slashed, so it isn't O) and a few symbols; # is a solid block (the user, 2026-10-25)
-  '0': [' _ ', '|/|', '|_|'], '1': ['   ', '/| ', ' | '], '2': ['_  ', ' ) ', '/_ '], '3': ['_  ', '_) ', '_) '],
-  '4': ['   ', '|_|', '  |'], '5': [' _ ', '|_ ', ' _)'], '6': [' _ ', '|_ ', '|_)'], '7': ['__ ', ' / ', '/  '],
-  '8': [' _ ', '(_)', '(_)'], '9': [' _ ', '(_|', '  |'], '*': ['\\|/', '-*-', '/|\\'], '#': ['###', '###', '###'],
-  '$': ['_|_', '(_ ', '_|)'], '!': [' | ', ' | ', ' o '], '?': [' _ ', ' _)', ' o '], '+': ['   ', '_|_', ' | '],
-};
+// The initials are drawn like the WORKBENCH's letters: one letter at 3x size across a 3 x 3 block of cells
+// (engine/bench.js benchBlock; Greg, 2026-11-06: was the Bigfig FIGlet font). # is a letter like the rest.
 const LB_ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*#$!?+';   // up / down cycles through these
 const LB_OK = /^[A-Z0-9*#$!?+]{3}$/;
 const LB_RUDE = ['ASS', 'CUM', 'FAG', 'FUC', 'FUK', 'FCK', 'KKK', 'NIG', 'NGR', 'DIK', 'COK', 'CNT', 'TIT', 'JIZ', 'SHT', 'FKU', 'NAZ', 'HOE', 'WTF'];
@@ -178,19 +166,23 @@ function lbOverLines() {
   // the initials: arrows above and below each big letter (tap to change), the one being typed in the accent color
   const pick = (k, d) => () => { p.cur = k; lbStep(d); };
   out.push({ gap: 3, row: [0, 1, 2].map(k => ({ text: '[^]', id: 'lbu' + k, onTap: pick(k, 1) })) });
-  for (let row = 0; row < 3; row++) {
-    const text = p.letters.map(ch => (LB_FONT[ch] || LB_FONT.X)[row]).join('   ');
-    out.push({ text, bold: true, colorAt: i => i % 6 < 3 && Math.floor(i / 6) === p.cur ? C.accent : C.bright });
-  }
+  // the letters: 3 wide with 3 between, under the arrows (the row above centers the same 15 cells: textboard.js)
+  out.push({ h: 3, draw: (ctx, y) => {
+    const x0 = Math.floor((L.wc - 15) / 2), lt = p.letT || [];
+    p.letters.forEach((ch, k) => benchBlock(ctx, x0 + k * 6, y, ch, { t0: lt[k] || 0, seed: k,
+      chip: k === p.cur ? { fg: C.bg, bg: C.accent } : { fg: C.bright, bg: mixHex(C.bg, C.bright, 0.14) } }));
+  } });
   out.push({ gap: 3, row: [0, 1, 2].map(k => ({ text: '[v]', id: 'lbd' + k, onTap: pick(k, -1) })) });
   const rude = lbRude(p.letters.join(''));
   out.push({ box: true, text: 'U P L O A D', sub: rude ? '- pick other letters -' : '- sign your run -', id: 'lbup', onTap: lbUpload, minW: 24, disabled: rude });
   return out;
 }
+const lbLetT = (p, k) => { (p.letT || (p.letT = []))[k] = performance.now(); };   // a changed letter blinks on (like the bench's)
 function lbStep(d) {
   const p = st.lbPost; if (!p) return;
   const i = LB_ABC.indexOf(p.letters[p.cur]);
   p.letters[p.cur] = LB_ABC[(i + d + LB_ABC.length) % LB_ABC.length];
+  lbLetT(p, p.cur);
   Sound.tick();
 }
 // Keys while the initials are up: left / right pick a letter, up / down change it, typing a letter (or digit, symbol) sets it and
@@ -201,7 +193,7 @@ function lbOverKeys(prev) {
     if (!p || p.uploaded || st.mode !== 'over') return prev ? prev(k) : false;
     if (k === 'arrowleft' || k === 'arrowright') { p.cur = clamp(p.cur + (k === 'arrowleft' ? -1 : 1), 0, 2); Sound.tick(); return true; }
     if (k === 'arrowup' || k === 'arrowdown') { lbStep(k === 'arrowup' ? 1 : -1); return true; }
-    if (k.length === 1 && LB_ABC.includes(k.toUpperCase())) { p.letters[p.cur] = k.toUpperCase(); p.cur = Math.min(2, p.cur + 1); Sound.tick(); return true; }
+    if (k.length === 1 && LB_ABC.includes(k.toUpperCase())) { p.letters[p.cur] = k.toUpperCase(); lbLetT(p, p.cur); p.cur = Math.min(2, p.cur + 1); Sound.tick(); return true; }
     if (k === 'backspace') { p.cur = Math.max(0, p.cur - 1); Sound.tick(); return true; }
     if (k === 'enter') { lbUpload(); return true; }
     return prev ? prev(k) : false;
