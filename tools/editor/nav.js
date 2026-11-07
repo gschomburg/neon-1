@@ -12,9 +12,9 @@
   // ---------- the tab picker ----------
   // [key, label]: groups in the dropdown. The keys match the <section id>s (pal is #panel) and help.js's HELP.
   const GROUPS = [
+    ['on the running game', [['test', 'testing'], ['g0d', 'g0d prototypes']]],
     ['edit a data file', [['pal', 'palette'], ['art', 'art'], ['tut', 'training'], ['econ', 'economy'], ['fx', 'fx']]],
     ['look up', [['music', 'music'], ['items', 'gear & mods'], ['ads', 'ads'], ['hack', 'hackers']]],
-    ['on the running game', [['test', 'testing'], ['g0d', 'g0d']]],
   ];
   const KEYS = GROUPS.flatMap(g => g[1].map(t => t[0]));
   const sel = $('#modeSel');
