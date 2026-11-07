@@ -515,6 +515,9 @@ if (EDITOR) {
     heaven: async m => {
       g0dfStop(); st.g0d = null; st.g0dBar = null;
       await freshRun(); heavenSetup(); toMap(); await settle();
+      // heaven's map raises its DEEP MOLD card: going on past the map, close it as a player would (left open under
+      // the fight or the maze, it took every tap)
+      if (m.where && m.where !== 'map' && st.evCard) closeEventCard();
       if (m.where === 'maze') { const n = Object.values(st.run.map).find(o => o.heaven === 'maze'); await enterNode(n, true); await settle(); }
       if (m.where === 'fight') { const n = Object.values(st.run.map).find(o => o.heaven === 'g0d'); await enterNode(n, true); }
       const g0dNode = () => Object.values(st.run.map).find(o => o.heaven === 'g0d'), real = () => ({ real: true, node: g0dNode(), startInt: st.run.integrity, startCr: st.run.credits });
