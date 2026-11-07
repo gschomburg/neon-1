@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.47']);
+NEON_FILES.push(['engine/heaven.js', 'v14.48']);
 
 const HEAVEN = {};
 
@@ -102,7 +102,7 @@ function heavenSetup() {
 HEAVEN.maze = {
   key: 'maze', name: 'G0D MAZE', letter: '#', level: 5,
   intel: '"prompt. diamond. cross. st#%age. upl@#k. wa%#..."',
-  tell: null, pay: 0.6, timer: 6, noLoot: true, noOdds: true,
+  tell: null, pay: 0.6, timer: 6, noLoot: true, noOdds: true, mapLine: '> mapping layers ....... ??? ok',   // (its 200 layers are just "keep going": don't say so)
   // out of the maze: a real rewards screen (round 2 of the feedback: "more of a success thing")
   reward(c) {
     const run = st.run, r = rngFor(run.seed, 'mazereward', c.node.id);
@@ -822,7 +822,7 @@ function g0dChromeFade(out, bgs, k) {
   const keep = G0D_KEEP_ROWS(), hs = FX.hs, gone = (x, y) => hs(x * 3.1 + y * 7.7) < k * 1.05;
   const off = y => (y < BOARD_Y || y >= BOARD_Y + L.gh) && !keep.includes(y);
   out = out.filter(c => { const x = Math.round(c.cx), y = Math.round(c.cy); return !(off(y) && gone(x, y)); });
-  if (bgs && k >= 1) { g0dDropBgs(bgs, off); return out; }   // all gone: drop what was under it (covering it cell by cell left faint seams: the user)
+  if (bgs && k >= 1) { g0dDropBgs(bgs, off); if (st.frameBgs) g0dDropBgs(st.frameBgs, off); return out; }   // all gone: drop what was under it (covering it cell by cell left faint seams: the user), the screen's own too (the tray's chips: they came back as solid blocks)
   if (bgs) for (let y = 0; y < L.hc; y++) { if (!off(y)) continue; for (let x = 0; x < L.wc; x++) if (gone(x, y)) bgs.push({ cx: x, cy: y, w: 1, col: C.bg, alpha: 1 }); }
   return out;
 }
@@ -1119,10 +1119,14 @@ HEAVEN.cerberus = {
     if (!cb.eyes.length && closed.length) for (let k = 0; k < Math.min(CERB.eyes, closed.length); k++) cb.eyes.push({ tile: null, at: now, wait: cb.t0 + (cb.plain ? 700 : CERB.hold + CERB.grow) + k * 520, red, blue, k });   // (plain: no mold to wait for)
     for (const e of cb.eyes) {
       if (e.wait) { if (now < e.wait) continue; e.wait = 0; if (cb.teach && cb.taught.dig) setTimeout(() => cerbTeach(cb, 'eyes'), 1600); }
+      if (e.rest) { if (now < e.rest) continue; e.rest = 0; }
       const cyc = (e.tile === real0 ? red : red + blue) * 1000;   // (on the real node: it leaves before it goes blue)
       if (!e.tile || e.tile.state !== 'closed' || e.hop || now - e.at > cyc) {   // a new spot (not where another eye is)
         const free = closed.filter(t => t !== e.tile && !cb.eyes.some(o => o !== e && o.tile === t));   // (somewhere new)
-        e.tile = free.length ? pickR(free, Math.random) : null; e.at = now + (e.hop ? 250 : 0); e.hop = false;
+        // only the real node left for it (VIRUS burned the rest, the other eyes on what's left): it rests a cycle off the
+        // board. Before, it kept landing back on the real node, red, and you couldn't tap it (the user's playtest)
+        if (!free.some(t => t !== real0)) { e.tile = null; e.hop = false; e.rest = now + red * 1000; continue; }
+        e.tile = pickR(free, Math.random); e.at = now + (e.hop ? 250 : 0); e.hop = false;
       }
     }
     // draw: the mold (it hides the nodes), the look, the eyes over everything

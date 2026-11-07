@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.47']);
+NEON_FILES.push(['engine/panels.js', 'v14.48']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -576,7 +576,7 @@ function rewardOptions(node) {
   const third = r() < ECON.reward.gear ? [rewardGear(r)] : pickMods(r, modsOfKind('gen', 'minor'), 1, corpPick.concat(gen));
   const options = shuffle(corpPick.concat(gen, third), r);
   const calls = callReward(rngFor(run.seed, 'callreward', node.id));
-  if (calls) options.push(calls);
+  if (calls && !options.some(o => o.key === calls.key)) options.push(calls);   // (not the same CALL twice: the third pick can be one too. the user got b0y x2)
   return options;
 }
 function openReward(node, skipped = false) {

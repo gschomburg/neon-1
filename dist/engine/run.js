@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.47']);
+NEON_FILES.push(['engine/run.js', 'v14.48']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -280,7 +280,7 @@ async function corpIntro() {
   const boot = [
     [`> connecting to ${def.name.toLowerCase().replace(/[^a-z/]+/g, '.')}`, C.mid],
     ['> handshake ............... ok', C.mid],
-    [`> mapping ${c.counts.length - 1} layers + boss .... ok`, C.mid],
+    [def.mapLine || `> mapping ${c.counts.length - 1} layers + boss .... ok`, C.mid],   // (mapLine: a corp with no real count, G0D MAZE)
     ['> ICE detected ............ yes', C.danger],
   ];
   const spoil = has('spoiler') && st.run && c.hasBoss && !(st.run.spoiled || {})[def.key] && CORP_TELL[def.key];
@@ -293,7 +293,7 @@ async function corpIntro() {
     X({ text: def.name, col: C.bright, bold: true });
     if (c.stageBoss) T('// SECTOR BOSS //', C.danger);
     T(c.tier ? `TIER ${c.tier}${def.level ? '   LV ' + def.level : ''}` : '', C.mid);
-    T(def.intel, C.text);
+    wrapText(def.intel || '', 31).forEach(l => T(l, C.text));   // (a long one wraps: G0D MAZE's ran off a phone's screen)
     T(rules, C.mid);
     if (c.mod) T(`+ ${ANOMALIES[c.mod].name}: ${ANOMALIES[c.mod].desc}`, C.money);
     spoilLines.slice(0, 3).forEach((l, j) => T(j === 2 && spoilLines.length > 3 ? l.slice(0, 28) + '...' : l, C.money));

@@ -1,6 +1,6 @@
 // NeoN+1 corps/tumbler.js
 'use strict';
-NEON_FILES.push(['corps/tumbler.js', 'v14.47']);
+NEON_FILES.push(['corps/tumbler.js', 'v14.48']);
 // Its boss mod: PICKSET (pickset), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

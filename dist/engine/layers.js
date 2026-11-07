@@ -1,6 +1,6 @@
 // NeoN+1 engine/layers.js: Layers: the grid, picking the real node, glyphs, the corp dressing a layer.
 'use strict';
-NEON_FILES.push(['engine/layers.js', 'v14.47']);
+NEON_FILES.push(['engine/layers.js', 'v14.48']);
 
 // ---------------- Layers ----------------
 function gridFor(n) {

@@ -1,6 +1,6 @@
 // NeoN+1 corps/hydra.js
 'use strict';
-NEON_FILES.push(['corps/hydra.js', 'v14.47']);
+NEON_FILES.push(['corps/hydra.js', 'v14.48']);
 // Its boss mod: HEADCOUNT (headcount), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

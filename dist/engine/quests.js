@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.47']);
+NEON_FILES.push(['engine/quests.js', 'v14.48']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -553,13 +553,16 @@ function buildScene_(ctx0, now) {
     addHit: () => {} });
   const { put, bg, addHit } = ctx;
   const W = 30, x0 = Math.floor((L.wc - W) / 2), mid = Math.floor(L.hc / 2);
-  if (!strip || fr.title) put(x0, mid - 8, `- ${String(sc.i + 1)} / ${frames.length} -`.padStart(W), C.dim, 'hud');   // (a strip: its own, top left)
+  if (strip && fr.title) put(1, 1, `- ${sc.i + 1} / ${frames.length} -`, C.dim, 'hud');   // a strip's title card: top left, like its other frames (the user: it sat low)
+  else if (!strip) put(x0, mid - 8, `- ${String(sc.i + 1)} / ${frames.length} -`.padStart(W), C.dim, 'hud');   // (a strip: its own, top left)
   const skip = '[ SKIP ]';
   put(L.wc - skip.length - 1, 1, skip, st.hoverBtn === 'qskip' ? C.bright : C.mid, 'hud');
   addHit(L.wc - skip.length - 1, 1, skip.length, 1, { kind: 'btn', id: 'qskip', onTap: sceneEnd });
   if (fr.title) {   // a title card: the quest's name, the step under it
-    fr.title.forEach((t, k) => put(Math.floor((L.wc - t.length) / 2), mid - 2 + k * 2, t, k ? C.mid : C.rep, 'hud', !k));
-    if (Math.floor(now / 500) % 2) { const t = 'tap to go on'; put(Math.floor((L.wc - t.length) / 2), mid + 6, t, C.dim, 'hud'); }
+    // a long card (the ending's credits) is centered, with its tap under it (it ran over the last lines: the user)
+    const n = fr.title.length, top = Math.min(mid - 2, mid - n), tapY = Math.max(mid + 6, top + 2 * n + 1);
+    fr.title.forEach((t, k) => put(Math.floor((L.wc - t.length) / 2), top + k * 2, t, k ? C.mid : C.rep, 'hud', !k));
+    if (Math.floor(now / 500) % 2) { const t = sc.i < frames.length - 1 ? 'tap to go on' : 'tap to end'; put(Math.floor((L.wc - t.length) / 2), tapY, t, C.dim, 'hud'); }
     return;
   }
   if (strip) return buildStrip(ctx, now, sc, frames);

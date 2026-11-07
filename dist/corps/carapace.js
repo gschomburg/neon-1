@@ -1,6 +1,6 @@
 // NeoN+1 corps/carapace.js
 'use strict';
-NEON_FILES.push(['corps/carapace.js', 'v14.47']);
+NEON_FILES.push(['corps/carapace.js', 'v14.48']);
 // Its boss reward: ROLLUP gear x2 (rollup), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

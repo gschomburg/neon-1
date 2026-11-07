@@ -254,6 +254,19 @@ unlocked by REP, and some quests unlock REP.
   daily seed (parked, below) would fit as a pinned row on the SEEDS page.
 - **G0D comes out of its own logo** (Greg, 2026-11-05: "god could have popped out of his own logo for the final
   stand"): its logo (v14.43) up first in the final stand, then the eye tears out of the triangle.
+- **Playtest of H3AV3N, the rest of it** (the user, meat notes 2026-11-06). **Built v14.48** (SPEC version log): the
+  CERBERUS eye stuck red on the real node, the maze's intro running off the screen, the tray's chips outlasting G0D's
+  collapse, the ending's long cards (the tap line over them, the counter low), b0y twice on a boss's rewards. To talk
+  through:
+  - **b0y after the quest:** dropping in on your next runs is fine (he's strong). Maybe he works like in H3AV3N: in the
+    tray, you call him out. His CALL gear can still drop, but this way you can count on him at the first OMNI out of
+    the sector.
+  - **b0y called into a corp** doesn't split into three. Not needed, but he should act more like he does in H3AV3N.
+  - **After the credits, POPS's CALL** offers THE MAZE or G0D FIGHT. The user likes fighting G0D again, but wants an exit
+    to the title, and maybe no maze (THE MAZE starts the seed over at sector 2, not at the # node; the only maze feat
+    is LOST). To talk through.
+  - **KITCHEN and ZER0** (the terminal's log in the ending) are only art today. Hide a seed or two in there that are
+    real special seeds (the gauntlet, below, or fun made-up ones).
 - **Replay H3AV3N** after winning (maybe its own leaderboard).
 - **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
 - **More rewards?** A mod you always start with (meat notes 2026-10-29).
@@ -441,6 +454,8 @@ unlocked by REP, and some quests unlock REP.
 - **Bugs and weirdness** (the user, meat notes 2026-11-06): **all built v14.46** (SPEC version log): the market list scrolls, the DISC is loot in a market, boxes block hovers, STIM + ZOMBIE = rot limit 225, TUNNEL's lines, the music after FIRST BREACH.
 - **Misc** (the user, meat notes 2026-11-06):
   - **COLD BREW's rewards aren't very good:** it needs something legendary.
+  - **A PHISHING REP buy** (the user, meat notes 2026-11-06): one PHISH was tiny and so fast LURE couldn't catch it.
+    That difficulty is fine, but a REP buy, unlocked fairly high, caps the target's top speed.
   - **CHUCK E. CACHE has a 1UP in its logo:** do something with that once 1UPs are unlocked?
   - **Skip a corp's rewards for a heal:** an option, maybe a choice on the screen, maybe a REP unlock.
   - **Send a seed to a friend.**
