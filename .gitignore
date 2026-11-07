@@ -33,5 +33,6 @@ node_modules/
 # Files moved aside instead of deleted (the user can empty it).
 _trash/
 
-# The neon editor built for the site (tools/deploy_editor.js): made again any time.
-deploy/neon/
+# The neon editor's copy for the site (tools/deploy_editor.js, run by bump.js): made again any time; it's uploaded
+# with dist/, not committed.
+dist/tools/

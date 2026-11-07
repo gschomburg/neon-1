@@ -1,5 +1,7 @@
-// deploy_editor.js: an upload-ready copy of the neon editor for the site, in deploy/neon/tools/ (gitignored).
-// Upload that folder's contents to /neon/tools/ next to the game (the game is /neon/, dist/ uploaded there).
+// deploy_editor.js: a copy of the neon editor for the site, in dist/tools/ (gitignored), so uploading dist/ to /neon/
+// puts it at /neon/tools/ next to the game. tools/bump.js runs it after every bump; run it by hand after editor changes.
+// It works from disk too (dist/tools/neon_editor.html: the game is the folder above). Keep the folder password-protected
+// on the site.
 //
 // What it changes from tools/ (the files here stay as they are, for running from disk):
 //   - only what the editor needs: neon_editor.html, editor/, the data file writers it loads (data/*_file.js),
@@ -11,8 +13,8 @@
 // Not online: "edit in asXii" (the ART tab) opens ../ascii-editor/, which isn't on the site.
 'use strict';
 const fs = require('fs'), path = require('path');
-if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/deploy_editor.js   (writes deploy/neon/tools/: upload its contents to /neon/tools/)'); process.exit(0); }
-const TOOLS = __dirname, ROOT = path.join(TOOLS, '..'), OUT = path.join(ROOT, 'deploy', 'neon', 'tools');
+if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/deploy_editor.js   (writes dist/tools/: the editor, uploaded with dist/ to /neon/tools/)'); process.exit(0); }
+const TOOLS = __dirname, ROOT = path.join(TOOLS, '..'), OUT = path.join(ROOT, 'dist', 'tools');
 const build = JSON.parse(fs.readFileSync(path.join(ROOT, 'dist', 'version.json'), 'utf8')).version.replace(/^v/, '');
 
 const FILES = ['neon_editor.html', 'music_view.html',
@@ -43,4 +45,4 @@ fs.writeFileSync(path.join(OUT, '.htaccess'), [
   '  Header set X-Robots-Tag "noindex, nofollow"',
   '</IfModule>',
   ''].join('\n'));
-console.log(`deploy/neon/tools/: ${n} files + .htaccess, build v${build}. Upload its contents to /neon/tools/.`);
+console.log(`dist/tools/: the editor, ${n} files + .htaccess, build v${build}.`);

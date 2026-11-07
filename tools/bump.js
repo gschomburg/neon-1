@@ -38,7 +38,7 @@ else { console.log(`now v${maj}.${String(min).padStart(2, '0')}. usage: node too
 const v = `v${maj}.${String(min).padStart(2, '0')}`, num = v.slice(1);
 
 let n = 0;
-const walk = d => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (p.endsWith('.js')) {
+const walk = d => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) { if (p !== path.join(DIST, 'tools')) walk(p); } else if (p.endsWith('.js')) {
   // the stamp: NEON_FILES.push(['engine/core.js', 'v12.00']) (palettes.js writes it a little differently)
   const t = fs.readFileSync(p, 'utf8'), u = t.replace(/(\.push\(\['[^']+', ')v[\d.]+('\]\);)/, `$1${v}$2`);
   if (u !== t) { fs.writeFileSync(p, u); n++; }
@@ -51,4 +51,5 @@ fs.writeFileSync(html, fs.readFileSync(html, 'utf8').replace(/(<script src="(?!h
 fs.writeFileSync(path.join(DIST, 'version.json'), JSON.stringify({ version: v }) + String.fromCharCode(10));
 console.log(`build ${v}: VERSION, ${n} file stamps, the script links and version.json.`);
 syncMusicTool();
+require('./deploy_editor.js');   // dist/tools/: the editor for the site, on this build
 if (min === 0) console.log(`new major: give it a new save slot (STORE_KEY in engine/core.js, beta_runner.v${maj}.save) and copy the old one over, like v12 does.`);
