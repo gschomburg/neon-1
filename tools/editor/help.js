@@ -171,7 +171,7 @@
 <h1>Testing</h1>
 <p class="lead">Cheats and jumps on the game on the left, for playing things through. Nothing here writes a file. Every cheat makes the run practice (not scored).</p>
 <ul>
-<li><b>Run:</b> a new test run (on the map, after the public net); god (no damage), show the real node, free travel (go to any node); stop clocks (on by default: layer timers hold still; turn it off to test timed corps and TIME IS MONEY); music and sfx (the game's own; the music tab takes over while it plays a track); set credits and INT, heal; set REP (your saved REP: works without a run).</li>
+<li><b>Run:</b> a new test run (on the map, after the public net); god (no damage), show the real node, free travel (go to any node); stop clocks (off by default: turn it on and layer timers hold still, for looking at a screen); the game's music and sfx start on; music and sfx (the game's own; the music tab takes over while it plays a track); set credits and INT, heal; set REP (your saved REP: works without a run).</li>
 <li><b>Quests:</b> open the quest (marks a sector cleared and puts POPS on your crew), give the DISC (a run needed), set the quest step, make POPS call, play the scene.</li>
 <li><b>Sector events:</b> click one and the game starts a new run and climbs straight to sector 2 with that event: its card comes up first. The sector name on the map shows the card again.</li>
 <li><b>Jump:</b> to sector 2-5 (events rolled as usual); into this sector's boss; clear the sector (the success screen); straight to the uplink; or <b>go fishing</b> (a PIER, with at least 100cr).</li>

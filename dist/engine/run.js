@@ -527,7 +527,7 @@ function lockTile(t, col, source = 'purge') {
 
 function updateTimer(dt) {
   const tm = st.timer;
-  if (!tm || st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.pause || (EDITOR && st.editorHold !== false)) return;   // the editor holds the clocks still (TESTING tab: stop clocks, on by default)
+  if (!tm || st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.pause || (EDITOR && st.editorHold)) return;   // the editor holds the clocks still (TESTING tab: stop clocks, off by default)
   if (st.lv && st.lv.holdUntil && performance.now() < st.lv.holdUntil) return;   // ESPRESSO, FREEZE FRAME
   tm.left -= dt * ((st.lv && st.lv.clockRate) || 1);   // TIMEWARP
   const sec = Math.ceil(tm.left);

@@ -95,9 +95,9 @@
   // level: 0-4, or 'game' (the level the game's screen gives it).
   const NE = window.NE;
   const PREF_KEY = 'neon.editor.music';
-  const p = { key: null, place: null, follow: false, playing: false, level: 2, urgency: 0, low: false, sfx: false, volume: 0.8, restart: 0, stage: null };
-  try { const o = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); for (const k of ['level', 'sfx', 'volume']) if (k in o) p[k] = o[k]; } catch (e) { /* nothing saved */ }
-  const savePrefs = () => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ level: p.level, sfx: p.sfx, volume: p.volume })); } catch (e) { /* private mode */ } };
+  const p = { key: null, place: null, follow: false, playing: false, level: 2, urgency: 0, low: false, sfx: true, volume: 0.8, restart: 0, stage: null };
+  try { const o = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); for (const k of ['level', 'volume']) if (k in o) p[k] = o[k]; } catch (e) { /* nothing saved */ }
+  const savePrefs = () => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ level: p.level, volume: p.volume })); } catch (e) { /* private mode */ } };
   function sendCtl(restart) {
     if (restart) p.restart = Date.now();
     NE.toGame({ type: 'music-ctl', playing: p.playing, key: p.follow ? null : p.key, level: p.level === 'game' ? null : p.level,
