@@ -488,7 +488,7 @@
   <div id="nowused"></div>
   <div id="nowgame"></div>
   <div id="steps"></div>
-  <div class="row"><button id="play" class="primary">play</button><button id="mPrev">prev</button><button id="mNext">next</button></div>
+  <div class="row"><button id="play" class="primary">play</button><button id="mPrev">prev</button><button id="mNext">next</button><button id="mRoll" title="This track's parts as a piano roll: sections, form, levels, mute / solo (Music View, Justin's)">piano roll</button></div>
 
   <h2>Like the game does</h2>
   <div class="row"><label>level</label><span id="levels"></span></div>
@@ -520,6 +520,10 @@
   </div>
   <div id="mErrors"></div>
 </aside>
+<div id="mRollBox">
+  <div id="mRollBar"><b>piano roll</b> <span id="mRollName"></span><button id="mRollClose" title="Back to the list (Esc)">close</button></div>
+  <iframe id="mRollFrame" title="Music View"></iframe>
+</div>
 </section>
 </div>
 <div id="toast"></div>

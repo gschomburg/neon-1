@@ -23,8 +23,8 @@ const ac = {
   createPeriodicWave: () => ({}), createBuffer: () => ({ getChannelData: () => new Float32Array(1) }),
 };
 
-// ---- load what the music tool loads (its stand-ins, the music files, every corp), then the resolver
-const html = fs.readFileSync(path.join(__dirname, '..', 'music.html'), 'utf8');
+// ---- load what Music View loads (its stand-ins, the music files, every corp), then the resolver
+const html = fs.readFileSync(path.join(__dirname, '..', 'music_view.html'), 'utf8');
 const head = html.slice(0, html.indexOf('<!-- corps: end -->'));
 const ctx = { console, Math, Date, JSON, Object, Array, Map, Set, WeakMap, Number, String, Float32Array, performance: { now: () => 0 } };
 ctx.window = ctx; ctx.globalThis = ctx;

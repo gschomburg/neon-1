@@ -423,9 +423,23 @@
     else prompt('copy this:', txt);
   });
 
+  // ---- the piano roll: Music View in a frame over the tab. It plays on its own, so the game's music stops.
+  const roll = on => {
+    $('#music').classList.toggle('roll', on);
+    if (!on) { $('#mRollFrame').src = 'about:blank'; return; }
+    if (p.playing) { p.playing = false; sendCtl(false); renderPlayer(); renderList(); }
+    const k = p.key && !(p.key in DEMOS) ? p.key : null;
+    $('#mRollName').textContent = k ? SONGS[k].name : '';
+    $('#mRollFrame').src = 'music_view.html' + (k ? '?track=' + k : '');
+  };
+  $('#mRoll').onclick = () => roll(true);
+  $('#mRollClose').onclick = () => roll(false);
+  document.addEventListener('neon-mode', () => { if ($('#music').classList.contains('roll')) roll(false); });
+
   // ---- keys
   document.addEventListener('keydown', e => {
     if (!document.body.classList.contains('mode-music')) return;
+    if ($('#music').classList.contains('roll')) { if (e.key === 'Escape') roll(false); return; }
     if ((e.target.matches && e.target.matches('input[type=text], textarea, select')) || e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
     if (k === ' ') { e.preventDefault(); $('#play').click(); }

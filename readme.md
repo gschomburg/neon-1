@@ -59,7 +59,7 @@ node tools/data/economy_file.js     # rewrite a data file through its writer (a 
                                # art_ and palette_file.js; each prints "unchanged" when the file and writer agree
 ```
 
-The editors (`tools/neon_editor.html`, `tools/music.html`, `tools/music_view.html`) open straight from disk in
+The editors (`tools/neon_editor.html`, `tools/music_view.html`) open straight from disk in
 Chrome. They save into `dist/` with the File System Access API.
 
 ## Version
@@ -129,8 +129,7 @@ neon-1/
 │   ├── bump.js             change the build number everywhere
 │   ├── test.js             every automatic check in one go (exit 1 on a failure)
 │   ├── neon_editor.html    the editor: edits the data files in dist/ in place (the page; its code is in editor/)
-│   ├── music.html          the music tool: which track plays where
-│   ├── music_view.html     Music View: a piano roll of any track
+│   ├── music_view.html     Music View: a piano roll of any track (the MUSIC tab's "piano roll" opens it)
 │   ├── checks/             the automatic checks
 │   │   ├── harness.js      runs the game headless: in a Node vm, or as a page in headless Chrome
 │   │   ├── tests/          test pages: play a bit, check things (fixes, the end game)

@@ -96,10 +96,11 @@ pick one and the game shows one of its layers in its own palette *and plays its 
 the game plays. The level buttons pick how much of the band plays (0-4), or "game" (what the screen gives it). Up /
 down walks through the corps. Everything else works as in the music tool below (stars, tags, notes, the tracks view,
 try another band, assignments); changes are remembered in the browser and copied out for Claude, and the game frame
-gets them live. The stars, notes and changes are shared with the old music tool (same browser storage). The old
-`music.html` stays for now (`palette_editor.html` was removed on 2026-11-05: the PALETTE tab replaces it).
+gets them live. **piano roll** opens Music View (below) on the track, over the tab. `music.html` was retired on
+2026-11-07 (the MUSIC tab does all it did; `palette_editor.html` went 2026-11-05: the PALETTE tab replaces it).
+What follows still describes the MUSIC tab: it began as that tool.
 
-**The music tool: `tools/music.html`** (2026-10-24). Open it in Chrome from the repo. Every track in a sortable,
+**The music tool: `tools/music.html`** (2026-10-24; retired 2026-11-07, now the editor's MUSIC tab). Every track in a sortable,
 filterable list (tempo, key, groove, bass, arp, where it plays); click one to play it, and push it like the game does
 (level 0-4, urgency, heartbeat, the boss-win / game-over tests). For narrowing down: tag each track keep / maybe /
 cut with a note (kept in the browser), then **copy the list** to paste into a chat. It loads the game's own music
@@ -129,8 +130,8 @@ The creak is a low saw gliding up through a narrow band, chopped unevenly (the h
 ~2s; the owl is four soft sine hoots (hoo, hoo-hoo, hooo) pitched to the track's root, panned, into the echo. Here
 a door creaks every other time through.
 
-**Music View** (2026-10-25): `tools/music_view.html`, a sequencer-style look inside one track (the music tool links
-to it). A piano roll per part (melody, arp, stabs, pad, bass, drums, sound fx), each in the numbers the track is
+**Music View** (2026-10-25): `tools/music_view.html`, a sequencer-style look inside one track (the MUSIC tab's
+**piano roll** opens it). A piano roll per part (melody, arp, stabs, pad, bass, drums, sound fx), each in the numbers the track is
 written in: melody in degrees from the root, bass in steps from the chord root, arp in chord tones 0-5. On top: the
 chords (roman numerals and names) and the form as a strip of passes, lettered by section, with fills and breakdowns
 marked; click a pass to jump there, loop it, or switch to the song view (every pass left to right). Parts the

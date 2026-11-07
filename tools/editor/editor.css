@@ -351,7 +351,14 @@
   table.ilad td.s.pick { cursor: pointer; }
   table.ilad td.s.pick:hover { background: #1a2027; }
   table.ilad td.s.on { outline: 2px solid var(--acc); outline-offset: -2px; color: var(--acc); }
-  #music { flex-direction: row; }
+  #music { flex-direction: row; position: relative; }
+  /* the piano roll: Music View (tools/music_view.html) in a frame over the music tab */
+  #mRollBox { display: none; position: absolute; inset: 0; z-index: 10; flex-direction: column; background: var(--bg); }
+  #music.roll #mRollBox { display: flex; }
+  #mRollBar { display: flex; gap: 8px; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  #mRollBar #mRollName { color: var(--mid); }
+  #mRollBar #mRollClose { margin-left: auto; }
+  #mRollFrame { flex: 1; border: 0; width: 100%; background: var(--bg); }
   #music .dim { color: var(--dim, #5d636b); }
   #music #nowgame { color: var(--mid); font-size: 12px; margin-top: 4px; min-height: 17px; }
   #music #nowgame.warn { color: var(--warn); }
