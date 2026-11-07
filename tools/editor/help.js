@@ -228,7 +228,7 @@
   $('#helpBtn').onclick = () => toggle();
   $('#helpBody').addEventListener('click', e => { const a = e.target.closest('a[data-go]'); if (a) show(a.dataset.go); });
   // switching tabs closes it (the tab is what you came to see)
-  for (const b of document.querySelectorAll('#modes button[data-mode]')) b.addEventListener('click', () => toggle(false));
+  document.addEventListener('neon-mode', () => toggle(false));
   addEventListener('keydown', e => {
     if (e.key === 'F1') { e.preventDefault(); toggle(); }
     else if (e.key === 'Escape' && open) toggle(false);

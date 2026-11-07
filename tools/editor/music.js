@@ -475,24 +475,4 @@
   let view = 'corps'; try { view = localStorage.getItem('neon.music.view') || 'corps'; } catch (e) { /* private mode */ }
   setView(view); renderPlayer();
 
-  // ---- the two modes (music / palette), remembered
-  const setMode = m => {
-    if (!['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test', 'g0d', 'fx'].includes(m)) m = 'music';
-    for (const k of ['music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'test', 'g0d', 'fx']) document.body.classList.toggle('mode-' + k, m === k);
-    for (const b of document.querySelectorAll('#modes button[data-mode]')) b.classList.toggle('on', b.dataset.mode === m);
-    $('#modehint').textContent = { music: 'pick a corp: the game shows it and plays its track', pal: 'palettes: save writes dist/data/palettes.js',
-      items: 'from dist/data/mods.js. give / change / remove mods on the running game (the copy is read-only)',
-      art: 'dist/data/art/: glyphs, logos, hacker faces, world map. edit here or in asXii; save writes the files',
-      tut: 'dist/data/tutorial.js: what POPS says. show plays the training to that line; edits show live',
-      econ: 'dist/data/economy.js: every money number, in units. edits go to the game live; save writes the file',
-      ads: 'dist/data/ads.js: every fake ad as text; show one in the game (edit the file to change them)',
-      hack: 'dist/data/hackers.js: the hacker cast, with faces and logos (not in play yet)',
-      test: 'cheats and jumps on the running game, for testing (nothing is saved)',
-      g0d: 'G0D designs and effects, drawn in the running game (engine/g0d.js; previews only)',
-      fx: 'dist/data/fx.js: every effect\'s settings (the global look). show plays it; edits go to the game live; save writes the file' }[m];
-    try { localStorage.setItem('neon.editor.mode', m); } catch (e) { /* private mode */ }
-  };
-  for (const b of document.querySelectorAll('#modes button[data-mode]')) b.addEventListener('click', () => setMode(b.dataset.mode));
-  let mode = 'music'; try { mode = localStorage.getItem('neon.editor.mode') || 'music'; } catch (e) { /* private mode */ }
-  setMode(mode);
 })();

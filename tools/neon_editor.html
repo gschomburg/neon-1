@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <title>NeoN+1 editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- NeoN+1 editor: the game on the left (index.html?editor=1, engine/editor.js), and three modes on the right:
-     MUSIC (every corp's track, played by the game itself), PALETTE (edits dist/data/palettes.js) and ITEMS & MODS
-     (read-only: every item and mod, its rarity steps and its copy, from dist/data/mods.js).
+<!-- NeoN+1 editor: the game on the left (index.html?editor=1, engine/editor.js), a divider you can drag, and the
+     tabs on the right, picked from one dropdown (editor/nav.js): tabs that edit a data file (palette, art, training,
+     economy, fx), tabs to look things up (music, gear & mods, ads, hackers) and tabs that drive the running game
+     (testing, g0d).
      First, stand-ins for the bits of the game the music and corp files expect, then the game's own files.
      The page's own code is in editor/: common.js (helpers every tab shares, NEON_ED), then one file per tab, in
      the order at the end of the body (palette.js first: it runs the game frame and sets NE for the music tab).
@@ -147,7 +148,9 @@
         <option value="360">small phone 360</option>
         <option value="480">wide phone 480</option>
         <option value="720" selected>tablet 720</option>
+        <option value="fit">fit the column</option>
       </select>
+      <span id="frameScale" class="dim" title="the frame is wider than its column: shown smaller"></span>
       <button id="reloadgame" title="Reload the game frame">reload game</button>
       <button id="gameMusic" title="the game's own music on / off (the same switch as TESTING's music)">music</button>
       <button id="gameSfx" title="the game's sound effects on / off (the same switch as TESTING's sfx)">sfx</button>
@@ -156,9 +159,10 @@
   <div id="framewrap"><iframe id="game" title="game preview" allow="autoplay"></iframe></div>
   <div id="scenestate">loading the game...</div>
 </section>
+<div id="split" title="Drag to resize. Double-click: back to the frame's width"></div>
 
 <div id="right">
-<div id="modes"><b>NeoN+1 editor</b><button data-mode="music">music</button><button data-mode="pal">palette</button><button data-mode="items">gear &amp; mods</button><button data-mode="art">art</button><button data-mode="tut">training</button><button data-mode="econ">economy</button><button data-mode="ads">ads</button><button data-mode="hack">hackers</button><button data-mode="test">testing</button><button data-mode="g0d">g0d</button><button data-mode="fx">fx</button><span id="modehint"></span><button id="helpBtn" title="How this tab works, and how saving works (F1)">? help</button></div>
+<div id="modes"><b>NeoN+1 editor</b><select id="modeSel" title="The tab (Alt + up / down)"></select><button id="helpBtn" title="How this tab works, and how saving works (F1)">? help</button></div>
 <div id="help"><div id="helpNav"></div><div id="helpBody"></div></div>
 <section id="art" class="mode">
   <div id="aBar">
@@ -204,8 +208,7 @@
   <div id="adBar">
     <input id="adFilter" type="text" placeholder="filter: name, text..." autocomplete="off">
     <button id="adRandom" title="Show a random ad in the game">show a random one</button>
-    <span id="adCount"></span>
-    <span class="dim">from dist/data/ads.js (read-only here); underlined lines are buttons (hover: what they say after)</span>
+    <span id="adCount" title="From dist/data/ads.js (read-only here). Underlined lines are buttons: hover one for what it says after"></span>
   </div>
   <div id="adBody"></div>
 </section>
@@ -213,15 +216,14 @@
   <div id="hkBar">
     <button data-side="all" class="on">all</button><button data-side="bad">bad</button><button data-side="good">good</button>
     <input id="hkFilter" type="text" placeholder="filter: name, text..." autocomplete="off">
-    <span id="hkCount"></span>
-    <span class="dim">from dist/data/hackers.js (read-only here; ask Claude to change them). Faces and logos: the art tab.</span>
+    <span id="hkCount" title="From dist/data/hackers.js (read-only here). Faces and logos: the art tab"></span>
   </div>
   <div id="hkBody"></div>
 </section>
 <section id="test" class="mode">
   <div id="xState">the game isn't ready yet</div>
   <div id="xLog"></div>
-  <h2>Run <small>every cheat makes the run practice (not scored)</small></h2>
+  <details class="xgrp" data-g="run" open><summary>Run <small>every cheat makes the run practice (not scored)</small></summary>
   <div class="row">
     <button data-x="fresh">new test run</button>
     <button data-x="h3av3n" title="the H3AV3N seed, as if you typed it: a QUEST run from sector 1 (CERBERUS, then heaven)">play H3AV3N</button>
@@ -239,6 +241,7 @@
     &nbsp; INT <input id="xInt" type="number" value="5" min="1"> <button data-x="int">set</button> <button data-x="heal">heal</button>
     &nbsp; REP <input id="xRep" type="number" value="500" min="0"> <button data-x="rep">set</button>
   </div>
+  </details>
   <details class="xgrp" data-g="loot"><summary>Loot <small>what a node on the map could give, read off the seed with what you carry now (nothing is taken; the run stays scored)</small></summary>
   <div class="row">
     <button data-x="lootview" title="tap a node on the game's map first (or it's the one you're on)">show loot for the map node</button>
@@ -247,7 +250,7 @@
   </div>
   <pre id="xLoot" style="display:none; max-height:420px; overflow:auto; margin:6px 0; padding:8px; background:#0b0f12; border:1px solid #234; font-size:12px; white-space:pre"></pre>
   </details>
-  <h2>Quests <small>SYSTEM FAILURE (POPS): docs/QUESTS.md. Set a step, then the button for it.</small></h2>
+  <details class="xgrp" data-g="quests" open><summary>Quests <small>SYSTEM FAILURE (POPS): set a step, then the button for it</small></summary>
   <div class="row">
     <button data-x="qopen" title="marks a sector cleared and puts POPS on your crew, so the DISC can drop">open the quest</button>
     &nbsp; step <select id="xQStep"><option value="none">not started</option><option value="sector">1 PROVE IT: clear a sector</option><option value="find">2 THE DISC: find it</option><option value="deliver">3 SAFEHOUSE: take it to POPS</option><option value="d0g">4 DOG DAYS: HAD3S, 10 d0g wins</option><option value="trace">5 TRACE ROUTE: go to POPS</option><option value="raid">6 OMNI RAID: b0y on OMNI</option><option value="g0d">7 G0D MODE: H3AV3N</option><option value="done">8 done</option></select> <button data-x="qstep" title="steps 6 and on put b0y on your crew (and d0g becomes w00f); earlier steps take him off">set</button>
@@ -264,6 +267,7 @@
     HAD3S: <button data-x="had3s" title="a HAD3S run, as if you typed the seed">run it</button> <button data-x="myconet" title="a HAD3S run, straight into sector 1's boss">MYCONET</button> <button data-x="cerberus" title="a HAD3S run, straight into sector 2's boss (no mold)">CERBERUS</button> <button data-x="rivalgear" title="LEASH, BONE, MUZZLE, H0NEY into your gear (a run needed)">+ rival gear</button>
     &nbsp; <button data-x="b0yomni" title="sets OMNI RAID, a new run, straight into OMNI with b0y called in: break it for HEAVEN'S GATE">OMNI with b0y</button>
   </div>
+  </details>
   <details class="xgrp" data-g="sector"><summary>Sector <small>events, jumps, anomalies, THE FENCE</small></summary>
   <h2>Sector events <small>click one: a new run, straight to sector 2 with that event (its card first)</small></h2>
   <div class="row" id="xEvents"></div>
@@ -277,13 +281,15 @@
   <h2>THE FENCE</h2>
   <div class="row"><button data-x="steal">steal my last mod</button> <span class="dim">it goes to THE FENCE (one is added next to this sector's boss if there isn't one)</span></div>
   </details>
-  <h2>Give <small>a mod (at a step), gear or loot; the gear &amp; mods tab has the full list</small></h2>
+  <details class="xgrp" data-g="give" open><summary>Give <small>a mod (at a step), gear, loot or a kit</small></summary>
   <div class="row">mod <select id="xGiveMod"></select> <select id="xTierMod"></select> <button id="xGiveModBtn">give</button></div>
   <div class="row">gear <select id="xGiveGear"></select> <select id="xTierGear"></select> <button id="xGiveGearBtn">give</button></div>
   <div class="row">loot <select id="xGiveLoot"></select> <select id="xTierLoot"></select> <button id="xGiveLootBtn">give</button> <button id="xGiveLootRnd" title="2-5 random loot, one after another: the [$] pile">random 2-5</button></div>
-  <div class="row">kit <button data-x="kit" data-key="tank" title="a legendary BUFFER, 10 rare PATCHes, INT full">tank kit</button> <button data-x="kit" data-key="tracker" title="TRACER and KEYLOGGER at their top steps">tracker kit</button> <button data-x="kit" data-key="crew" title="CALL x5 and 2 of each crew member's own CALL (as many as fit on the belt)">crew kit</button> <button data-x="kit" data-key="shop" title="+500 credits">shop kit</button> <span class="dim">they only add: nothing you have is replaced; what doesn't fit is skipped</span></div>
-  <h2>Hackers <small>bring one into the corp layer you're in: a rival, or crew as if you'd called them (CALL gear is under Give too)</small></h2>
+  <div class="row">kit <button data-x="kit" data-key="tank" title="a legendary BUFFER, 10 rare PATCHes, INT full">tank kit</button> <button data-x="kit" data-key="tracker" title="TRACER and KEYLOGGER at their top steps">tracker kit</button> <button data-x="kit" data-key="crew" title="CALL x5 and 2 of each crew member's own CALL (as many as fit on the belt)">crew kit</button> <button data-x="kit" data-key="shop" title="+500 credits">shop kit</button> <span class="dim">kits only add (what doesn't fit is skipped)</span></div>
+  </details>
+  <details class="xgrp" data-g="hackers" open><summary>Hackers <small>bring one into the corp layer you're in: a rival, or crew as if called</small></summary>
   <div class="row"><select id="xHk"></select> <button data-x="hacker">bring in</button></div>
+  </details>
   <details class="xgrp" data-g="feats"><summary>Feats <small>click one to grant it or take it back (lit = done); "box" shows its FEAT box once the game is calm</small></summary>
   <div class="row xfeats" id="xFeats"></div>
   <div class="row"><button data-x="wipe">wipe progression</button> <span class="dim">your own save: REP back for THE BOARD's posts; feats, titles and the record cleared</span></div>
@@ -298,19 +304,20 @@
     <button data-g="off">off</button>
     <span class="dim">mockups, not the game: nothing here is saved or played in a run</span>
   </div>
-  <h2>Play the prototype <small>G0D MAZE, G0D FIGHT, G0D FINAL STAND: playable, rough (engine/g0dfight.js). Tap on the game's board.</small></h2>
+  <details class="xgrp" data-g="proto" open><summary>Play the prototype <small>playable, rough (engine/g0dfight.js): tap on the game's board</small></summary>
   <div class="row">
     <button class="gp" data-stage="maze">G0D MAZE</button> <button class="gp" data-stage="fight">G0D FIGHT</button> <button class="gp" data-stage="stand">FINAL STAND</button> <button class="gp" data-stage="">stop</button>
     <label><input type="checkbox" id="gpBoy" checked> b0y helps</label>
   </div>
   <div class="row" id="gpNums"></div>
-  <h2>In the game: H3AV3N <small>the real thing, a step at a time (engine/heaven.js): heaven's last sector as a real map, the maze as real layers</small></h2>
+  </details>
+  <details class="xgrp" data-g="heaven" open><summary>In the game: H3AV3N <small>the real thing, a step at a time (engine/heaven.js), a practice run</small></summary>
   <div class="row">
     <button class="hv" data-to="map">HEAVEN MAP</button> <button class="hv" data-to="maze">THE MAZE (real layers)</button> <button class="hv" data-to="fight">G0D (wake-up, then the fight)</button> <button class="hv" data-to="die">G0D DIES</button> <button class="hv" data-to="fake">FAKE WIN</button> <button class="hv" data-to="stand">FINAL STAND</button> <button class="hv" data-to="end">THE COLLAPSE</button>
     <label title="the wake-up, G0D dying, the fake win, the collapse"><input type="checkbox" id="gpSkip"> skip cinematics</label>
     <label title="a tap skips a cinematic (after a beat); off: they play out"><input type="checkbox" id="gpTap"> tap skips them</label>
-    <span class="dim">a practice run</span>
   </div>
+  </details>
   <details class="xgrp" data-g="hp"><summary>The health bar <small>its own overlay: over the look you're on, or a corp layer; click again for off</small></summary>
   <div class="row" id="gHp"></div>
   </details>
@@ -337,8 +344,7 @@
     <button id="fxSave" class="primary" title="Write dist/data/fx.js (Ctrl S)">save</button>
     <button id="fxReload" title="Load dist/data/fx.js again (drops unsaved changes)">reload</button>
     <button id="fxOff" title="Take the preview off the game">stop showing</button>
-    <span id="fxFile"></span>
-    <span style="margin-left:auto;color:var(--mid);font-size:12px">drag a number sideways, or click it to type. Shift = 10x, Alt = 0.1x</span>
+    <span id="fxFile" title="Drag a number sideways, or click it to type. Shift = 10x, Alt = 0.1x"></span>
   </div>
   <div id="fxList"></div>
 </section>
@@ -532,5 +538,6 @@
 <script src="editor/fx.js"></script>
 <script src="editor/g0d-mold.js"></script>
 <script src="editor/help.js"></script>
+<script src="editor/nav.js"></script>
 </body>
 </html>

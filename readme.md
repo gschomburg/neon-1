@@ -151,12 +151,13 @@ neon-1/
 │       ├── common.js       helpers every tab uses (NEON_ED): the game frame, toasts, IndexedDB, saving a data file
 │       ├── editor.css      the editor's styles
 │       ├── palette.js      the game frame and its scene buttons, and the PALETTE tab (loads first)
-│       ├── music.js        MUSIC, and the mode switch for every tab
+│       ├── music.js        the MUSIC tab
 │       ├── demos.js        the music tool's engine demo tracks
 │       ├── art.js, training.js, economy.js, fx.js   the tabs that save data files
 │       ├── items.js, ads.js, hackers.js             read-only views (ITEMS & MODS, ADS, HACKERS)
 │       ├── testing.js, g0d.js, g0d-mold.js          TESTING and G0D: cheats and previews on the running game
 │       ├── help.js         the ? help, per tab
+│       ├── nav.js          the tab dropdown, the divider you drag, the game frame's size (loads last)
 │       ├── music_view_resolve.js   Music View's resolver (every note a pass plays)
 │       └── scrub-field.js/.css     draggable number fields (a copy of gregfont's)
 ├── docs/                   the design docs

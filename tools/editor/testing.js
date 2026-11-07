@@ -26,7 +26,7 @@
     if (m.type === 'mod-set' && m.ok === false) log('give: ' + m.error, true);
   });
   for (const d of document.querySelectorAll('#test details.xgrp')) {   // open / closed is remembered
-    try { d.open = localStorage.getItem('neonEditor.test.' + d.dataset.g) === '1'; } catch (e) { /* no storage */ }
+    try { const v = localStorage.getItem('neonEditor.test.' + d.dataset.g); if (v != null) d.open = v === '1'; } catch (e) { /* no storage */ }   // (none saved: as the HTML has it)
     d.addEventListener('toggle', () => { try { localStorage.setItem('neonEditor.test.' + d.dataset.g, d.open ? '1' : '0'); } catch (e) { /* no storage */ } });
   }
   $('#test').addEventListener('click', ev => {

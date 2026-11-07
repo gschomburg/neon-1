@@ -118,9 +118,7 @@
     s.value = [...s.options].some(o => o.value === cur) ? cur : 'auto';
   }
   $('#corpsel').onchange = () => { if (['layer', 'hit', 'boss'].includes(scene)) runScene(scene); };
-  // the game column hugs the frame; the form gets the rest
-  const sizeStage = () => { const w = +$('#width').value; frame.style.width = w + 'px'; $('#stage').style.width = Math.max(w + 40, 430) + 'px'; };
-  $('#width').onchange = sizeStage;
+  // (the frame's size and the divider: editor/nav.js)
   $('#reloadgame').onclick = loadGame;
   // music / sfx by the game frame: the game's own switches (engine/editor.js test acts 'music', 'sfx'); lit while on
   for (const [id, act] of [['#gameMusic', 'music'], ['#gameSfx', 'sfx']]) $(id).onclick = () => toGame({ type: 'test', act });
@@ -382,7 +380,7 @@
     const d = dirty();
     $('#filestate').innerHTML = (handle ? `file: <span class="mono">${handle.name}</span>` : 'file: not linked yet (save asks for dist/data/palettes.js)') + (d ? ' · <b>unsaved changes</b>' : ' · saved');
     $('#undo').disabled = !undo.length; $('#redo').disabled = !redo.length;
-    document.title = (d ? '* ' : '') + 'NeoN+1 palette editor';
+    document.title = (d ? '* ' : '') + 'NeoN+1 editor';
   }
   const toast = t => NEON_ED.toast(t, 2200);
 
@@ -445,7 +443,6 @@
   // a check that what we write reads back the same (the editor never changes colors on its own)
   try { const back = parseFile(fileText()); if (JSON.stringify(back.palettes) !== JSON.stringify(data.palettes)) console.warn('palette editor: the file writer does not round-trip'); } catch (e) { console.warn(e); }
 
-  sizeStage();
   renderAll();
   loadGame();
   window.__editor = { fileText, get data() { return data; } };   // for tests

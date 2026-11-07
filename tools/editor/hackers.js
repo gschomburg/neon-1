@@ -34,6 +34,6 @@
     c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 1200);
   });
   // redraw when the tab opens (the art tab may have changed a face)
-  for (const b of document.querySelectorAll('#modes button[data-mode="hack"]')) b.addEventListener('click', render);
+  document.addEventListener('neon-mode', e => { if (e.detail === 'hack') render(); });
   render();
 })();

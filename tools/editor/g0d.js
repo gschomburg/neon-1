@@ -29,7 +29,7 @@
     if (m.type === 'test-done' && m.act === 'g0d') log(m.ok ? (cur ? 'showing' : 'off') : m.error, !m.ok);
   });
   for (const d of document.querySelectorAll('#g0d details.xgrp')) {   // open / closed is remembered
-    try { d.open = localStorage.getItem('neonEditor.g0d.' + d.dataset.g) === '1'; } catch (e) { /* no storage */ }
+    try { const v = localStorage.getItem('neonEditor.g0d.' + d.dataset.g); if (v != null) d.open = v === '1'; } catch (e) { /* no storage */ }   // (none saved: as the HTML has it)
     d.addEventListener('toggle', () => { try { localStorage.setItem('neonEditor.g0d.' + d.dataset.g, d.open ? '1' : '0'); } catch (e) { /* no storage */ } });
   }
   // ---- the prototype: stages, b0y, the numbers (G0DF in engine/g0dfight.js)

@@ -19,17 +19,24 @@
   .mono { font-family: "JetBrains Mono", Consolas, monospace; }
 
   /* left: the game */
-  #stage { display: flex; flex-direction: column; flex: 0 0 auto; min-width: 0; border-right: 1px solid var(--line); }
-  #stagebar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--line); background: var(--panel); max-width: 100%; }
-  #stagebar .grp { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-right: 8px; }
+  #stage { display: flex; flex-direction: column; flex: 0 0 auto; min-width: 0; width: 480px; }   /* (its width: editor/nav.js) */
+  #stagebar { display: flex; flex-wrap: wrap; gap: 6px 4px; padding: 8px; border-bottom: 1px solid var(--line); background: var(--panel); max-width: 100%; }
+  #stagebar .grp { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; margin-right: 8px; }
+  #scenes button { padding: 2px 7px; font-size: 12px; }
+  #frameScale { font-size: 11px; color: var(--mid); }
+  /* the divider: drag to share the width (editor/nav.js) */
+  #split { flex: 0 0 6px; cursor: col-resize; background: var(--line); border-left: 2px solid var(--bg); border-right: 2px solid var(--bg); touch-action: none; }
+  #split:hover, body.dragging #split { background: var(--acc); }
+  body.dragging { cursor: col-resize; user-select: none; }
+  body.dragging iframe { pointer-events: none; }
   #top .grp { display: inline-flex; gap: 4px; align-items: center; margin-left: 8px; }
   #stagebar label { color: var(--mid); }
-  #framewrap { flex: 1; display: flex; justify-content: center; background: #0c0d0f; overflow: hidden; }
-  #game { border: 0; height: 100%; background: #000; }
+  #framewrap { flex: 1; position: relative; background: #0c0d0f; overflow: hidden; min-height: 0; }
+  #game { position: absolute; top: 0; left: 0; border: 0; background: #000; transform-origin: 0 0; }   /* (sized and scaled: editor/nav.js) */
   #scenestate { padding: 4px 8px; color: var(--mid); font-size: 12px; border-top: 1px solid var(--line); min-height: 22px; }
 
   /* right: the form */
-  #panel { flex: 1; min-width: 440px; display: flex; flex-direction: column; }
+  #panel { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   #top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
   #filestate { color: var(--mid); flex-basis: 100%; }
   #filestate b { color: var(--warn); }
@@ -78,9 +85,8 @@
   #toast.show { opacity: 1; }
 
   /* the two modes */
-  #right { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
+  #right { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; container: right / inline-size; }
   /* help: a drawer over the tab, opened by "? help" */
-  #helpBtn { margin-left: 10px; }
   #helpBtn.on { border-color: var(--acc); color: var(--acc); }
   #help { position: absolute; left: 0; right: 0; top: 43px; bottom: 0; z-index: 20; background: var(--bg); display: none; }
   #help.show { display: flex; }
@@ -99,10 +105,10 @@
   #helpBody .file { color: var(--warn); }
   #helpBody .lead { color: var(--mid); margin-bottom: 10px; }
   #helpBody a { color: var(--acc); cursor: pointer; }
-  #modes { display: flex; gap: 4px; align-items: center; padding: 8px 12px; background: #111316; border-bottom: 1px solid var(--line); }
-  #modes b { font-size: 14px; color: var(--hi); margin-right: 12px; letter-spacing: 0.04em; }
-  #modes button { font-size: 13px; padding: 5px 16px; }
-  #modes #modehint { margin-left: auto; color: var(--mid); font-size: 12px; }
+  #modes { display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: #111316; border-bottom: 1px solid var(--line); }
+  #modes b { font-size: 14px; color: var(--hi); margin-right: 4px; letter-spacing: 0.04em; white-space: nowrap; }
+  #modeSel { font-size: 14px; padding: 4px 8px; min-width: 170px; }
+  #modes #helpBtn { margin-left: auto; }
   #right > .mode { display: none; flex: 1; min-height: 0; }
   body.mode-pal #panel { display: flex; }
   body.mode-music #music { display: flex; }
@@ -284,7 +290,7 @@
   #aList .ai { display: flex; gap: 8px; align-items: center; padding: 3px 12px; cursor: pointer; }
   #aList .ai:hover { background: #1a2027; }
   #aList .ai.on { background: #12384a; }
-  #aList .ai pre { margin: 0; font: 9px/1 "JetBrains Mono", Consolas, monospace; color: var(--mid); min-width: 34px; }
+  #aList .ai pre { margin: 0; font: 9px/1 "JetBrains Mono", Consolas, monospace; color: var(--mid); min-width: 30px; }
   #aList .ai span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #aList .ai i { font-style: normal; color: var(--warn); }
   #aList .ai b { font-weight: normal; color: var(--warn); }
@@ -302,7 +308,6 @@
   #aDetail .afields { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; }
   #aDetail .af { display: inline-flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--mid); }
   #aDetail .af textarea { min-height: 0; }
-  #aList .ai pre { min-width: 30px; }
 
   /* items & mods: read the copy and the rarity steps (from dist/data/mods.js) */
   #items { flex-direction: column; }
@@ -346,11 +351,8 @@
   table.ilad td.s.pick { cursor: pointer; }
   table.ilad td.s.pick:hover { background: #1a2027; }
   table.ilad td.s.on { outline: 2px solid var(--acc); outline-offset: -2px; color: var(--acc); }
-  #panel { min-width: 0; }
   #music { flex-direction: row; }
   #music .dim { color: var(--dim, #5d636b); }
-  #music #mList { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--line); }
-  #music #mPlayer { flex: 0 0 300px; padding: 6px 14px 16px; overflow: auto; background: var(--panel); }
   #music #nowgame { color: var(--mid); font-size: 12px; margin-top: 4px; min-height: 17px; }
   #music #nowgame.warn { color: var(--warn); }
   #music td.lv { color: var(--mid); text-align: right; font-variant-numeric: tabular-nums; }
@@ -438,3 +440,28 @@
   #music .chg { color: var(--warn); font-size: 12px; }
   #music .sm { font-size: 12px; padding: 2px 7px; }
   #music td select { min-width: 220px; }
+
+  /* ---------- a narrow right side: side-by-side panels stack, the tab scrolls as one ---------- */
+  @container right (max-width: 820px) {
+    #music, #eMain, #aMain { flex-direction: column; overflow-y: auto; }
+    #econ, #art { overflow-y: auto; }
+    #music #mList { flex: none; border-right: 0; border-bottom: 1px solid var(--line); }
+    #music #mScroll { overflow: visible; }
+    #music #mPlayer { flex: none; }
+    #eMain, #aMain { flex: none; min-height: auto; }
+    #eList, #ePrev, #aDetail { overflow: visible; flex: none; }
+    #ePrev { border-left: 0; border-top: 1px solid var(--line); }
+    #aList { flex: none; max-height: 38vh; border-right: 0; border-bottom: 1px solid var(--line); }
+    #eUnits { grid-template-columns: 1fr; }
+  }
+  @container right (max-width: 640px) {
+    #econ .er { grid-template-columns: 1fr auto; }
+    #econ .er > :last-child { grid-column: 1 / -1; }
+    #eUnits .er { grid-template-columns: 1fr auto; }
+    table.slots td.role { display: none; }
+    #help.show { flex-direction: column; }
+    #helpNav { width: auto; flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; }
+    #helpNav .sep { display: none; }
+    #helpBody { padding: 12px 14px 40px; }
+    #modes b { display: none; }
+  }
