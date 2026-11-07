@@ -4,7 +4,7 @@
   const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); for (const k of kids) e.append(k); return e; };
 
   // ---------------- Data ----------------
-  // the slots and rarities, and the palettes.js writer, are tools/palette_file.js's
+  // the slots and rarities, and the palettes.js writer, are tools/data/palette_file.js's
   const P = window.NEON_PALETTE_FILE;
   if (!P) { document.body.textContent = "Couldn't load palette_file.js. Open this page from the repo's tools/ folder."; return; }
   const BASE = P.BASE, RAR = P.RAR;
@@ -45,7 +45,7 @@
     return out;
   }
 
-  // ---------------- Writing palettes.js (tools/palette_file.js writes and reads it) ----------------
+  // ---------------- Writing palettes.js (tools/data/palette_file.js writes and reads it) ----------------
   const fileText = () => P.text(data, build);
   // keep the file's order the way it's written: starters, then locked
   const reorder = () => { P.reorder(data); };

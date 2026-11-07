@@ -1,7 +1,7 @@
 // ---------------- Training: what POPS says in the training run (dist/data/tutorial.js) ----------------
 // Every line in order, grouped by part. Edits go to the game as you type (a popup that's up changes
 // right away). "show" plays the training in the game to that line (engine/tutorial.js skips the lines
-// before it and does what they ask); back / next step through. "save" writes the file (tools/tutorial_file.js).
+// before it and does what they ask); back / next step through. "save" writes the file (tools/data/tutorial_file.js).
 (() => {
   const { $, toGame, onGame, toast, esc, clone } = NEON_ED;
   const F = window.NEON_TUT_FILE;

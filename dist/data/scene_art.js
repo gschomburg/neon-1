@@ -1,4 +1,4 @@
-// NeoN+1 data/scene_art.js: cutscene art, drawn in asXii (ascii-editor/saves). Made by tools/scene_art.js: edit the
+// NeoN+1 data/scene_art.js: cutscene art, drawn in asXii (ascii-editor/saves). Made by tools/data/scene_art.js: edit the
 // save and run it again, don't edit here. SCENE_ART[scene]: { src, w, h, layers: { name: { x, y, rows } } }.
 'use strict';
 NEON_FILES.push(['data/scene_art.js', 'v14.59']);

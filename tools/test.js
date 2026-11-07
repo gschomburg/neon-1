@@ -1,12 +1,12 @@
 // test.js: every automatic check in one go. Exits 1 if anything fails.
-//   1. the data files round-trip through their writers (tools/*_file.js)
-//   2. tools/check.js: layers, maps and tables match tools/golden.json
-//   3. tools/tests/*.js: headless pages that play a bit and check things (tools/harness.js)
-//   4. tools/playtest.js: every corp played, compared to tools/golden-play.json (slow: skip with --quick)
+//   1. the data files round-trip through their writers (tools/data/*_file.js)
+//   2. tools/checks/check.js: layers, maps and tables match tools/checks/golden.json
+//   3. tools/checks/tests/*.js: headless pages that play a bit and check things (tools/checks/harness.js)
+//   4. tools/checks/playtest.js: every corp played, compared to tools/checks/golden-play.json (slow: skip with --quick)
 // Usage: node tools/test.js [--quick] [name ...]   (names: only those tests/*.js files)
 'use strict';
-if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/test.js [--quick] [test names]   (data round-trips, check.js, tools/tests/*.js, playtest.js)'); process.exit(0); }
-const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process'), H = require('./harness.js');
+if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/test.js [--quick] [test names]   (data round-trips, check.js, tools/checks/tests/*.js, playtest.js)'); process.exit(0); }
+const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process'), H = require('./checks/harness.js');
 const args = process.argv.slice(2), quick = args.includes('--quick'), only = args.filter(a => !a.startsWith('--'));
 let failed = 0;
 const ok = (good, line) => { console.log((good ? 'ok    ' : 'FAIL  ') + line); if (!good) failed++; };
@@ -19,17 +19,17 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
 (async () => {
   if (!only.length) {
     // 1. round-trips: each writer rewrites its file; a change means the file and the writer disagree
-    for (const f of ['economy_file.js', 'fx_file.js', 'tutorial_file.js', 'art_file.js', 'palette_file.js']) {
+    for (const f of ['economy_file.js', 'fx_file.js', 'tutorial_file.js', 'art_file.js', 'palette_file.js'].map(f => 'data/' + f)) {
       const r = node(f);
       ok(r.ok && !/rewritten/.test(r.out), `${f}: ${last(r.out)}`);
     }
     // 2. the golden fingerprint
-    const c = node('check.js');
+    const c = node('checks/check.js');
     ok(c.ok, 'check.js: ' + last(c.out));
     if (!c.ok) console.log(c.out.split('\n').slice(0, 12).map(l => '        ' + l).join('\n'));
   }
   // 3. the test pages
-  const dir = path.join(__dirname, 'tests');
+  const dir = path.join(__dirname, 'checks', 'tests');
   const tests = fs.readdirSync(dir).filter(f => f.endsWith('.js')).map(f => require(path.join(dir, f))).filter(t => !only.length || only.includes(t.name));
   const results = await Promise.all(tests.map(t => H.runPage(H.testPage(H.GAME, H.wrapTest(t.body), { key: 'test-' + t.name }), { ms: 240000, query: t.query })));
   tests.forEach((t, i) => {
@@ -42,7 +42,7 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
   });
   // 4. the playtest
   if (!quick && !only.length) {
-    const p = node('playtest.js');
+    const p = node('checks/playtest.js');
     ok(p.ok, 'playtest.js: ' + (p.out.match(/corps: .*/) || [last(p.out)])[0]);
   }
   console.log(failed ? `\n${failed} failed.` : '\nall good.');

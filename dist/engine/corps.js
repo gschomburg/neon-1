@@ -10,7 +10,7 @@ const FINAL = {
 };
 // ---------- A corp's hooks and flags ----------
 // They count only in a real corp visit (st.corp.hasBoss: the public net's start node has none). Every hook a corp can
-// have is listed in docs/CORP_HOOKS.md (tools/check.js flags a corp def key that isn't there: a typo does nothing).
+// have is listed in docs/CORP_HOOKS.md (tools/checks/check.js flags a corp def key that isn't there: a typo does nothing).
 //   corpFlag('money')          the corp's value for it (or undefined)
 //   corpHas('tap')             it has one
 //   corpHook('onHit', t)       call it if it has one (undefined if not)

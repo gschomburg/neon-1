@@ -1,7 +1,7 @@
 // ---------------- Economy: every money number (dist/data/economy.js), in units ----------------
 // The numbers on the left, grouped (each with its credits at the sector you pick); on the right, what they add up to:
 // layer pay by nodes, a corp by level, and market prices. Edits go to the game as you type; "save" writes the file
-// (tools/economy_file.js). Mod and item prices are edited with the mods (data/mods.js); they show here scaled.
+// (tools/data/economy_file.js). Mod and item prices are edited with the mods (data/mods.js); they show here scaled.
 (() => {
   const { $, toGame, onGame, toast, esc, clone } = NEON_ED;
   const F = window.NEON_ECON_FILE;
@@ -122,7 +122,7 @@
   // ---- saving: the dist/data folder (the same one the TRAINING tab uses, picked once; common.js dataDir)
   NEON_ED.dataDir.on(values);
   async function saveFile() {
-    if (lost.length) return toast('not saved: economy.js has numbers this tab doesn\'t know (' + lost.join(', ') + '). add them to tools/economy_file.js INFO first.');
+    if (lost.length) return toast('not saved: economy.js has numbers this tab doesn\'t know (' + lost.join(', ') + '). add them to tools/data/economy_file.js INFO first.');
     if (!dirty()) return toast('nothing to save');
     if (await file.save(F.text(econ, build))) { saved = clone(econ); values(); }
   }

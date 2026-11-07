@@ -333,7 +333,7 @@ unlocked by REP, and some quests unlock REP.
     point somewhere else: a hosted copy (simplest, works from anywhere), or a sibling folder on disk
     (`../../asxii/dist/`). The messages already check `from: 'asxii'`, so they work across sites;
     `dist/neon-link.js` goes with asXii.
-  - **Cutscene art:** `tools/scene_art.js` reads the asXii saves in `ascii-editor/saves/` (gitignored, so they're
+  - **Cutscene art:** `tools/data/scene_art.js` reads the asXii saves in `ascii-editor/saves/` (gitignored, so they're
     only on Greg's disk). Give it a path setting, or keep the cutscene saves in this repo (e.g. `art/scenes/`), since
     they're the game's art more than asXii's.
   - **Docs and settings to update:** CLAUDE.md (the asXii line), readme.md (the layout tree), SPEC §14 and §16f,

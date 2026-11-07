@@ -13,6 +13,7 @@
   const save = { musicOn: true, musicVol: 0.8, muted: false, sfxVol: 0.8 };
   const CORPS = {}, CORP_TELL = {}, CORP_ART = {};
   const normMotif = m => m;   // (some corps shape their glyphs at the top of the file)
+  const defineModFx = () => {};   // (a corp can define its mod's look: engine/corpkit.js)
   window.addEventListener('error', e => { (window.LOAD_ERRORS = window.LOAD_ERRORS || []).push(e.filename + ': ' + e.message); });
 </script>
 <script src="../dist/data/economy.js"></script>
@@ -103,7 +104,7 @@
 <script src="../dist/corps/monty.js"></script>
 <script src="../dist/corps/fossil.js"></script>
 <!-- corps: end -->
-<script src="music_view_resolve.js"></script>
+<script src="editor/music_view_resolve.js"></script>
 <style>
   :root {
     --bg: #15171a; --panel: #1d2024; --line: #2c3036; --text: #d6dade; --mid: #8b929a; --dim: #5d636b; --hi: #ffffff;

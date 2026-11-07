@@ -132,7 +132,7 @@ const QUEST_SCENES = {
   ],
   // SAFEHOUSE: you bring POPS the DISC
   // A strip scene (the user, 2026-11-04): one tall page that scrolls up (engine/quests.js buildStrip).
-  // pic: { art: a data/scene_art.js canvas (drawn in asXii, copied by tools/scene_art.js), rows: the canvas rows it
+  // pic: { art: a data/scene_art.js canvas (drawn in asXii, copied by tools/data/scene_art.js), rows: the canvas rows it
   //   takes, hold: ms the page waits on it once it's in, before the text and the scroll, layers }; or { logo: a
   //   hacker's id } for their logo (data/art/logos.js), glitching in.
   // A layer, back to front: n = its name in the save; col = a palette color (C.*, or 'ink:pops' for a hacker's);

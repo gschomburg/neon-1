@@ -1,7 +1,7 @@
 # NeoN+1 quest dialog
 
 Every quest's calls and scenes, as a script. **This file is generated:** the words live in `dist/data/quests.js`.
-Edit them there, then run `node tools/quest_dialog.js` to rewrite this file.
+Edit them there, then run `node tools/data/quest_dialog.js` to rewrite this file.
 
 ## SYSTEM FAILURE
 

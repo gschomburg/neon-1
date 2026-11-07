@@ -10,13 +10,14 @@
      First, stand-ins for the bits of the game the music and corp files expect, then the game's own files.
      The page's own code is in editor/: common.js (helpers every tab shares, NEON_ED), then one file per tab, in
      the order at the end of the body (palette.js first: it runs the game frame and sets NE for the music tab).
-     The data files are written by tools/*_file.js (on tools/data_file_core.js), loaded here too. -->
+     The data files are written by tools/data/*_file.js (on tools/data/data_file_core.js), loaded here too. -->
 <script>
   window.NEON_FILES = window.NEON_FILES || [];
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const save = { musicOn: true, musicVol: 0.8, muted: false, sfxVol: 0.8 };
   const CORPS = {}, CORP_TELL = {}, CORP_ART = {};
   const normMotif = m => m;   // (some corps shape their glyphs at the top of the file)
+  const defineModFx = () => {};   // (a corp can define its mod's look: engine/corpkit.js)
   window.addEventListener('error', e => { (window.LOAD_ERRORS = window.LOAD_ERRORS || []).push(e.filename + ': ' + e.message); });
 </script>
 <script src="../dist/data/palettes.js"></script>
@@ -34,15 +35,15 @@
 <script src="../dist/data/art/faces.js"></script>
 <script src="../dist/data/art/root.js"></script>
 <script src="../dist/data/art/worldmap.js"></script>
-<script src="data_file_core.js"></script>
-<script src="palette_file.js"></script>
-<script src="art_file.js"></script>
+<script src="data/data_file_core.js"></script>
+<script src="data/palette_file.js"></script>
+<script src="data/art_file.js"></script>
 <script src="../dist/data/tutorial.js"></script>
-<script src="tutorial_file.js"></script>
-<script src="economy_file.js"></script>
-<script src="fx_file.js"></script>
-<script src="scrub-field.js"></script>
-<link rel="stylesheet" href="scrub-field.css">
+<script src="data/tutorial_file.js"></script>
+<script src="data/economy_file.js"></script>
+<script src="data/fx_file.js"></script>
+<script src="editor/scrub-field.js"></script>
+<link rel="stylesheet" href="editor/scrub-field.css">
 <!-- the corps (each one's track sits at the top of its file). tools/bump.js keeps this list in step with dist/index.html. -->
 <!-- corps: begin -->
 <script src="../dist/corps/perimeter.js"></script>

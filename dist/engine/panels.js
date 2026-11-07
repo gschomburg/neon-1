@@ -237,7 +237,7 @@ function openShop(node) {
     sellSel = 0; sellArea.top = 0;
     Sound.buy(); setTimeout(() => Sound.loot(), 120); setMsg(`> sold all loot (${n}). +${cr}cr.`, C.money);
   };
-  st.shop = { node: node.id, get offers() { return offers; }, priceOf, buyAt: k => buy(offers[k]), reroll, rerollsLeft, rerollPrice, sellAt: sell };   // (read by tools/econsim.js)
+  st.shop = { node: node.id, get offers() { return offers; }, priceOf, buyAt: k => buy(offers[k]), reroll, rerollsLeft, rerollPrice, sellAt: sell };   // (read by tools/checks/econsim.js)
 
   // What an offer is: gear at its tier; mods as what you'd end up with (upgrades).
   const defOf = o => o.kind === 'item' ? itemView(o.key, o.tier) : o.kind === 'mod' ? modView(o.key, o.sold && o.got != null ? o.got : upgradeTo(o.key, o.tier))   // (sold: what you bought, not the next step up: the user's bug)
@@ -386,7 +386,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
   };
   st.breachRival = null; st.breachEscaped = false;
   const leave = () => next ? (st.transitioning ? null : swapTo(next)) : leavePanel();
-  st.choice = { title, options: options.slice(), skip: !!skipLabel, take: o => take(o) };   // (read by tools/econsim.js)
+  st.choice = { title, options: options.slice(), skip: !!skipLabel, take: o => take(o) };   // (read by tools/checks/econsim.js)
   const take = o => {
     if (st.transitioning) return;
     if (o && locked) return Sound.deny();

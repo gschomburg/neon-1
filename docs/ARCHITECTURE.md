@@ -14,7 +14,7 @@ Status: **mostly done (2026-11-05),** on branches arch-pass and arch-pass-2. Ite
 ## Bugs found (verified)
 
 - [x] **The economy tab drops 6 numbers on save.** **Done (2026-11-05):** fcb24ed. `data/economy.js` has `loot.valueShare`, `loot.boss`,
-  `loot.sector`, `loot.cache`, `modx.pickpocket`, `modx.pickpocketRare`; `tools/economy_file.js` doesn't know them
+  `loot.sector`, `loot.cache`, `modx.pickpocket`, `modx.pickpocketRare`; `tools/data/economy_file.js` doesn't know them
   and the editor's Ctrl S writes the file without them. Fix: add them to its INFO; refuse to save while any are unknown.
 - [x] **A reload mid-corp loses some corp state.** **Done (2026-11-05):** one CORP_SAVE list (fcb24ed). `runSnapshot` (engine/save.js) lists ~30 corp fields by hand;
   missing: `leash`, `muzzleTo`, `honeyTo` (engine/hackers.js: LEASH is a paid item), `express`, `invUsed` (run.js).
@@ -73,7 +73,7 @@ shares.
 - **Every G0D cinematic is a hand-rolled timeline:** five timing tables, five state slots, four copied skip
   functions. **Change:** a small `Seq` helper and one `st.cine` slot. Medium; timing is tuned by eye, port one at a
   time. **Done (2026-11-05):** `Seq` in engine/fx.js (`cue`, `canSkip`, `skipTip`) replaces the copied pieces;
-  every timing table is unchanged. tools/tests/cutscenes.js plays them with the cinematics on. Dropped: one `st.cine`
+  every timing table is unchanged. tools/checks/tests/cutscenes.js plays them with the cinematics on. Dropped: one `st.cine`
   slot, because merging `st.g0dFake` / `g0dDie` / `g0dEnd` changes the input and overlay checks for no visible gain.
 - **Hover:** `hl()` exists but 21 places tint by hand; modals get no keyboard focus (a CALL's second button can't be
   reached by keys). Small.
@@ -111,7 +111,7 @@ shares.
   (`advanceOn`, `uplinkLine`, `counter`...) before the first crew quest. Medium. **Done (2026-11-05):** how each step ends is data in
   QUEST_INFO (`carry`, `uplinkLine`, `doneLine`, `scene`, `goTo`, `crew`; the next step is the next in the list). What
   happens during a step (DISC drops, d0g wins, the OMNI raid) stays code until crew quests show what they share.
-  tools/tests/quests.js walks the chain.
+  tools/checks/tests/quests.js walks the chain.
 - **Six ways a character talks;** b0y alone four ways, `G0DP_BLUE` hard-coded 36 times. **Change:** one
   `say(who, text)` from the hacker's style. Small.
 - **Quest seeds are special-cased in the engine** (run.js, map.js, active.js, input.js). **Change:** a per-seed
@@ -119,14 +119,14 @@ shares.
 
 ## 5. Tools and checks
 
-- **The checks don't catch anything:** `tools/check.js` compares against a baseline from 2026-10-22 that includes a
+- **The checks don't catch anything:** `tools/checks/check.js` compares against a baseline from 2026-10-22 that includes a
   hash of every function, so any edit is a difference (3,672 now); it never fails; it has its own drifted copy of the
   layer setup. **Change:** a small committed golden file (layers, maps, data; no code hashes), exit 1 on a
   difference, `--accept`; one engine `layerSpecs(node)` the checks and editor share. Medium.
-- **Every test builds its own harness** (5 of them). **Change:** `tools/harness.js` (vm load, headless Chrome page)
+- **Every test builds its own harness** (5 of them). **Change:** `tools/checks/harness.js` (vm load, headless Chrome page)
   and one `tools/test.js` that runs the data round-trips, the golden and the playtest. Medium.
 - **No shared core for the `*_file.js` writers** (UMD wrapper, parse, stamp, quoting copied 3-4 times). **Change:**
-  `tools/data_file_core.js`. Medium. **Done (2026-11-05).**
+  `tools/data/data_file_core.js`. Medium. **Done (2026-11-05).**
 - **neon_editor.html is 3,407 lines** with `toGame`, `toast`, IndexedDB and save code copied per tab (TRAINING,
   ECONOMY and FX even share one IndexedDB key). **Change:** `tools/editor/common.js` and one file per tab. Medium.
   **Done (2026-11-05):** the page is the HTML only; the three tabs share one dist/data folder handle on purpose.

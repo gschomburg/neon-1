@@ -408,7 +408,7 @@ if (EDITOR) {
       persist();
     },
     qscene: m => playScene(m && m.key && QUEST_SCENES[m.key] ? m.key : 'disc'),
-    // the FX tab's "show" (tools/fx_file.js LOOKS[].show): a scene frame on a loop, a hacker's card or death screen
+    // the FX tab's "show" (tools/data/fx_file.js LOOKS[].show): a scene frame on a loop, a hacker's card or death screen
     fxoff: () => fxShowOff(),
     fxscene: m => {
       if (!QUEST_SCENES[m.key] || !QUEST_SCENES[m.key][m.frame]) throw new Error('no such scene frame');

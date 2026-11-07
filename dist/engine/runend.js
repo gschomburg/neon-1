@@ -202,7 +202,7 @@ function openUplink() {
   };
   const togglePass = () => { if (!hasPass()) return Sound.deny(); usePass = !usePass; Sound.tick(); };
   const toggle = k => { if (UPLINK_LOCKED.includes(k)) return Sound.deny(); keep[k] = !keep[k]; Sound.tick(); };
-  st.uplink = { keep, tally, canGo, toggle, togglePass, push: go, cash: cashOut, fee: uplinkFee, sell: uplinkSell, locked: UPLINK_LOCKED };   // (read by tools/econsim.js)
+  st.uplink = { keep, tally, canGo, toggle, togglePass, push: go, cash: cashOut, fee: uplinkFee, sell: uplinkSell, locked: UPLINK_LOCKED };   // (read by tools/checks/econsim.js)
   questUplink();   // with the DISC: POPS reminds you (engine/quests.js)
   // The screen (the user's design, 2026-10-29): a checkbox list of your mods (unchecked = sold), each showing the
   // tray's short text; tapping a row toggles it and runs its ticker (its name, then its whole description, scrolling).

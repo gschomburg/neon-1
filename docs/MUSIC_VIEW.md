@@ -60,8 +60,8 @@ What the view is built around (all from `dist/engine/music.js`):
 
 ## First batch: done 2026-10-25
 
-Files: `tools/music_view.html` (the page), `tools/music_view_resolve.js` (the resolver),
-`tools/music_view_check.js` (resolver vs engine), engine hooks in `dist/engine/music.js`, a link in `tools/music.html`.
+Files: `tools/music_view.html` (the page), `tools/editor/music_view_resolve.js` (the resolver),
+`tools/checks/music_view_check.js` (resolver vs engine), engine hooks in `dist/engine/music.js`, a link in `tools/music.html`.
 
 ### 1. Groundwork
 - [x] `tools/music_view.html`: loads the same game files as the music tool (data/music.js, engine/music.js,
@@ -88,7 +88,7 @@ to guess:
 - [x] generated parts filled in and flagged as generated: drum / bass / arp patterns, the stock boss lead, auto
       fills (which style, from the pass number), the crash after a fill, breakdown passes
 - [x] level gating: each note knows the level it starts at
-- [x] unit-check it against the engine: `node tools/music_view_check.js` plays every track headless, one part
+- [x] unit-check it against the engine: `node tools/checks/music_view_check.js` plays every track headless, one part
       at a time at every level, and compares the 16ths that sound with the resolver's notes (2580 checks, all match)
 
 ### 4. The views

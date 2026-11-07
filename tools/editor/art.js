@@ -2,7 +2,7 @@
 // The list on the left, the piece on the right: a preview inside its size limit, a text box, its details (a glyph's
 // name and lore, a logo's id / name / mark / kind), and buttons to send it to asXii (it comes back with asXii's
 // "send back to NeoN+1"), copy / paste, and show it in the game. Changes go to the game live; "save" writes the
-// files that changed (tools/art_file.js makes the text). "+ glyph" and "+ logo" add new ones at the end.
+// files that changed (tools/data/art_file.js makes the text). "+ glyph" and "+ logo" add new ones at the end.
 (() => {
   const { $, toGame, toast, esc, clone } = NEON_ED;
   const F = window.NEON_ART_FILE;

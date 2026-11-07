@@ -159,7 +159,7 @@ async function enterNode(node, warp = false) {
   startCorp(node);
 }
 
-// ---------- Layer plans (shared: the game, the editor's loot viewer, tools/check.js) ----------
+// ---------- Layer plans (shared: the game, the editor's loot viewer, tools/checks/check.js) ----------
 // A corp's plan for one visit: how many nodes each layer has, the tell (OMNI borrows one; deeper MIRRORLINE and
 // PERIMETER change theirs), the SIGIL mark, how strong the tell is this deep. run: { seed, tutorial, finalTell }.
 function corpPlan(node, def, run) {

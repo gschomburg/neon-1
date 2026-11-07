@@ -11,8 +11,8 @@
 //   3. Optional: its palette in palettes.js (c_KEY); its music in its own file (SONGS.<track> +
 //      MUSIC_FOR.KEY); helpers only it uses go in its own file too. Its boss mod goes in data/mods.js
 //      at the END of MODS (the order there decides reward rolls), its effect in engine/run.js or active.js.
-//   4. Check it: node tools/check.js and node tools/playtest.js (every corp, headless), and
-//      node tools/tell_odds.js for how much a position tell helps.
+//   4. Check it: node tools/checks/check.js and node tools/checks/playtest.js (every corp, headless), and
+//      node tools/checks/tell_odds.js for how much a position tell helps.
 //
 // WHAT THE CORP FILES USE from the rest of the game (generated from the corps/ files at v12.02).
 // Anything here can be used in a corp's hooks; most corps need only C, st, setMsg, Sound, pickR,

@@ -137,7 +137,7 @@ marked; click a pass to jump there, loop it, or switch to the song view (every p
 engine makes itself (patterns, the stock boss lead, fills) are drawn hollow; parts above the current level are
 dimmed. Mute / solo per part and per drum row, a playhead, levels 0-4 and urgency like the game. It uses four
 small hooks in engine/music.js (`Music.position / mute / seek / loop`) that the game never calls.
-`node tools/music_view_check.js` proves the view matches the engine. Plan and what's next: docs/MUSIC_VIEW.md.
+`node tools/checks/music_view_check.js` proves the view matches the engine. Plan and what's next: docs/MUSIC_VIEW.md.
 
 **The G0D fights (v13.96, 2026-10-31).** The user: "energetic but also menacing... the maze can be more mysterious, the
 boss fight and the last stand should be good... ramp up per stage... real variety... Daft Punk or NIN are always a plus."

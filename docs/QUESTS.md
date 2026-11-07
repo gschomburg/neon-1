@@ -13,7 +13,7 @@ Where quests sit in the progression: `docs/PROGRESSION.md`.
 it wanted a bigger name. The last step is SYSTEM RESTORED (was WHAT IT WAS ALL FOR).
 
 **Its words (calls, scenes, step names) are in `dist/data/quests.js`:** read and edit them there. As a script to read: `docs/QUEST_DIALOG.md`
-(generated: `node tools/quest_dialog.js` after editing).
+(generated: `node tools/data/quest_dialog.js` after editing).
 
 **Step names** (as built, v14.47; the step names are Claude's, to change): 1 PROVE IT, 2 THE DISC (GET OUT WITH THE
 DISC while you hold it), 3 SAFEHOUSE, 4 DOG DAYS, 5 TRACE ROUTE (the PRODIGAL scene), 6 OMNI RAID, 7 G0D MODE,

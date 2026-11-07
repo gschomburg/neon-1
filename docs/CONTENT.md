@@ -194,7 +194,7 @@ Rank 1 = hardest once you know the tell. Tell advantage = knowing avg / blind av
   about x1.7 in v08, though its center boss is still ~58%.
 - **OMNI** depends on which tell it borrowed that run: mark is hard, corner and mirror are easy.
 
-**Regenerate:** `node tools/tell_odds.js` (optional: a game file path, and the number of runs).
+**Regenerate:** `node tools/checks/tell_odds.js` (optional: a game file path, and the number of runs).
 It loads the newest `vNN/beta_runner_vNN.html` by default and prints this table as markdown.
 
 ---

@@ -149,7 +149,7 @@
 <h2>Saving</h2>
 <p><b>revert</b> on a row puts it back. <b>save</b> writes the file (the first time, pick the ${F('dist/data')} folder). More: ${go('saving', 'how saving works')}.</p>
 <h2>Checking a change</h2>
-<p>Ask Claude to run the economy sim (${F('tools/econsim.js')}): a bot plays whole runs and reports what they earn and hold. Results go in ${F('docs/ECONOMY.md')}.</p>` },
+<p>Ask Claude to run the economy sim (${F('tools/checks/econsim.js')}): a bot plays whole runs and reports what they earn and hold. Results go in ${F('docs/ECONOMY.md')}.</p>` },
     ads: { name: 'ads', html: `
 <h1>Ads</h1>
 <p class="lead">Every fake ad in ${F('dist/data/ads.js')}, drawn the way the game draws it (30 x 18 inside the box). Read-only here: ads are changed in the file (or ask Claude).</p>

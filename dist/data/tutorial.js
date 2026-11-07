@@ -1,5 +1,5 @@
 // NeoN+1 data/tutorial.js: everything POPS says in the training run, in the order he says it.
-// The neon editor's TRAINING tab edits this file (tools/tutorial_file.js writes it). Each line:
+// The neon editor's TRAINING tab edits this file (tools/data/tutorial_file.js writes it). Each line:
 //   id:    what engine/tutorial.js asks for (don't rename)
 //   part:  a heading for the lines from here on (the editor groups by it)
 //   text:  what he says. \n\n is a blank line. {name} is your hacker name.

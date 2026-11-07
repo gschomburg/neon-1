@@ -12,6 +12,7 @@
   const save = { musicOn: true, musicVol: 0.8, muted: false, sfxVol: 0.8 };
   const CORPS = {}, CORP_TELL = {}, CORP_ART = {};
   const normMotif = m => m;   // (some corps shape their glyphs at the top of the file)
+  const defineModFx = () => {};   // (a corp can define its mod's look: engine/corpkit.js)
   window.addEventListener('error', e => { (window.LOAD_ERRORS = window.LOAD_ERRORS || []).push(e.filename + ': ' + e.message); });
 </script>
 <script src="../dist/data/economy.js"></script>

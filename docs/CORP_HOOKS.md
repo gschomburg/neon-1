@@ -4,7 +4,7 @@ Every key a corp definition (`CORPS.key = { ... }` in `dist/corps/key.js`) can h
 with `corpHook('name', ...args)`, test one with `corpHas('name')`, read a flag with `corpFlag('name')`
 (engine/corps.js): they count only in a real corp visit, not on the public net's start node.
 
-`tools/check.js` fails on a corp key that isn't listed here (a misspelled hook does nothing, silently). Adding a
+`tools/checks/check.js` fails on a corp key that isn't listed here (a misspelled hook does nothing, silently). Adding a
 new hook: add it here, in the right section, with where the engine calls it.
 
 ## Who it is

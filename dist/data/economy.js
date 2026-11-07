@@ -1,5 +1,5 @@
 // NeoN+1 data/economy.js: every money number in the game, in one place (the user's credit scale, 2026-10-26).
-// The neon editor's ECONOMY tab edits this file (tools/economy_file.js writes it; the notes come from there).
+// The neon editor's ECONOMY tab edits this file (tools/data/economy_file.js writes it; the notes come from there).
 //
 // Two units: EARN (everything that pays you) and SPEND (everything that costs you). A number marked earn / spend is a
 // count of that side's units: repair 2 = 2 x the spend unit = 20cr. Change a unit and that whole side moves; change

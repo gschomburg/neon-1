@@ -1,5 +1,5 @@
 // NeoN+1 data/fx.js: the named effects' settings (the global look). engine/fx.js draws them; docs/EFFECTS.md is the plan.
-// The neon editor's FX tab edits this file (tools/fx_file.js writes it; the notes come from there).
+// The neon editor's FX tab edits this file (tools/data/fx_file.js writes it; the notes come from there).
 // Change a number here and every place using that effect changes. A place can override any of them for itself
 // (a cutscene layer: { n: 'logo', glitch: { col: 'ink:b0y' } }), without becoming its own effect.
 // Times are in ms. "share" = the chance (0-1) per cell or per window. "set" = the characters it swaps in.

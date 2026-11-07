@@ -128,10 +128,10 @@ cap it further. Nothing gets more expensive as you go.
 
 ## The sim: baseline (2026-10-26, v13.37)
 
-`node tools/econsim.js` plays whole runs in headless Chrome: 5 seeds x 3 skill levels (how often it finds the real
+`node tools/checks/econsim.js` plays whole runs in headless Chrome: 5 seeds x 3 skill levels (how often it finds the real
 node first try: 0%, 50%, 90%), 3 sectors, god mode (it never dies), no ads. It goes to every market it can reach,
 buys repair when hurt then the priciest things it has room for, and takes the first mod it has room for on reward
-screens (else the credits). `save <name>` keeps the numbers (tools/check/econ-<name>.json), `diff <a> <b>` compares.
+screens (else the credits). `save <name>` keeps the numbers (tools/checks/out/econ-<name>.json), `diff <a> <b>` compares.
 This baseline: `econ-baseline.json`. About 4-5 minutes.
 
 Averages per sector (credits):
@@ -167,7 +167,7 @@ that aren't limited by slot room (rerolls, tolls, repair, prices that rise).
 
 ## The sim: what-ifs (2026-10-26)
 
-`WHATIF=... node tools/econsim.js` changes the game inside the sim's page only. Credits held at the end of sector 3
+`WHATIF=... node tools/checks/econsim.js` changes the game inside the sim's page only. Credits held at the end of sector 3
 (and earned in sector 3), averaged over 5 seeds:
 
 | Skill | Today | Perfects a flat x2 (`flat2`) | Prices +35% a sector (`inflate35`) | Both |

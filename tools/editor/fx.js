@@ -1,5 +1,5 @@
 // ---------------- FX: every effect's settings (dist/data/fx.js), live in the game, saved in place ----------------
-// tools/fx_file.js says what each setting is and where the effect shows; engine/fx.js draws them. "show" asks the game
+// tools/data/fx_file.js says what each setting is and where the effect shows; engine/fx.js draws them. "show" asks the game
 // (engine/editor.js fxscene / fxcard / fxdeath, or the G0D tab's mold glitch) to put the effect up on a loop.
 (() => {
   const { $, toGame, onGame, toast, esc, clone } = NEON_ED;
@@ -130,7 +130,7 @@
   // ---- saving: the dist/data folder (the same one the TRAINING and ECONOMY tabs use, picked once; common.js dataDir)
   NEON_ED.dataDir.on(marks);
   async function saveFile() {
-    if (lost.length) return toast('not saved: fx.js has settings this tab doesn\'t know (' + lost.join(', ') + '). add them to tools/fx_file.js first.');
+    if (lost.length) return toast('not saved: fx.js has settings this tab doesn\'t know (' + lost.join(', ') + '). add them to tools/data/fx_file.js first.');
     if (!dirty()) return toast('nothing to save');
     if (await file.save(F.text(Object.assign(clone(fx), { looks: F.expand(fx) }), build))) { saved = clone(fx); marks(); }
   }

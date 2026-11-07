@@ -71,12 +71,12 @@ Steps 1-3 change nothing you can see.
 - One card per effect: its note, its settings as draggable number fields (the shared scrub fields), colors and characters as text, and revert.
 - **show** puts up a place that uses the effect. That's the real thing, not sample art: a cutscene frame on a loop, d0g's rival card or death screen, or G0D's mold glitch. The garble card plays its own line.
 - Edits go to the game live, and save writes `dist/data/fx.js` in place (Ctrl S, the same dist/data folder as training and economy).
-- `tools/fx_file.js` reads and writes the file and holds each effect's note, settings and show list. `node tools/fx_file.js` is the round-trip check.
+- `tools/data/fx_file.js` reads and writes the file and holds each effect's note, settings and show list. `node tools/data/fx_file.js` is the round-trip check.
 - **Decided (Claude, 2026-11-05):** the preview uses the real scenes rather than sample art, so what you tune is what plays. A new effect gets a show once a scene uses it.
 
 ## Next
 
-- New effects (step 5) go where a place needs them (**Decided (Greg, 2026-11-05):** build the ones with a place to go; keep the other ideas). Each one: code in engine/fx.js, settings in data/fx.js, an entry in tools/fx_file.js LOOKS.
+- New effects (step 5) go where a place needs them (**Decided (Greg, 2026-11-05):** build the ones with a place to go; keep the other ideas). Each one: code in engine/fx.js, settings in data/fx.js, an entry in tools/data/fx_file.js LOOKS.
   - **Built v14.35: decrypt**, for the encrypted codex (BACKLOG 9). Unfound names are ciphertext (hex), at their real length. Up to `hint` (half) of the letters show through as you find more of that tab. A new find decodes the first time the codex shows it (`save.codexRead`; a save from before it counts everything found as read). A corp's tell is ciphertext until you breach it, then decodes once.
   - **Built v14.36: the mold transition** (`moldwipe`), with the mold slider on the G0D tab (BACKLOG, G0D's fights: "the g0d tab grows"). At a mold level from 0 to 1 (`st.moldDev`; engine/effects.js `wipeMold`), the regular wipe gets blotches of mold scrolling in the fill, mold in the breakdown noise, and mold lingering on some of the new screen a moment. The mold glitch reads the same slider (0.5 = its normal size). At 0 the wipe is exactly as before. **v14.39:** the M0LD events turn it up (light 0.3, heavy 0.7), and the mold **lags behind**: the fill's blotches stay put as the new screen comes in and clear late, as an overlay after the wipe (`applyMoldLag`), so the wipe ends on time and taps work while it clears. **Decided (Greg, 2026-11-05):** the moldy bits are slower than the rest, so as it cranks up it's clear something weird is happening.
   - The intro pass bits (BACKLOG Polish): the logo decoding in (decrypt), noise in the log, the map drawing in with static, a burst on the handshake. Wait for the user: the intro pass comes after they've lived with it.
