@@ -108,6 +108,9 @@ unlocked by REP, and some quests unlock REP.
     crew CALL gear. Probably a REP unlock. Or simpler: a boosted safehouse, 2 INT and an item or two.
   - **The quest object sparkles** (meat notes 2026-10-29): a twinkle / glitter effect on it.
 - **G0D:**
+  - **G0D as an acronym** (meat notes 2026-11-07): the name should stand for something, a hacker reference with a G
+    (the 0 can read as zero, nil or o) that hints at where G0D came from. Greg's ideas: gibson zero day, gibson 0
+    defense, g omnipotent device.
   - **The mold turned up as the quest goes on** (today: the M0LD events set it, v14.39).
   - **G0D flashing in on SECTOR CLEARED** now and then (meat notes 2026-10-29).
   - **G0D.exe** (the user, meat notes 2026-11-03): a personal AI hacker assistant, exotic gear. After you beat G0D, a
@@ -303,6 +306,10 @@ unlocked by REP, and some quests unlock REP.
 - **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle.
 
 ## Medium and small
+- **Pets you can toggle** (meat notes 2026-11-07): a small button in the loot bar, like b0y's on the left (if b0y's
+  is there, shift it right so they don't overlap), that turns a pet on or off. Today it's one pet a run: COMPANION, the
+  EGG's chick, STRAY's bug and CATPHISH's fish don't stack (with STRAY and CATPHISH, the seed picks one). Maybe they
+  can all be out at once, each with its own toggle ([p] [f]... by name). Open: how several pets behave together.
 - **If the C.A.R. confuses** (Greg, 2026-11-07: "i think it'll be fine", keep it as a potential fix): with the C.A.R.
   every node in the sector looks reachable, so the map doesn't show which moves are a drive. Fix if it comes up: draw the
   drive-only nodes differently (dimmer, or a little car mark).
