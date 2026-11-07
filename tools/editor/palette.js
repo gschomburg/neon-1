@@ -83,7 +83,7 @@
   const corpOf = key => key.startsWith('c_') ? key.slice(2) : 'basic';
   function runScene(name) {
     scene = name;
-    for (const b of document.querySelectorAll('#scenes button')) b.classList.toggle('on', b.dataset.scene === name);
+    $('#sceneSel').value = name;
     if (!gameReady) return;
     const corp = $('#corpsel').value === 'auto' ? corpOf(sel) : $('#corpsel').value;
     $('#scenestate').textContent = `setting up: ${name}${['layer', 'hit', 'boss'].includes(name) ? ' (' + corp + ')' : ''}...`;
@@ -103,11 +103,10 @@
   function loadGame() { gameReady = false; $('#scenestate').textContent = 'loading the game...'; frame.src = '../dist/index.html?editor=1&t=' + Date.now(); }
 
   const SCENES = [['title', 'title'], ['intro', 'intro'], ['map', 'map'], ['layer', 'layer'], ['hit', 'a miss'], ['boss', 'boss'], ['shop', 'shop'], ['sectorboss', 'sector boss'], ['sectorclear', 'sector clear'], ['uplink', 'uplink'], ['help', 'how to play'], ['codex', 'codex'], ['settings', 'settings'], ['profile', 'profile']];
-  for (const [k, label] of SCENES) {
-    const b = el('button', { textContent: label, onclick: () => runScene(k), title: `show the ${label} screen` });
-    b.dataset.scene = k;
-    $('#scenes').append(b);
-  }
+  // the screen picker: picking one shows it; go sets it up again (a fresh copy of the same screen)
+  for (const [k, label] of SCENES) $('#sceneSel').append(new Option(label, k));
+  $('#sceneSel').onchange = () => runScene($('#sceneSel').value);
+  $('#sceneGo').onclick = () => runScene($('#sceneSel').value);
   function fillCorps() {
     const s = $('#corpsel'), cur = s.value || 'auto';
     s.innerHTML = '';
