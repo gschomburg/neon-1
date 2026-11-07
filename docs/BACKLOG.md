@@ -344,6 +344,8 @@ unlocked by REP, and some quests unlock REP.
 - **Going public:** drop the page's `noindex`; maybe the game's own domain.
 
 ## Parked (later, when the user says)
+- **THE DEAL** (a mod, parked 2026-11-07 when MONTY's prize became the C.A.R. / GOAT): once a layer, after your first ICE hit,
+  every node goes dark but the real one and one other. A good fit for another game-show corp.
 - **G0D comes out of its own logo** (parked, Greg 2026-11-07: "it's pretty nice as it is right now"; Greg, 2026-11-05:
   "god could have popped out of his own logo for the final stand"): its logo (v14.43) up first in the final stand,
   then the eye tears out of the triangle.

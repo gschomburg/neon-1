@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.57']);
+NEON_FILES.push(['engine/run.js', 'v14.58']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -143,7 +143,7 @@ async function enterNode(node, warp = false) {
   st.transitioning = true;
   const run = st.run;
   { const cur = run.at && run.map[run.at]; if (run.tunnel && cur && cur.step === node.step) (run.dug = run.dug || []).push([cur.id, node.id]); }   // TUNNEL: the dug path stays on the map (engine/mapview.js)
-  run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false;   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)
+  run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false; run.carAim = false;   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)
   stimDown();   // STIM wears off once you leave its corp
   await wipeOut(0);
   run.at = node.id;
@@ -464,6 +464,7 @@ async function enterLayer() {
   if (lv.maskMs) lv.maskAt = performance.now() + lv.maskMs;   // corp kit: FORGET-ME-NOT
   // JACK-IN-THE-BOX: in one layer per corp, an ICE pops out 1-3s in (layerTick does it)
   if (has('companion') && c.hasBoss && n > 2 && c.petIdx === c.idx) lv.petAt = performance.now() + 1500 + rngFor(run.seed, 'pett', c.node.id)() * 3000;
+  if (has('goat') && c.hasBoss && n > 2 && c.petIdx === c.idx) lv.goatAt = performance.now() + 1800 + rngFor(run.seed, 'goatt', c.node.id)() * 2500;   // GOAT: once a corp, lunch
   if (has('jackbox') && c.hasBoss && n > 2 && c.jackIdx === c.idx) lv.jackAt = performance.now() + 1000 + rngFor(run.seed, 'jackt', c.node.id)() * 2000;
   st.busy = false;
   lv.readyAt = performance.now();
@@ -593,6 +594,7 @@ function layerTick(now) {
       setMsg(`> sniff sniff. 1 ICE found. -${treat}cr`, C.accent);
     }
   }
+  if (lv.goatAt && now > lv.goatAt) { lv.goatAt = null; goatEats(lv); }   // GOAT (MONTY's zonk)
   if (lv.holdUntil && now < lv.holdUntil) return;   // ESPRESSO / FREEZE FRAME stop the layer's clock too
   lv.lt = (lv.lt || 0) + dt;
   const def = st.corp && st.corp.hasBoss ? st.corp.def : null;

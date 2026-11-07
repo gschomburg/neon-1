@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.57']);
+NEON_FILES.push(['engine/panels.js', 'v14.58']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -38,6 +38,7 @@ function addMod(key, tier = 0) {
   if (!MODS[key]) return null;          // a mod that no longer exists (old saves / tests)
   markSeen(key);
   if (key === 'companion') petRoll(run, 'companion');   // COMPANION: a pet for the run (engine/pet.js)
+  if (key === 'goat') goatJoins(run);   // MONTY's zonk: your pet is a goat now
   if (run.mods.includes(key)) {
     const was = modTier(key);
     run.modTier[key] = upgradeTo(key, tier);
@@ -576,7 +577,9 @@ function rewardGear(r) {
 // A corp's boss reward picks (openReward; the editor's loot viewer)
 function rewardOptions(node) {
   const run = st.run, r = rngFor(run.seed, 'reward', node.id), def = corpDef(node.corp);
-  const corpPick = def.gear ? [{ kind: 'gear', key: def.gear.key, tier: def.gear.tier || 0, n: def.gear.n || 1 }] : pickMods(r, def.mods || [], 1);
+  // a corp with a prize (MONTY: the C.A.R. or the GOAT, by how its boss went) offers that one (nothing if you have it)
+  const prize = def.prize && st.corp && st.corp.def === def ? def.prize(st.corp) : null;
+  const corpPick = def.gear ? [{ kind: 'gear', key: def.gear.key, tier: def.gear.tier || 0, n: def.gear.n || 1 }] : prize ? (has(prize) ? [] : [{ key: prize, tier: 0 }]) : pickMods(r, def.mods || [], 1);
   const gen = pickMods(r, modsOfKind('gen'), 1, corpPick);
   const third = r() < ECON.reward.gear ? [rewardGear(r)] : pickMods(r, modsOfKind('gen', 'minor'), 1, corpPick.concat(gen));
   const options = shuffle(corpPick.concat(gen, third), r);

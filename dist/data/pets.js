@@ -6,7 +6,7 @@
 // Each look is 2 lines (it can overlap the lines above and below). Walking and dancing have 2 frames. They face right;
 // facing left they're mirrored ( ) / \ < > swapped). Hand edits are fine: keep each line about 8 wide.
 'use strict';
-NEON_FILES.push(['data/pets.js', 'v14.57']);
+NEON_FILES.push(['data/pets.js', 'v14.58']);
 
 const PET_NAMES = ['BYTE', 'CHIP', 'NIBBLE', 'PIXEL', 'BITSY', 'PING', 'GIGA', 'SOCKET', 'DOT', 'MODEM', 'ZIP', 'TOFU', 'WIDGET', 'JPEG', 'CRUMB', 'PATCHY'];
 
@@ -53,6 +53,15 @@ const PETS = {
     dance: [['\\ ,_  ', ' (^> )/'], ['  ,_ /', '\\(^> )']],
     happy: ['  ,_  ', ' (^> )'],
     alert: ['  ,_  ', ' (O> )'],
+  },
+  // GOAT: MONTY's zonk (the GOAT mod). It eats things.
+  goat: {
+    sit:   ['  )_(  ', ' (o o)~'],
+    walk:  [['  )_(  ', '~(o o) '], ['  )_(  ', '_(o o) ']],
+    sleep: ['  )_(  ', ' (- -)~'],
+    dance: [['\\ )_(  ', ' (^ ^)/'], ['  )_( /', '\\(^ ^) ']],
+    happy: ['  )_(  ', ' (^o^)~'],
+    alert: ['  )_(  ', ' (O O)!'],
   },
 };
 // Where a pet comes from: COMPANION (a cat or a dog, and its trick), STRAY on THE BOARD (a bug, every run), the CATPHISH

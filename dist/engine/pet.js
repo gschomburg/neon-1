@@ -3,7 +3,7 @@
 // and forth, sits now and then, sleeps when you've been idle, dances on the beat when the music plays, runs over when
 // it sniffs something out (COMPANION), and a tap pets it. Looks only: it never changes play.
 'use strict';
-NEON_FILES.push(['engine/pet.js', 'v14.57']);
+NEON_FILES.push(['engine/pet.js', 'v14.58']);
 
 // A pet for this run (when you take COMPANION, or anything else that gives one later): a cat or a dog, and a name.
 function petRoll(run, why = 'pet', kind = null) {
@@ -19,6 +19,28 @@ function startPet(run) {
   if (legacyLv('stray')) kinds.push('bug');
   if (featDone('catphish')) kinds.push('fish');
   if (kinds.length) petRoll(run, 'start', pickR(kinds, rngFor(run.seed, 'petkind')));
+}
+// The GOAT (MONTY's zonk): your pet is a goat now, ZONK (one you had waves goodbye).
+function goatJoins(run) {
+  if (run.pet && run.pet.kind === 'goat') return;
+  const old = run.pet;
+  run.pet = null; st.petS = null;
+  petRoll(run, 'goat', 'goat'); run.pet.name = 'ZONK';
+  setTimeout(() => setMsg(old ? `> zonk! a goat. ${old.name.toLowerCase()} waves bye.` : '> zonk! a goat. it follows you.', C.money), 450);
+}
+// GOAT: once a corp it eats an ICE (it runs over to it); about a third of the time, something from your LOOT bag too.
+function goatEats(lv) {
+  const run = st.run, opts = lv.tiles.filter(t => !t.safe && t.state === 'closed');
+  if (!opts.length || candidates().length < 2) return;
+  const t = pickR(opts, layerRng('goat'));
+  lockTile(t, C.money, 'goat'); petSniff(t); Sound.jingle();
+  setMsg('> the goat eats an ICE.', C.money);
+  const bag = (run.loot || []).filter(s => s.n > 0 && !ITEMS[s.key].quest);
+  if (bag.length && layerRng('goatloot')() < 0.33) {
+    const s = pickR(bag, layerRng('goatwhat'));
+    s.n--; if (!s.n) run.loot.splice(run.loot.indexOf(s), 1);
+    setTimeout(() => setMsg(`> ...and your ${ITEMS[s.key].name.toLowerCase()}. goat.`, C.danger), 1300);
+  }
 }
 // The EGG (gear): it hatches. A chick for the run (one you had waves goodbye).
 function hatchEgg() {

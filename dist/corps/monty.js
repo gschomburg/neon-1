@@ -1,7 +1,8 @@
 // NeoN+1 corps/monty.js
 'use strict';
-NEON_FILES.push(['corps/monty.js', 'v14.57']);
-// Its boss mod: THE DEAL (deal), defined with the others in data/mods.js (at the end of MODS), its effect below.
+NEON_FILES.push(['corps/monty.js', 'v14.58']);
+// Its boss prize: the C.A.R. (car) for a clean boss layer, or the zonk, a GOAT (goat), if you hit ICE there (Greg,
+// 2026-11-07). Both are in data/mods.js (at the end of MODS); their effects: engine/active.js, engine/run.js.
 // Design: docs/CORPS.md A32 (Greg, 2026-11-07).
 
 // ---- its own helpers
@@ -64,7 +65,9 @@ CORPS.monty = {
   tell: null,
   bossDesc: 'boss: he swaps the doors while you think.',
   rules: () => 'pick a door. he opens the rest. stay or switch?',
-  mods: ['deal'],
+  mods: ['car', 'goat'],
+  prize: c => c.zonk ? 'goat' : 'car',   // the reward screen's corp pick (engine/panels.js rewardOptions)
+  onHit() { if (st.lv && st.lv.boss) st.corp.zonk = true; },   // ICE on the boss layer: you get the zonk
   dress(lv, k) {
     lv.tiles.forEach((t, i) => { t.door = i + 1; t.glyph = montyDoor(t.door); });
     lv.monty = { stage: 'pick', mine: null, other: null, honest: !!k.follow, tier: k.tier || 1, boss: !!k.boss, hide: false, line: '' };
@@ -84,20 +87,6 @@ CORPS.monty = {
   },
   hint: lv => lv.monty ? { text: lv.monty.stage === 'pick' ? 'monty> pick a door.' : lv.monty.stage === 'decide' ? 'monty> stay or switch?' : 'monty> ...', col: C.money } : null,
 };
-
-// ---- its boss mod's effect: THE DEAL (the HIT stage, engine/mods.js; run from engine/run.js): once a layer, after
-// your first ICE hit, every node goes dark but two: the real one and one other.
-defineModFx('deal', 'hit', {
-  hit(t) {
-    const lv = st.lv, real = lv.tiles[lv.safe];
-    if (lv.dealt || real.state !== 'closed') return false;
-    const ice = lv.tiles.filter(o => o.state === 'closed' && !o.safe && !o.ruledOut);
-    if (ice.length < 2) return false;
-    lv.dealt = true;
-    const keep = pickR(ice, layerRng('deal'));
-    (lv.callouts = lv.callouts || []).push({ key: 'deal', text: '> the deal: two doors left.', fn: () => { for (const o of ice) if (o !== keep) o.ruledOut = true; } });
-  },
-});
 
 // the codex, once you've beaten it
 CORP_TELL.monty = "1. pick a door: it doesn't open. 2. MONTY opens every other door but one. 3. listen to him. when your door is the real one, he tries to talk you off it ('are you SURE?'); when it isn't, he's relaxed ('your call.'). deeper, he says the same things, but a question when you're right and a plain statement when you're wrong. he doesn't always tell the truth. 4. stay or switch. boss: the numbers go and he swaps the two doors around: keep your eye on yours.";

@@ -14,7 +14,7 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
-- [ ] **MONTY and FOSSIL** (v14.57): editor > TESTING, breach each. MONTY: is his tell readable but not free (blunt at tier 1, ? vs . deeper)? The boss's swaps: too fast? THE DEAL as its reward. FOSSIL: brushing feel (a second a brush, 15s), the fossil glyphs (4 kinds, the eye is an o), the dirt, the boss skeleton. SHOVEL as its reward. My calls: both level 3, the logos, VELVET ROPE / HOLLOW.
+- [ ] **MONTY and FOSSIL** (v14.57): editor > TESTING, breach each. MONTY: is his tell readable but not free (blunt at tier 1, ? vs . deeper)? The boss's swaps: too fast? Its prize (v14.58): clean boss = the C.A.R. (drive to any node, once a sector), ICE on the boss = a GOAT named ZONK that eats an ICE a corp and sometimes your loot: does the goat steal too often (1 in 3)? FOSSIL: brushing feel (a second a brush, 15s), the fossil glyphs (4 kinds, the eye is an o), the dirt, the boss skeleton. SHOVEL as its reward. My calls: both level 3, the logos, VELVET ROPE / HOLLOW.
 
 - [ ] **SIMON** (v14.55): editor > TESTING, breach SIMON (or find it on the map, level 2). Watch the pattern, play it back; try a wrong step (it hurts, replays). Since v14.56 a step is one beat of TRACKER (136 BPM: about 440ms): too fast? The tones (in the track's key, by node), the four colors, the look-alike characters deep in (`[l]` `[I]` `[1]` `[|]`: maybe too mean?). The boss's white steps. My calls: level 2, 12s clock, REPEAT as its boss gear, TRACKER music, the logo.
 

@@ -1,6 +1,6 @@
 // tools/tests/montyfossil.js: MONTY and FOSSIL (v14.57, docs/CORPS.md A32 / A28; Greg 2026-11-07). MONTY: a pick holds,
 // he opens all but one, the other is the real node when you picked ICE, switching clears; the boss swaps. FOSSIL: free
-// brushes cost the clock and show rows, the next tap resolves, the fossil with the eye; SHOVEL; THE DEAL.
+// brushes cost the clock and show rows, the next tap resolves, the fossil with the eye; SHOVEL; MONTY's C.A.R. and GOAT.
 module.exports = { name: 'montyfossil', body: `
   await settle();
   B.startRun('MF1457', false); await settle('start');
@@ -35,9 +35,22 @@ module.exports = { name: 'montyfossil', body: `
   startCorp(node, 3); await ready(); lv = st.lv;
   const ts = trench(lv); if (ts) BOSS_GEAR.shovel.use(lv);
   check(!ts || (ts.every(t => t.ruledOut && !t.safe) && (ts.every(t => t.row === ts[0].row) || ts.every(t => t.col === ts[0].col))), 'SHOVEL: a row or column of ICE ruled out, never the real');
-  // THE DEAL
-  st.run.mods.push('deal'); st.run.modTier.deal = 0;
-  node.corp = 'basic'; startCorp(node, 3); await ready(); lv = st.lv;
-  pick(lv.tiles.indexOf(lv.tiles.find(t => !t.safe && t.state === 'closed'))); for (let i = 0; i < 40 && (st.busy || !lv.dealt); i++) await sleep(100); await sleep(300);
-  check(lv.dealt && lv.tiles.filter(t => t.state === 'closed' && !t.ruledOut).length === 2, 'THE DEAL: after the first hit, two nodes left');
+  // MONTY's prize: a clean boss wins the C.A.R., ICE on the boss gets the zonk (a GOAT)
+  node.corp = 'monty'; startCorp(node, 4); await ready(); lv = st.lv;
+  check(rewardOptions(node).some(o => o.key === 'car'), 'a clean MONTY boss: the C.A.R. on the rewards');
+  st.corp.zonk = true;
+  check(rewardOptions(node).some(o => o.key === 'goat'), 'ICE on the boss: the GOAT');
+  // the C.A.R.: once a sector, any node in the sector
+  st.run.mods.push('car'); st.run.modTier.car = 0; st.run.ended = false;
+  st.corp = null; B.toMap(); await sleep(800);
+  check(modUsable('car'), 'the C.A.R. is ready on the map');
+  activateMod('car');
+  const all = Object.values(st.run.map).filter(n => (n.sector || 0) === (st.run.sector || 0) && n.id !== st.run.at && !st.run.visited.includes(n.id));
+  check(all.every(n => availableNodes().includes(n.id)) && !modUsable('car'), 'driving: every node in the sector, once a sector');
+  // the GOAT: your pet is ZONK, and once a corp it eats an ICE
+  addMod('goat');
+  check(st.run.pet && st.run.pet.kind === 'goat' && st.run.pet.name === 'ZONK', 'the GOAT: a goat named ZONK follows you');
+  node.corp = 'basic'; node.tier = 2; startCorp(node, 3); await ready(); lv = st.lv;
+  goatEats(lv);
+  check(lv.tiles.some(t => t.lockedBy === 'goat'), 'the goat eats an ICE');
 ` };

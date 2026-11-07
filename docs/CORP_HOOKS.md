@@ -17,6 +17,7 @@ new hook: add it here, in the right section, with where the engine calls it.
 | `bossDesc` | what its boss does, on the map |
 | `mods` | its boss mods (keys in data/mods.js, the reward's corp pick) |
 | `gear` | `{ key, tier, n }`: boss gear as the corp pick instead of a mod |
+| `prize(c)` | the boss reward's corp pick, by how the corp went (MONTY: `c.zonk` = ICE on its boss: the GOAT, else the C.A.R.); engine/panels.js rewardOptions |
 
 ## Its layers
 | key | what |
