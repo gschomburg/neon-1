@@ -322,6 +322,7 @@ unlocked by REP, and some quests unlock REP.
   - **SOURCE:** the word is in the page source / a code comment (desktop). Phones need the URL fallback (MANTIS): a
     stage of a fight, not a whole one.
   - **KONAMI:** too strong to beat, until you enter a cheat code mid-fight and the game's own dev menu opens against it.
+    (Greg likes it, 2026-11-07; the dev menu as a terminal: section 11.)
   - **PHISHER:** a social engineer. It phishes you with fake prompts (session expired, enter your seed; a fake update;
     a fake CONTINUE), each with a tell (a typo, the wrong font); a fake costs you. The PHISH theme turned around.
   - **GHOST:** your own best run (REPLAYS) as a boss: it taps what you tapped; race yourself. Close to DOPPEL, at boss size.
@@ -454,7 +455,12 @@ unlocked by REP, and some quests unlock REP.
   for more than a boss: a second window that's a little terminal you type commands into, feeding the game. Other uses
   to think about: a second screen showing the map or a trace, a crew member "on the line" in the other window, a
   rival's window you hack into. Same limits as TWIN (same browser; a hidden tab barely runs) and it needs the
-  two-tab save guard. Close to the dev-menu terminal idea in the meat notes.
+  two-tab save guard. One terminal could do both: the dev-menu terminal below, popped out to its own window.
+- **The dev menu as a one-line terminal** (Greg, meat notes 2026-11-07: "i like that hack boss idea where you open up
+  the dev menu. i kinda think we might want to update the dev menu to be more like just a one line terminal that shows
+  with ` and you can type in it and maybe it has auto complete"). Today ` opens the dev menu's button page
+  (engine/dev.js). Instead: a one-line prompt, commands typed in, with autocomplete. It's the same terminal KONAMI
+  turns against its boss, and the one the second window could hold.
 
 ## Low priority
 
