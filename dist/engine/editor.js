@@ -269,6 +269,7 @@ if (EDITOR) {
   window.addEventListener('message', e => {
     const m = e.data;
     if (!m || m.to !== 'neon-game') return;
+    if (m.type === 'hush') { if (m.on) Sound.hush(); else Sound.init(); }   // all the game's sound off / back on (the MUSIC tab's piano roll plays its own)
     if (m.type === 'music-data') musicData(m);
     if (m.type === 'music-ctl') musicCtl(m);
     if (m.type === 'music-test' && st.editorMusic && st.editorMusic.playing) {

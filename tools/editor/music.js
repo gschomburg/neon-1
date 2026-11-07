@@ -423,9 +423,11 @@
     else prompt('copy this:', txt);
   });
 
-  // ---- the piano roll: Music View in a frame over the tab. It plays on its own, so the game's music stops.
+  // ---- the piano roll: Music View in a frame over the tab. It plays on its own, so the game goes quiet meanwhile
+  // (engine/editor.js 'hush': all its sound, music and effects).
   const roll = on => {
     $('#music').classList.toggle('roll', on);
+    NE.toGame({ type: 'hush', on });
     if (!on) { $('#mRollFrame').src = 'about:blank'; return; }
     if (p.playing) { p.playing = false; sendCtl(false); renderPlayer(); renderList(); }
     const k = p.key && !(p.key in DEMOS) ? p.key : null;
