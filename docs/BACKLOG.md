@@ -261,6 +261,12 @@ unlocked by REP, and some quests unlock REP.
   HANDS. Still open:
   - **KITCHEN and ZER0** (the terminal's log in the ending) are only art today. Hide a seed or two in there that are
     real special seeds (the gauntlet, below, or fun made-up ones). **Decided (Greg, 2026-11-06):** not now; later.
+- **An end game quest: from a hacking game to a hacker game** (Greg, 2026-11-06: "this and rebuilding god as a ai
+  assistant i think would be interesting and take it up a notch"). After G0D, a quest that reaches outside the game:
+  the PSYCHO MANTIS boss (section 7: go offline, a hidden word in the URL / tab title / console) and rebuilding G0D as
+  your AI assistant (G0D.exe, section 3). Claude's thoughts, to talk through: the G, the 0 and the D (G0D.exe's pieces)
+  could each be hidden that way (one in the page's URL, one in the console, one only while you're offline), and MANTIS
+  guards the last one. Section 11 ("make it more of a hacking game") fits here too.
 - **Replay H3AV3N** after winning (maybe its own leaderboard).
 - **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
 - **More rewards?** A mod you always start with (meat notes 2026-10-29).
@@ -340,7 +346,7 @@ unlocked by REP, and some quests unlock REP.
 - **The Simon corp** (the user, meat notes 2026-11-06): it shows you a pattern, and you play the pattern back. Its ICE
   won't hurt you, but it doesn't break either. Do the pattern right and the last node is the real one. A wrong step
   hurts like ICE but doesn't break it (or maybe it breaks and the pattern updates).
-- **A PSYCHO MANTIS boss** (the user, meat notes 2026-11-06): a boss that reaches outside the game: "unplug your
+- **A PSYCHO MANTIS boss** (the user, meat notes 2026-11-06; **Decided (Greg, 2026-11-06):** part of an end game quest, section 4): a boss that reaches outside the game: "unplug your
   internet", "open the inspector"? Talked through 2026-11-06 (Greg: "i like the weird hard ones"):
   - **It reads your mind:** it knows where you'll tap (your cursor on desktop, your habits from the save), so playing
     normally can't beat it. FOURTH WALL already reads your save; this is the step past that (Mantis's port 2).
@@ -354,7 +360,7 @@ unlocked by REP, and some quests unlock REP.
   - Other outside tricks the browser can see: switching tabs, turning the phone, resizing, keyboard instead of a
     cursor. Fake-outs between phases: a fake crash, a fake update prompt, black with its name.
   - The trick has to be findable: after a couple of fails, a hint (b0y or POPS).
-  - Open: a corp's boss, a sector boss, or a one-off like d0g; how many phases.
+  - Open: how many phases.
 - CORPS.md marks every built corp `(built)` on its heading.
 
 - **RED TAPE:** a mod or gear (just the name so far).
