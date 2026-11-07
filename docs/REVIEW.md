@@ -14,7 +14,7 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
-- [ ] **SIMON** (v14.55): editor > TESTING, breach SIMON (or find it on the map, level 2). Watch the pattern, play it back; try a wrong step (it hurts, replays). Is 380ms a step too fast or slow? The tones (a C major run, by node), the four colors, the look-alike characters deep in (`[l]` `[I]` `[1]` `[|]`: maybe too mean?). The boss's white steps. My calls: level 2, 12s clock, REPEAT as its boss gear, TRACKER music, the logo.
+- [ ] **SIMON** (v14.55): editor > TESTING, breach SIMON (or find it on the map, level 2). Watch the pattern, play it back; try a wrong step (it hurts, replays). Since v14.56 a step is one beat of TRACKER (136 BPM: about 440ms): too fast? The tones (in the track's key, by node), the four colors, the look-alike characters deep in (`[l]` `[I]` `[1]` `[|]`: maybe too mean?). The boss's white steps. My calls: level 2, 12s clock, REPEAT as its boss gear, TRACKER music, the logo.
 
 - [ ] **This session** (v14.50-v14.53, 2026-11-07): b0y's one cursor and his [b] hint on the OMNI RAID; the initials in the workbench letters; [SHARE] on the title and the results (open a `?seed=` link: it counts on the seed boards); open the game in two tabs (the second says PLAY HERE; tap it, the first goes quiet); REWIND legendary from COLDBREW's boss; CERBERUS's card on a phone; BOX OF WIRES (editor TESTING > Give it 6 times: every node opens). Is a box turning up 40% of the time while you carry one too often?
 

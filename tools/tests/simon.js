@@ -5,11 +5,14 @@ module.exports = { name: 'simon', body: `
   await settle();
   B.startRun('SIMON1455', false); await settle('start');
   if (st.mode !== 'map') { B.toMap(); await sleep(1500); }
-  const node = Object.values(st.run.map).find(n => n.type === 'corp'); node.corp = 'simon'; node.tier = 2;
+  const node = Object.values(st.run.map).find(n => n.type === 'corp'); node.corp = 'simon'; node.tier = 2; save.musicOn = true;
   const layer = async idx => { startCorp(node, idx); for (let i = 0; i < 100 && !(st.lv && st.lv.simon && st.lv.simon.seq && !st.busy); i++) await sleep(100); return st.lv; };
   let lv = await layer(1), S = lv.simon;
   check(S.seq[S.seq.length - 1].t.safe && S.seq.length === 5, 'the pattern: 5 steps at tier 2, the last one real');
   check(lv.tiles.every(t => t.glyph[1].trim() === '[' + t.simonCh + ']' && !t.loaded), 'one character a node, no $ nodes');
+  check(musicState().level <= 1, 'the music stays low (level ' + musicState().level + ')');
+  { const f = lv.tiles.map(t => t.tone), semis = f.map(x => Math.round(12 * Math.log2(x / 440) + 69 - SONGS[trackFor('simon')].root) % 12);
+    check(semis.every(k => [0, 3, 5, 7, 10].includes(k)), 'the tones are in the track key: ' + semis.join(' ')); }
   // a wrong step
   const nx = simonNext(lv), wrong = lv.tiles.find(t => t !== nx.t && !t.safe && t.state === 'closed');
   const hp = st.run.integrity; pick(lv.tiles.indexOf(wrong));

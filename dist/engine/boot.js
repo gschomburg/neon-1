@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v14.55']);
+NEON_FILES.push(['engine/boot.js', 'v14.56']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -46,6 +46,7 @@ function gameMusicState() {
     if (st.timer && st.timer.max) urgency = clamp(1 - st.timer.left / st.timer.max, 0, 1);
     if (song === 'chronos' && st.lv && st.lv.boss) urgency = Math.min(1, urgency + st.lv.misses * 0.25);
     if (song !== 'chronos') urgency *= 0.3;
+    if (st.corp.def.musicMax != null) level = Math.min(level, st.corp.def.musicMax);   // (SIMON: its tones over a quiet track)
   } else if (st.corp) level = 0;                         // public net
   // the PIER: its own track (one of FISH_TRACKS, picked when you arrive), amped up while you reel one in
   if (st.mode === 'fish' && st.fish && SONGS[st.fish.track] && song !== 'none') return { song: st.fish.track, level: st.fish.reel ? 3 : 1, urgency: 0, low: false, tempo: 1, pitch: 1 };
