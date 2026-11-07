@@ -341,7 +341,20 @@ unlocked by REP, and some quests unlock REP.
   won't hurt you, but it doesn't break either. Do the pattern right and the last node is the real one. A wrong step
   hurts like ICE but doesn't break it (or maybe it breaks and the pattern updates).
 - **A PSYCHO MANTIS boss** (the user, meat notes 2026-11-06): a boss that reaches outside the game: "unplug your
-  internet", "open the inspector"?
+  internet", "open the inspector"? Talked through 2026-11-06 (Greg: "i like the weird hard ones"):
+  - **It reads your mind:** it knows where you'll tap (your cursor on desktop, your habits from the save), so playing
+    normally can't beat it. FOURTH WALL already reads your save; this is the step past that (Mantis's port 2).
+  - **Go offline:** "unplug your internet" (airplane mode on a phone). The browser sees it go offline; it loses you and
+    can be beaten. Greg likes this one.
+  - **A hidden word you type in** (Greg's idea for "the inspector"): the console alone won't do (phones have none, and
+    browsers differ). Claude: put the word in several places at once, so every device has one: the address bar (the
+    URL's #word: "look up"), the tab's title (a phone's tab switcher), and the console (a bonus for the curious on
+    desktop). You type it in the seed's text field. (Copying it to the clipboard works too, but it overwrites what you
+    had: probably not.)
+  - Other outside tricks the browser can see: switching tabs, turning the phone, resizing, keyboard instead of a
+    cursor. Fake-outs between phases: a fake crash, a fake update prompt, black with its name.
+  - The trick has to be findable: after a couple of fails, a hint (b0y or POPS).
+  - Open: a corp's boss, a sector boss, or a one-off like d0g; how many phases.
 - CORPS.md marks every built corp `(built)` on its heading.
 
 - **RED TAPE:** a mod or gear (just the name so far).
