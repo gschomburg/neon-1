@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.48']);
+NEON_FILES.push(['engine/heaven.js', 'v14.49']);
 
 const HEAVEN = {};
 
@@ -959,10 +959,21 @@ function moldDigTile(t) {
 // editor's jump) and in the G0D prototype. Tap it: he comes out. In the maze he only comes out when called (his tip:
 // his cursors and the next glyph); in a M0LD corp he holds the mold back (once a layer); in the fight he comes out now.
 const boyOn = () => G0DF.boy && ((st.run && st.run.heaven) || st.mode === 'g0df');
+// The OMNI RAID (Greg, 2026-11-06): b0y rides in the tray ([b]) until you clear the sector (run.boyTray: engine/quests.js
+// questRunStart / questSector). Tap it in a corp: he's called in like a CALL, for the rest of the corp (once a corp).
+const boyTrayOn = () => !!(st.run && st.run.boyTray && !st.run.heaven);
+function boyTrayCall() {
+  const c = st.corp;
+  if (hkUp('b0y')) { Sound.ping(1568); return setMsg('> b0y: ' + hkLine({ id: 'b0y' }, 'clue'), G0DF_BLUE); }
+  if (!hkCallable()) { Sound.deny(); return setMsg('> b0y: call me in when we hit a corp.', G0DF_BLUE); }
+  if (c.boyTrayUsed) { Sound.deny(); return setMsg("> b0y: lost the signal. next corp.", G0DF_BLUE); }
+  c.boyTrayUsed = true; Sound.ping(1175);
+  hkSpawn('b0y', 'call');
+}
 function buildBoyBtn(ctx, y) {
-  if (!boyOn() || st.mode === 'title' || st.mode === 'over' || st.mp) return;
+  if (!(boyOn() || boyTrayOn()) || st.mode === 'title' || st.mode === 'over' || st.mp) return;
   const { put, bg, addHit, now } = ctx, x = 0, c = st.corp, p = st.g0df;
-  const out = (c && c.boyCall && now < c.boyCall) || (p && p.boy && !g0dfBoyResting(p.boy)) || (st.moldFx && st.moldFx.wipe);
+  const out = (c && c.boyCall && now < c.boyCall) || (p && p.boy && !g0dfBoyResting(p.boy)) || (st.moldFx && st.moldFx.wipe) || (boyTrayOn() && !!hkUp('b0y'));
   clearRect(ctx.cells, x, y, 3, 1);
   if (out) bg(x, y, 3, G0DF_BLUE, 1);
   // (the user, 2026-10-31: it cycles b, 0, y: his name, a letter at a time; b most of the time)
@@ -982,6 +993,7 @@ function heavenExotic(r) {
 const BOY_SHOP = ['patches. lots of patches.', 'a BUFFER keeps you up.', 'reroll here. trust me.', 'shoes. he hates shoes.', 'FWALL. the eye bites.', 'buy now. no refunds later.'];
 const BOY_TIPS = ['the mold comes and goes.', 'tap [b] when you need me.', 'keep your INT up. patches.', 'the corps up here are his.'];   // (the terminal fits ~30 after b0y:)
 function boyCall() {
+  if (boyTrayOn() && !boyOn()) return boyTrayCall();
   const now = performance.now(), c = st.corp, p = st.g0df;
   Sound.ping(1175);
   if (p && p.boy) {   // the fight (and the prototype): he comes out now
@@ -1290,8 +1302,8 @@ function g0dEndCall(f) {
   st.kbFocus = st.hoverBtn = null; Sound.shield();
   st.callBox = ({ t0: performance.now(), who: 'pops', lines: ['kid. you did it. G0D is down.', "b0y's up here with me. he says hi.", 'the net is yours. go again?'],
     btns: [
-      { text: '[ THE MAZE ]', onTap: () => { st.g0dEnd = null; st.g0df = null; startRun(seed, true, { heaven: true, quest }); } },
-      { text: '[ G0D FIGHT ]', onTap: () => { st.g0dEnd = null; st.g0df = null; toMap(); setTimeout(() => { if (st.mode === 'map' && st.run && !st.g0df && node) g0dWakeStart(node); }, 700); } }],
+      { text: '[ G0D FIGHT ]', onTap: () => { st.g0dEnd = null; st.g0df = null; toMap(); setTimeout(() => { if (st.mode === 'map' && st.run && !st.g0df && node) g0dWakeStart(node); }, 700); } },
+      { text: '[ TITLE ]', onTap: async () => { st.g0dEnd = null; st.g0df = null; if (quest) { await endRun(true); swapTo(showTitle); } else heavenWon(f); } }],   // (Greg, 2026-11-06: the fight again or out; THE MAZE went: it started sector 2 over, not the maze)
     onClose: () => { if (quest) { st.g0dEnd = null; st.g0df = null; endRun(true); } else heavenWon(f); } });   // (straight up: it doesn't wait in the CALL queue) (the seed: the run ends, a win)
 }
 // The ending's rewards screen (a placeholder, the user 2026-10-31): your logo, how you did, the REP (the run's, if it

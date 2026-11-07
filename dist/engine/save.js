@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v14.48']);
+NEON_FILES.push(['engine/save.js', 'v14.49']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -60,6 +60,7 @@ const LEGACY = [
   { key: 'bench', tier: 2, name: 'WORKBENCH', desc: 'every safehouse gets a workbench: shred gear and mods into letters, spell a code to build one.', costs: [150] },   // (engine/bench.js)
   { key: 'nemesis', tier: 2, name: 'NEMESIS', desc: 'pick a corp you have breached: it shows up 3x as often.', costs: [120] },
   { key: 'starter', tier: 2, name: 'STARTER POOL', desc: 'the starter perk can offer general mods too.', costs: [150] },
+  { key: 'steady', tier: 2, name: 'STEADY HANDS', desc: "at the pier, no catch moves faster than your line can follow.", costs: [300] },   // (Greg, 2026-11-06: a fast legendary PHISH outran LURE; engine/fishing.js FISH_STEADY)
   { key: 'tellscope', tier: 2, name: 'TELL LIGHT', desc: 'every corp layer says if its tell is on: TELL ON / TELL OFF.', costs: [150] },   // (the user: know if a tell is active)
   // ---- 3 ELITE, 4 SYSOP: nothing posted yet (HEAT, the quests, THE ARCHIVE: docs/PROGRESSION.md)
   // ---- PRIVATE MESSAGES (a feat opens them)

@@ -23,7 +23,7 @@
 //   lvl2    crew: their LVL 2 upgrade (THE BOARD), fixed
 // How each one plays is engine/hackers.js (HK_AI); they come in through the RIVAL anomaly (rivals) and CALL gear (crew).
 'use strict';
-NEON_FILES.push(['data/hackers.js', 'v14.48']);
+NEON_FILES.push(['data/hackers.js', 'v14.49']);
 
 const HACKERS = {
   // ================= bad hackers =================
@@ -355,7 +355,7 @@ Object.assign(HACKERS, {
   // b0y: d0g, back (the main quest, docs/QUESTS.md: TRACE ROUTE). quest: he joins at the end of the PRODIGAL scene,
   // never by calls or THE BOARD; a plain CALL can't bring him before that.
   b0y: {
-    name: 'b0y', side: 'good', hp: 4, quest: true,
+    name: 'b0y', side: 'good', hp: 4, quest: true, split: true,
     style: { fg: "#4aa8ff", bg: "#06162e" },
     enter: "doc said you'd call.",
     clue: ["not that one.","closer.","that one. trust me."],
@@ -365,8 +365,8 @@ Object.assign(HACKERS, {
     shtick: "he knows the right node. he won't tap it for you.",
     lore: ['POPS\'s son. He went into the net after the thing waking up in the corps, and it got into him: for years he',
       'was d0g, its guard dog. He built CERBERUS for it. Every time somebody beat him, he came back a little.'],
-    ai: 'Never taps. His cursor hovers over three maybes, then two, then settles on the real node, which lights up ' +
-      '(every 3.2s one maybe drops; LVL 2: 2s).',
+    ai: 'Never taps. He splits into three cursors over three maybes; as each maybe drops, its cursor goes over to the ' +
+      'real node, which lights up once all three are on it (every 3.2s one maybe drops; LVL 2: 2s).',
     counter: 'cerberus: he built it. he knows which eye is lying.',
   },
 });

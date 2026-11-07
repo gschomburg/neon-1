@@ -16,7 +16,7 @@ From POPS.
 3. **SAFEHOUSE**: you cashed out with the DISC. take it to POPS.
 4. **DOG DAYS**: start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.
 5. **TRACE ROUTE**: POPS got a hit on the name on the DOGTAG. go see him.
-6. **OMNI RAID**: b0y is on your crew. call him in on an OMNI boss (his CALL, or a plain one) and break it with him there.
+6. **OMNI RAID**: b0y rides with you ([b]) till the sector's done. call him in on the OMNI boss and break it with him there.
 7. **G0D MODE**: start a run with the seed H3AV3N and beat G0D. b0y goes with you.
 8. **SYSTEM RESTORED**: you beat G0D. POPS has his boy back.
 
@@ -94,7 +94,7 @@ From POPS.
 **raid**
 
 > **POPS:** it's me. b0y.  
-> **POPS:** it hid inside OMNI for years. call me in on one and i'll find where it went.  
+> **POPS:** it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in.  
 
 ### Scenes
 

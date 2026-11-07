@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v14.48']);
+NEON_FILES.push(['engine/fishing.js', 'v14.49']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -29,6 +29,8 @@ const fishKB = (key, r) => { const [a, b] = ITEMS[key].kb || [1, 100]; return a 
 const fmtKB = kb => kb < 1 ? Math.max(1, Math.round(kb * 1024)) + ' B' : kb < 1024 ? (kb < 10 ? kb.toFixed(1) : Math.round(kb)) + ' KB'
   : kb < 1048576 ? (kb < 10240 ? (kb / 1024).toFixed(1) : Math.round(kb / 1024)) + ' MB' : (kb / 1048576).toFixed(1) + ' GB';
 const fmtLb = v => v.toFixed(1) + ' lb';   // (a shoe still weighs something)
+// STEADY HANDS (a REP post, engine/save.js): the window's top speed, under what your line pulls (0.65 a second)
+const FISH_STEADY = 0.55;
 const pierOn = () => true;   // later: a feat unlocks the pier (so it isn't the first thing a new player meets)
 
 // ---------------- Coming and going ----------------
@@ -180,7 +182,8 @@ function fishTick(now) {
   // the reel: the window wanders; you hold to pull the fish right, let go and it slips left
   const rl = f.reel;
   if (rl) {
-    const pace = { scrap: 0.25, common: 0.35, rare: 0.55, epic: 0.75, legendary: 1 }[rl.s.out.rarity] || 0.4;
+    let pace = { scrap: 0.25, common: 0.35, rare: 0.55, epic: 0.75, legendary: 1 }[rl.s.out.rarity] || 0.4;
+    if (legacyLv('steady')) pace = Math.min(pace, FISH_STEADY);
     rl.winV += (f.r() - 0.5) * pace * 4 * dt; rl.winV = clamp(rl.winV, -pace, pace);
     rl.win += rl.winV * dt;
     if (rl.win < 0) { rl.win = 0; rl.winV = Math.abs(rl.winV); } if (rl.win > 1 - rl.w) { rl.win = 1 - rl.w; rl.winV = -Math.abs(rl.winV); }

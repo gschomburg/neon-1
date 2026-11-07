@@ -115,7 +115,7 @@ The user's dump, 2026-10-28, put in order. More is coming.
 - Why it fits: the ten wins, CERBERUS, the mold in HAD3S (MYCONET), why b0y knows where G0D went and its tricks (he
   built some of them), why he can't help much against heaven's CERBERUS (it was built to stop him), the DISC.
 - **Built v14.29:** steps 6-10 as: the DOGTAG cash-out -> POPS calls -> PRODIGAL (the trace + the d0g scene in one)
-  -> b0y on the crew (no REP buy, no LVL 2) -> OMNI RAID (his CALL each run; break an OMNI boss with him there) ->
+  -> b0y on the crew (no REP buy, no LVL 2) -> OMNI RAID (built v14.48: he rides in the tray, [b], till the sector's done; break an OMNI boss with him there) ->
   HEAVEN'S GATE -> G0D MODE (the H3AV3N seed on a QUEST card) -> done when you beat G0D.
 
 ### Step 6: the trace

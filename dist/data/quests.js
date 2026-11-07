@@ -23,7 +23,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.48']);
+NEON_FILES.push(['data/quests.js', 'v14.49']);
 
 const QUEST_INFO = {
   pops: {
@@ -40,7 +40,7 @@ const QUEST_INFO = {
       { key: 'deliver', name: 'SAFEHOUSE', scene: 'disc', goTo: 'TAKE IT TO POPS', goal: 'you cashed out with the DISC. take it to POPS.' },
       { key: 'd0g', name: 'DOG DAYS', carry: 'dogtag', uplinkLine: 'tagUplink', doneLine: 'traced', goal: "start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.", seed: 'HAD3S', wins: 10 },
       { key: 'trace', name: 'TRACE ROUTE', scene: 'prodigal', goTo: 'GO TO POPS', crew: 'b0y', goal: 'POPS got a hit on the name on the DOGTAG. go see him.' },
-      { key: 'raid', name: 'OMNI RAID', scene: 'gate', goal: "b0y is on your crew. call him in on an OMNI boss (his CALL, or a plain one) and break it with him there." },
+      { key: 'raid', name: 'OMNI RAID', scene: 'gate', goal: "b0y rides with you ([b]) till the sector's done. call him in on the OMNI boss and break it with him there." },
       { key: 'g0d', name: 'G0D MODE', goal: 'start a run with the seed H3AV3N and beat G0D. b0y goes with you.', seed: 'H3AV3N' },
       { key: 'done', name: 'SYSTEM RESTORED', goal: 'you beat G0D. POPS has his boy back.' },
     ],
@@ -73,7 +73,7 @@ const QUEST_LINES = {
   tagUplink: ["you've got his tag.", "CASH OUT here and bring it to me."],
   traced: ["you got it out. good.", "i ran the name. i got a hit.", "come by. now."],
   // OMNI RAID: b0y, once he's on your crew (each run while the step is on: you start with his CALL)
-  raid: ["it's me. b0y.", "it hid inside OMNI for years. call me in on one and i'll find where it went."],
+  raid: ["it's me. b0y.", "it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in."],
 };
 
 // A scene's music (the user, 2026-11-04): its song, and a new pick of level and stage every step ms from the frame's mood

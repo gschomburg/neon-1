@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.48']);
+NEON_FILES.push(['engine/quests.js', 'v14.49']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -79,6 +79,7 @@ function questCalled(id) {
 }
 // PROVE IT: a sector cleared with POPS on your crew (engine/runend.js sectorClear): he calls, and THE DISC starts.
 function questSector() {
+  if (st.run && st.run.boyTray) st.run.boyTray = false;   // the OMNI RAID: b0y's tray ride ends with the sector
   if (!questRun() || questOf('pops').step !== 'sector' || !hkCrewOn('pops')) return;
   queueCall('pops', QUEST_LINES.sector);
   questNext('pops');
@@ -145,7 +146,7 @@ function questRunStart(run) {
     const q = questOf('pops'); if (!q.leashTold) { q.leashTold = true; persist(); setTimeout(() => queueCall('pops', QUEST_LINES.leash), 2500); }
   }
   if (!questRun() || questOf('pops').step !== 'raid' || !hkCrewOn('b0y')) return;
-  run.items.push({ key: 'call_b0y', tier: 0, n: 1 });
+  run.boyTray = true;   // b0y rides in the tray ([b]) until you clear the sector (Greg, 2026-11-06; was a CALL b0y stack: engine/heaven.js boyTrayCall)
   const q = questOf('pops'); if (!q.raidCalled) { q.raidCalled = true; persist(); setTimeout(() => queueCall('b0y', QUEST_LINES.raid), 2500); }
 }
 

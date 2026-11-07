@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.48']);
+NEON_FILES.push(['engine/hackers.js', 'v14.49']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -180,6 +180,7 @@ function hkTick(lv, now) {
     s.cur.x += (to.x - s.cur.x) * 0.12; s.cur.y += (to.y - s.cur.y) * 0.12;
     if (!s.aim && Math.random() < 0.01) s.home = null;
     if (hkDef(h.id).heads) hkHeads(s, now);
+    if (hkDef(h.id).split && s.split) hkSplit(s);
     if (h.side === 'good' || HK_AI[h.id].emotes) { if (!s.emoteAt || now > s.emoteAt) { s.emoteAt = now + 5000 + Math.random() * 6000; if (Math.random() < 0.5) hkSay(h, hkLine(h, h.side === 'bad' ? 'taunt' : 'clue'), false, true); } }
     else if (!s.tauntAt || now > s.tauntAt) { s.tauntAt = now + 6000 + Math.random() * 6000; if (s.tauntAt && Math.random() < 0.4) hkSay(h, hkLine(h, 'taunt'), false, true); }
   }
@@ -193,6 +194,15 @@ function hkHeads(s, now) {
   if (s.aim && s.aim.t && now > s.aim.at - HK_HEADS.lead && now < s.aim.at) s.headsTill = now + HK_HEADS.hover;
   const want = now < (s.headsTill || 0) ? 1 : 0;
   s.spread = (s.spread || 0) + (want - (s.spread || 0)) * (want ? HK_HEADS.out : HK_HEADS.back);
+}
+// b0y's other two cursors (split): each glides to its node, the way the main one does
+function hkSplit(s) {
+  s.sp = s.sp || [];
+  s.split.slice(1).forEach((t, i) => {
+    const to = hkCell(t), p = s.sp[i] || (s.sp[i] = { x: s.cur.x, y: s.cur.y });
+    p.x += (to.x - p.x) * 0.12; p.y += (to.y - p.y) * 0.12; p.t = t;
+  });
+  s.sp.length = Math.max(0, s.split.length - 1);
 }
 // The notes row: each hacker's name and bars (rivals: vs NAME ###; crew: +NAME ###)
 function hkNotes(lv) {
@@ -431,7 +441,11 @@ const HK_AI = {
       const left = Math.max(1, 3 - Math.floor((now - s.m0) / (h.lv2 ? 2000 : 3200)));
       while (s.maybe.length > left) { const i = s.maybe.findIndex(t => t !== real); if (i < 0) break; s.maybe.splice(i, 1); }
       if (!s.maybe.length) return;
-      if (now > s.mAt) { s.mi = (s.mi + 1) % s.maybe.length; s.mAt = now + 650; s.aim = { t: s.maybe[s.mi], at: Infinity, fn: () => {} }; }
+      // his three cursors (split; Greg, 2026-11-06, like his in H3AV3N): one on each maybe; as a maybe drops, its cursor
+      // goes over to the real node, till they're all on it
+      if (!s.split || s.splitLv !== lv) { s.splitLv = lv; s.split = s.maybe.slice(); }
+      s.split = s.split.map(t => s.maybe.includes(t) ? t : real);
+      s.aim = { t: s.split[0], at: Infinity, fn: () => {} };
       if (s.maybe.length === 1 && !s.said) { s.said = true; real.zd = true; Sound.ping(1568); hkSay(h, hkLine(h, 'clue')); }   // (lit up gold, like 0DAY)
     },
   },
@@ -619,6 +633,12 @@ function buildHackers(ctx, lv, now) {
       const hx = Math.round(x + ox * s.spread), hy = Math.round((y + oy * s.spread + Math.sin(now / 240 + i * 2.1) * 0.4 * s.spread) * 2) / 2;
       bg(hx, hy, 3, sty.bg, 0.8); put(hx, hy, mark, mixHex(sty.fg, sty.bg, 0.3), 'fx', true);
     });
+    if (hkDef(h.id).split && s.sp) for (const p of s.sp) {   // b0y's other cursors (one with the main one: hidden), a v over their node
+      if (Math.abs(p.x - s.cur.x) < 0.7 && Math.abs(p.y - s.cur.y) < 0.7) continue;
+      const hx = Math.round(p.x - 1), hy = Math.round(p.y);
+      bg(hx, hy, 3, sty.bg, 1); put(hx, hy, mark, sty.fg, 'fx', true);
+      if (p.t && p.t.state === 'closed') { const o = tileOrigin(p.t); bg(o.tx + 3, o.ty - 1, 1, sty.bg, 1); put(o.tx + 3, o.ty - 1, 'v', sty.fg, 'fx', true); }
+    }
     bg(x, y, 3, sty.bg, 1); put(x, y, mark, sty.fg, 'fx', true);
     // their tag: their name, or what they're saying (a chat line in the cursor, like b0y's); kept on the screen
     const talking = s.bubble && now < s.bubble.until, tag = talking ? ' ' + s.bubble.text + ' ' : hkName(h.id).toLowerCase().slice(0, 8);

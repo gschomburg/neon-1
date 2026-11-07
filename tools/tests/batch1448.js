@@ -52,4 +52,28 @@ module.exports = { name: 'batch1448', body: `
     check(tapY > yOf('andfriends'), 'credits: the tap line (' + tapY + ') is under the last line (' + yOf('andfriends') + ')');
     sceneEnd(); await sleep(300);
   }
-` };
+  // the OMNI RAID: b0y rides in the tray till the sector's done; [b] calls him in, once a corp
+  {
+    const q = questOf('pops'), was = Object.assign({}, q), run = st.run; save.legacy = save.legacy || {}; const crew0 = save.legacy.crew_b0y;
+    save.legacy.crew_b0y = 1; q.step = 'raid'; q.raidCalled = true;
+    const items0 = run.items.length; questRunStart(run);
+    check(run.boyTray && run.items.length === items0, 'the raid: b0y in the tray, no CALL stack');
+    boyCall(); check(/corp/.test(st.msg || ''), 'on the map: he waits for a corp: ' + st.msg);
+    let id = null; for (let k = 0; k < 6 && !id; k++) { id = availableNodes().find(i => st.run.map[i].type === 'corp'); if (!id) { await B.enterNode(st.run.map[availableNodes()[0]]); await settle('x'); if (st.mode !== 'map') { B.toMap(); await settle('m'); } } }
+    await B.enterNode(st.run.map[id]); await settle('enter'); await B.pick(st.lv.safe); for (let j = 0; j < 100 && (st.busy || st.transitioning || st.wipe); j++) await sleep(50);
+    boyCall(); await sleep(300); st.hkCard = null; st.hkCards = [];
+    check(!!hkUp('b0y'), 'in a corp: [b] calls him in');
+    const h = hkUp('b0y'); h.out = true; boyCall(); check(!hkUp('b0y') && /next corp/.test(st.msg || ''), 'once a corp: ' + st.msg);
+    h.out = false;
+    // his three cursors: one on each maybe, then all on the real node
+    const lv = st.lv, sh = hkS(lv, h); for (let k = 0; k < 20; k++) { hkTick(lv, performance.now()); await sleep(20); }
+    check(sh.split && sh.split.length === Math.min(3, hkCands(lv).length) && new Set(sh.split).size === sh.split.length, 'split: one cursor a maybe: ' + (sh.split || []).length);
+    sh.m0 -= 20000; for (let k = 0; k < 5; k++) { hkTick(lv, performance.now()); await sleep(20); }
+    check(sh.split.every(t => t === lv.tiles[lv.safe]), 'split: they end up on the real node');
+    questSector(); check(!run.boyTray, 'the sector cleared: his ride ends');
+    Object.assign(q, was); save.legacy.crew_b0y = crew0;
+  }
+
+  // STEADY HANDS: no catch outruns the line
+  check(LEGACY.some(u => u.key === 'steady' && u.tier === 2 && u.costs[0] === 300) && FISH_STEADY < 0.65, 'STEADY HANDS: a USER post, 300 REP');
+`};
