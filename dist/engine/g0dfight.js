@@ -4,7 +4,7 @@
 // when G0D dies). The maze before it is a real corp, HEAVEN.maze (engine/heaven.js), which reads G0DF_SEQ and the maze
 // numbers here. The numbers are all in G0DF; the neon editor's g0d tab can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dfight.js', 'v14.49']);
+NEON_FILES.push(['engine/g0dfight.js', 'v14.50']);
 
 const G0DF = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -127,16 +127,16 @@ function g0dfBoyTick(p, now, dt, targets) {
     if (b.phase === 'rest' || b.phase === 'hold') {   // scatter: each to a different node, the right one among them
       const opts = targets.right ? [targets.right, ...shuffle(targets.others, Math.random).slice(0, 2)] : shuffle(targets.others, Math.random).slice(0, 3);
       const spots = shuffle(opts, Math.random);
-      b.curs.forEach((c, i) => { const s = spots[i % Math.max(1, spots.length)] || { x: c.x, y: c.y }; c.tx = s.x; c.ty = s.y; c.tag = s.name ? s.name + '?' : ''; });
+      b.curs.forEach((c, i) => { const s = spots[i % Math.max(1, spots.length)] || { x: c.x, y: c.y }; c.tx = s.x; c.ty = s.y; c.at = s; c.tag = s.name ? s.name + '?' : ''; });
       b.phase = 'scatter'; b.until = now + 2300; b.right = targets.right;
     } else if (b.phase === 'scatter') {   // converge, one at a time
       b.phase = 'converge'; b.until = now + 1700; b.k = 0; b.kAt = now;
     } else if (b.phase === 'converge') { b.phase = 'hold'; b.until = now + 2600; }
   }
   if (b.phase === 'converge' && b.right) {
-    while (b.k < 3 && now - b.kAt > b.k * 380) { const c = b.curs[b.k]; c.tx = b.right.x; c.ty = b.right.y; c.tag = b.k === 0 && b.right.name ? 'here: ' + b.right.name : ''; b.k++; }
+    while (b.k < 3 && now - b.kAt > b.k * 380) { const c = b.curs[b.k]; c.tx = b.right.x; c.ty = b.right.y; c.at = b.right; c.tag = b.k === 0 && b.right.name ? 'here: ' + b.right.name : ''; b.k++; }
   }
-  if (b.phase === 'hold' && now > b.until - 900) b.curs.forEach((c, i) => { c.tx = 4 + i * 3; c.ty = 0; });   // drift off to rest
+  if (b.phase === 'hold' && now > b.until - 900) b.curs.forEach((c, i) => { c.tx = 4 + i * 3; c.ty = 0; c.at = null; });   // drift off to rest
   if (b.phase === 'hold' && targets.right) b.right = targets.right;
   for (const c of b.curs) {   // glide (a bit of jitter while hovering)
     const jx = b.phase === 'scatter' ? Math.sin(now / 160 + c.tx) * 0.6 : 0;
@@ -174,28 +174,25 @@ function g0dfBoyTick1(p, now, dt, targets) {
   const jx = b.phase.startsWith('look') ? Math.sin(now / 200) * 0.8 : 0, k = Math.min(1, dt * (c.point ? 10 : 3.5));
   c.x += (c.tx + jx - c.x) * k; c.y += (c.ty - c.y) * k;
 }
-// b0y's cursor: a v on his blue, and what he's saying (his tag) beside it, on the left at the right edge.
-// (round 5: a : while he looks, a v when he points; pointing, just the v slides half a cell down and back, smooth: g0dfBoyBob)
-const g0dfBoyBob = (now, i = 0) => 0.25 * (1 - Math.cos((now + i * 170) / 520 * Math.PI * 2));   // 0 .. 0.5 of a cell
-function g0dfBoyMark(put, bg, x, y, tag, point = true, dy = 0) {
-  bg(x, y + dy, 1, G0DF_BLUE, 1); put(x, y + dy, point ? 'v' : ':', C.bg, 'fx', true);
-  if (!tag) return;   // his words: inverted, blue with dark letters, one block with his v (on the left at the screen's edge)
-  const w = tag.length + 2, tx = x + 1 + w > L.wc ? x - w : x + 1;
-  bg(tx, y, w, G0DF_BLUE, 1); put(tx + 1, y, tag, C.bg, 'fx', true);
+// b0y's cursor: the hackers' cursor (engine/hackers.js drawHkCursor; Greg, 2026-11-06: one look everywhere), what he's
+// saying in his tag. Pointing (c.point), his v sits on the spot (a node's top right) and bobs, his cursor just above
+// it (below, when there's no room above: the top of the board). Looking (no v), just his cursor where he is.
+// Where his marks go this frame: [{ x, y (his mark's left cell), say, v: {x, y} | null, i }] (screen cells)
+function g0dBoyPlace(sx, sy, point, top = BOARD_Y) {
+  if (!point) return { x: sx - 1, y: sy, v: null };
+  return sy - 2 >= top ? { x: sx - 1, y: sy - 2, v: { x: sx, y: sy } } : { x: sx - 1, y: sy + 1, v: { x: sx, y: sy } };
 }
 const g0dfBoyResting = b => b.phase === 'rest' || (b.phase === 'hold' && performance.now() > b.until - 900);
-// Where his marks go this frame: [{ x, y, tag, point, dy }] (screen cells; dy: the v's slide, pointing)
 function g0dfBoyMarks(p, now) {
   const b = p.boy, out = [];
   if (!G0DF.boy || !b || g0dfBoyResting(b)) return out;   // resting: hidden (the tray shows him: g0dfOverlay)
   b.curs.forEach((c, i) => {
     if (b.single && i > 0) return;
     const maze = p.stage === 'maze', point = maze || p.stage === 'stand' || !!c.point, tracer = maze && i === 2;
-    const settled = Math.abs(c.x - c.tx) < 0.5 && Math.abs(c.y - c.ty) < 0.5;
-    const dy = point && settled && !tracer ? g0dfBoyBob(now, i) : 0;
-    const x = Math.round(c.x), y = BOARD_Y + Math.round(c.y);
-    if (y < BOARD_Y || y >= BOARD_Y + L.gh) return;   // (up in the header: g0dfOverlay draws him, over the spill)
-    out.push({ x, y, tag: tracer ? '' : c.tag, point, dy });
+    const sx = Math.round(c.x), sy = BOARD_Y + Math.round(c.y);
+    if (sy < BOARD_Y || sy >= BOARD_Y + L.gh) return;   // (up in the header: g0dfOverlay draws him, over the spill)
+    const at = g0dBoyPlace(sx, sy, point);
+    out.push({ x: at.x, y: at.y, v: at.v, say: tracer ? null : c.tag || null, tag: !tracer, i });
   });
   return out;
 }
@@ -203,13 +200,16 @@ function g0dfBoyMarks(p, now) {
 function g0dfBoyCells(p, now) {
   const out = new Set();
   for (const m of g0dfBoyMarks(p, now)) {
-    out.add(m.x + ',' + m.y); if (m.dy) out.add(m.x + ',' + (m.y + 1));   // (the v slides into the cell below)
-    if (m.tag) { const w = m.tag.length + 2, tx = m.x + 1 + w > L.wc ? m.x - w : m.x + 1; for (let k = 0; k < w; k++) out.add((tx + k) + ',' + m.y); }
+    for (const [x, y] of hkCursorCells(m.x, m.y, 'b0y', { say: m.say, tag: m.tag })) out.add(x + ',' + y);
+    if (m.v) { out.add(m.v.x + ',' + m.v.y); out.add(m.v.x + ',' + (m.v.y + 1)); }   // (the v slides into the cell below)
   }
   return out;
 }
 function g0dfBoyDraw(p, put, bg, now) {
-  for (const m of g0dfBoyMarks(p, now)) g0dfBoyMark(put, bg, m.x, m.y, m.tag, m.point, m.dy);
+  for (const m of g0dfBoyMarks(p, now)) {
+    drawHkCursor(put, bg, m.x, m.y, 'b0y', { say: m.say, tag: m.tag });
+    if (m.v) drawHkPoint(put, bg, m.v.x, m.v.y, 'b0y', now, m.i);
+  }
 }
 
 // A glyph's name (the codex's), for b0y's tags: 'diamond', 'the cross'...
@@ -766,7 +766,7 @@ function g0dfFightDraw(p, put, bg, now) {
       put(x + k, Y + y, lab[k], thin ? col : col, 'fx', !thin);
     }
   }
-  if (G0DF.boy && p.boy) p.boy.curs.forEach((c, i) => { if (p.boy.single && i > 0) return; const bx = Math.round(c.x), by = Math.round(c.y); take(bx, by, i === 0 ? 4 : 1); });   // b0y stays on top (round 14)
+  if (G0DF.boy && p.boy) for (const k of g0dfBoyCells(p, now)) { const [x, y] = k.split(',').map(Number); take(x, y - BOARD_Y, 1); }   // b0y stays on top (round 14): his cursor, tag and v
   // the M0LD (round 5: its colors: g0dfMoldCol; a little cyan over a buried eye node)
   const cyan = new Map();
   for (const n of f.nodes) {
@@ -1164,16 +1164,13 @@ function g0dfOverlay(cells, now, bgs) {
   }
   if (p.stage === 'stand') { const s = p.stand; out = s.hole && now < s.openUntil ? g0dHoleOverlay(out, now, bgs, s) : g0dfBar(out, bgs, { f: (s.eyes.length - s.cur) / s.eyes.length }); }   // (out of the hole: the mold and his bar coming back: engine/heaven.js)
   if (p.stage === 'fight' && G0DF.boy && p.boy && !g0dfBoyResting(p.boy)) {   // b0y up in the header (pointing at the mold on your INT) (round 5: not while he rests: he's in the tray then)
-    const c = p.boy.curs[0], x = Math.round(c.x), y = BOARD_Y + Math.round(c.y);   // (no bob up here: the header's rows are tight)
-    if (y >= 1 && y < BOARD_Y) {
-      out = out.filter(o => !(Math.round(o.cy) === y && o.cx >= x - 3 && o.cx < x + 4));
-      const dy = c.point ? g0dfBoyBob(now) : 0;
-      if (bgs) bgs.push({ cx: x, cy: y + dy, w: 1, col: G0DF_BLUE, alpha: 1 });
-      out.push({ ch: c.point ? 'v' : ':', cx: x, cy: y + dy, col: C.bg, own: 'fx', bold: true });
-      const tag = c.tag || 'b0y', w = tag.length + 2, tx = x + 1 + w > L.wc ? x - w : x + 1;   // (his tag on the left at the edge)
-      out = out.filter(o => !(Math.round(o.cy) === y && o.cx >= tx && o.cx < tx + w));
-      if (bgs) bgs.push({ cx: tx, cy: y, w, col: G0DF_BLUE, alpha: 1 });   // inverted, like the board's
-      [...tag].forEach((ch, k) => out.push({ ch, cx: tx + 1 + k, cy: y, col: C.bg, own: 'fx', bold: true }));
+    const c = p.boy.curs[0], sx = Math.round(c.x), sy = BOARD_Y + Math.round(c.y);
+    if (sy >= 1 && sy < BOARD_Y) {   // (up here his cursor goes under the spot: there's no room above)
+      const at = g0dBoyPlace(sx, sy, !!c.point, L.hc), cellsOf = (x, y) => Math.round(y) * 1000 + x;
+      const put = (x, y, str, col, own, bold) => { str = String(str); for (let k = 0; k < str.length; k++) { const key = cellsOf(x + k, y); out = out.filter(o => cellsOf(Math.round(o.cx), o.cy) !== key); out.push({ ch: str[k], cx: x + k, cy: y, col, own: 'fx', bold }); } };
+      const bg = (x, y, w, col, alpha) => { if (bgs) bgs.push({ cx: x, cy: y, w, col, alpha }); };
+      drawHkCursor(put, bg, at.x, at.y, 'b0y', { say: c.tag || null });   // (the hackers' cursor: engine/hackers.js)
+      if (at.v) drawHkPoint(put, bg, at.v.x, at.v.y, 'b0y', now);
     }
   }
   return out;   // (b0y resting: the [b] button shows him, engine/heaven.js buildBoyBtn)

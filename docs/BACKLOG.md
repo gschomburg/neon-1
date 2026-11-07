@@ -261,12 +261,7 @@ unlocked by REP, and some quests unlock REP.
   HANDS. Still open:
   - **KITCHEN and ZER0** (the terminal's log in the ending) are only art today. Hide a seed or two in there that are
     real special seeds (the gauntlet, below, or fun made-up ones). **Decided (Greg, 2026-11-06):** not now; later.
-  - **b0y's pop-in on the OMNI quest** (meat notes 2026-11-06, later): make it clear you tap [b]. Like the training
-    popup but in the quest's colors, with an arrow at the [b]; or just bounce the [b] a bunch.
-  - **One b0y everywhere** (meat notes 2026-11-06, later): in H3AV3N and the boss fight he uses different chips (one
-    has a bg color). Make them look and behave the same. Then the same pass on rivals and crew (see "Enemy and ally
-    hackers" below): b0y's cursor types one-word lines like a terminal; every hacker should work the same way, or
-    have a reason not to.
+  - **b0y's [b] hint and one b0y everywhere: built v14.50** (SPEC version log).
 - **Playtest of HAD3S** (meat notes 2026-11-06, later):
   - **CERBERUS (the final sector boss) is too tall on a phone:** the BREACH button's bottom line overlaps the loot bar
     by one row. The rival plus the MOLD lines stack it up. Idea: all the anomalies on one line that swaps or ticks
@@ -450,8 +445,7 @@ unlocked by REP, and some quests unlock REP.
   (2026-11-03: see G0D.exe in item 3; maybe the same thing.)
 
 ### Enemy and ally hackers (low: the user 2026-10-29, "we don't need any more"; the lore was great) (built v13.67: rivals, crew, CALL gear; see docs/PROGRESSION.md step 3)
-- **A consistency pass** (meat notes 2026-11-06): rivals and crew should look and act like b0y (his terminal-style
-  cursor lines), or have a reason not to. Details: section 4, "One b0y everywhere".
+- **The consistency pass: built v14.50** (SPEC version log): one cursor for everyone, b0y included; short chat in the tag.
 - **Still open:** special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM);
   COMPANION's pet; balance from play.
 - **From the user's iPhone notes (meat notes 2026-10-30):** hacker names: **s3iz**, **alpha haxor**, **kupreg**,
@@ -530,7 +524,7 @@ unlocked by REP, and some quests unlock REP.
   - **Send a seed to a friend.**
   - **The training sim** may need a little redesign.
   - **Pull greglytics into its own repo**, like asXii (below).
-  - **The high score font** (meat notes 2026-11-06, later): Greg doesn't like it. Use the workbench's 3x3 letters instead.
+  - **The high score font: built v14.50**: the initials use the workbench's big letters.
 - **Bug: a stray `[` in a replayed cutscene** (meat notes 2026-11-06, later): replaying cutscene 1 (SYSTEM FAILURE)
   from the QUESTS tab leaves a `[` near the top left. It's the edge of the board's [you] button: the cutscene covers
   the page under it but misses that edge.

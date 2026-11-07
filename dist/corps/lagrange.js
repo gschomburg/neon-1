@@ -1,6 +1,6 @@
 // NeoN+1 corps/lagrange.js
 'use strict';
-NEON_FILES.push(['corps/lagrange.js', 'v14.49']);
+NEON_FILES.push(['corps/lagrange.js', 'v14.50']);
 // Its boss mod: PRECOG (precog), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

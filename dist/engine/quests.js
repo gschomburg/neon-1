@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v14.49']);
+NEON_FILES.push(['engine/quests.js', 'v14.50']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -147,14 +147,14 @@ function questRunStart(run) {
   }
   if (!questRun() || questOf('pops').step !== 'raid' || !hkCrewOn('b0y')) return;
   run.boyTray = true;   // b0y rides in the tray ([b]) until you clear the sector (Greg, 2026-11-06; was a CALL b0y stack: engine/heaven.js boyTrayCall)
-  const q = questOf('pops'); if (!q.raidCalled) { q.raidCalled = true; persist(); setTimeout(() => queueCall('b0y', QUEST_LINES.raid), 2500); }
+  const q = questOf('pops'); if (!q.raidCalled) { q.raidCalled = true; persist(); setTimeout(() => queueCall('b0y', QUEST_LINES.raid, null, boyTrayHint), 2500); }   // (then the hint: his [b])
 }
 
 // The words (QUEST_INFO, QUEST_LINES, QUEST_SCENES) live in data/quests.js.
 
 // ---------------- The CALL box ----------------
 const CALL_QUEUE = [];
-function queueCall(who, lines, btn = null) { CALL_QUEUE.push({ who, lines, btn }); }
+function queueCall(who, lines, btn = null, onClose = null) { CALL_QUEUE.push({ who, lines, btn, onClose }); }   // (onClose: put away without a button)
 // A QUEST card (the call box, no face): the quest's name, the step you're on now, its goal (and seed).
 function questCard(id) {
   const info = QUEST_INFO[id], v = questView(id);

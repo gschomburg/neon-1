@@ -1,7 +1,7 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v14.49']);
+NEON_FILES.push(['engine/feats.js', 'v14.50']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
@@ -144,7 +144,7 @@ function featNews(f) {
   }
 }
 const featCalm = () => !st.ad && !st.evCard && !st.dev && !st.mp && !st.boot && !st.transitioning && !st.wipe && !st.dying && !st.hideAll
-  && !(st.tut && (st.tut.pop || st.tut.curtain)) && st.mode !== 'play' && !(st.run && st.run.tutorial && !st.run.ended)
+  && !(st.tut && (st.tut.pop || st.tut.curtain)) && !(st.hint && st.hint.pop) && st.mode !== 'play' && !(st.run && st.run.tutorial && !st.run.ended)
   && !(st.panelReveal && !st.panelReveal.done) && !(st.mode === 'map' && st.mapView && st.mapView.row !== st.mapView.target)
   && !st.intro && !st.bossIntro && !(st.mode === 'fish' && st.fish && (st.fish.hook || st.fish.reel || st.fish.card));   // (the PIER: between casts)
 // Each frame (engine/scene.js): open the box when there's news and it's calm.

@@ -23,7 +23,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.49']);
+NEON_FILES.push(['data/quests.js', 'v14.50']);
 
 const QUEST_INFO = {
   pops: {
@@ -74,6 +74,8 @@ const QUEST_LINES = {
   traced: ["you got it out. good.", "i ran the name. i got a hit.", "come by. now."],
   // OMNI RAID: b0y, once he's on your crew (each run while the step is on: you start with his CALL)
   raid: ["it's me. b0y.", "it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in."],
+  // ...and right after that call, a popup like the training's, in his blue, its arrow on his [b] (engine/heaven.js boyTrayHint)
+  raidHint: ["that's me, down there. in a corp, tap [b] and i'm in. once a corp."],
 };
 
 // A scene's music (the user, 2026-11-04): its song, and a new pick of level and stage every step ms from the frame's mood

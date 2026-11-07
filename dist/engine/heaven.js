@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.49']);
+NEON_FILES.push(['engine/heaven.js', 'v14.50']);
 
 const HEAVEN = {};
 
@@ -121,8 +121,9 @@ HEAVEN.maze = {
     const words = ['prompt', 'diamond', 'the cross', 'storage unit', 'uplink', 'the watcher'];   // (his tags name the glyphs now: the terminal just says what is next)
     return { text: c.maze.lost ? '> b0y: hm. not sure about this.' : '> b0y: ' + words[c.maze.path] + ' next.', col: G0DF_BLUE };
   },
-  // b0y in the maze: two cursors on the nodes' top right corners (the one you're after among them), they come together on
-  // it; he hides when he's resting. (G0DF.boy off: no b0y.)
+  // b0y in the maze: two cursors on nodes (the one you're after among them), a v over each, the glyph's name in his tag;
+  // they come together on it; he hides when he's resting. (G0DF.boy off: no b0y.) His cursor is the hackers' one
+  // (engine/hackers.js drawHkCursor; Greg, 2026-11-06), on the node's bottom edge, not its middle like theirs.
   overlay(ctx, lv, now) {
     const c = st.corp;
     if (!G0DF.boy || !c || !c.maze || !lv) return;
@@ -130,14 +131,17 @@ HEAVEN.maze = {
     if (st.busy || lv.tiles.some(t => t.state === 'safe')) { c.boy = null; return; }   // a node's been taken: he clears out (the next layer starts him fresh)
     if (!c.boy || c.boyLv !== lv) { c.boy = g0dfBoyNew(); c.boy.until = now + 300; c.boyLv = lv; }
     const dt = Math.min(0.05, (now - (c.boyLast || now)) / 1000); c.boyLast = now;
-    const corner = t => { const o = tileOrigin(t); return { x: o.tx + TILE_W - 1, y: o.ty - 1, name: g0dfGlyphName(t.glyph) }; };   // over the corner; the glyph name on his tag
+    const corner = t => { const o = tileOrigin(t); return { x: o.tx + 3, y: o.ty + TILE_H - 1, t, name: g0dfGlyphName(t.glyph) }; };   // on the node's bottom edge (the glyph is the clue: he doesn't cover it); the glyph name on his tag
     const open = lv.tiles.filter(t => t.state === 'closed'), real = lv.tiles[lv.safe];
     g0dfBoyTick({ boy: c.boy }, now, dt, { right: !c.maze.lost && real && real.state === 'closed' ? corner(real) : null, others: open.filter(t => t !== real).map(corner) });
     const b = c.boy;
     if (b.phase === 'rest' || (b.phase === 'hold' && now > b.until - 900)) return;   // resting: hidden
-    b.curs.slice(0, 2).forEach((cu, i) => {
-      const dy = Math.abs(cu.x - cu.tx) < 0.5 ? g0dfBoyBob(now, i) : 0, x = Math.round(cu.x), y = Math.round(cu.y);   // (just the v slides)
-      g0dfBoyMark(ctx.put, ctx.bg, x, y, cu.tag, true, dy);
+    const two = b.curs.slice(0, 2);
+    two.forEach((cu, i) => {
+      if (i > 0 && Math.abs(cu.x - two[0].x) < 0.7 && Math.abs(cu.y - two[0].y) < 0.7) return;   // (together on one node: one cursor)
+      drawHkCursor(ctx.put, ctx.bg, Math.round(cu.x - 1), Math.round(cu.y), 'b0y', { say: cu.tag || null });
+      const settled = Math.abs(cu.x - cu.tx) < 0.5 && Math.abs(cu.y - cu.ty) < 0.5;
+      if (settled && cu.at && cu.at.t && cu.at.t.state === 'closed') { const o = tileOrigin(cu.at.t); drawHkPoint(ctx.put, ctx.bg, o.tx + 3, o.ty - 1, 'b0y', now, i); }
     });
   },
   rules: () => 'follow the codex. every node is a perfect.',
@@ -900,7 +904,7 @@ function moldOverlay(cells, now, bgs) {
     if (e > MOLD_FX.wipe) m.wipe = null;
     else {
       // (the user's playtest: it could be better) it opens to just short of the corners: his blue edge holds the mold
-      // there, trembling, his marks on it (engine/g0dfight.js g0dfBoyMark's look)
+      // there, trembling, his cursors on it (engine/hackers.js drawHkCursor)
       const k = Math.min(1, e / 500) * (e > MOLD_FX.wipe - 700 ? (MOLD_FX.wipe - e) / 700 : 1), Rw = k * Math.hypot(W / 4.4, L.gh / 2) * 0.86 + Math.sin(now / 90) * 0.15, cx = (W - 1) / 2, cy = y0 + L.gh / 2;
       const dOf = (x, y) => Math.hypot((x - cx) / 2.2, y - cy) + hs(x * 1.7 + y * 9.1) * 1.5;
       for (const key of [...cover.keys()]) { const [x, y] = key.split(',').map(Number); if (dOf(x, y) < Rw) cover.delete(key); }
@@ -924,15 +928,14 @@ function moldOverlay(cells, now, bgs) {
     if (onRim) rim.push([x, y]);
     out.push({ ch: g0dfMoldGlyph(th, x, y, now), cx: x, cy: y, col: onRim ? G0DF_BLUE : g0dfMoldCol(th, lvl === 'heavy' ? 1 : 0), own: 'fx', bold: onRim });
   }
-  if (rim.length > 4 && bgs) {   // b0y's marks on his edge: one up at the top left (his tag), one down at the bottom right
+  if (rim.length > 4 && bgs) {   // b0y's cursors on his edge (the hackers' cursor: engine/hackers.js): one up at the top left ("hold"), one down at the bottom right
     const by = f => rim.reduce((a, c) => (f(c) < f(a) ? c : a));
-    const marks = [[by(c => c[0] + 2.2 * (c[1] - y0)), 'hold'], [by(c => -(c[0] + 2.2 * (c[1] - y0))), '']];
-    for (const [[x, y], tag] of marks) {
-      const put = (cx, ch, col) => { const i = out.findIndex(c => Math.round(c.cx) === cx && Math.round(c.cy) === y); if (i >= 0) out.splice(i, 1); out.push({ ch, cx, cy: y, col, own: 'fx', bold: true }); };
-      bgs.push({ cx: x, cy: y, w: 1, col: G0DF_BLUE, alpha: 1 }); put(x, ':', C.bg);
-      if (tag) { const w = tag.length + 2, tx = x + 1 + w > W ? x - w : x + 1; bgs.push({ cx: tx, cy: y, w, col: G0DF_BLUE, alpha: 1 }); for (let q = 0; q < w; q++) put(tx + q, q === 0 || q === w - 1 ? ' ' : tag[q - 1], C.bg); }
-    }
+    const marks = [[by(c => c[0] + 2.2 * (c[1] - y0)), 'hold'], [by(c => -(c[0] + 2.2 * (c[1] - y0))), null]];
+    const put = (x, y, str, col, own, bold) => { str = String(str); for (let k = 0; k < str.length; k++) { const cx = x + k, i = out.findIndex(c => Math.round(c.cx) === cx && Math.round(c.cy) === y); if (i >= 0) out.splice(i, 1); out.push({ ch: str[k], cx, cy: y, col, own: 'fx', bold }); } };
+    const bg = (x, y, w, col, alpha) => bgs.push({ cx: x, cy: y, w, col, alpha });
+    for (const [[x, y], say] of marks) drawHkCursor(put, bg, clamp(x - 1, 0, W - 3), y, 'b0y', say ? { say } : { tag: false });   // (the bottom one: no tag, it would hang off the board)
   }
+
   return out;
 }
 // Dig the deep mold at a cell (screen x, y): true if there was mold there to break
@@ -969,6 +972,12 @@ function boyTrayCall() {
   if (c.boyTrayUsed) { Sound.deny(); return setMsg("> b0y: lost the signal. next corp.", G0DF_BLUE); }
   c.boyTrayUsed = true; Sound.ping(1175);
   hkSpawn('b0y', 'call');
+}
+// The OMNI RAID's first call puts away to a hint (Greg, 2026-11-06): the training's popup, in his blue, its arrow on [b].
+const BOY_HINT_COL = { tag: '#4aa8ff', ink: '#06162e', hint: '#1d4f8a', shadow: 'rgba(0,0,0,0.55)' };   // (his colors: data/hackers.js b0y style)
+function boyTrayHint() {
+  if (!boyTrayOn()) return;
+  showHint({ target: { btn: 'b0y' }, col: BOY_HINT_COL, face: 'b0y', name: 'b0y', text: QUEST_LINES.raidHint.join(' '), at: 'above' });
 }
 function buildBoyBtn(ctx, y) {
   if (!(boyOn() || boyTrayOn()) || st.mode === 'title' || st.mode === 'over' || st.mp) return;

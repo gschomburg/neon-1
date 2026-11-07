@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.49']);
+NEON_FILES.push(['engine/input.js', 'v14.50']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -182,6 +182,7 @@ cv.addEventListener('pointerdown', e => {
   let h = hitAt(...ptXY(e));
   if (st.mode === 'g0df' && !st.pause && !st.dev && !st.wipe && !(h && h.kind === 'btn')) { const [px, py] = ptXY(e); if (g0dfTap((px - L.ox) / L.cw, (py - L.oy) / L.chh)) return; }   // the G0D prototype takes board taps
   if (st.tut && st.tut.pop && !st.pause && !st.dev && tutTap(h)) return;   // the training run's popup (POPS)
+  if (st.hint && st.hint.pop && !st.pause && !st.dev && hintTap(h)) return;   // a hint (b0y's [b]: engine/tutorial.js showHint)
   if (h && h.kind === 'tile' && upsideMirror()) {   // UPSIDE boss: it lands on the mirrored node (the one lit up as you point)
     h = { kind: 'tile', i: upsideLand(st.lv, h.i) };   // (its own node when the mirror can't take it)
   }
@@ -332,6 +333,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   if ((st.transitioning || st.wipe) && !(st.tut && st.tut.curtain)) return;   // (the training's opening is a held wipe: its popups still take keys)
+  if (st.hint && st.hint.pop && !st.dev && !st.pause && (k === 'enter' || k === ' ')) { hintTap(null); return; }   // a hint (engine/tutorial.js showHint)
   if (st.tut && st.tut.pop && st.tut.pop.ok && !st.dev && !st.pause) { if (k === 'enter' || k === ' ') tutDismiss(); return; }   // (the curtain: see above)   // the training run's popup
   const overlay = st.dev || st.pause;
   if (!overlay) {

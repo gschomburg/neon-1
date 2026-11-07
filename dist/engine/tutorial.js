@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v14.49']);
+NEON_FILES.push(['engine/tutorial.js', 'v14.50']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -472,8 +472,9 @@ function drawTutorial(now) {
   }
 }
 // The yellow under-layer and fill: a dark drop shadow, or a yellow line along the right and bottom.
-function tutBack(x, y, w, h, k) {
-  const col = TUT.col, o = 4 * k;
+// (col: a popup's own colors, like TUT.col: b0y's hint in his blue, showHint below)
+function tutBack(x, y, w, h, k, col = TUT.col) {
+  const o = 4 * k;
   if (TUT.style === 'stroke') {
     g.strokeStyle = col.tag; g.lineWidth = 1.5 * k; g.lineJoin = 'miter';
     g.beginPath(); g.moveTo(x + w, y + o); g.lineTo(x + w + o, y + o); g.lineTo(x + w + o, y + h + o); g.lineTo(x + o, y + h + o); g.lineTo(x + o, y + h); g.stroke();
@@ -481,22 +482,22 @@ function tutBack(x, y, w, h, k) {
   g.fillStyle = col.tag; g.fillRect(x, y, w, h);
 }
 // His face: a dark chip with a yellow line and a dark gap outside it, centered on (cx, cy).
-function tutDrawFace(cx, cy, s, k) {
+function tutDrawFace(cx, cy, s, k, col = TUT.col, face = 'pops') {
   if (s <= 0) return;
-  const col = TUT.col, F = tutFace(k);
+  const F = tutFace(k);
   g.save();
   g.translate(cx, cy); g.scale(s, s);
   g.fillStyle = col.ink; g.fillRect(-F.w / 2 - 3 * k, -F.h / 2 - 3 * k, F.w + 6 * k, F.h + 6 * k);
   g.fillStyle = col.tag; g.fillRect(-F.w / 2 - 1 * k, -F.h / 2 - 1 * k, F.w + 2 * k, F.h + 2 * k);
   g.fillStyle = col.ink; g.fillRect(-F.w / 2, -F.h / 2, F.w, F.h);
   g.font = `400 ${F.fs}px ${FONT}`; g.fillStyle = col.tag; g.textAlign = 'center'; g.textBaseline = 'middle';
-  ((typeof ART_FACES !== 'undefined' && ART_FACES.pops && ART_FACES.pops.art) || TUT.face).forEach((ln, i) => g.fillText(ln, 0, (i - 1) * 1.12 * F.fs));
+  ((typeof ART_FACES !== 'undefined' && ART_FACES[face] && ART_FACES[face].art) || TUT.face).forEach((ln, i) => g.fillText(ln, 0, (i - 1) * 1.12 * F.fs));
   g.restore();
 }
 const tutPopIn = u => (u < 0.6 ? 1.25 * (u / 0.6) : 1.25 - 0.25 * (u - 0.6) / 0.4);   // his pop: overshoot, settle
 
 function drawTutPop(T, p, now, te) {
-  const l = p.lay, A = TUT.anim, col = TUT.col, k = l.k, out = te >= 0;
+  const l = p.lay, A = TUT.anim, col = p.col || TUT.col, k = l.k, out = te >= 0;   // (p.col, p.face, p.name: a hint's own: showHint)
   const t = now - p.t0;
   const nud = !out && T.nudge && now - T.nudge < 300 ? Math.sin((now - T.nudge) / 25) * 4 * k : 0;   // a wrong tap: it shakes
   g.save();
@@ -525,14 +526,14 @@ function drawTutPop(T, p, now, te) {
       g.globalAlpha = 1;
     }
     if (w > 1) {
-      tutBack(P.x + nud, P.y, w, P.h, k);
+      tutBack(P.x + nud, P.y, w, P.h, k, col);
       g.save(); g.beginPath(); g.rect(P.x + nud, P.y, w, P.h); g.clip();
       g.font = `800 ${l.fs}px ${FONT}`; g.fillStyle = col.ink; g.textAlign = 'left';
       g.fillText(label, P.x + nud + 10 * k, P.y + P.h / 2);
       g.restore();
     }
     const F = tutFace(k);
-    tutDrawFace(l.fx + F.w / 2 + nud, l.fy + F.h / 2 + bob, faceS, k);
+    tutDrawFace(l.fx + F.w / 2 + nud, l.fy + F.h / 2 + bob, faceS, k, col, p.face);
     g.restore();
     return;
   }
@@ -574,7 +575,7 @@ function drawTutPop(T, p, now, te) {
     let hgt = l.pad;
     for (let i = 0; i < shown; i++) hgt += l.rows[i].h;
     if (shown === n) hgt = l.H;
-    tutBack(x, y, l.W, hgt, k);
+    tutBack(x, y, l.W, hgt, k, col);
     const spaced = 'letterSpacing' in g;
     let ry = y + l.pad;
     for (let i = 0; i < shown; i++) {
@@ -582,7 +583,7 @@ function drawTutPop(T, p, now, te) {
       if (row.kind === 'name') {
         g.font = `800 ${10 * k}px ${FONT}`; g.fillStyle = col.ink; g.textAlign = 'left';
         if (spaced) g.letterSpacing = `${1.6 * k}px`;
-        g.fillText(TUT.name, x + 44 * k, ry + 6 * k);
+        g.fillText(p.name || TUT.name, x + 44 * k, ry + 6 * k);
         if (spaced) g.letterSpacing = '0px';
       } else if (row.kind === 'body') {
         g.font = `400 ${l.bodyFs}px ${FONT}`; g.fillStyle = col.ink; g.textAlign = 'left';
@@ -611,6 +612,40 @@ function drawTutPop(T, p, now, te) {
     }
   }
   const F = tutFace(k);
-  tutDrawFace(x - 10 * k + F.w / 2, y - 15 * k + F.h / 2 + faceDy, faceS, k);
+  tutDrawFace(x - 10 * k + F.w / 2, y - 15 * k + F.h / 2 + faceDy, faceS, k, col, p.face);
   g.restore();
+}
+
+// ---- Hints: a training-style popup in a normal run (Greg, 2026-11-06: b0y's [b] on the OMNI RAID)
+// One "ok" popup with its own colors, face and name (the same drawing as POPS's: drawTutPop), its arrow on a target
+// (tutRect: { btn: 'b0y' }...). Any tap or Enter puts it away; a tap on its target also goes through to the game.
+// st.hint: { pop, leaving } like st.tut. (Built in engine/scene.js, drawn in render.js, taps in input.js.)
+function showHint(pop) {
+  st.hint = { pop: Object.assign({ ok: true, t0: performance.now() }, pop), leaving: null };
+  Sound.talk();
+}
+function buildHint(ctx, now, under) {
+  const H = st.hint, p = H && H.pop;
+  if (!p) return;
+  const r = tutRect(p.target, under);
+  if (p.target && !r && now - p.t0 > 400) { st.hint = H.leaving ? { pop: null, leaving: H.leaving } : null; return; }   // its target's gone (a screen without it): no hint
+  p.lay = tutLayout(p, r);
+}
+function drawHint(now) {
+  const H = st.hint;
+  if (!H || st.dev || st.ad || st.wipe) return;
+  if (H.leaving) { const te = now - H.leaving.t0; if (te > tutExitMs(H.leaving.pop)) H.leaving = null; else drawTutPop(H, H.leaving.pop, now, te); }
+  if (H.pop && H.pop.lay) drawTutPop(H, H.pop, now, -1);
+  if (!H.pop && !H.leaving) st.hint = null;
+}
+// A tap (h: what's under it) or Enter / Space while a hint is up. True: the hint used it.
+function hintTap(h) {
+  const H = st.hint, p = H && H.pop;
+  if (!p || (h && h.kind === 'btn' && ['menu', 'snd'].includes(h.id))) return false;
+  const now = performance.now();
+  const onTarget = h && p.target && h.kind === 'btn' && h.id === p.target.btn;
+  if (!onTarget && tutSkip(p, now)) return true;
+  if (!onTarget && now - Math.max(p.t0 + tutTimes(p).done, p.shownAt || 0) < TUT.okDelay) return true;
+  tutClose(H); Sound.tick();
+  return !onTarget;
 }

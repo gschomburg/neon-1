@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v14.49']);
+NEON_FILES.push(['engine/render.js', 'v14.50']);
 
 // ---------------- Popup looks (the user, 2026-10-31) ----------------
 // Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
@@ -106,6 +106,7 @@ function render(now) {
   g.globalAlpha = 1;
   if (st.bench) benchKeys(now);   // the WORKBENCH keyboard: its own layer, over the bottom of the screen
   if (st.tut) drawTutorial(now);   // the training run's popup (POPS), over everything
+  if (st.hint) drawHint(now);   // a hint in a normal run (b0y's [b]: engine/tutorial.js showHint)
   const fk = (now - flashFx.t0) / 1000;
   if (fk < flashFx.dur) {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);

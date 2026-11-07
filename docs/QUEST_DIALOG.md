@@ -96,6 +96,10 @@ From POPS.
 > **POPS:** it's me. b0y.  
 > **POPS:** it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in.  
 
+**raidHint**
+
+> **POPS:** that's me, down there. in a corp, tap [b] and i'm in. once a corp.  
+
 ### Scenes
 
 #### G0D IS DOWN: H3AV3N (`h3av3n`)

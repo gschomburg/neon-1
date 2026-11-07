@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.49']);
+NEON_FILES.push(['engine/hackers.js', 'v14.50']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -119,8 +119,9 @@ const HK_TAG_MAX = 20;   // a chat line this short can go in their cursor's tag
 function hkSay(h, text, last = false, chat = false) {
   if (!text || (h.out && !last)) return;   // out is out: a late line (a timer, a hook) doesn't get through
   const now = performance.now();
-  // (the user, 2026-10-31: the crew and rivals catch up to b0y) a short chat line, half the time: in their cursor's tag
-  if (chat && st.lv && text.length <= HK_TAG_MAX && Math.random() < 0.5) { const s = hkS(st.lv, h); s.bubble = { text, until: now + HK_MSG.chat }; s.faceAt = now; return; }
+  // (the user, 2026-10-31: the crew and rivals catch up to b0y) a short chat line goes in their cursor's tag, like b0y's
+  // (Greg, 2026-11-06: always; it was half the time). Longer ones go to the terminal.
+  if (chat && st.lv && text.length <= HK_TAG_MAX) { const s = hkS(st.lv, h); s.bubble = { text, until: now + HK_MSG.chat }; s.faceAt = now; return; }
   if (chat && !st.msgChat && st.msg && now - st.msgT < HK_MSG.fresh) return;
   const was = st.msgChat ? st.msgChat.was : { msg: st.msg, col: st.msgCol, ink: st.msgInk, lv: st.lv };
   const sty = hkStyle(h.id);
@@ -607,6 +608,35 @@ function hkStamp(ctx, y, id, w, age, every = 70, covered = () => false, word = '
   return n;
 }
 
+// ---------------- A hacker's cursor ----------------
+// One look for everyone: rivals, crew and b0y (Greg, 2026-11-06). Their mark on their colors (3 cells at x, y), and
+// their tag under it: their name while they're quiet, or what they're saying, inverted (their colors swapped: b0y's
+// blue with dark letters). The tag stays on the screen. Used by buildHackers, and by b0y in H3AV3N (the maze, the
+// M0LD's hold: engine/heaven.js) and the G0D fight (engine/g0dfight.js): change the look here, for all of them.
+// opts: say (their words, or null), tag: false (no tag: b0y's extra cursors).
+const hkTagText = (id, say) => say ? ' ' + say + ' ' : hkName(id).toLowerCase().slice(0, 8);
+function hkCursorCells(x, y, id, opts = {}) {
+  const out = [[x, y], [x + 1, y], [x + 2, y]];
+  if (opts.tag === false) return out;
+  const tag = hkTagText(id, opts.say), tx = clamp(x, 0, Math.max(0, L.wc - tag.length));
+  for (let k = 0; k < tag.length; k++) out.push([tx + k, y + 1]);
+  return out;
+}
+function drawHkCursor(put, bg, x, y, id, opts = {}) {
+  const sty = hkStyle(id);
+  bg(x, y, 3, sty.bg, 1); put(x, y, logoMark(id), sty.fg, 'fx', true);
+  if (opts.tag === false) return;
+  const tag = hkTagText(id, opts.say), tx = clamp(x, 0, Math.max(0, L.wc - tag.length));
+  if (opts.say) { bg(tx, y + 1, tag.length, sty.fg, 1); put(tx, y + 1, tag, sty.bg, 'fx', true); }
+  else { bg(tx, y + 1, tag.length, sty.bg, 0.8); put(tx, y + 1, tag, sty.fg, 'fx'); }
+}
+// Pointing: their v over what they mean (a node's top), sliding half a cell down and back (i: out of step with the others).
+const hkBob = (now, i = 0) => 0.25 * (1 - Math.cos((now + i * 170) / 520 * Math.PI * 2));   // 0 .. 0.5 of a cell
+function drawHkPoint(put, bg, x, y, id, now, i = 0) {
+  const sty = hkStyle(id), dy = hkBob(now, i);
+  bg(x, y + dy, 1, sty.bg, 1); put(x, y + dy, 'v', sty.fg, 'fx', true);
+}
+
 // ---------------- On the board ----------------
 // Cursors (the full mark on their colors, the name under it), faces when they talk, emote covers, denied nodes,
 // fire, tape. (engine/board.js, after the board)
@@ -633,21 +663,17 @@ function buildHackers(ctx, lv, now) {
       const hx = Math.round(x + ox * s.spread), hy = Math.round((y + oy * s.spread + Math.sin(now / 240 + i * 2.1) * 0.4 * s.spread) * 2) / 2;
       bg(hx, hy, 3, sty.bg, 0.8); put(hx, hy, mark, mixHex(sty.fg, sty.bg, 0.3), 'fx', true);
     });
-    if (hkDef(h.id).split && s.sp) for (const p of s.sp) {   // b0y's other cursors (one with the main one: hidden), a v over their node
+    if (hkDef(h.id).split && s.sp) for (const [i, p] of s.sp.entries()) {   // b0y's other cursors (one with the main one: hidden), a v over their node
       if (Math.abs(p.x - s.cur.x) < 0.7 && Math.abs(p.y - s.cur.y) < 0.7) continue;
-      const hx = Math.round(p.x - 1), hy = Math.round(p.y);
-      bg(hx, hy, 3, sty.bg, 1); put(hx, hy, mark, sty.fg, 'fx', true);
-      if (p.t && p.t.state === 'closed') { const o = tileOrigin(p.t); bg(o.tx + 3, o.ty - 1, 1, sty.bg, 1); put(o.tx + 3, o.ty - 1, 'v', sty.fg, 'fx', true); }
+      drawHkCursor(put, bg, Math.round(p.x - 1), Math.round(p.y), h.id, { tag: false });
+      if (p.t && p.t.state === 'closed') { const o = tileOrigin(p.t); drawHkPoint(put, bg, o.tx + 3, o.ty - 1, h.id, now, i + 1); }
     }
-    bg(x, y, 3, sty.bg, 1); put(x, y, mark, sty.fg, 'fx', true);
-    // their tag: their name, or what they're saying (a chat line in the cursor, like b0y's); kept on the screen
-    const talking = s.bubble && now < s.bubble.until, tag = talking ? ' ' + s.bubble.text + ' ' : hkName(h.id).toLowerCase().slice(0, 8);
-    const tx = clamp(x, 0, Math.max(0, L.wc - tag.length));
-    bg(tx, y + 1, tag.length, sty.bg, talking ? 1 : 0.8); put(tx, y + 1, tag, sty.fg, 'fx', talking);
+    // their cursor, and their tag under it: their name, or what they're saying (a chat line in the cursor, like b0y's)
+    drawHkCursor(put, bg, x, y, h.id, { say: s.bubble && now < s.bubble.until ? s.bubble.text : null });
     // pointing: while they aim at a node, a v of theirs bobs over it (where their tap is going)
     if (s.aim && s.aim.t && s.aim.t.state === 'closed' && now < s.aim.at) {
       const o = tileOrigin(s.aim.t);
-      bg(o.tx + 3, o.ty - 1, 1, sty.bg, 1); put(o.tx + 3, o.ty - 1, 'v', sty.fg, 'fx', true);
+      drawHkPoint(put, bg, o.tx + 3, o.ty - 1, h.id, now);
     }
     if (s.faceAt && now - s.faceAt < 1600) {   // talking: the face bounces up above the cursor
       const f = (ART_FACES[h.id] || { art: [] }).art, hop = Math.round(Math.abs(Math.sin((now - s.faceAt) / 120)) * 1);
