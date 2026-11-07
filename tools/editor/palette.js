@@ -85,6 +85,11 @@
     scene = name;
     $('#sceneSel').value = name;
     if (!gameReady) return;
+    const jump = JUMPS[name];
+    if (jump) {   // a place in a quest: the testing / g0d tabs' own jumps (engine/editor.js TEST)
+      $('#scenestate').textContent = `going to: ${$('#sceneSel').selectedOptions[0].textContent}...`;
+      return toGame(Object.assign({ type: 'test' }, jump));
+    }
     const corp = $('#corpsel').value === 'auto' ? corpOf(sel) : $('#corpsel').value;
     $('#scenestate').textContent = `setting up: ${name}${['layer', 'hit', 'boss'].includes(name) ? ' (' + corp + ')' : ''}...`;
     toGame({ type: 'scene', name, opts: { corp } });
@@ -102,9 +107,23 @@
   });
   function loadGame() { gameReady = false; $('#scenestate').textContent = 'loading the game...'; frame.src = '../dist/index.html?editor=1&t=' + Date.now(); }
 
-  const SCENES = [['title', 'title'], ['intro', 'intro'], ['map', 'map'], ['layer', 'layer'], ['hit', 'a miss'], ['boss', 'boss'], ['shop', 'shop'], ['sectorboss', 'sector boss'], ['sectorclear', 'sector clear'], ['uplink', 'uplink'], ['help', 'how to play'], ['codex', 'codex'], ['settings', 'settings'], ['profile', 'profile']];
-  // the screen picker: picking one shows it; go sets it up again (a fresh copy of the same screen)
-  for (const [k, label] of SCENES) $('#sceneSel').append(new Option(label, k));
+  // The screen picker, in groups. A plain key is a scene (engine/editor.js SCENES); a key in JUMPS is a test act
+  // (engine/editor.js TEST, the same ones the testing and g0d tabs send). Picking one goes there; go goes again, fresh.
+  const SCENES = [
+    ['menus', [['title', 'title'], ['intro', 'intro'], ['help', 'how to play'], ['codex', 'codex'], ['settings', 'settings'], ['profile', 'profile'], ['board', 'the board']]],
+    ['a run', [['map', 'map'], ['layer', 'layer'], ['hit', 'a miss'], ['boss', 'boss'], ['shop', 'shop'], ['j:bench', 'safehouse + bench'], ['j:pier', 'pier (fishing)'], ['sectorboss', 'sector boss'], ['sectorclear', 'sector clear'], ['uplink', 'uplink']]],
+    ['quests: HAD3S', [['j:had3s', 'HAD3S run'], ['j:myconet', 'MYCONET (boss 1)'], ['j:cerberus', 'CERBERUS (boss 2)']]],
+    ['quests: heaven', [['j:b0yomni', 'OMNI with b0y'], ['j:h3av3n', 'H3AV3N run'], ['j:hv-map', 'heaven map'], ['j:hv-maze', 'the maze'], ['j:hv-fight', 'G0D fight'], ['j:hv-die', 'G0D dies'], ['j:hv-fake', 'fake win'], ['j:hv-stand', 'final stand'], ['j:hv-end', 'the collapse']]],
+  ];
+  const JUMPS = {};
+  for (const a of ['bench', 'pier', 'had3s', 'myconet', 'cerberus', 'b0yomni', 'h3av3n']) JUMPS['j:' + a] = { act: a };
+  for (const w of ['map', 'maze', 'fight', 'die', 'fake', 'stand', 'end']) JUMPS['j:hv-' + w] = { act: 'heaven', where: w };
+  onGame('test-done', m => { const j = JUMPS[scene]; if (j && m.act === j.act) $('#scenestate').textContent = m.ok ? 'there: ' + $('#sceneSel').selectedOptions[0].textContent : `${m.act} failed: ${m.error}`; });
+  for (const [group, list] of SCENES) {
+    const og = el('optgroup', { label: group });
+    for (const [k, label] of list) og.append(new Option(label, k));
+    $('#sceneSel').append(og);
+  }
   $('#sceneSel').onchange = () => runScene($('#sceneSel').value);
   $('#sceneGo').onclick = () => runScene($('#sceneSel').value);
   function fillCorps() {
