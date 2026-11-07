@@ -305,7 +305,8 @@ unlocked by REP, and some quests unlock REP.
 ## Medium and small
 - **If the C.A.R. confuses** (Greg, 2026-11-07: "i think it'll be fine", keep it as a potential fix): with the C.A.R.
   every node in the sector looks reachable, so the map doesn't show which moves are a drive. Fix if it comes up: draw the
-  drive-only nodes differently (dimmer, or a little car mark).- **The neon editor** (meat notes 2026-11-06): clean up the UI; terminal-style commands with autocomplete?; Justin's
+  drive-only nodes differently (dimmer, or a little car mark).
+- **The neon editor** (meat notes 2026-11-06): clean up the UI; terminal-style commands with autocomplete?; Justin's
   music track viewer in the music tab?
 - **Code cleanups left from the arch pass** (the user, 2026-11-05: "keep those all around so we can hit them when it makes sense"). Do each one with the feature that needs it, not on its own. Details: docs/ARCHITECTURE.md.
   - **One popup card (`drawCard`):** with the next new kind of popup.
