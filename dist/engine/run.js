@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.56']);
+NEON_FILES.push(['engine/run.js', 'v14.57']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -663,7 +663,7 @@ async function pick(i) {
   if (hkDenied(t)) return;   // SYSOP: ACCESS DENIED
   // ZOMBIE: weak taps. A node takes tapsToBreak() taps; the ones before the last only crack it
   // (the same for ICE and the real node: a crack never tells you which it is).
-  if (zombie() && st.corp && st.corp.hasBoss && !st.corp.def.pattern) {   // (SIMON: a tap is a step, not a crack)
+  if (zombie() && st.corp && st.corp.hasBoss && !st.corp.def.pattern && !st.corp.def.doors) {   // (SIMON, MONTY: a tap is a step or a pick, not a crack)
     const need = tapsToBreak();
     if ((t.cracks || 0) + 1 < need) {
       t.cracks = (t.cracks || 0) + 1; t.crackAt = performance.now();

@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.56']);
+NEON_FILES.push(['engine/active.js', 'v14.57']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -139,6 +139,11 @@ const BOSS_GEAR = {
     why: () => 'no ICE for the bees.',
     use(lv) { st.corp.bees = true; beeSwarm(lv, 3); },
   },
+  shovel: {
+    ok: lv => !!trench(lv),
+    why: () => 'nowhere to dig.',
+    use(lv) { const ts = trench(lv); for (const t of ts) t.ruledOut = true; Sound.shatter(); shake(4); setMsg(`> shovel: a trench. ${ts.length} ICE ruled out.`, C.accent); },
+  },
   // REPEAT (SIMON's): 3 nodes and then the real one flash in turn, each with its tone (drawn by engine/board.js, lv.flashSeq)
   repeat: {
     ok: lv => lv.n > 1 && lv.tiles[lv.safe].state === 'closed' && !lv.flashSeq,
@@ -151,6 +156,14 @@ const BOSS_GEAR = {
     },
   },
 };
+// SHOVEL (FOSSIL's): the row or column with the most ICE that doesn't hold the real node
+function trench(lv) {
+  const real = lv.tiles[lv.safe], ice = lv.tiles.filter(t => t.state === 'closed' && !t.safe && !t.ruledOut);
+  let best = null;
+  for (let c = 0; c < lv.cols; c++) if (c !== real.col) { const n = ice.filter(t => t.col === c); if (n.length && (!best || n.length > best.length)) best = n; }
+  for (let r = 0; r < lv.rows; r++) if (r !== real.row) { const n = ice.filter(t => t.row === r); if (n.length && (!best || n.length > best.length)) best = n; }
+  return best;
+}
 // REPEAT's flash: is node t lit right now? (engine/board.js; the sequence ends on its own)
 function flashLit(lv, t, now) {
   const F = lv.flashSeq;

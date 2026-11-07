@@ -89,5 +89,6 @@ These work, but each is engine code for one corp (docs/ARCHITECTURE.md: a genera
 | `drag` | hot and cold corps | taps by dragging |
 | `moves` | moving corps | nodes move (ANCHOR stops them) |
 | `musicMax` | SIMON | the music's level never goes above this (engine/boot.js) |
+| `doors` | MONTY | the first tap picks a door: ICE EATER is off (MOD_OFF), ZOMBIE's weak taps don't crack |
 | `pattern` | SIMON | taps play a pattern back: ICE EATER is off (MOD_OFF), ZOMBIE's weak taps don't crack |
 | `marks` | | see Drawing |

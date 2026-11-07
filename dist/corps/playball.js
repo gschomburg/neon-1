@@ -1,6 +1,6 @@
 // NeoN+1 corps/playball.js
 'use strict';
-NEON_FILES.push(['corps/playball.js', 'v14.56']);
+NEON_FILES.push(['corps/playball.js', 'v14.57']);
 // Its boss mod: OVERTIME (overtime), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

@@ -210,11 +210,6 @@ unlocked by REP, and some quests unlock REP.
   is clean, and from sector 2 any event can show up.
 
 ### 7. New corps
-- **Next up: MONTY and FOSSIL** (designed with Greg 2026-11-07: docs/CORPS.md A32, A28). SIMON is built (v14.55).
-  - **MONTY** (the user, meat notes 2026-10-30): a corp of 16 doors (the Monty Hall problem): you choose one, it takes away every
-    door but yours and one other, and you choose again. (Claude: needs a twist that makes it skill, not luck.)
-  - **FOSSIL** (docs/CORPS.md A28): a dig site; taps brush a node's glyph in a bit at a time; uncover a regular glyph
-    (not a fossil) and it's ICE. Open: what brushing costs.
 - **A PSYCHO MANTIS boss** (the user, meat notes 2026-11-06; **Decided (Greg, 2026-11-06):** part of an end game quest,
   section 4): a boss that reaches outside the game: "unplug your internet", "open the inspector"? Talked through
   2026-11-06 (Greg: "i like the weird hard ones"):

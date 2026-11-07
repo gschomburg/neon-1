@@ -14,7 +14,7 @@ Each corp has:
   corp (SIGSCAN for Sigil, the clock mods for Chronos) should also matter in some other corps, so
   mods and corps cross over.
 
-`(built)` on a heading: it is in the game (dist/corps/). Not built yet (2026-10-26): A28 FOSSIL, A32 MONTY, A29 UNICORN, A30 MAGIC, A31 ALARMS, #49 the chain corp, #50 the case corp, #51 the stock market corp (also in BACKLOG.md).
+`(built)` on a heading: it is in the game (dist/corps/). Not built yet (2026-10-26): A29 UNICORN, A30 MAGIC, A31 ALARMS, #49 the chain corp, #50 the case corp, #51 the stock market corp (also in BACKLOG.md).
 `*` after a name marks something the user changed or asked for in the review. Names are parodies or
 made up, not real brands.
 
@@ -289,7 +289,7 @@ made up, not real brands.
   pick.
 - **Works with:** the clock mods.
 
-### A28. FOSSIL (dig site; "we've been around a long time") (the user, 2026-10-23; designed 2026-11-07)
+### A28. FOSSIL (dig site; "we've been around a long time") (the user, 2026-10-23; designed 2026-11-07) (built)
 - **Special:** digging for fossils. Every node starts buried. A tap brushes it: a bit more of its glyph shows.
 - **Tell:** some glyphs are the usual glyphs and some are fossils (bones). Read the bones from a half-dug glyph.
 - **Decided (Greg, 2026-11-07): the third brush commits.** Two brushes on a node are free and show 2/3 of its
@@ -298,7 +298,7 @@ made up, not real brands.
   one free brush.
 - **Boss:** one big skeleton spread across several nodes: find the skull.
 
-### A32. MONTY (16 doors, the Monty Hall problem) (the user, meat notes 2026-10-30; designed 2026-11-07)
+### A32. MONTY (16 doors, the Monty Hall problem) (the user, meat notes 2026-10-30; designed 2026-11-07) (built)
 - **Special:** you pick a door (it holds, it doesn't open). MONTY opens every other door but one (all ICE, no
   damage). Then you stay or switch.
 - **Decided (Greg, 2026-11-07): MONTY has a tell.** He isn't fair: when your first pick is the real door, he tries to

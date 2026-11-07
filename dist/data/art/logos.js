@@ -6,7 +6,7 @@
 // also the corp's intro art) or hacker (unlocked by beating that hacker), and the art: up to 24 x 7, shown in a
 // 24 x 7 box, centered.
 'use strict';
-NEON_FILES.push(['data/art/logos.js', 'v14.56']);
+NEON_FILES.push(['data/art/logos.js', 'v14.57']);
 
 const ART_LOGOS = [
   { id: 'skull', name: 'SKULL', mark: '{x}', kind: 'player', art: [
@@ -535,6 +535,22 @@ const ART_LOGOS = [
     '    |   |',
     '    \'---\'',
     'W A T C H P O I N T',
+  ] },
+  { id: 'monty', name: 'MONTY', mark: 'MY3', kind: 'corp', corp: 'monty', art: [
+    ' .---. .---. .---.',
+    ' | 1 | | 2 | | 3 |',
+    ' |   | | o | |   |',
+    ' \'---\' \'---\' \'---\'',
+    '  let\'s make a deal',
+    '      M O N T Y',
+  ] },
+  { id: 'fossil', name: 'FOSSIL', mark: 'FS3', kind: 'corp', corp: 'fossil', art: [
+    '        __',
+    '   ___/o  \\___',
+    '  /  ` ,  ,   \\~~',
+    ' /_/\\_/\\__/\\_/ ',
+    ' .,:;\'`~.,:;\'`~.,',
+    '    F O S S I L',
   ] },
   { id: 'aegis', name: 'AEGIS DEFENSE', mark: 'AE4', kind: 'corp', corp: 'aegis', art: [
     '.-------.',

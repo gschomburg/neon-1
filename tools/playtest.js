@@ -45,7 +45,7 @@ const PLAYER = `(async () => {
       const run = st.run, id = B.availableNodes().find(x => run.map[x].type === 'corp');
       Object.assign(run.map[id], { corp: key, tier: 1 }); delete run.map[id].mod;
       B.enterNode(run.map[id], true); await settle('enter');
-      for (let guard = 0; guard < 8 && st.mode === 'play' && st.corp && st.corp.def.key === key; guard++) {
+      for (let guard = 0; guard < 16 && st.mode === 'play' && st.corp && st.corp.def.key === key; guard++) {
         const lv = st.lv, c = st.corp;
         const hint = c.def.hint ? (() => { try { const h = c.def.hint(lv, performance.now()); return h ? h.text : ''; } catch (e) { return 'HINT ERROR ' + e.message; } })() : '';
         const L = { idx: c.idx, boss: !!lv.boss, n: lv.tiles.length };
@@ -61,7 +61,7 @@ const PLAYER = `(async () => {
           await B.pick(real); await settle('find');
         }
         rec.layers.push(L);
-        // corps with their own pick rules (FORM 27B, DEMOLITION...) can need more than one find
+        // corps with their own pick rules (FORM 27B, DEMOLITION...) can need more than one find (FOSSIL: three taps a node, so 16 rounds)
         await sleep(50);
       }
       rec.end = st.mode + (st.panelTitle ? ':' + st.panelTitle : '');

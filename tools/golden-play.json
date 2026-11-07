@@ -1075,7 +1075,7 @@
      "idx": 3,
      "boss": false,
      "n": 5,
-     "hint": "grid: nominal",
+     "hint": "!! brownout !!",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 5
     },
@@ -1352,7 +1352,7 @@
      "idx": 2,
      "boss": false,
      "n": 4,
-     "hint": "buffering \\",
+     "hint": "> now playing",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 4
     },
@@ -1466,7 +1466,7 @@
      "idx": 0,
      "boss": false,
      "n": 2,
-     "hint": "lift> floor 2 ^",
+     "hint": "lift> floor 3 ^",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 2
     },
@@ -1482,7 +1482,7 @@
      "idx": 2,
      "boss": false,
      "n": 4,
-     "hint": "lift> floor 2 v",
+     "hint": "lift> floor 1 ^",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 4
     },
@@ -1490,7 +1490,7 @@
      "idx": 3,
      "boss": false,
      "n": 5,
-     "hint": "lift> floor 2 ^",
+     "hint": "lift> floor 3 ^",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 5
     },
@@ -1511,7 +1511,7 @@
      "idx": 0,
      "boss": false,
      "n": 2,
-     "hint": "ALIENS LAND: BOTTOM ROW, COLUMN 3 ++",
+     "hint": " ALIENS LAND: BOTTOM ROW, COLUMN 3 +",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 2
     },
@@ -1859,7 +1859,7 @@
      "idx": 1,
      "boss": false,
      "n": 3,
-     "hint": "tempo> . . . O  126 bpm",
+     "hint": "tempo> . . . o  126 bpm",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 3
     },
@@ -1867,7 +1867,7 @@
      "idx": 2,
      "boss": false,
      "n": 4,
-     "hint": "tempo> . O . .  126 bpm",
+     "hint": "tempo> . o . .  126 bpm",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 4
     },
@@ -1875,7 +1875,7 @@
      "idx": 3,
      "boss": false,
      "n": 5,
-     "hint": "tempo> . . . O  126 bpm",
+     "hint": "tempo> . . . o  126 bpm",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 5
     },
@@ -2806,7 +2806,7 @@
      "idx": 0,
      "boss": false,
      "n": 2,
-     "hint": "@you 115 fol  eng 2.0%  ^",
+     "hint": "@you 116 fol  eng 2.6%  ^",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 2
     },
@@ -2814,7 +2814,7 @@
      "idx": 1,
      "boss": false,
      "n": 3,
-     "hint": "@you 215 fol  eng 8.0%  v",
+     "hint": "@you 215 fol  eng 7.4%  v",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 3
     },
@@ -2822,7 +2822,7 @@
      "idx": 2,
      "boss": false,
      "n": 4,
-     "hint": "@you 332 fol  eng 2.0%  ^",
+     "hint": "@you 330 fol  eng 2.7%  ^",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 4
     },
@@ -2830,7 +2830,7 @@
      "idx": 3,
      "boss": false,
      "n": 5,
-     "hint": "@you 486 fol  eng 8.0%  v",
+     "hint": "@you 488 fol  eng 7.3%  ^",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 5
     },
@@ -2838,7 +2838,7 @@
      "idx": 4,
      "boss": true,
      "n": 6,
-     "hint": "@you 758 fol  eng 8.9%  ^",
+     "hint": "@you 753 fol  eng 9.0%  ^",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 6
     }
@@ -3045,6 +3045,70 @@
      "hint": "lag> sending...",
      "missMsg": "> sent. it lands after the slide.",
      "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "lag> sending...",
+     "missMsg": "> sent. it lands after the slide.",
+     "after": 2
     }
    ],
    "end": "play:LAGRANGE NET"
@@ -3132,7 +3196,7 @@
      "idx": 4,
      "boss": true,
      "n": 6,
-     "hint": "FATAL: close this window",
+     "hint": "FATAL: runner.exe stopped",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 6
     }
@@ -3394,6 +3458,154 @@
      "boss": true,
      "n": 6,
      "missMsg": "> simon: *-_-_-_-_-_",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "monty": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "hint": "monty> pick a door.",
+     "missMsg": "> MONTY: the other door looks good.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "hint": "monty> pick a door.",
+     "missMsg": "> MONTY: are you SURE?",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "hint": "monty> pick a door.",
+     "missMsg": "> MONTY: stay or switch. up to you.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "hint": "monty> pick a door.",
+     "missMsg": "> MONTY: no pressure, kid.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "hint": "monty> pick a door.",
+     "missMsg": "> MONTY: are you sure.",
+     "after": 6
+    }
+   ],
+   "end": "panel:CORP BREACHED"
+  },
+  "fossil": {
+   "layers": [
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> brush. 1/3",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> brush. 2/3",
+     "after": 2
+    },
+    {
+     "idx": 0,
+     "boss": false,
+     "n": 2,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 2
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> brush. 1/3",
+     "after": 3
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> brush. 2/3",
+     "after": 3
+    },
+    {
+     "idx": 1,
+     "boss": false,
+     "n": 3,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 3
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> brush. 1/3",
+     "after": 4
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> brush. 2/3",
+     "after": 4
+    },
+    {
+     "idx": 2,
+     "boss": false,
+     "n": 4,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 4
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> brush. 1/3",
+     "after": 5
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> brush. 2/3",
+     "after": 5
+    },
+    {
+     "idx": 3,
+     "boss": false,
+     "n": 5,
+     "missMsg": "> ICE. god mode: no damage.",
+     "after": 5
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> brush. 1/2",
+     "after": 6
+    },
+    {
+     "idx": 4,
+     "boss": true,
+     "n": 6,
+     "missMsg": "> ICE. god mode: no damage.",
      "after": 6
     }
    ],

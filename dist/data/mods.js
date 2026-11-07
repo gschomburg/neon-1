@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.56']);
+NEON_FILES.push(['data/mods.js', 'v14.57']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -249,12 +249,16 @@ const ITEMS = {
     codex: 'flip it: what you have and what you are missing trade places. at 1 of 4 you are back to 3 of 4. at 3 of 4 you drop to 1. at full it won\'t go: that would kill you. with ZOMBIE: your rot flips instead (120 of 150 becomes 30).' },
   fake:   { key: 'fake',   name: 'FAKE',   price: 80, rarity: 'epic', desc: 'tap it, then a mod: that mod goes up a step, for good.', tip: '+1 step on a mod.',
     codex: 'fake it till you make it. tap it, then one of your mods: it goes up one rarity step for the rest of the run, as if you found it again. mods that can\'t go higher (corp mods, exotics, maxed ones) don\'t take it.' },
+  nuke:   { key: 'nuke',   name: 'NUKE',   price: 200, rarity: 'exotic', find: true, where: '$ nodes, caches. never in a market.', desc: 'in a corp: it\'s gone. it counts as beaten and the layers left pay half. not on a sector boss.', tip: 'breach the corp now.',
+    codex: 'the big one. in a corp, it ends it: the corp counts as beaten, the layers you didn\'t play pay half, and the boss still gives up its reward. sector bosses are too big to nuke. never sold: you find it, or you don\'t.' },
   // REPEAT (SIMON's boss gear, corps/simon.js): a short pattern, the last flash is the real node. Effect: engine/active.js BOSS_GEAR.
   repeat: { key: 'repeat', name: 'REPEAT', price: 50, rarity: 'legendary', corp: 'simon',
     desc: 'in a layer: 4 nodes flash one by one, each with a tone. the last one is the real node.', tip: 'the last flash is real.',
     codex: "in a layer: simon plays you a short pattern. 4 nodes flash one by one, each with its tone, and the last one is always the real node. it's quick: watch." },
-  nuke:   { key: 'nuke',   name: 'NUKE',   price: 200, rarity: 'exotic', find: true, where: '$ nodes, caches. never in a market.', desc: 'in a corp: it\'s gone. it counts as beaten and the layers left pay half. not on a sector boss.', tip: 'breach the corp now.',
-    codex: 'the big one. in a corp, it ends it: the corp counts as beaten, the layers you didn\'t play pay half, and the boss still gives up its reward. sector bosses are too big to nuke. never sold: you find it, or you don\'t.' },
+  // SHOVEL (FOSSIL's boss gear, corps/fossil.js): a trench. Effect: engine/active.js BOSS_GEAR.
+  shovel: { key: 'shovel', name: 'SHOVEL', price: 60, rarity: 'legendary', corp: 'fossil',
+    desc: "in a layer: dig a trench. the row or column with the most ICE (never the real node's) is ruled out.", tip: 'rule out a row or column.',
+    codex: "in a layer: dig a trench across the board. the row or column with the most ICE in it is ruled out. it never digs through the real node's row or column." },
 };
 const ITEM_WHERE = 'market, $ nodes, caches.';
 
@@ -439,4 +443,6 @@ const MODS = {
       { rarity: 'epic', tip: 'mostly sorted. nothing.', desc: 'mostly sorted. it does nothing yet. find more.' },
       { rarity: 'legendary', tip: 'almost. one more box.', desc: 'almost sorted. it does nothing yet. one more box.' },
       { rarity: 'exotic', tip: 'every sector wide open.', desc: 'wired: every node in every sector is open, the rest of the run. any node, any order, the boss too.' }] },
+  // THE DEAL (MONTY's boss mod, corps/monty.js: its effect there).
+  deal:     { name: 'THE DEAL', short: 'DEL', kind: 'corp', corp: 'monty', rarity: 'legendary', icon: '[?][', anim: 'cycle', tip: 'first hit: two doors left.', desc: 'once a layer, after your first ICE hit, every node goes dark but two: the real one and one other.' },
 };
