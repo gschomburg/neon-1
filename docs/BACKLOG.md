@@ -267,6 +267,28 @@ unlocked by REP, and some quests unlock REP.
   your AI assistant (G0D.exe, section 3). Claude's thoughts, to talk through: the G, the 0 and the D (G0D.exe's pieces)
   could each be hidden that way (one in the page's URL, one in the console, one only while you're offline), and MANTIS
   guards the last one. Section 11 ("make it more of a hacking game") fits here too.
+- **More boss seeds** (Greg, 2026-11-06: "i really like how the god boss turned out"; "all worth keeping around", he's
+  thinking on them). Not a long quest like SYSTEM FAILURE: find a seed somewhere, two sectors of buildup, then a boss
+  (like H3AV3N). Do the "per-seed definitions" cleanup (Medium and small) with the first one. Claude's ideas:
+  - **TWIN:** it can only watch one window. Open the game in a second tab and hit it from behind (tabs can talk:
+    BroadcastChannel / storage events; phones too). Hint: "i can only watch one of you."
+  - **PHREAK:** a phone phreak. It talks in keypad tones; you play them back (the Simon corp's idea). Weird-hard: it
+    wants 2600 Hz, whistled or played into the mic (asks for the mic; phones too). Seed: a PIER catch, or a payphone node.
+  - **SLEEPER:** it can't see you when you close your eyes. Turn the screen off or switch apps and its guard drops
+    (page visibility).
+  - **CRON:** only there at a real time ("come back at 3:33"). Ties to the daily seed (parked).
+  - **OVERFLOW:** a buffer overflow. Its health counter wraps: heal it past its max and it rolls to zero. Or a long
+    string typed into the seed field. (Section 11: something in the game you can hack.)
+  - **SOURCE:** the word is in the page source / a code comment (desktop). Phones need the URL fallback (MANTIS): a
+    stage of a fight, not a whole one.
+  - **KONAMI:** too strong to beat, until you enter a cheat code mid-fight and the game's own dev menu opens against it.
+  - **PHISHER:** a social engineer. It phishes you with fake prompts (session expired, enter your seed; a fake update;
+    a fake CONTINUE), each with a tell (a typo, the wrong font); a fake costs you. The PHISH theme turned around.
+  - **GHOST:** your own best run (REPLAYS) as a boss: it taps what you tapped; race yourself. Close to DOPPEL, at boss size.
+  - **Where the seeds turn up:** the ending's log (KITCHEN, ZER0: section 4), a hidden ad, a PHISH catch, a crew call,
+    the codex's ciphertext, the console.
+  - Claude's picks: TWIN (works everywhere, nobody expects it), OVERFLOW (pure hacker logic), PHISHER (fits the story).
+    PHREAK's whistle is the weird-hard one, like going offline.
 - **Replay H3AV3N** after winning (maybe its own leaderboard).
 - **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
 - **More rewards?** A mod you always start with (meat notes 2026-10-29).
