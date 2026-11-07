@@ -113,11 +113,12 @@
     ['menus', [['title', 'title'], ['intro', 'intro'], ['help', 'how to play'], ['codex', 'codex'], ['settings', 'settings'], ['profile', 'profile'], ['board', 'the board']]],
     ['a run', [['map', 'map'], ['layer', 'layer'], ['hit', 'a miss'], ['boss', 'boss'], ['shop', 'shop'], ['j:bench', 'safehouse + bench'], ['j:pier', 'pier (fishing)'], ['sectorboss', 'sector boss'], ['sectorclear', 'sector clear'], ['uplink', 'uplink']]],
     ['quests: HAD3S', [['j:had3s', 'HAD3S run'], ['j:myconet', 'MYCONET (boss 1)'], ['j:cerberus', 'CERBERUS (boss 2)']]],
-    ['quests: heaven', [['j:b0yomni', 'OMNI with b0y'], ['j:h3av3n', 'H3AV3N run'], ['j:hv-map', 'heaven map'], ['j:hv-maze', 'the maze'], ['j:hv-fight', 'G0D fight'], ['j:hv-die', 'G0D dies'], ['j:hv-fake', 'fake win'], ['j:hv-stand', 'final stand'], ['j:hv-end', 'the collapse']]],
+    ['quests: heaven', [['j:b0yomni', 'OMNI with b0y'], ['j:h3av3n', 'H3AV3N run'], ['j:hv-map', 'heaven map'], ['j:hv-maze', 'the maze'], ['j:hv-fight', 'G0D fight'], ['j:hv-die', 'G0D dies'], ['j:hv-fake', 'fake win'], ['j:hv-stand', 'final stand'], ['j:hv-end', 'the collapse'], ['j:ending', 'the ending (cutscene)']]],
   ];
   const JUMPS = {};
   for (const a of ['bench', 'pier', 'had3s', 'myconet', 'cerberus', 'b0yomni', 'h3av3n']) JUMPS['j:' + a] = { act: a };
   for (const w of ['map', 'maze', 'fight', 'die', 'fake', 'stand', 'end']) JUMPS['j:hv-' + w] = { act: 'heaven', where: w };
+  JUMPS['j:ending'] = { act: 'qscene', key: 'h3av3n' };   // the cutscene only (its rewards screen would add REP to your save)
   onGame('test-done', m => { const j = JUMPS[scene]; if (j && m.act === j.act) $('#scenestate').textContent = m.ok ? 'there: ' + $('#sceneSel').selectedOptions[0].textContent : `${m.act} failed: ${m.error}`; });
   for (const [group, list] of SCENES) {
     const og = el('optgroup', { label: group });
