@@ -284,6 +284,16 @@ unlocked by REP, and some quests unlock REP.
   (like H3AV3N). Do the "per-seed definitions" cleanup (Medium and small) with the first one. Claude's ideas:
   - **TWIN:** it can only watch one window. Open the game in a second tab and hit it from behind (tabs can talk:
     BroadcastChannel / storage events; phones too). Hint: "i can only watch one of you."
+    - **How tabs talk (2026-11-07):** neither tab launches the other. Any tabs of the game in the same browser hear
+      each other on a `BroadcastChannel` (open the second from a link, a bookmark, the address bar). Not across
+      browsers or a normal and a private window; across devices it's Firebase (multiplayer has it): a TWIN where your
+      phone is the second window. A hidden tab barely runs (desktop timers ~1/s, no drawing; iOS freezes it), so each
+      tab acts while you look at it and the shared state lives in the save. `window.open` isn't needed (phones block
+      pop-ups without a tap). file://: Chrome lets local tabs talk, Firefox doesn't; test it.
+    - **The fight:** desktop: two windows side by side, it faces the focused one, you strike from the other. Phone:
+      switch tabs; the page knows you left (page visibility, SLEEPER's signal), it turns to the tab you're in, and the
+      other one gets a few seconds' opening.
+    - Needs the two-tab save guard first (Medium and small).
   - **PHREAK:** a phone phreak. It talks in keypad tones; you play them back (the Simon corp's idea). Weird-hard: it
     wants 2600 Hz, whistled or played into the mic (asks for the mic; phones too). Seed: a PIER catch, or a payphone node.
     - **The mic (Greg, 2026-11-06: analyze the frequency):** getUserMedia + an AnalyserNode (FFT ~8192 at 48 kHz: ~6 Hz a
@@ -439,6 +449,12 @@ unlocked by REP, and some quests unlock REP.
 
 ### 11. Make it more of a hacking game
 - Something in the game itself you can hack, like the seed.
+- **A second window** (Greg, 2026-11-07: "a boss is neat. but we could also just open another browser window and have
+  a little terminal there you could type in or all sorts of stuff"). TWIN's trick (tabs talk on a BroadcastChannel)
+  for more than a boss: a second window that's a little terminal you type commands into, feeding the game. Other uses
+  to think about: a second screen showing the map or a trace, a crew member "on the line" in the other window, a
+  rival's window you hack into. Same limits as TWIN (same browser; a hidden tab barely runs) and it needs the
+  two-tab save guard. Close to the dev-menu terminal idea in the meat notes.
 
 ## Low priority
 
@@ -520,6 +536,10 @@ unlocked by REP, and some quests unlock REP.
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
 
 ## Medium and small
+- **Two tabs eat the save** (found 2026-11-07, talking about TWIN): nothing knows about a second tab of the game, so
+  both write the save and the last one wins; opening the game twice can lose progress today. Fix: on start, ask
+  through a BroadcastChannel (or the browser's lock API, `navigator.locks`) whether another copy is running; one tab
+  owns the save, a second one says so (or joins as a twin that doesn't write it). TWIN and the second window need it.
 - **Bugs and weirdness** (the user, meat notes 2026-11-06): **all built v14.46** (SPEC version log): the market list scrolls, the DISC is loot in a market, boxes block hovers, STIM + ZOMBIE = rot limit 225, TUNNEL's lines, the music after FIRST BREACH.
 - **Misc** (the user, meat notes 2026-11-06):
   - **COLD BREW's rewards aren't very good:** it needs something legendary.
