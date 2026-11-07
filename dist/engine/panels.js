@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.52']);
+NEON_FILES.push(['engine/panels.js', 'v14.53']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -42,10 +42,12 @@ function addMod(key, tier = 0) {
     const was = modTier(key);
     run.modTier[key] = upgradeTo(key, tier);
     if (key === 'buffer') { const d = run.modTier[key] - was; run.maxInt += d; run.integrity += d; }   // each step: +1 more, healed
+    if (key === 'wires') wiresUp(was);
     return 'up';
   }
   run.mods.push(key);
   run.modTier[key] = clamp(tier, 0, tierCount(MODS[key]) - 1);
+  if (key === 'wires') wiresUp(0);
   if (key === 'buffer') { run.maxInt += run.modTier[key] + 1; run.integrity += run.modTier[key] + 1; }   // +1 common ... +4 legendary
   if (key === 'stash') run.beltSlots++;
   if (key === 'ramdoubler') {   // the belt goes: what you hold is sold for half
@@ -135,8 +137,11 @@ function lootMigrate(run) {
 function pickMods(r, pool, k, exclude = []) {
   const ex = exclude.map(o => o.key || o);
   const ok = key => !ex.includes(key) && (!has(key) || (MODS[key].tiers && !modMaxed(key)));
-  return shuffle(pool.filter(ok), r).slice(0, k).map(key => ({ key, tier: rollTier(r, MODS[key]) }));
+  let keys = shuffle(pool.filter(ok), r);
+  if (keys.includes('wires') && has('wires') && r() < WIRES_PULL) keys = ['wires'].concat(keys.filter(x => x !== 'wires'));   // BOX OF WIRES: you notice them now
+  return keys.slice(0, k).map(key => ({ key, tier: rollTier(r, MODS[key]) }));
 }
+const WIRES_PULL = 0.4;   // while you carry a BOX OF WIRES, the chance an offer from a pool it's in is one (data/mods.js wires)
 
 const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale()));   // (priceScale: data/economy.js)
 const SEP = '+ - - - - - - - - - - - - - - - +';

@@ -53,8 +53,8 @@ unlocked by REP, and some quests unlock REP.
 - Exotic gear is empty now (WARP went to rare / epic): PARADOX / ENTANGLE / NUKE / BITFLIP (below).
 - **Codex hints for the gear reactions** (not written yet): GRAVITAS (TILT = a free gravity drop), ENTROPY (SHAKE
   sets off its shuffle). Could go in each corp's codex entry.
-- **BOX OF WIRES (the user, 2026-10-26):** a mod, not gear: starts at scrap ("i'm not going to sort these") and does
-  something really cool only once you have upgraded it all the way to legendary (pairs with the carry-a-scrap-mod quest).
+- **BOX OF WIRES: built v14.53** (SPEC version log; Greg, 2026-11-07): a scrap mod that does nothing until a box sorts it
+  all the way to exotic; then every node in every sector is open (any order, the boss too). Open: the carry-a-scrap-mod quest.
 - **Built v13.62:** the tap-to-use corp mods are boss gear stacks now (FLARE, REMOTE, ROLLUP, FREEZE, BLAST, SNITCH,
   TITHE, ANCHOR, SLOMO, BEES; ESPRESSO folded into REWIND), and a boss reward's third pick can be a gear stack.
 - **More corp mods -> gear?** (the user, 2026-10-27, after the v13.62 pass): only the tap-to-use ones moved. Others

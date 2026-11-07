@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.52']);
+NEON_FILES.push(['data/mods.js', 'v14.53']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -280,6 +280,17 @@ const MODS = {
     codex: 'light fingers. every layer you clear, a chance something valuable walks out with you: a loot item (DUDS ... WALLET) into your LOOT bag. sell it at a market. the higher steps find it more often, and find better.',
     tiers: [{}, { rarity: 'epic', tip: `${Math.round(ECON.modx.pickpocket[1] * 100)}%: loot, rarer.`, desc: `each layer you clear: ${Math.round(ECON.modx.pickpocket[1] * 100)}% chance of a loot item, leaning rarer.` },
       { rarity: 'legendary', tip: `${Math.round(ECON.modx.pickpocket[2] * 100)}%: loot, rarest.`, desc: `each layer you clear: ${Math.round(ECON.modx.pickpocket[2] * 100)}% chance of a loot item, leaning rarest.` }] },
+  // BOX OF WIRES (Greg, 2026-10-26 / 2026-11-07): scrap that does nothing, all the way up, until you've found enough of
+  // it. Each box you find sorts it a step (and while you carry one, offers pull it in more: engine/panels.js WIRES_PULL).
+  // Exotic, the top: every node in every sector is open, any order, the boss too, for the rest of the run
+  // (engine/render.js availableNodes, wiresOpen). The only mod that upgrades past legendary.
+  wires:    { name: 'BOX OF WIRES', short: 'BOX', kind: 'gen', rarity: 'scrap', icon: '{~&}', anim: 'wave', price: 8, tip: 'a tangle. does nothing.', desc: "a box of tangled wires. it does nothing. find more: each box sorts it a step.",
+    codex: "does nothing until it's sorted. each box you find sorts it a step.",
+    tiers: [{}, { rarity: 'common', tip: 'still a tangle. nothing.', desc: 'still a tangle. it does nothing yet. find more.' },
+      { rarity: 'rare', tip: 'half sorted. nothing yet.', desc: 'half sorted. it does nothing yet. find more.' },
+      { rarity: 'epic', tip: 'mostly sorted. nothing.', desc: 'mostly sorted. it does nothing yet. find more.' },
+      { rarity: 'legendary', tip: 'almost. one more box.', desc: 'almost sorted. it does nothing yet. one more box.' },
+      { rarity: 'exotic', tip: 'every sector wide open.', desc: 'wired: every node in every sector is open, the rest of the run. any node, any order, the boss too.' }] },
   skimmer:  { name: 'SKIMMER',  short: 'SKM', kind: 'gen', rarity: 'common', icon: '$$s$', anim: 'cycle',    price: 60, tip: `+${Math.round((ECON.modx.skimmer[0] - 1) * 100)}% credits.`, desc: `+${Math.round((ECON.modx.skimmer[0] - 1) * 100)}% credits from every payout.`,
     tiers: [{}, { rarity: 'rare', tip: `+${Math.round((ECON.modx.skimmer[1] - 1) * 100)}% credits.`, desc: `+${Math.round((ECON.modx.skimmer[1] - 1) * 100)}% credits from every payout.` }, { rarity: 'epic', tip: `+${Math.round((ECON.modx.skimmer[2] - 1) * 100)}% credits.`, desc: `+${Math.round((ECON.modx.skimmer[2] - 1) * 100)}% credits from every payout.` }] },
   buffer:   { name: 'BUFFER',   short: 'BUF', kind: 'gen', rarity: 'common', icon: '[]][', anim: 'blink',    price: 65, tip: '+1 max integrity.',     desc: '+1 max integrity, and heal 1.',

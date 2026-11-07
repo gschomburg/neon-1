@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v14.52']);
+NEON_FILES.push(['engine/render.js', 'v14.53']);
 
 // ---------------- Popup looks (the user, 2026-10-31) ----------------
 // Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
@@ -125,6 +125,13 @@ const slotOf = col => Object.keys(C).find(k => C[k] === col) || (paletteFade && 
 function setMsg(msg, col = C.text, ink = null) { st.msg = msg; st.msgCol = col; st.msgSlot = slotOf(col); st.msgInk = ink; st.msgT = performance.now(); st.msgChat = null; }   // ink: the text color on the band (a hacker's own)
 const candidates = () => st.lv ? st.lv.tiles.filter(t => t.state === 'closed' && !t.loaded && !t.ruledOut) : [];
 
+// BOX OF WIRES (data/mods.js wires): nothing at all until exotic (Greg, 2026-11-07: "you go from scrap all the way up to
+// exotic to get it to function"). Exotic: every node in every sector is open for the rest of the run, the boss too.
+const WIRES_EXO = 5;   // (its tiers: scrap, common, rare, epic, legendary, exotic)
+const wiresOpen = () => !!st.run && has('wires') && modTier('wires') >= WIRES_EXO;
+function wiresUp(was) {   // it went up a step (engine/panels.js addMod)
+  if (modTier('wires') >= WIRES_EXO && was < WIRES_EXO) setTimeout(() => setMsg('> box of wires: it all connects. the whole net is wired: any node, any order.', C.accent), 400);
+}
 function availableNodes() {
   const run = st.run;
   if (!run) return [];
@@ -139,6 +146,7 @@ function availableNodes() {
   if (run.mesh === run.sector) for (const n of meshSides()) out.add(n.id);   // the row under the boss: the nodes beside you too
   if (run.warpAim) for (const n of warpTargets()) out.add(n.id);   // (anywhere you haven't been, behind you too)
   if (run.skipAim) for (const n of skipTargets()) out.add(n.id);   // SKIP: two rows ahead
+  if (wiresOpen()) for (const n of Object.values(run.map)) if ((n.sector || 0) === (run.sector || 0) && n.id !== run.at) out.add(n.id);   // BOX OF WIRES
   let ids = [...out].filter(id => !run.visited.includes(id));
   // a pocket (WARP landed you where every way on is explored): any of the ways up, the next row with somewhere new
   if (!ids.length && cur.type !== 'final') for (let s = cur.step + 1; s < SECTOR_STEPS * (run.sector + 1) + 1 && !ids.length; s++)
