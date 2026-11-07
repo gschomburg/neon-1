@@ -254,23 +254,19 @@
   </div>
   <pre id="xLoot" style="display:none; max-height:420px; overflow:auto; margin:6px 0; padding:8px; background:#0b0f12; border:1px solid #234; font-size:12px; white-space:pre"></pre>
   </details>
-  <details class="xgrp" data-g="quests" open><summary>Quests <small>SYSTEM FAILURE (POPS): set a step, then the button for it</small></summary>
+  <details class="xgrp" data-g="quests" open><summary>SYSTEM FAILURE <small>POPS's quest, in the order you play it (docs/QUESTS.md). Set the step, then the buttons on its row</small></summary>
   <div class="row">
-    <button data-x="qopen" title="marks a sector cleared and puts POPS on your crew, so the DISC can drop">open the quest</button>
-    &nbsp; step <select id="xQStep"><option value="none">not started</option><option value="sector">1 PROVE IT: clear a sector</option><option value="find">2 THE DISC: find it</option><option value="deliver">3 SAFEHOUSE: take it to POPS</option><option value="d0g">4 DOG DAYS: HAD3S, 10 d0g wins</option><option value="trace">5 TRACE ROUTE: go to POPS</option><option value="raid">6 OMNI RAID: b0y on OMNI</option><option value="g0d">7 G0D MODE: H3AV3N</option><option value="done">8 done</option></select> <button data-x="qstep" title="steps 6 and on put b0y on your crew (and d0g becomes w00f); earlier steps take him off">set</button>
-    &nbsp; <button data-x="qcard" title="the QUEST card for the step you're on">QUEST card</button> <button data-x="qcall">POPS calls</button>
+    step <select id="xQStep"><option value="none">not started</option><option value="sector">1 PROVE IT: clear a sector</option><option value="find">2 THE DISC: find it</option><option value="deliver">3 SAFEHOUSE: take it to POPS</option><option value="d0g">4 DOG DAYS: HAD3S, 10 d0g wins</option><option value="trace">5 TRACE ROUTE: go to POPS</option><option value="raid">6 OMNI RAID: b0y on OMNI</option><option value="g0d">7 G0D MODE: H3AV3N</option><option value="done">8 done</option></select> <button data-x="qstep" title="steps 6 and on put b0y on your crew (and d0g becomes w00f); earlier steps take him off">set</button>
+    <button data-x="qcard" title="the QUEST card for the step you're on">QUEST card</button>
   </div>
-  <div class="row">
-    scenes: <button data-x="qscene" data-key="disc">DISC (safehouse)</button> <button data-x="qscene" data-key="prodigal">PRODIGAL (d0g)</button> <button data-x="qscene" data-key="gate">HEAVEN'S GATE</button> <button data-x="qscene" data-key="h3av3n" title="the ending's cutscene, after G0D falls (the rewards screen and POPS's call after it aren't shown: they'd add REP to your save)">THE ENDING</button>
-  </div>
-  <div class="row">
-    <button data-x="qdisc" title="into your loot (a run needed)">give the DISC</button> <button data-x="qtag" title="into your loot (a run needed); then CASH OUT">give the DOGTAG</button>
-    &nbsp; d0g wins <input id="xQWins" type="number" min="0" max="10" value="9" style="width:50px"> <button data-x="qwins" title="the next d0g win: 10 drops the DOGTAG">set</button>
-  </div>
-  <div class="row">
-    HAD3S: <button data-x="had3s" title="a HAD3S run, as if you typed the seed">run it</button> <button data-x="myconet" title="a HAD3S run, straight into sector 1's boss">MYCONET</button> <button data-x="cerberus" title="a HAD3S run, straight into sector 2's boss (no mold)">CERBERUS</button> <button data-x="rivalgear" title="LEASH, BONE, MUZZLE, H0NEY into your gear (a run needed)">+ rival gear</button>
-    &nbsp; <button data-x="b0yomni" title="sets OMNI RAID, a new run, straight into OMNI with b0y called in: break it for HEAVEN'S GATE">OMNI with b0y</button>
-  </div>
+  <div class="row"><span class="qs">1 PROVE IT</span> <button data-x="qopen" title="marks a sector cleared and puts POPS on your crew, so the DISC can drop">open the quest</button></div>
+  <div class="row"><span class="qs">2 THE DISC</span> <button data-x="qdisc" title="into your loot (a run needed)">give the DISC</button> <button data-x="qcall" title="POPS's call when you pick the DISC up">POPS calls</button></div>
+  <div class="row"><span class="qs">3 SAFEHOUSE</span> <button data-x="qscene" data-key="disc" title="the scene when you bring POPS the DISC">DISC scene</button></div>
+  <div class="row"><span class="qs">4 DOG DAYS</span> <button data-x="had3s" title="a HAD3S run, as if you typed the seed">HAD3S run</button> <button data-x="myconet" title="a HAD3S run, straight into sector 1's boss">MYCONET</button> <button data-x="cerberus" title="a HAD3S run, straight into sector 2's boss (no mold)">CERBERUS</button> <button data-x="rivalgear" title="LEASH, BONE, MUZZLE, H0NEY into your gear (a run needed)">+ rival gear</button></div>
+  <div class="row"><span class="qs"></span> d0g wins <input id="xQWins" type="number" min="0" max="10" value="9" style="width:50px"> <button data-x="qwins" title="the next d0g win: 10 drops the DOGTAG">set</button> <button data-x="qtag" title="into your loot (a run needed); then CASH OUT">give the DOGTAG</button> <button data-x="qscene" data-key="prodigal" title="the scene when d0g comes home">PRODIGAL scene</button></div>
+  <div class="row"><span class="qs">5 TRACE ROUTE</span> <span class="dim">set the step, then go to POPS on the map</span></div>
+  <div class="row"><span class="qs">6 OMNI RAID</span> <button data-x="b0yomni" title="sets OMNI RAID, a new run, straight into OMNI with b0y called in: break it for HEAVEN'S GATE">OMNI with b0y</button> <button data-x="qscene" data-key="gate" title="the scene when OMNI breaks open">HEAVEN'S GATE scene</button></div>
+  <div class="row"><span class="qs">7 G0D MODE</span> <button data-x="h3av3n" title="the H3AV3N seed, as if you typed it: a QUEST run from sector 1 (CERBERUS, then heaven)">H3AV3N run</button> <button data-x="qscene" data-key="h3av3n" title="the ending's cutscene, after G0D falls (the rewards screen and POPS's call after it aren't shown: they'd add REP to your save)">THE ENDING</button> <span class="dim">each step of heaven: the screen picker, or the g0d prototypes tab</span></div>
   </details>
   <details class="xgrp" data-g="sector"><summary>Sector <small>events, jumps, anomalies, THE FENCE</small></summary>
   <h2>Sector events <small>click one: a new run, straight to sector 2 with that event (its card first)</small></h2>
