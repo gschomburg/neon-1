@@ -1,7 +1,7 @@
 // NeoN+1 engine/tray.js: the mod tray and mod badges (drawBadge, putChip, buildTray). Moved out of engine/scene.js
 // (2026-11-05). buildScene (engine/scene.js) calls buildTray each frame.
 'use strict';
-NEON_FILES.push(['engine/tray.js', 'v14.50']);
+NEON_FILES.push(['engine/tray.js', 'v14.51']);
 
 // A mod's key color (its rarity chip's background).
 const modColor = m => rarityCol(m.rarity);

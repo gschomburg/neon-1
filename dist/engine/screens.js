@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.50']);
+NEON_FILES.push(['engine/screens.js', 'v14.51']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -134,13 +134,17 @@ function titleLines(now) {
   { const prof = profile(); lines.push({ text: `[ ${logoMark(prof.logo)} ${prof.name} ]${save.newTitle ? '*' : ''}`, id: 'profile', style: styleOf(prof.style), onTap: () => swapTo(() => openBoard('you')) }); }   // THE BOARD's YOU tab (a * for a new title)
   T(`best ${pad2(save.best)}  runs ${save.runs}  wins ${save.wins}  rep ${save.rep || 0}`, C.mid);
   { const b = lbTitleLine(); T(b ? `board: ${b}` : '', C.money); }   // engine/leaders.js (its row is kept, so nothing jumps)
-  // Seed: tap to roll a new one.
-  lines.push({ gap: 1, row: [
-    { text: 'seed' },
-    { text: `[${st.seed.slice(0, 10)}]`, id: 'seed', onTap: rerollSeed },
-    ...(questSeed(st.seed) ? [{ text: 'quest', col: G0DF_BLUE }] : st.seeded ? [{ text: 'replay', col: C.mid }] : []),   // (a chosen seed: the seed boards)
-    ...(replaysOpen() ? [{ text: '[REPLAYS]', id: 'replays', onTap: () => swapTo(openReplays) }] : []),   // (beat G0D: POPS's log, engine/menus.js)
-  ] });
+  // Seed: tap to roll a new one; [SHARE] sends its link (engine/multiplayer.js shareSeed).
+  { const row = [
+      { text: 'seed' },
+      { text: `[${st.seed.slice(0, 10)}]`, id: 'seed', onTap: rerollSeed },
+      ...(questSeed(st.seed) ? [{ text: 'quest', col: G0DF_BLUE }] : st.seeded ? [{ text: 'replay', col: C.mid }] : []),   // (a chosen seed: the seed boards)
+      { text: seedShared() ? '[COPIED]' : '[SHARE]', id: 'shareseed', onTap: () => shareSeed(st.seed) },
+      ...(replaysOpen() ? [{ text: '[REPLAYS]', id: 'replays', onTap: () => swapTo(openReplays) }] : []),   // (beat G0D: POPS's log, engine/menus.js)
+    ];
+    const w = () => row.reduce((a, b) => a + b.text.length, 0) + row.length - 1;
+    if (w() > L.wc) row.shift();   // too wide for a phone (a long seed, the tag and [REPLAYS]): the 'seed' label goes
+    lines.push({ gap: 1, row }); }
   return lines;
 }
 
@@ -318,7 +322,10 @@ function overLines() {
     { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
   ] : [
     { box: true, text: 'N E W   R U N', id: 'new', onTap: newRun, minW: 24 },
-    { text: '[ RETRY SEED ]', id: 'retry', onTap: retry },
+    { row: [   // (one row: the screen's rows are counted below)
+      { text: '[ RETRY SEED ]', id: 'retry', onTap: retry },
+      { text: seedShared() ? '[ COPIED ]' : '[ SHARE ]', id: 'shareseed', onTap: () => shareSeed(r.seed) },
+    ] },
     { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
   ])];
   // the scrolling area: the mods and items, then the map with the path you took

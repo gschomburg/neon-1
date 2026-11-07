@@ -31,7 +31,7 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
   // 3. the test pages
   const dir = path.join(__dirname, 'tests');
   const tests = fs.readdirSync(dir).filter(f => f.endsWith('.js')).map(f => require(path.join(dir, f))).filter(t => !only.length || only.includes(t.name));
-  const results = await Promise.all(tests.map(t => H.runPage(H.testPage(H.GAME, H.wrapTest(t.body), { key: 'test-' + t.name }), { ms: 240000 })));
+  const results = await Promise.all(tests.map(t => H.runPage(H.testPage(H.GAME, H.wrapTest(t.body), { key: 'test-' + t.name }), { ms: 240000, query: t.query })));
   tests.forEach((t, i) => {
     const r = results[i];
     if (r.error) return ok(false, `tests/${t.name}: ${r.error}`);

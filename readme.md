@@ -43,7 +43,7 @@ All ASCII, mobile first, plain HTML/JS, no build step.
 
 Open `dist/index.html` in a browser. That's it: no build step, no server. It works straight from disk (file://).
 
-- `?seed=WORD` plays a fixed seed. A corp's name as the seed (`?seed=NOIR`) makes every node that corp.
+- `?seed=WORD` plays a fixed seed, ranked on the seed boards like a seed typed in game ([SHARE] on the title and the results copies this link). A corp's name as the seed (`?seed=NOIR`) makes every node that corp.
 - `?dev=1` (or the backtick key) opens the dev menu.
 - Multiplayer (2-6 players, over Firebase): `[ MULTIPLAYER ]` on the title screen.
 

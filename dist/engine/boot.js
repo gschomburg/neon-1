@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v14.50']);
+NEON_FILES.push(['engine/boot.js', 'v14.51']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -95,6 +95,13 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 setInterval(() => checkVersion(true), 600000);
 showTitle();
 if (!EDITOR && !params.get('room') && !params.get('nointro')) startIntro();   // the boot / login intro over the title
+// A shared seed link (?seed=XYZ, engine/screen.js urlSeed): the same as picking that seed in game, so it's ranked on
+// the seed boards (a quest seed is a quest). Then the seed comes out of the address bar, so a refresh doesn't
+// bring it back and a link copied from the bar doesn't carry it.
+if (urlSeed) {
+  st.practice = false; st.seeded = !questSeed(urlSeed);
+  try { const u = new URL(location.href); u.searchParams.delete('seed'); history.replaceState(null, '', u.toString()); } catch (e) { /* file:// in some browsers */ }
+}
 // A shared room link (?room=CODE): straight to multiplayer, code filled in, and join.
 { const rc = !EDITOR && cleanRoomCode(params.get('room'));
   if (rc) { st.joinCode = rc; setTimeout(() => { openMultiplayer(); setTimeout(() => mpJoin(rc), 400); }, 50); } }

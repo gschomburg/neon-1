@@ -1,6 +1,6 @@
 // NeoN+1 engine/screen.js: The canvas, layout, and the game state (st).
 'use strict';
-NEON_FILES.push(['engine/screen.js', 'v14.50']);
+NEON_FILES.push(['engine/screen.js', 'v14.51']);
 
 // ---------------- Canvas & layout ----------------
 const cv = document.getElementById('screen');
@@ -63,7 +63,7 @@ const urlSeed = cleanSeed(params.get('seed'));
 const st = {
   mode: 'title',          // title | map | play | panel | over
   seed: urlSeed || newSeed(),
-  practice: !!urlSeed,
+  practice: false,        // (a ?seed= link counts like a typed seed: engine/boot.js sets st.seeded)
   run: null,              // the current run (map, integrity, credits, items, mods)
   corp: null,             // the corp being hacked
   lv: null,               // the current layer

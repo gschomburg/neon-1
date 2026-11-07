@@ -86,7 +86,7 @@ function runPage(html, opts = {}) {
   return new Promise(res => {
     execFile(CHROME, ['--headless=new', '--disable-gpu', `--window-size=${opts.size || '400,820'}`, `--virtual-time-budget=${opts.ms || 120000}`,
       '--allow-file-access-from-files', `--user-data-dir=${path.join(tmp, 'profile')}`, '--dump-dom',
-      'file:///' + page.replace(/\\/g, '/') + (opts.hash ? '#' + opts.hash : '')],
+      'file:///' + page.replace(/\\/g, '/') + (opts.query ? '?' + opts.query : '') + (opts.hash ?'#' + opts.hash : '')],
       { maxBuffer: 1 << 28, timeout: opts.timeout || 10 * 60 * 1000 }, (err, stdout) => {
         try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) { /* chrome may still hold it */ }
         const m = String(stdout || '').match(/<pre id="out">([\s\S]*?)<\/pre>/);

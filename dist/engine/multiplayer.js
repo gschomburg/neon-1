@@ -1,6 +1,6 @@
 // NeoN+1 engine/multiplayer.js: Online multiplayer, profiles, INFO.
 'use strict';
-NEON_FILES.push(['engine/multiplayer.js', 'v14.50']);
+NEON_FILES.push(['engine/multiplayer.js', 'v14.51']);
 
 // ---------------- Online multiplayer ----------------
 // 2-6 players take turns on one seeded run ("Jenga" rules, elimination):
@@ -296,19 +296,32 @@ const cleanRoomCode = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '
 // The room's link: this page with ?room=CODE. On phones the share sheet opens; elsewhere
 // the link is copied.
 async function shareRoom(m) {
-  const url = location.href.split('#')[0].split('?')[0] + '?room=' + m.code;
+  const r = await shareLink('room', m.code, `join my NeoN+1 room: ${m.code}`, 'room link');
+  if (r === 'copied') m.sharedAt = performance.now();
+}
+// A seed's link (?seed=XYZ: engine/boot.js plays it on the seed boards). Its [SHARE] on the title and the results.
+async function shareSeed(seed) {
+  if (await shareLink('seed', seed, `try my NeoN+1 seed: ${seed}`, `seed ${seed} link`) === 'copied') st.seedSharedAt = performance.now();
+}
+const seedShared = () => st.seedSharedAt && performance.now() - st.seedSharedAt < 1500;   // the button reads [COPIED] a moment
+// This page with ?key=val. On phones the share sheet opens; elsewhere the link is copied.
+// Says 'shared', 'copied', or null (cancelled or failed).
+async function shareLink(key, val, text, what) {
+  const url = location.href.split('#')[0].split('?')[0] + '?' + key + '=' + encodeURIComponent(val);
   const web = /^https?:$/.test(location.protocol);
   // The share sheet only on phones, on the web. Chrome's desktop share (the Windows share
   // dialog) crashed the tab ("Aw, Snap!"), and a file:// link only works on this computer.
   const phone = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
   if (web && phone && navigator.share) {
-    try { await navigator.share({ title: 'NeoN+1', text: `join my NeoN+1 room: ${m.code}`, url }); Sound.buy(); return; }
-    catch (e) { if (e && e.name === 'AbortError') return; }   // anything else: copy instead
+    try { await navigator.share({ title: 'NeoN+1', text, url }); Sound.buy(); return 'shared'; }
+    catch (e) { if (e && e.name === 'AbortError') return null; }   // anything else: copy instead
   }
   if (await copyText(url)) {
-    m.sharedAt = performance.now(); Sound.buy();
-    setMsg(web ? '> room link copied.' : '> link copied (a local file: it only works on this computer).', C.accent);
-  } else { Sound.deny(); setMsg(`> couldn't copy. code: ${m.code}`, C.danger); }
+    Sound.buy();
+    setMsg(web ? `> ${what} copied.` : '> link copied (a local file: it only works on this computer).', C.accent);
+    return 'copied';
+  }
+  Sound.deny(); setMsg(`> couldn't copy. ${key}: ${val}`, C.danger); return null;
 }
 async function mpJoin(codeIn) {
   if (st.mpBusy) return;
