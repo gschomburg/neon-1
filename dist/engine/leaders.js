@@ -4,13 +4,14 @@
 // mods breaks a tie. Every run is its own entry (one player can be on a board many times). Then the end screen asks for 3-letter initials (big
 // letters, the WORKBENCH's) and UPLOAD sends them: the server keeps one name per device and shows it on all its entries.
 // Pages opened from a file or localhost use the test boards (kept apart on the server), and so does a tester
-// device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off).
+// device: open the game once with ?dev=1 (remembered; ?dev=0 or the dev menu turns it off). The neon editor's game always
+// posts to the test boards, cheats and all (Greg, 2026-11-07: "tag the editor runs with dev"), so its end screen works there.
 // SEED BOARDS (docs/ENDGAME.md, decided 2026-11-05): every seed has a board of its own (`seed-<SEED>`). A run on a seed
 // you chose (run.seeded: typed, REPLAYS, retry) goes on its seed's board and on `replays` (the SEEDS tab's front page),
 // never on TODAY / ALL TIME: memorizing a map shouldn't win those. Other runs go on TODAY / ALL TIME and their seed's
 // board (so a replay has the first run to beat). Every score says if you'd beaten G0D (data.g0d: tracked, not shown).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v14.53']);
+NEON_FILES.push(['engine/leaders.js', 'v14.54']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }, { key: 'seeds', label: 'SEEDS' }];
@@ -24,7 +25,7 @@ function lbClient() {
     try {
       if (window.Greglytics && params.get('dev') && !lbUrlDone) Greglytics.tester(params.get('dev') === '1');   // once per page load
       lbUrlDone = true;
-      lbGl = window.Greglytics ? Greglytics.init({ endpoint: LB_ENDPOINT, app: 'neon', version: VERSION.slice(1) }) : null;
+      lbGl = window.Greglytics ? Greglytics.init(Object.assign({ endpoint: LB_ENDPOINT, app: 'neon', version: VERSION.slice(1) }, EDITOR ? { dev: true } : {})) : null;   // (the editor: always the test boards)
     }
     catch (e) { lbGl = null; }
   }
@@ -61,13 +62,13 @@ function lbInitials() {
 function lbSubmit(run, win) {
   st.lbPost = null;
   try {
-    if (run.practice || st.mp || EDITOR || !(run.depth > 0) || !lbClient()) return;   // (run kinds: engine/save.js)
+    if ((run.practice && !EDITOR) || st.mp || !(run.depth > 0) || !lbClient()) return;   // (run kinds: engine/save.js; the editor: test boards only, practice too)
     if (navigator.webdriver && !window.LB_TEST) return;
     const prof = profile(), at = Date.now(), ini = lbInitials();
     // tie: fewer 1UPs used wins, then fewer mods (1UPs x 100 + mods; the board shows the mods: tie % 100)
     const s = { at, score: run.depth, tie: (run.oneUps || 0) * 100 + run.mods.length, player: ini, logo: logoMark(prof.logo),
       data: { hacker: prof.name, style: prof.style, win: !!win, sector: (run.sector || 0) + 1, v: VERSION, run: at, seed: run.seed, oneUps: run.oneUps || 0,
-        seeded: !!run.seeded, g0d: !!save.beatG0D } };   // run: the initials name just this run's scores
+        seeded: !!run.seeded, g0d: !!save.beatG0D, editor: EDITOR || undefined, practice: run.practice || undefined } };   // (editor / practice: test boards only)   // run: the initials name just this run's scores
     // which boards: [tab, board]. tab 'seed' is the run's own seed's board.
     const posts = (run.seeded ? [['seeds', lbBoard('seeds')]] : LB_MAIN.map(k => [k, lbBoard(k, at)])).concat([['seed', lbSeedBoard(run.seed)]]);
     st.lbPost = { at, score: s.score, tie: s.tie, ranks: {}, of: {}, tabs: posts.map(p => p[0]), seed: run.seed, seeded: !!run.seeded,
@@ -208,7 +209,7 @@ function lbOverKeys(prev) {
 let lbTitle = { at: -1e9, busy: false, all: null, day: null };
 function lbTitleLine() {
   const gl = lbClient();
-  if (!gl || EDITOR || (navigator.webdriver && !window.LB_TEST)) return null;
+  if (!gl || (navigator.webdriver && !window.LB_TEST)) return null;
   if (!lbTitle.busy && performance.now() - lbTitle.at > 60000) {
     lbTitle.busy = true; lbTitle.at = performance.now();
     const you = name => gl.scores(name, { limit: 1 }).then(d => d && d.you ? d.you.rank : null, () => undefined);
