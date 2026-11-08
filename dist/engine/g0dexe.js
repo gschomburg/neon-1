@@ -433,7 +433,7 @@ function g0dxFishPlan(now) {
   if (hk) {   // nothing heading for the hook for a while: reel in, cast again
     return now - Math.max(hk.since || (hk.since = now), f.g0dxComing || 0) > 4000 ? { at: g0dxAt(g0dxBtn('freel')), act: () => fishReelIn() } : 'wait';
   }
-  if (phish && fishCanCast()) {
+  if (phish && fishCanCast() && st.run.credits >= fishCost()) {   // (its own money only: never into LEVERAGE's debt)
     const lane = Math.floor(Math.random() * FISH_LANES), g = fishGeo();
     return { at: { x: Math.round(L.wc * 0.42), y: g.laneY(lane) }, act: () => { if (fishCast(lane)) f.hold = true; }, say: g0dxPhishSay() };
   }
