@@ -381,6 +381,16 @@ unlocked by REP, and some quests unlock REP.
   drive-only nodes differently (dimmer, or a little car mark).
 - **The neon editor** (meat notes 2026-11-06): clean up the UI; terminal-style commands with autocomplete?; Justin's
   music track viewer in the music tab?
+  - **Dev menu buttons the editor's TESTING doesn't have yet** (Greg, 2026-11-08: "add that and maybe anything else
+    useful to the editor as buttons as well"). The editor has god, show real, free travel, credits, INT, heal, REP and
+    the screen jumps already. Missing:
+    - **UNLOCK CODEX:** every corp breached once, everything seen (dev.js `seenall`). With it, a **FORGET CORPS** button
+      (every corp back to 0 breaches), and maybe a breaches number, to test G0D.exe knowing and guessing.
+    - **G0D.exe:** its settings (speed, clicks, wins before it knows a corp, popups, its wins count, workbench build,
+      phish, risky hand-off), on/off, and its decision log (run.g0dx.log) shown in the editor while it plays.
+    - **RESET LEGACY** (THE BOARD's unlocks) and **FILL GEAR** (one of every gear).
+    - The corp tester's **RUN: ALL <corp>** and **RUN: DEV1** seeds, if the editor's own breach doesn't cover them.
+    - **Intro replays** (first boot / short) and the stats **TESTER** toggle, if they're worth a button there.
 - **Code cleanups left from the arch pass** (the user, 2026-11-05: "keep those all around so we can hit them when it makes sense"). Do each one with the feature that needs it, not on its own. Details: docs/ARCHITECTURE.md.
   - **One popup card (`drawCard`):** with the next new kind of popup.
   - **Per-seed definitions:** when a new seed comes in (crew quests), so HAD3S / H3AV3N / the next one are mostly data.

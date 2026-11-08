@@ -24,6 +24,7 @@ misc notes
 
 bugs or weirdness
 ********************
+- end screen after i died with god.exe is too tall. i'm not sure what's making it so tall, it's got practice run: not scored, there is 2 line spaces after breached none and then the mods i had HGL and then another line with god.exe on it. that's all i had
 
 neon editor
 ***************
