@@ -161,8 +161,8 @@ unlocked by REP, and some quests unlock REP.
           itself in there with gear: PING, FRAG, CALLs.
         - **Its wins count** (the codex's breaches: the corps it then knows), with a setting so they don't. It's still
           your INT on the line.
-        - **Safehouses and the workbench:** a safehouse when it needs healing. The workbench is a setting (off: it would
-          spend your components crafting); with it on it can at least SHRED what it doesn't need.
+        - **Safehouses and the workbench:** a safehouse when it needs healing. At a workbench it always SHREDS what it
+          doesn't need; building is a setting, off to start (it would spend all your components).
         - **A full belt:** it trashes gear it can't use to make room.
       - [ ] Its face is a placeholder eye (data/art/faces.js `g0dexe`): redraw in the ART tab.
 
