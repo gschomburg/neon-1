@@ -167,6 +167,15 @@ unlocked by REP, and some quests unlock REP.
       - [ ] Its face is a placeholder eye (data/art/faces.js `g0dexe`): redraw in the ART tab.
       - [ ] Still open: building at the workbench is in but barely tried. How smart its map and shopping are: tune once
         you've watched it. The real G0D.exe (the quest, not the dev menu) is the entry above.
+      - [ ] **After Greg watches it** (2026-11-08: batch these with his feedback):
+        - Keys don't take over: a tap of yours pauses it, but picking a node with the arrows + Enter doesn't (it would
+          keep clicking under you). Make a game key pause it too.
+        - Belt priorities: with the belt full of gear it uses, it throws back new catches and rewards (a WARP) instead
+          of dropping a spare (the 7th CALL).
+        - Quest runs untested: H3AV3N (the maze, the fight, the broken UPLINK), HAD3S, CERBERUS's digging. It should
+          stop with "it doesn't know this screen"; check it does.
+        - Workbench building: barely tried. Its face: a placeholder eye.
+        - Tuning: the map scores, what it buys and rerolls, when it taps $ nodes, the 1s think at 1x.
       - [x] Step 4 and the rest (2026-11-08, v14.62; SPEC v14.62). **Decided (Greg, 2026-11-08):**
         - **$ nodes in corps it knows:** MAGNET whenever it has one. It taps a $ node itself only at full health, while
           the UPLINK still needs money, and never on a boss layer.
