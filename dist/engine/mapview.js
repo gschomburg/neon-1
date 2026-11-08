@@ -1,7 +1,7 @@
 // NeoN+1 engine/mapview.js: the run's map (buildMap), the results screen's map (drawMapView), and a node's info.
 // Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/mapview.js', 'v14.64']);
+NEON_FILES.push(['engine/mapview.js', 'v14.65']);
 
 // Map: final node at the top, start at the bottom. Edges are dotted lines.
 // x for a node; start / final nodes sit in the middle lane.
@@ -38,6 +38,35 @@ function corpIconCols(n) {
   return { bg: bgc, fg: p.accent };
 }
 
+// The results map's layout, worked out once: each node's spot and each link's dots, sorted into rows (by the whole
+// row: a dot can sit between two). Drawing it fresh every frame was quadratic (mapRowOf scans the whole map, for both
+// ends of every link) and ran once per row while the screen builds in: a 23-sector run took ~0.7s a frame (Greg,
+// meat notes 2026-11-08: the confetti lagged). Made again if the screen width or the run's path changes.
+const MAP_VIEW_CACHE = new WeakMap();
+function mapViewLayout(r) {
+  const map = r.map, old = MAP_VIEW_CACHE.get(map);
+  if (old && old.wc === L.wc && old.nv === r.visited.length && old.at === r.at) return old;
+  const top = mapTop(map), rows = new Map(), seen = new Set(r.visited);
+  const row = n => (top - n.step) * 3;   // (mapRowOf, without the scan)
+  let order = 0;   // (drawn in the order they were made, as before: where two dots share a cell, the later one shows)
+  const add = (rw, item) => { const k = Math.floor(rw); item.order = order++; if (!rows.has(k)) rows.set(k, []); rows.get(k).push(item); };
+  const steps = new Set();   // the path: each move, either way
+  for (let i = 0; i + 1 < r.visited.length; i++) { steps.add(r.visited[i] + '>' + r.visited[i + 1]); steps.add(r.visited[i + 1] + '>' + r.visited[i]); }
+  for (const n of Object.values(map)) {
+    const a = { x: mapX(n), row: row(n) };
+    for (const id of n.next) {
+      const m = map[id];
+      if (!m) continue;
+      const path = steps.has(n.id + '>' + id);
+      for (const d of linkDots(a, { x: mapX(m), row: row(m) })) add(d.row, { dot: true, x: d.x, row: d.row, ch: d.ch || '·', path });
+    }
+    add(a.row, { node: n, x: a.x, row: a.row, visited: seen.has(n.id) });
+  }
+  const lay = { wc: L.wc, nv: r.visited.length, at: r.at, rows };
+  MAP_VIEW_CACHE.set(map, lay);
+  return lay;
+}
+
 // The run's map on the results screen: the path you took lit, the rest dim, an X
 // where you were traced. Shows rows top..top+h of the map, at screen row y.
 function drawMapView(ctx, y, ln) {
@@ -45,23 +74,17 @@ function drawMapView(ctx, y, ln) {
   // A line can be one row (k) of a view viewH tall, so the view can come in row by row.
   const r = ln.r, map = r.map, top = ln.top, k0 = ln.k || 0, h = ln.k != null ? ln.viewH : ln.h;
   y -= k0;   // y is now where the view's first row is
-  const pos = n => ({ x: mapX(n), row: mapRowOf(n, map) });
   const lo = ln.k != null ? Math.max(top - 0.01, top + k0 - 0.5) : top - 0.01;
   const hi = ln.k != null ? Math.min(top + h - 0.99, top + k0 + 0.49) : top + h - 0.99;
   const inView = row => row >= lo && row <= hi;
-  const onPath = (a, b) => { const i = r.visited.indexOf(a); return i >= 0 && r.visited[i + 1] === b; };
-  for (const n of Object.values(map)) {
-    for (const id of n.next) {
-      const m = map[id], path = onPath(n.id, m.id) || onPath(m.id, n.id);
-      for (const d of linkDots(pos(n), pos(m))) if (inView(d.row)) put(d.x, y + d.row - top, d.ch || '·', path ? C.accent : C.dim, 'board');
-    }
-  }
-  for (const n of Object.values(map)) {
-    const p = pos(n);
-    if (!inView(p.row)) continue;
-    const visited = r.visited.includes(n.id), dead = !r.win && n.id === r.at;
-    const col = dead ? C.danger : visited ? C.accent : n.type === 'final' ? C.dangerDim : C.dim;
-    put(p.x - 1, y + p.row - top, nodeLabel(n), col, 'board', dead || visited);
+  const { rows } = mapViewLayout(r), dots = [], nodes = [];
+  for (let k = Math.floor(lo); k <= Math.floor(hi); k++) for (const it of rows.get(k) || []) if (inView(it.row)) (it.dot ? dots : nodes).push(it);
+  dots.sort((p, q) => p.order - q.order); nodes.sort((p, q) => p.order - q.order);
+  for (const d of dots) put(d.x, y + d.row - top, d.ch, d.path ? C.accent : C.dim, 'board');   // (links first: the nodes go over them)
+  for (const p of nodes) {
+    const n = p.node, dead = !r.win && n.id === r.at;
+    const col = dead ? C.danger : p.visited ? C.accent : n.type === 'final' ? C.dangerDim : C.dim;
+    put(p.x - 1, y + p.row - top, nodeLabel(n), col, 'board', dead || p.visited);
     if (dead) put(p.x - 3, y + p.row - top, 'X', C.danger, 'board', true);
     if (r.win && n.id === r.at) put(p.x - 3, y + p.row - top, '@', C.bright, 'board', true);
   }

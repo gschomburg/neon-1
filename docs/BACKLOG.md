@@ -396,11 +396,6 @@ unlocked by REP, and some quests unlock REP.
   - [ ] **The end screen after a death with G0D.exe is too tall** (practice run: not scored, two gaps after "breached
     none", then HGL, then a line with G0D.exe). Claude couldn't make it happen (fits at 390x780 and 375x600, same
     lines): a screenshot and the window size would help (Greg will get one). The bottom buttons ran over the footer.
-  - [ ] **The rewards screen lags deep in a long G0D.exe run** (Greg, meat notes 2026-11-08: 609 layers, sector 23;
-    his guess: the map drawing off screen). Claude couldn't make it happen (2026-11-08): the map is only built on the
-    map screen, and a faked sector-23 run (298 nodes, rewards open, G0D.exe on) takes ~0.3ms a frame. So it's
-    something a real long run piles up, not the map's size. Next: measure the real run in Greg's browser (Chrome's
-    Performance tab, or Claude in Chrome on the open tab), or a copy of its run save (localStorage).
 - **The neon editor** (meat notes 2026-11-06): clean up the UI; terminal-style commands with autocomplete?; Justin's
   music track viewer in the music tab?
   - **Dev menu buttons the editor's TESTING doesn't have yet** (Greg, 2026-11-08: "add that and maybe anything else
