@@ -176,6 +176,9 @@ unlocked by REP, and some quests unlock REP.
           stop with "it doesn't know this screen"; check it does.
         - Workbench building: barely tried. Its face: a placeholder eye.
         - Tuning: the map scores, what it buys and rerolls, when it taps $ nodes, the 1s think at 1x.
+        - **Out of clicks** (Greg, meat notes 2026-11-08: "maybe"): the gear goes away (or resets), and then you could
+          switch on another one (a stack of G0D.exe: the next one, fresh clicks).
+        - **Its cursor stays** after it runs out of clicks, till the corp ends (Greg: "maybe fine").
       - [x] Step 4 and the rest (2026-11-08, v14.62; SPEC v14.62). **Decided (Greg, 2026-11-08):**
         - **$ nodes in corps it knows:** MAGNET whenever it has one. It taps a $ node itself only at full health, while
           the UPLINK still needs money, and never on a boss layer.
@@ -322,6 +325,15 @@ unlocked by REP, and some quests unlock REP.
   with ` and you can type in it and maybe it has auto complete"). Today ` opens the dev menu's button page
   (engine/dev.js). Instead: a one-line prompt, commands typed in, with autocomplete. It's the same terminal KONAMI
   turns against its boss, and the one the second window could hold.
+  - **More on the terminal** (Greg, meat notes 2026-11-08):
+    - Commands unlock as you find them, like recipes: once found, autocomplete starts offering them. Maybe tied to
+      feats (ELITE), or crew quests unlock the terminal and its parts (or just reveal things about it).
+    - Commands like `give mod pch` (maybe `give.mod pch`): a PATCH. `run.seed 348349`: jump to that seed.
+    - `mode.god`: not god mode for good; it wears off after a sector and you run it again.
+    - Hacker tokens that commands cost to run, bought with REP? An API key you can enter that does something.
+    - Runs that used the terminal are marked on the leaderboard: another level, or just a flag (hacked).
+- **A hacker boss whose weakness is your sound muted** (Greg, meat notes 2026-11-08). Like PSYCHO MANTIS (section 4):
+  the fix is outside the game.
 - **A second window** (Greg, 2026-11-07: "a boss is neat. but we could also just open another browser window and have
   a little terminal there you could type in or all sorts of stuff"). TWIN's trick (tabs talk on a BroadcastChannel)
   for more than a boss: a second window that's a little terminal you type commands into, feeding the game. Other uses
@@ -379,6 +391,13 @@ unlocked by REP, and some quests unlock REP.
 - **If the C.A.R. confuses** (Greg, 2026-11-07: "i think it'll be fine", keep it as a potential fix): with the C.A.R.
   every node in the sector looks reachable, so the map doesn't show which moves are a drive. Fix if it comes up: draw the
   drive-only nodes differently (dimmer, or a little car mark).
+- **Bugs** (Greg, meat notes 2026-11-08):
+  - [ ] **The end screen after a death with G0D.exe is too tall** (practice run: not scored, two gaps after "breached
+    none", then HGL, then a line with G0D.exe). Claude couldn't make it happen (fits at 390x780 and 375x600, same
+    lines): a screenshot and the window size would help.
+  - [ ] **SIMON's tones are hard to hear.** They use the short generic ping (0.09s, vol 0.35, engine/sound.js) and the
+    music sits at level 1 (pad, bass, drums: corps/simon.js musicMax). Both a notch: its own longer, louder tone, and
+    the music at 0 (pad and bass).
 - **The neon editor** (meat notes 2026-11-06): clean up the UI; terminal-style commands with autocomplete?; Justin's
   music track viewer in the music tab?
   - **Dev menu buttons the editor's TESTING doesn't have yet** (Greg, 2026-11-08: "add that and maybe anything else
