@@ -14,6 +14,12 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Credits instead of a mod may be too low** (found planning G0D.exe, 2026-11-08). Skipping a boss reward pays
+  2 earn units (20cr in sector 1). Taking an epic or legendary mod and selling it at the UPLINK pays 33% of its fee:
+  ~26cr (epic) or ~40cr (legendary), times the sector, and you have the mod until then. So from epic up, "take it and
+  sell it" always beats the credits. Rare (~16cr) and common (~10cr) don't. Fine as a hidden strategy, or raise
+  ECON.skip.boss / lower ECON.uplink.sellPct?
+
 - [ ] **MONTY and FOSSIL** (v14.57): editor > TESTING, breach each. MONTY: is his tell readable but not free (blunt at tier 1, ? vs . deeper)? The boss's swaps: too fast? Its prize (v14.58): clean boss = the C.A.R. (v14.59: no tap; every node in the sector is open until you drive off the links), ICE on the boss = a GOAT named ZONK that eats an ICE a corp and sometimes your loot: does the goat steal too often (1 in 3)? FOSSIL: brushing feel (a second a brush, 15s), the fossil glyphs (4 kinds, the eye is an o), the dirt, the boss skeleton. SHOVEL as its reward. My calls: both level 3, the logos, VELVET ROPE / HOLLOW.
 
 - [ ] **SIMON** (v14.55): editor > TESTING, breach SIMON (or find it on the map, level 2). Watch the pattern, play it back; try a wrong step (it hurts, replays). Since v14.56 a step is one beat of TRACKER (136 BPM: about 440ms): too fast? The tones (in the track's key, by node), the four colors, the look-alike characters deep in (`[l]` `[I]` `[1]` `[|]`: maybe too mean?). The boss's white steps. My calls: level 2, 12s clock, REPEAT as its boss gear, TRACKER music, the logo.

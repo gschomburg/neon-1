@@ -146,7 +146,24 @@ unlocked by REP, and some quests unlock REP.
       - [x] Steps 1 and 2 (2026-11-08, v14.60): see SPEC v14.60. The all-corps run (tools/checks/g0d_play.js) found
         LAGRANGE stuck and DEMOLITION clearing for no pay; SIMON cleared by skipping its pattern. All three have `auto`
         hooks now; all 81 corps play clean. MONTY (2 taps a layer) and FOSSIL (brushes) play right without one.
-      - [ ] Step 3: the map and money (it stops at the corp's rewards screen today).
+      - [ ] Step 3: the map and money (it stops at the corp's rewards screen today). **Decided (Greg, 2026-11-08):**
+        - **The map:** its cursor hovers there too, and the @ flies to the node it picks. A short line says why first
+          (`g0d: market. uplink needs 140cr, have 60.`).
+        - **The UPLINK:** it keeps money mods, sells the rest, and pushes on when it can pay. When it can't go any
+          further, it stops with a card like the hacker card, but with why it stopped, the clicks it used and how far it
+          got (sectors, corps). You close it and cash out yourself.
+        - **Rewards:** money mods first, then map gear (WARP / ROUTE / TUNNEL / SKIP). Other mods: it takes epic and
+          legendary ones anyway, to sell at the UPLINK (Claude's numbers: in sector 1 a legendary sells for ~40cr, an epic
+          ~26cr, x the sector; credits instead pay 20cr. Rare and common: take the credits).
+        - **Popups:** it skips scenes and clicks through quest and feat popups (and ads, event cards, CALL boxes), a click
+          each. A setting in the code to turn that off.
+        - **A corp it doesn't know in the way:** it goes in. It heals first when it's low (safehouse, PATCH), and helps
+          itself in there with gear: PING, FRAG, CALLs.
+        - **Its wins count** (the codex's breaches: the corps it then knows), with a setting so they don't. It's still
+          your INT on the line.
+        - **Safehouses and the workbench:** a safehouse when it needs healing. The workbench is a setting (off: it would
+          spend your components crafting); with it on it can at least SHRED what it doesn't need.
+        - **A full belt:** it trashes gear it can't use to make room.
       - [ ] Its face is a placeholder eye (data/art/faces.js `g0dexe`): redraw in the ART tab.
 
 ### 4. The end game (details: docs/ENDGAME.md)
