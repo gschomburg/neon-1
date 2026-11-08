@@ -51,9 +51,12 @@ module.exports = { name: 'g0dexe', body: `
   // two on the belt: the next one is ready, fresh clicks
   st.g0dxStop = null; addItem('g0dexe', 0); addItem('g0dexe', 0);
   await fresh(3);
-  st.run.g0dx.left = 1; useItem(slot());
-  for (let i = 0; i < 40 && !st.g0dxStop; i++) await sleep(100);
-  check(holds('g0dexe') && st.run.g0dx.left === save.g0dx.clicks && !g0dxOn() && /next G0D.exe/.test(st.g0dxStop ? st.g0dxStop.why : ''), 'a stack: one spent, the next is ready with fresh clicks');
+  st.run.g0dx.left = 2; useItem(slot());
+  let sawCard = false;
+  for (let i = 0; i < 60 && !(st.run.g0dx.chained && !st.hkCard && st.run.g0dx.left < save.g0dx.clicks); i++) { if (st.hkCard && st.hkCard.chain) sawCard = true; await sleep(50); }
+  check(st.run.g0dx.chained === 1 && g0dxCount() === 1 && g0dxOn() && !st.g0dxStop, 'a stack: its last click switches the next one on, no stop (' + g0dxCount() + ' left, chained ' + st.run.g0dx.chained + ')');
+  check(sawCard && !st.hkCard && st.run.g0dx.left <= save.g0dx.clicks - 1, "the new one's card comes up and it closes it itself (its first click)");
+  st.run.g0dx.on = false;
   st.g0dxStop = null; await settle('its last tap');
   // the last one spent, then a new one given (the editor's GIVE): fresh clicks
   st.run.items = st.run.items.filter(s => s.key !== 'g0dexe'); st.run.g0dx.left = 0; addItem('g0dexe', 0);

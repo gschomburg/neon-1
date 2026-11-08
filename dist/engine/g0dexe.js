@@ -18,7 +18,7 @@
 // st.g0dxD: the driver's moment to moment state (its cursor off the board, the flight, what it's waiting on)
 // save.g0dx: the dev settings (g0dxCfg)
 'use strict';
-NEON_FILES.push(['engine/g0dexe.js', 'v14.63']);
+NEON_FILES.push(['engine/g0dexe.js', 'v14.64']);
 
 // ---------- settings ----------
 const G0DX_CLICKS = [100, 250, 500, 1000, 9999];
@@ -111,7 +111,28 @@ function g0dxSpend() {
   g.left--; g.used++;
   return true;
 }
-const g0dxSpent = () => { const g = g0dxState(); if (g && g.on && g.left <= 0) g0dxOut(); };
+const g0dxSpent = () => {
+  const g = g0dxState();
+  if (!g || !g.on) return;
+  if (g.left === 1 && g0dxCount() >= 2) g.chain = true;   // its last click goes on the next G0D.exe (g0dxChain)
+  else if (g.left <= 0) g0dxOut();
+};
+const g0dxCount = () => st.run.items.filter(s => s.key === 'g0dexe').reduce((a, s) => a + s.n, 0);
+// The hand-off (Greg, 2026-11-08): with another G0D.exe on the belt, its last click switches that one on. This one is
+// spent and floats away; the next comes in with fresh clicks and its card, and closes the card itself (its first
+// click: g0dxPlan). No OFFLINE card in between. (Switched on by you, its card waits for your tap.)
+function g0dxChain() {
+  const g = g0dxState();
+  g.chain = false;
+  takeItem('g0dexe');
+  const h = hkUp('g0dexe'); if (h) hkOut(h, 'one more of me.');
+  g.left = g0dxCfg().clicks; g.chained = (g.chained || 0) + 1;
+  g0dxSay(`one more of me. ${g.left} clicks.`);
+  const c = { id: 'g0dexe', side: 'good', t0: performance.now(), chain: true };
+  if (st.mode === 'play' && st.lv) { c.hold = st.lv.holdUntil || 0; st.lv.holdUntil = Infinity; }
+  st.hkCard = c;
+  Sound.shield();
+}
 // Out of clicks (Greg, meat notes 2026-11-08): the gear is spent (one off the belt, like used gear) and its cursor floats
 // away (hkOut: a crew member leaving). Another G0D.exe on the belt is ready with fresh clicks: tap it.
 function g0dxOut() {
@@ -217,9 +238,10 @@ function g0dxPlan(now, D) {
   const run = st.run;
   if (!run) return { stop: 'no run.' };
   if (st.wipe || st.transitioning || st.g0dxStop) return 'wait';
+  if (g0dxState().chain && !st.busy) { const i = g0dxSlot('g0dexe'); return { at: g0dxBeltAt(i), act: g0dxChain }; }   // its last click: the next G0D.exe
   const o = overlayTop();
   if (o) {
-    if (o.id === 'hacker' && st.hkCard && st.hkCard.id === 'g0dexe') return 'wait';   // its own card: yours to close
+    if (o.id === 'hacker' && st.hkCard && st.hkCard.id === 'g0dexe') return st.hkCard.chain ? { act: () => o.key('enter') } : 'wait';   // its own card: yours to close (a hand-off's: it closes it)
     if (!g0dxCfg().popups) return 'wait';
     if (o.id === 'event' && !evCardShown()) return 'wait';   // (a sector event waits for the map to settle; it takes no taps till then)
     if (!D.popAt) D.popAt = now;
@@ -522,7 +544,7 @@ HK_AI.g0dexe = {
       s.wanderAt = now + 250 + Math.random() * 300;
       s.home = { x: L.gx + rand(2, Math.max(3, lv.cols * (TILE_W + GAP_X) - 2)), y: BOARD_Y + rand(1, Math.max(2, lv.rows * (TILE_H + GAP_Y) - 2)) };
     }
-    if (!g0dxOn() || overlayTop()) { if (!g0dxOn()) { s.fly = null; s.lastTick = 0; } return; }
+    if (!g0dxOn() || overlayTop() || g0dxState().chain) { if (!g0dxOn()) { s.fly = null; s.lastTick = 0; } return; }   // (the hand-off: the driver)
     if (!s.lastTick || s.held) { s.held = false; s.thinkTo = Math.max(s.thinkTo || 0, now + g0dxMs('think')); }   // back from a pause or a card: think again
     s.lastTick = now;
     if (s.fly) {

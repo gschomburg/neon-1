@@ -1,7 +1,7 @@
 // NeoN+1 engine/board.js: the layer's board (buildBoard) and COIN FLIP's coin box and multiplier pop.
 // Moved out of engine/scene.js (2026-11-05). buildScene (engine/scene.js) calls buildBoard each frame.
 'use strict';
-NEON_FILES.push(['engine/board.js', 'v14.63']);
+NEON_FILES.push(['engine/board.js', 'v14.64']);
 
 function buildBoard({ now, put, addHit, bg, cells }) {
   const lv = st.lv;
