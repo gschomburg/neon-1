@@ -17,8 +17,9 @@ to build is `docs/BACKLOG.md`.)
 - [ ] **G0D.exe** (v14.60-v14.61): dev menu (backtick) > [give G0D.exe], then tap the red [G0D] on your belt. Watch a
   run: its card, the <@> cursor thinking and the @ flying out, the map lines (why it goes where), markets, rewards, the
   UPLINK, and its OFFLINE card when it stops. Settings in the dev menu: speed, clicks, wins before it knows a corp,
-  popups (click / wait), its wins (count / not), the workbench (shred only / + build). My calls: the eye art (placeholder),
-  how it scores the map, what it buys.
+  popups (click / wait), its wins (count / not), the workbench (shred only / + build), phish (skip / ALL OF IT: watch it
+  phish your money away at a pier), risky (go on / hand back). My calls: the eye art (placeholder), how it scores the map,
+  what it buys, when it taps a $ node.
 
 - [ ] **Credits instead of a mod may be too low** (found planning G0D.exe, 2026-11-08). Skipping a boss reward pays
   2 earn units (20cr in sector 1). Taking an epic or legendary mod and selling it at the UPLINK pays 33% of its fee:

@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v14.61']);
+NEON_FILES.push(['engine/fishing.js', 'v14.62']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -97,24 +97,30 @@ function fishPointer(kind, e) {
     if (f.card) return true;   // the LANDED card: its buttons only
     if (f.reel) { f.hold = true; return true; }   // the reel: hold to pull
     if (f.hook && f.hook.bite) { fishStartReel(); return true; }   // it bit: tap the stream
-    if (!f.hook) {   // a new cast
-      if (fishCasts() >= ECON.fish.casts) { Sound.deny(); setMsg("> nothing's biting here anymore. move on.", C.mid); return true; }
-      const cost = fishCost();
-      if (!canSpend(cost)) { Sound.deny(); setMsg(`> a cast is ${cost}cr.`, C.danger); return true; }
-      st.run.credits -= cost;
-      st.run.pierCasts[f.node.id] = fishCasts() + 1;
-      tally('casts');   // THE RECORD (CAST AWAY)
-      // the cast: the hook drops straight to the lane you tapped (then hold and drag to move it)
-      f.hook = { x: L.wc * 0.42, y: fishGeo().surface, lane: fishLaneAt(y), bite: null, drop: true, row: null };
-      Sound.fishCast();
-      setMsg(`> cast. -${cost}cr.`, C.accent);
-    }
+    if (!f.hook && !fishCast(fishLaneAt(y))) return true;   // a new cast
     f.hold = true; f.hook.lane = fishLaneAt(y);
     return true;
   }
   if (kind === 'move' && f.hold && f.hook && !f.reel) { f.hook.lane = fishLaneAt(y); return true; }
   if (kind === 'up') { f.hold = false; return true; }
   return false;
+}
+// A cast into a lane (your tap, fishPointer; G0D.exe, engine/g0dexe.js): it costs credits, and a pier has so many.
+// False: no cast (fished out, or no money), and it says so.
+const fishCanCast = () => fishCasts() < ECON.fish.casts && canSpend(fishCost());
+function fishCast(lane) {
+  const f = st.fish;
+  if (fishCasts() >= ECON.fish.casts) { Sound.deny(); setMsg("> nothing's biting here anymore. move on.", C.mid); return false; }
+  const cost = fishCost();
+  if (!canSpend(cost)) { Sound.deny(); setMsg(`> a cast is ${cost}cr.`, C.danger); return false; }
+  st.run.credits -= cost;
+  st.run.pierCasts[f.node.id] = fishCasts() + 1;
+  tally('casts');   // THE RECORD (CAST AWAY)
+  // the cast: the hook drops straight to the lane you tapped (then hold and drag to move it)
+  f.hook = { x: L.wc * 0.42, y: fishGeo().surface, lane, bite: null, drop: true, row: null };
+  Sound.fishCast();
+  setMsg(`> cast. -${cost}cr.`, C.accent);
+  return true;
 }
 function fishReelIn() {
   const f = st.fish;

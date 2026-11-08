@@ -1,6 +1,6 @@
 // NeoN+1 corps/fossil.js
 'use strict';
-NEON_FILES.push(['corps/fossil.js', 'v14.61']);
+NEON_FILES.push(['corps/fossil.js', 'v14.62']);
 // Its boss gear: SHOVEL x3 (shovel), defined with the gear in data/mods.js (ITEMS), its effect in engine/active.js
 // (BOSS_GEAR). Design: docs/CORPS.md A28 (Greg, 2026-11-07).
 

@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.61']);
+NEON_FILES.push(['engine/input.js', 'v14.62']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -173,6 +173,7 @@ cv.addEventListener('pointerdown', e => {
   Field.blur();   // tapping anywhere else finishes typing (phones don't always do this)
   if (st.boot && !st.dev) { introTap(hitAt(...ptXY(e))); return; }   // the intro: LOGIN, skip ahead, its buttons (engine/intro.js)
   { const o = overlayTop(); if (o) return o.tap(hitAt(...ptXY(e), overlayHits)); }   // an ad, a card, a box, a scene: the top one takes the tap (OVERLAYS, engine/scene.js)
+  if (st.mode === 'fish' && !st.dev && !st.pause && g0dxOn()) g0dxPause('paused: you took over.');   // G0D.exe at the pier: your tap takes over (engine/g0dexe.js)
   if (st.mode === 'fish' && !st.dev && !st.pause && fishPointer('down', e)) return;   // the PIER (engine/fishing.js)
   if (st.bench && benchPointer('down', e)) return;   // the WORKBENCH keyboard and slots (engine/bench.js)
   if (st.intro) { st.intro.skip = true; return; }   // tap skips a corp intro

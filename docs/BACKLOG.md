@@ -165,9 +165,9 @@ unlocked by REP, and some quests unlock REP.
           doesn't need; building is a setting, off to start (it would spend all your components).
         - **A full belt:** it trashes gear it can't use to make room.
       - [ ] Its face is a placeholder eye (data/art/faces.js `g0dexe`): redraw in the ART tab.
-      - [ ] Still open: TUNNEL and MESH (it keeps them, doesn't use them yet); phishing (it skips the pier); building at
-        the workbench is in but barely tried; it never rerolls a market. How smart its map is: tune once you've watched it.
-      - [ ] Step 4 and the rest. **Decided (Greg, 2026-11-08):**
+      - [ ] Still open: building at the workbench is in but barely tried. How smart its map and shopping are: tune once
+        you've watched it. The real G0D.exe (the quest, not the dev menu) is the entry above.
+      - [x] Step 4 and the rest (2026-11-08, v14.62; SPEC v14.62). **Decided (Greg, 2026-11-08):**
         - **$ nodes in corps it knows:** MAGNET whenever it has one. It taps a $ node itself only at full health, while
           the UPLINK still needs money, and never on a boss layer.
         - **Phishing:** off by default (it skips the pier). A flag turns on a "phish it all away" mode, for laughs: it

@@ -18,7 +18,7 @@
 // st.g0dxD: the driver's moment to moment state (its cursor off the board, the flight, what it's waiting on)
 // save.g0dx: the dev settings (g0dxCfg)
 'use strict';
-NEON_FILES.push(['engine/g0dexe.js', 'v14.61']);
+NEON_FILES.push(['engine/g0dexe.js', 'v14.62']);
 
 // ---------- settings ----------
 const G0DX_CLICKS = [100, 250, 500, 1000, 9999];
@@ -28,8 +28,10 @@ const G0DX_MS = { think: 1000, screen: 500, out: 220, back: 260, gap: 300 };
 // clicks: how many it gets. speed: 1x 2x 4x. beaten: wins before it knows a corp. popups: it clicks through popups and
 // skips scenes (false: it waits for you). countWins: a corp it breaches counts in your codex (so it knows it after).
 // build: at a workbench it builds gear it uses, from your components (off: it only shreds what it doesn't use).
+// phish: "phish it all away" (Greg, for laughs): it heads for every pier and casts till it's out of clicks or credits
+// (off: it skips the pier). handoff: low, nothing to heal, and every way on is a corp it doesn't know: it stops.
 function g0dxCfg() {
-  save.g0dx = Object.assign({ clicks: 500, speed: 1, beaten: 1, popups: true, countWins: true, build: false }, save.g0dx || {});
+  save.g0dx = Object.assign({ clicks: 500, speed: 1, beaten: 1, popups: true, countWins: true, build: false, phish: false, handoff: false }, save.g0dx || {});
   return save.g0dx;
 }
 const g0dxMs = k => G0DX_MS[k] / (g0dxCfg().speed || 1);
@@ -119,8 +121,9 @@ function g0dxCorpDone(c) {
 // ---------- gear it uses ----------
 // What it does with each gear (everything else is junk to it: trashed for room, shredded at a workbench).
 const G0DX_GEAR = {
-  map: ['skip', 'warp', 'route'],   // jumping ahead (TUNNEL and MESH: kept, not used yet)
-  keep: ['tunnel', 'mesh', 'pass'],   // (PASS: the UPLINK uses it by itself)
+  map: ['skip', 'warp', 'route'],   // jumping ahead
+  ways: ['mesh', 'tunnel'],   // more ways on: used when they open a better one
+  keep: ['pass', 'magnet'],   // (PASS: the UPLINK uses it by itself; MAGNET: a $ node in a layer)
   heal: ['patch', 'stim', 'wall'],
   layer: ['zeroday', 'split', 'repeat', 'shovel', 'frag', 'purge', 'ping'],   // corps it doesn't know, best first
   any: ['lotto'],   // use it now: credits
@@ -166,6 +169,7 @@ function g0dxDrive(now) {
   const D = st.g0dxD || (st.g0dxD = { next: 0 });
   if (D.fly) g0dxFlyStep(D, now);
   if (!g0dxOn() || st.dev || st.pause || (typeof TABS !== 'undefined' && TABS.away) || st.mode === 'title' || (st.run.ended && st.mode !== 'over')) { D.waitAt = 0; return; }
+  if (st.mode === 'fish' && st.fish) g0dxFishHold(st.fish, now);   // the pier: the hook and the reel, frame by frame
   if (D.fly || now < D.next) return;
   const key = `${st.mode}:${st.panelTitle || ''}:${st.run && st.run.at}:${overlayTop() ? overlayTop().id : ''}`;
   if (key !== D.key) { D.key = key; D.lookTo = now + g0dxMs('screen'); D.waitAt = 0; D.tries = 0; D.popAt = 0; }
@@ -174,7 +178,7 @@ function g0dxDrive(now) {
   try { plan = g0dxPlan(now, D); } catch (e) { g0dxLog('plan error: ' + e.message); plan = { stop: 'something broke: ' + e.message }; }
   if (!plan || plan === 'wait') {   // waiting a long while off the board: it doesn't know this screen
     if (!D.waitAt) D.waitAt = now;
-    else if (st.mode !== 'play' && !st.transitioning && !st.wipe && now - D.waitAt > 8000 / (g0dxCfg().speed || 1) + 4000) g0dxStop(`it doesn't know this screen (${st.panelTitle || st.mode}).`);
+    else if (st.mode !== 'play' && st.mode !== 'fish' && !st.transitioning && !st.wipe && now - D.waitAt > 8000 / (g0dxCfg().speed || 1) + 4000) g0dxStop(`it doesn't know this screen (${st.panelTitle || st.mode}).`);
     return;
   }
   D.waitAt = 0;
@@ -215,6 +219,7 @@ function g0dxPlan(now, D) {
   if (st.mode === 'play') return g0dxPlayPlan();
   if (st.mode === 'map') return g0dxMapPlan();
   if (st.mode === 'panel') return g0dxPanelPlan(D);
+  if (st.mode === 'fish' && st.fish) return g0dxFishPlan(now);
   if (st.mode === 'over') {
     if (st.result && st.result.sector) { const b = g0dxBtn('push'); return b ? { at: g0dxAt(b), act: b.onTap, say: 'sector cleared. on to the uplink.' } : 'wait'; }
     return { stop: run.integrity <= 0 ? 'you flatlined.' : 'the run is over.' };
@@ -241,7 +246,7 @@ function g0dxNodeValue(n, c) {
   else if (t === 'shop') v = c.loot || c.hurt ? 2 : 0.3;
   else if (t === 'cache') v = 2;
   else if (t === 'repair') v = c.low ? 5 : c.hurt ? 2.5 : 0.2;
-  else if (t === 'pier') v = -1;
+  else if (t === 'pier') v = g0dxCfg().phish && st.run.credits >= fishCost() && ((st.run.pierCasts || {})[n.id] || 0) < ECON.fish.casts ? 8 : -1;   // (phish it all away)
   return v - (c.need > 0 ? 0 : 0.6);
 }
 // The best total along any way from this node to the sector's boss (the map's links; sideways ones go both ways).
@@ -268,6 +273,20 @@ function g0dxMapPlan() {
   // the belt first: heal when low, scratch a LOTTO, make room
   if (low && g0dxSlot('patch') >= 0 && canUse(run.items[g0dxSlot('patch')])) return g0dxUseGear('patch', 'patching up.');
   if (g0dxSlot('lotto') >= 0) return g0dxUseGear('lotto', 'a lotto ticket.');
+  const c0 = { need, hurt, low, loot: (run.loot || []).some(s => !ITEMS[s.key].quest) };
+  const score = id => g0dxRoute(id, c0, new Set([id])) + run.map[id].step * 0.01;   // (a tie: the deeper one)
+  const now0 = availableNodes(), bestNow = Math.max(-Infinity, ...now0.map(score));
+  // the hand-off (a setting): low, nothing to heal with, and every way on is a corp it doesn't know
+  if (g0dxCfg().handoff && low && g0dxSlot('patch') < 0 && now0.length && now0.every(id => ['corp', 'final'].includes(run.map[id].type) && !g0dxKnows(run.map[id].corp)))
+    return { stop: `you're at ${run.integrity} INT with nothing to heal, and every way on is a corp it doesn't know.` };
+  // MESH / TUNNEL: when they'd open a better way than the ones there are
+  for (const k of G0DX_GEAR.ways) {
+    const i = g0dxSlot(k);
+    if (i < 0 || !canUse(run.items[i])) continue;
+    const cur = run.map[run.at], opens = k === 'tunnel' ? rowMates() : Object.values(run.map).filter(n => n.step === cur.step + 1 && (n.sector || 0) === (run.sector || 0)).concat(meshSides());
+    const more = opens.filter(n => !run.visited.includes(n.id) && !now0.includes(n.id));
+    if (more.length && Math.max(...more.map(n => score(n.id))) > bestNow + 1.5) return g0dxUseGear(k, `${ITEMS[k].name.toLowerCase()}: a better way on.`);
+  }
   // jumping ahead: only when the money's there and you're not hurt
   if (need <= 0 && !hurt) for (const k of G0DX_GEAR.map) {
     const i = g0dxSlot(k);
@@ -276,10 +295,9 @@ function g0dxMapPlan() {
   }
   const ids = availableNodes();
   if (!ids.length) return { stop: 'nowhere left to go on the map.' };
-  const c = { need, hurt, low, loot: (run.loot || []).some(s => !ITEMS[s.key].quest) };
   let best = null, bv = -Infinity;
   for (const id of ids) {
-    const v = g0dxRoute(id, c, new Set([id])) + run.map[id].step * 0.01;   // (a tie: the deeper one)
+    const v = score(id);
     if (v > bv) { bv = v; best = id; }
   }
   const n = run.map[best], u = g0dxUplinkNet();
@@ -353,6 +371,7 @@ function g0dxShopPlan(D) {
   const k = sh.offers.findIndex(o => !o.sold && canSpend(P(o)) && P(o) <= spare() && (
     (o.kind === 'mod' && g0dxMoneyMod(o.key) && modRoom(o.key) && !clashWith(o.key)) || (o.kind === 'item' && g0dxUses(o.key) && itemRoom(o.key, o.tier))));
   if (k >= 0) { const o = sh.offers[k]; return { act: () => sh.buyAt(k), say: `buys ${(o.kind === 'mod' ? MODS[o.key] : ITEMS[o.key]).name.toLowerCase()}.` }; }
+  if (sh.rerollsLeft() > 0 && (D.shop.rolls || 0) < 2 && spare() > sh.rerollPrice() * 3) { D.shop.rolls = (D.shop.rolls || 0) + 1; return { act: () => sh.reroll(), say: `money to spare: a reroll (${sh.rerollPrice()}cr).` }; }
   return g0dxLeave();
 }
 const g0dxLeave = () => { const b = g0dxBtn('leave') || g0dxBtn('back'); return { at: g0dxAt(b), act: () => (b ? b.onTap() : leavePanel()) }; };
@@ -376,6 +395,51 @@ function g0dxBenchPlan(D) {
   return { act: () => benchLeave() };
 }
 
+// ---------- the pier (only with "phish it all away" on; else it leaves) ----------
+// Frame by frame (engine/fishing.js): the hook goes to the lane of the shape that will reach it first; on the reel it holds
+// while the mark is short of the window's middle and lets go past it. (Holding isn't a click: the cast and the
+// tap on a bite are.)
+function g0dxFishHold(f, now) {
+  if (!g0dxOn()) return;
+  const rl = f.reel;
+  if (rl) { f.hold = rl.mark < rl.win + rl.w * 0.5; return; }
+  const hk = f.hook;
+  if (!hk || hk.bite || hk.drop) return;
+  const eta = s => (hk.x - fishHead(s)) * s.dir / Math.max(0.1, s.spd);   // (how long till it swims to the hook, s)
+  let best = f.g0dxFish;   // stay on the one it picked till it's nosed the hook or swum past
+  if (!best || best.nosed || best.flee || !f.shapes.includes(best) || eta(best) < -0.5) {
+    best = null; let bd = Infinity;
+    for (const s of f.shapes) {
+      if (s.nosed || s.flee || s.hooked) continue;
+      const d = eta(s);
+      if (d > 0.8 && d < bd) { bd = d; best = s; }   // (time to get the hook there first)
+    }
+    f.g0dxFish = best;
+  }
+  f.g0dxComing = best ? now : f.g0dxComing;
+  if (best) { hk.lane = best.lane; f.hold = true; } else f.hold = false;
+}
+function g0dxFishPlan(now) {
+  const f = st.fish, phish = g0dxCfg().phish;
+  if (f.card) {   // landed: keep it (it's loot to sell), or back it goes when there's no room
+    const key = fishKeepKey(f.card.out), room = itemRoom(key, f.card.out.tier);
+    return { at: g0dxAt(g0dxBtn(room ? 'fkeep' : 'fback')), act: () => (room ? fishKeep() : fishThrowBack()) };
+  }
+  if (f.reel) return 'wait';   // (g0dxFishHold has the line)
+  const hk = f.hook;
+  if (hk && hk.bite) return { at: { x: Math.round(hk.x), y: Math.round(hk.y) }, act: () => { if (f.hook && f.hook.bite) fishStartReel(); } };
+  if (hk) {   // nothing heading for the hook for a while: reel in, cast again
+    return now - Math.max(hk.since || (hk.since = now), f.g0dxComing || 0) > 4000 ? { at: g0dxAt(g0dxBtn('freel')), act: () => fishReelIn() } : 'wait';
+  }
+  if (phish && fishCanCast()) {
+    const lane = Math.floor(Math.random() * FISH_LANES), g = fishGeo();
+    return { at: { x: Math.round(L.wc * 0.42), y: g.laneY(lane) }, act: () => { if (fishCast(lane)) f.hold = true; }, say: g0dxPhishSay() };
+  }
+  return { at: g0dxAt(g0dxBtn('fleave')), act: () => leavePier(),
+    say: !phish ? 'no phishing today.' : fishCasts() >= ECON.fish.casts ? 'fished out. on to the next pier.' : 'out of credits to cast.' };
+}
+const g0dxPhishSay = () => `phishing it all away. ${fishCost()}cr a cast, ${st.run.credits}cr left.`;
+
 // ---------- in a corp ----------
 // Switched on, it's in every corp layer (engine/hackers.js hkTick calls this each frame).
 function g0dxEnsure(lv) {
@@ -393,7 +457,11 @@ function g0dxChoose(lv) {
   const cands = lv.tiles.filter(t => t.state === 'closed' && !t.loaded && !(t.denied && t.denied > now));
   const real = cands.find(isReal) || null, known = g0dxKnows(def.key);
   if (def.auto) { const r = def.auto(lv, { known, cands, real }); if (r !== undefined) return r; }
-  if (known && real) return real;
+  if (known && real) {   // a $ node first (Greg): at full health, while the UPLINK needs money, never on a boss layer
+    const cash = lv.tiles.find(t => t.loaded && t.state === 'closed' && !isReal(t));
+    if (cash && !def.auto && !lv.boss && !zombie() && (st.run.integrity >= st.run.maxInt || has('forgery')) && g0dxNeed() > 0) return cash;
+    return real;
+  }
   const shown = cands.find(t => t.zd);
   if (shown) return shown;
   const open = cands.filter(t => !t.ruledOut);
@@ -405,6 +473,7 @@ function g0dxLayerGear(lv, s) {
   const run = st.run, known = g0dxKnows(st.corp.def.key);
   const use = k => { const i = g0dxSlot(k); return i >= 0 && canUse(run.items[i]) ? k : null; };
   if (g0dxLow()) { const k = use('patch') || use('stim') || use('wall'); if (k) return k; }
+  if (lv.tiles.some(t => t.loaded && t.state === 'closed') && use('magnet')) return 'magnet';   // a $ node: its loot, free
   if (known || s.gear || lv.tiles.some(t => t.zd && t.state === 'closed')) return null;
   const k = G0DX_GEAR.layer.map(use).find(Boolean);
   if (k) return k;

@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v14.61']);
+NEON_FILES.push(['engine/dev.js', 'v14.62']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
@@ -217,6 +217,10 @@ function devMenuLines() {
     { text: `[its wins: ${gx.countWins ? 'count' : 'not'}]`, id: 'g0dxwin', onTap: () => { gx.countWins = !gx.countWins; persist(); Sound.tick(); } },
   ] });
   B(`[ workbench: ${gx.build ? 'shred + build' : 'shred only  '} ]`, 'g0dxbld', () => { gx.build = !gx.build; persist(); Sound.tick(); });
+  lines.push({ row: [
+    { text: `[phish: ${gx.phish ? 'ALL OF IT' : 'skip'}]`, id: 'g0dxfish', onTap: () => { gx.phish = !gx.phish; persist(); Sound.tick(); } },
+    { text: `[risky: ${gx.handoff ? 'hand back' : 'go on'}]`, id: 'g0dxrisk', onTap: () => { gx.handoff = !gx.handoff; persist(); Sound.tick(); } },
+  ] });
   if (run && run.g0dx) T(`${run.g0dx.on ? 'on' : 'paused'}: ${run.g0dx.left} clicks left, ${run.g0dx.used} used`, C.dim);
   T('');
   lines.push({ row: [
