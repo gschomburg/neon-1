@@ -39,25 +39,31 @@ const g0dxMs = k => G0DX_MS[k] / (g0dxCfg().speed || 1);
 // ---------- the switch ----------
 const g0dxState = () => (st.run && st.run.g0dx) || null;
 const g0dxOn = () => { const g = g0dxState(); return !!(g && g.on && holds('g0dexe')); };
-const g0dxCanToggle = () => { const g = g0dxState(); return !!(st.run && !st.run.ended && g && (g.on || g.left > 0)); };
+const g0dxCanToggle = () => { const g = g0dxState(); return !!(st.run && !st.run.ended && holds('g0dexe') && (!g || g.on || g.left > 0)); };   // (no state yet: the tap sets it up)
 const g0dxWhy = () => { const g = g0dxState(); return !g ? 'not set up: give it from the dev menu.' : g.left <= 0 ? 'out of clicks.' : 'wait a moment.'; };
 const g0dxKnows = key => corpStat(key).breached >= (g0dxCfg().beaten || 1);
 const g0dxNote = () => { const g = g0dxState(); return g && g.on ? `+G0D.exe ${g.left}` : 'G0D.exe ||'; };
 
-// The dev menu's [give G0D.exe]: onto your belt, with a fresh count of clicks.
+// Its state on the run: a fresh count of clicks (a run with it is practice).
+function g0dxSetup() {
+  const run = st.run;
+  run.g0dx = { on: false, left: g0dxCfg().clicks, used: 0, card: true, corps: 0 };
+  st.g0dxStop = null; st.g0dxD = null;
+  run.practice = true;
+  return run.g0dx;
+}
+// The dev menu's [give G0D.exe]: onto your belt, set up. (Put on the belt some other way, the editor or [fill gear],
+// its first tap sets it up: g0dxToggle.)
 function g0dxGive() {
   const run = st.run;
   if (!run) return false;
   if (!holds('g0dexe') && !addItem('g0dexe', 0)) { setMsg('> no room on the belt for G0D.exe.', C.danger); return false; }
-  run.g0dx = { on: false, left: g0dxCfg().clicks, used: 0, card: true, corps: 0 };
-  st.g0dxStop = null; st.g0dxD = null;
-  run.practice = true;
+  g0dxSetup();
   setMsg(`> G0D.exe on your belt. ${run.g0dx.left} clicks. tap it on.`, C.divine);
   return true;
 }
 function g0dxToggle() {
-  const g = g0dxState();
-  if (!g) return;
+  const g = g0dxState() || g0dxSetup();
   st.hoverItem = -1; st.selItem = -1;
   if (g.on) return g0dxPause('paused. tap it to go on.');
   g.on = true; g.stuck = null;

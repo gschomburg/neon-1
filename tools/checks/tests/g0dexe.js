@@ -47,5 +47,13 @@ module.exports = { name: 'g0dexe', body: `
   for (let i = 0; i < 40 && st.run.g0dx.left > 0; i++) await sleep(100);
   await sleep(300);
   check(st.run.g0dx.left === 0 && !g0dxOn() && !canUse(st.run.items[slot()]), 'out of clicks: it stops, and the gear says so (' + whyNotItem(st.run.items[slot()]) + ' / ' + at() + ')');
+  // put on the belt some other way (the editor, [fill gear]): its first tap sets it up, on the map too
+  st.run.items = st.run.items.filter(s => s.key !== 'g0dexe'); st.run.g0dx = null; st.run.ended = false;
+  st.corp = null; B.toMap(); await sleep(1500);
+  addItem('g0dexe', 0);
+  check(canUse(st.run.items[slot()]), 'added without its setup: it can still be switched on (' + whyNotItem(st.run.items[slot()]) + ')');
+  useItem(slot());
+  check(g0dxOn() && st.run.g0dx.left === save.g0dx.clicks && st.run.practice, 'the first tap sets it up and switches it on, on the map');
+  st.run.g0dx.on = false;
   check(chipOf('divine').bg === '#ff3b3b' && RARITY.divine.label === 'DIVINE', 'DIVINE: G0D red');
 ` };
