@@ -20,7 +20,7 @@
 //   once-offs (counted when they happen):  diedFirst (died in your first corp)  nakedSector (cleared a sector with no
 //   mods)  bossAt1 (beat a boss layer at 1 INT)  easyCome (earned 1000cr in a run and ended it with under 10)
 'use strict';
-NEON_FILES.push(['data/feats.js', 'v14.65']);
+NEON_FILES.push(['data/feats.js', 'v14.66']);
 
 const FEATS = [
   // ---- the basics: runs
@@ -101,7 +101,7 @@ const FEATS = [
     say: "you took down G0D. i'm going to need a minute. so is the net." },
   { id: 'g0dclean', name: 'UNTOUCHED', group: 'heaven', text: 'beat G0D without him landing a hit.', stat: 'g0dClean', n: 1, title: 'UNTOUCHED',
     say: "not a scratch. G0D didn't lay a finger on you. show off." },
-  { id: 'g0dshoe', name: 'WITH A SHOE', group: 'heaven', text: 'finish G0D off with a shoe.', stat: 'g0dShoe', n: 1, title: 'COBBLER',
+  { id: 'g0dshoe', name: 'WITH A SHOE', group: 'heaven', text: 'finish G0D off with a shoe.', stat: 'g0dShoe', n: 1, title: 'INFIDEL',
     say: 'a shoe. you killed G0D with a shoe. i love you kid.' },
   { id: 'mazelost', name: 'LOST', group: 'heaven', text: 'get lost in the G0D MAZE.', stat: 'mazeLost', n: 1,
     say: "the maze ate you. happens. follow the codex, kid." },

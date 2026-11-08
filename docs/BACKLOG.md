@@ -9,6 +9,9 @@ New ideas and "n:" notes go here. Details live in the docs each item points to.
   `docs/archive/BACKLOG_2026-11-07.md`. The older planning lists: `docs/archive/SPEC_backlog_2026-10.md`.
 
 Cleaned up 2026-11-07: built items taken out (the SPEC version log has them), open leftovers kept.
+Checked against the code 2026-11-08: items built already that were still listed are out (RELOAD, the achievement
+feats, more pets, the DISC on the line, corrupted software at the PIER, the quests tab hint, BIG DATA, the cutscene
+track, Justin's music viewer, KERNEL, NEMESIS, STARTER POOL, TIME IS MONEY); partly built ones say what's left.
 
 ## Big features: the next layer of the game
 
@@ -17,16 +20,13 @@ unlocked by REP, and some quests unlock REP.
 
 ### 1. Gear and scrap mods
 **Greg, 2026-11-07:** "we are pretty good on gear for now."
-- **A gear top-up mod** (the user, 2026-10-30): at the start of every corp, if you have any gear it gives you one more;
-  or, if you only have one of a gear item, another. At least legendary: a boss reward, or exotic as its own find.
-  (RELOAD, legendary, is built: singles get a second each corp. Still open: **PACK RAT**, exotic: mod row = gear
-  slots, rewards = gear, every stack +1 each corp; docs/EXOTICS.md, "All items".)
+- **PACK RAT** (exotic; the gear top-up's big cousin, RELOAD is the built one): mod row = gear slots, rewards = gear,
+  every stack +1 each corp (docs/EXOTICS.md, "All items").
 - **Going back a row** on the map is a can of worms: save it for an exotic mod (the user thinks it could be good).
 - More map gear ideas (Claude): SCOUT (see the corps / anomalies ahead).
 - Exotic gear: only NUKE. Ideas: PARADOX / ENTANGLE / BITFLIP (below).
 - **Codex hints for the gear reactions** (not written yet): GRAVITAS (TILT = a free gravity drop), ENTROPY (SHAKE
   sets off its shuffle). Could go in each corp's codex entry.
-- **BOX OF WIRES** (built v14.53). Open: the carry-a-scrap-mod challenge quest (section 3).
 - **More corp mods -> gear?** (the user, 2026-10-27): only the tap-to-use ones moved (v13.62). Others that could: none
   picked yet.
 - **Gear ideas (the user, 2026-10-27):**
@@ -40,13 +40,13 @@ unlocked by REP, and some quests unlock REP.
 - **THE WORKBENCH, what's still open** (built v14.12-v14.15; the whole design talk is in the archive):
   - Keyboard design tweaks and the line over it (the user: not sure yet). The look: off-white / beige Commodore
     colors (the user: leaning, just a note).
-  - **DIVINE** red letters (from G0D); blueprints; wildcards (*) from fishing; a use for digits in mods. Letter
+  - **DIVINE** red letters (from G0D; the bench's SPECIAL row waits for them); blueprints; wildcards (*) from fishing
+    (today only by shredding the corrupted software it brings up); a use for digits in mods. Letter
     counts: no recipe uses I; digits 1-9 none; J, Q once.
   - What a letter's rarity means once you craft with it (Greg, 2026-11-05: keep each letter's rarity, so the keyboard
     can show the colours).
   - How safehouse gear works (install anything? swap?). Leaning: you can't swap out an equipped mod; maybe you can
     only shred it, or unequip it.
-  - Corrupted software (JUNK.DAT...): fishing them up at the PIER.
   - **Sounds:** a failed craft (the components burning), a sound pass on the whole bench (keys, slots, tabs, the
     locker, take / store), better key-press sounds.
 - **Scrap mods:** maybe 2 other worthless ones.
@@ -63,12 +63,13 @@ unlocked by REP, and some quests unlock REP.
   - Levels of unlocks; finishing the codex (or beating every corp) opens new options. For the codex one: THE
     ARCHIVE (start with any mod you've found), ARCHIVIST (every corp's tell printed), an exotic pick, a cosmetic.
   - Mod storage between runs (LOCKER exists: cash out, keep 1 mod a step lower): rent per run, 1-2 mods.
-  - A booster that picks corps you haven't beaten more often. A **nemesis**: mark a corp and it shows up more.
-  - Unlock mods into the starter pool (choose 3; one may show up at the start).
+  - A booster that picks corps you haven't beaten more often. (NEMESIS, marking a corp, is built: a BOARD post.)
+  - The starter pool, more: choose 3, one may show up at the start. (STARTER POOL is built: the starter perk can offer
+    the mods you've found.)
   - **Palettes unlock** by beating their corp (not built: SETTINGS offers every palette today). Big logos as unlocks.
   - Difficulty levels unlocked with REP that add drains (money or mods taken away) and pay more REP.
-  - **Feat ideas:** replay a seed and get further than before; call 2 hackers in the same layer; sell 30 PHISH; catch
-    a biiiig PHISH; buy a mod back from the fence (and maybe a REP unlock: fence prices -10%). The FEAT box over the
+  - **Feat ideas:** replay a seed and get further than before; call 2 hackers in the same layer; sell 30 PHISH; buy a
+    mod back from the fence (and maybe a REP unlock: fence prices -10%). The FEAT box over the
     win page: a solid background that isn't the screen's (the REP color?).
   - **REP unlocks you can switch on and off** (the user, meat notes 2026-10-29), e.g. +1 to the default corp layer count.
   - **Skip a corp's rewards for a heal** (meat notes 2026-11-06): an option, maybe a choice on the screen, maybe a REP unlock.
@@ -96,9 +97,7 @@ unlocked by REP, and some quests unlock REP.
 - **The feel: FTL's quests and interactions.** Brainstorm together. **Random encounters, FTL style** (meat notes
   2026-11-06): you choose from 2 or 3 options, and you might get a reward.
 - **Cutscene art:** random traces running up that aren't in the drawings; more color work; more art for the later
-  frames maybe. **Cutscene music:** EVENT HORIZON as a possible lighter cutscene track.
-- **A hint on the quests tab** (meat notes 2026-11-03): when it's empty, something like "no quests yet. put a crew
-  together and maybe you will discover some" / "get to know the other hackers, call them".
+  frames maybe.
 - **More quests** (the user, meat notes 2026-10-28):
   - **The symbol path:** you find a symbol that is a path through a network (a very simple treasure map). Go through a
     sector that way and you get a bonus, or the final node turns into a special boss. Needs a special sector map, e.g.:
@@ -247,14 +246,15 @@ unlocked by REP, and some quests unlock REP.
     ciphertext, the console.
   - Claude's picks: TWIN (works everywhere, nobody expects it), OVERFLOW (pure hacker logic), PHISHER (fits the story).
     PHREAK's whistle is the weird-hard one, like going offline.
-- **Replay H3AV3N** after winning (maybe its own leaderboard).
+- **An H3AV3N leaderboard** (replaying it after a win works already).
 - **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
+  (GAUNTLET the sector event is built: one line, no choices, one market.)
 - **A daily seed** and a daily leaderboard (none today): a pinned row on LEADERBOARD > SEEDS.
 - **More rewards?** A mod you always start with (meat notes 2026-10-29).
 - **CODEX** (the track) might be good for the credits or the cutscenes (meat notes 2026-10-31).
 
 ### 5. The map and run structure
-- **Fishing, what's still open:** unlock the PIER with a feat; a quest item on the line; mods or gear that affect
+- **Fishing, what's still open:** unlock the PIER with a feat; mods or gear that affect
   fishing? (a note for now; the first notes said no fishing upgrades).
 - **Different markets** (the user, meat notes 2026-10-28): black market / grey market / open market.
 - More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
@@ -267,7 +267,7 @@ unlocked by REP, and some quests unlock REP.
 
 ### 6. Anomalies and sector events (design: `docs/SECTOR_EVENTS.md`)
 - **Still open:** a THREAT level later; a REP option to turn events on in sector 1; tying the sector boss to the
-  event (parked). Idea: ICE STORM.
+  event further (parked; it already carries the event's anomaly). Idea: ICE STORM.
 - **Other ideas (Claude's):** TAXED, AUDITED, RANSOM, BACKWARDS, a trace meter.
 - **Overlapping events, still open:** more scales (quests, REP level: the user, 2026-11-04, 'quests or other things can
   start to scale those values'); the editor's TESTING picking a pair; turn RAT RACE / CHEF'S CHOICE down to 3-4 after
@@ -302,20 +302,18 @@ unlocked by REP, and some quests unlock REP.
   (upper / lower case), the stock market corp. CORPS.md marks every built corp `(built)` on its heading.
 - From the old ideas list, not built: bad security (passwords that rotate: BUDGETWALL / PASSWORD123), the dating app
   (SPARKD, a catfish boss), an arms dealer (GUNMETAL), the punk corp (details to come from the user), sudoku /
-  crossword, the seed corp (uses or changes the run seed). THE CHOIR as a "ministry" (a per-corp word instead of "corp").
+  crossword. KERNEL (the seed corp) reseeding the map from its boss. THE CHOIR as a "ministry" (a per-corp word instead of "corp").
 - A second boss mod for the corps that have one (71 corp mods left; 11 corps give boss gear instead, v13.62).
 - **CHUCK E. CACHE has a 1UP in its logo** (meat notes 2026-11-06): do something with that once 1UPs are unlocked?
 - **RED TAPE:** a mod or gear (just the name so far). **B1BL3** (meat notes 2026-10-31): a portable codex (gear).
 
 ### 8. Achievements and cosmetics
-- First win, a naked (0 mod) win, beat each corp, perfect streaks, reach layer X; easy ones too (die on the first
-  corp, spend 1000cr, earn 1000cr then get back to 0); beat G0D at the top.
-- Unlock cosmetics: logos, hats / accessories, card frames, titles ("SIGIL BREAKER"). Some bought with REP.
-- **INFIDEL** (the user, meat notes 2026-10-30): a feat (a title) for beating G0D with a SHOE. (So SHOE has to work in the
-  G0D fight.)
+- The feats cover the achievement list (first win, NAKED, OMNIVORE, layer 50 / 100, perfect streaks, SPEEDRUN, BIG
+  SPENDER, EASY COME, G0D SLAYER, WITH A SHOE / INFIDEL), and titles and logos unlock from them. Still open:
+  hats / accessories, card frames, more titles ("SIGIL BREAKER"), cosmetics bought with REP.
 
 ### 9. Lean more cyberpunk
-- Cyberware in names and flavor (implants as gear, MEDIX as a chrome clinic, chrome on the runner card), the ads.
+- Cyberware in names and flavor: implants as gear, chrome on the runner card. (MEDIX CHROME CLINIC is an ad already.)
 
 ### 10. Make it more of a hacking game
 - Something in the game itself you can hack, like the seed (OVERFLOW, section 4).
@@ -350,14 +348,13 @@ unlocked by REP, and some quests unlock REP.
   bring it in with an exotic CALL item. Names: ZEUS? APOLLO? (Maybe the same thing as G0D.exe, section 3.)
 
 ### Enemy and ally hackers (low: the user 2026-10-29, "we don't need any more"; the lore was great)
-- **Still open:** special per-hacker emotes; multiplayer on the new cursor; more hackers (RTFM: its line is not "real
+- **Still open:** per-hacker emotes (only GG_EZ and HYPE have them); multiplayer on the new cursor; more hackers (RTFM: its line is not "real
   time fun machine"; names from the user's notes: **s3iz**, **alpha haxor**, **kupreg**, **circo 77**, **Doctor kitten
   face**); balance from play. Using a crew member's logo (as yours) makes their calls less rare.
 - **Dying to a rival** (meat notes 2026-10-28): better sounds on that screen (their logo over your death): a wah-wah,
   but more jingly, bad-news sounding.
-- **Allies, more:** upgrade crew, give them mods (POPS with TRACER), tie them to REP or to your history with that
-  hacker. Mods on good hackers.
-- **The pet:** other ways to get one (today only COMPANION).
+- **Allies, more:** give crew mods, tie them to your history with that hacker. Mods on good hackers. (Crew LVL 2 posts
+  are built: POPS's is TRACER.)
 
 ## Polish (the user, 2026-10-29: the finishing passes)
 - **Boss intro pass** (the user, 2026-10-29: "it's all working for now", but the whole boss intro could use a little more): the corp's logo on it, and more.
@@ -382,7 +379,8 @@ unlocked by REP, and some quests unlock REP.
   screens; the header menu button right-aligned?; the palette warnings (40 palettes; MOCHI MOCHI is hard to read,
   the user will probably change it).
 - **A juice / graphics pass:** Unicode shading and shapes, kaomoji, bigger mini-art for mods in detail boxes.
-- **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle.
+- **Effects on the beat** (the user, 2026-10-27): effects that land on the music's beat; subtle. (The beat clock is
+  there: `Music.beat`; the pet dances to it and SIMON plays on it.)
 
 ## Medium and small
 - **Pets you can toggle** (meat notes 2026-11-07): a small button in the loot bar, like b0y's on the left (if b0y's
@@ -396,16 +394,21 @@ unlocked by REP, and some quests unlock REP.
   - [ ] **The end screen after a death with G0D.exe is too tall** (practice run: not scored, two gaps after "breached
     none", then HGL, then a line with G0D.exe). Claude couldn't make it happen (fits at 390x780 and 375x600, same
     lines): a screenshot and the window size would help (Greg will get one). The bottom buttons ran over the footer.
-- **The neon editor** (meat notes 2026-11-06): clean up the UI; terminal-style commands with autocomplete?; Justin's
-  music track viewer in the music tab?
+  - [ ] **tests/g0dexe.js is flaky** (Claude, 2026-11-08): about 1 run in 3 of the full `node tools/test.js --quick`
+    it fails at a different step ("stuck: leave mode=play", the hand-off card); alone it passes. Its waits are probably
+    too tight when the suite's Chromes run side by side.
+- **The neon editor** (meat notes 2026-11-06): clean up the UI; terminal-style commands with autocomplete? (Justin's
+  music viewer is in: the music tab's piano roll.)
   - **Dev menu buttons the editor's TESTING doesn't have yet** (Greg, 2026-11-08: "add that and maybe anything else
     useful to the editor as buttons as well"). The editor has god, show real, free travel, credits, INT, heal, REP and
-    the screen jumps already. Missing:
+    the screen jumps already. Each one below is in the game's dev menu (engine/dev.js) already, so it's wiring it to
+    the editor (engine/editor.js TEST + tools/editor/testing.js). Missing:
     - **UNLOCK CODEX:** every corp breached once, everything seen (dev.js `seenall`). With it, a **FORGET CORPS** button
-      (every corp back to 0 breaches), and maybe a breaches number, to test G0D.exe knowing and guessing.
+      (every corp back to 0 breaches; not in the dev menu either), and maybe a breaches number, to test G0D.exe knowing and guessing.
     - **G0D.exe:** its settings (speed, clicks, wins before it knows a corp, popups, its wins count, workbench build,
       phish, risky hand-off), on/off, and its decision log (run.g0dx.log) shown in the editor while it plays.
-    - **RESET LEGACY** (THE BOARD's unlocks) and **FILL GEAR** (one of every gear).
+    - **RESET LEGACY** (THE BOARD's unlocks only: the editor's "wipe progression" resets everything) and **FILL GEAR**
+      (one of every gear).
     - The corp tester's **RUN: ALL <corp>** and **RUN: DEV1** seeds, if the editor's own breach doesn't cover them.
     - **Intro replays** (first boot / short) and the stats **TESTER** toggle, if they're worth a button there.
 - **Code cleanups left from the arch pass** (the user, 2026-11-05: "keep those all around so we can hit them when it makes sense"). Do each one with the feature that needs it, not on its own. Details: docs/ARCHITECTURE.md.
@@ -414,7 +417,7 @@ unlocked by REP, and some quests unlock REP.
   - **`say()`, one way for characters to talk:** when crew quests add more voices.
   - **The `MODES` registry:** with the next new screen mode, or if input bugs keep coming from pointerdown's early returns.
   - **Hover / keyboard focus in popups:** with a desktop or accessibility pass.
-- **Hacker logo pass** (the user, 2026-11-04, looking at them now): the game always adds the name under a logo (logoBlock: mark + name; the hacker card's NAME // RIVAL line), so logos don't need the name in their art: 24 x 7 is all picture. 17 hacker logos spell their name in the art and show it twice: pops, iceman, turbo, sysop, vulture, phish, hcf, leech, brick, null, nana, dialup, baud, mother, root, kludge, hype (not ggez, doppel, d0g). Redraw them (art only, no code).
+- **Hacker logo pass** (the user, 2026-11-04, looking at them now): the game always adds the name under a logo (logoBlock: mark + name; the hacker card's NAME // RIVAL line), so logos don't need the name in their art: 24 x 7 is all picture. 11 hacker logos still spell their name in the art and show it twice: pops, hcf, brick, null, nana, dialup, baud, mother, root, kludge, hype (iceman, turbo, sysop, vulture, phish and leech are redrawn). Redraw them (art only, no code).
 - **asXii size presets** (the user, 2026-11-04): update asXii's Presets list (ascii-editor/dist/index.html #sizePreset) to the game's real art sizes, and check the ones there. Today it has: node glyph 5 x 3 (right), corp art 24 x 12 (wrong: corp intro art is the logo, 24 x 7), ad box 30 x 18 (right: ADS_W / ADS_H), intro map 34 x 9 (the map is 34 x 12 now), title art 32 x 20 (check: TITLE_W is 31), terminal 80 x 24. Add: logo 24 x 7 (the name goes on row 8, LOGO_W / LOGO_H), hacker face 5 x 3, SECTOR CLEARED 30 x 13, sector event card 5 x 3, cutscene 36 wide (any height; the game's grid). asXii is Justin's too: check his recent commits first.
 - **Pull asXii out into its own repo** (the user, 2026-11-04), and **greglytics** too (meat notes 2026-11-06). asXii is
   already separate in most ways: its own version, bump script, README and docs, and no game code. What moving it
@@ -466,7 +469,7 @@ Where they are, for when mods open up again:
 - **CLUSTER** (the user, 2026-10-26): a mod name to build something around; no idea for it yet.
 - **A random gear every corp** (the user, 2026-10-27): a mod that gives you a new random loot gear at each corp's start.
 - CORPS.md "Notes": open map, THROTTLE (cheaper uplink), DIGIPET's pet on screen.
-- ECONOMY.md: chained perfects, TIME IS MONEY, items as a store of value.
+- ECONOMY.md: chained perfects, items as a store of value. (TIME IS MONEY is a sector event now.)
 - EXOTICS.md: "New exotic ideas, 2026-10-25".
 - The archive (`docs/archive/SPEC_backlog_2026-10.md`): random gear on perfects, better drops (10-20% one step up),
   a bigger VIRUS / CHAINLOCK, a glyph mod, TRUTH METER, dummy ICE, scans as patterns, OVERCLOCK's row-flash
