@@ -120,6 +120,29 @@ unlocked by REP, and some quests unlock REP.
     moves through the network, and goes for depth; it won't buy many mods unless they boost credits (for the UPLINKs).
     Maybe a limit of 256 clicks; if so it tries to get another of itself to activate; it can call crew too. (Same idea
     as "An AI crew member that plays the game" in Low priority: G0D.exe may be that one.)
+    - **The dev version first** (Greg, 2026-11-08): build G0D.exe itself, given from the dev menu, to see how it plays.
+      The quest to get it comes later. **Decided (Greg, 2026-11-08):** the name is G0D.exe; "beaten" means beaten
+      once (the codex page is open; a setting, so it can go to ~5 later); in a corp you haven't beaten it guesses at
+      random, and on the map it goes around those corps when it can.
+      - **The gear:** a new rarity above exotic, **DIVINE**, in G0D's red (its own chip; the gear and the cursor both
+        use it). Tap it on: a card like a crew CALL's, with a portrait like the crew's (a little eye). Tap it again,
+        or tap anything yourself, and it pauses.
+      - **The cursor:** splits up like d0g's and b0y's. At the start of each layer G0D's cursor hovers about the board
+        for about a second ("thinking"), then one of its characters flies off, hits a node and flies back. Quick.
+      - **Clicks:** every tap counts (nodes, gear, the map, buy, sell). 500 to start, a dev setting; a counter on the
+        gear. Speed 1x / 2x / 4x (dev setting). It uses the same functions your own taps use, so the rules hold.
+      - **In a corp:** beaten: it taps the real node. Gimmick corps (SIMON, MONTY, FOSSIL, FORM 27B, DEMOLITION...)
+        get an `auto` hook in their corp file (next to `dress` / `hint`): what to tap next. Find which ones need it by
+        letting G0D.exe play every corp headless and listing where it gets stuck; that run becomes a check.
+      - **On the map:** depth first. WARP / ROUTE / TUNNEL / SKIP to jump ahead. It works out the next UPLINK's price
+        and, when short, detours to markets, caches and good-paying corps. At markets it sells loot and buys only
+        things that bring in credits (and health when low). A safehouse when your health is low: ICE and damage
+        still come off your health.
+      - **It stops and waits for you** at cutscenes, quest cards, the run's end, no clicks left, or anything it doesn't
+        know, with a line saying why. A short log line per decision (`g0d: market. uplink needs 140cr, have 60.`).
+      - **Order:** 1. the gear, the card, the cursor, clicks, pause, playing corps (+ the all-corps run); 2. `auto`
+        hooks for the corps that got stuck; 3. the map and money; 4. gear in corps (reveal gear in unbeaten ones);
+        5. phishing, maybe.
 
 ### 4. The end game (details: docs/ENDGAME.md)
 - **The ending's leftovers:** the art (placeholders to redraw); the three unlocks as already-paid posts on THE BOARD.
