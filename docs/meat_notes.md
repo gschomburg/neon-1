@@ -14,7 +14,9 @@ misc notes
     - mode.god (maybe isn't god mode all the time, disables after a sector and you need to use it again)
     - maybe there's some sort of hacker tokens that things cost to run? you use rep to buy them?
     - some sort of api key you can enter that does something
-    - run.seed 348349 
+    - run.seed 348349
+    - maybe crew quests unlock the terminal and different parts of it? or just reveal things about it?
+    - terminal runs should also be noted in the leaderboard, like another level maybe or just a flag (hacked)
 
 bugs or weirdness
 ********************

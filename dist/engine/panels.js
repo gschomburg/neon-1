@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v14.60']);
+NEON_FILES.push(['engine/panels.js', 'v14.61']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -238,7 +238,7 @@ function openShop(node) {
     sellSel = 0; sellArea.top = 0;
     Sound.buy(); setTimeout(() => Sound.loot(), 120); setMsg(`> sold all loot (${n}). +${cr}cr.`, C.money);
   };
-  st.shop = { node: node.id, get offers() { return offers; }, priceOf, buyAt: k => buy(offers[k]), reroll, rerollsLeft, rerollPrice, sellAt: sell };   // (read by tools/checks/econsim.js)
+  st.shop = { node: node.id, get offers() { return offers; }, priceOf, buyAt: k => buy(offers[k]), reroll, rerollsLeft, rerollPrice, sellAt: sell, sellAll };   // (read by tools/checks/econsim.js and engine/g0dexe.js)
 
   // What an offer is: gear at its tier; mods as what you'd end up with (upgrades).
   const defOf = o => o.kind === 'item' ? itemView(o.key, o.tier) : o.kind === 'mod' ? modView(o.key, o.sold && o.got != null ? o.got : upgradeTo(o.key, o.tier))   // (sold: what you bought, not the next step up: the user's bug)

@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.60']);
+NEON_FILES.push(['engine/scene.js', 'v14.61']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -362,6 +362,7 @@ function buildScene(now, collectHits, raw = false) {
     if (collectHits && o.tick) o.tick(now);
     if (!st.dev && o.on() && o.shown()) { if (collectHits) overlayHits = hits.length; const lc = layerCtx(ctx, result, adBgs); o.build(lc.ctx, now); result = result.concat(lc.cells); }
   }
+  if (!st.dev && st.g0dxD) { const lc = layerCtx(ctx, result, adBgs); g0dxDrawScreen(lc.ctx, now); result = result.concat(lc.cells); }   // G0D.exe's cursor off the board, over it all (engine/g0dexe.js)
   // The training run's popup (engine/tutorial.js): over everything but an ad, the same way.
   if (st.tut && st.tut.pop && !st.dev && !st.ad && (!st.wipe || st.tut.curtain)) {
     const lc = layerCtx(ctx, null, adBgs, 'tut');

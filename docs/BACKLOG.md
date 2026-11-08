@@ -146,7 +146,7 @@ unlocked by REP, and some quests unlock REP.
       - [x] Steps 1 and 2 (2026-11-08, v14.60): see SPEC v14.60. The all-corps run (tools/checks/g0d_play.js) found
         LAGRANGE stuck and DEMOLITION clearing for no pay; SIMON cleared by skipping its pattern. All three have `auto`
         hooks now; all 81 corps play clean. MONTY (2 taps a layer) and FOSSIL (brushes) play right without one.
-      - [ ] Step 3: the map and money (it stops at the corp's rewards screen today). **Decided (Greg, 2026-11-08):**
+      - [x] Step 3: the map and money (2026-11-08, v14.61; SPEC v14.61). **Decided (Greg, 2026-11-08):**
         - **The map:** its cursor hovers there too, and the @ flies to the node it picks. A short line says why first
           (`g0d: market. uplink needs 140cr, have 60.`).
         - **The UPLINK:** it keeps money mods, sells the rest, and pushes on when it can pay. When it can't go any
@@ -165,6 +165,8 @@ unlocked by REP, and some quests unlock REP.
           doesn't need; building is a setting, off to start (it would spend all your components).
         - **A full belt:** it trashes gear it can't use to make room.
       - [ ] Its face is a placeholder eye (data/art/faces.js `g0dexe`): redraw in the ART tab.
+      - [ ] Still open: TUNNEL and MESH (it keeps them, doesn't use them yet); phishing (it skips the pier); building at
+        the workbench is in but barely tried; it never rerolls a market. How smart its map is: tune once you've watched it.
 
 ### 4. The end game (details: docs/ENDGAME.md)
 - **The ending's leftovers:** the art (placeholders to redraw); the three unlocks as already-paid posts on THE BOARD.

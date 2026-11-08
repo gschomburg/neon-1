@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v14.60']);
+NEON_FILES.push(['engine/render.js', 'v14.61']);
 
 // ---------------- Popup looks (the user, 2026-10-31) ----------------
 // Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
@@ -40,6 +40,7 @@ function frameBody(now) {
   updateParts(dt);
   updateTimer(dt);
   layerTick(now);
+  g0dxDrive(now);   // G0D.exe off the board: the map, markets, rewards, popups (engine/g0dexe.js)
   eaterWatch();   // ICE EATER: a layer with no ICE left clears
   coinTick(now);  // COIN FLIP: a held press brings the coin up
   g0dfTick(now, dt);   // the G0D prototype (engine/g0dfight.js; the editor's g0d tab)

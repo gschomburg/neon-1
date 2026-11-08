@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.60']);
+NEON_FILES.push(['engine/run.js', 'v14.61']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -838,7 +838,9 @@ function finishCorp() {
   if (c.node.type === 'start') { run.pending = { kind: 'start', id: c.node.id }; saveRun(); return openStartReward(c.node); }
   run.corps++;
   if (c.node.type === 'corp') { run.beat = run.beat || {}; (run.beat[c.sector] = run.beat[c.sector] || []).push(c.def.key); }
-  corpStat(c.def.key).breached++; persist();   // codex record
+  if (!g0dxNoCount(c)) corpStat(c.def.key).breached++;   // codex record (G0D.exe's wins: a setting, engine/g0dexe.js)
+  persist();
+  g0dxCorpDone(c);
   tallyCorp(c.def.key);   // THE RECORD
   // THIEF: what it took goes to THE FENCE (bought back there); a sector boss's thief gives them back when you win
   if (c.stolen && c.stolen.length) {

@@ -1,6 +1,6 @@
 // NeoN+1 corps/simon.js
 'use strict';
-NEON_FILES.push(['corps/simon.js', 'v14.60']);
+NEON_FILES.push(['corps/simon.js', 'v14.61']);
 // Its boss gear: REPEAT x3 (repeat), defined with the gear in data/mods.js (ITEMS), its effect in engine/active.js
 // (BOSS_GEAR). Design: docs/CORPS.md A33 (Greg, 2026-11-07).
 

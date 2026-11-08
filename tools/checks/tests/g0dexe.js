@@ -24,7 +24,7 @@ module.exports = { name: 'g0dexe', body: `
   const corp = st.corp, layers = corp.counts.length, hp = st.run.integrity;
   await untilDone(corp, 40000);
   check(st.corp !== corp || st.mode !== 'play', 'it plays the corp through (mode ' + st.mode + ')');
-  check(st.run.g0dx.used === layers, 'one click a layer in a corp it knows: ' + st.run.g0dx.used + ' for ' + layers);
+  check(st.run.g0dx.used - layers <= 1, 'one click a layer in a corp it knows (and maybe one on the rewards after): ' + st.run.g0dx.used + ' for ' + layers);
   check(!(corp.hk || []).some(h => h.id === 'g0dexe' && h.out), 'it never runs out of bars');
   say('log: ' + (st.run.g0dx.log || []).join(' / '));
   // a corp you haven't beaten: it guesses (more clicks than layers, most of the time)
