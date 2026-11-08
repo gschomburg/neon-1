@@ -47,6 +47,25 @@ module.exports = { name: 'g0dstep4', body: `
   check(casts === 4 || st.run.credits < fishCost(), 'it cast till the pier was fished out (' + casts + ' of 4, ' + st.run.credits + 'cr left)');
   check(st.mode !== 'fish', 'then it moved on (' + st.mode + ')');
   check((st.run.loot || []).length + st.run.items.length > loot0 || /phished|shoe|gear/.test((st.run.g0dx.log || []).join(' ')) || casts > 0, 'and it landed something, or at least tried');
+  // at a pier: a popup mid-phish (a CALL) gets clicked through; a gear catch it uses with the belt full: junk goes, it keeps it
+  const pier3 = Object.assign({}, node, { id: 'g0d-pier3', type: 'pier' });
+  st.run.g0dx.on = false; await settle('map'); st.run.credits = 300;
+  await swapTo(() => openPier(pier3));
+  while (st.run.items.length < st.run.beltSlots) addItem(['shoe', 'egg', 'lotto', 'flare'].find(k => ITEMS[k] && !holds(k)) || 'shoe', 0);
+  for (const s of st.run.items) if (s.key === 'lotto') s.key = 'shoe';   // (it would scratch a LOTTO: junk only)
+  if (g0dxJunkSlot() < 0) st.run.items[st.run.items.findIndex(s => s.key !== 'g0dexe')] = { key: 'shoe', tier: 0, n: 1 };   // (some junk to make room with)
+  queueCall('pops', ['kid. you fishing?', 'nice.']);
+  st.run.g0dx.on = true;
+  for (let i = 0; i < 80 && (st.callBox || overlayTop()); i++) await sleep(100);
+  check(!st.callBox && !overlayTop() && st.mode === 'fish', 'a popup at the pier: clicked through, still fishing');
+  st.run.g0dx.on = false; await sleep(300);
+  const f = st.fish; f.hook = null; f.reel = null;
+  f.card = { out: { kind: 'gear', key: 'warp', tier: 0, rarity: ITEMS.warp.rarity }, look: '[wrp]', t0: performance.now() };
+  const full = st.run.items.length >= st.run.beltSlots && !itemRoom('warp', 0);
+  st.run.g0dx.on = true; st.g0dxD = null;
+  for (let i = 0; i < 60 && f.card; i++) await sleep(100);
+  check(full && holds('warp') && !f.card, 'a gear catch it uses, belt full: junk out, the catch kept (' + st.run.items.map(s => s.key).join(',') + ')');
+  st.run.g0dx.on = false;
   ECON.fish.casts = casts0;
   say('pier log: ' + (st.run.g0dx.log || []).slice(-10).join(' / '));
   // the hand-off flag: low, nothing to heal, every way on a guess: it stops

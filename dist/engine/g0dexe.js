@@ -421,9 +421,11 @@ function g0dxFishHold(f, now) {
 }
 function g0dxFishPlan(now) {
   const f = st.fish, phish = g0dxCfg().phish;
-  if (f.card) {   // landed: keep it (it's loot to sell), or back it goes when there's no room
-    const key = fishKeepKey(f.card.out), room = itemRoom(key, f.card.out.tier);
-    return { at: g0dxAt(g0dxBtn(room ? 'fkeep' : 'fback')), act: () => (room ? fishKeep() : fishThrowBack()) };
+  if (f.card) {   // landed: keep it (PHISH and loot go in the bag); gear it uses with the belt full: junk out first; else back it goes
+    const key = fishKeepKey(f.card.out), tier = f.card.out.tier, junk = g0dxJunkSlot();
+    const room = itemRoom(key, tier), make = !room && g0dxUses(key) && junk >= 0;
+    if (room || make) return { at: g0dxAt(g0dxBtn('fkeep')), act: () => { if (!itemRoom(key, tier)) trashItem(g0dxJunkSlot()); fishKeep(); }, say: make ? `makes room for ${ITEMS[key].name.toLowerCase()}.` : null };
+    return { at: g0dxAt(g0dxBtn('fback')), act: () => fishThrowBack(), say: `throws back ${ITEMS[key].name.toLowerCase()}.` };
   }
   if (f.reel) return 'wait';   // (g0dxFishHold has the line)
   const hk = f.hook;
