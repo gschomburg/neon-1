@@ -329,6 +329,8 @@ unlocked by REP, and some quests unlock REP.
     - `mode.god`: not god mode for good; it wears off after a sector and you run it again.
     - Hacker tokens that commands cost to run, bought with REP? An API key you can enter that does something.
     - Runs that used the terminal are marked on the leaderboard: another level, or just a flag (hacked).
+    - A command to kill yourself (end the run on the spot), and maybe one to kill other hackers (a rival in the corp
+      flatlines) (Greg, 2026-11-08).
 - **A hacker boss whose weakness is your sound muted** (Greg, meat notes 2026-11-08). Like PSYCHO MANTIS (section 4):
   the fix is outside the game.
 - **A second window** (Greg, 2026-11-07: "a boss is neat. but we could also just open another browser window and have
