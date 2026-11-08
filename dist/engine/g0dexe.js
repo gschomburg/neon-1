@@ -18,7 +18,7 @@
 // st.g0dxD: the driver's moment to moment state (its cursor off the board, the flight, what it's waiting on)
 // save.g0dx: the dev settings (g0dxCfg)
 'use strict';
-NEON_FILES.push(['engine/g0dexe.js', 'v14.62']);
+NEON_FILES.push(['engine/g0dexe.js', 'v14.63']);
 
 // ---------- settings ----------
 const G0DX_CLICKS = [100, 250, 500, 1000, 9999];
@@ -39,7 +39,7 @@ const g0dxMs = k => G0DX_MS[k] / (g0dxCfg().speed || 1);
 // ---------- the switch ----------
 const g0dxState = () => (st.run && st.run.g0dx) || null;
 const g0dxOn = () => { const g = g0dxState(); return !!(g && g.on && holds('g0dexe')); };
-const g0dxCanToggle = () => { const g = g0dxState(); return !!(st.run && !st.run.ended && holds('g0dexe') && (!g || g.on || g.left > 0)); };   // (no state yet: the tap sets it up)
+const g0dxCanToggle = () => !!(st.run && !st.run.ended && holds('g0dexe'));   // (no state yet, or a spent one: the tap sets it up)
 const g0dxWhy = () => { const g = g0dxState(); return !g ? 'not set up: give it from the dev menu.' : g.left <= 0 ? 'out of clicks.' : 'wait a moment.'; };
 const g0dxKnows = key => corpStat(key).breached >= (g0dxCfg().beaten || 1);
 const g0dxNote = () => { const g = g0dxState(); return g && g.on ? `+G0D.exe ${g.left}` : 'G0D.exe ||'; };
@@ -63,7 +63,7 @@ function g0dxGive() {
   return true;
 }
 function g0dxToggle() {
-  const g = g0dxState() || g0dxSetup();
+  const g0 = g0dxState(), g = g0 && (g0.on || g0.left > 0) ? g0 : g0dxSetup();   // (a new one after one was spent: fresh clicks)
   st.hoverItem = -1; st.selItem = -1;
   if (g.on) return g0dxPause('paused. tap it to go on.');
   g.on = true; g.stuck = null;
@@ -107,11 +107,22 @@ function g0dxSay(text) { setMsg('> g0d.exe: ' + text, C.divine); g0dxLog(text); 
 // A click spent (every tap it makes, anywhere). False: none left (it stops).
 function g0dxSpend() {
   const g = g0dxState();
-  if (!g || g.left <= 0) { g0dxStop('out of clicks.'); return false; }
+  if (!g || g.left <= 0) { g0dxOut(); return false; }
   g.left--; g.used++;
   return true;
 }
-const g0dxSpent = () => { const g = g0dxState(); if (g && g.on && g.left <= 0) g0dxStop('out of clicks.'); };
+const g0dxSpent = () => { const g = g0dxState(); if (g && g.on && g.left <= 0) g0dxOut(); };
+// Out of clicks (Greg, meat notes 2026-11-08): the gear is spent (one off the belt, like used gear) and its cursor floats
+// away (hkOut: a crew member leaving). Another G0D.exe on the belt is ready with fresh clicks: tap it.
+function g0dxOut() {
+  const g = g0dxState();
+  if (!g) return;
+  takeItem('g0dexe');
+  const h = hkUp('g0dexe'); if (h) hkOut(h, hkLine(h, 'out'));
+  const more = holds('g0dexe');
+  g0dxStop(more ? 'out of clicks. the gear is spent; the next G0D.exe on your belt is ready: tap it.' : 'out of clicks. the gear is spent.');
+  if (more) { g.left = g0dxCfg().clicks; g.used = 0; }
+}
 
 // ---------- the corps it breached (engine/run.js finishCorp) ----------
 const g0dxWasIn = c => !!(c && (c.hk || []).some(h => h.id === 'g0dexe'));
@@ -497,7 +508,6 @@ function g0dxTap(lv, h, t) {
   const s = hkS(lv, h);
   s.taps = (s.taps || 0) + 1;
   if (t.cellTap) corpHook('cellTap', t.cell); else pick(lv.tiles.indexOf(t));
-  if (g0dxState().left <= 0) hkSay(h, hkLine(h, 'out'));
   g0dxSpent();
   return true;
 }

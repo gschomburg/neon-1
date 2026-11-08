@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v14.62']);
+NEON_FILES.push(['data/economy.js', 'v14.63']);
 
 const ECON = {
   // ---- Units

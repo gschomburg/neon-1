@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.62']);
+NEON_FILES.push(['engine/active.js', 'v14.63']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -155,7 +155,7 @@ const BOSS_GEAR = {
     use(lv) {
       const real = lv.tiles[lv.safe], seq = shuffle(lv.tiles.filter(t => t !== real && t.state === 'closed' && !t.ruledOut), layerRng('repeat')).slice(0, 3).concat([real]);
       const F = lv.flashSeq = { seq, t0: performance.now() + 300, on: 260, gap: 140 };
-      seq.forEach((t, k) => setTimeout(() => { if (st.lv === lv) Sound.ping(simonTone(t.cell)); }, 300 + k * (F.on + F.gap)));
+      seq.forEach((t, k) => setTimeout(() => { if (st.lv === lv) Sound.simon(simonTone(t.cell)); }, 300 + k * (F.on + F.gap)));
       setMsg('> repeat: watch the last one.', C.accent);
     },
   },

@@ -176,9 +176,6 @@ unlocked by REP, and some quests unlock REP.
           stop with "it doesn't know this screen"; check it does.
         - Workbench building: barely tried. Its face: a placeholder eye.
         - Tuning: the map scores, what it buys and rerolls, when it taps $ nodes, the 1s think at 1x.
-        - **Out of clicks** (Greg, meat notes 2026-11-08: "maybe"): the gear goes away (or resets), and then you could
-          switch on another one (a stack of G0D.exe: the next one, fresh clicks).
-        - **Its cursor stays** after it runs out of clicks, till the corp ends (Greg: "maybe fine").
       - [x] Step 4 and the rest (2026-11-08, v14.62; SPEC v14.62). **Decided (Greg, 2026-11-08):**
         - **$ nodes in corps it knows:** MAGNET whenever it has one. It taps a $ node itself only at full health, while
           the UPLINK still needs money, and never on a boss layer.
@@ -394,10 +391,7 @@ unlocked by REP, and some quests unlock REP.
 - **Bugs** (Greg, meat notes 2026-11-08):
   - [ ] **The end screen after a death with G0D.exe is too tall** (practice run: not scored, two gaps after "breached
     none", then HGL, then a line with G0D.exe). Claude couldn't make it happen (fits at 390x780 and 375x600, same
-    lines): a screenshot and the window size would help.
-  - [ ] **SIMON's tones are hard to hear.** They use the short generic ping (0.09s, vol 0.35, engine/sound.js) and the
-    music sits at level 1 (pad, bass, drums: corps/simon.js musicMax). Both a notch: its own longer, louder tone, and
-    the music at 0 (pad and bass).
+    lines): a screenshot and the window size would help (Greg will get one). The bottom buttons ran over the footer.
 - **The neon editor** (meat notes 2026-11-06): clean up the UI; terminal-style commands with autocomplete?; Justin's
   music track viewer in the music tab?
   - **Dev menu buttons the editor's TESTING doesn't have yet** (Greg, 2026-11-08: "add that and maybe anything else

@@ -46,8 +46,22 @@ module.exports = { name: 'g0dexe', body: `
   st.run.g0dx.left = 1; useItem(slot());
   for (let i = 0; i < 40 && st.run.g0dx.left > 0; i++) await sleep(100);
   await sleep(300);
-  check(st.run.g0dx.left === 0 && !g0dxOn() && !canUse(st.run.items[slot()]), 'out of clicks: it stops, and the gear says so (' + whyNotItem(st.run.items[slot()]) + ' / ' + at() + ')');
+  check(st.run.g0dx.left === 0 && !g0dxOn() && !holds('g0dexe') && st.g0dxStop && /spent/.test(st.g0dxStop.why), 'out of clicks: it stops and the gear is spent (' + at() + ')');
+  check(!hkUp('g0dexe'), 'its cursor goes (it floats away, like crew leaving)');
+  // two on the belt: the next one is ready, fresh clicks
+  st.g0dxStop = null; addItem('g0dexe', 0); addItem('g0dexe', 0);
+  await fresh(3);
+  st.run.g0dx.left = 1; useItem(slot());
+  for (let i = 0; i < 40 && !st.g0dxStop; i++) await sleep(100);
+  check(holds('g0dexe') && st.run.g0dx.left === save.g0dx.clicks && !g0dxOn() && /next G0D.exe/.test(st.g0dxStop ? st.g0dxStop.why : ''), 'a stack: one spent, the next is ready with fresh clicks');
+  st.g0dxStop = null; await settle('its last tap');
+  // the last one spent, then a new one given (the editor's GIVE): fresh clicks
+  st.run.items = st.run.items.filter(s => s.key !== 'g0dexe'); st.run.g0dx.left = 0; addItem('g0dexe', 0);
+  useItem(slot());
+  check(g0dxOn() && st.run.g0dx.left === save.g0dx.clicks, 'a new one after the last was spent: fresh clicks');
+  st.run.g0dx.on = false;
   // put on the belt some other way (the editor, [fill gear]): its first tap sets it up, on the map too
+  await settle('the last tap');
   st.run.items = st.run.items.filter(s => s.key !== 'g0dexe'); st.run.g0dx = null; st.run.ended = false;
   st.corp = null; B.toMap(); await sleep(1500);
   addItem('g0dexe', 0);

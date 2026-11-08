@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v14.62']);
+NEON_FILES.push(['engine/sound.js', 'v14.63']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,
@@ -131,6 +131,9 @@ const Sound = (() => {
     beeps: n => { for (let i = 0; i < n; i++) tone(1250, 0.06, { type: 'sine', vol: 0.35, delay: 0.3 + i * 0.2 }); },
     dtmf: ch => { const k = '123456789*0#'.indexOf(ch), lo = [697, 770, 852, 941][Math.floor(Math.max(0, k) / 3)], hi = [1209, 1336, 1477][Math.max(0, k) % 3]; tone(lo, 0.12, { type: 'sine', vol: 0.25 }); tone(hi, 0.12, { type: 'sine', vol: 0.25 }); },
     ping: f => { tone(f, 0.09, { type: 'sine', vol: 0.35 }); tone(f * 1.5, 0.05, { type: 'sine', vol: 0.12, delay: 0.03 }); },
+    // SIMON's tones (corps/simon.js; REPEAT, engine/active.js): longer and louder than a ping, so they lead over the music
+    // (Greg, 2026-11-08: they were hard to hear)
+    simon: f => { tone(f, 0.22, { type: 'triangle', vol: 0.6 }); tone(f * 2, 0.14, { type: 'sine', vol: 0.18, delay: 0.01 }); },
     horn: v => { tone(98, 0.7, { type: 'sawtooth', vol: 0.6 * v }); tone(147, 0.7, { type: 'sawtooth', vol: 0.35 * v }); },
     // Boss entrance: a two-tone alarm with a heartbeat thump, a build, the drop, nodes powering on.
     alarm: () => {

@@ -1,6 +1,6 @@
 // NeoN+1 corps/simon.js
 'use strict';
-NEON_FILES.push(['corps/simon.js', 'v14.62']);
+NEON_FILES.push(['corps/simon.js', 'v14.63']);
 // Its boss gear: REPEAT x3 (repeat), defined with the gear in data/mods.js (ITEMS), its effect in engine/active.js
 // (BOSS_GEAR). Design: docs/CORPS.md A33 (Greg, 2026-11-07).
 
@@ -81,7 +81,7 @@ async function simonPlay(lv, again = false) {
     await wait(bt.wait);
     if (st.lv !== lv) return;
     S.lit = { t: s.t, said: s.said, until: performance.now() + bt.ms * SIMON.on };
-    Sound.ping(s.said ? s.t.tone : s.t.tone * 2);
+    Sound.simon(s.said ? s.t.tone : s.t.tone * 2);
     shown.push(s.said ? s.t.simonCh : `(${s.t.simonCh})`);
     simonSay('> simon: ' + shown.join('-'), s.said ? C.accent : C.mid);
     await wait(bt.ms * SIMON.on);
@@ -97,7 +97,7 @@ MUSIC_FOR.simon = 'tracker';   // TRACKER (in data/music.js)
 // ---- the corp
 // ---- A corp with its own pick rule (`tap`) and a fast path for the steps (`intercept`: no probing pause).
 CORPS.simon = {
-  key: 'simon', name: 'SIMON', code: 'SM', level: 2, pattern: true, musicMax: 1,   // (the music stays low: the tones lead)
+  key: 'simon', name: 'SIMON', code: 'SM', level: 2, pattern: true, musicMax: 0,   // (the music stays low, pad and bass: the tones lead; Greg 2026-11-08)
   intel: '"simon says: watch."',
   tell: null, timer: 12, noLoot: true, noOdds: true,   // (no $ nodes: a wrong tap doesn't break a node, so its loot would pay again and again)
   bossDesc: "boss: simon says. the white ones don't count.",
@@ -120,7 +120,7 @@ CORPS.simon = {
     if (!nx || nx.t !== t || S.pos >= S.seq.length - 1) return false;
     S.pos++;
     S.lit = { t, said: true, until: performance.now() + 220 };
-    Sound.ping(t.tone);
+    Sound.simon(t.tone);
     simonTurnMsg(lv);
     return true;
   },
