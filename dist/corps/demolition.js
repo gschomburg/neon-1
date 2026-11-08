@@ -1,6 +1,6 @@
 // NeoN+1 corps/demolition.js
 'use strict';
-NEON_FILES.push(['corps/demolition.js', 'v14.59']);
+NEON_FILES.push(['corps/demolition.js', 'v14.60']);
 // Its boss reward: BLAST gear x2 (blast), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 
@@ -25,6 +25,8 @@ CORPS.demolition = {
   // the real node is next to it (diagonals too), 0 if not. Clear every ICE to pass. Tap the
   // real node and it hurts (the layer passes, no pay). Boss: the numbers fade after a second.
   dress(lv) { lv.demo = true; },
+  // G0D.exe (engine/g0dexe.js), when it knows the corp: break the ICE, leave the real node
+  auto(lv, g) { return g.known ? lv.tiles.find(t => t.state === 'closed' && !t.safe) || null : undefined; },   // ($ nodes too: the layer needs every ICE broken)
   tap(t) {
     const lv = st.lv, run = st.run, q = lv.tiles[lv.safe];
     if (!lv.demo) return false;

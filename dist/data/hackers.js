@@ -23,7 +23,7 @@
 //   lvl2    crew: their LVL 2 upgrade (THE BOARD), fixed
 // How each one plays is engine/hackers.js (HK_AI); they come in through the RIVAL anomaly (rivals) and CALL gear (crew).
 'use strict';
-NEON_FILES.push(['data/hackers.js', 'v14.59']);
+NEON_FILES.push(['data/hackers.js', 'v14.60']);
 
 const HACKERS = {
   // ================= bad hackers =================
@@ -368,5 +368,22 @@ Object.assign(HACKERS, {
     ai: 'Never taps. He splits into three cursors over three maybes; as each maybe drops, its cursor goes over to the ' +
       'real node, which lights up once all three are on it (every 3.2s one maybe drops; LVL 2: 2s).',
     counter: 'cerberus: he built it. he knows which eye is lying.',
+  },
+  // G0D.exe (Greg, 2026-11-08; docs/BACKLOG.md): not called, switched on (its gear, engine/g0dexe.js). quest: never a
+  // plain CALL. It plays as you: its taps are yours, so it takes no bars (engine/hackers.js hkHurt).
+  g0dexe: {
+    name: 'G0D.exe', side: 'good', hp: 1, quest: true,
+    style: { fg: '#ff3b3b', bg: '#2a070a' },   // G0D's red (CHIPS.divine in engine/core.js)
+    enter: 'i see it. let me.',
+    clue: ['obviously.', 'this one.', 'predictable.', 'i remember this corp.', 'mine.'],
+    out: 'out of clicks.',
+    snake: '{name}. that was not the plan.',
+    lvl2: '',
+    shtick: 'it plays for you. it knows every corp you know.',
+    lore: ['What was left of G0D after the collapse, rebuilt small enough to fit in your deck. It remembers every',
+      'corp you have beaten, and it clicks faster than you do.'],
+    ai: 'Taps for you (engine/g0dexe.js). Each layer its cursor hovers for about a second, then one character flies out, ' +
+      'taps a node and flies back. Corps you have beaten: the real node. The rest: a guess. Every tap costs a click.',
+    counter: '',
   },
 });

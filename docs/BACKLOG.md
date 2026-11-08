@@ -143,6 +143,11 @@ unlocked by REP, and some quests unlock REP.
       - **Order:** 1. the gear, the card, the cursor, clicks, pause, playing corps (+ the all-corps run); 2. `auto`
         hooks for the corps that got stuck; 3. the map and money; 4. gear in corps (reveal gear in unbeaten ones);
         5. phishing, maybe.
+      - [x] Steps 1 and 2 (2026-11-08, v14.60): see SPEC v14.60. The all-corps run (tools/checks/g0d_play.js) found
+        LAGRANGE stuck and DEMOLITION clearing for no pay; SIMON cleared by skipping its pattern. All three have `auto`
+        hooks now; all 81 corps play clean. MONTY (2 taps a layer) and FOSSIL (brushes) play right without one.
+      - [ ] Step 3: the map and money (it stops at the corp's rewards screen today).
+      - [ ] Its face is a placeholder eye (data/art/faces.js `g0dexe`): redraw in the ART tab.
 
 ### 4. The end game (details: docs/ENDGAME.md)
 - **The ending's leftovers:** the art (placeholders to redraw); the three unlocks as already-paid posts on THE BOARD.

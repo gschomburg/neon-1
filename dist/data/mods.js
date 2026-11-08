@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.59']);
+NEON_FILES.push(['data/mods.js', 'v14.60']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -13,6 +13,7 @@ const RARITY = {
   legendary: { label: 'LEGEND', lvl: 4 },
   exotic:    { label: 'EXOTIC', lvl: 5 },
   quest:     { label: 'QUEST',  lvl: 4, hidden: true },   // quest gear (engine/quests.js): its chip is the REP color; not a real rarity step
+  divine:    { label: 'DIVINE', lvl: 6, hidden: true },   // G0D's own things, in his red (G0D.exe; Greg, 2026-11-08). Above exotic; nothing drops it
 };
 
 // Corrupted software (the user, 2026-11-04): loot whose name won't hold still. It swaps between its versions and
@@ -259,6 +260,11 @@ const ITEMS = {
   shovel: { key: 'shovel', name: 'SHOVEL', price: 60, rarity: 'legendary', corp: 'fossil',
     desc: "in a layer: dig a trench. the row or column with the most ICE (never the real node's) is ruled out.", tip: 'rule out a row or column.',
     codex: "in a layer: dig a trench across the board. the row or column with the most ICE in it is ruled out. it never digs through the real node's row or column." },
+  // G0D.exe (docs/BACKLOG.md, Greg 2026-11-08): it plays for you. Dev only for now (only: never drops, never in a market);
+  // the dev menu gives it. A switch like ENCORE: never spent. Its play: engine/g0dexe.js.
+  g0dexe: { key: 'g0dexe', name: 'G0D.exe', price: 0, rarity: 'divine', only: 'dev', nosell: true,
+    desc: 'tap it on: G0D.exe plays for you, a click at a time. tap it again (or tap anything yourself) and it pauses.', tip: 'it plays for you.',
+    codex: "G0D, rebuilt as yours. switched on, it taps for you: the real node in every corp you've beaten, a guess in the rest. it has so many clicks, then it's spent. ICE still hurts you." },
 };
 const ITEM_WHERE = 'market, $ nodes, caches.';
 

@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.59']);
+NEON_FILES.push(['engine/hackers.js', 'v14.60']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -143,7 +143,7 @@ function hkOut(h, text) {
   }
 }
 function hkHurt(h, n = 1) {
-  if (!h || h.out) return;
+  if (!h || h.out || h.id === 'g0dexe') return;   // (G0D.exe plays as you: it has no bars to lose)
   h.hp = Math.max(0, h.hp - n);
   if (h.hp <= 0) hkOut(h);
 }
@@ -167,6 +167,7 @@ function hkLayerStart(lv) {
 }
 // Every frame in a layer (engine/run.js layerTick): each hacker's own rules, then their cursors drift.
 function hkTick(lv, now) {
+  g0dxEnsure(lv);   // G0D.exe switched on: it's in every corp (engine/g0dexe.js)
   if (!lv || lv.n < 2 || st.hkCard || !hkList().length) return;
   hkLayerStart(lv);
   for (const h of hkList()) {
@@ -208,7 +209,7 @@ function hkSplit(s) {
 // The notes row: each hacker's name and bars (rivals: vs NAME ###; crew: +NAME ###)
 function hkNotes(lv) {
   lv.notes = (lv.notes || []).filter(n => !n.hk);
-  for (const h of hkList()) lv.notes.push({ hk: true, text: h.out ? `${hkName(h.id).slice(0, 8).toLowerCase()} x_x` : h.side === 'bad' && hkAsleep() ? `${hkName(h.id).slice(0, 8).toLowerCase()} zzz` : `${h.side === 'bad' ? 'vs ' : '+'}${hkName(h.id).slice(0, 8)} ${hkBars(h)}`, tag: 'hk_' + h.id });
+  for (const h of hkList()) lv.notes.push({ hk: true, text: h.id === 'g0dexe' ? g0dxNote() : h.out ? `${hkName(h.id).slice(0, 8).toLowerCase()} x_x` : h.side === 'bad' && hkAsleep() ? `${hkName(h.id).slice(0, 8).toLowerCase()} zzz` : `${h.side === 'bad' ? 'vs ' : '+'}${hkName(h.id).slice(0, 8)} ${hkBars(h)}`, tag: 'hk_' + h.id });
 }
 // A rival taps a node: ICE locks for you (and maybe costs it a bar); the real node: it takes the layer's pay.
 function hkTap(lv, h, t, iceCost = 1) {
@@ -668,6 +669,7 @@ function buildHackers(ctx, lv, now) {
       drawHkCursor(put, bg, Math.round(p.x - 1), Math.round(p.y), h.id, { tag: false });
       if (p.t && p.t.state === 'closed') { const o = tileOrigin(p.t); drawHkPoint(put, bg, o.tx + 3, o.ty - 1, h.id, now, i + 1); }
     }
+    if (HK_AI[h.id] && HK_AI[h.id].draw) { HK_AI[h.id].draw({ put, bg }, lv, h, s, now); continue; }   // a cursor of its own (G0D.exe: engine/g0dexe.js)
     // their cursor, and their tag under it: their name, or what they're saying (a chat line in the cursor, like b0y's)
     drawHkCursor(put, bg, x, y, h.id, { say: s.bubble && now < s.bubble.until ? s.bubble.text : null });
     // pointing: while they aim at a node, a v of theirs bobs over it (where their tap is going)
@@ -715,7 +717,7 @@ const CALL_GEAR = {
     },
   },
 };
-for (const id of HK_CREW) CALL_GEAR['call_' + id] = {
+for (const id of HK_CREW.filter(k => ITEMS['call_' + k])) CALL_GEAR['call_' + id] = {   // (crew with a CALL of their own: not G0D.exe)
   ok: () => hkCallable() && !hkUp(id),
   why: () => !hkCallable() ? 'only in a corp.' : `${HACKERS[id].name.toLowerCase()} is already here.`,
   use() { Sound.ui(); hkSpawn(id, 'call'); },

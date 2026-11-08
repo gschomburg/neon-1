@@ -4,7 +4,7 @@
 // (a cutscene layer: { n: 'logo', glitch: { col: 'ink:b0y' } }), without becoming its own effect.
 // Times are in ms. "share" = the chance (0-1) per cell or per window. "set" = the characters it swaps in.
 'use strict';
-NEON_FILES.push(['data/fx.js', 'v14.59']);
+NEON_FILES.push(['data/fx.js', 'v14.60']);
 
 const FX_GLITCH = '#%&@$!?*<>/=+';   // the glitch characters (one set everywhere: glitch, cue, garble)
 const FX_NOISE = '%&#*;:';   // the softer noise a burst flashes to (mold, d0g's tics)

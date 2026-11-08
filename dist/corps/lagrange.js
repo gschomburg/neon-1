@@ -1,6 +1,6 @@
 // NeoN+1 corps/lagrange.js
 'use strict';
-NEON_FILES.push(['corps/lagrange.js', 'v14.59']);
+NEON_FILES.push(['corps/lagrange.js', 'v14.60']);
 // Its boss mod: PRECOG (precog), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -67,6 +67,14 @@ CORPS.lagrange = {
     if (g.pending) { g.land = { cell: g.pending.cell, at: now + slideMs(300) + 30 }; g.pending = null; }
   },
   intercept(i) { const t = st.lv.tiles[i]; return this.cellTap(t.cell); },
+  // G0D.exe (engine/g0dexe.js), when it knows the corp: tap the cell the real node slides into next (no lag: the node)
+  auto(lv, g) {
+    const G = lv.lag;
+    if (!G || !g.known || !g.real) return undefined;
+    if (lv.anchor) return g.real;
+    if (G.pending || G.land) return null;   // one tap in flight at a time
+    return g0dxCell(lv, lagNext(lv, g.real));
+  },
   cellTap(cell) {
     const lv = st.lv, g = lv.lag;
     if (!g || st.busy) return true;

@@ -3,7 +3,7 @@
 // Hand edits are fine too: inside the quotes a backslash is \\ and a quote \'.
 // A face is 5 x 3, drawn as is (the lines are not centered one by one). POPS's is the training handler's.
 'use strict';
-NEON_FILES.push(['data/art/faces.js', 'v14.59']);
+NEON_FILES.push(['data/art/faces.js', 'v14.60']);
 
 const ART_FACES = {
   pops: { name: 'POPS', art: [' \'-, ', '┌@\\@┐', '╯{=╭╰'] },
@@ -28,4 +28,5 @@ const ART_FACES = {
   root: { name: 'ROOT', art: ['.___.', '|# _|', '\'---\''] },
   kludge: { name: 'KLUDGE', art: [' ,_, ', '(#_o)', ' |=| '] },
   hype: { name: 'HYPE', art: [' * * ', '\\^o^/', '  |  '] },
+  g0dexe: { name: 'G0D.exe', art: [' .-. ', '(<@>)', ' \'-\' '], note: 'a placeholder: the eye' },
 };

@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v14.59']);
+NEON_FILES.push(['engine/dev.js', 'v14.60']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
@@ -200,6 +200,19 @@ function devMenuLines() {
   if (st.mode !== 'map') T('(breach now: be on the map)', C.dim);
   T('');
   T('mods / gear: the neon editor', C.dim);
+  T('');
+  // G0D.exe (engine/g0dexe.js): give it, and its settings (kept in the save)
+  T('G0D.exe', C.divine);
+  const gx = g0dxCfg();
+  lines.push({ row: [
+    { text: '[give G0D.exe]', id: 'g0dx', onTap: () => { if (g0dxGive()) { Sound.buy(); toggleDev(); } else Sound.deny(); }, disabled: !run },
+    { text: `[speed ${gx.speed}x]`, id: 'g0dxsp', onTap: () => { gx.speed = G0DX_SPEEDS[(G0DX_SPEEDS.indexOf(gx.speed) + 1) % G0DX_SPEEDS.length]; persist(); Sound.tick(); } },
+  ] });
+  lines.push({ row: [
+    { text: `[clicks ${gx.clicks}]`, id: 'g0dxcl', onTap: () => { gx.clicks = G0DX_CLICKS[(G0DX_CLICKS.indexOf(gx.clicks) + 1) % G0DX_CLICKS.length]; persist(); Sound.tick(); } },
+    { text: `[knows: beaten ${gx.beaten}x]`, id: 'g0dxbt', onTap: () => { gx.beaten = gx.beaten % 5 + 1; persist(); Sound.tick(); } },
+  ] });
+  if (run && run.g0dx) T(`${run.g0dx.on ? 'on' : 'paused'}: ${run.g0dx.left} clicks left, ${run.g0dx.used} used`, C.dim);
   T('');
   lines.push({ row: [
     { text: '[+100cr]', id: 'cr', onTap: cheat(() => { run.credits += 100; }), disabled: !run },

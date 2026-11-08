@@ -54,6 +54,7 @@ node tools/test.js             # every automatic check: data round-trips, check.
 node tools/test.js --quick     # the same without the playtest (about a minute)
 node tools/checks/check.js            # fingerprint the game and compare it to tools/checks/golden.json (--accept after a change on purpose)
 node tools/checks/playtest.js         # play every corp in headless Chrome, compare to tools/checks/golden-play.json
+node tools/checks/g0d_play.js         # G0D.exe plays every corp headless; lists the ones it gets stuck on
 node tools/checks/tell_odds.js        # how much each corp's tell helps
 node tools/data/economy_file.js     # rewrite a data file through its writer (a round-trip check): also fx_, tutorial_,
                                # art_ and palette_file.js; each prints "unchanged" when the file and writer agree
@@ -144,6 +145,7 @@ neon-1/
 │   │   ├── tests/          test pages: play a bit, check things (fixes, the end game)
 │   │   ├── check.js        fingerprint the game, compare to golden.json (layers, maps, tables)
 │   │   ├── playtest.js     play every corp in headless Chrome, compare to golden-play.json
+│   │   ├── g0d_play.js     G0D.exe plays every corp headless: where it gets stuck, ICE, no-pay layers
 │   │   ├── golden*.json    what the game made last time it was accepted (committed)
 │   │   ├── econsim.js      play whole runs headless and report the credits (docs/ECONOMY.md)
 │   │   ├── tell_odds.js    how much each corp's tell helps

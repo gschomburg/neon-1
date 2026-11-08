@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.59']);
+NEON_FILES.push(['engine/input.js', 'v14.60']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -205,6 +205,8 @@ cv.addEventListener('pointerdown', e => {
     st.selItem = -1; st.selMod = -1;
     return;
   }
+  // G0D.exe is playing: a tap of your own on the game takes over (it pauses; its own gear switches it: engine/g0dexe.js)
+  if (g0dxOn() && !st.pause && !st.dev && (['tile', 'cell', 'node', 'peek', 'mod'].includes(h.kind) || (h.kind === 'item' && st.run.items[h.i] && st.run.items[h.i].key !== 'g0dexe'))) g0dxPause('paused: you took over.');
   const oneTap = save.tapMode === 'one';
   if (h.kind === 'tile' && coinOn() && !st.busy && !st.coin) {
     // COIN FLIP: a press waits: a quick tap picks, a hold (or a drag up) brings the coin up

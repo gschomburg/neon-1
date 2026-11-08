@@ -42,7 +42,7 @@
 //   engine/mods.js      zombie, ROT
 //
 'use strict';
-NEON_FILES.push(['engine/corpkit.js', 'v14.59']);
+NEON_FILES.push(['engine/corpkit.js', 'v14.60']);
 
 // ---------------- Content ----------------
 // tell: how the corp picks its safe tile. bossTell: the boss layer's twist.
@@ -55,6 +55,8 @@ NEON_FILES.push(['engine/corpkit.js', 'v14.59']);
 //                 tell isn't followed this layer) a random node. It sets t.glyph, plus
 //                 tile flags other mods read: t.marked (SIGSCAN), t.forged (FORGERY).
 //   hint(lv, now) a line for row 7 (when there's no clock): { text, col } or null.
+//   auto(lv, g)   G0D.exe (engine/g0dexe.js): what it taps next in this corp; only for corps where tapping the real
+//                 node isn't enough (LAGRANGE, SIMON). A tile, null (wait), or undefined (the usual).
 //   nodes         + / - nodes per layer. pay, timer: as before. rules(tier): the rules line.
 const CORPS = {};   // filled by the corps/ files
 

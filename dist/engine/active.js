@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.59']);
+NEON_FILES.push(['engine/active.js', 'v14.60']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -606,7 +606,7 @@ function toggleArm(key) {
   else { Sound.tick(); setMsg(`> ${ITEMS[key].name.toLowerCase()} off.`, C.mid); }
 }
 // A gear's chip glows on the belt while it's on (ENCORE) or armed.
-const gearOn = key => key === 'encore' ? !!st.run.encore : ARMS[key] ? ARMS[key].on() && holds(key) : false;
+const gearOn = key => key === 'encore' ? !!st.run.encore : key === 'g0dexe' ? g0dxOn() : ARMS[key] ? ARMS[key].on() && holds(key) : false;
 const ENCORE_NO = new Set(['leash', 'bone', 'muzzle', 'honey', 'exorcist', 'egg', 'encore', 'ping', 'route', 'warp', 'tunnel', 'mesh', 'skip', 'worm', 'nuke', 'swap', 'stim', 'fake', 'allin', 'tithe', 'blast', 'rollup', 'split', 'freeze', 'slomo', 'anchor', 'pass']);
 const encoreOk = key => !ENCORE_NO.has(key) && !key.startsWith('call');
 async function encoreAgain(key, tier, first) {
@@ -637,6 +637,7 @@ const itemOffHere = key => !!(st.mode === 'play' && st.corp && st.corp.hasBoss &
 function whyNotItem(stack) {
   if (st.mode === 'g0df' && st.g0df) return g0dfGearWhy(stack);   // the G0D fight (engine/g0dfight.js)
   const key = stack.key, inCorp = st.mode === 'play' && st.corp && st.corp.hasBoss;
+  if (key === 'g0dexe') return g0dxWhy();
   if (ITEMS[key].quest) return 'POPS wants it: CASH OUT with it.';
   if (itemOffHere(key)) return 'off in this corp.';
   if (key === 'patch') return zombie() ? 'no rot to fix.' : 'integrity is full.';
@@ -802,6 +803,7 @@ function canUse(stack) {
   const run = st.run;
   if (!run || st.wipe || !stack) return false;
   const key = stack.key, tier = stack.tier || 0;
+  if (key === 'g0dexe') return g0dxCanToggle();   // G0D.exe: a switch (engine/g0dexe.js)
   if (isLoot(key)) return false;   // loot (and quest gear) lives in the LOOT bag: it's carried and sold, not used
   if (key !== 'patch' && key !== 'lotto' && st.mode === 'g0df' && st.g0df && G0DF_GEAR.includes(key)) return g0dfGearOk(stack);   // the G0D fight (engine/g0dfight.js)
   if (GEAR[key]) return GEAR[key].ok(gearCtx(tier));
@@ -860,6 +862,7 @@ function useItem(slot) {
   }
   const key = stack.key, tier = stack.tier || 0;
   if (key === 'encore') return toggleEncore();   // ENCORE: a switch; spent when it doubles something
+  if (key === 'g0dexe') return g0dxToggle();   // G0D.exe: a switch, never spent (engine/g0dexe.js)
   if (ARMS[key]) return toggleArm(key);   // PING, FAKE, WORM: armed by a tap, cancelled by another, spent when they fire
   tally('gear');   // THE RECORD (engine/feats.js)
   stack.n--;
