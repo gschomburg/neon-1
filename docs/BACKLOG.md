@@ -167,6 +167,16 @@ unlocked by REP, and some quests unlock REP.
       - [ ] Its face is a placeholder eye (data/art/faces.js `g0dexe`): redraw in the ART tab.
       - [ ] Still open: TUNNEL and MESH (it keeps them, doesn't use them yet); phishing (it skips the pier); building at
         the workbench is in but barely tried; it never rerolls a market. How smart its map is: tune once you've watched it.
+      - [ ] Step 4 and the rest. **Decided (Greg, 2026-11-08):**
+        - **$ nodes in corps it knows:** MAGNET whenever it has one. It taps a $ node itself only at full health, while
+          the UPLINK still needs money, and never on a boss layer.
+        - **Phishing:** off by default (it skips the pier). A flag turns on a "phish it all away" mode, for laughs: it
+          heads for every pier and casts until it's out of clicks or credits (each pier has a cast limit, ECON.fish.casts:
+          then on to the next pier).
+        - **Handing back when it's risky:** a flag, off by default. On: at low INT with nothing to heal, when every way on
+          the map is a corp it doesn't know, it stops with its OFFLINE card. (It reads the map's corps; the UPLINK screen
+          doesn't show what's ahead, so the check is on the map.)
+        - Also: TUNNEL / MESH on the map, a market reroll when it's rich.
 
 ### 4. The end game (details: docs/ENDGAME.md)
 - **The ending's leftovers:** the art (placeholders to redraw); the three unlocks as already-paid posts on THE BOARD.
