@@ -113,10 +113,10 @@ The game lives at [www.gregschomburg.com/neon/](https://www.gregschomburg.com/ne
 every script (`/neon/.htaccess` caches scripts for a year), noindex, its own `.htaccess` (no caching). After changing
 the editor between bumps, run `node tools/deploy_editor.js` again. **Password-protect `/neon/tools/`** on the server
 (DreamHost panel: Htaccess/WebDAV). Saving still writes to your own computer (Chrome asks for your repo's `dist/data`
-folder). "edit in asXii" (the ART tab) doesn't work online: asXii isn't on the site.
+folder). "edit in asXii" (the ART tab) opens the live asXii (gregschomburg.com/asxii/), online or not.
 
 
-The leaderboard service (`greglytics/`) deploys on its own: see `greglytics/README.md`.
+The leaderboard service (greglytics) has its own repo and deploys on its own: github.com/gschomburg/greglytics.
 
 ## Project layout
 
@@ -156,7 +156,7 @@ neon-1/
 │   │   │                   `node tools/data/x_file.js` checks a file round-trips
 │   │   ├── data_file_core.js   what the *_file.js writers share: the stamp line, parsing, quoting, the round-trip main
 │   │   ├── quest_dialog.js writes docs/QUEST_DIALOG.md from dist/data/quests.js
-│   │   └── scene_art.js    copies cutscene art from asXii saves into dist/data/scene_art.js
+│   │   └── scene_art.js    copies cutscene art from asxii_art/ saves into dist/data/scene_art.js
 │   └── editor/             the editor's code: one file per tab, and what they share
 │       ├── common.js       helpers every tab uses (NEON_ED): the game frame, toasts, IndexedDB, saving a data file
 │       ├── editor.css      the editor's styles
@@ -179,8 +179,7 @@ neon-1/
 │   ├── archive/            old planning lists, the v11-v13 version log, old backlog and review items
 │   ├── art/                logotype drafts
 │   └── mockups/            HTML mockups (the WORKBENCH)
-├── ascii-editor/           asXii, a standalone ASCII art editor with its own version (see its README)
-├── greglytics/             the shared events and leaderboard service (PHP/MySQL); dist/engine/greglytics.js is a copy
+├── asxii_art/              neon's art saved from asXii (its own repo, gregschomburg.com/asxii/); the cutscenes feed tools/data/scene_art.js
 ├── prototypes/             the old versions, frozen (v01-v11; v11 is where dist/ started)
 └── reference/              One True Door (1TD.html), the game that inspired this one, and HackJack
 ```

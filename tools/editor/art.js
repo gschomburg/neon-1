@@ -68,11 +68,14 @@
   };
   const loadMsg = p => { const k = F.KINDS[p.kind], rows = getRows(p);
     return { to: 'asxii', type: 'load', id: p.id, name: p.label, label: k.label, rows: p.kind === 'glyphs' || p.kind === 'special' ? asDrawn(rows) : rows, w: k.w, h: k.h, note: k.note }; };
+  // asXii lives in its own repo now, hosted on the site; ?neon=1 turns on its link back (its public/neon-link.js), which
+  // posts to window.opener with '*', so it works from this editor on file:// and online.
+  const ASXII_URL = 'https://www.gregschomburg.com/asxii/?neon=1';
   function editInAsxii(p) {
     pending = loadMsg(p);
     if (ax && !ax.closed && axReady) { ax.postMessage(pending, '*'); try { ax.focus(); } catch (e) { /* */ } pending = null; toast('sent to asXii'); return; }
     axReady = false;
-    ax = window.open('../ascii-editor/dist/index.html?neon=1', 'neon-asxii');
+    ax = window.open(ASXII_URL, 'neon-asxii');
     if (!ax) toast('the browser blocked the asXii tab: allow pop-ups for this page');
   }
   function fromAsxii(m, src) {

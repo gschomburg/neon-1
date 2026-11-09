@@ -23,7 +23,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.67']);
+NEON_FILES.push(['data/quests.js', 'v14.68']);
 
 const QUEST_INFO = {
   pops: {
@@ -91,7 +91,7 @@ const QUEST_SCENES = {
   // seed of a G0D.exe quest later). Dawn over the city, POPS and b0y on the roof, the two rewards handed over (b0y: the
   // 1UP, out of MEDIX; POPS: the seeds hold still now, and his log of your runs, REPLAYS), G0D's mark (its logo, yours
   // to wear), your logo, the credits. More to do: every seed has a board (the seed leaderboard, docs/ENDGAME.md).
-  // Placeholder art (Claude's): ascii-editor/saves/n_cutscene_04_ending, to redraw.
+  // Placeholder art (Claude's): asxii_art/n_cutscene_04_ending, to redraw.
   h3av3n: [
     { title: ['G0D IS DOWN', 'H3AV3N'], mood: { levels: [0], stages: 'A' } },
     { pic: { art: 'ending', rows: [0, 11], hold: 1200, layers: [
@@ -190,7 +190,7 @@ const QUEST_SCENES = {
         progress: { after: '//', ch: 'o0', at: 2200, ms: 1800, col: 'accent', sound: 'vcrSpin' } },
       { n: 'slot', col: 'mid', at: 0, dur: 400, off: [-3, -3], cut: { a: 1, b: 1, c: 101, rows: [80, 88] } }] },
       text: 'the DISC goes in. an old drive coughs, then spins up.', mood: { levels: [2], stages: 'B' } },
-    // POPS, close (Claude's headshot: ascii-editor/saves/n_cutscene_01_pops_head), his gear blinking behind him
+    // POPS, close (Claude's headshot: asxii_art/n_cutscene_01_pops_head), his gear blinking behind him
     { pic: { art: 'popshead', rows: [0, 14], layers: [
       { n: 'head lights', col: 'mid', lights: { ch: 'o', col: 'accent', rate: 520, off: 0.45, offCh: '.' } },
       { n: 'head', col: 'bright', at: 300, dur: 900, blink: { match: '[_@_]-[_@_]', to: '[_-_]-[_-_]' }, smoke: { x: 9, y: 8, dx: -4, dy: -6 } }] },

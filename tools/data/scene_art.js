@@ -5,13 +5,13 @@
 if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/data/scene_art.js   (rewrites dist/data/scene_art.js from the asXii saves in SOURCES)"); process.exit(0); }
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..', '..');
-const SOURCES = { disc: 'ascii-editor/saves/n_cutscene_01_v02.asxii.json', popshead: 'ascii-editor/saves/n_cutscene_01_pops_head.asxii.json',
-  prodigal: 'ascii-editor/saves/n_cutscene_02_prodigal.asxii.json', gate: 'ascii-editor/saves/n_cutscene_03_gate.asxii.json',
-  ending: 'ascii-editor/saves/n_cutscene_04_ending.asxii.json' };
+const SOURCES = { disc: 'asxii_art/n_cutscene_01_v02.asxii.json', popshead: 'asxii_art/n_cutscene_01_pops_head.asxii.json',
+  prodigal: 'asxii_art/n_cutscene_02_prodigal.asxii.json', gate: 'asxii_art/n_cutscene_03_gate.asxii.json',
+  ending: 'asxii_art/n_cutscene_04_ending.asxii.json' };
 const VERSION = (fs.readFileSync(path.join(ROOT, 'dist/data/quests.js'), 'utf8').match(/NEON_FILES\.push\(\['data\/quests\.js', '([^']+)'\]\)/) || [, 'v0'])[1];
 
 const out = [
-  "// NeoN+1 data/scene_art.js: cutscene art, drawn in asXii (ascii-editor/saves). Made by tools/data/scene_art.js: edit the",
+  "// NeoN+1 data/scene_art.js: cutscene art, drawn in asXii (asxii_art/). Made by tools/data/scene_art.js: edit the",
   "// save and run it again, don't edit here. SCENE_ART[scene]: { src, w, h, layers: { name: { x, y, rows } } }.",
   "'use strict';",
   `NEON_FILES.push(['data/scene_art.js', '${VERSION}']);`,

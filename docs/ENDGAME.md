@@ -17,7 +17,7 @@ After G0D FINAL STAND, in order:
 - A clean, happy ending: POPS and b0y reunite ("let's go crack a corp").
 - The rewards are handed over in the story: **b0y gives you the 1UP** (a crash unit he pulled out of MEDIX on his way out of sub-basement three); **POPS teaches you the seeds** (with the mold gone they hold still, so replays count) and gives you **his log of your runs** (REPLAYS). The gauntlet seed and G0D's eye: later.
 - Credits: made by Greg Schomburg and Claude; playtesting Justin Bakse and friends; then THANKS TO a list of made-up hacker handles.
-- New art, all placeholders for now (Claude's, ascii-editor/saves/n_cutscene_04_ending, to redraw in asXii): a skyline at dawn, the rooftop, the crash unit, the seed terminal; your own logo at the end.
+- New art, all placeholders for now (Claude's, asxii_art/n_cutscene_04_ending, to redraw in asXii): a skyline at dawn, the rooftop, the crash unit, the seed terminal; your own logo at the end.
 
 **The scene** (data/quests.js `h3av3n`, a strip; music EVENT HORIZON): G0D IS DOWN · dawn over the city, its lights going out (G0D's code scattered) · the mold goes with it · the rooftop, two mugs of coffee · "doc." / "kid." · the crash unit (b0y: the 1UP) · the seed terminal (POPS: seeds, his log) · "come on, doc. let's go crack a corp." / "one. then breakfast." · your logo: "and you? you've got a seed to type in." · THERE IS MORE TO EXPLORE · THANKS FOR PLAYING · CREDITS · THANKS TO. Then H3AV3N CLEARED lists the three unlocks, then POPS's call.
 

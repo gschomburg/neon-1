@@ -10,7 +10,7 @@
 //   - every local script and stylesheet gets ?v=<build>: /neon/.htaccess caches .js for a year, so a new build
 //     needs new URLs (the game's own index.html does the same: tools/bump.js)
 //   - robots noindex in the pages, and an .htaccess: no caching for the editor's own files, noindex
-// Not online: "edit in asXii" (the ART tab) opens ../ascii-editor/, which isn't on the site.
+// "edit in asXii" (the ART tab) opens the live asXii (gregschomburg.com/asxii/), so it works online too.
 'use strict';
 const fs = require('fs'), path = require('path');
 if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/deploy_editor.js   (writes dist/tools/: the editor, uploaded with dist/ to /neon/tools/)'); process.exit(0); }

@@ -348,8 +348,7 @@ neon+1/
     readme.md
     reference/
       1TD.html           <- One True Door, the inspiration
-    ascii-editor/        <- the standalone ASCII art tool (not the game; may get its own repo):
-                            README.md, PLAN.md, dist/ (the app), reference/ (art picks; the ascii-art.de catalog is local only)
+    asxii_art/           <- neon's art saved from asXii (asXii and greglytics have their own repos since 2026-11-08)
     database.rules.json  <- Firebase Realtime Database rules (pasted into the console)
     docs/
       SPEC.md            <- this file
@@ -1095,6 +1094,7 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v14.68** (2026-11-08): **asXii and greglytics move out** (Greg moved them to their own repos). The editor's "edit in asXii" opens the live asXii (gregschomburg.com/asxii/?neon=1), so it works from the uploaded editor too. Neon's asXii saves (cutscenes, title screens, hacker and crew logos) are in `asxii_art/`, committed (they were gitignored, only on disk); tools/data/scene_art.js reads them there (the art came out the same). engine/greglytics.js: copied again from the greglytics repo (one comment), its header points there.
 - **v14.67** (2026-11-08): **The death screen fits again** (Greg's screenshot: a practice G0D.exe run in the editor, the leaderboard block up, UPLOAD running into the footer). overLines (engine/screens.js) counted the initials' big letters (one line, 3 rows) as 1 row, so the map's scroll area got 2 rows too many. It now counts rows with the text board's own rule, `lineRows` (engine/textboard.js), so the two can't disagree. check.js re-accepted (the title's build number).
 - **v14.66** (2026-11-08): **INFIDEL** (Greg): WITH A SHOE's title (finish G0D off with a shoe) is INFIDEL, was COBBLER (data/feats.js). Docs: the backlog checked against the code; built items taken out.
 - **v14.65** (2026-11-08): **The end screen's map is fast again** (Greg's meat notes: a long G0D.exe run, 609 layers, sector 23, lagged on the results screen, confetti and all). drawMapView (engine/mapview.js) worked the whole map out every frame, and mapRowOf scans the map for both ends of every link: quadratic, and run once per row while the screen builds in. At sector 23 that was ~0.7s a frame (~40ms once built); now ~0.5ms. The layout (node spots, link dots by row) is made once per results map (mapViewLayout, MAP_VIEW_CACHE). It draws the same cells, in the same order (checked against the old code at 1, 3 and 23 sectors).

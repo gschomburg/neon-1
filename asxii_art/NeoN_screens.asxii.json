@@ -1,0 +1,163 @@
+{
+ "app": "asXii",
+ "appVersion": "0.143",
+ "format": 1,
+ "name": "NeoN+1 screens",
+ "width": 36,
+ "height": 38,
+ "active": 5,
+ "mirror": {
+  "x": null,
+  "y": null
+ },
+ "layers": [
+  {
+   "name": "intro 4: welcome (handshake)",
+   "visible": false,
+   "x": 0,
+   "y": 1,
+   "rows": [
+    "login: NEON_HOUND",
+    "password: ********",
+    "",
+    "  ,-''-._       ,-.  ,-----.___",
+    " (       `.   _/  `-'          `-.",
+    "  `.  ,.  ) _( o,-.   ,--.     ,-'",
+    "    \\/  \\/ (   (   `-'   `.  ,'",
+    "     \\     )  ,'    ,-.   ( (",
+    "      `.  /  (     (   )   `.`.",
+    "        )(    `.    `-'     ,-'",
+    "       ( (      )        .-'  .-.",
+    "        `'      `'           (__)",
+    "> trace: 2 hops // located.",
+    "",
+    "",
+    "",
+    "[********************] 100%",
+    "",
+    "> handshake complete.",
+    "",
+    "             ( (  ( (",
+    "            .--------.",
+    "            | this   |]",
+    "            | is fine|]",
+    "            '--------'",
+    "           {&} NEON_HOUND",
+    "",
+    "        welcome, neon_hound."
+   ]
+  },
+  {
+   "name": "intro 3: world map (trace)",
+   "visible": false,
+   "x": 0,
+   "y": 1,
+   "rows": [
+    "login: NEON_HOUND",
+    "password: ********",
+    "",
+    "  ,-''-._       ,-.  ,-----.___",
+    " (       `.   _/  `-'          `-.",
+    "  `.  ,.  ) _( o,-.   ,--.     ,-'",
+    "    \\/  \\/ (   (   `-'   `.  ,'",
+    "     \\     )  ,'    ,-.   ( (",
+    "      `.  /  (     (   )   `.`.",
+    "        )(    `.    `-'     ,-'",
+    "       ( (      )        .-'  .-.",
+    "        `'      `'           (__)",
+    "> trace: 2 hops // located.",
+    "",
+    "",
+    "",
+    "[********************] 100%"
+   ]
+  },
+  {
+   "name": "intro 2: boot log (scrolling)",
+   "visible": false,
+   "x": 0,
+   "y": 1,
+   "rows": [
+    "login: NEON_HOUND",
+    "password: ********",
+    "",
+    "corps/monte .............. ok",
+    "corps/entropy ............ ok",
+    "corps/predator ........... ok",
+    "corps/aegis .............. ok",
+    "corps/gravitas ........... ok",
+    "corps/decibel ............ ok",
+    "corps/squalor ............ ok",
+    "> masking ip",
+    "corps/bullettime ......... ok",
+    "corps/upside ............. ok",
+    "corps/bitrot ............. ok",
+    "corps/lagrange ........... ok",
+    "",
+    "[**************------]  69%"
+   ]
+  },
+  {
+   "name": "intro 1: login",
+   "visible": false,
+   "x": 0,
+   "y": 1,
+   "rows": [
+    "login: NEON_HOUND",
+    "password: ********"
+   ]
+  },
+  {
+   "name": "title: art (face, logo, traces)",
+   "visible": true,
+   "x": 0,
+   "y": 1,
+   "rows": [
+    "  .: '**      _.-~~~~~~-._ o---+",
+    "   *:      .-'   .| [#]  '-.   |",
+    "         .'    .' |  |  +--o'. +-",
+    "  *==   /     /   |  +--+    \\ |",
+    "  :    |   .-\"\"-. | [@@]=+    |+-",
+    "   o   |  ( (o)  )|  ||  |    |",
+    "   |.  |   '-..-' | o++o |    |o-",
+    "  -+--o|     )    |  ||  +=   |",
+    "       |    (_    | ++==++    |",
+    "        \\    __   | [====]   /o-+",
+    "   +----o\\  '--'  |   ||    /o--+",
+    "   |      '.      |  o--  .'    |",
+    "   o _      _ ._  |   _.-'  +---+",
+    "    | \\    | |  '-~-'       |   |",
+    "    |  \\   | |     _  o-----+   |",
+    "    | . \\  | |  | / |           |",
+    "    | |\\ \\ | | -+-| |           |",
+    "    | | \\ \\| |  | |_|  v13.27   |",
+    "    | |  \\   |                  |",
+    "    |_|   \\__| N e o N + 1 o----+",
+    "   network intrusion // prototype"
+   ]
+  },
+  {
+   "name": "title: menu + ui",
+   "visible": true,
+   "x": 0,
+   "y": 23,
+   "rows": [
+    "     +========================+",
+    "     |     J A C K   I N      |",
+    "     |    - start a run -     |",
+    "     +========================+",
+    "",
+    "     [ HOW TO PLAY ]  [ CODEX ]",
+    "   [ SETTINGS ]  [ MULTIPLAYER ]",
+    "   [ THE BOARD ]  [ LEADERBOARD ]",
+    "",
+    "         [ {&} NEON_HOUND ]",
+    "   best 00  runs 0  wins 0  rep 0",
+    "",
+    "           seed [ANSF6B]",
+    "",
+    "                   neon+1 v13.27 [?]"
+   ]
+  }
+ ]
+}

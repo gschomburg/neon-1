@@ -1,6 +1,7 @@
-// NeoN+1 engine/greglytics.js: a copy of greglytics/client/greglytics.js (the scores service on s3iz.com/glx).
-// Change the original, then copy it here again (keep this stamp line).
-NEON_FILES.push(['engine/greglytics.js', 'v14.67']);
+// NeoN+1 engine/greglytics.js: a copy of client/greglytics.js in the greglytics repo (github.com/gschomburg/greglytics;
+// on disk: D:/GS/projects/greglytics/greglytics). The scores service on s3iz.com/glx. Change the original, then copy it
+// here again (keep this stamp line).
+NEON_FILES.push(['engine/greglytics.js', 'v14.68']);
 // greglytics: the browser side. Copy this file into a project and include it with a script tag; then:
 //   const gl = Greglytics.init({ endpoint: 'https://your.domain/api/', app: 'neon', version: '13.09' });
 //   gl.track('run_end', { layers: 21, mods: 3 });
@@ -22,6 +23,7 @@ NEON_FILES.push(['engine/greglytics.js', 'v14.67']);
   const rid = n => { const a = new Uint8Array(n); (root.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => { a[i] = Math.random() * 256; }); return Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); };
   const isTester = () => store.get('tester') === '1';
   // a tester device: everything it sends is dev. Clients made after this pick it up.
+  // public/api/glv.js reads the same key (greglytics.tester), so ?glv=me there marks the device here too.
   const tester = on => { if (on !== undefined) store.set('tester', on ? '1' : null); return isTester(); };
   const isDevPage = () => { const p = root.location || {}; return p.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(p.hostname || ''); };
 

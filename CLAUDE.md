@@ -25,8 +25,8 @@ Greg's raw notes.
 ## Parts
 - Game: `dist/` (classic global scripts, load order set in `dist/index.html`). Runs from file://. Multiplayer uses the Firebase Realtime DB (`database.rules.json` is pasted into the console by hand).
 - `tools/neon_editor.html`: edits the game's data files in place (follows web.md's saving pattern). Its code is `tools/editor/` (one file per tab; `common.js` holds the shared helpers, `NEON_ED`). Shared file readers and writers are `tools/data/*_file.js`, on `tools/data/data_file_core.js`; `node tools/data/x_file.js` must print "unchanged". The editor talks to the game through `dist/engine/editor.js` (postMessage): change both ends together.
-- `ascii-editor/` (asXii): its own version (`node ascii-editor/bump.js`, `MAJOR.MINOR`, no "v"). Saves follow web.md's saving pattern (in place in Chrome, a download elsewhere). Justin Bakse works on asXii too: fetch and check his commits before changing it. `saves/` is gitignored.
-- `greglytics/`: the shared events/leaderboard service. `dist/engine/greglytics.js` is a copy; change the original, then copy it in.
+- asXii (the ASCII art editor) has its own repo now (`D:/GS/projects/asxii/asxii`), live at gregschomburg.com/asxii/. The editor's "edit in asXii" opens the live one (`tools/editor/art.js` ASXII_URL). Neon's art saved from asXii goes in `asxii_art/` (committed): the cutscenes there are what `node tools/data/scene_art.js` turns into `dist/data/scene_art.js` (the game only reads that file, never a save).
+- greglytics (the events/leaderboard service) has its own repo now (`D:/GS/projects/greglytics/greglytics`, github.com/gschomburg/greglytics). `dist/engine/greglytics.js` is a copy of its `client/greglytics.js`: change the original, then copy it in (keep the game's three header lines and stamp).
 - Deploy: the user uploads `dist/` to gregschomburg.com/neon/.
 
 ## Screen space
