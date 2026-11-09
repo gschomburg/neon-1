@@ -36,3 +36,4 @@ Greg's raw notes.
   - One scrolling line instead of stacked, wrapped text: `FX.ticker` (engine/fx.js: a beat on the start, then it scrolls). The UPLINK's rows and the tray's gear tips use it.
   - Lines that take turns on one row: `FX.swapLines` (the map's node card when a boss has too many lines: mapview.js `swap` lines).
 - **Decided (Greg, 2026-11-05):** stacked text reads best where it fits (the rewards screen keeps it). The ticker is for when space is tight.
+- The end screen's map flexes: it scrolls and gets whatever rows are left (engine/screens.js overLines). The rows above and below it are counted with `lineRows` (engine/textboard.js), the same rule that draws them; count any new line there too. **Decided (Greg, 2026-11-08):** no tickers there, and the initials keep their `[^]` / `[v]` arrows.
