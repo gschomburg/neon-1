@@ -1,7 +1,7 @@
 // NeoN+1 engine/textboard.js: centered text screens (buildTextBoard), the big box button (drawBox), text fields
 // (Field, drawField), info tile rows and offer pops. Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/textboard.js', 'v14.66']);
+NEON_FILES.push(['engine/textboard.js', 'v14.67']);
 
 // Big boxed primary button. 3 rows, or 4 with a subtitle.
 function drawBox(ctx, y, ln) {
@@ -105,10 +105,13 @@ function drawField(ctx, x, y, b) {
   }
 }
 
+// How many rows a text board line takes. engine/screens.js overLines counts the end screen's rows with it too, so
+// the two always agree (it counted the initials' 3-row letters as 1, and UPLOAD ran into the footer).
+const lineRows = ln => ln.box ? (ln.sub ? 4 : 3) : ln.tileInfo ? TILE_H : ln.mapView || ln.draw ? ln.h || 1 : 1;
 function buildTextBoard(ctx, lines, area = null) {
   const { now, put, putC, addHit, bg, cells, collectHits } = ctx;
   const hl = ctx.hl || (() => {});
-  const heightOf = ln => ln.box ? (ln.sub ? 4 : 3) : ln.tileInfo ? TILE_H : ln.mapView || ln.draw ? ln.h || 1 : 1;
+  const heightOf = lineRows;
   const total = lines.reduce((s, ln) => s + heightOf(ln), 0);
   const top = area ? area.top : BOARD_Y, areaH = area ? area.h : L.gh;
   let y = top + Math.max(0, Math.floor((areaH - total) / 2));

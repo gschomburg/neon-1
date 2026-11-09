@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.66']);
+NEON_FILES.push(['engine/screens.js', 'v14.67']);
 
 // The title art as a grid: each cell's char and layer (f face, l logo letters,
 // w logo words, b background), plus every route a pulse can take along the traces,
@@ -332,8 +332,8 @@ function overLines() {
     { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
   ])];
   // the scrolling area: the mods and items, then the map with the path you took
-  const rest = 1 + bottom.reduce((a, ln) => a + (ln.box ? (ln.sub ? 4 : 3) : 1), 0);   // gap + the bottom
-  const used = lines.reduce((a, ln) => a + (ln.box ? 3 : 1), 0);
+  const rest = 1 + bottom.reduce((a, ln) => a + lineRows(ln), 0);   // gap + the bottom (lineRows: engine/textboard.js, as it draws them)
+  const used = lines.reduce((a, ln) => a + lineRows(ln), 0);
   const E = extras.length, total = E + mapRows(r.map);
   const view = clamp(L.hc - 2 - used - rest, 5, total);
   const om = st.overMap || (st.overMap = { top: null });

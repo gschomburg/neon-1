@@ -1,6 +1,6 @@
 // NeoN+1 corps/monty.js
 'use strict';
-NEON_FILES.push(['corps/monty.js', 'v14.66']);
+NEON_FILES.push(['corps/monty.js', 'v14.67']);
 // Its boss prize: the C.A.R. (car) for a clean boss layer, or the zonk, a GOAT (goat), if you hit ICE there (Greg,
 // 2026-11-07). Both are in data/mods.js (at the end of MODS); their effects: engine/active.js, engine/run.js.
 // Design: docs/CORPS.md A32 (Greg, 2026-11-07).

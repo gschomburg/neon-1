@@ -1,7 +1,7 @@
 // NeoN+1 engine/damage.js: damage and healing (hurt, heal, ZOMBIE rot, BLOOD MONEY), and the exotic pick rules
 // that change them: ICE EATER, COIN FLIP, SNOOZE, ALL-IN, FAILSAFE, BLACK ICE. Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/damage.js', 'v14.66']);
+NEON_FILES.push(['engine/damage.js', 'v14.67']);
 
 // ---- Damage and healing outside an ICE hit go through these, so ZOMBIE can turn them into rot.
 // hurt: n integrity (ZOMBIE: rot instead). heal: up to n integrity (ZOMBIE: less rot).
