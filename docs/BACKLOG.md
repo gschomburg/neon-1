@@ -391,9 +391,6 @@ unlocked by REP, and some quests unlock REP.
   every node in the sector looks reachable, so the map doesn't show which moves are a drive. Fix if it comes up: draw the
   drive-only nodes differently (dimmer, or a little car mark).
 - **Bugs** (Greg, meat notes 2026-11-08):
-  - [ ] **The end screen after a death with G0D.exe is too tall** (practice run: not scored, two gaps after "breached
-    none", then HGL, then a line with G0D.exe). Claude couldn't make it happen (fits at 390x780 and 375x600, same
-    lines): a screenshot and the window size would help (Greg will get one). The bottom buttons ran over the footer.
   - [ ] **tests/g0dexe.js is flaky** (Claude, 2026-11-08): about 1 run in 3 of the full `node tools/test.js --quick`
     it fails at a different step ("stuck: leave mode=play", the hand-off card); alone it passes. Its waits are probably
     too tight when the suite's Chromes run side by side.
