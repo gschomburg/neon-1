@@ -5,7 +5,7 @@
 // engine/scene.js; the eyes transition: engine/effects.js).
 // (Particles, shakes and flashes are engine/effects.js: they work in pixels, not cells.)
 'use strict';
-NEON_FILES.push(['engine/fx.js', 'v14.70']);
+NEON_FILES.push(['engine/fx.js', 'v14.71']);
 
 const FX = (() => {
   // ---------- building blocks ----------
@@ -293,31 +293,36 @@ const FX = (() => {
   }
   // Eyes coming and going in an area (x, y, w, h), only where free(x, y, w, h) says the spot is clear. A slot comes up
   // every E.every ms; `share` of them get an eye, of `big` / `mid` / small size, living life[0] + up to life[1] ms; each
-  // tries a few spots. Older eyes keep their spots. Calls put(x, y, ch, col, bold) for every mark.
-  function eyes(E, now, x0, y0, w, h, free, put) {
+  // tries a few spots. Older eyes keep their spots. `anywhere` of them skip free() and land on anything (the UI too).
+  // Calls put(x, y, ch, col, bold) for every mark, and cover(x, y, w, h) for an eye on top of things (clear under it).
+  function eyes(E, now, x0, y0, w, h, free, put, cover) {
     if (typeof reduced === 'function' && reduced()) return;   // (reduced motion: no eyes)
     const maxLife = E.life[0] + E.life[1], taken = [];
     for (let n = step(now - maxLife, E.every) - 1; n <= step(now, E.every); n++) {
       if (hash(n, 21, E.seed) >= E.share) continue;
       const t0 = (n + hash(n, 22, E.seed)) * E.every, life = E.life[0] + hash(n, 23, E.seed) * E.life[1];
       if (now < t0 || now > t0 + life) continue;
-      const k = hash(n, 24, E.seed), kind = k < E.big ? 'big' : k < E.big + E.mid ? 'mid' : 'small', [ew, eh] = eyeSize(kind);
+      const over = hash(n, 47, E.seed) < (E.anywhere || 0), k = hash(n, 24, E.seed), kind = k < E.big ? 'big' : k < E.big + E.mid ? 'mid' : 'small', [ew, eh] = eyeSize(kind);
       for (let tr = 0; tr < 6; tr++) {
         const x = x0 + Math.floor(hash(n, 25 + tr, E.seed) * (w - ew + 1)), y = y0 + Math.floor(hash(n, 35 + tr, E.seed) * (h - eh + 1));
         if (taken.some(([tx, ty, tw, th]) => x < tx + tw + 1 && tx < x + ew + 1 && y < ty + th && ty < y + eh)) continue;
-        if (!free(x - 1, y - 1, ew + 2, eh + 2)) continue;   // (a clear ring around it, so it sits in empty space)
+        if (!over && !free(x - 1, y - 1, ew + 2, eh + 2)) continue;   // (a clear ring around it, so it sits in empty space)
         taken.push([x, y, ew, eh]);
-        for (const m of eyeMarks({ kind, t0, life, seed: n }, E, now)) put(x + m.x, y + m.y, m.ch, m.col, m.bold);
+        const marks = eyeMarks({ kind, t0, life, seed: n }, E, now);
+        if (over && marks.length && cover) cover(x, y, ew, eh);
+        for (const m of marks) put(x + m.x, y + m.y, m.ch, m.col, m.bold);
         break;
       }
     }
   }
-  // Eyes over a list of screen cells ({ ch, cx, cy }), in the blank parts of an area: the marks to add ({ ch, cx, cy, col, own, bold }).
+  // Eyes over a list of screen cells ({ ch, cx, cy }) in an area: a new list, the eyes added (own 'fx') and anything
+  // under an `anywhere` eye gone.
   function eyeCells(cells, E, now, x0, y0, w, h) {
-    const used = new Set(cells.map(c => Math.round(c.cx) + ',' + Math.round(c.cy))), out = [];
+    const used = new Set(cells.map(c => Math.round(c.cx) + ',' + Math.round(c.cy))), out = [], gone = new Set();
     const free = (x, y, fw, fh) => { for (let yy = y; yy < y + fh; yy++) for (let xx = x; xx < x + fw; xx++) if (used.has(xx + ',' + yy)) return false; return true; };
-    eyes(E, now, x0, y0, w, h, free, (cx, cy, ch, ink, bold) => out.push({ ch, cx, cy, col: ink, own: 'fx', bold }));
-    return out;
+    const cover = (x, y, cw, ch) => { for (let yy = y; yy < y + ch; yy++) for (let xx = x; xx < x + cw; xx++) gone.add(xx + ',' + yy); };
+    eyes(E, now, x0, y0, w, h, free, (cx, cy, ch, ink, bold) => out.push({ ch, cx, cy, col: ink, own: 'fx', bold }), cover);
+    return (gone.size ? cells.filter(c => !gone.has(Math.round(c.cx) + ',' + Math.round(c.cy))) : cells).concat(out);
   }
 
   // hs: a fast hash of one number to [0, 1) (G0D's looks, the mold: was G0D_LOOKS.hs). The other hashes in the game give

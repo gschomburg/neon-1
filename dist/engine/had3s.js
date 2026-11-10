@@ -2,7 +2,7 @@
 // They live in HEAVEN (engine/heaven.js) with the other story corps, so the map never picks them at random:
 // HAD3S puts MYCONET on sector 1's boss node and CERBERUS (no mold there: engine/heaven.js) on sector 2's.
 'use strict';
-NEON_FILES.push(['engine/had3s.js', 'v14.70']);
+NEON_FILES.push(['engine/had3s.js', 'v14.71']);
 
 // ---------------- MYCONET: the mold corp ----------------
 // (the user, 2026-11-04: "start with some scraping, or maybe the ice spawns mold that you need to scrape")

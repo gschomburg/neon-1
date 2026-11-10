@@ -4,7 +4,7 @@
 // (a cutscene layer: { n: 'logo', glitch: { col: 'ink:b0y' } }), without becoming its own effect.
 // Times are in ms. "share" = the chance (0-1) per cell or per window. "set" = the characters it swaps in.
 'use strict';
-NEON_FILES.push(['data/fx.js', 'v14.70']);
+NEON_FILES.push(['data/fx.js', 'v14.71']);
 
 const FX_GLITCH = '#%&@$!?*<>/=+';   // the glitch characters (one set everywhere: glitch, cue, garble)
 const FX_NOISE = '%&#*;:';   // the softer noise a burst flashes to (mold, d0g's tics)
@@ -75,8 +75,9 @@ const FX_LOOKS = {
   // them get an eye, `big` / `mid` of them bigger ones (the rest small), living life[0] + up to life[1]. Each glitches
   // in over `inMs` (each mark settling on its own), looks around (a glance every `look`) and blinks (once a
   // `blinkEvery`, for `blinkMs`), glitches `glitch` of the time (a new mark every ms), and glitches out over the last
-  // `outMs`. Its rim is `rim` of the way from the background to col. seed: another seed, other eyes.
-  eyes: { every: 700, share: 0.45, life: [1400, 1600], inMs: 300, outMs: 280, look: 450, blinkEvery: 2300, blinkMs: 130, big: 0.08, mid: 0.35, glitch: 0.05, ms: 80, set: FX_GLITCH, col: 'danger', rim: 0.65, seed: 0 },
+  // `outMs`. Its rim is `rim` of the way from the background to col. `anywhere` of them skip the clear-space rule and
+  // land on anything, the UI too (0 = never, 1 = all of them). seed: another seed, other eyes.
+  eyes: { every: 700, share: 0.45, life: [1400, 1600], inMs: 300, outMs: 280, look: 450, blinkEvery: 2300, blinkMs: 130, big: 0.08, mid: 0.35, glitch: 0.05, ms: 80, set: FX_GLITCH, col: 'danger', rim: 0.65, anywhere: 0, seed: 0 },
   // EYES TRANSITION: G0D in the screen transition, at an eyes level (0-1; for now the G0D tab's eyes slider: nothing
   // in the game sets it yet). At full: `count` eyes in the fill (`big` of them big), sitting still on the glass: they
   // glitch in as the old screen goes, may blink once, and stay up to `linger` ms after the new screen's front passes

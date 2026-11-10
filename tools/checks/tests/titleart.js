@@ -52,6 +52,18 @@ module.exports = { name: 'titleart', body: `
     check(seen > 20, 'eyes come and go on the title: in ' + seen + ' of 134 frames');
     check(onTop === 0, 'an eye never touches the title\\'s own marks: ' + onTop);
     if (shown) say('TITLE WITH EYES\\n' + text(shown).join('\\n'));
+    // anywhere = 1: no clear-space rule, they land on the UI too and clear what's under them
+    FX_LOOKS.eyes.anywhere = 1;
+    const share = FX_LOOKS.eyes.share;
+    let over = 0, shownOver = null;
+    for (let t = 20000; t < 50000; t += 450) {
+      const plain = (() => { FX_LOOKS.eyes.share = 0; const c = buildScene(t, false, true); FX_LOOKS.eyes.share = share; return new Set(c.map(c => Math.round(c.cx) + ',' + Math.round(c.cy))); })();
+      const n = buildScene(t, false, true).filter(c => c.own === 'fx' && plain.has(c.cx + ',' + c.cy)).length;
+      if (n) { over++; if (!shownOver) shownOver = t; }
+    }
+    check(over > 10, 'with anywhere on, eyes land on the title\\'s marks: in ' + over + ' frames');
+    if (shownOver) say('TITLE WITH EYES ANYWHERE\\n' + text(shownOver).join('\\n'));
+    FX_LOOKS.eyes.anywhere = 0;
   }
 
   // the eyes transition (data/fx.js eyewipe): red eyes and g / 0 / d letters in the wipe; the eyes go a little after

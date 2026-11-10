@@ -1,7 +1,7 @@
 // NeoN+1 engine/textboard.js: centered text screens (buildTextBoard), the big box button (drawBox), text fields
 // (Field, drawField), info tile rows and offer pops. Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/textboard.js', 'v14.70']);
+NEON_FILES.push(['engine/textboard.js', 'v14.71']);
 
 // Big boxed primary button. 3 rows, or 4 with a subtitle.
 function drawBox(ctx, y, ln) {
