@@ -1,10 +1,11 @@
 // NeoN+1 engine/fx.js: the effects library (docs/EFFECTS.md). The shared building blocks (one hash, beats, picking,
 // easing, colors) and the named effects built on them. Their settings are data/fx.js (FX_LOOKS).
 // Needs engine/core.js (mixHex, C) and data/fx.js first. Used by the cutscene strips (engine/quests.js buildStrip),
-// corrupted loot names (data/mods.js glitchName) and G0D's mold glitch (engine/g0d.js).
+// corrupted loot names (data/mods.js glitchName), G0D's mold glitch (engine/g0d.js), and G0D's eyes (the title:
+// engine/scene.js; the eyes transition: engine/effects.js).
 // (Particles, shakes and flashes are engine/effects.js: they work in pixels, not cells.)
 'use strict';
-NEON_FILES.push(['engine/fx.js', 'v14.69']);
+NEON_FILES.push(['engine/fx.js', 'v14.70']);
 
 const FX = (() => {
   // ---------- building blocks ----------
@@ -258,12 +259,74 @@ const FX = (() => {
   // A steady number for a string (a codex key): decrypt's seed.
   const seedOf = s => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100003; return h; };
 
+  // ---------- G0D's eyes (data/fx.js eyes, eyewipe) ----------
+  // The eyes, small to big: open and shut rows, and the pupil (its row, its middle column, how far it can look, its mark).
+  // The small one can't look sideways: its pupil swaps marks instead.
+  const EYE_ART = {
+    small: { open: ['( )'], shut: ['(-)'], py: 0, px: 1, range: 0, pupil: 'o', glance: 'o@O' },
+    mid: { open: ['(   )'], shut: ['(---)'], py: 0, px: 2, range: 1, pupil: 'o' },
+    big: { open: ['.-~~~-.', '(     )', "'-~~~-'"], shut: ['.-~~~-.', '(-----)', "'-~~~-'"], py: 1, px: 3, range: 2, pupil: '@' },
+  };
+  const eyeSize = kind => { const A = EYE_ART[kind]; return [A.open[0].length, A.open.length]; };
+  // One eye's marks right now: [{ x, y, ch, col, bold }] (x, y from its top-left). e = { kind, t0, life, seed, still }:
+  // it glitches in over E.inMs (each cell settling on its own), looks around (not when still) and blinks, glitches now
+  // and then, and glitches out over the last E.outMs. Nothing before t0 or after t0 + life.
+  function eyeMarks(e, E, now) {
+    const age = now - e.t0;
+    if (!(age >= 0 && age <= e.life)) return [];
+    const A = EYE_ART[e.kind], s = e.seed, red = col(E.col), rim = mixHex(C.bg, red, E.rim), left = e.life - age;
+    const live = age > E.inMs && left > E.outMs;
+    const shut = live && (age + hash(s, 41) * E.blinkEvery) % E.blinkEvery < E.blinkMs;
+    const g = step(age, E.look), look = e.still || hash(g, s, 43) < 0.4 ? 0 : Math.round((hash(g, s, 44) * 2 - 1) * A.range);
+    const pupil = A.glance && !e.still && hash(g, s, 45) < 0.5 ? pick(A.glance, hash(g, s, 46)) : A.pupil;
+    const rows = shut ? A.shut : A.open, out = [];
+    rows.forEach((row, y) => [...row].forEach((ch, x) => {
+      const inAt = hash(x, y, s + 51) * E.inMs, outAt = hash(x, y, s + 52) * E.outMs;
+      if (age < inAt * 0.4 || left < outAt * 0.4) return;   // not in yet / gone already
+      const noisy = age < inAt || left < outAt || hash(x, y, step(now, E.ms) + s) < E.glitch;
+      const eye = !shut && y === A.py && x === A.px + look;
+      if (noisy) out.push({ x, y, ch: pick(E.set, hash(x, y, step(now, E.ms) + s + 7)), col: red, bold: false });
+      else if (eye) out.push({ x, y, ch: pupil, col: red, bold: true });
+      else if (ch !== ' ') out.push({ x, y, ch, col: rim, bold: false });
+    }));
+    return out;
+  }
+  // Eyes coming and going in an area (x, y, w, h), only where free(x, y, w, h) says the spot is clear. A slot comes up
+  // every E.every ms; `share` of them get an eye, of `big` / `mid` / small size, living life[0] + up to life[1] ms; each
+  // tries a few spots. Older eyes keep their spots. Calls put(x, y, ch, col, bold) for every mark.
+  function eyes(E, now, x0, y0, w, h, free, put) {
+    if (typeof reduced === 'function' && reduced()) return;   // (reduced motion: no eyes)
+    const maxLife = E.life[0] + E.life[1], taken = [];
+    for (let n = step(now - maxLife, E.every) - 1; n <= step(now, E.every); n++) {
+      if (hash(n, 21, E.seed) >= E.share) continue;
+      const t0 = (n + hash(n, 22, E.seed)) * E.every, life = E.life[0] + hash(n, 23, E.seed) * E.life[1];
+      if (now < t0 || now > t0 + life) continue;
+      const k = hash(n, 24, E.seed), kind = k < E.big ? 'big' : k < E.big + E.mid ? 'mid' : 'small', [ew, eh] = eyeSize(kind);
+      for (let tr = 0; tr < 6; tr++) {
+        const x = x0 + Math.floor(hash(n, 25 + tr, E.seed) * (w - ew + 1)), y = y0 + Math.floor(hash(n, 35 + tr, E.seed) * (h - eh + 1));
+        if (taken.some(([tx, ty, tw, th]) => x < tx + tw + 1 && tx < x + ew + 1 && y < ty + th && ty < y + eh)) continue;
+        if (!free(x - 1, y - 1, ew + 2, eh + 2)) continue;   // (a clear ring around it, so it sits in empty space)
+        taken.push([x, y, ew, eh]);
+        for (const m of eyeMarks({ kind, t0, life, seed: n }, E, now)) put(x + m.x, y + m.y, m.ch, m.col, m.bold);
+        break;
+      }
+    }
+  }
+  // Eyes over a list of screen cells ({ ch, cx, cy }), in the blank parts of an area: the marks to add ({ ch, cx, cy, col, own, bold }).
+  function eyeCells(cells, E, now, x0, y0, w, h) {
+    const used = new Set(cells.map(c => Math.round(c.cx) + ',' + Math.round(c.cy))), out = [];
+    const free = (x, y, fw, fh) => { for (let yy = y; yy < y + fh; yy++) for (let xx = x; xx < x + fw; xx++) if (used.has(xx + ',' + yy)) return false; return true; };
+    eyes(E, now, x0, y0, w, h, free, (cx, cy, ch, ink, bold) => out.push({ ch, cx, cy, col: ink, own: 'fx', bold }));
+    return out;
+  }
+
   // hs: a fast hash of one number to [0, 1) (G0D's looks, the mold: was G0D_LOOKS.hs). The other hashes in the game give
   // other numbers, so they stay where they are (swapping one would change a look): h01 (engine/corpkit.js), hash2
   // (engine/effects.js, the wipes), hh (engine/bench.js), decodeDelay (engine/scene.js).
   const hs = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
   return { hs, hash, pick, step, cycle, clamp01, easeOut, col, look, ticker, swapLines, decrypt, seedOf, noise1, noise2, mask, where, glitchOn, flickerOff, tint, apply, order, orderRow, reveal, boxIn, blink, cue, lights, ember, spin,
-    glow, glowCone, glowCell, glowWash, tear, swapOn, burst, burstCh, burstCells, tics, putTics, smoke, fogRows, garble };
+    glow, glowCone, glowCell, glowWash, tear, swapOn, burst, burstCh, burstCells, tics, putTics, smoke, fogRows, garble,
+    EYE_ART, eyeSize, eyeMarks, eyes, eyeCells };
 })();
 
 // ---------- The M0LD's colors (moved here from engine/g0d.js: the fight, heaven, HAD3S, the wipes and events use them) ----------

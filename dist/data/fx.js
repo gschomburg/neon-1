@@ -4,7 +4,7 @@
 // (a cutscene layer: { n: 'logo', glitch: { col: 'ink:b0y' } }), without becoming its own effect.
 // Times are in ms. "share" = the chance (0-1) per cell or per window. "set" = the characters it swaps in.
 'use strict';
-NEON_FILES.push(['data/fx.js', 'v14.69']);
+NEON_FILES.push(['data/fx.js', 'v14.70']);
 
 const FX_GLITCH = '#%&@$!?*<>/=+';   // the glitch characters (one set everywhere: glitch, cue, garble)
 const FX_NOISE = '%&#*;:';   // the softer noise a burst flashes to (mold, d0g's tics)
@@ -71,6 +71,18 @@ const FX_LOOKS = {
   // longer. The fill's blotches lag behind: they stay put as the new screen comes in and clear up to `lag` ms later
   // (taps work meanwhile).
   moldwipe: { set: FX_NOISE, fill: 0.8, blotch: 4, noise: 0.7, stay: 0.35, linger: 500, lag: 1800, light: 0.3, heavy: 0.7 },
+  // G0D'S EYES: red eyes come and go in an area's blank spots (the title). A slot comes up every `every`; `share` of
+  // them get an eye, `big` / `mid` of them bigger ones (the rest small), living life[0] + up to life[1]. Each glitches
+  // in over `inMs` (each mark settling on its own), looks around (a glance every `look`) and blinks (once a
+  // `blinkEvery`, for `blinkMs`), glitches `glitch` of the time (a new mark every ms), and glitches out over the last
+  // `outMs`. Its rim is `rim` of the way from the background to col. seed: another seed, other eyes.
+  eyes: { every: 700, share: 0.45, life: [1400, 1600], inMs: 300, outMs: 280, look: 450, blinkEvery: 2300, blinkMs: 130, big: 0.08, mid: 0.35, glitch: 0.05, ms: 80, set: FX_GLITCH, col: 'danger', rim: 0.65, seed: 0 },
+  // EYES TRANSITION: G0D in the screen transition, at an eyes level (0-1; for now the G0D tab's eyes slider: nothing
+  // in the game sets it yet). At full: `count` eyes in the fill (`big` of them big), sitting still on the glass: they
+  // glitch in as the old screen goes, may blink once, and stay up to `linger` ms after the new screen's front passes
+  // them, then glitch out. `letters` of the fill and `noise` of the breakdown noise are red `word` letters. They look
+  // like G0D'S EYES (its in / out, blink, glitch, color).
+  eyewipe: { count: 6, big: 0.25, linger: 600, letters: 0.05, noise: 0.15, word: 'g0d' },
   // GARBLE: a line of text that won't hold still (corrupted loot names): it switches versions every `swapMs`, and
   // `share` of its letters are glitch characters, re-rolled every ms.
   garble: { ms: 120, swapMs: 1700, share: 0.12, set: FX_GLITCH },

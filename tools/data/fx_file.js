@@ -20,6 +20,7 @@
   const DISC_D0G = { label: 'DISC: d0g\'s logo', scene: 'disc', frame: 10 }, PROD_ROOM = { label: 'PRODIGAL: the room', scene: 'prodigal', frame: 4 };
   const PROD_EYES = { label: 'PRODIGAL: the eyes', scene: 'prodigal', frame: 9 }, GATE = { label: 'GATE', scene: 'gate', frame: 1 };
   const CODEX = { label: 'the codex', codex: true }, MOLDWIPE = { label: 'a transition (at the G0D tab\'s mold level)', moldwipe: true };
+  const TITLE = { label: 'the title screen', title: true }, EYEWIPE = { label: 'a transition (at the G0D tab\'s eyes level)', eyewipe: true };
   const CARD = { label: 'd0g\'s rival card', card: 'd0g' }, DEATH = { label: 'd0g\'s death screen', death: 'd0g' }, MOLD = { label: 'mold glitch (G0D)', g0d: 'glitch' };
   const f = (k, kind, label, extra) => Object.assign({ k, kind, label }, extra || {});
   const LOOKS = [
@@ -87,6 +88,14 @@
       note: 'the screen transition with mold in it, at a mold level (0-1): `light` / `heavy` in a M0LD event\'s corps (H3AV3N), or the G0D tab\'s slider while it\'s on. At full mold: blotches (`blotch` cells across) of `fill` of the fill, `noise` of the breakdown noise, and `stay` of the new screen\'s marks held as mold up to `linger` ms longer. The fill\'s blotches lag behind: they stay put as the new screen comes in and clear up to `lag` ms later (taps work meanwhile).',
       fields: [f('set', 'set', 'characters', { set: 'FX_NOISE' }), f('fill', 'share', 'of the fill'), f('blotch', 'cells', 'blotch size'), f('noise', 'share', 'of the noise'), f('stay', 'share', 'lingers'), f('linger', 'ms', 'linger up to'),
         f('lag', 'ms', 'lags behind up to'), f('light', 'share', 'M0LD light'), f('heavy', 'share', 'M0LD heavy')] },
+    { key: 'eyes', title: 'G0D\'S EYES', show: [TITLE],
+      note: 'red eyes come and go in an area\'s blank spots (the title). A slot comes up every `every`; `share` of them get an eye, `big` / `mid` of them bigger ones (the rest small), living life[0] + up to life[1]. Each glitches in over `inMs` (each mark settling on its own), looks around (a glance every `look`) and blinks (once a `blinkEvery`, for `blinkMs`), glitches `glitch` of the time (a new mark every ms), and glitches out over the last `outMs`. Its rim is `rim` of the way from the background to col. seed: another seed, other eyes.',
+      fields: [f('every', 'ms', 'a slot every'), f('share', 'share', 'slots with an eye'), f('life', 'pair', 'lives + up to', { step: 50 }), f('inMs', 'ms', 'glitch in'), f('outMs', 'ms', 'glitch out'),
+        f('look', 'ms', 'glance every'), f('blinkEvery', 'ms', 'blink every'), f('blinkMs', 'ms', 'blink for'), f('big', 'share', 'big ones'), f('mid', 'share', 'mid ones'),
+        f('glitch', 'share', 'glitching'), f('ms', 'ms', 'glitch mark every'), f('set', 'set', 'characters', { set: 'FX_GLITCH' }), f('col', 'col', 'color'), f('rim', 'share', 'rim'), f('seed', 'num', 'seed')] },
+    { key: 'eyewipe', title: 'EYES TRANSITION', show: [EYEWIPE],
+      note: 'G0D in the screen transition, at an eyes level (0-1; for now the G0D tab\'s eyes slider: nothing in the game sets it yet). At full: `count` eyes in the fill (`big` of them big), sitting still on the glass: they glitch in as the old screen goes, may blink once, and stay up to `linger` ms after the new screen\'s front passes them, then glitch out. `letters` of the fill and `noise` of the breakdown noise are red `word` letters. They look like G0D\'S EYES (its in / out, blink, glitch, color).',
+      fields: [f('count', 'num', 'eyes'), f('big', 'share', 'big ones'), f('linger', 'ms', 'linger up to'), f('letters', 'share', 'letters in the fill'), f('noise', 'share', 'letters in the noise'), f('word', 'chars', 'letters')] },
     { key: 'garble', title: 'GARBLE', show: [],
       note: 'a line of text that won\'t hold still (corrupted loot names): it switches versions every `swapMs`, and `share` of its letters are glitch characters, re-rolled every ms.',
       fields: [f('ms', 'ms', 're-roll every'), f('swapMs', 'ms', 'version every'), f('share', 'share', 'glitched'), f('set', 'set', 'characters', { set: 'FX_GLITCH' })] },

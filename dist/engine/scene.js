@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.69']);
+NEON_FILES.push(['engine/scene.js', 'v14.70']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -121,6 +121,7 @@ function buildScene(now, collectHits, raw = false) {
   } else if (fullScreen() || st.dev) {
     buildTextBoard(ctx, st.dev ? devLines() : st.mode === 'title' ? titleLines(now) : panelLines(), { top: 0, h: L.hc });
     footerRight();
+    if (st.mode === 'title' && !st.dev) cells.push(...FX.eyeCells(cells, FX.look('eyes'), now, 0, 0, L.wc, L.hc));   // G0D's eyes in the blank spots (engine/fx.js)
   } else {
 
   // Header
@@ -344,6 +345,7 @@ function buildScene(now, collectHits, raw = false) {
       }
     }
     if (st.moldLag && !st.dev) result = applyMoldLag(result, now);   // the mold a wipe left behind, clearing late (engine/effects.js)
+    if (st.eyeWipe && !st.dev) result = applyEyeWipe(result, now);   // G0D's eyes in a wipe, going a little late (engine/effects.js)
   }
   // A fake ad goes over everything, after the wipe too (a wipe between layers holds the screen while
   // an ad is up; drawn under the wipe, the ad was invisible). Its characters and backgrounds are kept

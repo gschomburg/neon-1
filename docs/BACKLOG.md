@@ -367,17 +367,12 @@ unlocked by REP, and some quests unlock REP.
   2026-10-27): the white path lines light up, or each continent lights up with brighter white borders.
 - **Mold on the title** (Greg, 2026-11-09, someday, a nice detail): G0D's mold as an extra faint background layer behind the
   face, or a subtle noise effect over the top. (The mold's looks: engine/fx.js; the mold wipe: engine/effects.js `wipeMold`.)
-- **G0D's eyes, here and there** (Greg, 2026-11-09, talked through; grows QUESTS.md's "the mold creeps over things now
-  and then, a hint before anyone names it"). Two parts:
-  - **An eyes effect, for any area** (an FX look, engine/fx.js, with a `where` area like the glitch): small red `(o)`
-    eyes now and then, sometimes a bigger one (G0D's `.-~~~-.` eye, smaller). Each glitches in (chip / mold noise
-    settling into the eye), looks around (`(o )` `( o)`), blinks (`(-)`), then glitches out; 1-3 s. Red, with the chip
-    glitchiness. Usable anywhere: the title, the map, menus, the death screen.
-  - **In the transition:** red eyes and red g / 0 / d letters mixed into the mold wipe's noise (`wipeMold`, engine/
-    effects.js), not the whole wipe. A few eyes linger a beat after it, shorter than the mold's linger, maybe one blink,
-    then glitch out; no looking around.
-  - To settle when it's built: when they show (Claude's pitch: by quest progress: none early, rare in later sectors, more
-    once G0D is named); only on blank cells, so they never cover text (Claude's pitch: yes).
+- **G0D's eyes, here and there** (Greg, 2026-11-09; grows QUESTS.md's "the mold creeps over things now and then, a hint
+  before anyone names it"). **Built v14.70:** the effect (`eyes`, engine/fx.js; on the title for now, only on blank cells)
+  and the eyes transition (`eyewipe`, engine/effects.js; the editor's G0D tab triggers it). Still open:
+  - Where else they go (the map, menus, the death screen) and when the game turns them up (Claude's pitch: by quest
+    progress: none early, rare in later sectors, more once G0D is named). Maybe only on the title after you've met him?
+  - Tune by eye (the FX tab): how often, how many big ones, how heavy the letters are at full.
 - **Sector event cards:** the user's art for the 14 card pictures (5 x 3 placeholders in data/events.js). (Still wanted: "update art for sector events", meat notes 2026-11-06.)
 - **COPY PASS (text):** a terminology pass on the whole game, to lock the terms down. Settled so far (the user, 2026-10-29):
   **going deeper** = moving on through the sectors (the UPLINK says it; push on, next sector... say it this way). The INFO page, the training (POPS's lines), the mod and gear descriptions, and the ~180

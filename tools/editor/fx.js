@@ -89,6 +89,8 @@
     if (s.scene) toGame({ type: 'test', act: 'fxscene', key: s.scene, frame: s.frame });
     else if (s.codex) toGame({ type: 'test', act: 'fxcodex' });
     else if (s.moldwipe) toGame({ type: 'test', act: 'moldwipe' });
+    else if (s.eyewipe) toGame({ type: 'test', act: 'eyewipe' });
+    else if (s.title) toGame({ type: 'test', act: 'fxtitle' });
     else if (s.card) toGame({ type: 'test', act: 'fxcard', key: s.card });
     else if (s.death) toGame({ type: 'test', act: 'fxdeath', key: s.death });
     else if (s.g0d) { toGame({ type: 'test', act: 'fxoff' }); toGame({ type: 'test', act: 'g0d', key: s.g0d }); }

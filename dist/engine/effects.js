@@ -1,6 +1,6 @@
 // NeoN+1 engine/effects.js: Particles, flashes, shakes, and the scroll-fill wipe.
 'use strict';
-NEON_FILES.push(['engine/effects.js', 'v14.69']);
+NEON_FILES.push(['engine/effects.js', 'v14.70']);
 
 // ---------------- Effects ----------------
 const parts = [];
@@ -247,9 +247,54 @@ function moldBlotch(cx, cy, s, m) {
   return FX.hash(Math.floor((cx + j) / B), Math.floor((cy + s + j / 2) / (B / 2)), 15) < m * MW.fill;
 }
 
+// G0D IN THE TRANSITION (data/fx.js eyewipe): how much of him a wipe carries, 0-1. For now only the editor's G0D tab
+// sets it (st.eyesDev); nothing in the game does yet. Like the mold: the most of it at the start and when the new screen comes in.
+const wipeEyes = () => st.eyesDev != null ? st.eyesDev : 0;
+// A red letter of his name (eyewipe.word) at (cx, cy), now and then a glitch mark (the eyes' glitch).
+function eyeLetter(cx, cy, s, now) {
+  const EY = FX_LOOKS.eyes, ch = FX.hash(Math.round(cx), Math.round(cy), FX.step(now, EY.ms) + 61) < EY.glitch * 3 ? FX.pick(EY.set, FX.hash(cx, cy, FX.step(now, EY.ms))) : FX.pick(FX_LOOKS.eyewipe.word, FX.hash(cx, cy + s, 18));
+  return { ch, col: FX.col(EY.col), bold: true };
+}
+// The eyes in a wipe: still, on the glass (not scrolling with the fill). Each comes in as the old screen's front
+// passes its row, and goes up to eyewipe.linger after the new screen's front does (wipeIn sets that).
+function eyeWipeStart(w, now) {
+  const e = w.eyes || 0, EW = FX_LOOKS.eyewipe, n = Math.round(EW.count * e);
+  if (!n) return null;
+  const top = w.top != null ? w.top : w.full ? 0 : BOARD_Y, bot = w.bot != null ? w.bot : w.full ? L.hc : BOARD_Y + L.gh;
+  const outT = WIPE_TIME[w.level], spots = [];
+  for (let i = 0, tries = 0; spots.length < n && tries < n * 8; tries++) {
+    const kind = Math.random() < EW.big ? 'big' : Math.random() < 0.5 ? 'mid' : 'small', [ew, eh] = FX.eyeSize(kind);
+    const x = Math.floor(Math.random() * (L.wc - ew + 1)), y = top + Math.floor(Math.random() * Math.max(1, bot - top - eh + 1));
+    if (spots.some(o => x < o.x + o.w + 2 && o.x < x + ew + 2 && y < o.y + o.h + 1 && o.y < y + eh + 1)) continue;
+    const row = y + Math.floor(eh / 2), frac = (bot - 1 - row) / Math.max(1, bot - top - 1);
+    spots.push({ kind, x, y, w: ew, h: eh, row, frac, t0: now + (frac * outT.travel + 120 + Math.random() * 200) / CONFIG.wipeSpeed, life: Infinity, seed: Math.floor(Math.random() * 9999) + i++, still: true });
+  }
+  return { spots, top, bot };
+}
+function eyeWipeIn(g, inT, now) {
+  const EW = FX_LOOKS.eyewipe;
+  for (const o of g.spots) o.life = Math.max(400, now + o.frac * inT.travel / CONFIG.wipeSpeed + EW.linger * (0.3 + 0.7 * Math.random()) - o.t0);
+  g.endsAt = Math.max(0, ...g.spots.map(o => o.t0 + o.life));
+}
+// Drawn over the screen during the wipe and after it (like the mold that lags behind): the cells under an eye go.
+function applyEyeWipe(cells, now) {
+  const g = st.eyeWipe;
+  if (g.endsAt && now > g.endsAt) { st.eyeWipe = null; return cells; }
+  const marks = [], under = new Set();
+  for (const o of g.spots) {
+    const m = FX.eyeMarks(o, FX_LOOKS.eyes, now);
+    if (!m.length) continue;
+    for (let y = 0; y < o.h; y++) for (let x = 0; x < o.w; x++) under.add((o.x + x) + ',' + (o.y + y));
+    for (const k of m) marks.push({ ch: k.ch, cx: o.x + k.x, cy: o.y + k.y, col: k.col, own: 'wipe', bold: k.bold });
+  }
+  if (!marks.length) return cells;
+  return cells.filter(c => !under.has(Math.round(c.cx) + ',' + Math.round(c.cy))).concat(marks);
+}
+
 function applyWipe(cells, now) {
   const w = st.wipe;
   const m = w.mold || 0, MW = FX_LOOKS.moldwipe, moldy = () => m > 0 && Math.random() < m * MW.noise;
+  const ey = w.eyes || 0, EW = FX_LOOKS.eyewipe, godly = () => ey > 0 && Math.random() < ey * EW.noise;   // (a red g / 0 / d in the noise)
   const top = w.top != null ? w.top : w.full ? 0 : BOARD_Y, bot = w.bot != null ? w.bot : w.full ? L.hc : BOARD_Y + L.gh;
   const inB = c => c.cy >= top && c.cy < bot;
   const out = cells.filter(c => !inB(c));
@@ -276,7 +321,7 @@ function applyWipe(cells, now) {
     const q = t / dec;
     let ch, col;
     if (q < 0.3) { ch = Math.random() < 0.5 ? c.ch : noiseCh(); col = Math.random() < 0.5 ? c.col : hitOut; }
-    else if (q < 0.7) { if (moldy()) { ch = moldCh(c.cx, c.cy, now); col = moldInk(c.cx, c.cy); } else { ch = noiseCh(); col = hitOut; } }
+    else if (q < 0.7) { if (moldy()) { ch = moldCh(c.cx, c.cy, now); col = moldInk(c.cx, c.cy); } else if (godly()) ({ ch, col } = eyeLetter(c.cx, c.cy, 0, now)); else { ch = noiseCh(); col = hitOut; } }
     else { ch = decayCh(); col = C.mid; }
     const dy = -Math.sin(Math.min(1, q * 2) * Math.PI) * (w.level ? 0.35 : 0.2);   // bumped by the front
     out.push({ ch, cx: c.cx, cy: c.cy + dy, col, own: 'wipe', bold: c.bold });
@@ -301,7 +346,7 @@ function applyWipe(cells, now) {
       const q = t / dec;
       let ch, col;
       if (q < 0.25) { ch = decayCh(); col = C.mid; }
-      else if (q < 0.65) { if (moldy()) { ch = moldCh(c.cx, c.cy, now); col = moldInk(c.cx, c.cy); } else { ch = noiseCh(); col = hitIn; } }
+      else if (q < 0.65) { if (moldy()) { ch = moldCh(c.cx, c.cy, now); col = moldInk(c.cx, c.cy); } else if (godly()) ({ ch, col } = eyeLetter(c.cx, c.cy, 0, now)); else { ch = noiseCh(); col = hitIn; } }
       else { ch = Math.random() < 0.6 ? c.ch : noiseCh(); col = Math.random() < 0.6 ? c.col : hitIn; }
       out.push({ ch, cx: c.cx, cy: c.cy, col, own: 'wipe', bold: c.bold });
       busy.add(key(c.cx, c.cy));
@@ -324,7 +369,9 @@ function applyWipe(cells, now) {
         if (tI < 60) { const ch = fillChar(cx, cy, now, inLvl, w.pattern); if (ch) out.push({ ch, cx, cy, col: hitIn, own: 'wipe' }); }
         continue;
       }
-      if (m > 0 && moldBlotch(cx, cy, Math.floor(now * CONFIG.wipeSpeed / (w.level ? 45 : 75)), m)) { out.push({ ch: moldCh(cx, cy, now), cx, cy, col: moldInk(cx, cy), own: 'wipe' }); continue; }   // (the same scroll as fillChar)
+      const scroll = Math.floor(now * CONFIG.wipeSpeed / (w.level ? 45 : 75));
+      if (ey > 0 && FX.hash(cx, cy + scroll, 17) < ey * EW.letters) { out.push(Object.assign({ cx, cy, own: 'wipe' }, eyeLetter(cx, cy, scroll, now))); continue; }   // his letters, scrolling with the fill
+      if (m > 0 && moldBlotch(cx, cy, scroll, m)) { out.push({ ch: moldCh(cx, cy, now), cx, cy, col: moldInk(cx, cy), own: 'wipe' }); continue; }   // (the same scroll as fillChar)
       const ch = fillChar(cx, cy, now, w.level, w.pattern);
       if (ch) out.push({ ch, cx, cy, col: fillCol(tO), own: 'wipe' });
     }
@@ -372,8 +419,9 @@ async function wipeOut(level = 0, lit = null, quiet = false) {
   const now = performance.now();
   const cells = buildScene(now, false, true);   // whole screen; applyWipe uses the part in its region
   const pattern = pickR(level ? FILLS.success : FILLS.quiet, Math.random);   // new fill each wipe
-  st.wipe = { t0: now, level, cells, lit, pattern, tIn: null, full: fullScreen(), mold: wipeMold() };
+  st.wipe = { t0: now, level, cells, lit, pattern, tIn: null, full: fullScreen(), mold: wipeMold(), eyes: wipeEyes() };
   st.moldLag = null;   // (the last wipe's left-behind mold goes)
+  st.eyeWipe = eyeWipeStart(st.wipe, now);   // (and its eyes)
   if (level) { if (quiet) Sound.whoosh(); else Sound.sweep(level); shake(level >= 2 ? 7 : 3, 0.3); if (level >= 2) flash(C.accent, 0.15, 0.4); }
   else Sound.whoosh();
   // Success wipes hand off later, so the lit node gets its moment.
@@ -391,6 +439,7 @@ function wipeIn() {
     if (fullScreen()) w.full = true;   // full-screen screens wipe the whole screen
     w.levelIn = Math.min(w.level, 1);   // the new screen always builds in calmly
     w.mold = Math.max(w.mold || 0, wipeMold());   // (going into a mold corp: its mold counts too)
+    if (!st.eyeWipe && wipeEyes() > (w.eyes || 0)) { w.eyes = wipeEyes(); st.eyeWipe = eyeWipeStart(w, now); }
     const outT = WIPE_TIME[w.level], inT = WIPE_TIME[w.levelIn];
     const slack = CONFIG.wipeStagger;   // the last characters can start this much later, and change 1.3x slower
     const outEnd = w.t0 + (outT.travel + Math.max(outT.decay * 1.3 + slack, w.lit ? LIT_HOLD : 0)) / CONFIG.wipeSpeed;
@@ -399,6 +448,7 @@ function wipeIn() {
     w.endsAt = Math.max(outEnd, inEnd);
     // the mold lags behind: the fill's blotches stay put as the new screen's front passes them, and clear late
     if (w.mold > 0) st.moldLag = { t0: now, m: w.mold, level: w.level, travel: inT.travel, full: w.full, top: w.top, bot: w.bot };
+    if (st.eyeWipe) eyeWipeIn(st.eyeWipe, inT, now);   // the eyes go a little after the new screen's front passes them
   } else {
     st.wipe = null;
     st.boardStart = performance.now();

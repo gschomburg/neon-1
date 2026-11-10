@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.69']);
+NEON_FILES.push(['engine/editor.js', 'v14.70']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -419,6 +419,14 @@ if (EDITOR) {
     },
     // the mold slider (the G0D tab): how much mold the transitions and the mold glitch carry; null = off
     moldlvl: m => { st.moldDev = m.m == null ? null : clamp(+m.m, 0, 1); },
+    // the eyes slider (the G0D tab): how much of G0D the transitions carry (data/fx.js eyewipe); null = off
+    eyeslvl: m => { st.eyesDev = m.m == null ? null : clamp(+m.m, 0, 1); },
+    eyewipe: async m => {   // a screen transition at the eyes level (the same screen comes back)
+      if (m.m != null) st.eyesDev = clamp(+m.m, 0, 1);
+      else if (st.eyesDev == null) st.eyesDev = 1;
+      fxShowOff(); await wipeOut(0); wipeIn();
+    },
+    fxtitle: () => { fxShowOff(); endRun(); },   // the FX tab's G0D'S EYES: the title (they live there for now)
     moldwipe: async m => {   // a screen transition at the mold level (the same screen comes back)
       if (m.m != null) st.moldDev = clamp(+m.m, 0, 1);
       else if (st.moldDev == null) st.moldDev = 0.7;

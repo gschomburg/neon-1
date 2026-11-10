@@ -38,4 +38,38 @@ module.exports = { name: 'titleart', body: `
   check(late.some(r => r.includes('NeoN+1')), 'NeoN+1 has typed in');
   say('CARD\\n' + late.join('\\n'));
   endIntro();
+
+  // G0D's eyes on the title (engine/fx.js eyes): they come up, only on blank cells (a clear ring around them)
+  {
+    const E = FX.look('eyes'), red = FX.col(E.col);
+    let seen = 0, onTop = 0, shown = null;
+    for (let t = 20000; t < 80000; t += 450) {
+      const all = buildScene(t, false, true), eyes = all.filter(c => c.own === 'fx'), rest = all.filter(c => c.own !== 'fx');
+      const used = new Set(rest.map(c => Math.round(c.cx) + ',' + Math.round(c.cy)));
+      onTop += eyes.filter(c => [-1, 0, 1].some(dy => [-1, 0, 1].some(dx => used.has((c.cx + dx) + ',' + (c.cy + dy))))).length;
+      if (eyes.length) { seen++; if (!shown && eyes.some(c => c.bold)) shown = t; }
+    }
+    check(seen > 20, 'eyes come and go on the title: in ' + seen + ' of 134 frames');
+    check(onTop === 0, 'an eye never touches the title\\'s own marks: ' + onTop);
+    if (shown) say('TITLE WITH EYES\\n' + text(shown).join('\\n'));
+  }
+
+  // the eyes transition (data/fx.js eyewipe): red eyes and g / 0 / d letters in the wipe; the eyes go a little after
+  {
+    st.eyesDev = 1;
+    await wipeOut(0);
+    const mid = buildScene(performance.now() + 150);
+    const red = FX.col(FX_LOOKS.eyes.col), word = FX_LOOKS.eyewipe.word;
+    check(mid.some(c => c.col === red && word.includes(c.ch)), 'his letters in the wipe');
+    wipeIn();
+    check(st.eyeWipe && st.eyeWipe.spots.length >= 3, 'the wipe has eyes: ' + (st.eyeWipe && st.eyeWipe.spots.length));
+    let most = 0, at = 0;
+    for (let i = 0; i < 40 && st.eyeWipe; i++) { await sleep(100); const n = buildScene(performance.now()).filter(c => c.own === 'wipe' && c.bold && c.col === red && 'o@O'.includes(c.ch)).length; if (n > most) { most = n; at = i; } }
+    check(most > 0, 'eyes open in the wipe: ' + most + ' pupils at once');
+    for (let i = 0; i < 60 && (st.wipe || st.eyeWipe); i++) await sleep(100);
+    check(!st.eyeWipe, 'the eyes go after the wipe');
+    st.eyesDev = null;
+    await wipeOut(0); wipeIn();
+    check(!st.eyeWipe, 'no eyes at level 0');
+  }
 ` };

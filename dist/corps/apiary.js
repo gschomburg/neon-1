@@ -1,6 +1,6 @@
 // NeoN+1 corps/apiary.js
 'use strict';
-NEON_FILES.push(['corps/apiary.js', 'v14.69']);
+NEON_FILES.push(['corps/apiary.js', 'v14.70']);
 // Its boss reward: BEES gear x3 (bees), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 
