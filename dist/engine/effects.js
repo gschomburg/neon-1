@@ -1,6 +1,6 @@
 // NeoN+1 engine/effects.js: Particles, flashes, shakes, and the scroll-fill wipe.
 'use strict';
-NEON_FILES.push(['engine/effects.js', 'v14.73']);
+NEON_FILES.push(['engine/effects.js', 'v14.74']);
 
 // ---------------- Effects ----------------
 const parts = [];
@@ -266,6 +266,7 @@ function eyeLetter(cx, cy, s, now) {
 }
 // The eyes in a wipe: still, on the glass (not scrolling with the fill). Each comes in as the old screen's front
 // passes its row, and goes up to eyewipe.linger after the new screen's front does (wipeIn sets that).
+const EYE_WIPE_MAX = 4000;   // ms: the longest a wipe's eyes can stay (applyEyeWipe)
 function eyeWipeStart(w, now) {
   const e = w.eyes || 0, EW = FX_LOOKS.eyewipe, n = Math.round(EW.count * e);
   if (!n) return null;
@@ -279,7 +280,7 @@ function eyeWipeStart(w, now) {
     const row = y + Math.floor(eh / 2), frac = (bot - 1 - row) / Math.max(1, bot - top - 1);
     spots.push({ kind, x, y, w: ew, h: eh, row, frac, t0: now + (frac * outT.travel + 120 + rnd() * 200) / CONFIG.wipeSpeed, life: Infinity, seed: Math.floor(rnd() * 9999) + i++, still: true });
   }
-  return { spots, top, bot };
+  return { spots, top, bot, w, t0: now };
 }
 function eyeWipeIn(g, inT, now) {
   const EW = FX_LOOKS.eyewipe; let k = 0; const rnd = () => FX.hash(Math.floor(now) % 9973, k++, 74);
@@ -289,6 +290,12 @@ function eyeWipeIn(g, inT, now) {
 // Drawn over the screen during the wipe and after it (like the mold that lags behind): the cells under an eye go.
 function applyEyeWipe(cells, now) {
   const g = st.eyeWipe;
+  // its wipe went without a hand-off (the boss warning drops it; others too): the eyes linger a little, then go.
+  // And never more than EYE_WIPE_MAX after it started, whatever happens.
+  if (!g.endsAt && (st.wipe !== g.w || now - g.t0 > EYE_WIPE_MAX)) {
+    for (const o of g.spots) o.life = now < o.t0 ? -1 : now - o.t0 + FX_LOOKS.eyewipe.linger * (0.3 + 0.7 * FX.hash(o.seed, 3, 75));   // (one not up yet never comes)
+    g.endsAt = Math.max(0, ...g.spots.map(o => o.t0 + o.life));
+  }
   if (g.endsAt && now > g.endsAt) { st.eyeWipe = null; return cells; }
   const marks = [], under = new Set();
   for (const o of g.spots) {

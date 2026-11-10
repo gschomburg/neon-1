@@ -81,6 +81,12 @@ module.exports = { name: 'titleart', body: `
     check(most > 0, 'eyes open in the wipe: ' + most + ' pupils at once');
     for (let i = 0; i < 60 && (st.wipe || st.eyeWipe); i++) await sleep(100);
     check(!st.eyeWipe, 'the eyes go after the wipe');
+    // a wipe dropped without a hand-off (the boss warning does that): its eyes still go
+    st.eyesDev = 1;
+    await wipeOut(0); await sleep(300);
+    st.wipe = null;
+    for (let i = 0; i < 30 && st.eyeWipe; i++) { buildScene(performance.now()); await sleep(100); }
+    check(!st.eyeWipe, 'the eyes go when their wipe is dropped (the boss warning)');
     st.eyesDev = 0;
     await wipeOut(0); wipeIn();
     check(!st.eyeWipe, 'no eyes at level 0');
