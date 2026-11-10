@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v14.71']);
+NEON_FILES.push(['engine/help.js', 'v14.72']);
 
 // ---------------- How to play ----------------
 const HELP_PAGES = [

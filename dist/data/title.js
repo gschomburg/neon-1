@@ -1,6 +1,6 @@
 // NeoN+1 data/title.js: The title screen art: the face, the NeoN+1 name, the circuit traces.
 'use strict';
-NEON_FILES.push(['data/title.js', 'v14.71']);
+NEON_FILES.push(['data/title.js', 'v14.72']);
 
 // ---------------- Screens built from lines ----------------
 // Title cover art (the user's, from asXii: asxii_art/NeoN_1_screens_v06, "title: art FACE v2"): a face, half human
@@ -43,3 +43,7 @@ const TITLE_NAME = [
 const TITLE_NAME_AT = 17;
 const TITLE_NAME_WORD = [13, 21];
 const TITLE_W = 36;
+// G0D's eyes on the title (engine/scene.js): the global look (data/fx.js eyes) with these over it.
+// anywhere 0.5 (Greg, 2026-11-09): half the eyes land on anything, the UI too. (So the FX tab's `anywhere` doesn't reach
+// the title; its other settings do.)
+const TITLE_EYES = { anywhere: 0.5 };

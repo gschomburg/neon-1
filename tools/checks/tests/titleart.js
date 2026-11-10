@@ -41,7 +41,8 @@ module.exports = { name: 'titleart', body: `
 
   // G0D's eyes on the title (engine/fx.js eyes): they come up, only on blank cells (a clear ring around them)
   {
-    const E = FX.look('eyes'), red = FX.col(E.col);
+    const E = FX.look('eyes'), titleAny = TITLE_EYES.anywhere;
+    TITLE_EYES.anywhere = 0;   // (the rule first: the title's own setting lets half of them land anywhere)
     let seen = 0, onTop = 0, shown = null;
     for (let t = 20000; t < 80000; t += 450) {
       const all = buildScene(t, false, true), eyes = all.filter(c => c.own === 'fx'), rest = all.filter(c => c.own !== 'fx');
@@ -53,7 +54,7 @@ module.exports = { name: 'titleart', body: `
     check(onTop === 0, 'an eye never touches the title\\'s own marks: ' + onTop);
     if (shown) say('TITLE WITH EYES\\n' + text(shown).join('\\n'));
     // anywhere = 1: no clear-space rule, they land on the UI too and clear what's under them
-    FX_LOOKS.eyes.anywhere = 1;
+    TITLE_EYES.anywhere = 1;
     const share = FX_LOOKS.eyes.share;
     let over = 0, shownOver = null;
     for (let t = 20000; t < 50000; t += 450) {
@@ -63,7 +64,7 @@ module.exports = { name: 'titleart', body: `
     }
     check(over > 10, 'with anywhere on, eyes land on the title\\'s marks: in ' + over + ' frames');
     if (shownOver) say('TITLE WITH EYES ANYWHERE\\n' + text(shownOver).join('\\n'));
-    FX_LOOKS.eyes.anywhere = 0;
+    TITLE_EYES.anywhere = titleAny;
   }
 
   // the eyes transition (data/fx.js eyewipe): red eyes and g / 0 / d letters in the wipe; the eyes go a little after

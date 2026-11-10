@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.71']);
+NEON_FILES.push(['engine/scene.js', 'v14.72']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -121,7 +121,7 @@ function buildScene(now, collectHits, raw = false) {
   } else if (fullScreen() || st.dev) {
     buildTextBoard(ctx, st.dev ? devLines() : st.mode === 'title' ? titleLines(now) : panelLines(), { top: 0, h: L.hc });
     footerRight();
-    if (st.mode === 'title' && !st.dev) cells.splice(0, cells.length, ...FX.eyeCells(cells, FX.look('eyes'), now, 0, 0, L.wc, L.hc));   // G0D's eyes in the blank spots, or anywhere (engine/fx.js)
+    if (st.mode === 'title' && !st.dev) cells.splice(0, cells.length, ...FX.eyeCells(cells, FX.look('eyes', TITLE_EYES), now, 0, 0, L.wc, L.hc));   // G0D's eyes (engine/fx.js; the title's own settings: data/title.js TITLE_EYES)
   } else {
 
   // Header
