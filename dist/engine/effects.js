@@ -1,6 +1,6 @@
 // NeoN+1 engine/effects.js: Particles, flashes, shakes, and the scroll-fill wipe.
 'use strict';
-NEON_FILES.push(['engine/effects.js', 'v14.72']);
+NEON_FILES.push(['engine/effects.js', 'v14.73']);
 
 // ---------------- Effects ----------------
 const parts = [];
@@ -247,9 +247,18 @@ function moldBlotch(cx, cy, s, m) {
   return FX.hash(Math.floor((cx + j) / B), Math.floor((cy + s + j / 2) / (B / 2)), 15) < m * MW.fill;
 }
 
-// G0D IN THE TRANSITION (data/fx.js eyewipe): how much of him a wipe carries, 0-1. For now only the editor's G0D tab
-// sets it (st.eyesDev); nothing in the game does yet. Like the mold: the most of it at the start and when the new screen comes in.
+// G0D IN THE TRANSITION (data/fx.js eyewipe): how much of him a wipe carries, 0-1. The editor's G0D tab's slider
+// (st.eyesDev) wins while it's on; otherwise eyewipe.chance of the wipes get him at eyewipe.level (Greg, 2026-11-09:
+// 15%), but never in the intro or the training. The roll is a hash of the wipe's count and time, not Math.random, so
+// the game's other random rolls don't move. Like the mold: the most of it at the start and when the new screen comes in.
+let wipeCount = 0;
 const wipeEyes = () => st.eyesDev != null ? st.eyesDev : 0;
+function rollWipeEyes(now) {
+  if (st.eyesDev != null) return st.eyesDev;
+  const EW = FX_LOOKS.eyewipe;
+  if (st.boot || st.tut || !(EW.chance > 0)) return 0;
+  return FX.hash(++wipeCount, Math.floor(now) % 9973, 71) < EW.chance ? EW.level : 0;
+}
 // A red letter of his name (eyewipe.word) at (cx, cy), now and then a glitch mark (the eyes' glitch).
 function eyeLetter(cx, cy, s, now) {
   const EY = FX_LOOKS.eyes, ch = FX.hash(Math.round(cx), Math.round(cy), FX.step(now, EY.ms) + 61) < EY.glitch * 3 ? FX.pick(EY.set, FX.hash(cx, cy, FX.step(now, EY.ms))) : FX.pick(FX_LOOKS.eyewipe.word, FX.hash(cx, cy + s, 18));
@@ -260,20 +269,21 @@ function eyeLetter(cx, cy, s, now) {
 function eyeWipeStart(w, now) {
   const e = w.eyes || 0, EW = FX_LOOKS.eyewipe, n = Math.round(EW.count * e);
   if (!n) return null;
+  let k = 0; const rnd = () => FX.hash(Math.floor(now) % 9973, k++, 73);   // (its own rolls: see rollWipeEyes)
   const top = w.top != null ? w.top : w.full ? 0 : BOARD_Y, bot = w.bot != null ? w.bot : w.full ? L.hc : BOARD_Y + L.gh;
   const outT = WIPE_TIME[w.level], spots = [];
   for (let i = 0, tries = 0; spots.length < n && tries < n * 8; tries++) {
-    const kind = Math.random() < EW.big ? 'big' : Math.random() < 0.5 ? 'mid' : 'small', [ew, eh] = FX.eyeSize(kind);
-    const x = Math.floor(Math.random() * (L.wc - ew + 1)), y = top + Math.floor(Math.random() * Math.max(1, bot - top - eh + 1));
+    const kind = rnd() < EW.big ? 'big' : rnd() < 0.5 ? 'mid' : 'small', [ew, eh] = FX.eyeSize(kind);
+    const x = Math.floor(rnd() * (L.wc - ew + 1)), y = top + Math.floor(rnd() * Math.max(1, bot - top - eh + 1));
     if (spots.some(o => x < o.x + o.w + 2 && o.x < x + ew + 2 && y < o.y + o.h + 1 && o.y < y + eh + 1)) continue;
     const row = y + Math.floor(eh / 2), frac = (bot - 1 - row) / Math.max(1, bot - top - 1);
-    spots.push({ kind, x, y, w: ew, h: eh, row, frac, t0: now + (frac * outT.travel + 120 + Math.random() * 200) / CONFIG.wipeSpeed, life: Infinity, seed: Math.floor(Math.random() * 9999) + i++, still: true });
+    spots.push({ kind, x, y, w: ew, h: eh, row, frac, t0: now + (frac * outT.travel + 120 + rnd() * 200) / CONFIG.wipeSpeed, life: Infinity, seed: Math.floor(rnd() * 9999) + i++, still: true });
   }
   return { spots, top, bot };
 }
 function eyeWipeIn(g, inT, now) {
-  const EW = FX_LOOKS.eyewipe;
-  for (const o of g.spots) o.life = Math.max(400, now + o.frac * inT.travel / CONFIG.wipeSpeed + EW.linger * (0.3 + 0.7 * Math.random()) - o.t0);
+  const EW = FX_LOOKS.eyewipe; let k = 0; const rnd = () => FX.hash(Math.floor(now) % 9973, k++, 74);
+  for (const o of g.spots) o.life = Math.max(400, now + o.frac * inT.travel / CONFIG.wipeSpeed + EW.linger * (0.3 + 0.7 * rnd()) - o.t0);
   g.endsAt = Math.max(0, ...g.spots.map(o => o.t0 + o.life));
 }
 // Drawn over the screen during the wipe and after it (like the mold that lags behind): the cells under an eye go.
@@ -419,7 +429,7 @@ async function wipeOut(level = 0, lit = null, quiet = false) {
   const now = performance.now();
   const cells = buildScene(now, false, true);   // whole screen; applyWipe uses the part in its region
   const pattern = pickR(level ? FILLS.success : FILLS.quiet, Math.random);   // new fill each wipe
-  st.wipe = { t0: now, level, cells, lit, pattern, tIn: null, full: fullScreen(), mold: wipeMold(), eyes: wipeEyes() };
+  st.wipe = { t0: now, level, cells, lit, pattern, tIn: null, full: fullScreen(), mold: wipeMold(), eyes: rollWipeEyes(now) };
   st.moldLag = null;   // (the last wipe's left-behind mold goes)
   st.eyeWipe = eyeWipeStart(st.wipe, now);   // (and its eyes)
   if (level) { if (quiet) Sound.whoosh(); else Sound.sweep(level); shake(level >= 2 ? 7 : 3, 0.3); if (level >= 2) flash(C.accent, 0.15, 0.4); }

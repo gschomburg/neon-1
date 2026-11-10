@@ -81,8 +81,15 @@ module.exports = { name: 'titleart', body: `
     check(most > 0, 'eyes open in the wipe: ' + most + ' pupils at once');
     for (let i = 0; i < 60 && (st.wipe || st.eyeWipe); i++) await sleep(100);
     check(!st.eyeWipe, 'the eyes go after the wipe');
-    st.eyesDev = null;
+    st.eyesDev = 0;
     await wipeOut(0); wipeIn();
     check(!st.eyeWipe, 'no eyes at level 0');
+    st.eyesDev = null;
+    // on their own: about eyewipe.chance of the wipes (the roll), never in the intro
+    { let n = 0; for (let i = 0; i < 400; i++) if (rollWipeEyes(1000 + i * 37) > 0) n++;
+      const want = FX_LOOKS.eyewipe.chance * 400;
+      check(Math.abs(n - want) < want * 0.5 + 8, 'about ' + Math.round(FX_LOOKS.eyewipe.chance * 100) + '% of wipes get G0D: ' + n + ' of 400');
+      startIntro(); let b = 0; for (let i = 0; i < 100; i++) if (rollWipeEyes(5000 + i * 41) > 0) b++; endIntro();
+      check(b === 0, 'never in the intro: ' + b); }
   }
 ` };

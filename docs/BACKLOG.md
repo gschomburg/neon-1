@@ -370,8 +370,8 @@ unlocked by REP, and some quests unlock REP.
 - **G0D's eyes, here and there** (Greg, 2026-11-09; grows QUESTS.md's "the mold creeps over things now and then, a hint
   before anyone names it"). **Built v14.70:** the effect (`eyes`, engine/fx.js; on the title for now, only on blank cells)
   and the eyes transition (`eyewipe`, engine/effects.js; the editor's G0D tab triggers it). Still open:
-  - Where else they go (the map, menus, the death screen) and when the game turns them up (Claude's pitch: by quest
-    progress: none early, rare in later sectors, more once G0D is named). Maybe only on the title after you've met him?
+  - **Decided (Greg, 2026-11-09):** 15% of transitions get G0D (v14.73: `eyewipe.chance`; not in the intro or the training).
+  - Where else the eyes go (the map, menus, the death screen). Maybe more of them, or a bigger chance, as the quest goes on.
   - Tune by eye (the FX tab): how often, how many big ones, how heavy the letters are at full.
 - **Sector event cards:** the user's art for the 14 card pictures (5 x 3 placeholders in data/events.js). (Still wanted: "update art for sector events", meat notes 2026-11-06.)
 - **COPY PASS (text):** a terminology pass on the whole game, to lock the terms down. Settled so far (the user, 2026-10-29):
