@@ -365,6 +365,10 @@ unlocked by REP, and some quests unlock REP.
   `docs/art/logotype_round4.png`, `logotype_n1.png`, `logotype_round5.png`, text in NAMES.md; the title switching
   between the face and the lettering). Your profile shuffling as you log in. The maps more animated (the user,
   2026-10-27): the white path lines light up, or each continent lights up with brighter white borders.
+- **Mold on the title** (Greg, 2026-11-09, someday, a nice detail): G0D's mold as an extra faint background layer behind the
+  face, or a subtle noise effect over the top. (The mold's looks: engine/fx.js; the mold wipe: engine/effects.js `wipeMold`.)
+- **The mold creeping in, here and there** (QUESTS.md, picked 2026-10-28; not built): in later sectors a G0D glitch-out
+  creeps over things now and then (map nodes, glyphs, screens), a hint before anyone names it.
 - **Sector event cards:** the user's art for the 14 card pictures (5 x 3 placeholders in data/events.js). (Still wanted: "update art for sector events", meat notes 2026-11-06.)
 - **COPY PASS (text):** a terminology pass on the whole game, to lock the terms down. Settled so far (the user, 2026-10-29):
   **going deeper** = moving on through the sectors (the UPLINK says it; push on, next sector... say it this way). The INFO page, the training (POPS's lines), the mod and gear descriptions, and the ~180
