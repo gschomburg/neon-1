@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.74']);
+NEON_FILES.push(['engine/editor.js', 'v14.75']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -421,16 +421,21 @@ if (EDITOR) {
     moldlvl: m => { st.moldDev = m.m == null ? null : clamp(+m.m, 0, 1); },
     // the eyes slider (the G0D tab): how much of G0D the transitions carry (data/fx.js eyewipe); null = off
     eyeslvl: m => { st.eyesDev = m.m == null ? null : clamp(+m.m, 0, 1); },
-    eyewipe: async m => {   // a screen transition at the eyes level (the same screen comes back)
-      if (m.m != null) st.eyesDev = clamp(+m.m, 0, 1);
-      else if (st.eyesDev == null) st.eyesDev = 1;
+    // A transition with G0D's eyes / the mold (the same screen comes back). From the G0D tab (m.m: its slider) the
+    // level sticks, like the slider; from the FX tab's show (no m.m) it's for that one transition, and the slider stays
+    // as it was (it used to stick at 1 / 0.7, so every transition after had it).
+    eyewipe: async m => {
+      const was = st.eyesDev;
+      st.eyesDev = m.m != null ? clamp(+m.m, 0, 1) : was != null ? was : 1;
       fxShowOff(); await wipeOut(0); wipeIn();
+      if (m.m == null) st.eyesDev = was;
     },
     fxtitle: () => { fxShowOff(); endRun(); },   // the FX tab's G0D'S EYES: the title (they live there for now)
-    moldwipe: async m => {   // a screen transition at the mold level (the same screen comes back)
-      if (m.m != null) st.moldDev = clamp(+m.m, 0, 1);
-      else if (st.moldDev == null) st.moldDev = 0.7;
+    moldwipe: async m => {
+      const was = st.moldDev;
+      st.moldDev = m.m != null ? clamp(+m.m, 0, 1) : was != null ? was : 0.7;
       fxShowOff(); await wipeOut(0); wipeIn();
+      if (m.m == null) st.moldDev = was;
     },
     fxcodex: () => {   // the codex, with the first found mod set to decode again (only the animation: nothing else changes)
       fxShowOff(); openCodex();
