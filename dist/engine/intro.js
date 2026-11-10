@@ -7,7 +7,7 @@
 //   4. A first run: NEWB or LEET, under your logo and name (tap them to shuffle). NEWB starts the training, LEET the title.
 // Screens change with the game's wipe. A tap skips ahead.
 'use strict';
-NEON_FILES.push(['engine/intro.js', 'v14.68']);
+NEON_FILES.push(['engine/intro.js', 'v14.69']);
 
 // For now (the user, 2026-10-26, while we work on it): every launch plays all of it, NEWB / LEET too.
 // Later: NEWB / LEET only the first time (save.bootSeen).
@@ -30,7 +30,7 @@ const INTRO_JARGON = [
   'warming up ICE breaker', 'loading tells', 'syncing clock', 'checking for traces', 'decrypting the net', 'cache warm',
   'dialing out', 'handshake 2/3', 'scrubbing logs', 'forging certs', 'tunneling :443', 'pinging the void', 'rerouting',
 ];
-// The title card: the NeoN art (the user's, from asXii: NeoN_1_screens_v04, "NeoN_fullscreen"), at INTRO_CARD_AT.
+// The title card: the NeoN art (the user's, from asXii: NeoN_1_screens_v06, "NeoN_fullscreen"), at INTRO_CARD_AT.
 const INTRO_CARD = [
   "    ____          ____",
   "   /\\   \\__      /\\   \\",
@@ -64,6 +64,47 @@ const INTRO_CARD = [
   "network intrusion // prototype",
 ];
 const INTRO_CARD_AT = [2, 4];
+// The wires behind the card (the user's, asXii NeoN_1_screens_v06 "wires"), from the screen's top-left corner.
+// (In asXii they start a column further left; that column and anything past the screen's right edge is cut.)
+// They draw in out of the logo, then pulses run in along them from the screen's edges (engine/screens.js traceNet).
+const INTRO_WIRES = [
+  "  │     │  │       │        │   │",
+  "  o    ╭╯╭─┴───╮   ╰──+─╮  ╭┼───┴╮",
+  "  │ o  o │  ##.│        ╰──╯│    ├──",
+  "  ╰╮├+  ╭╯     ╰─┬─oo+──o─o─┤   ╭╯",
+  "   ╰┤   │        │             ╭╯",
+  "─╮  ╰┬╮ │        │        ╭─><─╯   ╭",
+  " ╰───┼┼─         │      ╭─╯      ╭─╯",
+  "     ╰┴──        │     ─╯     ╭──+──",
+  "                          ────╯  │",
+  "───────╭──                       ╰──",
+  "    ╭──╯",
+  "  o─╯                            ╭──",
+  "──╯      ╭─                     ╭╯",
+  "    ╭────╯                      o",
+  "─<>─╯                       ────╯",
+  "",
+  "                                  ╭─",
+  "                                 ╭╯",
+  "                           ──╮   │",
+  " ╭────                       ╰╮  o",
+  "─╯                     ──╮    │  +",
+  "                         ╰╮   ╰┬─┴╮",
+  "                          ╰─o──┤  ╰─",
+  "─╮                             │",
+  " │  │                          │",
+  " ╰──╯                          ├─><─",
+  "     │              ╭─         │",
+  "    ╭─             ╭╯        ─ ╰╮",
+  "  ╭─╯   │          ╯      │     │",
+  "  │     ╯                 ╰╮    +",
+  "  │",
+  "  o",
+];
+// The card's motion (ms): a wire cell draws in `grow` after the one before it; the shine sweeps the logo every
+// `shine`; a row of the logo glitches every `glitch`; NeoN+1 types in from `name`, a letter every `key`.
+const INTRO_CARD_FX = { grow: 60, shine: 2600, glitch: 3300, name: 500, key: 70 };
+const INTRO_PULSE = { speed: 20, tail: 3, gapMin: 110, gapMax: 380, max: 7 };   // (engine/screens.js PULSE: faster, more)
 // Timing (ms). The login screen: from the tap; the card: from when it's in.
 const INTRO_T = {
   name: 300, key: 55, pass: 150,      // typing: when the name starts, per key, the pause before the password
@@ -255,13 +296,70 @@ function introNet(ctx, now, t) {
   if (t >= end + T.hold && !b.going) introGo('card');
 }
 
+// The wires as a grid under the logo (they only show where the logo is blank), the routes a pulse can take, and
+// when each wire cell draws in (its distance from the logo along the wires).
+let introWires = null;
+function introWireGrid() {
+  if (introWires) return introWires;
+  const [x0, y0] = INTRO_CARD_AT, W = MIN_CONTENT_W, H = Math.max(INTRO_WIRES.length, y0 + INTRO_CARD.length);
+  const ch = [...Array(H)].map(() => Array(W).fill(' ')), logo = [...Array(H)].map(() => Array(W).fill(false));
+  INTRO_CARD.forEach((row, y) => [...row].forEach((c, x) => { if (c !== ' ' && x0 + x < W) logo[y0 + y][x0 + x] = true; }));
+  INTRO_WIRES.forEach((row, y) => [...row].forEach((c, x) => { if (c !== ' ' && x < W && !logo[y][x]) ch[y][x] = c; }));
+  const isT = (y, x) => !!TRACE_PORTS[ch[y][x]];
+  const edge = k => { const y = Math.floor(k / W), x = k % W; return x === 0 || x === W - 1 || y === 0; };
+  const { paths, on } = traceNet(ch, W, H, isT, ends => { const e = ends.filter(edge); return e.length ? e : ends; });
+  // draw-in order: out from the logo; wires that don't touch it come in from the screen's edges
+  const at = new Map(), cells = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (ch[y][x] !== ' ') cells.push(y * W + x);
+  const nearLogo = k => { const y = Math.floor(k / W), x = k % W; return [-1, 0, 1].some(dy => [-1, 0, 1].some(dx => (logo[y + dy] || [])[x + dx])); };
+  const grow = seeds => {
+    const q = seeds.filter(k => !at.has(k)); q.forEach(k => at.set(k, 0));
+    for (let i = 0; i < q.length; i++) {
+      const k = q[i], y = Math.floor(k / W), x = k % W;
+      [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dy, dx]) => {
+        const yy = y + dy, xx = x + dx, n = yy * W + xx;
+        if (yy >= 0 && yy < H && xx >= 0 && xx < W && ch[yy][xx] !== ' ' && !at.has(n)) { at.set(n, at.get(k) + 1); q.push(n); }
+      });
+    }
+  };
+  grow(cells.filter(nearLogo));
+  grow(cells.filter(edge));
+  grow(cells);
+  return (introWires = { ch, W, H, paths, on, at, far: Math.max(0, ...at.values()) });
+}
+const introPulses = { list: [], next: 0 };
+
+// The card: the wires draw in out of the logo and pulses run in along them, a shine sweeps across the logo,
+// now and then a row of it glitches, and NeoN+1 types in.
 function introCard(ctx, now, t) {
-  const { put } = ctx, [x0, y0] = INTRO_CARD_AT;
+  const { put } = ctx, [x0, y0] = INTRO_CARD_AT, F = INTRO_CARD_FX, still = reduced();
+  const wg = introWireGrid(), trace = mixHex(C.bg, C.accent, 0.35);
+  const hot = t > wg.far * F.grow && !still ? pulseCells(introPulses, wg.paths, now, INTRO_PULSE) : new Map();
+  const blinkOn = Math.floor(now / 700) % 2;
+  wg.ch.forEach((row, y) => row.forEach((c, x) => {
+    const k = y * wg.W + x;
+    if (c === ' ' || (!still && t < wg.at.get(k) * F.grow)) return;
+    if (!wg.on.has(k)) return put(x, y, c, C.dim);
+    const p = pulseLook(hot.get(k), trace, st.pulseStyle || 'color');
+    const cap = !hot.has(k) && '<>'.includes(c) ? (blinkOn ? C.accent : trace) : null;   // the connectors blink
+    put(x, y, p.ch || c, cap || (!hot.has(k) && c === 'o' ? C.mid : p.col), 'hud', p.bold);
+  }));
+  const shine = ((t % F.shine) / F.shine) * (INTRO_CARD.length + 40) - 8;   // a diagonal band, top-left to bottom-right
+  const glitchRow = !still && (t % F.glitch) < 110 ? Math.floor(t / F.glitch * 7) % 26 : -1;   // (the logo's rows)
   INTRO_CARD.forEach((row, y) => {
     const s = row.trim();
-    if (s === 'NeoN+1') return put(x0 + row.indexOf(s), y0 + y, s, C.bright, 'hud', true);
+    if (s === 'NeoN+1') {
+      const n = still ? s.length : clamp(Math.floor((t - F.name) / F.key), 0, s.length);
+      return put(x0 + row.indexOf(s), y0 + y, s.slice(0, n) + (n < s.length && n > 0 ? '_' : ''), C.bright, 'hud', true);
+    }
     if (/^[a-z/ ]+$/.test(s)) return put(x0 + row.indexOf(s), y0 + y, s, C.mid);   // the copy line
-    [...row].forEach((ch, x) => { if (ch !== ' ') put(x0 + x, y0 + y, ch, ';:.'.includes(ch) ? C.dim : '_'.includes(ch) && /^_+$/.test(s) ? C.dim : C.accent); });
+    const shift = y === glitchRow ? 1 : 0;
+    [...row].forEach((ch, x) => {
+      if (ch === ' ') return;
+      const fill = ';:.'.includes(ch), rule = '_'.includes(ch) && /^_+$/.test(s), lit = !still && Math.abs(x + y - shine) < 1.5;
+      const c = shift && Math.random() < 0.25 ? noiseCh() : ch;
+      put(x0 + x + shift, y0 + y, c, rule ? C.dim : fill ? (lit ? C.accent : C.dim) : lit ? C.bright : C.accent, 'hud', lit && !fill);
+    });
   });
   if (t > 1200 && Math.floor(now / 600) % 2) ctx.putC(L.hc - 2, 'tap to continue', C.dim);
   if (t >= INTRO_T.card && !st.boot.going) introAfterCard();

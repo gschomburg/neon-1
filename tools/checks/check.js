@@ -26,7 +26,7 @@ const DIR = path.join(__dirname, 'out');
 // ---- load the game into one headless context (tools/checks/harness.js), with a hook that hands this tool the game's tables
 const NAMES = ['CONFIG', 'CORPS', 'FINAL', 'PUBLIC', 'CORP_TELL', 'CORP_ART', 'CODEX_CORPS', 'MODS', 'ITEMS', 'RARITY',
   'STAGES', 'MOD_STAGE', 'ANOMALIES', 'LEGACY', 'SONGS', 'MUSIC_FOR', 'SCALES', 'MOTIFS', 'GLYPHS',
-  'NAME_A', 'NAME_B', 'NAME_C', 'HELP_PAGES', 'PALETTES', 'PLAYER_STYLES', 'LOCK_LABEL', 'TITLE', 'COVER',
+  'NAME_A', 'NAME_B', 'NAME_C', 'HELP_PAGES', 'PALETTES', 'PLAYER_STYLES', 'LOCK_LABEL', 'TITLE', 'COVER', 'TITLE_NAME', 'TITLE_FACE_SPAN',
   'START_NOTE', 'HIT_FX', 'END_FX', 'BOSS_GEAR', 'BOARD_FX', 'CIPHER_SYMS', 'RAINBOW', 'ZODIAC', 'LEX_WORDS'];
 function load(file) {
   const g = require('./harness.js').loadGame(file, { hook: `window.__check = { genLayer, genMap, pickCorps, corpPlan, layerSpec, ${NAMES.join(', ')} };` });

@@ -1,102 +1,140 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.68']);
+NEON_FILES.push(['engine/screens.js', 'v14.69']);
 
-// The title art as a grid: each cell's char and layer (f face, l logo letters,
-// w logo words, b background), plus every route a pulse can take along the traces,
-// from a pad on the head out to a loose end.
-const TITLE = (() => {
-  const H = TITLE_BG.length, W = TITLE_W;
-  const ch = [], cls = [];
-  for (let y = 0; y < H; y++) { ch.push(Array(W).fill(' ')); cls.push(Array(W).fill('')); }
-  COVER.forEach(([l, m, r], y) => [...(l.padEnd(16) + m + r.padEnd(14))].forEach((c, x) => { if (c !== ' ') { ch[y][x] = c; cls[y][x] = 'f'; } }));
-  const top = H - TITLE_LOGO.length;
-  TITLE_LOGO.forEach((s, k) => [...s].forEach((c, x) => {
-    const y = top + k;
-    if (c === '%') { ch[y][x] = ' '; cls[y][x] = ''; }
-    else if (c !== ' ') { ch[y][x] = c; cls[y][x] = (y === top + 7 && x >= 13) || x >= 20 ? 'w' : 'l'; }   // words: the name row and the build number
-  }));
-  TITLE_BG.forEach((s, y) => [...s].forEach((c, x) => { if (c !== ' ' && !cls[y][x]) { ch[y][x] = c; cls[y][x] = 'b'; } }));
-  // Trace cells: '-' links sideways, '|' up and down, '+' and 'o' every way.
-  const isT = (y, x) => y >= 0 && y < H && x >= 0 && x < W && cls[y][x] === 'b' && '-|+o'.includes(ch[y][x]);
-  const links = (y, x) => [[0, 1], [0, -1], [1, 0], [-1, 0]].filter(([dy, dx]) => {
-    if (!isT(y + dy, x + dx)) return false;
-    const side = dy === 0, a = ch[y][x], b = ch[y + dy][x + dx];
-    return !((a === '-' || b === '-') && !side) && !((a === '|' || b === '|') && side);
-  }).map(([dy, dx]) => [y + dy, x + dx]);
-  const touchesFace = (y, x) => [-1, 0, 1].some(dy => [-1, 0, 1].some(dx => (cls[y + dy] || [])[x + dx] === 'f'));
-  const starts = [];
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++)
-    if (isT(y, x) && ch[y][x] === 'o' && links(y, x).length === 1 && touchesFace(y, x)) starts.push(y * W + x);
-  const paths = [];
-  const walk = p => {
-    const last = p[p.length - 1], next = links(Math.floor(last / W), last % W).map(([y, x]) => y * W + x).filter(k => !p.includes(k));
-    if (!next.length) { if (p.length > 1 && !starts.includes(last)) paths.push(p); return; }
-    next.forEach(k => walk([...p, k]));
+// ---------- circuit traces (the title's, and the intro card's wires: engine/intro.js) ----------
+// Which way each trace char connects (n e s w). Two cells link when each has a port facing the other.
+const TRACE_PORTS = { '-': 'ew', ':': 'ew', '=': 'ew', '<': 'ew', '>': 'ew', '|': 'ns', '+': 'nesw', 'o': 'nesw',
+  '─': 'ew', '│': 'ns', '╭': 'es', '╮': 'sw', '╯': 'nw', '╰': 'ne', '┼': 'nesw', '┴': 'new', '┬': 'esw', '├': 'nes', '┤': 'nsw' };
+const TRACE_DIRS = [['n', -1, 0, 's'], ['e', 0, 1, 'w'], ['s', 1, 0, 'n'], ['w', 0, -1, 'e']];
+// isT(y, x): is this cell a trace. pickStarts(ends, cells): the cells of one connected trace that pulses start from
+// (ends: its loose ends). Returns every route from a start to another loose end (cells as y * W + x), and the
+// set of cells on a trace that has a start (the others aren't wires: static, a stray '=').
+function traceNet(ch, W, H, isT, pickStarts) {
+  const links = k => {
+    const y = Math.floor(k / W), x = k % W, a = TRACE_PORTS[ch[y][x]];
+    return TRACE_DIRS.filter(([d, dy, dx, back]) => {
+      const yy = y + dy, xx = x + dx;
+      return a.includes(d) && yy >= 0 && yy < H && xx >= 0 && xx < W && isT(yy, xx) && TRACE_PORTS[ch[yy][xx]].includes(back);
+    }).map(([, dy, dx]) => (y + dy) * W + x + dx);
   };
-  starts.forEach(s => walk([s]));
-  return { ch, cls, paths, H, W };
-})();
-
-// Pulses: a yellow spark runs out from the head along a trace, with a short tail.
-// How the spark shows (dev menu): 'color' recolors the trace, 'char' swaps the
-// character for noise, 'both' does both.
+  const seen = new Set(), paths = [], on = new Set();
+  for (let k = 0; k < W * H; k++) {
+    if (seen.has(k) || !isT(Math.floor(k / W), k % W)) continue;
+    const cells = [k]; seen.add(k);
+    for (let i = 0; i < cells.length; i++) links(cells[i]).forEach(n => { if (!seen.has(n)) { seen.add(n); cells.push(n); } });
+    const ends = cells.filter(c => links(c).length === 1), starts = pickStarts(ends, cells);
+    if (!starts.length) continue;
+    cells.forEach(c => on.add(c));
+    const walk = p => {
+      if (paths.length > 400) return;   // (a tangle: plenty to pick from already)
+      const next = links(p[p.length - 1]).filter(n => !p.includes(n));
+      if (!next.length) { if (p.length > 1 && !starts.includes(p[p.length - 1])) paths.push(p); return; }
+      next.forEach(n => walk([...p, n]));
+    };
+    starts.forEach(s => walk([s]));
+  }
+  return { paths, on };
+}
+// Pulses: a yellow spark runs along a route, with a short tail. pulses: { list, next } (one per screen).
+// Returns the cells they're on now (k -> { j: 0 the spark, 1.. the tail; ch: a noise char for the spark }).
 const PULSE = { speed: 14, tail: 3, gapMin: 250, gapMax: 900, max: 4 };
-const PULSE_STYLES = ['color', 'char', 'both'];
-const titlePulses = [];
-let pulseNext = 0;
-
-// The title art with a little life: the eye blinks, the circuit eye scans, a scanline
-// drifts down the face, now and then a row glitches sideways, the logo glitches, and
-// pulses run out along the traces.
-function titleArtLines(now) {
-  const t = now / 1000, { ch, cls, H, W } = TITLE;
-  const blink = (t % 4.3) < 0.14;
-  const scanEye = ['@@', '@ ', ' @', '@@'][Math.floor(t * 3) % 4];
-  const scanRow = Math.floor(now / 140) % (COVER.length + 6);
-  const glitchRow = (t % 3.1) < 0.12 ? Math.floor(t * 7) % COVER.length : -1;
-  const style = st.pulseStyle || 'color';
-
-  // Spawn and age the pulses; mark the cells they're on (0 = the spark, 1.. = tail).
-  if (reduced()) titlePulses.length = 0;
-  else if (now >= pulseNext && TITLE.paths.length) {
-    if (titlePulses.length < PULSE.max) titlePulses.push({ path: TITLE.paths[Math.floor(Math.random() * TITLE.paths.length)], t0: now, seed: Math.floor(Math.random() * 97) });
-    pulseNext = now + rand(PULSE.gapMin, PULSE.gapMax);
+function pulseCells(pulses, paths, now, o = PULSE) {
+  if (reduced()) pulses.list.length = 0;
+  else if (now >= pulses.next && paths.length) {
+    if (pulses.list.length < o.max) pulses.list.push({ path: paths[Math.floor(Math.random() * paths.length)], t0: now, seed: Math.floor(Math.random() * 97) });
+    pulses.next = now + rand(o.gapMin, o.gapMax);
   }
   const hot = new Map();
-  for (let i = titlePulses.length - 1; i >= 0; i--) {
-    const p = titlePulses[i], step = Math.floor((now - p.t0) / 1000 * PULSE.speed);
-    if (step - PULSE.tail >= p.path.length) { titlePulses.splice(i, 1); continue; }
-    for (let j = 0; j <= PULSE.tail; j++) {
+  for (let i = pulses.list.length - 1; i >= 0; i--) {
+    const p = pulses.list[i], step = Math.floor((now - p.t0) / 1000 * o.speed);
+    if (step - o.tail >= p.path.length) { pulses.list.splice(i, 1); continue; }
+    for (let j = 0; j <= o.tail; j++) {
       const n = step - j;
       if (n < 0 || n >= p.path.length) continue;
       const k = p.path[n], had = hot.get(k);
       if (!had || had.j > j) hot.set(k, { j, ch: NOISE[(n * 7 + p.seed) % NOISE.length] });
     }
   }
-
-  const trace = mixHex(C.bg, C.accent, 0.4);
+  return hot;
+}
+// A trace cell's look with the pulses on it (style: the dev menu's pulse style, below).
+function pulseLook(h, trace, style) {
   const tailCols = [C.money, mixHex(C.money, C.accent, 0.5), C.accent, mixHex(trace, C.accent, 0.5)];
-  const logoTop = H - TITLE_LOGO.length;
+  return { ch: h && style !== 'color' && h.j === 0 ? h.ch : null, col: h && style !== 'char' ? tailCols[h.j] : h && h.j === 0 ? C.money : trace, bold: !!h && h.j === 0 };
+}
+
+// The title art as a grid (data/title.js): each cell's char and layer (f face, l the name's Ns, w the name's
+// e o and +1, b background), plus every route a pulse can take along the traces, from a pad on the head out to
+// a loose end.
+const TITLE = (() => {
+  const H = TITLE_NAME_AT + TITLE_NAME.length, W = TITLE_W;
+  const ch = [], cls = [];
+  for (let y = 0; y < H; y++) { ch.push(Array(W).fill(' ')); cls.push(Array(W).fill('')); }
+  COVER.forEach((row, y) => [...row].forEach((c, x) => {
+    if (c === ' ' || x >= W) return;
+    const sp = TITLE_FACE_SPAN[y];
+    ch[y][x] = c; cls[y][x] = sp && x >= sp[0] && x <= sp[1] ? 'f' : 'b';
+  }));
+  TITLE_NAME.forEach((s, k) => [...s].forEach((c, x) => {
+    if (c === ' ' || x >= W) return;
+    const y = TITLE_NAME_AT + k, word = (x >= TITLE_NAME_WORD[0] && x <= TITLE_NAME_WORD[1]) || c === '+' || (c === '1' && s[x - 1] === '+');
+    ch[y][x] = c; cls[y][x] = word ? 'w' : 'l';
+  }));
+  const isT = (y, x) => cls[y][x] === 'b' && !!TRACE_PORTS[ch[y][x]];
+  const nearFace = (k, r) => { const y = Math.floor(k / W), x = k % W; for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if ((cls[y + dy] || [])[x + dx] === 'f') return true; return false; };
+  // Pulses start at the pads touching the head; a trace with none starts from a loose end near it (the chin's stub).
+  const pick = ends => { for (const f of [k => ch[Math.floor(k / W)][k % W] === 'o' && nearFace(k, 1), k => nearFace(k, 1), k => nearFace(k, 2)]) { const s = ends.filter(f); if (s.length) return s; } return []; };
+  const { paths, on } = traceNet(ch, W, H, isT, pick);
+  return { ch, cls, paths, on, H, W };
+})();
+
+// How the spark shows (dev menu): 'color' recolors the trace, 'char' swaps the
+// character for noise, 'both' does both.
+const PULSE_STYLES = ['color', 'char', 'both'];
+const titlePulses = { list: [], next: 0 };
+// The meter in the face ([====]): how full it is, a step at a time (a level meter's bounce).
+const TITLE_METER = [1, 2, 3, 4, 3, 4, 2, 3, 1, 2, 4, 3, 2, 4, 4, 3];
+
+// The title art with a little life: the eye blinks, the circuit eye scans, the meter bounces, a light runs down
+// the chip column, the <> flips, the [#] flickers, a scanline drifts down the face, now and then a row glitches
+// sideways, the name glitches, and pulses run out along the traces.
+function titleArtLines(now) {
+  const t = now / 1000, { ch, cls, on, H, W } = TITLE;
+  const faceRows = COVER.length;
+  const blink = (t % 4.3) < 0.14;
+  const scanEye = ['@@', '@ ', ' @', '@@'][Math.floor(t * 3) % 4];
+  const meter = TITLE_METER[Math.floor(t * 6) % TITLE_METER.length];
+  const [chipX, chipY, chipN] = TITLE_CHIP, chipLit = chipY + Math.floor(t * 4) % (chipN + 3);   // (3 dark steps between runs)
+  const flip = (t % 2.3) < 0.3, flicker = (t % 3.7) < 0.12;
+  const scanRow = Math.floor(now / 140) % (faceRows + 6);
+  const glitchRow = (t % 3.1) < 0.12 ? Math.floor(t * 7) % faceRows : -1;
+  const style = st.pulseStyle || 'color';
+  const hot = pulseCells(titlePulses, TITLE.paths, now);
+  const trace = mixHex(C.bg, C.accent, 0.4);
   return ch.map((rowCh, y) => {
     const chars = rowCh.slice(), cols = [], bolds = [];
-    const lit = y === scanRow, logoGlitch = y >= logoTop && ((t + (y - logoTop) * 0.9) % 4.5) < 0.09;
+    const lit = y === scanRow, nameGlitch = y >= TITLE_NAME_AT && ((t + (y - TITLE_NAME_AT) * 0.9) % 4.5) < 0.09;
     for (let x = 0; x < W; x++) {
       const c = cls[y][x];
-      if (c === 'f') { cols.push(lit ? C.bright : x < 16 ? C.text : x === 16 ? C.dim : C.accent); bolds.push(lit); }
-      else if (c === 'l' || c === 'w') {
-        if (logoGlitch && Math.random() < 0.3) chars[x] = noiseCh();
+      if (c === 'f') {
+        const chip = y === chipLit && (x === chipX || x === chipX + 1);
+        if (chip && chars[x] === 'X') chars[x] = '+';
+        cols.push(lit || chip ? C.bright : x < TITLE_MID ? C.text : x === TITLE_MID ? C.dim : C.accent); bolds.push(lit || chip);
+      } else if (c === 'l' || c === 'w') {
+        if (nameGlitch && Math.random() < 0.3) chars[x] = noiseCh();
         cols.push(c === 'w' ? C.bright : C.accent); bolds.push(true);
-      } else if (c === 'b' && '-|+o'.includes(ch[y][x])) {
-        const h = hot.get(y * W + x);
-        if (h && style !== 'color' && h.j === 0) chars[x] = h.ch;
-        cols.push(h && style !== 'char' ? tailCols[h.j] : h && h.j === 0 ? C.money : trace);
-        bolds.push(!!h && h.j === 0);
+      } else if (c === 'b' && on.has(y * W + x)) {
+        const p = pulseLook(hot.get(y * W + x), trace, style);
+        if (p.ch) chars[x] = p.ch;
+        cols.push(p.col); bolds.push(p.bold);
       } else { cols.push(C.dim); bolds.push(false); }
     }
     let text = chars.join('');
-    if (y === 5 && blink) text = text.replace('(o)', '(-)');
-    if (y === 4) text = text.replace('@@', scanEye);
+    if (blink) text = text.replace('{o}', '{-}');
+    text = text.replace('[@@]', `[${scanEye}]`).replace('[====]', `[${'='.repeat(meter).padEnd(4, '-')}]`);
+    if (flip && y < faceRows) text = text.replace('|<>|', '|><|');
+    if (flicker) text = text.replace('[#]', `[${noiseCh()}]`);
     if (y === glitchRow) {
       text = (' ' + text.slice(0, -1)).replace(/[^ ]/g, c => Math.random() < 0.25 ? noiseCh() : c);
       cols.unshift(cols[0]); bolds.unshift(false);

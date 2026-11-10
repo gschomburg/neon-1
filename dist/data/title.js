@@ -1,61 +1,45 @@
-// NeoN+1 data/title.js: The title screen art: the face, the NeoN+1 lockup, the circuit traces.
+// NeoN+1 data/title.js: The title screen art: the face, the NeoN+1 name, the circuit traces.
 'use strict';
-NEON_FILES.push(['data/title.js', 'v14.68']);
+NEON_FILES.push(['data/title.js', 'v14.69']);
 
 // ---------------- Screens built from lines ----------------
-// Title cover art: a face, half human (left) and half circuitry (right).
-// Each row: [left half, divider, right half].
+// Title cover art (the user's, from asXii: asxii_art/NeoN_1_screens_v06, "title: art FACE v2"): a face, half human
+// (left of the '|' at TITLE_MID) and half circuitry, with circuit traces around it. The face and the traces share
+// rows; TITLE_FACE_SPAN says which columns of each row are face ([from, to], or null), the rest is background
+// (static and traces). engine/screens.js TITLE reads all three, and its animations look for '{o}', '[@@]',
+// '[====]', '<>' and the vv /\ ^^ X column at TITLE_CHIP: keep those if the art changes.
 const COVER = [
-  ['            _.-~', '~', '~~~~-._'],
-  ["         .-'   .", '|', " [#]  '-."],
-  ["       .'    .' ", '|', "  |  +--o'."],
-  ['      /     /   ', '|', '  +--+    \\'],
-  ['     |   .-""-. ', '|', ' [@@]=+    |'],
-  ['     |  ( (o)  )', '|', '  ||  |    |'],
-  ["     |   '-..-' ", '|', ' o++o |    |'],
-  ['     |     )    ', '|', '  ||  +=   |'],
-  ['     |    (_    ', '|', ' ++==++    |'],
-  ['      \\    __   ', '|', ' [====]   /'],
-  ["       \\  '--'  ", '|', '   ||    /'],
-  ["        '.      ", '|', "  o--  .'"],
-  ["          '-._  ", '|', "   _.-'"],
-  ["              '-", '~', "-'"],
+  "                          o---++",
+  "  .: '**      _.-~~~~~~-._    _|",
+  "   *:      .-'   .| [#]  '-.   |",
+  "         .'    .' |  |  +--o'. +-:--",
+  "  *==   /     /   |  +--+  ..\\ |",
+  "  :    |   .-\"\"-. | [@@]=+ vv |+-",
+  "   o   |  (-{o}- )|<>||  | /\\ |",
+  "   |.  |   '-..-' | o++o | /\\ |o-<=>",
+  "  -+--o|     )    L__||__+=/\\ |",
+  "       |    (_    | ++==++ ^^ |",
+  "        \\    __   | [====] X /o-+",
+  "<>-+----o\\  '=='  |   ||  []/o--+",
+  "   |      '.      |  o--  .'    |",
+  "   o        ';._  L_.._.-'  +---+",
+  "          |     '-~-'       |   |",
+  "      +---o           o-----+   ++",
+  "                                 |",
+  "                                 o",
 ];
-// NeoN+1 lockup (docs/NAMES.md #15 EXPONENT): a big N with a raised +1, the build number
-// beside it (v11.00) and the name along the bottom. Rows 12-19 of the title art,
-// tucked under the jaw. '%' clears a face cell.
-const TITLE_LOGO = [
-  "   _      _%",
-  "  | \\    | |",
-  "  |  \\   | |     _",
-  "  | . \\  | |  | / |",
-  "  | |\\ \\ | | -+-| |",
-  `  | | \\ \\| |  | |_|  ${VERSION}`,
-  "  | |  \\   |",
-  "  |_|   \\__| N e o N + 1",
+const TITLE_FACE_SPAN = [null, [14, 25], [11, 27], [9, 29], [8, 29], [7, 30], [7, 30], [7, 30], [7, 30], [7, 30],
+  [8, 29], [9, 28], [10, 27], [12, 25], [16, 20], null, null, null];
+const TITLE_MID = 18;           // the column between the human half and the circuit half
+const TITLE_CHIP = [27, 5, 6];  // the chip column (vv /\ /\ /\ ^^ X): x, first row, rows
+// The NeoN+1 name (the user's, asXii "neon_title"), from row TITLE_NAME_AT of the art. Its middle columns
+// (TITLE_NAME_WORD: the e and o) and the +1 are drawn brighter than the Ns.
+const TITLE_NAME = [
+  "    {]\\\\  [}           {]\\\\  [=}",
+  "     [ \\\\ ]   __   __   [ \\\\ ]",
+  "     [  \\\\]  /..} /  \\  [  \\\\]",
+  "   {=]   \\[} \\__, \\__/ {]   \\[}+1",
 ];
-// Background behind the face: static (. : ' ` * =) in the top-left corner and circuit
-// traces (- | + o) on both sides. Every trace starts at an 'o' pad touching the head.
-const TITLE_BG = [
-  ".: '**                   o---+ ",
-  " *:                          | ",
-  "                             +-",
-  "*==                          | ",
-  ":                            +-",
-  " o                             ",
-  " |.                          o-",
-  "-+--o                          ",
-  "                               ",
-  "                            o-+",
-  " +----o                    o--+",
-  " |                            |",
-  " o                        +---+",
-  "                          |   |",
-  "                    o-----+   |",
-  "                              |",
-  "                              |",
-  "                              |",
-  "                              |",
-  "                         o----+",
-];
-const TITLE_W = 31;
+const TITLE_NAME_AT = 17;
+const TITLE_NAME_WORD = [13, 21];
+const TITLE_W = 36;

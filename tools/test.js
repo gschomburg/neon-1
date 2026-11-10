@@ -3,11 +3,11 @@
 //   2. tools/checks/check.js: layers, maps and tables match tools/checks/golden.json
 //   3. tools/checks/tests/*.js: headless pages that play a bit and check things (tools/checks/harness.js)
 //   4. tools/checks/playtest.js: every corp played, compared to tools/checks/golden-play.json (slow: skip with --quick)
-// Usage: node tools/test.js [--quick] [name ...]   (names: only those tests/*.js files)
+// Usage: node tools/test.js [--quick] [--log] [name ...]   (names: only those tests/*.js files; --log prints what they say())
 'use strict';
-if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/test.js [--quick] [test names]   (data round-trips, check.js, tools/checks/tests/*.js, playtest.js)'); process.exit(0); }
+if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/test.js [--quick] [--log] [test names]   (data round-trips, check.js, tools/checks/tests/*.js, playtest.js)'); process.exit(0); }
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process'), H = require('./checks/harness.js');
-const args = process.argv.slice(2), quick = args.includes('--quick'), only = args.filter(a => !a.startsWith('--'));
+const args = process.argv.slice(2), quick = args.includes('--quick'), showLog = args.includes('--log'), only = args.filter(a => !a.startsWith('--'));
 let failed = 0;
 const ok = (good, line) => { console.log((good ? 'ok    ' : 'FAIL  ') + line); if (!good) failed++; };
 const node = (file, extra = []) => {
@@ -39,6 +39,7 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
     ok(!r.fails.length && !errs.length, `tests/${t.name}: ${r.passes} passed${r.fails.length ? `, ${r.fails.length} failed` : ''}${errs.length ? ', page errors' : ''}`);
     for (const f of r.fails) console.log('        - ' + f);
     for (const e of errs) console.log('        ! ' + e);
+    if (showLog) for (const l of r.log || []) console.log(l);
   });
   // 4. the playtest
   if (!quick && !only.length) {
