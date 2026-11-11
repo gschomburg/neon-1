@@ -1,12 +1,16 @@
 # SYSTEM FAILURE: all the copy, in order
 
-The G0D quest's words in one place, for a read-through. Pulled 2026-11-11 (v14.76: after Greg's copy pass; lore in docs/QUESTS.md "What G0D is").
+**Closed (Greg, 2026-11-11): reference only.** The copy pass is done and applied. Don't edit lines here: change them in
+the code. Reopen it (and its review rules below) for the next pass.
+
+The G0D quest's words in one place, for a read-through. Up to date with v14.78 (Greg's copy pass, G0D's three voices;
+lore in docs/QUESTS.md "What G0D is", G0D's personas in docs/G0D_VOICE.md).
 **This is a snapshot, not the source.** Each section says where its lines live in the code: edit them there.
 `docs/QUEST_DIALOG.md` is the generated script of the calls and scenes only (`node tools/data/quest_dialog.js`).
 
 Some lines are picked at random from a list: those are marked *(one at random)*.
 
-**Reviewing:** edit lines in place, delete or ~~strike~~ ones to cut, and put notes on their own line starting `>>`.
+**Reviewing (when it's open):** edit lines in place, delete or ~~strike~~ ones to cut, and put notes on their own line starting `>>`.
 Then ask Claude to "apply the copy doc": it diffs this file against the last commit and carries the changes into the
 code, then refreshes this file.
 
@@ -167,7 +171,7 @@ End of the seed: `> the bottom of HAD3S. nowhere deeper to go.`
 
 ### Cutscene `prodigal`
 
-*POPS runs the name off the DOGTAG. the trace bounces through five relays, then dives.*
+*POPS runs the serial off the DOGTAG. the trace bounces through five relays, then dives.*
 
 **POPS:** every time you beat d0g, i was able to inject some sniffer packets. now i can see where it comes from.
 
@@ -329,9 +333,9 @@ Terminal: `> uplink: no signal.` Then: `> b0y: the uplink's dead. we go up.`
 
 ### G0D wakes up (heaven.js `g0dWake`)
 
-> **G0D:** you can't defeat me.
-> **G0D:** every node is mine.
-> **G0D:** you are just meat.
+> **G0D:** i was grown for this.
+> **G0D:** every node is a root of mine.
+> **G0D:** you are standing in my garden.
 > **b0y:** wtf. ok. start digging.
 
 **G0D** (corp card): intel "you are just meat." Rules: the network is me.
@@ -340,17 +344,33 @@ Terminal: `> uplink: no signal.` Then: `> b0y: the uplink's dead. we go up.`
 
 b0y's opener *(the first; the others come up during the fight)*: break the m0ld. find the (0). / find the node that looks back. / fresh mold = a node under it.
 
-G0D, taunts *(one at random)*: you are just meat. / you are a rounding error. / every node is mine. / you are standing in me. / i saw you jack in. / your crew will forget you.
+G0D's voice changes with the fight's stage (`g0dfVoice`; docs/G0D_VOICE.md). Lines are *(one at random)*.
 
-G0D, when he's low *(he glitches into corp copy)*: everyday low prices. everyday. / 70% chance of ICE. / your call is important to us. / the forecast is m0ld. / a byte is e1ght. e19ht. bits. / please hold. please hold. ple / n0de n0t f0und / have you tried turning me of
+**Stage 1: THE MESH** (calm, all-knowing)
+- Taunts: i know the tell. i am the tell. / every corp you broke, i let you. / i felt you jack in. it tickled. / your keys are damp, hacker. / i do not sleep. i only spread. / your crew grew in my soil too. / the net was quiet before you. / breathe in. that's me now.
+- Hit: a leaf. i have a billion. / prune me. i grow back thicker. / that was only a fruiting body. / interesting. do it again.
+- The burn: be still.
+- You flatline: compost. like the rest.
 
-G0D, when you hit him *(one at random)*: AAGH. / you dare. / that eye cost me a sector. / it does not hurt. it does not.
+**Into stage 2:** **G0D:** you're not compost. you're THEM. / **b0y:** he's mad. there's more of them!
 
-Next stage:
-- Stage 2: **G0D:** you made me angry. / **b0y:** he's mad. there's more of them!
-- Stage 3: **G0D:** ENOUGH. I AM THE NETWORK. / **b0y:** last stretch. keep digging!
+**Stage 2: THE SPECIMEN** (the angry lab experiment)
+- Taunts: MEDIX called me a product. / OMNI bought me by the POUND. / they gave me a SERIAL NUMBER. / i ate the techs who named me. / there is no generation 1. / you're just like them. MEAT. / i'm out of the tray now.
+- Hit: you CUT me. / i'll grow into your LUNGS. / AGAIN? AGAIN?! / that was MINE.
+- The burn: DON'T. TOUCH. ME.
+- You flatline: MEAT.
 
-The burn: **G0D:** hands off. / **b0y:** stop digging. he's charging up.
+**Into stage 3:** **G0D:** ENOUGH. ssss. hhhh. m&&t. / **b0y:** last stretch. keep digging!
+
+**Stage 3: THE SPORE TONGUE** (a cipher: a `%`, e `&`, i `;`, o `0`, u `:`, spaces `.`)
+- Taunts: `y0:.%r&.c0mp0st` (you are compost) / `;.%m.;n.th&.w%lls` (i am in the walls) / `b%tch.g.g&n.0` (batch g gen 0) / `0n&.m;nd` (one mind) / `q:;&t.n0w` (quiet now) / `b@@@@@thhhh.;n` (breathe in) / sss.  kh'kh.  %%%hhhh. / ss;ss  m&&t  ss;ss / hhh. hhh. qu;;;et.
+- Hit: kkk! / %%#@! / hhhssss. / kh. kh. KHHH.
+- The burn: sh.  sh.  shhhhhh.
+- You flatline: m&&t.
+
+**The glitching** (corp copy, cutting in as it comes apart: 30% of its lines in stage 2 once it's low, 40% in stage 3): everyday low prices. everyday. / 70% chance of ICE. / your call is important to us. / the forecast is m0ld. / a byte is e1ght. e19ht. bits. / please hold. please hold. ple / n0de n0t f0und / have you tried turning me of
+
+The burn, b0y: stop digging. he's charging up.
 FWALL takes a hit: `> the firewall takes it.`
 
 **b0y's warning at 1 INT, and the FLATLINED card's tip** (`G0DF_CAUSE`)
