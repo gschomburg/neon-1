@@ -1,6 +1,6 @@
 # SYSTEM FAILURE: all the copy, in order
 
-The G0D quest's words in one place, for a read-through. Pulled 2026-11-11 (v14.75).
+The G0D quest's words in one place, for a read-through. Pulled 2026-11-11 (v14.76: after Greg's copy pass; lore in docs/QUESTS.md "What G0D is").
 **This is a snapshot, not the source.** Each section says where its lines live in the code: edit them there.
 `docs/QUEST_DIALOG.md` is the generated script of the calls and scenes only (`node tools/data/quest_dialog.js`).
 
@@ -27,8 +27,8 @@ Terminal: `> QUEST: SYSTEM FAILURE`
 **After your first sector** (`sector`)
 > **POPS:** that's a sector. not bad, kid.
 > **POPS:** i've been watching the net. corps going quiet. something growing in the logs, like mold.
-> **POPS:** MEDIX runs hottest. there's an old DISC in there i want back.
-> **POPS:** break MEDIX if you see it. it could turn up anywhere, though.
+> **POPS:** MEDIX runs hottest. break MEDIX if you see it.
+> **POPS:** and keep an eye out for any MEDIX tech. there might be some data we can scrape.
 
 ---
 
@@ -37,12 +37,12 @@ Terminal: `> QUEST: SYSTEM FAILURE`
 *Quest card:* POPS wants an old DISC found. try MEDIX: its corp boss always has one. it can turn up anywhere loot drops, markets too.
 
 **The DISC in a market** (`shop`)
-> **POPS:** kid. that DISC in the market. that's the one.
+> **POPS:** kid. that DISC in the market. it's a MEDIX archive.
 > **POPS:** buy it. i'm good for it. mostly.
 
 **You pick it up, first time** (`found`)
 > **POPS:** kid. that disc you just picked up.
-> **POPS:** i know that label. don't lose it.
+> **POPS:** i recognize that hash. don't lose it.
 > **POPS:** take it through the next checkpoint: beat the sector boss and CASH OUT at the UPLINK with it.
 > **POPS:** then bring it to me.
 
@@ -73,7 +73,7 @@ Terminal: `> QUEST: SYSTEM FAILURE`
 
 *POPS's safehouse is a back room behind a laundromat that closed years ago. the sign still flickers OPEN.*
 
-*inside it smells like solder and burnt coffee. three monitors, two of them dead. a cot nobody makes. cables everywhere, taped down where people trip.*
+*inside it smells like solder and burnt coffee. three monitors, two of them dead. a faded futon. cables everywhere, taped down where people trip.*
 
 **POPS:** you brought it. let's see it.
 
@@ -169,7 +169,7 @@ End of the seed: `> the bottom of HAD3S. nowhere deeper to go.`
 
 *POPS runs the name off the DOGTAG. the trace bounces through five relays, then dives.*
 
-**POPS:** every time you beat d0g, his signal came through a little cleaner. now i can see where it comes from.
+**POPS:** every time you beat d0g, i was able to inject some sniffer packets. now i can see where it comes from.
 
 **POPS:** it doesn't end in a corp. it ends under one. MEDIX. sub-basement three.
 
@@ -177,7 +177,7 @@ End of the seed: `> the bottom of HAD3S. nowhere deeper to go.`
 
 *you go down together. the lights are out. mold up the walls, and one screen still on in the dark.*
 
-*he's there, slumped in front of it. cables run out of his arms and into the wall. thin. barely breathing.*
+*d0g is there, slumped in front of it. cables run out of his arms and into the wall. thin. barely breathing.*
 
 **POPS:** kid. kid, it's me.
 
@@ -187,11 +187,11 @@ End of the seed: `> the bottom of HAD3S. nowhere deeper to go.`
 
 **POPS:** ...not all of him. the DISC. it was never a trail. it's him. a backup. he got it out before it took the rest.
 
-**POPS:** i'll keep him breathing. you're the hacker. put him back.
+**POPS:** i'll keep him breathing. i need you to run the restore protocols.
 
 [ DISC >> b0y: the upload bar. A tap starts it; the mold pushes it back twice. ]
 
-*you jack the DISC into the wall, into him. something in the wall pushes back.*
+*you insert the DISC and begin the restore routines. the limp body seizes. something pushes back.*
 
 **d0g:** no. this one is mine. you can't have hi-
 
@@ -203,17 +203,21 @@ End of the seed: `> the bottom of HAD3S. nowhere deeper to go.`
 
 *nobody has called POPS that in years. only one person ever did.*
 
-**d0g:** i went in after it. something under the corps was waking up. i wanted to see it first.
+**d0g:** i found something under the corps. it was... waking up. at first i thought it was a rogue ai, some program that slipped its sandbox. by the time i saw how big it was, it was too late.
 
-**d0g:** it isn't a corp. it's under all of them. every corp you've ever cracked, it was in there, watching you do it.
+**d0g:** it isn't an ai or a corp. i'm not even sure it's digital. it's under all of them. every corp you've ever cracked, it was in there, watching you do it.
 
-**d0g:** the mold is what it looks like when it grows. it doesn't want money. it wants the whole net quiet.
+**d0g:** MEDIX grew it. right here. living racks for the server rooms. it was never supposed to think.
+
+**d0g:** and it isn't staying in the net. look at the walls. this mold is what it leaves behind.
+
+**d0g:** it doesn't want money. it wants the whole net quiet.
 
 **d0g:** one mind. nothing moving that it didn't move.
 
-**d0g:** it got into me. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out.
+**d0g:** it walked through my ICE like it wasn't there. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out.
 
-**d0g:** every time you beat me, its grip slipped. long enough to hide a copy of me where somebody would find it.
+**d0g:** while it paved me over, i dumped its garbage buffers onto that DISC. a copy of me, hidden where somebody would find it.
 
 *POPS doesn't say anything. he just holds on to him.*
 
@@ -229,7 +233,8 @@ End of the seed: `> the bottom of HAD3S. nowhere deeper to go.`
 
 **b0y's call** (`raid`)
 > **B0Y:** it's me. b0y.
-> **B0Y:** it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in.
+> **B0Y:** OMNI was the first corp it took. from there it was only a matter of time before it spread through the rest.
+> **B0Y:** i'm riding with you till we get there: tap [b] in a corp and i'm in.
 
 **The [b] hint popup** (`raidHint`)
 > that's me, down there. in a corp, tap [b] and i'm in. once a corp.
@@ -405,7 +410,7 @@ Terminal: `> G0D is down. the network goes quiet.`
 
 *neither of them says much. they don't need to.*
 
-**B0Y:** here. i pulled this out of MEDIX on my way out of sub-basement three. they brought me back with it more times than i can count.
+**B0Y:** here. i pulled this out of MEDIX on my way out of sub-basement three. the autotechs brought me back with it more times than i can count.
 
 **B0Y:** a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector.
 
