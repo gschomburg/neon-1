@@ -6,8 +6,11 @@ Grows BACKLOG section 10 ("The dev menu as a one-line terminal", "More on the te
 
 ## What it is
 
-- A one-line prompt at the bottom of the board, drawn in the game's own text grid. The last few output lines sit above
-  it, like a shell.
+**Step 1 is built (v14.79):** `dist/engine/terminal.js`, checked by `tools/checks/tests/terminal.js`.
+
+- A one-line prompt at the bottom of the screen, with the output lines above it, like a shell. It's plain HTML over
+  the canvas, not drawn in the game's text grid: it has its own look (see Decided), and a real text box gives a phone
+  its keyboard for free.
 - As you type, a list of matching commands pops up above the prompt. **Up / Down** pick one, **Tab** fills it in,
   **Enter** runs it, **Esc** closes the list (a second Esc closes the terminal).
 - **Up** on an empty prompt walks back through the commands you ran this session (not saved; see Decided).
@@ -20,8 +23,8 @@ Grows BACKLOG section 10 ("The dev menu as a one-line terminal", "More on the te
 
 - **`~`** (Shift + `) or **Ctrl + `** opens and closes it. Plain **`** keeps opening the old dev menu until the terminal
   covers everything; then the old menu goes (Greg, 2026-11-11: "maybe we ditch it once we complete this").
-- While it's open it takes every key (the game's keys don't fire). The game pauses under it like it does under the
-  dev menu.
+- While it's open it takes every key (the game's keys don't fire), and the layer clocks, the eater, G0D.exe and the
+  G0D fight hold still (`st.term`). Taps on the game above it still work.
 - **Phones:** see below.
 
 ## On a phone
@@ -33,14 +36,14 @@ The trouble: no keyboard, and the phone's own keyboard covers about half the scr
   run most commands without the keyboard at all.
 - **The keyboard is there to filter.** A `[ type ]` button (or tapping the prompt) brings it up. Typing narrows the
   list, like on desktop.
-- **Where it sits:** while the keyboard is up, the terminal moves to the top of the screen, so the prompt and the list
-  sit above the keyboard. The browser says how much room the keyboard leaves (`visualViewport`), and the board just
-  shows less. When the keyboard goes, it drops back to the bottom.
-- **The typing itself:** a canvas can't bring up a phone's keyboard, so a hidden text box takes the typing (no
-  autocorrect, no capitals, no spellcheck) and the terminal draws what's in it in the game's font. On desktop the same
-  box does the work, so there's one path for both.
-- **Opening it on a phone:** the footer's `[DEV]` button with `?dev=1` (as today) for us. For players later, the
-  terminal is gear or a node (see "The game part"), so you tap it like anything else.
+- **Where it sits:** while the keyboard is up, the terminal rides on top of it, so the prompt and the list stay in
+  view. The browser says how much room the keyboard leaves (`visualViewport`), and the board just shows less. When the
+  keyboard goes, it drops back to the bottom.
+- **The typing itself:** a canvas can't bring up a phone's keyboard, so the prompt is a real text box (no autocorrect,
+  no capitals, no spellcheck, 16px so iPhones don't zoom). On desktop the same box does the work, so there's one path
+  for both. `[run]` and `[x]` buttons sit beside it for fingers.
+- **Opening it on a phone:** `[ terminal ]` at the top of the dev menu (the footer's `[DEV]` with `?dev=1`). For
+  players later, the terminal is gear or a node (see "The game part"), so you tap it like anything else.
 
 ## Under the hood: one command list
 
@@ -60,7 +63,17 @@ Every command is one entry in a shared list (`engine/terminal.js`, `TERM_CMDS`):
 
 ## The commands (step 1: what the dev menu and the editor do today)
 
-Names are a first pass: easy to change.
+Names are a first pass: easy to change. `help` in the game lists them as built; the list below was the plan. What
+changed: `breach <corp> [tier]` took over `corp.tier`; `run.die` is `game.over`; `show <screen>` covers the screens
+and `show music` opens the music player (so no `music.play`, `heartbeat` or `urgency`); `corp.anomaly`, `sector`,
+`sector.event`, `sector.boss`, `sector.clear`, `kit`, `steal`, `take.mod`, `hacker`, `heaven [where]`, `palette`,
+`stats.tester`, `title.pulse` and `menu` (the old dev menu) were added. `boss.win` isn't built (nothing does that
+today).
+
+**Left for step 2** (they live inside engine/editor.js and need moving first): the editor's scenes (a corp's intro,
+a layer after a miss, the shop, a sector's boss, sector clear), the G0D tab's looks and health bars, the FX tab's
+looping scene frames and codex decode, the WORKBENCH's `letters`, and the loot viewer. Several terminal helpers are
+copies of the editor's (`termSettle`, `termToSector`, `termHeaven`, `termKit`...): step 2 makes the editor call them.
 
 **The run**
 - `int <n>`, `heal`, `credits <n>` (`cr`), `rep <n>`
@@ -116,7 +129,7 @@ Ideas so far (BACKLOG section 10, Greg 2026-11-08 and 2026-11-11):
 ## Order
 
 1. **The terminal, dev mode only.** The prompt, the list, Tab / arrows / history, help, the phone layout, and every
-   dev menu and editor command above. Plain ` keeps the old menu.
+   dev menu and editor command above. Plain ` keeps the old menu. **Done v14.79** (what's left is under the commands).
 2. **One command list for the editor too.** The TESTING buttons run terminal commands; the buttons it was missing
    come for free. A check (`tools/checks/tests/`) that runs a few commands.
 3. **The game part.** Learning, hacking out, the hacked mark. Talk it through first.
@@ -125,7 +138,9 @@ Ideas so far (BACKLOG section 10, Greg 2026-11-08 and 2026-11-11):
 ## Decided
 
 - **Decided (Greg, 2026-11-11): you can open it before you know anything.** With nothing learned there are no
-  autocompletes; the list shows a short message instead (e.g. `no commands known`).
+  autocompletes; the list shows a short message instead (e.g. `no commands known`). Built: for now "known" means dev
+  access (`?dev=1`, the backtick menu, or the editor); without it, `help` says `no commands known.` and only `help`,
+  `clear`, `history` and `exit` answer.
 - **Decided (Greg, 2026-11-11): its own look, outside the palettes.** A black field with white text, like a generic
   shell. Some colour highlighting picks out commands and objects (mod names, corps). The corp palettes don't touch it.
 - **Decided (Greg, 2026-11-11): history lasts the session only.** Nothing goes in the save.

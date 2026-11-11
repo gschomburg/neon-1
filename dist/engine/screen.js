@@ -1,6 +1,6 @@
 // NeoN+1 engine/screen.js: The canvas, layout, and the game state (st).
 'use strict';
-NEON_FILES.push(['engine/screen.js', 'v14.78']);
+NEON_FILES.push(['engine/screen.js', 'v14.79']);
 
 // ---------------- Canvas & layout ----------------
 const cv = document.getElementById('screen');
@@ -82,6 +82,7 @@ const st = {
   hideBoard: false, hideAll: false,
   debug: false,           // show the real node (dev menu)
   dev: false,             // dev menu open
+  term: false,            // THE TERMINAL open (engine/terminal.js): the clocks hold, the game takes no keys
   devAccess: params.get('dev') === '1',
   result: null,
   transitioning: false,

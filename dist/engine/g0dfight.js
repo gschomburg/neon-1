@@ -4,7 +4,7 @@
 // when G0D dies). The maze before it is a real corp, HEAVEN.maze (engine/heaven.js), which reads G0DF_SEQ and the maze
 // numbers here. The numbers are all in G0DF; the neon editor's g0d tab can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dfight.js', 'v14.78']);
+NEON_FILES.push(['engine/g0dfight.js', 'v14.79']);
 
 const G0DF = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -1047,7 +1047,7 @@ function g0dfGearUse(key, tier) {
 // ---------------- The loop, the board, taps (engine/render.js, engine/scene.js, engine/input.js) ----------------
 function g0dfTick(now, dt) {
   const p = st.g0df;
-  if (!p || st.mode !== 'g0df' || st.pause || st.dev || st.wipe || p.card) return;
+  if (!p || st.mode !== 'g0df' || st.pause || st.dev || st.term || st.wipe || p.card) return;
   if (p.pend && now >= (p.boyHold || 0)) { setMsg(p.pend[0], p.pend[1], p.pend[2] || null); p.pend = null; }   // the line that waited for b0y
   if (p.wake) return g0dWakeTick(p, now, dt);   // the wake-up (engine/heaven.js)
   if (p.stage === 'fight') g0dfFightTick(p, now, dt);

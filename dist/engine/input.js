@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.78']);
+NEON_FILES.push(['engine/input.js', 'v14.79']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -314,6 +314,7 @@ cv.addEventListener('wheel', e => {
 
 document.addEventListener('keydown', e => {
   if (TABS.away) { if (e.key === 'Enter' || e.key === ' ') tabsTake(); return; }
+  if (st.term) return;   // THE TERMINAL takes every key while it's open (engine/terminal.js)
   st.lastInput = performance.now();
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   Sound.init();

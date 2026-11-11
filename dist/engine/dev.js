@@ -1,9 +1,10 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v14.78']);
+NEON_FILES.push(['engine/dev.js', 'v14.79']);
 
 // ---------------- Dev menu ----------------
-// Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1.
+// Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1. THE TERMINAL (~ or Ctrl + `,
+// engine/terminal.js) does all this too, by typing.
 // Using cheats on a run marks it as practice, so it doesn't count.
 function toggleDev() {
   if (st.transitioning || st.wipe) return;
@@ -168,6 +169,7 @@ function devMenuLines() {
   const idle = !st.busy && !st.transitioning;
   T('DEV MENU', C.accent);
   T(run ? (run.practice ? 'run is practice (not scored)' : 'cheats mark the run as practice') : 'start a run for cheats', C.dim);
+  B('[ terminal ]', 'term', termOpen);   // THE TERMINAL (engine/terminal.js): how a phone opens it
   B(`[ palette: ${PALETTES[save.palette].name.padEnd(11)} ]`, 'pal', cyclePalette);
   B(`[ show real node: ${st.debug ? 'ON ' : 'OFF'} ]`, 'dbg', () => { st.debug = !st.debug; if (run) run.practice = true; Sound.ui(); });
   B(`[ god: ${st.god ? 'ON ' : 'OFF'} ]`, 'god', () => { st.god = !st.god; if (run) run.practice = true; Sound.ui(); });
