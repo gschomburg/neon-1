@@ -147,7 +147,7 @@ End of the seed: `> the bottom of HAD3S. nowhere deeper to go.`
 
 **The tenth win** (`dogtag`)
 > **POPS:** that's ten.
-> **POPS:** he dropped something. an old tag, with a name scratched into it.
+> **POPS:** he dropped something. an old tag, with a serial scratched into it.
 > **POPS:** CASH OUT with it. i'll run a trace.
 
 **At the UPLINK with the tag** (`tagUplink`)
@@ -158,11 +158,11 @@ End of the seed: `> the bottom of HAD3S. nowhere deeper to go.`
 
 ## Step 5: TRACE ROUTE
 
-*Quest card:* POPS got a hit on the name on the DOGTAG. go see him.
+*Quest card:* POPS got a hit on the serial on the DOGTAG. go see him.
 
 **After cashing out with the tag** (`traced`)
 > **POPS:** you got it out. good.
-> **POPS:** i ran the name. i got a hit.
+> **POPS:** i ran the serial. i got a hit.
 > **POPS:** come by. now.
 
 ### Cutscene `prodigal`

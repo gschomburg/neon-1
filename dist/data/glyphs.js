@@ -1,6 +1,6 @@
 // NeoN+1 data/glyphs.js: Node glyphs (the ASCII art on nodes) and their helpers.
 'use strict';
-NEON_FILES.push(['data/glyphs.js', 'v14.76']);
+NEON_FILES.push(['data/glyphs.js', 'v14.77']);
 
 // ---------------- Glyphs ----------------
 // The art, names and lore are in data/art/glyphs.js (ART_GLYPHS), edited in the neon editor.
@@ -33,10 +33,15 @@ const SPECIAL_GLYPHS = [
   { key: 'gsig',  name: 'SIGIL SIGNATURE', glyphOf: () => X_SHAPE,    lore: ['sigil signs its work.', 'the signature changes.', 'the habit does not.'] },
   { key: 'gmask', name: ART_SPECIAL.mask.name, glyphOf: () => MASK_GLYPH, lore: ART_SPECIAL.mask.lore },
 ];
-const GLYPHS = [
-  ...GLYPH_LORE.map(([name, lore], i) => ({ key: 'g' + i, name, lore, glyphOf: () => MOTIFS[i] })),
-  ...SPECIAL_GLYPHS,
-];
+// The codex's order (its #01, #02...): PROMPT first, then the G0D MAZE's path, then the rest. The maze's clue is "the
+// codex order", so this has to match engine/g0dfight.js G0DF_SEQ (and b0y's words in heaven.js / G0DF_CLUE). Keys
+// stay 'g' + the art index (save.seen uses them), so reordering here loses nothing.
+const CODEX_GLYPH_FIRST = ['gjack', 'DIAMOND', 'THE CROSS', 'STORAGE UNIT', 'UPLINK', 'THE WATCHER'];
+const GLYPHS = (() => {
+  const all = [...GLYPH_LORE.map(([name, lore], i) => ({ key: 'g' + i, name, lore, glyphOf: () => MOTIFS[i] })), ...SPECIAL_GLYPHS];
+  const first = CODEX_GLYPH_FIRST.map(n => all.find(gl => gl.key === n || (/^g\d+$/.test(gl.key) && gl.name === n))).filter(Boolean);
+  return [...first, ...all.filter(gl => !first.includes(gl))];
+})();
 const GLYPH_BY_KEY = Object.fromEntries(GLYPHS.map(gl => [gl.key, gl]));
 
 // Labels on locked-out nodes: [word, mod code]. 5 characters max.

@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v14.76']);
+NEON_FILES.push(['engine/runend.js', 'v14.77']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
