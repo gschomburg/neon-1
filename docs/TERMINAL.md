@@ -16,6 +16,8 @@ Grows BACKLOG section 10 ("The dev menu as a one-line terminal", "More on the te
 - **Up** on an empty prompt walks back through the commands you ran this session (not saved; see Decided).
 - Arguments autocomplete too: after `give.mod ` the list is mod codes and names; after `corp.jump ` it's corps.
 - `help` lists what you know. `help give.mod` prints its help line and arguments.
+- The editor's **terminal** tab (v14.81) is a readme: every command by group, with its arguments, read from the
+  game so it's always current. Its **type** / **run** buttons put a line into the game's terminal.
 - Commands are `group.verb` (`give.mod`, `run.seed`, `mode.god`). Typing without the dot still matches
   (`givemod`, `give mod`), and matching is by prefix first, then anywhere in the name.
 

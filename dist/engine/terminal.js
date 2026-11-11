@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/terminal.js', 'v14.80']);
+NEON_FILES.push(['engine/terminal.js', 'v14.81']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -163,8 +163,11 @@ const fixed = (...vs) => () => vs.map(v => Array.isArray(v) ? { v: v[0], hint: v
 // run gets the arguments, checked; it returns a line to print (or nothing: "ok") and can throw an Error, which
 // prints in red. Commands mark the run as practice unless safe: true. learn (docs/TERMINAL.md "The game part"):
 // none yet; for now every command is known in dev mode (?dev=1, the backtick menu, or the editor).
-const TERM_CMDS = [
+// A string in the list starts a group (the editor's terminal tab, tools/editor/terminal.js, lists them by group).
+const termGroups = list => { let g = ''; return list.filter(c => typeof c === 'string' ? (g = c, false) : (c.group = g, true)); };
+const TERM_CMDS = termGroups([
   // ----- the run -----
+  'the run',
   { name: 'int', args: [{ name: 'n', of: 'n' }], help: 'set INTEGRITY (max goes up to fit)', run: a => { const run = termNeedRun(), n = Math.max(1, Math.round(a[0])); run.maxInt = Math.max(run.maxInt, n); run.integrity = n; return `INTEGRITY ${n}/${run.maxInt}`; } },
   { name: 'heal', help: 'INTEGRITY back to full', run: () => { const run = termNeedRun(); run.integrity = run.maxInt; return `INTEGRITY ${run.integrity}`; } },
   { name: 'credits', alias: ['cr'], args: [{ name: 'n', of: 'n' }], help: 'set your credits', run: a => { termNeedRun().credits = Math.max(0, Math.round(a[0])); return `${st.run.credits}cr`; } },
@@ -179,6 +182,8 @@ const TERM_CMDS = [
   { name: 'run.new', help: 'a fresh practice run, on the map', run: () => termFreshRun() },
   { name: 'run.end', help: 'throw the run away, back to the title', safe: true, run: () => termEndRun() },
   { name: 'run.die', help: 'flatline: the run ends as a death', run: () => { termNeedRun(); return endRun(false); } },
+  // ----- corps and sectors -----
+  'corps and sectors',
   { name: 'breach', args: [{ name: 'corp', of: 'corps' }, { name: 'tier', of: fixed('1', '2', '3'), opt: true }], help: 'breach a corp now (from the map)', run: a => { const n = termCorpNode(a[0], +a[1] || 1); enterNode(n, true); } },
   { name: 'corp.jump', args: [{ name: 'corp', of: 'corps', opt: true }], help: "to a corp's boss: this corp's, the one picked on the map, or one you name", run: a => {
     const run = termNeedRun();
@@ -210,7 +215,8 @@ const TERM_CMDS = [
   { name: 'sector.boss', help: "into this sector's boss", run: async () => { await termOnMap(); const run = st.run, n = Object.values(run.map).find(x => x.type === 'final' && x.sector === run.sector) || run.map[bossIdOf(run.sector)]; await enterNode(n, true); } },
   { name: 'sector.clear', help: 'clear this sector now', run: async () => { await termOnMap(); const run = st.run, b = bossIdOf(run.sector); run.at = b; if (!run.visited.includes(b)) run.visited.push(b); await sectorClear(false); } },
 
-  // ----- stuff -----
+  // ----- giving -----
+  'giving',
   { name: 'give.mod', args: [{ name: 'mod', of: 'mods' }, { name: 'tier', of: 'n', opt: true }], help: 'put a mod in your row (or set its tier)', run: a => {
     const run = termNeedRun(), k = a[0], top = tierCount(MODS[k]) - 1, t = clamp(a[1] == null ? 0 : Math.round(a[1]) - 1, 0, top);
     if (run.mods.includes(k)) { const was = run.modTier[k] || 0; run.modTier[k] = t; if (k === 'buffer') { run.maxInt += t - was; run.integrity = clamp(run.integrity + t - was, 1, run.maxInt); } }
@@ -240,6 +246,7 @@ const TERM_CMDS = [
   } },
 
   // ----- progress and the save -----
+  'progress and the save',
   { name: 'codex.all', help: 'everything seen, every corp breached once', safe: true, run: () => {
     for (const k of [...Object.keys(MODS), ...Object.keys(ITEMS), ...GLYPHS.map(gl => gl.key), ...CODEX_CORPS.map(c => 'corp_' + c), ...Object.keys(SECTOR_EVENTS).map(e => 'ev_' + e)]) save.seen[k] = true;
     for (const c of CODEX_CORPS) if (!corpStat(c).breached) corpStat(c).breached = 1;
@@ -253,6 +260,7 @@ const TERM_CMDS = [
   { name: 'feat.box', args: [{ name: 'feat', of: 'feats' }], help: "show a feat's box", safe: true, run: a => { FEAT_QUEUE.push({ feat: a[0] }); } },
 
   // ----- quests (engine/quests.js) -----
+  'quests',
   { name: 'quest.open', help: 'open the DISC quest (a sector cleared, POPS on the crew)', safe: true, run: () => { save.stats = save.stats || {}; save.stats.sectors = Math.max(1, save.stats.sectors || 0); save.legacy = save.legacy || {}; save.legacy.crew_pops = Math.max(1, save.legacy.crew_pops || 0); persist(); } },
   { name: 'quest.step', args: [{ name: 'step', of: 'steps' }], help: "set SYSTEM FAILURE's step", safe: true, run: a => {
     save.quests = save.quests || {}; save.legacy = save.legacy || {};
@@ -276,6 +284,7 @@ const TERM_CMDS = [
   { name: 'heaven', args: [{ name: 'where', of: fixed(['map', 'its sector map'], ['maze', 'the maze'], ['fight', 'G0D'], ['die', 'G0D dies'], ['fake', 'the fake win'], ['stand', 'the stand'], ['end', 'the collapse']), opt: true }], help: 'H3AV3N in a practice run', run: a => termHeaven(a[0] || 'map') },
 
   // ----- G0D.exe (engine/g0dexe.js; its settings are kept in the save) -----
+  'G0D.exe',
   { name: 'g0dexe', help: 'G0D.exe on your belt', run: () => { termNeedRun(); if (!g0dxGive()) throw new Error('no room on the belt'); } },
   { name: 'g0dexe.speed', args: [{ name: 'x', of: () => G0DX_SPEEDS.map(v => ({ v: String(v), hint: '' })) }], help: 'how fast it plays', safe: true, run: a => { g0dxCfg().speed = +a[0]; persist(); } },
   { name: 'g0dexe.clicks', args: [{ name: 'n', of: () => G0DX_CLICKS.map(v => ({ v: String(v), hint: '' })) }], help: 'how many clicks it gets', safe: true, run: a => { g0dxCfg().clicks = +a[0]; persist(); } },
@@ -288,6 +297,7 @@ const TERM_CMDS = [
   { name: 'g0dexe.log', help: "its decision log, this run", safe: true, run: () => { const g = st.run && st.run.g0dx; if (!g || !g.log || !g.log.length) return 'nothing in the log'; return g.log.slice(-20).join('\n'); } },
 
   // ----- screens and effects -----
+  'screens and effects',
   { name: 'show', args: [{ name: 'screen', of: fixed(['title', 'ends the run'], ['help', 'ends the run'], ['codex', 'ends the run'], ['settings', 'ends the run'], ['board', 'ends the run'], ['profile', 'ends the run'], ['pier', 'on the map'], ['bench', 'on the map'], ['shop', 'a market, on the map'], ['uplink', 'clears the sector']) }], help: 'go to a screen', safe: true, run: async a => {
     const s = a[0];
     if (s === 'pier') { await termOnMap(); st.run.practice = true; st.run.credits = Math.max(st.run.credits, 100); return swapTo(() => openPier({ id: 'dev-pier', sector: st.run.sector, type: 'pier' })); }
@@ -315,12 +325,13 @@ const TERM_CMDS = [
   { name: 'title.pulse', help: "the title's pulse style (next one)", safe: true, run: () => { st.pulseStyle = PULSE_STYLES[(PULSE_STYLES.indexOf(st.pulseStyle || 'color') + 1) % PULSE_STYLES.length]; return st.pulseStyle; } },
 
   // ----- the terminal itself (always known) -----
+  'the terminal itself',
   { name: 'help', args: [{ name: 'command', of: 'commands', opt: true }], help: 'what you know, or one command', always: true, safe: true, run: a => termHelp(a[0]) },
   { name: 'clear', help: 'clear the terminal', always: true, safe: true, run: () => { TERM.log = []; } },
   { name: 'history', help: 'what you ran this session', always: true, safe: true, run: () => TERM.hist.length ? TERM.hist.slice(-20).join('\n') : 'nothing yet' },
   { name: 'exit', help: 'close the terminal', always: true, safe: true, run: () => { termClose(); } },
   { name: 'menu', help: 'the old dev menu', safe: true, run: () => { termClose(); if (!st.dev) toggleDev(); } },
-];
+]);
 const TERM_BY = Object.fromEntries(TERM_CMDS.map(c => [c.name, c]));
 for (const c of TERM_CMDS) for (const al of c.alias || []) TERM_BY[al] = c;
 

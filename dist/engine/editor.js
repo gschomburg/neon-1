@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.80']);
+NEON_FILES.push(['engine/editor.js', 'v14.81']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -514,6 +514,24 @@ if (EDITOR) {
     const s = JSON.stringify(m);
     if (s !== lastTest) { lastTest = s; post(m); }
   }, 300);
+
+  // ---- The terminal tab (tools/editor/terminal.js): THE TERMINAL's commands (engine/terminal.js TERM_CMDS), read
+  // from the game so the tab can't drift from it; and a line typed (or run) in the game's terminal.
+  const termArg = x => ({ name: x.name, opt: !!x.opt, of: typeof x.of === 'string' ? x.of : 'list',
+    list: typeof x.of === 'function' ? x.of().map(o => [o.v, o.hint]) : null });
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if (!m || m.to !== 'neon-game') return;
+    if (m.type === 'term-get') post({ type: 'term-cmds',
+      cmds: TERM_CMDS.map(c => ({ name: c.name, alias: c.alias || [], group: c.group, help: c.help, safe: !!c.safe, always: !!c.always, args: (c.args || []).map(termArg) })),
+      lists: Object.fromEntries(Object.keys(TERM_OF).filter(k => k !== 'commands').map(k => [k, TERM_OF[k]().map(o => [o.v, o.hint])])) });
+    if (m.type === 'term-type' || m.type === 'term-run') {
+      termOpen();
+      if (m.type === 'term-run') return termRun(m.line);
+      TERM.input.value = m.line; TERM.input.setSelectionRange(m.line.length, m.line.length);
+      TERM.input.dispatchEvent(new Event('input')); TERM.input.focus();
+    }
+  });
 
   post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES),
     events: Object.entries(SECTOR_EVENTS).map(([k, e]) => [k, e.name, e.kind, e.anomaly || null]),

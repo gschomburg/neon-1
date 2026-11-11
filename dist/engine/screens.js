@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.80']);
+NEON_FILES.push(['engine/screens.js', 'v14.81']);
 
 // ---------- circuit traces (the title's, and the intro card's wires: engine/intro.js) ----------
 // Which way each trace char connects (n e s w). Two cells link when each has a port facing the other.

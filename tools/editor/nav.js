@@ -14,7 +14,7 @@
   const GROUPS = [
     ['on the running game', [['test', 'testing'], ['g0d', 'g0d prototypes']]],
     ['edit a data file', [['pal', 'palette'], ['art', 'art'], ['tut', 'training'], ['econ', 'economy'], ['fx', 'fx']]],
-    ['look up', [['music', 'music'], ['items', 'gear & mods'], ['ads', 'ads'], ['hack', 'hackers']]],
+    ['look up', [['music', 'music'], ['items', 'gear & mods'], ['ads', 'ads'], ['hack', 'hackers'], ['term', 'terminal']]],
   ];
   const KEYS = GROUPS.flatMap(g => g[1].map(t => t[0]));
   const sel = $('#modeSel');

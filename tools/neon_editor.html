@@ -224,6 +224,25 @@
   </div>
   <div id="hkBody"></div>
 </section>
+<section id="term" class="mode">
+  <div id="tmBar">
+    <input id="tmFilter" type="text" placeholder="filter: name, what it does..." autocomplete="off">
+    <span id="tmCount" title="Read from the game frame (dist/engine/terminal.js), so it's always what the game has"></span>
+  </div>
+  <div id="tmBody"></div>
+  <template id="tmReadme">
+    <div class="tmreadme">
+      <p><b>THE TERMINAL</b> is a dev console you type into, over the game. For now it only answers in dev mode (<code>?dev=1</code>, the backtick menu, or here in the editor). The plan: <code>docs/TERMINAL.md</code>.</p>
+      <ul>
+        <li><b>Open it:</b> <code>~</code> (Shift + backtick) or <code>Ctrl + backtick</code>, with the game focused (click the game first). On a phone: <code>[ terminal ]</code> at the top of the dev menu. Or <b>type</b> / <b>run</b> on a command below.</li>
+        <li><b>Typing:</b> a list of matches pops up. <b>Up / Down</b> pick, <b>Tab</b> fills in, <b>Enter</b> runs, <b>Esc</b> closes the list (again: the terminal). <b>Up</b> on an empty line walks back through what you ran this session.</li>
+        <li><b>Names</b> are <code>group.verb</code> (<code>give.mod</code>). Without the dot works too: <code>givemod</code>, <code>give mod</code>. Arguments autocomplete: after <code>give.mod </code> it lists the mods, by code or name.</li>
+        <li><span class="tma">&lt;arg&gt;</span> is needed, <span class="tma">[arg]</span> is optional. <span class="tmchip cheat">practice</span> commands mark the run practice (not scored); <span class="tmchip">safe</span> ones don't.</li>
+        <li>While it's open the game takes no keys and its clocks hold still. <code>help</code> lists every command in the game; <code>help give.mod</code> shows one.</li>
+      </ul>
+    </div>
+  </template>
+</section>
 <section id="test" class="mode">
   <div id="xState">the game isn't ready yet</div>
   <div id="xLog"></div>
@@ -542,6 +561,7 @@
 <script src="editor/music.js"></script>
 <script src="editor/ads.js"></script>
 <script src="editor/hackers.js"></script>
+<script src="editor/terminal.js"></script>
 <script src="editor/g0d.js"></script>
 <script src="editor/testing.js"></script>
 <script src="editor/items.js"></script>
