@@ -257,9 +257,8 @@ const TERM_CMDS = [
   { name: 'g0dexe.log', help: "its decision log, this run", safe: true, run: () => { const g = st.run && st.run.g0dx; if (!g || !g.log || !g.log.length) return 'nothing in the log'; return g.log.slice(-20).join('\n'); } },
 
   // ----- screens and effects -----
-  { name: 'show', args: [{ name: 'screen', of: fixed(['title', 'ends the run'], ['help', 'ends the run'], ['codex', 'ends the run'], ['settings', 'ends the run'], ['board', 'ends the run'], ['profile', 'ends the run'], ['pier', 'on the map'], ['bench', 'on the map'], ['uplink', 'clears the sector'], ['music', 'the music player']) }], help: 'go to a screen', safe: true, run: async a => {
+  { name: 'show', args: [{ name: 'screen', of: fixed(['title', 'ends the run'], ['help', 'ends the run'], ['codex', 'ends the run'], ['settings', 'ends the run'], ['board', 'ends the run'], ['profile', 'ends the run'], ['pier', 'on the map'], ['bench', 'on the map'], ['uplink', 'clears the sector']) }], help: 'go to a screen', safe: true, run: async a => {
     const s = a[0];
-    if (s === 'music') { if (!st.dev) toggleDev(); return openTrackPlayer(); }
     if (s === 'pier') { await termOnMap(); st.run.practice = true; st.run.credits = Math.max(st.run.credits, 100); return swapTo(() => openPier({ id: 'dev-pier', sector: st.run.sector, type: 'pier' })); }
     if (s === 'bench') {   // a SAFEHOUSE with the WORKBENCH, and letters if you have none (editor.js TEST.bench)
       await termOnMap(); st.run.practice = true;

@@ -70,10 +70,15 @@ and `show music` opens the music player (so no `music.play`, `heartbeat` or `urg
 `stats.tester`, `title.pulse` and `menu` (the old dev menu) were added. `boss.win` isn't built (nothing does that
 today).
 
-**Left for step 2** (they live inside engine/editor.js and need moving first): the editor's scenes (a corp's intro,
-a layer after a miss, the shop, a sector's boss, sector clear), the G0D tab's looks and health bars, the FX tab's
-looping scene frames and codex decode, the WORKBENCH's `letters`, and the loot viewer. Several terminal helpers are
-copies of the editor's (`termSettle`, `termToSector`, `termHeaven`, `termKit`...): step 2 makes the editor call them.
+**Decided (Greg, 2026-11-11): the terminal doesn't need to do everything the editor does.** It's for getting
+around (the intro, a corp, a sector, a screen) and for giving yourself things (mods, gear). It doesn't touch music
+tracks, copy or art.
+- So these stay editor-only: the G0D tab's looks and health bars, the FX tab's looping scene frames and codex decode,
+  the music tab, and the loot viewer.
+- Still to add (step 2): getting around to a few more places the editor's scenes go (a corp's intro screen, the
+  shop), and the WORKBENCH's `letters` (giving).
+- Dropped: `show music` (the music player) because the terminal stays out of music tracks. `music on|off` and
+  `sfx on|off` stay; they're settings, not tracks.
 
 **The run**
 - `int <n>`, `heal`, `credits <n>` (`cr`), `rep <n>`
@@ -130,8 +135,11 @@ Ideas so far (BACKLOG section 10, Greg 2026-11-08 and 2026-11-11):
 
 1. **The terminal, dev mode only.** The prompt, the list, Tab / arrows / history, help, the phone layout, and every
    dev menu and editor command above. Plain ` keeps the old menu. **Done v14.79** (what's left is under the commands).
-2. **One command list for the editor too.** The TESTING buttons run terminal commands; the buttons it was missing
-   come for free. A check (`tools/checks/tests/`) that runs a few commands.
+2. **A small top-up.** `show shop`, `show corpintro <corp>`, `give.letters`. Then the editor's TESTING helpers that
+   the terminal copied (`settle`, `freshRun`, `toSector`, `heaven`, `kit`...) call the terminal's instead, so the
+   two can't drift. The editor keeps its own buttons; it doesn't have to become a terminal.
+   (Was: "one command list for the editor too", with every TESTING button run as a terminal command. Dropped
+   (Greg, 2026-11-11) because the terminal no longer tries to cover the whole editor.)
 3. **The game part.** Learning, hacking out, the hacked mark. Talk it through first.
 4. **The old dev menu goes** once nothing needs it.
 
