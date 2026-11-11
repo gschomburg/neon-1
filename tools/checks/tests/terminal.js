@@ -57,6 +57,19 @@ module.exports = { name: 'terminal', body: `
   await termRun('give.mod');
   check(last().cls === 'err' && /usage/.test(last().s), 'a missing argument shows the usage');
   check(TERM.hist.includes('credits 999'), 'history keeps what you ran');
+  const lettersWere = benchCount();
+  await termRun('give.letters abc 1');
+  check(benchCount() === lettersWere + 3 && last().s === 'letters: ABC', 'give.letters abc: 3 letters, the 1 dropped: ' + last().s);
+
+  // getting around
+  await termRun('show shop'); await settle('shop');
+  check(st.mode === 'panel' && TERM.log[TERM.log.length - 1].cls !== 'err', 'show shop opens a market: ' + st.mode + ' ' + last().s);
+  B.toMap(); await settle('back to the map');
+  const hold = CONFIG.introHold;
+  await termRun('corp.intro basic');
+  check(st.intro && /held/.test(last().s), 'corp.intro holds the intro up: ' + last().s);
+  st.intro.skip = true; await settle('intro'); await sleep(300);
+  check(!st.intro && CONFIG.introHold === hold, 'a tap lets it go, and the hold goes back: ' + CONFIG.introHold);
 
   // ~ closes it, and the clocks run again
   window.dispatchEvent(new KeyboardEvent('keydown', { key: '~', bubbles: true }));

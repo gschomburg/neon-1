@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.79']);
+NEON_FILES.push(['engine/editor.js', 'v14.80']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -95,16 +95,8 @@ if (EDITOR) {
     if (data.styles) PLAYER_STYLES.splice(0, PLAYER_STYLES.length, ...data.styles);
     refreshPalette();
   };
-  // Wait for wipes, intros and animations to finish (skipping intros).
-  const settle = async (ms = 25000) => {
-    const t0 = performance.now();
-    while (st.busy || st.transitioning || st.wipe || st.intro || st.bossIntro) {
-      if (st.intro) st.intro.skip = true;
-      if (st.bossIntro) st.bossIntro.skip = true;
-      if (performance.now() - t0 > ms) throw new Error('the game took too long');
-      await wait(40);
-    }
-  };
+  // Wait for wipes, intros and animations to finish (skipping intros). Shared with THE TERMINAL (engine/terminal.js).
+  const settle = termSettle;
   // The corpintro scene holds a corp's intro screen up; any next scene lets it go first.
   const INTRO_HOLD = CONFIG.introHold;
   const letGo = async () => { if (CONFIG.introHold !== INTRO_HOLD) { CONFIG.introHold = INTRO_HOLD; if (st.intro) st.intro.skip = true; await settle(); } };
@@ -355,38 +347,10 @@ if (EDITOR) {
   }
   // ---- The TESTING tab (meat testing): cheats on the running game, and jumps to a sector with any event.
   // 'test' { act, ... }; the game sends 'test-state' (what the run looks like now) whenever it changes.
-  const freshRun = async () => {   // a practice run, on the map after the public net
-    endRun();
-    startRun('TEST' + Math.floor(Math.random() * 90000 + 10000), true);
-    await settle();
-    if (st.mode === 'play' && st.lv) { await pick(st.lv.safe); await settle(); }
-    if (st.mode !== 'map') { toMap(); await settle(); }
-  };
-  const onMap = async () => { if (!st.run || st.run.ended) await freshRun(); if (st.panel || st.mode !== 'map') { toMap(); await settle(); } };
-  // Climb to sector `to` (1-based sectors: to 2 = the 2nd), with `ev` as that sector's event (the rest roll as usual).
-  const toSector = async (to, ev) => {
-    if (ev || !st.run || st.run.ended || st.run.sector >= to - 1) await freshRun(); else await onMap();
-    const run = st.run;
-    run.practice = true;
-    while (run.sector < to - 1) {
-      const old = run.sector, boss = bossIdOf(old);
-      run.at = boss; if (!run.visited.includes(boss)) run.visited.push(boss);
-      run.sector++; run.sectorsCleared = (run.sectorsCleared || 0) + 1;
-      addSector(run.map, run.seed, run.sector, run.sector === to - 1 ? ev || null : null);
-      run.fence = [];
-      if (run.sector < to - 1) (run.evSeen = run.evSeen || []).push(run.sector);   // only the last one's card comes up
-      if (run.sector === to - 1) { await swapTo(() => toMap(old)); await settle(); }
-    }
-  };
-  // HAD3S: straight into a sector's boss (0: MYCONET, 1: CERBERUS), past the public net
-  const had3sBoss = async s => {
-    if (st.lv && st.lv.safe != null) { await pick(st.lv.safe); await settle(); }
-    if (st.mode !== 'map') { toMap(); await settle(); }
-    if (st.evCard) closeEventCard();
-    const run = st.run;
-    if (s >= 1) { run.sector = 1; addSector(run.map, run.seed, 1); }
-    await enterNode(run.map[bossIdOf(s)], true); await settle();
-  };
+  // These are THE TERMINAL's (engine/terminal.js), so the two can't drift; they end a run with this file's endRun.
+  const freshRun = () => termFreshRun(endRun);
+  const onMap = () => termOnMap(endRun);
+  const toSector = (to, ev) => termToSector(to, ev, endRun);   // to: 1-based
   const TEST = {
     god: () => { st.god = !st.god; },
     debug: () => { st.debug = !st.debug; },
@@ -453,18 +417,10 @@ if (EDITOR) {
     qtag: () => { if (st.run && !hasLoot('dogtag')) addItem('dogtag', 0); },
     qwins: m => { questOf('pops').d0g = clamp(Math.round(+m.n || 0), 0, 10); persist(); },
     had3s: async () => { endRun(); st.seed = 'HAD3S'; startRun('HAD3S', false); await settle(); },
-    myconet: async () => { endRun(); startRun('HAD3S', false); await settle(); await had3sBoss(0); },
-    cerberus: async () => { endRun(); startRun('HAD3S', false); await settle(); await had3sBoss(1); },
+    myconet: () => termHad3sBoss(0, endRun),
+    cerberus: () => termHad3sBoss(1, endRun),
     rivalgear: () => { if (st.run) for (const k of ['leash', 'bone', 'muzzle', 'honey']) st.run.items.push({ key: k, tier: 0, n: 1 }); },
-    b0yomni: async () => {
-      Object.assign(questOf('pops'), { step: 'raid', seen: true }); save.legacy = save.legacy || {}; save.legacy.crew_b0y = 1; persist();
-      endRun(); startRun(newSeed(), false); await settle();
-      if (st.lv && st.lv.safe != null) { await pick(st.lv.safe); await settle(); }
-      if (st.mode !== 'map') { toMap(); await settle(); }
-      if (st.evCard) closeEventCard();
-      await enterNode(st.run.map[bossIdOf(0)], true); await settle();
-      await wait(1200); if (st.corp) hkSpawn('b0y', 'call');
-    },
+    b0yomni: () => termB0yOmni(endRun),
     // the H3AV3N seed, as if you typed it: a QUEST run from the start (engine/heaven.js)
     // The loot viewer (the user, 2026-10-31): what the node picked on the map (or the one you're on) could give. Read
     // straight off the seed, nothing taken: a market's offers and every reroll, a cache's loot and picks, a corp's boss
@@ -476,16 +432,8 @@ if (EDITOR) {
     sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),
     boss: async () => { await onMap(); const n = Object.values(st.run.map).find(x => x.type === 'final' && x.sector === st.run.sector) || st.run.map[bossIdOf(st.run.sector)]; await enterNode(n, true); await settle(); },   // (HEAD FIRST: the boss is the first node)
     clear: async () => { await onMap(); const run = st.run, b = bossIdOf(run.sector); run.at = b; if (!run.visited.includes(b)) run.visited.push(b); await sectorClear(false); await settle(); },
-    bench: async () => {   // a SAFEHOUSE with the WORKBENCH (engine/bench.js): the post unlocked, letters if you have none
-      await onMap();
-      save.legacy = save.legacy || {}; save.legacy.bench = Math.max(1, save.legacy.bench || 0);
-      const b = benchSave();
-      if (!benchCount()) Object.assign(b.letters, { E: 3, A: 2, R: 3, S: 2, T: 2, I: 1, O: 2, N: 1, L: 1, P: 3, K: 2, M: 1, W: 2, G: 2, H: 1, C: 1, U: 1, F: 1, Z: 1, '0': 1, '*': 1 });
-      persist();
-      const node = { id: 'test-rest' + Math.floor(Math.random() * 1e6), type: 'rest', sector: st.run.sector };
-      await swapTo(() => openRepair(node)); await settle();
-    },
-    letters: () => { const b = benchSave(); for (const ch of 'EEAARRSSTTPPKWMNGOZX0*') b.letters[ch] = (b.letters[ch] || 0) + 1; persist(); },
+    bench: () => termBench(endRun),   // a SAFEHOUSE with the WORKBENCH
+    letters: () => { termLetters(); },
     pier: async () => { await onMap(); st.run.credits = Math.max(st.run.credits, 100); await swapTo(() => openPier({ id: 'test-pier', sector: st.run.sector, type: 'pier' })); await settle(); },   // fishing (engine/fishing.js)
     uplink: async () => { await TEST.clear(); await swapTo(openUplink); await settle(); },
     anomaly: async m => {   // on the corps you can go to next
@@ -527,43 +475,10 @@ if (EDITOR) {
       return TEST.heaven({ where: m.stage });
     },
     // H3AV3N in the real game (engine/heaven.js): its sector map, or straight into the maze
-    heaven: async m => {
-      g0dfStop(); st.g0d = null; st.g0dBar = null;
-      await freshRun(); heavenSetup(); toMap(); await settle();
-      // heaven's map raises its DEEP MOLD card: going on past the map, close it as a player would (left open under
-      // the fight or the maze, it took every tap)
-      if (m.where && m.where !== 'map' && st.evCard) closeEventCard();
-      if (m.where === 'maze') { const n = Object.values(st.run.map).find(o => o.heaven === 'maze'); await enterNode(n, true); await settle(); }
-      if (m.where === 'fight') { const n = Object.values(st.run.map).find(o => o.heaven === 'g0d'); await enterNode(n, true); }
-      const g0dNode = () => Object.values(st.run.map).find(o => o.heaven === 'g0d'), real = () => ({ real: true, node: g0dNode(), startInt: st.run.integrity, startCr: st.run.credits });
-      if (m.where === 'fake') heavenFakeWin(real());   // the fake win (the rewards screen, frozen), then the stand
-      if (m.where === 'die') { g0dfStart('fight', real()); heavenDie(st.g0df); }   // G0D dies, then the fake win
-      if (m.where === 'stand') g0dfStart('stand', real());
-      if (m.where === 'end') heavenCollapse({ node: g0dNode() });
-    },
+    heaven: m => termHeaven(m.where, endRun),
     // TESTING: kits. They only add: a mod you have only ever goes up, a mod with no free slot is skipped, gear that
-    // doesn't fit on the belt is skipped, nothing of yours is replaced. The terminal says what you got.
-    kit: m => {
-      const run = st.run, got = [], skipped = [];
-      const mod = (key, tier) => {
-        if (has(key)) {
-          const was = modTier(key);
-          if (tier <= was) return skipped.push(MODS[key].name + ' (have it)');
-          run.modTier[key] = tier;
-          if (key === 'buffer') { run.maxInt += tier - was; run.integrity += tier - was; }
-          return got.push(MODS[key].name + ' up');
-        }
-        if (!modRoom(key)) return skipped.push(MODS[key].name + ' (no slot)');
-        addMod(key, tier); got.push(MODS[key].name);
-      };
-      const gear = (key, tier, n) => { let k = 0; while (k < n && addItem(key, tier)) k++; if (k) got.push(ITEMS[key].name + (k > 1 ? 'x' + k : '')); if (k < n) skipped.push(ITEMS[key].name + ' (belt full)'); };
-      if (m.key === 'tank') { mod('buffer', 3); gear('patch', 2, 10); run.integrity = Math.max(run.integrity, run.maxInt); }
-      if (m.key === 'tracker') { mod('tracer', tierCount(MODS.tracer) - 1); mod('keylogger', tierCount(MODS.keylogger) - 1); }
-      if (m.key === 'crew') { gear('call', 0, 5); for (const id of HK_CREW) if (ITEMS['call_' + id]) gear('call_' + id, 0, 2); }
-      if (m.key === 'shop') { run.credits += 500; got.push('+500cr'); }
-      setMsg(`> ${m.key} kit: ${got.join(', ') || 'nothing new'}${skipped.length ? '. skipped: ' + skipped.join(', ') : ''}`.slice(0, 120), got.length ? C.accent : C.mid);
-      Sound.buy();
-    },
+    // doesn't fit on the belt is skipped, nothing of yours is replaced. The message line says what you got (termKit, engine/terminal.js).
+    kit: m => { const s = termKit(m.key); setMsg(('> ' + s).slice(0, 120), /nothing new/.test(s) ? C.mid : C.accent); Sound.buy(); },
     g0dfset: m => { for (const [k, v] of Object.entries(m.set || {})) if (k in G0DF && typeof G0DF[k] === typeof v) G0DF[k] = v; },
     g0dstill: m => { if (st.g0d) { st.g0d.still = !!m.on; st.g0d.t0 = performance.now(); } },
     featbox: m => { if (FEAT_BY_ID[m.key]) FEAT_QUEUE.push({ feat: m.key }); },

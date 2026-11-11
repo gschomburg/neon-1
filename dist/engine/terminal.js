@@ -4,14 +4,15 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/terminal.js', 'v14.79']);
+NEON_FILES.push(['engine/terminal.js', 'v14.80']);
 
 // ---------- helpers the commands share ----------
-// (several are copies of engine/editor.js TEST's helpers, for now: step 2 of docs/TERMINAL.md makes the editor call
-// these instead. Change both until then.)
+// The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
+// take `end`: the editor passes its own (it also puts back a logo it borrowed for the profile scene).
 const termNeedRun = () => { if (!st.run || st.run.ended) throw new Error('no run: start one first'); return st.run; };
 const termIdle = () => !st.busy && !st.transitioning && !st.wipe;
-// Wait for wipes, intros and animations to finish (skipping intros). (editor.js settle)
+const TERM_INTRO_HOLD = CONFIG.introHold;   // (corp.intro holds the intro up, then puts this back)
+// Wait for wipes, intros and animations to finish (skipping intros).
 async function termSettle(ms = 25000) {
   const t0 = performance.now();
   while (st.busy || st.transitioning || st.wipe || st.intro || st.bossIntro) {
@@ -21,23 +22,23 @@ async function termSettle(ms = 25000) {
     await wait(40);
   }
 }
-// To the title, the run thrown away. (editor.js endRun, without its profile logo)
+// To the title, the run thrown away.
 function termEndRun() {
   if (st.run) { st.run.ended = true; clearRun(); }
   st.pause = false; st.dev = false; showTitle();
 }
-// A practice run, on the map after the public net. (editor.js freshRun)
-async function termFreshRun() {
-  termEndRun();
+// A practice run, on the map after the public net.
+async function termFreshRun(end = termEndRun) {
+  end();
   startRun('TEST' + Math.floor(Math.random() * 90000 + 10000), true);
   await termSettle();
   if (st.mode === 'play' && st.lv) { await pick(st.lv.safe); await termSettle(); }
   if (st.mode !== 'map') { toMap(); await termSettle(); }
 }
-async function termOnMap() { if (!st.run || st.run.ended) await termFreshRun(); if (st.panel || st.mode !== 'map') { toMap(); await termSettle(); } }
-// Climb to sector `to` (1-based), with `ev` as that sector's event. (editor.js toSector)
-async function termToSector(to, ev) {
-  if (ev || !st.run || st.run.ended || st.run.sector >= to - 1) await termFreshRun(); else await termOnMap();
+async function termOnMap(end = termEndRun) { if (!st.run || st.run.ended) await termFreshRun(end); if (st.panel || st.mode !== 'map') { toMap(); await termSettle(); } }
+// Climb to sector `to` (1-based), with `ev` as that sector's event.
+async function termToSector(to, ev, end = termEndRun) {
+  if (ev || !st.run || st.run.ended || st.run.sector >= to - 1) await termFreshRun(end); else await termOnMap(end);
   const run = st.run;
   run.practice = true;
   while (run.sector < to - 1) {
@@ -50,9 +51,9 @@ async function termToSector(to, ev) {
     if (run.sector === to - 1) { await swapTo(() => toMap(old)); await termSettle(); }
   }
 }
-// HAD3S: straight into a sector's boss (0: MYCONET, 1: CERBERUS). (editor.js had3sBoss)
-async function termHad3sBoss(s) {
-  termEndRun(); startRun('HAD3S', false); await termSettle();
+// HAD3S: straight into a sector's boss (0: MYCONET, 1: CERBERUS).
+async function termHad3sBoss(s, end = termEndRun) {
+  end(); startRun('HAD3S', false); await termSettle();
   if (st.lv && st.lv.safe != null) { await pick(st.lv.safe); await termSettle(); }
   if (st.mode !== 'map') { toMap(); await termSettle(); }
   if (st.evCard) closeEventCard();
@@ -60,10 +61,10 @@ async function termHad3sBoss(s) {
   if (s >= 1) { run.sector = 1; addSector(run.map, run.seed, 1); }
   await enterNode(run.map[bossIdOf(s)], true); await termSettle();
 }
-// H3AV3N in the real game: its map, or straight to a part of it. (editor.js TEST.heaven)
-async function termHeaven(where) {
+// H3AV3N in the real game: its map, or straight to a part of it.
+async function termHeaven(where, end = termEndRun) {
   g0dfStop(); st.g0d = null; st.g0dBar = null;
-  await termFreshRun(); heavenSetup(); toMap(); await termSettle();
+  await termFreshRun(end); heavenSetup(); toMap(); await termSettle();
   if (where && where !== 'map' && st.evCard) closeEventCard();
   const node = k => Object.values(st.run.map).find(o => o.heaven === k);
   const real = () => ({ real: true, node: node('g0d'), startInt: st.run.integrity, startCr: st.run.credits });
@@ -73,6 +74,34 @@ async function termHeaven(where) {
   if (where === 'die') { g0dfStart('fight', real()); heavenDie(st.g0df); }
   if (where === 'stand') g0dfStart('stand', real());
   if (where === 'end') heavenCollapse({ node: node('g0d') });
+}
+// OMNI RAID: a real run, straight to the OMNI boss, b0y called in.
+async function termB0yOmni(end = termEndRun) {
+  Object.assign(questOf('pops'), { step: 'raid', seen: true }); save.legacy = save.legacy || {}; save.legacy.crew_b0y = 1; persist();
+  end(); startRun(newSeed(), false); await termSettle();
+  st.run.practice = true;
+  if (st.lv && st.lv.safe != null) { await pick(st.lv.safe); await termSettle(); }
+  if (st.mode !== 'map') { toMap(); await termSettle(); }
+  if (st.evCard) closeEventCard();
+  await enterNode(st.run.map[bossIdOf(0)], true); await termSettle();
+  await wait(1200); if (st.corp) hkSpawn('b0y', 'call');
+}
+// A SAFEHOUSE with the WORKBENCH (engine/bench.js): the post unlocked, and letters if you have none.
+async function termBench(end = termEndRun) {
+  await termOnMap(end); st.run.practice = true;
+  save.legacy = save.legacy || {}; save.legacy.bench = Math.max(1, save.legacy.bench || 0);
+  const b = benchSave();
+  if (!benchCount()) Object.assign(b.letters, { E: 3, A: 2, R: 3, S: 2, T: 2, I: 1, O: 2, N: 1, L: 1, P: 3, K: 2, M: 1, W: 2, G: 2, H: 1, C: 1, U: 1, F: 1, Z: 1, '0': 1, '*': 1 });
+  persist();
+  await swapTo(() => openRepair({ id: 'dev-rest' + Math.floor(Math.random() * 1e6), type: 'rest', sector: st.run.sector }));
+  await termSettle();
+}
+// WORKBENCH letters, one of each (kept in the save). Letters only: A-Z, 0 and the * blank.
+function termLetters(which = 'EEAARRSSTTPPKWMNGOZX0*') {
+  const b = benchSave(), got = String(which).toUpperCase().replace(/[^A-Z0*]/g, '');
+  for (const ch of got) b.letters[ch] = (b.letters[ch] || 0) + 1;
+  persist();
+  return got;
 }
 // The first corp you can go to next on the map becomes `key`. (dev.js devBreach finds it the same way)
 function termCorpNode(key, tier = 1) {
@@ -84,7 +113,7 @@ function termCorpNode(key, tier = 1) {
   delete run.map[id].mod;
   return run.map[id];
 }
-// A kit: only adds (a mod you have only goes up, no free slot is skipped). (editor.js TEST.kit)
+// A kit: only adds (a mod you have only goes up, no free slot is skipped). Says what you got.
 function termKit(key) {
   const run = termNeedRun(), got = [], skipped = [];
   const mod = (k, tier) => {
@@ -160,6 +189,16 @@ const TERM_CMDS = [
     if (!inCorp && !(sel && (sel.type === 'corp' || sel.type === 'final'))) throw new Error('be in a corp, pick one on the map, or name one');
     jumpToBoss(inCorp ? null : sel);
   } },
+  // A corp's intro screen, held up till you tap it (CONFIG.introHold; editor.js's corpintro scene holds it the same way).
+  { name: 'corp.intro', args: [{ name: 'corp', of: 'corps' }], help: "breach a corp and hold its intro screen up (tap to go on)", run: async a => {
+    await termOnMap();
+    const n = termCorpNode(a[0]);
+    CONFIG.introHold = 1e9;
+    enterNode(n, true);
+    for (let i = 0; i < 100 && !st.intro; i++) await wait(40);
+    (async () => { while (st.intro) await wait(100); CONFIG.introHold = TERM_INTRO_HOLD; })();
+    return 'held. tap it to go on.';
+  } },
   { name: 'corp.anomaly', args: [{ name: 'anomaly', of: 'anomalies' }], help: 'put an anomaly on the corps you can go to next', run: async a => {
     await termOnMap();
     const run = st.run, key = a[0] === 'none' ? null : a[0];
@@ -189,6 +228,7 @@ const TERM_CMDS = [
     Sound.buy(); return `${ITEMS[k].name} x${i}`;
   } },
   { name: 'gear.fill', help: 'one of every gear', run: () => { termNeedRun(); for (const k of Object.keys(ITEMS)) if (!ITEMS[k].fish || ITEMS[k].bag) addItem(k, 0); Sound.buy(); } },
+  { name: 'give.letters', args: [{ name: 'letters', of: 's', opt: true }], help: 'WORKBENCH letters (a mix if none)', safe: true, run: a => { const got = termLetters(a[0] || undefined); if (!got) throw new Error('letters only: A-Z, 0, *'); Sound.buy(); return 'letters: ' + got; } },
   { name: 'kit', args: [{ name: 'kit', of: fixed(['tank', 'BUFFER + patches'], ['tracker', 'TRACER + KEYLOGGER'], ['crew', 'CALLs'], ['shop', '+500cr']) }], help: 'a kit: only adds', run: a => { const s = termKit(a[0]); Sound.buy(); return s; } },
   { name: 'steal', help: 'your last mod goes to THE FENCE', run: () => {
     const run = termNeedRun();
@@ -230,16 +270,7 @@ const TERM_CMDS = [
   { name: 'seed.h3av3n', help: 'the H3AV3N seed, as if you typed it', safe: true, run: async () => { g0dfStop(); st.g0d = null; st.g0dBar = null; termEndRun(); st.seed = 'H3AV3N'; st.practice = !save.beatG0D; startRun('H3AV3N', st.practice); await termSettle(); } },
   { name: 'corp.myconet', help: "HAD3S, straight to MYCONET's boss", run: () => termHad3sBoss(0) },
   { name: 'corp.cerberus', help: "HAD3S, straight to CERBERUS's boss", run: () => termHad3sBoss(1) },
-  { name: 'b0y.omni', help: "OMNI RAID: the OMNI boss, b0y called in", run: async () => {
-    Object.assign(questOf('pops'), { step: 'raid', seen: true }); save.legacy = save.legacy || {}; save.legacy.crew_b0y = 1; persist();
-    termEndRun(); startRun(newSeed(), false); await termSettle();
-    st.run.practice = true;
-    if (st.lv && st.lv.safe != null) { await pick(st.lv.safe); await termSettle(); }
-    if (st.mode !== 'map') { toMap(); await termSettle(); }
-    if (st.evCard) closeEventCard();
-    await enterNode(st.run.map[bossIdOf(0)], true); await termSettle();
-    await wait(1200); if (st.corp) hkSpawn('b0y', 'call');
-  } },
+  { name: 'b0y.omni', help: 'OMNI RAID: the OMNI boss, b0y called in', run: () => termB0yOmni() },
   { name: 'rival.gear', help: "the rivals' gear on your belt", run: () => { const run = termNeedRun(); for (const k of ['leash', 'bone', 'muzzle', 'honey']) run.items.push({ key: k, tier: 0, n: 1 }); } },
   { name: 'hacker', args: [{ name: 'hacker', of: 'hackers' }], help: 'bring a hacker into this layer', run: a => { if (!st.corp || !st.corp.hasBoss || !st.lv) throw new Error('get into a corp layer first'); hkSpawn(a[0], HACKERS[a[0]].side === 'bad' ? 'rival' : 'call'); } },
   { name: 'heaven', args: [{ name: 'where', of: fixed(['map', 'its sector map'], ['maze', 'the maze'], ['fight', 'G0D'], ['die', 'G0D dies'], ['fake', 'the fake win'], ['stand', 'the stand'], ['end', 'the collapse']), opt: true }], help: 'H3AV3N in a practice run', run: a => termHeaven(a[0] || 'map') },
@@ -257,17 +288,11 @@ const TERM_CMDS = [
   { name: 'g0dexe.log', help: "its decision log, this run", safe: true, run: () => { const g = st.run && st.run.g0dx; if (!g || !g.log || !g.log.length) return 'nothing in the log'; return g.log.slice(-20).join('\n'); } },
 
   // ----- screens and effects -----
-  { name: 'show', args: [{ name: 'screen', of: fixed(['title', 'ends the run'], ['help', 'ends the run'], ['codex', 'ends the run'], ['settings', 'ends the run'], ['board', 'ends the run'], ['profile', 'ends the run'], ['pier', 'on the map'], ['bench', 'on the map'], ['uplink', 'clears the sector']) }], help: 'go to a screen', safe: true, run: async a => {
+  { name: 'show', args: [{ name: 'screen', of: fixed(['title', 'ends the run'], ['help', 'ends the run'], ['codex', 'ends the run'], ['settings', 'ends the run'], ['board', 'ends the run'], ['profile', 'ends the run'], ['pier', 'on the map'], ['bench', 'on the map'], ['shop', 'a market, on the map'], ['uplink', 'clears the sector']) }], help: 'go to a screen', safe: true, run: async a => {
     const s = a[0];
     if (s === 'pier') { await termOnMap(); st.run.practice = true; st.run.credits = Math.max(st.run.credits, 100); return swapTo(() => openPier({ id: 'dev-pier', sector: st.run.sector, type: 'pier' })); }
-    if (s === 'bench') {   // a SAFEHOUSE with the WORKBENCH, and letters if you have none (editor.js TEST.bench)
-      await termOnMap(); st.run.practice = true;
-      save.legacy = save.legacy || {}; save.legacy.bench = Math.max(1, save.legacy.bench || 0);
-      const b = benchSave();
-      if (!benchCount()) Object.assign(b.letters, { E: 3, A: 2, R: 3, S: 2, T: 2, I: 1, O: 2, N: 1, L: 1, P: 3, K: 2, M: 1, W: 2, G: 2, H: 1, C: 1, U: 1, F: 1, Z: 1, '0': 1, '*': 1 });
-      persist();
-      return swapTo(() => openRepair({ id: 'dev-rest' + Math.floor(Math.random() * 1e6), type: 'rest', sector: st.run.sector }));
-    }
+    if (s === 'bench') return termBench();
+    if (s === 'shop') { await termOnMap(); st.run.practice = true; const id = Object.keys(st.run.map).find(k => st.run.map[k].type === 'shop'); return swapTo(() => openShop(id ? st.run.map[id] : { id: 'dev-shop' })); }
     if (s === 'uplink') { await termOnMap(); st.run.practice = true; const run = st.run, b = bossIdOf(run.sector); run.at = b; if (!run.visited.includes(b)) run.visited.push(b); await sectorClear(false); await termSettle(); return swapTo(openUplink); }
     termEndRun();
     ({ title: () => {}, help: openHelp, codex: openCodex, settings: openSettings, board: () => openBoard(), profile: openProfile })[s]();

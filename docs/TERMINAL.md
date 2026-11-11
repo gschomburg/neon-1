@@ -75,8 +75,8 @@ around (the intro, a corp, a sector, a screen) and for giving yourself things (m
 tracks, copy or art.
 - So these stay editor-only: the G0D tab's looks and health bars, the FX tab's looping scene frames and codex decode,
   the music tab, and the loot viewer.
-- Still to add (step 2): getting around to a few more places the editor's scenes go (a corp's intro screen, the
-  shop), and the WORKBENCH's `letters` (giving).
+- Added in step 2: getting around to a few more places the editor's scenes go (a corp's intro screen, the shop),
+  and the WORKBENCH's `letters` (giving).
 - Dropped: `show music` (the music player) because the terminal stays out of music tracks. `music on|off` and
   `sfx on|off` stay; they're settings, not tracks.
 
@@ -140,6 +140,9 @@ Ideas so far (BACKLOG section 10, Greg 2026-11-08 and 2026-11-11):
    two can't drift. The editor keeps its own buttons; it doesn't have to become a terminal.
    (Was: "one command list for the editor too", with every TESTING button run as a terminal command. Dropped
    (Greg, 2026-11-11) because the terminal no longer tries to cover the whole editor.)
+   **Done v14.80:** `show shop`, `corp.intro <corp>` (named that, not `show corpintro`), `give.letters [letters]`.
+   The editor's TESTING tab calls `termSettle`, `termFreshRun`, `termOnMap`, `termToSector`, `termHad3sBoss`,
+   `termB0yOmni`, `termBench`, `termLetters`, `termHeaven` and `termKit`.
 3. **The game part.** Learning, hacking out, the hacked mark. Talk it through first.
 4. **The old dev menu goes** once nothing needs it.
 
