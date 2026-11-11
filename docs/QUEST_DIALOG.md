@@ -33,18 +33,18 @@ From POPS.
 
 > **POPS:** that's a sector. not bad, kid.  
 > **POPS:** i've been watching the net. corps going quiet. something growing in the logs, like mold.  
-> **POPS:** MEDIX runs hottest. there's an old DISC in there i want back.  
-> **POPS:** break MEDIX if you see it. it could turn up anywhere, though.  
+> **POPS:** MEDIX runs hottest. break MEDIX if you see it.  
+> **POPS:** and keep any eye out for any MEDIX tech there might be some data we can scrape.  
 
 **shop**
 
-> **POPS:** kid. that DISC in the market. that's the one.  
+> **POPS:** kid. that DISC in the market. it's a MEDIX archive.  
 > **POPS:** buy it. i'm good for it. mostly.  
 
 **found**: You pick up the DISC for the first time.
 
 > **POPS:** kid. that disc you just picked up.  
-> **POPS:** i know that label. don't lose it.  
+> **POPS:** i recognize that hash. don't lose it.  
 > **POPS:** take it through the next checkpoint: beat the sector boss and CASH OUT at the UPLINK with it.  
 > **POPS:** then bring it to me.  
 
@@ -95,6 +95,7 @@ From POPS.
 
 > **B0Y:** it's me. b0y.  
 > **B0Y:** it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in.  
+>> i think something more like "the first corp it took was OMNI, from there it was only a matter of time before it spread through the other corps."
 
 **raidHint**
 
@@ -116,7 +117,7 @@ From POPS.
 
 *neither of them says much. they don't need to.*
 
-**B0Y:** here. i pulled this out of MEDIX on my way out of sub-basement three. they brought me back with it more times than i can count.
+**B0Y:** here. i pulled this out of MEDIX on my way out of sub-basement three. the autotechs brought me back with it more times than i can count.
 
 **B0Y:** a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector.
 
@@ -136,7 +137,7 @@ From POPS.
 
 *POPS's safehouse is a back room behind a laundromat that closed years ago. the sign still flickers OPEN.*
 
-*inside it smells like solder and burnt coffee. three monitors, two of them dead. a cot nobody makes. cables everywhere, taped down where people trip.*
+*inside it smells like solder and burnt coffee. three monitors, two of them dead. a faded futon. cables everywhere, taped down where people trip.*
 
 **POPS:** you brought it. let's see it.
 
@@ -168,7 +169,7 @@ From POPS.
 
 *POPS runs the name off the DOGTAG. the trace bounces through five relays, then dives.*
 
-**POPS:** every time you beat d0g, his signal came through a little cleaner. now i can see where it comes from.
+**POPS:** every time you beat d0g, i was able to inject some sniffer packets. now i can see where it comes from.
 
 **POPS:** it doesn't end in a corp. it ends under one. MEDIX. sub-basement three.
 
@@ -176,7 +177,7 @@ From POPS.
 
 *you go down together. the lights are out. mold up the walls, and one screen still on in the dark.*
 
-*he's there, slumped in front of it. cables run out of his arms and into the wall. thin. barely breathing.*
+*d0g is there, slumped in front of it. cables run out of his arms and into the wall. thin. barely breathing.*
 
 **POPS:** kid. kid, it's me.
 
@@ -186,11 +187,12 @@ From POPS.
 
 **POPS:** ...not all of him. the DISC. it was never a trail. it's him. a backup. he got it out before it took the rest.
 
-**POPS:** i'll keep him breathing. you're the hacker. put him back.
+**POPS:** i'll keep him breathing. i need you to run the restore protocols.
 
 [ DISC >> b0y: the upload bar. A tap starts it; the mold pushes it back twice. ]
 
-*you jack the DISC into the wall, into him. something in the wall pushes back.*
+*you insert the DISC and begin the restore routines. the limp body lurches, something pushes back.*
+>> i'm not sure lurches is the right words, i'm sort of thinking like a muscle reflex type thing. like a seizure type thing.
 
 **d0g:** no. this one is mine. you can't have hi-
 
@@ -202,17 +204,20 @@ From POPS.
 
 *nobody has called POPS that in years. only one person ever did.*
 
-**d0g:** i went in after it. something under the corps was waking up. i wanted to see it first.
+**d0g:** i found something under the corps. it was... waking up. at first i thought it was just some rogue ai or some program that slipped it's sandbox. by the time i realized how powerful it was it was too late.
 
-**d0g:** it isn't a corp. it's under all of them. every corp you've ever cracked, it was in there, watching you do it.
+**d0g:** it isn't an ai or a corp. i'm not even sure it's digital. it's under all of them. every corp you've ever cracked, it was in there, watching you do it.
+>> i want to say something like that its spilling out of the net and into the REAL world. like maybe it's some sort of nano bio tech that MEDIX was researching and it merged with something in the net. or the it's trying to build itself a way to manifest physically. if you can bring that angle in here somehow.
 
-**d0g:** the mold is what it looks like when it grows. it doesn't want money. it wants the whole net quiet.
+**d0g:** this mold is what it leaves behind. it doesn't want money. it wants the whole net quiet.
 
 **d0g:** one mind. nothing moving that it didn't move.
 
-**d0g:** it got into me. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out.
+**d0g:** it walked through my neural firewall like it was an open door. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out.
+>> not sure i like neural firewall. maybe there's a cooler term we could use, 'link defenses'
 
-**d0g:** every time you beat me, its grip slipped. long enough to hide a copy of me where somebody would find it.
+**d0g:** as it rewrote my brain i was able to export the garbage buffers to that DISC to hide a copy of me where somebody would find it.
+>> anything to make this better? "rewrote my brain" i think there's a cooler way to describe that.
 
 *POPS doesn't say anything. he just holds on to him.*
 
