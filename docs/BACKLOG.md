@@ -50,13 +50,15 @@ unlocked by REP, and some quests unlock REP.
   - **Sounds:** a failed craft (the components burning), a sound pass on the whole bench (keys, slots, tabs, the
     locker, take / store), better key-press sounds.
 - **Scrap mods:** maybe 2 other worthless ones.
+- **Fishing mods** (Greg, 2026-11-11: could be fun): mods or gear that change fishing. **Dropped:** unlocking the PIER
+  with a feat (Greg, 2026-11-11: not needed).
 - **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first).
   Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), DECODER (read CIPHER for a layer), exotic tiers
   of today's gear. EXOTICS.md has more.
 
 ### 2. REP and THE BOARD
 - **The plan: `docs/PROGRESSION.md`** (2026-10-28, screen mockups on a page). Much of it is built (THE BOARD, feats,
-  crew, CALL gear); its 4 small questions are still open.
+  crew, CALL gear). One question left: how rare CALL is (5 calls is the bar for now).
 - **Today:** a run's REP = depth + 3 per corp + 1 per perfect + 1 per 40cr earned + 10 per sector cleared (`repFor`,
   engine/save.js). Cashing out banks it; dying banks nothing (DEADMAN keeps 25% / 50%).
 - **Ideas logged:**
@@ -253,8 +255,6 @@ unlocked by REP, and some quests unlock REP.
 - **CODEX** (the track) might be good for the credits or the cutscenes (meat notes 2026-10-31).
 
 ### 5. The map and run structure
-- **Fishing, what's still open:** unlock the PIER with a feat; mods or gear that affect
-  fishing? (a note for now; the first notes said no fishing upgrades).
 - **Different markets** (the user, meat notes 2026-10-28): black market / grey market / open market.
 - More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
 - Moving backwards / the frontier (pick any node linked to one you've visited), or allow clearing the whole map.
