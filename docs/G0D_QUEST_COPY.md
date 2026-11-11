@@ -6,6 +6,10 @@ The G0D quest's words in one place, for a read-through. Pulled 2026-11-11 (v14.7
 
 Some lines are picked at random from a list: those are marked *(one at random)*.
 
+**Reviewing:** edit lines in place, delete or ~~strike~~ ones to cut, and put notes on their own line starting `>>`.
+Then ask Claude to "apply the copy doc": it diffs this file against the last commit and carries the changes into the
+code, then refreshes this file.
+
 ---
 
 ## Step 1: PROVE IT
