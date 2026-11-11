@@ -10,7 +10,7 @@ Grows BACKLOG section 10 ("The dev menu as a one-line terminal", "More on the te
   it, like a shell.
 - As you type, a list of matching commands pops up above the prompt. **Up / Down** pick one, **Tab** fills it in,
   **Enter** runs it, **Esc** closes the list (a second Esc closes the terminal).
-- **Up** on an empty prompt walks back through the commands you ran (kept in the save, the last ~30).
+- **Up** on an empty prompt walks back through the commands you ran this session (not saved; see Decided).
 - Arguments autocomplete too: after `give.mod ` the list is mod codes and names; after `corp.jump ` it's corps.
 - `help` lists what you know. `help give.mod` prints its help line and arguments.
 - Commands are `group.verb` (`give.mod`, `run.seed`, `mode.god`). Typing without the dot still matches
@@ -122,9 +122,10 @@ Ideas so far (BACKLOG section 10, Greg 2026-11-08 and 2026-11-11):
 3. **The game part.** Learning, hacking out, the hacked mark. Talk it through first.
 4. **The old dev menu goes** once nothing needs it.
 
-## Open questions
+## Decided
 
-- Should a player ever see the terminal before they've learned a single command? (A blank prompt that only answers to
-  `help` could be its own little mystery.)
-- Does the terminal look like the game's terminal line (`> ...`), or its own thing (a black band, green text)?
-- History in the save, or only for the session?
+- **Decided (Greg, 2026-11-11): you can open it before you know anything.** With nothing learned there are no
+  autocompletes; the list shows a short message instead (e.g. `no commands known`).
+- **Decided (Greg, 2026-11-11): its own look, outside the palettes.** A black field with white text, like a generic
+  shell. Some colour highlighting picks out commands and objects (mod names, corps). The corp palettes don't touch it.
+- **Decided (Greg, 2026-11-11): history lasts the session only.** Nothing goes in the save.
