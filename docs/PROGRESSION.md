@@ -164,5 +164,4 @@ posted yet (HEAT, the quests, THE ARCHIVE). **Step 1 built v13.65** (SPEC versio
 
 ## Still open
 
-- How rare CALL is (5 calls is the bar for the crew). POPS joins on the first call now (the quest), so the slow part is
-  gone for him; check the others in play.
+- Nothing. **Decided (Greg, 2026-11-11):** how rare CALL is: fine as it is (POPS on the first call, the rest at 5).

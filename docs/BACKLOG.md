@@ -58,8 +58,8 @@ unlocked by REP, and some quests unlock REP.
 
 ### 2. REP and THE BOARD
 - **The plan: `docs/PROGRESSION.md`** (2026-10-28, screen mockups on a page). Much of it is built (THE BOARD, feats,
-  crew, CALL gear). One question left: how rare CALL is. POPS joins on the first call now (the quest), so it's only the
-  other crew (5 calls each): check in play.
+  crew, CALL gear). **Decided (Greg, 2026-11-11):** CALL rarity is fine (POPS joins on the first
+  call; the other crew at 5). No questions left.
 - **Today:** a run's REP = depth + 3 per corp + 1 per perfect + 1 per 40cr earned + 10 per sector cleared (`repFor`,
   engine/save.js). Cashing out banks it; dying banks nothing (DEADMAN keeps 25% / 50%).
 - **Ideas logged:**
