@@ -4,7 +4,7 @@
 // when G0D dies). The maze before it is a real corp, HEAVEN.maze (engine/heaven.js), which reads G0DF_SEQ and the maze
 // numbers here. The numbers are all in G0DF; the neon editor's g0d tab can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dfight.js', 'v14.77']);
+NEON_FILES.push(['engine/g0dfight.js', 'v14.78']);
 
 const G0DF = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -43,9 +43,26 @@ const G0DF_LINES = {
   boyFight: ['break the m0ld. find the (0).', 'find the node that looks back.', 'fresh mold = a node under it.'],
   boyHands: "stop digging. he's charging up.",
   boyStand: "he's running. stop him!",
-  g0d: ['you are just meat.', 'you are a rounding error.', 'every node is mine.', 'you are standing in me.', 'i saw you jack in.', 'your crew will forget you.'],
+  // G0D's voice changes over the fight's three stages (Greg, 2026-11-11; docs/G0D_VOICE.md): THE MESH (calm, all-knowing),
+  // THE SPECIMEN (the lab experiment, angry), THE SPORE TONGUE (no English left: a cipher, vowels to mold glyphs
+  // a % e & i ; o 0 u :, spaces to .). Each list is [stage 0, stage 1, stage 2]: g0dfVoice picks by the stage.
+  g0d: [
+    ['i know the tell. i am the tell.', 'every corp you broke, i let you.', 'i felt you jack in. it tickled.', 'your keys are damp, hacker.',
+      'i do not sleep. i only spread.', 'your crew grew in my soil too.', 'the net was quiet before you.', "breathe in. that's me now."],
+    ['MEDIX called me a product.', 'OMNI bought me by the POUND.', 'they gave me a SERIAL NUMBER.', 'i ate the techs who named me.',
+      'there is no generation 1.', "you're just like them. MEAT.", "i'm out of the tray now."],
+    ['y0:.%r&.c0mp0st', ';.%m.;n.th&.w%lls', 'b%tch.g.g&n.0', '0n&.m;nd', 'q:;&t.n0w', 'b@@@@@thhhh.;n',
+      "sss.  kh'kh.  %%%hhhh.", 'ss;ss  m&&t  ss;ss', 'hhh. hhh. qu;;;et.'],
+  ],
+  first: ['i was grown for this.', 'they grew me in a TRAY.', "sss.  kh'kh.  %%%hhhh."],   // its opening line, per stage
+  hands: ['be still.', "DON'T. TOUCH. ME.", 'sh.  sh.  shhhhhh.'],   // HANDS OFF
+  flat: ['compost. like the rest.', 'MEAT.', 'm&&t.'],   // you flatline
   g0dLow: ['everyday low prices. everyday.', '70% chance of ICE.', 'your call is important to us.', 'the forecast is m0ld.', 'a byte is e1ght. e19ht. bits.', 'please hold. please hold. ple', 'n0de n0t f0und', 'have you tried turning me of'],
-  hit: ['AAGH.', 'you dare.', 'that eye cost me a sector.', 'it does not hurt. it does not.'],
+  hit: [
+    ['a leaf. i have a billion.', 'prune me. i grow back thicker.', 'that was only a fruiting body.', 'interesting. do it again.'],
+    ['you CUT me.', "i'll grow into your LUNGS.", 'AGAIN? AGAIN?!', 'that was MINE.'],
+    ['kkk!', '%%#@!', 'hhhssss.', 'kh. kh. KHHH.'],
+  ],
 };
 // b0y's clue in the maze: the codex order, half eaten by the mold (two lines at the bottom of the board)
 const G0DF_CLUE = ['b0y: prompt. diamond. cross.', '     st#%age. upl@#k. wa%#...'];
@@ -53,6 +70,15 @@ const G0DF_CLUE = ['b0y: prompt. diamond. cross.', '     st#%age. upl@#k. wa%#..
 const G0DF_CLUE_AT = [[0, 5, 6], [0, 13, 7], [0, 22, 5], [1, 5, 7], [1, 14, 6], [1, 22, 4]];
 const G0DF_SAY_BG = '#2a070a';   // G0D's terminal lines: dark red with red text, apart from his bar (round 17)
 const g0dSay = text => g0dfMsg('> G0D: ' + text, G0DF_SAY_BG, G0DF_RED);
+// G0D's line for its stage (G0DF_LINES g0d / hit / hands / flat / first). Before the fight (the maze) and after it (the
+// final stand): stage 0 / 2. The corp-copy glitch lines (g0dLow) cut in as it comes apart: some in stage 1 when it's
+// low, more in stage 2 (Greg likes the glitching: keep it).
+function g0dfVoice(key, p = st.g0df) {
+  const f = p && p.fight, stage = f ? (f.stage || 0) : p && p.stage === 'stand' ? 2 : 0, low = f && f.hp / G0DF.hp < 0.4;
+  const glitch = (key === 'g0d' || key === 'hit') && Math.random() < (stage >= 2 ? 0.4 : low ? 0.3 : 0);
+  const pick = glitch ? G0DF_LINES.g0dLow : G0DF_LINES[key][Math.min(stage, 2)];
+  return Array.isArray(pick) ? pickR(pick, Math.random) : pick;
+}
 // b0y's lines: in the terminal, and on the board's bottom row a few seconds (the terminal gets stepped on; the user, round 1)
 // (round 12: no line of his own at the bottom any more: his lines hold the terminal a moment and the rest wait)
 const G0DF_BOY_HOLD = 2600;
@@ -103,7 +129,7 @@ function g0dfHurt(p, n, why, cause) {
   const c = G0DF_CAUSE[cause];
   if (run.integrity === 1 && c && c.warn && !p.card) boySay(c.warn);   // one left: b0y warns you (round 16)
   if (run.integrity <= 0 && !p.card) {
-    g0dSay('you are just meat.');
+    g0dSay(g0dfVoice('flat', p));
     const stage = p.stage, tip = c ? lootWrap(c.tip, 34) : [], back = p.real && stage === 'stand' ? 'fight' : stage;   // (the run: failing the final stand starts the G0D fight over; the user, 2026-10-31)
     g0dfCard(p, [stage === 'stand' ? 'HE GOT AWAY' : 'FLATLINED', '', ...tip, '', back === 'maze' ? 'the maze starts over.' : back === 'fight' ? 'the fight starts over.' : 'the final stand starts over.', '', 'tap to go again'], () => {
       const again = g0dfAgain(p);
@@ -248,11 +274,11 @@ function g0dfFightStart(p, wake = null) {
   f.stage = 0; f.fightAt = performance.now();
   if (wake) { f.target = f.m.slice(); f.m.fill(0); p.wake = g0dWakeNew(p, wake); return; }   // H3AV3N: the wake-up first (engine/heaven.js); its mold grows in up to this
   boySay(G0DF_LINES.boyFight[0]);
-  setTimeout(() => { if (st.g0df === p) g0dSay(G0DF_LINES.g0d[0]); }, 2200);
+  setTimeout(() => { if (st.g0df === p) g0dSay(g0dfVoice('first', p)); }, 2200);
 }
 const g0dfSpewNow = f => G0DF.spew * (1 + G0DF.stageSpew * (f.stage || 0));
 const g0dfHandsNow = f => G0DF.handsEvery * Math.max(0.3, 1 - G0DF.stageHands * (f.stage || 0)) * 1000;
-const G0DF_STAGE_LINES = ['', 'you made me angry.', 'ENOUGH. I AM THE NETWORK.'];
+const G0DF_STAGE_LINES = ['', "you're not compost. you're THEM.", 'ENOUGH. ssss. hhhh. m&&t.'];   // the turn into THE SPECIMEN, then THE SPORE TONGUE (G0DF_LINES)
 // A stage break (round 24): the eye slams shut, the mold surges, more corp nodes come up, G0D gets louder.
 function g0dfStageUp(p, stage, now) {
   const f = p.fight;
@@ -328,7 +354,7 @@ function g0dfFightTick(p, now, dt) {
   // HANDS OFF
   if (!f.hands && !f.eye && now > f.nextHands) {
     f.hands = { at: now, eyes: [] };
-    g0dSay('hands off.');
+    g0dSay(g0dfVoice('hands', p));
     if (G0DF.boy) setTimeout(() => { if (st.g0df === p) boySay(G0DF_LINES.boyHands); }, 900);
     Sound.alarm();
   }
@@ -374,8 +400,7 @@ function g0dfFightTick(p, now, dt) {
   // G0D talks
   if (now > f.nextLine && !f.hands) {
     f.nextLine = now + 9000 + Math.random() * 6000;
-    const low = f.hp / G0DF.hp < 0.4;
-    g0dSay(pickR(low && Math.random() < 0.7 ? G0DF_LINES.g0dLow : G0DF_LINES.g0d, Math.random));
+    g0dSay(g0dfVoice('g0d', p));
   }
   // b0y: the eye node (or the open eye)
   const eyeN = f.nodes.find(n => n.kind === 'eye' && !n.gone && !g0dfShows(f, n));   // one still buried (round 24: the second, once the eye is open)
@@ -538,7 +563,7 @@ function g0dfFightTap(p, x, y, now) {
     g0dfRegrow(p, f.eye.x, f.eye.y, 1.2, false, 260);   // every hit: the mold surges back in (round 18)
     g0dfBarBreak(f.hp + 1, f.hp);
     Sound.hkBoom(); shake(10, 0.45); flash(G0DF_BLUE, 0.3, 0.5);
-    g0dSay(pickR(f.hp / G0DF.hp < 0.4 ? G0DF_LINES.g0dLow : G0DF_LINES.hit, Math.random));
+    g0dSay(g0dfVoice('hit', p));
     if (f.hp <= 0) {
       return heavenDie(p);   // G0D dies (engine/heaven.js), the fake win, then the final stand
     }

@@ -15,7 +15,7 @@ From POPS.
    - After losing the item: you lost the DISC. another copy is out there. try MEDIX again, or any loot node, market or the PIER.
 3. **SAFEHOUSE**: you cashed out with the DISC. take it to POPS.
 4. **DOG DAYS**: start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.
-5. **TRACE ROUTE**: POPS got a hit on the name on the DOGTAG. go see him.
+5. **TRACE ROUTE**: POPS got a hit on the serial on the DOGTAG. go see him.
 6. **OMNI RAID**: b0y rides with you ([b]) till the sector's done. call him in on the OMNI boss and break it with him there.
 7. **G0D MODE**: start a run with the seed H3AV3N and beat G0D. b0y goes with you.
 8. **SYSTEM RESTORED**: you beat G0D. POPS has his boy back.
@@ -71,7 +71,7 @@ From POPS.
 **dogtag**
 
 > **POPS:** that's ten.  
-> **POPS:** he dropped something. an old tag, with a name scratched into it.  
+> **POPS:** he dropped something. an old tag, with a serial scratched into it.  
 > **POPS:** CASH OUT with it. i'll run a trace.  
 
 **leash**
@@ -88,7 +88,7 @@ From POPS.
 **traced**
 
 > **POPS:** you got it out. good.  
-> **POPS:** i ran the name. i got a hit.  
+> **POPS:** i ran the serial. i got a hit.  
 > **POPS:** come by. now.  
 
 **raid**
@@ -167,7 +167,7 @@ From POPS.
 
 #### SYSTEM FAILURE: step 5: TRACE ROUTE (`prodigal`)
 
-*POPS runs the name off the DOGTAG. the trace bounces through five relays, then dives.*
+*POPS runs the serial off the DOGTAG. the trace bounces through five relays, then dives.*
 
 **POPS:** every time you beat d0g, i was able to inject some sniffer packets. now i can see where it comes from.
 

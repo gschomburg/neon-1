@@ -1,5 +1,9 @@
 # G0D's voice: three personas
 
+**Decided (Greg, 2026-11-11):** all three, one per stage, as below (the spore tongue: the cipher, with a few sound
+lines). Built v14.78: engine/g0dfight.js G0DF_LINES / g0dfVoice; the wake-up's lines in engine/heaven.js. The code is the
+source now: this doc is the design.
+
 A scratch doc for pumping up G0D's mid-fight lines. Started 2026-11-11 (Greg: "the god lines are a little lame").
 Built on docs/QUESTS.md "What G0D is": grown at MEDIX (batch G, generation 0), living server racks, OMNI installed it
 first, the mold is its body, it's leaving the net, it wants one organism and the whole net quiet.

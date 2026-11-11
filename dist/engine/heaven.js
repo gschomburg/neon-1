@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.77']);
+NEON_FILES.push(['engine/heaven.js', 'v14.78']);
 
 const HEAVEN = {};
 
@@ -279,13 +279,13 @@ function g0dWakeTick(p, now, dt) {
   const w = p.wake, f = p.fight, W = f.W, H = f.H, B = w.boss, [s0, s1] = G0D_WAKE.shiver;
   w.e += dt * 1000;
   const e = w.e, say = Seq.cue(w, e);
-  say('a', 450, () => g0dSay("you can't defeat me."));
+  say('a', 450, () => g0dSay('i was grown for this.'));   // (THE MESH: G0DF_LINES, engine/g0dfight.js)
   say('break', s1, () => g0dWakeBurst(w, B, true));
   [0, 1, 2].forEach(i => say('L' + i, G0D_WAKE.letters[0] + i * G0D_WAKE.letters[1] + G0D_WAKE.fall, () => g0dWakeLand(i)));
   say('fill', G0D_WAKE.fill[0], () => Sound.bossBuild());
-  say('b', 4700, () => g0dSay('every node is mine.'));
+  say('b', 4700, () => g0dSay('every node is a root of mine.'));
   say('m', G0D_WAKE.mold[0], () => { Sound.alarm(); shake(5, 0.4); });
-  say('c', 9200, () => g0dSay('you are just meat.'));
+  say('c', 9200, () => g0dSay('you are standing in my garden.'));
   // the eye: up to its home near the top, then it hovers there (a little room, not much)
   if (e >= s1) {
     const k = clamp((e - s1) / G0D_WAKE.rise, 0, 1), ease = 1 - Math.pow(1 - k, 3);
