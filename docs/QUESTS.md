@@ -288,7 +288,7 @@ in the game. Mix details in where they fit.
     why he can trace G0D to heaven.
 - **The MOLD is the same on every run of the seed** to start (a memory test; with the same seed it always is, unless
   the mold changes the data). Try a more random mold later.
-- **Getting POPS on your crew** (the quest's gate, with a sector cleared): it took ~45 CALLs. v13.78 weights the plain CALL toward POPS until he's crew (~18 CALLs) and toward crew you've called under 5 times, and markets carry CALL more (41% of markets).
+- **Getting POPS on your crew:** he joins on your first CALL now (questCalled). Before that it took ~45 CALLs. v13.78 weights the plain CALL toward POPS until he's crew (~18 CALLs) and toward crew you've called under 5 times, and markets carry CALL more (41% of markets).
 - Not picked up (yet): G0D's eyes following your cursor; the boss mods as bits of corp AI (G0D is what they become).
 
 ## G0D's fights (the user's rough ideas, 2026-10-28)

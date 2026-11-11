@@ -58,7 +58,8 @@ unlocked by REP, and some quests unlock REP.
 
 ### 2. REP and THE BOARD
 - **The plan: `docs/PROGRESSION.md`** (2026-10-28, screen mockups on a page). Much of it is built (THE BOARD, feats,
-  crew, CALL gear). One question left: how rare CALL is (5 calls is the bar for now).
+  crew, CALL gear). One question left: how rare CALL is. POPS joins on the first call now (the quest), so it's only the
+  other crew (5 calls each): check in play.
 - **Today:** a run's REP = depth + 3 per corp + 1 per perfect + 1 per 40cr earned + 10 per sector cleared (`repFor`,
   engine/save.js). Cashing out banks it; dying banks nothing (DEADMAN keeps 25% / 50%).
 - **Ideas logged:**
@@ -111,6 +112,8 @@ unlocked by REP, and some quests unlock REP.
 - **G0D:**
   - **G0D as an acronym:** **Decided (Greg, 2026-11-11):** a MEDIX lab label, batch G, generation 0 (QUESTS.md "What
     G0D is"). Still open: where the game lets that slip (a crash unit's label, a codex line, the ending's art).
+  - **THE SPORE TONGUE's voice** (2026-11-11): G0D's lines growl as they type (a deep modem, engine/heaven.js). In stage
+    3, when it stops speaking English, should it sound wetter and hissier? (docs/G0D_VOICE.md)
   - **The mold turned up as the quest goes on** (today: the M0LD events set it, v14.39).
   - **G0D flashing in on SECTOR CLEARED** now and then (meat notes 2026-10-29).
   - **G0D.exe** (the user, meat notes 2026-11-03): a personal AI hacker assistant, exotic gear. After you beat G0D, a
@@ -332,6 +335,9 @@ unlocked by REP, and some quests unlock REP.
       flatlines) (Greg, 2026-11-08).
 - **A hacker boss whose weakness is your sound muted** (Greg, meat notes 2026-11-08). Like PSYCHO MANTIS (section 4):
   the fix is outside the game.
+- **Mini-games** (Greg, meat notes 2026-11-11): like Skyrim's lockpicking, Cyberpunk's breach or BioShock's hacking.
+  A short puzzle, slightly skill based. Maybe a rhythm pattern game (DDR, Guitar Hero), or a sliding tile puzzle.
+  Open: where they go (a node type, a locked cache, a quest step, gear?).
 - **A second window** (Greg, 2026-11-07: "a boss is neat. but we could also just open another browser window and have
   a little terminal there you could type in or all sorts of stuff"). TWIN's trick (tabs talk on a BroadcastChannel)
   for more than a boss: a second window that's a little terminal you type commands into, feeding the game. Other uses

@@ -85,7 +85,8 @@ BACKLOG items 1 (REP and THE BOARD), 2 (quests), 4 (hackers) and 7 (achievements
 1. **The random call:** a **CALL** gear (markets and loot) brings in a random crew hacker for the rest of the corp.
    Each visit counts for that hacker.
 2. **The preview:** after the first call, REP's PRIVATE MESSAGES shows them as a locked post: `POPS  ##--- 2/5`.
-3. **Join:** at 5 calls the post opens, **CREW: POPS** for REP. He joins your crew, his logo unlocks, and his own gear
+3. **Join:** at 5 calls the post opens, **CREW: POPS** for REP. (POPS himself joins on your first CALL now, free: the
+   main quest, engine/quests.js questCalled. The 5 calls hold for the other crew.) He joins your crew, his logo unlocks, and his own gear
    (named after him: all 10 names fit the gear bar's 6 letters) turns up in markets and loot.
 4. **LVL 2:** a new post, **POPS LVL 2** `######---- 6/10` (use him 5 more times). Buy it: his fixed upgrade (POPS:
    TRACER, he reads the tell better).
@@ -163,4 +164,5 @@ posted yet (HEAT, the quests, THE ARCHIVE). **Step 1 built v13.65** (SPEC versio
 
 ## Still open
 
-- How rare CALL is (5 calls is the bar for now).
+- How rare CALL is (5 calls is the bar for the crew). POPS joins on the first call now (the quest), so the slow part is
+  gone for him; check the others in play.
