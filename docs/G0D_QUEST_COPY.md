@@ -227,9 +227,9 @@ End of the seed: `> the bottom of HAD3S. nowhere deeper to go.`
 
 *Quest card:* b0y rides with you ([b]) till the sector's done. call him in on the OMNI boss and break it with him there.
 
-**b0y's call** (`raid`; plays as b0y. QUEST_DIALOG.md wrongly labels it POPS)
-> **b0y:** it's me. b0y.
-> **b0y:** it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in.
+**b0y's call** (`raid`)
+> **B0Y:** it's me. b0y.
+> **B0Y:** it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in.
 
 **The [b] hint popup** (`raidHint`)
 > that's me, down there. in a corp, tap [b] and i'm in. once a corp.

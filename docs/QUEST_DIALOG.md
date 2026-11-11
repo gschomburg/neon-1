@@ -93,12 +93,12 @@ From POPS.
 
 **raid**
 
-> **POPS:** it's me. b0y.  
-> **POPS:** it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in.  
+> **B0Y:** it's me. b0y.  
+> **B0Y:** it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in.  
 
 **raidHint**
 
-> **POPS:** that's me, down there. in a corp, tap [b] and i'm in. once a corp.  
+> **B0Y:** that's me, down there. in a corp, tap [b] and i'm in. once a corp.  
 
 ### Scenes
 

@@ -9,6 +9,9 @@ const box = { NEON_FILES: [] };
 vm.runInNewContext(src + '\n;this.QUEST_INFO = QUEST_INFO; this.QUEST_LINES = QUEST_LINES; this.QUEST_SCENES = QUEST_SCENES;', box);
 const { QUEST_INFO, QUEST_LINES, QUEST_SCENES } = box;
 const NAMES = { pops: 'POPS', d0g: 'd0g' };
+// Who says each call (default: POPS). The game picks the speaker in code: engine/quests.js queueCall('b0y', QUEST_LINES.raid)
+// and engine/heaven.js boyTrayHint (raidHint). Change both if a call's speaker changes.
+const CALL_WHO = { raid: 'B0Y', raidHint: 'B0Y' };
 const CALL_WHEN = {
   found: 'You pick up the DISC for the first time.',
   foundOld: 'You pick up the DISC again (you had one before).',
@@ -37,7 +40,7 @@ for (const [id, q] of Object.entries(QUEST_INFO)) {
   for (const [k, lines] of Object.entries(QUEST_LINES)) {
     P(`**${k}**${CALL_WHEN[k] ? ': ' + CALL_WHEN[k] : ''}`);
     P('');
-    for (const l of lines) P(`> **POPS:** ${l}  `);
+    for (const l of lines) P(`> **${CALL_WHO[k] || 'POPS'}:** ${l}  `);
     P('');
   }
   P('### Scenes');
