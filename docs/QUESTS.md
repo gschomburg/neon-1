@@ -242,6 +242,30 @@ The user's dump, 2026-10-28, put in order. More is coming.
 ### Story still to fill in
 - The user, 2026-10-28: "some story elements i left out or that could be added". Roughly, the main quest is the above.
 
+## What G0D is (the lore, for us)
+
+**Decided (Greg, 2026-11-11):** G0D was grown, not built. This is background for writing lines: don't spell it all out
+in the game. Mix details in where they fit.
+- **MEDIX grew it.** A biocomputing project: living server racks, a fungal mesh that stores and computes. Cheap, and it
+  healed itself. The MEDIX autotechs, POPS patching people there, sub-basement three: all the same building.
+- **The name is a lab label:** batch **G**, generation **0**. The techs called it G0D as a joke, and it kept the name.
+  (Settles BACKLOG's "G0D as an acronym".)
+- **OMNI was the first corp it took.** It didn't hack OMNI: OMNI bought the first big batch for its core and installed
+  it. From there it was only a matter of time before it spread through the other corps.
+- **The net taught it.** A mycelium is already a network. Plugged into the real one, it kept growing: over the wire as
+  code, and through the server rooms as actual mold. d0g first took it for a rogue AI that slipped its sandbox; it isn't
+  an AI or a corp, and maybe isn't even digital.
+- **The mold is what it leaves behind, and its body.** It shows where it has taken hold, on screens and on walls (the
+  mold up sub-basement three's walls). It's already spilling into the real world: it doesn't need a body built for it,
+  it is one.
+- **What it wants:** one organism. Nothing moving that it didn't move. The whole net quiet.
+- **MYCONET** ("we grow the network now") is its own front corp.
+- **How it took d0g:** it walked through his ICE like it wasn't there. While it paved him over, he dumped what it was
+  throwing away onto the DISC: that's the backup of him.
+
+**Wording picks (Greg, 2026-11-11), for the quest script edits:** "it walked through my ICE" (not "neural firewall");
+"paved over" (not "rewrote my brain"); the body *seizes* when the DISC goes in (not "lurches").
+
 ## The story (the user, 2026-10-28)
 - **The quest item: a DISC** (FLOPPY is too long for a gear slot; gear names fit 6 letters). It holds encrypted data on
   his son's whereabouts: POPS decrypts it and tracks it back to an old d0g terminal or hideout.
