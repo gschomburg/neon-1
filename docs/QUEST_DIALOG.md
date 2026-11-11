@@ -34,7 +34,7 @@ From POPS.
 > **POPS:** that's a sector. not bad, kid.  
 > **POPS:** i've been watching the net. corps going quiet. something growing in the logs, like mold.  
 > **POPS:** MEDIX runs hottest. break MEDIX if you see it.  
-> **POPS:** and keep any eye out for any MEDIX tech there might be some data we can scrape.  
+> **POPS:** and keep an eye out for any MEDIX tech. there might be some data we can scrape.  
 
 **shop**
 
@@ -94,8 +94,8 @@ From POPS.
 **raid**
 
 > **B0Y:** it's me. b0y.  
-> **B0Y:** it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in.  
->> i think something more like "the first corp it took was OMNI, from there it was only a matter of time before it spread through the other corps."
+> **B0Y:** OMNI was the first corp it took. from there it was only a matter of time before it spread through the rest.  
+> **B0Y:** i'm riding with you till we get there: tap [b] in a corp and i'm in.  
 
 **raidHint**
 
@@ -191,8 +191,7 @@ From POPS.
 
 [ DISC >> b0y: the upload bar. A tap starts it; the mold pushes it back twice. ]
 
-*you insert the DISC and begin the restore routines. the limp body lurches, something pushes back.*
->> i'm not sure lurches is the right words, i'm sort of thinking like a muscle reflex type thing. like a seizure type thing.
+*you insert the DISC and begin the restore routines. the limp body seizes. something pushes back.*
 
 **d0g:** no. this one is mine. you can't have hi-
 
@@ -204,20 +203,21 @@ From POPS.
 
 *nobody has called POPS that in years. only one person ever did.*
 
-**d0g:** i found something under the corps. it was... waking up. at first i thought it was just some rogue ai or some program that slipped it's sandbox. by the time i realized how powerful it was it was too late.
+**d0g:** i found something under the corps. it was... waking up. at first i thought it was a rogue ai, some program that slipped its sandbox. by the time i saw how big it was, it was too late.
 
 **d0g:** it isn't an ai or a corp. i'm not even sure it's digital. it's under all of them. every corp you've ever cracked, it was in there, watching you do it.
->> i want to say something like that its spilling out of the net and into the REAL world. like maybe it's some sort of nano bio tech that MEDIX was researching and it merged with something in the net. or the it's trying to build itself a way to manifest physically. if you can bring that angle in here somehow.
 
-**d0g:** this mold is what it leaves behind. it doesn't want money. it wants the whole net quiet.
+**d0g:** MEDIX grew it. right here. living racks for the server rooms. it was never supposed to think.
+
+**d0g:** and it isn't staying in the net. look at the walls. this mold is what it leaves behind.
+
+**d0g:** it doesn't want money. it wants the whole net quiet.
 
 **d0g:** one mind. nothing moving that it didn't move.
 
-**d0g:** it walked through my neural firewall like it was an open door. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out.
->> not sure i like neural firewall. maybe there's a cooler term we could use, 'link defenses'
+**d0g:** it walked through my ICE like it wasn't there. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out.
 
-**d0g:** as it rewrote my brain i was able to export the garbage buffers to that DISC to hide a copy of me where somebody would find it.
->> anything to make this better? "rewrote my brain" i think there's a cooler way to describe that.
+**d0g:** while it paved me over, i dumped its garbage buffers onto that DISC. a copy of me, hidden where somebody would find it.
 
 *POPS doesn't say anything. he just holds on to him.*
 

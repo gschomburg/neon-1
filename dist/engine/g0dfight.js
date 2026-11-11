@@ -4,7 +4,7 @@
 // when G0D dies). The maze before it is a real corp, HEAVEN.maze (engine/heaven.js), which reads G0DF_SEQ and the maze
 // numbers here. The numbers are all in G0DF; the neon editor's g0d tab can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dfight.js', 'v14.75']);
+NEON_FILES.push(['engine/g0dfight.js', 'v14.76']);
 
 const G0DF = {
   boy: true,                 // b0y helps (his cursors and his lines)

@@ -23,7 +23,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v14.75']);
+NEON_FILES.push(['data/quests.js', 'v14.76']);
 
 const QUEST_INFO = {
   pops: {
@@ -53,11 +53,11 @@ const QUEST_LINES = {
     "clear a sector and we'll talk. something's off in the net lately. i want to know you can handle it."],
   // PROVE IT: you clear a sector with him on your crew. The mold, before the quest gets there (the user, 2026-11-06).
   sector: ["that's a sector. not bad, kid.", "i've been watching the net. corps going quiet. something growing in the logs, like mold.",
-    "MEDIX runs hottest. there's an old DISC in there i want back.", "break MEDIX if you see it. it could turn up anywhere, though."],
+    "MEDIX runs hottest. break MEDIX if you see it.", "and keep an eye out for any MEDIX tech. there might be some data we can scrape."],
   // the DISC for sale in a market (once a market)
-  shop: ["kid. that DISC in the market. that's the one.", "buy it. i'm good for it. mostly."],
+  shop: ["kid. that DISC in the market. it's a MEDIX archive.", "buy it. i'm good for it. mostly."],
   // you pick up the DISC for the first time
-  found: ["kid. that disc you just picked up.", "i know that label. don't lose it.", "take it through the next checkpoint: beat the sector boss and CASH OUT at the UPLINK with it.", "then bring it to me."],
+  found: ["kid. that disc you just picked up.", "i recognize that hash. don't lose it.", "take it through the next checkpoint: beat the sector boss and CASH OUT at the UPLINK with it.", "then bring it to me."],
   // you pick it up again (you'd had it before)
   foundOld: ["the disc. you've got it again.", "beat the sector boss, CASH OUT at the UPLINK with it."],
   // you pick it up after dying with one
@@ -73,7 +73,8 @@ const QUEST_LINES = {
   tagUplink: ["you've got his tag.", "CASH OUT here and bring it to me."],
   traced: ["you got it out. good.", "i ran the name. i got a hit.", "come by. now."],
   // OMNI RAID: b0y, once he's on your crew (each run while the step is on: you start with his CALL)
-  raid: ["it's me. b0y.", "it hid inside OMNI for years. i'm riding with you till we get there: tap [b] in a corp and i'm in."],
+  raid: ["it's me. b0y.", "OMNI was the first corp it took. from there it was only a matter of time before it spread through the rest.",
+    "i'm riding with you till we get there: tap [b] in a corp and i'm in."],
   // ...and right after that call, a popup like the training's, in his blue, its arrow on his [b] (engine/heaven.js boyTrayHint)
   raidHint: ["that's me, down there. in a corp, tap [b] and i'm in. once a corp."],
 };
@@ -114,7 +115,7 @@ const QUEST_SCENES = {
       { n: 'cable', col: 'dim' },
       { n: 'unit', col: 'text', glitch: true, dur: 900, lights: { ch: '*', col: 'danger', rate: 600, off: 0.4, pulse: 1, period: 900 },
         cue: { match: '[ 1UP ]', word: 'back', col: 'money' } }] },
-      who: 'b0y', text: 'here. i pulled this out of MEDIX on my way out of sub-basement three. they brought me back with it more times than i can count.', mood: { levels: [1], stages: 'A' } },
+      who: 'b0y', text: 'here. i pulled this out of MEDIX on my way out of sub-basement three. the autotechs brought me back with it more times than i can count.', mood: { levels: [1], stages: 'A' } },
     { who: 'b0y', text: "a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector." },
     { pic: { art: 'ending', rows: [44, 53], layers: [
       { n: 'terminal', col: 'text', flicker: true, dur: 800, cue: { match: ': ________', word: 'seeds', col: 'accent' } }] },
@@ -176,7 +177,7 @@ const QUEST_SCENES = {
         glow: { x: 21, y: 29, rows: 9, spread: 0.85, col: 'money', alpha: 0.12 },
         cue: { match: '~open', word: 'OPEN', col: 'accent' } }] },
       text: "POPS's safehouse is a back room behind a laundromat that closed years ago. the sign still flickers OPEN.", mood: { levels: [0, 1], stages: 'A' } },
-    { text: 'inside it smells like solder and burnt coffee. three monitors, two of them dead. a cot nobody makes. cables everywhere, taped down where people trip.' },
+    { text: 'inside it smells like solder and burnt coffee. three monitors, two of them dead. a faded futon. cables everywhere, taped down where people trip.' },
     { pic: { art: 'disc', rows: [49, 64], layers: [
       { n: 'a pops bg', col: 'mid', lights: { ch: '01x+', col: 'accent', rate: 700, off: 0.35 } },
       { n: 'a_pops sit', col: 'bright', blink: { match: '60', to: '--' }, hide: ['~'],   // (his cigarette: - ; the ~ off it is the smoke, animated)
@@ -216,20 +217,20 @@ const QUEST_SCENES = {
     { title: ['SYSTEM FAILURE', 'step 5: TRACE ROUTE'], mood: { levels: [0], stages: 'A' } },
     { pic: { art: 'prodigal', rows: [0, 5], layers: [{ n: 'trace', col: 'accent', from: 'top', dur: 1600 }] },
       text: 'POPS runs the name off the DOGTAG. the trace bounces through five relays, then dives.' },
-    { who: 'pops', text: 'every time you beat d0g, his signal came through a little cleaner. now i can see where it comes from.' },
+    { who: 'pops', text: 'every time you beat d0g, i was able to inject some sniffer packets. now i can see where it comes from.' },
     { who: 'pops', text: "it doesn't end in a corp. it ends under one. MEDIX. sub-basement three." },
     { who: 'pops', text: 'i worked there, a long time ago. i patched people up.' },
     { pic: { art: 'prodigal', rows: [8, 17], hold: 600, layers: [
       { n: 'basement mold', col: '#9fc13a', from: 'bottom', flicker: true, at: 600 },
       { n: 'basement', col: 'text', from: 'bottom', flicker: true, at: 0, lights: { ch: '>:/', col: 'accent', rate: 900, off: 0.3 } }] },
       text: 'you go down together. the lights are out. mold up the walls, and one screen still on in the dark.', mood: { levels: [0, 1], stages: 'A' } },
-    { text: "he's there, slumped in front of it. cables run out of his arms and into the wall. thin. barely breathing." },
+    { text: "d0g is there, slumped in front of it. cables run out of his arms and into the wall. thin. barely breathing." },
     { who: 'pops', text: "kid. kid, it's me." },
     { text: "nothing. POPS checks his pulse, his eyes, the cables. his hands remember what to do, even if he doesn't." },
     { who: 'pops', text: "he's breathing. but there's nobody home. it took all of him." },
     { who: 'pops', text: "...not all of him. the DISC. it was never a trail. it's him. a backup. he got it out before it took the rest.", mood: { levels: [1], stages: 'AB' } },
-    { who: 'pops', text: "i'll keep him breathing. you're the hacker. put him back." },
-    { upload: { from: 'DISC', to: 'b0y' }, text: 'you jack the DISC into the wall, into him. something in the wall pushes back.', mood: { levels: [2], stages: 'B' } },
+    { who: 'pops', text: "i'll keep him breathing. i need you to run the restore protocols." },
+    { upload: { from: 'DISC', to: 'b0y' }, text: 'you insert the DISC and begin the restore routines. the limp body seizes. something pushes back.', mood: { levels: [2], stages: 'B' } },
     { pic: { art: 'prodigal', rows: [22, 29], layers: [{ n: 'hood', col: 'mid' }, { n: 'eyes', col: 'danger', at: 300, glitch: true }] },
       who: 'd0g', text: "no. this one is mine. you can't have hi-", mood: { levels: [2, 3], stages: 'BC' } },
     { who: 'pops', text: 'kid. look at me.' },
@@ -238,12 +239,15 @@ const QUEST_SCENES = {
       who: 'd0g', text: '...doc?', mood: { levels: [1, 2], stages: 'B' } },
     { text: 'nobody has called POPS that in years. only one person ever did.', mood: { levels: [0, 1], stages: 'A' } },
     // G0D, set up (the user, 2026-11-06): not by name, what it is and what it wants
-    { who: 'd0g', text: 'i went in after it. something under the corps was waking up. i wanted to see it first.' },
-    { who: 'd0g', text: "it isn't a corp. it's under all of them. every corp you've ever cracked, it was in there, watching you do it." },
-    { who: 'd0g', text: "the mold is what it looks like when it grows. it doesn't want money. it wants the whole net quiet.", mood: { levels: [1, 2], stages: 'B' } },
+    { who: 'd0g', text: 'i found something under the corps. it was... waking up. at first i thought it was a rogue ai, some program that slipped its sandbox. by the time i saw how big it was, it was too late.' },
+    { who: 'd0g', text: "it isn't an ai or a corp. i'm not even sure it's digital. it's under all of them. every corp you've ever cracked, it was in there, watching you do it." },
+    // (what G0D is: docs/QUESTS.md "What G0D is". Hinted, not spelled out)
+    { who: 'd0g', text: 'MEDIX grew it. right here. living racks for the server rooms. it was never supposed to think.' },
+    { who: 'd0g', text: "and it isn't staying in the net. look at the walls. this mold is what it leaves behind.", mood: { levels: [1, 2], stages: 'B' } },
+    { who: 'd0g', text: "it doesn't want money. it wants the whole net quiet." },
     { who: 'd0g', text: "one mind. nothing moving that it didn't move." },
-    { who: 'd0g', text: 'it got into me. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out.' },
-    { who: 'd0g', text: 'every time you beat me, its grip slipped. long enough to hide a copy of me where somebody would find it.' },
+    { who: 'd0g', text: "it walked through my ICE like it wasn't there. it made me its dog. i built it a gate down here. CERBERUS. so nothing gets in. so nothing gets out." },
+    { who: 'd0g', text: 'while it paved me over, i dumped its garbage buffers onto that DISC. a copy of me, hidden where somebody would find it.' },
     { text: "POPS doesn't say anything. he just holds on to him.", mood: { levels: [0], stages: 'A' } },
     { who: 'b0y', text: "don't call me d0g. that was its name for me. it's b0y." },
     { who: 'b0y', text: "it's still out there, and it knows your face now. here's my number. when you're ready, we go get it.", mood: { levels: [1], stages: 'AB' } },
