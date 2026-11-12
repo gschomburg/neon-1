@@ -1474,7 +1474,7 @@
      "idx": 1,
      "boss": false,
      "n": 3,
-     "hint": "lift> floor 4 v",
+     "hint": "lift> floor 3 v",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 3
     },
@@ -1498,7 +1498,7 @@
      "idx": 4,
      "boss": true,
      "n": 6,
-     "hint": "lift> floor 2 ^",
+     "hint": "lift> floor 3 ^",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 6
     }
@@ -2806,7 +2806,7 @@
      "idx": 0,
      "boss": false,
      "n": 2,
-     "hint": "@you 116 fol  eng 2.6%  ^",
+     "hint": "@you 116 fol  eng 2.7%  ^",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 2
     },
@@ -2814,7 +2814,7 @@
      "idx": 1,
      "boss": false,
      "n": 3,
-     "hint": "@you 215 fol  eng 7.4%  v",
+     "hint": "@you 215 fol  eng 7.3%  v",
      "missMsg": "> ICE. god mode: no damage. it's trending!",
      "after": 3
     },

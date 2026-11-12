@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.87']);
+NEON_FILES.push(['engine/run.js', 'v14.88']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -295,7 +295,7 @@ async function corpIntro() {
     if (c.stageBoss) T('// SECTOR BOSS //', C.danger);
     T(c.tier ? `TIER ${c.tier}${def.level ? '   LV ' + def.level : ''}` : '', C.mid);
     wrapText(def.intel || '', 31).forEach(l => T(l, C.text));   // (a long one wraps: G0D MAZE's ran off a phone's screen)
-    T(rules, C.mid);
+    (wrapText(rules, 31).length ? wrapText(rules, 31) : ['']).forEach(l => T(l, C.mid));   // (MONTY's and SIMON's ran off a phone's screen)
     if (c.mod) T(`+ ${ANOMALIES[c.mod].name}: ${ANOMALIES[c.mod].desc}`, C.money);
     spoilLines.slice(0, 3).forEach((l, j) => T(j === 2 && spoilLines.length > 3 ? l.slice(0, 28) + '...' : l, C.money));
     T('');

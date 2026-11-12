@@ -85,7 +85,9 @@ made up, not real brands.
   nothing.
 - **Works with:** SHATTER (cracks armor in one hit), BULWARK, TRACER (as the hint).
 
-### A7. MONTE (shell game; or THREE CARD) (built)
+### A7. SH3LL (was MONTE; shell game; or THREE CARD) (built)
+
+**Renamed (Greg, 2026-11-12):** MONTE is SH3LL (code SL) next to MONTY. The key stays `monte`. Maybe renamed again later.
 - **Special:** the real node moves. The nodes shuffle like cups sliding, and you can follow it if
   you're sharp. The boss shuffles more and faster.
 - **Tell:** follow it with your eyes.
@@ -316,7 +318,7 @@ made up, not real brands.
   in as you go (`g-X-_-_-_`).
 - **Decided (Greg, 2026-11-07): a wrong step hurts like ICE, then SIMON replays the pattern from the start.**
   Patterns grow with the tier (4, 5, 6 steps). A gentle clock that waits while the pattern plays.
-- **Boss, "Simon says":** steps SIMON didn't say flash white (dim brackets in the terminal, `g-(X)-x-g`): skip them.
+- **Boss, "Simon says"** (tier 3 and up, so not in sector 1: Greg, 2026-11-12): steps SIMON didn't say flash white (dim brackets in the terminal, `g-(X)-x-g`): skip them.
 - **Gear and mods (Greg, 2026-11-07):** the pattern is built only from nodes still in play. Anything that removes ICE
   (PURGE, SPLIT, FLARE, FRAG, BLAST, BEES, ICE EATER, a rival) drops those nodes from the pattern: with one node left,
   the whole pattern plays on it. Removed mid-pattern: their steps go, you carry on. Finders (0DAY, SNITCH, TRACER,

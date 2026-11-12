@@ -1,7 +1,7 @@
 // NeoN+1 engine/oneup.js: THE 1UP (docs/ENDGAME.md): a save point as you enter a corp, and CONTINUE? from it.
 // Moved out of engine/run.js (2026-11-05). Needs engine/run.js (startCorp, die) loaded first.
 'use strict';
-NEON_FILES.push(['engine/oneup.js', 'v14.87']);
+NEON_FILES.push(['engine/oneup.js', 'v14.88']);
 
 // ---------------- THE 1UP (docs/ENDGAME.md; b0y's crash unit from MEDIX, the reward for beating G0D) ----------------
 // You hold one at most; it charges again every sector. Die holding it and you can go back to the start of the corp you

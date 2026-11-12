@@ -1,6 +1,6 @@
 // NeoN+1 engine/sound.js: Sound effects (generated).
 'use strict';
-NEON_FILES.push(['engine/sound.js', 'v14.87']);
+NEON_FILES.push(['engine/sound.js', 'v14.88']);
 
 // ---------------- Sound ----------------
 // Everything is synthesized with Web Audio. Two buses: effects and music,

@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v14.87']);
+NEON_FILES.push(['engine/codex.js', 'v14.88']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -128,7 +128,7 @@ function openCodex() {
       } else {
         X({ text: `${corpCode(d)}  ${d.name}${d.level ? '  LV' + d.level : ''}`, col: key === 'omni' ? C.danger : C.accent, bold: true });
         T(d.intel, C.text);
-        T(corpRules(d, 1), C.mid);
+        (wrapText(corpRules(d, 1), 34).length ? wrapText(corpRules(d, 1), 34) : ['']).forEach(l => T(l, C.mid));
         T(d.bossDesc || '', C.dangerDim);
         T('');
         // The tell: ciphertext until you've beaten this corp (its first line, and a hint), then it decodes once.

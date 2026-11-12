@@ -6,7 +6,7 @@
 // also the corp's intro art) or hacker (unlocked by beating that hacker), and the art: up to 24 x 7, shown in a
 // 24 x 7 box, centered.
 'use strict';
-NEON_FILES.push(['data/art/logos.js', 'v14.87']);
+NEON_FILES.push(['data/art/logos.js', 'v14.88']);
 
 const ART_LOGOS = [
   { id: 'skull', name: 'SKULL', mark: '{x}', kind: 'player', art: [
@@ -613,12 +613,12 @@ const ART_LOGOS = [
     ' \'-\'   \'-\'',
     'H A L F L I F E',
   ] },
-  { id: 'monte', name: 'MONTE', mark: 'MT4', kind: 'corp', corp: 'monte', art: [
+  { id: 'monte', name: 'SH3LL', mark: 'SL4', kind: 'corp', corp: 'monte', art: [
     ' ___    ___    ___',
     '/   \\  /   \\  /   \\',
     '\'---\'  \'---\'  \'-o-\'',
     '',
-    '   M  O  N  T  E',
+    '   S  H  3  L  L',
   ] },
   { id: 'noir', name: 'NOIR & ASSOCIATES', mark: 'NR4', kind: 'corp', corp: 'noir', art: [
     '   _____',

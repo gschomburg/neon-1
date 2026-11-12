@@ -1,6 +1,6 @@
 // NeoN+1 corps/simon.js
 'use strict';
-NEON_FILES.push(['corps/simon.js', 'v14.87']);
+NEON_FILES.push(['corps/simon.js', 'v14.88']);
 // Its boss gear: REPEAT x3 (repeat), defined with the gear in data/mods.js (ITEMS), its effect in engine/active.js
 // (BOSS_GEAR). Design: docs/CORPS.md A33 (Greg, 2026-11-07).
 
@@ -27,7 +27,8 @@ const simonLive = t => t.state === 'closed' && !t.ruledOut;
 const simonStepLive = s => s.t.safe || simonLive(s.t);
 
 // The pattern: len steps over the live ICE (no node twice in a row), then the real node. With no ICE left, every
-// step is the real node. Boss ("simon says"): a few extra steps SIMON didn't say (white), never the last.
+// step is the real node. A deep boss ("simon says"): a few extra steps SIMON didn't say (white), never the last.
+// (S.white: tier 3 and up, so not in sector 1. Greg, 2026-11-12: "save the white blinks for deeper areas".)
 function simonSeq(lv) {
   const S = lv.simon, real = lv.tiles[lv.safe], r = layerRng('simon');
   const live = lv.tiles.filter(t => t !== real && simonLive(t));
@@ -38,7 +39,7 @@ function simonSeq(lv) {
     steps.push({ t: pickR(opts, r), said: true });
   }
   steps.push({ t: real, said: true });
-  if (S.boss && live.length) for (let k = 0; k < Math.max(1, Math.floor(S.len / 3)); k++) {
+  if (S.white && live.length) for (let k = 0; k < Math.max(1, Math.floor(S.len / 3)); k++) {
     const at = 1 + Math.floor(r() * (steps.length - 1));
     steps.splice(at, 0, { t: pickR(live, r), said: false });
   }
@@ -100,15 +101,15 @@ CORPS.simon = {
   key: 'simon', name: 'SIMON', code: 'SM', level: 2, pattern: true, musicMax: 0,   // (the music stays low, pad and bass: the tones lead; Greg 2026-11-08)
   intel: '"simon says: watch."',
   tell: null, timer: 12, noLoot: true, noOdds: true,   // (no $ nodes: a wrong tap doesn't break a node, so its loot would pay again and again)
-  bossDesc: "boss: simon says. the white ones don't count.",
-  rules: () => 'play the pattern back. the last one is real.',
+  bossDesc: "boss: a long pattern. deeper, the white ones don't count.",
+  rules: () => 'play it back. the last one is real.',
   gear: { key: 'repeat', n: 3 },   // its boss reward: a stack of gear
   // Every node gets one character ([g] [X] [x]) and a tone. The pattern is made once the START mods have locked their
   // ICE (intro).
   dress(lv, k) {
     const set = SIMON_CHARS[k.boss || k.tier >= 3 ? 2 : k.tier >= 2 ? 1 : 0], chars = shuffle([...set], k.r);
     lv.tiles.forEach((t, i) => { t.loaded = false; t.simonCh = chars[i % chars.length]; t.glyph = simonGlyph(t); t.tone = simonTone(t.cell); });
-    lv.simon = { len: k.boss ? 6 : 3 + Math.min(3, k.tier || 1), boss: !!k.boss, seq: null, pos: 0, lit: null };
+    lv.simon = { len: k.boss ? 6 : 3 + Math.min(3, k.tier || 1), boss: !!k.boss, white: !!k.boss && (k.tier || 1) >= 3, seq: null, pos: 0, lit: null };
   },
   async intro(lv) { simonSeq(lv); await simonPlay(lv); },
   // The right step: it lights, the next one's up (no probing pause). The last step, a wrong one, or the real node
@@ -155,4 +156,5 @@ CORPS.simon = {
 };
 
 // the codex, once you've beaten it
-CORP_TELL.simon = "1. watch: simon lights nodes one at a time, each with its tone, and the terminal spells it out (g-X-x-g). 2. play it back in the same order. 3. the last step is the real node. a wrong step hurts, and simon plays it all again. the ICE never breaks. boss: steps in white (in brackets on the terminal) weren't said: skip them. gear that takes ICE out takes its steps out too. tap the real node early and it clears, but pays nothing.";
+// (short: it's the FIRST BREACH box's text too, engine/panels.js; Greg 2026-11-12: the long one ran off the screen)
+CORP_TELL.simon = "watch simon light the nodes, then play them back in order. the last one is the real node. a wrong step hurts and simon plays it again. deep bosses: white steps weren't said. skip them.";

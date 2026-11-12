@@ -10,7 +10,7 @@
 // hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
 // Rarity colors aren't in the palettes: every mod and item shows its rarity as a chip (chips, below),
 // the same in every palette.
-(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes.js', 'v14.87']);   // the build it's from (see index.html)
+(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes.js', 'v14.88']);   // the build it's from (see index.html)
 window.NEON_PALETTES = {
   // Rarity chips: a text color on its own background, for each rarity (bg = the rarity's key color).
   chips: {
@@ -84,7 +84,7 @@ window.NEON_PALETTES = {
     c_drop4:        { name: 'DROP4', hidden: true, bg: '#04082a', dim: '#142060', mid: '#3a52b0', text: '#d8e0ff', bright: '#ffffff', accent: '#ff3a4a', danger: '#ff9a2a', dangerDim: '#5a3010', money: '#ffe23a', rep: '#a381f5', note: 'board blue, red + yellow chips' },
     c_tollgate:     { name: 'TOLLGATE', hidden: true, bg: '#0b0b08', dim: '#2c2c20', mid: '#6a6a50', text: '#d8d8c0', bright: '#ffffff', accent: '#ffe600', danger: '#ff4a2a', dangerDim: '#5a1e12', money: '#ffe600', rep: '#a380f5', note: 'road yellow' },
     c_lexicon:      { name: 'LEXICON', hidden: true, bg: '#f4efe2', dim: '#d6cdb6', mid: '#8a8068', text: '#2e2a22', bright: '#000000', accent: '#b0351f', danger: '#c4122c', dangerDim: '#d99aa2', money: '#8a6a00', rep: '#7b49f0', note: 'light: paper + red ink' },
-    c_monte:        { name: 'MONTE', hidden: true, bg: '#03130b', dim: '#0f3a22', mid: '#2c6a46', text: '#cfe8d6', bright: '#ffffff', accent: '#ffe07a', danger: '#ff4a4a', dangerDim: '#5a1a1a', money: '#ffd84a', rep: '#a583f5', note: 'card-table felt' },
+    c_monte:        { name: 'SH3LL', hidden: true, bg: '#03130b', dim: '#0f3a22', mid: '#2c6a46', text: '#cfe8d6', bright: '#ffffff', accent: '#ffe07a', danger: '#ff4a4a', dangerDim: '#5a1a1a', money: '#ffd84a', rep: '#a583f5', note: 'card-table felt' },
     c_entropy:      { name: 'ENTROPY', hidden: true, bg: '#0d0612', dim: '#2e1a3a', mid: '#6a3f80', text: '#e0c8f0', bright: '#ffffff', accent: '#ff4ad8', danger: '#ff5a3a', dangerDim: '#5a2018', money: '#c8ff4a', rep: '#a27ef5', note: 'chaos magenta' },
     c_predator:     { name: 'PREDATOR', hidden: true, bg: '#02020e', dim: '#141440', mid: '#2a3a8a', text: '#7a9aff', bright: '#ffffff', accent: '#ff8a1a', danger: '#ff2a2a', dangerDim: '#5a0a10', money: '#ffe24a', rep: '#a07bf4', note: 'thermal camera' },
     c_aegis:        { name: 'AEGIS', hidden: true, bg: '#0a0c06', dim: '#262c16', mid: '#56603a', text: '#c8d0a8', bright: '#f4f8e0', accent: '#a8e04a', danger: '#ff4a2a', dangerDim: '#5a2010', money: '#e8c84a', rep: '#a380f5', note: 'olive drab' },

@@ -423,20 +423,20 @@ unlocked by REP, and some quests unlock REP.
     - The corp tester's **RUN: ALL <corp>** and **RUN: DEV1** seeds, if the editor's own breach doesn't cover them.
     - **Intro replays** (first boot / short) and the stats **TESTER** toggle, if they're worth a button there.
 - **Meat notes 2026-11-12** (Greg):
-  - [ ] **SIMON: the first-win text is too long, and the intro text is too wide for the screen.** The first win shows
+  - [x] **SIMON: the first-win text is too long, and the intro text is too wide for the screen.** (Done 2026-11-12, v14.88.) The first win shows
     `CORP_TELL.simon` (corps/simon.js; the FIRST BREACH box, engine/panels.js): 450 characters, second only to MONTY's (475). The wide
     intro text is probably its pattern line on the terminal (`> simon: g-X-(x)-g...`): the boss plays 6 steps plus
     the white ones in brackets. Check both on a phone.
-  - [ ] **SIMON's boss is hard: save the white blinks for deeper.** "i like it but maybe we save the white blinks for
+  - [x] **SIMON's boss is hard: save the white blinks for deeper.** (Done v14.88: tier 3+ bosses.) "i like it but maybe we save the white blinks for
     deeper areas." Today every SIMON boss gets them (corps/simon.js `simonSeq`, "a few extra steps SIMON didn't say").
     Maybe: none in sector 1, from sector 2 or 3 on. `bossDesc` ("the white ones don't count") and the tell change with it.
-  - [ ] **b0y's cursors cover the glyphs.** When he splits over the maybes, his cursor and its "b0y" tag sit on the
+  - [x] **b0y's cursors cover the glyphs.** (Done v14.88.) When he splits over the maybes, his cursor and its "b0y" tag sit on the
     nodes and hide their glyphs. Greg: keep just one letter each (b, 0, y) next to its v arrow. (engine/hackers.js:
     the split cursors in buildHackers, drawHkCursor / drawHkPoint.)
-  - [ ] **MONTE and MONTY sound alike.** MONTE (MT4, the cups) and MONTY (MY3, the doors). Rename MONTE: "shell" fits
+  - [x] **MONTE and MONTY sound alike.** (Done v14.88: MONTE is SH3LL for now, Greg: "maybe we change it later".) MONTE (MT4, the cups) and MONTY (MY3, the doors). Rename MONTE: "shell" fits
     (the shell game) but THE SHELL is the dev console now. Ideas wanted. (A rename touches corps/monte.js, its logo,
     palette `c_monte`, its codex and save stats keys: keep the key `monte`, change only the name.)
-  - [ ] **The WORKBENCH LOCKER: equipping a mod you already have.** Say it's an upgrade ("SNIPE -> rare"), and a little
+  - [x] **The WORKBENCH LOCKER: equipping a mod you already have.** (Done v14.88.) Say it's an upgrade ("SNIPE -> rare"), and a little
     fanfare when you slot something from the locker, more for a higher rarity. (engine/bench.js `benchTake`: today it
     says "took X out of the locker" and plays the buy sound.)
   - [ ] **The INT row gets crowded.** First make the list of everything that shows on header rows 2-3, then decide how

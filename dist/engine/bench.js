@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v14.87']);
+NEON_FILES.push(['engine/bench.js', 'v14.88']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -285,6 +285,16 @@ function benchShred(e) {
 }
 
 // ---- the locker
+// Slotting something from the locker: a little fanfare, bigger the rarer it is (Greg, 2026-11-12). up: a mod upgraded.
+function benchFanfare(rarity, up) {
+  const lvl = (RARITY[rarity] || RARITY.common).lvl, col = rarityCol(rarity);
+  if (lvl >= 4) { flash(col, 0.3, 0.7); shake(4, 0.3); Sound.bossWin(); fireworkShow(4, 220, 'panel'); }
+  else if (lvl === 3) { flash(col, 0.25, 0.5); Sound.jingle(); fireworkShow(2, 200, 'panel'); }
+  else if (lvl === 2 || up) { flash(col, 0.18, 0.4); Sound.loot(); }
+  else Sound.buy();
+}
+// A mod in the locker that you already have: taking it upgrades yours (addMod). 'maxed': yours can't go higher.
+const benchUpNote = e => e.kind !== 'mod' || !has(e.key) ? null : modMaxed(e.key) ? 'maxed' : 'upgrade';
 function benchTake(i) {
   const lk = benchSave().locker, e = lk[i];
   if (!e || benchBusy()) return;
@@ -292,7 +302,13 @@ function benchTake(i) {
   if (e.kind === 'mod') {
     if (clashWith(e.key)) { benchSay(`> ${name}: it clashes with a mod you have.`); return Sound.deny(); }
     if (!modRoom(e.key)) { benchSay('> no free mod slot.'); return Sound.deny(); }
+    if (benchUpNote(e) === 'maxed') { benchSay(`> your ${name} is maxed already.`); return Sound.deny(); }
+    const up = has(e.key);
     addMod(e.key, e.tier || 0); lk[i] = null;
+    const v = modView(e.key);
+    persist();
+    benchSay(up ? `> ${name} upgraded: ${v.name}, ${tierLabel(v)}.` : `> took ${name} out of the locker.`);
+    return benchFanfare(v.rarity, up);
   } else {
     let n = 0;
     while (n < e.n && itemRoom(e.key, e.tier || 0) && addItem(e.key, e.tier || 0)) n++;
@@ -301,7 +317,7 @@ function benchTake(i) {
   }
   persist();
   benchSay(`> took ${name} out of the locker.`);
-  Sound.buy();
+  benchFanfare(itemView(e.key, e.tier).rarity, false);
 }
 function benchStoreList() {
   const run = st.run;
@@ -697,7 +713,7 @@ function benchLockerLines(T, B, X) {
     T(`in the locker  ${lk.filter(Boolean).length}/${BENCH.locker}`, C.rep);
     T('');
     b.lkSel = clamp(b.lkSel, 0, BENCH.locker - 1);
-    lk.forEach((x, i) => x ? X(rowOf(x, i, i === b.lkSel, () => { b.lkSel = i; Sound.tick(); }, x.kind))
+    lk.forEach((x, i) => x ? X(rowOf(x, i, i === b.lkSel, () => { b.lkSel = i; Sound.tick(); }, benchUpNote(x) || x.kind, benchUpNote(x) === 'upgrade' ? C.money : benchUpNote(x) ? C.dim : undefined))
       : X({ list: true, id: 'lkempty' + i, sel: i === b.lkSel, onTap: () => { b.lkSel = i; Sound.tick(); }, name: ':  .  :  empty', faded: true }));
     // the components you've banked, every one with its count (they live here too, between runs)
     const letters = benchSave().letters, keys = Object.keys(letters).filter(ch => letters[ch] > 0)
@@ -712,7 +728,9 @@ function benchLockerLines(T, B, X) {
         ctx.bg(x, yy, 1, c.bg, 1); ctx.put(x, yy, ch, c.fg, 'ui', true); ctx.put(x + 1, yy, String(letters[ch]), C.mid, 'ui'); });
     } });
     e = lk[b.lkSel];
-    if (e) box = { box: true, text: 'T A K E', sub: e.kind === 'mod' ? '- into a mod slot -' : '- onto your belt -', id: 'bktake', onTap: () => benchTake(b.lkSel), minW: 22 };
+    const up = e && benchUpNote(e);
+    if (e) box = { box: true, text: up === 'upgrade' ? 'U P G R A D E' : 'T A K E', sub: up === 'upgrade' ? `- yours goes up to ${tierLabel(modView(e.key, upgradeTo(e.key, e.tier || 0)))} -` : up ? '- yours is maxed -' : e.kind === 'mod' ? '- into a mod slot -' : '- onto your belt -',
+      id: 'bktake', onTap: () => benchTake(b.lkSel), minW: 22, col: up === 'upgrade' ? C.money : undefined, disabled: up === 'maxed' };
   } else {
     const list = benchStoreList();
     T('from your tray', C.rep);

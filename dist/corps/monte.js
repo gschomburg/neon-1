@@ -1,6 +1,6 @@
 // NeoN+1 corps/monte.js
 'use strict';
-NEON_FILES.push(['corps/monte.js', 'v14.87']);
+NEON_FILES.push(['corps/monte.js', 'v14.88']);
 // Its boss mod: QUICK EYE (quickeye), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
@@ -40,7 +40,8 @@ MUSIC_FOR.monte = 'shellgame';
 
 // ---- the corp
 CORPS.monte = {
-  key: 'monte', name: 'MONTE', code: 'MT', level: 4, moves: true,
+  key: 'monte', name: 'SH3LL', code: 'SL',   // (was MONTE: too close to MONTY. The key stays monte, for saves. Greg, 2026-11-12: "maybe we change it later")
+  level: 4, moves: true,
   intel: '"keep your eye on the ball."',
   tell: null, alwaysFollow: true,
   bossDesc: 'boss: faster hands. more cups.',

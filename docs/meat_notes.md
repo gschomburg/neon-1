@@ -14,7 +14,7 @@ misc notes
 
 bugs or weirdness
 ********************
-
+- god gets hung up on some ads, maybe ads with the timer on them or maybe single screen ads?
 
 
 neon editor

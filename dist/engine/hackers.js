@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.87']);
+NEON_FILES.push(['engine/hackers.js', 'v14.88']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -664,10 +664,21 @@ function buildHackers(ctx, lv, now) {
       const hx = Math.round(x + ox * s.spread), hy = Math.round((y + oy * s.spread + Math.sin(now / 240 + i * 2.1) * 0.4 * s.spread) * 2) / 2;
       bg(hx, hy, 3, sty.bg, 0.8); put(hx, hy, mark, mixHex(sty.fg, sty.bg, 0.3), 'fx', true);
     });
-    if (hkDef(h.id).split && s.sp) for (const [i, p] of s.sp.entries()) {   // b0y's other cursors (one with the main one: hidden), a v over their node
-      if (Math.abs(p.x - s.cur.x) < 0.7 && Math.abs(p.y - s.cur.y) < 0.7) continue;
-      drawHkCursor(put, bg, Math.round(p.x - 1), Math.round(p.y), h.id, { tag: false });
-      if (p.t && p.t.state === 'closed') { const o = tileOrigin(p.t); drawHkPoint(put, bg, o.tx + 3, o.ty - 1, h.id, now, i + 1); }
+    // b0y split over the maybes: no cursors (they sat on the glyphs; Greg, 2026-11-12), just a v over each node with one
+    // letter of his mark beside it (b / 0 / y). They glide like the cursors did; two on one node sit side by side.
+    if (hkDef(h.id).split && s.sp && s.split && s.split.length > 1) {
+      const pts = [s.cur, ...s.sp], took = new Map();
+      pts.forEach((p, i) => {
+        const px = Math.round(p.x), py = Math.round(p.y) - 3, key = px + ',' + py, k = took.get(key) || 0, dy = hkBob(now, i);
+        took.set(key, k + 1);
+        if (!k) { bg(px, py + dy, 1, sty.bg, 1); put(px, py + dy, 'v', sty.fg, 'fx', true); }
+        bg(px + 1 + k, py + dy, 1, sty.bg, 1); put(px + 1 + k, py + dy, mark[i] || '', sty.fg, 'fx', true);
+      });
+      if (s.bubble && now < s.bubble.until) {   // what he's saying, under the main one's node
+        const tag = hkTagText(h.id, s.bubble.text), tx = clamp(x, 0, Math.max(0, L.wc - tag.length));
+        bg(tx, y + 3, tag.length, sty.fg, 1); put(tx, y + 3, tag, sty.bg, 'fx', true);
+      }
+      continue;
     }
     if (HK_AI[h.id] && HK_AI[h.id].draw) { HK_AI[h.id].draw({ put, bg }, lv, h, s, now); continue; }   // a cursor of its own (G0D.exe: engine/g0dexe.js)
     // their cursor, and their tag under it: their name, or what they're saying (a chat line in the cursor, like b0y's)
