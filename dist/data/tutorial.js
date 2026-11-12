@@ -9,7 +9,7 @@
 //   of:    said in place of that popup's do-this line (a wrong tap, the boss beaten): one way to say it per line,
 //          picked at random.
 'use strict';
-NEON_FILES.push(['data/tutorial.js', 'v14.82']);
+NEON_FILES.push(['data/tutorial.js', 'v14.83']);
 
 const TUT_COPY = [
   // the public net
@@ -60,6 +60,7 @@ const TUT_COPY = [
   // out
   { id: "loop", part: "out", text: "that's the loop: pick a path, breach corps, grab rewards, shop at markets." },
   { id: "sector", text: "a SECTOR BOSS waits at the top of every sector. and the CODEX keeps every tell you learn." },
+  { id: "menu", text: "one more thing. tap NeoN+1 up top any time: it pauses the run. sound, colors, and the way out if you need it." },
   { id: "bye", text: "that's all i got, {name}. keep your integrity up and your head down.\n\ngood luck out there." },
   { id: "out", text: "jacking you out." },
 ];

@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v14.82']);
+NEON_FILES.push(['engine/tutorial.js', 'v14.83']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -327,6 +327,7 @@ async function tutScript(T) {
   await until(onMap);
   await say('loop');
   await say('sector');
+  await say('menu', { target: { btn: 'menu' }, at: 'below' });   // the NeoN+1 menu (Greg, 2026-11-12: point it out at the end)
   // the send-off: the game goes out to the lines (held), like the opening
   if (!T.auto || TUT.curtainEnd.includes(T.auto)) {
     T.curtain = true;
@@ -455,7 +456,7 @@ function drawTutorial(now) {
   if (!T) return;
   const dt = T.lastNow ? Math.min(250, now - T.lastNow) : 0;
   T.lastNow = now;
-  if (st.dev || st.ad || (st.wipe && !(T.pop && T.pop.mini) && !T.curtain) || !tutOn()) { if (T.pop) T.pop.t0 += dt; T.leaving = null; return; }
+  if (menuCover() || st.ad || (st.wipe && !(T.pop && T.pop.mini) && !T.curtain) || !tutOn()) { if (T.pop) T.pop.t0 += dt; T.leaving = null; return; }
   if (T.leaving) {
     const te = now - T.leaving.t0;
     if (te > tutExitMs(T.leaving.pop)) T.leaving = null;

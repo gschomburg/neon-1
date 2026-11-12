@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.82']);
+NEON_FILES.push(['engine/scene.js', 'v14.83']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -45,7 +45,10 @@ const OVERLAYS = [
   { id: 'scene', on: () => !!st.qScene, shown: () => true, tick: now => sceneOutTick(now), build: (c, now) => buildScene_(c, now), tap: h => sceneTap(h), key: k => sceneKey(k) },
   { id: 'call', on: () => !!st.callBox, shown: () => !st.ad && !st.evCard && !st.featBox, tick: now => callTick(now), build: (c, now) => buildCallBox(c, now), tap: h => callTap(h), key: k => callKey(k) },   // a CALL, engine/quests.js
 ];
-const overlayTop = () => { if (st.dev) return null; for (let i = OVERLAYS.length - 1; i >= 0; i--) { const o = OVERLAYS[i]; if (o.on() && o.shown()) return o; } return null; };
+// The NeoN+1 menu (st.pause === true; the LOOT bag is a pause too, but stays on the board) covers everything, like the
+// dev menu: the header, the tray, the training's popups and the overlays wait under it (Greg, 2026-11-12).
+const menuCover = () => !!(st.dev || st.pause === true);
+const overlayTop = () => { if (menuCover()) return null; for (let i = OVERLAYS.length - 1; i >= 0; i--) { const o = OVERLAYS[i]; if (o.on() && o.shown()) return o; } return null; };
 // A drawing layer over the scene: its own put (into cells, added after), bg into bgs. cells: what's already drawn.
 function layerCtx(ctx, cells, bgs, owner = 'hud') {
   const out = [];
@@ -109,15 +112,21 @@ function buildScene(now, collectHits, raw = false) {
       addHit(x, y, label.length, 1, { kind: 'btn', id: 'dev', onTap: toggleDev, noFocus: true });
     }
   };
-  if (!st.dev && st.boot) {
+  const cover = menuCover();
+  if (!cover && st.boot) {
     buildIntro(ctx, now);   // the boot / login intro (engine/intro.js)
-  } else if (!st.dev && st.bossIntro) {
+  } else if (!cover && st.bossIntro) {
     buildBossIntro(ctx, now);
-  } else if (!st.dev && st.mode === 'over' && st.overReveal) {
+  } else if (!cover && st.mode === 'over' && st.overReveal) {
     buildOverReveal(ctx, now);
     footerRight();
-  } else if (!st.dev && !st.pause && st.mode === 'panel' && st.panelReveal && !st.panelReveal.done) {
+  } else if (!cover && st.mode === 'panel' && st.panelReveal && !st.panelReveal.done) {
     buildReveal(ctx, now, st.panelReveal, panelLines());
+  } else if (st.pause === true && !st.dev) {
+    buildTextBoard(ctx, pauseLines(), { top: 0, h: L.hc });
+    put(0, 0, 'NeoN+1', C.accent, 'ui', true);   // still the button that closes it
+    bg(0, 0, 6, C.accent, 0.2);
+    addHit(0, 0, 6, 1, { kind: 'btn', id: 'menu', onTap: togglePause, noFocus: true });
   } else if (fullScreen() || st.dev) {
     buildTextBoard(ctx, st.dev ? devLines() : st.mode === 'title' ? titleLines(now) : panelLines(), { top: 0, h: L.hc });
     footerRight();
@@ -334,7 +343,7 @@ function buildScene(now, collectHits, raw = false) {
 
   let result = cells;
   if (!raw) {
-    if (st.wipe && !st.dev) result = applyWipe(cells, now);
+    if (st.wipe && !cover) result = applyWipe(cells, now);
     else {
       // Board characters "decode" in when a screen appears without a wipe.
       const age = now - st.boardStart;
@@ -344,36 +353,36 @@ function buildScene(now, collectHits, raw = false) {
         }
       }
     }
-    if (st.moldLag && !st.dev) result = applyMoldLag(result, now);   // the mold a wipe left behind, clearing late (engine/effects.js)
-    if (st.eyeWipe && !st.dev) result = applyEyeWipe(result, now);   // G0D's eyes in a wipe, going a little late (engine/effects.js)
+    if (st.moldLag && !cover) result = applyMoldLag(result, now);   // the mold a wipe left behind, clearing late (engine/effects.js)
+    if (st.eyeWipe && !cover) result = applyEyeWipe(result, now);   // G0D's eyes in a wipe, going a little late (engine/effects.js)
   }
   // A fake ad goes over everything, after the wipe too (a wipe between layers holds the screen while
   // an ad is up; drawn under the wipe, the ad was invisible). Its characters and backgrounds are kept
   // apart and added on top; what was under the box is dropped.
   const adBgs = [];
   // The editor's G0D tab (engine/g0d.js): a G0D design or effect drawn over this screen. Never in play.
-  if ((st.g0d || st.g0dBar) && !st.dev) result = g0dOverlay(result, now, adBgs);
-  if (st.mode === 'g0df' && !st.dev) result = g0dfOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
-  if ((st.mode === 'play' || st.mode === 'panel') && !st.dev) result = moldOverlay(result, now, adBgs);   // H3AV3N: the M0LD in a corp (and on the broken UPLINK)
-  if (st.g0dFake && !st.dev) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win (over the rewards screen)
-  if (st.mode === 'g0ddie' && !st.dev) result = g0dDieOverlay(result, now, adBgs);   // H3AV3N: G0D dies
-  if (st.mode === 'g0dend' && !st.dev) result = g0dEndOverlay(result, now, adBgs);   // H3AV3N: the collapse
+  if ((st.g0d || st.g0dBar) && !cover) result = g0dOverlay(result, now, adBgs);
+  if (st.mode === 'g0df' && !cover) result = g0dfOverlay(result, now, adBgs);   // the G0D prototype: its bar, the mold on your INT
+  if ((st.mode === 'play' || st.mode === 'panel') && !cover) result = moldOverlay(result, now, adBgs);   // H3AV3N: the M0LD in a corp (and on the broken UPLINK)
+  if (st.g0dFake && !cover) result = g0dFakeOverlay(result, now, adBgs);   // H3AV3N: the fake win (over the rewards screen)
+  if (st.mode === 'g0ddie' && !cover) result = g0dDieOverlay(result, now, adBgs);   // H3AV3N: G0D dies
+  if (st.mode === 'g0dend' && !cover) result = g0dEndOverlay(result, now, adBgs);   // H3AV3N: the collapse
   // The overlays (OVERLAYS, below): bottom first, so the top one is drawn last.
   if (collectHits) overlayHits = 0;
   for (const o of OVERLAYS) {
     if (collectHits && o.tick) o.tick(now);
-    if (!st.dev && o.on() && o.shown()) { if (collectHits) overlayHits = hits.length; const lc = layerCtx(ctx, result, adBgs); o.build(lc.ctx, now); result = result.concat(lc.cells); }
+    if (!cover && o.on() && o.shown()) { if (collectHits) overlayHits = hits.length; const lc = layerCtx(ctx, result, adBgs); o.build(lc.ctx, now); result = result.concat(lc.cells); }
   }
-  if (!st.dev && st.g0dxD) { const lc = layerCtx(ctx, result, adBgs); g0dxDrawScreen(lc.ctx, now); result = result.concat(lc.cells); }   // G0D.exe's cursor off the board, over it all (engine/g0dexe.js)
+  if (!cover && st.g0dxD) { const lc = layerCtx(ctx, result, adBgs); g0dxDrawScreen(lc.ctx, now); result = result.concat(lc.cells); }   // G0D.exe's cursor off the board, over it all (engine/g0dexe.js)
   // The training run's popup (engine/tutorial.js): over everything but an ad, the same way.
-  if (st.tut && st.tut.pop && !st.dev && !st.ad && (!st.wipe || st.tut.curtain)) {
+  if (st.tut && st.tut.pop && !cover && !st.ad && (!st.wipe || st.tut.curtain)) {
     const lc = layerCtx(ctx, null, adBgs, 'tut');
     buildTutorial(lc.ctx, now, result);
     result = result.concat(lc.cells);
   }
-  if (st.hint && st.hint.pop && !st.dev && !st.ad && !st.wipe) buildHint(ctx, now, result);   // a hint (engine/tutorial.js showHint): laid out on what's drawn
+  if (st.hint && st.hint.pop && !cover && !st.ad && !st.wipe) buildHint(ctx, now, result);   // a hint (engine/tutorial.js showHint): laid out on what's drawn
   const wTop = st.wipe && st.wipe.top != null ? st.wipe.top : BOARD_Y, wBot = st.wipe && st.wipe.bot != null ? st.wipe.bot : boardEnd;
-  if (collectHits) bgs = (st.wipe && !st.dev ? (st.wipe.full && st.wipe.top == null ? [] : frameBgs.filter(b => b.cy < wTop || b.cy >= wBot)) : frameBgs).concat(adBgs);
+  if (collectHits) bgs = (st.wipe && !cover ? (st.wipe.full && st.wipe.top == null ? [] : frameBgs.filter(b => b.cy < wTop || b.cy >= wBot)) : frameBgs).concat(adBgs);
   if (collectHits) st.focusables = hits.filter(h => h.kind === 'btn' && !h.noFocus).sort((a, b) => a.y - b.y || a.x - b.x).map(h => ({ id: h.id, onTap: h.onTap }));
   return result;
 }
