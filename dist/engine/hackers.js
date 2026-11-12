@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v14.89']);
+NEON_FILES.push(['engine/hackers.js', 'v14.90']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -74,7 +74,7 @@ function hkCardTick(now) {
 }
 function hkCardClose() {
   const c = st.hkCard;
-  if (!c || performance.now() - c.t0 < 400) return;
+  if (!c || performance.now() - c.t0 < 400) return;   // (G0D.exe waits this out before it closes its own card: engine/g0dexe.js g0dxPlan)
   st.hkCard = null;
   if (st.lv && st.lv.holdUntil === Infinity && !st.lv.frozen && !(st.corp && st.corp.frozen)) st.lv.holdUntil = c.hold && c.hold > performance.now() ? c.hold : 0;
   Sound.ui();

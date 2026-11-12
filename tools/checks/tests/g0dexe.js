@@ -7,6 +7,7 @@ module.exports = { name: 'g0dexe', body: `
   if (st.mode !== 'map') { B.toMap(); await sleep(1500); }
   st.god = true;
   save.g0dx = { clicks: 500, speed: 4, beaten: 1 };
+  save.ads = false;   // (no random ads: fresh() starts corps from the map with no tap, so one could sit under a corp; the ad check below opens its own)
   check(!pickGearDrop.toString().includes('g0dexe') && !gearAllowed('g0dexe') && !shopGear().includes('g0dexe'), 'never dropped or sold in a market');
   check(g0dxGive() && holds('g0dexe') && st.run.g0dx.left === 500 && !g0dxOn(), 'the dev menu gives it, off, 500 clicks');
   const slot = () => st.run.items.findIndex(s => s.key === 'g0dexe');
@@ -36,6 +37,14 @@ module.exports = { name: 'g0dexe', body: `
   await sleep(1500);
   check(st.run.g0dx.used > used0, 'it guesses in a corp you have not beaten (' + at() + ')');
   check(!st.hkCard && !(st.hkCards || []).find(c => c.id === 'g0dexe'), 'the card only comes the first time');
+  // an ad between layers comes up while the last layer's wipe is still out: it closes it (it used to wait forever;
+  // Greg, 2026-11-12: "god.exe gets hung up on some ads")
+  await fresh(3); await sleep(300);
+  await wipeOut(1); showAd(Object.keys(ADS)[0]);
+  let wiped = true;
+  for (let i = 0; i < 100 && st.ad; i++) { wiped = wiped && !!st.wipe; await sleep(100); }
+  check(!st.ad && wiped, "an ad over a layer's wipe: it closes it (" + at() + ' wipe ' + wiped + ')');
+  st.wipe = null;
   // its gear pauses it
   await fresh(3);
   useItem(slot());
@@ -53,9 +62,9 @@ module.exports = { name: 'g0dexe', body: `
   await fresh(3);
   st.run.g0dx.left = 2; useItem(slot());
   let sawCard = false;
-  for (let i = 0; i < 60 && !(st.run.g0dx.chained && !st.hkCard && st.run.g0dx.left < save.g0dx.clicks); i++) { if (st.hkCard && st.hkCard.chain) sawCard = true; await sleep(50); }
+  for (let i = 0; i < 120 && !(st.run.g0dx.chained && !st.hkCard && st.run.g0dx.left < save.g0dx.clicks); i++) { if (st.hkCard && st.hkCard.chain) sawCard = true; await sleep(50); }
   check(st.run.g0dx.chained === 1 && g0dxCount() === 1 && g0dxOn() && !st.g0dxStop, 'a stack: its last click switches the next one on, no stop (' + g0dxCount() + ' left, chained ' + st.run.g0dx.chained + ')');
-  check(sawCard && !st.hkCard && st.run.g0dx.left <= save.g0dx.clicks - 1, "the new one's card comes up and it closes it itself (its first click)");
+  check(sawCard && !st.hkCard && st.run.g0dx.left <= save.g0dx.clicks - 1, "the new one's card comes up and it closes it itself (its first click): saw " + sawCard + ' card ' + !!st.hkCard + ' ' + at() + ' stop ' + (st.g0dxStop && st.g0dxStop.why));
   st.run.g0dx.on = false;
   st.g0dxStop = null; await settle('its last tap');
   // the last one spent, then a new one given (the editor's GIVE): fresh clicks

@@ -4,7 +4,7 @@
 // multiplier, 3 characters each, taking turns. Row 3: where you are, and CR.
 // Decided (Greg, 2026-11-12): the plan is in docs/BACKLOG.md ("The INT row").
 'use strict';
-NEON_FILES.push(['engine/hud.js', 'v14.89']);
+NEON_FILES.push(['engine/hud.js', 'v14.90']);
 
 // ---------- FIREWALL ----------
 // FW counts in hex and stops at F (Greg, 2026-11-12), like the belt's counts (engine/panels.js beltLabel).

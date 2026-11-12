@@ -1,6 +1,6 @@
 // NeoN+1 corps/decibel.js
 'use strict';
-NEON_FILES.push(['corps/decibel.js', 'v14.89']);
+NEON_FILES.push(['corps/decibel.js', 'v14.90']);
 // Its boss mod: STETHOSCOPE (stethoscope), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 

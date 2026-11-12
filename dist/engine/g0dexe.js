@@ -18,7 +18,7 @@
 // st.g0dxD: the driver's moment to moment state (its cursor off the board, the flight, what it's waiting on)
 // save.g0dx: the dev settings (g0dxCfg)
 'use strict';
-NEON_FILES.push(['engine/g0dexe.js', 'v14.89']);
+NEON_FILES.push(['engine/g0dexe.js', 'v14.90']);
 
 // ---------- settings ----------
 const G0DX_CLICKS = [100, 250, 500, 1000, 9999];
@@ -237,17 +237,19 @@ function g0dxFlyStep(D, now) {
 function g0dxPlan(now, D) {
   const run = st.run;
   if (!run) return { stop: 'no run.' };
-  if (st.wipe || st.transitioning || st.g0dxStop) return 'wait';
-  if (g0dxState().chain && !st.busy) { const i = g0dxSlot('g0dexe'); return { at: g0dxBeltAt(i), act: g0dxChain }; }   // its last click: the next G0D.exe
+  // (an ad between layers comes up while the last layer's wipe is still out: it closes that first, or it would wait
+  // forever. Greg, 2026-11-12: "god.exe gets hung up on some ads")
+  if (((st.wipe || st.transitioning) && !st.ad) || st.g0dxStop) return 'wait';
+  if (g0dxState().chain && (!st.busy || st.ad)) { const i = g0dxSlot('g0dexe'); return { at: g0dxBeltAt(i), act: g0dxChain }; }   // its last click: the next G0D.exe (first, even under an ad between layers: its last click on the ad would spend it)
   const o = overlayTop();
   if (o) {
-    if (o.id === 'hacker' && st.hkCard && st.hkCard.id === 'g0dexe') return st.hkCard.chain ? { act: () => o.key('enter') } : 'wait';   // its own card: yours to close (a hand-off's: it closes it)
+    if (o.id === 'hacker' && st.hkCard && st.hkCard.id === 'g0dexe') return st.hkCard.chain && now - st.hkCard.t0 >= 450 ? { act: () => o.key('enter') } : 'wait';   // (a card can't close in its first 400ms: engine/hackers.js hkCardClose)   // its own card: yours to close (a hand-off's: it closes it)
     if (!g0dxCfg().popups) return 'wait';
     if (o.id === 'event' && !evCardShown()) return 'wait';   // (a sector event waits for the map to settle; it takes no taps till then)
     if (!D.popAt) D.popAt = now;
     if (D.tries > 8 && now - D.popAt > 6000) return { stop: `a popup it can't close (${o.id}).` };
     // a key (a scene: skipped; a card, a feat: closed), then a tap on the popup's own button (an ad's [x], a CALL's)
-    const own = hits.slice(overlayHits), btn = own.find(h => h.kind === 'btn' && h.onTap && !h.disabled) || own[0];
+    const own = hits.slice(overlayHits), btn = own.find(h => (h.kind === 'btn' && h.onTap && !h.disabled) || h.kind === 'adx' || h.kind === 'adbtn') || own[0];   // (an ad's [x] or its button, not its box: engine/ads.js adTap)
     if (D.tries % 2 && btn) return { at: g0dxAt(btn), act: () => o.tap(btn) };
     const keys = ['enter', 'escape', ' ', 'x'];
     return { act: () => o.key(keys[Math.floor(D.tries / 2) % keys.length]) };
