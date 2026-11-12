@@ -1,6 +1,6 @@
 // NeoN+1 engine/screen.js: The canvas, layout, and the game state (st).
 'use strict';
-NEON_FILES.push(['engine/screen.js', 'v14.85']);
+NEON_FILES.push(['engine/screen.js', 'v14.86']);
 
 // ---------------- Canvas & layout ----------------
 const cv = document.getElementById('screen');
@@ -51,6 +51,7 @@ function computeLayout() {
     ox: Math.round(SAFE.l + (UW - wc * cw) / 2),
     oy: Math.round(SAFE.t + (UH - hc * chh) / 2),
   };
+  if (typeof termFitWidth === 'function') termFitWidth();   // THE TERMINAL sits under the game's column (engine/terminal.js)
 }
 const pxX = cx => L.ox + cx * L.cw + L.cw / 2;
 const pxY = cy => L.oy + cy * L.chh + L.chh / 2;

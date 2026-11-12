@@ -71,6 +71,10 @@ module.exports = { name: 'terminal', body: `
   st.intro.skip = true; await settle('intro'); await sleep(300);
   check(!st.intro && CONFIG.introHold === hold, 'a tap lets it go, and the hold goes back: ' + CONFIG.introHold);
 
+  // v14.86: as wide as the game, over its column
+  const tr = TERM.el.getBoundingClientRect();
+  check(Math.abs(tr.left - L.ox) < 2 && Math.abs(tr.width - L.wc * L.cw) < 2, 'the terminal sits over the game: ' + tr.left + '+' + tr.width + ' vs ' + L.ox + '+' + (L.wc * L.cw));
+
   // ~ closes it, and the clocks run again
   window.dispatchEvent(new KeyboardEvent('keydown', { key: '~', bubbles: true }));
   check(!st.term && TERM.el.hidden, '~ closes it');

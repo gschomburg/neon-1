@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/terminal.js', 'v14.85']);
+NEON_FILES.push(['engine/terminal.js', 'v14.86']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -550,7 +550,16 @@ function termBuild() {
   };
   if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
   else el.style.maxHeight = '70vh';
-  fit();
+  fit(); termFitWidth();
+}
+// As wide as the game, over its column (Greg, 2026-11-12: a wide screen had it running edge to edge). Called by
+// engine/screen.js computeLayout whenever the layout changes. A phone's game is the whole width anyway.
+function termFitWidth() {
+  if (!TERM.el || !L) return;
+  const w = Math.round(L.wc * L.cw);
+  TERM.el.style.left = L.ox + 'px';
+  TERM.el.style.width = w + 'px';
+  TERM.el.style.right = 'auto';
 }
 
 const span = (cls, text) => { const s = document.createElement('span'); s.className = cls; s.textContent = text; return s; };
