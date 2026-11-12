@@ -11,8 +11,10 @@ hades
 misc notes
 ***********************
 
+
 bugs or weirdness
 ********************
+
 
 
 neon editor

@@ -422,6 +422,31 @@ unlocked by REP, and some quests unlock REP.
       (one of every gear).
     - The corp tester's **RUN: ALL <corp>** and **RUN: DEV1** seeds, if the editor's own breach doesn't cover them.
     - **Intro replays** (first boot / short) and the stats **TESTER** toggle, if they're worth a button there.
+- **Meat notes 2026-11-12** (Greg):
+  - [ ] **SIMON: the first-win text is too long, and the intro text is too wide for the screen.** The first win shows
+    `CORP_TELL.simon` (corps/simon.js; the FIRST BREACH box, engine/panels.js): 450 characters, second only to MONTY's (475). The wide
+    intro text is probably its pattern line on the terminal (`> simon: g-X-(x)-g...`): the boss plays 6 steps plus
+    the white ones in brackets. Check both on a phone.
+  - [ ] **SIMON's boss is hard: save the white blinks for deeper.** "i like it but maybe we save the white blinks for
+    deeper areas." Today every SIMON boss gets them (corps/simon.js `simonSeq`, "a few extra steps SIMON didn't say").
+    Maybe: none in sector 1, from sector 2 or 3 on. `bossDesc` ("the white ones don't count") and the tell change with it.
+  - [ ] **b0y's cursors cover the glyphs.** When he splits over the maybes, his cursor and its "b0y" tag sit on the
+    nodes and hide their glyphs. Greg: keep just one letter each (b, 0, y) next to its v arrow. (engine/hackers.js:
+    the split cursors in buildHackers, drawHkCursor / drawHkPoint.)
+  - [ ] **MONTE and MONTY sound alike.** MONTE (MT4, the cups) and MONTY (MY3, the doors). Rename MONTE: "shell" fits
+    (the shell game) but THE SHELL is the dev console now. Ideas wanted. (A rename touches corps/monte.js, its logo,
+    palette `c_monte`, its codex and save stats keys: keep the key `monte`, change only the name.)
+  - [ ] **The WORKBENCH LOCKER: equipping a mod you already have.** Say it's an upgrade ("SNIPE -> rare"), and a little
+    fanfare when you slot something from the locker, more for a higher rarity. (engine/bench.js `benchTake`: today it
+    says "took X out of the locker" and plays the buy sound.)
+  - [ ] **The INT row gets crowded.** First make the list of everything that shows on header rows 2-3, then decide how
+    to manage it. Greg: keep INT where it is and let the other things take turns or scroll in one area (FX.swapLines /
+    FX.ticker). What's there today (engine/scene.js buildScene's header):
+    - Row 2, left: LAYER nn, S n. Right: the INT bar (`#`s up to 10 max, `n/max` past it), FW n / FW* (FIREWALL, a
+      corp's WALL), 1UP (charged). In place of INT: ZOMBIE's ROT nnn/max, or BLOOD MONEY's LIFE nnncr with hit-n.
+    - Row 3: where you are (the corp and its progress, BOSS, the screen's title), CR n (LEVERAGE: n/limit in red), COIN
+      FLIP's xN.
+    - Greg also named SNIPE; it isn't drawn on these rows in the code. Check where it shows when it's live.
 - **Code cleanups left from the arch pass** (the user, 2026-11-05: "keep those all around so we can hit them when it makes sense"). Do each one with the feature that needs it, not on its own. Details: docs/ARCHITECTURE.md.
   - **One popup card (`drawCard`):** with the next new kind of popup.
   - **Per-seed definitions:** when a new seed comes in (crew quests), so HAD3S / H3AV3N / the next one are mostly data.
