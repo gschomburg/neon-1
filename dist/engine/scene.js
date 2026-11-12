@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.81']);
+NEON_FILES.push(['engine/scene.js', 'v14.82']);
 
 // ---------------- Scene ----------------
 let hits = [];

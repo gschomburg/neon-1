@@ -1,6 +1,6 @@
 // NeoN+1 engine/screen.js: The canvas, layout, and the game state (st).
 'use strict';
-NEON_FILES.push(['engine/screen.js', 'v14.81']);
+NEON_FILES.push(['engine/screen.js', 'v14.82']);
 
 // ---------------- Canvas & layout ----------------
 const cv = document.getElementById('screen');
@@ -41,7 +41,8 @@ function computeLayout() {
   const gutter = 12;
   const UW = W - SAFE.l - SAFE.r, UH = H - SAFE.t - SAFE.b;   // the usable area (inside the notch and the home bar)
   let fs = Math.min((UW - 2 * gutter) / (wc * ratio), (UH - 2 * gutter) / (hc * LINE_H));
-  fs = Math.max(7, Math.min(26, fs));
+  // No top size (Greg, 2026-11-12): a tall window (a 4K screen, F11) gets the board as big as it fits. It was 26.
+  fs = Math.max(7, fs);
   const cw = fs * ratio, chh = fs * LINE_H;
   L = {
     fs, cw, chh, wc, hc, gw, gh,
