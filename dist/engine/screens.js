@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.84']);
+NEON_FILES.push(['engine/screens.js', 'v14.85']);
 
 // ---------- circuit traces (the title's, and the intro card's wires: engine/intro.js) ----------
 // Which way each trace char connects (n e s w). Two cells link when each has a port facing the other.
@@ -250,8 +250,9 @@ function buildReveal(ctx, now, rv, all) {
     const cursor = Math.floor(now / 250) % 2 ? '_' : ' ';
     vis[0] = Object.assign({}, vis[0], { text: (title.slice(0, typed) + cursor).padEnd(title.length) });
   }
-  const hOf = ln => ln.box ? (ln.sub ? 4 : 3) : ln.tileInfo ? TILE_H : ln.mapView ? ln.h : 1;
-  const H = vis.reduce((a, ln) => a + hOf(ln), 0);
+  // (lineRows: engine/textboard.js, the rule buildTextBoard draws by. A copy here missed the initials' 3-row letters, so
+  // the death screen sat a row low and UPLOAD ran onto the footer.)
+  const H = vis.reduce((a, ln) => a + lineRows(ln), 0);
   // glide toward the centered spot (so new lines push the block up smoothly);
   // 'board' centers like a normal panel, so the finished screen lines up exactly
   const target = rv.whole ? Math.max(0, Math.floor((L.hc - H) / 2)) : rv.center === 'board' ? BOARD_Y + Math.max(0, Math.floor((L.gh - H) / 2)) : (L.hc - Math.max(1, H)) / 2;

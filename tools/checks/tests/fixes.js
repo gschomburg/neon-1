@@ -44,4 +44,15 @@ module.exports = { name: 'fixes', body: `
   document.querySelector('canvas').dispatchEvent(new PointerEvent('pointerdown', { clientX: 10, clientY: 10, bubbles: true }));
   window.adTap = old; st.ad = null; st.dev = false;
   check(!took, 'an ad under the dev menu took a tap');
+
+  // v14.85: the death screen (still in its build-in) counts the initials' 3-row letters, so UPLOAD stays off the footer
+  B.startRun('M8QN8P', false); await settle('start'); await B.pick(st.lv.safe); await settle('pub'); if (st.mode !== 'map') { B.toMap(); await settle('map'); }
+  st.run.depth = 6; endRun(false); await settle('over'); await sleep(2500);
+  st.featBox = null; FEAT_QUEUE.length = 0;
+  if (st.lbPost) { st.lbPost.state = 'ok'; st.lbPost.ranks = { all: 15, today: 4 }; st.lbPost.of = {}; }
+  await sleep(6000);
+  const ov = buildScene(performance.now(), false), want = overLines().reduce((a, ln) => a + lineRows(ln), 0);
+  const ovTop = Math.min(...ov.map(c => c.cy)), onFoot = ov.filter(c => Math.round(c.cy) === L.hc - 1 && /[=|]/.test(c.ch));
+  check(st.overReveal && st.lbPost && Math.round(ovTop) === Math.floor((L.hc - want) / 2) && !onFoot.length,
+    'the death screen sits centered, off the footer: top row ' + ovTop + ', ' + want + ' rows, ' + onFoot.length + ' box cells on the footer');
 ` };

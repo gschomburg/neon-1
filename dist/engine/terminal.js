@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/terminal.js', 'v14.84']);
+NEON_FILES.push(['engine/terminal.js', 'v14.85']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run

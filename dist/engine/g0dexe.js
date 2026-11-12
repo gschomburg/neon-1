@@ -18,7 +18,7 @@
 // st.g0dxD: the driver's moment to moment state (its cursor off the board, the flight, what it's waiting on)
 // save.g0dx: the dev settings (g0dxCfg)
 'use strict';
-NEON_FILES.push(['engine/g0dexe.js', 'v14.84']);
+NEON_FILES.push(['engine/g0dexe.js', 'v14.85']);
 
 // ---------- settings ----------
 const G0DX_CLICKS = [100, 250, 500, 1000, 9999];
