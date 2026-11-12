@@ -1,6 +1,6 @@
 // NeoN+1 corps/zodiac.js
 'use strict';
-NEON_FILES.push(['corps/zodiac.js', 'v14.83']);
+NEON_FILES.push(['corps/zodiac.js', 'v14.84']);
 // Its boss mod: HOROSCOPE (horoscope), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
