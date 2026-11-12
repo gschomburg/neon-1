@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v14.88']);
+NEON_FILES.push(['engine/active.js', 'v14.89']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -649,7 +649,7 @@ function whyNotItem(stack) {
   if (key === 'worm') return st.mode !== 'map' ? 'only on the map.' : 'no corp ahead to send it to.';
   if (key === 'rewind' && inCorp && (st.corp.frozen || (st.lv && st.lv.frozen))) return 'time already stopped.';
   if (key === 'rewind' && inCorp && (stack.tier || 0) < 2 && !st.timer) return 'no clock running.';
-  if (key === 'wall') return 'only inside a corp.';
+  if (key === 'wall') return (stack.tier || 0) < 2 && st.run.shield >= FW_MAX ? `firewall is maxed: ${fwTag(FW_MAX)}.` : 'only inside a corp.';
   if (!inCorp && key !== 'wall') return 'only inside a corp layer.';
   if (key === 'nuke' && st.corp.node.type === 'final') return 'too big to nuke.';
   if (key === 'nuke' && st.run.tutorial) return 'not in the training.';
@@ -685,10 +685,10 @@ const GEAR = {
   },
   lotto: { ok: () => !st.transitioning, use() { lottoScratch(); } },   // LOTTO: any time, anywhere
   wall: {
-    ok: c => c.tier < 2 ? true : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll,
+    ok: c => c.tier < 2 ? (c.run.shield || 0) < FW_MAX : st.mode === 'play' && !!st.corp && st.corp.hasBoss && !st.corp.wallAll,
     use(tier, lv, run) {
       if (tier >= 2) { st.corp.wallAll = true; setMsg('> firewall: no hits for this corp.', C.accent); }
-      else { run.shield += tier + 1; setMsg(`> firewall up. FW${run.shield}`, C.accent); }
+      else { run.shield = Math.min(FW_MAX, run.shield + tier + 1); setMsg(`> firewall up. ${fwTag(run.shield)}`, C.accent); }   // (FW counts in hex, to F: engine/hud.js)
       Sound.shield();
     },
   },

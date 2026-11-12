@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v14.88']);
+NEON_FILES.push(['data/mods.js', 'v14.89']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -408,7 +408,7 @@ const MODS = {
     tip: "you're dead. rot is your clock.", desc: "you're dead, so ICE can't hurt you. but you rot: the more rot, the more taps a node takes. 150 rot and you fall apart. locked in.",
     codex: "integrity is gone: you're dead. ICE can't hurt you, but every layer and every node you break adds rot. the more rot, the more taps it takes to break a node (tap it until it breaks; weak taps don't show what it is). healing takes rot away. at 150 rot you fall apart. once taken it's locked in for the run." },
   bloodmoney:    { name: 'BLOOD MONEY',    short: 'BLD', kind: 'exotic', rarity: 'exotic', slot: 'health', icon: '$+$-', anim: 'exotic', price: 120,
-    tip: 'your credits are your health.', desc: `+${earnInt(ECON.blood.bonus)}cr now. from then on ICE hits cost credits, not integrity. broke and hit: you die.`,
+    tip: `credits are health. a hit: ${costInt(ECON.bloodHit.base)}cr+.`, desc: `+${earnInt(ECON.blood.bonus)}cr now. from then on ICE hits cost credits (${costInt(ECON.bloodHit.base)}cr, +${costInt(ECON.bloodHit.perSector)} a sector), not integrity. broke and hit: you die.`,
     codex: `you sell your health: +${earnInt(ECON.blood.bonus)}cr now, and every ICE hit (and every other hurt) costs credits instead of integrity, ${costInt(ECON.bloodHit.base)}cr plus ${costInt(ECON.bloodHit.perSector)} a sector. can\x27t pay and you\x27re dead (FAILSAFE catches it once). healing pays you credits instead. the market is now where you buy your life back.` },
   leverage:      { name: 'LEVERAGE',       short: 'LVG', kind: 'exotic', rarity: 'exotic', slot: 'money', icon: '-$-%', anim: 'exotic', price: 90,
     tip: 'go into debt. debt shields you.', desc: 'your credits can go below 0. the deeper in debt, the more often ICE does nothing. every layer costs a loan payment.',

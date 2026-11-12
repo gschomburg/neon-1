@@ -439,7 +439,8 @@ unlocked by REP, and some quests unlock REP.
   - [x] **The WORKBENCH LOCKER: equipping a mod you already have.** (Done v14.88.) Say it's an upgrade ("SNIPE -> rare"), and a little
     fanfare when you slot something from the locker, more for a higher rarity. (engine/bench.js `benchTake`: today it
     says "took X out of the locker" and plays the buy sound.)
-  - [ ] **The INT row gets crowded.** First make the list of everything that shows on header rows 2-3, then decide how
+  - [x] **Done v14.89 (2026-11-12).** **Decided (Greg, 2026-11-12):** the life slot (INT / ROT / LIFE) always shows on row 2's right; past 10 max INT it's `n/max` (Dropped: `#` for 1 and a block for 5, because missing health in chunks of 5 was hard to read), red at 3; FW, 1UP and COIN FLIP's `$xN` are 3-character chips one space left of it, taking turns, swapping a character at a time; FW in hex, stops at F; SNIPE gets no mark; BLOOD MONEY's `hit-n` goes into its tip; the sector leaves row 3. Not done: a fold animation when the bar turns into n/max (offered as optional). Spec: SPEC v14.89. The notes it started from:
+  - **The INT row gets crowded.** First make the list of everything that shows on header rows 2-3, then decide how
     to manage it. Greg: keep INT where it is and let the other things take turns or scroll in one area (FX.swapLines /
     FX.ticker). What's there today (engine/scene.js buildScene's header):
     - Row 2, left: LAYER nn, S n. Right: the INT bar (`#`s up to 10 max, `n/max` past it), FW n / FW* (FIREWALL, a

@@ -4,7 +4,7 @@
 // when G0D dies). The maze before it is a real corp, HEAVEN.maze (engine/heaven.js), which reads G0DF_SEQ and the maze
 // numbers here. The numbers are all in G0DF; the neon editor's g0d tab can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dfight.js', 'v14.88']);
+NEON_FILES.push(['engine/g0dfight.js', 'v14.89']);
 
 const G0DF = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -121,7 +121,7 @@ const G0DF_CAUSE = {
 };
 function g0dfHurt(p, n, why, cause) {
   const run = st.run;
-  if (n > 0 && run.shield > 0) { run.shield--; Sound.shield(); flash(C.accent, 0.12, 0.3); g0dfMsg('> the firewall takes it.' + (run.shield ? ` FW${run.shield}` : ''), C.accent); return; }   // FWALL (gear in the fight)
+  if (n > 0 && run.shield > 0) { run.shield--; Sound.shield(); flash(C.accent, 0.12, 0.3); g0dfMsg('> the firewall takes it.' + (run.shield ? ' ' + fwTag(run.shield) : ''), C.accent); return; }   // FWALL (gear in the fight)
   run.integrity = Math.max(0, run.integrity - n);
   if (p.real && n > 0) run.g0dHurt = (run.g0dHurt || 0) + n;   // (the ending's UNTOUCHED: engine/heaven.js)
   Sound.trap(); flash(C.danger, 0.25, 0.5); shake(7, 0.35);

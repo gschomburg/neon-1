@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.88']);
+NEON_FILES.push(['engine/scene.js', 'v14.89']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -12,24 +12,7 @@ const rule = w => '- '.repeat(Math.ceil(w / 2)).slice(0, w);
 const decodeDelay = (cx, cy) => 40 + ((((Math.round(cx * 2) + 1) * 374761393) ^ ((Math.round(cy * 2) + 1) * 668265263)) >>> 0) % 380;
 
 // raw = skip transitions (used for snapshots).
-// HUD integrity: watch the shown value. A gain pops each new # (HP_POP ms, scaled past the grid); a loss breaks each
-// lost # into bits that hop and fall. Only the live frame (collectHits) watches, so snapshots don't double it.
-const HP_POP = 520;
-const hpFx = { run: null, shown: null, x0: 0, gain: {} };
-function hpWatch(cur, x0, bar, now) {
-  const run = st.run;
-  if (hpFx.run !== run || hpFx.shown == null) { Object.assign(hpFx, { run, shown: cur, x0, gain: {} }); return; }
-  const was = hpFx.shown;
-  if (cur > was && !reduced()) { if (bar) for (let i = was; i < cur; i++) hpFx.gain[i] = now + (i - was) * 90; else hpFx.gain.all = now; }
-  if (cur < was && !reduced() && bar) {
-    for (let i = cur; i < was; i++) {
-      const x = pxX(hpFx.x0 + i), y = pxY(2);
-      const bits = ['#', '+', '=', '.', "'"].map(ch => ({ ch, x: x + rand(-0.3, 0.3) * L.cw, y: y + rand(-0.3, 0.3) * L.chh, col: C.danger }));
-      explode(bits, x, y + L.chh * 0.8, { col: C.danger, power: 0.35, grav: 1, life: [0.55, 0.95] });
-    }
-  }
-  hpFx.shown = cur; hpFx.x0 = x0;
-}
+// (the HUD's INT and its animations: engine/hud.js)
 
 // ---------- Overlays: the boxes that come up over everything ----------
 // In drawing order, bottom first. on(): it's up. shown(): not hidden by another (a card waits under an ad). The top
@@ -167,55 +150,7 @@ function buildScene(now, collectHits, raw = false) {
       put(x + 8, y, hp, out ? C.dim : S.hp[id] <= 1 ? C.danger : col, 'hud');
     });
   } else if (run && st.mode !== 'title' && st.mode !== 'over') {
-    put(0, 2, 'LAYER ', C.mid); put(6, 2, pad2(run.depth), C.bright);
-    if (run.sector) { put(9, 2, 'S', C.mid); put(10, 2, String(run.sector + 1), C.bright); }
-    // FAILSAFE: shows 0 for a beat after the killing hit, then blinks back to 1
-    const fsAge = st.fsAt && now >= st.fsAt ? now - st.fsAt : 1e9;
-    const cur = fsAge < FAILSAFE_BEAT ? 0 : Math.max(0, run.integrity);
-    const bar = run.maxInt <= 10 ? '#'.repeat(cur) + '-'.repeat(Math.max(0, run.maxInt - cur)) : `${cur}/${run.maxInt}`;
-    const fsBlink = fsAge >= FAILSAFE_BEAT && fsAge < FAILSAFE_BEAT + 900 && Math.floor(fsAge / 110) % 2;
-    if (zombie()) {   // ZOMBIE: rot in place of integrity, sickly as it climbs
-      const rot = run.rot || 0, txt = `${String(rot).padStart(3, '0')}/${rotMax()}`;
-      putR(2, txt, rot >= rotMax() - 30 ? C.danger : rot >= rotMax() / 2 ? C.money : C.accent);
-      put(L.wc - txt.length - 4, 2, 'ROT', C.mid);
-    } else if (bloodMoney()) {   // BLOOD MONEY: your credits are your life; red when one more hit breaks you
-      const txt = `${run.credits}cr`, cost = bloodCost(1);
-      putR(2, txt, run.credits < cost ? C.danger : run.credits < cost * 3 ? C.money : C.accent);
-      put(L.wc - txt.length - 5, 2, 'LIFE', C.mid);
-      put(L.wc - txt.length - 5 - 9, 2, `hit-${cost}`, C.dim);
-    } else {
-      const x0 = L.wc - bar.length, base = fsBlink ? C.bright : cur <= 1 ? C.danger : C.accent;
-      if (collectHits) hpWatch(cur, x0, run.maxInt <= 10, now);
-      // one char at a time: a new # pops up past the grid; at 1 left it beats like a heart (two quick blinks)
-      const beat = cur === 1 && !fsBlink && (now % 1400 < 90 || (now % 1400 > 200 && now % 1400 < 290));
-      for (let i = 0; i < bar.length; i++) {
-        const t0 = hpFx.gain[run.maxInt <= 10 ? i : 'all'], k = t0 != null ? (now - t0) / HP_POP : 1;
-        const pop = k >= 0 && k < 1, isHash = run.maxInt > 10 || bar[i] === '#';
-        cells.push({ ch: bar[i], cx: x0 + i, cy: 2, own: 'hud', col: pop && k < 0.6 ? C.bright : beat && isHash ? C.bright : base,
-          bold: pop || (beat && isHash), sc: pop ? 1 + 0.75 * Math.sin(Math.PI * k) : beat && isHash ? 1.15 : 1 });
-      }
-      put(L.wc - bar.length - 4, 2, 'INT', C.mid);   // (was INTEGRITY; the user, 2026-10-26)
-    }
-    const fw = st.corp && st.corp.wallAll ? 'FW*' : run.shield ? `FW${run.shield}` : '';
-    if (fw) put(L.wc - bar.length - 4 - 1 - fw.length, 2, fw, C.accent);
-    if (run.oneUp > 0) put(L.wc - bar.length - 4 - 1 - (fw ? fw.length + 1 : 0) - 3, 2, '1UP', C.money);   // the 1UP, charged (engine/oneup.js)
-
-    let where = run.sector ? `OVERWORLD // SECTOR ${run.sector + 1}` : 'OVERWORLD';
-    if (st.mode === 'play' && st.corp) {
-      const c = st.corp;
-      const prog = c.def.progLabel ? c.def.progLabel(c) : c.hasBoss ? (st.lv && st.lv.boss ? 'BOSS' : `${c.idx + 1}/${c.counts.length - 1}`) : '';
-      where = `${c.def.name} ${prog}`;
-    } else if (st.mode === 'panel') where = st.panelTitle || '';
-    else if (st.mode === 'fish') where = 'THE PIER';
-    else if (st.mode === 'g0dfake') where = 'G0D // BREACHED';
-    else if (st.mode === 'g0dend') where = 'G0D // DOWN';
-    else if (st.mode === 'g0ddie') where = 'G0D // FIGHT';
-    else if (st.mode === 'g0df' && st.g0df) where = `G0D // ${{ maze: 'MAZE', fight: 'FIGHT', stand: 'FINAL STAND' }[st.g0df.stage]}`;
-    put(0, 3, where, st.lv && st.lv.boss && st.mode === 'play' ? C.danger : C.text);
-    // LEVERAGE: in debt the credits go red, with your limit after them (CR -120/-150)
-    const crTxt = `${(st.mode === 'play' && corpFlag('money')) || 'CR'} ${run.credits}${leverage() && run.credits < 0 ? '/' + creditFloor() : ''}`;
-    putR(3, crTxt, run.credits < 0 ? C.danger : C.money);
-    if (has('coinflip')) { const m = run.coinMult || 1; put(L.wc - crTxt.length - 4, 3, `x${m}`, m >= COIN.max ? C.bright : m > 1 ? C.money : C.dim, 'hud', m > 1); }   // COIN FLIP: the multiplier
+    buildHudRows(ctx, run, now);   // rows 2-3: LAYER, INT and its status chip, where you are, CR (engine/hud.js)
   } else {
     put(0, 2, `BEST ${pad2(save.best)}   RUNS ${save.runs}   WINS ${save.wins}`, C.mid);
   }
