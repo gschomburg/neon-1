@@ -143,27 +143,27 @@
   #fx .garble { font: 13px "JetBrains Mono", Consolas, monospace; color: var(--warn); margin: 6px 0 0; }
   body.mode-ads #ads { display: flex; }
   body.mode-hack #hack { display: flex; }
-  /* terminal: THE TERMINAL's commands (read from the game). Its colours match the game's terminal (engine/terminal.js) */
-  body.mode-term #term { display: flex; }
-  #term { flex-direction: column; }
-  #tmBar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
-  #tmCount { color: var(--mid); font-size: 12px; }
-  #tmBody { overflow: auto; padding: 8px 14px 40px; }
-  #tmBody h2 { margin: 18px 0 6px; font-size: 13px; color: var(--mid); text-transform: uppercase; letter-spacing: .1em; }
-  .tmreadme { background: #000; color: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 4px 14px; font-size: 13px; }
-  .tmreadme li { margin: 4px 0; }
-  .tmcmd { background: #000; color: #fff; border: 1px solid #222; border-radius: 4px; padding: 6px 10px; margin: 4px 0; font-size: 13px; }
-  .tmtop { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .tmuse, .tmcmd code, .tmreadme code { font-family: "JetBrains Mono", Consolas, monospace; }
-  .tmc { color: #7fd4ff; } .tma { color: #ffd479; font-family: "JetBrains Mono", Consolas, monospace; }
-  .tmchip { font-size: 10px; padding: 0 5px; border-radius: 3px; border: 1px solid #808080; color: #808080; }
-  .tmchip.cheat { border-color: #ff6b6b; color: #ff6b6b; }
-  .tmbtns { margin-left: auto; display: flex; gap: 4px; } .tmbtns button { font-size: 11px; padding: 1px 8px; }
-  .tmhelp { color: #e0e0e0; }
-  .tmarg { margin: 2px 0 0 14px; color: #c0c0c0; }
-  .tmarg .dim, .tmall .dim, .tmcmd .dim { color: #808080; }
-  a.tmlist { color: #7fd4ff; cursor: pointer; }
-  .tmall { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 12px; margin: 4px 0 6px; }
+  /* shell: THE SHELL's commands (read from the game). Its colours match the game's shell (engine/shell.js) */
+  body.mode-shell #shell { display: flex; }
+  #shell { flex-direction: column; }
+  #shBar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  #shCount { color: var(--mid); font-size: 12px; }
+  #shBody { overflow: auto; padding: 8px 14px 40px; }
+  #shBody h2 { margin: 18px 0 6px; font-size: 13px; color: var(--mid); text-transform: uppercase; letter-spacing: .1em; }
+  .shreadme { background: #000; color: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 4px 14px; font-size: 13px; }
+  .shreadme li { margin: 4px 0; }
+  .shcmd { background: #000; color: #fff; border: 1px solid #222; border-radius: 4px; padding: 6px 10px; margin: 4px 0; font-size: 13px; }
+  .shtop { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .shuse, .shcmd code, .shreadme code { font-family: "JetBrains Mono", Consolas, monospace; }
+  .shc { color: #7fd4ff; } .sha { color: #ffd479; font-family: "JetBrains Mono", Consolas, monospace; }
+  .shchip { font-size: 10px; padding: 0 5px; border-radius: 3px; border: 1px solid #808080; color: #808080; }
+  .shchip.cheat { border-color: #ff6b6b; color: #ff6b6b; }
+  .shbtns { margin-left: auto; display: flex; gap: 4px; } .shbtns button { font-size: 11px; padding: 1px 8px; }
+  .shhelp { color: #e0e0e0; }
+  .sharg { margin: 2px 0 0 14px; color: #c0c0c0; }
+  .sharg .dim, .shall .dim, .shcmd .dim { color: #808080; }
+  a.shlist { color: #7fd4ff; cursor: pointer; }
+  .shall { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 12px; margin: 4px 0 6px; }
   .xfeats { flex-wrap: wrap; gap: 6px; } .xfeats .xf { display: inline-flex; gap: 1px; } .xfeats button.on { background: #a27ef5; color: #0b0d10; } .xfeats button.sm { font-size: 11px; opacity: .8; }
   /* hackers: the cast (dist/data/hackers.js), face + logo + who they are */
   #hack { flex-direction: column; }

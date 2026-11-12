@@ -1,7 +1,7 @@
 // NeoN+1 engine/editor.js: The editor bridge (tools/neon_editor.html; only with
 // ?editor=1), and the debug hook for tests.
 'use strict';
-NEON_FILES.push(['engine/editor.js', 'v14.86']);
+NEON_FILES.push(['engine/editor.js', 'v14.87']);
 
 // The editor's loot viewer (the user, 2026-10-31): what a map node could give, read off the seed, nothing taken.
 // The node picked on the map (or peeked, or the one you're on). The editor's TESTING tab asks for it (loot here).
@@ -95,8 +95,8 @@ if (EDITOR) {
     if (data.styles) PLAYER_STYLES.splice(0, PLAYER_STYLES.length, ...data.styles);
     refreshPalette();
   };
-  // Wait for wipes, intros and animations to finish (skipping intros). Shared with THE TERMINAL (engine/terminal.js).
-  const settle = termSettle;
+  // Wait for wipes, intros and animations to finish (skipping intros). Shared with THE SHELL (engine/shell.js).
+  const settle = shellSettle;
   // The corpintro scene holds a corp's intro screen up; any next scene lets it go first.
   const INTRO_HOLD = CONFIG.introHold;
   const letGo = async () => { if (CONFIG.introHold !== INTRO_HOLD) { CONFIG.introHold = INTRO_HOLD; if (st.intro) st.intro.skip = true; await settle(); } };
@@ -347,10 +347,10 @@ if (EDITOR) {
   }
   // ---- The TESTING tab (meat testing): cheats on the running game, and jumps to a sector with any event.
   // 'test' { act, ... }; the game sends 'test-state' (what the run looks like now) whenever it changes.
-  // These are THE TERMINAL's (engine/terminal.js), so the two can't drift; they end a run with this file's endRun.
-  const freshRun = () => termFreshRun(endRun);
-  const onMap = () => termOnMap(endRun);
-  const toSector = (to, ev) => termToSector(to, ev, endRun);   // to: 1-based
+  // These are THE SHELL's (engine/shell.js), so the two can't drift; they end a run with this file's endRun.
+  const freshRun = () => shellFreshRun(endRun);
+  const onMap = () => shellOnMap(endRun);
+  const toSector = (to, ev) => shellToSector(to, ev, endRun);   // to: 1-based
   const TEST = {
     god: () => { st.god = !st.god; },
     debug: () => { st.debug = !st.debug; },
@@ -417,10 +417,10 @@ if (EDITOR) {
     qtag: () => { if (st.run && !hasLoot('dogtag')) addItem('dogtag', 0); },
     qwins: m => { questOf('pops').d0g = clamp(Math.round(+m.n || 0), 0, 10); persist(); },
     had3s: async () => { endRun(); st.seed = 'HAD3S'; startRun('HAD3S', false); await settle(); },
-    myconet: () => termHad3sBoss(0, endRun),
-    cerberus: () => termHad3sBoss(1, endRun),
+    myconet: () => shellHad3sBoss(0, endRun),
+    cerberus: () => shellHad3sBoss(1, endRun),
     rivalgear: () => { if (st.run) for (const k of ['leash', 'bone', 'muzzle', 'honey']) st.run.items.push({ key: k, tier: 0, n: 1 }); },
-    b0yomni: () => termB0yOmni(endRun),
+    b0yomni: () => shellB0yOmni(endRun),
     // the H3AV3N seed, as if you typed it: a QUEST run from the start (engine/heaven.js)
     // The loot viewer (the user, 2026-10-31): what the node picked on the map (or the one you're on) could give. Read
     // straight off the seed, nothing taken: a market's offers and every reroll, a cache's loot and picks, a corp's boss
@@ -432,8 +432,8 @@ if (EDITOR) {
     sector: m => toSector(clamp(Math.round(+m.n || 2), 1, 9), null),
     boss: async () => { await onMap(); const n = Object.values(st.run.map).find(x => x.type === 'final' && x.sector === st.run.sector) || st.run.map[bossIdOf(st.run.sector)]; await enterNode(n, true); await settle(); },   // (HEAD FIRST: the boss is the first node)
     clear: async () => { await onMap(); const run = st.run, b = bossIdOf(run.sector); run.at = b; if (!run.visited.includes(b)) run.visited.push(b); await sectorClear(false); await settle(); },
-    bench: () => termBench(endRun),   // a SAFEHOUSE with the WORKBENCH
-    letters: () => { termLetters(); },
+    bench: () => shellBench(endRun),   // a SAFEHOUSE with the WORKBENCH
+    letters: () => { shellLetters(); },
     pier: async () => { await onMap(); st.run.credits = Math.max(st.run.credits, 100); await swapTo(() => openPier({ id: 'test-pier', sector: st.run.sector, type: 'pier' })); await settle(); },   // fishing (engine/fishing.js)
     uplink: async () => { await TEST.clear(); await swapTo(openUplink); await settle(); },
     anomaly: async m => {   // on the corps you can go to next
@@ -475,10 +475,10 @@ if (EDITOR) {
       return TEST.heaven({ where: m.stage });
     },
     // H3AV3N in the real game (engine/heaven.js): its sector map, or straight into the maze
-    heaven: m => termHeaven(m.where, endRun),
+    heaven: m => shellHeaven(m.where, endRun),
     // TESTING: kits. They only add: a mod you have only ever goes up, a mod with no free slot is skipped, gear that
-    // doesn't fit on the belt is skipped, nothing of yours is replaced. The message line says what you got (termKit, engine/terminal.js).
-    kit: m => { const s = termKit(m.key); setMsg(('> ' + s).slice(0, 120), /nothing new/.test(s) ? C.mid : C.accent); Sound.buy(); },
+    // doesn't fit on the belt is skipped, nothing of yours is replaced. The message line says what you got (shellKit, engine/shell.js).
+    kit: m => { const s = shellKit(m.key); setMsg(('> ' + s).slice(0, 120), /nothing new/.test(s) ? C.mid : C.accent); Sound.buy(); },
     g0dfset: m => { for (const [k, v] of Object.entries(m.set || {})) if (k in G0DF && typeof G0DF[k] === typeof v) G0DF[k] = v; },
     g0dstill: m => { if (st.g0d) { st.g0d.still = !!m.on; st.g0d.t0 = performance.now(); } },
     featbox: m => { if (FEAT_BY_ID[m.key]) FEAT_QUEUE.push({ feat: m.key }); },
@@ -515,21 +515,21 @@ if (EDITOR) {
     if (s !== lastTest) { lastTest = s; post(m); }
   }, 300);
 
-  // ---- The terminal tab (tools/editor/terminal.js): THE TERMINAL's commands (engine/terminal.js TERM_CMDS), read
-  // from the game so the tab can't drift from it; and a line typed (or run) in the game's terminal.
-  const termArg = x => ({ name: x.name, opt: !!x.opt, of: typeof x.of === 'string' ? x.of : 'list',
+  // ---- The shell tab (tools/editor/shell.js): THE SHELL's commands (engine/shell.js SHELL_CMDS), read
+  // from the game so the tab can't drift from it; and a line typed (or run) in the game's shell.
+  const shellArg = x => ({ name: x.name, opt: !!x.opt, of: typeof x.of === 'string' ? x.of : 'list',
     list: typeof x.of === 'function' ? x.of().map(o => [o.v, o.hint]) : null });
   window.addEventListener('message', e => {
     const m = e.data;
     if (!m || m.to !== 'neon-game') return;
-    if (m.type === 'term-get') post({ type: 'term-cmds',
-      cmds: TERM_CMDS.map(c => ({ name: c.name, alias: c.alias || [], group: c.group, help: c.help, safe: !!c.safe, always: !!c.always, args: (c.args || []).map(termArg) })),
-      lists: Object.fromEntries(Object.keys(TERM_OF).filter(k => k !== 'commands').map(k => [k, TERM_OF[k]().map(o => [o.v, o.hint])])) });
-    if (m.type === 'term-type' || m.type === 'term-run') {
-      termOpen();
-      if (m.type === 'term-run') return termRun(m.line);
-      TERM.input.value = m.line; TERM.input.setSelectionRange(m.line.length, m.line.length);
-      TERM.input.dispatchEvent(new Event('input')); TERM.input.focus();
+    if (m.type === 'shell-get') post({ type: 'shell-cmds',
+      cmds: SHELL_CMDS.map(c => ({ name: c.name, alias: c.alias || [], group: c.group, help: c.help, safe: !!c.safe, always: !!c.always, args: (c.args || []).map(shellArg) })),
+      lists: Object.fromEntries(Object.keys(SHELL_OF).filter(k => k !== 'commands').map(k => [k, SHELL_OF[k]().map(o => [o.v, o.hint])])) });
+    if (m.type === 'shell-type' || m.type === 'shell-run') {
+      shellOpen();
+      if (m.type === 'shell-run') return shellRun(m.line);
+      SHELL.input.value = m.line; SHELL.input.setSelectionRange(m.line.length, m.line.length);
+      SHELL.input.dispatchEvent(new Event('input')); SHELL.input.focus();
     }
   });
 

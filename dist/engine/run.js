@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v14.86']);
+NEON_FILES.push(['engine/run.js', 'v14.87']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -527,7 +527,7 @@ function lockTile(t, col, source = 'purge') {
 
 function updateTimer(dt) {
   const tm = st.timer;
-  if (!tm || st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.term || st.pause || st.editorHold) return;   // the terminal is open; mode.hold / the editor's TESTING tab (stop clocks) holds them still
+  if (!tm || st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.shell || st.pause || st.editorHold) return;   // the shell is open; mode.hold / the editor's TESTING tab (stop clocks) holds them still
   if (st.lv && st.lv.holdUntil && performance.now() < st.lv.holdUntil) return;   // ESPRESSO, FREEZE FRAME
   tm.left -= dt * ((st.lv && st.lv.clockRate) || 1);   // TIMEWARP
   const sec = Math.ceil(tm.left);
@@ -569,7 +569,7 @@ function layerTick(now) {
   if (!lv) return;
   const dt = lv.lastNow ? Math.min(100, now - lv.lastNow) : 0;
   lv.lastNow = now;
-  if (st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.term || st.pause || st.mp || st.wipe || lv.shownAt == null) return;
+  if (st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.shell || st.pause || st.mp || st.wipe || lv.shownAt == null) return;
   // JACK-IN-THE-BOX: pop!
   if (lv.jackAt && now > lv.jackAt) {
     lv.jackAt = null;

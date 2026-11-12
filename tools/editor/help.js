@@ -167,13 +167,13 @@
 <li>Each card: the face (5 x 3, like POPS's), the logo (beating a bad hacker unlocks it), health, the line the player reads, lore, how the AI plays, and the hacker it counters (click to jump there).</li>
 <li>Faces and logos are edited in the ${go('art', 'art tab')} (<b>hacker faces</b>, <b>hacker logos</b>), with asXii too. This tab shows the art tab's unsaved edits.</li>
 </ul>` },
-    term: { name: 'terminal', html: `
-<h1>Terminal</h1>
-<p class="lead">A readme for THE TERMINAL, the dev console you type into over the game (${F('dist/engine/terminal.js')}; the plan: ${F('docs/TERMINAL.md')}). The list is read from the game frame, so it's always what the game has. Read-only here: commands are added in the game's code (or ask Claude).</p>
+    shell: { name: 'shell', html: `
+<h1>Shell</h1>
+<p class="lead">A readme for THE SHELL, the dev console you type into over the game (${F('dist/engine/shell.js')}; the plan: ${F('docs/SHELL.md')}). The list is read from the game frame, so it's always what the game has. Read-only here: commands are added in the game's code (or ask Claude).</p>
 <ul>
 <li>Each command: how you type it (<code>&lt;arg&gt;</code> needed, <code>[arg]</code> optional), what it does, and what each argument can be. <b>(list)</b> shows every choice (the mods, the corps...).</li>
 <li><b>practice</b> commands mark the run practice (not scored); <b>safe</b> ones don't.</li>
-<li><b>type</b> puts the command in the game's terminal for you to finish there (Tab fills in, Enter runs). <b>run</b> runs it now (only commands that need nothing more).</li>
+<li><b>type</b> puts the command in the game's shell for you to finish there (Tab fills in, Enter runs). <b>run</b> runs it now (only commands that need nothing more).</li>
 <li>The filter matches names, what a command does, and its group.</li>
 </ul>` },
     test: { name: 'testing', html: `
@@ -213,7 +213,7 @@
 </ul>
 <p><b>save</b> (the first time, pick the ${F('dist/data')} folder; the same one as training and economy). More: ${go('saving', 'how saving works')}. The plan: docs/EFFECTS.md.</p>` },
   };
-  const ORDER = ['saving', null, 'music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'term', 'test', 'g0d', 'fx'];
+  const ORDER = ['saving', null, 'music', 'pal', 'items', 'art', 'tut', 'econ', 'ads', 'hack', 'shell', 'test', 'g0d', 'fx'];
   let open = false, at = 'saving';
   const modeNow = () => (document.body.className.match(/mode-(\w+)/) || [])[1] || 'music';
   const nav = $('#helpNav');

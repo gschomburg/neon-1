@@ -1,6 +1,6 @@
 // NeoN+1 engine/screen.js: The canvas, layout, and the game state (st).
 'use strict';
-NEON_FILES.push(['engine/screen.js', 'v14.86']);
+NEON_FILES.push(['engine/screen.js', 'v14.87']);
 
 // ---------------- Canvas & layout ----------------
 const cv = document.getElementById('screen');
@@ -51,7 +51,7 @@ function computeLayout() {
     ox: Math.round(SAFE.l + (UW - wc * cw) / 2),
     oy: Math.round(SAFE.t + (UH - hc * chh) / 2),
   };
-  if (typeof termFitWidth === 'function') termFitWidth();   // THE TERMINAL sits under the game's column (engine/terminal.js)
+  if (typeof shellFitWidth === 'function') shellFitWidth();   // THE SHELL sits under the game's column (engine/shell.js)
 }
 const pxX = cx => L.ox + cx * L.cw + L.cw / 2;
 const pxY = cy => L.oy + cy * L.chh + L.chh / 2;
@@ -84,7 +84,7 @@ const st = {
   hideBoard: false, hideAll: false,
   debug: false,           // show the real node (dev menu)
   dev: false,             // dev menu open
-  term: false,            // THE TERMINAL open (engine/terminal.js): the clocks hold, the game takes no keys
+  term: false,            // THE SHELL open (engine/shell.js): the clocks hold, the game takes no keys
   devAccess: params.get('dev') === '1',
   result: null,
   transitioning: false,

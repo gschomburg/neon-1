@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.86']);
+NEON_FILES.push(['engine/heaven.js', 'v14.87']);
 
 const HEAVEN = {};
 
@@ -458,7 +458,7 @@ function g0dFakeTick(now) {
   const f = st.g0dFake;
   if (!f) return;
   const dt = Math.min(0.05, (now - (f.last || now)) / 1000); f.last = now;
-  if (st.mode !== 'panel' || st.pause || st.dev || st.term) return;
+  if (st.mode !== 'panel' || st.pause || st.dev || st.shell) return;
   const e = now - f.t0, rv = st.panelReveal;
   if (f.doneAt == null && (!rv || rv.done)) f.doneAt = e;
   if (f.holeAt == null && ((f.doneAt != null && e >= f.doneAt + G0D_FAKE.pause) || e >= G0D_FAKE.cap)) { f.holeAt = e; Sound.shatter(); shake(5, 0.3); }
@@ -700,7 +700,7 @@ const g0dDieFrac = (e, [a, b]) => clamp((e - a) / (b - a), 0, 1);
 const g0dDieNetGone = (f, x, y, k) => (1 - Math.hypot((x - f.eye.x) / 2.2, y - f.eye.y) / f.dmax) * 0.85 + FX.hs(x * 1.9 + y * 5.3) * 0.15 < k;
 function g0dDieTick(now) {
   const f = st.g0dDie;
-  if (!f || st.mode !== 'g0ddie' || st.pause || st.dev || st.term) return;
+  if (!f || st.mode !== 'g0ddie' || st.pause || st.dev || st.shell) return;
   const e = now - f.t0, say = Seq.cue(f, e);
   const dt = Math.min(0.05, (now - (f.last || now)) / 1000); f.last = now;
   say('a', 400, () => g0dSay('n0. N0. N0000.'));
@@ -1270,7 +1270,7 @@ function g0dEndSkip(f) {   // straight to G0D DEFEATED (the editor's skip, a tap
 }
 function g0dEndTick(now) {
   const f = st.g0dEnd;
-  if (!f || st.mode !== 'g0dend' || st.pause || st.dev || st.term) return;
+  if (!f || st.mode !== 'g0dend' || st.pause || st.dev || st.shell) return;
   const e = now - f.t0, say = Seq.cue(f, e);
   say('a', 300, () => g0dSay('n0. n0. i AM the net.'));   // (the user, 2026-11-05: it just dies. no "there will be others")
   say('b', 1700, () => g0dSay('i am th3 n3t. i am th3 n%... i am'));   // its code coming apart (scattered across the net: the ending)

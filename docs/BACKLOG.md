@@ -319,7 +319,7 @@ unlocked by REP, and some quests unlock REP.
 
 ### 10. Make it more of a hacking game
 - Something in the game itself you can hack, like the seed (OVERFLOW, section 4).
-- **THE TERMINAL: the plan is docs/TERMINAL.md** (2026-11-11: the next big feature, Greg). The notes below fed it.
+- **THE SHELL (was THE TERMINAL): the plan is docs/SHELL.md** (2026-11-11: the next big feature, Greg). The notes below fed it.
 - **The dev menu as a one-line terminal** (Greg, meat notes 2026-11-07: "i like that hack boss idea where you open up
   the dev menu. i kinda think we might want to update the dev menu to be more like just a one line terminal that shows
   with ` and you can type in it and maybe it has auto complete"). Today ` opens the dev menu's button page

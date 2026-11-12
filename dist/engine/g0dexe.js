@@ -18,7 +18,7 @@
 // st.g0dxD: the driver's moment to moment state (its cursor off the board, the flight, what it's waiting on)
 // save.g0dx: the dev settings (g0dxCfg)
 'use strict';
-NEON_FILES.push(['engine/g0dexe.js', 'v14.86']);
+NEON_FILES.push(['engine/g0dexe.js', 'v14.87']);
 
 // ---------- settings ----------
 const G0DX_CLICKS = [100, 250, 500, 1000, 9999];
@@ -206,7 +206,7 @@ const g0dxUseGear = (key, say) => { const i = g0dxSlot(key); return i < 0 ? null
 function g0dxDrive(now) {
   const D = st.g0dxD || (st.g0dxD = { next: 0 });
   if (D.fly) g0dxFlyStep(D, now);
-  if (!g0dxOn() || st.dev || st.term || st.pause || (typeof TABS !== 'undefined' && TABS.away) || st.mode === 'title' || (st.run.ended && st.mode !== 'over')) { D.waitAt = 0; return; }
+  if (!g0dxOn() || st.dev || st.shell || st.pause || (typeof TABS !== 'undefined' && TABS.away) || st.mode === 'title' || (st.run.ended && st.mode !== 'over')) { D.waitAt = 0; return; }
   if (st.mode === 'fish' && st.fish) g0dxFishHold(st.fish, now);   // the pier: the hook and the reel, frame by frame
   if (D.fly || now < D.next) return;
   const key = `${st.mode}:${st.panelTitle || ''}:${st.run && st.run.at}:${overlayTop() ? overlayTop().id : ''}`;
