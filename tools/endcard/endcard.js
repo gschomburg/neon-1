@@ -28,7 +28,7 @@
     blobs: false, blobAmount: 50,
     palette: 0, wireBright: 50,
     duration: 8,                 // seconds
-    wireStop: 8,                 // seconds: new wires taper off to none over P.wires.taper from here (at the end: they never stop)
+    wireStop: 8,                 // seconds: new wires and blobs taper off to none over P.wires.taper from here (at the end: never)
     wipeLevel: 0, wipeFill: 2,   // the wipe in: 0 quiet (grey fill) / 1 success (cyan, sparks); its fill pattern (engine/effects.js FILLS)
   };
   const SET = Object.assign({}, DEFAULTS);
@@ -174,9 +174,10 @@
     const k = t.pts.shift();
     if (S.own[k] === t.id) { S.wire[k] = null; S.own[k] = -1; }
   }
+  // The wires stop timer (SET.wireStop): 1, then down to 0 over P.wires.taper. New wires, branches and blobs follow it.
+  const stopTaper = () => { const at = SET.wireStop * 1000; return at >= P.dur ? 1 : 1 - ease((S.t - at) / P.wires.taper); };
   function stepWires(dt) {
-    const Wc = P.wires, stopAt = SET.wireStop * 1000;
-    const taper = stopAt >= P.dur ? 1 : 1 - ease((S.t - stopAt) / Wc.taper);   // new wires (and branches) taper off to none
+    const Wc = P.wires, taper = stopTaper();   // new wires (and branches) taper off to none
     if (S.t >= Wc.at && taper > 0) {
       const heat = ease((S.t - Wc.at) / (Wc.full - Wc.at));
       S.acc += dt / 1000 * between(Wc.rate, heat) * k100(SET.wireAmount, 0.15, 2.5) * taper;
@@ -257,7 +258,7 @@
     const B = P.blobs;
     S.blobs = S.blobs.filter(b => S.t < b.t0 + b.life);
     if (!SET.blobs || S.t < B.at || !S.ever.length) return;
-    S.bAcc += dt * k100(SET.blobAmount, 0.15, 3);
+    S.bAcc += dt * k100(SET.blobAmount, 0.15, 3) * stopTaper();
     while (S.bAcc >= B.every) {
       S.bAcc -= B.every;
       if (rnd() < 0.5) continue;
@@ -377,7 +378,7 @@
   // Built from a list: [key, label, kind (check | range | number), extra]. A change starts the card over at the same time.
   const STORE = 'neon-endcard.settings';
   const PANEL = [
-    ['', 'TIMING'], ['duration', 'duration (s)', 'range', { min: 4, max: 16, step: 0.5 }], ['wireStop', 'wires stop (s)', 'range', { min: 2, max: () => SET.duration, step: 0.1 }],
+    ['', 'TIMING'], ['duration', 'duration (s)', 'range', { min: 4, max: 16, step: 0.5 }], ['wireStop', 'wires + blobs stop (s)', 'range', { min: 2, max: () => SET.duration, step: 0.1 }],
     ['', 'PALETTE'], ['palette', 'palette', 'select', { options: () => CARD_PALETTES.map(p => p.name) }],
     ['', 'MOLD'], ['mold', 'mold', 'check'], ['moldSpread', 'spread', 'range'],
     ['', 'WIRES'], ['wireBox', 'box  ─│╭╮', 'check'], ['wireAscii', 'ascii  -|+ o', 'check'], ['wireDouble', 'double  =║', 'check'], ['wireDots', 'dots  ·:', 'check'],
