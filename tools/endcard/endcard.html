@@ -5,19 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>NeoN+1 end card</title>
-<!-- The trailer's end card (tools/endcard/endcard.js). Open it to watch it live (space: again, s: one step when
-     paused, p: pause); tools/endcard/render.js renders it frame by frame to a 4K MP4. -->
+<!-- The trailer's end card (tools/endcard/endcard.js). Open it to watch it live, with a panel of settings (h hides
+     it); tools/endcard/render.js renders it frame by frame to a 4K MP4. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
 <style>
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
   canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
   #info { position: absolute; left: 8px; bottom: 6px; color: #5f7470; font: 12px monospace; }
+  #panel { position: absolute; right: 8px; top: 8px; width: 250px; max-height: calc(100% - 16px); overflow: auto; padding: 8px 10px;
+    background: rgba(6, 9, 10, 0.88); border: 1px solid #2c3a38; color: #a9bdb7; font: 12px/1.5 "JetBrains Mono", monospace; }
+  #panel .head { color: #3cf0ff; margin-top: 8px; letter-spacing: 0.1em; }
+  #panel .head:first-child { margin-top: 0; }
+  #panel .row { display: grid; grid-template-columns: 1fr 1.3fr 2.4em; align-items: center; gap: 6px; }
+  #panel .row:has(input[type=checkbox]) { grid-template-columns: auto 1fr; }
+  #panel input[type=range] { width: 100%; accent-color: #3cf0ff; }
+  #panel input[type=number] { width: 100%; background: #0d1416; color: #e6f4ef; border: 1px solid #2c3a38; font: inherit; }
+  #panel .val { color: #5f7470; text-align: right; }
+  #panel .btns { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 6px; }
+  #panel button { background: #0d1416; color: #a9bdb7; border: 1px solid #2c3a38; font: inherit; cursor: pointer; padding: 2px 6px; }
+  #panel button:hover { border-color: #3cf0ff; color: #e6f4ef; }
+  #panel .tip { color: #5f7470; margin-top: 6px; }
+  :focus-visible { outline: 1px solid #3cf0ff; }
   [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <canvas id="card"></canvas>
 <div id="info"></div>
+<div id="panel"></div>
 <!-- The game's own scripts, for its colors, the wipe, the mold and the noise (dist/ is the game). They expect a few
      of the game's globals; these stand-ins are enough for what the card calls (engine/screen.js has the real ones). -->
 <script>

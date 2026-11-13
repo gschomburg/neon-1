@@ -1,8 +1,9 @@
 // tools/endcard/render.js: bundles the end card's art and renders the card (endcard.html) to a 4K 60fps MP4, a frame
 // at a time in headless Chrome (exact frames: no screen recording), piped to ffmpeg.
 //   node tools/endcard/render.js art [art.asxii.json]           write endcard_art.js (open endcard.html to watch it live)
-//   node tools/endcard/render.js render [out.mp4] [--art f] [--frames n] [--still t]
+//   node tools/endcard/render.js render [out.mp4] [--art f] [--settings f] [--frames n] [--still t]
 //        out.mp4 defaults to ../video/trailer/endcard.mp4; --still t writes one PNG at t seconds instead.
+//        The settings: tools/endcard/settings.json (the page's panel saves it), when there is one.
 // Needs: Chrome (CHROME env to override), ffmpeg on PATH, the art (default asxii_art/neon_1_4k_v03.asxii.json).
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os');
@@ -12,7 +13,7 @@ const ROOT = path.join(__dirname, '..', '..');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const args = process.argv.slice(2), cmd = args[0];
 const opt = (name, def) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : def; };
-const USAGE = 'usage: node tools/endcard/render.js art [art.asxii.json] | render [out.mp4] [--art f] [--frames n] [--still seconds]';
+const USAGE = 'usage: node tools/endcard/render.js art [art.asxii.json] | render [out.mp4] [--art f] [--settings f] [--frames n] [--still seconds]';
 if (!cmd || cmd === '--help' || !['art', 'render'].includes(cmd)) { console.log(USAGE); process.exit(cmd && cmd !== '--help' ? 1 : 0); }
 
 // ---------- the art: the asXii file's visible layers -> endcard_art.js ----------
@@ -78,6 +79,10 @@ async function withPage(fn) {
   const out = path.resolve(args[1] && !args[1].startsWith('--') ? args[1] : path.join(ROOT, '..', 'video', 'trailer', still != null ? 'endcard_still.png' : 'endcard.mp4'));
   await withPage(async evaluate => {
     const fps = await evaluate('endcard.FPS');
+    const setFile = path.resolve(opt('--settings', path.join(__dirname, 'settings.json')));
+    const settings = fs.existsSync(setFile) ? JSON.parse(fs.readFileSync(setFile, 'utf8')) : {};
+    await evaluate(`endcard.set(${JSON.stringify(settings)})`);
+    console.log('settings:', fs.existsSync(setFile) ? path.relative(ROOT, setFile) : 'the defaults', JSON.stringify(settings));
     if (still != null) {   // one frame (it runs the card from 0 up to it)
       const i = Math.round(+still * fps);
       fs.writeFileSync(out, Buffer.from(await evaluate(`endcard.frame(${i})`), 'base64'));
