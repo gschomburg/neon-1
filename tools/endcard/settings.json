@@ -1,0 +1,22 @@
+{
+  "seed": 27,
+  "mold": false,
+  "moldSpread": 0,
+  "wireBox": true,
+  "wireAscii": false,
+  "wireDouble": false,
+  "wireDots": true,
+  "wireSnake": true,
+  "snakeLen": 16,
+  "wireAmount": 17,
+  "wireSpeed": 74,
+  "wireLength": 64,
+  "blobs": true,
+  "blobAmount": 50,
+  "palette": 4,
+  "wireBright": 50,
+  "duration": 12,
+  "wireStop": 6.7,
+  "wipeLevel": 1,
+  "wipeFill": 0
+}
