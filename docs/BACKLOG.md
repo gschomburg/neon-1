@@ -5,8 +5,6 @@ When something gets built, take it off this list and log it in SPEC.md's version
 New ideas and "n:" notes go here. Details live in the docs each item points to.
 
 - Things for the user to look at or test: `docs/REVIEW.md`.
-- **Next: v15.00.** The trailer is done, so v14 ends at v14.92. The next change to the game starts v15:
-  `node tools/bump.js major`, plus a new save slot (`STORE_KEY` in engine/core.js) that copies the v14 save over.
 - This list before the 2026-11-07 cleanup, with the built items and their design history:
   `docs/archive/BACKLOG_2026-11-07.md`. The older planning lists: `docs/archive/SPEC_backlog_2026-10.md`.
 
