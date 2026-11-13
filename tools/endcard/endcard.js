@@ -26,6 +26,7 @@
     wireSnake: false, snakeLen: 30,
     wireAmount: 50, wireSpeed: 50, wireLength: 50,
     blobs: false, blobAmount: 50,
+    palette: 0, wireBright: 50,
     wipeLevel: 0, wipeFill: 2,   // the wipe in: 0 quiet (grey fill) / 1 success (cyan, sparks); its fill pattern (engine/effects.js FILLS)
   };
   const SET = Object.assign({}, DEFAULTS);
@@ -45,11 +46,37 @@
   // The wire styles: their lines, corners, crossings, heads and ends, and how bright (0-1 from the background to `ink`)
   const CORNER = { '1,0>0,1': '╮', '1,0>0,-1': '╯', '-1,0>0,1': '╭', '-1,0>0,-1': '╰', '0,1>1,0': '╰', '0,1>-1,0': '╯', '0,-1>1,0': '╭', '0,-1>-1,0': '╮' };   // (engine/g0dfight.js G0DF_CORNER)
   const WIRES = {
-    box: { h: '─', v: '│', corner: k => CORNER[k] || '┼', cross: '┼', head: '•', end: null, ink: 'accent', tone: 0.34 },
-    ascii: { h: '-', v: '|', corner: () => '+', cross: '+', head: 'o', end: 'o', ink: 'text', tone: 0.36 },
-    double: { h: '=', v: '║', corner: () => '+', cross: '#', head: '#', end: null, ink: 'accent', tone: 0.48 },
-    dots: { h: '·', v: ':', corner: () => '.', cross: ':', head: '*', end: null, ink: 'mid', tone: 0.6 },
+    box: { h: '─', v: '│', corner: k => CORNER[k] || '┼', cross: '┼', head: '•', end: null, tone: 0.42 },
+    ascii: { h: '-', v: '|', corner: () => '+', cross: '+', head: 'o', end: 'o', tone: 0.36 },
+    double: { h: '=', v: '║', corner: () => '+', cross: '#', head: '#', end: null, tone: 0.5 },
+    dots: { h: '·', v: ':', corner: () => '.', cross: ':', head: '*', end: null, tone: 0.55 },
   };
+  // The card's palettes (Greg, 2026-11-13): from the corps' (dist/data/palettes.js), on black, the wires another color
+  // than the letters and toned down. logo: the block letters; title: the logotype (and the shine on the block); wire:
+  // the wires at full (each style takes its tone of it, times the wire brightness slider); blob: a tech blob's middle.
+  // The rest comes from these (fill, rule, copy line, and the game colors the wipe uses: C).
+  const CARD_PALETTES = [
+    { name: 'BASIC',      bg: '#000000', logo: '#3cf0ff', title: '#e6f4ef', wire: '#a27ef5', blob: '#d8ccff' },
+    { name: 'OMNI',       bg: '#030001', logo: '#ffb3c0', title: '#ffe1e3', wire: '#ff1f3a', blob: '#ffc36e' },
+    { name: 'TEMPO',      bg: '#040006', logo: '#ff3af0', title: '#ffffff', wire: '#3ad8ff', blob: '#ffe04a' },
+    { name: 'BRIGHTLINE', bg: '#020200', logo: '#ffde0a', title: '#fffbe6', wire: '#4ab0ff', blob: '#ff5a3a' },
+    { name: 'CHRONOS',    bg: '#000301', logo: '#39ff6a', title: '#b8ffc8', wire: '#ffb000', blob: '#d8ff6a' },
+    { name: 'KERNEL',     bg: '#010404', logo: '#ffb000', title: '#e0fffc', wire: '#2fb0a8', blob: '#ffd06a' },
+    { name: 'SYNAPSE',    bg: '#000306', logo: '#7a8aff', title: '#c8eaff', wire: '#ff4a8a', blob: '#b8f0ff' },
+    { name: 'NOIR',       bg: '#000000', logo: '#e0e0e0', title: '#ffffff', wire: '#c0303a', blob: '#c8b88a' },
+  ];
+  let K = {};   // the palette in use, with its derived colors
+  function applyPal() {
+    const p = CARD_PALETTES[Math.min(SET.palette | 0, CARD_PALETTES.length - 1)];
+    K = Object.assign({}, p, {
+      fill: mixHex(p.bg, p.logo, 0.28), rule: mixHex(p.bg, p.logo, 0.32), copy: mixHex(p.bg, p.title, 0.45),
+      head: mixHex(p.wire, '#ffffff', 0.45), rim: mixHex(p.bg, p.wire, 0.7),
+    });
+    // the game's colors, for the wipe (engine/effects.js applyWipe draws with C)
+    Object.assign(C, { bg: p.bg, accent: p.logo, bright: p.title, text: mixHex(p.title, p.bg, 0.2), mid: mixHex(p.bg, p.title, 0.45), dim: mixHex(p.bg, p.logo, 0.25) });
+    document.body.style.background = p.bg;
+  }
+
   // Tech blobs: art (one row) and how it moves: frame(age, seed) -> the row now. Like the title's [@@] and [====].
   const noisy = () => noiseCh();
   const BLOBS = [
@@ -119,6 +146,7 @@
       traces: [], ever: [], everSet: new Uint8Array(W * H), acc: 0, ids: 0,
       seeds: [], m: new Float32Array(W * H), mAcc: 0, cover: 0, blobs: [], bAcc: 0 };
     st.wipe = null;
+    applyPal();
   }
   const types = () => { const t = ['box', 'ascii', 'double', 'dots'].filter(k => SET['wire' + k[0].toUpperCase() + k.slice(1)]); return t.length ? t : ['box']; };
   function spawnTrace(x, y, dx, dy, out) {
@@ -256,29 +284,28 @@
       const shift = a.row === gRow || a.row === gTitle ? (g % 2 ? 1 : -1) : 0;
       const ch = shift && Math.random() < 0.25 ? noiseCh() : a.ch;
       let col, bold = false;
-      if (a.kind === 'rule') col = C.dim;
-      else if (a.kind === 'fill') col = lit ? C.accent : C.dim;
-      else if (a.kind === 'title') { col = lit ? C.accent : C.bright; bold = true; }
-      else { col = lit ? C.bright : C.accent; bold = lit; }
+      if (a.kind === 'rule') col = K.rule;
+      else if (a.kind === 'fill') col = lit ? K.logo : K.fill;
+      else if (a.kind === 'title') { col = lit ? K.logo : K.title; bold = true; }
+      else { col = lit ? K.title : K.logo; bold = lit; }
       out.push({ ch, cx: x + shift, cy: y, col, bold });
     }
     if (copy) {
       const n = Math.max(0, Math.min(copy.text.length, Math.floor((t - P.copyAt) / P.key)));
       const s = copy.text.slice(0, n) + (n > 0 && n < copy.text.length ? '_' : '');
-      [...s].forEach((ch, i) => { if (ch !== ' ') out.push({ ch, cx: copy.x + i, cy: copy.y, col: ch === '_' ? C.accent : C.mid }); });
+      [...s].forEach((ch, i) => { if (ch !== ' ') out.push({ ch, cx: copy.x + i, cy: copy.y, col: ch === '_' ? K.logo : K.copy }); });
     }
     return out;
   }
   function blobMarks(b, t) {   // as engine/fx.js eyeMarks: each cell glitches in, then the art animates, then it glitches out
     const B = P.blobs, age = t - b.t0, left = b.life - age, row = BLOBS[b.art].frame(age, b.seed), out = [];
-    const rim = mixHex(C.bg, C.text, 0.55);
     [...row].forEach((ch, x) => {
       const inAt = FX.hash(x, b.y, b.seed + 51) * B.inMs, outAt = FX.hash(x, b.y, b.seed + 52) * B.outMs;
       if (age < inAt * 0.4 || left < outAt * 0.4) return;
       const glitch = age < inAt || left < outAt || FX.hash(x, b.y, FX.step(t, B.ms) + b.seed) < B.glitch;
       const edge = x === 0 || x === row.length - 1;
-      if (glitch) out.push({ ch: FX.pick(FX_GLITCH, FX.hash(x, b.y, FX.step(t, B.ms) + b.seed + 7)), cx: b.x + x, cy: b.y, col: C.accent });
-      else if (ch !== ' ') out.push({ ch, cx: b.x + x, cy: b.y, col: edge ? rim : C.bright, bold: !edge });
+      if (glitch) out.push({ ch: FX.pick(FX_GLITCH, FX.hash(x, b.y, FX.step(t, B.ms) + b.seed + 7)), cx: b.x + x, cy: b.y, col: K.wire });
+      else if (ch !== ' ') out.push({ ch, cx: b.x + x, cy: b.y, col: edge ? K.rim : K.blob, bold: !edge });
     });
     return out;
   }
@@ -286,7 +313,7 @@
     const out = [], heads = new Map(), cover = new Set();
     for (const tr of S.traces) if (!tr.done) heads.set(idx(tr.x, tr.y), tr.type);
     for (const b of S.blobs) for (let i = -1; i <= b.w; i++) cover.add(idx(b.x + i, b.y));
-    const ink = {}; for (const [k, Wt] of Object.entries(WIRES)) ink[k] = mixHex(C.bg, C[Wt.ink], Wt.tone);
+    const ink = {}; for (const [k, Wt] of Object.entries(WIRES)) ink[k] = mixHex(C.bg, K.wire, Math.min(1, Wt.tone * k100(SET.wireBright, 0.3, 2)));
     for (let k = 0; k < W * H; k++) {
       if (cover.has(k)) continue;
       const x = k % W, y = Math.floor(k / W), m = SET.mold ? S.m[k] : 0, w = S.wire[k];
@@ -295,7 +322,7 @@
         out.push({ ch, cx: x, cy: y, col: mixHex(C.bg, moldCol(m), P.mold.tone) });
       } else if (w) {
         const age = t - S.born[k], ty = S.type[k], head = heads.get(k);
-        const col = head ? C.bright : m >= 0.6 ? mixHex(C.bg, moldCol(m), P.mold.tone) : age < 260 ? mixHex(ink[ty], C.accent, 1 - age / 260) : ink[ty];
+        const col = head ? K.head : m >= 0.6 ? mixHex(C.bg, moldCol(m), P.mold.tone) : age < 260 ? mixHex(ink[ty], K.head, 1 - age / 260) : ink[ty];
         out.push({ ch: head ? WIRES[head].head : w, cx: x, cy: y, col });
       }
     }
@@ -345,9 +372,10 @@
   // Built from a list: [key, label, kind (check | range | number), extra]. A change starts the card over at the same time.
   const STORE = 'neon-endcard.settings';
   const PANEL = [
+    ['', 'PALETTE'], ['palette', 'palette', 'select', { options: () => CARD_PALETTES.map(p => p.name) }],
     ['', 'MOLD'], ['mold', 'mold', 'check'], ['moldSpread', 'spread', 'range'],
     ['', 'WIRES'], ['wireBox', 'box  ─│╭╮', 'check'], ['wireAscii', 'ascii  -|+ o', 'check'], ['wireDouble', 'double  =║', 'check'], ['wireDots', 'dots  ·:', 'check'],
-    ['wireAmount', 'amount', 'range'], ['wireSpeed', 'speed', 'range'], ['wireLength', 'length', 'range'],
+    ['wireBright', 'brightness', 'range'], ['wireAmount', 'amount', 'range'], ['wireSpeed', 'speed', 'range'], ['wireLength', 'length', 'range'],
     ['wireSnake', 'snakes (tail follows)', 'check'], ['snakeLen', 'snake length', 'range', { min: 3, max: 80 }],
     ['', 'TECH BLOBS'], ['blobs', 'blobs', 'check'], ['blobAmount', 'amount', 'range'],
     ['', 'WIPE IN'], ['wipeLevel', 'level', 'select', { options: ['quiet', 'success'] }],
@@ -378,7 +406,7 @@
         SET[key] = kind === 'check' ? inp.checked : +inp.value;
         if (kind === 'range') val.textContent = inp.value;
         changed();
-        if (kind === 'select') { buildPanel(); play = { t0: performance.now(), paused: false, at: 0 }; }   // (the fills list follows the level; and watch the wipe again)
+        if (key === 'wipeLevel' || key === 'wipeFill') { buildPanel(); play = { t0: performance.now(), paused: false, at: 0 }; }   // (the fills list follows the level; and watch the wipe again)
       });
       row.append(kind === 'check' ? inp : name, kind === 'check' ? name : inp, val);
       box.appendChild(row);
@@ -414,7 +442,7 @@
   }
 
   // ---------- running it ----------
-  Object.assign(C, PALETTES.c_basic || PALETTES[DEFAULT_PALETTE]);   // BASIC: the intro's colors
+  Object.assign(C, PALETTES.c_basic || PALETTES[DEFAULT_PALETTE]);   // (the game's colors, then the card's palette over them: applyPal)
   const api = {
     P, W, H, FPS, SET,
     frames: () => Math.round(P.dur / STEP),
