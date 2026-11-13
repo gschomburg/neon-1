@@ -4,7 +4,7 @@
 // when G0D dies). The maze before it is a real corp, HEAVEN.maze (engine/heaven.js), which reads G0DF_SEQ and the maze
 // numbers here. The numbers are all in G0DF; the neon editor's g0d tab can change them.
 'use strict';
-NEON_FILES.push(['engine/g0dfight.js', 'v14.90']);
+NEON_FILES.push(['engine/g0dfight.js', 'v14.91']);
 
 const G0DF = {
   boy: true,                 // b0y helps (his cursors and his lines)
@@ -131,14 +131,50 @@ function g0dfHurt(p, n, why, cause) {
   if (run.integrity <= 0 && !p.card) {
     g0dSay(g0dfVoice('flat', p));
     const stage = p.stage, tip = c ? lootWrap(c.tip, 34) : [], back = p.real && stage === 'stand' ? 'fight' : stage;   // (the run: failing the final stand starts the G0D fight over; the user, 2026-10-31)
-    g0dfCard(p, [stage === 'stand' ? 'HE GOT AWAY' : 'FLATLINED', '', ...tip, '', back === 'maze' ? 'the maze starts over.' : back === 'fight' ? 'the fight starts over.' : 'the final stand starts over.', '', 'tap to go again'], () => {
+    g0dfFlatline(p, stage === 'stand' ? 'HE GOT AWAY' : 'FLATLINED', tip, back === 'maze' ? 'the maze starts over.' : back === 'fight' ? 'the fight starts over.' : 'the final stand starts over.', () => {
       const again = g0dfAgain(p);
       if (back !== stage) { again.startInt = p.fightInt; again.startCr = p.fightCr; }
       st.run.credits = back !== stage ? p.fightCr : p.startCr;
       if (p.real) { stimDown(); st.run.integrity = back !== stage ? p.fightInt : p.startInt; }   // (the run: what you walked in with; a STIM wears off)
       g0dfStart(back, again);
-    }, C.danger);
+    });
   }
+}
+// Dying to G0D (the user's note, 2026-11-12: it just popped up the retry card): a run's death. The music powers down,
+// the screen glitches out, CONNECTION TERMINATED types in, then what got you and the GO AGAIN box come in under it
+// (engine/screens.js buildReveal; no initials, no map). st.flatline: { song } while it falls out, + { rv, lines } after.
+// (TRAILER MODE holds on CONNECTION TERMINATED first: engine/screens.js trailerHold.)
+function g0dfFlatline(p, head, tip, after, go) {
+  p.card = { lines: [], next: null, col: C.danger, at: Infinity };   // holds the fight: no ticks, no taps
+  st.flatline = { song: Music.current() };   // (g0dMusic: the fight's track, sagging, then silence)
+  st.busy = true; st.dying = true;
+  Sound.death();
+  const finish = () => {
+    if (!st.flatline || !st.flatline.rv) return;
+    st.flatline = null; p.card = null; st.trailerHold = false;
+    go();
+  };
+  (async () => {
+    await wait(1100);
+    const cells = snapshot(() => true);
+    st.hideAll = true; st.wipe = null;
+    const ms = fallOut(cells); flash(C.danger, 0.2, 0.4);
+    Sound.collapse(ms / 1000);
+    await wait(ms + 150);
+    st.hideAll = false; st.dying = false;
+    st.flatline.lines = [
+      { text: 'CONNECTION TERMINATED', col: C.danger },
+      { text: '' },
+      { text: head, col: C.dangerDim, bold: true },
+      ...tip.map(t => ({ text: t, col: C.mid })),
+      { text: '' },
+      { text: after, col: C.text },
+      { text: '' },
+      { box: true, text: 'G O   A G A I N', sub: '- tap to try again -', id: 'g0dagain', onTap: finish, minW: 30 },
+    ];
+    st.flatline.rv = { t0: performance.now() + 200, shown: 0, typed: 0, y: null, lt: 0, trailer: !!save.trailerMode };
+    st.busy = false;
+  })();
 }
 const g0dfAgain = p => (p.real ? { real: true, node: p.node, startInt: p.startInt, startCr: p.startCr, fightInt: p.fightInt, fightCr: p.fightCr } : null);   // the same fight, again
 const g0dfHeal = n => { const run = st.run; run.integrity = Math.min(run.maxInt, run.integrity + n); };

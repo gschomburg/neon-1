@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v14.90']);
+NEON_FILES.push(['engine/screens.js', 'v14.91']);
 
 // ---------- circuit traces (the title's, and the intro card's wires: engine/intro.js) ----------
 // Which way each trace char connects (n e s w). Two cells link when each has a port facing the other.
@@ -212,6 +212,7 @@ function buildReveal(ctx, now, rv, all) {
   // rv.pre: lines already on screen (FIRST BREACH's header): they show at once and the rest build in under them
   const pre = rv.pre || 0;
   const typed = pre ? title.length : clamp(Math.floor((now - rv.t0) / REVEAL.type), 0, title.length);
+  if (rv.trailer && !rv.trailerGo) return trailerHold(ctx, now, rv, all[0], typed);   // TRAILER MODE (engine/dev.js)
   // when each line shows up (blank lines come with the next one)
   let k = 1, t = pre ? rv.t0 : rv.t0 + title.length * REVEAL.type + REVEAL.hold, firstPop = null, outAt = null;
   for (let i = 1; i < all.length; i++) {
@@ -283,6 +284,29 @@ function buildReveal(ctx, now, rv, all) {
       if (rv.msg) setMsg(rv.msg.text, rv.msg.col);   // the header's line types in as it comes back
     }
   }
+}
+
+// TRAILER MODE (the dev menu; for recording the trailer, the user 2026-11-12): a death's CONNECTION TERMINATED types in,
+// holds `hold` ms, types back out, and the screen sits black (no footer, no mouse pointer) until a click. Then the
+// reveal starts over from the top as normal (the results, or G0D's GO AGAIN). rv.trailer is set when the reveal starts.
+const TRAILER_HOLD = { hold: 1500 };
+function trailerHold(ctx, now, rv, line, typed) {
+  const title = line.text, typedAt = rv.t0 + title.length * REVEAL.type;
+  const gone = clamp(Math.floor((now - typedAt - TRAILER_HOLD.hold) / REVEAL.type), 0, title.length);
+  st.trailerHold = true;
+  if (now >= rv.t0 && gone < title.length) {
+    const busy = typed < title.length || gone > 0, n = typed < title.length ? typed : title.length - gone;
+    const text = (title.slice(0, n) + (busy ? (Math.floor(now / 250) % 2 ? '_' : ' ') : '')).padEnd(title.length);
+    buildTextBoard(ctx, [Object.assign({}, line, { text })], { top: (L.hc - 1) / 2, h: 1 });   // (where the normal reveal puts it)
+  }
+  if (!ctx.collectHits) return;
+  cv.style.cursor = 'none';
+  if (typed > rv.typed) { rv.typed = typed; Sound.tick(); }
+  if (gone > (rv.gone || 0)) { rv.gone = gone; Sound.tick(); }
+  if (gone >= title.length) ctx.addHit(0, 0, L.wc, L.hc, { kind: 'btn', id: 'trailergo', noFocus: true, onTap: () => {
+    rv.trailerGo = true; st.trailerHold = false; cv.style.cursor = 'default';
+    rv.t0 = performance.now() + 200; rv.typed = 0; rv.y = null;
+  } });
 }
 
 function overLines() {

@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v14.90']);
+NEON_FILES.push(['engine/heaven.js', 'v14.91']);
 
 const HEAVEN = {};
 
@@ -1197,6 +1197,8 @@ MUSIC_FOR.cerberus = 'rootaccess';
 //   the collapse: it powers down (heavenCollapse) and nothing comes back in
 function g0dMusic() {
   const p = st.g0df, now = performance.now(), o = (song, x) => Object.assign({ song: trackFor(song), level: 2, urgency: 0, low: false, tempo: 1, pitch: 1, section: 'A' }, x);
+  // dying to G0D (engine/g0dfight.js g0dfFlatline): the fight's track while it powers down, then silence
+  if (st.flatline) return { song: st.flatline.rv ? 'none' : st.flatline.song || 'none', level: 2, urgency: 0, low: false, tempo: 1, pitch: 1 };
   if (st.mode === 'g0df' && p && !p.card) {
     if (p.stage === 'maze') return o('maze', { level: clamp(1 + Math.floor(((p.maze && p.maze.path) || 0) / 2), 1, 3) });
     if (p.stage === 'fight') {

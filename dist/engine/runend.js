@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v14.90']);
+NEON_FILES.push(['engine/runend.js', 'v14.91']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -90,7 +90,7 @@ async function endRun(win) {
   scenePalette(null);
   showBoard('over');
   // Losing builds the results up out of the empty screen (no decode-in).
-  st.overReveal = win ? null : { t0: performance.now() + 200, shown: 0, typed: 0, y: null, lt: 0 };
+  st.overReveal = win ? null : { t0: performance.now() + 200, shown: 0, typed: 0, y: null, lt: 0, trailer: !!save.trailerMode };   // (trailer: TRAILER MODE's hold, engine/screens.js)
   st.overMap = null;
   if (!win) st.boardStart = -1e9;
   {

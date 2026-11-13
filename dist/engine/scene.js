@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v14.90']);
+NEON_FILES.push(['engine/scene.js', 'v14.91']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -82,6 +82,7 @@ function buildScene(now, collectHits, raw = false) {
   // Footer, bottom row on every screen: [DEV] (when dev access is on) + build version. The
   // version is the link to the INFO page (not during a run or a multiplayer game).
   const footerRight = () => {
+    if (save.trailerNoFooter || st.trailerHold) return;   // TRAILER MODE's footers off, and its black hold (engine/dev.js)
     const y = L.hc - 1, x0 = L.wc - versionTag.length, live = !st.run && !st.mp && !st.busy && !st.transitioning;
     putR(y, versionTag, st.hoverBtn === 'info' ? C.accent : C.dim);
     if (live) {
@@ -102,6 +103,9 @@ function buildScene(now, collectHits, raw = false) {
     buildBossIntro(ctx, now);
   } else if (!cover && st.mode === 'over' && st.overReveal) {
     buildOverReveal(ctx, now);
+    footerRight();
+  } else if (!cover && st.flatline && st.flatline.rv) {   // dying to G0D (engine/g0dfight.js g0dfFlatline)
+    buildReveal(ctx, now, st.flatline.rv, st.flatline.lines);
     footerRight();
   } else if (!cover && st.mode === 'panel' && st.panelReveal && !st.panelReveal.done) {
     buildReveal(ctx, now, st.panelReveal, panelLines());
@@ -271,7 +275,8 @@ function buildScene(now, collectHits, raw = false) {
   // Footer: the run's seed, small and out of the way.
   // Left side of the footer, clipped so it never runs into [DEV] / the version.
   const footRoom = L.wc - versionTag.length - (st.devAccess || st.dev ? 8 : 1) - 1;
-  if (run && st.mode !== 'over') put(0, boardEnd + 6, `seed ${run.seed}${run.quest ? ' quest' : run.practice ? ' practice' : run.seeded ? ' replay' : ''}`.slice(0, footRoom), C.dim);
+  if (save.trailerNoFooter) { /* TRAILER MODE: footers off */ }
+  else if (run && st.mode !== 'over') put(0, boardEnd + 6, `seed ${run.seed}${run.quest ? ' quest' : run.practice ? ' practice' : run.seeded ? ' replay' : ''}`.slice(0, footRoom), C.dim);
   else if (st.mp) put(0, boardEnd + 6, `room ${st.mp.code}`, C.dim);
   footerRight();
   }

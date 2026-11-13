@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v14.90']);
+NEON_FILES.push(['engine/input.js', 'v14.91']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -267,7 +267,7 @@ cv.addEventListener('pointermove', e => {
   st.hoverNode = h && (h.kind === 'node' || h.kind === 'peek') ? h.id : null;
   st.hoverItem = h && h.kind === 'item' ? h.i : -1;
   st.hoverMod = h && h.kind === 'mod' ? h.i : -1;
-  cv.style.cursor = h ? 'pointer' : 'default';
+  cv.style.cursor = st.trailerHold ? 'none' : h ? 'pointer' : 'default';   // (TRAILER MODE's black hold: engine/screens.js)
 });
 cv.addEventListener('pointerup', e => {
   if (st.mode === 'fish' && st.fish) fishPointer('up', e);
@@ -327,6 +327,11 @@ document.addEventListener('keydown', e => {
   if (st.bossIntro && e.key !== '`') { st.bossIntro.skip = true; return; }
   if (st.g0dFake && !st.dev && e.key !== '`') return;   // H3AV3N's fake win: its rewards screen takes no keys either
   if (e.key === '`') return toggleDev();
+  // TRAILER MODE (engine/dev.js): K flatlines you in a G0D fight, any time (the wake-up too), for the trailer's death
+  if (k === 'k' && save.trailerMode && !st.dev && st.mode === 'g0df' && st.g0df && !st.g0df.card && st.run) {
+    st.run.practice = true; st.run.integrity = 0;
+    return g0dfHurt(st.g0df, 0, 'flatlined.', null);
+  }
   if (st.keyHandler && st.keyHandler.typing && !st.dev && k.length === 1 && st.keyHandler(k)) return;   // typing (leaderboard initials)
   if (k === 'm' && !st.dev) return toggleMute();
   if (k === 'n' && !st.dev) return toggleMusic();

@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v14.90']);
+NEON_FILES.push(['engine/dev.js', 'v14.91']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1. THE SHELL (~ or Ctrl + `,
@@ -253,6 +253,14 @@ function devMenuLines() {
     { text: '[+100 REP]', id: 'rep', onTap: () => { save.rep = (save.rep || 0) + 100; persist(); Sound.buy(); } },
     { text: '[reset legacy]', id: 'leg0', onTap: () => { save.legacy = {}; save.rep = 0; persist(); Sound.deny(); } },
   ] });
+  // TRAILER MODE (the user, 2026-11-12, recording the trailer): a death holds on CONNECTION TERMINATED, goes black and
+  // waits for a click (engine/screens.js trailerHold); K flatlines you in a G0D fight (engine/input.js). Footers: the
+  // seed / version / [DEV] row off (engine/scene.js). Both saved.
+  lines.push({ row: [
+    { text: `[trailer ${save.trailerMode ? 'ON' : 'off'}]`, id: 'trailer', onTap: () => { save.trailerMode = !save.trailerMode; persist(); Sound.ui(); } },
+    { text: `[footers ${save.trailerNoFooter ? 'off' : 'on'}]`, id: 'footers', onTap: () => { save.trailerNoFooter = !save.trailerNoFooter; persist(); Sound.ui(); } },
+  ] });
+  if (save.trailerMode) T('deaths hold, K kills you vs G0D', C.dim);
   T('');
   T(SEP, C.dim);
   B('[ music player ]', 'tracks', openTrackPlayer);
