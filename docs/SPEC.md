@@ -1225,3 +1225,4 @@ Open work is in [BACKLOG.md](BACKLOG.md) now (2026-10-26). This section, as it w
 | 2026-10-19 | v04 built from the full pending list (see §16c) |
 | 2026-10-19 | v04 second pass: locked-node labels, pause menu + abandon, keyboard controls, scrolling codex (see §16d) |
 | 2026-10-19 | v05 built from the pending list (see §16e): corp intros/palettes, music, title round 2 |
+| 2026-11-13 | **Decided (Greg):** v14 is the trailer version (it ends at v14.92). The next change to the game is v15.00, a major bump with a new save slot |
