@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v14.91']);
+NEON_FILES.push(['engine/dev.js', 'v14.92']);
 
 // ---------------- Dev menu ----------------
 // Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1. THE SHELL (~ or Ctrl + `,
@@ -249,6 +249,14 @@ function devMenuLines() {
     if (st.dev) toggleDev();
     sectorClear(false);
   }), !idle || st.mode !== 'map');
+  // H3AV3N jumps, a fresh practice run each (engine/shell.js shellHeaven, the same as the shell's `heaven` and the
+  // editor's g0d tab). G0D: on the map with G0D next; you breach it.
+  const hv = where => () => { if (st.dev) toggleDev(); shellHeaven(where, endRun); };
+  lines.push({ row: [
+    { text: '[heaven map]', id: 'hvmap', onTap: hv('map'), disabled: !idle },
+    { text: '[maze]', id: 'hvmaze', onTap: hv('maze'), disabled: !idle },
+    { text: '[G0D]', id: 'hvdoor', onTap: hv('door'), disabled: !idle },
+  ] });
   lines.push({ row: [
     { text: '[+100 REP]', id: 'rep', onTap: () => { save.rep = (save.rep || 0) + 100; persist(); Sound.buy(); } },
     { text: '[reset legacy]', id: 'leg0', onTap: () => { save.legacy = {}; save.rep = 0; persist(); Sound.deny(); } },

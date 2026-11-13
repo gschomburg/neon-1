@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v14.91']);
+NEON_FILES.push(['engine/shell.js', 'v14.92']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -70,6 +70,11 @@ async function shellHeaven(where, end = shellEndRun) {
   const real = () => ({ real: true, node: node('g0d'), startInt: st.run.integrity, startCr: st.run.credits });
   if (where === 'maze') { await enterNode(node('maze'), true); await shellSettle(); }
   if (where === 'fight') await enterNode(node('g0d'), true);
+  if (where === 'door') {   // past the maze, on the map, G0D next: you tap it and BREACH yourself (the user, 2026-11-13, recording the trailer)
+    const m = node('maze');
+    st.run.at = m.id; if (!st.run.visited.includes(m.id)) st.run.visited.push(m.id);
+    toMap(); await shellSettle();
+  }
   if (where === 'fake') heavenFakeWin(real());
   if (where === 'die') { g0dfStart('fight', real()); heavenDie(st.g0df); }
   if (where === 'stand') g0dfStart('stand', real());
@@ -281,7 +286,7 @@ const SHELL_CMDS = shellGroups([
   { name: 'b0y.omni', help: 'OMNI RAID: the OMNI boss, b0y called in', run: () => shellB0yOmni() },
   { name: 'rival.gear', help: "the rivals' gear on your belt", run: () => { const run = shellNeedRun(); for (const k of ['leash', 'bone', 'muzzle', 'honey']) run.items.push({ key: k, tier: 0, n: 1 }); } },
   { name: 'hacker', args: [{ name: 'hacker', of: 'hackers' }], help: 'bring a hacker into this layer', run: a => { if (!st.corp || !st.corp.hasBoss || !st.lv) throw new Error('get into a corp layer first'); hkSpawn(a[0], HACKERS[a[0]].side === 'bad' ? 'rival' : 'call'); } },
-  { name: 'heaven', args: [{ name: 'where', of: fixed(['map', 'its sector map'], ['maze', 'the maze'], ['fight', 'G0D'], ['die', 'G0D dies'], ['fake', 'the fake win'], ['stand', 'the stand'], ['end', 'the collapse']), opt: true }], help: 'H3AV3N in a practice run', run: a => shellHeaven(a[0] || 'map') },
+  { name: 'heaven', args: [{ name: 'where', of: fixed(['map', 'its sector map'], ['maze', 'the maze'], ['door', 'G0D next, not breached'], ['fight', 'G0D'], ['die', 'G0D dies'], ['fake', 'the fake win'], ['stand', 'the stand'], ['end', 'the collapse']), opt: true }], help: 'H3AV3N in a practice run', run: a => shellHeaven(a[0] || 'map') },
 
   // ----- G0D.exe (engine/g0dexe.js; its settings are kept in the save) -----
   'G0D.exe',

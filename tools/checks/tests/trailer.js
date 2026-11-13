@@ -39,5 +39,10 @@ module.exports = { name: 'trailer', body: `
   check(!st.trailerHold && rv.trailerGo, 'the click carries on');
   check(await waitFor(() => rv.total && rv.vis >= rv.total, 8000), 'the normal reveal plays after it');
   save.trailerMode = false; save.trailerNoFooter = false;
+  // the dev menu's [G0D] (shellHeaven 'door'): a fresh run on heaven's map, past the maze, G0D next but not breached
+  await shellHeaven('door', endRun); await settle('door');
+  const g = Object.values(st.run.map).find(o => o.heaven === 'g0d');
+  check(st.mode === 'map' && st.run.map[st.run.at].heaven === 'maze' && availableNodes().includes(g.id), 'the door: on the map, G0D is next');
+  check(!st.g0df, 'the door: G0D not started');
   check(!(window.__errs || []).length, 'no errors: ' + (window.__errs || []).join(' | '));
 ` };
