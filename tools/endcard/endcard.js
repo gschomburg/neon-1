@@ -26,6 +26,7 @@
     wireSnake: false, snakeLen: 30,
     wireAmount: 50, wireSpeed: 50, wireLength: 50,
     blobs: false, blobAmount: 50,
+    wipeLevel: 0, wipeFill: 2,   // the wipe in: 0 quiet (grey fill) / 1 success (cyan, sparks); its fill pattern (engine/effects.js FILLS)
   };
   const SET = Object.assign({}, DEFAULTS);
   const k100 = (v, lo, hi) => v <= 50 ? lo + (1 - lo) * v / 50 : 1 + (hi - 1) * (v - 50) / 50;   // 0 -> lo, 50 -> 1, 100 -> hi
@@ -306,11 +307,12 @@
     if (t < P.wipeAt) return [];
     let cells = worldCells(t).concat(artCells(t));
     // the wipe: the game's own, from black (no old screen), building the card in
-    const w0 = P.wipeAt, T = WIPE_TIME[0];
-    const tIn = w0 + T.travel * CONFIG.wipeOverlap / CONFIG.wipeSpeed;
+    const lvl = SET.wipeLevel ? 1 : 0, fills = lvl ? FILLS.success : FILLS.quiet;
+    const w0 = P.wipeAt, T = WIPE_TIME[lvl];
+    const tIn = w0 + T.travel * (lvl ? CONFIG.wipeOverlapWin : CONFIG.wipeOverlap) / CONFIG.wipeSpeed;   // (as engine/effects.js wipeOut's hand-off)
     const done = tIn + (T.travel + T.decay * 1.3 + CONFIG.wipeStagger) / CONFIG.wipeSpeed;
     if (t < done) {
-      st.wipe = st.wipe || { t0: w0, level: 0, cells: [], lit: null, pattern: FILLS.quiet[2], tIn, full: true, top: 0, bot: H, mold: 0, eyes: 0 };
+      st.wipe = st.wipe || { t0: w0, level: lvl, cells: [], lit: null, pattern: fills[Math.min(SET.wipeFill, fills.length - 1)], tIn, full: true, top: 0, bot: H, mold: 0, eyes: 0 };
       cells = applyWipe(cells, t);
     } else st.wipe = null;
     return cells;
@@ -348,6 +350,8 @@
     ['wireAmount', 'amount', 'range'], ['wireSpeed', 'speed', 'range'], ['wireLength', 'length', 'range'],
     ['wireSnake', 'snakes (tail follows)', 'check'], ['snakeLen', 'snake length', 'range', { min: 3, max: 80 }],
     ['', 'TECH BLOBS'], ['blobs', 'blobs', 'check'], ['blobAmount', 'amount', 'range'],
+    ['', 'WIPE IN'], ['wipeLevel', 'level', 'select', { options: ['quiet', 'success'] }],
+    ['wipeFill', 'fill', 'select', { options: () => SET.wipeLevel ? ['streams', 'noise', 'double chevrons', 'arrows'] : ['streams', 'noise', 'chevrons', 'dashes', 'checker'] }],
     ['', 'SEED'], ['seed', 'seed', 'number'],
   ];
   let play = { t0: 0, paused: false, at: 0 };
@@ -359,8 +363,13 @@
       if (!kind) { const h = document.createElement('div'); h.className = 'head'; h.textContent = label; box.appendChild(h); continue; }
       const row = document.createElement('label'); row.className = 'row';
       const name = document.createElement('span'); name.textContent = label;
-      const inp = document.createElement('input');
-      inp.type = kind === 'check' ? 'checkbox' : kind === 'range' ? 'range' : 'number';
+      const inp = document.createElement(kind === 'select' ? 'select' : 'input');
+      if (kind === 'select') {
+        const opts = typeof ex.options === 'function' ? ex.options() : ex.options;
+        if (SET[key] >= opts.length) SET[key] = 0;
+        opts.forEach((o, i) => { const op = document.createElement('option'); op.value = i; op.textContent = o; inp.appendChild(op); });
+        inp.value = SET[key];
+      } else inp.type = kind === 'check' ? 'checkbox' : kind === 'range' ? 'range' : 'number';
       if (kind === 'range') { inp.min = ex ? ex.min : 0; inp.max = ex ? ex.max : 100; inp.step = 1; inp.value = SET[key]; }
       if (kind === 'number') inp.value = SET[key];
       if (kind === 'check') inp.checked = !!SET[key];
@@ -369,6 +378,7 @@
         SET[key] = kind === 'check' ? inp.checked : +inp.value;
         if (kind === 'range') val.textContent = inp.value;
         changed();
+        if (kind === 'select') { buildPanel(); play = { t0: performance.now(), paused: false, at: 0 }; }   // (the fills list follows the level; and watch the wipe again)
       });
       row.append(kind === 'check' ? inp : name, kind === 'check' ? name : inp, val);
       box.appendChild(row);
