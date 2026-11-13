@@ -27,6 +27,8 @@
     wireAmount: 50, wireSpeed: 50, wireLength: 50,
     blobs: false, blobAmount: 50,
     palette: 0, wireBright: 50,
+    duration: 8,                 // seconds
+    wireStop: 8,                 // seconds: new wires taper off to none over P.wires.taper from here (at the end: they never stop)
     wipeLevel: 0, wipeFill: 2,   // the wipe in: 0 quiet (grey fill) / 1 success (cyan, sparks); its fill pattern (engine/effects.js FILLS)
   };
   const SET = Object.assign({}, DEFAULTS);
@@ -38,7 +40,7 @@
     wipeAt: 120,            // the wipe starts (the frames before it are black)
     copyAt: 1250, key: 38,  // "network intrusion // prototype" types in
     shine: 2600, glitch: 1900, glitchMs: 110,   // the intro card's shine and row glitch (engine/intro.js INTRO_CARD_FX)
-    wires: { at: 1900, full: 5200, rate: [6, 40], speed: [20, 46], len: [14, 72], turn: 0.12, branch: 0.035, fromWire: 0.5, max: 340 },
+    wires: { at: 1900, full: 5200, taper: 1000, rate: [6, 40], speed: [20, 46], len: [14, 72], turn: 0.12, branch: 0.035, fromWire: 0.5, max: 340 },
     mold: { at: 3000, full: 7400, r: [1.3, 3.4], grow: 1100, amp: [2.2, 4.6], tone: 0.72, keep: [5, 2], pick: 8 },
     blobs: { at: 2600, every: 90, life: [1500, 1800], inMs: 300, outMs: 280, glitch: 0.04, ms: 70 },   // (as data/fx.js eyes)
     keep: [2, 1],           // the clean margin around the art (cells across, rows down)
@@ -146,6 +148,8 @@
       traces: [], ever: [], everSet: new Uint8Array(W * H), acc: 0, ids: 0,
       seeds: [], m: new Float32Array(W * H), mAcc: 0, cover: 0, blobs: [], bAcc: 0 };
     st.wipe = null;
+    P.dur = Math.round(SET.duration * 1000);
+    P.mold.full = Math.max(P.mold.at + 1000, P.dur - 600);   // (the mold reaches its spread just before the end)
     applyPal();
   }
   const types = () => { const t = ['box', 'ascii', 'double', 'dots'].filter(k => SET['wire' + k[0].toUpperCase() + k.slice(1)]); return t.length ? t : ['box']; };
@@ -171,10 +175,11 @@
     if (S.own[k] === t.id) { S.wire[k] = null; S.own[k] = -1; }
   }
   function stepWires(dt) {
-    const Wc = P.wires;
-    if (S.t >= Wc.at) {
+    const Wc = P.wires, stopAt = SET.wireStop * 1000;
+    const taper = stopAt >= P.dur ? 1 : 1 - ease((S.t - stopAt) / Wc.taper);   // new wires (and branches) taper off to none
+    if (S.t >= Wc.at && taper > 0) {
       const heat = ease((S.t - Wc.at) / (Wc.full - Wc.at));
-      S.acc += dt / 1000 * between(Wc.rate, heat) * k100(SET.wireAmount, 0.15, 2.5);
+      S.acc += dt / 1000 * between(Wc.rate, heat) * k100(SET.wireAmount, 0.15, 2.5) * taper;
       while (S.acc >= 1) {
         S.acc -= 1;
         if (S.ever.length > 20 && rnd() < Wc.fromWire * heat) {   // a new branch off a wire (to reach the edges)
@@ -207,7 +212,7 @@
         t.x = nx; t.y = ny; t.n++;
         lay(t, nx, ny, dx ? Wt.h : Wt.v);
         if (snake && t.pts.length > tail) unlay(t);
-        if (rnd() < P.wires.branch) spawnTrace(nx, ny, dy ? (rnd() < 0.5 ? 1 : -1) : 0, dx ? (rnd() < 0.5 ? 1 : -1) : 0, t.out);
+        if (rnd() < P.wires.branch * taper) spawnTrace(nx, ny, dy ? (rnd() < 0.5 ? 1 : -1) : 0, dx ? (rnd() < 0.5 ? 1 : -1) : 0, t.out);
       }
       if (t.done && Wt.end && !snake && !t.capped) { t.capped = true; const k = idx(t.x, t.y); if (S.own[k] === t.id) S.wire[k] = Wt.end; }   // ascii: an o at the end
       if (t.done && (!snake || !t.pts.length)) { if (snake) S.traces.splice(i, 1); }
@@ -372,6 +377,7 @@
   // Built from a list: [key, label, kind (check | range | number), extra]. A change starts the card over at the same time.
   const STORE = 'neon-endcard.settings';
   const PANEL = [
+    ['', 'TIMING'], ['duration', 'duration (s)', 'range', { min: 4, max: 16, step: 0.5 }], ['wireStop', 'wires stop (s)', 'range', { min: 2, max: () => SET.duration, step: 0.1 }],
     ['', 'PALETTE'], ['palette', 'palette', 'select', { options: () => CARD_PALETTES.map(p => p.name) }],
     ['', 'MOLD'], ['mold', 'mold', 'check'], ['moldSpread', 'spread', 'range'],
     ['', 'WIRES'], ['wireBox', 'box  ─│╭╮', 'check'], ['wireAscii', 'ascii  -|+ o', 'check'], ['wireDouble', 'double  =║', 'check'], ['wireDots', 'dots  ·:', 'check'],
@@ -398,14 +404,16 @@
         opts.forEach((o, i) => { const op = document.createElement('option'); op.value = i; op.textContent = o; inp.appendChild(op); });
         inp.value = SET[key];
       } else inp.type = kind === 'check' ? 'checkbox' : kind === 'range' ? 'range' : 'number';
-      if (kind === 'range') { inp.min = ex ? ex.min : 0; inp.max = ex ? ex.max : 100; inp.step = 1; inp.value = SET[key]; }
+      if (kind === 'range') { inp.min = ex ? ex.min : 0; inp.max = ex ? (typeof ex.max === 'function' ? ex.max() : ex.max) : 100; inp.step = ex && ex.step || 1; inp.value = SET[key]; }
       if (kind === 'number') inp.value = SET[key];
       if (kind === 'check') inp.checked = !!SET[key];
       const val = document.createElement('span'); val.className = 'val'; val.textContent = kind === 'range' ? SET[key] : '';
       inp.addEventListener('input', () => {
+        const prev = SET[key];
         SET[key] = kind === 'check' ? inp.checked : +inp.value;
         if (kind === 'range') val.textContent = inp.value;
         changed();
+        if (key === 'duration') { if (SET.wireStop > SET.duration || SET.wireStop === prev) { SET.wireStop = SET.duration; changed(); } buildPanel(); }   // (wires stop follows the end when it was there)
         if (key === 'wipeLevel' || key === 'wipeFill') { buildPanel(); play = { t0: performance.now(), paused: false, at: 0 }; }   // (the fills list follows the level; and watch the wipe again)
       });
       row.append(kind === 'check' ? inp : name, kind === 'check' ? name : inp, val);
