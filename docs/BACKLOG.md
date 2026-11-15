@@ -378,42 +378,8 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   - Which BOARD posts become chips (NEMESIS, STARTER POOL, LOCKER, TELL LIGHT), or only new things.
   - Whether a progression wipe (`PROGRESS_EPOCH`) wipes the deck, or it stays like the codex.
   - What a chip looks like, and how the info area fits on a phone (23 rows).
-- **Board v2** (`asxii_art/deck_board_v02.asxii.json`, Greg, 2026-11-15: new traces, sockets moved, layers cut down;
-  "just illustration now", the socket count gets tuned once we know what each one does). 25 slots, three bands, top to
-  bottom. The bands are the split Greg drew; the lower two read as daughterboards plugged in through the header.
-  Claude's first pass at what each one is (rows/cols are the asXii file's):
-  - **OPEN (the deck as you get it, mk II): 13 slots.**
-    - **CPU** (3,2): NEURAL DECK mk II. Tap it for the deck's level and the upgrade.
-    - **RIG BANK**, 4 sockets off the CPU's right pins (21,1) (27,1) (21,4) (27,4): REP posts with a switch or a
-      pick: NEMESIS (pick the corp), TELL LIGHT, STRAY, STARTER POOL, SHORTLIST, BOSS LOOT.
-    - **PSU** (0,20), the `+=-=+` socket on the left edge: integrity. HARDENED sits here, lit, so you see it's on
-      (Greg). Swap ideas: SECOND WIND, or a GLASS chip (-1 integrity, +money).
-    - **THE STICK** (23,7), the tall 3x7 slot: one crash unit. The 1UP lives here (Greg: swap it for other things you
-      find). Same family: DEADMAN (keep REP on death), a black box (die and one mod goes to the LOCKER), EJECT (cash
-      out from anywhere, once).
-    - **GLYPH** (27,9), the 5x5 with the X: your favourite glyph, a REP unlock (Greg). Seeing it on a layer and
-      tapping it acts like a loot node, ICE or real. Or you pick the mod it gives.
-    - **BOSS ROW**, 4 sockets at row 15: (15,15) is fed straight from the CPU (the `>:<`), so it's the SPOILS switch:
-      skip a corp boss's rewards screen for a heal or for money (Greg). (20,15) and (28,15) share the `[___.___]`
-      bar: a linked pair, two chips that combo. (0,15): a shell chip.
-    - **KEYED** (12,20), the notched one: a shell chip.
-    - **THE BYTE** (25,20), 8 bits: DIP switches. Most of the 256 codes do nothing; a few do something (a challenge
-      mode, a hidden corp, a skin). The codes are hidden in the game: a corp's logo, a post, G0D's lines. Or (Greg's
-      other idea) the bits light up as you unlock the shell.
-    - **Readout** (27,14), the `]8[`: a 7-segment digit. The deck's mk, or how many chips are slotted.
-    - **The header** (6,24), the `db / oo / vv` box: where the lower boards plug in. Upgrading the deck plugs one in.
-  - **mk III (4 sockets, row 30):** the `^` under each points back up to the open board. A shell rack: more commands.
-    Opens at SYSOP, or for REP.
-  - **mk IV (8 slots, rows 38-46):** 3 small down each side, fed by the `|||||`, and 2 wide ones in the middle (the
-    `o.o`): wide chips for big things (a boss's own chip, G0D's, KONAMI's). Opens after beating G0D?
-  - **Open (board v2):**
-    - Does the deck cap what you already own? If the RIG BANK has 4 sockets and you own 7 switch posts, you lose
-      some. Claude's lean: posts you've bought stay on; only the ones with a choice (NEMESIS, SPOILS) are set here,
-      and found chips are what compete for sockets.
-    - THE BYTE: secret codes or shell progress (or both: the lit bits show progress, flipping them enters a code)?
-    - Shell chips have only 2 open sockets (+4 at mk III). Is that the shell's limit, or should the byte be it?
-    - 25 slots is a lot for one screen. Trim once the chip list exists.
-    - Not filled in yet (Greg: figure out the slots first): silkscreen labels, the tech bits and blobs from v01.
+- **Board v2 and the socket plan: `docs/DECK.md`** (2026-11-15): Greg's layout (`asxii_art/deck_board_v02.asxii.json`),
+  every socket group named, what goes in each, the mk levels and power, and the backlog ideas that fit there.
 
 ### 12. A NetHack-style dungeon (meat notes 2026-11-15, "net hack inspiration")
 - A place on the map takes you into a dungeon: sewers, tunnels, data mines ("maybe make hackery?"). Maybe it's where
