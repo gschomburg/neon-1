@@ -15,7 +15,10 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
 - **DEADMAN goes in the CRASH socket.** CHUCK E. CACHE's 1UP stays a mod idea (BACKLOG section 7).
 - **Beat G0D and you can slot the 1UP right away.** So the deck has to open before that, or CRASH needs something
   to hold earlier (see "How it opens").
-- **THE BYTE is for secret codes.** The shell has its own sockets.
+- **THE BYTE is for secret codes.** The shell has its own sockets. One row of bits, not two. Under it, a readout:
+  a scrolling ticker (like `FX.ticker`) that says when a code does something, and can show anything else too.
+- **The CRASH socket is a normal 3x2 socket.** The tall stick becomes its readout, like the byte's: with a chip in,
+  the stick spells out what it is (DEADMAN, 1UP).
 - **Each shell socket holds one command.** No command + argument pairs: each command takes different arguments.
 - **The FUSE is the extra power** that turns the bottom of the board on once you have the REP for it.
 - **Keep the PSU and the FUSE** even though you can't see them in a run. Make them fit, maybe through a boss you fight
@@ -280,6 +283,10 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
     (BIDBLITZ).
 
 ### CRASH (1): when you die
+- **The socket** (Greg, 2026-11-15): a normal 3x2 socket, next to the stick. The stick is its readout and shows
+  the slotted chip's name, top to bottom. It's 5 tall inside: 1UP fits, DEADMAN (7) scrolls through it like a
+  ticker, or the stick grows to 7. Claude: the socket could go right of the stick, where the glyph was (the
+  capacitors are there now), with the stick's tabs wiring the two together.
 - **1UP:** b0y's crash unit, from beating G0D. Back to the start of the corp.
 - **DEADMAN** (Greg: it goes here): dying keeps 25% / 50% of the REP. Bought on THE BOARD, as now.
 - **CHECKPOINT:** die in a corp and you start over at its first layer, with a cost.
@@ -345,6 +352,8 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   That's where the PSU and the FUSE show up in a run.
 
 ### THE BYTE: secret codes
+- **The look** (Greg, 2026-11-15): the bits are one row. The `(........)` under them is a readout: a scrolling
+  ticker that says when a code does something ("0xFF: OVERFLOW wakes up"), or anything else we want there.
 - Eight switches, so 256 codes, hidden around the game in binary or hex. Most codes do nothing. Ideas:
   - `11111111` (0xFF): **OVERFLOW**'s boss seed. Add one more and it wraps; that's his whole joke.
   - The other boss seeds (TWIN, PHISHER, SLEEPER...), one code each, hidden where BACKLOG section 4 says the
