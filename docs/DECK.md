@@ -1,6 +1,7 @@
 # THE DECK: the sockets, the chips, and how it opens
 
-Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). A plan to look over; nothing is
+The in-game mockup: `docs/mockups/deck_v3.html` (scroll, select, slot, the chip list, the parts that aren't
+sockets). Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). A plan to look over; nothing is
 built. BACKLOG section 11 has where the idea came from; the mockups are `docs/mockups/deck.html` and `deck_v2.html`.
 
 Everything here is Claude's unless it says Greg. The socket count gets tuned once each group's chip list settles
@@ -9,6 +10,9 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
 ## Decided so far (Greg, 2026-11-15)
 - **Outside a run.** You set the deck up between runs. It doesn't come up while you play.
 - **Chips have a rarity, one each.** No chip comes in more than one rarity.
+- **One of each chip.** Once you have one there's no reason to get it again, except to scrap it: a chip you
+  already own, found again, scraps into its letters. (Claude: the drop tables could skip chips you own, so finds
+  stay new.)
 - **You keep a chip only if you cash out with it.** Die and it's gone.
 - **Chips come from many places:** loot drops, bosses, quests, crafting (maybe by accident), and the fence (a chip of
   its own, or a selection of them).
