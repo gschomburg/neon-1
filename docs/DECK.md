@@ -74,6 +74,49 @@ Claude's ladder, so the 1UP always has somewhere to go:
 - **Rarity:** the box's outline is in its rarity colour, not a filled tile, so chips don't look like letter tiles.
   Rarer chips are stronger and cost more power.
 
+## What a chip looks like
+**Decided (Greg, 2026-11-15):** chips are 3 wide and 2 tall, so they look different from everything else (letter
+tiles, mod badges and gear chips are all one row). The sockets get a row taller to fit.
+
+Some ways to fill the two rows (Claude's; to try in asXii):
+```
+ 1UP      1UP      1UP      .1UP
+ '''      =o=      [*]      '''
+code     code     code     notch
++ legs   + a bus  + a mark  + legs
+```
+- With two rows, a chip can have a filled background in its rarity colour and still never pass for a letter tile.
+  That beats the outline-only rule from before (BACKLOG section 11).
+- **A socket, 5 x 4:**
+  ```
+  +---+    + - +    +...+
+  |1UP|    :   :    :mk3:
+  |'''|    :   :    :   :
+  +-+-+    + - +    +...+
+  filled   empty    locked
+  ```
+  Greg's v2 sockets are 5 x 3, so the board art gets a row taller wherever a socket is (the CRASH stick and the BYTE
+  already have their own shapes).
+
+### Everywhere else a chip shows up
+Every place gives a chip two rows, and any list it's in has to scroll by row:
+- **The deck's info area** (the market-style panel): the chip, then its name and text beside it. Two rows of chip
+  leave the text two rows, side by side, like a tile does in HOW TO PLAY.
+- **Lists that scroll:** the fence, the deck's own chip list (the chips you own), a codex page for chips, maybe the
+  market. The game already scrolls a 3-row thing by row: HOW TO PLAY splits each tile into one line per row
+  (`tileRow`, engine/help.js `flatRows`; engine/textboard.js draws them), so a scroll can stop halfway through a
+  tile. Chips do the same thing with 2 rows. Also add them to `lineRows` (engine/textboard.js) so the screens that
+  count rows count them right.
+- **Boss rewards and loot popups:** a chip dropped as a reward takes 2 rows on that screen. Count the rewards
+  screen's rows (it's tight on a phone: 23 rows).
+- **The belt, mid-run** (if chips ride in the belt): the tray's gear slots are one row (`[PURGE]`). A 2-row chip
+  won't fit, so the belt shows a one-row stand-in, e.g. `[#1UP]` in the chip's colour. Tapping it shows the
+  real 2-row chip in the detail box. (The chip case, if we go that way instead, has the same problem.)
+- **Cashing out and the death screen:** "chips kept" / "chips lost" lines: 2 rows each, or the stand-ins in one
+  row when there are several.
+- **The workbench:** if a code with a digit builds a chip, the result slot shows it at full size. The bench draws
+  itself (`draw`, with its own height), so it has room.
+
 ## The map
 Greg's v2 art, each socket named (`^3` marks one to move down to mk III):
 
