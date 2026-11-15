@@ -23,6 +23,10 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
 - **The ports are a keeper.**
 - **Backlog ideas can move here** (done: BACKLOG points here for each one).
 - **A short training** once the board opens, to point things out.
+- **The CPU shows your hacker name** (Greg, 2026-11-15), not NEURAL DECK, with the mk under it. Names are
+  `WORD_WORD` (data/personas.js), up to 13 characters (STATIC_GOBLIN); the CPU is 12 wide inside. A name that
+  doesn't fit goes on 2 lines, split at the `_` (each word is 6 at most). Maybe small silkscreen under it
+  (`MEDIX NC-1`). Names with MK2 in them (`POTATO_MK2` over `mk II`) are a free joke.
 
 ## The name
 Greg likes "board" better than "deck", but THE BOARD is already the REP screen. Options:
