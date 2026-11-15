@@ -22,8 +22,8 @@ unlocked by REP, and some quests unlock REP.
 **Greg, 2026-11-07:** "we are pretty good on gear for now."
 - **PACK RAT** (exotic; the gear top-up's big cousin, RELOAD is the built one): mod row = gear slots, rewards = gear,
   every stack +1 each corp (docs/EXOTICS.md, "All items").
-- **Going back a row** on the map is a can of worms: save it for an exotic mod (the user thinks it could be good).
-- More map gear ideas (Claude): SCOUT (see the corps / anomalies ahead).
+- **Going back a row** on the map: moved to docs/DECK.md (the shell chip `cd ..`), 2026-11-15.
+- SCOUT (see the corps / anomalies ahead): moved to docs/DECK.md (the shell chip `scan`), 2026-11-15.
 - Exotic gear: only NUKE. Ideas: PARADOX / ENTANGLE / BITFLIP (below).
 - **Codex hints for the gear reactions** (not written yet): GRAVITAS (TILT = a free gravity drop), ENTROPY (SHAKE
   sets off its shuffle). Could go in each corp's codex entry.
@@ -32,16 +32,16 @@ unlocked by REP, and some quests unlock REP.
 - **Gear ideas (the user, 2026-10-27):**
   - **SHORT** (short circuit): fries 2 ICE that sit next to each other. (BLAST is an aimed 2x2, so SHORT is close to a
     small BLAST. Keep it only if it gets its own twist.)
-  - **Call a market:** gear that opens a black market right where you are (maybe a smaller one). Goes with **ads you
-    can buy from**.
-  - **CHECKPOINT** (exotic): use it in a corp; if you die in that corp, you start over at its first layer. Variations:
-    pay credits to come back; or come back with no mods or gear. A weaker, one-shot cousin of CONTINUE.
+  - **Call a market:** moved to docs/DECK.md (the shell chip `market`), 2026-11-15. It still goes with **ads you can buy
+    from**.
+  - **CHECKPOINT:** moved to docs/DECK.md (a CRASH chip), 2026-11-15. Its variations: pay credits to come back, or come
+    back with no mods or gear.
   - **Gear names to use:** CHMOD, POKE, JUMP (no effects yet).
 - **THE WORKBENCH, what's still open** (built v14.12-v14.15; the whole design talk is in the archive):
   - Keyboard design tweaks and the line over it (the user: not sure yet). The look: off-white / beige Commodore
     colors (the user: leaning, just a note).
   - **DIVINE** red letters (from G0D; the bench's SPECIAL row waits for them); blueprints; wildcards (*) from fishing
-    (today only by shredding the corrupted software it brings up); a use for digits in mods. Letter
+    (today only by shredding the corrupted software it brings up); a use for digits in mods (docs/DECK.md: a code with a digit makes a chip). Letter
     counts: no recipe uses I; digits 1-9 none; J, Q once.
   - What a letter's rarity means once you craft with it (Greg, 2026-11-05: keep each letter's rarity, so the keyboard
     can show the colours).
@@ -53,8 +53,8 @@ unlocked by REP, and some quests unlock REP.
 - **Fishing mods** (Greg, 2026-11-11: could be fun): mods or gear that change fishing. **Dropped:** unlocking the PIER
   with a feat (Greg, 2026-11-11: not needed).
 - **Gear to concept:** more gear with bonuses, even if it's only worth selling (SHARD and BOND are the first).
-  Logged: PARADOX (undo your last ICE hit), ENTANGLE (link two nodes), DECODER (read CIPHER for a layer), exotic tiers
-  of today's gear. EXOTICS.md has more.
+  Logged: ENTANGLE (link two nodes), exotic tiers of today's gear. EXOTICS.md has more. (PARADOX and DECODER moved
+  to docs/DECK.md as the shell chips `undo` and `decode`.)
 
 ### 2. REP and THE BOARD
 - **The plan: `docs/PROGRESSION.md`** (2026-10-28, screen mockups on a page). Much of it is built (THE BOARD, feats,
@@ -66,16 +66,16 @@ unlocked by REP, and some quests unlock REP.
   - Levels of unlocks; finishing the codex (or beating every corp) opens new options. For the codex one: THE
     ARCHIVE (start with any mod you've found), ARCHIVIST (every corp's tell printed), an exotic pick, a cosmetic.
   - Mod storage between runs (LOCKER exists: cash out, keep 1 mod a step lower): rent per run, 1-2 mods.
-  - A booster that picks corps you haven't beaten more often. (NEMESIS, marking a corp, is built: a BOARD post.)
-  - The starter pool, more: choose 3, one may show up at the start. (STARTER POOL is built: the starter perk can offer
-    the mods you've found.)
+  - A booster for corps you haven't beaten: moved to docs/DECK.md (the BIOS chip FRESH).
+  - The starter pool, more (choose 3, one may show up at the start): moved to docs/DECK.md (the BOOT chip STARTER).
   - **Palettes unlock** by beating their corp (not built: SETTINGS offers every palette today). Big logos as unlocks.
-  - Difficulty levels unlocked with REP that add drains (money or mods taken away) and pay more REP.
+  - Difficulty levels that add drains and pay more REP: moved to docs/DECK.md (HEAT).
   - **Feat ideas:** replay a seed and get further than before; call 2 hackers in the same layer; sell 30 PHISH; buy a
     mod back from the fence (and maybe a REP unlock: fence prices -10%). The FEAT box over the
     win page: a solid background that isn't the screen's (the REP color?).
-  - **REP unlocks you can switch on and off** (the user, meat notes 2026-10-29), e.g. +1 to the default corp layer count.
-  - **Skip a corp's rewards for a heal** (meat notes 2026-11-06): an option, maybe a choice on the screen, maybe a REP unlock.
+  - **REP unlocks you can switch on and off**, and +1 corp layer: moved to docs/DECK.md (the ROM's switches, the BIOS
+    chip +1 LAYER).
+  - **Skip a corp's rewards for a heal:** moved to docs/DECK.md (SPOILS).
 
 ### 3. Quests and RPG elements
 - **More than one quest at a time** (a quest log: a list that scrolls, the active quests, then the completed ones).
@@ -88,7 +88,7 @@ unlocked by REP, and some quests unlock REP.
 - **Break a fellow hacker out of a corp:** one spot on the map is that corp; maybe offered after a stage, with the next
   stage built around it; you can turn it down; beating it unlocks the meta thing.
 - **The call as an item** (expensive or random): more than a heal, e.g. a different level, or softening / cancelling
-  the corp events.
+  the corp events. (Also: the deck's CREW jacks, docs/DECK.md.)
 - **Challenge quests:** the first OMNI stage with few mods (none, or nothing above epic); carry a worthless scrap mod
   through 3 stages (BOX OF WIRES fits).
 - "You thought this was a game": a REP unlock that changes the game (unlocks quests).
@@ -106,7 +106,7 @@ unlocked by REP, and some quests unlock REP.
     sector that way and you get a bonus, or the final node turns into a special boss. Needs a special sector map, e.g.:
     `.-.-X` / ` \.-.` / `   /` / `  .`
   - **POPS's old corp:** a quest that unlocks when you call POPS in the corp he used to work for.
-  - **Safehouses need something cooler** (meat notes 2026-10-29): they keep some mods from a run you died in, or offer
+  - **Safehouses need something cooler** (meat notes 2026-10-29): they keep some mods from a run you died in (that part: DECK.md's BLACK BOX), or offer
     crew CALL gear. Probably a REP unlock. Or simpler: a boosted safehouse, 2 INT and an item or two.
   - **The quest object sparkles** (meat notes 2026-10-29): a twinkle / glitter effect on it.
 - **G0D:**
@@ -116,7 +116,7 @@ unlocked by REP, and some quests unlock REP.
     3, when it stops speaking English, should it sound wetter and hissier? (docs/G0D_VOICE.md)
   - **The mold turned up as the quest goes on** (today: the M0LD events set it, v14.39).
   - **G0D flashing in on SECTOR CLEARED** now and then (meat notes 2026-10-29).
-  - **G0D.exe** (the user, meat notes 2026-11-03): a personal AI hacker assistant, exotic gear. After you beat G0D, a
+  - **G0D.exe** (the user, meat notes 2026-11-03): a personal AI hacker assistant, exotic gear (or a deck chip: docs/DECK.md). After you beat G0D, a
     quest to reassemble it: find the G, the 0 and the D, then put G0D together at a workshop. It knows the tells of
     every corp you've beaten more than ~5 times (feat unlocks). Activated, it plays perfectly: it knows the real nodes
     (not just tells) and clicks them for you. It stays with you from corp to corp, uses gear, goes to stores and buys,
@@ -247,14 +247,14 @@ unlocked by REP, and some quests unlock REP.
     a fake CONTINUE), each with a tell (a typo, the wrong font); a fake costs you. The PHISH theme turned around.
   - **GHOST:** your own best run (REPLAYS) as a boss: it taps what you tapped; race yourself. Close to DOPPEL, at boss size.
   - **Where the seeds turn up:** the ending's log (KITCHEN, ZER0), a hidden ad, a PHISH catch, a crew call, the codex's
-    ciphertext, the console.
+    ciphertext, the console. A seed could also be a code on the deck's BYTE (docs/DECK.md).
   - Claude's picks: TWIN (works everywhere, nobody expects it), OVERFLOW (pure hacker logic), PHISHER (fits the story).
     PHREAK's whistle is the weird-hard one, like going offline.
 - **An H3AV3N leaderboard** (replaying it after a win works already).
 - **A gauntlet seed:** one of each corp, in order, in a single line (stores / fishing off the sides, no skipping corps).
   (GAUNTLET the sector event is built: one line, no choices, one market.)
 - **A daily seed** and a daily leaderboard (none today): a pinned row on LEADERBOARD > SEEDS.
-- **More rewards?** A mod you always start with (meat notes 2026-10-29).
+- **A mod you always start with:** moved to docs/DECK.md (the BOOT chip STARTER).
 - **CODEX** (the track) might be good for the credits or the cutscenes (meat notes 2026-10-31).
 
 ### 5. The map and run structure
@@ -269,7 +269,7 @@ unlocked by REP, and some quests unlock REP.
   another random place or seed.
 
 ### 6. Anomalies and sector events (design: `docs/SECTOR_EVENTS.md`)
-- **Still open:** a THREAT level later; a REP option to turn events on in sector 1; tying the sector boss to the
+- **Still open:** a THREAT level later; events on in sector 1 (moved to docs/DECK.md: the BIOS chip EVENTS); tying the sector boss to the
   event further (parked; it already carries the event's anomaly). Idea: ICE STORM.
 - **Other ideas (Claude's):** TAXED, AUDITED, RANSOM, BACKWARDS, a trace meter.
 - **Overlapping events, still open:** more scales (quests, REP level: the user, 2026-11-04, 'quests or other things can
@@ -280,8 +280,8 @@ unlocked by REP, and some quests unlock REP.
 - **New event ideas** (meat notes 2026-11-06, later):
   - **Glitching up:** each ICE hit and derez adds more glitch filter over the screen, like chroma separation.
   - **Dying moves you:** a death restarts you somewhere else.
-  - **More ads** (meat notes 2026-11-15): an event that brings up more ads, for when you want them: a mod where
-    clicking an ad heals you, a REP upgrade, or hacking ads for loot.
+  - **More ads** (meat notes 2026-11-15): an event that brings up more ads, for when you want them: ads that heal
+    you (moved to docs/DECK.md: the BIOS chip ADWARE), or hacking ads for loot.
 - **Event tiers, later** (the user, 2026-10-30: not now): harder events only deeper. For now the rule stands: sector 1
   is clean, and from sector 2 any event can show up.
 
@@ -309,7 +309,7 @@ unlocked by REP, and some quests unlock REP.
   (SPARKD, a catfish boss), an arms dealer (GUNMETAL), the punk corp (details to come from the user), sudoku /
   crossword. KERNEL (the seed corp) reseeding the map from its boss. THE CHOIR as a "ministry" (a per-corp word instead of "corp").
 - A second boss mod for the corps that have one (71 corp mods left; 11 corps give boss gear instead, v13.62).
-- **CHUCK E. CACHE has a 1UP in its logo** (meat notes 2026-11-06): do something with that once 1UPs are unlocked?
+- **CHUCK E. CACHE has a 1UP in its logo** (meat notes 2026-11-06): do something with that once 1UPs are unlocked? **Decided (Greg, 2026-11-15):** a mod, not a deck chip.
 - **RED TAPE:** a mod or gear (just the name so far). **B1BL3** (meat notes 2026-10-31): a portable codex (gear).
 
 ### 8. Achievements and cosmetics
@@ -379,7 +379,8 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   - Whether a progression wipe (`PROGRESS_EPOCH`) wipes the deck, or it stays like the codex.
   - What a chip looks like, and how the info area fits on a phone (23 rows).
 - **Board v2 and the socket plan: `docs/DECK.md`** (2026-11-15): Greg's layout (`asxii_art/deck_board_v02.asxii.json`),
-  every socket group named, what goes in each, the mk levels and power, and the backlog ideas that fit there.
+  every socket group named, what goes in each (5-8 more chip ideas a group, with the corps that drop them), how it
+  opens, power, and Greg's decisions. The backlog ideas that fit there moved there (each old line says so).
 
 ### 12. A NetHack-style dungeon (meat notes 2026-11-15, "net hack inspiration")
 - A place on the map takes you into a dungeon: sewers, tunnels, data mines ("maybe make hackery?"). Maybe it's where
@@ -501,7 +502,7 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   - **Hover / keyboard focus in popups:** with a desktop or accessibility pass.
 - **Hacker logo pass** (the user, 2026-11-04, looking at them now): the game always adds the name under a logo (logoBlock: mark + name; the hacker card's NAME // RIVAL line), so logos don't need the name in their art: 24 x 7 is all picture. 11 hacker logos still spell their name in the art and show it twice: pops, hcf, brick, null, nana, dialup, baud, mother, root, kludge, hype (iceman, turbo, sysop, vulture, phish and leech are redrawn). Redraw them (art only, no code).
 - **asXii size presets** (the user, 2026-11-04; asXii's own repo now: move this to its list): update asXii's Presets list (public/index.html #sizePreset) to the game's real art sizes, and check the ones there. Today it has: node glyph 5 x 3 (right), corp art 24 x 12 (wrong: corp intro art is the logo, 24 x 7), ad box 30 x 18 (right: ADS_W / ADS_H), intro map 34 x 9 (the map is 34 x 12 now), title art 32 x 20 (check: TITLE_W is 31), terminal 80 x 24. Add: logo 24 x 7 (the name goes on row 8, LOGO_W / LOGO_H), hacker face 5 x 3, SECTOR CLEARED 30 x 13, sector event card 5 x 3, cutscene 36 wide (any height; the game's grid). asXii is Justin's too: check his recent commits first.
-- **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open).
+- **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open). Or a GLYPH chip (docs/DECK.md).
 - **Ads that do things** (later, the user 2026-10-28; the fake ads are done and great): an ad that sells you gear or a mod; a free trial of a corp's mod; AD BLOCKER.
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.
