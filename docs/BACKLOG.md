@@ -259,6 +259,7 @@ unlocked by REP, and some quests unlock REP.
 
 ### 5. The map and run structure
 - **Different markets** (the user, meat notes 2026-10-28): black market / grey market / open market.
+  Another shop that sells only corp mods and gear, maybe dearer (meat notes 2026-11-15).
 - More varied layouts: missing nodes, skip-lane links, sideways links, dead ends, other shapes per sector.
 - Moving backwards / the frontier (pick any node linked to one you've visited), or allow clearing the whole map.
 - Node count that keeps climbing; past the 4x4 grid (phones fit ~6 columns).
@@ -279,6 +280,8 @@ unlocked by REP, and some quests unlock REP.
 - **New event ideas** (meat notes 2026-11-06, later):
   - **Glitching up:** each ICE hit and derez adds more glitch filter over the screen, like chroma separation.
   - **Dying moves you:** a death restarts you somewhere else.
+  - **More ads** (meat notes 2026-11-15): an event that brings up more ads, for when you want them: a mod where
+    clicking an ad heals you, a REP upgrade, or hacking ads for loot.
 - **Event tiers, later** (the user, 2026-10-30: not now): harder events only deeper. For now the rule stands: sector 1
   is clean, and from sector 2 any event can show up.
 
@@ -346,6 +349,44 @@ unlocked by REP, and some quests unlock REP.
   rival's window you hack into. Same limits as TWIN (same browser; a hidden tab barely runs). One terminal could do
   both: the dev-menu terminal above, popped out to its own window.
 
+### 11. THE DECK (your own ICE)
+Greg, 2026-11-15 (talk, and meat notes "workshops": "some sort of deck that you can upgrade; gems go into different
+slots and give you different things; gems are like letter unlocks"). Mockups: `docs/mockups/deck.html`.
+- **The idea:** a cyber deck, outside runs (meta progression), unlocked late (around ELITE). It's your own ICE: a
+  network of sockets wired together, the same kind of thing you breach in every corp. Flavour: neural cyberware.
+- **Chips** (**Decided (Greg, 2026-11-15):** "chips", not gems). You slot them into the deck's sockets. Two kinds:
+  - **Shell chips:** found in runs; each one gives you commands in THE SHELL. This could be SHELL step 3's answer
+    for learning commands (docs/SHELL.md, "The game part").
+  - **Rig chips:** REP unlocks you switch on and off (section 2's "REP unlocks you can switch on and off"): the corp
+    picker (corps you haven't beaten come up more), +1 corp layer, TELL LIGHT, skip rewards for a heal, HEAT...
+- **Limited sockets** make it a loadout you pick before a run, not a list of everything on. Upgrade the deck (REP) to
+  open more; the wires show which socket opens next, like a skill tree. Later the wires could mean something (a chip
+  powers its neighbours).
+- **Finding chips:** boss rewards (each corp's fits it), caches, the fence, crew quests, hacking commands out in the
+  shell. Claude's idea: a chip found in a run is only yours if you cash out (die and it's gone).
+- **Extras (Claude's ideas):** a late boss or KONAMI breaches your deck and knocks a socket out for the corp. The
+  "rooted" leaderboard mark only for runs that used a shell chip.
+- **The screen:** full screen like the workbench. A circuit board that scrolls (**Decided (Greg, 2026-11-15)**), with
+  an info area like the market's: pick a socket or chip and see what it does.
+- **Naming trap:** the code already says "chip" for a letter or code's rarity colors (`chipOf`, engine/bench.js), the
+  belt's gear chips and the INT row's status chips. Give the deck's its own name in code (`deckChip`?), and draw them
+  so they don't look like letter tiles.
+- **Meat notes (workshops), also:** "enchanting, slotting gems? adding an extra letter to mods or something?": slotting
+  into mods themselves, maybe a workbench thing.
+- **Open:**
+  - When it unlocks: ELITE (REP level 3)? Greg said "leet".
+  - Which BOARD posts become chips (NEMESIS, STARTER POOL, LOCKER, TELL LIGHT), or only new things.
+  - Whether a progression wipe (`PROGRESS_EPOCH`) wipes the deck, or it stays like the codex.
+  - What a chip looks like, and how the info area fits on a phone (23 rows).
+
+### 12. A NetHack-style dungeon (meat notes 2026-11-15, "net hack inspiration")
+- A place on the map takes you into a dungeon: sewers, tunnels, data mines ("maybe make hackery?"). Maybe it's where
+  you go after you nuke a corp: its sub-basement.
+- Turn based. Fog of war, or you need a light. Some sort of hacking cyber run: get in and out in a number of turns.
+- A reason to go in: a quest or a boss fight.
+- Controls: arrows or clicks? A mini d-pad on a phone.
+- Things in it: an oracle; a Sokoban pushing game; a mimic (in the store? in the data cache?).
+
 ## Low priority
 
 - **An AI crew member that plays the game** (the user, meat notes 2026-10-31): it learns as you beat corps: beat a corp
@@ -363,6 +404,8 @@ unlocked by REP, and some quests unlock REP.
   are built: POPS's is TRACER.)
 
 ## Polish (the user, 2026-10-29: the finishing passes)
+- **Phone battery** (meat notes 2026-11-15): the game drains Greg's older phone fast. Look for savings: draw only
+  when something changed, a lower frame rate when the screen is still, pause it all in a hidden tab, lighter effects.
 - **Boss intro pass** (the user, 2026-10-29: "it's all working for now", but the whole boss intro could use a little more): the corp's logo on it, and more.
 - **INTRO PASS:** after the user has lived with it. The intro keeps playing every time; the NEWB / LEET screen only on
   a truly fresh start (maybe a URL switch keeps it all, for testing; `INTRO_ALWAYS` in engine/intro.js). Glitch /

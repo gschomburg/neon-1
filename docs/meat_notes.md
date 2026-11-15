@@ -9,9 +9,14 @@ god.exe
 hades
 *******************
 
+net hack inspiration
+********
+
 misc notes
 ***********************
-- sector event that increases the ads? might tie into something where you want more ads? like a mod where clicking an ad gives you health or maybe just a rep upgrade of some sort? you can hack ads for loot?
+
+optimizations
+*************
 
 
 bugs or weirdness
