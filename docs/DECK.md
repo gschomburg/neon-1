@@ -140,51 +140,51 @@ Every place gives a chip two rows, and any list it's in has to scroll by row:
   itself (`draw`, with its own height), so it has room.
 
 ## The map
-Board v03 (`asxii_art/deck_board_v03.asxii.json`, Claude's pass on Greg's v02): every chip socket is 5 x 4 for the 3x2
-chips, and GLYPH moved down into mk III. The labels sit on each socket's top row.
+Board v06 (`asxii_art/deck_board_v06.asxii.json`). The history: v03 made every chip socket 5 x 4 for the 3x2 chips
+and moved GLYPH down into mk III; Greg's v04 put your hacker name on the CPU and tweaked a few things; v05 added a
+`socket labels` layer (each code on its socket's top border, so it reads with a chip in); v06 added the CRASH socket
+right of the stick, and a `readouts` layer (the stick showing the slotted crash chip; in the game it scrolls).
 
-Later: Greg's v04 (the CPU with your name, a few tweaks), then v05 = v04 + a `socket labels` layer: each socket's
-code on its top border (`+BT1+`), so the name stays readable with a chip in it. The codes: BT1-2, BI1-2, CRS (the
-stick), SPL, SH1-4, PSU, BYT, PRT (the `[X` ports), GLY, OV1-3, CRW (the crew jacks), SU1-3, BS1-2 (the wide
-BOSS sockets), HT1-3, UPL (the uplink jacks).
+The codes: BT1-2, BI1-2, CRS, SPL, SH1-4, PSU, BYT, PRT (the `[X` ports), GLY, OV1-3, CRW (the crew jacks), SU1-3,
+BS1-2 (the wide BOSS sockets), HT1-3, UPL (the uplink jacks).
 
 ```
-    0. 0.0  ..
-    ][ |%|  ][      +---+ +---+ {
-   +-o--o--o--o-+   ]BT1[ |BT2|  }--
-   |            |   ]   [ |   |  |
-   |            |   +-+-+ +-+-+  |-
-[}-o  NEURAL    o=--+---+ + - +  |-
-[} |   DECK     |...]BI1[ :BI2:  }--
-[} |            |   ]   [ :   :
-[}-o    mk II   o=--+-+-+ + - + {
+     0. [^]  ..
+     ][ |%|  ][     +BT1+ +BT2+ {
+     \/  v   \/     ]   [ |   |  }--
+     /\  |   /\     ]   [ |   |  |
+   +-oo--o---oo-+   +-+-+ +-+-+  |-
+[}-o            o=--+BI1+ +BI2+  |-
+[} |  POTATO    |...]   [ :   :  |
+[} |  SAUCE     |   ]   [ :   :  }--
+[}-o  mk II     o=--+-+-+ + - + {
    |            |     +-+
-   +-o--o--o--o-+     |C|
-   [_ ::::'::: _]     |R|
-     |        /       |A[=o
-     |+   .__/        |S[=o
-     |_   ||          |H|
+   +-o--o--o--o-+     |.|
+   [_ ::::'::: _]     |1|  +CRS+
+     |        /       |U[==]   [
+     |+   .__/        |P[==]   [
+     |_   ||          |.|  +-+-+
       |   ||          +-+
       |   ||                 ]8[
-+---+ {   ||   +---++ - +   +---+
-]SH1[-+   ++>:<]SPL[:SH3:   ]SH4[
++SH1+ {   ||   +SPL++SH3+   +SH4+
+]   [-+   ++>:<]   [:   :   ]   [
 ]   [ |   ||   ]   [:   :   ]   [
 +-+-+ {   vV   +-+-++ - +   +-+-+
       |    \          [___.___]
-      |     \______
-+=-=+ {     +---+  }     +--------+
-]PSU[-+     ]SH2[  }-::::]01010101[
-]   [ |     ]   [  |     ]v^v^v^v^[
-+-=-+ {     ++--+  |     +-+-qp-+-+
+      |     \______      +---BYT--+
++PSU+ {     +SH2+  }     ]01010101[
+]   [-+     ]   [  }-::::+-+-qp-+-+
+]   [ |     ]   [  |     (........)
++-=-+ {     ++--+  |
       |     ||     |    __
       +::+::db::+::+   [  ]=----+-[X
-       '  ' oo '  '     ||      |
-       '  '    '  '     )(      +-[X
+       '  ' oo '  '     ||      |PRT
+       ,  ,    ,  ,     )(      +-[X
       +::+::vv::+::+    ||
-X]    |            |___<++>_______
-X]====] +=-=-=+                   [
-X]    | ].....[ +...+ +...+ +...+ }
-X]====] ].GLY.[ :OV1: :OV2: :OV3: }
+X]CRW |            |___<++>_______
+X]====] +=GLY=+                   [
+X]    | ].....[ +OV1+ +OV2+ +OV3+ }
+X]====] ]..X..[ :   : :   : :   : }
 X]    | ].....[ :   : :   : :   : }
 X]    ' +=-=-=+ +...+ +...+ +...+ }
        \   ^      ^     ^     ^   [
@@ -192,16 +192,16 @@ X]    ' +=-=-=+ +...+ +...+ +...+ }
          \_______----------_______[
           |||||             |||||
           ^   ^             ^   ^
-          +...+   +.o.o.+   +...+
-}-        :SU1:   :BOSS :   :HT1:
+          +SU1+   +.BS1.+   +HT1+
+}-        :   :   :     :   :   :
+          :   :   :     :   :   :
+ UPL      +...+   +.o.o.+   +...+
+          +SU2+   +.BS2.+   +HT2+
+}-        :   :   :     :   :   :
           :   :   :     :   :   :
           +...+   +.o.o.+   +...+
-          +...+   +.o.o.+   +...+
-}-        :SU2:   :BOSS :   :HT2:
-          :   :   :     :   :   :
-          +...+   +.o.o.+   +...+
-          +...+             +...+
-          :SU3:             :HT3:
+          +SU3+             +HT3+
+          :   :             :   :
           :   :             :   :
           +...+             +...+
 ```
