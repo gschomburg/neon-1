@@ -140,6 +140,11 @@ Every place gives a chip two rows, and any list it's in has to scroll by row:
 Board v03 (`asxii_art/deck_board_v03.asxii.json`, Claude's pass on Greg's v02): every chip socket is 5 x 4 for the 3x2
 chips, and GLYPH moved down into mk III. The labels sit on each socket's top row.
 
+Later: Greg's v04 (the CPU with your name, a few tweaks), then v05 = v04 + a `socket labels` layer: each socket's
+code on its top border (`+BT1+`), so the name stays readable with a chip in it. The codes: BT1-2, BI1-2, CRS (the
+stick), SPL, SH1-4, PSU, BYT, PRT (the `[X` ports), GLY, OV1-3, CRW (the crew jacks), SU1-3, BS1-2 (the wide
+BOSS sockets), HT1-3, UPL (the uplink jacks).
+
 ```
     0. 0.0  ..
     ][ |%|  ][      +---+ +---+ {
