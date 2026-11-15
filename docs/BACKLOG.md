@@ -351,7 +351,7 @@ unlocked by REP, and some quests unlock REP.
 
 ### 11. THE DECK (your own ICE)
 Greg, 2026-11-15 (talk, and meat notes "workshops": "some sort of deck that you can upgrade; gems go into different
-slots and give you different things; gems are like letter unlocks"). Mockups: `docs/mockups/deck.html`.
+slots and give you different things; gems are like letter unlocks"). Mockups: `docs/mockups/deck.html` (round 1: bus, motherboard, tree, trace; Greg: too organized, the motherboard most interesting) and `deck_v2.html` (round 2: asymmetric, a big CPU, wide power traces).
 - **The idea:** a cyber deck, outside runs (meta progression), unlocked late (around ELITE). It's your own ICE: a
   network of sockets wired together, the same kind of thing you breach in every corp. Flavour: neural cyberware.
 - **Chips** (**Decided (Greg, 2026-11-15):** "chips", not gems). You slot them into the deck's sockets. Two kinds:

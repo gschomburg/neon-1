@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Deck Round 2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+/* THE DECK, round 2: asymmetric circuit boards (a big CPU, scattered modules, wide power traces with 45-degree bends) */
+:root {
+  color-scheme: dark;
+  --bg: #06090a; --dim: #2c3a38; --mid: #5f7470; --text: #a9bdb7; --bright: #e6f4ef;
+  --accent: #3cf0ff; --danger: #ff3b4e; --money: #e8c66a; --rep: #a27ef5;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.45; padding: 24px 16px 64px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-size: 26px; font-weight: 800; color: var(--bright); margin: 0; letter-spacing: 2px; }
+h1 b { color: var(--accent); }
+h2 { font-size: 15px; margin: 0; color: var(--bright); letter-spacing: 2px; }
+h2 b { color: var(--accent); margin-right: 8px; }
+p { margin: 0; max-width: 90ch; }
+.k-shell { color: var(--accent); } .k-rig { color: var(--rep); } .k-core { color: var(--money); }
+.grid { display: flex; flex-wrap: wrap; gap: 28px; }
+.card { width: 380px; max-width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.card ul, .side ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.card b, .side b { color: var(--bright); }
+.phone { position: relative; width: 380px; max-width: 100%; height: 760px; border: 1px solid var(--dim); background: var(--bg); overflow: hidden;
+  user-select: none; -webkit-user-select: none; touch-action: none; }
+.phone canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.phone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.side { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 14px; }
+.side h3 { margin: 0; font-size: 12px; letter-spacing: 2px; color: var(--mid); font-weight: 400; }
+.q { border-left: 3px solid var(--money); padding: 6px 12px; display: flex; flex-direction: column; gap: 6px; }
+.q b { color: var(--money); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>THE DECK <b>ROUND 2</b></h1>
+    <p>Less skill tree, more circuit board. A big CPU off to one side, modules scattered in loose clusters, and two widths of trace: thin signal lines, and wide power traces (double, on a copper strip) with 45-degree bends. The pulse starts at the CPU and runs out through every chip that's slotted; an empty socket stops it. Same controls as round 1: drag or scroll, tap a socket, slot / PULL / UPGRADE.</p>
+  </div>
+  <div class="grid" id="grid">
+    <div class="side">
+      <div><h3>WHAT CHANGED</h3><ul>
+        <li><b>The CPU</b> is a big square with pins on its edges, and the traces leave from the pins.</li>
+        <li><b>Wide traces</b> are the power lines: a band of copper, two columns wide going down. <span class="k-core">Gold</span> where they're the CPU's, the chip's color where they feed one.</li>
+        <li><b>Chains:</b> a socket can be fed through another one. Pull <span class="k-shell">GIV</span> in E and the empty socket under it goes dark; slot something in the empty one and <span class="k-shell">KIL</span>'s line lights.</li>
+        <li><b>Silkscreen:</b> part numbers, a crystal, mounting holes, the board's name. Only decoration.</li>
+      </ul></div>
+      <div class="q">
+        <b>QUESTIONS</b>
+        <div>1. E or F, or more of these?</div>
+        <div>2. The chaining (a chip passes power on to the next socket): just a look, or a rule (an empty socket cuts off the ones past it)?</div>
+        <div>3. Names on the board, or only in the info area?</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+// ---------- data ----------
+const css = getComputedStyle(document.documentElement), V = n => css.getPropertyValue('--' + n).trim();
+const C = {}; for (const k of ['bg', 'dim', 'mid', 'text', 'bright', 'accent', 'danger', 'money', 'rep']) C[k] = V(k);
+const KIND = { shell: C.accent, rig: C.rep, core: C.money, any: C.text };
+const CHIPS = {
+  SHL: ['ROOT', 'shell', ['the shell itself: ~ opens it.', 'the commands you slot show', 'up in its autocomplete.']],
+  GIV: ['give.*', 'shell', ['give.mod, give.gear.', 'once a sector each.']],
+  SHW: ['show.*', 'shell', ['show shop, show tell:', 'peek at what a layer hides.']],
+  KIL: ['kill', 'shell', ['kill -9 me: end the run now.', 'kill <rival>: they flatline.']],
+  SED: ['run.seed', 'shell', ['type a seed, play that run.', 'runs on it are marked rooted.']],
+  GOD: ['mode.god', 'shell', ['no ICE hurts, for a sector.', 'then it wears off.']],
+  NEM: ['NEMESIS', 'rig', ['mark a corp: it comes up', 'more, and pays more REP.']],
+  PKR: ['PICKER', 'rig', ["corps you haven't beaten", 'come up more often.']],
+  DEP: ['DEEP', 'rig', ['+1 layer in every corp.', '+10% REP.']],
+  STP: ['STARTER', 'rig', ['the starter perk can offer', "mods you've found."]],
+  TEL: ['TELL LIGHT', 'rig', ['every layer says', 'TELL ON or TELL OFF.']],
+  HOT: ['HEAT', 'rig', ['harder runs.', '+25% REP.']],
+  MED: ['TRIAGE', 'rig', ["skip a corp's rewards:", 'heal 2 instead.']],
+};
+const BAG = ['SED', 'GOD', 'TEL', 'HOT', 'MED'];
+const TIER_NUM = { III: '3', IV: '4' };
+const kindOf = n => n.chip ? CHIPS[n.chip][1] : n.kind;
+const live = n => n.kind === 'core' || !!n.chip;
+
+const WC = 36, HC = 34, VY = 5, VH = 17, IY = 23, BW = 35, LINE_H = 1.22, FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
+const PERIOD = 34;   // the pulse: one wave every PERIOD steps, rippling out from the CPU
+
+// ---------- traces ----------
+// A path through points: straight runs and 45-degree runs (|dx| == |dy|). Wide traces are two columns on the
+// vertical and diagonal runs ("||", "//") and '=' across; their orthogonal bends are '#', thin ones '+'.
+function trace(pts, wide) {
+  pts = pts.filter((p, i) => i === 0 || p[0] !== pts[i - 1][0] || p[1] !== pts[i - 1][1]);
+  const out = [], dirOf = (a, b) => [Math.sign(b[0] - a[0]), Math.sign(b[1] - a[1])];
+  const chOf = ([dx, dy]) => dx && dy ? (dx * dy > 0 ? '\\' : '/') : dy ? '|' : wide ? '=' : '-';
+  if (pts.length === 1) return [{ x: pts[0][0], y: pts[0][1], ch: wide ? '=' : '-', i: 0 }];
+  let i = 0;
+  for (let s = 1; s < pts.length; s++) {
+    const d = dirOf(pts[s - 1], pts[s]);
+    let [x, y] = pts[s - 1];
+    if (s > 1) { x += d[0]; y += d[1]; }
+    for (;;) {
+      out.push({ x, y, ch: chOf(d), i: i++ });
+      if (x === pts[s][0] && y === pts[s][1]) break;
+      x += d[0]; y += d[1];
+    }
+    if (s < pts.length - 1) {
+      const e = dirOf(pts[s], pts[s + 1]);
+      if (!d[0] !== !e[0] && !d[1] !== !e[1] && (!d[0] || !d[1]) && (!e[0] || !e[1])) out[out.length - 1].ch = wide ? '#' : '+';
+    }
+  }
+  if (wide) for (const c of out.slice()) if (c.ch !== '=') out.push({ ...c, x: c.x + 1, twin: true });
+  return out;
+}
+const sock = (id, x, y, kind, chip, extra = {}) => ({ id, x, y, w: 5, h: 3, kind, chip: chip || null, lock: 0, ...extra });
+
+// ---------- E: the CPU top left, power down the left and out along the bottom ----------
+function layE() {
+  const III = { lock: 600, tier: 'III' }, IV = { lock: 1500, tier: 'IV' };
+  const nodes = [
+    { id: 'core', x: 3, y: 2, w: 14, h: 7, kind: 'core', art: ['+-o--o--o--o-+', '|            |', 'o  NEURAL    o', '|   DECK     |', 'o    mk II   o', '|            |', '+-o--o--o--o-+'] },
+    sock('s1', 22, 1, 'shell', 'SHL'), sock('s2', 28, 5, 'shell', 'GIV'), sock('s3', 22, 9, 'shell', 'SHW'),
+    sock('s4', 28, 12, 'shell', null), sock('s5', 28, 17, 'shell', 'KIL'),
+    sock('r1', 0, 13, 'rig', 'NEM'), sock('r2', 12, 15, 'rig', 'PKR'), sock('r3', 0, 20, 'rig', 'DEP'),
+    sock('r4', 12, 22, 'rig', 'STP'), sock('r5', 20, 15, 'rig', null),
+    sock('l1', 11, 33, 'any', null, III), sock('l2', 19, 33, 'any', null, III), sock('l3', 22, 37, 'any', null, III),
+    sock('l4', 22, 42, 'any', null, IV), sock('l5', 12, 41, 'any', null, IV),
+  ];
+  const wires = [
+    { id: 'bus', from: 'core', pts: [[8, 9], [8, 12], [6, 14], [6, 27], [9, 30], [26, 30], [29, 33], [29, 44]], wide: true },
+    { from: 'core', to: 's1', pts: [[17, 4], [19, 4], [21, 2]] },
+    { from: 's1', to: 's2', pts: [[27, 2], [28, 2], [30, 4]] },
+    { from: 'core', to: 's3', pts: [[17, 6], [19, 6], [21, 8], [21, 10]] },
+    { from: 's2', to: 's4', pts: [[30, 8], [30, 11]] },
+    { from: 's4', to: 's5', pts: [[30, 15], [30, 16]] },
+    { from: 's3', to: 'r5', pts: [[24, 12], [24, 14]] },
+    { parent: 'bus', to: 'r1', pts: [[5, 14]] },
+    { parent: 'bus', to: 'r2', pts: [[8, 16], [11, 16]], wide: true },
+    { parent: 'bus', to: 'r3', pts: [[5, 21]] },
+    { parent: 'bus', to: 'r4', pts: [[8, 23], [11, 23]], wide: true },
+    { from: 'r2', to: 'r5', pts: [[17, 16], [19, 16]] },
+    { parent: 'bus', to: 'l1', pts: [[13, 31], [13, 32]] },
+    { parent: 'bus', to: 'l2', pts: [[21, 31], [21, 32]] },
+    { parent: 'bus', to: 'l3', pts: [[28, 38], [27, 38]] },
+    { parent: 'bus', to: 'l4', pts: [[28, 43], [27, 43]] },
+    { from: 'l4', to: 'l5', pts: [[21, 43], [19, 43], [18, 42], [17, 42]] },
+  ];
+  const deco = [[0, 0, '(o)'], [32, 0, '(o)'], [3, 1, 'U1'], [18, 5, '[C1]'], [0, 10, 'R4'], [33, 9, 'U2'], [10, 19, '<XTAL>'],
+    [25, 24, 'Q1'], [33, 22, 'C7'], [12, 28, 'mk III  600 REP'], [1, 38, 'mk IV  1500 REP'], [1, 33, 'TP1'],
+    [0, 45, '(o)'], [32, 45, '(o)'], [7, 46, 'NEON+1 // DECK REV C']];
+  return { nodes, wires, deco, h: 47 };
+}
+
+// ---------- F: the CPU top right, the shell modules hanging off its left, power down the middle ----------
+function layF() {
+  const III = { lock: 600, tier: 'III' }, IV = { lock: 1500, tier: 'IV' };
+  const nodes = [
+    { id: 'core', x: 18, y: 3, w: 16, h: 8, kind: 'core', art: ['+-o--o--o--o--o+', 'o              |', '|   NEURAL     o', 'o    DECK      |', '|     mk II    o', 'o              |', '|              o', '+o--o--o--o--o-+'] },
+    sock('s1', 1, 1, 'shell', 'SHL'), sock('s2', 8, 4, 'shell', 'GIV'), sock('s3', 2, 8, 'shell', 'SHW'),
+    sock('s4', 10, 11, 'shell', null), sock('s5', 1, 15, 'shell', 'KIL'),
+    sock('r1', 29, 13, 'rig', 'NEM'), sock('r2', 14, 18, 'rig', 'PKR'), sock('r3', 27, 21, 'rig', 'DEP'),
+    sock('r4', 13, 25, 'rig', 'STP'), sock('r5', 5, 21, 'rig', null),
+    sock('l1', 29, 31, 'any', null, III), sock('l2', 17, 33, 'any', null, III), sock('l3', 29, 37, 'any', null, III),
+    sock('l4', 4, 42, 'any', null, IV), sock('l5', 12, 39, 'any', null, IV),
+  ];
+  const wires = [
+    { id: 'bus', from: 'core', pts: [[25, 11], [25, 16], [21, 20], [21, 26], [25, 30], [25, 40], [22, 43], [10, 43]], wide: true },
+    { from: 'core', to: 's2', pts: [[17, 4], [15, 4], [14, 5], [13, 5]] },
+    { from: 's2', to: 's1', pts: [[7, 5], [7, 3], [6, 2]] },
+    { from: 'core', to: 's3', pts: [[17, 6], [16, 6], [14, 8], [8, 8], [7, 9]], wide: true },
+    { from: 'core', to: 's4', pts: [[19, 11], [19, 12], [15, 12]] },
+    { from: 's3', to: 's5', pts: [[4, 11], [4, 14]] },
+    { from: 's4', to: 'r5', pts: [[12, 14], [12, 16], [9, 19], [9, 20]] },
+    { parent: 'bus', to: 'r1', pts: [[27, 14], [28, 14]] },
+    { parent: 'bus', to: 'r2', pts: [[21, 19], [19, 19]] },
+    { parent: 'bus', to: 'r3', pts: [[23, 22], [26, 22]], wide: true },
+    { parent: 'bus', to: 'r4', pts: [[20, 26], [18, 26]] },
+    { from: 'r2', to: 'r5', pts: [[13, 19], [12, 19], [11, 20], [10, 21]] },
+    { parent: 'bus', to: 'l1', pts: [[27, 32], [28, 32]] },
+    { parent: 'bus', to: 'l2', pts: [[24, 34], [22, 34]] },
+    { parent: 'bus', to: 'l3', pts: [[27, 38], [28, 38]] },
+    { parent: 'bus', to: 'l4', pts: [[9, 43]] },
+    { parent: 'bus', to: 'l5', pts: [[14, 42]] },
+  ];
+  const deco = [[31, 0, '(o)'], [18, 2, 'U1'], [8, 0, '[C3]'], [15, 15, 'R9'], [5, 27, '<XTAL>'], [30, 26, 'Q2'], [7, 31, '(@@) L1'],
+    [1, 34, 'mk III  600 REP'], [1, 38, 'mk IV'], [0, 46, '(o)'], [31, 46, '(o)'], [9, 47, 'NEON+1 // DECK REV D']];
+  return { nodes, wires, deco, h: 48 };
+}
+
+const LAYOUTS = [
+  { key: 'E', name: 'CPU TOP LEFT', make: layE, notes: ['The power bus drops down the left, past the rig modules, and bends out along the bottom to the expansion sockets.', 'The shell modules chain off the CPU to the right.'] },
+  { key: 'F', name: 'CPU TOP RIGHT', make: layF, notes: ['A bigger CPU on the right; the shell modules hang off its left side.', 'The power bus zigzags down the middle and turns left at the bottom for mk IV.'] },
+];
+
+// ---------- one phone ----------
+function makePhone(def, before) {
+  const card = document.createElement('div'); card.className = 'card';
+  card.innerHTML = `<h2><b>${def.key}</b>${def.name}</h2><div class="phone" tabindex="0"><canvas></canvas></div><ul>${def.notes.map(n => `<li>${n}</li>`).join('')}</ul>`;
+  document.getElementById('grid').insertBefore(card, before);
+  const phone = card.querySelector('.phone'), cv = phone.querySelector('canvas'), g = cv.getContext('2d');
+  const lay = def.make(), nodes = {}, wires = lay.wires;
+  for (const n of lay.nodes) nodes[n.id] = n;
+  const byId = {};
+  for (const w of wires) {
+    w.cells = trace(w.pts, w.wide);
+    if (w.id) byId[w.id] = w;
+  }
+  // a branch starts at the parent's cell nearest its first point
+  for (const w of wires) if (w.parent) {
+    const P = byId[w.parent], [x, y] = w.pts[0];
+    let best = 0, bd = 1e9;
+    for (const c of P.cells) { const d = Math.abs(c.x - x) + Math.abs(c.y - y); if (d < bd) { bd = d; best = c.i; } }
+    w.pw = P; w.pi = best + 1;
+  }
+  const qs = new URLSearchParams(location.search);
+  const ph = { lay, nodes, scroll: Math.min(+qs.get('scroll') || 0, Math.max(0, lay.h - VH)), sel: 'core', bag: BAG.slice(), rep: 1240, msg: null, mc: null, L: null, hits: [] };
+
+  // which wires carry power, and how far along the pulse each one starts
+  function power() {
+    const reach = { core: 0 };
+    for (const w of wires) { w.on = false; w.base = 0; }
+    for (let pass = 0, changed = true; changed && pass < 40; pass++) {
+      changed = false;
+      for (const w of wires) {
+        let b = null;
+        if (w.pw) { if (w.pw.on) b = w.pw.base + w.pi; }
+        else if (reach[w.from] != null && live(nodes[w.from])) b = reach[w.from];
+        if (b == null || (w.to && nodes[w.to].lock)) continue;
+        if (!w.on || b < w.base) { w.on = true; w.base = b; changed = true; }
+        if (w.to) { const d = b + w.cells.length; if (reach[w.to] == null || d < reach[w.to]) { reach[w.to] = d; changed = true; } }
+      }
+    }
+    const lockedW = w => (w.to && nodes[w.to].lock) || (w.from && nodes[w.from].lock) || (w.pw && lockedW(w.pw) && !w.pw.on);
+    for (const w of wires) w.state = w.on ? 'on' : lockedW(w) ? 'locked' : 'off';
+  }
+
+  function layout() {
+    const r = phone.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 3);
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.font = `400 100px ${FONT}`; const ratio = (g.measureText('M').width / 100) || 0.6;
+    const fs = Math.max(7, Math.min(26, Math.min((r.width - 16) / (WC * ratio), (r.height - 16) / (HC * LINE_H))));
+    ph.L = { fs, cw: fs * ratio, chh: fs * LINE_H, w: r.width, h: r.height };
+    ph.L.ox = Math.round((r.width - WC * ph.L.cw) / 2); ph.L.oy = Math.round((r.height - HC * ph.L.chh) / 2);
+  }
+  const maxScroll = () => Math.max(0, lay.h - VH);
+  const lockedTiers = () => [...new Set(lay.nodes.filter(n => n.lock).map(n => n.lock))].sort((a, b) => a - b);
+  const mk = () => ['II', 'III', 'IV'][2 - lockedTiers().length] || 'IV';
+  const tierName = lock => lay.nodes.find(n => n.lock === lock).tier;
+
+  function frame(now) {
+    power();
+    const grid = new Array(WC * HC).fill(null), bgs = [], hits = [];
+    const put = (x, y, s, col, bold = false, a = 1) => { for (let i = 0; i < s.length; i++) { const xx = x + i; if (s[i] === ' ' || xx < 0 || xx >= WC || y < 0 || y >= HC) continue; grid[y * WC + xx] = { ch: s[i], col, bold, a }; } };
+    const clr = (x, y, w, h) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (xx >= 0 && xx < WC && yy >= 0 && yy < HC) grid[yy * WC + xx] = null; };
+    const bg = (x, y, w, h, col, a) => bgs.push({ x, y, w, h, col, a });
+    const hit = (x, y, w, h, fn) => { hits.push({ x, y, w, h, fn }); if (ph.mc && ph.mc[0] >= x && ph.mc[0] < x + w && ph.mc[1] >= y && ph.mc[1] < y + h) bg(x, y, w, h, C.accent, 0.18); };
+    const sy = y => VY + y - ph.scroll, inView = y => y >= ph.scroll && y < ph.scroll + VH;
+    const bput = (x, y, s, col, bold, a) => { if (!inView(y)) return; put(x, sy(y), s.slice(0, Math.max(0, BW - x)), col, bold, a); };
+    const bbg = (x, y, w, h, col, a) => { const y0 = Math.max(y, ph.scroll), y1 = Math.min(y + h, ph.scroll + VH); if (y1 > y0) bg(x, sy(y0), Math.min(w, BW - x), y1 - y0, col, a); };
+    const bclr = (x, y, w, h) => { for (let yy = y; yy < y + h; yy++) if (inView(yy)) clr(x, sy(yy), Math.min(w, BW - x), 1); };
+
+    // ---------- header ----------
+    put(0, 0, 'NeoN+1', C.accent); put(33, 0, '[X]', C.mid);
+    put(0, 1, '- '.repeat(18), C.dim);
+    put(0, 2, 'SAFEHOUSE // ', C.mid); put(13, 2, 'THE DECK', C.bright, true);
+    const rep = `${ph.rep} REP`; put(WC - rep.length, 2, rep, C.rep);
+    const open = lay.nodes.filter(n => n.kind !== 'core' && !n.lock).length, inn = lay.nodes.filter(n => n.chip).length;
+    put(0, 3, `mk ${mk()}`, C.money, true); put(7, 3, `${open} sockets  ${inn} in  ${ph.bag.length} loose`, C.mid);
+    put(0, 4, '- '.repeat(18), C.dim);
+
+    // ---------- board ----------
+    for (const [x, y, s] of lay.deco) bput(x, y, s, C.dim);
+    const step = Math.floor(now / 55);
+    for (const w of wires) {
+      const col = w.state === 'on' ? (w.to ? KIND[kindOf(nodes[w.to])] : C.money) : w.state === 'off' ? C.mid : C.dim;
+      for (const c of w.cells) {
+        let ch = c.ch, cc = col, a = w.state === 'on' ? (w.wide ? 0.85 : 0.7) : w.state === 'off' ? 0.55 : 1, bold = !!w.wide, band = w.wide ? 0.12 : 0;
+        if (w.state === 'locked') { ch = ch === '|' ? ':' : '.'; bold = false; band = w.wide ? 0.05 : 0; }
+        if (w.state === 'on') {
+          const d = ((step - (w.base + c.i)) % PERIOD + PERIOD) % PERIOD;
+          if (d < 3) { cc = C.bright; a = 1 - d * 0.22; if (w.wide) band = 0.32 - d * 0.08; }
+        }
+        if (band) bbg(c.x, c.y, 1, 1, w.state === 'locked' ? C.dim : col, band);
+        bput(c.x, c.y, ch, cc, bold, a);
+      }
+    }
+    const drawNode = (n, X, Y, P, B, CL, small) => {
+      const kc = n.lock ? C.dim : KIND[kindOf(n)];
+      if (n.art && !small) {
+        CL(X, Y, n.w, n.h); B(X, Y, n.w, n.h, kc, 0.07);
+        n.art.forEach((l, i) => P(X, Y + i, l, kc, i > 0 && i < n.art.length - 1));
+        // the CPU's pins blink in turn
+        const k = Math.floor(now / 160) % 24; let pi = 0;
+        n.art.forEach((l, i) => { for (let j = 0; j < l.length; j++) if (l[j] === 'o' && pi++ % 24 === k) P(X + j, Y + i, 'o', C.bright, true); });
+        return;
+      }
+      CL(X, Y, 5, 3);
+      if (n.kind === 'core') { ['+---+', '|CPU|', '+---+'].forEach((l, i) => P(X, Y + i, l, kc, i === 1)); return; }
+      if (n.lock) { ['+...+', ':mk' + TIER_NUM[n.tier] + ':', '+...+'].forEach((l, i) => P(X, Y + i, l, C.mid, false, i === 1 ? 0.9 : 0.6)); return; }
+      if (n.chip) { B(X, Y, 5, 3, kc, 0.14); P(X, Y, '+---+', kc); P(X, Y + 1, '|', kc); P(X + 4, Y + 1, '|', kc); P(X + 1, Y + 1, n.chip, kc, true); P(X, Y + 2, '+-+-+', kc); return; }
+      P(X, Y, '+ - +', kc, false, 0.65); P(X, Y + 1, ':', kc, false, 0.65); P(X + 4, Y + 1, ':', kc, false, 0.65); P(X, Y + 2, '+ - +', kc, false, 0.65);
+    };
+    for (const n of lay.nodes) {
+      drawNode(n, n.x, n.y, bput, bbg, bclr);
+      if (n.id === ph.sel) bbg(n.x, n.y, n.w, n.h, C.accent, 0.22);
+    }
+    const ms = maxScroll();
+    if (ms) {
+      const th = Math.max(2, Math.round(VH * VH / lay.h)), ty = VY + Math.round((VH - th) * ph.scroll / ms);
+      for (let y = VY; y < VY + VH; y++) put(35, y, y >= ty && y < ty + th ? '#' : ':', y >= ty && y < ty + th ? C.mid : C.dim);
+      if (ph.scroll > 0) put(35, VY, '^', C.accent, true);
+      if (ph.scroll < ms) put(35, VY + VH - 1, 'v', C.accent, true);
+    }
+
+    // ---------- info ----------
+    put(0, IY - 1, '- '.repeat(18), C.dim);
+    const n = nodes[ph.sel], body = [], btns = [];
+    drawNode(n, 1, IY, put, bg, clr, true);
+    if (n.kind === 'core') {
+      const next = lockedTiers()[0];
+      put(8, IY, `NEURAL DECK mk ${mk()}`, C.money, true); put(8, IY + 1, 'your own ICE.', C.mid);
+      body.push([`${open} sockets open, ${inn} chips in.`, C.text], [next ? `mk ${tierName(next)}: ${next} REP, ${lay.nodes.filter(m => m.lock === next).length} more.` : 'fully upgraded.', C.text], ['', C.text],
+        ['a chip you find in a run is', C.mid], ['yours when you cash out.', C.mid]);
+      if (next) btns.push([`[ UPGRADE mk ${tierName(next)} · ${next} REP ]`, C.rep, () => upgrade(next)]);
+    } else if (n.lock) {
+      const lowest = lockedTiers()[0];
+      put(8, IY, 'LOCKED SOCKET', C.mid, true); put(8, IY + 1, `opens with mk ${n.tier}`, C.dim);
+      body.push([`${n.lock} REP upgrades the deck:`, C.text], [`${lay.nodes.filter(m => m.lock === n.lock).length} more sockets, any chip.`, C.text]);
+      if (n.lock !== lowest) body.push([`mk ${tierName(lowest)} first.`, C.mid]);
+      else btns.push([`[ UPGRADE · ${n.lock} REP ]`, C.rep, () => upgrade(n.lock)]);
+    } else {
+      const powered = wires.some(w => w.to === n.id && w.on);
+      if (n.chip) {
+        const [name, kind, tip] = CHIPS[n.chip];
+        put(8, IY, name, C.bright, true); put(8, IY + 1, `${kind.toUpperCase()} CHIP`, KIND[kind]); put(8 + kind.length + 6, IY + 1, powered ? '· on' : '· no power', powered ? C.mid : C.danger);
+        put(8, IY + 2, kind === 'shell' ? 'adds commands to the shell' : 'on while it sits here', C.dim);
+        tip.forEach(l => body.push([l, C.text]));
+        if (!powered) body.push(['', C.text], ['an empty socket before it', C.danger], ['cuts its line.', C.danger]);
+        btns.push(['[ PULL ]', C.bright, () => { ph.bag.push(n.chip); n.chip = null; }]);
+      } else {
+        const fits = ph.bag.filter(c => n.kind === 'any' || CHIPS[c][1] === n.kind);
+        put(8, IY, 'EMPTY SOCKET', C.bright, true); put(8, IY + 1, n.kind === 'any' ? 'takes any chip' : `takes ${n.kind} chips`, KIND[n.kind]);
+        if (!fits.length) body.push(['nothing that fits.', C.mid], ['find chips in runs.', C.mid]);
+        else {
+          put(1, IY + 4, 'YOUR CHIPS', C.mid);
+          fits.slice(0, 5).forEach((c, i) => {
+            const y = IY + 5 + i, [name, kind] = CHIPS[c];
+            hit(1, y, 34, 1, () => { ph.bag.splice(ph.bag.indexOf(c), 1); n.chip = c; });
+            put(2, y, c, KIND[kind], true); put(7, y, name, C.bright); put(30, y, 'slot', C.accent);
+          });
+        }
+      }
+    }
+    body.forEach(([l, col], i) => put(1, IY + 4 + i, l, col));
+    let bx = 1;
+    for (const [s, col, fn] of btns) { hit(bx, 32, s.length, 1, fn); put(bx, 32, s, col); bx += s.length + 2; }
+    if (ph.msg && now - ph.msg.t < 2200) put(1, 33, ph.msg.text, C.danger);
+
+    // ---------- draw ----------
+    const L = ph.L; ph.hits = hits;
+    g.globalAlpha = 1; g.fillStyle = C.bg; g.fillRect(0, 0, L.w, L.h);
+    for (const b of bgs) { g.globalAlpha = b.a; g.fillStyle = b.col; g.fillRect(L.ox + b.x * L.cw, L.oy + b.y * L.chh, b.w * L.cw + 0.5, b.h * L.chh + 0.5); }
+    g.textBaseline = 'middle';
+    let font = '';
+    for (let i = 0; i < grid.length; i++) {
+      const c = grid[i]; if (!c) continue;
+      const f = `${c.bold ? 700 : 400} ${L.fs}px ${FONT}`; if (f !== font) { g.font = f; font = f; }
+      g.globalAlpha = c.a; g.fillStyle = c.col;
+      g.fillText(c.ch, L.ox + (i % WC) * L.cw, L.oy + (Math.floor(i / WC) + 0.5) * L.chh);
+    }
+    g.globalAlpha = 1;
+  }
+  function upgrade(lock) {
+    if (lock !== lockedTiers()[0]) return;
+    if (ph.rep < lock) { ph.msg = { text: `not enough REP: ${lock - ph.rep} short.`, t: performance.now() }; return; }
+    ph.rep -= lock;
+    for (const n of lay.nodes) if (n.lock === lock) n.lock = 0;
+  }
+
+  // ---------- input ----------
+  const cellAt = e => { const r = cv.getBoundingClientRect(), L = ph.L; return [Math.floor((e.clientX - r.left - L.ox) / L.cw), Math.floor((e.clientY - r.top - L.oy) / L.chh)]; };
+  let down = null;
+  phone.addEventListener('pointerdown', e => { down = { y: e.clientY, s: ph.scroll, moved: false }; phone.setPointerCapture(e.pointerId); });
+  phone.addEventListener('pointermove', e => {
+    ph.mc = cellAt(e);
+    if (!down) return;
+    if (Math.abs(e.clientY - down.y) > 4) down.moved = true;
+    if (down.moved) ph.scroll = Math.max(0, Math.min(maxScroll(), Math.round(down.s - (e.clientY - down.y) / ph.L.chh)));
+  });
+  phone.addEventListener('pointerleave', () => { ph.mc = null; });
+  phone.addEventListener('pointerup', e => {
+    const d = down; down = null;
+    if (!d || d.moved) return;
+    const [x, y] = cellAt(e);
+    const h = ph.hits.find(h => x >= h.x && x < h.x + h.w && y >= h.y && y < h.y + h.h);
+    if (h) { h.fn(); return; }
+    if (y >= VY && y < VY + VH) {
+      const by = y - VY + ph.scroll, n = lay.nodes.find(n => x >= n.x && x < n.x + n.w && by >= n.y && by < n.y + n.h);
+      if (n) ph.sel = n.id;
+    }
+  });
+  phone.addEventListener('wheel', e => { e.preventDefault(); ph.scroll = Math.max(0, Math.min(maxScroll(), ph.scroll + Math.sign(e.deltaY) * 2)); }, { passive: false });
+  phone.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); ph.scroll = Math.max(0, Math.min(maxScroll(), ph.scroll + (e.key === 'ArrowDown' ? 1 : -1))); }
+  });
+  new ResizeObserver(layout).observe(phone);
+  layout();
+  return frame;
+}
+
+const side = document.querySelector('.side');
+const frames = LAYOUTS.map(d => makePhone(d, side));
+const loop = now => { for (const f of frames) f(now); requestAnimationFrame(loop); };
+document.fonts.ready.then(() => requestAnimationFrame(loop));
+})();
+</script>
+</body>
+</html>
