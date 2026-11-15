@@ -80,10 +80,10 @@ tiles, mod badges and gear chips are all one row). The sockets get a row taller 
 
 Some ways to fill the two rows (Claude's; to try in asXii):
 ```
- 1UP      1UP      1UP      .1UP
- '''      =o=      [*]      '''
-code     code     code     notch
-+ legs   + a bus  + a mark  + legs
+ 1UP      1UP      1UP      1UP
+ '''      =o=      [*]      .--
+code     code     code     code
++ legs   + a bus  + a mark  + a notch
 ```
 - With two rows, a chip can have a filled background in its rarity colour and still never pass for a letter tile.
   That beats the outline-only rule from before (BACKLOG section 11).
