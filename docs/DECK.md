@@ -284,9 +284,9 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
 
 ### CRASH (1): when you die
 - **The socket** (Greg, 2026-11-15): a normal 3x2 socket, next to the stick. The stick is its readout and shows
-  the slotted chip's name, top to bottom. It's 5 tall inside: 1UP fits, DEADMAN (7) scrolls through it like a
-  ticker, or the stick grows to 7. Claude: the socket could go right of the stick, where the glyph was (the
-  capacitors are there now), with the stick's tabs wiring the two together.
+  the slotted chip's name, top to bottom. It's 5 tall inside; a longer name
+  (DEADMAN) scrolls through it (**Decided (Greg, 2026-11-15)**). The socket goes right of the stick, where the glyph
+  was (Greg: there's room for a normal chip there), wired to it by the stick's tabs.
 - **1UP:** b0y's crash unit, from beating G0D. Back to the start of the corp.
 - **DEADMAN** (Greg: it goes here): dying keeps 25% / 50% of the REP. Bought on THE BOARD, as now.
 - **CHECKPOINT:** die in a corp and you start over at its first layer, with a cost.
