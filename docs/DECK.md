@@ -110,7 +110,7 @@ code     code     code     code
   +-+-+    + - +    +...+
   filled   empty    locked
   ```
-  Greg's v2 sockets are 5 x 3, so the board art gets a row taller wherever a socket is (the CRASH stick and the BYTE
+  Greg's v2 sockets are 5 x 3, so the board art gets a row taller wherever a socket is (done: board v03) (the CRASH stick and the BYTE
   already have their own shapes).
 
 ### Everywhere else a chip shows up
@@ -133,31 +133,36 @@ Every place gives a chip two rows, and any list it's in has to scroll by row:
   itself (`draw`, with its own height), so it has room.
 
 ## The map
-Greg's v2 art, each socket named (`^3` marks one to move down to mk III):
+Board v03 (`asxii_art/deck_board_v03.asxii.json`, Claude's pass on Greg's v02): every chip socket is 5 x 4 for the 3x2
+chips, and GLYPH moved down into mk III. The labels sit on each socket's top row.
 
 ```
     0. 0.0  ..
     ][ |%|  ][      +---+ +---+ {
-   +-o--o--o--o-+   ] BT1 | BT2  }--
+   +-o--o--o--o-+   ]BT1[ |BT2|  }--
+   |            |   ]   [ |   |  |
    |            |   +-+-+ +-+-+  |-
 [}-o  NEURAL    o=--+---+ + - +  |-
-[} |   DECK     |...] BI1 : BI2  }--
+[} |   DECK     |...]BI1[ :BI2:  }--
+[} |            |   ]   [ :   :
 [}-o    mk II   o=--+-+-+ + - + {
    |            |     +-+
-   +-o--o--o--o-+     |.C
-   [_ ::::'::: _]     |.R  +=-=-=+
-     |        /       |.A==].....[
-     |+   .__/        |.S==]GLY^3[
-     |_   ||          |.H  ].....[
-      |   ||          +-+  +=-=-=+
+   +-o--o--o--o-+     |C|
+   [_ ::::'::: _]     |R|
+     |        /       |A[=o
+     |+   .__/        |S[=o
+     |_   ||          |H|
+      |   ||          +-+
       |   ||                 ]8[
 +---+ {   ||   +---++ - +   +---+
 ]SH1[-+   ++>:<]SPL[:SH3:   ]SH4[
+]   [ |   ||   ]   [:   :   ]   [
 +-+-+ {   vV   +-+-++ - +   +-+-+
       |    \          [___.___]
       |     \______
 +=-=+ {     +---+  }     +--------+
 ]PSU[-+     ]SH2[  }-::::]01010101[
+]   [ |     ]   [  |     ]v^v^v^v^[
 +-=-+ {     ++--+  |     +-+-qp-+-+
       |     ||     |    __
       +::+::db::+::+   [  ]=----+-[X
@@ -165,23 +170,27 @@ Greg's v2 art, each socket named (`^3` marks one to move down to mk III):
        '  '    '  '     )(      +-[X
       +::+::vv::+::+    ||
 X]    |            |___<++>_______
-X]====]                           [
-X]    |  +...+ +...+ +...+ +...+  }
-X]====]  :GLY: :OV1: :OV2: :OV3:  }
-X]    '  +...+ +...+ +...+ +...+  }
-       \   ^     ^     ^     ^    [
+X]====] +=-=-=+                   [
+X]    | ].....[ +...+ +...+ +...+ }
+X]====] ].GLY.[ :OV1: :OV2: :OV3: }
+X]    | ].....[ :   : :   : :   : }
+X]    ' +=-=-=+ +...+ +...+ +...+ }
+       \   ^      ^     ^     ^   [
         \                         [
          \_______----------_______[
           |||||             |||||
           ^   ^             ^   ^
           +...+   +.o.o.+   +...+
-}-        :SU1:   : BOSS:   :HT1:
+}-        :SU1:   :BOSS :   :HT1:
+          :   :   :     :   :   :
           +...+   +.o.o.+   +...+
           +...+   +.o.o.+   +...+
-}-        :SU2:   : BOSS:   :HT2:
+}-        :SU2:   :BOSS :   :HT2:
+          :   :   :     :   :   :
           +...+   +.o.o.+   +...+
           +...+             +...+
           :SU3:             :HT3:
+          :   :             :   :
           +...+             +...+
 ```
 
@@ -201,7 +210,7 @@ X]    '  +...+ +...+ +...+ +...+  }
 | READOUT | the `]8[` | II | (display) | power used, or the mk |
 | PORTS | the `[X` jacks, right edge | II | 2 | things outside the page |
 | FUSE | the `)(` part over the mk III board | IV | (display) | the bottom band's power |
-| GLYPH | GLY (moved down) | III | 1 | your favourite glyph |
+| GLYPH | GLY (moved down in v03) | III | 1 | your favourite glyph |
 | OVERVOLT | OV1-OV3 | III | 3 | pay with integrity |
 | CREW | the `X]` jacks, left edge | III | 2-3 | crew links |
 | SUDO | SU1-SU3 | IV | 3 | the strong shell commands |
@@ -440,7 +449,7 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
 
 ## Moves to the layout
 Greg: sockets that open earlier should sit higher on the board.
-- **GLYPH moves down** into the mk III board (it needs a 5x5 space there). Its old spot up top is free.
+- **GLYPH moved down** into the mk III board (done in v03). Its old spot up top, right of the CRASH stick, is free.
 - **CRASH stays up top:** DEADMAN fills it from the start, and the 1UP joins it later.
 - **THE BYTE stays up top:** visible from the start, doing nothing until you find a code.
 - **The `[X` PORTS** wait on features that aren't built. Leave them dark where they are, or move them down.
