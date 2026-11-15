@@ -67,6 +67,21 @@ Claude's ladder, so the 1UP always has somewhere to go:
   stolen, so a rival hunts you until you cash out.
 - **The workbench:** a chip's code has a digit in it (`1UP`, `DM5`). The bench has no use for digits yet (BACKLOG
   section 1: "digits 1-9 none"), so spelling a code with a digit makes a chip.
+- **Mashing 2 mods together** (Greg, 2026-11-15: "maybe you make a chip by mashing 2 mods together"). Claude's take:
+  - It fits the 3x2 look: a mod's code is 3 letters (TRC, SKM), so a fused chip shows both, one on each row:
+    ```
+    TRC
+    SKM
+    ```
+  - Both mods are used up. The chip is yours once you cash out with it.
+  - **What it does:**
+    - A BOOT chip: every run starts with the pair, a step weaker (common). Simple, and you build your own opening.
+    - Or **recipes:** some pairs make a real chip (TRACER + SNIFFER = the `ps` shell chip). Any other pair fuses into
+      SLAG (the accident, below). You find the recipes by trying, like the bench's codes.
+    - Or both: a known recipe makes its chip, and any other pair makes a plain BOOT chip of the two.
+  - Its rarity is the lower of the two mods'.
+  - Open: is fusing a WORKBENCH thing (any safehouse) or a deck thing (only between runs)? The bench is in a run, so
+    the chip still has to get home.
 - **By accident** (Greg): a failed craft now and then fuses its burnt components into a **SLAG** chip: junk with a
   small random effect, and once in a while something good. Some chips might only be found that way.
 - **Drops:** each corp boss can drop its own chip (the list below says which). Caches, quests and the final bosses
