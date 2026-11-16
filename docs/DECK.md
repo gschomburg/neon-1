@@ -60,6 +60,8 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   **Then (Greg):** only posts with a real choice get a setting. Claude's cut: STARTER POOL (it changes what the
   starter perk offers), STRAY (a pet you might not want along), NEMESIS (a corp, or none). TELL LIGHT and LUCKY START
   only help, so they're just on. (Done.)
+  More settings may come with the ELITE and SYSOP posts (not written yet). The popup has room for about 2 more;
+  past that, its settings become a scroll area like the picker's list.
 - **A short and a long text per chip,** like mods and gear: the short one is the card's ticker and the list's second
   row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
 - **A dim dashed line between items** in the lists, not a blank row. (Done.)
