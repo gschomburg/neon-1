@@ -28,7 +28,7 @@ module.exports = { name: 'deck', body: `
   DECK.snakes = []; deckSlot('LI2', 'PSU');
   check(DECK.fx && DECK.fx.kind === 'in' && DECK.fx.sid === 'PSU', 'power: the wave and the burst');
   { const rs = (DECK.snakes || []).filter(sn => sn.under);
-    check(reduced() || (rs.length >= 3 && rs.length <= 5 && rs.every(sn => sn.rc === rarityCol(DECK_CHIPS.LI2[2]) && sn.path.length <= 13 && sn.ch.every(c => '─│╭╮╰╯'.includes(c))) && DECK.techs && DECK.techs.length >= 5),
+    check(reduced() || (rs.length >= 3 && rs.length <= 5 && rs.every(sn => sn.rc === rarityCol(DECK_CHIPS.LI2[2]) && sn.path.length <= 13 && sn.ch.every(c => '─│╭╮╰╯'.includes(c))) && (!DECK_TECH_ON || (DECK.techs && DECK.techs.length >= 5))),
       'a burst of 3 to 5 short rounded snakes in its rarity, and tech blobs pop around it: ' + rs.length); }
   check(buildScene(performance.now() + 300, false).length > 300, 'the board draws with them');
   p = deckPower();

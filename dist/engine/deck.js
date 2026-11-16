@@ -483,7 +483,7 @@ function deckFx(kind, sid, key) {
   if (kind === 'in' && !reduced()) {
     (d.snakes = d.snakes || []).push(...deckSnakes(sid, 3 + 2 * d.fx.lvl, 12 + 5 * d.fx.lvl, d.fx.t0));   // (snakes along the wires: Greg)
     if (key) d.snakes.push(...deckRoundSnakes(sid, rarityCol(DECK_CHIPS[key][2]), d.fx.t0 + 100));   // ...and a burst of rounded ones out of the chip
-    if (key) d.techs = (d.techs || []).concat(deckTechs(sid, d.fx.lvl, rarityCol(DECK_CHIPS[key][2]), d.fx.t0));   // tech blobs around it
+    if (key && DECK_TECH_ON) d.techs = (d.techs || []).concat(deckTechs(sid, d.fx.lvl, rarityCol(DECK_CHIPS[key][2]), d.fx.t0));   // tech blobs around it
   }
   if (kind === 'in') Sound.chipIn(d.fx.lvl); else Sound.chipDead();
 }
@@ -652,6 +652,7 @@ function deckRoundSnakes(sid, rc, now) {
 }
 // tech blobs around a chip that just went in: they pop up around the socket, decode, glow in its rarity, then fade
 // (more the rarer). d.techs = [{ x, y, t, t0, life, col }]
+const DECK_TECH_ON = false;   // (Greg, 2026-11-16: off for now, to see the snakes without them)
 const DECK_TECH = ['o', '#', '=o=', '[]', '0x', '::', '<>', '+', '*', '1o', '=#'];
 function deckTechs(sid, lvl, col, now) {
   const s = deckSock(sid), ART = deckArt(), rects = DECK_SOCKETS.concat(DECK_PARTS), out = [];
@@ -851,10 +852,11 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
     for (let tries = 0; tries < 12; tries++) { const k = ks[Math.floor(Math.random() * ks.length)], x = k % 64, y = Math.floor(k / 64);
       if (deckOpen(deckBand(y)) && inView(y)) { d.snakes.push({ path: deckWalk(x, y, 10 + Math.floor(Math.random() * 14)), t0: now, ms: 55, dim: true }); break; } }
   }
-  // ...and out the under-traces of a chip that has power, now and then (mostly out, sometimes back in)
+  // ...and out the under-traces of the socket you have selected, if its chip has power, now and then (mostly out,
+  // sometimes back in) (Greg, 2026-11-16: only for the selected socket)
   if (!under && !still && now > (d.undNext || 0)) {
     d.undNext = now + (1200 + Math.random() * 3000) * (1.5 - en);   // (Greg, 2026-11-16: a little less often, 2 at a time at most)
-    const live = d.snakes.filter(sn => sn.ch && !sn.under).length >= 2 ? [] : DECK_SOCKETS.filter(s => deckOpen(s.mk) && d.slots[s.id] && pw.on.has(s.id) && (deckUnder()[s.id] || []).length && inView(s.y + 1));
+    const live = d.snakes.filter(sn => sn.ch && !sn.under).length >= 2 ? [] : DECK_SOCKETS.filter(s => d.sel.kind === 'socket' && d.sel.id === s.id && deckOpen(s.mk) && d.slots[s.id] && pw.on.has(s.id) && (deckUnder()[s.id] || []).length && inView(s.y + 1));
     if (live.length) { const s = pickR(live, Math.random), sn = deckUnderSnake(s.id, Math.floor(Math.random() * deckUnder()[s.id].length), now, 50 + Math.random() * 30, Math.random() < 0.25); if (sn) d.snakes.push(sn); }
   }
   if (fx && !under) {   // the show
