@@ -215,12 +215,14 @@ what changes what:
     out, because knowing a dupe matters more (Greg).
 - **The fence** sells two or three chips, different each time. Some only turn up there, and those are **hot**:
   stolen, so a rival hunts you. **Greg (2026-11-16):** "until you cash out" is too easy, since the fence sits right before the
-  sector boss. Claude's take, to decide: a hot chip only comes home once it's cooled. Carry it through one more full
-  sector (a rival hunts you meanwhile); cash out sooner and the fence takes it back.
+  sector boss. Dropped: Claude's "a hot chip has to cool for a sector first" (Greg wasn't sure).
+  **Then (Greg, 2026-11-16):** hot chips also drop from rivals. Beat a rival and it may drop a chip; then rivals chase
+  you through the nodes. You can still just cash out. The fence sells hot chips too, at a high price.
 - **The workbench:** a chip's code has a digit in it (`1UP`, `DM5`). The bench has no use for digits yet (BACKLOG
   section 1: "digits 1-9 none"), so spelling a code with a digit makes a chip. **Greg (2026-11-16):** good. A chip's code can be 6
-  characters (both rows of its face). And making chips needs something first, to decide: a one-use find (some
-  e-paste) that opens a 6-slot craft, or a single-use recipe with 6 slots.
+  characters (both rows of its face). **Then (Greg, 2026-11-16):** making a chip takes a one-use item that opens the
+  bench's extra row (6 slots). It stacks, and it's a component, so it stays between runs once you find one. Where it
+  comes from: open.
 - **Mashing 2 mods together** (Greg, 2026-11-15: "maybe you make a chip by mashing 2 mods together"). Claude's take:
   - It fits the 3x2 look: a mod's code is 3 letters (TRC, SKM), so a fused chip shows both, one on each row:
     ```
@@ -240,8 +242,8 @@ what changes what:
 - **By accident** (Greg): a failed craft now and then fuses its burnt components into a **SLAG** chip: junk with a
   small random effect, and once in a while something good. Some chips might only be found that way.
 - **Drops** (**Decided (Greg, 2026-11-16):** no chip for every corp; that's a lot, and it pollutes the pool).
-  Chips can still be corp-themed, but they come from a limited-use spot on the map, like the data cache, plus boss
-  rewards (chips show up there more, or rarer) and quests. The corp beside each chip below is its theme now, not
+  Chips can still be corp-themed. They come from **the data cache** (the main place), PHISHING, maybe markets,
+  boss rewards (chips show up there more, or rarer), rivals (hot ones, above) and quests. The corp beside each chip below is its theme now, not
   where it drops.
 - **Rarity:** the box's outline is in its rarity colour, not a filled tile, so chips don't look like letter tiles.
   Rarer chips are stronger and cost more power.
@@ -688,7 +690,13 @@ Greg: sockets that open earlier should sit higher on the board.
   (past the first set of REP buys), a popup introduces the deck.
 - **Where it lives and its name** (**Decided (Greg, 2026-11-16)**): it's **your deck**. It lives in THE BOARD screen
   and opens nearly full screen, with just a back button. From then on the CPU upgrades are REP buys, on the REP page
-  or in the CPU's popup: ELITE has the mk III one, SYSOP the mk IV one. ELITE and SYSOP still need their other buys.
+  or in the CPU's popup: ELITE has the mk III one, SYSOP the mk IV one. ELITE and SYSOP still need their other buys: **for now, placeholder buys that do nothing** (Greg, 2026-11-16), to swap
+  for real ones later.
   (Claude: it fits. One snag: "the board" means the REP screen and also this doc's circuit art; say "your deck" for
   the whole thing.)
+- **The first chip set** (Greg, 2026-11-16): chips for most of the groups, from things the game already has. SHELL
+  and SUDO get only a couple each until THE SHELL is sorted out, so we can see them work.
+- **The build, in batches** (Greg, 2026-11-16): 1, the real deck (THE BOARD, the save, POPS at USER, the mk buys);
+  2, chips as loot (drops, a gear slot, cashing out); 3, the first chip set; 4, the show (effects, sounds, NO POWER
+  tap); 5, later (SHELL, SUDO, hot chips, fusing, BOSS, UPLINK, PORTS).
 - **The cuts:** once the lists settle. BOOT and BIOS could share 4 sockets; UPLINK could fold into PORTS.
