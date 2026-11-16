@@ -369,7 +369,7 @@ if (EDITOR) {
     deckall: () => setMsg('> ' + DECK_TEST.all(), C.accent), deckreset: () => setMsg('> ' + DECK_TEST.reset(), C.accent), deckremove: () => setMsg('> ' + DECK_TEST.remove(), C.accent),
     deckmk: m => setMsg('> ' + DECK_TEST.mk(m.n), C.accent), deckintro: () => DECK_TEST.intro(), deckdrops: () => DECK_TEST.drops(),
     deckbelt: m => { setMsg('> ' + DECK_TEST.belt(m.key), C.accent); Sound.buy(); }, deckadd: m => setMsg('> ' + DECK_TEST.add(m.key), C.accent),
-    deckrun: () => setMsg('> ' + DECK_TEST.run(), C.accent),
+    deckrun: () => setMsg('> ' + DECK_TEST.run(), C.accent), deckupshow: () => DECK_TEST.upshow(),
     rep: m => { save.rep = Math.max(0, Math.round(+m.n || 0)); persist(); },   // REP (the editor's save; no run needed)
     // quests (engine/quests.js): open the DISC quest (a sector cleared + POPS on the crew), give it, set the step, the scene, the call
     qopen: () => { save.stats = save.stats || {}; save.stats.sectors = Math.max(1, save.stats.sectors || 0); save.legacy = save.legacy || {}; save.legacy.crew_pops = Math.max(1, save.legacy.crew_pops || 0); persist(); },

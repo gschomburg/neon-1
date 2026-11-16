@@ -13,6 +13,8 @@ module.exports = { name: 'deck', body: `
   check(DECK.slots.BT2 === 'BM4', 'it still goes in');
   check(DECK.fx && DECK.fx.kind === 'dead' && DECK.fx.sid === 'BT2', 'no power: the drain and the sparks (the show)');
   check(buildScene(performance.now(), false).length > 300, 'the board draws during it');
+  check(deckLook().blobs.length > 20 && deckWires().size > 200, 'hidden tech blobs and the wire map: ' + deckLook().blobs.length + ' / ' + deckWires().size);
+  check(DECK.snakes === undefined || Array.isArray(DECK.snakes), 'snakes');
   check(deckLook().silk.length >= 4 && deckLook().vias.length > 0, 'silkscreen and vias found room: ' + deckLook().silk.map(x => x[2]).join(' '));
   check(['DEAD', 'MAN'].includes(deckStickText('DEADMAN', 1000)) && deckStickText('EJECT', 0) === 'EJECT', 'the CRASH stick: a word at a time');
   deckSlot('PS4', 'SH4');
@@ -50,7 +52,8 @@ module.exports = { name: 'deck', body: `
   DECK.scroll = 0; deckCarry('FL3'); check(!DECK.carry, 'a chip with no open socket: no carry');
   deckCarry('HC1'); check(!DECK.carry, 'HEAT (mk IV) has no open socket yet');
   DECK.mk = 3; DECK.scroll = 0; deckCarry('GR8');
-  check(DECK.carry === 'GR8' && DECK.scroll + deckViewRows() >= 38 && DECK.scroll <= 34, 'SLOT scrolls the OVERVOLT sockets into view: ' + DECK.scroll);
+  check(DECK.carry === 'GR8' && deckScrollGoal() + deckViewRows() >= 38 && deckScrollGoal() <= 34, 'SLOT scrolls (smoothly) the OVERVOLT sockets into view: ' + deckScrollGoal());
+  await sleep(DECK_SCROLL_MS + 200); buildScene(performance.now(), false); check(DECK.scroll === deckScrollGoal() && !DECK.scrollTo, 'the scroll gets there: ' + DECK.scroll);
   // the FUSE is mk IV's own power: chips there don't use the cell
   DECK.mk = 4; DECK.fuse = true; DECK.blown = false;
   const c0 = deckPower().used; deckSlot('FL3', 'SU1'); deckSlot('OMNI', 'BS1');
@@ -81,8 +84,11 @@ module.exports = { name: 'deck', body: `
   deckFuseIn(); check(!legacyLv('fuse'), 'the FUSE needs mk III first');
   const r0 = save.rep; deckUpgrade3();
   check(DECK.mk === 3 && legacyLv('deck3') === 1 && save.rep === r0 - deckCost('deck3'), 'mk III is THE BOARD post, at its price: ' + (r0 - save.rep));
+  check(DECK.up && DECK.up.mk === 3, 'buying mk III in the deck: the fanfare');
+  buildScene(performance.now(), false); DECK.up = null;
   save.legacy.elite1 = 1; check(boardLevel() === 4, 'SYSOP (mk III and a placeholder)');
   deckFuseIn(); check(DECK.mk === 4 && DECK.fuse && legacyLv('fuse') === 1, 'the FUSE: mk IV');
+  save.deck.seenMk = 3; openDeck(); await sleep(100); check(DECK.up && DECK.up.mk === 4, 'bought on THE BOARD: the fanfare the next time you open your deck'); DECK.up = null;
   check(LEGACY.filter(u => u.placeholder && u.tier === 3).length === 3 && LEGACY.filter(u => u.placeholder && u.tier === 4).length === 3, 'placeholder posts on ELITE and SYSOP');
   // the switches: STRAY off turns the post off for runs
   save.legacy.stray = 1; openDeck(); await sleep(200);

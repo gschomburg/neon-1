@@ -282,6 +282,7 @@ const DECK_TEST = {
   },
   drops(on) { DECK_ALWAYS = on == null ? !DECK_ALWAYS : !!on; return 'chips always drop: ' + (DECK_ALWAYS ? 'on' : 'off'); },
   intro() { deckIntroCall(); return "POPS's call about the deck: once the screen is calm."; },
+  upshow() { if (!DECK) throw new Error('open your deck first'); deckUpShow(Math.max(3, DECK.mk)); return `the mk ${deckMk(Math.max(3, DECK.mk))} fanfare.`; },
 };
 
 // ---------- state ----------
@@ -308,7 +309,7 @@ const DECK_START = { chips: { SC1: 1, SP3: 1 }, slots: { PSU: 'SC1', SPL: 'SP3' 
 const deckFreshSave = () => Object.assign(JSON.parse(JSON.stringify(DECK_START)), { spoils: 0, glyph: 0, crew: [], off: [], overclock: false, blown: false });
 function deckEnsure() {
   if (save.deck || boardLevel() < 2) return;
-  save.deck = deckFreshSave();
+  save.deck = Object.assign(deckFreshSave(), { seenMk: deckMkNow() });
   persist();
   deckIntroCall();
 }
@@ -324,7 +325,7 @@ function deckReal() {
   const d = Object.assign(deckView(), {
     real: true, mk: deckMkNow(), fuse: legacyLv('fuse') > 0, blown: !!sd.blown, spoils: sd.spoils || 0, glyph: sd.glyph || 0,
     crew: new Set(sd.crew || []), chips: Object.assign({}, sd.chips), slots: Object.assign({}, sd.slots), order: (sd.order || []).slice(),
-    sw: new Set(owned.filter(k => k !== 'nemesis' && !(sd.off || []).includes(k))), nemesis: nem, overclock: !!sd.overclock,
+    sw: new Set(owned.filter(k => k !== 'nemesis' && !(sd.off || []).includes(k))), nemesis: nem, overclock: !!sd.overclock, seenMk: sd.seenMk || 2,
   });
   Object.defineProperty(d, 'rep', { get: () => save.rep || 0 });   // (spend it with deckBuy: THE BOARD's posts)
   d.savedJ = JSON.stringify(deckSnap(d));
@@ -334,7 +335,7 @@ function deckReal() {
 function deckSnap(d) {
   const owned = DECK_SWITCHES.filter(k => legacyLv(k));
   return { chips: d.chips, slots: d.slots, order: d.order, spoils: d.spoils, glyph: d.glyph, crew: [...d.crew],
-    off: owned.filter(k => k === 'nemesis' ? !d.nemesis && (!d.real || nemesisPool().length > 0) : !d.sw.has(k)), overclock: !!d.overclock, blown: !!d.blown };
+    off: owned.filter(k => k === 'nemesis' ? !d.nemesis && (!d.real || nemesisPool().length > 0) : !d.sw.has(k)), overclock: !!d.overclock, blown: !!d.blown, seenMk: d.seenMk || 2 };
 }
 // Each frame on the real deck: anything changed goes into the save (one place, so no change is missed).
 function deckPersist() {
@@ -423,15 +424,16 @@ function deckCarry(key) {
   }
   const rows = deckViewRows(), top = Math.min(...fit.map(s => s.y)), bot = Math.max(...fit.map(s => s.y + s.h));
   const max = Math.max(0, deckArt().length - rows);
-  d.scroll = clamp(bot - top <= rows ? Math.round((top + bot - rows) / 2) : top - 1, 0, max);
+  deckScrollTo(clamp(bot - top <= rows ? Math.round((top + bot - rows) / 2) : top - 1, 0, max));
   d.carry = key; d.view = 'board'; Sound.ui();
 }
-function deckShow(by, h, rows) { const d = DECK; if (by < d.scroll) d.scroll = Math.max(0, by - 1); else if (by + h > d.scroll + rows) d.scroll = by + h - rows + 1; }
+function deckShow(by, h, rows) { const d = DECK, at = deckScrollGoal(); if (by < at) deckScrollTo(Math.max(0, by - 1)); else if (by + h > at + rows) deckScrollTo(by + h - rows + 1); }   // (smooth: deckScrollTo)
 
 function openDeck(o = {}) {
   if (!o.dev && !save.deck) deckEnsure();
   DECK = o.dev || !save.deck ? deckDev() : deckReal();
   const d = DECK;
+  if (d.real && d.mk > (d.seenMk || 2)) deckUpShow(d.mk, 500);   // bought on THE BOARD since you last looked: the fanfare now
   d.pick = null; d.cpu = null; d.carry = null; d.msg = null; d.selT = performance.now();
   openPanel('THE DECK', deckLines, null, { full: true });
   st.keyHandler = deckKey;
@@ -465,6 +467,7 @@ const DECK_TRACE = '-|=:.+o_/\\';   // the characters light runs along
 const DECK_WAVE_MS = 13, DECK_DRAIN_MS = 7;   // ms a cell: the wave out, the drain in (and the fill back)
 function deckFx(kind, sid, key) {
   const d = DECK; d.fx = { kind, sid, t0: performance.now(), lvl: key ? DECK_LVL[DECK_CHIPS[key][2]] || 0 : 0, burst: false };
+  if (kind === 'in' && !reduced()) (d.snakes = d.snakes || []).push(...deckSnakes(sid, 3 + 2 * d.fx.lvl, 12 + 5 * d.fx.lvl, d.fx.t0));   // (snakes along the wires: Greg)
   if (kind === 'in') Sound.chipIn(d.fx.lvl); else Sound.chipDead();
 }
 // how far each of the board's cells is from a socket (cached per socket). The art's traces have gaps (it's ASCII), so
@@ -497,28 +500,72 @@ function deckLook() {   // the silkscreen's cells and the vias, worked out once
     const near = [[1, 0], [-1, 0]].some(([dx]) => DECK_TRACE.includes((ART[y] || '')[x + dx] || ' '));
     if (near && ((x * 73 + y * 151) % 41) === 0) vias.push([x, y]);
   }
-  return (deckSilkCells = { silk, vias });
-}
-// a data packet: a short run along the traces from a random spot, every few seconds (open bands only)
-function deckPacket(now) {
-  const d = DECK, ART = deckArt();
-  if (d.pk && now - d.pk.t0 < d.pk.path.length * 70 + 400) return d.pk;
-  if (d.pkNext && now < d.pkNext) return null;
-  d.pkNext = now + 2200 + Math.random() * 2600;
-  for (let tries = 0; tries < 30; tries++) {
-    const y = Math.floor(Math.random() * ART.length), x = Math.floor(Math.random() * DECK_ART_W);
-    if (!DECK_TRACE.includes(ART[y][x] || ' ') || !deckOpen(deckBand(y))) continue;
-    const path = [[x, y]], seen = new Set([y * 64 + x]);
-    for (let i = 0; i < 26; i++) {
-      const [px, py] = path[path.length - 1];
-      const nx = [[px + 1, py], [px - 1, py], [px, py + 1], [px, py - 1]].filter(([a, b]) => !seen.has(b * 64 + a) && DECK_TRACE.includes((ART[b] || '')[a] || ' ') && deckOpen(deckBand(b)));
-      if (!nx.length) break;
-      const n = nx[Math.floor(Math.random() * nx.length)]; seen.add(n[1] * 64 + n[0]); path.push(n);
-    }
-    if (path.length >= 8) return (d.pk = { path, t0: now });
+  // hidden tech blobs: dim (or dark) until your deck is alive enough, or a ripple passes (Greg)
+  const blobs = [];
+  for (let y = 0; y < ART.length; y++) for (let x = 0; x < DECK_ART_W; x++) {
+    if (!free(x, y) || silk.some(([sx, sy, t]) => sy === y && x >= sx - 1 && x <= sx + t.length) || vias.some(([vx, vy]) => vx === x && vy === y)) continue;
+    const h = ((x * 2654435761 + y * 40503) >>> 0) % 1000 / 1000;
+    if (h < 0.07) blobs.push([x, y, 'o*=#:.+'[Math.floor(h * 1000) % 7], h / 0.07]);
   }
-  return null;
+  return (deckSilkCells = { silk, vias, blobs });
 }
+// The wires as a graph (Greg, 2026-11-16: "the pulse should follow the traces"): a wire char links to the wire chars
+// around it (a diagonal only through / or \). Snakes: a lit head with a short tail running a random walk along it, a
+// few out of a socket when a chip goes in (more and longer the rarer), and now and then on their own.
+const DECK_WIRE = '-|=:+o_/\\<>^v{}';
+let deckWireMap = null;
+function deckWires() {
+  if (deckWireMap) return deckWireMap;
+  const ART = deckArt(), is = (x, y) => DECK_WIRE.includes((ART[y] || '')[x] || ' '), m = new Map();
+  for (let y = 0; y < ART.length; y++) for (let x = 0; x < DECK_ART_W; x++) {
+    if (!is(x, y)) continue;
+    const n = [];
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if ((!dx && !dy) || !is(x + dx, y + dy)) continue;
+      if (dx && dy && !'/\\'.includes(ART[y][x]) && !'/\\'.includes(ART[y + dy][x + dx])) continue;
+      n.push([x + dx, y + dy]);
+    }
+    m.set(y * 64 + x, n);
+  }
+  return (deckWireMap = m);
+}
+// a walk along the wires from [x, y]: it keeps its heading when it can
+function deckWalk(x, y, len, avoid) {
+  const W = deckWires(), path = [[x, y]], seen = new Set([y * 64 + x]);
+  let hx = 0, hy = 0;
+  for (let i = 0; i < len; i++) {
+    const [px, py] = path[path.length - 1];
+    const nx = (W.get(py * 64 + px) || []).filter(([a, b]) => !seen.has(b * 64 + a) && !(avoid && avoid(a, b)));
+    if (!nx.length) break;
+    const ahead = nx.filter(([a, b]) => a - px === hx && b - py === hy);
+    const [a, b] = ahead.length && Math.random() < 0.7 ? ahead[0] : nx[Math.floor(Math.random() * nx.length)];
+    hx = a - px; hy = b - py; seen.add(b * 64 + a); path.push([a, b]);
+  }
+  return path;
+}
+// snakes out of a socket (or a part): from the wires touching it, outward
+function deckSnakes(sid, n, len, now, delay = 40) {
+  const s = deckSock(sid) || DECK_PARTS.find(p => p.id === sid), W = deckWires(), inside = (x, y) => x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h;
+  const starts = [];
+  for (let y = s.y - 1; y <= s.y + s.h; y++) for (let x = s.x - 1; x <= s.x + s.w; x++) if (!inside(x, y) && W.has(y * 64 + x)) starts.push([x, y]);
+  if (!starts.length) return [];
+  return Array.from({ length: n }, (_, i) => { const [x, y] = starts[Math.floor(Math.random() * starts.length)]; return { path: deckWalk(x, y, len + Math.floor(Math.random() * len / 2), inside), t0: now + i * delay, ms: 26 }; });
+}
+// How alive your deck is (0-1): more chips in, more power used, a higher mk (Greg: more tech blobs, more active, as you
+// slot more and your deck levels up). It sets how many hidden blobs glow and how often snakes run on their own.
+function deckEnergy(pw) {
+  const d = DECK, open = DECK_SOCKETS.filter(s => deckOpen(s.mk) && s.g !== 'glyph');
+  const filled = open.length ? open.filter(s => d.slots[s.id] && pw.on.has(s.id)).length / open.length : 0;
+  const pf = pw.budget ? pw.used / pw.budget : 0;
+  return clamp(0.12 + 0.45 * filled + 0.25 * pf + 0.18 * (d.mk - 2) / 2, 0, 1);
+}
+// a smooth scroll of the board (Greg: the NO POWER bar jumped; about half a second)
+const DECK_SCROLL_MS = 450;
+function deckScrollTo(to) { const d = DECK; d.scrollTo = { from: d.scroll, to, t0: performance.now() }; }
+const deckScrollGoal = () => DECK.scrollTo ? DECK.scrollTo.to : DECK.scroll;
+// the band an mk opens (its first row on the board), for the upgrade's boot sweep
+const DECK_BAND_TOP = { 2: 0, 3: 28, 4: 41 }, DECK_BAND_END = { 2: 28, 3: 41, 4: 56 };
+
 // the CRASH stick: a name too long for it shows a word (or 4 letters) at a time, swapping with a scramble (Greg)
 function deckStickText(name, now) {
   const parts = name.includes(' ') ? name.split(' ') : name.length <= 5 ? [name] : name.match(/.{1,4}/g);
@@ -660,6 +707,8 @@ function deckHeader(ctx, y) {
 function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (the board draws into it, dim, no taps)
   const d = DECK, g = under || deckGrid(ctx), now = ctx.now, pw = deckPower(), ART = deckArt(), BH = ART.length, bv = sa - 2;
   const ax = Math.floor((L.wc - DECK_ART_W) / 2), maxTop = Math.max(0, BH - bv);
+  if (d.scrollTo && !under) { const k = clamp((now - d.scrollTo.t0) / DECK_SCROLL_MS, 0, 1), e = 1 - Math.pow(1 - k, 3);
+    d.scroll = Math.round(d.scrollTo.from + (clamp(d.scrollTo.to, 0, maxTop) - d.scrollTo.from) * e); if (k >= 1) d.scrollTo = null; }
   d.scroll = clamp(d.scroll, 0, maxTop);
   const top = d.scroll, inView = by => by >= top && by < top + bv, sy = by => y0 + 1 + by - top;
   const bput = (x, by, s, col, bold) => { if (inView(by)) g.put(ax + x, sy(by), s, col, bold); };
@@ -673,18 +722,35 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   { const lk = deckLook();   // silkscreen and vias, toned back
     for (const [x, y, t] of lk.silk) bput(x, y, t, silkCol);
     for (const [x, y] of lk.vias) bput(x, y, 'o', mixHex(C.dim, tc, 0.25)); }
-  const fx = d.fx, fxAge = fx ? now - fx.t0 : 0;
-  if (!under && !reduced()) {   // a data packet on a trace
-    const pk = deckPacket(now);
-    if (pk) { const i = Math.floor((now - pk.t0) / 70);
-      for (let j = 0; j < 4; j++) { const c = pk.path[i - j]; if (c) bput(c[0], c[1], j ? ART[c[1]][c[0]] : 'o', j ? mixHex(idle, tc, 0.6 - j * 0.15) : mixHex(tc, C.bright, 0.3), !j); } }
+  const fx = d.fx, fxAge = fx ? now - fx.t0 : 0, still = reduced(), en = deckEnergy(pw), lk = deckLook();
+  const hh = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
+  // the hidden tech blobs: the livelier your deck, the more of them glow (dim), and now and then one twinkles
+  if (!under) for (const [x, y, ch, h] of lk.blobs) {
+    if (!deckOpen(deckBand(y)) || h > en * 0.75) continue;
+    const tw = !still && hh(x * 13 + y, Math.floor(now / 350)) < 0.01 + 0.05 * en;
+    bput(x, y, ch, tw ? mixHex(tc, C.bright, 0.4) : mixHex(C.dim, tc, 0.15 + 0.3 * en), tw);
+  }
+  // snakes on their own, more often the livelier your deck is
+  d.snakes = d.snakes || [];
+  if (!under && !still && now > (d.ambNext || 0)) {
+    d.ambNext = now + (700 + Math.random() * 2600) * (1.5 - en);
+    const W = deckWires(), ks = [...W.keys()];
+    for (let tries = 0; tries < 12; tries++) { const k = ks[Math.floor(Math.random() * ks.length)], x = k % 64, y = Math.floor(k / 64);
+      if (deckOpen(deckBand(y)) && inView(y)) { d.snakes.push({ path: deckWalk(x, y, 10 + Math.floor(Math.random() * 14)), t0: now, ms: 55, dim: true }); break; } }
   }
   if (fx && !under) {   // the show
     const dm = deckDist(fx.sid);
-    if (fx.kind === 'in') {   // a wave of light out along the traces
-      const front = fxAge / DECK_WAVE_MS;
-      if (front > dm.max + 8) d.fx = null;
-      else for (const [k, dd] of dm.m) { if (dd > front || dd < front - 7) continue; const x = k % 64, y = Math.floor(k / 64); if (deckOpen(deckBand(y))) bput(x, y, ART[y][x], dd > front - 2 ? mixHex(tc, C.bright, 0.5) : mixHex(idle, tc, (dd - front + 7) / 7), dd > front - 2); }
+    if (fx.kind === 'in') {   // a ripple: two rings out of the socket, lighting the lines and showing the hidden blobs as they pass
+      const f1 = fxAge / DECK_WAVE_MS, f2 = f1 - 9;
+      if (f2 > dm.max + 4) d.fx = null;
+      else {
+        for (const [k, dd] of dm.m) { const r1 = f1 - dd, r2 = f2 - dd; const on1 = r1 >= 0 && r1 < 3, on2 = r2 >= 0 && r2 < 2; if (!on1 && !on2) continue;
+          const x = k % 64, y = Math.floor(k / 64); if (deckOpen(deckBand(y))) bput(x, y, ART[y][x], on1 && r1 < 1.2 ? mixHex(tc, C.bright, 0.55) : mixHex(idle, tc, 0.8), on1 && r1 < 1.2); }
+        const s0 = deckSock(fx.sid) || DECK_PARTS.find(p => p.id === fx.sid);
+        for (const [x, y, ch] of lk.blobs) { if (!deckOpen(deckBand(y))) continue;
+          const dx = x - clamp(x, s0.x, s0.x + s0.w - 1), dy = y - clamp(y, s0.y, s0.y + s0.h - 1), dd = Math.sqrt(dx * dx + 4 * dy * dy);
+          if (dd <= f1 && dd > f1 - 10) bput(x, y, ch, mixHex(tc, C.bright, (10 - (f1 - dd)) / 20), true); }
+      }
     } else {   // the light drains into the socket, holds dark, then fills back
       const drain = dm.max * DECK_DRAIN_MS, hold = 300, fill = dm.max * DECK_DRAIN_MS * 1.6;
       const front = fxAge < drain ? dm.max - fxAge / DECK_DRAIN_MS : fxAge < drain + hold ? 0 : (fxAge - drain - hold) / (DECK_DRAIN_MS * 1.6);
@@ -692,6 +758,42 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
       else { for (let by = top; by < top + bv && by < BH; by++) g.put(ax, sy(by), ART[by], C.dim);   // the board goes dim...
         for (const [k, dd] of dm.m) { if (dd > front) continue; const x = k % 64, y = Math.floor(k / 64); if (deckOpen(deckBand(y))) bput(x, y, ART[y][x], idle); } }   // ...but where the light still is
     }
+  }
+  // the snakes: a lit head, a short tail, along the wires
+  if (!under) for (let i = d.snakes.length - 1; i >= 0; i--) {
+    const sn = d.snakes[i], hd = Math.floor((now - sn.t0) / sn.ms);
+    if (hd < 0) continue;
+    if (hd - 5 >= sn.path.length) { d.snakes.splice(i, 1); continue; }
+    for (let j = 0; j <= 5; j++) { const c = sn.path[hd - j]; if (!c || !deckOpen(deckBand(c[1]))) continue;
+      bput(c[0], c[1], j ? ART[c[1]][c[0]] : (sn.dim ? 'o' : '*'), j ? mixHex(idle, tc, (sn.dim ? 0.55 : 1) - j * 0.12) : mixHex(tc, C.bright, sn.dim ? 0.2 : 0.6), !j); }
+  }
+  // the mk upgrade (Greg, 2026-11-16: big fanfare): the new board boots, a sweep running down it row by row (dark below
+  // it), bursts at its sockets as it passes them, then snakes and a ripple out of the CPU. d.up = { mk, t0, bursts }
+  const up = d.up, upAge = up ? now - up.t0 : 0;
+  if (up && !under && upAge >= 0) {
+    const bt = DECK_BAND_TOP[up.mk], be = DECK_BAND_END[up.mk], sweepMs = 1300, sw = bt + (be - bt) * clamp(upAge / sweepMs, 0, 1);
+    if (!up.started) {
+      up.started = true; Sound.deckUp(); deckSay(`mk ${deckMk(up.mk)} ONLINE.${up.mk === 4 ? ' the FUSE is lit.' : ' new sockets.'}`, tc);   // (it fits the bar)
+      deckScrollTo(Math.max(0, bt - 3)); if (!still) { flash(tc, 0.3, 0.5); shake(5, 0.45); }
+    }
+    if (upAge < sweepMs) for (let by = Math.max(top, Math.floor(sw) + 1); by < Math.min(be, top + bv); by++) g.put(ax, sy(by), ART[by], C.dim);   // not booted yet
+    if (upAge < sweepMs) { const ry = Math.floor(sw); if (ry < be) { bput(0, ry, [...ART[ry]].map(c => c === ' ' ? ' ' : still ? c : Math.random() < 0.3 ? noiseCh() : c).join(''), mixHex(tc, C.bright, 0.6), true); } }
+    up.bursts = up.bursts || new Set();
+    for (const s of DECK_SOCKETS) { if (s.mk !== up.mk || up.bursts.has(s.id) || sw < s.y + 1) continue;
+      up.bursts.add(s.id);
+      if (!still && inView(s.y + 1)) { const x = pxX(ax + s.x + s.w / 2 - 0.5), y = pxY(sy(s.y + 1)), cells = [];
+        for (let k = 0; k < 16; k++) cells.push({ ch: pickR(['o', '*', '+', '0', '1', '#', '=', '<', '>'], Math.random), x: x + rand(-1, 1) * L.cw, y, col: pickR([tc, C.bright, C.money, tc], Math.random) });
+        explode(cells, x, y + L.chh / 2, { power: 0.6, grav: 0.6, life: [0.6, 1.3] }); Sound.lamp(); } }
+    if (upAge >= sweepMs && !up.done) {
+      up.done = true;
+      d.snakes.push(...deckSnakes('cpu', 10, 26, now, 30));
+      for (const s of DECK_SOCKETS) if (s.mk === up.mk) d.snakes.push(...deckSnakes(s.id, 2, 16, now, 60));
+      d.fx = { kind: 'in', sid: 'cpu', t0: now, lvl: 4, burst: true };
+      if (!still) { flash(tc, 0.2, 0.4); const x = pxX(L.wc / 2), y = pxY(y0 + Math.floor(bv / 2)), cells = [];
+        for (let k = 0; k < 50; k++) cells.push({ ch: pickR(['*', '+', '~', 'x', '.', 'o', '0', '1'], Math.random), x: x + rand(-6, 6) * L.cw, y: y + rand(-2, 2) * L.chh, col: pickR([tc, C.bright, C.money, C.accent, tc], Math.random) });
+        explode(cells, x, y, { power: 1, grav: 0.6, life: [1, 1.8] }); }
+    }
+    if (upAge > 3500) d.up = null;
   }
   // the CPU: your hacker name (2 lines when it doesn't fit), the mk, the pins blinking in turn
   { const n = deckName(), lines = n.length <= 10 ? [n] : n.split('_');
@@ -733,7 +835,6 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   }
   // sparks: static around a chip that has no power (now and then), and a lot of it while one dies
   const ring = s => { const r = []; for (let x = s.x - 1; x <= s.x + s.w; x++) r.push([x, s.y - 1], [x, s.y + s.h]); for (let y = s.y; y < s.y + s.h; y++) r.push([s.x - 1, y], [s.x + s.w, y]); return r; };
-  const hh = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
   if (!under) {
     for (const id of pw.off) { const s = deckSock(id), r = ring(s), f = Math.floor(now / 110);
       if (hh(id.charCodeAt(2) + f, f) < 0.18) { const c = r[Math.floor(hh(f, id.charCodeAt(1)) * r.length)]; bput(c[0], c[1], pickR(["'", '*', '+', ','], Math.random), C.danger); } }
@@ -762,7 +863,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   deckMore(ctx, g, 0, L.wc, y0 + sa - 1, false, top < maxTop, () => { d.scroll = clamp(d.scroll + DECK_BOARD_STEP, 0, maxTop); }, 'dkdn');
   if (under) return;
   d.keyStep = null;
-  st.scroll = dd => { const t = clamp(d.scroll + dd, 0, maxTop); if (t !== d.scroll) { d.scroll = t; Sound.tick(); } };
+  st.scroll = dd => { d.scrollTo = null; const t = clamp(d.scroll + dd, 0, maxTop); if (t !== d.scroll) { d.scroll = t; Sound.tick(); } };
   g.flush();
 }
 function deckTapSocket(s, rows) {
@@ -1059,8 +1160,9 @@ function deckPartCard(ctx, g, y, id, pw, tick, btns) {
     btns([['[ OPEN ]', C.accent, 'dkcpu', deckCpuOpen]]);   // (the name comes from your profile: no button here)
   } else if (id === 'byte') {
     g.put(1, y, 'THE BYTE · secret codes', C.bright, true);
-    for (let i = 0; i < 8; i++) { const x = 1 + i * 3, on = d.bits[i]; g.put(x, y + 1, `[${on}]`, on ? C.accent : C.mid, !!on); ctx.hl(x, y + 1, 3, 1, 'dkbit' + i, false); ctx.addHit(x, y + 1, 3, 1, { kind: 'btn', id: 'dkbit' + i, onTap: () => { d.bits[i] ^= 1; Sound.tick(); } }); }
+    for (let i = 0; i < 8; i++) { const x = 1 + i * 3, on = d.bits[i]; g.put(x, y + 1, `[${on}]`, on ? C.accent : C.text, !!on); ctx.hl(x, y + 1, 3, 1, 'dkbit' + i, false); ctx.addHit(x, y + 1, 3, 1, { kind: 'btn', id: 'dkbit' + i, onTap: () => { d.bits[i] ^= 1; Sound.tick(); } }); }
     g.put(26, y + 1, '0x' + parseInt(d.bits.join(''), 2).toString(16).toUpperCase().padStart(2, '0'), C.mid);
+    // (the 0s in text white, not mid: Greg, so they read as switches)
     tick(1, '8 switches. most codes do nothing. the hints are around the game: logos, posts, G0D, the codex.', C.mid);
     btns([['[ ENTER ]', C.accent, 'dkenter', deckEnterByte], ['[ CLEAR ]', C.mid, 'dkclear', () => { d.bits.fill(0); Sound.tick(); }]]);
   } else if (id === 'fuse') {
@@ -1107,11 +1209,14 @@ function deckBuy(key, cost, done) {
   if (d.rep < cost) { Sound.deny(); return deckSay('not enough REP.', C.danger); }
   d.rep -= cost; done();
 }
-function deckUpgrade3() { deckBuy('deck3', deckCost('deck3'), () => { const d = DECK; d.mk = Math.max(d.mk, 3); Sound.buy(); deckSay('mk III: the middle board is in.'); }); }
+function deckUpgrade3() { deckBuy('deck3', deckCost('deck3'), () => { const d = DECK; d.mk = Math.max(d.mk, 3); deckUpShow(3); }); }
+// the upgrade fanfare (deckBoard: d.up). seenMk: the mk it last played for, so buying one on THE BOARD plays it the first
+// time you open your deck after.
+function deckUpShow(mk, delay = 0) { const d = DECK; d.cpu = null; d.pick = null; d.view = 'board'; d.up = { mk, t0: performance.now() + delay }; d.seenMk = Math.max(d.seenMk || 2, mk); }
 function deckFuseIn() {
   const d = DECK;
   if (d.mk < 3) { Sound.deny(); return deckSay('mk III first.', C.danger); }
-  deckBuy('fuse', deckCost('fuse'), () => { d.fuse = true; d.mk = 4; Sound.buy(); deckSay('the fuse is in. mk IV lit.'); });
+  deckBuy('fuse', deckCost('fuse'), () => { d.fuse = true; d.mk = 4; deckUpShow(4); });
 }
 function deckEnterByte() {
   const d = DECK, code = d.bits.join('');

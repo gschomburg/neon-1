@@ -350,6 +350,7 @@ const SHELL_CMDS = shellGroups([
   { name: 'deck.drops', args: [{ name: 'on|off', of: fixed('on', 'off'), opt: true }], help: 'every DATA CACHE and PIER gear catch drops a chip', run: a => DECK_TEST.drops(a[0] == null ? null : a[0] === 'on') },
   { name: 'deck.open', help: 'your deck (the dev one if you have none)', safe: true, run: () => { shellClose(); openDeck(); } },
   { name: 'deck.intro', help: "POPS's call about the deck", safe: true, run: () => DECK_TEST.intro() },
+  { name: 'deck.upshow', help: "the mk upgrade's fanfare (on your open deck)", safe: true, run: () => { shellClose(); return DECK_TEST.upshow(); } },
 ]);
 const SHELL_BY = Object.fromEntries(SHELL_CMDS.map(c => [c.name, c]));
 for (const c of SHELL_CMDS) for (const al of c.alias || []) SHELL_BY[al] = c;

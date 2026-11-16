@@ -342,6 +342,13 @@ const Sound = (() => {
       if (lvl >= 1) arp([659, 784, 988, 1319, 1568].slice(0, 2 + lvl), 0.06, { vol: 0.28 });
       if (lvl >= 3) { tone(1976, 0.4, { type: 'triangle', vol: 0.18, delay: 0.38 }); noise(0.3, { vol: 0.1, freq: 8000, type: 'highpass', delay: 0.36 }); }
     },
+    // your deck goes up a mk: the power comes up under it, a fanfare climbs, and it rings out
+    deckUp: () => {
+      noise(1.2, { vol: 0.16, freq: 160, to: 2200 }); tone(45, 1.2, { type: 'sawtooth', vol: 0.12, slide: 4 });
+      arp([523, 659, 784, 1047, 1319, 1568], 0.08, { vol: 0.4 });
+      tone(1568, 0.7, { type: 'triangle', vol: 0.3, delay: 0.5 }); tone(2093, 0.8, { type: 'triangle', vol: 0.22, delay: 0.55 });
+      tone(784, 0.9, { type: 'square', vol: 0.08, delay: 0.5 }); noise(0.7, { vol: 0.14, freq: 8000, type: 'highpass', delay: 0.5 });
+    },
     // ...not enough power: it tries, sputters and dies (an error, static crackling)
     chipDead: () => {
       tone(150, 0.25, { type: 'sawtooth', vol: 0.12, slide: 1.8 }); tone(330, 0.1, { type: 'square', vol: 0.14, delay: 0.22 });

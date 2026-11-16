@@ -691,6 +691,21 @@ Greg: sockets that open earlier should sit higher on the board.
   comes from its mk's rarity, and chips keep their rarity colors. Dropped: the profile-color toggle in the mockup.
 - **The training** (**Decided (Greg, 2026-11-16)**): POPS, since you may not have the 1UP yet. When you reach USER
   (past the first set of REP buys), a popup introduces the deck.
+- **Pump it** (Greg's meat notes, 2026-11-16: "more effects going on when stuff happens"). Done:
+  - **Snakes along the wires** ("the pulse should follow the traces", like the trailer's end card): a chip going in sends
+    3-11 lit snakes out along the board's wires (more and longer the rarer), and short dim ones run on their own.
+  - **A ripple** (two rings, not one burst) that **shows hidden tech blobs** as it passes.
+  - **The deck comes alive as it fills:** hidden blobs glow (dim) and twinkle, and snakes run more often, the more
+    chips are in and powered, the more power is used, and the higher your mk (engine/deck.js deckEnergy).
+  - **Smooth scrolls** (about half a second): the NO POWER bar, SLOT from the CHIPS tab.
+  - **The mk upgrade fanfare:** the new board boots, a sweep runs down it row by row with a burst at each socket,
+    then snakes and a ripple out of the CPU, a fanfare (Sound.deckUp) and  Bought in the deck, it plays
+    right away; bought on THE BOARD, the first time you open your deck after (save.deck.seenMk).
+  - **THE BYTE's 0s** in the card are text white, so they read as switches.
+  - Greg likes: the CRASH stick's text and swap, and the glitch around a chip with no power. (Kept.)
+  - **Open: the 1UP isn't in CRASH.** It's not a chip yet: the 1UP is still the old one (beat G0D, every run starts
+    with it). The idea was that it joins CRASH as b0y's crash unit. To decide: a 1UP chip you get for beating G0D,
+    and the run's 1UP only works with it slotted and powered (3)?
 - **A DECK tab on THE BOARD** (Greg, 2026-11-16: noted, not built): today the deck is THE BOARD > YOU > [ YOUR DECK ].
   It deserves its own tab up top. Space: the tab row is 35 of 36 wide now ([YOU] [REP] [FEATS] [CREW] [QUESTS]), so a
   [DECK] tab needs room: shorter labels, or a second row, or one tab folds in.
