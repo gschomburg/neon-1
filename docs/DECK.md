@@ -688,6 +688,9 @@ Greg: sockets that open earlier should sit higher on the board.
   comes from its mk's rarity, and chips keep their rarity colors. Dropped: the profile-color toggle in the mockup.
 - **The training** (**Decided (Greg, 2026-11-16)**): POPS, since you may not have the 1UP yet. When you reach USER
   (past the first set of REP buys), a popup introduces the deck.
+- **A DECK tab on THE BOARD** (Greg, 2026-11-16: noted, not built): today the deck is THE BOARD > YOU > [ YOUR DECK ].
+  It deserves its own tab up top. Space: the tab row is 35 of 36 wide now ([YOU] [REP] [FEATS] [CREW] [QUESTS]), so a
+  [DECK] tab needs room: shorter labels, or a second row, or one tab folds in.
 - **The deck's training** (Greg, 2026-11-16: noted, not built): so far only POPS's call at USER (3 lines and
   [ SEE YOUR DECK ]). Claude's idea, like the bench's first-time POPS lines (engine/bench.js popsSeen): the first time
   you open your deck, a few POPS lines pointing at each part (sockets: tap, tap again to slot; the PSU and power; the
