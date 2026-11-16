@@ -169,6 +169,20 @@ function deckPick(sid) {
   Sound.ui();
 }
 // keep a board row range in view
+const deckViewRows = () => L.hc - 1 - 5 - DECK_CARD_H - 2;   // board rows in view (the scroll area less its "more" rows)
+// SLOT from the CHIPS tab: back to the board, scrolled so the sockets it fits are in view (all of them when they fit
+// in the view together, else from the first one down) (Greg, 2026-11-15). None open for it: say so, stay on the list.
+function deckCarry(key) {
+  const d = DECK, c = DECK_CHIPS[key], fit = DECK_SOCKETS.filter(s => deckFits(key, s) && deckOpen(s.mk));
+  if (!fit.length) {
+    const any = DECK_SOCKETS.find(s => deckFits(key, s));
+    Sound.deny(); return deckSay(any ? `no open ${DECK_GROUPS[c[1]][0]} socket: it opens with mk ${deckMk(any.mk)}.` : 'no socket for it on this deck.', C.danger);
+  }
+  const rows = deckViewRows(), top = Math.min(...fit.map(s => s.y)), bot = Math.max(...fit.map(s => s.y + s.h));
+  const max = Math.max(0, deckArt().length - rows);
+  d.scroll = clamp(bot - top <= rows ? Math.round((top + bot - rows) / 2) : top - 1, 0, max);
+  d.carry = key; d.view = 'board'; Sound.ui();
+}
 function deckShow(by, h, rows) { const d = DECK; if (by < d.scroll) d.scroll = Math.max(0, by - 1); else if (by + h > d.scroll + rows) d.scroll = by + h - rows + 1; }
 
 function openDeck() {
@@ -600,7 +614,7 @@ function deckCard(ctx, y0) {
     const names = pw.off.map(id => `NO POWER: ${DECK_CHIPS[d.slots[id]][0]} in ${id}`), sw = FX.swapLines(names, W - 2, 0, now, 1800);
     g.bg(0, y0, W, 1, st.hoverBtn === 'dkbar' ? C.accent : C.danger, 1); g.put(1, y0, sw.text, C.bg, true);
     if (!d.pick && !d.cpu) ctx.addHit(0, y0, W, 1, { kind: 'btn', id: 'dkbar', onTap: () => {
-      const id = pw.off[sw.k], s = deckSock(id); d.view = 'board'; deckSelect({ kind: 'socket', id }); deckShow(s.y, s.h, L.hc - 1 - 5 - DECK_CARD_H - 2); Sound.tick(); } });
+      const id = pw.off[sw.k], s = deckSock(id); d.view = 'board'; deckSelect({ kind: 'socket', id }); deckShow(s.y, s.h, deckViewRows()); Sound.tick(); } });
   } else g.put(0, y0, rule(W), C.dim);
   // the picker is up: the card waits under it (dim), and a tap on it closes the picker
   if (d.pick || d.cpu) { g.dim = true; ctx.addHit(0, y0 + 1, W, 4, { kind: 'btn', id: 'dkcard', onTap: () => { d.pick = null; d.cpu = null; Sound.tick(); } }); }
@@ -621,7 +635,7 @@ function deckCard(ctx, y0) {
     const where = deckSlotOf(sel.key), c = DECK_CHIPS[sel.key];
     frame(where ? deckSock(where) : { id: '---', g: c[1], mk: 2, w: c[1] === 'boss' ? 7 : 5, h: 4 }, sel.key);
     chipRows(sel.key, where);
-    btns([['[ SLOT ]', C.accent, 'dkslot', () => { d.carry = sel.key; d.view = 'board'; Sound.ui(); }], ...(where ? [['[ PULL ]', C.bright, 'dkpull', () => deckPull(where)]] : [])], c[1] === 'boss' ? 10 : 8);
+    btns([['[ SLOT ]', C.accent, 'dkslot', () => deckCarry(sel.key)], ...(where ? [['[ PULL ]', C.bright, 'dkpull', () => deckPull(where)]] : [])], c[1] === 'boss' ? 10 : 8);
   } else if (sel.kind === 'socket') {
     const s = deckSock(sel.id), key = d.slots[s.id], open = deckOpen(s.mk), [gn, , gt] = DECK_GROUPS[s.g], gc = deckGroupCol(s.g);
     if (s.g === 'glyph') {
@@ -698,6 +712,6 @@ function deckEnterByte() {
   const d = DECK, code = d.bits.join('');
   d.tick = { text: DECK_CODES[code] || 'NO CARRIER', t: performance.now() };
   Sound.ui();
-  deckShow(22, 4, L.hc - 1 - 5 - DECK_CARD_H - 2);   // the ticker answers on the board: bring it into view
+  deckShow(22, 4, deckViewRows());   // the ticker answers on the board: bring it into view
   if (code === '01111111') setTimeout(() => d.bits.fill(0), 900);
 }

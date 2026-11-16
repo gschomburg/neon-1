@@ -40,5 +40,9 @@ module.exports = { name: 'deck', body: `
   check(DECK.nemesis !== was, 'NEMESIS cycles to the next corp: ' + was + ' > ' + DECK.nemesis);
   const tb = hits.find(h => h.id === 'dkswstray'); tb.onTap(); check(!DECK.sw.has('stray'), 'a switch turns off');
   deckKey('escape'); check(!DECK.cpu, 'Escape closes it');
+  DECK.scroll = 0; deckCarry('GD0'); check(!DECK.carry, 'a chip with no open socket: no carry');
+  deckCarry('HN2'); check(!DECK.carry, 'HEAT (mk IV) has no open socket yet');
+  DECK.mk = 3; DECK.scroll = 0; deckCarry('GR8');
+  check(DECK.carry === 'GR8' && DECK.scroll + deckViewRows() >= 38 && DECK.scroll <= 34, 'SLOT scrolls the OVERVOLT sockets into view: ' + DECK.scroll);
   DECK = null;
 ` };

@@ -64,6 +64,8 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   past that, its settings become a scroll area like the picker's list.
 - **A short and a long text per chip,** like mods and gear: the short one is the card's ticker and the list's second
   row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
+- **SLOT from the CHIPS tab scrolls the board** to the sockets that chip fits: all of them when they fit in the
+  view together, else from the first one. No open socket for it (mk III / IV): it says so and stays on the list. (Done.)
 - **A dim dashed line between items** in the lists, not a blank row. (Done.)
 - **The wheel and a drag scroll one row at a time;** the arrows and the "more" rows step to the next whole item.
   (Done. In the picker the arrow keys move the pick and Enter slots it.)
