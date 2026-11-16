@@ -702,6 +702,10 @@ Greg: sockets that open earlier should sit higher on the board.
   2, chips as loot (drops, a gear slot, cashing out; done: DATA CACHEs 20%, a PIER gear catch 25%, weighted by rarity,
   on their own seeded streams; the 1UP and the starter chips never drop. A chip is gear (`chip_` + its key) that can't be
   used, its belt code is its face (the two rows take turns), its tip says NEW or how many you have; a full belt gets
-  the swap; cash out and it goes home (a YOUR DECK note), die and it's gone; the bench shreds it into its code's letters); 3, the first chip set; 4, the show (effects, sounds, NO POWER
+  the swap; cash out and it goes home (a YOUR DECK note), die and it's gone; the bench shreds it into its code's letters); 3, the first chip set (done, 22 chips: BOOT TRUST FUND, LOADOUT, BEAST MASTER, FRESH INSTALL; BIOS QUIET;
+  CRASH DEADMAN, BLACK BOX; SPOILS the switch; PSU the 4 cells; OVERVOLT GREED, LUCK, FAME, SPIKE; SHELL whoami, ps;
+  SUDO flatline; BOSS OMNI'S EYE; HEAT HARDCORE, TAXED. The chips slotted, open and powered as a run starts are on
+  for that run (run.chips; HARDCORE turns CRASH off). SHELL and SUDO chips teach a command in THE SHELL (~): safe, but
+  the run is marked hacked. GLYPH and the CREW jacks have no chips yet); 4, the show (effects, sounds, NO POWER
   tap); 5, later (SHELL, SUDO, hot chips, fusing, BOSS, UPLINK, PORTS).
 - **The cuts:** once the lists settle. BOOT and BIOS could share 4 sockets; UPLINK could fold into PORTS.

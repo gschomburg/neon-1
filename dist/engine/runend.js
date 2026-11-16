@@ -67,7 +67,8 @@ async function endRun(win) {
   }
   // REP: cashing out banks it all; dying banks nothing (DEADMAN keeps a part).
   const repWorth = repFor(run);
-  const rep = run.practice ? 0 : win ? repWorth : Math.floor(repWorth * [0, 0.25, 0.5][legacyLv('dms')]);
+  const rep = run.practice ? 0 : win ? repWorth : Math.floor(repWorth * Math.max([0, 0.25, 0.5][legacyLv('dms')], deckDeadman(run)));   // (DEADMAN: the post, or the chip)
+  if (!win) deckBlackBox(run);   // BLACK BOX (a chip): your best mod to the LOCKER
   if (rep) { save.rep = (save.rep || 0) + rep; save.repTotal = (save.repTotal || 0) + rep; }
   if (win && !run.practice) save.cashouts = (save.cashouts || 0) + 1;
   deckHome(run, win);   // the chips in your belt go home to your deck (engine/deck.js)

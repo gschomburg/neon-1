@@ -7,7 +7,7 @@
 'use strict';
 NEON_FILES.push(['engine/deck.js', 'v15.00']);
 
-// ---------- data (a stand-in: the real lists come once Greg has sorted the chip ideas) ----------
+// ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key, what it's for]
 const DECK_GROUPS = {
   boot: ['BOOT', 'rep', 'what a run starts with'], bios: ['BIOS', 'rep', "the run's rules"],
@@ -19,52 +19,49 @@ const DECK_GROUPS = {
 };
 const deckGroupCol = g => C[DECK_GROUPS[g][1]] || C.text;
 // chips: key: [name, group, rarity, power, what it does (the long text: the picker, 4 rows at most), face (top row,
-// bottom row: 3 wide, 5 for BOSS), tip (the short text: the card's ticker)]
+// bottom row: 3 wide, 5 for BOSS), tip (the short text: the card's ticker)]. What each one does in a run: the hooks
+// below (chipOn), one per chip, each marked "(a chip: engine/deck.js)" where it lives. Power: 0 for switches, handicaps
+// and looks; 1 most; 2 strong; 3 run-changers.
 const DECK_CHIPS = {
+  // BOOT: what a run starts with (engine/deck.js deckRunStart)
+  TF1: ['TRUST FUND', 'boot', 'common', 1, 'start every run with +60cr.', ['$$$', '+60'], 'start with +60cr.'],
+  LD3: ['LOADOUT', 'boot', 'rare', 2, 'a battle chip: start every run with 3 FWALLs and 2 FRAGs.', ['[#]', '*!*'], 'start with 3 FWALLs and 2 FRAGs.'],
+  BM4: ['BEAST MASTER', 'boot', 'epic', 2, 'start every run with 3 CALLs: your crew on speed dial.', ['@@@', 'BMS'], 'start with 3 CALLs.'],
+  FI2: ['FRESH INSTALL', 'boot', 'rare', 1, 'no starter perk. you start with +2 INT and +100cr instead.', ['NEW', '+2^'], 'no starter perk: +2 INT, +100cr.'],
+  // BIOS: the run's rules
+  QT0: ['QUIET', 'bios', 'rare', 1, 'no rival hackers turn up. (a corp with the RIVAL anomaly has nobody.)', ['shh', '...'], 'no rival hackers.'],
+  // CRASH: when you die
   DM5: ['DEADMAN', 'crash', 'epic', 1, 'dying keeps 50% of the REP you would have banked.', ['DED', 'MAN'], 'die and keep half your REP.'],
-  '1UP': ['1UP', 'crash', 'exotic', 3, "b0y's crash unit. die and go back to the start of the corp, once a run.", ['1UP', '^_^'], 'one more life a run.'],
-  EJ1: ['EJECT', 'crash', 'common', 1, 'cash out from anywhere, once a run.', ['/^\\', 'EJT'], 'cash out anywhere, once.'],
-  BB7: ['BLACK BOX', 'crash', 'rare', 2, 'when you die, one mod goes to the LOCKER.', ['[#]', 'BOX'], 'a mod survives your death.'],
-  SP3: ['SPOILS', 'spoils', 'common', 0, 'a switch for corp bosses: take the REWARDS, or skip them for a HEAL or for CASH.', ['SPL', null], 'take boss rewards, a heal, or cash.'],
-  GM7: ['GAMBLE', 'spoils', 'epic', 2, 'boss rewards come face down. one of them is a jackpot: two mods.', ['?!?', 'BET'], 'face-down rewards, one jackpot.'],
-  CD2: ['cd ..', 'shell', 'rare', 2, 'THE SHELL learns cd ..: back a row on the map, once a sector.', ['cd ', ' ..'], 'cd ..: back a row.'],
-  MK7: ['market', 'shell', 'epic', 2, 'THE SHELL learns market: a small black market right where you are, once a sector.', ['mkt', '[$]'], 'market: a pocket shop.'],
-  LS1: ['ls', 'shell', 'common', 1, 'THE SHELL learns ls: how many ICE and $ nodes are on this layer.', ['ls ', '#?$'], 'ls: count the ICE and $.'],
-  PS4: ['ps', 'shell', 'rare', 1, 'THE SHELL learns ps: where the rival hackers are on the map.', ['ps ', '@ @'], 'ps: see the rivals.'],
-  KL6: ['kill', 'shell', 'epic', 2, 'THE SHELL learns kill: end one ICE node outright, once a sector. it still counts as a hit on you if it was armed.', ['kil', '-9 '], 'kill: end an ICE node.'],
-  PG2: ['ping', 'shell', 'common', 1, 'THE SHELL learns ping: how many nodes the next layer has, before you go in.', ['png', '((('], "ping: the next layer's size."],
-  GP5: ['grep', 'shell', 'rare', 1, 'THE SHELL learns grep: name a mod and the map marks the nodes that can drop it, this sector.', ['grp', '/?/'], 'grep: find a mod on the map.'],
-  CM7: ['chmod', 'shell', 'rare', 2, 'THE SHELL learns chmod: open one locked node on this layer, once a sector.', ['chm', '+x '], 'chmod: open a locked node.'],
-  WH0: ['whoami', 'shell', 'common', 1, "THE SHELL learns whoami: your run so far, the REP on the line, and what you'd bank if you cashed out now.", ['who', '?_?'], 'whoami: your run so far.'],
-  TP3: ['top', 'shell', 'common', 1, 'THE SHELL learns top: which node on this layer pays the most.', ['top', '^$^'], 'top: the richest node.'],
-  CT4: ['cat', 'shell', 'rare', 1, 'THE SHELL learns cat: read a node before you open it, once a layer.', ['cat', '=^.'], 'cat: read a node first.'],
-  SS8: ['ssh', 'shell', 'legendary', 3, 'THE SHELL learns ssh: jump to any node on the next row of the map, once a sector. the row after is fair game too.', ['ssh', '>>@'], 'ssh: jump to any node ahead.'],
-  UN0: ['undo', 'shell', 'epic', 2, 'THE SHELL learns undo: take back your last ICE hit, once a sector.', ['und', '<-o'], 'undo: take back an ICE hit.'],
-  ST4: ['STARTER', 'boot', 'rare', 1, "pick a mod you've found: it can show up in the starter perk.", ['STR', '>>>'], 'pick a starter mod.'],
-  PT1: ['PET', 'boot', 'common', 0, 'pick the pet that comes along: COMPANION, the chick, the bug, the fish.', ['PET', '^.^'], 'pick your pet.'],
-  HS2: ['HEADSTART', 'boot', 'common', 1, 'start on the second row of sector 1. pays a little less REP.', ['GO!', '>>2'], 'skip a row of sector 1.'],
-  SM1: ['SIMON CHIP', 'bios', 'rare', 1, 'a corp chip: SIMON shows up 3x as often. flip it and it shows up less.', ['SIM', 'x3!'], 'SIMON shows up more.'],
-  QT0: ['QUIET', 'bios', 'rare', 1, 'no rival hackers turn up.', ['shh', '...'], 'no rival hackers.'],
-  AD5: ['ADWARE', 'bios', 'common', 1, 'more ads, and tapping one heals 1 INT.', ['AD!', '[x]'], 'ads heal you.'],
+  BB7: ['BLACK BOX', 'crash', 'rare', 2, "when you die, your best mod goes to the LOCKER, a step lower (if the LOCKER's empty). your next run starts with it.", ['[#]', 'BOX'], 'a mod survives your death.'],
+  // SPOILS: what corp bosses give
+  SP3: ['SPOILS', 'spoils', 'common', 0, 'a switch for corp bosses: take the REWARDS, or skip them for a HEAL (2 INT) or for CASH (60cr).', ['SPL', null], 'take boss rewards, a heal, or cash.'],
+  // PSU: the cell
   SC1: ['STOCK CELL', 'psu', 'common', 0, 'comes with the deck. power 6.', ['[+]', 'C:6'], 'power 6.'],
   LI2: ['LI-ION', 'psu', 'rare', 0, 'a better cell. power 9.', ['[+]', 'Li9'], 'power 9.'],
   NC3: ['NANO CELL', 'psu', 'epic', 0, 'a mk III era cell. power 11.', ['[+]', 'Nb'], 'power 11.'],
   RX9: ['REACTOR', 'psu', 'legendary', 0, 'power 14 (E), but -1 starting INT.', ['(*)', 'RxE'], 'power 14, -1 INT.'],
+  // OVERVOLT (mk III): pay with integrity
   GR8: ['GREED', 'ov', 'rare', 2, '-1 starting INT. +25% credits.', ['GRD', '$-1'], '-1 INT, +25% credits.'],
-  LK7: ['LUCK', 'ov', 'epic', 2, '-1 starting INT. 1 in 5 drops roll a step rarer.', ['777', 'LCK'], '-1 INT, rarer drops.'],
-  GD0: ['mode.god', 'sudo', 'legendary', 3, 'THE SHELL learns mode.god: no damage for a sector, then it wears off.', ['g0d', 'mod'], 'mode.god: no damage for a sector.'],
+  LK7: ['LUCK', 'ov', 'epic', 2, '-1 starting INT. 1 in 5 mods and gear roll a step rarer.', ['777', 'LCK'], '-1 INT, rarer drops.'],
+  FM2: ['FAME', 'ov', 'rare', 2, '-1 starting INT. +20% REP.', ['FME', '*-1'], '-1 INT, +20% REP.'],
+  SK1: ['SPIKE', 'ov', 'common', 0, '-1 starting INT. +2 power for your deck.', ['/\\/', '+2P'], '-1 INT, +2 power.'],
+  // SHELL: one command each, in THE SHELL (~ opens it). a stand-in pair until THE SHELL is sorted out (Greg)
+  WH0: ['whoami', 'shell', 'common', 1, "THE SHELL learns whoami: your run so far, and the REP you'd bank if you cashed out now. (~ opens THE SHELL.)", ['who', '?_?'], 'whoami: your run so far.'],
+  PS4: ['ps', 'shell', 'rare', 1, 'THE SHELL learns ps: the rival hackers in this corp, by name, and how hurt they are. (~ opens THE SHELL.)', ['ps ', '@ @'], 'ps: name the rivals.'],
+  // SUDO (mk IV): the strong commands
+  FL3: ['flatline', 'sudo', 'legendary', 3, 'THE SHELL learns flatline: a rival hacker in this corp drops dead. once a corp. (~ opens THE SHELL.)', ['FLT', '_/\\'], 'flatline: a rival drops dead.'],
+  // BOSS (mk IV): big chips from the big bosses
   OMNI: ["OMNI'S EYE", 'boss', 'exotic', 3, "every corp's card on the map shows its tell.", ['<(@)>', 'OMNI '], 'every corp shows its tell.'],
+  // HEAT (mk IV): harder runs, more REP
   HC1: ['HARDCORE', 'heat', 'epic', 0, 'no CRASH chip works. +50% REP.', ['HRD', 'x_x'], 'no CRASH chip, +50% REP.'],
-  HN2: ['HUNTED', 'heat', 'rare', 0, 'twice as many rivals. +20% REP.', ['HNT', '>@<'], '2x rivals, +20% REP.'],
+  TX2: ['TAXED', 'heat', 'rare', 0, 'a cut of every payout: -20% credits. +25% REP.', ['TAX', '-$%'], '-20% credits, +25% REP.'],
 };
 // What each chip touches (docs/DECK.md "Seeds"; not shown in the game): map (what a run generates), rules (what it pays
 // or drops), you (your start, tools, deaths). Keep it next to DECK_CHIPS: a new chip gets its tags here.
 const DECK_CHIP_TAGS = {
-  DM5: ['you'], '1UP': ['you'], EJ1: ['you'], BB7: ['you'], SP3: ['rules'], GM7: ['rules'],
-  CD2: ['you'], MK7: ['you'], LS1: ['you'], PS4: ['you'], KL6: ['you'], PG2: ['you'], GP5: ['you'], CM7: ['you'], WH0: ['you'],
-  TP3: ['you'], CT4: ['you'], SS8: ['you'], UN0: ['you'], ST4: ['you'], PT1: ['you'], HS2: ['map'],
-  SM1: ['map'], QT0: ['map'], AD5: ['map', 'you'], SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'],
-  GD0: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], HN2: ['map', 'rules'],
+  TF1: ['you'], LD3: ['you'], BM4: ['you'], FI2: ['you'], QT0: ['map'], DM5: ['you'], BB7: ['you'], SP3: ['rules'],
+  SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'], FM2: ['you', 'rules'], SK1: ['you'],
+  WH0: ['you'], PS4: ['you'], FL3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'],
 };
 // Power (docs/DECK.md "Power", first pass for playtesting): the cell powers mk II and mk III, one cell per stage of the
 // ladder (6 / 9 / 11 / 14); the FUSE powers mk IV on its own (DECK_FUSE_PWR). Every number fits one hex character:
@@ -128,7 +125,7 @@ const deckBand = by => by >= 41 ? 4 : by >= 32 ? 3 : 2;
 // own seeded streams ('cachechip', 'pierchip'), so a seed's other drops don't move.
 const DECK_DROP = { cache: 0.2, fish: 0.25 };   // a cracked DATA CACHE; a pier catch that would have been gear
 const DECK_DROP_WEIGHT = { common: 50, rare: 30, epic: 14, legendary: 5, exotic: 1 };
-const DECK_NO_DROP = ['SC1', 'SP3', '1UP'];   // the deck comes with the first two; the 1UP is b0y's (beating G0D)
+const DECK_NO_DROP = ['SC1', 'SP3'];   // the deck comes with these (the 1UP is b0y's, from beating G0D: not a chip yet)
 const deckChipItem = key => 'chip_' + key;
 const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
 const deckHave = key => (save.deck && save.deck.chips && save.deck.chips[key]) || 0;
@@ -172,6 +169,76 @@ function deckHome(run, win) {
   FEAT_QUEUE.push({ head: 'YOUR DECK', lines: ['chips home:', '', ...chips.map(s => '  ' + ITEMS[s.key].name + (s.n > 1 ? ' x' + s.n : '')), '', 'slot them: THE BOARD > YOU.'] });
 }
 
+// ---------- the chips in a run ----------
+// As a run starts (engine/run.js startRun: deckRunStart), the chips in your deck that are slotted, open and powered are
+// written on the run (run.chips: so a resumed run has the same ones, and changing your deck mid-run changes nothing).
+// HARDCORE turns the CRASH chips off. Not in the training or a race. chipOn(key) is what the game asks.
+const chipOn = (key, run = st.run) => !!(run && run.chips && run.chips.includes(key));
+function deckRunChips() {
+  if (!save.deck) return [];
+  const was = DECK; DECK = deckReal();
+  const pw = deckPower(), d = DECK;
+  let keys = [...pw.on].map(id => d.slots[id]).filter(k => DECK_CHIPS[k]);
+  if (keys.includes('HC1')) keys = keys.filter(k => DECK_CHIPS[k][1] !== 'crash');   // HARDCORE: no CRASH chip works
+  const spoils = d.spoils;
+  DECK = was;
+  return { keys, spoils };
+}
+// INT a chip costs (or gives) as a run starts
+const DECK_INT = { RX9: -1, GR8: -1, LK7: -1, FM2: -1, SK1: -1, FI2: 2 };
+function deckRunStart(run, opts = {}) {
+  if (opts.tutorial || st.mp) return;
+  const { keys, spoils } = deckRunChips();
+  if (!keys || !keys.length) return;
+  run.chips = keys; run.spoils = spoils || 0;
+  const di = keys.reduce((a, k) => a + (DECK_INT[k] || 0), 0);
+  if (di) { run.maxInt = Math.max(1, run.maxInt + di); run.integrity = Math.max(1, Math.min(run.maxInt, run.integrity + di)); }
+  if (chipOn('TF1', run)) run.credits += 60;   // TRUST FUND
+  if (chipOn('FI2', run)) run.credits += 100;   // FRESH INSTALL (and no starter perk: engine/panels.js openStartReward)
+  const give = (key, n) => { for (let i = 0; i < n; i++) if (!addItem(key, 0)) break; };
+  if (chipOn('LD3', run)) { give('wall', 3); give('frag', 2); }   // LOADOUT
+  if (chipOn('BM4', run)) give('call', 3);   // BEAST MASTER
+}
+// credits you earn (engine/save.js earn): GREED +25%, TAXED -20%
+function deckCredits(cr, run) {
+  if (!(cr > 0) || !run || !run.chips) return cr;
+  return Math.round(cr * (chipOn('GR8', run) ? 1.25 : 1) * (chipOn('TX2', run) ? 0.8 : 1));
+}
+// REP a run is worth (engine/save.js repFor): FAME +20%, TAXED +25%, HARDCORE +50%
+const deckRepMult = run => !run || !run.chips ? 1 : (chipOn('FM2', run) ? 1.2 : 1) * (chipOn('TX2', run) ? 1.25 : 1) * (chipOn('HC1', run) ? 1.5 : 1);
+// dying (engine/runend.js endRun): DEADMAN keeps half; BLACK BOX puts your best mod in the LOCKER
+const deckDeadman = run => chipOn('DM5', run) ? 0.5 : 0;
+function deckBlackBox(run) {
+  if (!chipOn('BB7', run) || save.locker || run.practice || !run.mods.length) return;
+  const rank = k => RARITY_ORDER.indexOf(MODS[k].rarity) * 10 + ((run.modTier || {})[k] || 0);
+  const k = run.mods.filter(m => MODS[m] && !UPLINK_LOCKED.includes(m)).sort((a, b) => rank(b) - rank(a))[0];
+  if (!k) return;
+  save.locker = { key: k, tier: Math.max(0, ((run.modTier || {})[k] || 0) - 1) };
+  FEAT_QUEUE.push({ head: 'BLACK BOX', lines: [`${MODS[k].name} made it out.`, "it's in the LOCKER:", 'your next run starts with it.'] });
+}
+// SPOILS (engine/panels.js openReward): 0 the rewards, 1 a heal, 2 cash
+const deckSpoils = run => chipOn('SP3', run) ? run.spoils || 0 : 0;
+// THE SHELL's commands from chips (engine/shell.js: the 'your deck' group). Known while the chip's on in this run (or in
+// dev mode); safe (the run still counts), but the run is marked hacked (run.hacked: the leaderboard's mark, later).
+const DECK_SHELL_CMDS = [
+  { name: 'whoami', chip: 'WH0', safe: true, help: "your run so far, and the REP you'd bank now", run: () => {
+    const run = shellNeedRun(); run.hacked = true;
+    return `${profile().name} · sector ${run.sector + 1} · depth ${run.depth}\ncorps ${run.corps} · ${run.credits}cr · INT ${run.integrity}/${run.maxInt}\ncash out now: ${repFor(run)} REP`; } },
+  { name: 'ps', chip: 'PS4', safe: true, help: 'the rival hackers in this corp', run: () => {
+    const run = shellNeedRun(); run.hacked = true;
+    const hs = hkRivalsUp();
+    return hs.length ? hs.map(h => `${hkName(h.id).padEnd(10)} ${hkBars(h)}`).join('\n') : 'no rivals here.'; } },
+  { name: 'flatline', chip: 'FL3', safe: true, help: 'a rival in this corp drops dead (once a corp)', run: () => {
+    const run = shellNeedRun();
+    if (!st.corp) throw new Error('only in a corp.');
+    if (st.corp.flatlined) throw new Error('used: once a corp.');
+    const h = hkRivalsUp()[0];
+    if (!h) return 'no rivals here.';
+    run.hacked = true; st.corp.flatlined = true;
+    hkOut(h, 'flatlined.');
+    return `${hkName(h.id)}: flatlined.`; } },
+];
+
 // ---------- state ----------
 // DECK is the deck on screen: the dev one (DECK_DEV, kept while the page lives) or the real one (made from save.deck
 // each time it opens, and written back by deckPersist whenever it changes).
@@ -183,7 +250,7 @@ const deckView = () => ({ view: 'board', scroll: 0, list: { top: 0 }, sel: { kin
 function deckDev() {
   if (!DECK_DEV) DECK_DEV = Object.assign(deckView(), {
     real: false, rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: 0, crew: new Set(['POPS']),
-    slots: { PSU: 'SC1', BT1: 'ST4', BI1: 'SM1', CRS: 'DM5', SPL: 'SP3', SH1: 'CD2' },
+    slots: { PSU: 'SC1', BT1: 'LD3', BI1: 'QT0', CRS: 'DM5', SPL: 'SP3', SH1: 'WH0' },
     order: ['PSU', 'BT1', 'BI1', 'CRS', 'SPL', 'SH1'],   // the sockets in the order their chips went in: power goes oldest first
     sw: new Set(['starter', 'stray']), nemesis: CORPS.burgertron ? 'burgertron' : null,
   });
@@ -259,7 +326,8 @@ const deckSelect = sel => { DECK.sel = sel; DECK.selT = performance.now(); };
 const deckPool = s => s.mk === 4 ? 'fuse' : 'cell';
 function deckPower() {
   const d = DECK, on = new Set(), off = [];
-  const cellB = d.slots.PSU ? (d.overclock ? 15 : DECK_CELL[d.slots.PSU] || 0) : 0, fuseB = deckOpen(4) ? DECK_FUSE_PWR : 0;
+  const spike = Object.keys(d.slots).some(id => d.slots[id] === 'SK1' && deckOpen(deckSock(id).mk)) ? 2 : 0;   // SPIKE (OVERVOLT)
+  const cellB = d.slots.PSU ? (d.overclock ? 15 : DECK_CELL[d.slots.PSU] || 0) + spike : 0, fuseB = deckOpen(4) ? DECK_FUSE_PWR : 0;
   const left = { cell: cellB, fuse: fuseB };
   for (const id of d.order) {
     const key = d.slots[id], s = deckSock(id); if (!key || !deckOpen(s.mk)) continue;   // a dark band's chips cost nothing

@@ -336,6 +336,9 @@ const SHELL_CMDS = shellGroups([
   { name: 'history', help: 'what you ran this session', always: true, safe: true, run: () => SHELL.hist.length ? SHELL.hist.slice(-20).join('\n') : 'nothing yet' },
   { name: 'exit', help: 'close the shell', always: true, safe: true, run: () => { shellClose(); } },
   { name: 'menu', help: 'the old dev menu', safe: true, run: () => { shellClose(); if (!st.dev) toggleDev(); } },
+  // ----- your deck: commands a chip teaches (engine/deck.js DECK_SHELL_CMDS) -----
+  'your deck',
+  ...DECK_SHELL_CMDS,
 ]);
 const SHELL_BY = Object.fromEntries(SHELL_CMDS.map(c => [c.name, c]));
 for (const c of SHELL_CMDS) for (const al of c.alias || []) SHELL_BY[al] = c;
@@ -343,7 +346,7 @@ for (const c of SHELL_CMDS) for (const al of c.alias || []) SHELL_BY[al] = c;
 // What you know. Step 1: everything in dev mode, nothing otherwise (the shell's own commands always work,
 // but they don't autocomplete till you know something).
 const shellDev = () => !!(st.devAccess || EDITOR);
-const shellKnows = c => shellDev() && !!c;
+const shellKnows = c => !!c && (shellDev() || (!!c.chip && chipOn(c.chip)));   // (a chip in your deck teaches its command: engine/deck.js)
 const shellUsage = c => [c.name, ...(c.args || []).map(x => x.opt ? `[${x.name}]` : `<${x.name}>`)].join(' ');
 function shellHelp(name) {
   if (name) { const c = SHELL_BY[name]; if (!c || !(shellKnows(c) || c.always)) throw new Error(`not a command: ${name}`); return `${shellUsage(c)}\n  ${c.help}`; }

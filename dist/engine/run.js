@@ -52,6 +52,7 @@ async function startRun(seed, practice, opts = {}) {
     const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
     if (pool.length) st.run.items.push({ key: pickR(pool, rngFor(seed, 'lucky')), tier: 0, n: 1 });
   }
+  deckRunStart(st.run, opts);   // your deck's chips: what's on this run, and what it starts with (engine/deck.js)
   if (opts.tutorial) tutorialRun(st.run);   // the training run (engine/tutorial.js)
   st.petS = null;   // (a new run: the pet starts fresh)
   if (!opts.tutorial) startPet(st.run);   // STRAY / CATPHISH: a pet from the start (engine/pet.js)
@@ -210,7 +211,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
   if (restore) {   // a resumed save: what this corp had used up so far
     for (const k of CORP_SAVE) if (restore[k] != null) st.corp[k] = restore[k];   // (engine/save.js)
   }
-  if (!restore && st.corp.mod === 'rival') st.corp.hkRival = hkRivalFor(node);
+  if (!restore && st.corp.mod === 'rival') st.corp.hkRival = chipOn('QT0') ? null : hkRivalFor(node);   // (QUIET, a chip: nobody comes)
   if (!restore && st.corp.hasBoss && has('reload')) reloadGear();   // RELOAD: singles get a second (engine/active.js)   // RIVAL: one of the cast (engine/hackers.js)
   if (st.corp.hasBoss) {
     // MUTATE: this corp, it counts as a random other mod.

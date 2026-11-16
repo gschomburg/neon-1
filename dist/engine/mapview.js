@@ -244,6 +244,7 @@ function nodeInfo(n) {
     T(d.intel, C.text);
     const rules = corpRules(d, n.tier);
     if (rules) T(rules, C.mid);
+    if (chipOn("OMNI") && CORP_TELL[d.key]) T('tell: ' + CORP_TELL[d.key], C.rep, true);   // OMNI'S EYE (a chip: engine/deck.js)
     if (d.bossDesc) T(d.bossDesc, C.dangerDim, true);
     if (n.mod && ANOMALIES[n.mod]) T(`+ ${ANOMALIES[n.mod].name}: ${ANOMALIES[n.mod].desc}`, C.money, true);
     if (questHintNode(n)) T('! POPS: the DISC could be in here.', C.rep, true);   // (engine/quests.js)

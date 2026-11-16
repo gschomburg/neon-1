@@ -170,9 +170,9 @@ function buyPost(u) {
 //   lbSubmit     engine/leaders.js   the leaderboard                         not practice, not mp, not the editor; depth > 0
 // Credits you earned: what you have and what counts as earned (REP, the end screen) go up together. Credits that
 // aren't earnings (a refund, a cheat) add to run.credits alone.
-function earn(cr, run = st.run) { run.credits += cr; run.earned += cr; }
+function earn(cr, run = st.run) { cr = deckCredits(cr, run); run.credits += cr; run.earned += cr; }   // (GREED, TAXED: chips, engine/deck.js)
 function repFor(run) {
-  return run.depth + 3 * run.corps + (run.perfects || 0) + Math.floor(run.earned / 40) + 10 * (run.sectorsCleared || 0);
+  return Math.round((run.depth + 3 * run.corps + (run.perfects || 0) + Math.floor(run.earned / 40) + 10 * (run.sectorsCleared || 0)) * deckRepMult(run));   // (FAME, TAXED, HARDCORE: chips, engine/deck.js)
 }
 
 // ---------------- Run save (resume) ----------------

@@ -504,10 +504,12 @@ function openStartReward(node) {
   openChoice({
     title: 'LINK ESTABLISHED', col: C.accent,
     head: [['you are in. pick a starter perk.', C.text]],
-    options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, postOn('starter') ? modsFound('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky')),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
+    options: chipOn('FI2') ? [] : run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, postOn('starter') ? modsFound('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky')),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.starter)}cr ]`,
     onSkip: () => { const cr = earnInt(ECON.skip.starter); earn(cr, run); },
     msg: '> link established.',
+    ...(chipOn('FI2') ? { head: [['FRESH INSTALL: no starter perk.', C.text], ['+2 INT and +100cr instead.', C.mid]], locked: true, skipLabel: '[ CONTINUE ]', onSkip: null } : {}),   // (a chip: engine/deck.js)
+
   });
 }
 
@@ -593,7 +595,9 @@ function openReward(node, skipped = false) {
   const run = st.run;
   const def = corpDef(node.corp);
   // the corp's own pick (its boss gear or its corp mod), a general mod, a random third, and half the time a CALL stack
-  const options = rewardOptions(node);
+  const sp = skipped ? 0 : deckSpoils(run);   // SPOILS (a chip: engine/deck.js): 1 a heal, 2 cash, in place of the rewards
+  if (sp === 1) heal(2); else if (sp === 2) earn(60, run);
+  const options = sp ? [] : rewardOptions(node);
   const loot = skipped ? [] : bossLoot(node);   // loot for the bag (ECON.loot.boss; the user: bosses drop it)
   // FIRST BREACH (the user, 2026-10-29): the first time you ever beat this corp, its logo and its tell come before the
   // rewards (only as the screen builds in after the boss; corpStat counted this breach already)
@@ -605,11 +609,11 @@ function openReward(node, skipped = false) {
     rival: st.breachReveal && !skipped ? st.breachRival : null,   // a rival here: their logo comes in first, DEFEATED, then yours
     escaped: st.breachEscaped,   // (they took the last node: ESCAPED instead, and a line says so)
     title: 'CORP BREACHED', col: C.accent,
-    head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]].concat(escapedLine()), extra: lootLine(loot),
+    head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]].concat(escapedLine(), sp ? [[sp === 1 ? 'SPOILS: +2 INT, no rewards.' : 'SPOILS: +60cr, no rewards.', C.money]] : []), extra: lootLine(loot),
     by: skipped ? null : profile(),
-    options, locked: skipped,
-    skipLabel: skipped ? '[ CONTINUE ]' : '[ SKIP  +20cr ]',
-    onSkip: skipped ? null : () => { const cr = earnInt(ECON.skip.boss); earn(cr, run); Sound.loot(); },
+    options, locked: skipped || !!sp,
+    skipLabel: skipped || sp ? '[ CONTINUE ]' : '[ SKIP  +20cr ]',
+    onSkip: skipped || sp ? null : () => { const cr = earnInt(ECON.skip.boss); earn(cr, run); Sound.loot(); },
     msg: skipped ? { text: '> skipjack: boss skipped.', col: C.dangerDim } : breachSummary(),
   });
 }
