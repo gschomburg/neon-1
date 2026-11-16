@@ -333,6 +333,28 @@ const Sound = (() => {
     keyclick: () => { tone(1900 + Math.random() * 500, 0.008, { type: 'square', vol: 0.1 }); noise(0.018, { vol: 0.12, freq: 4200 }); tone(150 + Math.random() * 40, 0.035, { type: 'sine', vol: 0.28, slide: 0.7 }); },
     // a build that didn't take: it fizzles and burns out
     fizzle: () => { noise(0.55, { vol: 0.3, freq: 2600, to: 180 }); tone(240, 0.5, { type: 'sawtooth', vol: 0.16, slide: 0.3 }); for (let i = 0; i < 7; i++) noise(0.025, { vol: 0.2, freq: 1500 + Math.random() * 4000, delay: 0.05 + Math.random() * 0.4 }); tone(70, 0.3, { type: 'sine', vol: 0.4, slide: 0.6, delay: 0.35 }); },
+    // YOUR DECK (engine/deck.js). A chip seats and powers up: a click, a hum rising, and a chime that grows with its
+    // rarity (lvl 0 common .. 4 exotic).
+    chipIn: (lvl = 0) => {
+      tone(2600, 0.01, { type: 'square', vol: 0.2 }); noise(0.03, { vol: 0.3, freq: 3200 });
+      tone(70, 0.5, { type: 'sawtooth', vol: 0.1, slide: 2.6, delay: 0.04 }); tone(140, 0.45, { type: 'triangle', vol: 0.08, slide: 2.6, delay: 0.06 });
+      noise(0.45, { vol: 0.1, freq: 400, to: 2400, delay: 0.04 });
+      if (lvl >= 1) arp([659, 784, 988, 1319, 1568].slice(0, 2 + lvl), 0.06, { vol: 0.28 });
+      if (lvl >= 3) { tone(1976, 0.4, { type: 'triangle', vol: 0.18, delay: 0.38 }); noise(0.3, { vol: 0.1, freq: 8000, type: 'highpass', delay: 0.36 }); }
+    },
+    // ...not enough power: it tries, sputters and dies (an error, static crackling)
+    chipDead: () => {
+      tone(150, 0.25, { type: 'sawtooth', vol: 0.12, slide: 1.8 }); tone(330, 0.1, { type: 'square', vol: 0.14, delay: 0.22 });
+      tone(247, 0.1, { type: 'square', vol: 0.14, delay: 0.34 }); tone(165, 0.4, { type: 'sawtooth', vol: 0.14, slide: 0.45, delay: 0.46 });
+      for (let i = 0; i < 9; i++) noise(0.02 + Math.random() * 0.03, { vol: 0.22, freq: 1800 + Math.random() * 5000, delay: Math.random() * 0.9 });
+    },
+    // a cell goes in: a fan spinning up (a rising whir, the blades ticking faster)
+    fanUp: () => {
+      noise(1.1, { vol: 0.16, freq: 180, to: 1500 }); tone(38, 1.1, { type: 'sawtooth', vol: 0.08, slide: 3.2 });
+      for (let i = 0; i < 12; i++) tone(900, 0.008, { type: 'square', vol: 0.05, delay: 1.0 * (1 - Math.pow(1 - i / 12, 0.55)) });
+    },
+    // power going: the fan winds down, the hum falls
+    powerDown: () => { noise(0.9, { vol: 0.14, freq: 1400, to: 160 }); tone(160, 0.8, { type: 'sawtooth', vol: 0.09, slide: 0.25 }); tone(2000, 0.02, { type: 'square', vol: 0.12 }); },
     // what you built lands in the locker: a little fanfare
     fanfare: () => { arp([784, 988, 1175, 1568], 0.07, { vol: 0.42 }); tone(1568, 0.3, { type: 'triangle', vol: 0.3, delay: 0.3 }); tone(2093, 0.35, { type: 'triangle', vol: 0.2, delay: 0.34 }); noise(0.3, { vol: 0.12, freq: 8000, type: 'highpass', delay: 0.3 }); },
     // SHOE: the throw (a whiff) and the hit (a thunk)

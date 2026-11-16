@@ -11,10 +11,15 @@ module.exports = { name: 'deck', body: `
   let p = deckPower();
   check(p.off.length === 1 && p.off[0] === 'BT2', 'the newest chip is the one with no power: ' + JSON.stringify(p.off));
   check(DECK.slots.BT2 === 'BM4', 'it still goes in');
+  check(DECK.fx && DECK.fx.kind === 'dead' && DECK.fx.sid === 'BT2', 'no power: the drain and the sparks (the show)');
+  check(buildScene(performance.now(), false).length > 300, 'the board draws during it');
+  check(deckLook().silk.length >= 4 && deckLook().vias.length > 0, 'silkscreen and vias found room: ' + deckLook().silk.map(x => x[2]).join(' '));
+  check(['DEAD', 'MAN'].includes(deckStickText('DEADMAN', 1000)) && deckStickText('EJECT', 0) === 'EJECT', 'the CRASH stick: a word at a time');
   deckSlot('PS4', 'SH4');
   p = deckPower();
   check(p.on.has('SH4') && p.off.length === 1, 'a newer, cheaper chip still gets what is left: ' + JSON.stringify([...p.on]));
   deckSlot('LI2', 'PSU');
+  check(DECK.fx && DECK.fx.kind === 'in' && DECK.fx.sid === 'PSU', 'power: the wave and the burst');
   p = deckPower();
   check(p.budget === 9 && !p.off.length, 'a bigger cell lights them all: ' + JSON.stringify(p.off));
   deckSlot('SC1', 'PSU');

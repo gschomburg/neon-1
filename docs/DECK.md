@@ -706,6 +706,9 @@ Greg: sockets that open earlier should sit higher on the board.
   CRASH DEADMAN, BLACK BOX; SPOILS the switch; PSU the 4 cells; OVERVOLT GREED, LUCK, FAME, SPIKE; SHELL whoami, ps;
   SUDO flatline; BOSS OMNI'S EYE; HEAT HARDCORE, TAXED. The chips slotted, open and powered as a run starts are on
   for that run (run.chips; HARDCORE turns CRASH off). SHELL and SUDO chips teach a command in THE SHELL (~): safe, but
-  the run is marked hacked. GLYPH and the CREW jacks have no chips yet); 4, the show (effects, sounds, NO POWER
-  tap); 5, later (SHELL, SUDO, hot chips, fusing, BOSS, UPLINK, PORTS).
+  the run is marked hacked. GLYPH and the CREW jacks have no chips yet); 4, the show (done: a chip with power sends a burst of confetti and tech blobs, more the
+  rarer, and a ring of light out across the board; no power drains the light into the socket, dims the board, fills it
+  back, with red static; sounds chipIn (a chime by rarity), chipDead, fanUp (a cell), powerDown; the traces lean to the
+  mk's color; toned-back silkscreen, vias and data packets; the NO POWER bar steps through the chips; the CRASH stick
+  swaps words with a scramble); 5, later (SHELL, SUDO, hot chips, fusing, BOSS, UPLINK, PORTS).
 - **The cuts:** once the lists settle. BOOT and BIOS could share 4 sockets; UPLINK could fold into PORTS.

@@ -344,15 +344,15 @@ function deckSlot(key, sid) {
   d.slots[sid] = key; d.order = d.order.filter(i => i !== sid).concat(sid);
   d.carry = null; deckSelect({ kind: 'socket', id: sid });
   const p = deckPower();
-  if (grp === 'psu') { Sound.buy(); return deckSay(p.off.length ? `${name}: ${p.off.length} chip${p.off.length > 1 ? 's' : ''} lost power.` : `${name} in. power ${p.budget}.`, p.off.length ? C.danger : C.money); }
-  if (!p.on.has(sid)) { Sound.deny(); return deckSay(`no power: ${name} needs ${cost - deckLeft(p, deckSock(sid))} more.`, C.danger); }
-  Sound.buy();
+  if (grp === 'psu') { if (p.off.length) deckFx('dead', sid, key); else { deckFx('in', sid, key); Sound.fanUp(); } return deckSay(p.off.length ? `${name}: ${p.off.length} chip${p.off.length > 1 ? 's' : ''} lost power.` : `${name} in. power ${p.budget}.`, p.off.length ? C.danger : C.money); }
+  if (!p.on.has(sid)) { deckFx('dead', sid, key); return deckSay(`no power: ${name} needs ${cost - deckLeft(p, deckSock(sid))} more.`, C.danger); }
+  deckFx('in', sid, key);
   deckSay(was && was !== key ? `${name} in. ${DECK_CHIPS[was][0]} back in your chips.` : other && other !== sid ? `${name} moved to ${sid}.` : `${name} in ${sid}.`);
 }
 function deckPull(sid) {
   const d = DECK, key = d.slots[sid]; if (!key) return;
   delete d.slots[sid]; d.order = d.order.filter(i => i !== sid);
-  Sound.tick();
+  if (sid === 'PSU') Sound.powerDown(); else Sound.tick();
   const off = deckPower().off.length;
   deckSay(`${DECK_CHIPS[key][0]} back in your chips.` + (sid === 'PSU' && off ? ' no cell: no power.' : ''), sid === 'PSU' && off ? C.danger : C.accent);
 }
@@ -400,6 +400,82 @@ function deckKey(k) {
   if (d.pick && d.pick.keys) { if (dd) { d.pick.keys.move(dd); return true; } if (k === 'enter' || k === ' ') { d.pick.keys.go(); return true; } }
   if (dd) { if (d.keyStep) d.keyStep(dd); else if (st.scroll) st.scroll(dd); return true; }
   return false;
+}
+
+// ---------- the show (docs/DECK.md "Socketing gets a show", Greg 2026-11-16) ----------
+// A chip goes in with power: a burst of confetti and tech blobs (more the rarer it is), and a wave of light runs out of
+// its socket along the traces. No power: the light drains back into the socket, the board goes dim, then fills again,
+// with static sparks around the chip. d.fx = { kind: 'in' | 'dead', sid, t0, lvl, burst }.
+// The board's own look, toned back so it isn't noisy: the traces lean to the mk's color (mk II epic, III legendary, IV
+// exotic: Greg), silkscreen part numbers in the empty spots, vias, and now and then a data packet running a trace.
+const DECK_MK_RARITY = { 2: 'epic', 3: 'legendary', 4: 'exotic' };
+const deckTraceCol = () => rarityCol(DECK_MK_RARITY[DECK.mk] || 'epic');
+const DECK_LVL = { scrap: 0, common: 0, rare: 1, epic: 2, legendary: 3, exotic: 4 };
+const DECK_TRACE = '-|=:.+o_/\\';   // the characters light runs along
+const DECK_WAVE_MS = 13, DECK_DRAIN_MS = 7;   // ms a cell: the wave out, the drain in (and the fill back)
+function deckFx(kind, sid, key) {
+  const d = DECK; d.fx = { kind, sid, t0: performance.now(), lvl: key ? DECK_LVL[DECK_CHIPS[key][2]] || 0 : 0, burst: false };
+  if (kind === 'in') Sound.chipIn(d.fx.lvl); else Sound.chipDead();
+}
+// how far each of the board's cells is from a socket (cached per socket). The art's traces have gaps (it's ASCII), so
+// the light spreads out as a ring across the board's lines, a cell's distance jittered a little so the edge crackles.
+// (y counts double: a cell is twice as tall as it is wide.)
+const deckDists = {};
+function deckDist(sid) {
+  if (deckDists[sid]) return deckDists[sid];
+  const ART = deckArt(), s = deckSock(sid) || DECK_PARTS.find(p => p.id === sid), m = new Map();
+  let max = 0;
+  for (let y = 0; y < ART.length; y++) for (let x = 0; x < DECK_ART_W; x++) {
+    if ((ART[y][x] || ' ') === ' ') continue;
+    const dx = x - clamp(x, s.x, s.x + s.w - 1), dy = y - clamp(y, s.y, s.y + s.h - 1), j = ((x * 37 + y * 91) % 7) / 4;
+    const dd = Math.sqrt(dx * dx + 4 * dy * dy) + j; m.set(y * 64 + x, dd); max = Math.max(max, dd);
+  }
+  return (deckDists[sid] = { m, max });
+}
+// silkscreen (toned back): part numbers, mounting holes, the board's name. Each one only goes where the art is empty.
+const DECK_SILK = [[0, 0, '(o)'], [33, 0, '(o)'], [8, 13, 'U1'], [14, 21, '<XTAL>'], [22, 26, 'R12'], [27, 26, '-/\\/-'],
+  [12, 39, 'C7'], [26, 39, '+5V'], [2, 52, 'GND'], [2, 53, 'Q2'], [16, 52, 'NEON+1 DECK'], [19, 53, 'REV E'], [0, 55, '(o)'], [33, 55, '(o)']];
+let deckSilkCells = null;
+function deckLook() {   // the silkscreen's cells and the vias, worked out once
+  if (deckSilkCells) return deckSilkCells;
+  const ART = deckArt(), cover = (x, y) => DECK_SOCKETS.concat(DECK_PARTS).some(r => x >= r.x - 1 && x < r.x + r.w + 1 && y >= r.y && y < r.y + r.h);
+  const free = (x, y) => ART[y] && x >= 0 && x < DECK_ART_W && (ART[y][x] || ' ') === ' ' && !cover(x, y);
+  const silk = DECK_SILK.filter(([x, y, t]) => [...t].every((_, i) => free(x + i, y) && free(x + i - 1, y) && free(x + i + 1, y)));
+  const vias = [];
+  for (let y = 0; y < ART.length; y++) for (let x = 0; x < DECK_ART_W; x++) {
+    if (!free(x, y) || silk.some(([sx, sy, t]) => sy === y && x >= sx - 1 && x <= sx + t.length)) continue;
+    const near = [[1, 0], [-1, 0]].some(([dx]) => DECK_TRACE.includes((ART[y] || '')[x + dx] || ' '));
+    if (near && ((x * 73 + y * 151) % 41) === 0) vias.push([x, y]);
+  }
+  return (deckSilkCells = { silk, vias });
+}
+// a data packet: a short run along the traces from a random spot, every few seconds (open bands only)
+function deckPacket(now) {
+  const d = DECK, ART = deckArt();
+  if (d.pk && now - d.pk.t0 < d.pk.path.length * 70 + 400) return d.pk;
+  if (d.pkNext && now < d.pkNext) return null;
+  d.pkNext = now + 2200 + Math.random() * 2600;
+  for (let tries = 0; tries < 30; tries++) {
+    const y = Math.floor(Math.random() * ART.length), x = Math.floor(Math.random() * DECK_ART_W);
+    if (!DECK_TRACE.includes(ART[y][x] || ' ') || !deckOpen(deckBand(y))) continue;
+    const path = [[x, y]], seen = new Set([y * 64 + x]);
+    for (let i = 0; i < 26; i++) {
+      const [px, py] = path[path.length - 1];
+      const nx = [[px + 1, py], [px - 1, py], [px, py + 1], [px, py - 1]].filter(([a, b]) => !seen.has(b * 64 + a) && DECK_TRACE.includes((ART[b] || '')[a] || ' ') && deckOpen(deckBand(b)));
+      if (!nx.length) break;
+      const n = nx[Math.floor(Math.random() * nx.length)]; seen.add(n[1] * 64 + n[0]); path.push(n);
+    }
+    if (path.length >= 8) return (d.pk = { path, t0: now });
+  }
+  return null;
+}
+// the CRASH stick: a name too long for it shows a word (or 4 letters) at a time, swapping with a scramble (Greg)
+function deckStickText(name, now) {
+  const parts = name.includes(' ') ? name.split(' ') : name.length <= 5 ? [name] : name.match(/.{1,4}/g);
+  if (parts.length < 2) return name.replace(/ /g, '');
+  const per = 1500, k = Math.floor(now / per) % parts.length, t = now % per, cur = parts[k], prev = parts[(k + parts.length - 1) % parts.length];
+  if (t > 300) return cur;
+  return Array.from({ length: Math.max(cur.length, prev.length) }, (_, j) => t > 60 + j * 50 ? (cur[j] || ' ') : noiseCh()).join('');
 }
 
 // ---------- drawing ----------
@@ -542,7 +618,31 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   const bhit = (x, by, w, h, id, fn) => { if (under) return; const a0 = Math.max(by, top), a1 = Math.min(by + h, top + bv); if (a1 > a0) { ctx.hl(ax + x, sy(a0), w, a1 - a0, id, false); ctx.addHit(ax + x, sy(a0), w, a1 - a0, { kind: 'btn', id, onTap: fn }); } };
   if (under) g.dim = true;
   // the art, dim where the band is dark
-  for (let by = top; by < top + bv && by < BH; by++) g.put(ax, sy(by), ART[by], deckOpen(deckBand(by)) ? C.mid : C.dim);
+  const tc = deckTraceCol(), idle = mixHex(C.mid, tc, 0.3), silkCol = mixHex(C.dim, C.mid, 0.45);
+  for (let by = top; by < top + bv && by < BH; by++) g.put(ax, sy(by), ART[by], deckOpen(deckBand(by)) ? idle : C.dim);
+  { const lk = deckLook();   // silkscreen and vias, toned back
+    for (const [x, y, t] of lk.silk) bput(x, y, t, silkCol);
+    for (const [x, y] of lk.vias) bput(x, y, 'o', mixHex(C.dim, tc, 0.25)); }
+  const fx = d.fx, fxAge = fx ? now - fx.t0 : 0;
+  if (!under && !reduced()) {   // a data packet on a trace
+    const pk = deckPacket(now);
+    if (pk) { const i = Math.floor((now - pk.t0) / 70);
+      for (let j = 0; j < 4; j++) { const c = pk.path[i - j]; if (c) bput(c[0], c[1], j ? ART[c[1]][c[0]] : 'o', j ? mixHex(idle, tc, 0.6 - j * 0.15) : mixHex(tc, C.bright, 0.3), !j); } }
+  }
+  if (fx && !under) {   // the show
+    const dm = deckDist(fx.sid);
+    if (fx.kind === 'in') {   // a wave of light out along the traces
+      const front = fxAge / DECK_WAVE_MS;
+      if (front > dm.max + 8) d.fx = null;
+      else for (const [k, dd] of dm.m) { if (dd > front || dd < front - 7) continue; const x = k % 64, y = Math.floor(k / 64); if (deckOpen(deckBand(y))) bput(x, y, ART[y][x], dd > front - 2 ? mixHex(tc, C.bright, 0.5) : mixHex(idle, tc, (dd - front + 7) / 7), dd > front - 2); }
+    } else {   // the light drains into the socket, holds dark, then fills back
+      const drain = dm.max * DECK_DRAIN_MS, hold = 300, fill = dm.max * DECK_DRAIN_MS * 1.6;
+      const front = fxAge < drain ? dm.max - fxAge / DECK_DRAIN_MS : fxAge < drain + hold ? 0 : (fxAge - drain - hold) / (DECK_DRAIN_MS * 1.6);
+      if (fxAge > drain + hold + fill) d.fx = null;
+      else { for (let by = top; by < top + bv && by < BH; by++) g.put(ax, sy(by), ART[by], C.dim);   // the board goes dim...
+        for (const [k, dd] of dm.m) { if (dd > front) continue; const x = k % 64, y = Math.floor(k / 64); if (deckOpen(deckBand(y))) bput(x, y, ART[y][x], idle); } }   // ...but where the light still is
+    }
+  }
   // the CPU: your hacker name (2 lines when it doesn't fit), the mk, the pins blinking in turn
   { const n = deckName(), lines = n.length <= 10 ? [n] : n.split('_');
     bclr(4, 5, 12, 5); lines.forEach((l, i) => bput(6, 6 + i, l, C.money, true)); bput(6, 6 + lines.length, 'mk ' + deckMk(d.mk), C.money);
@@ -554,11 +654,11 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   { const lit = d.real ? LEGACY.filter(u => legacyLv(u.key) > 0 && !u.placeholder).length : DECK_POSTS.length + d.sw.size + (d.nemesis ? 1 : 0); let n = 0;
     for (let x = 6; x <= 13; x++) if (ART[11][x] !== ' ') { bput(x, 11, ART[11][x], n < lit ? C.rep : C.dim, n < lit); n++; } }
   // the CRASH stick reads out its chip, scrolling when the name is longer than 5 (OFF in red with no power)
-  { const key = d.slots.CRS, name = key ? DECK_CHIPS[key][0].replace(/ /g, '') : '', on = key && pw.on.has('CRS');
+  { const key = d.slots.CRS, name = key ? DECK_CHIPS[key][0] : '', on = key && pw.on.has('CRS');
     for (let j = 0; j < 5; j++) {
       let ch = '.';
       if (name && !on) ch = ' OFF '[j];
-      else if (name) { if (name.length <= 5) { const o = Math.floor((5 - name.length) / 2); ch = name[j - o] || '.'; } else { const s = name + '   '; ch = s[(Math.floor(now / 320) + j) % s.length]; } }
+      else if (name) { const w = deckStickText(DECK_CHIPS[key][0], now), o = Math.floor((5 - w.length) / 2); ch = w[j - o] || '.'; }   // (a word at a time, with a scramble: deckStickText)
       bput(23, 10 + j, ch === ' ' ? '.' : ch, name && !on ? C.danger : name && ch !== '.' && ch !== ' ' ? C.bright : C.dim, !!name);
     } }
   // the ]8[ readout: power left, a blinking ! when a chip has none
@@ -580,6 +680,30 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   for (const s of DECK_SOCKETS) {
     deckSocket(s, s.x, s.y, bput, bbg, bclr, { sel: d.sel.kind === 'socket' && d.sel.id === s.id, pw, now });
     bhit(s.x, s.y, s.w, s.h, 'dks_' + s.id, () => deckTapSocket(s, bv));
+  }
+  // sparks: static around a chip that has no power (now and then), and a lot of it while one dies
+  const ring = s => { const r = []; for (let x = s.x - 1; x <= s.x + s.w; x++) r.push([x, s.y - 1], [x, s.y + s.h]); for (let y = s.y; y < s.y + s.h; y++) r.push([s.x - 1, y], [s.x + s.w, y]); return r; };
+  const hh = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
+  if (!under) {
+    for (const id of pw.off) { const s = deckSock(id), r = ring(s), f = Math.floor(now / 110);
+      if (hh(id.charCodeAt(2) + f, f) < 0.18) { const c = r[Math.floor(hh(f, id.charCodeAt(1)) * r.length)]; bput(c[0], c[1], pickR(["'", '*', '+', ','], Math.random), C.danger); } }
+    if (fx && fx.kind === 'dead' && fxAge < 1400) { const s = deckSock(fx.sid), r = ring(s);
+      for (let i = 0; i < 6; i++) { const c = r[Math.floor(Math.random() * r.length)]; bput(c[0], c[1], noiseCh(), Math.random() < 0.6 ? C.danger : C.bright, true); } }
+  }
+  // the burst, once, when the socket is on screen (confetti and tech blobs, more the rarer: none when effects are reduced)
+  if (fx && !fx.burst && !under) {
+    const s = deckSock(fx.sid);
+    if (s && inView(s.y + 1)) {
+      fx.burst = true;
+      const x = pxX(ax + s.x + s.w / 2 - 0.5), y = pxY(sy(s.y + 1));
+      if (fx.kind === 'in' && !reduced()) {
+        const rc = rarityCol(DECK_CHIPS[d.slots[fx.sid]] ? DECK_CHIPS[d.slots[fx.sid]][2] : 'common'), n = [8, 14, 22, 34, 46][fx.lvl];
+        const cells = []; for (let k = 0; k < n; k++) cells.push({ ch: pickR(['o', '*', '+', '0', '1', '#', '=', '.', '<', '>'], Math.random), x: x + rand(-1, 1) * L.cw, y, col: pickR([rc, tc, C.bright, rc, C.money], Math.random) });
+        explode(cells, x, y + L.chh / 2, { power: 0.35 + 0.12 * fx.lvl, grav: 0.7, life: [0.5, 0.9 + 0.2 * fx.lvl] });
+        if (fx.lvl >= 2) flash(rc, 0.06 + 0.03 * fx.lvl, 0.3);
+        if (fx.lvl >= 3) shake(2 + fx.lvl, 0.3);
+      } else if (fx.kind === 'dead') { flash(C.danger, 0.08, 0.3); shake(2, 0.25); }
+    }
   }
   if (d.sel.kind === 'part') { const p = DECK_PARTS.find(q => q.id === d.sel.id); if (p) bbg(p.x, p.y, p.w, p.h, C.accent, 0.18); }
   // the "more" rows; a drag or the wheel moves a row at a time
@@ -822,8 +946,9 @@ function deckCard(ctx, y0) {
   else if (pw.off.length) {   // NO POWER: red, cycling through the chips that have none; a tap goes to the one showing
     const names = pw.off.map(id => `NO POWER: ${DECK_CHIPS[d.slots[id]][0]} in ${id}`), sw = FX.swapLines(names, W - 2, 0, now, 1800);
     g.bg(0, y0, W, 1, st.hoverBtn === 'dkbar' ? C.accent : C.danger, 1); g.put(1, y0, sw.text, C.bg, true);
-    if (!d.pick && !d.cpu) ctx.addHit(0, y0, W, 1, { kind: 'btn', id: 'dkbar', onTap: () => {
-      const id = pw.off[sw.k], s = deckSock(id); d.view = 'board'; deckSelect({ kind: 'socket', id }); deckShow(s.y, s.h, deckViewRows()); Sound.tick(); } });
+    if (!d.pick && !d.cpu) ctx.addHit(0, y0, W, 1, { kind: 'btn', id: 'dkbar', onTap: () => {   // (each tap: the next one, Greg 2026-11-16)
+      d.offI = d.offI == null || d.offI >= pw.off.length - 1 ? 0 : d.offI + 1;
+      const id = pw.off[d.offI], s = deckSock(id); d.view = 'board'; deckSelect({ kind: 'socket', id }); deckShow(s.y, s.h, deckViewRows()); Sound.tick(); } });
   } else g.put(0, y0, rule(W), C.dim);
   // the picker is up: the card waits under it (dim), and a tap on it closes the picker
   if (d.pick || d.cpu) { g.dim = true; ctx.addHit(0, y0 + 1, W, 4, { kind: 'btn', id: 'dkcard', onTap: () => { d.pick = null; d.cpu = null; Sound.tick(); } }); }
