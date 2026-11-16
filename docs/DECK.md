@@ -54,6 +54,9 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
 - **The CPU opens a popup** (Greg): the ROM goes in it (the ROM pins open it too, and the ROM card is gone). In it
   (Claude's take): your mk and access, chips in (6/11: no list, you can see them) and power, the mk ladder with the
   upgrade, the ROM's posts and switches, and a line of lore at the bottom (`MEDIX NC-1 · rev 2`). (Done.)
+  **Then (Greg):** no list of the ROM's posts (the pins show them). The room goes to the switches, one per row with
+  its text under it and a `[x]` / `[ ]` on the right. NEMESIS isn't on/off: `NEMESIS [BURGERTRON]`, and a tap cycles
+  to the next corp or none. (Done. In the game it would cycle only the corps you've breached.)
 - **A short and a long text per chip,** like mods and gear: the short one is the card's ticker and the list's second
   row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
 - **A dim dashed line between items** in the lists, not a blank row. (Done.)

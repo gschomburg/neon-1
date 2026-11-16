@@ -36,6 +36,9 @@ module.exports = { name: 'deck', body: `
   deckTapPart('rom'); check(DECK.sel.kind === 'part' && DECK.sel.id === 'cpu', 'the ROM pins select the CPU');
   deckTapPart('cpu'); check(DECK.cpu && !DECK.pick, 'a second tap opens the CPU popup');
   check(buildScene(performance.now(), false).length > 300, 'the CPU popup draws');
+  const was = DECK.nemesis; render(performance.now()); const nb = hits.find(h => h.id === 'dksweemesis' || h.id === 'dkswnemesis'); nb.onTap();
+  check(DECK.nemesis !== was, 'NEMESIS cycles to the next corp: ' + was + ' > ' + DECK.nemesis);
+  const tb = hits.find(h => h.id === 'dkswlucky'); tb.onTap(); check(DECK.sw.has('lucky'), 'a switch turns on');
   deckKey('escape'); check(!DECK.cpu, 'Escape closes it');
   DECK = null;
 ` };
