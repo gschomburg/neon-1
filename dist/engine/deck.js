@@ -18,7 +18,7 @@ const DECK_GROUPS = {
   sudo: ['SUDO', 'accent', 'the strong commands'], boss: ['BOSS', 'money', 'wide chips from the big bosses'],
   heat: ['HEAT', 'legendary', 'harder runs, more REP'],
 };
-// Every socket's color is your deck's: it levels up with your mk (mk II epic, III legendary, IV exotic: the same as the
+// Every socket's color is your deck's: it levels up with your mk (mk II rare, III epic, IV gold: the same as the
 // traces, deckTraceCol). GLYPH keeps its own (Greg, 2026-11-16). Red still means no power. Used for a slotted socket's
 // outline, the picker's frame and the CHIPS tab's headers.
 const deckGroupCol = g => g === 'glyph' ? C[DECK_GROUPS[g][1]] || C.text : deckTraceCol();
@@ -455,10 +455,11 @@ function deckKey(k) {
 // A chip goes in with power: a burst of confetti and tech blobs (more the rarer it is), and a wave of light runs out of
 // its socket along the traces. No power: the light drains back into the socket, the board goes dim, then fills again,
 // with static sparks around the chip. d.fx = { kind: 'in' | 'dead', sid, t0, lvl, burst }.
-// The board's own look, toned back so it isn't noisy: the traces lean to the mk's color (mk II epic, III legendary, IV
+// The board's own look, toned back so it isn't noisy: the traces lean to the mk's color (mk II rare, III epic, IV
 // exotic: Greg), silkscreen part numbers in the empty spots, vias, and now and then a data packet running a trace.
-const DECK_MK_RARITY = { 2: 'epic', 3: 'legendary', 4: 'exotic' };
-const deckTraceCol = () => rarityCol(DECK_MK_RARITY[DECK.mk] || 'epic');
+// (Greg, 2026-11-16: rare, epic, then legendary; but mk IV takes the exotic gold, he likes it better than the orange)
+const DECK_MK_RARITY = { 2: 'rare', 3: 'epic', 4: 'exotic' };
+const deckTraceCol = () => rarityCol(DECK_MK_RARITY[DECK.mk] || 'rare');
 const DECK_LVL = { scrap: 0, common: 0, rare: 1, epic: 2, legendary: 3, exotic: 4 };
 const DECK_TRACE = '-|=:.+o_/\\';   // the characters light runs along
 const DECK_WAVE_MS = 13, DECK_DRAIN_MS = 7;   // ms a cell: the wave out, the drain in (and the fill back)

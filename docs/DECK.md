@@ -44,6 +44,9 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   bench tab about the run you're in, so it could stay in the run's safehouse.) Not decided.
 - **Colors (ideas):** THE BOARD is REP's, so the deck could lean on the REP purple. Or each mk is a rarity color for
   the traces: mk II epic (close to the REP purple), mk III legendary, mk IV exotic. Chips keep their rarity colors.
+  **Decided (Greg, 2026-11-16):** the traces and every socket level up with your mk: mk II rare (blue), mk III epic
+  (purple), mk IV legendary, but in the exotic gold (Greg likes it better than the orange). GLYPH keeps its white; red
+  is no power. (Built.)
 - **The card's order:** the group and power first, dim (`SHELL · PWR 2`); then the name on its rarity chip; then
   the short text, a ticker. (Done.)
 - **The picker is a set height, like a store:** a list that scrolls, then the picked one's info under it: name,
