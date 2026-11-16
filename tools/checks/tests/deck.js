@@ -24,5 +24,9 @@ module.exports = { name: 'deck', body: `
   deckPick('BT1'); check(DECK.pick && DECK.pick.id === 'BT1', 'the picker opens');
   check(buildScene(performance.now(), false).length > 300, 'the picker draws');
   deckPick('OV1'); check(DECK.pick.id === 'BT1', 'a locked socket has no picker');
+  DECK.pick = null; deckPick('SH4'); buildScene(performance.now(), false);
+  check(DECK.pick.sel === 'LS1', 'the picker starts on the chip in the socket: ' + DECK.pick.sel);
+  DECK.pick.keys.move(1); check(DECK.pick.sel !== 'LS1' && DECK.pick, 'the keys move the pick, it stays open');
+  const next = DECK.pick.sel; DECK.pick.keys.go(); check(!DECK.pick && DECK.slots.SH4 === next, 'go slots it and closes: ' + DECK.slots.SH4);
   DECK = null;
 ` };

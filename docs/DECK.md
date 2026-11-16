@@ -36,6 +36,24 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   doesn't fit goes on 2 lines, split at the `_` (each word is 6 at most). Maybe small silkscreen under it
   (`MEDIX NC-1`). Names with MK2 in them (`POTATO_MK2` over `mk II`) are a free joke.
 
+## Decided from the first in-game round (Greg, 2026-11-15)
+- **Where the deck lives:** probably a part of THE BOARD screen (the main menu), not the safehouse: a chip you carry
+  but haven't cashed out can't be slotted, and that would be odd in a safehouse mid-run. An idea: unlock the
+  workbench / safehouse as a main-menu thing too, for crafting, the deck and the LOCKER. (Claude: SHRED is the one
+  bench tab about the run you're in, so it could stay in the run's safehouse.) Not decided.
+- **Colors (ideas):** THE BOARD is REP's, so the deck could lean on the REP purple. Or each mk is a rarity color for
+  the traces: mk II epic (close to the REP purple), mk III legendary, mk IV exotic. Chips keep their rarity colors.
+- **The card's order:** the group and power first, dim (`SHELL · PWR 2`); then the name on its rarity chip; then
+  the short text, a ticker. (Done.)
+- **The picker is a set height, like a store:** a list that scrolls, then the picked one's info under it: name,
+  rarity and power, the long text (4 rows at most), and SLOT. A tap picks, SLOT puts it in. (Done.)
+- **A short and a long text per chip,** like mods and gear: the short one is the card's ticker and the list's second
+  row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
+- **A dim dashed line between items** in the lists, not a blank row. (Done.)
+- **The wheel and a drag scroll one row at a time;** the arrows and the "more" rows step to the next whole item.
+  (Done. In the picker the arrow keys move the pick and Enter slots it.)
+- 8 more SHELL chips, to see a long list (stand-ins, like the rest).
+
 ## Decided from the round 4 mockup (Greg, 2026-11-15)
 - **Every socket takes two taps:** the first shows its card, the second opens the picker. Empty ones too.
 - **The card is 4 rows**, beside the socket's frame: the name; the group and its power on one line (no rarity: the

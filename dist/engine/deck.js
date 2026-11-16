@@ -16,34 +16,43 @@ const DECK_GROUPS = {
   heat: ['HEAT', 'danger', 'harder runs, more REP'],
 };
 const deckGroupCol = g => C[DECK_GROUPS[g][1]] || C.text;
-// chips: key: [name, group, rarity, power, what it does, face (top row, bottom row: 3 wide, 5 for BOSS)]
+// chips: key: [name, group, rarity, power, what it does (the long text: the picker, 4 rows at most), face (top row,
+// bottom row: 3 wide, 5 for BOSS), tip (the short text: the card's ticker)]
 const DECK_CHIPS = {
-  DM5: ['DEADMAN', 'crash', 'epic', 1, 'dying keeps 50% of the REP you would have banked.', ['DED', 'MAN']],
-  '1UP': ['1UP', 'crash', 'exotic', 3, "b0y's crash unit. die and go back to the start of the corp, once a run.", ['1UP', '^_^']],
-  EJ1: ['EJECT', 'crash', 'common', 1, 'cash out from anywhere, once a run.', ['/^\\', 'EJT']],
-  BB7: ['BLACK BOX', 'crash', 'rare', 1, 'when you die, one mod goes to the LOCKER.', ['[#]', 'BOX']],
-  SP3: ['SPOILS', 'spoils', 'common', 0, 'a switch for corp bosses: take the REWARDS, or skip them for a HEAL or for CASH.', ['SPL', null]],
-  GM7: ['GAMBLE', 'spoils', 'epic', 2, 'boss rewards come face down. one of them is a jackpot: two mods.', ['?!?', 'BET']],
-  CD2: ['cd ..', 'shell', 'rare', 2, 'THE SHELL learns cd ..: back a row on the map, once a sector.', ['cd ', ' ..']],
-  MK7: ['market', 'shell', 'epic', 2, 'THE SHELL learns market: a small black market right where you are, once a sector.', ['mkt', '[$]']],
-  LS1: ['ls', 'shell', 'common', 1, 'THE SHELL learns ls: how many ICE and $ nodes are on this layer.', ['ls ', '#?$']],
-  PS4: ['ps', 'shell', 'rare', 1, 'THE SHELL learns ps: where the rival hackers are on the map.', ['ps ', '@ @']],
-  UN0: ['undo', 'shell', 'epic', 2, 'THE SHELL learns undo: take back your last ICE hit, once a sector.', ['und', '<-o']],
-  ST4: ['STARTER', 'boot', 'rare', 1, "pick a mod you've found: it can show up in the starter perk.", ['STR', '>>>']],
-  PT1: ['PET', 'boot', 'common', 0, 'pick the pet that comes along: COMPANION, the chick, the bug, the fish.', ['PET', '^.^']],
-  HS2: ['HEADSTART', 'boot', 'common', 1, 'start on the second row of sector 1. pays a little less REP.', ['GO!', '>>2']],
-  SM1: ['SIMON CHIP', 'bios', 'rare', 1, 'a corp chip: SIMON shows up 3x as often. flip it and it shows up less.', ['SIM', 'x3!']],
-  QT0: ['QUIET', 'bios', 'rare', 1, 'no rival hackers turn up.', ['shh', '...']],
-  AD5: ['ADWARE', 'bios', 'common', 1, 'more ads, and tapping one heals 1 INT.', ['AD!', '[x]']],
-  SC1: ['STOCK CELL', 'psu', 'common', 0, 'comes with the deck. power 6.', ['[+]', 'C:6']],
-  LI2: ['LI-ION', 'psu', 'rare', 0, 'a better cell. power 9.', ['[+]', 'Li9']],
-  RX9: ['REACTOR', 'psu', 'legendary', 0, 'power 14, but -1 starting INT.', ['(*)', 'R14']],
-  GR8: ['GREED', 'ov', 'rare', 2, '-1 starting INT. +25% credits.', ['GRD', '$-1']],
-  LK7: ['LUCK', 'ov', 'epic', 2, '-1 starting INT. 1 in 5 drops roll a step rarer.', ['777', 'LCK']],
-  GD0: ['mode.god', 'sudo', 'legendary', 3, 'THE SHELL learns mode.god: no damage for a sector, then it wears off.', ['g0d', 'mod']],
-  OMNI: ["OMNI'S EYE", 'boss', 'exotic', 3, "every corp's card on the map shows its tell.", ['<(@)>', 'OMNI ']],
-  HC1: ['HARDCORE', 'heat', 'epic', 0, 'no CRASH chip works. +50% REP.', ['HRD', 'x_x']],
-  HN2: ['HUNTED', 'heat', 'rare', 0, 'twice as many rivals. +20% REP.', ['HNT', '>@<']],
+  DM5: ['DEADMAN', 'crash', 'epic', 1, 'dying keeps 50% of the REP you would have banked.', ['DED', 'MAN'], 'die and keep half your REP.'],
+  '1UP': ['1UP', 'crash', 'exotic', 3, "b0y's crash unit. die and go back to the start of the corp, once a run.", ['1UP', '^_^'], 'one more life a run.'],
+  EJ1: ['EJECT', 'crash', 'common', 1, 'cash out from anywhere, once a run.', ['/^\\', 'EJT'], 'cash out anywhere, once.'],
+  BB7: ['BLACK BOX', 'crash', 'rare', 1, 'when you die, one mod goes to the LOCKER.', ['[#]', 'BOX'], 'a mod survives your death.'],
+  SP3: ['SPOILS', 'spoils', 'common', 0, 'a switch for corp bosses: take the REWARDS, or skip them for a HEAL or for CASH.', ['SPL', null], 'take boss rewards, a heal, or cash.'],
+  GM7: ['GAMBLE', 'spoils', 'epic', 2, 'boss rewards come face down. one of them is a jackpot: two mods.', ['?!?', 'BET'], 'face-down rewards, one jackpot.'],
+  CD2: ['cd ..', 'shell', 'rare', 2, 'THE SHELL learns cd ..: back a row on the map, once a sector.', ['cd ', ' ..'], 'cd ..: back a row.'],
+  MK7: ['market', 'shell', 'epic', 2, 'THE SHELL learns market: a small black market right where you are, once a sector.', ['mkt', '[$]'], 'market: a pocket shop.'],
+  LS1: ['ls', 'shell', 'common', 1, 'THE SHELL learns ls: how many ICE and $ nodes are on this layer.', ['ls ', '#?$'], 'ls: count the ICE and $.'],
+  PS4: ['ps', 'shell', 'rare', 1, 'THE SHELL learns ps: where the rival hackers are on the map.', ['ps ', '@ @'], 'ps: see the rivals.'],
+  KL6: ['kill', 'shell', 'epic', 2, 'THE SHELL learns kill: end one ICE node outright, once a sector. it still counts as a hit on you if it was armed.', ['kil', '-9 '], 'kill: end an ICE node.'],
+  PG2: ['ping', 'shell', 'common', 1, 'THE SHELL learns ping: how many nodes the next layer has, before you go in.', ['png', '((('], "ping: the next layer's size."],
+  GP5: ['grep', 'shell', 'rare', 1, 'THE SHELL learns grep: name a mod and the map marks the nodes that can drop it, this sector.', ['grp', '/?/'], 'grep: find a mod on the map.'],
+  CM7: ['chmod', 'shell', 'rare', 2, 'THE SHELL learns chmod: open one locked node on this layer, once a sector.', ['chm', '+x '], 'chmod: open a locked node.'],
+  WH0: ['whoami', 'shell', 'common', 0, "THE SHELL learns whoami: your run so far, the REP on the line, and what you'd bank if you cashed out now.", ['who', '?_?'], 'whoami: your run so far.'],
+  TP3: ['top', 'shell', 'common', 1, 'THE SHELL learns top: which node on this layer pays the most.', ['top', '^$^'], 'top: the richest node.'],
+  CT4: ['cat', 'shell', 'rare', 1, 'THE SHELL learns cat: read a node before you open it, once a layer.', ['cat', '=^.'], 'cat: read a node first.'],
+  SS8: ['ssh', 'shell', 'legendary', 3, 'THE SHELL learns ssh: jump to any node on the next row of the map, once a sector. the row after is fair game too.', ['ssh', '>>@'], 'ssh: jump to any node ahead.'],
+  UN0: ['undo', 'shell', 'epic', 2, 'THE SHELL learns undo: take back your last ICE hit, once a sector.', ['und', '<-o'], 'undo: take back an ICE hit.'],
+  ST4: ['STARTER', 'boot', 'rare', 1, "pick a mod you've found: it can show up in the starter perk.", ['STR', '>>>'], 'pick a starter mod.'],
+  PT1: ['PET', 'boot', 'common', 0, 'pick the pet that comes along: COMPANION, the chick, the bug, the fish.', ['PET', '^.^'], 'pick your pet.'],
+  HS2: ['HEADSTART', 'boot', 'common', 1, 'start on the second row of sector 1. pays a little less REP.', ['GO!', '>>2'], 'skip a row of sector 1.'],
+  SM1: ['SIMON CHIP', 'bios', 'rare', 1, 'a corp chip: SIMON shows up 3x as often. flip it and it shows up less.', ['SIM', 'x3!'], 'SIMON shows up more.'],
+  QT0: ['QUIET', 'bios', 'rare', 1, 'no rival hackers turn up.', ['shh', '...'], 'no rival hackers.'],
+  AD5: ['ADWARE', 'bios', 'common', 1, 'more ads, and tapping one heals 1 INT.', ['AD!', '[x]'], 'ads heal you.'],
+  SC1: ['STOCK CELL', 'psu', 'common', 0, 'comes with the deck. power 6.', ['[+]', 'C:6'], 'power 6.'],
+  LI2: ['LI-ION', 'psu', 'rare', 0, 'a better cell. power 9.', ['[+]', 'Li9'], 'power 9.'],
+  RX9: ['REACTOR', 'psu', 'legendary', 0, 'power 14, but -1 starting INT.', ['(*)', 'R14'], 'power 14, -1 INT.'],
+  GR8: ['GREED', 'ov', 'rare', 2, '-1 starting INT. +25% credits.', ['GRD', '$-1'], '-1 INT, +25% credits.'],
+  LK7: ['LUCK', 'ov', 'epic', 2, '-1 starting INT. 1 in 5 drops roll a step rarer.', ['777', 'LCK'], '-1 INT, rarer drops.'],
+  GD0: ['mode.god', 'sudo', 'legendary', 3, 'THE SHELL learns mode.god: no damage for a sector, then it wears off.', ['g0d', 'mod'], 'mode.god: no damage for a sector.'],
+  OMNI: ["OMNI'S EYE", 'boss', 'exotic', 3, "every corp's card on the map shows its tell.", ['<(@)>', 'OMNI '], 'every corp shows its tell.'],
+  HC1: ['HARDCORE', 'heat', 'epic', 0, 'no CRASH chip works. +50% REP.', ['HRD', 'x_x'], 'no CRASH chip, +50% REP.'],
+  HN2: ['HUNTED', 'heat', 'rare', 0, 'twice as many rivals. +20% REP.', ['HNT', '>@<'], '2x rivals, +20% REP.'],
 };
 const DECK_CELL = { SC1: 6, LI2: 9, RX9: 14 };
 const DECK_SPOILS = [['REWARDS', 'RWD', 'take the REWARDS.'], ['HEAL', 'HP+', 'skip them: HEAL 2 INT.'], ['CASH', '$$$', 'skip them: take CASH.']];
@@ -169,7 +178,9 @@ function deckLeave() {
 function deckKey(k) {
   const d = DECK; if (!d) return false;
   if (k === 'escape') { if (d.pick) { d.pick = null; Sound.tick(); } else if (d.carry) d.carry = null; else deckLeave(); return true; }
-  if (k === 'arrowup' || k === 'arrowdown') { if (st.scroll) st.scroll(k === 'arrowup' ? -1 : 1); return true; }
+  const dd = k === 'arrowup' ? -1 : k === 'arrowdown' ? 1 : 0;
+  if (d.pick && d.pick.keys) { if (dd) { d.pick.keys.move(dd); return true; } if (k === 'enter' || k === ' ') { d.pick.keys.go(); return true; } }
+  if (dd) { if (d.keyStep) d.keyStep(dd); else if (st.scroll) st.scroll(dd); return true; }
   return false;
 }
 
@@ -199,21 +210,49 @@ function deckMore(ctx, g, x0, w, y, up, can, fn, id) {
   g.bg(x, y, s.length, 1, st.hoverBtn === id ? C.accent : C.text, 1); g.put(x, y, s, C.bg, true);
   ctx.addHit(x, y, s.length, 1, { kind: 'btn', id, onTap: () => { fn(); Sound.tick(); } });
 }
-// A scroll area of blocks (a chip is 2 rows and a gap): it steps a whole block, so a chip is never cut in half.
-// s: { top } (a block index). Draws `rows` rows at y; the "more" rows take the first and last when it doesn't fit.
-function deckBlocks(ctx, g, x0, w, y, rows, blocks, s, idp) {
-  const total = blocks.reduce((n, b) => n + b.h, 0);
-  if (total <= rows) { s.top = 0; s.max = 0; let yy = y; for (const b of blocks) { b.draw(yy); yy += b.h; } return () => {}; }
-  const inner = rows - 2; let max = 0;
-  for (let i = blocks.length - 1, acc = 0; i >= 0; i--) { acc += blocks[i].h; if (acc > inner) { max = i + 1; break; } }
-  s.max = max; s.top = clamp(s.top, 0, max);
-  let yy = y + 1;
-  for (let i = s.top; i < blocks.length && yy + blocks[i].h <= y + 1 + inner; i++) { blocks[i].draw(yy); yy += blocks[i].h; }
-  const by = dd => { s.top = clamp(s.top + dd, 0, max); };
-  deckMore(ctx, g, x0, w, y, true, s.top > 0, () => by(-1), idp + 'up');
-  deckMore(ctx, g, x0, w, y + rows - 1, false, s.top < max, () => by(1), idp + 'dn');
-  return by;
+// A scroll area by rows, with the "more" rows (engine/codex.js scrollArea). items: { h, stop, draw(g, ctx, y) }: a chip is
+// 2 rows (stop: true), with a dim dashed row between (deckSep). The wheel and a drag move it a row at a time and can
+// leave an item cut at the edge; a "more" tap or the keys step to the next whole item (Greg, 2026-11-15). s: { top }
+// (a row). Returns { line, step, show(i) }.
+function deckRows(ctx, g, x0, w, y, rows, items, s, idp) {
+  const start = []; let total = 0;
+  for (const it of items) { start.push(total); total += it.h; }
+  const fits = total <= rows, inner = fits ? rows : rows - 2, wy = fits ? y : y + 1, max = Math.max(0, total - inner);
+  s.top = clamp(s.top || 0, 0, max);
+  const top = s.top, inRows = yy => yy >= wy && yy < wy + inner;
+  // what an item draws with: everything clipped to the window
+  const cg = { get dim() { return g.dim; }, set dim(v) { g.dim = v; },
+    put: (x, yy, t, col, bold) => { if (inRows(yy)) g.put(x, yy, t, col, bold); },
+    clr: (x, yy, ww, h = 1) => { for (let j = 0; j < h; j++) if (inRows(yy + j)) g.clr(x, yy + j, ww, 1); },
+    bg: (x, yy, ww, h, col, a) => { for (let j = 0; j < h; j++) if (inRows(yy + j)) g.bg(x, yy + j, ww, 1, col, a); } };
+  const clip = (yy, h) => { const a = Math.max(yy, wy), b = Math.min(yy + h, wy + inner); return b > a ? [a, b - a] : null; };
+  const cctx = Object.assign({}, ctx, {
+    hl: (x, yy, ww, h, id, m) => { const c = clip(yy, h); if (c) ctx.hl(x, c[0], ww, c[1], id, m); },
+    addHit: (x, yy, ww, h, hit) => { const c = clip(yy, h); if (c) ctx.addHit(x, c[0], ww, c[1], hit); } });
+  items.forEach((it, i) => { const yy = wy + start[i] - top; if (yy + it.h > wy && yy < wy + inner) it.draw(cg, cctx, yy); });
+  const line = dd => { const t = clamp(s.top + dd, 0, max); if (t !== s.top) { s.top = t; Sound.tick(); } };
+  const stops = items.map((it, i) => i).filter(i => items[i].stop);
+  // a step: to the next item that isn't all in view, all of it (the first item takes the rows above it too)
+  const step = dd => {
+    let t;
+    if (dd > 0) { const i = stops.find(i => start[i] + items[i].h > s.top + inner); t = i != null ? Math.max(s.top + 1, start[i] + items[i].h - inner) : max; }
+    else { const i = stops.slice().reverse().find(i => start[i] < s.top); t = i != null ? Math.min(s.top - 1, i === stops[0] ? 0 : start[i]) : 0; }
+    s.top = clamp(t, 0, max);
+  };
+  const show = i => {
+    if (i == null || i < 0) return;
+    const a = i === stops[0] ? 0 : start[i], b = start[i] + items[i].h;
+    if (a < s.top) s.top = a; else if (b > s.top + inner) s.top = b - inner;
+    s.top = clamp(s.top, 0, max);
+  };
+  if (!fits) {
+    deckMore(ctx, g, x0, w, y, true, top > 0, () => step(-1), idp + 'up');
+    deckMore(ctx, g, x0, w, y + rows - 1, false, top < max, () => step(1), idp + 'dn');
+  }
+  return { line, step, show };
 }
+// the row between two items: a light dashed line
+const deckSep = (x, w) => ({ h: 1, draw: (g, ctx, y) => g.put(x + 1, y, rule(w - 2), C.dim) });
 // a chip's face: 3 x 2 (5 x 2 for BOSS), both rows art, on its rarity chip (grey with no power)
 function deckFace(g, x, y, key, off) {
   const c = DECK_CHIPS[key], ch = off ? DECK_OFF : chipOf(c[2]), w = c[1] === 'boss' ? 5 : 3;
@@ -321,6 +360,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   deckMore(ctx, g, 0, L.wc, y0, true, top > 0, () => { d.scroll = clamp(d.scroll - DECK_BOARD_STEP, 0, maxTop); }, 'dkup');
   deckMore(ctx, g, 0, L.wc, y0 + sa - 1, false, top < maxTop, () => { d.scroll = clamp(d.scroll + DECK_BOARD_STEP, 0, maxTop); }, 'dkdn');
   if (under) return;
+  d.keyStep = null;
   st.scroll = dd => { const t = clamp(d.scroll + dd, 0, maxTop); if (t !== d.scroll) { d.scroll = t; Sound.tick(); } };
   g.flush();
 }
@@ -340,80 +380,134 @@ function deckTapPart(id) {
   deckSelect(id === 'stick' ? { kind: 'socket', id: 'CRS' } : { kind: 'part', id }); Sound.tick();
 }
 
-// the CHIPS tab: every chip you own, grouped; a chip is 2 rows and a gap, and a "more" tap steps a chip
+// the CHIPS tab: every chip you own, grouped (a chip is 2 rows, a dashed row between)
 function deckChipList(ctx, y0, sa) {
-  const d = DECK, g = deckGrid(ctx), pw = deckPower(), W = L.wc, blocks = [];
+  const d = DECK, g = deckGrid(ctx), pw = deckPower(), W = L.wc, items = [];
   for (const gk of Object.keys(DECK_GROUPS)) {
     const ks = deckOwned().filter(k => DECK_CHIPS[k][1] === gk); if (!ks.length) continue;
-    blocks.push({ h: 1, draw: y => { const n = DECK_GROUPS[gk][0]; g.put(1, y, `-- ${n} `, deckGroupCol(gk)); g.put(5 + n.length, y, rule(W - 7 - n.length), C.dim); } });
-    for (const key of ks) blocks.push({ h: 3, draw: y => {
-      const c = DECK_CHIPS[key], where = deckSlotOf(key), off = !!(where && !pw.on.has(where) && c[1] !== 'psu'), id = 'dkc_' + key;
-      if (d.sel.kind === 'chip' && d.sel.key === key) g.bg(0, y, W, 2, C.accent, 0.18);
-      ctx.hl(0, y, W, 2, id, false);
-      deckFace(g, 2, y, key, off);
-      g.put(9, y, c[0], C.bright, true);
-      if (where) g.put(W - 1 - where.length - 3, y, 'in ' + where, off ? C.danger : C.accent);
-      g.put(9, y + 1, `${DECK_GROUPS[c[1]][0]} · ` + (c[1] === 'psu' ? `+${DECK_CELL[key]} PWR` : `PWR ${c[3]}`), C.money);
-      if (off) g.put(W - 9, y + 1, 'NO POWER', C.danger, true);
-      ctx.addHit(0, y, W, 2, { kind: 'btn', id, onTap: () => { deckSelect({ kind: 'chip', key }); Sound.tick(); } });
-    } });
+    if (items.length) items.push({ h: 1, draw: () => {} });
+    items.push({ h: 1, draw: (g, ctx, y) => { const n = DECK_GROUPS[gk][0]; g.put(1, y, `-- ${n} `, deckGroupCol(gk)); g.put(5 + n.length, y, rule(W - 7 - n.length), C.dim); } });
+    ks.forEach((key, i) => {
+      if (i) items.push(deckSep(0, W));
+      items.push({ h: 2, stop: true, draw: (g, ctx, y) => {
+        const c = DECK_CHIPS[key], where = deckSlotOf(key), off = !!(where && !pw.on.has(where) && c[1] !== 'psu'), id = 'dkc_' + key;
+        if (d.sel.kind === 'chip' && d.sel.key === key) g.bg(0, y, W, 2, C.accent, 0.18);
+        ctx.hl(0, y, W, 2, id, false);
+        deckFace(g, 2, y, key, off);
+        g.put(9, y, c[0], C.bright, true);
+        if (where) g.put(W - 1 - where.length - 3, y, 'in ' + where, off ? C.danger : C.accent);
+        g.put(9, y + 1, c[1] === 'psu' ? `+${DECK_CELL[key]} PWR` : `PWR ${c[3]}`, C.mid);
+        g.put(16, y + 1, c[6].slice(0, W - 17), C.text);
+        if (off) { g.clr(W - 10, y + 1, 10); g.put(W - 9, y + 1, 'NO POWER', C.danger, true); }
+        ctx.addHit(0, y, W, 2, { kind: 'btn', id, onTap: () => { deckSelect({ kind: 'chip', key }); Sound.tick(); } });
+      } });
+    });
   }
-  const by = deckBlocks(ctx, g, 0, W, y0, sa, blocks, d.list, 'dkl');
-  st.scroll = dd => by(dd);
+  const sc = deckRows(ctx, g, 0, W, y0, sa, items, d.list, 'dkl');
+  st.scroll = sc.line; d.keyStep = sc.step;
   g.flush();
 }
 
-// the picker: a popup over the scroll area, a scroll area of what fits (or NONE); one tap slots it and closes
+// The picker: a popup over the scroll area, a set height, like a store: the list (it scrolls), then the one you
+// picked: its name, its power, its long text, and SLOT. A tap picks; SLOT puts it in and closes (Greg, 2026-11-15).
+const DECK_PICK_INFO = 8;   // the divider and 7 rows: name, power, 4 rows of text, the buttons
 function deckPicker(ctx, y0, sa) {
   const d = DECK, p = d.pick, s = deckSock(p.id), g = deckGrid(ctx), pw = deckPower(), now = ctx.now;
   const W = Math.min(L.wc, DECK_ART_W), X0 = Math.floor((L.wc - W) / 2), gc = deckGroupCol(s.g), cur = d.slots[s.id];
+  const IX = X0 + 1, IW = W - 2, H = sa, LR = Math.max(5, H - 3 - DECK_PICK_INFO);
   const done = () => { d.pick = null; };
-  const blocks = [], IX = X0 + 1, IW = W - 2;
-  if (s.g === 'glyph') {
-    DECK_GLYPHS.forEach(([name, art], i) => blocks.push({ h: 4, draw: y => {
-      const id = 'dkg' + i; ctx.hl(IX, y, IW, 3, id, false);
-      art.forEach((l, j) => g.put(IX + 1, y + j, l, C.bright, true));
-      g.put(IX + 8, y, name, C.bright, true); if (i === d.glyph) g.put(IX + IW - 7, y, 'in GLY', C.accent);
-      g.put(IX + 8, y + 1, 'seen on ' + (3 + i * 2) + ' layers', C.mid);
-      ctx.addHit(IX, y, IW, 3, { kind: 'btn', id, onTap: () => { d.glyph = i; done(); Sound.buy(); deckSay(`${name} is your glyph.`); } });
-    } }));
-  } else {
-    blocks.push({ h: 3, draw: y => {   // NONE: empty the socket
-      ctx.hl(IX, y, IW, 2, 'dknone', false);
-      g.put(IX + 1, y, '- -', C.mid); g.put(IX + 1, y + 1, ' - ', C.mid);
-      g.put(IX + 6, y, 'NONE', cur ? C.bright : C.mid, true); if (!cur) g.put(IX + IW - 6, y, 'empty', C.accent);
-      g.put(IX + 6, y + 1, cur ? `pull ${DECK_CHIPS[cur][0]} out` : `leave ${s.id} empty`, C.mid);
-      ctx.addHit(IX, y, IW, 2, { kind: 'btn', id: 'dknone', onTap: () => { done(); if (cur) deckPull(s.id); else Sound.tick(); } });
-    } });
-    deckOwned().filter(k => deckFits(k, s)).forEach((key, i) => blocks.push({ h: 3, draw: y => {
-      const c = DECK_CHIPS[key], where = deckSlotOf(key), wide = c[1] === 'boss', id = 'dkk_' + key;
-      ctx.hl(IX, y, IW, 2, id, false);
-      deckFace(g, IX + 1, y, key, false);
-      const nx = IX + (wide ? 8 : 6);
-      g.put(nx, y, c[0], C.bright, true);
-      if (where) g.put(IX + 19, y, 'in ' + where, where === s.id ? C.accent : C.mid);
-      // would it get power here? what's left, plus what this socket's chip frees, plus its own if it's on elsewhere
-      const room = pw.left + (cur && pw.on.has(s.id) ? DECK_CHIPS[cur][3] : 0) + (where && where !== s.id && pw.on.has(where) ? c[3] : 0);
-      const short = c[1] !== 'psu' && where !== s.id && c[3] > room, pt = c[1] === 'psu' ? `+${DECK_CELL[key]}` : `PWR ${c[3]}`;
-      g.put(IX + IW - pt.length, y, pt, short ? C.danger : C.money, short);
-      g.put(nx + 1, y + 1, FX.ticker(c[4], IX + IW - nx - 1, p.t0 + i * 700, now), C.text);
-      ctx.addHit(IX, y, IW, 2, { kind: 'btn', id, onTap: () => { done(); if (where !== s.id) deckSlot(key, s.id); else Sound.tick(); } });
-    } }));
-  }
-  // as tall as what's in it (up to the whole scroll area); the board shows, dim, under the rest
-  const H = Math.min(sa, Math.max(9, blocks.reduce((n, b) => n + b.h, 0) + 4));
-  deckBoard(ctx, y0, sa, g); g.dim = false;
+  // the choices: NONE (or the glyphs), then what fits
+  const keys = s.g === 'glyph' ? DECK_GLYPHS.map((x, i) => i) : ['NONE'].concat(deckOwned().filter(k => deckFits(k, s)));
+  if (p.sel == null) p.sel = s.g === 'glyph' ? d.glyph : cur || keys[1] || 'NONE';
+  const items = [], idx = {};
+  keys.forEach((k, i) => {
+    if (i) items.push(deckSep(IX, IW));
+    idx[k] = items.length;
+    items.push({ h: s.g === 'glyph' ? 3 : 2, stop: true, draw: (g, ctx, y) => deckPickRow(g, ctx, y, k, { IX, IW, s, cur, pw }) });
+  });
+  deckBoard(ctx, y0, sa, g); g.dim = false;   // the board, dim, around it
   g.clr(X0, y0, W, H);
   g.put(X0, y0, '+' + '-'.repeat(W - 2) + '+', gc);
   const title = ` ${s.id} · ${DECK_GROUPS[s.g][0]} `; g.clr(X0 + 2, y0, title.length); g.put(X0 + 2, y0, title, gc, true);
   for (let j = 1; j < H - 1; j++) { g.put(X0, y0 + j, '|', gc); g.put(X0 + W - 1, y0 + j, '|', gc); }
   g.put(X0, y0 + H - 1, '+' + '-'.repeat(W - 2) + '+', gc);
-  g.put(X0 + 2, y0 + 1, DECK_GROUPS[s.g][2], C.dim);
-  const by = deckBlocks(ctx, g, IX, IW, y0 + 2, H - 4, blocks, p.s, 'dkpk');
-  st.scroll = dd => by(dd);
-  g.put(X0 + 2, y0 + H - 2, s.g === 'glyph' ? 'tap one to pick it' : `tap one to slot it · ${pw.left} PWR left`, C.dim);
+  const pl = `${pw.left} PWR left`; g.put(X0 + 2, y0 + 1, DECK_GROUPS[s.g][2].slice(0, W - 5 - pl.length), C.dim); g.put(X0 + W - 2 - pl.length, y0 + 1, pl, C.money);
+  const sc = deckRows(ctx, g, IX, IW, y0 + 2, LR, items, p.s, 'dkpk');
+  if (!p.shown) { sc.show(idx[p.sel]); p.shown = true; }
+  st.scroll = sc.line; d.keyStep = null;
+  const go = () => deckPickGo(p.sel, s, cur);
+  p.keys = { go, move: dd => { const i = keys.indexOf(p.sel), j = clamp(i + dd, 0, keys.length - 1); if (j !== i) { p.sel = keys[j]; sc.show(idx[p.sel]); Sound.tick(); } } };
+  // the one you picked
+  const iy = y0 + 2 + LR;
+  g.put(X0, iy, '|' + '-'.repeat(W - 2) + '|', gc);
+  deckPickInfo(ctx, g, IX, IW, iy + 1, p, s, cur, pw, go);
   deckBtn(ctx, g, X0 + W - 4, y0, '[X]', C.mid, 'dkpx', () => { done(); Sound.tick(); });
   g.flush();
+}
+// a row in the picker's list
+function deckPickRow(g, ctx, y, k, { IX, IW, s, cur, pw }) {
+  const d = DECK, p = d.pick, h = s.g === 'glyph' ? 3 : 2, id = 'dkk_' + k;
+  if (p.sel === k) g.bg(IX, y, IW, h, C.accent, 0.18);
+  ctx.hl(IX, y, IW, h, id, false);
+  ctx.addHit(IX, y, IW, h, { kind: 'btn', id, onTap: () => { if (p.sel === k) return; p.sel = k; Sound.tick(); } });
+  if (s.g === 'glyph') {
+    const [name, art] = DECK_GLYPHS[k];
+    art.forEach((l, j) => g.put(IX + 1, y + j, l, C.bright, true));
+    g.put(IX + 8, y, name, C.bright, true); if (k === d.glyph) g.put(IX + IW - 7, y, 'in GLY', C.accent);
+    g.put(IX + 8, y + 1, 'seen on ' + (3 + k * 2) + ' layers', C.mid);
+    return;
+  }
+  if (k === 'NONE') {
+    g.put(IX + 1, y, '- -', C.mid); g.put(IX + 1, y + 1, ' - ', C.mid);
+    g.put(IX + 6, y, 'NONE', cur ? C.bright : C.mid, true); if (!cur) g.put(IX + IW - 6, y, 'empty', C.accent);
+    g.put(IX + 6, y + 1, cur ? `pull ${DECK_CHIPS[cur][0]} out` : `leave ${s.id} empty`, C.mid);
+    return;
+  }
+  const c = DECK_CHIPS[k], where = deckSlotOf(k), nx = IX + (c[1] === 'boss' ? 8 : 6), sh = deckPickShort(k, s, cur, pw);
+  deckFace(g, IX + 1, y, k, false);
+  g.put(nx, y, c[0], C.bright, true);
+  if (where) g.put(IX + 19, y, 'in ' + where, where === s.id ? C.accent : C.mid);
+  const pt = c[1] === 'psu' ? `+${DECK_CELL[k]}` : `PWR ${c[3]}`; g.put(IX + IW - pt.length, y, pt, sh ? C.danger : C.money, sh > 0);
+  g.put(nx, y + 1, c[6].slice(0, IX + IW - nx), C.text);
+}
+// how much power a chip would be short in this socket: what's left, plus what this socket's chip frees, plus its own
+// if it's on somewhere else (0: it'd get power)
+function deckPickShort(k, s, cur, pw) {
+  const c = DECK_CHIPS[k], where = deckSlotOf(k);
+  if (c[1] === 'psu' || where === s.id) return 0;
+  const room = pw.left + (cur && pw.on.has(s.id) ? DECK_CHIPS[cur][3] : 0) + (where && pw.on.has(where) ? c[3] : 0);
+  return Math.max(0, c[3] - room);
+}
+function deckPickGo(k, s, cur) {
+  const d = DECK; d.pick = null;
+  if (s.g === 'glyph') { if (k !== d.glyph) { d.glyph = k; Sound.buy(); deckSay(`${DECK_GLYPHS[k][0]} is your glyph.`); } return; }
+  if (k === 'NONE') { if (cur) deckPull(s.id); else Sound.tick(); return; }
+  if (deckSlotOf(k) !== s.id) deckSlot(k, s.id); else Sound.tick();
+}
+// the picked one: its name on its rarity chip, rarity and power, its long text (4 rows at most), the button
+function deckPickInfo(ctx, g, IX, IW, y, p, s, cur, pw, go) {
+  const d = DECK, k = p.sel, x = IX + 1, w = IW - 2, by = y + 6;
+  const btn = (label, col, off) => deckBtn(ctx, g, x, by, label, col, 'dkgo', go, off);
+  const text = t => wrapText(t, w).slice(0, 4).forEach((l, j) => g.put(x, y + 2 + j, l, C.text));
+  if (s.g === 'glyph') {
+    g.put(x, y, DECK_GLYPHS[k][0], C.bright, true); g.put(x, y + 1, 'GLYPH', C.mid);
+    text('tap it when you see it on a layer and it acts like a loot node, ICE or real.');
+    btn(k === d.glyph ? '[ IN GLY ]' : '[ PICK IT ]', C.accent, k === d.glyph);
+    return;
+  }
+  if (k === 'NONE') {
+    g.put(x, y, 'NONE', C.bright, true); g.put(x, y + 1, 'an empty socket', C.mid);
+    text(cur ? `pull ${DECK_CHIPS[cur][0]} out of ${s.id}. it goes back in your chips.` : `leave ${s.id} empty.`);
+    btn(cur ? `[ EMPTY ${s.id} ]` : '[ EMPTY ]', C.bright, !cur);
+    return;
+  }
+  const c = DECK_CHIPS[k], ch = chipOf(c[2]), where = deckSlotOf(k), sh = deckPickShort(k, s, cur, pw);
+  g.bg(x, y, c[0].length + 2, 1, ch.bg, 1); g.put(x + 1, y, c[0], ch.fg, true);
+  const meta = `${c[2]} · ` + (c[1] === 'psu' ? `power ${DECK_CELL[k]}` : `PWR ${c[3]}`); g.put(x, y + 1, meta, C.mid);
+  if (sh) g.put(x + meta.length + 1, y + 1, `· needs ${sh} more`, C.danger);
+  text(c[4]);
+  if (where === s.id) btn(`[ IN ${s.id} ]`, C.accent, true);
+  else { const nx = btn(`[ ${where ? 'MOVE' : 'SLOT'} TO ${s.id} ]`, C.accent); if (where) g.put(nx, by, `from ${where}`, C.mid); }
 }
 
 // the card: the bar (the rule, a message, or NO POWER), then 4 rows about what you picked
@@ -430,17 +524,17 @@ function deckCard(ctx, y0) {
   } else g.put(0, y0, rule(W), C.dim);
   // the picker is up: the card waits under it (dim), and a tap on it closes the picker
   if (d.pick) { g.dim = true; ctx.addHit(0, y0 + 1, W, 4, { kind: 'btn', id: 'dkcard', onTap: () => { d.pick = null; Sound.tick(); } }); }
-  const y = y0 + 1, tw = (x) => W - x - 1, tick = (x, text, col = C.text) => g.put(x, y + 2, FX.ticker(text, tw(x), d.selT, now), col);
+  const y = y0 + 1, tw = (x) => W - x - 1, tick = (x, text, col = C.text) => g.put(x, y + 2, FX.ticker(text, tw(x), d.selT, now, 6), col);
   const btns = (list, bx = 1) => { for (const [label, col, id, fn, off] of list) bx = deckBtn(ctx, g, bx, y + 3, label, col, id, fn, off); };
   const frame = (s, key) => deckSocket(s, 1, y, g.put, g.bg, g.clr, { key, pw, now });
   const sel = d.sel;
-  const chipRows = (key, sid) => {   // name; group and power; what it does (a ticker, indented)
-    const c = DECK_CHIPS[key], x = c[1] === 'boss' ? 10 : 8, off = !!(sid && !pw.on.has(sid) && c[1] !== 'psu');
-    g.put(x, y, c[0], C.bright, true);
-    if (off) { if (Math.floor(now / 500) % 2) g.put(W - 9, y, 'NO POWER', C.danger, true); }
-    const gn = DECK_GROUPS[c[1]][0]; g.put(x, y + 1, gn, deckGroupCol(c[1]));
-    g.put(x + gn.length + 1, y + 1, '· ' + (c[1] === 'psu' ? `${DECK_CELL[key]} PWR` : `PWR ${c[3]}`), off ? C.danger : C.money);
-    tick(x + 2, key === 'SP3' ? 'bosses: ' + DECK_SPOILS[d.spoils][2] : c[4]);
+  const chipRows = (key, sid) => {   // the group and power (dim); the name on its rarity chip; the short text (a ticker)
+    const c = DECK_CHIPS[key], x = c[1] === 'boss' ? 10 : 8, off = !!(sid && !pw.on.has(sid) && c[1] !== 'psu'), ch = off ? DECK_OFF : chipOf(c[2]);
+    const meta = `${DECK_GROUPS[c[1]][0]} · `; g.put(x, y, meta, C.mid);
+    g.put(x + meta.length, y, c[1] === 'psu' ? `power ${DECK_CELL[key]}` : `PWR ${c[3]}`, off ? C.danger : C.mid);
+    if (off && Math.floor(now / 500) % 2) g.put(W - 9, y, 'NO POWER', C.danger, true);
+    g.bg(x, y + 1, c[0].length + 2, 1, ch.bg, 1); g.put(x + 1, y + 1, c[0], ch.fg, true);
+    tick(x + 1, key === 'SP3' ? 'bosses: ' + DECK_SPOILS[d.spoils][2] : c[6]);
     return x;
   };
   if (sel.kind === 'chip') {
@@ -452,13 +546,13 @@ function deckCard(ctx, y0) {
     const s = deckSock(sel.id), key = d.slots[s.id], open = deckOpen(s.mk), [gn, , gt] = DECK_GROUPS[s.g], gc = deckGroupCol(s.g);
     if (s.g === 'glyph') {
       if (open) DECK_GLYPHS[d.glyph][1].forEach((l, j) => g.put(1, y + j, l, C.bright, true)); else g.put(1, y + 1, ':mk3:', C.mid);
-      g.put(8, y, open ? DECK_GLYPHS[d.glyph][0] : 'GLY · LOCKED', open ? C.bright : C.mid, true); g.put(8, y + 1, 'GLYPH · your favourite', gc);
-      tick(10, open ? 'tap it when you see it on a layer and it acts like a loot node, ICE or real.' : 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.');
+      g.put(8, y, 'GLYPH · your favourite', C.mid); g.put(9, y + 1, open ? DECK_GLYPHS[d.glyph][0] : 'GLY · LOCKED', open ? C.bright : C.mid, true);
+      tick(9, open ? 'tap it when you see it on a layer and it acts like a loot node, ICE or real.' : 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.');
       btns(open ? [['[ CHANGE ]', C.accent, 'dkchg', () => deckPick('GLY')]] : d.mk < 3 ? [['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]] : [], 8);
     } else if (!open) {
       frame(s);
-      g.put(8, y, `${s.id} · LOCKED`, C.mid, true); g.put(8, y + 1, gn, gc);
-      tick(10, s.mk === 3 ? 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.' : d.blown ? 'the FUSE is blown. replace it to light mk IV again.' : 'opens with mk IV: the FUSE, a SYSOP post on THE BOARD.');
+      g.put(8, y, gn, C.mid); g.put(9, y + 1, `${s.id} · LOCKED`, C.mid, true);
+      tick(9, s.mk === 3 ? 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.' : d.blown ? 'the FUSE is blown. replace it to light mk IV again.' : 'opens with mk IV: the FUSE, a SYSOP post on THE BOARD.');
       btns(s.mk === 3 && d.mk < 3 ? [['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]] : s.mk === 4 ? [[d.blown ? '[ REPLACE FUSE ]' : '[ SEE THE FUSE ]', C.rep, 'dkfuse', () => deckTapPart('fuse')]] : [], s.w + 3);
     } else if (key) {
       frame(s); chipRows(key, s.id);
@@ -466,8 +560,8 @@ function deckCard(ctx, y0) {
     } else {
       frame(s);
       const n = deckOwned().filter(k => deckFits(k, s)).length;
-      g.put(8, y, `${s.id} · EMPTY`, C.bright, true); g.put(8, y + 1, gn, gc); g.put(9 + gn.length, y + 1, `· ${n} fit`, C.mid);
-      tick(10, gt + '.');
+      g.put(8, y, `${gn} · ${n} fit`, C.mid); g.put(9, y + 1, `${s.id} · EMPTY`, C.bright, true);
+      tick(9, gt + '.');
       btns([['[ CHOOSE ]', C.accent, 'dkchg', () => deckPick(s.id)]], s.w + 3);
     }
   } else if (sel.kind === 'part') deckPartCard(ctx, g, y, sel.id, pw, tick, btns);
@@ -478,44 +572,44 @@ function deckPartCard(ctx, g, y, id, pw, tick, btns) {
   if (id === 'cpu') {
     const n = DECK_NAMES[d.name], open = DECK_SOCKETS.filter(s => deckOpen(s.mk)).length;
     head(`CPU · ${n}`, `mk ${deckMk(d.mk)} · ${['', '', 'USER', 'ELITE', 'SYSOP'][d.mk]}`, C.money);
-    tick(3, `your name, printed on your deck. ${open} sockets open, ${Object.keys(d.slots).length} chips in, power ${pw.used} of ${pw.budget}.`);
+    tick(1, `your name, printed on your deck. ${open} sockets open, ${Object.keys(d.slots).length} chips in, power ${pw.used} of ${pw.budget}.`);
     btns([...(d.mk < 3 ? [['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]] : []), ['[ NAME > ]', C.mid, 'dkname', () => { d.name = (d.name + 1) % DECK_NAMES.length; Sound.tick(); }]]);
   } else if (id === 'rom') {
     head('ROM · your BOARD posts', `${DECK_POSTS.length + d.sw.size} pins lit`, C.rep);
-    tick(3, 'bought: ' + DECK_POSTS.join(', ') + '. the switches turn a post on or off for your next run.', C.mid);
+    tick(1, 'bought: ' + DECK_POSTS.join(', ') + '. the switches turn a post on or off for your next run.', C.mid);
     btns(DECK_SWITCHES.map(([k]) => [`[${k}]`, d.sw.has(k) ? C.accent : C.dim, 'dksw' + k, () => { if (d.sw.has(k)) d.sw.delete(k); else d.sw.add(k); Sound.tick(); }]));
   } else if (id === 'byte') {
     g.put(1, y, 'THE BYTE · secret codes', C.bright, true);
     for (let i = 0; i < 8; i++) { const x = 1 + i * 3, on = d.bits[i]; g.put(x, y + 1, `[${on}]`, on ? C.accent : C.mid, !!on); ctx.hl(x, y + 1, 3, 1, 'dkbit' + i, false); ctx.addHit(x, y + 1, 3, 1, { kind: 'btn', id: 'dkbit' + i, onTap: () => { d.bits[i] ^= 1; Sound.tick(); } }); }
     g.put(26, y + 1, '0x' + parseInt(d.bits.join(''), 2).toString(16).toUpperCase().padStart(2, '0'), C.mid);
-    tick(3, '8 switches. most codes do nothing. the hints are around the game: logos, posts, G0D, the codex.', C.mid);
+    tick(1, '8 switches. most codes do nothing. the hints are around the game: logos, posts, G0D, the codex.', C.mid);
     btns([['[ ENTER ]', C.accent, 'dkenter', deckEnterByte], ['[ CLEAR ]', C.mid, 'dkclear', () => { d.bits.fill(0); Sound.tick(); }]]);
   } else if (id === 'fuse') {
     head('THE FUSE · mk IV power', d.blown ? 'BLOWN' : d.fuse ? 'installed' : 'not installed', d.blown ? C.danger : d.fuse ? C.money : C.mid);
-    tick(3, d.blown ? 'a rival breached your deck and blew it. mk IV is dark until you replace it.' : d.fuse ? 'mk IV is lit. a boss that breaches your deck goes for it (the TEST shows it).' : 'the extra power that lights the bottom of the board. a SYSOP post, after mk III.');
+    tick(1, d.blown ? 'a rival breached your deck and blew it. mk IV is dark until you replace it.' : d.fuse ? 'mk IV is lit. a boss that breaches your deck goes for it (the TEST shows it).' : 'the extra power that lights the bottom of the board. a SYSOP post, after mk III.');
     if (!d.fuse) btns([['[ INSTALL · 1500 REP ]', C.rep, 'dkinst', () => { if (d.mk < 3) { Sound.deny(); return deckSay('mk III first.', C.danger); } if (d.rep < 1500) { Sound.deny(); return deckSay('not enough REP.', C.danger); } d.rep -= 1500; d.fuse = true; d.mk = 4; Sound.buy(); deckSay('the fuse is in. mk IV lit.'); }]]);
     else if (!d.blown) btns([['[ TEST: BREACH ]', C.danger, 'dkbreach', () => { d.blown = true; Sound.deny(); deckSay('BREACH: a rival blew your fuse.', C.danger); d.tick = { text: 'FUSE BLOWN. mk IV dark.', t: performance.now() }; }]]);
     else btns([['[ REPLACE · 100 REP ]', C.rep, 'dkrepl', () => { if (d.rep < 100) return Sound.deny(); d.rep -= 100; d.blown = false; Sound.buy(); deckSay('new fuse. mk IV lit again.'); }]]);
   } else if (id === 'readout') {
     head('READOUT', `power left: ${pw.left} · ${pw.used} of ${pw.budget} used`, C.money);
-    tick(3, 'the cell in PSU sets the budget. each chip costs 0-3. the oldest chips get power first.');
+    tick(1, 'the cell in PSU sets the budget. each chip costs 0-3. the oldest chips get power first.');
   } else if (id === 'ports') {
     head('PORTS · dark', 'things outside the page', C.text);
-    tick(3, 'MIC: the whistle, the mold. GAMEPAD: a controller. MIDI: play SIMON on keys. MODEM: multiplayer. each waits until its feature is built.', C.mid);
+    tick(1, 'MIC: the whistle, the mold. GAMEPAD: a controller. MIDI: play SIMON on keys. MODEM: multiplayer. each waits until its feature is built.', C.mid);
   } else if (id === 'crew') {
     const open = deckOpen(3);
     head('CREW JACKS' + (open ? '' : ' · LOCKED'), open ? 'plug in up to 2 of your crew' : 'opens with mk III', open ? C.text : C.mid);
-    tick(3, open ? DECK_CREW.filter(([c]) => d.crew.has(c)).map(([c, t]) => `${c}: ${t}.`).join(' ') || 'nobody plugged in.' : 'the mk III board has the jacks.');
+    tick(1, open ? DECK_CREW.filter(([c]) => d.crew.has(c)).map(([c, t]) => `${c}: ${t}.`).join(' ') || 'nobody plugged in.' : 'the mk III board has the jacks.');
     if (open) btns(DECK_CREW.map(([c]) => [`[${c}]`, d.crew.has(c) ? C.accent : C.dim, 'dkcrew' + c, () => {
       if (d.crew.has(c)) d.crew.delete(c); else if (d.crew.size < 2) d.crew.add(c); else { Sound.deny(); return deckSay('2 jacks: unplug one first.', C.danger); }
       Sound.tick(); }]));
   } else if (id === 'uplink') {
     head('UPLINK' + (deckOpen(4) ? '' : ' · LOCKED'), deckOpen(4) ? 'empty' : 'opens with mk IV', deckOpen(4) ? C.text : C.mid);
-    tick(3, 'G0D.exe plugs in here: it plays for you, with its click limit. a second jack doubles the clicks.');
+    tick(1, 'G0D.exe plugs in here: it plays for you, with its click limit. a second jack doubles the clicks.');
   } else if (id === 'hdr3' || id === 'hdr4') {
     const m = id === 'hdr3' ? 3 : 4;
     head(`EXPANSION · mk ${deckMk(m)}`, deckOpen(m) ? 'plugged in' : 'empty', deckOpen(m) ? C.money : C.mid);
-    tick(3, m === 3 ? 'the mk III board plugs in here. the CPU upgrade: 600 REP (ELITE).' : 'the mk IV board plugs in here. it needs the FUSE for power.');
+    tick(1, m === 3 ? 'the mk III board plugs in here. the CPU upgrade: 600 REP (ELITE).' : 'the mk IV board plugs in here. it needs the FUSE for power.');
     if (m === 3 && d.mk < 3) btns([['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]]);
   }
 }
