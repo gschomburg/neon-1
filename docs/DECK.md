@@ -696,7 +696,9 @@ Greg: sockets that open earlier should sit higher on the board.
   the whole thing.)
 - **The first chip set** (Greg, 2026-11-16): chips for most of the groups, from things the game already has. SHELL
   and SUDO get only a couple each until THE SHELL is sorted out, so we can see them work.
-- **The build, in batches** (Greg, 2026-11-16): 1, the real deck (THE BOARD, the save, POPS at USER, the mk buys);
+- **The build, in batches** (Greg, 2026-11-16): 1, the real deck (THE BOARD, the save, POPS at USER, the mk buys; done: THE BOARD > YOU >
+  [ YOUR DECK ], save.deck, the DECK mk III and THE FUSE posts, 3 placeholder posts each on ELITE and SYSOP, the CPU's
+  switches turn posts off for runs (engine/save.js postOn), OVERCLOCK saved);
   2, chips as loot (drops, a gear slot, cashing out); 3, the first chip set; 4, the show (effects, sounds, NO POWER
   tap); 5, later (SHELL, SUDO, hot chips, fusing, BOSS, UPLINK, PORTS).
 - **The cuts:** once the lists settle. BOOT and BIOS could share 4 sockets; UPLINK could fold into PORTS.

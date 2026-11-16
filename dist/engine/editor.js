@@ -132,7 +132,7 @@ if (EDITOR) {
     codex: async () => { endRun(); openCodex(); },
     settings: async () => { endRun(); openSettings(); },
     board: async () => { endRun(); openBoard(); },   // THE BOARD (YOU / REP / FEATS + stats / CREW)
-    deck: async () => { endRun(); openDeck(); },   // THE DECK: dev only for now (engine/deck.js)
+    deck: async () => { endRun(); openDeck({ dev: true }); },   // THE DECK's dev screen: every chip, its own REP, nothing saved (engine/deck.js)
     // the profile; opts.logo shows it wearing that logo (put back at the next scene)
     profile: async o => { endRun(); if (o.logo && LOGO_BY_ID[o.logo]) { const p = profile(); if (logoWas == null) logoWas = p.logo; p.logo = o.logo; } openProfile(); },
     map: mapRun,

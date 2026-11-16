@@ -504,7 +504,7 @@ function openStartReward(node) {
   openChoice({
     title: 'LINK ESTABLISHED', col: C.accent,
     head: [['you are in. pick a starter perk.', C.text]],
-    options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, legacyLv('starter') ? modsFound('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky')),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
+    options: run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, postOn('starter') ? modsFound('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky')),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.starter)}cr ]`,
     onSkip: () => { const cr = earnInt(ECON.skip.starter); earn(cr, run); },
     msg: '> link established.',

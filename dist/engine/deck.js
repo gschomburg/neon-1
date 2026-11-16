@@ -1,7 +1,9 @@
-// NeoN+1 engine/deck.js: THE DECK (docs/DECK.md), a dev-only screen for now. Only the editor opens it (the screen
-// picker's "the deck (dev)": engine/editor.js SCENES.deck). Its state lives in memory, never in the save: it's a
-// mockup in the engine, to tune on the real grid. The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in
-// by tools/data/scene_art.js). The socket and part spots below are read off that art: move them when the art moves.
+// NeoN+1 engine/deck.js: YOUR DECK (docs/DECK.md). Two ways in:
+// - The real deck: THE BOARD > YOU > [ YOUR DECK ]. You get it at USER (POPS calls). What you own and where it sits is
+//   save.deck; your mk comes from THE BOARD's posts (DECK mk III, THE FUSE: engine/save.js LEGACY), your REP is save.rep.
+// - The dev screen: the editor's "the deck (dev)" (engine/editor.js SCENES.deck). Every chip, its own REP, nothing saved.
+// The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
+// spots below are read off that art: move them when the art moves.
 'use strict';
 NEON_FILES.push(['engine/deck.js', 'v15.00']);
 
@@ -102,7 +104,7 @@ const deckPost = k => (typeof LEGACY !== 'undefined' && LEGACY.find(u => u.key =
 const deckCorps = () => [null].concat(Object.keys(CORPS).sort((a, b) => CORPS[a].name.localeCompare(CORPS[b].name)));
 const DECK_CREW = [['POPS', 'one tell hint a sector'], ['NANA', 'a PATCH every sector'], ['BRICK', 'first ICE hit blocked'], ['KLUDGE', 'failed crafts refund']];
 const DECK_CODES = {
-  '00001111': '0x0F: OVERCLOCK. your cell runs at F (15) for your next run.',
+  '00001111': '0x0F: OVERCLOCK. your cell runs at F (15). enter it again to stop.',
   '11111111': '0xFF: OVERFLOW wakes up. his seed is armed for your next run.',
   '00101010': '42. but what was the question?',
   '10110000': 'b0y: hey. quit poking my switches.',
@@ -117,18 +119,67 @@ const DECK_MORE_UP = '[ ^ ^ ^  more  ^ ^ ^ ]', DECK_MORE_DN = '[ v v v  more  v 
 const DECK_OFF = { fg: '#5f7470', bg: '#141b1a' };   // an unpowered chip: grey
 const deckBand = by => by >= 41 ? 4 : by >= 32 ? 3 : 2;
 
-// ---------- state (in memory only) ----------
-let DECK = null;
-function deckState() {
-  if (!DECK) DECK = {
-    view: 'board', scroll: 0, list: { top: 0 }, sel: { kind: 'socket', id: 'BT1' }, selT: 0, pick: null, carry: null,
-    rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: 0, crew: new Set(['POPS']),
+// ---------- state ----------
+// DECK is the deck on screen: the dev one (DECK_DEV, kept while the page lives) or the real one (made from save.deck
+// each time it opens, and written back by deckPersist whenever it changes).
+// save.deck: { chips: { key: how many }, slots: { socket: key }, order: [sockets, oldest first], spoils, glyph,
+//   crew: [names], off: [posts switched off: engine/save.js postOn], overclock, blown }
+let DECK = null, DECK_DEV = null;
+const deckView = () => ({ view: 'board', scroll: 0, list: { top: 0 }, sel: { kind: 'socket', id: 'BT1' }, selT: 0, pick: null, carry: null,
+  bits: [0, 0, 0, 0, 0, 0, 0, 0], tick: null, msg: null, leave: 0 });
+function deckDev() {
+  if (!DECK_DEV) DECK_DEV = Object.assign(deckView(), {
+    real: false, rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: 0, crew: new Set(['POPS']),
     slots: { PSU: 'SC1', BT1: 'ST4', BI1: 'SM1', CRS: 'DM5', SPL: 'SP3', SH1: 'CD2' },
     order: ['PSU', 'BT1', 'BI1', 'CRS', 'SPL', 'SH1'],   // the sockets in the order their chips went in: power goes oldest first
-    sw: new Set(['starter', 'stray']), nemesis: CORPS.burgertron ? 'burgertron' : null, bits: [0, 0, 0, 0, 0, 0, 0, 0], tick: null, msg: null, leave: 0,
-  };
-  return DECK;
+    sw: new Set(['starter', 'stray']), nemesis: CORPS.burgertron ? 'burgertron' : null,
+  });
+  return DECK_DEV;
 }
+// What you start with (the deck comes with its cell, and the SPOILS switch).
+const DECK_START = { chips: { SC1: 1, SP3: 1 }, slots: { PSU: 'SC1', SPL: 'SP3' }, order: ['PSU', 'SPL'] };
+// USER and no deck yet: it's yours, and POPS calls about it. From THE BOARD (a level opens: engine/feats.js
+// boardLevelNews; or a save from before the deck: engine/menus.js openBoard).
+function deckEnsure() {
+  if (save.deck || boardLevel() < 2) return;
+  save.deck = Object.assign(JSON.parse(JSON.stringify(DECK_START)), { spoils: 0, glyph: 0, crew: [], off: [], overclock: false, blown: false });
+  persist();
+  queueCall('pops', ["kid. you made USER. that gets you a deck.", "slot chips in and they run, every run. the cell powers them.",
+    "find chips. bring them home. it's on THE BOARD, under YOU."], { text: '[ SEE YOUR DECK ]', onTap: () => openDeck() });
+}
+// your mk, from THE BOARD's posts (the FUSE needs mk III: engine/save.js LEGACY 'fuse' needs 'deck3')
+const deckMkNow = () => legacyLv('fuse') ? 4 : legacyLv('deck3') ? 3 : 2;
+function deckReal() {
+  const sd = save.deck, owned = DECK_SWITCHES.filter(k => legacyLv(k));
+  const nem = owned.includes('nemesis') && !(sd.off || []).includes('nemesis') && CORPS[save.nemesis] ? save.nemesis : null;
+  const d = Object.assign(deckView(), {
+    real: true, mk: deckMkNow(), fuse: legacyLv('fuse') > 0, blown: !!sd.blown, spoils: sd.spoils || 0, glyph: sd.glyph || 0,
+    crew: new Set(sd.crew || []), chips: Object.assign({}, sd.chips), slots: Object.assign({}, sd.slots), order: (sd.order || []).slice(),
+    sw: new Set(owned.filter(k => k !== 'nemesis' && !(sd.off || []).includes(k))), nemesis: nem, overclock: !!sd.overclock,
+  });
+  Object.defineProperty(d, 'rep', { get: () => save.rep || 0 });   // (spend it with deckBuy: THE BOARD's posts)
+  d.savedJ = JSON.stringify(deckSnap(d));
+  return d;
+}
+// the part of the real deck that's saved (NEMESIS with no corp breached yet isn't "off": there's nothing to pick)
+function deckSnap(d) {
+  const owned = DECK_SWITCHES.filter(k => legacyLv(k));
+  return { chips: d.chips, slots: d.slots, order: d.order, spoils: d.spoils, glyph: d.glyph, crew: [...d.crew],
+    off: owned.filter(k => k === 'nemesis' ? !d.nemesis && (!d.real || nemesisPool().length > 0) : !d.sw.has(k)), overclock: !!d.overclock, blown: !!d.blown };
+}
+// Each frame on the real deck: anything changed goes into the save (one place, so no change is missed).
+function deckPersist() {
+  const d = DECK; if (!d || !d.real) return;
+  const o = deckSnap(d), j = JSON.stringify(o);
+  if (j === d.savedJ) return;
+  d.savedJ = j; save.deck = Object.assign(save.deck || {}, JSON.parse(j));
+  if (d.nemesis) save.nemesis = d.nemesis;
+  persist();
+}
+// the switches you can set: the posts you own (all of them on the dev deck)
+const deckSwitches = () => DECK.real ? DECK_SWITCHES.filter(k => legacyLv(k)) : DECK_SWITCHES;
+// NEMESIS cycles through: the corps you've breached and none (every corp on the dev deck)
+const deckNemPool = () => DECK.real ? [null].concat(nemesisPool()) : deckCorps();
 let deckArtRows = null;
 function deckArt() {   // the board, flat: every layer in order, but the ones drawn live
   if (deckArtRows) return deckArtRows;
@@ -139,7 +190,7 @@ function deckArt() {   // the board, flat: every layer in order, but the ones dr
   }
   return (deckArtRows = g.map(r => r.join('')));
 }
-const deckOwned = () => Object.keys(DECK_CHIPS);
+const deckOwned = () => DECK.real ? Object.keys(DECK.chips).filter(k => DECK_CHIPS[k] && DECK.chips[k] > 0) : Object.keys(DECK_CHIPS);
 const deckSock = id => DECK_SOCKETS.find(s => s.id === id);
 const deckSlotOf = key => Object.keys(DECK.slots).find(k => DECK.slots[k] === key);
 const deckOpen = mk => mk <= DECK.mk && !(mk === 4 && (!DECK.fuse || DECK.blown));
@@ -207,8 +258,10 @@ function deckCarry(key) {
 }
 function deckShow(by, h, rows) { const d = DECK; if (by < d.scroll) d.scroll = Math.max(0, by - 1); else if (by + h > d.scroll + rows) d.scroll = by + h - rows + 1; }
 
-function openDeck() {
-  const d = deckState();
+function openDeck(o = {}) {
+  if (!o.dev && !save.deck) deckEnsure();
+  DECK = o.dev || !save.deck ? deckDev() : deckReal();
+  const d = DECK;
   d.pick = null; d.cpu = null; d.carry = null; d.msg = null; d.selT = performance.now();
   openPanel('THE DECK', deckLines, null, { full: true });
   st.keyHandler = deckKey;
@@ -216,7 +269,8 @@ function openDeck() {
 function deckLeave() {
   const off = deckPower().off.length, now = performance.now();
   if (off && now - DECK.leave > 3000) { DECK.leave = now; Sound.deny(); return deckSay(`${off} chip${off > 1 ? 's have' : ' has'} no power. LEAVE again to go.`, C.danger); }
-  DECK.leave = 0; swapTo(showTitle);
+  DECK.leave = 0;
+  if (DECK.real) swapTo(() => openBoard('you')); else swapTo(showTitle);
 }
 function deckKey(k) {
   const d = DECK; if (!d) return false;
@@ -335,6 +389,7 @@ function deckLines(T, B, X) {
   const d = DECK; if (!d) return;
   const sa = L.hc - 1 - 5 - DECK_CARD_H;   // the scroll area: what the header, the card and the footer row leave
   st.scroll = null;
+  deckPersist();
   X({ h: 5, draw: (ctx, y) => deckHeader(ctx, y) });
   X({ h: sa, draw: (ctx, y) => { if (d.pick) deckPicker(ctx, y, sa); else if (d.cpu) deckCpu(ctx, y, sa); else if (d.view === 'chips') deckChipList(ctx, y, sa); else deckBoard(ctx, y, sa); } });
   X({ h: DECK_CARD_H, draw: (ctx, y) => deckCard(ctx, y) });
@@ -344,7 +399,7 @@ function deckHeader(ctx, y) {
   const d = DECK, g = deckGrid(ctx), pw = deckPower(), W = L.wc;
   g.put(0, y, 'NeoN+1', C.accent); const rep = `${d.rep} REP`; g.put(W - rep.length, y, rep, C.rep);
   g.put(0, y + 1, rule(W), C.dim);
-  g.put(0, y + 2, 'SAFEHOUSE // ', C.mid); g.put(13, y + 2, 'THE DECK', C.bright, true);
+  g.put(0, y + 2, 'THE BOARD // ', C.mid); g.put(13, y + 2, d.real ? 'YOUR DECK' : 'DECK · DEV', d.real ? C.bright : C.danger, true);
   deckBtn(ctx, g, W - 7, y + 2, '[LEAVE]', C.mid, 'dkleave', deckLeave);
   const tab = (v, label, id, x) => deckBtn(ctx, g, x, y + 3, d.view === v ? `[${label}]` : ` ${label} `, d.view === v ? C.accent : C.mid, id, () => { if (d.view === v) return; d.view = v; d.pick = null; d.cpu = null; d.carry = null; Sound.tick(); });
   const x2 = tab('board', 'BOARD', 'dktb', 0); tab('chips', `CHIPS ${deckOwned().length}`, 'dktc', x2);
@@ -375,7 +430,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
     for (let by = 4; by <= 10; by++) for (const x of [3, 16]) if ('|+o'.includes(ART[by][x])) bput(x, by, ART[by][x], C.money);
     bput(3, 4, '+-', C.money); bput(15, 4, '-+', C.money); bput(3, 10, '+-', C.money); bput(15, 10, '-+', C.money); }
   // the ROM pins: one per BOARD post you've bought (and switch you've turned on), lit
-  { const lit = DECK_POSTS.length + d.sw.size + (d.nemesis ? 1 : 0); let n = 0;
+  { const lit = d.real ? LEGACY.filter(u => legacyLv(u.key) > 0 && !u.placeholder).length : DECK_POSTS.length + d.sw.size + (d.nemesis ? 1 : 0); let n = 0;
     for (let x = 6; x <= 13; x++) if (ART[11][x] !== ' ') { bput(x, 11, ART[11][x], n < lit ? C.rep : C.dim, n < lit); n++; } }
   // the CRASH stick reads out its chip, scrolling when the name is longer than 5 (OFF in red with no power)
   { const key = d.slots.CRS, name = key ? DECK_CHIPS[key][0].replace(/ /g, '') : '', on = key && pw.on.has('CRS');
@@ -607,8 +662,8 @@ function deckCpu(ctx, y0, sa) {
     g.put(x + 10, y, what.slice(0, w - 10), have ? C.text : C.mid);
     y++;
     let bx = x + 10;
-    if (m === 3 && !have) deckBtn(ctx, g, bx, y, '[ UPGRADE · 600 REP ]', d.mk === 2 ? C.rep : C.dim, 'dkmk3', deckUpgrade3, d.mk !== 2);
-    else if (m === 4 && !have) g.put(bx, y, d.mk < 3 ? 'mk III, then the FUSE' : 'needs the FUSE', C.dim);
+    if (m === 3 && !have) deckBtn(ctx, g, bx, y, `[ UPGRADE · ${deckCost('deck3')} REP ]`, d.mk === 2 ? C.rep : C.dim, 'dkmk3', deckUpgrade3, d.mk !== 2);
+    else if (m === 4 && !have) { if (d.mk < 3) g.put(bx, y, 'mk III, then the FUSE', C.dim); else deckBtn(ctx, g, bx, y, `[ THE FUSE · ${deckCost('fuse')} REP ]`, C.rep, 'dkmk4', deckFuseIn); }
     else if (m === 4 && d.blown) g.put(bx, y, 'the FUSE is blown', C.danger);
     else g.put(bx, y, lv + ' access', C.dim);
     y++;
@@ -617,12 +672,14 @@ function deckCpu(ctx, y0, sa) {
   // the ROM's switches: BOARD posts you can turn off for your next run (Greg, 2026-11-15: no list of the posts, you
   // can see them lit; the room goes to the switches, each with its text). NEMESIS cycles through the corps, or none.
   head('SETTINGS · for your next run');
-  DECK_SWITCHES.forEach((k, i) => {
+  const sws = deckSwitches();
+  if (!sws.length) { g.put(x, y++, 'none yet: STARTER POOL, STRAY and', C.dim); g.put(x, y++, 'NEMESIS (THE BOARD) can go here.', C.dim); }
+  sws.forEach((k, i) => {
     const p = deckPost(k), nem = k === 'nemesis', on = nem ? !!d.nemesis : d.sw.has(k);
     const btn = nem ? `[${d.nemesis ? CORPS[d.nemesis].name : 'none'}]` : on ? '[on]' : '[off]';
     g.put(x, y, p.name, on ? C.bright : C.mid, on);
     deckBtn(ctx, g, x + w - btn.length, y, btn, on ? C.accent : C.mid, 'dksw' + k, () => {
-      if (nem) { const cs = deckCorps(); d.nemesis = cs[(cs.indexOf(d.nemesis) + 1) % cs.length]; }
+      if (nem) { const cs = deckNemPool(); d.nemesis = cs[(cs.indexOf(d.nemesis) + 1) % cs.length]; }
       else if (d.sw.has(k)) d.sw.delete(k); else d.sw.add(k);
       Sound.tick(); });
     g.put(x, y + 1, FX.ticker(p.desc, w, d.cpu.t0 + i * 900, ctx.now, 6), on ? C.text : C.dim);
@@ -673,12 +730,12 @@ function deckCard(ctx, y0) {
       if (open) DECK_GLYPHS[d.glyph][1].forEach((l, j) => g.put(1, y + j, l, C.bright, true)); else g.put(1, y + 1, ':mk3:', C.mid);
       g.put(8, y, 'GLYPH · your favourite', C.mid); g.put(9, y + 1, open ? DECK_GLYPHS[d.glyph][0] : 'GLY · LOCKED', open ? C.bright : C.mid, true);
       tick(9, open ? 'tap it when you see it on a layer and it acts like a loot node, ICE or real.' : 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.');
-      btns(open ? [['[ CHANGE ]', C.accent, 'dkchg', () => deckPick('GLY')]] : d.mk < 3 ? [['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]] : [], 8);
+      btns(open ? [['[ CHANGE ]', C.accent, 'dkchg', () => deckPick('GLY')]] : d.mk < 3 ? [['[ mk III · ' + deckCost('deck3') + ' REP ]', C.rep, 'dkmk3', deckUpgrade3]] : [], 8);
     } else if (!open) {
       frame(s);
       g.put(8, y, gn, C.mid); g.put(9, y + 1, `${s.id} · LOCKED`, C.mid, true);
       tick(9, s.mk === 3 ? 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.' : d.blown ? 'the FUSE is blown. replace it to light mk IV again.' : 'opens with mk IV: the FUSE, a SYSOP post on THE BOARD.');
-      btns(s.mk === 3 && d.mk < 3 ? [['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]] : s.mk === 4 ? [[d.blown ? '[ REPLACE FUSE ]' : '[ SEE THE FUSE ]', C.rep, 'dkfuse', () => deckTapPart('fuse')]] : [], s.w + 3);
+      btns(s.mk === 3 && d.mk < 3 ? [['[ mk III · ' + deckCost('deck3') + ' REP ]', C.rep, 'dkmk3', deckUpgrade3]] : s.mk === 4 ? [[d.blown ? '[ REPLACE FUSE ]' : '[ SEE THE FUSE ]', C.rep, 'dkfuse', () => deckTapPart('fuse')]] : [], s.w + 3);
     } else if (key) {
       frame(s); chipRows(key, s.id);
       btns([['[ CHANGE ]', C.accent, 'dkchg', () => deckPick(s.id)], ...(key === 'SP3' ? [[`[ ${DECK_SPOILS[d.spoils][0]} > ]`, C.money, 'dkspl', () => { d.spoils = (d.spoils + 1) % 3; Sound.tick(); }]] : [])], s.w + 3);
@@ -708,9 +765,9 @@ function deckPartCard(ctx, g, y, id, pw, tick, btns) {
   } else if (id === 'fuse') {
     head('THE FUSE · mk IV power', d.blown ? 'BLOWN' : d.fuse ? `installed · ${pw.fuse.used} of ${pw.fuse.budget} used` : `not installed · power ${DECK_FUSE_PWR}`, d.blown ? C.danger : d.fuse ? C.money : C.mid);
     tick(1, d.blown ? 'a rival breached your deck and blew it. mk IV is dark until you replace it.' : d.fuse ? 'mk IV is lit. a boss that breaches your deck goes for it (the TEST shows it).' : 'its own power for the bottom board: SUDO and BOSS chips run on it, not the cell. a SYSOP post, after mk III.');
-    if (!d.fuse) btns([['[ INSTALL · 1500 REP ]', C.rep, 'dkinst', () => { if (d.mk < 3) { Sound.deny(); return deckSay('mk III first.', C.danger); } if (d.rep < 1500) { Sound.deny(); return deckSay('not enough REP.', C.danger); } d.rep -= 1500; d.fuse = true; d.mk = 4; Sound.buy(); deckSay('the fuse is in. mk IV lit.'); }]]);
-    else if (!d.blown) btns([['[ TEST: BREACH ]', C.danger, 'dkbreach', () => { d.blown = true; Sound.deny(); deckSay('BREACH: a rival blew your fuse.', C.danger); d.tick = { text: 'FUSE BLOWN. mk IV dark.', t: performance.now() }; }]]);
-    else btns([['[ REPLACE · 100 REP ]', C.rep, 'dkrepl', () => { if (d.rep < 100) return Sound.deny(); d.rep -= 100; d.blown = false; Sound.buy(); deckSay('new fuse. mk IV lit again.'); }]]);
+    if (!d.fuse) btns([[`[ INSTALL · ${deckCost('fuse')} REP ]`, C.rep, 'dkinst', deckFuseIn]]);
+    else if (!d.blown && !d.real) btns([['[ TEST: BREACH ]', C.danger, 'dkbreach', () => { d.blown = true; Sound.deny(); deckSay('BREACH: a rival blew your fuse.', C.danger); d.tick = { text: 'FUSE BLOWN. mk IV dark.', t: performance.now() }; }]]);
+    else if (d.blown) btns([['[ REPLACE · 100 REP ]', C.rep, 'dkrepl', () => deckBuy(null, 100, () => { d.blown = false; Sound.buy(); deckSay('new fuse. mk IV lit again.'); })]]);
   } else if (id === 'readout') {
     head('READOUT', `cell: ${pw.left} left · ${pw.used} of ${pw.budget} used`, C.money);
     tick(1, 'the cell in PSU powers mk II and III; the FUSE powers mk IV. each chip costs 0-3, shown on its socket. the oldest chips get power first.');
@@ -731,13 +788,29 @@ function deckPartCard(ctx, g, y, id, pw, tick, btns) {
     const m = id === 'hdr3' ? 3 : 4;
     head(`EXPANSION · mk ${deckMk(m)}`, deckOpen(m) ? 'plugged in' : 'empty', deckOpen(m) ? C.money : C.mid);
     tick(1, m === 3 ? 'the mk III board plugs in here. the CPU upgrade: 600 REP (ELITE).' : 'the mk IV board plugs in here. it needs the FUSE for power.');
-    if (m === 3 && d.mk < 3) btns([['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]]);
+    if (m === 3 && d.mk < 3) btns([['[ mk III · ' + deckCost('deck3') + ' REP ]', C.rep, 'dkmk3', deckUpgrade3]]);
   }
 }
-function deckUpgrade3() {
+// The upgrades are THE BOARD's posts (engine/save.js LEGACY: DECK mk III, THE FUSE): the real deck buys them there
+// (buyPost), at those prices; the dev deck pays its own REP. key null: not a post (replacing a blown fuse: REP only).
+const deckCost = key => { const u = typeof LEGACY !== 'undefined' && LEGACY.find(p => p.key === key); return u ? u.costs[0] : '?'; };
+function deckBuy(key, cost, done) {
   const d = DECK;
-  if (d.rep < 600) { Sound.deny(); return deckSay('not enough REP.', C.danger); }
-  d.rep -= 600; d.mk = Math.max(d.mk, 3); Sound.buy(); deckSay('mk III: the middle board is in.');
+  if (d.real && key) {
+    const why = buyPost(LEGACY.find(p => p.key === key));
+    if (why) { Sound.deny(); return deckSay(why, C.danger); }
+    d.mk = deckMkNow(); d.fuse = legacyLv('fuse') > 0;
+    return done();
+  }
+  if (d.real) { if ((save.rep || 0) < cost) { Sound.deny(); return deckSay('not enough REP.', C.danger); } save.rep -= cost; persist(); return done(); }
+  if (d.rep < cost) { Sound.deny(); return deckSay('not enough REP.', C.danger); }
+  d.rep -= cost; done();
+}
+function deckUpgrade3() { deckBuy('deck3', deckCost('deck3'), () => { const d = DECK; d.mk = Math.max(d.mk, 3); Sound.buy(); deckSay('mk III: the middle board is in.'); }); }
+function deckFuseIn() {
+  const d = DECK;
+  if (d.mk < 3) { Sound.deny(); return deckSay('mk III first.', C.danger); }
+  deckBuy('fuse', deckCost('fuse'), () => { d.fuse = true; d.mk = 4; Sound.buy(); deckSay('the fuse is in. mk IV lit.'); });
 }
 function deckEnterByte() {
   const d = DECK, code = d.bits.join('');
@@ -745,5 +818,8 @@ function deckEnterByte() {
   Sound.ui();
   deckShow(22, 4, deckViewRows());   // the ticker answers on the board: bring it into view
   if (code === '01111111') setTimeout(() => d.bits.fill(0), 900);
-  if (code === '00001111' && !d.overclock) { d.overclock = true; Sound.buy(); }   // OVERCLOCK: the cell at F (the dev screen keeps it)
+  if (code === '00001111') {   // OVERCLOCK: the cell at F, and it stays on (saved) until you enter it again
+    d.overclock = !d.overclock; Sound.buy();
+    if (!d.overclock) d.tick = { text: '0x0F: OVERCLOCK off. your cell runs at its own power.', t: performance.now() };
+  }
 }

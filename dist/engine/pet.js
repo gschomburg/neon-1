@@ -16,7 +16,7 @@ function petRoll(run, why = 'pet', kind = null) {
 // A run's starting pet (STRAY: a bug; CATPHISH: a fish)
 function startPet(run) {
   const kinds = [];
-  if (legacyLv('stray')) kinds.push('bug');
+  if (postOn('stray')) kinds.push('bug');   // (postOn: the deck can switch it off)
   if (featDone('catphish')) kinds.push('fish');
   if (kinds.length) petRoll(run, 'start', pickR(kinds, rngFor(run.seed, 'petkind')));
 }

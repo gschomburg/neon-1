@@ -1,7 +1,8 @@
-// tools/checks/tests/deck.js: THE DECK (engine/deck.js, dev only for now): it opens and draws, and power goes to the
-// oldest chips first, so the chip you just slotted is the one with none.
+// tools/checks/tests/deck.js: YOUR DECK (engine/deck.js). The dev screen: it opens and draws, and power goes to the
+// oldest chips first, so the chip you just slotted is the one with none. The real deck: you get it at USER, it lives
+// in save.deck, its mk comes from THE BOARD's posts, and its switches turn posts off for your runs.
 module.exports = { name: 'deck', body: `
-  openDeck(); await sleep(400);
+  openDeck({ dev: true }); await sleep(400);
   check(st.mode === 'panel' && st.panelFn === deckLines, 'it opens as a full panel');
   check(buildScene(performance.now(), false).length > 300, 'it draws');
   const p0 = deckPower();
@@ -50,5 +51,42 @@ module.exports = { name: 'deck', body: `
   const pf = deckPower();
   check(pf.fuse && pf.fuse.used === 6 && pf.fuse.budget === DECK_FUSE_PWR && pf.used === c0, 'mk IV runs on the fuse, not the cell: ' + JSON.stringify(pf.fuse) + ' cell ' + pf.used);
   DECK.blown = true; check(deckPower().fuse === null && deckPower().used === c0, 'a blown fuse: mk IV dark, the cell unchanged');
-  DECK = null;
+  DECK = null; DECK_DEV = null;
+
+  // ---- the real deck
+  const keep = JSON.stringify(save);
+  save.legacy = {}; save.deck = null; save.rep = 5000; save.nemesis = null; CALL_QUEUE.length = 0;
+  deckEnsure(); check(!save.deck, 'GUEST: no deck yet');
+  for (const k of ['hard', 'cash', 'kit', 'belt']) save.legacy[k] = 1;
+  boardLevelNews(2);
+  check(save.deck && save.deck.slots.PSU === 'SC1' && save.deck.chips.SP3 === 1, 'USER: the deck is yours, with its cell and SPOILS: ' + JSON.stringify(save.deck && save.deck.slots));
+  check(CALL_QUEUE.some(c => c.who === 'pops' && c.btn), 'POPS calls about it, with a button to see it');
+  FEAT_QUEUE.length = 0; CALL_QUEUE.length = 0;
+  openDeck(); await sleep(300);
+  check(DECK.real && DECK.mk === 2 && deckOwned().length === 2, 'it opens the real deck: mk II, your 2 chips: ' + deckOwned());
+  check(buildScene(performance.now(), false).length > 300, 'the real deck draws');
+  deckPull('SPL'); buildScene(performance.now(), false);
+  check(!save.deck.slots.SPL && save.deck.order.join() === 'PSU', 'a change goes into the save: ' + JSON.stringify(save.deck.slots));
+  deckSlot('SP3', 'SPL'); buildScene(performance.now(), false);
+  check(save.deck.slots.SPL === 'SP3', 'and back');
+  deckUpgrade3(); check(DECK.mk === 2 && !legacyLv('deck3'), 'mk III waits for ELITE');
+  for (const k of ['drops', 'locker', 'bench']) save.legacy[k] = 1;
+  check(boardLevel() === 3, 'ELITE');
+  deckFuseIn(); check(!legacyLv('fuse'), 'the FUSE needs mk III first');
+  const r0 = save.rep; deckUpgrade3();
+  check(DECK.mk === 3 && legacyLv('deck3') === 1 && save.rep === r0 - deckCost('deck3'), 'mk III is THE BOARD post, at its price: ' + (r0 - save.rep));
+  save.legacy.elite1 = 1; check(boardLevel() === 4, 'SYSOP (mk III and a placeholder)');
+  deckFuseIn(); check(DECK.mk === 4 && DECK.fuse && legacyLv('fuse') === 1, 'the FUSE: mk IV');
+  check(LEGACY.filter(u => u.placeholder && u.tier === 3).length === 3 && LEGACY.filter(u => u.placeholder && u.tier === 4).length === 3, 'placeholder posts on ELITE and SYSOP');
+  // the switches: STRAY off turns the post off for runs
+  save.legacy.stray = 1; openDeck(); await sleep(200);
+  check(deckSwitches().join() === 'stray' && postOn('stray'), 'only the posts you own are settings: ' + deckSwitches());
+  DECK.sw.delete('stray'); buildScene(performance.now(), false);
+  check(!postOn('stray') && save.deck.off.includes('stray'), 'switched off: postOn says no');
+  DECK.bits = [0, 0, 0, 0, 1, 1, 1, 1]; deckEnterByte(); buildScene(performance.now(), false);
+  check(save.deck.overclock === true && deckPower().budget === 15, 'OVERCLOCK stays on (saved)');
+  DECK.bits = [0, 0, 0, 0, 1, 1, 1, 1]; deckEnterByte(); buildScene(performance.now(), false);
+  check(save.deck.overclock === false, 'entering it again turns it off');
+  wipeProgress(); check(save.deck === null, 'a progression wipe takes the deck too');
+  DECK = null; Object.keys(save).forEach(k => delete save[k]); Object.assign(save, JSON.parse(keep)); persist();
 ` };

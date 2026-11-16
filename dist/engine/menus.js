@@ -144,6 +144,7 @@ function stepNemesis(d) {
   if (!pool.length) return Sound.deny();
   const i = pool.indexOf(save.nemesis);
   save.nemesis = pool[((i < 0 ? 0 : i + d) % pool.length + pool.length) % pool.length];
+  if (save.deck && save.deck.off) save.deck.off = save.deck.off.filter(k => k !== 'nemesis');   // (picking one here turns it on: the deck's CPU can set it to none)
   persist(); Sound.tick();
 }
 // STATS: one column, values on the right, every other line shaded (under the feats list)
@@ -216,20 +217,13 @@ function openBoard(tab) {
   const setTab = k => { if (k === tab) return; if (tab === 'you') boardFixLogo(); tab = k; Sound.tick(); if (k === 'you') seeTitles(); };
   if (tab === 'you') seeTitles();
   const back = () => { boardFixLogo(); swapTo(showTitle); };
-  const buy = u => {
-    const lv = legacyLv(u.key), cost = u.costs[lv];
-    if (cost == null || !postOpen(u)) return Sound.deny();
-    const was = boardLevel();
-    if ((save.rep || 0) < cost) { Sound.deny(); setMsg('> not enough REP.', C.danger); return; }
-    save.rep -= cost;
-    save.legacy = save.legacy || {};
-    save.legacy[u.key] = lv + 1;
-    persist();
+  const buy = u => {   // (engine/save.js buyPost)
+    const lv = legacyLv(u.key), why = buyPost(u);
+    if (why) { Sound.deny(); setMsg('> ' + why, C.danger); return; }
     Sound.buy();
     setMsg(`> ${u.name.toLowerCase()} unlocked${u.costs.length > 1 ? `: level ${lv + 1}` : ''}.`, C.rep);
-    if (u.key === 'nemesis' && !save.nemesis && nemesisPool().length) { save.nemesis = nemesisPool()[0]; persist(); }
-    for (let l = was + 1; l <= boardLevel(); l++) boardLevelNews(l);   // a level opened
   };
+  deckEnsure();   // USER and no deck yet (a save from before the deck): it's yours now, and POPS calls (engine/deck.js)
   openPanel('THE BOARD', (T, B, X) => {
     st.scroll = null;
     T('+------------------------------+', C.dim);
@@ -268,6 +262,7 @@ function openBoard(tab) {
         { text: '[ NEW NAME ]', id: 'pname', onTap: () => { prof.name = randomName(); persist(); Sound.tick(); } },
         { text: '[ RANDOMIZE ALL ]', id: 'prand', onTap: () => { randomizeProfile(prof); Sound.ui(); } },
       ] });
+      if (save.deck) { t(''); x({ row: [{ text: '[ YOUR DECK ]', id: 'pdeck', onTap: () => { boardFixLogo(); openDeck(); } }] }); }   // (engine/deck.js)
     } else if (tab === 'rep') {
       // the posts (scrolling), then the picked one with its BUY box under it
       const lines = repLines();
@@ -298,7 +293,8 @@ function openBoard(tab) {
         const pool = nemesisPool();
         if (!pool.length) t('breach a corp first.', C.mid);
         else x({ gap: 1, row: [{ text: '[ < ]', id: 'nemL', onTap: () => stepNemesis(-1) }, { text: (CORPS[save.nemesis] ? CORPS[save.nemesis].name : '?').slice(0, 16).padEnd(16), id: 'nemN', onTap: () => stepNemesis(1) }, { text: '[ > ]', id: 'nemR', onTap: () => stepNemesis(1) }] });
-      } else if (u.key === 'locker' && lv) t(save.locker && MODS[save.locker.key] ? `in it: ${MODS[save.locker.key].name} (next run)` : 'empty. cash out to put one away.', C.mid);
+      } else if (u.needs && !legacyLv(u.needs) && !u.pm) t(`needs ${(LEGACY.find(p => p.key === u.needs) || {}).name} first.`, C.mid);
+      else if (u.key === 'locker' && lv) t(save.locker && MODS[save.locker.key] ? `in it: ${MODS[save.locker.key].name} (next run)` : 'empty. cash out to put one away.', C.mid);
       else t(u.costs.length > 1 ? `level ${lv} of ${u.costs.length}` : '', C.mid);
       if (!open) { t(''); t('a private message. not yet.', C.dim); t(''); }
       else if (max) { t(''); t('owned.', C.accent); t(''); }

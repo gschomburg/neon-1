@@ -108,7 +108,18 @@ const LEGACY = [
   { key: 'starter', tier: 2, name: 'STARTER POOL', desc: 'the starter perk can offer general mods too.', costs: [150] },
   { key: 'steady', tier: 2, name: 'STEADY HANDS', desc: "at the pier, no catch moves faster than your line can follow.", costs: [300] },   // (Greg, 2026-11-06: a fast legendary PHISH outran LURE; engine/fishing.js FISH_STEADY)
   { key: 'tellscope', tier: 2, name: 'TELL LIGHT', desc: 'every corp layer says if its tell is on: TELL ON / TELL OFF.', costs: [150] },   // (the user: know if a tell is active)
-  // ---- 3 ELITE, 4 SYSOP: nothing posted yet (HEAT, the quests, THE ARCHIVE: docs/PROGRESSION.md)
+  // ---- 3 ELITE: your deck's mk III (engine/deck.js; you get the deck itself at USER), and placeholders
+  // placeholder: a post that does nothing yet, so the level can be filled out and tried (Greg, 2026-11-16: swap them
+  // for real ones later). HEAT, the quests, THE ARCHIVE are ideas for these levels (docs/PROGRESSION.md, docs/DECK.md).
+  { key: 'deck3', tier: 3, name: 'DECK mk III', desc: 'the middle board for your deck: the GLYPH, OVERVOLT and the crew jacks.', costs: [600] },
+  { key: 'elite1', tier: 3, name: 'ELITE POST 1', desc: 'a placeholder. it does nothing yet.', costs: [100], placeholder: true },
+  { key: 'elite2', tier: 3, name: 'ELITE POST 2', desc: 'a placeholder. it does nothing yet.', costs: [100], placeholder: true },
+  { key: 'elite3', tier: 3, name: 'ELITE POST 3', desc: 'a placeholder. it does nothing yet.', costs: [100], placeholder: true },
+  // ---- 4 SYSOP: the FUSE (your deck's mk IV, after mk III), and placeholders
+  { key: 'fuse', tier: 4, name: 'THE FUSE', needs: 'deck3', desc: "mk IV for your deck: the bottom board, on the fuse's own power. SUDO, BOSS, HEAT.", costs: [1500] },
+  { key: 'sysop1', tier: 4, name: 'SYSOP POST 1', desc: 'a placeholder. it does nothing yet.', costs: [200], placeholder: true },
+  { key: 'sysop2', tier: 4, name: 'SYSOP POST 2', desc: 'a placeholder. it does nothing yet.', costs: [200], placeholder: true },
+  { key: 'sysop3', tier: 4, name: 'SYSOP POST 3', desc: 'a placeholder. it does nothing yet.', costs: [200], placeholder: true },
   // ---- PRIVATE MESSAGES (a feat opens them)
   { key: 'bossloot', pm: 'bosshunter', name: 'BOSS LOOT', desc: 'boss gear (FLARE, BEES...) can turn up in black markets.', costs: [180] },
 ];
@@ -127,6 +138,26 @@ function boardLevel() {
 }
 const accessName = () => BOARD_LEVELS[boardLevel() - 1].name;
 const postOpen = u => u.pm ? featDone(u.pm) : u.tier <= boardLevel();
+// A post that's bought and switched on: your deck's CPU can turn some off for your runs (engine/deck.js DECK_SWITCHES:
+// STARTER POOL, STRAY, NEMESIS). Read the posts that can be switched off with this, not legacyLv.
+const postOn = k => legacyLv(k) > 0 && !(save.deck && save.deck.off && save.deck.off.includes(k));
+// Buy a BOARD post: THE BOARD's REP tab (engine/menus.js) and the deck's CPU upgrades (engine/deck.js deckBuy) both
+// come here. Returns null when it's bought, or why not (the caller plays the sound and says it).
+function buyPost(u) {
+  const lv = legacyLv(u.key), cost = u.costs[lv];
+  if (cost == null) return 'you have it.';
+  if (!postOpen(u)) return 'not open yet.';
+  if (u.needs && !legacyLv(u.needs) && !u.pm) return `${(LEGACY.find(p => p.key === u.needs) || {}).name} first.`;
+  if ((save.rep || 0) < cost) return 'not enough REP.';
+  const was = boardLevel();
+  save.rep -= cost;
+  save.legacy = save.legacy || {};
+  save.legacy[u.key] = lv + 1;
+  persist();
+  if (u.key === 'nemesis' && !save.nemesis && nemesisPool().length) { save.nemesis = nemesisPool()[0]; persist(); }
+  for (let l = was + 1; l <= boardLevel(); l++) boardLevelNews(l);   // a level opened
+  return null;
+}
 // What a run is worth in REP right now.
 // ---------------- Run kinds ----------------
 // What a run is, on st.run: tutorial (the training), practice (cheats: the dev menu, the editor's jumps), seeded (a seed

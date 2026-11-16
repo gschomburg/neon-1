@@ -167,7 +167,7 @@ function addSector(nodes, seed, s, force = null) {
   const has = k => ev === k || ev2 === k;
   const same = has('copypaste') ? pickCorps(rngFor(seed, 'copy', s), targetLevel(s, 3), 1)[0] : null;   // COPY PASTE: one corp everywhere
   const evBoost = has('timeismoney') ? k => timedCorp(k) ? 3 : 1 : null;   // TIME IS MONEY: timed corps come up more
-  const nem = typeof save !== 'undefined' && legacyLv('nemesis') && save.nemesis && CORPS[save.nemesis] ? save.nemesis : null;   // NEMESIS (THE BOARD): 3x
+  const nem = typeof save !== 'undefined' && postOn('nemesis') && save.nemesis && CORPS[save.nemesis] ? save.nemesis : null;   // NEMESIS (THE BOARD): 3x
   const boost = evBoost || nem ? k => (evBoost ? evBoost(k) : 1) * (k === nem ? 3 : 1) : null;
   const lanes = has('gauntlet') ? [1] : [0, 1, 2];   // GAUNTLET: one line, no choices (a market in row 3)
   for (let ls = 1; ls <= 4; ls++) {

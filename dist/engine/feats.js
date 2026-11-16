@@ -120,6 +120,7 @@ function boardLevelNews(lv) {
   const posts = LEGACY.filter(u => u.tier === lv);
   for (const u of posts) (save.unseenPosts = save.unseenPosts || {})[u.key] = 1;
   persist();
+  if (lv === 2) deckEnsure();   // USER: your deck (engine/deck.js), and POPS calls about it
   FEAT_QUEUE.push({ head: 'THE BOARD', lines: [`access: ${BOARD_LEVELS[lv - 1].name}.`, '', posts.length ? 'new posts on THE BOARD:' : 'nothing posted on it yet.', ...posts.map(u => '  ' + u.name)] });
 }
 const featUnseen = id => !!(save.unseen && save.unseen[id]);
@@ -243,6 +244,7 @@ function wipeProgress() {
   save.rep = (save.rep || 0) + refund;
   save.legacy = {}; save.stats = {}; save.feats = {}; save.unseen = {}; save.newTitle = false; save.featsIntro = false;
   save.unseenPosts = {}; save.locker = null; save.bench = null; save.nemesis = null;   // (REP's posts: what's in the LOCKER, your NEMESIS)
+  save.deck = null;   // (your deck comes back at USER)
   if (save.profile) {
     save.profile.title = null;
     const l = LOGO_BY_ID[save.profile.logo];
