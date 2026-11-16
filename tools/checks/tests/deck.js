@@ -28,5 +28,10 @@ module.exports = { name: 'deck', body: `
   check(DECK.pick.sel === 'LS1', 'the picker starts on the chip in the socket: ' + DECK.pick.sel);
   DECK.pick.keys.move(1); check(DECK.pick.sel !== 'LS1' && DECK.pick, 'the keys move the pick, it stays open');
   const next = DECK.pick.sel; DECK.pick.keys.go(); check(!DECK.pick && DECK.slots.SH4 === next, 'go slots it and closes: ' + DECK.slots.SH4);
+  deckPick('SH3'); buildScene(performance.now(), false);
+  const row = id => hits.find(h => h.id === id);
+  render(performance.now()); const r = row('dkk_PG2') || row('dkk_CD2'), want = r && r.id.slice(4);
+  r.onTap(); check(DECK.pick && DECK.pick.sel === want, 'one tap picks: ' + want);
+  r.onTap(); check(!DECK.pick && DECK.slots.SH3 === want, 'a second tap slots it and closes: ' + DECK.slots.SH3);
   DECK = null;
 ` };

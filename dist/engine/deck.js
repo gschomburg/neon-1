@@ -410,7 +410,8 @@ function deckChipList(ctx, y0, sa) {
 
 // The picker: a popup over the scroll area, a set height, like a store: the list (it scrolls), then the one you
 // picked: its name, its power, its long text, and SLOT. A tap picks; SLOT puts it in and closes (Greg, 2026-11-15).
-const DECK_PICK_INFO = 8;   // the divider and 7 rows: name, power, 4 rows of text, the buttons
+const DECK_PICK_INFO = 8;
+const DECK_DOUBLE_MS = 450;   // two taps on a picker row this close: slot it   // the divider and 7 rows: name, power, 4 rows of text, the buttons
 function deckPicker(ctx, y0, sa) {
   const d = DECK, p = d.pick, s = deckSock(p.id), g = deckGrid(ctx), pw = deckPower(), now = ctx.now;
   const W = Math.min(L.wc, DECK_ART_W), X0 = Math.floor((L.wc - W) / 2), gc = deckGroupCol(s.g), cur = d.slots[s.id];
@@ -449,7 +450,13 @@ function deckPickRow(g, ctx, y, k, { IX, IW, s, cur, pw }) {
   const d = DECK, p = d.pick, h = s.g === 'glyph' ? 3 : 2, id = 'dkk_' + k;
   if (p.sel === k) g.bg(IX, y, IW, h, C.accent, 0.18);
   ctx.hl(IX, y, IW, h, id, false);
-  ctx.addHit(IX, y, IW, h, { kind: 'btn', id, onTap: () => { if (p.sel === k) return; p.sel = k; Sound.tick(); } });
+  // a tap picks it; a second tap on it soon after (a double tap / click) puts it in, like SLOT (Greg, 2026-11-15)
+  ctx.addHit(IX, y, IW, h, { kind: 'btn', id, onTap: () => {
+    const t = performance.now(), dbl = p.tap && p.tap.k === k && t - p.tap.t < DECK_DOUBLE_MS;
+    p.tap = dbl ? null : { k, t };
+    if (dbl) return deckPickGo(k, s, cur);
+    if (p.sel !== k) { p.sel = k; Sound.tick(); }
+  } });
   if (s.g === 'glyph') {
     const [name, art] = DECK_GLYPHS[k];
     art.forEach((l, j) => g.put(IX + 1, y + j, l, C.bright, true));

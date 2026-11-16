@@ -47,6 +47,7 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   the short text, a ticker. (Done.)
 - **The picker is a set height, like a store:** a list that scrolls, then the picked one's info under it: name,
   rarity and power, the long text (4 rows at most), and SLOT. A tap picks, SLOT puts it in. (Done.)
+  A double tap (or click) on a row slots it too (Greg).
 - **A short and a long text per chip,** like mods and gear: the short one is the card's ticker and the list's second
   row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
 - **A dim dashed line between items** in the lists, not a blank row. (Done.)
