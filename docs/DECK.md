@@ -82,6 +82,7 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   opposite: the light drains out of the board and it dims, with an error fanfare and static sparks around the chip.
   (Claude: the flow can follow the trace characters out from the socket, a few cells a frame, in the mk's trace color;
   the drain the same way back in. The red NO POWER bar stays as the readable part.)
+  **Sounds too** (Greg): new ones, like something powering up or off, or a fan spinning up.
 
 ## Decided from the round 4 mockup (Greg, 2026-11-15)
 - **Every socket takes two taps:** the first shows its card, the second opens the picker. Empty ones too.
