@@ -482,7 +482,7 @@ function deckFx(kind, sid, key) {
   const d = DECK; d.fx = { kind, sid, t0: performance.now(), lvl: key ? DECK_LVL[DECK_CHIPS[key][2]] || 0 : 0, burst: false };
   if (kind === 'in' && !reduced()) {
     (d.snakes = d.snakes || []).push(...deckSnakes(sid, 3 + 2 * d.fx.lvl, 12 + 5 * d.fx.lvl, d.fx.t0));   // (snakes along the wires: Greg)
-    (deckUnder()[sid] || []).forEach((_, i) => { const sn = deckUnderSnake(sid, i, d.fx.t0 + 120 + i * 90, 32); if (sn) d.snakes.push(sn); });   // ...and out its under-traces
+    if (key) d.snakes.push(...deckRoundSnakes(sid, rarityCol(DECK_CHIPS[key][2]), d.fx.t0 + 100));   // ...and a burst of rounded ones out of the chip
     if (key) d.techs = (d.techs || []).concat(deckTechs(sid, d.fx.lvl, rarityCol(DECK_CHIPS[key][2]), d.fx.t0));   // tech blobs around it
   }
   if (kind === 'in') Sound.chipIn(d.fx.lvl); else Sound.chipDead();
@@ -618,6 +618,37 @@ function deckUnderSnake(sid, i, now, ms = 45, back = false) {
   if (!p || !key || !DECK_CHIPS[key]) return null;
   const path = back ? p.slice().reverse() : p;
   return { path: path.map(([x, y]) => [x, y]), ch: path.map(c => c[2]), t0: now, ms, rc: rarityCol(DECK_CHIPS[key][2]), tail: 7 };
+}
+// The slot burst (Greg, 2026-11-16): 3 to 5 short snakes in rounded box lines, out of the chip in random directions,
+// gone in a second or two. Their paths are fresh each time and go anywhere on the board, but they run under the
+// sockets and the parts (deckUnderAt: they don't draw there), so they never cover a chip.
+const deckUnderAt = (x, y) => DECK_SOCKETS.concat(DECK_PARTS).some(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
+function deckRoundSnakes(sid, rc, now) {
+  const s = deckSock(sid), H = deckArt().length, out = [], n = 3 + Math.floor(Math.random() * 3);
+  const ring = [];   // the cells around the socket, heading away from it
+  for (let x = s.x; x < s.x + s.w; x++) ring.push([x, s.y - 1, 0, -1], [x, s.y + s.h, 0, 1]);
+  for (let y = s.y; y < s.y + s.h; y++) ring.push([s.x - 1, y, -1, 0], [s.x + s.w, y, 1, 0]);
+  const starts = ring.filter(([x, y]) => x >= 0 && y >= 0 && x < DECK_ART_W && y < H);
+  for (let i = 0; i < n && starts.length; i++) {
+    let [x, y, hx, hy] = pickR(starts, Math.random);
+    const path = [[x, y]], seen = new Set([y * 64 + x]), len = 6 + Math.floor(Math.random() * 7);
+    for (let k = 0; k < len; k++) {
+      const turn = Math.random() < 0.3, dirs = (turn ? [[hy, hx], [-hy, -hx], [hx, hy]] : [[hx, hy], [hy, hx], [-hy, -hx]]).filter(([dx, dy]) => {
+        const a = x + dx, b = y + dy; return a >= 0 && b >= 0 && a < DECK_ART_W && b < H && !seen.has(b * 64 + a) && !(a >= s.x && a < s.x + s.w && b >= s.y && b < s.y + s.h); });
+      if (!dirs.length) break;
+      const [dx, dy] = turn && dirs.length > 1 && Math.random() < 0.5 ? dirs[1] : dirs[0];
+      hx = dx; hy = dy; x += dx; y += dy; seen.add(y * 64 + x); path.push([x, y]);
+    }
+    const ch = path.map(([x, y], j) => {
+      const nb = [path[j - 1], path[j + 1]].filter(Boolean).map(([a, b]) => [a - x, b - y]);
+      const h = nb.some(([a]) => a), v = nb.some(([, b]) => b);
+      if (!h || !v) return h ? '─' : '│';
+      const l = nb.some(([a]) => a < 0), u = nb.some(([, b]) => b < 0);
+      return u ? (l ? '╯' : '╰') : (l ? '╮' : '╭');
+    });
+    out.push({ path, ch, t0: now + i * 70, ms: 55 + Math.random() * 35, rc, tail: 4, under: true });
+  }
+  return out;
 }
 // tech blobs around a chip that just went in: they pop up around the socket, decode, glow in its rarity, then fade
 // (more the rarer). d.techs = [{ x, y, t, t0, life, col }]
@@ -815,15 +846,15 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   // snakes on their own, more often the livelier your deck is
   d.snakes = d.snakes || [];
   if (!under && !still && now > (d.ambNext || 0)) {
-    d.ambNext = now + (700 + Math.random() * 2600) * (1.5 - en);
+    d.ambNext = now + (1400 + Math.random() * 4000) * (1.5 - en);   // (Greg, 2026-11-16: a little less often)
     const W = deckWires(), ks = [...W.keys()];
     for (let tries = 0; tries < 12; tries++) { const k = ks[Math.floor(Math.random() * ks.length)], x = k % 64, y = Math.floor(k / 64);
       if (deckOpen(deckBand(y)) && inView(y)) { d.snakes.push({ path: deckWalk(x, y, 10 + Math.floor(Math.random() * 14)), t0: now, ms: 55, dim: true }); break; } }
   }
   // ...and out the under-traces of a chip that has power, now and then (mostly out, sometimes back in)
   if (!under && !still && now > (d.undNext || 0)) {
-    d.undNext = now + (500 + Math.random() * 1500) * (1.5 - en);
-    const live = DECK_SOCKETS.filter(s => deckOpen(s.mk) && d.slots[s.id] && pw.on.has(s.id) && (deckUnder()[s.id] || []).length && inView(s.y + 1));
+    d.undNext = now + (1200 + Math.random() * 3000) * (1.5 - en);   // (Greg, 2026-11-16: a little less often, 2 at a time at most)
+    const live = d.snakes.filter(sn => sn.ch && !sn.under).length >= 2 ? [] : DECK_SOCKETS.filter(s => deckOpen(s.mk) && d.slots[s.id] && pw.on.has(s.id) && (deckUnder()[s.id] || []).length && inView(s.y + 1));
     if (live.length) { const s = pickR(live, Math.random), sn = deckUnderSnake(s.id, Math.floor(Math.random() * deckUnder()[s.id].length), now, 50 + Math.random() * 30, Math.random() < 0.25); if (sn) d.snakes.push(sn); }
   }
   if (fx && !under) {   // the show
@@ -855,6 +886,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
     if (hd - tl >= sn.path.length) { d.snakes.splice(i, 1); continue; }
     if (sn.ch) {   // an under-trace: box lines in the chip's rarity, fading down the tail
       for (let j = 0; j <= tl; j++) { const c = sn.path[hd - j]; if (!c || !deckOpen(deckBand(c[1]))) continue;
+        if (sn.under && deckUnderAt(c[0], c[1])) continue;   // (under the chips)
         bput(c[0], c[1], sn.ch[hd - j], j ? mixHex(C.dim, sn.rc, 1 - j / (tl + 2)) : mixHex(sn.rc, C.bright, 0.55), j < 2); }
       continue;
     }

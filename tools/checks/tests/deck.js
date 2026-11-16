@@ -25,9 +25,11 @@ module.exports = { name: 'deck', body: `
   deckSlot('PS4', 'SH4');
   p = deckPower();
   check(p.on.has('SH4') && p.off.length === 1, 'a newer, cheaper chip still gets what is left: ' + JSON.stringify([...p.on]));
-  deckSlot('LI2', 'PSU');
+  DECK.snakes = []; deckSlot('LI2', 'PSU');
   check(DECK.fx && DECK.fx.kind === 'in' && DECK.fx.sid === 'PSU', 'power: the wave and the burst');
-  check(reduced() || (DECK.snakes.some(sn => sn.ch && sn.rc === rarityCol(DECK_CHIPS.LI2[2])) && DECK.techs && DECK.techs.length >= 5), 'it runs its under-traces in its rarity, and tech blobs pop around it');
+  { const rs = (DECK.snakes || []).filter(sn => sn.under);
+    check(reduced() || (rs.length >= 3 && rs.length <= 5 && rs.every(sn => sn.rc === rarityCol(DECK_CHIPS.LI2[2]) && sn.path.length <= 13 && sn.ch.every(c => '─│╭╮╰╯'.includes(c))) && DECK.techs && DECK.techs.length >= 5),
+      'a burst of 3 to 5 short rounded snakes in its rarity, and tech blobs pop around it: ' + rs.length); }
   check(buildScene(performance.now() + 300, false).length > 300, 'the board draws with them');
   p = deckPower();
   check(p.budget === 9 && !p.off.length, 'a bigger cell lights them all: ' + JSON.stringify(p.off));
