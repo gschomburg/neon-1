@@ -77,10 +77,12 @@ const DECK_PARTS = [['cpu', 3, 4, 14, 7], ['rom', 3, 11, 14, 1], ['stick', 22, 9
   ['crew', 0, 32, 5, 6], ['hdr4', 10, 41, 23, 2], ['uplink', 0, 44, 4, 5]].map(([id, x, y, w, h]) => ({ id, x, y, w, h }));
 // the CPU shows your hacker name (PROFILE): WORD_WORD, 13 at most; 2 lines when it's over 10
 const deckName = () => { try { return profile().name || 'POTATO_SAUCE'; } catch (e) { return 'POTATO_SAUCE'; } };
-const DECK_POSTS = ['HARDENED', 'SEED MONEY', 'FIELD KIT', 'GEAR SLOT', 'RESTOCK', 'SECOND WIND', 'LOCKER', 'WORKBENCH'];
-// BOARD posts you can turn off for a run (THE BOARD's LEGACY keys, engine/save.js: their names and text come from
-// there). NEMESIS isn't on / off: it cycles through the corps, or none.
-const DECK_SWITCHES = ['tellscope', 'stray', 'lucky', 'starter', 'nemesis'];
+const DECK_POSTS = ['HARDENED', 'SEED MONEY', 'FIELD KIT', 'GEAR SLOT', 'RESTOCK', 'SECOND WIND', 'LOCKER', 'WORKBENCH', 'TELL LIGHT', 'LUCKY START'];
+// BOARD posts you can set for a run (THE BOARD's LEGACY keys, engine/save.js: their names and text come from there).
+// Only the ones with a real choice (Greg, 2026-11-15): STARTER POOL changes what the starter perk offers, STRAY is a pet
+// you might not want along, NEMESIS picks a corp (it cycles, or none). Posts that only help (TELL LIGHT, LUCKY START)
+// are just on.
+const DECK_SWITCHES = ['starter', 'stray', 'nemesis'];
 const deckPost = k => (typeof LEGACY !== 'undefined' && LEGACY.find(u => u.key === k)) || { name: k.toUpperCase(), desc: '' };
 const deckCorps = () => [null].concat(Object.keys(CORPS).sort((a, b) => CORPS[a].name.localeCompare(CORPS[b].name)));
 const DECK_CREW = [['POPS', 'one tell hint a sector'], ['NANA', 'a PATCH every sector'], ['BRICK', 'first ICE hit blocked'], ['KLUDGE', 'failed crafts refund']];
@@ -107,7 +109,7 @@ function deckState() {
     rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: 0, crew: new Set(['POPS']),
     slots: { PSU: 'SC1', BT1: 'ST4', BI1: 'SM1', CRS: 'DM5', SPL: 'SP3', SH1: 'CD2' },
     order: ['PSU', 'BT1', 'BI1', 'CRS', 'SPL', 'SH1'],   // the sockets in the order their chips went in: power goes oldest first
-    sw: new Set(['tellscope', 'stray']), nemesis: CORPS.burgertron ? 'burgertron' : null, bits: [0, 0, 0, 0, 0, 0, 0, 0], tick: null, msg: null, leave: 0,
+    sw: new Set(['starter', 'stray']), nemesis: CORPS.burgertron ? 'burgertron' : null, bits: [0, 0, 0, 0, 0, 0, 0, 0], tick: null, msg: null, leave: 0,
   };
   return DECK;
 }
@@ -569,7 +571,7 @@ function deckCpu(ctx, y0, sa) {
   sep();
   // the ROM's switches: BOARD posts you can turn off for your next run (Greg, 2026-11-15: no list of the posts, you
   // can see them lit; the room goes to the switches, each with its text). NEMESIS cycles through the corps, or none.
-  head('SWITCHES · for your next run');
+  head('SETTINGS · for your next run');
   DECK_SWITCHES.forEach((k, i) => {
     const p = deckPost(k), nem = k === 'nemesis', on = nem ? !!d.nemesis : d.sw.has(k);
     const btn = nem ? `[${d.nemesis ? CORPS[d.nemesis].name : 'none'}]` : on ? '[x]' : '[ ]';
