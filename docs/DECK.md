@@ -65,6 +65,9 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   past that, its settings become a scroll area like the picker's list.
 - **A short and a long text per chip,** like mods and gear: the short one is the card's ticker and the list's second
   row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
+- **Each socket shows its chip's power on the board** (Greg, to do): a small number centered on the socket's bottom
+  border, `+-2-+` (`+-+2+-+` on a wide one). Red when the chip has no power; no number in an empty socket, and
+  none for 0-power chips or the cell (or the cell shows its budget, `+-6-+`?).
 - **SLOT from the CHIPS tab scrolls the board** to the sockets that chip fits: all of them when they fit in the
   view together, else from the first one. No open socket for it (mk III / IV): it says so and stays on the list. (Done.)
 - **A dim dashed line between items** in the lists, not a blank row. (Done.)
