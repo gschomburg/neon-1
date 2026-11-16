@@ -703,9 +703,11 @@ Greg: sockets that open earlier should sit higher on the board.
     right away; bought on THE BOARD, the first time you open your deck after (save.deck.seenMk).
   - **THE BYTE's 0s** in the card are text white, so they read as switches.
   - Greg likes: the CRASH stick's text and swap, and the glitch around a chip with no power. (Kept.)
-  - **Open: the 1UP isn't in CRASH.** It's not a chip yet: the 1UP is still the old one (beat G0D, every run starts
-    with it). The idea was that it joins CRASH as b0y's crash unit. To decide: a 1UP chip you get for beating G0D,
-    and the run's 1UP only works with it slotted and powered (3)?
+  - **The 1UP is a chip** (**Decided (Greg, 2026-11-16):** yes, and say so in the ending). Beat G0D and b0y gives you
+    his 1UP chip (exotic, CRASH, power 3), once (save.deck.got1up); it goes in CRASH if that's empty. A run only gets
+    its 1UP while the chip is slotted and powered (HARDCORE turns it off with the other CRASH chips). A save that beat
+    G0D before this gets the chip the same way. No deck yet: it comes with the deck. The ending says so: b0y's line
+    in the scene, "1UP chip" on H3AV3N CLEARED, and POPS's call the first time. It never drops.
 - **A DECK tab on THE BOARD** (Greg, 2026-11-16: noted, not built): today the deck is THE BOARD > YOU > [ YOUR DECK ].
   It deserves its own tab up top. Space: the tab row is 35 of 36 wide now ([YOU] [REP] [FEATS] [CREW] [QUESTS]), so a
   [DECK] tab needs room: shorter labels, or a second row, or one tab folds in.

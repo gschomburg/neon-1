@@ -432,7 +432,7 @@ Terminal: `> G0D is down. the network goes quiet.`
 
 **B0Y:** here. i pulled this out of MEDIX on my way out of sub-basement three. the autotechs brought me back with it more times than i can count.
 
-**B0Y:** a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector.
+**B0Y:** a 1UP. it's a chip now: slot it in your deck, in CRASH. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector.
 
 **POPS:** and now that the mold's gone, the seeds hold still. type one in and the net comes up the same, every time. send one to a friend. see who gets deeper.
 
@@ -456,7 +456,7 @@ Terminal: `> G0D is down. the network goes quiet.`
 > ..with a shoe *(if you did)*
 > G0D never touched you. *(if it didn't)*
 > unlocked:
-> 1UP       b0y's crash unit
+> 1UP chip  b0y's crash unit
 > REPLAYS   POPS's log, on the title
 > G0D       its logo, yours
 > [ CONTINUE ]
@@ -466,7 +466,7 @@ Terminal: `> b0y: we did it. it's quiet now.`
 ### POPS's call
 
 > **POPS:** kid. you did it. G0D is down.
-> **POPS:** b0y's up here with me. he says hi.
+> **POPS:** b0y says hi. his 1UP's in your deck: CRASH. (the first time; after that: b0y's up here with me. he says hi.)
 > **POPS:** the net is yours. go again?
 
 ---

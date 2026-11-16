@@ -1304,6 +1304,7 @@ function g0dEndCall(f) {
     f.ended = true;
     f.wasBeat = !!save.beatG0D;
     if (!save.beatG0D) { save.beatG0D = true; persist(); }
+    deckGift();   // b0y's 1UP chip, for your deck (engine/deck.js)
     save.g0dWins = (save.g0dWins || 0) + 1; persist();
     stat('g0d_win', { quest: run.quest, seed: run.seed, shoe: !!f.shoe });
     if (questOf('pops').step === 'g0d') questStep('pops', 'done');   // the main quest: done
@@ -1311,7 +1312,7 @@ function g0dEndCall(f) {
   }
   const node = f.node, seed = run && run.seed, quest = run && run.quest;
   st.kbFocus = st.hoverBtn = null; Sound.shield();
-  st.callBox = ({ t0: performance.now(), who: 'pops', lines: ['kid. you did it. G0D is down.', "b0y's up here with me. he says hi.", 'the net is yours. go again?'],
+  st.callBox = ({ t0: performance.now(), who: 'pops', lines: ['kid. you did it. G0D is down.', f.wasBeat === false ? "b0y says hi. his 1UP's in your deck: CRASH." : "b0y's up here with me. he says hi.", 'the net is yours. go again?'],
     btns: [
       { text: '[ G0D FIGHT ]', onTap: () => { st.g0dEnd = null; st.g0df = null; toMap(); setTimeout(() => { if (st.mode === 'map' && st.run && !st.g0df && node) g0dWakeStart(node); }, 700); } },
       { text: '[ TITLE ]', onTap: async () => { st.g0dEnd = null; st.g0df = null; if (quest) { await endRun(true); swapTo(showTitle); } else heavenWon(f); } }],   // (Greg, 2026-11-06: the fight again or out; THE MAZE went: it started sector 2 over, not the maze)
@@ -1332,7 +1333,7 @@ function heavenRewards(f, next) {
   extra.push(['', C.text]);
   if (runRep) extra.push([`+${runRep} REP   the run`, C.rep]);
   extra.push([`+${bonus} REP   H3AV3N`, C.rep], ['', C.text]);
-  if (!f.wasBeat) extra.push(['unlocked:', C.mid], ["1UP       b0y's crash unit", C.money], ["REPLAYS   POPS's log, on the title", C.money], ['G0D       its logo, yours', C.money]);   // (the ending hands them over: data/quests.js h3av3n)
+  if (!f.wasBeat) extra.push(['unlocked:', C.mid], ["1UP chip  b0y's crash unit", C.money], ["REPLAYS   POPS's log, on the title", C.money], ['G0D       its logo, yours', C.money]);   // (the ending hands them over: data/quests.js h3av3n)
   else extra.push([`G0D down x${save.g0dWins}.`, C.money]);
   openChoice({ reveal: true, title: 'H3AV3N CLEARED', col: G0DF_BLUE, by: profile(), head: [['G0D', C.text]], extra, options: [],
     skipLabel: '[ CONTINUE ]', msg: { text: "> b0y: we did it. it's quiet now.", col: G0DF_BLUE },

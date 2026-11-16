@@ -36,6 +36,7 @@ const DECK_CHIPS = {
   QT0: ['QUIET', 'bios', 'rare', 1, 'no rival hackers turn up. (a corp with the RIVAL anomaly has nobody.)', ['shh', '...'], 'no rival hackers.'],
   // CRASH: when you die
   DM5: ['DEADMAN', 'crash', 'epic', 1, 'dying keeps 50% of the REP you would have banked.', ['DED', 'MAN'], 'die and keep half your REP.'],
+  '1UP': ['1UP', 'crash', 'exotic', 3, "b0y's crash unit, from beating G0D: die in a corp and CONTINUE? from its start, the way you went in. it charges again every sector.", ['1UP', 'b0y'], "die: back to the corp's start."],   // (engine/oneup.js oneUpOpen; never drops: deckGift)
   BB7: ['BLACK BOX', 'crash', 'rare', 2, "when you die, your best mod goes to the LOCKER, a step lower (if the LOCKER's empty). your next run starts with it.", ['[#]', 'BOX'], 'a mod survives your death.'],
   // SPOILS: what corp bosses give
   SP3: ['SPOILS', 'spoils', 'common', 0, 'a switch for corp bosses: take the REWARDS, or skip them for a HEAL (2 INT) or for CASH (60cr).', ['SPL', null], 'take boss rewards, a heal, or cash.'],
@@ -129,7 +130,7 @@ const deckBand = by => by >= 41 ? 4 : by >= 32 ? 3 : 2;
 // own seeded streams ('cachechip', 'pierchip'), so a seed's other drops don't move.
 const DECK_DROP = { cache: 0.2, fish: 0.25 };   // a cracked DATA CACHE; a pier catch that would have been gear
 const DECK_DROP_WEIGHT = { common: 50, rare: 30, epic: 14, legendary: 5, exotic: 1 };
-const DECK_NO_DROP = ['SC1', 'SP3'];   // the deck comes with these (the 1UP is b0y's, from beating G0D: not a chip yet)
+const DECK_NO_DROP = ['SC1', 'SP3', '1UP'];   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
 const deckChipItem = key => 'chip_' + key;
 const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
 const deckHave = key => (save.deck && save.deck.chips && save.deck.chips[key]) || 0;
@@ -179,6 +180,7 @@ function deckHome(run, win) {
 // HARDCORE turns the CRASH chips off. Not in the training or a race. chipOn(key) is what the game asks.
 const chipOn = (key, run = st.run) => !!(run && run.chips && run.chips.includes(key));
 function deckRunChips() {
+  deckGift();
   if (!save.deck) return [];
   const was = DECK; DECK = deckReal();
   const pw = deckPower(), d = DECK;
@@ -308,10 +310,21 @@ const DECK_START = { chips: { SC1: 1, SP3: 1 }, slots: { PSU: 'SC1', SPL: 'SP3' 
 // boardLevelNews; or a save from before the deck: engine/menus.js openBoard).
 const deckFreshSave = () => Object.assign(JSON.parse(JSON.stringify(DECK_START)), { spoils: 0, glyph: 0, crew: [], off: [], overclock: false, blown: false });
 function deckEnsure() {
-  if (save.deck || boardLevel() < 2) return;
+  if (save.deck || boardLevel() < 2) return deckGift();
   save.deck = Object.assign(deckFreshSave(), { seenMk: deckMkNow() });
-  persist();
+  deckGift(); persist();
   deckIntroCall();
+}
+// The 1UP chip (Greg, 2026-11-16): beat G0D and b0y gives you his crash unit, once (save.deck.got1up). It goes in CRASH
+// if that's empty. A save that beat G0D before the 1UP was a chip gets it the same way (the deck, a run, THE BOARD).
+// No deck yet: it comes with the deck (deckEnsure).
+function deckGift() {
+  const sd = save.deck;
+  if (!sd || !save.beatG0D || sd.got1up) return;
+  sd.got1up = true; sd.chips = sd.chips || {}; sd.chips['1UP'] = (sd.chips['1UP'] || 0) + 1;
+  sd.slots = sd.slots || {}; sd.order = sd.order || [];
+  if (!sd.slots.CRS && !Object.values(sd.slots).includes('1UP')) { sd.slots.CRS = '1UP'; sd.order = sd.order.filter(i => i !== 'CRS').concat('CRS'); }
+  persist();
 }
 function deckIntroCall() {
   queueCall('pops', ["kid. you made USER. that gets you a deck.", "slot chips in and they run, every run. the cell powers them.",

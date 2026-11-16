@@ -119,7 +119,7 @@ From POPS.
 
 **B0Y:** here. i pulled this out of MEDIX on my way out of sub-basement three. the autotechs brought me back with it more times than i can count.
 
-**B0Y:** a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector.
+**B0Y:** a 1UP. it's a chip now: slot it in your deck, in CRASH. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector.
 
 **POPS:** and now that the mold's gone, the seeds hold still. type one in and the net comes up the same, every time. send one to a friend. see who gets deeper.
 

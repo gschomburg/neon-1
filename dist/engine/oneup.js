@@ -7,7 +7,7 @@ NEON_FILES.push(['engine/oneup.js', 'v15.00']);
 // You hold one at most; it charges again every sector. Die holding it and you can go back to the start of the corp you
 // died in, with what you had going in (run.oneUpSave, taken as you entered). The seed is the seed: its layers come back
 // exactly the same. No penalty: fewer used breaks a tie on the leaderboard (engine/leaders.js), and it's tracked.
-const oneUpOpen = (run, opts = {}) => !!save.beatG0D && !!run && !run.tutorial && !opts.tutorial && !st.mp;   // (run kinds: engine/save.js)
+const oneUpOpen = (run, opts = {}) => !!run && !run.tutorial && !opts.tutorial && !st.mp && chipOn('1UP', run);   // (run kinds: engine/save.js) (the 1UP chip, slotted and powered, is what says you beat G0D: engine/deck.js deckGift)
 function oneUpSavePoint(node) {
   const run = st.run;
   if (!oneUpOpen(run) || node.type === 'start' || node.heaven) return;   // (not the public net, and not heaven's MAZE / G0D: their own rules)

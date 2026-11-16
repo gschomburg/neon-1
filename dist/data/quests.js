@@ -116,7 +116,7 @@ const QUEST_SCENES = {
       { n: 'unit', col: 'text', glitch: true, dur: 900, lights: { ch: '*', col: 'danger', rate: 600, off: 0.4, pulse: 1, period: 900 },
         cue: { match: '[ 1UP ]', word: 'back', col: 'money' } }] },
       who: 'b0y', text: 'here. i pulled this out of MEDIX on my way out of sub-basement three. the autotechs brought me back with it more times than i can count.', mood: { levels: [1], stages: 'A' } },
-    { who: 'b0y', text: "a 1UP. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector." },
+    { who: 'b0y', text: "a 1UP. it's a chip now: slot it in your deck, in CRASH. go down with it and it brings you back to the start of the corp, the way you went in. it charges up again every sector." },
     { pic: { art: 'ending', rows: [44, 53], layers: [
       { n: 'terminal', col: 'text', flicker: true, dur: 800, cue: { match: ': ________', word: 'seeds', col: 'accent' } }] },
       who: 'pops', text: "and now that the mold's gone, the seeds hold still. type one in and the net comes up the same, every time. send one to a friend. see who gets deeper." },

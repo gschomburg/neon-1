@@ -1,6 +1,11 @@
 // tools/checks/tests/endgame.js: the 1UP, REPLAYS and the seed boards (docs/ENDGAME.md). Run by tools/test.js.
 module.exports = { name: 'endgame', body: `
   save.beatG0D = true;
+  save.deck = deckFreshSave(); deckGift();   // the 1UP is a chip now (engine/deck.js deckGift): b0y's, into CRASH
+  check(save.deck.chips['1UP'] === 1 && save.deck.slots.CRS === '1UP' && save.deck.got1up, 'beating G0D gives the 1UP chip, in CRASH');
+  deckGift(); check(save.deck.chips['1UP'] === 1, 'only once');
+  { const s0 = save.deck.slots.CRS; delete save.deck.slots.CRS; const k = deckRunChips().keys; save.deck.slots.CRS = s0;
+    check(!k.includes('1UP') && !oneUpOpen({ chips: k }), 'not slotted: no 1UP'); }
   B.startRun('ONEUPTEST', false); await settle('start'); await B.pick(st.lv.safe); await settle('public'); if (st.mode !== 'map') { B.toMap(); await settle('map'); }
   check(st.run.oneUp === 1, 'a run starts with a 1UP after G0D');
   const id = availableNodes().find(i => st.run.map[i].type === 'corp');

@@ -42,7 +42,6 @@ async function startRun(seed, practice, opts = {}) {
     beltSlots: CONFIG.beltSlots + legacyLv('belt'), reroutes: 0,
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
-  if (oneUpOpen(st.run, opts)) st.run.oneUp = 1;   // the 1UP (beat G0D): you start with one
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
   if (quest === 'had3s') st.run.items.push({ key: 'leash', tier: 0, n: 1 });   // HAD3S: you go in with a LEASH
   if (!opts.tutorial) questRunStart(st.run);   // the OMNI RAID: b0y's CALL (engine/quests.js)
@@ -53,6 +52,7 @@ async function startRun(seed, practice, opts = {}) {
     if (pool.length) st.run.items.push({ key: pickR(pool, rngFor(seed, 'lucky')), tier: 0, n: 1 });
   }
   deckRunStart(st.run, opts);   // your deck's chips: what's on this run, and what it starts with (engine/deck.js)
+  if (oneUpOpen(st.run, opts)) st.run.oneUp = 1;   // the 1UP (beat G0D, its chip in your deck): you start with one
   if (opts.tutorial) tutorialRun(st.run);   // the training run (engine/tutorial.js)
   st.petS = null;   // (a new run: the pet starts fresh)
   if (!opts.tutorial) startPet(st.run);   // STRAY / CATPHISH: a pet from the start (engine/pet.js)
