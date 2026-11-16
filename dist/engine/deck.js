@@ -467,7 +467,11 @@ const DECK_TRACE = '-|=:.+o_/\\';   // the characters light runs along
 const DECK_WAVE_MS = 13, DECK_DRAIN_MS = 7;   // ms a cell: the wave out, the drain in (and the fill back)
 function deckFx(kind, sid, key) {
   const d = DECK; d.fx = { kind, sid, t0: performance.now(), lvl: key ? DECK_LVL[DECK_CHIPS[key][2]] || 0 : 0, burst: false };
-  if (kind === 'in' && !reduced()) (d.snakes = d.snakes || []).push(...deckSnakes(sid, 3 + 2 * d.fx.lvl, 12 + 5 * d.fx.lvl, d.fx.t0));   // (snakes along the wires: Greg)
+  if (kind === 'in' && !reduced()) {
+    (d.snakes = d.snakes || []).push(...deckSnakes(sid, 3 + 2 * d.fx.lvl, 12 + 5 * d.fx.lvl, d.fx.t0));   // (snakes along the wires: Greg)
+    (deckUnder()[sid] || []).forEach((_, i) => { const sn = deckUnderSnake(sid, i, d.fx.t0 + 120 + i * 90, 32); if (sn) d.snakes.push(sn); });   // ...and out its under-traces
+    if (key) d.techs = (d.techs || []).concat(deckTechs(sid, d.fx.lvl, rarityCol(DECK_CHIPS[key][2]), d.fx.t0));   // tech blobs around it
+  }
   if (kind === 'in') Sound.chipIn(d.fx.lvl); else Sound.chipDead();
 }
 // how far each of the board's cells is from a socket (cached per socket). The art's traces have gaps (it's ASCII), so
@@ -550,6 +554,71 @@ function deckSnakes(sid, n, len, now, delay = 40) {
   for (let y = s.y - 1; y <= s.y + s.h; y++) for (let x = s.x - 1; x <= s.x + s.w; x++) if (!inside(x, y) && W.has(y * 64 + x)) starts.push([x, y]);
   if (!starts.length) return [];
   return Array.from({ length: n }, (_, i) => { const [x, y] = starts[Math.floor(Math.random() * starts.length)]; return { path: deckWalk(x, y, len + Math.floor(Math.random() * len / 2), inside), t0: now + i * delay, ms: 26 }; });
+}
+// The under-traces (Greg, 2026-11-16): every socket has a few paths of its own, box-line style, running out from it under
+// the board and around (empty board first, across the art when they must, never through a socket or a part). They're
+// hidden: they only show while a snake runs them, lit in the slot's chip's rarity. Fixed per socket (seeded by its id).
+// deckUnder() = { sid: [ [[x, y, ch], ...], ... ] }
+const DECK_UNDER_N = 3;
+let deckUnderMap = null;
+function deckUnder() {
+  if (deckUnderMap) return deckUnderMap;
+  const ART = deckArt(), H = ART.length, rects = DECK_SOCKETS.concat(DECK_PARTS), m = {};
+  const blocked = (x, y) => x < 0 || y < 0 || x >= DECK_ART_W || y >= H || rects.some(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
+  const empty = (x, y) => (ART[y][x] || ' ') === ' ';
+  for (const s of DECK_SOCKETS) {
+    if (s.g === 'glyph') continue;
+    let seed = [...s.id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+    const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const ring = [];   // the cells around the socket, heading away from it
+    for (let x = s.x; x < s.x + s.w; x++) ring.push([x, s.y - 1, 0, -1], [x, s.y + s.h, 0, 1]);
+    for (let y = s.y; y < s.y + s.h; y++) ring.push([s.x - 1, y, -1, 0], [s.x + s.w, y, 1, 0]);
+    const starts = ring.filter(([x, y]) => !blocked(x, y));
+    m[s.id] = [];
+    for (let i = 0; i < DECK_UNDER_N && starts.length; i++) {
+      let [x, y, hx, hy] = starts[Math.floor(rnd() * starts.length)];
+      const path = [[x, y]], seen = new Set([y * 64 + x]), len = 10 + Math.floor(rnd() * 16);
+      for (let k = 0; k < len; k++) {
+        // straight on mostly, a turn now and then; empty board wins
+        const opts = [[hx, hy, 3], [hy, hx, 1], [-hy, -hx, 1]].filter(([dx, dy]) => !blocked(x + dx, y + dy) && !seen.has((y + dy) * 64 + x + dx));
+        if (!opts.length) break;
+        let best = null, bs = -1;
+        for (const [dx, dy, w] of opts) { const sc = (empty(x + dx, y + dy) ? 2 : 0.35) * w * (0.4 + rnd()); if (sc > bs) { bs = sc; best = [dx, dy]; } }
+        [hx, hy] = best; x += hx; y += hy; seen.add(y * 64 + x); path.push([x, y]);
+      }
+      if (path.length < 5) continue;
+      // box lines: a cell's char from where the path comes in and goes out
+      m[s.id].push(path.map(([x, y], j) => {
+        const nb = [path[j - 1], path[j + 1]].filter(Boolean).map(([a, b]) => [a - x, b - y]);
+        const h = nb.some(([a]) => a), v = nb.some(([, b]) => b);
+        if (!h || !v) return [x, y, h ? '─' : '│'];
+        const l = nb.some(([a]) => a < 0), u = nb.some(([, b]) => b < 0);
+        return [x, y, u ? (l ? '┘' : '└') : (l ? '┐' : '┌')];
+      }));
+    }
+  }
+  return (deckUnderMap = m);
+}
+// snakes on a socket's under-traces, in its chip's rarity (back: run one in toward the socket)
+function deckUnderSnake(sid, i, now, ms = 45, back = false) {
+  const p = (deckUnder()[sid] || [])[i], key = DECK.slots[sid];
+  if (!p || !key || !DECK_CHIPS[key]) return null;
+  const path = back ? p.slice().reverse() : p;
+  return { path: path.map(([x, y]) => [x, y]), ch: path.map(c => c[2]), t0: now, ms, rc: rarityCol(DECK_CHIPS[key][2]), tail: 7 };
+}
+// tech blobs around a chip that just went in: they pop up around the socket, decode, glow in its rarity, then fade
+// (more the rarer). d.techs = [{ x, y, t, t0, life, col }]
+const DECK_TECH = ['o', '#', '=o=', '[]', '0x', '::', '<>', '+', '*', '1o', '=#'];
+function deckTechs(sid, lvl, col, now) {
+  const s = deckSock(sid), ART = deckArt(), rects = DECK_SOCKETS.concat(DECK_PARTS), out = [];
+  const blocked = (x, y) => x < 0 || y < 0 || x >= DECK_ART_W || y >= ART.length || rects.some(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
+  const n = 5 + 3 * lvl;
+  for (let tries = 0; out.length < n && tries < n * 12; tries++) {
+    const t = pickR(DECK_TECH, Math.random), x = s.x - 3 + Math.floor(Math.random() * (s.w + 6)), y = s.y - 1 + Math.floor(Math.random() * (s.h + 2));
+    if ([...t].some((_, i) => blocked(x + i, y)) || out.some(o => o.y === y && x < o.x + o.t.length + 1 && o.x < x + t.length + 1)) continue;
+    out.push({ x, y, t, t0: now + Math.random() * (250 + 60 * lvl), life: 650 + Math.random() * (400 + 120 * lvl), col });
+  }
+  return out;
 }
 // How alive your deck is (0-1): more chips in, more power used, a higher mk (Greg: more tech blobs, more active, as you
 // slot more and your deck levels up). It sets how many hidden blobs glow and how often snakes run on their own.
@@ -738,6 +807,12 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
     for (let tries = 0; tries < 12; tries++) { const k = ks[Math.floor(Math.random() * ks.length)], x = k % 64, y = Math.floor(k / 64);
       if (deckOpen(deckBand(y)) && inView(y)) { d.snakes.push({ path: deckWalk(x, y, 10 + Math.floor(Math.random() * 14)), t0: now, ms: 55, dim: true }); break; } }
   }
+  // ...and out the under-traces of a chip that has power, now and then (mostly out, sometimes back in)
+  if (!under && !still && now > (d.undNext || 0)) {
+    d.undNext = now + (500 + Math.random() * 1500) * (1.5 - en);
+    const live = DECK_SOCKETS.filter(s => deckOpen(s.mk) && d.slots[s.id] && pw.on.has(s.id) && (deckUnder()[s.id] || []).length && inView(s.y + 1));
+    if (live.length) { const s = pickR(live, Math.random), sn = deckUnderSnake(s.id, Math.floor(Math.random() * deckUnder()[s.id].length), now, 50 + Math.random() * 30, Math.random() < 0.25); if (sn) d.snakes.push(sn); }
+  }
   if (fx && !under) {   // the show
     const dm = deckDist(fx.sid);
     if (fx.kind === 'in') {   // a ripple: two rings out of the socket, lighting the lines and showing the hidden blobs as they pass
@@ -763,9 +838,23 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   if (!under) for (let i = d.snakes.length - 1; i >= 0; i--) {
     const sn = d.snakes[i], hd = Math.floor((now - sn.t0) / sn.ms);
     if (hd < 0) continue;
-    if (hd - 5 >= sn.path.length) { d.snakes.splice(i, 1); continue; }
+    const tl = sn.tail || 5;
+    if (hd - tl >= sn.path.length) { d.snakes.splice(i, 1); continue; }
+    if (sn.ch) {   // an under-trace: box lines in the chip's rarity, fading down the tail
+      for (let j = 0; j <= tl; j++) { const c = sn.path[hd - j]; if (!c || !deckOpen(deckBand(c[1]))) continue;
+        bput(c[0], c[1], sn.ch[hd - j], j ? mixHex(C.dim, sn.rc, 1 - j / (tl + 2)) : mixHex(sn.rc, C.bright, 0.55), j < 2); }
+      continue;
+    }
     for (let j = 0; j <= 5; j++) { const c = sn.path[hd - j]; if (!c || !deckOpen(deckBand(c[1]))) continue;
       bput(c[0], c[1], j ? ART[c[1]][c[0]] : (sn.dim ? 'o' : '*'), j ? mixHex(idle, tc, (sn.dim ? 0.55 : 1) - j * 0.12) : mixHex(tc, C.bright, sn.dim ? 0.2 : 0.6), !j); }
+  }
+  // the tech blobs around a chip that just went in: scrambled, then they settle and glow, then dim out
+  if (!under && d.techs) {
+    d.techs = d.techs.filter(b => now - b.t0 < b.life);
+    for (const b of d.techs) { const a = now - b.t0; if (a < 0 || !deckOpen(deckBand(b.y))) continue;
+      const k = a / b.life, txt = a < 140 ? [...b.t].map(() => noiseCh()).join('') : k > 0.8 ? b.t.replace(/./g, '.') : b.t;
+      bput(b.x, b.y, txt, a < 140 ? C.bright : mixHex(b.col, C.dim, clamp((k - 0.45) / 0.55, 0, 1)), k < 0.5); }
+    if (!d.techs.length) d.techs = null;
   }
   // the mk upgrade (Greg, 2026-11-16: big fanfare): the new board boots, a sweep running down it row by row (dark below
   // it), bursts at its sockets as it passes them, then snakes and a ripple out of the CPU. d.up = { mk, t0, bursts }

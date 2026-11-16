@@ -341,6 +341,12 @@ const Sound = (() => {
       noise(0.45, { vol: 0.1, freq: 400, to: 2400, delay: 0.04 });
       if (lvl >= 1) arp([659, 784, 988, 1319, 1568].slice(0, 2 + lvl), 0.06, { vol: 0.28 });
       if (lvl >= 3) { tone(1976, 0.4, { type: 'triangle', vol: 0.18, delay: 0.38 }); noise(0.3, { vol: 0.1, freq: 8000, type: 'highpass', delay: 0.36 }); }
+      // then it powers up (Greg, 2026-11-16: "a brrrr powering up sound after the chip slot sound"): a buzz whose pulses
+      // speed up and climb, longer and higher the rarer
+      const b = 0.2, dur = 0.5 + 0.1 * lvl, n = Math.round(dur / 0.022);
+      tone(48, dur, { type: 'sawtooth', vol: 0.11, slide: 2.5 + 0.4 * lvl, delay: b }); tone(96, dur, { type: 'square', vol: 0.045, slide: 2.5 + 0.4 * lvl, delay: b });
+      for (let i = 0; i < n; i++) { const t = i / n; tone(80 + (260 + 90 * lvl) * t * t, 0.016, { type: 'square', vol: 0.05 + 0.06 * t, delay: b + dur * (1 - Math.pow(1 - t, 1.5)) }); }
+      noise(0.12, { vol: 0.08, freq: 5000, type: 'highpass', delay: b + dur - 0.04 });
     },
     // your deck goes up a mk: the power comes up under it, a fanfare climbs, and it rings out
     deckUp: () => {

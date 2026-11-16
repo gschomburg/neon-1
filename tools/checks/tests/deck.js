@@ -15,6 +15,11 @@ module.exports = { name: 'deck', body: `
   check(buildScene(performance.now(), false).length > 300, 'the board draws during it');
   check(deckLook().blobs.length > 20 && deckWires().size > 200, 'hidden tech blobs and the wire map: ' + deckLook().blobs.length + ' / ' + deckWires().size);
   check(DECK.snakes === undefined || Array.isArray(DECK.snakes), 'snakes');
+  { const U = deckUnder(), ids = DECK_SOCKETS.filter(s => s.g !== 'glyph').map(s => s.id), rects = DECK_SOCKETS.concat(DECK_PARTS);
+    const cells = ids.flatMap(id => (U[id] || []).flat());
+    check(ids.every(id => (U[id] || []).length >= 1), 'every socket has under-traces: ' + ids.filter(id => !(U[id] || []).length).join(' '));
+    check(cells.every(([x, y, ch]) => '─│┌┐└┘'.includes(ch) && !rects.some(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h)), 'they are box lines and never cross a socket or a part');
+    deckUnderMap = null; check(JSON.stringify(deckUnder()) === JSON.stringify(U), 'they are fixed (the same every time)'); }
   check(deckLook().silk.length >= 4 && deckLook().vias.length > 0, 'silkscreen and vias found room: ' + deckLook().silk.map(x => x[2]).join(' '));
   check(['DEAD', 'MAN'].includes(deckStickText('DEADMAN', 1000)) && deckStickText('EJECT', 0) === 'EJECT', 'the CRASH stick: a word at a time');
   deckSlot('PS4', 'SH4');
@@ -22,6 +27,8 @@ module.exports = { name: 'deck', body: `
   check(p.on.has('SH4') && p.off.length === 1, 'a newer, cheaper chip still gets what is left: ' + JSON.stringify([...p.on]));
   deckSlot('LI2', 'PSU');
   check(DECK.fx && DECK.fx.kind === 'in' && DECK.fx.sid === 'PSU', 'power: the wave and the burst');
+  check(reduced() || (DECK.snakes.some(sn => sn.ch && sn.rc === rarityCol(DECK_CHIPS.LI2[2])) && DECK.techs && DECK.techs.length >= 5), 'it runs its under-traces in its rarity, and tech blobs pop around it');
+  check(buildScene(performance.now() + 300, false).length > 300, 'the board draws with them');
   p = deckPower();
   check(p.budget === 9 && !p.off.length, 'a bigger cell lights them all: ' + JSON.stringify(p.off));
   deckSlot('SC1', 'PSU');
