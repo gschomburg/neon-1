@@ -1,0 +1,28 @@
+// tools/checks/tests/deck.js: THE DECK (engine/deck.js, dev only for now): it opens and draws, and power goes to the
+// oldest chips first, so the chip you just slotted is the one with none.
+module.exports = { name: 'deck', body: `
+  openDeck(); await sleep(400);
+  check(st.mode === 'panel' && st.panelFn === deckLines, 'it opens as a full panel');
+  check(buildScene(performance.now(), false).length > 300, 'it draws');
+  const p0 = deckPower();
+  check(p0.budget === 6 && p0.used === 5 && !p0.off.length, 'starts at 5 of 6, all on: ' + JSON.stringify([p0.used, p0.budget, p0.off]));
+  deckSlot('MK7', 'SH3');
+  let p = deckPower();
+  check(p.off.length === 1 && p.off[0] === 'SH3', 'the newest chip is the one with no power: ' + JSON.stringify(p.off));
+  check(DECK.slots.SH3 === 'MK7', 'it still goes in');
+  deckSlot('LS1', 'SH4');
+  p = deckPower();
+  check(p.on.has('SH4') && p.off.length === 1, 'a newer, cheaper chip still gets what is left: ' + JSON.stringify([...p.on]));
+  deckSlot('LI2', 'PSU');
+  p = deckPower();
+  check(p.budget === 9 && !p.off.length, 'a bigger cell lights them all: ' + JSON.stringify(p.off));
+  deckSlot('SC1', 'PSU');
+  p = deckPower();
+  check(p.off.includes('SH3') && !p.off.includes('BT1'), 'back to the small cell: the newest go dark first: ' + JSON.stringify(p.off));
+  deckSlot('ST4', 'BT2');
+  check(DECK.slots.BT2 === 'ST4' && !DECK.slots.BT1, 'a chip moves (one of each)');
+  deckPick('BT1'); check(DECK.pick && DECK.pick.id === 'BT1', 'the picker opens');
+  check(buildScene(performance.now(), false).length > 300, 'the picker draws');
+  deckPick('OV1'); check(DECK.pick.id === 'BT1', 'a locked socket has no picker');
+  DECK = null;
+` };

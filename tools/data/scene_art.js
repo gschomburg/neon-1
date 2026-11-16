@@ -7,7 +7,8 @@ const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..', '..');
 const SOURCES = { disc: 'asxii_art/n_cutscene_01_v02.asxii.json', popshead: 'asxii_art/n_cutscene_01_pops_head.asxii.json',
   prodigal: 'asxii_art/n_cutscene_02_prodigal.asxii.json', gate: 'asxii_art/n_cutscene_03_gate.asxii.json',
-  ending: 'asxii_art/n_cutscene_04_ending.asxii.json' };
+  ending: 'asxii_art/n_cutscene_04_ending.asxii.json',
+  deck: 'asxii_art/deck_board_v06.asxii.json' };   // THE DECK's board (engine/deck.js, dev only for now)
 const VERSION = (fs.readFileSync(path.join(ROOT, 'dist/data/quests.js'), 'utf8').match(/NEON_FILES\.push\(\['data\/quests\.js', '([^']+)'\]\)/) || [, 'v0'])[1];
 
 const out = [

@@ -131,7 +131,8 @@ if (EDITOR) {
     help: async () => { endRun(); openHelp(); },
     codex: async () => { endRun(); openCodex(); },
     settings: async () => { endRun(); openSettings(); },
-    board: async () => { endRun(); openBoard(); },   // THE BOARD (YOU / REP / FEATS + stats / CREW)
+    board: async () => { endRun(); openBoard(); },
+    deck: async () => { endRun(); openDeck(); },   // THE DECK: dev only for now (engine/deck.js)   // THE BOARD (YOU / REP / FEATS + stats / CREW)
     // the profile; opts.logo shows it wearing that logo (put back at the next scene)
     profile: async o => { endRun(); if (o.logo && LOGO_BY_ID[o.logo]) { const p = profile(); if (logoWas == null) logoWas = p.logo; p.logo = o.logo; } openProfile(); },
     map: mapRun,

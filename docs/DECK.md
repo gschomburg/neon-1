@@ -1,7 +1,8 @@
 # THE DECK: the sockets, the chips, and how it opens
 
-The in-game mockup: `docs/mockups/deck_v4.html` (the picker popup, power running out, chip faces, the parts that
-aren't sockets; round 3 was `deck_v3.html`). Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). A plan to look over; nothing is
+**In the game (dev only):** `dist/engine/deck.js`, opened from the editor's screen picker ("the deck (dev)"). Its state
+lives in memory, never in the save. The art is `asxii_art/deck_board_v06` (copied in by `node tools/data/scene_art.js`).
+The HTML mockups: `docs/mockups/deck_v4.html` (round 4), `deck_v3.html` (round 3). Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). A plan to look over; nothing is
 built. BACKLOG section 11 has where the idea came from; the mockups are `docs/mockups/deck.html` and `deck_v2.html`.
 
 Everything here is Claude's unless it says Greg. The socket count gets tuned once each group's chip list settles
@@ -34,6 +35,17 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   `WORD_WORD` (data/personas.js), up to 13 characters (STATIC_GOBLIN); the CPU is 12 wide inside. A name that
   doesn't fit goes on 2 lines, split at the `_` (each word is 6 at most). Maybe small silkscreen under it
   (`MEDIX NC-1`). Names with MK2 in them (`POTATO_MK2` over `mk II`) are a free joke.
+
+## Decided from the round 4 mockup (Greg, 2026-11-15)
+- **Every socket takes two taps:** the first shows its card, the second opens the picker. Empty ones too.
+- **The card is 4 rows**, beside the socket's frame: the name; the group and its power on one line (no rarity: the
+  face's color says it); what it does as one indented ticker line (`FX.ticker`), so its length doesn't matter; and
+  the buttons (CHANGE). The scroll area gets the rows that frees.
+- **NO POWER goes on the rule** over the card: the rule turns red with dark text, "NO POWER: market in SH3", cycling
+  when more than one chip has none (`FX.swapLines`). No line at the very bottom. (Claude: tapping it goes to that
+  socket.) The game's footer row is counted.
+- **It moves into the engine** as a screen only the editor opens, to keep tuning on the real grid.
+- (Claude) The picker is as tall as what's in it, over the board, with the board dim under it.
 
 ## Decided from the round 3 mockup (Greg, 2026-11-15)
 - **Scrolling uses the game's scroll area:** the "more" rows top and bottom (engine/codex.js `scrollArea`), for the
