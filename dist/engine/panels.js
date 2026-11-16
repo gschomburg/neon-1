@@ -528,6 +528,7 @@ function openCache(node) {
   // and now and then a pile of loot for the bag (ECON.loot.cache: as many as a sector boss)
   { const lr = rngFor(run.seed, 'cacheloot', node.id), [lo, hi] = ECON.loot.sector;
     if (!again && lr() < ECON.loot.cache) { const l = dropLoot(lr, lo + Math.floor(lr() * (hi - lo + 1))); got.push('+ loot: ' + l.join(', ')); } }
+  if (!again) { const chip = deckCacheChip(node); if (chip) got.push(chip); }   // a chip for your deck, now and then (engine/deck.js)
   openChoice({
     title: 'DATA CACHE', col: C.money,
     head: got.map(g => [g, again ? C.dim : C.bright]),

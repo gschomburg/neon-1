@@ -119,6 +119,59 @@ const DECK_MORE_UP = '[ ^ ^ ^  more  ^ ^ ^ ]', DECK_MORE_DN = '[ v v v  more  v 
 const DECK_OFF = { fg: '#5f7470', bg: '#141b1a' };   // an unpowered chip: grey
 const deckBand = by => by >= 41 ? 4 : by >= 32 ? 3 : 2;
 
+// ---------- chips as loot (docs/DECK.md "Chips: getting them, carrying them, keeping them") ----------
+// A chip you find rides in your belt as gear ('chip_' + its key, made here from DECK_CHIPS). It does nothing in a run
+// (engine/active.js: canUse has no entry for it, whyNotItem says why). Its info line says NEW or how many you have, so you
+// know a dupe (shred it at a workbench, or drag it to the trash). Cash out and it goes home to save.deck.chips
+// (engine/runend.js endRun: deckHome); die and it's gone. only: 'deck' keeps chips out of every random gear pool
+// (engine/hackers.js gearAllowed), so markets, loot and the pier's gear are the same as before; chips roll on their
+// own seeded streams ('cachechip', 'pierchip'), so a seed's other drops don't move.
+const DECK_DROP = { cache: 0.2, fish: 0.25 };   // a cracked DATA CACHE; a pier catch that would have been gear
+const DECK_DROP_WEIGHT = { common: 50, rare: 30, epic: 14, legendary: 5, exotic: 1 };
+const DECK_NO_DROP = ['SC1', 'SP3', '1UP'];   // the deck comes with the first two; the 1UP is b0y's (beating G0D)
+const deckChipItem = key => 'chip_' + key;
+const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
+const deckHave = key => (save.deck && save.deck.chips && save.deck.chips[key]) || 0;
+for (const [key, c] of Object.entries(DECK_CHIPS)) {
+  ITEMS[deckChipItem(key)] = { key: deckChipItem(key), name: c[0], price: 0, rarity: c[2], chip: key, only: 'deck', nosell: true, desc: c[4],
+    get tip() { const n = deckHave(key); return `${n ? `dupe: you have ${n}.` : 'NEW.'} ${c[6]} cash out to keep it.`; } };
+  // on the belt its face's two rows take turns (Greg, 2026-11-16), 3 wide (engine/panels.js ITEM_SHORT)
+  Object.defineProperty(ITEM_SHORT, deckChipItem(key), { get: () => { const f = c[5], b = f[1] && Math.floor(performance.now() / 1100) % 2; return (b ? f[1] : f[0]).slice(0, 3).padEnd(3); } });
+}
+// chips drop once you have a deck, in real runs (not the training, not a race)
+const deckDrops = () => !!save.deck && !!st.run && !st.run.tutorial && !st.mp;
+function deckRollChip(r) {
+  const pool = Object.keys(DECK_CHIPS).filter(k => !DECK_NO_DROP.includes(k));
+  return pickWeighted(pool, k => DECK_DROP_WEIGHT[DECK_CHIPS[k][2]] || 0, r);
+}
+// a DATA CACHE (engine/panels.js openCache): now and then a chip. Returns its line for the cache's head, or null.
+// A full belt: the swap comes up over the cache (pick the gear that goes, or keep what you have).
+function deckCacheChip(node) {
+  if (!deckDrops()) return null;
+  const r = rngFor(st.run.seed, 'cachechip', node.id);
+  if (r() >= DECK_DROP.cache) return null;
+  const key = deckRollChip(r), ik = deckChipItem(key);
+  if (itemRoom(ik, 0)) { addItem(ik, 0); return `+ chip: ${DECK_CHIPS[key][0]}${deckHave(key) ? ' (dupe)' : ''}`; }
+  setTimeout(() => openSwap('item', ik, 0, null), 0);   // (after the cache's panel is up)
+  return `+ chip: ${DECK_CHIPS[key][0]}. belt full.`;
+}
+// the PIER (engine/fishing.js): a catch that would have been gear is sometimes a chip
+function deckFishChip(out, f) {
+  if (out.kind !== 'gear' || out.key === 'disc' || !deckDrops()) return out;
+  if (!f.cr) f.cr = rngFor(st.run.seed, 'pierchip', f.node.id);
+  if (f.cr() >= DECK_DROP.fish) return out;
+  const key = deckRollChip(f.cr);
+  return { kind: 'gear', key: deckChipItem(key), tier: 0, rarity: DECK_CHIPS[key][2], chip: true };
+}
+// Cashing out (engine/runend.js endRun): the chips in your belt go home. Dying: they're gone.
+function deckHome(run, win) {
+  const chips = run.items.filter(s => deckItemChip(s.key));
+  if (!win || !chips.length || !save.deck || run.practice || run.tutorial || st.mp) return;
+  save.deck.chips = save.deck.chips || {};
+  for (const s of chips) { const k = deckItemChip(s.key); save.deck.chips[k] = (save.deck.chips[k] || 0) + s.n; }
+  FEAT_QUEUE.push({ head: 'YOUR DECK', lines: ['chips home:', '', ...chips.map(s => '  ' + ITEMS[s.key].name + (s.n > 1 ? ' x' + s.n : '')), '', 'slot them: THE BOARD > YOU.'] });
+}
+
 // ---------- state ----------
 // DECK is the deck on screen: the dev one (DECK_DEV, kept while the page lives) or the real one (made from save.deck
 // each time it opens, and written back by deckPersist whenever it changes).
@@ -503,7 +556,7 @@ function deckChipList(ctx, y0, sa) {
         if (d.sel.kind === 'chip' && d.sel.key === key) g.bg(0, y, W, 2, C.accent, 0.18);
         ctx.hl(0, y, W, 2, id, false);
         deckFace(g, 2, y, key, off);
-        g.put(9, y, c[0], C.bright, true);
+        g.put(9, y, c[0] + (d.real && d.chips[key] > 1 ? ` x${d.chips[key]}` : ''), C.bright, true);   // (a dupe: how many)
         if (where) g.put(W - 1 - where.length - 3, y, 'in ' + where, off ? C.danger : C.accent);
         g.put(9, y + 1, c[1] === 'psu' ? `+${DECK_CELL[key]} PWR` : `PWR ${c[3]}`, C.mid);
         g.put(16, y + 1, c[6].slice(0, W - 17), C.text);

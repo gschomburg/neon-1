@@ -36,7 +36,7 @@ function benchRecipes() {
   if (BENCH_RECIPES) return BENCH_RECIPES;
   const r = {};
   for (const [key, it] of Object.entries(ITEMS)) {
-    if (it.value || it.quest || it.bag || it.fish || it.hunt || key.startsWith('call')) continue;   // (hunt: HAD3S gear, not built at the bench yet)
+    if (it.value || it.quest || it.bag || it.fish || it.hunt || it.chip || key.startsWith('call')) continue;   // (chip: your deck's, engine/deck.js)   // (hunt: HAD3S gear, not built at the bench yet)
     const code = itemShort(key);
     if (code.length === 3 && !r[code]) r[code] = { kind: 'gear', key, code };
   }
@@ -257,7 +257,7 @@ function benchShredList() {
   (run.loot || []).forEach(s => { if (!ITEMS[s.key].quest) out.push({ kind: 'loot', key: s.key, tier: s.tier || 0, n: s.n, stack: s, list: run.loot }); });
   return out;
 }
-const shredCode = e => e.kind === 'mod' ? MODS[e.key].short : ITEMS[e.key].corrupt ? '???' : itemShort(e.key);
+const shredCode = e => e.kind === 'mod' ? MODS[e.key].short : ITEMS[e.key].corrupt ? '???' : ITEMS[e.key].chip ? (ITEMS[e.key].chip.replace(/[^A-Z]/g, '') || 'CHP') : itemShort(e.key);   // (a chip: its code's letters, not its face)
 // Corrupted software: random components (any letter, I likelier: no recipe uses it), maybe a digit, maybe a *.
 const BENCH_RANDOM = 'ABCDEFGHIIIJKLMNOPQRSTUVWXYZ0';
 function corruptShred(c) {

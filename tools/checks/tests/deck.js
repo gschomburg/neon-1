@@ -88,5 +88,27 @@ module.exports = { name: 'deck', body: `
   DECK.bits = [0, 0, 0, 0, 1, 1, 1, 1]; deckEnterByte(); buildScene(performance.now(), false);
   check(save.deck.overclock === false, 'entering it again turns it off');
   wipeProgress(); check(save.deck === null, 'a progression wipe takes the deck too');
+  // ---- chips as loot: gear in your belt, kept out of the random pools, home when you cash out
+  check(ITEMS.chip_DM5 && ITEMS.chip_DM5.chip === 'DM5' && !gearAllowed('chip_DM5'), 'every chip is gear, kept out of the drop pools');
+  check(!shopGear().some(k => ITEMS[k].chip) && !lootPool().some(k => ITEMS[k].chip), 'no chips in markets or loot');
+  save.legacy = { hard: 1, cash: 1, kit: 1, belt: 1 }; save.deck = null; CALL_QUEUE.length = 0; deckEnsure(); CALL_QUEUE.length = 0; FEAT_QUEUE.length = 0;
+  B.startRun('CHIPTEST', false); await settle('chip run');
+  st.run.items = [];
+  let nid = null; for (let i = 0; i < 300 && !nid; i++) { const r = rngFor(st.run.seed, 'cachechip', 'n' + i); if (r() < DECK_DROP.cache) nid = 'n' + i; }
+  const line = deckCacheChip({ id: nid }), got = st.run.items.find(x => ITEMS[x.key].chip);
+  check(line && got, 'a DATA CACHE can drop a chip into your belt: ' + line);
+  check(beltLabel(got).length === 5 && beltLabel(got)[0] === '[' && beltLabel(got)[4] === ']' && /NEW/.test(itemView(got.key).tip), 'on the belt: its face, 3 wide; its tip says NEW: ' + beltLabel(got) + ' / ' + itemView(got.key).tip);
+  check(whyNotItem(got) === 'a chip: CASH OUT to keep it.' && !canUse(got), "it can't be used in a run");
+  check(shredCode({ kind: 'gear', key: got.key }).length >= 1, 'the bench can shred it: ' + shredCode({ kind: 'gear', key: got.key }));
+  const ck = ITEMS[got.key].chip;
+  deckHome(st.run, false); check(!deckHave(ck), 'die: it never gets home');
+  deckHome(st.run, true); check(deckHave(ck) === 1 && FEAT_QUEUE.some(q => q.head === 'YOUR DECK'), 'cash out: it goes home to your deck: ' + ck);
+  check(/dupe: you have 1/.test(itemView(got.key).tip), 'another one says it is a dupe');
+  st.run.items = []; for (let i = 0; i < st.run.beltSlots; i++) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
+  deckCacheChip({ id: nid }); await sleep(50);
+  check(st.swap && st.swap.kind === 'item' && ITEMS[st.swap.key].chip, 'a full belt: the swap comes up');
+  st.swap = null; FEAT_QUEUE.length = 0;
+  const fo = deckFishChip({ kind: 'gear', key: 'patch', tier: 0 }, { node: { id: 'p1' } });
+  check(fo.kind === 'gear' && (fo.key === 'patch' || ITEMS[fo.key].chip), 'the PIER: a gear catch is gear or a chip');
   DECK = null; Object.keys(save).forEach(k => delete save[k]); Object.assign(save, JSON.parse(keep)); persist();
 ` };

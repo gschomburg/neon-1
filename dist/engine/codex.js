@@ -80,7 +80,7 @@ function openCodex() {
     persist(); }
   const TABS = [['mods', 'MODS', 'tabm'], ['items', 'GEAR', 'tabi'], ['glyphs', 'GLYPHS', 'tabg'], ['corps', 'CORPS', 'tabc'], ['sectors', 'SECTORS', 'tabs'], ['hackers', 'HACKERS', 'tabh']];
   let tab = 'mods', sel = 0, top = 0, shownPal = null;
-  const entries = () => tab === 'mods' ? codexMods() : tab === 'items' ? Object.keys(ITEMS).filter(k => !ITEMS[k].bag)
+  const entries = () => tab === 'mods' ? codexMods() : tab === 'items' ? Object.keys(ITEMS).filter(k => !ITEMS[k].bag && !ITEMS[k].chip)
     : tab === 'glyphs' ? GLYPHS.map(gl => gl.key) : tab === 'sectors' ? Object.keys(SECTOR_EVENTS).map(k => 'ev_' + k)
     : tab === 'hackers' ? [...HK_RIVALS, ...HK_CREW].map(k => 'hk_' + k) : CODEX_CORPS.map(k => 'corp_' + k);
   // an entry's name, as the codex shows it once it's found (what the ciphertext hides)

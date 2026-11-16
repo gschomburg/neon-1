@@ -639,6 +639,7 @@ function whyNotItem(stack) {
   const key = stack.key, inCorp = st.mode === 'play' && st.corp && st.corp.hasBoss;
   if (key === 'g0dexe') return g0dxWhy();
   if (ITEMS[key].quest) return 'POPS wants it: CASH OUT with it.';
+  if (ITEMS[key].chip) return 'a chip: CASH OUT to keep it.';   // (engine/deck.js)
   if (itemOffHere(key)) return 'off in this corp.';
   if (key === 'patch') return zombie() ? 'no rot to fix.' : 'integrity is full.';
   if (key === 'route' || key === 'warp' || key === 'tunnel' || key === 'mesh') return st.mode !== 'map' ? 'only on the map.' : st.run.warpAim || st.run.tunnel || st.run.mesh === st.run.sector ? 'already open: pick a node.' : 'nowhere to go.';

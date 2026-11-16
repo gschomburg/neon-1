@@ -70,6 +70,7 @@ async function endRun(win) {
   const rep = run.practice ? 0 : win ? repWorth : Math.floor(repWorth * [0, 0.25, 0.5][legacyLv('dms')]);
   if (rep) { save.rep = (save.rep || 0) + rep; save.repTotal = (save.repTotal || 0) + rep; }
   if (win && !run.practice) save.cashouts = (save.cashouts || 0) + 1;
+  deckHome(run, win);   // the chips in your belt go home to your deck (engine/deck.js)
   tallyRunEnd(run, win, rep);   // THE RECORD (the FEAT box comes up over the end screen)
   noteHistory(run, { win, rep });
   bestSeedsNote(run);   // REPLAYS: your 10 deepest seeds (engine/menus.js)

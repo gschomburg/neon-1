@@ -699,6 +699,9 @@ Greg: sockets that open earlier should sit higher on the board.
 - **The build, in batches** (Greg, 2026-11-16): 1, the real deck (THE BOARD, the save, POPS at USER, the mk buys; done: THE BOARD > YOU >
   [ YOUR DECK ], save.deck, the DECK mk III and THE FUSE posts, 3 placeholder posts each on ELITE and SYSOP, the CPU's
   switches turn posts off for runs (engine/save.js postOn), OVERCLOCK saved);
-  2, chips as loot (drops, a gear slot, cashing out); 3, the first chip set; 4, the show (effects, sounds, NO POWER
+  2, chips as loot (drops, a gear slot, cashing out; done: DATA CACHEs 20%, a PIER gear catch 25%, weighted by rarity,
+  on their own seeded streams; the 1UP and the starter chips never drop. A chip is gear (`chip_` + its key) that can't be
+  used, its belt code is its face (the two rows take turns), its tip says NEW or how many you have; a full belt gets
+  the swap; cash out and it goes home (a YOUR DECK note), die and it's gone; the bench shreds it into its code's letters); 3, the first chip set; 4, the show (effects, sounds, NO POWER
   tap); 5, later (SHELL, SUDO, hot chips, fusing, BOSS, UPLINK, PORTS).
 - **The cuts:** once the lists settle. BOOT and BIOS could share 4 sockets; UPLINK could fold into PORTS.

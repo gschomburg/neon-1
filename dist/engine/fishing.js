@@ -150,7 +150,7 @@ function fishTick(now) {
   // (everything in a lane moves at the lane's speed, so nothing catches up; a new one waits for room)
   if (now > f.spawnAt) {
     f.spawnAt = now + 650 + f.r() * 1000;
-    const lane = Math.floor(f.r() * FISH_LANES), out = fishOutcome(f.r), lk = fishLookFor(out, f), dir = f.dirs[lane];
+    const lane = Math.floor(f.r() * FISH_LANES), out = deckFishChip(fishOutcome(f.r), f), lk = fishLookFor(out, f), dir = f.dirs[lane];
     const look = dir > 0 ? fishMirror(lk.look) : lk.look, x0 = dir > 0 ? -look.length - 1 : L.wc + 1;
     const room = f.shapes.every(s => s.lane !== lane || (dir > 0 ? s.x > x0 + look.length + 4 : s.x + s.look.length + 4 < x0));
     if (room) f.shapes.push({ lane, x: x0, dir, out, look, size: lk.size, spd: 3 * f.lanes[lane], nosed: false });
@@ -338,7 +338,7 @@ function buildFish(ctx) {
     for (let r = 1; r < h - 1; r++) { put(x0, y0 + r, '|', C.money, 'hud'); put(x0 + w - 1, y0 + r, '|', C.money, 'hud'); }
     const mid = (y, t, col, bold) => put(x0 + Math.floor((w - t.length) / 2), y, t, col, 'hud', bold);
     if (out.kind === 'fish') mid(y0 + 1, f.card.look, rarityCol(out.rarity), true);
-    else mid(y0 + 1, out.kind === 'shoe' ? "it's a shoe." : 'just gear.', C.mid);
+    else mid(y0 + 1, out.kind === 'shoe' ? "it's a shoe." : out.chip ? 'a chip! for your deck.' : 'just gear.', out.chip ? C.accent : C.mid, !!out.chip);   // (engine/deck.js deckFishChip)
     if (f.card.kb != null) mid(y0 + 2, fmtKB(f.card.kb) + (f.card.record ? '  BIGGEST YET' : ''), f.card.record ? C.money : C.mid, !!f.card.record);
     else if (f.card.lb != null) mid(y0 + 2, fmtLb(f.card.lb), C.mid);
     putChip(put, bg, x0 + 2, y0 + 3, it.name, it.rarity, 'hud', true);

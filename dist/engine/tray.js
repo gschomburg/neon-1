@@ -165,7 +165,7 @@ function buildTray(ctx, y) {
     else {
       const usable = canUse(stack);
       const onOff = stack.key === 'encore' || ARMS[stack.key] ? (gearOn(stack.key) ? '>tap: off' : '>tap: on') : null;   // switches: ENCORE, and the gear you arm
-      const act = onOff || (usable ? '>tap' : '(not now)'), x0 = 3 + it.name.length, room = L.wc - x0 - act.length - 1;
+      const act = onOff || (usable ? '>tap' : ITEMS[stack.key].chip ? '(chip)' : '(not now)'), x0 = 3 + it.name.length, room = L.wc - x0 - act.length - 1;
       let tip = (stack.n > 1 ? `x${stack.n} ` : '') + it.tip;
       if (tip.length > room) {   // too long: it scrolls (a beat first), like the UPLINK's ticker
         if (st.tipTick !== ii + ':' + stack.key) { st.tipTick = ii + ':' + stack.key; st.tipT0 = now; }

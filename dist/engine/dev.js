@@ -228,7 +228,7 @@ function devMenuLines() {
   lines.push({ row: [
     { text: '[+100cr]', id: 'cr', onTap: cheat(() => { run.credits += 100; }), disabled: !run },
     { text: '[heal]', id: 'hp', onTap: cheat(() => { run.integrity = run.maxInt; }), disabled: !run },
-    { text: '[fill gear]', id: 'belt', onTap: cheat(() => { for (const k of Object.keys(ITEMS)) if (!ITEMS[k].fish || ITEMS[k].bag) addItem(k, 0); }), disabled: !run },
+    { text: '[fill gear]', id: 'belt', onTap: cheat(() => { for (const k of Object.keys(ITEMS)) if ((!ITEMS[k].fish || ITEMS[k].bag) && !ITEMS[k].chip) addItem(k, 0); }), disabled: !run },
   ] });
   B('[unlock codex]', 'seenall', () => {
     for (const k of [...Object.keys(MODS), ...Object.keys(ITEMS), ...GLYPHS.map(gl => gl.key), ...CODEX_CORPS.map(c => 'corp_' + c), ...Object.keys(SECTOR_EVENTS).map(e => 'ev_' + e)]) save.seen[k] = true;

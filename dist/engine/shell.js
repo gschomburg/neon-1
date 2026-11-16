@@ -238,7 +238,7 @@ const SHELL_CMDS = shellGroups([
     if (!i) throw new Error('no room on the belt');
     Sound.buy(); return `${ITEMS[k].name} x${i}`;
   } },
-  { name: 'gear.fill', help: 'one of every gear', run: () => { shellNeedRun(); for (const k of Object.keys(ITEMS)) if (!ITEMS[k].fish || ITEMS[k].bag) addItem(k, 0); Sound.buy(); } },
+  { name: 'gear.fill', help: 'one of every gear', run: () => { shellNeedRun(); for (const k of Object.keys(ITEMS)) if ((!ITEMS[k].fish || ITEMS[k].bag) && !ITEMS[k].chip) addItem(k, 0); Sound.buy(); } },
   { name: 'give.letters', args: [{ name: 'letters', of: 's', opt: true }], help: 'WORKBENCH letters (a mix if none)', safe: true, run: a => { const got = shellLetters(a[0] || undefined); if (!got) throw new Error('letters only: A-Z, 0, *'); Sound.buy(); return 'letters: ' + got; } },
   { name: 'kit', args: [{ name: 'kit', of: fixed(['tank', 'BUFFER + patches'], ['tracker', 'TRACER + KEYLOGGER'], ['crew', 'CALLs'], ['shop', '+500cr']) }], help: 'a kit: only adds', run: a => { const s = shellKit(a[0]); Sound.buy(); return s; } },
   { name: 'steal', help: 'your last mod goes to THE FENCE', run: () => {
