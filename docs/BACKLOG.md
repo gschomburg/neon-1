@@ -497,6 +497,10 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
 - **Code cleanups left from the arch pass** (the user, 2026-11-05: "keep those all around so we can hit them when it makes sense"). Do each one with the feature that needs it, not on its own. Details: docs/ARCHITECTURE.md.
   - **One popup card (`drawCard`):** with the next new kind of popup.
   - **Per-seed definitions:** when a new seed comes in (crew quests), so HAD3S / H3AV3N / the next one are mostly data.
+- **Lock HAD3S and H3AV3N down** (Greg, 2026-11-15: "those should be curated"): no weighting in any of their sectors.
+  Today NEMESIS changes their corps: HAD3S's corps (all but MYCONET, CERBERUS, MEDIX) and H3AV3N's sector 1 go through
+  the weighted `pickCorps` in `addSector` (engine/map.js); heaven's own sector doesn't. Fix: no boost when
+  `questSeed(seed)` is set. Play both through after. (docs/DECK.md "Seeds")
   - **`say()`, one way for characters to talk:** when crew quests add more voices.
   - **The `MODES` registry:** with the next new screen mode, or if input bugs keep coming from pointerdown's early returns.
   - **Hover / keyboard focus in popups:** with a desktop or accessibility pass.

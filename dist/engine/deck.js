@@ -54,6 +54,15 @@ const DECK_CHIPS = {
   HC1: ['HARDCORE', 'heat', 'epic', 0, 'no CRASH chip works. +50% REP.', ['HRD', 'x_x'], 'no CRASH chip, +50% REP.'],
   HN2: ['HUNTED', 'heat', 'rare', 0, 'twice as many rivals. +20% REP.', ['HNT', '>@<'], '2x rivals, +20% REP.'],
 };
+// What each chip touches (docs/DECK.md "Seeds"; not shown in the game): map (what a run generates), rules (what it pays
+// or drops), you (your start, tools, deaths). Keep it next to DECK_CHIPS: a new chip gets its tags here.
+const DECK_CHIP_TAGS = {
+  DM5: ['you'], '1UP': ['you'], EJ1: ['you'], BB7: ['you'], SP3: ['rules'], GM7: ['rules'],
+  CD2: ['you'], MK7: ['you'], LS1: ['you'], PS4: ['you'], KL6: ['you'], PG2: ['you'], GP5: ['you'], CM7: ['you'], WH0: ['you'],
+  TP3: ['you'], CT4: ['you'], SS8: ['you'], UN0: ['you'], ST4: ['you'], PT1: ['you'], HS2: ['map'],
+  SM1: ['map'], QT0: ['map'], AD5: ['map', 'you'], SC1: ['you'], LI2: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'],
+  GD0: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], HN2: ['map', 'rules'],
+};
 const DECK_CELL = { SC1: 6, LI2: 9, RX9: 14 };
 const DECK_SPOILS = [['REWARDS', 'RWD', 'take the REWARDS.'], ['HEAL', 'HP+', 'skip them: HEAL 2 INT.'], ['CASH', '$$$', 'skip them: take CASH.']];
 const DECK_GLYPHS = [

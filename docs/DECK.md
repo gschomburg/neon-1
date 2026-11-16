@@ -2,8 +2,9 @@
 
 **In the game (dev only):** `dist/engine/deck.js`, opened from the editor's screen picker ("the deck (dev)"). Its state
 lives in memory, never in the save. The art is `asxii_art/deck_board_v06` (copied in by `node tools/data/scene_art.js`).
-The HTML mockups: `docs/mockups/deck_v4.html` (round 4), `deck_v3.html` (round 3). Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). A plan to look over; nothing is
-built. BACKLOG section 11 has where the idea came from; the mockups are `docs/mockups/deck.html` and `deck_v2.html`.
+The HTML mockups: `docs/mockups/deck_v4.html` (round 4), `deck_v3.html` (round 3), `deck.html` and `deck_v2.html`
+(the first boards). Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). Only the dev
+screen is built. BACKLOG section 11 has where the idea came from.
 
 Everything here is Claude's unless it says Greg. The socket count gets tuned once each group's chip list settles
 (**Decided (Greg, 2026-11-15):** decide what to cut after we've gone deeper on the options).
@@ -98,42 +99,7 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
 - **A power warning:** (Claude's take) the PWR count in the header turns red with the number off, the `]8[` readout
   blinks `!`, the bottom row says which chips have none, and leaving the deck with a chip off asks once.
 - **Chip faces use both rows:** letters and symbols, e.g. DEADMAN is `DED` over `MAN`. The 3-letter code stays in
-  the data. (Claude: a chip with a setting can show it, like SPOILS' `RWD` / `HP+` / `$# THE DECK: the sockets, the chips, and how it opens
-
-The in-game mockup: `docs/mockups/deck_v4.html` (the picker popup, power running out, chip faces, the parts that
-aren't sockets; round 3 was `deck_v3.html`). Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). A plan to look over; nothing is
-built. BACKLOG section 11 has where the idea came from; the mockups are `docs/mockups/deck.html` and `deck_v2.html`.
-
-Everything here is Claude's unless it says Greg. The socket count gets tuned once each group's chip list settles
-(**Decided (Greg, 2026-11-15):** decide what to cut after we've gone deeper on the options).
-
-## Decided so far (Greg, 2026-11-15)
-- **Outside a run.** You set the deck up between runs. It doesn't come up while you play.
-- **Chips have a rarity, one each.** No chip comes in more than one rarity.
-- **One of each chip.** Once you have one there's no reason to get it again, except to scrap it: a chip you
-  already own, found again, scraps into its letters. (Claude: the drop tables could skip chips you own, so finds
-  stay new.)
-- **You keep a chip only if you cash out with it.** Die and it's gone.
-- **Chips come from many places:** loot drops, bosses, quests, crafting (maybe by accident), and the fence (a chip of
-  its own, or a selection of them).
-- **DEADMAN goes in the CRASH socket.** CHUCK E. CACHE's 1UP stays a mod idea (BACKLOG section 7).
-- **Beat G0D and you can slot the 1UP right away.** So the deck has to open before that, or CRASH needs something
-  to hold earlier (see "How it opens").
-- **THE BYTE is for secret codes.** The shell has its own sockets. One row of bits, not two. Under it, a readout:
-  a scrolling ticker (like `FX.ticker`) that says when a code does something, and can show anything else too.
-- **The CRASH socket is a normal 3x2 socket.** The tall stick becomes its readout, like the byte's: with a chip in,
-  the stick spells out what it is (DEADMAN, 1UP).
-- **Each shell socket holds one command.** No command + argument pairs: each command takes different arguments.
-- **The FUSE is the extra power** that turns the bottom of the board on once you have the REP for it.
-- **Keep the PSU and the FUSE** even though you can't see them in a run. Make them fit, maybe through a boss you fight
-  on your own deck.
-- **The ports are a keeper.**
-- **Backlog ideas can move here** (done: BACKLOG points here for each one).
-- **A short training** once the board opens, to point things out.
-- **The CPU shows your hacker name** (Greg, 2026-11-15), not NEURAL DECK, with the mk under it. Names are
-  `WORD_WORD` (data/personas.js), up to 13 characters (STATIC_GOBLIN); the CPU is 12 wide inside. A name that
-  doesn't fit goes on 2 lines, split at the `_` (each word is 6 at most). Maybe small silkscreen under it
-.)
+  the data. (Claude: a chip with a setting can show it, like SPOILS' `RWD` / `HP+` / `$$$`.)
 
 ## The name
 Greg likes "board" better than "deck", but THE BOARD is already the REP screen. Options:
@@ -169,6 +135,40 @@ Claude's ladder, so the 1UP always has somewhere to go:
   how much you can run at once. Stronger chips cost more, so a strong deck is a choice, not just a collection.
   (This brings back the "every chip draws power" idea. It's the simplest way to keep the strong chips in check.)
 - **Where you'd see it in a run:** a boss that breaches your deck (below, PSU).
+
+## Seeds: what a chip does to a run
+**Decided (Greg, 2026-11-15):**
+- **Seeded runs keep everything on**, world chips too, like REP posts (HARDENED's extra INT stays). A seed only has to
+  stay *about* the same: the same corps, sector events and paths. A chip gets special treatment only if it really
+  scrambles a run.
+- **HAD3S and H3AV3N are curated:** lock every sector of both, so no chip or post (NEMESIS today) changes their corps.
+  (Greg: they played fine last time; he hasn't played them in a while.) BACKLOG has it.
+
+**Weighting a corp without scrambling the map** (Greg's idea, Claude's details). `pickCorps` (engine/map.js) picks a
+row's 3 corps by weight, one random number each. NEMESIS's 3x changes the total weight, which moves every boundary, so
+nearly every pick changes. Instead:
+- Every row's pool always has 2 placeholder corps, for every player, at a weight that doesn't depend on the player (the
+  row's average corp weight). The totals match for everyone, so every other pick lands the same.
+- After the row's 3 picks, a placeholder becomes your NEMESIS (or a chip's corp) if it isn't in the row already and its
+  level fits the row. Otherwise it's a fallback pick from its own stream (`rngFor(seed, 'nemfill', s, row, lane)`),
+  never from the map's stream, so the map's stream still uses 3 numbers a row.
+- Two players on one seed then differ only at the placeholder slots (about 1 corp slot in 10). Tile layouts are
+  keyed by node (`'layer', nodeId, idx`), so only those nodes' layers differ.
+- Adding the placeholders changes every existing seed once (the seed boards' old scores). Do it at a version bump, or
+  give map generation a version so old seeds keep their maps.
+- More "this corp shows up more" effects (the SIMON CHIP, TIME IS MONEY) fill the same placeholders, in a fixed order.
+- **+1 LAYER** the same way: the extra layer gets its own stream (`'layer+', nodeId`) and goes just before the boss;
+  the boss keeps its stream, and the lucky / jackpot / pet picks keep the old layer count.
+
+**What each chip touches** (a note for us, not shown in the game). Tag each chip when it's kept, so it's easy to see
+what changes what:
+- **map:** what a run generates: corps, sector events, paths, layers, rivals turning up. SIMON CHIP and the other
+  corp chips, FRESH, +1 LAYER, EVENTS, QUIET, HUNTED, HEADSTART, ADWARE.
+- **rules:** what a run pays or drops, once the map exists: SPOILS, GAMBLE, GREED, LUCK, the HEAT chips' REP.
+- **you:** your start, your tools and your deaths: BOOT's STARTER and PET, the CRASH chips, the SHELL and SUDO
+  commands, the PSU cells, OVERVOLT's INT cost, the GLYPH.
+- A chip can have two tags (HUNTED: map, for the rivals; rules, for its REP). The dev screen's stand-ins carry them
+  in `DECK_CHIP_TAGS` (engine/deck.js).
 
 ## Chips: getting them, carrying them, keeping them
 - **Carrying one home:** a chip you find rides in your belt like a gear. You can't use it in the run; it just takes
