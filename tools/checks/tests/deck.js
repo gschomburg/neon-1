@@ -31,6 +31,8 @@ module.exports = { name: 'deck', body: `
     check(reduced() || (rs.length >= 3 && rs.length <= 5 && rs.every(sn => sn.rc === rarityCol(DECK_CHIPS.LI2[2]) && sn.path.length <= 21 && sn.ch.every(c => '─│╭╮╰╯'.includes(c))) && (!DECK_TECH_ON || (DECK.techs && DECK.techs.length >= 5))),
       'a burst of 3 to 5 short rounded snakes in its rarity, and tech blobs pop around it: ' + rs.length); }
   check(buildScene(performance.now() + 300, false).length > 300, 'the board draws with them');
+  if (!reduced()) { DECK.techs = null; buildScene(performance.now() + 4000, false);
+    check(DECK.techs && DECK.techs.length >= 1 && DECK.techs.every(b => b.col === rarityCol(DECK_CHIPS.LI2[2]) && ![...b.t].some((_, i) => deckUnderAt(b.x + i, b.y))), 'a tech blob where each burst snake ends, in its rarity, never on a chip: ' + (DECK.techs || []).length); }
   p = deckPower();
   check(p.budget === 9 && !p.off.length, 'a bigger cell lights them all: ' + JSON.stringify(p.off));
   deckSlot('SC1', 'PSU');

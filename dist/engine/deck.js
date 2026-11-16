@@ -653,7 +653,7 @@ function deckRoundSnakes(sid, rc, now) {
 }
 // tech blobs around a chip that just went in: they pop up around the socket, decode, glow in its rarity, then fade
 // (more the rarer). d.techs = [{ x, y, t, t0, life, col }]
-const DECK_TECH_ON = false;   // (Greg, 2026-11-16: off for now, to see the snakes without them)
+const DECK_TECH_ON = false;   // the ring of them around the chip (Greg, 2026-11-16: off; they come at the slot burst's ends now: DECK_TECH_END)
 const DECK_TECH = ['o', '#', '=o=', '[]', '0x', '::', '<>', '+', '*', '1o', '=#'];
 function deckTechs(sid, lvl, col, now) {
   const s = deckSock(sid), ART = deckArt(), rects = DECK_SOCKETS.concat(DECK_PARTS), out = [];
@@ -665,6 +665,19 @@ function deckTechs(sid, lvl, col, now) {
     out.push({ x, y, t, t0: now + Math.random() * (250 + 60 * lvl), life: 650 + Math.random() * (400 + 120 * lvl), col });
   }
   return out;
+}
+// ...and one where a slot burst's snake ends (Greg, 2026-11-16: the wires go out and run around, then a tech blob where
+// each one ends, in the chip's rarity). On the end cell or next to it, never on a socket, a part or another blob.
+const DECK_TECH_END = true;
+function deckTechAt(x, y, col, now) {
+  const d = DECK, H = deckArt().length, t = pickR(DECK_TECH, Math.random), have = d.techs || [];
+  for (const [dx, dy] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1], [-2, 0], [-1, -1], [-1, 1]]) {
+    const bx = x + dx - Math.floor((t.length - 1) / 2), by = y + dy;
+    if ([...t].some((_, i) => bx + i < 0 || bx + i >= DECK_ART_W || by < 0 || by >= H || deckUnderAt(bx + i, by))) continue;
+    if (have.some(o => o.y === by && bx < o.x + o.t.length + 1 && o.x < bx + t.length + 1)) continue;
+    d.techs = have.concat({ x: bx, y: by, t, t0: now, life: 900 + Math.random() * 500, col });
+    return;
+  }
 }
 // How alive your deck is (0-1): more chips in, more power used, a higher mk (Greg: more tech blobs, more active, as you
 // slot more and your deck levels up). It sets how many hidden blobs glow and how often snakes run on their own.
@@ -886,6 +899,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
     const sn = d.snakes[i], hd = Math.floor((now - sn.t0) / sn.ms);
     if (hd < 0) continue;
     const tl = sn.tail || 5;
+    if (sn.under && !sn.ended && hd >= sn.path.length - 1) { sn.ended = true; const e = sn.path[sn.path.length - 1]; if (DECK_TECH_END && deckOpen(deckBand(e[1]))) deckTechAt(e[0], e[1], sn.rc, now); }   // (a tech blob where it ends)
     if (hd - tl >= sn.path.length) { d.snakes.splice(i, 1); continue; }
     if (sn.ch) {   // an under-trace: box lines in the chip's rarity, fading down the tail
       for (let j = 0; j <= tl; j++) { const c = sn.path[hd - j]; if (!c || !deckOpen(deckBand(c[1]))) continue;
