@@ -620,12 +620,12 @@ function deckUnderSnake(sid, i, now, ms = 45, back = false) {
   const path = back ? p.slice().reverse() : p;
   return { path: path.map(([x, y]) => [x, y]), ch: path.map(c => c[2]), t0: now, ms, rc: rarityCol(DECK_CHIPS[key][2]), tail: 7 };
 }
-// The slot burst (Greg, 2026-11-16): 3 to 5 snakes in rounded box lines, out of the chip in random directions,
+// The slot burst (Greg, 2026-11-16): 4 to 7 snakes in rounded box lines, out of the chip in random directions,
 // gone in about 2 seconds. Their paths are fresh each time and go anywhere on the board, but they run under the
 // sockets and the parts (deckUnderAt: they don't draw there), so they never cover a chip.
 const deckUnderAt = (x, y) => DECK_SOCKETS.concat(DECK_PARTS).some(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
 function deckRoundSnakes(sid, rc, now) {
-  const s = deckSock(sid), H = deckArt().length, out = [], n = 3 + Math.floor(Math.random() * 3);
+  const s = deckSock(sid), H = deckArt().length, out = [], n = 4 + Math.floor(Math.random() * 4);   // (Greg: 4 to 7)
   const ring = [];   // the cells around the socket, heading away from it
   for (let x = s.x; x < s.x + s.w; x++) ring.push([x, s.y - 1, 0, -1], [x, s.y + s.h, 0, 1]);
   for (let y = s.y; y < s.y + s.h; y++) ring.push([s.x - 1, y, -1, 0], [s.x + s.w, y, 1, 0]);
@@ -647,7 +647,7 @@ function deckRoundSnakes(sid, rc, now) {
       const l = nb.some(([a]) => a < 0), u = nb.some(([, b]) => b < 0);
       return u ? (l ? '╯' : '╰') : (l ? '╮' : '╭');
     });
-    out.push({ path, ch, t0: now + i * 70, ms: 75 + Math.random() * 20, rc, tail: 5, under: true });
+    out.push({ path, ch, t0: now + i * 70, ms: (75 + Math.random() * 20) / 1.2, rc, tail: 5, under: true });
   }
   return out;
 }
