@@ -966,11 +966,16 @@ function deckCpu(ctx, y0, sa) {
   if (!sws.length) { g.put(x, y++, 'none yet: STARTER POOL, STRAY and', C.dim); g.put(x, y++, 'NEMESIS (THE BOARD) can go here.', C.dim); }
   sws.forEach((k, i) => {
     const p = deckPost(k), nem = k === 'nemesis', on = nem ? !!d.nemesis : d.sw.has(k);
-    const btn = nem ? `[${d.nemesis ? CORPS[d.nemesis].name : 'none'}]` : on ? '[on]' : '[off]';
     g.put(x, y, p.name, on ? C.bright : C.mid, on);
-    deckBtn(ctx, g, x + w - btn.length, y, btn, on ? C.accent : C.mid, 'dksw' + k, () => {
-      if (nem) { const cs = deckNemPool(); d.nemesis = cs[(cs.indexOf(d.nemesis) + 1) % cs.length]; }
-      else if (d.sw.has(k)) d.sw.delete(k); else d.sw.add(k);
+    if (nem) {   // [<] CORP [>] (Greg, 2026-11-16: lots of corps; like THE BOARD's NEMESIS picker). The name steps forward too.
+      const step = dd => { const cs = deckNemPool(); d.nemesis = cs[((cs.indexOf(d.nemesis) + dd) % cs.length + cs.length) % cs.length]; Sound.tick(); };
+      const nw = 13, n = (d.nemesis ? CORPS[d.nemesis].name : 'none').slice(0, nw), l = Math.floor((nw - n.length) / 2);
+      const bx = x + w - (nw + 8);
+      deckBtn(ctx, g, bx, y, '[<]', C.accent, 'dkswnemesisL', () => step(-1));
+      deckBtn(ctx, g, bx + 4, y, (' '.repeat(l) + n).padEnd(nw), on ? C.accent : C.mid, 'dkswnemesis', () => step(1));
+      deckBtn(ctx, g, bx + nw + 5, y, '[>]', C.accent, 'dkswnemesisR', () => step(1));
+    } else deckBtn(ctx, g, x + w - (on ? 4 : 5), y, on ? '[on]' : '[off]', on ? C.accent : C.mid, 'dksw' + k, () => {
+      if (d.sw.has(k)) d.sw.delete(k); else d.sw.add(k);
       Sound.tick(); });
     g.put(x, y + 1, FX.ticker(p.desc, w, d.cpu.t0 + i * 900, ctx.now, 6), on ? C.text : C.dim);
     y += 2;
