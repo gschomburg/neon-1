@@ -55,7 +55,7 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   (Claude's take): your mk and access, chips in (6/11: no list, you can see them) and power, the mk ladder with the
   upgrade, the ROM's posts and switches, and a line of lore at the bottom (`MEDIX NC-1 · rev 2`). (Done.)
   **Then (Greg):** no list of the ROM's posts (the pins show them). The room goes to the switches, one per row with
-  its text under it and a `[x]` / `[ ]` on the right. NEMESIS isn't on/off: `NEMESIS [BURGERTRON]`, and a tap cycles
+  its text under it and `[on]` / `[off]` on the right (Greg). NEMESIS isn't on/off: `NEMESIS [BURGERTRON]`, and a tap cycles
   to the next corp or none. (Done. In the game it would cycle only the corps you've breached.)
   **Then (Greg):** only posts with a real choice get a setting. Claude's cut: STARTER POOL (it changes what the
   starter perk offers), STRAY (a pet you might not want along), NEMESIS (a corp, or none). TELL LIGHT and LUCKY START

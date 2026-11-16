@@ -574,7 +574,7 @@ function deckCpu(ctx, y0, sa) {
   head('SETTINGS · for your next run');
   DECK_SWITCHES.forEach((k, i) => {
     const p = deckPost(k), nem = k === 'nemesis', on = nem ? !!d.nemesis : d.sw.has(k);
-    const btn = nem ? `[${d.nemesis ? CORPS[d.nemesis].name : 'none'}]` : on ? '[x]' : '[ ]';
+    const btn = nem ? `[${d.nemesis ? CORPS[d.nemesis].name : 'none'}]` : on ? '[on]' : '[off]';
     g.put(x, y, p.name, on ? C.bright : C.mid, on);
     deckBtn(ctx, g, x + w - btn.length, y, btn, on ? C.accent : C.mid, 'dksw' + k, () => {
       if (nem) { const cs = deckCorps(); d.nemesis = cs[(cs.indexOf(d.nemesis) + 1) % cs.length]; }
