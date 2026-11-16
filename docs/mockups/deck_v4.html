@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Deck In Game</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+/* THE DECK, round 4: Greg's notes on round 3. The game's "more" rows for every scroll, a picker popup for sockets
+   (pick a chip or NONE and it closes), a short chip card, power that runs out instead of refusing (oldest chips get it
+   first), chip faces that use both rows, and a toggle for chips in your profile color. Board: asxii_art/deck_board_v06. */
+:root {
+  color-scheme: dark;
+  --bg: #06090a; --dim: #2c3a38; --mid: #5f7470; --text: #a9bdb7; --bright: #e6f4ef;
+  --accent: #3cf0ff; --danger: #ff3b4e; --money: #e8c66a; --rep: #a27ef5;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.45; padding: 24px 16px 64px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-size: 26px; font-weight: 800; color: var(--bright); margin: 0; letter-spacing: 2px; }
+h1 b { color: var(--accent); }
+p { margin: 0; max-width: 90ch; }
+.grid { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.phone { position: relative; width: 390px; max-width: 100%; height: 760px; border: 1px solid var(--dim); background: var(--bg); overflow: hidden;
+  user-select: none; -webkit-user-select: none; touch-action: none; }
+.phone canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.phone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.side { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 14px; }
+.side h3 { margin: 0; font-size: 12px; letter-spacing: 2px; color: var(--mid); font-weight: 400; }
+.side ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.side b { color: var(--bright); }
+.q { border-left: 3px solid var(--money); padding: 6px 12px; display: flex; flex-direction: column; gap: 6px; }
+.q b { color: var(--money); }
+.styles { display: flex; flex-wrap: wrap; gap: 6px; }
+.styles button { font: inherit; font-size: 12px; background: transparent; color: var(--text); border: 1px solid var(--dim); padding: 3px 8px; cursor: pointer; }
+.styles button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.styles button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>THE DECK <b>IN GAME</b> <span style="color:var(--mid);font-size:14px">round 4</span></h1>
+    <p>Greg's board v06 on the game's grid. The board scrolls in the middle, with the game's "more" rows; the bottom is a short card for what you picked. Tap a socket to pick its chip.</p>
+  </div>
+  <div class="grid">
+    <div class="phone" id="phone" tabindex="0"><canvas></canvas></div>
+    <div class="side">
+      <div><h3>TRY THIS</h3><ul>
+        <li><b>Tap an empty socket</b> (BT2, BI2, SH3...). The picker pops up: the chips that fit, or NONE. Tap one and it's in, and the picker closes.</li>
+        <li><b>Tap a full socket</b> and the card under the board shows its chip. Tap it again (or CHANGE) for the picker.</li>
+        <li><b>Run out of power:</b> put market in SH3 and ps in SH4. The newest chip goes grey with a red socket, and the warning stays at the bottom. Power goes to the oldest chips first. Swap the cell in PSU for LI-ION and they light up.</li>
+        <li><b>Tap [X]</b> (top right) with a chip off: that's the warning you'd get leaving the deck.</li>
+        <li><b>SPOILS:</b> its face shows the mode (RWD, HP+, $$$).</li>
+        <li><b>CHIPS</b> (top): every chip you own, scrolling a chip at a time. Tap one, then SLOT, and the sockets it fits blink.</li>
+        <li><b>GLYPH</b> (mk III, under the CPU upgrade) uses the same picker.</li>
+        <li>Still here from round 3: the BYTE (tap bits, ENTER; try 11111111), the CPU (NAME, mk III), the FUSE (install, TEST: BREACH), the ROM pins, the crew jacks, the ports, the uplink.</li>
+      </ul></div>
+      <div><h3>CHIP COLORS</h3>
+        <p style="margin-bottom:8px">Rarity (the game's chips), or your profile color. In your color the rarity moves to the socket's sides.</p>
+        <div class="styles" id="styles"></div>
+      </div>
+      <div class="q">
+        <b>NOTES</b>
+        <div>1. The "more" rows take a row each, so the board shows 15 rows, and the scrollbar column is gone: the art's 36 columns fit the grid as is.</div>
+        <div>2. The game's scroll area steps a line at a time. A chip is 2 rows, so the picker and CHIPS step a whole chip, so you never see half of one. The board steps 5 rows a tap (it's 56 rows); drag or the wheel for fine moves.</div>
+        <div>3. The card dropped "from:" and "found again". They could live in the codex, if chips get a tab there.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+// ---------- data ----------
+const css = getComputedStyle(document.documentElement), V = n => css.getPropertyValue('--' + n).trim();
+const C = {}; for (const k of ['bg', 'dim', 'mid', 'text', 'bright', 'accent', 'danger', 'money', 'rep']) C[k] = V(k);
+// rarity chips: [text, background], the game's colors (dist/data/palettes.js chips)
+const RAR = { common: ['#0c3318', '#6fdc84'], rare: ['#0b2a55', '#7fb6ff'], epic: ['#2d0a4e', '#c99bff'], legendary: ['#4a1300', '#ff8a4a'], exotic: ['#3a2800', '#ffd84a'] };
+// player color styles: dist/data/palettes.js styles
+const STYLES = [['NEON', '#3cf0ff', '#06303a'], ['TOXIC', '#9dff3c', '#16300a'], ['BLOOD', '#ff4d5e', '#3a0a10'], ['GOLD', '#ffd84a', '#3a2c06'],
+  ['ULTRA', '#c07bff', '#24103a'], ['VAPOR', '#ff79c6', '#1a1030'], ['GHOST', '#e6f4ef', '#2c3a38'], ['ICE', '#0b2a4a', '#bfe6ff'],
+  ['PAPER', '#111111', '#efe9da'], ['HAZARD', '#111111', '#ffb000']];
+const OFF = ['#5f7470', '#141b1a'];   // an unpowered chip: grey
+// the board: asxii_art/deck_board_v06 (every layer but the CPU's name and the readouts, which are drawn live)
+const ART = ["     0. [^]  ..",
+"     ][ |%|  ][     +BT1+ +BT2+ {",
+"     \\/  v   \\/     ]   [ |   |  }--",
+"     /\\  |   /\\     ]   [ |   |  |",
+"   +-oo--o---oo-+   +-+-+ +-+-+  |-",
+"[}-o            o=--+BI1+ +BI2+  |-",
+"[} |            |...]   [ :   :  |",
+"[} |            |   ]   [ :   :  }--",
+"[}-o            o=--+-+-+ + - + {",
+"   |            |     +-+",
+"   +-o--o--o--o-+     |.|",
+"   [_ ::::'::: _]     |.|  +CRS+",
+"     |        /       |.[==]   [",
+"     |+   .__/        |.[==]   [",
+"     |_   ||          |.|  +-+-+",
+"      |   ||          +-+",
+"      |   ||                 ]8[",
+"+SH1+ {   ||   +SPL++SH3+   +SH4+",
+"]   [-+   ++>:<]   [:   :   ]   [",
+"]   [ |   ||   ]   [:   :   ]   [",
+"+-+-+ {   vV   +-+-++ - +   +-+-+",
+"      |    \\          [___.___]",
+"      |     \\______      +---BYT--+",
+"+PSU+ {     +SH2+  }     ]01010101[",
+"]   [-+     ]   [  }-::::+-+-qp-+-+",
+"]   [ |     ]   [  |     (........)",
+"+-=-+ {     ++--+  |",
+"      |     ||     |    __",
+"      +::+::db::+::+   [  ]=----+-[X",
+"       '  ' oo '  '     ||      |PRT",
+"       ,  ,    ,  ,     )(      +-[X",
+"      +::+::vv::+::+    ||",
+"X]CRW |            |___<++>_______",
+"X]====] +=GLY=+                   [",
+"X]    | ].....[ +OV1+ +OV2+ +OV3+ }",
+"X]====] ]..X..[ :   : :   : :   : }",
+"X]    | ].....[ :   : :   : :   : }",
+"X]    ' +=-=-=+ +...+ +...+ +...+ }",
+"       \\   ^      ^     ^     ^   [",
+"        \\                         [",
+"         \\_______----------_______[",
+"          |||||             |||||",
+"          ^   ^             ^   ^",
+"          +SU1+   +.BS1.+   +HT1+",
+"}-        :   :   :     :   :   :",
+"          :   :   :     :   :   :",
+" UPL      +...+   +.o.o.+   +...+",
+"          +SU2+   +.BS2.+   +HT2+",
+"}-        :   :   :     :   :   :",
+"          :   :   :     :   :   :",
+"          +...+   +.o.o.+   +...+",
+"          +SU3+             +HT3+",
+"          :   :             :   :",
+"          :   :             :   :",
+"          +...+             +...+",
+""];
+const GROUPS = {
+  boot: ['BOOT', C.rep, 'what a run starts with'], bios: ['BIOS', C.rep, "the run's rules"],
+  crash: ['CRASH', C.bright, 'what happens when you die'], spoils: ['SPOILS', C.money, 'what corp bosses give'],
+  shell: ['SHELL', C.accent, 'one command for THE SHELL'], psu: ['PSU', C.money, 'the cell: your power budget'],
+  glyph: ['GLYPH', C.bright, 'your favourite glyph'], ov: ['OVERVOLT', C.danger, 'pay with integrity'],
+  sudo: ['SUDO', C.accent, 'the strong commands'], boss: ['BOSS', C.money, 'wide chips from the big bosses'],
+  heat: ['HEAT', C.danger, 'harder runs, more REP'],
+};
+// key: [code, name, group, rarity, power, what it does, face (top row, bottom row: 3 wide, 5 for BOSS)]
+const CHIPS = {
+  DM5: ['DM5', 'DEADMAN', 'crash', 'epic', 1, 'dying keeps 50% of the REP you would have banked.', ['DED', 'MAN']],
+  '1UP': ['1UP', '1UP', 'crash', 'exotic', 3, "b0y's crash unit. die and go back to the start of the corp, once a run.", ['1UP', '^_^']],
+  EJ1: ['EJ1', 'EJECT', 'crash', 'common', 1, 'cash out from anywhere, once a run.', ['/^\\', 'EJT']],
+  BB7: ['BB7', 'BLACK BOX', 'crash', 'rare', 1, 'when you die, one mod goes to the LOCKER.', ['[#]', 'BOX']],
+  SP3: ['SP3', 'SPOILS', 'spoils', 'common', 0, 'a switch for corp bosses: take the REWARDS, or skip them for a HEAL or for CASH.', ['SPL', null]],
+  GM7: ['GM7', 'GAMBLE', 'spoils', 'epic', 2, 'boss rewards come face down. one of them is a jackpot: two mods.', ['?!?', 'BET']],
+  CD2: ['CD2', 'cd ..', 'shell', 'rare', 2, 'THE SHELL learns cd ..: back a row on the map, once a sector.', ['cd ', ' ..']],
+  MK7: ['MK7', 'market', 'shell', 'epic', 2, 'THE SHELL learns market: a small black market right where you are, once a sector.', ['mkt', '[$]']],
+  LS1: ['LS1', 'ls', 'shell', 'common', 1, 'THE SHELL learns ls: how many ICE and $ nodes are on this layer.', ['ls ', '#?$']],
+  PS4: ['PS4', 'ps', 'shell', 'rare', 1, 'THE SHELL learns ps: where the rival hackers are on the map.', ['ps ', '@ @']],
+  UN0: ['UN0', 'undo', 'shell', 'epic', 2, 'THE SHELL learns undo: take back your last ICE hit, once a sector.', ['und', '<-o']],
+  ST4: ['ST4', 'STARTER', 'boot', 'rare', 1, "pick a mod you've found: it can show up in the starter perk.", ['STR', '>>>']],
+  PT1: ['PT1', 'PET', 'boot', 'common', 0, 'pick the pet that comes along: COMPANION, the chick, the bug, the fish.', ['PET', '^.^']],
+  HS2: ['HS2', 'HEADSTART', 'boot', 'common', 1, 'start on the second row of sector 1. pays a little less REP.', ['GO!', '>>2']],
+  SM1: ['SM1', 'SIMON CHIP', 'bios', 'rare', 1, 'a corp chip: SIMON shows up 3x as often. flip it and it shows up less.', ['SIM', 'x3!']],
+  QT0: ['QT0', 'QUIET', 'bios', 'rare', 1, 'no rival hackers turn up.', ['shh', '...']],
+  AD5: ['AD5', 'ADWARE', 'bios', 'common', 1, 'more ads, and tapping one heals 1 INT.', ['AD!', '[x]']],
+  SC1: ['SC1', 'STOCK CELL', 'psu', 'common', 0, 'comes with the deck. power 6.', ['[+]', 'C:6']],
+  LI2: ['LI2', 'LI-ION', 'psu', 'rare', 0, 'a better cell. power 9.', ['[+]', 'Li9']],
+  RX9: ['RX9', 'REACTOR', 'psu', 'legendary', 0, 'power 14, but -1 starting INT.', ['(*)', 'R14']],
+  GR8: ['GR8', 'GREED', 'ov', 'rare', 2, '-1 starting INT. +25% credits.', ['GRD', '$-1']],
+  LK7: ['LK7', 'LUCK', 'ov', 'epic', 2, '-1 starting INT. 1 in 5 drops roll a step rarer.', ['777', 'LCK']],
+  GD0: ['GD0', 'mode.god', 'sudo', 'legendary', 3, 'THE SHELL learns mode.god: no damage for a sector, then it wears off.', ['g0d', 'mod']],
+  OMNI: ['OMNI', "OMNI'S EYE", 'boss', 'exotic', 3, "every corp's card on the map shows its tell.", ['<(@)>', 'OMNI ']],
+  HC1: ['HC1', 'HARDCORE', 'heat', 'epic', 0, 'no CRASH chip works. +50% REP.', ['HRD', 'x_x']],
+  HN2: ['HN2', 'HUNTED', 'heat', 'rare', 0, 'twice as many rivals. +20% REP.', ['HNT', '>@<']],
+};
+const CELL = { SC1: 6, LI2: 9, RX9: 14 };
+const SPOIL_MODES = [['REWARDS', 'RWD', 'take the REWARDS.'], ['HEAL', 'HP+', 'skip them: HEAL 2 INT.'], ['CASH', '$$$', 'skip them: take CASH.']];
+const GLYPHS = [
+  ['THE WATCHER', [' .-. ', '( o )', " '-' "]], ['COOKIE', [' .-. ', '(::.)', " '-' "]],
+  ['GHOST USER', [' .-. ', '(o o)', ' vvv ']], ['DIAMOND', [' / \\ ', '<   >', ' \\ / ']],
+];
+// the sockets, from the socket labels layer (the game would read them out of the art the same way)
+const S = (id, x, y, g, mk, w = 5, h = 4) => ({ id, x, y, g, mk, w, h });
+const SOCKETS = [
+  S('BT1', 20, 1, 'boot', 2), S('BT2', 26, 1, 'boot', 2), S('BI1', 20, 5, 'bios', 2), S('BI2', 26, 5, 'bios', 2),
+  S('CRS', 27, 11, 'crash', 2), S('SH1', 0, 17, 'shell', 2), S('SPL', 15, 17, 'spoils', 2), S('SH3', 20, 17, 'shell', 2),
+  S('SH4', 28, 17, 'shell', 2), S('PSU', 0, 23, 'psu', 2), S('SH2', 12, 23, 'shell', 2),
+  S('GLY', 8, 33, 'glyph', 3, 7, 5), S('OV1', 16, 34, 'ov', 3), S('OV2', 22, 34, 'ov', 3), S('OV3', 28, 34, 'ov', 3),
+  S('SU1', 10, 43, 'sudo', 4), S('SU2', 10, 47, 'sudo', 4), S('SU3', 10, 51, 'sudo', 4),
+  S('BS1', 18, 43, 'boss', 4, 7), S('BS2', 18, 47, 'boss', 4, 7),
+  S('HT1', 28, 43, 'heat', 4), S('HT2', 28, 47, 'heat', 4), S('HT3', 28, 51, 'heat', 4),
+];
+const P = (id, x, y, w, h, mk = 2) => ({ id, x, y, w, h, mk });
+const PARTS = [
+  P('cpu', 3, 4, 14, 7), P('rom', 3, 11, 14, 1), P('stick', 22, 9, 3, 7), P('readout', 29, 16, 3, 1),
+  P('byte', 25, 22, 10, 4), P('hdr3', 6, 28, 14, 4), P('fuse', 23, 27, 4, 6), P('ports', 33, 28, 3, 3),
+  P('crew', 0, 32, 5, 6, 3), P('hdr4', 10, 41, 23, 2, 4), P('uplink', 0, 44, 4, 5, 4),
+];
+const NAMES = ['POTATO_SAUCE', 'NEON_FOX', 'STATIC_GOBLIN', 'IRON_MK2', 'THE_YETI'];
+const POSTS = [['HARDENED', 1], ['SEED MONEY', 1], ['FIELD KIT', 1], ['GEAR SLOT', 1], ['RESTOCK', 1], ['SHORTLIST', 0],
+  ['SECOND WIND', 1], ['BETTER DROPS', 0], ['LOCKER', 1], ['WORKBENCH', 1]];
+const SWITCHES = ['TELL LIGHT', 'STRAY', 'LUCKY START', 'STARTER POOL'];
+const CODES = {
+  '11111111': '0xFF: OVERFLOW wakes up. his seed is armed for your next run.',
+  '00101010': '42. but what was the question?',
+  '10110000': 'b0y: hey. quit poking my switches.',
+  '01111111': 'DEL: access denied.',
+  '10000000': '0x80: DOUBLE TIME armed for your next run.',
+};
+const BAND = by => by >= 41 ? 4 : by >= 32 ? 3 : 2;
+
+// the screen: 36 x 34. Rows 5-21 are the scroll area (a "more" row top and bottom, 15 board rows), 23-32 the card.
+const WC = 36, HC = 34, VY = 5, VH = 17, BV = VH - 2, IY = 23, BH = ART.length, LINE_H = 1.22, FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
+const BOARD_STEP = 5;   // rows a "more" tap moves the board
+const MORE_UP = '[ ^ ^ ^  more  ^ ^ ^ ]', MORE_DN = '[ v v v  more  v v v ]';   // engine/codex.js scrollArea's rows
+
+// ---------- state ----------
+const qs = new URLSearchParams(location.search);
+const st = {
+  view: 'board', scroll: Math.min(+qs.get('scroll') || 0, BH - BV), list: { top: 0 },
+  sel: { kind: 'socket', id: 'BT1' }, dlg: null, carry: null, style: -1, leave: 0,
+  rep: 2400, mk: 2, fuse: false, blown: false, name: 0, spoils: 0, glyph: 0, crew: new Set(['POPS']),
+  slots: { PSU: 'SC1', BT1: 'ST4', BI1: 'SM1', CRS: 'DM5', SPL: 'SP3', SH1: 'CD2' },
+  order: ['PSU', 'BT1', 'BI1', 'CRS', 'SPL', 'SH1'],   // the sockets in the order their chips went in: power goes oldest first
+  sw: new Set(['TELL LIGHT', 'STRAY']), bits: [0, 0, 0, 0, 0, 0, 0, 0], tick: null, msg: null, mc: null, L: null, hits: [],
+};
+const owned = Object.keys(CHIPS);
+const sockById = id => SOCKETS.find(s => s.id === id);
+const slotOf = key => Object.keys(st.slots).find(k => st.slots[k] === key);
+const bandOpen = mk => mk <= st.mk && !(mk === 4 && (!st.fuse || st.blown));
+const fits = (key, s) => CHIPS[key][2] === s.g;
+const say = (text, err = true) => { st.msg = { text, err, t: performance.now() }; };
+const ticker = text => { st.tick = { text, t: performance.now() }; };
+const mkName = m => ['', '', 'II', 'III', 'IV'][m];
+const wrap = (s, w) => { const out = []; let line = ''; for (const word of s.split(' ')) { if ((line + ' ' + word).trim().length > w) { out.push(line); line = word; } else line = (line + ' ' + word).trim(); } if (line) out.push(line); return out; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// Power: the cell's budget goes to the chips in the order they went in. A chip that doesn't fit what's left gets none,
+// and the ones after it still try (so the newest chips are the ones that go dark, not one you can't see).
+function power() {
+  const budget = CELL[st.slots.PSU] || 0, on = new Set(), off = [];
+  let left = budget;
+  for (const id of st.order) {
+    const key = st.slots[id]; if (!key) continue;
+    const s = sockById(id), c = CHIPS[key][4];
+    if (!bandOpen(s.mk)) continue;   // a dark band (blown fuse): its chips sit there, off, and cost nothing
+    if (c <= left) { left -= c; on.add(id); } else off.push(id);
+  }
+  return { budget, left, on, off, used: budget - left };
+}
+const isOn = id => power().on.has(id);
+
+function slot(key, sid) {
+  const s = sockById(sid), was = st.slots[sid], other = slotOf(key), name = CHIPS[key][1];
+  if (other) { delete st.slots[other]; st.order = st.order.filter(i => i !== other); }
+  st.slots[sid] = key; st.order = st.order.filter(i => i !== sid).concat(sid);
+  st.carry = null; st.sel = { kind: 'socket', id: sid };
+  const p = power();
+  if (!p.on.has(sid) && CHIPS[key][2] !== 'psu') return say(`NO POWER: ${name} needs ${CHIPS[key][4] - p.left} more.`);
+  const lost = p.off.length;
+  if (CHIPS[key][2] === 'psu' && lost) return say(`${name}: ${lost} chip${lost > 1 ? 's' : ''} lost power.`);
+  if (CHIPS[key][2] === 'psu') return say(`${name} in. power ${p.budget}.`, false);
+  say(was && was !== key ? `${name} in ${s.id}. ${CHIPS[was][1]} back in your chips.` : other && other !== sid ? `${name} moved to ${s.id}.` : `${name} in ${s.id}.`, false);
+}
+function pull(sid) {
+  const key = st.slots[sid]; if (!key) return;
+  delete st.slots[sid]; st.order = st.order.filter(i => i !== sid);
+  const p = power();
+  say(`${CHIPS[key][1]} back in your chips.` + (sid === 'PSU' && p.off.length ? ' no cell: no power.' : ''), sid === 'PSU' && p.off.length > 0);
+}
+function openPicker(sid) {
+  const s = sockById(sid);
+  st.sel = { kind: 'socket', id: sid }; st.carry = null;
+  if (!bandOpen(s.mk)) return;   // locked: the card says why
+  st.dlg = { id: sid, s: { top: 0 }, t: performance.now() };
+}
+
+// ---------- drawing ----------
+const phone = document.getElementById('phone'), cv = phone.querySelector('canvas'), g = cv.getContext('2d');
+function layout() {
+  const r = phone.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 3);
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.font = `400 100px ${FONT}`; const ratio = (g.measureText('M').width / 100) || 0.6;
+  const fs = Math.max(7, Math.min(26, Math.min((r.width - 12) / (WC * ratio), (r.height - 12) / (HC * LINE_H))));
+  st.L = { fs, cw: fs * ratio, chh: fs * LINE_H, w: r.width, h: r.height };
+  st.L.ox = Math.round((r.width - WC * st.L.cw) / 2); st.L.oy = Math.round((r.height - HC * st.L.chh) / 2);
+}
+// a line that doesn't fit scrolls (FX.ticker: a beat on the start, then it runs, a beat on the end)
+function tick(text, w, t0, now) {
+  if (text.length <= w) return text;
+  const steps = text.length - w, ms = now - t0, cyc = 1200 + steps * 150 + 1200, t = ms % cyc;
+  const i = t < 1200 ? 0 : Math.min(steps, Math.floor((t - 1200) / 150));
+  return text.substr(i, w);
+}
+
+function frame(now) {
+  const grid = new Array(WC * HC).fill(null), bgs = [];
+  let hits = [];
+  const pw = power();
+  const put = (x, y, s, col, bold = false, a = 1) => { for (let i = 0; i < s.length; i++) { const xx = x + i; if (s[i] === ' ' || xx < 0 || xx >= WC || y < 0 || y >= HC) continue; grid[y * WC + xx] = { ch: s[i], col, bold, a }; } };
+  const clr = (x, y, w, h) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (xx >= 0 && xx < WC && yy >= 0 && yy < HC) grid[yy * WC + xx] = null; };
+  const bg = (x, y, w, h, col, a) => bgs.push({ x, y, w, h, col, a });
+  const hover = (x, y, w, h) => st.mc && st.mc[0] >= x && st.mc[0] < x + w && st.mc[1] >= y && st.mc[1] < y + h;
+  const hit = (x, y, w, h, fn) => { hits.push({ x, y, w, h, fn }); if (hover(x, y, w, h)) bg(x, y, w, h, C.accent, 0.16); };
+  const btn = (x, y, s, col, fn, off) => { put(x, y, s, off ? C.dim : col); if (!off) hit(x, y, s.length, 1, fn); return x + s.length + 1; };
+  const top = st.scroll, inView = by => by >= top && by < top + BV, sy = by => VY + 1 + by - top;
+  const bput = (x, by, s, col, bold, a) => { if (inView(by)) put(x, sy(by), s, col, bold, a); };
+  const bbg = (x, by, w, h, col, a) => { const y0 = Math.max(by, top), y1 = Math.min(by + h, top + BV); if (y1 > y0) bg(x, sy(y0), w, y1 - y0, col, a); };
+  const bclr = (x, by, w, h) => { for (let y = by; y < by + h; y++) if (inView(y)) clr(x, sy(y), w, 1); };
+  // the "more" rows (engine/codex.js scrollArea): an inverted bar, blank when there's nothing more that way
+  const more = (x0, w, y, up, can, fn) => {
+    if (!can) return;
+    const s = up ? MORE_UP : MORE_DN, x = x0 + Math.floor((w - s.length) / 2), hov = hover(x, y, s.length, 1);
+    bg(x, y, s.length, 1, hov ? C.accent : C.text, 1); put(x, y, s, C.bg, true); hits.push({ x, y, w: s.length, h: 1, fn });
+  };
+  // A scroll area of blocks (a chip is 2 rows and a gap): it steps a whole block, so a chip is never cut in half.
+  // s: { top } (a block index). Draws `rows` rows at y, the "more" rows taking the first and last when it doesn't fit.
+  const blockArea = (x0, w, y, rows, blocks, s) => {
+    const total = blocks.reduce((n, b) => n + b.h, 0);
+    if (total <= rows) { s.top = 0; s.max = 0; let yy = y; for (const b of blocks) { b.draw(yy); yy += b.h; } return; }
+    const inner = rows - 2; let max = 0;
+    for (let i = blocks.length - 1, acc = 0; i >= 0; i--) { acc += blocks[i].h; if (acc > inner) { max = i + 1; break; } }
+    s.max = max; s.top = clamp(s.top, 0, max);
+    let yy = y + 1;
+    for (let i = s.top; i < blocks.length && yy + blocks[i].h <= y + 1 + inner; i++) { blocks[i].draw(yy); yy += blocks[i].h; }
+    more(x0, w, y, true, s.top > 0, () => { s.top = clamp(s.top - 1, 0, max); });
+    more(x0, w, y + rows - 1, false, s.top < max, () => { s.top = clamp(s.top + 1, 0, max); });
+  };
+
+  // a chip's face: 3 x 2 (5 x 2 for BOSS), both rows art, on its rarity color (or your style; grey with no power)
+  const faceRows = key => { const f = CHIPS[key][6]; return [f[0], key === 'SP3' ? SPOIL_MODES[st.spoils][1] : f[1]]; };
+  const faceCols = (key, off) => off ? OFF : st.style >= 0 ? [STYLES[st.style][1], STYLES[st.style][2]] : RAR[CHIPS[key][3]];
+  const chipFace = (x, y, key, P, B, off) => {
+    const [fg, bgc] = faceCols(key, off), [a, b] = faceRows(key), w = CHIPS[key][2] === 'boss' ? 5 : 3;
+    B(x, y, w, 2, bgc, 1); P(x, y, a, fg, true); P(x, y + 1, b, fg, true);
+  };
+  // a chip in a list: its face, with the rarity as brackets when the face is in your style
+  const listFace = (x, y, key, off) => {
+    const w = CHIPS[key][2] === 'boss' ? 5 : 3;
+    chipFace(x, y, key, put, bg, off);
+    if (st.style >= 0 && !off) { const rc = RAR[CHIPS[key][3]][1]; for (const j of [0, 1]) { put(x - 1, y + j, ']', rc, true); put(x + w, y + j, '[', rc, true); } }
+  };
+  // a socket: its code on the top border, the frame by state, the chip inside
+  const drawSocket = (s, X, Y, P, B, CL, isSel, keyOver) => {
+    const open = bandOpen(s.mk), key = keyOver !== undefined ? keyOver : st.slots[s.id], [, gc] = GROUPS[s.g], w = s.w, inner = w - 2;
+    const off = key && open && !keyOver && !pw.on.has(s.id) && CHIPS[key][2] !== 'psu';
+    CL(X, Y, w, s.h);
+    const col = !open ? C.dim : off ? C.danger : key ? gc : C.mid;
+    if (s.g === 'glyph') {
+      P(X, Y, '+=GLY=+', col); for (let j = 1; j < 4; j++) { P(X, Y + j, ']', col); P(X + 6, Y + j, '[', col); } P(X, Y + 4, '+=-=-=+', col);
+      if (!open) { P(X + 1, Y + 2, ':mk3:', C.mid, false, 0.8); }
+      else GLYPHS[st.glyph][1].forEach((l, j) => P(X + 1, Y + 1 + j, l, C.bright, true));
+      if (isSel) B(X, Y, w, s.h, C.accent, 0.22);
+      return;
+    }
+    const lab = s.id, topRow = '+' + (inner > 3 ? '.' : '') + lab + (inner > 3 ? '.' : '') + '+';
+    P(X, Y, topRow, col, false, open ? 1 : 0.8);
+    const sideCol = key && open && !off && st.style >= 0 ? RAR[CHIPS[key][3]][1] : col;
+    for (let j = 1; j < s.h - 1; j++) { P(X, Y + j, !open || !key ? ':' : ']', sideCol, !!(key && st.style >= 0)); P(X + w - 1, Y + j, !open || !key ? ':' : '[', sideCol, !!(key && st.style >= 0)); }
+    P(X, Y + s.h - 1, !open ? '+' + '.'.repeat(inner) + '+' : key ? (inner > 3 ? '+-+-+-+' : '+-+-+') : (inner > 3 ? '+ - - +' : '+ - +'), col, false, open ? 1 : 0.8);
+    if (!open) P(X + 1, Y + 1, inner > 3 ? ' mk' + s.mk + ' ' : 'mk' + s.mk, C.mid, false, 0.7);
+    else if (key) chipFace(X + 1, Y + 1, key, P, B, off);
+    if (st.carry && open && fits(st.carry, s) && Math.floor(now / 300) % 2) B(X, Y, w, s.h, C.accent, 0.3);
+    if (isSel) B(X, Y, w, s.h, C.accent, 0.22);
+  };
+
+  // ---------- header ----------
+  put(0, 0, 'NeoN+1', C.accent); btn(WC - 3, 0, '[X]', C.mid, leave);
+  put(0, 1, '- '.repeat(18), C.dim);
+  put(0, 2, 'SAFEHOUSE // ', C.mid); put(13, 2, 'THE DECK', C.bright, true);
+  const rep = `${st.rep} REP`; put(WC - rep.length, 2, rep, C.rep);
+  let tx = btn(0, 3, st.view === 'board' ? '[BOARD]' : ' BOARD ', st.view === 'board' ? C.accent : C.mid, () => { st.view = 'board'; });
+  btn(tx, 3, st.view === 'chips' ? `[CHIPS ${owned.length}]` : ` CHIPS ${owned.length} `, st.view === 'chips' ? C.accent : C.mid, () => { st.view = 'chips'; st.carry = null; });
+  const pwt = `PWR ${pw.used}/${pw.budget}` + (pw.off.length ? ` !${pw.off.length}` : ''), mkt = `mk ${mkName(st.mk)} `;
+  put(WC - pwt.length, 3, pwt, pw.off.length ? C.danger : C.money, !!pw.off.length); put(WC - pwt.length - mkt.length, 3, mkt, C.money);
+  put(0, 4, '- '.repeat(18), C.dim);
+
+  if (st.view === 'board') {
+    // ---------- the board ----------
+    for (let by = top; by < top + BV && by < BH; by++) put(0, sy(by), ART[by], bandOpen(BAND(by)) ? C.mid : C.dim, false, bandOpen(BAND(by)) ? 0.9 : 0.8);
+    // the CPU: your hacker name (2 lines when it doesn't fit), the mk, the pins blinking in turn
+    { const n = NAMES[st.name], lines = n.length <= 10 ? [n] : n.split('_');
+      bclr(4, 5, 12, 5); lines.forEach((l, i) => bput(6, 6 + i, l, C.money, true)); bput(6, 6 + lines.length, 'mk ' + mkName(st.mk), C.money);
+      const k = Math.floor(now / 170) % 12; let pi = 0;
+      for (const by of [4, 10]) { const row = ART[by]; for (let x = 3; x <= 16; x++) if (row[x] === 'o') { bput(x, by, 'o', pi % 12 === k ? C.bright : C.money, pi % 12 === k); pi++; } }
+      for (const by of [5, 8]) for (const x of [3, 16]) bput(x, by, 'o', C.money);
+      for (let by = 4; by <= 10; by++) for (const x of [3, 16]) if ('|+'.includes(ART[by][x])) bput(x, by, ART[by][x], C.money);
+      bput(3, 4, '+-', C.money); bput(15, 4, '-+', C.money); bput(3, 10, '+-', C.money); bput(15, 10, '-+', C.money); }
+    // the ROM pins: one per BOARD post you've bought, lit
+    { const lit = POSTS.filter(p => p[1]).length + st.sw.size; let n = 0;
+      for (let x = 6; x <= 13; x++) if (ART[11][x] !== ' ') { bput(x, 11, ART[11][x], n < lit ? C.rep : C.dim, n < lit); n++; } }
+    // the CRASH stick reads out its chip, scrolling when the name is longer than 5 (red and still when it has no power)
+    { const key = st.slots.CRS, name = key ? CHIPS[key][1].replace(/ /g, '') : '', on = key && pw.on.has('CRS');
+      for (let j = 0; j < 5; j++) {
+        let ch = '.';
+        if (name && !on) ch = ' OFF '[j];
+        else if (name) { if (name.length <= 5) { const o = Math.floor((5 - name.length) / 2); ch = name[j - o] || '.'; } else { const s = name + '   ', i = Math.floor(now / 320); ch = s[(i + j) % s.length]; } }
+        bput(23, 10 + j, ch === ' ' ? '.' : ch, name && !on ? C.danger : name && ch !== '.' && ch !== ' ' ? C.bright : C.dim, !!name);
+      } }
+    // the ]8[ readout: power left, ! when a chip has none
+    bput(30, 16, pw.off.length ? (Math.floor(now / 400) % 2 ? '!' : ' ') : pw.left > 9 ? '+' : String(pw.left), pw.off.length ? C.danger : pw.left > 0 ? C.money : C.mid, true);
+    // THE BYTE: tap a bit to flip it; the ticker under it answers
+    for (let i = 0; i < 8; i++) {
+      bput(26 + i, 23, String(st.bits[i]), st.bits[i] ? C.accent : C.mid, !!st.bits[i]);
+      if (inView(23)) hit(26 + i, sy(23), 1, 1, () => { st.bits[i] ^= 1; st.sel = { kind: 'part', id: 'byte' }; });
+    }
+    { let s = '........';
+      if (st.tick) { const pad = '        ', full = pad + st.tick.text + pad, i = Math.floor((now - st.tick.t) / 140);
+        if (i > (full.length - 8) * 2) st.tick = null; else s = full.substr(i % (full.length - 8), 8); }
+      bclr(26, 25, 8, 1); bput(26, 25, s.replace(/ /g, st.tick ? ' ' : '.'), st.tick ? C.accent : C.dim, !!st.tick); }
+    // the FUSE
+    { const fc = st.blown ? C.danger : st.fuse ? C.money : C.dim;
+      bput(24, 30, st.blown ? (Math.floor(now / 200) % 2 ? '><' : '  ') : ')(', fc, true); bput(24, 29, '||', fc); bput(24, 31, '||', fc); }
+    // the sockets
+    for (const s of SOCKETS) drawSocket(s, s.x, s.y, bput, bbg, bclr, st.sel.kind === 'socket' && st.sel.id === s.id);
+    if (st.sel.kind === 'part') { const p = PARTS.find(p => p.id === st.sel.id); if (p) bbg(p.x, p.y, p.w, p.h, C.accent, 0.18); }
+    if (!bandOpen(3)) bput(21, 33, 'mk III', C.dim); if (!bandOpen(4)) bput(25, 42, st.blown ? 'FUSE BLOWN' : 'mk IV', st.blown ? C.danger : C.dim);
+    // the "more" rows
+    clr(0, VY, WC, 1); clr(0, VY + VH - 1, WC, 1);
+    more(0, WC, VY, true, top > 0, () => { st.scroll = clamp(st.scroll - BOARD_STEP, 0, BH - BV); });
+    more(0, WC, VY + VH - 1, false, top < BH - BV, () => { st.scroll = clamp(st.scroll + BOARD_STEP, 0, BH - BV); });
+  } else {
+    // ---------- the chip list: grouped, a chip is 2 rows and a gap, a "more" tap steps a chip ----------
+    const blocks = [];
+    for (const gk of Object.keys(GROUPS)) {
+      const ks = owned.filter(k => CHIPS[k][2] === gk); if (!ks.length) continue;
+      blocks.push({ h: 1, draw: y => { const [n, gc] = GROUPS[gk]; put(1, y, `-- ${n} `, gc); put(5 + n.length, y, '- '.repeat(Math.floor((30 - n.length) / 2)), C.dim); } });
+      for (const key of ks) blocks.push({ h: 3, draw: y => {
+        const k = CHIPS[key], where = slotOf(key), off = where && !pw.on.has(where) && k[2] !== 'psu', [, rc] = RAR[k[3]];
+        listFace(2, y, key, off);
+        put(9, y, k[1], C.bright, true);
+        if (where) put(WC - 1 - where.length - 3, y, 'in ' + where, off ? C.danger : C.accent);
+        put(9, y + 1, k[3], rc); put(10 + k[3].length, y + 1, k[2] === 'psu' ? `· +${CELL[key]} PWR` : `· PWR ${k[4]}`, C.money);
+        if (off) put(WC - 9, y + 1, 'NO POWER', C.danger, true);
+        if (st.sel.kind === 'chip' && st.sel.key === key) bg(0, y, WC, 2, C.accent, 0.18);
+        hit(0, y, WC, 2, () => { st.sel = { kind: 'chip', key }; });
+      } });
+    }
+    blockArea(0, WC, VY, VH, blocks, st.list);
+  }
+
+  // ---------- the card ----------
+  put(0, IY - 1, '- '.repeat(18), C.dim);
+  const BY = IY + 8; let bx = 1;
+  const B = (s, col, fn, off) => { bx = btn(bx, BY, s, col, fn, off) + 1; };
+  const lines = (ls, y0) => ls.forEach(([t, col], i) => put(1, y0 + i, t, col));
+  // a chip's short card: the face in a socket frame, name, group and rarity, power, what it does
+  const chipCard = (key, sid) => {
+    const k = CHIPS[key], [gn, gc] = GROUPS[k[2]], [, rc] = RAR[k[3]], wide = k[2] === 'boss';
+    const fr = { id: sid || '---', g: k[2], mk: 2, w: wide ? 7 : 5, h: 4 };
+    const off = sid && !pw.on.has(sid) && k[2] !== 'psu';
+    if (sid && st.slots[sid] === key) drawSocket(Object.assign({}, sockById(sid), { x: 1, y: IY }), 1, IY, put, bg, clr, false);
+    else drawSocket(fr, 1, IY, put, bg, clr, false, key);
+    const x = wide ? 10 : 8;
+    put(x, IY, k[1], C.bright, true);
+    put(x, IY + 1, gn, gc); put(x + gn.length + 1, IY + 1, '· ' + k[3], rc);
+    put(x, IY + 2, k[2] === 'psu' ? `gives ${CELL[key]} power` : `PWR ${k[4]}`, C.money);
+    if (off) put(x + 7, IY + 2, Math.floor(now / 500) % 2 ? 'NO POWER' : '', C.danger, true);
+    else if (sid && k[2] !== 'psu') put(x + 7, IY + 2, 'on', C.accent);
+    if (key === 'SP3') lines([['bosses: ' + SPOIL_MODES[st.spoils][2], C.text]], IY + 4);
+    else lines(wrap(k[5], 34).slice(0, 3).map(t => [t, C.text]), IY + 4);
+    if (off) put(1, IY + 7, `needs ${k[4] - pw.left} more PWR: see PSU.`, C.danger);
+  };
+  const sel = st.sel;
+  if (sel.kind === 'chip') {
+    const where = slotOf(sel.key); chipCard(sel.key, where);
+    B('[ SLOT ]', C.accent, () => { st.carry = sel.key; st.view = 'board'; say(`tap a blinking ${GROUPS[CHIPS[sel.key][2]][0]} socket.`, false); });
+    if (where) B('[ PULL ]', C.bright, () => pull(where));
+  } else if (sel.kind === 'socket') {
+    const s = sockById(sel.id), key = st.slots[s.id], [gn, gc, gt] = GROUPS[s.g], open = bandOpen(s.mk);
+    if (!open) {
+      drawSocket(s, 1, IY, put, bg, clr, false);
+      put(8, IY, `${s.id} · LOCKED`, C.mid, true); put(8, IY + 1, gn, gc); put(8, IY + 2, gt, C.dim);
+      const why = s.mk === 3 ? ['opens with mk III: the CPU upgrade.', 'an ELITE post on THE BOARD.'] : st.blown ? ['the FUSE is blown.', 'replace it to light mk IV again.'] : ['opens with mk IV: the FUSE.', 'a SYSOP post on THE BOARD.'];
+      lines(why.map(t => [t, C.text]), IY + 4);
+      if (s.mk === 3 && st.mk < 3) B('[ mk III · 600 REP ]', C.rep, upgrade3);
+      if (s.mk === 4) B(st.blown ? '[ REPLACE FUSE · 100 REP ]' : '[ SEE THE FUSE ]', C.rep, () => { st.sel = { kind: 'part', id: 'fuse' }; });
+    } else if (s.g === 'glyph') {
+      drawSocket(s, 1, IY, put, bg, clr, false);
+      put(10, IY, GLYPHS[st.glyph][0], C.bright, true); put(10, IY + 1, 'GLYPH · your favourite', C.bright); put(10, IY + 2, 'pick from glyphs seen', C.dim);
+      lines(wrap('tap it when you see it on a layer and it acts like a loot node, ICE or real.', 34).map(t => [t, C.text]), IY + 6);
+      B('[ CHANGE ]', C.accent, () => openPicker('GLY'));
+    } else if (key) {
+      chipCard(key, s.id);
+      B('[ CHANGE ]', C.accent, () => openPicker(s.id));
+      if (key === 'SP3') B('[ ' + SPOIL_MODES[st.spoils][0] + ' > ]', C.money, () => { st.spoils = (st.spoils + 1) % 3; });
+    } else {
+      drawSocket(s, 1, IY, put, bg, clr, false);
+      put(8, IY, `${s.id} · EMPTY`, C.bright, true); put(8, IY + 1, gn, gc); put(8, IY + 2, gt, C.dim);
+      const n = owned.filter(k => fits(k, s)).length;
+      lines([[n ? `${n} chip${n > 1 ? 's' : ''} fit it.` : 'no chips for it yet.', C.mid]], IY + 4);
+      B('[ CHOOSE ]', C.accent, () => openPicker(s.id));
+    }
+  } else if (sel.kind === 'part') {
+    const id = sel.id;
+    const head = (t, sub, subc, sub2) => { put(1, IY, t, C.bright, true); put(1, IY + 1, sub, subc); if (sub2) put(1, IY + 2, sub2, C.dim); };
+    if (id === 'cpu') {
+      const n = NAMES[st.name];
+      head(`CPU · ${n}`, `mk ${mkName(st.mk)} · ${['', '', 'USER', 'ELITE', 'SYSOP'][st.mk]}`, C.money, 'your name, printed on your deck');
+      const open = SOCKETS.filter(s => bandOpen(s.mk)).length, inn = Object.keys(st.slots).length;
+      lines([[`${open} sockets open, ${inn} chips in.`, C.text], [`power ${pw.used} of ${pw.budget} (the cell in PSU).`, C.text]], IY + 4);
+      if (st.mk < 3) B('[ mk III · 600 REP ]', C.rep, upgrade3);
+      B('[ NAME > ]', C.mid, () => { st.name = (st.name + 1) % NAMES.length; });
+    } else if (id === 'rom') {
+      head('ROM · your BOARD posts', 'bought posts light a pin', C.rep);
+      const all = POSTS.map(p => [p[0], p[1] ? 'lit' : '-']).concat(SWITCHES.map(s => [s, st.sw.has(s) ? 'on' : 'off']));
+      all.forEach(([t, v], i) => {
+        const x = i < 7 ? 1 : 19, y = IY + 3 + (i % 7), isSw = SWITCHES.includes(t), col = v === 'lit' || v === 'on' ? C.rep : C.dim;
+        put(x, y, (v === 'lit' || v === 'on' ? '* ' : '. ') + t.slice(0, 12), col);
+        if (isSw) { put(x + 15, y, v, v === 'on' ? C.accent : C.mid); hit(x, y, 17, 1, () => { st.sw.has(t) ? st.sw.delete(t) : st.sw.add(t); }); }
+      });
+    } else if (id === 'byte') {
+      head('THE BYTE · secret codes', '8 switches. most codes do nothing.', C.accent);
+      for (let i = 0; i < 8; i++) { const x = 1 + i * 4; put(x, IY + 4, `[${st.bits[i]}]`, st.bits[i] ? C.accent : C.mid, !!st.bits[i]); hit(x, IY + 4, 3, 1, () => { st.bits[i] ^= 1; }); }
+      const hex = parseInt(st.bits.join(''), 2).toString(16).toUpperCase().padStart(2, '0');
+      put(1, IY + 5, `= 0x${hex} (${parseInt(st.bits.join(''), 2)})`, C.mid);
+      B('[ ENTER ]', C.accent, enterByte); B('[ CLEAR ]', C.mid, () => { st.bits.fill(0); });
+    } else if (id === 'fuse') {
+      head('THE FUSE · mk IV power', st.blown ? 'BLOWN' : st.fuse ? 'installed' : 'not installed', st.blown ? C.danger : st.fuse ? C.money : C.mid);
+      lines((st.blown ? ['a rival breached your deck and', 'blew it. mk IV is dark until', 'you replace it.']
+        : st.fuse ? ['mk IV is lit.', 'a boss that breaches your deck', 'goes for it (the TEST shows it).']
+          : ['the extra power that lights', 'the bottom of the board.', 'a SYSOP post, after mk III.']).map(t => [t, C.text]), IY + 4);
+      if (!st.fuse) B('[ INSTALL · 1500 REP ]', C.rep, () => { if (st.mk < 3) return say('mk III first.'); if (st.rep < 1500) return say('not enough REP.'); st.rep -= 1500; st.fuse = true; st.mk = 4; say('the fuse is in. mk IV lit.', false); });
+      else if (!st.blown) B('[ TEST: BREACH ]', C.danger, () => { st.blown = true; say('BREACH: a rival blew your fuse.'); ticker('FUSE BLOWN. mk IV dark.'); });
+      else B('[ REPLACE · 100 REP ]', C.rep, () => { if (st.rep < 100) return say('not enough REP.'); st.rep -= 100; st.blown = false; say('new fuse. mk IV lit again.', false); });
+    } else if (id === 'readout') {
+      head('READOUT', `power left: ${pw.left}`, C.money, `${pw.used} used of ${pw.budget}`);
+      lines([['the cell in PSU sets the budget.', C.text], ['each chip costs 0-3. the oldest', C.text], ['chips get power first.', C.text]], IY + 4);
+    } else if (id === 'ports') {
+      head('PORTS · dark', 'things outside the page', C.text, 'each waits until its feature is built');
+      lines([['MIC      the whistle, the mold', C.mid], ['GAMEPAD  a controller', C.mid], ['MIDI     play SIMON on keys', C.mid], ['MODEM    multiplayer', C.mid]], IY + 4);
+    } else if (id === 'crew') {
+      const open = bandOpen(3);
+      head('CREW JACKS' + (open ? '' : ' · LOCKED'), open ? 'plug in up to 2 of your crew' : 'opens with mk III', open ? C.text : C.mid);
+      if (open) ['POPS', 'NANA', 'BRICK', 'KLUDGE'].forEach((c, i) => {
+        const on = st.crew.has(c), y = IY + 3 + i; put(1, y, (on ? '* ' : '. ') + c, on ? C.accent : C.mid);
+        put(12, y, ['one tell hint a sector', 'a PATCH every sector', 'first ICE hit blocked', 'failed crafts refund'][i], C.dim);
+        hit(1, y, 34, 1, () => { if (on) st.crew.delete(c); else if (st.crew.size < 2) st.crew.add(c); else say('2 jacks: unplug one first.'); });
+      });
+    } else if (id === 'uplink') {
+      const open = bandOpen(4);
+      head('UPLINK' + (open ? '' : ' · LOCKED'), open ? 'empty' : 'opens with mk IV', open ? C.text : C.mid);
+      lines([['G0D.exe plugs in here: it plays', C.text], ['for you, with its click limit.', C.text]], IY + 4);
+    } else if (id === 'hdr3' || id === 'hdr4') {
+      const m = id === 'hdr3' ? 3 : 4;
+      head(`EXPANSION · mk ${mkName(m)}`, bandOpen(m) ? 'plugged in' : 'empty', bandOpen(m) ? C.money : C.mid);
+      lines([[`the mk ${mkName(m)} board plugs in here.`, C.text], [m === 3 ? 'the CPU upgrade: 600 REP (ELITE).' : 'needs the FUSE for power.', C.mid]], IY + 4);
+      if (m === 3 && st.mk < 3) B('[ mk III · 600 REP ]', C.rep, upgrade3);
+    }
+  }
+  // the bottom row: a message, or the power warning (it stays while a chip has none)
+  if (st.msg && now - st.msg.t < 2600) put(1, 33, st.msg.text.slice(0, WC - 2), st.msg.err ? C.danger : C.accent);
+  else if (st.carry) put(1, 33, `slotting ${CHIPS[st.carry][1]}: tap a blinking socket.`, C.accent);
+  else if (pw.off.length) {
+    const names = pw.off.map(id => CHIPS[st.slots[id]][1]).join(', '), s = `! NO POWER: ${names}`;
+    put(1, 33, tick(s, WC - 2, 0, now), C.danger, Math.floor(now / 600) % 2 === 0);
+  }
+
+  // ---------- the picker: a popup over the board, a scroll area of what fits, or NONE ----------
+  if (st.dlg) {
+    hits = [];   // it's modal: only its own taps count, a tap outside closes it
+    const d = st.dlg, s = sockById(d.id), [gn, gc, gt] = GROUPS[s.g], X0 = 1, Y0 = 5, W = 34, H = 18, cur = st.slots[s.id];
+    hits.push({ x: 0, y: 0, w: WC, h: HC, fn: () => { st.dlg = null; } });   // the backdrop (checked last: hits are searched from the end)
+    clr(X0, Y0, W, H); bg(0, 0, WC, HC, C.bg, 0.6); bg(X0, Y0, W, H, C.bg, 1);
+    const title = ` ${s.id} · ${gn} `; put(X0, Y0, '+' + '-'.repeat(W - 2) + '+', gc); clr(X0 + 2, Y0, title.length, 1); put(X0 + 2, Y0, title, gc, true);
+    for (let j = 1; j < H - 1; j++) { put(X0, Y0 + j, '|', gc); put(X0 + W - 1, Y0 + j, '|', gc); }
+    put(X0, Y0 + H - 1, '+' + '-'.repeat(W - 2) + '+', gc);
+    put(X0 + 2, Y0 + 1, gt, C.dim);
+    const blocks = [];
+    const done = () => { st.dlg = null; };
+    if (s.g === 'glyph') {
+      GLYPHS.forEach(([name, art], i) => blocks.push({ h: 4, draw: y => {
+        art.forEach((l, j) => put(X0 + 2, y + j, l, C.bright, true));
+        put(X0 + 9, y, name, C.bright, true); if (i === st.glyph) put(X0 + W - 7, y, 'in GLY', C.accent);
+        put(X0 + 9, y + 1, 'seen on ' + (3 + i * 2) + ' layers', C.mid);
+        hit(X0 + 1, y, W - 2, 3, () => { st.glyph = i; done(); say(`${name} is your glyph.`, false); });
+      } }));
+    } else {
+      // NONE: empty the socket
+      blocks.push({ h: 3, draw: y => {
+        put(X0 + 2, y, '- -', C.mid); put(X0 + 2, y + 1, ' - ', C.mid);
+        put(X0 + 8, y, 'NONE', cur ? C.bright : C.mid, true); if (!cur) put(X0 + W - 7, y, 'empty', C.accent);
+        put(X0 + 8, y + 1, cur ? `pull ${CHIPS[cur][1]} out` : `leave ${s.id} empty`, C.mid);
+        hit(X0 + 1, y, W - 2, 2, () => { done(); if (cur) pull(s.id); });
+      } });
+      owned.filter(k => fits(k, s)).forEach((key, i) => blocks.push({ h: 3, draw: y => {
+        const k = CHIPS[key], where = slotOf(key), wide = k[2] === 'boss', fx = X0 + 2;
+        listFace(fx, y, key, false);
+        const nx = X0 + (wide ? 10 : 8);
+        put(nx, y, k[1], C.bright, true);
+        if (where) put(X0 + 21, y, 'in ' + where, where === s.id ? C.accent : C.mid);
+        const pwrT = k[2] === 'psu' ? `+${CELL[key]}` : `PWR ${k[4]}`;
+        // would it get power here? (what's left, plus what's in this socket now, which it replaces)
+        const room = pw.left + (cur && pw.on.has(s.id) ? CHIPS[cur][4] : 0) + (where && where !== s.id && pw.on.has(where) ? k[4] : 0);
+        const short = k[2] !== 'psu' && where !== s.id && k[4] > room;
+        put(X0 + W - 1 - pwrT.length, y, pwrT, short ? C.danger : C.money, short);
+        put(nx, y + 1, tick(k[5], X0 + W - 2 - nx, d.t + i * 700, now), C.text);
+        hit(X0 + 1, y, W - 2, 2, () => { done(); if (where !== s.id) slot(key, s.id); });
+      } }));
+    }
+    blockArea(X0 + 1, W - 2, Y0 + 2, H - 4, blocks, d.s);
+    const foot = s.g === 'glyph' ? 'tap one to pick it' : `tap one to slot it · ${pw.left} PWR left`;
+    put(X0 + 2, Y0 + H - 2, foot, C.dim);
+    btn(X0 + W - 4, Y0, '[X]', C.mid, done);
+    // everything outside it fades
+    for (let i = 0; i < grid.length; i++) { const x = i % WC, y = Math.floor(i / WC); if (grid[i] && (x < X0 || x >= X0 + W || y < Y0 || y >= Y0 + H)) grid[i] = Object.assign({}, grid[i], { a: grid[i].a * 0.3 }); }
+  }
+
+  // ---------- draw ----------
+  const L = st.L; st.hits = hits;
+  g.globalAlpha = 1; g.fillStyle = C.bg; g.fillRect(0, 0, L.w, L.h);
+  for (const b of bgs) { g.globalAlpha = b.a; g.fillStyle = b.col; g.fillRect(L.ox + b.x * L.cw, L.oy + b.y * L.chh, b.w * L.cw + 0.5, b.h * L.chh + 0.5); }
+  g.textBaseline = 'middle';
+  let font = '';
+  for (let i = 0; i < grid.length; i++) {
+    const c = grid[i]; if (!c) continue;
+    const f = `${c.bold ? 700 : 400} ${L.fs}px ${FONT}`; if (f !== font) { g.font = f; font = f; }
+    g.globalAlpha = c.a; g.fillStyle = c.col;
+    g.fillText(c.ch, L.ox + (i % WC) * L.cw, L.oy + (Math.floor(i / WC) + 0.5) * L.chh);
+  }
+  g.globalAlpha = 1;
+}
+function upgrade3() { if (st.rep < 600) return say('not enough REP.'); st.rep -= 600; st.mk = Math.max(st.mk, 3); say('mk III: the middle board is in.', false); }
+function enterByte() {
+  const code = st.bits.join(''), r = CODES[code];
+  ticker(r || 'NO CARRIER');
+  if (code === '01111111') setTimeout(() => st.bits.fill(0), 900);
+}
+// leaving the deck with a chip off: warn once, a second tap goes
+function leave() {
+  const off = power().off.length, now = performance.now();
+  if (off && now - st.leave > 3000) { st.leave = now; return say(`${off} chip${off > 1 ? 's have' : ' has'} no power. [X] again to go.`); }
+  st.leave = 0; say('(back to the safehouse)', false);
+}
+
+// ---------- input ----------
+const cellAt = e => { const r = cv.getBoundingClientRect(), L = st.L; return [Math.floor((e.clientX - r.left - L.ox) / L.cw), Math.floor((e.clientY - r.top - L.oy) / L.chh)]; };
+const clampBoard = v => clamp(v, 0, BH - BV);
+// what a drag or the wheel scrolls: the picker's list, the chip list, or the board
+const scroller = () => st.dlg ? st.dlg.s : st.view === 'chips' ? st.list : null;
+let down = null;
+phone.addEventListener('pointerdown', e => { const [, y] = cellAt(e); const sc = scroller(); down = { y: e.clientY, cy: y, s: st.scroll, bt: sc ? sc.top : 0, moved: false }; phone.setPointerCapture(e.pointerId); });
+phone.addEventListener('pointermove', e => {
+  st.mc = cellAt(e);
+  if (!down) return;
+  if (Math.abs(e.clientY - down.y) > 4) down.moved = true;
+  if (!down.moved) return;
+  const d = Math.round((e.clientY - down.y) / st.L.chh), sc = scroller();
+  if (sc) sc.top = clamp(down.bt - Math.round(d / 3), 0, sc.max || 0);   // a block list: 3 rows of drag is a chip
+  else if (down.cy >= VY && down.cy < VY + VH) st.scroll = clampBoard(down.s - d);
+});
+phone.addEventListener('pointerleave', () => { st.mc = null; });
+phone.addEventListener('pointerup', e => {
+  const d = down; down = null;
+  if (!d || d.moved) return;
+  const [x, y] = cellAt(e);
+  for (let i = st.hits.length - 1; i >= 0; i--) { const h = st.hits[i]; if (x >= h.x && x < h.x + h.w && y >= h.y && y < h.y + h.h) { h.fn(); return; } }
+  if (st.view === 'board' && y > VY && y < VY + VH - 1) {
+    const by = y - VY - 1 + st.scroll, s = SOCKETS.find(s => x >= s.x && x < s.x + s.w && by >= s.y && by < s.y + s.h);
+    if (s) {
+      if (st.carry) { if (fits(st.carry, s) && bandOpen(s.mk)) slot(st.carry, s.id); else say(`${CHIPS[st.carry][1]} doesn't go in ${s.id}.`); return; }
+      const again = st.sel.kind === 'socket' && st.sel.id === s.id;
+      if (!st.slots[s.id] || again) openPicker(s.id);   // empty: the picker; full: the card first, a second tap the picker
+      else st.sel = { kind: 'socket', id: s.id };
+      return;
+    }
+    const p = PARTS.find(p => x >= p.x && x < p.x + p.w && by >= p.y && by < p.y + p.h);
+    if (p) { st.sel = p.id === 'stick' ? { kind: 'socket', id: 'CRS' } : { kind: 'part', id: p.id }; st.carry = null; }
+  }
+});
+phone.addEventListener('wheel', e => {
+  e.preventDefault();
+  const dy = Math.sign(e.deltaY), sc = scroller();
+  if (sc) sc.top = clamp(sc.top + dy, 0, sc.max || 0);
+  else st.scroll = clampBoard(st.scroll + dy * 2);
+}, { passive: false });
+phone.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && st.dlg) { st.dlg = null; return; }
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  e.preventDefault(); const dy = e.key === 'ArrowDown' ? 1 : -1, sc = scroller();
+  if (sc) sc.top = clamp(sc.top + dy, 0, sc.max || 0); else st.scroll = clampBoard(st.scroll + dy);
+});
+// the chip color toggle, beside the phone
+{ const box = document.getElementById('styles');
+  const opts = [['RARITY', -1]].concat(STYLES.map((s, i) => [s[0], i]));
+  for (const [name, i] of opts) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.setAttribute('aria-pressed', String(i === st.style));
+    if (i >= 0) { b.style.background = STYLES[i][2]; b.style.color = STYLES[i][1]; }
+    b.addEventListener('click', () => { st.style = i; for (const x of box.children) x.setAttribute('aria-pressed', String(x === b)); });
+    box.appendChild(b);
+  } }
+new ResizeObserver(layout).observe(phone);
+layout();
+const loop = now => { frame(now); requestAnimationFrame(loop); };
+document.fonts.ready.then(() => requestAnimationFrame(loop));
+})();
+</script>
+</body>
+</html>

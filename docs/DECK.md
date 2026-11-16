@@ -1,7 +1,7 @@
 # THE DECK: the sockets, the chips, and how it opens
 
-The in-game mockup: `docs/mockups/deck_v3.html` (scroll, select, slot, the chip list, the parts that aren't
-sockets). Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). A plan to look over; nothing is
+The in-game mockup: `docs/mockups/deck_v4.html` (the picker popup, power running out, chip faces, the parts that
+aren't sockets; round 3 was `deck_v3.html`). Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). A plan to look over; nothing is
 built. BACKLOG section 11 has where the idea came from; the mockups are `docs/mockups/deck.html` and `deck_v2.html`.
 
 Everything here is Claude's unless it says Greg. The socket count gets tuned once each group's chip list settles
@@ -34,6 +34,59 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   `WORD_WORD` (data/personas.js), up to 13 characters (STATIC_GOBLIN); the CPU is 12 wide inside. A name that
   doesn't fit goes on 2 lines, split at the `_` (each word is 6 at most). Maybe small silkscreen under it
   (`MEDIX NC-1`). Names with MK2 in them (`POTATO_MK2` over `mk II`) are a free joke.
+
+## Decided from the round 3 mockup (Greg, 2026-11-15)
+- **Scrolling uses the game's scroll area:** the "more" rows top and bottom (engine/codex.js `scrollArea`), for the
+  board, the chip list and the picker. No scrollbar column, so the art's 36 columns fit. (Claude: a list of chips
+  steps a whole chip, so you never see half of one. The board steps 5 rows a tap.)
+- **A socket's chip is picked in a popup:** a picker with a scroll area of the chips that fit, plus NONE. Tap one
+  and it's in, and the picker closes. No PULL / SWAP buttons, no list in the info area. An empty socket opens the
+  picker on the first tap; a full one shows its card first, and a second tap (or CHANGE) opens the picker.
+- **The chip card is short:** face, name, group and rarity, power, what it does. No "from:" or "found again" lines.
+  (Claude: those could go in the codex if chips get a page there.)
+- **Power runs out instead of refusing.** You can always slot a chip. The cell's power goes to the chips in the order
+  they went in, oldest first. A chip that doesn't get power goes grey and its socket border goes red, so the one you
+  just slotted is the one that goes dark, not one off screen. (Claude: a chip that doesn't fit what's left is
+  skipped, and newer, cheaper chips still try.)
+- **A power warning:** (Claude's take) the PWR count in the header turns red with the number off, the `]8[` readout
+  blinks `!`, the bottom row says which chips have none, and leaving the deck with a chip off asks once.
+- **Chip faces use both rows:** letters and symbols, e.g. DEADMAN is `DED` over `MAN`. The 3-letter code stays in
+  the data. (Claude: a chip with a setting can show it, like SPOILS' `RWD` / `HP+` / `$# THE DECK: the sockets, the chips, and how it opens
+
+The in-game mockup: `docs/mockups/deck_v4.html` (the picker popup, power running out, chip faces, the parts that
+aren't sockets; round 3 was `deck_v3.html`). Started 2026-11-15 from Greg's board v2 (`asxii_art/deck_board_v02.asxii.json`). A plan to look over; nothing is
+built. BACKLOG section 11 has where the idea came from; the mockups are `docs/mockups/deck.html` and `deck_v2.html`.
+
+Everything here is Claude's unless it says Greg. The socket count gets tuned once each group's chip list settles
+(**Decided (Greg, 2026-11-15):** decide what to cut after we've gone deeper on the options).
+
+## Decided so far (Greg, 2026-11-15)
+- **Outside a run.** You set the deck up between runs. It doesn't come up while you play.
+- **Chips have a rarity, one each.** No chip comes in more than one rarity.
+- **One of each chip.** Once you have one there's no reason to get it again, except to scrap it: a chip you
+  already own, found again, scraps into its letters. (Claude: the drop tables could skip chips you own, so finds
+  stay new.)
+- **You keep a chip only if you cash out with it.** Die and it's gone.
+- **Chips come from many places:** loot drops, bosses, quests, crafting (maybe by accident), and the fence (a chip of
+  its own, or a selection of them).
+- **DEADMAN goes in the CRASH socket.** CHUCK E. CACHE's 1UP stays a mod idea (BACKLOG section 7).
+- **Beat G0D and you can slot the 1UP right away.** So the deck has to open before that, or CRASH needs something
+  to hold earlier (see "How it opens").
+- **THE BYTE is for secret codes.** The shell has its own sockets. One row of bits, not two. Under it, a readout:
+  a scrolling ticker (like `FX.ticker`) that says when a code does something, and can show anything else too.
+- **The CRASH socket is a normal 3x2 socket.** The tall stick becomes its readout, like the byte's: with a chip in,
+  the stick spells out what it is (DEADMAN, 1UP).
+- **Each shell socket holds one command.** No command + argument pairs: each command takes different arguments.
+- **The FUSE is the extra power** that turns the bottom of the board on once you have the REP for it.
+- **Keep the PSU and the FUSE** even though you can't see them in a run. Make them fit, maybe through a boss you fight
+  on your own deck.
+- **The ports are a keeper.**
+- **Backlog ideas can move here** (done: BACKLOG points here for each one).
+- **A short training** once the board opens, to point things out.
+- **The CPU shows your hacker name** (Greg, 2026-11-15), not NEURAL DECK, with the mk under it. Names are
+  `WORD_WORD` (data/personas.js), up to 13 characters (STATIC_GOBLIN); the CPU is 12 wide inside. A name that
+  doesn't fit goes on 2 lines, split at the `_` (each word is 6 at most). Maybe small silkscreen under it
+.)
 
 ## The name
 Greg likes "board" better than "deck", but THE BOARD is already the REP screen. Options:
@@ -131,7 +184,7 @@ Every place gives a chip two rows, and any list it's in has to scroll by row:
 - **Lists that scroll:** the fence, the deck's own chip list (the chips you own), a codex page for chips, maybe the
   market. The game already scrolls a 3-row thing by row: HOW TO PLAY splits each tile into one line per row
   (`tileRow`, engine/help.js `flatRows`; engine/textboard.js draws them), so a scroll can stop halfway through a
-  tile. Chips do the same thing with 2 rows. Also add them to `lineRows` (engine/textboard.js) so the screens that
+  tile. **Update (Greg, 2026-11-15):** chip lists use the "more" scroll area instead, stepping a whole chip. Also add them to `lineRows` (engine/textboard.js) so the screens that
   count rows count them right.
 - **Boss rewards and loot popups:** a chip dropped as a reward takes 2 rows on that screen. Count the rewards
   screen's rows (it's tight on a phone: 23 rows).
@@ -480,5 +533,8 @@ Greg: sockets that open earlier should sit higher on the board.
 - **The ladder:** the deck at USER, mk III at ELITE, the FUSE at SYSOP. Or one of Greg's other ways.
 - **The power budget:** chips cost 1-3 power and the cell sets the budget. Yes?
 - **Carrying a chip home:** in the belt, taking a gear slot, or its own one-chip case?
+- **Chips in your profile color?** (Greg, maybe.) The mockup has a toggle: the face in your color style
+  (PROFILE > COLOR, data/palettes.js `styles`) and the rarity moved to the socket's `]` `[` sides. Rarity colors are
+  easier to read at a glance; your color makes the deck yours.
 - **The training:** who points the board out (POPS? b0y, since it's his crash unit?).
 - **The cuts:** once the lists settle. BOOT and BIOS could share 4 sockets; UPLINK could fold into PORTS.
