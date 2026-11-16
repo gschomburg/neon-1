@@ -162,11 +162,11 @@ Claude's ladder, so the 1UP always has somewhere to go:
 - **Every number is one hex character** on the board: a socket's bottom border shows its chip's cost (`+-2-+`), the
   PSU shows used / budget (`+5/E+`), the `]8[` readout the cell's power left, and a digit beside the FUSE its power
   left. The header: `PWR 5/6 F2/8`.
-- **F is a secret:** OVERCLOCK, a BYTE code (00001111), runs the cell at 15 for a run.
->>> seems like the overclock would just be a thing you can unlock and set i'm not sure why or how we limit it to a single run
+- **F is a secret:** OVERCLOCK, a BYTE code (00001111), runs the cell at 15. **Greg (2026-11-16):** it stays a BYTE code, but once
+  you've entered it, it stays on (saved), so you don't enter it every run. (Claude: enter it again to switch it off.)
 - **A rule for judging a cell:** spare = power - paid sockets. Negative early, about 0 mid-game, +2 at the max.
-
->>> as a side note we should make the no power notification bar into a thing that scrolls the deck to a chip that needs power if you click it
+- **The NO POWER bar is a button** (Greg, 2026-11-16; to do): tap it and the board scrolls to a chip with no power,
+  the next one on each tap.
 
 ## Seeds: what a chip does to a run
 **Decided (Greg, 2026-11-15):**
@@ -203,17 +203,24 @@ what changes what:
   in `DECK_CHIP_TAGS` (engine/deck.js).
 
 ## Chips: getting them, carrying them, keeping them
-- **Carrying one home:** a chip you find rides in your belt like a gear. You can't use it in the run; it just takes
-  the slot. Do you keep a WARP, or the chip? Cash out and it's yours. Die and it's gone. (The other way: its own
-  one-chip case, so it never costs a gear.)
-  >>> i think we store them in the gear so it's clear you have it. that means we need to be able to replace your gear if you get one, or at least give you the option. incase they're an auto drop we need the prompt to comeup and say it's swapping. since it's in the gear and it's a 3x2 we maybe have it 'cycle from one line to the other 'scrolling up or down. also for it's description if you click on it.. maybe you don't know what a chip is until you cash out with it? it shows the rarity but you need to identify it.. maybe? i could also see just having its description be a ticker and we use the short text.
+- **Carrying one home** (**Decided (Greg, 2026-11-16):** in a gear slot, so it's clear you have it). A chip you
+  find rides in your belt like a gear. You can't use it in the run; it just takes the slot. Cash out and it's yours.
+  Die and it's gone.
+  - **A full belt:** you get the choice to swap a gear out. If the chip is an automatic drop, a prompt says it's
+    swapping and lets you pick the gear that goes (or leave the chip).
+  - **On the tray** a gear slot is one row, so the chip's two rows take turns (its face scrolls up or down a row).
+  - **Tap it** for its short text, as a ticker. You see what it is right away, so you know a dupe when you get one
+    and can shred it or drop it.
+  - Dropped: its own one-chip case, because the gear slot shows you have it. Dropped: chips you identify by cashing
+    out, because knowing a dupe matters more (Greg).
 - **The fence** sells two or three chips, different each time. Some only turn up there, and those are **hot**:
-  stolen, so a rival hunts you until you cash out.
-  >>> this is good, but the fence is also always right there by the boss so you can just cash out the next node.
+  stolen, so a rival hunts you. **Greg (2026-11-16):** "until you cash out" is too easy, since the fence sits right before the
+  sector boss. Claude's take, to decide: a hot chip only comes home once it's cooled. Carry it through one more full
+  sector (a rival hunts you meanwhile); cash out sooner and the fence takes it back.
 - **The workbench:** a chip's code has a digit in it (`1UP`, `DM5`). The bench has no use for digits yet (BACKLOG
-  section 1: "digits 1-9 none"), so spelling a code with a digit makes a chip.
-  >>> this is good, also the chips can have 6 characters
-  >>> also for the workbench i think there's probably and upgrade you need to get to try and make chips.. maybe it's something you can find that is a 1 time use like some sort of e paste you need to try and craft with 6 slots.. or just a single ues recipe that allows 6 slots?
+  section 1: "digits 1-9 none"), so spelling a code with a digit makes a chip. **Greg (2026-11-16):** good. A chip's code can be 6
+  characters (both rows of its face). And making chips needs something first, to decide: a one-use find (some
+  e-paste) that opens a 6-slot craft, or a single-use recipe with 6 slots.
 - **Mashing 2 mods together** (Greg, 2026-11-15: "maybe you make a chip by mashing 2 mods together"). Claude's take:
   - It fits the 3x2 look: a mod's code is 3 letters (TRC, SKM), so a fused chip shows both, one on each row:
     ```
@@ -221,19 +228,21 @@ what changes what:
     SKM
     ```
   - Both mods are used up. The chip is yours once you cash out with it.
-  >>> this (merging 2 mods instead of just using components) is maybe to make a certain special chip or something. maybe a special node you can go to. the workbench doesn't actually have a great place for this.. this would i can see this being some sort of thing where you equip 2 exotiv mods and then go to this place and fuse them and then get a exotic chip
+  - **Greg (2026-11-16):** maybe fusing is only for a special chip, at a special node: the bench has no good place for it. Equip 2
+    exotic mods, go to that node, fuse them, and get an exotic chip.
   - **What it does:**
     - A BOOT chip: every run starts with the pair, a step weaker (common). Simple, and you build your own opening.
     - Or **recipes:** some pairs make a real chip (TRACER + SNIFFER = the `ps` shell chip). Any other pair fuses into
       SLAG (the accident, below). You find the recipes by trying, like the bench's codes.
     - Or both: a known recipe makes its chip, and any other pair makes a plain BOOT chip of the two.
   - Its rarity is the lower of the two mods'.
-  - Open: is fusing a WORKBENCH thing (any safehouse) or a deck thing (only between runs)? The bench is in a run, so
-    the chip still has to get home.
+  - Open: is fusing a WORKBENCH thing or a deck thing? (Greg's answer above: neither, a special node.)
 - **By accident** (Greg): a failed craft now and then fuses its burnt components into a **SLAG** chip: junk with a
   small random effect, and once in a while something good. Some chips might only be found that way.
-- **Drops:** each corp boss can drop its own chip (the list below says which). Caches, quests and the final bosses
-  give others.
+- **Drops** (**Decided (Greg, 2026-11-16):** no chip for every corp; that's a lot, and it pollutes the pool).
+  Chips can still be corp-themed, but they come from a limited-use spot on the map, like the data cache, plus boss
+  rewards (chips show up there more, or rarer) and quests. The corp beside each chip below is its theme now, not
+  where it drops.
 - **Rarity:** the box's outline is in its rarity colour, not a filled tile, so chips don't look like letter tiles.
   Rarer chips are stronger and cost more power.
 
@@ -390,36 +399,34 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
 - **STARTER:** pick a mod you've found; it can show up in the starter perk. Or a stronger one: you always start with
   it.
 - **ARCHIVE:** start with any mod you've found (THE ARCHIVE, the codex reward idea).
-- **PET:** pick which pet comes along: COMPANION, the chick, STRAY's bug, CATPHISH's fish.
->>> companion actually does something with the mod. so maybe we always have companion be the pet that's there if you have it equiped? either that or the companion pet is there with your other rep pet at the same time. i do like being able to maybe change/set your earned pet
+- **PET:** pick which pet comes along: the chick, STRAY's bug, CATPHISH's fish. **Greg (2026-11-16):** COMPANION is a mod that
+  does something, so it isn't a PET pick: either COMPANION's pet always comes when the mod is on, or it comes along
+  with your REP pet. Setting your earned pet is the good part.
 - **KIT:** start with a given gear.
 - More:
-  - **HEADSTART:** start on the second row of sector 1. Pays a little less REP. From RYDR's boss.
-  >>> i don't know if this needs a rep penalty
+  - **HEADSTART:** start on the second row of sector 1. RYDR. (Greg: no REP penalty.)
   - **PRELOAD:** start with 3 random gear. PARCELNET ("it's out for delivery").
-  - **TRUST FUND:** start with +60cr; the first market's prices are up 25%. LEDGER TRUST.
-  >>> also not sure we need the penalty
-  - **FRESH INSTALL:** start with no mods, +2 INT and 100cr. MEGAMART.
-  >>> i like it, you normally start with no mods 'i think' so i'm not sure how that affects things
-  >>> i would also like a version that starts you with maybe ~3 firewall shields? maybe some other things. some frags? it's like a battle chip
-  - **BLUEPRINT:** start with the letters for one workbench recipe you've built before. PURLWISE (knitting patterns).
-  >>> interesting. since components only go away when you use them though this could be exploited, maybe it's just your first workbench build doesn't cost anything? 
-  - **CLONE:** start with the best mod from your last cash-out, a step lower. CLONEWORKS ("two of everything.
-    almost.").
-    >>> kind of interesting but not everything has a step lower version.
-    >>> i could see a chip where you start with full mod slots of low level mods, maybe it's a good wayt o start with box of wires.. i think it would be a predefined set. 
-  - **MIXTAPE:** pick the run's music. Just for fun. TEMPO RECORDS.
-  >>> this might make it a little too repetitive, what might be more fun is turning the ---- bar above the mods into a EQ, you use one for one of the corps i think decible in the terminal (it's faked but i like the look) if that was actually based on the music that would be neat 
-  - **SEED VAULT:** start on the seed of your best run. KERNEL ("the seed knows").
-  >>> this one is less interesting cause you can always just go type in the seed
-  >>> i think having a few chips that start you off with different gear sets like a paladin, cleric or a knight or a rogue would be good, each one just a single mod, and some gear. maybe one or 2 are higher power/rarity we could use dnd classes or cyber punk classes. maybe a 'beast master' where you start with a bunch of crew calls (team effort)
-
-  >>> maybe we also go away from particular corps dropping certain chips. the chips can still be corp themed, but we already have the mods that drop limited places.. we should probably make a spot like the data cache which is limited use have chips or something.
+  - **TRUST FUND:** start with +60cr. LEDGER TRUST. (Greg: no penalty. It was "the first market's prices are up
+    25%".)
+  - **FRESH INSTALL:** no starter mod, +2 INT and 100cr. MEGAMART. (Greg likes it. Claude: a run starts with no
+    mods, and the starter perk offers one; this skips the perk.)
+  - **LOADOUT** (Greg, 2026-11-16; name to pick): start with about 3 firewall shields and some frags. A battle chip.
+  - **BLUEPRINT** (Greg's version): your first workbench build in a run costs nothing. PURLWISE. Dropped: starting
+    with a recipe's letters, because components only go when you use them, so the letters could be farmed.
+  - **BOX OF WIRES** (Greg, 2026-11-16): start with every mod slot full of low mods, a set list. Dropped: CLONE
+    (your best mod a step lower), because not every mod has a step lower.
+  - Dropped: MIXTAPE (pick the run's music), because the same music every run gets old (Greg). Instead, maybe not
+    a chip: the `----` rule above the mods becomes an EQ that moves with the real music, like DECIBEL's waveform.
+    (Claude: doable if the music plays through Web Audio; check engine/music.js.)
+  - Dropped: SEED VAULT (start on your best run's seed), because you can type the seed in.
+  - **Class chips** (Greg, 2026-11-16): start with a set: one mod and some gear. Paladin, cleric, knight, rogue (D&D
+    or cyberpunk classes); one or two stronger and rarer. A BEAST MASTER starts with a pile of crew calls (TEAM
+    EFFORT).
 
 ### BIOS (2): the run's rules
-- **Corp chips:** each corp boss can drop its own. Slot one and that corp shows up 3x as often (NEMESIS). Flip it
-  and it shows up less (AVOID).
-  >>> this makes sense to drop from each corp, but maybe we just have it work the way nemesis works. once you beat a corp you can put it on the list.. maybe it's a thing where you beat any corp x5 and then nemesis unlocks and maybe then you buy it and it comes with the nemesis chip. it also has the toggle to switch to avoid. one chip for every corp is a lot
+- **NEMESIS** (**Decided (Greg, 2026-11-16):** one chip, not one per corp). It unlocks after you've beaten
+  corps (any corp 5 times, say); buy it and you get the chip. Pick the corp from the ones you've beaten (the CPU's
+  NEMESIS setting does this now). Flip it to AVOID and that corp shows up less.
 - **FRESH:** corps you haven't beaten come up more.
 - **+1 LAYER:** every corp gets one more layer, for more REP.
 - **EVENTS:** sector events from sector 1.
@@ -436,61 +443,58 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **SPRAWL:** one more row each sector: more markets, more corps. GENCORP.
   - **CORP STORE:** one market a sector sells only corp mods and gear, dearer (BACKLOG section 5). MEGAMART or SOLD!
     (BIDBLITZ).
-    >>> i'm not sure how these would work in with the distorting the seed, but as long as they don't mess it up too much i like most of these. i like sprawl but is there room on the map for that?
+  - **Greg (2026-11-16):** most of these are good, if they don't bend a seed too far ("Seeds" above). SPRAWL: the map scrolls, so
+    the screen has room, but a sector's length is fixed in the code (`SECTOR_STEPS`, engine/map.js), and the extra
+    row needs its own random stream (like +1 LAYER). Real work, so later.
 
 ### CRASH (1): when you die
 - **The socket** (Greg, 2026-11-15): a normal 3x2 socket, next to the stick. The stick is its readout and shows
   the slotted chip's name, top to bottom. It's 5 tall inside; a longer name
-  >>> right now that text scrolls.. i think it might be neater if it just swapped to the next line, maybe with a little character swapping effect 
-  (DEADMAN) scrolls through it (**Decided (Greg, 2026-11-15)**). The socket goes right of the stick, where the glyph
+  (DEADMAN) scrolls through it (**Decided (Greg, 2026-11-15)**). **Then (Greg, 2026-11-16; to do):** it swaps to the
+  next part instead, with a little character-swap effect. The socket goes right of the stick, where the glyph
   was (Greg: there's room for a normal chip there), wired to it by the stick's tabs.
 - **1UP:** b0y's crash unit, from beating G0D. Back to the start of the corp.
 - **DEADMAN** (Greg: it goes here): dying keeps 25% / 50% of the REP. Bought on THE BOARD, as now.
-- **CHECKPOINT:** die in a corp and you start over at its first layer, with a cost.
->>> this could be a respawn with nothing, but full int and you can only do it once a run.
-- **BLACK BOX:** when you die, one mod goes to the LOCKER.
->>> would have to note, if there's space or maybe you choose
->>> could also be a chip that when you cash out or die it shreds all your mods and gear so you get those components.
+- **CHECKPOINT** (**Decided (Greg, 2026-11-16):** the one respawn chip): once a run, die and you respawn with
+  nothing (no mods, no gear) but full INT.
+  Dropped: REBOOT, CRYO and CLONE BODY, because several die-and-restart chips take the fun out of finally getting the
+  1UP (Greg). CRYO was also too much to keep track of; Greg likes the name for something else.
+- **BLACK BOX:** when you die, one mod goes to the LOCKER: you choose which, if the LOCKER has room (Greg).
+  - Or (Greg): when you cash out or die, all your mods and gear get shredded into components.
 - **EJECT:** cash out from anywhere, once a run.
+- **A mod saves you** (Greg): a killing blow takes a mod instead, if you have one. It's a shield, not a death, so it
+  goes somewhere else (OVERVOLT, or a gear).
 - More:
   - **INSURANCE:** die and your next run starts with half the credits you had. SAFEHARBOR ("read the fine print":
     the premium comes off every payout).
-  - **REBOOT:** die on a boss layer and retry it once, at 1 INT. GROUNDHOG ("same time tomorrow?").
-  - **CRYO:** die and the run is frozen. Next time, carry on from the sector's start, but it banks only half its REP.
-    GLACIER STORAGE.
-    >>> interesting but seems kinda complex to keep track of i think we cut cryo or come up with a better effect, i like the name as a general idea. 
-  - **CLONE BODY:** die and you're back on the same layer at 1 INT, every mod a step lower. GENCORP.
-  >>> this is kinda like the checkpoint one above.. i'm a little worried that we have a few of these die and restart somewhere chips, reboot as well. it might take the fun out of the 1up when you actually get it. i think we consolidate these into one chip and think about some of the other effects like the ones that give you things.. like maybe instead of restarting when you die, your mods can actually save you. lets say if you take a finishing int blow it actually just removes a mod if you have one. maybe this doesn't fit with the die, because it's more acting like a shield. (maybe it goes somewhere else) anyway i say we consolidtate the death/restarts.
-  >>> maybe a chip that will randomly unscramble something in the codex when you die
-  - **DEAD DROP:** when you die, your gear is waiting in the first cache of your next run. BONEYARD.
-  >>> cool
-  - **MEMORY:** die and the next run is the same seed, with the corps you breached marked. FORGET-ME-NOT ("you were
-    here before. remember?").
-    >>> hmm, interesting. could it be that any seed you run it shows your last path? like the network lines are marked somehow? so even if you cash out you see the path? is that a lot to keep track of? maybe it's only stores like the last 5 seeds you played or something? and they're just local memeory so we don't need to save them?
+  - **CODEX** (Greg; name to pick): when you die, something in the codex unscrambles.
+  - **DEAD DROP:** when you die, your gear is waiting in the first cache of your next run. BONEYARD. (Greg likes it.)
+  - **MEMORY** (Greg's version, 2026-11-16): on any seed you've played, the map marks your last path (the network
+    lines), whether you cashed out or died. Only the last 5 seeds or so, kept on this device, not in the save.
+    (Claude: a path is a short list of node ids, so it's tiny. It's close to the BOSS list's GHOST.) FORGET-ME-NOT
+    ("you were here before. remember?").
   - **OBITUARY:** a death past layer 30 pays REP as if you'd cashed out at the last UPLINK. HEADLINE NEWS ("if it
-    bleeds, it leads").
-    >>> i like it
+    bleeds, it leads"). (Greg likes it.)
 
 ### SPOILS (1): what corp bosses give
 - **The switch** (Greg): REWARDS / HEAL / CASH. Skip a corp boss's rewards for a heal or for money.
-- **GEAR:** skip the mods, take a gear.
->>> also a version that skips for loot
+- **GEAR:** skip the mods, take a gear. And one that skips them for loot (Greg).
 - More:
-  - **CHIP HUNT:** skip the rewards for a chance at that corp's own chip. The way to farm a corp's chip.
-  >>> maybe it's just chips show up more in boss rewards or they're more rare
-  - **GAMBLE:** the rewards are face down, and one of them is a jackpot (two mods). LUCKEEZ CASINO.
-  >>> interesting.. maybe there is just a mystery item in the list and that can be good or lame. we would also need to make it so if they choose it and their slots for the mods or whatever it is are full they either need to take it or it goes away. they can't back out and choose somethign else.
+  - Dropped: CHIP HUNT, because there's no chip per corp now. Instead (Greg): chips show up in boss rewards more, or
+    rarer.
+  - **GAMBLE** (Greg's version): one mystery item in the rewards, good or lame. Pick it and it's yours: if your
+    slots are full, you take it (swapping something out) or it's gone. No backing out to pick another. LUCKEEZ.
   - **OFFERING:** skip the rewards and bank REP instead. THE CHOIR ("have faith. or pay.").
-  - **AUCTION:** pay credits to add a fourth choice. BIDBLITZ LIVE.
-    >>> function like a market reroll maybe?
-  - **SALVAGE:** skip the rewards, take their letters for the workbench. DEMOLITION CO.
-  >>>good, or maybe it's just a bunch of components, i guess it could be you choose the item then choose salvage instead of 'take' and you get the letters.
-  - **HEIRLOOM:** the mod you pick goes straight to the LOCKER, not your run. DEWEY SYSTEMS.
-  >>> good, but the locker does have limited space, so we would need some way to maybe manage that? if it's full it opens up the choose what to replace dialog?
-  - **PAWN:** your pick sells for double at the next market. PAWN BROS.
-  >>> probably scrap this one, since you can't sell mods at the market.. but i could see a chip that maybe allows that, maybe just a rep buy?
-  - **PROTECTION:** skip the rewards; the next boss gives an extra choice. LA FAMIGLIA ("nice node you got").
-  >>> interesting. i think the problem i usually run into with rewards as you get higher up you usually have everything full and so you always want to skip rewards. i'm not sure having more options helps that. so maybe cut this one.. unless this instead just gives you a firewall or 2... that's protection?
+  - **AUCTION:** pay credits to reroll the choices, like a market's reroll (Greg). BIDBLITZ LIVE.
+  - **SALVAGE:** pick a reward, then SALVAGE instead of TAKE, and you get its letters for the workbench (Greg). Or
+    just a bunch of components. DEMOLITION CO.
+  - **HEIRLOOM:** the mod you pick goes straight to the LOCKER, not your run. DEWEY SYSTEMS. The LOCKER has limited
+    room: when it's full, the choose-what-to-replace dialog opens (Greg).
+  - Dropped: PAWN (your pick sells for double), because you can't sell mods at a market. Selling mods could be its
+    own thing, maybe a REP buy (Greg).
+  - **PROTECTION** (Greg's version, maybe): skip the rewards for a firewall or two. LA FAMIGLIA ("nice node you
+    got"). Dropped: an extra choice at the next boss, because late in a run your slots are full and you skip rewards
+    anyway; more choices don't help (Greg).
 
 ### SHELL (4): one command each
 - Commands work in THE SHELL while the chip is slotted. A run that used one is marked hacked on the leaderboard.
@@ -500,46 +504,47 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
 - **`decode`:** read CIPHER for a layer (section 1's DECODER).
 - **`kill`:** end the run now.
 - More (each once a sector unless it says):
-  ~~ - **`ls`:** how many ICE and $ nodes are on this layer. SEEKR ("did you mean: give up?"). ~~
-  >>> i'm not sure this is useful since you can just see the ice and there's always one real node right?
-  - **`ps`:** where the rival hackers are on the map. WATCHPOINT.
-  >>> i think you can already see there's hackers on nodes, but this would maybe show you which hacker
-  - **`man`:** this corp's codex entry, mid-layer. DEWEY SYSTEMS.
-  >>> so this opens the entry and shows you right then right? like in a popup of some sort
+  - Dropped: `ls` (how many ICE and $ nodes on a layer), because you can see the ICE, and there's always one real
+    node (Greg).
+  - **`ps`:** which rival hacker is which (the map already shows a hacker is on a node). WATCHPOINT.
+  - **`man`:** opens this corp's codex entry right then, in a popup, mid-layer. DEWEY SYSTEMS.
   - **`undo`:** take back your last ICE hit (the PARADOX gear idea, section 1). CHRONOS.
   - **`cat`:** see what a cache or $ node holds before you open it. PARCELNET.
   - **`sleep`:** the layer clock stops for 5 seconds, once a layer. COLDBREW (the opposite of espresso).
   - **`echo`:** use your last gear again. ECHO LABS ("we hear everything. ping.").
   - **`rm`:** delete one ICE on this layer. DEMOLITION CO.
   - **`whois`:** prints this corp's tell. Strong, so a rare drop. NOIR & ASSOCIATES ("everybody lies. except one.").
-  >>> these are all interesting. what about makign them work with some of the existing terminal commands like give or whatever.. like a chip that enables the gives to be a higher rarity or something? the gives are already probably super overpowered so i'm not sure how that feeds into stuff. i guess these don't seem as powerful as just give me god mode, which is probably good. i'm still not sure how to integrate the shell and make it either all powerful or somewhat limited. i think we go for all powerful.. but maybe it's got limited uses and some of these chips give it more charges? we will need to come back to these ones once we figure out the shells intro and how it fits 
+- **Open (Greg, 2026-11-16):** come back to the SHELL chips once THE SHELL's intro and place are worked out.
+  Greg's lean: THE SHELL is all-powerful but has limited uses, and chips give it more charges, or work with its
+  commands (`give` at a higher rarity, say; `give` may already be too strong). These small commands are weaker than
+  god mode, which is probably good.
 
 ### PSU (1): the cell
 - **STOCK CELL:** comes with the deck. A small budget.
 - More:
   - **LI-ION:** a bigger budget. BRIGHTLINE POWER.
-  - **BROWNOUT:** a big budget, but one random chip is off each run. BLACKOUT.
-  >>> interesting, we would need a notification of what chip went offline and what it did.
+  - **BROWNOUT:** a big budget, but one random chip is off each run. A notice says which chip went offline and
+    what it does (Greg). BLACKOUT.
   - **REACTOR:** a huge budget, -1 starting INT. HALFLIFE NUCLEAR ("perfectly safe. mostly.").
   - **WIND-UP:** the budget is how many sectors you cleared in your last cash-out. PLAYTIME ("wind it up and watch
     it go!").
-    >>> 
-  - **POTATO:** a tiny budget. Common. A joke; maybe it does something odd. BURGERTRON.
-  >>> i was thinking of a low budget one that also made 1PWR chips cost nothing or maybe they cost half?
-  - **SPORE CELL:** the biggest budget, and the mold creeps over the board (looks only, at first). From H3AV3N.
-  >>> neat, i was going to suggest having a moldy chip that has mold effects, i like the idea of it sort of spreading on the traces a little. maybe it doens't actually do anything
+  - **POTATO:** a tiny budget, but 1-power chips cost nothing (or half) (Greg). Common. BURGERTRON.
+  - **SPORE CELL:** the biggest budget, and the mold creeps over the board, spreading a little along the traces
+    (Greg). Looks only; maybe it never does anything. From H3AV3N.
 - **A boss on your deck** (Greg: "fight him on your deck"): a rival breaches your deck mid-run. The layer turns into
   your own board: the sockets are the nodes and your chips are the ICE. It goes for your PSU, and you tap to defend.
   If it lands, the FUSE blows and the bottom band is dark for the rest of the corp. KONAMI, or a rival like SYSOP.
   That's where the PSU and the FUSE show up in a run.
-  >>> i still like this idea. well work it into a boss or a quest.. it could be like a whack a mole kinda thing where they hide in your chips and you gotta find em, the more chips you have the harder it is.
+  **Greg (2026-11-16):** still likes it; it goes in a boss or a quest. Maybe whack-a-mole: the rival hides in your chips and you
+  find it, so the more chips you run, the harder it is.
 
 ### THE BYTE: secret codes
 - **The look** (Greg, 2026-11-15): the bits are one row. The `(........)` under them is a readout: a scrolling
   ticker that says when a code does something ("0xFF: OVERFLOW wakes up"), or anything else we want there.
 - Eight switches, so 256 codes, hidden around the game in binary or hex. Most codes do nothing. Ideas:
   - `11111111` (0xFF): **OVERFLOW**'s boss seed. Add one more and it wraps; that's his whole joke.
-  >>> yeah i like the idea of using this spot for that.. somehow, teaching it might be kinda weird tho. would that mean you want to go into the seed with just 00000001 ?
+    **Greg (2026-11-16):** yes, but teaching it is awkward. Open. (Claude: you'd enter 11111111 and the next run is OVERFLOW's
+    seed; the readout's "add one more and it wraps to 00000000" is just the joke, not a second code to enter.)
   - The other boss seeds (TWIN, PHISHER, SLEEPER...), one code each, hidden where BACKLOG section 4 says the
     seeds turn up.
   - `00101010` (42): a joke line, and nothing else.
@@ -547,7 +552,8 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - `10000000` (0x80): DOUBLE TIME. Everything runs 2x for a run.
   - `00000001`: MONO. The palette goes greyscale.
   - `01111111` (0x7F, DEL): "access denied", and the switches flip themselves back. A troll.
-  >>> these are all interesting we maybe don't need to worry too much about these.. maybe we just have the mono one enabled for now. maybe there's some other ones like that that just apply effects to the whole game like a constant glitch effect over the full game or some sort of chromatic aberation?
+  - **Greg (2026-11-16):** don't worry much about these yet. MONO is the one to turn on for now. More like it would be good:
+    codes that put an effect over the whole game (a constant glitch, chromatic aberration).
   - A HARD mode code: every corp a tier higher, REP x2.
 
 ### PORTS (2): things outside the page
@@ -559,8 +565,9 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **MODEM:** multiplayer, when it comes back (shelved now).
   - **PRINTER:** print your run card, or save it as an image to share.
   - **CLOCK:** the real time, for CRON ("come back at 3:33") and the daily seed.
-  >>> could we make it print something? what would that involve? it makes a custom pdf or something and then sends it to the print dialog? that's actually kinda wild cause we could print out secret codes.
-  >>> these are all pretty interesting but we don't have a use for them just now so there's nothing to really implement but good to have in our pocket thinking about em.
+- **Greg (2026-11-16):** nothing to build yet; these are for later. PRINTER could really print (secret codes on paper!).
+  Claude: the game builds a hidden page (the run card, a code) and opens the browser's print dialog; no PDF needed.
+  Phones print unevenly, so it's a desktop treat.
 
 ### GLYPH (1, mk III): your favourite glyph
 - **Greg:** a REP unlock to pick a favourite glyph. Tap it when you see it on a layer and it acts like a loot node,
@@ -568,15 +575,14 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
 - More (glyph chips that change what your glyph does):
   - **SIGNED:** your glyph never hurts you; as ICE it hits for 0. SIGIL DYNAMICS ("we sign everything we make").
   - **GOLDEN:** when your glyph is the real node, it pays double. ZODIAC HOUSE, if you take a new glyph each run.
-  - **WORD:** pick a letter glyph instead; any layer that has it pays a bonus. LEXICON.
-  >>> letter glyphs are only in lexicon right? we can cut this one prolly
-  - **SPOTLIGHT:** your glyph always glows a little, so you see where it is. KERNING.
-  >>> is there a reson to have it glow? is this an add on so our glyph still just gives us bonus loot if we click it and this also highlights it?
-  ~~ - **MIRROR:** your glyph and its mirror image both count. MIRRORLINE. ~~
-  - **FORGERY's partner:** your glyph turns $ nodes into exotic mod nodes (BACKLOG Medium and small).
-  >>> sure i'm not sure i know where this one came from
-  - **COLLECTOR:** each time you tap your glyph, +1 to a counter; at 10, a free mod. HAUTE//COUTURE.
-  >>> kinda neat
+  - Dropped: WORD (a letter glyph), because letters only come up in LEXICON (Greg).
+  - **SPOTLIGHT:** your glyph always glows a little, so you see where it is. An add-on: it still pays as before.
+    KERNING. (Claude: weak; cut it, or fold it into COLLECTOR.)
+  - Dropped: MIRROR (Greg).
+  - **FORGERY's partner:** your glyph turns $ nodes into exotic mod nodes (BACKLOG Medium and small). FORGERY is
+    SIGIL's legendary mod ($ nodes do no damage). Greg: sure.
+  - **COLLECTOR:** each time you tap your glyph, +1 to a counter; at 10, a free mod. HAUTE//COUTURE. (Greg likes
+    it.)
 
 ### OVERVOLT (3, mk III): pay with integrity
 - **Greg likes it.** Each one costs starting INT for something else:
@@ -586,15 +592,15 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **SPIKE:** +2 power for the deck.
 - More:
   - **DONOR:** -1 INT, one more mod to pick from at the start. MEDIX ("this might sting a little").
-  - **GLASS:** -2 INT; derezzed ICE pays credits. AEGIS DEFENSE.
-  >>> i don't know what derezzed ice is, but if it's common enough maybe
+  - **GLASS:** -2 INT; every ICE hit pays credits. AEGIS DEFENSE. ("Derezzed ICE" was a made-up word. Greg: OK if
+    it comes up often enough.)
   - **CHEAPSKATE:** -1 INT; markets are 20% cheaper. MEGAMART.
   - **TOLL PASS:** -1 INT; UPLINKs cost 25% less. TOLLGATE ("exact change only").
   - **RED EYE:** -1 INT; one decoy each layer is marked. COLDBREW ("another shot?").
   - **LAG:** -1 INT; layer clocks +2 seconds. BULLET TIME INC.
   - The other way: **UNDERVOLT** (+1 INT, -25% credits) and **PADDING** (+2 INT, perfects pay no REP). CARAPACE
     ARMOR.
-    >>> do perfects add to your rep? i didn't know interesting
+    (Perfects do pay REP when you cash out, with depth, breaches, credits and sectors.)
 
 ### CREW (2-3 jacks, mk III): crew links
 - Plug in a crew member you've hired: their calls come more often, or one free call a run. Their LVL 2 perk might
@@ -609,15 +615,15 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **DIALUP:** the map shows one more row ahead.
   - **b0y** (the quest crew): his split cursor marks the maybes once a corp.
   - Two crew who know each other, both plugged in: a bonus for the pair.
-  >>> this could just be once they're on your crew you have their 'chip'
-  >>> could also make them cheaper in the market
+  - **Greg (2026-11-16):** or simpler: once someone's on your crew, you have their chip. Or their calls could be cheaper at the
+    market.
 
 ### SUDO (3, mk IV): the strong commands
 - **`mode.god`:** no damage for a sector, then it wears off.
 - **`run.seed`:** pick the seed of your next run.
 - **`flatline`:** a rival in this corp drops dead.
 - **`give.mod`:** pick one of 3 mods, once a run.
-- More (the dev commands, earned for real):
+- More (the dev commands, earned for real; Greg: the strong ones he was after):
   - **`mode.free`:** free travel on the map for a sector.
   - **`mode.hold`:** the layer clocks stop for a corp.
   - **`show.real`:** the real node shows for one layer, once a corp.
@@ -626,7 +632,7 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **`rm -rf`:** every ICE on this layer is gone. HALFLIFE NUCLEAR.
   - **`fork`:** copy a mod you own for the rest of the corp. CLONEWORKS.
   - **`chmod`:** a mod goes up a rarity for a sector (CHMOD was a gear name with no effect yet, section 1).
-  >>> ah these are the more powerful ones i was looking for i see.
+
 
 ### BOSS (2 wide, mk IV): the big bosses
 - OMNI's, H3AV3N's, KONAMI's. **G0D.exe** could be one, so it comes along every run.
@@ -634,13 +640,13 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **OMNI'S EYE:** every corp's card on the map shows its tell.
   - **THE MOLD** (G0D): ICE you've hit once rots, and can't hit you again.
   - **HAD3S'S COIN:** every third ICE hit is free.
-  - **CERBERUS:** three more gear slots.
-  >>> i'm not sure we have space for that?
+  - **CERBERUS:** three more gear slots. (Greg: the tray has no room. Needs another effect.)
   - **MYCONET:** beating a corp takes a layer off the corps next to it.
   - **MANTIS** (when it exists): one wrong tap a corp is forgiven ("it reads your mind").
   - **PHISHER** (when it exists): one ICE node a layer is a fake that pays.
   - **GHOST** (when it exists): on a seed you've played, the node you tapped last time is marked.
-  >>> these are interesting but again we don't have the bosses. so maybe this it just where we have a god eye chip that allows the divine components to show up in game? you get the chip by beating god.. maybe ~10 times? or something
+- **Greg (2026-11-16):** these wait on bosses that don't exist yet. One for now: **G0D'S EYE**, so the divine components show up in
+  a run. You get it by beating G0D about 10 times.
 
 ### HEAT (3, mk IV): harder runs, more REP
 - TAXED (a cut of every payout), AUDITED, RANSOM. Each one adds to the REP a run banks.
@@ -651,10 +657,9 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **NO MEDS:** no PATCH drops, no heals at markets. MEDIX.
   - **INFLATION:** prices +10% every sector. LEDGER TRUST.
   - **DECAY:** your mods drop a rarity every sector. BITROT.
-  >>> neat
   - **FOG:** the map shows only the next row. NIMBUS WEATHER.
   - **GLITCH:** every ICE hit adds glitch to the screen (section 6's "glitching up"). UPSIDE.
-  >>> those are all pretty good
+  - (Greg likes all of these.)
 
 ### UPLINK (2 jacks, mk IV): things that play for you
 - **G0D.exe**, if it isn't a BOSS chip. Or the AI crew member (Low priority), which may be the same thing.
@@ -664,7 +669,7 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **TUTOR:** G0D.exe says why it would tap a node, so you learn the tells.
   - **RIVAL'S REPLAY:** race a leaderboard run's REPLAY on the same seed.
   - (UPLINK and PORTS could be one group, if we cut.)
-  >>> those are all good i think. i like having a way to config the god.exe
+  - (Greg likes these; a way to set up G0D.exe is the good part.)
 
 ## Moves to the layout
 Greg: sockets that open earlier should sit higher on the board.
@@ -674,14 +679,16 @@ Greg: sockets that open earlier should sit higher on the board.
 - **The `[X` PORTS** wait on features that aren't built. Leave them dark where they are, or move them down.
 
 ## Open
-- **The ladder:** the deck at USER, mk III at ELITE, the FUSE at SYSOP. Or one of Greg's other ways.
-- **The power budget:** chips cost 1-3 power and the cell sets the budget. Yes?
-- **Carrying a chip home:** in the belt, taking a gear slot, or its own one-chip case?
->>> i think we try gear slots for now.
-- **Chips in your profile color?** (Greg, maybe.) The mockup has a toggle: the face in your color style
-  (PROFILE > COLOR, data/palettes.js `styles`) and the rarity moved to the socket's `]` `[` sides. Rarity colors are
-  easier to read at a glance; your color makes the deck yours.
-  >>> i think the the deck colors we sorted a bit, the deck main color (traces/effects) is based on the mk version rarity then the chips are their rarity color
-- **The training:** who points the board out (POPS? b0y, since it's his crash unit?).
+- **The ladder:** the deck at USER, mk III at ELITE, the FUSE at SYSOP. **Decided (Greg, 2026-11-16):** yes (below).
+- **The power budget:** chips cost 0-3 power and the cell sets the budget. **Decided:** yes, first pass (Power).
+- **Carrying a chip home:** **Decided (Greg, 2026-11-16):** a gear slot, for now (Chips, above).
+- **Chips in your profile color?** **Decided (Greg, 2026-11-16):** no. The deck's own color (traces, effects)
+  comes from its mk's rarity, and chips keep their rarity colors. Dropped: the profile-color toggle in the mockup.
+- **The training** (**Decided (Greg, 2026-11-16)**): POPS, since you may not have the 1UP yet. When you reach USER
+  (past the first set of REP buys), a popup introduces the deck.
+- **Where it lives and its name** (**Decided (Greg, 2026-11-16)**): it's **your deck**. It lives in THE BOARD screen
+  and opens nearly full screen, with just a back button. From then on the CPU upgrades are REP buys, on the REP page
+  or in the CPU's popup: ELITE has the mk III one, SYSOP the mk IV one. ELITE and SYSOP still need their other buys.
+  (Claude: it fits. One snag: "the board" means the REP screen and also this doc's circuit art; say "your deck" for
+  the whole thing.)
 - **The cuts:** once the lists settle. BOOT and BIOS could share 4 sockets; UPLINK could fold into PORTS.
->>> i think training is pops again, since you might not have the 1up when you get introduced to the board.. i'm thinking once you get past the first set of rep buys, so once you get to user there is a popup and you get introduced to the deck. i think it lives somewhere in this board page, we should work out these names maybe we do just call this thing your deck. when the deck is open it's pretty fullscreen with just a back/leave button. from then on the cpu upgrades are rep buys you can buy them on the rep page or in the deck cpu page. elite has one for mk 3 and sysop for mk 4 or whatever the steps are.. we also need to fill out those groups with some buys. does that all work/fit?
