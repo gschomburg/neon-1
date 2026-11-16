@@ -573,6 +573,7 @@ function deckSnakes(sid, n, len, now, delay = 40) {
 // hidden: they only show while a snake runs them, lit in the slot's chip's rarity. Fixed per socket (seeded by its id).
 // deckUnder() = { sid: [ [[x, y, ch], ...], ... ] }
 const DECK_UNDER_N = 3;
+const DECK_UNDER_ON = false;   // (Greg, 2026-11-16: off for now, to see the slot burst on its own)
 let deckUnderMap = null;
 function deckUnder() {
   if (deckUnderMap) return deckUnderMap;
@@ -854,7 +855,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   }
   // ...and out the under-traces of the socket you have selected, if its chip has power, now and then (mostly out,
   // sometimes back in) (Greg, 2026-11-16: only for the selected socket)
-  if (!under && !still && now > (d.undNext || 0)) {
+  if (DECK_UNDER_ON && !under && !still && now > (d.undNext || 0)) {
     d.undNext = now + (1200 + Math.random() * 3000) * (1.5 - en);   // (Greg, 2026-11-16: a little less often, 2 at a time at most)
     const live = d.snakes.filter(sn => sn.ch && !sn.under).length >= 2 ? [] : DECK_SOCKETS.filter(s => d.sel.kind === 'socket' && d.sel.id === s.id && deckOpen(s.mk) && d.slots[s.id] && pw.on.has(s.id) && (deckUnder()[s.id] || []).length && inView(s.y + 1));
     if (live.length) { const s = pickR(live, Math.random), sn = deckUnderSnake(s.id, Math.floor(Math.random() * deckUnder()[s.id].length), now, 50 + Math.random() * 30, Math.random() < 0.25); if (sn) d.snakes.push(sn); }
