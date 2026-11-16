@@ -33,6 +33,11 @@ module.exports = { name: 'deck', body: `
   check(buildScene(performance.now() + 300, false).length > 300, 'the board draws with them');
   if (!reduced()) { DECK.techs = null; buildScene(performance.now() + 4000, false);
     check(DECK.techs && DECK.techs.length >= 1 && DECK.techs.every(b => b.col === rarityCol(DECK_CHIPS.LI2[2]) && ![...b.t].some((_, i) => deckUnderAt(b.x + i, b.y))), 'a tech blob where each burst snake ends, in its rarity, never on a chip: ' + (DECK.techs || []).length); }
+  if (!reduced()) { const sel0 = DECK.sel; DECK.techs = null; DECK.selTechNext = 0; DECK.sel = { kind: 'socket', id: 'PSU' }; DECK.scroll = 20; buildScene(performance.now() + 9000, false);
+    check(DECK.techs && DECK.techs.some(b => b.col === rarityCol(DECK_CHIPS[DECK.slots.PSU][2])), 'a selected socket: tech blobs around it now and then, in its rarity');
+    DECK.techs = null; DECK.selTechNext = 0; DECK.sel = { kind: 'socket', id: 'SH2' }; const k2 = DECK.slots.SH2; delete DECK.slots.SH2; buildScene(performance.now() + 9100, false);
+    check(DECK.techs && DECK.techs.every(b => b.col === deckTraceCol()), '...the trace color when it is empty');
+    if (k2) DECK.slots.SH2 = k2; DECK.sel = sel0; DECK.techs = null; }
   p = deckPower();
   check(p.budget === 9 && !p.off.length, 'a bigger cell lights them all: ' + JSON.stringify(p.off));
   deckSlot('SC1', 'PSU');

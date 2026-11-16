@@ -655,13 +655,13 @@ function deckRoundSnakes(sid, rc, now) {
 // (more the rarer). d.techs = [{ x, y, t, t0, life, col }]
 const DECK_TECH_ON = false;   // the ring of them around the chip (Greg, 2026-11-16: off; they come at the slot burst's ends now: DECK_TECH_END)
 const DECK_TECH = ['o', '#', '=o=', '[]', '0x', '::', '<>', '+', '*', '1o', '=#'];
-function deckTechs(sid, lvl, col, now) {
+function deckTechs(sid, lvl, col, now, n = 5 + 3 * lvl) {
   const s = deckSock(sid), ART = deckArt(), rects = DECK_SOCKETS.concat(DECK_PARTS), out = [];
   const blocked = (x, y) => x < 0 || y < 0 || x >= DECK_ART_W || y >= ART.length || rects.some(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
-  const n = 5 + 3 * lvl;
+  const have = DECK.techs || [];
   for (let tries = 0; out.length < n && tries < n * 12; tries++) {
     const t = pickR(DECK_TECH, Math.random), x = s.x - 3 + Math.floor(Math.random() * (s.w + 6)), y = s.y - 1 + Math.floor(Math.random() * (s.h + 2));
-    if ([...t].some((_, i) => blocked(x + i, y)) || out.some(o => o.y === y && x < o.x + o.t.length + 1 && o.x < x + t.length + 1)) continue;
+    if ([...t].some((_, i) => blocked(x + i, y)) || out.concat(have).some(o => o.y === y && x < o.x + o.t.length + 1 && o.x < x + t.length + 1)) continue;
     out.push({ x, y, t, t0: now + Math.random() * (250 + 60 * lvl), life: 650 + Math.random() * (400 + 120 * lvl), col });
   }
   return out;
@@ -909,6 +909,13 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
     }
     for (let j = 0; j <= 5; j++) { const c = sn.path[hd - j]; if (!c || !deckOpen(deckBand(c[1]))) continue;
       bput(c[0], c[1], j ? ART[c[1]][c[0]] : (sn.dim ? 'o' : '*'), j ? mixHex(idle, tc, (sn.dim ? 0.55 : 1) - j * 0.12) : mixHex(tc, C.bright, sn.dim ? 0.2 : 0.6), !j); }
+  }
+  // the socket you have selected: a tech blob around it now and then, in its chip's rarity (the board's trace color
+  // when it's empty) (Greg, 2026-11-16)
+  if (!under && !still && d.sel.kind === 'socket' && now > (d.selTechNext || 0)) {
+    d.selTechNext = now + 500 + Math.random() * 900;
+    const s = deckSock(d.sel.id), key = s && d.slots[s.id];
+    if (s && deckOpen(s.mk) && inView(s.y + 1)) d.techs = (d.techs || []).concat(deckTechs(s.id, 0, key && DECK_CHIPS[key] ? rarityCol(DECK_CHIPS[key][2]) : tc, now, 1));
   }
   // the tech blobs around a chip that just went in: scrambled, then they settle and glow, then dim out
   if (!under && d.techs) {
