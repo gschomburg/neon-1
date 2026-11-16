@@ -167,7 +167,7 @@ function deckShow(by, h, rows) { const d = DECK; if (by < d.scroll) d.scroll = M
 
 function openDeck() {
   const d = deckState();
-  d.pick = null; d.carry = null; d.msg = null; d.selT = performance.now();
+  d.pick = null; d.cpu = null; d.carry = null; d.msg = null; d.selT = performance.now();
   openPanel('THE DECK', deckLines, null, { full: true });
   st.keyHandler = deckKey;
 }
@@ -178,7 +178,7 @@ function deckLeave() {
 }
 function deckKey(k) {
   const d = DECK; if (!d) return false;
-  if (k === 'escape') { if (d.pick) { d.pick = null; Sound.tick(); } else if (d.carry) d.carry = null; else deckLeave(); return true; }
+  if (k === 'escape') { if (d.pick || d.cpu) { d.pick = null; d.cpu = null; Sound.tick(); } else if (d.carry) d.carry = null; else deckLeave(); return true; }
   const dd = k === 'arrowup' ? -1 : k === 'arrowdown' ? 1 : 0;
   if (d.pick && d.pick.keys) { if (dd) { d.pick.keys.move(dd); return true; } if (k === 'enter' || k === ' ') { d.pick.keys.go(); return true; } }
   if (dd) { if (d.keyStep) d.keyStep(dd); else if (st.scroll) st.scroll(dd); return true; }
@@ -288,7 +288,7 @@ function deckLines(T, B, X) {
   const sa = L.hc - 1 - 5 - DECK_CARD_H;   // the scroll area: what the header, the card and the footer row leave
   st.scroll = null;
   X({ h: 5, draw: (ctx, y) => deckHeader(ctx, y) });
-  X({ h: sa, draw: (ctx, y) => { if (d.pick) deckPicker(ctx, y, sa); else if (d.view === 'chips') deckChipList(ctx, y, sa); else deckBoard(ctx, y, sa); } });
+  X({ h: sa, draw: (ctx, y) => { if (d.pick) deckPicker(ctx, y, sa); else if (d.cpu) deckCpu(ctx, y, sa); else if (d.view === 'chips') deckChipList(ctx, y, sa); else deckBoard(ctx, y, sa); } });
   X({ h: DECK_CARD_H, draw: (ctx, y) => deckCard(ctx, y) });
 }
 
@@ -298,7 +298,7 @@ function deckHeader(ctx, y) {
   g.put(0, y + 1, rule(W), C.dim);
   g.put(0, y + 2, 'SAFEHOUSE // ', C.mid); g.put(13, y + 2, 'THE DECK', C.bright, true);
   deckBtn(ctx, g, W - 7, y + 2, '[LEAVE]', C.mid, 'dkleave', deckLeave);
-  const tab = (v, label, id, x) => deckBtn(ctx, g, x, y + 3, d.view === v ? `[${label}]` : ` ${label} `, d.view === v ? C.accent : C.mid, id, () => { if (d.view === v) return; d.view = v; d.pick = null; d.carry = null; Sound.tick(); });
+  const tab = (v, label, id, x) => deckBtn(ctx, g, x, y + 3, d.view === v ? `[${label}]` : ` ${label} `, d.view === v ? C.accent : C.mid, id, () => { if (d.view === v) return; d.view = v; d.pick = null; d.cpu = null; d.carry = null; Sound.tick(); });
   const x2 = tab('board', 'BOARD', 'dktb', 0); tab('chips', `CHIPS ${deckOwned().length}`, 'dktc', x2);
   const pwt = `PWR ${pw.used}/${pw.budget}` + (pw.off.length ? ` !${pw.off.length}` : ''), mkt = `mk ${deckMk(d.mk)} `;
   g.put(W - pwt.length, y + 3, pwt, pw.off.length ? C.danger : C.money, !!pw.off.length); g.put(W - pwt.length - mkt.length, y + 3, mkt, C.money);
@@ -378,8 +378,11 @@ function deckTapSocket(s, rows) {
 }
 function deckTapPart(id) {
   const d = DECK; d.carry = null;
+  if (id === 'rom') id = 'cpu';   // the ROM is the CPU's: its posts and switches are in the CPU's popup
+  if (id === 'cpu' && d.sel.kind === 'part' && d.sel.id === 'cpu') return deckCpuOpen();
   deckSelect(id === 'stick' ? { kind: 'socket', id: 'CRS' } : { kind: 'part', id }); Sound.tick();
 }
+function deckCpuOpen() { DECK.pick = null; DECK.cpu = { t0: performance.now() }; deckSelect({ kind: 'part', id: 'cpu' }); Sound.ui(); }
 
 // the CHIPS tab: every chip you own, grouped (a chip is 2 rows, a dashed row between)
 function deckChipList(ctx, y0, sa) {
@@ -427,12 +430,7 @@ function deckPicker(ctx, y0, sa) {
     idx[k] = items.length;
     items.push({ h: s.g === 'glyph' ? 3 : 2, stop: true, draw: (g, ctx, y) => deckPickRow(g, ctx, y, k, { IX, IW, s, cur, pw }) });
   });
-  deckBoard(ctx, y0, sa, g); g.dim = false;   // the board, dim, around it
-  g.clr(X0, y0, W, H);
-  g.put(X0, y0, '+' + '-'.repeat(W - 2) + '+', gc);
-  const title = ` ${s.id} · ${DECK_GROUPS[s.g][0]} `; g.clr(X0 + 2, y0, title.length); g.put(X0 + 2, y0, title, gc, true);
-  for (let j = 1; j < H - 1; j++) { g.put(X0, y0 + j, '|', gc); g.put(X0 + W - 1, y0 + j, '|', gc); }
-  g.put(X0, y0 + H - 1, '+' + '-'.repeat(W - 2) + '+', gc);
+  deckBox(ctx, g, y0, sa, X0, W, H, gc, `${s.id} · ${DECK_GROUPS[s.g][0]}`, done);
   // a status line (the group's text for now; the header already shows your power). It gets the whole row: whatever
   // goes here later has to fit W - 4 (Greg, 2026-11-15)
   g.put(X0 + 2, y0 + 1, DECK_GROUPS[s.g][2].slice(0, W - 4), C.dim);
@@ -445,8 +443,18 @@ function deckPicker(ctx, y0, sa) {
   const iy = y0 + 2 + LR;
   g.put(X0, iy, '|' + '-'.repeat(W - 2) + '|', gc);
   deckPickInfo(ctx, g, IX, IW, iy + 1, p, s, cur, pw, go);
-  deckBtn(ctx, g, X0 + W - 4, y0, '[X]', C.mid, 'dkpx', () => { done(); Sound.tick(); });
   g.flush();
+}
+// A popup over the scroll area: the board, dim, around it; a box W wide and H tall at X0, y0 with the title on its
+// top border and [X] at the right. Returns nothing; the caller fills rows y0 + 1 to y0 + H - 2.
+function deckBox(ctx, g, y0, sa, X0, W, H, col, title, close) {
+  deckBoard(ctx, y0, sa, g); g.dim = false;
+  g.clr(X0, y0, W, H);
+  g.put(X0, y0, '+' + '-'.repeat(W - 2) + '+', col);
+  const t = ` ${title} `.slice(0, W - 8); g.clr(X0 + 2, y0, t.length); g.put(X0 + 2, y0, t, col, true);
+  for (let j = 1; j < H - 1; j++) { g.put(X0, y0 + j, '|', col); g.put(X0 + W - 1, y0 + j, '|', col); }
+  g.put(X0, y0 + H - 1, '+' + '-'.repeat(W - 2) + '+', col);
+  deckBtn(ctx, g, X0 + W - 4, y0, '[X]', C.mid, 'dkbx', () => { close(); Sound.tick(); });
 }
 // a row in the picker's list
 function deckPickRow(g, ctx, y, k, { IX, IW, s, cur, pw }) {
@@ -520,6 +528,57 @@ function deckPickInfo(ctx, g, IX, IW, y, p, s, cur, pw, go) {
   else { const nx = btn(`[ ${where ? 'MOVE' : 'SLOT'} TO ${s.id} ]`, C.accent); if (where) g.put(nx, by, `from ${where}`, C.mid); }
 }
 
+// The CPU's popup (Greg, 2026-11-15): your deck at a glance (chips in, power), the mk ladder with the upgrade, the
+// ROM (the BOARD posts you've bought, lit, and the switches), and a line of lore. A set height, like the picker.
+function deckCpu(ctx, y0, sa) {
+  const d = DECK, g = deckGrid(ctx), pw = deckPower(), W = Math.min(L.wc, DECK_ART_W), X0 = Math.floor((L.wc - W) / 2);
+  const x = X0 + 2, w = W - 4, close = () => { d.cpu = null; };
+  deckBox(ctx, g, y0, sa, X0, W, sa, C.money, `CPU · ${deckName()}`, close);
+  const gput = g.put; g.put = (px, py, t, col, bold) => gput(px, py, t.slice(0, Math.max(0, x + w - px)), col, bold);   // (clipped to the box)
+  let y = y0 + 1;
+  const sep = () => { g.put(X0 + 1, y++, rule(W - 2), C.dim); };
+  const head = t => { g.put(x, y++, t, C.mid); };
+  g.put(x, y++, `mk ${deckMk(d.mk)} · ${['', '', 'USER', 'ELITE', 'SYSOP'][d.mk]} access`, C.money);
+  y++;
+  // the deck at a glance
+  const open = DECK_SOCKETS.filter(q => deckOpen(q.mk) && q.g !== 'glyph'), inn = open.filter(q => d.slots[q.id]).length;
+  g.put(x, y, 'chips in', C.mid); g.put(x + 9, y, `${inn}/${open.length}`, C.bright, true);
+  g.put(x + 16, y, 'power', C.mid); g.put(x + 22, y, `${pw.used}/${pw.budget}`, pw.off.length ? C.danger : C.money, true);
+  if (pw.off.length) g.put(x + 27, y, `!${pw.off.length}`, C.danger, true);
+  y++;
+  sep();
+  // the mk ladder
+  head('THE BOARDS');
+  const rungs = [[2, 'USER', 'the top board'], [3, 'ELITE', 'GLYPH, OVERVOLT, crew'], [4, 'SYSOP', 'SUDO, BOSS, HEAT']];
+  for (const [m, lv, what] of rungs) {
+    const have = m <= d.mk, lit = deckOpen(m);
+    g.put(x, y, (have ? '* ' : '. ') + 'mk ' + deckMk(m), have ? (lit ? C.money : C.danger) : C.dim, have);
+    g.put(x + 10, y, what.slice(0, w - 10), have ? C.text : C.mid);
+    y++;
+    let bx = x + 10;
+    if (m === 3 && !have) deckBtn(ctx, g, bx, y, '[ UPGRADE · 600 REP ]', d.mk === 2 ? C.rep : C.dim, 'dkmk3', deckUpgrade3, d.mk !== 2);
+    else if (m === 4 && !have) g.put(bx, y, d.mk < 3 ? 'mk III, then the FUSE' : 'needs the FUSE', C.dim);
+    else if (m === 4 && d.blown) g.put(bx, y, 'the FUSE is blown', C.danger);
+    else g.put(bx, y, lv + ' access', C.dim);
+    y++;
+  }
+  sep();
+  // the ROM: your BOARD posts (lit pins), and the ones you can switch off for a run
+  head(`ROM · ${DECK_POSTS.length + d.sw.size} pins lit`);
+  const half = Math.ceil(DECK_POSTS.length / 2);
+  DECK_POSTS.forEach((p, i) => g.put(x + (i < half ? 0 : 16), y + (i % half), '* ' + p.slice(0, 13), C.rep));
+  y += half;
+  g.put(x, y++, 'switches: on for your next run', C.dim);
+  let bx = x;
+  for (const [k] of DECK_SWITCHES) bx = deckBtn(ctx, g, bx, y, `[${k}]`, d.sw.has(k) ? C.accent : C.dim, 'dksw' + k, () => { if (d.sw.has(k)) d.sw.delete(k); else d.sw.add(k); Sound.tick(); });
+  y++;
+  // a line of lore, at the bottom
+  const ly = y0 + sa - 2;
+  if (ly > y) g.put(x, ly, 'MEDIX NC-1 · rev 2', C.dim);
+  g.put = gput;
+  g.flush();
+}
+
 // the card: the bar (the rule, a message, or NO POWER), then 4 rows about what you picked
 function deckCard(ctx, y0) {
   const d = DECK, g = deckGrid(ctx), pw = deckPower(), now = ctx.now, W = L.wc;
@@ -529,11 +588,11 @@ function deckCard(ctx, y0) {
   else if (pw.off.length) {   // NO POWER: red, cycling through the chips that have none; a tap goes to the one showing
     const names = pw.off.map(id => `NO POWER: ${DECK_CHIPS[d.slots[id]][0]} in ${id}`), sw = FX.swapLines(names, W - 2, 0, now, 1800);
     g.bg(0, y0, W, 1, st.hoverBtn === 'dkbar' ? C.accent : C.danger, 1); g.put(1, y0, sw.text, C.bg, true);
-    if (!d.pick) ctx.addHit(0, y0, W, 1, { kind: 'btn', id: 'dkbar', onTap: () => {
+    if (!d.pick && !d.cpu) ctx.addHit(0, y0, W, 1, { kind: 'btn', id: 'dkbar', onTap: () => {
       const id = pw.off[sw.k], s = deckSock(id); d.view = 'board'; deckSelect({ kind: 'socket', id }); deckShow(s.y, s.h, L.hc - 1 - 5 - DECK_CARD_H - 2); Sound.tick(); } });
   } else g.put(0, y0, rule(W), C.dim);
   // the picker is up: the card waits under it (dim), and a tap on it closes the picker
-  if (d.pick) { g.dim = true; ctx.addHit(0, y0 + 1, W, 4, { kind: 'btn', id: 'dkcard', onTap: () => { d.pick = null; Sound.tick(); } }); }
+  if (d.pick || d.cpu) { g.dim = true; ctx.addHit(0, y0 + 1, W, 4, { kind: 'btn', id: 'dkcard', onTap: () => { d.pick = null; d.cpu = null; Sound.tick(); } }); }
   const y = y0 + 1, tw = (x) => W - x - 1, tick = (x, text, col = C.text) => g.put(x, y + 2, FX.ticker(text, tw(x), d.selT, now, 6), col);
   const btns = (list, bx = 1) => { for (const [label, col, id, fn, off] of list) bx = deckBtn(ctx, g, bx, y + 3, label, col, id, fn, off); };
   const frame = (s, key) => deckSocket(s, 1, y, g.put, g.bg, g.clr, { key, pw, now });
@@ -583,11 +642,7 @@ function deckPartCard(ctx, g, y, id, pw, tick, btns) {
     const n = deckName(), open = DECK_SOCKETS.filter(s => deckOpen(s.mk)).length;
     head(`CPU · ${n}`, `mk ${deckMk(d.mk)} · ${['', '', 'USER', 'ELITE', 'SYSOP'][d.mk]}`, C.money);
     tick(1, `your name, printed on your deck. ${open} sockets open, ${Object.keys(d.slots).length} chips in, power ${pw.used} of ${pw.budget}.`);
-    btns(d.mk < 3 ? [['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]] : []);   // (the name comes from your profile: no button here)
-  } else if (id === 'rom') {
-    head('ROM · your BOARD posts', `${DECK_POSTS.length + d.sw.size} pins lit`, C.rep);
-    tick(1, 'bought: ' + DECK_POSTS.join(', ') + '. the switches turn a post on or off for your next run.', C.mid);
-    btns(DECK_SWITCHES.map(([k]) => [`[${k}]`, d.sw.has(k) ? C.accent : C.dim, 'dksw' + k, () => { if (d.sw.has(k)) d.sw.delete(k); else d.sw.add(k); Sound.tick(); }]));
+    btns([['[ OPEN ]', C.accent, 'dkcpu', deckCpuOpen]]);   // (the name comes from your profile: no button here)
   } else if (id === 'byte') {
     g.put(1, y, 'THE BYTE · secret codes', C.bright, true);
     for (let i = 0; i < 8; i++) { const x = 1 + i * 3, on = d.bits[i]; g.put(x, y + 1, `[${on}]`, on ? C.accent : C.mid, !!on); ctx.hl(x, y + 1, 3, 1, 'dkbit' + i, false); ctx.addHit(x, y + 1, 3, 1, { kind: 'btn', id: 'dkbit' + i, onTap: () => { d.bits[i] ^= 1; Sound.tick(); } }); }

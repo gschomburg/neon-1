@@ -33,5 +33,9 @@ module.exports = { name: 'deck', body: `
   render(performance.now()); const r = row('dkk_PG2') || row('dkk_CD2'), want = r && r.id.slice(4);
   r.onTap(); check(DECK.pick && DECK.pick.sel === want, 'one tap picks: ' + want);
   r.onTap(); check(!DECK.pick && DECK.slots.SH3 === want, 'a second tap slots it and closes: ' + DECK.slots.SH3);
+  deckTapPart('rom'); check(DECK.sel.kind === 'part' && DECK.sel.id === 'cpu', 'the ROM pins select the CPU');
+  deckTapPart('cpu'); check(DECK.cpu && !DECK.pick, 'a second tap opens the CPU popup');
+  check(buildScene(performance.now(), false).length > 300, 'the CPU popup draws');
+  deckKey('escape'); check(!DECK.cpu, 'Escape closes it');
   DECK = null;
 ` };

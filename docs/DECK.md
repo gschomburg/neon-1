@@ -51,9 +51,9 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
 - **The picker's status line** (the row under its title) stays: the group's text for now. The power reading is gone
   from it (the header shows your power right above). Whatever goes there later has to fit the box (32 wide). (Done.)
 - **No NAME button on the CPU:** it shows your PROFILE's hacker name. (Done.)
-- **A CPU popup?** (Greg, maybe.) What could go in it (Claude): the mk ladder (II / III / IV, what each opens, the
-  upgrade button), the ROM's posts and switches (so the ROM card folds in), the deck's numbers (sockets open, chips
-  in, power), and a line of lore (the maker's silkscreen, `MEDIX NC-1`; a note from b0y once you have the 1UP).
+- **The CPU opens a popup** (Greg): the ROM goes in it (the ROM pins open it too, and the ROM card is gone). In it
+  (Claude's take): your mk and access, chips in (6/11: no list, you can see them) and power, the mk ladder with the
+  upgrade, the ROM's posts and switches, and a line of lore at the bottom (`MEDIX NC-1 · rev 2`). (Done.)
 - **A short and a long text per chip,** like mods and gear: the short one is the card's ticker and the list's second
   row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
 - **A dim dashed line between items** in the lists, not a blank row. (Done.)
