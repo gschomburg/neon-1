@@ -77,6 +77,11 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
 - **The wheel and a drag scroll one row at a time;** the arrows and the "more" rows step to the next whole item.
   (Done. In the picker the arrow keys move the pick and Enter slots it.)
 - 8 more SHELL chips, to see a long list (stand-ins, like the rest).
+- **Socketing gets a show** (Greg, 2026-11-16; to do): bigger the rarer the chip. Confetti and fanfare, tech blobs,
+  and the traces light up: electricity flows out of the chip and across the board. **Not enough power** does the
+  opposite: the light drains out of the board and it dims, with an error fanfare and static sparks around the chip.
+  (Claude: the flow can follow the trace characters out from the socket, a few cells a frame, in the mk's trace color;
+  the drain the same way back in. The red NO POWER bar stays as the readable part.)
 
 ## Decided from the round 4 mockup (Greg, 2026-11-15)
 - **Every socket takes two taps:** the first shows its card, the second opens the picker. Empty ones too.
