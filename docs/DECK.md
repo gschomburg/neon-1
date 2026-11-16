@@ -688,6 +688,11 @@ Greg: sockets that open earlier should sit higher on the board.
   comes from its mk's rarity, and chips keep their rarity colors. Dropped: the profile-color toggle in the mockup.
 - **The training** (**Decided (Greg, 2026-11-16)**): POPS, since you may not have the 1UP yet. When you reach USER
   (past the first set of REP buys), a popup introduces the deck.
+- **The deck's training** (Greg, 2026-11-16: noted, not built): so far only POPS's call at USER (3 lines and
+  [ SEE YOUR DECK ]). Claude's idea, like the bench's first-time POPS lines (engine/bench.js popsSeen): the first time
+  you open your deck, a few POPS lines pointing at each part (sockets: tap, tap again to slot; the PSU and power; the
+  CPU and its mk; chips ride home in your belt), and one line on your first chip drop in a run. Seen once, saved; an
+  editor button to replay them.
 - **Where it lives and its name** (**Decided (Greg, 2026-11-16)**): it's **your deck**. It lives in THE BOARD screen
   and opens nearly full screen, with just a back button. From then on the CPU upgrades are REP buys, on the REP page
   or in the CPU's popup: ELITE has the mk III one, SYSOP the mk IV one. ELITE and SYSOP still need their other buys: **for now, placeholder buys that do nothing** (Greg, 2026-11-16), to swap
