@@ -364,6 +364,12 @@ if (EDITOR) {
     credits: m => { st.run.credits = Math.round(+m.n || 0); },
     int: m => { const n = Math.max(1, Math.round(+m.n || 1)); st.run.maxInt = Math.max(st.run.maxInt, n); st.run.integrity = n; },
     heal: () => { st.run.integrity = st.run.maxInt; },
+    // your deck (engine/deck.js DECK_TEST; THE SHELL's deck.* commands do the same)
+    deckopen: () => { st.dev = false; openDeck(); },
+    deckall: () => setMsg('> ' + DECK_TEST.all(), C.accent), deckreset: () => setMsg('> ' + DECK_TEST.reset(), C.accent), deckremove: () => setMsg('> ' + DECK_TEST.remove(), C.accent),
+    deckmk: m => setMsg('> ' + DECK_TEST.mk(m.n), C.accent), deckintro: () => DECK_TEST.intro(), deckdrops: () => DECK_TEST.drops(),
+    deckbelt: m => { setMsg('> ' + DECK_TEST.belt(m.key), C.accent); Sound.buy(); }, deckadd: m => setMsg('> ' + DECK_TEST.add(m.key), C.accent),
+    deckrun: () => setMsg('> ' + DECK_TEST.run(), C.accent),
     rep: m => { save.rep = Math.max(0, Math.round(+m.n || 0)); persist(); },   // REP (the editor's save; no run needed)
     // quests (engine/quests.js): open the DISC quest (a sector cleared + POPS on the crew), give it, set the step, the scene, the call
     qopen: () => { save.stats = save.stats || {}; save.stats.sectors = Math.max(1, save.stats.sectors || 0); save.legacy = save.legacy || {}; save.legacy.crew_pops = Math.max(1, save.legacy.crew_pops || 0); persist(); },
@@ -493,7 +499,7 @@ if (EDITOR) {
       setMsg(`> test: ${MODS[key].name} stolen. it's at THE FENCE.`, C.danger);
     },
   };
-  const NEEDS_RUN = ['god', 'debug', 'free', 'credits', 'int', 'heal', 'steal', 'kit', 'lootview'];
+  const NEEDS_RUN = ['god', 'debug', 'free', 'credits', 'int', 'heal', 'steal', 'kit', 'lootview', 'deckbelt', 'deckrun'];
   window.addEventListener('message', e => {
     const m = e.data;
     if (!m || m.to !== 'neon-game' || m.type !== 'test' || !TEST[m.act]) return;
@@ -511,6 +517,8 @@ if (EDITOR) {
       music: tabPlaying ? !!gameMusicOn : !!save.musicOn, sfx: !save.muted, tabMusic: tabPlaying,
       credits: run ? run.credits : 0, int: run ? run.integrity : 0, maxInt: run ? run.maxInt : 0, sector: run ? run.sector + 1 : 0,
       event: ev, fence: run ? (run.fence || []).length : 0, mods: run ? run.mods.length : 0, feats: Object.keys(save.feats || {}), rep: save.rep || 0, quest: (save.quests && save.quests.pops && save.quests.pops.step) || 'none', qopen: questOpen(),
+      deckdrops: DECK_ALWAYS, deck: save.deck ? { chips: Object.values(save.deck.chips || {}).reduce((a, b) => a + b, 0), kinds: Object.keys(save.deck.chips || {}).length, mk: deckMkNow(), slotted: Object.keys(save.deck.slots || {}).length } : null,
+      runChips: run ? run.chips || [] : [],
       g0d: st.g0d ? st.g0d.key : '', g0dStill: !!(st.g0d && st.g0d.still), g0dBar: st.g0dBar || '', g0df: st.g0df && st.mode === 'g0df' ? st.g0df.stage : '', g0dfCfg: G0DF };
     const s = JSON.stringify(m);
     if (s !== lastTest) { lastTest = s; post(m); }
@@ -537,6 +545,7 @@ if (EDITOR) {
   post({ type: 'ready', version: VERSION, scenes: Object.keys(SCENES),
     events: Object.entries(SECTOR_EVENTS).map(([k, e]) => [k, e.name, e.kind, e.anomaly || null]),
     anomalies: Object.entries(ANOMALIES).map(([k, a]) => [k, a.name, a.tag, a.desc]),
+    chips: Object.entries(DECK_CHIPS).map(([k, c]) => [k, c[0], DECK_GROUPS[c[1]][0], c[2]]),   // (the TESTING tab's chip picker: engine/deck.js)
     corpNames: Object.fromEntries(Object.entries(CORPS).map(([k, c]) => [k, c.name])), g0d: g0dList(), g0dHp: g0dHpList() });
 }
 

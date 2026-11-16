@@ -146,5 +146,16 @@ module.exports = { name: 'deck', body: `
   run3.spoils = 2; const cs = run3.credits; openReward(cn); await sleep(300);
   check(run3.credits - cs === 60, 'SPOILS on CASH: +60cr: ' + (run3.credits - cs));
   run3.chips = []; FEAT_QUEUE.length = 0;
+  // ---- testing tools (engine/deck.js DECK_TEST; the editor's TESTING tab and THE SHELL call them)
+  DECK_TEST.remove(); check(save.deck === null, 'remove the deck');
+  DECK_TEST.all(); check(save.deck && Object.keys(DECK_CHIPS).every(k => save.deck.chips[k] >= 1), 'unlock all chips (it makes the deck)');
+  DECK_TEST.reset(); check(Object.keys(save.deck.chips).join() === 'SC1,SP3' && save.deck.slots.PSU === 'SC1', 'reset chips: the starting two');
+  DECK_TEST.mk(4); check(deckMkNow() === 4 && legacyLv('deck3') && legacyLv('fuse'), 'mk IV'); DECK_TEST.mk(2); check(deckMkNow() === 2 && !legacyLv('fuse'), 'back to mk II');
+  DECK_TEST.add('FL3'); check(save.deck.chips.FL3 === 1, 'add a chip to the deck');
+  st.run.items = []; DECK_TEST.belt('OMNI'); check(st.run.items.some(x => x.key === 'chip_OMNI'), 'give a chip onto the belt');
+  DECK_TEST.drops(true); const dl = deckCacheChip({ id: 'never-drops-' + Math.random() }); check(!!dl, 'chips always drop: ' + dl); DECK_TEST.drops(false);
+  save.deck.slots.BT1 = 'TF1'; save.deck.chips.TF1 = 1; save.deck.order.push('BT1'); DECK_TEST.run(); check(chipOn('TF1'), "deck -> this run: the deck's chips go on now");
+  check(['give.chip', 'deck.chips', 'deck.add', 'deck.mk', 'deck.run', 'deck.drops', 'deck.open', 'deck.intro'].every(n => SHELL_BY[n]), 'THE SHELL has the deck commands');
+  check(/every chip/.test(SHELL_BY['deck.chips'].run(['all'])), 'deck.chips all runs');
   DECK = null; Object.keys(save).forEach(k => delete save[k]); Object.assign(save, JSON.parse(keep)); persist();
 ` };

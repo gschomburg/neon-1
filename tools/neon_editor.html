@@ -306,6 +306,13 @@
   <div class="row">loot <select id="xGiveLoot"></select> <select id="xTierLoot"></select> <button id="xGiveLootBtn">give</button> <button id="xGiveLootRnd" title="2-5 random loot, one after another: the [$] pile">random 2-5</button></div>
   <div class="row">kit <button data-x="kit" data-key="tank" title="a legendary BUFFER, 10 rare PATCHes, INT full">tank kit</button> <button data-x="kit" data-key="tracker" title="TRACER and KEYLOGGER at their top steps">tracker kit</button> <button data-x="kit" data-key="crew" title="CALL x5 and 2 of each crew member's own CALL (as many as fit on the belt)">crew kit</button> <button data-x="kit" data-key="shop" title="+500 credits">shop kit</button> <span class="dim">kits only add (what doesn't fit is skipped)</span></div>
   </details>
+  <details class="xgrp" data-g="deck" open><summary>Your deck <small>chips and the deck's mk (THE SHELL has the same: give.chip, deck.*)</small></summary>
+  <div class="row"><span id="xDeck" class="dim">no deck yet</span></div>
+  <div class="row"><button data-x="deckopen">open your deck</button> <button data-x="deckall" title="one of every chip into your deck (it makes the deck if you have none)">unlock all chips</button> <button data-x="deckreset" title="back to the STOCK CELL and SPOILS, slotted">reset chips</button> <button data-x="deckremove" title="no deck: POPS's call comes again the next time THE BOARD opens at USER">remove the deck</button> <button data-x="deckintro" title="POPS's call about the deck, once the screen is calm">POPS's call</button></div>
+  <div class="row">mk <button data-x="deckmk" data-n="2">II</button> <button data-x="deckmk" data-n="3">III</button> <button data-x="deckmk" data-n="4">IV (the FUSE)</button> <span class="dim">sets THE BOARD's DECK mk III and THE FUSE posts</span></div>
+  <div class="row">chip <select id="xChip"></select> <button data-x="deckbelt" title="on your belt as gear, in a run: cash out to keep it (in the editor, practice runs bank chips too)">give (belt)</button> <button data-x="deckadd" title="straight into your deck">add to deck</button></div>
+  <div class="row"><button data-x="deckrun" title="the deck's slotted, powered chips go on this run now (without what a run starts with: credits, gear, INT)">deck → this run</button> <button class="tg" data-x="deckdrops" title="every DATA CACHE and PIER gear catch drops a chip">chips always drop</button></div>
+  </details>
   <details class="xgrp" data-g="hackers" open><summary>Hackers <small>bring one into the corp layer you're in: a rival, or crew as if called</small></summary>
   <div class="row"><select id="xHk"></select> <button data-x="hacker">bring in</button></div>
   </details>

@@ -146,7 +146,7 @@ function deckRollChip(r) {
 function deckCacheChip(node) {
   if (!deckDrops()) return null;
   const r = rngFor(st.run.seed, 'cachechip', node.id);
-  if (r() >= DECK_DROP.cache) return null;
+  if (r() >= DECK_DROP.cache && !DECK_ALWAYS) return null;   // (DECK_ALWAYS: testing)
   const key = deckRollChip(r), ik = deckChipItem(key);
   if (itemRoom(ik, 0)) { addItem(ik, 0); return `+ chip: ${DECK_CHIPS[key][0]}${deckHave(key) ? ' (dupe)' : ''}`; }
   setTimeout(() => openSwap('item', ik, 0, null), 0);   // (after the cache's panel is up)
@@ -156,14 +156,14 @@ function deckCacheChip(node) {
 function deckFishChip(out, f) {
   if (out.kind !== 'gear' || out.key === 'disc' || !deckDrops()) return out;
   if (!f.cr) f.cr = rngFor(st.run.seed, 'pierchip', f.node.id);
-  if (f.cr() >= DECK_DROP.fish) return out;
+  if (f.cr() >= DECK_DROP.fish && !DECK_ALWAYS) return out;
   const key = deckRollChip(f.cr);
   return { kind: 'gear', key: deckChipItem(key), tier: 0, rarity: DECK_CHIPS[key][2], chip: true };
 }
 // Cashing out (engine/runend.js endRun): the chips in your belt go home. Dying: they're gone.
 function deckHome(run, win) {
   const chips = run.items.filter(s => deckItemChip(s.key));
-  if (!win || !chips.length || !save.deck || run.practice || run.tutorial || st.mp) return;
+  if (!win || !chips.length || !save.deck || (run.practice && !EDITOR) || run.tutorial || st.mp) return;   // (the editor: its runs are practice, and its save is its own)
   save.deck.chips = save.deck.chips || {};
   for (const s of chips) { const k = deckItemChip(s.key); save.deck.chips[k] = (save.deck.chips[k] || 0) + s.n; }
   FEAT_QUEUE.push({ head: 'YOUR DECK', lines: ['chips home:', '', ...chips.map(s => '  ' + ITEMS[s.key].name + (s.n > 1 ? ' x' + s.n : '')), '', 'slot them: THE BOARD > YOU.'] });
@@ -239,6 +239,47 @@ const DECK_SHELL_CMDS = [
     return `${hkName(h.id)}: flatlined.`; } },
 ];
 
+// ---------- testing: the editor's TESTING tab (engine/editor.js TEST) and THE SHELL's deck commands (engine/shell.js)
+// both call these, so the two can't drift. Each returns a line to show, or throws why not.
+let DECK_ALWAYS = false;   // every DATA CACHE and PIER gear catch drops a chip
+const DECK_TEST = {
+  again() {   // the deck on screen writes itself to the save every frame: rebuild it from the save we just changed
+    if (!DECK || !DECK.real) return;
+    const v = DECK; DECK = save.deck ? deckReal() : null;
+    if (DECK) Object.assign(DECK, { view: v.view, scroll: v.scroll, sel: v.sel, selT: v.selT });
+    else swapTo(() => openBoard('you'));
+  },
+  all() { const sd = save.deck || (save.deck = deckFreshSave()); for (const k of Object.keys(DECK_CHIPS)) sd.chips[k] = Math.max(1, sd.chips[k] || 0); persist(); DECK_TEST.again(); return `every chip in your deck (${Object.keys(DECK_CHIPS).length}).`; },
+  reset() { save.deck = Object.assign(deckFreshSave(), { off: (save.deck && save.deck.off) || [] }); persist(); DECK_TEST.again(); return 'your deck: just the STOCK CELL and SPOILS.'; },
+  remove() { save.deck = null; persist(); DECK_TEST.again(); return 'no deck: POPS calls again when THE BOARD opens at USER.'; },
+  mk(m) {
+    m = clamp(Math.round(+m || 2), 2, 4); save.legacy = save.legacy || {};
+    if (m >= 3) save.legacy.deck3 = 1; else delete save.legacy.deck3;
+    if (m >= 4) save.legacy.fuse = 1; else delete save.legacy.fuse;
+    if (save.deck) save.deck.blown = false;
+    persist(); if (DECK && DECK.real) Object.assign(DECK, { mk: deckMkNow(), fuse: m >= 4, blown: false });
+    return `your deck: mk ${deckMk(m)} (THE BOARD's DECK mk III and THE FUSE posts).`;
+  },
+  belt(key) {
+    if (!st.run || st.run.ended) throw new Error('no run: start one first');
+    if (!DECK_CHIPS[key]) throw new Error('not a chip: ' + key);
+    if (!addItem(deckChipItem(key), 0)) throw new Error('no room in the gear slots');
+    return `${DECK_CHIPS[key][0]} on your belt: cash out to keep it.`;
+  },
+  add(key) {
+    if (!DECK_CHIPS[key]) throw new Error('not a chip: ' + key);
+    const sd = save.deck || (save.deck = deckFreshSave()); sd.chips[key] = (sd.chips[key] || 0) + 1; persist(); DECK_TEST.again();
+    return `${DECK_CHIPS[key][0]} in your deck (${sd.chips[key]}).`;
+  },
+  run() {   // the deck's chips onto this run now, without what a run starts with (credits, gear, INT)
+    if (!st.run || st.run.ended) throw new Error('no run: start one first');
+    const r = deckRunChips(); st.run.chips = (r && r.keys) || []; st.run.spoils = (r && r.spoils) || 0;
+    return `this run's chips: ${st.run.chips.join(' ') || 'none'}`;
+  },
+  drops(on) { DECK_ALWAYS = on == null ? !DECK_ALWAYS : !!on; return 'chips always drop: ' + (DECK_ALWAYS ? 'on' : 'off'); },
+  intro() { deckIntroCall(); return "POPS's call about the deck: once the screen is calm."; },
+};
+
 // ---------- state ----------
 // DECK is the deck on screen: the dev one (DECK_DEV, kept while the page lives) or the real one (made from save.deck
 // each time it opens, and written back by deckPersist whenever it changes).
@@ -260,10 +301,14 @@ function deckDev() {
 const DECK_START = { chips: { SC1: 1, SP3: 1 }, slots: { PSU: 'SC1', SPL: 'SP3' }, order: ['PSU', 'SPL'] };
 // USER and no deck yet: it's yours, and POPS calls about it. From THE BOARD (a level opens: engine/feats.js
 // boardLevelNews; or a save from before the deck: engine/menus.js openBoard).
+const deckFreshSave = () => Object.assign(JSON.parse(JSON.stringify(DECK_START)), { spoils: 0, glyph: 0, crew: [], off: [], overclock: false, blown: false });
 function deckEnsure() {
   if (save.deck || boardLevel() < 2) return;
-  save.deck = Object.assign(JSON.parse(JSON.stringify(DECK_START)), { spoils: 0, glyph: 0, crew: [], off: [], overclock: false, blown: false });
+  save.deck = deckFreshSave();
   persist();
+  deckIntroCall();
+}
+function deckIntroCall() {
   queueCall('pops', ["kid. you made USER. that gets you a deck.", "slot chips in and they run, every run. the cell powers them.",
     "find chips. bring them home. it's on THE BOARD, under YOU."], { text: '[ SEE YOUR DECK ]', onTap: () => openDeck() });
 }

@@ -10,6 +10,7 @@
     const x = state;
     for (const b of document.querySelectorAll('#test button.tg')) b.classList.toggle('on', !!(x && x[b.dataset.x]));
     for (const b of document.querySelectorAll('#xFeats button[data-x="feat"]')) b.classList.toggle('on', !!(x && (x.feats || []).includes(b.dataset.key)));
+    { const dk = x && x.deck; $('#xDeck').textContent = dk ? `your deck: mk ${['', '', 'II', 'III', 'IV'][dk.mk]}  ·  ${dk.chips} chips (${dk.kinds} kinds)  ·  ${dk.slotted} slotted${x.run ? '  ·  on this run: ' + (x.runChips.join(' ') || 'none') : ''}` : 'no deck yet (USER on THE BOARD, or "unlock all chips")'; }
     if (!x || !x.run) { $('#xState').textContent = 'no run: click "new test run" or a sector event'; return; }
     $('#xState').textContent = `sector ${x.sector}${x.event ? ' // ' + (evNames[x.event] || x.event) : ''}  ·  ${x.credits}cr  ·  INT ${x.int}/${x.maxInt}  ·  REP ${x.rep}  ·  quest: ${x.quest}${x.qopen ? '' : ' (closed)'}  ·  ${x.mods} mods${x.fence ? '  ·  fence: ' + x.fence : ''}  ·  ${x.mode}${x.god ? '  ·  GOD' : ''}${x.free ? '  ·  free travel' : ''}${x.tabMusic ? '  ·  music tab playing' : ''}`;
   };
@@ -18,6 +19,9 @@
       evNames = Object.fromEntries((m.events || []).map(([k, n]) => [k, n]));
       const an = Object.fromEntries((m.anomalies || []).map(a => [a[0], a]));
       $('#xEvents').innerHTML = (m.events || []).map(([k, n, kind, a]) => `<button class="ev" data-x="event" data-key="${esc(k)}">${esc(n)}<small>${kind === 'anomaly' ? (a === 'any' ? 'any anomaly' : esc(an[a] ? an[a][1] : a)) : 'whole sector'}</small></button>`).join('');
+      // your deck's chips, by group (engine/deck.js DECK_CHIPS, sent in 'ready')
+      { const gs = {}; for (const [k, n, g, r] of m.chips || []) (gs[g] = gs[g] || []).push(`<option value="${esc(k)}">${esc(n)} (${esc(k)}, ${esc(r)})</option>`);
+        $('#xChip').innerHTML = Object.entries(gs).map(([g, os]) => `<optgroup label="${esc(g)}">${os.join('')}</optgroup>`).join(''); }
       $('#xAnoms').innerHTML = (m.anomalies || []).map(([k, n, tag, d]) => `<button data-x="anomaly" data-key="${esc(k)}" title="${esc(d)}">${esc(tag)} ${esc(n)}</button>`).join('') + '<button data-x="anomaly" data-key="">none</button>';
     }
     if (m.type === 'test-state') { state = m; drawState(); }
@@ -45,6 +49,8 @@
     if (act === 'featbox') return send('featbox', { key: b.dataset.key });
     if (act === 'hacker') return send('hacker', { key: $('#xHk').value });
     if (act === 'kit') return send('kit', { key: b.dataset.key });
+    if (act === 'deckmk') return send('deckmk', { n: +b.dataset.n });
+    if (act === 'deckbelt' || act === 'deckadd') return send(act, { key: $('#xChip').value });
     send(act);
   });
   // give: every mod and gear (from dist/data/mods.js, loaded for the gear & mods tab)

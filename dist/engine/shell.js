@@ -150,6 +150,7 @@ const shellLevel = a => a == null || a === 'off' ? null : clamp(+a, 0, 1);
 const SHELL_OF = {
   mods: () => Object.keys(MODS).map(k => ({ v: k, hint: MODS[k].name })),
   gear: () => Object.keys(ITEMS).map(k => ({ v: k, hint: ITEMS[k].name })),
+  chips: () => Object.keys(DECK_CHIPS).map(k => ({ v: k, hint: `${DECK_CHIPS[k][0]}  ${DECK_CHIPS[k][1]}` })),
   corps: () => corpsByLevel().map(k => ({ v: k, hint: `${CORPS[k].name}  LV${CORPS[k].level || 1}` })),
   hackers: () => Object.keys(HACKERS).map(k => ({ v: k, hint: HACKERS[k].name || '' })),
   events: () => Object.keys(SECTOR_EVENTS).map(k => ({ v: k, hint: SECTOR_EVENTS[k].name })),
@@ -339,6 +340,16 @@ const SHELL_CMDS = shellGroups([
   // ----- your deck: commands a chip teaches (engine/deck.js DECK_SHELL_CMDS) -----
   'your deck',
   ...DECK_SHELL_CMDS,
+  // testing the deck (engine/deck.js DECK_TEST: the editor's TESTING tab does the same)
+  { name: 'give.chip', args: [{ name: 'chip', of: 'chips' }], help: 'a chip on your belt (cash out to keep it)', run: a => { const s = DECK_TEST.belt(a[0]); Sound.buy(); return s; } },
+  { name: 'deck.chips', args: [{ name: 'all|reset|none', of: fixed(['all', 'every chip'], ['reset', 'the STOCK CELL and SPOILS'], ['none', 'no deck: POPS calls again']) }], help: 'your deck: every chip, the starting two, or no deck', safe: true,
+    run: a => a[0] === 'all' ? DECK_TEST.all() : a[0] === 'reset' ? DECK_TEST.reset() : DECK_TEST.remove() },
+  { name: 'deck.add', args: [{ name: 'chip', of: 'chips' }], help: 'a chip straight into your deck', safe: true, run: a => DECK_TEST.add(a[0]) },
+  { name: 'deck.mk', args: [{ name: '2|3|4', of: fixed(['2', 'mk II'], ['3', 'mk III'], ['4', 'mk IV: the FUSE']) }], help: "your deck's mk (THE BOARD's posts)", safe: true, run: a => DECK_TEST.mk(a[0]) },
+  { name: 'deck.run', help: "the deck's slotted, powered chips onto this run now", run: () => DECK_TEST.run() },
+  { name: 'deck.drops', args: [{ name: 'on|off', of: fixed('on', 'off'), opt: true }], help: 'every DATA CACHE and PIER gear catch drops a chip', run: a => DECK_TEST.drops(a[0] == null ? null : a[0] === 'on') },
+  { name: 'deck.open', help: 'your deck (the dev one if you have none)', safe: true, run: () => { shellClose(); openDeck(); } },
+  { name: 'deck.intro', help: "POPS's call about the deck", safe: true, run: () => DECK_TEST.intro() },
 ]);
 const SHELL_BY = Object.fromEntries(SHELL_CMDS.map(c => [c.name, c]));
 for (const c of SHELL_CMDS) for (const al of c.alias || []) SHELL_BY[al] = c;
