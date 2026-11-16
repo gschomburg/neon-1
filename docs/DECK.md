@@ -699,7 +699,7 @@ Greg: sockets that open earlier should sit higher on the board.
     chips are in and powered, the more power is used, and the higher your mk (engine/deck.js deckEnergy).
   - **Smooth scrolls** (about half a second): the NO POWER bar, SLOT from the CHIPS tab.
   - **The mk upgrade fanfare:** the new board boots, a sweep runs down it row by row with a burst at each socket,
-    then snakes and a ripple out of the CPU, a fanfare (Sound.deckUp) and  Bought in the deck, it plays
+    then snakes and a ripple out of the CPU, a fanfare (Sound.deckUp) and "mk III ONLINE." Bought in the deck, it plays
     right away; bought on THE BOARD, the first time you open your deck after (save.deck.seenMk).
   - **THE BYTE's 0s** in the card are text white, so they read as switches.
   - Greg likes: the CRASH stick's text and swap, and the glitch around a chip with no power. (Kept.)
