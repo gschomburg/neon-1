@@ -619,8 +619,8 @@ function deckUnderSnake(sid, i, now, ms = 45, back = false) {
   const path = back ? p.slice().reverse() : p;
   return { path: path.map(([x, y]) => [x, y]), ch: path.map(c => c[2]), t0: now, ms, rc: rarityCol(DECK_CHIPS[key][2]), tail: 7 };
 }
-// The slot burst (Greg, 2026-11-16): 3 to 5 short snakes in rounded box lines, out of the chip in random directions,
-// gone in a second or two. Their paths are fresh each time and go anywhere on the board, but they run under the
+// The slot burst (Greg, 2026-11-16): 3 to 5 snakes in rounded box lines, out of the chip in random directions,
+// gone in about 2 seconds. Their paths are fresh each time and go anywhere on the board, but they run under the
 // sockets and the parts (deckUnderAt: they don't draw there), so they never cover a chip.
 const deckUnderAt = (x, y) => DECK_SOCKETS.concat(DECK_PARTS).some(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
 function deckRoundSnakes(sid, rc, now) {
@@ -631,9 +631,9 @@ function deckRoundSnakes(sid, rc, now) {
   const starts = ring.filter(([x, y]) => x >= 0 && y >= 0 && x < DECK_ART_W && y < H);
   for (let i = 0; i < n && starts.length; i++) {
     let [x, y, hx, hy] = pickR(starts, Math.random);
-    const path = [[x, y]], seen = new Set([y * 64 + x]), len = 6 + Math.floor(Math.random() * 7);
+    const path = [[x, y]], seen = new Set([y * 64 + x]), len = 14 + Math.floor(Math.random() * 7);   // (Greg: a bit further, fewer turns, about 2 seconds)
     for (let k = 0; k < len; k++) {
-      const turn = Math.random() < 0.3, dirs = (turn ? [[hy, hx], [-hy, -hx], [hx, hy]] : [[hx, hy], [hy, hx], [-hy, -hx]]).filter(([dx, dy]) => {
+      const turn = Math.random() < 0.15, dirs = (turn ? [[hy, hx], [-hy, -hx], [hx, hy]] : [[hx, hy], [hy, hx], [-hy, -hx]]).filter(([dx, dy]) => {
         const a = x + dx, b = y + dy; return a >= 0 && b >= 0 && a < DECK_ART_W && b < H && !seen.has(b * 64 + a) && !(a >= s.x && a < s.x + s.w && b >= s.y && b < s.y + s.h); });
       if (!dirs.length) break;
       const [dx, dy] = turn && dirs.length > 1 && Math.random() < 0.5 ? dirs[1] : dirs[0];
@@ -646,7 +646,7 @@ function deckRoundSnakes(sid, rc, now) {
       const l = nb.some(([a]) => a < 0), u = nb.some(([, b]) => b < 0);
       return u ? (l ? '╯' : '╰') : (l ? '╮' : '╭');
     });
-    out.push({ path, ch, t0: now + i * 70, ms: 55 + Math.random() * 35, rc, tail: 4, under: true });
+    out.push({ path, ch, t0: now + i * 70, ms: 75 + Math.random() * 20, rc, tail: 5, under: true });
   }
   return out;
 }
