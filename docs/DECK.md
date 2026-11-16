@@ -65,7 +65,7 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   past that, its settings become a scroll area like the picker's list.
 - **A short and a long text per chip,** like mods and gear: the short one is the card's ticker and the list's second
   row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
-- **Each socket shows its chip's power on the board** (Greg, to do): a small number centered on the socket's bottom
+- **Each socket shows its chip's power on the board** (Greg; done, in hex): a small number centered on the socket's bottom
   border, `+-2-+` (`+-+2+-+` on a wide one). Red when the chip has no power; no number in an empty socket, and
   none for 0-power chips. **The PSU shows the usage** (Greg): `+5/6+`. A budget over 9 (REACTOR, 14) doesn't fit 3
   wide. Greg's option, and Claude's pick: **hex**, one character up to 15, so REACTOR reads `+5/E+` (the BYTE already
@@ -141,6 +141,23 @@ Claude's ladder, so the 1UP always has somewhere to go:
   how much you can run at once. Stronger chips cost more, so a strong deck is a choice, not just a collection.
   (This brings back the "every chip draws power" idea. It's the simplest way to keep the strong chips in check.)
 - **Where you'd see it in a run:** a boss that breaches your deck (below, PSU).
+
+**First pass, to playtest (Greg, 2026-11-15: "solid enough for a first pass").** In the dev screen.
+- **What needs power** (board v06): mk II has 10 chip sockets (SPOILS is a 0-power switch, so 9 that cost), mk III
+  has 3 (OVERVOLT; the GLYPH is free), mk IV has 5 (SUDO, BOSS; the HEAT sockets are free).
+- **Costs:** 0 for switches, handicaps and looks (SPOILS, HEAT, PET, the cells). 1 for most chips (commons, small
+  tools: ls, EJECT, DEADMAN). 2 for strong ones (market, undo, GAMBLE, GREED). 3 for run-changers (1UP, mode.god,
+  ssh, the BOSS chips).
+- **The cell powers mk II and mk III**, one cell per stage of the ladder: STOCK 6 (comes with the deck: half the top
+  board, so you choose from day one), LI-ION 9 (a mid boss), NANO CELL 11 (about ELITE: 12 paid sockets, always 1
+  short), REACTOR 14 (endgame, -1 INT: every socket with a 1, and 2 to spare).
+- **The FUSE powers mk IV on its own:** 8, against SUDO and BOSS chips at 2-3 each (15 to run them all). Two BOSS
+  chips and a light SUDO, or 3 SUDO and a BOSS, never all of it.
+- **Every number is one hex character** on the board: a socket's bottom border shows its chip's cost (`+-2-+`), the
+  PSU shows used / budget (`+5/E+`), the `]8[` readout the cell's power left, and a digit beside the FUSE its power
+  left. The header: `PWR 5/6 F2/8`.
+- **F is a secret:** OVERCLOCK, a BYTE code (00001111), runs the cell at 15 for a run.
+- **A rule for judging a cell:** spare = power - paid sockets. Negative early, about 0 mid-game, +2 at the max.
 
 ## Seeds: what a chip does to a run
 **Decided (Greg, 2026-11-15):**

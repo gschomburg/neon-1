@@ -44,5 +44,11 @@ module.exports = { name: 'deck', body: `
   deckCarry('HN2'); check(!DECK.carry, 'HEAT (mk IV) has no open socket yet');
   DECK.mk = 3; DECK.scroll = 0; deckCarry('GR8');
   check(DECK.carry === 'GR8' && DECK.scroll + deckViewRows() >= 38 && DECK.scroll <= 34, 'SLOT scrolls the OVERVOLT sockets into view: ' + DECK.scroll);
+  // the FUSE is mk IV's own power: chips there don't use the cell
+  DECK.mk = 4; DECK.fuse = true; DECK.blown = false;
+  const c0 = deckPower().used; deckSlot('GD0', 'SU1'); deckSlot('OMNI', 'BS1');
+  const pf = deckPower();
+  check(pf.fuse && pf.fuse.used === 6 && pf.fuse.budget === DECK_FUSE_PWR && pf.used === c0, 'mk IV runs on the fuse, not the cell: ' + JSON.stringify(pf.fuse) + ' cell ' + pf.used);
+  DECK.blown = true; check(deckPower().fuse === null && deckPower().used === c0, 'a blown fuse: mk IV dark, the cell unchanged');
   DECK = null;
 ` };

@@ -22,7 +22,7 @@ const DECK_CHIPS = {
   DM5: ['DEADMAN', 'crash', 'epic', 1, 'dying keeps 50% of the REP you would have banked.', ['DED', 'MAN'], 'die and keep half your REP.'],
   '1UP': ['1UP', 'crash', 'exotic', 3, "b0y's crash unit. die and go back to the start of the corp, once a run.", ['1UP', '^_^'], 'one more life a run.'],
   EJ1: ['EJECT', 'crash', 'common', 1, 'cash out from anywhere, once a run.', ['/^\\', 'EJT'], 'cash out anywhere, once.'],
-  BB7: ['BLACK BOX', 'crash', 'rare', 1, 'when you die, one mod goes to the LOCKER.', ['[#]', 'BOX'], 'a mod survives your death.'],
+  BB7: ['BLACK BOX', 'crash', 'rare', 2, 'when you die, one mod goes to the LOCKER.', ['[#]', 'BOX'], 'a mod survives your death.'],
   SP3: ['SPOILS', 'spoils', 'common', 0, 'a switch for corp bosses: take the REWARDS, or skip them for a HEAL or for CASH.', ['SPL', null], 'take boss rewards, a heal, or cash.'],
   GM7: ['GAMBLE', 'spoils', 'epic', 2, 'boss rewards come face down. one of them is a jackpot: two mods.', ['?!?', 'BET'], 'face-down rewards, one jackpot.'],
   CD2: ['cd ..', 'shell', 'rare', 2, 'THE SHELL learns cd ..: back a row on the map, once a sector.', ['cd ', ' ..'], 'cd ..: back a row.'],
@@ -33,7 +33,7 @@ const DECK_CHIPS = {
   PG2: ['ping', 'shell', 'common', 1, 'THE SHELL learns ping: how many nodes the next layer has, before you go in.', ['png', '((('], "ping: the next layer's size."],
   GP5: ['grep', 'shell', 'rare', 1, 'THE SHELL learns grep: name a mod and the map marks the nodes that can drop it, this sector.', ['grp', '/?/'], 'grep: find a mod on the map.'],
   CM7: ['chmod', 'shell', 'rare', 2, 'THE SHELL learns chmod: open one locked node on this layer, once a sector.', ['chm', '+x '], 'chmod: open a locked node.'],
-  WH0: ['whoami', 'shell', 'common', 0, "THE SHELL learns whoami: your run so far, the REP on the line, and what you'd bank if you cashed out now.", ['who', '?_?'], 'whoami: your run so far.'],
+  WH0: ['whoami', 'shell', 'common', 1, "THE SHELL learns whoami: your run so far, the REP on the line, and what you'd bank if you cashed out now.", ['who', '?_?'], 'whoami: your run so far.'],
   TP3: ['top', 'shell', 'common', 1, 'THE SHELL learns top: which node on this layer pays the most.', ['top', '^$^'], 'top: the richest node.'],
   CT4: ['cat', 'shell', 'rare', 1, 'THE SHELL learns cat: read a node before you open it, once a layer.', ['cat', '=^.'], 'cat: read a node first.'],
   SS8: ['ssh', 'shell', 'legendary', 3, 'THE SHELL learns ssh: jump to any node on the next row of the map, once a sector. the row after is fair game too.', ['ssh', '>>@'], 'ssh: jump to any node ahead.'],
@@ -46,7 +46,8 @@ const DECK_CHIPS = {
   AD5: ['ADWARE', 'bios', 'common', 1, 'more ads, and tapping one heals 1 INT.', ['AD!', '[x]'], 'ads heal you.'],
   SC1: ['STOCK CELL', 'psu', 'common', 0, 'comes with the deck. power 6.', ['[+]', 'C:6'], 'power 6.'],
   LI2: ['LI-ION', 'psu', 'rare', 0, 'a better cell. power 9.', ['[+]', 'Li9'], 'power 9.'],
-  RX9: ['REACTOR', 'psu', 'legendary', 0, 'power 14, but -1 starting INT.', ['(*)', 'R14'], 'power 14, -1 INT.'],
+  NC3: ['NANO CELL', 'psu', 'epic', 0, 'a mk III era cell. power 11.', ['[+]', 'Nb'], 'power 11.'],
+  RX9: ['REACTOR', 'psu', 'legendary', 0, 'power 14 (E), but -1 starting INT.', ['(*)', 'RxE'], 'power 14, -1 INT.'],
   GR8: ['GREED', 'ov', 'rare', 2, '-1 starting INT. +25% credits.', ['GRD', '$-1'], '-1 INT, +25% credits.'],
   LK7: ['LUCK', 'ov', 'epic', 2, '-1 starting INT. 1 in 5 drops roll a step rarer.', ['777', 'LCK'], '-1 INT, rarer drops.'],
   GD0: ['mode.god', 'sudo', 'legendary', 3, 'THE SHELL learns mode.god: no damage for a sector, then it wears off.', ['g0d', 'mod'], 'mode.god: no damage for a sector.'],
@@ -60,10 +61,15 @@ const DECK_CHIP_TAGS = {
   DM5: ['you'], '1UP': ['you'], EJ1: ['you'], BB7: ['you'], SP3: ['rules'], GM7: ['rules'],
   CD2: ['you'], MK7: ['you'], LS1: ['you'], PS4: ['you'], KL6: ['you'], PG2: ['you'], GP5: ['you'], CM7: ['you'], WH0: ['you'],
   TP3: ['you'], CT4: ['you'], SS8: ['you'], UN0: ['you'], ST4: ['you'], PT1: ['you'], HS2: ['map'],
-  SM1: ['map'], QT0: ['map'], AD5: ['map', 'you'], SC1: ['you'], LI2: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'],
+  SM1: ['map'], QT0: ['map'], AD5: ['map', 'you'], SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'],
   GD0: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], HN2: ['map', 'rules'],
 };
-const DECK_CELL = { SC1: 6, LI2: 9, RX9: 14 };
+// Power (docs/DECK.md "Power", first pass for playtesting): the cell powers mk II and mk III, one cell per stage of the
+// ladder (6 / 9 / 11 / 14); the FUSE powers mk IV on its own (DECK_FUSE_PWR). Every number fits one hex character:
+// the borders show them that way (+-2-+, the PSU +5/E+). OVERCLOCK (a BYTE code) runs the cell at F.
+const DECK_CELL = { SC1: 6, LI2: 9, NC3: 11, RX9: 14 };
+const DECK_FUSE_PWR = 8;
+const deckHex = n => n.toString(16).toUpperCase();
 const DECK_SPOILS = [['REWARDS', 'RWD', 'take the REWARDS.'], ['HEAL', 'HP+', 'skip them: HEAL 2 INT.'], ['CASH', '$$$', 'skip them: take CASH.']];
 const DECK_GLYPHS = [
   ['THE WATCHER', [' .-. ', '( o )', " '-' "]], ['COOKIE', [' .-. ', '(::.)', " '-' "]],
@@ -96,6 +102,7 @@ const deckPost = k => (typeof LEGACY !== 'undefined' && LEGACY.find(u => u.key =
 const deckCorps = () => [null].concat(Object.keys(CORPS).sort((a, b) => CORPS[a].name.localeCompare(CORPS[b].name)));
 const DECK_CREW = [['POPS', 'one tell hint a sector'], ['NANA', 'a PATCH every sector'], ['BRICK', 'first ICE hit blocked'], ['KLUDGE', 'failed crafts refund']];
 const DECK_CODES = {
+  '00001111': '0x0F: OVERCLOCK. your cell runs at F (15) for your next run.',
   '11111111': '0xFF: OVERFLOW wakes up. his seed is armed for your next run.',
   '00101010': '42. but what was the question?',
   '10110000': 'b0y: hey. quit poking my switches.',
@@ -143,16 +150,22 @@ const deckSelect = sel => { DECK.sel = sel; DECK.selT = performance.now(); };
 
 // Power: the cell's budget goes to the chips in the order they went in. A chip that doesn't fit what's left gets none,
 // and newer ones still try, so the chip you just slotted is the one that goes dark, not one off screen.
+// Two pools: the cell's for mk II and III, the FUSE's for mk IV (Greg, 2026-11-15: the fuse is the bottom board's power).
+// Returns the cell's numbers at the top level (budget, left, used) and the fuse's as .fuse (null when it's dark).
+const deckPool = s => s.mk === 4 ? 'fuse' : 'cell';
 function deckPower() {
-  const d = DECK, budget = DECK_CELL[d.slots.PSU] || 0, on = new Set(), off = [];
-  let left = budget;
+  const d = DECK, on = new Set(), off = [];
+  const cellB = d.slots.PSU ? (d.overclock ? 15 : DECK_CELL[d.slots.PSU] || 0) : 0, fuseB = deckOpen(4) ? DECK_FUSE_PWR : 0;
+  const left = { cell: cellB, fuse: fuseB };
   for (const id of d.order) {
     const key = d.slots[id], s = deckSock(id); if (!key || !deckOpen(s.mk)) continue;   // a dark band's chips cost nothing
-    const c = DECK_CHIPS[key][3];
-    if (c <= left) { left -= c; on.add(id); } else off.push(id);
+    const c = DECK_CHIPS[key][3], p = deckPool(s);
+    if (c <= left[p]) { left[p] -= c; on.add(id); } else off.push(id);
   }
-  return { budget, left, on, off, used: budget - left };
+  return { budget: cellB, left: left.cell, used: cellB - left.cell, on, off,
+    fuse: deckOpen(4) ? { budget: fuseB, left: left.fuse, used: fuseB - left.fuse } : null };
 }
+const deckLeft = (pw, s) => deckPool(s) === 'fuse' ? (pw.fuse ? pw.fuse.left : 0) : pw.left;
 function deckSlot(key, sid) {
   const d = DECK, was = d.slots[sid], other = deckSlotOf(key), [name, grp, , cost] = DECK_CHIPS[key];
   if (other) { delete d.slots[other]; d.order = d.order.filter(i => i !== other); }
@@ -160,7 +173,7 @@ function deckSlot(key, sid) {
   d.carry = null; deckSelect({ kind: 'socket', id: sid });
   const p = deckPower();
   if (grp === 'psu') { Sound.buy(); return deckSay(p.off.length ? `${name}: ${p.off.length} chip${p.off.length > 1 ? 's' : ''} lost power.` : `${name} in. power ${p.budget}.`, p.off.length ? C.danger : C.money); }
-  if (!p.on.has(sid)) { Sound.deny(); return deckSay(`no power: ${name} needs ${cost - p.left} more.`, C.danger); }
+  if (!p.on.has(sid)) { Sound.deny(); return deckSay(`no power: ${name} needs ${cost - deckLeft(p, deckSock(sid))} more.`, C.danger); }
   Sound.buy();
   deckSay(was && was !== key ? `${name} in. ${DECK_CHIPS[was][0]} back in your chips.` : other && other !== sid ? `${name} moved to ${sid}.` : `${name} in ${sid}.`);
 }
@@ -305,6 +318,12 @@ function deckSocket(s, X, Y, P, B, CL, { sel = false, key, pw, now }) {
     P(X, Y, '+' + (inner > 3 ? '.' : '') + s.id + (inner > 3 ? '.' : '') + '+', col);
     for (let j = 1; j < s.h - 1; j++) { P(X, Y + j, !open || !key ? ':' : ']', col); P(X + w - 1, Y + j, !open || !key ? ':' : '[', col); }
     P(X, Y + s.h - 1, !open ? '+' + '.'.repeat(inner) + '+' : key ? (inner > 3 ? '+-+-+-+' : '+-+-+') : (inner > 3 ? '+ - - +' : '+ - +'), col);
+    // the power on the bottom border (Greg, 2026-11-15): the chip's cost, centered (none at 0); the PSU: used / budget
+    if (open && key && pw && d.slots[s.id] === key) {
+      const c = DECK_CHIPS[key][3], mid = X + Math.floor(w / 2);
+      if (s.id === 'PSU') P(X + 1, Y + s.h - 1, deckHex(pw.used) + '/' + deckHex(pw.budget), d.overclock ? C.accent : C.money, true);
+      else if (c) P(mid, Y + s.h - 1, deckHex(c), off ? C.danger : C.money, true);
+    }
     if (!open) P(X + 1, Y + 1, inner > 3 ? ' mk' + s.mk + ' ' : 'mk' + s.mk, C.mid);
     else if (key) deckFace({ put: P, bg: B }, X + 1, Y + 1, key, off);
   }
@@ -329,8 +348,9 @@ function deckHeader(ctx, y) {
   deckBtn(ctx, g, W - 7, y + 2, '[LEAVE]', C.mid, 'dkleave', deckLeave);
   const tab = (v, label, id, x) => deckBtn(ctx, g, x, y + 3, d.view === v ? `[${label}]` : ` ${label} `, d.view === v ? C.accent : C.mid, id, () => { if (d.view === v) return; d.view = v; d.pick = null; d.cpu = null; d.carry = null; Sound.tick(); });
   const x2 = tab('board', 'BOARD', 'dktb', 0); tab('chips', `CHIPS ${deckOwned().length}`, 'dktc', x2);
-  const pwt = `PWR ${pw.used}/${pw.budget}` + (pw.off.length ? ` !${pw.off.length}` : ''), mkt = `mk ${deckMk(d.mk)} `;
-  g.put(W - pwt.length, y + 3, pwt, pw.off.length ? C.danger : C.money, !!pw.off.length); g.put(W - pwt.length - mkt.length, y + 3, mkt, C.money);
+  const pwt = `PWR ${pw.used}/${pw.budget}` + (pw.fuse ? ` F${pw.fuse.used}/${pw.fuse.budget}` : '') + (pw.off.length ? ` !${pw.off.length}` : ''), mkt = `mk ${deckMk(d.mk)} `;
+  g.put(W - pwt.length, y + 3, pwt, pw.off.length ? C.danger : C.money, !!pw.off.length);
+  if (W - pwt.length - mkt.length >= x2 + 13) g.put(W - pwt.length - mkt.length, y + 3, mkt, C.money);   // (the mk gives way when it's tight)
   g.put(0, y + 4, rule(W), C.dim);
   g.flush();
 }
@@ -366,7 +386,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
       bput(23, 10 + j, ch === ' ' ? '.' : ch, name && !on ? C.danger : name && ch !== '.' && ch !== ' ' ? C.bright : C.dim, !!name);
     } }
   // the ]8[ readout: power left, a blinking ! when a chip has none
-  bput(30, 16, pw.off.length ? (Math.floor(now / 400) % 2 ? '!' : ' ') : pw.left > 9 ? '+' : String(pw.left), pw.off.length ? C.danger : pw.left > 0 ? C.money : C.mid, true);
+  bput(30, 16, pw.off.length ? (Math.floor(now / 400) % 2 ? '!' : ' ') : deckHex(pw.left), pw.off.length ? C.danger : pw.left > 0 ? C.money : C.mid, true);
   // THE BYTE's bits, and the ticker under it
   for (let i = 0; i < 8; i++) bput(26 + i, 23, String(d.bits[i]), d.bits[i] ? C.accent : C.mid, !!d.bits[i]);
   { let s = '........';
@@ -375,7 +395,8 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
     bclr(26, 25, 8, 1); bput(26, 25, d.tick ? s : s.replace(/ /g, '.'), d.tick ? C.accent : C.dim, !!d.tick); }
   // the FUSE
   { const fc = d.blown ? C.danger : d.fuse ? C.money : C.dim;
-    bput(24, 30, d.blown ? (Math.floor(now / 200) % 2 ? '><' : '  ') : ')(', fc, true); bput(24, 29, '||', fc); bput(24, 31, '||', fc); }
+    bput(24, 30, d.blown ? (Math.floor(now / 200) % 2 ? '><' : '  ') : ')(', fc, true); bput(24, 29, '||', fc); bput(24, 31, '||', fc);
+    if (pw.fuse) { bclr(26, 30, 1, 1); bput(26, 30, deckHex(pw.fuse.left), pw.fuse.left ? C.money : C.mid, true); } }   // (the fuse's power left)
   if (!deckOpen(3)) bput(21, 33, 'mk III', C.dim);
   if (!deckOpen(4)) bput(25, 42, d.blown ? 'FUSE BLOWN' : 'mk IV', d.blown ? C.danger : C.dim);
   // the parts, then the sockets (on top, so their taps win)
@@ -522,7 +543,7 @@ function deckPickRow(g, ctx, y, k, { IX, IW, s, cur, pw }) {
 function deckPickShort(k, s, cur, pw) {
   const c = DECK_CHIPS[k], where = deckSlotOf(k);
   if (c[1] === 'psu' || where === s.id) return 0;
-  const room = pw.left + (cur && pw.on.has(s.id) ? DECK_CHIPS[cur][3] : 0) + (where && pw.on.has(where) ? c[3] : 0);
+  const room = deckLeft(pw, s) + (cur && pw.on.has(s.id) ? DECK_CHIPS[cur][3] : 0) + (where && pw.on.has(where) ? c[3] : 0);
   return Math.max(0, c[3] - room);
 }
 function deckPickGo(k, s, cur) {
@@ -572,8 +593,9 @@ function deckCpu(ctx, y0, sa) {
   // the deck at a glance
   const open = DECK_SOCKETS.filter(q => deckOpen(q.mk) && q.g !== 'glyph'), inn = open.filter(q => d.slots[q.id]).length;
   g.put(x, y, 'chips in', C.mid); g.put(x + 9, y, `${inn}/${open.length}`, C.bright, true);
-  g.put(x + 16, y, 'power', C.mid); g.put(x + 22, y, `${pw.used}/${pw.budget}`, pw.off.length ? C.danger : C.money, true);
-  if (pw.off.length) g.put(x + 27, y, `!${pw.off.length}`, C.danger, true);
+  g.put(x + 15, y, 'pwr', C.mid); g.put(x + 19, y, `${pw.used}/${pw.budget}`, pw.off.length ? C.danger : C.money, true);
+  if (pw.fuse) g.put(x + 25, y, `F${pw.fuse.used}/${pw.fuse.budget}`, C.money, true);
+  else if (pw.off.length) g.put(x + 25, y, `!${pw.off.length}`, C.danger, true);
   y++;
   sep();
   // the mk ladder
@@ -684,14 +706,14 @@ function deckPartCard(ctx, g, y, id, pw, tick, btns) {
     tick(1, '8 switches. most codes do nothing. the hints are around the game: logos, posts, G0D, the codex.', C.mid);
     btns([['[ ENTER ]', C.accent, 'dkenter', deckEnterByte], ['[ CLEAR ]', C.mid, 'dkclear', () => { d.bits.fill(0); Sound.tick(); }]]);
   } else if (id === 'fuse') {
-    head('THE FUSE · mk IV power', d.blown ? 'BLOWN' : d.fuse ? 'installed' : 'not installed', d.blown ? C.danger : d.fuse ? C.money : C.mid);
-    tick(1, d.blown ? 'a rival breached your deck and blew it. mk IV is dark until you replace it.' : d.fuse ? 'mk IV is lit. a boss that breaches your deck goes for it (the TEST shows it).' : 'the extra power that lights the bottom of the board. a SYSOP post, after mk III.');
+    head('THE FUSE · mk IV power', d.blown ? 'BLOWN' : d.fuse ? `installed · ${pw.fuse.used} of ${pw.fuse.budget} used` : `not installed · power ${DECK_FUSE_PWR}`, d.blown ? C.danger : d.fuse ? C.money : C.mid);
+    tick(1, d.blown ? 'a rival breached your deck and blew it. mk IV is dark until you replace it.' : d.fuse ? 'mk IV is lit. a boss that breaches your deck goes for it (the TEST shows it).' : 'its own power for the bottom board: SUDO and BOSS chips run on it, not the cell. a SYSOP post, after mk III.');
     if (!d.fuse) btns([['[ INSTALL · 1500 REP ]', C.rep, 'dkinst', () => { if (d.mk < 3) { Sound.deny(); return deckSay('mk III first.', C.danger); } if (d.rep < 1500) { Sound.deny(); return deckSay('not enough REP.', C.danger); } d.rep -= 1500; d.fuse = true; d.mk = 4; Sound.buy(); deckSay('the fuse is in. mk IV lit.'); }]]);
     else if (!d.blown) btns([['[ TEST: BREACH ]', C.danger, 'dkbreach', () => { d.blown = true; Sound.deny(); deckSay('BREACH: a rival blew your fuse.', C.danger); d.tick = { text: 'FUSE BLOWN. mk IV dark.', t: performance.now() }; }]]);
     else btns([['[ REPLACE · 100 REP ]', C.rep, 'dkrepl', () => { if (d.rep < 100) return Sound.deny(); d.rep -= 100; d.blown = false; Sound.buy(); deckSay('new fuse. mk IV lit again.'); }]]);
   } else if (id === 'readout') {
-    head('READOUT', `power left: ${pw.left} · ${pw.used} of ${pw.budget} used`, C.money);
-    tick(1, 'the cell in PSU sets the budget. each chip costs 0-3. the oldest chips get power first.');
+    head('READOUT', `cell: ${pw.left} left · ${pw.used} of ${pw.budget} used`, C.money);
+    tick(1, 'the cell in PSU powers mk II and III; the FUSE powers mk IV. each chip costs 0-3, shown on its socket. the oldest chips get power first.');
   } else if (id === 'ports') {
     head('PORTS · dark', 'things outside the page', C.text);
     tick(1, 'MIC: the whistle, the mold. GAMEPAD: a controller. MIDI: play SIMON on keys. MODEM: multiplayer. each waits until its feature is built.', C.mid);
@@ -723,4 +745,5 @@ function deckEnterByte() {
   Sound.ui();
   deckShow(22, 4, deckViewRows());   // the ticker answers on the board: bring it into view
   if (code === '01111111') setTimeout(() => d.bits.fill(0), 900);
+  if (code === '00001111' && !d.overclock) { d.overclock = true; Sound.buy(); }   // OVERCLOCK: the cell at F (the dev screen keeps it)
 }
