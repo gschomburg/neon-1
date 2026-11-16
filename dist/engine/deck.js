@@ -8,14 +8,15 @@
 NEON_FILES.push(['engine/deck.js', 'v15.00']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
-// groups: [name, palette color key, what it's for]
+// groups: [name, palette color key, what it's for]. Not danger: red is a chip with no power (Greg, 2026-11-16: an
+// OVERVOLT chip looked unpowered).
 const DECK_GROUPS = {
   boot: ['BOOT', 'rep', 'what a run starts with'], bios: ['BIOS', 'rep', "the run's rules"],
   crash: ['CRASH', 'bright', 'what happens when you die'], spoils: ['SPOILS', 'money', 'what corp bosses give'],
   shell: ['SHELL', 'accent', 'one command for THE SHELL'], psu: ['PSU', 'money', 'the cell: your power budget'],
-  glyph: ['GLYPH', 'bright', 'your favourite glyph'], ov: ['OVERVOLT', 'danger', 'pay with integrity'],
+  glyph: ['GLYPH', 'bright', 'your favourite glyph'], ov: ['OVERVOLT', 'money', 'pay with integrity'],
   sudo: ['SUDO', 'accent', 'the strong commands'], boss: ['BOSS', 'money', 'wide chips from the big bosses'],
-  heat: ['HEAT', 'danger', 'harder runs, more REP'],
+  heat: ['HEAT', 'legendary', 'harder runs, more REP'],
 };
 const deckGroupCol = g => C[DECK_GROUPS[g][1]] || C.text;
 // chips: key: [name, group, rarity, power, what it does (the long text: the picker, 4 rows at most), face (top row,
