@@ -48,6 +48,12 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
 - **The picker is a set height, like a store:** a list that scrolls, then the picked one's info under it: name,
   rarity and power, the long text (4 rows at most), and SLOT. A tap picks, SLOT puts it in. (Done.)
   A double tap (or click) on a row slots it too (Greg).
+- **The picker's status line** (the row under its title) stays: the group's text for now. The power reading is gone
+  from it (the header shows your power right above). Whatever goes there later has to fit the box (32 wide). (Done.)
+- **No NAME button on the CPU:** it shows your PROFILE's hacker name. (Done.)
+- **A CPU popup?** (Greg, maybe.) What could go in it (Claude): the mk ladder (II / III / IV, what each opens, the
+  upgrade button), the ROM's posts and switches (so the ROM card folds in), the deck's numbers (sockets open, chips
+  in, power), and a line of lore (the maker's silkscreen, `MEDIX NC-1`; a note from b0y once you have the 1UP).
 - **A short and a long text per chip,** like mods and gear: the short one is the card's ticker and the list's second
   row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
 - **A dim dashed line between items** in the lists, not a blank row. (Done.)

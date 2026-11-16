@@ -75,7 +75,8 @@ const DECK_SOCKETS = [
 const DECK_PARTS = [['cpu', 3, 4, 14, 7], ['rom', 3, 11, 14, 1], ['stick', 22, 9, 3, 7], ['readout', 29, 16, 3, 1],
   ['byte', 25, 22, 10, 4], ['hdr3', 6, 28, 14, 4], ['fuse', 23, 27, 4, 6], ['ports', 33, 28, 3, 3],
   ['crew', 0, 32, 5, 6], ['hdr4', 10, 41, 23, 2], ['uplink', 0, 44, 4, 5]].map(([id, x, y, w, h]) => ({ id, x, y, w, h }));
-const DECK_NAMES = ['POTATO_SAUCE', 'NEON_FOX', 'STATIC_GOBLIN', 'IRON_MK2', 'THE_YETI'];
+// the CPU shows your hacker name (PROFILE): WORD_WORD, 13 at most; 2 lines when it's over 10
+const deckName = () => { try { return profile().name || 'POTATO_SAUCE'; } catch (e) { return 'POTATO_SAUCE'; } };
 const DECK_POSTS = ['HARDENED', 'SEED MONEY', 'FIELD KIT', 'GEAR SLOT', 'RESTOCK', 'SECOND WIND', 'LOCKER', 'WORKBENCH'];
 const DECK_SWITCHES = [['TELL', 'TELL LIGHT'], ['STRAY', 'STRAY'], ['LUCKY', 'LUCKY START'], ['POOL', 'STARTER POOL']];
 const DECK_CREW = [['POPS', 'one tell hint a sector'], ['NANA', 'a PATCH every sector'], ['BRICK', 'first ICE hit blocked'], ['KLUDGE', 'failed crafts refund']];
@@ -99,7 +100,7 @@ let DECK = null;
 function deckState() {
   if (!DECK) DECK = {
     view: 'board', scroll: 0, list: { top: 0 }, sel: { kind: 'socket', id: 'BT1' }, selT: 0, pick: null, carry: null,
-    rep: 2400, mk: 2, fuse: false, blown: false, name: 0, spoils: 0, glyph: 0, crew: new Set(['POPS']),
+    rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: 0, crew: new Set(['POPS']),
     slots: { PSU: 'SC1', BT1: 'ST4', BI1: 'SM1', CRS: 'DM5', SPL: 'SP3', SH1: 'CD2' },
     order: ['PSU', 'BT1', 'BI1', 'CRS', 'SPL', 'SH1'],   // the sockets in the order their chips went in: power goes oldest first
     sw: new Set(['TELL', 'STRAY']), bits: [0, 0, 0, 0, 0, 0, 0, 0], tick: null, msg: null, leave: 0,
@@ -318,7 +319,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   // the art, dim where the band is dark
   for (let by = top; by < top + bv && by < BH; by++) g.put(ax, sy(by), ART[by], deckOpen(deckBand(by)) ? C.mid : C.dim);
   // the CPU: your hacker name (2 lines when it doesn't fit), the mk, the pins blinking in turn
-  { const n = DECK_NAMES[d.name], lines = n.length <= 10 ? [n] : n.split('_');
+  { const n = deckName(), lines = n.length <= 10 ? [n] : n.split('_');
     bclr(4, 5, 12, 5); lines.forEach((l, i) => bput(6, 6 + i, l, C.money, true)); bput(6, 6 + lines.length, 'mk ' + deckMk(d.mk), C.money);
     const k = Math.floor(now / 170) % 12; let pi = 0;
     for (const by of [4, 10]) for (let x = 3; x <= 16; x++) if (ART[by][x] === 'o') { bput(x, by, 'o', pi % 12 === k ? C.bright : C.money, pi % 12 === k); pi++; }
@@ -432,7 +433,9 @@ function deckPicker(ctx, y0, sa) {
   const title = ` ${s.id} · ${DECK_GROUPS[s.g][0]} `; g.clr(X0 + 2, y0, title.length); g.put(X0 + 2, y0, title, gc, true);
   for (let j = 1; j < H - 1; j++) { g.put(X0, y0 + j, '|', gc); g.put(X0 + W - 1, y0 + j, '|', gc); }
   g.put(X0, y0 + H - 1, '+' + '-'.repeat(W - 2) + '+', gc);
-  const pl = `${pw.left} PWR left`; g.put(X0 + 2, y0 + 1, DECK_GROUPS[s.g][2].slice(0, W - 5 - pl.length), C.dim); g.put(X0 + W - 2 - pl.length, y0 + 1, pl, C.money);
+  // a status line (the group's text for now; the header already shows your power). It gets the whole row: whatever
+  // goes here later has to fit W - 4 (Greg, 2026-11-15)
+  g.put(X0 + 2, y0 + 1, DECK_GROUPS[s.g][2].slice(0, W - 4), C.dim);
   const sc = deckRows(ctx, g, IX, IW, y0 + 2, LR, items, p.s, 'dkpk');
   if (!p.shown) { sc.show(idx[p.sel]); p.shown = true; }
   st.scroll = sc.line; d.keyStep = null;
@@ -577,10 +580,10 @@ function deckCard(ctx, y0) {
 function deckPartCard(ctx, g, y, id, pw, tick, btns) {
   const d = DECK, head = (t, sub, subc) => { g.put(1, y, t, C.bright, true); g.put(1, y + 1, sub, subc); };
   if (id === 'cpu') {
-    const n = DECK_NAMES[d.name], open = DECK_SOCKETS.filter(s => deckOpen(s.mk)).length;
+    const n = deckName(), open = DECK_SOCKETS.filter(s => deckOpen(s.mk)).length;
     head(`CPU · ${n}`, `mk ${deckMk(d.mk)} · ${['', '', 'USER', 'ELITE', 'SYSOP'][d.mk]}`, C.money);
     tick(1, `your name, printed on your deck. ${open} sockets open, ${Object.keys(d.slots).length} chips in, power ${pw.used} of ${pw.budget}.`);
-    btns([...(d.mk < 3 ? [['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]] : []), ['[ NAME > ]', C.mid, 'dkname', () => { d.name = (d.name + 1) % DECK_NAMES.length; Sound.tick(); }]]);
+    btns(d.mk < 3 ? [['[ mk III · 600 REP ]', C.rep, 'dkmk3', deckUpgrade3]] : []);   // (the name comes from your profile: no button here)
   } else if (id === 'rom') {
     head('ROM · your BOARD posts', `${DECK_POSTS.length + d.sw.size} pins lit`, C.rep);
     tick(1, 'bought: ' + DECK_POSTS.join(', ') + '. the switches turn a post on or off for your next run.', C.mid);
