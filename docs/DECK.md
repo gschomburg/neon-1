@@ -67,7 +67,8 @@ Everything here is Claude's unless it says Greg. The socket count gets tuned onc
   row, the long one is the picker's info. The long one has a limit, but more room than a ticker.
 - **Each socket shows its chip's power on the board** (Greg, to do): a small number centered on the socket's bottom
   border, `+-2-+` (`+-+2+-+` on a wide one). Red when the chip has no power; no number in an empty socket, and
-  none for 0-power chips or the cell (or the cell shows its budget, `+-6-+`?).
+  none for 0-power chips. **The PSU shows the usage** (Greg): `+5/6+`. A budget over 9 (REACTOR, 14) doesn't fit 3
+  wide: the number takes the right corner (`+5/14`), or it shows only what's left (`+-9-+`). To decide.
 - **SLOT from the CHIPS tab scrolls the board** to the sockets that chip fits: all of them when they fit in the
   view together, else from the first one. No open socket for it (mk III / IV): it says so and stays on the list. (Done.)
 - **A dim dashed line between items** in the lists, not a blank row. (Done.)
