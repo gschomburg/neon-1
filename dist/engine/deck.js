@@ -18,14 +18,10 @@ const DECK_GROUPS = {
   sudo: ['SUDO', 'accent', 'the strong commands'], boss: ['BOSS', 'money', 'wide chips from the big bosses'],
   heat: ['HEAT', 'legendary', 'harder runs, more REP'],
 };
-// A group's color is its board's: the sockets take the rarity color of the mk they open with (mk II epic, III
-// legendary, IV exotic: the same as the traces, DECK_MK_RARITY). GLYPH keeps its own (Greg, 2026-11-16). Used for a
-// slotted socket's outline, the picker's frame and the CHIPS tab's headers.
-const deckGroupCol = g => {
-  if (g === 'glyph') return C[DECK_GROUPS[g][1]] || C.text;
-  const s = DECK_SOCKETS.find(q => q.g === g);
-  return s ? rarityCol({ 2: 'epic', 3: 'legendary', 4: 'exotic' }[s.mk]) : C[DECK_GROUPS[g][1]] || C.text;
-};
+// Every socket's color is your deck's: it levels up with your mk (mk II epic, III legendary, IV exotic: the same as the
+// traces, deckTraceCol). GLYPH keeps its own (Greg, 2026-11-16). Red still means no power. Used for a slotted socket's
+// outline, the picker's frame and the CHIPS tab's headers.
+const deckGroupCol = g => g === 'glyph' ? C[DECK_GROUPS[g][1]] || C.text : deckTraceCol();
 // chips: key: [name, group, rarity, power, what it does (the long text: the picker, 4 rows at most), face (top row,
 // bottom row: 3 wide, 5 for BOSS), tip (the short text: the card's ticker)]. What each one does in a run: the hooks
 // below (chipOn), one per chip, each marked "(a chip: engine/deck.js)" where it lives. Power: 0 for switches, handicaps
