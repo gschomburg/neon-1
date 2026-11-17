@@ -144,7 +144,7 @@ function pickMods(r, pool, k, exclude = []) {
 }
 const WIRES_PULL = 0.4;   // while you carry a BOX OF WIRES, the chance an offer from a pool it's in is one (data/mods.js wires)
 
-const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale()));   // (priceScale: data/economy.js)
+const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale() * deckPriceMult()));   // (priceScale: data/economy.js) (CHEAPSKATE, INFLATION: chips, engine/deck.js)
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
 // What a market pays for one of a gear stack: value gear (DUDS ... WALLET) its worth, the rest a share of its price.
@@ -185,6 +185,7 @@ function shopRoll(node, n) {
   if (hvx) offers.push({ kind: 'mod', key: hvx, tier: 0, price: MODS[hvx].price, sold: false });
   else if (!qm) for (const o of exoticOffer(run.seed, 'shop', n ? node.id + 'r' + n : node.id, EXOTIC.shopChance)) offers.push({ kind: 'mod', key: o.key, tier: 0, price: MODS[o.key].price, sold: false });
   if (discDrops(rngFor(run.seed, 'shop', node.id, 'disc', n), 'shop')) offers.push({ kind: 'item', key: 'disc', tier: 0, price: ITEMS.disc.price, sold: false, n: 1 });   // the quest (engine/quests.js)
+  { const ch = deckShopChip(node, n); if (ch) offers.push(ch); }   // now and then a chip for your deck (its own stream: engine/deck.js)
   offers = shuffle(offers, r);   // random order: any slot could be the good one
   if (has('coupon') && offers.length) offers[Math.floor(r() * offers.length)].free = true;   // COUPON: one offer is free
   return offers;
@@ -197,7 +198,7 @@ function openShop(node) {
   const repair = { kind: 'repair', key: 'repair', price: costInt(ECON.repair), sold: false };
   // a market you go back into (the user, 2026-10-31) is as you left it: run.shops keeps its offers and rerolls
   const kept = (run.shops = run.shops || {})[node.id];
-  let offers = kept ? kept.offers : roll(0).concat([repair]), rolls = kept ? kept.rolls : 0, view = 'buy', sel = 0, sellSel = 0;
+  let offers = kept ? kept.offers : roll(0).concat(chipOn('NM0') ? [] : [repair]), rolls = kept ? kept.rolls : 0, view = 'buy', sel = 0, sellSel = 0;
   const keep = () => { run.shops[node.id] = { offers, rolls }; questShop(node, offers); };   // (the DISC for sale: POPS calls, engine/quests.js)
   keep();
   const rerollsLeft = () => marketRerolls() - rolls;
@@ -504,7 +505,7 @@ function openStartReward(node) {
   openChoice({
     title: 'LINK ESTABLISHED', col: C.accent,
     head: [['you are in. pick a starter perk.', C.text]],
-    options: chipOn('FI2') ? [] : run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, postOn('starter') ? modsFound('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky')),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
+    options: chipOn('FI2') ? [] : run.tutorial ? [{ key: 'tracer', tier: 0 }] : pickMods(r, postOn('starter') ? modsFound('minor', 'gen') : modsOfKind('minor'), 3 + legacyLv('picky') + (chipOn('DN1') ? 1 : 0)),   // the training run: TRACER; THE BOARD: STARTER POOL (general mods too), SHORTLIST (4)
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.starter)}cr ]`,
     onSkip: () => { const cr = earnInt(ECON.skip.starter); earn(cr, run); },
     msg: '> link established.',
@@ -531,6 +532,7 @@ function openCache(node) {
   { const lr = rngFor(run.seed, 'cacheloot', node.id), [lo, hi] = ECON.loot.sector;
     if (!again && lr() < ECON.loot.cache) { const l = dropLoot(lr, lo + Math.floor(lr() * (hi - lo + 1))); got.push('+ loot: ' + l.join(', ')); } }
   if (!again) { const chip = deckCacheChip(node); if (chip) got.push(chip); }   // a chip for your deck, now and then (engine/deck.js)
+  if (!again) { const dd = deckDeadDrop(st.run); if (dd) got.push(dd); }   // DEAD DROP (a chip): your gear from your last death
   openChoice({
     title: 'DATA CACHE', col: C.money,
     head: got.map(g => [g, again ? C.dim : C.bright]),
@@ -589,6 +591,7 @@ function rewardOptions(node) {
   const options = shuffle(corpPick.concat(gen, third), r);
   const calls = callReward(rngFor(run.seed, 'callreward', node.id));
   if (calls && !options.some(o => o.key === calls.key)) options.push(calls);   // (not the same CALL twice: the third pick can be one too. the user got b0y x2)
+  const chip = deckBossChip(node); if (chip) options.push(chip);   // now and then a chip for your deck (engine/deck.js)
   return options;
 }
 function openReward(node, skipped = false) {
@@ -596,8 +599,8 @@ function openReward(node, skipped = false) {
   const def = corpDef(node.corp);
   // the corp's own pick (its boss gear or its corp mod), a general mod, a random third, and half the time a CALL stack
   const sp = skipped ? 0 : deckSpoils(run);   // SPOILS (a chip: engine/deck.js): 1 a heal, 2 cash, in place of the rewards
-  if (sp === 1) heal(2); else if (sp === 2) earn(60, run);
-  const options = sp ? [] : rewardOptions(node);
+  if (sp === 1) heal(2); else if (sp === 2) earn(60, run); else if (sp === 3) run.repBonus = (run.repBonus || 0) + 6; else if (sp === 4) { for (let i = 0; i < 2; i++) addItem('wall', 0); }   // (OFFERING, PROTECTION: chips)
+  const options = sp ? [] : chipOn('GE1') ? deckGearRewards(node) : rewardOptions(node);   // (GEAR: a chip)
   const loot = skipped ? [] : bossLoot(node);   // loot for the bag (ECON.loot.boss; the user: bosses drop it)
   // FIRST BREACH (the user, 2026-10-29): the first time you ever beat this corp, its logo and its tell come before the
   // rewards (only as the screen builds in after the boss; corpStat counted this breach already)
@@ -609,7 +612,7 @@ function openReward(node, skipped = false) {
     rival: st.breachReveal && !skipped ? st.breachRival : null,   // a rival here: their logo comes in first, DEFEATED, then yours
     escaped: st.breachEscaped,   // (they took the last node: ESCAPED instead, and a line says so)
     title: 'CORP BREACHED', col: C.accent,
-    head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]].concat(escapedLine(), sp ? [[sp === 1 ? 'SPOILS: +2 INT, no rewards.' : 'SPOILS: +60cr, no rewards.', C.money]] : []), extra: lootLine(loot),
+    head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]].concat(escapedLine(), sp ? [[['', 'SPOILS: +2 INT, no rewards.', 'SPOILS: +60cr, no rewards.', 'OFFERING: +6 REP, no rewards.', 'PROTECTION: 2 FWALLs, no rewards.'][sp], C.money]] : []), extra: lootLine(loot),
     by: skipped ? null : profile(),
     options, locked: skipped || !!sp,
     skipLabel: skipped || sp ? '[ CONTINUE ]' : '[ SKIP  +20cr ]',

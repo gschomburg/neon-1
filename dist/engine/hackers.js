@@ -520,8 +520,9 @@ function hkCorpEnd(c) {
     if (h.side !== 'bad') continue;
     tally('hack:beat:' + h.id);
     if (h.id === 'd0g') questD0g(h);   // DOG DAYS (engine/quests.js): a win for POPS, or he escaped
-    const bonus = h.exorcised ? 0 : h.out ? earnInt(ECON.rival.flatlined) : h.stole === 0 ? earnInt(ECON.rival.beat) : 0;   // (EXORCIST: thrown out, not beaten: no bonus)
+    const bonus = (h.exorcised ? 0 : h.out ? earnInt(ECON.rival.flatlined) : h.stole === 0 ? earnInt(ECON.rival.beat) : 0) * deckRivalPay();   // (EXORCIST: thrown out, not beaten: no bonus) (LOUD, a chip: double)
     if (bonus) { earn(bonus, run); setMsg(h.out ? `> ${hkName(h.id).toLowerCase()} flatlined. +${bonus}cr` : `> you beat ${hkName(h.id).toLowerCase()}. +${bonus}cr`, C.money); }
+    if (!h.exorcised && (h.out || h.stole === 0)) { const cm = deckRivalChip(h); if (cm) setTimeout(() => setMsg(cm, C.rep), 1400); }   // a chip, now and then: HOT (engine/deck.js)
   }
 }
 // You died with hackers there: a rival's logo and taunt, or a crew member calling your name, as the screen falls apart.
@@ -735,4 +736,4 @@ for (const id of HK_CREW.filter(k => ITEMS['call_' + k])) CALL_GEAR['call_' + id
 };
 Object.assign(BOSS_GEAR, CALL_GEAR);   // engine/active.js runs them like the boss gear
 // A crew member's own gear only turns up once they're in your crew (engine/panels.js shopGear, engine/run.js loot).
-const gearAllowed = k => !ITEMS[k].quest && !ITEMS[k].only && (!ITEMS[k].hunt || !!(st.run && st.run.quest === 'had3s')) && (!ITEMS[k].crew || hkCrewOn(ITEMS[k].crew));   // (quest gear drops by its quest's rules: engine/quests.js; hunt gear: HAD3S only; only: from its corp)
+const gearAllowed = k => !ITEMS[k].quest && !ITEMS[k].only && !(k === 'patch' && chipOn('NM0')) && (!ITEMS[k].hunt || !!(st.run && st.run.quest === 'had3s')) && (!ITEMS[k].crew || hkCrewOn(ITEMS[k].crew));   // (quest gear drops by its quest's rules: engine/quests.js; hunt gear: HAD3S only; only: from its corp)

@@ -232,7 +232,8 @@ function benchBuild(code = null, force = false) {
   }
   const view = rc ? (rc.kind === 'mod' ? modView(rc.key, 0) : itemView(rc.key, 0)) : null;
   const spent = b.slots.slice(0, 3).concat(rc && rc.kind === 'mod' ? [] : [mult]).filter(Boolean);
-  for (const ch of spent) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }
+  const free = !!(st.run && st.run.freeBuild); if (free) st.run.freeBuild = false;   // BLUEPRINT (a chip: engine/deck.js): the first build uses no letters
+  if (!free) for (const ch of spent) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }
   b.anim = { t0: performance.now(), word, slots: b.slots.slice(0, 3), x: b.slotX.slice(), y: b.slotY, rc, view, n, where, lucky: code === '?', mult };
   b.slots = [null, null, null, null];
   persist();

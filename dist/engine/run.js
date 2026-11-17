@@ -211,7 +211,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
   if (restore) {   // a resumed save: what this corp had used up so far
     for (const k of CORP_SAVE) if (restore[k] != null) st.corp[k] = restore[k];   // (engine/save.js)
   }
-  if (!restore && st.corp.mod === 'rival') st.corp.hkRival = chipOn('QT0') ? null : hkRivalFor(node);   // (QUIET, a chip: nobody comes)
+  if (!restore && (st.corp.mod === 'rival' || deckRivalComes(node))) st.corp.hkRival = chipOn('QT0') ? null : hkRivalFor(node);   // (QUIET, a chip: nobody comes; LOUD, HUNTED and a HOT chip bring one: engine/deck.js)
   if (!restore && st.corp.hasBoss && has('reload')) reloadGear();   // RELOAD: singles get a second (engine/active.js)   // RIVAL: one of the cast (engine/hackers.js)
   if (st.corp.hasBoss) {
     // MUTATE: this corp, it counts as a random other mod.
@@ -316,6 +316,7 @@ async function enterLayer() {
   const c = st.corp, run = st.run;
   const spec = layerSpec(c, run, c.idx, c.prevSafe), n = spec.n, boss = spec.boss;
   const lv = genLayer(spec);
+  deckLayer(lv, c);   // RED EYE (a chip: engine/deck.js)
   lv.after = c.prevSafe;       // last layer's real node, for AFTERIMAGE
   if (c.mod === 'branded' && n > 2) {   // BRANDED: about a third of the ICE wear the sigil
     const ice = shuffle(lv.tiles.filter(t => !t.safe && !t.loaded), rngFor(run.seed, 'brand', c.node.id, c.idx));
@@ -509,6 +510,7 @@ function makeTimer() {
   if (c.def.shot) max = Math.max(5, max - c.idx);   // COLDBREW: another shot
   if (has('coolant')) max += tv('coolant', [3, 5, 8]);
   if (has('overtime') && lv && lv.boss) max += 5;   // OVERTIME
+  if (deckClock()) max = Math.max(3, max + deckClock());   // LAG, SHORT FUSE (chips: engine/deck.js)
   return { max, left: max, lastSec: max, ocNext: CONFIG.overclockStart };
 }
 
@@ -960,6 +962,7 @@ async function onTrap(t, i) {
   // check, then BOARD. Corp twists would go after the mods in HIT and BOARD.
   if (lv.eater) t.eaten = true;
   let msg = lv.eater ? eatBite(t) : blockHit(t, i);
+  msg += deckIceHit(t);   // GLASS, GLITCH (chips: engine/deck.js)
   if (t.loaded) {
     const lr = rngFor(run.seed, 'loot', st.corp.node.id, st.corp.idx);
     msg += ' ' + grantLoot(lr, st.corp.tier);

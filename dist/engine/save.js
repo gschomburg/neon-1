@@ -172,7 +172,7 @@ function buyPost(u) {
 // aren't earnings (a refund, a cheat) add to run.credits alone.
 function earn(cr, run = st.run) { cr = deckCredits(cr, run); run.credits += cr; run.earned += cr; }   // (GREED, TAXED: chips, engine/deck.js)
 function repFor(run) {
-  return Math.round((run.depth + 3 * run.corps + (run.perfects || 0) + Math.floor(run.earned / 40) + 10 * (run.sectorsCleared || 0)) * deckRepMult(run));   // (FAME, TAXED, HARDCORE: chips, engine/deck.js)
+  return Math.round((run.depth + 3 * run.corps + (chipOn('PD2', run) ? 0 : run.perfects || 0) + Math.floor(run.earned / 40) + 10 * (run.sectorsCleared || 0) + (run.repBonus || 0)) * deckRepMult(run));   // (FAME, the HEAT chips, PADDING, OFFERING: chips, engine/deck.js)
 }
 
 // ---------------- Run save (resume) ----------------

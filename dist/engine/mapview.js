@@ -145,11 +145,13 @@ function buildMap(ctx) {
       for (const d of linkDots(pos(a), pos(b))) if (shown(d.row) && !xs.some(x => Math.abs(d.x - x) <= 2)) put(d.x, yOf(d.row), '=', done ? C.accent : C.mid, 'map');
     }
   }
+  const fogStep = chipOn('FG0') && map[run.at] ? map[run.at].step + 1 : Infinity;   // FOG (a chip: engine/deck.js): only the next row shows
   for (const n of nodes) {
     const p = pos(n);
     if (!shown(p.row)) continue;
     const y = yOf(p.row);
     const visited = run.visited.includes(n.id), available = avail.has(n.id);
+    if (n.step > fogStep && !visited) { put(p.x - 1, y, '...', C.dim, 'map'); continue; }
     const sel = st.mapSel === n.id, hov = st.hoverNode === n.id;
     let col = visited ? C.accent : C.dim;
     if (available) col = sel ? C.accent : (Math.floor(now / 500) % 2 ? C.bright : C.text);

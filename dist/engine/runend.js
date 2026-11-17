@@ -23,6 +23,11 @@ async function die() {
     showBoard('play');
   }
   if (oneUpReady(run0) && await askOneUp()) return useOneUp(run0);   // the 1UP: back to the start of this corp
+  if (run0 && deckCheckpoint(run0)) {   // CHECKPOINT (a chip): once a run, back with nothing but full INT (engine/deck.js)
+    await wipeOut(0); showBoard('play'); resetTimer(); layerReady(st.lv);
+    setMsg('> CHECKPOINT. you came back with nothing.', C.accent);
+    return;
+  }
   if (st.corp && st.corp.hasBoss) { corpStat(st.corp.def.key).lost++; persist(); }   // codex record
   lightsOn();
   st.busy = true;
@@ -68,7 +73,8 @@ async function endRun(win) {
   // REP: cashing out banks it all; dying banks nothing (DEADMAN keeps a part).
   const repWorth = repFor(run);
   const rep = run.practice ? 0 : win ? repWorth : Math.floor(repWorth * Math.max([0, 0.25, 0.5][legacyLv('dms')], deckDeadman(run)));   // (DEADMAN: the post, or the chip)
-  if (!win) deckBlackBox(run);   // BLACK BOX (a chip): your best mod to the LOCKER
+  if (!win) { deckBlackBox(run); deckDeath(run); }   // BLACK BOX (a chip): your best mod to the LOCKER; INSURANCE, DEAD DROP
+  else deckCashedOut(run);   // (WIND-UP's power)
   if (rep) { save.rep = (save.rep || 0) + rep; save.repTotal = (save.repTotal || 0) + rep; }
   if (win && !run.practice) save.cashouts = (save.cashouts || 0) + 1;
   deckHome(run, win);   // the chips in your belt go home to your deck (engine/deck.js)
@@ -152,6 +158,7 @@ async function pushOn() {
   run.sector++;
   if (legacyLv('wind') && run.integrity < run.maxInt && !zombie()) run.integrity++;   // SECOND WIND (THE BOARD)
   if (oneUpOpen(run)) run.oneUp = 1;   // the 1UP charges again every sector (used or not, you hold one)
+  deckSector(run);   // DECAY (a chip: engine/deck.js)
   if (run.quest === 'h3av3n' && run.sector === 1) addHeavenSector(run.map, run.seed, 1);   // the H3AV3N seed: sector 2 is heaven (engine/heaven.js)
   else addSector(run.map, run.seed, run.sector, run.forceEvent || null);   // (forceEvent: the editor's TESTING tab)
   run.forceEvent = null; run.fence = [];   // what THE FENCE didn't sell back is gone
@@ -170,9 +177,10 @@ async function pushOn() {
 // cover the fee (into debt).
 const UPLINK_LOCKED = ['bloodmoney', 'zombie'];
 const uplinkMult = () => ((st.run && st.run.sector) || 0) + 1;
-const uplinkMin = () => costInt(ECON.uplink.min) * uplinkMult();
-const uplinkFee = key => costInt(ECON.uplink[modView(key).rarity] != null ? ECON.uplink[modView(key).rarity] : ECON.uplink.common) * uplinkMult();
-const uplinkSell = key => Math.floor(uplinkFee(key) * ECON.uplink.sellPct);
+const uplinkMin = () => Math.round(costInt(ECON.uplink.min) * uplinkMult() * deckUplinkMult());   // (TOLL PASS: a chip, engine/deck.js)
+const uplinkBase = key => costInt(ECON.uplink[modView(key).rarity] != null ? ECON.uplink[modView(key).rarity] : ECON.uplink.common) * uplinkMult();
+const uplinkFee = key => Math.round(uplinkBase(key) * deckUplinkMult());
+const uplinkSell = key => Math.floor(uplinkBase(key) * ECON.uplink.sellPct);   // (what a mod sells for doesn't drop with TOLL PASS)
 function openUplink() {
   const run = st.run;
   if (!run) return;

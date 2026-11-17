@@ -125,6 +125,13 @@ function openFence(node) {
     saveRun();
   };
   const whyNot = o => run.mods.includes(o.key) ? 'you have one already.' : !canSpend(fencePrice(o)) ? 'not enough credits.' : null;
+  // a HOT chip, dear (engine/deck.js deckFenceChip): buy it and rivals come for it (beta)
+  const buyChip = () => {
+    const fc = deckFenceChip(node), ik = fc && deckChipItem(fc.key);
+    if (!fc || !canSpend(fc.price) || !itemRoom(ik, 0)) return Sound.deny();
+    run.credits -= fc.price; addItem(ik, 0); run.fenceChip.sold = true; run.hot = true;
+    Sound.buy(); setMsg(`> ${DECK_CHIPS[fc.key][0]}: it's HOT. rivals will come for it.`, C.danger); saveRun();
+  };
   st.fence = { buyAt: buy, price: fencePrice, get stock() { return stock(); } };   // (tests)
   for (const k of ['haggle']) if (has(k)) modFired(k);
   openPanel('THE FENCE', (T, B, X) => {
@@ -151,6 +158,8 @@ function openFence(node) {
       else X({ box: true, text: 'B U Y   B A C K', sub: `${fencePrice(o)}cr`, id: 'fbuy', onTap: () => buy(sel), minW: 18 });
       T(SEP, C.dim);
     }
+    const fc = deckFenceChip(node);
+    if (fc) { T(`HOT CHIP: ${DECK_CHIPS[fc.key][0]}  ${fc.price}cr`, C.danger); B(`[ BUY HOT ]`, 'fchip', buyChip); }
     B('[ LEAVE ]', 'leave', leavePanel);
   }, stock().length ? '> the fence has your stuff.' : '> the fence shrugs.');
 }

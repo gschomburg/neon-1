@@ -740,3 +740,44 @@ Greg: sockets that open earlier should sit higher on the board.
   mk's color; toned-back silkscreen, vias and data packets; the NO POWER bar steps through the chips; the CRASH stick
   swaps words with a scramble); 5, later (SHELL, SUDO, hot chips, fusing, BOSS, UPLINK, PORTS).
 - **The cuts:** once the lists settle. BOOT and BIOS could share 4 sockets; UPLINK could fold into PORTS.
+
+## The second chip set (Greg, 2026-11-16)
+**Decided (Greg, 2026-11-16):** "just make up most of those other chips", even without a good source or purpose yet.
+Mark the far-off ones BETA so we know they need more work. Leave out the chips waiting on something else (SHELL,
+SUDO, the BOSS chips but OMNI'S EYE, GLYPH, CREW, UPLINK, PORTS, SPRAWL / SHORTCUT, +1 LAYER). Add the sources too.
+Fusing, SLAG and the WORKBENCH's chip item stay ideas for now.
+
+50 new chips (73 in all). Their numbers are a first pass, to playtest. Each one's hook is marked "(a chip:
+engine/deck.js)" where it lives. tools/checks/tests/chips.js checks them.
+- **BOOT:** PRELOAD (3 random gear), BLUEPRINT (the first WORKBENCH build uses no letters), JUNK DRAWER (6 low mods;
+  it was "BOX OF WIRES" here, but that's a mod's name), PALADIN, ROGUE, KNIGHT, CLERIC (classes: a mod and some gear).
+- **BIOS:** LOUD (a rival in 1 corp in 4 that had none; rivals pay double).
+- **CRASH:** CHECKPOINT (once a run, back with nothing but full INT), EJECT (THE SHELL's `eject`: cash out from the
+  map, once a run; not marked hacked), INSURANCE (half your credits, next run), DEAD DROP (your gear, in next run's first
+  DATA CACHE), OBITUARY (die past layer 30: all your REP).
+- **SPOILS** (in place of the switch): GEAR (3 gear, not mods), OFFERING (no rewards, +6 REP), PROTECTION (no rewards,
+  2 FWALLs).
+- **PSU:** BROWNOUT (12; one chip off each run, from the seed, and a line says which), POTATO (4; the 1s are free),
+  WIND-UP (2, +2 a sector of your last cash-out, 14 at most).
+- **OVERVOLT:** DONOR (a bigger starter pick), GLASS (-2 INT; ICE pays 8cr), CHEAPSKATE (markets -20%), TOLL PASS
+  (UPLINK fees -25%; what a mod sells for there stays), RED EYE (one ICE a layer ruled out), LAG (clocks +2s), UNDERVOLT
+  (+1 INT, -25% credits), PADDING (+2 INT, perfects pay no REP).
+- **HEAT** (REP: they multiply): HUNTED (a rival in half the corps that had none, +25%), SHORT FUSE (clocks -2s, +20%),
+  NO MEDS (no PATCH anywhere, no market repair, +20%), INFLATION (prices +10% a sector, +15%), DECAY (mods drop a step
+  every sector, BUFFER keeps its step, +30%), FOG (the map shows the next row only, +15%), GLITCH (each ICE hit
+  glitches the screen, worse every time, +10%).
+- **BETA** (`DECK_BETA`: what each one is missing). They show BETA in your deck and never drop; the editor's "unlock
+  all chips" and THE SHELL give them. HEADSTART, FRESH and the theme chips (CASINO, CLOCK, DARK), EVENTS, ADWARE, SAFE
+  ROUTE, PIER PASS, ALMANAC, FORGET-ME-NOT, GAMBLE, AUCTION, SALVAGE, HEIRLOOM, SPORE CELL (its power works; the mold
+  isn't drawn yet). Most are map work, or need the placeholder corps so seeds hold still (Seeds, above).
+
+**The sources** (each on its own seeded stream, so a seed's other rolls stay put; BETA chips never come from any):
+- DATA CACHEs (20%) and PIER gear catches (25%), as before.
+- **Markets:** 15% of the time, a chip for sale (40cr common ... 240cr exotic; CHEAPSKATE and INFLATION count).
+- **Corp boss rewards:** 12% of the time, a chip is one of the picks.
+- **Rivals:** beat one (or flatline it) and 30% of the time it drops a chip. It's **HOT**.
+- **THE FENCE** (when THIEF made one): a HOT chip, at twice a market's price. **Beta:** one line and a [ BUY HOT ]
+  button; it needs a proper look.
+- **HOT** (beta): while you carry one, a rival comes to every corp, all run (QUIET still stops them). It's the simple
+  version of "they chase you through the nodes": rivals don't move between nodes yet.
+- **Quests** (beta): the OMNI RAID gives OMNI'S EYE, once. There's only the one quest so far.

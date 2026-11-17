@@ -139,6 +139,7 @@ function questPlaySeed(seed) {
 function questOmni(c) {
   if (!questRun() || questOf('pops').step !== 'raid' || !c || c.def.key !== 'omni' || !(c.hk || []).some(h => h.id === 'b0y')) return;
   setTimeout(() => playScene('gate'), 900);
+  deckQuestChip('OMNI', 'the OMNI RAID: b0y lifted this on the way out.');   // a quest's chip (beta: engine/deck.js)
 }
 // A run starts on the OMNI RAID: b0y's number comes with you, and he calls (once).
 function questRunStart(run) {
