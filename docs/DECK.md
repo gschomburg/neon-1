@@ -781,3 +781,4 @@ engine/deck.js)" where it lives. tools/checks/tests/chips.js checks them.
 - **HOT** (beta): while you carry one, a rival comes to every corp, all run (QUIET still stops them). It's the simple
   version of "they chase you through the nodes": rivals don't move between nodes yet.
 - **Quests** (beta): the OMNI RAID gives OMNI'S EYE, once. There's only the one quest so far.
+- **Decided (Greg, 2026-11-17):** exotics stay in the random drops (weight 1, about 1 chip drop in 1,700). They're rare, and the quest still guarantees its one. Get it early, fine; get a dupe, sell or shred it.
