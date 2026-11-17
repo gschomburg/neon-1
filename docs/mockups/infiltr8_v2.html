@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INFILTR8 Vault Floors</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+/* INFILTR8, round 2 (Greg's notes on round 1): five more VAULT FLOOR maps. The tray swaps for a d-pad ([⇄ PAD] /
+   [⇄ GEAR]); tapping anything on the map fills a 2-row info card; sweeps from PACKET PUSH come to the vault; stairs;
+   odd halls and room shapes; you leave by the door you came in, or an alt exit. Round 1: infiltr8.html.
+   Notes: docs/INFILTR8.md. */
+:root {
+  color-scheme: dark;
+  --bg: #06090a; --dim: #2c3a38; --mid: #5f7470; --text: #a9bdb7; --bright: #e6f4ef;
+  --accent: #3cf0ff; --danger: #ff3b4e; --money: #e8c66a; --rep: #a27ef5; --rare: #4aa3ff; --green: #6dff8f; --leg: #ff9a3c;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.45; padding: 24px 16px 64px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 34px; }
+h1 { font-size: 26px; font-weight: 800; color: var(--bright); margin: 0; letter-spacing: 2px; }
+h1 b { color: var(--accent); }
+h2 { font-size: 16px; color: var(--bright); margin: 0 0 4px; letter-spacing: 1px; }
+h2 span { color: var(--mid); font-weight: 400; }
+p { margin: 0; max-width: 90ch; }
+.intro { display: flex; flex-direction: column; gap: 8px; }
+.intro ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; max-width: 90ch; }
+.intro b, .side b { color: var(--bright); }
+.mock { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.phone { margin: 0; padding: 10px 8px; border: 1px solid var(--dim); background: var(--bg); font-size: 16px; line-height: 1.5;
+  white-space: pre; overflow-x: auto; max-width: 100%; }
+.phone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.side { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 10px; }
+.side h3 { margin: 0; font-size: 12px; letter-spacing: 2px; color: var(--mid); font-weight: 400; }
+.side ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.q { border-left: 3px solid var(--money); padding: 6px 12px; }
+.q b { color: var(--money); }
+.k-d { color: var(--dim); } .k-m { color: var(--mid); } .k-t { color: var(--text); } .k-b { color: var(--bright); font-weight: 700; }
+.k-a { color: var(--accent); font-weight: 700; } .k-r { color: var(--danger); font-weight: 700; } .k-\$ { color: var(--money); }
+.k-p { color: var(--rep); } .k-u { color: var(--rare); } .k-g { color: var(--green); } .k-o { color: var(--leg); }
+.k-R { color: var(--danger); background: rgba(255, 59, 78, 0.18); }
+.k-S { color: var(--dim); background: rgba(60, 240, 255, 0.07); }
+.k-A { color: var(--bg); background: var(--accent); font-weight: 700; }
+.k-Y { color: var(--bg); background: var(--money); }
+.k-U { color: var(--bg); background: var(--rare); }
+.k-P { color: var(--bg); background: var(--rep); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>INFILTR8 <b>VAULT FLOORS</b> <span style="color:var(--mid);font-size:14px">round 2</span></h1>
+    <p>Five more maps for THE VAULT FLOOR, from Greg's notes on round 1. Each is the game's 36 x 23 phone grid. Every one has:</p>
+    <ul>
+      <li><b>[⇄ PAD] / [⇄ GEAR]</b> swaps the bottom 3 rows: the tray (gear, mods, ticker) or the controls (d-pad, wait, use). The tray rows hold the d-pad, so the map loses nothing.</li>
+      <li><b>Tap anything</b> on the map (a camera, a door, a daemon, the stairs) and it lights up, and the <b>info card</b> (2 rows, over the controls) says what it is. With nothing tapped, the card is the message line.</li>
+      <li><b>In and out:</b> you come in a door (<b>⌂</b>), and you leave by it, or by an alt exit (<b>◘</b>, <b>▒</b>, <b>▾</b>), each with a catch.</li>
+    </ul>
+  </div>
+  <div id="mocks"></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+// ---------- grid ----------
+// A map is drawn on a grid of cells, then turned into the same {k:text} markup the other rows use.
+// AUTO colors a cell by its character; shade() overrides that for an area (fog, a tapped thing).
+const AUTO = {
+  '·': 'd', '@': 'a', '&': 'r', 'P': 'r', 'T': 'r', 'S': 'r', '¤': 'u', '$': '$', '◉': 'r', '░': 'R', '━': 'R', '┃': 'R',
+  '▶': 'r', '◀': 'r', '⌂': 'a', '◘': 'g', '▒': 'g', '▾': 'g', '▲': 'b', '▼': 'b', '≡': 'u', '▫': 'u', '▪': 'm', '█': 'm',
+  '•': 'p', '◌': 'm', '+': 'm', '~': 'u', '!': 'r',
+};
+const BOX = {
+  sq: '┌┐└┘─│', rd: '╭╮╰╯─│', db: '╔╗╚╝═║',
+};
+function G(w = 36, h = 13) {
+  const ch = [...Array(h)].map(() => Array(w).fill(' ')), k = [...Array(h)].map(() => Array(w).fill(null));
+  const ok = (x, y) => x >= 0 && y >= 0 && x < w && y < h;
+  const g = {
+    put(x, y, s, key = null) { Array.from(s).forEach((c, i) => { if (ok(x + i, y)) { ch[y][x + i] = c; k[y][x + i] = key; } }); return g; },
+    box(x, y, bw, bh, st = 'sq') {
+      const [tl, tr, bl, br, hz, vt] = Array.from(BOX[st]);
+      for (let i = 1; i < bw - 1; i++) { g.put(x + i, y, hz); g.put(x + i, y + bh - 1, hz); }
+      for (let j = 1; j < bh - 1; j++) { g.put(x, y + j, vt); g.put(x + bw - 1, y + j, vt); }
+      g.put(x, y, tl).put(x + bw - 1, y, tr).put(x, y + bh - 1, bl).put(x + bw - 1, y + bh - 1, br);
+      return g.carve(x + 1, y + 1, bw - 2, bh - 2);
+    },
+    carve(x, y, cw, chh, c = '·') { for (let j = 0; j < chh; j++) for (let i = 0; i < cw; i++) g.put(x + i, y + j, c); return g; },
+    path(pts, c = '·', key = null) { pts.forEach(([x, y]) => g.put(x, y, c, key)); return g; },
+    shade(x, y, sw, sh, key) { for (let j = 0; j < sh; j++) for (let i = 0; i < sw; i++) if (ok(x + i, y + j)) k[y + j][x + i] = key; return g; },
+    rows() {
+      return ch.map((row, y) => {
+        let out = '', run = '', rk = null;
+        const flush = () => { if (run) out += '{' + rk + ':' + run + '}'; run = ''; };
+        row.forEach((c, x) => {
+          const key = k[y][x] || AUTO[c] || (c === ' ' ? 'd' : 't');
+          if (key !== rk) { flush(); rk = key; }
+          run += c;
+        });
+        flush();
+        return out;
+      });
+    },
+  };
+  return g;
+}
+const line = (x0, x1, y) => { const p = []; for (let x = x0; x <= x1; x++) p.push([x, y]); return p; };
+const col = (x, y0, y1) => { const p = []; for (let y = y0; y <= y1; y++) p.push([x, y]); return p; };
+
+// ---------- shared rows ----------
+const vis = s => Array.from(s.replace(/\{([^:}]+):([^}]*)\}/g, '$2')).length;
+const lr = (l, r) => l + ' '.repeat(Math.max(1, 36 - vis(l) - vis(r))) + r;   // left and right ends of a row
+const head = (where, cr, floor, intLine) => [lr('{m:[≡]}', '{m:SECTOR 2}'), lr(floor, intLine), lr(where, cr)];
+const INT4 = '{m:INT }{a:####}{d:--}';
+const DIV = '{d:────────────────────────────────────}';
+// The bottom: 2 info rows, a divider, then 3 rows of controls (pad) or the tray (gear).
+const pad = (gear) => [
+  DIV,
+  '      {a:[ ▲ ]}          {a:[   USE    ]}',
+  ' {a:[ ◄ ]} {m:[ · ]} {a:[ ► ]}   {a:[◄ ' + gear + ' ►]}',
+  '      {a:[ ▼ ]}          {m:[ ⇄ GEAR  ]}',
+];
+const tray = (ticker) => [
+  DIV,
+  ' {a:[FRAG]} {m:[SHOE]} {a:[PING]} {a:[FWALL]} {d:[ + ]}',
+  lr(' {U:≈ ECHO} {P:✦ GHST} {Y:◆ TRC2}', '{m:[⇄ PAD]}'),
+  ticker,
+];
+
+// ---------- the maps ----------
+const MOCKS = [];
+
+// 1. THE RING: a core inside a ring inside a ring. The core's sweep is an arm that turns.
+{
+  const g = G();
+  g.box(1, 0, 33, 12, 'rd').box(3, 2, 29, 8).box(7, 4, 21, 4, 'rd');
+  g.put(3, 5, '+').put(31, 6, '+').put(17, 9, '+').put(17, 7, '+').put(17, 11, '⌂').put(9, 0, '◘');
+  g.put(11, 5, '━━━━━━◉').put(21, 6, '$').put(24, 3, 'P').put(12, 10, '@');
+  g.path([[19, 5], [20, 5]], '·');
+  g.shade(17, 5, 1, 1, 'A');
+  g.put(1, 12, '⌂ in   ◘ out   + door   P patrol', 'm');
+  MOCKS.push({
+    name: 'THE RING', tag: 'a core in a ring in a ring · pad mode',
+    rows: [
+      ...head('{b:ORBITAL//CORE}', '{$:CR 412}', '{t:FLOOR 1/2} {m:· TURN} {b:8}{m:/40}', INT4),
+      DIV, ...g.rows(),
+      ' {A:◉} {b:THE ARM} {m:· a sweep that turns}',
+      ' {m:an eighth a turn. walls block it.}',
+      ...pad('FRAG x2'),
+    ],
+    how: [
+      '<b>Rings.</b> The way in (<b>⌂</b>) is on the outside; the payload is in the middle. Every ring\'s doors are on a different side, so you go around to go in.',
+      '<b>The sweep turns:</b> the core\'s arm (<b>━━━◉</b>) swings around like a lighthouse, an eighth a turn. Walls block it, so you go in behind it, grab the <b>$</b>, and leave before it comes back.',
+      'The middle ring has a patrol (<b>P</b>) that walks the loop the other way.',
+      'The vent (<b>◘</b>, top) is the alt exit: no going back around the rings, but you leave the gear in your pack slot behind (it\'s too tight).',
+      '<b>Pad mode:</b> the d-pad, <b>[ · ]</b> to wait, <b>USE</b> with <b>◄ FRAG ►</b> to pick the gear, <b>[⇄ GEAR]</b> back to the tray. The arm is tapped, so the card shows it.',
+    ],
+    note: 'The arm is a sweep you read like a clock. One rule, easy to see, lots of timing.',
+  });
+}
+
+// 2. STAIRS: floor B1 of 3, an L room, a pillared hall, a zigzag hall, the floor stack on the right.
+{
+  const g = G();
+  g.box(0, 0, 9, 5).put(2, 1, '▲').put(4, 2, '@').put(8, 2, '+').path(line(9, 11, 2));
+  g.box(12, 0, 15, 4).box(20, 3, 7, 6).carve(21, 3, 5, 1).put(20, 3, '┐').put(26, 3, '│').put(12, 2, '+');
+  g.put(25, 1, '◉').path([[22, 1], [23, 1], [24, 1], [21, 2], [22, 2], [23, 2], [24, 2]], '░').put(23, 6, '&');
+  g.put(4, 4, '+').path(col(4, 5, 6));
+  g.box(0, 7, 14, 6).put(4, 7, '+').put(13, 9, '+');
+  g.path([[3, 9], [7, 9], [3, 11], [7, 11]], '▪').put(11, 10, '▼');
+  g.path([[14, 9], [15, 9], [15, 8], [16, 8], [17, 8], [17, 7], [18, 7], [19, 7]]).put(20, 7, '+');
+  g.put(28, 0, 'FLOORS', 'm').put(28, 2, 'F1 ⌂ in', 'd').put(28, 3, 'B1 @', 'a').put(28, 4, 'B2 $', '$');
+  g.put(28, 6, '▲ up', 'm').put(28, 7, '▼ down', 'm').put(28, 9, 'daemons', 'm').put(28, 10, 'stay on', 'm').put(28, 11, 'a floor', 'm');
+  g.shade(11, 10, 1, 1, 'A');
+  MOCKS.push({
+    name: 'STAIRS', tag: 'B1 of 3 · gear mode',
+    rows: [
+      ...head('{b:FOSSIL//STACKS}', '{$:CR 412}', '{t:B1} {m:· TURN} {b:17}{m:/50}', INT4),
+      DIV, ...g.rows(),
+      ' {A:▼} {b:STAIRS DOWN} {m:· to B2, the vault}',
+      ' {m:1 turn. you come up by the same ▲.}',
+      ...tray(' {m:the CAM in the L turns left next}'),
+    ],
+    how: [
+      '<b>Floors.</b> You come in at F1, by the door (<b>⌂</b>). Stairs (<b>▲ ▼</b>) go between floors. The payload is on the bottom one, so every run goes down and comes back up.',
+      'The floor stack on the right shows where you are. Daemons stay on their floor, so the stairs are a safe spot (for a turn).',
+      '<b>Rooms that aren\'t boxes:</b> an L (top right, with a CAM in its corner), a pillared hall (<b>▪</b> pillars to hide behind), and a zigzag hall between them.',
+      '<b>Gear mode:</b> the tray is back, with <b>[⇄ PAD]</b> on the mods row. The stairs are tapped, so the card shows them.',
+    ],
+    note: 'Going down is safe, coming back up is the hard part: the floors above get a step worse while you\'re below (a new patrol, a CAM that wasn\'t on).',
+  });
+}
+
+// 3. THE DUCTS: a round room, a cross room, a pillared hall, and ducts through the walls.
+{
+  const g = G();
+  g.box(1, 0, 11, 6, 'rd').put(1, 2, '⌂').put(6, 5, '+').path(col(6, 6, 7));
+  g.box(15, 2, 17, 5).box(20, 0, 7, 9).carve(16, 3, 15, 3).carve(21, 1, 5, 7);
+  g.put(20, 2, '┘').put(26, 2, '└').put(20, 6, '┐').put(26, 6, '┌');
+  g.put(23, 4, '$').put(18, 4, '&').put(23, 1, '◉').path([[22, 2], [23, 2], [24, 2], [22, 3], [23, 3], [24, 3]], '░').put(23, 4, '$');
+  g.box(1, 8, 13, 5).put(6, 8, '+').put(13, 9, '+').put(4, 10, '¤');
+  g.path([[3, 10], [9, 10]], '▪');
+  g.path(line(14, 23, 9)).put(23, 8, '+');
+  g.put(11, 2, '▫').path([[12, 2], [13, 2], [13, 3], [13, 4], [14, 4]], '≡').put(15, 4, '▫');
+  g.put(8, 5, '▫').path([[8, 6], [8, 7]], '≡').put(8, 8, '▫');
+  g.put(13, 11, '▫').path([...line(14, 32, 11), ...col(32, 7, 10), [33, 7]], '≡').put(34, 7, '◘');
+  g.put(13, 3, '@').shade(13, 3, 1, 1, 'A');
+  MOCKS.push({
+    name: 'THE DUCTS', tag: 'odd rooms and vents · pad mode',
+    rows: [
+      ...head('{b:CARAPACE//SHELL}', '{$:CR 412}', '{t:FLOOR 1/1} {m:· TURN} {b:11}{m:/40}', INT4),
+      DIV, ...g.rows(),
+      ' {A:@} {b:IN A DUCT} {m:· 2 turns a step}',
+      ' {m:nothing sees you. no gear fits.}',
+      ...pad('PING x1'),
+    ],
+    how: [
+      '<b>Ducts</b> (<b>≡</b>, blue) run through the walls between vents (<b>▫</b>). In a duct nothing sees you and no daemon follows, but each step takes 2 turns and you can\'t use gear (no room).',
+      'One duct runs under everything to the alt exit (<b>◘</b>, right). It\'s the slow, safe way out.',
+      '<b>Room shapes:</b> a round room (the way in), a cross room (the payload in the middle, a CAM looking down from the top arm), a pillared hall with a SPIDER (<b>¤</b>).',
+      'You\'re tapped (in the duct), so the card says what being in a duct means.',
+    ],
+    note: 'Ducts give stealth a second map on top of the first. The trace clock is what makes them a choice: safe but slow.',
+  });
+}
+
+// 4. THE SERVER FARM: one big room of racks, and beams that move a row each turn. Racks block a beam.
+{
+  const g = G();
+  g.box(0, 0, 35, 13);
+  [[5, 2], [5, 7], [11, 4], [11, 9], [17, 2], [17, 7], [23, 4], [23, 9], [29, 2], [29, 7]].forEach(([x, y]) => g.path([[x, y], [x, y + 1]], '█'));
+  g.put(0, 4, '▶').path(line(1, 10, 4), '━').shade(12, 4, 22, 1, 'S');
+  g.put(34, 8, '◀').path(line(18, 33, 8), '━').shade(1, 8, 16, 1, 'S');
+  g.put(14, 4, '@').put(31, 10, '$').put(14, 12, '⌂').put(34, 2, '▒').put(8, 10, 'T');
+  g.shade(1, 4, 10, 1, 'A');
+  MOCKS.push({
+    name: 'THE SERVER FARM', tag: 'beams and racks · gear mode',
+    rows: [
+      ...head('{b:STREAMFLIX//CDN}', '{$:CR 412}', '{t:FLOOR 2/2} {m:· TURN} {b:23}{m:/40}', INT4),
+      DIV, ...g.rows(),
+      ' {A:━} {b:BEAM} {m:· a row lower every turn}',
+      ' {m:a rack (█) blocks it. hide behind.}',
+      ...tray(' {m:▶ hits row 5 next · ◀ hits row 8}'),
+    ],
+    how: [
+      '<b>PACKET PUSH\'s sweep, as a beam:</b> an emitter on the wall (<b>▶ ◀</b>) shines across a row and moves a row each turn. A rack (<b>█</b>) stops it, and the cells behind the rack (shaded) are safe.',
+      'So the room is a timing puzzle: hop from rack shadow to rack shadow as the beams come down. You\'re in one now.',
+      'A TRACER (<b>T</b>) goes to the last noise. The way in is the bottom door (<b>⌂</b>); the alt exit is a hole someone else cut (<b>▒</b>, top right): it\'s out, but whoever cut it is still around.',
+      'The ticker says where the beams go next, so you can plan without counting.',
+    ],
+    note: 'Racks could be pushable, like packets: move one to make your own shadow. That\'s where this and PACKET PUSH meet.',
+  });
+}
+
+// 5. GET OUT: you have the payload, the alarm is on, and your trail shows the way back. Or take an alt exit.
+{
+  const g = G();
+  g.box(0, 7, 10, 6).put(0, 9, '⌂').put(9, 9, '+');
+  g.box(13, 6, 9, 6).put(13, 9, '+').put(21, 7, '+').put(19, 10, '▾');
+  g.box(24, 0, 11, 6).put(28, 5, '+').put(34, 2, '◘').put(30, 0, '▒').put(27, 2, '◌');
+  g.path([...line(1, 8, 9), ...line(10, 12, 9), [14, 9], [15, 8], [16, 8], [17, 8], [18, 7], [19, 7], [20, 7], ...line(22, 27, 7), [28, 7], [28, 6], [28, 4]], '•');
+  g.path(line(10, 12, 9), '•').path(line(22, 28, 7), '•');
+  g.put(28, 3, '@').put(5, 10, 'S').put(17, 10, '&').put(25, 7, '&');
+  g.put(17, 9, '!').put(25, 6, '!');
+  g.put(1, 0, 'GET OUT', 'r').put(1, 1, 'you have it.', 'm').put(1, 2, '• your way in', 'p').put(1, 3, '◘ ▒ ▾ other ways', 'g');
+  g.shade(34, 2, 1, 1, 'A');
+  MOCKS.push({
+    name: 'GET OUT', tag: 'the way back · pad mode',
+    rows: [
+      ...head('{b:NOIR//ARCHIVE}', '{$:CR 412}', '{r:ALARM} {m:· out in} {r:6} {m:turns}', INT4),
+      DIV, ...g.rows(),
+      ' {A:◘} {b:FIRE EXIT} {m:· out, right now}',
+      ' {r:LOUD:} {m:every daemon hears. pay -30%.}',
+      ...pad('SHOE x1'),
+    ],
+    how: [
+      '<b>Get in, get out.</b> You came in at the door (<b>⌂</b>, bottom left), and your trail (<b>•</b>) shows the way back. You have the payload; the alarm is on.',
+      'The trail is the safe way, but the daemons (<b>!</b>) are on it now, and a SYSOP (<b>S</b>) stands in the room by the door.',
+      '<b>Alt exits, each with a catch:</b> the FIRE EXIT (<b>◘</b>): out now, loud, less pay. The TRASH CHUTE (<b>▾</b>): out, but you land with your pack shuffled. The WINDOW (<b>▒</b>): out, but only with a FLARE or a crew member to catch you.',
+      'Leave by your own door and it\'s a clean job: full pay, and it counts toward a GHOST if nobody saw you.',
+      'Pad mode, with the SHOE picked: throw it the other way and the daemons go look.',
+    ],
+    note: 'The alarm could start when you take the payload, not when you\'re seen. Then every run has this second half, and the way in becomes the map you plan the way out on.',
+  });
+}
+
+// ---------- render ----------
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const plain = row => row.replace(/\{([^:}]+):([^}]*)\}/g, '$2');
+function rowHtml(row, name, i) {
+  const w = Array.from(plain(row)).length;
+  if (w > 36) console.warn(name + ' row ' + i + ' is ' + w + ' wide');
+  row += ' '.repeat(Math.max(0, 36 - w));
+  let out = '', last = 0;
+  row.replace(/\{([^:}]+):([^}]*)\}/g, (m, k, txt, at) => {
+    out += esc(row.slice(last, at)) + '<span class="k-' + k + '">' + esc(txt) + '</span>';
+    last = at + m.length;
+    return m;
+  });
+  return out + esc(row.slice(last));
+}
+if (typeof document === 'undefined') { module.exports = MOCKS; return; }   // (node: the row check)
+const root = document.getElementById('mocks');
+MOCKS.forEach((m, n) => {
+  if (m.rows.length !== 23) console.warn(m.name + ' has ' + m.rows.length + ' rows');
+  const sec = document.createElement('section');
+  sec.innerHTML =
+    '<h2>' + (n + 1) + '. ' + esc(m.name) + ' <span>· ' + esc(m.tag) + '</span></h2>' +
+    '<div class="mock"><pre class="phone" tabindex="0">' + m.rows.map((r, i) => '<span class="k-t">' + rowHtml(r, m.name, i) + '</span>').join('\n') + '</pre>' +
+    '<div class="side"><h3>HOW IT PLAYS</h3><ul>' + m.how.map(h => '<li>' + h + '</li>').join('') + '</ul>' +
+    '<div class="q"><b>NOTE</b> ' + m.note + '</div></div></div>';
+  root.appendChild(sec);
+});
+})();
+</script>
+</body>
+</html>

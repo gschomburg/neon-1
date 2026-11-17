@@ -1,7 +1,8 @@
 # INFILTR8: the subnet, a net inside the net
 
 **Status:** a brainstorm. Nothing is built. Started 2026-11-17 from the meat notes ("net hack inspiration", BACKLOG
-section 12). The mockups: `docs/mockups/infiltr8.html` (5 of them, round 1).
+section 12). The mockups: `docs/mockups/infiltr8.html` (round 1: 5 takes) and `docs/mockups/infiltr8_v2.html`
+(round 2: 5 VAULT FLOOR maps).
 
 Everything here is Claude's unless it says Greg. Greg's starting points:
 - A NetHack-style dungeon: sewers, tunnels, data mines. Turn based, fog of war or a light. Get in and out in a number
@@ -10,6 +11,32 @@ Everything here is Claude's unless it says Greg. Greg's starting points:
   corp. (2026-11-17)
 - A net inside the net, so it's all virtual. The game has goofy physical things in it already (the SHOE). (2026-11-17)
 - It takes the same area as the tiles: the header (INT, CR) stays, and your gear still works (a FRAG). (2026-11-17)
+
+## Decided so far (Greg, 2026-11-17)
+- **The d-pad is needed.** A button swaps the whole tray for the controls (d-pad, USE, wait) and back:
+   / . The tray's rows hold the pad, so the map keeps its rows. (Round 2 has it.)
+- **The sweep goes to THE VAULT FLOOR** (Greg liked it in PACKET PUSH). Round 2 has the turning arm (THE RING)
+  and the beams that racks block (THE SERVER FARM).
+- **Stairs** for going up and down floors.
+- **More unique halls and room shapes.**
+- **Tap a thing to get its info**, so the info lives on screen. Round 2: a 2-row info card above the controls; with
+  nothing tapped it's the message line.
+- **Get in, then get out.** You come in a door and usually leave by the same one. Alt doors are the other ways out.
+
+## Round 2: five VAULT FLOOR maps ()
+1. **THE RING:** a core in a ring in a ring, the doors on different sides. The core's sweep is an arm that turns
+   like a lighthouse, an eighth a turn. The alt exit is a vent: too tight for your pack slot.
+2. **STAIRS:** B1 of 3, with the floor stack on the right. An L room with a CAM in its corner, a pillared hall
+   (pillars to hide behind), a zigzag hall. Going down is safe; the floors above get a step worse while you're
+   below.
+3. **THE DUCTS:** ducts run through the walls between vents. Nothing sees you in one, but a step takes 2 turns and
+   no gear fits. A round room, a cross room, a duct under everything to the alt exit.
+4. **THE SERVER FARM:** beams from the walls move a row each turn; racks block them, and the cells behind a rack
+   are safe. Maybe racks can be pushed, so you make your own shadow (PACKET PUSH meets the vault).
+5. **GET OUT:** you have the payload and the alarm is on. Your trail shows the way back to your door. Alt exits,
+   each with a catch: the FIRE EXIT (loud, less pay), the TRASH CHUTE (your pack gets shuffled), the WINDOW (needs a
+   FLARE or a crew member). Your own door is a clean job. Idea: the alarm starts when you take the payload, so
+   every run has a way-out half.
 
 ## Names
 - **INFILTR8** for the action (the button next to BREACH), and **the SUBNET** for the place. That's what the doc and
