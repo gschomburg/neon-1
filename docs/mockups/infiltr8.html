@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INFILTR8 Mockups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+/* INFILTR8, round 1: five ways the subnet could look and play, on the game's 36 x 23 phone grid. The header (INT, CR)
+   and the tray (gear, mods) stay where they are in a corp; the subnet takes the board's rows. Notes: docs/INFILTR8.md. */
+:root {
+  color-scheme: dark;
+  --bg: #06090a; --dim: #2c3a38; --mid: #5f7470; --text: #a9bdb7; --bright: #e6f4ef;
+  --accent: #3cf0ff; --danger: #ff3b4e; --money: #e8c66a; --rep: #a27ef5; --rare: #4aa3ff; --green: #6dff8f; --leg: #ff9a3c;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.45; padding: 24px 16px 64px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 34px; }
+h1 { font-size: 26px; font-weight: 800; color: var(--bright); margin: 0; letter-spacing: 2px; }
+h1 b { color: var(--accent); }
+h2 { font-size: 16px; color: var(--bright); margin: 0 0 4px; letter-spacing: 1px; }
+h2 span { color: var(--mid); font-weight: 400; }
+p { margin: 0; max-width: 90ch; }
+.mock { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.phone { margin: 0; padding: 10px 8px; border: 1px solid var(--dim); background: var(--bg); font-size: 16px; line-height: 1.5;
+  white-space: pre; overflow-x: auto; max-width: 100%; }
+.phone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.side { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 10px; }
+.side h3 { margin: 0; font-size: 12px; letter-spacing: 2px; color: var(--mid); font-weight: 400; }
+.side ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.side b { color: var(--bright); }
+.q { border-left: 3px solid var(--money); padding: 6px 12px; }
+.q b { color: var(--money); }
+.k-d { color: var(--dim); } .k-m { color: var(--mid); } .k-t { color: var(--text); } .k-b { color: var(--bright); font-weight: 700; }
+.k-a { color: var(--accent); font-weight: 700; } .k-r { color: var(--danger); font-weight: 700; } .k-\$ { color: var(--money); }
+.k-p { color: var(--rep); } .k-u { color: var(--rare); } .k-g { color: var(--green); } .k-o { color: var(--leg); }
+.k-R { color: var(--danger); background: rgba(255, 59, 78, 0.18); }
+.k-A { color: var(--bg); background: var(--accent); font-weight: 700; }
+.k-Y { color: var(--bg); background: var(--money); }
+.k-U { color: var(--bg); background: var(--rare); }
+.k-P { color: var(--bg); background: var(--rep); }
+.k-F { color: var(--dim); background: rgba(95, 116, 112, 0.10); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>INFILTR8 <b>MOCKUPS</b> <span style="color:var(--mid);font-size:14px">round 1</span></h1>
+    <p>Five takes on the subnet: the net inside a corp's net. Each one is the game's 36 x 23 phone grid. The header (INT, CR) and the tray (gear, mods) stay put; the subnet takes the board's rows. The brainstorm is in <code>docs/INFILTR8.md</code>.</p>
+  </div>
+  <div id="mocks"></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+// ---------- data ----------
+// A row is markup: {k:text} colors text with key k (see the .k-* classes); bare text is the text color.
+// A row is at most 36 visible characters; shorter rows get padded (a row over 36 warns in the console).
+// DATA START
+const vis = s => Array.from(s.replace(/{([^:}]+):([^}]*)}/g, '$2')).length;
+const lr = (l, r) => l + ' '.repeat(Math.max(1, 36 - vis(l) - vis(r))) + r;   // left and right ends of a row
+const head = (where, cr, floor, intLine) => [lr('{m:[≡]}', '{m:SECTOR 2}'), lr(floor, intLine), lr(where, cr)];
+const tray = (ticker) => [
+  '{d:────────────────────────────────────}',
+  ' {a:[FRAG]} {m:[SHOE]} {a:[PING]} {a:[FWALL]} {d:[ + ]} ',
+  ' {U:≈ ECHO} {P:✦ GHST} {Y:◆ TRC2}             ',
+  ticker,
+];
+const INT4 = '{m:INT }{a:####}{d:--}';
+
+const MOCKS = [
+  {
+    name: 'THE VAULT FLOOR', tag: 'rooms and corridors',
+    rows: [
+      ...head('{b:KESTREL//VAULT}', '{$:CR 412}', '{t:FLOOR 1/3} {m:· TURN} {b:12}{m:/40}', INT4),
+      '{d:────────────────────────────────────}',
+      ' {t:┌────────┐}         {d:┌──────────┐}    ',
+      ' {t:│········│}         {d:│··········│}    ',
+      ' {t:│··}{a:@}{t:·····+}{d:·········+···}{R:░░░}{d:····│}    ',
+      ' {t:│········│}         {d:│··}{R:░░}{r:◉}{R:░░}{d:···│}    ',
+      ' {t:└───+────┘}         {d:│···}{R:░░░}{d:····│}    ',
+      '     {t:·}              {d:└────+─────┘}    ',
+      '     {t:·}                   {d:·}          ',
+      ' {d:┌───+──────┐}   {d:┌────────+───┐}      ',
+      ' {d:│··········│}   {d:│····}{r:&}{d:·······│}      ',
+      ' {d:│··········│}   {d:│············│}      ',
+      ' {d:│··········+···+·····}{$:$}{d:······│}      ',
+      ' {d:└──────────┘}   {d:│············│}      ',
+      '                {d:└──────}{a:>}{d:─────┘}      ',
+      '                                    ',
+      ' {r:◉} {m:sweeps in} {b:2}  {m:NOISE} {o:▮}{d:▯▯}  {a:[WAIT]}  ',
+      ...tray(' {m:PING found the}{$: $ }{m:· get it, get out}'),
+    ],
+    how: [
+      '<b>The classic one.</b> Rooms and halls, seen from above. You are <b>@</b>. Tap a cell next to you to step, or tap far away and you walk there a turn at a time.',
+      'Rooms you\'ve seen stay drawn, dim (fog). Only your room is lit.',
+      '<b>◉ CAM</b>: its cone (red) turns a step each turn. <b>&amp;</b> is a guard daemon on a patrol loop.',
+      'Get the <b>$</b> (the payload), then the <b>&gt;</b> (out, or the next floor). <b>TURN 12/40</b> is the trace: at 40 they find you.',
+      'NOISE fills when you run, fight or use loud gear (FRAG). Full noise wakes the floor.',
+    ],
+    note: 'The biggest build of the five: a dungeon generator, line of sight, patrols. The most "NetHack".',
+  },
+  {
+    name: 'NODE ROOMS', tag: 'the corp grid, walked',
+    rows: [
+      ...head('{b:NOIR//ARCHIVE}', '{$:CR 412}', '{t:LAYER 2/4} {m:· TURN} {b:5}{m:/18}', INT4),
+      '{d:────────────────────────────────────}',
+      ' {R:+- - - - -+} {t:+- - - - -+} {d:+- - - - -+}',
+      ' {R::    }{r:◉}{R:    :} {t::         :} {d::  ? ? ?  :}',
+      ' {R::   ░░░   :}{t:=}{t::   }{a:[@]}{t:   :}{t:=}{d::         :}',
+      ' {R:+- - - - -+} {t:+- - -}{t:‖}{t:- -+} {d:+- - - - -+}',
+      '                   {t:‖}                ',
+      ' {d:+- - - - -+} {t:+- - -‖- -+} {d:+- - - - -+}',
+      ' {d::  ? ? ?  :} {t::  }{r:&}{t: → →  :}{d:=}{$::  $ $ $  :}',
+      ' {d::         :} {t::  patrol :} {$::  cache  :}',
+      ' {d:+- - - - -+} {t:+- - - - -+} {$:+- - - - -+}',
+      '                                    ',
+      ' {d:+- - - - -+} {d:+- - - - -+} {a:+- - - - -+}',
+      ' {d::  ? ? ?  :} {d::  ? ? ?  :} {a::   >>>   :}',
+      ' {d:+- - - - -+} {d:+- - - - -+} {a:+- - - - -+}',
+      '                                    ',
+      ' {m:a step = 1 turn ·} {a:[PEEK]} {m:= 1 turn}',
+      ...tray(' {m:NOIR\'s tell: the watched room is }'),
+    ],
+    how: [
+      '<b>The cheap one, and the closest to the game we have.</b> A layer\'s grid, but each node is a room you walk into instead of a node you guess.',
+      'Rooms you haven\'t been next to are closed (<b>? ? ?</b>). <b>PEEK</b> opens one next to you for a turn.',
+      'A watched room (red) costs INT if you step in while its CAM looks your way. A patrol (<b>&amp;</b>) walks a lane of rooms.',
+      '<b>The corp\'s tell still works:</b> the watched room hides the way a real node would (NOIR: the shadowed one). Players who know the tells sneak better.',
+      'The ticker at the bottom spells out the tell, like the codex does.',
+    ],
+    note: 'Reuses the tile frames, the board size, the tells. Could ship first and grow into THE VAULT FLOOR later.',
+  },
+  {
+    name: 'PACKET PUSH', tag: 'a firewall puzzle',
+    rows: [
+      ...head('{b:AXIOM//GATE}', '{$:CR 412}', '{t:WALL 2/3} {m:· TURN} {b:9}{m:/30}', INT4),
+      '{d:────────────────────────────────────}',
+      ' {m:FIREWALL 2/3}         {m:PORTS} {g:1}{m:/3}   ',
+      ' {t:┌──────────┬───────────┬────────┐}',
+      ' {t:│··········│·····}{$:◇}{t:·····│········│}',
+      ' {t:│··}{b:■}{t:·······│···········│··}{g:◆}{t:·····│}',
+      ' {t:│··········+·····}{b:■}{t:·····+········│}',
+      ' {R:│═════════════════════════════  │}',
+      ' {t:│··········│··}{a:@}{t:········│········│}',
+      ' {t:│····}{b:■}{t:·····│···········│········│}',
+      ' {t:│··········│·····}{$:◇}{t:·····│··}{$:◇}{t:·····│}',
+      ' {t:└──────────┴─────╥─────┴────────┘}',
+      '                  {d:╨} {m:opens at 3/3}    ',
+      '                                    ',
+      ' {b:■} {m:packet} {$:◇} {m:port} {r:═} {m:sweep, 1 row/turn}',
+      ' {m:walk into a packet to push it} {a:[↶]}',
+      '                                    ',
+      ...tray(' {r:the sweep is on your row next turn} '),
+    ],
+    how: [
+      '<b>The Sokoban one.</b> Push data packets (<b>■</b>) onto ports (<b>◇</b>). All 3 in, and the wall at the bottom opens.',
+      'A sweep (<b>═</b>, red) crosses the room one row a turn. It doesn\'t care where you are, only that it touches you: be out of its row, or behind a packet (packets block it).',
+      '<b>[↶]</b> undoes a push, and costs a turn. Pushing a packet into a corner where it\'s stuck is the classic way to lose.',
+      'Works as a floor of THE VAULT FLOOR (a locked door), or on its own as a short challenge on the map.',
+    ],
+    note: 'Hand-made puzzles play best. A pile of small ones made in the editor, picked by the seed?',
+  },
+  {
+    name: 'DAEMONS', tag: 'a fight',
+    rows: [
+      ...head('{b:HYDRA//NEST}', '{$:CR 388}', '{t:FLOOR 2/3} {m:· TURN} {b:21}{m:/40}', '{m:INT }{a:###}{r:-}{d:--}'),
+      '{d:────────────────────────────────────}',
+      ' {t:┌──────────────────┐} {r:WATCHDOG} {r:▮▮}{d:▯}',
+      ' {t:│··········}{r:&}{t:·······│} {m:follows your}',
+      ' {t:│·······}{a:@}{t:··········│} {m:trail.}      ',
+      ' {t:│·····}{o:▓▓▓}{t:··········│}              ',
+      ' {t:│·····}{o:▓}{d:x}{o:▓}{t:·····}{u:¤}{t:····│} {u:SPIDER} {d:▯▯▯}   ',
+      ' {t:│·····}{o:▓▓▓}{t:··········│} {d:gone.}        ',
+      ' {t:│··················│}              ',
+      ' {t:└────────+─────────┘} {r:1 SEES YOU}   ',
+      ' {o:> FRAG: 3x3. the SPIDER is gone.}   ',
+      ' {m:> the WATCHDOG heard it.} {o:NOISE 3} ',
+      ' {r:> WATCHDOG bites: -1 INT.}          ',
+      '           {a:[ ▲ ]}                    ',
+      '     {a:[ ◄ ]} {m:[ · ]} {a:[ ► ]}   {a:[ USE ]}   ',
+      '           {a:[ ▼ ]}                    ',
+      ' {m:bump to hit · [ · ] waits a turn} ',
+      ...tray(' {m:HYDRA: hit one and it splits in 2}'),
+    ],
+    how: [
+      '<b>The fighting one.</b> Bump into a daemon to hit it. Each has a few pips (<b>▮</b>). Fighting is loud (NOISE), and noise brings the rest.',
+      'Your gear works here: <b>FRAG</b> blows a 3x3 (the orange ring), walls and all. The tray stays live the whole time.',
+      'A mini d-pad for phones (Greg\'s idea from the backlog), plus tap-to-step. <b>[ · ]</b> waits a turn.',
+      'The log is 3 lines, newest at the bottom, like a roguelike\'s message line.',
+      '<b>The corp\'s tell turns into the enemy rule</b> (HYDRA: hit one, it splits).',
+    ],
+    note: 'The d-pad eats 3 rows of board. On a phone the map shrinks to 7 rows; it might need to scroll with you.',
+  },
+  {
+    name: 'SOLE.NET', tag: 'the weird one',
+    rows: [
+      ...head('{o:SOLE.NET} {d:v0.1 beta}', '{$:CR 412}', '{t:INSOLE 1/1} {m:· STEP} {b:3}{m:/13}', INT4),
+      '{d:────────────────────────────────────}',
+      ' {m:you threw the SHOE. it landed on a}',
+      ' {m:port. it was not nothing.}          ',
+      '                {o:┌───────┐}           ',
+      '                {o:│}{d:·}{t:x}{d:·}{t:x}{d:·}{t:x}{d:·}{o:│}           ',
+      '                {o:│}{d:·}{t:x}{d:·}{a:@}{d:·}{t:x}{d:·}{o:└──┐}        ',
+      '                {o:│}{d:·}{t:x}{d:·}{t:x}{d:·}{t:x}{d:····}{o:└──┐}     ',
+      '  {o:┌─────────────┘}{d:··}{r:ʘ}{d:··········}{o:│}     ',
+      '  {o:│}{d:·}{m:%}{d:·······}{u:~~~}{d:···········}{r:&}{d:···}{o:└─┐}',
+      '  {o:│}{d:····}{m:%}{d:···················}{$:$}{d:····}{o:│}',
+      '  {o:└}{t:═════════════════════════════}{o:┘}',
+      '  {m:% LINT}  {u:~} {m:SOCK?}  {r:&} {m:TOE}  {r:ʘ} {m:EYELET}',
+      ' {m:SMELL} {o:▮▮▮}{d:▯}  {m:out: the tongue only}',
+      ' {m:the laces (x) are walls.}',
+      '                                    ',
+      '                                    ',
+      '{d:────────────────────────────────────}',
+      ' {a:[FRAG]} {d:[    ]} {a:[PING]} {a:[FWALL]} {d:[ + ]} ',
+      ' {U:≈ ECHO} {P:✦ GHST} {Y:◆ TRC2}             ',
+      ' {m:the SOCK on the floor is not a sock}',
+    ],
+    how: [
+      '<b>The weird one.</b> The SHOE ("throw it. it probably does nothing.") lands on a port and turns out to have firmware. You\'re in it. The SHOE slot in the tray is empty: you\'re standing in it.',
+      'The level is the shoe. The laces are walls, the eyelet is the camera (<b>ʘ</b>), and the way out is the tongue.',
+      'LINT (<b>%</b>) drifts toward you. THE TOE (<b>&amp;</b>) is the boss: it stomps 3 cells in a line. The SOCK (<b>~~~</b>) is the mimic.',
+      '<b>SMELL</b> stands in for NOISE: it goes up every step you take. 13 steps, then you\'re out either way.',
+      'The payload (<b>$</b>) is the shoe\'s "smart insole data". Bring it out and you get a better SHOE.',
+    ],
+    note: 'A rare, one-off secret, not a mode: the SHOE has a small chance to open it. Every corp could have one silly subnet like this.',
+  },
+];
+// DATA END
+
+// ---------- render ----------
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const plain = row => row.replace(/\{([^:}]+):([^}]*)\}/g, '$2');
+function rowHtml(row, name, i) {
+  const w = Array.from(plain(row)).length;
+  if (w > 36) console.warn(name + ' row ' + i + ' is ' + w + ' wide');
+  row += ' '.repeat(Math.max(0, 36 - w));
+  let out = '', last = 0;
+  row.replace(/\{([^:}]+):([^}]*)\}/g, (m, k, txt, at) => {
+    out += esc(row.slice(last, at)) + '<span class="k-' + k + '">' + esc(txt) + '</span>';
+    last = at + m.length;
+    return m;
+  });
+  return out + esc(row.slice(last));
+}
+const root = document.getElementById('mocks');
+MOCKS.forEach((m, n) => {
+  if (m.rows.length !== 23) console.warn(m.name + ' has ' + m.rows.length + ' rows');
+  const sec = document.createElement('section');
+  sec.innerHTML =
+    '<h2>' + (n + 1) + '. ' + esc(m.name) + ' <span>· ' + esc(m.tag) + '</span></h2>' +
+    '<div class="mock"><pre class="phone" tabindex="0">' + m.rows.map((r, i) => '<span class="k-t">' + rowHtml(r, m.name, i) + '</span>').join('\n') + '</pre>' +
+    '<div class="side"><h3>HOW IT PLAYS</h3><ul>' + m.how.map(h => '<li>' + h + '</li>').join('') + '</ul>' +
+    '<div class="q"><b>NOTE</b> ' + m.note + '</div></div></div>';
+  root.appendChild(sec);
+});
+})();
+</script>
+</body>
+</html>

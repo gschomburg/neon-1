@@ -14,8 +14,7 @@ hades
 
 net hack inspiration
 ********
-- infiltrate mission a net hack stealth type game, avoid cameras and security systems
-    - can choose this instead of breaching a corp? 
+
 
 misc notes
 ***********************

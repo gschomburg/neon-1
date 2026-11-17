@@ -389,6 +389,9 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
 - A reason to go in: a quest or a boss fight.
 - Controls: arrows or clicks? A mini d-pad on a phone.
 - Things in it: an oracle; a Sokoban pushing game; a mimic (in the store? in the data cache?).
+- **An infiltrate mission** (meat notes 2026-11-17): a stealth game: sneak past cameras and security systems. Maybe you
+  can pick it instead of breaching a corp.
+- **The brainstorm and 5 mockups: `docs/INFILTR8.md`** (2026-11-17), `docs/mockups/infiltr8.html`.
 
 ## Low priority
 
