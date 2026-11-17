@@ -43,7 +43,7 @@ FORTY DOLLARS already had THE BBS with a RULES page to read.
   INFILTR8 button (or node) just stays hidden until it's unlocked, and before that the node plays as a normal corp.
 - **Later subnet quests:** KLUDGE's SPARE PARTS (the MUG off a sysadmin's desk; the SOCK), BRICK's THAW (a jailbreak
   floor), MOTHER's THE FILE (LEECH's office).
-- Open: does FORTY DOLLARS become this quest, or keep its own steps with this as its BBS step?
+- **Decided (Greg, 2026-11-17):** this is the intro to FORTY DOLLARS. Greg will look over the rest of the quest again.
 
 ## Round 2: five VAULT FLOOR maps (`docs/mockups/infiltr8_v2.html`)
 1. **THE RING:** a core in a ring in a ring, the doors on different sides. The core's sweep is an arm that turns
