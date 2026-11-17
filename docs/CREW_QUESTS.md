@@ -120,6 +120,8 @@ title, an ad), **REP**, a **new crew member**, or the rival **changing sides / l
 - Uses: GG_EZ, a corp boss drop, a gear used on a rival, "flip a rival" (BACKLOG).
 
 ### DIALUP: FORTY DOLLARS
+- **Decided (Greg, 2026-11-17):** DIALUP's quest introduces INFILTR8 (the stealth mode) and comes up once he's on your
+  crew. Claude's mash of this quest with it: docs/INFILTR8.md, "The intro quest". The first take is below.
 - DIALUP owes SYSOP forty dollars from 1994. **Start:** a number: you've called DIALUP in a corp with SYSOP in it 3
   times (they're friends there: SYSOP stops denying nodes). DIALUP: "he still asks about the forty bucks."
 - **Step 1, the number** (a secret ad, ADS.md): an old phone number turns up in one ad (OMNINET ONLINE, or a new

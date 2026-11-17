@@ -22,6 +22,28 @@ Everything here is Claude's unless it says Greg. Greg's starting points:
 - **Tap a thing to get its info**, so the info lives on screen. Round 2: a 2-row info card above the controls; with
   nothing tapped it's the message line.
 - **Get in, then get out.** You come in a door and usually leave by the same one. Alt doors are the other ways out.
+- **The mode is first explained in a short crew quest: DIALUP's.** Once he's on your crew (5 calls, then his crew
+  post on THE BOARD, 120 REP), the quest comes up. It takes you into a quest seed with an infiltrate node and a short
+  training; after it, infiltrate nodes start showing up in your runs. (The plan: "The intro quest" below.)
+
+## The intro quest: DIALUP, FORTY DOLLARS (Claude's take, 2026-11-17)
+Mashed with DIALUP's quest in docs/CREW_QUESTS.md. Why him: "slow to get going, deadly once he's in", "bad in clock
+corps, great in big boards": a turn-based mode is his game. His rival SYSOP is already the subnet's floor boss, and
+FORTY DOLLARS already had THE BBS with a RULES page to read.
+- **A heist in reverse.** You break in to pay SYSOP back the forty dollars (with interest), without him knowing.
+- **Start:** DIALUP calls once he's crew: "i owe a guy. i can't knock on the front door. he'd ban me." He gives you the
+  board's old phone number.
+- **The quest seed:** one small sector, one node: THE BBS. Its only button is INFILTR8.
+- **The training is the board's RULES:** a floor per rule. Rule 1: moving, and tapping things for info. Rule 2: a CAM.
+  Rule 3: a sweep. Rule 4: SYSOP on his rounds. DIALUP types his tips between them, slowly.
+- **The payload goes in:** leave the money in SYSOP's desk, then out by the door you came in (get in, get out).
+- **The end:** SYSOP posts on THE BOARD: "who left this." DIALUP: "...good." **Reward:** infiltrate nodes from now on
+  (maybe DIALUP LVL 2 too).
+- **Seeds:** the quest seed is its own (like HAD3S). In normal runs every seed makes the same map for everyone; the
+  INFILTR8 button (or node) just stays hidden until it's unlocked, and before that the node plays as a normal corp.
+- **Later subnet quests:** KLUDGE's SPARE PARTS (the MUG off a sysadmin's desk; the SOCK), BRICK's THAW (a jailbreak
+  floor), MOTHER's THE FILE (LEECH's office).
+- Open: does FORTY DOLLARS become this quest, or keep its own steps with this as its BBS step?
 
 ## Round 2: five VAULT FLOOR maps (`docs/mockups/infiltr8_v2.html`)
 1. **THE RING:** a core in a ring in a ring, the doors on different sides. The core's sweep is an arm that turns
