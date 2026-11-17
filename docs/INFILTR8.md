@@ -14,7 +14,7 @@ Everything here is Claude's unless it says Greg. Greg's starting points:
 
 ## Decided so far (Greg, 2026-11-17)
 - **The d-pad is needed.** A button swaps the whole tray for the controls (d-pad, USE, wait) and back:
-   / . The tray's rows hold the pad, so the map keeps its rows. (Round 2 has it.)
+  `[⇄ PAD]` / `[⇄ GEAR]`. The tray's rows hold the pad, so the map keeps its rows. (Round 2 has it.)
 - **The sweep goes to THE VAULT FLOOR** (Greg liked it in PACKET PUSH). Round 2 has the turning arm (THE RING)
   and the beams that racks block (THE SERVER FARM).
 - **Stairs** for going up and down floors.
@@ -23,7 +23,7 @@ Everything here is Claude's unless it says Greg. Greg's starting points:
   nothing tapped it's the message line.
 - **Get in, then get out.** You come in a door and usually leave by the same one. Alt doors are the other ways out.
 
-## Round 2: five VAULT FLOOR maps ()
+## Round 2: five VAULT FLOOR maps (`docs/mockups/infiltr8_v2.html`)
 1. **THE RING:** a core in a ring in a ring, the doors on different sides. The core's sweep is an arm that turns
    like a lighthouse, an eighth a turn. The alt exit is a vent: too tight for your pack slot.
 2. **STAIRS:** B1 of 3, with the floor stack on the right. An L room with a CAM in its corner, a pillared hall
