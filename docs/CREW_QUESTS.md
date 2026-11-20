@@ -156,18 +156,42 @@ title, an ad), **REP**, a **new crew member**, or the rival **changing sides / l
   killed you and how many times. (The next MOTHER step could be a revenge list, NULL-style.)
 - Uses: a stat the game already keeps, a map mark, a boss layer.
 
-### ROOT: PAPERWORK (unlocks ROOT)
+### ROOT: PAPERWORK (unlocks ROOT and THE SHELL)
+**Decided (Greg, 2026-11-20):** the design below. It's how THE SHELL opens (docs/SHELL.md, "The game part").
 - ROOT "came with your deck, or moved into it; the paperwork is unclear." This is how it moves in.
-- **Start (something odd):** shredding corrupted software at the workbench, sometimes a component comes out wrong: an R,
-  an O, a T that won't stack with your other letters (they're marked, a different color). No call.
-- **Step 1:** the BOOK gets a recipe that wasn't there: **R??T**, four letters (the workbench's three slots plus the
-  digit slot, the only four-letter recipe).
-- **Step 2:** PH1SH is involved: his fakes get worse, and a phishing line shows in the terminal: "psst: your deck has a
-  stowaway :) want me to take care of it?" Tap it and you lose a letter (and some credits). Don't.
-- **Step 3:** spell ROOT at the bench. **Scene:** the bench's screen fills with ROOT's fine print, smug. "finally. i
+- **ROOT is quest crew** (like b0y): a plain CALL never brings it, and it has no CREW post on THE BOARD. It joins when
+  the quest ends. A save that already bought ROOT keeps it (and the shell is open); its quest doesn't run.
+- **Start:** at USER (where your deck and the WORKBENCH post open), the first time you open your deck or visit a
+  bench, whichever comes first. POPS's deck call gets a line: "something's squatting in your shell sockets. not
+  mine." The SHELL sockets are glitched; tap one: a line of ROOT's fine print. QUEST card: ROOT: PAPERWORK.
+- **Step 1: get a WORKBENCH** (skipped if you have one): the card points at THE BOARD.
+- **Step 2: the letters.** While the quest is on, a shred has a good chance (about 60%) to give a lowercase letter you
+  still need (r, o, o, t); corrupted software always gives one. Never random: always one you're missing. You can get
+  all four in one visit.
+  - **The fanfare:** the shred's other letters fly up to the LOCKER button as usual, but the lowercase one stays under
+    the shredder, with a little fanfare. Then the QUEST card (the first letter) or PH1SH's ad comes up over the whole
+    screen, with the letter in it at 2x. When they close, it flies up to the LOCKER (or it's gone, if it was eaten).
+  - They sit in the bench's special row next to the `*`, in the quest color.
+  - Protected: no other recipe uses them, a wrong spell or RUN ANYWAY sends them back, you can't shred them.
+  - Shredded letters go in the save right away, so they survive a death.
+  - The BOOK gets a page: **r _ _ t**, filled in as you go. The card counts 1/4...
+- **PH1SH's spam ad** (the first letter always; after that, about 1 in 3):
+  - It looks like the ads, with a difference (another border, other colors), so it reads as "not a normal ad". It
+    ignores SETTINGS > ads (a quest event). It waits for the shred to finish.
+  - The letter is in it. Two buttons: a plain [ close ] (always there, never hidden) and a bait button that shouts.
+    Spam types, each with its own bait: "your deck has a stowaway: [ REMOVE NOW ]", "you've won an exotic: [ CLAIM ]",
+    "verify your account: [ LOG IN ]", "hot singles in your sector: [ CHAT ]".
+  - **Close:** the letter flies to the LOCKER. POPS: "good instincts, kid." (the first time only).
+  - **Bait:** in the ad, a fish swims in and eats the letter (confetti destruction, like the INT hits), PH1SH pops up
+    and laughs ("thanks, chump."), your credits tick down, the ad closes. POPS: "don't click links in ads."; a second
+    fall gets another line ("again?"). No credits: just the letter, and a meaner laugh. A shred can give it back.
+- **Step 3: spell it.** Put a lowercase letter in and the bench's x slot becomes a 4th letter slot. A `*` fills a
+  missing letter (`r * o t`).
+- **Scene:** the build starts, then gets hijacked: the bench's screen fills with ROOT's fine print, smug. "finally. i
   have been living in your cache for six runs."
-- **Reward:** ROOT joins your crew (no REP; not buyable on THE BOARD any more). ROOT's codex entry fills in.
-- Uses: the workbench, corrupted software, the BOOK, letters, PH1SH, a phishing line in the terminal.
+- **Reward:** ROOT joins your crew (no REP). ROOT's codex entry fills in. The SHELL sockets light up and THE SHELL
+  opens (ROOT greets you the first time you press `~`). ROOT's starter chip: `man` and a couple of charges.
+- Uses: the workbench, the BOOK, letters, PH1SH, the ad box, a strip cutscene, your deck.
 
 ### KLUDGE: SPARE PARTS
 - **Start:** KLUDGE calls: "i'm building something. need parts." A parts list on the QUESTS tab: **a MOUSE** (an old

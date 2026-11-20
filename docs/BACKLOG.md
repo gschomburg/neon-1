@@ -446,6 +446,9 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   there: `Music.beat`; the pet dances to it and SIMON plays on it.)
 
 ## Medium and small
+- **A WORKBENCH training** (Greg, 2026-11-20; later): today the bench only has POPS's 3 lines on your first visit.
+  When you buy WORKBENCH on THE BOARD, offer a training outside a run: it gives you some random gear and loot to
+  shred, then shows you how to build something; it explains the `*` and the recipes (the BOOK).
 - **Pets you can toggle** (meat notes 2026-11-07): a small button in the loot bar, like b0y's on the left (if b0y's
   is there, shift it right so they don't overlap), that turns a pet on or off. Today it's one pet a run: COMPANION, the
   EGG's chick, STRAY's bug and CATPHISH's fish don't stack (with STRAY and CATPHISH, the seed picks one). Maybe they
