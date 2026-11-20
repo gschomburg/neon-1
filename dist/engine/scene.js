@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v15.00']);
+NEON_FILES.push(['engine/scene.js', 'v15.01']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -26,7 +26,9 @@ const OVERLAYS = [
   { id: 'feat', on: () => !!st.featBox, shown: () => !st.ad && !st.evCard, tick: now => featBoxTick(now), build: (c, now) => buildFeatBox(c, now), tap: h => featTap(h), key: k => featKey(k) },   // engine/feats.js
   // a quest scene, full screen (engine/quests.js): under the CALL box, which only comes up once the scene has gone dark
   { id: 'scene', on: () => !!st.qScene, shown: () => true, tick: now => sceneOutTick(now), build: (c, now) => buildScene_(c, now), tap: h => sceneTap(h), key: k => sceneKey(k) },
-  { id: 'call', on: () => !!st.callBox, shown: () => !st.ad && !st.evCard && !st.featBox, tick: now => callTick(now), build: (c, now) => buildCallBox(c, now), tap: h => callTap(h), key: k => callKey(k) },   // a CALL, engine/quests.js
+  // PH1SH's spam ad (ROOT's quest, engine/ads.js): over everything, the bench's keyboard steps aside
+  { id: 'phish', on: () => !!st.phish, shown: () => !st.ad, tick: now => phishTick(now), build: (c, now) => buildPhish(c, now), tap: h => phishTap(h), key: k => phishKey(k) },
+  { id: 'call', on: () => !!st.callBox, shown: () => !st.ad && !st.evCard && !st.featBox && !st.phish, tick: now => callTick(now), build: (c, now) => buildCallBox(c, now), tap: h => callTap(h), key: k => callKey(k) },   // a CALL, engine/quests.js
 ];
 // The NeoN+1 menu (st.pause === true; the LOOT bag is a pause too, but stays on the board) covers everything, like the
 // dev menu: the header, the tray, the training's popups and the overlays wait under it (Greg, 2026-11-12).

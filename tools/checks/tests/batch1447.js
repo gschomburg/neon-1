@@ -7,7 +7,8 @@ module.exports = { name: 'batch1447', body: `
   // the scene titles' step numbers match the steps (step 3: SAFEHOUSE ...)
   for (const [id, frames] of Object.entries(QUEST_SCENES)) for (const fr of frames) {
     const m = fr.title && /^step (\\d+): (.+)$/.exec(fr.title[1] || '');
-    if (m) check(info.steps[+m[1] - 1] && info.steps[+m[1] - 1].name === m[2], id + ': "' + fr.title[1] + '" is that step');
+    const qi = (fr.title && Object.values(QUEST_INFO).find(x => x.name === fr.title[0])) || info;   // (each scene's own quest: PAPERWORK is ROOT's)
+    if (m) check(qi.steps[+m[1] - 1] && qi.steps[+m[1] - 1].name === m[2], id + ': "' + fr.title[1] + '" is that step');
   }
   check(info.name === 'SYSTEM FAILURE' && info.steps[0].key === 'sector', 'the quest: ' + info.name + ', from ' + info.steps[0].key);
 

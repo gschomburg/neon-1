@@ -23,7 +23,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v15.00']);
+NEON_FILES.push(['data/quests.js', 'v15.01']);
 
 const QUEST_INFO = {
   pops: {
@@ -43,6 +43,18 @@ const QUEST_INFO = {
       { key: 'raid', name: 'OMNI RAID', scene: 'gate', goal: "b0y rides with you ([b]) till the sector's done. call him in on the OMNI boss and break it with him there." },
       { key: 'g0d', name: 'G0D MODE', goal: 'start a run with the seed H3AV3N and beat G0D. b0y goes with you.', seed: 'H3AV3N' },
       { key: 'done', name: 'SYSTEM RESTORED', goal: 'you beat G0D. POPS has his boy back.' },
+    ],
+  },
+  // ROOT's crew quest (docs/CREW_QUESTS.md, Greg 2026-11-20): ROOT lives in your deck. It starts at USER, the first time
+  // you open your deck or a bench. Shreds give its lowercase letters (r o o t: engine/bench.js); PH1SH's spam ad tries
+  // to take them; spell it at the bench and ROOT joins, and THE SHELL opens. letters: the step shows r o o t, filled in.
+  root: {
+    name: 'PAPERWORK', from: 'ROOT',
+    steps: [
+      { key: 'bench', name: 'A WORKBENCH', goal: "something lives in your deck's SHELL sockets. its paperwork is a mess. get a WORKBENCH: it's a post on THE BOARD's REP tab." },
+      { key: 'letters', name: 'THE FINE PRINT', letters: true, goal: 'shred things at a safehouse WORKBENCH. some of what comes out is lowercase: r, o, o, t. corrupted software always gives one.' },
+      { key: 'spell', name: 'SIGN HERE', letters: true, scene: 'paperwork', crew: 'root', goal: 'you have the letters. spell r o o t at a WORKBENCH. (a * fills in for one.)' },
+      { key: 'done', name: 'MOVED IN', goal: 'ROOT is on your crew. THE SHELL is open: press ~ (or tap [ shell ] in the menu).' },
     ],
   },
 };
@@ -77,7 +89,36 @@ const QUEST_LINES = {
     "i'm riding with you till we get there: tap [b] in a corp and i'm in."],
   // ...and right after that call, a popup like the training's, in his blue, its arrow on his [b] (engine/heaven.js boyTrayHint)
   raidHint: ["that's me, down there. in a corp, tap [b] and i'm in. once a corp."],
+  // ---- ROOT: PAPERWORK (engine/quests.js rootStart...) ----
+  // POPS's deck call at USER gets this line while ROOT isn't on your crew (engine/deck.js deckIntroCall)
+  rootPops: "and something's squatting in your shell sockets. not mine.",
+  // a SHELL socket's card, before ROOT's on your crew: its fine print (one at a time, a ticker)
+  rootFine: ['§1.1: this socket is leased. the lessee is unclear.', '§4.2: the paperwork is pending. do not touch the paperwork.',
+    '§7: tenant requests lowercase only.', '§9.9: by reading this you agree to all of it.'],
+  // the first letter you shred: the QUEST card says it (engine/bench.js)
+  rootFirst: ['a component came out lowercase. it hums.'],
+  // PH1SH's spam ad: close it (the first time) / take the bait (the first time / after)
+  rootClosed: ['good instincts, kid.', "that was PH1SH. he's a rival. never click links in ads."],
+  rootBit: ["don't click links in ads, kid.", 'that was PH1SH. he took your letter and your credits. shred some more: it comes back.'],
+  rootBitAgain: ['again? really?'],
+  // all four letters: the step after
+  rootAll: ['r o o t. all of it.', 'spell it at the bench and see who answers.'],
+  // ROOT joins (after the scene): its first call
+  rootJoined: ['root@deck:~# whoami', 'ROOT. i live here now. it was always going to go this way.', 'THE SHELL is open: press ~. type help.',
+    'here. a chip. slot it in a SHELL socket and THE SHELL learns man.'],
+  // THE SHELL, opened for the first time after ROOT joins (engine/shell.js)
+  rootShellHi: ['ROOT: oh. you found the door.', 'ROOT: help lists what you know. you know very little.'],
+  // THE SHELL before ROOT: no shell yet (engine/shell.js)
+  rootPending: 'paperwork pending.',
 };
+// PH1SH's spam ads (ROOT's quest: engine/ads.js phishShow), in turn: the first one you see is the stowaway. Lines fit 30.
+// from: the sender; head: the shouting line; lines: the pitch (the letter shows under it); bait: the button's words.
+const PHISH_SPAM = [
+  { from: 'DECK SECURITY', head: 'WARNING: STOWAWAY', lines: ['your deck has an', 'unregistered tenant.'], bait: 'REMOVE NOW' },
+  { from: 'PRIZE CENTER', head: 'YOU WON!!!', lines: ['a FREE exotic mod.', 'just verify this letter:'], bait: 'CLAIM' },
+  { from: 'ACCOUNT TEAM', head: 'VERIFY YOUR ACCOUNT', lines: ['odd activity on your', 'bench. confirm this one:'], bait: 'LOG IN' },
+  { from: 'h0t_s1ngl3s', head: 'HOT SINGLES', lines: ['in your sector want', 'to meet this letter.'], bait: 'CHAT' },
+];
 
 // A scene's music (the user, 2026-11-04): its song, and a new pick of level and stage every step ms from the frame's mood
 // (engine/quests.js sceneMusic). Another one to try for a lighter scene: EVENT HORIZON (eventhorizon).
@@ -85,6 +126,7 @@ const SCENE_MUSIC = {
   disc: { song: 'pantheon', step: 6000, mood: { levels: [0, 1], stages: 'A' } },
   prodigal: { song: 'eventhorizon', step: 7000, mood: { levels: [0], stages: 'A' } },   // (the user: EVENT HORIZON, a lighter cutscene track)
   gate: { song: 'pantheon', step: 6000, mood: { levels: [2], stages: 'B' } },
+  paperwork: { song: 'eventhorizon', step: 7000, mood: { levels: [0], stages: 'A' } },
   h3av3n: { song: 'eventhorizon', step: 7000, mood: { levels: [0], stages: 'A' } },
 };
 const QUEST_SCENES = {
@@ -266,5 +308,16 @@ const QUEST_SCENES = {
       text: 'on the screen: a gate, up past the clouds. mold all over it.', mood: { levels: [2, 3], stages: 'BC' } },
     { who: 'b0y', text: 'the way in is a seed. H3AV3N.' },
     { who: 'b0y', text: "i'll be with you the whole way. i know its tricks. i built some of them.", mood: { levels: [3], stages: 'C' } },
+  ],
+  // PAPERWORK (docs/CREW_QUESTS.md): you spell r o o t at the bench and the build gets hijacked. Placeholder: ROOT's logo
+  // for the picture (no art yet; redraw in asXii later).
+  paperwork: [
+    { title: ['PAPERWORK', 'step 3: SIGN HERE'], mood: { levels: [0], stages: 'A' } },
+    { text: 'the bench takes the letters. then it stops. the screen fills with fine print, faster than you can read it.' },
+    { pic: { logo: 'root' }, who: 'root', text: 'finally. i have been living in your cache for six runs.', mood: { levels: [1], stages: 'A' } },
+    { who: 'root', text: "section 4.2: the tenant gets the shell. the shell was always the tenant's. you signed. technically." },
+    { who: 'root', text: "that PH1SH has been trying to evict me for weeks. he's not a pest control company. he's a pest." },
+    { text: 'something on the bench clicks into place. a prompt blinks: root@neon:~$', mood: { levels: [1, 2], stages: 'AB' } },
+    { who: 'root', text: "i'm on your crew now. you're welcome. press ~ and we'll talk." },
   ],
 };

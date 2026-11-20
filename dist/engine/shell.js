@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.00']);
+NEON_FILES.push(['engine/shell.js', 'v15.01']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -279,6 +279,17 @@ const SHELL_CMDS = shellGroups([
   { name: 'quest.wins', args: [{ name: 'n', of: 'n' }], help: "d0g's count (0-10)", safe: true, run: a => { questOf('pops').d0g = clamp(Math.round(a[0]), 0, 10); persist(); } },
   { name: 'quest.scene', args: [{ name: 'scene', of: 'scenes' }], help: 'play a quest scene', safe: true, run: a => playScene(a[0]) },
   { name: 'quest.card', help: "the quest's card", safe: true, run: () => questCard('pops') },
+  // ROOT's quest, PAPERWORK (engine/quests.js): jump to a step, hand yourself its letters, take ROOT off your crew
+  { name: 'root.step', args: [{ name: 'step', of: fixed(...QUEST_INFO.root.steps.map(x => [x.key, x.name])) }], help: "set ROOT's quest step (PAPERWORK)", safe: true, run: a => {
+    const q = questOf('root'); q.step = a[0]; q.news = true;
+    save.legacy = save.legacy || {}; save.legacy.crew_root = a[0] === 'done' ? 1 : 0; persist();
+    questCard('root'); return 'PAPERWORK: ' + a[0] + (a[0] === 'done' ? ' (ROOT on your crew)' : ''); } },
+  { name: 'root.letters', help: "give yourself ROOT's letters (r o o t)", safe: true, run: () => {
+    const l = benchSave().letters; l.r = Math.max(1, l.r || 0); l.o = Math.max(2, l.o || 0); l.t = Math.max(1, l.t || 0); persist(); rootCheck(); return 'r o o t in your bank.'; } },
+  { name: 'root.reset', help: "ROOT's quest from the start: off your crew, no letters, no quest", safe: true, run: () => {
+    if (save.quests) delete save.quests.root; if (save.legacy) save.legacy.crew_root = 0; const l = benchSave().letters; delete l.r; delete l.o; delete l.t; save.shellHi = false; persist();
+    return "PAPERWORK reset. it starts when you open your deck or a bench (at USER)."; } },
+  { name: 'root.phish', help: "PH1SH's spam ad, with a letter in it", safe: true, run: () => { phishShow('r', eaten => shellOut(eaten ? 'he ate it.' : 'you closed it.')); return 'close THE SHELL to see it.'; } },
   { name: 'quest.call', help: "POPS's CALL", safe: true, run: () => queueCall('pops', QUEST_LINES.found) },
   { name: 'seed.had3s', help: 'the HAD3S seed, as if you typed it', safe: true, run: async () => { shellEndRun(); st.seed = 'HAD3S'; startRun('HAD3S', false); await shellSettle(); } },
   { name: 'seed.h3av3n', help: 'the H3AV3N seed, as if you typed it', safe: true, run: async () => { g0dfStop(); st.g0d = null; st.g0dBar = null; shellEndRun(); st.seed = 'H3AV3N'; st.practice = !save.beatG0D; startRun('H3AV3N', st.practice); await shellSettle(); } },
@@ -358,7 +369,10 @@ for (const c of SHELL_CMDS) for (const al of c.alias || []) SHELL_BY[al] = c;
 // What you know. Step 1: everything in dev mode, nothing otherwise (the shell's own commands always work,
 // but they don't autocomplete till you know something).
 const shellDev = () => !!(st.devAccess || EDITOR);
-const shellKnows = c => !!c && (shellDev() || (!!c.chip && chipOn(c.chip)));   // (a chip in your deck teaches its command: engine/deck.js)
+// THE SHELL is ROOT's (Greg, 2026-11-20): a chip's command works once ROOT is on your crew (ROOT's quest, PAPERWORK:
+// engine/quests.js). Before that the shell only says "paperwork pending." Dev access knows everything.
+const shellRooted = () => typeof rootOn === 'function' && rootOn();
+const shellKnows = c => !!c && (shellDev() || (!!c.chip && chipOn(c.chip) && shellRooted()));   // (a chip in your deck teaches its command: engine/deck.js)
 const shellUsage = c => [c.name, ...(c.args || []).map(x => x.opt ? `[${x.name}]` : `<${x.name}>`)].join(' ');
 function shellHelp(name) {
   if (name) { const c = SHELL_BY[name]; if (!c || !(shellKnows(c) || c.always)) throw new Error(`not a command: ${name}`); return `${shellUsage(c)}\n  ${c.help}`; }
@@ -633,6 +647,8 @@ function shellOpen() {
   st.shell = true;   // the game holds its clocks and takes no keys (engine/input.js, run.js...)
   SHELL.el.hidden = false;
   if (!SHELL.log.length) shellOut(shellDev() ? 'THE SHELL. help lists what you know. Tab fills in, Enter runs, Esc closes.' : 'THE SHELL.', 'dim');
+  if (!shellDev() && !shellRooted()) shellOut(QUEST_LINES.rootPending, 'dim');   // (ROOT's quest isn't done: engine/quests.js)
+  else if (!shellDev() && !save.shellHi) { save.shellHi = true; persist(); QUEST_LINES.rootShellHi.forEach(l => shellOut(l)); }   // ROOT, the first time
   SHELL.input.value = ''; SHELL.moved = false; SHELL.hideList = false; SHELL.histAt = -1;
   shellRefresh();
   if (!shellTouch()) SHELL.input.focus();   // a phone: tap first, the keyboard only when you tap the prompt

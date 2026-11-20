@@ -238,3 +238,89 @@ From POPS.
 **B0Y:** the way in is a seed. H3AV3N.
 
 **B0Y:** i'll be with you the whole way. i know its tricks. i built some of them.
+
+## PAPERWORK
+
+From ROOT.
+
+### Steps
+
+1. **A WORKBENCH**: something lives in your deck's SHELL sockets. its paperwork is a mess. get a WORKBENCH: it's a post on THE BOARD's REP tab.
+2. **THE FINE PRINT**: shred things at a safehouse WORKBENCH. some of what comes out is lowercase: r, o, o, t. corrupted software always gives one.
+3. **SIGN HERE**: you have the letters. spell r o o t at a WORKBENCH. (a * fills in for one.)
+4. **MOVED IN**: ROOT is on your crew. THE SHELL is open: press ~ (or tap [ shell ] in the menu).
+
+### Calls
+
+**rootPops**: The last line of POPS's deck call at USER, while ROOT isn't on your crew.
+
+> **POPS:** and something's squatting in your shell sockets. not mine.  
+
+**rootFine**: A SHELL socket's card before ROOT moves in (a ticker).
+
+> **A SHELL SOCKET:** §1.1: this socket is leased. the lessee is unclear.  
+> **A SHELL SOCKET:** §4.2: the paperwork is pending. do not touch the paperwork.  
+> **A SHELL SOCKET:** §7: tenant requests lowercase only.  
+> **A SHELL SOCKET:** §9.9: by reading this you agree to all of it.  
+
+**rootFirst**: The first lowercase letter you shred: its QUEST card, with the letter in it.
+
+> **QUEST CARD:** a component came out lowercase. it hums.  
+
+**rootClosed**: You close PH1SH's spam ad (the first time).
+
+> **POPS:** good instincts, kid.  
+> **POPS:** that was PH1SH. he's a rival. never click links in ads.  
+
+**rootBit**: You take PH1SH's bait (the first time).
+
+> **POPS:** don't click links in ads, kid.  
+> **POPS:** that was PH1SH. he took your letter and your credits. shred some more: it comes back.  
+
+**rootBitAgain**: You take PH1SH's bait again.
+
+> **POPS:** again? really?  
+
+**rootAll**: You have all four letters.
+
+> **POPS:** r o o t. all of it.  
+> **POPS:** spell it at the bench and see who answers.  
+
+**rootJoined**: ROOT joins, after the PAPERWORK scene.
+
+> **ROOT:** root@deck:~# whoami  
+> **ROOT:** ROOT. i live here now. it was always going to go this way.  
+> **ROOT:** THE SHELL is open: press ~. type help.  
+> **ROOT:** here. a chip. slot it in a SHELL socket and THE SHELL learns man.  
+
+**rootShellHi**: THE SHELL, the first time you open it after ROOT joins.
+
+> **THE SHELL:** ROOT: oh. you found the door.  
+> **THE SHELL:** ROOT: help lists what you know. you know very little.  
+
+**rootPending**: THE SHELL, before ROOT joins.
+
+> **THE SHELL:** paperwork pending.  
+
+### Scenes
+
+#### PAPERWORK: step 3: SIGN HERE (`paperwork`)
+
+*the bench takes the letters. then it stops. the screen fills with fine print, faster than you can read it.*
+
+**ROOT:** finally. i have been living in your cache for six runs.
+
+**ROOT:** section 4.2: the tenant gets the shell. the shell was always the tenant's. you signed. technically.
+
+**ROOT:** that PH1SH has been trying to evict me for weeks. he's not a pest control company. he's a pest.
+
+*something on the bench clicks into place. a prompt blinks: root@neon:~$*
+
+**ROOT:** i'm on your crew now. you're welcome. press ~ and we'll talk.
+
+### PH1SH's spam ads
+
+- from **DECK SECURITY**: **WARNING: STOWAWAY** your deck has an unregistered tenant. [ REMOVE NOW ] / [ close ]
+- from **PRIZE CENTER**: **YOU WON!!!** a FREE exotic mod. just verify this letter: [ CLAIM ] / [ close ]
+- from **ACCOUNT TEAM**: **VERIFY YOUR ACCOUNT** odd activity on your bench. confirm this one: [ LOG IN ] / [ close ]
+- from **h0t_s1ngl3s**: **HOT SINGLES** in your sector want to meet this letter. [ CHAT ] / [ close ]

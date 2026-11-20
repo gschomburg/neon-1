@@ -1,6 +1,6 @@
 // NeoN+1 engine/ads.js: the fake ads: when they show up, the ad box, and its two-screen turn.
 'use strict';
-NEON_FILES.push(['engine/ads.js', 'v15.00']);
+NEON_FILES.push(['engine/ads.js', 'v15.01']);
 
 // An ad comes up over whatever is on screen, in a bordered box nearly the screen's width, and
 // blocks everything under it until you close it. [x] (top right) shows up after a few seconds
@@ -134,4 +134,88 @@ function buildAd(ctx, now) {
   }
   // two-screen ads turn on their own
   if (!ad.turn || now - ad.turn.at > AD_CFG.turnMs) { if (now - ad.at > AD_CFG.screenMs && ad.screen < def.screens.length - 1) adTurn(); }
+}
+
+// ---------------- PH1SH's spam ad (ROOT's quest, PAPERWORK: docs/CREW_QUESTS.md, Greg 2026-11-20) ----------------
+// A fake ad over the whole screen, with one of ROOT's letters in it (engine/bench.js benchRootFound). It looks like an
+// ad, but off: a wavy border in PH1SH's colors, and a sender that gives it away. It comes up even with SETTINGS > ads
+// off (it's the quest). [ close ] keeps the letter; the bait button lets a fish eat it, PH1SH laughs, and your credits
+// go. st.phish = { ch, spam, t0, phase: 'ask' | 'keep' | 'eat', at, took, done(eaten) }.
+const PHISH = { keepMs: 520, swimMs: 900, laughAt: 1500, laughMs: 2300, take: 30 };
+function phishShow(ch, done) {
+  const q = save.quests && save.quests.root, seen = (q && q.spam) || 0;
+  const spam = PHISH_SPAM[seen % PHISH_SPAM.length];   // the stowaway one first, then the others in turn
+  if (q) { q.spam = seen + 1; persist(); }
+  st.phish = { ch, spam, t0: performance.now(), phase: 'ask', done };
+  st.kbFocus = st.hoverBtn = null;
+  Sound.buzz ? Sound.buzz() : Sound.ui();
+}
+function phishPick(bait) {
+  const p = st.phish;
+  if (!p || p.phase !== 'ask' || performance.now() - p.t0 < 400) return;   // (a beat before a tap counts)
+  p.phase = bait ? 'eat' : 'keep'; p.at = performance.now();
+  if (bait) Sound.whiff(); else Sound.ui();
+}
+function phishEnd() { const p = st.phish; st.phish = null; Sound.ui(); if (p && p.done) p.done(p.phase === 'eat'); }
+function phishTick(now) {
+  const p = st.phish; if (!p) return;
+  const t = now - (p.at || 0);
+  if (p.phase === 'keep' && t >= PHISH.keepMs) phishEnd();
+  if (p.phase === 'eat' && t >= PHISH.laughAt && p.took == null) {   // he laughs, and takes his cut
+    const run = st.run; p.took = run ? Math.min(run.credits, PHISH.take) : 0; p.was = run ? run.credits : 0;
+    if (run) run.credits -= p.took;
+    Sound.trap();
+  }
+  if (p.phase === 'eat' && t >= PHISH.laughAt + PHISH.laughMs) phishEnd();
+}
+function phishTap(h) { if (h && h.kind === 'btn' && (h.id === 'phbait' || h.id === 'phclose')) h.onTap(); }
+function phishKey(k) { if (k === 'escape' || k === 'x') phishPick(false); }   // (Enter never takes the bait)
+function buildPhish(ctx, now) {
+  const { put, bg, cells, addHit } = ctx, p = st.phish, s = p.spam, sty = hkStyle('phish');
+  const w = ADS_W + 4, h = 19, x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2)), cx = x0 + Math.floor(w / 2);
+  clearRect(cells, x0, y0, w, h);
+  popupBg(bg, 'ad', x0, y0, w, h);
+  const water = HEX6.test(C.bg) ? moldMix(C.bg, sty.bg, 0.55) : sty.bg;   // PH1SH's water, under it (solid: half-row overlaps, like popupBg)
+  for (let r = 1; r < h - 1; r++) { bg(x0 + 1, y0 + r, w - 2, water, 1); if (r < h - 2) bg(x0 + 1, y0 + r + 0.5, w - 2, water, 1); }
+  // the border: waves, not lines (it's an ad, but off)
+  const wave = (y, k, gap = []) => put(x0, y, Array.from({ length: w }, (_, i) => i >= gap[0] && i < gap[1] ? ' ' : '~-'[(i + k + Math.floor(now / 260)) % 2]).join(''), sty.fg);
+  wave(y0, 0, [1, 9]); wave(y0 + h - 1, 1);   // (a gap for the [ AD ] tag)
+  for (let r = 1; r < h - 1; r++) { put(x0, y0 + r, '{', sty.fg); put(x0 + w - 1, y0 + r, '}', sty.fg); }
+  put(x0 + 2, y0, '[ AD ]', C.money, 'hud', true);
+  const mid = (y, t, col, bold = false) => put(cx - Math.floor(t.length / 2), y, t, col, 'hud', bold);
+  mid(y0 + 1, 'from: ' + s.from, C.mid);
+  mid(y0 + 2, '<no-reply@ph1sh.biz>', C.dim);
+  const head = ` ${s.head} `, flash = Math.floor(now / 350) % 2;
+  bg(cx - Math.floor(head.length / 2), y0 + 4, head.length, flash ? C.danger : C.money, 1); mid(y0 + 4, head, C.bg, true);
+  s.lines.forEach((l, i) => mid(y0 + 6 + i, l, C.text));
+  // the letter (3x3, ROOT's quest color); the fish comes for it; PH1SH in its place
+  const ly = y0 + 9, lx = cx - 1, t = now - (p.at || 0), chip = letterChip(p.ch);
+  const eaten = p.phase === 'eat' && t >= PHISH.swimMs;
+  if (!eaten) benchBlock(Object.assign({}, ctx, { now }), lx, ly, p.ch, { t0: p.t0 + 200, chip, seed: 7 });
+  if (p.phase === 'keep') for (let i = 0; i < 8; i++) { const a = now / 200 + i * Math.PI / 4; put(lx + 1 + Math.round(Math.cos(a) * 3), ly + 1 + Math.round(Math.sin(a) * 2), '*', C.rep, 'fx'); }
+  if (p.phase === 'eat') {
+    const fx = t < PHISH.swimMs ? x0 + w - 4 - (x0 + w - 4 - lx) * (t / PHISH.swimMs) : lx - (t - PHISH.swimMs) / 60;
+    if (fx > x0) put(Math.round(fx), ly + 1, t < PHISH.swimMs ? '<><' : '<>< ~', sty.fg, 'fx', true);
+    if (eaten && !p.boom) {   // the letter goes to bits (like INT lost: engine/hud.js hpBurst)
+      p.boom = true; Sound.fishBite(); Sound.shatter();
+      const px = pxX(lx + 1.5), py = pxY(ly + 1.5), bits = [];
+      for (let i = 0; i < 18; i++) bits.push({ ch: i < 6 ? p.ch : pickR(['#', '%', '.', ':', '*', "'"], Math.random), x: px + rand(-1.2, 1.2) * L.cw, y: py + rand(-1, 1) * L.chh, col: i % 3 ? chip.bg : C.danger });
+      explode(bits, px, py + L.chh, { power: 0.7, grav: 0.9, life: [0.7, 1.2] });
+    }
+    if (t >= PHISH.laughAt) {   // PH1SH, laughing; your credits going
+      const face = (ART_FACES.phish || { art: [] }).art, bob = Math.floor(now / 140) % 2 ? -1 : 0;
+      face.forEach((l, k) => { bg(lx - 1, ly + k + bob, 6, sty.bg, 1); put(lx - 0.5, ly + k + bob, l, sty.fg, 'hud', true); });
+      mid(ly + 4, p.took ? 'thanks, chump. :)' : 'broke AND gullible. :)', sty.fg, true);
+      if (p.took) { const k = Math.min(1, (t - PHISH.laughAt) / 900), cr = Math.round(p.was - p.took * k); mid(ly + 6, `credits ${cr}cr  -${p.took}`, C.danger, true); }
+      else mid(ly + 6, 'he took the letter.', C.danger);
+    }
+  }
+  // the buttons: the bait shouts, [ close ] is plain (and always there)
+  if (p.phase === 'ask') {
+    const bait = `>> [ ${s.bait} ] <<`, bx = cx - Math.floor(bait.length / 2), close = '[ close ]', kx = cx - Math.floor(close.length / 2);
+    bg(bx, y0 + 14, bait.length, flash ? C.money : C.danger, st.hoverBtn === 'phbait' ? 0.7 : 1); put(bx, y0 + 14, bait, C.bg, 'hud', true);
+    addHit(bx, y0 + 14, bait.length, 1, { kind: 'btn', id: 'phbait', onTap: () => phishPick(true) });
+    put(kx, y0 + 16, close, st.hoverBtn === 'phclose' ? C.bright : C.mid, 'hud');
+    addHit(kx, y0 + 16, close.length, 1, { kind: 'btn', id: 'phclose', onTap: () => phishPick(false) });
+  }
 }

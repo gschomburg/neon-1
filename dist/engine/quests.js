@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v15.00']);
+NEON_FILES.push(['engine/quests.js', 'v15.01']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -151,6 +151,56 @@ function questRunStart(run) {
   const q = questOf('pops'); if (!q.raidCalled) { q.raidCalled = true; persist(); setTimeout(() => queueCall('b0y', QUEST_LINES.raid, null, boyTrayHint), 2500); }   // (then the hint: his [b])
 }
 
+// ---------------- ROOT: PAPERWORK (docs/CREW_QUESTS.md, Greg 2026-11-20) ----------------
+// ROOT lives in your deck. Quest crew (data/hackers.js quest: true): no CALL brings it and there's no CREW post; this quest
+// puts it on your crew, and that opens THE SHELL (engine/shell.js shellRooted). A save that bought ROOT before keeps it
+// (the quest never starts). save.quests.root: { step, news, letters1, bit, closed }
+//   step: bench -> letters -> spell -> done (data/quests.js QUEST_INFO.root)
+// The letters are lowercase components in the bench's bank (save.bench.letters r / o / t: engine/bench.js benchRoot...).
+const ROOT_WORD = 'root';
+const rootOn = () => hkCrewOn('root');
+const rootStep = () => save.quests && save.quests.root ? save.quests.root.step : null;
+// The letters ROOT's word still needs from your bank (r o o t, less what you have): '' when you have them all.
+function rootNeed() {
+  const have = Object.assign({}, (save.bench && save.bench.letters) || {});
+  return ROOT_WORD.split('').filter(ch => (have[ch] > 0 ? (have[ch]--, false) : true)).join('');
+}
+// It starts at USER, the first time you open your deck or a bench (engine/deck.js openDeck, engine/bench.js openBench).
+function rootStart() {
+  if (rootOn() || rootStep() || boardLevel() < 2 || EDITOR && !st.run) return;
+  const q = questOf('root');
+  q.step = benchOpen() ? 'letters' : 'bench'; q.news = true; persist();
+  questCard('root');
+}
+// WORKBENCH bought on THE BOARD (engine/save.js buyPost): on to the letters.
+function rootBenchBought() {
+  if (rootStep() !== 'bench') return;
+  questNext('root');
+}
+// After the letters change (a shred, PH1SH's ad): all four in the bank moves you to SIGN HERE (one lost: back).
+function rootCheck() {
+  const s = rootStep();
+  if (s === 'letters' && !rootNeed()) { questNext('root'); queueCall('pops', QUEST_LINES.rootAll); }
+  else if (s === 'spell' && rootNeed()) { questStep('root', 'letters'); }
+}
+// A shred gives one of the letters you still need (engine/bench.js benchShred): corrupted software always, else
+// ROOT_ODDS.shred of the time. Never random: always one you're missing. Returns the letter, or null.
+const ROOT_ODDS = { shred: 0.6, phish: 1 / 3 };
+function rootShredLetter(corrupt) {
+  if (rootStep() !== 'letters') return null;
+  const need = rootNeed();
+  if (!need || (!corrupt && Math.random() >= ROOT_ODDS.shred)) return null;
+  return need[Math.floor(Math.random() * need.length)];
+}
+// You spelled it (engine/bench.js benchBuild): the scene, then ROOT joins (the step's crew), its call and its chip.
+function rootSigned() {
+  playScene('paperwork', () => {
+    questNext('root');   // (SIGN HERE's crew: ROOT is on your crew now)
+    deckQuestChip('MN1', "ROOT moved in. it brought a chip.");   // (ROOT's chip: man. engine/deck.js)
+    queueCall('root', QUEST_LINES.rootJoined);
+  });
+}
+
 // The words (QUEST_INFO, QUEST_LINES, QUEST_SCENES) live in data/quests.js.
 
 // ---------------- The CALL box ----------------
@@ -182,7 +232,7 @@ function buildCallBox(ctx, now) {
   const { put, bg, cells, addHit } = ctx, b = st.callBox, d = HACKERS[b.who] || { name: b.who.toUpperCase() };
   const face = (ART_FACES[b.who] || { art: ['', '', ''] }).art, ink = hkInk(b.who);
   const rows = b.lines.flatMap(l => wrapText(l, CALL_W - 2));
-  const w = CALL_W + 2, h = rows.length + 9, x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
+  const w = CALL_W + 2, h = rows.length + 9 + (b.letter ? 4 : 0), x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
   clearRect(cells, x0, y0, w, h);
   popupBg(bg, 'call', x0, y0, w, h);   // (its look: POPUP_LOOK, engine/render.js)
   const head = b.quest ? 'QUEST' : 'CALL', ring = !b.quest && Math.floor((now - b.t0) / 400) % 2 && now - b.t0 < 1600 ? ' ((( ' : ' ';
@@ -204,6 +254,7 @@ function buildCallBox(ctx, now) {
   }
   let budget = Math.floor((now - b.t0 - 300) / 18);
   rows.forEach((t, r) => { const shown = t.slice(0, Math.max(0, budget)); budget -= t.length; if (shown) put(x0 + 2, y0 + 6 + r, shown, C.text, 'hud'); });
+  if (b.letter) benchBlock(Object.assign({}, ctx, { now }), x0 + Math.floor(w / 2) - 1, y0 + 7 + rows.length, b.letter, { t0: b.t0 + 300, chip: letterChip(b.letter) });   // ROOT's letter, big (engine/bench.js)
   const btns = b.btns ? b.btns.map((x, i) => ({ id: 'cb' + i, text: x.text, onTap: () => { st.callBox = null; x.onTap(); } }))   // (its own buttons: the G0D ending)
     : b.btn ? [{ id: 'cgo', text: b.btn.text, onTap: () => { st.callBox = null; b.btn.onTap(); } }, { id: 'cok', text: '[ LATER ]', onTap: callClose }]
     : [{ id: 'cok', text: '[ OK ]', onTap: callClose }];
@@ -583,6 +634,17 @@ function buildScene_(ctx0, now) {
     put(Math.floor((L.wc - t.length) / 2), mid + 6, t, C.dim, 'hud');
   }
 }
+// r o o t, each one you have on the quest color, the rest dim: THE BOARD > QUESTS, the bench's BOOK (engine/bench.js).
+function rootLettersRow(ctx, x, y) {
+  const need = rootNeed().split('');
+  ctx.put(x, y, 'letters:', C.mid, 'ui');
+  ROOT_WORD.split('').forEach((ch, i) => {
+    const m = need.indexOf(ch), got = m < 0; if (!got) need.splice(m, 1);
+    const cx = x + 10 + i * 2;
+    if (got) { ctx.bg(cx, y, 1, C.rep, 1); ctx.put(cx, y, ch, C.bg, 'ui', true); } else ctx.put(cx, y, '_', C.dim, 'ui');
+  });
+  ctx.put(x + 19, y, `${4 - rootNeed().length} / 4`, C.rep, 'ui');
+}
 function sceneTap(h) {
   if (st.qScene && st.qScene.out) return;   // (going dark: taps wait)
   if (h && h.kind === 'btn' && h.id === 'qskip') return h.onTap();
@@ -590,23 +652,34 @@ function sceneTap(h) {
 }
 
 // ---------------- THE BOARD > QUESTS ----------------
-const questsNew = () => !!(save.quests && Object.entries(save.quests).some(([id, q]) => q.news && (q.seen || (id === 'pops' && hkCrewOn('pops')))));
+// The quests THE BOARD shows: POPS's once he's on your crew (or you've had the DISC), the rest once they've started.
+const questShown = id => { const q = save.quests && save.quests[id]; return !!(q && QUEST_INFO[id] && (id !== 'pops' || q.seen || hkCrewOn('pops'))); };
+const questsShown = () => Object.keys(QUEST_INFO).filter(questShown);
+const questsNew = () => questsShown().some(id => save.quests[id].news);
 function questBoardLines(T, X) {
-  const q = save.quests && save.quests.pops;
-  if (!q || !(q.seen || hkCrewOn('pops'))) {
+  const ids = questsShown();
+  if (!ids.length) {
     T('no quests yet.', C.mid);
     T('');
     for (const l of wrapText('put a crew together and maybe you will find some. get to know the other hackers: call them.', 32)) T(l, C.dim);
     return;
   }
+  // more than one: a row of tabs, one a quest (a * on one with news); the newest news first when you come in
+  if (!ids.includes(st.questTab)) st.questTab = ids.find(i => save.quests[i].news) || ids[0];
+  if (ids.length > 1) {
+    X({ gap: 1, row: ids.map(i => ({ text: `[ ${QUEST_INFO[i].name}${save.quests[i].news && i !== st.questTab ? '*' : ''} ]`, id: 'qtab_' + i, sel: i === st.questTab, onTap: () => { st.questTab = i; Sound.tick(); } })) });
+    T('');
+  }
+  const id = st.questTab, q = save.quests[id];
   q.news = false;
-  const info = QUEST_INFO.pops, v = questView('pops'), at = v.at, step = v.step;
+  const info = QUEST_INFO[id], v = questView(id), at = v.at, step = v.step;
   X({ text: info.name, col: C.rep, bold: true });
   T(`from ${info.from}`, C.mid);
   T('');
   X({ text: `STEP ${at + 1}: ${v.name}`, col: C.bright, bold: true });
   for (const l of wrapText(v.goal, 32)) T(l, C.text);
   if (step.wins) { T(''); X({ text: `d0g: ${Math.min(q.d0g || 0, step.wins)} / ${step.wins}`, col: C.bright, bold: true }); }   // (DOG DAYS: the wins so far)
+  if (step.letters) { T(''); X({ h: 1, draw: (ctx, y) => rootLettersRow(ctx, Math.floor((L.wc - 32) / 2), y) }); }   // (PAPERWORK: r o o t, the ones you have)
   if (step.seed) {   // the seed POPS gave you, and (off the title, no run waiting) a link that starts it (the user, 2026-11-06)
     T('');
     if (st.run || st.savedRun) X({ text: `seed: ${step.seed}`, col: C.rep, bold: true });

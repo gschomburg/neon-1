@@ -181,7 +181,8 @@ Older ideas, not decided (BACKLOG section 10, Greg 2026-11-08 and 2026-11-11):
    The editor's TESTING tab calls `shellSettle`, `shellFreshRun`, `shellOnMap`, `shellToSector`, `shellHad3sBoss`,
    `shellB0yOmni`, `shellBench`, `shellLetters`, `shellHeaven` and `shellKit`.
 3. **The game part.** Designed 2026-11-20 (above). Built in batches: ROOT's quest first (docs/CREW_QUESTS.md), then
-   charges, the free commands and `dev.start`.
+   charges, the free commands and `dev.start`. **ROOT's quest: built v15.01.** Next: charges, the free commands,
+   `dev.start`.
 4. **The old dev menu goes** once nothing needs it.
 
 ## Decided

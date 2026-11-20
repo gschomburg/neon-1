@@ -156,8 +156,13 @@ title, an ad), **REP**, a **new crew member**, or the rival **changing sides / l
   killed you and how many times. (The next MOTHER step could be a revenge list, NULL-style.)
 - Uses: a stat the game already keeps, a map mark, a boss layer.
 
-### ROOT: PAPERWORK (unlocks ROOT and THE SHELL)
+### ROOT: PAPERWORK (unlocks ROOT and THE SHELL) (built v15.01)
 **Decided (Greg, 2026-11-20):** the design below. It's how THE SHELL opens (docs/SHELL.md, "The game part").
+**Built v15.01:** engine/quests.js (ROOT: PAPERWORK), the letters at the bench (engine/bench.js), PH1SH's spam ad
+(engine/ads.js phishShow), the words in data/quests.js (QUEST_INFO.root, the root* lines, PHISH_SPAM, the paperwork
+scene). Check: tools/checks/tests/root.js. Shell commands for testing: `root.step`, `root.letters`, `root.reset`,
+`root.phish`. Left for later: the scene's art (it uses ROOT's logo for now), and the charges on ROOT's chip (`man`
+has no limit until THE SHELL's charges are built).
 - ROOT "came with your deck, or moved into it; the paperwork is unclear." This is how it moves in.
 - **ROOT is quest crew** (like b0y): a plain CALL never brings it, and it has no CREW post on THE BOARD. It joins when
   the quest ends. A save that already bought ROOT keeps it (and the shell is open); its quest doesn't run.

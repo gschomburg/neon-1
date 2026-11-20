@@ -149,6 +149,9 @@ module.exports = { name: 'deck', body: `
   check(run3.items.some(x => x.key === 'wall' && x.n >= 3) && run3.items.some(x => x.key === 'frag'), 'LOADOUT: FWALLs and FRAGs in the belt: ' + JSON.stringify(run3.items));
   check(run3.credits >= 60, 'TRUST FUND: +60cr: ' + run3.credits);
   check(deckSpoils(run3) === 2, 'SPOILS is set to CASH');
+  save.legacy.crew_root = 0;   // THE SHELL is ROOT's (its quest, PAPERWORK): no ROOT, no commands
+  check(shellDev() || !shellKnows(SHELL_BY.whoami), 'no ROOT on your crew: THE SHELL knows no chip commands');
+  save.legacy.crew_root = 1;
   check(shellKnows(SHELL_BY.whoami) && shellKnows(SHELL_BY.ps) && (shellDev() || !shellKnows(SHELL_BY.flatline)), "THE SHELL knows the chips' commands");
   check(/REP/.test(SHELL_BY.whoami.run([])) && run3.hacked, 'whoami runs, and marks the run hacked');
   const cz = run3.credits; earn(100, run3); check(run3.credits - cz === 100, 'no GREED: earnings as before');

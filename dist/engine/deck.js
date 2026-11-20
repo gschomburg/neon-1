@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.00']);
+NEON_FILES.push(['engine/deck.js', 'v15.01']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -52,6 +52,7 @@ const DECK_CHIPS = {
   SK1: ['SPIKE', 'ov', 'common', 0, '-1 starting INT. +2 power for your deck.', ['/\\/', '+2P'], '-1 INT, +2 power.'],
   // SHELL: one command each, in THE SHELL (~ opens it). a stand-in pair until THE SHELL is sorted out (Greg)
   WH0: ['whoami', 'shell', 'common', 1, "THE SHELL learns whoami: your run so far, and the REP you'd bank if you cashed out now. (~ opens THE SHELL.)", ['who', '?_?'], 'whoami: your run so far.'],
+  MN1: ['man', 'shell', 'rare', 1, "ROOT's chip, from its quest: THE SHELL learns man: this corp's codex entry, mid-layer (its tell once you've beaten it). (~ opens THE SHELL.)", ['man', '[?]'], "man: this corp's codex entry."],
   PS4: ['ps', 'shell', 'rare', 1, 'THE SHELL learns ps: the rival hackers in this corp, by name, and how hurt they are. (~ opens THE SHELL.)', ['ps ', '@ @'], 'ps: name the rivals.'],
   // SUDO (mk IV): the strong commands
   FL3: ['flatline', 'sudo', 'legendary', 3, 'THE SHELL learns flatline: a rival hacker in this corp drops dead. once a corp. (~ opens THE SHELL.)', ['FLT', '_/\\'], 'flatline: a rival drops dead.'],
@@ -125,7 +126,7 @@ const DECK_CHIPS = {
 const DECK_CHIP_TAGS = {
   TF1: ['you'], LD3: ['you'], BM4: ['you'], FI2: ['you'], QT0: ['map'], DM5: ['you'], BB7: ['you'], SP3: ['rules'],
   SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'], FM2: ['you', 'rules'], SK1: ['you'],
-  WH0: ['you'], PS4: ['you'], FL3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
+  WH0: ['you'], MN1: ['you'], PS4: ['you'], FL3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
   PL3: ['you'], BP1: ['you'], JD6: ['you'], PD7: ['you'], RG6: ['you'], KN8: ['you'], CL3: ['you'], HS1: ['map'],
   LU6: ['map', 'rules'], FR5: ['map'], EV2: ['map'], AD0: ['map'], SR4: ['map'], PP2: ['map'], AL4: ['you'], CS7: ['map'], CK9: ['map'], DK6: ['map'],
   CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'],
@@ -211,7 +212,7 @@ const deckBand = by => by >= 41 ? 4 : by >= 32 ? 3 : 2;
 // own seeded streams ('cachechip', 'pierchip'), so a seed's other drops don't move.
 const DECK_DROP = { cache: 0.2, fish: 0.25 };   // a cracked DATA CACHE; a pier catch that would have been gear
 const DECK_DROP_WEIGHT = { common: 50, rare: 30, epic: 14, legendary: 5, exotic: 1 };
-const DECK_NO_DROP = ['SC1', 'SP3', '1UP'];   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
+const DECK_NO_DROP = ['SC1', 'SP3', '1UP', 'MN1'];   // (MN1: ROOT's, from its quest)   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
 const deckChipItem = key => 'chip_' + key;
 const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
 const deckHave = key => (save.deck && save.deck.chips && save.deck.chips[key]) || 0;
@@ -444,6 +445,12 @@ const DECK_SHELL_CMDS = [
   { name: 'whoami', chip: 'WH0', safe: true, help: "your run so far, and the REP you'd bank now", run: () => {
     const run = shellNeedRun(); run.hacked = true;
     return `${profile().name} · sector ${run.sector + 1} · depth ${run.depth}\ncorps ${run.corps} · ${run.credits}cr · INT ${run.integrity}/${run.maxInt}\ncash out now: ${repFor(run)} REP`; } },
+  { name: 'man', chip: 'MN1', safe: true, help: "this corp's codex entry (its tell, once you've beaten it)", run: () => {   // ROOT's chip
+    const run = shellNeedRun();
+    if (!st.corp) throw new Error('only in a corp.');
+    const key = st.corp.def.key, d = corpDef(key), rec = corpStat(key);
+    run.hacked = true;
+    return [`${d.name}${d.level ? '  LV' + d.level : ''}`, d.intel, corpRules(d, 1), CORP_TELL[key] ? (rec.breached ? 'tell: ' + CORP_TELL[key] : 'tell: beat this corp to read it.') : ''].filter(Boolean).join('\n'); } },
   { name: 'ps', chip: 'PS4', safe: true, help: 'the rival hackers in this corp', run: () => {
     const run = shellNeedRun(); run.hacked = true;
     const hs = hkRivalsUp();
@@ -548,7 +555,7 @@ function deckGift() {
 }
 function deckIntroCall() {
   queueCall('pops', ["kid. you made USER. that gets you a deck.", "slot chips in and they run, every run. the cell powers them.",
-    "find chips. bring them home. it's on THE BOARD, under YOU."], { text: '[ SEE YOUR DECK ]', onTap: () => openDeck() });
+    "find chips. bring them home. it's on THE BOARD, under YOU."].concat(rootOn() ? [] : [QUEST_LINES.rootPops]), { text: '[ SEE YOUR DECK ]', onTap: () => openDeck() });   // (ROOT's quest: engine/quests.js)
 }
 // your mk, from THE BOARD's posts (the FUSE needs mk III: engine/save.js LEGACY 'fuse' needs 'deck3')
 const deckMkNow = () => legacyLv('fuse') ? 4 : legacyLv('deck3') ? 3 : 2;
@@ -598,6 +605,8 @@ const deckSock = id => DECK_SOCKETS.find(s => s.id === id);
 const deckSlotOf = key => Object.keys(DECK.slots).find(k => DECK.slots[k] === key);
 const deckOpen = mk => mk <= DECK.mk && !(mk === 4 && (!DECK.fuse || DECK.blown));
 const deckFits = (key, s) => DECK_CHIPS[key][1] === s.g;
+// a SHELL socket on your real deck while ROOT isn't on your crew: chips go in, but THE SHELL is ROOT's (engine/quests.js)
+const deckShellPending = s => !!(s && s.g === 'shell' && DECK.real && typeof rootOn === 'function' && !rootOn());
 const deckMk = m => ['', '', 'II', 'III', 'IV'][m];
 const deckSay = (text, col = C.accent) => { DECK.msg = { text, col, t: performance.now() }; };
 const deckSelect = sel => { DECK.sel = sel; DECK.selT = performance.now(); };
@@ -672,6 +681,7 @@ function openDeck(o = {}) {
   d.pick = null; d.cpu = null; d.carry = null; d.msg = null; d.selT = performance.now();
   openPanel('THE DECK', deckLines, null, { full: true });
   st.keyHandler = deckKey;
+  if (d.real) rootStart();   // ROOT's quest starts here, or at a bench (engine/quests.js)
 }
 function deckLeave() {
   const off = deckPower().off.length, now = performance.now();
@@ -1024,6 +1034,9 @@ function deckSocket(s, X, Y, P, B, CL, { sel = false, key, pw, now }) {
     }
     if (!open) P(X + 1, Y + 1, inner > 3 ? ' mk' + s.mk + ' ' : 'mk' + s.mk, C.mid);
     else if (key) deckFace({ put: P, bg: B }, X + 1, Y + 1, key, off);
+    // a SHELL socket before ROOT moves in (its quest: engine/quests.js): something lives in it, glitching in the quest color
+    if (open && deckShellPending(s)) for (let j = 1; j < s.h - 1; j++) for (let i = 1; i < w - 1; i++)
+      if (hh(i + s.x * 7, j + Math.floor(now / 140) + s.y) < (key ? 0.12 : 0.35)) P(X + i, Y + j, noiseCh(), C.rep);
   }
   if (d.carry && open && deckFits(d.carry, s) && Math.floor(now / 300) % 2) B(X, Y, w, s.h, C.accent, 0.3);
   if (sel) B(X, Y, w, s.h, C.accent, 0.22);
@@ -1499,7 +1512,7 @@ function deckCard(ctx, y0) {
     g.put(x + meta.length, y, c[1] === 'psu' ? `power ${deckCellPower(key)}` : `PWR ${c[3]}`, off ? C.danger : C.mid);
     if (off && Math.floor(now / 500) % 2) g.put(W - 9, y, 'NO POWER', C.danger, true);
     g.bg(x, y + 1, c[0].length + 2, 1, ch.bg, 1); g.put(x + 1, y + 1, c[0], ch.fg, true);
-    tick(x + 1, key === 'SP3' ? 'bosses: ' + DECK_SPOILS[d.spoils][2] : c[6]);
+    tick(x + 1, key === 'SP3' ? 'bosses: ' + DECK_SPOILS[d.spoils][2] : sid && deckShellPending(deckSock(sid)) ? 'no shell yet: get ROOT on your crew (THE BOARD > QUESTS).' : c[6]);
     return x;
   };
   if (sel.kind === 'chip') {
@@ -1525,8 +1538,9 @@ function deckCard(ctx, y0) {
     } else {
       frame(s);
       const n = deckOwned().filter(k => deckFits(k, s)).length;
-      g.put(8, y, `${gn} · ${n} fit`, C.mid); g.put(9, y + 1, `${s.id} · EMPTY`, C.bright, true);
-      tick(9, gt + '.');
+      const pend = deckShellPending(s);   // (ROOT's: its fine print, a line at a time)
+      g.put(8, y, `${gn} · ${n} fit`, C.mid); g.put(9, y + 1, `${s.id} · ${pend ? 'LEASED' : 'EMPTY'}`, pend ? C.rep : C.bright, true);
+      tick(9, pend ? QUEST_LINES.rootFine.join('   ') + '   (ROOT: PAPERWORK, THE BOARD > QUESTS)' : gt + '.');
       btns([['[ CHOOSE ]', C.accent, 'dkchg', () => deckPick(s.id)]], s.w + 3);
     }
   } else if (sel.kind === 'part') deckPartCard(ctx, g, y, sel.id, pw, tick, btns);

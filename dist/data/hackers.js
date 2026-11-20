@@ -23,7 +23,7 @@
 //   lvl2    crew: their LVL 2 upgrade (THE BOARD), fixed
 // How each one plays is engine/hackers.js (HK_AI); they come in through the RIVAL anomaly (rivals) and CALL gear (crew).
 'use strict';
-NEON_FILES.push(['data/hackers.js', 'v15.00']);
+NEON_FILES.push(['data/hackers.js', 'v15.01']);
 
 const HACKERS = {
   // ================= bad hackers =================
@@ -293,7 +293,7 @@ const HACKERS = {
     counter: 'leech: she pulls it off you at once ("not my baby"); no cut while she is up.',
   },
   root: {
-    name: 'ROOT', side: 'good', hp: 3,
+    name: 'ROOT', side: 'good', hp: 3, quest: true, lvl2Post: true,   // (quest crew: ROOT's own quest, PAPERWORK, puts it on your crew: engine/quests.js; its LVL 2 is still a post)
     style: { fg: "#33ff66", bg: "#001a08" },
     enter: "root@deck:~# whoami",
     clue: ["# that one: ICE.","# read the source.","# trivial."],

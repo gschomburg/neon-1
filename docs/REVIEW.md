@@ -14,6 +14,15 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **ROOT's quest, PAPERWORK** (v15.01; docs/CREW_QUESTS.md). To start fresh: THE SHELL (~ with `?dev=1`) >
+  `root.reset`, then open your deck at USER. Watch: the glitched SHELL sockets (their fine print), the QUEST card, the
+  WORKBENCH step (if you haven't bought it), a shred where a lowercase letter stays under the shredder with a fanfare,
+  the QUEST card with the letter big, PH1SH's spam ad (try both buttons: the fish, the confetti, "thanks, chump.", your
+  credits going; POPS after), the 4th slot (`r o o t`, a `*` fills one), the hijacked build and the scene, ROOT's call,
+  then `~`: ROOT's hello and `man` from ROOT's chip in a corp. Shortcuts: `root.letters`, `root.phish`, `root.step`.
+  My calls: 60% a shred gives a letter, 1 in 3 letters after the first get the ad, PH1SH takes 30cr, the 4 spam texts,
+  the scene's words (data/quests.js), ROOT's chip is `man`. Saves that bought CREW: ROOT keep it (and the shell).
+
 - [ ] **G0D.exe** (v14.60-v14.61): dev menu (backtick) > [give G0D.exe], then tap the red [G0D] on your belt. Watch a
   run: its card, the <@> cursor thinking and the @ flying out, the map lines (why it goes where), markets, rewards, the
   UPLINK, and its OFFLINE card when it stops. Settings in the dev menu: speed, clicks, wins before it knows a corp,
