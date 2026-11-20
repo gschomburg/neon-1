@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.02']);
+NEON_FILES.push(['engine/deck.js', 'v15.03']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -50,13 +50,28 @@ const DECK_CHIPS = {
   LK7: ['LUCK', 'ov', 'epic', 2, '-1 starting INT. 1 in 5 mods and gear roll a step rarer.', ['777', 'LCK'], '-1 INT, rarer drops.'],
   FM2: ['FAME', 'ov', 'rare', 2, '-1 starting INT. +20% REP.', ['FME', '*-1'], '-1 INT, +20% REP.'],
   SK1: ['SPIKE', 'ov', 'common', 0, '-1 starting INT. +2 power for your deck.', ['/\\/', '+2P'], '-1 INT, +2 power.'],
-  // SHELL: one command each, in THE SHELL (~ opens it). a stand-in pair until THE SHELL is sorted out (Greg)
-  WH0: ['whoami', 'shell', 'common', 1, "THE SHELL learns whoami: your run so far, and the REP you'd bank if you cashed out now. (~ opens THE SHELL.)", ['who', '?_?'], 'whoami: your run so far.'],
+  // SHELL: one command each, in THE SHELL (` opens it). a stand-in pair until THE SHELL is sorted out (Greg)
+  WH0: ['whoami', 'shell', 'common', 1, "THE SHELL learns whoami: your run so far, and the REP you'd bank if you cashed out now. (` opens THE SHELL.)", ['who', '?_?'], 'whoami: your run so far.'],
   CA4: ['CAPACITOR', 'shell', 'common', 1, 'no command: just charges for THE SHELL. pair it with a strong one.', ['|||', '+4 '], 'just charges.'],
-  MN1: ['man', 'shell', 'rare', 1, "ROOT's chip, from its quest: THE SHELL learns man: this corp's codex entry, mid-layer (its tell once you've beaten it). (~ opens THE SHELL.)", ['man', '[?]'], "man: this corp's codex entry."],
-  PS4: ['ps', 'shell', 'rare', 1, 'THE SHELL learns ps: the rival hackers in this corp, by name, and how hurt they are. (~ opens THE SHELL.)', ['ps ', '@ @'], 'ps: name the rivals.'],
+  MN1: ['man', 'shell', 'rare', 1, "ROOT's chip, from its quest: THE SHELL learns man: this corp's codex entry, mid-layer (its tell once you've beaten it). (` opens THE SHELL.)", ['man', '[?]'], "man: this corp's codex entry."],
+  PS4: ['ps', 'shell', 'rare', 1, 'THE SHELL learns ps: the rival hackers in this corp, by name, and how hurt they are. (` opens THE SHELL.)', ['ps ', '@ @'], 'ps: name the rivals.'],
+  // (v15.03, docs/DECK.md SHELL: the rest of the list)
+  CD2: ['cd ..', 'shell', 'rare', 1, 'THE SHELL learns cd ..: on the map, your next move can go back a row (somewhere you skipped). (` opens THE SHELL.)', ['cd ', '..^'], 'cd ..: go back a row.'],
+  SN5: ['scan', 'shell', 'common', 1, "THE SHELL learns scan: the corps ahead in this sector, with their tiers and anomalies, and BLINDERS and FOG lifted for the sector. (` opens THE SHELL.)", ['(((', 'SCN'], 'scan: the corps ahead.'],
+  RM1: ['rm', 'shell', 'rare', 1, 'THE SHELL learns rm: one ICE on this layer is deleted. (` opens THE SHELL.)', ['rm ', '[x]'], 'rm: delete one ICE.'],
+  KL9: ['kill', 'shell', 'common', 1, 'THE SHELL learns kill -9: you flatline yourself. the run ends now, as a death. (` opens THE SHELL.)', ['-9 ', 'x_x'], 'kill -9: end the run.'],
+  CT1: ['cat', 'shell', 'common', 1, "THE SHELL learns cat: what a DATA CACHE holds (its loot and its picks) before you open it. (` opens THE SHELL.)", ['cat', '=^.'], 'cat: see inside a cache.'],
+  ZZ3: ['sleep', 'shell', 'rare', 1, 'THE SHELL learns sleep: the layer clock stops for 5 seconds once you close THE SHELL. once a layer. (` opens THE SHELL.)', ['zzz', '5s '], 'sleep: the clock stops 5s.'],
+  WI5: ['whois', 'shell', 'epic', 1, "THE SHELL learns whois: this corp's tell, beaten or not. (` opens THE SHELL.)", ['who', 'is?'], "whois: this corp's tell."],
+  UD2: ['undo', 'shell', 'epic', 2, 'THE SHELL learns undo: take back your last ICE hit on this layer. (` opens THE SHELL.)', ['<-z', 'UND'], 'undo: take back an ICE hit.'],
   // SUDO (mk IV): the strong commands
-  FL3: ['flatline', 'sudo', 'legendary', 3, 'THE SHELL learns flatline: a rival hacker in this corp drops dead. once a corp. (~ opens THE SHELL.)', ['FLT', '_/\\'], 'flatline: a rival drops dead.'],
+  FL3: ['flatline', 'sudo', 'legendary', 3, 'THE SHELL learns flatline: a rival hacker in this corp drops dead. once a corp. (` opens THE SHELL.)', ['FLT', '_/\\'], 'flatline: a rival drops dead.'],
+  // (v15.03: the player versions of dev commands. In dev mode the same name is the free dev version: engine/shell.js)
+  GD1: ['mode.god', 'sudo', 'legendary', 3, 'THE SHELL learns mode.god: ICE does no damage for the rest of this sector. (` opens THE SHELL.)', ['GOD', '(+)'], 'mode.god: no damage, a sector.'],
+  HD4: ['mode.hold', 'sudo', 'epic', 2, "THE SHELL learns mode.hold: the layer clocks stop for the rest of this corp. (` opens THE SHELL.)", ['|| ', 'HLD'], 'mode.hold: no clocks, a corp.'],
+  RL2: ['show.real', 'sudo', 'epic', 2, 'THE SHELL learns show.real: the real node is marked on this layer. once a corp. (` opens THE SHELL.)', ['[*]', 'RL!'], 'show.real: mark the real node.'],
+  BR3: ['breach', 'sudo', 'legendary', 3, 'THE SHELL learns breach: you win this layer outright, full pay. once a run. (` opens THE SHELL.)', ['>>>', 'BRC'], 'breach: win a layer.'],
+  GM1: ['give.mod', 'sudo', 'epic', 2, 'THE SHELL learns give.mod: pick one of 3 mods, right now. once a run. (` opens THE SHELL.)', ['+M ', '1/3'], 'give.mod: pick 1 of 3 mods.'],
   // BOSS (mk IV): big chips from the big bosses
   OMNI: ["OMNI'S EYE", 'boss', 'exotic', 3, "every corp's card on the map shows its tell.", ['<(@)>', 'OMNI '], 'every corp shows its tell.'],
   // HEAT (mk IV): harder runs, more REP
@@ -87,7 +102,7 @@ const DECK_CHIPS = {
   // CRASH
   CP0: ['CHECKPOINT', 'crash', 'epic', 2, 'once a run, die and you come back with nothing (no mods, no gear, no credits) but full INT.', ['[>]', 'CKP'], 'once a run: back, with nothing.'],
   RK1: ['ROOTKIT', 'crash', 'epic', 2, "die with THE SHELL's charges left: they all burn, and you're back with 1 INT. charges back, and it can save you again.", ['RKT', '>_<'], 'die: burn your charges, live.'],
-  EJ1: ['EJECT', 'crash', 'rare', 1, 'THE SHELL learns eject: cash out from the map, anywhere, once a run. (~ opens THE SHELL.)', ['^^^', 'EJT'], 'eject: cash out from the map.'],
+  EJ1: ['EJECT', 'crash', 'rare', 1, 'THE SHELL learns eject: cash out from the map, anywhere, once a run. (` opens THE SHELL.)', ['^^^', 'EJT'], 'eject: cash out from the map.'],
   IN5: ['INSURANCE', 'crash', 'common', 1, 'die and your next run starts with half the credits you had. (read the fine print.)', ['$/2', 'INS'], 'die: half your credits next run.'],
   DD3: ['DEAD DROP', 'crash', 'rare', 1, "when you die, your gear is waiting in your next run's first DATA CACHE.", ['[v]', 'DRP'], 'die: your gear waits for you.'],
   OB1: ['OBITUARY', 'crash', 'rare', 1, 'die past layer 30 and you keep all your REP, as if you cashed out. (if it bleeds, it leads.)', ['RIP', '30+'], 'die past 30: keep your REP.'],
@@ -128,7 +143,8 @@ const DECK_CHIPS = {
 const DECK_CHIP_TAGS = {
   TF1: ['you'], LD3: ['you'], BM4: ['you'], FI2: ['you'], QT0: ['map'], DM5: ['you'], BB7: ['you'], SP3: ['rules'],
   SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'], FM2: ['you', 'rules'], SK1: ['you'],
-  WH0: ['you'], MN1: ['you'], CA4: ['you'], RK1: ['you'], PS4: ['you'], FL3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
+  WH0: ['you'], MN1: ['you'], CA4: ['you'], RK1: ['you'], PS4: ['you'], FL3: ['you'], CD2: ['you'], SN5: ['you'], RM1: ['you'], KL9: ['you'], CT1: ['you'], ZZ3: ['you'], WI5: ['you'], UD2: ['you'],
+  GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
   PL3: ['you'], BP1: ['you'], JD6: ['you'], PD7: ['you'], RG6: ['you'], KN8: ['you'], CL3: ['you'], HS1: ['map'],
   LU6: ['map', 'rules'], FR5: ['map'], EV2: ['map'], AD0: ['map'], SR4: ['map'], PP2: ['map'], AL4: ['you'], CS7: ['map'], CK9: ['map'], DK6: ['map'],
   CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'],
@@ -449,7 +465,8 @@ const deckSpoils = run => chipOn('OF1', run) ? 3 : chipOn('PT1', run) ? 4 : chip
 // new sector (for now); 'run' makes it last the whole run (Greg: later, with a BOSS chip, CRON, that brings the sector
 // refill back). More from a corp boss's CHARGE pick (gear: +2), and ROOTKIT (CRASH) burns them all to save you.
 const SHELL_REFILL = 'sector';
-const DECK_CHARGES = { WH0: 3, PS4: 2, MN1: 2, CA4: 4, FL3: 1 };
+const DECK_CHARGES = { WH0: 3, PS4: 2, MN1: 2, CA4: 4, FL3: 3,   // (FL3 was 1: v15.03, a SUDO chip gives one use of its own command)
+  CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 3 };
 const SHELL_CHARGE = { pack: 2, boss: 0.35 };   // a CHARGE gives 2; a corp boss offers one 35% of the time (with charges to fill)
 for (const [k, n] of Object.entries(DECK_CHARGES)) if (DECK_CHIPS[k]) { DECK_CHIPS[k][4] += ` +${n} shell charges.`; DECK_CHIPS[k][6] += ` +${n} charges.`; }
 function deckCharges(run) { run.chargeMax = (run.chips || []).reduce((a, k) => a + (DECK_CHARGES[k] || 0), 0); run.charges = run.chargeMax; }
@@ -507,7 +524,127 @@ const DECK_SHELL_CMDS = [
     if (run.ejected) throw new Error('used: once a run.');
     run.ejected = true; setTimeout(() => cashOut(), 300);
     return 'ejecting. cashing out.'; } },
+  // ---- v15.03 (docs/DECK.md SHELL: the rest of the list). A command that throws costs nothing (engine/shell.js shellRun).
+  { name: 'cd', chip: 'CD2', cost: 2, safe: true, args: [{ name: 'dir', of: () => [{ v: '..', hint: 'back a row' }] }], help: 'cd ..: your next move on the map can go back a row', run: () => {
+    const run = shellNeedRun();
+    if (st.mode !== 'map' || st.corp) throw new Error('only on the map.');
+    if (run.backAim) throw new Error('already open: pick a node.');
+    const n = backTargets().length;
+    if (!n) throw new Error('nothing back there you skipped.');
+    run.backAim = true; run.hacked = true; st.mapSel = null;
+    return `cd ..: ${n} node${n > 1 ? 's' : ''} a row back. pick one.`; } },
+  { name: 'scan', chip: 'SN5', cost: 1, safe: true, help: 'the corps ahead in this sector (BLINDERS and FOG lifted for it)', run: () => {
+    const run = shellNeedRun(), cur = run.map[run.at], base = SECTOR_STEPS * run.sector;
+    run.scanned = run.sector; run.hacked = true;   // (engine/map.js blinded, engine/mapview.js FOG)
+    const ahead = Object.values(run.map).filter(n => (n.sector || 0) === run.sector && (n.type === 'corp' || n.type === 'final') && !run.visited.includes(n.id) && (!cur || n.step > cur.step)).sort((a, b) => a.step - b.step);
+    if (!ahead.length) return 'nothing ahead.';
+    return ahead.map(n => `row ${n.step - base}  ${n.type === 'final' ? 'BOSS ' : ''}${corpDef(n.corp).name} T${n.tier || 1}${n.mod && ANOMALIES[n.mod] ? '  + ' + ANOMALIES[n.mod].name : ''}`).join('\n'); } },
+  { name: 'rm', chip: 'RM1', cost: 2, safe: true, help: 'delete one ICE on this layer', run: () => {
+    const run = shellNeedRun(), lv = deckShellLayer();
+    const opts = lv.tiles.filter(t => t.state === 'closed' && !isReal(t) && !t.loaded);
+    if (!opts.length || candidates().length <= 1) throw new Error('no ICE left to delete.');
+    lv.rms = (lv.rms || 0) + 1;
+    lockTile(pickR(opts, rngFor(run.seed, 'rm', st.corp.node.id, st.corp.idx, lv.rms)), C.mid, 'rm');
+    run.hacked = true;
+    return 'rm: 1 ICE deleted.'; } },
+  { name: 'kill', chip: 'KL9', cost: 1, safe: true, args: [{ name: 'signal', of: () => [{ v: '-9', hint: 'for real: the run ends' }] }], help: 'kill -9: flatline yourself. the run ends now, as a death', run: () => {
+    const run = shellNeedRun();
+    if (st.mp) throw new Error('not in a race.');
+    if (!shellIdle()) throw new Error('wait for the screen to settle.');
+    run.hacked = true; shellClose();
+    setTimeout(() => { if (st.run === run && !run.ended) endRun(false); }, 200);
+    return 'killed.'; } },
+  { name: 'cat', chip: 'CT1', cost: 1, safe: true, help: 'what a DATA CACHE holds: the one picked on the map, or the next in reach', run: () => {
+    const run = shellNeedRun();
+    if (st.mode !== 'map' || st.corp) throw new Error('only on the map.');
+    const sel = st.mapSel && run.map[st.mapSel];
+    const node = sel && sel.type === 'cache' ? sel : availableNodes().map(id => run.map[id]).find(n => n.type === 'cache');
+    if (!node) throw new Error('no DATA CACHE picked or in reach.');
+    if ((run.caches || {})[node.id]) throw new Error('that one is open already.');
+    run.hacked = true;
+    return deckCatCache(node).join('\n'); } },
+  { name: 'sleep', chip: 'ZZ3', cost: 1, safe: true, help: 'the layer clock stops 5 seconds once you close THE SHELL (once a layer)', run: () => {
+    const lv = deckShellLayer();
+    if (lv.slept) throw new Error('used: once a layer.');
+    lv.slept = true; lv.sleepArm = true; st.run.hacked = true;   // (engine/shell.js shellClose starts it)
+    return 'sleep 5: the clock stops for 5s when you close THE SHELL.'; } },
+  { name: 'whois', chip: 'WI5', cost: 2, safe: true, help: "this corp's tell, beaten or not (or the corp picked on the map)", run: () => {
+    const run = shellNeedRun(), sel = st.mode === 'map' && st.mapSel && run.map[st.mapSel];
+    const key = st.corp ? st.corp.def.key : sel && (sel.type === 'corp' || sel.type === 'final') ? sel.corp : null;
+    if (!key) throw new Error('be in a corp, or pick one on the map.');
+    const d = corpDef(key);
+    if (!CORP_TELL[key]) throw new Error(`${d.name} has no tell.`);
+    run.hacked = true;
+    return `${d.name}: ${CORP_TELL[key]}`; } },
+  { name: 'undo', chip: 'UD2', cost: 3, safe: true, help: 'take back your last ICE hit on this layer', run: () => {
+    const run = shellNeedRun(), lv = deckShellLayer(), h = st.lastHit;   // (engine/hits.js blockHit keeps it)
+    if (!h || h.lv !== lv || h.undone) throw new Error('no ICE hit to undo on this layer.');
+    h.undone = true; run.integrity = Math.min(run.maxInt, run.integrity + h.dmg); run.hacked = true;
+    return `undo: +${h.dmg} INT (${run.integrity}/${run.maxInt}).`; } },
 ];
+// A corp layer you can work on (rm, sleep, undo, show.real, breach), or why not.
+function deckShellLayer() {
+  if (st.mode !== 'play' || !st.lv || !st.corp || !st.corp.hasBoss || st.mp) throw new Error('only on a layer.');
+  if (st.busy || st.transitioning) throw new Error('wait for the layer to settle.');
+  return st.lv;
+}
+// cat: a DATA CACHE's loot and picks, rolled the way engine/panels.js openCache rolls them (the same stream, the same
+// order: keep the two together).
+function deckCatCache(node) {
+  const run = st.run, r = rngFor(run.seed, 'cache', node.id), quest = questMarket(node), out = ['DATA CACHE:'];
+  const n = 1 + (has('cachekey') ? tv('cachekey', ECON.modx.cachekey) : quest ? 1 : 0);
+  for (let i = 0; i < n; i++) {
+    const g = lootRoll(r, 2);
+    out.push(g.key ? `  ${isLoot(g.key) ? 'loot' : 'gear'}: ${ITEMS[g.key].name}` : `  +${g.cr}cr`);
+  }
+  const opts = quest ? questCacheOptions(r) : cacheOptions(r, node);
+  out.push('  pick: ' + opts.map(o => o.kind === 'gear' ? ITEMS[o.key].name : MODS[o.key].name + (o.tier ? ` (tier ${o.tier + 1})` : '')).join(' or '));
+  return out;
+}
+// give.mod (the SUDO chip): its 3 mods, rolled once a run and kept till you take one
+function deckGiveOffer() {
+  const run = st.run;
+  if (!run || run.giveUsed) return [];
+  return run.giveOffer = run.giveOffer || pickMods(rngFor(run.seed, 'givemod'), modsFound('gen', 'minor'), 3);
+}
+// The player versions of dev commands (Greg, 2026-11-20: one command list; dev mode gets the dev version). engine/shell.js
+// puts each on its command as .play: without dev mode, THE SHELL runs this (its chip, cost, args, help) in its place.
+const DECK_SHELL_PLAY = {
+  'mode.god': { chip: 'GD1', safe: true, cost: 4, args: [], help: 'ICE does no damage for the rest of this sector', run: () => {
+    const run = shellNeedRun();
+    if (run.godSector === run.sector) throw new Error('already on, till this sector ends.');
+    run.godSector = run.sector; run.hacked = true;   // (engine/damage.js godOn)
+    return `mode.god: no damage till sector ${run.sector + 1} ends.`; } },
+  'mode.hold': { chip: 'HD4', safe: true, cost: 3, args: [], help: 'the layer clocks stop for the rest of this corp', run: () => {
+    shellNeedRun();
+    if (!st.corp || !st.corp.hasBoss) throw new Error('only in a corp.');
+    if (st.corp.held) throw new Error('already held.');
+    st.corp.held = true; st.run.hacked = true;   // (engine/run.js updateTimer)
+    return 'mode.hold: the clocks stop till you leave this corp.'; } },
+  'show.real': { chip: 'RL2', safe: true, cost: 2, args: [], help: 'the real node is marked on this layer (once a corp)', run: () => {
+    const lv = deckShellLayer();
+    if (st.corp.realShown) throw new Error('used: once a corp.');
+    st.corp.realShown = true; lv.realShown = true; st.run.hacked = true;   // (engine/board.js draws the *)
+    return 'show.real: the real node has a * on it.'; } },
+  'breach': { chip: 'BR3', safe: true, cost: 4, args: [], help: 'win this layer outright, full pay (once a run)', run: () => {
+    const run = shellNeedRun(), lv = deckShellLayer();
+    if (run.sudoBreach) throw new Error('used: once a run.');
+    if (!gearMayClear()) throw new Error("this corp won't let you.");
+    run.sudoBreach = true; run.hacked = true; shellClose();
+    setTimeout(() => { if (st.lv === lv && !st.busy) { setMsg('> breach. you are in.', C.accent); st.busy = true; onSafe(lv.tiles[lv.safe]); } }, 250);
+    return 'breach: you are in.'; } },
+  'give.mod': { chip: 'GM1', safe: true, cost: 3, args: [{ name: 'mod', of: () => deckGiveOffer().map(o => ({ v: o.key, hint: MODS[o.key].name })), opt: true }],
+    help: 'pick one of 3 mods (once a run): give.mod lists them, give.mod <mod> takes one', run: a => {
+      const run = shellNeedRun();
+      if (run.giveUsed) throw new Error('used: once a run.');
+      const offer = deckGiveOffer();
+      if (!offer.length) throw new Error('nothing to give.');
+      if (!a[0]) return { out: 'pick one: give.mod <mod>\n' + offer.map(o => `  ${o.key.padEnd(12)} ${MODS[o.key].name}${o.tier ? ` (tier ${o.tier + 1})` : ''}`).join('\n'), free: true };
+      const o = offer.find(x => x.key === a[0]);
+      if (!has(o.key) && !modRoom(o.key)) throw new Error('no free slot for it.');
+      addMod(o.key, o.tier); run.giveUsed = true; run.hacked = true; Sound.buy();
+      return `give.mod: ${MODS[o.key].name}.`; } },
+};
 
 // ---------- testing: the editor's TESTING tab (engine/editor.js TEST) and THE SHELL's deck commands (engine/shell.js)
 // both call these, so the two can't drift. Each returns a line to show, or throws why not.

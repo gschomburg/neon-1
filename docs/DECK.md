@@ -504,6 +504,11 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
     anyway; more choices don't help (Greg).
 
 ### SHELL (4): one command each
+**Built v15.03** (Greg, 2026-11-20: "all of them"): `cd ..` CD2, `scan` SN5, `rm` RM1, `kill -9` KL9, `cat` CT1, `sleep`
+ZZ3, `whois` WI5, `undo` UD2. Charges / cost: cd 2/2, scan 3/1, rm 2/2, kill 2/1, cat 3/1, sleep 2/1, whois 1/2,
+undo 1/3. Each is "hacked", not practice. `scan` here: the map already shows corps and anomalies, so it lists the
+corps ahead by row and lifts BLINDERS and FOG for the sector (the next sector's event, ALMANAC's idea, doesn't exist
+yet when you'd scan). `kill` takes `-9` so it can't go off by accident.
 - Commands work in THE SHELL while the chip is slotted. A run that used one is marked hacked on the leaderboard.
 - **`cd ..`:** go back a row on the map (BACKLOG section 1 had this as an exotic mod).
 - **`market`:** a small black market right where you are (section 1's "call a market").
@@ -626,6 +631,9 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
     market.
 
 ### SUDO (3, mk IV): the strong commands
+**Built v15.03:** `mode.god` GD1, `mode.hold` HD4, `show.real` RL2, `breach` BR3, `give.mod` GM1 (player versions;
+dev mode keeps the dev ones: docs/SHELL.md). A SUDO chip gives exactly one use of its own command in charges (Greg:
+"a powerful command but it only provides one use"): god 4, hold 3, real 2, breach 4, give 3; flatline went 1 -> 3.
 - **`mode.god`:** no damage for a sector, then it wears off.
 - **`run.seed`:** pick the seed of your next run.
 - **`flatline`:** a rival in this corp drops dead.
@@ -737,7 +745,7 @@ Greg: sockets that open earlier should sit higher on the board.
   the swap; cash out and it goes home (a YOUR DECK note), die and it's gone; the bench shreds it into its code's letters); 3, the first chip set (done, 22 chips: BOOT TRUST FUND, LOADOUT, BEAST MASTER, FRESH INSTALL; BIOS QUIET;
   CRASH DEADMAN, BLACK BOX; SPOILS the switch; PSU the 4 cells; OVERVOLT GREED, LUCK, FAME, SPIKE; SHELL whoami, ps;
   SUDO flatline; BOSS OMNI'S EYE; HEAT HARDCORE, TAXED. The chips slotted, open and powered as a run starts are on
-  for that run (run.chips; HARDCORE turns CRASH off). SHELL and SUDO chips teach a command in THE SHELL (~): safe, but
+  for that run (run.chips; HARDCORE turns CRASH off). SHELL and SUDO chips teach a command in THE SHELL (`): safe, but
   the run is marked hacked. GLYPH and the CREW jacks have no chips yet); 4, the show (done: a chip with power sends a burst of confetti and tech blobs, more the
   rarer, and a ring of light out across the board; no power drains the light into the socket, dims the board, fills it
   back, with red static; sounds chipIn (a chime by rarity), chipDead, fanUp (a cell), powerDown; the traces lean to the

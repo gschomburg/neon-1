@@ -2,7 +2,7 @@
 // (HIT_FX, BOARD_FX; corps add their boss mods' with defineModFx). Moved out of engine/run.js (2026-11-05).
 // Needs engine/run.js first (START_NOTE, END_FX: the last line here fills all four tables).
 'use strict';
-NEON_FILES.push(['engine/hits.js', 'v15.02']);
+NEON_FILES.push(['engine/hits.js', 'v15.03']);
 
 // Queue a line for after the hit (see onTrap): a mod saying what it just showed you.
 // fn(now) runs as the line shows (that's when the change appears on the node).
@@ -15,11 +15,11 @@ const callout = (key, text, fn) => (st.lv.callouts = st.lv.callouts || []).push(
 function blockHit(t, i) {
   const run = st.run, lv = st.lv;
   let msg;
-  if (zombie() && !st.god) {
+  if (zombie() && !godOn()) {
     addRot(ROT.ice * (t.black ? 2 : 1));   // (BLACK ICE: twice the rot)
     Sound.shatter(); shake(4);
     msg = run.integrity > 0 ? `> ICE broken. rot +${ROT.ice}.` : '> ICE broken. you fall apart.';
-  } else if (st.god) {
+  } else if (godOn()) {
     Sound.shield();
     msg = '> ICE. god mode: no damage.';
   } else if (hkUp('brick')) {   // BRICK (crew) takes it
@@ -124,6 +124,7 @@ function blockHit(t, i) {
       return msg;
     }
     run.integrity -= dmg;
+    if (dmg > 0) st.lastHit = { lv, dmg };   // THE SHELL's undo (engine/deck.js)
     Sound.trap();
     shake(9);
     flash(C.danger, 0.18, 0.35);

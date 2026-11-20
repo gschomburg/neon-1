@@ -14,6 +14,12 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **THE SHELL's new commands** (v15.03; docs/DECK.md SHELL / SUDO). ` opens THE SHELL now (~ / Ctrl + ` the old
+  dev menu, dev mode only; phones: `[ SHELL ]` in the pause menu). Try the chips (`give.chip CD2` etc. in dev mode, or
+  `deck.chips all`): `cd ..`, `scan`, `rm`, `kill -9`, `cat`, `sleep`, `whois`, `undo`; SUDO `mode.god` (a sector),
+  `mode.hold` (a corp), `show.real` (a layer), `breach` (once a run), `give.mod` (1 of 3, once a run). My calls:
+  `scan` lists the corps ahead and lifts BLINDERS / FOG (the map already shows corps and anomalies); `kill` needs
+  `-9`; SUDO chips give exactly one use in charges (flatline went 1 -> 3). All numbers are guesses.
 - [ ] **THE SHELL's charges** (v15.02; docs/SHELL.md "Charges"). Slot SHELL chips (with ROOT on your crew), start a run,
   press `~`: the charges show top right; the list shows each command's cost (`whoami ·1`); run out and it says so; a
   new sector fills them; a corp boss now and then offers a CHARGE (+2). ROOTKIT in CRASH: die with charges and you

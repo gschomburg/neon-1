@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v15.02']);
+NEON_FILES.push(['engine/input.js', 'v15.03']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -52,6 +52,7 @@ function pauseLines() {
   B(`[ corp colors: ${save.corpColors ? 'ON ' : 'OFF'} ]`, 'pccol', toggleCorpColors);
   B(`[ effects: ${save.effects === 'full' ? 'FULL   ' : 'REDUCED'} ]`, 'pfx', toggleEffects);
   B(`[ gear: ${save.tapMode === 'two' ? 'TAP TWICE' : 'TAP ONCE '} ]`, 'ptap', toggleTapMode);
+  if (save.deck || shellDev()) B('[ SHELL ]', 'pshell', () => { togglePause(); shellOpen(); });   // THE SHELL (engine/shell.js): how a phone opens it (a keyboard: `)
   audioLines(ln => lines.push(ln), 'p_');
   T('');
   B(st.abandonArmed ? '[ TAP AGAIN TO ABANDON ]' : '[ ABANDON RUN ]', 'abandon', abandonRun);
@@ -321,12 +322,12 @@ document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   const arrow = k.startsWith('arrow');
   if (arrow || k === ' ' || k === 'enter') e.preventDefault();
-  if (st.boot && e.key !== '`') { introKey(e.key.toLowerCase()); return; }   // the intro: Enter / Space start and skip, N / L pick
-  { const o = e.key !== '`' && overlayTop(); if (o) { e.preventDefault(); return o.key(k); } }   // the top overlay takes the key (OVERLAYS, engine/scene.js)
-  if (st.intro && e.key !== '`') { st.intro.skip = true; return; }   // any key skips a corp intro
-  if (st.bossIntro && e.key !== '`') { st.bossIntro.skip = true; return; }
-  if (st.g0dFake && !st.dev && e.key !== '`') return;   // H3AV3N's fake win: its rewards screen takes no keys either
-  if (e.key === '`') return toggleDev();
+  // (` and ~ never get here: THE SHELL and the old dev menu take them first, engine/shell.js)
+  if (st.boot) { introKey(e.key.toLowerCase()); return; }   // the intro: Enter / Space start and skip, N / L pick
+  { const o = overlayTop(); if (o) { e.preventDefault(); return o.key(k); } }   // the top overlay takes the key (OVERLAYS, engine/scene.js)
+  if (st.intro) { st.intro.skip = true; return; }   // any key skips a corp intro
+  if (st.bossIntro) { st.bossIntro.skip = true; return; }
+  if (st.g0dFake && !st.dev) return;   // H3AV3N's fake win: its rewards screen takes no keys either
   // TRAILER MODE (engine/dev.js): K flatlines you in a G0D fight, any time (the wake-up too), for the trailer's death
   if (k === 'k' && save.trailerMode && !st.dev && st.mode === 'g0df' && st.g0df && !st.g0df.card && st.run) {
     st.run.practice = true; st.run.integrity = 0;

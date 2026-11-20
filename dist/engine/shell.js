@@ -1,10 +1,10 @@
 // NeoN+1 engine/shell.js: THE SHELL, a dev console you type into (docs/SHELL.md).
 // Needs everything before it in index.html (it calls the game's functions); loads after engine/dev.js.
-// ~ (Shift + `) or Ctrl + ` opens and closes it; on a phone, the dev menu's [ shell ] button.
+// ` opens and closes it (~ or Ctrl + ` is the old dev menu, in dev mode); on a phone, the pause menu's [ SHELL ] row.
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.02']);
+NEON_FILES.push(['engine/shell.js', 'v15.03']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -167,8 +167,9 @@ const fixed = (...vs) => () => vs.map(v => Array.isArray(v) ? { v: v[0], hint: v
 // ---------- the commands ----------
 // { name, args: [{ name, of, opt }], help, run(a), safe }. of: a SHELL_OF key, a fixed() list, or 'n' (a number).
 // run gets the arguments, checked; it returns a line to print (or nothing: "ok") and can throw an Error, which
-// prints in red. Commands mark the run as practice unless safe: true. learn (docs/SHELL.md "The game part"):
-// none yet; for now every command is known in dev mode (?dev=1, the backtick menu, or the editor).
+// prints in red (and costs nothing). Commands mark the run as practice unless safe: true. Known: every command in dev mode
+// (dev.start, ?dev=1, the editor); otherwise a chip's command (engine/deck.js), once ROOT is on your crew. A command can
+// have a player version (.play, from engine/deck.js DECK_SHELL_PLAY) that runs in its place outside dev mode.
 // A string in the list starts a group (the editor's shell tab, tools/editor/shell.js, lists them by group).
 const shellGroups = list => { let g = ''; return list.filter(c => typeof c === 'string' ? (g = c, false) : (c.group = g, true)); };
 const SHELL_CMDS = shellGroups([
@@ -364,6 +365,9 @@ const SHELL_CMDS = shellGroups([
   { name: 'deck.upshow', help: "the mk upgrade's fanfare (on your open deck)", safe: true, run: () => { shellClose(); return DECK_TEST.upshow(); } },
 ]);
 const SHELL_BY = Object.fromEntries(SHELL_CMDS.map(c => [c.name, c]));
+// The player versions of dev commands (engine/deck.js DECK_SHELL_PLAY): out of dev mode, a command runs its .play.
+for (const [name, p] of Object.entries(DECK_SHELL_PLAY)) if (SHELL_BY[name]) SHELL_BY[name].play = p;
+const shellVer = c => c && c.play && !shellDev() ? Object.assign({}, c, c.play) : c;
 for (const c of SHELL_CMDS) for (const al of c.alias || []) SHELL_BY[al] = c;
 
 // What you know. Step 1: everything in dev mode, nothing otherwise (the shell's own commands always work,
@@ -372,14 +376,15 @@ const shellDev = () => !!(st.devAccess || EDITOR);
 // THE SHELL is ROOT's (Greg, 2026-11-20): a chip's command works once ROOT is on your crew (ROOT's quest, PAPERWORK:
 // engine/quests.js). Before that the shell only says "paperwork pending." Dev access knows everything.
 const shellRooted = () => typeof rootOn === 'function' && rootOn();
-const shellKnows = c => !!c && (shellDev() || (!!c.chip && chipOn(c.chip) && shellRooted()));   // (a chip in your deck teaches its command: engine/deck.js)
+const shellChip = c => c.chip || (c.play && c.play.chip);
+const shellKnows = c => !!c && (shellDev() || (!!shellChip(c) && chipOn(shellChip(c)) && shellRooted()));   // (a chip in your deck teaches its command: engine/deck.js)
 // What a command costs from THE SHELL's charges (engine/deck.js "THE SHELL's charges"): its cost; nothing in dev mode.
 const shellCost = c => shellDev() ? 0 : c.cost || 0;
 const shellUsage = c => [c.name, ...(c.args || []).map(x => x.opt ? `[${x.name}]` : `<${x.name}>`)].join(' ');
 function shellHelp(name) {
-  if (name) { const c = SHELL_BY[name]; if (!c || !(shellKnows(c) || c.always)) throw new Error(`not a command: ${name}`); return `${shellUsage(c)}\n  ${c.help}`; }
+  if (name) { const c = shellVer(SHELL_BY[name]); if (!c || !(shellKnows(c) || c.always)) throw new Error(`not a command: ${name}`); return `${shellUsage(c)}\n  ${c.help}`; }
   // what you know (with its cost in charges), then the free ones (Greg, 2026-11-20: free, no chip, not hacked)
-  const known = SHELL_CMDS.filter(shellKnows), free = 'free: ' + SHELL_CMDS.filter(c => c.always).map(c => c.name).join(' ');
+  const known = SHELL_CMDS.filter(shellKnows).map(shellVer), free = 'free: ' + SHELL_CMDS.filter(c => c.always).map(c => c.name).join(' ');
   if (!known.length) return 'no commands known.\n' + free;
   return known.map(c => (shellUsage(c) + (shellCost(c) ? ' ·' + shellCost(c) : '')).padEnd(28) + ' ' + c.help).join('\n') + (shellDev() ? '' : '\n' + free);
 }
@@ -392,8 +397,8 @@ function shellParse(line) {
   if (!words.length) return null;
   const find = w => SHELL_BY[w.toLowerCase()] || SHELL_CMDS.find(c => norm(c.name) === norm(w));
   let cmd = find(words[0]), used = 1;
-  if (words.length > 1) { const two = find(words[0] + words[1]); if (two) { cmd = two; used = 2; } }   // (show ad = show.ad, not show <ad>)
-  return { cmd, word: words[0], args: words.slice(used) };
+  if (words.length > 1) { const two = find(words[0] + words[1]); if (two && two !== cmd) { cmd = two; used = 2; } }   // (show ad = show.ad, not show <ad>; cd .. is cd with ..)
+  return { cmd: shellVer(cmd), word: words[0], args: words.slice(used) };
 }
 const shellItems = of => typeof of === 'function' ? of() : SHELL_OF[of] ? SHELL_OF[of]() : null;
 // An argument as typed: a number, a free word, or one from its list (by its code or its name).
@@ -439,8 +444,9 @@ async function shellRun(line) {
     const cost = shellCost(c), have = st.run ? st.run.charges || 0 : 0;
     if (cost && have < cost) throw new Error(`not enough charges: ${c.name} costs ${cost}, you have ${have}.`);
     SHELL.busy = true; shellDraw();
-    const r = await c.run(vals);
-    if (cost && st.run) st.run.charges = Math.max(0, (st.run.charges || 0) - cost);   // (spent once it worked)
+    let r = await c.run(vals);
+    const free = !!(r && typeof r === 'object' && r.free); if (r && typeof r === 'object') r = r.out;   // ({ out, free }: give.mod's list costs nothing)
+    if (cost && st.run && !free) st.run.charges = Math.max(0, (st.run.charges || 0) - cost);   // (spent once it worked)
     if (st.shell) shellOut(typeof r === 'string' ? r : 'ok', typeof r === 'string' ? 'out' : 'dim');
   } catch (err) {
     shellOut(String((err && err.message) || err), 'err');
@@ -451,7 +457,7 @@ async function shellRun(line) {
 // The list under what you're typing: commands, then (once a command is typed) its arguments.
 function shellSuggest() {
   const inp = SHELL.input, text = inp.value.slice(0, inp.selectionStart == null ? inp.value.length : inp.selectionStart);
-  const known = SHELL_CMDS.filter(shellKnows);
+  const known = SHELL_CMDS.filter(shellKnows).map(shellVer);
   if (!known.length) return text.trim() || shellTouch() ? [{ none: 'no commands known' }] : [];
   const parts = text.replace(/^\s+/, '').split(/\s+/), last = parts[parts.length - 1];
   const p = parts.length > 1 ? shellParse(parts.slice(0, -1).join(' ')) : null, c = p && p.cmd;
@@ -507,7 +513,7 @@ function shellRefresh() {
 function shellKey(e) {
   const k = e.key;
   e.stopPropagation();   // the game never sees the shell's keys
-  if (k === '~' || (k === '`' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); return shellClose(); }
+  if (k === '`' || k === '~') { e.preventDefault(); shellClose(); if (shellMenuKey(e)) shellMenu(); return; }   // (` closes; ~ / Ctrl + `: the old dev menu)
   const listOn = SHELL.list.length && SHELL.sel >= 0;
   if (k === 'ArrowDown' || k === 'ArrowUp') {
     e.preventDefault();
@@ -633,7 +639,7 @@ function shellDraw() {
   if (SHELL.busy) log.appendChild(span('d', '...'));
   // THE SHELL's charges, top right (Greg, 2026-11-20): a bar and n / max; dev mode has none
   const run = st.run, max = run ? run.chargeMax || 0 : 0, n = run ? Math.min(max, run.charges || 0) : 0;
-  SHELL.chEl.textContent = shellDev() ? 'dev: no limits' : !shellRooted() || !run ? '' : `charges [${'#'.repeat(Math.min(n, 12))}${'.'.repeat(Math.max(0, Math.min(max, 12) - Math.min(n, 12)))}] ${n}/${max}`;
+  SHELL.chEl.textContent = shellDev() ? 'dev: no limits' : !shellRooted() || !run ? '' : max > 8 ? `charges [${'#'.repeat(Math.round(8 * n / max))}${'.'.repeat(8 - Math.round(8 * n / max))}] ${n}/${max}` : `charges [${'#'.repeat(n)}${'.'.repeat(Math.max(0, max - n))}] ${n}/${max}`;   // (over 8: the bar is a share of 8)
   log.scrollTop = log.scrollHeight;
   const list = SHELL.listEl;
   list.textContent = '';
@@ -647,7 +653,7 @@ function shellDraw() {
     else {
       r.appendChild(span(it.arg ? 'a' : 'c', it.v));
       if (it.sig) r.appendChild(span('d', it.sig));
-      const cc = !it.arg && SHELL_BY[it.v] ? shellCost(SHELL_BY[it.v]) : 0; if (cc) r.appendChild(span('a', '  ·' + cc));   // its cost in charges
+      const cc = !it.arg && SHELL_BY[it.v] ? shellCost(shellVer(SHELL_BY[it.v])) : 0; if (cc) r.appendChild(span('a', '  ·' + cc));   // its cost in charges
       if (it.hint) r.appendChild(span('d', '  ' + it.hint));
     }
     list.appendChild(r);
@@ -673,6 +679,7 @@ function shellOpen() {
 function shellClose() {
   if (!st.shell) return;
   st.shell = false;
+  if (st.lv && st.lv.sleepArm) { st.lv.sleepArm = false; st.lv.holdUntil = Math.max(st.lv.holdUntil || 0, performance.now() + 5000); }   // sleep (engine/deck.js): 5s from now
   if (SHELL.input) SHELL.input.blur();
   if (SHELL.el) SHELL.el.hidden = true;
   st.boardStart = performance.now();
@@ -680,9 +687,17 @@ function shellClose() {
 }
 const shellToggle = () => st.shell ? shellClose() : shellOpen();
 
-// ~ (Shift + `) or Ctrl + `, before the game's own keys (plain ` stays the old dev menu: engine/input.js).
+// ` opens and closes THE SHELL, any time (Greg, 2026-11-20). ~ (Shift + `) or Ctrl + ` is the old dev menu (engine/dev.js), and
+// only once dev mode is on (dev.start, ?dev=1, the editor): opening it turns dev mode on, so players can't get in that way.
+// Before the game's own keys (engine/input.js).
+const shellMenuKey = e => e.key === '~' || (e.key === '`' && (e.ctrlKey || e.metaKey));
+function shellMenu() { if (shellDev() || st.dev) toggleDev(); }
 window.addEventListener('keydown', e => {
-  const open = e.key === '~' || (e.key === '`' && (e.ctrlKey || e.metaKey));
-  if (open) { e.preventDefault(); e.stopPropagation(); shellToggle(); return; }
+  if (e.key === '`' || e.key === '~') {
+    e.preventDefault(); e.stopPropagation();
+    if (shellMenuKey(e)) { if (st.shell) shellClose(); return shellMenu(); }
+    if (st.dev) toggleDev();
+    return shellToggle();
+  }
   if (st.shell && SHELL.input && document.activeElement !== SHELL.input && e.key.length === 1 && !e.ctrlKey && !e.metaKey) SHELL.input.focus();   // typing goes to the prompt
 }, true);

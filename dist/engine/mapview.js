@@ -1,7 +1,7 @@
 // NeoN+1 engine/mapview.js: the run's map (buildMap), the results screen's map (drawMapView), and a node's info.
 // Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/mapview.js', 'v15.02']);
+NEON_FILES.push(['engine/mapview.js', 'v15.03']);
 
 // Map: final node at the top, start at the bottom. Edges are dotted lines.
 // x for a node; start / final nodes sit in the middle lane.
@@ -145,7 +145,7 @@ function buildMap(ctx) {
       for (const d of linkDots(pos(a), pos(b))) if (shown(d.row) && !xs.some(x => Math.abs(d.x - x) <= 2)) put(d.x, yOf(d.row), '=', done ? C.accent : C.mid, 'map');
     }
   }
-  const fogStep = chipOn('FG0') && map[run.at] ? map[run.at].step + 1 : Infinity;   // FOG (a chip: engine/deck.js): only the next row shows
+  const fogStep = chipOn('FG0') && run.scanned !== run.sector && map[run.at] ? map[run.at].step + 1 : Infinity;   // FOG (a chip: engine/deck.js): only the next row shows
   for (const n of nodes) {
     const p = pos(n);
     if (!shown(p.row)) continue;

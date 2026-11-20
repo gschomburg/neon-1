@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v15.02']);
+NEON_FILES.push(['engine/render.js', 'v15.03']);
 
 // ---------------- Popup looks (the user, 2026-10-31) ----------------
 // Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
@@ -146,6 +146,7 @@ function availableNodes(noCar = false) {   // (noCar: without the C.A.R.: the mo
   if (run.mesh === run.sector) for (const n of Object.values(run.map)) if (n.step === cur.step + 1 && (n.sector || 0) === run.sector) out.add(n.id);
   if (run.mesh === run.sector) for (const n of meshSides()) out.add(n.id);   // the row under the boss: the nodes beside you too
   if (run.warpAim) for (const n of warpTargets()) out.add(n.id);
+  if (run.backAim) for (const n of backTargets()) out.add(n.id);   // cd .. (THE SHELL)
   if (!noCar && carOn()) for (const n of carTargets()) out.add(n.id);   // the C.A.R. (MONTY's): until it's used this sector   // (anywhere you haven't been, behind you too)
   if (run.skipAim) for (const n of skipTargets()) out.add(n.id);   // SKIP: two rows ahead
   if (wiresOpen()) for (const n of Object.values(run.map)) if ((n.sector || 0) === (run.sector || 0) && n.id !== run.at) out.add(n.id);   // BOX OF WIRES

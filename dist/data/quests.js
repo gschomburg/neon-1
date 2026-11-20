@@ -23,7 +23,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v15.02']);
+NEON_FILES.push(['data/quests.js', 'v15.03']);
 
 const QUEST_INFO = {
   pops: {
@@ -54,7 +54,7 @@ const QUEST_INFO = {
       { key: 'bench', name: 'A WORKBENCH', goal: "something lives in your deck's SHELL sockets. its paperwork is a mess. get a WORKBENCH: it's a post on THE BOARD's REP tab." },
       { key: 'letters', name: 'THE FINE PRINT', letters: true, goal: 'shred things at a safehouse WORKBENCH. some of what comes out is lowercase: r, o, o, t. corrupted software always gives one.' },
       { key: 'spell', name: 'SIGN HERE', letters: true, scene: 'paperwork', crew: 'root', goal: 'you have the letters. spell r o o t at a WORKBENCH. (a * fills in for one.)' },
-      { key: 'done', name: 'MOVED IN', goal: 'ROOT is on your crew. THE SHELL is open: press ~ (or tap [ shell ] in the menu).' },
+      { key: 'done', name: 'MOVED IN', goal: 'ROOT is on your crew. THE SHELL is open: press ` (or tap [ SHELL ] in the pause menu).' },
     ],
   },
 };
@@ -104,7 +104,7 @@ const QUEST_LINES = {
   // all four letters: the step after
   rootAll: ['r o o t. all of it.', 'spell it at the bench and see who answers.'],
   // ROOT joins (after the scene): its first call
-  rootJoined: ['root@deck:~# whoami', 'ROOT. i live here now. it was always going to go this way.', 'THE SHELL is open: press ~. type help.',
+  rootJoined: ['root@deck:~# whoami', 'ROOT. i live here now. it was always going to go this way.', 'THE SHELL is open: press `. type help.',
     'here. a chip. slot it in a SHELL socket and THE SHELL learns man.'],
   // THE SHELL, opened for the first time after ROOT joins (engine/shell.js)
   rootShellHi: ['ROOT: oh. you found the door.', 'ROOT: help lists what you know. you know very little.'],
@@ -318,6 +318,6 @@ const QUEST_SCENES = {
     { who: 'root', text: "section 4.2: the tenant gets the shell. the shell was always the tenant's. you signed. technically." },
     { who: 'root', text: "that PH1SH has been trying to evict me for weeks. he's not a pest control company. he's a pest." },
     { text: 'something on the bench clicks into place. a prompt blinks: root@neon:~$', mood: { levels: [1, 2], stages: 'AB' } },
-    { who: 'root', text: "i'm on your crew now. you're welcome. press ~ and we'll talk." },
+    { who: 'root', text: "i'm on your crew now. you're welcome. press ` and we'll talk." },
   ],
 };

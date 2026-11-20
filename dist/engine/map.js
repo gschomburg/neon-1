@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v15.02']);
+NEON_FILES.push(['engine/map.js', 'v15.03']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -253,6 +253,6 @@ function addSector(nodes, seed, s, force = null) {
 const mapTop = map => Math.max(...Object.values(map).map(n => n.step));
 // What a node shows on the map, 3 cells: [$] [?] [+] for stops, a corp's code (SK1) for corps.
 // BLINDERS: the corp is hidden (its level shows) until you've been in.
-const blinded = n => n.mod === 'blinders' && !(st.run && st.run.visited.includes(n.id));
+const blinded = n => n.mod === 'blinders' && !(st.run && (st.run.visited.includes(n.id) || st.run.scanned === (n.sector || 0)));   // (scanned: THE SHELL's scan)
 const nodeLabel = n => n.type === 'shop' ? '[$]' : n.type === 'cache' ? '[?]' : n.type === 'repair' ? '[+]' : n.type === 'pier' ? '[~]' : n.type === 'fence' ? '[&]'
   : blinded(n) ? (n.type === 'final' ? '???' : '??' + (corpDef(n.corp).level || 1)) : corpCode(corpDef(n.corp));

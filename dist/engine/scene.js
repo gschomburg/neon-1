@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v15.02']);
+NEON_FILES.push(['engine/scene.js', 'v15.03']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -91,7 +91,7 @@ function buildScene(now, collectHits, raw = false) {
       if (st.hoverBtn === 'info') bg(x0, y, versionTag.length, C.accent, 0.2);
       addHit(x0, y, versionTag.length, 1, { kind: 'btn', id: 'info', onTap: () => swapTo(openInfo), noFocus: true });
     }
-    if (st.devAccess || st.dev) {   // ?dev=1 in the URL, or the backtick key (until a refresh)
+    if (st.devAccess || st.dev) {   // ?dev=1 in the URL, or dev.start in THE SHELL (until a refresh)
       const label = '[DEV]', x = L.wc - versionTag.length - label.length - 2;
       put(x, y, label, st.dev ? C.accent : C.mid, 'ui');
       if (st.hoverBtn === 'dev') bg(x, y, label.length, C.accent, 0.2);

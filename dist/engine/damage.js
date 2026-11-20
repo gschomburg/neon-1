@@ -1,8 +1,10 @@
 // NeoN+1 engine/damage.js: damage and healing (hurt, heal, ZOMBIE rot, BLOOD MONEY), and the exotic pick rules
 // that change them: ICE EATER, COIN FLIP, SNOOZE, ALL-IN, FAILSAFE, BLACK ICE. Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/damage.js', 'v15.02']);
+NEON_FILES.push(['engine/damage.js', 'v15.03']);
 
+// No damage: the dev's god mode (st.god), or THE SHELL's mode.god (a SUDO chip, engine/deck.js): the rest of a sector.
+const godOn = () => !!st.god || !!(st.run && !st.run.ended && st.run.godSector === st.run.sector);
 // ---- Damage and healing outside an ICE hit go through these, so ZOMBIE can turn them into rot.
 // hurt: n integrity (ZOMBIE: rot instead). heal: up to n integrity (ZOMBIE: less rot).
 function hurt(n) {
@@ -65,7 +67,7 @@ async function eaterBit(t) {
   Sound.trap(); shake(14, 0.6); flash(C.danger, 0.3, 0.5);
   modFired('iceeater');
   setMsg(`> that was the real one. -${EATER_BITE}.`, C.danger);
-  if (st.god) { /* dev: no death */ }
+  if (godOn()) { /* dev: no death */ }
   else if (zombie()) addRot(ROT.realTap);
   else if (has('failsafe') && !run.failsafeUsed && !bloodMoney() && run.integrity <= EATER_BITE) { run.failsafeUsed = true; run.integrity = 1; st.fsAt = performance.now(); lv.failsafeNow = true; }
   else hurt(EATER_BITE);

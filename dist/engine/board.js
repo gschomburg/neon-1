@@ -1,7 +1,7 @@
 // NeoN+1 engine/board.js: the layer's board (buildBoard) and COIN FLIP's coin box and multiplier pop.
 // Moved out of engine/scene.js (2026-11-05). buildScene (engine/scene.js) calls buildBoard each frame.
 'use strict';
-NEON_FILES.push(['engine/board.js', 'v15.02']);
+NEON_FILES.push(['engine/board.js', 'v15.03']);
 
 function buildBoard({ now, put, addHit, bg, cells }) {
   const lv = st.lv;
@@ -217,7 +217,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     if (kern) put(ox + 1 + kern.px / L.cw, oy + 1 + kern.ln + kern.py / L.chh, t.glyph[kern.ln], gc, own, bold);
     if (over) for (const o of over) put(ox + o.dx, oy + o.dy, o.ch, o.col || gc, 'fx');
     if (corner) put(ox + TILE_W - 1, oy, corner.corner, corner.cornerCol || gc, own, true);
-    if (st.debug && t.safe && t.state === 'closed') put(tx + TILE_W - 1, ty, '*', C.accent, own);
+    if ((st.debug || lv.realShown) && t.safe && t.state === 'closed') put(tx + TILE_W - 1, ty, '*', C.accent, own);   // (realShown: THE SHELL's show.real)
     if (st.kbGrid && i === st.hover && !st.busy && Math.floor(now / 280) % 2) {
       for (const [cx, cy] of [[tx, ty], [tx + TILE_W - 1, ty], [tx, ty + TILE_H - 1], [tx + TILE_W - 1, ty + TILE_H - 1]]) put(cx, cy, '#', C.accent, own, true);
     }

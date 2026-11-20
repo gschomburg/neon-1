@@ -75,7 +75,7 @@ module.exports = { name: 'shell', body: `
   const tr = SHELL.el.getBoundingClientRect();
   check(Math.abs(tr.left - L.ox) < 2 && Math.abs(tr.width - L.wc * L.cw) < 2, 'the shell sits over the game: ' + tr.left + '+' + tr.width + ' vs ' + L.ox + '+' + (L.wc * L.cw));
 
-  // ~ closes it, and the clocks run again
-  window.dispatchEvent(new KeyboardEvent('keydown', { key: '~', bubbles: true }));
-  check(!st.shell && SHELL.el.hidden, '~ closes it');
+  // backtick closes it, and the clocks run again (v15.03: backtick is THE SHELL; ~ is the old dev menu)
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: '\`', bubbles: true }));
+  check(!st.shell && SHELL.el.hidden, 'backtick closes it');
 ` };

@@ -48,9 +48,11 @@ All ASCII, mobile first, plain HTML/JS, no build step.
 Open `dist/index.html` in a browser. That's it: no build step, no server. It works straight from disk (file://).
 
 - `?seed=WORD` plays a fixed seed, ranked on the seed boards like a seed typed in game ([SHARE] on the title and the results copies this link). A corp's name as the seed (`?seed=NOIR`) makes every node that corp.
-- The backtick key opens the dev menu (`?dev=1` adds a [DEV] button to the footer). Its TRAILER MODE and the
-  H3AV3N jumps were made for recording the trailer.
-- `~` (or Ctrl + backtick) opens THE SHELL, the dev console: type `help`. Its commands are in `docs/SHELL.md`.
+- The backtick key opens THE SHELL, any time: type `help`. In a run, its commands come from your deck's SHELL and SUDO
+  chips, once ROOT is on your crew. Typing `dev.start` in it turns on dev mode (every command, free; the run is
+  practice). Its commands are in `docs/SHELL.md`. On a phone: `[ SHELL ]` in the pause menu.
+- `~` (Shift + backtick) or Ctrl + backtick opens the old dev menu, in dev mode only (`dev.start`, or `?dev=1`, which
+  also adds a [DEV] button to the footer). Its TRAILER MODE and the H3AV3N jumps were made for recording the trailer.
 - Multiplayer (2-6 players, over Firebase): `[ MULTIPLAYER ]` on the title screen.
 
 The tools in `tools/` are Node scripts or HTML pages. Each script prints its usage with `--help`:

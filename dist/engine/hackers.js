@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v15.02']);
+NEON_FILES.push(['engine/hackers.js', 'v15.03']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -475,7 +475,7 @@ function hkDenied(t) { if (t.denied && t.denied > performance.now()) { Sound.den
 // MOTHER: at your last integrity, a tap on ICE is stopped (it costs her a bar).
 function hkStopTap(t) {
   const m = hkUp('mother');
-  if (!m || isReal(t) || st.god || zombie() || st.run.integrity > 1) return false;
+  if (!m || isReal(t) || godOn() || zombie() || st.run.integrity > 1) return false;
   hkSay(m, 'no, dear.'); hkHurt(m); Sound.shield();
   return true;
 }

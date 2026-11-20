@@ -248,7 +248,7 @@ From ROOT.
 1. **A WORKBENCH**: something lives in your deck's SHELL sockets. its paperwork is a mess. get a WORKBENCH: it's a post on THE BOARD's REP tab.
 2. **THE FINE PRINT**: shred things at a safehouse WORKBENCH. some of what comes out is lowercase: r, o, o, t. corrupted software always gives one.
 3. **SIGN HERE**: you have the letters. spell r o o t at a WORKBENCH. (a * fills in for one.)
-4. **MOVED IN**: ROOT is on your crew. THE SHELL is open: press ~ (or tap [ shell ] in the menu).
+4. **MOVED IN**: ROOT is on your crew. THE SHELL is open: press ` (or tap [ SHELL ] in the pause menu).
 
 ### Calls
 
@@ -290,7 +290,7 @@ From ROOT.
 
 > **ROOT:** root@deck:~# whoami  
 > **ROOT:** ROOT. i live here now. it was always going to go this way.  
-> **ROOT:** THE SHELL is open: press ~. type help.  
+> **ROOT:** THE SHELL is open: press `. type help.  
 > **ROOT:** here. a chip. slot it in a SHELL socket and THE SHELL learns man.  
 
 **rootShellHi**: THE SHELL, the first time you open it after ROOT joins.
@@ -316,7 +316,7 @@ From ROOT.
 
 *something on the bench clicks into place. a prompt blinks: root@neon:~$*
 
-**ROOT:** i'm on your crew now. you're welcome. press ~ and we'll talk.
+**ROOT:** i'm on your crew now. you're welcome. press ` and we'll talk.
 
 ### PH1SH's spam ads
 

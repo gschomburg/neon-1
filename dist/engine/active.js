@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v15.02']);
+NEON_FILES.push(['engine/active.js', 'v15.03']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -275,6 +275,12 @@ function meshSides() {
   const row = rowMates().filter(n => (n.sector || 0) === run.sector), x = mapX(cur);
   const l = row.filter(n => mapX(n) < x).sort((a, b) => mapX(b) - mapX(a))[0], r = row.filter(n => mapX(n) > x).sort((a, b) => mapX(a) - mapX(b))[0];
   return [l, r].filter(Boolean);
+}
+// cd .. (THE SHELL, a SHELL chip: engine/deck.js): the row behind you, the nodes you skipped (this sector)
+function backTargets() {
+  const run = st.run, cur = run.at && run.map[run.at];
+  if (!cur) return [];
+  return Object.values(run.map).filter(n => n.step === cur.step - 1 && (n.sector || 0) === (run.sector || 0) && n.type !== 'start' && !run.visited.includes(n.id));
 }
 function rowMates() {
   const run = st.run, cur = run.map[run.at];

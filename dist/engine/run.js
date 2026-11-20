@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.02']);
+NEON_FILES.push(['engine/run.js', 'v15.03']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -145,7 +145,7 @@ async function enterNode(node, warp = false) {
   const run = st.run;
   if (!warp && carOn() && !availableNodes(true).includes(node.id)) { run.carUsed = run.sector; modFired('car'); Sound.whoosh(); setMsg('> C.A.R.: complete assisted route. vroom.', C.accent); }   // off the links: that's the drive for this sector
   { const cur = run.at && run.map[run.at]; if (run.tunnel && cur && cur.step === node.step) (run.dug = run.dug || []).push([cur.id, node.id]); }   // TUNNEL: the dug path stays on the map (engine/mapview.js)
-  run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false;   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)
+  run.tunnel = false; run.warpAim = false; run.skipAim = false; run.wormAim = false; run.backAim = false;   // (backAim: THE SHELL's cd ..)   // TUNNEL, aimed WARP, SKIP: this was the move (an armed WORM just turns off: it isn't spent)
   stimDown();   // STIM wears off once you leave its corp
   await wipeOut(0);
   run.at = node.id;
@@ -530,7 +530,7 @@ function lockTile(t, col, source = 'purge') {
 
 function updateTimer(dt) {
   const tm = st.timer;
-  if (!tm || st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.shell || st.pause || st.editorHold) return;   // the shell is open; mode.hold / the editor's TESTING tab (stop clocks) holds them still
+  if (!tm || st.mode !== 'play' || st.busy || st.transitioning || st.dev || st.shell || st.pause || st.editorHold || (st.corp && st.corp.held)) return;   // the shell is open; mode.hold / the editor's TESTING tab (stop clocks) holds them still
   if (st.lv && st.lv.holdUntil && performance.now() < st.lv.holdUntil) return;   // ESPRESSO, FREEZE FRAME
   tm.left -= dt * ((st.lv && st.lv.clockRate) || 1);   // TIMEWARP
   const sec = Math.ceil(tm.left);

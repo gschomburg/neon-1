@@ -1,10 +1,10 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v15.02']);
+NEON_FILES.push(['engine/dev.js', 'v15.03']);
 
 // ---------------- Dev menu ----------------
-// Open with ` (backtick), or the [DEV] button in the footer when the URL has ?dev=1. THE SHELL (~ or Ctrl + `,
-// engine/shell.js) does all this too, by typing.
+// Open with ~ (Shift + `) or Ctrl + `, once dev mode is on (dev.start in THE SHELL, ?dev=1, the editor), or the [DEV]
+// button in the footer. THE SHELL (`, engine/shell.js) does all this too, by typing.
 // Using cheats on a run marks it as practice, so it doesn't count.
 function toggleDev() {
   if (st.transitioning || st.wipe) return;

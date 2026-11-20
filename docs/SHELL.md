@@ -23,8 +23,11 @@ Grows BACKLOG section 10 ("The dev menu as a one-line terminal", "More on the te
 
 ## Opening it
 
-- **`~`** (Shift + `) or **Ctrl + `** opens and closes it. Plain **`** keeps opening the old dev menu until the shell
-  covers everything; then the old menu goes (Greg, 2026-11-11: "maybe we ditch it once we complete this").
+- **`** (backtick) opens and closes it, any time. **Decided (Greg, 2026-11-20); built v15.03.** Was `~` / Ctrl + `.
+- **`~`** (Shift + `) or **Ctrl + `** opens the old dev menu, and only in dev mode (`dev.start`, `?dev=1`, the
+  editor): the menu turns dev mode on, so players can't get in that way. **Decided (Greg, 2026-11-20):** the old menu
+  stays, on these keys (was: "maybe we ditch it once we complete this", 2026-11-11).
+- **Phones:** `[ SHELL ]` in the pause menu, once you have a deck (Greg, 2026-11-20; built v15.03).
 - While it's open it takes every key (the game's keys don't fire), and the layer clocks, the eater, G0D.exe and the
   G0D fight hold still (`st.shell`). Taps on the game above it still work.
 - **Phones:** see below.
@@ -157,7 +160,12 @@ mark the run hacked. `help` lists them. **Decided (Greg, 2026-11-20):** in place
 `?dev=1`) and makes the run practice; no costs. Not built yet: separate player and dev versions of one command.
 - Players and dev mode share one command list. Typing `dev.start` (never autocompleted) turns dev mode on: every
   autocomplete, unlimited charges, the dev-only commands (`rep`, `progress.wipe`, quests, fx...), and each shared
-  command's dev version (`mode.god` is a free on / off, not a sector for 3 charges).
+  command's dev version (`mode.god` is a free on / off, not a sector for 4 charges).
+- **Built v15.03:** a command can carry a player version (`.play`, from engine/deck.js `DECK_SHELL_PLAY`): its chip,
+  cost, arguments and help. Outside dev mode THE SHELL runs that in its place. The shared ones: `mode.god` (no damage
+  for the rest of the sector), `mode.hold` (no layer clocks for the rest of the corp), `show.real` (the real node marked
+  on this layer, once a corp), `breach` (win this layer, full pay, once a run: the dev one breaches a corp you name),
+  `give.mod` (pick one of 3, once a run: `give.mod` lists them for free, `give.mod <mod>` takes one).
 - Each command has a player version, a dev version, or both.
 - Players will find `dev.start` (the game's JS is open). That's fine: dev runs are practice (no REP, no leaderboard),
   like the old dev menu's cheats. Maybe hide it somewhere as a secret worth finding.
@@ -192,9 +200,10 @@ Older ideas, not decided (BACKLOG section 10, Greg 2026-11-08 and 2026-11-11):
    The editor's TESTING tab calls `shellSettle`, `shellFreshRun`, `shellOnMap`, `shellToSector`, `shellHad3sBoss`,
    `shellB0yOmni`, `shellBench`, `shellLetters`, `shellHeaven` and `shellKit`.
 3. **The game part.** Designed 2026-11-20 (above). Built in batches: ROOT's quest first (docs/CREW_QUESTS.md), then
-   charges, the free commands and `dev.start`. **ROOT's quest: built v15.01.** Next: charges, the free commands,
-   `dev.start`.
-4. **The old dev menu goes** once nothing needs it.
+   charges, the free commands and `dev.start`. **ROOT's quest: built v15.01. Charges, free commands, `dev.start`:
+   v15.02. The SHELL and SUDO chips' commands, and player versions of dev commands: v15.03.**
+4. ~~The old dev menu goes once nothing needs it.~~ Dropped (Greg, 2026-11-20) because it's still handy: it stays on
+   ~ / Ctrl + `, in dev mode only, and ` is THE SHELL. **Built v15.03.**
 
 ## Decided
 
@@ -204,7 +213,7 @@ Older ideas, not decided (BACKLOG section 10, Greg 2026-11-08 and 2026-11-11):
 
 - **Decided (Greg, 2026-11-11): you can open it before you know anything.** With nothing learned there are no
   autocompletes; the list shows a short message instead (e.g. `no commands known`). Built: for now "known" means dev
-  access (`?dev=1`, the backtick menu, or the editor); without it, `help` says `no commands known.` and only `help`,
+  access (`?dev=1`, `dev.start`, or the editor); without it, `help` says `no commands known.` and only `help`,
   `clear`, `history` and `exit` answer.
 - **Decided (Greg, 2026-11-11): its own look, outside the palettes.** A black field with white text, like a generic
   shell. Some colour highlighting picks out commands and objects (mod names, corps). The corp palettes don't touch it.
