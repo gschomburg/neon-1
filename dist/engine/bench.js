@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.01']);
+NEON_FILES.push(['engine/bench.js', 'v15.02']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -40,7 +40,7 @@ function benchRecipes() {
   if (BENCH_RECIPES) return BENCH_RECIPES;
   const r = {};
   for (const [key, it] of Object.entries(ITEMS)) {
-    if (it.value || it.quest || it.bag || it.fish || it.hunt || it.chip || key.startsWith('call')) continue;   // (chip: your deck's, engine/deck.js)   // (hunt: HAD3S gear, not built at the bench yet)
+    if (it.value || it.quest || it.bag || it.fish || it.hunt || it.chip || it.noBench || key.startsWith('call')) continue;   // (chip: your deck's, engine/deck.js)   // (hunt: HAD3S gear, not built at the bench yet)
     const code = itemShort(key);
     if (code.length === 3 && !r[code]) r[code] = { kind: 'gear', key, code };
   }

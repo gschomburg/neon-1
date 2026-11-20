@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.01']);
+NEON_FILES.push(['engine/panels.js', 'v15.02']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -592,6 +592,7 @@ function rewardOptions(node) {
   const calls = callReward(rngFor(run.seed, 'callreward', node.id));
   if (calls && !options.some(o => o.key === calls.key)) options.push(calls);   // (not the same CALL twice: the third pick can be one too. the user got b0y x2)
   const chip = deckBossChip(node); if (chip) options.push(chip);   // now and then a chip for your deck (engine/deck.js)
+  const charge = deckChargeReward(node); if (charge) options.push(charge);   // with SHELL chips: a CHARGE for THE SHELL (engine/deck.js)
   return options;
 }
 function openReward(node, skipped = false) {

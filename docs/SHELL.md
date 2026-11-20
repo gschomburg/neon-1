@@ -138,12 +138,23 @@ crew, the shell opens. **Decided (Greg, 2026-11-20).**
   once a layer).
 - A command that makes a chip (`compile`?): costs a lot, puts a strong chip in your belt; you still cash out with it.
   It never makes a SHELL chip with charges (no loop).
-- **Open:** do charges last the whole run, or refill each sector? (Claude leans: refill each sector.)
+- **Decided (Greg, 2026-11-20): they refill each sector, for now.** It's one setting (engine/deck.js `SHELL_REFILL`).
+  Later the default becomes "they last the run", and a BOSS chip, **CRON** (the scheduler), brings the sector refill
+  back.
+- **Decided (Greg, 2026-11-20):** a corp boss can offer a **CHARGE** (gear: +2 charges, up to your max) as one of its
+  picks, while you have SHELL chips and ROOT. Never in markets or at the bench.
+- **Decided (Greg, 2026-11-20): ROOTKIT**, a CRASH chip: die with charges left and they all burn, and you're back with
+  1 INT. Get charges back and it can save you again.
+- **Decided (Greg, 2026-11-20):** the charges show in the shell, top right: `charges [###..] 3/5`.
+- **Built v15.02** (first numbers, to playtest): whoami +3 (costs 1), ps +2 (1), man +2 (1), CAPACITOR +4 (no
+  command), flatline +1 (3). A CHARGE pick 35% of corp bosses. ROOTKIT epic, power 2. `help` lists costs and the
+  free commands. Check: tools/checks/tests/charges.js.
 
 **Free commands.** `help`, `clear`, `history`, `exit` (maybe `crew` or `status`) cost nothing, need no chip, and don't
-mark the run hacked. `help` lists them. **Decided (Greg, 2026-11-20):** in place of a help chip.
+mark the run hacked. `help` lists them. **Decided (Greg, 2026-11-20):** in place of a help chip. **Built v15.02.**
 
-**Dev mode: `dev.start`.** **Decided (Greg, 2026-11-20).**
+**Dev mode: `dev.start`.** **Decided (Greg, 2026-11-20).** **Built v15.02:** `dev.start` turns on dev access (like
+`?dev=1`) and makes the run practice; no costs. Not built yet: separate player and dev versions of one command.
 - Players and dev mode share one command list. Typing `dev.start` (never autocompleted) turns dev mode on: every
   autocomplete, unlimited charges, the dev-only commands (`rep`, `progress.wipe`, quests, fx...), and each shared
   command's dev version (`mode.god` is a free on / off, not a sector for 3 charges).

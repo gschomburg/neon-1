@@ -17,7 +17,7 @@ module.exports = { name: 'shell', body: `
   check(st.shell && !SHELL.el.hidden, 'it opens');
   type('give');
   check(SHELL.list.length === 1 && SHELL.list[0].none === 'no commands known', 'nothing known: a message, no list: ' + JSON.stringify(SHELL.list[0]));
-  check(shellHelp() === 'no commands known.', 'help: no commands known');
+  check(shellHelp().startsWith('no commands known.') && shellHelp().endsWith('free: help clear history exit'), 'help: no commands known, and the free ones: ' + shellHelp());
   await shellRun('heal');
   check(last().cls === 'err', 'an unknown command is an error');
 

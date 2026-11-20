@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.01']);
+NEON_FILES.push(['engine/runend.js', 'v15.02']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -23,6 +23,12 @@ async function die() {
     showBoard('play');
   }
   if (oneUpReady(run0) && await askOneUp()) return useOneUp(run0);   // the 1UP: back to the start of this corp
+  const rk = run0 ? deckRootkit(run0) : 0;
+  if (rk) {   // ROOTKIT (a chip): THE SHELL's charges burn, and you live (engine/deck.js)
+    await wipeOut(0); showBoard('play'); resetTimer(); layerReady(st.lv);
+    setMsg(`> ROOTKIT: ${rk} charge${rk > 1 ? 's' : ''} burned. 1 integrity left.`, C.accent);
+    return;
+  }
   if (run0 && deckCheckpoint(run0)) {   // CHECKPOINT (a chip): once a run, back with nothing but full INT (engine/deck.js)
     await wipeOut(0); showBoard('play'); resetTimer(); layerReady(st.lv);
     setMsg('> CHECKPOINT. you came back with nothing.', C.accent);

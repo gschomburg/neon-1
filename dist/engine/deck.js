@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.01']);
+NEON_FILES.push(['engine/deck.js', 'v15.02']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -52,6 +52,7 @@ const DECK_CHIPS = {
   SK1: ['SPIKE', 'ov', 'common', 0, '-1 starting INT. +2 power for your deck.', ['/\\/', '+2P'], '-1 INT, +2 power.'],
   // SHELL: one command each, in THE SHELL (~ opens it). a stand-in pair until THE SHELL is sorted out (Greg)
   WH0: ['whoami', 'shell', 'common', 1, "THE SHELL learns whoami: your run so far, and the REP you'd bank if you cashed out now. (~ opens THE SHELL.)", ['who', '?_?'], 'whoami: your run so far.'],
+  CA4: ['CAPACITOR', 'shell', 'common', 1, 'no command: just charges for THE SHELL. pair it with a strong one.', ['|||', '+4 '], 'just charges.'],
   MN1: ['man', 'shell', 'rare', 1, "ROOT's chip, from its quest: THE SHELL learns man: this corp's codex entry, mid-layer (its tell once you've beaten it). (~ opens THE SHELL.)", ['man', '[?]'], "man: this corp's codex entry."],
   PS4: ['ps', 'shell', 'rare', 1, 'THE SHELL learns ps: the rival hackers in this corp, by name, and how hurt they are. (~ opens THE SHELL.)', ['ps ', '@ @'], 'ps: name the rivals.'],
   // SUDO (mk IV): the strong commands
@@ -85,6 +86,7 @@ const DECK_CHIPS = {
   DK6: ['DARK', 'bios', 'rare', 1, 'the dark corps come up more: BLACKOUT, NOIR, PREDATOR.', ['###', 'DRK'], 'dark corps come up more.'],
   // CRASH
   CP0: ['CHECKPOINT', 'crash', 'epic', 2, 'once a run, die and you come back with nothing (no mods, no gear, no credits) but full INT.', ['[>]', 'CKP'], 'once a run: back, with nothing.'],
+  RK1: ['ROOTKIT', 'crash', 'epic', 2, "die with THE SHELL's charges left: they all burn, and you're back with 1 INT. charges back, and it can save you again.", ['RKT', '>_<'], 'die: burn your charges, live.'],
   EJ1: ['EJECT', 'crash', 'rare', 1, 'THE SHELL learns eject: cash out from the map, anywhere, once a run. (~ opens THE SHELL.)', ['^^^', 'EJT'], 'eject: cash out from the map.'],
   IN5: ['INSURANCE', 'crash', 'common', 1, 'die and your next run starts with half the credits you had. (read the fine print.)', ['$/2', 'INS'], 'die: half your credits next run.'],
   DD3: ['DEAD DROP', 'crash', 'rare', 1, "when you die, your gear is waiting in your next run's first DATA CACHE.", ['[v]', 'DRP'], 'die: your gear waits for you.'],
@@ -126,7 +128,7 @@ const DECK_CHIPS = {
 const DECK_CHIP_TAGS = {
   TF1: ['you'], LD3: ['you'], BM4: ['you'], FI2: ['you'], QT0: ['map'], DM5: ['you'], BB7: ['you'], SP3: ['rules'],
   SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'], FM2: ['you', 'rules'], SK1: ['you'],
-  WH0: ['you'], MN1: ['you'], PS4: ['you'], FL3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
+  WH0: ['you'], MN1: ['you'], CA4: ['you'], RK1: ['you'], PS4: ['you'], FL3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
   PL3: ['you'], BP1: ['you'], JD6: ['you'], PD7: ['you'], RG6: ['you'], KN8: ['you'], CL3: ['you'], HS1: ['map'],
   LU6: ['map', 'rules'], FR5: ['map'], EV2: ['map'], AD0: ['map'], SR4: ['map'], PP2: ['map'], AL4: ['you'], CS7: ['map'], CK9: ['map'], DK6: ['map'],
   CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'],
@@ -282,6 +284,7 @@ function deckRunStart(run, opts = {}) {
   deckRunCarry(run);   // INSURANCE and DEAD DROP from your last death (they come whatever's slotted now)
   if (!keys || !keys.length) return;
   run.chips = keys; run.spoils = spoils || 0;
+  deckCharges(run);   // THE SHELL's charges, full
   if (brown) { run.brownout = brown; setTimeout(() => { if (st.run === run) setMsg(`> BROWNOUT: ${DECK_CHIPS[brown][0]} is offline this run.`, C.danger); }, 1600); }
   const di = keys.reduce((a, k) => a + (DECK_INT[k] || 0), 0);
   if (di) { run.maxInt = Math.max(1, run.maxInt + di); run.integrity = Math.max(1, Math.min(run.maxInt, run.integrity + di)); }
@@ -351,6 +354,7 @@ function deckLayer(lv, c) {
 }
 // a new sector (engine/runend.js pushOn): DECAY drops each mod a step (BUFFER keeps its step: it changes your INT)
 function deckSector(run) {
+  deckRefill(run);   // THE SHELL's charges, topped up (SHELL_REFILL)
   if (!chipOn('DC4', run)) return;
   const hit = run.mods.filter(k => k !== 'buffer' && (run.modTier[k] || 0) > 0);
   for (const k of hit) run.modTier[k]--;
@@ -439,23 +443,56 @@ function deckBlackBox(run) {
 }
 // SPOILS (engine/panels.js openReward): 0 the rewards, 1 a heal, 2 cash
 const deckSpoils = run => chipOn('OF1', run) ? 3 : chipOn('PT1', run) ? 4 : chipOn('SP3', run) ? run.spoils || 0 : 0;   // (3 OFFERING, 4 PROTECTION: chips)
+// ---------- THE SHELL's charges (docs/SHELL.md "Charges", Greg 2026-11-20) ----------
+// SHELL chips give charges (DECK_CHARGES) and their commands cost them (each command's cost: DECK_SHELL_CMDS). One pool:
+// run.charges, up to run.chargeMax (what the run's chips give). It starts full. SHELL_REFILL: 'sector' tops it up every
+// new sector (for now); 'run' makes it last the whole run (Greg: later, with a BOSS chip, CRON, that brings the sector
+// refill back). More from a corp boss's CHARGE pick (gear: +2), and ROOTKIT (CRASH) burns them all to save you.
+const SHELL_REFILL = 'sector';
+const DECK_CHARGES = { WH0: 3, PS4: 2, MN1: 2, CA4: 4, FL3: 1 };
+const SHELL_CHARGE = { pack: 2, boss: 0.35 };   // a CHARGE gives 2; a corp boss offers one 35% of the time (with charges to fill)
+for (const [k, n] of Object.entries(DECK_CHARGES)) if (DECK_CHIPS[k]) { DECK_CHIPS[k][4] += ` +${n} shell charges.`; DECK_CHIPS[k][6] += ` +${n} charges.`; }
+function deckCharges(run) { run.chargeMax = (run.chips || []).reduce((a, k) => a + (DECK_CHARGES[k] || 0), 0); run.charges = run.chargeMax; }
+function deckRefill(run) {
+  if (SHELL_REFILL !== 'sector' || !run.chargeMax || run.charges >= run.chargeMax) return;
+  run.charges = run.chargeMax;
+  if (rootOn()) setTimeout(() => { if (st.run === run) setMsg(`> THE SHELL: charges back to ${run.chargeMax}.`, C.accent); }, 1800);
+}
+// CHARGE: gear from corp boss rewards (engine/panels.js rewardOptions), never in markets or at the bench
+ITEMS.charge = { key: 'charge', name: 'CHARGE', price: 0, rarity: 'rare', find: true, noBench: true, nosell: true, desc: `+${SHELL_CHARGE.pack} charges for THE SHELL (up to your max).`,
+  tip: `+${SHELL_CHARGE.pack} shell charges.`, where: 'corp boss rewards, while you have SHELL chips.', codex: "a charge pack for THE SHELL. it tops your charges up by 2, never past what your SHELL chips give." };
+ITEM_SHORT.charge = 'CHG';
+GEAR.charge = {
+  ok: () => !!st.run && (st.run.chargeMax || 0) > (st.run.charges || 0),
+  use(tier, lv, run) { const was = run.charges || 0; run.charges = Math.min(run.chargeMax, was + SHELL_CHARGE.pack); Sound.buy(); setMsg(`> THE SHELL: +${run.charges - was} charges (${run.charges}/${run.chargeMax}).`, C.accent); },
+};
+function deckChargeReward(node) {
+  const run = st.run; if (!run || !run.chargeMax || !rootOn()) return null;
+  return rngFor(run.seed, 'chargereward', node.id)() < SHELL_CHARGE.boss ? { kind: 'gear', key: 'charge', tier: 0, n: 1 } : null;
+}
+// ROOTKIT (engine/runend.js die): THE SHELL's charges burn and you live, with 1 INT. Any charges will do, every time.
+function deckRootkit(run) {
+  if (!chipOn('RK1', run) || !(run.charges > 0) || !rootOn() || !st.lv || st.mp) return 0;
+  const n = run.charges; run.charges = 0; run.integrity = 1;
+  return n;
+}
 // THE SHELL's commands from chips (engine/shell.js: the 'your deck' group). Known while the chip's on in this run (or in
 // dev mode); safe (the run still counts), but the run is marked hacked (run.hacked: the leaderboard's mark, later).
 const DECK_SHELL_CMDS = [
-  { name: 'whoami', chip: 'WH0', safe: true, help: "your run so far, and the REP you'd bank now", run: () => {
+  { name: 'whoami', chip: 'WH0', cost: 1, safe: true, help: "your run so far, and the REP you'd bank now", run: () => {
     const run = shellNeedRun(); run.hacked = true;
     return `${profile().name} · sector ${run.sector + 1} · depth ${run.depth}\ncorps ${run.corps} · ${run.credits}cr · INT ${run.integrity}/${run.maxInt}\ncash out now: ${repFor(run)} REP`; } },
-  { name: 'man', chip: 'MN1', safe: true, help: "this corp's codex entry (its tell, once you've beaten it)", run: () => {   // ROOT's chip
+  { name: 'man', chip: 'MN1', cost: 1, safe: true, help: "this corp's codex entry (its tell, once you've beaten it)", run: () => {   // ROOT's chip
     const run = shellNeedRun();
     if (!st.corp) throw new Error('only in a corp.');
     const key = st.corp.def.key, d = corpDef(key), rec = corpStat(key);
     run.hacked = true;
     return [`${d.name}${d.level ? '  LV' + d.level : ''}`, d.intel, corpRules(d, 1), CORP_TELL[key] ? (rec.breached ? 'tell: ' + CORP_TELL[key] : 'tell: beat this corp to read it.') : ''].filter(Boolean).join('\n'); } },
-  { name: 'ps', chip: 'PS4', safe: true, help: 'the rival hackers in this corp', run: () => {
+  { name: 'ps', chip: 'PS4', cost: 1, safe: true, help: 'the rival hackers in this corp', run: () => {
     const run = shellNeedRun(); run.hacked = true;
     const hs = hkRivalsUp();
     return hs.length ? hs.map(h => `${hkName(h.id).padEnd(10)} ${hkBars(h)}`).join('\n') : 'no rivals here.'; } },
-  { name: 'flatline', chip: 'FL3', safe: true, help: 'a rival in this corp drops dead (once a corp)', run: () => {
+  { name: 'flatline', chip: 'FL3', cost: 3, safe: true, help: 'a rival in this corp drops dead (once a corp)', run: () => {
     const run = shellNeedRun();
     if (!st.corp) throw new Error('only in a corp.');
     if (st.corp.flatlined) throw new Error('used: once a corp.');

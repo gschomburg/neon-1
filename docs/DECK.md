@@ -453,6 +453,8 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
     row needs its own random stream (like +1 LAYER). Real work, so later.
 
 ### CRASH (1): when you die
+- **ROOTKIT** (Greg, 2026-11-20; built v15.02, RK1): die with THE SHELL's charges left: they all burn, back with 1 INT.
+  Charges back, it saves you again. (And SHELL got **CAPACITOR**, CA4: just charges.)
 - **The socket** (Greg, 2026-11-15): a normal 3x2 socket, next to the stick. The stick is its readout and shows
   the slotted chip's name, top to bottom. It's 5 tall inside; a longer name
   (DEADMAN) scrolls through it (**Decided (Greg, 2026-11-15)**). **Then (Greg, 2026-11-16; to do):** it swaps to the
@@ -641,6 +643,8 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
 
 ### BOSS (2 wide, mk IV): the big bosses
 - OMNI's, H3AV3N's, KONAMI's. **G0D.exe** could be one, so it comes along every run.
+- **CRON** (Greg, 2026-11-20; not built): THE SHELL's charges refill every sector. Goes with making run-long charges
+  the default (docs/SHELL.md "Charges").
 - More:
   - **OMNI'S EYE:** every corp's card on the map shows its tell.
   - **THE MOLD** (G0D): ICE you've hit once rots, and can't hit you again.

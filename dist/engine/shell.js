@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.01']);
+NEON_FILES.push(['engine/shell.js', 'v15.02']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -373,12 +373,15 @@ const shellDev = () => !!(st.devAccess || EDITOR);
 // engine/quests.js). Before that the shell only says "paperwork pending." Dev access knows everything.
 const shellRooted = () => typeof rootOn === 'function' && rootOn();
 const shellKnows = c => !!c && (shellDev() || (!!c.chip && chipOn(c.chip) && shellRooted()));   // (a chip in your deck teaches its command: engine/deck.js)
+// What a command costs from THE SHELL's charges (engine/deck.js "THE SHELL's charges"): its cost; nothing in dev mode.
+const shellCost = c => shellDev() ? 0 : c.cost || 0;
 const shellUsage = c => [c.name, ...(c.args || []).map(x => x.opt ? `[${x.name}]` : `<${x.name}>`)].join(' ');
 function shellHelp(name) {
   if (name) { const c = SHELL_BY[name]; if (!c || !(shellKnows(c) || c.always)) throw new Error(`not a command: ${name}`); return `${shellUsage(c)}\n  ${c.help}`; }
-  const known = SHELL_CMDS.filter(shellKnows);
-  if (!known.length) return 'no commands known.';
-  return known.map(c => shellUsage(c).padEnd(28) + ' ' + c.help).join('\n');
+  // what you know (with its cost in charges), then the free ones (Greg, 2026-11-20: free, no chip, not hacked)
+  const known = SHELL_CMDS.filter(shellKnows), free = 'free: ' + SHELL_CMDS.filter(c => c.always).map(c => c.name).join(' ');
+  if (!known.length) return 'no commands known.\n' + free;
+  return known.map(c => (shellUsage(c) + (shellCost(c) ? ' ·' + shellCost(c) : '')).padEnd(28) + ' ' + c.help).join('\n') + (shellDev() ? '' : '\n' + free);
 }
 
 // ---------- reading what you typed ----------
@@ -421,6 +424,10 @@ async function shellRun(line) {
   SHELL.histAt = -1;
   shellOut(line, 'cmd');
   const p = shellParse(line), c = p && p.cmd;
+  if (line === 'dev.start') {   // dev mode (Greg, 2026-11-20): never autocompleted. Every command, no charges; the run is practice
+    st.devAccess = true; if (st.run && !st.run.ended) st.run.practice = true;
+    if (SHELL.el) shellRefresh(); return shellOut('dev mode: every command, no charges. this run is practice now.', 'dim');
+  }
   if (!c || !(shellKnows(c) || c.always)) return shellOut(`unknown command: ${p ? p.word : line}`, 'err');
   try {
     const args = c.args || [];
@@ -429,8 +436,11 @@ async function shellRun(line) {
     if (p.args.length < need) throw new Error('usage: ' + shellUsage(c));
     const vals = args.map((spec, i) => p.args[i] == null ? null : shellArg(spec, p.args[i]));
     if (!c.safe && st.run && !st.run.ended) st.run.practice = true;   // a cheat: the run doesn't count (dev.js cheat())
+    const cost = shellCost(c), have = st.run ? st.run.charges || 0 : 0;
+    if (cost && have < cost) throw new Error(`not enough charges: ${c.name} costs ${cost}, you have ${have}.`);
     SHELL.busy = true; shellDraw();
     const r = await c.run(vals);
+    if (cost && st.run) st.run.charges = Math.max(0, (st.run.charges || 0) - cost);   // (spent once it worked)
     if (st.shell) shellOut(typeof r === 'string' ? r : 'ok', typeof r === 'string' ? 'out' : 'dim');
   } catch (err) {
     shellOut(String((err && err.message) || err), 'err');
@@ -557,16 +567,18 @@ const SHELL_CSS = `
 #shell button:active { background: #222; }
 #shell .c { color: #7fd4ff; } #shell .a { color: #ffd479; } #shell .d { color: #808080; } #shell .e { color: #ff6b6b; } #shell .o { color: #e8e8e8; }
 #shell b { color: #fff; font-weight: 700; }
+#shell .t-ch { position: absolute; top: 6px; right: 10px; color: #ffd479; pointer-events: none; background: #000; padding-left: 6px; }
+#shell .t-ch:empty { display: none; }
 `;
 function shellBuild() {
   if (SHELL.el) return;
   const css = document.createElement('style'); css.textContent = SHELL_CSS; document.head.appendChild(css);
   const el = document.createElement('div'); el.id = 'shell'; el.hidden = true;
-  el.innerHTML = '<div class="t-log"></div><div class="t-list"></div><div class="t-line"><span class="t-ps">' + SHELL_PS + '</span>' +
+  el.innerHTML = '<div class="t-ch"></div><div class="t-log"></div><div class="t-list"></div><div class="t-line"><span class="t-ps">' + SHELL_PS + '</span>' +
     '<input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="shell">' +
     '<button type="button" data-k="run">run</button><button type="button" data-k="x">x</button></div>';
   document.body.appendChild(el);
-  SHELL.el = el; SHELL.logEl = el.querySelector('.t-log'); SHELL.listEl = el.querySelector('.t-list'); SHELL.input = el.querySelector('input');
+  SHELL.el = el; SHELL.logEl = el.querySelector('.t-log'); SHELL.listEl = el.querySelector('.t-list'); SHELL.input = el.querySelector('input'); SHELL.chEl = el.querySelector('.t-ch');
   SHELL.input.addEventListener('keydown', shellKey);
   SHELL.input.addEventListener('input', () => { SHELL.hideList = false; SHELL.moved = false; SHELL.histAt = -1; shellRefresh(); });
   SHELL.input.addEventListener('click', () => shellRefresh());
@@ -619,6 +631,9 @@ function shellDraw() {
     log.appendChild(d);
   }
   if (SHELL.busy) log.appendChild(span('d', '...'));
+  // THE SHELL's charges, top right (Greg, 2026-11-20): a bar and n / max; dev mode has none
+  const run = st.run, max = run ? run.chargeMax || 0 : 0, n = run ? Math.min(max, run.charges || 0) : 0;
+  SHELL.chEl.textContent = shellDev() ? 'dev: no limits' : !shellRooted() || !run ? '' : `charges [${'#'.repeat(Math.min(n, 12))}${'.'.repeat(Math.max(0, Math.min(max, 12) - Math.min(n, 12)))}] ${n}/${max}`;
   log.scrollTop = log.scrollHeight;
   const list = SHELL.listEl;
   list.textContent = '';
@@ -632,6 +647,7 @@ function shellDraw() {
     else {
       r.appendChild(span(it.arg ? 'a' : 'c', it.v));
       if (it.sig) r.appendChild(span('d', it.sig));
+      const cc = !it.arg && SHELL_BY[it.v] ? shellCost(SHELL_BY[it.v]) : 0; if (cc) r.appendChild(span('a', '  ·' + cc));   // its cost in charges
       if (it.hint) r.appendChild(span('d', '  ' + it.hint));
     }
     list.appendChild(r);

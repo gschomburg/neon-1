@@ -14,6 +14,12 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **THE SHELL's charges** (v15.02; docs/SHELL.md "Charges"). Slot SHELL chips (with ROOT on your crew), start a run,
+  press `~`: the charges show top right; the list shows each command's cost (`whoami ·1`); run out and it says so; a
+  new sector fills them; a corp boss now and then offers a CHARGE (+2). ROOTKIT in CRASH: die with charges and you
+  live at 1 INT. `dev.start` in the shell: dev mode, no costs, the run is practice. My numbers: whoami +3, ps +2,
+  man +2, CAPACITOR +4, flatline +1 (costs 3); a CHARGE in 35% of corp boss rewards.
+
 - [ ] **ROOT's quest, PAPERWORK** (v15.01; docs/CREW_QUESTS.md). To start fresh: THE SHELL (~ with `?dev=1`) >
   `root.reset`, then open your deck at USER. Watch: the glitched SHELL sockets (their fine print), the QUEST card, the
   WORKBENCH step (if you haven't bought it), a shred where a lowercase letter stays under the shredder with a fanfare,
