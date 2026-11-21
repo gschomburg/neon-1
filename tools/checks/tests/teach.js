@@ -53,6 +53,9 @@ module.exports = { name: 'teach', body: `
   check(tb('tby').y === tb('tbd').y && tb('tbf').y > tb('tby').y, 'two rows: DECK up top, FEATS under: ' + ['tby', 'tbd', 'tbf'].map(i => tb(i).y).join(' '));
   tb('tbd').onTap(); await sleep(600);
   check(st.panelTitle === 'THE DECK', 'DECK opens your deck: ' + st.panelTitle);
+  check(['dkb_you', 'dkb_rep', 'dkb_feats', 'dktb', 'dktc'].every(tb) && !tb('dkleave'), 'the deck: THE BOARD tabs on top, SLOTS and CHIPS under, no [LEAVE]');
+  save.deck.slots = {}; tb('dkb_rep').onTap(); await sleep(900);
+  check(st.panelTitle === 'THE BOARD', 'its REP tab goes back to THE BOARD: ' + st.panelTitle);
 
   // a run that used THE SHELL's chip commands: rooted in its history
   B.startRun('TEACHTEST', false); await settle('start');

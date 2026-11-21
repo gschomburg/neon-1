@@ -31,6 +31,8 @@ Greg's raw notes.
 
 ## Screen space
 - On a phone the board is 23 rows. A panel that runs over spills onto the mod tray: `buildTextBoard` doesn't squeeze. Count rows when you add lines to a screen.
+- **Item names: JACK IN THE BOX (15 characters) is the longest that fits** on the rewards screen and the market, right up
+  against its rarity. Keep new mod and gear names at or under it (Greg, 2026-11-21).
 - Tricks when a screen is tight:
   - Fold away art once it's had its moment (the boss rewards logo: `LOGO_OUT` in engine/screens.js).
   - One scrolling line instead of stacked, wrapped text: `FX.ticker` (engine/fx.js: a beat on the start, then it scrolls). The UPLINK's rows and the tray's gear tips use it.

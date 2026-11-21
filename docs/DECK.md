@@ -741,6 +741,10 @@ Greg: sockets that open earlier should sit higher on the board.
 - **The `[X` PORTS** wait on features that aren't built. Leave them dark where they are, or move them down.
 
 ## Open
+- **The deck's header (Greg, 2026-11-21; v15.16):** the deck is a BOARD tab, so it shows THE BOARD's tabs ([YOU] [REP]
+  [DECK] over [FEATS] [CREW] [QUESTS]), DECK lit; any of the others goes back to THE BOARD on that tab. Under them a
+  sub-tab strip: SLOTS (was BOARD) and CHIPS, the power on the right. Gone: "THE BOARD // YOUR DECK" and [LEAVE] (it
+  was really a back). Esc still goes to THE BOARD's YOU. Chips with no power: the first tap warns.
 - **The ladder:** the deck at USER, mk III at ELITE, the FUSE at SYSOP. **Decided (Greg, 2026-11-16):** yes (below).
 - **The power budget:** chips cost 0-3 power and the cell sets the budget. **Decided:** yes, first pass (Power).
 - **Carrying a chip home:** **Decided (Greg, 2026-11-16):** a gear slot, for now (Chips, above).

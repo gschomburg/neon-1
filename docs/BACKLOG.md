@@ -447,8 +447,8 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   - Claude's proposal: LEAVE = leave a place in a run (back to the map); BACK = up a menu (to the title, or the screen
     before); CLOSE = an overlay over what you were doing. And one spot for each: full screens with a header (the bench,
     the deck) put it top right; everything else at the bottom. Greg's call.
-- **The longest item name** (meat notes 2026-11-21): JACK IN THE BOX on the rewards screen (and the market) runs right
-  up to its LEGENDARY. "probably fine for now", but it's the longest a name can be there without cropping or scrolling.
+  - **Greg (2026-11-21):** every [ BACK ] goes to the title (the leaderboard's goes back to all seeds first): maybe
+    name it for where it goes (MAIN or TITLE). YOUR DECK: done v15.16 (THE BOARD's tabs on it, no [LEAVE]).
 - **Phone battery** (meat notes 2026-11-15): the game drains Greg's older phone fast. Look for savings: draw only
   when something changed, a lower frame rate when the screen is still, pause it all in a hidden tab, lighter effects.
 - **Boss intro pass** (the user, 2026-10-29: "it's all working for now", but the whole boss intro could use a little more): the corp's logo on it, and more.

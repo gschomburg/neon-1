@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.15']);
+NEON_FILES.push(['engine/deck.js', 'v15.16']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -1050,11 +1050,12 @@ function deckTrainLines() {
     ...(rootOn() ? ["SHELL and SUDO chips teach THE SHELL commands. give.mod and give.gear call up what you've found."]
       : ["SHELL and SUDO chips need a shell. you don't have one yet. something in here might."])];
 }
-function deckLeave() {
+// Out of your deck: to a BOARD tab (tab: you, rep, feats... Esc: YOU). Chips with no power: it warns once first.
+function deckLeave(tab = 'you') {
   const off = deckPower().off.length, now = performance.now();
-  if (off && now - DECK.leave > 3000) { DECK.leave = now; Sound.deny(); return deckSay(`${off} chip${off > 1 ? 's have' : ' has'} no power. LEAVE again to go.`, C.danger); }
+  if (off && now - DECK.leave > 3000) { DECK.leave = now; Sound.deny(); return deckSay(`${off} chip${off > 1 ? 's have' : ' has'} no power. tap again to go.`, C.danger); }
   DECK.leave = 0;
-  if (DECK.real) swapTo(() => openBoard('you')); else swapTo(showTitle);
+  if (DECK.real) swapTo(() => openBoard(tab)); else swapTo(showTitle);
 }
 function deckKey(k) {
   const d = DECK; if (!d) return false;
@@ -1423,14 +1424,29 @@ function deckLines(T, B, X) {
 function deckHeader(ctx, y) {
   const d = DECK, g = deckGrid(ctx), pw = deckPower(), W = L.wc;
   g.put(0, y, 'NeoN+1', C.accent); const rep = `${d.rep} REP`; g.put(W - rep.length, y, rep, C.rep);
-  g.put(0, y + 1, rule(W), C.dim);
-  g.put(0, y + 2, 'THE BOARD // ', C.mid); g.put(13, y + 2, d.real ? 'YOUR DECK' : 'DECK · DEV', d.real ? C.bright : C.danger, true);
-  deckBtn(ctx, g, W - 7, y + 2, '[LEAVE]', C.mid, 'dkleave', deckLeave);
-  const tab = (v, label, id, x) => deckBtn(ctx, g, x, y + 3, d.view === v ? `[${label}]` : ` ${label} `, d.view === v ? C.accent : C.mid, id, () => { if (d.view === v) return; d.view = v; d.pick = null; d.cpu = null; d.carry = null; Sound.tick(); });
-  const x2 = tab('board', 'BOARD', 'dktb', 0); tab('chips', `CHIPS ${deckOwned().length}`, 'dktc', x2);
+  // THE BOARD's tabs, DECK lit (Greg, 2026-11-21: the deck is a BOARD tab; it had its own header and a [LEAVE] that was
+  // really a back). The same two rows as THE BOARD (engine/menus.js openBoard), centered. The dev deck: its own row.
+  if (d.real) {
+    const rows = [['you', 'rep', 'deck'], ['feats', 'crew', 'quests']];
+    rows.forEach((ks, ri) => {
+      const labels = ks.map(k => `[${k.toUpperCase()}${k !== 'deck' && boardStar(k) ? '*' : ''}]`), w = labels.join(' ').length;
+      let x = Math.floor((W - w) / 2);
+      ks.forEach((k, i) => {
+        if (k === 'deck') { g.bg(x, y + 1 + ri, labels[i].length, 1, C.accent, 0.22); g.put(x, y + 1 + ri, labels[i], C.accent, true); x += labels[i].length + 1; }
+        else x = deckBtn(ctx, g, x, y + 1 + ri, labels[i], C.bright, 'dkb_' + k, () => deckLeave(k));
+      });
+    });
+  } else {
+    g.put(0, y + 1, 'DECK · DEV', C.danger, true); deckBtn(ctx, g, W - 7, y + 1, '[LEAVE]', C.mid, 'dkleave', () => deckLeave());
+  }
+  // the sub-tabs: SLOTS and CHIPS, in a strip (the same look as engine/textboard.js drawSubTabs), the power on the right
+  g.bg(0, y + 3, W, 1, C.dim, 0.35);
+  const tab = (v, label, id, x) => { const s = ` ${label} `, on = d.view === v; if (on) g.bg(x, y + 3, s.length, 1, C.accent, 1);
+    deckBtn(ctx, g, x, y + 3, s, on ? C.bg : C.bright, id, () => { if (d.view === v) return; d.view = v; d.pick = null; d.cpu = null; d.carry = null; Sound.tick(); }); return x + s.length + 1; };
+  const x2 = tab('board', 'SLOTS', 'dktb', 1); const x3 = tab('chips', `CHIPS ${deckOwned().length}`, 'dktc', x2);
   const pwt = `PWR ${pw.used}/${pw.budget}` + (pw.fuse ? ` F${pw.fuse.used}/${pw.fuse.budget}` : '') + (pw.off.length ? ` !${pw.off.length}` : ''), mkt = `mk ${deckMk(d.mk)} `;
   g.put(W - pwt.length, y + 3, pwt, pw.off.length ? C.danger : C.money, !!pw.off.length);
-  if (W - pwt.length - mkt.length >= x2 + 13) g.put(W - pwt.length - mkt.length, y + 3, mkt, C.money);   // (the mk gives way when it's tight)
+  if (W - pwt.length - mkt.length >= x3 + 1) g.put(W - pwt.length - mkt.length, y + 3, mkt, C.money);   // (the mk gives way when it's tight)
   g.put(0, y + 4, rule(W), C.dim);
   g.flush();
 }

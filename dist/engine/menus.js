@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.15']);
+NEON_FILES.push(['engine/menus.js', 'v15.16']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -205,6 +205,8 @@ function crewItems() {
   }
   return items;
 }
+// A BOARD tab with something new on it: a * after its name (THE BOARD's tabs, and your deck's copy of them: engine/deck.js deckHeader)
+const boardStar = k => (k === 'feats' && Object.keys(save.unseen || {}).length > 0) || (k === 'rep' && repNew()) || (k === 'you' && save.newTitle) || (k === 'quests' && questsNew());
 function openBoard(tab) {
   if (!tab) tab = Object.keys(save.unseen || {}).length ? 'feats' : 'rep';
   const featS = { top: 0 }, statS = { top: 0 }, repS = { top: 0 }, crewS = { top: 0 };
@@ -229,7 +231,7 @@ function openBoard(tab) {
     T('+------------------------------+', C.dim);
     X({ text: '|  T H E   B O A R D   //  BBS |', colorAt: i => i === 0 || i === 31 ? C.dim : C.rep, bold: true });
     T('+------------------------------+', C.dim);
-    const star = k => (k === 'feats' && Object.keys(save.unseen || {}).length > 0) || (k === 'rep' && repNew()) || (k === 'you' && save.newTitle) || (k === 'quests' && questsNew());
+    const star = boardStar;
     // Two rows of tabs (Greg, 2026-11-20): YOU REP DECK over FEATS CREW QUESTS. DECK isn't a tab: it opens your deck
     // (full screen). The row takes the blank line that sat under the tabs, so the body doesn't move.
     { const tb = ([k, label, id]) => ({ text: `[${label}${star(k) ? '*' : ''}]`, id, sel: tab === k, onTap: () => setTab(k) });
