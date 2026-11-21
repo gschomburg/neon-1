@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.04']);
+NEON_FILES.push(['engine/shell.js', 'v15.05']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -362,6 +362,7 @@ const SHELL_CMDS = shellGroups([
   { name: 'deck.run', help: "the deck's slotted, powered chips onto this run now", run: () => DECK_TEST.run() },
   { name: 'deck.drops', args: [{ name: 'on|off', of: fixed('on', 'off'), opt: true }], help: 'every DATA CACHE and PIER gear catch drops a chip', run: a => DECK_TEST.drops(a[0] == null ? null : a[0] === 'on') },
   { name: 'deck.open', help: 'your deck (the dev one if you have none)', safe: true, run: () => { shellClose(); openDeck(); } },
+  { name: 'deck.pops', help: "POPS's deck training again (the first time you open your deck)", safe: true, run: () => { if (save.deck) save.deck.popsSeen = false; shellClose(); openDeck(); } },
   { name: 'deck.intro', help: "POPS's call about the deck", safe: true, run: () => DECK_TEST.intro() },
   { name: 'deck.upshow', help: "the mk upgrade's fanfare (on your open deck)", safe: true, run: () => { shellClose(); return DECK_TEST.upshow(); } },
 ]);

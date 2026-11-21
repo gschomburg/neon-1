@@ -14,6 +14,13 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Teaching THE SHELL and the deck** (v15.05). Try a fresh save if you can:
+  - **The bench:** POPS's first-visit lines end with your shell line (before ROOT: "don't know what a shell is?..."; with ROOT: "give.mod, give.gear").
+  - **Your deck:** the first time you open it, POPS trains you (6 lines: sockets, power, runs, where chips come from, SHELL chips). `deck.pops` replays it. A save that has a deck already gets it the next time it opens the deck.
+  - **Shell chips before ROOT:** they still drop. Their tip says "it needs THE SHELL: get ROOT on your crew", and cashing one out says where to go (QUESTS, or "open your deck" if ROOT's quest hasn't started).
+  - **The codex:** once ROOT is crew, a SHELL chip in front of the "from" line, in the top rarity you can call up.
+  - **THE BOARD:** two rows of tabs: `[YOU] [REP] [DECK]` over `[FEATS] [CREW] [QUESTS]`. DECK opens your deck. My call: the new row took the blank line under the tabs, so the BBS box didn't move up. Say if you'd rather it moved up and kept the blank.
+  - **Rooted:** a run that used chip commands is saved in your history as rooted (not shown anywhere yet). Dev runs are practice, a separate mark.
 - [ ] **`give.mod` / `give.gear` by name** (v15.04; docs/DECK.md SUDO). `give.mod tracer epic`, `give.gear frag 2`.
   Common and rare: anything you've found. Epic and up: only what you've shredded at that rarity or higher (shredding
   starts counting now: older shreds weren't kept). My calls: charges by rarity (1/2/3/4/5), the chips give 4. Greg: no

@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.04']);
+NEON_FILES.push(['engine/menus.js', 'v15.05']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -230,10 +230,14 @@ function openBoard(tab) {
     X({ text: '|  T H E   B O A R D   //  BBS |', colorAt: i => i === 0 || i === 31 ? C.dim : C.rep, bold: true });
     T('+------------------------------+', C.dim);
     const star = k => (k === 'feats' && Object.keys(save.unseen || {}).length > 0) || (k === 'rep' && repNew()) || (k === 'you' && save.newTitle) || (k === 'quests' && questsNew());
-    { const row = BOARD_TABS.map(([k, label, id]) => ({ text: `[${label}${star(k) ? '*' : ''}]`, id, sel: tab === k, onTap: () => setTab(k) }));
-      const w = row.reduce((a, b) => a + b.text.length, 0) + row.length - 1;
-      X({ gap: w > L.wc ? 0 : 1, row }); }   // (two *s make it 37 wide: it ran off the left edge)
-    T('');
+    // Two rows of tabs (Greg, 2026-11-20): YOU REP DECK over FEATS CREW QUESTS. DECK isn't a tab: it opens your deck
+    // (full screen). The row takes the blank line that sat under the tabs, so the body doesn't move.
+    { const tb = ([k, label, id]) => ({ text: `[${label}${star(k) ? '*' : ''}]`, id, sel: tab === k, onTap: () => setTab(k) });
+      const by = k => BOARD_TABS.find(b => b[0] === k);
+      const top = ['you', 'rep'].map(k => tb(by(k)));
+      if (save.deck) top.push({ text: '[DECK]', id: 'tbd', onTap: () => { boardFixLogo(); openDeck(); } });   // (engine/deck.js)
+      X({ gap: 1, row: top });
+      X({ gap: 1, row: ['feats', 'crew', 'quests'].map(k => tb(by(k))) }); }
     let used = 0;
     const t = (s, c) => { T(s, c); used++; }, x = o => { X(o); used += o.box ? (o.sub ? 4 : 3) : 1; };
 

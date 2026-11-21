@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.04']);
+NEON_FILES.push(['engine/deck.js', 'v15.05']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -234,10 +234,12 @@ const DECK_DROP_WEIGHT = { common: 50, rare: 30, epic: 14, legendary: 5, exotic:
 const DECK_NO_DROP = ['SC1', 'SP3', '1UP', 'MN1'];   // (MN1: ROOT's, from its quest)   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
 const deckChipItem = key => 'chip_' + key;
 const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
+// A SHELL or SUDO chip before THE SHELL is yours (Greg, 2026-11-20: they still drop; they point you at ROOT's quest)
+const deckNoShell = key => ['shell', 'sudo'].includes(DECK_CHIPS[key][1]) && !(typeof rootOn === 'function' && rootOn());
 const deckHave = key => (save.deck && save.deck.chips && save.deck.chips[key]) || 0;
 for (const [key, c] of Object.entries(DECK_CHIPS)) {
   ITEMS[deckChipItem(key)] = { key: deckChipItem(key), name: c[0], price: 0, rarity: c[2], chip: key, only: 'deck', nosell: true, desc: c[4],
-    get tip() { const n = deckHave(key); return `${n ? `dupe: you have ${n}.` : 'NEW.'} ${c[6]} cash out to keep it.`; } };
+    get tip() { const n = deckHave(key); return `${n ? `dupe: you have ${n}.` : 'NEW.'} ${c[6]} cash out to keep it.${deckNoShell(key) ? ' it needs THE SHELL: get ROOT on your crew.' : ''}`; } };
   // on the belt its face's two rows take turns (Greg, 2026-11-16), 3 wide (engine/panels.js ITEM_SHORT)
   Object.defineProperty(ITEM_SHORT, deckChipItem(key), { get: () => { const f = c[5], b = f[1] && Math.floor(performance.now() / 1100) % 2; return (b ? f[1] : f[0]).slice(0, 3).padEnd(3); } });
 }
@@ -272,7 +274,9 @@ function deckHome(run, win) {
   if (!win || !chips.length || !save.deck || (run.practice && !EDITOR) || run.tutorial || st.mp) return;   // (the editor: its runs are practice, and its save is its own)
   save.deck.chips = save.deck.chips || {};
   for (const s of chips) { const k = deckItemChip(s.key); save.deck.chips[k] = (save.deck.chips[k] || 0) + s.n; }
-  FEAT_QUEUE.push({ head: 'YOUR DECK', lines: ['chips home:', '', ...chips.map(s => '  ' + ITEMS[s.key].name + (s.n > 1 ? ' x' + s.n : '')), '', 'slot them: THE BOARD > YOU.'] });
+  const noShell = chips.some(s => deckNoShell(deckItemChip(s.key)));   // (a shell chip before ROOT: where to go)
+  FEAT_QUEUE.push({ head: 'YOUR DECK', lines: ['chips home:', '', ...chips.map(s => '  ' + ITEMS[s.key].name + (s.n > 1 ? ' x' + s.n : '')), '', 'slot them: THE BOARD > DECK.']
+    .concat(noShell ? ['', 'shell chips need THE SHELL.', rootStep() ? 'get ROOT: THE BOARD > QUESTS.' : 'open your deck. something lives in it.'] : []) });
 }
 
 // ---------- the chips in a run ----------
@@ -430,7 +434,7 @@ function deckQuestChip(key, why) {
   const sd = save.deck; if (!sd || !DECK_CHIPS[key]) return;
   sd.questChips = sd.questChips || []; if (sd.questChips.includes(key)) return;
   sd.questChips.push(key); sd.chips[key] = (sd.chips[key] || 0) + 1; persist();
-  FEAT_QUEUE.push({ head: 'YOUR DECK', lines: [why, '', '  ' + DECK_CHIPS[key][0], '', 'slot it: THE BOARD > YOU.'] });
+  FEAT_QUEUE.push({ head: 'YOUR DECK', lines: [why, '', '  ' + DECK_CHIPS[key][0], '', 'slot it: THE BOARD > DECK.'] });
 }
 // CHECKPOINT (engine/runend.js die): once a run, back with nothing but full INT. Returns true if it took the death.
 function deckCheckpoint(run) {
@@ -770,7 +774,7 @@ function deckGift() {
 }
 function deckIntroCall() {
   queueCall('pops', ["kid. you made USER. that gets you a deck.", "slot chips in and they run, every run. the cell powers them.",
-    "find chips. bring them home. it's on THE BOARD, under YOU."].concat(rootOn() ? [] : [QUEST_LINES.rootPops]), { text: '[ SEE YOUR DECK ]', onTap: () => openDeck() });   // (ROOT's quest: engine/quests.js)
+    "find chips. bring them home. it's on THE BOARD: DECK."].concat(rootOn() ? [] : [QUEST_LINES.rootPops]), { text: '[ SEE YOUR DECK ]', onTap: () => openDeck() });   // (ROOT's quest: engine/quests.js)
 }
 // your mk, from THE BOARD's posts (the FUSE needs mk III: engine/save.js LEGACY 'fuse' needs 'deck3')
 const deckMkNow = () => legacyLv('fuse') ? 4 : legacyLv('deck3') ? 3 : 2;
@@ -897,6 +901,18 @@ function openDeck(o = {}) {
   openPanel('THE DECK', deckLines, null, { full: true });
   st.keyHandler = deckKey;
   if (d.real) rootStart();   // ROOT's quest starts here, or at a bench (engine/quests.js)
+  if (d.real && !save.deck.popsSeen) { save.deck.popsSeen = true; persist(); queueCall('pops', deckTrainLines()); }
+}
+// The deck's training (Greg, 2026-11-20: "rough something in"): POPS, the first time you open your deck. Seen once
+// (save.deck.popsSeen); `deck.pops` in THE SHELL replays it.
+function deckTrainLines() {
+  return ["your deck, kid. it's a board, like the ones you breach. this one's yours.",
+    "tap a socket to see what fits it. tap a chip to slot it.",
+    "chips need power. the cell sets how much. no power, no chip.",
+    "the chips that are slotted and powered when a run starts run all run.",
+    "find chips in DATA CACHEs and at the PIER. they ride home on your belt: cash out to keep them, die and they're gone.",
+    ...(rootOn() ? ["SHELL and SUDO chips teach THE SHELL commands. give.mod and give.gear call up what you've found."]
+      : ["SHELL and SUDO chips need a shell. you don't have one yet. something in here might."])];
 }
 function deckLeave() {
   const off = deckPower().off.length, now = performance.now();

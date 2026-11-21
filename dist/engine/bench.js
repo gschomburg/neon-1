@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.04']);
+NEON_FILES.push(['engine/bench.js', 'v15.05']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -138,9 +138,15 @@ function openBench(node) {
   rootStart();   // ROOT's quest starts here, or in your deck (engine/quests.js)
   if (!bs.popsSeen) {   // the first time: POPS explains it
     bs.popsSeen = true; persist();
-    queueCall('pops', benchCount() ? ["kid. a workbench. nice.", "shred what you carry: it comes apart into components.", "spell a code with them and it builds. what you build waits in the locker, run after run."]
-      : ["kid. a workbench. nice.", "you've got no components yet. shred something: gear, a mod, loot.", "then spell a code and it builds. it waits in the locker, run after run."]);
+    queueCall('pops', (benchCount() ? ["kid. a workbench. nice.", "shred what you carry: it comes apart into components.", "spell a code with them and it builds. what you build waits in the locker, run after run."]
+      : ["kid. a workbench. nice.", "you've got no components yet. shred something: gear, a mod, loot.", "then spell a code and it builds. it waits in the locker, run after run."]).concat(benchShellLines()));
   }
+}
+// POPS's last line on your first bench (Greg, 2026-11-20): shredding epic and up unlocks it for THE SHELL's give.mod /
+// give.gear (engine/deck.js deckGiveTiers). Before ROOT, he keeps the shell a mystery.
+function benchShellLines() {
+  return typeof rootOn === 'function' && rootOn() ? ["shred epic and better and THE SHELL can give it back to you later: give.mod, give.gear."]
+    : ["shredding epic and better gear and mods can get you other bonuses, like for shell commands.", "don't know what a shell is? just keep playing. you'll find out."];
 }
 function benchPanel() {
   openPanel('WORKBENCH', benchLines, null, { full: true });

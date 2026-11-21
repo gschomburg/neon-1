@@ -13,6 +13,18 @@ Checked against the code 2026-11-08: items built already that were still listed 
 feats, more pets, the DISC on the line, corrupted software at the PIER, the quests tab hint, BIG DATA, the cutscene
 track, Justin's music viewer, KERNEL, NEMESIS, STARTER POOL, TIME IS MONEY); partly built ones say what's left.
 
+## Next up: THE SHELL and the deck (Greg, 2026-11-20: "a list of stuff i can have you work on tomorrow")
+Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
+- **CRON** and more BOSS chips: CRON brings back the refill every sector, and with it charges that last the whole run
+  become the default. More big bosses to drop BOSS chips (Greg: "we will need to figure out more bosses").
+- **`compile`:** THE SHELL makes a chip.
+- **More SUDO commands:** `rm -rf` (every ICE on the layer), `fork` (copy a mod for the corp), `chmod` (a mod up a
+  rarity for a sector), `mode.free` (free travel on the map for a sector), `corp.jump` (skip to the boss).
+- **Hot chips:** the fence sells them; rivals drop them and then chase you.
+- **The fuse node:** fuse 2 exotic mods into an exotic chip.
+- **Making chips at the workbench:** a code with a digit makes a chip; a one-use item opens the bench's extra row.
+- **Chips for the empty groups:** GLYPH, the CREW jacks, UPLINK, PORTS.
+
 ## Big features: the next layer of the game
 
 The user, 2026-10-26: these are the features still to flesh out. REP and quests tie together: some quests are
@@ -449,18 +461,6 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
 - **A WORKBENCH training** (Greg, 2026-11-20; later): today the bench only has POPS's 3 lines on your first visit.
   When you buy WORKBENCH on THE BOARD, offer a training outside a run: it gives you some random gear and loot to
   shred, then shows you how to build something; it explains the `*` and the recipes (the BOOK).
-- **Teach the give unlocks** (Greg, 2026-11-20; v15.04's `give.mod` / `give.gear`: epic and up only once you've
-  shredded one, engine/deck.js deckGiveTiers, save.shredded):
-  - **The WORKBENCH training** (above), or POPS's first-visit lines until it exists: a line like "scrapping epic and
-    better gear and mods can give you other bonuses, like for shell commands. don't know what a shell is? just keep
-    playing and you'll find out."
-  - **Mark what's unlocked for THE SHELL:** which gear and mods (and at which rarity) you can summon. **Decided (Greg,
-    2026-11-20):** in the codex, and it doesn't have to be much: just the word SHELL on the entry, in the color of the
-    highest rarity you can summon (rarityCol of the top of deckGiveTiers). Found but never shredded: a
-    rare-colored SHELL is fine if it fits (Greg: "we can address once we get there"). Today nothing shows save.shredded. A shred unlocks its rarity and every one below it (a legendary FRAG
-    unlocks epic too): built that way in v15.04.
-  - **The deck:** a note about SHELL chips: how you get them (ROOT on your crew, chips from caches and bosses), and that
-    `give.mod` / `give.gear` summon mods and gear you've found (epic and up: shredded).
 - **Pets you can toggle** (meat notes 2026-11-07): a small button in the loot bar, like b0y's on the left (if b0y's
   is there, shift it right so they don't overlap), that turns a pet on or off. Today it's one pet a run: COMPANION, the
   EGG's chick, STRAY's bug and CATPHISH's fish don't stack (with STRAY and CATPHISH, the seed picks one). Maybe they

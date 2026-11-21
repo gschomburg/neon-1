@@ -1,7 +1,7 @@
 // NeoN+1 engine/textboard.js: centered text screens (buildTextBoard), the big box button (drawBox), text fields
 // (Field, drawField), info tile rows and offer pops. Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/textboard.js', 'v15.04']);
+NEON_FILES.push(['engine/textboard.js', 'v15.05']);
 
 // Big boxed primary button. 3 rows, or 4 with a subtitle.
 function drawBox(ctx, y, ln) {
@@ -239,7 +239,8 @@ function buildTextBoard(ctx, lines, area = null) {
     } else if (ln.text) {
       const x = Math.floor((L.wc - ln.text.length) / 2);
       // rarity chips: chips: true = the rarity words in it; chip: 'rare' = the whole text (not its padding)
-      const chips = ln.chip ? [{ from: ln.text.length - ln.text.trimStart().length, len: ln.text.trim().length, r: ln.chip }] : ln.chips ? rarityChips(ln.text) : null;
+      const chips0 = ln.chip ? [{ from: ln.text.length - ln.text.trimStart().length, len: ln.text.trim().length, r: ln.chip }] : ln.chips ? rarityChips(ln.text) : null;
+      const chips = ln.moreChips ? (chips0 || []).concat(ln.moreChips) : chips0;   // moreChips: [{ from, len, r }] (the codex's SHELL mark)
       if (chips && chips.length) {
         const chipAt = i => chips.find(c => i >= c.from && i < c.from + c.len);
         for (const c of chips) bg(x + c.from, y, c.len, chipOf(c.r).bg, 1);

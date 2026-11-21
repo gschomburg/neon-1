@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.04']);
+NEON_FILES.push(['engine/save.js', 'v15.05']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -185,12 +185,12 @@ const RUN_KEY = STORE_KEY + '.run';
 const CORP_SAVE = ['prevSafe', 'bulwarkUsed', 'burnerUsed', 'contUsed', 'wallAll', 'ice', 'perfects', 'scored', 'carry', 'pins',
   'friendUsed', 'tapUsed', 'rad', 'ride', 'tickets', 'stolen', 'rival', 'frozen', 'slomo', 'anchored', 'bees', 'hk', 'hkRival',
   'hypeRow', 'kludgeHealed', 'zd', 'magnet',
-  'leash', 'muzzleTo', 'honeyTo', 'express', 'invUsed'];   // (these five were lost on a reload before v14.45)
+  'leash', 'muzzleTo', 'honeyTo', 'express', 'invUsed', 'held', 'realShown'];   // (held, realShown: THE SHELL's mode.hold, show.real)   // (these five were lost on a reload before v14.45)
 // A run's line in save.history (the last 20 runs): every way a run ends writes the same shape.
 function noteHistory(run, extra) {
   if (run.tutorial) return;   // (the training run leaves no history)
   save.history.unshift(Object.assign({ seed: run.seed, depth: run.depth, corps: run.corps, sector: (run.sector || 0) + 1,
-    practice: run.practice, seeded: !!run.seeded, at: Date.now() }, extra));
+    practice: run.practice, seeded: !!run.seeded, rooted: !!run.hacked, at: Date.now() }, extra));   // (rooted: a real run that used THE SHELL's chip commands; not on the leaderboard yet, Greg 2026-11-20)
   save.history = save.history.slice(0, 20);
 }
 function runSnapshot() {

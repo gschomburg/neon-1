@@ -1,10 +1,26 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v15.04']);
+NEON_FILES.push(['engine/codex.js', 'v15.05']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
 const codexMods = () => Object.keys(MODS).filter(k => !MODS[k].hidden).sort((a, b) => RARITY_ORDER.indexOf(MODS[a].rarity) - RARITY_ORDER.indexOf(MODS[b].rarity) || MODS[a].name.localeCompare(MODS[b].name));
+// THE SHELL's mark (Greg, 2026-11-20): the word SHELL as a chip in the color of the top rarity give.mod / give.gear can
+// call up (engine/deck.js deckGiveTiers: found = up to rare, shredded = higher). Only once THE SHELL is yours (ROOT on
+// your crew). It sits in front of the "from" line, or on its own row when that would run past 34.
+const cxShellTop = (kind, k) => {
+  if (typeof deckGiveTiers !== 'function' || !(typeof rootOn === 'function' && rootOn())) return null;
+  const ts = deckGiveTiers(kind, k);
+  return ts.length ? tierView(kind === 'mod' ? MODS[k] : ITEMS[k], ts[ts.length - 1]).rarity : null;
+};
+const CX_SHELL = 'SHELL';
+const cxWhereOwn = (where, top) => top && where.length + CX_SHELL.length + 1 > 34 ? 1 : 0;   // (1: the mark takes its own row)
+function cxWhere(X, T, where, top) {
+  if (!top) { T(where, C.mid); return 0; }
+  if (cxWhereOwn(where, top)) { X({ text: CX_SHELL, chip: top }); T(where, C.mid); return 1; }
+  X({ text: CX_SHELL + ' ' + where, col: C.mid, moreChips: [{ from: 0, len: CX_SHELL.length, r: top }] });
+  return 0;
+}
 const CODEX_ROWS = 23; // height of the list window, including "more" rows (the tabs take two rows)
 
 function wrapText(str, w) {
@@ -185,20 +201,21 @@ function openCodex() {
       const sg = STAGES[m.stage];   // when it fires (the trigger order)
       X({ text: `${RARITY[m.rarity].label} // ${kind} // ${sg.order ? sg.order + '.' : ''}${sg.label}`, col: C.mid, chips: true });
       const tiers = m.tiers ? m.tiers.map((_, i) => tierView(m, i)) : [];
-      const d = wrapText(m.codex || m.desc, 34).slice(0, 12 - 3 - tiers.length - (tiers.length ? 1 : 0));
+      const d = wrapText(m.codex || m.desc, 34).slice(0, 12 - 3 - tiers.length - (tiers.length ? 1 : 0) - cxWhereOwn(modWhere(m), cxShellTop('mod', k)));
       d.forEach(l => T(l.padEnd(34), C.text));
       if (tiers.length) { T(''); tiers.forEach(v => X({ text: `${tierLabel(v).padEnd(7)}${v.tip}`.padEnd(34), col: C.text, chips: true })); }
-      T(modWhere(m), C.mid);
-      for (let i = 3 + d.length + tiers.length + (tiers.length ? 1 : 0); i < 12; i++) T('');
+      const own = cxWhere(X, T, modWhere(m), cxShellTop('mod', k));
+      for (let i = 3 + d.length + tiers.length + (tiers.length ? 1 : 0) + own; i < 12; i++) T('');
     } else {
       const it = ITEMS[k], tiers = it.tiers ? it.tiers.map((_, i) => tierView(it, i)) : [];
       X(isLoot(k) ? { text: it.name, chip: it.rarity, bold: true } : { gearHead: k, gearTier: 0, text: it.name }); X({ text: `${!['scrap', 'common'].includes(it.rarity) ? RARITY[it.rarity].label + ' ' : ''}gear // single use`, col: C.mid, chips: true });
-      const dl = wrapText(it.codex || it.desc, 34).slice(0, 12 - 3 - tiers.length - (tiers.length ? 1 : 0));
+      const boss = it.corp && CORPS[it.corp];   // boss gear: which boss gives it, how many
+      const from = `from: ${boss ? `${boss.name} boss (x${boss.gear ? boss.gear.n : 1}).` : it.where || ITEM_WHERE}`, shTop = cxShellTop('gear', k);
+      const dl = wrapText(it.codex || it.desc, 34).slice(0, 12 - 3 - tiers.length - (tiers.length ? 1 : 0) - cxWhereOwn(from, shTop));
       dl.forEach(l => T(l.padEnd(34), C.text));
       if (tiers.length) { T(''); tiers.forEach(v => X({ text: `${RARITY[v.rarity].label.padEnd(7)}${v.tip}`.padEnd(34), col: C.text, chips: true })); }
-      const boss = it.corp && CORPS[it.corp];   // boss gear: which boss gives it, how many
-      T(`from: ${boss ? `${boss.name} boss (x${boss.gear ? boss.gear.n : 1}).` : it.where || ITEM_WHERE}`, C.mid);
-      for (let i = 3 + dl.length + tiers.length + (tiers.length ? 1 : 0); i < 12; i++) T('');
+      const own = cxWhere(X, T, from, shTop);
+      for (let i = 3 + dl.length + tiers.length + (tiers.length ? 1 : 0) + own; i < 12; i++) T('');
     }
     T(SEP, C.dim);
 

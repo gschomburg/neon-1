@@ -725,10 +725,10 @@ Greg: sockets that open earlier should sit higher on the board.
     its 1UP while the chip is slotted and powered (HARDCORE turns it off with the other CRASH chips). A save that beat
     G0D before this gets the chip the same way. No deck yet: it comes with the deck. The ending says so: b0y's line
     in the scene, "1UP chip" on H3AV3N CLEARED, and POPS's call the first time. It never drops.
-- **A DECK tab on THE BOARD** (Greg, 2026-11-16: noted, not built): today the deck is THE BOARD > YOU > [ YOUR DECK ].
+- **A DECK tab on THE BOARD** (built v15.05: two tab rows, YOU REP DECK over FEATS CREW QUESTS; DECK opens your deck. Greg, 2026-11-16: noted then): today the deck is THE BOARD > YOU > [ YOUR DECK ].
   It deserves its own tab up top. Space: the tab row is 35 of 36 wide now ([YOU] [REP] [FEATS] [CREW] [QUESTS]), so a
   [DECK] tab needs room: shorter labels, or a second row, or one tab folds in.
-- **The deck's training** (Greg, 2026-11-16: noted, not built): so far only POPS's call at USER (3 lines and
+- **The deck's training** (roughed in v15.05: POPS's 6 lines on the first open, engine/deck.js deckTrainLines; `deck.pops` replays them. Greg, 2026-11-16: noted then): so far only POPS's call at USER (3 lines and
   [ SEE YOUR DECK ]). Claude's idea, like the bench's first-time POPS lines (engine/bench.js popsSeen): the first time
   you open your deck, a few POPS lines pointing at each part (sockets: tap, tap again to slot; the PSU and power; the
   CPU and its mk; chips ride home in your belt), and one line on your first chip drop in a run. Seen once, saved; an
