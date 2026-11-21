@@ -20,7 +20,9 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
 - **`compile`:** THE SHELL makes a chip.
 - **More SUDO commands:** `rm -rf` (every ICE on the layer), `fork` (copy a mod for the corp), `chmod` (a mod up a
   rarity for a sector), `mode.free` (free travel on the map for a sector), `corp.jump` (skip to the boss).
-- **Hot chips:** the fence sells them; rivals drop them and then chase you.
+- **Hot chips:** the fence sells them; rivals drop them and then chase you. Greg's calls (2026-11-21) are in
+  docs/DECK.md, under "The sources": a rival on every corp node without an anomaly, heat only while you hold one,
+  rivals take it back, their own set by rarity, magenta cycling, POPS's calls.
 - **The fuse node:** fuse 2 exotic mods into an exotic chip.
 - **Making chips at the workbench:** a code with a digit makes a chip; a one-use item opens the bench's extra row.
 - **Chips for the empty groups:** GLYPH, the CREW jacks, UPLINK, PORTS.

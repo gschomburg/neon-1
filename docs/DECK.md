@@ -797,5 +797,16 @@ engine/deck.js)" where it lives. tools/checks/tests/chips.js checks them.
   button; it needs a proper look.
 - **HOT** (beta): while you carry one, a rival comes to every corp, all run (QUIET still stops them). It's the simple
   version of "they chase you through the nodes": rivals don't move between nodes yet.
+- **Decided (Greg, 2026-11-21), hot chips (not built yet):**
+  - **The chase:** while you carry a hot chip, every corp node has a rival. A node that already has another anomaly
+    keeps that anomaly, and no rival comes there. Rivals still don't move between nodes.
+  - **The heat lasts while you have the chip.** Sell it or trash it and the heat is gone. (Today run.hot never clears.)
+  - **Two hot chips are no worse than one.**
+  - **A rival you don't beat takes the hot chip back.** POPS calls when you pick up your first hot chip, and again
+    when a rival takes one back.
+  - **Hot chips are a set of their own,** in a few rarities: the rarer, the stronger. They slot into the usual
+    sockets. (Today a rival or the fence hands you an ordinary chip, flagged hot.)
+  - **The look:** a hot chip shows its own rarity color with magenta (the workbench's) cycling through it, animated.
+    Not red: red is DIVINE's. Its one-line text says HOT.
 - **Quests** (beta): the OMNI RAID gives OMNI'S EYE, once. There's only the one quest so far.
 - **Decided (Greg, 2026-11-17):** exotics stay in the random drops (weight 1, about 1 chip drop in 1,700). They're rare, and the quest still guarantees its one. Get it early, fine; get a dupe, sell or shred it.
