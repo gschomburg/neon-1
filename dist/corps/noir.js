@@ -1,6 +1,6 @@
 // NeoN+1 corps/noir.js
 'use strict';
-NEON_FILES.push(['corps/noir.js', 'v15.22']);
+NEON_FILES.push(['corps/noir.js', 'v15.23']);
 // Its boss reward: SNITCH gear x3 (snitch), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

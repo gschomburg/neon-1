@@ -495,9 +495,6 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   "integrity" mentions (the header says INT; INT everywhere, or only where space is tight). **Ad copy** (meat notes
   2026-11-06): "you are the product!"
 - **Codex and menus pass** (with HOW TO PLAY):
-  - **Codex sub-tabs?** (meat notes 2026-11-21): group it with the sub-tab strip (drawSubTabs). Mods, gear and chips
-    under one tab (TECH?); glyphs, corps and sectors under another (NET?). Hackers maybe get their own, with CREW and
-    RIVALS sub-tabs.
   - **HOW TO PLAY pass:** touch it up (corps and tells on THE BASICS; gestures, exotics, ads, run resume).
   - **Keyword highlighting in text** (started v13.75 on HOW TO PLAY > THE BASICS: ICE, INT, credits; next the other HOW TO PLAY pages and the codex, the user's aim: neater): ICE in red, credits in money, mod names in their rarity...
 - **The training sim** may need a little redesign (meat notes 2026-11-06).

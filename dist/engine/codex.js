@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v15.22']);
+NEON_FILES.push(['engine/codex.js', 'v15.23']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -89,22 +89,45 @@ function cxName(key, real, seen, frac, now) {
   return FX.decrypt(real, hint + (1 - hint) * k, seed, now, true);
 }
 
-function openCodex() {
+// THE CODEX's tabs (Greg, 2026-11-21): [id, label, its sub-tabs]. CHIPS shows once you've got a chip of your own (not
+// the two the deck comes with: DECK_START).
+const CX_SUB = { items: 'gear', mods: 'mods', chips: 'chips', corps: 'corps', glyphs: 'glyphs', sectors: 'sectors', crew: 'crew', rivals: 'rivals' };
+const cxChipsOn = () => typeof DECK_CHIPS !== 'undefined' && Object.keys(DECK_CHIPS).some(k => !DECK_START.chips[k] && deckHave(k) > 0);
+const cxTabs = () => [['tech', 'TECH', ['items', 'mods', ...(cxChipsOn() ? ['chips'] : [])]], ['net', 'NET', ['corps', 'glyphs', 'sectors']], ['hk', 'HACKERS', ['crew', 'rivals']]];
+// the chips, by group (DECK_GROUPS' order) then rarity. Not the BETA ones (not built yet).
+const cxChips = () => Object.keys(DECK_CHIPS).filter(k => !deckBeta(k)).sort((a, b) => {
+  const g = Object.keys(DECK_GROUPS), A = DECK_CHIPS[a], B = DECK_CHIPS[b];
+  return g.indexOf(A[1]) - g.indexOf(B[1]) || RARITY_ORDER.indexOf(A[2]) - RARITY_ORDER.indexOf(B[2]) || A[0].localeCompare(B[0]);
+});
+// where a chip comes from (engine/deck.js: deckRollChip's pool, DECK_RIPPED, DECK_NO_DROP, the BOSS chips)
+const cxChipWhere = k => DECK_START.chips[k] ? 'from: it comes with your deck.' : k === '1UP' ? "from: b0y, for beating G0D." : k === 'MN1' ? "from: ROOT's quest."
+  : deckIsRipped(k) ? 'from: rivals and THE FENCE. never a cache or a market.' : DECK_CHIPS[k][1] === 'boss' ? 'from: the big bosses.'
+  : 'from: caches, the pier, markets and corp bosses. or build it at a WORKBENCH.';
+// where you were last time (this session): the codex opens there again
+const CX_LAST = { tab: null, sel: 0, top: 0 };
+function openCodex(want) {
   // (first time with the encrypted codex: what you'd already found doesn't decode again)
   if (!save.codexRead) { save.codexRead = {}; for (const k of Object.keys(save.seen || {})) if (save.seen[k]) save.codexRead[k] = 1;
     for (const c of CODEX_CORPS) if (corpStat(c).breached) for (let i = 0; i < 3; i++) save.codexRead['tell_' + c + i] = 1;
     persist(); }
-  const TABS = [['mods', 'MODS', 'tabm'], ['items', 'GEAR', 'tabi'], ['glyphs', 'GLYPHS', 'tabg'], ['corps', 'CORPS', 'tabc'], ['sectors', 'SECTORS', 'tabs'], ['hackers', 'HACKERS', 'tabh']];
-  let tab = 'mods', sel = 0, top = 0, shownPal = null;
+  const tabs = cxTabs(), subs = tabs.flatMap(t => t[2]);
+  if (want === 'gear') want = 'items';
+  let tab = subs.includes(want) ? want : subs.includes(CX_LAST.tab) ? CX_LAST.tab : 'items', sel = 0, top = 0, shownPal = null;
+  if (tab === CX_LAST.tab) ({ sel, top } = CX_LAST);
+  const main = () => tabs.find(t => t[2].includes(tab));
+  const isChip = () => tab === 'chips', isHk = () => tab === 'crew' || tab === 'rivals';
   const entries = () => tab === 'mods' ? codexMods() : tab === 'items' ? Object.keys(ITEMS).filter(k => !ITEMS[k].bag && !ITEMS[k].chip)
+    : tab === 'chips' ? cxChips().map(deckChipItem)
     : tab === 'glyphs' ? GLYPHS.map(gl => gl.key) : tab === 'sectors' ? Object.keys(SECTOR_EVENTS).map(k => 'ev_' + k)
-    : tab === 'hackers' ? [...HK_RIVALS, ...HK_CREW].map(k => 'hk_' + k) : CODEX_CORPS.map(k => 'corp_' + k);
+    : tab === 'crew' ? HK_CREW.map(k => 'hk_' + k) : tab === 'rivals' ? HK_RIVALS.map(k => 'hk_' + k) : CODEX_CORPS.map(k => 'corp_' + k);
+  // found: seen; a chip also when it's in your deck (the ones it came with were never picked up)
+  const seenOf = key => !!save.seen[key] || (isChip() && deckHave(ITEMS[key].chip) > 0);
   // an entry's name, as the codex shows it once it's found (what the ciphertext hides)
-  const nameOf = key => tab === 'corps' ? (d => `${corpCode(d)}  ${d.name}`)(corpDef(key.slice(5))) : tab === 'hackers' ? hkName(key.slice(3))
+  const nameOf = key => tab === 'corps' ? (d => `${corpCode(d)}  ${d.name}`)(corpDef(key.slice(5))) : isHk() ? hkName(key.slice(3))
     : tab === 'sectors' ? SECTOR_EVENTS[key.slice(3)].name : tab === 'glyphs' ? GLYPH_BY_KEY[key].name : (tab === 'mods' ? MODS : ITEMS)[key].name;
   // Corps: a short list and a taller details box.
-  const rowsFor = () => tab === 'corps' ? CODEX_ROWS - 5 : tab === 'glyphs' ? CODEX_ROWS : CODEX_ROWS - 7;   // details: corps 10 rows, mods / items 12, glyphs 5
-  const setTab = name => { tab = name; sel = 0; top = 0; Sound.tick(); };
+  const rowsFor = () => tab === 'corps' ? CODEX_ROWS - 5 : tab === 'glyphs' ? CODEX_ROWS : CODEX_ROWS - 7;   // details: corps 10 rows, mods / items / chips 12, glyphs 5
+  const setTab = name => { if (name === tab) return; tab = name; sel = 0; top = 0; Sound.tick(); };
   const scrollBy = d => { const n = entries().length; const t = nextTop(top, d, maxTop(n, rowsFor())); if (t !== top) { top = t; Sound.tick(); } };
   // Keep the selected entry inside the list window.
   const follow = () => {
@@ -122,16 +145,18 @@ function openCodex() {
     const list = entries(), n = list.length, rows = rowsFor();
     sel = clamp(sel, 0, n - 1);
     top = clamp(top, 0, maxTop(n, rows));
-    const found = list.filter(k => save.seen[k]).length, now = performance.now();
-    const cx = key => cxName(key, nameOf(key), !!save.seen[key], found / n, now);   // the name, or its ciphertext
-    T(`CODEX  ${tab} ${found}/${n} found`, C.accent);
-    const tabBtn = ([name, label, id]) => ({ text: `[${label}]`, id, sel: tab === name, onTap: () => setTab(name) });
-    X({ gap: 0, row: TABS.slice(0, 4).map(tabBtn) });   // (two rows: 36 wide)
-    X({ gap: 0, row: TABS.slice(4).map(tabBtn) });
+    Object.assign(CX_LAST, { tab, sel, top });
+    const found = list.filter(seenOf).length, now = performance.now();
+    const cx = key => cxName(key, nameOf(key), seenOf(key), found / n, now);   // the name, or its ciphertext
+    T(`CODEX  ${CX_SUB[tab]} ${found}/${n} found`, C.accent);
+    // THE CODEX's tabs (Greg, 2026-11-21): three main ones, and the sub-tab strip under them (drawSubTabs, like the
+    // BOOK's). The same two rows the six tabs used to take.
+    X({ gap: 1, row: tabs.map(([id, label, s]) => ({ text: `[${label}]`, id: 'tab_' + id, sel: main()[0] === id, onTap: () => setTab(s[0]) })) });
+    X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, main()[2].map(s => ({ id: 'cxs_' + s, text: CX_SUB[s].toUpperCase(), on: tab === s, onTap: () => setTab(s) }))) });
 
     // Details of the selected entry (5 rows; 10 for corps).
     T(SEP, C.dim);
-    const k = list[sel], seen = !!save.seen[k];
+    const k = list[sel], seen = seenOf(k);
     // A found corp is shown in its own palette (if corp colors are on).
     const palKey = tab === 'corps' && seen ? k.slice(5) : null;
     if (palKey !== shownPal) { shownPal = palKey; scenePalette(palKey); }
@@ -155,7 +180,7 @@ function openCodex() {
         T(d.gear ? `boss gear: ${ITEMS[d.gear.key].name} x${d.gear.n}` : d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
         T(`breached ${rec.breached}   lost ${rec.lost}`, C.text);
       }
-    } else if (tab === 'hackers') {
+    } else if (isHk()) {
       // 12 rows: the face in their colors, name and side, the shtick, the lore
       const id = k.slice(3), h = HACKERS[id], sty = hkStyle(id), face = (ART_FACES[id] || { art: ['', '', ''] }).art;
       if (!seen) {
@@ -189,6 +214,23 @@ function openCodex() {
       X({ tileInfo: seen ? gl.glyphOf() : MASK_GLYPH, lines: seen
         ? [{ text: gl.name, col: C.accent }, ...gl.lore.map(t => ({ text: t, col: C.text }))]
         : [{ text: cx(k), col: C.dim }, { text: 'not found yet.', col: C.mid }, { text: 'it shows up on a board.', col: C.dim }] });
+    } else if (isChip()) {
+      // 12 rows: the name, rarity // group // power, what it does, where it comes from, whether it's yours
+      const ck = ITEMS[k].chip, c = DECK_CHIPS[ck];
+      if (!seen) {
+        T(cx(k), C.dim); T('not found yet.', C.mid);
+        T(deckIsRipped(ck) ? 'rivals carry these.' : 'pick one up, or see one for sale.', C.dim);
+        for (let i = 0; i < 9; i++) T('');
+      } else {
+        X({ text: c[0], chip: c[2], bold: true });
+        X({ text: `${RARITY[c[2]].label} // ${DECK_GROUPS[c[1]][0]} chip // power ${c[3]}`, col: C.mid, chips: true });
+        const wh = wrapText(cxChipWhere(ck), 34), dl = wrapText(c[4], 34).slice(0, 12 - 4 - wh.length);
+        dl.forEach(l => T(l.padEnd(34), C.text));
+        T('');
+        wh.forEach(l => T(l, C.mid));
+        T(deckHave(ck) ? `${ck}: in your deck.` : `${ck}: not yours yet.`, deckHave(ck) ? C.accent : C.dim);
+        for (let i = 4 + dl.length + wh.length; i < 12; i++) T('');
+      }
     } else if (!seen) {
       T(cx(k), C.dim); T('not found yet.', C.mid);
       T(tab === 'mods' ? 'find it in a run to unlock it.' : 'pick one up to unlock it.', C.dim);
@@ -224,11 +266,14 @@ function openCodex() {
     let used = 0;
     if (w.hasUp) { X({ text: w.canUp ? '[ ^ ^ ^  more  ^ ^ ^ ]' : '', invert: true, id: 'moreup', onTap: () => scrollBy(-1) }); used++; }
     for (let idx = top; idx < top + w.shown; idx++) {
-      const key = list[idx], seenK = !!save.seen[key];
+      const key = list[idx], seenK = seenOf(key);
       const base = { list: true, id: 'cx' + idx, onTap: () => { sel = idx; Sound.tick(); }, sel: idx === sel };
-      if (tab === 'hackers') {
+      if (isHk()) {
         const h = HACKERS[key.slice(3)];
         X(Object.assign(base, { name: cx(key), col: seenK ? C.bright : C.dim, right: seenK ? (h.side === 'bad' ? 'RIVAL' : 'CREW') : '', rightCol: h.side === 'bad' ? C.danger : C.accent }));
+      } else if (isChip()) {
+        const ck = ITEMS[key].chip;
+        X(Object.assign(base, { name: cx(key), col: seenK ? C.bright : C.dim, chip: seenK ? DECK_CHIPS[ck][2] : null, right: seenK ? ck : '', rightCol: C.mid }));
       } else if (tab === 'sectors') {
         const E = SECTOR_EVENTS[key.slice(3)];
         X(Object.assign(base, { name: cx(key), col: seenK ? C.bright : C.dim, right: seenK ? (E.kind === 'sector' ? 'sector' : 'anomaly') : '', rightCol: C.mid }));
@@ -256,13 +301,13 @@ function openCodex() {
     for (; used < rows; used++) T('');
   }, '> codex open.', { full: true, top: TO_TITLE });
 
-  // Keys: left/right = tabs, up/down = move through the list, esc = back.
+  // Keys: left/right = sub-tabs, up/down = move through the list, esc = back.
   st.keyHandler = k => {
     if (k === 'arrowleft' || k === 'arrowright') {
-      const i = TABS.findIndex(t => t[0] === tab);
-      const next = TABS[(i + (k === 'arrowright' ? 1 : TABS.length - 1)) % TABS.length];
-      setTab(next[0]);
-      st.kbFocus = st.hoverBtn = next[2];   // cursor follows the active tab
+      // every sub-tab in order, into the next main tab at the end (Greg, 2026-11-21)
+      const all = cxTabs().flatMap(t => t[2]), i = all.indexOf(tab);
+      setTab(all[(i + (k === 'arrowright' ? 1 : all.length - 1)) % all.length]);
+      st.kbFocus = st.hoverBtn = 'tab_' + main()[0];   // cursor follows the active tab
       return true;
     }
     if (k === 'arrowup' || k === 'arrowdown') {

@@ -14,6 +14,12 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The codex's tabs** (v15.23): `[TECH] [NET] [HACKERS]`, with a sub-tab strip under them: GEAR MODS CHIPS /
+  CORPS GLYPHS SECTORS / CREW RIVALS. Left / right walks every sub-tab in order. It opens where you left it (till you
+  reload). **CHIPS** shows once you've got a chip of your own (the deck's STOCK CELL and SPOILS don't count). A chip is
+  found once you've seen it or it's in your deck; its page has rarity // group // power, its text, where it comes from,
+  and whether it's yours. My calls: chips listed by group then rarity, BETA chips left out, the code on the right.
+
 - [ ] **Epic and legendary chips build without a blueprint** (v15.22): see one (a market, a boss's pick, your belt) and
   it's in the BOOK, buildable with the parts and a BLANK. Blueprints are exotics only. POPS's blueprint call says so.
 
