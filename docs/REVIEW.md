@@ -14,6 +14,12 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **RIPPED chips** (v15.08; docs/DECK.md "The sources"). `give.chip LW1` in dev mode puts one on your belt.
+  - **The chase:** with one on your belt, every corp without another anomaly has a rival. Sell it, trash it, or let a rival take it, and that stops.
+  - **Taking it back:** a rival that gets away (steals a layer and isn't flatlined or thrown out) takes one off your belt. POPS calls the first time, and the first time you get one.
+  - **The look:** magenta runs across the chip, on the belt and in your deck. Its texts start RIPPED. Worth a look on a phone.
+  - **The set (my picks, rarer = stronger):** LIFTED WALLET (common, +50cr), TURBO'S NITRO (rare, 2 WARP), VULTURE'S CUT (rare, rivals pay +50%), D0PPEL'S MASK (epic, +2 INT), PH1SH'S HOOK (epic, rivals drop chips twice as often), SYSOP'S KEY (legendary, every corp's first layer: real node marked). Names, numbers and effects are all up for change.
+  - **My calls:** ripped chips sell at a market (other chips don't), since you said selling it ends the heat. Only rivals and THE FENCE give them; caches, markets and bosses never do.
 - [ ] **Four more SUDO commands** (v15.06; docs/DECK.md SUDO). `give.chip FT3` (and JM4, RF4, CM3) in dev mode puts one on your belt.
   - **`mode.free`** (FT3, epic, 3 charges): any node in this sector is open, the boss too, till the sector ends.
   - **`corp.jump`** (JM4, legendary, 4): from a corp layer, straight to its boss.

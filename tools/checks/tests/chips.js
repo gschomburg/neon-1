@@ -44,7 +44,7 @@ module.exports = { name: 'chips', body: `
   on(['UV1']); check(deckCredits(100, run) === 75, 'UNDERVOLT: -25% credits');
   on(['GL2']); const cr0 = run.credits; deckIceHit({}); check(run.credits === cr0 + 8, 'GLASS: an ICE hit pays 8cr');
   on(['HN1']); const n0 = Object.values(run.map).filter(n => n.type === 'corp' && deckRivalComes(n)).length; check(n0 > 0, 'HUNTED: rivals turn up: ' + n0);
-  on([]); run.hot = true; check(Object.values(run.map).filter(n => n.type === 'corp').every(deckRivalComes), 'a HOT chip: a rival in every corp'); run.hot = false;
+  on([]); addItem(deckChipItem('LW1'), 0); check(Object.values(run.map).filter(n => n.type === 'corp' && (!n.mod || n.mod === 'rival')).every(deckRivalComes), 'a RIPPED chip: a rival in every corp without another anomaly (more: tests/ripped.js)'); takeItem(deckChipItem('LW1'));
   on(['DC4']); run.mods = run.mods.filter(k => k !== 'tracer'); addMod('tracer', 1); deckSector(run); check(run.modTier.tracer === 0, 'DECAY: a mod drops a step');
   on(['IN5', 'DD3']); run.credits = 90; deckDeath(run); check(save.deck.insured === 45 && save.deck.deadDrop && save.deck.deadDrop.length > 0, 'INSURANCE and DEAD DROP: saved on a death');
   const run2 = { credits: 0, practice: false }; deckRunCarry(run2); check(run2.credits === 45 && run2.deadDrop && !save.deck.insured && !save.deck.deadDrop, '...and paid out next run');
@@ -54,7 +54,7 @@ module.exports = { name: 'chips', body: `
   on([]); DECK_ALWAYS = true;
   check(!!deckShopChip({ id: 'n1' }, 0) && deckShopChip({ id: 'n1' }, 0).price > 0, 'a market can sell a chip');
   check(!!deckBossChip({ id: 'n1' }), 'a boss reward can be a chip');
-  check(!!deckFenceChip({ id: 'n1' }) && deckFenceChip({ id: 'n1' }).price > 0, 'THE FENCE sells a hot chip');
+  check(!!deckFenceChip({ id: 'n1' }) && deckFenceChip({ id: 'n1' }).price > 0, 'THE FENCE sells a ripped chip');
   DECK_ALWAYS = false;
   on(['GE1']); check(deckGearRewards({ id: 'n1' }).length === 3 && deckGearRewards({ id: 'n1' }).every(o => o.kind === 'gear'), 'GEAR: 3 gear for the boss rewards');
   check(DECK_SHELL_CMDS.some(c => c.name === 'eject' && c.chip === 'EJ1'), 'EJECT teaches eject');

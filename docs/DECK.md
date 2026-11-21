@@ -799,23 +799,31 @@ engine/deck.js)" where it lives. tools/checks/tests/chips.js checks them.
 - DATA CACHEs (20%) and PIER gear catches (25%), as before.
 - **Markets:** 15% of the time, a chip for sale (40cr common ... 240cr exotic; CHEAPSKATE and INFLATION count).
 - **Corp boss rewards:** 12% of the time, a chip is one of the picks.
-- **Rivals:** beat one (or flatline it) and 30% of the time it drops a chip. It's **RIPPED**.
+- **Rivals:** beat one (or flatline it) and 30% of the time it drops a chip (PH1SH'S HOOK: 60%). It's **RIPPED**: from
+  the ripped set only.
 - **THE FENCE** (when THIEF made one): a RIPPED chip, at twice a market's price. **Beta:** one line and a [ BUY RIPPED ]
   button; it needs a proper look.
-- **RIPPED** (beta): while you carry one, a rival comes to every corp, all run (QUIET still stops them). It's the simple
-  version of "they chase you through the nodes": rivals don't move between nodes yet.
-- **Decided (Greg, 2026-11-21), ripped chips (not built yet):**
+- **RIPPED** (built v15.08): while one is on your belt, a rival comes to every corp with no other anomaly (QUIET still
+  stops them). Sell it, trash it or lose it to a rival and that's off; cash out and it's yours, a chip like any other.
+  A rival that gets away (stole a layer, not flatlined, not thrown out) takes one back. POPS calls the first time you
+  get one, and the first time one is taken (save.deck.ripSeen, ripLost). Magenta runs through the chip on the belt and
+  in your deck (deckRipGlow). They sell (their share of a market chip's price); other chips don't.
+- **The ripped set** (v15.08, Claude's; Greg to look): LIFTED WALLET (common BOOT, +50cr to start), TURBO'S NITRO (rare
+  BOOT, 2 WARP to start), VULTURE'S CUT (rare BIOS, rivals pay +50%), D0PPEL'S MASK (epic BOOT, +2 max INT), PH1SH'S HOOK
+  (epic BIOS, rivals drop chips twice as often), SYSOP'S KEY (legendary BOOT, a corp's first layer: the real node
+  marked). Named for the rivals they came off. No exotic yet.
+- **Decided (Greg, 2026-11-21), ripped chips (built v15.08):**
   - **The name:** RIPPED (you ripped it out: "w00f is gonna want that back"), was HOT, because HOT read like the HEAT
-    group. Renamed in the code v15.06 (run.ripped; the drop, fence lines and button). Dropped: SWIPED, FLAGGED,
+    group. Renamed in the code v15.06 (the drop, fence lines and button; v15.08 drops the run.ripped flag: the belt says). Dropped: SWIPED, FLAGGED,
     BOUNTY, CONTRABAND, PINCHED, RIP; BOOTLEG kept for later (BACKLOG, Parked).
   - **The chase:** while you carry a ripped chip, every corp node has a rival. A node that already has another anomaly
     keeps that anomaly, and no rival comes there. Rivals still don't move between nodes.
-  - **The chase lasts while you have the chip.** Sell it or trash it and the chase is gone. (Today run.ripped never clears.)
+  - **The chase lasts while you have the chip.** Sell it or trash it and the chase is gone.
   - **Two ripped chips are no worse than one.**
   - **A rival you don't beat takes the ripped chip back.** POPS calls when you pick up your first ripped chip, and again
     when a rival takes one back.
   - **Ripped chips are a set of their own,** in a few rarities: the rarer, the stronger. They slot into the usual
-    sockets. (Today a rival or the fence hands you an ordinary chip, flagged ripped.)
+    sockets.
   - **The look:** a ripped chip shows its own rarity color with magenta (the workbench's) cycling through it, animated.
     Not red: red is DIVINE's. Its one-line text says RIPPED.
 - **Quests** (beta): the OMNI RAID gives OMNI'S EYE, once. There's only the one quest so far.

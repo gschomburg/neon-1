@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.07']);
+NEON_FILES.push(['engine/deck.js', 'v15.08']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -144,7 +144,19 @@ const DECK_CHIPS = {
   DC4: ['DECAY', 'heat', 'epic', 0, 'your mods drop a step every sector. +30% REP.', ['v.v', 'DCY'], 'mods decay, +30% REP.'],
   FG0: ['FOG', 'heat', 'rare', 0, 'the map shows only the next row. +15% REP.', ['...', 'FOG'], 'see one row ahead, +15% REP.'],
   GT1: ['GLITCH', 'heat', 'common', 0, 'every ICE hit glitches the screen, worse every time. +10% REP.', ['#!#', 'GLT'], 'ICE glitches you, +10% REP.'],
+  // ---- RIPPED (Greg, 2026-11-21; docs/DECK.md "The sources"): a set of their own, only from rivals and THE FENCE, the
+  // rarer the stronger. They slot into the usual sockets. Carry one and rivals come for it (deckRippedOn).
+  LW1: ['LIFTED WALLET', 'boot', 'common', 1, 'start each run with +50cr. somebody is missing it.', ['$<-', 'LFT'], '+50cr to start.'],
+  TN2: ["TURBO'S NITRO", 'boot', 'rare', 1, 'start each run with 2 WARP.', ['>>~', 'NTR'], 'start with 2 WARP.'],
+  VE2: ["VULTURE'S CUT", 'bios', 'rare', 1, 'beating a rival pays +50%.', ['\\v/', 'CUT'], 'rivals pay +50%.'],
+  DM3: ["D0PPEL'S MASK", 'boot', 'epic', 2, '+2 max INTEGRITY.', ['(=)', 'DPL'], '+2 max INT.'],
+  PH3: ["PH1SH'S HOOK", 'bios', 'epic', 2, 'rivals you beat drop a chip twice as often (60%).', ['_J ', 'HK!'], 'rivals drop more chips.'],
+  SY4: ["SYSOP'S KEY", 'boot', 'legendary', 3, "the first layer of every corp: the real node is marked.", ['#*#', 'SYS'], 'first layers: real node marked.'],
 };
+// RIPPED chips: their texts say so (their one-line tip starts RIPPED), and they look it (deckRipGlow)
+const DECK_RIPPED = ['LW1', 'TN2', 'VE2', 'DM3', 'PH3', 'SY4'];
+const deckIsRipped = k => DECK_RIPPED.includes(k);
+for (const k of DECK_RIPPED) { DECK_CHIPS[k][4] = 'RIPPED: from a rival. ' + DECK_CHIPS[k][4]; DECK_CHIPS[k][6] = 'RIPPED. ' + DECK_CHIPS[k][6]; }
 // What each chip touches (docs/DECK.md "Seeds"; not shown in the game): map (what a run generates), rules (what it pays
 // or drops), you (your start, tools, deaths). Keep it next to DECK_CHIPS: a new chip gets its tags here.
 const DECK_CHIP_TAGS = {
@@ -158,6 +170,7 @@ const DECK_CHIP_TAGS = {
   GE1: ['rules'], OF1: ['rules'], PT1: ['rules'], GB2: ['rules'], AU2: ['rules'], SV1: ['rules'], HL2: ['rules'],
   BO1: ['you'], PO1: ['you'], WU3: ['you'], SPC: ['you'],
   DN1: ['you'], GL2: ['you', 'rules'], CH1: ['you', 'rules'], TP1: ['you', 'rules'], RE1: ['you'], LG2: ['you'], UV1: ['you', 'rules'], PD2: ['you', 'rules'],
+  LW1: ['you'], TN2: ['you'], VE2: ['rules'], DM3: ['you'], PH3: ['rules'], SY4: ['you'],
   HN1: ['map', 'rules'], SF2: ['rules'], NM0: ['rules'], IF1: ['rules'], DC4: ['rules'], FG0: ['rules'], GT1: ['rules'],
 };
 // The chips that don't do their whole job yet (Greg, 2026-11-16: mark them BETA, so we know they need more work). What's
@@ -244,17 +257,19 @@ const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
 const deckNoShell = key => ['shell', 'sudo'].includes(DECK_CHIPS[key][1]) && !(typeof rootOn === 'function' && rootOn());
 const deckHave = key => (save.deck && save.deck.chips && save.deck.chips[key]) || 0;
 for (const [key, c] of Object.entries(DECK_CHIPS)) {
-  ITEMS[deckChipItem(key)] = { key: deckChipItem(key), name: c[0], price: 0, rarity: c[2], chip: key, only: 'deck', nosell: true, desc: c[4],
-    get tip() { const n = deckHave(key); return `${n ? `dupe: you have ${n}.` : 'NEW.'} ${c[6]} cash out to keep it.${deckNoShell(key) ? ' it needs THE SHELL: get ROOT on your crew.' : ''}`; } };
+  ITEMS[deckChipItem(key)] = { key: deckChipItem(key), name: c[0], price: 0, rarity: c[2], chip: key, only: 'deck', nosell: !deckIsRipped(key), ripped: deckIsRipped(key), desc: c[4],   // (a RIPPED one sells: Greg, sell it and the heat's off. Its price: below)
+    get tip() { const n = deckHave(key); return `${n ? `dupe: you have ${n}.` : 'NEW.'} ${c[6]} cash out to keep it.${deckIsRipped(key) ? ' rivals want it back.' : ''}${deckNoShell(key) ? ' it needs THE SHELL: get ROOT on your crew.' : ''}`; } };
   // on the belt its face's two rows take turns (Greg, 2026-11-16), 3 wide (engine/panels.js ITEM_SHORT)
   Object.defineProperty(ITEM_SHORT, deckChipItem(key), { get: () => { const f = c[5], b = f[1] && Math.floor(performance.now() / 1100) % 2; return (b ? f[1] : f[0]).slice(0, 3).padEnd(3); } });
 }
 // chips drop once you have a deck, in real runs (not the training, not a race)
 const deckDrops = () => !!save.deck && !!st.run && !st.run.tutorial && !st.mp;
 function deckRollChip(r) {
-  const pool = Object.keys(DECK_CHIPS).filter(k => !DECK_NO_DROP.includes(k) && !deckBeta(k));
+  const pool = Object.keys(DECK_CHIPS).filter(k => !DECK_NO_DROP.includes(k) && !deckBeta(k) && !deckIsRipped(k));
   return pickWeighted(pool, k => DECK_DROP_WEIGHT[DECK_CHIPS[k][2]] || 0, r);
 }
+// a RIPPED one (rivals, THE FENCE): by rarity, the same weights
+const deckRollRipped = r => pickWeighted(DECK_RIPPED, k => DECK_DROP_WEIGHT[DECK_CHIPS[k][2]] || 0, r);
 // a DATA CACHE (engine/panels.js openCache): now and then a chip. Returns its line for the cache's head, or null.
 // A full belt: the swap comes up over the cache (pick the gear that goes, or keep what you have).
 function deckCacheChip(node) {
@@ -304,7 +319,7 @@ function deckRunChips(run) {
   return { keys, spoils, brown };
 }
 // INT a chip costs (or gives) as a run starts
-const DECK_INT = { RX9: -1, GR8: -1, LK7: -1, FM2: -1, SK1: -1, FI2: 2, DN1: -1, GL2: -2, CH1: -1, TP1: -1, RE1: -1, LG2: -1, UV1: 1, PD2: 2 };
+const DECK_INT = { DM3: 2, RX9: -1, GR8: -1, LK7: -1, FM2: -1, SK1: -1, FI2: 2, DN1: -1, GL2: -2, CH1: -1, TP1: -1, RE1: -1, LG2: -1, UV1: 1, PD2: 2 };
 function deckRunStart(run, opts = {}) {
   if (opts.tutorial || st.mp) return;
   const { keys, spoils, brown } = deckRunChips(run);
@@ -317,7 +332,9 @@ function deckRunStart(run, opts = {}) {
   if (di) { run.maxInt = Math.max(1, run.maxInt + di); run.integrity = Math.max(1, Math.min(run.maxInt, run.integrity + di)); }
   if (chipOn('TF1', run)) run.credits += 60;   // TRUST FUND
   if (chipOn('FI2', run)) run.credits += 100;   // FRESH INSTALL (and no starter perk: engine/panels.js openStartReward)
+  if (chipOn('LW1', run)) run.credits += 50;   // LIFTED WALLET (RIPPED)
   const give = (key, n) => { for (let i = 0; i < n; i++) if (!addItem(key, 0)) break; };
+  if (chipOn('TN2', run)) give('warp', 2);   // TURBO'S NITRO (RIPPED)
   if (chipOn('LD3', run)) { give('wall', 3); give('frag', 2); }   // LOADOUT
   if (chipOn('BM4', run)) give('call', 3);   // BEAST MASTER
   // the second set
@@ -374,7 +391,9 @@ function deckIceHit(t) {
   return msg;
 }
 // a new layer (engine/run.js enterLayer): RED EYE marks one ICE (not a $ node), from the run's seed
+// SYSOP'S KEY (RIPPED) marks the real node on a corp's first layer, the way 0DAY does (t.zd)
 function deckLayer(lv, c) {
+  if (chipOn('SY4') && c.idx === 0 && c.hasBoss && lv.n > 1) lv.tiles[lv.safe].zd = true;
   if (!chipOn('RE1') || lv.n < 3) return;
   const ice = lv.tiles.filter(t => !t.safe && !t.loaded && !t.quantum);
   if (ice.length) pickR(ice, rngFor(st.run.seed, 'redeye', c.node.id, c.idx)).ruledOut = true;
@@ -388,28 +407,60 @@ function deckSector(run) {
   for (const k of hit) run.modTier[k]--;
   if (hit.length) setTimeout(() => setMsg(`> DECAY: ${hit.length} mod${hit.length > 1 ? 's' : ''} dropped a step.`, C.danger), 1200);
 }
-// rivals (engine/run.js startCorp): LOUD and HUNTED bring one to a corp that had none, and a RIPPED chip in your belt
-// brings one to every corp (they want it back). Their own stream: the map stays the same.
+// rivals (engine/run.js startCorp): LOUD and HUNTED bring one to a corp that had none. A RIPPED chip on your belt brings
+// one to every corp, unless the corp has another anomaly: that one's on, and nobody comes (Greg, 2026-11-21). Their own
+// stream: the map stays the same.
+const deckRippedOn = (run = st.run) => !!run && (run.items || []).some(s => ITEMS[s.key] && ITEMS[s.key].ripped);   // (sold, trashed, taken back: the heat's off. Two are no worse than one)
 function deckRivalComes(node) {
   const run = st.run; if (!run || !node || (node.type !== 'corp' && node.type !== 'final')) return false;
-  if (run.ripped || run.hot) return true;   // (run.hot: a run saved before v15.06)
+  if (deckRippedOn(run) && (!node.mod || node.mod === 'rival')) return true;
   const p = Math.max(chipOn('LU6') ? 0.25 : 0, chipOn('HN1') ? 0.5 : 0);
   return p > 0 && rngFor(run.seed, 'deckrival', node.id)() < p;
 }
-// beating a rival (engine/hackers.js hkCorpEnd): LOUD pays double; now and then they drop a chip, and it's RIPPED
+// beating a rival (engine/hackers.js hkCorpEnd): LOUD pays double, VULTURE'S CUT +50%; now and then they drop a chip,
+// and it's RIPPED (PH1SH'S HOOK: twice as often)
 const DECK_RIVAL_DROP = 0.3;
-const deckRivalPay = () => chipOn('LU6') ? 2 : 1;
+const deckRivalPay = () => (chipOn('LU6') ? 2 : 1) * (chipOn('VE2') ? 1.5 : 1);
 function deckRivalChip(h) {
   const run = st.run; if (!deckDrops() || !st.corp) return null;
   const r = rngFor(run.seed, 'rivalchip', st.corp.node.id, h.id);
-  if (r() >= DECK_RIVAL_DROP && !DECK_ALWAYS) return null;
-  const key = deckRollChip(r), ik = deckChipItem(key);
+  if (r() >= DECK_RIVAL_DROP * (chipOn('PH3') ? 2 : 1) && !DECK_ALWAYS) return null;
+  const key = deckRollRipped(r), ik = deckChipItem(key);
   if (!itemRoom(ik, 0)) return null;
-  addItem(ik, 0); run.ripped = true;
+  addItem(ik, 0); deckRipFirst();
   return `> ${hkName(h.id).toLowerCase()} dropped a chip: ${DECK_CHIPS[key][0]}. it's RIPPED. ${hkName(h.id).toLowerCase()} is gonna want that back.`;
+}
+// A rival you didn't beat (it got away with a layer, not flatlined, not thrown out) takes a RIPPED chip back off your
+// belt (engine/hackers.js hkCorpEnd). Returns the line, or null.
+function deckRivalTakes(h) {
+  const run = st.run, s = run && run.items.find(x => ITEMS[x.key] && ITEMS[x.key].ripped);
+  if (!s) return null;
+  const name = ITEMS[s.key].name, who = hkName(h.id).toLowerCase();
+  takeItem(s.key); Sound.deny();
+  const sd = save.deck;
+  if (sd && !sd.ripLost) { sd.ripLost = true; persist(); queueCall('pops', deckRipLostLines(who, name)); }
+  return `> ${who} took ${name} back.`;
+}
+// POPS: the first RIPPED chip you get, and the first one a rival takes back (save.deck.ripSeen, .ripLost)
+function deckRipFirst() {
+  const sd = save.deck; if (!sd || sd.ripSeen) return;
+  sd.ripSeen = true; persist(); queueCall('pops', deckRipLines());
+}
+const deckRipLines = () => ["that chip you just got? it's RIPPED. ripped right out of a rival's deck.",
+  "they know you've got it. while it's on your belt, a rival turns up in every corp you hit. one with an anomaly keeps the anomaly.",
+  "beat 'em and you keep it. let one get away and they take it back.",
+  "sell it or trash it and the heat's off. get it home and it's yours: ripped chips are good ones."];
+const deckRipLostLines = (who, name) => [`${who} got away with ${name}. told you they'd want it back.`,
+  "a rival that slips out of a corp takes a ripped chip with 'em. flatline 'em, or beat 'em to the end."];
+// The look (Greg, 2026-11-21): magenta (the bench's: engine/bench.js BENCH_MISS) runs through a RIPPED chip, over its
+// own rarity color. Not red: red is DIVINE's. B(x, y, w, col, alpha) paints one cell's background.
+const DECK_RIP_COL = '#ff4fd8';
+function deckRipGlow(B, x, y, w, now = performance.now()) {
+  for (let j = 0; j < w; j++) { const a = Math.max(0, Math.sin(now / 220 - j * 0.9)); if (a > 0.05) B(x + j, y, DECK_RIP_COL, 0.6 * a); }
 }
 // a chip for sale: a market now and then (engine/panels.js shopRoll), THE FENCE always (ripped, dearer: engine/events.js)
 const DECK_SHOP_CHIP = 0.15, DECK_CHIP_PRICE = { common: 40, rare: 70, epic: 110, legendary: 160, exotic: 240 };
+for (const k of DECK_RIPPED) ITEMS[deckChipItem(k)].price = DECK_CHIP_PRICE[DECK_CHIPS[k][2]];   // (a RIPPED chip sells for its share of this: engine/panels.js gearValue)
 function deckShopChip(node, n) {
   const run = st.run; if (!deckDrops()) return null;
   const r = rngFor(run.seed, 'shopchip', node.id, n || 0);
@@ -419,7 +470,7 @@ function deckShopChip(node, n) {
 }
 function deckFenceChip(node) {
   const run = st.run; if (!deckDrops()) return null;
-  if (!run.fenceChip || run.fenceChip.node !== node.id) { const key = deckRollChip(rngFor(run.seed, 'fencechip', node.id)); run.fenceChip = { node: node.id, key, sold: false }; }
+  if (!run.fenceChip || run.fenceChip.node !== node.id) { const key = deckRollRipped(rngFor(run.seed, 'fencechip', node.id)); run.fenceChip = { node: node.id, key, sold: false }; }
   const fc = run.fenceChip; return fc.sold ? null : Object.assign({ price: Math.round(2 * (DECK_CHIP_PRICE[DECK_CHIPS[fc.key][2]] || 60) * deckPriceMult()) }, fc);
 }
 // boss rewards (engine/panels.js rewardOptions): a chip now and then; SPOILS chips (openReward: deckSpoils)
@@ -1315,6 +1366,7 @@ function deckFace(g, x, y, key, off) {
   const c = DECK_CHIPS[key], ch = off ? DECK_OFF : chipOf(c[2]), w = c[1] === 'boss' ? 5 : 3;
   const bot = key === 'SP3' ? DECK_SPOILS[DECK.spoils][1] : c[5][1];
   g.bg(x, y, w, 2, ch.bg, 1); g.put(x, y, c[5][0], ch.fg, true); g.put(x, y + 1, bot, ch.fg, true);
+  if (deckIsRipped(key) && !off) for (let r = 0; r < 2; r++) deckRipGlow((cx, cy, col, a) => g.bg(cx, cy, 1, 1, col, a), x, y + r, w, performance.now() - r * 150);   // RIPPED: magenta runs through it
 }
 // a socket: its code on the top border, the frame by state, the chip inside. P / B / CL: put, bg, clear (the board's
 // clip to the rows in view; the card's draw straight)

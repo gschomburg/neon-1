@@ -1,7 +1,7 @@
 // NeoN+1 engine/events.js: the SECTOR EVENT card (what a new sector rolled) and THE FENCE (THIEF's stolen mods,
 // sold back). The events themselves: data/events.js; the roll: engine/map.js addSector.
 'use strict';
-NEON_FILES.push(['engine/events.js', 'v15.07']);
+NEON_FILES.push(['engine/events.js', 'v15.08']);
 
 // ---------------- The SECTOR EVENT card ----------------
 // It comes up over a new sector's map once the climb settles (toMap), and again from the map's sector label.
@@ -125,11 +125,11 @@ function openFence(node) {
     saveRun();
   };
   const whyNot = o => run.mods.includes(o.key) ? 'you have one already.' : !canSpend(fencePrice(o)) ? 'not enough credits.' : null;
-  // a RIPPED chip, dear (engine/deck.js deckFenceChip): buy it and rivals come for it (beta)
+  // a RIPPED chip, dear (engine/deck.js deckFenceChip): carry it and rivals come for it
   const buyChip = () => {
     const fc = deckFenceChip(node), ik = fc && deckChipItem(fc.key);
     if (!fc || !canSpend(fc.price) || !itemRoom(ik, 0)) return Sound.deny();
-    run.credits -= fc.price; addItem(ik, 0); run.fenceChip.sold = true; run.ripped = true;
+    run.credits -= fc.price; addItem(ik, 0); run.fenceChip.sold = true; deckRipFirst();
     Sound.buy(); setMsg(`> ${DECK_CHIPS[fc.key][0]}: it's RIPPED. somebody's gonna want that back.`, C.danger); saveRun();
   };
   st.fence = { buyAt: buy, price: fencePrice, get stock() { return stock(); } };   // (tests)

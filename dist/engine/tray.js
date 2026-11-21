@@ -1,7 +1,7 @@
 // NeoN+1 engine/tray.js: the mod tray and mod badges (drawBadge, putChip, buildTray). Moved out of engine/scene.js
 // (2026-11-05). buildScene (engine/scene.js) calls buildTray each frame.
 'use strict';
-NEON_FILES.push(['engine/tray.js', 'v15.07']);
+NEON_FILES.push(['engine/tray.js', 'v15.08']);
 
 // A mod's key color (its rarity chip's background).
 const modColor = m => rarityCol(m.rarity);
@@ -132,6 +132,7 @@ function buildTray(ctx, y) {
       if (ok || listy) { bg(ix + nameLen, y + 2, cnt.length, mixHex(ch.bg, '#000000', 0.45), 1); put(ix + nameLen, y + 2, cnt, ch.bg, 'tray'); }
       else put(ix + nameLen, y + 2, cnt, C.dim, 'tray');
     }
+    if (ITEMS[stack.key].ripped) deckRipGlow((cx, cy, col, a) => bg(cx, cy, 1, col, a), ix, y + 2, nameLen, now);   // RIPPED (a chip: engine/deck.js): magenta runs through it
     if (gearOn(stack.key)) { bg(ix, y + 2, 7, C.accent, 0.3 + 0.25 * Math.sin(now / 160)); put(ix + 7 - 1, y + 2, '*', C.accent, 'tray', true); }   // ENCORE on: it glows
     if (sel || hov) bg(ix, y + 2, 7, C.accent, sel ? 0.25 : 0.12);
     addHit(ix, y + 2, 7, 1, { kind: 'item', i });
