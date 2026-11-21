@@ -449,6 +449,15 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
 - **A WORKBENCH training** (Greg, 2026-11-20; later): today the bench only has POPS's 3 lines on your first visit.
   When you buy WORKBENCH on THE BOARD, offer a training outside a run: it gives you some random gear and loot to
   shred, then shows you how to build something; it explains the `*` and the recipes (the BOOK).
+- **Teach the give unlocks** (Greg, 2026-11-20; v15.04's `give.mod` / `give.gear`: epic and up only once you've
+  shredded one, engine/deck.js deckGiveTiers, save.shredded):
+  - **The WORKBENCH training** (above), or POPS's first-visit lines until it exists: a line like "scrapping epic and
+    better gear and mods can give you other bonuses, like for shell commands. don't know what a shell is? just keep
+    playing and you'll find out."
+  - **Mark what's unlocked for THE SHELL:** where you can see which gear and mods (and at which rarity) you've shredded.
+    Open: the BOOK (the bench's recipes), the codex, or both. Today nothing shows save.shredded.
+  - **The deck:** a note about SHELL chips: how you get them (ROOT on your crew, chips from caches and bosses), and that
+    `give.mod` / `give.gear` summon mods and gear you've found (epic and up: shredded).
 - **Pets you can toggle** (meat notes 2026-11-07): a small button in the loot bar, like b0y's on the left (if b0y's
   is there, shift it right so they don't overlap), that turns a pet on or off. Today it's one pet a run: COMPANION, the
   EGG's chick, STRAY's bug and CATPHISH's fish don't stack (with STRAY and CATPHISH, the seed picks one). Maybe they
