@@ -437,6 +437,9 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   are built: POPS's is TRACER.)
 
 ## Polish (the user, 2026-10-29: the finishing passes)
+- **To test: FOURTH WALL is flaky in tools/checks/playtest.js** (2026-11-21): about one run in three it differs from
+  golden-play.json. Its tell reads your past picks (save.habits), so something feeding them isn't the same every run.
+  Find what, and make the playtest steady.
 - **BACK / LEAVE / CLOSE, made consistent** (meat notes 2026-11-21: "we're kind of inconsistent with back and leave
   buttons. both in the titles and their positioning"). Today:
   - **[LEAVE] top right, in the header:** the WORKBENCH, YOUR DECK, a race (MP).
@@ -454,8 +457,9 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
     (THE BOARD and its deck, codex, help, settings, history, leaderboard, the race join and info screens) has
     `[< TITLE]` top left (openPanel opts.top; the leaderboard's says `[< ALL SEEDS]` in a seed), and the bottom one is
     gone. The end screen keeps its button with the others (Greg). In a run, top left stays NeoN+1, the menu.
-  - **Step 2 (not yet, after Greg plays step 1):** LEAVE for the places in a run (market, THE FENCE, the PIER) top
-    right, like the bench. CLOSE stays with its popup. Greg isn't worried about the phone reach.
+  - **Step 2 built v15.21:** LEAVE top right on NeoN+1's line: the market (or HEAD FIRST's JACK OUT), THE FENCE, the PIER,
+    the bench (openPanel opts.leave; engine/scene.js). CLOSE stays with its popup; cutscenes' SKIP is top right already.
+    Multiplayer: later, with its overhaul.
 - **Phone battery** (meat notes 2026-11-15): the game drains Greg's older phone fast. Look for savings: draw only
   when something changed, a lower frame rate when the screen is still, pause it all in a hidden tab, lighter effects.
 - **Boss intro pass** (the user, 2026-10-29: "it's all working for now", but the whole boss intro could use a little more): the corp's logo on it, and more.

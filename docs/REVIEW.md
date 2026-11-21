@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **LEAVE top right** (v15.21): the market (HEAD FIRST: JACK OUT), THE FENCE, the PIER and the bench all have [LEAVE] on NeoN+1's line, right side.
+- [ ] **The market** (v15.21): BUY / SELL are a sub-tab strip under the message line; the panel's own BLACK MARKET and credits lines are gone (the header has both). LEVERAGE's limit and HAGGLE's cut show on a line under the tabs, only when you have them.
 - [ ] **Top left is the way out** (v15.19): `[< TITLE]` top left on THE BOARD, your deck, the codex, help, settings, history, the leaderboard (`[< ALL SEEDS]` inside a seed) and the race screens. The bottom TITLE buttons are gone; the end screen keeps its own. See how it feels before step 2 (LEAVE up top in markets, THE FENCE, the PIER).
 - [ ] **REP on the deck** (v15.19): gone from the top line, now in the upgrade buttons as have/cost (`420/600 REP`), dimmed while you're short.
 - [ ] **THE SHELL's help wrapping** (v15.18): wrapped lines step in under the command now. On the game's column (about 40 wide) the description column is too far right, so a wrap steps in 2; on a wide shell it lines up under the description.

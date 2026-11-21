@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.20']);
+NEON_FILES.push(['engine/panels.js', 'v15.21']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -12,6 +12,7 @@ const fullScreen = () => st.mode === 'title' || st.mode === 'over' || (st.mode =
 function openPanel(title, fn, msg, opts = {}) {
   st.panelFull = !!opts.full;
   st.panelTop = opts.top || null;
+  st.panelLeave = opts.leave || null;   // (a place in a run: { text, onTap, id }, top right in the header: engine/scene.js)
   st.swap = null;
   st.bigPops = 0; st.glow = {};
   st.breachReveal = false;
@@ -280,18 +281,18 @@ function openShop(node) {
   // The REROLL row (the last row of the buy list; not one of the offers, so st.shop.offers / econsim never see it)
   const rerollRow = { kind: 'reroll', key: 'reroll' };
   const rowsOf = () => offers.concat([rerollRow]);
-  // Both modes share one layout: the list area is listRows() tall, then the details box (7 rows), then the nav buttons,
-  // so [ SELL ] / [ BUY ] and [ LEAVE ] sit in the same spots on both.
+  // Both modes share one layout: BUY / SELL sub-tabs on top, the list area listRows() tall, then the details box (7 rows).
   // At most SHOP_LIST_ROWS: past that the list scrolls (the user, 2026-11-06: 10 rows with COUPON CUTTER pushed LEAVE
   // into the loot bar on a phone; engine/textboard.js doesn't squeeze, see CLAUDE.md "Screen space").
   const listRows = () => Math.min(SHOP_LIST_ROWS, Math.max(rowsOf().length, 1 + run.beltSlots));
   const sellArea = { top: 0 }, buyArea = { top: 0 };   // the lists scroll (a big LOOT bag; a long market)
   const pad = (T, used) => { for (let i = used; i < listRows(); i++) T(''); };
-  const nav = B => {
-    if (view === 'buy') B('[ SELL WARES ]', 'sellv', () => { view = 'sell'; sellSel = 0; sellArea.top = 0; Sound.ui(); }, !sellRows().length);
-    else B('[ BUY WARES  ]', 'buyv', () => { view = 'buy'; Sound.ui(); });
-    B(node.exit ? '[ JACK OUT ]' : '[ LEAVE ]', 'leave', node.exit ? () => { if (!st.transitioning) swapTo(() => sectorClear(false)); } : leavePanel);   // HEAD FIRST's exit market: the sector is clear
-  };
+  // BUY / SELL: sub-tabs under the terminal (Greg, 2026-11-21: they were buttons at the bottom; the panel's own BLACK
+  // MARKET and credits lines are gone: the header has both). LEAVE (or HEAD FIRST's JACK OUT) is top right in the header.
+  const tabs = X => X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, [['buy', 'BUY'], ['sell', 'SELL']].map(([v, t]) => ({ id: v + 'v', text: t, on: view === v,
+    onTap: () => { if (view === v) return; view = v; if (v === 'sell') { sellSel = 0; sellArea.top = 0; } Sound.ui(); } }))) });
+  // LEVERAGE's limit and HAGGLE's cut (they sat on the credits line): a line under the tabs, only when there's something to say
+  const notes = () => [leverage() ? `limit ${creditFloor()}cr` : '', has('haggle') ? `haggle -${Math.round(tv('haggle', ECON.haggle) * 100)}%` : ''].filter(Boolean).join('  ');
 
   // SELL: your LOOT and your gear, what the market pays for one of each (the same look as the buy list: a type tag and
   // the price). A long list scrolls.
@@ -320,13 +321,12 @@ function openShop(node) {
       else X({ box: true, text: 'S E L L', sub: `+${gearValue(s.key, s.tier)}cr`, id: 'sell', onTap: () => sell(sellSel), minW: 18 });
     } else for (let i = 0; i < 7; i++) T('');
     T(SEP, C.dim);
-    nav(B);
   };
 
   openPanel('BLACK MARKET', (T, B, X) => {
     const now = performance.now();
-    T('BLACK MARKET', C.money);
-    T(`credits ${run.credits}${leverage() ? `  (limit ${creditFloor()})` : ''}${has('haggle') ? `  (haggle -${Math.round(tv('haggle', ECON.haggle) * 100)}%)` : ''}`, run.credits < 0 ? C.danger : C.money);   // LEVERAGE: the limit
+    tabs(X);
+    T(notes(), C.money);   // LEVERAGE, HAGGLE (else a blank row)   // LEVERAGE: the limit
     T('');
     if (view === 'sell') return drawSell(T, B, X);
     const rows = rowsOf(), items = [];
@@ -372,10 +372,8 @@ function openShop(node) {
       else if (o.kind === 'reroll') X({ box: true, text: 'R E R O L L', sub: `${rerollPrice()}cr`, id: 'buy', onTap: reroll, minW: 18 });
       else X({ box: true, text: 'B U Y', sub: o.free ? 'FREE' : `${priceOf(o)}cr`, id: 'buy', onTap: () => buy(o), minW: 18 });
     }
-    T(SEP, C.dim);
-    // SELL (the other mode) over LEAVE (REROLL is a row in the list, 1 a market, more with RESTOCK)
-    nav(B);
-  }, '> the market is open.');
+    T(SEP, C.dim);   // (REROLL is a row in the list, 1 a market, more with RESTOCK)
+  }, '> the market is open.', { leave: node.exit ? { text: '[JACK OUT]', onTap: () => { if (!st.transitioning) swapTo(() => sectorClear(false)); } } : { text: '[LEAVE]', onTap: leavePanel } });
 }
 
 // A reward screen: header lines, then a list of mods to pick one from (or skip).

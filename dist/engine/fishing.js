@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v15.20']);
+NEON_FILES.push(['engine/fishing.js', 'v15.21']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -327,7 +327,7 @@ function buildFish(ctx) {
     // the buttons: REEL IN (an empty hook) and LEAVE
     const btn = (x, text, id, onTap, on) => { put(x, y0 + 1, text, on ? C.bright : C.dim, 'ui', false); if (st.hoverBtn === id) bg(x, y0 + 1, text.length, C.accent, 0.2); addHit(x, y0 + 1, text.length, 1, { kind: 'btn', id, onTap }); };
     btn(1, '[ REEL IN ]', 'freel', fishReelIn, !!hk && !hk.bite);
-    btn(W - 10, '[ LEAVE ]', 'fleave', leavePier, true);
+    // (LEAVE: top right in the header, engine/scene.js; Greg, 2026-11-21)
   }
   // the LANDED card: what it is, its size, what you got, what it's worth
   if (f.card) {

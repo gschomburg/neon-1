@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v15.20']);
+NEON_FILES.push(['engine/scene.js', 'v15.21']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -143,6 +143,10 @@ function buildScene(now, collectHits, raw = false) {
   }
   if (st.mp) headerBtn(12, '[LEAVE]', 'leave', mpLeave, false);
   else if (!menuOk) put(12, 0, `// ${VERSION}`, C.dim);
+  // LEAVE a place in a run: top right, on this line (Greg, 2026-11-21: the market, THE FENCE, the PIER; the bench, full
+  // screen, has its own on its top line). openPanel's opts.leave; the PIER's is its own.
+  const lv = !st.mp && run && (st.mode === 'panel' && st.panelLeave ? st.panelLeave : st.mode === 'fish' && st.fish && !st.fish.card ? { text: '[LEAVE]', id: 'fleave', onTap: leavePier } : null);
+  if (lv) headerBtn(L.wc - lv.text.length, lv.text, lv.id || 'leave', lv.onTap, false);
   put(0, 1, rule(L.wc), C.dim);
 
   // HUD
