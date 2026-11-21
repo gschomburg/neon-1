@@ -14,6 +14,9 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Epic and legendary chips build without a blueprint** (v15.22): see one (a market, a boss's pick, your belt) and
+  it's in the BOOK, buildable with the parts and a BLANK. Blueprints are exotics only. POPS's blueprint call says so.
+
 - [ ] **LEAVE top right** (v15.21): the market (HEAD FIRST: JACK OUT), THE FENCE, the PIER and the bench all have [LEAVE] on NeoN+1's line, right side.
 - [ ] **The market** (v15.21): BUY / SELL are a sub-tab strip under the message line; the panel's own BLACK MARKET and credits lines are gone (the header has both). LEVERAGE's limit and HAGGLE's cut show on a line under the tabs, only when you have them.
 - [ ] **Top left is the way out** (v15.19): `[< TITLE]` top left on THE BOARD, your deck, the codex, help, settings, history, the leaderboard (`[< ALL SEEDS]` inside a seed) and the race screens. The bottom TITLE buttons are gone; the end screen keeps its own. See how it feels before step 2 (LEAVE up top in markets, THE FENCE, the PIER).
@@ -94,7 +97,7 @@ to build is `docs/BACKLOG.md`.)
   phish your money away at a pier), risky (go on / hand back). My calls: the eye art (placeholder), how it scores the map,
   what it buys, when it taps a $ node.
 
-- [ ] **Credits instead of a mod may be too low** (found planning G0D.exe, 2026-11-08). Skipping a boss reward pays
+- [x] **Credits instead of a mod may be too low** (Greg, 2026-11-21: on purpose, skipping is meant to pay less; the economy plays fine) (found planning G0D.exe, 2026-11-08). Skipping a boss reward pays
   2 earn units (20cr in sector 1). Taking an epic or legendary mod and selling it at the UPLINK pays 33% of its fee:
   ~26cr (epic) or ~40cr (legendary), times the sector, and you have the mod until then. So from epic up, "take it and
   sell it" always beats the credits. Rare (~16cr) and common (~10cr) don't. Fine as a hidden strategy, or raise

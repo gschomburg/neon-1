@@ -239,6 +239,9 @@ what changes what:
     shredding"):** epic and better chips, and every exotic (mods and gear), need one. Shred one and you learn it
     (save.bench.blueprints). A mod that binds to you (ZOMBIE, RAM DOUBLER) doesn't come apart: the shred teaches its
     blueprint and counts for give, but you keep it and get no components.
+    **Decided (Greg, 2026-11-21), v15.22:** chips don't need blueprints any more. Any chip you've seen builds if you have
+    the parts, epic and legendary too. Blueprints are for exotics only. Dropped: epic+ chip blueprints from shredding,
+    because you had to own the chip before you could build it.
   - **No `*` for exotics** (Greg: the * means "anything", it's not a cost).
   - **The BUILD screen:** what you've spelled (its code, name and [ BUILD ]) sits under the letters now, not on the right.
     Typing a chip's code with no BLANK in: the matches offer it, and tap: fill puts a BLANK in.

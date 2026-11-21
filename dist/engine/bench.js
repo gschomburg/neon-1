@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.21']);
+NEON_FILES.push(['engine/bench.js', 'v15.22']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -40,7 +40,7 @@ const isDigit = ch => /^[1-9]$/.test(ch);
 
 // ---- recipes: every short code you can spell. Shop gear (no loot, quest gear or CALLs) and general / minor / exotic
 // mods (no corp mods), and your deck's chips (their code: a BLANK makes them). Blueprints (save.bench.blueprints, by
-// code; from shredding one: benchShred): every exotic, and chips above rare. First come wins a shared code.
+// code; from shredding one: benchShred): every exotic. First come wins a shared code.
 let BENCH_RECIPES = null, BENCH_USE = null;
 function benchRecipes() {
   if (BENCH_RECIPES) return BENCH_RECIPES;
@@ -65,8 +65,9 @@ function benchRecipes() {
 // A chip recipe shows (in the BOOK, the matches) once you've seen that chip (Greg, 2026-11-21): on your belt, in your
 // deck, for sale at a market, or offered by a corp boss (markSeen: engine/deck.js deckShopChip, deckBossChip).
 const recipeKnown = rc => rc.kind !== 'chip' || !!save.seen[rc.key] || deckHave(rc.chip) > 0;
-// What needs a blueprint (Greg, 2026-11-21): exotics, and chips above rare.
-const recipeNeedsBp = rc => { const r = recipeDef(rc).rarity; return r === 'exotic' || (rc.kind === 'chip' && (RARITY[r] || RARITY.common).lvl > RARITY.rare.lvl); };
+// What needs a blueprint: exotics. (Chips above rare did too till Greg, 2026-11-21, v15.22: any chip you've seen builds
+// if you have the parts. recipeKnown is their gate.)
+const recipeNeedsBp = rc => recipeDef(rc).rarity === 'exotic';
 // How many recipes use each letter: its rarity (and how often it drops as a bonus).
 function benchUse() {
   if (BENCH_USE) return BENCH_USE;
@@ -364,7 +365,7 @@ function corruptShred(c) {
   return got;
 }
 const shredView = e => e.kind === 'mod' ? modView(e.key, e.tier) : itemView(e.key, e.tier);
-// A blueprint (Greg, 2026-11-21): shredding an exotic, or a chip above rare, teaches you to build it (by its code). A mod
+// A blueprint (Greg, 2026-11-21): shredding an exotic teaches you to build it (by its code). A mod
 // that binds to you (ZOMBIE, RAM DOUBLER: modLocked) can't come apart: the shred still counts (the blueprint, give's
 // record), but you keep it and get no components. Returns the code learned, or null.
 const benchShredBpCode = e => { const rc = benchRecipes()[shredRecipeCode(e)]; return rc && rc.key === e.key && recipeNeedsBp(rc) ? rc.code : null; };
@@ -376,7 +377,7 @@ function benchLearn(code) {
 }
 const benchBound = e => e.kind === 'mod' && modLocked(e.key);
 // Cashing out with a chip you already have (Greg, 2026-11-21: once it's home it's unlocked, no extras): it shreds on
-// its own, into its code (digit too) and maybe a BLANK, and an epic+ one teaches its blueprint. Returns what came out.
+// its own, into its code (digit too) and maybe a BLANK. Returns what came out.
 function benchAutoShred(key, n = 1) {
   const got = [];
   for (let i = 0; i < n; i++) {
@@ -384,7 +385,6 @@ function benchAutoShred(key, n = 1) {
     if (Math.random() < BENCH.blank.chip) got.push(BENCH_BLANK);
   }
   benchAdd(got);
-  const rc = benchRecipes()[key]; if (rc && rc.kind === 'chip' && recipeNeedsBp(rc)) benchLearn(key);
   const sh = save.shredded || (save.shredded = {}); sh[deckChipItem(key)] = 0;
   benchTeach(got);
   return got;
@@ -397,7 +397,7 @@ function benchTeach(got, learned) {
     "at a workbench it goes in the little slot after the letters. then spell a chip's code: two letters and a digit, like CD2.",
     "it builds that chip, straight into your deck. you can make any chip you've seen."]); }
   if (learned && !bs.bpSeen) { bs.bpSeen = true; persist(); queueCall('pops', ['you took it apart, so now you know how it goes together. a blueprint.',
-    'exotics and the good chips need one to build. shred one and you learn it. look it up in the BOOK.']); }
+    'exotics need one to build. shred one and you learn it. look it up in the BOOK.']); }
 }
 function benchShred(e) {
   const b = st.bench;
@@ -416,7 +416,7 @@ function benchShred(e) {
   if (!cor && Math.random() < (BENCH.wild[v.rarity] || 0)) got.push('*');
   if (!cor && Math.random() < (BENCH.digit[v.rarity] || 0)) got.push(benchDigit());
   if (Math.random() < (cor ? BENCH.blank.corrupt : ITEMS[e.key] && ITEMS[e.key].chip ? BENCH.blank.chip : 0)) got.push(BENCH_BLANK);   // a BLANK: mostly from chips
-  const learned = cor ? null : benchLearn(benchShredBpCode(e));   // a blueprint: exotics, chips above rare
+  const learned = cor ? null : benchLearn(benchShredBpCode(e));   // a blueprint: exotics
   if (!cor) { const sh = save.shredded || (save.shredded = {}); sh[e.key] = Math.max(sh[e.key] == null ? -1 : sh[e.key], e.tier || 0); }   // its top tier: give.mod / give.gear's epic+ (engine/deck.js deckGiveTiers)
   if (e.kind === 'mod') removeMod(e.key);
   else if (--e.stack.n <= 0) e.list.splice(e.list.indexOf(e.stack), 1);

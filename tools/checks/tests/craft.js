@@ -1,6 +1,6 @@
 // tools/checks/tests/craft.js: crafting chips and blueprints at the workbench (engine/bench.js, Greg 2026-11-21): a BLANK
-// in its slot makes the three slots spell a chip's code (digits too); chips above rare and every exotic need a blueprint,
-// learned by shredding one; a bound mod (ZOMBIE) teaches its blueprint and stays; shredding a chip gives its digit; the
+// in its slot makes the three slots spell a chip's code (digits too); any chip you've seen builds, epic too (v15.22);
+// every exotic needs a blueprint, learned by shredding one; a bound mod (ZOMBIE) teaches its blueprint and stays; shredding a chip gives its digit; the
 // BUILD screen's BLANK slot and the result under the letters. Run by tools/test.js (tools/checks/harness.js).
 module.exports = { name: 'craft', body: `
   const closeCalls = async () => { for (let k = 0; k < 6 && (st.callBox || CALL_QUEUE.length); k++) { if (st.callBox) callClose(); await sleep(120); } };
@@ -8,7 +8,7 @@ module.exports = { name: 'craft', body: `
   const R = benchRecipes(), chipRc = Object.values(R).filter(rc => rc.kind === 'chip');
   check(chipRc.length > 50 && chipRc.every(rc => /[0-9]/.test(rc.code) && !deckIsRipped(rc.chip) && DECK_CHIPS[rc.chip][1] !== 'boss' && !DECK_NO_DROP.includes(rc.chip)), 'chip recipes: ' + chipRc.length + ', none ripped, BOSS or from the deck / a quest');
   check(letterTier('A') === letterTier('A') && letterTier('#') === 'epic', 'a BLANK is an epic component');
-  check(recipeNeedsBp(R.EAT) && !recipeNeedsBp(R.CD2) && recipeNeedsBp(R.WI5), 'blueprints: exotics and chips above rare (whois: epic), not a rare chip');
+  check(recipeNeedsBp(R.EAT) && !recipeNeedsBp(R.CD2) && !recipeNeedsBp(R.WI5), 'blueprints: exotics only, no chips (whois: epic)');
 
   await shellBench(); await swapTo(() => openBench({ id: 'test-rest', type: 'rest', sector: st.run.sector })); await settle('bench');
   await closeCalls(); CALL_QUEUE.length = 0;
@@ -47,19 +47,16 @@ module.exports = { name: 'craft', body: `
   check(benchJudge().kind === 'blank', 'C D 2 with no BLANK: it says a chip needs one: ' + benchJudge().kind);
   clear();
 
-  // an epic chip: locked till you shred one
-  save.seen[deckChipItem('WI5')] = true;
+  // an epic chip: seen is enough, no blueprint (Greg, 2026-11-21, v15.22)
+  const wiSeen = save.seen[deckChipItem('WI5')]; save.seen[deckChipItem('WI5')] = true;
   benchPlace('#'); benchPlace('W'); benchPlace('I'); benchPlace('5');
-  check(benchJudge().kind === 'lock', 'whois (epic): needs a blueprint');
+  check(benchJudge().kind === 'ok', 'whois (epic), seen: it builds: ' + benchJudge().kind + ' ' + JSON.stringify(b.slots));
   clear();
   st.run.items = st.run.items.filter(s => s.key !== deckChipItem('WI5')); addItem(deckChipItem('WI5'), 0);
-  const d0 = Object.values(L0).reduce((a, n) => a + n, 0);
   b.shredAnim = null; benchShred(benchShredList().find(e => e.key === deckChipItem('WI5')));
-  check(benchBp('WI5') && (L0['5'] || 0) >= 2, 'shred one: the blueprint, and its digit back');
+  check(!benchBp('WI5') && (L0['5'] || 0) >= 2, 'shred one: its digit back, no blueprint');
   for (let k = 0; k < 160 && b.shredAnim; k++) await sleep(50); b.shredAnim = null;
-  benchPlace('#'); benchPlace('W'); benchPlace('I'); benchPlace('5');
-  check(benchJudge().kind === 'ok', 'now it builds: ' + benchJudge().kind + ' ' + JSON.stringify(b.slots) + ' busy ' + benchBusy());
-  clear();
+  save.seen[deckChipItem('WI5')] = wiSeen;
 
   // an exotic mod: shred it, learn it
   st.run.mods = st.run.mods.filter(k => k !== 'iceeater'); addMod('iceeater', 0);

@@ -28,8 +28,7 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
 - **The fuse node:** now **THE CHROME FORGE**, parked with the map nodes (section 5).
 - **Making chips at the workbench:** built v15.10 (a BLANK; docs/DECK.md "The workbench").
   **Decided (Greg, 2026-11-21), v15.14:** a chip you've seen is craftable (a market's, a corp boss's pick, your belt).
-  Still open: epic+ blueprints only come from shredding, which means you have the chip already; another source (quests,
-  drops) would make them worth having.
+  **Decided (Greg, 2026-11-21), v15.22:** chips need no blueprint at all now, epic+ too: seen and the parts is enough.
 - **A CRASH chip that shreds everything** (Greg, 2026-11-21: keep it): cash out or die, and all your mods and gear shred
   into components (docs/DECK.md CRASH, under BLACK BOX).
 - **Chips for the empty groups:** GLYPH, the CREW jacks, UPLINK, PORTS.
@@ -457,7 +456,8 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
     the deck) put it top right; everything else at the bottom. Greg's call.
   - **Greg (2026-11-21):** name it for where it goes: every [ BACK ] that went to the title is **[ TITLE ]** now (v15.17;
     the leaderboard's still says [ ALL SEEDS ] in a seed). YOUR DECK: done v15.16 (THE BOARD's tabs on it, no [LEAVE]).
-    Still open: LEAVE vs CLOSE and where each sits.
+    **Decided (Greg, 2026-11-21):** LEAVE and CLOSE are different things and stay that way. LEAVE takes you out of a place
+    in a run (back to the map); CLOSE shuts a popup over what you were doing.
   - **Decided (Greg, 2026-11-21): top left is the way out.** Step 1 built v15.19: every full-screen menu out of a run
     (THE BOARD and its deck, codex, help, settings, history, leaderboard, the race join and info screens) has
     `[< TITLE]` top left (openPanel opts.top; the leaderboard's says `[< ALL SEEDS]` in a seed), and the bottom one is
