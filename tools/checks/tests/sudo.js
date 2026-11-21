@@ -59,7 +59,7 @@ module.exports = { name: 'sudo', body: `
   run.backAim = false; run.at = at0;
 
   // give.mod / give.gear: name it. Found: common and rare; epic and up only once you've shredded one. Cost by rarity,
-  // once a sector each.
+  // as often as your charges last.
   const tierOf = (def, r) => (def.tiers || []).findIndex(x => x.rarity === r);
   const mk = Object.keys(MODS).find(k => deckGiveable('mod', k) && !has(k) && !clashWith(k) && tierOf(MODS[k], 'rare') >= 0 && tierOf(MODS[k], 'epic') >= 0);
   const seen0 = save.seen[mk], sh0 = save.shredded; save.seen[mk] = false; save.shredded = {};
@@ -74,9 +74,7 @@ module.exports = { name: 'sudo', body: `
   save.shredded[mk] = tierOf(MODS[mk], 'epic');
   await shellRun('give.mod ' + mk + ' epic');
   check(has(mk) && modTier(mk) === tierOf(MODS[mk], 'epic') && run.charges === c0 - 3, 'epic, shredded: yours, 3 spent: ' + out() + ' ' + run.charges);
-  await shellRun('give.mod ' + mk);
-  check(/once a sector/.test(out()) && run.charges === c0 - 3, 'give.mod again: once a sector');
-  run.giveModAt = null; removeMod(mk);
+  removeMod(mk);
   await shellRun('give.mod ' + mk + ' ' + (tierOf(MODS[mk], 'rare') + 1));
   check(modTier(mk) === tierOf(MODS[mk], 'rare') && run.charges === c0 - 5, 'a tier by number (rare): 2 spent: ' + out());
   removeMod(mk); save.seen[mk] = seen0;
@@ -84,7 +82,12 @@ module.exports = { name: 'sudo', body: `
   save.seen[gk] = true;
   const c2 = run.charges, belt = run.items.length;
   await shellRun('give.gear ' + gk);
-  check(run.items.some(s => s.key === gk) && run.charges === c2 - 1 && run.giveGearAt === run.sector, 'give.gear: on your belt, a common is 1: ' + out());
+  check(run.items.some(s => s.key === gk) && run.charges === c2 - 1, 'give.gear: on your belt, a common is 1: ' + out());
+  const n1 = run.items.filter(s => s.key === gk).reduce((a, s) => a + s.n, 0);
+  await shellRun('give.gear ' + gk);
+  check(run.items.filter(s => s.key === gk).reduce((a, s) => a + s.n, 0) === n1 + 1 && run.charges === c2 - 2, 'again: another one, 1 more spent');
+  run.charges = 0; await shellRun('give.gear ' + gk);
+  check(/not enough charges/.test(out()), 'out of charges: no: ' + out()); run.charges = c2 - 2;
   run.items.splice(belt); save.shredded = sh0;
   // the shred keeps the top tier of each thing (engine/bench.js benchShred)
   { const bk = st.bench, mods = run.mods.slice(); st.bench = { anim: null, shredAnim: null }; save.shredded = {};

@@ -166,7 +166,7 @@ mark the run hacked. `help` lists them. **Decided (Greg, 2026-11-20):** in place
   for the rest of the sector), `mode.hold` (no layer clocks for the rest of the corp), `show.real` (the real node marked
   on this layer, once a corp), `breach` (win this layer, full pay, once a run: the dev one breaches a corp you name),
   `give.mod` and `give.gear` (v15.04: name it, `give.mod tracer epic`: what you've found, epic and up only once you've
-  shredded one; charges by rarity, once a sector; alone it lists yours for free). The dev ones: `give.mod <mod> [tier]`
+  shredded one; charges by rarity, as often as they last; alone it lists yours for free). The dev ones: `give.mod <mod> [tier]`
   sets the tier, `give.gear <gear> [n]` gives n of it.
 - Each command has a player version, a dev version, or both.
 - Players will find `dev.start` (the game's JS is open). That's fine: dev runs are practice (no REP, no leaderboard),
