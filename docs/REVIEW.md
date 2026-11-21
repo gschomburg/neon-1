@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **QUESTS, one at a time** (v15.17): `[ < ]  SYSTEM FAILURE  [ > ]`, and "from POPS · 1 of 2" under it. It opens on a quest with a new step; otherwise the one you looked at last. An arrow reads `[*< ]` / `[ >*]` while another quest has news. Pinning: not done (you floated it); say if you want it.
+- [ ] **[ TITLE ]** (v15.17): every [ BACK ] that went to the title screen says so now (codex, help, leaderboard, settings, history, THE BOARD, the race screens, the end screen).
 - [ ] **YOUR DECK's header** (v15.16): THE BOARD's two tab rows with [DECK] lit, then a strip with SLOTS / CHIPS and the power. No [LEAVE] and no "THE BOARD // YOUR DECK": tap YOU or REP (any tab) to go back. Does it feel like part of THE BOARD now?
 - [ ] **The bugs in your meat notes** (v15.15).
   - **MONTY:** 2 more doors a layer. Its tell is shorter (it pushed the button off the first breach screen). The first breach screen now folds the logo away whenever the tell wouldn't fit with it (FOSSIL's would have too).

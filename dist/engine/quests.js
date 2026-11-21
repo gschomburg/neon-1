@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v15.16']);
+NEON_FILES.push(['engine/quests.js', 'v15.17']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -664,17 +664,19 @@ function questBoardLines(T, X) {
     for (const l of wrapText('put a crew together and maybe you will find some. get to know the other hackers: call them.', 32)) T(l, C.dim);
     return;
   }
-  // more than one: a row of tabs, one a quest (a * on one with news); the newest news first when you come in
-  if (!ids.includes(st.questTab)) st.questTab = ids.find(i => save.quests[i].news) || ids[0];
-  if (ids.length > 1) {
-    X({ gap: 1, row: ids.map(i => ({ text: `[ ${QUEST_INFO[i].name}${save.quests[i].news && i !== st.questTab ? '*' : ''} ]`, id: 'qtab_' + i, sel: i === st.questTab, onTap: () => { st.questTab = i; Sound.tick(); } })) });
-    T('');
-  }
+  // One quest at a time, < NAME > to step through them (Greg, 2026-11-21: a row of quest tabs won't fit many). Coming
+  // in: one with news (a step you haven't seen) first, else the one you looked at last (save.questPick). An arrow
+  // wears a * while another quest has news.
+  if (!ids.includes(st.questTab)) st.questTab = ids.find(i => save.quests[i].news) || (ids.includes(save.questPick) ? save.questPick : ids[0]);
   const id = st.questTab, q = save.quests[id];
-  q.news = false;
+  q.news = false; save.questPick = id;
   const info = QUEST_INFO[id], v = questView(id), at = v.at, step = v.step;
-  X({ text: info.name, col: C.rep, bold: true });
-  T(`from ${info.from}`, C.mid);
+  if (ids.length > 1) {
+    const news = ids.some(i => i !== id && save.quests[i].news), k = ids.indexOf(id);
+    const go = d => { st.questTab = ids[(k + d + ids.length) % ids.length]; Sound.tick(); };
+    X({ gap: 1, row: [{ text: news ? '[*< ]' : '[ < ]', id: 'qprev', onTap: () => go(-1) }, { text: ` ${info.name} `, col: C.rep, bold: true }, { text: news ? '[ >*]' : '[ > ]', id: 'qnext', onTap: () => go(1) }] });
+  } else X({ text: info.name, col: C.rep, bold: true });
+  T(`from ${info.from}` + (ids.length > 1 ? `  ·  ${ids.indexOf(id) + 1} of ${ids.length}` : ''), C.mid);
   T('');
   X({ text: `STEP ${at + 1}: ${v.name}`, col: C.bright, bold: true });
   for (const l of wrapText(v.goal, 32)) T(l, C.text);

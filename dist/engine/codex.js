@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v15.16']);
+NEON_FILES.push(['engine/codex.js', 'v15.17']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -254,7 +254,7 @@ function openCodex() {
     }
     if (w.hasDown) { X({ text: w.canDown ? '[ v v v  more  v v v ]' : '', invert: true, id: 'moredn', onTap: () => scrollBy(1) }); used++; }
     for (; used < rows; used++) T('');
-    B('[ BACK ]', 'back', () => swapTo(showTitle));
+    B('[ TITLE ]', 'back', () => swapTo(showTitle));
   }, '> codex open.', { full: true });
 
   // Keys: left/right = tabs, up/down = move through the list, esc = back.

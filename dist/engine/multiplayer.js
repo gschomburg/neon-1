@@ -1,6 +1,6 @@
 // NeoN+1 engine/multiplayer.js: Online multiplayer, profiles, INFO.
 'use strict';
-NEON_FILES.push(['engine/multiplayer.js', 'v15.16']);
+NEON_FILES.push(['engine/multiplayer.js', 'v15.17']);
 
 // ---------------- Online multiplayer ----------------
 // 2-6 players take turns on one seeded run ("Jenga" rules, elimination):
@@ -220,7 +220,7 @@ function openMultiplayer() {
       ] });
       T(Field.editing('room') ? 'enter to join, esc to cancel' : 'tap the box to type the code', C.dim);
     }
-    B('[ BACK ]', 'back', () => swapTo(showTitle));
+    B('[ TITLE ]', 'back', () => swapTo(showTitle));
   }, '> multiplayer.', { full: true });
   st.keyHandler = k => { if (k === 'escape') { swapTo(showTitle); return true; } return false; };
 }
@@ -245,7 +245,7 @@ function openInfo() {
     T('');
     B('[ GITHUB: gschomburg/neon-1 ]', 'repo', () => { try { window.open(REPO_URL, '_blank', 'noopener'); } catch (e) { /* blocked */ } });
     T('');
-    B('[ BACK ]', 'back', () => swapTo(showTitle));
+    B('[ TITLE ]', 'back', () => swapTo(showTitle));
   }, '> info.', { full: true });
   st.keyHandler = k => { if (k === 'escape') { swapTo(showTitle); return true; } return false; };
 }

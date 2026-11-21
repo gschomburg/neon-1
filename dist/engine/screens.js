@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v15.16']);
+NEON_FILES.push(['engine/screens.js', 'v15.17']);
 
 // ---------- circuit traces (the title's, and the intro card's wires: engine/intro.js) ----------
 // Which way each trace char connects (n e s w). Two cells link when each has a port facing the other.
@@ -381,18 +381,18 @@ function overLines() {
   const bottom = [...(lb || []), ...(lbOpen ? [] : r.quest === 'had3s' ? [   // HAD3S: running it again is the big one
     { box: true, text: 'R U N   H A D 3 S   A G A I N', id: 'had3s', onTap: runHad3s, minW: 30 },
     { text: '[ NEW RUN ]', id: 'new', onTap: newRun },
-    { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
+    { text: '[ TITLE ]', id: 'title', onTap: () => swapTo(showTitle) },
   ] : r.heaven && !r.win ? [   // died in H3AV3N: retrying heaven is the big one
     { box: true, text: 'R E T R Y   H 3 A V 3 N', id: 'retryh', onTap: retryHeaven, minW: 28 },
     { text: '[ NEW RUN ]', id: 'new', onTap: newRun },
-    { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
+    { text: '[ TITLE ]', id: 'title', onTap: () => swapTo(showTitle) },
   ] : [
     { box: true, text: 'N E W   R U N', id: 'new', onTap: newRun, minW: 24 },
     { row: [   // (one row: the screen's rows are counted below)
       { text: '[ RETRY SEED ]', id: 'retry', onTap: retry },
       { text: seedShared() ? '[ COPIED ]' : '[ SHARE ]', id: 'shareseed', onTap: () => shareSeed(r.seed) },
     ] },
-    { text: '[ BACK ]', id: 'title', onTap: () => swapTo(showTitle) },
+    { text: '[ TITLE ]', id: 'title', onTap: () => swapTo(showTitle) },
   ])];
   // the scrolling area: the mods and items, then the map with the path you took
   const rest = 1 + bottom.reduce((a, ln) => a + lineRows(ln), 0);   // gap + the bottom (lineRows: engine/textboard.js, as it draws them)

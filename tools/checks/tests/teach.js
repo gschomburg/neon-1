@@ -61,5 +61,13 @@ module.exports = { name: 'teach', body: `
   B.startRun('TEACHTEST', false); await settle('start');
   st.run.hacked = true; noteHistory(st.run);
   check(save.history[0].rooted === true && !save.history[0].practice, 'history: rooted');
+  // QUESTS: one at a time, < NAME > to step; one with news first (Greg, 2026-11-21)
+  { const ids = Object.keys(QUEST_INFO).slice(0, 2); save.quests = save.quests || {};
+    for (const i of ids) save.quests[i] = Object.assign(save.quests[i] || {}, { step: QUEST_INFO[i].steps[0].key, seen: true, news: false });
+    save.quests[ids[1]].news = true; st.questTab = null;
+    openBoard('quests'); await sleep(700);
+    check(st.questTab === ids[1] && tb('qnext') && tb('qprev') && !hits.some(h => /^qtab_/.test(h.id || '')), 'QUESTS: the one with news first, arrows, no quest tabs');
+    tb('qnext').onTap(); await sleep(200);
+    check(st.questTab === ids[0], 'the arrow steps to the next'); }
   save.legacy.crew_root = rootWas;
 ` };
