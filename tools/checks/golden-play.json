@@ -3164,7 +3164,7 @@
      "idx": 0,
      "boss": false,
      "n": 2,
-     "hint": "> i can see your cursor, you know.",
+     "hint": "> the edges? not today.",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 2
     },
@@ -3180,7 +3180,7 @@
      "idx": 2,
      "boss": false,
      "n": 4,
-     "hint": "> 0 runs. 0 wins. hm.",
+     "hint": "> the edges? not today.",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 4
     },
@@ -3196,7 +3196,7 @@
      "idx": 4,
      "boss": true,
      "n": 6,
-     "hint": "FATAL: runner.exe stopped",
+     "hint": "FATAL: close this window",
      "missMsg": "> ICE. god mode: no damage.",
      "after": 6
     }

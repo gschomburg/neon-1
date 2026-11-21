@@ -437,9 +437,14 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   are built: POPS's is TRACER.)
 
 ## Polish (the user, 2026-10-29: the finishing passes)
-- **To test: FOURTH WALL is flaky in tools/checks/playtest.js** (2026-11-21): about one run in three it differs from
-  golden-play.json. Its tell reads your past picks (save.habits), so something feeding them isn't the same every run.
-  Find what, and make the playtest steady.
+- **Playtest clock (later, if the `TIMING` list gets in the way):** tools/checks/playtest.js ignores hint changes for
+  the corps in `TIMING` (LIFTCO, SQUALOR, STREAMFLIX...), because their hints run on the real clock. To check those
+  too, fake the page's whole clock (`performance.now`, `Date`, `Math.random`, animation frames). A fixed `now` alone
+  isn't enough: they compare it to timestamps saved when the layer appeared (`lv.shownAt`). The playtest's own waits
+  run on that clock too, so it's a real job.
+  - [x] FOURTH WALL's flake (2026-11-21): it wasn't `save.habits` (a fresh save picks the zone by seed). Its hint
+    switches between its tell and chat lines on the clock, and the chat has a random mod and the real time. The
+    playtest gives it a fixed time now (`FIXED_NOW`), so it always records its tell.
 - **BACK / LEAVE / CLOSE, made consistent** (meat notes 2026-11-21: "we're kind of inconsistent with back and leave
   buttons. both in the titles and their positioning"). Today:
   - **[LEAVE] top right, in the header:** the WORKBENCH, YOUR DECK, a race (MP).

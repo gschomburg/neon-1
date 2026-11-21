@@ -47,7 +47,11 @@ const PLAYER = `(async () => {
       B.enterNode(run.map[id], true); await settle('enter');
       for (let guard = 0; guard < 16 && st.mode === 'play' && st.corp && st.corp.def.key === key; guard++) {
         const lv = st.lv, c = st.corp;
-        const hint = c.def.hint ? (() => { try { const h = c.def.hint(lv, performance.now()); return h ? h.text : ''; } catch (e) { return 'HINT ERROR ' + e.message; } })() : '';
+        // FIXED_NOW: corps whose hint only uses the time to pick a line (no elapsed time), so a fixed
+        // time makes it steady. FOURTH WALL at 0 shows its tell, not its chat (a random mod, the real clock).
+        const FIXED_NOW = { fourthwall: 0 };
+        const now = key in FIXED_NOW ? FIXED_NOW[key] : performance.now();
+        const hint = c.def.hint ? (() => { try { const h = c.def.hint(lv, now); return h ? h.text : ''; } catch (e) { return 'HINT ERROR ' + e.message; } })() : '';
         const L = { idx: c.idx, boss: !!lv.boss, n: lv.tiles.length };
         if (hint) L.hint = hint;
         const ice = lv.tiles.findIndex(t => !t.safe && t.state === 'closed' && !t.loaded);
