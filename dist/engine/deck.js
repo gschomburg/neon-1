@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.05']);
+NEON_FILES.push(['engine/deck.js', 'v15.06']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -73,6 +73,11 @@ const DECK_CHIPS = {
   BR3: ['breach', 'sudo', 'legendary', 3, 'THE SHELL learns breach: you win this layer outright, full pay. once a run. (` opens THE SHELL.)', ['>>>', 'BRC'], 'breach: win a layer.'],
   GM1: ['give.mod', 'sudo', 'epic', 2, 'THE SHELL learns give.mod: name a mod you have found and it is yours. epic and up: only ones you have shredded. it costs more the rarer it is. (` opens THE SHELL.)', ['+M ', 'GVE'], 'give.mod: name a mod.'],
   GG1: ['give.gear', 'sudo', 'epic', 2, 'THE SHELL learns give.gear: name gear you have found and it is on your belt. epic and up: only what you have shredded. it costs more the rarer it is. (` opens THE SHELL.)', ['+G ', 'GVE'], 'give.gear: name your gear.'],
+  // (v15.06: the rest of the SUDO list, docs/DECK.md. fork waits on Greg: a run can't hold two of one mod)
+  FT3: ['mode.free', 'sudo', 'epic', 2, 'THE SHELL learns mode.free: any node in this sector is open to you, the boss too, till the sector ends. (` opens THE SHELL.)', ['<->', 'FRE'], 'mode.free: go anywhere, a sector.'],
+  JM4: ['corp.jump', 'sudo', 'legendary', 3, "THE SHELL learns corp.jump: skip the rest of this corp's layers, straight to its boss. (` opens THE SHELL.)", ['>>|', 'JMP'], "corp.jump: straight to the boss."],
+  RF4: ['rm -rf', 'sudo', 'legendary', 3, 'THE SHELL learns rm -rf: every ICE on this layer is deleted. not on a sector boss. (` opens THE SHELL.)', ['rm*', '-rf'], 'rm -rf: delete all the ICE.'],
+  CM3: ['chmod', 'sudo', 'epic', 2, 'THE SHELL learns chmod: one of your mods goes up a rarity till the sector ends. (` opens THE SHELL.)', ['+x ', 'CHM'], 'chmod: a mod up a rarity.'],
   // BOSS (mk IV): big chips from the big bosses
   OMNI: ["OMNI'S EYE", 'boss', 'exotic', 3, "every corp's card on the map shows its tell.", ['<(@)>', 'OMNI '], 'every corp shows its tell.'],
   // HEAT (mk IV): harder runs, more REP
@@ -145,7 +150,7 @@ const DECK_CHIP_TAGS = {
   TF1: ['you'], LD3: ['you'], BM4: ['you'], FI2: ['you'], QT0: ['map'], DM5: ['you'], BB7: ['you'], SP3: ['rules'],
   SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'], FM2: ['you', 'rules'], SK1: ['you'],
   WH0: ['you'], MN1: ['you'], CA4: ['you'], RK1: ['you'], PS4: ['you'], FL3: ['you'], CD2: ['you'], SN5: ['you'], RM1: ['you'], KL9: ['you'], CT1: ['you'], ZZ3: ['you'], WI5: ['you'], UD2: ['you'],
-  GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], GG1: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
+  GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], GG1: ['you'], FT3: ['you'], JM4: ['you'], RF4: ['you'], CM3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
   PL3: ['you'], BP1: ['you'], JD6: ['you'], PD7: ['you'], RG6: ['you'], KN8: ['you'], CL3: ['you'], HS1: ['map'],
   LU6: ['map', 'rules'], FR5: ['map'], EV2: ['map'], AD0: ['map'], SR4: ['map'], PP2: ['map'], AL4: ['you'], CS7: ['map'], CK9: ['map'], DK6: ['map'],
   CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'],
@@ -376,6 +381,7 @@ function deckLayer(lv, c) {
 // a new sector (engine/runend.js pushOn): DECAY drops each mod a step (BUFFER keeps its step: it changes your INT)
 function deckSector(run) {
   deckRefill(run);   // THE SHELL's charges, topped up (SHELL_REFILL)
+  deckChmodOff(run);   // chmod's rarity wears off (before DECAY)
   if (!chipOn('DC4', run)) return;
   const hit = run.mods.filter(k => k !== 'buffer' && (run.modTier[k] || 0) > 0);
   for (const k of hit) run.modTier[k]--;
@@ -471,7 +477,7 @@ const deckSpoils = run => chipOn('OF1', run) ? 3 : chipOn('PT1', run) ? 4 : chip
 // refill back). More from a corp boss's CHARGE pick (gear: +2), and ROOTKIT (CRASH) burns them all to save you.
 const SHELL_REFILL = 'sector';
 const DECK_CHARGES = { WH0: 3, PS4: 2, MN1: 2, CA4: 4, FL3: 3,   // (FL3 was 1: v15.03, a SUDO chip gives one use of its own command)
-  CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 4, GG1: 4 };   // (GM1, GG1: they cost by rarity, DECK_GIVE_COST: 4 reaches a legendary)
+  CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 4, GG1: 4, FT3: 3, JM4: 4, RF4: 4, CM3: 3 };   // (GM1, GG1: they cost by rarity, DECK_GIVE_COST: 4 reaches a legendary)
 const SHELL_CHARGE = { pack: 2, boss: 0.35 };   // a CHARGE gives 2; a corp boss offers one 35% of the time (with charges to fill)
 for (const [k, n] of Object.entries(DECK_CHARGES)) if (DECK_CHIPS[k]) { DECK_CHIPS[k][4] += ` +${n} shell charges.`; DECK_CHIPS[k][6] += ` +${n} charges.`; }
 function deckCharges(run) { run.chargeMax = (run.chips || []).reduce((a, k) => a + (DECK_CHARGES[k] || 0), 0); run.charges = run.chargeMax; }
@@ -586,7 +592,42 @@ const DECK_SHELL_CMDS = [
     if (!h || h.lv !== lv || h.undone) throw new Error('no ICE hit to undo on this layer.');
     h.undone = true; run.integrity = Math.min(run.maxInt, run.integrity + h.dmg); run.hacked = true;
     return `undo: +${h.dmg} INT (${run.integrity}/${run.maxInt}).`; } },
+  // ---- v15.06: SUDO (docs/DECK.md SUDO). 'rm -rf' has a space: engine/shell.js shellParse reads "rm -rf" as one name.
+  { name: 'rm -rf', chip: 'RF4', cost: 4, safe: true, help: 'every ICE on this layer is deleted (not on a sector boss)', run: () => {
+    const run = shellNeedRun(), lv = deckShellLayer();
+    if (st.corp.node.type === 'final') throw new Error('too big: not on a sector boss.');
+    const ice = deckRfIce(lv);
+    if (!ice.length) throw new Error('no ICE left to delete.');
+    run.hacked = true; shellClose();
+    setTimeout(() => deckRmRf(lv), 250);
+    return `rm -rf: ${ice.length} ICE deleted.`; } },
+  { name: 'chmod', chip: 'CM3', cost: 3, safe: true, args: [{ name: 'mod', of: () => deckChmodList(), any: 'mods' }], help: 'one of your mods up a rarity till the sector ends', run: a => {
+    const run = shellNeedRun(), k = a[0];
+    if (run.chmod && run.chmod.sector === run.sector) throw new Error(`used: ${MODS[run.chmod.key].name} is up till this sector ends.`);
+    if (!has(k)) throw new Error(`you don't have ${MODS[k] ? MODS[k].name : k}.`);
+    if (DECK_CHMOD_NO.includes(k)) throw new Error(`${MODS[k].name} won't take it.`);
+    if (modMaxed(k)) throw new Error(`your ${MODS[k].name} is maxed already.`);
+    run.modTier[k] = (run.modTier[k] || 0) + 1; run.chmod = { key: k, sector: run.sector }; run.hacked = true; Sound.buy();
+    return `chmod: ${MODS[k].name} is ${tierLabel(modView(k)).toLowerCase()} till sector ${run.sector + 1} ends.`; } },
 ];
+// rm -rf: the ICE on a layer (what rm picks from), deleted one after another so you see it go
+const deckRfIce = lv => lv.tiles.filter(t => t.state === 'closed' && !isReal(t) && !t.loaded);
+async function deckRmRf(lv) {
+  if (st.lv !== lv) return;
+  st.busy = true; flash(C.danger, 0.3, 0.6); shake(8, 0.5);
+  for (const t of deckRfIce(lv)) { if (st.lv !== lv) break; lockTile(t, C.mid, 'rm'); await wait(reduced() ? 0 : 60); }
+  if (st.lv === lv) { st.busy = false; setMsg('> rm -rf: the ICE is gone.', C.accent); }
+}
+// chmod: not the mods whose step changes more than their numbers (BUFFER your INT, BOX OF WIRES the map, MUTATE what
+// it is). It wears off as a new sector starts (deckSector), unless you sold the mod.
+const DECK_CHMOD_NO = ['buffer', 'wires', 'mutate'];
+const deckChmodList = () => (st.run ? st.run.mods : []).filter(k => MODS[k] && !DECK_CHMOD_NO.includes(k) && !modMaxed(k))
+  .map(k => ({ v: k, hint: MODS[k].name.toLowerCase() + ' ' + tierLabel(modView(k)).toLowerCase() }));
+function deckChmodOff(run) {
+  const c = run.chmod; if (!c || c.sector === run.sector) return;
+  if (run.mods.includes(c.key) && (run.modTier[c.key] || 0) > 0) run.modTier[c.key]--;
+  run.chmod = null;
+}
 // A corp layer you can work on (rm, sleep, undo, show.real, breach), or why not.
 function deckShellLayer() {
   if (st.mode !== 'play' || !st.lv || !st.corp || !st.corp.hasBoss || st.mp) throw new Error('only on a layer.');
@@ -685,6 +726,17 @@ const DECK_SHELL_PLAY = {
     run.sudoBreach = true; run.hacked = true; shellClose();
     setTimeout(() => { if (st.lv === lv && !st.busy) { setMsg('> breach. you are in.', C.accent); st.busy = true; onSafe(lv.tiles[lv.safe]); } }, 250);
     return 'breach: you are in.'; } },
+  'mode.free': { chip: 'FT3', safe: true, cost: 3, args: [], help: 'any node in this sector is open, the boss too, till it ends', run: () => {
+    const run = shellNeedRun();
+    if (run.freeSector === run.sector) throw new Error('already on, till this sector ends.');
+    run.freeSector = run.sector; run.hacked = true; st.mapSel = null;   // (engine/render.js availableNodes)
+    return `mode.free: go anywhere in sector ${run.sector + 1}, the boss too.`; } },
+  'corp.jump': { chip: 'JM4', safe: true, cost: 4, args: [], help: "skip this corp's layers, straight to its boss", run: () => {
+    const run = shellNeedRun(), lv = deckShellLayer();
+    if (lv.boss || st.corp.idx >= st.corp.counts.length - 1) throw new Error('you are at the boss already.');
+    run.hacked = true; shellClose();
+    setTimeout(() => { if (st.lv === lv && !st.busy) { setMsg('> corp.jump: straight to the boss.', C.accent); st.corp.idx = st.corp.counts.length - 1; enterLayer(); } }, 250);   // (the dev version: engine/dev.js jumpToBoss)
+    return 'corp.jump: to the boss.'; } },
   'give.mod': { chip: 'GM1', safe: true, cost: 1, costOf: a => deckGiveCostOf('mod', a), args: [{ name: 'mod', of: () => deckGiveList('mod'), any: 'mods', opt: true }, DECK_GIVE_TIER_ARG],
     help: 'name a mod you have found (epic+: shredded). 1-5 charges by rarity', run: a => deckGive('mod', a) },
   'give.gear': { chip: 'GG1', safe: true, cost: 1, costOf: a => deckGiveCostOf('gear', a), args: [{ name: 'gear', of: () => deckGiveList('gear'), any: 'gear', opt: true }, DECK_GIVE_TIER_ARG],

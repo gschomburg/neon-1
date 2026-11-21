@@ -18,8 +18,8 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
 - **CRON** and more BOSS chips: CRON brings back the refill every sector, and with it charges that last the whole run
   become the default. More big bosses to drop BOSS chips (Greg: "we will need to figure out more bosses").
 - **`compile`:** THE SHELL makes a chip.
-- **More SUDO commands:** `rm -rf` (every ICE on the layer), `fork` (copy a mod for the corp), `chmod` (a mod up a
-  rarity for a sector), `mode.free` (free travel on the map for a sector), `corp.jump` (skip to the boss).
+- **More SUDO commands:** built v15.06: `mode.free`, `corp.jump`, `rm -rf`, `chmod`. Left: `fork` (copy a mod for the
+  corp), which waits on Greg: a run holds one of each mod, so what does the copy do?
 - **Ripped chips** (was HOT, renamed v15.06): the fence sells them; rivals drop them and then chase you. Greg's calls (2026-11-21) are in
   docs/DECK.md, under "The sources": a rival on every corp node without an anomaly, heat only while you hold one,
   rivals take it back, their own set by rarity, magenta cycling, POPS's calls.

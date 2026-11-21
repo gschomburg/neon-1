@@ -14,6 +14,13 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Four more SUDO commands** (v15.06; docs/DECK.md SUDO). `give.chip FT3` (and JM4, RF4, CM3) in dev mode puts one on your belt.
+  - **`mode.free`** (FT3, epic, 3 charges): any node in this sector is open, the boss too, till the sector ends.
+  - **`corp.jump`** (JM4, legendary, 4): from a corp layer, straight to its boss.
+  - **`rm -rf`** (RF4, legendary, 4): every ICE on the layer goes, one after another. My call: not on a sector boss, like NUKE.
+  - **`chmod <mod>`** (CM3, epic, 3): a mod up a rarity till the sector ends, once a sector. My call: not BUFFER, BOX OF WIRES or MUTATE, since their step changes more than numbers.
+  - Rarities and charges are my picks; each chip gives one use. They drop by rarity like the others (no corp drops: HALFLIFE and CLONEWORKS are only their themes).
+  - **`fork`: not built.** A run holds one of each mod, so a copy has nothing to add. Your call on what it does.
 - [ ] **Teaching THE SHELL and the deck** (v15.05). Try a fresh save if you can:
   - **The bench:** POPS's first-visit lines end with your shell line (before ROOT: "don't know what a shell is?..."; with ROOT: "give.mod, give.gear").
   - **Your deck:** the first time you open it, POPS trains you (6 lines: sockets, power, runs, where chips come from, SHELL chips). `deck.pops` replays it. A save that has a deck already gets it the next time it opens the deck.

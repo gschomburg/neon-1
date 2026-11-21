@@ -1,6 +1,6 @@
 // NeoN+1 corps/entropy.js
 'use strict';
-NEON_FILES.push(['corps/entropy.js', 'v15.05']);
+NEON_FILES.push(['corps/entropy.js', 'v15.06']);
 // Its boss reward: ANCHOR gear x2 (anchor), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 

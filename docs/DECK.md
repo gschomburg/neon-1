@@ -632,7 +632,9 @@ yet when you'd scan). `kill` takes `-9` so it can't go off by accident.
 
 ### SUDO (3, mk IV): the strong commands
 **Built v15.03:** `mode.god` GD1, `mode.hold` HD4, `show.real` RL2, `breach` BR3, `give.mod` GM1 (player versions;
-dev mode keeps the dev ones: docs/SHELL.md). A SUDO chip gives exactly one use of its own command in charges (Greg:
+dev mode keeps the dev ones: docs/SHELL.md). **Built v15.06:** `mode.free` FT3 (epic, 3), `corp.jump` JM4 (legendary,
+4), `rm -rf` RF4 (legendary, 4), `chmod` CM3 (epic, 3); they drop like the other chips (by rarity: no corp drops yet).
+**Waiting on Greg:** `fork`. A SUDO chip gives exactly one use of its own command in charges (Greg:
 "a powerful command but it only provides one use"): god 4, hold 3, real 2, breach 4, give 4 (v15.04); flatline went 1 -> 3.
 - **`mode.god`:** no damage for a sector, then it wears off.
 - **`run.seed`:** pick the seed of your next run.
@@ -644,14 +646,16 @@ dev mode keeps the dev ones: docs/SHELL.md). A SUDO chip gives exactly one use o
   lowest you may summon. The chips give 4 charges (a legendary; an exotic needs a CAPACITOR). Alone it lists yours, free.
   Dropped: pick 1 of 3, once a run (v15.03), because Greg wanted to name it.
 - More (the dev commands, earned for real; Greg: the strong ones he was after):
-  - **`mode.free`:** free travel on the map for a sector.
+  - **`mode.free`** (built v15.06): free travel on the map for a sector: every node in it, the boss too.
   - **`mode.hold`:** the layer clocks stop for a corp.
   - **`show.real`:** the real node shows for one layer, once a corp.
   - **`breach`:** win this layer outright, once a run.
-  - **`corp.jump`:** skip to this corp's boss.
-  - **`rm -rf`:** every ICE on this layer is gone. HALFLIFE NUCLEAR.
-  - **`fork`:** copy a mod you own for the rest of the corp. CLONEWORKS.
-  - **`chmod`:** a mod goes up a rarity for a sector (CHMOD was a gear name with no effect yet, section 1).
+  - **`corp.jump`** (built v15.06): skip to this corp's boss, from one of its layers.
+  - **`rm -rf`** (built v15.06): every ICE on this layer is gone, one after another. Not on a sector boss (like NUKE). HALFLIFE NUCLEAR.
+  - **`fork`:** copy a mod you own for the rest of the corp. CLONEWORKS. **Open:** a run holds one of each mod, so a
+    copy has nothing to add. What should it do? (Not built.)
+  - **`chmod <mod>`** (built v15.06): a mod goes up a rarity till the sector ends, once a sector. Not BUFFER, BOX OF
+    WIRES or MUTATE (their step changes more than numbers). (CHMOD was a gear name with no effect yet, section 1.)
 
 
 ### BOSS (2 wide, mk IV): the big bosses
