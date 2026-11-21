@@ -745,6 +745,9 @@ Greg: sockets that open earlier should sit higher on the board.
   [DECK] over [FEATS] [CREW] [QUESTS]), DECK lit; any of the others goes back to THE BOARD on that tab. Under them a
   sub-tab strip: SLOTS (was BOARD) and CHIPS, the power on the right. Gone: "THE BOARD // YOUR DECK" and [LEAVE] (it
   was really a back). Esc still goes to THE BOARD's YOU. Chips with no power: the first tap warns.
+  **v15.19 (Greg):** top left is `[< TITLE]` (was NeoN+1); REP left the top line. It's in the buttons that cost it:
+  `[ INSTALL · 420/600 REP ]`, `[ THE FUSE · ... ]`, `[ mk III · ... ]`, dimmed while you're short (a tap still says
+  what's missing).
 - **The ladder:** the deck at USER, mk III at ELITE, the FUSE at SYSOP. **Decided (Greg, 2026-11-16):** yes (below).
 - **The power budget:** chips cost 0-3 power and the cell sets the budget. **Decided:** yes, first pass (Power).
 - **Carrying a chip home:** **Decided (Greg, 2026-11-16):** a gear slot, for now (Chips, above).

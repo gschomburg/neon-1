@@ -1,13 +1,17 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.18']);
+NEON_FILES.push(['engine/panels.js', 'v15.19']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
+const TO_TITLE = { text: '[< TITLE]', onTap: () => swapTo(showTitle) };
 const fullScreen = () => st.mode === 'title' || st.mode === 'over' || (st.mode === 'panel' && st.panelFull);
 
+// opts.top: the top-left button of a full-screen menu (Greg, 2026-11-21: top left is the way out, [< TITLE]):
+// { text (or a function for it), onTap }. TO_TITLE is the usual one.
 function openPanel(title, fn, msg, opts = {}) {
   st.panelFull = !!opts.full;
+  st.panelTop = opts.top || null;
   st.swap = null;
   st.bigPops = 0; st.glow = {};
   st.breachReveal = false;

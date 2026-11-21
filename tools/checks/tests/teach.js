@@ -49,6 +49,7 @@ module.exports = { name: 'teach', body: `
   // THE BOARD: YOU REP DECK over FEATS CREW QUESTS
   openBoard('rep'); await sleep(600);
   const tb = id => hits.find(h => h.id === id);
+  check(tb('back') && hits.every(h => h.y >= tb('back').y), 'THE BOARD: [< TITLE] top left, the first row');
   check(['tby', 'tbr', 'tbd', 'tbf', 'tbc', 'tbq'].every(tb), 'all six tabs');
   check(tb('tby').y === tb('tbd').y && tb('tbf').y > tb('tby').y, 'two rows: DECK up top, FEATS under: ' + ['tby', 'tbd', 'tbf'].map(i => tb(i).y).join(' '));
   tb('tbd').onTap(); await sleep(600);

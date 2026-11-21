@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.18']);
+NEON_FILES.push(['engine/menus.js', 'v15.19']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -26,8 +26,7 @@ function openSettings() {
     B(st.resetArmed ? '[ TAP AGAIN TO ERASE ]' : '[ reset save data ]', 'reset', resetSave);
     if (st.resetArmed) T('erases best, runs, codex.', C.danger);
     T('');
-    B('[ TITLE ]', 'back', () => swapTo(showTitle));
-  }, '> settings.', { full: true });
+  }, '> settings.', { full: true, top: TO_TITLE });
   st.keyHandler = k => { if (k === 'escape') { swapTo(showTitle); return true; } return false; };
 }
 
@@ -76,8 +75,7 @@ function openReplays() {
     const seen = new Set(), recent = (save.history || []).filter(h => h.seed && !seen.has(h.seed) && seen.add(h.seed)).slice(0, 5);
     if (recent.length) recent.forEach((h, i) => row(h, i, 'rr')); else T('nothing yet.', C.dim);
     T('');
-    B('[ TITLE ]', 'back', () => swapTo(showTitle));
-  }, "> POPS's log.", { full: true });
+  }, "> POPS's log.", { full: true, top: TO_TITLE });
   st.keyHandler = k => { if (k === 'escape') { swapTo(showTitle); return true; } return false; };
 }
 
@@ -330,8 +328,7 @@ function openBoard(tab) {
     } else if (tab === 'quests') questBoardLines(t, x);   // engine/quests.js
     for (; used < BOARD_BODY; used++) T('');
     T('');
-    B('[ TITLE ]', 'back', back);
-  }, '> connected to the board.', { full: true });
+  }, '> connected to the board.', { full: true, top: { text: '[< TITLE]', onTap: back } });
   // keys: left / right = tabs, up / down = the list (REP, FEATS) or scroll (STATS), esc = back
   st.keyHandler = k => {
     if (k === 'escape') { back(); return true; }

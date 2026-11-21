@@ -11,7 +11,7 @@
 // never on TODAY / ALL TIME: memorizing a map shouldn't win those. Other runs go on TODAY / ALL TIME and their seed's
 // board (so a replay has the first run to beat). Every score says if you'd beaten G0D (data.g0d: tracked, not shown).
 'use strict';
-NEON_FILES.push(['engine/leaders.js', 'v15.18']);
+NEON_FILES.push(['engine/leaders.js', 'v15.19']);
 
 const LB_ENDPOINT = 'https://s3iz.com/glx/api/';
 const LB_TABS = [{ key: 'day', label: 'TODAY' }, { key: 'all', label: 'ALL TIME' }, { key: 'seeds', label: 'SEEDS' }];
@@ -301,8 +301,7 @@ function openLeaders() {
     T(gl && gl.dev ? 'test board (tester / local page)' : front ? 'replays: each player\'s best on each seed.' : seedsTab() ? 'everyone on this seed. most layers wins.'
       : tab().key === 'day' ? 'today = the UTC day' : 'most layers. fewer 1UPs, then mods, win ties.', C.dim);
     T('');
-    B(seedsTab() && st.lbSeed ? '[ ALL SEEDS ]' : '[ TITLE ]', 'back', back);
-  }, '> pulling the board.', { full: true });
+  }, '> pulling the board.', { full: true, top: { text: () => seedsTab() && st.lbSeed ? '[< ALL SEEDS]' : '[< TITLE]', onTap: back } });
   st.keyHandler = k => {
     if (k === 'escape') { back(); return true; }
     if (k === 'arrowleft' || k === 'arrowright') { go(k === 'arrowleft' ? -1 : 1); st.kbFocus = st.hoverBtn = 'lbt' + tab().key; return true; }

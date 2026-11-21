@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v15.18']);
+NEON_FILES.push(['engine/scene.js', 'v15.19']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -119,6 +119,12 @@ function buildScene(now, collectHits, raw = false) {
   } else if (fullScreen() || st.dev) {
     buildTextBoard(ctx, st.dev ? devLines() : st.mode === 'title' ? titleLines(now) : panelLines(), { top: 0, h: L.hc });
     footerRight();
+    // a full-screen menu's way out, top left (openPanel's opts.top: [< TITLE]); it takes the 'back' id, so the keys find it
+    const tp = !st.dev && st.mode === 'panel' && st.panelTop;
+    if (tp) { const s = typeof tp.text === 'function' ? tp.text() : tp.text;
+      bg(0, 0, s.length, C.bg, 1); put(0, 0, s, st.hoverBtn === 'back' ? C.accent : C.mid, 'ui');
+      if (st.hoverBtn === 'back') bg(0, 0, s.length, C.accent, 0.2);
+      addHit(0, 0, s.length, 1, { kind: 'btn', id: 'back', onTap: tp.onTap }); }
     if (st.mode === 'title' && !st.dev) cells.splice(0, cells.length, ...FX.eyeCells(cells, FX.look('eyes', TITLE_EYES), now, 0, 0, L.wc, L.hc));   // G0D's eyes (engine/fx.js; the title's own settings: data/title.js TITLE_EYES)
   } else {
 

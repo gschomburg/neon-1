@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Top left is the way out** (v15.19): `[< TITLE]` top left on THE BOARD, your deck, the codex, help, settings, history, the leaderboard (`[< ALL SEEDS]` inside a seed) and the race screens. The bottom TITLE buttons are gone; the end screen keeps its own. See how it feels before step 2 (LEAVE up top in markets, THE FENCE, the PIER).
+- [ ] **REP on the deck** (v15.19): gone from the top line, now in the upgrade buttons as have/cost (`420/600 REP`), dimmed while you're short.
 - [ ] **THE SHELL's help wrapping** (v15.18): wrapped lines step in under the command now. On the game's column (about 40 wide) the description column is too far right, so a wrap steps in 2; on a wide shell it lines up under the description.
 - [ ] **QUESTS, one at a time** (v15.17): `[ < ]  SYSTEM FAILURE  [ > ]`, and "from POPS · 1 of 2" under it. It opens on a quest with a new step; otherwise the one you looked at last. An arrow reads `[*< ]` / `[ >*]` while another quest has news. Pinning: not done (you floated it); say if you want it.
 - [ ] **[ TITLE ]** (v15.17): every [ BACK ] that went to the title screen says so now (codex, help, leaderboard, settings, history, THE BOARD, the race screens, the end screen).

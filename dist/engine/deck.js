@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.18']);
+NEON_FILES.push(['engine/deck.js', 'v15.19']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -1050,12 +1050,12 @@ function deckTrainLines() {
     ...(rootOn() ? ["SHELL and SUDO chips teach THE SHELL commands. give.mod and give.gear call up what you've found."]
       : ["SHELL and SUDO chips need a shell. you don't have one yet. something in here might."])];
 }
-// Out of your deck: to a BOARD tab (tab: you, rep, feats... Esc: YOU). Chips with no power: it warns once first.
+// Out of your deck: to a BOARD tab (tab: you, rep, feats... Esc: YOU), or 'title'. Chips with no power: it warns once first.
 function deckLeave(tab = 'you') {
   const off = deckPower().off.length, now = performance.now();
   if (off && now - DECK.leave > 3000) { DECK.leave = now; Sound.deny(); return deckSay(`${off} chip${off > 1 ? 's have' : ' has'} no power. tap again to go.`, C.danger); }
   DECK.leave = 0;
-  if (DECK.real) swapTo(() => openBoard(tab)); else swapTo(showTitle);
+  if (DECK.real && tab !== 'title') swapTo(() => openBoard(tab)); else swapTo(showTitle);
 }
 function deckKey(k) {
   const d = DECK; if (!d) return false;
@@ -1423,7 +1423,10 @@ function deckLines(T, B, X) {
 
 function deckHeader(ctx, y) {
   const d = DECK, g = deckGrid(ctx), pw = deckPower(), W = L.wc;
-  g.put(0, y, 'NeoN+1', C.accent); const rep = `${d.rep} REP`; g.put(W - rep.length, y, rep, C.rep);
+  // top left: the way out (Greg, 2026-11-21: every menu's [< TITLE] sits here). REP isn't up here any more: it's in the
+  // buttons that cost it (deckRepBtn)
+  if (d.real) deckBtn(ctx, g, 0, y, '[< TITLE]', C.mid, 'back', () => deckLeave('title'));
+  else g.put(0, y, 'NeoN+1', C.accent);
   // THE BOARD's tabs, DECK lit (Greg, 2026-11-21: the deck is a BOARD tab; it had its own header and a [LEAVE] that was
   // really a back). The same two rows as THE BOARD (engine/menus.js openBoard), centered. The dev deck: its own row.
   if (d.real) {
@@ -1836,8 +1839,8 @@ function deckCpu(ctx, y0, sa) {
     g.put(x + 10, y, what.slice(0, w - 10), have ? C.text : C.mid);
     y++;
     let bx = x + 10;
-    if (m === 3 && !have) deckBtn(ctx, g, bx, y, `[ UPGRADE · ${deckCost('deck3')} REP ]`, d.mk === 2 ? C.rep : C.dim, 'dkmk3', deckUpgrade3, d.mk !== 2);
-    else if (m === 4 && !have) { if (d.mk < 3) g.put(bx, y, 'mk III, then the FUSE', C.dim); else deckBtn(ctx, g, bx, y, `[ THE FUSE · ${deckCost('fuse')} REP ]`, C.rep, 'dkmk4', deckFuseIn); }
+    if (m === 3 && !have) deckBtn(ctx, g, bx, y, deckRepText('INSTALL', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3, d.mk !== 2);
+    else if (m === 4 && !have) { if (d.mk < 3) g.put(bx, y, 'mk III, then the FUSE', C.dim); else deckBtn(ctx, g, bx, y, deckRepText('THE FUSE', 'fuse'), deckRepCol('fuse'), 'dkmk4', deckFuseIn); }
     else if (m === 4 && d.blown) g.put(bx, y, 'the FUSE is blown', C.danger);
     else g.put(bx, y, lv + ' access', C.dim);
     y++;
@@ -1910,12 +1913,12 @@ function deckCard(ctx, y0) {
       if (open) DECK_GLYPHS[d.glyph][1].forEach((l, j) => g.put(1, y + j, l, C.bright, true)); else g.put(1, y + 1, ':mk3:', C.mid);
       g.put(8, y, 'GLYPH · your favourite', C.mid); g.put(9, y + 1, open ? DECK_GLYPHS[d.glyph][0] : 'GLY · LOCKED', open ? C.bright : C.mid, true);
       tick(9, open ? 'tap it when you see it on a layer and it acts like a loot node, ICE or real.' : 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.');
-      btns(open ? [['[ CHANGE ]', C.accent, 'dkchg', () => deckPick('GLY')]] : d.mk < 3 ? [['[ mk III · ' + deckCost('deck3') + ' REP ]', C.rep, 'dkmk3', deckUpgrade3]] : [], 8);
+      btns(open ? [['[ CHANGE ]', C.accent, 'dkchg', () => deckPick('GLY')]] : d.mk < 3 ? [[deckRepText('mk III', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3]] : [], 8);
     } else if (!open) {
       frame(s);
       g.put(8, y, gn, C.mid); g.put(9, y + 1, `${s.id} · LOCKED`, C.mid, true);
       tick(9, s.mk === 3 ? 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.' : d.blown ? 'the FUSE is blown. replace it to light mk IV again.' : 'opens with mk IV: the FUSE, a SYSOP post on THE BOARD.');
-      btns(s.mk === 3 && d.mk < 3 ? [['[ mk III · ' + deckCost('deck3') + ' REP ]', C.rep, 'dkmk3', deckUpgrade3]] : s.mk === 4 ? [[d.blown ? '[ REPLACE FUSE ]' : '[ SEE THE FUSE ]', C.rep, 'dkfuse', () => deckTapPart('fuse')]] : [], s.w + 3);
+      btns(s.mk === 3 && d.mk < 3 ? [[deckRepText('mk III', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3]] : s.mk === 4 ? [[d.blown ? '[ REPLACE FUSE ]' : '[ SEE THE FUSE ]', C.rep, 'dkfuse', () => deckTapPart('fuse')]] : [], s.w + 3);
     } else if (key) {
       frame(s); chipRows(key, s.id);
       btns([['[ CHANGE ]', C.accent, 'dkchg', () => deckPick(s.id)], ...(key === 'SP3' ? [[`[ ${DECK_SPOILS[d.spoils][0]} > ]`, C.money, 'dkspl', () => { d.spoils = (d.spoils + 1) % 3; Sound.tick(); }]] : [])], s.w + 3);
@@ -1976,6 +1979,10 @@ function deckPartCard(ctx, g, y, id, pw, tick, btns) {
 // The upgrades are THE BOARD's posts (engine/save.js LEGACY: DECK mk III, THE FUSE): the real deck buys them there
 // (buyPost), at those prices; the dev deck pays its own REP. key null: not a post (replacing a blown fuse: REP only).
 const deckCost = key => { const u = typeof LEGACY !== 'undefined' && LEGACY.find(p => p.key === key); return u ? u.costs[0] : '?'; };
+// A button that costs REP shows what you have against it, dimmed while you're short (Greg, 2026-11-21: REP left the
+// deck's top line). It still takes a tap: deckBuy says what's missing.
+const deckRepText = (what, key) => `[ ${what} · ${DECK.rep}/${deckCost(key)} REP ]`;
+const deckRepCol = key => DECK.rep >= deckCost(key) ? C.rep : C.mid;
 function deckBuy(key, cost, done) {
   const d = DECK;
   if (d.real && key) {
