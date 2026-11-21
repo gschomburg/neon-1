@@ -454,8 +454,10 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   - **The WORKBENCH training** (above), or POPS's first-visit lines until it exists: a line like "scrapping epic and
     better gear and mods can give you other bonuses, like for shell commands. don't know what a shell is? just keep
     playing and you'll find out."
-  - **Mark what's unlocked for THE SHELL:** where you can see which gear and mods (and at which rarity) you've shredded.
-    Open: the BOOK (the bench's recipes), the codex, or both. Today nothing shows save.shredded.
+  - **Mark what's unlocked for THE SHELL:** which gear and mods (and at which rarity) you can summon. **Decided (Greg,
+    2026-11-20):** in the codex, and it doesn't have to be much (a small line on the entry, e.g. "shell: common rare
+    epic"). Today nothing shows save.shredded. A shred unlocks its rarity and every one below it (a legendary FRAG
+    unlocks epic too): built that way in v15.04.
   - **The deck:** a note about SHELL chips: how you get them (ROOT on your crew, chips from caches and bosses), and that
     `give.mod` / `give.gear` summon mods and gear you've found (epic and up: shredded).
 - **Pets you can toggle** (meat notes 2026-11-07): a small button in the loot bar, like b0y's on the left (if b0y's
