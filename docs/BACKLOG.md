@@ -59,6 +59,9 @@ unlocked by REP, and some quests unlock REP.
   - **DIVINE** red letters (from G0D; the bench's SPECIAL row waits for them); wildcards (*) from fishing
     (today only by shredding the corrupted software it brings up); a use for digits in mods (docs/DECK.md: a code with a digit makes a chip). Letter
     counts: no recipe uses I; digits 1-9 none; J, Q once.
+  - **`* * *`: three wildcards** (Greg, 2026-11-21, an idea; not built). Today it lists the first three recipes that fit
+    ("* FITS N: PICK ONE"), always the same three. Idea: three wildcards build something super good, and always the
+    same thing, like an exotic mod or an exotic / BOSS chip. Maybe work it into a quest. Dropped for now: a random roll.
   - What a letter's rarity means once you craft with it (Greg, 2026-11-05: keep each letter's rarity, so the keyboard
     can show the colours).
   - How safehouse gear works (install anything? swap?). Leaning: you can't swap out an equipped mod; maybe you can
