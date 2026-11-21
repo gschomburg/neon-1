@@ -456,7 +456,8 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
     playing and you'll find out."
   - **Mark what's unlocked for THE SHELL:** which gear and mods (and at which rarity) you can summon. **Decided (Greg,
     2026-11-20):** in the codex, and it doesn't have to be much: just the word SHELL on the entry, in the color of the
-    highest rarity you can summon (rarityCol of the top of deckGiveTiers). Today nothing shows save.shredded. A shred unlocks its rarity and every one below it (a legendary FRAG
+    highest rarity you can summon (rarityCol of the top of deckGiveTiers). Found but never shredded: a
+    rare-colored SHELL is fine if it fits (Greg: "we can address once we get there"). Today nothing shows save.shredded. A shred unlocks its rarity and every one below it (a legendary FRAG
     unlocks epic too): built that way in v15.04.
   - **The deck:** a note about SHELL chips: how you get them (ROOT on your crew, chips from caches and bosses), and that
     `give.mod` / `give.gear` summon mods and gear you've found (epic and up: shredded).
