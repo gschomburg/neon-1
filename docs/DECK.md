@@ -801,8 +801,8 @@ engine/deck.js)" where it lives. tools/checks/tests/chips.js checks them.
 - **Corp boss rewards:** 12% of the time, a chip is one of the picks.
 - **Rivals:** beat one (or flatline it) and 30% of the time it drops a chip (PH1SH'S HOOK: 60%). It's **RIPPED**: from
   the ripped set only.
-- **THE FENCE** (when THIEF made one): a RIPPED chip, at twice a market's price. **Beta:** one line and a [ BUY RIPPED ]
-  button; it needs a proper look.
+- **THE FENCE** (when THIEF made one): a RIPPED chip, at twice a market's price: a row in its list, under your stolen
+  mods, on its code chip like gear at a market (v15.09; Greg: "it should fit there the same way").
 - **RIPPED** (built v15.08): while one is on your belt, a rival comes to every corp with no other anomaly (QUIET still
   stops them). Sell it, trash it or lose it to a rival and that's off; cash out and it's yours, a chip like any other.
   A rival that gets away (stole a layer, not flatlined, not thrown out) takes one back. POPS calls the first time you
@@ -817,7 +817,8 @@ engine/deck.js)" where it lives. tools/checks/tests/chips.js checks them.
     group. Renamed in the code v15.06 (the drop, fence lines and button; v15.08 drops the run.ripped flag: the belt says). Dropped: SWIPED, FLAGGED,
     BOUNTY, CONTRABAND, PINCHED, RIP; BOOTLEG kept for later (BACKLOG, Parked).
   - **The chase:** while you carry a ripped chip, every corp node has a rival. A node that already has another anomaly
-    keeps that anomaly, and no rival comes there. Rivals still don't move between nodes.
+    keeps that anomaly, and no rival comes there. **Then (Greg, 2026-11-21):** rivals don't need to move between nodes:
+    every node that can have one has one.
   - **The chase lasts while you have the chip.** Sell it or trash it and the chase is gone.
   - **Two ripped chips are no worse than one.**
   - **A rival you don't beat takes the ripped chip back.** POPS calls when you pick up your first ripped chip, and again

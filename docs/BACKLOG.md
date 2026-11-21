@@ -20,8 +20,7 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
 - **`compile`:** THE SHELL makes a chip.
 - **More SUDO commands:** built v15.06: `mode.free`, `corp.jump`, `rm -rf`, `chmod`. `fork` v15.07 (QUANTUM's second real
   node for a corp, same glyph, full pay).
-- **Ripped chips:** built v15.08 (docs/DECK.md "The sources"). Left: THE FENCE's proper look (still one line and a
-  button), an exotic ripped chip, and rivals that really move between nodes (later).
+- **Ripped chips:** built v15.08, the fence list v15.09 (docs/DECK.md "The sources"). Left: an exotic ripped chip.
 - **The fuse node:** fuse 2 exotic mods into an exotic chip.
 - **Making chips at the workbench:** a code with a digit makes a chip; a one-use item opens the bench's extra row.
 - **Chips for the empty groups:** GLYPH, the CREW jacks, UPLINK, PORTS.

@@ -1,7 +1,7 @@
 // NeoN+1 engine/textboard.js: centered text screens (buildTextBoard), the big box button (drawBox), text fields
 // (Field, drawField), info tile rows and offer pops. Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/textboard.js', 'v15.08']);
+NEON_FILES.push(['engine/textboard.js', 'v15.09']);
 
 // Big boxed primary button. 3 rows, or 4 with a subtitle.
 function drawBox(ctx, y, ln) {
@@ -166,6 +166,7 @@ function buildTextBoard(ctx, lines, area = null) {
     else if (ln.gearHead && !ln.list && ITEMS[ln.gearHead]) {   // a gear's header (the detail box): its code chip, then its name, like a mod's
       const code = itemShort(ln.gearHead), name = ln.text || ITEMS[ln.gearHead].name, x = Math.floor((L.wc - (code.length + 2 + name.length)) / 2);
       putChip(put, bg, x, y, code, itemView(ln.gearHead, ln.gearTier || 0).rarity, 'board', true);
+      if (ITEMS[ln.gearHead].ripped) deckRipGlow((cx, cy, col, a) => bg(cx, cy, 1, col, a), x, y, code.length, now);   // RIPPED (engine/deck.js)
       put(x + code.length + 2, y, name, C.bright, 'board', true);
     } else if (ln.badge && !ln.list) {
       const m = tierView(MODS[ln.badge], ln.badgeTier || 0);
@@ -185,7 +186,7 @@ function buildTextBoard(ctx, lines, area = null) {
       if (ln.check != null) { put(cx, y, '[' + ln.check + ']', ln.checkCol || C.mid, 'ui', ln.check === 'x'); cx += 4; }
       if (ln.badge) cx += drawBadge(put, now, cx, y, ln.badge, 1, { own: 'board', tier: ln.badgeTier, bg, dim: !!ln.badgeDim }) + 1;
       // gear: its code on its rarity chip, then its name (the user, 2026-10-31: the same as mods, in every list)
-      if (ln.gear && ITEMS[ln.gear]) { const code = itemShort(ln.gear); putChip(put, bg, cx, y, code, itemView(ln.gear, ln.gearTier || 0).rarity, 'ui', true); cx += Math.max(code.length + 1, 5); }   // (names line up with the mods': a badge is 4 wide)
+      if (ln.gear && ITEMS[ln.gear]) { const code = itemShort(ln.gear); putChip(put, bg, cx, y, code, itemView(ln.gear, ln.gearTier || 0).rarity, 'ui', true); if (ITEMS[ln.gear].ripped) deckRipGlow((gx, gy, col, a) => bg(gx, gy, 1, col, a), cx, y, code.length, now); cx += Math.max(code.length + 1, 5); }   // (names line up with the mods': a badge is 4 wide)
       // faded (can't afford, sold, locked): the color bit stays (a mod's badge, an item's name chip),
       // everything else goes grey, so you see what you're missing
       // clip: the name stops a space short of the right text ('ellipsis' ends it with ...; 'cut' just cuts: a ticker)

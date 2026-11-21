@@ -59,6 +59,17 @@ module.exports = { name: 'ripped', body: `
   run.chips = [];
   check(DECK_INT.DM3 === 2, "D0PPEL'S MASK: +2 INT");
 
+  // THE FENCE: the chip is a row in its list, under your stolen mods (gear's code chip, like a market's)
+  { const mk = Object.keys(MODS).find(k => !has(k) && !MODS[k].hidden); run.fence = [{ key: mk, tier: 0 }]; run.fenceChip = null; run.credits = 999;
+    openFence(fence); await sleep(500);
+    const hit = id => hits.find(h => h.id === id);
+    check(st.mode === 'panel' && hit('fence0') && hit('fence1') && !hit('fchip'), 'the fence: a mod row, then the chip row');
+    hit('fence1').onTap(); await sleep(200);
+    check(!!hit('fchip'), 'pick the chip: its BUY box');
+    const before = run.items.length; hit('fchip').onTap(); await sleep(200);
+    check(run.items.length === before + 1 && deckRippedOn(run) && run.fenceChip.sold && !hit('fence1'), 'bought: on your belt, ripped, gone from the list');
+    run.items = run.items.filter(s => !ITEMS[s.key].ripped); run.fence = []; leavePanel && leavePanel(); await sleep(300); }
+
   // the look: magenta runs through it
   { let n = 0; deckRipGlow((x, y, col, a) => { if (col === DECK_RIP_COL && a > 0) n++; }, 0, 0, 3, 1000); check(n > 0, 'the glow paints magenta'); }
 ` };

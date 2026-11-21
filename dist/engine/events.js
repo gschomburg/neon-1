@@ -1,7 +1,7 @@
 // NeoN+1 engine/events.js: the SECTOR EVENT card (what a new sector rolled) and THE FENCE (THIEF's stolen mods,
 // sold back). The events themselves: data/events.js; the roll: engine/map.js addSector.
 'use strict';
-NEON_FILES.push(['engine/events.js', 'v15.08']);
+NEON_FILES.push(['engine/events.js', 'v15.09']);
 
 // ---------------- The SECTOR EVENT card ----------------
 // It comes up over a new sector's map once the climb settles (toMap), and again from the map's sector label.
@@ -125,6 +125,7 @@ function openFence(node) {
     saveRun();
   };
   const whyNot = o => run.mods.includes(o.key) ? 'you have one already.' : !canSpend(fencePrice(o)) ? 'not enough credits.' : null;
+  const chipWhyNot = fc => !canSpend(fc.price) ? 'not enough credits.' : !itemRoom(deckChipItem(fc.key), 0) ? 'no room on your belt.' : null;
   // a RIPPED chip, dear (engine/deck.js deckFenceChip): carry it and rivals come for it
   const buyChip = () => {
     const fc = deckFenceChip(node), ik = fc && deckChipItem(fc.key);
@@ -138,28 +139,41 @@ function openFence(node) {
     T('THE FENCE', C.money);
     T(`credits ${run.credits}${has('haggle') ? `  (haggle -${Math.round(tv('haggle', ECON.haggle) * 100)}%)` : ''}`, C.money);
     T('');
-    if (!stock().length) {
+    // one list: your stolen mods, then a RIPPED chip (its code chip, like gear at a market: Greg, 2026-11-21)
+    const fc = deckFenceChip(node), rows = stock().map(o => ({ o })).concat(fc ? [{ fc }] : []);
+    sel = Math.min(sel, Math.max(0, rows.length - 1));
+    if (!rows.length) {
       T('nothing here. nobody took', C.text);
       T('anything from you. lucky.', C.text);
       for (let i = 0; i < 6; i++) T('');
     } else {
-      T('your stolen mods, for sale:', C.mid);
-      stock().forEach((o, k) => {
-        const v = modView(o.key, o.tier);
-        X({ list: true, id: 'fence' + k, onTap: () => { sel = k; Sound.tick(); }, sel: k === sel, faded: !!whyNot(o),
-          badge: o.key, badgeTier: v.tier, name: v.name, col: C.bright, right: `${fencePrice(o)}cr`.padStart(6), rightCol: C.money });
+      T(stock().length ? 'your stolen mods, for sale:' : 'nobody took anything. but:', C.mid);
+      rows.forEach((row, k) => {
+        const tap = () => { sel = k; Sound.tick(); };
+        if (row.fc) X({ list: true, id: 'fence' + k, onTap: tap, sel: k === sel, faded: !!chipWhyNot(row.fc),
+          gear: deckChipItem(row.fc.key), name: DECK_CHIPS[row.fc.key][0], col: C.bright, right: `${row.fc.price}cr`.padStart(6), rightCol: C.money });
+        else { const o = row.o, v = modView(o.key, o.tier);
+          X({ list: true, id: 'fence' + k, onTap: tap, sel: k === sel, faded: !!whyNot(o),
+            badge: o.key, badgeTier: v.tier, name: v.name, col: C.bright, right: `${fencePrice(o)}cr`.padStart(6), rightCol: C.money }); }
       });
       T('');
       T(SEP, C.dim);
-      const o = stock()[sel], v = modView(o.key, o.tier), why = whyNot(o);
-      X({ badge: o.key, badgeTier: v.tier });
-      T(v.tip || v.desc, C.text);
-      if (why) { T(''); T(why, C.dangerDim); T(''); }
-      else X({ box: true, text: 'B U Y   B A C K', sub: `${fencePrice(o)}cr`, id: 'fbuy', onTap: () => buy(sel), minW: 18 });
+      const row = rows[sel];
+      if (row.fc) {
+        const why = chipWhyNot(row.fc), ik = deckChipItem(row.fc.key);
+        X({ gearHead: ik, gearTier: 0, text: `${DECK_CHIPS[row.fc.key][0]}: RIPPED` });
+        T(DECK_CHIPS[row.fc.key][6] + ' rivals come for it.', C.text);
+        if (why) { T(''); T(why, C.dangerDim); T(''); }
+        else X({ box: true, text: 'B U Y   I T', sub: `${row.fc.price}cr`, id: 'fchip', onTap: buyChip, minW: 18 });
+      } else {
+        const o = row.o, v = modView(o.key, o.tier), why = whyNot(o);
+        X({ badge: o.key, badgeTier: v.tier });
+        T(v.tip || v.desc, C.text);
+        if (why) { T(''); T(why, C.dangerDim); T(''); }
+        else X({ box: true, text: 'B U Y   B A C K', sub: `${fencePrice(o)}cr`, id: 'fbuy', onTap: () => buy(sel), minW: 18 });
+      }
       T(SEP, C.dim);
     }
-    const fc = deckFenceChip(node);
-    if (fc) { T(`RIPPED CHIP: ${DECK_CHIPS[fc.key][0]}  ${fc.price}cr`, C.danger); B(`[ BUY RIPPED ]`, 'fchip', buyChip); }
     B('[ LEAVE ]', 'leave', leavePanel);
   }, stock().length ? '> the fence has your stuff.' : '> the fence shrugs.');
 }
