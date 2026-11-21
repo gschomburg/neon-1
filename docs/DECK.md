@@ -227,8 +227,9 @@ what changes what:
   bench's extra row (6 slots). It stacks, and it's a component, so it stays between runs once you find one. Where it
   comes from: open.
   **Built v15.10 (Greg, 2026-11-21):**
-  - **The BLANK** (an empty chip) is the one-use item. It goes in the BLANK slot, a permanent 4th spot on BUILD, smaller
-    (2x2) and dotted so it reads as optional. With a BLANK in, the three slots spell a chip's code, digits too (CD2,
+  - **The BLANK** (an empty chip) is the one-use item. It goes in the extra slot, a permanent 4th spot on BUILD, smaller
+    (2x2) and dotted so it reads as optional. **v15.11 (Greg):** it's the x slot too: one slot takes a digit 2-9 (a 50%
+    chance of that many gear) or a BLANK, never both. With a BLANK in, the three slots spell a chip's code, digits too (CD2,
     LW1); the x slot (build several) is off. No 6-slot row: the faces use symbols the keyboard doesn't have.
   - **BLANKs come from shredding chips** (40%) and now and then corrupted software (10%). A shredded chip gives its
     whole code back, digit too.

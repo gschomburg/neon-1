@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.10']);
+NEON_FILES.push(['engine/bench.js', 'v15.11']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -31,9 +31,9 @@ const BENCH_MISS = { fg: '#ff4fd8', bg: '#4a1240' };   // a letter you're missin
 const isRootCh = ch => /^[a-z]$/.test(ch);
 const letterChip = ch => isRootCh(ch) ? { fg: C.bg, bg: C.rep } : chipOf(letterTier(ch));
 const BENCH_KB = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
-// A BLANK (Greg, 2026-11-21): an empty chip. It goes in the BLANK slot (slot 4, the small 2x2 after the x), and then
+// A BLANK (Greg, 2026-11-21): an empty chip. It goes in the extra slot (the small 2x2 after the letters; inside, slot 4), and then
 // the three slots spell a chip's code (digits too: CD2, LW1). One BLANK, one chip. From shredding chips, now and then.
-const BENCH_BLANK = '#', isBlank = ch => ch === BENCH_BLANK, BENCH_BLANK_X = 26;   // (its x on the BUILD screen: benchBuildLines)
+const BENCH_BLANK = '#', isBlank = ch => ch === BENCH_BLANK, BENCH_BLANK_X = 23;   // (its x on the BUILD screen: benchBuildLines)
 const BENCH_SPECIAL = ['*', BENCH_BLANK];   // the special row over the keyboard (the DIVINE letters go here later)
 const isMult = ch => /^[2-9]$/.test(ch);   // a multiplier digit (0 is a letter: 0DAY)
 const isDigit = ch => /^[1-9]$/.test(ch);
@@ -233,7 +233,7 @@ function benchPlace(ch, i) {
     b.slots[i] = ch; b.slotT[i] = performance.now();
     return Sound.lamp();
   }
-  if (i === 4) return Sound.deny();
+  if (i === 4) i = 3;   // (the extra slot: a digit dropped on it)
   if (isMult(ch)) i = 3;   // digits 2-9 go in the x slot
   else if (ch === '1') return Sound.deny();
   if (i == null) i = b.slots.slice(0, 3).findIndex(s => !s);
@@ -599,19 +599,15 @@ function benchBuildLines(T, B, X) {
       else { for (let r = 0; r < 3; r++) ctx.bg(22, sy + r, 3, C.rep, 0.25); if (cur < 0 && blink) put(22, sy + 2, '___', C.rep, 'board', true); }
       ctx.addHit(22, sy, 3, 3, { kind: 'benchslot', slot: 3 });
     } else {
-      put(22, sy + 2, 'x', C.mid, 'board');
-      if (d && !a) { const dc = chipOf('legendary'); ctx.bg(23, sy + 2, 1, dc.bg, 1); put(23, sy + 2, d, dc.fg, 'board', true); }
-      else if (!a) ctx.bg(23, sy + 2, 1, C.dim, 0.45);
-      ctx.addHit(22, sy + 2, 2, 1, { kind: 'benchslot', slot: 3 });
-    }
-    // the BLANK slot (Greg, 2026-11-21): always there, but smaller (2x2) and dotted, so it reads as optional. A BLANK in
-    // it makes the slots spell a chip. Not while you spell ROOT's word (its 4th slot sits there).
-    if (!rm) {
-      const bx = BENCH_BLANK_X, bk = b.slots[4], cm = !a && isBlank(bk), bc = chipOf(letterTier(BENCH_BLANK));
-      if (cm) { ctx.bg(bx, sy + 1, 2, bc.bg, 1); ctx.bg(bx, sy + 2, 2, bc.bg, 1); put(bx, sy + 1, '[]', bc.fg, 'board', true); put(bx, sy + 2, '[]', bc.fg, 'board', true); }
+      // the extra slot (Greg, 2026-11-21: one slot for both): smaller (2x2) and dotted, so it reads as optional. It
+      // takes a digit 2-9 (x: a chance of that many, gear) or a BLANK (the slots spell a chip). Inside, the digit is
+      // slot 3 and the BLANK slot 4: the two never sit in it together (benchPlace).
+      const bx = BENCH_BLANK_X, cm = !a && isBlank(b.slots[4]), bc = chipOf(letterTier(BENCH_BLANK)), dc = chipOf('legendary');
+      if (!a && cm) { ctx.bg(bx, sy + 1, 2, bc.bg, 1); ctx.bg(bx, sy + 2, 2, bc.bg, 1); put(bx, sy + 1, '[]', bc.fg, 'board', true); put(bx, sy + 2, '[]', bc.fg, 'board', true); }
+      else if (!a && d) { ctx.bg(bx, sy + 1, 2, dc.bg, 1); ctx.bg(bx, sy + 2, 2, dc.bg, 1); put(bx, sy + 1, 'x' + d, dc.fg, 'board', true); }
       else if (!a) { put(bx, sy + 1, '::', C.dim, 'board'); put(bx, sy + 2, '::', C.dim, 'board'); }
-      if (!a) put(bx - 1, sy + 3, 'BLANK', cm ? bc.bg : C.dim, 'board', cm);
-      ctx.addHit(bx, sy + 1, 2, 2, { kind: 'benchslot', slot: 4 });
+      if (!a) { const lab = cm ? 'BLANK' : d ? `x${d} ${Math.round(BENCH.multi * 100)}%` : 'x2-9 BLANK'; put(bx, sy + 3, lab, cm ? bc.bg : d ? dc.bg : C.dim, 'board', cm || !!d); }
+      ctx.addHit(bx, sy + 1, 2, 2, { kind: 'benchslot', slot: cm ? 4 : 3 });
     }
     if (a) { benchBuildAnim(ctx, a); benchFx(ctx); benchLoot(ctx); return; }
     const j = benchJudge();
