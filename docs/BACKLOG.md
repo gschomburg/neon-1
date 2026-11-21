@@ -17,12 +17,16 @@ track, Justin's music viewer, KERNEL, NEMESIS, STARTER POOL, TIME IS MONEY); par
 Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
 - **CRON** and more BOSS chips: CRON brings back the refill every sector, and with it charges that last the whole run
   become the default. More big bosses to drop BOSS chips (Greg: "we will need to figure out more bosses").
-- **`compile`:** THE SHELL makes a chip.
+  **Decided (Greg, 2026-11-21):** not yet. There's no boss for it, so charges keep refilling every sector for now.
+- **`compile`:** THE SHELL makes a chip. **Decided (Greg, 2026-11-21):** a special, one-time thing inside a quest: you
+  find something during a run, compile it in THE SHELL, then cash out with the chip. A special chip. Where it fits: later.
+- **Chips in `give`'s list** (Greg, 2026-11-21, a note): `give` could take chips too, but only ones you've seen or
+  shredded, so it's harder. Different from `compile`.
 - **More SUDO commands:** built v15.06: `mode.free`, `corp.jump`, `rm -rf`, `chmod`. `fork` v15.07 (QUANTUM's second real
   node for a corp, same glyph, full pay).
 - **Ripped chips:** built v15.08, the fence list v15.09 (docs/DECK.md "The sources"). Left: an exotic ripped chip.
-- **The fuse node:** fuse 2 exotic mods into an exotic chip.
-- **Making chips at the workbench:** a code with a digit makes a chip; a one-use item opens the bench's extra row.
+- **The fuse node:** now **THE CHROME FORGE**, parked with the map nodes (section 5).
+- **Making chips at the workbench:** built v15.10 (a BLANK; docs/DECK.md "The workbench").
 - **Chips for the empty groups:** GLYPH, the CREW jacks, UPLINK, PORTS.
 
 ## Big features: the next layer of the game
@@ -52,7 +56,7 @@ unlocked by REP, and some quests unlock REP.
 - **THE WORKBENCH, what's still open** (built v14.12-v14.15; the whole design talk is in the archive):
   - Keyboard design tweaks and the line over it (the user: not sure yet). The look: off-white / beige Commodore
     colors (the user: leaning, just a note).
-  - **DIVINE** red letters (from G0D; the bench's SPECIAL row waits for them); blueprints; wildcards (*) from fishing
+  - **DIVINE** red letters (from G0D; the bench's SPECIAL row waits for them); wildcards (*) from fishing
     (today only by shredding the corrupted software it brings up); a use for digits in mods (docs/DECK.md: a code with a digit makes a chip). Letter
     counts: no recipe uses I; digits 1-9 none; J, Q once.
   - What a letter's rarity means once you craft with it (Greg, 2026-11-05: keep each letter's rarity, so the keyboard
@@ -279,6 +283,9 @@ unlocked by REP, and some quests unlock REP.
 - Long-run issues: power creep, a guaranteed heal each sector.
 - **A portal node** (Greg, meat notes 2026-11-08): a sector node that takes you to a quest seed, or a portal to
   another random place or seed.
+- **A pass on more store types and other non-corp map nodes** (Greg, 2026-11-21). In it:
+  - **THE CHROME FORGE** (was "the fuse node"; Greg: "the forge or maybe something more hackery"): bring 2 exotic mods,
+    fuse them into an exotic chip (docs/DECK.md "Mashing 2 mods together"). Maybe tied to a quest, or a custom seed.
 
 ### 6. Anomalies and sector events (design: `docs/SECTOR_EVENTS.md`)
 - **Still open:** a THREAT level later; events on in sector 1 (moved to docs/DECK.md: the BIOS chip EVENTS); tying the sector boss to the

@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.09']);
+NEON_FILES.push(['engine/bench.js', 'v15.10']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -16,6 +16,7 @@ const BENCH = {
   digit: { scrap: 0, common: 0, rare: 0.04, epic: 0.08, legendary: 0.15, exotic: 0.25 },   // ...of a digit 2-9
   digits: [[2, 40], [3, 25], [4, 12], [5, 8], [6, 6], [7, 4], [8, 3], [9, 2]],              // which digit (weights)
   multi: 0.5,    // a digit in the x slot: the chance you get that many
+  blank: { chip: 0.4, corrupt: 0.1 },   // a shred's chance of a BLANK (an empty chip): a chip, corrupted software
   near: 0.5,     // RUN ANYWAY on a word one letter off a recipe
   unknown: 0.1,  // ...on a word that's nothing (a common / rare recipe, or loot)
   arrive: 3,     // components the safehouse leaves you when you get there
@@ -30,11 +31,16 @@ const BENCH_MISS = { fg: '#ff4fd8', bg: '#4a1240' };   // a letter you're missin
 const isRootCh = ch => /^[a-z]$/.test(ch);
 const letterChip = ch => isRootCh(ch) ? { fg: C.bg, bg: C.rep } : chipOf(letterTier(ch));
 const BENCH_KB = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
-const BENCH_SPECIAL = ['*'];   // the special row over the keyboard (the DIVINE letters go here later)
+// A BLANK (Greg, 2026-11-21): an empty chip. It goes in the BLANK slot (slot 4, the small 2x2 after the x), and then
+// the three slots spell a chip's code (digits too: CD2, LW1). One BLANK, one chip. From shredding chips, now and then.
+const BENCH_BLANK = '#', isBlank = ch => ch === BENCH_BLANK, BENCH_BLANK_X = 26;   // (its x on the BUILD screen: benchBuildLines)
+const BENCH_SPECIAL = ['*', BENCH_BLANK];   // the special row over the keyboard (the DIVINE letters go here later)
 const isMult = ch => /^[2-9]$/.test(ch);   // a multiplier digit (0 is a letter: 0DAY)
+const isDigit = ch => /^[1-9]$/.test(ch);
 
 // ---- recipes: every short code you can spell. Shop gear (no loot, quest gear or CALLs) and general / minor / exotic
-// mods (no corp mods). Exotics need a blueprint (none yet: they show locked). First come wins a shared code.
+// mods (no corp mods), and your deck's chips (their code: a BLANK makes them). Blueprints (save.bench.blueprints, by
+// code; from shredding one: benchShred): every exotic, and chips above rare. First come wins a shared code.
 let BENCH_RECIPES = null, BENCH_USE = null;
 function benchRecipes() {
   if (BENCH_RECIPES) return BENCH_RECIPES;
@@ -48,29 +54,43 @@ function benchRecipes() {
     if (!['gen', 'minor', 'exotic'].includes(m.kind) || m.hidden || m.quest || !m.short || m.short.length !== 3) continue;
     if (!r[m.short]) r[m.short] = { kind: 'mod', key, code: m.short };
   }
+  // chips (engine/deck.js DECK_CHIPS): a 3-character code with a digit. Not RIPPED ones (stolen only), not the ones the
+  // deck or a quest gives (DECK_NO_DROP), not BOSS chips, not BETA.
+  for (const [k, c] of Object.entries(DECK_CHIPS)) {
+    if (!/^[A-Z0-9]{3}$/.test(k) || !/[0-9]/.test(k) || r[k] || deckIsRipped(k) || DECK_NO_DROP.includes(k) || c[1] === 'boss' || deckBeta(k)) continue;
+    r[k] = { kind: 'chip', key: deckChipItem(k), code: k, chip: k };
+  }
   return (BENCH_RECIPES = r);
 }
+// A chip recipe shows (in the BOOK, the matches) once you've had that chip: on your belt or in your deck.
+const recipeKnown = rc => rc.kind !== 'chip' || !!save.seen[rc.key] || deckHave(rc.chip) > 0;
+// What needs a blueprint (Greg, 2026-11-21): exotics, and chips above rare.
+const recipeNeedsBp = rc => { const r = recipeDef(rc).rarity; return r === 'exotic' || (rc.kind === 'chip' && (RARITY[r] || RARITY.common).lvl > RARITY.rare.lvl); };
 // How many recipes use each letter: its rarity (and how often it drops as a bonus).
 function benchUse() {
   if (BENCH_USE) return BENCH_USE;
   const u = {};
-  for (const code of Object.keys(benchRecipes())) for (const ch of code) u[ch] = (u[ch] || 0) + 1;
+  for (const [code, rc] of Object.entries(benchRecipes())) if (rc.kind !== 'chip') for (const ch of code) u[ch] = (u[ch] || 0) + 1;   // (not the chips: a letter's rarity stays what it was)
   return (BENCH_USE = u);
 }
 // A component's rarity (its chip): used by 10+ recipes common, 5+ rare, 2+ epic, else legendary; digits legendary; * exotic.
 function letterTier(ch) {
   if (ch === '*') return 'exotic';
+  if (isBlank(ch)) return 'epic';
+  if (ch === '1') return 'legendary';
   if (isMult(ch)) return 'legendary';
   const n = benchUse()[ch] || 0;
   return n >= 10 ? 'common' : n >= 5 ? 'rare' : n >= 2 ? 'epic' : 'legendary';
 }
 const benchBonusLetter = () => { const u = benchUse(), keys = Object.keys(u).filter(ch => /[A-Z0]/.test(ch)); return pickWeighted(keys, ch => u[ch], Math.random); };
 const benchDigit = () => String(pickWeighted(BENCH.digits, d => d[1], Math.random)[0]);
-const recipeDef = rc => rc.kind === 'gear' ? ITEMS[rc.key] : MODS[rc.key];
-const recipeView = rc => rc.kind === 'gear' ? itemView(rc.key, 0) : modView(rc.key, 0);
-const recipeLocked = rc => recipeDef(rc).rarity === 'exotic' && !(benchSave().blueprints || {})[rc.code];
+const recipeDef = rc => rc.kind === 'mod' ? MODS[rc.key] : ITEMS[rc.key];
+const recipeView = rc => rc.kind === 'mod' ? modView(rc.key, 0) : itemView(rc.key, 0);
+const benchBp = code => !!(benchSave().blueprints || {})[code];
+const recipeLocked = rc => recipeNeedsBp(rc) && !benchBp(rc.code);
 // The BOOK's order: gear, then mods, each by rarity.
-const bookCodes = () => Object.values(benchRecipes()).sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'gear' ? -1 : 1)
+const BOOK_KIND = { gear: 0, mod: 1, chip: 2 };
+const bookCodes = () => Object.values(benchRecipes()).sort((a, b) => BOOK_KIND[a.kind] - BOOK_KIND[b.kind]
   || RARITY_ORDER.indexOf(recipeDef(a).rarity) - RARITY_ORDER.indexOf(recipeDef(b).rarity)).map(rc => rc.code);
 
 function benchSave() {
@@ -92,36 +112,45 @@ const benchHave = ch => (benchSave().letters[ch] || 0) - benchUsed(ch);
 const benchCount = () => Object.values(benchSave().letters).reduce((a, n) => a + n, 0);
 // The letters a code still needs (counting what's in the slots as yours).
 function benchMissing(code) {
+  const rc = benchRecipes()[code]; if (rc && rc.kind === 'chip') code += BENCH_BLANK;   // (a chip takes a BLANK too)
   const left = Object.assign({}, benchSave().letters);
   return code.split('').filter(ch => (left[ch] > 0 ? (left[ch]--, false) : true)).join('');
 }
+const missText = m => m.replace(BENCH_BLANK, '') + (m.includes(BENCH_BLANK) ? (m.length > 1 ? ' ' : '') + '+BLANK' : '');
 const benchWord = () => st.bench.slots.slice(0, 3).map(s => s || '').join('');
 // What the three slots spell: partial / ok (a recipe) / pick (a * fits several) / near (one letter off) / bad / lock.
 // ROOT's letters in the slots: the x slot is a 4th letter slot, and the word is ROOT's (engine/quests.js ROOT_WORD; a *
 // fills in for one). rpartial / root (it's right) / rbad.
 const benchRootMode = () => !!st.bench && st.bench.slots.some(isRootCh);
+// A BLANK in its slot: the three slots spell a chip (the chip recipes only; digits go in the letter slots).
+const benchChipMode = () => !!st.bench && isBlank(st.bench.slots[4]);
+// The recipes the slots can spell now: chips with a BLANK in, everything else without (and only chips you've had).
+const benchPool = () => { const chip = benchChipMode(); return Object.values(benchRecipes()).filter(rc => (rc.kind === 'chip') === chip && recipeKnown(rc)); };
 function benchJudge() {
   if (benchRootMode()) {
-    const s4 = st.bench.slots;
+    const s4 = st.bench.slots.slice(0, 4);
     if (s4.some(x => !x)) return { kind: 'rpartial' };
     return s4.every((x, i) => x === ROOT_WORD[i] || x === '*') ? { kind: 'root' } : { kind: 'rbad', w: s4.join('') };
   }
   const s = st.bench.slots.slice(0, 3);
   if (s.some(x => !x)) return { kind: 'partial' };
-  const w = s.join(''), R = benchRecipes();
+  const w = s.join(''), R = benchRecipes(), pool = benchPool();
   if (w.includes('*')) {
-    const fit = Object.values(R).filter(rc => !recipeLocked(rc) && [0, 1, 2].every(i => w[i] === '*' || rc.code[i] === w[i])).map(rc => rc.code);
+    const fit = pool.filter(rc => !recipeLocked(rc) && [0, 1, 2].every(i => w[i] === '*' || rc.code[i] === w[i])).map(rc => rc.code);
     return fit.length === 1 ? { kind: 'ok', code: fit[0], wild: true } : fit.length ? { kind: 'pick', fit, w } : { kind: 'bad', w };
   }
-  if (R[w]) return recipeLocked(R[w]) ? { kind: 'lock', w } : { kind: 'ok', code: w };
-  const near = Object.values(R).find(rc => !recipeLocked(rc) && [0, 1, 2].filter(i => rc.code[i] === w[i]).length === 2);
+  if (R[w] && pool.includes(R[w])) return recipeLocked(R[w]) ? { kind: 'lock', w, chip: R[w].kind === 'chip' } : { kind: 'ok', code: w };
+  if (R[w] && R[w].kind === 'chip' && recipeKnown(R[w])) return { kind: 'blank', w };   // a chip's code, no BLANK in
+  if (benchChipMode() && R[w] && R[w].kind !== 'chip') return { kind: 'notchip', w };
+  const near = pool.find(rc => !recipeLocked(rc) && [0, 1, 2].filter(i => rc.code[i] === w[i]).length === 2);
   return near ? { kind: 'near', code: near.code, w } : { kind: 'bad', w };
 }
 // The codes that fit what's typed so far (a * fits anything).
 function benchMatches() {
   const s = st.bench.slots;
   if (!s.slice(0, 3).some(Boolean) || benchRootMode()) return [];
-  return Object.values(benchRecipes()).filter(rc => [0, 1, 2].every(i => !s[i] || s[i] === '*' || rc.code[i] === s[i]))
+  const pool = benchChipMode() ? benchPool() : benchPool().concat(Object.values(benchRecipes()).filter(rc => rc.kind === 'chip' && recipeKnown(rc)));   // (no BLANK in: chips you've had come after, and tap: fill puts a BLANK in)
+  return pool.filter(rc => [0, 1, 2].every(i => !s[i] || s[i] === '*' || rc.code[i] === s[i]))
     .sort((a, b) => !benchMissing(b.code) - !benchMissing(a.code)).slice(0, 3).map(rc => rc.code);
 }
 const benchBusy = () => { const b = st.bench; return !b || !!b.anim || !!b.shredAnim || st.transitioning || !!st.wipe; };
@@ -130,7 +159,7 @@ const benchBusy = () => { const b = st.bench; return !b || !!b.anim || !!b.shred
 function openBench(node) {
   benchSave();
   node.bench = true;   // going back in here brings you back to the bench (engine/run.js canGoBack)
-  st.bench = { node, tab: 'build', slots: [null, null, null, null], slotT: [0, 0, 0, 0], slotX: [10, 14, 18], slotY: 15, fx: [], kb: { up: true, t0: performance.now() + 380 },
+  st.bench = { node, tab: 'build', slots: [null, null, null, null, null], slotT: [0, 0, 0, 0, 0], slotX: [10, 14, 18], slotY: 15, fx: [], kb: { up: true, t0: performance.now() + 380 },
     log: ['> workbench online.'], shSel: 0, shArea: { top: 0 }, bkSel: 0, bkT: 0, bkArea: { top: 0 }, lkView: 'take', lkSel: 0, stSel: 0, press: null,
     anim: null, shredAnim: null, flash: null };
   benchPanel();
@@ -184,14 +213,27 @@ function benchPlace(ch, i) {
   const b = st.bench;
   if (!b || b.tab !== 'build' || benchBusy()) return;
   if (benchHave(ch) <= 0) return Sound.deny();
-  if (isRootCh(ch) || benchRootMode()) {   // ROOT's letters: four letter slots, no digits
-    if (isMult(ch) || ch === '1') return Sound.deny();
+  if (isRootCh(ch) || benchRootMode()) {   // ROOT's letters: four letter slots, no digits, no BLANK
+    if (isMult(ch) || ch === '1' || isBlank(ch) || b.slots[4]) return Sound.deny();
     if (b.slots[3] && isMult(b.slots[3])) benchUnplace(3, true);
-    if (i == null || b.slots[i]) i = b.slots.findIndex(s => !s);
+    if (i == null || i > 3 || b.slots[i]) i = b.slots.slice(0, 4).findIndex(s => !s);
     if (i < 0) return Sound.deny();
     b.slots[i] = ch; b.slotT[i] = performance.now();
     return Sound.lamp();
   }
+  if (isBlank(ch)) {   // the BLANK slot: a chip. A digit waiting in the x slot can't stay (chips don't stack)
+    if (b.slots[4]) return Sound.deny();
+    if (b.slots[3]) benchUnplace(3);
+    b.slots[4] = ch; b.slotT[4] = performance.now();
+    return Sound.lamp();
+  }
+  if (benchChipMode()) {   // spelling a chip: digits are letters now (CD2, LW1); no x slot
+    if (i == null || i > 2 || b.slots[i]) i = b.slots.slice(0, 3).findIndex(s => !s);
+    if (i < 0) return Sound.deny();
+    b.slots[i] = ch; b.slotT[i] = performance.now();
+    return Sound.lamp();
+  }
+  if (i === 4) return Sound.deny();
   if (isMult(ch)) i = 3;   // digits 2-9 go in the x slot
   else if (ch === '1') return Sound.deny();
   if (i == null) i = b.slots.slice(0, 3).findIndex(s => !s);
@@ -203,20 +245,23 @@ function benchUnplace(i, quiet = false) {
   const b = st.bench, ch = b.slots[i];
   if (!ch) return;
   b.slots[i] = null;
-  if (!quiet && (i < 3 || !isMult(ch))) { b.fx.push({ ch, x: i < 3 ? b.slotX[i] : 22, y: b.slotY, t0: performance.now() }); Sound.tick(); }
+  if (!quiet && (i < 3 || !isMult(ch))) { b.fx.push({ ch, x: i < 3 ? b.slotX[i] : i === 4 ? BENCH_BLANK_X : 22, y: b.slotY, t0: performance.now() }); Sound.tick(); }
   if (!benchRootMode() && b.slots[3] && !isMult(b.slots[3])) benchUnplace(3, quiet);   // the last of ROOT's letters out: the 4th slot is the x slot again
+  if (i === 4) for (const j of [0, 1, 2]) if (isDigit(b.slots[j])) benchUnplace(j, quiet);   // the BLANK out: no more digits in the letter slots
 }
 function benchFill(code) {
-  const b = st.bench;
-  [0, 1, 2].forEach(i => benchUnplace(i, true));
+  const b = st.bench, chip = benchRecipes()[code] && benchRecipes()[code].kind === 'chip';
+  [0, 1, 2, 3, 4].forEach(i => benchUnplace(i, true));
   const miss = benchMissing(code);
-  if (miss) { benchSay(`> ${code}: need ${miss.split('').join(' ')}.`); return Sound.deny(); }
+  if (miss) { benchSay(`> ${code}: need ${miss.split('').map(ch => isBlank(ch) ? 'a BLANK' : ch).join(' ')}.`); return Sound.deny(); }
+  if (chip) { b.slots[4] = BENCH_BLANK; b.slotT[4] = performance.now(); }
   code.split('').forEach((ch, i) => { b.slots[i] = ch; b.slotT[i] = performance.now() + i * 90; });
   Sound.lamp();
 }
 // Put what you built away: loot to the LOOT bag; the locker (gear stacks); else straight onto you. null: no room.
 function benchGive(rc, n = 1) {
   if (rc.kind === 'loot') { for (let k = 0; k < n; k++) addLoot(rc.key, 0); return 'loot'; }
+  if (rc.kind === 'chip') { const sd = save.deck || (save.deck = deckFreshSave()); sd.chips[rc.chip] = (sd.chips[rc.chip] || 0) + 1; return 'deck'; }   // (built at a safehouse: it's home)
   const lk = benchSave().locker;
   if (rc.kind === 'gear') {
     const s = lk.find(x => x && x.kind === 'gear' && x.key === rc.key && (x.tier || 0) === 0 && x.n + n <= STACK_MAX);
@@ -238,7 +283,7 @@ function benchBuild(code = null, force = false) {
     const letters = benchSave().letters;
     for (const ch of b.slots) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }
     b.anim = { t0: performance.now(), root: true, word: b.slots.join(''), slots: b.slots.slice(), x: b.slotX.concat(22), y: b.slotY };
-    b.slots = [null, null, null, null];
+    b.slots = [null, null, null, null, null];
     persist();
     return Sound.charge(BENCH.build.charge / 1000);
   }
@@ -254,13 +299,13 @@ function benchBuild(code = null, force = false) {
     const luck = Math.random() < (j.kind === 'near' ? BENCH.near : BENCH.unknown);
     if (luck && j.kind === 'near') rc = benchRecipes()[j.code];
     else if (luck) {
-      const pool = Object.values(benchRecipes()).filter(x => !recipeLocked(x) && ['common', 'rare'].includes(recipeDef(x).rarity))
+      const pool = Object.values(benchRecipes()).filter(x => x.kind !== 'chip' && !recipeLocked(x) && ['common', 'rare'].includes(recipeDef(x).rarity))
         .concat(Object.keys(ITEMS).filter(k => ITEMS[k].value && !ITEMS[k].fish && !ITEMS[k].bag).map(key => ({ kind: 'loot', key, code: itemShort(key) })));
       rc = pickR(pool, Math.random);
     }
   }
   let n = 1;
-  if (rc && mult && rc.kind !== 'mod' && Math.random() < BENCH.multi) n = +mult;
+  if (rc && mult && rc.kind === 'gear' && Math.random() < BENCH.multi) n = +mult;
   let where = null;
   if (rc) {
     where = benchGive(rc, n);
@@ -268,11 +313,11 @@ function benchBuild(code = null, force = false) {
     markSeen(rc.key);
   }
   const view = rc ? (rc.kind === 'mod' ? modView(rc.key, 0) : itemView(rc.key, 0)) : null;
-  const spent = b.slots.slice(0, 3).concat(rc && rc.kind === 'mod' ? [] : [mult]).filter(Boolean);
-  const free = !!(st.run && st.run.freeBuild); if (free) st.run.freeBuild = false;   // BLUEPRINT (a chip: engine/deck.js): the first build uses no letters
+  const spent = b.slots.slice(0, 3).concat(rc && rc.kind === 'mod' ? [] : [mult], [b.slots[4]]).filter(Boolean);   // (slot 4: the BLANK, spent on a chip)
+  const free = !!(st.run && st.run.freeBuild); if (free) st.run.freeBuild = false;   // FREE PRESS (a chip: engine/deck.js): the first build uses no letters
   if (!free) for (const ch of spent) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }
   b.anim = { t0: performance.now(), word, slots: b.slots.slice(0, 3), x: b.slotX.slice(), y: b.slotY, rc, view, n, where, lucky: code === '?', mult };
-  b.slots = [null, null, null, null];
+  b.slots = [null, null, null, null, null];
   persist();
   Sound.charge(BENCH.build.charge / 1000);
 }
@@ -283,7 +328,7 @@ function benchBuildDone(a) {
   if (!a.rc) { benchSay(`> build ${a.word}: nothing. the components burned.`); return; }   // (the fizzle played as it crumbled)
   const nm = a.view.name + (a.n > 1 ? ` x${a.n}` : '');
   benchSay(`> build ${a.word}${a.lucky ? ' --force' : ''}: ${nm} -> ${a.where === 'loot' ? 'the loot bag' : a.where === 'locker' ? 'the locker' : 'your ' + a.where}.`);
-  if (a.mult && a.rc.kind !== 'mod') benchSay(a.n > 1 ? `  x${a.mult}: it took. ${a.n} of them.` : `  x${a.mult}: it didn't take.`);
+  if (a.mult && a.rc.kind === 'gear') benchSay(a.n > 1 ? `  x${a.mult}: it took. ${a.n} of them.` : `  x${a.mult}: it didn't take.`);
   b.flash = { to: a.where === 'loot' ? 'loot' : 'locker', t0: performance.now() };
 }
 
@@ -295,7 +340,7 @@ function benchShredList() {
   (run.loot || []).forEach(s => { if (!ITEMS[s.key].quest) out.push({ kind: 'loot', key: s.key, tier: s.tier || 0, n: s.n, stack: s, list: run.loot }); });
   return out;
 }
-const shredCode = e => e.kind === 'mod' ? MODS[e.key].short : ITEMS[e.key].corrupt ? '???' : ITEMS[e.key].chip ? (ITEMS[e.key].chip.replace(/[^A-Z]/g, '') || 'CHP') : itemShort(e.key);   // (a chip: its code's letters, not its face)
+const shredCode = e => e.kind === 'mod' ? MODS[e.key].short : ITEMS[e.key].corrupt ? '???' : ITEMS[e.key].chip ? (ITEMS[e.key].chip.replace(/[^A-Z0-9]/g, '') || 'CHP') : itemShort(e.key);   // (a chip: its code's letters, not its face)
 // Corrupted software: random components (any letter, I likelier: no recipe uses it), maybe a digit, maybe a *.
 const BENCH_RANDOM = 'ABCDEFGHIIIJKLMNOPQRSTUVWXYZ0';
 function corruptShred(c) {
@@ -306,14 +351,35 @@ function corruptShred(c) {
   return got;
 }
 const shredView = e => e.kind === 'mod' ? modView(e.key, e.tier) : itemView(e.key, e.tier);
+// A blueprint (Greg, 2026-11-21): shredding an exotic, or a chip above rare, teaches you to build it (by its code). A mod
+// that binds to you (ZOMBIE, RAM DOUBLER: modLocked) can't come apart: the shred still counts (the blueprint, give's
+// record), but you keep it and get no components. Returns the code learned, or null.
+const benchShredBpCode = e => { const rc = benchRecipes()[shredRecipeCode(e)]; return rc && rc.key === e.key && recipeNeedsBp(rc) ? rc.code : null; };
+const shredRecipeCode = e => e.kind === 'mod' ? MODS[e.key].short : ITEMS[e.key].chip || itemShort(e.key);
+function benchLearn(code) {
+  const bs = benchSave(); if (!code || (bs.blueprints || {})[code]) return null;
+  (bs.blueprints = bs.blueprints || {})[code] = true;
+  return code;
+}
+const benchBound = e => e.kind === 'mod' && modLocked(e.key);
 function benchShred(e) {
   const b = st.bench;
   if (!e || !b || benchBusy()) return;
+  if (benchBound(e)) {   // it binds to you: learn it, keep it
+    const code = benchShredBpCode(e), learned = benchLearn(code), v = shredView(e);
+    const sh = save.shredded || (save.shredded = {}); sh[e.key] = Math.max(sh[e.key] == null ? -1 : sh[e.key], e.tier || 0);
+    persist();
+    if (!learned) { benchSay(`> ${v.name.toLowerCase()} is bound to you. it won't come apart.`); return Sound.deny(); }
+    benchSay(`> ${v.name.toLowerCase()} is bound to you: it stays.`); benchSay(`> blueprint: ${code} (${v.name}) is in the BOOK.`);
+    flash(rarityCol(v.rarity), 0.25, 0.5); return Sound.jingle();
+  }
   const cor = e.kind !== 'mod' && ITEMS[e.key].corrupt, v = shredView(e);
   const letters = cor ? ['?', '?', '?'] : shredCode(e).split('').filter(ch => /[A-Z0-9]/.test(ch)), got = cor ? corruptShred(cor) : letters.slice();
   if (!cor && Math.random() < BENCH.bonus) got.push(benchBonusLetter());
   if (!cor && Math.random() < (BENCH.wild[v.rarity] || 0)) got.push('*');
   if (!cor && Math.random() < (BENCH.digit[v.rarity] || 0)) got.push(benchDigit());
+  if (Math.random() < (cor ? BENCH.blank.corrupt : ITEMS[e.key] && ITEMS[e.key].chip ? BENCH.blank.chip : 0)) got.push(BENCH_BLANK);   // a BLANK: mostly from chips
+  const learned = cor ? null : benchLearn(benchShredBpCode(e));   // a blueprint: exotics, chips above rare
   if (!cor) { const sh = save.shredded || (save.shredded = {}); sh[e.key] = Math.max(sh[e.key] == null ? -1 : sh[e.key], e.tier || 0); }   // its top tier: give.mod / give.gear's epic+ (engine/deck.js deckGiveTiers)
   if (e.kind === 'mod') removeMod(e.key);
   else if (--e.stack.n <= 0) e.list.splice(e.list.indexOf(e.stack), 1);
@@ -322,6 +388,7 @@ function benchShred(e) {
   if (quest) benchAdd([quest]);
   persist();
   b.shredAnim = { t0: performance.now(), letters, got, name: v.name, rarity: v.rarity, quest };
+  if (learned) benchSay(`> blueprint: ${learned} (${v.name}) is in the BOOK.`);
   Sound.grind(BENCH.shred.jumble / 1000);
 }
 
@@ -384,11 +451,11 @@ function benchKey(k) {
   if (benchBusy()) return k.length === 1;   // (swallow typing during a build / shred)
   if (k === 'escape') { benchLeave(); return true; }
   if (b.tab !== 'build') return false;
-  if (k.length === 1 && /[a-z0-9*]/.test(k)) {   // a letter types uppercase; ROOT's lowercase ones when you're spelling it, or have no uppercase one
+  if (k.length === 1 && /[a-z0-9*#]/.test(k)) {   // a letter types uppercase; ROOT's lowercase ones when you're spelling it, or have no uppercase one
     const up = k.toUpperCase(), lo = /[a-z]/.test(k) && benchHave(k) > 0 && (benchRootMode() || benchHave(up) <= 0);
     Sound.keyclick(); benchPlace(lo ? k : up); return true;
   }
-  if (k === 'backspace') { Sound.keyclick(); const i = [3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); return true; }
+  if (k === 'backspace') { Sound.keyclick(); const i = [4, 3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); return true; }
   if (k === 'enter') { Sound.keyclick(); benchBuild(); return true; }
   return false;
 }
@@ -506,7 +573,7 @@ function benchBuildLines(T, B, X) {
         const lc = m >= 0 ? (left.splice(m, 1), BENCH_MISS) : letterChip(ch);
         ctx.bg(x, y, 1, lc.bg, 1); put(x, y, ch, lc.fg, 'board', true);
       });
-      put(24, y, miss.length ? 'need ' + miss.join('') : 'ready', miss.length ? BENCH_MISS.fg : C.accent, 'board');
+      put(24, y, miss.length ? 'need ' + missText(miss.join('')) : 'ready', miss.length ? BENCH_MISS.fg : C.accent, 'board');
       ctx.addHit(1, y, L.wc - 2, 1, { kind: 'btn', id: 'pin' + code, onTap: () => benchFill(code) });
     });
     // the prompt: $ build, a frame round three plain 3x3 slots, the x slot for a digit
@@ -537,6 +604,15 @@ function benchBuildLines(T, B, X) {
       else if (!a) ctx.bg(23, sy + 2, 1, C.dim, 0.45);
       ctx.addHit(22, sy + 2, 2, 1, { kind: 'benchslot', slot: 3 });
     }
+    // the BLANK slot (Greg, 2026-11-21): always there, but smaller (2x2) and dotted, so it reads as optional. A BLANK in
+    // it makes the slots spell a chip. Not while you spell ROOT's word (its 4th slot sits there).
+    if (!rm) {
+      const bx = BENCH_BLANK_X, bk = b.slots[4], cm = !a && isBlank(bk), bc = chipOf(letterTier(BENCH_BLANK));
+      if (cm) { ctx.bg(bx, sy + 1, 2, bc.bg, 1); ctx.bg(bx, sy + 2, 2, bc.bg, 1); put(bx, sy + 1, '[]', bc.fg, 'board', true); put(bx, sy + 2, '[]', bc.fg, 'board', true); }
+      else if (!a) { put(bx, sy + 1, '::', C.dim, 'board'); put(bx, sy + 2, '::', C.dim, 'board'); }
+      if (!a) put(bx - 1, sy + 3, 'BLANK', cm ? bc.bg : C.dim, 'board', cm);
+      ctx.addHit(bx, sy + 1, 2, 2, { kind: 'benchslot', slot: 4 });
+    }
     if (a) { benchBuildAnim(ctx, a); benchFx(ctx); benchLoot(ctx); return; }
     const j = benchJudge();
     if (j.kind === 'root' || j.kind === 'rpartial' || j.kind === 'rbad') {   // ROOT's word (engine/quests.js PAPERWORK)
@@ -547,11 +623,12 @@ function benchBuildLines(T, B, X) {
       if (j.kind === 'rbad') { const r2 = '[ CLEAR ]'; benchBtn(ctx, Math.floor((L.wc - r2.length) / 2), y + 2, r2, C.bright, 'bkcancel', () => [3, 2, 1, 0].forEach(i => benchUnplace(i))); }
       benchFx(ctx); benchLoot(ctx); return;
     }
-    if (j.kind === 'ok') {
-      const v = recipeView(benchRecipes()[j.code]), cc = chipOf(v.rarity);
-      ctx.bg(26, sy, 3, cc.bg, 1); put(26, sy, j.code, cc.fg, 'board', true);
-      put(26, sy + 1, v.name.slice(0, 10), C.bright, 'board', true);
-      benchBtn(ctx, 25, sy + 3, j.wild ? '[ via * ]' : '[ BUILD ]', j.wild ? C.money : C.accent, 'bkbuild', () => benchBuild());
+    if (j.kind === 'ok') {   // under the letters (Greg, 2026-11-21: the right side has the BLANK now): code, name, [ BUILD ]
+      const v = recipeView(benchRecipes()[j.code]), cc = chipOf(v.rarity), btn = j.wild ? '[ via * ]' : '[ BUILD ]';
+      const nm = v.name.slice(0, L.wc - 8 - btn.length), x0 = Math.floor((L.wc - (3 + 1 + nm.length + 2 + btn.length)) / 2), ry = sy + 4;
+      ctx.bg(x0, ry, 3, cc.bg, 1); put(x0, ry, j.code, cc.fg, 'board', true);
+      put(x0 + 4, ry, nm, C.bright, 'board', true);
+      benchBtn(ctx, x0 + 4 + nm.length + 2, ry, btn, j.wild ? C.money : C.accent, 'bkbuild', () => benchBuild());
     }
     // under the prompt: what fits / what went wrong
     const y = sy + 5;
@@ -560,15 +637,15 @@ function benchBuildLines(T, B, X) {
       if (m.length) {
         put(1, y - 1, 'MATCHES', C.mid, 'board');
         m.forEach((code, i) => { const rc = benchRecipes()[code], v = recipeView(rc), miss = benchMissing(code), lock = recipeLocked(rc);
-          benchRow(ctx, y + i, code, v.rarity, v.name, lock ? 'blueprint' : miss ? 'need ' + miss : 'tap: fill', lock ? C.dangerDim : miss ? BENCH_MISS.fg : C.accent, 'm' + code, () => benchFill(code), !!miss || lock); });
+          benchRow(ctx, y + i, code, v.rarity, v.name, lock ? 'blueprint' : miss ? 'need ' + missText(miss) : 'tap: fill', lock ? C.dangerDim : miss ? BENCH_MISS.fg : C.accent, 'm' + code, () => benchFill(code), !!miss || lock); });
       } else {
         const msg = !benchCount() ? '> no components. shred something.' : b.slots.some(Boolean) ? '> no code fits. a secret?' : '> select components';
         put(1, y, msg, C.mid, 'board');
       }
     } else if (j.kind === 'ok') {
-      const v = recipeView(benchRecipes()[j.code]), tip = v.tip || '', rc = benchRecipes()[j.code];
+      const rc = benchRecipes()[j.code], v = recipeView(rc), tip = (rc.kind === 'chip' ? DECK_CHIPS[rc.chip][6] : v.tip || '').slice(0, L.wc);   // (a chip: its short text; the belt tip is long)
       put(Math.floor((L.wc - tip.length) / 2), y, tip, C.text, 'board');
-      const note = d && rc.kind === 'mod' ? `x${d}: mods don't stack.` : d ? `x${d}: ${Math.round(BENCH.multi * 100)}% you get ${d}.` : 'it goes up to the locker.';
+      const note = rc.kind === 'chip' ? 'a chip: it goes into your deck.' : d && rc.kind === 'mod' ? `x${d}: mods don't stack.` : d ? `x${d}: ${Math.round(BENCH.multi * 100)}% you get ${d}.` : 'it goes up to the locker.';
       put(Math.floor((L.wc - note.length) / 2), y + 1, note, d ? C.money : C.dim, 'board');
     } else if (j.kind === 'pick') {
       put(1, y - 1, `* FITS ${j.fit.length}: PICK ONE`, C.money, 'board');
@@ -581,8 +658,10 @@ function benchBuildLines(T, B, X) {
       benchBtn(ctx, x, y + 2, r1, C.money, 'bkforce', () => benchBuild(null, true));
       benchBtn(ctx, x + r1.length + 2, y + 2, r2, C.bright, 'bkcancel', () => [0, 1, 2, 3].forEach(i => benchUnplace(i)));
     } else {
-      const l = j.kind === 'lock' ? `${j.w}: needs a blueprint.` : '';
-      put(Math.floor((L.wc - l.length) / 2), y, l, C.danger, 'board');
+      const l = j.kind === 'lock' ? `${j.w}: needs a blueprint.` : j.kind === 'blank' ? `${j.w}: a chip. it needs a BLANK.` : j.kind === 'notchip' ? `${j.w}: a BLANK only makes chips.` : '';
+      const l2 = j.kind === 'lock' ? 'shred one and you learn it.' : j.kind === 'blank' ? 'shred chips for BLANKs.' : j.kind === 'notchip' ? 'take the BLANK out to build it.' : '';
+      put(Math.floor((L.wc - l.length) / 2), y, l, j.kind === 'lock' ? C.danger : C.money, 'board');
+      if (l2) put(Math.floor((L.wc - l2.length) / 2), y + 1, l2, C.mid, 'board');
     }
     benchFx(ctx);
     benchLoot(ctx);
@@ -672,7 +751,7 @@ function benchShredLines(T, B, X) {
     const v = shredView(e), code = shredCode(e);
     X(e.kind === 'mod' ? { badge: e.key, badgeTier: e.tier } : { gearHead: e.key, gearTier: e.tier, text: v.name });
     T(v.tip || v.desc || '', C.text);
-    T(e.kind === 'mod' ? 'an equipped mod. it goes for good.' : e.kind === 'loot' ? `loot. it sells for ${gearValue(e.key, e.tier)}cr.` : `gear${e.n > 1 ? `, you have ${e.n}` : ''}.`, e.kind === 'mod' ? C.dangerDim : C.mid);
+    T(benchBound(e) ? (benchBp(shredRecipeCode(e)) ? 'bound to you. it won\'t come apart.' : 'bound to you: a shred learns its blueprint. it stays.') : e.kind === 'mod' ? 'an equipped mod. it goes for good.' : e.kind === 'loot' ? `loot. it sells for ${gearValue(e.key, e.tier)}cr.` : `gear${e.n > 1 ? `, you have ${e.n}` : ''}.`, e.kind === 'mod' ? C.dangerDim : C.mid);
     X({ box: true, text: 'S H R E D', sub: ITEMS[e.key] && ITEMS[e.key].corrupt ? '- ? ? ? -' : `- ${code.split('').join(' ')} + ? -`, id: 'bkshred', onTap: () => benchShred(benchShredList()[b.shSel]), minW: 22, col: C.danger });
     T('');
   } else for (let i = 0; i < 8; i++) T('');
@@ -767,26 +846,26 @@ function benchRootFound(sa) {
 
 function benchBookLines(T, B, X) {
   const b = st.bench, codes = bookCodes(), R = benchRecipes();
-  const found = codes.filter(c => save.seen[R[c].key]).length;
+  const found = codes.filter(c => save.seen[R[c].key] && recipeKnown(R[c])).length;
   X({ h: 1, draw: (ctx, y) => { const x = Math.floor((L.wc - 32) / 2), n = `${benchCount()} comps`; ctx.put(x, y, 'BOOK', C.accent, 'ui', true); ctx.put(x + 6, y, `${found}/${codes.length} found`, C.mid, 'ui'); ctx.put(x + 32 - n.length, y, n, C.mid, 'ui'); } });
   const rq = ['letters', 'spell'].includes(rootStep());   // ROOT's paperwork: its letters, over the recipes (engine/quests.js)
   if (rq) X({ h: 1, draw: (ctx, y) => rootLettersRow(ctx, Math.floor((L.wc - 32) / 2), y) });
   T(SEP, C.dim);
   b.bkSel = clamp(b.bkSel, 0, codes.length - 1);
   const pick = i => { if (i !== b.bkSel) { b.bkSel = i; b.bkT = performance.now(); Sound.tick(); } };
-  const code = codes[b.bkSel], rc = R[code], v = recipeView(rc), seen = !!save.seen[rc.key], lock = recipeLocked(rc), miss = benchMissing(code);
+  const code = codes[b.bkSel], rc = R[code], v = recipeView(rc), seen = !!save.seen[rc.key] && recipeKnown(rc), lock = recipeLocked(rc), miss = benchMissing(code);
   if (seen) {
     X(rc.kind === 'mod' ? { badge: rc.key, badgeTier: 0 } : { gearHead: rc.key, gearTier: 0, text: v.name });
     T(`${RARITY[v.rarity].label.toLowerCase()} ${rc.kind}`, C.mid);
     T(v.tip || '', C.text);
-  } else { T('???', C.dim); T('not found yet.', C.mid); T('own one to log it. or spell it.', C.dim); }
+  } else { T('???', C.dim); T('not found yet.', C.mid); T(rc.kind === 'chip' ? 'have one to log it.' : 'own one to log it. or spell it.', C.dim); }
   X({ h: 3, draw: (ctx, y) => {
     const left = miss.split('');
     code.split('').forEach((ch, i) => { const m = left.indexOf(ch); if (m >= 0) left.splice(m, 1);
       if (seen) benchBlock(ctx, 12 + i * 4, y, ch, { miss: m >= 0, t0: b.bkT + i * 60, seed: i + b.bkSel });
       else { for (let r = 0; r < 3; r++) ctx.bg(12 + i * 4, y + r, 3, C.dim, 0.3); ctx.put(13 + i * 4, y + 1, '?', C.dim, 'ui'); } });
   } });
-  T(!seen ? '' : lock ? 'needs a blueprint.' : miss ? 'missing: ' + miss.split('').join(' ') : 'you have the components.', lock ? C.danger : miss ? BENCH_MISS.fg : C.accent);
+  T(!seen ? '' : lock ? 'needs a blueprint: shred one.' : miss ? 'missing: ' + (miss.replace(BENCH_BLANK, '').split('').join(' ') + (miss.includes(BENCH_BLANK) ? ' +BLANK' : '')).trim() : rc.kind === 'chip' ? 'you have the components and a BLANK.' : 'you have the components.', lock ? C.danger : miss ? BENCH_MISS.fg : C.accent);
   const pins = benchSave().pins, pinned = pins.includes(code), canBuild = seen && !lock && !miss;
   X({ gap: 2, row: [
     { text: pinned ? '[ UNPIN ]' : '[ PIN ]', id: 'bkpin', disabled: !seen, onTap: () => { const p = benchSave(); p.pins = pinned ? p.pins.filter(x => x !== code) : [code].concat(p.pins.filter(x => x !== code)).slice(0, BENCH.pins); persist(); Sound.tick(); } },
@@ -795,9 +874,9 @@ function benchBookLines(T, B, X) {
   T(SEP, C.dim);
   const rows = Math.max(6, L.hc - 1 - 6 - 11 - 1 - (rq ? 1 : 0));
   const items = codes.map((c, i) => {
-    const r = R[c], s = !!save.seen[r.key], vv = recipeView(r), mm = benchMissing(c), lk = recipeLocked(r);
+    const r = R[c], s = !!save.seen[r.key] && recipeKnown(r), vv = recipeView(r), mm = benchMissing(c), lk = recipeLocked(r);
     return s ? { list: true, id: 'bk' + i, sel: i === b.bkSel, onTap: () => pick(i), name: vv.name, faded: !!mm || lk,
-      right: (pins.includes(c) ? '* ' : '') + (lk ? 'blueprint' : mm ? 'need ' + mm : 'ready'), rightCol: lk ? C.dangerDim : mm ? BENCH_MISS.fg : C.accent,
+      right: (pins.includes(c) ? '* ' : '') + (lk ? 'blueprint' : mm ? 'need ' + missText(mm) : 'ready'), rightCol: lk ? C.dangerDim : mm ? BENCH_MISS.fg : C.accent,
       ...(r.kind === 'mod' ? { badge: r.key, badgeTier: 0 } : { gear: r.key, gearTier: 0 }) }
       : { list: true, id: 'bk' + i, sel: i === b.bkSel, onTap: () => pick(i), name: '???', faded: true, right: 'not found', rightCol: C.dim };
   });
@@ -916,7 +995,7 @@ function benchKeys(now) {
   BENCH_KB.forEach((row, r) => {
     const extra = r === 3 ? 2 * (G.kw * 1.5) + 2 * G.gap : 0;
     let x = G.x0 + (G.gw - (row.length * G.kw + (row.length - 1) * G.gap + extra)) / 2;
-    if (r === 3) { key(x, y, G.kw * 1.5, 'DEL', 1, () => { Sound.keyclick(); const i = [3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); }, 'DEL', chipOf('scrap')); x += G.kw * 1.5 + G.gap; }
+    if (r === 3) { key(x, y, G.kw * 1.5, 'DEL', 1, () => { Sound.keyclick(); const i = [4, 3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); }, 'DEL', chipOf('scrap')); x += G.kw * 1.5 + G.gap; }
     for (const ch of row) { key(x, y, G.kw, ch, benchHave(ch)); x += G.kw + G.gap; }
     if (r === 3) key(x, y, G.kw * 1.5, 'ENTER', 1, () => { Sound.keyclick(); benchBuild(); }, 'ENTER', { bg: C.accent, fg: C.bg });
     y += G.kh + G.gap;

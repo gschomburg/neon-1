@@ -226,6 +226,22 @@ what changes what:
   characters (both rows of its face). **Then (Greg, 2026-11-16):** making a chip takes a one-use item that opens the
   bench's extra row (6 slots). It stacks, and it's a component, so it stays between runs once you find one. Where it
   comes from: open.
+  **Built v15.10 (Greg, 2026-11-21):**
+  - **The BLANK** (an empty chip) is the one-use item. It goes in the BLANK slot, a permanent 4th spot on BUILD, smaller
+    (2x2) and dotted so it reads as optional. With a BLANK in, the three slots spell a chip's code, digits too (CD2,
+    LW1); the x slot (build several) is off. No 6-slot row: the faces use symbols the keyboard doesn't have.
+  - **BLANKs come from shredding chips** (40%) and now and then corrupted software (10%). A shredded chip gives its
+    whole code back, digit too.
+  - **Which chips:** ones you've had (on your belt or in your deck). Not RIPPED (stolen only), not the deck's or a
+    quest's (DECK_NO_DROP), not BOSS chips, not BETA. A built chip goes straight into your deck.
+  - **Blueprints (Greg: "chips should require you have a blueprint for anything above rare, blueprints require
+    shredding"):** epic and better chips, and every exotic (mods and gear), need one. Shred one and you learn it
+    (save.bench.blueprints). A mod that binds to you (ZOMBIE, RAM DOUBLER) doesn't come apart: the shred teaches its
+    blueprint and counts for give, but you keep it and get no components.
+  - **No `*` for exotics** (Greg: the * means "anything", it's not a cost).
+  - **The BUILD screen:** what you've spelled (its code, name and [ BUILD ]) sits under the letters now, not on the right.
+    Typing a chip's code with no BLANK in: the matches offer it, and tap: fill puts a BLANK in.
+  - The BLUEPRINT chip is **FREE PRESS** now (Greg: a blueprint is knowing how to craft something).
 - **Mashing 2 mods together** (Greg, 2026-11-15: "maybe you make a chip by mashing 2 mods together"). Claude's take:
   - It fits the 3x2 look: a mod's code is 3 letters (TRC, SKM), so a fused chip shows both, one on each row:
     ```
@@ -241,7 +257,8 @@ what changes what:
       SLAG (the accident, below). You find the recipes by trying, like the bench's codes.
     - Or both: a known recipe makes its chip, and any other pair makes a plain BOOT chip of the two.
   - Its rarity is the lower of the two mods'.
-  - Open: is fusing a WORKBENCH thing or a deck thing? (Greg's answer above: neither, a special node.)
+  - Open: is fusing a WORKBENCH thing or a deck thing? (Greg's answer above: neither, a special node.) **Then (Greg,
+    2026-11-21):** the node is **THE CHROME FORGE**, parked for a pass on more map nodes (BACKLOG section 5).
 - **By accident** (Greg): a failed craft now and then fuses its burnt components into a **SLAG** chip: junk with a
   small random effect, and once in a while something good. Some chips might only be found that way.
 - **Drops** (**Decided (Greg, 2026-11-16):** no chip for every corp; that's a lot, and it pollutes the pool).
@@ -416,7 +433,7 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **FRESH INSTALL:** no starter mod, +2 INT and 100cr. MEGAMART. (Greg likes it. Claude: a run starts with no
     mods, and the starter perk offers one; this skips the perk.)
   - **LOADOUT** (Greg, 2026-11-16; name to pick): start with about 3 firewall shields and some frags. A battle chip.
-  - **BLUEPRINT** (Greg's version): your first workbench build in a run costs nothing. PURLWISE. Dropped: starting
+  - **FREE PRESS** (was BLUEPRINT, renamed v15.10: Greg, 2026-11-21, a blueprint is knowing how to craft something; also up: SPARE PARTS, ALPHABET SOUP) (Greg's version): your first workbench build in a run costs nothing. PURLWISE. Dropped: starting
     with a recipe's letters, because components only go when you use them, so the letters could be farmed.
   - **BOX OF WIRES** (Greg, 2026-11-16): start with every mod slot full of low mods, a set list. Dropped: CLONE
     (your best mod a step lower), because not every mod has a step lower.
@@ -664,7 +681,8 @@ dev mode keeps the dev ones: docs/SHELL.md). **Built v15.06:** `mode.free` FT3 (
 ### BOSS (2 wide, mk IV): the big bosses
 - OMNI's, H3AV3N's, KONAMI's. **G0D.exe** could be one, so it comes along every run.
 - **CRON** (Greg, 2026-11-20; not built): THE SHELL's charges refill every sector. Goes with making run-long charges
-  the default (docs/SHELL.md "Charges").
+  the default (docs/SHELL.md "Charges"). **Greg (2026-11-21):** later, once there's a boss for it (maybe the real-time one,
+  BACKLOG "CRON: only there at a real time"); till then charges refill every sector.
 - More:
   - **OMNI'S EYE:** every corp's card on the map shows its tell.
   - **THE MOLD** (G0D): ICE you've hit once rots, and can't hit you again.
@@ -773,7 +791,7 @@ Fusing, SLAG and the WORKBENCH's chip item stay ideas for now.
 
 50 new chips (73 in all). Their numbers are a first pass, to playtest. Each one's hook is marked "(a chip:
 engine/deck.js)" where it lives. tools/checks/tests/chips.js checks them.
-- **BOOT:** PRELOAD (3 random gear), BLUEPRINT (the first WORKBENCH build uses no letters), JUNK DRAWER (6 low mods;
+- **BOOT:** PRELOAD (3 random gear), FREE PRESS (the first WORKBENCH build uses no letters), JUNK DRAWER (6 low mods;
   it was "BOX OF WIRES" here, but that's a mod's name), PALADIN, ROGUE, KNIGHT, CLERIC (classes: a mod and some gear).
 - **BIOS:** LOUD (a rival in 1 corp in 4 that had none; rivals pay double).
 - **CRASH:** CHECKPOINT (once a run, back with nothing but full INT), EJECT (THE SHELL's `eject`: cash out from the

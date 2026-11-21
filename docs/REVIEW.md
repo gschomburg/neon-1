@@ -14,6 +14,11 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Chips and blueprints at the workbench** (v15.10; docs/DECK.md "The workbench").
+  - **BUILD:** a small dotted 2x2 **BLANK** slot sits right of the x. Put a BLANK (`#`, in the SPECIAL row) in and the three slots spell a chip's code, digits too (`CD2`). What you've spelled (code, name, [ BUILD ]) is under the letters now.
+  - **Blueprints:** epic+ chips and every exotic show "blueprint" in the BOOK till you shred one. ZOMBIE and RAM DOUBLER bind to you: shredding one teaches the blueprint and you keep it.
+  - **My calls:** BLANKs come from shredding chips (40%) and corrupted software (10%). Shredding a chip gives its digit back too. You can only craft chips you've had (not RIPPED, BOSS, or the deck's / quests' own). A built chip goes straight into your deck. The chips show in the BOOK after the mods.
+  - **FREE PRESS** is the old BLUEPRINT chip (your first build each run is free). Say if you'd rather ALPHABET SOUP.
 - [ ] **RIPPED chips** (v15.08; docs/DECK.md "The sources"). `give.chip LW1` in dev mode puts one on your belt.
   - **The chase:** with one on your belt, every corp without another anomaly has a rival. Sell it, trash it, or let a rival take it, and that stops.
   - **Taking it back:** a rival that gets away (steals a layer and isn't flatlined or thrown out) takes one off your belt. POPS calls the first time, and the first time you get one.

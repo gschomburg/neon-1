@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.09']);
+NEON_FILES.push(['engine/deck.js', 'v15.10']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -88,7 +88,7 @@ const DECK_CHIPS = {
   // their whole job yet (they never drop: the editor and THE SHELL give them)
   // BOOT
   PL3: ['PRELOAD', 'boot', 'common', 1, 'start every run with 3 random gear.', ['[?]', 'x3 '], 'start with 3 random gear.'],
-  BP1: ['BLUEPRINT', 'boot', 'rare', 1, 'your first WORKBENCH build each run uses up no letters.', ['[=]', 'BLU'], 'first bench build: free.'],
+  BP1: ['FREE PRESS', 'boot', 'rare', 1, 'your first WORKBENCH build each run uses up no letters.', ['[=]', 'PRS'], 'first bench build: free.'],   // (was BLUEPRINT: Greg, 2026-11-21, blueprints are the bench's now)
   JD6: ['JUNK DRAWER', 'boot', 'rare', 2, 'start with every mod slot full of low mods: BOX OF WIRES, COOLANT, SKIMMER, BUFFER, BURNER, STASH.', ['%#~', 'JNK'], 'start with 6 low mods.'],
   PD7: ['PALADIN', 'boot', 'epic', 2, 'a class: start with BUFFER, 2 FWALLs and a PATCH.', ['+|+', 'PAL'], 'BUFFER, 2 FWALLs, a PATCH.'],
   RG6: ['ROGUE', 'boot', 'epic', 2, 'a class: start with PICKPOCKET, a SPLIT and a SHAKE.', ['-/-', 'RGE'], 'PICKPOCKET, SPLIT, SHAKE.'],
@@ -345,7 +345,7 @@ function deckRunStart(run, opts = {}) {
   if (chipOn('RG6', run)) { mods(['pickpocket']); give('split', 1); give('shake', 1); }   // ROGUE
   if (chipOn('KN8', run)) { mods(['burner']); give('wall', 2); give('frag', 1); }   // KNIGHT
   if (chipOn('CL3', run)) { mods(['failsafe']); give('patch', 2); }   // CLERIC
-  if (chipOn('BP1', run)) run.freeBuild = true;   // BLUEPRINT (engine/bench.js benchBuild)
+  if (chipOn('BP1', run)) run.freeBuild = true;   // FREE PRESS (engine/bench.js benchBuild)
 }
 // INSURANCE and DEAD DROP: what your last death left you (save.deck.insured, .deadDrop: deckDeath)
 function deckRunCarry(run) {

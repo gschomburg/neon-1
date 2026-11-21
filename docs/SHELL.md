@@ -140,7 +140,8 @@ crew, the shell opens. **Decided (Greg, 2026-11-20).**
 - Hard limits only where spamming breaks the game (`flatline` needs a rival, `eject` only from the map, `rm` maybe
   once a layer).
 - A command that makes a chip (`compile`?): costs a lot, puts a strong chip in your belt; you still cash out with it.
-  It never makes a SHELL chip with charges (no loop).
+  It never makes a SHELL chip with charges (no loop). **Decided (Greg, 2026-11-21):** a special one-time use inside a
+  quest: find something in a run, compile it, cash out with a special chip. Where: later.
 - **Decided (Greg, 2026-11-20): they refill each sector, for now.** It's one setting (engine/deck.js `SHELL_REFILL`).
   Later the default becomes "they last the run", and a BOSS chip, **CRON** (the scheduler), brings the sector refill
   back.
