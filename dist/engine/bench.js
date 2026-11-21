@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.11']);
+NEON_FILES.push(['engine/bench.js', 'v15.12']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -245,7 +245,7 @@ function benchUnplace(i, quiet = false) {
   const b = st.bench, ch = b.slots[i];
   if (!ch) return;
   b.slots[i] = null;
-  if (!quiet && (i < 3 || !isMult(ch))) { b.fx.push({ ch, x: i < 3 ? b.slotX[i] : i === 4 ? BENCH_BLANK_X : 22, y: b.slotY, t0: performance.now() }); Sound.tick(); }
+  if (!quiet && (i < 3 || !isMult(ch))) { b.fx.push({ ch, x: i < 3 ? b.slotX[i] : BENCH_BLANK_X, y: b.slotY, t0: performance.now() }); Sound.tick(); }
   if (!benchRootMode() && b.slots[3] && !isMult(b.slots[3])) benchUnplace(3, quiet);   // the last of ROOT's letters out: the 4th slot is the x slot again
   if (i === 4) for (const j of [0, 1, 2]) if (isDigit(b.slots[j])) benchUnplace(j, quiet);   // the BLANK out: no more digits in the letter slots
 }
@@ -282,7 +282,7 @@ function benchBuild(code = null, force = false) {
   if (j.kind === 'root') {   // ROOT's word: the letters (and a *) are spent, the build charges, then it's hijacked (rootSigned)
     const letters = benchSave().letters;
     for (const ch of b.slots) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }
-    b.anim = { t0: performance.now(), root: true, word: b.slots.join(''), slots: b.slots.slice(), x: b.slotX.concat(22), y: b.slotY };
+    b.anim = { t0: performance.now(), root: true, word: b.slots.join(''), slots: b.slots.slice(0, 4), x: b.slotX.concat(BENCH_BLANK_X), y: b.slotY };
     b.slots = [null, null, null, null, null];
     persist();
     return Sound.charge(BENCH.build.charge / 1000);
@@ -579,7 +579,7 @@ function benchBuildLines(T, B, X) {
     // the prompt: $ build, a frame round three plain 3x3 slots, the x slot for a digit
     const sy = y0 + 9; b.slotY = sy; b.slotX = [10, 14, 18];
     put(1, sy + 1, '$', C.accent, 'board', true); put(3, sy + 1, 'build', C.accent, 'board', true);
-    const fw = !a && benchRootMode() ? 15 : 11, fc = fw > 11 ? C.rep : C.dim;   // (ROOT's letters: the frame takes in a 4th slot)
+    const fw = 11, fc = !a && benchRootMode() ? C.rep : C.dim;   // (ROOT's letters: the frame goes the quest color)
     put(9, sy - 1, '+' + '-'.repeat(fw) + '+', fc, 'board'); put(9, sy + 3, '+' + '-'.repeat(fw) + '+', fc, 'board');
     for (let r = 0; r < 3; r++) { put(9, sy + r, '|', fc, 'board'); put(10 + fw, sy + r, '|', fc, 'board'); }
     const cur = a ? -1 : b.slots.slice(0, 3).findIndex(s => !s), blink = Math.floor(now / 500) % 2;
@@ -592,12 +592,15 @@ function benchBuildLines(T, B, X) {
       }
       ctx.addHit(x, sy, 3, 3, { kind: 'benchslot', slot: i });
     });
-    // the x slot: a digit 2-9 (a chance of that many). With ROOT's letters in, it's a 4th letter slot (the frame grows).
+    // the extra slot: a digit 2-9 (x: a chance of that many) or a BLANK. With ROOT's letters in, it's their 4th letter.
     const d = b.slots[3], rm = !a && benchRootMode();
     if (rm) {
-      if (d) benchBlock(ctx, 22, sy, d, { t0: b.slotT[3], seed: 3 });
-      else { for (let r = 0; r < 3; r++) ctx.bg(22, sy + r, 3, C.rep, 0.25); if (cur < 0 && blink) put(22, sy + 2, '___', C.rep, 'board', true); }
-      ctx.addHit(22, sy, 3, 3, { kind: 'benchslot', slot: 3 });
+      // ROOT's word: its 4th letter goes in the extra slot (Greg, 2026-11-21: "just make it work for the t")
+      const bx = BENCH_BLANK_X;
+      if (d) { ctx.bg(bx, sy + 1, 2, C.rep, 1); ctx.bg(bx, sy + 2, 2, C.rep, 1); put(bx, sy + 1, d, C.bg, 'board', true); }
+      else { put(bx, sy + 1, '::', C.rep, 'board'); put(bx, sy + 2, cur < 0 && blink ? '__' : '::', C.rep, 'board', cur < 0 && blink); }
+      put(bx, sy + 3, 'ROOT', C.rep, 'board');
+      ctx.addHit(bx, sy + 1, 2, 2, { kind: 'benchslot', slot: 3 });
     } else {
       // the extra slot (Greg, 2026-11-21: one slot for both): smaller (2x2) and dotted, so it reads as optional. It
       // takes a digit 2-9 (x: a chance of that many, gear) or a BLANK (the slots spell a chip). Inside, the digit is
@@ -612,7 +615,7 @@ function benchBuildLines(T, B, X) {
     if (a) { benchBuildAnim(ctx, a); benchFx(ctx); benchLoot(ctx); return; }
     const j = benchJudge();
     if (j.kind === 'root' || j.kind === 'rpartial' || j.kind === 'rbad') {   // ROOT's word (engine/quests.js PAPERWORK)
-      if (j.kind === 'root') { ctx.bg(27, sy, 4, C.rep, 1); put(27, sy, 'r??t', C.bg, 'board', true); put(27, sy + 1, 'sign it', C.bright, 'board', true); benchBtn(ctx, 26, sy + 3, '[ SIGN ]', C.rep, 'bkbuild', () => benchBuild()); }
+      if (j.kind === 'root') { const x0 = Math.floor((L.wc - 24) / 2), ry = sy + 4; ctx.bg(x0, ry, 4, C.rep, 1); put(x0, ry, 'r??t', C.bg, 'board', true); put(x0 + 5, ry, 'sign it', C.bright, 'board', true); benchBtn(ctx, x0 + 14, ry, '[ SIGN ]', C.rep, 'bkbuild', () => benchBuild()); }   // (under the letters, like a build)
       const y = sy + 5, l1 = j.kind === 'rbad' ? `${j.w}: that's not it.` : j.kind === 'root' ? 'the paperwork, filled in.' : "r o o t: ROOT's paperwork.", l2 = j.kind === 'root' ? '' : 'a * fills in for one letter.';
       put(Math.floor((L.wc - l1.length) / 2), y, l1, j.kind === 'rbad' ? C.danger : C.rep, 'board');
       if (l2) put(Math.floor((L.wc - l2.length) / 2), y + 1, l2, C.mid, 'board');

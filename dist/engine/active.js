@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v15.11']);
+NEON_FILES.push(['engine/active.js', 'v15.12']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {

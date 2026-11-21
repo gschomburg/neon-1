@@ -190,7 +190,8 @@ has no limit until THE SHELL's charges are built).
   - **Bait:** in the ad, a fish swims in and eats the letter (confetti destruction, like the INT hits), PH1SH pops up
     and laughs ("thanks, chump."), your credits tick down, the ad closes. POPS: "don't click links in ads."; a second
     fall gets another line ("again?"). No credits: just the letter, and a meaner laugh. A shred can give it back.
-- **Step 3: spell it.** Put a lowercase letter in and the bench's x slot becomes a 4th letter slot. A `*` fills a
+- **Step 3: spell it.** Put a lowercase letter in and the bench's extra slot (the small one after the letters, where the x digit or a BLANK
+  goes) takes the 4th letter, the  (v15.12, Greg: "just make it work for the t"; it was a full-size 4th slot). A `*` fills a
   missing letter (`r * o t`).
 - **Scene:** the build starts, then gets hijacked: the bench's screen fills with ROOT's fine print, smug. "finally. i
   have been living in your cache for six runs."
