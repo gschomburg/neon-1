@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.13']);
+NEON_FILES.push(['engine/bench.js', 'v15.14']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -62,7 +62,8 @@ function benchRecipes() {
   }
   return (BENCH_RECIPES = r);
 }
-// A chip recipe shows (in the BOOK, the matches) once you've had that chip: on your belt or in your deck.
+// A chip recipe shows (in the BOOK, the matches) once you've seen that chip (Greg, 2026-11-21): on your belt, in your
+// deck, for sale at a market, or offered by a corp boss (markSeen: engine/deck.js deckShopChip, deckBossChip).
 const recipeKnown = rc => rc.kind !== 'chip' || !!save.seen[rc.key] || deckHave(rc.chip) > 0;
 // What needs a blueprint (Greg, 2026-11-21): exotics, and chips above rare.
 const recipeNeedsBp = rc => { const r = recipeDef(rc).rarity; return r === 'exotic' || (rc.kind === 'chip' && (RARITY[r] || RARITY.common).lvl > RARITY.rare.lvl); };
@@ -394,7 +395,7 @@ function benchTeach(got, learned) {
   const bs = benchSave();
   if (got && got.some(isBlank) && !bs.blankSeen) { bs.blankSeen = true; persist(); queueCall('pops', ["that's a BLANK. an empty chip.",
     "at a workbench it goes in the little slot after the letters. then spell a chip's code: two letters and a digit, like CD2.",
-    "it builds that chip, straight into your deck. you can only make chips you've had."]); }
+    "it builds that chip, straight into your deck. you can make any chip you've seen."]); }
   if (learned && !bs.bpSeen) { bs.bpSeen = true; persist(); queueCall('pops', ['you took it apart, so now you know how it goes together. a blueprint.',
     'exotics and the good chips need one to build. shred one and you learn it. look it up in the BOOK.']); }
 }
@@ -884,7 +885,7 @@ function benchRootFound(sa) {
 function benchBookLines(T, B, X) {
   const b = st.bench, codes = bookList(), R = benchRecipes();
   const found = codes.filter(c => save.seen[R[c].key] && recipeKnown(R[c])).length;   // (this tab's: GEAR, MODS or CHIPS)
-  X({ h: 1, draw: (ctx, y) => { const x = Math.floor((L.wc - 32) / 2), n = `${benchCount()} comps`; ctx.put(x, y, 'BOOK', C.accent, 'ui', true); ctx.put(x + 6, y, `${found}/${codes.length} found`, C.mid, 'ui'); ctx.put(x + 32 - n.length, y, n, C.mid, 'ui'); } });
+  X({ h: 1, draw: (ctx, y) => { const x = Math.floor((L.wc - 32) / 2), n = `${benchCount()} comps`; ctx.put(x, y, `${found}/${codes.length} found`, C.mid, 'ui');   /* (no BOOK: the sub-tab over it says which list, Greg) */ ctx.put(x + 32 - n.length, y, n, C.mid, 'ui'); } });
   const rq = ['letters', 'spell'].includes(rootStep());   // ROOT's paperwork: its letters, over the recipes (engine/quests.js)
   if (rq) X({ h: 1, draw: (ctx, y) => rootLettersRow(ctx, Math.floor((L.wc - 32) / 2), y) });
   T(SEP, C.dim);
@@ -895,7 +896,7 @@ function benchBookLines(T, B, X) {
     X(rc.kind === 'mod' ? { badge: rc.key, badgeTier: 0 } : { gearHead: rc.key, gearTier: 0, text: v.name });
     T(`${RARITY[v.rarity].label.toLowerCase()} ${rc.kind}`, C.mid);
     T((rc.kind === 'chip' ? DECK_CHIPS[rc.chip][6] : v.tip || '').slice(0, L.wc), C.text);   // (a chip: its short text; the belt tip is long)
-  } else { T('???', C.dim); T('not found yet.', C.mid); T(rc.kind === 'chip' ? 'have one to log it.' : 'own one to log it. or spell it.', C.dim); }
+  } else { T('???', C.dim); T('not found yet.', C.mid); T(rc.kind === 'chip' ? 'see one to log it.' : 'own one to log it. or spell it.', C.dim); }
   X({ h: 3, draw: (ctx, y) => {
     const left = miss.split('');
     code.split('').forEach((ch, i) => { const m = left.indexOf(ch); if (m >= 0) left.splice(m, 1);

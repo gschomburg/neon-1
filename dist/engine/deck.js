@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.13']);
+NEON_FILES.push(['engine/deck.js', 'v15.14']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -474,6 +474,7 @@ function deckShopChip(node, n) {
   const r = rngFor(run.seed, 'shopchip', node.id, n || 0);
   if (r() >= DECK_SHOP_CHIP && !DECK_ALWAYS) return null;
   const key = deckRollChip(r);
+  markSeen(deckChipItem(key));   // (seen: the bench can craft it, engine/bench.js recipeKnown)
   return { kind: 'item', key: deckChipItem(key), tier: 0, price: DECK_CHIP_PRICE[DECK_CHIPS[key][2]] || 60, sold: false, n: 1 };
 }
 function deckFenceChip(node) {
@@ -487,7 +488,8 @@ function deckBossChip(node) {
   const run = st.run; if (!deckDrops()) return null;
   const r = rngFor(run.seed, 'bosschip', node.id);
   if (r() >= DECK_BOSS_CHIP && !DECK_ALWAYS) return null;
-  return { kind: 'gear', key: deckChipItem(deckRollChip(r)), tier: 0, n: 1 };
+  const key = deckRollChip(r); markSeen(deckChipItem(key));   // (seen: craftable)
+  return { kind: 'gear', key: deckChipItem(key), tier: 0, n: 1 };
 }
 // GEAR (SPOILS): 3 gear in place of the mods
 function deckGearRewards(node) {

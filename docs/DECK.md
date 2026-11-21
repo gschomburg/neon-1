@@ -252,8 +252,10 @@ what changes what:
   - **The BOOK** has sub-tabs, GEAR MODS CHIPS, each with its own found count. Sub-tabs sit in a strip of background
     (textboard.js drawSubTabs: use it for any tabs inside tabs).
   - G0D.exe was a recipe for everyone (G 0 D built it): items marked only (dev, deck) aren't recipes now.
-  - **Open (Claude, for Greg):** with chips unlocked once home, crafting a chip you already have does nothing. What's
-    left to craft: chips you had on your belt but never got home (you died). See BACKLOG "Making chips".
+  - **Decided (Greg, 2026-11-21), v15.14:** you can craft any chip you've **seen**: on your belt, for sale at a market,
+    or offered by a corp boss. Certain chips still only come from quests and bosses (they aren't recipes). Dropped:
+    crafting chips to sell ("probably not worth it").
+  - The BOOK's count line has no "BOOK" now: the sub-tab over it says which list (Greg).
 - **Mashing 2 mods together** (Greg, 2026-11-15: "maybe you make a chip by mashing 2 mods together"). Claude's take:
   - It fits the 3x2 look: a mod's code is 3 letters (TRC, SKM), so a fused chip shows both, one on each row:
     ```
@@ -496,7 +498,8 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   Dropped: REBOOT, CRYO and CLONE BODY, because several die-and-restart chips take the fun out of finally getting the
   1UP (Greg). CRYO was also too much to keep track of; Greg likes the name for something else.
 - **BLACK BOX:** when you die, one mod goes to the LOCKER: you choose which, if the LOCKER has room (Greg).
-  - Or (Greg): when you cash out or die, all your mods and gear get shredded into components.
+  - Or (Greg): when you cash out or die, all your mods and gear get shredded into components. **Greg (2026-11-21):** a
+    decent idea to keep, maybe as its own CRASH chip (not a REP buy). Not built.
 - **EJECT:** cash out from anywhere, once a run.
 - **A mod saves you** (Greg): a killing blow takes a mod instead, if you have one. It's a shield, not a death, so it
   goes somewhere else (OVERVOLT, or a gear).

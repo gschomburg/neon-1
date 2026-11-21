@@ -79,6 +79,8 @@ module.exports = { name: 'craft', body: `
   save.seen[deckChipItem('CD2')] = seen0; save.deck.chips.CD2 = had; save.bench.blueprints = bp0;
   check(DECK_CHIPS.BP1[0] === 'FREE PRESS', 'the BLUEPRINT chip is FREE PRESS now');
   check(BENCH.digits.some(d => d[0] === 1) && !Object.values(benchRecipes()).some(rc => rc.key === 'g0dexe'), 'shreds can give a 1; G0D.exe is no recipe');
+  DECK_ALWAYS = true; const so = deckShopChip({ id: 'seen1' }); DECK_ALWAYS = false;
+  check(so && save.seen[so.key] && recipeKnown(benchRecipes()[ITEMS[so.key].chip] || { kind: 'gear' }), 'a chip for sale at a market: seen, so you can craft it: ' + (so && so.key));
   // POPS: the first BLANK
   CALL_QUEUE.length = 0; st.callBox = null; save.bench.blankSeen = false;
   benchTeach(['#']); benchTeach(['#']);
