@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.17']);
+NEON_FILES.push(['engine/shell.js', 'v15.18']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -634,9 +634,16 @@ function shellDraw() {
   if (!SHELL.el || SHELL.el.hidden) return;
   const log = SHELL.logEl;
   log.textContent = '';
+  const cols = Math.max(20, Math.floor(log.clientWidth / (parseFloat(getComputedStyle(log).fontSize) * 0.6 || 8)));   // (about how many characters fit: monospace)
   for (const l of SHELL.log.slice(-60)) {
     const d = document.createElement('div');
     if (l.cls === 'cmd') d.appendChild(shellLineEl(l.s)); else d.appendChild(span(l.cls === 'err' ? 'e' : l.cls === 'dim' ? 'd' : 'o', l.s));
+    // a long line wraps under its own text, not back at the start (Greg, 2026-11-21: help's descriptions): the column
+    // after a gap of 2+ spaces (help's usage / description, give's list), or the line's own indent
+    // (on a narrow shell, past half its width, the wrap just steps in 2)
+    if (l.cls !== 'cmd') { const m = l.s.match(/^(.*?\S)( {2,})(?=\S)/); let hang = m ? m[1].length + m[2].length : l.s.length - l.s.trimStart().length;
+      if (hang > cols / 2) hang = 2;
+      if (hang > 0) { d.style.paddingLeft = hang + 'ch'; d.style.textIndent = -hang + 'ch'; } }
     log.appendChild(d);
   }
   if (SHELL.busy) log.appendChild(span('d', '...'));

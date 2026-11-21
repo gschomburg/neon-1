@@ -14,6 +14,7 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **THE SHELL's help wrapping** (v15.18): wrapped lines step in under the command now. On the game's column (about 40 wide) the description column is too far right, so a wrap steps in 2; on a wide shell it lines up under the description.
 - [ ] **QUESTS, one at a time** (v15.17): `[ < ]  SYSTEM FAILURE  [ > ]`, and "from POPS · 1 of 2" under it. It opens on a quest with a new step; otherwise the one you looked at last. An arrow reads `[*< ]` / `[ >*]` while another quest has news. Pinning: not done (you floated it); say if you want it.
 - [ ] **[ TITLE ]** (v15.17): every [ BACK ] that went to the title screen says so now (codex, help, leaderboard, settings, history, THE BOARD, the race screens, the end screen).
 - [ ] **YOUR DECK's header** (v15.16): THE BOARD's two tab rows with [DECK] lit, then a strip with SLOTS / CHIPS and the power. No [LEAVE] and no "THE BOARD // YOUR DECK": tap YOU or REP (any tab) to go back. Does it feel like part of THE BOARD now?
