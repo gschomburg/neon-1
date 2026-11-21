@@ -345,6 +345,8 @@ unlocked by REP, and some quests unlock REP.
 
 ### 9. Lean more cyberpunk
 - Cyberware in names and flavor: implants as gear, chrome on the runner card. (MEDIX CHROME CLINIC is an ad already.)
+- **The city's name** (meat notes 2026-11-21, lore): base it on a Midwestern region, not the east or west coast or
+  Tokyo. The rust belt. Ideas: Nokomis, P City, Grand Forks, Sioux City.
 
 ### 10. Make it more of a hacking game
 - Something in the game itself you can hack, like the seed (OVERFLOW, section 4).
@@ -419,6 +421,10 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   can pick it instead of breaching a corp.
 - **The brainstorm and 5 mockups: `docs/INFILTR8.md`** (2026-11-17), `docs/mockups/infiltr8.html`.
 
+### 13. Other game modes (meat notes 2026-11-21)
+- Other games or mini-game modes to try: a **farm sim** (farming mold for chips and loot), **tower defense**, a
+  **Candy Crush** style match game, **horde mode** waves, **missile defense**. Ideas only; none picked yet.
+
 ## Low priority
 
 - **An AI crew member that plays the game** (the user, meat notes 2026-10-31): it learns as you beat corps: beat a corp
@@ -489,6 +495,9 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   "integrity" mentions (the header says INT; INT everywhere, or only where space is tight). **Ad copy** (meat notes
   2026-11-06): "you are the product!"
 - **Codex and menus pass** (with HOW TO PLAY):
+  - **Codex sub-tabs?** (meat notes 2026-11-21): group it with the sub-tab strip (drawSubTabs). Mods, gear and chips
+    under one tab (TECH?); glyphs, corps and sectors under another (NET?). Hackers maybe get their own, with CREW and
+    RIVALS sub-tabs.
   - **HOW TO PLAY pass:** touch it up (corps and tells on THE BASICS; gestures, exotics, ads, run resume).
   - **Keyword highlighting in text** (started v13.75 on HOW TO PLAY > THE BASICS: ICE, INT, credits; next the other HOW TO PLAY pages and the codex, the user's aim: neater): ICE in red, credits in money, mod names in their rarity...
 - **The training sim** may need a little redesign (meat notes 2026-11-06).
