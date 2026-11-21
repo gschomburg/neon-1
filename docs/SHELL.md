@@ -171,7 +171,8 @@ mark the run hacked. `help` lists them. **Decided (Greg, 2026-11-20):** in place
   **v15.06:** `mode.free` (FT3: any node in this sector, the boss too, till it ends; the dev one is free travel on / off)
   and `corp.jump` (JM4: this corp's boss; the dev one takes a corp to jump to). Player-only: `rm -rf` (RF4: every ICE
   on the layer, not on a sector boss; the name has a space, and shellParse reads it as one) and `chmod <mod>` (CM3: a
-  mod up a rarity till the sector ends, once a sector; not BUFFER, BOX OF WIRES or MUTATE).
+  mod up a rarity till the sector ends, once a sector; not BUFFER, BOX OF WIRES or MUTATE). **v15.07:** `fork` (FK2:
+  two real nodes on every layer of the corp, one glyph, full pay).
 - Each command has a player version, a dev version, or both.
 - Players will find `dev.start` (the game's JS is open). That's fine: dev runs are practice (no REP, no leaderboard),
   like the old dev menu's cheats. Maybe hide it somewhere as a secret worth finding.

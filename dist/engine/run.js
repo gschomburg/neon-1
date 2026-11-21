@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.06']);
+NEON_FILES.push(['engine/run.js', 'v15.07']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -346,6 +346,7 @@ async function enterLayer() {
     const opts = lv.tiles.filter(t => !t.safe && !t.loaded);
     if (opts.length) pickR(opts, rngFor(run.seed, 'quantum', c.node.id, c.idx)).quantum = true;
   }
+  if (c.forked) deckForkLayer(lv, c);   // fork (THE SHELL, SUDO: engine/deck.js): QUANTUM's second real node, the real one's glyph, no pay cut
   if (run.snoozed && run.snoozed.length && n > 1 && c.hasBoss && !st.mp && !modOffIn('snooze', c.def)) snoozeIn(lv, rngFor(run.seed, 'snoozein', c.node.id, c.idx));
   lv.eater = has('iceeater') && n > 1 && !st.mp && !modOffIn('iceeater', c.def);   // ICE EATER: eat the ICE (a 1-node layer is just the real one)
   lv.iceTotal = lv.tiles.filter(t => !isReal(t)).length; lv.eatPaid = 0;
@@ -446,7 +447,7 @@ async function enterLayer() {
   lv.notes = [];
   if (n > 1 && c.hasBoss) {
     for (const key of modsAt('start')) if (START_NOTE[key]) { const note = START_NOTE[key](lv, c, run); if (note) { lv.notes.push(note); modFired(key); } }
-    if (lv.tiles.some(t => t.quantum)) { lv.notes.push({ text: 'quantum: 2 real' }); modFired('quantum'); }
+    if (lv.tiles.some(t => t.quantum)) { lv.notes.push({ text: c.forked ? 'fork: 2 real' : 'quantum: 2 real' }); modFired('quantum'); }
     if (has('horoscope') && c.luckyIdx === c.idx) { lv.notes.push({ text: 'lucky layer!' }); modFired('horoscope'); }
     if (has('handshake')) { modFired('handshake'); const row = lv.tiles[lv.safe].row; lv.notes.push({ text: `hs: ${'o'.repeat(row + 1)}` }); Sound.beeps(row + 1); }
     if (has('chancecard') && c.idx === 0) { lv.notes.push({ text: chanceCard(lv, c, run) }); modFired('chancecard'); }
@@ -753,7 +754,7 @@ function payFor(lv) {
   if ((lv.misses === 0 || lv.eater) && lv.n > 1 && !lv.scanned) mult *= ECON.pay.perfect + ECON.pay.perfectPerNode * (lv.n - 1);   // ICE EATER: every clear is clean
   if (has('skimmer')) mult *= tv('skimmer', ECON.modx.skimmer);   // (the mod numbers: data/economy.js ECON.modx)
   mult *= coinMult();   // COIN FLIP: the streak multiplier
-  if (has('quantum') && lv.tiles.some(t => t.quantum)) mult *= ECON.modx.quantum;   // QUANTUM: 2 real, half pay
+  if (has('quantum') && lv.tiles.some(t => t.quantum) && !c.forked) mult *= ECON.modx.quantum;   // QUANTUM: 2 real, half pay (fork lifts it for the corp)
   if (has('fastpay') && lv.fast) mult *= ECON.modx.fastpay;
   if (has('supersize')) mult *= ECON.modx.supersize;
   if (c.def.surge) mult *= 1 + 0.8 * (lv.surgeF || 0);   // RYDR: pays more the later you pick

@@ -20,7 +20,8 @@ to build is `docs/BACKLOG.md`.)
   - **`rm -rf`** (RF4, legendary, 4): every ICE on the layer goes, one after another. My call: not on a sector boss, like NUKE.
   - **`chmod <mod>`** (CM3, epic, 3): a mod up a rarity till the sector ends, once a sector. My call: not BUFFER, BOX OF WIRES or MUTATE, since their step changes more than numbers.
   - Rarities and charges are my picks; each chip gives one use. They drop by rarity like the others (no corp drops: HALFLIFE and CLONEWORKS are only their themes).
-  - **`fork`: not built.** A run holds one of each mod, so a copy has nothing to add. Your call on what it does.
+  - **`fork`** (FK2, legendary, 4; v15.07): every layer of the corp gets a second real node wearing the real one's glyph, full pay. Shows "fork: 2 real" on the layer. With QUANTUM, QUANTUM's node is the fork and its pay cut is off. My calls: only layers of 3+ nodes (like QUANTUM), not in tap corps, and the glyph copy may look odd on corps whose tell isn't a glyph (it's still a second real node there).
+  - **One use:** each SUDO chip gives the charges of one use, but only some commands have their own limit (breach once a run; flatline, show.real, mode.hold, fork once a corp; mode.god, mode.free, chmod once a sector). rm -rf, corp.jump and give have none: more charges (CAPACITOR, the CHARGE pick, other chips) means more uses.
 - [ ] **Teaching THE SHELL and the deck** (v15.05). Try a fresh save if you can:
   - **The bench:** POPS's first-visit lines end with your shell line (before ROOT: "don't know what a shell is?..."; with ROOT: "give.mod, give.gear").
   - **Your deck:** the first time you open it, POPS trains you (6 lines: sockets, power, runs, where chips come from, SHELL chips). `deck.pops` replays it. A save that has a deck already gets it the next time it opens the deck.

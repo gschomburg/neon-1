@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.06']);
+NEON_FILES.push(['engine/deck.js', 'v15.07']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -73,7 +73,8 @@ const DECK_CHIPS = {
   BR3: ['breach', 'sudo', 'legendary', 3, 'THE SHELL learns breach: you win this layer outright, full pay. once a run. (` opens THE SHELL.)', ['>>>', 'BRC'], 'breach: win a layer.'],
   GM1: ['give.mod', 'sudo', 'epic', 2, 'THE SHELL learns give.mod: name a mod you have found and it is yours. epic and up: only ones you have shredded. it costs more the rarer it is. (` opens THE SHELL.)', ['+M ', 'GVE'], 'give.mod: name a mod.'],
   GG1: ['give.gear', 'sudo', 'epic', 2, 'THE SHELL learns give.gear: name gear you have found and it is on your belt. epic and up: only what you have shredded. it costs more the rarer it is. (` opens THE SHELL.)', ['+G ', 'GVE'], 'give.gear: name your gear.'],
-  // (v15.06: the rest of the SUDO list, docs/DECK.md. fork waits on Greg: a run can't hold two of one mod)
+  // (v15.06: the rest of the SUDO list, docs/DECK.md)
+  FK2: ['fork', 'sudo', 'legendary', 3, 'THE SHELL learns fork: the real node forks. every layer of this corp has two, with the same glyph, and the pay stays whole. (` opens THE SHELL.)', ['fk<', '(*)'], 'fork: two real nodes, a corp.'],
   FT3: ['mode.free', 'sudo', 'epic', 2, 'THE SHELL learns mode.free: any node in this sector is open to you, the boss too, till the sector ends. (` opens THE SHELL.)', ['<->', 'FRE'], 'mode.free: go anywhere, a sector.'],
   JM4: ['corp.jump', 'sudo', 'legendary', 3, "THE SHELL learns corp.jump: skip the rest of this corp's layers, straight to its boss. (` opens THE SHELL.)", ['>>|', 'JMP'], "corp.jump: straight to the boss."],
   RF4: ['rm -rf', 'sudo', 'legendary', 3, 'THE SHELL learns rm -rf: every ICE on this layer is deleted. not on a sector boss. (` opens THE SHELL.)', ['rm*', '-rf'], 'rm -rf: delete all the ICE.'],
@@ -150,7 +151,7 @@ const DECK_CHIP_TAGS = {
   TF1: ['you'], LD3: ['you'], BM4: ['you'], FI2: ['you'], QT0: ['map'], DM5: ['you'], BB7: ['you'], SP3: ['rules'],
   SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'], FM2: ['you', 'rules'], SK1: ['you'],
   WH0: ['you'], MN1: ['you'], CA4: ['you'], RK1: ['you'], PS4: ['you'], FL3: ['you'], CD2: ['you'], SN5: ['you'], RM1: ['you'], KL9: ['you'], CT1: ['you'], ZZ3: ['you'], WI5: ['you'], UD2: ['you'],
-  GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], GG1: ['you'], FT3: ['you'], JM4: ['you'], RF4: ['you'], CM3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
+  GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], GG1: ['you'], FT3: ['you'], JM4: ['you'], FK2: ['you'], RF4: ['you'], CM3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
   PL3: ['you'], BP1: ['you'], JD6: ['you'], PD7: ['you'], RG6: ['you'], KN8: ['you'], CL3: ['you'], HS1: ['map'],
   LU6: ['map', 'rules'], FR5: ['map'], EV2: ['map'], AD0: ['map'], SR4: ['map'], PP2: ['map'], AL4: ['you'], CS7: ['map'], CK9: ['map'], DK6: ['map'],
   CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'],
@@ -477,7 +478,7 @@ const deckSpoils = run => chipOn('OF1', run) ? 3 : chipOn('PT1', run) ? 4 : chip
 // refill back). More from a corp boss's CHARGE pick (gear: +2), and ROOTKIT (CRASH) burns them all to save you.
 const SHELL_REFILL = 'sector';
 const DECK_CHARGES = { WH0: 3, PS4: 2, MN1: 2, CA4: 4, FL3: 3,   // (FL3 was 1: v15.03, a SUDO chip gives one use of its own command)
-  CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 4, GG1: 4, FT3: 3, JM4: 4, RF4: 4, CM3: 3 };   // (GM1, GG1: they cost by rarity, DECK_GIVE_COST: 4 reaches a legendary)
+  CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 4, GG1: 4, FT3: 3, JM4: 4, RF4: 4, CM3: 3, FK2: 4 };   // (GM1, GG1: they cost by rarity, DECK_GIVE_COST: 4 reaches a legendary)
 const SHELL_CHARGE = { pack: 2, boss: 0.35 };   // a CHARGE gives 2; a corp boss offers one 35% of the time (with charges to fill)
 for (const [k, n] of Object.entries(DECK_CHARGES)) if (DECK_CHIPS[k]) { DECK_CHIPS[k][4] += ` +${n} shell charges.`; DECK_CHIPS[k][6] += ` +${n} charges.`; }
 function deckCharges(run) { run.chargeMax = (run.chips || []).reduce((a, k) => a + (DECK_CHARGES[k] || 0), 0); run.charges = run.chargeMax; }
@@ -601,6 +602,14 @@ const DECK_SHELL_CMDS = [
     run.hacked = true; shellClose();
     setTimeout(() => deckRmRf(lv), 250);
     return `rm -rf: ${ice.length} ICE deleted.`; } },
+  { name: 'fork', chip: 'FK2', cost: 4, safe: true, help: 'the real node forks: two on every layer of this corp, same glyph, full pay', run: () => {
+    const run = shellNeedRun(), lv = deckShellLayer(), c = st.corp;
+    if (c.forked) throw new Error('forked already, till you leave this corp.');
+    if (c.def.tap) throw new Error("this corp won't fork.");
+    c.forked = true; run.hacked = true;
+    const t = deckForkLayer(lv, c);
+    if (t) { const { x, y } = tileCenter(t); explode(snapshot(cl => cl.own === 't' + lv.tiles.indexOf(t)), x, y, { col: C.accent, power: 0.5 }); Sound.shield(); }
+    return t ? 'fork: two real nodes, this layer and every one after it in this corp.' : 'fork: from the next layer on (this one is too small).'; } },
   { name: 'chmod', chip: 'CM3', cost: 3, safe: true, args: [{ name: 'mod', of: () => deckChmodList(), any: 'mods' }], help: 'one of your mods up a rarity till the sector ends', run: a => {
     const run = shellNeedRun(), k = a[0];
     if (run.chmod && run.chmod.sector === run.sector) throw new Error(`used: ${MODS[run.chmod.key].name} is up till this sector ends.`);
@@ -610,6 +619,20 @@ const DECK_SHELL_CMDS = [
     run.modTier[k] = (run.modTier[k] || 0) + 1; run.chmod = { key: k, sector: run.sector }; run.hacked = true; Sound.buy();
     return `chmod: ${MODS[k].name} is ${tierLabel(modView(k)).toLowerCase()} till sector ${run.sector + 1} ends.`; } },
 ];
+// fork: QUANTUM's second real node (engine/run.js enterLayer; isReal), on a layer of 3 or more, wearing the real one's
+// glyph so the corp's tell finds it too. With QUANTUM it's that node, and the pay cut is off for the corp (payFor).
+// Returns the forked node, or null.
+function deckForkLayer(lv, c) {
+  if (lv.n < 3 || !c.hasBoss || c.def.tap || st.mp) return null;
+  let t = lv.tiles.find(x => x.quantum && x.state === 'closed');
+  if (!t) {
+    const opts = lv.tiles.filter(x => x.state === 'closed' && !x.safe && !x.loaded && !x.quantum);
+    if (!opts.length) return null;
+    t = pickR(opts, rngFor(st.run.seed, 'fork', c.node.id, c.idx)); t.quantum = true;
+  }
+  t.forked = true; t.glyph = lv.tiles[lv.safe].glyph;
+  return t;
+}
 // rm -rf: the ICE on a layer (what rm picks from), deleted one after another so you see it go
 const deckRfIce = lv => lv.tiles.filter(t => t.state === 'closed' && !isReal(t) && !t.loaded);
 async function deckRmRf(lv) {

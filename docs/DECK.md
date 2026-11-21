@@ -634,7 +634,7 @@ yet when you'd scan). `kill` takes `-9` so it can't go off by accident.
 **Built v15.03:** `mode.god` GD1, `mode.hold` HD4, `show.real` RL2, `breach` BR3, `give.mod` GM1 (player versions;
 dev mode keeps the dev ones: docs/SHELL.md). **Built v15.06:** `mode.free` FT3 (epic, 3), `corp.jump` JM4 (legendary,
 4), `rm -rf` RF4 (legendary, 4), `chmod` CM3 (epic, 3); they drop like the other chips (by rarity: no corp drops yet).
-**Waiting on Greg:** `fork`. A SUDO chip gives exactly one use of its own command in charges (Greg:
+**Built v15.07:** `fork` FK2 (legendary, 4). A SUDO chip gives exactly one use of its own command in charges (Greg:
 "a powerful command but it only provides one use"): god 4, hold 3, real 2, breach 4, give 4 (v15.04); flatline went 1 -> 3.
 - **`mode.god`:** no damage for a sector, then it wears off.
 - **`run.seed`:** pick the seed of your next run.
@@ -652,8 +652,11 @@ dev mode keeps the dev ones: docs/SHELL.md). **Built v15.06:** `mode.free` FT3 (
   - **`breach`:** win this layer outright, once a run.
   - **`corp.jump`** (built v15.06): skip to this corp's boss, from one of its layers.
   - **`rm -rf`** (built v15.06): every ICE on this layer is gone, one after another. Not on a sector boss (like NUKE). HALFLIFE NUCLEAR.
-  - **`fork`:** copy a mod you own for the rest of the corp. CLONEWORKS. **Open:** a run holds one of each mod, so a
-    copy has nothing to add. What should it do? (Not built.)
+  - **`fork`** (built v15.07; **Decided (Greg, 2026-11-21):** "build the fork like quantum"): the real node forks. Every
+    layer of this corp (3+ nodes) has a second real node, wearing the real one's glyph so the tell finds it too, and the
+    pay stays whole. With QUANTUM it's QUANTUM's node, and QUANTUM's pay cut is off for the corp. Not in tap corps.
+    CLONEWORKS. Dropped: copying a mod (a run holds one of each), doubling a mod, a free slot (Greg: temporary slots
+    are weird). Later, maybe: a duplicate cursor (your tap opens two nodes; b0y's split cursor).
   - **`chmod <mod>`** (built v15.06): a mod goes up a rarity till the sector ends, once a sector. Not BUFFER, BOX OF
     WIRES or MUTATE (their step changes more than numbers). (CHMOD was a gear name with no effect yet, section 1.)
 
