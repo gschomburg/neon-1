@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.14']);
+NEON_FILES.push(['engine/menus.js', 'v15.15']);
 
 // ---------------- Settings ----------------
 function openSettings() {

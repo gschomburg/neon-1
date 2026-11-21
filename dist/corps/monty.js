@@ -1,6 +1,6 @@
 // NeoN+1 corps/monty.js
 'use strict';
-NEON_FILES.push(['corps/monty.js', 'v15.14']);
+NEON_FILES.push(['corps/monty.js', 'v15.15']);
 // Its boss prize: the C.A.R. (car) for a clean boss layer, or the zonk, a GOAT (goat), if you hit ICE there (Greg,
 // 2026-11-07). Both are in data/mods.js (at the end of MODS); their effects: engine/active.js, engine/run.js.
 // Design: docs/CORPS.md A32 (Greg, 2026-11-07).
@@ -61,6 +61,7 @@ MUSIC_FOR.monty = 'velvetrope';   // VELVET ROPE (in data/music.js): a game show
 // stays or switches (the normal pick).
 CORPS.monty = {
   key: 'monty', name: 'MONTY', code: 'MY', level: 3, doors: true,
+  nodes: 2,   // two more doors a layer (Greg, 2026-11-21: "at least 2 more nodes per layer")
   intel: '"let\'s make a deal."',
   tell: null,
   bossDesc: 'boss: he swaps the doors while you think.',
@@ -89,4 +90,5 @@ CORPS.monty = {
 };
 
 // the codex, once you've beaten it
-CORP_TELL.monty = "1. pick a door: it doesn't open. 2. MONTY opens every other door but one. 3. listen to him. when your door is the real one, he tries to talk you off it ('are you SURE?'); when it isn't, he's relaxed ('your call.'). deeper, he says the same things, but a question when you're right and a plain statement when you're wrong. he doesn't always tell the truth. 4. stay or switch. boss: the numbers go and he swaps the two doors around: keep your eye on yours.";
+// (short: it shows on the first breach screen, under the logo. Greg, 2026-11-21: the long one pushed the button off)
+CORP_TELL.monty = "pick a door; he opens all but one. if he pushes you to switch ('are you SURE?'), yours is real. deeper: a question means you're right. he lies sometimes. boss: he swaps the two doors. watch yours.";

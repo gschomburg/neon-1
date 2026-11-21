@@ -14,6 +14,12 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The bugs in your meat notes** (v15.15).
+  - **MONTY:** 2 more doors a layer. Its tell is shorter (it pushed the button off the first breach screen). The first breach screen now folds the logo away whenever the tell wouldn't fit with it (FOSSIL's would have too).
+  - **The PIER:** the LANDED card's buttons wake up 1 second after it lands (grey till then).
+  - **The bench's small slot:** the digit, a BLANK or ROOT's t show 2x2 big now, just the 3 (the label says x3 50%).
+  - **SIGIL's little "."**: I couldn't find it. The signature code hasn't changed since v12, and a SIGIL board looks the same on v15.00 and now. Which tier, and where on the glyph was it? A screenshot would help.
+  - **BACK / LEAVE:** a survey and a proposal are in BACKLOG Polish. JACK IN THE BOX's length is noted there too.
 - [ ] **The workbench, round 2** (v15.13).
   - **Cash out with a chip you already have:** it shreds into letters (and maybe a BLANK). The YOUR DECK card lists "had already, shredded:" and what came out. No more x2 in your deck.
   - **POPS's two new calls** (rough, see where they land): the first BLANK you get, and the first blueprint you learn.

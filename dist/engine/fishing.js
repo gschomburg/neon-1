@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v15.14']);
+NEON_FILES.push(['engine/fishing.js', 'v15.15']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -247,6 +247,7 @@ function fishKeep() {
 function fishThrowBack() { const f = st.fish; if (!f || !f.card) return; f.card = null; Sound.tick(); setMsg('> back in the stream.', C.mid); }
 
 // ---------------- Drawing (engine/scene.js, the board area) ----------------
+const FISH_CARD_WAIT = 1000;   // ms before the LANDED card's buttons take a tap
 function buildFish(ctx) {
   const { now, put, bg, addHit } = ctx, f = st.fish;
   if (!f) return;
@@ -348,9 +349,11 @@ function buildFish(ctx) {
     const room = itemRoom(fishKeepKey(out), out.tier);
     const kx = x0 + 2, tx = x0 + w - 16;
     if (!room) put(kx, y0 + 9, 'slots full: drag gear to the trash', C.dangerDim, 'hud');
-    bg(kx, y0 + 10, 8, room ? C.accent : C.dim, 1); put(kx, y0 + 10, '[ KEEP ]', C.bg, 'hud', true);
-    if (room) addHit(kx, y0 + 10, 8, 1, { kind: 'btn', id: 'fkeep', onTap: fishKeep });
-    bg(tx, y0 + 10, 14, C.danger, 1); put(tx, y0 + 10, '[ THROW BACK ]', C.bg, 'hud', true);
-    addHit(tx, y0 + 10, 14, 1, { kind: 'btn', id: 'fback', onTap: fishThrowBack });
+    // the buttons wake up a beat after the card lands (Greg, 2026-11-21: the taps that caught the fish kept throwing it back)
+    const live = now - f.card.t0 >= FISH_CARD_WAIT;
+    bg(kx, y0 + 10, 8, room && live ? C.accent : C.dim, 1); put(kx, y0 + 10, '[ KEEP ]', C.bg, 'hud', true);
+    if (room && live) addHit(kx, y0 + 10, 8, 1, { kind: 'btn', id: 'fkeep', onTap: fishKeep });
+    bg(tx, y0 + 10, 14, live ? C.danger : C.dim, 1); put(tx, y0 + 10, '[ THROW BACK ]', C.bg, 'hud', true);
+    if (live) addHit(tx, y0 + 10, 14, 1, { kind: 'btn', id: 'fback', onTap: fishThrowBack });
   }
 }

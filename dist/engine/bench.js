@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.14']);
+NEON_FILES.push(['engine/bench.js', 'v15.15']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -505,17 +505,18 @@ const hh = (a, b = 0) => ((((a * 2 + 1) * 374761393) ^ ((b * 2 + 1) * 668265263)
 // t0: when it went in: the pieces blink on like old bulbs (one lags, flickering; a cell's colors glitch).
 // miss: a letter you don't have (BOOK). ox, oy, a: an offset / fade for the whole block (the build).
 // chip: its colors ({ fg, bg }), when it isn't a component (the leaderboard's initials: engine/leaders.js).
-function benchBlock(ctx, x, y, ch, { t0 = 0, miss = false, ox = 0, oy = 0, a = 1, seed = 0, chip: chipIn = null } = {}) {
+// size: 3 (a letter slot, 3x3) or 2 (the extra slot after the letters, 2x2: Greg, 2026-11-21)
+function benchBlock(ctx, x, y, ch, { t0 = 0, miss = false, ox = 0, oy = 0, a = 1, seed = 0, chip: chipIn = null, size = 3 } = {}) {
   const now = ctx.now, chip = chipIn || (miss ? BENCH_MISS : letterChip(ch));
   const age = t0 ? now - t0 : 1e9, lag = Math.floor(hh(seed + 3, Math.floor(t0) % 97) * 9);
-  for (let p = 0; p < 9; p++) {
-    const px = p % 3, py = Math.floor(p / 3);
+  for (let p = 0; p < size * size; p++) {
+    const px = p % size, py = Math.floor(p / size);
     let on = age > hh(p, seed) * 110, inv = false;
     if (p === lag && age < 420) on = age > 60 && (Math.floor(age / 55) % 3 !== 1) && !(age > 200 && age < 250);   // the lagging bulb
     if (age < 260 && hh(p + 11, Math.floor(age / 40)) < 0.12) inv = true;   // a cell's colors glitch
     if (!on) continue;
     const pa = (miss ? 0.5 : 1) * a;
-    ctx.cells.push({ ch, cx: x + px + ox, cy: y + py + oy, col: inv ? chip.bg : chip.fg, own: 'board', bold: true, piece: { ch, px, py, bg: inv ? chip.fg : chip.bg, a: pa } });
+    ctx.cells.push({ ch, cx: x + px + ox, cy: y + py + oy, col: inv ? chip.bg : chip.fg, own: 'board', bold: true, piece: { ch, px, py, n: size, bg: inv ? chip.fg : chip.bg, a: pa } });
   }
 }
 // A letter taken out: it blinks off (a quick flicker, no falling).
@@ -636,7 +637,7 @@ function benchBuildLines(T, B, X) {
     if (rm) {
       // ROOT's word: its 4th letter goes in the extra slot (Greg, 2026-11-21: "just make it work for the t")
       const bx = BENCH_BLANK_X;
-      if (d) { ctx.bg(bx, sy + 1, 2, C.rep, 1); ctx.bg(bx, sy + 2, 2, C.rep, 1); put(bx, sy + 1, d, C.bg, 'board', true); }
+      if (d) benchBlock(ctx, bx, sy + 1, d, { t0: b.slotT[3], seed: 3, size: 2 });
       else { put(bx, sy + 1, '::', C.rep, 'board'); put(bx, sy + 2, cur < 0 && blink ? '__' : '::', C.rep, 'board', cur < 0 && blink); }
       put(bx, sy + 3, 'ROOT', C.rep, 'board');
       ctx.addHit(bx, sy + 1, 2, 2, { kind: 'benchslot', slot: 3 });
@@ -645,8 +646,8 @@ function benchBuildLines(T, B, X) {
       // takes a digit 2-9 (x: a chance of that many, gear) or a BLANK (the slots spell a chip). Inside, the digit is
       // slot 3 and the BLANK slot 4: the two never sit in it together (benchPlace).
       const bx = BENCH_BLANK_X, cm = !a && isBlank(b.slots[4]), bc = chipOf(letterTier(BENCH_BLANK)), dc = chipOf('legendary');
-      if (!a && cm) { ctx.bg(bx, sy + 1, 2, bc.bg, 1); ctx.bg(bx, sy + 2, 2, bc.bg, 1); put(bx, sy + 1, '[]', bc.fg, 'board', true); put(bx, sy + 2, '[]', bc.fg, 'board', true); }
-      else if (!a && d) { ctx.bg(bx, sy + 1, 2, dc.bg, 1); ctx.bg(bx, sy + 2, 2, dc.bg, 1); put(bx, sy + 1, 'x' + d, dc.fg, 'board', true); }
+      if (!a && cm) benchBlock(ctx, bx, sy + 1, BENCH_BLANK, { t0: b.slotT[4], seed: 4, size: 2 });
+      else if (!a && d) benchBlock(ctx, bx, sy + 1, d, { t0: b.slotT[3], seed: 3, size: 2 });   // (just the digit: the label under it says x3)
       else if (!a) { put(bx, sy + 1, '::', C.dim, 'board'); put(bx, sy + 2, '::', C.dim, 'board'); }
       if (!a) { const lab = cm ? 'BLANK' : d ? `x${d} ${Math.round(BENCH.multi * 100)}%` : 'x2-9 BLANK'; put(bx, sy + 3, lab, cm ? bc.bg : d ? dc.bg : C.dim, 'board', cm || !!d); }
       ctx.addHit(bx, sy + 1, 2, 2, { kind: 'benchslot', slot: cm ? 4 : 3 });
@@ -1053,8 +1054,9 @@ function drawPiece(c) {
   g.globalAlpha = p.a == null ? 1 : p.a;
   g.beginPath(); g.rect(x, y, L.cw + 0.6, L.chh + 0.6); g.clip();
   g.fillStyle = p.bg; g.fillRect(x, y, L.cw + 0.6, L.chh + 0.6);
-  g.fillStyle = c.col; g.font = `${DRAW_FONT.bold} ${L.fs * 2.7}px ${DRAW_FONT.family}`;
-  g.fillText(p.ch, x + (1.5 - p.px) * L.cw, y + (1.55 - p.py) * L.chh);
+  const n = p.n || 3;   // (a 3x3 letter, or the extra slot's 2x2)
+  g.fillStyle = c.col; g.font = `${DRAW_FONT.bold} ${L.fs * 2.7 * n / 3}px ${DRAW_FONT.family}`;
+  g.fillText(p.ch, x + (n / 2 - p.px) * L.cw, y + (n / 2 + 0.05 - p.py) * L.chh);
   g.restore();
 }
 

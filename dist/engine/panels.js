@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.14']);
+NEON_FILES.push(['engine/panels.js', 'v15.15']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -148,6 +148,9 @@ const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.e
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
 // What a market pays for one of a gear stack: value gear (DUDS ... WALLET) its worth, the rest a share of its price.
+// The first breach screen: the rows under its logo and tell (logged in your codex, a gap, the 4-row box, a spare). The
+// logo only shows if it fits in what's left (L.hc), so the button never goes off the bottom.
+const FIRST_BREACH_REST = 7;
 function gearValue(key, tier = 0) {
   if (key === 'bond') return earnInt(ECON.gear.bond) * ((st.run && st.run.sector || 0) + 1);
   if (ITEMS[key].fish) return fishWorth(key);   // a fish (ECON.fish, by rarity)
@@ -441,10 +444,10 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
       T('');
       X({ text: 'F I R S T   B R E A C H', col: C.money, bold: true, onShow: fanfare });
       T('');
-      const aw = Math.max(0, ...first.art.map(l => l.length));
-      for (const l of first.art) T(l.padEnd(aw), C.accent);
-      T('');
-      for (const l of wrapText('tell: ' + first.tell, 34)) T(l, C.accent);
+      // a long tell: the logo folds away, so the tell and the button still fit (Greg, 2026-11-21: MONTY's pushed it off)
+      const tl = wrapText('tell: ' + first.tell, 34), aw = Math.max(0, ...first.art.map(l => l.length));
+      if (tl.length + first.art.length + 1 <= L.hc - lines.length - FIRST_BREACH_REST) { for (const l of first.art) T(l.padEnd(aw), C.accent); T(''); }
+      for (const l of tl) T(l, C.accent);
       T('logged in your codex.', C.dim);
       T('');
       X({ box: true, text: 'S E E   T H E   C O R E', sub: '- your rewards -', id: 'core', onTap: toCore, minW: 30 });

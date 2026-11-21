@@ -437,6 +437,18 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   are built: POPS's is TRACER.)
 
 ## Polish (the user, 2026-10-29: the finishing passes)
+- **BACK / LEAVE / CLOSE, made consistent** (meat notes 2026-11-21: "we're kind of inconsistent with back and leave
+  buttons. both in the titles and their positioning"). Today:
+  - **[LEAVE] top right, in the header:** the WORKBENCH, YOUR DECK, a race (MP).
+  - **[ LEAVE ] at the bottom:** a market, THE FENCE, the PIER (bottom right), the MP lobby and results.
+  - **[ BACK ] at the bottom:** the codex, the help, the leaderboard, settings, run history, THE BOARD, the MP join
+    screen, the end screen (HAD3S).
+  - **[ CLOSE ]:** the FEAT box, the LOOT bag. **[ JACK OUT ]:** a market that's HEAD FIRST's exit.
+  - Claude's proposal: LEAVE = leave a place in a run (back to the map); BACK = up a menu (to the title, or the screen
+    before); CLOSE = an overlay over what you were doing. And one spot for each: full screens with a header (the bench,
+    the deck) put it top right; everything else at the bottom. Greg's call.
+- **The longest item name** (meat notes 2026-11-21): JACK IN THE BOX on the rewards screen (and the market) runs right
+  up to its LEGENDARY. "probably fine for now", but it's the longest a name can be there without cropping or scrolling.
 - **Phone battery** (meat notes 2026-11-15): the game drains Greg's older phone fast. Look for savings: draw only
   when something changed, a lower frame rate when the screen is still, pause it all in a hidden tab, lighter effects.
 - **Boss intro pass** (the user, 2026-10-29: "it's all working for now", but the whole boss intro could use a little more): the corp's logo on it, and more.
