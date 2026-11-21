@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.03']);
+NEON_FILES.push(['engine/deck.js', 'v15.04']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -71,7 +71,8 @@ const DECK_CHIPS = {
   HD4: ['mode.hold', 'sudo', 'epic', 2, "THE SHELL learns mode.hold: the layer clocks stop for the rest of this corp. (` opens THE SHELL.)", ['|| ', 'HLD'], 'mode.hold: no clocks, a corp.'],
   RL2: ['show.real', 'sudo', 'epic', 2, 'THE SHELL learns show.real: the real node is marked on this layer. once a corp. (` opens THE SHELL.)', ['[*]', 'RL!'], 'show.real: mark the real node.'],
   BR3: ['breach', 'sudo', 'legendary', 3, 'THE SHELL learns breach: you win this layer outright, full pay. once a run. (` opens THE SHELL.)', ['>>>', 'BRC'], 'breach: win a layer.'],
-  GM1: ['give.mod', 'sudo', 'epic', 2, 'THE SHELL learns give.mod: pick one of 3 mods, right now. once a run. (` opens THE SHELL.)', ['+M ', '1/3'], 'give.mod: pick 1 of 3 mods.'],
+  GM1: ['give.mod', 'sudo', 'epic', 2, 'THE SHELL learns give.mod: name a mod you have found and it is yours. epic and up: only ones you have shredded. once a sector. (` opens THE SHELL.)', ['+M ', 'GVE'], 'give.mod: name a mod.'],
+  GG1: ['give.gear', 'sudo', 'epic', 2, 'THE SHELL learns give.gear: name gear you have found and it is on your belt. epic and up: only what you have shredded. once a sector. (` opens THE SHELL.)', ['+G ', 'GVE'], 'give.gear: name your gear.'],
   // BOSS (mk IV): big chips from the big bosses
   OMNI: ["OMNI'S EYE", 'boss', 'exotic', 3, "every corp's card on the map shows its tell.", ['<(@)>', 'OMNI '], 'every corp shows its tell.'],
   // HEAT (mk IV): harder runs, more REP
@@ -144,7 +145,7 @@ const DECK_CHIP_TAGS = {
   TF1: ['you'], LD3: ['you'], BM4: ['you'], FI2: ['you'], QT0: ['map'], DM5: ['you'], BB7: ['you'], SP3: ['rules'],
   SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'], FM2: ['you', 'rules'], SK1: ['you'],
   WH0: ['you'], MN1: ['you'], CA4: ['you'], RK1: ['you'], PS4: ['you'], FL3: ['you'], CD2: ['you'], SN5: ['you'], RM1: ['you'], KL9: ['you'], CT1: ['you'], ZZ3: ['you'], WI5: ['you'], UD2: ['you'],
-  GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
+  GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], GG1: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
   PL3: ['you'], BP1: ['you'], JD6: ['you'], PD7: ['you'], RG6: ['you'], KN8: ['you'], CL3: ['you'], HS1: ['map'],
   LU6: ['map', 'rules'], FR5: ['map'], EV2: ['map'], AD0: ['map'], SR4: ['map'], PP2: ['map'], AL4: ['you'], CS7: ['map'], CK9: ['map'], DK6: ['map'],
   CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'],
@@ -466,7 +467,7 @@ const deckSpoils = run => chipOn('OF1', run) ? 3 : chipOn('PT1', run) ? 4 : chip
 // refill back). More from a corp boss's CHARGE pick (gear: +2), and ROOTKIT (CRASH) burns them all to save you.
 const SHELL_REFILL = 'sector';
 const DECK_CHARGES = { WH0: 3, PS4: 2, MN1: 2, CA4: 4, FL3: 3,   // (FL3 was 1: v15.03, a SUDO chip gives one use of its own command)
-  CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 3 };
+  CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 4, GG1: 4 };   // (GM1, GG1: they cost by rarity, DECK_GIVE_COST: 4 reaches a legendary)
 const SHELL_CHARGE = { pack: 2, boss: 0.35 };   // a CHARGE gives 2; a corp boss offers one 35% of the time (with charges to fill)
 for (const [k, n] of Object.entries(DECK_CHARGES)) if (DECK_CHIPS[k]) { DECK_CHIPS[k][4] += ` +${n} shell charges.`; DECK_CHIPS[k][6] += ` +${n} charges.`; }
 function deckCharges(run) { run.chargeMax = (run.chips || []).reduce((a, k) => a + (DECK_CHARGES[k] || 0), 0); run.charges = run.chargeMax; }
@@ -601,11 +602,59 @@ function deckCatCache(node) {
   out.push('  pick: ' + opts.map(o => o.kind === 'gear' ? ITEMS[o.key].name : MODS[o.key].name + (o.tier ? ` (tier ${o.tier + 1})` : '')).join(' or '));
   return out;
 }
-// give.mod (the SUDO chip): its 3 mods, rolled once a run and kept till you take one
-function deckGiveOffer() {
-  const run = st.run;
-  if (!run || run.giveUsed) return [];
-  return run.giveOffer = run.giveOffer || pickMods(rngFor(run.seed, 'givemod'), modsFound('gen', 'minor'), 3);
+// give.mod / give.gear (the SUDO chips GM1, GG1; Greg, 2026-11-20): you name it. Common and rare: anything you've found
+// (save.seen). Epic and up: only what you've shredded at a workbench at that rarity or higher (save.shredded, its top
+// tier: engine/bench.js benchShred). It costs charges by its rarity (DECK_GIVE_COST), once a sector each.
+const DECK_GIVE_COST = { scrap: 1, common: 1, rare: 2, epic: 3, legendary: 4, exotic: 5 };
+const deckGiveDef = (kind, k) => kind === 'mod' ? MODS[k] : ITEMS[k];
+const deckGiveable = (kind, k) => { const d = deckGiveDef(kind, k); return !!d && (kind === 'mod' ? !d.hidden : !isLoot(k) && !d.chip && !d.corrupt && !d.fish); };
+// The tiers of it you may summon (indexes into its tiers; none: you can't)
+function deckGiveTiers(kind, k) {
+  if (!deckGiveable(kind, k) || !save.seen[k]) return [];
+  const def = deckGiveDef(kind, k), sh = (save.shredded || {})[k], out = [];
+  for (let t = 0; t < tierCount(def); t++) {
+    const r = RARITY[tierView(def, t).rarity] || RARITY.common;
+    if (!r.hidden && (r.lvl <= RARITY.rare.lvl || (sh != null && sh >= t))) out.push(t);
+  }
+  return out;
+}
+const deckGiveLabel = (kind, k, t) => tierLabel(tierView(deckGiveDef(kind, k), t)).toLowerCase();
+const deckGiveList = kind => Object.keys(kind === 'mod' ? MODS : ITEMS).filter(k => deckGiveTiers(kind, k).length)
+  .map(k => ({ v: k, hint: deckGiveTiers(kind, k).map(t => deckGiveLabel(kind, k, t)).join(' ') }));
+// The tier as typed: 2 (its step), lv2, or a rarity (epic); none: the lowest you may summon
+function deckGiveTier(kind, k, raw) {
+  const def = deckGiveDef(kind, k), n = tierCount(def), ok = deckGiveTiers(kind, k);
+  if (raw == null || raw === '') return ok[0];
+  const s = String(raw).toLowerCase().replace(/^lv/, ''), want = s === 'legend' ? 'legendary' : s;
+  const t = /^\d+$/.test(s) ? Number(s) - 1 : [...Array(n).keys()].find(i => tierView(def, i).rarity === want);
+  if (t == null || t < 0 || t >= n) throw new Error(`${def.name} has no ${raw} (it comes in: ${[...Array(n).keys()].map(i => deckGiveLabel(kind, k, i)).join(' ')}).`);
+  if (!ok.includes(t)) throw new Error(`${def.name} ${deckGiveLabel(kind, k, t)}: shred one at a workbench first.`);
+  return t;
+}
+const DECK_GIVE_TIER_ARG = { name: 'tier', of: () => ['common', 'rare', 'epic', 'legendary', 'legend', 'exotic', 'lv1', 'lv2', 'lv3', '1', '2', '3', '4'].map(v => ({ v, hint: /^[0-9]/.test(v) ? 'tier ' + v : '' })), opt: true };
+const deckGiveCost = (kind, k, t) => DECK_GIVE_COST[tierView(deckGiveDef(kind, k), t).rarity] || 1;
+// What a give costs, read off the line before it runs (engine/shell.js shellRun asks a command's .costOf)
+function deckGiveCostOf(kind, a) { try { if (!a[0]) return 0; const t = deckGiveTier(kind, a[0], a[1]); return t == null ? 0 : deckGiveCost(kind, a[0], t); } catch (e) { return 0; } }
+function deckGive(kind, a) {
+  const run = shellNeedRun(), tag = kind === 'mod' ? 'give.mod' : 'give.gear', used = kind === 'mod' ? 'giveModAt' : 'giveGearAt';
+  if (run[used] === run.sector) throw new Error('used: once a sector.');
+  if (!a[0]) {
+    const list = deckGiveList(kind);
+    return { out: list.length ? `${tag} <${kind}> [tier]. yours to name:\n` + list.map(o => `  ${o.v.padEnd(12)} ${o.hint}`).join('\n')
+      : `nothing yet: find some ${kind === 'mod' ? 'mods' : 'gear'} first.`, free: true };
+  }
+  const k = a[0], def = deckGiveDef(kind, k);
+  if (!deckGiveable(kind, k)) throw new Error(`${def.name} can't be given.`);
+  if (!save.seen[k]) throw new Error(`you haven't found ${def.name} yet.`);
+  const t = deckGiveTier(kind, k, a[1]);
+  if (kind === 'mod') {
+    if (has(k) && modMaxed(k)) throw new Error(`your ${def.name} is maxed already.`);
+    if (!has(k) && clashWith(k)) throw new Error(`${def.name} clashes with a mod you have.`);
+    if (!has(k) && !modRoom(k)) throw new Error('no free slot for it.');
+    addMod(k, t);
+  } else if (!itemRoom(k, t) || !addItem(k, t)) throw new Error('no room on the belt.');
+  run[used] = run.sector; run.hacked = true; Sound.buy();
+  return `${tag}: ${def.name}, ${deckGiveLabel(kind, k, t)}.`;
 }
 // The player versions of dev commands (Greg, 2026-11-20: one command list; dev mode gets the dev version). engine/shell.js
 // puts each on its command as .play: without dev mode, THE SHELL runs this (its chip, cost, args, help) in its place.
@@ -633,17 +682,10 @@ const DECK_SHELL_PLAY = {
     run.sudoBreach = true; run.hacked = true; shellClose();
     setTimeout(() => { if (st.lv === lv && !st.busy) { setMsg('> breach. you are in.', C.accent); st.busy = true; onSafe(lv.tiles[lv.safe]); } }, 250);
     return 'breach: you are in.'; } },
-  'give.mod': { chip: 'GM1', safe: true, cost: 3, args: [{ name: 'mod', of: () => deckGiveOffer().map(o => ({ v: o.key, hint: MODS[o.key].name })), opt: true }],
-    help: 'pick one of 3 mods (once a run): give.mod lists them, give.mod <mod> takes one', run: a => {
-      const run = shellNeedRun();
-      if (run.giveUsed) throw new Error('used: once a run.');
-      const offer = deckGiveOffer();
-      if (!offer.length) throw new Error('nothing to give.');
-      if (!a[0]) return { out: 'pick one: give.mod <mod>\n' + offer.map(o => `  ${o.key.padEnd(12)} ${MODS[o.key].name}${o.tier ? ` (tier ${o.tier + 1})` : ''}`).join('\n'), free: true };
-      const o = offer.find(x => x.key === a[0]);
-      if (!has(o.key) && !modRoom(o.key)) throw new Error('no free slot for it.');
-      addMod(o.key, o.tier); run.giveUsed = true; run.hacked = true; Sound.buy();
-      return `give.mod: ${MODS[o.key].name}.`; } },
+  'give.mod': { chip: 'GM1', safe: true, cost: 1, costOf: a => deckGiveCostOf('mod', a), args: [{ name: 'mod', of: () => deckGiveList('mod'), any: 'mods', opt: true }, DECK_GIVE_TIER_ARG],
+    help: 'name a mod you have found (epic+: shredded). 1-5 charges by rarity, once a sector', run: a => deckGive('mod', a) },
+  'give.gear': { chip: 'GG1', safe: true, cost: 1, costOf: a => deckGiveCostOf('gear', a), args: [{ name: 'gear', of: () => deckGiveList('gear'), any: 'gear', opt: true }, DECK_GIVE_TIER_ARG],
+    help: 'name gear you have found (epic+: shredded). 1-5 charges by rarity, once a sector', run: a => deckGive('gear', a) },
 };
 
 // ---------- testing: the editor's TESTING tab (engine/editor.js TEST) and THE SHELL's deck commands (engine/shell.js)

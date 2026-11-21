@@ -11,9 +11,9 @@ module.exports = { name: 'sudo', body: `
   if (st.evCard) closeEventCard();
   const run = st.run;
   save.legacy = save.legacy || {}; save.legacy.crew_root = 1; save.shellHi = true;
-  const CHIPS = ['CD2', 'SN5', 'RM1', 'KL9', 'CT1', 'ZZ3', 'WI5', 'UD2', 'GD1', 'HD4', 'RL2', 'BR3', 'GM1'];
+  const CHIPS = ['CD2', 'SN5', 'RM1', 'KL9', 'CT1', 'ZZ3', 'WI5', 'UD2', 'GD1', 'HD4', 'RL2', 'BR3', 'GM1', 'GG1'];
   run.chips = CHIPS.slice(); deckCharges(run);
-  check(run.chargeMax === 2 + 3 + 2 + 2 + 3 + 2 + 1 + 1 + 4 + 3 + 2 + 4 + 3, 'the new chips give their charges: ' + run.chargeMax);
+  check(run.chargeMax === 2 + 3 + 2 + 2 + 3 + 2 + 1 + 1 + 4 + 3 + 2 + 4 + 4 + 4, 'the new chips give their charges: ' + run.chargeMax);
   run.chargeMax = run.charges = 99;
   shellOpen();
 
@@ -58,15 +58,41 @@ module.exports = { name: 'sudo', body: `
   check(run.backAim && backTargets().length && backTargets().every(n => availableNodes().includes(n.id)), 'cd ..: the row back is open: ' + out());
   run.backAim = false; run.at = at0;
 
-  // give.mod: the list is free, the pick costs 3, once a run
+  // give.mod / give.gear: name it. Found: common and rare; epic and up only once you've shredded one. Cost by rarity,
+  // once a sector each.
+  const tierOf = (def, r) => (def.tiers || []).findIndex(x => x.rarity === r);
+  const mk = Object.keys(MODS).find(k => deckGiveable('mod', k) && !has(k) && !clashWith(k) && tierOf(MODS[k], 'rare') >= 0 && tierOf(MODS[k], 'epic') >= 0);
+  const seen0 = save.seen[mk], sh0 = save.shredded; save.seen[mk] = false; save.shredded = {};
   const c0 = run.charges;
+  await shellRun('give.mod ' + mk);
+  check(/haven't found/.test(out()) && run.charges === c0, 'give.mod, never found: no, nothing spent: ' + out());
+  save.seen[mk] = true;
   await shellRun('give.mod');
-  const offer = deckGiveOffer();
-  check(offer.length === 3 && run.charges === c0 && offer.every(o => all().includes(o.key)), 'give.mod: 3 mods, nothing spent: ' + offer.map(o => o.key).join(' '));
-  await shellRun('give.mod ' + offer[0].key);
-  check(has(offer[0].key) && run.giveUsed && run.charges === c0 - 3, 'give.mod <mod>: it is yours, 3 spent');
-  await shellRun('give.mod');
-  check(/once a run/.test(out()) && run.charges === c0 - 3, 'give.mod again: once a run');
+  check(all().includes(mk) && run.charges === c0, 'give.mod alone: what you can name, free');
+  await shellRun('give.mod ' + mk + ' epic');
+  check(/shred one/.test(out()) && !has(mk) && run.charges === c0, 'epic, never shredded: no: ' + out());
+  save.shredded[mk] = tierOf(MODS[mk], 'epic');
+  await shellRun('give.mod ' + mk + ' epic');
+  check(has(mk) && modTier(mk) === tierOf(MODS[mk], 'epic') && run.charges === c0 - 3, 'epic, shredded: yours, 3 spent: ' + out() + ' ' + run.charges);
+  await shellRun('give.mod ' + mk);
+  check(/once a sector/.test(out()) && run.charges === c0 - 3, 'give.mod again: once a sector');
+  run.giveModAt = null; removeMod(mk);
+  await shellRun('give.mod ' + mk + ' ' + (tierOf(MODS[mk], 'rare') + 1));
+  check(modTier(mk) === tierOf(MODS[mk], 'rare') && run.charges === c0 - 5, 'a tier by number (rare): 2 spent: ' + out());
+  removeMod(mk); save.seen[mk] = seen0;
+  const gk = Object.keys(ITEMS).find(k => deckGiveable('gear', k) && itemView(k, 0).rarity === 'common');
+  save.seen[gk] = true;
+  const c2 = run.charges, belt = run.items.length;
+  await shellRun('give.gear ' + gk);
+  check(run.items.some(s => s.key === gk) && run.charges === c2 - 1 && run.giveGearAt === run.sector, 'give.gear: on your belt, a common is 1: ' + out());
+  run.items.splice(belt); save.shredded = sh0;
+  // the shred keeps the top tier of each thing (engine/bench.js benchShred)
+  { const bk = st.bench, mods = run.mods.slice(); st.bench = { anim: null, shredAnim: null }; save.shredded = {};
+    addMod(mk, 1); benchShred({ kind: 'mod', key: mk, tier: 1, n: 1 });
+    check(save.shredded[mk] === 1 && !has(mk), 'a shred keeps its tier: ' + JSON.stringify(save.shredded));
+    st.bench.shredAnim = null; addMod(mk, 0); benchShred({ kind: 'mod', key: mk, tier: 0, n: 1 });
+    check(save.shredded[mk] === 1 && !has(mk), 'a lower one keeps the top');
+    st.bench = bk; save.shredded = sh0; }
   check(!run.practice, 'none of it made the run practice');
 
   // ---- in a corp

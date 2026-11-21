@@ -633,11 +633,16 @@ yet when you'd scan). `kill` takes `-9` so it can't go off by accident.
 ### SUDO (3, mk IV): the strong commands
 **Built v15.03:** `mode.god` GD1, `mode.hold` HD4, `show.real` RL2, `breach` BR3, `give.mod` GM1 (player versions;
 dev mode keeps the dev ones: docs/SHELL.md). A SUDO chip gives exactly one use of its own command in charges (Greg:
-"a powerful command but it only provides one use"): god 4, hold 3, real 2, breach 4, give 3; flatline went 1 -> 3.
+"a powerful command but it only provides one use"): god 4, hold 3, real 2, breach 4, give 4 (v15.04); flatline went 1 -> 3.
 - **`mode.god`:** no damage for a sector, then it wears off.
 - **`run.seed`:** pick the seed of your next run.
 - **`flatline`:** a rival in this corp drops dead.
-- **`give.mod`:** pick one of 3 mods, once a run.
+- **`give.mod <mod> [tier]` GM1, `give.gear <gear> [tier]` GG1** (v15.04; **Decided (Greg, 2026-11-20):** you name it, no
+  1-of-3). Common and rare: anything you've found (the codex). Epic and up: only what you've shredded at a workbench at
+  that rarity or higher (save.shredded keeps the top tier of each). Charges by rarity: common 1, rare 2, epic 3, legend
+  4, exotic 5. Once a sector each. The tier is a number (`tracer 2`), `lv2`, or a rarity (`tracer epic`); none: the
+  lowest you may summon. The chips give 4 charges (a legendary; an exotic needs a CAPACITOR). Alone it lists yours, free.
+  Dropped: pick 1 of 3, once a run (v15.03), because Greg wanted to name it.
 - More (the dev commands, earned for real; Greg: the strong ones he was after):
   - **`mode.free`:** free travel on the map for a sector.
   - **`mode.hold`:** the layer clocks stop for a corp.

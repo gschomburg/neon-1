@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.03']);
+NEON_FILES.push(['engine/bench.js', 'v15.04']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -308,6 +308,7 @@ function benchShred(e) {
   if (!cor && Math.random() < BENCH.bonus) got.push(benchBonusLetter());
   if (!cor && Math.random() < (BENCH.wild[v.rarity] || 0)) got.push('*');
   if (!cor && Math.random() < (BENCH.digit[v.rarity] || 0)) got.push(benchDigit());
+  if (!cor) { const sh = save.shredded || (save.shredded = {}); sh[e.key] = Math.max(sh[e.key] == null ? -1 : sh[e.key], e.tier || 0); }   // its top tier: give.mod / give.gear's epic+ (engine/deck.js deckGiveTiers)
   if (e.kind === 'mod') removeMod(e.key);
   else if (--e.stack.n <= 0) e.list.splice(e.list.indexOf(e.stack), 1);
   benchAdd(got);

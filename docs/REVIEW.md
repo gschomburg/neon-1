@@ -14,6 +14,10 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **`give.mod` / `give.gear` by name** (v15.04; docs/DECK.md SUDO). `give.mod tracer epic`, `give.gear frag 2`.
+  Common and rare: anything you've found. Epic and up: only what you've shredded at that rarity or higher (shredding
+  starts counting now: older shreds weren't kept). My calls: charges by rarity (1/2/3/4/5), once a sector each (it was
+  once a run), the chips give 4. `give.gear` is a new SUDO chip (GG1, epic).
 - [ ] **THE SHELL's new commands** (v15.03; docs/DECK.md SHELL / SUDO). ` opens THE SHELL now (~ / Ctrl + ` the old
   dev menu, dev mode only; phones: `[ SHELL ]` in the pause menu). Try the chips (`give.chip CD2` etc. in dev mode, or
   `deck.chips all`): `cd ..`, `scan`, `rm`, `kill -9`, `cat`, `sleep`, `whois`, `undo`; SUDO `mode.god` (a sector),

@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.03']);
+NEON_FILES.push(['engine/shell.js', 'v15.04']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -165,7 +165,8 @@ const SHELL_OF = {
 const fixed = (...vs) => () => vs.map(v => Array.isArray(v) ? { v: v[0], hint: v[1] } : { v, hint: '' });
 
 // ---------- the commands ----------
-// { name, args: [{ name, of, opt }], help, run(a), safe }. of: a SHELL_OF key, a fixed() list, or 'n' (a number).
+// { name, args: [{ name, of, opt, any }], help, run(a), safe, costOf(a) }. of: a SHELL_OF key, a fixed() list, or 'n' (a number).
+// any: a SHELL_OF key it also takes (give.mod lists yours, takes any). costOf: a cost read off the arguments (give.mod).
 // run gets the arguments, checked; it returns a line to print (or nothing: "ok") and can throw an Error, which
 // prints in red (and costs nothing). Commands mark the run as practice unless safe: true. Known: every command in dev mode
 // (dev.start, ?dev=1, the editor); otherwise a chip's command (engine/deck.js), once ROOT is on your crew. A command can
@@ -406,7 +407,8 @@ function shellArg(spec, raw) {
   if (spec.of === 'n') { const n = Number(raw); if (!isFinite(n)) throw new Error(`${spec.name}: a number`); return n; }
   const items = shellItems(spec.of);
   if (!items) return raw;
-  const lo = raw.toLowerCase(), hit = items.find(x => x.v.toLowerCase() === lo) || items.find(x => x.hint && norm(x.hint) === norm(raw));
+  const lo = raw.toLowerCase(), is = x => x.v.toLowerCase() === lo, named = x => x.hint && norm(x.hint) === norm(raw);
+  const hit = items.find(is) || items.find(named) || (spec.any && (shellItems(spec.any).find(is) || shellItems(spec.any).find(named)));   // (any: it lists some but takes all, and the command says why not)
   if (!hit) throw new Error(`no ${spec.name} called ${raw}`);
   return hit.v;
 }
@@ -441,7 +443,7 @@ async function shellRun(line) {
     if (p.args.length < need) throw new Error('usage: ' + shellUsage(c));
     const vals = args.map((spec, i) => p.args[i] == null ? null : shellArg(spec, p.args[i]));
     if (!c.safe && st.run && !st.run.ended) st.run.practice = true;   // a cheat: the run doesn't count (dev.js cheat())
-    const cost = shellCost(c), have = st.run ? st.run.charges || 0 : 0;
+    const cost = c.costOf && !shellDev() ? c.costOf(vals) : shellCost(c), have = st.run ? st.run.charges || 0 : 0;
     if (cost && have < cost) throw new Error(`not enough charges: ${c.name} costs ${cost}, you have ${have}.`);
     SHELL.busy = true; shellDraw();
     let r = await c.run(vals);
