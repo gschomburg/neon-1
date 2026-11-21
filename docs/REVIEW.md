@@ -29,6 +29,7 @@ to build is `docs/BACKLOG.md`.)
 - [ ] **The workbench, round 2** (v15.13).
   - **Cash out with a chip you already have:** it shreds into letters (and maybe a BLANK). The YOUR DECK card lists "had already, shredded:" and what came out. No more x2 in your deck.
   - **POPS's two new calls** (rough, see where they land): the first BLANK you get, and the first blueprint you learn.
+  - **The LOCKER** (v15.20): TAKE / STORE use the same sub-tab strip.
   - **The BOOK's sub-tabs:** GEAR MODS CHIPS in a dim strip under the main tabs, the one you're on filled in. The found count is that tab's. Is the strip the look you want for tabs inside tabs?
   - **Seen chips** (v15.14, your call): a chip you've seen for sale at a market or as a corp boss's pick is craftable now. The BOOK's count line lost its "BOOK".
   - G0D.exe: it showed in the BOOK for everyone, and G 0 D actually built it. Fixed: it's no recipe now.

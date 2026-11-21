@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.19']);
+NEON_FILES.push(['engine/bench.js', 'v15.20']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -579,7 +579,9 @@ function benchLines(T, B, X, lines) {
       ctx.addHit(x, y + 4, s.length, 1, { kind: 'btn', id: 'bt_' + t, onTap: () => benchTab(t) });
     });
   } });
-  if (b.tab === 'book') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, BOOK_TABS.map(([k, t]) => ({ id: 'bks_' + k, text: t, on: bookKind() === k, onTap: () => bookPickKind(k) }))) });
+  // sub-tabs (engine/textboard.js drawSubTabs): the BOOK's GEAR MODS CHIPS, the LOCKER's TAKE STORE (Greg, 2026-11-21)
+  if (b.tab === 'locker') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, [['take', 'TAKE'], ['store', 'STORE']].map(([v, t]) => ({ id: 'lv' + v, text: t, on: b.lkView === v, onTap: () => { if (b.lkView !== v) { b.lkView = v; Sound.tick(); } } }))) });
+  else if (b.tab === 'book') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, BOOK_TABS.map(([k, t]) => ({ id: 'bks_' + k, text: t, on: bookKind() === k, onTap: () => bookPickKind(k) }))) });
   else T('');
   if (b.tab === 'build') benchBuildLines(T, B, X);
   else if (b.tab === 'shred') benchShredLines(T, B, X);
@@ -925,9 +927,7 @@ function benchBookLines(T, B, X) {
 
 function benchLockerLines(T, B, X) {
   const b = st.bench, lk = benchSave().locker;
-  T(rule(32), C.dim);
-  X({ gap: 3, row: [['take', '[ TAKE ]'], ['store', '[ STORE ]']].map(([v, s]) => ({ text: s, id: 'lv' + v, sel: b.lkView === v, onTap: () => { b.lkView = v; Sound.tick(); } })) });
-  T(rule(32), C.dim);
+  T(rule(32), C.dim);   // (TAKE / STORE: the sub-tab strip under the main tabs, benchLines)
   T('');
   const rowOf = (e, i, sel, onTap, right, rightCol) => {
     const v = e.kind === 'mod' ? modView(e.key, e.tier) : itemView(e.key, e.tier);
