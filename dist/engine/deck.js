@@ -381,15 +381,15 @@ function deckSector(run) {
   for (const k of hit) run.modTier[k]--;
   if (hit.length) setTimeout(() => setMsg(`> DECAY: ${hit.length} mod${hit.length > 1 ? 's' : ''} dropped a step.`, C.danger), 1200);
 }
-// rivals (engine/run.js startCorp): LOUD and HUNTED bring one to a corp that had none, and a HOT chip in your belt
+// rivals (engine/run.js startCorp): LOUD and HUNTED bring one to a corp that had none, and a RIPPED chip in your belt
 // brings one to every corp (they want it back). Their own stream: the map stays the same.
 function deckRivalComes(node) {
   const run = st.run; if (!run || !node || (node.type !== 'corp' && node.type !== 'final')) return false;
-  if (run.hot) return true;
+  if (run.ripped || run.hot) return true;   // (run.hot: a run saved before v15.06)
   const p = Math.max(chipOn('LU6') ? 0.25 : 0, chipOn('HN1') ? 0.5 : 0);
   return p > 0 && rngFor(run.seed, 'deckrival', node.id)() < p;
 }
-// beating a rival (engine/hackers.js hkCorpEnd): LOUD pays double; now and then they drop a chip, and it's HOT
+// beating a rival (engine/hackers.js hkCorpEnd): LOUD pays double; now and then they drop a chip, and it's RIPPED
 const DECK_RIVAL_DROP = 0.3;
 const deckRivalPay = () => chipOn('LU6') ? 2 : 1;
 function deckRivalChip(h) {
@@ -398,10 +398,10 @@ function deckRivalChip(h) {
   if (r() >= DECK_RIVAL_DROP && !DECK_ALWAYS) return null;
   const key = deckRollChip(r), ik = deckChipItem(key);
   if (!itemRoom(ik, 0)) return null;
-  addItem(ik, 0); run.hot = true;
-  return `> ${hkName(h.id).toLowerCase()} dropped a chip: ${DECK_CHIPS[key][0]}. it's HOT: rivals will come for it.`;
+  addItem(ik, 0); run.ripped = true;
+  return `> ${hkName(h.id).toLowerCase()} dropped a chip: ${DECK_CHIPS[key][0]}. it's RIPPED. ${hkName(h.id).toLowerCase()} is gonna want that back.`;
 }
-// a chip for sale: a market now and then (engine/panels.js shopRoll), THE FENCE always (hot, dearer: engine/events.js)
+// a chip for sale: a market now and then (engine/panels.js shopRoll), THE FENCE always (ripped, dearer: engine/events.js)
 const DECK_SHOP_CHIP = 0.15, DECK_CHIP_PRICE = { common: 40, rare: 70, epic: 110, legendary: 160, exotic: 240 };
 function deckShopChip(node, n) {
   const run = st.run; if (!deckDrops()) return null;

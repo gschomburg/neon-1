@@ -522,7 +522,7 @@ function hkCorpEnd(c) {
     if (h.id === 'd0g') questD0g(h);   // DOG DAYS (engine/quests.js): a win for POPS, or he escaped
     const bonus = (h.exorcised ? 0 : h.out ? earnInt(ECON.rival.flatlined) : h.stole === 0 ? earnInt(ECON.rival.beat) : 0) * deckRivalPay();   // (EXORCIST: thrown out, not beaten: no bonus) (LOUD, a chip: double)
     if (bonus) { earn(bonus, run); setMsg(h.out ? `> ${hkName(h.id).toLowerCase()} flatlined. +${bonus}cr` : `> you beat ${hkName(h.id).toLowerCase()}. +${bonus}cr`, C.money); }
-    if (!h.exorcised && (h.out || h.stole === 0)) { const cm = deckRivalChip(h); if (cm) setTimeout(() => setMsg(cm, C.rep), 1400); }   // a chip, now and then: HOT (engine/deck.js)
+    if (!h.exorcised && (h.out || h.stole === 0)) { const cm = deckRivalChip(h); if (cm) setTimeout(() => setMsg(cm, C.rep), 1400); }   // a chip, now and then: RIPPED (engine/deck.js)
   }
 }
 // You died with hackers there: a rival's logo and taunt, or a crew member calling your name, as the screen falls apart.

@@ -20,7 +20,7 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
 - **`compile`:** THE SHELL makes a chip.
 - **More SUDO commands:** `rm -rf` (every ICE on the layer), `fork` (copy a mod for the corp), `chmod` (a mod up a
   rarity for a sector), `mode.free` (free travel on the map for a sector), `corp.jump` (skip to the boss).
-- **Hot chips:** the fence sells them; rivals drop them and then chase you. Greg's calls (2026-11-21) are in
+- **Ripped chips** (was HOT, renamed v15.06): the fence sells them; rivals drop them and then chase you. Greg's calls (2026-11-21) are in
   docs/DECK.md, under "The sources": a rival on every corp node without an anomaly, heat only while you hold one,
   rivals take it back, their own set by rarity, magenta cycling, POPS's calls.
 - **The fuse node:** fuse 2 exotic mods into an exotic chip.
@@ -545,6 +545,8 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
 - **MULTIPLAYER: shelved** (it works and stays in; finish the core game first). Later: maybe p5.party instead of
   Firebase; co-op (NeoN+m, Keep Talking style); a roulette mode.
 - **Music:** the engine pass and fewer, better tracks: docs/MUSIC.md.
+- **BOOTLEG** (Greg, 2026-11-21: "good for something later"): a name to use. It was up for the ripped chips (a
+  pirated copy fits the fence), but RIPPED won.
 - **Analytics:** the play stats are collected (greglytics); reading them (which corps beat people, what gets bought).
 
 ## Parked mod ideas (the user, 2026-10-26: "we have enough mods for now")

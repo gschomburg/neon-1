@@ -211,7 +211,7 @@ async function startCorp(node, startIdx = 0, restore = null) {
   if (restore) {   // a resumed save: what this corp had used up so far
     for (const k of CORP_SAVE) if (restore[k] != null) st.corp[k] = restore[k];   // (engine/save.js)
   }
-  if (!restore && (st.corp.mod === 'rival' || deckRivalComes(node))) st.corp.hkRival = chipOn('QT0') ? null : hkRivalFor(node);   // (QUIET, a chip: nobody comes; LOUD, HUNTED and a HOT chip bring one: engine/deck.js)
+  if (!restore && (st.corp.mod === 'rival' || deckRivalComes(node))) st.corp.hkRival = chipOn('QT0') ? null : hkRivalFor(node);   // (QUIET, a chip: nobody comes; LOUD, HUNTED and a RIPPED chip bring one: engine/deck.js)
   if (!restore && st.corp.hasBoss && has('reload')) reloadGear();   // RELOAD: singles get a second (engine/active.js)   // RIVAL: one of the cast (engine/hackers.js)
   if (st.corp.hasBoss) {
     // MUTATE: this corp, it counts as a random other mod.

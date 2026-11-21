@@ -216,11 +216,11 @@ what changes what:
     and can shred it or drop it.
   - Dropped: its own one-chip case, because the gear slot shows you have it. Dropped: chips you identify by cashing
     out, because knowing a dupe matters more (Greg).
-- **The fence** sells two or three chips, different each time. Some only turn up there, and those are **hot**:
+- **The fence** sells two or three chips, different each time. Some only turn up there, and those are **ripped**:
   stolen, so a rival hunts you. **Greg (2026-11-16):** "until you cash out" is too easy, since the fence sits right before the
-  sector boss. Dropped: Claude's "a hot chip has to cool for a sector first" (Greg wasn't sure).
-  **Then (Greg, 2026-11-16):** hot chips also drop from rivals. Beat a rival and it may drop a chip; then rivals chase
-  you through the nodes. You can still just cash out. The fence sells hot chips too, at a high price.
+  sector boss. Dropped: Claude's "a ripped chip has to cool for a sector first" (Greg wasn't sure).
+  **Then (Greg, 2026-11-16):** ripped chips also drop from rivals. Beat a rival and it may drop a chip; then rivals chase
+  you through the nodes. You can still just cash out. The fence sells ripped chips too, at a high price.
 - **The workbench:** a chip's code has a digit in it (`1UP`, `DM5`). The bench has no use for digits yet (BACKLOG
   section 1: "digits 1-9 none"), so spelling a code with a digit makes a chip. **Greg (2026-11-16):** good. A chip's code can be 6
   characters (both rows of its face). **Then (Greg, 2026-11-16):** making a chip takes a one-use item that opens the
@@ -246,7 +246,7 @@ what changes what:
   small random effect, and once in a while something good. Some chips might only be found that way.
 - **Drops** (**Decided (Greg, 2026-11-16):** no chip for every corp; that's a lot, and it pollutes the pool).
   Chips can still be corp-themed. They come from **the data cache** (the main place), PHISHING, maybe markets,
-  boss rewards (chips show up there more, or rarer), rivals (hot ones, above) and quests. The corp beside each chip below is its theme now, not
+  boss rewards (chips show up there more, or rarer), rivals (ripped ones, above) and quests. The corp beside each chip below is its theme now, not
   where it drops.
 - **Rarity:** the box's outline is in its rarity colour, not a filled tile, so chips don't look like letter tiles.
   Rarer chips are stronger and cost more power.
@@ -755,7 +755,7 @@ Greg: sockets that open earlier should sit higher on the board.
   rarer, and a ring of light out across the board; no power drains the light into the socket, dims the board, fills it
   back, with red static; sounds chipIn (a chime by rarity), chipDead, fanUp (a cell), powerDown; the traces lean to the
   mk's color; toned-back silkscreen, vias and data packets; the NO POWER bar steps through the chips; the CRASH stick
-  swaps words with a scramble); 5, later (SHELL, SUDO, hot chips, fusing, BOSS, UPLINK, PORTS).
+  swaps words with a scramble); 5, later (SHELL, SUDO, ripped chips, fusing, BOSS, UPLINK, PORTS).
 - **The cuts:** once the lists settle. BOOT and BIOS could share 4 sockets; UPLINK could fold into PORTS.
 
 ## The second chip set (Greg, 2026-11-16)
@@ -792,21 +792,24 @@ engine/deck.js)" where it lives. tools/checks/tests/chips.js checks them.
 - DATA CACHEs (20%) and PIER gear catches (25%), as before.
 - **Markets:** 15% of the time, a chip for sale (40cr common ... 240cr exotic; CHEAPSKATE and INFLATION count).
 - **Corp boss rewards:** 12% of the time, a chip is one of the picks.
-- **Rivals:** beat one (or flatline it) and 30% of the time it drops a chip. It's **HOT**.
-- **THE FENCE** (when THIEF made one): a HOT chip, at twice a market's price. **Beta:** one line and a [ BUY HOT ]
+- **Rivals:** beat one (or flatline it) and 30% of the time it drops a chip. It's **RIPPED**.
+- **THE FENCE** (when THIEF made one): a RIPPED chip, at twice a market's price. **Beta:** one line and a [ BUY RIPPED ]
   button; it needs a proper look.
-- **HOT** (beta): while you carry one, a rival comes to every corp, all run (QUIET still stops them). It's the simple
+- **RIPPED** (beta): while you carry one, a rival comes to every corp, all run (QUIET still stops them). It's the simple
   version of "they chase you through the nodes": rivals don't move between nodes yet.
-- **Decided (Greg, 2026-11-21), hot chips (not built yet):**
-  - **The chase:** while you carry a hot chip, every corp node has a rival. A node that already has another anomaly
+- **Decided (Greg, 2026-11-21), ripped chips (not built yet):**
+  - **The name:** RIPPED (you ripped it out: "w00f is gonna want that back"), was HOT, because HOT read like the HEAT
+    group. Renamed in the code v15.06 (run.ripped; the drop, fence lines and button). Dropped: SWIPED, FLAGGED,
+    BOUNTY, CONTRABAND, PINCHED, RIP; BOOTLEG kept for later (BACKLOG, Parked).
+  - **The chase:** while you carry a ripped chip, every corp node has a rival. A node that already has another anomaly
     keeps that anomaly, and no rival comes there. Rivals still don't move between nodes.
-  - **The heat lasts while you have the chip.** Sell it or trash it and the heat is gone. (Today run.hot never clears.)
-  - **Two hot chips are no worse than one.**
-  - **A rival you don't beat takes the hot chip back.** POPS calls when you pick up your first hot chip, and again
+  - **The chase lasts while you have the chip.** Sell it or trash it and the chase is gone. (Today run.ripped never clears.)
+  - **Two ripped chips are no worse than one.**
+  - **A rival you don't beat takes the ripped chip back.** POPS calls when you pick up your first ripped chip, and again
     when a rival takes one back.
-  - **Hot chips are a set of their own,** in a few rarities: the rarer, the stronger. They slot into the usual
-    sockets. (Today a rival or the fence hands you an ordinary chip, flagged hot.)
-  - **The look:** a hot chip shows its own rarity color with magenta (the workbench's) cycling through it, animated.
-    Not red: red is DIVINE's. Its one-line text says HOT.
+  - **Ripped chips are a set of their own,** in a few rarities: the rarer, the stronger. They slot into the usual
+    sockets. (Today a rival or the fence hands you an ordinary chip, flagged ripped.)
+  - **The look:** a ripped chip shows its own rarity color with magenta (the workbench's) cycling through it, animated.
+    Not red: red is DIVINE's. Its one-line text says RIPPED.
 - **Quests** (beta): the OMNI RAID gives OMNI'S EYE, once. There's only the one quest so far.
 - **Decided (Greg, 2026-11-17):** exotics stay in the random drops (weight 1, about 1 chip drop in 1,700). They're rare, and the quest still guarantees its one. Get it early, fine; get a dupe, sell or shred it.
