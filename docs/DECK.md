@@ -243,6 +243,17 @@ what changes what:
   - **The BUILD screen:** what you've spelled (its code, name and [ BUILD ]) sits under the letters now, not on the right.
     Typing a chip's code with no BLANK in: the matches offer it, and tap: fill puts a BLANK in.
   - The BLUEPRINT chip is **FREE PRESS** now (Greg: a blueprint is knowing how to craft something).
+  **v15.13 (Greg, 2026-11-21):**
+  - **No extras:** a chip home is unlocked, so your deck keeps no counts (no x2). Cash out with a chip you already have
+    and it shreds on its own into its code (digit too) and maybe a BLANK; an epic+ one teaches its blueprint. A new chip
+    carried twice: one home, the other shreds. The cash-out note lists both. Maybe later a REP buy does more here.
+  - **More 1s:** shreds' random digits include 1 now (the digit chip codes use most); a 1 never goes in the x.
+  - **POPS** explains the first BLANK, and the first blueprint (rough: Greg to look).
+  - **The BOOK** has sub-tabs, GEAR MODS CHIPS, each with its own found count. Sub-tabs sit in a strip of background
+    (textboard.js drawSubTabs: use it for any tabs inside tabs).
+  - G0D.exe was a recipe for everyone (G 0 D built it): items marked only (dev, deck) aren't recipes now.
+  - **Open (Claude, for Greg):** with chips unlocked once home, crafting a chip you already have does nothing. What's
+    left to craft: chips you had on your belt but never got home (you died). See BACKLOG "Making chips".
 - **Mashing 2 mods together** (Greg, 2026-11-15: "maybe you make a chip by mashing 2 mods together"). Claude's take:
   - It fits the 3x2 look: a mod's code is 3 letters (TRC, SKM), so a fused chip shows both, one on each row:
     ```

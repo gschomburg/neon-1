@@ -78,4 +78,15 @@ module.exports = { name: 'craft', body: `
 
   save.seen[deckChipItem('CD2')] = seen0; save.deck.chips.CD2 = had; save.bench.blueprints = bp0;
   check(DECK_CHIPS.BP1[0] === 'FREE PRESS', 'the BLUEPRINT chip is FREE PRESS now');
+  check(BENCH.digits.some(d => d[0] === 1) && !Object.values(benchRecipes()).some(rc => rc.key === 'g0dexe'), 'shreds can give a 1; G0D.exe is no recipe');
+  // POPS: the first BLANK
+  CALL_QUEUE.length = 0; st.callBox = null; save.bench.blankSeen = false;
+  benchTeach(['#']); benchTeach(['#']);
+  check(save.bench.blankSeen && CALL_QUEUE.concat(st.callBox ? [st.callBox] : []).filter(c => c.lines.some(l => /BLANK/.test(l))).length === 1, 'the first BLANK: POPS explains, once');
+  CALL_QUEUE.length = 0; st.callBox = null;
+  // the BOOK: GEAR MODS CHIPS, each its own list
+  benchTab('book'); await sleep(900);
+  check(['bks_gear', 'bks_mod', 'bks_chip'].every(id => hits.find(h => h.id === id)), 'the BOOK has GEAR MODS CHIPS');
+  hits.find(h => h.id === 'bks_chip').onTap(); await sleep(200);
+  check(bookKind() === 'chip' && bookList().every(c => benchRecipes()[c].kind === 'chip'), 'CHIPS: only chips');
 ` };

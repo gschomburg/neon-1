@@ -1,7 +1,7 @@
 // NeoN+1 engine/textboard.js: centered text screens (buildTextBoard), the big box button (drawBox), text fields
 // (Field, drawField), info tile rows and offer pops. Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/textboard.js', 'v15.12']);
+NEON_FILES.push(['engine/textboard.js', 'v15.13']);
 
 // Big boxed primary button. 3 rows, or 4 with a subtitle.
 function drawBox(ctx, y, ln) {
@@ -108,6 +108,21 @@ function drawField(ctx, x, y, b) {
 // How many rows a text board line takes. engine/screens.js overLines counts the end screen's rows with it too, so
 // the two always agree (it counted the initials' 3-row letters as 1, and UPLOAD ran into the footer).
 const lineRows = ln => ln.box ? (ln.sub ? 4 : 3) : ln.tileInfo ? TILE_H : ln.mapView || ln.draw ? ln.h || 1 : 1;
+// Sub-tabs: a tab group inside a tab (Greg, 2026-11-21; the bench's BOOK: GEAR MODS CHIPS). A strip of background right
+// across the row, the tabs sitting in it without brackets, the one you're on filled in. So it reads as under the main
+// tabs ([BUILD] [SHRED]...), not next to them. Use it for any tabs inside tabs. items: [{ id, text, on, onTap }].
+function drawSubTabs(ctx, y, items, gap = 1) {
+  const w = items.reduce((a, t) => a + t.text.length + 2, 0) + (items.length - 1) * gap;
+  let x = Math.floor((L.wc - w) / 2);
+  ctx.bg(0, y, L.wc, C.dim, 0.35);
+  for (const t of items) {
+    const s = ' ' + t.text + ' ';
+    if (t.on) ctx.bg(x, y, s.length, C.accent, 1); else if (ctx.hl) ctx.hl(x, y, s.length, 1, t.id, false);
+    ctx.put(x, y, s, t.on ? C.bg : C.bright, 'ui', !!t.on);
+    ctx.addHit(x, y, s.length, 1, { kind: 'btn', id: t.id, onTap: t.onTap });
+    x += s.length + gap;
+  }
+}
 function buildTextBoard(ctx, lines, area = null) {
   const { now, put, putC, addHit, bg, cells, collectHits } = ctx;
   const hl = ctx.hl || (() => {});

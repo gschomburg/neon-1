@@ -27,6 +27,10 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
 - **Ripped chips:** built v15.08, the fence list v15.09 (docs/DECK.md "The sources"). Left: an exotic ripped chip.
 - **The fuse node:** now **THE CHROME FORGE**, parked with the map nodes (section 5).
 - **Making chips at the workbench:** built v15.10 (a BLANK; docs/DECK.md "The workbench").
+  **Open (v15.13):** chips are unlocked once home (no extras), so crafting only helps for a chip you saw but don't
+  have. Today "saw" means it was on your belt (and you died with it). Ideas: a chip seen anywhere counts (a market,
+  THE FENCE, a cache's pick, the codex); epic+ blueprints from somewhere other than shredding (quests, drops), since
+  shredding one means you have it. Greg's call.
 - **Chips for the empty groups:** GLYPH, the CREW jacks, UPLINK, PORTS.
 
 ## Big features: the next layer of the game

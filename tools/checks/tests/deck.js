@@ -131,7 +131,11 @@ module.exports = { name: 'deck', body: `
   const ck = ITEMS[got.key].chip;
   deckHome(st.run, false); check(!deckHave(ck), 'die: it never gets home');
   deckHome(st.run, true); check(deckHave(ck) === 1 && FEAT_QUEUE.some(q => q.head === 'YOUR DECK'), 'cash out: it goes home to your deck: ' + ck);
-  check(/dupe: you have 1/.test(itemView(got.key).tip), 'another one says it is a dupe');
+  check(/you have it/.test(itemView(got.key).tip) && /shreds/.test(itemView(got.key).tip), 'another one says you have it, and it shreds: ' + itemView(got.key).tip);
+  { const lt = save.bench && save.bench.letters ? Object.values(save.bench.letters).reduce((a, n) => a + n, 0) : 0; FEAT_QUEUE.length = 0;
+    deckHome(st.run, true);
+    const lt2 = Object.values(benchSave().letters).reduce((a, n) => a + n, 0);
+    check(deckHave(ck) === 1 && lt2 >= lt + 3 && FEAT_QUEUE.some(q => q.lines.some(l => /shredded/.test(l))), 'cash out a chip you have: no count, it shreds into its code: ' + (lt2 - lt)); }
   st.run.items = []; for (let i = 0; i < st.run.beltSlots; i++) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
   deckCacheChip({ id: nid }); await sleep(50);
   check(st.swap && st.swap.kind === 'item' && ITEMS[st.swap.key].chip, 'a full belt: the swap comes up');

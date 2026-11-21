@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.12']);
+NEON_FILES.push(['engine/deck.js', 'v15.13']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -258,7 +258,7 @@ const deckNoShell = key => ['shell', 'sudo'].includes(DECK_CHIPS[key][1]) && !(t
 const deckHave = key => (save.deck && save.deck.chips && save.deck.chips[key]) || 0;
 for (const [key, c] of Object.entries(DECK_CHIPS)) {
   ITEMS[deckChipItem(key)] = { key: deckChipItem(key), name: c[0], price: 0, rarity: c[2], chip: key, only: 'deck', nosell: !deckIsRipped(key), ripped: deckIsRipped(key), desc: c[4],   // (a RIPPED one sells: Greg, sell it and the heat's off. Its price: below)
-    get tip() { const n = deckHave(key); return `${n ? `dupe: you have ${n}.` : 'NEW.'} ${c[6]} cash out to keep it.${deckIsRipped(key) ? ' rivals want it back.' : ''}${deckNoShell(key) ? ' it needs THE SHELL: get ROOT on your crew.' : ''}`; } };
+    get tip() { const n = deckHave(key); return `${n ? 'you have it.' : 'NEW.'} ${c[6]} ${n ? 'cash out and it shreds into letters.' : 'cash out to keep it.'}${deckIsRipped(key) ? ' rivals want it back.' : ''}${deckNoShell(key) ? ' it needs THE SHELL: get ROOT on your crew.' : ''}`; } };
   // on the belt its face's two rows take turns (Greg, 2026-11-16), 3 wide (engine/panels.js ITEM_SHORT)
   Object.defineProperty(ITEM_SHORT, deckChipItem(key), { get: () => { const f = c[5], b = f[1] && Math.floor(performance.now() / 1100) % 2; return (b ? f[1] : f[0]).slice(0, 3).padEnd(3); } });
 }
@@ -294,10 +294,18 @@ function deckHome(run, win) {
   const chips = run.items.filter(s => deckItemChip(s.key));
   if (!win || !chips.length || !save.deck || (run.practice && !EDITOR) || run.tutorial || st.mp) return;   // (the editor: its runs are practice, and its save is its own)
   save.deck.chips = save.deck.chips || {};
-  for (const s of chips) { const k = deckItemChip(s.key); save.deck.chips[k] = (save.deck.chips[k] || 0) + s.n; }
+  // A chip home is unlocked: no extras (Greg, 2026-11-21). One you had already shreds into components on its own
+  // (engine/bench.js benchAutoShred); a new one carried twice: one home, the other shreds.
+  const home = [], shred = [], got = [];
+  for (const s of chips) {
+    const k = deckItemChip(s.key), had = deckHave(k) > 0, n = had ? s.n : s.n - 1;
+    if (!had) { save.deck.chips[k] = 1; home.push(ITEMS[s.key].name); }
+    if (n > 0) { shred.push(ITEMS[s.key].name + (n > 1 ? ' x' + n : '')); got.push(...benchAutoShred(k, n)); }
+  }
   const noShell = chips.some(s => deckNoShell(deckItemChip(s.key)));   // (a shell chip before ROOT: where to go)
-  FEAT_QUEUE.push({ head: 'YOUR DECK', lines: ['chips home:', '', ...chips.map(s => '  ' + ITEMS[s.key].name + (s.n > 1 ? ' x' + s.n : '')), '', 'slot them: THE BOARD > DECK.']
-    .concat(noShell ? ['', 'shell chips need THE SHELL.', rootStep() ? 'get ROOT: THE BOARD > QUESTS.' : 'open your deck. something lives in it.'] : []) });
+  const lines = home.length ? ['chips home:', '', ...home.map(n => '  ' + n), '', 'slot them: THE BOARD > DECK.'] : [];
+  if (shred.length) lines.push(...(lines.length ? [''] : []), 'had already, shredded:', ...shred.map(n => '  ' + n), '  > ' + got.map(ch => isBlank(ch) ? 'BLANK' : ch).join(' '));
+  FEAT_QUEUE.push({ head: 'YOUR DECK', lines: lines.concat(noShell && home.length ? ['', 'shell chips need THE SHELL.', rootStep() ? 'get ROOT: THE BOARD > QUESTS.' : 'open your deck. something lives in it.'] : []) });
 }
 
 // ---------- the chips in a run ----------
@@ -1650,7 +1658,7 @@ function deckChipList(ctx, y0, sa) {
         if (d.sel.kind === 'chip' && d.sel.key === key) g.bg(0, y, W, 2, C.accent, 0.18);
         ctx.hl(0, y, W, 2, id, false);
         deckFace(g, 2, y, key, off);
-        g.put(9, y, c[0] + (d.real && d.chips[key] > 1 ? ` x${d.chips[key]}` : ''), C.bright, true);   // (a dupe: how many)
+        g.put(9, y, c[0], C.bright, true);   // (no counts: a chip home is unlocked, Greg 2026-11-21)
         if (deckBeta(key) && !where) g.put(W - 5, y, 'BETA', C.danger);   // (DECK_BETA: not all there yet)
         if (where) g.put(W - 1 - where.length - 3, y, 'in ' + where, off ? C.danger : C.accent);
         g.put(9, y + 1, c[1] === 'psu' ? `+${deckCellPower(key)} PWR` : `PWR ${c[3]}`, C.mid);

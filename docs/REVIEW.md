@@ -14,6 +14,12 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The workbench, round 2** (v15.13).
+  - **Cash out with a chip you already have:** it shreds into letters (and maybe a BLANK). The YOUR DECK card lists "had already, shredded:" and what came out. No more x2 in your deck.
+  - **POPS's two new calls** (rough, see where they land): the first BLANK you get, and the first blueprint you learn.
+  - **The BOOK's sub-tabs:** GEAR MODS CHIPS in a dim strip under the main tabs, the one you're on filled in. The found count is that tab's. Is the strip the look you want for tabs inside tabs?
+  - **A question:** once chips unlock on cash-out, crafting a chip you already have does nothing. Only chips you held and lost are worth crafting. BACKLOG "Making chips" has ideas (a chip seen at a market counts; epic+ blueprints from quests).
+  - G0D.exe: it showed in the BOOK for everyone, and G 0 D actually built it. Fixed: it's no recipe now.
 - [ ] **Chips and blueprints at the workbench** (v15.10; docs/DECK.md "The workbench").
   - **BUILD:** one small dotted 2x2 slot after the letters ("x2-9 BLANK"; v15.11 merged the x slot into it): a digit there is the x (a 50% chance of that many gear), a BLANK makes a chip. Put a BLANK (`#`, in the SPECIAL row) in and the three slots spell a chip's code, digits too (`CD2`). What you've spelled (code, name, [ BUILD ]) is under the letters now.
   - **Blueprints:** epic+ chips and every exotic show "blueprint" in the BOOK till you shred one. ZOMBIE and RAM DOUBLER bind to you: shredding one teaches the blueprint and you keep it.

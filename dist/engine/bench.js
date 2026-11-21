@@ -8,13 +8,13 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.12']);
+NEON_FILES.push(['engine/bench.js', 'v15.13']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
   wild: { scrap: 0, common: 0.02, rare: 0.05, epic: 0.08, legendary: 0.12, exotic: 0.2 },    // ...of a * (by its rarity)
   digit: { scrap: 0, common: 0, rare: 0.04, epic: 0.08, legendary: 0.15, exotic: 0.25 },   // ...of a digit 2-9
-  digits: [[2, 40], [3, 25], [4, 12], [5, 8], [6, 6], [7, 4], [8, 3], [9, 2]],              // which digit (weights)
+  digits: [[1, 45], [2, 40], [3, 25], [4, 12], [5, 8], [6, 6], [7, 4], [8, 3], [9, 2]],     // which digit (weights; 1: chip codes, never the x: Greg, 2026-11-21)
   multi: 0.5,    // a digit in the x slot: the chance you get that many
   blank: { chip: 0.4, corrupt: 0.1 },   // a shred's chance of a BLANK (an empty chip): a chip, corrupted software
   near: 0.5,     // RUN ANYWAY on a word one letter off a recipe
@@ -46,7 +46,7 @@ function benchRecipes() {
   if (BENCH_RECIPES) return BENCH_RECIPES;
   const r = {};
   for (const [key, it] of Object.entries(ITEMS)) {
-    if (it.value || it.quest || it.bag || it.fish || it.hunt || it.chip || it.noBench || key.startsWith('call')) continue;   // (chip: your deck's, engine/deck.js)   // (hunt: HAD3S gear, not built at the bench yet)
+    if (it.value || it.quest || it.bag || it.fish || it.hunt || it.chip || it.only || it.noBench || key.startsWith('call')) continue;   // (only: G0D.exe, dev only)   // (chip: your deck's, engine/deck.js)   // (hunt: HAD3S gear, not built at the bench yet)
     const code = itemShort(key);
     if (code.length === 3 && !r[code]) r[code] = { kind: 'gear', key, code };
   }
@@ -90,6 +90,16 @@ const benchBp = code => !!(benchSave().blueprints || {})[code];
 const recipeLocked = rc => recipeNeedsBp(rc) && !benchBp(rc.code);
 // The BOOK's order: gear, then mods, each by rarity.
 const BOOK_KIND = { gear: 0, mod: 1, chip: 2 };
+// The BOOK's sub-tabs (Greg, 2026-11-21): GEAR, MODS, CHIPS, each its own list and its own found count.
+const BOOK_TABS = [['gear', 'GEAR'], ['mod', 'MODS'], ['chip', 'CHIPS']];
+const bookKind = () => (st.bench && st.bench.bkKind) || 'gear';
+const bookList = () => bookCodes().filter(c => benchRecipes()[c].kind === bookKind());
+function bookPickKind(k) {
+  const b = st.bench; if (!b || b.bkKind === k) return;
+  b.bkKind = k; b.bkSel = 0; b.bkArea = { top: 0 }; b.bkT = performance.now(); Sound.tick();
+  const codes = bookList(), R = benchRecipes(), i = codes.findIndex(c => save.seen[R[c].key] && recipeKnown(R[c]));
+  if (i > 0) b.bkSel = i;
+}
 const bookCodes = () => Object.values(benchRecipes()).sort((a, b) => BOOK_KIND[a.kind] - BOOK_KIND[b.kind]
   || RARITY_ORDER.indexOf(recipeDef(a).rarity) - RARITY_ORDER.indexOf(recipeDef(b).rarity)).map(rc => rc.code);
 
@@ -202,7 +212,9 @@ function benchTab(t) {
     if (t === 'book') {   // open on something you've found
       b.bkT = performance.now();
       const codes = bookCodes(), R = benchRecipes();
-      if (!save.seen[R[codes[b.bkSel]].key]) b.bkSel = Math.max(0, codes.findIndex(c => save.seen[R[c].key]));
+      if (!b.bkKind) b.bkKind = 'gear';
+      const bc = bookList(); b.bkSel = clamp(b.bkSel, 0, bc.length - 1);
+      if (!save.seen[R[bc[b.bkSel]].key]) b.bkSel = Math.max(0, bc.findIndex(c => save.seen[R[c].key] && recipeKnown(R[c])));
     }
   });
 }
@@ -261,7 +273,7 @@ function benchFill(code) {
 // Put what you built away: loot to the LOOT bag; the locker (gear stacks); else straight onto you. null: no room.
 function benchGive(rc, n = 1) {
   if (rc.kind === 'loot') { for (let k = 0; k < n; k++) addLoot(rc.key, 0); return 'loot'; }
-  if (rc.kind === 'chip') { const sd = save.deck || (save.deck = deckFreshSave()); sd.chips[rc.chip] = (sd.chips[rc.chip] || 0) + 1; return 'deck'; }   // (built at a safehouse: it's home)
+  if (rc.kind === 'chip') { const sd = save.deck || (save.deck = deckFreshSave()); sd.chips[rc.chip] = 1; return 'deck'; }   // (built at a safehouse: it's home)
   const lk = benchSave().locker;
   if (rc.kind === 'gear') {
     const s = lk.find(x => x && x.kind === 'gear' && x.key === rc.key && (x.tier || 0) === 0 && x.n + n <= STACK_MAX);
@@ -362,6 +374,30 @@ function benchLearn(code) {
   return code;
 }
 const benchBound = e => e.kind === 'mod' && modLocked(e.key);
+// Cashing out with a chip you already have (Greg, 2026-11-21: once it's home it's unlocked, no extras): it shreds on
+// its own, into its code (digit too) and maybe a BLANK, and an epic+ one teaches its blueprint. Returns what came out.
+function benchAutoShred(key, n = 1) {
+  const got = [];
+  for (let i = 0; i < n; i++) {
+    for (const ch of key) if (/[A-Z0-9]/.test(ch)) got.push(ch);
+    if (Math.random() < BENCH.blank.chip) got.push(BENCH_BLANK);
+  }
+  benchAdd(got);
+  const rc = benchRecipes()[key]; if (rc && rc.kind === 'chip' && recipeNeedsBp(rc)) benchLearn(key);
+  const sh = save.shredded || (save.shredded = {}); sh[deckChipItem(key)] = 0;
+  benchTeach(got);
+  return got;
+}
+// POPS, the first time a BLANK comes out of a shred and the first time you learn a blueprint (save.bench.blankSeen,
+// bpSeen). Rough: Greg will look at where they land (docs/REVIEW.md).
+function benchTeach(got, learned) {
+  const bs = benchSave();
+  if (got && got.some(isBlank) && !bs.blankSeen) { bs.blankSeen = true; persist(); queueCall('pops', ["that's a BLANK. an empty chip.",
+    "at a workbench it goes in the little slot after the letters. then spell a chip's code: two letters and a digit, like CD2.",
+    "it builds that chip, straight into your deck. you can only make chips you've had."]); }
+  if (learned && !bs.bpSeen) { bs.bpSeen = true; persist(); queueCall('pops', ['you took it apart, so now you know how it goes together. a blueprint.',
+    'exotics and the good chips need one to build. shred one and you learn it. look it up in the BOOK.']); }
+}
 function benchShred(e) {
   const b = st.bench;
   if (!e || !b || benchBusy()) return;
@@ -370,7 +406,7 @@ function benchShred(e) {
     const sh = save.shredded || (save.shredded = {}); sh[e.key] = Math.max(sh[e.key] == null ? -1 : sh[e.key], e.tier || 0);
     persist();
     if (!learned) { benchSay(`> ${v.name.toLowerCase()} is bound to you. it won't come apart.`); return Sound.deny(); }
-    benchSay(`> ${v.name.toLowerCase()} is bound to you: it stays.`); benchSay(`> blueprint: ${code} (${v.name}) is in the BOOK.`);
+    benchSay(`> ${v.name.toLowerCase()} is bound to you: it stays.`); benchSay(`> blueprint: ${code} (${v.name}) is in the BOOK.`); benchTeach(null, learned);
     flash(rarityCol(v.rarity), 0.25, 0.5); return Sound.jingle();
   }
   const cor = e.kind !== 'mod' && ITEMS[e.key].corrupt, v = shredView(e);
@@ -389,6 +425,7 @@ function benchShred(e) {
   persist();
   b.shredAnim = { t0: performance.now(), letters, got, name: v.name, rarity: v.rarity, quest };
   if (learned) benchSay(`> blueprint: ${learned} (${v.name}) is in the BOOK.`);
+  benchTeach(got, learned);
   Sound.grind(BENCH.shred.jumble / 1000);
 }
 
@@ -540,7 +577,8 @@ function benchLines(T, B, X, lines) {
       ctx.addHit(x, y + 4, s.length, 1, { kind: 'btn', id: 'bt_' + t, onTap: () => benchTab(t) });
     });
   } });
-  T('');
+  if (b.tab === 'book') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, BOOK_TABS.map(([k, t]) => ({ id: 'bks_' + k, text: t, on: bookKind() === k, onTap: () => bookPickKind(k) }))) });
+  else T('');
   if (b.tab === 'build') benchBuildLines(T, B, X);
   else if (b.tab === 'shred') benchShredLines(T, B, X);
   else if (b.tab === 'book') benchBookLines(T, B, X);
@@ -844,8 +882,8 @@ function benchRootFound(sa) {
 }
 
 function benchBookLines(T, B, X) {
-  const b = st.bench, codes = bookCodes(), R = benchRecipes();
-  const found = codes.filter(c => save.seen[R[c].key] && recipeKnown(R[c])).length;
+  const b = st.bench, codes = bookList(), R = benchRecipes();
+  const found = codes.filter(c => save.seen[R[c].key] && recipeKnown(R[c])).length;   // (this tab's: GEAR, MODS or CHIPS)
   X({ h: 1, draw: (ctx, y) => { const x = Math.floor((L.wc - 32) / 2), n = `${benchCount()} comps`; ctx.put(x, y, 'BOOK', C.accent, 'ui', true); ctx.put(x + 6, y, `${found}/${codes.length} found`, C.mid, 'ui'); ctx.put(x + 32 - n.length, y, n, C.mid, 'ui'); } });
   const rq = ['letters', 'spell'].includes(rootStep());   // ROOT's paperwork: its letters, over the recipes (engine/quests.js)
   if (rq) X({ h: 1, draw: (ctx, y) => rootLettersRow(ctx, Math.floor((L.wc - 32) / 2), y) });
@@ -856,7 +894,7 @@ function benchBookLines(T, B, X) {
   if (seen) {
     X(rc.kind === 'mod' ? { badge: rc.key, badgeTier: 0 } : { gearHead: rc.key, gearTier: 0, text: v.name });
     T(`${RARITY[v.rarity].label.toLowerCase()} ${rc.kind}`, C.mid);
-    T(v.tip || '', C.text);
+    T((rc.kind === 'chip' ? DECK_CHIPS[rc.chip][6] : v.tip || '').slice(0, L.wc), C.text);   // (a chip: its short text; the belt tip is long)
   } else { T('???', C.dim); T('not found yet.', C.mid); T(rc.kind === 'chip' ? 'have one to log it.' : 'own one to log it. or spell it.', C.dim); }
   X({ h: 3, draw: (ctx, y) => {
     const left = miss.split('');
