@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.43']);
+NEON_FILES.push(['engine/run.js', 'v15.44']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -160,7 +160,7 @@ async function enterNode(node, warp = false) {
 function corpPlan(node, def, run) {
   const t = node.tier, sector = node.sector || 0;
   const counts = def.counts ? def.counts(t) : node.type === 'start' ? [1] : run.tutorial && node.id === TUT.corpNode ? TUT.counts.slice()
-    : Array.from({ length: CONFIG.corpLayers + (sectorHas('grind', sector) ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));
+    : Array.from({ length: CONFIG.corpLayers + (sectorHas('grind', sector) ? 1 : 0) + (run.chips && run.chips.includes('LY1') ? 1 : 0) }, (_, i) => clamp(t + 1 + i + (def.nodes || 0), 2, CONFIG.maxNodes));   // (+1 LAYER: a chip, engine/deck.js)
   // OMNI borrows a tell, a new one each sector
   let tell = node.type === 'final' && node.corp === 'omni' && !def.copied ? (sector === 0 ? run.finalTell : pickR(['corner', 'mark', 'mirror'], rngFor(run.seed, 'final', node.sector))) : def.tell;
   if (tell === 'mirror' && t >= 2) tell = 'vmirror';   // deeper Mirrorlines mirror top-bottom

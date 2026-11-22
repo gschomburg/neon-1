@@ -91,8 +91,9 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
    dev.stop; SYSOP, hidden till you're SYSOP).
 3. [x] (v15.43) CHIP DEALER (ELITE; II on SYSOP): a catalog of chips after a DATA CACHE. You still have to get out with what you
    buy; every chip in it counts as seen (craftable).
-4. [ ] Posts that give chips: BLOOD TOLL (ELITE, OVERVOLT: pay the UPLINK with all but 1 INT, an option there) and
-   +1 LAYER (SYSOP, BIOS).
+4. [x] (v15.44) Posts that give chips: SACRIFICE (ELITE, OVERVOLT: pay the UPLINK with all but 1 INT, an option there;
+   was BLOOD TOLL, Greg: it didn't fit BLOOD MONEY) and +1 LAYER (SYSOP, BIOS). **Kept for later (Greg):** the name
+   BRUTE FORCE, for a feat, a post or a chip.
 5. [ ] The rewards-screen chips (HEIRLOOM's [ TO LOCKER ], SALVAGE, GAMBLE, AUCTION) and BENCH LINK.
 
 The ideas as they came:

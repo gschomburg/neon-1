@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.43']);
+NEON_FILES.push(['engine/save.js', 'v15.44']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -125,6 +125,7 @@ const LEGACY = [
   { key: 'surge', tier: 3, name: 'SURGE', desc: '+1 charge for THE SHELL, every run (with a SHELL chip).', costs: [250] },   // (engine/deck.js deckCharges)
   { key: 'bait', tier: 3, name: 'BAIT SHOP', desc: 'casts at the pier cost half.', costs: [150] },   // (engine/fishing.js fishCost)
   { key: 'dealer', tier: 3, name: 'CHIP DEALER', desc: 'after a DATA CACHE: a catalog of 3 chips for your deck. get out with what you buy.', costs: [300] },   // (engine/deck.js openChipDealer)
+  { key: 'sacrifice', tier: 3, name: 'SACRIFICE', chip: 'SX1', desc: 'gives you the SACRIFICE chip (OVERVOLT, mk III) for your deck: pay the UPLINK with all but 1 INT, not credits.', costs: [300] },   // (engine/runend.js openUplink)
   { key: 'drops2', tier: 3, ladder: 'drops', needs: 'drops', name: 'BETTER DROPS II', desc: '1 in 5 mods and gear roll a step rarer (was 1 in 10).', costs: [300] },
   // chip: buying it gives you that chip for your deck (Greg, 2026-11-22: posts that are strong or need a limit are chips)
   { key: 'codex', tier: 3, name: 'CODEX', chip: 'CX5', desc: "gives you the CODEX chip (CRASH) for your deck: die in a corp you haven't beaten and a piece of its tell decodes.", costs: [250] },
@@ -142,6 +143,7 @@ const LEGACY = [
   // list (engine/shell.js SHELL_DEV).
   { key: 'backdoor', tier: 4, name: 'BACKDOOR', desc: 'the secret: THE SHELL shows you dev.start (every command, no charges, but the run turns practice) and dev.stop.', costs: [1500] },
   { key: 'dealer2', tier: 4, ladder: 'dealer', needs: 'dealer', name: 'CHIP DEALER II', desc: 'the catalog has 5 chips (was 3), one of them rare or better.', costs: [600] },
+  { key: 'layer', tier: 4, name: '+1 LAYER', chip: 'LY1', desc: 'gives you the +1 LAYER chip (BIOS) for your deck: every corp has one more layer. more REP, more risk.', costs: [500] },   // (engine/run.js corpPlan)
   { key: 'market2', tier: 4, ladder: 'market', needs: 'market', name: 'LOYALTY CARD II', desc: 'every market is 10% cheaper (was 5%).', costs: [400] },
   // ---- PRIVATE MESSAGES (a feat opens them)
   { key: 'bossloot', pm: 'bosshunter', name: 'BOSS LOOT', desc: 'boss gear (FLARE, BEES...) can turn up in black markets.', costs: [180] },

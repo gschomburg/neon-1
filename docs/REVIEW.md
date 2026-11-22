@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **SACRIFICE and +1 LAYER** (v15.44): SACRIFICE (ELITE, 300) gives an OVERVOLT chip: at the UPLINK, [ SACRIFICE: -N INT, no fee ] takes you to 1 INT and on (a ZOMBIE pays in rot). +1 LAYER (SYSOP, 500) gives a BIOS chip: one more layer in every corp.
+
 - [ ] **CHIP DEALER** (v15.43): ELITE (300) / II on SYSOP (600). After a DATA CACHE, a catalog of 3 chips (5 with II, one rare or better) at market chip prices. Buys go on your belt; every chip in it counts as seen, so the WORKBENCH can build it.
 
 - [ ] **ELITE / SYSOP posts, batch 2** (v15.41): POWER TAP (+1 / +2 deck power), SURGE (+1 / +2 SHELL charges), BAIT SHOP (half-price casts), CLOUT (+25% REP), DEEP WATER (rarer catches, more corrupted software), BACKDOOR (dev.start). BACKDOOR (v15.42): dev.start / dev.stop always work; with it they autocomplete. Prices are guesses: 300/600, 250/500, 150, 1000, 400, 1500.

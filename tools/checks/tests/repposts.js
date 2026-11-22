@@ -51,6 +51,17 @@ module.exports = { name: 'repposts', body: `
     const k0 = s2[0].key; hits.find(h => h.id === 'dbuy').onTap();
     check(s2[0].sold && st.run.items.some(x => x.key === deckChipItem(k0)), 'a buy: on your belt');
     save.legacy = lg2; }
+  // +1 LAYER and SACRIFICE (v15.44): chips from posts
+  { B.startRun('LAYERS', false); await settle('start');
+    const run = st.run, cn = Object.values(run.map).find(n => n.type === 'corp'), def = corpDef(cn.corp);
+    run.chips = []; const l0 = corpPlan(cn, def, run).counts.length; run.chips = ['LY1'];
+    check(corpPlan(cn, def, run).counts.length === l0 + 1, '+1 LAYER: one more layer: ' + l0 + ' -> ' + corpPlan(cn, def, run).counts.length);
+    run.chips = ['SX1']; run.integrity = 4; run.credits = 0; await swapTo(() => openUplink()); await sleep(400);
+    const sb = hits.find(h => h.id === 'sacrifice'); check(!!sb, 'SACRIFICE: a button at the UPLINK');
+    const s0 = run.sector; sb.onTap(); await sleep(800);
+    check(run.integrity === 1 && run.sector === s0 + 1 && run.credits === 0, 'SACRIFICE: down to 1 INT, on to the next sector, no credits paid');
+    run.integrity = 1; await swapTo(() => openUplink()); await sleep(400);
+    check(!hits.find(h => h.id === 'sacrifice'), 'at 1 INT: nothing to give, no button'); }
   // CHROMATOPHORE
   save.legacy.chroma = 0;
   const few = playerPalettes().length, locked = PLAYER_STYLES.map((s, i) => i).filter(i => PLAYER_STYLES[i].locked);

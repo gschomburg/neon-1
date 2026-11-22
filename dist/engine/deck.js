@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.43']);
+NEON_FILES.push(['engine/deck.js', 'v15.44']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -101,6 +101,7 @@ const DECK_CHIPS = {
   HS1: ['HEADSTART', 'boot', 'rare', 2, 'start on the second row of sector 1.', ['>>|', 'HS1'], 'start a row in.'],
   // BIOS
   LU6: ['LOUD', 'bios', 'rare', 1, 'rival hackers turn up more (1 corp in 4 that had none), and each one you beat pays double.', ['!!!', 'LUD'], 'more rivals, double pay.'],
+  LY1: ['+1 LAYER', 'bios', 'rare', 1, 'every corp has one more layer before its boss. more REP, more risk. (THE BOARD: +1 LAYER)', ['+1 ', '[=]'], 'every corp: one more layer.'],   // (engine/run.js corpPlan)
   FR5: ['FRESH', 'bios', 'rare', 1, "corps you haven't beaten come up more.", ['NEW', 'FR5'], 'unbeaten corps come up more.'],
   EV2: ['EVENTS', 'bios', 'rare', 1, 'sector events from sector 1.', ['EVT', '!!1'], 'events from sector 1.'],
   AD0: ['ADWARE', 'bios', 'common', 1, 'more ads, and tapping one heals 1 INT.', ['AD!', '+1^'], 'ads heal you.'],
@@ -136,6 +137,7 @@ const DECK_CHIPS = {
   // OVERVOLT
   DN1: ['DONOR', 'ov', 'rare', 2, '-1 starting INT. one more mod to pick from at the start. (this might sting.)', ['+1M', 'v-1'], '-1 INT, a bigger starter pick.'],
   GL2: ['GLASS', 'ov', 'epic', 2, '-2 starting INT. every ICE hit pays 8cr.', ['/ /', '$-2'], '-2 INT, ICE pays 8cr.'],
+  SX1: ['SACRIFICE', 'ov', 'epic', 1, "the UPLINK takes INT instead: give all but 1 (a ZOMBIE: rot, to one hit from falling apart) and there's no fee. a choice there, not a must. (THE BOARD: SACRIFICE)", ['-^-', 'SAC'], 'pay the UPLINK in INT.'],   // (engine/runend.js openUplink; Greg, 2026-11-22. BRUTE FORCE: a name kept for later)
   CH1: ['CHEAPSKATE', 'ov', 'rare', 2, '-1 starting INT. markets are 20% cheaper.', ['%-%', 'v-1'], '-1 INT, markets -20%.'],
   TP1: ['TOLL PASS', 'ov', 'rare', 2, '-1 starting INT. UPLINKs cost 25% less. (exact change only.)', ['=|=', 'v-1'], '-1 INT, UPLINKs -25%.'],
   RE1: ['RED EYE', 'ov', 'epic', 2, '-1 starting INT. one ICE node on every layer is marked. (another shot?)', ['(x)', 'v-1'], '-1 INT, one ICE marked.'],
@@ -172,7 +174,7 @@ const DECK_CHIP_TAGS = {
   GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], GG1: ['you'], FT3: ['you'], JM4: ['you'], FK2: ['you'], RF4: ['you'], CM3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
   PL3: ['you'], BP1: ['you'], JD6: ['you'], PD7: ['you'], RG6: ['you'], KN8: ['you'], CL3: ['you'], HS1: ['map'],
   LU6: ['map', 'rules'], FR5: ['map'], EV2: ['map'], AD0: ['map'], SR4: ['map'], PP2: ['map'], AL4: ['you'], CS7: ['map'], CK9: ['map'], DK6: ['map'],
-  CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'], CX5: ['you'], RC1: ['rules'],
+  SX1: ['you'], LY1: ['map'], CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'], CX5: ['you'], RC1: ['rules'],
   GE1: ['rules'], OF1: ['rules'], PT1: ['rules'], GB2: ['rules'], AU2: ['rules'], SV1: ['rules'], HL2: ['rules'],
   BO1: ['you'], PO1: ['you'], WU3: ['you'], SPC: ['you'],
   DN1: ['you'], GL2: ['you', 'rules'], CH1: ['you', 'rules'], TP1: ['you', 'rules'], RE1: ['you'], LG2: ['you'], UV1: ['you', 'rules'], PD2: ['you', 'rules'],
@@ -260,7 +262,7 @@ const deckBand = by => by >= 41 ? 4 : by >= 32 ? 3 : 2;
 // own seeded streams ('cachechip', 'pierchip'), so a seed's other drops don't move.
 const DECK_DROP = { cache: 0.2, fish: 0.25 };   // a cracked DATA CACHE; a pier catch that would have been gear
 const DECK_DROP_WEIGHT = { common: 50, rare: 30, epic: 14, legendary: 5, exotic: 1 };
-const DECK_NO_DROP = ['SC1', 'SP3', '1UP', 'MN1', 'CX5', 'RC1', 'PG0', 'FA1', 'LS1', 'AR1'];   // (CX5, RC1, FA1, LS1: THE BOARD's posts give them; PG0 comes with the deck: deckGiveOwed)   // (MN1: ROOT's, from its quest)   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
+const DECK_NO_DROP = ['SC1', 'SP3', '1UP', 'MN1', 'CX5', 'RC1', 'PG0', 'FA1', 'LS1', 'AR1', 'SX1', 'LY1'];   // (CX5, RC1, FA1, LS1: THE BOARD's posts give them; PG0 comes with the deck: deckGiveOwed)   // (MN1: ROOT's, from its quest)   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
 const deckChipItem = key => 'chip_' + key;
 const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
 // A SHELL or SUDO chip before THE SHELL is yours (Greg, 2026-11-20: they still drop; they point you at ROOT's quest)

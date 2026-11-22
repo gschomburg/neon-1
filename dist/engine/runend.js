@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.43']);
+NEON_FILES.push(['engine/runend.js', 'v15.44']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -218,6 +218,23 @@ function openUplink() {
     pushOn();
     setMsg(`> uplink: -${t.fee}cr${t.cut ? ' (pass used)' : ''}${sold.length ? `, sold ${sold.length} for +${t.sold}cr` : ''}.`, C.money);
   };
+  // SACRIFICE (a chip, THE BOARD: Greg 2026-11-22): no fee; you give all but 1 INT (a ZOMBIE: rot, to one ICE hit from
+  // falling apart). Not with BLOOD MONEY (credits are your health) or with nothing to give. Mods you don't keep still sell;
+  // a PASS isn't used.
+  const sacGive = () => zombie() ? Math.max(0, rotMax() - ROT.ice - (run.rot || 0)) : run.integrity - 1;
+  const canSac = () => chipOn('SX1', run) && !bloodMoney() && sacGive() > 0;
+  const sacrifice = () => {
+    if (st.transitioning || !canSac()) return Sound.deny();
+    const t = tally(), sold = run.mods.filter(k => !keep[k]), n = sacGive();
+    for (const k of sold) removeMod(k);
+    run.credits += t.sold;
+    if (zombie()) run.rot = (run.rot || 0) + n; else run.integrity = 1;
+    run.uplinks = (run.uplinks || 0) + 1;
+    Sound.ui(); shake(6, 0.4);
+    st.uplink = null;
+    pushOn();
+    setMsg(`> sacrifice: ${zombie() ? '+' + n + ' rot' : '-' + n + ' INT'}, no fee${sold.length ? `, sold ${sold.length} for +${t.sold}cr` : ''}.`, C.danger);
+  };
   const togglePass = () => { if (!hasPass()) return Sound.deny(); usePass = !usePass; Sound.tick(); };
   const toggle = k => { if (UPLINK_LOCKED.includes(k)) return Sound.deny(); keep[k] = !keep[k]; Sound.tick(); };
   st.uplink = { keep, tally, canGo, toggle, togglePass, push: go, cash: cashOut, fee: uplinkFee, sell: uplinkSell, locked: UPLINK_LOCKED };   // (read by tools/checks/econsim.js)
@@ -253,7 +270,7 @@ function openUplink() {
       name: 'PASS: half the fee', clip: 'ellipsis', col: usePass ? C.text : C.mid,
       right: '-' + Math.round(t.raw * ECON.uplink.pass), rightCol: usePass ? C.money : C.dim });
     // the list gets what the rest of the screen leaves (the rest: ~22 rows)
-    const rest = 23 + (leverage() ? 1 : 0) + (t.cut ? 1 : 0) + (questCarryLine() ? 1 : 0);   // (the quest's reminder line, below)
+    const rest = 23 + (leverage() ? 1 : 0) + (t.cut ? 1 : 0) + (questCarryLine() ? 1 : 0) + (canSac() ? 1 : 0);   // (the quest's reminder line, below)
     const rows = Math.max(1, Math.min(items.length, L.hc - 2 - rest));
     if (items.length) scrollArea(X, T, area, items, rows, 'upl');
     else T('no mods to carry.', C.dim);
@@ -272,6 +289,7 @@ function openUplink() {
     const w = Math.max(30, subPush.length + 8, subCash.length + 8);   // the two buttons the same width (drawBox pads 8)
     X(ok ? { box: true, text: `${sp('PAY')}   ${sp(t.fee + 'cr')}`, sub: subPush, id: 'push', onTap: go, minW: w, col: C.money }
       : { box: true, text: `${sp('REMOVE')}   ${sp('MODS')}`, sub: subPush, id: 'push', onTap: go, minW: w, disabled: true, disCol: C.danger });
+    if (canSac()) B(`[ SACRIFICE: ${zombie() ? '+' + sacGive() + ' ROT' : '-' + sacGive() + ' INT'}, no fee ]`, 'sacrifice', sacrifice);   // (a chip)
     X({ box: true, text: run.practice ? `${sp('END')}   ${sp('RUN')}` : `${sp('EARN')}   ${sp(repFor(run))}   ${sp('REP')}`, sub: subCash, id: 'cash', onTap: cashOut, minW: w, col: C.rep });
     if (!run.practice) T(legacyLv('dms') ? `dying later keeps ${25 * Math.min(3, legacyLv('dms'))}% of your REP.` : 'die later and you bank nothing.', C.dim);
     { const ql = questCarryLine(); if (ql) T(ql, C.rep); }   // (the DISC, the DOGTAG: engine/quests.js)
