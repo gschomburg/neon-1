@@ -1,15 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.26']);
-
-// dev.real (THE SHELL, Greg 2026-11-21): a dev run that still counts. Quests move, REP banks, the boards see it. Nothing
-// can make it practice: dev.start, G0D.exe and the cheats all set run.practice, so practice reads false here. The run
-// keeps real: true, so a resume or a 1UP puts it back (engine/menus.js, engine/oneup.js).
-function runKeepReal(run) {
-  if (!run || !run.real) return run;
-  Object.defineProperty(run, 'practice', { get: () => false, set: () => {}, enumerable: true, configurable: true });
-  return run;
-}
+NEON_FILES.push(['engine/run.js', 'v15.27']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -42,7 +33,7 @@ async function startRun(seed, practice, opts = {}) {
   const seeded = !!opts.seeded && !quest && !opts.tutorial;
   st.seed = seed; st.practice = practice; st.seeded = seeded;
   st.run = {
-    seed, practice, quest, seeded, real: !!st.devReal,
+    seed, practice, quest, seeded, startPractice: practice,   // (startPractice: what dev.stop puts back, engine/shell.js)
     map: genMap(seed),
     finalTell: pickR(['corner', 'mark', 'mirror'], rngFor(seed, 'final')),
     at: '0:1', visited: ['0:1'],
@@ -51,8 +42,6 @@ async function startRun(seed, practice, opts = {}) {
     beltSlots: CONFIG.beltSlots + legacyLv('belt'), reroutes: 0,
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
-  runKeepReal(st.run);   // dev.real (THE SHELL): this run counts
-
   if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
   if (quest === 'had3s') st.run.items.push({ key: 'leash', tier: 0, n: 1 });   // HAD3S: you go in with a LEASH
   if (!opts.tutorial) questRunStart(st.run);   // the OMNI RAID: b0y's CALL (engine/quests.js)

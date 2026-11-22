@@ -1,7 +1,7 @@
 // NeoN+1 engine/oneup.js: THE 1UP (docs/ENDGAME.md): a save point as you enter a corp, and CONTINUE? from it.
 // Moved out of engine/run.js (2026-11-05). Needs engine/run.js (startCorp, die) loaded first.
 'use strict';
-NEON_FILES.push(['engine/oneup.js', 'v15.26']);
+NEON_FILES.push(['engine/oneup.js', 'v15.27']);
 
 // ---------------- THE 1UP (docs/ENDGAME.md; b0y's crash unit from MEDIX, the reward for beating G0D) ----------------
 // You hold one at most; it charges again every sector. Die holding it and you can go back to the start of the corp you
@@ -40,7 +40,7 @@ async function useOneUp(run0) {
   const c = st.corp, back = JSON.parse(JSON.stringify(run0.oneUpSave));
   Object.assign(back, { oneUp: 0, oneUps: (run0.oneUps || 0) + 1, oneUpAt: run0.oneUpAt, oneUpSave: run0.oneUpSave, stat: run0.stat, resumes: run0.resumes });   // (the stats keep counting)
   stat('oneup', { sector: (c.sector || 0) + 1, corp: c.def.key, layer: st.lv && st.lv.boss ? 'boss' : c.idx + 1 });
-  st.run = runKeepReal(back); st.dying = false; st.timer = null; st.hkDeath = null;   // (runKeepReal: dev.real, engine/run.js)
+  st.run = back; st.dying = false; st.timer = null; st.hkDeath = null;
   Sound.shield(); flash(C.money, 0.25, 0.5);
   await wipeOut(0);
   st.busy = false;

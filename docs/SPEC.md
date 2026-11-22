@@ -1094,7 +1094,8 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
-- **v15.26** (2026-11-21): **dev.real** (Greg). A shell command: dev runs count. While it's on (this session), nothing makes a run practice (dev.start, G0D.exe, cheats): quests move, REP banks, scores post. Off: practice again. The run keeps real: true for a resume or a 1UP (engine/run.js runKeepReal). tests/devreal.js.
+- **v15.27** (2026-11-21): **dev.stop** (Greg). Out of dev mode, and the run counts again (run.startPractice: what it began as); god, free travel and show real go off. Replaces v15.26's dev.real (reverted). tests/devstop.js.
+- **v15.26** (2026-11-21): dev.real, a switch that kept dev runs from going practice. Reverted in v15.27 for dev.stop.
 - **v15.25** (2026-11-21): **godexe works** (Greg). THE SHELL reads god with an o as g0d when the word isn't a command as typed (engine/shell.js shellParse): godexe, godexe.speed... mode.god stays mode.god. tests/shell.js.
 - **v15.24** (2026-11-21): **ENTROPY and fork; its tell** (Greg). A shuffle leaves fork's second real node its glyph (it wore the real one's, then got a new one like a decoy). ENTROPY's tell says deeper in one decoy keeps its glyph through the first shuffle. golden.json re-accepted (CORP_TELL). tests/sudo2.js checks the fork.
 - **v15.23** (2026-11-21): **The codex's tabs** (Greg, meat notes). TECH (GEAR MODS CHIPS), NET (CORPS GLYPHS SECTORS), HACKERS (CREW RIVALS): three main tabs and a sub-tab strip (drawSubTabs), in the two rows the six tabs took (engine/codex.js cxTabs). CHIPS is new: it shows once you've got a chip that isn't the deck's own; a chip is found when seen or in your deck. The arrows walk every sub-tab; the codex reopens where you left it (CX_LAST, this session). openCodex(sub) opens on a sub-tab. tests/codex.js.
