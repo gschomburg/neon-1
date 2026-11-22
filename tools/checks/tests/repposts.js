@@ -3,12 +3,20 @@
 // CPU, starts every run), and placeholder posts that real ones replaced give their REP back. Run by tools/test.js.
 module.exports = { name: 'repposts', body: `
   save.legacy = save.legacy || {};
-  // LOYALTY CARD
+  // LOYALTY CARD (I on ELITE, II on SYSOP: a ladder, v15.40)
   const o = { kind: 'item', key: 'patch', tier: 0, price: 100 };
-  save.legacy.market = 0; const p0 = priceOf(o);
-  save.legacy.market = 2; const p2 = priceOf(o);
-  check(p0 > 0 && Math.abs(p2 / p0 - 0.9) < 0.03, 'LOYALTY CARD 2: markets 10% cheaper: ' + p0 + ' -> ' + p2);
-  save.legacy.market = 0;
+  save.legacy.market = 0; save.legacy.market2 = 0; const p0 = priceOf(o);
+  save.legacy.market = 1; save.legacy.market2 = 1; const p2 = priceOf(o);
+  check(p0 > 0 && Math.abs(p2 / p0 - 0.9) < 0.03, 'LOYALTY CARD I and II: markets 10% cheaper: ' + p0 + ' -> ' + p2);
+  save.legacy.market = 0; save.legacy.market2 = 0;
+  // the ladders: each step its own post a level up, needing the one before; legacyLv counts the ladder
+  const lad = { hard: ['hard2', 'hard3'], cash: ['cash2', 'cash3'], restock: ['restock2'], dms: ['dms2', 'dms3'], drops: ['drops2'], market: ['market2'] };
+  check(Object.entries(lad).every(([b, ks]) => ks.every((k, i) => { const u = LEGACY.find(p => p.key === k), up = LEGACY.find(p => p.key === (i ? ks[i - 1] : b)); return u && u.ladder === b && u.needs === up.key && u.tier === up.tier + 1; })), 'the ladders: a level up each, each needs the one before');
+  const lg0 = Object.assign({}, save.legacy);
+  Object.assign(save.legacy, { dms: 1, dms2: 1, dms3: 1, hard: 1, hard2: 1 });
+  check(legacyLv('dms') === 3 && legacyLv('hard') === 2 && postLv('hard') === 1, 'legacyLv counts the ladder: DEADMAN III is 3, HARDENED II is 2');
+  save.legacy = lg0;
+  check(REP_SUBS.map(s => s[1]).join(' ') === 'MSGS GUEST USER ELITE SYSOP', 'REP has its sub-tabs: ' + REP_SUBS.map(s => s[1]).join(' '));
   // CHROMATOPHORE
   save.legacy.chroma = 0;
   const few = playerPalettes().length, locked = PLAYER_STYLES.map((s, i) => i).filter(i => PLAYER_STYLES[i].locked);

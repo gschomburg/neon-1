@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.39']);
+NEON_FILES.push(['engine/save.js', 'v15.40']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -87,21 +87,25 @@ function markSeen(key) {
 const BOARD_LEVELS = [{ name: 'GUEST' }, { name: 'USER', need: 4 }, { name: 'ELITE', need: 3 }, { name: 'SYSOP', need: 2 }];
 const LEGACY = [
   // ---- 1 GUEST
-  { key: 'hard',  tier: 1, name: 'HARDENED',   desc: '+1 starting integrity.',          costs: [40, 100] },
-  { key: 'cash',  tier: 1, name: 'SEED MONEY', desc: 'start with +25cr.',               costs: [20, 40, 80] },
+  // Ladders (Greg, 2026-11-22): a post's next level is its own post on the level above (ladder: the first one's key;
+  // needs: the one before). legacyLv(first) counts the whole ladder. HARDENED, SEED MONEY, RESTOCK, DEADMAN, BETTER DROPS,
+  // LOYALTY CARD.
+  { key: 'hard',  tier: 1, name: 'HARDENED',   desc: '+1 starting integrity.',          costs: [40] },
+  { key: 'cash',  tier: 1, name: 'SEED MONEY', desc: 'start with +25cr.',               costs: [20] },
   { key: 'kit',   tier: 1, name: 'FIRST AID',  chip: 'FA1', desc: 'start with a PATCH. once you have a deck: the FIRST AID chip (BOOT).', costs: [50] },   // (was FIELD KIT: Greg, 2026-11-22, not a KIT)
   { key: 'belt',  tier: 1, name: 'GEAR SLOT',  desc: '+1 gear slot.',                   costs: [120] },
-  { key: 'restock', tier: 1, name: 'RESTOCK',  desc: '+1 reroll at every market.',      costs: [30, 60],
-    levels: ['2 rerolls at every market (was 1).', '3 rerolls at every market.'] },
+  { key: 'restock', tier: 1, name: 'RESTOCK',  desc: '2 rerolls at every market (was 1).', costs: [30] },
   { key: 'picky', tier: 1, name: 'SHORTLIST',  desc: 'the starter perk offers 4 mods.', costs: [60] },
-  { key: 'dms',   tier: 1, name: 'DEADMAN',    desc: 'dying keeps 25% of the REP you would have banked.', costs: [80, 200],
-    levels: ['dying keeps 25% of the REP you would have banked.', 'dying keeps 50% of the REP you would have banked.'] },
+  { key: 'dms',   tier: 1, name: 'DEADMAN',    desc: 'dying keeps 25% of the REP you would have banked.', costs: [80] },
   { key: 'wind',  tier: 1, name: 'SECOND WIND', desc: 'heal 1 integrity at the start of every new sector.', costs: [50] },
   { key: 'lucky', tier: 1, name: 'LUCKY START', chip: 'LS1', desc: 'start every run with a random common gear. once you have a deck: the LUCKY START chip (BOOT).', costs: [40] },
   { key: 'stray', tier: 1, name: 'STRAY',      desc: 'a stray bug follows you: every run starts with a pet.', costs: [60] },
   // ---- 2 USER
-  { key: 'drops', tier: 2, name: 'BETTER DROPS', desc: '1 in 10 mods and gear roll a step rarer.', costs: [150, 300],
-    levels: ['1 in 10 mods and gear roll a step rarer.', '1 in 5 mods and gear roll a step rarer.'] },
+  { key: 'hard2', tier: 2, ladder: 'hard', needs: 'hard', name: 'HARDENED II', desc: '+2 starting integrity (was +1).', costs: [100] },
+  { key: 'cash2', tier: 2, ladder: 'cash', needs: 'cash', name: 'SEED MONEY II', desc: 'start with +50cr (was +25).', costs: [40] },
+  { key: 'restock2', tier: 2, ladder: 'restock', needs: 'restock', name: 'RESTOCK II', desc: '3 rerolls at every market (was 2).', costs: [60] },
+  { key: 'dms2', tier: 2, ladder: 'dms', needs: 'dms', name: 'DEADMAN II', desc: 'dying keeps 50% of the REP you would have banked (was 25%).', costs: [200] },
+  { key: 'drops', tier: 2, name: 'BETTER DROPS', desc: '1 in 10 mods and gear roll a step rarer.', costs: [150] },
   { key: 'remote', tier: 2, name: 'REMOTE ACCESS', needs: 'bench', desc: 'after the public node, your WORKBENCH opens: take things out of its LOCKER, shred, build.', costs: [200] },   // (was the LOCKER post, one stored mod: Greg, 2026-11-22. engine/panels.js openStartReward)
   { key: 'bench', tier: 2, name: 'WORKBENCH', desc: 'every safehouse gets a workbench: shred gear and mods into letters, spell a code to build one.', costs: [150] },   // (engine/bench.js)
   { key: 'nemesis', tier: 2, name: 'NEMESIS', desc: 'pick a corp you have breached: it shows up 3x as often.', costs: [120] },
@@ -113,8 +117,11 @@ const LEGACY = [
   // for real ones later). HEAT, the quests, THE ARCHIVE are ideas for these levels (docs/PROGRESSION.md, docs/DECK.md).
   { key: 'deck3', tier: 3, name: 'DECK mk III', desc: 'the middle board for your deck: the GLYPH, OVERVOLT and the crew jacks.', costs: [600] },
   { key: 'biglocker', tier: 3, name: 'BIG LOCKER', needs: 'bench', desc: "+5 slots in the workbench's LOCKER.", costs: [200] },   // (engine/bench.js benchLockerMax; Greg, 2026-11-22: on ELITE, in ELITE POST 1's place)
-  { key: 'market', tier: 3, name: 'LOYALTY CARD', desc: 'markets are 5% cheaper.', costs: [200, 400],   // (engine/panels.js priceOf; Greg, 2026-11-22: all markets, 2 levels)
-    levels: ['markets are 5% cheaper.', 'markets are 10% cheaper.'] },
+  { key: 'market', tier: 3, name: 'LOYALTY CARD', desc: 'every market is 5% cheaper, the fence too.', costs: [200] },   // (engine/deck.js shopMult; Greg, 2026-11-22: all markets)
+  { key: 'hard3', tier: 3, ladder: 'hard', needs: 'hard2', name: 'HARDENED III', desc: '+3 starting integrity (was +2).', costs: [300] },
+  { key: 'cash3', tier: 3, ladder: 'cash', needs: 'cash2', name: 'SEED MONEY III', desc: 'start with +75cr (was +50).', costs: [80] },
+  { key: 'dms3', tier: 3, ladder: 'dms', needs: 'dms2', name: 'DEADMAN III', desc: 'dying keeps 75% of the REP you would have banked (was 50%).', costs: [400] },
+  { key: 'drops2', tier: 3, ladder: 'drops', needs: 'drops', name: 'BETTER DROPS II', desc: '1 in 5 mods and gear roll a step rarer (was 1 in 10).', costs: [300] },
   // chip: buying it gives you that chip for your deck (Greg, 2026-11-22: posts that are strong or need a limit are chips)
   { key: 'codex', tier: 3, name: 'CODEX', chip: 'CX5', desc: "gives you the CODEX chip (CRASH) for your deck: die in a corp you haven't beaten and a piece of its tell decodes.", costs: [250] },
   // ---- 4 SYSOP: the FUSE (your deck's mk IV, after mk III), and placeholders
@@ -123,6 +130,7 @@ const LEGACY = [
   { key: 'archive', tier: 4, name: 'THE ARCHIVE', chip: 'AR1', desc: "gives you THE ARCHIVE chip (BOOT) for your deck: pick a mod you've found on its card, and every run starts with it.", costs: [800] },
   { key: 'chroma', tier: 4, name: 'CHROMATOPHORE', desc: 'every palette in SETTINGS, and more colors for your card.', costs: [500] },   // (engine/core.js playerPalettes, engine/multiplayer.js styleOpen)
   { key: 'relic', tier: 4, name: 'RELIC', chip: 'RC1', desc: 'gives you the RELIC chip (SPOILS) for your deck: now and then a corp boss adds an exotic mod to its picks.', costs: [800] },
+  { key: 'market2', tier: 4, ladder: 'market', needs: 'market', name: 'LOYALTY CARD II', desc: 'every market is 10% cheaper (was 5%).', costs: [400] },
   // ---- PRIVATE MESSAGES (a feat opens them)
   { key: 'bossloot', pm: 'bosshunter', name: 'BOSS LOOT', desc: 'boss gear (FLARE, BEES...) can turn up in black markets.', costs: [180] },
 ];
@@ -131,8 +139,11 @@ const LEGACY = [
 for (const [id, h] of Object.entries(HACKERS)) if (h.side === 'good' && (!h.quest || h.lvl2Post)) LEGACY.push(   // (quest crew, b0y and ROOT: the quest puts them on the crew; ROOT keeps its LVL 2 post)
   ...(h.quest ? [] : [{ key: 'crew_' + id, pm: 'call_' + id, crew: id, name: 'CREW: ' + h.name, desc: h.name + ' joins your crew: their own call gear turns up in markets and loot.', costs: [120] }]),
   { key: 'crew2_' + id, pm: 'call10_' + id, needs: 'crew_' + id, crew: id, name: 'CREW: ' + h.name + ' LVL 2', desc: h.lvl2 || '', costs: [200] });
-const legacyLv = key => (save.legacy && save.legacy[key]) || 0;
-const boughtOn = t => LEGACY.filter(u => u.tier === t && legacyLv(u.key) > 0).length;
+// postLv: this post's own level (what it costs next, OWNED). legacyLv: what it does, its whole ladder (HARDENED + II + III).
+const postLv = key => (save.legacy && save.legacy[key]) || 0;
+const LADDERS = {}; for (const u of LEGACY) if (u.ladder) (LADDERS[u.ladder] = LADDERS[u.ladder] || []).push(u.key);
+const legacyLv = key => postLv(key) + (LADDERS[key] || []).reduce((a, k) => a + postLv(k), 0);
+const boughtOn = t => LEGACY.filter(u => u.tier === t && postLv(u.key) > 0).length;
 // Your access level: 1 GUEST ... 4 SYSOP (the highest level that's open).
 function boardLevel() {
   let lv = 1;
@@ -147,7 +158,7 @@ const postOn = k => legacyLv(k) > 0 && !(save.deck && save.deck.off && save.deck
 // Buy a BOARD post: THE BOARD's REP tab (engine/menus.js) and the deck's CPU upgrades (engine/deck.js deckBuy) both
 // come here. Returns null when it's bought, or why not (the caller plays the sound and says it).
 function buyPost(u) {
-  const lv = legacyLv(u.key), cost = u.costs[lv];
+  const lv = postLv(u.key), cost = u.costs[lv];
   if (cost == null) return 'you have it.';
   if (!postOpen(u)) return 'not open yet.';
   if (u.needs && !legacyLv(u.needs) && !u.pm) return `${(LEGACY.find(p => p.key === u.needs) || {}).name} first.`;

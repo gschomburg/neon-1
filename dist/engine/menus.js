@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.39']);
+NEON_FILES.push(['engine/menus.js', 'v15.40']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -121,17 +121,26 @@ function featLines() {
 // REP: PRIVATE MESSAGES (shown once its feat has some progress), then each level: open ones list their posts, the next
 // locked one says what opens it. Lines: { hdr, right } | { post } | { note }.
 const REP_LIST_ROWS = 13;
-function repLines() {
+// REP's sub-tabs (Greg, 2026-11-22: the list got long): MSGS (the private messages), then a tab a level. repLines(sub):
+// that tab's lines; a locked level says how it opens.
+const REP_SUBS = [['pm', 'MSGS']].concat(BOARD_LEVELS.map((L, i) => [i + 1, L.name]));
+const repPms = () => LEGACY.filter(u => u.pm && FEAT_BY_ID[u.pm] && (!u.needs || legacyLv(u.needs)) && (featDone(u.pm) || featProgress(FEAT_BY_ID[u.pm]) > 0));
+const repSubPosts = sub => sub === 'pm' ? repPms() : sub <= boardLevel() ? LEGACY.filter(u => u.tier === sub) : [];
+const repSubNew = sub => repSubPosts(sub).some(u => postUnseen(u.key));
+function repLines(sub) {
   const lines = [], lvl = boardLevel();
-  const pms = LEGACY.filter(u => u.pm && FEAT_BY_ID[u.pm] && (!u.needs || legacyLv(u.needs)) && (featDone(u.pm) || featProgress(FEAT_BY_ID[u.pm]) > 0));
-  if (pms.length) { lines.push({ hdr: 'PRIVATE MESSAGES', right: '' }); for (const u of pms) lines.push({ post: u }); }
-  BOARD_LEVELS.forEach((L, i) => {
-    const t = i + 1, posts = LEGACY.filter(u => u.tier === t), open = t <= lvl;
-    lines.push({ hdr: `${t} ${L.name}`, right: !open ? 'locked' : posts.length ? `${boughtOn(t)}/${posts.length}` : '' });
-    if (!open) { if (t === lvl + 1) lines.push({ note: `buy ${L.need - boughtOn(t - 1)} more on ${BOARD_LEVELS[t - 2].name} to open.` }); return; }
-    if (!posts.length) lines.push({ note: 'nothing posted yet.' });
-    for (const u of posts) lines.push({ post: u });
-  });
+  if (sub === 'pm') {
+    const pms = repPms();
+    lines.push({ hdr: 'PRIVATE MESSAGES', right: '' });
+    if (!pms.length) lines.push({ note: 'none yet. feats open them.' });
+    for (const u of pms) lines.push({ post: u });
+    return lines;
+  }
+  const t = sub, L = BOARD_LEVELS[t - 1], posts = LEGACY.filter(u => u.tier === t), open = t <= lvl;
+  lines.push({ hdr: `${t} ${L.name}`, right: !open ? 'locked' : posts.length ? `${boughtOn(t)}/${posts.length}` : '' });
+  if (!open) { lines.push({ note: t === lvl + 1 ? `buy ${L.need - boughtOn(t - 1)} more on ${BOARD_LEVELS[t - 2].name} to open.` : `open ${BOARD_LEVELS[t - 2].name} first.` }); return lines; }
+  if (!posts.length) lines.push({ note: 'nothing posted yet.' });
+  for (const u of posts) lines.push({ post: u });
   return lines;
 }
 const repHdr = (t, right) => { const r = right ? ' ' + right + ' --' : ''; return ('-- ' + t + ' ').padEnd(32 - r.length, '-') + r; };
@@ -209,8 +218,12 @@ function openBoard(tab) {
   if (!tab) tab = Object.keys(save.unseen || {}).length ? 'feats' : 'rep';
   const featS = { top: 0 }, statS = { top: 0 }, repS = { top: 0 }, crewS = { top: 0 };
   // REP starts on the first new post (or the first post)
-  let repSel = (() => { const ls = repLines(), i = ls.findIndex(l => l.post && postUnseen(l.post.key)); return i >= 0 ? i : ls.findIndex(l => l.post); })();
-  scrollFollow(repS, repSel, repLines().length, REP_LIST_ROWS);
+  // (REP opens on the tab with something new, else your access level)
+  let repSub = (REP_SUBS.find(([k]) => repSubNew(k)) || [boardLevel()])[0];
+  const repFirst = () => { const ls = repLines(repSub), i = ls.findIndex(l => l.post && postUnseen(l.post.key)); return i >= 0 ? i : ls.findIndex(l => l.post); };
+  let repSel = repFirst();
+  scrollFollow(repS, repSel, repLines(repSub).length, REP_LIST_ROWS);
+  const setRepSub = k => { if (k === repSub) return; repSub = k; repS.top = 0; repSel = repFirst(); scrollFollow(repS, repSel, repLines(repSub).length, REP_LIST_ROWS); Sound.tick(); };
   // FEATS starts on the first new one (or the first feat)
   let featSel = (() => { const ls = featLines(), i = ls.findIndex(l => l.f && featUnseen(l.f.id)); return i >= 0 ? i : ls.findIndex(l => l.f); })();
   scrollFollow(featS, featSel, featLines().length, FEAT_LIST_ROWS);
@@ -218,7 +231,7 @@ function openBoard(tab) {
   if (tab === 'you') seeTitles();
   const back = () => { boardFixLogo(); swapTo(showTitle); };
   const buy = u => {   // (engine/save.js buyPost)
-    const lv = legacyLv(u.key), why = buyPost(u);
+    const lv = postLv(u.key), why = buyPost(u);
     if (why) { Sound.deny(); setMsg('> ' + why, C.danger); return; }
     Sound.buy();
     setMsg(`> ${u.name.toLowerCase()} unlocked${u.costs.length > 1 ? `: level ${lv + 1}` : ''}.`, C.rep);
@@ -269,15 +282,17 @@ function openBoard(tab) {
       if (save.deck) { t(''); x({ row: [{ text: '[ YOUR DECK ]', id: 'pdeck', onTap: () => { boardFixLogo(); openDeck(); } }] }); }   // (engine/deck.js)
     } else if (tab === 'rep') {
       // the posts (scrolling), then the picked one with its BUY box under it
-      const lines = repLines();
+      const lines = repLines(repSub);
       if (!lines[repSel] || !lines[repSel].post) repSel = lines.findIndex(l => l.post);
-      const u = lines[repSel].post;
-      seePost(u.key);   // looked at: its * goes
+      const u = repSel >= 0 ? lines[repSel].post : null;
+      if (u) seePost(u.key);   // looked at: its * goes
       x({ text: `REP ${save.rep || 0}   //   access ${accessName()}`, colorAt: i => i < 4 + String(save.rep || 0).length ? C.rep : C.mid, bold: true });
+      // the sub-tabs (engine/textboard.js drawSubTabs): a * on one with a new post
+      x({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, REP_SUBS.map(([k, label]) => ({ id: 'rps_' + k, text: (repSubNew(k) ? '*' : '') + label, on: repSub === k, onTap: () => setRepSub(k) })), 0) });
       const items = lines.map((l, i) => {
         if (l.hdr) return { text: repHdr(l.hdr, l.right), col: l.right === 'locked' ? C.dim : C.mid };
         if (l.note) return { text: ('   ' + l.note).padEnd(32), col: C.dim };
-        const p = l.post, lv = legacyLv(p.key), max = lv >= p.costs.length, cost = p.costs[lv], open = postOpen(p);
+        const p = l.post, lv = postLv(p.key), max = lv >= p.costs.length, cost = p.costs[lv], open = postOpen(p);
         const lvTxt = p.costs.length > 1 ? ` ${'#'.repeat(lv)}${'-'.repeat(p.costs.length - lv)}` : '';
         const fe = p.pm && FEAT_BY_ID[p.pm];
         return { list: true, id: 'lg' + i, onTap: () => { repSel = i; Sound.tick(); }, sel: i === repSel,
@@ -286,7 +301,8 @@ function openBoard(tab) {
           rightCol: max ? C.accent : !open ? C.mid : (save.rep || 0) >= cost ? C.rep : C.dim, tint: max ? C.accent : null };
       });
       scrollArea(x, t, repS, items, REP_LIST_ROWS, 'rl');
-      const lv = legacyLv(u.key), max = lv >= u.costs.length, cost = u.costs[lv], open = postOpen(u);
+      if (!u) { t(SEP, C.dim); for (let k = 0; k < 6; k++) t(''); t(SEP, C.dim); return; }   // (a locked level, or no messages yet)
+      const lv = postLv(u.key), max = lv >= u.costs.length, cost = u.costs[lv], open = postOpen(u);
       t(SEP, C.dim);
       x({ text: u.name, col: C.bright, bold: true });
       const dl = wrapText(u.levels ? u.levels[Math.min(lv, u.levels.length - 1)] : u.desc, 32);
@@ -339,7 +355,8 @@ function openBoard(tab) {
     if (k === 'arrowup' || k === 'arrowdown') {
       const d = k === 'arrowdown' ? 1 : -1;
       if (tab === 'rep') {
-        const lines = repLines(), picks = lines.map((l, i) => l.post ? i : -1).filter(i => i >= 0), j = picks.indexOf(repSel);
+        const lines = repLines(repSub), picks = lines.map((l, i) => l.post ? i : -1).filter(i => i >= 0), j = picks.indexOf(repSel);
+        if (!picks.length) return true;
         repSel = picks[clamp(j + d, 0, picks.length - 1)];
         scrollFollow(repS, repSel, lines.length, REP_LIST_ROWS); Sound.tick();
         return true;

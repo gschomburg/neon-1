@@ -105,7 +105,7 @@ module.exports = { name: 'deck', body: `
   save.legacy.market = 1; check(boardLevel() === 4, 'SYSOP (mk III and LOYALTY CARD)');
   deckFuseIn(); check(DECK.mk === 4 && DECK.fuse && legacyLv('fuse') === 1, 'the FUSE: mk IV');
   save.deck.seenMk = 3; openDeck(); await sleep(100); check(DECK.up && DECK.up.mk === 4, 'bought on THE BOARD: the fanfare the next time you open your deck'); DECK.up = null;
-  check(!LEGACY.some(u => u.placeholder) && LEGACY.filter(u => u.tier === 3).length === 4 && LEGACY.filter(u => u.tier === 4).length === 4, 'ELITE and SYSOP: 4 real posts each, no placeholders');
+  check(!LEGACY.some(u => u.placeholder) && LEGACY.filter(u => u.tier === 3).length >= 4 && LEGACY.filter(u => u.tier === 4).length >= 4, 'ELITE and SYSOP: real posts, no placeholders');
   // the switches: STRAY off turns the post off for runs
   save.legacy.stray = 1; openDeck(); await sleep(200);
   check(deckSwitches().join() === 'stray' && postOn('stray'), 'only the posts you own are settings: ' + deckSwitches());

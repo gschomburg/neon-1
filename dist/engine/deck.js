@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.39']);
+NEON_FILES.push(['engine/deck.js', 'v15.40']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -398,7 +398,7 @@ function deckCashedOut(run) { if (save.deck && !run.practice) save.deck.windup =
 // market prices (engine/panels.js priceOf): CHEAPSKATE -20%, INFLATION +10% a sector
 // Every market's buy price goes through shopMult (Greg, 2026-11-22: LOYALTY CARD is every market, the fence too, and any new
 // one): the market (engine/panels.js priceOf), THE FENCE's mods and its ripped chip (engine/events.js fencePrice, deckFenceChip).
-const shopMult = (run = st.run) => deckPriceMult(run) * (1 - 0.05 * legacyLv('market'));   // (LOYALTY CARD: THE BOARD, 5% a level)
+const shopMult = (run = st.run) => deckPriceMult(run) * (1 - 0.05 * legacyLv('market'));   // (LOYALTY CARD: THE BOARD, I and II, 5% each)
 const deckPriceMult = (run = st.run) => !run || !run.chips ? 1 : (chipOn('CH1', run) ? 0.8 : 1) * (chipOn('IF1', run) ? 1 + 0.1 * (run.sector || 0) : 1);
 // the UPLINK's fees (engine/runend.js uplinkMin, uplinkFee): TOLL PASS -25%
 const deckUplinkMult = (run = st.run) => chipOn('TP1', run) ? 0.75 : 1;

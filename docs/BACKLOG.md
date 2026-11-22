@@ -83,7 +83,19 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   ELITE POST 1's place: ELITE needs real posts).
 
 ### REP and chip ideas (Greg, meat notes 2026-11-22)
-THE BOARD today: GUEST 10 posts, USER 7, ELITE 4, SYSOP 4, plus the private messages. Ideas for more posts:
+**Decided (Greg, 2026-11-22):** fill ELITE and SYSOP. The batches:
+1. [x] (v15.40) Ladders: a post's next level is its own post a level up (HARDENED, SEED MONEY, RESTOCK, DEADMAN to 75%,
+   BETTER DROPS, LOYALTY CARD), and REP's sub-tabs (MSGS GUEST USER ELITE SYSOP).
+2. [ ] Plain posts: POWER TAP (deck power +1 ELITE, +2 SYSOP), SURGE (SHELL charges, the same), CLOUT (+25% REP, SYSOP),
+   BAIT SHOP (cheaper casts, ELITE), DEEP WATER (rarer and more corrupted catches, SYSOP), BACKDOOR (dev.start /
+   dev.stop; SYSOP, hidden till you're SYSOP).
+3. [ ] CHIP DEALER (ELITE; II on SYSOP): a catalog of chips after a DATA CACHE. You still have to get out with what you
+   buy; every chip in it counts as seen (craftable).
+4. [ ] Posts that give chips: BLOOD TOLL (ELITE, OVERVOLT: pay the UPLINK with all but 1 INT, an option there) and
+   +1 LAYER (SYSOP, BIOS).
+5. [ ] The rewards-screen chips (HEIRLOOM's [ TO LOCKER ], SALVAGE, GAMBLE, AUCTION) and BENCH LINK.
+
+The ideas as they came:
 - **Full shell access:** the secret to `dev.start` / `dev.stop`. Expensive, and hidden. (Today dev mode makes a run
   practice, so it can't farm anything.) Maybe a private message from a feat, or a SYSOP post that doesn't show until
   you're SYSOP.
@@ -95,7 +107,8 @@ THE BOARD today: GUEST 10 posts, USER 7, ELITE 4, SYSOP 4, plus the private mess
 - **A fishing post:** bigger catches, a better rarity, half-price casts, or free casts. (STEADY HANDS is the one now.)
 - **The UPLINK:** cheaper (TOLL PASS, a chip, is -25%), or a full heal, or pay with INT (all but 1) to pass.
 - **REP sub-tabs:** MSGS GUEST USER ELITE SYSOP (27 wide: fits). The list is long now (about 30).
-- **Press F to pay respects** at the end of a boss fight. (Open: what pressing it does. A feat? A line?)
+- **Press F to pay respects** (misc, later: Greg, 2026-11-22): when a boss goes down, an `F` flashes for a moment; tap it
+  (or press F) and it counts toward a feat (PAID RESPECTS, 50), maybe a line from POPS the first time. Nothing in the run.
 - **Chips are hard to come by in normal play.** Today: a cracked DATA CACHE 20%, a pier catch 25% (in place of gear),
   a market 15%, a corp boss 12%, out of about 120 chips. Ideas: a REP post that adds a chip store to DATA CACHES, or a
   chip dealer (a node, or a stall like THE FENCE).

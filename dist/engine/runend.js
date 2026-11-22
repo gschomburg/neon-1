@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.39']);
+NEON_FILES.push(['engine/runend.js', 'v15.40']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -80,7 +80,7 @@ async function endRun(win) {
   }
   // REP: cashing out banks it all; dying banks nothing (DEADMAN keeps a part).
   const repWorth = repFor(run);
-  const rep = run.practice ? 0 : win ? repWorth : Math.floor(repWorth * Math.max([0, 0.25, 0.5][legacyLv('dms')], deckDeadman(run)));   // (DEADMAN: the post, or the chip)
+  const rep = run.practice ? 0 : win ? repWorth : Math.floor(repWorth * Math.max(0.25 * Math.min(3, legacyLv('dms')), deckDeadman(run)));   // (DEADMAN: the post, or the chip)
   if (!win) { deckBlackBox(run); deckDeath(run); }   // BLACK BOX (a chip): your best mod to the LOCKER; INSURANCE, DEAD DROP
   else deckCashedOut(run);   // (WIND-UP's power)
   if (rep) { save.rep = (save.rep || 0) + rep; save.repTotal = (save.repTotal || 0) + rep; }
@@ -273,7 +273,7 @@ function openUplink() {
     X(ok ? { box: true, text: `${sp('PAY')}   ${sp(t.fee + 'cr')}`, sub: subPush, id: 'push', onTap: go, minW: w, col: C.money }
       : { box: true, text: `${sp('REMOVE')}   ${sp('MODS')}`, sub: subPush, id: 'push', onTap: go, minW: w, disabled: true, disCol: C.danger });
     X({ box: true, text: run.practice ? `${sp('END')}   ${sp('RUN')}` : `${sp('EARN')}   ${sp(repFor(run))}   ${sp('REP')}`, sub: subCash, id: 'cash', onTap: cashOut, minW: w, col: C.rep });
-    if (!run.practice) T(legacyLv('dms') ? `dying later keeps ${[0, 25, 50][legacyLv('dms')]}% of your REP.` : 'die later and you bank nothing.', C.dim);
+    if (!run.practice) T(legacyLv('dms') ? `dying later keeps ${25 * Math.min(3, legacyLv('dms'))}% of your REP.` : 'die later and you bank nothing.', C.dim);
     { const ql = questCarryLine(); if (ql) T(ql, C.rep); }   // (the DISC, the DOGTAG: engine/quests.js)
   }, '> uplink: what do you carry?', { full: true });
 }
