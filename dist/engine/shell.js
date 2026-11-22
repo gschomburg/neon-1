@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.24']);
+NEON_FILES.push(['engine/shell.js', 'v15.25']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -397,7 +397,10 @@ const norm = s => String(s).toLowerCase().replace(/[\s._-]/g, '');
 function shellParse(line) {
   const words = line.trim().split(/\s+/).filter(Boolean);
   if (!words.length) return null;
-  const find = w => SHELL_BY[w.toLowerCase()] || SHELL_CMDS.find(c => norm(c.name) === norm(w));
+  const find0 = w => SHELL_BY[w.toLowerCase()] || SHELL_CMDS.find(c => norm(c.name) === norm(w));
+  // god with an o works for the g0d commands (Greg, 2026-11-21: godexe = g0dexe). Only when the word isn't a command as
+  // typed, so mode.god stays mode.god.
+  const find = w => find0(w) || (/god/i.test(w) ? find0(w.replace(/god/gi, 'g0d')) : null);
   let cmd = find(words[0]), used = 1;
   if (words.length > 1) { const two = find(words[0] + words[1]); if (two && two !== cmd) { cmd = two; used = 2; } }   // (show ad = show.ad, not show <ad>; cd .. is cd with ..)
   return { cmd: shellVer(cmd), word: words[0], args: words.slice(used) };

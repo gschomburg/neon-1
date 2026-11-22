@@ -81,11 +81,22 @@ pay review notes
     - the cutscene happens in the work bench build and the keyuboard is still on top of everything
     - the dialog for root giving you the man shell command is a little weird cause it just says 'man' maybe we show the 3x2 chip in the dialog?
     - there is also another call directly from root that also has the same info. maybe we smooth that all out a little it's a mix of quest dialogs and crew calls. all one after another.
+    - roots letters should prolly go away from the workbench once you slot them if you still have any extras around (once he's unlocked)
+- similar to root giving you man the dialog for chips home should maybe just be each chip you grabbed as a 3x2 maybe with the name as well sort of in a list.
     - is there more quest steps after step 4 moved in?
 - the reload mod maybe shouldn't double chips.. maybe?
 - maybe the how to play gets the tabs and sub tab treatments
     - basics, maybe also has 'intro'(current basics info) net and tray maybe also a training page with each training session corp, work bench and deck
     - advanced, with deck and workbench and phishing maybe, info for crews and rep (not sure what all the sub tabs might be, but we can take them from )
+- on the deck for the expansion and the fuse it should have a bigger note that you need to reach rep elite to install it if you aren't that rep yet.
+- chips even though they go in the gear slots should say chip instead of gear when they show up in rewards or stores, or wait what is charge? is that actually a gear?
+- i was in hades and on the final cerberus boss.. i had the wallet from dog. i'm pretty sure i beat him (but i guess maybe not and that would explain this) at the end of the layer it gave me a popup from pop saying dog escaped so he got the ripped chip back. maybe check if there's something funky with hades and dog that might have glitched it into taking away the chip even if i beat him. i think i had 2 ripped chips actually, the vulture one and the wallet. also for the chips home it shows me insurance(whihc i had) and vulture which i also had, but it looks like the wallet didn't go. and also i already had the wallet chip.
+
+- cutscene with medix basement should foreshadow the net hack stuff, that first art should look like whatever we end up doing with that.. more like rooms.. maybe not the first art, but maybe there's a second one of sneaking through the basement past a camera or something.
+
+- we need things for the elite level
+- the shell scroll bars need better styling, they should be dark
+- the shell auto completes might be a ltitle off, i think if there's only one option it kinda gets half covered, like if i type god it shows mode.god, but it's kinda under the shell typing area a bunch, it also shouldn't show a scroll bar on the right if it doesn't need it
 
 
 bugs or weirdness

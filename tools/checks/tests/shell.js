@@ -75,6 +75,9 @@ module.exports = { name: 'shell', body: `
   const tr = SHELL.el.getBoundingClientRect();
   check(Math.abs(tr.left - L.ox) < 2 && Math.abs(tr.width - L.wc * L.cw) < 2, 'the shell sits over the game: ' + tr.left + '+' + tr.width + ' vs ' + L.ox + '+' + (L.wc * L.cw));
 
+  // god with an o: the g0d commands (v15.25); mode.god stays itself
+  check(shellParse('godexe').cmd.name === 'g0dexe' && shellParse('GODEXE.speed 2').cmd.name === 'g0dexe.speed' && shellParse('mode.god').cmd.name === 'mode.god', 'godexe = g0dexe, mode.god stays');
+
   // backtick closes it, and the clocks run again (v15.03: backtick is THE SHELL; ~ is the old dev menu)
   window.dispatchEvent(new KeyboardEvent('keydown', { key: '\`', bubbles: true }));
   check(!st.shell && SHELL.el.hidden, 'backtick closes it');
