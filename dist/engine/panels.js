@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.49']);
+NEON_FILES.push(['engine/panels.js', 'v15.50']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -380,7 +380,7 @@ function openShop(node) {
 
 // A reward screen: header lines, then a list of mods to pick one from (or skip).
 // next: where to go after (default: the map).
-// alts: more buttons under TAKE for the picked offer: { id, label(o), why(o) (a reason it can't, or null), run(o, { done, swap, options }) }
+// alts: more buttons beside TAKE for the picked offer: { id, label(o), sub(o) (its second line), why(o) (a reason it can't, or null), run(o, { done, swap, options }) }
 // (a corp boss's SPOILS chips: engine/deck.js deckRewardAlts). An offer with mystery: shown as ? ? ? till it's taken (GAMBLE).
 function openChoice({ title, col, head = [], extra = [], onTake = null, options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, escaped = false, first = null, more = [], alts = [] }) {
   let sel = 0, picked = false;
@@ -485,31 +485,33 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
       if (!by) T('');   // with the logo (LOGO_H rows) there's no room for the gaps
       const o = options[sel], v = viewOf(o);
       const shown = now >= st.panelT0 + sel * CONFIG.revealGap;
+      // TAKE, and the SPOILS chip's button beside it (Greg, 2026-11-22: two big boxes; TAKE unspaced so both fit). The
+      // chip's second line: its letters or price, or why it can't. (The SPOILS socket holds one chip: more go under.)
+      const altCtx = { options, done: () => { if (!picked) { picked = true; statPick(title, options, o); } if (onTake) onTake(o); leave(); }, swap: nu => { options[sel] = nu; st.choice.options = options.slice(); } };
+      const altBox = a => { const w = a.why(o); return { box: true, text: a.label(o), sub: w || (a.sub ? a.sub(o) : ''), id: a.id, disabled: !!w, disCol: C.dim, onTap: () => { if (st.transitioning || a.why(o)) return Sound.deny(); a.run(o, altCtx); } }; };
+      const takeBox = o => alts.length ? X({ boxes: [{ text: 'TAKE', id: 'take', onTap: () => take(o) }, altBox(alts[0])] }) : X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
       T(SEP, C.dim);
       if (shown && o.mystery) {
         X({ text: '? ? ?', col: C.rep, bold: true });
         T('a mystery pick: good, or lame.', C.text);
         T('take it and see.', C.dim);
         if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
-        else X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
+        else takeBox(o);
       } else if (shown && o.kind === 'gear') {
         const room = itemRoom(o.key, o.tier) && !has('ramdoubler');
         X({ gearHead: o.key, gearTier: o.tier, text: `${v.name} x${o.n}` });
         T(v.tip || v.desc, C.text);
         X({ text: has('ramdoubler') ? 'ram doubler: it gets sold.' : room ? (ITEMS[o.key].chip ? `${RARITY[ITEMS[o.key].rarity].label} chip // cash out to keep it` : `gear // ${o.n} uses`) : "gear slots full: you'll swap one", col: room ? C.mid : C.dangerDim, chips: true });
         if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
-        else X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
+        else takeBox(o);
       } else if (shown) {
         X({ badge: o.key, badgeTier: v.tier });
         T(v.tip, C.text);
         X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(v)}` : !modRoom(o.key) ? `mod slots full (${modSlots()}): you'll swap one` : '', col: has(o.key) ? C.text : C.dangerDim, chips: true });
         if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
-        else X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
+        else takeBox(o);
       } else { T('...', C.dim); T(''); T(''); T(''); T(''); T(''); }
-      if (shown && !locked && alts.length) {   // (SPOILS chips: TO LOCKER, SALVAGE, REROLL)
-        const ctx = { options, done: () => { if (!picked) { picked = true; statPick(title, options, o); } if (onTake) onTake(o); leave(); }, swap: nu => { options[sel] = nu; st.choice.options = options.slice(); } };
-        X({ gap: 1, row: alts.map(a => { const w = a.why(o); return { text: a.label(o), id: a.id, disabled: !!w, onTap: () => { if (st.transitioning || a.why(o)) return Sound.deny(); a.run(o, ctx); } }; }) });
-      }
+      if (shown && !locked && alts.length > 1) X({ gap: 1, row: alts.slice(1).map(a => { const b = altBox(a); return { text: '[ ' + b.text + ' ]', id: b.id, disabled: b.disabled, onTap: b.onTap }; }) });   // (more than one: the rest, small)
       T(SEP, C.dim);
     }
     if (!by) T('');

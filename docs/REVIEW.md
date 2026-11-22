@@ -14,6 +14,9 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The UPLINK's buttons** (Greg, 2026-11-22: test it and see how it looks). PAY and EARN REP are big boxes, stacked; [ WORKBENCH ] (BENCH LINK) and [ SACRIFICE ] (a chip) are small buttons between them. Should SACRIFICE be a big box beside PAY, like ENTER | PIER and TAKE | SALVAGE? The UPLINK is the tightest screen on a phone (its rows are counted: engine/runend.js openUplink).
+- [ ] **TAKE and the SPOILS chip's box side by side** (rewards screen) and **ENTER | PIER** (PIER PASS): how do they look and feel?
+
 - [ ] **The map chips** (v15.49, out of BETA): HEADSTART (first move: any node in rows 1-2), INTO THE FIRE (an event in sector 1; not HEAD FIRST or EENY MEENY), PIER PASS (once a sector, a PIER box next to a rest stop's ENTER; rarer catches), ALMANAC (next sector's card after this one's, NEXT UP), FORGET-ME-NOT (last time's path in purple on the map; every run's path is saved, last 20 seeds). They drop now, like the other chips.
 
 - [ ] **Your GLYPH** (v15.48): the GLY socket lists the glyphs you've seen; pick one and its bonus (LOOT free; SIGNED, GOLDEN on ELITE; COLLECTOR on SYSOP). It's tinted on the board, and counts only where a corp shows the codex glyphs. How often does it turn up for you (about 1 layer in 5 in plain corps)? Prices: 300 / 300 / 500.

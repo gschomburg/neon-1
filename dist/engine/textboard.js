@@ -1,7 +1,7 @@
 // NeoN+1 engine/textboard.js: centered text screens (buildTextBoard), the big box button (drawBox), text fields
 // (Field, drawField), info tile rows and offer pops. Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/textboard.js', 'v15.49']);
+NEON_FILES.push(['engine/textboard.js', 'v15.50']);
 
 // Big boxed primary button. 3 rows, or 4 with a subtitle.
 function drawBox(ctx, y, ln) {
@@ -31,10 +31,18 @@ function drawBox(ctx, y, ln) {
   return h;
 }
 
+// Big buttons side by side, the same size, centered as a group (16 wide at most). One with a second line makes them
+// all that tall (an empty second line on the others), so they line up.
+function drawBoxes(ctx, y, boxes) {
+  const n = boxes.length, gap = 2, w = Math.min(16, Math.floor((L.wc - gap * (n - 1)) / n)), x0 = Math.floor((L.wc - (n * w + gap * (n - 1))) / 2), tall = boxes.some(b => b.sub);
+  boxes.forEach((b, i) => drawBox(ctx, y, Object.assign({}, b, { w, x: x0 + i * (w + gap), sub: b.sub || (tall ? ' ' : '') })));
+  return tall ? 4 : 3;
+}
+
 // Centered text screens: title, panels, help, codex, settings, game over.
 // Line types:
 //   text {text,col}           button {text,id,onTap,disabled,sel,faded}
-//   box {box,text,sub,id}     row of small buttons {row:[...]}
+//   box {box,text,sub,id}     boxes {boxes:[box...]} (side by side)   row of small buttons {row:[...]}
 //   badge {badge}             list row {list,id,onTap,sel,name,right,badge,col,tint}
 //   gap {gap:n} (empty rows)   any text line: tap {id,onTap} makes it tappable
 // Any line can have `reveal` (index) and `rarity` to pop in one at a time.
@@ -107,7 +115,7 @@ function drawField(ctx, x, y, b) {
 
 // How many rows a text board line takes. engine/screens.js overLines counts the end screen's rows with it too, so
 // the two always agree (it counted the initials' 3-row letters as 1, and UPLOAD ran into the footer).
-const lineRows = ln => ln.box ? (ln.sub ? 4 : 3) : ln.tileInfo ? TILE_H : ln.mapView || ln.draw ? ln.h || 1 : 1;
+const lineRows = ln => ln.box ? (ln.sub ? 4 : 3) : ln.boxes ? (ln.boxes.some(b => b.sub) ? 4 : 3) : ln.tileInfo ? TILE_H : ln.mapView || ln.draw ? ln.h || 1 : 1;
 // Sub-tabs: a tab group inside a tab (Greg, 2026-11-21; the bench's BOOK: GEAR MODS CHIPS). A strip of background right
 // across the row, the tabs sitting in it without brackets, the one you're on filled in. So it reads as under the main
 // tabs ([BUILD] [SHRED]...), not next to them. Use it for any tabs inside tabs. items: [{ id, text, on, onTap }].
@@ -147,6 +155,7 @@ function buildTextBoard(ctx, lines, area = null) {
     if (ln.arrowUp || ln.arrowDown) { const ch = ln.arrowUp ? '^' : 'v', blink = Math.floor(now / 600) % 2 ? C.mid : C.dim; put(0, y, ch, blink, 'board'); put(L.wc - 1, y, ch, blink, 'board'); }
 
     if (ln.box) drawBox(ctx, y, ln);
+    else if (ln.boxes) drawBoxes(ctx, y, ln.boxes);   // big buttons side by side (the rewards screen's TAKE and a chip's)
     else if (ln.draw) ln.draw(ctx, y);   // a line that draws itself, h rows (the WORKBENCH: engine/bench.js)
     else if (ln.tileInfo) {
       // A tile drawn like on the board, with text lines beside it.

@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.49']);
+NEON_FILES.push(['engine/deck.js', 'v15.50']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -125,10 +125,10 @@ const DECK_CHIPS = {
   OF1: ['OFFERING', 'spoils', 'rare', 1, 'skip every corp boss reward and bank 6 REP instead. (have faith. or pay.)', ['_|_', '+6R'], 'skip rewards: +6 REP.'],
   PT1: ['PROTECTION', 'spoils', 'rare', 1, 'skip every corp boss reward for 2 FWALLs. (nice node you got.)', ['[#]', 'x2 '], 'skip rewards: 2 FWALLs.'],
   GB2: ['GAMBLE', 'spoils', 'epic', 2, 'one mystery pick in the rewards, good or lame. pick it and it is yours.', ['???', 'GMB'], 'a mystery reward.'],
-  AU2: ['AUCTION', 'spoils', 'rare', 2, "a corp boss's rewards get [ REROLL ]: pay credits to swap a pick for another (more each time).", ['$>$', 'AUC'], 'reroll rewards for cr.'],
-  SV1: ['SALVAGE', 'spoils', 'common', 1, "a corp boss's rewards get [ SALVAGE ]: take a pick as its letters, for the WORKBENCH.", ['abc', 'SLV'], 'rewards into letters.'],
+  AU2: ['AUCTION', 'spoils', 'rare', 2, "a corp boss's rewards get a REROLL button: pay credits to swap a pick for another (more each time).", ['$>$', 'AUC'], 'reroll rewards for cr.'],
+  SV1: ['SALVAGE', 'spoils', 'common', 1, "a corp boss's rewards get a SALVAGE button: take a pick as its letters, for the WORKBENCH.", ['abc', 'SLV'], 'rewards into letters.'],
   RC1: ['RELIC', 'spoils', 'legendary', 2, 'now and then a corp boss adds an exotic mod to its rewards: one more pick.', ['<X>', 'RLC'], 'an exotic, now and then.'],   // (THE BOARD's RELIC post gives it: deckRelicPick)
-  HL2: ['HEIRLOOM', 'spoils', 'epic', 2, "a corp boss's rewards get [ TO LOCKER ]: your pick goes into your WORKBENCH's LOCKER, for a later run.", ['{L}', 'HLM'], 'your pick: to the LOCKER.'],
+  HL2: ['HEIRLOOM', 'spoils', 'epic', 2, "a corp boss's rewards get a LOCKER button: your pick goes into your WORKBENCH's LOCKER, for a later run.", ['{L}', 'HLM'], 'your pick: to the LOCKER.'],
   // PSU (cells: their power is deckCellPower)
   BO1: ['BROWNOUT', 'psu', 'epic', 0, 'power 12, but one random chip is off each run (a note says which).', ['[~]', 'Bo~'], 'power 12, one chip off.'],
   PO1: ['POTATO', 'psu', 'common', 0, 'power 4, but chips that cost 1 cost nothing.', ['(o)', 'Po4'], 'power 4, 1s are free.'],
@@ -747,17 +747,17 @@ function deckGambleOption(node, options) {
 const deckSalvageLetters = o => shredCode({ kind: o.kind === 'gear' ? 'gear' : 'mod', key: o.key }).split('').filter(ch => /[A-Z0-9]/.test(ch));
 function deckRewardAlts(node) {
   const run = st.run, alts = [];
-  if (chipOn('HL2', run)) alts.push({ id: 'heirloom', label: () => '[ TO LOCKER ]',
+  if (chipOn('HL2', run)) alts.push({ id: 'heirloom', label: () => 'LOCKER', sub: () => 'keep it',
     why: o => o.mystery ? 'mystery' : !benchOpen() ? 'no WORKBENCH' : !benchSave().locker.some(x => !x) ? 'LOCKER full' : o.kind === 'gear' && ITEMS[o.key].chip ? 'a chip' : null,
     run: (o, c) => { const lk = benchSave().locker, i = lk.findIndex(x => !x);
       lk[i] = o.kind === 'gear' ? { kind: 'gear', key: o.key, tier: o.tier || 0, n: o.n || 1 } : { kind: 'mod', key: o.key, tier: o.tier || 0, n: 1 }; persist();
       Sound.buy(); setMsg(`> heirloom: ${(o.kind === 'gear' ? itemView(o.key) : modView(o.key)).name.toLowerCase()} is in your LOCKER.`, C.rep); c.done(); } });
-  if (chipOn('SV1', run)) alts.push({ id: 'salvage', label: o => o.mystery ? '[ SALVAGE ]' : `[ SALVAGE: ${deckSalvageLetters(o).join('')} ]`,
+  if (chipOn('SV1', run)) alts.push({ id: 'salvage', label: () => 'SALVAGE', sub: o => deckSalvageLetters(o).join(' '),
     why: o => o.mystery ? 'mystery' : !benchOpen() ? 'no WORKBENCH' : null,
     run: (o, c) => { const got = deckSalvageLetters(o); benchAdd(got); persist();
       Sound.comp(); setMsg(`> salvaged: ${got.join(' ')} for the WORKBENCH.`, C.accent); c.done(); } });
   if (chipOn('AU2', run)) { let n = 0; const price = () => costInt(3) * ((run.sector || 0) + 1) * (n + 1);   // (30cr x the sector, more each time)
-    alts.push({ id: 'auction', label: () => `[ REROLL ${price()}cr ]`, why: () => !canSpend(price()) ? 'credits' : null,
+    alts.push({ id: 'auction', label: () => 'REROLL', sub: () => price() + 'cr', why: () => !canSpend(price()) ? 'need ' + price() + 'cr' : null,
       run: (o, c) => { const p = price(), r = rngFor(run.seed, 'auction', node.id, n), others = c.options.filter(x => x !== o);
         const nu = r() < ECON.reward.gear ? rewardGear(r) : pickMods(r, modsOfKind('gen', 'minor'), 1, others)[0];
         if (!nu) return Sound.deny();

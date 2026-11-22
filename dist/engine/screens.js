@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v15.49']);
+NEON_FILES.push(['engine/screens.js', 'v15.50']);
 
 // ---------- circuit traces (the title's, and the intro card's wires: engine/intro.js) ----------
 // Which way each trace char connects (n e s w). Two cells link when each has a port facing the other.
@@ -276,7 +276,7 @@ function buildReveal(ctx, now, rv, all) {
       const ln = all[k - 1];
       if (k > 1 && ln.mapView) Sound.tick();
       else if (k > 1 && ln.reveal != null) { /* its offer pop plays */ }
-      else if (k > 1 && (ln.text || ln.box || ln.row || ln.list)) rv.sound === 'climb' ? Sound.climb(rv.climbs = (rv.climbs || 0) + 1) : Sound.ui();
+      else if (k > 1 && (ln.text || ln.box || ln.boxes || ln.row || ln.list)) rv.sound === 'climb' ? Sound.climb(rv.climbs = (rv.climbs || 0) + 1) : Sound.ui();
     }
     // all in and settled: hand back to the normal screen (header, HUD, tray return)
     if (k === all.length && now > t + 350 && Math.abs(rv.y - target) < 0.05 && rv.center === 'board' && !rv.done && !rv.hold) {
