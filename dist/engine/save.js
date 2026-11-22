@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.34']);
+NEON_FILES.push(['engine/save.js', 'v15.35']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -107,13 +107,12 @@ const LEGACY = [
   { key: 'nemesis', tier: 2, name: 'NEMESIS', desc: 'pick a corp you have breached: it shows up 3x as often.', costs: [120] },
   { key: 'starter', tier: 2, name: 'STARTER POOL', desc: 'the starter perk can offer general mods too.', costs: [150] },
   { key: 'steady', tier: 2, name: 'STEADY HANDS', desc: "at the pier, no catch moves faster than your line can follow.", costs: [300] },   // (Greg, 2026-11-06: a fast legendary PHISH outran LURE; engine/fishing.js FISH_STEADY)
-  { key: 'biglocker', tier: 2, name: 'BIG LOCKER', needs: 'bench', desc: "+5 slots in the workbench's LOCKER.", costs: [200] },   // (engine/bench.js benchLockerMax; Greg, 2026-11-22)
   { key: 'tellscope', tier: 2, name: 'TELL LIGHT', desc: 'every corp layer says if its tell is on: TELL ON / TELL OFF.', costs: [150] },   // (the user: know if a tell is active)
   // ---- 3 ELITE: your deck's mk III (engine/deck.js; you get the deck itself at USER), and placeholders
   // placeholder: a post that does nothing yet, so the level can be filled out and tried (Greg, 2026-11-16: swap them
   // for real ones later). HEAT, the quests, THE ARCHIVE are ideas for these levels (docs/PROGRESSION.md, docs/DECK.md).
   { key: 'deck3', tier: 3, name: 'DECK mk III', desc: 'the middle board for your deck: the GLYPH, OVERVOLT and the crew jacks.', costs: [600] },
-  { key: 'elite1', tier: 3, name: 'ELITE POST 1', desc: 'a placeholder. it does nothing yet.', costs: [100], placeholder: true },
+  { key: 'biglocker', tier: 3, name: 'BIG LOCKER', needs: 'bench', desc: "+5 slots in the workbench's LOCKER.", costs: [200] },   // (engine/bench.js benchLockerMax; Greg, 2026-11-22: on ELITE, in ELITE POST 1's place)
   { key: 'elite2', tier: 3, name: 'ELITE POST 2', desc: 'a placeholder. it does nothing yet.', costs: [100], placeholder: true },
   { key: 'elite3', tier: 3, name: 'ELITE POST 3', desc: 'a placeholder. it does nothing yet.', costs: [100], placeholder: true },
   // ---- 4 SYSOP: the FUSE (your deck's mk IV, after mk III), and placeholders

@@ -79,7 +79,8 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 ### The workbench
 - Built v15.33: SHRED's GEAR / MODS / LOOT sub-tabs, [ CLEAR ] under a good recipe, its music (AUGMENT, low; Greg).
 - **Decided (Greg, 2026-11-22), built v15.34:** the components move to their own LOCKER sub-tab (COMPS, letters 2x2), and
-  BIG LOCKER (+5 slots) is a USER post.
+  BIG LOCKER (+5 slots) is an ELITE post (v15.35, in
+  ELITE POST 1's place: ELITE needs real posts).
 
 ### The deck and chips
 - (Greg asked: is SPOILS a chip you start with? Yes: the deck comes with STOCK CELL and SPOILS, engine/deck.js DECK_START.)
