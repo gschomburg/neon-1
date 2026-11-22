@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.41']);
+NEON_FILES.push(['engine/shell.js', 'v15.42']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -435,10 +435,7 @@ async function shellRun(line) {
   SHELL.histAt = -1;
   shellOut(line, 'cmd');
   const p = shellParse(line), c = p && p.cmd;
-  // BACKDOOR (THE BOARD, SYSOP: Greg 2026-11-22) opens dev.start / dev.stop. Without it they're unknown commands, unless
-  // you've opened the dev menu this session or play from a file (yours: testing).
-  const backdoor = legacyLv('backdoor') > 0 || st.devAccess || location.protocol === 'file:';
-  if (line === 'dev.start' && backdoor) {   // dev mode (Greg, 2026-11-20): never autocompleted. Every command, no charges; the run is practice
+  if (line === 'dev.start') {   // dev mode (Greg, 2026-11-20): autocompleted only with BACKDOOR (shellSuggest). Every command, no charges; the run is practice
     st.devAccess = true; if (st.run && !st.run.ended) st.run.practice = true;
     if (SHELL.el) shellRefresh(); return shellOut('dev mode: every command, no charges. this run is practice now.', 'dim');
   }
@@ -474,9 +471,11 @@ async function shellRun(line) {
 }
 
 // The list under what you're typing: commands, then (once a command is typed) its arguments.
+// dev.start / dev.stop: they always work if you know them; BACKDOOR (THE BOARD, SYSOP) puts them in the list (Greg, 2026-11-22)
+const SHELL_DEV = [{ name: 'dev.start', help: 'dev mode: every command, no charges. the run turns practice.' }, { name: 'dev.stop', help: 'out of dev mode: the run counts again.' }];
 function shellSuggest() {
   const inp = SHELL.input, text = inp.value.slice(0, inp.selectionStart == null ? inp.value.length : inp.selectionStart);
-  const known = SHELL_CMDS.filter(shellKnows).map(shellVer);
+  const known = SHELL_CMDS.filter(shellKnows).map(shellVer).concat(legacyLv('backdoor') > 0 ? SHELL_DEV : []);
   if (!known.length) return text.trim() || shellTouch() ? [{ none: 'no commands known' }] : [];
   const parts = text.replace(/^\s+/, '').split(/\s+/), last = parts[parts.length - 1];
   const p = parts.length > 1 ? shellParse(parts.slice(0, -1).join(' ')) : null, c = p && p.cmd;

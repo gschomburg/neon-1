@@ -31,6 +31,12 @@ module.exports = { name: 'repposts', body: `
     save.legacy.power = 1; save.legacy.power2 = 1; DECK = deckReal(); check(deckPower().budget === b0 + 2, 'POWER TAP I and II: +2 power: ' + b0 + ' -> ' + deckPower().budget); DECK = null;
     let sum = (deep) => { save.legacy.deep = deep ? 1 : 0; let n = 0, rr2 = 0; const r = rngFor('DEEP', 'x'); for (let i = 0; i < 400; i++) { const o = fishOutcome(r); if (o.kind === 'fish') { n++; rr2 += RARITY_ORDER.indexOf(o.rarity); } } return rr2 / Math.max(1, n); };
     const a0 = sum(false), a1 = sum(true); check(a1 > a0, 'DEEP WATER: rarer fish on average: ' + a0.toFixed(2) + ' -> ' + a1.toFixed(2));
+    // BACKDOOR (v15.42): dev.start / dev.stop autocomplete with it, not without (they run either way: tests/devstop)
+    shellOpen(); await sleep(100); SHELL.input.value = 'dev.st'; SHELL.input.setSelectionRange(6, 6);
+    save.legacy.backdoor = 0; const no = shellSuggest().filter(x => x.v && /^dev\./.test(x.v)).length;
+    save.legacy.backdoor = 1; const yes = shellSuggest().filter(x => x.v && /^dev\./.test(x.v)).map(x => x.v);
+    check(!no && yes.includes('dev.start') && yes.includes('dev.stop'), 'BACKDOOR: dev.start and dev.stop autocomplete: ' + yes.join(' '));
+    SHELL.input.value = ''; shellClose();
     save.legacy = lg1; }
   // CHROMATOPHORE
   save.legacy.chroma = 0;

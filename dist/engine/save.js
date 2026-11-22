@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.41']);
+NEON_FILES.push(['engine/save.js', 'v15.42']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -137,8 +137,9 @@ const LEGACY = [
   { key: 'surge2', tier: 4, ladder: 'surge', needs: 'surge', name: 'SURGE II', desc: '+2 charges for THE SHELL (was +1).', costs: [500] },
   { key: 'clout', tier: 4, name: 'CLOUT', desc: '+25% REP from every run you bank.', costs: [1000] },   // (engine/save.js repFor)
   { key: 'deep', tier: 4, name: 'DEEP WATER', desc: 'the pier: rarer catches, and more corrupted software in the gear.', costs: [400] },   // (engine/fishing.js fishOutcome)
-  // BACKDOOR (Greg's idea, 2026-11-22): the secret. dev.start / dev.stop work in THE SHELL (engine/shell.js shellRun).
-  { key: 'backdoor', tier: 4, name: 'BACKDOOR', desc: 'THE SHELL learns dev.start: every command, no charges, but the run turns practice. dev.stop ends it.', costs: [1500] },
+  // BACKDOOR (Greg, 2026-11-22): the secret. dev.start / dev.stop always work if you know them; this puts them in THE SHELL's
+  // list (engine/shell.js SHELL_DEV).
+  { key: 'backdoor', tier: 4, name: 'BACKDOOR', desc: 'the secret: THE SHELL shows you dev.start (every command, no charges, but the run turns practice) and dev.stop.', costs: [1500] },
   { key: 'market2', tier: 4, ladder: 'market', needs: 'market', name: 'LOYALTY CARD II', desc: 'every market is 10% cheaper (was 5%).', costs: [400] },
   // ---- PRIVATE MESSAGES (a feat opens them)
   { key: 'bossloot', pm: 'bosshunter', name: 'BOSS LOOT', desc: 'boss gear (FLARE, BEES...) can turn up in black markets.', costs: [180] },
