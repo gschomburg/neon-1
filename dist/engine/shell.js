@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.25']);
+NEON_FILES.push(['engine/shell.js', 'v15.26']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -176,6 +176,12 @@ const shellGroups = list => { let g = ''; return list.filter(c => typeof c === '
 const SHELL_CMDS = shellGroups([
   // ----- the run -----
   'the run',
+  { name: 'dev.real', args: [{ name: 'on|off', of: fixed('on', 'off'), opt: true }], help: 'dev runs count: quests move, REP banks', safe: true, run: a => {
+    st.devReal = shellFlip(st.devReal, a[0]);   // (this session: this run and the next ones; engine/run.js runKeepReal)
+    const run = st.run && !st.run.ended ? st.run : null;
+    if (run) { if (st.devReal) { run.real = true; runKeepReal(run); } else if (run.real) { run.real = false; delete run.practice; run.practice = true; } st.practice = run.practice; }
+    return st.devReal ? 'dev.real ON: runs count. quests move, REP banks, scores post.' : 'dev.real OFF: dev runs are practice again.';
+  } },
   { name: 'int', args: [{ name: 'n', of: 'n' }], help: 'set INTEGRITY (max goes up to fit)', run: a => { const run = shellNeedRun(), n = Math.max(1, Math.round(a[0])); run.maxInt = Math.max(run.maxInt, n); run.integrity = n; return `INTEGRITY ${n}/${run.maxInt}`; } },
   { name: 'heal', help: 'INTEGRITY back to full', run: () => { const run = shellNeedRun(); run.integrity = run.maxInt; return `INTEGRITY ${run.integrity}`; } },
   { name: 'credits', alias: ['cr'], args: [{ name: 'n', of: 'n' }], help: 'set your credits', run: a => { shellNeedRun().credits = Math.max(0, Math.round(a[0])); return `${st.run.credits}cr`; } },

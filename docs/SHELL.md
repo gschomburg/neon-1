@@ -159,6 +159,9 @@ mark the run hacked. `help` lists them. **Decided (Greg, 2026-11-20):** in place
 
 **Dev mode: `dev.start`.** **Decided (Greg, 2026-11-20).** **Built v15.02:** `dev.start` turns on dev access (like
 `?dev=1`) and makes the run practice; no costs. Not built yet: separate player and dev versions of one command.
+- **`dev.real` (Greg, 2026-11-21), built v15.26:** a dev run that still counts. `dev.real on` / `off` (or a flip),
+  for this session: this run and the next ones. Nothing can make the run practice while it's on (dev.start, G0D.exe,
+  cheats), so quests move, REP banks and scores post. Off makes the run practice again. (engine/run.js runKeepReal.)
 - Players and dev mode share one command list. Typing `dev.start` (never autocompleted) turns dev mode on: every
   autocomplete, unlimited charges, the dev-only commands (`rep`, `progress.wipe`, quests, fx...), and each shared
   command's dev version (`mode.god` is a free on / off, not a sector for 4 charges).
