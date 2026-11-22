@@ -52,6 +52,8 @@ module.exports = { name: 'sudo2', body: `
   check(st.corp.forked && st.lv.n >= 3 && reals(st.lv).length === 2 && st.lv.notes.some(n => /fork/.test(n.text)), 'the boss layer is forked too (n ' + st.lv.n + ')');
   { const q = st.lv.tiles.find(t => t.quantum); const p1 = payFor(st.lv); st.corp.forked = false; const had = st.run.mods.includes('quantum'); if (!had) st.run.mods.push('quantum'); const p2 = payFor(st.lv); if (!had) st.run.mods.splice(st.run.mods.indexOf('quantum'), 1); st.corp.forked = true;
     check(q && p1 > p2, 'fork pays whole, QUANTUM would cut it: ' + p1 + ' > ' + p2); }
+  { const L = st.lv, g0 = reals(L)[0].glyph; L.ent = { n: 5, seen: new Set(L.tiles.map(t => t.glyph)), decoy: null }; entropyShuffle(L); delete L.ent;
+    check(reals(L).every(t => t.glyph === g0), "an ENTROPY shuffle: both real nodes keep the real one's glyph"); }
   await shellRun('corp.jump'); check(/already/.test(out()), 'again at the boss: no');
   check(!run.practice && run.hacked, 'rooted, not practice');
   if (st.shell) shellClose();

@@ -1,6 +1,6 @@
 // NeoN+1 corps/entropy.js
 'use strict';
-NEON_FILES.push(['corps/entropy.js', 'v15.23']);
+NEON_FILES.push(['corps/entropy.js', 'v15.24']);
 // Its boss reward: ANCHOR gear x2 (anchor), defined with the gear in data/mods.js (ITEMS),
 // its effect in engine/active.js.
 
@@ -18,7 +18,8 @@ function entropyShuffle(lv) {
   let pool = shuffle(MOTIFS.filter(m => !e.seen.has(m)), r);
   if (pool.length < movers.length) { e.seen = new Set(lv.tiles.map(t => t.glyph)); pool = shuffle(MOTIFS.filter(m => !e.seen.has(m)), r); }
   for (const t of movers) {
-    if (t.safe || t.loaded || (t === e.decoy && e.n === 1) || !pool.length) continue;
+    // (forked: fork's second real node wears the real one's glyph, so it keeps it too: engine/deck.js deckForkLayer)
+    if (t.safe || t.forked || t.loaded || (t === e.decoy && e.n === 1) || !pool.length) continue;
     t.glyph = pool.pop(); e.seen.add(t.glyph);
   }
   Sound.whoosh();
@@ -70,4 +71,4 @@ CORPS.entropy = {
 };
 
 // the codex, once you've beaten it
-CORP_TELL.entropy = "every few seconds every node jumps to a new cell and the decoys get new glyphs. the real node keeps its glyph: the one that survives a shuffle.";
+CORP_TELL.entropy = "every few seconds the board shuffles and the decoys get new glyphs. the real node keeps its glyph through every shuffle. deeper in, one decoy keeps its glyph through the first one too: wait for the second.";
