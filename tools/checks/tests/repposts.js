@@ -17,6 +17,21 @@ module.exports = { name: 'repposts', body: `
   check(legacyLv('dms') === 3 && legacyLv('hard') === 2 && postLv('hard') === 1, 'legacyLv counts the ladder: DEADMAN III is 3, HARDENED II is 2');
   save.legacy = lg0;
   check(REP_SUBS.map(s => s[1]).join(' ') === 'MSGS GUEST USER ELITE SYSOP', 'REP has its sub-tabs: ' + REP_SUBS.map(s => s[1]).join(' '));
+  // batch 2 (v15.41): CLOUT, BAIT SHOP, SURGE, POWER TAP, DEEP WATER, BACKDOOR
+  { const lg1 = Object.assign({}, save.legacy), rr = { depth: 40, corps: 8, perfects: 5, earned: 400, sectorsCleared: 2, repBonus: 0, chips: [] };
+    save.legacy.clout = 0; const r0 = repFor(rr); save.legacy.clout = 1;
+    check(repFor(rr) === Math.round(r0 * 1.25), 'CLOUT: +25% REP: ' + r0 + ' -> ' + repFor(rr));
+    save.legacy.bait = 0; const c0 = fishCost(); save.legacy.bait = 1;
+    check(fishCost() === Math.max(1, Math.round(c0 * 0.5)), 'BAIT SHOP: casts cost half: ' + c0 + ' -> ' + fishCost());
+    const sr = { chips: ['WH0'] }; save.legacy.surge = 1; save.legacy.surge2 = 1; deckCharges(sr); const withS = sr.chargeMax;
+    save.legacy.surge = 0; save.legacy.surge2 = 0; deckCharges(sr);
+    check(withS === sr.chargeMax + 2, 'SURGE I and II: +2 charges: ' + sr.chargeMax + ' -> ' + withS);
+    const nr = { chips: [] }; save.legacy.surge = 1; deckCharges(nr); check(nr.chargeMax === 0, 'SURGE: nothing without a SHELL chip');
+    save.legacy.power = 0; save.deck = save.deck || deckFreshSave(); DECK = deckReal(); const b0 = deckPower().budget;
+    save.legacy.power = 1; save.legacy.power2 = 1; DECK = deckReal(); check(deckPower().budget === b0 + 2, 'POWER TAP I and II: +2 power: ' + b0 + ' -> ' + deckPower().budget); DECK = null;
+    let sum = (deep) => { save.legacy.deep = deep ? 1 : 0; let n = 0, rr2 = 0; const r = rngFor('DEEP', 'x'); for (let i = 0; i < 400; i++) { const o = fishOutcome(r); if (o.kind === 'fish') { n++; rr2 += RARITY_ORDER.indexOf(o.rarity); } } return rr2 / Math.max(1, n); };
+    const a0 = sum(false), a1 = sum(true); check(a1 > a0, 'DEEP WATER: rarer fish on average: ' + a0.toFixed(2) + ' -> ' + a1.toFixed(2));
+    save.legacy = lg1; }
   // CHROMATOPHORE
   save.legacy.chroma = 0;
   const few = playerPalettes().length, locked = PLAYER_STYLES.map((s, i) => i).filter(i => PLAYER_STYLES[i].locked);

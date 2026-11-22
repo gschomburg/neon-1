@@ -86,7 +86,7 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 **Decided (Greg, 2026-11-22):** fill ELITE and SYSOP. The batches:
 1. [x] (v15.40) Ladders: a post's next level is its own post a level up (HARDENED, SEED MONEY, RESTOCK, DEADMAN to 75%,
    BETTER DROPS, LOYALTY CARD), and REP's sub-tabs (MSGS GUEST USER ELITE SYSOP).
-2. [ ] Plain posts: POWER TAP (deck power +1 ELITE, +2 SYSOP), SURGE (SHELL charges, the same), CLOUT (+25% REP, SYSOP),
+2. [x] (v15.41) Plain posts: POWER TAP (deck power +1 ELITE, +2 SYSOP), SURGE (SHELL charges, the same), CLOUT (+25% REP, SYSOP),
    BAIT SHOP (cheaper casts, ELITE), DEEP WATER (rarer and more corrupted catches, SYSOP), BACKDOOR (dev.start /
    dev.stop; SYSOP, hidden till you're SYSOP).
 3. [ ] CHIP DEALER (ELITE; II on SYSOP): a catalog of chips after a DATA CACHE. You still have to get out with what you

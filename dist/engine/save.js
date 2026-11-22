@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.40']);
+NEON_FILES.push(['engine/save.js', 'v15.41']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -121,6 +121,9 @@ const LEGACY = [
   { key: 'hard3', tier: 3, ladder: 'hard', needs: 'hard2', name: 'HARDENED III', desc: '+3 starting integrity (was +2).', costs: [300] },
   { key: 'cash3', tier: 3, ladder: 'cash', needs: 'cash2', name: 'SEED MONEY III', desc: 'start with +75cr (was +50).', costs: [80] },
   { key: 'dms3', tier: 3, ladder: 'dms', needs: 'dms2', name: 'DEADMAN III', desc: 'dying keeps 75% of the REP you would have banked (was 50%).', costs: [400] },
+  { key: 'power', tier: 3, name: 'POWER TAP', desc: '+1 power for your deck (its cell).', costs: [300] },   // (engine/deck.js deckPower)
+  { key: 'surge', tier: 3, name: 'SURGE', desc: '+1 charge for THE SHELL, every run (with a SHELL chip).', costs: [250] },   // (engine/deck.js deckCharges)
+  { key: 'bait', tier: 3, name: 'BAIT SHOP', desc: 'casts at the pier cost half.', costs: [150] },   // (engine/fishing.js fishCost)
   { key: 'drops2', tier: 3, ladder: 'drops', needs: 'drops', name: 'BETTER DROPS II', desc: '1 in 5 mods and gear roll a step rarer (was 1 in 10).', costs: [300] },
   // chip: buying it gives you that chip for your deck (Greg, 2026-11-22: posts that are strong or need a limit are chips)
   { key: 'codex', tier: 3, name: 'CODEX', chip: 'CX5', desc: "gives you the CODEX chip (CRASH) for your deck: die in a corp you haven't beaten and a piece of its tell decodes.", costs: [250] },
@@ -130,6 +133,12 @@ const LEGACY = [
   { key: 'archive', tier: 4, name: 'THE ARCHIVE', chip: 'AR1', desc: "gives you THE ARCHIVE chip (BOOT) for your deck: pick a mod you've found on its card, and every run starts with it.", costs: [800] },
   { key: 'chroma', tier: 4, name: 'CHROMATOPHORE', desc: 'every palette in SETTINGS, and more colors for your card.', costs: [500] },   // (engine/core.js playerPalettes, engine/multiplayer.js styleOpen)
   { key: 'relic', tier: 4, name: 'RELIC', chip: 'RC1', desc: 'gives you the RELIC chip (SPOILS) for your deck: now and then a corp boss adds an exotic mod to its picks.', costs: [800] },
+  { key: 'power2', tier: 4, ladder: 'power', needs: 'power', name: 'POWER TAP II', desc: '+2 power for your deck (was +1).', costs: [600] },
+  { key: 'surge2', tier: 4, ladder: 'surge', needs: 'surge', name: 'SURGE II', desc: '+2 charges for THE SHELL (was +1).', costs: [500] },
+  { key: 'clout', tier: 4, name: 'CLOUT', desc: '+25% REP from every run you bank.', costs: [1000] },   // (engine/save.js repFor)
+  { key: 'deep', tier: 4, name: 'DEEP WATER', desc: 'the pier: rarer catches, and more corrupted software in the gear.', costs: [400] },   // (engine/fishing.js fishOutcome)
+  // BACKDOOR (Greg's idea, 2026-11-22): the secret. dev.start / dev.stop work in THE SHELL (engine/shell.js shellRun).
+  { key: 'backdoor', tier: 4, name: 'BACKDOOR', desc: 'THE SHELL learns dev.start: every command, no charges, but the run turns practice. dev.stop ends it.', costs: [1500] },
   { key: 'market2', tier: 4, ladder: 'market', needs: 'market', name: 'LOYALTY CARD II', desc: 'every market is 10% cheaper (was 5%).', costs: [400] },
   // ---- PRIVATE MESSAGES (a feat opens them)
   { key: 'bossloot', pm: 'bosshunter', name: 'BOSS LOOT', desc: 'boss gear (FLARE, BEES...) can turn up in black markets.', costs: [180] },
@@ -195,7 +204,7 @@ function refundGonePosts() {
 // aren't earnings (a refund, a cheat) add to run.credits alone.
 function earn(cr, run = st.run) { cr = deckCredits(cr, run); run.credits += cr; run.earned += cr; }   // (GREED, TAXED: chips, engine/deck.js)
 function repFor(run) {
-  return Math.round((run.depth + 3 * run.corps + (chipOn('PD2', run) ? 0 : run.perfects || 0) + Math.floor(run.earned / 40) + 10 * (run.sectorsCleared || 0) + (run.repBonus || 0)) * deckRepMult(run));   // (FAME, the HEAT chips, PADDING, OFFERING: chips, engine/deck.js)
+  return Math.round((1 + 0.25 * legacyLv('clout')) * (run.depth + 3 * run.corps + (chipOn('PD2', run) ? 0 : run.perfects || 0) + Math.floor(run.earned / 40) + 10 * (run.sectorsCleared || 0) + (run.repBonus || 0)) * deckRepMult(run));   // (FAME, the HEAT chips, PADDING, OFFERING: chips, engine/deck.js)
 }
 
 // ---------------- Run save (resume) ----------------

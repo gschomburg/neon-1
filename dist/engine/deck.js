@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.40']);
+NEON_FILES.push(['engine/deck.js', 'v15.41']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -587,7 +587,11 @@ const DECK_CHARGES = { WH0: 3, PS4: 2, MN1: 2, CA4: 4, FL3: 3,   // (FL3 was 1: 
   CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 4, GG1: 4, FT3: 3, JM4: 4, RF4: 4, CM3: 3, FK2: 4 };   // (GM1, GG1: they cost by rarity, DECK_GIVE_COST: 4 reaches a legendary)
 const SHELL_CHARGE = { pack: 2, boss: 0.35 };   // a CHARGE gives 2; a corp boss offers one 35% of the time (with charges to fill)
 for (const [k, n] of Object.entries(DECK_CHARGES)) if (DECK_CHIPS[k]) { DECK_CHIPS[k][4] += ` +${n} shell charges.`; DECK_CHIPS[k][6] += ` +${n} charges.`; }
-function deckCharges(run) { run.chargeMax = (run.chips || []).reduce((a, k) => a + (DECK_CHARGES[k] || 0), 0); run.charges = run.chargeMax; }
+function deckCharges(run) {
+  run.chargeMax = (run.chips || []).reduce((a, k) => a + (DECK_CHARGES[k] || 0), 0);
+  if (run.chargeMax) run.chargeMax += legacyLv('surge');   // SURGE (THE BOARD: +1, II +2), with a SHELL chip
+  run.charges = run.chargeMax;
+}
 function deckRefill(run) {
   if (SHELL_REFILL !== 'sector' || !run.chargeMax || run.charges >= run.chargeMax) return;
   run.charges = run.chargeMax;
@@ -1051,7 +1055,8 @@ const deckChipCost = key => DECK.slots.PSU === 'PO1' && DECK_CHIPS[key][3] === 1
 function deckPower() {
   const d = DECK, on = new Set(), off = [];
   const spike = Object.keys(d.slots).some(id => d.slots[id] === 'SK1' && deckOpen(deckSock(id).mk)) ? 2 : 0;   // SPIKE (OVERVOLT)
-  const cellB = d.slots.PSU ? (d.overclock ? 15 : deckCellPower(d.slots.PSU)) + spike : 0, fuseB = deckOpen(4) ? DECK_FUSE_PWR : 0;
+  const tap = d.real ? legacyLv('power') : 0;   // POWER TAP (THE BOARD: +1, II +2)
+  const cellB = d.slots.PSU ? (d.overclock ? 15 : deckCellPower(d.slots.PSU)) + spike + tap : 0, fuseB = deckOpen(4) ? DECK_FUSE_PWR : 0;
   const left = { cell: cellB, fuse: fuseB };
   for (const id of d.order) {
     const key = d.slots[id], s = deckSock(id); if (!key || !deckOpen(s.mk)) continue;   // a dark band's chips cost nothing

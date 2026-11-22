@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v15.40']);
+NEON_FILES.push(['engine/fishing.js', 'v15.41']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -22,7 +22,7 @@ const fishMirror = t => [...t].reverse().map(c => ({ '<': '>', '>': '<', '(': ')
 const fishHead = s => s.dir > 0 ? s.x + s.look.length - 1 : s.x;   // the head's column (it noses the hook)
 // The PIER's music: one of these at random each visit, level 3 while you reel (engine/boot.js)
 const FISH_TRACKS = ['lowpressure', 'plusone', 'sealegs'];
-const fishCost = () => costInt(ECON.fish.cast);
+const fishCost = () => Math.max(1, Math.round(costInt(ECON.fish.cast) * (legacyLv('bait') ? 0.5 : 1)));   // (BAIT SHOP: THE BOARD, half)
 const fishWorth = key => earnInt(ECON.fish[ITEMS[key].rarity] != null ? ECON.fish[ITEMS[key].rarity] : ECON.fish.common);
 // A catch's (made-up) size in KB: ITEMS[key].kb is its range (spread on a log scale; most land near the low end)
 const fishKB = (key, r) => { const [a, b] = ITEMS[key].kb || [1, 100]; return a * Math.pow(b / a, Math.pow(r(), 1.6)); };
@@ -67,10 +67,11 @@ function fishOutcome(r) {
   if (u < ECON.fish.shoe + ECON.fish.gear) {   // the loot pool, each rarity step damped
     const pool = Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && !ITEMS[k].crew && k !== 'shoe' && gearAllowed(k));
     const step = k => Math.max(0, RARITY_ORDER.indexOf(ITEMS[k].rarity) - RARITY_ORDER.indexOf('common'));
-    const key = pickWeighted(pool, k => gearWeight(k) * Math.pow(ECON.fish.damp, step(k)) * (ITEMS[k].corrupt ? 2 : 1), r);   // (corrupted software: it washes up here)
+    const deep = legacyLv('deep') > 0;   // DEEP WATER (THE BOARD): the rarer steps damped less, corrupted software twice as likely again
+    const key = pickWeighted(pool, k => gearWeight(k) * Math.pow(ECON.fish.damp, step(k) * (deep ? 0.6 : 1)) * (ITEMS[k].corrupt ? (deep ? 4 : 2) : 1), r);   // (corrupted software: it washes up here)
     return { kind: 'gear', key, tier: 0, rarity: ITEMS[key].rarity };
   }
-  const rar = pickWeighted(FISH_RARITY, x => ECON.fish.odds[FISH_RARITY.indexOf(x)] || 0, r);
+  const rar = pickWeighted(FISH_RARITY, x => (ECON.fish.odds[FISH_RARITY.indexOf(x)] || 0) * (legacyLv('deep') ? Math.pow(1.6, FISH_RARITY.indexOf(x)) : 1), r);   // (DEEP WATER: rarer fish)
   const key = pickR(FISH_KEYS.filter(k => ITEMS[k].rarity === rar), r) || pickR(FISH_KEYS, r);
   return { kind: 'fish', key, tier: 0, rarity: ITEMS[key].rarity };
 }

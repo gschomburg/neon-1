@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.40']);
+NEON_FILES.push(['engine/shell.js', 'v15.41']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -435,7 +435,10 @@ async function shellRun(line) {
   SHELL.histAt = -1;
   shellOut(line, 'cmd');
   const p = shellParse(line), c = p && p.cmd;
-  if (line === 'dev.start') {   // dev mode (Greg, 2026-11-20): never autocompleted. Every command, no charges; the run is practice
+  // BACKDOOR (THE BOARD, SYSOP: Greg 2026-11-22) opens dev.start / dev.stop. Without it they're unknown commands, unless
+  // you've opened the dev menu this session or play from a file (yours: testing).
+  const backdoor = legacyLv('backdoor') > 0 || st.devAccess || location.protocol === 'file:';
+  if (line === 'dev.start' && backdoor) {   // dev mode (Greg, 2026-11-20): never autocompleted. Every command, no charges; the run is practice
     st.devAccess = true; if (st.run && !st.run.ended) st.run.practice = true;
     if (SHELL.el) shellRefresh(); return shellOut('dev mode: every command, no charges. this run is practice now.', 'dim');
   }

@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **ELITE / SYSOP posts, batch 2** (v15.41): POWER TAP (+1 / +2 deck power), SURGE (+1 / +2 SHELL charges), BAIT SHOP (half-price casts), CLOUT (+25% REP), DEEP WATER (rarer catches, more corrupted software), BACKDOOR (dev.start). **Heads up:** dev.start now needs BACKDOOR on the live site, unless you open the dev menu first that session. Prices are guesses: 300/600, 250/500, 150, 1000, 400, 1500.
+
 - [ ] **Ladders and REP tabs** (v15.40): REP has tabs (MSGS GUEST USER ELITE SYSOP). A post's later levels sit a level up as their own posts (HARDENED II on USER, III on ELITE...; DEADMAN III is new, 75%). Saves aren't carried over: an old 2-level HARDENED still counts as 2.
 
 - [ ] **Start-of-run chips, REMOTE ACCESS, KITs** (v15.38): your deck now holds PURGE (power 0), FIRST AID and LUCKY START (if you bought them), slotted in BOOT. Pull PURGE and you start without one. BT1 is the KIT socket (it says KIT when empty). THE ARCHIVE is a BOOT chip: pick its mod on its card. REMOTE ACCESS (USER): the workbench opens after the public node. BLACK BOX saves to the WORKBENCH's LOCKER. If you'd bought the old LOCKER post, its 200 REP came back.
