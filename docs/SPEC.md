@@ -1094,6 +1094,7 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v15.31** (2026-11-21): **Ripped chips: only the boss layer takes one back** (Greg). A rival takes a RIPPED chip back only when it took the corp's boss layer (h.stoleLast), not for any layer; beat the boss and you keep them. Its line says why ("beat you to the boss"); POPS's lines match. tests/ripped.js.
 - **v15.30** (2026-11-21): **Playtest bugs** (Greg's meat notes). The boss intro's line wraps at 31 (SIMON's, MONTY's, FOSSIL's ran wide; engine/run.js buildBossIntro). The bench keyboard steps aside for a quest scene, a FEAT box or an ad (ROOT's cutscene over BUILD; engine/bench.js benchKeys). THE SHELL: the suggestion list never shrinks (the log gives up the room), dark scroll bars. Looked at, working as built: WARP and EENY MEENY, a rival taking a ripped chip back after you beat the boss, TELL LIGHT on TELEPHONIX (BACKLOG Playtest notes).
 - **v15.29** (2026-11-21): **A finished quest says COMPLETE** (Greg). THE BOARD's QUESTS: a quest on its last step (done) reads COMPLETE: MOVED IN / COMPLETE: SYSTEM RESTORED, not STEP n (engine/quests.js questBoardLines). tests/teach.js.
 - **v15.28** (2026-11-21): **b0y comes in on OMNI's boss** (Greg). On the OMNI RAID step, OMNI's boss layer without b0y: he comes in by himself (this corp's [b]) with a line, so the raid can't be lost by not calling him (engine/quests.js questOmniBoy). tests/raidboy.js.

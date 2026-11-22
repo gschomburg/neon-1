@@ -848,7 +848,8 @@ engine/deck.js)" where it lives. tools/checks/tests/chips.js checks them.
   mods, on its code chip like gear at a market (v15.09; Greg: "it should fit there the same way").
 - **RIPPED** (built v15.08): while one is on your belt, a rival comes to every corp with no other anomaly (QUIET still
   stops them). Sell it, trash it or lose it to a rival and that's off; cash out and it's yours, a chip like any other.
-  A rival that gets away (stole a layer, not flatlined, not thrown out) takes one back. POPS calls the first time you
+  A rival that takes the corp's boss layer (not flatlined, not thrown out) takes one back (**Decided (Greg, 2026-11-21),
+  v15.31:** the boss layer only; it was any layer). POPS calls the first time you
   get one, and the first time one is taken (save.deck.ripSeen, ripLost). Magenta runs through the chip on the belt and
   in your deck (deckRipGlow). They sell (their share of a market chip's price); other chips don't.
 - **The ripped set** (v15.08, Claude's; Greg to look): LIFTED WALLET (common BOOT, +50cr to start), TURBO'S NITRO (rare

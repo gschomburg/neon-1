@@ -1,6 +1,6 @@
 // tools/checks/tests/ripped.js: RIPPED chips (engine/deck.js, Greg 2026-11-21): their own set, only from rivals and THE
 // FENCE; while one is on your belt a rival comes to every corp without another anomaly; sell or lose it and that's off;
-// a rival that gets away takes one back; POPS's two calls; their effects. Run by tools/test.js (tools/checks/harness.js).
+// a rival that takes the boss layer takes one back (v15.31: not any layer); POPS's two calls; their effects. Run by tools/test.js (tools/checks/harness.js).
 module.exports = { name: 'ripped', body: `
   save.deck = save.deck || deckFreshSave();
   B.startRun('RIPTEST', false); await settle('start'); await B.pick(st.lv.safe); await settle('public'); if (st.mode !== 'map') { B.toMap(); await settle('map'); }
@@ -40,8 +40,10 @@ module.exports = { name: 'ripped', body: `
   check(run.items.some(s => s.key === ik), 'a rival you flatlined: you keep it');
   hkCorpEnd({ hk: [{ id: rid, side: 'bad', out: false, stole: 1, exorcised: true }] });
   check(run.items.some(s => s.key === ik), 'one you threw out: you keep it');
-  hkCorpEnd({ hk: [{ id: rid, side: 'bad', out: false, stole: 1 }] });
-  check(!run.items.some(s => s.key === ik) && save.deck.ripLost && pops(/got away/).length === 1, 'one that got away: it takes it back, POPS calls');
+  hkCorpEnd({ hk: [{ id: rid, side: 'bad', out: false, stole: 2 }] });
+  check(run.items.some(s => s.key === ik), 'one that stole layers but not the boss: you keep it');
+  hkCorpEnd({ hk: [{ id: rid, side: 'bad', out: false, stole: 1, stoleLast: true }] });
+  check(!run.items.some(s => s.key === ik) && save.deck.ripLost && pops(/got away/).length === 1, 'one that took the boss layer: it takes it back, POPS calls');
   CALL_QUEUE.length = 0; st.callBox = null;
 
   // a rival you beat drops a ripped one

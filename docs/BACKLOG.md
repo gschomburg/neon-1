@@ -44,10 +44,8 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   too. **Decided (Greg, 2026-11-21):** keep it ("the simon one is still pretty hard").
 - **WARP in EENY MEENY:** working as built. WARP never targets a boss (any sector), and you can't get stuck: when every
   way on is explored, the next row with somewhere new opens (engine/render.js availableNodes, the "pocket").
-- **HAD3S, CERBERUS and a ripped chip:** working as built, but it reads like a bug. A rival that steals any layer of the
-  corp and isn't flatlined takes a ripped chip back, even when you beat the boss (engine/hackers.js hkCorpEnd,
-  engine/deck.js deckRivalTakes). It takes the first one on your belt: the wallet. Open for Greg: should beating the
-  boss protect your chips? And the line could say why ("d0g stole a layer: he took LIFTED WALLET back").
+- **HAD3S, CERBERUS and a ripped chip:** it was the rule: any layer a rival stole meant it took a ripped chip back.
+  **Decided (Greg, 2026-11-21), built v15.31:** only the boss layer. Beat the boss and you keep them.
 - **TELEPHONIX's TELL LIGHT:** the corp side looks right: when a layer doesn't follow its tell, the dial points at a
   random node, and TELL LIGHT says TELL OFF. The quirk: that random node can be the real one, so TELL OFF shows while
   the dial is right (for every corp that dresses its nodes; engine/layers.js lv.tellOn). Open for Greg: what did you

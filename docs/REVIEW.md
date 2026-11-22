@@ -61,7 +61,7 @@ to build is `docs/BACKLOG.md`.)
   - **FREE PRESS** is the old BLUEPRINT chip (your first build each run is free). Say if you'd rather ALPHABET SOUP.
 - [ ] **RIPPED chips** (v15.08; docs/DECK.md "The sources"). `give.chip LW1` in dev mode puts one on your belt.
   - **The chase:** with one on your belt, every corp without another anomaly has a rival. Sell it, trash it, or let a rival take it, and that stops.
-  - **Taking it back:** a rival that gets away (steals a layer and isn't flatlined or thrown out) takes one off your belt. POPS calls the first time, and the first time you get one.
+  - **Taking it back:** a rival that takes the corp's boss layer (and isn't flatlined or thrown out) takes one off your belt (v15.31: was any layer). POPS calls the first time, and the first time you get one.
   - **The look:** magenta runs across the chip, on the belt and in your deck. Its texts start RIPPED. Worth a look on a phone.
   - **The set (my picks, rarer = stronger):** LIFTED WALLET (common, +50cr), TURBO'S NITRO (rare, 2 WARP), VULTURE'S CUT (rare, rivals pay +50%), D0PPEL'S MASK (epic, +2 INT), PH1SH'S HOOK (epic, rivals drop chips twice as often), SYSOP'S KEY (legendary, every corp's first layer: real node marked). Names, numbers and effects are all up for change.
   - **THE FENCE** (v15.09): the chip is a row in its list under your stolen mods, with its code chip and price; pick it for its text and a B U Y   I T box.

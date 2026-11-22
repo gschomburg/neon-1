@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.30']);
+NEON_FILES.push(['engine/deck.js', 'v15.31']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -438,8 +438,9 @@ function deckRivalChip(h) {
   addItem(ik, 0); deckRipFirst();
   return `> ${hkName(h.id).toLowerCase()} dropped a chip: ${DECK_CHIPS[key][0]}. it's RIPPED. ${hkName(h.id).toLowerCase()} is gonna want that back.`;
 }
-// A rival you didn't beat (it got away with a layer, not flatlined, not thrown out) takes a RIPPED chip back off your
-// belt (engine/hackers.js hkCorpEnd). Returns the line, or null.
+// A rival that took the corp's boss layer (h.stoleLast; not flatlined, not thrown out) takes a RIPPED chip back off
+// your belt (engine/hackers.js hkCorpEnd). Beat the boss yourself and you keep them (Greg, 2026-11-21: it was any layer).
+// Returns the line, or null.
 function deckRivalTakes(h) {
   const run = st.run, s = run && run.items.find(x => ITEMS[x.key] && ITEMS[x.key].ripped);
   if (!s) return null;
@@ -447,7 +448,7 @@ function deckRivalTakes(h) {
   takeItem(s.key); Sound.deny();
   const sd = save.deck;
   if (sd && !sd.ripLost) { sd.ripLost = true; persist(); queueCall('pops', deckRipLostLines(who, name)); }
-  return `> ${who} took ${name} back.`;
+  return `> ${who} beat you to the boss. took ${name} back.`;
 }
 // POPS: the first RIPPED chip you get, and the first one a rival takes back (save.deck.ripSeen, .ripLost)
 function deckRipFirst() {
@@ -456,10 +457,10 @@ function deckRipFirst() {
 }
 const deckRipLines = () => ["that chip you just got? it's RIPPED. ripped right out of a rival's deck.",
   "they know you've got it. while it's on your belt, a rival turns up in every corp you hit. one with an anomaly keeps the anomaly.",
-  "beat 'em and you keep it. let one get away and they take it back.",
+  "beat the boss before they do and you keep it. let one take the boss layer and they take it back.",
   "sell it or trash it and the heat's off. get it home and it's yours: ripped chips are good ones."];
 const deckRipLostLines = (who, name) => [`${who} got away with ${name}. told you they'd want it back.`,
-  "a rival that slips out of a corp takes a ripped chip with 'em. flatline 'em, or beat 'em to the end."];
+  "a rival that beats you to a corp's boss takes a ripped chip with 'em. flatline 'em, or beat 'em to it."];
 // The look (Greg, 2026-11-21): magenta (the bench's: engine/bench.js BENCH_MISS) runs through a RIPPED chip, over its
 // own rarity color. Not red: red is DIVINE's. B(x, y, w, col, alpha) paints one cell's background.
 const DECK_RIP_COL = '#ff4fd8';

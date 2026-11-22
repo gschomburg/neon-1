@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v15.30']);
+NEON_FILES.push(['engine/hackers.js', 'v15.31']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -523,7 +523,7 @@ function hkCorpEnd(c) {
     const bonus = (h.exorcised ? 0 : h.out ? earnInt(ECON.rival.flatlined) : h.stole === 0 ? earnInt(ECON.rival.beat) : 0) * deckRivalPay();   // (EXORCIST: thrown out, not beaten: no bonus) (LOUD, a chip: double)
     if (bonus) { earn(bonus, run); setMsg(h.out ? `> ${hkName(h.id).toLowerCase()} flatlined. +${bonus}cr` : `> you beat ${hkName(h.id).toLowerCase()}. +${bonus}cr`, C.money); }
     if (!h.exorcised && (h.out || h.stole === 0)) { const cm = deckRivalChip(h); if (cm) setTimeout(() => setMsg(cm, C.rep), 1400); }   // a chip, now and then: RIPPED (engine/deck.js)
-    else if (!h.exorcised) { const tm = deckRivalTakes(h); if (tm) setTimeout(() => setMsg(tm, C.danger), 1400); }   // it got away: it takes a RIPPED chip back
+    else if (!h.exorcised && h.stoleLast) { const tm = deckRivalTakes(h); if (tm) setTimeout(() => setMsg(tm, C.danger), 1400); }   // it took the boss layer: it takes a RIPPED chip back (Greg, 2026-11-21: beat the boss and you keep them)
   }
 }
 // You died with hackers there: a rival's logo and taunt, or a crew member calling your name, as the screen falls apart.
