@@ -98,6 +98,8 @@ pay review notes
 - the shell scroll bars need better styling, they should be dark
 - the shell auto completes might be a ltitle off, i think if there's only one option it kinda gets half covered, like if i type god it shows mode.god, but it's kinda under the shell typing area a bunch, it also shouldn't show a scroll bar on the right if it doesn't need it
 
+- deck chips page list should maybe make the "in slot" thing a little clearer. i'm not sure how yet. i'm almost thinking if they had a white bg color and black text this is in the list view. migth also be good to have the option to [view] the chip if it's slotted which would take you to the deck and scroll to it.
+
 
 bugs or weirdness
 ********************

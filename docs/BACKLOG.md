@@ -150,6 +150,8 @@ unlocked by REP, and some quests unlock REP.
       The quest to get it comes later. **Decided (Greg, 2026-11-08):** the name is G0D.exe; "beaten" means beaten
       once (the codex page is open; a setting, so it can go to ~5 later); in a corp you haven't beaten it guesses at
       random, and on the map it goes around those corps when it can.
+    - **Not a cheat (Greg, 2026-11-21):** G0D.exe will be a real thing, so turning it on doesn't make a run practice.
+      Today getting it (`g0dexe` in dev mode) still does; when the real way in is built, drop that too (engine/g0dexe.js g0dxSetup).
       - **The gear:** a new rarity above exotic, **DIVINE**, in G0D's red (its own chip; the gear and the cursor both
         use it). Tap it on: a card like a crew CALL's, with a portrait like the crew's (a little eye). Tap it again,
         or tap anything yourself, and it pauses.
