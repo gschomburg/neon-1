@@ -10,7 +10,7 @@ net hack inspiration
 misc notes
 ***********************
 
-pay review notes
+play review notes
 ***********
 
 bugs or weirdness

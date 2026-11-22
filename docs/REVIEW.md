@@ -14,6 +14,12 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The playtest bugs** (v15.30):
+  - **Boss intros:** SIMON's, MONTY's and FOSSIL's boss line wraps onto a second row now. Look on a phone.
+  - **ROOT's cutscene** at the bench: the keyboard is gone while it plays and comes back after.
+  - **THE SHELL:** type `god`: `mode.god` shows whole, no scroll bar. Scroll bars are dark. One to watch: in a headless screenshot the shell ran past the right edge of a 400px window. Check it on your phone.
+  - **Two questions** (BACKLOG Playtest notes, Bugs): should beating a boss keep your ripped chips safe? And TELEPHONIX's TELL LIGHT: what did you see?
+
 - [ ] **A finished quest** (v15.29): THE BOARD > QUESTS shows COMPLETE: MOVED IN (ROOT) or COMPLETE: SYSTEM RESTORED (POPS) in the accent color, in place of STEP 4 / STEP 8.
 
 - [ ] **b0y on the OMNI RAID** (v15.28): on OMNI's boss layer, if you haven't tapped [b] in that OMNI, he comes in by himself about a second in ("OMNI's boss. i'm not missing this one."). Call him earlier and nothing changes.
