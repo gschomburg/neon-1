@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **A finished quest** (v15.29): THE BOARD > QUESTS shows COMPLETE: MOVED IN (ROOT) or COMPLETE: SYSTEM RESTORED (POPS) in the accent color, in place of STEP 4 / STEP 8.
+
 - [ ] **b0y on the OMNI RAID** (v15.28): on OMNI's boss layer, if you haven't tapped [b] in that OMNI, he comes in by himself about a second in ("OMNI's boss. i'm not missing this one."). Call him earlier and nothing changes.
 
 - [ ] **The codex's tabs** (v15.23): `[TECH] [NET] [HACKERS]`, with a sub-tab strip under them: GEAR MODS CHIPS /

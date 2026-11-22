@@ -99,7 +99,6 @@ Filed from the meat notes as written; nothing here is checked or built yet unles
 ### ROOT's unlock, smoothed out
 - ROOT giving you `man`: the call just says "man". Show the 3x2 chip in it.
 - ROOT also calls with the same info right after. Smooth it out: today it's quest cards and crew calls one after another.
-- Greg asked: are there more quest steps after step 4? (Check the QUEST card's step count reads right at the end.)
 
 ### UI
 - **`[< TITLE]`:** not sure about the look. Maybe `<< TITLE` or MAIN.

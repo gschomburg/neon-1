@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v15.28']);
+NEON_FILES.push(['engine/quests.js', 'v15.29']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -689,7 +689,9 @@ function questBoardLines(T, X) {
   } else X({ text: info.name, col: C.rep, bold: true });
   T(`from ${info.from}` + (ids.length > 1 ? `  ·  ${ids.indexOf(id) + 1} of ${ids.length}` : ''), C.mid);
   T('');
-  X({ text: `STEP ${at + 1}: ${v.name}`, col: C.bright, bold: true });
+  // a finished quest (its last step, 'done') says so (Greg, 2026-11-21: MOVED IN read like a step still to do)
+  const over = step.key === 'done' && at === info.steps.length - 1;
+  X({ text: over ? `COMPLETE: ${v.name}` : `STEP ${at + 1}: ${v.name}`, col: over ? C.accent : C.bright, bold: true });
   for (const l of wrapText(v.goal, 32)) T(l, C.text);
   if (step.wins) { T(''); X({ text: `d0g: ${Math.min(q.d0g || 0, step.wins)} / ${step.wins}`, col: C.bright, bold: true }); }   // (DOG DAYS: the wins so far)
   if (step.letters) { T(''); X({ h: 1, draw: (ctx, y) => rootLettersRow(ctx, Math.floor((L.wc - 32) / 2), y) }); }   // (PAPERWORK: r o o t, the ones you have)

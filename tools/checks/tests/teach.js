@@ -69,6 +69,12 @@ module.exports = { name: 'teach', body: `
     openBoard('quests'); await sleep(700);
     check(st.questTab === ids[1] && tb('qnext') && tb('qprev') && !hits.some(h => /^qtab_/.test(h.id || '')), 'QUESTS: the one with news first, arrows, no quest tabs');
     tb('qnext').onTap(); await sleep(200);
-    check(st.questTab === ids[0], 'the arrow steps to the next'); }
+    check(st.questTab === ids[0], 'the arrow steps to the next');
+    // a finished quest says COMPLETE, not STEP n (v15.29)
+    const head = () => { const rows = []; questBoardLines(s => rows.push(String(s)), o => rows.push(o.text || '')); return rows.find(r => /^(STEP|COMPLETE)/.test(r)) || ''; };
+    st.questTab = 'root'; save.quests.root = Object.assign(save.quests.root || {}, { step: 'spell' });
+    check(/^STEP 3: SIGN HERE/.test(head()), 'a step under way: STEP 3: ' + head());
+    save.quests.root.step = 'done';
+    check(head() === 'COMPLETE: MOVED IN', 'done: COMPLETE: ' + head()); }
   save.legacy.crew_root = rootWas;
 ` };
