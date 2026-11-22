@@ -447,7 +447,8 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   with your REP pet. Setting your earned pet is the good part.
 - **KIT:** start with a given gear.
 - More:
-  - **HEADSTART:** start on the second row of sector 1. RYDR. (Greg: no REP penalty.)
+  - **HEADSTART:** start on the second row of sector 1. RYDR. (Greg: no REP penalty.) **Built v15.49 (Greg):** your first
+    move can be any node in the first 2 rows.
   - **PRELOAD:** start with 3 random gear. PARCELNET ("it's out for delivery").
   - **TRUST FUND:** start with +60cr. LEDGER TRUST. (Greg: no penalty. It was "the first market's prices are up
     25%".)
@@ -480,8 +481,10 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **QUIET:** no rival hackers. TELEPHONIX ("please hold"). Its flip side, **LOUD:** more rivals, and each pays more.
   - **SAFE ROUTE** (built v15.45 as **BENCH LINK**: the WORKBENCH at every UPLINK, Greg): was a safehouse on every sector's map (BACKLOG section 5: "a guaranteed heal each sector").
     SAFEHARBOR.
-  - **PIER PASS:** a PIER on every sector's map. A rare PIER catch.
-  - **ALMANAC:** the next sector's event is shown a sector early. NIMBUS WEATHER.
+  - **PIER PASS:** a PIER on every sector's map. A rare PIER catch. **Built v15.49 (Greg):** a choice: once a sector, any
+    market, safehouse or cache offers [ OR GO PHISHING ] in place of going in. Rarer catches.
+  - **ALMANAC:** the next sector's event is shown a sector early. NIMBUS WEATHER. **Built v15.49 (Greg):** its card comes
+    right after this sector's, marked NEXT UP. EVENTS is now **INTO THE FIRE** (Greg's name), also v15.49.
   - **SHORTCUT:** one fewer row each sector, and less REP. LIFTCO.
   - **SPRAWL:** one more row each sector: more markets, more corps. GENCORP.
   - **CORP STORE:** one market a sector sells only corp mods and gear, dearer (BACKLOG section 5). MEGAMART or SOLD!

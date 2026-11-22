@@ -1,7 +1,7 @@
 // NeoN+1 engine/mapview.js: the run's map (buildMap), the results screen's map (drawMapView), and a node's info.
 // Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/mapview.js', 'v15.48']);
+NEON_FILES.push(['engine/mapview.js', 'v15.49']);
 
 // Map: final node at the top, start at the bottom. Edges are dotted lines.
 // x for a node; start / final nodes sit in the middle lane.
@@ -115,7 +115,7 @@ function buildMap(ctx) {
       const vi = run.visited.indexOf(n.id), mi = run.visited.indexOf(m.id);
       const onPath = (vi >= 0 && run.visited[vi + 1] === m.id) || (mi >= 0 && run.visited[mi + 1] === n.id);
       const live = run.at === n.id && avail.has(m.id);
-      const col = onPath ? C.accent : live ? C.mid : C.dim;
+      const col = onPath ? C.accent : live ? C.mid : deckWasPath(run, n.id, m.id) ? C.rep : C.dim;   // (FORGET-ME-NOT, a chip: last time's path)
       for (const d of linkDots(pos(n), pos(m))) if (shown(d.row)) put(d.x, yOf(d.row), d.ch || '·', col, 'map');
     }
   }
@@ -227,6 +227,12 @@ function buildMap(ctx) {
   }
   lines.forEach((ln, k) => putC(y0 + k, ln.text, ln.col, 'map'));
   if (st.mapSel) drawBox(ctx, y0 + lines.length, { text: info.action, id: 'enter', onTap: () => enterNode(map[st.mapSel]), minW: 18 });
+  if (st.mapSel && deckPhishHere(map[st.mapSel])) {   // PIER PASS (a chip: engine/deck.js): or phish here, once a sector
+    const t = '[ OR GO PHISHING ]', x = Math.floor((L.wc - t.length) / 2), yy = y0 + lines.length + 3;
+    if (ctx.hl) ctx.hl(x, yy, t.length, 1, 'phish');
+    put(x, yy, t, st.hoverBtn === 'phish' ? C.bright : C.accent, 'map', true);
+    addHit(x, yy, t.length, 1, { kind: 'btn', id: 'phish', onTap: () => enterNode(map[st.mapSel], false, true) });
+  }
 }
 
 function nodeInfo(n) {

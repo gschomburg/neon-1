@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.48']);
+NEON_FILES.push(['engine/deck.js', 'v15.49']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -98,16 +98,16 @@ const DECK_CHIPS = {
   RG6: ['ROGUE', 'boot', 'epic', 2, 'a KIT (a class): start with PICKPOCKET, a SPLIT and a SHAKE.', ['-/-', 'RGE'], 'PICKPOCKET, SPLIT, SHAKE.'],
   KN8: ['KNIGHT', 'boot', 'rare', 2, 'a KIT (a class): start with BURNER, 2 FWALLs and a FRAG.', ['[#]', 'KNT'], 'BURNER, 2 FWALLs, a FRAG.'],
   CL3: ['CLERIC', 'boot', 'legendary', 3, 'a KIT (a class): start with FAILSAFE and 2 PATCHes.', ['(+)', 'CLR'], 'FAILSAFE, 2 PATCHes.'],
-  HS1: ['HEADSTART', 'boot', 'rare', 2, 'start on the second row of sector 1.', ['>>|', 'HS1'], 'start a row in.'],
+  HS1: ['HEADSTART', 'boot', 'rare', 2, 'your first move can be any node in the first 2 rows.', ['>>|', 'HS1'], 'jump in, up to 2 rows.'],   // (engine/render.js availableNodes)
   // BIOS
   LU6: ['LOUD', 'bios', 'rare', 1, 'rival hackers turn up more (1 corp in 4 that had none), and each one you beat pays double.', ['!!!', 'LUD'], 'more rivals, double pay.'],
   LY1: ['+1 LAYER', 'bios', 'rare', 1, 'every corp has one more layer before its boss. more REP, more risk. (THE BOARD: +1 LAYER)', ['+1 ', '[=]'], 'every corp: one more layer.'],   // (engine/run.js corpPlan)
   FR5: ['FRESH', 'bios', 'rare', 1, "corps you haven't beaten come up more.", ['NEW', 'FR5'], 'unbeaten corps come up more.'],
-  EV2: ['EVENTS', 'bios', 'rare', 1, 'sector events from sector 1.', ['EVT', '!!1'], 'events from sector 1.'],
+  EV2: ['INTO THE FIRE', 'bios', 'rare', 1, 'sector 1 gets a sector event too.', ['^^^', 'FIR'], 'an event in sector 1.'],   // (was EVENTS: Greg, 2026-11-22. deckFireEvent)
   AD0: ['ADWARE', 'bios', 'common', 1, "ads come up twice as often, and tapping a button in one (not its [x]) heals 1 INT.", ['AD!', '+1^'], 'ads heal you.'],
   SR4: ['BENCH LINK', 'bios', 'epic', 2, 'your WORKBENCH at every UPLINK: shred, build, take from its LOCKER before you push on.', ['[+]', 'LNK'], 'the WORKBENCH at the UPLINK.'],   // (was SAFE ROUTE, a safehouse on every map: Greg, 2026-11-22. engine/runend.js openUplink)
-  PP2: ['PIER PASS', 'bios', 'rare', 1, 'a PIER on every sector map, and a rare catch now and then.', ['~~~', 'PIR'], 'a PIER every sector.'],
-  AL4: ['ALMANAC', 'bios', 'common', 1, "the next sector's event shows a sector early.", ['(*)', 'ALM'], 'see the next event early.'],
+  PP2: ['PIER PASS', 'bios', 'rare', 1, 'once a sector, phish at a market, safehouse or cache in place of going in. rarer catches.', ['~~~', 'PIR'], 'phish at a rest stop.'],
+  AL4: ['ALMANAC', 'bios', 'common', 1, "see the next sector's event early: its card comes after this sector's.", ['(*)', 'ALM'], 'see the next event early.'],
   CS7: ['CASINO', 'bios', 'rare', 1, 'the casino corps come up more: LUCKEEZ, MONTY, BIDBLITZ, DROP-4.', ['$7$', 'CAS'], 'casino corps come up more.'],
   CK9: ['CLOCK', 'bios', 'rare', 1, 'the clock corps come up more: CHANNEL 9, COLDBREW, WATCHPOINT, RYDR.', ['(L)', 'CLK'], 'clock corps come up more.'],
   DK6: ['DARK', 'bios', 'rare', 1, 'the dark corps come up more: BLACKOUT, NOIR, PREDATOR.', ['###', 'DRK'], 'dark corps come up more.'],
@@ -184,11 +184,8 @@ const DECK_CHIP_TAGS = {
 // The chips that don't do their whole job yet (Greg, 2026-11-16: mark them BETA, so we know they need more work). What's
 // missing, for us. They show BETA in your deck, and never drop (deckRollChip): the editor and THE SHELL give them.
 const DECK_BETA = {
-  HS1: 'starting a row in needs map work (the start node and its links)',
   FR5: 'corp weights scramble seeds: needs the placeholder corps (Seeds)', CS7: 'the same: placeholder corps', CK9: 'the same', DK6: 'the same',
-  EV2: "an event in sector 1 needs its own stream (rollEvent skips sector 1)", AD0: 'built; no way to get it yet (an ad corp\'s boss, BACKLOG)',
-  PP2: 'a PIER on every map needs map work',
-  AL4: "the next sector's event is only made when you push on", MM4: 'needs the last path saved per seed, and drawn on the map',
+  AD0: 'built; no way to get it yet (an ad corp\'s boss, BACKLOG)',
   SPC: 'built; no way to get it yet (beating the M0LD, BACKLOG)',
 };
 const deckBeta = k => !!DECK_BETA[k];
@@ -463,6 +460,8 @@ function deckRunStart(run, opts = {}) {
   if (chipOn('CL3', run)) { mods(['failsafe']); give('patch', 2); }   // CLERIC
   if (chipOn('AR1', run) && archivePool().includes(save.archive)) mods([save.archive]);   // THE ARCHIVE (THE BOARD's chip): the mod you picked on its card
   if (chipOn('BP1', run)) run.freeBuild = true;   // FREE PRESS (engine/bench.js benchBuild)
+  deckFireEvent(run);   // INTO THE FIRE: sector 1's event (sector 1 made again, with it)
+  if (chipOn('MM4', run)) run.lastPath = deckLastPath(run.seed);   // FORGET-ME-NOT
 }
 // INSURANCE and DEAD DROP: what your last death left you (save.deck.insured, .deadDrop: deckDeath)
 function deckRunCarry(run) {
@@ -538,6 +537,48 @@ function deckCollectorMod(run) {
   if (m && modRoom(m.key) && !clashWith(m.key)) { addMod(m.key, 0); return 'COLLECTOR 10/10: ' + MODS[m.key].name + '.'; }
   earn(60, run); return 'COLLECTOR 10/10: no room for a mod. +60cr.';
 }
+// ---------- the map chips (Greg, 2026-11-22: out of BETA) ----------
+// INTO THE FIRE (was EVENTS): sector 1 gets an event too, from its own stream, so the later sectors' events stay the
+// same. The map is made before the chips are known (engine/run.js startRun), so sector 1 is made again, with it.
+const DECK_FIRE_SKIP = ['headfirst', 'eenymeeny'];   // (a boss on row 1, three bosses: too much for a first sector)
+function deckFireEvent(run) {
+  if (!chipOn('EV2', run) || run.quest || run.heaven || testSeed(run.seed)) return;
+  const scales = eventScales(), next = rollEvent(run.seed, 1);
+  const pool = Object.keys(SECTOR_EVENTS).filter(k => !SECTOR_EVENTS[k].quest && !EVENT_SIDE.includes(k) && !DECK_FIRE_SKIP.includes(k) && k !== next && eventWeight(k, scales) > 0).sort();
+  if (!pool.length) return;
+  run.map = genMap(run.seed, pool[pickEventW(pool, rngFor(run.seed, 'fire'), scales)]);
+}
+// PIER PASS (Greg, 2026-11-22: a choice, not a node turned into a PIER, so you never lose your safehouse): once a
+// sector, a market, safehouse or cache you can go to also offers [ OR GO PHISHING ] (engine/mapview.js). Take it and
+// that stop is your PIER for the visit, not the stop (engine/run.js enterNode; going back in: the PIER again). Its
+// catches run rarer, like DEEP WATER (engine/fishing.js fishOutcome). run.pierSec: the sector you phished in.
+const deckPhishHere = (n, run = st.run) => !!(run && n && chipOn('PP2', run) && ['shop', 'repair', 'cache'].includes(n.type) && !n.exit && (n.sector || 0) === (run.sector || 0) && run.pierSec !== (run.sector || 0));
+const deckPhished = (n, run = st.run) => !!(run && n && (run.phished || []).includes(n.id));
+// ALMANAC: the next sector's event, a sector early. Its card comes after this sector's (engine/events.js
+// closeEventCard), or when you reach the map if this sector has none (engine/run.js). Worked out from the seed, the way
+// the map will make it (rollEvent). Once a sector.
+function deckAlmanac(run = st.run) {
+  if (!run || !chipOn('AL4', run) || run.quest || run.heaven || testSeed(run.seed)) return false;
+  const s = (run.sector || 0) + 1; run.almSeen = run.almSeen || [];
+  if (run.almSeen.includes(s)) return false;
+  run.almSeen.push(s);
+  const ev = rollEvent(run.seed, s), ev2 = rollEvent2(run.seed, s);
+  if (!ev || !SECTOR_EVENTS[ev]) return false;
+  st.evCard = { ev, ev2: ev2 && SECTOR_EVENTS[ev2] ? ev2 : null, sector: s, again: true, almanac: true, t0: null };
+  return true;
+}
+// FORGET-ME-NOT: the map marks the path you took last time on this seed. Every run's path is kept (save.paths: [[seed,
+// [node ids]]], the last DECK_PATHS_MAX seeds), so the chip works on seeds played before you had it.
+const DECK_PATHS_MAX = 20;
+function deckSavePath(run) {
+  if (!run || run.tutorial || st.mp || !run.visited) return;
+  const p = (save.paths || []).filter(([sd]) => sd !== run.seed);
+  p.push([run.seed, run.visited.slice()]);
+  save.paths = p.slice(-DECK_PATHS_MAX); persist();
+}
+const deckLastPath = seed => { const e = (save.paths || []).find(([sd]) => sd === seed); return e ? e[1].slice() : null; };
+// a link on the last path (engine/mapview.js buildMap)
+const deckWasPath = (run, a, b) => { const p = run.lastPath; if (!p) return false; const i = p.indexOf(a), j = p.indexOf(b); return (i >= 0 && p[i + 1] === b) || (j >= 0 && p[j + 1] === a); };
 // ---------- CREW JACKS' boons in a run (DECK_JACKS) ----------
 // every sector, the first one too (deckRunStart, deckSector): NANA's PATCHes, DIALUP's TUNNEL (and SKIP), KLUDGE's letter
 function deckJackSector(run) {

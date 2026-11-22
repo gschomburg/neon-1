@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.48']);
+NEON_FILES.push(['engine/run.js', 'v15.49']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -83,7 +83,7 @@ function toMap(fromSector) {
   // A new sector's event: its card, once (after the map's climb settles); otherwise maybe an ad
   const ev = sectorEvent();
   if (ev && !(st.run.evSeen || []).includes(st.run.sector)) showEventCard(st.run.sector);
-  else adBreak('map');   // maybe an ad, over the map
+  else if (!deckAlmanac(st.run)) adBreak('map');   // (ALMANAC, a chip: the next sector's card, when this one has none)   // maybe an ad, over the map
 }
 
 // Map rows count down from the top of the whole map; a sector view starts at its OMNI.
@@ -112,6 +112,7 @@ function stepMapView(now) {
 function canGoBack(n) {
   const run = st.run;
   if (!run || !n || run.at !== n.id || n.exit) return false;
+  if (deckPhished(n, run)) return true;   // (PIER PASS: you phished here: back to the PIER)
   return n.type === 'shop' || n.type === 'pier' || (n.type === 'cache' && run.caches && run.caches[n.id] === 'open') || (n.type === 'repair' && n.bench && benchOpen());   // (a safehouse: back to its WORKBENCH)
 }
 async function goBackIn(n) {
@@ -119,6 +120,7 @@ async function goBackIn(n) {
   st.transitioning = true; st.mapSel = st.mapPeek = null;
   await wipeOut(0);
   st.transitioning = false;
+  if (deckPhished(n)) return openPier(n);
   if (n.type === 'shop') return openShop(n);
   if (n.type === 'cache') return openCache(n);
   if (n.type === 'pier') return openPier(n);
@@ -132,7 +134,7 @@ function selectNode(id) {
   Sound.ui();
 }
 
-async function enterNode(node, warp = false) {
+async function enterNode(node, warp = false, phish = false) {   // (phish: PIER PASS, a chip: this stop is a PIER)
   if (st.transitioning || !node || (!warp && !availableNodes().includes(node.id))) return;
   if (node.heaven === 'g0d') return g0dWakeStart(node);   // G0D: the wake-up on the map, then the fight (engine/heaven.js)
   st.transitioning = true;
@@ -146,6 +148,7 @@ async function enterNode(node, warp = false) {
   run.visited.push(node.id);
   statNodeStart(node);
   st.transitioning = false;
+  if (phish) { run.pierSec = run.sector || 0; (run.phished = run.phished || []).push(node.id); return openPier(node); }
   if (node.type === 'shop') return openShop(node);
   if (node.type === 'cache') return openCache(node);
   if (node.type === 'pier') return openPier(node);   // fishing (engine/fishing.js)

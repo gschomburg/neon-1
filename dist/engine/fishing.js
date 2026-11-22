@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v15.48']);
+NEON_FILES.push(['engine/fishing.js', 'v15.49']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -67,11 +67,11 @@ function fishOutcome(r) {
   if (u < ECON.fish.shoe + ECON.fish.gear) {   // the loot pool, each rarity step damped
     const pool = Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && !ITEMS[k].crew && k !== 'shoe' && gearAllowed(k));
     const step = k => Math.max(0, RARITY_ORDER.indexOf(ITEMS[k].rarity) - RARITY_ORDER.indexOf('common'));
-    const deep = legacyLv('deep') > 0;   // DEEP WATER (THE BOARD): the rarer steps damped less, corrupted software twice as likely again
+    const deep = legacyLv('deep') > 0 || chipOn('PP2');   // (PIER PASS, a chip, the same)   // DEEP WATER (THE BOARD): the rarer steps damped less, corrupted software twice as likely again
     const key = pickWeighted(pool, k => gearWeight(k) * Math.pow(ECON.fish.damp, step(k) * (deep ? 0.6 : 1)) * (ITEMS[k].corrupt ? (deep ? 4 : 2) : 1), r);   // (corrupted software: it washes up here)
     return { kind: 'gear', key, tier: 0, rarity: ITEMS[key].rarity };
   }
-  const rar = pickWeighted(FISH_RARITY, x => (ECON.fish.odds[FISH_RARITY.indexOf(x)] || 0) * (legacyLv('deep') ? Math.pow(1.6, FISH_RARITY.indexOf(x)) : 1), r);   // (DEEP WATER: rarer fish)
+  const rar = pickWeighted(FISH_RARITY, x => (ECON.fish.odds[FISH_RARITY.indexOf(x)] || 0) * (legacyLv('deep') || chipOn('PP2') ? Math.pow(1.6, FISH_RARITY.indexOf(x)) : 1), r);   // (DEEP WATER: rarer fish)
   const key = pickR(FISH_KEYS.filter(k => ITEMS[k].rarity === rar), r) || pickR(FISH_KEYS, r);
   return { kind: 'fish', key, tier: 0, rarity: ITEMS[key].rarity };
 }

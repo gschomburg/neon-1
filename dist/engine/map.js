@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v15.48']);
+NEON_FILES.push(['engine/map.js', 'v15.49']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -130,10 +130,11 @@ function pickCorps(r, target, k, boost = null) {
   return out;
 }
 
-function genMap(seed) {
+// ev0: sector 1's event (INTO THE FIRE, a chip: engine/deck.js deckFireEvent); none otherwise.
+function genMap(seed, ev0 = null) {
   const nodes = {};
   nodes['0:1'] = { id: '0:1', step: 0, lane: 1, sector: 0, type: 'start', corp: 'public', tier: 0, next: [] };
-  addSector(nodes, seed, 0);
+  addSector(nodes, seed, 0, ev0);
   return nodes;
 }
 
@@ -162,7 +163,7 @@ function addSector(nodes, seed, s, force = null) {
   const test = testSeed(seed), order = corpsByLevel();
   const [fa, fb] = (force || '').split('+');   // (a forced pair: 'a+b', the editor)
   const qev = typeof questSeed === 'function' && questSeed(seed) === 'had3s' ? 'hunt' : null;   // HAD3S: THE HUNT in every sector (sector 1 too), nothing else
-  const ev = qev || (s === 0 ? null : fa && SECTOR_EVENTS[fa] ? fa : test ? null : rollEvent(seed, s));
+  const ev = qev || (s === 0 ? (fa && SECTOR_EVENTS[fa] ? fa : null) : fa && SECTOR_EVENTS[fa] ? fa : test ? null : rollEvent(seed, s));
   const ev2 = qev || s === 0 || test ? null : force ? (fb && SECTOR_EVENTS[fb] ? fb : null) : rollEvent2(seed, s);   // a 2nd event, now and then
   const has = k => ev === k || ev2 === k;
   const same = has('copypaste') ? pickCorps(rngFor(seed, 'copy', s), targetLevel(s, 3), 1)[0] : null;   // COPY PASTE: one corp everywhere

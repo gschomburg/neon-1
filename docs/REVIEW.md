@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The map chips** (v15.49, out of BETA): HEADSTART (first move: any node in rows 1-2), INTO THE FIRE (an event in sector 1; not HEAD FIRST or EENY MEENY), PIER PASS (once a sector, [ OR GO PHISHING ] under a rest stop's ENTER; rarer catches), ALMANAC (next sector's card after this one's, NEXT UP), FORGET-ME-NOT (last time's path in purple on the map; every run's path is saved, last 20 seeds). They drop now, like the other chips.
+
 - [ ] **Your GLYPH** (v15.48): the GLY socket lists the glyphs you've seen; pick one and its bonus (LOOT free; SIGNED, GOLDEN on ELITE; COLLECTOR on SYSOP). It's tinted on the board, and counts only where a corp shows the codex glyphs. How often does it turn up for you (about 1 layer in 5 in plain corps)? Prices: 300 / 300 / 500.
 
 - [ ] **CREW JACKS** (v15.47): tap the jacks twice on the mk III board. Your hired crew plug in, 1 power each (2 at LVL 2), and their boons are on every run. Worth a look: are the numbers right (b0y every layer at LVL 2 is strong; it skips layers under 5 nodes and bosses), and is PARTY LINE (a 3rd jack, SYSOP 600) worth it? PORTS' card is cryptic now.

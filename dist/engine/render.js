@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v15.48']);
+NEON_FILES.push(['engine/render.js', 'v15.49']);
 
 // ---------------- Popup looks (the user, 2026-10-31) ----------------
 // Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
@@ -141,6 +141,7 @@ function availableNodes(noCar = false) {   // (noCar: without the C.A.R.: the mo
   // Links out of where you are, minus stops you've been to (sideways links go both ways).
   if (!run.at) return ['0:1'];
   const cur = run.map[run.at], out = new Set(cur.next);
+  if (run.at === '0:1' && run.visited.length === 1 && chipOn('HS1')) for (const n of Object.values(run.map)) if ((n.sector || 0) === 0 && (n.step === 1 || n.step === 2)) out.add(n.id);   // HEADSTART (a chip): any node in the first 2 rows
   // map gear: TUNNEL (any node in your row), MESH (every node in the next row, all sector), aimed WARP (anything ahead)
   if (run.tunnel) for (const n of rowMates()) out.add(n.id);
   if (run.mesh === run.sector) for (const n of Object.values(run.map)) if (n.step === cur.step + 1 && (n.sector || 0) === run.sector) out.add(n.id);

@@ -1,7 +1,7 @@
 // NeoN+1 engine/events.js: the SECTOR EVENT card (what a new sector rolled) and THE FENCE (THIEF's stolen mods,
 // sold back). The events themselves: data/events.js; the roll: engine/map.js addSector.
 'use strict';
-NEON_FILES.push(['engine/events.js', 'v15.48']);
+NEON_FILES.push(['engine/events.js', 'v15.49']);
 
 // ---------------- The SECTOR EVENT card ----------------
 // It comes up over a new sector's map once the climb settles (toMap), and again from the map's sector label.
@@ -19,6 +19,7 @@ function closeEventCard() {
   Sound.ui();
   const run = st.run;
   if (run && !c.again) { run.evSeen = run.evSeen || []; if (!run.evSeen.includes(c.sector)) run.evSeen.push(c.sector); saveRun(); }
+  if (run && !c.almanac && !c.again) deckAlmanac(run);   // ALMANAC (a chip: engine/deck.js): the next sector's card, after this one
 }
 // What a line of the card says, filled in for that sector.
 function eventLines(ev, sector) {
@@ -35,10 +36,10 @@ function eventTagLine(ev, boss = true) {
   return E.noBoss || !boss ? `${a.tag} = ${a.name}` : `${a.tag} = ${a.name} (the boss too)`;
 }
 // The card as rows: { t, col, bold, x ('c' = centered), btn }.
-function eventCardRows(ev, sector, ev2 = null) {
+function eventCardRows(ev, sector, ev2 = null, almanac = false) {   // (almanac: the next sector's, early: ALMANAC, a chip)
   const E = SECTOR_EVENTS[ev], rows = [];
   const R = (t, col = C.text, o = {}) => rows.push(Object.assign({ t, col }, o));
-  R(`SECTOR ${sector + 1} // EVENT`, C.mid);
+  R(`SECTOR ${sector + 1} // ${almanac ? 'NEXT UP · ALMANAC' : 'EVENT'}`, almanac ? C.rep : C.mid);
   R('');
   for (const a of E.art) R(a, C.bright, { x: 'c' });
   R('');
@@ -79,7 +80,7 @@ function buildEventCard(ctx, now) {
   const mv = st.mapView;
   if (st.mode !== 'map' || (mv && mv.row !== mv.target) || st.wipe || st.transitioning) return;
   if (c.t0 == null) { c.t0 = now; Sound.shield(); markSeen('ev_' + c.ev); if (c.ev2) markSeen('ev_' + c.ev2); }   // its own alert sound; the codex logs it
-  const rows = eventCardRows(c.ev, c.sector, c.ev2);
+  const rows = eventCardRows(c.ev, c.sector, c.ev2, c.almanac);
   const w = EV_W + 2, h = rows.length + 2, x0 = Math.max(0, Math.floor((L.wc - w) / 2)), y0 = Math.max(0, Math.floor((L.hc - h) / 2));
   clearRect(cells, x0, y0, w, h);
   popupBg(bg, 'event', x0, y0, w, h);   // (its look: POPUP_LOOK, engine/render.js)
