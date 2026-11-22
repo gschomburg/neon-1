@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.47']);
+NEON_FILES.push(['engine/save.js', 'v15.48']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -125,6 +125,8 @@ const LEGACY = [
   { key: 'surge', tier: 3, name: 'SURGE', desc: '+1 charge for THE SHELL, every run (with a SHELL chip).', costs: [250] },   // (engine/deck.js deckCharges)
   { key: 'bait', tier: 3, name: 'BAIT SHOP', desc: 'casts at the pier cost half.', costs: [150] },   // (engine/fishing.js fishCost)
   { key: 'dealer', tier: 3, name: 'CHIP DEALER', desc: 'after a DATA CACHE: a catalog of 3 chips for your deck. get out with what you buy.', costs: [300] },   // (engine/deck.js openChipDealer)
+  { key: 'gsigned', tier: 3, needs: 'deck3', name: 'SIGNED', desc: "a bonus for your deck's GLYPH: as ICE, your glyph hits you for 0.", costs: [300] },   // (engine/deck.js DECK_FAV_B)
+  { key: 'ggolden', tier: 3, needs: 'deck3', name: 'GOLDEN', desc: "a bonus for your deck's GLYPH: when your glyph is the real node, the layer pays double.", costs: [300] },
   { key: 'sacrifice', tier: 3, name: 'SACRIFICE', chip: 'SX1', desc: 'gives you the SACRIFICE chip (OVERVOLT, mk III) for your deck: pay the UPLINK with all but 1 INT, not credits.', costs: [300] },   // (engine/runend.js openUplink)
   { key: 'drops2', tier: 3, ladder: 'drops', needs: 'drops', name: 'BETTER DROPS II', desc: '1 in 5 mods and gear roll a step rarer (was 1 in 10).', costs: [300] },
   // chip: buying it gives you that chip for your deck (Greg, 2026-11-22: posts that are strong or need a limit are chips)
@@ -144,6 +146,7 @@ const LEGACY = [
   { key: 'backdoor', tier: 4, name: 'BACKDOOR', desc: 'the secret: THE SHELL shows you dev.start (every command, no charges, but the run turns practice) and dev.stop.', costs: [1500] },
   { key: 'dealer2', tier: 4, ladder: 'dealer', needs: 'dealer', name: 'CHIP DEALER II', desc: 'the catalog has 5 chips (was 3), one of them rare or better.', costs: [600] },
   { key: 'layer', tier: 4, name: '+1 LAYER', chip: 'LY1', desc: 'gives you the +1 LAYER chip (BIOS) for your deck: every corp has one more layer. more REP, more risk.', costs: [500] },   // (engine/run.js corpPlan)
+  { key: 'gcollect', tier: 4, needs: 'deck3', name: 'COLLECTOR', desc: "a bonus for your deck's GLYPH: every tap on your glyph counts; at 10, a free mod.", costs: [500] },
   { key: 'jack3', tier: 4, needs: 'deck3', name: 'PARTY LINE', desc: 'a third CREW JACK on your deck: one more of your crew plugged in.', costs: [600] },   // (engine/deck.js deckJackMax)
   { key: 'market2', tier: 4, ladder: 'market', needs: 'market', name: 'LOYALTY CARD II', desc: 'every market is 10% cheaper (was 5%).', costs: [400] },
   // ---- PRIVATE MESSAGES (a feat opens them)

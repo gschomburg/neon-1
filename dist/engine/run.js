@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.47']);
+NEON_FILES.push(['engine/run.js', 'v15.48']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -758,6 +758,7 @@ function payFor(lv) {
   if (c.mod === 'loaded') mult *= 1.2;
   if (c.hasBoss && c.def.faith && !lv.tithed) mult *= 2;   // THE CHOIR: on faith
   if (lv.dd) mult *= 2;                                    // LUCKEEZ: double down
+  if (st.run && st.run.favB === 'golden' && deckFavIs(lv.tiles[lv.safe])) mult *= 2;   // GOLDEN (your deck's GLYPH: engine/deck.js)
   mult *= hkPayMult(lv);   // LEECH takes a cut, HYPE cheers streaks (engine/hackers.js)
   mult *= 1 - (lv.payCut || 0);
   return lv.n === 1 ? 0 : Math.round(base * mult);
@@ -794,6 +795,7 @@ async function onSafe(t) {
   if (rewall) msg += ' bulwark up';
   if (surged) msg += ' surge +1 int';
   if (hype) msg += ` hype +${hype}cr`;
+  msg += deckFavTap(t);   // your GLYPH: LOOT, COLLECTOR (engine/deck.js)
   setMsg(msg, C.accent);
   const land = lv.boss ? Sound.bossWin() : 0;   // boss: the fanfare replaces the safe sound (s until it lands)
   await wait(380);
@@ -968,6 +970,7 @@ async function onTrap(t, i) {
     msg += ' ' + grantLoot(lr, st.corp.tier);
     if (has('priority')) { for (let i = 1; i < ECON.modx.priority; i++) msg += ' ' + grantLoot(lr, st.corp.tier); modFired('priority'); }   // PRIORITY: delivered more than once
   }
+  msg += deckFavTap(t);   // your GLYPH: LOOT, COLLECTOR (engine/deck.js)
   // a HIT mod fires unless it returns false (nothing happened); a callout fires it later
   for (const k of modsAt('hit')) {
     if (!HIT_FX[k]) continue;

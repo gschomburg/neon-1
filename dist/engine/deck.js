@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.47']);
+NEON_FILES.push(['engine/deck.js', 'v15.48']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -201,10 +201,27 @@ const deckCellPower = key => key === 'WU3' ? Math.min(14, 2 + 2 * ((save.deck &&
 const DECK_FUSE_PWR = 8;
 const deckHex = n => n.toString(16).toUpperCase();
 const DECK_SPOILS = [['REWARDS', 'RWD', 'take the REWARDS.'], ['HEAL', 'HP+', 'skip them: HEAL 2 INT.'], ['CASH', '$$$', 'skip them: take CASH.']];
-const DECK_GLYPHS = [
-  ['THE WATCHER', [' .-. ', '( o )', " '-' "]], ['COOKIE', [' .-. ', '(::.)', " '-' "]],
-  ['GHOST USER', [' .-. ', '(o o)', ' vvv ']], ['DIAMOND', [' / \\ ', '<   >', ' \\ / ']],
-];
+// GLYPH (mk III; Greg, 2026-11-22): no chips. Pick your favourite from the real glyphs you've seen (the codex's), then
+// its bonus. Only where it shows: corps that draw their own symbols replace the glyph, so it's never there (a tile's glyph
+// is the very MOTIFS entry: deckFavIs). LOOT is free; the others are THE BOARD's posts. save.deck.fav (an ART_GLYPHS
+// index), .favB (a bonus key), .favTaps (COLLECTOR's count, across runs). run.fav, run.favB for the run.
+// Hooks: deckFavTap (engine/run.js onSafe, onTrap: LOOT, COLLECTOR), engine/hits.js blockHit (SIGNED), engine/run.js
+// payFor (GOLDEN), engine/board.js (your glyph's tint).
+const DECK_FAV_B = {
+  loot: ['LOOT', null, 'tap it and it pays out like a $ node, ICE or real'],
+  signed: ['SIGNED', 'gsigned', 'as ICE it hits you for 0'],
+  golden: ['GOLDEN', 'ggolden', "when it's the real node, the layer pays double"],
+  collector: ['COLLECTOR', 'gcollect', 'every tap on it counts: at 10, a free mod'],
+};
+const deckFavBOpen = k => !DECK_FAV_B[k][1] || !DECK.real || legacyLv(DECK_FAV_B[k][1]) > 0;
+const deckFavPool = () => ART_GLYPHS.map((g, i) => i).filter(i => !DECK.real || (save.seen || {})['g' + i]);
+const deckFavArt = i => i == null || !MOTIFS[i] ? [' ? ? ', '? ? ?', ' ? ? '] : MOTIFS[i];
+const deckFavName = i => i == null || !ART_GLYPHS[i] ? 'NONE YET' : ART_GLYPHS[i].name;
+function deckFavStep(dd = 1) {
+  const d = DECK, ks = Object.keys(DECK_FAV_B).filter(deckFavBOpen), i = ks.indexOf(d.favB);
+  d.favB = ks[((i < 0 ? 0 : i + dd) % ks.length + ks.length) % ks.length]; Sound.tick();
+}
+const deckFavIs = (t, run = st.run) => !!(run && run.fav != null && t && t.glyph && MOTIFS.indexOf(t.glyph) === run.fav);
 // the sockets (where the socket labels layer puts them): id, x, y, group, the mk that opens it, size
 const deckS = (id, x, y, g, mk, w = 5, h = 4) => ({ id, x, y, g, mk, w, h });
 const DECK_SOCKETS = [
@@ -404,19 +421,20 @@ function deckRunChips(run) {
   if (keys.includes('HC1')) keys = keys.filter(k => DECK_CHIPS[k][1] !== 'crash');   // HARDCORE: no CRASH chip works
   let brown = null;   // BROWNOUT (a cell): one of the others is off this run (the run's seed picks it)
   if (keys.includes('BO1') && run) { const pool = keys.filter(k => DECK_CHIPS[k][1] !== 'psu'); if (pool.length) { brown = pickR(pool, rngFor(run.seed, 'brownout')); keys = keys.filter(k => k !== brown); } }
-  const spoils = d.spoils, crew = {};
+  const spoils = d.spoils, crew = {}, fav = deckOpen(3) && d.glyph != null ? d.glyph : null, favB = deckFavBOpen(d.favB) ? d.favB : 'loot';   // (GLYPH)
   for (const id of pw.crewOn) crew[id] = deckCrewLv(id);   // CREW JACKS
   DECK = was;
-  return { keys, spoils, brown, crew };
+  return { keys, spoils, brown, crew, fav, favB };
 }
 // INT a chip costs (or gives) as a run starts
 const DECK_INT = { DM3: 2, RX9: -1, GR8: -1, LK7: -1, FM2: -1, SK1: -1, FI2: 2, DN1: -1, GL2: -2, CH1: -1, TP1: -1, RE1: -1, LG2: -1, UV1: 1, PD2: 2 };
 function deckRunStart(run, opts = {}) {
   if (opts.tutorial || st.mp) return;
-  const { keys, spoils, brown, crew } = deckRunChips(run);
+  const { keys, spoils, brown, crew, fav, favB } = deckRunChips(run);
   deckRunCarry(run);   // INSURANCE and DEAD DROP from your last death (they come whatever's slotted now)
   // PURGE is a chip once you have the deck (Greg, 2026-11-22): no PURGE chip on, no PURGE at the start
   if (save.deck && !(keys || []).includes('PG0')) { const i = run.items.findIndex(x => x.key === 'purge'); if (i >= 0) run.items.splice(i, 1); }
+  run.fav = fav != null ? fav : null; run.favB = favB || 'loot';   // your GLYPH (DECK_FAV_B)
   run.jacks = crew || {};   // CREW JACKS (DECK_JACKS): on with no chips too
   if (Object.keys(run.jacks).length) deckJackSector(run);   // (the first sector's PATCH, TUNNEL...)
   if (!keys || !keys.length) return;
@@ -500,6 +518,25 @@ function deckLayer(lv, c) {
   if (!chipOn('RE1') || lv.n < 3) return;
   const ice = lv.tiles.filter(t => !t.safe && !t.loaded && !t.quantum);
   if (ice.length) pickR(ice, rngFor(st.run.seed, 'redeye', c.node.id, c.idx)).ruledOut = true;
+}
+// ---------- your GLYPH in a run (DECK_FAV_B) ----------
+// a tap on your glyph (engine/run.js onSafe, onTrap): LOOT pays out like a $ node; COLLECTOR counts. Returns a line to add.
+function deckFavTap(t) {
+  const run = st.run, c = st.corp; if (!deckFavIs(t) || !c) return '';
+  if (run.favB === 'loot') return ' ' + grantLoot(rngFor(run.seed, 'favloot', c.node.id, c.idx), c.tier || 1);
+  if (run.favB === 'collector' && save.deck && !run.practice) {
+    const n = save.deck.favTaps = (save.deck.favTaps || 0) + 1;
+    if (n < 10) { persist(); return ' glyph ' + n + '/10.'; }
+    save.deck.favTaps = 0; persist();
+    return ' ' + deckCollectorMod(run);
+  }
+  return '';
+}
+// COLLECTOR's 10th tap: a mod you don't have (common gen and minor, by the seed), or credits when there's no room
+function deckCollectorMod(run) {
+  const m = pickMods(rngFor(run.seed, 'collector', run.depth || 0), modsOfKind('gen', 'minor').filter(k => !has(k)), 1)[0];
+  if (m && modRoom(m.key) && !clashWith(m.key)) { addMod(m.key, 0); return 'COLLECTOR 10/10: ' + MODS[m.key].name + '.'; }
+  earn(60, run); return 'COLLECTOR 10/10: no room for a mod. +60cr.';
 }
 // ---------- CREW JACKS' boons in a run (DECK_JACKS) ----------
 // every sector, the first one too (deckRunStart, deckSector): NANA's PATCHes, DIALUP's TUNNEL (and SKIP), KLUDGE's letter
@@ -1076,14 +1113,14 @@ const DECK_TEST = {
 // ---------- state ----------
 // DECK is the deck on screen: the dev one (DECK_DEV, kept while the page lives) or the real one (made from save.deck
 // each time it opens, and written back by deckPersist whenever it changes).
-// save.deck: { chips: { key: how many }, slots: { socket: key }, order: [sockets, oldest first], spoils, glyph,
+// save.deck: { chips: { key: how many }, slots: { socket: key }, order: [sockets, oldest first], spoils, fav, favB (GLYPH),
 //   crew: [crew ids: the CREW JACKS, in order], off: [posts switched off: engine/save.js postOn], overclock, blown }
 let DECK = null, DECK_DEV = null;
 const deckView = () => ({ view: 'board', scroll: 0, list: { top: 0 }, sel: { kind: 'socket', id: 'BT1' }, selT: 0, pick: null, carry: null,
   bits: [0, 0, 0, 0, 0, 0, 0, 0], tick: null, msg: null, leave: 0 });
 function deckDev() {
   if (!DECK_DEV) DECK_DEV = Object.assign(deckView(), {
-    real: false, rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: 0, crew: new Set(['pops']),
+    real: false, rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: Math.max(0, ART_GLYPHS.findIndex(g => g.name === 'THE WATCHER')), favB: 'loot', crew: new Set(['pops']),
     slots: { PSU: 'SC1', BT1: 'LD3', BI1: 'QT0', CRS: 'DM5', SPL: 'SP3', SH1: 'WH0' },
     order: ['PSU', 'BT1', 'BI1', 'CRS', 'SPL', 'SH1'],   // the sockets in the order their chips went in: power goes oldest first
     sw: new Set(['starter', 'stray']), nemesis: CORPS.burgertron ? 'burgertron' : null, archive: null,
@@ -1094,7 +1131,7 @@ function deckDev() {
 const DECK_START = { chips: { SC1: 1, SP3: 1 }, slots: { PSU: 'SC1', SPL: 'SP3' }, order: ['PSU', 'SPL'] };
 // USER and no deck yet: it's yours, and POPS calls about it. From THE BOARD (a level opens: engine/feats.js
 // boardLevelNews; or a save from before the deck: engine/menus.js openBoard).
-const deckFreshSave = () => Object.assign(JSON.parse(JSON.stringify(DECK_START)), { spoils: 0, glyph: 0, crew: [], off: [], overclock: false, blown: false });
+const deckFreshSave = () => Object.assign(JSON.parse(JSON.stringify(DECK_START)), { spoils: 0, fav: null, favB: 'loot', crew: [], off: [], overclock: false, blown: false });
 function deckEnsure() {
   if (save.deck || boardLevel() < 2) return deckGift();
   save.deck = Object.assign(deckFreshSave(), { seenMk: deckMkNow() });
@@ -1139,7 +1176,8 @@ function deckReal() {
   const nem = owned.includes('nemesis') && !(sd.off || []).includes('nemesis') && CORPS[save.nemesis] ? save.nemesis : null;
   const arc = MODS[save.archive] ? save.archive : null;   // (THE ARCHIVE's mod: its chip's card sets it)
   const d = Object.assign(deckView(), {
-    real: true, mk: deckMkNow(), fuse: legacyLv('fuse') > 0, blown: !!sd.blown, spoils: sd.spoils || 0, glyph: sd.glyph || 0,
+    real: true, mk: deckMkNow(), fuse: legacyLv('fuse') > 0, blown: !!sd.blown, spoils: sd.spoils || 0, glyph: sd.fav != null && ART_GLYPHS[sd.fav] ? sd.fav : null, favB: DECK_FAV_B[sd.favB] ? sd.favB : 'loot',   // (glyph: an ART_GLYPHS index, saved as fav)
+   
     crew: new Set((sd.crew || []).map(c => String(c).toLowerCase()).filter(c => DECK_JACKS[c])), chips: Object.assign({}, sd.chips), slots: Object.assign({}, sd.slots), order: (sd.order || []).slice(),
     sw: new Set(owned.filter(k => !DECK_PICKERS.includes(k) && !(sd.off || []).includes(k))), nemesis: nem, archive: arc, overclock: !!sd.overclock, seenMk: sd.seenMk || 2,
   });
@@ -1154,7 +1192,7 @@ function deckReal() {
 // the part of the real deck that's saved (NEMESIS with no corp breached yet isn't "off": there's nothing to pick)
 function deckSnap(d) {
   const owned = DECK_SWITCHES.filter(k => legacyLv(k));
-  return { chips: d.chips, slots: d.slots, order: d.order, spoils: d.spoils, glyph: d.glyph, crew: [...d.crew],
+  return { chips: d.chips, slots: d.slots, order: d.order, spoils: d.spoils, fav: d.glyph, favB: d.favB, crew: [...d.crew],
     off: owned.filter(k => k === 'nemesis' ? !d.nemesis && (!d.real || nemesisPool().length > 0) : !d.sw.has(k)), overclock: !!d.overclock, blown: !!d.blown, seenMk: d.seenMk || 2 };
 }
 // Each frame on the real deck: anything changed goes into the save (one place, so no change is missed).
@@ -1628,7 +1666,7 @@ function deckSocket(s, X, Y, P, B, CL, { sel = false, key, pw, now }) {
   if (s.g === 'glyph') {
     P(X, Y, '+=GLY=+', col); for (let j = 1; j < 4; j++) { P(X, Y + j, ']', col); P(X + 6, Y + j, '[', col); } P(X, Y + 4, '+=-=-=+', col);
     if (!open) P(X + 1, Y + 2, ':mk3:', C.mid);
-    else DECK_GLYPHS[d.glyph][1].forEach((l, j) => P(X + 1, Y + 1 + j, l, C.bright, true));
+    else deckFavArt(d.glyph).forEach((l, j) => P(X + 1, Y + 1 + j, l, C.bright, true));
   } else {
     P(X, Y, '+' + (inner > 3 ? '.' : '') + s.id + (inner > 3 ? '.' : '') + '+', col);
     for (let j = 1; j < s.h - 1; j++) { P(X, Y + j, !open || !key ? ':' : ']', col); P(X + w - 1, Y + j, !open || !key ? ':' : '[', col); }
@@ -1963,8 +2001,9 @@ function deckPicker(ctx, y0, sa) {
   const IX = X0 + 1, IW = W - 2, H = sa, LR = Math.max(5, H - 3 - DECK_PICK_INFO);
   const done = () => { d.pick = null; };
   // the choices: NONE (or the glyphs), then what fits
-  const keys = s.g === 'glyph' ? DECK_GLYPHS.map((x, i) => i) : ['NONE'].concat(deckOwned().filter(k => deckFits(k, s)));
-  if (p.sel == null) p.sel = s.g === 'glyph' ? d.glyph : cur || keys[1] || 'NONE';
+  const keys = s.g === 'glyph' ? deckFavPool() : ['NONE'].concat(deckOwned().filter(k => deckFits(k, s)));
+  if (s.g === 'glyph' && !keys.length) { d.pick = null; return; }   // (nothing seen yet)
+  if (p.sel == null) p.sel = s.g === 'glyph' ? (keys.includes(d.glyph) ? d.glyph : keys[0]) : cur || keys[1] || 'NONE';
   const items = [], idx = {};
   keys.forEach((k, i) => {
     if (i) items.push(deckSep(IX, IW));
@@ -2010,10 +2049,9 @@ function deckPickRow(g, ctx, y, k, { IX, IW, s, cur, pw }) {
     if (p.sel !== k) { p.sel = k; Sound.tick(); }
   } });
   if (s.g === 'glyph') {
-    const [name, art] = DECK_GLYPHS[k];
-    art.forEach((l, j) => g.put(IX + 1, y + j, l, C.bright, true));
-    g.put(IX + 8, y, name, C.bright, true); if (k === d.glyph) g.put(IX + IW - 7, y, 'in GLY', C.accent);
-    g.put(IX + 8, y + 1, 'seen on ' + (3 + k * 2) + ' layers', C.mid);
+    deckFavArt(k).forEach((l, j) => g.put(IX + 1, y + j, l, C.bright, true));
+    g.put(IX + 8, y, deckFavName(k), C.bright, true); if (k === d.glyph) g.put(IX + IW - 7, y, 'in GLY', C.accent);
+    g.put(IX + 8, y + 1, (ART_GLYPHS[k].lore[0] || '').slice(0, IW - 9), C.mid);
     return;
   }
   if (k === 'NONE') {
@@ -2039,7 +2077,7 @@ function deckPickShort(k, s, cur, pw) {
 }
 function deckPickGo(k, s, cur) {
   const d = DECK; d.pick = null;
-  if (s.g === 'glyph') { if (k !== d.glyph) { d.glyph = k; Sound.buy(); deckSay(`${DECK_GLYPHS[k][0]} is your glyph.`); } return; }
+  if (s.g === 'glyph') { if (k !== d.glyph) { d.glyph = k; Sound.buy(); deckSay(`${deckFavName(k)} is your glyph.`); } return; }
   if (k === 'NONE') { if (cur) deckPull(s.id); else Sound.tick(); return; }
   if (deckSlotOf(k) !== s.id) deckSlot(k, s.id); else Sound.tick();
 }
@@ -2049,8 +2087,15 @@ function deckPickInfo(ctx, g, IX, IW, y, p, s, cur, pw, go) {
   const btn = (label, col, off) => deckBtn(ctx, g, x, by, label, col, 'dkgo', go, off);
   const text = t => wrapText(t, w).slice(0, 4).forEach((l, j) => g.put(x, y + 2 + j, l, C.text));
   if (s.g === 'glyph') {
-    g.put(x, y, DECK_GLYPHS[k][0], C.bright, true); g.put(x, y + 1, 'GLYPH', C.mid);
-    text('tap it when you see it on a layer and it acts like a loot node, ICE or real.');
+    g.put(x, y, deckFavName(k), C.bright, true); g.put(x, y + 1, 'GLYPH · codex glyphs only', C.mid);
+    // the bonus (the socket's, whichever glyph): [<] NAME [>] and what it does; the ones still to buy, on THE BOARD
+    const fb = DECK_FAV_B[d.favB] || DECK_FAV_B.loot, lock = Object.keys(DECK_FAV_B).filter(b => !deckFavBOpen(b)).map(b => DECK_FAV_B[b][0]);
+    g.put(x, y + 2, 'bonus', C.mid);
+    deckBtn(ctx, g, x + 6, y + 2, '[<]', C.accent, 'dkfbL', () => deckFavStep(-1));
+    deckBtn(ctx, g, x + 10, y + 2, fb[0].padEnd(9), C.rep, 'dkfb', () => deckFavStep(1));
+    deckBtn(ctx, g, x + 20, y + 2, '[>]', C.accent, 'dkfbR', () => deckFavStep(1));
+    wrapText(fb[2] + '.', w).slice(0, 2).forEach((l, j) => g.put(x, y + 3 + j, l, C.text));
+    if (lock.length) g.put(x, y + 5, ('on THE BOARD: ' + lock.join(', ')).slice(0, w), C.dim);
     btn(k === d.glyph ? '[ IN GLY ]' : '[ PICK IT ]', C.accent, k === d.glyph);
     return;
   }
@@ -2229,10 +2274,11 @@ function deckCard(ctx, y0) {
   } else if (sel.kind === 'socket') {
     const s = deckSock(sel.id), key = d.slots[s.id], open = deckOpen(s.mk), [gn, , gt] = DECK_GROUPS[s.g], gc = deckGroupCol(s.g);
     if (s.g === 'glyph') {
-      if (open) DECK_GLYPHS[d.glyph][1].forEach((l, j) => g.put(1, y + j, l, C.bright, true)); else g.put(1, y + 1, ':mk3:', C.mid);
-      g.put(8, y, 'GLYPH · your favourite', C.mid); g.put(9, y + 1, open ? DECK_GLYPHS[d.glyph][0] : 'GLY · LOCKED', open ? C.bright : C.mid, true);
-      tick(9, open ? 'tap it when you see it on a layer and it acts like a loot node, ICE or real.' : 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.');
-      btns(open ? [['[ CHANGE ]', C.accent, 'dkchg', () => deckPick('GLY')]] : d.mk < 3 ? [[deckRepText('mk III', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3]] : [], 8);
+      const fb = DECK_FAV_B[d.favB] || DECK_FAV_B.loot;
+      if (open) deckFavArt(d.glyph).forEach((l, j) => g.put(1, y + j, l, C.bright, true)); else g.put(1, y + 1, ':mk3:', C.mid);
+      g.put(8, y, 'GLYPH · your favourite', C.mid); g.put(9, y + 1, open ? deckFavName(d.glyph) : 'GLY · LOCKED', open ? C.bright : C.mid, true);
+      tick(9, open ? (d.glyph == null ? 'pick one of the glyphs you have seen. ' : '') + fb[0] + ': ' + fb[2] + '. (only in corps that show the codex glyphs.)' : 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.');
+      btns(open ? [['[ CHANGE ]', C.accent, 'dkchg', () => deckPick('GLY')], ['[ ' + fb[0] + ' > ]', C.rep, 'dkfbc', () => deckFavStep(1)]] : d.mk < 3 ? [[deckRepText('mk III', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3]] : [], 8);
     } else if (!open) {
       frame(s);
       g.put(8, y, gn, C.mid); g.put(9, y + 1, `${s.id} · LOCKED`, C.mid, true);

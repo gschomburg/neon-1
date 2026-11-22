@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Your GLYPH** (v15.48): the GLY socket lists the glyphs you've seen; pick one and its bonus (LOOT free; SIGNED, GOLDEN on ELITE; COLLECTOR on SYSOP). It's tinted on the board, and counts only where a corp shows the codex glyphs. How often does it turn up for you (about 1 layer in 5 in plain corps)? Prices: 300 / 300 / 500.
+
 - [ ] **CREW JACKS** (v15.47): tap the jacks twice on the mk III board. Your hired crew plug in, 1 power each (2 at LVL 2), and their boons are on every run. Worth a look: are the numbers right (b0y every layer at LVL 2 is strong; it skips layers under 5 nodes and bosses), and is PARTY LINE (a 3rd jack, SYSOP 600) worth it? PORTS' card is cryptic now.
 
 - [ ] **ADWARE and SPORE CELL** (v15.46, still BETA: try them on the dev deck): ADWARE doubles the ads, and a button in one heals 1 INT. SPORE CELL's mold creeps over your deck from the PSU, a little more each run.

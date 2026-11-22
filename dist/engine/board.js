@@ -1,7 +1,7 @@
 // NeoN+1 engine/board.js: the layer's board (buildBoard) and COIN FLIP's coin box and multiplier pop.
 // Moved out of engine/scene.js (2026-11-05). buildScene (engine/scene.js) calls buildBoard each frame.
 'use strict';
-NEON_FILES.push(['engine/board.js', 'v15.47']);
+NEON_FILES.push(['engine/board.js', 'v15.48']);
 
 function buildBoard({ now, put, addHit, bg, cells }) {
   const lv = st.lv;
@@ -132,6 +132,7 @@ function buildBoard({ now, put, addHit, bg, cells }) {
     }
     if (t.loaded) { fc = C.dangerDim; gc = C.money; }
     if (t.ruledOut) { fc = C.dim; gc = C.dim; }
+    else if (t.state === 'closed' && !t.loaded && deckFavIs(t)) gc = C.rep;   // your GLYPH (the deck: engine/deck.js)
     if (t.state === 'safe' || t.state === 'reveal') { solid = true; fc = C.accent; gc = C.accent; }
     else if (t.probing || st.sel === i || (i === st.hover && !st.busy && !(st.press && st.press.moved))) { solid = true; fc = C.bright; if (!t.loaded) gc = C.bright; }
     // X-AXIS / Y-AXIS scan (lv.scan, set in engine/run.js): nodes on the line light up as the

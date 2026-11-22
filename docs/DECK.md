@@ -622,6 +622,9 @@ yet when you'd scan). `kill` takes `-9` so it can't go off by accident.
   Phones print unevenly, so it's a desktop treat.
 
 ### GLYPH (1, mk III): your favourite glyph
+**Built v15.48 (Greg, 2026-11-22): no chips.** Pick a real glyph you've seen, then its bonus: LOOT (free), SIGNED and
+GOLDEN (ELITE posts), COLLECTOR (SYSOP). Corps with their own symbols don't count. SPOTLIGHT became the board's tint on
+your glyph. FORGERY's partner waits (an exotic from a $ node is a lot).
 - **Greg:** a REP unlock to pick a favourite glyph. Tap it when you see it on a layer and it acts like a loot node,
   ICE or real. Or you pick the mod it gives.
 - More (glyph chips that change what your glyph does):
