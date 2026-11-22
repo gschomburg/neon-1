@@ -33,6 +33,103 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
   into components (docs/DECK.md CRASH, under BLACK BOX).
 - **Chips for the empty groups:** GLYPH, the CREW jacks, UPLINK, PORTS.
 
+## Playtest notes (Greg, meat notes 2026-11-21: "play review notes")
+Filed from the meat notes as written; nothing here is checked or built yet unless it says so.
+
+### Bugs to look into
+- **SIMON's boss let a wrong play through** (seed SSCPA6, sector 1, upper right): it showed the pattern, took the first
+  click and the layer completed. Greg's guess: tapping the pattern's last glyph counts as the real node. Is that meant?
+- **SIMON's boss intro is too wide:** the boss hint line on the boss intro.
+- **HAD3S, CERBERUS and a ripped chip:** Greg had LIFTED WALLET (from d0g) and VULTURE'S CUT, beat (he thinks) the final
+  CERBERUS boss, and at the end of the layer POPS called: d0g escaped and took the ripped chip back. The chips home card
+  showed INSURANCE and VULTURE, not the wallet (he had a wallet already, so it may have shredded: check the card says
+  so). Check whether d0g in HAD3S can count as escaped when you've beaten the boss.
+- **TELEPHONIX's tell light** may not be working.
+- **WARP in an EENY MEENY sector** won't jump to the bosses (maybe the general rule: warp never targets a boss). Check:
+  warp back to an earlier node whose neighbours are all done: can you get stuck?
+- **THE SHELL's autocomplete:** with one match (type `god`: `mode.god`) the list sits half under the typing line, and it
+  shows a scroll bar it doesn't need. The scroll bars need a dark style.
+- **Unlocking ROOT:** the cutscene plays over the workbench's BUILD and its keyboard stays on top of everything.
+
+### Training: the deck and the workbench
+- **The deck's first time:** today the PAPERWORK quest card comes up first. POPS's call should come first, then the quest
+  card. POPS's 6-line deck talk is too big for a first look: split it into its own training. POPS calls and offers it
+  ("there's a lot to go over here. need me to hold your hand?" / skip). Greg's outline:
+  - your deck lasts, like your REP buys
+  - start by slotting the PSU chip. A board with no PSU: that socket gets the power effects, and the no-power bar says
+    "slot a PSU" (tap it: scrolls to the PSU)
+  - chips go in sockets; you find them on runs and have to cash out with them; maybe craft them at a workbench, or take
+    them off other hackers
+  - chips need power; upgrade your PSU here; maybe an example of slotting one with too little power
+  - a quick "slot a chip" for the player to do
+  - the deck upgrades for REP, which opens more slots (REP, and you have to be ELITE or SYSOP)
+  - point out the SLOTS sub-tab
+  - at the end maybe a chip, a feat or a title
+  - then the PAPERWORK quest card
+- **A `*` on the DECK tab** when you hit USER and get the deck, till you open it (check it isn't there already).
+- **The workbench training** (was in Medium and small, Greg 2026-11-20): same shape as the deck's, a quick intro then the
+  offer. Its own world, apart from your run: your gear swaps for a set kit, ROOT's quest popups stay out, and at the end
+  you're back in your run as you were. Greg's outline:
+  - SHRED: shred the set gear / mods for letters. You can shred mods, gear or loot, unless it's important. Letters come
+    from the item; some corrupted items give weirder stuff. Shred till you have PURGE's letters.
+  - the BOOK (auto, or POPS has you tap it): pin a recipe (PATCH).
+  - BUILD: go to the build page and type the letters (Greg leans to typing them), build.
+  - the LOCKER: what you build goes there; put it on your belt; the locker keeps 5 things for your next run.
+  - also explain the `*` (from the old item: it means "anything").
+- **Replay them** from HOW TO PLAY (both trainings).
+
+### The workbench
+- SHRED could get sub-tabs: LOOT, GEAR, MODS.
+- On SHRED, mods are yellow in the list but gear and loot are grey: why? Make it one rule.
+- A correct recipe shows only BUILD: maybe a cancel too.
+- A REP buy for +5 LOCKER slots? Only if it fits without a scroll area.
+- Its own music track.
+- ROOT's letters: once ROOT is unlocked, any spare r / o / t should leave the bench.
+
+### The deck and chips
+- **Chips home card:** each chip as its 3x2 face with its name, in a list (like ROOT's man, below).
+- **The CHIPS list:** make "in slot" clearer (maybe a white background with black text), and a [VIEW] on a slotted chip
+  that opens the board scrolled to it.
+- **EXPANSION and the FUSE:** a bigger note that you need ELITE to install them, when you aren't yet.
+- **Chips in rewards and markets** should say chip, not gear. (Greg asked: is CHARGE a gear? Yes: a corp boss's CHARGE
+  pick is gear, +2 shell charges, not a chip.)
+- **RELOAD** maybe shouldn't double chips.
+- (Greg asked: is SPOILS a chip you start with? Yes: the deck comes with STOCK CELL and SPOILS, engine/deck.js DECK_START.)
+
+### ROOT's unlock, smoothed out
+- ROOT giving you `man`: the call just says "man". Show the 3x2 chip in it.
+- ROOT also calls with the same info right after. Smooth it out: today it's quest cards and crew calls one after another.
+- Greg asked: are there more quest steps after step 4? (Check the QUEST card's step count reads right at the end.)
+
+### UI
+- **`[< TITLE]`:** not sure about the look. Maybe `<< TITLE` or MAIN.
+- **TITLE and LEAVE buttons** are greyed out: a little brighter, and maybe a small animation now and then.
+- **The market's BUY / SELL** could be regular tabs, not the sub-tab strip.
+- **Lists with an info box:** standardize above or below. FEATS shows it above, REP below (REP also has its buy area;
+  maybe those just sit closer). The codex is above. Look at them all together.
+- **THE BOARD's name:** "BBS board"? Or a better name for the whole section (it was up for a rename once). BBS = bulletin
+  board system.
+- **HOW TO PLAY** gets the tabs and sub-tabs: BASICS (INTRO: today's basics, NET, TRAY; TRAINING: the corp, workbench
+  and deck trainings) and ADVANCED (the deck, the workbench, phishing, crews and REP...). Sub-tabs to work out.
+- **The training's text:** make the capitals match (MOD is capitalized, mods isn't: maybe that's fine).
+- The LOOT bag's CLOSE is fine as it is (Greg).
+
+### Quests and story
+- **SYSTEM FAILURE step 2:** its popup still names the DISC. The popup should be the vaguer copy (keep an eye out for
+  tech from MEDIX); the quest page can name the DISC.
+- **The POPS x5 feat** says "there's a spot on your crew, if you want it", but POPS is on your crew already (data/feats.js
+  call_ feats). Different words when they're crew already.
+- **The H3AV3N maze:** make the pattern more of a thing: a better intro, or a little popup from b0y.
+- **The MEDIX basement scene** should foreshadow the NetHack / INFILTR8 stuff: maybe a second panel of sneaking through
+  the basement past a camera, in rooms, looking like what that mode ends up as.
+
+### Balance
+- **LEVERAGE** isn't a great exotic yet. Ideas: real debt without buying anything (take a loan, give your money away);
+  let it go below -250 at the UPLINK.
+- **FRAG:** does it show explosions? A plop where each will land, then staggered radial booms.
+- **The PHISH popup's button delay:** half as long.
+- **The ELITE level** needs things to buy: its three posts are placeholders (engine/save.js elite1-3).
+
 ## Big features: the next layer of the game
 
 The user, 2026-10-26: these are the features still to flesh out. REP and quests tie together: some quests are
@@ -513,9 +610,6 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   there: `Music.beat`; the pet dances to it and SIMON plays on it.)
 
 ## Medium and small
-- **A WORKBENCH training** (Greg, 2026-11-20; later): today the bench only has POPS's 3 lines on your first visit.
-  When you buy WORKBENCH on THE BOARD, offer a training outside a run: it gives you some random gear and loot to
-  shred, then shows you how to build something; it explains the `*` and the recipes (the BOOK).
 - **Pets you can toggle** (meat notes 2026-11-07): a small button in the loot bar, like b0y's on the left (if b0y's
   is there, shift it right so they don't overlap), that turns a pet on or off. Today it's one pet a run: COMPANION, the
   EGG's chick, STRAY's bug and CATPHISH's fish don't stack (with STRAY and CATPHISH, the seed picks one). Maybe they
