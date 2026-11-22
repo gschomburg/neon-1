@@ -495,6 +495,10 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   "integrity" mentions (the header says INT; INT everywhere, or only where space is tight). **Ad copy** (meat notes
   2026-11-06): "you are the product!"
 - **Codex and menus pass** (with HOW TO PLAY):
+  - **Corp tells get cut off in the codex** (found 2026-11-21; talk about it later): a corp's page shows 3 lines of its tell
+    (engine/codex.js, pad(..., 3)) and 73 of the 81 tells wrap longer (4-6 most; FOSSIL 12, UPSIDE 10, BLACKOUT 9).
+    Ways: the details box grows to fit and the list takes what's left (Claude's pick, like the end screen's map); the
+    lines take turns in 3-line pages (FX.swapLines); tap the tell to read it whole; or shorter tells (a copy pass).
   - **HOW TO PLAY pass:** touch it up (corps and tells on THE BASICS; gestures, exotics, ads, run resume).
   - **Keyword highlighting in text** (started v13.75 on HOW TO PLAY > THE BASICS: ICE, INT, credits; next the other HOW TO PLAY pages and the codex, the user's aim: neater): ICE in red, credits in money, mod names in their rarity...
 - **The training sim** may need a little redesign (meat notes 2026-11-06).
