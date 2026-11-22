@@ -77,10 +77,10 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 - **Replay them** from HOW TO PLAY (both trainings).
 
 ### The workbench
-- SHRED could get sub-tabs: LOOT, GEAR, MODS.
-- A correct recipe shows only BUILD: maybe a cancel too.
-- A REP buy for +5 LOCKER slots? Only if it fits without a scroll area.
-- Its own music track.
+- Built v15.33: SHRED's GEAR / MODS / LOOT sub-tabs, [ CLEAR ] under a good recipe, its music (AUGMENT, low; Greg).
+- **A REP buy for +5 LOCKER slots:** it doesn't fit. The LOCKER's TAKE page is full on a phone; 5 more rows would need a
+  scroll area. Ways it could fit: two columns of 5 (names cut to about 12), or the components block moves to its own
+  sub-tab. Greg's call.
 
 ### The deck and chips
 - (Greg asked: is SPOILS a chip you start with? Yes: the deck comes with STOCK CELL and SPOILS, engine/deck.js DECK_START.)

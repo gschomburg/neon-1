@@ -1,10 +1,12 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v15.32']);
+NEON_FILES.push(['engine/boot.js', 'v15.33']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
 // The editor's music tab (tools/neon_editor.html, engine/editor.js) can pick the track and level itself.
+// The workbench's music (gameMusicState): AUGMENT's stages by time, one letter per 20s (Greg, 2026-11-21).
+const BENCH_MUSIC = { song: 'augment', level: 1, every: 20000, sections: 'AABABBAACCAB' };
 function musicState() {
   const s = gameMusicState(), m = EDITOR && st.editorMusic;
   if (!m) return s;
@@ -54,6 +56,12 @@ function gameMusicState() {
   const low = !!(run && st.mode === 'play' && (zombie() ? (run.rot || 0) >= rotMax() - 30 : bloodMoney() ? run.credits < bloodCost(1) : run.integrity <= 1) && !st.dying);
   const slowmo = !!(st.mode === 'play' && corpHas('slowmo') && st.lv);   // BULLET TIME
   const tempo = (1 + (song === 'chronos' ? urgency * 0.25 : 0) + (level >= 3 ? 0.05 : 0)) * (slowmo ? 0.55 : 1);
+  // The WORKBENCH: AUGMENT, low (Greg, 2026-11-21). Its stages wander, mostly 1 and 2, now and then 3 for a stretch
+  // (BENCH_MUSIC.sections: one letter per `every` ms, looping).
+  if (st.bench && st.mode === 'panel' && st.panelFn === benchLines && song !== 'none' && SONGS[BENCH_MUSIC.song]) {
+    const sec = BENCH_MUSIC.sections[Math.floor(performance.now() / BENCH_MUSIC.every) % BENCH_MUSIC.sections.length];
+    return { song: BENCH_MUSIC.song, level: sec === 'C' ? BENCH_MUSIC.level + 1 : BENCH_MUSIC.level, urgency: 0, low: false, tempo: 1, pitch: 1, section: sec };
+  }
   // GRAVE ROBBER: its own spooky track follows you around the map (corps keep theirs)
   if (song === 'theme' && run && run.quest === 'had3s' && SONGS.zeroday) {   // HAD3S: ZERO DAY on the map, its stages wandering (corps keep their own tracks)
     const k = Math.floor(performance.now() / 20000) % 2;

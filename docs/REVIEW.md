@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The workbench extras** (v15.33): AUGMENT plays at the bench, low; its stage changes every 20s (A A B A B B A A C C A B, C a bit louder: engine/boot.js BENCH_MUSIC). SHRED: GEAR / MODS / LOOT sub-tabs with counts. BUILD: [ CLEAR ] under a good recipe.
+
 - [ ] **The small batch** (v15.32):
   - **[< TITLE] and [LEAVE >]:** brighter; every ~2.6s the arrow gives two nudges its way, and every ~4.3s a shimmer slides across. Too much, too little? (engine/scene.js WAYOUT has the timings.)
   - **The market:** [BUY] [SELL] as regular tabs. Chips say chip in the list and the detail line.

@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.32']);
+NEON_FILES.push(['engine/bench.js', 'v15.33']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -355,6 +355,16 @@ function benchShredList() {
   (run.loot || []).forEach(s => { if (!ITEMS[s.key].quest) out.push({ kind: 'loot', key: s.key, tier: s.tier || 0, n: s.n, stack: s, list: run.loot }); });
   return out;
 }
+// SHRED's sub-tabs (Greg, 2026-11-21): GEAR MODS LOOT, like the BOOK's; each one's count on its tab. It opens on the
+// first one with something in it.
+const SHRED_TABS = [['gear', 'GEAR'], ['mod', 'MODS'], ['loot', 'LOOT']];
+function shredKind() {
+  const b = st.bench, all = benchShredList();
+  if (!b.shKind || !all.some(e => e.kind === b.shKind) && all.length) b.shKind = (SHRED_TABS.find(([k]) => all.some(e => e.kind === k)) || SHRED_TABS[0])[0];
+  return b.shKind;
+}
+const benchShredShown = () => { const k = shredKind(); return benchShredList().filter(e => e.kind === k); };
+function shredPickKind(k) { const b = st.bench; if (!b || b.shKind === k || benchBusy()) return; b.shKind = k; b.shSel = 0; b.shArea = { top: 0 }; Sound.tick(); }
 const shredCode = e => e.kind === 'mod' ? MODS[e.key].short : ITEMS[e.key].corrupt ? '???' : ITEMS[e.key].chip ? (ITEMS[e.key].chip.replace(/[^A-Z0-9]/g, '') || 'CHP') : itemShort(e.key);   // (a chip: its code's letters, not its face)
 // Corrupted software: random components (any letter, I likelier: no recipe uses it), maybe a digit, maybe a *.
 const BENCH_RANDOM = 'ABCDEFGHIIIJKLMNOPQRSTUVWXYZ0';
@@ -580,9 +590,10 @@ function benchLines(T, B, X, lines) {
       ctx.addHit(x, y + 4, s.length, 1, { kind: 'btn', id: 'bt_' + t, onTap: () => benchTab(t) });
     });
   } });
-  // sub-tabs (engine/textboard.js drawSubTabs): the BOOK's GEAR MODS CHIPS, the LOCKER's TAKE STORE (Greg, 2026-11-21)
+  // sub-tabs (engine/textboard.js drawSubTabs): the BOOK's GEAR MODS CHIPS, the LOCKER's TAKE STORE, SHRED's GEAR MODS LOOT (Greg, 2026-11-21)
   if (b.tab === 'locker') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, [['take', 'TAKE'], ['store', 'STORE']].map(([v, t]) => ({ id: 'lv' + v, text: t, on: b.lkView === v, onTap: () => { if (b.lkView !== v) { b.lkView = v; Sound.tick(); } } }))) });
   else if (b.tab === 'book') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, BOOK_TABS.map(([k, t]) => ({ id: 'bks_' + k, text: t, on: bookKind() === k, onTap: () => bookPickKind(k) }))) });
+  else if (b.tab === 'shred') { const all = benchShredList(), on = shredKind(); X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, SHRED_TABS.map(([k, t]) => { const n = all.filter(e => e.kind === k).length; return { id: 'shs_' + k, text: n ? `${t} ${n}` : t, on: on === k, onTap: () => shredPickKind(k) }; })) }); }
   else T('');
   if (b.tab === 'build') benchBuildLines(T, B, X);
   else if (b.tab === 'shred') benchShredLines(T, B, X);
@@ -689,6 +700,7 @@ function benchBuildLines(T, B, X) {
       put(Math.floor((L.wc - tip.length) / 2), y, tip, C.text, 'board');
       const note = rc.kind === 'chip' ? 'a chip: it goes into your deck.' : d && rc.kind === 'mod' ? `x${d}: mods don't stack.` : d ? `x${d}: ${Math.round(BENCH.multi * 100)}% you get ${d}.` : 'it goes up to the locker.';
       put(Math.floor((L.wc - note.length) / 2), y + 1, note, d ? C.money : C.dim, 'board');
+      { const r2 = '[ CLEAR ]'; benchBtn(ctx, Math.floor((L.wc - r2.length) / 2), y + 2, r2, C.mid, 'bkclear', () => [4, 3, 2, 1, 0].forEach(i => benchUnplace(i))); }   // a way out of a good recipe too (Greg, 2026-11-21)
     } else if (j.kind === 'pick') {
       put(1, y - 1, `* FITS ${j.fit.length}: PICK ONE`, C.money, 'board');
       j.fit.slice(0, 3).forEach((code, i) => { const v = recipeView(benchRecipes()[code]); benchRow(ctx, y + i, code, v.rarity, v.name, 'build', C.accent, 'pk' + code, () => benchBuild(code)); });
@@ -769,7 +781,7 @@ function benchBuildAnim(ctx, a) {
 }
 
 function benchShredLines(T, B, X) {
-  const b = st.bench, list = benchShredList();
+  const b = st.bench, list = benchShredShown();
   T('S H R E D', C.danger);
   T('it comes apart into components.', C.text);
   T('');
@@ -794,7 +806,7 @@ function benchShredLines(T, B, X) {
     X(e.kind === 'mod' ? { badge: e.key, badgeTier: e.tier } : { gearHead: e.key, gearTier: e.tier, text: v.name });
     T(v.tip || v.desc || '', C.text);
     T(benchBound(e) ? (benchBp(shredRecipeCode(e)) ? 'bound to you. it won\'t come apart.' : 'bound to you: a shred learns its blueprint. it stays.') : e.kind === 'mod' ? 'an equipped mod. it goes for good.' : e.kind === 'loot' ? `loot. it sells for ${gearValue(e.key, e.tier)}cr.` : `gear${e.n > 1 ? `, you have ${e.n}` : ''}.`, e.kind === 'mod' ? C.dangerDim : C.mid);
-    X({ box: true, text: 'S H R E D', sub: ITEMS[e.key] && ITEMS[e.key].corrupt ? '- ? ? ? -' : `- ${code.split('').join(' ')} + ? -`, id: 'bkshred', onTap: () => benchShred(benchShredList()[b.shSel]), minW: 22, col: C.danger });
+    X({ box: true, text: 'S H R E D', sub: ITEMS[e.key] && ITEMS[e.key].corrupt ? '- ? ? ? -' : `- ${code.split('').join(' ')} + ? -`, id: 'bkshred', onTap: () => benchShred(benchShredShown()[b.shSel]), minW: 22, col: C.danger });
     T('');
   } else for (let i = 0; i < 8; i++) T('');
   T(SEP, C.dim);
