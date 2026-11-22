@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v15.27']);
+NEON_FILES.push(['engine/quests.js', 'v15.28']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -140,6 +140,17 @@ function questOmni(c) {
   if (!questRun() || questOf('pops').step !== 'raid' || !c || c.def.key !== 'omni' || !(c.hk || []).some(h => h.id === 'b0y')) return;
   setTimeout(() => playScene('gate'), 900);
   deckQuestChip('OMNI', 'the OMNI RAID: b0y lifted this on the way out.');   // a quest's chip (beta: engine/deck.js)
+}
+// The OMNI RAID's boss layer without b0y (Greg, 2026-11-21): he comes in by himself, using this corp's [b], so the raid
+// can't be lost by forgetting to call him. questOmni (above) still needs him there when the boss breaks.
+const boyInCorp = c => (c.hk || []).some(h => h.id === 'b0y');
+function questOmniBoy(c, lv) {
+  if (!lv.boss || !c || c.def.key !== 'omni' || !questRun() || questOf('pops').step !== 'raid' || !boyTrayOn() || boyInCorp(c) || c.boyTrayUsed) return;
+  setTimeout(() => {
+    if (st.lv !== lv || st.busy || boyInCorp(c) || c.boyTrayUsed) return;
+    boyTrayCall();
+    if (boyInCorp(c)) setMsg("> b0y: OMNI's boss. i'm not missing this one.", G0DF_BLUE);
+  }, 700);
 }
 // A run starts on the OMNI RAID: b0y's number comes with you, and he calls (once).
 function questRunStart(run) {

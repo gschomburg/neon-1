@@ -1094,6 +1094,7 @@ move). Save slot unchanged (`beta_runner.v11.save`), so progress carries over. S
 New builds are listed below as before.
 
 **Version log** (newest first; see §14 for the numbering):
+- **v15.28** (2026-11-21): **b0y comes in on OMNI's boss** (Greg). On the OMNI RAID step, OMNI's boss layer without b0y: he comes in by himself (this corp's [b]) with a line, so the raid can't be lost by not calling him (engine/quests.js questOmniBoy). tests/raidboy.js.
 - **v15.27** (2026-11-21): **dev.stop** (Greg). Out of dev mode, and the run counts again (run.startPractice: what it began as); god, free travel and show real go off. Replaces v15.26's dev.real (reverted). tests/devstop.js.
 - **v15.26** (2026-11-21): dev.real, a switch that kept dev runs from going practice. Reverted in v15.27 for dev.stop.
 - **v15.25** (2026-11-21): **godexe works** (Greg). THE SHELL reads god with an o as g0d when the word isn't a command as typed (engine/shell.js shellParse): godexe, godexe.speed... mode.god stays mode.god. tests/shell.js.

@@ -1,7 +1,7 @@
 // NeoN+1 engine/damage.js: damage and healing (hurt, heal, ZOMBIE rot, BLOOD MONEY), and the exotic pick rules
 // that change them: ICE EATER, COIN FLIP, SNOOZE, ALL-IN, FAILSAFE, BLACK ICE. Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/damage.js', 'v15.27']);
+NEON_FILES.push(['engine/damage.js', 'v15.28']);
 
 // No damage: the dev's god mode (st.god), or THE SHELL's mode.god (a SUDO chip, engine/deck.js): the rest of a sector.
 const godOn = () => !!st.god || !!(st.run && !st.run.ended && st.run.godSector === st.run.sector);

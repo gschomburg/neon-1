@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **b0y on the OMNI RAID** (v15.28): on OMNI's boss layer, if you haven't tapped [b] in that OMNI, he comes in by himself about a second in ("OMNI's boss. i'm not missing this one."). Call him earlier and nothing changes.
+
 - [ ] **The codex's tabs** (v15.23): `[TECH] [NET] [HACKERS]`, with a sub-tab strip under them: GEAR MODS CHIPS /
   CORPS GLYPHS SECTORS / CREW RIVALS. Left / right walks every sub-tab in order. It opens where you left it (till you
   reload). **CHIPS** shows once you've got a chip of your own (the deck's STOCK CELL and SPOILS don't count). A chip is

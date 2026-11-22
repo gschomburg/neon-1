@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.27']);
+NEON_FILES.push(['engine/run.js', 'v15.28']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -473,6 +473,7 @@ async function enterLayer() {
   st.busy = false;
   lv.readyAt = performance.now();
   lv.shownAt = lv.readyAt;
+  questOmniBoy(c, lv);   // the OMNI RAID: b0y comes in on the boss by himself (engine/quests.js)
   if (c.slomo) lv.clockRate = 0.5;   // SLOMO (gear): the whole corp
   if (c.bees && n > 1) beeSwarm(lv, 1, true);   // BEES (gear): the swarm stays for the corp
   if (c.frozen) freezeLayer(lv);   // REWIND legendary: every timer stays stopped, the whole corp   // unlike readyAt, this one doesn't reset after a miss
