@@ -37,19 +37,21 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
 Filed from the meat notes as written; nothing here is checked or built yet unless it says so.
 
 ### Bugs to look into
-- **SIMON's boss let a wrong play through** (seed SSCPA6, sector 1, upper right): it showed the pattern, took the first
-  click and the layer completed. Greg's guess: tapping the pattern's last glyph counts as the real node. Is that meant?
-- **SIMON's boss intro is too wide:** the boss hint line on the boss intro.
-- **HAD3S, CERBERUS and a ripped chip:** Greg had LIFTED WALLET (from d0g) and VULTURE'S CUT, beat (he thinks) the final
-  CERBERUS boss, and at the end of the layer POPS called: d0g escaped and took the ripped chip back. The chips home card
-  showed INSURANCE and VULTURE, not the wallet (he had a wallet already, so it may have shredded: check the card says
-  so). Check whether d0g in HAD3S can count as escaped when you've beaten the boss.
-- **TELEPHONIX's tell light** may not be working.
-- **WARP in an EENY MEENY sector** won't jump to the bosses (maybe the general rule: warp never targets a boss). Check:
-  warp back to an earlier node whose neighbours are all done: can you get stuck?
-- **THE SHELL's autocomplete:** with one match (type `god`: `mode.god`) the list sits half under the typing line, and it
-  shows a scroll bar it doesn't need. The scroll bars need a dark style.
-- **Unlocking ROOT:** the cutscene plays over the workbench's BUILD and its keyboard stays on top of everything.
+Looked at 2026-11-21 (v15.30). Fixed: SIMON's boss intro wraps (and MONTY's and FOSSIL's: engine/run.js
+buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js benchKeys); THE SHELL's list keeps its rows
+(the log gives up the room) and its scroll bars are dark.
+- **SIMON's boss skip:** tapping the real node (the pattern's last step) early clears the layer with no pay, the boss
+  too. **Decided (Greg, 2026-11-21):** keep it ("the simon one is still pretty hard").
+- **WARP in EENY MEENY:** working as built. WARP never targets a boss (any sector), and you can't get stuck: when every
+  way on is explored, the next row with somewhere new opens (engine/render.js availableNodes, the "pocket").
+- **HAD3S, CERBERUS and a ripped chip:** working as built, but it reads like a bug. A rival that steals any layer of the
+  corp and isn't flatlined takes a ripped chip back, even when you beat the boss (engine/hackers.js hkCorpEnd,
+  engine/deck.js deckRivalTakes). It takes the first one on your belt: the wallet. Open for Greg: should beating the
+  boss protect your chips? And the line could say why ("d0g stole a layer: he took LIFTED WALLET back").
+- **TELEPHONIX's TELL LIGHT:** the corp side looks right: when a layer doesn't follow its tell, the dial points at a
+  random node, and TELL LIGHT says TELL OFF. The quirk: that random node can be the real one, so TELL OFF shows while
+  the dial is right (for every corp that dresses its nodes; engine/layers.js lv.tellOn). Open for Greg: what did you
+  see? (TELL ON with a wrong dial would be a real bug.) Maybe say TELL ON whenever the tell happens to point true.
 
 ### Training: the deck and the workbench
 - **The deck's first time:** today the PAPERWORK quest card comes up first. POPS's call should come first, then the quest

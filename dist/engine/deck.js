@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.29']);
+NEON_FILES.push(['engine/deck.js', 'v15.30']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip

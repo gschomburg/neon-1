@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.29']);
+NEON_FILES.push(['engine/bench.js', 'v15.30']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -989,7 +989,7 @@ function benchKbGeom() {
 function benchKeys(now) {
   const b = st.bench;
   if (!b || st.mode !== 'panel' || st.panelFn !== benchLines || st.dev || st.pause) return;
-  if (st.callBox || st.phish) return;   // (a CALL or PH1SH's ad is up: the keyboard steps aside)
+  if (st.callBox || st.phish || st.qScene || st.featBox || st.ad) return;   // (a CALL, PH1SH's ad, a quest scene (ROOT's, over BUILD: Greg 2026-11-21), a FEAT box or an ad is up: the keyboard steps aside)
   const G = benchKbGeom(), k = clamp((now - b.kb.t0) / BENCH.slideMs, 0, 1);
   const off = b.kb.up ? (1 - ease3(k)) * (G.h + SAFE.b + 8) : ease3(k) * (G.h + SAFE.b + 8);
   if (!b.kb.up && k >= 1) return;

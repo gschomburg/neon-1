@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.29']);
+NEON_FILES.push(['engine/shell.js', 'v15.30']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -576,8 +576,14 @@ const SHELL_CSS = `
   padding: 6px 10px calc(6px + env(safe-area-inset-bottom)); box-sizing: border-box; user-select: text; -webkit-user-select: text; }
 #shell[hidden] { display: none !important; }
 #shell .t-log { overflow-y: auto; white-space: pre-wrap; word-break: break-word; min-height: 1.35em; flex: 1 1 auto; }
-#shell .t-list { overflow-y: auto; flex: 0 1 auto; border-top: 1px solid #222; border-bottom: 1px solid #222; margin: 4px 0; }
+#shell .t-list { overflow-y: auto; flex: 0 0 auto; border-top: 1px solid #222; border-bottom: 1px solid #222; margin: 4px 0; }
 #shell .t-list:empty { display: none; }
+/* (the list never shrinks: the log gives up the room, so a short list isn't half under the typing line: Greg 2026-11-21) */
+#shell, #shell * { scrollbar-width: thin; scrollbar-color: #333 #000; }
+#shell ::-webkit-scrollbar { width: 8px; height: 8px; background: #000; }
+#shell ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+#shell ::-webkit-scrollbar-thumb:hover { background: #555; }
+#shell ::-webkit-scrollbar-corner { background: #000; }
 #shell .t-row { padding: 2px 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #shell .t-row.sel { background: #1d2a33; }
 #shell .t-row.none { color: #777; cursor: default; }

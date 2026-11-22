@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.29']);
+NEON_FILES.push(['engine/run.js', 'v15.30']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -264,7 +264,8 @@ function buildBossIntro(ctx, now) {
   if (e > 450) lines.push({ text: typed('!! WARNING !!', 450), col: Math.floor(now / 200) % 2 ? C.danger : C.bright, bold: true });
   if (e > 450) lines.push({ text: '' });
   if (e > 900) lines.push({ text: typed(`${bi.name} // BOSS`, 900), col: C.danger, bold: true });
-  if (e > 1300) lines.push({ text: typed(bi.line, 1300, 18), col: C.text });
+  // the boss line wraps (SIMON's ran off a phone's screen, Greg 2026-11-21), typed on as one line
+  if (e > 1300) { let at = 1300; for (const l of wrapText(bi.line, 31)) { lines.push({ text: typed(l, at, 18), col: C.text }); at += l.length * 18; } }
   if (e > 1300) lines.push({ text: '' });
   if (e > 1750) lines.push({ text: typed(`${bi.n} nodes. one is real.`, 1750, 18), col: C.mid });
   // red pulses behind it, growing through the build
