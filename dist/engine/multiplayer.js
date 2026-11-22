@@ -1,6 +1,6 @@
 // NeoN+1 engine/multiplayer.js: Online multiplayer, profiles, INFO.
 'use strict';
-NEON_FILES.push(['engine/multiplayer.js', 'v15.35']);
+NEON_FILES.push(['engine/multiplayer.js', 'v15.36']);
 
 // ---------------- Online multiplayer ----------------
 // 2-6 players take turns on one seeded run ("Jenga" rules, elimination):
@@ -88,13 +88,16 @@ function logoBlock(logo, name, sty) {
 function randomizeProfile(prof) {
   prof.name = randomName();
   prof.logo = randomLogo();
-  prof.style = Math.floor(Math.random() * PLAYER_STYLES.length);
+  prof.style = pickR(PLAYER_STYLES.map((x, i) => i).filter(styleOpen), Math.random);
   persist();
 }
 // Player color styles: a text color on a background, picked to read well together. Fixed colors
 // (not palette-based), so a player looks the same on everyone's screen. They live in palettes.js
 // (NEON only if it didn't load).
 const PLAYER_STYLES = (window.NEON_PALETTES && window.NEON_PALETTES.styles) || [{ name: 'NEON', fg: '#3cf0ff', bg: '#06303a' }];
+// locked: CHROMATOPHORE (a SYSOP post on THE BOARD, engine/save.js) opens them. stepStyle: the next open one.
+const styleOpen = i => !PLAYER_STYLES[i].locked || (typeof legacyLv === 'function' && legacyLv('chroma') > 0);
+function stepStyle(cur, d) { const n = PLAYER_STYLES.length; let i = cur || 0; for (let k = 0; k < n; k++) { i = ((i + d) % n + n) % n; if (styleOpen(i)) return i; } return cur || 0; }
 const styleOf = i => PLAYER_STYLES[((i % PLAYER_STYLES.length) + PLAYER_STYLES.length) % PLAYER_STYLES.length];
 const randomName = () => {
   const mid = pickR(NAME_B, Math.random);
@@ -103,7 +106,7 @@ const randomName = () => {
 function profile() {
   if (!save.profile) { save.profile = { name: randomName(), logo: randomLogo() }; persist(); }
   if (typeof save.profile.logo !== 'string' || !LOGO_BY_ID[save.profile.logo]) { save.profile.logo = logoOf(save.profile.logo).id; persist(); }   // old saves: a number
-  if (save.profile.style == null) { save.profile.style = Math.floor(Math.random() * PLAYER_STYLES.length); persist(); }
+  if (save.profile.style == null) { save.profile.style = pickR(PLAYER_STYLES.map((x, i) => i).filter(styleOpen), Math.random); persist(); }
   return save.profile;
 }
 const logoMark = id => logoOf(id).mark;
@@ -204,7 +207,7 @@ function openMultiplayer() {
     X({ row: [
       { text: '[ NEW NAME ]', id: 'mpname', onTap: () => { prof.name = randomName(); persist(); Sound.tick(); } },
       { text: '[ LOGO ]', id: 'mplogo', onTap: () => stepLogo(prof, 1) },
-      { text: '[ COLOR ]', id: 'mpcolor', onTap: () => { prof.style = (prof.style + 1) % PLAYER_STYLES.length; persist(); Sound.tick(); } },
+      { text: '[ COLOR ]', id: 'mpcolor', onTap: () => { prof.style = stepStyle(prof.style, 1); persist(); Sound.tick(); } },
     ] });
     B('[ RANDOMIZE ALL ]', 'mprand', () => { randomizeProfile(prof); Sound.ui(); });
     T('');

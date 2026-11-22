@@ -437,7 +437,8 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
 ### BOOT (2): what a run starts with
 - **STARTER:** pick a mod you've found; it can show up in the starter perk. Or a stronger one: you always start with
   it.
-- **ARCHIVE:** start with any mod you've found (THE ARCHIVE, the codex reward idea).
+- **ARCHIVE:** start with any mod you've found. (Built v15.36 as THE ARCHIVE, a SYSOP post that's a CPU setting like
+  NEMESIS, not a chip.)
 - **PET:** pick which pet comes along: the chick, STRAY's bug, CATPHISH's fish. **Greg (2026-11-16):** COMPANION is a mod that
   does something, so it isn't a PET pick: either COMPANION's pet always comes when the mod is on, or it comes along
   with your REP pet. Setting your earned pet is the good part.

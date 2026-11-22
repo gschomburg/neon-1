@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.35']);
+NEON_FILES.push(['engine/run.js', 'v15.36']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -51,6 +51,8 @@ async function startRun(seed, practice, opts = {}) {
     const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
     if (pool.length) st.run.items.push({ key: pickR(pool, rngFor(seed, 'lucky')), tier: 0, n: 1 });
   }
+  // THE ARCHIVE (THE BOARD, SYSOP): the mod you picked on your deck's CPU (engine/deck.js archivePool), at its lowest
+  if (postOn('archive') && MODS[save.archive] && !opts.tutorial && !st.run.mods.includes(save.archive)) addMod(save.archive, 0);
   deckRunStart(st.run, opts);   // your deck's chips: what's on this run, and what it starts with (engine/deck.js)
   if (oneUpOpen(st.run, opts)) st.run.oneUp = 1;   // the 1UP (beat G0D, its chip in your deck): you start with one
   if (opts.tutorial) tutorialRun(st.run);   // the training run (engine/tutorial.js)

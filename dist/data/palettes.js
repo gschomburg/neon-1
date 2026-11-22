@@ -7,10 +7,10 @@
 //   mid        secondary text, labels   dangerDim  locked nodes, dark red frames
 //   text       normal text              money      credits, rewards, gold glows
 //   bright     headings, emphasis       rep        REP, feats, unlocks (THE BOARD)
-// hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
+// hidden: locked (not offered in SETTINGS till THE BOARD's CHROMATOPHORE; corps may unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
 // Rarity colors aren't in the palettes: every mod and item shows its rarity as a chip (chips, below),
 // the same in every palette.
-(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes.js', 'v15.35']);   // the build it's from (see index.html)
+(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes.js', 'v15.36']);   // the build it's from (see index.html)
 window.NEON_PALETTES = {
   // Rarity chips: a text color on its own background, for each rarity (bg = the rarity's key color).
   chips: {
@@ -105,7 +105,7 @@ window.NEON_PALETTES = {
     c_omni:         { name: 'OMNI', hidden: true, bg: '#080203', dim: '#3a0f14', mid: '#7a2a33', text: '#d79a9f', bright: '#ffe1e3', accent: '#ffb3c0', danger: '#ff1f3a', dangerDim: '#5e1018', money: '#ffc36e', rep: '#a07bf4', font: { weight: 700, bold: 800 }, note: 'red on black, heavy' },
   },
   // Player color styles: the colors of your name and logo (PROFILE > COLOR, multiplayer). Saved
-  // profiles store a style by its position here, so add new ones at the end.
+  // profiles store a style by its position here, so add new ones at the end. locked: CHROMATOPHORE opens it.
   styles: [
     { name: 'NEON',   fg: '#3cf0ff', bg: '#06303a' },
     { name: 'TOXIC',  fg: '#9dff3c', bg: '#16300a' },
@@ -117,5 +117,12 @@ window.NEON_PALETTES = {
     { name: 'ICE',    fg: '#0b2a4a', bg: '#bfe6ff' },
     { name: 'PAPER',  fg: '#111111', bg: '#efe9da' },
     { name: 'HAZARD', fg: '#111111', bg: '#ffb000' },
+    { name: 'CHROME', fg: '#e8eef2', bg: '#4a5560', locked: true },
+    { name: 'PLASMA', fg: '#ff9a3c', bg: '#3a1406', locked: true },
+    { name: 'MATRIX', fg: '#39ff6a', bg: '#000000', locked: true },
+    { name: 'VOID',   fg: '#8a7dff', bg: '#000000', locked: true },
+    { name: 'RUST',   fg: '#ffcfa8', bg: '#7a2e12', locked: true },
+    { name: 'SUNSET', fg: '#2a0a24', bg: '#ff8a5c', locked: true },
+    { name: 'MINT',   fg: '#063a2a', bg: '#7dffc8', locked: true },
   ],
 };

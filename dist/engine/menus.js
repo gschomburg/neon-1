@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.35']);
+NEON_FILES.push(['engine/menus.js', 'v15.36']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -260,7 +260,7 @@ function openBoard(tab) {
         { text: '[ < ]', id: idp + 'L', onTap: () => step(-1) }, { text: mid(name, 15), id: idp + 'N', onTap: () => step(1) }, { text: '[ > ]', id: idp, onTap: () => step(1) }] });
       pick('logo', logoOf(prof.logo).name, 'plogo', d => stepBoardLogo(prof, d));
       pick('title', ttl || 'none yet', 'ptitle', d => stepTitle(prof, d));
-      pick('color', sty.name, 'pcolor', d => { prof.style = ((prof.style + d) % PLAYER_STYLES.length + PLAYER_STYLES.length) % PLAYER_STYLES.length; persist(); Sound.tick(); });
+      pick('color', sty.name, 'pcolor', d => { prof.style = stepStyle(prof.style, d); persist(); Sound.tick(); });   // (locked colors: CHROMATOPHORE)
       t('');
       x({ row: [
         { text: '[ NEW NAME ]', id: 'pname', onTap: () => { prof.name = randomName(); persist(); Sound.tick(); } },

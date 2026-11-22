@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.35']);
+NEON_FILES.push(['engine/deck.js', 'v15.36']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -220,8 +220,12 @@ const DECK_POSTS = ['HARDENED', 'SEED MONEY', 'FIELD KIT', 'GEAR SLOT', 'RESTOCK
 // BOARD posts you can set for a run (THE BOARD's LEGACY keys, engine/save.js: their names and text come from there).
 // Only the ones with a real choice (Greg, 2026-11-15): STARTER POOL changes what the starter perk offers, STRAY is a pet
 // you might not want along, NEMESIS picks a corp (it cycles, or none). Posts that only help (TELL LIGHT, LUCKY START)
-// are just on.
-const DECK_SWITCHES = ['starter', 'stray', 'nemesis'];
+// are just on. THE ARCHIVE (SYSOP, Greg 2026-11-22) picks a mod the same way NEMESIS picks a corp: the PICKERS.
+const DECK_SWITCHES = ['starter', 'stray', 'nemesis', 'archive'];
+const DECK_PICKERS = ['nemesis', 'archive'];
+// THE ARCHIVE's mods: any you've found (seen), but no exotics, quest mods or hidden ones (engine/run.js starts the run with it)
+const archivePool = () => modsFound('minor', 'gen', 'corp').filter(k => save.seen[k] && !MODS[k].quest && !MODS[k].hidden)
+  .sort((a, b) => MODS[a].name.localeCompare(MODS[b].name));
 const deckPost = k => (typeof LEGACY !== 'undefined' && LEGACY.find(u => u.key === k)) || { name: k.toUpperCase(), desc: '' };
 const deckCorps = () => [null].concat(Object.keys(CORPS).sort((a, b) => CORPS[a].name.localeCompare(CORPS[b].name)));
 const DECK_CREW = [['POPS', 'one tell hint a sector'], ['NANA', 'a PATCH every sector'], ['BRICK', 'first ICE hit blocked'], ['KLUDGE', 'failed crafts refund']];
@@ -884,7 +888,7 @@ function deckDev() {
     real: false, rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: 0, crew: new Set(['POPS']),
     slots: { PSU: 'SC1', BT1: 'LD3', BI1: 'QT0', CRS: 'DM5', SPL: 'SP3', SH1: 'WH0' },
     order: ['PSU', 'BT1', 'BI1', 'CRS', 'SPL', 'SH1'],   // the sockets in the order their chips went in: power goes oldest first
-    sw: new Set(['starter', 'stray']), nemesis: CORPS.burgertron ? 'burgertron' : null,
+    sw: new Set(['starter', 'stray']), nemesis: CORPS.burgertron ? 'burgertron' : null, archive: null,
   });
   return DECK_DEV;
 }
@@ -919,10 +923,11 @@ const deckMkNow = () => legacyLv('fuse') ? 4 : legacyLv('deck3') ? 3 : 2;
 function deckReal() {
   const sd = save.deck, owned = DECK_SWITCHES.filter(k => legacyLv(k));
   const nem = owned.includes('nemesis') && !(sd.off || []).includes('nemesis') && CORPS[save.nemesis] ? save.nemesis : null;
+  const arc = owned.includes('archive') && !(sd.off || []).includes('archive') && MODS[save.archive] ? save.archive : null;
   const d = Object.assign(deckView(), {
     real: true, mk: deckMkNow(), fuse: legacyLv('fuse') > 0, blown: !!sd.blown, spoils: sd.spoils || 0, glyph: sd.glyph || 0,
     crew: new Set(sd.crew || []), chips: Object.assign({}, sd.chips), slots: Object.assign({}, sd.slots), order: (sd.order || []).slice(),
-    sw: new Set(owned.filter(k => k !== 'nemesis' && !(sd.off || []).includes(k))), nemesis: nem, overclock: !!sd.overclock, seenMk: sd.seenMk || 2,
+    sw: new Set(owned.filter(k => !DECK_PICKERS.includes(k) && !(sd.off || []).includes(k))), nemesis: nem, archive: arc, overclock: !!sd.overclock, seenMk: sd.seenMk || 2,
   });
   Object.defineProperty(d, 'rep', { get: () => save.rep || 0 });   // (spend it with deckBuy: THE BOARD's posts)
   d.savedJ = JSON.stringify(deckSnap(d));
@@ -932,7 +937,7 @@ function deckReal() {
 function deckSnap(d) {
   const owned = DECK_SWITCHES.filter(k => legacyLv(k));
   return { chips: d.chips, slots: d.slots, order: d.order, spoils: d.spoils, glyph: d.glyph, crew: [...d.crew],
-    off: owned.filter(k => k === 'nemesis' ? !d.nemesis && (!d.real || nemesisPool().length > 0) : !d.sw.has(k)), overclock: !!d.overclock, blown: !!d.blown, seenMk: d.seenMk || 2 };
+    off: owned.filter(k => k === 'nemesis' ? !d.nemesis && (!d.real || nemesisPool().length > 0) : k === 'archive' ? !d.archive : !d.sw.has(k)), overclock: !!d.overclock, blown: !!d.blown, seenMk: d.seenMk || 2 };
 }
 // Each frame on the real deck: anything changed goes into the save (one place, so no change is missed).
 function deckPersist() {
@@ -941,12 +946,15 @@ function deckPersist() {
   if (j === d.savedJ) return;
   d.savedJ = j; save.deck = Object.assign(save.deck || {}, JSON.parse(j));
   if (d.nemesis) save.nemesis = d.nemesis;
+  if (d.archive) save.archive = d.archive;
   persist();
 }
 // the switches you can set: the posts you own (all of them on the dev deck)
 const deckSwitches = () => DECK.real ? DECK_SWITCHES.filter(k => legacyLv(k)) : DECK_SWITCHES;
 // NEMESIS cycles through: the corps you've breached and none (every corp on the dev deck)
 const deckNemPool = () => DECK.real ? [null].concat(nemesisPool()) : deckCorps();
+// THE ARCHIVE cycles through: the mods you've found and none (every one on the dev deck)
+const deckArcPool = () => [null].concat(DECK.real ? archivePool() : modsFound('minor', 'gen', 'corp').sort((a, b) => MODS[a].name.localeCompare(MODS[b].name)));
 let deckArtRows = null;
 function deckArt() {   // the board, flat: every layer in order, but the ones drawn live
   if (deckArtRows) return deckArtRows;
@@ -1855,17 +1863,18 @@ function deckCpu(ctx, y0, sa) {
   // can see them lit; the room goes to the switches, each with its text). NEMESIS cycles through the corps, or none.
   head('SETTINGS · for your next run');
   const sws = deckSwitches();
-  if (!sws.length) { g.put(x, y++, 'none yet: STARTER POOL, STRAY and', C.dim); g.put(x, y++, 'NEMESIS (THE BOARD) can go here.', C.dim); }
+  if (!sws.length) { g.put(x, y++, 'none yet: STARTER POOL, STRAY, NEMESIS', C.dim); g.put(x, y++, 'and THE ARCHIVE (THE BOARD) go here.', C.dim); }
   sws.forEach((k, i) => {
-    const p = deckPost(k), nem = k === 'nemesis', on = nem ? !!d.nemesis : d.sw.has(k);
+    const pk = DECK_PICKERS.includes(k), on = pk ? !!d[k] : d.sw.has(k), p = deckPost(k);
     g.put(x, y, p.name, on ? C.bright : C.mid, on);
-    if (nem) {   // [<] CORP [>] (Greg, 2026-11-16: lots of corps; like THE BOARD's NEMESIS picker). The name steps forward too.
-      const step = dd => { const cs = deckNemPool(); d.nemesis = cs[((cs.indexOf(d.nemesis) + dd) % cs.length + cs.length) % cs.length]; Sound.tick(); };
-      const nw = 13, n = (d.nemesis ? CORPS[d.nemesis].name : 'none').slice(0, nw), l = Math.floor((nw - n.length) / 2);
+    if (pk) {   // [<] CORP [>] / [<] MOD [>] (Greg, 2026-11-16: lots of corps; like THE BOARD's NEMESIS picker). The name steps forward too.
+      const pool = k === 'nemesis' ? deckNemPool : deckArcPool, nameOf = v => k === 'nemesis' ? CORPS[v].name : MODS[v].name;
+      const step = dd => { const cs = pool(); d[k] = cs[((cs.indexOf(d[k]) + dd) % cs.length + cs.length) % cs.length]; Sound.tick(); };
+      const nw = Math.min(13, w - 9 - p.name.length), n = (d[k] ? nameOf(d[k]) : 'none').slice(0, nw), l = Math.floor((nw - n.length) / 2);
       const bx = x + w - (nw + 8);
-      deckBtn(ctx, g, bx, y, '[<]', C.accent, 'dkswnemesisL', () => step(-1));
-      deckBtn(ctx, g, bx + 4, y, (' '.repeat(l) + n).padEnd(nw), on ? C.accent : C.mid, 'dkswnemesis', () => step(1));
-      deckBtn(ctx, g, bx + nw + 5, y, '[>]', C.accent, 'dkswnemesisR', () => step(1));
+      deckBtn(ctx, g, bx, y, '[<]', C.accent, 'dksw' + k + 'L', () => step(-1));
+      deckBtn(ctx, g, bx + 4, y, (' '.repeat(l) + n).padEnd(nw), on ? C.accent : C.mid, 'dksw' + k, () => step(1));
+      deckBtn(ctx, g, bx + nw + 5, y, '[>]', C.accent, 'dksw' + k + 'R', () => step(1));
     } else deckBtn(ctx, g, x + w - (on ? 4 : 5), y, on ? '[on]' : '[off]', on ? C.accent : C.mid, 'dksw' + k, () => {
       if (d.sw.has(k)) d.sw.delete(k); else d.sw.add(k);
       Sound.tick(); });

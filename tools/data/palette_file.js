@@ -26,7 +26,7 @@
 //   mid        secondary text, labels   dangerDim  locked nodes, dark red frames
 //   text       normal text              money      credits, rewards, gold glows
 //   bright     headings, emphasis       rep        REP, feats, unlocks (THE BOARD)
-// hidden: locked (not offered in SETTINGS; corps will unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
+// hidden: locked (not offered in SETTINGS till THE BOARD's CHROMATOPHORE; corps may unlock theirs when beaten). font: { weight, bold } (OMNI only). note: a description.
 // Rarity colors aren't in the palettes: every mod and item shows its rarity as a chip (chips, below),
 // the same in every palette.
 `;
@@ -44,7 +44,7 @@
     const keys = Object.keys(data.palettes);
     const starters = keys.filter(k => !data.palettes[k].hidden), locked = keys.filter(k => data.palettes[k].hidden);
     const chips = RAR.map(([r]) => `    ${(r + ':').padEnd(10)} { fg: ${q(data.chips[r].fg)}, bg: ${q(data.chips[r].bg)} },`);
-    const styles = data.styles.map(s => `    { name: ${(q(s.name) + ',').padEnd(9)} fg: ${q(s.fg)}, bg: ${q(s.bg)} },`);
+    const styles = data.styles.map(s => `    { name: ${(q(s.name) + ',').padEnd(9)} fg: ${q(s.fg)}, bg: ${q(s.bg)}${s.locked ? ', locked: true' : ''} },`);
     return HEADER + `(window.NEON_FILES = window.NEON_FILES || []).push(['data/palettes.js', '${build}']);   // the build it's from (see index.html)\n` +
       'window.NEON_PALETTES = {\n' +
       '  // Rarity chips: a text color on its own background, for each rarity (bg = the rarity\'s key color).\n' +
@@ -54,7 +54,7 @@
       '    // locked: unlocked by beating the corp (for now: hidden from SETTINGS)\n' +
       locked.map(k => paletteLine(k, data.palettes[k])).join('\n') + '\n  },\n' +
       '  // Player color styles: the colors of your name and logo (PROFILE > COLOR, multiplayer). Saved\n' +
-      '  // profiles store a style by its position here, so add new ones at the end.\n' +
+      '  // profiles store a style by its position here, so add new ones at the end. locked: CHROMATOPHORE opens it.\n' +
       '  styles: [\n' + styles.join('\n') + '\n  ],\n};\n';
   }
   // keep the file's order the way it's written: starters, then locked (changes data.palettes in place)

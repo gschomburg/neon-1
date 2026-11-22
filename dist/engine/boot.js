@@ -1,6 +1,6 @@
 // NeoN+1 engine/boot.js: What the music follows, and booting the game.
 'use strict';
-NEON_FILES.push(['engine/boot.js', 'v15.35']);
+NEON_FILES.push(['engine/boot.js', 'v15.36']);
 
 // ---------------- Music state ----------------
 // Which song and how intense, from what's on screen. Read by the music scheduler.
@@ -76,6 +76,7 @@ Music.setSource(musicState);
 window.addEventListener('resize', resize);
 applyPalette(save.palette, true);
 checkEpoch();   // engine/feats.js: a progression wipe, when PROGRESS_EPOCH went up
+refundGonePosts();   // engine/save.js: placeholder posts that real ones replaced give their REP back
 st.msgCol = C.text;
 resize();
 // Version stamps: every game file says which build it's from. One missing (not uploaded) or from

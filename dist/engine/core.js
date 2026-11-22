@@ -1,6 +1,6 @@
 // NeoN+1 engine/core.js: Tuning, the build number, constants, the palettes (resolved from palettes.js), the seeded RNG.
 'use strict';
-NEON_FILES.push(['engine/core.js', 'v15.35']);
+NEON_FILES.push(['engine/core.js', 'v15.36']);
 
 // ---------------- Tuning ----------------
 const CONFIG = {
@@ -31,7 +31,7 @@ const CONFIG = {
 
 // Build number: vMAJOR.MINOR. The minor ticks (+.01) with every update; the major changes only on
 // the user's call. The save slot follows the major only, so minor updates keep your progress.
-const VERSION = 'v15.35';
+const VERSION = 'v15.36';
 // In the palette editor (index.html?editor=1) the game keeps its own save, so yours is never touched.
 const EDITOR = /[?&]editor=1(&|$)/.test(location.search);
 const STORE_KEY = EDITOR ? 'beta_runner.editor.save' : 'beta_runner.v15.save';
@@ -83,7 +83,9 @@ const CHIPS = Object.assign({
 }, PALETTE_DATA.chips || {});
 const setChipKeys = () => { for (const r of Object.keys(CHIPS)) C[r] = CHIPS[r].bg; };
 setChipKeys();
-const playerPalettes = () => Object.keys(PALETTES).filter(k => !PALETTES[k].hidden);
+// (CHROMATOPHORE, a SYSOP post on THE BOARD: every palette. engine/save.js; legacyLv isn't loaded yet for DEFAULT_PALETTE)
+const playerPalettes = () => { const all = typeof legacyLv === 'function' && typeof save !== 'undefined' && legacyLv('chroma') > 0;
+  return Object.keys(PALETTES).filter(k => all || !PALETTES[k].hidden); };
 // The default palette: the first starter in palettes.js (BASIC). Old saves named the player
 // palettes that were folded into corps (2026-10-21): map them to their corps.
 const DEFAULT_PALETTE = playerPalettes()[0] || Object.keys(PALETTES)[0];

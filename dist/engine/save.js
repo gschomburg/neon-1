@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.35']);
+NEON_FILES.push(['engine/save.js', 'v15.36']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -113,12 +113,14 @@ const LEGACY = [
   // for real ones later). HEAT, the quests, THE ARCHIVE are ideas for these levels (docs/PROGRESSION.md, docs/DECK.md).
   { key: 'deck3', tier: 3, name: 'DECK mk III', desc: 'the middle board for your deck: the GLYPH, OVERVOLT and the crew jacks.', costs: [600] },
   { key: 'biglocker', tier: 3, name: 'BIG LOCKER', needs: 'bench', desc: "+5 slots in the workbench's LOCKER.", costs: [200] },   // (engine/bench.js benchLockerMax; Greg, 2026-11-22: on ELITE, in ELITE POST 1's place)
-  { key: 'elite2', tier: 3, name: 'ELITE POST 2', desc: 'a placeholder. it does nothing yet.', costs: [100], placeholder: true },
+  { key: 'market', tier: 3, name: 'LOYALTY CARD', desc: 'markets are 5% cheaper.', costs: [200, 400],   // (engine/panels.js priceOf; Greg, 2026-11-22: all markets, 2 levels)
+    levels: ['markets are 5% cheaper.', 'markets are 10% cheaper.'] },
   { key: 'elite3', tier: 3, name: 'ELITE POST 3', desc: 'a placeholder. it does nothing yet.', costs: [100], placeholder: true },
   // ---- 4 SYSOP: the FUSE (your deck's mk IV, after mk III), and placeholders
   { key: 'fuse', tier: 4, name: 'THE FUSE', needs: 'deck3', desc: "mk IV for your deck: the bottom board, on the fuse's own power. SUDO, BOSS, HEAT.", costs: [1500] },
-  { key: 'sysop1', tier: 4, name: 'SYSOP POST 1', desc: 'a placeholder. it does nothing yet.', costs: [200], placeholder: true },
-  { key: 'sysop2', tier: 4, name: 'SYSOP POST 2', desc: 'a placeholder. it does nothing yet.', costs: [200], placeholder: true },
+  // THE ARCHIVE: a setting on your deck's CPU, like NEMESIS (engine/deck.js DECK_SWITCHES; the run starts it in engine/run.js)
+  { key: 'archive', tier: 4, name: 'THE ARCHIVE', desc: "pick a mod you've found on your deck's CPU: every run starts with it.", costs: [800] },
+  { key: 'chroma', tier: 4, name: 'CHROMATOPHORE', desc: 'every palette in SETTINGS, and more colors for your card.', costs: [500] },   // (engine/core.js playerPalettes, engine/multiplayer.js styleOpen)
   { key: 'sysop3', tier: 4, name: 'SYSOP POST 3', desc: 'a placeholder. it does nothing yet.', costs: [200], placeholder: true },
   // ---- PRIVATE MESSAGES (a feat opens them)
   { key: 'bossloot', pm: 'bosshunter', name: 'BOSS LOOT', desc: 'boss gear (FLARE, BEES...) can turn up in black markets.', costs: [180] },
@@ -158,6 +160,13 @@ function buyPost(u) {
   if (u.key === 'bench' && typeof rootBenchBought === 'function') rootBenchBought();   // ROOT's quest: on to the letters (engine/quests.js)
   for (let l = was + 1; l <= boardLevel(); l++) boardLevelNews(l);   // a level opened
   return null;
+}
+// Placeholder posts that real ones replaced (v15.35-v15.36): bought ones give their REP back (boot.js, at load).
+const GONE_POSTS = { elite1: 100, elite2: 100, sysop1: 200, sysop2: 200 };
+function refundGonePosts() {
+  const lg = save.legacy || {}; let back = 0;
+  for (const [k, cost] of Object.entries(GONE_POSTS)) if (lg[k] && !LEGACY.some(u => u.key === k)) { back += cost * lg[k]; delete lg[k]; }
+  if (back) { save.rep = (save.rep || 0) + back; persist(); }
 }
 // What a run is worth in REP right now.
 // ---------------- Run kinds ----------------

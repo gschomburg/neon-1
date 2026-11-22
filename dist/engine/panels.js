@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.35']);
+NEON_FILES.push(['engine/panels.js', 'v15.36']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -149,7 +149,7 @@ function pickMods(r, pool, k, exclude = []) {
 }
 const WIRES_PULL = 0.4;   // while you carry a BOX OF WIRES, the chance an offer from a pool it's in is one (data/mods.js wires)
 
-const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale() * deckPriceMult()));   // (priceScale: data/economy.js) (CHEAPSKATE, INFLATION: chips, engine/deck.js)
+const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale() * deckPriceMult() * (1 - 0.05 * legacyLv('market'))));   // (priceScale: data/economy.js) (CHEAPSKATE, INFLATION: chips, engine/deck.js) (LOYALTY CARD: THE BOARD, 5% a level)
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
 // What a market pays for one of a gear stack: value gear (DUDS ... WALLET) its worth, the rest a share of its price.
