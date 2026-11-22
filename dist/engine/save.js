@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.36']);
+NEON_FILES.push(['engine/save.js', 'v15.37']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -115,13 +115,14 @@ const LEGACY = [
   { key: 'biglocker', tier: 3, name: 'BIG LOCKER', needs: 'bench', desc: "+5 slots in the workbench's LOCKER.", costs: [200] },   // (engine/bench.js benchLockerMax; Greg, 2026-11-22: on ELITE, in ELITE POST 1's place)
   { key: 'market', tier: 3, name: 'LOYALTY CARD', desc: 'markets are 5% cheaper.', costs: [200, 400],   // (engine/panels.js priceOf; Greg, 2026-11-22: all markets, 2 levels)
     levels: ['markets are 5% cheaper.', 'markets are 10% cheaper.'] },
-  { key: 'elite3', tier: 3, name: 'ELITE POST 3', desc: 'a placeholder. it does nothing yet.', costs: [100], placeholder: true },
+  // chip: buying it gives you that chip for your deck (Greg, 2026-11-22: posts that are strong or need a limit are chips)
+  { key: 'codex', tier: 3, name: 'CODEX', chip: 'CX5', desc: "gives you the CODEX chip (CRASH) for your deck: die in a corp you haven't beaten and a piece of its tell decodes.", costs: [250] },
   // ---- 4 SYSOP: the FUSE (your deck's mk IV, after mk III), and placeholders
   { key: 'fuse', tier: 4, name: 'THE FUSE', needs: 'deck3', desc: "mk IV for your deck: the bottom board, on the fuse's own power. SUDO, BOSS, HEAT.", costs: [1500] },
   // THE ARCHIVE: a setting on your deck's CPU, like NEMESIS (engine/deck.js DECK_SWITCHES; the run starts it in engine/run.js)
   { key: 'archive', tier: 4, name: 'THE ARCHIVE', desc: "pick a mod you've found on your deck's CPU: every run starts with it.", costs: [800] },
   { key: 'chroma', tier: 4, name: 'CHROMATOPHORE', desc: 'every palette in SETTINGS, and more colors for your card.', costs: [500] },   // (engine/core.js playerPalettes, engine/multiplayer.js styleOpen)
-  { key: 'sysop3', tier: 4, name: 'SYSOP POST 3', desc: 'a placeholder. it does nothing yet.', costs: [200], placeholder: true },
+  { key: 'relic', tier: 4, name: 'RELIC', chip: 'RC1', desc: 'gives you the RELIC chip (SPOILS) for your deck: now and then a corp boss adds an exotic mod to its picks.', costs: [800] },
   // ---- PRIVATE MESSAGES (a feat opens them)
   { key: 'bossloot', pm: 'bosshunter', name: 'BOSS LOOT', desc: 'boss gear (FLARE, BEES...) can turn up in black markets.', costs: [180] },
 ];
@@ -157,12 +158,13 @@ function buyPost(u) {
   save.legacy[u.key] = lv + 1;
   persist();
   if (u.key === 'nemesis' && !save.nemesis && nemesisPool().length) { save.nemesis = nemesisPool()[0]; persist(); }
+  if (u.chip && save.deck) { save.deck.chips = save.deck.chips || {}; save.deck.chips[u.chip] = 1; persist(); }   // a post that's a chip: into your deck
   if (u.key === 'bench' && typeof rootBenchBought === 'function') rootBenchBought();   // ROOT's quest: on to the letters (engine/quests.js)
   for (let l = was + 1; l <= boardLevel(); l++) boardLevelNews(l);   // a level opened
   return null;
 }
 // Placeholder posts that real ones replaced (v15.35-v15.36): bought ones give their REP back (boot.js, at load).
-const GONE_POSTS = { elite1: 100, elite2: 100, sysop1: 200, sysop2: 200 };
+const GONE_POSTS = { elite1: 100, elite2: 100, elite3: 100, sysop1: 200, sysop2: 200, sysop3: 200 };
 function refundGonePosts() {
   const lg = save.legacy || {}; let back = 0;
   for (const [k, cost] of Object.entries(GONE_POSTS)) if (lg[k] && !LEGACY.some(u => u.key === k)) { back += cost * lg[k]; delete lg[k]; }

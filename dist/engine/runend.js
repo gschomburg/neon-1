@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.36']);
+NEON_FILES.push(['engine/runend.js', 'v15.37']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -35,6 +35,8 @@ async function die() {
     return;
   }
   if (st.corp && st.corp.hasBoss) { corpStat(st.corp.def.key).lost++; persist(); }   // codex record
+  const cxd = st.corp && st.corp.hasBoss && run0 ? deckCodexDeath(run0, st.corp.def.key) : null;   // CODEX (a chip): a piece of its tell
+  if (cxd) FEAT_QUEUE.push({ head: 'CODEX', lines: [`${cxd}: a piece of its tell decoded.`, `${save.codexBits[st.corp.def.key]}/3. it's in the codex.`] });
   lightsOn();
   st.busy = true;
   st.timer = null;

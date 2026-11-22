@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v15.36']);
+NEON_FILES.push(['engine/codex.js', 'v15.37']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -79,6 +79,15 @@ function scrollFollow(s, idx, n, rows) {
 // decrypt). As you find more of that tab, more letters show through (up to decrypt.hint of them, all found). A newly
 // found entry decodes the first time the codex shows it; save.codexRead keeps the ones that have.
 const CX_DECODING = {};   // key -> when its decode started (this session)
+// CODEX's thirds: each word of a tell line belongs to a third (steady, from the seed); the thirds you've decoded read
+// clear, the rest stay ciphertext. 'tell: ' stays clear.
+function cxTellPart(text, bits, seed, now) {
+  let w = 0;
+  return text.replace(/\S+/g, (word, at) => {
+    if (at === 0 && word === 'tell:') return word;
+    return FX.seedOf(seed + ':' + (w++)) % 3 < bits ? word : FX.decrypt(word, 0, seed + at, now);
+  });
+}
 function cxName(key, real, seen, frac, now) {
   const D = FX_LOOKS.decrypt, seed = FX.seedOf(key), hint = frac * D.hint;
   if (!seen) return FX.decrypt(real, hint, seed, now);
@@ -100,7 +109,7 @@ const cxChips = () => Object.keys(DECK_CHIPS).filter(k => !deckBeta(k)).sort((a,
   return g.indexOf(A[1]) - g.indexOf(B[1]) || RARITY_ORDER.indexOf(A[2]) - RARITY_ORDER.indexOf(B[2]) || A[0].localeCompare(B[0]);
 });
 // where a chip comes from (engine/deck.js: deckRollChip's pool, DECK_RIPPED, DECK_NO_DROP, the BOSS chips)
-const cxChipWhere = k => DECK_START.chips[k] ? 'from: it comes with your deck.' : k === '1UP' ? "from: b0y, for beating G0D." : k === 'MN1' ? "from: ROOT's quest."
+const cxChipWhere = k => DECK_START.chips[k] ? 'from: it comes with your deck.' : LEGACY.some(u => u.chip === k) ? `from: THE BOARD (${LEGACY.find(u => u.chip === k).name}).` : k === '1UP' ? "from: b0y, for beating G0D." : k === 'MN1' ? "from: ROOT's quest."
   : deckIsRipped(k) ? 'from: rivals and THE FENCE. never a cache or a market.' : DECK_CHIPS[k][1] === 'boss' ? 'from: the big bosses.'
   : 'from: caches, the pier, markets and corp bosses. or build it at a WORKBENCH.';
 // where you were last time (this session): the codex opens there again
@@ -175,10 +184,11 @@ function openCodex(want) {
         // The tell: ciphertext until you've beaten this corp (its first line, and a hint), then it decodes once.
         const tl = pad(wrapText('tell: ' + CORP_TELL[key], 34), 3), on = !!rec.breached;
         const line = (t, i) => i ? cxName('tell_' + key + i, t, on, 0, now) : 'tell: ' + cxName('tell_' + key + i, t.slice(6), on, 0, now);   // ('tell: ' stays clear)
-        const tell = on ? tl.map(line) : [line(tl[0], 0), 'beat this corp to log its tell.', ''];
-        tell.forEach((t, i) => T(t, rec.breached ? C.accent : i === 0 ? C.mid : C.dim));
+        const bits = !on && save.codexBits ? save.codexBits[key] || 0 : 0;   // CODEX (a chip): thirds decoded by dying here
+        const tell = on ? tl.map(line) : bits ? tl.map((t, i) => cxTellPart(t, bits, FX.seedOf('tell_' + key + i), now)) : [line(tl[0], 0), 'beat this corp to log its tell.', ''];
+        tell.forEach((t, i) => T(t, rec.breached ? C.accent : bits || i === 0 ? C.mid : C.dim));
         T(d.gear ? `boss gear: ${ITEMS[d.gear.key].name} x${d.gear.n}` : d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
-        T(`breached ${rec.breached}   lost ${rec.lost}`, C.text);
+        T(`breached ${rec.breached}   lost ${rec.lost}` + (bits ? `   decoded ${bits}/3` : ''), C.text);
       }
     } else if (isHk()) {
       // 12 rows: the face in their colors, name and side, the shtick, the lore

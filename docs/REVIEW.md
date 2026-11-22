@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **CODEX and RELIC** (v15.37): ELITE's CODEX (250 REP) and SYSOP's RELIC (800 REP) each give a chip. CODEX goes in CRASH: die in a corp you haven't beaten and a third of its tell decodes (look at the codex after: the decoded words read clear, `decoded 1/3`). RELIC goes in SPOILS: 1 corp boss in 5 has an exotic as an extra pick. THE BOARD has no placeholders now.
+
 - [ ] **ELITE and SYSOP posts** (v15.36): LOYALTY CARD (ELITE: markets 5% then 10% cheaper), THE ARCHIVE (SYSOP: pick the mod on your deck's CPU, under NEMESIS), CHROMATOPHORE (SYSOP: every palette, and 7 locked card colors on YOU > color). Prices are guesses: 200/400, 800, 500. If you'd bought ELITE POST 2 or SYSOP POST 1/2, the REP came back.
 
 - [ ] **The LOCKER** (v15.34): COMPS is its own sub-tab, the letters 2x2 (the cells are tall, so they read tall and thin: 3 wide x 2 is an option). BIG LOCKER on THE BOARD's ELITE level (v15.35, in ELITE POST 1's place), 200 REP: 10 slots. Check TAKE with 10 on your phone: on the test page it just fits over the keyboard.

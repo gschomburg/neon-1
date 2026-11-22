@@ -164,9 +164,9 @@ unlocked by REP, and some quests unlock REP.
   - Levels of unlocks; finishing the codex (or beating every corp) opens new options. For the codex one: THE
     ARCHIVE (start with any mod you've found), ARCHIVIST (every corp's tell printed), an exotic pick, a cosmetic.
     **Decided (Greg, 2026-11-22):** THE ARCHIVE, LOYALTY CARD and CHROMATOPHORE built v15.36. Dropped: ARCHIVIST, because there's
-    plenty that shows tells already and by ELITE you've beaten most corps. **Next:** ELITE POST 3 becomes CODEX (gives
-    the CRASH chip: die in a corp and a piece of its codex entry unscrambles); SYSOP POST 3 becomes the exotic pick
-    (gives a SPOILS chip: now and then a boss offers an exotic). Both need their details worked out.
+    plenty that shows tells already and by ELITE you've beaten most corps. CODEX and RELIC built v15.37 (Greg: CODEX
+    still helps, the corps you die on are the hard, rare ones you haven't beaten; RELIC's exotic is an extra pick, so
+    it doesn't change a seed's rewards).
   - Mod storage between runs (LOCKER exists: cash out, keep 1 mod a step lower): rent per run, 1-2 mods.
   - A booster for corps you haven't beaten: moved to docs/DECK.md (the BIOS chip FRESH).
   - The starter pool, more (choose 3, one may show up at the start): moved to docs/DECK.md (the BOOT chip STARTER).

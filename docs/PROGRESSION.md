@@ -103,8 +103,8 @@ BACKLOG items 1 (REP and THE BOARD), 2 (quests), 4 (hackers) and 7 (achievements
   3. **LEVEL 2 USER** (buy 4 on GUEST): LOCKER, BETTER DROPS, BOSS LOOT, NEMESIS, STARTER POOL.
   4. **LEVEL 3 ELITE** (buy 3 on USER): HEAT (harder runs, more REP), "you thought this was a game" (quests), the G0D quest.
   5. **LEVEL 4 SYSOP** (buy 2 on ELITE): THE ARCHIVE, cosmetics.
-  - **Built (v15.35-v15.36):** ELITE: DECK mk III, BIG LOCKER, LOYALTY CARD, one placeholder (for CODEX). SYSOP: THE FUSE,
-    THE ARCHIVE, CHROMATOPHORE, one placeholder (for the exotic pick). **Decided (Greg, 2026-11-22):** a post that's powerful and
+  - **Built (v15.35-v15.36):** ELITE: DECK mk III, BIG LOCKER, LOYALTY CARD, CODEX (a chip, v15.37). SYSOP: THE FUSE,
+    THE ARCHIVE, CHROMATOPHORE, RELIC (a chip, v15.37). **Decided (Greg, 2026-11-22):** a post that's powerful and
     needs a limit, or that has a choice, gives a chip or a deck CPU setting (NEMESIS, THE ARCHIVE); the rest are plain
     buys. Say so in the post's text.
 - A locked level shows its header and what opens it. A post with levels counts once. The counts are a guess.

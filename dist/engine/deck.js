@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.36']);
+NEON_FILES.push(['engine/deck.js', 'v15.37']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -112,6 +112,7 @@ const DECK_CHIPS = {
   EJ1: ['EJECT', 'crash', 'rare', 1, 'THE SHELL learns eject: cash out from the map, anywhere, once a run. (` opens THE SHELL.)', ['^^^', 'EJT'], 'eject: cash out from the map.'],
   IN5: ['INSURANCE', 'crash', 'common', 1, 'die and your next run starts with half the credits you had. (read the fine print.)', ['$/2', 'INS'], 'die: half your credits next run.'],
   DD3: ['DEAD DROP', 'crash', 'rare', 1, "when you die, your gear is waiting in your next run's first DATA CACHE.", ['[v]', 'DRP'], 'die: your gear waits for you.'],
+  CX5: ['CODEX', 'crash', 'rare', 1, "die in a corp you haven't beaten: a third of its tell decodes in the codex.", ['[?]', 'CDX'], 'die: a piece of its tell.'],   // (THE BOARD's CODEX post gives it: deckCodexDeath)
   OB1: ['OBITUARY', 'crash', 'rare', 1, 'die past layer 30 and you keep all your REP, as if you cashed out. (if it bleeds, it leads.)', ['RIP', '30+'], 'die past 30: keep your REP.'],
   MM4: ['FORGET-ME-NOT', 'crash', 'common', 1, 'on a seed you played, the map marks your last path. (you were here before.)', ['*.*', 'MEM'], 'see your last path.'],
   // SPOILS (in place of the switch)
@@ -121,6 +122,7 @@ const DECK_CHIPS = {
   GB2: ['GAMBLE', 'spoils', 'epic', 2, 'one mystery pick in the rewards, good or lame. pick it and it is yours.', ['???', 'GMB'], 'a mystery reward.'],
   AU2: ['AUCTION', 'spoils', 'rare', 2, 'pay credits to reroll a boss reward.', ['$>$', 'AUC'], 'reroll rewards for cr.'],
   SV1: ['SALVAGE', 'spoils', 'common', 1, 'salvage a reward: its letters, for the WORKBENCH.', ['abc', 'SLV'], 'rewards into letters.'],
+  RC1: ['RELIC', 'spoils', 'legendary', 2, 'now and then a corp boss adds an exotic mod to its rewards: one more pick.', ['<X>', 'RLC'], 'an exotic, now and then.'],   // (THE BOARD's RELIC post gives it: deckRelicPick)
   HL2: ['HEIRLOOM', 'spoils', 'epic', 2, 'the mod you pick goes straight to the LOCKER.', ['{L}', 'HLM'], 'your pick: to the LOCKER.'],
   // PSU (cells: their power is deckCellPower)
   BO1: ['BROWNOUT', 'psu', 'epic', 0, 'power 12, but one random chip is off each run (a note says which).', ['[~]', 'Bo~'], 'power 12, one chip off.'],
@@ -166,7 +168,7 @@ const DECK_CHIP_TAGS = {
   GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], GG1: ['you'], FT3: ['you'], JM4: ['you'], FK2: ['you'], RF4: ['you'], CM3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
   PL3: ['you'], BP1: ['you'], JD6: ['you'], PD7: ['you'], RG6: ['you'], KN8: ['you'], CL3: ['you'], HS1: ['map'],
   LU6: ['map', 'rules'], FR5: ['map'], EV2: ['map'], AD0: ['map'], SR4: ['map'], PP2: ['map'], AL4: ['you'], CS7: ['map'], CK9: ['map'], DK6: ['map'],
-  CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'],
+  CP0: ['you'], EJ1: ['you'], IN5: ['you'], DD3: ['you'], OB1: ['you'], MM4: ['you'], CX5: ['you'], RC1: ['rules'],
   GE1: ['rules'], OF1: ['rules'], PT1: ['rules'], GB2: ['rules'], AU2: ['rules'], SV1: ['rules'], HL2: ['rules'],
   BO1: ['you'], PO1: ['you'], WU3: ['you'], SPC: ['you'],
   DN1: ['you'], GL2: ['you', 'rules'], CH1: ['you', 'rules'], TP1: ['you', 'rules'], RE1: ['you'], LG2: ['you'], UV1: ['you', 'rules'], PD2: ['you', 'rules'],
@@ -254,7 +256,7 @@ const deckBand = by => by >= 41 ? 4 : by >= 32 ? 3 : 2;
 // own seeded streams ('cachechip', 'pierchip'), so a seed's other drops don't move.
 const DECK_DROP = { cache: 0.2, fish: 0.25 };   // a cracked DATA CACHE; a pier catch that would have been gear
 const DECK_DROP_WEIGHT = { common: 50, rare: 30, epic: 14, legendary: 5, exotic: 1 };
-const DECK_NO_DROP = ['SC1', 'SP3', '1UP', 'MN1'];   // (MN1: ROOT's, from its quest)   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
+const DECK_NO_DROP = ['SC1', 'SP3', '1UP', 'MN1', 'CX5', 'RC1'];   // (CX5, RC1: THE BOARD's CODEX and RELIC posts give them)   // (MN1: ROOT's, from its quest)   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
 const deckChipItem = key => 'chip_' + key;
 const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
 // A SHELL or SUDO chip before THE SHELL is yours (Greg, 2026-11-20: they still drop; they point you at ROOT's quest)
@@ -496,6 +498,23 @@ function deckBossChip(node) {
   if (r() >= DECK_BOSS_CHIP && !DECK_ALWAYS) return null;
   const key = deckRollChip(r); markSeen(deckChipItem(key));   // (seen: craftable)
   return { kind: 'gear', key: deckChipItem(key), tier: 0, n: 1 };
+}
+// RELIC (SPOILS, from THE BOARD's SYSOP post): now and then a corp boss's rewards get an exotic mod as one more pick. Its
+// own seeded stream, so the rest of the rewards stay the same for a seed (Greg, 2026-11-22: an extra, not in place of one).
+const DECK_RELIC = 0.2;   // the chance at each corp boss
+function deckRelicPick(node, options) {
+  const run = st.run; if (!chipOn('RC1', run) || node.type !== 'corp') return null;
+  const got = exoticOffer(run.seed, 'relic', node.id, DECK_RELIC).filter(o => !has(o.key) && !options.some(p => p.key === o.key));
+  return got.length ? { key: got[0].key, tier: 0 } : null;
+}
+// CODEX (CRASH, from THE BOARD's ELITE post): die in a corp you haven't beaten and a third of its tell decodes in the codex
+// (save.codexBits: corp -> 0-3; engine/codex.js cxTellPart shows it). Not in practice runs. Returns the corp's name, or null.
+function deckCodexDeath(run, key) {
+  if (!chipOn('CX5', run) || run.practice || !CORP_TELL[key] || corpStat(key).breached) return null;
+  save.codexBits = save.codexBits || {};
+  if ((save.codexBits[key] || 0) >= 3) return null;
+  save.codexBits[key] = (save.codexBits[key] || 0) + 1; persist();
+  return corpDef(key).name;
 }
 // GEAR (SPOILS): 3 gear in place of the mods
 function deckGearRewards(node) {

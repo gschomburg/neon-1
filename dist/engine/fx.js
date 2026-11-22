@@ -5,7 +5,7 @@
 // engine/scene.js; the eyes transition: engine/effects.js).
 // (Particles, shakes and flashes are engine/effects.js: they work in pixels, not cells.)
 'use strict';
-NEON_FILES.push(['engine/fx.js', 'v15.36']);
+NEON_FILES.push(['engine/fx.js', 'v15.37']);
 
 const FX = (() => {
   // ---------- building blocks ----------

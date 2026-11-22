@@ -33,4 +33,32 @@ module.exports = { name: 'repposts', body: `
   if (save.deck) { save.deck.off = (save.deck.off || []).concat('archive'); B.startRun('ARCHIVE2', false); await settle('start');
     check(!st.run.mods.includes('tracer'), 'switched off on the CPU (none picked): no mod'); save.deck.off = save.deck.off.filter(k => k !== 'archive'); }
   save.legacy.archive = 0;
+  // the chip posts: buying one puts its chip in your deck
+  save.deck = save.deck || deckFreshSave(); save.rep = 5000;
+  save.legacy.deck3 = 1; save.legacy.fuse = 1; save.legacy.market = 1; ['hard', 'cash', 'kit', 'belt', 'drops', 'bench', 'nemesis', 'starter'].forEach(k => save.legacy[k] = 1);
+  const cxPost = LEGACY.find(u => u.key === 'codex'), rcPost = LEGACY.find(u => u.key === 'relic');
+  check(buyPost(cxPost) === null && save.deck.chips.CX5 === 1, 'CODEX: the post gives the CX5 chip');
+  check(buyPost(rcPost) === null && save.deck.chips.RC1 === 1, 'RELIC: the post gives the RC1 chip');
+  check(DECK_NO_DROP.includes('CX5') && DECK_NO_DROP.includes('RC1') && /THE BOARD/.test(cxChipWhere('CX5')), 'they never drop; the codex says THE BOARD');
+  // CODEX: dying in a corp you haven't beaten decodes a third of its tell, 3 at most; a beaten one, nothing
+  const ck = Object.keys(CORP_TELL).find(k => CORPS[k] && !corpStat(k).breached), run = st.run;
+  run.chips = ['CX5']; save.codexBits = {};
+  check(deckCodexDeath(run, ck) && save.codexBits[ck] === 1, 'CODEX: a death in ' + ck + ' decodes 1/3');
+  deckCodexDeath(run, ck); deckCodexDeath(run, ck); check(!deckCodexDeath(run, ck) && save.codexBits[ck] === 3, '3/3 at most');
+  const bk = Object.keys(CORP_TELL).find(k => CORPS[k] && k !== ck); const br0 = corpStat(bk).breached; corpStat(bk).breached = 1;
+  check(!deckCodexDeath(run, bk), 'a corp you have beaten: nothing'); corpStat(bk).breached = br0;
+  const line = 'tell: ' + CORP_TELL[ck];
+  check(cxTellPart(line, 3, 5, 0) === line, 'all three thirds: the tell reads clear');
+  const part = cxTellPart(line, 1, 5, 0).split(' '), words = line.split(' ');
+  check(part[0] === 'tell:' && part.some((w, i) => w === words[i] && i > 0) || words.length < 4, 'one third: some words clear');
+  // RELIC: one more pick, an exotic; the rest of the rewards stay the same
+  // (try seeds till one of the map's corps rolls its exotic)
+  let node = null;
+  for (let s = 0; s < 40 && !node; s++) { run.seed = 'RELIC' + s; node = Object.values(run.map).find(n => n.type === 'corp' && exoticOffer(run.seed, 'relic', n.id, DECK_RELIC).length); }
+  check(DECK_RELIC > 0 && DECK_RELIC < 1 && node, 'RELIC: now and then (' + DECK_RELIC + ')');
+  run.chips = []; const plain = rewardOptions(node).map(o => o.key);
+  run.chips = ['RC1']; const withR = rewardOptions(node).map(o => o.key);
+  check(withR.length === plain.length + 1 && MODS[withR[withR.length - 1]].kind === 'exotic', 'RELIC: one more pick, an exotic: ' + withR[withR.length - 1]);
+  check(withR.slice(0, plain.length).join() === plain.join(), 'the usual picks stay the same');
+  run.chips = [];
 ` };

@@ -102,10 +102,10 @@ module.exports = { name: 'deck', body: `
   check(DECK.mk === 3 && legacyLv('deck3') === 1 && save.rep === r0 - deckCost('deck3'), 'mk III is THE BOARD post, at its price: ' + (r0 - save.rep));
   check(DECK.up && DECK.up.mk === 3, 'buying mk III in the deck: the fanfare');
   buildScene(performance.now(), false); DECK.up = null;
-  save.legacy.elite3 = 1; check(boardLevel() === 4, 'SYSOP (mk III and a placeholder)');
+  save.legacy.market = 1; check(boardLevel() === 4, 'SYSOP (mk III and LOYALTY CARD)');
   deckFuseIn(); check(DECK.mk === 4 && DECK.fuse && legacyLv('fuse') === 1, 'the FUSE: mk IV');
   save.deck.seenMk = 3; openDeck(); await sleep(100); check(DECK.up && DECK.up.mk === 4, 'bought on THE BOARD: the fanfare the next time you open your deck'); DECK.up = null;
-  check(LEGACY.filter(u => u.placeholder && u.tier === 3).length === 1 && LEGACY.filter(u => u.placeholder && u.tier === 4).length === 1, 'placeholder posts on ELITE and SYSOP');
+  check(!LEGACY.some(u => u.placeholder) && LEGACY.filter(u => u.tier === 3).length === 4 && LEGACY.filter(u => u.tier === 4).length === 4, 'ELITE and SYSOP: 4 real posts each, no placeholders');
   // the switches: STRAY off turns the post off for runs
   save.legacy.stray = 1; openDeck(); await sleep(200);
   check(deckSwitches().join() === 'stray' && postOn('stray'), 'only the posts you own are settings: ' + deckSwitches());
