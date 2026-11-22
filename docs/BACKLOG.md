@@ -114,8 +114,8 @@ The ideas as they came:
   a market 15%, a corp boss 12%, out of about 120 chips. Ideas: a REP post that adds a chip store to DATA CACHES, or a
   chip dealer (a node, or a stall like THE FENCE).
 - **Decided (Greg, 2026-11-22):** SAFE ROUTE becomes **BENCH LINK**: your WORKBENCH at the UPLINK, once a sector (not a
-  safehouse in place of a node). SPORE CELL (the M0LD) and ADWARE (an ad corp, once ads can be tapped) wait for a way
-  to get them. HEIRLOOM: a `[ TO LOCKER ]` button by TAKE, not automatic; the rewards-screen chips (HEIRLOOM, SALVAGE,
+  safehouse in place of a node). SPORE CELL (the M0LD) and ADWARE (an ad corp's boss) wait for a way to get them: both
+  are built (v15.46) and stay BETA (they never drop) till they have one. HEIRLOOM: a `[ TO LOCKER ]` button by TAKE, not automatic; the rewards-screen chips (HEIRLOOM, SALVAGE,
   GAMBLE, AUCTION) are a batch.
 
 ### The deck and chips

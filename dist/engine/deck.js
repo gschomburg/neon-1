@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.45']);
+NEON_FILES.push(['engine/deck.js', 'v15.46']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -104,7 +104,7 @@ const DECK_CHIPS = {
   LY1: ['+1 LAYER', 'bios', 'rare', 1, 'every corp has one more layer before its boss. more REP, more risk. (THE BOARD: +1 LAYER)', ['+1 ', '[=]'], 'every corp: one more layer.'],   // (engine/run.js corpPlan)
   FR5: ['FRESH', 'bios', 'rare', 1, "corps you haven't beaten come up more.", ['NEW', 'FR5'], 'unbeaten corps come up more.'],
   EV2: ['EVENTS', 'bios', 'rare', 1, 'sector events from sector 1.', ['EVT', '!!1'], 'events from sector 1.'],
-  AD0: ['ADWARE', 'bios', 'common', 1, 'more ads, and tapping one heals 1 INT.', ['AD!', '+1^'], 'ads heal you.'],
+  AD0: ['ADWARE', 'bios', 'common', 1, "ads come up twice as often, and tapping a button in one (not its [x]) heals 1 INT.", ['AD!', '+1^'], 'ads heal you.'],
   SR4: ['BENCH LINK', 'bios', 'epic', 2, 'your WORKBENCH at every UPLINK: shred, build, take from its LOCKER before you push on.', ['[+]', 'LNK'], 'the WORKBENCH at the UPLINK.'],   // (was SAFE ROUTE, a safehouse on every map: Greg, 2026-11-22. engine/runend.js openUplink)
   PP2: ['PIER PASS', 'bios', 'rare', 1, 'a PIER on every sector map, and a rare catch now and then.', ['~~~', 'PIR'], 'a PIER every sector.'],
   AL4: ['ALMANAC', 'bios', 'common', 1, "the next sector's event shows a sector early.", ['(*)', 'ALM'], 'see the next event early.'],
@@ -186,10 +186,10 @@ const DECK_CHIP_TAGS = {
 const DECK_BETA = {
   HS1: 'starting a row in needs map work (the start node and its links)',
   FR5: 'corp weights scramble seeds: needs the placeholder corps (Seeds)', CS7: 'the same: placeholder corps', CK9: 'the same', DK6: 'the same',
-  EV2: "an event in sector 1 needs its own stream (rollEvent skips sector 1)", AD0: 'there are no ads to tap yet',
+  EV2: "an event in sector 1 needs its own stream (rollEvent skips sector 1)", AD0: 'built; no way to get it yet (an ad corp\'s boss, BACKLOG)',
   PP2: 'a PIER on every map needs map work',
   AL4: "the next sector's event is only made when you push on", MM4: 'needs the last path saved per seed, and drawn on the map',
-  SPC: 'the power works; the mold creeping over your board is still to draw',
+  SPC: 'built; no way to get it yet (beating the M0LD, BACKLOG)',
 };
 const deckBeta = k => !!DECK_BETA[k];
 // Power (docs/DECK.md "Power", first pass for playtesting): the cell powers mk II and mk III, one cell per stage of the
@@ -398,6 +398,7 @@ function deckRunStart(run, opts = {}) {
   if (brown) { run.brownout = brown; setTimeout(() => { if (st.run === run) setMsg(`> BROWNOUT: ${DECK_CHIPS[brown][0]} is offline this run.`, C.danger); }, 1600); }
   const di = keys.reduce((a, k) => a + (DECK_INT[k] || 0), 0);
   if (di) { run.maxInt = Math.max(1, run.maxInt + di); run.integrity = Math.max(1, Math.min(run.maxInt, run.integrity + di)); }
+  if (chipOn('SPC', run) && save.deck) save.deck.spore = (save.deck.spore || 0) + 1;   // SPORE CELL: the mold on your board grows a run at a time (deckMold)
   if (chipOn('TF1', run)) run.credits += 60;   // TRUST FUND
   if (chipOn('FI2', run)) run.credits += 100;   // FRESH INSTALL (and no starter perk: engine/panels.js openStartReward)
   if (chipOn('LW1', run)) run.credits += 50;   // LIFTED WALLET (RIPPED)
@@ -1614,6 +1615,21 @@ function deckHeader(ctx, y) {
   g.flush();
 }
 
+const DECK_MOLD_CH = '%&#*;:,.';
+let deckMoldSkip = null;   // (the sockets' cells: the mold stays off them)
+function deckMold(bput, d, now, still) {
+  if (!deckMoldSkip) { deckMoldSkip = new Set(); for (const s of DECK_SOCKETS) for (let y = s.y; y < s.y + s.h; y++) for (let x = s.x; x < s.x + (s.w || 5); x++) deckMoldSkip.add(x + ',' + y); }
+  const runs = d.real ? (save.deck && save.deck.spore) || 0 : 12, ps = deckSock('PSU'), cx = ps.x + 2, cy = ps.y + 2;
+  const R = Math.min(48, 5 + runs * 1.6), ART = deckArt(), fr = still ? 0 : Math.floor(now / 900);
+  const hs = (a, b) => { const v = Math.sin(a * 91.7 + b * 47.3) * 43758.5453; return v - Math.floor(v); };
+  for (let y = Math.max(0, cy - Math.ceil(R)); y < Math.min(ART.length, cy + R); y++) for (let x = 0; x < DECK_ART_W; x++) {
+    if (deckMoldSkip.has(x + ',' + y)) continue;
+    const dist = Math.hypot((x - cx) * 0.6, y - cy), edge = R * (0.55 + 0.45 * hs(x, y));
+    if (dist > edge) continue;
+    const th = Math.max(0, Math.min(3.9, (1 - dist / edge) * 4.2)), fresh = !still && dist > edge - 1.5 && hs(x + fr, y) < 0.08;
+    bput(x, y, DECK_MOLD_CH[Math.min(DECK_MOLD_CH.length - 1, Math.floor((4 - th) * 2))], fresh ? MOLD.fresh : moldCol(th), th > 3);
+  }
+}
 function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (the board draws into it, dim, no taps)
   const d = DECK, g = under || deckGrid(ctx), now = ctx.now, pw = deckPower(), ART = deckArt(), BH = ART.length, bv = sa - 2;
   const ax = Math.floor((L.wc - DECK_ART_W) / 2), maxTop = Math.max(0, BH - bv);
@@ -1640,6 +1656,9 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
     const tw = !still && hh(x * 13 + y, Math.floor(now / 350)) < 0.01 + 0.05 * en;
     bput(x, y, ch, tw ? mixHex(tc, C.bright, 0.4) : mixHex(C.dim, tc, 0.15 + 0.3 * en), tw);
   }
+  // SPORE CELL (a cell): the mold creeps over your board from the PSU, more with every run it powers (save.deck.spore;
+  // the dev deck: some). G0D's mold, its colors and marks (engine/fx.js moldCol). Never over a socket.
+  if (d.slots.PSU === 'SPC') deckMold(bput, d, now, still);
   // snakes on their own, more often the livelier your deck is
   d.snakes = d.snakes || [];
   if (!under && !still && now > (d.ambNext || 0)) {

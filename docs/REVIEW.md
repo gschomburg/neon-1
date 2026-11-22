@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **ADWARE and SPORE CELL** (v15.46, still BETA: try them on the dev deck): ADWARE doubles the ads, and a button in one heals 1 INT. SPORE CELL's mold creeps over your deck from the PSU, a little more each run.
+
 - [ ] **The rewards-screen chips and BENCH LINK** (v15.45, out of BETA): GAMBLE (a ? ? ? pick), HEIRLOOM ([ TO LOCKER ]), SALVAGE ([ SALVAGE: SNP ]: the pick as letters), AUCTION ([ REROLL 30cr ], more each time). BENCH LINK: [ WORKBENCH ] at the UPLINK. They're SPOILS chips, so one at a time.
 
 - [ ] **SACRIFICE and +1 LAYER** (v15.44): SACRIFICE (ELITE, 300) gives an OVERVOLT chip: at the UPLINK, [ SACRIFICE: -N INT, no fee ] takes you to 1 INT and on (a ZOMBIE pays in rot). +1 LAYER (SYSOP, 500) gives a BIOS chip: one more layer in every corp.

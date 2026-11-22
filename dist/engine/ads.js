@@ -1,6 +1,6 @@
 // NeoN+1 engine/ads.js: the fake ads: when they show up, the ad box, and its two-screen turn.
 'use strict';
-NEON_FILES.push(['engine/ads.js', 'v15.45']);
+NEON_FILES.push(['engine/ads.js', 'v15.46']);
 
 // An ad comes up over whatever is on screen, in a bordered box nearly the screen's width, and
 // blocks everything under it until you close it. [x] (top right) shows up after a few seconds
@@ -25,7 +25,8 @@ function adBreak(where) {
   run.adGap = (run.adGap || 0) + 1;
   const c = st.corp;
   if (where === 'layer' && (!c || c.adShown || c.idx >= c.counts.length - 1)) return Promise.resolve();   // (next is the boss)
-  if (run.adGap <= AD_CFG.gap || Math.random() >= AD_CFG.chance) return Promise.resolve();
+  const adware = chipOn('AD0', run);   // ADWARE (a chip): twice as often, and a button in one heals (adTap)
+  if (run.adGap <= (adware ? 1 : AD_CFG.gap) || Math.random() >= AD_CFG.chance * (adware ? 2 : 1)) return Promise.resolve();
   if (c) c.adShown = true;
   run.adGap = 0;
   const keys = Object.keys(ADS).filter(k => k !== run.lastAd);
@@ -62,7 +63,10 @@ function adTap(h, now) {
   const ad = st.ad;
   if (!h) return;
   if (h.kind === 'adx' && adClosable(ad, now)) return closeAd();
-  if (h.kind === 'adbtn') return closeAd(h.msg);
+  if (h.kind === 'adbtn') {   // (ADWARE, a chip: a button in an ad heals 1 INT; its [x] doesn't)
+    if (chipOn('AD0') && st.run) { heal(1); closeAd('> ADWARE: thanks for clicking. you feel better.'); return; }
+    return closeAd(h.msg);
+  }
   if (h.kind === 'adbox') { if (!adTurn()) setMsg('> nice try.', C.dim); }
 }
 function adKey(k, now) {

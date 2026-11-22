@@ -78,6 +78,18 @@ module.exports = { name: 'repposts', body: `
     run.chips = ['SR4']; await swapTo(() => openUplink()); await sleep(400); hits.find(h => h.id === 'uplbench').onTap(); await sleep(1500);
     check(!!st.bench, 'BENCH LINK: the WORKBENCH from the UPLINK'); benchLeave(); await sleep(1800);
     check(st.panelTitle === 'UPLINK', '...and back to the UPLINK'); }
+  // ADWARE and SPORE CELL (v15.46): built, still BETA (no way to get them yet)
+  { check(deckBeta('AD0') && deckBeta('SPC'), 'ADWARE and SPORE CELL stay BETA: they never drop');
+    const run = st.run; run.chips = ['AD0']; run.integrity = 2; run.maxInt = 4;
+    showAd(Object.keys(ADS)[0]); adTap({ kind: 'adbtn', msg: '> ok.' }, performance.now());
+    check(run.integrity === 3 && !st.ad, 'ADWARE: a button in an ad heals 1 INT');
+    showAd(Object.keys(ADS)[0]); adTap({ kind: 'adx' }, performance.now() + AD_CFG.closeMs + 10);
+    check(run.integrity === 3 && !st.ad, '...its [x] closes it, no heal');
+    run.chips = []; const deck1 = save.deck;
+    save.deck = Object.assign(deckFreshSave(), { owed: { PG0: 1 }, slots: { PSU: 'SPC' }, order: ['PSU'], spore: 2 }); save.deck.chips.SPC = 1;
+    B.startRun('SPORE', false); await settle('start');
+    check(save.deck.spore === 3, 'SPORE CELL: a run it powers grows the mold: ' + save.deck.spore);
+    save.deck = deck1; }
   // CHROMATOPHORE
   save.legacy.chroma = 0;
   const few = playerPalettes().length, locked = PLAYER_STYLES.map((s, i) => i).filter(i => PLAYER_STYLES[i].locked);
