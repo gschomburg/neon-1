@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.42']);
+NEON_FILES.push(['engine/panels.js', 'v15.43']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -547,6 +547,7 @@ function openCache(node) {
     onTake: () => { run.caches[node.id] = 'taken'; },
     skipLabel: '[ SKIP ]',
     msg: '> cache cracked.',
+    next: legacyLv('dealer') && !run.tutorial && deckDrops() ? () => openChipDealer(node) : null,   // CHIP DEALER (THE BOARD): its catalog, after (engine/deck.js)
   });
 }
 

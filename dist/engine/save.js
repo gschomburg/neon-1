@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.42']);
+NEON_FILES.push(['engine/save.js', 'v15.43']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -124,6 +124,7 @@ const LEGACY = [
   { key: 'power', tier: 3, name: 'POWER TAP', desc: '+1 power for your deck (its cell).', costs: [300] },   // (engine/deck.js deckPower)
   { key: 'surge', tier: 3, name: 'SURGE', desc: '+1 charge for THE SHELL, every run (with a SHELL chip).', costs: [250] },   // (engine/deck.js deckCharges)
   { key: 'bait', tier: 3, name: 'BAIT SHOP', desc: 'casts at the pier cost half.', costs: [150] },   // (engine/fishing.js fishCost)
+  { key: 'dealer', tier: 3, name: 'CHIP DEALER', desc: 'after a DATA CACHE: a catalog of 3 chips for your deck. get out with what you buy.', costs: [300] },   // (engine/deck.js openChipDealer)
   { key: 'drops2', tier: 3, ladder: 'drops', needs: 'drops', name: 'BETTER DROPS II', desc: '1 in 5 mods and gear roll a step rarer (was 1 in 10).', costs: [300] },
   // chip: buying it gives you that chip for your deck (Greg, 2026-11-22: posts that are strong or need a limit are chips)
   { key: 'codex', tier: 3, name: 'CODEX', chip: 'CX5', desc: "gives you the CODEX chip (CRASH) for your deck: die in a corp you haven't beaten and a piece of its tell decodes.", costs: [250] },
@@ -140,6 +141,7 @@ const LEGACY = [
   // BACKDOOR (Greg, 2026-11-22): the secret. dev.start / dev.stop always work if you know them; this puts them in THE SHELL's
   // list (engine/shell.js SHELL_DEV).
   { key: 'backdoor', tier: 4, name: 'BACKDOOR', desc: 'the secret: THE SHELL shows you dev.start (every command, no charges, but the run turns practice) and dev.stop.', costs: [1500] },
+  { key: 'dealer2', tier: 4, ladder: 'dealer', needs: 'dealer', name: 'CHIP DEALER II', desc: 'the catalog has 5 chips (was 3), one of them rare or better.', costs: [600] },
   { key: 'market2', tier: 4, ladder: 'market', needs: 'market', name: 'LOYALTY CARD II', desc: 'every market is 10% cheaper (was 5%).', costs: [400] },
   // ---- PRIVATE MESSAGES (a feat opens them)
   { key: 'bossloot', pm: 'bosshunter', name: 'BOSS LOOT', desc: 'boss gear (FLARE, BEES...) can turn up in black markets.', costs: [180] },

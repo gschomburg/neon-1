@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.42']);
+NEON_FILES.push(['engine/deck.js', 'v15.43']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -280,6 +280,53 @@ function deckRollChip(r) {
 }
 // a RIPPED one (rivals, THE FENCE): by rarity, the same weights
 const deckRollRipped = r => pickWeighted(DECK_RIPPED, k => DECK_DROP_WEIGHT[DECK_CHIPS[k][2]] || 0, r);
+// ---------- CHIP DEALER (THE BOARD: ELITE, II on SYSOP; Greg, 2026-11-22) ----------
+// After a DATA CACHE: a catalog of chips (3; 5 with II, one of them rare or better), at a market's chip price (shopMult:
+// LOYALTY CARD, CHEAPSKATE). What drops can be in it (deckRollChip: no BETA, RIPPED or quest chips; no BOSS ones).
+// Every one in it counts as seen (the WORKBENCH can build it). What you buy goes on your belt: cash out to keep it.
+// Its stock is the run's, by the seed (run.dealer: node id -> [{ key, price, sold }]), so going back in shows what's left.
+function deckDealerStock(node) {
+  const run = st.run; run.dealer = run.dealer || {};
+  if (run.dealer[node.id]) return run.dealer[node.id];
+  const r = rngFor(run.seed, 'dealer', node.id), n = legacyLv('dealer') >= 2 ? 5 : 3, keys = [];
+  for (let tries = 0; keys.length < n && tries < 60; tries++) {
+    const k = deckRollChip(r);
+    if (!keys.includes(k) && DECK_CHIPS[k][1] !== 'boss') keys.push(k);
+  }
+  if (n === 5 && !keys.some(k => RARITY_ORDER.indexOf(DECK_CHIPS[k][2]) >= RARITY_ORDER.indexOf('rare'))) {   // (II: one rare or better)
+    for (let tries = 0; tries < 60; tries++) { const k = deckRollChip(r); if (!keys.includes(k) && DECK_CHIPS[k][1] !== 'boss' && RARITY_ORDER.indexOf(DECK_CHIPS[k][2]) >= RARITY_ORDER.indexOf('rare')) { keys[keys.length - 1] = k; break; } }
+  }
+  for (const k of keys) markSeen(deckChipItem(k));
+  return (run.dealer[node.id] = keys.map(key => ({ key, price: Math.round((DECK_CHIP_PRICE[DECK_CHIPS[key][2]] || 60) * shopMult()), sold: false })));
+}
+function openChipDealer(node) {
+  const run = st.run, stock = deckDealerStock(node);
+  let sel = Math.max(0, stock.findIndex(o => !o.sold));
+  const why = o => o.sold ? 'sold.' : !canSpend(o.price) ? 'not enough credits.' : !itemRoom(deckChipItem(o.key), 0) ? 'no room on your belt.' : null;
+  const buy = () => {
+    const o = stock[sel]; if (!o || why(o) || st.transitioning) return Sound.deny();
+    run.credits -= o.price; addItem(deckChipItem(o.key), 0); o.sold = true;
+    Sound.buy(); setMsg(`> bought ${DECK_CHIPS[o.key][0].toLowerCase()}.`, C.money); saveRun();
+    const nx = stock.findIndex(x => !x.sold); if (nx >= 0) sel = nx;   // (on to one that's left)
+  };
+  openPanel('CHIP DEALER', (T, B, X) => {
+    T('CHIP DEALER', C.money);
+    T(`credits ${run.credits}`, C.money);
+    T('to keep a chip, get out with it.', C.dim);
+    T('the catalog. chips for your deck:', C.mid);
+    stock.forEach((o, k) => X({ list: true, id: 'dealer' + k, onTap: () => { sel = k; Sound.tick(); }, sel: k === sel, faded: !!why(o),
+      gear: deckChipItem(o.key), name: DECK_CHIPS[o.key][0], col: C.bright, right: o.sold ? 'SOLD' : `${o.price}cr`.padStart(6), rightCol: o.sold ? C.dim : C.money }));
+    T('');
+    T(SEP, C.dim);
+    const o = stock[sel], c = DECK_CHIPS[o.key];
+    X({ gearHead: deckChipItem(o.key), gearTier: 0, text: `${c[0]}: ${DECK_GROUPS[c[1]][0]}` });
+    T(c[6], C.text);
+    const w = why(o);
+    if (w) { T(''); T(w, o.sold ? C.dim : C.dangerDim); T(''); }
+    else X({ box: true, text: 'B U Y   I T', sub: `${o.price}cr`, id: 'dbuy', onTap: buy, minW: 18 });
+    T(SEP, C.dim);
+  }, '> the dealer opens the catalog.', { leave: { text: '[LEAVE >]', onTap: leavePanel } });
+}
 // a DATA CACHE (engine/panels.js openCache): now and then a chip. Returns its line for the cache's head, or null.
 // A full belt: the swap comes up over the cache (pick the gear that goes, or keep what you have).
 function deckCacheChip(node) {

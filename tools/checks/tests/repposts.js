@@ -38,6 +38,19 @@ module.exports = { name: 'repposts', body: `
     check(!no && yes.includes('dev.start') && yes.includes('dev.stop'), 'BACKDOOR: dev.start and dev.stop autocomplete: ' + yes.join(' '));
     SHELL.input.value = ''; shellClose();
     save.legacy = lg1; }
+  // CHIP DEALER (v15.43): 3 chips (5 with II, one rare or better), seen, by the seed; a buy goes on the belt
+  { const lg2 = Object.assign({}, save.legacy); save.deck = save.deck || deckFreshSave();
+    B.startRun('DEALER', false); await settle('start');
+    const nodes = Object.values(st.run.map), n1 = nodes[1], n2 = nodes[2];
+    save.legacy.dealer = 1; save.legacy.dealer2 = 0; const s1 = deckDealerStock(n1);
+    check(s1.length === 3 && new Set(s1.map(o => o.key)).size === 3 && s1.every(o => save.seen[deckChipItem(o.key)] && !deckBeta(o.key) && !deckIsRipped(o.key) && DECK_CHIPS[o.key][1] !== 'boss'), 'CHIP DEALER: 3 chips, all seen, none BETA, RIPPED or BOSS: ' + s1.map(o => o.key));
+    check(deckDealerStock(n1) === s1, 'going back in: the same stock');
+    save.legacy.dealer2 = 1; const s2 = deckDealerStock(n2);
+    check(s2.length === 5 && s2.some(o => RARITY_ORDER.indexOf(DECK_CHIPS[o.key][2]) >= RARITY_ORDER.indexOf('rare')), 'CHIP DEALER II: 5, one rare or better');
+    st.run.credits = 999; openChipDealer(n2); await sleep(300);
+    const k0 = s2[0].key; hits.find(h => h.id === 'dbuy').onTap();
+    check(s2[0].sold && st.run.items.some(x => x.key === deckChipItem(k0)), 'a buy: on your belt');
+    save.legacy = lg2; }
   // CHROMATOPHORE
   save.legacy.chroma = 0;
   const few = playerPalettes().length, locked = PLAYER_STYLES.map((s, i) => i).filter(i => PLAYER_STYLES[i].locked);

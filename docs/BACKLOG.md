@@ -89,7 +89,7 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 2. [x] (v15.41) Plain posts: POWER TAP (deck power +1 ELITE, +2 SYSOP), SURGE (SHELL charges, the same), CLOUT (+25% REP, SYSOP),
    BAIT SHOP (cheaper casts, ELITE), DEEP WATER (rarer and more corrupted catches, SYSOP), BACKDOOR (dev.start /
    dev.stop; SYSOP, hidden till you're SYSOP).
-3. [ ] CHIP DEALER (ELITE; II on SYSOP): a catalog of chips after a DATA CACHE. You still have to get out with what you
+3. [x] (v15.43) CHIP DEALER (ELITE; II on SYSOP): a catalog of chips after a DATA CACHE. You still have to get out with what you
    buy; every chip in it counts as seen (craftable).
 4. [ ] Posts that give chips: BLOOD TOLL (ELITE, OVERVOLT: pay the UPLINK with all but 1 INT, an option there) and
    +1 LAYER (SYSOP, BIOS).
