@@ -82,6 +82,28 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   BIG LOCKER (+5 slots) is an ELITE post (v15.35, in
   ELITE POST 1's place: ELITE needs real posts).
 
+### REP and chip ideas (Greg, meat notes 2026-11-22)
+THE BOARD today: GUEST 10 posts, USER 7, ELITE 4, SYSOP 4, plus the private messages. Ideas for more posts:
+- **Full shell access:** the secret to `dev.start` / `dev.stop`. Expensive, and hidden. (Today dev mode makes a run
+  practice, so it can't farm anything.) Maybe a private message from a feat, or a SYSOP post that doesn't show until
+  you're SYSOP.
+- **Another level for DEADMAN** (75%) **and / or HARDENED** (+3 INT).
+- **More deck power:** +1, then +2 (a post with 2 levels; adds to your cell's budget).
+- **More SHELL charges:** +1, then +2, baked in (a post), or a chip if that fits better.
+- **More REP:** about x1.5. (FAME, an OVERVOLT chip, is +20% for -1 INT.) A post would be a plain multiplier, so keep
+  it small (+10% / +25%) or SYSOP-priced.
+- **A fishing post:** bigger catches, a better rarity, half-price casts, or free casts. (STEADY HANDS is the one now.)
+- **The UPLINK:** cheaper (TOLL PASS, a chip, is -25%), or a full heal, or pay with INT (all but 1) to pass.
+- **REP sub-tabs:** MSGS GUEST USER ELITE SYSOP (27 wide: fits). The list is long now (about 30).
+- **Press F to pay respects** at the end of a boss fight. (Open: what pressing it does. A feat? A line?)
+- **Chips are hard to come by in normal play.** Today: a cracked DATA CACHE 20%, a pier catch 25% (in place of gear),
+  a market 15%, a corp boss 12%, out of about 120 chips. Ideas: a REP post that adds a chip store to DATA CACHES, or a
+  chip dealer (a node, or a stall like THE FENCE).
+- **Decided (Greg, 2026-11-22):** SAFE ROUTE becomes **BENCH LINK**: your WORKBENCH at the UPLINK, once a sector (not a
+  safehouse in place of a node). SPORE CELL (the M0LD) and ADWARE (an ad corp, once ads can be tapped) wait for a way
+  to get them. HEIRLOOM: a `[ TO LOCKER ]` button by TAKE, not automatic; the rewards-screen chips (HEIRLOOM, SALVAGE,
+  GAMBLE, AUCTION) are a batch.
+
 ### The deck and chips
 - (Greg asked: is SPOILS a chip you start with? Yes: the deck comes with STOCK CELL and SPOILS, engine/deck.js DECK_START.)
 

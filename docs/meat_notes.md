@@ -9,13 +9,6 @@ net hack inspiration
 
 misc notes
 ***********************
-- rep unlocks
-    - full shell access. the secret to dev.start / dev.stop expensive also hidden
-    - another step in deadman and or the int booster
-    - extra deck power? like a +1 and a +2
-    - extra deck charges? +1 or +2
-    - something to just boost rep earned buy ~1.5?
-    - 
 
 play review notes
 ***********
@@ -29,17 +22,15 @@ misc mod and items
 lore
 **************
 
-workshops
+shell
 **************
-
-bosses
-************
 
 feats
 *************
 
 neon editor
 *************
+- make an update pass to cover any new stuff
 
 ads
 ****************
