@@ -478,7 +478,7 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
   - **Theme chips:** a family of corps comes up more: CASINO (LUCKEEZ, MONTY, BIDBLITZ, DROP-4), CLOCK (CHANNEL 9,
     COLDBREW, WATCHPOINT, RYDR), DARK (BLACKOUT, NOIR, PREDATOR). From a boss of that family.
   - **QUIET:** no rival hackers. TELEPHONIX ("please hold"). Its flip side, **LOUD:** more rivals, and each pays more.
-  - **SAFE ROUTE:** a safehouse on every sector's map (BACKLOG section 5: "a guaranteed heal each sector").
+  - **SAFE ROUTE** (built v15.45 as **BENCH LINK**: the WORKBENCH at every UPLINK, Greg): was a safehouse on every sector's map (BACKLOG section 5: "a guaranteed heal each sector").
     SAFEHARBOR.
   - **PIER PASS:** a PIER on every sector's map. A rare PIER catch.
   - **ALMANAC:** the next sector's event is shown a sector early. NIMBUS WEATHER.

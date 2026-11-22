@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.44']);
+NEON_FILES.push(['engine/panels.js', 'v15.45']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -379,7 +379,9 @@ function openShop(node) {
 
 // A reward screen: header lines, then a list of mods to pick one from (or skip).
 // next: where to go after (default: the map).
-function openChoice({ title, col, head = [], extra = [], onTake = null, options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, escaped = false, first = null, more = [] }) {
+// alts: more buttons under TAKE for the picked offer: { id, label(o), why(o) (a reason it can't, or null), run(o, { done, swap, options }) }
+// (a corp boss's SPOILS chips: engine/deck.js deckRewardAlts). An offer with mystery: shown as ? ? ? till it's taken (GAMBLE).
+function openChoice({ title, col, head = [], extra = [], onTake = null, options, skipLabel, onSkip, msg, reveal = false, locked = false, next = null, by = null, rival = null, escaped = false, first = null, more = [], alts = [] }) {
   let sel = 0, picked = false;
   // first: { key, art, tell }: FIRST BREACH shows under the header (title, logos, breached line) and holds the reveal;
   // SEE THE CORE swaps it for the rewards, which build in under the header the same way (buildReveal's pre)
@@ -462,6 +464,10 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
     const viewOf = o => o.kind === 'gear' ? itemView(o.key, o.tier) : modView(o.key, upgradeTo(o.key, o.tier));
     options.forEach((o, i) => {
       const v = viewOf(o), up = o.kind !== 'gear' && has(o.key), mc = locked ? C.dim : C.bright;
+      if (o.mystery) {   // GAMBLE (a chip): what it is stays hidden till you take it
+        X({ list: true, id: 'opt' + i, onTap: () => { sel = i; Sound.tick(); }, sel: i === sel, name: '? ? ?', col: mc, faded: locked, right: 'mystery', rightCol: C.rep, reveal: i, revealId: 'opt' + i, rarity: 'rare' });
+        return;
+      }
       if (o.kind === 'gear') {   // a stack of gear: its name on its rarity chip, xN
         X({ list: true, id: 'opt' + i, onTap: () => { sel = i; Sound.tick(); }, sel: i === sel, name: `${v.name} x${o.n}`, gear: o.key, gearTier: o.tier, col: mc, faded: locked,
           right: `${(v.tier ? RARITY[v.rarity].label : '').padStart(6)} gear`, rightCol: mc, reveal: i, revealId: 'opt' + i, rarity: v.rarity, seenKey: o.key });
@@ -479,7 +485,13 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
       const o = options[sel], v = viewOf(o);
       const shown = now >= st.panelT0 + sel * CONFIG.revealGap;
       T(SEP, C.dim);
-      if (shown && o.kind === 'gear') {
+      if (shown && o.mystery) {
+        X({ text: '? ? ?', col: C.rep, bold: true });
+        T('a mystery pick: good, or lame.', C.text);
+        T('take it and see.', C.dim);
+        if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
+        else X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
+      } else if (shown && o.kind === 'gear') {
         const room = itemRoom(o.key, o.tier) && !has('ramdoubler');
         X({ gearHead: o.key, gearTier: o.tier, text: `${v.name} x${o.n}` });
         T(v.tip || v.desc, C.text);
@@ -493,6 +505,10 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
         if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
         else X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
       } else { T('...', C.dim); T(''); T(''); T(''); T(''); T(''); }
+      if (shown && !locked && alts.length) {   // (SPOILS chips: TO LOCKER, SALVAGE, REROLL)
+        const ctx = { options, done: () => { if (!picked) { picked = true; statPick(title, options, o); } if (onTake) onTake(o); leave(); }, swap: nu => { options[sel] = nu; st.choice.options = options.slice(); } };
+        X({ gap: 1, row: alts.map(a => { const w = a.why(o); return { text: a.label(o), id: a.id, disabled: !!w, onTap: () => { if (st.transitioning || a.why(o)) return Sound.deny(); a.run(o, ctx); } }; }) });
+      }
       T(SEP, C.dim);
     }
     if (!by) T('');
@@ -611,6 +627,7 @@ function openReward(node, skipped = false) {
   const sp = skipped ? 0 : deckSpoils(run);   // SPOILS (a chip: engine/deck.js): 1 a heal, 2 cash, in place of the rewards
   if (sp === 1) heal(2); else if (sp === 2) earn(60, run); else if (sp === 3) run.repBonus = (run.repBonus || 0) + 6; else if (sp === 4) { for (let i = 0; i < 2; i++) addItem('wall', 0); }   // (OFFERING, PROTECTION: chips)
   const options = sp ? [] : chipOn('GE1') ? deckGearRewards(node) : rewardOptions(node);   // (GEAR: a chip)
+  if (!sp && !skipped) { const g = deckGambleOption(node, options); if (g) options.push(g); }   // GAMBLE (a chip): a mystery pick
   const loot = skipped ? [] : bossLoot(node);   // loot for the bag (ECON.loot.boss; the user: bosses drop it)
   // FIRST BREACH (the user, 2026-10-29): the first time you ever beat this corp, its logo and its tell come before the
   // rewards (only as the screen builds in after the boss; corpStat counted this breach already)
@@ -624,7 +641,7 @@ function openReward(node, skipped = false) {
     title: 'CORP BREACHED', col: C.accent,
     head: skipped ? [[def.name, C.text], ['boss skipped: no rewards.', C.dangerDim]] : [[def.name, C.text]].concat(escapedLine(), sp ? [[['', 'SPOILS: +2 INT, no rewards.', 'SPOILS: +60cr, no rewards.', 'OFFERING: +6 REP, no rewards.', 'PROTECTION: 2 FWALLs, no rewards.'][sp], C.money]] : []), extra: lootLine(loot),
     by: skipped ? null : profile(),
-    options, locked: skipped || !!sp,
+    options, locked: skipped || !!sp, alts: skipped || sp ? [] : deckRewardAlts(node),   // (HEIRLOOM, SALVAGE, AUCTION: chips, engine/deck.js)
     skipLabel: skipped || sp ? '[ CONTINUE ]' : '[ SKIP  +20cr ]',
     onSkip: skipped || sp ? null : () => { const cr = earnInt(ECON.skip.boss); earn(cr, run); Sound.loot(); },
     msg: skipped ? { text: '> skipjack: boss skipped.', col: C.dangerDim } : breachSummary(),

@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.44']);
+NEON_FILES.push(['engine/deck.js', 'v15.45']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -105,7 +105,7 @@ const DECK_CHIPS = {
   FR5: ['FRESH', 'bios', 'rare', 1, "corps you haven't beaten come up more.", ['NEW', 'FR5'], 'unbeaten corps come up more.'],
   EV2: ['EVENTS', 'bios', 'rare', 1, 'sector events from sector 1.', ['EVT', '!!1'], 'events from sector 1.'],
   AD0: ['ADWARE', 'bios', 'common', 1, 'more ads, and tapping one heals 1 INT.', ['AD!', '+1^'], 'ads heal you.'],
-  SR4: ['SAFE ROUTE', 'bios', 'epic', 2, 'a safehouse on every sector map.', ['[+]', 'SRT'], 'a safehouse every sector.'],
+  SR4: ['BENCH LINK', 'bios', 'epic', 2, 'your WORKBENCH at every UPLINK: shred, build, take from its LOCKER before you push on.', ['[+]', 'LNK'], 'the WORKBENCH at the UPLINK.'],   // (was SAFE ROUTE, a safehouse on every map: Greg, 2026-11-22. engine/runend.js openUplink)
   PP2: ['PIER PASS', 'bios', 'rare', 1, 'a PIER on every sector map, and a rare catch now and then.', ['~~~', 'PIR'], 'a PIER every sector.'],
   AL4: ['ALMANAC', 'bios', 'common', 1, "the next sector's event shows a sector early.", ['(*)', 'ALM'], 'see the next event early.'],
   CS7: ['CASINO', 'bios', 'rare', 1, 'the casino corps come up more: LUCKEEZ, MONTY, BIDBLITZ, DROP-4.', ['$7$', 'CAS'], 'casino corps come up more.'],
@@ -125,10 +125,10 @@ const DECK_CHIPS = {
   OF1: ['OFFERING', 'spoils', 'rare', 1, 'skip every corp boss reward and bank 6 REP instead. (have faith. or pay.)', ['_|_', '+6R'], 'skip rewards: +6 REP.'],
   PT1: ['PROTECTION', 'spoils', 'rare', 1, 'skip every corp boss reward for 2 FWALLs. (nice node you got.)', ['[#]', 'x2 '], 'skip rewards: 2 FWALLs.'],
   GB2: ['GAMBLE', 'spoils', 'epic', 2, 'one mystery pick in the rewards, good or lame. pick it and it is yours.', ['???', 'GMB'], 'a mystery reward.'],
-  AU2: ['AUCTION', 'spoils', 'rare', 2, 'pay credits to reroll a boss reward.', ['$>$', 'AUC'], 'reroll rewards for cr.'],
-  SV1: ['SALVAGE', 'spoils', 'common', 1, 'salvage a reward: its letters, for the WORKBENCH.', ['abc', 'SLV'], 'rewards into letters.'],
+  AU2: ['AUCTION', 'spoils', 'rare', 2, "a corp boss's rewards get [ REROLL ]: pay credits to swap a pick for another (more each time).", ['$>$', 'AUC'], 'reroll rewards for cr.'],
+  SV1: ['SALVAGE', 'spoils', 'common', 1, "a corp boss's rewards get [ SALVAGE ]: take a pick as its letters, for the WORKBENCH.", ['abc', 'SLV'], 'rewards into letters.'],
   RC1: ['RELIC', 'spoils', 'legendary', 2, 'now and then a corp boss adds an exotic mod to its rewards: one more pick.', ['<X>', 'RLC'], 'an exotic, now and then.'],   // (THE BOARD's RELIC post gives it: deckRelicPick)
-  HL2: ['HEIRLOOM', 'spoils', 'epic', 2, "the mod you pick at a corp boss goes into your WORKBENCH's LOCKER, for a later run (on you if it's full).", ['{L}', 'HLM'], 'your pick: to the LOCKER.'],
+  HL2: ['HEIRLOOM', 'spoils', 'epic', 2, "a corp boss's rewards get [ TO LOCKER ]: your pick goes into your WORKBENCH's LOCKER, for a later run.", ['{L}', 'HLM'], 'your pick: to the LOCKER.'],
   // PSU (cells: their power is deckCellPower)
   BO1: ['BROWNOUT', 'psu', 'epic', 0, 'power 12, but one random chip is off each run (a note says which).', ['[~]', 'Bo~'], 'power 12, one chip off.'],
   PO1: ['POTATO', 'psu', 'common', 0, 'power 4, but chips that cost 1 cost nothing.', ['(o)', 'Po4'], 'power 4, 1s are free.'],
@@ -187,10 +187,8 @@ const DECK_BETA = {
   HS1: 'starting a row in needs map work (the start node and its links)',
   FR5: 'corp weights scramble seeds: needs the placeholder corps (Seeds)', CS7: 'the same: placeholder corps', CK9: 'the same', DK6: 'the same',
   EV2: "an event in sector 1 needs its own stream (rollEvent skips sector 1)", AD0: 'there are no ads to tap yet',
-  SR4: 'a safehouse on every map needs map work', PP2: 'a PIER on every map needs map work',
+  PP2: 'a PIER on every map needs map work',
   AL4: "the next sector's event is only made when you push on", MM4: 'needs the last path saved per seed, and drawn on the map',
-  GB2: 'the mystery pick needs its own reward card', AU2: 'the reroll needs a button on the rewards screen',
-  SV1: "salvage needs a third button on a reward (and the bench's letters)", HL2: 'needs a hook after you pick a reward',
   SPC: 'the power works; the mold creeping over your board is still to draw',
 };
 const deckBeta = k => !!DECK_BETA[k];
@@ -579,6 +577,37 @@ function deckCodexDeath(run, key) {
   if ((save.codexBits[key] || 0) >= 3) return null;
   save.codexBits[key] = (save.codexBits[key] || 0) + 1; persist();
   return corpDef(key).name;
+}
+// ---------- the rewards-screen SPOILS chips (Greg, 2026-11-22: batch 5). engine/panels.js openReward hands these to
+// openChoice: GAMBLE adds a mystery pick; HEIRLOOM, SALVAGE and AUCTION are buttons under TAKE (openChoice's alts).
+// GAMBLE: one more pick, hidden till you take it: half the time a mod a step rarer, half the time one plain common gear.
+function deckGambleOption(node, options) {
+  const run = st.run; if (!chipOn('GB2', run)) return null;
+  const r = rngFor(run.seed, 'gamble', node.id);
+  if (r() < 0.5) { const m = pickMods(r, modsOfKind('gen', 'minor'), 1, options)[0]; if (m) return { key: m.key, tier: Math.min(m.tier + 1, tierCount(MODS[m.key]) - 1), mystery: true }; }
+  const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
+  return pool.length ? { kind: 'gear', key: pickR(pool, r), tier: 0, n: 1, mystery: true } : null;
+}
+// the letters a pick salvages into (its shred code: engine/bench.js shredCode)
+const deckSalvageLetters = o => shredCode({ kind: o.kind === 'gear' ? 'gear' : 'mod', key: o.key }).split('').filter(ch => /[A-Z0-9]/.test(ch));
+function deckRewardAlts(node) {
+  const run = st.run, alts = [];
+  if (chipOn('HL2', run)) alts.push({ id: 'heirloom', label: () => '[ TO LOCKER ]',
+    why: o => o.mystery ? 'mystery' : !benchOpen() ? 'no WORKBENCH' : !benchSave().locker.some(x => !x) ? 'LOCKER full' : o.kind === 'gear' && ITEMS[o.key].chip ? 'a chip' : null,
+    run: (o, c) => { const lk = benchSave().locker, i = lk.findIndex(x => !x);
+      lk[i] = o.kind === 'gear' ? { kind: 'gear', key: o.key, tier: o.tier || 0, n: o.n || 1 } : { kind: 'mod', key: o.key, tier: o.tier || 0, n: 1 }; persist();
+      Sound.buy(); setMsg(`> heirloom: ${(o.kind === 'gear' ? itemView(o.key) : modView(o.key)).name.toLowerCase()} is in your LOCKER.`, C.rep); c.done(); } });
+  if (chipOn('SV1', run)) alts.push({ id: 'salvage', label: o => o.mystery ? '[ SALVAGE ]' : `[ SALVAGE: ${deckSalvageLetters(o).join('')} ]`,
+    why: o => o.mystery ? 'mystery' : !benchOpen() ? 'no WORKBENCH' : null,
+    run: (o, c) => { const got = deckSalvageLetters(o); benchAdd(got); persist();
+      Sound.comp(); setMsg(`> salvaged: ${got.join(' ')} for the WORKBENCH.`, C.accent); c.done(); } });
+  if (chipOn('AU2', run)) { let n = 0; const price = () => costInt(3) * ((run.sector || 0) + 1) * (n + 1);   // (30cr x the sector, more each time)
+    alts.push({ id: 'auction', label: () => `[ REROLL ${price()}cr ]`, why: () => !canSpend(price()) ? 'credits' : null,
+      run: (o, c) => { const p = price(), r = rngFor(run.seed, 'auction', node.id, n), others = c.options.filter(x => x !== o);
+        const nu = r() < ECON.reward.gear ? rewardGear(r) : pickMods(r, modsOfKind('gen', 'minor'), 1, others)[0];
+        if (!nu) return Sound.deny();
+        run.credits -= p; n++; c.swap(nu); Sound.buy(); setMsg(`> auction: -${p}cr. a new pick.`, C.money); } }); }
+  return alts;
 }
 // GEAR (SPOILS): 3 gear in place of the mods
 function deckGearRewards(node) {

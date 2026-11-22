@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.44']);
+NEON_FILES.push(['engine/bench.js', 'v15.45']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -172,13 +172,14 @@ function benchMatches() {
 const benchBusy = () => { const b = st.bench; return !b || !!b.anim || !!b.shredAnim || st.transitioning || !!st.wipe; };
 
 // ---- open / leave
-function openBench(node) {
+// back: where LEAVE goes (BENCH LINK's UPLINK: engine/runend.js); else the map.
+function openBench(node, back = null) {
   benchSave();
   rootLettersGone();   // (ROOT moved in: its spare r / o / t leave the bench. engine/quests.js)
   node.bench = true;   // going back in here brings you back to the bench (engine/run.js canGoBack)
   st.bench = { node, tab: 'build', slots: [null, null, null, null, null], slotT: [0, 0, 0, 0, 0], slotX: [10, 14, 18], slotY: 15, fx: [], kb: { up: true, t0: performance.now() + 380 },
     log: ['> workbench online.'], shSel: 0, shArea: { top: 0 }, bkSel: 0, bkT: 0, bkArea: { top: 0 }, lkView: 'take', lkSel: 0, stSel: 0, press: null,
-    anim: null, shredAnim: null, flash: null };
+    anim: null, shredAnim: null, flash: null, back };
   benchPanel();
   const bs = benchSave();
   rootStart();   // ROOT's quest starts here, or in your deck (engine/quests.js)
@@ -205,7 +206,8 @@ function benchLeave() {
   if (!b || benchBusy()) return;
   b.kb = { up: false, t0: performance.now() };
   persist();
-  swapTo(() => { st.bench = null; toMap(); });
+  const back = b.back;
+  swapTo(() => { st.bench = null; if (back) back(); else toMap(); });
 }
 function benchTab(t) {
   const b = st.bench;

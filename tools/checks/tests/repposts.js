@@ -62,6 +62,22 @@ module.exports = { name: 'repposts', body: `
     check(run.integrity === 1 && run.sector === s0 + 1 && run.credits === 0, 'SACRIFICE: down to 1 INT, on to the next sector, no credits paid');
     run.integrity = 1; await swapTo(() => openUplink()); await sleep(400);
     check(!hits.find(h => h.id === 'sacrifice'), 'at 1 INT: nothing to give, no button'); }
+  // batch 5 (v15.45): GAMBLE, AUCTION, HEIRLOOM, SALVAGE on a corp boss's rewards; BENCH LINK at the UPLINK
+  { save.legacy.bench = 1; B.startRun('SPOILS', false); await settle('start');
+    const run = st.run, node = Object.values(run.map).find(n => n.type === 'corp'); run.credits = 999; benchSave().locker.fill(null);
+    run.chips = []; openReward(node); await sleep(1500); const plainN = st.choice.options.length; check(!hits.find(h => /^(heirloom|salvage|auction)$/.test(h.id)), 'no SPOILS chips: no extra buttons');
+    run.chips = ['GB2', 'AU2']; openReward(node); await sleep(1500);
+    const opts = st.choice.options; check(opts.length === plainN + 1 && opts[opts.length - 1].mystery, 'GAMBLE: one more pick, a mystery');
+    const k0 = opts[0].key, c0 = run.credits; hits.find(h => h.id === 'auction').onTap(); await sleep(100);
+    check(st.choice.options[0].key !== k0 && run.credits < c0, 'AUCTION: a reroll swaps the pick, for credits: ' + (c0 - run.credits) + 'cr');
+    run.chips = ['HL2']; openReward(node); await sleep(1500); const kh = st.choice.options[0].key; hits.find(h => h.id === 'heirloom').onTap(); await sleep(300);
+    check(benchSave().locker.some(x => x && x.key === kh) && !run.mods.includes(kh), 'HEIRLOOM: the pick goes to the LOCKER, not onto you');
+    run.chips = ['SV1']; openReward(node); await sleep(1500); const o = st.choice.options[0], want = deckSalvageLetters(o), l0 = benchCount();
+    hits.find(h => h.id === 'salvage').onTap(); await sleep(300);
+    check(want.length > 0 && benchCount() === l0 + want.length, 'SALVAGE: the pick as its letters: ' + want.join(''));
+    run.chips = ['SR4']; await swapTo(() => openUplink()); await sleep(400); hits.find(h => h.id === 'uplbench').onTap(); await sleep(1500);
+    check(!!st.bench, 'BENCH LINK: the WORKBENCH from the UPLINK'); benchLeave(); await sleep(1800);
+    check(st.panelTitle === 'UPLINK', '...and back to the UPLINK'); }
   // CHROMATOPHORE
   save.legacy.chroma = 0;
   const few = playerPalettes().length, locked = PLAYER_STYLES.map((s, i) => i).filter(i => PLAYER_STYLES[i].locked);

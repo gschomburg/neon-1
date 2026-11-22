@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.44']);
+NEON_FILES.push(['engine/runend.js', 'v15.45']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -270,7 +270,8 @@ function openUplink() {
       name: 'PASS: half the fee', clip: 'ellipsis', col: usePass ? C.text : C.mid,
       right: '-' + Math.round(t.raw * ECON.uplink.pass), rightCol: usePass ? C.money : C.dim });
     // the list gets what the rest of the screen leaves (the rest: ~22 rows)
-    const rest = 23 + (leverage() ? 1 : 0) + (t.cut ? 1 : 0) + (questCarryLine() ? 1 : 0) + (canSac() ? 1 : 0);   // (the quest's reminder line, below)
+    const link = chipOn('SR4', run) && benchOpen();   // BENCH LINK (a chip): the WORKBENCH from here
+    const rest = 23 + (leverage() ? 1 : 0) + (t.cut ? 1 : 0) + (questCarryLine() ? 1 : 0) + (canSac() ? 1 : 0) + (link ? 1 : 0);   // (the quest's reminder line, below)
     const rows = Math.max(1, Math.min(items.length, L.hc - 2 - rest));
     if (items.length) scrollArea(X, T, area, items, rows, 'upl');
     else T('no mods to carry.', C.dim);
@@ -289,6 +290,7 @@ function openUplink() {
     const w = Math.max(30, subPush.length + 8, subCash.length + 8);   // the two buttons the same width (drawBox pads 8)
     X(ok ? { box: true, text: `${sp('PAY')}   ${sp(t.fee + 'cr')}`, sub: subPush, id: 'push', onTap: go, minW: w, col: C.money }
       : { box: true, text: `${sp('REMOVE')}   ${sp('MODS')}`, sub: subPush, id: 'push', onTap: go, minW: w, disabled: true, disCol: C.danger });
+    if (link) B('[ WORKBENCH ]', 'uplbench', () => { if (st.transitioning) return; st.uplink = null; swapTo(() => openBench({ id: 'uplink' + run.sector, type: 'uplink' }, openUplink)); });
     if (canSac()) B(`[ SACRIFICE: ${zombie() ? '+' + sacGive() + ' ROT' : '-' + sacGive() + ' INT'}, no fee ]`, 'sacrifice', sacrifice);   // (a chip)
     X({ box: true, text: run.practice ? `${sp('END')}   ${sp('RUN')}` : `${sp('EARN')}   ${sp(repFor(run))}   ${sp('REP')}`, sub: subCash, id: 'cash', onTap: cashOut, minW: w, col: C.rep });
     if (!run.practice) T(legacyLv('dms') ? `dying later keeps ${25 * Math.min(3, legacyLv('dms'))}% of your REP.` : 'die later and you bank nothing.', C.dim);
