@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.46']);
+NEON_FILES.push(['engine/save.js', 'v15.47']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -144,6 +144,7 @@ const LEGACY = [
   { key: 'backdoor', tier: 4, name: 'BACKDOOR', desc: 'the secret: THE SHELL shows you dev.start (every command, no charges, but the run turns practice) and dev.stop.', costs: [1500] },
   { key: 'dealer2', tier: 4, ladder: 'dealer', needs: 'dealer', name: 'CHIP DEALER II', desc: 'the catalog has 5 chips (was 3), one of them rare or better.', costs: [600] },
   { key: 'layer', tier: 4, name: '+1 LAYER', chip: 'LY1', desc: 'gives you the +1 LAYER chip (BIOS) for your deck: every corp has one more layer. more REP, more risk.', costs: [500] },   // (engine/run.js corpPlan)
+  { key: 'jack3', tier: 4, needs: 'deck3', name: 'PARTY LINE', desc: 'a third CREW JACK on your deck: one more of your crew plugged in.', costs: [600] },   // (engine/deck.js deckJackMax)
   { key: 'market2', tier: 4, ladder: 'market', needs: 'market', name: 'LOYALTY CARD II', desc: 'every market is 10% cheaper (was 5%).', costs: [400] },
   // ---- PRIVATE MESSAGES (a feat opens them)
   { key: 'bossloot', pm: 'bosshunter', name: 'BOSS LOOT', desc: 'boss gear (FLARE, BEES...) can turn up in black markets.', costs: [180] },

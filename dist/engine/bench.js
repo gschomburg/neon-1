@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.46']);
+NEON_FILES.push(['engine/bench.js', 'v15.47']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -336,8 +336,9 @@ function benchBuild(code = null, force = false) {
   const view = rc ? (rc.kind === 'mod' ? modView(rc.key, 0) : itemView(rc.key, 0)) : null;
   const spent = b.slots.slice(0, 3).concat(rc && rc.kind === 'mod' ? [] : [mult], [b.slots[4]]).filter(Boolean);   // (slot 4: the BLANK, spent on a chip)
   const free = !!(st.run && st.run.freeBuild); if (free) st.run.freeBuild = false;   // FREE PRESS (a chip: engine/deck.js): the first build uses no letters
-  if (!free) for (const ch of spent) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }
-  b.anim = { t0: performance.now(), word, slots: b.slots.slice(0, 3), x: b.slotX.slice(), y: b.slotY, rc, view, n, where, lucky: code === '?', mult };
+  const kludge = !rc && !free && jackLv('kludge') > 0 && !b.kludged; if (kludge) b.kludged = true;   // KLUDGE (a CREW JACK: engine/deck.js): a failed build gives its letters back, once a WORKBENCH
+  if (!free && !kludge) for (const ch of spent) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }
+  b.anim = { t0: performance.now(), word, slots: b.slots.slice(0, 3), x: b.slotX.slice(), y: b.slotY, rc, view, n, where, lucky: code === '?', mult, kludge };
   b.slots = [null, null, null, null, null];
   persist();
   Sound.charge(BENCH.build.charge / 1000);
@@ -346,7 +347,7 @@ function benchBuild(code = null, force = false) {
 function benchBuildDone(a) {
   const b = st.bench;
   b.anim = null;
-  if (!a.rc) { benchSay(`> build ${a.word}: nothing. the components burned.`); return; }   // (the fizzle played as it crumbled)
+  if (!a.rc) { benchSay(a.kludge ? `> build ${a.word}: nothing. KLUDGE taped the components back.` : `> build ${a.word}: nothing. the components burned.`); return; }   // (the fizzle played as it crumbled)
   const nm = a.view.name + (a.n > 1 ? ` x${a.n}` : '');
   benchSay(`> build ${a.word}${a.lucky ? ' --force' : ''}: ${nm} -> ${a.where === 'loot' ? 'the loot bag' : a.where === 'locker' ? 'the locker' : 'your ' + a.where}.`);
   if (a.mult && a.rc.kind === 'gear') benchSay(a.n > 1 ? `  x${a.mult}: it took. ${a.n} of them.` : `  x${a.mult}: it didn't take.`);

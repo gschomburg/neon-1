@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.46']);
+NEON_FILES.push(['engine/panels.js', 'v15.47']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -149,7 +149,7 @@ function pickMods(r, pool, k, exclude = []) {
 }
 const WIRES_PULL = 0.4;   // while you carry a BOX OF WIRES, the chance an offer from a pool it's in is one (data/mods.js wires)
 
-const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale() * shopMult()));   // (priceScale: data/economy.js) (shopMult, engine/deck.js: CHEAPSKATE, INFLATION, LOYALTY CARD)
+const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? deckRepairPrice(o.price) : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale() * shopMult()));   // (priceScale: data/economy.js) (shopMult, engine/deck.js: CHEAPSKATE, INFLATION, LOYALTY CARD)
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
 // What a market pays for one of a gear stack: value gear (DUDS ... WALLET) its worth, the rest a share of its price.
@@ -258,7 +258,8 @@ function openShop(node) {
     if (o.sold || !canSpend(price)) return Sound.deny();
     if (o.kind === 'repair' && !canHeal()) return Sound.deny();
     const name = defOf(o).name.toLowerCase();
-    const finish = () => { statBuy(o, price); run.credits -= price; o.free = false; if (o.kind === 'mod') o.got = modTier(o.key); if (o.kind === 'item' ? --o.n <= 0 : o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
+    const finish = () => { if (o.kind === 'repair') deckRepairBought(); statBuy(o, price);   // (MOTHER, a CREW JACK: engine/deck.js)
+      run.credits -= price; o.free = false; if (o.kind === 'mod') o.got = modTier(o.key); if (o.kind === 'item' ? --o.n <= 0 : o.kind !== 'repair') o.sold = true; Sound.buy(); setMsg(`> bought ${name}.`, C.money); };
     // No room: pick one of yours to replace (the purchase goes through after the swap).
     if (o.kind === 'item') { if (!itemRoom(o.key, o.tier)) return openSwap('item', o.key, o.tier, finish); addItem(o.key, o.tier); }
     if (o.kind === 'mod') {

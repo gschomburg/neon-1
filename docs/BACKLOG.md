@@ -31,7 +31,8 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
   **Decided (Greg, 2026-11-21), v15.22:** chips need no blueprint at all now, epic+ too: seen and the parts is enough.
 - **A CRASH chip that shreds everything** (Greg, 2026-11-21: keep it): cash out or die, and all your mods and gear shred
   into components (docs/DECK.md CRASH, under BLACK BOX).
-- **Chips for the empty groups:** GLYPH, the CREW jacks, UPLINK, PORTS.
+- **Chips for the empty groups:** UPLINK, PORTS (later; its card is cryptic for now). The CREW jacks (v15.47) and GLYPH
+  (v15.48) take no chips: crew plug in, and the glyph has its bonus (Greg, 2026-11-22).
 
 ## Playtest notes (Greg, meat notes 2026-11-21: "play review notes")
 Filed from the meat notes as written; nothing here is checked or built yet unless it says so.

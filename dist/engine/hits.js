@@ -2,7 +2,7 @@
 // (HIT_FX, BOARD_FX; corps add their boss mods' with defineModFx). Moved out of engine/run.js (2026-11-05).
 // Needs engine/run.js first (START_NOTE, END_FX: the last line here fills all four tables).
 'use strict';
-NEON_FILES.push(['engine/hits.js', 'v15.46']);
+NEON_FILES.push(['engine/hits.js', 'v15.47']);
 
 // Queue a line for after the hit (see onTrap): a mod saying what it just showed you.
 // fn(now) runs as the line shows (that's when the change appears on the node).
@@ -24,6 +24,9 @@ function blockHit(t, i) {
     msg = '> ICE. god mode: no damage.';
   } else if (hkUp('brick')) {   // BRICK (crew) takes it
     msg = hkTakeHit();
+  } else if (deckBrickBlock()) {   // BRICK (a CREW JACK: engine/deck.js)
+    Sound.shield(); flash(C.accent, 0.12, 0.3);
+    msg = '> ICE. BRICK blocked it (his jack).';
   } else if (has('forgery') && (t.loaded || (t.forged && !lv.forgeUsed))) {
     Sound.shield();
     if (!t.loaded) lv.forgeUsed = true;   // a counterfeit (HAUTE//COUTURE): one free per layer

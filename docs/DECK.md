@@ -608,6 +608,7 @@ yet when you'd scan). `kill` takes `-9` so it can't go off by accident.
   - A HARD mode code: every corp a tier higher, REP x2.
 
 ### PORTS (2): things outside the page
+**Decided (Greg, 2026-11-22):** later. Its card is cryptic for now: "no peripherals found..." / "searching...".
 - The second window (THE SHELL in its own tab), and TWIN's tab or your phone as a second screen.
 - More (each one turns a browser feature on, so it waits until it's built):
   - **MIC:** the mic tricks: PHREAK's whistle, blow on the mold, clap a rhythm (BACKLOG section 4, "the mic").
@@ -654,6 +655,11 @@ yet when you'd scan). `kill` takes `-9` so it can't go off by accident.
     (Perfects do pay REP when you cash out, with depth, breaches, credits and sectors.)
 
 ### CREW (2-3 jacks, mk III): crew links
+**Built v15.47 (Greg, 2026-11-22): no chips.** Your hired crew plug in (a window like the CPU's), and their boon is on
+every run, no call needed. 1 power a jack, 2 at LVL 2 (their LVL 2 post makes the boon stronger). 2 jacks; PARTY LINE
+(SYSOP) a 3rd. The boons are in engine/deck.js DECK_JACKS. DIALUP's map row was dropped (Greg: not worth it): he gives
+TUNNELs. NULL's rival comes in on 1 bar (LVL 2: out at once), once a sector. ROOT: SHELL charges. The ideas below were the
+first pass.
 - Plug in a crew member you've hired: their calls come more often, or one free call a run. Their LVL 2 perk might
   need the link.
 - More (one per crew member):

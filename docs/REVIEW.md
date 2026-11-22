@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **CREW JACKS** (v15.47): tap the jacks twice on the mk III board. Your hired crew plug in, 1 power each (2 at LVL 2), and their boons are on every run. Worth a look: are the numbers right (b0y every layer at LVL 2 is strong; it skips layers under 5 nodes and bosses), and is PARTY LINE (a 3rd jack, SYSOP 600) worth it? PORTS' card is cryptic now.
+
 - [ ] **ADWARE and SPORE CELL** (v15.46, still BETA: try them on the dev deck): ADWARE doubles the ads, and a button in one heals 1 INT. SPORE CELL's mold creeps over your deck from the PSU, a little more each run.
 
 - [ ] **The rewards-screen chips and BENCH LINK** (v15.45, out of BETA): GAMBLE (a ? ? ? pick), HEIRLOOM ([ TO LOCKER ]), SALVAGE ([ SALVAGE: SNP ]: the pick as letters), AUCTION ([ REROLL 30cr ], more each time). BENCH LINK: [ WORKBENCH ] at the UPLINK. They're SPOILS chips, so one at a time.

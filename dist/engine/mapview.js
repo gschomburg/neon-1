@@ -1,7 +1,7 @@
 // NeoN+1 engine/mapview.js: the run's map (buildMap), the results screen's map (drawMapView), and a node's info.
 // Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/mapview.js', 'v15.46']);
+NEON_FILES.push(['engine/mapview.js', 'v15.47']);
 
 // Map: final node at the top, start at the bottom. Edges are dotted lines.
 // x for a node; start / final nodes sit in the middle lane.
@@ -247,6 +247,7 @@ function nodeInfo(n) {
     const rules = corpRules(d, n.tier);
     if (rules) T(rules, C.mid);
     if (chipOn("OMNI") && CORP_TELL[d.key]) T('tell: ' + CORP_TELL[d.key], C.rep, true);   // OMNI'S EYE (a chip: engine/deck.js)
+    else if (CORP_TELL[d.key] && deckPopsTell(n)) T('POPS: ' + CORP_TELL[d.key], C.rep, true);   // POPS (a CREW JACK: engine/deck.js)
     if (d.bossDesc) T(d.bossDesc, C.dangerDim, true);
     if (n.mod && ANOMALIES[n.mod]) T(`+ ${ANOMALIES[n.mod].name}: ${ANOMALIES[n.mod].desc}`, C.money, true);
     if (questHintNode(n)) T('! POPS: the DISC could be in here.', C.rep, true);   // (engine/quests.js)

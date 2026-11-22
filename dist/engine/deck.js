@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.46']);
+NEON_FILES.push(['engine/deck.js', 'v15.47']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -234,7 +234,31 @@ const archivePool = () => modsFound('minor', 'gen', 'corp').filter(k => save.see
   .sort((a, b) => MODS[a].name.localeCompare(MODS[b].name));
 const deckPost = k => (typeof LEGACY !== 'undefined' && LEGACY.find(u => u.key === k)) || { name: k.toUpperCase(), desc: '' };
 const deckCorps = () => [null].concat(Object.keys(CORPS).sort((a, b) => CORPS[a].name.localeCompare(CORPS[b].name)));
-const DECK_CREW = [['POPS', 'one tell hint a sector'], ['NANA', 'a PATCH every sector'], ['BRICK', 'first ICE hit blocked'], ['KLUDGE', 'failed crafts refund']];
+// CREW JACKS (mk III; Greg, 2026-11-22): no chips. Plug in crew you've hired (THE BOARD's CREW posts) and their boon is
+// on for every run, no call needed. Their LVL 2 post makes it stronger: [LVL 1, LVL 2]. A jack costs power, 1 (2 at
+// LVL 2), after the chips (deckPower). 2 jacks; PARTY LINE (THE BOARD, SYSOP) is a 3rd. run.jacks: { id: 1 | 2 }.
+// The hooks: deckJackSector (NANA, DIALUP, KLUDGE's letter), engine/hits.js blockHit (BRICK), engine/hackers.js hkSpawn
+// (NULL), deckClock (BAUD), engine/panels.js priceOf (MOTHER), engine/bench.js benchBuild (KLUDGE), engine/run.js onSafe
+// (HYPE), deckLayer (b0y), deckCharges (ROOT), engine/mapview.js nodeInfo (POPS).
+const DECK_JACKS = {
+  pops: ['one corp a sector shows its tell on the map', 'two corps a sector show their tell on the map'],
+  nana: ['a PATCH every sector', 'two PATCHes every sector'],
+  brick: ['your first ICE hit each sector is blocked', 'your first ICE hit in each corp is blocked'],
+  null: ['once a sector, a rival comes in on 1 bar', "once a sector, a rival's out the moment it comes in"],
+  dialup: ['a TUNNEL every sector', 'a TUNNEL and a SKIP every sector'],
+  baud: ['layer clocks +1s', 'layer clocks +2s'],
+  mother: ['market heals cost half', 'market heals cost half, and the first a sector is free'],
+  kludge: ['a failed build gives its letters back, once a WORKBENCH', 'that, and +1 letter every sector'],
+  hype: ['perfect layers pay +5cr', 'perfect layers pay +10cr'],
+  b0y: ["a corp's first layer: he rules out ICE till 3 are left", 'every layer: he rules out ICE till 3 are left'],
+  root: ['+1 charge for THE SHELL', '+2 charges for THE SHELL'],
+};
+const jackLv = (id, run = st.run) => (run && run.jacks && run.jacks[id]) || 0;
+const deckJackMax = () => !deckOpen(3) ? 0 : 2 + (DECK.real ? Math.min(1, legacyLv('jack3')) : 1);
+// who can plug in: crew you've hired (every one on the dev deck)
+const deckCrewPool = () => Object.keys(DECK_JACKS).filter(id => HACKERS[id] && (!DECK.real || hkCrewOn(id)));
+const deckCrewLv = id => hkLvl2(id) ? 2 : 1;
+const deckJacked = () => { const pool = deckCrewPool(); return [...DECK.crew].filter(id => pool.includes(id)).slice(0, deckJackMax()); };
 const DECK_CODES = {
   '00001111': '0x0F: OVERCLOCK. your cell runs at F (15). enter it again to stop.',
   '11111111': '0xFF: OVERFLOW wakes up. his seed is armed for your next run.',
@@ -380,18 +404,21 @@ function deckRunChips(run) {
   if (keys.includes('HC1')) keys = keys.filter(k => DECK_CHIPS[k][1] !== 'crash');   // HARDCORE: no CRASH chip works
   let brown = null;   // BROWNOUT (a cell): one of the others is off this run (the run's seed picks it)
   if (keys.includes('BO1') && run) { const pool = keys.filter(k => DECK_CHIPS[k][1] !== 'psu'); if (pool.length) { brown = pickR(pool, rngFor(run.seed, 'brownout')); keys = keys.filter(k => k !== brown); } }
-  const spoils = d.spoils;
+  const spoils = d.spoils, crew = {};
+  for (const id of pw.crewOn) crew[id] = deckCrewLv(id);   // CREW JACKS
   DECK = was;
-  return { keys, spoils, brown };
+  return { keys, spoils, brown, crew };
 }
 // INT a chip costs (or gives) as a run starts
 const DECK_INT = { DM3: 2, RX9: -1, GR8: -1, LK7: -1, FM2: -1, SK1: -1, FI2: 2, DN1: -1, GL2: -2, CH1: -1, TP1: -1, RE1: -1, LG2: -1, UV1: 1, PD2: 2 };
 function deckRunStart(run, opts = {}) {
   if (opts.tutorial || st.mp) return;
-  const { keys, spoils, brown } = deckRunChips(run);
+  const { keys, spoils, brown, crew } = deckRunChips(run);
   deckRunCarry(run);   // INSURANCE and DEAD DROP from your last death (they come whatever's slotted now)
   // PURGE is a chip once you have the deck (Greg, 2026-11-22): no PURGE chip on, no PURGE at the start
   if (save.deck && !(keys || []).includes('PG0')) { const i = run.items.findIndex(x => x.key === 'purge'); if (i >= 0) run.items.splice(i, 1); }
+  run.jacks = crew || {};   // CREW JACKS (DECK_JACKS): on with no chips too
+  if (Object.keys(run.jacks).length) deckJackSector(run);   // (the first sector's PATCH, TUNNEL...)
   if (!keys || !keys.length) return;
   run.chips = keys; run.spoils = spoils || 0;
   deckCharges(run);   // THE SHELL's charges, full
@@ -451,7 +478,7 @@ const deckPriceMult = (run = st.run) => !run || !run.chips ? 1 : (chipOn('CH1', 
 // the UPLINK's fees (engine/runend.js uplinkMin, uplinkFee): TOLL PASS -25%
 const deckUplinkMult = (run = st.run) => chipOn('TP1', run) ? 0.75 : 1;
 // layer clocks (engine/run.js makeTimer): LAG +2s, SHORT FUSE -2s
-const deckClock = () => (chipOn('LG2') ? 2 : 0) - (chipOn('SF2') ? 2 : 0);
+const deckClock = () => (chipOn('LG2') ? 2 : 0) - (chipOn('SF2') ? 2 : 0) + jackLv('baud');   // (BAUD: a CREW JACK)
 // an ICE hit (engine/run.js onTrap): GLASS pays, GLITCH glitches (worse every hit). Returns a line to add.
 function deckIceHit(t) {
   const run = st.run; let msg = '';
@@ -468,13 +495,62 @@ function deckIceHit(t) {
 // a new layer (engine/run.js enterLayer): RED EYE marks one ICE (not a $ node), from the run's seed
 // SYSOP'S KEY (RIPPED) marks the real node on a corp's first layer, the way 0DAY does (t.zd)
 function deckLayer(lv, c) {
+  deckB0yJack(lv, c);   // b0y (a CREW JACK)
   if (chipOn('SY4') && c.idx === 0 && c.hasBoss && lv.n > 1) lv.tiles[lv.safe].zd = true;
   if (!chipOn('RE1') || lv.n < 3) return;
   const ice = lv.tiles.filter(t => !t.safe && !t.loaded && !t.quantum);
   if (ice.length) pickR(ice, rngFor(st.run.seed, 'redeye', c.node.id, c.idx)).ruledOut = true;
 }
+// ---------- CREW JACKS' boons in a run (DECK_JACKS) ----------
+// every sector, the first one too (deckRunStart, deckSector): NANA's PATCHes, DIALUP's TUNNEL (and SKIP), KLUDGE's letter
+function deckJackSector(run) {
+  const got = [], give = (key, n, who) => { let k = 0; for (let i = 0; i < n; i++) if (addItem(key, 0)) k++; if (k) got.push(who + ' +' + (k > 1 ? k + ' ' : '') + ITEMS[key].name); };
+  if (jackLv('nana', run)) give('patch', jackLv('nana', run), 'NANA');
+  if (jackLv('dialup', run)) { give('tunnel', 1, 'DIALUP'); if (jackLv('dialup', run) > 1) give('skip', 1, 'DIALUP'); }
+  if (jackLv('kludge', run) > 1 && benchOpen()) { const ch = benchBonusLetter(); if (ch) { benchAdd([ch]); persist(); got.push('KLUDGE +' + ch); } }
+  if (got.length) setTimeout(() => { if (st.run === run) setMsg('> crew: ' + got.join(', ') + '.', C.accent); }, 2200);
+  return got;
+}
+// BRICK: your first ICE hit each sector (LVL 2: each corp) is blocked (engine/hits.js blockHit)
+function deckBrickBlock() {
+  const n = jackLv('brick'), run = st.run, c = st.corp; if (!n || !c) return false;
+  if (n > 1) { if (c.brickJack) return false; c.brickJack = true; return true; }
+  if (run.brickSec === (run.sector || 0)) return false;
+  run.brickSec = run.sector || 0; return true;
+}
+// NULL: once a sector, a rival comes in on 1 bar (LVL 2: it's out as it comes in) (engine/hackers.js hkSpawn)
+function deckNullJack(h) {
+  const n = jackLv('null'), run = st.run; if (!n || !run || run.nullSec === (run.sector || 0)) return;
+  run.nullSec = run.sector || 0;
+  if (n > 1) { setTimeout(() => { if (!h.out && st.run === run) hkOut(h, '*NULL was waiting. disconnected.*'); }, 1400); return; }
+  h.hp = 1;
+  setTimeout(() => { if (st.run === run && !h.out) setMsg('> null: ' + hkName(h.id).toLowerCase() + ' comes in on 1 bar.', hkInk('null')); }, 1400);
+}
+// MOTHER: market heals cost half (LVL 2: the first a sector is free) (engine/panels.js priceOf, and its buy)
+const deckRepairPrice = (p, run = st.run) => { const n = jackLv('mother', run); return !n ? p : n > 1 && run.motherSec !== (run.sector || 0) ? 0 : Math.round(p / 2); };
+const deckRepairBought = (run = st.run) => { if (jackLv('mother', run) > 1) run.motherSec = run.sector || 0; };
+// b0y: rules out ICE till 3 maybes are left: a corp's first layer (LVL 2: every layer). Not a boss layer, and only
+// layers of 5+ nodes (on smaller ones it would all but solve it). (deckLayer)
+function deckB0yJack(lv, c) {
+  const n = jackLv('b0y'); if (!n || lv.boss || lv.n < 5 || (n < 2 && c.idx !== 0)) return;
+  const ice = lv.tiles.filter(t => !t.safe && !t.loaded && !t.quantum && !t.forked && !t.ruledOut);
+  const out = shuffle(ice.slice(), rngFor(st.run.seed, 'b0yjack', c.node.id, c.idx)).slice(0, Math.max(0, ice.length - 2));
+  for (const t of out) t.ruledOut = true;
+  if (out.length) setTimeout(() => { if (st.lv === lv) setMsg("> b0y: it's one of these 3.", hkInk('b0y')); }, 700);
+}
+// POPS: one corp a sector (LVL 2: two) shows its tell on the map: ones you don't know yet, picked by the seed
+function deckPopsTell(n) {
+  const k = jackLv('pops'), run = st.run; if (!k || !run || !run.map || !n) return false;
+  const s = n.sector || 0; run.popsTell = run.popsTell || {};
+  if (!run.popsTell[s]) {
+    const pool = Object.values(run.map).filter(m => m.sector === s && (m.type === 'corp' || m.type === 'final') && CORP_TELL[m.corp] && !tellKnown(m.corp)).sort((a, b) => a.id < b.id ? -1 : 1);
+    run.popsTell[s] = shuffle(pool, rngFor(run.seed, 'popstell', s)).slice(0, k).map(m => m.id);
+  }
+  return run.popsTell[s].includes(n.id);
+}
 // a new sector (engine/runend.js pushOn): DECAY drops each mod a step (BUFFER keeps its step: it changes your INT)
 function deckSector(run) {
+  deckJackSector(run);   // CREW JACKS: NANA, DIALUP, KLUDGE
   deckRefill(run);   // THE SHELL's charges, topped up (SHELL_REFILL)
   deckChmodOff(run);   // chmod's rarity wears off (before DECAY)
   if (!chipOn('DC4', run)) return;
@@ -668,7 +744,7 @@ const SHELL_CHARGE = { pack: 2, boss: 0.35 };   // a CHARGE gives 2; a corp boss
 for (const [k, n] of Object.entries(DECK_CHARGES)) if (DECK_CHIPS[k]) { DECK_CHIPS[k][4] += ` +${n} shell charges.`; DECK_CHIPS[k][6] += ` +${n} charges.`; }
 function deckCharges(run) {
   run.chargeMax = (run.chips || []).reduce((a, k) => a + (DECK_CHARGES[k] || 0), 0);
-  if (run.chargeMax) run.chargeMax += legacyLv('surge');   // SURGE (THE BOARD: +1, II +2), with a SHELL chip
+  if (run.chargeMax) run.chargeMax += legacyLv('surge') + jackLv('root', run);   // SURGE (THE BOARD: +1, II +2) and ROOT (a CREW JACK), with a SHELL chip
   run.charges = run.chargeMax;
 }
 function deckRefill(run) {
@@ -1001,13 +1077,13 @@ const DECK_TEST = {
 // DECK is the deck on screen: the dev one (DECK_DEV, kept while the page lives) or the real one (made from save.deck
 // each time it opens, and written back by deckPersist whenever it changes).
 // save.deck: { chips: { key: how many }, slots: { socket: key }, order: [sockets, oldest first], spoils, glyph,
-//   crew: [names], off: [posts switched off: engine/save.js postOn], overclock, blown }
+//   crew: [crew ids: the CREW JACKS, in order], off: [posts switched off: engine/save.js postOn], overclock, blown }
 let DECK = null, DECK_DEV = null;
 const deckView = () => ({ view: 'board', scroll: 0, list: { top: 0 }, sel: { kind: 'socket', id: 'BT1' }, selT: 0, pick: null, carry: null,
   bits: [0, 0, 0, 0, 0, 0, 0, 0], tick: null, msg: null, leave: 0 });
 function deckDev() {
   if (!DECK_DEV) DECK_DEV = Object.assign(deckView(), {
-    real: false, rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: 0, crew: new Set(['POPS']),
+    real: false, rep: 2400, mk: 2, fuse: false, blown: false, spoils: 0, glyph: 0, crew: new Set(['pops']),
     slots: { PSU: 'SC1', BT1: 'LD3', BI1: 'QT0', CRS: 'DM5', SPL: 'SP3', SH1: 'WH0' },
     order: ['PSU', 'BT1', 'BI1', 'CRS', 'SPL', 'SH1'],   // the sockets in the order their chips went in: power goes oldest first
     sw: new Set(['starter', 'stray']), nemesis: CORPS.burgertron ? 'burgertron' : null, archive: null,
@@ -1064,7 +1140,7 @@ function deckReal() {
   const arc = MODS[save.archive] ? save.archive : null;   // (THE ARCHIVE's mod: its chip's card sets it)
   const d = Object.assign(deckView(), {
     real: true, mk: deckMkNow(), fuse: legacyLv('fuse') > 0, blown: !!sd.blown, spoils: sd.spoils || 0, glyph: sd.glyph || 0,
-    crew: new Set(sd.crew || []), chips: Object.assign({}, sd.chips), slots: Object.assign({}, sd.slots), order: (sd.order || []).slice(),
+    crew: new Set((sd.crew || []).map(c => String(c).toLowerCase()).filter(c => DECK_JACKS[c])), chips: Object.assign({}, sd.chips), slots: Object.assign({}, sd.slots), order: (sd.order || []).slice(),
     sw: new Set(owned.filter(k => !DECK_PICKERS.includes(k) && !(sd.off || []).includes(k))), nemesis: nem, archive: arc, overclock: !!sd.overclock, seenMk: sd.seenMk || 2,
   });
   for (const id of Object.keys(d.slots)) if (id !== DECK_KIT_SOCKET && DECK_KITS.includes(d.slots[id])) {   // (a KIT outside the KIT socket: a save from before it)
@@ -1142,7 +1218,9 @@ function deckPower() {
     const c = deckChipCost(key), p = deckPool(s);
     if (c <= left[p]) { left[p] -= c; on.add(id); } else off.push(id);
   }
-  return { budget: cellB, left: left.cell, used: cellB - left.cell, on, off,
+  const crewOn = [], crewOff = [];   // CREW JACKS: after the chips, in the order they went in (1 power, 2 at LVL 2)
+  for (const id of deckJacked()) { const c = deckCrewLv(id); if (c <= left.cell) { left.cell -= c; crewOn.push(id); } else crewOff.push(id); }
+  return { budget: cellB, left: left.cell, used: cellB - left.cell, on, off, crewOn, crewOff,
     fuse: deckOpen(4) ? { budget: fuseB, left: left.fuse, used: fuseB - left.fuse } : null };
 }
 const deckLeft = (pw, s) => deckPool(s) === 'fuse' ? (pw.fuse ? pw.fuse.left : 0) : pw.left;
@@ -1578,7 +1656,7 @@ function deckLines(T, B, X) {
   st.scroll = null;
   deckPersist();
   X({ h: 5, draw: (ctx, y) => deckHeader(ctx, y) });
-  X({ h: sa, draw: (ctx, y) => { if (d.pick) deckPicker(ctx, y, sa); else if (d.cpu) deckCpu(ctx, y, sa); else if (d.view === 'chips') deckChipList(ctx, y, sa); else deckBoard(ctx, y, sa); } });
+  X({ h: sa, draw: (ctx, y) => { if (d.pick) (d.pick.id === 'CREW' ? deckCrewPicker : deckPicker)(ctx, y, sa); else if (d.cpu) deckCpu(ctx, y, sa); else if (d.view === 'chips') deckChipList(ctx, y, sa); else deckBoard(ctx, y, sa); } });
   X({ h: DECK_CARD_H, draw: (ctx, y) => deckCard(ctx, y) });
 }
 
@@ -1840,6 +1918,7 @@ function deckTapPart(id) {
   const d = DECK; d.carry = null;
   if (id === 'rom') id = 'cpu';   // the ROM is the CPU's: its posts and switches are in the CPU's popup
   if (id === 'cpu' && d.sel.kind === 'part' && d.sel.id === 'cpu') return deckCpuOpen();
+  if (id === 'crew' && d.sel.kind === 'part' && d.sel.id === 'crew' && deckOpen(3)) return deckCrewOpen();   // (the second tap: its window)
   deckSelect(id === 'stick' ? { kind: 'socket', id: 'CRS' } : { kind: 'part', id }); Sound.tick();
 }
 function deckCpuOpen() { DECK.pick = null; DECK.cpu = { t0: performance.now() }; deckSelect({ kind: 'part', id: 'cpu' }); Sound.ui(); }
@@ -1988,6 +2067,62 @@ function deckPickInfo(ctx, g, IX, IW, y, p, s, cur, pw, go) {
   text(c[4]);
   if (where === s.id) btn(`[ IN ${s.id} ]`, C.accent, true);
   else { const nx = btn(`[ ${where ? 'MOVE' : 'SLOT'} TO ${s.id} ]`, C.accent); if (where) g.put(nx, by, `from ${where}`, C.mid); }
+}
+
+// The CREW JACKS' window (Greg, 2026-11-22: a window, like the CPU's): your crew, a row each, then the one you picked:
+// its boon and [ PLUG IN ] / [ UNPLUG ]. The jacks fill in order; power goes to the chips first, then the jacks.
+function deckCrewOpen() { const d = DECK; d.cpu = null; d.carry = null; d.pick = { id: 'CREW', s: { top: 0 }, t0: performance.now() }; deckSelect({ kind: 'part', id: 'crew' }); Sound.ui(); }
+function deckCrewPicker(ctx, y0, sa) {
+  const d = DECK, p = d.pick, g = deckGrid(ctx), pw = deckPower();
+  const W = Math.min(L.wc, DECK_ART_W), X0 = Math.floor((L.wc - W) / 2), IX = X0 + 1, IW = W - 2, LR = Math.max(5, sa - 3 - DECK_PICK_INFO);
+  const keys = deckCrewPool(), max = deckJackMax(), inn = deckJacked();
+  deckBox(ctx, g, y0, sa, X0, W, sa, C.text, 'CREW JACKS', () => { d.pick = null; });
+  g.put(X0 + 2, y0 + 1, (inn.length + '/' + max + ' jacks · PWR 1 each, LVL 2: 2').slice(0, W - 4), C.dim);
+  if (!keys.length) {
+    wrapText('no crew yet. call crew in on your runs: after 5 calls one can join your crew (THE BOARD > REP). then plug them in here.', IW - 2).forEach((l, j) => g.put(IX + 1, y0 + 3 + j, l, C.mid));
+    p.keys = null; g.flush(); return;
+  }
+  if (p.sel == null || !keys.includes(p.sel)) p.sel = inn[0] || keys[0];
+  const items = [], idx = {};
+  keys.forEach((k, i) => { if (i) items.push(deckSep(IX, IW)); idx[k] = items.length; items.push({ h: 2, stop: true, draw: (g, ctx, y) => deckCrewRow(g, ctx, y, k, inn, pw, IX, IW) }); });
+  const sc = deckRows(ctx, g, IX, IW, y0 + 2, LR, items, p.s, 'dkcr');
+  if (!p.shown) { sc.show(idx[p.sel]); p.shown = true; }
+  st.scroll = sc.line; d.keyStep = null;
+  const go = () => deckJackToggle(p.sel);
+  p.keys = { go, move: dd => { const i = keys.indexOf(p.sel), j = clamp(i + dd, 0, keys.length - 1); if (j !== i) { p.sel = keys[j]; sc.show(idx[p.sel]); Sound.tick(); } } };
+  const iy = y0 + 2 + LR;
+  g.put(X0, iy, '|' + '-'.repeat(W - 2) + '|', C.text);
+  // the one you picked: name, level and power, its boon (and what LVL 2 does), the button
+  const k = p.sel, x = IX + 1, w = IW - 2, y = iy + 1, lv = deckCrewLv(k), on = inn.includes(k), dark = pw.crewOff.includes(k);
+  g.put(x, y, HACKERS[k].name, hkInk(k), true);
+  g.put(x, y + 1, 'LVL ' + lv + ' · PWR ' + lv + (on ? (dark ? ' · NO POWER' : ' · jacked in') : ''), dark ? C.danger : C.mid);
+  const boon = wrapText(DECK_JACKS[k][lv - 1] + '.', w).slice(0, 2);
+  boon.forEach((l, j) => g.put(x, y + 2 + j, l, C.text));
+  if (lv < 2) wrapText('LVL 2: ' + DECK_JACKS[k][1] + '.', w).slice(0, 4 - boon.length).forEach((l, j) => g.put(x, y + 2 + boon.length + j, l, C.dim));
+  deckBtn(ctx, g, x, y + 6, on ? '[ UNPLUG ]' : '[ PLUG IN ]', on ? C.bright : C.accent, 'dkgo', go);
+  g.flush();
+}
+function deckCrewRow(g, ctx, y, k, inn, pw, IX, IW) {
+  const d = DECK, p = d.pick, id = 'dkcr_' + k, lv = deckCrewLv(k), j = inn.indexOf(k);
+  if (p.sel === k) g.bg(IX, y, IW, 2, C.accent, 0.18);
+  ctx.hl(IX, y, IW, 2, id, false);
+  ctx.addHit(IX, y, IW, 2, { kind: 'btn', id, onTap: () => {   // a tap picks; a double tap plugs in (or out), like the picker
+    const t = performance.now(), dbl = p.tap && p.tap.k === k && t - p.tap.t < DECK_DOUBLE_MS;
+    p.tap = dbl ? null : { k, t };
+    if (dbl) return deckJackToggle(k);
+    if (p.sel !== k) { p.sel = k; Sound.tick(); } } });
+  g.put(IX + 1, y, j >= 0 ? '[' + (j + 1) + ']' : '[ ]', j >= 0 ? (pw.crewOff.includes(k) ? C.danger : C.accent) : C.dim, j >= 0);
+  g.put(IX + 5, y, HACKERS[k].name, hkInk(k), true);
+  const r = 'LVL ' + lv + ' · PWR ' + lv; g.put(IX + IW - r.length - 1, y, r, C.mid);
+  g.put(IX + 5, y + 1, FX.ticker(DECK_JACKS[k][lv - 1], IW - 6, p.t0, ctx.now, 6), C.text);
+}
+function deckJackToggle(k) {
+  const d = DECK, max = deckJackMax(), name = HACKERS[k].name;
+  if (d.crew.has(k)) { d.crew.delete(k); Sound.tick(); return deckSay(name + ' unplugged.'); }
+  if (deckJacked().length >= max) { Sound.deny(); return deckSay(max + ' jacks: unplug one first.', C.danger); }
+  d.crew.add(k);
+  if (deckPower().crewOff.includes(k)) { Sound.deny(); return deckSay('no power: ' + name + ' needs ' + deckCrewLv(k) + '.', C.danger); }
+  Sound.buy(); deckSay(name + ' jacked in.');
 }
 
 // The CPU's popup (Greg, 2026-11-15): your deck at a glance (chips in, power), the mk ladder with the upgrade, the
@@ -2144,15 +2279,14 @@ function deckPartCard(ctx, g, y, id, pw, tick, btns) {
     head('READOUT', `cell: ${pw.left} left · ${pw.used} of ${pw.budget} used`, C.money);
     tick(1, 'the cell in PSU powers mk II and III; the FUSE powers mk IV. each chip costs 0-3, shown on its socket. the oldest chips get power first.');
   } else if (id === 'ports') {
-    head('PORTS · dark', 'things outside the page', C.text);
-    tick(1, 'MIC: the whistle, the mold. GAMEPAD: a controller. MIDI: play SIMON on keys. MODEM: multiplayer. each waits until its feature is built.', C.mid);
+    // (Greg, 2026-11-22: cryptic. What goes here is in docs/DECK.md PORTS, for later)
+    head('PORTS', FX.swapLines(['no peripherals found...', 'searching...'], L.wc - 2, d.selT, ctx.now, 1800).text, C.mid);
   } else if (id === 'crew') {
-    const open = deckOpen(3);
-    head('CREW JACKS' + (open ? '' : ' · LOCKED'), open ? 'plug in up to 2 of your crew' : 'opens with mk III', open ? C.text : C.mid);
-    tick(1, open ? DECK_CREW.filter(([c]) => d.crew.has(c)).map(([c, t]) => `${c}: ${t}.`).join(' ') || 'nobody plugged in.' : 'the mk III board has the jacks.');
-    if (open) btns(DECK_CREW.map(([c]) => [`[${c}]`, d.crew.has(c) ? C.accent : C.dim, 'dkcrew' + c, () => {
-      if (d.crew.has(c)) d.crew.delete(c); else if (d.crew.size < 2) d.crew.add(c); else { Sound.deny(); return deckSay('2 jacks: unplug one first.', C.danger); }
-      Sound.tick(); }]));
+    const open = deckOpen(3), inn = open ? deckJacked() : [];
+    head('CREW JACKS' + (open ? '' : ' · LOCKED'), open ? inn.length + '/' + deckJackMax() + ' plugged in · their boons, every run' : 'opens with mk III', open ? C.text : C.mid);
+    tick(1, !open ? 'the mk III board has the jacks.' : inn.length ? inn.map(c => HACKERS[c].name + ': ' + DECK_JACKS[c][deckCrewLv(c) - 1] + (pw.crewOff.includes(c) ? ' (NO POWER)' : '') + '.').join('   ')
+      : deckCrewPool().length ? 'nobody plugged in. OPEN to plug in your crew.' : 'no crew yet: call crew in on your runs. after 5 calls one can join (THE BOARD > REP).');
+    if (open) btns([['[ OPEN ]', C.accent, 'dkcrewo', deckCrewOpen]]);
   } else if (id === 'uplink') {
     head('UPLINK' + (deckOpen(4) ? '' : ' · LOCKED'), deckOpen(4) ? 'empty' : 'opens with mk IV', deckOpen(4) ? C.text : C.mid);
     tick(1, 'G0D.exe plugs in here: it plays for you, with its click limit. a second jack doubles the clicks.');

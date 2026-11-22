@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.46']);
+NEON_FILES.push(['engine/run.js', 'v15.47']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -781,6 +781,8 @@ async function onSafe(t) {
   if (perfect && canHeal() && c.mod !== 'cursed') { heal(CONFIG.perfectHeal); healed = true; }
   const surged = has('surge') && lv.late && canHeal() && c.hasBoss;   // SURGE: a real pick in the last 3s heals 1
   if (surged) { heal(1); modFired('surge'); }
+  const hype = perfect && !tix && pay ? 5 * jackLv('hype') : 0;   // HYPE (a CREW JACK: engine/deck.js)
+  if (hype) earn(hype, run);
   const rewall = perfect && c.hasBoss && c.bulwarkUsed && has('bulwark');   // BULWARK: a perfect charges it back up
   if (rewall) { c.bulwarkUsed = false; modFired('bulwark'); }
   if (!lv.boss) Sound.safe();
@@ -791,6 +793,7 @@ async function onSafe(t) {
   if (healed) msg += ' +1 int';
   if (rewall) msg += ' bulwark up';
   if (surged) msg += ' surge +1 int';
+  if (hype) msg += ` hype +${hype}cr`;
   setMsg(msg, C.accent);
   const land = lv.boss ? Sound.bossWin() : 0;   // boss: the fanfare replaces the safe sound (s until it lands)
   await wait(380);

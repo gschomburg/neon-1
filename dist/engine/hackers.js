@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v15.46']);
+NEON_FILES.push(['engine/hackers.js', 'v15.47']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -55,6 +55,7 @@ function hkSpawn(id, how) {
   if (id === 'nana' && hkUp('ggez')) hkOut(hkUp('ggez'), 'LANGUAGE. *logs off*');
   if (id === 'ggez' && hkUp('nana')) hkOut(h, 'LANGUAGE. *logs off*');
   if (id === 'kludge' && canHeal() && !c.kludgeHealed) { c.kludgeHealed = true; heal(1); }
+  if (d.side === 'bad') deckNullJack(h);   // NULL (a CREW JACK: engine/deck.js)
   return h;
 }
 
