@@ -629,6 +629,10 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   there: `Music.beat`; the pet dances to it and SIMON plays on it.)
 
 ## Medium and small
+- **Talk about the test run's speed** (Greg, 2026-11-22: "no need to change it yet, talk about it later"). How
+  `node tools/test.js` runs now: data round-trips, then check.js, then the 39 test pages (all at once, a Chrome each),
+  then the playtest (split over several Chromes). Ideas: time each stage; start check.js, the pages and the playtest
+  together (they don't depend on each other); a pool of 16-24 pages instead of all 39 at once (32 threads here).
 - **Pets you can toggle** (meat notes 2026-11-07): a small button in the loot bar, like b0y's on the left (if b0y's
   is there, shift it right so they don't overlap), that turns a pet on or off. Today it's one pet a run: COMPANION, the
   EGG's chick, STRAY's bug and CATPHISH's fish don't stack (with STRAY and CATPHISH, the seed picks one). Maybe they
