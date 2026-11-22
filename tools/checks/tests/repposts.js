@@ -27,12 +27,16 @@ module.exports = { name: 'repposts', body: `
   // THE ARCHIVE
   save.seen.tracer = true;
   check(archivePool().includes('tracer') && !archivePool().some(k => MODS[k].kind === 'exotic'), 'THE ARCHIVE: mods you have found, no exotics');
-  save.legacy.archive = 1; save.archive = 'tracer'; if (save.deck) save.deck.off = (save.deck.off || []).filter(k => k !== 'archive');
+  // (v15.38: a BOOT chip, AR1; its card picks the mod. Not a KIT: either BOOT socket)
+  const deck0 = save.deck;
+  save.deck = Object.assign(deckFreshSave(), { owed: { PG0: 1 }, slots: { PSU: 'RX9', BT2: 'AR1' }, order: ['PSU', 'BT2'] }); save.deck.chips.AR1 = 1; save.deck.chips.RX9 = 1;
+  save.archive = 'tracer';
   B.startRun('ARCHIVE', false); await settle('start');
-  check(st.run.mods.includes('tracer'), 'THE ARCHIVE: the run starts with it');
-  if (save.deck) { save.deck.off = (save.deck.off || []).concat('archive'); B.startRun('ARCHIVE2', false); await settle('start');
-    check(!st.run.mods.includes('tracer'), 'switched off on the CPU (none picked): no mod'); save.deck.off = save.deck.off.filter(k => k !== 'archive'); }
-  save.legacy.archive = 0;
+  check(st.run.mods.includes('tracer'), 'THE ARCHIVE (its chip): the run starts with it');
+  check(deckFits('AR1', deckSock('BT2')) && !deckFits('PD7', deckSock('BT2')) && deckFits('PD7', deckSock('BT1')), 'KITs only in BT1; THE ARCHIVE in either');
+  save.archive = null; B.startRun('ARCHIVE2', false); await settle('start');
+  check(!st.run.mods.includes('tracer'), 'none picked: no mod');
+  save.deck = deck0;
   // the chip posts: buying one puts its chip in your deck
   save.deck = save.deck || deckFreshSave(); save.rep = 5000;
   save.legacy.deck3 = 1; save.legacy.fuse = 1; save.legacy.market = 1; ['hard', 'cash', 'kit', 'belt', 'drops', 'bench', 'nemesis', 'starter'].forEach(k => save.legacy[k] = 1);

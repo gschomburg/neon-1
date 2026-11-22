@@ -18,7 +18,7 @@
 // st.g0dxD: the driver's moment to moment state (its cursor off the board, the flight, what it's waiting on)
 // save.g0dx: the dev settings (g0dxCfg)
 'use strict';
-NEON_FILES.push(['engine/g0dexe.js', 'v15.37']);
+NEON_FILES.push(['engine/g0dexe.js', 'v15.38']);
 
 // ---------- settings ----------
 const G0DX_CLICKS = [100, 250, 500, 1000, 9999];
@@ -41,7 +41,7 @@ const g0dxState = () => (st.run && st.run.g0dx) || null;
 const g0dxOn = () => { const g = g0dxState(); return !!(g && g.on && holds('g0dexe')); };
 const g0dxCanToggle = () => !!(st.run && !st.run.ended && holds('g0dexe'));   // (no state yet, or a spent one: the tap sets it up)
 const g0dxWhy = () => { const g = g0dxState(); return !g ? 'not set up: give it from the dev menu.' : g.left <= 0 ? 'out of clicks.' : 'wait a moment.'; };
-const g0dxKnows = key => corpStat(key).breached >= (g0dxCfg().beaten || 1);
+const g0dxKnows = key => corpStat(key).breached >= (g0dxCfg().beaten || 1) || ((save.codexBits || {})[key] || 0) >= 3;   // (or CODEX decoded it all: engine/deck.js tellKnown)
 const g0dxNote = () => { const g = g0dxState(); return g && g.on ? `+G0D.exe ${g.left}` : 'G0D.exe ||'; };
 
 // Its state on the run: a fresh count of clicks (a run with it is practice).

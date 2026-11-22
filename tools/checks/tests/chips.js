@@ -23,11 +23,17 @@ module.exports = { name: 'chips', body: `
   // a real deck, and a run with chips
   const deckWith = slots => { save.deck = Object.assign(deckFreshSave(), { slots: Object.assign({ PSU: 'RX9' }, slots), order: ['PSU'].concat(Object.keys(slots)) }); for (const k of Object.values(save.deck.slots)) save.deck.chips[k] = 1; };
   save.legacy = save.legacy || {};
-  deckWith({ BT1: 'JD6', BT2: 'PL3' });
+  // KITs (v15.38): JUNK DRAWER 3 of its 6, PRELOAD 2 gear; PURGE is a chip with the deck
+  deckWith({ BT1: 'JD6', BT2: 'PG0' });
+  B.startRun('CHIPTEST0', false); await settle('start');
+  const jd = st.run.mods.filter(k => ['wires', 'coolant', 'skimmer', 'buffer', 'burner', 'stash'].includes(k));
+  check(chipOn('JD6') && jd.length === 3, 'JUNK DRAWER: 3 of its low mods: ' + jd.join(' '));
+  check(st.run.items.some(o => o.key === 'purge'), 'the PURGE chip: a PURGE');
+  deckWith({ BT1: 'PL3', BT2: 'TF1' });
   B.startRun('CHIPTEST', false); await settle('start');
   let run = st.run;
-  check(chipOn('JD6') && ['wires', 'coolant', 'skimmer', 'buffer', 'burner', 'stash'].every(k => run.mods.includes(k)), 'JUNK DRAWER: 6 low mods: ' + run.mods.join(' '));
-  check(run.items.filter(o => !ITEMS[o.key].quest).length >= 3, 'PRELOAD: 3 gear: ' + run.items.map(o => o.key).join(' '));
+  check(!run.items.some(o => o.key === 'purge'), 'a deck without the PURGE chip: no PURGE');
+  check(run.items.filter(o => !ITEMS[o.key].quest).reduce((a, o) => a + o.n, 0) === 2, 'PRELOAD: 2 gear: ' + run.items.map(o => o.key).join(' '));
   if (st.lv) { await B.pick(st.lv.safe); await settle('public'); }
   if (st.mode !== 'map') { B.toMap(); await settle('map'); }
   run = st.run;

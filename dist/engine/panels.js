@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.37']);
+NEON_FILES.push(['engine/panels.js', 'v15.38']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -149,7 +149,7 @@ function pickMods(r, pool, k, exclude = []) {
 }
 const WIRES_PULL = 0.4;   // while you carry a BOX OF WIRES, the chance an offer from a pool it's in is one (data/mods.js wires)
 
-const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale() * deckPriceMult() * (1 - 0.05 * legacyLv('market'))));   // (priceScale: data/economy.js) (CHEAPSKATE, INFLATION: chips, engine/deck.js) (LOYALTY CARD: THE BOARD, 5% a level)
+const priceOf = o => o.free ? 0 : Math.round((sectorHas('firesale') ? 1 - ECON.events.fireSale : 1) * (o.kind === 'repair' ? o.price : o.price * TIER_PRICE[o.tier || 0] * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * priceScale() * shopMult()));   // (priceScale: data/economy.js) (shopMult, engine/deck.js: CHEAPSKATE, INFLATION, LOYALTY CARD)
 const SEP = '+ - - - - - - - - - - - - - - - +';
 
 // What a market pays for one of a gear stack: value gear (DUDS ... WALLET) its worth, the rest a share of its price.
@@ -515,6 +515,7 @@ function openStartReward(node) {
     skipLabel: `[ SKIP  +${earnInt(ECON.skip.starter)}cr ]`,
     onSkip: () => { const cr = earnInt(ECON.skip.starter); earn(cr, run); },
     msg: '> link established.',
+    next: postOn('remote') && benchOpen() && !run.tutorial ? () => openBench(node) : null,   // REMOTE ACCESS (THE BOARD): your WORKBENCH, from out here
     ...(chipOn('FI2') ? { head: [['FRESH INSTALL: no starter perk.', C.text], ['+2 INT and +100cr instead.', C.mid]], locked: true, skipLabel: '[ CONTINUE ]', onSkip: null } : {}),   // (a chip: engine/deck.js)
 
   });

@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v15.37']);
+NEON_FILES.push(['engine/codex.js', 'v15.38']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -101,7 +101,7 @@ function cxName(key, real, seen, frac, now) {
 // THE CODEX's tabs (Greg, 2026-11-21): [id, label, its sub-tabs]. CHIPS shows once you've got a chip of your own (not
 // the two the deck comes with: DECK_START).
 const CX_SUB = { items: 'gear', mods: 'mods', chips: 'chips', corps: 'corps', glyphs: 'glyphs', sectors: 'sectors', crew: 'crew', rivals: 'rivals' };
-const cxChipsOn = () => typeof DECK_CHIPS !== 'undefined' && Object.keys(DECK_CHIPS).some(k => !DECK_START.chips[k] && deckHave(k) > 0);
+const cxChipsOn = () => typeof DECK_CHIPS !== 'undefined' && Object.keys(DECK_CHIPS).some(k => !DECK_START.chips[k] && k !== 'PG0' && deckHave(k) > 0);   // (PURGE comes with every deck too: deckGiveOwed)
 const cxTabs = () => [['tech', 'TECH', ['items', 'mods', ...(cxChipsOn() ? ['chips'] : [])]], ['net', 'NET', ['corps', 'glyphs', 'sectors']], ['hk', 'HACKERS', ['crew', 'rivals']]];
 // the chips, by group (DECK_GROUPS' order) then rarity. Not the BETA ones (not built yet).
 const cxChips = () => Object.keys(DECK_CHIPS).filter(k => !deckBeta(k)).sort((a, b) => {
@@ -182,11 +182,11 @@ function openCodex(want) {
         T(d.bossDesc || '', C.dangerDim);
         T('');
         // The tell: ciphertext until you've beaten this corp (its first line, and a hint), then it decodes once.
-        const tl = pad(wrapText('tell: ' + CORP_TELL[key], 34), 3), on = !!rec.breached;
+        const tl = pad(wrapText('tell: ' + CORP_TELL[key], 34), 3), on = tellKnown(key);   // (breached, or CODEX decoded it all)
         const line = (t, i) => i ? cxName('tell_' + key + i, t, on, 0, now) : 'tell: ' + cxName('tell_' + key + i, t.slice(6), on, 0, now);   // ('tell: ' stays clear)
         const bits = !on && save.codexBits ? save.codexBits[key] || 0 : 0;   // CODEX (a chip): thirds decoded by dying here
         const tell = on ? tl.map(line) : bits ? tl.map((t, i) => cxTellPart(t, bits, FX.seedOf('tell_' + key + i), now)) : [line(tl[0], 0), 'beat this corp to log its tell.', ''];
-        tell.forEach((t, i) => T(t, rec.breached ? C.accent : bits || i === 0 ? C.mid : C.dim));
+        tell.forEach((t, i) => T(t, on ? C.accent : bits || i === 0 ? C.mid : C.dim));
         T(d.gear ? `boss gear: ${ITEMS[d.gear.key].name} x${d.gear.n}` : d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
         T(`breached ${rec.breached}   lost ${rec.lost}` + (bits ? `   decoded ${bits}/3` : ''), C.text);
       }

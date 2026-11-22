@@ -88,14 +88,14 @@ module.exports = { name: 'deck', body: `
   check(CALL_QUEUE.some(c => c.who === 'pops' && c.btn), 'POPS calls about it, with a button to see it');
   FEAT_QUEUE.length = 0; CALL_QUEUE.length = 0;
   openDeck(); await sleep(300);
-  check(DECK.real && DECK.mk === 2 && deckOwned().length === 2, 'it opens the real deck: mk II, your 2 chips: ' + deckOwned());
+  check(DECK.real && DECK.mk === 2 && deckOwned().sort().join() === 'FA1,PG0,SC1,SP3' && DECK.slots.BT2 === 'PG0' && DECK.slots.BT1 === 'FA1', 'it opens the real deck: mk II, its cell, SPOILS, PURGE, and FIRST AID (bought before): ' + deckOwned());
   check(buildScene(performance.now(), false).length > 300, 'the real deck draws');
   deckPull('SPL'); buildScene(performance.now(), false);
-  check(!save.deck.slots.SPL && save.deck.order.join() === 'PSU', 'a change goes into the save: ' + JSON.stringify(save.deck.slots));
+  check(!save.deck.slots.SPL && !save.deck.order.includes('SPL'), 'a change goes into the save: ' + JSON.stringify(save.deck.slots));
   deckSlot('SP3', 'SPL'); buildScene(performance.now(), false);
   check(save.deck.slots.SPL === 'SP3', 'and back');
   deckUpgrade3(); check(DECK.mk === 2 && !legacyLv('deck3'), 'mk III waits for ELITE');
-  for (const k of ['drops', 'locker', 'bench']) save.legacy[k] = 1;
+  for (const k of ['drops', 'remote', 'bench']) save.legacy[k] = 1;
   check(boardLevel() === 3, 'ELITE');
   deckFuseIn(); check(!legacyLv('fuse'), 'the FUSE needs mk III first');
   const r0 = save.rep; deckUpgrade3();
@@ -144,8 +144,8 @@ module.exports = { name: 'deck', body: `
   check(fo.kind === 'gear' && (fo.key === 'patch' || ITEMS[fo.key].chip), 'the PIER: a gear catch is gear or a chip');
   // ---- the first chip set in a run: slotted, open and powered chips are on (run.chips)
   save.deck.chips = Object.fromEntries(Object.keys(DECK_CHIPS).map(k => [k, 1]));
-  save.deck.slots = { PSU: 'LI2', BT1: 'TF1', BT2: 'LD3', BI1: 'QT0', CRS: 'DM5', SPL: 'SP3', SH1: 'WH0', SH3: 'PS4' };
-  save.deck.order = ['PSU', 'BT1', 'BT2', 'BI1', 'CRS', 'SPL', 'SH1', 'SH3']; save.deck.spoils = 2; save.locker = null;
+  save.deck.slots = { PSU: 'LI2', BT1: 'LD3', BT2: 'TF1', BI1: 'QT0', CRS: 'DM5', SPL: 'SP3', SH1: 'WH0', SH3: 'PS4' };
+  save.deck.order = ['PSU', 'BT1', 'BT2', 'BI1', 'CRS', 'SPL', 'SH1', 'SH3']; save.deck.spoils = 2;
   endRun && st.run && (st.run.ended = true);
   B.startRun('CHIPS3', false); await settle('chips run');
   const run3 = st.run;
@@ -163,9 +163,12 @@ module.exports = { name: 'deck', body: `
   run3.chips.push('TX2'); const c2 = run3.credits; earn(100, run3); check(run3.credits - c2 === 100, 'GREED and TAXED: 125 x 0.8');
   run3.chips = []; const rp = repFor(run3); run3.chips = ['FM2']; check(repFor(run3) === Math.round(rp * 1.2), 'FAME: +20% REP: ' + rp + ' > ' + repFor(run3));
   run3.chips = ['HC1', 'TX2']; check(repFor(run3) === Math.round(rp * 1.5 * 1.25), 'HARDCORE and TAXED: x1.5 x1.25');
-  run3.mods = ['tracer']; run3.chips = []; deckBlackBox(run3); check(!save.locker, 'no BLACK BOX: the LOCKER stays empty');
-  run3.chips = ['BB7']; deckBlackBox(run3); check(save.locker && save.locker.key === 'tracer', 'BLACK BOX: your best mod to the LOCKER');
-  FEAT_QUEUE.length = 0; save.locker = null;
+  save.legacy.bench = 1; const lkHas = k => benchSave().locker.some(x => x && x.key === k); benchSave().locker.fill(null);
+  run3.mods = ['tracer']; run3.chips = []; deckBlackBox(run3); check(!lkHas('tracer'), 'no BLACK BOX: the LOCKER stays empty');
+  run3.chips = ['BB7']; FEAT_QUEUE.length = 0; deckBlackBox(run3); check(lkHas('tracer') && /made it out/.test(FEAT_QUEUE[0].lines[0]), "BLACK BOX: your best mod to the WORKBENCH's LOCKER, and it says so");
+  benchSave().locker.fill({ kind: 'gear', key: 'wall', tier: 0, n: 1 }); FEAT_QUEUE.length = 0; deckBlackBox(run3);
+  check(/full/.test(FEAT_QUEUE[0].lines[1]), 'a full LOCKER: it says nothing was saved');
+  FEAT_QUEUE.length = 0; benchSave().locker.fill(null);
   const cn = Object.values(run3.map).find(n => n.type === 'corp');
   run3.chips = ['OMNI']; check(nodeInfo(cn).lines.some(l => /^tell: /.test(l.text)), "OMNI'S EYE: the corp's card shows its tell");
   run3.chips = []; check(!nodeInfo(cn).lines.some(l => /^tell: /.test(l.text)), 'without it: no tell');

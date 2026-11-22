@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.37']);
+NEON_FILES.push(['engine/menus.js', 'v15.38']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -298,7 +298,6 @@ function openBoard(tab) {
         if (!pool.length) t('breach a corp first.', C.mid);
         else x({ gap: 1, row: [{ text: '[ < ]', id: 'nemL', onTap: () => stepNemesis(-1) }, { text: (CORPS[save.nemesis] ? CORPS[save.nemesis].name : '?').slice(0, 16).padEnd(16), id: 'nemN', onTap: () => stepNemesis(1) }, { text: '[ > ]', id: 'nemR', onTap: () => stepNemesis(1) }] });
       } else if (u.needs && !legacyLv(u.needs) && !u.pm) t(`needs ${(LEGACY.find(p => p.key === u.needs) || {}).name} first.`, C.mid);
-      else if (u.key === 'locker' && lv) t(save.locker && MODS[save.locker.key] ? `in it: ${MODS[save.locker.key].name} (next run)` : 'empty. cash out to put one away.', C.mid);
       else t(u.costs.length > 1 ? `level ${lv} of ${u.costs.length}` : '', C.mid);
       if (!open) { t(''); t('a private message. not yet.', C.dim); t(''); }
       else if (max) { t(''); t('owned.', C.accent); t(''); }

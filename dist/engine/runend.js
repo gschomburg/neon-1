@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.37']);
+NEON_FILES.push(['engine/runend.js', 'v15.38']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -317,41 +317,12 @@ async function cashOut() {
   if (st.transitioning || !st.run) return;
   // LOCKER (THE BOARD): first, put one mod away for your next run
   const run = st.run;
-  if (legacyLv('locker') && !run.practice && !run.tutorial && !run.lockerAsked && run.mods.some(k => !UPLINK_LOCKED.includes(k))) {
-    run.lockerAsked = true;
-    return swapTo(openLocker);
-  }
   st.transitioning = true;
   Sound.ui();
   questCashOut(run);   // out with the DISC: POPS asks for it (engine/quests.js)
   await wipeOut(0);
   st.transitioning = false;
   endRun(true);
-}
-
-// LOCKER: pick one of your mods to put away (a step lower), or none. Then the run ends as a cash out.
-function openLocker() {
-  const run = st.run, mods = run.mods.filter(k => !UPLINK_LOCKED.includes(k));
-  let sel = 0;
-  const lower = k => Math.max(0, ((run.modTier || {})[k] || 0) - 1);
-  const put = k => {
-    if (k) { save.locker = { key: k, tier: lower(k) }; persist(); Sound.buy(); setMsg(`> ${MODS[k].name.toLowerCase()} is in the locker.`, C.rep); }
-    cashOut();
-  };
-  openPanel('LOCKER', (T, B, X) => {
-    T('L O C K E R', C.rep);
-    T('put one mod away for your next run.', C.text);
-    T('it comes back a step lower.', C.mid);
-    T('');
-    mods.forEach((k, i) => {
-      const v = modView(k), dn = modView(k, lower(k));
-      X({ list: true, id: 'lk' + i, onTap: () => { sel = i; Sound.tick(); }, sel: i === sel, badge: k, badgeTier: run.modTier[k] || 0, name: v.name,
-        right: `back as ${dn.tier === v.tier ? 'is' : RARITY[dn.rarity].label}`, rightCol: C.mid });
-    });
-    T('');
-    X({ box: true, text: 'P U T   I T   A W A Y', sub: `- ${MODS[mods[sel]].name.toLowerCase()} -`, id: 'lkput', onTap: () => put(mods[sel]), minW: 28 });
-    B('[ NOTHING: CASH OUT ]', 'lknone', () => put(null));
-  }, '> locker: one mod to keep.', { full: true });
 }
 
 const jackIn = () => startRun(st.seed, st.practice, { seeded: st.seeded });

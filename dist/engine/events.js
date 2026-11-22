@@ -1,7 +1,7 @@
 // NeoN+1 engine/events.js: the SECTOR EVENT card (what a new sector rolled) and THE FENCE (THIEF's stolen mods,
 // sold back). The events themselves: data/events.js; the roll: engine/map.js addSector.
 'use strict';
-NEON_FILES.push(['engine/events.js', 'v15.37']);
+NEON_FILES.push(['engine/events.js', 'v15.38']);
 
 // ---------------- The SECTOR EVENT card ----------------
 // It comes up over a new sector's map once the climb settles (toMap), and again from the map's sector label.
@@ -107,7 +107,7 @@ function buildEventCard(ctx, now) {
 // THIEF's stolen mods, for sale next to the sector boss. A mod costs its uplink fee (by its rarity; HAGGLE works
 // here). It comes back as it was (its tier, no slot needed: it was yours). What you don't buy is gone at the uplink.
 const fencePrice = o => Math.round(costInt(ECON.uplink[modView(o.key, o.tier).rarity] != null ? ECON.uplink[modView(o.key, o.tier).rarity] : ECON.uplink.common)
-  * uplinkMult() * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1));
+  * uplinkMult() * (has('haggle') ? 1 - tv('haggle', ECON.haggle) : 1) * shopMult());   // (shopMult, engine/deck.js: every market's discounts)
 function openFence(node) {
   const run = st.run;
   let sel = 0;

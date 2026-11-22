@@ -1,7 +1,7 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v15.37']);
+NEON_FILES.push(['engine/feats.js', 'v15.38']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
@@ -251,7 +251,7 @@ function wipeProgress() {
   const had = refund > 0 || Object.keys(save.feats || {}).length > 0;
   save.rep = (save.rep || 0) + refund;
   save.legacy = {}; save.stats = {}; save.feats = {}; save.unseen = {}; save.newTitle = false; save.featsIntro = false;
-  save.unseenPosts = {}; save.locker = null; save.bench = null; save.nemesis = null;   // (REP's posts: what's in the LOCKER, your NEMESIS)
+  save.unseenPosts = {}; save.bench = null; save.nemesis = null;   // (REP's posts: what's in the LOCKER, your NEMESIS)
   save.deck = null;   // (your deck comes back at USER)
   if (save.profile) {
     save.profile.title = null;

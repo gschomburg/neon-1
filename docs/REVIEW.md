@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **Start-of-run chips, REMOTE ACCESS, KITs** (v15.38): your deck now holds PURGE (power 0), FIRST AID and LUCKY START (if you bought them), slotted in BOOT. Pull PURGE and you start without one. BT1 is the KIT socket (it says KIT when empty). THE ARCHIVE is a BOOT chip: pick its mod on its card. REMOTE ACCESS (USER): the workbench opens after the public node. BLACK BOX saves to the WORKBENCH's LOCKER. If you'd bought the old LOCKER post, its 200 REP came back.
+
 - [ ] **CODEX and RELIC** (v15.37): ELITE's CODEX (250 REP) and SYSOP's RELIC (800 REP) each give a chip. CODEX goes in CRASH: die in a corp you haven't beaten and a third of its tell decodes (look at the codex after: the decoded words read clear, `decoded 1/3`). RELIC goes in SPOILS: 1 corp boss in 5 has an exotic as an extra pick. THE BOARD has no placeholders now.
 
 - [ ] **ELITE and SYSOP posts** (v15.36): LOYALTY CARD (ELITE: markets 5% then 10% cheaper), THE ARCHIVE (SYSOP: pick the mod on your deck's CPU, under NEMESIS), CHROMATOPHORE (SYSOP: every palette, and 7 locked card colors on YOU > color). Prices are guesses: 200/400, 800, 500. If you'd bought ELITE POST 2 or SYSOP POST 1/2, the REP came back.

@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.37']);
+NEON_FILES.push(['engine/run.js', 'v15.38']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -42,29 +42,21 @@ async function startRun(seed, practice, opts = {}) {
     beltSlots: CONFIG.beltSlots + legacyLv('belt'), reroutes: 0,
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
-  if (legacyLv('kit')) st.run.items.push({ key: 'patch', tier: 0, n: 1 });
+  if (legacyLv('kit') && !save.deck) st.run.items.push({ key: 'patch', tier: 0, n: 1 });   // FIRST AID (THE BOARD; with a deck it's a chip: engine/deck.js)
   if (quest === 'had3s') st.run.items.push({ key: 'leash', tier: 0, n: 1 });   // HAD3S: you go in with a LEASH
   if (!opts.tutorial) questRunStart(st.run);   // the OMNI RAID: b0y's CALL (engine/quests.js)
   if (quest === 'h3av3n') { st.run.heaven = true; questMold(st.run); }   // (a heaven run from the start: its death screen retries it; sector 1's M0LD)
   if (opts.heaven) heavenSetup();   // H3AV3N (engine/heaven.js): its sector map in place of the first sector (the editor's jump, the ending's THE MAZE)
-  if (legacyLv('lucky') && !opts.tutorial) {   // LUCKY START (THE BOARD): a random common gear
+  if (legacyLv('lucky') && !opts.tutorial && !save.deck) {   // LUCKY START (THE BOARD): a random common gear (with a deck it's a chip: engine/deck.js)
     const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
     if (pool.length) st.run.items.push({ key: pickR(pool, rngFor(seed, 'lucky')), tier: 0, n: 1 });
   }
-  // THE ARCHIVE (THE BOARD, SYSOP): the mod you picked on your deck's CPU (engine/deck.js archivePool), at its lowest
-  if (postOn('archive') && MODS[save.archive] && !opts.tutorial && !st.run.mods.includes(save.archive)) addMod(save.archive, 0);
   deckRunStart(st.run, opts);   // your deck's chips: what's on this run, and what it starts with (engine/deck.js)
   if (oneUpOpen(st.run, opts)) st.run.oneUp = 1;   // the 1UP (beat G0D, its chip in your deck): you start with one
   if (opts.tutorial) tutorialRun(st.run);   // the training run (engine/tutorial.js)
   st.petS = null;   // (a new run: the pet starts fresh)
   if (!opts.tutorial) startPet(st.run);   // STRAY / CATPHISH: a pet from the start (engine/pet.js)
   featRunStart(st.run);   // engine/feats.js: the run's starting credits; NEWB if you skipped the training
-  // LOCKER (THE BOARD): the mod you put away when you last cashed out (not into practice runs or the training)
-  if (save.locker && !practice && !opts.tutorial) {
-    const lk = save.locker;
-    save.locker = null; persist();
-    if (MODS[lk.key]) { addMod(lk.key, lk.tier || 0); FEAT_QUEUE.push({ head: 'LOCKER', lines: [`${MODS[lk.key].name} came out of the locker.`, "it's on your bar."] }); }
-  }
   for (const x of st.run.items) markSeen(x.key);
   statRunStart(); statNodeStart(st.run.map['0:1']);   // play stats (engine/stats.js)
   clearRun();

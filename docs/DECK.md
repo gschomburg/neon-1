@@ -435,6 +435,9 @@ Each chip: what it does, then where it comes from. The first ideas are listed fi
 - DEADMAN moved to CRASH (Greg).
 
 ### BOOT (2): what a run starts with
+- **Decided (Greg, 2026-11-22), built v15.38:** anything that starts you with mods or gear is a BOOT chip (PURGE, FIRST AID,
+  LUCKY START, THE ARCHIVE too). BT1 is the KIT socket: a KIT (a bundle, at most 3 mods and 2 kinds of gear, so it never
+  fills your mod bar or belt) only goes there. The rest (one mod, one gear stack, or no items) go in either socket.
 - **STARTER:** pick a mod you've found; it can show up in the starter perk. Or a stronger one: you always start with
   it.
 - **ARCHIVE:** start with any mod you've found. (Built v15.36 as THE ARCHIVE, a SYSOP post that's a CPU setting like

@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.37']);
+NEON_FILES.push(['engine/save.js', 'v15.38']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -89,7 +89,7 @@ const LEGACY = [
   // ---- 1 GUEST
   { key: 'hard',  tier: 1, name: 'HARDENED',   desc: '+1 starting integrity.',          costs: [40, 100] },
   { key: 'cash',  tier: 1, name: 'SEED MONEY', desc: 'start with +25cr.',               costs: [20, 40, 80] },
-  { key: 'kit',   tier: 1, name: 'FIELD KIT',  desc: 'start with a PATCH.',             costs: [50] },
+  { key: 'kit',   tier: 1, name: 'FIRST AID',  chip: 'FA1', desc: 'start with a PATCH. once you have a deck: the FIRST AID chip (BOOT).', costs: [50] },   // (was FIELD KIT: Greg, 2026-11-22, not a KIT)
   { key: 'belt',  tier: 1, name: 'GEAR SLOT',  desc: '+1 gear slot.',                   costs: [120] },
   { key: 'restock', tier: 1, name: 'RESTOCK',  desc: '+1 reroll at every market.',      costs: [30, 60],
     levels: ['2 rerolls at every market (was 1).', '3 rerolls at every market.'] },
@@ -97,12 +97,12 @@ const LEGACY = [
   { key: 'dms',   tier: 1, name: 'DEADMAN',    desc: 'dying keeps 25% of the REP you would have banked.', costs: [80, 200],
     levels: ['dying keeps 25% of the REP you would have banked.', 'dying keeps 50% of the REP you would have banked.'] },
   { key: 'wind',  tier: 1, name: 'SECOND WIND', desc: 'heal 1 integrity at the start of every new sector.', costs: [50] },
-  { key: 'lucky', tier: 1, name: 'LUCKY START', desc: 'start every run with a random common gear.', costs: [40] },
+  { key: 'lucky', tier: 1, name: 'LUCKY START', chip: 'LS1', desc: 'start every run with a random common gear. once you have a deck: the LUCKY START chip (BOOT).', costs: [40] },
   { key: 'stray', tier: 1, name: 'STRAY',      desc: 'a stray bug follows you: every run starts with a pet.', costs: [60] },
   // ---- 2 USER
   { key: 'drops', tier: 2, name: 'BETTER DROPS', desc: '1 in 10 mods and gear roll a step rarer.', costs: [150, 300],
     levels: ['1 in 10 mods and gear roll a step rarer.', '1 in 5 mods and gear roll a step rarer.'] },
-  { key: 'locker', tier: 2, name: 'LOCKER', desc: 'cash out and put one mod away (a step lower): your next run starts with it.', costs: [200] },
+  { key: 'remote', tier: 2, name: 'REMOTE ACCESS', needs: 'bench', desc: 'after the public node, your WORKBENCH opens: take things out of its LOCKER, shred, build.', costs: [200] },   // (was the LOCKER post, one stored mod: Greg, 2026-11-22. engine/panels.js openStartReward)
   { key: 'bench', tier: 2, name: 'WORKBENCH', desc: 'every safehouse gets a workbench: shred gear and mods into letters, spell a code to build one.', costs: [150] },   // (engine/bench.js)
   { key: 'nemesis', tier: 2, name: 'NEMESIS', desc: 'pick a corp you have breached: it shows up 3x as often.', costs: [120] },
   { key: 'starter', tier: 2, name: 'STARTER POOL', desc: 'the starter perk can offer general mods too.', costs: [150] },
@@ -119,8 +119,8 @@ const LEGACY = [
   { key: 'codex', tier: 3, name: 'CODEX', chip: 'CX5', desc: "gives you the CODEX chip (CRASH) for your deck: die in a corp you haven't beaten and a piece of its tell decodes.", costs: [250] },
   // ---- 4 SYSOP: the FUSE (your deck's mk IV, after mk III), and placeholders
   { key: 'fuse', tier: 4, name: 'THE FUSE', needs: 'deck3', desc: "mk IV for your deck: the bottom board, on the fuse's own power. SUDO, BOSS, HEAT.", costs: [1500] },
-  // THE ARCHIVE: a setting on your deck's CPU, like NEMESIS (engine/deck.js DECK_SWITCHES; the run starts it in engine/run.js)
-  { key: 'archive', tier: 4, name: 'THE ARCHIVE', desc: "pick a mod you've found on your deck's CPU: every run starts with it.", costs: [800] },
+  // THE ARCHIVE: a BOOT chip (v15.38, Greg: mods and gear at the start are chips); you pick its mod on its card (engine/deck.js)
+  { key: 'archive', tier: 4, name: 'THE ARCHIVE', chip: 'AR1', desc: "gives you THE ARCHIVE chip (BOOT) for your deck: pick a mod you've found on its card, and every run starts with it.", costs: [800] },
   { key: 'chroma', tier: 4, name: 'CHROMATOPHORE', desc: 'every palette in SETTINGS, and more colors for your card.', costs: [500] },   // (engine/core.js playerPalettes, engine/multiplayer.js styleOpen)
   { key: 'relic', tier: 4, name: 'RELIC', chip: 'RC1', desc: 'gives you the RELIC chip (SPOILS) for your deck: now and then a corp boss adds an exotic mod to its picks.', costs: [800] },
   // ---- PRIVATE MESSAGES (a feat opens them)
@@ -158,13 +158,13 @@ function buyPost(u) {
   save.legacy[u.key] = lv + 1;
   persist();
   if (u.key === 'nemesis' && !save.nemesis && nemesisPool().length) { save.nemesis = nemesisPool()[0]; persist(); }
-  if (u.chip && save.deck) { save.deck.chips = save.deck.chips || {}; save.deck.chips[u.chip] = 1; persist(); }   // a post that's a chip: into your deck
+  if (u.chip && save.deck) deckGiveOwed();   // a post that's a chip: into your deck (a BOOT one into a free BOOT socket)
   if (u.key === 'bench' && typeof rootBenchBought === 'function') rootBenchBought();   // ROOT's quest: on to the letters (engine/quests.js)
   for (let l = was + 1; l <= boardLevel(); l++) boardLevelNews(l);   // a level opened
   return null;
 }
-// Placeholder posts that real ones replaced (v15.35-v15.36): bought ones give their REP back (boot.js, at load).
-const GONE_POSTS = { elite1: 100, elite2: 100, elite3: 100, sysop1: 200, sysop2: 200, sysop3: 200 };
+// Placeholder posts that real ones replaced (v15.35-v15.37), and the old LOCKER post (v15.38: REMOTE ACCESS): bought ones give their REP back (boot.js, at load).
+const GONE_POSTS = { locker: 200, elite1: 100, elite2: 100, elite3: 100, sysop1: 200, sysop2: 200, sysop3: 200 };
 function refundGonePosts() {
   const lg = save.legacy || {}; let back = 0;
   for (const [k, cost] of Object.entries(GONE_POSTS)) if (lg[k] && !LEGACY.some(u => u.key === k)) { back += cost * lg[k]; delete lg[k]; }

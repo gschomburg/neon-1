@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.37']);
+NEON_FILES.push(['engine/deck.js', 'v15.38']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -28,8 +28,12 @@ const deckGroupCol = g => g === 'glyph' ? C[DECK_GROUPS[g][1]] || C.text : deckT
 // and looks; 1 most; 2 strong; 3 run-changers.
 const DECK_CHIPS = {
   // BOOT: what a run starts with (engine/deck.js deckRunStart)
+  PG0: ['PURGE', 'boot', 'common', 0, 'start every run with a PURGE. it comes with your deck. swap it out for something better.', ['PRG', '<x>'], 'start with a PURGE.'],   // (before the deck everyone starts with one: CONFIG.startItems)
+  AR1: ['THE ARCHIVE', 'boot', 'legendary', 2, "start every run with a mod you've found: pick it on this chip's card. no exotics. (THE BOARD: THE ARCHIVE)", ['[A]', 'ARC'], 'start with the mod you picked.'],
+  FA1: ['FIRST AID', 'boot', 'common', 1, 'start every run with a PATCH. (THE BOARD: FIRST AID)', ['[+]', 'AID'], 'start with a PATCH.'],
+  LS1: ['LUCKY START', 'boot', 'common', 1, 'start every run with a random common gear. (THE BOARD: LUCKY START)', ['7?7', 'LCK'], 'start with a common gear.'],
   TF1: ['TRUST FUND', 'boot', 'common', 1, 'start every run with +60cr.', ['$$$', '+60'], 'start with +60cr.'],
-  LD3: ['LOADOUT', 'boot', 'rare', 2, 'a battle chip: start every run with 3 FWALLs and 2 FRAGs.', ['[#]', '*!*'], 'start with 3 FWALLs and 2 FRAGs.'],
+  LD3: ['CARE PACKAGE', 'boot', 'rare', 2, 'a KIT: start every run with 3 FWALLs and 2 FRAGs. (lob them at spawn.)', ['[#]', '*!*'], 'start with 3 FWALLs and 2 FRAGs.'],   // (was LOADOUT: Greg, 2026-11-22)
   BM4: ['BEAST MASTER', 'boot', 'epic', 2, 'start every run with 3 CALLs: your crew on speed dial.', ['@@@', 'BMS'], 'start with 3 CALLs.'],
   FI2: ['FRESH INSTALL', 'boot', 'rare', 1, 'no starter perk. you start with +2 INT and +100cr instead.', ['NEW', '+2^'], 'no starter perk: +2 INT, +100cr.'],
   // BIOS: the run's rules
@@ -37,7 +41,7 @@ const DECK_CHIPS = {
   // CRASH: when you die
   DM5: ['DEADMAN', 'crash', 'epic', 1, 'dying keeps 50% of the REP you would have banked.', ['DED', 'MAN'], 'die and keep half your REP.'],
   '1UP': ['1UP', 'crash', 'exotic', 3, "b0y's crash unit, from beating G0D: die in a corp and CONTINUE? from its start, the way you went in. it charges again every sector.", ['1UP', 'b0y'], "die: back to the corp's start."],   // (engine/oneup.js oneUpOpen; never drops: deckGift)
-  BB7: ['BLACK BOX', 'crash', 'rare', 2, "when you die, your best mod goes to the LOCKER, a step lower (if the LOCKER's empty). your next run starts with it.", ['[#]', 'BOX'], 'a mod survives your death.'],
+  BB7: ['BLACK BOX', 'crash', 'rare', 2, "when you die, your best mod goes into your WORKBENCH's LOCKER, a step lower (if there's room).", ['[#]', 'BOX'], 'a mod survives your death.'],
   // SPOILS: what corp bosses give
   SP3: ['SPOILS', 'spoils', 'common', 0, 'a switch for corp bosses: take the REWARDS, or skip them for a HEAL (2 INT) or for CASH (60cr).', ['SPL', null], 'take boss rewards, a heal, or cash.'],
   // PSU: the cell
@@ -87,13 +91,13 @@ const DECK_CHIPS = {
   // ---- the second set (Greg, 2026-11-16: "just make up most of those other chips"). DECK_BETA: the ones that don't do
   // their whole job yet (they never drop: the editor and THE SHELL give them)
   // BOOT
-  PL3: ['PRELOAD', 'boot', 'common', 1, 'start every run with 3 random gear.', ['[?]', 'x3 '], 'start with 3 random gear.'],
+  PL3: ['PRELOAD', 'boot', 'common', 1, 'a KIT: start every run with 2 random gear.', ['[?]', 'x2 '], 'start with 2 random gear.'],
   BP1: ['FREE PRESS', 'boot', 'rare', 1, 'your first WORKBENCH build each run uses up no letters.', ['[=]', 'PRS'], 'first bench build: free.'],   // (was BLUEPRINT: Greg, 2026-11-21, blueprints are the bench's now)
-  JD6: ['JUNK DRAWER', 'boot', 'rare', 2, 'start with every mod slot full of low mods: BOX OF WIRES, COOLANT, SKIMMER, BUFFER, BURNER, STASH.', ['%#~', 'JNK'], 'start with 6 low mods.'],
-  PD7: ['PALADIN', 'boot', 'epic', 2, 'a class: start with BUFFER, 2 FWALLs and a PATCH.', ['+|+', 'PAL'], 'BUFFER, 2 FWALLs, a PATCH.'],
-  RG6: ['ROGUE', 'boot', 'epic', 2, 'a class: start with PICKPOCKET, a SPLIT and a SHAKE.', ['-/-', 'RGE'], 'PICKPOCKET, SPLIT, SHAKE.'],
-  KN8: ['KNIGHT', 'boot', 'rare', 2, 'a class: start with BURNER, 2 FWALLs and a FRAG.', ['[#]', 'KNT'], 'BURNER, 2 FWALLs, a FRAG.'],
-  CL3: ['CLERIC', 'boot', 'legendary', 3, 'a class: start with FAILSAFE and 2 PATCHes.', ['(+)', 'CLR'], 'FAILSAFE, 2 PATCHes.'],
+  JD6: ['JUNK DRAWER', 'boot', 'rare', 2, 'a KIT: start with 3 low mods, a different 3 each run: BOX OF WIRES, COOLANT, SKIMMER, BUFFER, BURNER, STASH.', ['%#~', 'JNK'], 'start with 3 random low mods.'],
+  PD7: ['PALADIN', 'boot', 'epic', 2, 'a KIT (a class): start with BUFFER, 2 FWALLs and a PATCH.', ['+|+', 'PAL'], 'BUFFER, 2 FWALLs, a PATCH.'],
+  RG6: ['ROGUE', 'boot', 'epic', 2, 'a KIT (a class): start with PICKPOCKET, a SPLIT and a SHAKE.', ['-/-', 'RGE'], 'PICKPOCKET, SPLIT, SHAKE.'],
+  KN8: ['KNIGHT', 'boot', 'rare', 2, 'a KIT (a class): start with BURNER, 2 FWALLs and a FRAG.', ['[#]', 'KNT'], 'BURNER, 2 FWALLs, a FRAG.'],
+  CL3: ['CLERIC', 'boot', 'legendary', 3, 'a KIT (a class): start with FAILSAFE and 2 PATCHes.', ['(+)', 'CLR'], 'FAILSAFE, 2 PATCHes.'],
   HS1: ['HEADSTART', 'boot', 'rare', 2, 'start on the second row of sector 1.', ['>>|', 'HS1'], 'start a row in.'],
   // BIOS
   LU6: ['LOUD', 'bios', 'rare', 1, 'rival hackers turn up more (1 corp in 4 that had none), and each one you beat pays double.', ['!!!', 'LUD'], 'more rivals, double pay.'],
@@ -123,7 +127,7 @@ const DECK_CHIPS = {
   AU2: ['AUCTION', 'spoils', 'rare', 2, 'pay credits to reroll a boss reward.', ['$>$', 'AUC'], 'reroll rewards for cr.'],
   SV1: ['SALVAGE', 'spoils', 'common', 1, 'salvage a reward: its letters, for the WORKBENCH.', ['abc', 'SLV'], 'rewards into letters.'],
   RC1: ['RELIC', 'spoils', 'legendary', 2, 'now and then a corp boss adds an exotic mod to its rewards: one more pick.', ['<X>', 'RLC'], 'an exotic, now and then.'],   // (THE BOARD's RELIC post gives it: deckRelicPick)
-  HL2: ['HEIRLOOM', 'spoils', 'epic', 2, 'the mod you pick goes straight to the LOCKER.', ['{L}', 'HLM'], 'your pick: to the LOCKER.'],
+  HL2: ['HEIRLOOM', 'spoils', 'epic', 2, "the mod you pick at a corp boss goes into your WORKBENCH's LOCKER, for a later run (on you if it's full).", ['{L}', 'HLM'], 'your pick: to the LOCKER.'],
   // PSU (cells: their power is deckCellPower)
   BO1: ['BROWNOUT', 'psu', 'epic', 0, 'power 12, but one random chip is off each run (a note says which).', ['[~]', 'Bo~'], 'power 12, one chip off.'],
   PO1: ['POTATO', 'psu', 'common', 0, 'power 4, but chips that cost 1 cost nothing.', ['(o)', 'Po4'], 'power 4, 1s are free.'],
@@ -162,7 +166,7 @@ for (const k of DECK_RIPPED) { DECK_CHIPS[k][4] = 'RIPPED: from a rival. ' + DEC
 // What each chip touches (docs/DECK.md "Seeds"; not shown in the game): map (what a run generates), rules (what it pays
 // or drops), you (your start, tools, deaths). Keep it next to DECK_CHIPS: a new chip gets its tags here.
 const DECK_CHIP_TAGS = {
-  TF1: ['you'], LD3: ['you'], BM4: ['you'], FI2: ['you'], QT0: ['map'], DM5: ['you'], BB7: ['you'], SP3: ['rules'],
+  PG0: ['you'], AR1: ['you'], FA1: ['you'], LS1: ['you'], TF1: ['you'], LD3: ['you'], BM4: ['you'], FI2: ['you'], QT0: ['map'], DM5: ['you'], BB7: ['you'], SP3: ['rules'],
   SC1: ['you'], LI2: ['you'], NC3: ['you'], RX9: ['you'], GR8: ['you', 'rules'], LK7: ['you', 'rules'], FM2: ['you', 'rules'], SK1: ['you'],
   WH0: ['you'], MN1: ['you'], CA4: ['you'], RK1: ['you'], PS4: ['you'], FL3: ['you'], CD2: ['you'], SN5: ['you'], RM1: ['you'], KL9: ['you'], CT1: ['you'], ZZ3: ['you'], WI5: ['you'], UD2: ['you'],
   GD1: ['you'], HD4: ['you'], RL2: ['you'], BR3: ['you'], GM1: ['you'], GG1: ['you'], FT3: ['you'], JM4: ['you'], FK2: ['you'], RF4: ['you'], CM3: ['you'], OMNI: ['you'], HC1: ['rules', 'you'], TX2: ['rules'], '1UP': ['you'],
@@ -218,14 +222,14 @@ const DECK_PARTS = [['cpu', 3, 4, 14, 7], ['rom', 3, 11, 14, 1], ['stick', 22, 9
   ['crew', 0, 32, 5, 6], ['hdr4', 10, 41, 23, 2], ['uplink', 0, 44, 4, 5]].map(([id, x, y, w, h]) => ({ id, x, y, w, h }));
 // the CPU shows your hacker name (PROFILE): WORD_WORD, 13 at most; 2 lines when it's over 10
 const deckName = () => { try { return profile().name || 'POTATO_SAUCE'; } catch (e) { return 'POTATO_SAUCE'; } };
-const DECK_POSTS = ['HARDENED', 'SEED MONEY', 'FIELD KIT', 'GEAR SLOT', 'RESTOCK', 'SECOND WIND', 'LOCKER', 'WORKBENCH', 'TELL LIGHT', 'LUCKY START'];
+const DECK_POSTS = ['HARDENED', 'SEED MONEY', 'GEAR SLOT', 'RESTOCK', 'SECOND WIND', 'REMOTE ACCESS', 'WORKBENCH', 'TELL LIGHT'];
 // BOARD posts you can set for a run (THE BOARD's LEGACY keys, engine/save.js: their names and text come from there).
 // Only the ones with a real choice (Greg, 2026-11-15): STARTER POOL changes what the starter perk offers, STRAY is a pet
 // you might not want along, NEMESIS picks a corp (it cycles, or none). Posts that only help (TELL LIGHT, LUCKY START)
-// are just on. THE ARCHIVE (SYSOP, Greg 2026-11-22) picks a mod the same way NEMESIS picks a corp: the PICKERS.
-const DECK_SWITCHES = ['starter', 'stray', 'nemesis', 'archive'];
-const DECK_PICKERS = ['nemesis', 'archive'];
-// THE ARCHIVE's mods: any you've found (seen), but no exotics, quest mods or hidden ones (engine/run.js starts the run with it)
+// are just on. NEMESIS picks a corp ([<] CORP [>]: the PICKERS). (THE ARCHIVE was one too, v15.36-v15.37: it's a chip now.)
+const DECK_SWITCHES = ['starter', 'stray', 'nemesis'];
+const DECK_PICKERS = ['nemesis'];
+// THE ARCHIVE's mods (its chip, AR1): any you've found (seen), but no exotics, quest mods or hidden ones (deckRunStart)
 const archivePool = () => modsFound('minor', 'gen', 'corp').filter(k => save.seen[k] && !MODS[k].quest && !MODS[k].hidden)
   .sort((a, b) => MODS[a].name.localeCompare(MODS[b].name));
 const deckPost = k => (typeof LEGACY !== 'undefined' && LEGACY.find(u => u.key === k)) || { name: k.toUpperCase(), desc: '' };
@@ -256,7 +260,7 @@ const deckBand = by => by >= 41 ? 4 : by >= 32 ? 3 : 2;
 // own seeded streams ('cachechip', 'pierchip'), so a seed's other drops don't move.
 const DECK_DROP = { cache: 0.2, fish: 0.25 };   // a cracked DATA CACHE; a pier catch that would have been gear
 const DECK_DROP_WEIGHT = { common: 50, rare: 30, epic: 14, legendary: 5, exotic: 1 };
-const DECK_NO_DROP = ['SC1', 'SP3', '1UP', 'MN1', 'CX5', 'RC1'];   // (CX5, RC1: THE BOARD's CODEX and RELIC posts give them)   // (MN1: ROOT's, from its quest)   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
+const DECK_NO_DROP = ['SC1', 'SP3', '1UP', 'MN1', 'CX5', 'RC1', 'PG0', 'FA1', 'LS1', 'AR1'];   // (CX5, RC1, FA1, LS1: THE BOARD's posts give them; PG0 comes with the deck: deckGiveOwed)   // (MN1: ROOT's, from its quest)   // the deck comes with these; the 1UP is b0y's, from beating G0D (deckGift)
 const deckChipItem = key => 'chip_' + key;
 const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
 // A SHELL or SUDO chip before THE SHELL is yours (Greg, 2026-11-20: they still drop; they point you at ROOT's quest)
@@ -339,6 +343,8 @@ function deckRunStart(run, opts = {}) {
   if (opts.tutorial || st.mp) return;
   const { keys, spoils, brown } = deckRunChips(run);
   deckRunCarry(run);   // INSURANCE and DEAD DROP from your last death (they come whatever's slotted now)
+  // PURGE is a chip once you have the deck (Greg, 2026-11-22): no PURGE chip on, no PURGE at the start
+  if (save.deck && !(keys || []).includes('PG0')) { const i = run.items.findIndex(x => x.key === 'purge'); if (i >= 0) run.items.splice(i, 1); }
   if (!keys || !keys.length) return;
   run.chips = keys; run.spoils = spoils || 0;
   deckCharges(run);   // THE SHELL's charges, full
@@ -349,17 +355,20 @@ function deckRunStart(run, opts = {}) {
   if (chipOn('FI2', run)) run.credits += 100;   // FRESH INSTALL (and no starter perk: engine/panels.js openStartReward)
   if (chipOn('LW1', run)) run.credits += 50;   // LIFTED WALLET (RIPPED)
   const give = (key, n) => { for (let i = 0; i < n; i++) if (!addItem(key, 0)) break; };
+  if (chipOn('FA1', run)) give('patch', 1);   // FIRST AID (THE BOARD's post, as a chip)
+  if (chipOn('LS1', run)) { const pool = shopGear().filter(k => ITEMS[k].rarity === 'common'); if (pool.length) give(pickR(pool, rngFor(run.seed, 'lucky')), 1); }   // LUCKY START (the same)
   if (chipOn('TN2', run)) give('warp', 2);   // TURBO'S NITRO (RIPPED)
   if (chipOn('LD3', run)) { give('wall', 3); give('frag', 2); }   // LOADOUT
   if (chipOn('BM4', run)) give('call', 3);   // BEAST MASTER
   // the second set
-  if (chipOn('PL3', run)) { const r = rngFor(run.seed, 'preload'), pool = shopGear(); for (let i = 0; i < 3 && pool.length; i++) give(pickWeighted(pool, gearWeight, r), 1); }   // PRELOAD
+  if (chipOn('PL3', run)) { const r = rngFor(run.seed, 'preload'), pool = shopGear(); for (let i = 0; i < 2 && pool.length; i++) give(pickWeighted(pool, gearWeight, r), 1); }   // PRELOAD (a KIT: 2 at most)
   const mods = ks => { for (const k of ks) if (MODS[k] && !run.mods.includes(k) && run.mods.length < modSlots()) addMod(k, 0); };
-  if (chipOn('JD6', run)) mods(['wires', 'coolant', 'skimmer', 'buffer', 'burner', 'stash']);   // JUNK DRAWER
+  if (chipOn('JD6', run)) { const r = rngFor(run.seed, 'junkdrawer'), pool = ['wires', 'coolant', 'skimmer', 'buffer', 'burner', 'stash']; mods(shuffle(pool, r).slice(0, 3)); }   // JUNK DRAWER (a KIT: 3 of them, by the seed)
   if (chipOn('PD7', run)) { mods(['buffer']); give('wall', 2); give('patch', 1); }   // PALADIN
   if (chipOn('RG6', run)) { mods(['pickpocket']); give('split', 1); give('shake', 1); }   // ROGUE
   if (chipOn('KN8', run)) { mods(['burner']); give('wall', 2); give('frag', 1); }   // KNIGHT
   if (chipOn('CL3', run)) { mods(['failsafe']); give('patch', 2); }   // CLERIC
+  if (chipOn('AR1', run) && archivePool().includes(save.archive)) mods([save.archive]);   // THE ARCHIVE (THE BOARD's chip): the mod you picked on its card
   if (chipOn('BP1', run)) run.freeBuild = true;   // FREE PRESS (engine/bench.js benchBuild)
 }
 // INSURANCE and DEAD DROP: what your last death left you (save.deck.insured, .deadDrop: deckDeath)
@@ -387,6 +396,9 @@ function deckDeadDrop(run) {
 // WIND-UP's power: the sectors you cleared in your last cash-out (engine/runend.js endRun)
 function deckCashedOut(run) { if (save.deck && !run.practice) save.deck.windup = run.sectorsCleared || 0; }
 // market prices (engine/panels.js priceOf): CHEAPSKATE -20%, INFLATION +10% a sector
+// Every market's buy price goes through shopMult (Greg, 2026-11-22: LOYALTY CARD is every market, the fence too, and any new
+// one): the market (engine/panels.js priceOf), THE FENCE's mods and its ripped chip (engine/events.js fencePrice, deckFenceChip).
+const shopMult = (run = st.run) => deckPriceMult(run) * (1 - 0.05 * legacyLv('market'));   // (LOYALTY CARD: THE BOARD, 5% a level)
 const deckPriceMult = (run = st.run) => !run || !run.chips ? 1 : (chipOn('CH1', run) ? 0.8 : 1) * (chipOn('IF1', run) ? 1 + 0.1 * (run.sector || 0) : 1);
 // the UPLINK's fees (engine/runend.js uplinkMin, uplinkFee): TOLL PASS -25%
 const deckUplinkMult = (run = st.run) => chipOn('TP1', run) ? 0.75 : 1;
@@ -488,7 +500,7 @@ function deckShopChip(node, n) {
 function deckFenceChip(node) {
   const run = st.run; if (!deckDrops()) return null;
   if (!run.fenceChip || run.fenceChip.node !== node.id) { const key = deckRollRipped(rngFor(run.seed, 'fencechip', node.id)); run.fenceChip = { node: node.id, key, sold: false }; }
-  const fc = run.fenceChip; return fc.sold ? null : Object.assign({ price: Math.round(2 * (DECK_CHIP_PRICE[DECK_CHIPS[fc.key][2]] || 60) * deckPriceMult()) }, fc);
+  const fc = run.fenceChip; return fc.sold ? null : Object.assign({ price: Math.round(2 * (DECK_CHIP_PRICE[DECK_CHIPS[fc.key][2]] || 60) * shopMult()) }, fc);
 }
 // boss rewards (engine/panels.js rewardOptions): a chip now and then; SPOILS chips (openReward: deckSpoils)
 const DECK_BOSS_CHIP = 0.12;
@@ -507,6 +519,9 @@ function deckRelicPick(node, options) {
   const got = exoticOffer(run.seed, 'relic', node.id, DECK_RELIC).filter(o => !has(o.key) && !options.some(p => p.key === o.key));
   return got.length ? { key: got[0].key, tier: 0 } : null;
 }
+// A corp's tell is known: you've breached it, or CODEX decoded all of it (Greg, 2026-11-22). The codex, G0D.exe
+// (engine/g0dexe.js g0dxKnows) and `man` read this.
+const tellKnown = key => corpStat(key).breached > 0 || ((save.codexBits || {})[key] || 0) >= 3;
 // CODEX (CRASH, from THE BOARD's ELITE post): die in a corp you haven't beaten and a third of its tell decodes in the codex
 // (save.codexBits: corp -> 0-3; engine/codex.js cxTellPart shows it). Not in practice runs. Returns the corp's name, or null.
 function deckCodexDeath(run, key) {
@@ -547,13 +562,18 @@ const DECK_HEAT_REP = { HC1: 0.5, TX2: 0.25, HN1: 0.25, SF2: 0.2, NM0: 0.2, IF1:
 const deckRepMult = run => !run || !run.chips ? 1 : (chipOn('FM2', run) ? 1.2 : 1) * run.chips.reduce((m, k) => m * (1 + (DECK_HEAT_REP[k] || 0)), 1);
 // dying (engine/runend.js endRun): DEADMAN keeps half; BLACK BOX puts your best mod in the LOCKER
 const deckDeadman = run => chipOn('OB1', run) && run.depth >= 30 ? 1 : chipOn('DM5', run) ? 0.5 : 0;   // (OBITUARY: past 30, all of it)
+// BLACK BOX (Greg, 2026-11-22): your best mod, a step lower, into the WORKBENCH's LOCKER (no picking). It says what went,
+// or why nothing did (no WORKBENCH, the locker full).
 function deckBlackBox(run) {
-  if (!chipOn('BB7', run) || save.locker || run.practice || !run.mods.length) return;
+  if (!chipOn('BB7', run) || run.practice || !run.mods.length) return;
   const rank = k => RARITY_ORDER.indexOf(MODS[k].rarity) * 10 + ((run.modTier || {})[k] || 0);
   const k = run.mods.filter(m => MODS[m] && !UPLINK_LOCKED.includes(m)).sort((a, b) => rank(b) - rank(a))[0];
   if (!k) return;
-  save.locker = { key: k, tier: Math.max(0, ((run.modTier || {})[k] || 0) - 1) };
-  FEAT_QUEUE.push({ head: 'BLACK BOX', lines: [`${MODS[k].name} made it out.`, "it's in the LOCKER:", 'your next run starts with it.'] });
+  const tier = Math.max(0, ((run.modTier || {})[k] || 0) - 1), lk = benchSave().locker, free = lk.findIndex(x => !x);
+  if (!benchOpen()) return FEAT_QUEUE.push({ head: 'BLACK BOX', lines: [`${MODS[k].name} had nowhere to go.`, 'no WORKBENCH: it needs its LOCKER.'] });
+  if (free < 0) return FEAT_QUEUE.push({ head: 'BLACK BOX', lines: [`${MODS[k].name} had nowhere to go.`, 'your LOCKER was full. nothing saved.'] });
+  lk[free] = { kind: 'mod', key: k, tier, n: 1 }; persist();
+  FEAT_QUEUE.push({ head: 'BLACK BOX', lines: [`${MODS[k].name} made it out, ${tierLabel(modView(k, tier))}.`, "it's in your WORKBENCH's LOCKER."] });
 }
 // SPOILS (engine/panels.js openReward): 0 the rewards, 1 a heal, 2 cash
 const deckSpoils = run => chipOn('OF1', run) ? 3 : chipOn('PT1', run) ? 4 : chipOn('SP3', run) ? run.spoils || 0 : 0;   // (3 OFFERING, 4 PROTECTION: chips)
@@ -602,7 +622,7 @@ const DECK_SHELL_CMDS = [
     if (!st.corp) throw new Error('only in a corp.');
     const key = st.corp.def.key, d = corpDef(key), rec = corpStat(key);
     run.hacked = true;
-    return [`${d.name}${d.level ? '  LV' + d.level : ''}`, d.intel, corpRules(d, 1), CORP_TELL[key] ? (rec.breached ? 'tell: ' + CORP_TELL[key] : 'tell: beat this corp to read it.') : ''].filter(Boolean).join('\n'); } },
+    return [`${d.name}${d.level ? '  LV' + d.level : ''}`, d.intel, corpRules(d, 1), CORP_TELL[key] ? (tellKnown(key) ? 'tell: ' + CORP_TELL[key] : 'tell: beat this corp to read it.') : ''].filter(Boolean).join('\n'); } },
   { name: 'ps', chip: 'PS4', cost: 1, safe: true, help: 'the rival hackers in this corp', run: () => {
     const run = shellNeedRun(); run.hacked = true;
     const hs = hkRivalsUp();
@@ -925,7 +945,23 @@ function deckEnsure() {
 // The 1UP chip (Greg, 2026-11-16): beat G0D and b0y gives you his crash unit, once (save.deck.got1up). It goes in CRASH
 // if that's empty. A save that beat G0D before the 1UP was a chip gets it the same way (the deck, a run, THE BOARD).
 // No deck yet: it comes with the deck (deckEnsure).
+// Chips your deck gets without finding them: PURGE (every deck), and the chip of each BOARD post that is one (FIRST AID,
+// LUCKY START, CODEX, RELIC: LEGACY's `chip`). Bought before the deck, they're there when it opens. A BOOT one goes into a
+// free BOOT socket, BT2 first (BT1 is the KIT socket).
+function deckGiveOwed() {
+  const sd = save.deck; if (!sd) return;
+  sd.chips = sd.chips || {}; sd.slots = sd.slots || {}; sd.order = sd.order || []; sd.owed = sd.owed || {};
+  let changed = false;
+  for (const k of ['PG0'].concat(LEGACY.filter(u => u.chip && legacyLv(u.key) > 0).map(u => u.chip))) {
+    if (sd.owed[k]) continue;   // (given once: shred or sell it and it's gone)
+    sd.owed[k] = 1; changed = true; if (sd.chips[k] > 0) continue;   // (already yours: bought before this)
+    sd.chips[k] = 1;
+    if (DECK_CHIPS[k][1] === 'boot' && !Object.values(sd.slots).includes(k)) { const id = ['BT2', 'BT1'].find(i => !sd.slots[i]); if (id) { sd.slots[id] = k; sd.order.push(id); } }
+  }
+  if (changed) persist();
+}
 function deckGift() {
+  deckGiveOwed();
   const sd = save.deck;
   if (!sd || !save.beatG0D || sd.got1up) return;
   sd.got1up = true; sd.chips = sd.chips || {}; sd.chips['1UP'] = (sd.chips['1UP'] || 0) + 1;
@@ -942,12 +978,16 @@ const deckMkNow = () => legacyLv('fuse') ? 4 : legacyLv('deck3') ? 3 : 2;
 function deckReal() {
   const sd = save.deck, owned = DECK_SWITCHES.filter(k => legacyLv(k));
   const nem = owned.includes('nemesis') && !(sd.off || []).includes('nemesis') && CORPS[save.nemesis] ? save.nemesis : null;
-  const arc = owned.includes('archive') && !(sd.off || []).includes('archive') && MODS[save.archive] ? save.archive : null;
+  const arc = MODS[save.archive] ? save.archive : null;   // (THE ARCHIVE's mod: its chip's card sets it)
   const d = Object.assign(deckView(), {
     real: true, mk: deckMkNow(), fuse: legacyLv('fuse') > 0, blown: !!sd.blown, spoils: sd.spoils || 0, glyph: sd.glyph || 0,
     crew: new Set(sd.crew || []), chips: Object.assign({}, sd.chips), slots: Object.assign({}, sd.slots), order: (sd.order || []).slice(),
     sw: new Set(owned.filter(k => !DECK_PICKERS.includes(k) && !(sd.off || []).includes(k))), nemesis: nem, archive: arc, overclock: !!sd.overclock, seenMk: sd.seenMk || 2,
   });
+  for (const id of Object.keys(d.slots)) if (id !== DECK_KIT_SOCKET && DECK_KITS.includes(d.slots[id])) {   // (a KIT outside the KIT socket: a save from before it)
+    const k = d.slots[id]; delete d.slots[id]; d.order = d.order.filter(i => i !== id);
+    if (!d.slots[DECK_KIT_SOCKET]) { d.slots[DECK_KIT_SOCKET] = k; d.order.push(DECK_KIT_SOCKET); }
+  }
   Object.defineProperty(d, 'rep', { get: () => save.rep || 0 });   // (spend it with deckBuy: THE BOARD's posts)
   d.savedJ = JSON.stringify(deckSnap(d));
   return d;
@@ -956,7 +996,7 @@ function deckReal() {
 function deckSnap(d) {
   const owned = DECK_SWITCHES.filter(k => legacyLv(k));
   return { chips: d.chips, slots: d.slots, order: d.order, spoils: d.spoils, glyph: d.glyph, crew: [...d.crew],
-    off: owned.filter(k => k === 'nemesis' ? !d.nemesis && (!d.real || nemesisPool().length > 0) : k === 'archive' ? !d.archive : !d.sw.has(k)), overclock: !!d.overclock, blown: !!d.blown, seenMk: d.seenMk || 2 };
+    off: owned.filter(k => k === 'nemesis' ? !d.nemesis && (!d.real || nemesisPool().length > 0) : !d.sw.has(k)), overclock: !!d.overclock, blown: !!d.blown, seenMk: d.seenMk || 2 };
 }
 // Each frame on the real deck: anything changed goes into the save (one place, so no change is missed).
 function deckPersist() {
@@ -972,7 +1012,9 @@ function deckPersist() {
 const deckSwitches = () => DECK.real ? DECK_SWITCHES.filter(k => legacyLv(k)) : DECK_SWITCHES;
 // NEMESIS cycles through: the corps you've breached and none (every corp on the dev deck)
 const deckNemPool = () => DECK.real ? [null].concat(nemesisPool()) : deckCorps();
-// THE ARCHIVE cycles through: the mods you've found and none (every one on the dev deck)
+// THE ARCHIVE cycles through: the mods you've found and none (every one on the dev deck). Its chip's card steps it; the
+// real deck keeps it in save.archive.
+function deckArcStep() { const d = DECK, cs = deckArcPool(); d.archive = cs[(cs.indexOf(d.archive) + 1) % cs.length]; if (d.real) { save.archive = d.archive; persist(); } Sound.tick(); }
 const deckArcPool = () => [null].concat(DECK.real ? archivePool() : modsFound('minor', 'gen', 'corp').sort((a, b) => MODS[a].name.localeCompare(MODS[b].name)));
 let deckArtRows = null;
 function deckArt() {   // the board, flat: every layer in order, but the ones drawn live
@@ -988,7 +1030,11 @@ const deckOwned = () => DECK.real ? Object.keys(DECK.chips).filter(k => DECK_CHI
 const deckSock = id => DECK_SOCKETS.find(s => s.id === id);
 const deckSlotOf = key => Object.keys(DECK.slots).find(k => DECK.slots[k] === key);
 const deckOpen = mk => mk <= DECK.mk && !(mk === 4 && (!DECK.fuse || DECK.blown));
-const deckFits = (key, s) => DECK_CHIPS[key][1] === s.g;
+// KITs (Greg, 2026-11-22): BOOT chips that start you with a bundle, up to 3 mods and 2 kinds of gear, so they never fill
+// your mod bar or your belt (PURGE has a slot). Only the KIT socket (BT1) takes one, so you never run two. The rest of
+// BOOT (one mod, one gear stack, or no items) goes in either BOOT socket.
+const DECK_KITS = ['LD3', 'PL3', 'JD6', 'PD7', 'RG6', 'KN8', 'CL3'], DECK_KIT_SOCKET = 'BT1';
+const deckFits = (key, s) => DECK_CHIPS[key][1] === s.g && (!DECK_KITS.includes(key) || s.id === DECK_KIT_SOCKET);
 // a SHELL socket on your real deck while ROOT isn't on your crew: chips go in, but THE SHELL is ROOT's (engine/quests.js)
 const deckShellPending = s => !!(s && s.g === 'shell' && DECK.real && typeof rootOn === 'function' && !rootOn());
 const deckMk = m => ['', '', 'II', 'III', 'IV'][m];
@@ -1433,6 +1479,7 @@ function deckSocket(s, X, Y, P, B, CL, { sel = false, key, pw, now }) {
     }
     if (!open) P(X + 1, Y + 1, inner > 3 ? ' mk' + s.mk + ' ' : 'mk' + s.mk, C.mid);
     else if (key) deckFace({ put: P, bg: B }, X + 1, Y + 1, key, off);
+    else if (s.id === DECK_KIT_SOCKET) P(X + 1, Y + 1, 'KIT', C.mid);   // (the KIT socket, empty: says so)
     // a SHELL socket before ROOT moves in (its quest: engine/quests.js): something lives in it, glitching in the quest color
     if (open && deckShellPending(s)) for (let j = 1; j < s.h - 1; j++) for (let i = 1; i < w - 1; i++)
       if (hh(i + s.x * 7, j + Math.floor(now / 140) + s.y) < (key ? 0.12 : 0.35)) P(X + i, Y + j, noiseCh(), C.rep);
@@ -1743,10 +1790,10 @@ function deckPicker(ctx, y0, sa) {
     idx[k] = items.length;
     items.push({ h: s.g === 'glyph' ? 3 : 2, stop: true, draw: (g, ctx, y) => deckPickRow(g, ctx, y, k, { IX, IW, s, cur, pw }) });
   });
-  deckBox(ctx, g, y0, sa, X0, W, H, gc, `${s.id} · ${DECK_GROUPS[s.g][0]}`, done);
+  deckBox(ctx, g, y0, sa, X0, W, H, gc, `${s.id} · ${DECK_GROUPS[s.g][0]}${s.id === DECK_KIT_SOCKET ? ' · KIT' : ''}`, done);
   // a status line (the group's text for now; the header already shows your power). It gets the whole row: whatever
   // goes here later has to fit W - 4 (Greg, 2026-11-15)
-  g.put(X0 + 2, y0 + 1, DECK_GROUPS[s.g][2].slice(0, W - 4), C.dim);
+  g.put(X0 + 2, y0 + 1, (s.g !== 'boot' ? DECK_GROUPS[s.g][2] : s.id === DECK_KIT_SOCKET ? 'KIT: one KIT, or any BOOT chip' : 'what a run starts with. KIT: BT1').slice(0, W - 4), C.dim);
   const sc = deckRows(ctx, g, IX, IW, y0 + 2, LR, items, p.s, 'dkpk');
   if (!p.shown) { sc.show(idx[p.sel]); p.shown = true; }
   st.scroll = sc.line; d.keyStep = null;
@@ -1882,7 +1929,7 @@ function deckCpu(ctx, y0, sa) {
   // can see them lit; the room goes to the switches, each with its text). NEMESIS cycles through the corps, or none.
   head('SETTINGS · for your next run');
   const sws = deckSwitches();
-  if (!sws.length) { g.put(x, y++, 'none yet: STARTER POOL, STRAY, NEMESIS', C.dim); g.put(x, y++, 'and THE ARCHIVE (THE BOARD) go here.', C.dim); }
+  if (!sws.length) { g.put(x, y++, 'none yet: STARTER POOL, STRAY and', C.dim); g.put(x, y++, 'NEMESIS (THE BOARD) can go here.', C.dim); }
   sws.forEach((k, i) => {
     const pk = DECK_PICKERS.includes(k), on = pk ? !!d[k] : d.sw.has(k), p = deckPost(k);
     g.put(x, y, p.name, on ? C.bright : C.mid, on);
@@ -1932,7 +1979,7 @@ function deckCard(ctx, y0) {
     g.put(x + meta.length, y, c[1] === 'psu' ? `power ${deckCellPower(key)}` : `PWR ${c[3]}`, off ? C.danger : C.mid);
     if (off && Math.floor(now / 500) % 2) g.put(W - 9, y, 'NO POWER', C.danger, true);
     g.bg(x, y + 1, c[0].length + 2, 1, ch.bg, 1); g.put(x + 1, y + 1, c[0], ch.fg, true);
-    tick(x + 1, key === 'SP3' ? 'bosses: ' + DECK_SPOILS[d.spoils][2] : sid && deckShellPending(deckSock(sid)) ? 'no shell yet: get ROOT on your crew (THE BOARD > QUESTS).' : c[6]);
+    tick(x + 1, key === 'SP3' ? 'bosses: ' + DECK_SPOILS[d.spoils][2] : key === 'AR1' ? 'every run starts with: ' + (d.archive ? MODS[d.archive].name : 'nothing yet. pick a mod.') : sid && deckShellPending(deckSock(sid)) ? 'no shell yet: get ROOT on your crew (THE BOARD > QUESTS).' : c[6]);
     return x;
   };
   if (sel.kind === 'chip') {
@@ -1957,7 +2004,8 @@ function deckCard(ctx, y0) {
       else btns(s.mk === 3 && d.mk < 3 ? [[deckRepText('mk III', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3]] : s.mk === 4 ? [[d.blown ? '[ REPLACE FUSE ]' : '[ SEE THE FUSE ]', C.rep, 'dkfuse', () => deckTapPart('fuse')]] : [], s.w + 3);
     } else if (key) {
       frame(s); chipRows(key, s.id);
-      btns([['[ CHANGE ]', C.accent, 'dkchg', () => deckPick(s.id)], ...(key === 'SP3' ? [[`[ ${DECK_SPOILS[d.spoils][0]} > ]`, C.money, 'dkspl', () => { d.spoils = (d.spoils + 1) % 3; Sound.tick(); }]] : [])], s.w + 3);
+      btns([['[ CHANGE ]', C.accent, 'dkchg', () => deckPick(s.id)], ...(key === 'SP3' ? [[`[ ${DECK_SPOILS[d.spoils][0]} > ]`, C.money, 'dkspl', () => { d.spoils = (d.spoils + 1) % 3; Sound.tick(); }]] : []),
+        ...(key === 'AR1' ? [[`[ ${(d.archive ? MODS[d.archive].name : 'PICK').slice(0, 11)} > ]`, C.accent, 'dkarc', deckArcStep]] : [])], s.w + 3);
     } else {
       frame(s);
       const n = deckOwned().filter(k => deckFits(k, s)).length;

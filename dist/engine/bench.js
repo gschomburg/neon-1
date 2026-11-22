@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.37']);
+NEON_FILES.push(['engine/bench.js', 'v15.38']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -583,7 +583,8 @@ function benchLines(T, B, X, lines) {
   X({ h: 5, draw: (ctx, y) => {
     ctx.put(0, y, 'NeoN+1', C.accent, 'hud');
     ctx.put(0, y + 1, rule(L.wc), C.dim, 'hud');
-    ctx.put(0, y + 2, 'SAFEHOUSE // ', C.mid, 'hud'); ctx.put(13, y + 2, 'WORKBENCH', C.bright, 'hud');
+    const at = b.node && b.node.type !== 'rest' ? 'REMOTE // ' : 'SAFEHOUSE // ';   // (REMOTE ACCESS: from the public node)
+    ctx.put(0, y + 2, at, C.mid, 'hud'); ctx.put(at.length, y + 2, 'WORKBENCH', C.bright, 'hud');
     wayOutBtn(ctx, L.wc - 9, y, '[LEAVE >]', 'bkleave', benchLeave, ctx.now || performance.now());   // (engine/scene.js)   // (top right, NeoN+1's line, like every LEAVE: Greg, 2026-11-21)
     const fl = b.flash && b.flash.to === 'locker' ? (ctx.now - b.flash.t0) / 700 : 1;
     BENCH_TABS.forEach(t => {
