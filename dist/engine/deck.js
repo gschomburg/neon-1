@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.38']);
+NEON_FILES.push(['engine/deck.js', 'v15.39']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -1727,7 +1727,7 @@ function deckTapSocket(s, rows) {
   const d = DECK;
   if (d.carry) {
     if (deckFits(d.carry, s) && deckOpen(s.mk)) deckSlot(d.carry, s.id);
-    else { Sound.deny(); deckSay(`${DECK_CHIPS[d.carry][0]} doesn't go in ${s.id}.`, C.danger); }
+    else { Sound.deny(); deckSay(DECK_KITS.includes(d.carry) && s.g === 'boot' ? `${DECK_CHIPS[d.carry][0]} is a KIT: KITs go in ${DECK_KIT_SOCKET}.` : `${DECK_CHIPS[d.carry][0]} doesn't go in ${s.id}.`, C.danger); }
     return;
   }
   // the first tap: its card; the second: the picker (Greg, 2026-11-15)
@@ -2011,7 +2011,8 @@ function deckCard(ctx, y0) {
       const n = deckOwned().filter(k => deckFits(k, s)).length;
       const pend = deckShellPending(s);   // (ROOT's: its fine print, a line at a time)
       g.put(8, y, `${gn} · ${n} fit`, C.mid); g.put(9, y + 1, `${s.id} · ${pend ? 'LEASED' : 'EMPTY'}`, pend ? C.rep : C.bright, true);
-      tick(9, pend ? QUEST_LINES.rootFine.join('   ') + '   (ROOT: PAPERWORK, THE BOARD > QUESTS)' : gt + '.');
+      tick(9, pend ? QUEST_LINES.rootFine.join('   ') + '   (ROOT: PAPERWORK, THE BOARD > QUESTS)' : s.g !== 'boot' ? gt + '.'
+        : s.id === DECK_KIT_SOCKET ? 'the KIT socket: one KIT (a bundle of mods and gear), or any other BOOT chip.' : gt + '. any BOOT chip but a KIT (those go in ' + DECK_KIT_SOCKET + ').');   // (KITs: DECK_KITS)
       btns([['[ CHOOSE ]', C.accent, 'dkchg', () => deckPick(s.id)]], s.w + 3);
     }
   } else if (sel.kind === 'part') deckPartCard(ctx, g, y, sel.id, pw, tick, btns);

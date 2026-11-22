@@ -1,6 +1,6 @@
 // NeoN+1 corps/monte.js
 'use strict';
-NEON_FILES.push(['corps/monte.js', 'v15.38']);
+NEON_FILES.push(['corps/monte.js', 'v15.39']);
 // Its boss mod: QUICK EYE (quickeye), defined with the others in data/mods.js (their order there
 // decides reward rolls), its effect in engine/run.js or engine/active.js.
 
