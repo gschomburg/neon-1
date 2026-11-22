@@ -7,8 +7,8 @@ NEON_FILES.push(['engine/textboard.js', 'v15.49']);
 function drawBox(ctx, y, ln) {
   const { now, put, addHit } = ctx;
   const label = ln.text, sub = ln.sub || '';
-  const w = Math.max(ln.minW || 20, Math.max(label.length, sub.length) + 8);
-  const x = Math.floor((L.wc - w) / 2);
+  const w = ln.w || Math.max(ln.minW || 20, Math.max(label.length, sub.length) + 8);   // (w, x: a set size and place, e.g. two boxes side by side; else centered)
+  const x = ln.x != null ? ln.x : Math.floor((L.wc - w) / 2);
   const h = sub ? 4 : 3;
   const pulse = (Math.sin(now / 420) + 1) / 2;
   // col: the box's color (default accent); disCol: its color when disabled (default dim)

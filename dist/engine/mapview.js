@@ -226,13 +226,11 @@ function buildMap(ctx) {
     lines = lines.filter(ln => !ln.swap || ln === extra[0]).map(ln => ln === extra[0] ? { text: cur.text, col: extra[cur.k].col } : ln);
   }
   lines.forEach((ln, k) => putC(y0 + k, ln.text, ln.col, 'map'));
-  if (st.mapSel) drawBox(ctx, y0 + lines.length, { text: info.action, id: 'enter', onTap: () => enterNode(map[st.mapSel]), minW: 18 });
-  if (st.mapSel && deckPhishHere(map[st.mapSel])) {   // PIER PASS (a chip: engine/deck.js): or phish here, once a sector
-    const t = '[ OR GO PHISHING ]', x = Math.floor((L.wc - t.length) / 2), yy = y0 + lines.length + 3;
-    if (ctx.hl) ctx.hl(x, yy, t.length, 1, 'phish');
-    put(x, yy, t, st.hoverBtn === 'phish' ? C.bright : C.accent, 'map', true);
-    addHit(x, yy, t.length, 1, { kind: 'btn', id: 'phish', onTap: () => enterNode(map[st.mapSel], false, true) });
-  }
+  if (st.mapSel && deckPhishHere(map[st.mapSel])) {   // PIER PASS (a chip: engine/deck.js): ENTER and PIER side by side, once a sector (Greg, 2026-11-22)
+    const w = Math.min(16, Math.floor((L.wc - 2) / 2)), x = Math.floor((L.wc - 2 * w - 2) / 2);
+    drawBox(ctx, y0 + lines.length, { text: info.action, id: 'enter', onTap: () => enterNode(map[st.mapSel]), w, x });
+    drawBox(ctx, y0 + lines.length, { text: 'P I E R', id: 'phish', onTap: () => enterNode(map[st.mapSel], false, true), w, x: x + w + 2 });
+  } else if (st.mapSel) drawBox(ctx, y0 + lines.length, { text: info.action, id: 'enter', onTap: () => enterNode(map[st.mapSel]), minW: 18 });
 }
 
 function nodeInfo(n) {
