@@ -20,7 +20,7 @@
 //   once-offs (counted when they happen):  diedFirst (died in your first corp)  nakedSector (cleared a sector with no
 //   mods)  bossAt1 (beat a boss layer at 1 INT)  easyCome (earned 1000cr in a run and ended it with under 10)
 'use strict';
-NEON_FILES.push(['data/feats.js', 'v15.31']);
+NEON_FILES.push(['data/feats.js', 'v15.32']);
 
 const FEATS = [
   // ---- the basics: runs
@@ -114,7 +114,8 @@ for (const [id, h] of Object.entries(HACKERS)) {
     say: `five times you put ${h.name} down. ${h.name === 'd0g' ? 'wow.' : 'they want their logo back. tough.'}` });
   else {
     FEATS.push({ id: 'call_' + id, name: h.name + ' x5', group: 'crew', hacker: id, text: `call ${h.name} in 5 times.`, stat: 'hack:call:' + id, n: 5, logo: id,
-      say: `${h.name.toLowerCase()} likes working with you. there's a spot on your crew, if you want it.` });
+      // (already on your crew, like POPS from his quest: no offer of a spot. Greg, 2026-11-21)
+      get say() { return `${h.name.toLowerCase()} likes working with you.` + (typeof hkCrewOn === 'function' && hkCrewOn(id) ? " good thing they're on your crew already." : " there's a spot on your crew, if you want it."); } });
     FEATS.push({ id: 'call10_' + id, name: h.name + ' x10', group: 'crew', hacker: id, text: `call ${h.name} in 10 times.`, stat: 'hack:call:' + id, n: 10,
       say: `ten calls. ${h.name.toLowerCase()} has a trick to show you.` });
   }

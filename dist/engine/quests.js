@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v15.31']);
+NEON_FILES.push(['engine/quests.js', 'v15.32']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -203,12 +203,19 @@ function rootShredLetter(corrupt) {
   if (!need || (!corrupt && Math.random() >= ROOT_ODDS.shred)) return null;
   return need[Math.floor(Math.random() * need.length)];
 }
+// Once ROOT is on your crew, its spare lowercase letters leave the bench (Greg, 2026-11-21: they had no use left).
+function rootLettersGone() { if (!rootOn() || !save.bench || !save.bench.letters) return; const l = save.bench.letters; if (l.r || l.o || l.t) { delete l.r; delete l.o; delete l.t; persist(); } }
 // You spelled it (engine/bench.js benchBuild): the scene, then ROOT joins (the step's crew), its call and its chip.
 function rootSigned() {
+  // One after another (Greg, 2026-11-21: it was a QUEST card, a chip box and ROOT's call all saying the same): ROOT's
+  // call, then its chip (the box, with the chip's face), then the QUEST card, which says how to open THE SHELL.
   playScene('paperwork', () => {
-    questNext('root');   // (SIGN HERE's crew: ROOT is on your crew now)
-    deckQuestChip('MN1', "ROOT moved in. it brought a chip.");   // (ROOT's chip: man. engine/deck.js)
-    queueCall('root', QUEST_LINES.rootJoined);
+    save.legacy = save.legacy || {}; save.legacy.crew_root = 1; questStep('root', 'done');   // (SIGN HERE's crew: ROOT is on your crew now)
+    rootLettersGone();
+    queueCall('root', QUEST_LINES.rootJoined, null, () => {
+      deckQuestChip('MN1', 'ROOT moved in. it brought a chip.');   // (ROOT's chip: man. engine/deck.js)
+      questCard('root');   // (waits for the chip's box: callTick)
+    });
   });
 }
 
@@ -219,8 +226,8 @@ const CALL_QUEUE = [];
 function queueCall(who, lines, btn = null, onClose = null) { CALL_QUEUE.push({ who, lines, btn, onClose }); }   // (onClose: put away without a button)
 // A QUEST card (the call box, no face): the quest's name, the step you're on now, its goal (and seed).
 function questCard(id) {
-  const info = QUEST_INFO[id], v = questView(id);
-  CALL_QUEUE.push({ who: info.from.toLowerCase(), quest: { name: info.name, step: `STEP ${v.at + 1}: ${v.name}`, seed: v.step.seed }, lines: [v.goal] });
+  const info = QUEST_INFO[id], v = questView(id), cd = v.name === v.step.name && v.step.card;   // (card: its own words for the popup, while you aren't holding the item)
+  CALL_QUEUE.push({ who: info.from.toLowerCase(), quest: { name: info.name, step: `STEP ${v.at + 1}: ${cd ? cd.name : v.name}`, seed: v.step.seed }, lines: [cd ? cd.goal : v.goal] });
 }
 function callTick(now) {
   if (st.callBox || st.featBox || (st.qScene && !sceneDark(now)) || !CALL_QUEUE.length || !featCalm()) return;   // (after a scene: over its dark)

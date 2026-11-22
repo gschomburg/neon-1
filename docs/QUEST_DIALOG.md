@@ -290,8 +290,7 @@ From ROOT.
 
 > **ROOT:** root@deck:~# whoami  
 > **ROOT:** ROOT. i live here now. it was always going to go this way.  
-> **ROOT:** THE SHELL is open: press `. type help.  
-> **ROOT:** here. a chip. slot it in a SHELL socket and THE SHELL learns man.  
+> **ROOT:** here. a chip. slot it in a SHELL socket and THE SHELL learns man: what a corp is, mid-layer.  
 
 **rootShellHi**: THE SHELL, the first time you open it after ROOT joins.
 

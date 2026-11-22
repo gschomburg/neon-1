@@ -52,8 +52,7 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   see? (TELL ON with a wrong dial would be a real bug.) Maybe say TELL ON whenever the tell happens to point true.
 
 ### Training: the deck and the workbench
-- **The deck's first time:** today the PAPERWORK quest card comes up first. POPS's call should come first, then the quest
-  card. POPS's 6-line deck talk is too big for a first look: split it into its own training. POPS calls and offers it
+- **The deck's first time:** (built v15.32: POPS's call comes before the PAPERWORK card.) POPS's 6-line deck talk is too big for a first look: split it into its own training. POPS calls and offers it
   ("there's a lot to go over here. need me to hold your hand?" / skip). Greg's outline:
   - your deck lasts, like your REP buys
   - start by slotting the PSU chip. A board with no PSU: that socket gets the power effects, and the no-power bar says
@@ -66,7 +65,6 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   - point out the SLOTS sub-tab
   - at the end maybe a chip, a feat or a title
   - then the PAPERWORK quest card
-- **A `*` on the DECK tab** when you hit USER and get the deck, till you open it (check it isn't there already).
 - **The workbench training** (was in Medium and small, Greg 2026-11-20): same shape as the deck's, a quick intro then the
   offer. Its own world, apart from your run: your gear swaps for a set kit, ROOT's quest popups stay out, and at the end
   you're back in your run as you were. Greg's outline:
@@ -80,30 +78,16 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 
 ### The workbench
 - SHRED could get sub-tabs: LOOT, GEAR, MODS.
-- On SHRED, mods are yellow in the list but gear and loot are grey: why? Make it one rule.
 - A correct recipe shows only BUILD: maybe a cancel too.
 - A REP buy for +5 LOCKER slots? Only if it fits without a scroll area.
 - Its own music track.
-- ROOT's letters: once ROOT is unlocked, any spare r / o / t should leave the bench.
 
 ### The deck and chips
-- **Chips home card:** each chip as its 3x2 face with its name, in a list (like ROOT's man, below).
-- **The CHIPS list:** make "in slot" clearer (maybe a white background with black text), and a [VIEW] on a slotted chip
-  that opens the board scrolled to it.
-- **EXPANSION and the FUSE:** a bigger note that you need ELITE to install them, when you aren't yet.
-- **Chips in rewards and markets** should say chip, not gear. (Greg asked: is CHARGE a gear? Yes: a corp boss's CHARGE
-  pick is gear, +2 shell charges, not a chip.)
-- **RELOAD** maybe shouldn't double chips.
 - (Greg asked: is SPOILS a chip you start with? Yes: the deck comes with STOCK CELL and SPOILS, engine/deck.js DECK_START.)
 
-### ROOT's unlock, smoothed out
-- ROOT giving you `man`: the call just says "man". Show the 3x2 chip in it.
-- ROOT also calls with the same info right after. Smooth it out: today it's quest cards and crew calls one after another.
-
 ### UI
-- **`[< TITLE]`:** not sure about the look. Maybe `<< TITLE` or MAIN.
-- **TITLE and LEAVE buttons** are greyed out: a little brighter, and maybe a small animation now and then.
-- **The market's BUY / SELL** could be regular tabs, not the sub-tab strip.
+- **Decided (Greg, 2026-11-21), built v15.32:** keep `[< TITLE]`; LEAVE is `[LEAVE >]`. Both brighter, the arrow nudges
+  its way now and then and a shimmer slides across (engine/scene.js wayOutBtn). The market's BUY / SELL are regular tabs.
 - **Lists with an info box:** standardize above or below. FEATS shows it above, REP below (REP also has its buy area;
   maybe those just sit closer). The codex is above. Look at them all together.
 - **THE BOARD's name:** "BBS board"? Or a better name for the whole section (it was up for a rename once). BBS = bulletin
@@ -114,10 +98,6 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 - The LOOT bag's CLOSE is fine as it is (Greg).
 
 ### Quests and story
-- **SYSTEM FAILURE step 2:** its popup still names the DISC. The popup should be the vaguer copy (keep an eye out for
-  tech from MEDIX); the quest page can name the DISC.
-- **The POPS x5 feat** says "there's a spot on your crew, if you want it", but POPS is on your crew already (data/feats.js
-  call_ feats). Different words when they're crew already.
 - **The H3AV3N maze:** make the pattern more of a thing: a better intro, or a little popup from b0y.
 - **The MEDIX basement scene** should foreshadow the NetHack / INFILTR8 stuff: maybe a second panel of sneaking through
   the basement past a camera, in rooms, looking like what that mode ends up as.
@@ -126,7 +106,6 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 - **LEVERAGE** isn't a great exotic yet. Ideas: real debt without buying anything (take a loan, give your money away);
   let it go below -250 at the UPLINK.
 - **FRAG:** does it show explosions? A plop where each will land, then staggered radial booms.
-- **The PHISH popup's button delay:** half as long.
 - **The ELITE level** needs things to buy: its three posts are placeholders (engine/save.js elite1-3).
 
 ## Big features: the next layer of the game

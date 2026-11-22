@@ -23,7 +23,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v15.31']);
+NEON_FILES.push(['data/quests.js', 'v15.32']);
 
 const QUEST_INFO = {
   pops: {
@@ -35,6 +35,8 @@ const QUEST_INFO = {
       // MEDIX is a hint, not the only place: the DISC drops anywhere loot does (MEDIX's corp boss always has one)
       { key: 'find', name: 'THE DISC', carry: 'disc', uplinkLine: 'uplink', doneLine: 'deliver',
         goal: 'POPS wants an old DISC found. try MEDIX: its corp boss always has one. it can turn up anywhere loot drops, markets too.',
+        // the QUEST card when the step opens: vaguer, like POPS's call (Greg, 2026-11-21); THE BOARD's page names the DISC
+        card: { name: 'MEDIX TECH', goal: 'POPS wants MEDIX tech. break MEDIX if you see it, and keep an eye out for anything of theirs: loot, markets, the PIER.' },
         held: { name: 'GET OUT WITH THE DISC', goal: 'you have the DISC. beat the sector boss, then CASH OUT at the UPLINK with it.' },
         lost: 'you lost the DISC. another copy is out there. try MEDIX again, or any loot node, market or the PIER.' },
       { key: 'deliver', name: 'SAFEHOUSE', scene: 'disc', goTo: 'TAKE IT TO POPS', goal: 'you cashed out with the DISC. take it to POPS.' },
@@ -104,8 +106,8 @@ const QUEST_LINES = {
   // all four letters: the step after
   rootAll: ['r o o t. all of it.', 'spell it at the bench and see who answers.'],
   // ROOT joins (after the scene): its first call
-  rootJoined: ['root@deck:~# whoami', 'ROOT. i live here now. it was always going to go this way.', 'THE SHELL is open: press `. type help.',
-    'here. a chip. slot it in a SHELL socket and THE SHELL learns man.'],
+  rootJoined: ['root@deck:~# whoami', 'ROOT. i live here now. it was always going to go this way.',
+    'here. a chip. slot it in a SHELL socket and THE SHELL learns man: what a corp is, mid-layer.'],
   // THE SHELL, opened for the first time after ROOT joins (engine/shell.js)
   rootShellHi: ['ROOT: oh. you found the door.', 'ROOT: help lists what you know. you know very little.'],
   // THE SHELL before ROOT: no shell yet (engine/shell.js)

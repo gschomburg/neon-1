@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v15.31']);
+NEON_FILES.push(['engine/active.js', 'v15.32']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -581,7 +581,7 @@ async function nukeCorp(lv) {
 }
 // RELOAD (mod): going into a corp, every gear you hold only one of becomes two (engine/run.js startCorp).
 function reloadGear() {
-  const singles = st.run.items.filter(s => s.n === 1 && !isLoot(s.key));
+  const singles = st.run.items.filter(s => s.n === 1 && !isLoot(s.key) && !ITEMS[s.key].chip);   // (not chips: Greg, 2026-11-21)
   for (const s of singles) s.n = 2;
   if (singles.length) modFired('reload');
 }

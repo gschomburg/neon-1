@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v15.31']);
+NEON_FILES.push(['engine/screens.js', 'v15.32']);
 
 // ---------- circuit traces (the title's, and the intro card's wires: engine/intro.js) ----------
 // Which way each trace char connects (n e s w). Two cells link when each has a port facing the other.
@@ -490,7 +490,7 @@ function swapLines() {
     T('pick the gear to replace:', C.mid);
     run.items.forEach((s, i) => {
       const o = itemView(s.key, s.tier);
-      lines.push({ list: true, id: 'sw' + i, name: o.name + (s.n > 1 ? ' x' + s.n : ''), gear: s.key, gearTier: s.tier, right: s.n > 1 ? `all ${s.n}` : 'gear', rightCol: C.mid,
+      lines.push({ list: true, id: 'sw' + i, name: o.name + (s.n > 1 ? ' x' + s.n : ''), gear: s.key, gearTier: s.tier, right: s.n > 1 ? `all ${s.n}` : ITEMS[s.key].chip ? 'chip' : 'gear', rightCol: C.mid,
         sel: sw.sel === i, onTap: pick(i) });
     });
     T(SEP, C.dim);

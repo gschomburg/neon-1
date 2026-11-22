@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.31']);
+NEON_FILES.push(['engine/deck.js', 'v15.32']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -299,11 +299,12 @@ function deckHome(run, win) {
   const home = [], shred = [], got = [];
   for (const s of chips) {
     const k = deckItemChip(s.key), had = deckHave(k) > 0, n = had ? s.n : s.n - 1;
-    if (!had) { save.deck.chips[k] = 1; home.push(ITEMS[s.key].name); }
+    if (!had) { save.deck.chips[k] = 1; home.push(k); }
     if (n > 0) { shred.push(ITEMS[s.key].name + (n > 1 ? ' x' + n : '')); got.push(...benchAutoShred(k, n)); }
   }
   const noShell = chips.some(s => deckNoShell(deckItemChip(s.key)));   // (a shell chip before ROOT: where to go)
-  const lines = home.length ? ['chips home:', '', ...home.map(n => '  ' + n), '', 'slot them: THE BOARD > DECK.'] : [];
+  // each chip home as its face and name (engine/feats.js featPage); past 4, names only, so the box fits a phone
+  const lines = home.length ? ['chips home:', '', ...home.slice(0, 4).map(k => ({ chip: k })), ...home.slice(4).map(k => '  ' + DECK_CHIPS[k][0]), '', 'slot them: THE BOARD > DECK.'] : [];
   if (shred.length) lines.push(...(lines.length ? [''] : []), 'had already, shredded:', ...shred.map(n => '  ' + n), '  > ' + got.map(ch => isBlank(ch) ? 'BLANK' : ch).join(' '));
   FEAT_QUEUE.push({ head: 'YOUR DECK', lines: lines.concat(noShell && home.length ? ['', 'shell chips need THE SHELL.', rootStep() ? 'get ROOT: THE BOARD > QUESTS.' : 'open your deck. something lives in it.'] : []) });
 }
@@ -503,7 +504,7 @@ function deckQuestChip(key, why) {
   const sd = save.deck; if (!sd || !DECK_CHIPS[key]) return;
   sd.questChips = sd.questChips || []; if (sd.questChips.includes(key)) return;
   sd.questChips.push(key); sd.chips[key] = (sd.chips[key] || 0) + 1; persist();
-  FEAT_QUEUE.push({ head: 'YOUR DECK', lines: [why, '', '  ' + DECK_CHIPS[key][0], '', 'slot it: THE BOARD > DECK.'] });
+  FEAT_QUEUE.push({ head: 'YOUR DECK', lines: [why, '', { chip: key }, '', 'slot it: THE BOARD > DECK.'] });
 }
 // CHECKPOINT (engine/runend.js die): once a run, back with nothing but full INT. Returns true if it took the death.
 function deckCheckpoint(run) {
@@ -1037,8 +1038,9 @@ function openDeck(o = {}) {
   d.pick = null; d.cpu = null; d.carry = null; d.msg = null; d.selT = performance.now();
   openPanel('THE DECK', deckLines, null, { full: true });
   st.keyHandler = deckKey;
-  if (d.real) rootStart();   // ROOT's quest starts here, or at a bench (engine/quests.js)
+  // POPS first, then ROOT's QUEST card (Greg, 2026-11-21: the card came up before POPS had said what a deck is)
   if (d.real && !save.deck.popsSeen) { save.deck.popsSeen = true; persist(); queueCall('pops', deckTrainLines()); }
+  if (d.real) rootStart();   // ROOT's quest starts here, or at a bench (engine/quests.js)
 }
 // The deck's training (Greg, 2026-11-20: "rough something in"): POPS, the first time you open your deck. Seen once
 // (save.deck.popsSeen); `deck.pops` in THE SHELL replays it.
@@ -1682,7 +1684,8 @@ function deckChipList(ctx, y0, sa) {
         deckFace(g, 2, y, key, off);
         g.put(9, y, c[0], C.bright, true);   // (no counts: a chip home is unlocked, Greg 2026-11-21)
         if (deckBeta(key) && !where) g.put(W - 5, y, 'BETA', C.danger);   // (DECK_BETA: not all there yet)
-        if (where) g.put(W - 1 - where.length - 3, y, 'in ' + where, off ? C.danger : C.accent);
+        // slotted: inverted, so it stands out in the list (Greg, 2026-11-21: white with black text; red with no power)
+        if (where) { const t = ' in ' + where + ' ', tx = W - 1 - t.length; g.bg(tx, y, t.length, 1, off ? C.danger : C.bright, 1); g.put(tx, y, t, C.bg, true); }
         g.put(9, y + 1, c[1] === 'psu' ? `+${deckCellPower(key)} PWR` : `PWR ${c[3]}`, C.mid);
         g.put(16, y + 1, c[6].slice(0, W - 17), C.text);
         if (off) { g.clr(W - 10, y + 1, 10); g.put(W - 9, y + 1, 'NO POWER', C.danger, true); }
@@ -1840,8 +1843,9 @@ function deckCpu(ctx, y0, sa) {
     g.put(x + 10, y, what.slice(0, w - 10), have ? C.text : C.mid);
     y++;
     let bx = x + 10;
-    if (m === 3 && !have) deckBtn(ctx, g, bx, y, deckRepText('INSTALL', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3, d.mk !== 2);
-    else if (m === 4 && !have) { if (d.mk < 3) g.put(bx, y, 'mk III, then the FUSE', C.dim); else deckBtn(ctx, g, bx, y, deckRepText('THE FUSE', 'fuse'), deckRepCol('fuse'), 'dkmk4', deckFuseIn); }
+    // not at that access level on THE BOARD yet: it says so, loud, in place of the button (Greg, 2026-11-21)
+    if (m === 3 && !have) { if (d.real && !deckPostOpen('deck3')) g.put(bx, y, 'reach ELITE first', C.danger, true); else deckBtn(ctx, g, bx, y, deckRepText('INSTALL', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3, d.mk !== 2); }
+    else if (m === 4 && !have) { if (d.mk < 3) g.put(bx, y, 'mk III, then the FUSE', C.dim); else if (d.real && !deckPostOpen('fuse')) g.put(bx, y, 'reach SYSOP first', C.danger, true); else deckBtn(ctx, g, bx, y, deckRepText('THE FUSE', 'fuse'), deckRepCol('fuse'), 'dkmk4', deckFuseIn); }
     else if (m === 4 && d.blown) g.put(bx, y, 'the FUSE is blown', C.danger);
     else g.put(bx, y, lv + ' access', C.dim);
     y++;
@@ -1907,7 +1911,9 @@ function deckCard(ctx, y0) {
     const where = deckSlotOf(sel.key), c = DECK_CHIPS[sel.key];
     frame(where ? deckSock(where) : { id: '---', g: c[1], mk: 2, w: c[1] === 'boss' ? 7 : 5, h: 4 }, sel.key);
     chipRows(sel.key, where);
-    btns([['[ SLOT ]', C.accent, 'dkslot', () => deckCarry(sel.key)], ...(where ? [['[ PULL ]', C.bright, 'dkpull', () => deckPull(where)]] : [])], c[1] === 'boss' ? 10 : 8);
+    // VIEW: the board, scrolled to its socket (Greg, 2026-11-21)
+    const view = () => { const s = deckSock(where); d.view = 'board'; d.pick = null; d.carry = null; deckSelect({ kind: 'socket', id: where }); deckShow(s.y, s.h, deckViewRows()); Sound.tick(); };
+    btns([['[ SLOT ]', C.accent, 'dkslot', () => deckCarry(sel.key)], ...(where ? [['[ PULL ]', C.bright, 'dkpull', () => deckPull(where)], ['[ VIEW ]', C.bright, 'dkview', view]] : [])], c[1] === 'boss' ? 10 : 8);
   } else if (sel.kind === 'socket') {
     const s = deckSock(sel.id), key = d.slots[s.id], open = deckOpen(s.mk), [gn, , gt] = DECK_GROUPS[s.g], gc = deckGroupCol(s.g);
     if (s.g === 'glyph') {
@@ -1919,7 +1925,8 @@ function deckCard(ctx, y0) {
       frame(s);
       g.put(8, y, gn, C.mid); g.put(9, y + 1, `${s.id} · LOCKED`, C.mid, true);
       tick(9, s.mk === 3 ? 'opens with mk III: the CPU upgrade, an ELITE post on THE BOARD.' : d.blown ? 'the FUSE is blown. replace it to light mk IV again.' : 'opens with mk IV: the FUSE, a SYSOP post on THE BOARD.');
-      btns(s.mk === 3 && d.mk < 3 ? [[deckRepText('mk III', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3]] : s.mk === 4 ? [[d.blown ? '[ REPLACE FUSE ]' : '[ SEE THE FUSE ]', C.rep, 'dkfuse', () => deckTapPart('fuse')]] : [], s.w + 3);
+      if (s.mk === 3 && d.mk < 3 && d.real && !deckPostOpen('deck3')) g.put(1, y + 3, 'reach ELITE on THE BOARD first.', C.danger, true);
+      else btns(s.mk === 3 && d.mk < 3 ? [[deckRepText('mk III', 'deck3'), deckRepCol('deck3'), 'dkmk3', deckUpgrade3]] : s.mk === 4 ? [[d.blown ? '[ REPLACE FUSE ]' : '[ SEE THE FUSE ]', C.rep, 'dkfuse', () => deckTapPart('fuse')]] : [], s.w + 3);
     } else if (key) {
       frame(s); chipRows(key, s.id);
       btns([['[ CHANGE ]', C.accent, 'dkchg', () => deckPick(s.id)], ...(key === 'SP3' ? [[`[ ${DECK_SPOILS[d.spoils][0]} > ]`, C.money, 'dkspl', () => { d.spoils = (d.spoils + 1) % 3; Sound.tick(); }]] : [])], s.w + 3);
@@ -1982,6 +1989,8 @@ function deckPartCard(ctx, g, y, id, pw, tick, btns) {
 const deckCost = key => { const u = typeof LEGACY !== 'undefined' && LEGACY.find(p => p.key === key); return u ? u.costs[0] : '?'; };
 // A button that costs REP shows what you have against it, dimmed while you're short (Greg, 2026-11-21: REP left the
 // deck's top line). It still takes a tap: deckBuy says what's missing.
+// a deck post you can buy at your access level on THE BOARD (engine/save.js postOpen)
+const deckPostOpen = key => postOpen(LEGACY.find(p => p.key === key));
 const deckRepText = (what, key) => `[ ${what} · ${DECK.rep}/${deckCost(key)} REP ]`;
 const deckRepCol = key => DECK.rep >= deckCost(key) ? C.rep : C.mid;
 function deckBuy(key, cost, done) {

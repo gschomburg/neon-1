@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.31']);
+NEON_FILES.push(['engine/bench.js', 'v15.32']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -170,6 +170,7 @@ const benchBusy = () => { const b = st.bench; return !b || !!b.anim || !!b.shred
 // ---- open / leave
 function openBench(node) {
   benchSave();
+  rootLettersGone();   // (ROOT moved in: its spare r / o / t leave the bench. engine/quests.js)
   node.bench = true;   // going back in here brings you back to the bench (engine/run.js canGoBack)
   st.bench = { node, tab: 'build', slots: [null, null, null, null, null], slotT: [0, 0, 0, 0, 0], slotX: [10, 14, 18], slotY: 15, fx: [], kb: { up: true, t0: performance.now() + 380 },
     log: ['> workbench online.'], shSel: 0, shArea: { top: 0 }, bkSel: 0, bkT: 0, bkArea: { top: 0 }, lkView: 'take', lkSel: 0, stSel: 0, press: null,
@@ -569,7 +570,7 @@ function benchLines(T, B, X, lines) {
     ctx.put(0, y, 'NeoN+1', C.accent, 'hud');
     ctx.put(0, y + 1, rule(L.wc), C.dim, 'hud');
     ctx.put(0, y + 2, 'SAFEHOUSE // ', C.mid, 'hud'); ctx.put(13, y + 2, 'WORKBENCH', C.bright, 'hud');
-    benchBtn(ctx, L.wc - 7, y, '[LEAVE]', C.mid, 'bkleave', benchLeave);   // (top right, NeoN+1's line, like every LEAVE: Greg, 2026-11-21)
+    wayOutBtn(ctx, L.wc - 9, y, '[LEAVE >]', 'bkleave', benchLeave, ctx.now || performance.now());   // (engine/scene.js)   // (top right, NeoN+1's line, like every LEAVE: Greg, 2026-11-21)
     const fl = b.flash && b.flash.to === 'locker' ? (ctx.now - b.flash.t0) / 700 : 1;
     BENCH_TABS.forEach(t => {
       const s = `[${t.toUpperCase()}]`, x = benchTabX(t), on = b.tab === t;
@@ -778,7 +779,7 @@ function benchShredLines(T, B, X) {
   else {
     const items = list.map((e, i) => {
       const v = shredView(e);
-      const row = { list: true, id: 'sh' + i, onTap: () => { if (!benchBusy()) { b.shSel = i; Sound.tick(); } }, sel: i === b.shSel, name: v.name + (e.n > 1 ? 'x' + e.n : ''), right: e.kind, rightCol: e.kind === 'mod' ? C.money : C.mid };
+      const row = { list: true, id: 'sh' + i, onTap: () => { if (!benchBusy()) { b.shSel = i; Sound.tick(); } }, sel: i === b.shSel, name: v.name + (e.n > 1 ? 'x' + e.n : ''), right: e.kind, rightCol: rarityCol(v.rarity) };   // (one rule: the kind in its rarity's color. Greg, 2026-11-21: mods were yellow, gear and loot grey)
       if (e.kind === 'mod') Object.assign(row, { badge: e.key, badgeTier: e.tier }); else Object.assign(row, { gear: e.key, gearTier: e.tier });
       return row;
     });

@@ -14,6 +14,14 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The small batch** (v15.32):
+  - **[< TITLE] and [LEAVE >]:** brighter; every ~2.6s the arrow gives two nudges its way, and every ~4.3s a shimmer slides across. Too much, too little? (engine/scene.js WAYOUT has the timings.)
+  - **The market:** [BUY] [SELL] as regular tabs. Chips say chip in the list and the detail line.
+  - **YOUR DECK boxes:** chips home and a quest's chip show the chip's face. **ROOT moving in:** its call, then the chip, then the QUEST card (COMPLETE). The call no longer repeats how to open THE SHELL; the card says it.
+  - **The deck:** [DECK*] till you first open it. CHIPS: a slotted chip's "in SH1" is white on black (red with no power); select it for [ VIEW ]. mk III / THE FUSE say "reach ELITE first" when you can't buy them yet.
+  - **SYSTEM FAILURE step 2's card:** MEDIX TECH, "POPS wants MEDIX tech..." (my words). The QUESTS page still says THE DISC.
+  - Smaller: SHRED's kind labels in rarity color, RELOAD skips chips, the PIER card's buttons wake at 0.5s, the crew x5 feat for crew you have.
+
 - [ ] **The playtest bugs** (v15.30):
   - **Boss intros:** SIMON's, MONTY's and FOSSIL's boss line wraps onto a second row now. Look on a phone.
   - **ROOT's cutscene** at the bench: the keyboard is gone while it plays and comes back after.

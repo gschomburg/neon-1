@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.31']);
+NEON_FILES.push(['engine/panels.js', 'v15.32']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -287,10 +287,11 @@ function openShop(node) {
   const listRows = () => Math.min(SHOP_LIST_ROWS, Math.max(rowsOf().length, 1 + run.beltSlots));
   const sellArea = { top: 0 }, buyArea = { top: 0 };   // the lists scroll (a big LOOT bag; a long market)
   const pad = (T, used) => { for (let i = used; i < listRows(); i++) T(''); };
-  // BUY / SELL: sub-tabs under the terminal (Greg, 2026-11-21: they were buttons at the bottom; the panel's own BLACK
+  // BUY / SELL: tabs under the terminal (Greg, 2026-11-21: they were buttons at the bottom; the panel's own BLACK
   // MARKET and credits lines are gone: the header has both). LEAVE (or HEAD FIRST's JACK OUT) is top right in the header.
-  const tabs = X => X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, [['buy', 'BUY'], ['sell', 'SELL']].map(([v, t]) => ({ id: v + 'v', text: t, on: view === v,
-    onTap: () => { if (view === v) return; view = v; if (v === 'sell') { sellSel = 0; sellArea.top = 0; } Sound.ui(); } }))) });
+  // (Greg, 2026-11-21: regular tabs, like THE BOARD's, not the sub-tab strip)
+  const tabs = X => X({ gap: 1, row: [['buy', 'BUY'], ['sell', 'SELL']].map(([v, t]) => ({ text: `[${t}]`, id: v + 'v', sel: view === v,
+    onTap: () => { if (view === v) return; view = v; if (v === 'sell') { sellSel = 0; sellArea.top = 0; } Sound.ui(); } })) });
   // LEVERAGE's limit and HAGGLE's cut (they sat on the credits line): a line under the tabs, only when there's something to say
   const notes = () => [leverage() ? `limit ${creditFloor()}cr` : '', has('haggle') ? `haggle -${Math.round(tv('haggle', ECON.haggle) * 100)}%` : ''].filter(Boolean).join('  ');
 
@@ -302,7 +303,7 @@ function openShop(node) {
     X({ gap: 2, row: [{ text: 'sell:', col: C.mid }, { text: allCr ? `[ ALL LOOT +${allCr}cr ]` : '[ ALL LOOT ]', id: 'sellall', disabled: !allCr, onTap: sellAll }] });
     const rows = sellRows();
     const items = rows.map(({ s, list }, i) => {
-      const v = itemView(s.key, s.tier), q = ITEMS[s.key].quest, tag = list === run.loot ? 'loot' : 'gear';
+      const v = itemView(s.key, s.tier), q = ITEMS[s.key].quest, tag = list === run.loot ? 'loot' : ITEMS[s.key].chip ? 'chip' : 'gear';   // (a chip says chip: Greg, 2026-11-21)
       return { list: true, id: 'sl' + i, onTap: () => { sellSel = i; Sound.tick(); }, sel: i === sellSel,
         name: v.name + (s.n > 1 ? ' x' + s.n : ''), gear: s.key, gearTier: s.tier, col: C.bright,   // (loot too: its code chip, then its name, like the buy list)
         right: q ? 'QUEST  keep' : `${tag.padEnd(4)} ${(gearValue(s.key, s.tier) + 'cr').padStart(5)}`, rightCol: q ? C.rep : C.money, rightChips: true };
@@ -335,7 +336,7 @@ function openShop(node) {
       const isMod = o.kind === 'mod', up = isMod && has(o.key), rr = o.kind === 'reroll';
       const price = rr ? (rerollsLeft() > 0 ? `${rerollPrice()}cr` : 'DONE') : o.sold ? 'SOLD' : o.free ? 'FREE' : `${priceOf(o)}cr`;
       const bag = o.kind === 'item' && (ITEMS[o.key].quest || ITEMS[o.key].value || ITEMS[o.key].bag);   // (the DISC and value gear go in the LOOT bag: the user, 2026-11-06)
-      const tag = isMod ? (up ? 'mod+' : 'mod') : bag ? 'loot' : o.kind === 'item' ? 'gear' : 'svc';   // gear's rarity shows on its name chip
+      const tag = isMod ? (up ? 'mod+' : 'mod') : bag ? 'loot' : o.kind === 'item' ? (ITEMS[o.key].chip ? 'chip' : 'gear') : 'svc';   // gear's rarity shows on its name chip
       const col = C.bright;
       items.push({
         list: true, id: 'offer' + k, onTap: () => { sel = k; Sound.tick(); },
@@ -365,7 +366,7 @@ function openShop(node) {
         X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(def)}` : `${tierLabel(def)} mod`, col: C.text, chips: true });
       } else {
         if (o.kind === 'item') X({ gearHead: o.key, gearTier: o.tier, text: def.name + (o.n > 1 ? ` x${o.n}` : '') }); else T(def.name, C.bright);
-        X({ text: o.kind !== 'item' ? 'service' : ITEMS[o.key].quest ? 'quest loot // for POPS' : ITEMS[o.key].value ? 'loot // sell it' : `${def.tier ? RARITY[def.rarity].label + ' ' : ''}gear // single use`, col: C.mid, chips: true });
+        X({ text: o.kind !== 'item' ? 'service' : ITEMS[o.key].quest ? 'quest loot // for POPS' : ITEMS[o.key].value ? 'loot // sell it' : ITEMS[o.key].chip ? `${RARITY[def.rarity].label} chip // cash out to keep it` : `${def.tier ? RARITY[def.rarity].label + ' ' : ''}gear // single use`, col: C.mid, chips: true });
       }
       T(def.tip || def.desc, C.text);   // the short text: long gear descs ran off the screen
       if (why) { T(''); T(why, C.dangerDim); T(''); T(''); }
@@ -373,7 +374,7 @@ function openShop(node) {
       else X({ box: true, text: 'B U Y', sub: o.free ? 'FREE' : `${priceOf(o)}cr`, id: 'buy', onTap: () => buy(o), minW: 18 });
     }
     T(SEP, C.dim);   // (REROLL is a row in the list, 1 a market, more with RESTOCK)
-  }, '> the market is open.', { leave: node.exit ? { text: '[JACK OUT]', onTap: () => { if (!st.transitioning) swapTo(() => sectorClear(false)); } } : { text: '[LEAVE]', onTap: leavePanel } });
+  }, '> the market is open.', { leave: node.exit ? { text: '[JACK OUT >]', onTap: () => { if (!st.transitioning) swapTo(() => sectorClear(false)); } } : { text: '[LEAVE >]', onTap: leavePanel } });
 }
 
 // A reward screen: header lines, then a list of mods to pick one from (or skip).
@@ -482,7 +483,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
         const room = itemRoom(o.key, o.tier) && !has('ramdoubler');
         X({ gearHead: o.key, gearTier: o.tier, text: `${v.name} x${o.n}` });
         T(v.tip || v.desc, C.text);
-        X({ text: has('ramdoubler') ? 'ram doubler: it gets sold.' : room ? `gear // ${o.n} uses` : "gear slots full: you'll swap one", col: room ? C.mid : C.dangerDim, chips: true });
+        X({ text: has('ramdoubler') ? 'ram doubler: it gets sold.' : room ? (ITEMS[o.key].chip ? `${RARITY[ITEMS[o.key].rarity].label} chip // cash out to keep it` : `gear // ${o.n} uses`) : "gear slots full: you'll swap one", col: room ? C.mid : C.dangerDim, chips: true });
         if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
         else X({ box: true, text: 'T A K E', id: 'take', onTap: () => take(o), minW: 18 });
       } else if (shown) {

@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.31']);
+NEON_FILES.push(['engine/menus.js', 'v15.32']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -235,7 +235,7 @@ function openBoard(tab) {
     { const tb = ([k, label, id]) => ({ text: `[${label}${star(k) ? '*' : ''}]`, id, sel: tab === k, onTap: () => setTab(k) });
       const by = k => BOARD_TABS.find(b => b[0] === k);
       const top = ['you', 'rep'].map(k => tb(by(k)));
-      if (save.deck) top.push({ text: '[DECK]', id: 'tbd', onTap: () => { boardFixLogo(); openDeck(); } });   // (engine/deck.js)
+      if (save.deck) top.push({ text: save.deck.popsSeen ? '[DECK]' : '[DECK*]', id: 'tbd', onTap: () => { boardFixLogo(); openDeck(); } });   // (engine/deck.js) (its * till you've opened it: Greg, 2026-11-21)
       X({ gap: 1, row: top });
       X({ gap: 1, row: ['feats', 'crew', 'quests'].map(k => tb(by(k))) }); }
     let used = 0;

@@ -1,7 +1,7 @@
 // NeoN+1 engine/scene.js: building each frame (buildScene): the HUD, the overlays, and which screen draws. The parts
 // it calls live in engine/board.js, tray.js, mapview.js and textboard.js (split out 2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/scene.js', 'v15.31']);
+NEON_FILES.push(['engine/scene.js', 'v15.32']);
 
 // ---------------- Scene ----------------
 let hits = [];
@@ -43,6 +43,22 @@ function layerCtx(ctx, cells, bgs, owner = 'hud') {
   return { ctx: c, cells: out };
 }
 
+// ---------- the way out: [< TITLE] top left, [LEAVE >] top right ----------
+// (Greg, 2026-11-21: brighter than the grey they were; the arrow nudges its way now and then, and a shimmer slides
+// across, to draw the eye.) Used by the header (here) and the bench's own top line (engine/bench.js). ctx: put, bg, addHit.
+const WAYOUT = { nudgeEvery: 2600, nudgeMs: 520, nudge: 0.35, shineEvery: 4300, shineMs: 650 };
+function wayOutBtn(ctx, x, y, label, id, onTap, now) {
+  const W = WAYOUT, hov = st.hoverBtn === id, ai = label.search(/[<>]/), dir = ai >= 0 && label[ai] === '>' ? 1 : -1;
+  const tn = now % W.nudgeEvery, bump = tn < W.nudgeMs ? Math.sin(Math.PI * 2 * tn / W.nudgeMs) ** 2 : 0;   // two little pushes, then rest
+  const ts = (now + 1700) % W.shineEvery, pos = ts < W.shineMs ? (ts / W.shineMs) * (label.length + 4) - 2 : -99;   // (offset: not on the nudge)
+  for (let i = 0; i < label.length; i++) {
+    if (label[i] === ' ') continue;
+    const shine = Math.abs(i - pos) < 1.3, col = hov ? C.accent : shine ? C.bright : C.text;
+    ctx.put(x + i + (i === ai ? dir * W.nudge * bump : 0), y, label[i], col, 'ui', shine);
+  }
+  if (hov) ctx.bg(x, y, label.length, C.accent, 0.2);
+  ctx.addHit(x, y, label.length, 1, { kind: 'btn', id, onTap, noFocus: true });
+}
 function buildScene(now, collectHits, raw = false) {
   const cells = [];
   const frameBgs = [];
@@ -122,9 +138,7 @@ function buildScene(now, collectHits, raw = false) {
     // a full-screen menu's way out, top left (openPanel's opts.top: [< TITLE]); it takes the 'back' id, so the keys find it
     const tp = !st.dev && st.mode === 'panel' && st.panelTop;
     if (tp) { const s = typeof tp.text === 'function' ? tp.text() : tp.text;
-      bg(0, 0, s.length, C.bg, 1); put(0, 0, s, st.hoverBtn === 'back' ? C.accent : C.mid, 'ui');
-      if (st.hoverBtn === 'back') bg(0, 0, s.length, C.accent, 0.2);
-      addHit(0, 0, s.length, 1, { kind: 'btn', id: 'back', onTap: tp.onTap }); }
+      bg(0, 0, s.length, C.bg, 1); wayOutBtn({ put, bg, addHit }, 0, 0, s, 'back', tp.onTap, now); }
     if (st.mode === 'title' && !st.dev) cells.splice(0, cells.length, ...FX.eyeCells(cells, FX.look('eyes', TITLE_EYES), now, 0, 0, L.wc, L.hc));   // G0D's eyes (engine/fx.js; the title's own settings: data/title.js TITLE_EYES)
   } else {
 
@@ -145,8 +159,8 @@ function buildScene(now, collectHits, raw = false) {
   else if (!menuOk) put(12, 0, `// ${VERSION}`, C.dim);
   // LEAVE a place in a run: top right, on this line (Greg, 2026-11-21: the market, THE FENCE, the PIER; the bench, full
   // screen, has its own on its top line). openPanel's opts.leave; the PIER's is its own.
-  const lv = !st.mp && run && (st.mode === 'panel' && st.panelLeave ? st.panelLeave : st.mode === 'fish' && st.fish && !st.fish.card ? { text: '[LEAVE]', id: 'fleave', onTap: leavePier } : null);
-  if (lv) headerBtn(L.wc - lv.text.length, lv.text, lv.id || 'leave', lv.onTap, false);
+  const lv = !st.mp && run && (st.mode === 'panel' && st.panelLeave ? st.panelLeave : st.mode === 'fish' && st.fish && !st.fish.card ? { text: '[LEAVE >]', id: 'fleave', onTap: leavePier } : null);
+  if (lv) wayOutBtn({ put, bg, addHit }, L.wc - lv.text.length, 0, lv.text, lv.id || 'leave', lv.onTap, now);
   put(0, 1, rule(L.wc), C.dim);
 
   // HUD

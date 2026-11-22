@@ -1,7 +1,7 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v15.31']);
+NEON_FILES.push(['engine/feats.js', 'v15.32']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
@@ -183,7 +183,14 @@ function featPage(it) {
     if (f.title) { out.push({ t: '' }); out.push({ t: `unlocked title: ${f.title}`, col: C.rep, bold: true }); }
     if (f.logo) { out.push({ t: '' }); out.push({ t: `unlocked logo: ${HACKERS[f.logo].name}`, col: C.rep, bold: true }); }
     for (const u of LEGACY.filter(u => u.pm === f.id)) { out.push({ t: '' }); out.push({ t: `new post: ${u.name}`, col: C.rep, bold: true }); out.push({ t: '(THE BOARD > REP)', col: C.mid }); }
-  } else for (const l of it.lines) out.push({ t: l, col: C.text });
+  } else for (const l of it.lines) {
+    // { chip: key }: the chip's face (3 x 2, BOSS 5 x 2) with its name, and its rarity and group under it (Greg, 2026-11-21)
+    if (l && l.chip && DECK_CHIPS[l.chip]) {
+      const c = DECK_CHIPS[l.chip], pad = ' '.repeat((c[1] === 'boss' ? 5 : 3) + 2);
+      out.push({ t: pad + c[0], chipFace: l.chip, col: C.bright, bold: true });
+      out.push({ t: pad + `${RARITY[c[2]].label.toLowerCase()} ${DECK_GROUPS[c[1]][0]}`, col: C.mid });
+    } else out.push({ t: l, col: C.text });
+  }
   // every line wraps to the box (the how-it-works page's lines were cut off)
   return out.flatMap(r => r.t.length > FEAT_W - 2 ? wrapText(r.t, FEAT_W - 2).map(t => Object.assign({}, r, { t })) : [r]);
 }
@@ -204,6 +211,7 @@ function buildFeatBox(ctx, now) {
   rows.forEach((ln, r) => {
     const t = ln.t.slice(0, FEAT_W - 2), shown = t.slice(0, Math.max(0, budget)); budget -= t.length;
     if (shown) put(x0 + 2, y0 + 2 + r, shown, ln.col || C.text, 'hud', !!ln.bold);
+    if (shown && ln.chipFace) deckFace({ bg: (x, y, w, h, c, a) => { for (let k = 0; k < h; k++) bg(x, y + k, w, c, a); }, put: (x, y, s, c, b) => put(x, y, s, c, 'hud', b) }, x0 + 2, y0 + 2 + r, ln.chipFace, false);   // (engine/deck.js)
   });
   // the buttons: inverted, in the rep color. CLOSE always; NEXT when there's another page.
   const btns = [{ id: 'fclose', text: '[ CLOSE ]', onTap: featBoxClose }];
