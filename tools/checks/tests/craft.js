@@ -88,4 +88,17 @@ module.exports = { name: 'craft', body: `
   check(['bks_gear', 'bks_mod', 'bks_chip'].every(id => hits.find(h => h.id === id)), 'the BOOK has GEAR MODS CHIPS');
   hits.find(h => h.id === 'bks_chip').onTap(); await sleep(200);
   check(bookKind() === 'chip' && bookList().every(c => benchRecipes()[c].kind === 'chip'), 'CHIPS: only chips');
+  // the LOCKER: TAKE STORE COMPS (the components, 2x2, on their own page); BIG LOCKER: 10 slots, then back to 5 once empty (v15.34)
+  benchTab('locker'); await sleep(300);
+  check(['lvtake', 'lvstore', 'lvcomps'].every(id => hits.find(h => h.id === id)), 'the LOCKER has TAKE STORE COMPS');
+  save.legacy = save.legacy || {}; const lg0 = save.legacy.biglocker;
+  check(benchSave().locker.length === 5, 'the locker: 5 slots');
+  save.legacy.biglocker = 1; check(benchSave().locker.length === 10, 'BIG LOCKER: 10 slots');
+  benchSave().locker[7] = { kind: 'gear', key: 'wall', tier: 0, n: 1 };
+  save.legacy.biglocker = 0; check(benchSave().locker.length === 8 && benchSave().locker[7], 'lose BIG LOCKER: a full slot past 5 stays');
+  benchSave().locker[7] = null; check(benchSave().locker.length === 5, 'and goes once it is empty');
+  save.legacy.biglocker = lg0;
+  hits.find(h => h.id === 'lvcomps').onTap(); await sleep(300);
+  check(b.lkView === 'comps', 'COMPS opens');
+  b.lkView = 'take';
 ` };

@@ -78,9 +78,8 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 
 ### The workbench
 - Built v15.33: SHRED's GEAR / MODS / LOOT sub-tabs, [ CLEAR ] under a good recipe, its music (AUGMENT, low; Greg).
-- **A REP buy for +5 LOCKER slots:** it doesn't fit. The LOCKER's TAKE page is full on a phone; 5 more rows would need a
-  scroll area. Ways it could fit: two columns of 5 (names cut to about 12), or the components block moves to its own
-  sub-tab. Greg's call.
+- **Decided (Greg, 2026-11-22), built v15.34:** the components move to their own LOCKER sub-tab (COMPS, letters 2x2), and
+  BIG LOCKER (+5 slots) is a USER post.
 
 ### The deck and chips
 - (Greg asked: is SPOILS a chip you start with? Yes: the deck comes with STOCK CELL and SPOILS, engine/deck.js DECK_START.)

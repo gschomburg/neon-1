@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The LOCKER** (v15.34): COMPS is its own sub-tab, the letters 2x2 (the cells are tall, so they read tall and thin: 3 wide x 2 is an option). BIG LOCKER on THE BOARD's USER level, 200 REP: 10 slots. Check TAKE with 10 on your phone: on the test page it just fits over the keyboard.
+
 - [ ] **The workbench extras** (v15.33): AUGMENT plays at the bench, low; its stage changes every 20s (A A B A B B A A C C A B, C a bit louder: engine/boot.js BENCH_MUSIC). SHRED: GEAR / MODS / LOOT sub-tabs with counts. BUILD: [ CLEAR ] under a good recipe.
 
 - [ ] **The small batch** (v15.32):

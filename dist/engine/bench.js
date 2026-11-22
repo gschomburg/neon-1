@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.33']);
+NEON_FILES.push(['engine/bench.js', 'v15.34']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -109,10 +109,14 @@ function benchSave() {
   if (!save.bench) save.bench = { letters: {}, locker: [], pins: [] };
   const b = save.bench;
   b.letters = b.letters || {}; b.pins = b.pins || [];
-  b.locker = (b.locker || []).slice(0, BENCH.locker);
-  while (b.locker.length < BENCH.locker) b.locker.push(null);
+  b.locker = b.locker || [];
+  while (b.locker.length > benchLockerMax() && !b.locker[b.locker.length - 1]) b.locker.pop();   // (slots past the max go once they're empty)
+  while (b.locker.length < benchLockerMax()) b.locker.push(null);
   return b;
 }
+// The LOCKER's slots: 5, 10 with THE BOARD's BIG LOCKER (engine/save.js LEGACY). Lose the post (a progression wipe) and
+// the slots past 5 stay till you take out what's in them.
+const benchLockerMax = () => BENCH.locker + (legacyLv('biglocker') > 0 ? 5 : 0);
 const benchOpen = () => legacyLv('bench') > 0;
 const benchAdd = list => { const l = benchSave().letters; for (const ch of list) l[ch] = (l[ch] || 0) + 1; };
 // The safehouse leaves you a few components when you get there (the user, 2026-11-04).
@@ -591,7 +595,7 @@ function benchLines(T, B, X, lines) {
     });
   } });
   // sub-tabs (engine/textboard.js drawSubTabs): the BOOK's GEAR MODS CHIPS, the LOCKER's TAKE STORE, SHRED's GEAR MODS LOOT (Greg, 2026-11-21)
-  if (b.tab === 'locker') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, [['take', 'TAKE'], ['store', 'STORE']].map(([v, t]) => ({ id: 'lv' + v, text: t, on: b.lkView === v, onTap: () => { if (b.lkView !== v) { b.lkView = v; Sound.tick(); } } }))) });
+  if (b.tab === 'locker') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, [['take', 'TAKE'], ['store', 'STORE'], ['comps', 'COMPS']].map(([v, t]) => ({ id: 'lv' + v, text: t, on: b.lkView === v, onTap: () => { if (b.lkView !== v) { b.lkView = v; b.lkT = performance.now(); Sound.tick(); } } }))) });
   else if (b.tab === 'book') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, BOOK_TABS.map(([k, t]) => ({ id: 'bks_' + k, text: t, on: bookKind() === k, onTap: () => bookPickKind(k) }))) });
   else if (b.tab === 'shred') { const all = benchShredList(), on = shredKind(); X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, SHRED_TABS.map(([k, t]) => { const n = all.filter(e => e.kind === k).length; return { id: 'shs_' + k, text: n ? `${t} ${n}` : t, on: on === k, onTap: () => shredPickKind(k) }; })) }); }
   else T('');
@@ -940,8 +944,10 @@ function benchBookLines(T, B, X) {
 
 function benchLockerLines(T, B, X) {
   const b = st.bench, lk = benchSave().locker;
-  T(rule(32), C.dim);   // (TAKE / STORE: the sub-tab strip under the main tabs, benchLines)
+  // (TAKE / STORE / COMPS: the sub-tab strip under the main tabs, benchLines. No rule under it: the TAKE page needs the
+  // rows for BIG LOCKER's 10 slots, Greg 2026-11-22.)
   T('');
+  if (b.lkView === 'comps') return benchCompsLines(T, X);
   const rowOf = (e, i, sel, onTap, right, rightCol) => {
     const v = e.kind === 'mod' ? modView(e.key, e.tier) : itemView(e.key, e.tier);
     const row = { list: true, id: 'lk' + b.lkView + i, sel, onTap, name: v.name + (e.n > 1 ? 'x' + e.n : ''), right, rightCol };
@@ -949,23 +955,11 @@ function benchLockerLines(T, B, X) {
   };
   let e = null, box = null;
   if (b.lkView === 'take') {
-    T(`in the locker  ${lk.filter(Boolean).length}/${BENCH.locker}`, C.rep);
+    T(`in the locker  ${lk.filter(Boolean).length}/${lk.length}`, C.rep);
     T('');
-    b.lkSel = clamp(b.lkSel, 0, BENCH.locker - 1);
+    b.lkSel = clamp(b.lkSel, 0, lk.length - 1);
     lk.forEach((x, i) => x ? X(rowOf(x, i, i === b.lkSel, () => { b.lkSel = i; Sound.tick(); }, benchUpNote(x) || x.kind, benchUpNote(x) === 'upgrade' ? C.money : benchUpNote(x) ? C.dim : undefined))
       : X({ list: true, id: 'lkempty' + i, sel: i === b.lkSel, onTap: () => { b.lkSel = i; Sound.tick(); }, name: ':  .  :  empty', faded: true }));
-    // the components you've banked, every one with its count (they live here too, between runs)
-    const letters = benchSave().letters, keys = Object.keys(letters).filter(ch => letters[ch] > 0)
-      .sort((p, q) => (p === '*') - (q === '*') || /[0-9]/.test(p) - /[0-9]/.test(q) || p.localeCompare(q));
-    T('');
-    T(`components  ${benchCount()}`, C.rep);
-    const per = 8, h = Math.max(1, Math.ceil(keys.length / per));
-    X({ h, draw: (ctx, y) => {
-      const x0 = Math.floor((L.wc - per * 4 + 1) / 2);
-      if (!keys.length) { ctx.put(Math.floor((L.wc - 22) / 2), y, 'none yet. shred things.', C.dim, 'ui'); return; }
-      keys.forEach((ch, i) => { const x = x0 + (i % per) * 4, yy = y + Math.floor(i / per), c = letterChip(ch);
-        ctx.bg(x, yy, 1, c.bg, 1); ctx.put(x, yy, ch, c.fg, 'ui', true); ctx.put(x + 1, yy, String(letters[ch]), C.mid, 'ui'); });
-    } });
     e = lk[b.lkSel];
     const up = e && benchUpNote(e);
     if (e) box = { box: true, text: up === 'upgrade' ? 'U P G R A D E' : 'T A K E', sub: up === 'upgrade' ? `- yours goes up to ${tierLabel(modView(e.key, upgradeTo(e.key, e.tier || 0)))} -` : up ? '- yours is maxed -' : e.kind === 'mod' ? '- into a mod slot -' : '- onto your belt -',
@@ -982,7 +976,7 @@ function benchLockerLines(T, B, X) {
     const full = !lk.some(x => !x);
     if (e) box = { box: true, text: 'S T O R E', sub: full ? '- the locker is full -' : e.kind === 'mod' ? '- unequip it -' : '- into the locker -', id: 'bkstore', onTap: () => benchStore(benchStoreList()[b.stSel]), minW: 22, col: C.rep, disabled: full && !(e.kind === 'gear' && lk.some(x => x && x.key === e.key)) };
   }
-  T('');
+  if (lk.length <= BENCH.locker || b.lkView !== 'take') T('');   // (10 slots: no room for the gap)
   T(SEP, C.dim);
   if (e) { const v = e.kind === 'mod' ? modView(e.key, e.tier) : itemView(e.key, e.tier);
     X(e.kind === 'mod' ? { badge: e.key, badgeTier: e.tier } : { gearHead: e.key, gearTier: e.tier, text: v.name });
@@ -990,6 +984,25 @@ function benchLockerLines(T, B, X) {
   else { T(b.lkView === 'take' ? 'an empty slot.' : 'nothing on you.', C.mid); T('what you build lands here.', C.dim); T(''); T(''); T(''); T(''); }
   T(SEP, C.dim);
   T(b.log[b.log.length - 1].replace(/^> /, ''), C.accent);
+}
+
+// The LOCKER's COMPS: the components you've banked (they live here too, between runs), each a 2x2 chip with its count
+// (Greg, 2026-11-22: their own sub-tab, bigger). A row of air between rows of chips when it fits over the keyboard.
+function benchCompsLines(T, X) {
+  const b = st.bench, letters = benchSave().letters, keys = Object.keys(letters).filter(ch => letters[ch] > 0)
+    .sort((p, q) => (p === '*') - (q === '*') || /[0-9]/.test(p) - /[0-9]/.test(q) || p.localeCompare(q));
+  T(`components  ${benchCount()}`, C.rep);
+  T('');
+  if (!keys.length) { T('none yet. shred things.', C.dim); return; }
+  const per = clamp(Math.floor((L.wc + 1) / 5), 5, 8), lines = Math.ceil(keys.length / per);
+  const room = Math.max(20, Math.floor((benchKbGeom().top - L.oy) / L.chh)) - 9;   // (the header, sub-tabs and the two lines above)
+  const pitch = lines * 3 - 1 <= room ? 3 : 2;
+  X({ h: lines * pitch - (pitch - 2), draw: (ctx, y) => {
+    const x0 = Math.floor((L.wc - (per * 5 - 1)) / 2);
+    keys.forEach((ch, i) => { const x = x0 + (i % per) * 5, yy = y + Math.floor(i / per) * pitch;
+      benchBlock(ctx, x, yy, ch, { size: 2, t0: b.lkT || 0, seed: i });
+      ctx.put(x + 2, yy + 1, String(letters[ch]), C.mid, 'ui'); });
+  } });
 }
 
 // ---------------- the keyboard layer (pixels; render.js calls this after the grid) ----------------
