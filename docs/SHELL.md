@@ -107,7 +107,7 @@ tracks, copy or art.
 
 **G0D.exe**
 - `g0dexe` (on / off), `g0dexe.speed 1|2|4`, `g0dexe.clicks <n>`, `g0dexe.knows <n>`, `g0dexe.popups`,
-  `g0dexe.wins`, `g0dexe.phish`, `g0dexe.risky`, `g0dexe.build`, `g0dexe.log` (its decision log, printed)
+  `g0dexe.wins`, `g0dexe.phish`, `g0dexe.risky`, `g0dexe.build`, `g0dexe.log` (its decision log, printed). Typed with an o (`godexe`) they work too (v15.25).
 
 **Screens and effects**
 - `show.ad [ad]`, `show.intro first|short`, `show.screen <screen>`
