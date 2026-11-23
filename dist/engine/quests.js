@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v15.53']);
+NEON_FILES.push(['engine/quests.js', 'v15.54']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -210,7 +210,7 @@ function rootSigned() {
   // One after another (Greg, 2026-11-21: it was a QUEST card, a chip box and ROOT's call all saying the same): ROOT's
   // call, then its chip (the box, with the chip's face), then the QUEST card, which says how to open THE SHELL.
   playScene('paperwork', () => {
-    save.legacy = save.legacy || {}; save.legacy.crew_root = 1; questStep('root', 'done');   // (SIGN HERE's crew: ROOT is on your crew now)
+    save.legacy = save.legacy || {}; save.legacy.crew_root = 1; questStep('root', 'done'); featSweep();   // (SIGN HERE's crew: ROOT is on your crew now)
     rootLettersGone();
     queueCall('root', QUEST_LINES.rootJoined, null, () => {
       deckQuestChip('MN1', 'ROOT moved in. it brought a chip.');   // (ROOT's chip: man. engine/deck.js)

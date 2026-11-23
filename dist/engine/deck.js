@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.53']);
+NEON_FILES.push(['engine/deck.js', 'v15.54']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -411,6 +411,7 @@ function deckHome(run, win) {
     if (!had) { save.deck.chips[k] = 1; home.push(k); }
     if (n > 0) { shred.push(ITEMS[s.key].name + (n > 1 ? ' x' + n : '')); got.push(...benchAutoShred(k, n)); }
   }
+  if (home.length) { tally('chipsSmuggled', home.length); featSweep(); }   // SMUGGLER, COLLECTOR (engine/feats.js)
   const noShell = chips.some(s => deckNoShell(deckItemChip(s.key)));   // (a shell chip before ROOT: where to go)
   // each chip home as its face and name (engine/feats.js featPage); past 4, names only, so the box fits a phone
   const lines = home.length ? ['chips home:', '', ...home.slice(0, 4).map(k => ({ chip: k })), ...home.slice(4).map(k => '  ' + DECK_CHIPS[k][0]), '', 'slot them: THE BOARD > DECK.'] : [];
@@ -434,14 +435,16 @@ function deckRunChips(run) {
   if (keys.includes('BO1') && run) { const pool = keys.filter(k => DECK_CHIPS[k][1] !== 'psu'); if (pool.length) { brown = pickR(pool, rngFor(run.seed, 'brownout')); keys = keys.filter(k => k !== brown); } }
   const spoils = d.spoils, crew = {}, fav = deckOpen(3) && d.glyph != null ? d.glyph : null, favB = deckFavBOpen(d.favB) ? d.favB : 'loot';   // (GLYPH)
   for (const id of pw.crewOn) crew[id] = deckCrewLv(id);   // CREW JACKS
+  const under = pw.off.length > 0;   // a slotted chip with no power (UNDERPOWERED, a feat)
   DECK = was;
-  return { keys, spoils, brown, crew, fav, favB };
+  return { keys, spoils, brown, crew, fav, favB, under };
 }
 // INT a chip costs (or gives) as a run starts
 const DECK_INT = { DM3: 2, RX9: -1, GR8: -1, LK7: -1, FM2: -1, SK1: -1, FI2: 2, DN1: -1, GL2: -2, CH1: -1, TP1: -1, RE1: -1, LG2: -1, UV1: 1, PD2: 2 };
 function deckRunStart(run, opts = {}) {
   if (opts.tutorial || st.mp) return;
-  const { keys, spoils, brown, crew, fav, favB } = deckRunChips(run);
+  const { keys, spoils, brown, crew, fav, favB, under } = deckRunChips(run);
+  if (under) tally('underpowered');   // UNDERPOWERED (engine/feats.js)
   deckRunCarry(run);   // INSURANCE and DEAD DROP from your last death (they come whatever's slotted now)
   // PURGE is a chip once you have the deck (Greg, 2026-11-22): no PURGE chip on, no PURGE at the start
   if (save.deck && !(keys || []).includes('PG0')) { const i = run.items.findIndex(x => x.key === 'purge'); if (i >= 0) run.items.splice(i, 1); }
@@ -1306,7 +1309,11 @@ function deckPersist() {
   if (d.nemesis) save.nemesis = d.nemesis;
   if (d.archive) save.archive = d.archive;
   persist();
+  if (deckFull(d)) best('fullDeck', 1, true);   // FULL HOUSE
+  featSweep();   // COLLECTOR (engine/feats.js)
 }
+// Every open socket that takes chips has one (GLYPH takes none).
+const deckFull = d => DECK_SOCKETS.filter(s => s.g !== 'glyph' && deckOpen(s.mk)).every(s => d.slots[s.id]);
 // the switches you can set: the posts you own (all of them on the dev deck)
 const deckSwitches = () => DECK.real ? DECK_SWITCHES.filter(k => legacyLv(k)) : DECK_SWITCHES;
 // NEMESIS cycles through: the corps you've breached and none (every corp on the dev deck)
@@ -1369,6 +1376,7 @@ function deckSlot(key, sid) {
   if (other) { delete d.slots[other]; d.order = d.order.filter(i => i !== other); }
   d.slots[sid] = key; d.order = d.order.filter(i => i !== sid).concat(sid);
   d.carry = null; deckSelect({ kind: 'socket', id: sid });
+  if (d.real) tally('chipsSlotted', 1, true);   // PLUGGED IN (engine/feats.js)
   const p = deckPower();
   if (grp === 'psu') { if (p.off.length) deckFx('dead', sid, key); else { deckFx('in', sid, key); Sound.fanUp(); } return deckSay(p.off.length ? `${name}: ${p.off.length} chip${p.off.length > 1 ? 's' : ''} lost power.` : `${name} in. power ${p.budget}.`, p.off.length ? C.danger : C.money); }
   if (!p.on.has(sid)) { deckFx('dead', sid, key); return deckSay(`no power: ${name} needs ${cost - deckLeft(p, deckSock(sid))} more.`, C.danger); }

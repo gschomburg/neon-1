@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.53']);
+NEON_FILES.push(['engine/panels.js', 'v15.54']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -235,6 +235,7 @@ function openShop(node) {
     st.selItem = -1; st.hoverItem = -1;
     run.credits += cr; if (value) run.earned += cr;   // (only loot counts as earned: buying and selling back isn't)
     sellSel = Math.min(sellSel, Math.max(0, sellRows().length - 1));
+    if (/^phish_/.test(s.key)) tally('phishSold');   // PHISH MONGER (engine/feats.js)
     Sound.buy(); setMsg(`> sold ${name}. +${cr}cr.`, C.money);
   };
   const sellAll = () => {
@@ -243,6 +244,7 @@ function openShop(node) {
     if (!sold.length) return Sound.deny();
     let cr = 0, n = 0;
     for (const s of sold) { cr += gearValue(s.key, s.tier) * s.n; n += s.n; }
+    tally('phishSold', sold.filter(s => /^phish_/.test(s.key)).reduce((a, s) => a + s.n, 0));   // PHISH MONGER
     run.loot = keep; earn(cr, run);
     sellSel = 0; sellArea.top = 0;
     Sound.buy(); setTimeout(() => Sound.loot(), 120); setMsg(`> sold all loot (${n}). +${cr}cr.`, C.money);

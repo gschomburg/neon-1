@@ -1,23 +1,25 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v15.53']);
+NEON_FILES.push(['engine/feats.js', 'v15.54']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
 // Practice runs, the training and multiplayer don't count.
 const FEAT_BY_ID = Object.fromEntries(FEATS.map(f => [f.id, f]));
 const statOf = k => (save.stats && save.stats[k]) || 0;
-const counting = () => !(st.run && (st.run.practice || st.run.tutorial)) && !st.mp;   // (run kinds: engine/save.js)
-function tally(stat, by = 1) {
-  if (!counting() || !by) return;
+const counting = () => !(st.run && (st.run.practice || st.run.tutorial)) && !st.mp && !(st.tut && st.tut.bench);   // (run kinds: engine/save.js; the WORKBENCH training)
+// home: counted out of a run too (the deck, THE BOARD): only multiplayer and the WORKBENCH training don't.
+const countingHome = () => !st.mp && !(st.tut && st.tut.bench);
+function tally(stat, by = 1, home = false) {
+  if (!(home ? countingHome() : counting()) || !by) return;
   save.stats = save.stats || {};
   save.stats[stat] = statOf(stat) + by;
   checkFeats(stat);
   persist();
 }
-function best(stat, v) {
-  if (!counting() || !(v > statOf(stat))) return;
+function best(stat, v, home = false) {
+  if (!(home ? countingHome() : counting()) || !(v > statOf(stat))) return;
   save.stats = save.stats || {};
   save.stats[stat] = v;
   checkFeats(stat);
@@ -60,6 +62,19 @@ function tallyRunEnd(run, win, rep) {
   best('bestDepth', run.depth);
   best('bestSpent', Math.max(0, (run.cr0 || 0) + run.earned - run.credits));
   if (run.earned >= 1000 && run.credits < 10) tally('easyCome');
+  if (!win && (st.mode === 'fish' || st.fish)) tally('diedFishing');   // FISH FOOD (nothing kills you at the pier yet)
+  // ONE MORE TRY: a seed you've played before, deeper this time (save.seedBest: the deepest layer per seed, the last 200)
+  const sb = save.seedBest || (save.seedBest = {}), was = sb[run.seed];
+  if (was != null && run.depth > was) tally('seedBetter');
+  if (was == null || run.depth > was) { delete sb[run.seed]; sb[run.seed] = run.depth; const ks = Object.keys(sb); if (ks.length > 200) delete sb[ks[0]]; }
+}
+// The feats that read where you stand, not something that happened (SYSOP, MK IV, COLLECTOR, MOVED IN): checked when
+// THE BOARD opens, a post is bought, the deck changes, ROOT moves in, chips come home.
+function featSweep() {
+  best('boardLevel', boardLevel(), true);
+  if (legacyLv('fuse') > 0) best('deckMk4', 1, true);
+  if (save.deck && save.deck.chips) best('chipKinds', Object.keys(save.deck.chips).filter(k => save.deck.chips[k] > 0).length, true);
+  if (typeof rootOn === 'function' && rootOn()) best('movedIn', 1, true);
 }
 
 // ---------------- Feats ----------------

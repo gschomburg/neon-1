@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The new feats** (v15.54): THE BOARD > FEATS has a TECH group now, and 8 more elsewhere (SPEC v15.54). Things to look at: POPS's lines on each; whether CRAFTY / TINKERER at 10 and SHREDDER at 100 feel right; FISH FOOD can't be earned yet (there's no player command to kill yourself; THE SHELL's run.die is dev only, and dev runs don't count). On an older save, opening THE BOARD hands out SYSOP / MK IV / COLLECTOR / MOVED IN at once if you've earned them: a few FEAT boxes in a row.
+
 - [ ] **HOW TO PLAY's tabs** (v15.53): BASICS (INTRO NET TRAY TRAINING) and ADVANCED (RUNS BOARD DECK BENCH PIER). The DECK, BENCH and PIER pages are new: read them for anything wrong or missing. ADVANCED's strip fills the screen's width exactly, so a sixth sub-tab won't fit. HACKERS got split: RIVALS went on RUNS, CREW on BOARD.
 
 - [ ] **The WORKBENCH training** (v15.53): play it from HOW TO PLAY > TRAINING, and get the offer on a fresh save's first WORKBENCH. Things I picked: PURGE all the way through (your outline said pin PATCH, but you shred for PURGE's letters, so I kept it to one item). The kit is PING, ROUTE, TRACER, a SIM and a JUNK.DAT. The feat is APPRENTICE, plus 5 random components. POPS's lines are in the editor's TRAINING tab (the b_ lines). Also: the "do this" pill sometimes sits over the bench's log line; is that OK?

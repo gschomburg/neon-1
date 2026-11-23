@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.53']);
+NEON_FILES.push(['engine/menus.js', 'v15.54']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -98,7 +98,7 @@ function resetSave() {
 // else on REP); your name opens it on YOU.
 const BOARD_TABS = [['you', 'YOU', 'tby'], ['rep', 'REP', 'tbr'], ['feats', 'FEATS', 'tbf'], ['crew', 'CREW', 'tbc'], ['quests', 'QUESTS', 'tbq']];   // (STATS is under the feats list)
 const BOARD_BODY = 24;
-const FEAT_GROUPS = [['runs', 'RUNS'], ['corps', 'CORPS'], ['odd', 'ODD'], ['rivals', 'RIVALS'], ['crew', 'CREW'], ['heaven', 'H3AV3N']];
+const FEAT_GROUPS = [['runs', 'RUNS'], ['corps', 'CORPS'], ['odd', 'ODD'], ['tech', 'TECH'], ['rivals', 'RIVALS'], ['crew', 'CREW'], ['heaven', 'H3AV3N']];
 // A hacker's feats show once you've met them (a rival came in, you called the crew member).
 const hkMet = id => statOf('hack:met:' + id) > 0 || statOf('hack:call:' + id) > 0 || statOf('hack:beat:' + id) > 0;
 const featShown = f => (!f.hacker || hkMet(f.hacker)) && (f.group !== 'heaven' || save.heavenSeen || featDone(f.id));   // (H3AV3N's: once you've been)
@@ -215,6 +215,7 @@ function crewItems() {
 // A BOARD tab with something new on it: a * after its name (THE BOARD's tabs, and your deck's copy of them: engine/deck.js deckHeader)
 const boardStar = k => (k === 'feats' && Object.keys(save.unseen || {}).length > 0) || (k === 'rep' && repNew()) || (k === 'you' && save.newTitle) || (k === 'quests' && questsNew());
 function openBoard(tab) {
+  featSweep();   // SYSOP, MK IV, COLLECTOR, MOVED IN: saves from before those feats get them here (engine/feats.js)
   if (!tab) tab = Object.keys(save.unseen || {}).length ? 'feats' : 'rep';
   const featS = { top: 0 }, statS = { top: 0 }, repS = { top: 0 }, crewS = { top: 0 };
   // REP starts on the first new post (or the first post)

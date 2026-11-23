@@ -213,9 +213,8 @@ unlocked by REP, and some quests unlock REP.
   - The starter pool, more (choose 3, one may show up at the start): moved to docs/DECK.md (the BOOT chip STARTER).
   - **Palettes unlock** by beating their corp (not built: SETTINGS offers every palette today). Big logos as unlocks.
   - Difficulty levels that add drains and pay more REP: moved to docs/DECK.md (HEAT).
-  - **Feat ideas:** replay a seed and get further than before; call 2 hackers in the same layer; sell 30 PHISH; buy a
-    mod back from the fence (and maybe a REP unlock: fence prices -10%). The FEAT box over the
-    win page: a solid background that isn't the screen's (the REP color?).
+  - **Feat ideas:** built v15.54 (ONE MORE TRY, CONFERENCE CALL, PHISH MONGER, BUYBACK). Left: a REP unlock with BUYBACK
+    (fence prices -10%); the FEAT box over the win page: a solid background that isn't the screen's (the REP color?).
   - **REP unlocks you can switch on and off**, and +1 corp layer: moved to docs/DECK.md (the ROM's switches, the BIOS
     chip +1 LAYER).
   - **Skip a corp's rewards for a heal:** moved to docs/DECK.md (SPOILS).
@@ -469,7 +468,7 @@ unlocked by REP, and some quests unlock REP.
 - **RED TAPE:** a mod or gear (just the name so far). **B1BL3** (meat notes 2026-10-31): a portable codex (gear).
 
 ### 8. Achievements and cosmetics
-- (Greg, meat notes 2026-11-22) A rogue-like color palette. A feat for dying while fishing.
+- (Greg, meat notes 2026-11-22) A rogue-like color palette. (The feat for dying while fishing is FISH FOOD, v15.54: it waits for a way to die there.)
 - The feats cover the achievement list (first win, NAKED, OMNIVORE, layer 50 / 100, perfect streaks, SPEEDRUN, BIG
   SPENDER, EASY COME, G0D SLAYER, WITH A SHOE / INFIDEL), and titles and logos unlock from them. Still open:
   hats / accessories, card frames, more titles ("SIGIL BREAKER"), cosmetics bought with REP.

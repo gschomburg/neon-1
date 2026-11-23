@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.53']);
+NEON_FILES.push(['engine/bench.js', 'v15.54']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -353,10 +353,20 @@ function benchBuildDone(a) {
   const b = st.bench;
   b.anim = null;
   if (!a.rc) { benchSay(a.kludge ? `> build ${a.word}: nothing. KLUDGE taped the components back.` : `> build ${a.word}: nothing. the components burned.`); return; }   // (the fizzle played as it crumbled)
+  benchTally(a);
   const nm = a.view.name + (a.n > 1 ? ` x${a.n}` : '');
   benchSay(`> build ${a.word}${a.lucky ? ' --force' : ''}: ${nm} -> ${a.where === 'loot' ? 'the loot bag' : a.where === 'locker' ? 'the locker' : 'your ' + a.where}.`);
   if (a.mult && a.rc.kind === 'gear') benchSay(a.n > 1 ? `  x${a.mult}: it took. ${a.n} of them.` : `  x${a.mult}: it didn't take.`);
   b.flash = { to: a.where === 'loot' ? 'loot' : 'locker', t0: performance.now() };
+}
+
+// The feats a build counts toward (engine/feats.js tally: not in practice runs or the WORKBENCH training).
+function benchTally(a) {
+  const rc = a.rc;
+  tally('built');
+  tally(rc.kind === 'gear' ? 'builtGear' : rc.kind === 'mod' ? 'builtMods' : rc.kind === 'chip' ? 'builtChips' : 'builtLoot');
+  if (rc.kind !== 'loot' && rc.kind !== 'chip' && recipeNeedsBp(rc)) tally('builtExotic');
+  if (a.lucky) tally('luckyBuild');
 }
 
 // ---- shred: what you're carrying (mods, the belt, the LOOT bag) back into components
@@ -448,6 +458,7 @@ function benchShred(e) {
   if (quest) benchAdd([quest]);
   persist();
   b.shredAnim = { t0: performance.now(), letters, got, name: v.name, rarity: v.rarity, quest };
+  tally('shreds');   // SHREDDER (engine/feats.js)
   if (learned) benchSay(`> blueprint: ${learned} (${v.name}) is in the BOOK.`);
   benchTeach(got, learned);
   Sound.grind(BENCH.shred.jumble / 1000);

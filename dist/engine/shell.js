@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.53']);
+NEON_FILES.push(['engine/shell.js', 'v15.54']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -463,6 +463,7 @@ async function shellRun(line) {
     let r = await c.run(vals);
     const free = !!(r && typeof r === 'object' && r.free); if (r && typeof r === 'object') r = r.out;   // ({ out, free }: give.mod's list costs nothing)
     if (cost && st.run && !free) st.run.charges = Math.max(0, (st.run.charges || 0) - cost);   // (spent once it worked)
+    if (!shellDev() && !free && shellChip(c) && DECK_CHIPS[shellChip(c)] && DECK_CHIPS[shellChip(c)][1] === 'sudo') tally('sudoRuns');   // SUDO (engine/feats.js)
     if (st.shell) shellOut(typeof r === 'string' ? r : 'ok', typeof r === 'string' ? 'out' : 'dim');
   } catch (err) {
     shellOut(String((err && err.message) || err), 'err');

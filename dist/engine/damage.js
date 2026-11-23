@@ -1,17 +1,20 @@
 // NeoN+1 engine/damage.js: damage and healing (hurt, heal, ZOMBIE rot, BLOOD MONEY), and the exotic pick rules
 // that change them: ICE EATER, COIN FLIP, SNOOZE, ALL-IN, FAILSAFE, BLACK ICE. Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/damage.js', 'v15.53']);
+NEON_FILES.push(['engine/damage.js', 'v15.54']);
 
 // No damage: the dev's god mode (st.god), or THE SHELL's mode.god (a SUDO chip, engine/deck.js): the rest of a sector.
 const godOn = () => !!st.god || !!(st.run && !st.run.ended && st.run.godSector === st.run.sector);
 // ---- Damage and healing outside an ICE hit go through these, so ZOMBIE can turn them into rot.
 // hurt: n integrity (ZOMBIE: rot instead). heal: up to n integrity (ZOMBIE: less rot).
+// INT lost in this corp (BRUTE FORCE, a feat: engine/run.js counts it when the corp is breached). Every place integrity
+// drops calls it: hurt, the clock (below), an ICE hit (engine/hits.js).
+const corpLost = n => { if (st.corp && n > 0) st.corp.lost = (st.corp.lost || 0) + n; };
 function hurt(n) {
   const run = st.run;
   if (zombie()) return addRot(n * ROT.ice);
   if (bloodMoney()) return payBlood(n);
-  run.integrity -= n;
+  run.integrity -= n; corpLost(n);
   if (run.tutorial) run.integrity = Math.max(1, run.integrity);   // the training run can't be lost
 }
 function heal(n) {
@@ -98,7 +101,7 @@ function clockHurts() {
   Sound.trap(); shake(6); flash(C.danger, 0.15, 0.3);
   if (zombie()) { addRot(ROT.timeout); setMsg(`> clock ran out. rot +${ROT.timeout}.`, C.danger); }
   else if (bloodMoney()) { const cost = payBlood(1); setMsg(`> clock ran out. -${cost}cr.`, C.danger); }
-  else { run.integrity -= 1; setMsg('> clock ran out. integrity -1.', C.danger); }
+  else { run.integrity -= 1; corpLost(1); setMsg('> clock ran out. integrity -1.', C.danger); }
   if (run.integrity <= 0) { st.busy = true; die(); }
 }
 // ---- COIN FLIP (docs/EXOTICS.md). Hold a node: st.coin opens over it (two faces); drag to a side

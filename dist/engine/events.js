@@ -1,7 +1,7 @@
 // NeoN+1 engine/events.js: the SECTOR EVENT card (what a new sector rolled) and THE FENCE (THIEF's stolen mods,
 // sold back). The events themselves: data/events.js; the roll: engine/map.js addSector.
 'use strict';
-NEON_FILES.push(['engine/events.js', 'v15.53']);
+NEON_FILES.push(['engine/events.js', 'v15.54']);
 
 // ---------------- The SECTOR EVENT card ----------------
 // It comes up over a new sector's map once the climb settles (toMap), and again from the map's sector label.
@@ -122,6 +122,7 @@ function openFence(node) {
     run.mods.push(o.key); run.modTier = run.modTier || {}; run.modTier[o.key] = o.tier;
     stock().splice(i, 1);
     sel = Math.min(sel, Math.max(0, stock().length - 1));
+    tally('fenceBuys');   // BUYBACK (engine/feats.js)
     Sound.buy(); setMsg(`> bought back ${MODS[o.key].name.toLowerCase()}. -${price}cr.`, C.money);
     saveRun();
   };

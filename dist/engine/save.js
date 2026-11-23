@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.53']);
+NEON_FILES.push(['engine/save.js', 'v15.54']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -191,6 +191,7 @@ function buyPost(u) {
   if (u.chip && save.deck) deckGiveOwed();   // a post that's a chip: into your deck (a BOOT one into a free BOOT socket)
   if (u.key === 'bench' && typeof rootBenchBought === 'function') rootBenchBought();   // ROOT's quest: on to the letters (engine/quests.js)
   for (let l = was + 1; l <= boardLevel(); l++) boardLevelNews(l);   // a level opened
+  featSweep();   // SYSOP, MK IV (engine/feats.js)
   return null;
 }
 // Placeholder posts that real ones replaced (v15.35-v15.37), and the old LOCKER post (v15.38: REMOTE ACCESS): bought ones give their REP back (boot.js, at load).

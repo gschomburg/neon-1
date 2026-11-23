@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.53']);
+NEON_FILES.push(['engine/run.js', 'v15.54']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -850,6 +850,7 @@ function finishCorp() {
   persist();
   g0dxCorpDone(c);
   tallyCorp(c.def.key);   // THE RECORD
+  if ((c.lost || 0) >= 8) tally('bruteForce');   // BRUTE FORCE: 8 INT lost in here, and still in (engine/damage.js corpLost)
   // THIEF: what it took goes to THE FENCE (bought back there); a sector boss's thief gives them back when you win
   if (c.stolen && c.stolen.length) {
     const fence = c.node.type === 'corp' && Object.values(run.map).some(n => n.type === 'fence' && n.sector === c.sector);
