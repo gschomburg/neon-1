@@ -452,6 +452,26 @@ unlocked by REP, and some quests unlock REP.
 - A second boss mod for the corps that have one (71 corp mods left; 11 corps give boss gear instead, v13.62).
 - **CHUCK E. CACHE has a 1UP in its logo** (meat notes 2026-11-06): do something with that once 1UPs are unlocked? **Decided (Greg, 2026-11-15):** a mod, not a deck chip.
 - **RED TAPE:** a mod or gear (just the name so far). **B1BL3** (meat notes 2026-10-31): a portable codex (gear).
+- **A corp with a denser grid** (Greg, 2026-11-23: "a corp that had a 1/2 or 3/4 grid tile size"). The 4 x 4 board
+  sets the whole 36 x 38 screen (docs/LAYOUT.md section 1), so the board area (34 x 23) has to stay as it is. Dropped:
+  adding more and more nodes as you go deeper, because the game feels good at 16 (Greg, 2026-11-23). The grids that
+  fit the board area:
+
+  | Grid | Node | Gaps (across, down) | Board |
+  |---|---|---|---|
+  | 4 x 4 (today) | 7 x 5: frame + 5 x 3 glyph | 2, 1 | 34 x 23 |
+  | 5 x 5 | 6 x 3 | 1, 2 | 34 x 23 |
+  | 6 x 6 | 5 x 3: the glyph only | 1, 1 | 35 x 23 (36 is allowed) |
+  | 8 x 8 | 3 x 2: no glyph fits | 1, 1 | 31 x 23 |
+
+  - **Smaller nodes, same grid** (Claude's pick): 6 x 6 for that one corp. Nothing else on screen changes. A node is
+    about 54px wide on a phone (76 today), still easy to tap. Engine: a layer gets its own node size (`TILE_W` /
+    `TILE_H` are global today). 8 x 8 would need its own 3 x 2 glyphs: a gimmick corp, not a sector.
+  - **Scale the board down** instead (nodes keep their frames, at 3/4 about 5 x 5): the renderer needs a second font
+    size for the board alone, and hits, wipes, the fall-apart and hover all have to know it. At 1/2 the text is about
+    7px on a phone: too small.
+  - **Open:** with no frame, how does a node show its state (scanned, picked, danger)? Color, a background tint,
+    blinking?
 
 ### 8. Achievements and cosmetics
 - (Greg, meat notes 2026-11-22) A rogue-like color palette. (The feat for dying while fishing is FISH FOOD, v15.54: it waits for a way to die there.)
