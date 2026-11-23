@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.59']);
+NEON_FILES.push(['engine/run.js', 'v15.60']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -26,8 +26,7 @@ async function startRun(seed, practice, opts = {}) {
   Sound.ui();
   await wipeOut(0);
   const quest = opts.tutorial ? null : opts.quest || questSeed(seed);   // H3AV3N (engine/heaven.js): a QUEST run
-  if (quest === 'h3av3n') practice = !save.beatG0D;   // (not scored until you've beaten G0D once)
-  else if (quest === 'had3s') practice = false;   // HAD3S: a real run (engine/quests.js)
+  { const sd = quest && SEED_DEFS[quest]; if (sd && sd.practice != null) practice = typeof sd.practice === 'function' ? sd.practice() : sd.practice; }   // a quest seed's own (engine/seeds.js: H3AV3N not scored till you've beaten G0D; HAD3S real)
   // seeded: a seed you chose (typed, REPLAYS, retry): a normal run, but it's ranked on the seed boards, not TODAY /
   // ALL TIME (engine/leaders.js; docs/ENDGAME.md, decided 2026-11-05). Not a quest seed, not the training.
   if (st.god || st.debug || st.freeTravel) practice = true;   // (god / show real / free travel still on from the title: the run doesn't count. Audit 2026-11-23)
@@ -44,9 +43,9 @@ async function startRun(seed, practice, opts = {}) {
     depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null,
   };
   if (legacyLv('kit') && !save.deck) st.run.items.push({ key: 'patch', tier: 0, n: 1 });   // FIRST AID (THE BOARD; with a deck it's a chip: engine/deck.js)
-  if (quest === 'had3s') st.run.items.push({ key: 'leash', tier: 0, n: 1 });   // HAD3S: you go in with a LEASH
+  { const sd = seedDef(st.run); if (sd) for (const key of sd.items || []) st.run.items.push({ key, tier: 0, n: 1 }); }   // a quest seed's gear (HAD3S: a LEASH)
   if (!opts.tutorial) questRunStart(st.run);   // the OMNI RAID: b0y's CALL (engine/quests.js)
-  if (quest === 'h3av3n') { st.run.heaven = true; questMold(st.run); }   // (a heaven run from the start: its death screen retries it; sector 1's M0LD)
+  { const sd = seedDef(st.run); if (sd && sd.start) sd.start(st.run); }   // (H3AV3N: a heaven run from the start: its death screen retries it; sector 1's M0LD)
   if (opts.heaven) heavenSetup();   // H3AV3N (engine/heaven.js): its sector map in place of the first sector (the editor's jump, the ending's THE MAZE)
   if (legacyLv('lucky') && !opts.tutorial && !save.deck) {   // LUCKY START (THE BOARD): a random common gear (with a deck it's a chip: engine/deck.js)
     const pool = shopGear().filter(k => ITEMS[k].rarity === 'common');
@@ -837,7 +836,7 @@ function finishCorp() {
   stimDown();   // STIM wears off
   hkCorpEnd(c);   // hackers: the rivals you beat (the record, the bonus)
   questOmni(c);   // the OMNI RAID: OMNI broken with b0y there (engine/quests.js)
-  if (run.quest === 'had3s' && c.def.key === 'apiary') { addItem('honey'); setMsg('> APIARY left something sweet behind. H0NEY.', C.money); }   // HAD3S: H0NEY only comes from APIARY
+  { const sd = seedDef(run), gk = sd && sd.gift && sd.gift[c.def.key]; if (gk) { addItem(gk[0]); setMsg('> ' + gk[1], C.money); } }   // a quest seed's corp gift (HAD3S: H0NEY only comes from APIARY)
   lightsOn();
   statNodeEnd(c.bossSkipped ? 'skipped' : 'cleared');
   if (c.hasBoss && c.def.onClear) {

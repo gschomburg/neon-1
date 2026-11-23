@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.59']);
+NEON_FILES.push(['engine/panels.js', 'v15.60']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -167,7 +167,7 @@ const shopGear = () => Object.keys(ITEMS).filter(k => !ITEMS[k].value && !ITEMS[
 // How often a gear shows up (loot and markets): normal gear by its rarity, value gear its own (ECON.drop).
 const gearWeight = k => { const w = ECON.drop[ITEMS[k].value ? k : ITEMS[k].rarity]; return w == null ? 1 : w; };
 // A market's gear: by rarity, with a plain CALL likelier (CALL_ODDS.shop, engine/hackers.js).
-const shopWeight = k => gearWeight(k) * (k === 'call' ? CALL_ODDS.shop : 1) * (st.run && st.run.quest === 'had3s' && (k === 'tunnel' || k === 'mesh') ? 4 : 1);   // (HAD3S: TUNNEL and MESH turn up more: the user, 2026-11-06)
+const shopWeight = k => gearWeight(k) * (k === 'call' ? CALL_ODDS.shop : 1) * ((seedDef() && seedDef().shop && seedDef().shop[k]) || 1);   // (HAD3S: TUNNEL and MESH turn up more: the user, 2026-11-06)
 // One key, picked by weight.
 function pickWeighted(keys, w, r) {
   let x = r() * keys.reduce((a, k) => a + w(k), 0);

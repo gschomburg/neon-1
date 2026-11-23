@@ -6,7 +6,7 @@
 //   3+. (next) the fight as the boss, the fake win, the final stand, the collapse.
 // The heaven corps aren't in CORPS (so they never come up in a normal run): corpDef looks here too (engine/corps.js).
 'use strict';
-NEON_FILES.push(['engine/heaven.js', 'v15.59']);
+NEON_FILES.push(['engine/heaven.js', 'v15.60']);
 
 const HEAVEN = {};
 
@@ -43,8 +43,7 @@ function addHeavenSector(nodes, seed, s) {
 // from the seed, its market stocked for what's coming: QUEST_STOCK); its uplink is broken (no fee, no cash out); sector 2
 // is heaven (addHeavenSector: the corps, the maze, the shop, G0D). A QUEST run isn't scored (like practice) until you've
 // beaten G0D once (save.beatG0D): then every seed replay counts. Its death retry starts the seed over, still QUEST.
-const QUEST_SEEDS = { H3AV3N: 'h3av3n', HAD3S: 'had3s' };   // (HAD3S: the d0g hunt, engine/quests.js)
-const questSeed = seed => QUEST_SEEDS[seed] || null;
+// (the quest seeds, H3AV3N's rules among them: engine/seeds.js SEED_DEFS)
 // Sector 1's market on the H3AV3N seed (the user's list): PATCH always (a few), BUFFER always, two of the rest
 const QUEST_STOCK = { patches: 3, gear: ['shoe', 'frag', 'fwall', 'warp', 'call', 'stim', 'zeroday', 'swap'], mods: ['buffer'] };
 // Sector 1's M0LD on the H3AV3N seed (data/events.js 'mold'): its share of the corps, and the event (its card)

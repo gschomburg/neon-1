@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v15.59']);
+NEON_FILES.push(['engine/screens.js', 'v15.60']);
 
 // ---------- circuit traces (the title's, and the intro card's wires: engine/intro.js) ----------
 // Which way each trace char connects (n e s w). Two cells link when each has a port facing the other.
@@ -333,8 +333,8 @@ function overLines() {
       lines.push({ text: txt, colorAt: i => i < 9 ? C.mid : marks ? C.accent : C.dim }); }
     if (r.practice) T(r.quest ? 'quest run: no REP' : 'practice run: no REP', C.dangerDim);
     T('');
-    // (the bottom of HAD3S: no UPLINK, openUplink cashes you out, so the button says so)
-    const bottom = st.run && st.run.quest === 'had3s' && st.run.sector >= HAD3S_SECTORS - 1;
+    // (a quest seed's last sector, HAD3S's: no UPLINK, openUplink cashes you out, so the button says so)
+    const bottom = seedBottom();
     if (bottom) lines.push({ box: true, text: 'J A C K   O U T', sub: '- nowhere deeper to go -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
     else lines.push({ box: true, text: 'T H E   U P L I N K', sub: r.broken ? '- something is wrong -' : '- push on or cash out -', id: 'push', onTap: () => swapTo(openUplink), minW: 30 });
     return lines;
@@ -378,8 +378,9 @@ function overLines() {
   extras.push({ text: '' });
   // the bottom: the leaderboard block (ranks, initials, UPLOAD) until you upload, then the buttons
   const lb = lbOverLines(), lbOpen = lb && !(st.lbPost && st.lbPost.uploaded);
-  const bottom = [...(lb || []), ...(lbOpen ? [] : r.quest === 'had3s' ? [   // HAD3S: running it again is the big one
-    { box: true, text: 'R U N   H A D 3 S   A G A I N', id: 'had3s', onTap: runHad3s, minW: 30 },
+  const again = r.quest && SEED_DEFS[r.quest] && SEED_DEFS[r.quest].again;
+  const bottom = [...(lb || []), ...(lbOpen ? [] : again ? [   // a quest seed's own (HAD3S: running it again is the big one)
+    { box: true, text: again.text, id: r.quest, onTap: again.onTap, minW: 30 },
     { text: '[ NEW RUN ]', id: 'new', onTap: newRun },
     { text: '[ TITLE ]', id: 'title', onTap: () => swapTo(showTitle) },
   ] : r.heaven && !r.win ? [   // died in H3AV3N: retrying heaven is the big one

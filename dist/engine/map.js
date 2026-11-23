@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v15.59']);
+NEON_FILES.push(['engine/map.js', 'v15.60']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -178,7 +178,7 @@ function addSector(nodes, seed, s, force = null, fav = null) {   // (fav: genMap
   const keep = new Set([3, ...shuffle(stopRows, rr).slice(0, REST_STOPS - 1)]);
   const test = testSeed(seed), order = corpsByLevel();
   const [fa, fb] = (force || '').split('+');   // (a forced pair: 'a+b', the editor)
-  const qev = typeof questSeed === 'function' && questSeed(seed) === 'had3s' ? 'hunt' : null;   // HAD3S: THE HUNT in every sector (sector 1 too), nothing else
+  const qev = (SEED_DEFS[questSeed(seed)] || {}).event || null;   // a quest seed's event in every sector, sector 1 too, nothing else (HAD3S: THE HUNT)
   const ev = qev || (s === 0 ? (fa && SECTOR_EVENTS[fa] ? fa : null) : fa && SECTOR_EVENTS[fa] ? fa : test ? null : rollEvent(seed, s));
   const ev2 = qev || s === 0 || test ? null : force ? (fb && SECTOR_EVENTS[fb] ? fb : null) : rollEvent2(seed, s);   // a 2nd event, now and then
   const has = k => ev === k || ev2 === k;

@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v15.59']);
+NEON_FILES.push(['engine/quests.js', 'v15.60']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -134,7 +134,7 @@ function questCounterLine(id) {
 // The HAD3S seed: two sectors, THE HUNT in both (d0g in some corps and on the bosses), ZERO DAY on the map. A d0g win:
 // finishing a corp he's in before he takes its last node (else he escaped). Wins count anywhere while you're on the step.
 // At ten, the DOGTAG drops (again on the next win if you lose it); cash out with it and the trace starts.
-const HAD3S_SECTORS = 2;
+const HAD3S_SECTORS = SEED_DEFS.had3s.sectors;   // (engine/seeds.js)
 const d0gWinsNeeded = () => (QUEST_INFO.pops.steps.find(s => s.key === 'd0g') || {}).wins || 10;
 function questD0g(h) {
   if (!questRun() || questOf('pops').step !== 'd0g' || h.exorcised) return;

@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v15.59']);
+NEON_FILES.push(['engine/hackers.js', 'v15.60']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -31,7 +31,7 @@ const hkLine = (h, k) => { const d = hkDef(h.id), l = d[k]; return Array.isArray
 function hkRivalFor(node) {
   const d0gGone = hkCrewOn('b0y');   // d0g is b0y now, on your crew: never a rival again (docs/QUESTS.md step 8)
   const dog = d0gGone ? 'w00f' : 'd0g';   // (w00f: the dog without the boy, from then on)
-  if (st.run && st.run.quest === 'had3s') return (st.run.banned || []).includes(dog) ? null : dog;   // HAD3S: only ever the dog (thrown out: nobody)
+  if (seedDef() && seedDef().rival === 'dog') return (st.run.banned || []).includes(dog) ? null : dog;   // a quest seed's (HAD3S): only ever the dog (thrown out: nobody)
   const pool = HK_RIVALS.filter(k => (k !== 'd0g' && k !== 'w00f' || (k === dog && (node.sector || 0) >= 1)) && !(st.run.banned || []).includes(k));   // (EXORCIST: not one thrown out)
   if (!pool.length) return null;
   return pickR(pool, rngFor(st.run.seed, 'rival', node.id));
@@ -739,4 +739,4 @@ for (const id of HK_CREW.filter(k => ITEMS['call_' + k])) CALL_GEAR['call_' + id
 };
 Object.assign(BOSS_GEAR, CALL_GEAR);   // engine/active.js runs them like the boss gear
 // A crew member's own gear only turns up once they're in your crew (engine/panels.js shopGear, engine/run.js loot).
-const gearAllowed = k => !ITEMS[k].quest && !ITEMS[k].only && !(k === 'patch' && chipOn('NM0')) && (!ITEMS[k].hunt || !!(st.run && st.run.quest === 'had3s')) && (!ITEMS[k].crew || hkCrewOn(ITEMS[k].crew));   // (quest gear drops by its quest's rules: engine/quests.js; hunt gear: HAD3S only; only: from its corp)
+const gearAllowed = k => !ITEMS[k].quest && !ITEMS[k].only && !(k === 'patch' && chipOn('NM0')) && (!ITEMS[k].hunt || !!(seedDef() && seedDef().gear === 'hunt')) && (!ITEMS[k].crew || hkCrewOn(ITEMS[k].crew));   // (quest gear drops by its quest's rules: engine/quests.js; hunt gear: HAD3S only; only: from its corp)

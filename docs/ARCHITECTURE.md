@@ -90,17 +90,17 @@ Marks: **(checked)** Claude read the code path and confirmed it; the rest were c
 - One-socket assumptions (one CRASH, one SPOILS, the KIT in BT1) will fail quietly when a second socket comes.
 
 ### 2. Quests: before the next crew quest and the cult quest
-- **Steps still move two ways.** POPS's steps run on QUEST_INFO data, but five functions hard-code 'pops'
+- [x] **Done (v15.60):** questsOn, questNext for ROOT, questOf's first step, step counters. **Steps still move two ways.** POPS's steps run on QUEST_INFO data, but five functions hard-code 'pops'
   (sceneEnd, questCarryLine, questUplink, questCashOut), and ROOT sets its crew and step by hand (rootSigned) though
   its step data says `crew: 'root'`. Loop them over every started quest; rootSigned calls `questNext('root')`. Medium.
   Needed before any crew quest with a carry item or a scene (NANA's COOKIES, DIALUP's WALLET, KLUDGE's parts).
-- **Counters are one-off** (d0g's wins, ROOT's "/ 4" letters). A step `counter: { key, need, label }` drawn the same
+- [x] **Done (v15.60)** for d0g (step counter); ROOT's letter row stays its own. **Counters are one-off** (d0g's wins, ROOT's "/ 4" letters). A step `counter: { key, need, label }` drawn the same
   way for all. Medium.
-- **ROOT lives in bench.js** (~10 places). Fine for one quest; the cult's DIVINE letters would be a second copy. Add
+- [x] **Done (v15.60):** BENCH_WORDS. **ROOT lives in bench.js** (~10 places). Fine for one quest; the cult's DIVINE letters would be a second copy. Add
   a bench "special word" hook (the word, its slots, onSign) first. Medium.
-- **The bench keyboard is wired to the bench;** the cult typing fight wants it with its own keys and ENTER. Pull out
+- [x] **Done (v15.60):** engine/keyboard.js. **The bench keyboard is wired to the bench;** the cult typing fight wants it with its own keys and ENTER. Pull out
   `kbDraw(geom, { keys, count, onKey, onEnter, special })` before the fight's prototype. Medium.
-- **Quest seeds are special-cased in ~20 places** (`run.quest === 'had3s'`); BAUD's race and the cult seed add more.
+- [x] **Done (v15.60):** engine/seeds.js SEED_DEFS (H3AV3N's deep story stays in heaven.js; POPS's LEASH call in quests.js). **Quest seeds are special-cased in ~20 places** (`run.quest === 'had3s'`); BAUD's race and the cult seed add more.
   A per-seed definition (old audit). Medium.
 - Small: `questOf(id)` defaults any quest to POPS's first step; QUEST_LINES is one flat list (lines per quest
   instead); the quest dev commands are copied between shell.js and editor.js; dead `typeof rootOn` guards (6).
@@ -167,7 +167,7 @@ draw nothing). The likeliest causes, in order:
 2. **Checks:** test.js fails on no match / 0 passes, `--check` for the round trips, the new tables in the golden.
 3. **The flicker fixes** (T.head every frame, keep the last rect): cheap, then you look again.
 4. **Before the cult quest:** the keyboard out of the bench, the special-word hook, quest steps for every quest,
-   per-seed definitions.
+   per-seed definitions. **Done (v15.60).**
 5. **When next in the area:** split deck.js and CHIP_FX (before more chips); runkind.js and finishRun; tutorial.js into
    pops.js + startTraining; drawCard; test setup into pageKit.
 

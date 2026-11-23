@@ -2,7 +2,7 @@
 // (engine/bench.js benchKeys); the cult fight's later (docs/QUESTS.md: the same keys without the SPECIAL row, and its
 // own key where ENTER is). It draws and adds its hits; what a key does is the caller's. Loads before engine/bench.js.
 'use strict';
-NEON_FILES.push(['engine/keyboard.js', 'v15.59']);
+NEON_FILES.push(['engine/keyboard.js', 'v15.60']);
 
 const KB_ROWS = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];   // the key rows; the last gets DEL and ENTER
 // Its size, at the bottom of the screen: special: with the SPECIAL row over the 4 key rows (5 rows of keys), else 4.
