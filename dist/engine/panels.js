@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v15.51']);
+NEON_FILES.push(['engine/panels.js', 'v15.52']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -367,7 +367,7 @@ function openShop(node) {
         X({ text: has(o.key) ? `upgrade: ${tierLabel(modView(o.key))} > ${tierLabel(def)}` : `${tierLabel(def)} mod`, col: C.text, chips: true });
       } else {
         if (o.kind === 'item') X({ gearHead: o.key, gearTier: o.tier, text: def.name + (o.n > 1 ? ` x${o.n}` : '') }); else T(def.name, C.bright);
-        X({ text: o.kind !== 'item' ? 'service' : ITEMS[o.key].quest ? 'quest loot // for POPS' : ITEMS[o.key].value ? 'loot // sell it' : ITEMS[o.key].chip ? `${RARITY[def.rarity].label} chip // cash out to keep it` : `${def.tier ? RARITY[def.rarity].label + ' ' : ''}gear // single use`, col: C.mid, chips: true });
+        X({ text: o.kind !== 'item' ? 'service' : ITEMS[o.key].quest ? 'quest loot // for POPS' : ITEMS[o.key].value ? 'loot // sell it' : ITEMS[o.key].chip ? `${RARITY[def.rarity].label} chip // ${deckChipNote(o.key)}` : `${def.tier ? RARITY[def.rarity].label + ' ' : ''}gear // single use`, col: C.mid, chips: true });
       }
       T(def.tip || def.desc, C.text);   // the short text: long gear descs ran off the screen
       if (why) { T(''); T(why, C.dangerDim); T(''); T(''); }
@@ -501,7 +501,7 @@ function openChoice({ title, col, head = [], extra = [], onTake = null, options,
         const room = itemRoom(o.key, o.tier) && !has('ramdoubler');
         X({ gearHead: o.key, gearTier: o.tier, text: `${v.name} x${o.n}` });
         T(v.tip || v.desc, C.text);
-        X({ text: has('ramdoubler') ? 'ram doubler: it gets sold.' : room ? (ITEMS[o.key].chip ? `${RARITY[ITEMS[o.key].rarity].label} chip // cash out to keep it` : `gear // ${o.n} uses`) : "gear slots full: you'll swap one", col: room ? C.mid : C.dangerDim, chips: true });
+        X({ text: has('ramdoubler') ? 'ram doubler: it gets sold.' : room ? (ITEMS[o.key].chip ? `${RARITY[ITEMS[o.key].rarity].label} chip // ${deckChipNote(o.key)}` : `gear // ${o.n} uses`) : "gear slots full: you'll swap one", col: room ? C.mid : C.dangerDim, chips: true });
         if (locked) { T(''); T('skipped: you cannot take it.', C.dangerDim); T(''); }
         else takeBox(o);
       } else if (shown) {

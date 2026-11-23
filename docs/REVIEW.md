@@ -14,6 +14,12 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **OWNED on chips** (v15.52): a chip your deck already has says OWNED on the belt, at the CHIP DEALER, on market and boss cards and in drop lines. Clear enough?
+
+- [ ] **How easy chips are to find, and BIOS choices** (Greg, 2026-11-22: last time chips felt hard to come by, and picking 2 BIOS chips was easy; that was before the new chips). Where chips come from: a DATA CACHE 20%, a PIER gear catch 25%, a corp boss's rewards 12%, a market 15%, a beaten rival 30% (ripped), the CHIP DEALER (a post). BIOS now has 13 chips for 2 sockets (FRESH, CASINO, CLOCK, DARK, INTO THE FIRE, ALMANAC, PIER PASS, QUIET, LOUD, +1 LAYER, BENCH LINK...). If drops feel stingy, the numbers are DECK_DROP, DECK_BOSS_CHIP, DECK_SHOP_CHIP, DECK_RIVAL_DROP (engine/deck.js). A 3rd BIOS socket (a REP post, like PARTY LINE) only if picking 2 feels too tight.
+
+- [ ] **The deck's loose ends** (v15.52): HCF'S CORE (exotic RIPPED cell, power 18: rare from rivals and THE FENCE), FUSE II (SYSOP 600: mk IV 8 to 12 power), SELF DESTRUCT (CRASH: die, everything into WORKBENCH letters), give.chip (SUDO: a chip you've shredded). A jack with no power: red on the board and on the NO POWER bar.
+
 - [ ] **FRESH, CASINO, CLOCK, DARK and NEMESIS** (v15.51): each corp slot has a 20% chance (12% for NEMESIS) to swap to one of theirs. Enough? Too much? NEMESIS used to be 3x weight; it should feel about the same.
 
 - [ ] **The UPLINK's buttons** (Greg, 2026-11-22: test it and see how it looks). PAY and EARN REP are big boxes, stacked; [ WORKBENCH ] (BENCH LINK) and [ SACRIFICE ] (a chip) are small buttons between them. Should SACRIFICE be a big box beside PAY, like ENTER | PIER and TAKE | SALVAGE? The UPLINK is the tightest screen on a phone (its rows are counted: engine/runend.js openUplink).

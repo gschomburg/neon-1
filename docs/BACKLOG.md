@@ -20,16 +20,16 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
   **Decided (Greg, 2026-11-21):** not yet. There's no boss for it, so charges keep refilling every sector for now.
 - **`compile`:** THE SHELL makes a chip. **Decided (Greg, 2026-11-21):** a special, one-time thing inside a quest: you
   find something during a run, compile it in THE SHELL, then cash out with the chip. A special chip. Where it fits: later.
-- **Chips in `give`'s list** (Greg, 2026-11-21, a note): `give` could take chips too, but only ones you've seen or
+- **Chips in `give`'s list** (built v15.52 as **give.chip**, a SUDO chip: chips you've shredded) (Greg, 2026-11-21, a note): `give` could take chips too, but only ones you've seen or
   shredded, so it's harder. Different from `compile`.
 - **More SUDO commands:** built v15.06: `mode.free`, `corp.jump`, `rm -rf`, `chmod`. `fork` v15.07 (QUANTUM's second real
   node for a corp, same glyph, full pay).
-- **Ripped chips:** built v15.08, the fence list v15.09 (docs/DECK.md "The sources"). Left: an exotic ripped chip.
+- **Ripped chips:** built v15.08, the fence list v15.09 (docs/DECK.md "The sources"). The exotic one: **HCF'S CORE** (v15.52), a power 18 cell.
 - **The fuse node:** now **THE CHROME FORGE**, parked with the map nodes (section 5).
 - **Making chips at the workbench:** built v15.10 (a BLANK; docs/DECK.md "The workbench").
   **Decided (Greg, 2026-11-21), v15.14:** a chip you've seen is craftable (a market's, a corp boss's pick, your belt).
   **Decided (Greg, 2026-11-21), v15.22:** chips need no blueprint at all now, epic+ too: seen and the parts is enough.
-- **A CRASH chip that shreds everything** (Greg, 2026-11-21: keep it): cash out or die, and all your mods and gear shred
+- **A CRASH chip that shreds everything** (built v15.52 as **SELF DESTRUCT**: on a death only) (Greg, 2026-11-21: keep it): cash out or die, and all your mods and gear shred
   into components (docs/DECK.md CRASH, under BLACK BOX).
 - **Chips for the empty groups:** UPLINK, PORTS (later; its card is cryptic for now). The CREW jacks (v15.47) and GLYPH
   (v15.48) take no chips: crew plug in, and the glyph has its bonus (Greg, 2026-11-22).
@@ -84,6 +84,8 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   ELITE POST 1's place: ELITE needs real posts).
 
 ### REP and chip ideas (Greg, meat notes 2026-11-22)
+- **DANGEROUS CATCH** (a chip idea, meat notes 2026-11-22, later): fish can hurt you, 1 in 5; in return every catch sells
+  for more and runs rarer. And a feat for dying while fishing (section 8).
 **Decided (Greg, 2026-11-22):** fill ELITE and SYSOP. The batches:
 1. [x] (v15.40) Ladders: a post's next level is its own post a level up (HARDENED, SEED MONEY, RESTOCK, DEADMAN to 75%,
    BETTER DROPS, LOYALTY CARD), and REP's sub-tabs (MSGS GUEST USER ELITE SYSOP).
@@ -123,6 +125,8 @@ The ideas as they came:
 - (Greg asked: is SPOILS a chip you start with? Yes: the deck comes with STOCK CELL and SPOILS, engine/deck.js DECK_START.)
 
 ### UI
+- **The map's node card** (Greg, meat notes 2026-11-22): once the WORKBENCH and the CHIP DEALER are unlocked, say so
+  when you highlight a safehouse or a DATA CACHE (engine/mapview.js nodeInfo): "a WORKBENCH", "then the CHIP DEALER".
 - **Decided (Greg, 2026-11-21), built v15.32:** keep `[< TITLE]`; LEAVE is `[LEAVE >]`. Both brighter, the arrow nudges
   its way now and then and a shimmer slides across (engine/scene.js wayOutBtn). The market's BUY / SELL are regular tabs.
 - **Lists with an info box:** standardize above or below. FEATS shows it above, REP below (REP also has its buy area;
@@ -152,6 +156,16 @@ unlocked by REP, and some quests unlock REP.
 
 ### 1. Gear and scrap mods
 **Greg, 2026-11-07:** "we are pretty good on gear for now."
+- **New gear ideas** (Greg, meat notes 2026-11-22; ideas only):
+  - **TAUNT:** gear that calls a rival to your corp.
+  - **Hacker gear:** POSSESS / HIJACK: a rival's INT goes in front of yours, so ICE you hit hurts them. MEAT SHIELD
+    (or PAIN MAPPER), a name for now: every crew member's bars add to yours, like BRICK; ICE hits them first. Maybe a chip.
+  - **Deck power:** gear that gives your deck more power, for a corp or for some clicks.
+  - **GHOST:** a G0D.exe-like helper, weaker: it lasts a corp, then burns out. It knows nothing, but has lots of INT,
+    and clicks nodes itself. Or a crew member that does nothing but carry INT (for MEAT SHIELD). Or a ghost of your
+    last run on this seed: it plays it the way you did, and on layers you passed it already knows the real node. Maybe
+    only on a seed you just died on. (Claude: FORGET-ME-NOT already saves each seed's path, save.paths; the BOSS chip
+    idea GHOST in docs/DECK.md is close.)
 - **PACK RAT** (exotic; the gear top-up's big cousin, RELOAD is the built one): mod row = gear slots, rewards = gear,
   every stack +1 each corp (docs/EXOTICS.md, "All items").
 - **Going back a row** on the map: moved to docs/DECK.md (the shell chip `cd ..`), 2026-11-15.
@@ -262,6 +276,8 @@ unlocked by REP, and some quests unlock REP.
     moves through the network, and goes for depth; it won't buy many mods unless they boost credits (for the UPLINKs).
     Maybe a limit of 256 clicks; if so it tries to get another of itself to activate; it can call crew too. (Same idea
     as "An AI crew member that plays the game" in Low priority: G0D.exe may be that one.)
+    - **The quest to get it** (Greg, meat notes 2026-11-22): a cult racing you to bind G0D; DIVINE letters, G0D'S
+      EYE, a ritual route, stacked corps. docs/QUESTS.md "The G0D.exe quest: the cult".
     - **The dev version first** (Greg, 2026-11-08): build G0D.exe itself, given from the dev menu, to see how it plays.
       The quest to get it comes later. **Decided (Greg, 2026-11-08):** the name is G0D.exe; "beaten" means beaten
       once (the codex page is open; a setting, so it can go to ~5 later); in a corp you haven't beaten it guesses at
@@ -430,6 +446,7 @@ unlocked by REP, and some quests unlock REP.
   is clean, and from sector 2 any event can show up.
 
 ### 7. New corps
+- **Ideas** (Greg, meat notes 2026-11-22): a corp with moving glyphs, animated. A corp like Guess Who (mustaches?).
 - **A PSYCHO MANTIS boss** (the user, meat notes 2026-11-06; **Decided (Greg, 2026-11-06):** part of an end game quest,
   section 4): a boss that reaches outside the game: "unplug your internet", "open the inspector"? Talked through
   2026-11-06 (Greg: "i like the weird hard ones"):
@@ -457,6 +474,7 @@ unlocked by REP, and some quests unlock REP.
 - **RED TAPE:** a mod or gear (just the name so far). **B1BL3** (meat notes 2026-10-31): a portable codex (gear).
 
 ### 8. Achievements and cosmetics
+- (Greg, meat notes 2026-11-22) A rogue-like color palette. A feat for dying while fishing.
 - The feats cover the achievement list (first win, NAKED, OMNIVORE, layer 50 / 100, perfect streaks, SPEEDRUN, BIG
   SPENDER, EASY COME, G0D SLAYER, WITH A SHOE / INFIDEL), and titles and logos unlock from them. Still open:
   hats / accessories, card frames, more titles ("SIGIL BREAKER"), cosmetics bought with REP.
@@ -538,6 +556,8 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
 - **An infiltrate mission** (meat notes 2026-11-17): a stealth game: sneak past cameras and security systems. Maybe you
   can pick it instead of breaching a corp.
 - **The brainstorm and 5 mockups: `docs/INFILTR8.md`** (2026-11-17), `docs/mockups/infiltr8.html`.
+- **A warehouse** (meat notes 2026-11-22): a factory with boxes on a conveyor; stay behind them so a camera can't see
+  you. PARCELNET or MEGAMART.
 
 ### 13. Other game modes (meat notes 2026-11-21)
 - Other games or mini-game modes to try: a **farm sim** (farming mold for chips and loot), **tower defense**, a
@@ -629,6 +649,8 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   there: `Music.beat`; the pet dances to it and SIMON plays on it.)
 
 ## Medium and small
+- **The neon editor: an update pass** (Greg, meat notes 2026-11-22): cover the new stuff (the deck's chips and crew
+  jacks, the posts, the map chips...).
 - **Talk about the test run's speed** (Greg, 2026-11-22: "no need to change it yet, talk about it later"). How
   `node tools/test.js` runs now: data round-trips, then check.js, then the 39 test pages (all at once, a Chrome each),
   then the playtest (split over several Chromes). Ideas: time each stage; start check.js, the pages and the playtest
@@ -696,7 +718,7 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   - **Hover / keyboard focus in popups:** with a desktop or accessibility pass.
 - **Hacker logo pass** (the user, 2026-11-04, looking at them now): the game always adds the name under a logo (logoBlock: mark + name; the hacker card's NAME // RIVAL line), so logos don't need the name in their art: 24 x 7 is all picture. 11 hacker logos still spell their name in the art and show it twice: pops, hcf, brick, null, nana, dialup, baud, mother, root, kludge, hype (iceman, turbo, sysop, vulture, phish and leech are redrawn). Redraw them (art only, no code).
 - **asXii size presets** (the user, 2026-11-04; asXii's own repo now: move this to its list): update asXii's Presets list (public/index.html #sizePreset) to the game's real art sizes, and check the ones there. Today it has: node glyph 5 x 3 (right), corp art 24 x 12 (wrong: corp intro art is the logo, 24 x 7), ad box 30 x 18 (right: ADS_W / ADS_H), intro map 34 x 9 (the map is 34 x 12 now), title art 32 x 20 (check: TITLE_W is 31), terminal 80 x 24. Add: logo 24 x 7 (the name goes on row 8, LOGO_W / LOGO_H), hacker face 5 x 3, SECTOR CLEARED 30 x 13, sector event card 5 x 3, cutscene 36 wide (any height; the game's grid). asXii is Justin's too: check his recent commits first.
-- **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open). Or a GLYPH chip (docs/DECK.md).
+- Dropped (Greg, 2026-11-22: "exotic mods aren't that great anyway"): **FORGERY's partner:** a rare mod that turns $ nodes into exotic mod nodes (open: what one costs to open). Or a GLYPH chip (docs/DECK.md).
 - **Ads that do things** (later, the user 2026-10-28; the fake ads are done and great): an ad that sells you gear or a mod; a free trial of a corp's mod; AD BLOCKER.
 - (fine as is, the user 2026-10-29) A REROLL in a market with COUPON adds another free option. Epic FIREWALL with FAILSAFE: "no hits this corp", working. BLOOD MONEY's repair glitch (a repair pays a little in the early sectors) stays: "if someone wants to they should be able to". BLOOD MONEY scaling: fine as is.
 - (dropped, the user 2026-10-28: fine for now) Boss rewards by difficulty; showing corp difficulty in game; the tell balance pass.

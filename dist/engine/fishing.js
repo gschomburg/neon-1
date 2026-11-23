@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v15.51']);
+NEON_FILES.push(['engine/fishing.js', 'v15.52']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -340,7 +340,7 @@ function buildFish(ctx) {
     for (let r = 1; r < h - 1; r++) { put(x0, y0 + r, '|', C.money, 'hud'); put(x0 + w - 1, y0 + r, '|', C.money, 'hud'); }
     const mid = (y, t, col, bold) => put(x0 + Math.floor((w - t.length) / 2), y, t, col, 'hud', bold);
     if (out.kind === 'fish') mid(y0 + 1, f.card.look, rarityCol(out.rarity), true);
-    else mid(y0 + 1, out.kind === 'shoe' ? "it's a shoe." : out.chip ? 'a chip! for your deck.' : 'just gear.', out.chip ? C.accent : C.mid, !!out.chip);   // (engine/deck.js deckFishChip)
+    else mid(y0 + 1, out.kind === 'shoe' ? "it's a shoe." : out.chip ? (deckOwned1(out.key) ? 'a chip. OWNED already.' : 'a chip! for your deck.') : 'just gear.', out.chip ? C.accent : C.mid, !!out.chip);   // (engine/deck.js deckFishChip)
     if (f.card.kb != null) mid(y0 + 2, fmtKB(f.card.kb) + (f.card.record ? '  BIGGEST YET' : ''), f.card.record ? C.money : C.mid, !!f.card.record);
     else if (f.card.lb != null) mid(y0 + 2, fmtLb(f.card.lb), C.mid);
     putChip(put, bg, x0 + 2, y0 + 3, it.name, it.rarity, 'hud', true);

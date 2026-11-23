@@ -712,6 +712,34 @@ The ending, the rewards for beating the game and the rest of the end game: **doc
   that matters (the UPLINK). The hints get plainer the longer a step sits.
 - Quest seeds live on THE BOARD (a "play the d0g seed" button), so nobody has to remember them.
 
+## The G0D.exe quest: the cult (Greg, meat notes 2026-11-22; ideas, nothing decided or built)
+How you get G0D.exe (BACKLOG section 3) for real. Greg's notes, filed as he wrote them; the questions are for the next talk.
+- **The story:** a corp cult is trying to resurrect G0D and bind it under their control. You have to beat them to it.
+  - The cult is a conglomerate. Maybe a new corp.
+  - It needs a good name: something holy, like angels, cherubs, templars.
+  - Do you go back down to HAD3S, or is this seed limbo? Purgatory?
+- **How it starts:** it unlocks once you've beaten G0D, and maybe reached ELITE, or SYSOP. POPS contacts you.
+- **G0D'S EYE first, maybe** (docs/DECK.md BOSS): go into the heaven sim and beat G0D 10 times; if you've already beaten
+  him 10 times, one more is enough. Then you can see the DIVINE components, while it's slotted.
+- **The seed:** a new seed where you find the DIVINE letters, craft G0D.exe at the WORKBENCH, and then beat the cult.
+  - It makes you dig through corps. Maybe a linear network that zig-zags, like the gauntlet but its own thing.
+  - You should have the 1UP by now, so it can be tough.
+- **Ideas for the seed:**
+  - **A ritual pattern:** the cult is doing a ritual, and you have to follow it: the network navigation pattern idea,
+    going through nodes in a certain order. Maybe that's the only way the DIVINE letters show up. Stray from the route
+    and they stop; get back on it and clear 3 corps, and they show up again.
+  - **The letters:** random drops from corp bosses. Or you find BLANK chips you take to the WORKBENCH and forge: maybe
+    this is what THE CHROME FORGE is for.
+  - **Stacked corps:** corps on the map where every layer is a different corp's effect, say 3 corps jammed into one,
+    like an OMNI that changes by layer. Maybe the whole palette changes each layer to that corp's.
+  - Maybe this is where the NetHack stealth stuff comes in (BACKLOG section 12, docs/INFILTR8.md).
+- **The boss fight:**
+  - Rivals, corp hackers that attack your cursor. Or like Pac-Man: they chase you, then you get a "power pellet" and
+    can attack (tap) them back.
+  - Or an escort mission: you defend a glyph from clicks. It moves around the map, cursors keep coming on and trying to
+    click it, and you have to click them first.
+- **Loose notes under the same heading** (what they're for: ask Greg): "pwn: you own everything", "outsourcing".
+
 ## What it needs that doesn't exist yet
 - **Quest items:** a gear kind (quest color, QUEST tag, one at a time), the unlock gate, drop odds everywhere loot drops.
 - **Calls:** a hacker's face in the corner with their line (like the training's popups, in the quest color).

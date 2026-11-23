@@ -125,13 +125,13 @@ module.exports = { name: 'deck', body: `
   let nid = null; for (let i = 0; i < 300 && !nid; i++) { const r = rngFor(st.run.seed, 'cachechip', 'n' + i); if (r() < DECK_DROP.cache) nid = 'n' + i; }
   const line = deckCacheChip({ id: nid }), got = st.run.items.find(x => ITEMS[x.key].chip);
   check(line && got, 'a DATA CACHE can drop a chip into your belt: ' + line);
-  check(beltLabel(got).length === 5 && beltLabel(got)[0] === '[' && beltLabel(got)[4] === ']' && /NEW/.test(itemView(got.key).tip), 'on the belt: its face, 3 wide; its tip says NEW: ' + beltLabel(got) + ' / ' + itemView(got.key).tip);
+  check(beltLabel(got).length === 5 && beltLabel(got)[0] === '[' && beltLabel(got)[4] === ']' && !/NEW|OWNED/.test(itemView(got.key).tip), 'on the belt: its face, 3 wide; its tip says nothing about owning it (no NEW: Greg, 2026-11-22): ' + beltLabel(got) + ' / ' + itemView(got.key).tip);
   check(whyNotItem(got) === 'a chip: CASH OUT to keep it.' && !canUse(got), "it can't be used in a run");
   check(shredCode({ kind: 'gear', key: got.key }).length >= 1, 'the bench can shred it: ' + shredCode({ kind: 'gear', key: got.key }));
   const ck = ITEMS[got.key].chip;
   deckHome(st.run, false); check(!deckHave(ck), 'die: it never gets home');
   deckHome(st.run, true); check(deckHave(ck) === 1 && FEAT_QUEUE.some(q => q.head === 'YOUR DECK'), 'cash out: it goes home to your deck: ' + ck);
-  check(/you have it/.test(itemView(got.key).tip) && /shreds/.test(itemView(got.key).tip), 'another one says you have it, and it shreds: ' + itemView(got.key).tip);
+  check(/^OWNED/.test(itemView(got.key).tip) && /shreds/.test(itemView(got.key).tip), 'another one says OWNED, and it shreds: ' + itemView(got.key).tip);
   { const lt = save.bench && save.bench.letters ? Object.values(save.bench.letters).reduce((a, n) => a + n, 0) : 0; FEAT_QUEUE.length = 0;
     deckHome(st.run, true);
     const lt2 = Object.values(benchSave().letters).reduce((a, n) => a + n, 0);

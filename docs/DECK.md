@@ -641,7 +641,7 @@ your glyph. FORGERY's partner waits (an exotic from a $ node is a lot).
   - **SPOTLIGHT:** your glyph always glows a little, so you see where it is. An add-on: it still pays as before.
     KERNING. (Claude: weak; cut it, or fold it into COLLECTOR.)
   - Dropped: MIRROR (Greg).
-  - **FORGERY's partner:** your glyph turns $ nodes into exotic mod nodes (BACKLOG Medium and small). FORGERY is
+  - Dropped (Greg, 2026-11-22: exotic mods aren't that great anyway): **FORGERY's partner:** your glyph turns $ nodes into exotic mod nodes (BACKLOG Medium and small). FORGERY is
     SIGIL's legendary mod ($ nodes do no damage). Greg: sure.
   - **COLLECTOR:** each time you tap your glyph, +1 to a counter; at 10, a free mod. HAUTE//COUTURE. (Greg likes
     it.)
@@ -731,7 +731,10 @@ dev mode keeps the dev ones: docs/SHELL.md). **Built v15.06:** `mode.free` FT3 (
   - **PHISHER** (when it exists): one ICE node a layer is a fake that pays.
   - **GHOST** (when it exists): on a seed you've played, the node you tapped last time is marked.
 - **Greg (2026-11-16):** these wait on bosses that don't exist yet. One for now: **G0D'S EYE**, so the divine components show up in
-  a run. You get it by beating G0D about 10 times.
+  a run. You get it by beating G0D about 10 times. **Greg (2026-11-22):** it may be the first step of the G0D.exe quest
+  (docs/QUESTS.md "The G0D.exe quest: the cult"): beat G0D 10 times in the heaven sim (or once more, if you have).
+  The DIVINE letters it shows don't exist yet (BACKLOG, THE WORKBENCH).
+- **GHOST** (Greg, meat notes 2026-11-22): more ideas in BACKLOG section 1 (a ghost of your last run on a seed).
 
 ### HEAT (3, mk IV): harder runs, more REP
 - TAXED (a cut of every payout), AUDITED, RANSOM. Each one adds to the REP a run banks.

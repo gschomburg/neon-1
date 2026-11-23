@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.51']);
+NEON_FILES.push(['engine/deck.js', 'v15.52']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -41,6 +41,7 @@ const DECK_CHIPS = {
   // CRASH: when you die
   DM5: ['DEADMAN', 'crash', 'epic', 1, 'dying keeps 50% of the REP you would have banked.', ['DED', 'MAN'], 'die and keep half your REP.'],
   '1UP': ['1UP', 'crash', 'exotic', 3, "b0y's crash unit, from beating G0D: die in a corp and CONTINUE? from its start, the way you went in. it charges again every sector.", ['1UP', 'b0y'], "die: back to the corp's start."],   // (engine/oneup.js oneUpOpen; never drops: deckGift)
+  SD6: ['SELF DESTRUCT', 'crash', 'rare', 1, 'die and every mod and gear on you goes up: their letters land at your WORKBENCH.', ['*!*', 'SDX'], 'die: it all turns to letters.'],   // (deckSelfDestruct)
   BB7: ['BLACK BOX', 'crash', 'rare', 2, "when you die, your best mod goes into your WORKBENCH's LOCKER, a step lower (if there's room).", ['[#]', 'BOX'], 'a mod survives your death.'],
   // SPOILS: what corp bosses give
   SP3: ['SPOILS', 'spoils', 'common', 0, 'a switch for corp bosses: take the REWARDS, or skip them for a HEAL (2 INT) or for CASH (60cr).', ['SPL', null], 'take boss rewards, a heal, or cash.'],
@@ -51,7 +52,7 @@ const DECK_CHIPS = {
   RX9: ['REACTOR', 'psu', 'legendary', 0, 'power 14 (E), but -1 starting INT.', ['(*)', 'RxE'], 'power 14, -1 INT.'],
   // OVERVOLT (mk III): pay with integrity
   GR8: ['GREED', 'ov', 'rare', 2, '-1 starting INT. +25% credits.', ['GRD', '$-1'], '-1 INT, +25% credits.'],
-  LK7: ['LUCK', 'ov', 'epic', 2, '-1 starting INT. 1 in 5 mods and gear roll a step rarer.', ['777', 'LCK'], '-1 INT, rarer drops.'],
+  LK7: ['LUCK', 'ov', 'epic', 2, '-1 starting INT. 1 in 5 mods, gear and chips roll rarer.', ['777', 'LCK'], '-1 INT, rarer drops.'],
   FM2: ['FAME', 'ov', 'rare', 2, '-1 starting INT. +20% REP.', ['FME', '*-1'], '-1 INT, +20% REP.'],
   SK1: ['SPIKE', 'ov', 'common', 0, '-1 starting INT. +2 power for your deck.', ['/\\/', '+2P'], '-1 INT, +2 power.'],
   // SHELL: one command each, in THE SHELL (` opens it). a stand-in pair until THE SHELL is sorted out (Greg)
@@ -76,6 +77,7 @@ const DECK_CHIPS = {
   RL2: ['show.real', 'sudo', 'epic', 2, 'THE SHELL learns show.real: the real node is marked on this layer. once a corp. (` opens THE SHELL.)', ['[*]', 'RL!'], 'show.real: mark the real node.'],
   BR3: ['breach', 'sudo', 'legendary', 3, 'THE SHELL learns breach: you win this layer outright, full pay. once a run. (` opens THE SHELL.)', ['>>>', 'BRC'], 'breach: win a layer.'],
   GM1: ['give.mod', 'sudo', 'epic', 2, 'THE SHELL learns give.mod: name a mod you have found and it is yours. epic and up: only ones you have shredded. it costs more the rarer it is. (` opens THE SHELL.)', ['+M ', 'GVE'], 'give.mod: name a mod.'],
+  GC4: ['give.chip', 'sudo', 'legendary', 3, 'THE SHELL learns give.chip: name a chip you have shredded at a WORKBENCH and it is on your belt. it costs more the rarer it is. (` opens THE SHELL.)', ['+C ', 'GVE'], 'give.chip: name a chip.'],   // (deckGiveChip)
   GG1: ['give.gear', 'sudo', 'epic', 2, 'THE SHELL learns give.gear: name gear you have found and it is on your belt. epic and up: only what you have shredded. it costs more the rarer it is. (` opens THE SHELL.)', ['+G ', 'GVE'], 'give.gear: name your gear.'],
   // (v15.06: the rest of the SUDO list, docs/DECK.md)
   FK2: ['fork', 'sudo', 'legendary', 3, 'THE SHELL learns fork: the real node forks. every layer of this corp has two, with the same glyph, and the pay stays whole. (` opens THE SHELL.)', ['fk<', '(*)'], 'fork: two real nodes, a corp.'],
@@ -159,10 +161,11 @@ const DECK_CHIPS = {
   VE2: ["VULTURE'S CUT", 'bios', 'rare', 1, 'beating a rival pays +50%.', ['\\v/', 'CUT'], 'rivals pay +50%.'],
   DM3: ["D0PPEL'S MASK", 'boot', 'epic', 2, '+2 max INTEGRITY.', ['(=)', 'DPL'], '+2 max INT.'],
   PH3: ["PH1SH'S HOOK", 'bios', 'epic', 2, 'rivals you beat drop a chip twice as often (60%).', ['_J ', 'HK!'], 'rivals drop more chips.'],
+  HF9: ["HCF'S CORE", 'psu', 'exotic', 0, 'a cell: power 18. it runs hot. halt and catch fire. (HCF drops it most.)', ['!#!', 'C18'], 'power 18.'],   // (Greg, 2026-11-22: the exotic RIPPED chip; any rival or THE FENCE, rarely)
   SY4: ["SYSOP'S KEY", 'boot', 'legendary', 3, "the first layer of every corp: the real node is marked.", ['#*#', 'SYS'], 'first layers: real node marked.'],
 };
 // RIPPED chips: their texts say so (their one-line tip starts RIPPED), and they look it (deckRipGlow)
-const DECK_RIPPED = ['LW1', 'TN2', 'VE2', 'DM3', 'PH3', 'SY4'];
+const DECK_RIPPED = ['LW1', 'TN2', 'VE2', 'DM3', 'PH3', 'SY4', 'HF9'];
 const deckIsRipped = k => DECK_RIPPED.includes(k);
 for (const k of DECK_RIPPED) { DECK_CHIPS[k][4] = 'RIPPED: from a rival. ' + DECK_CHIPS[k][4]; DECK_CHIPS[k][6] = 'RIPPED. ' + DECK_CHIPS[k][6]; }
 // What each chip touches (docs/DECK.md "Seeds"; not shown in the game): map (what a run generates), rules (what it pays
@@ -178,7 +181,7 @@ const DECK_CHIP_TAGS = {
   GE1: ['rules'], OF1: ['rules'], PT1: ['rules'], GB2: ['rules'], AU2: ['rules'], SV1: ['rules'], HL2: ['rules'],
   BO1: ['you'], PO1: ['you'], WU3: ['you'], SPC: ['you'],
   DN1: ['you'], GL2: ['you', 'rules'], CH1: ['you', 'rules'], TP1: ['you', 'rules'], RE1: ['you'], LG2: ['you'], UV1: ['you', 'rules'], PD2: ['you', 'rules'],
-  LW1: ['you'], TN2: ['you'], VE2: ['rules'], DM3: ['you'], PH3: ['rules'], SY4: ['you'],
+  LW1: ['you'], TN2: ['you'], VE2: ['rules'], DM3: ['you'], PH3: ['rules'], SY4: ['you'], HF9: ['you'], SD6: ['you'], GC4: ['you'],
   HN1: ['map', 'rules'], SF2: ['rules'], NM0: ['rules'], IF1: ['rules'], DC4: ['rules'], FG0: ['rules'], GT1: ['rules'],
 };
 // The chips that don't do their whole job yet (Greg, 2026-11-16: mark them BETA, so we know they need more work). What's
@@ -191,7 +194,7 @@ const deckBeta = k => !!DECK_BETA[k];
 // Power (docs/DECK.md "Power", first pass for playtesting): the cell powers mk II and mk III, one cell per stage of the
 // ladder (6 / 9 / 11 / 14); the FUSE powers mk IV on its own (DECK_FUSE_PWR). Every number fits one hex character:
 // the borders show them that way (+-2-+, the PSU +5/E+). OVERCLOCK (a BYTE code) runs the cell at F.
-const DECK_CELL = { SC1: 6, LI2: 9, NC3: 11, RX9: 14, BO1: 12, PO1: 4, SPC: 15 };
+const DECK_CELL = { SC1: 6, LI2: 9, NC3: 11, RX9: 14, BO1: 12, PO1: 4, SPC: 15, HF9: 18 };
 // a cell's power. WIND-UP: 2, +2 a sector you cleared in your last cash-out (save.deck.windup, engine/runend.js endRun), 14 at most
 const deckCellPower = key => key === 'WU3' ? Math.min(14, 2 + 2 * ((save.deck && save.deck.windup) || 0)) : DECK_CELL[key] || 0;
 const DECK_FUSE_PWR = 8;
@@ -303,20 +306,31 @@ const deckItemChip = k => (ITEMS[k] && ITEMS[k].chip) || null;
 // A SHELL or SUDO chip before THE SHELL is yours (Greg, 2026-11-20: they still drop; they point you at ROOT's quest)
 const deckNoShell = key => ['shell', 'sudo'].includes(DECK_CHIPS[key][1]) && !(typeof rootOn === 'function' && rootOn());
 const deckHave = key => (save.deck && save.deck.chips && save.deck.chips[key]) || 0;
+// OWNED (Greg, 2026-11-22): a chip your deck has says so wherever you meet it in a run (the belt's tip, the CHIP DEALER,
+// a market's or a boss's card, a DATA CACHE, a PIER catch, a rival's drop). One you don't have says nothing.
+// You never hold more than one at home, so no counts. key: a chip key or its gear key (chip_...).
+const deckOwned1 = key => !!deckHave(deckItemChip(key) || key);
+const deckChipNote = key => deckOwned1(key) ? 'OWNED' : 'cash out to keep it';
 for (const [key, c] of Object.entries(DECK_CHIPS)) {
   ITEMS[deckChipItem(key)] = { key: deckChipItem(key), name: c[0], price: 0, rarity: c[2], chip: key, only: 'deck', nosell: !deckIsRipped(key), ripped: deckIsRipped(key), desc: c[4],   // (a RIPPED one sells: Greg, sell it and the heat's off. Its price: below)
-    get tip() { const n = deckHave(key); return `${n ? 'you have it.' : 'NEW.'} ${c[6]} ${n ? 'cash out and it shreds into letters.' : 'cash out to keep it.'}${deckIsRipped(key) ? ' rivals want it back.' : ''}${deckNoShell(key) ? ' it needs THE SHELL: get ROOT on your crew.' : ''}`; } };
+    get tip() { const n = deckHave(key); return `${n ? 'OWNED. ' : ''}${c[6]} ${n ? 'cash out and it shreds into letters.' : 'cash out to keep it.'}${deckIsRipped(key) ? ' rivals want it back.' : ''}${deckNoShell(key) ? ' it needs THE SHELL: get ROOT on your crew.' : ''}`; } };
   // on the belt its face's two rows take turns (Greg, 2026-11-16), 3 wide (engine/panels.js ITEM_SHORT)
   Object.defineProperty(ITEM_SHORT, deckChipItem(key), { get: () => { const f = c[5], b = f[1] && Math.floor(performance.now() / 1100) % 2; return (b ? f[1] : f[0]).slice(0, 3).padEnd(3); } });
 }
 // chips drop once you have a deck, in real runs (not the training, not a race)
 const deckDrops = () => !!save.deck && !!st.run && !st.run.tutorial && !st.mp;
+// BETTER DROPS and LUCK (engine/mods.js rarityUp; Greg, 2026-11-22: chips too): with their chance, a chip is rolled twice
+// and the rarer one kept. (Only then does it take more from the stream, as rollTier does.)
+const deckRarer = (a, b) => RARITY_ORDER.indexOf(DECK_CHIPS[b][2]) > RARITY_ORDER.indexOf(DECK_CHIPS[a][2]) ? b : a;
+const deckLucky = (r, roll) => { const k = roll(), up = rarityUp(); return up && r() < up ? deckRarer(k, roll()) : k; };
 function deckRollChip(r) {
   const pool = Object.keys(DECK_CHIPS).filter(k => !DECK_NO_DROP.includes(k) && !deckBeta(k) && !deckIsRipped(k));
-  return pickWeighted(pool, k => DECK_DROP_WEIGHT[DECK_CHIPS[k][2]] || 0, r);
+  return deckLucky(r, () => pickWeighted(pool, k => DECK_DROP_WEIGHT[DECK_CHIPS[k][2]] || 0, r));
 }
-// a RIPPED one (rivals, THE FENCE): by rarity, the same weights
-const deckRollRipped = r => pickWeighted(DECK_RIPPED, k => DECK_DROP_WEIGHT[DECK_CHIPS[k][2]] || 0, r);
+// a RIPPED one (rivals, THE FENCE): by rarity, the same weights. from: the rival it came off; HCF drops its own CORE
+// far more often (Greg, 2026-11-22: beat HCF for it): DECK_HCF_X its weight: about 1 of its drops in 5 (other rivals: 1 in 140).
+const DECK_HCF_X = 40;
+const deckRollRipped = (r, from = null) => deckLucky(r, () => pickWeighted(DECK_RIPPED, k => (DECK_DROP_WEIGHT[DECK_CHIPS[k][2]] || 0) * (k === 'HF9' && from === 'hcf' ? DECK_HCF_X : 1), r));   // (BETTER DROPS, LUCK: deckLucky)
 // ---------- CHIP DEALER (THE BOARD: ELITE, II on SYSOP; Greg, 2026-11-22) ----------
 // After a DATA CACHE: a catalog of chips (3; 5 with II, one of them rare or better), at a market's chip price (shopMult:
 // LOYALTY CARD, CHEAPSKATE). What drops can be in it (deckRollChip: no BETA, RIPPED or quest chips; no BOSS ones).
@@ -352,12 +366,13 @@ function openChipDealer(node) {
     T('to keep a chip, get out with it.', C.dim);
     T('the catalog. chips for your deck:', C.mid);
     stock.forEach((o, k) => X({ list: true, id: 'dealer' + k, onTap: () => { sel = k; Sound.tick(); }, sel: k === sel, faded: !!why(o),
-      gear: deckChipItem(o.key), name: DECK_CHIPS[o.key][0], col: C.bright, right: o.sold ? 'SOLD' : `${o.price}cr`.padStart(6), rightCol: o.sold ? C.dim : C.money }));
+      gear: deckChipItem(o.key), name: DECK_CHIPS[o.key][0], col: C.bright, right: o.sold ? 'SOLD' : (deckHave(o.key) ? 'OWNED ' : '') + `${o.price}cr`.padStart(6), rightCol: o.sold ? C.dim : C.money }));   // (OWNED: your deck has it)
     T('');
     T(SEP, C.dim);
     const o = stock[sel], c = DECK_CHIPS[o.key];
     X({ gearHead: deckChipItem(o.key), gearTier: 0, text: `${c[0]}: ${DECK_GROUPS[c[1]][0]}` });
     T(c[6], C.text);
+    if (deckHave(o.key)) T('OWNED: at home it shreds into letters.', C.mid);
     const w = why(o);
     if (w) { T(''); T(w, o.sold ? C.dim : C.dangerDim); T(''); }
     else X({ box: true, text: 'B U Y   I T', sub: `${o.price}cr`, id: 'dbuy', onTap: buy, minW: 18 });
@@ -371,7 +386,7 @@ function deckCacheChip(node) {
   const r = rngFor(st.run.seed, 'cachechip', node.id);
   if (r() >= DECK_DROP.cache && !DECK_ALWAYS) return null;   // (DECK_ALWAYS: testing)
   const key = deckRollChip(r), ik = deckChipItem(key);
-  if (itemRoom(ik, 0)) { addItem(ik, 0); return `+ chip: ${DECK_CHIPS[key][0]}${deckHave(key) ? ' (dupe)' : ''}`; }
+  if (itemRoom(ik, 0)) { addItem(ik, 0); return `+ chip: ${DECK_CHIPS[key][0]}${deckHave(key) ? ' (OWNED)' : ''}`; }
   setTimeout(() => openSwap('item', ik, 0, null), 0);   // (after the cache's panel is up)
   return `+ chip: ${DECK_CHIPS[key][0]}. belt full.`;
 }
@@ -670,10 +685,10 @@ function deckRivalChip(h) {
   const run = st.run; if (!deckDrops() || !st.corp) return null;
   const r = rngFor(run.seed, 'rivalchip', st.corp.node.id, h.id);
   if (r() >= DECK_RIVAL_DROP * (chipOn('PH3') ? 2 : 1) && !DECK_ALWAYS) return null;
-  const key = deckRollRipped(r), ik = deckChipItem(key);
+  const key = deckRollRipped(r, h.id), ik = deckChipItem(key);   // (HCF: its own CORE, far more often)
   if (!itemRoom(ik, 0)) return null;
   addItem(ik, 0); deckRipFirst();
-  return `> ${hkName(h.id).toLowerCase()} dropped a chip: ${DECK_CHIPS[key][0]}. it's RIPPED. ${hkName(h.id).toLowerCase()} is gonna want that back.`;
+  return `> ${hkName(h.id).toLowerCase()} dropped a chip: ${DECK_CHIPS[key][0]}${deckHave(key) ? ' (OWNED)' : ''}. it's RIPPED. ${hkName(h.id).toLowerCase()} is gonna want that back.`;
 }
 // A rival that took the corp's boss layer (h.stoleLast; not flatlined, not thrown out) takes a RIPPED chip back off
 // your belt (engine/hackers.js hkCorpEnd). Beat the boss yourself and you keep them (Greg, 2026-11-21: it was any layer).
@@ -824,6 +839,34 @@ function deckBlackBox(run) {
   lk[free] = { kind: 'mod', key: k, tier, n: 1 }; persist();
   FEAT_QUEUE.push({ head: 'BLACK BOX', lines: [`${MODS[k].name} made it out, ${tierLabel(modView(k, tier))}.`, "it's in your WORKBENCH's LOCKER."] });
 }
+// SELF DESTRUCT (CRASH, Greg 2026-11-22: "keep it", the CRASH chip that shreds everything): die and every mod and gear
+// stack on you goes up, its shred letters landing at your WORKBENCH (engine/bench.js shredCode, the same letters the
+// bench would give). Chips and quest gear don't. Only on a death: a cash-out keeps your things. (engine/runend.js endRun)
+function deckSelfDestruct(run) {
+  if (!chipOn('SD6', run) || run.practice) return;
+  const things = run.mods.filter(k => MODS[k]).map(k => ({ kind: 'mod', key: k }))
+    .concat(run.items.filter(o => ITEMS[o.key] && !deckItemChip(o.key) && !ITEMS[o.key].quest).map(o => ({ kind: 'gear', key: o.key })));
+  if (!things.length) return;
+  if (!benchOpen()) return FEAT_QUEUE.push({ head: 'SELF DESTRUCT', lines: [`${things.length} things went up.`, 'no WORKBENCH: the letters are lost.'] });
+  const got = things.flatMap(o => shredCode(o).split('').filter(ch => /[A-Z0-9]/.test(ch)));
+  benchAdd(got); persist();
+  FEAT_QUEUE.push({ head: 'SELF DESTRUCT', lines: [`${things.length} things went up: ${got.length} letters.`, 'they landed at your WORKBENCH.'] });
+}
+// give.chip (SUDO, GC4; Greg 2026-11-22): name a chip you've shredded at a WORKBENCH and it's on your belt (cash out to
+// keep it). Not a BOSS chip, not one THE BOARD or the deck gives (DECK_NO_DROP), not BETA. Charges by its rarity, like give.mod.
+const deckGiveChipOk = k => !!DECK_CHIPS[k] && DECK_CHIPS[k][1] !== 'boss' && !DECK_NO_DROP.includes(k) && !deckBeta(k) && (save.shredded || {})[deckChipItem(k)] != null;
+const deckGiveChipList = () => Object.keys(DECK_CHIPS).filter(deckGiveChipOk).sort().map(k => ({ v: k, hint: DECK_CHIPS[k][0] + ' · ' + DECK_CHIPS[k][2] }));
+const deckGiveChipCost = k => DECK_GIVE_COST[DECK_CHIPS[k][2]] || 1;
+function deckGiveChip(a) {
+  const run = shellNeedRun();
+  if (!a[0]) { const l = deckGiveChipList(); return { out: l.length ? 'give.chip <chip>. yours to name (shredded):\n' + l.map(o => `  ${o.v.padEnd(5)} ${o.hint}`).join('\n') : 'nothing yet: shred a chip at a WORKBENCH first.', free: true }; }
+  const k = String(a[0]).toUpperCase();
+  if (!DECK_CHIPS[k]) throw new Error('not a chip: ' + a[0]);
+  if (!deckGiveChipOk(k)) throw new Error(`${DECK_CHIPS[k][0]}: shred one at a WORKBENCH first` + (DECK_CHIPS[k][1] === 'boss' || DECK_NO_DROP.includes(k) ? ' (and it can\'t be given).' : '.'));
+  if (!addItem(deckChipItem(k), 0)) throw new Error('no room on the belt.');
+  run.hacked = true; Sound.buy();
+  return `give.chip: ${DECK_CHIPS[k][0]} on your belt. cash out to keep it.`;
+}
 // SPOILS (engine/panels.js openReward): 0 the rewards, 1 a heal, 2 cash
 const deckSpoils = run => chipOn('OF1', run) ? 3 : chipOn('PT1', run) ? 4 : chipOn('SP3', run) ? run.spoils || 0 : 0;   // (3 OFFERING, 4 PROTECTION: chips)
 // ---------- THE SHELL's charges (docs/SHELL.md "Charges", Greg 2026-11-20) ----------
@@ -833,7 +876,7 @@ const deckSpoils = run => chipOn('OF1', run) ? 3 : chipOn('PT1', run) ? 4 : chip
 // refill back). More from a corp boss's CHARGE pick (gear: +2), and ROOTKIT (CRASH) burns them all to save you.
 const SHELL_REFILL = 'sector';
 const DECK_CHARGES = { WH0: 3, PS4: 2, MN1: 2, CA4: 4, FL3: 3,   // (FL3 was 1: v15.03, a SUDO chip gives one use of its own command)
-  CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 4, GG1: 4, FT3: 3, JM4: 4, RF4: 4, CM3: 3, FK2: 4 };   // (GM1, GG1: they cost by rarity, DECK_GIVE_COST: 4 reaches a legendary)
+  CD2: 2, SN5: 3, RM1: 2, KL9: 2, CT1: 3, ZZ3: 2, WI5: 1, UD2: 1, GD1: 4, HD4: 3, RL2: 2, BR3: 4, GM1: 4, GG1: 4, GC4: 4, FT3: 3, JM4: 4, RF4: 4, CM3: 3, FK2: 4 };   // (GM1, GG1: they cost by rarity, DECK_GIVE_COST: 4 reaches a legendary)
 const SHELL_CHARGE = { pack: 2, boss: 0.35 };   // a CHARGE gives 2; a corp boss offers one 35% of the time (with charges to fill)
 for (const [k, n] of Object.entries(DECK_CHARGES)) if (DECK_CHIPS[k]) { DECK_CHIPS[k][4] += ` +${n} shell charges.`; DECK_CHIPS[k][6] += ` +${n} charges.`; }
 function deckCharges(run) {
@@ -1123,6 +1166,8 @@ const DECK_SHELL_PLAY = {
     help: 'name a mod you have found (epic+: shredded). 1-5 charges by rarity', run: a => deckGive('mod', a) },
   'give.gear': { chip: 'GG1', safe: true, cost: 1, costOf: a => deckGiveCostOf('gear', a), args: [{ name: 'gear', of: () => deckGiveList('gear'), any: 'gear', opt: true }, DECK_GIVE_TIER_ARG],
     help: 'name gear you have found (epic+: shredded). 1-5 charges by rarity', run: a => deckGive('gear', a) },
+  'give.chip': { chip: 'GC4', safe: true, cost: 1, costOf: a => a[0] && DECK_CHIPS[String(a[0]).toUpperCase()] ? deckGiveChipCost(String(a[0]).toUpperCase()) : 0, args: [{ name: 'chip', of: () => deckGiveChipList(), opt: true }],
+    help: 'name a chip you have shredded. 1-5 charges by rarity', run: a => deckGiveChip(a) },
 };
 
 // ---------- testing: the editor's TESTING tab (engine/editor.js TEST) and THE SHELL's deck commands (engine/shell.js)
@@ -1306,7 +1351,7 @@ function deckPower() {
   const d = DECK, on = new Set(), off = [];
   const spike = Object.keys(d.slots).some(id => d.slots[id] === 'SK1' && deckOpen(deckSock(id).mk)) ? 2 : 0;   // SPIKE (OVERVOLT)
   const tap = d.real ? legacyLv('power') : 0;   // POWER TAP (THE BOARD: +1, II +2)
-  const cellB = d.slots.PSU ? (d.overclock ? 15 : deckCellPower(d.slots.PSU)) + spike + tap : 0, fuseB = deckOpen(4) ? DECK_FUSE_PWR : 0;
+  const cellB = d.slots.PSU ? (d.overclock ? 15 : deckCellPower(d.slots.PSU)) + spike + tap : 0, fuseB = deckOpen(4) ? DECK_FUSE_PWR + (d.real ? 4 * Math.min(1, legacyLv('fuse2')) : 0) : 0;   // (FUSE II: THE BOARD, +4)
   const left = { cell: cellB, fuse: fuseB };
   for (const id of d.order) {
     const key = d.slots[id], s = deckSock(id); if (!key || !deckOpen(s.mk)) continue;   // a dark band's chips cost nothing
@@ -1989,6 +2034,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
     }
   }
   if (d.sel.kind === 'part') { const p = DECK_PARTS.find(q => q.id === d.sel.id); if (p) bbg(p.x, p.y, p.w, p.h, C.accent, 0.18); }
+  if (pw.crewOff && pw.crewOff.length) { const p = DECK_PARTS.find(q => q.id === 'crew'); bbg(p.x, p.y, p.w, p.h, C.danger, 0.15 + 0.2 * (Math.sin(now / 300) + 1) / 2); }   // a CREW JACK with no power: red, glowing
   // the "more" rows; a drag or the wheel moves a row at a time
   g.clr(0, y0, L.wc, 1); g.clr(0, y0 + sa - 1, L.wc, 1);
   deckMore(ctx, g, 0, L.wc, y0, true, top > 0, () => { d.scroll = clamp(d.scroll - DECK_BOARD_STEP, 0, maxTop); }, 'dkup');
@@ -2214,8 +2260,9 @@ function deckCrewRow(g, ctx, y, k, inn, pw, IX, IW) {
     if (dbl) return deckJackToggle(k);
     if (p.sel !== k) { p.sel = k; Sound.tick(); } } });
   g.put(IX + 1, y, j >= 0 ? '[' + (j + 1) + ']' : '[ ]', j >= 0 ? (pw.crewOff.includes(k) ? C.danger : C.accent) : C.dim, j >= 0);
-  g.put(IX + 5, y, HACKERS[k].name, hkInk(k), true);
-  const r = 'LVL ' + lv + ' · PWR ' + lv; g.put(IX + IW - r.length - 1, y, r, C.mid);
+  const dark = pw.crewOff.includes(k);   // (no power: red, and NO POWER blinks over its level)
+  g.put(IX + 5, y, HACKERS[k].name, dark ? C.danger : hkInk(k), true);
+  const r = dark && Math.floor(ctx.now / 500) % 2 ? 'NO POWER' : 'LVL ' + lv + ' · PWR ' + lv; g.put(IX + IW - r.length - 1, y, r, dark ? C.danger : C.mid, dark);
   g.put(IX + 5, y + 1, FX.ticker(DECK_JACKS[k][lv - 1], IW - 6, p.t0, ctx.now, 6), C.text);
 }
 function deckJackToggle(k) {
@@ -2299,12 +2346,14 @@ function deckCard(ctx, y0) {
   // the bar
   if (d.msg && now - d.msg.t < 2600) { g.put(0, y0, rule(W), C.dim); const s = ` ${d.msg.text} `.slice(0, W); g.clr(1, y0, s.length); g.put(1, y0, s, d.msg.col); }
   else if (d.carry) { g.put(0, y0, rule(W), C.dim); const s = ` slotting ${DECK_CHIPS[d.carry][0]}: tap a blinking socket `.slice(0, W); g.clr(1, y0, s.length); g.put(1, y0, s, C.accent); }
-  else if (pw.off.length) {   // NO POWER: red, cycling through the chips that have none; a tap goes to the one showing
-    const names = pw.off.map(id => `NO POWER: ${DECK_CHIPS[d.slots[id]][0]} in ${id}`), sw = FX.swapLines(names, W - 2, 0, now, 1800);
+  else if (pw.off.length || pw.crewOff.length) {   // NO POWER: red, cycling through the chips (and CREW JACKS) that have none; a tap goes to the one showing
+    const offs = pw.off.map(id => ({ text: `NO POWER: ${DECK_CHIPS[d.slots[id]][0]} in ${id}`, go: () => { const s = deckSock(id); d.view = 'board'; deckSelect({ kind: 'socket', id }); deckShow(s.y, s.h, deckViewRows()); } }))
+      .concat(pw.crewOff.map(c => ({ text: `NO POWER: ${HACKERS[c].name} in a jack`, go: () => { d.view = 'board'; deckCrewOpen(); d.pick.sel = c; } })));   // (Greg, 2026-11-22: it opens the jacks)
+    const sw = FX.swapLines(offs.map(o => o.text), W - 2, 0, now, 1800);
     g.bg(0, y0, W, 1, st.hoverBtn === 'dkbar' ? C.accent : C.danger, 1); g.put(1, y0, sw.text, C.bg, true);
     if (!d.pick && !d.cpu) ctx.addHit(0, y0, W, 1, { kind: 'btn', id: 'dkbar', onTap: () => {   // (each tap: the next one, Greg 2026-11-16)
-      d.offI = d.offI == null || d.offI >= pw.off.length - 1 ? 0 : d.offI + 1;
-      const id = pw.off[d.offI], s = deckSock(id); d.view = 'board'; deckSelect({ kind: 'socket', id }); deckShow(s.y, s.h, deckViewRows()); Sound.tick(); } });
+      d.offI = d.offI == null || d.offI >= offs.length - 1 ? 0 : d.offI + 1;
+      offs[d.offI].go(); Sound.tick(); } });
   } else g.put(0, y0, rule(W), C.dim);
   // the picker is up: the card waits under it (dim), and a tap on it closes the picker
   if (d.pick || d.cpu) { g.dim = true; ctx.addHit(0, y0 + 1, W, 4, { kind: 'btn', id: 'dkcard', onTap: () => { d.pick = null; d.cpu = null; Sound.tick(); } }); }

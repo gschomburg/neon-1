@@ -1,6 +1,6 @@
 // NeoN+1 engine/mods.js: Mod trigger stages and tiers.
 'use strict';
-NEON_FILES.push(['engine/mods.js', 'v15.51']);
+NEON_FILES.push(['engine/mods.js', 'v15.52']);
 
 const rarityCol = r => C[r] || C.text;   // a rarity's key color (its chip's background)
 // Rarity chips (CHIPS in core.js): chipOf(r) = { fg, bg }. rarityChips(text) finds the rarity words
@@ -219,13 +219,16 @@ const itemView = (key, tier = 0) => tierView(ITEMS[key], tier);
 const modTier = key => (st.run && st.run.modTier && st.run.modTier[key]) || (st.run && key && key === st.run.mutateAs && st.run.mods.includes('mutate') && st.run.mutateTier) || 0;   // MUTATE: what it became, at its rolled tier
 const tv = (key, values) => values[clamp(modTier(key), 0, values.length - 1)]; // a value by your tier
 const tierLabel = v => v.lvlTag ? `LV${v.tier + 1}` : RARITY[v.rarity].label;
+// The chance a drop rolls rarer: BETTER DROPS (THE BOARD: I and II, 10% each), LUCK (a chip: 20%); the better one, not
+// both. Not in the training. Mods and gear step up a tier (rollTier); chips roll twice and keep the rarer (engine/deck.js deckRollChip).
+const rarityUp = () => st.run && st.run.tutorial ? 0 : Math.max(0.1 * legacyLv('drops'), chipOn('LK7') ? 0.2 : 0);
 function rollTier(r, def) {
   if (!def.tiers) return 0;
   const u = r();
   let t = Math.min(def.tiers.length - 1, u < TIER_ODDS[0] ? 0 : u < TIER_ODDS[1] ? 1 : u < TIER_ODDS[2] || ITEMS[def.key] !== def ? 2 : 3);
   while (t > 0 && tierView(def, t).rarity === 'legendary' && u < TIER_ODDS[1]) t--;   // a legendary step: only the top 5% (or take it twice)
-  const up = Math.max(0.1 * legacyLv('drops'), chipOn('LK7') ? 0.2 : 0);   // BETTER DROPS (THE BOARD: I and II), LUCK (a chip: engine/deck.js)
-  if (up && t < def.tiers.length - 1 && !(st.run && st.run.tutorial) && r() < up) t++;   // a step rarer
+  const up = rarityUp();   // BETTER DROPS, LUCK
+  if (up && t < def.tiers.length - 1 && r() < up) t++;   // a step rarer
   return t;
 }
 // What owning `key` becomes if you take it at `tier`: at or below yours = up one step,

@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.51']);
+NEON_FILES.push(['engine/save.js', 'v15.52']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -105,7 +105,7 @@ const LEGACY = [
   { key: 'cash2', tier: 2, ladder: 'cash', needs: 'cash', name: 'SEED MONEY II', desc: 'start with +50cr (was +25).', costs: [40] },
   { key: 'restock2', tier: 2, ladder: 'restock', needs: 'restock', name: 'RESTOCK II', desc: '3 rerolls at every market (was 2).', costs: [60] },
   { key: 'dms2', tier: 2, ladder: 'dms', needs: 'dms', name: 'DEADMAN II', desc: 'dying keeps 50% of the REP you would have banked (was 25%).', costs: [200] },
-  { key: 'drops', tier: 2, name: 'BETTER DROPS', desc: '1 in 10 mods and gear roll a step rarer.', costs: [150] },
+  { key: 'drops', tier: 2, name: 'BETTER DROPS', desc: '1 in 10 mods, gear and chips roll rarer.', costs: [150] },
   { key: 'remote', tier: 2, name: 'REMOTE ACCESS', needs: 'bench', desc: 'after the public node, your WORKBENCH opens: take things out of its LOCKER, shred, build.', costs: [200] },   // (was the LOCKER post, one stored mod: Greg, 2026-11-22. engine/panels.js openStartReward)
   { key: 'bench', tier: 2, name: 'WORKBENCH', desc: 'every safehouse gets a workbench: shred gear and mods into letters, spell a code to build one.', costs: [150] },   // (engine/bench.js)
   { key: 'nemesis', tier: 2, name: 'NEMESIS', desc: 'pick a corp you have breached: it shows up more often.', costs: [120] },
@@ -128,7 +128,7 @@ const LEGACY = [
   { key: 'gsigned', tier: 3, needs: 'deck3', name: 'SIGNED', desc: "a bonus for your deck's GLYPH: as ICE, your glyph hits you for 0.", costs: [300] },   // (engine/deck.js DECK_FAV_B)
   { key: 'ggolden', tier: 3, needs: 'deck3', name: 'GOLDEN', desc: "a bonus for your deck's GLYPH: when your glyph is the real node, the layer pays double.", costs: [300] },
   { key: 'sacrifice', tier: 3, name: 'SACRIFICE', chip: 'SX1', desc: 'gives you the SACRIFICE chip (OVERVOLT, mk III) for your deck: pay the UPLINK with all but 1 INT, not credits.', costs: [300] },   // (engine/runend.js openUplink)
-  { key: 'drops2', tier: 3, ladder: 'drops', needs: 'drops', name: 'BETTER DROPS II', desc: '1 in 5 mods and gear roll a step rarer (was 1 in 10).', costs: [300] },
+  { key: 'drops2', tier: 3, ladder: 'drops', needs: 'drops', name: 'BETTER DROPS II', desc: '1 in 5 mods, gear and chips roll rarer (was 1 in 10).', costs: [300] },
   // chip: buying it gives you that chip for your deck (Greg, 2026-11-22: posts that are strong or need a limit are chips)
   { key: 'codex', tier: 3, name: 'CODEX', chip: 'CX5', desc: "gives you the CODEX chip (CRASH) for your deck: die in a corp you haven't beaten and a piece of its tell decodes.", costs: [250] },
   // ---- 4 SYSOP: the FUSE (your deck's mk IV, after mk III), and placeholders
@@ -137,6 +137,7 @@ const LEGACY = [
   { key: 'archive', tier: 4, name: 'THE ARCHIVE', chip: 'AR1', desc: "gives you THE ARCHIVE chip (BOOT) for your deck: pick a mod you've found on its card, and every run starts with it.", costs: [800] },
   { key: 'chroma', tier: 4, name: 'CHROMATOPHORE', desc: 'every palette in SETTINGS, and more colors for your card.', costs: [500] },   // (engine/core.js playerPalettes, engine/multiplayer.js styleOpen)
   { key: 'relic', tier: 4, name: 'RELIC', chip: 'RC1', desc: 'gives you the RELIC chip (SPOILS) for your deck: now and then a corp boss adds an exotic mod to its picks.', costs: [800] },
+  { key: 'fuse2', tier: 4, needs: 'fuse', name: 'FUSE II', desc: '+4 power for mk IV, the bottom board (the FUSE: 8, now 12).', costs: [600] },   // (engine/deck.js deckPower)
   { key: 'power2', tier: 4, ladder: 'power', needs: 'power', name: 'POWER TAP II', desc: '+2 power for your deck (was +1).', costs: [600] },
   { key: 'surge2', tier: 4, ladder: 'surge', needs: 'surge', name: 'SURGE II', desc: '+2 charges for THE SHELL (was +1).', costs: [500] },
   { key: 'clout', tier: 4, name: 'CLOUT', desc: '+25% REP from every run you bank.', costs: [1000] },   // (engine/save.js repFor)

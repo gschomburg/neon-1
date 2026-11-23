@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.51']);
+NEON_FILES.push(['engine/runend.js', 'v15.52']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -82,7 +82,7 @@ async function endRun(win) {
   const repWorth = repFor(run);
   const rep = run.practice ? 0 : win ? repWorth : Math.floor(repWorth * Math.max(0.25 * Math.min(3, legacyLv('dms')), deckDeadman(run)));   // (DEADMAN: the post, or the chip)
   deckSavePath(run);   // the path you took (FORGET-ME-NOT, a chip: engine/deck.js)
-  if (!win) { deckBlackBox(run); deckDeath(run); }   // BLACK BOX (a chip): your best mod to the LOCKER; INSURANCE, DEAD DROP
+  if (!win) { deckBlackBox(run); deckSelfDestruct(run); deckDeath(run); }   // BLACK BOX (a chip): your best mod to the LOCKER; INSURANCE, DEAD DROP
   else deckCashedOut(run);   // (WIND-UP's power)
   if (rep) { save.rep = (save.rep || 0) + rep; save.repTotal = (save.repTotal || 0) + rep; }
   if (win && !run.practice) save.cashouts = (save.cashouts || 0) + 1;
