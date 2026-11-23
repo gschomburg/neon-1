@@ -771,6 +771,9 @@ How you get G0D.exe (BACKLOG section 3) for real. Greg's notes, filed as he wrot
     when it reaches the priest (the altar), a loaded one explodes and hurts him. Or: the first time you type a word it
     kills that cultist on the spot, but every one G0D.exe types afterwards is a payload that hurts the priest. Longer
     words hurt more. (So the cultists reaching him isn't only bad: it's how he takes damage.)
+    **Greg (2026-11-22):** a payloaded cultist carries no letter any more: it just explodes. G0D.exe does those, so
+    it isn't your choice, it's how it works. Only cultists that weren't loaded carry letters up to the altar (maybe
+    only some of them carry one). The ritual word is 3 letters (G0D), so you can only let it slip twice.
   - **More challenge: the priest attacks** (Greg, 2026-11-22, an idea): another stage. Once the cultists are gone, the priest
     breaks out and starts shooting at your keyboard. Shields appear on the screen in front of the keyboard, each with a
     word; type one out to make it real, and it reflects his shots back at him.
