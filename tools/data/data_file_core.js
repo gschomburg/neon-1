@@ -22,7 +22,11 @@
     if (typeof require === 'undefined' || !mod || require.main !== mod) return;
     if (['-h', '--help'].includes(process.argv[2])) { console.log(usage); process.exit(0); }
     const fs = require('fs'), path = require('path');
-    fn({ fs, path, dist: path.join(__dirname, '..', '..', 'dist') });
+    // --check: the same, but nothing is written (tools/test.js: a failing round trip used to rewrite the file, so the
+    // next run passed. Audit 2026-11-23)
+    const check = process.argv.includes('--check'), fsx = check ? Object.assign(Object.create(fs), { writeFileSync: () => {} }) : fs;
+    fn({ fs: fsx, path, dist: path.join(__dirname, '..', '..', 'dist') });
+    if (check) console.log('(--check: nothing written)');
   };
   const api = { quote, stamp, buildOf, run, expose, main };
   expose(root, typeof module !== 'undefined' ? module : null, 'NEON_DATA_FILE', api);

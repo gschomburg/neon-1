@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v15.57']);
+NEON_FILES.push(['engine/fishing.js', 'v15.58']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -52,7 +52,7 @@ function openPier(node) {
   setMsg(`> the pier. hold on the stream to cast (${fishCost()}cr).`, C.accent);
   markSeen('pier');
 }
-function leavePier() { if (st.transitioning) return; st.fish = null; swapTo(() => toMap()); }
+function leavePier() { if (st.transitioning || st.busy || st.dying || (st.run && st.run.ended)) return; st.fish = null; swapTo(() => toMap()); }   // (not while a bite kills you: audit 2026-11-23)
 const fishCasts = () => (st.run.pierCasts || {})[st.fish.node.id] || 0;
 
 // ---------------- The stream's shape on screen ----------------
@@ -92,6 +92,7 @@ function fishLookFor(out, f) {
 function fishPointer(kind, e) {
   const f = st.fish;
   if (!f || st.mode !== 'fish' || st.transitioning) return false;
+  if (st.busy || st.dying || (st.run && st.run.ended)) return true;   // (dying: the stream takes no more casts)
   const [px, py] = ptXY(e), y = (py - L.oy) / L.chh;
   if (kind === 'down') {
     const h = hitAt(px, py);
@@ -228,7 +229,7 @@ function fishBit() {
   const run = st.run;
   hurt(1); Sound.trap(); flash(C.danger, 0.15, 0.3); shake(4, 0.3);
   setMsg(`> it bit you. -1 INT.`, C.danger);
-  if (run.integrity <= 0) { st.fish.card = null; run.diedPier = true; die(); }
+  if (run.integrity <= 0) { st.fish.card = null; run.diedPier = true; st.busy = true; die(); }
 }
 // The catch's sound: the market's reveal pop by rarity (engine/sound.js pop); a legendary gets confetti, a shoe a wah-wah
 function fishFanfare(out, y) {

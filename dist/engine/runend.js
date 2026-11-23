@@ -1,17 +1,20 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.57']);
+NEON_FILES.push(['engine/runend.js', 'v15.58']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
-  const run0 = st.run, contPrice = costInt(ECON.continue) * ((run0 && run0.continues || 0) + 1);
+  const run0 = st.run;
+  if (run0 && (run0.ended || st.dieRun === run0)) return;   // (already dying: once per death. st.dieRun: not saved)
+  st.dieRun = run0;
+  const contPrice = costInt(ECON.continue) * ((run0 && run0.continues || 0) + 1);
   if (run0 && has('continue') && !zombie() && st.corp && !st.corp.contUsed && canSpend(contPrice) && st.lv && !st.mp) {
     st.corp.contUsed = true;
     modFired('continue');
     const go = await askContinue(contPrice);
     if (go) {
-      run0.credits -= contPrice; run0.integrity = 1; run0.continues = (run0.continues || 0) + 1;
+      run0.credits -= contPrice; run0.integrity = 1; run0.continues = (run0.continues || 0) + 1; st.dieRun = null;
       await wipeOut(0);
       showBoard('play');
       resetTimer();
@@ -22,14 +25,16 @@ async function die() {
     await wipeOut(0);
     showBoard('play');
   }
-  if (oneUpReady(run0) && await askOneUp()) return useOneUp(run0);   // the 1UP: back to the start of this corp
+  if (oneUpReady(run0) && await askOneUp()) { st.dieRun = null; return useOneUp(run0); }   // the 1UP: back to the start of this corp
   const rk = run0 ? deckRootkit(run0) : 0;
   if (rk) {   // ROOTKIT (a chip): THE SHELL's charges burn, and you live (engine/deck.js)
+    st.dieRun = null;
     await wipeOut(0); showBoard('play'); resetTimer(); layerReady(st.lv);
     setMsg(`> ROOTKIT: ${rk} charge${rk > 1 ? 's' : ''} burned. 1 integrity left.`, C.accent);
     return;
   }
   if (run0 && deckCheckpoint(run0)) {   // CHECKPOINT (a chip): once a run, back with nothing but full INT (engine/deck.js)
+    st.dieRun = null;
     await wipeOut(0); showBoard('play'); resetTimer(); layerReady(st.lv);
     setMsg('> CHECKPOINT. you came back with nothing.', C.accent);
     return;

@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.57']);
+NEON_FILES.push(['engine/bench.js', 'v15.58']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -307,7 +307,8 @@ function benchBuild(code = null, force = false) {
   const j = benchJudge();
   if (j.kind === 'root') {   // ROOT's word: the letters (and a *) are spent, the build charges, then it's hijacked (rootSigned)
     const letters = benchSave().letters;
-    for (const ch of b.slots) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }
+    for (const ch of b.slots.filter(Boolean)) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }   // (slot 5 is empty in ROOT's word: it wrote letters.null = NaN)
+    questOf('root').signing = true;   // (spent: if the game closes before the scene ends, rootStart finishes it: engine/quests.js)
     b.anim = { t0: performance.now(), root: true, word: b.slots.join(''), slots: b.slots.slice(0, 4), x: b.slotX.concat(BENCH_BLANK_X), y: b.slotY };
     b.slots = [null, null, null, null, null];
     persist();

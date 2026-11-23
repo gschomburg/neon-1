@@ -15,63 +15,63 @@ Marks: **(checked)** Claude read the code path and confirmed it; the rest were c
 ## Bugs
 
 ### The deck and chips
-- [ ] **OMNI'S EYE drops from ordinary loot** (checked). `deckRollChip` (deck.js:330) doesn't filter the BOSS group;
+- [x] **OMNI'S EYE drops from ordinary loot** (checked). **Done (v15.58).** `deckRollChip` (deck.js:330) doesn't filter the BOSS group;
   OMNI isn't in `DECK_NO_DROP`. It's the only exotic that can drop, from caches, the PIER, markets, boss rewards; the
   quest then gives a second one. The dealer and give.chip filter boss chips by hand.
-- [ ] **OVERCLOCK lowers the big cells** (checked). deck.js:1397 sets the cell to 15, so HCF'S CORE (18) drops to 15.
+- [x] **OVERCLOCK lowers the big cells** (checked). **Done (v15.58).** deck.js:1397 sets the cell to 15, so HCF'S CORE (18) drops to 15.
   Should be `Math.max(15, cell)`.
-- [ ] **Power over 15 breaks the PSU readout.** The PSU socket prints hex used/budget in 5 columns (deck.js:1829);
+- [x] **Power over 15 breaks the PSU readout.** **Done (v15.58):** past F the digits go on G H I (base 36), one character. The PSU socket prints hex used/budget in 5 columns (deck.js:1829);
   HCF'S CORE (18) or REACTOR + SPIKE + POWER TAP (>15) runs past the socket. The comment at :195 says it always fits.
-- [ ] **BROWNOUT can pick HARDCORE** after HARDCORE has already turned the CRASH chips off (deck.js:469-471): CRASH
+- [x] **BROWNOUT can pick HARDCORE** **Done (v15.58).** after HARDCORE has already turned the CRASH chips off (deck.js:469-471): CRASH
   stays off and the +50% REP is lost. Pick the brownout first.
-- [ ] **BROWNOUT on SPIKE** keeps SPIKE's +2 power (counted from the slots) but skips its -1 INT.
-- [ ] **Practice and dev runs write to your real bench through chip drops.** `lostLoot`'s SHRED and a full pool shred
+- [x] **BROWNOUT on SPIKE** **Done (v15.58):** BROWNOUT never picks SPIKE. keeps SPIKE's +2 power (counted from the slots) but skips its -1 INT.
+- [x] **Practice and dev runs write to your real bench through chip drops.** **Done (v15.58):** in practice a lost chip that goes is just gone. `lostLoot`'s SHRED and a full pool shred
   into save.bench and save.shredded (unlocking give.chip for it); `deckDrops` has no practice check. (From v15.57.)
 - [ ] **Greg to decide: a RIPPED chip in LOST LOOT** carries no heat: rivals don't come for it and can't take it back
   (they only look at your belt), and it comes home on cash out.
 - Suspected: CHECKPOINT empties your belt and mods including quest gear (the other death chips skip quest gear).
 
 ### The WORKBENCH, THE SHELL, quests
-- [ ] **ROOT's build writes `letters.null = NaN`** (checked). bench.js:310 loops over all 5 slots; slot 4 is null in
+- [x] **ROOT's build writes `letters.null = NaN`** (checked). **Done (v15.58).** bench.js:310 loops over all 5 slots; slot 4 is null in
   ROOT's word. Until a reload the bench says "NaN components" and BUILD says you have none.
-- [ ] **ROOT's quest can lock for good:** the letters are spent and saved when you build, but the step only becomes
+- [x] **ROOT's quest can lock for good:** **Done (v15.58):** the build marks it `signing`; the next bench or deck finishes it (rootRecover). the letters are spent and saved when you build, but the step only becomes
   done when the PAPERWORK scene ends (quests.js:212). Close the tab in between and you're on 'spell' with no letters,
   and nothing moves it back (`rootCheck` only runs after a shred gives a letter). Fix: finish the step when you build.
-- [ ] **A progress wipe breaks ROOT's quest:** `wipeProgress` clears save.legacy (crew_root goes) but keeps save.quests
+- [x] **A progress wipe breaks ROOT's quest:** **Done (v15.58):** the wipe starts ROOT over and gives back the crew the other quests gave (b0y too). `wipeProgress` clears save.legacy (crew_root goes) but keeps save.quests
   (step 'done'), so ROOT never comes back and THE SHELL says "paperwork pending" for good. Next PROGRESS_EPOCH raise
   would hit everyone. Suspected the same for b0y at POPS's 'raid' step.
 - Suspected: `playScene` drops an open CALL without its onClose (b0y's raid call vs the 'gate' scene); the editor's
   FX preview of a scene moves POPS's quest on; [ CANCEL ] on a near-word leaves a BLANK in slot 5.
 
 ### Screens and input
-- [ ] **Esc on POPS's SHOW ME / SKIP offer loses it** (checked). `callKey` (quests.js:245) sends Esc to `callClose`,
+- [x] **Esc on POPS's SHOW ME / SKIP offer loses it** (checked). **Done (v15.58):** Esc presses the last button; left / right pick one, Enter presses it. `callKey` (quests.js:245) sends Esc to `callClose`,
   which only runs onClose; the WORKBENCH offer (and the deck one) have none, and popsSeen is already saved: no
   training, no brief. Enter always presses the first button; SKIP can't be reached by keys.
-- [ ] **Text past 36 columns, cut on both sides:** the CODEX corp card's boss line (SIMON 57, MONTY 41, FOSSIL 39) and
+- [x] **Text past 36 columns, cut on both sides:** **Done (v15.58):** the CODEX corp card's long lines and REP's "opens:" scroll (tickers); a feat's text gets 2 rows. the CODEX corp card's boss line (SIMON 57, MONTY 41, FOSSIL 39) and
   some intel lines; a FEATS card's text ("earn 1000cr in a run, end it with under 10." 44); REP's "opens:" line.
-- [ ] **The CODEX corp card isn't one height:** MONTY's rules wrap to 2 rows, so its card is 11 rows, not 10.
-- Suspected: the deck training can stick if it starts mid-transition (no `st.transitioning` guard, unlike the bench).
+- [x] **The CODEX corp card isn't one height:** **Done (v15.58).** MONTY's rules wrap to 2 rows, so its card is 11 rows, not 10.
+- Fixed (v15.58): the deck training can stick if it starts mid-transition (no `st.transitioning` guard, unlike the bench).
 
 ### The run, saving, feats
-- [ ] **A 1UP clears practice and hacked:** `useOneUp` (oneup.js:41) restores the run from the corp's start and only
+- [x] **A 1UP clears practice and hacked:** **Done (v15.58).** `useOneUp` (oneup.js:41) restores the run from the corp's start and only
   carries oneUp, stats and resumes. Cheat in a corp (practice), die, 1UP: the run counts again.
-- [ ] **Cheats carry into the next run:** `startRun` doesn't reset or check st.god / debug / freeTravel / devAccess.
+- [x] **Cheats carry into the next run:** **Done (v15.58):** god / show real / free travel on at the start make it practice. `startRun` doesn't reset or check st.god / debug / freeTravel / devAccess.
   With BACKDOOR: dev.start at the title, mode.god, start a run: it counts.
-- [ ] **Resume loses per-corp state** not in CORP_SAVE (save.js:228): `lost` (BRUTE FORCE), `flatlined` (once a corp),
+- [x] **Resume loses per-corp state** **Done (v15.58)** for lost, flatlined, brickJack, boyTrayUsed; G0D MAZE's maze is still open. not in CORP_SAVE (save.js:228): `lost` (BRUTE FORCE), `flatlined` (once a corp),
   `brickJack`, `boyTrayUsed`; G0D MAZE rebuilds its maze from the start on a reload.
-- [ ] **Dying at the PIER, the input stays live** (checked) (v15.56): during die()'s 1.1s beat you can still cast or
+- [x] **Dying at the PIER, the input stays live** (checked) **Done (v15.58).** (v15.56): during die()'s 1.1s beat you can still cast or
   tap [LEAVE >] (leavePier and fishPointer don't check st.busy / dying); LEAVE goes to the map under the end screen.
-- [ ] **`kill -9` / `run.die` skip die()** (endRun directly): no codex loss, no CODEX chip; at the PIER it counts as
+- [x] **`kill -9` / `run.die` skip die()** **FISH FOOD part done (v15.58):** only a bite counts (run.diedPier). The rest (codex loss, CODEX chip) is open. (endRun directly): no codex loss, no CODEX chip; at the PIER it counts as
   FISH FOOD (feats.js `|| st.mode === 'fish'`). (FISH FOOD should be `run.diedPier` only.)
-- Suspected: die() / endRun() have no re-entry guard (a second bite during the fall-out would bank twice); the
+- Fixed (v15.58): die() / endRun() had no re-entry guard (die() runs once per death now: st.dieRun) (a second bite during the fall-out would bank twice); the
   training run can die from a BLOCK or clock hit (only hurt() floors it at 1).
 
 ### Tools
-- [ ] **`node tools/test.js nosuchtest` says "all good."** (checked): a typo'd name runs nothing and passes. Fail
+- [x] **`node tools/test.js nosuchtest` says "all good."** (checked) **Done (v15.58).**: a typo'd name runs nothing and passes. Fail
   when a name matches no test, and fail a test with 0 passes.
-- [ ] **The round-trip checks write the file:** economy_file.js always writes, the others when different; a failing
+- [x] **The round-trip checks write the file:** **Done (v15.58):** `--check`, used by test.js. economy_file.js always writes, the others when different; a failing
   check fixes the file, so the next run passes. Add a `--check` mode (no write) for test.js.
-- [ ] **tools/checks/tell_odds.js crashes** (its own vm sandbox drifted from harness.loadGame).
+- [x] **tools/checks/tell_odds.js crashes** **Done (v15.58):** it uses harness.loadGame. (its own vm sandbox drifted from harness.loadGame).
 
 ## Structure
 

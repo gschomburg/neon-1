@@ -1,6 +1,6 @@
 // NeoN+1 engine/menus.js: Settings, THE BOARD, resuming a run.
 'use strict';
-NEON_FILES.push(['engine/menus.js', 'v15.57']);
+NEON_FILES.push(['engine/menus.js', 'v15.58']);
 
 // ---------------- Settings ----------------
 function openSettings() {
@@ -103,7 +103,7 @@ const FEAT_GROUPS = [['runs', 'RUNS'], ['corps', 'CORPS'], ['odd', 'ODD'], ['tec
 const hkMet = id => statOf('hack:met:' + id) > 0 || statOf('hack:call:' + id) > 0 || statOf('hack:beat:' + id) > 0;
 const featShown = f => (!f.hacker || hkMet(f.hacker)) && (f.group !== 'heaven' || save.heavenSeen || featDone(f.id));   // (H3AV3N's: once you've been)
 const featsShown = () => FEATS.filter(featShown);
-const FEAT_LIST_ROWS = BOARD_BODY - 7;   // FEATS: 6 lines of detail, then the list
+const FEAT_LIST_ROWS = BOARD_BODY - 8;   // FEATS: the count, the list, then 7 lines of detail (its text gets 2 rows: audit 2026-11-23)
 // A progress bar: 10 wide (fewer for small counts).
 function featBar(v, n) { const w = n >= 10 ? 10 : Math.max(1, n), k = Math.min(w, Math.floor(v / n * w)); return '#'.repeat(k) + '-'.repeat(w - k); }
 const featProgText = f => featDone(f.id) ? 'done' : `${featBar(featProgress(f), featNeed(f))} ${featProgress(f)}/${featNeed(f)}`;
@@ -223,7 +223,7 @@ function openBoard(tab) {
   // (REP opens on the tab with something new, else your access level)
   let repSub = (REP_SUBS.find(([k]) => repSubNew(k)) || [boardLevel()])[0];
   const repFirst = () => { const ls = repLines(repSub), i = ls.findIndex(l => l.post && postUnseen(l.post.key)); return i >= 0 ? i : ls.findIndex(l => l.post); };
-  let repSel = repFirst();
+  let repSel = repFirst(), repTick = {};
   scrollFollow(repS, repSel, repLines(repSub).length, REP_LIST_ROWS);
   const setRepSub = k => { if (k === repSub) return; repSub = k; repS.top = 0; repSel = repFirst(); scrollFollow(repS, repSel, repLines(repSub).length, REP_LIST_ROWS); Sound.tick(); };
   // FEATS starts on the first new one (or the first feat)
@@ -311,7 +311,8 @@ function openBoard(tab) {
       // Up to 4 rows: the longest post needs 4 (Greg, 2026-11-23: they were cut off at 2). Always 4, so BUY stays put.
       for (let k = 0; k < REP_DESC_ROWS; k++) t(dl[k] || '', C.text);
       // the line under it: how it opens, its steps, or what it holds (LOCKER, NEMESIS)
-      if (!open) t(`opens: ${FEAT_BY_ID[u.pm].text}`, C.mid);
+      if (!open) { const o = `opens: ${FEAT_BY_ID[u.pm].text}`, t0 = repTick.k === u.key ? repTick.t0 : (repTick = { k: u.key, t0: performance.now() }).t0;   // (a long one scrolls: audit 2026-11-23)
+        if (o.length <= 32) t(o, C.mid); else x({ h: 1, draw: (ctx, y) => ctx.put(Math.floor((L.wc - 32) / 2), y, FX.ticker(o, 32, t0, ctx.now, 6), C.mid, 'ui') }); }
       else if (u.key === 'nemesis' && lv) {
         const pool = nemesisPool();
         if (!pool.length) t('breach a corp first.', C.mid);
@@ -332,7 +333,7 @@ function openBoard(tab) {
       const d0 = panel.length;   // (the picked feat: drawn here, moved under the list, like every list: Greg, 2026-11-23)
       t(SEP, C.dim);
       x({ text: f.name, col: featDone(f.id) ? C.rep : C.bright, bold: true });
-      t(f.text, C.text);
+      { const fl = wrapText(f.text, 34); t(fl[0] || '', C.text); t(fl[1] || '', C.text); }   // (2 rows: some run to 45)
       t(featProgText(f), featDone(f.id) ? C.rep : C.mid);
       t(f.title ? `gives the title "${f.title}"` : '', C.rep);
       t(SEP, C.dim);

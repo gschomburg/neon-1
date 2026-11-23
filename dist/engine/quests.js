@@ -13,7 +13,7 @@
 // The CALL box: a hacker's face, their lines and a button, over everything when things are calm (like the FEAT box).
 // The scene: full screen, a line at a time (QUEST_SCENES).
 'use strict';
-NEON_FILES.push(['engine/quests.js', 'v15.57']);
+NEON_FILES.push(['engine/quests.js', 'v15.58']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
@@ -178,6 +178,7 @@ function rootNeed() {
 }
 // It starts at USER, the first time you open your deck or a bench (engine/deck.js openDeck, engine/bench.js openBench).
 function rootStart() {
+  rootRecover();
   if (rootOn() || rootStep() || boardLevel() < 2 || EDITOR && !st.run) return;
   const q = questOf('root');
   q.step = benchOpen() ? 'letters' : 'bench'; q.news = true; persist();
@@ -209,14 +210,26 @@ function rootLettersGone() { if (!rootOn() || !save.bench || !save.bench.letters
 function rootSigned() {
   // One after another (Greg, 2026-11-21: it was a QUEST card, a chip box and ROOT's call all saying the same): ROOT's
   // call, then its chip (the box, with the chip's face), then the QUEST card, which says how to open THE SHELL.
-  playScene('paperwork', () => {
-    save.legacy = save.legacy || {}; save.legacy.crew_root = 1; questStep('root', 'done'); featSweep();   // (SIGN HERE's crew: ROOT is on your crew now)
-    rootLettersGone();
-    queueCall('root', QUEST_LINES.rootJoined, null, () => {
-      deckQuestChip('MN1', 'ROOT moved in. it brought a chip.');   // (ROOT's chip: man. engine/deck.js)
-      questCard('root');   // (waits for the chip's box: callTick)
-    });
+  playScene('paperwork', () => rootJoins(true));
+}
+// ROOT joins: the step's crew, done, its chip. call: ROOT's call first (after the scene); without it (rootRecover) just
+// the chip and the card.
+function rootJoins(call) {
+  const q = questOf('root'); delete q.signing;
+  save.legacy = save.legacy || {}; save.legacy.crew_root = 1; questStep('root', 'done'); featSweep();   // (SIGN HERE's crew: ROOT is on your crew now)
+  rootLettersGone();
+  if (!call) { deckQuestChip('MN1', 'ROOT moved in. it brought a chip.'); questCard('root'); return; }
+  queueCall('root', QUEST_LINES.rootJoined, null, () => {
+    deckQuestChip('MN1', 'ROOT moved in. it brought a chip.');   // (ROOT's chip: man. engine/deck.js)
+    questCard('root');   // (waits for the chip's box: callTick)
   });
+}
+// The letters were spent on the word but the game closed before the scene ended (audit 2026-11-23: the quest was stuck
+// on SIGN HERE with no letters): ROOT joins now. And a step that lost its letters some other way goes back a step.
+function rootRecover() {
+  const q = save.quests && save.quests.root;
+  if (!q || q.step !== 'spell' || st.qScene) return;
+  if (q.signing) rootJoins(false); else rootCheck();
 }
 
 // The words (QUEST_INFO, QUEST_LINES, QUEST_SCENES) live in data/quests.js.
@@ -242,8 +255,12 @@ function callTap(h) {
 }
 function callKey(k) {
   const b = st.callBox;
-  if (k === 'escape' || k === 'x') return callClose();
-  if (k === 'enter' || k === ' ') { const go = b && (b.btns ? b.btns[0] : b.btn); if (go) { st.callBox = null; go.onTap(); } else callClose(); }
+  // Its own buttons (SHOW ME / SKIP...): left / right pick one, Enter presses it, Esc presses the last one (the 'no') when
+  // the box has no onClose of its own (audit 2026-11-23: Esc lost POPS's offer and his brief; SKIP had no key).
+  const n = b && b.btns ? b.btns.length : 0;
+  if (n > 1 && ['arrowleft', 'arrowright', 'tab'].includes(k)) { b.focus = ((b.focus || 0) + (k === 'arrowleft' ? -1 : 1) + n) % n; Sound.tick(); return; }
+  if (k === 'escape' || k === 'x') { if (n && !b.onClose) { const last = b.btns[n - 1]; st.callBox = null; return last.onTap(); } return callClose(); }
+  if (k === 'enter' || k === ' ') { const go = b && (b.btns ? b.btns[b.focus || 0] : b.btn); if (go) { st.callBox = null; go.onTap(); } else callClose(); }
 }
 const CALL_W = 32;
 function buildCallBox(ctx, now) {
@@ -279,13 +296,13 @@ function buildCallBox(ctx, now) {
   const bw = btns.reduce((s, x) => s + x.text.length, 0) + (btns.length - 1) * 2;
   let bx = x0 + Math.floor((w - bw) / 2);
   const by = y0 + h - 2;
-  for (const x of btns) {
-    const hov = st.hoverBtn === x.id;
+  btns.forEach((x, i) => {
+    const hov = st.hoverBtn === x.id || (b.btns && b.btns.length > 1 && (b.focus || 0) === i && !st.hoverBtn);   // (the keys' pick)
     bg(bx, by, x.text.length, hov ? C.bright : C.rep, 1);
     put(bx, by, x.text, C.bg, 'hud', true);
     addHit(bx, by, x.text.length, 1, { kind: 'btn', id: x.id, onTap: x.onTap });
     bx += x.text.length + 2;
-  }
+  });
 }
 
 // ---------------- The scene ----------------

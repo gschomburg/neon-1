@@ -4,6 +4,7 @@
 //   3. tools/checks/tests/*.js: headless pages that play a bit and check things (tools/checks/harness.js)
 //   4. tools/checks/playtest.js: every corp played, compared to tools/checks/golden-play.json (slow: skip with --quick)
 // Usage: node tools/test.js [--quick] [--log] [name ...]   (names: only those tests/*.js files; --log prints what they say())
+// A name that matches no test fails, and so does a test that passes nothing.
 'use strict';
 if (['-h', '--help'].includes(process.argv[2])) { console.log('usage: node tools/test.js [--quick] [--log] [test names]   (data round-trips, check.js, tools/checks/tests/*.js, playtest.js)'); process.exit(0); }
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process'), H = require('./checks/harness.js');
@@ -18,9 +19,10 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
 
 (async () => {
   if (!only.length) {
-    // 1. round-trips: each writer rewrites its file; a change means the file and the writer disagree
+    // 1. round-trips: each writer reads its file and writes it again (--check: not to disk); a change means the file and
+    // the writer disagree
     for (const f of ['economy_file.js', 'fx_file.js', 'tutorial_file.js', 'art_file.js', 'palette_file.js'].map(f => 'data/' + f)) {
-      const r = node(f);
+      const r = node(f, ['--check']);
       ok(r.ok && !/rewritten/.test(r.out), `${f}: ${last(r.out)}`);
     }
     // 2. the golden fingerprint
@@ -31,12 +33,13 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
   // 3. the test pages
   const dir = path.join(__dirname, 'checks', 'tests');
   const tests = fs.readdirSync(dir).filter(f => f.endsWith('.js')).map(f => require(path.join(dir, f))).filter(t => !only.length || only.includes(t.name));
+  for (const n of only) if (!tests.some(t => t.name === n)) ok(false, `tests/${n}: no test by that name`);   // (a typo ran nothing and said all good)
   const results = await Promise.all(tests.map(t => H.runPage(H.testPage(H.GAME, H.wrapTest(t.body), { key: 'test-' + t.name }), { ms: 240000, query: t.query })));
   tests.forEach((t, i) => {
     const r = results[i];
     if (r.error) return ok(false, `tests/${t.name}: ${r.error}`);
     const errs = (r.errors || []).filter(e => !/Script error/.test(e));
-    ok(!r.fails.length && !errs.length, `tests/${t.name}: ${r.passes} passed${r.fails.length ? `, ${r.fails.length} failed` : ''}${errs.length ? ', page errors' : ''}`);
+    ok(!r.fails.length && !errs.length && r.passes > 0, `tests/${t.name}: ${r.passes} passed${r.fails.length ? `, ${r.fails.length} failed` : ''}${errs.length ? ', page errors' : ''}`);
     for (const f of r.fails) console.log('        - ' + f);
     for (const e of errs) console.log('        ! ' + e);
     if (showLog) for (const l of r.log || []) console.log(l);

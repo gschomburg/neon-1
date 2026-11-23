@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.57']);
+NEON_FILES.push(['engine/deck.js', 'v15.58']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -199,7 +199,7 @@ const DECK_CELL = { SC1: 6, LI2: 9, NC3: 11, RX9: 14, BO1: 12, PO1: 4, SPC: 15, 
 // a cell's power. WIND-UP: 2, +2 a sector you cleared in your last cash-out (save.deck.windup, engine/runend.js endRun), 14 at most
 const deckCellPower = key => key === 'WU3' ? Math.min(14, 2 + 2 * ((save.deck && save.deck.windup) || 0)) : DECK_CELL[key] || 0;
 const DECK_FUSE_PWR = 8;
-const deckHex = n => n.toString(16).toUpperCase();
+const deckHex = n => n.toString(36).toUpperCase();   // (past F: G H I..., so HCF'S CORE's 18 and a big budget still fit the PSU's 3 cells: audit 2026-11-23)
 const DECK_SPOILS = [['REWARDS', 'RWD', 'take the REWARDS.'], ['HEAL', 'HP+', 'skip them: HEAL 2 INT.'], ['CASH', '$$$', 'skip them: take CASH.']];
 // GLYPH (mk III; Greg, 2026-11-22): no chips. Pick your favourite from the real glyphs you've seen (the codex's), then
 // its bonus. Only where it shows: corps that draw their own symbols replace the glyph, so it's never there (a tile's glyph
@@ -327,7 +327,7 @@ const deckDrops = () => !!save.deck && !!st.run && !st.run.tutorial && !st.mp;
 const deckRarer = (a, b) => RARITY_ORDER.indexOf(DECK_CHIPS[b][2]) > RARITY_ORDER.indexOf(DECK_CHIPS[a][2]) ? b : a;
 const deckLucky = (r, roll) => { const k = roll(), up = rarityUp(); return up && r() < up ? deckRarer(k, roll()) : k; };
 function deckRollChip(r) {
-  const pool = Object.keys(DECK_CHIPS).filter(k => !DECK_NO_DROP.includes(k) && !deckBeta(k) && !deckIsRipped(k));
+  const pool = Object.keys(DECK_CHIPS).filter(k => !DECK_NO_DROP.includes(k) && !deckBeta(k) && !deckIsRipped(k) && DECK_CHIPS[k][1] !== 'boss');   // (BOSS chips come from their bosses and quests: OMNI'S EYE dropped from caches, audit 2026-11-23)
   return deckLucky(r, () => pickWeighted(pool, k => DECK_DROP_WEIGHT[DECK_CHIPS[k][2]] || 0, r));
 }
 // a RIPPED one (rivals, THE FENCE): by rarity, the same weights. from: the rival it came off; HCF drops its own CORE
@@ -434,7 +434,8 @@ const lostOn = () => legacyLv('lostloot') > 0 && !!save.bench;
 function lostLoot(ik, run = st.run) {
   const k = deckItemChip(ik);
   if (!k || !run || !lostOn()) return null;
-  const name = DECK_CHIPS[k][0], shred = kk => benchAutoShred(kk).map(ch => isBlank(ch) ? 'BLANK' : ch).join(' ');
+  const real = !run.practice && !run.tutorial;   // (practice: a chip that goes is just gone; nothing lands on your real bench: audit 2026-11-23)
+  const name = DECK_CHIPS[k][0], shred = kk => real ? benchAutoShred(kk).map(ch => isBlank(ch) ? 'BLANK' : ch).join(' ') : 'practice, nothing kept';
   if (!postOn('lostloot')) return `${name} shredded: ${shred(k)}.`;
   const pool = run.lost || (run.lost = []);
   const add = { key: ik, at: run.lostN = (run.lostN || 0) + 1 };
@@ -466,9 +467,10 @@ function deckRunChips(run) {
   const was = DECK; DECK = deckReal();
   const pw = deckPower(), d = DECK;
   let keys = [...pw.on].map(id => d.slots[id]).filter(k => DECK_CHIPS[k]);
+  let brown = null;   // BROWNOUT (a cell): one of the others is off this run (the run's seed picks it). Before HARDCORE, so a
+  // browned-out HARDCORE takes its rule with it; not SPIKE, whose power is already counted (audit 2026-11-23)
+  if (keys.includes('BO1') && run) { const pool = keys.filter(k => DECK_CHIPS[k][1] !== 'psu' && k !== 'SK1'); if (pool.length) { brown = pickR(pool, rngFor(run.seed, 'brownout')); keys = keys.filter(k => k !== brown); } }
   if (keys.includes('HC1')) keys = keys.filter(k => DECK_CHIPS[k][1] !== 'crash');   // HARDCORE: no CRASH chip works
-  let brown = null;   // BROWNOUT (a cell): one of the others is off this run (the run's seed picks it)
-  if (keys.includes('BO1') && run) { const pool = keys.filter(k => DECK_CHIPS[k][1] !== 'psu'); if (pool.length) { brown = pickR(pool, rngFor(run.seed, 'brownout')); keys = keys.filter(k => k !== brown); } }
   const spoils = d.spoils, crew = {}, fav = deckOpen(3) && d.glyph != null ? d.glyph : null, favB = deckFavBOpen(d.favB) ? d.favB : 'loot';   // (GLYPH)
   for (const id of pw.crewOn) crew[id] = deckCrewLv(id);   // CREW JACKS
   const under = pw.off.length > 0;   // a slotted chip with no power (UNDERPOWERED, a feat)
@@ -1394,7 +1396,7 @@ function deckPower() {
   const d = DECK, on = new Set(), off = [];
   const spike = Object.keys(d.slots).some(id => d.slots[id] === 'SK1' && deckOpen(deckSock(id).mk)) ? 2 : 0;   // SPIKE (OVERVOLT)
   const tap = d.real ? legacyLv('power') : 0;   // POWER TAP (THE BOARD: +1, II +2)
-  const cellB = d.slots.PSU ? (d.overclock ? 15 : deckCellPower(d.slots.PSU)) + spike + tap : 0, fuseB = deckOpen(4) ? DECK_FUSE_PWR + (d.real ? 4 * Math.min(1, legacyLv('fuse2')) : 0) : 0;   // (FUSE II: THE BOARD, +4)
+  const cellB = d.slots.PSU ? (d.overclock ? Math.max(15, deckCellPower(d.slots.PSU)) : deckCellPower(d.slots.PSU)) + spike + tap : 0, fuseB = deckOpen(4) ? DECK_FUSE_PWR + (d.real ? 4 * Math.min(1, legacyLv('fuse2')) : 0) : 0;   // (FUSE II: THE BOARD, +4)
   const left = { cell: cellB, fuse: fuseB };
   for (const id of d.order) {
     const key = d.slots[id], s = deckSock(id); if (!key || !deckOpen(s.mk)) continue;   // a dark band's chips cost nothing

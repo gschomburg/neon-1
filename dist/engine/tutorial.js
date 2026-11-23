@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v15.57']);
+NEON_FILES.push(['engine/tutorial.js', 'v15.58']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -782,7 +782,7 @@ const DTUT = {
 const deckTutOn = () => !!(st.tut && st.tut.deck);
 // from: 'deck' (your deck, the first time: back to it after) or 'help' (HOW TO PLAY > TRAINING)
 function startDeckTraining(from = 'help') {
-  if (st.tut) return;
+  if (st.tut || st.transitioning) return;   // (swapTo would drop it and the training would never end: audit 2026-11-23)
   const T = st.tut = { deck: true, from, pop: null, allow: null, spots: {}, started: true };
   const go = () => {
     DECK = Object.assign(deckView(), { real: false, train: true, rep: 0, mk: 2, fuse: false, blown: false, spoils: 0, glyph: null, favB: 'loot', crew: new Set(),

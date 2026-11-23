@@ -1,7 +1,7 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v15.57']);
+NEON_FILES.push(['engine/feats.js', 'v15.58']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
@@ -62,7 +62,7 @@ function tallyRunEnd(run, win, rep) {
   best('bestDepth', run.depth);
   best('bestSpent', Math.max(0, (run.cr0 || 0) + run.earned - run.credits));
   if (run.earned >= 1000 && run.credits < 10) tally('easyCome');
-  if (!win && (run.diedPier || st.mode === 'fish')) tally('diedFishing');   // FISH FOOD (a DANGEROUS CATCH bite: engine/fishing.js fishBit)
+  if (!win && run.diedPier) tally('diedFishing');   // FISH FOOD (a DANGEROUS CATCH bite: engine/fishing.js fishBit)
   // ONE MORE TRY: a seed you've played before, deeper this time (save.seedBest: the deepest layer per seed, the last 200)
   const sb = save.seedBest || (save.seedBest = {}), was = sb[run.seed];
   if (was != null && run.depth > was) tally('seedBetter');
@@ -268,6 +268,17 @@ function wipeProgress() {
   save.legacy = {}; save.stats = {}; save.feats = {}; save.unseen = {}; save.newTitle = false; save.featsIntro = false;
   save.unseenPosts = {}; save.bench = null; save.nemesis = null;   // (REP's posts: what's in the LOCKER, your NEMESIS)
   save.deck = null;   // (your deck comes back at USER)
+  // The quests stay (the story), so the crew they gave comes back with them; ROOT's starts over, its deck and bench are
+  // gone (audit 2026-11-23: it said done with ROOT off the crew, and THE SHELL locked for good).
+  if (save.quests) {
+    delete save.quests.root;
+    for (const id of Object.keys(save.quests)) {
+      const info = QUEST_INFO[id]; if (!info) continue;
+      if (id === 'pops') save.legacy.crew_pops = 1;
+      const at = info.steps.findIndex(s => s.key === save.quests[id].step);
+      info.steps.forEach((s, i) => { if (s.crew && i < at) save.legacy['crew_' + s.crew] = 1; });
+    }
+  }
   if (save.profile) {
     save.profile.title = null;
     const l = LOGO_BY_ID[save.profile.logo];

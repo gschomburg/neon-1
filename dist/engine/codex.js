@@ -1,6 +1,6 @@
 // NeoN+1 engine/codex.js: The codex.
 'use strict';
-NEON_FILES.push(['engine/codex.js', 'v15.57']);
+NEON_FILES.push(['engine/codex.js', 'v15.58']);
 
 // ---------------- Codex ----------------
 const RARITY_ORDER = Object.keys(RARITY);
@@ -121,6 +121,7 @@ function openCodex(want) {
     persist(); }
   const tabs = cxTabs(), subs = tabs.flatMap(t => t[2]);
   if (want === 'gear') want = 'items';
+  let cxTick = {};   // (a corp card's long line: its ticker's start)
   let tab = subs.includes(want) ? want : subs.includes(CX_LAST.tab) ? CX_LAST.tab : 'items', sel = 0, top = 0, shownPal = null;
   if (tab === CX_LAST.tab) ({ sel, top } = CX_LAST);
   const main = () => tabs.find(t => t[2].includes(tab));
@@ -174,14 +175,18 @@ function openCodex(want) {
     if (tab === 'corps') {
       const key = k.slice(5), d = corpDef(key), rec = corpStat(key);
       const pad = (arr, nRows) => { while (arr.length < nRows) arr.push(''); return arr.slice(0, nRows); };
+      // One row each, always 10 rows (audit 2026-11-23: SIMON's boss line ran off both sides, MONTY's rules made the card
+      // 11): a line past 34 scrolls as a ticker, from when this corp was picked.
+      if (cxTick.k !== k) cxTick = { k, t0: now };
+      const fit = (text, col) => text.length <= 34 ? T(text, col) : X({ h: 1, draw: (ctx, y) => ctx.put(Math.floor((L.wc - 34) / 2), y, FX.ticker(text, 34, cxTick.t0, ctx.now, 6), col, 'ui') });
       if (!seen) {
         T(cx(k), C.dim); T('not found yet.', C.mid); T('enter it on the map to log it.', C.dim);
         for (let i = 0; i < 7; i++) T('');
       } else {
         X({ text: `${corpCode(d)}  ${d.name}${d.level ? '  LV' + d.level : ''}`, col: key === 'omni' ? C.danger : C.accent, bold: true });
-        T(d.intel, C.text);
-        (wrapText(corpRules(d, 1), 34).length ? wrapText(corpRules(d, 1), 34) : ['']).forEach(l => T(l, C.mid));
-        T(d.bossDesc || '', C.dangerDim);
+        fit(d.intel || '', C.text);
+        fit(corpRules(d, 1) || '', C.mid);
+        fit(d.bossDesc || '', C.dangerDim);
         T('');
         // The tell: ciphertext until you've beaten this corp (its first line, and a hint), then it decodes once.
         const tl = pad(wrapText('tell: ' + CORP_TELL[key], 34), 3), on = tellKnown(key);   // (breached, or CODEX decoded it all)
@@ -189,7 +194,7 @@ function openCodex(want) {
         const bits = !on && save.codexBits ? save.codexBits[key] || 0 : 0;   // CODEX (a chip): thirds decoded by dying here
         const tell = on ? tl.map(line) : bits ? tl.map((t, i) => cxTellPart(t, bits, FX.seedOf('tell_' + key + i), now)) : [line(tl[0], 0), 'beat this corp to log its tell.', ''];
         tell.forEach((t, i) => T(t, on ? C.accent : bits || i === 0 ? C.mid : C.dim));
-        T(d.gear ? `boss gear: ${ITEMS[d.gear.key].name} x${d.gear.n}` : d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
+        fit(d.gear ? `boss gear: ${ITEMS[d.gear.key].name} x${d.gear.n}` : d.mods ? `mods: ${d.mods.map(m => MODS[m].name).join(', ')}` : 'mods: none', C.mid);
         T(`breached ${rec.breached}   lost ${rec.lost}` + (bits ? `   decoded ${bits}/3` : ''), C.text);
       }
     } else if (isHk()) {

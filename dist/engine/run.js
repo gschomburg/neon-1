@@ -1,6 +1,6 @@
 // NeoN+1 engine/run.js: The run: corps, layers, picks, hits, mod effects by stage, sector clear.
 'use strict';
-NEON_FILES.push(['engine/run.js', 'v15.57']);
+NEON_FILES.push(['engine/run.js', 'v15.58']);
 
 // ---------------- Run flow ----------------
 function showTitle() {
@@ -30,6 +30,7 @@ async function startRun(seed, practice, opts = {}) {
   else if (quest === 'had3s') practice = false;   // HAD3S: a real run (engine/quests.js)
   // seeded: a seed you chose (typed, REPLAYS, retry): a normal run, but it's ranked on the seed boards, not TODAY /
   // ALL TIME (engine/leaders.js; docs/ENDGAME.md, decided 2026-11-05). Not a quest seed, not the training.
+  if (st.god || st.debug || st.freeTravel) practice = true;   // (god / show real / free travel still on from the title: the run doesn't count. Audit 2026-11-23)
   const seeded = !!opts.seeded && !quest && !opts.tutorial;
   st.seed = seed; st.practice = practice; st.seeded = seeded;
   st.run = {
