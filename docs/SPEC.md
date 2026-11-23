@@ -238,11 +238,7 @@ Everything is drawn in text characters, in a monospace font.
 
 ### Art sizes (rule)
 
-Stick to these when making or changing art (set 2026-10-20):
-- **Title area:** 32 wide x 20 tall, the face + BETA RUNNER logo together (the tagline sits below it).
-- **Corp logos:** at most 24 wide x 12 tall, for every corp (new ones too).
-- Screen is 36 columns. Even widths center exactly; odd widths sit half a character left (OK for art with one center column).
-- Art drop-off: `docs/ART.md` (blank frames at these sizes).
+The art budgets (glyphs, faces, corp logos, sector pictures, the world map, cutscenes) are in docs/LAYOUT.md section 10. Even widths center exactly on the 36 columns; odd widths sit half a character left (OK for art with one center column). The old drop-off with blank frames is docs/archive/ART_2026-10.md (its sizes are out of date).
 
 ### Buttons (UI rule)
 
@@ -352,7 +348,7 @@ neon+1/
     database.rules.json  <- Firebase Realtime Database rules (pasted into the console)
     docs/
       SPEC.md            <- this file
-      CORPS.md, CONTENT.md, NAMES.md, ART.md
+      CORPS.md, CONTENT.md, NAMES.md, LAYOUT.md
     tools/
       neon_editor.html   <- the editor: the game beside tabs that edit dist/data/ (code in tools/editor/)
       check.js           <- fingerprint the game (data, layers, maps, code) and compare builds

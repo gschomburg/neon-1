@@ -800,7 +800,7 @@ The tell is either a **position rule** (`tellCells`: corners, edge, mirror) or *
 
 **Every new corp also costs the same set of small things,** whatever its tier:
 - a palette
-- intro art (24 x 12, in ART.md; placeholder until the user draws it)
+- intro art (its logo, at most 24 x 7: docs/LAYOUT.md section 10; placeholder until the user draws it)
 - a music style
 - codex tell text
 - two boss mods

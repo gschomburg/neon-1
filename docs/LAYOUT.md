@@ -4,7 +4,7 @@ How the screen is laid out, what draws over what, the popups and UI parts there 
 gets. Read it before you make a new screen, popup, feature or mockup. It describes the code as it is (v15.55); when the
 code changes, change this too. File references are to `dist/engine/` unless they say otherwise.
 
-Older, narrower notes this replaces: `docs/ART.md` (the early "Beta Runner" art drop-off; its sizes are out of date).
+Older, narrower notes this replaces: `docs/archive/ART_2026-10.md` (the early "Beta Runner" art drop-off; its sizes are out of date).
 CLAUDE.md "Screen space" keeps the short rules; this is the long version.
 
 ## 1. The screen
