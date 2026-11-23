@@ -403,6 +403,10 @@ unlocked by REP, and some quests unlock REP.
   - **PHISHER:** a social engineer. It phishes you with fake prompts (session expired, enter your seed; a fake update;
     a fake CONTINUE), each with a tell (a typo, the wrong font); a fake costs you. The PHISH theme turned around.
   - **GHOST:** your own best run (REPLAYS) as a boss: it taps what you tapped; race yourself. Close to DOPPEL, at boss size.
+  - **Kept for another quest or boss** (Greg, 2026-11-22, from the G0D.exe boss brainstorm): **COLLAPSE**, the seed's
+    map crumbles from the bottom up and you run node to node ahead of it (each node a one-layer breach). **A quiz**, a real
+    multiple-choice one (not glyph taps). **The deck as the board**: a boss fought on a circuit board like your deck,
+    chips dragged in and out of its sockets (Greg likes it: "there should be some sort of thing where the deck is the board").
   - **Where the seeds turn up:** the ending's log (KITCHEN, ZER0), a hidden ad, a PHISH catch, a crew call, the codex's
     ciphertext, the console. A seed could also be a code on the deck's BYTE (docs/DECK.md).
   - Claude's picks: TWIN (works everywhere, nobody expects it), OVERFLOW (pure hacker logic), PHISHER (fits the story).

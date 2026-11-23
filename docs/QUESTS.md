@@ -733,12 +733,41 @@ How you get G0D.exe (BACKLOG section 3) for real. Greg's notes, filed as he wrot
   - **Stacked corps:** corps on the map where every layer is a different corp's effect, say 3 corps jammed into one,
     like an OMNI that changes by layer. Maybe the whole palette changes each layer to that corp's.
   - Maybe this is where the NetHack stealth stuff comes in (BACKLOG section 12, docs/INFILTR8.md).
-- **The boss fight:**
+- **G0D.exe in the fight** (Greg, 2026-11-22): it comes along the way b0y did in H3AV3N: free-use gear in your bar, on the boss seed and in the end fight. Its behavior may stay the same as the gear's; it doesn't have to do b0y's job.
+- **Where it's heading (Greg, 2026-11-22):**
+  - **A typing fight**, like the old learn-to-type games (things fall, type the word before it hits you). The cultists
+    are on your keyboard, and you craft with them, so it spends your components in a fun way. Use an in-game keyboard
+    (the WORKBENCH's), so it works on a phone; don't worry much about mobile yet.
+  - **A cult leader** is who you're really fighting, but you hurt him by taking out his followers (like G0D's fight:
+    the little eyes, then the big one).
+  - **G0D.exe trained up:** typing to it in THE SHELL is interesting (it leads toward the typing game too). It only knows
+    corps you've beaten, so the quest trains it.
+  - **THE CHROME FORGE** comes in here: where you craft special things, maybe the only place DIVINE letters can be used,
+    and maybe other special stuff. Probably not where the fight is: a dedicated seed for the fight, a dedicated seed for
+    the forge. Maybe two seeds with different versions of the forge.
+  - Brainstorms (2026-11-22): crafting as combat (hit ICE on purpose for its letters; catch their words back; one
+    bench, two builders; the cultists are the letters), G0D.exe hands off (the run trains it; show it once; its brain
+    is a board; fight for its soul in THE SHELL). Not kept for this fight but kept: BACKLOG "More boss seeds".
+- **The fight, working draft (Greg, 2026-11-22: "decent for now", still thinking: will it be fun, what is it missing?):**
+  Mockups: docs/mockups/cultfight.html (5 directions).
+  - **Just the keyboard** (the WORKBENCH's, at the bottom); the rest of the screen is the cult's. No crafting area: the
+    word on a cultist is the build. Cultists move about like rivals, chip-colored, each with a word; as you type, the
+    letters fill in over it; finished, they fall apart and their letters refill your keyboard.
+  - **G0D.exe learns words:** every cultist you finish teaches it that word, and it blasts those itself, fast, on the same
+    keyboard. More cultists come than you could beat alone. A known word shows in G0D's red (it's on it); a new one is
+    bright white with a blinking ?. The words could be corp names: it already knows the corps you've beaten.
+  - **A key you're out of** is dark; press it anyway and it costs 1 INT (you pay for the letter).
+  - **No header:** INT as pips on the spacebar, the leader's bars over his face, no healing in the fight.
+  - **The cultists climb to the altar,** each carrying a letter of the ritual; one that makes it adds its letter to the
+    cult's word (G, 0, D, maybe .EXE later). The word done: G0D is theirs, you lose. The clock is the ritual, not your INT.
+    (Another option: one that reaches you steals a key.)
+  - **The leader:** every follower you finish costs him a bar; when they thin out he comes down himself, with the longest
+    word, one nobody has typed (G0D.exe can't help).
+- **The first boss ideas** (Greg, 2026-11-22: not these: the circle, the sigil, the race for the letters, escort, Pac-Man):
   - Rivals, corp hackers that attack your cursor. Or like Pac-Man: they chase you, then you get a "power pellet" and
     can attack (tap) them back.
   - Or an escort mission: you defend a glyph from clicks. It moves around the map, cursors keep coming on and trying to
     click it, and you have to click them first.
-- **Loose notes under the same heading** (what they're for: ask Greg): "pwn: you own everything", "outsourcing".
 
 ## What it needs that doesn't exist yet
 - **Quest items:** a gear kind (quest color, QUEST tag, one at a time), the unlock gate, drop odds everywhere loot drops.

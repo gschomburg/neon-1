@@ -841,3 +841,9 @@ _|__|   \_|___________|__|   \_|_ _
  _     _    
 [|\|eo[|\|+1
             
+
+## Words that could become something (Greg, meat notes 2026-11-22)
+
+Not tied to anything yet: a mod, gear, a chip, a corp or a feat.
+- **PWN:** "you own everything".
+- **OUTSOURCING.**
