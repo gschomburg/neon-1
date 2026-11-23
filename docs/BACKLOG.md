@@ -56,8 +56,9 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 - **The deck training and the workbench training:** built v15.55 and v15.53 (SPEC). Both are on HOW TO PLAY > TRAINING.
   Greg's first notes on them (meat notes 2026-11-23): done v15.56.
 - **Open:** a little flicker of POPS's popups between one and the next, now and then (Greg saw it at the start of
-  "STORE puts things in it for later..."). A frame-by-frame capture of TAKE -> STORE (headless Chrome) came out clean:
-  which step, which device?
+  "STORE puts things in it for later...", on desktop). The audit's likeliest cause, fixed after v15.59: the header row
+  was a frozen copy while a popup was up and live between them (it's copied every frame now, its tints too); also a
+  frame with no target kept the last place, and wipes don't lay popups out. Greg to look again.
 - **Open: CORP TRAINING's name** (Greg, 2026-11-23): BASICS reads best, but the BASICS tab is right above it. NEWB?
 
 ### The workbench

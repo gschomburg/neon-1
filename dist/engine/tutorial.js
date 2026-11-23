@@ -379,10 +379,16 @@ function tutRect(tg, cells) {
 // from reaching the game. The tag itself is drawn by drawTutorial, after the grid.
 function buildTutorial(ctx, now, under) {
   const T = st.tut, p = T && T.pop;
-  if (!p || !tutOn()) return;
-  const r = tutRect(p.target, under);
+  if (!T || !tutOn()) return;
+  // the header row (NeoN+1, the menu, [LEAVE >]): drawn again on top of the popups. Copied every frame, its tints too
+  // (hover, chips), so it never sits frozen while the live one moves (the flicker between popups: audit 2026-11-23)
+  T.head = under.filter(c => Math.round(c.cy) === 0 && c.ch && c.ch !== ' ');
+  T.headBg = (st.frameBgs || []).filter(b => Math.round(b.cy) === 0);
+  if (!p) return;
+  // its target for a frame gone (a blink, a list redrawn): keep the last place, not a jump to the middle
+  let r = tutRect(p.target, under);
+  if (r) p.lastR = r; else if (p.target && p.lastR) r = p.lastR;
   p.lay = p.mini ? tutMiniLayout(p, r, under) : tutLayout(p, r);
-  T.head = under.filter(c => Math.round(c.cy) === 0 && c.ch && c.ch !== ' ');   // the header row (NeoN+1, the menu): drawn again on top
   // the target pulses (scales up and down around its middle) once the arrow has landed: nodes and the HUD; anything
   // else that asks for it (target.pulse: the deck's sockets, the bench's tabs: meat notes 2026-11-23). A pulse target's
   // background tints scale with it (engine/render.js draws a bg's h), so its letters stay on their chips.
@@ -484,6 +490,8 @@ function drawTutorial(now) {
   if (T.head && (T.pop || T.leaving)) {
     g.save();
     g.fillStyle = C.bg; g.fillRect(L.ox, L.oy, L.wc * L.cw, L.chh);
+    for (const b of T.headBg || []) { g.globalAlpha = b.alpha; g.fillStyle = b.col; g.fillRect(L.ox + b.cx * L.cw, L.oy + b.cy * L.chh, b.w * L.cw, (b.h || 1) * L.chh); }
+    g.globalAlpha = 1;
     g.textAlign = 'center'; g.textBaseline = 'middle';
     for (const c of T.head) { g.font = `${c.bold ? DRAW_FONT.bold : DRAW_FONT.weight} ${L.fs * DRAW_FONT.scale}px ${DRAW_FONT.family}`; g.fillStyle = c.col; g.fillText(c.ch, pxX(c.cx), pxY(c.cy)); }
     g.restore();

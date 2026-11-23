@@ -341,7 +341,9 @@ function buildScene(now, collectHits, raw = false) {
   }
   if (!cover && st.g0dxD) { const lc = layerCtx(ctx, result, adBgs); g0dxDrawScreen(lc.ctx, now); result = result.concat(lc.cells); }   // G0D.exe's cursor off the board, over it all (engine/g0dexe.js)
   // The training run's popup (engine/tutorial.js): over everything but an ad, the same way.
-  if (st.tut && st.tut.pop && !cover && !st.ad && (!st.wipe || st.tut.curtain)) {
+  // (real frames only: a wipe's or a snapshot's build laid the popup out on throwaway cells. While one leaves too, so the
+  // header copy stays live: the flicker, audit 2026-11-23)
+  if (st.tut && (st.tut.pop || st.tut.leaving) && collectHits && !cover && !st.ad && (!st.wipe || st.tut.curtain)) {
     const lc = layerCtx(ctx, null, adBgs, 'tut');
     buildTutorial(lc.ctx, now, result);
     result = result.concat(lc.cells);

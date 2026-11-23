@@ -144,7 +144,7 @@ Marks: **(checked)** Claude read the code path and confirmed it; the rest were c
 - Small: check.js loads the game twice; batch1446-1489 test files are named by version, not feature;
   data/palettes_v1.js is dead and still stamped (to _trash/); stale tool comments.
 
-## POPS's popup flicker (open, BACKLOG)
+## POPS's popup flicker (fixes 1-3 in after v15.59: Greg to look again)
 
 No path draws a popup early or at full size (a new popup has no layout until its first frame, and its first frames
 draw nothing). The likeliest causes, in order:
