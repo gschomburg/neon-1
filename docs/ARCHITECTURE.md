@@ -120,7 +120,7 @@ Marks: **(checked)** Claude read the code path and confirmed it; the rest were c
   feats.js holds the FEAT box. Small each.
 
 ### 4. Screens
-- **tutorial.js does five jobs** (836 lines): the gates and kit, the corp training, POPS's drawing, hints, the
+- [x] **Done (v15.61):** engine/callouts.js (the drawing, the hints, a popup's life; CALLOUT; any face: a key, a glyph or rows). startTraining is still open. **tutorial.js does five jobs** (836 lines): the gates and kit, the corp training, POPS's drawing, hints, the
   WORKBENCH training, the deck training. Move drawing and hints to `engine/callouts.js` (**Decided (Greg, 2026-11-23):** that name, not pops.js; a callout is anyone's, not only POPS's: its own palette and its own face art or picture, like b0y's blue hint already passes `col`, `face`, `name` to showHint); one `startTraining({ on, setup,
   script, end })` for the copied start / end code and tutOn's three-way check. The scripts stay code. Medium.
 - **Popup cards** still copied (feats.js, quests.js, events, hackers, ads): `drawCard`. Medium (old audit).

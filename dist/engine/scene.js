@@ -348,7 +348,7 @@ function buildScene(now, collectHits, raw = false) {
     buildTutorial(lc.ctx, now, result);
     result = result.concat(lc.cells);
   }
-  if (st.hint && st.hint.pop && !cover && !st.ad && !st.wipe) buildHint(ctx, now, result);   // a hint (engine/tutorial.js showHint): laid out on what's drawn
+  if (st.hint && st.hint.pop && !cover && !st.ad && !st.wipe) buildHint(ctx, now, result);   // a hint (engine/callouts.js showHint): laid out on what's drawn
   const wTop = st.wipe && st.wipe.top != null ? st.wipe.top : BOARD_Y, wBot = st.wipe && st.wipe.bot != null ? st.wipe.bot : boardEnd;
   if (collectHits) bgs = (st.wipe && !cover ? (st.wipe.full && st.wipe.top == null ? [] : frameBgs.filter(b => b.cy < wTop || b.cy >= wBot)) : frameBgs).concat(adBgs);
   if (collectHits) st.focusables = hits.filter(h => h.kind === 'btn' && !h.noFocus).sort((a, b) => a.y - b.y || a.x - b.x).map(h => ({ id: h.id, onTap: h.onTap }));
