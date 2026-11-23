@@ -6,7 +6,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v16.00']);
+NEON_FILES.push(['engine/deck.js', 'v16.01']);
 
 // ---------- data: the chips are in data/chips.js (DECK_GROUPS, DECK_CHIPS, and the tables built from them) ----------
 // Every socket's color is your deck's: it levels up with your mk (mk II rare, III epic, IV gold: the same as the

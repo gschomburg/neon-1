@@ -7,7 +7,7 @@
 // Rivals: beat one (breach the corp it's in) and it counts toward its logo (5: the feat). Crew: each call counts (5:
 // CREW on THE BOARD; 10: LVL 2). Crew never take your pay.
 'use strict';
-NEON_FILES.push(['engine/hackers.js', 'v16.00']);
+NEON_FILES.push(['engine/hackers.js', 'v16.01']);
 
 const HK_RIVALS = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'bad');
 const HK_CREW = Object.keys(HACKERS).filter(k => HACKERS[k].side === 'good');
@@ -175,7 +175,7 @@ function hkTick(lv, now) {
   for (const h of hkList()) {
     if (h.out) continue;
     const s = hkS(lv, h), ai = HK_AI[h.id];
-    const held = h.side === 'bad' && hkHeld(lv, h, s, now);   // rival gear: asleep (H0NEY) or chasing the BONE
+    const held = h.side === 'bad' && (hkHeld(lv, h, s, now) || hkPossessed() === h);   // rival gear: asleep (H0NEY), chasing the BONE, or POSSESSed
     if (!held && ai && ai.tick && !st.busy && lv.readyAt != null && !(st.dying)) ai.tick(lv, h, s, h.side === 'bad' ? hkClock(s, now) : now);   // (LEASH: their clock runs at half speed)
     if (st.lv !== lv || st.busy && !s.aim) { /* a pick is resolving: cursors still move */ }
     // the cursor glides to its aim (or wanders near the middle)
@@ -211,7 +211,7 @@ function hkSplit(s) {
 // The notes row: each hacker's name and bars (rivals: vs NAME ###; crew: +NAME ###)
 function hkNotes(lv) {
   lv.notes = (lv.notes || []).filter(n => !n.hk);
-  for (const h of hkList()) lv.notes.push({ hk: true, text: h.id === 'g0dexe' ? g0dxNote() : h.out ? `${hkName(h.id).slice(0, 8).toLowerCase()} x_x` : h.side === 'bad' && hkAsleep() ? `${hkName(h.id).slice(0, 8).toLowerCase()} zzz` : `${h.side === 'bad' ? 'vs ' : '+'}${hkName(h.id).slice(0, 8)} ${hkBars(h)}`, tag: 'hk_' + h.id });
+  for (const h of hkList()) lv.notes.push({ hk: true, text: h.id === 'g0dexe' ? g0dxNote() : h.out ? `${hkName(h.id).slice(0, 8).toLowerCase()} x_x` : h.side === 'bad' && hkPossessed() === h ? `you>${hkName(h.id).slice(0, 8)} ${hkBars(h)}` : h.side === 'bad' && hkAsleep() ? `${hkName(h.id).slice(0, 8).toLowerCase()} zzz` : `${h.side === 'bad' ? 'vs ' : '+'}${hkName(h.id).slice(0, 8)} ${hkBars(h)}`, tag: 'hk_' + h.id });
 }
 // A rival taps a node: ICE locks for you (and maybe costs it a bar); the real node: it takes the layer's pay.
 function hkTap(lv, h, t, iceCost = 1) {
@@ -480,6 +480,45 @@ function hkStopTap(t) {
   if (!m || isReal(t) || godOn() || zombie() || st.run.integrity > 1) return false;
   hkSay(m, 'no, dear.'); hkHurt(m); Sound.shield();
   return true;
+}
+// ---------------- TAUNT, POSSESS, MEAT SHIELD (Greg, meat notes 2026-11-22; built 2026-11-23) ----------------
+// TAUNT (gear): a rival comes in, picked the way the RIVAL anomaly picks (a quest seed's own: HAD3S, the dog), but on
+// your use: a seeded roll per corp and use, from the cast you haven't thrown out.
+function hkTauntPick() {
+  const c = st.corp; if (!c || !st.run) return null;
+  if (seedDef() && seedDef().rival) return hkRivalFor(c.node);
+  const dog = hkCrewOn('b0y') ? 'w00f' : 'd0g', sector = (c.node && c.node.sector) || 0;
+  const pool = HK_RIVALS.filter(k => (k !== 'd0g' && k !== 'w00f' || (k === dog && sector >= 1)) && !(st.run.banned || []).includes(k) && !hkUp(k));
+  return pool.length ? pickR(pool, rngFor(st.run.seed, 'taunt', c.node ? c.node.id : '', c.idx, c.taunts || 0)) : null;
+}
+function hkTaunt() {
+  const c = st.corp, id = hkTauntPick(); if (!id) return;
+  c.taunts = (c.taunts || 0) + 1;
+  const h = hkSpawn(id, 'rival');
+  if (h) setMsg(`> you called ${hkName(id).toLowerCase()} out. here they come.`, C.danger);
+}
+// POSSESS (gear): you ride a rival (the one with the most bars): it stops playing (hkTick), and your ICE hits cost its
+// bars, not your INT (hits.js blockHit: hkPossessHit). Out of bars, it drops, and the hits are yours again.
+const hkPossessed = () => (st.corp && st.corp.possess && hkUp(st.corp.possess)) || null;
+function hkPossess() {
+  const h = hkRivals().slice().sort((a, b) => b.hp - a.hp)[0]; if (!h) return;
+  st.corp.possess = h.id;
+  hkSay(h, '...what? get OUT of my head!', false, true); Sound.shield(); flash(C.rep, 0.15, 0.35);
+  setMsg(`> possessed: ${hkName(h.id).toLowerCase()}. your ICE hits are theirs now.`, C.rep);
+}
+function hkPossessHit() {
+  const h = hkPossessed(); if (!h) return null;
+  hkHurt(h); Sound.shield(); shake(4);
+  return h.out ? `> ICE. ${hkName(h.id).toLowerCase()} took it, and dropped. it's on you again.` : `> ICE. ${hkName(h.id).toLowerCase()} took it. ${hkBars(h)}`;
+}
+// MEAT SHIELD (a chip, BIOS: data/chips.js MS7): the crew you've called into this corp take your ICE hits, the one with
+// the most bars first. Never b0y (the OMNI RAID needs him there) or G0D.exe (no bars), and off in H3AV3N (b0y's run).
+function hkMeatHit() {
+  if (!chipOn('MS7') || (st.run && st.run.heaven)) return null;
+  const h = hkList().filter(x => x.side === 'good' && !x.out && x.hp > 0 && x.id !== 'b0y' && x.id !== 'g0dexe').sort((a, b) => b.hp - a.hp)[0];
+  if (!h) return null;
+  hkHurt(h); Sound.shield(); shake(4);
+  return h.out ? `> ICE. ${hkName(h.id).toLowerCase()} took it for you, and dropped.` : `> ICE. ${hkName(h.id).toLowerCase()} took it for you. ${hkBars(h)}`;
 }
 // BRICK: an ICE hit costs him a bar instead (returns the terminal line, or null).
 function hkTakeHit() {

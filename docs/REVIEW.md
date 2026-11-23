@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **TAUNT, POSSESS, MEAT SHIELD, FRAG at the PIER** (v16.01). Things I picked: TAUNT is common gear (20cr), only when no rival is in the corp, not in H3AV3N; POSSESS is rare (45cr) and rides the rival with the most bars, who stops playing; MEAT SHIELD is a BIOS chip (rare, power 2: you asked chip or mod), the crew with the most bars takes the hit first, and it comes after BRICK (BRICK still takes them first); FRAG at the PIER: a PHISH a rarity lower half the time, gear as corrupted software 60%, the DISC can't be fragged, no cast spent. The numbers are in engine/fishing.js FISH_FRAG.
+
 - [ ] **LOST LOOT** (v15.57): THE BOARD > REP > USER, 200 REP. Things I picked: a chip you swap OUT of your belt goes to LOST too (it's lost for lack of room, like the one you don't take); a chip pushed out of a full pool is shredded (components), not just gone, and the message line says which; the LOST sub-tab shows its count (LOST 2). The switch is on the deck's CPU (SETTINGS), not on the post's card.
 
 - [ ] **DANGEROUS CATCH** (v15.56): an OVERVOLT chip, rare, 1 power. 1 PHISH in 5 bites when you land it (-1 INT; gear, chips and shoes don't bite); rarer catches like DEEP WATER; PHISH sells for x1.5 (both numbers in ECON: the editor's ECONOMY tab). The rescues (CONTINUE, 1UP, ROOTKIT) don't work at the pier: they put you back in a corp. **Decided (Greg, 2026-11-23):** CHECKPOINT does (v15.59): back on the map with nothing, full INT.

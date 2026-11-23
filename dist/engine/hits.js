@@ -2,7 +2,7 @@
 // (HIT_FX, BOARD_FX; corps add their boss mods' with defineModFx). Moved out of engine/run.js (2026-11-05).
 // Needs engine/run.js first (START_NOTE, END_FX: the last line here fills all four tables).
 'use strict';
-NEON_FILES.push(['engine/hits.js', 'v16.00']);
+NEON_FILES.push(['engine/hits.js', 'v16.01']);
 
 // Queue a line for after the hit (see onTrap): a mod saying what it just showed you.
 // fn(now) runs as the line shows (that's when the change appears on the node).
@@ -25,8 +25,11 @@ function blockHit(t, i) {
   } else if (st.run.favB === 'signed' && deckFavIs(t)) {   // SIGNED (your deck's GLYPH: engine/deck.js)
     Sound.shield(); flash(C.accent, 0.12, 0.3);
     msg = '> ICE. your glyph, signed: no damage.';
+  } else if (hkPossessed()) {   // POSSESS (gear): the rival you ride takes it (engine/hackers.js)
+    msg = hkPossessHit();
   } else if (hkUp('brick')) {   // BRICK (crew) takes it
     msg = hkTakeHit();
+  } else if ((msg = hkMeatHit())) {   // MEAT SHIELD (a chip): the crew you called take it (engine/hackers.js)
   } else if (deckBrickBlock()) {   // BRICK (a CREW JACK: engine/deck.js)
     Sound.shield(); flash(C.accent, 0.12, 0.3);
     msg = '> ICE. BRICK blocked it (his jack).';

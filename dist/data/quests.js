@@ -26,7 +26,7 @@
 //   art:  (optional) a few lines of ASCII over the text
 //   title: (optional) a title card: big text, no face
 'use strict';
-NEON_FILES.push(['data/quests.js', 'v16.00']);
+NEON_FILES.push(['data/quests.js', 'v16.01']);
 
 const QUEST_INFO = {
   pops: {

@@ -3,7 +3,7 @@
 // numbers were in about ten tables). The old tables (DECK_INT, DECK_CHARGES...) are built from the entries, below.
 // Nothing here changes at load: engine/deck.js adds the RIPPED and "+n shell charges" words to the texts.
 'use strict';
-NEON_FILES.push(['data/chips.js', 'v16.00']);
+NEON_FILES.push(['data/chips.js', 'v16.01']);
 
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
 // with no power.
@@ -168,6 +168,8 @@ const DECK_CHIPS = {
   PH3: ["PH1SH'S HOOK", 'bios', 'epic', 2, 'rivals you beat drop a chip twice as often (60%).', ['_J ', 'HK!'], 'rivals drop more chips.', { tags: ['rules'], ripped: 5 }],
   HF9: ["HCF'S CORE", 'psu', 'exotic', 0, 'a cell: power 18. it runs hot. halt and catch fire. (HCF drops it most.)', ['!#!', 'C18'], 'power 18.', { tags: ['you'], cell: 18, ripped: 7 }],   // (Greg, 2026-11-22: the exotic RIPPED chip; any rival or THE FENCE, rarely)
   SY4: ["SYSOP'S KEY", 'boot', 'legendary', 3, "the first layer of every corp: the real node is marked.", ['#*#', 'SYS'], 'first layers: real node marked.', { tags: ['you'], ripped: 6 }],
+  // (Greg, meat notes 2026-11-22; built 2026-11-23. Here at the end: a new chip goes last, so the seeded chip rolls stay put)
+  MS7: ['MEAT SHIELD', 'bios', 'rare', 2, 'the crew you call into a corp take your ICE hits first, the one with the most bars. never b0y, and not in H3AV3N.', ['[#]', 'MTS'], 'crew take your hits.', { tags: ['you'] }],   // (engine/hackers.js hkMeatHit)
 };
 
 // The tables the engine reads, built from the entries

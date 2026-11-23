@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v16.00']);
+NEON_FILES.push(['engine/help.js', 'v16.01']);
 
 // ---------------- How to play ----------------
 // Two main tabs, each with a strip of sub-tabs under it (drawSubTabs, like THE CODEX's). Greg, 2026-11-23: BASICS

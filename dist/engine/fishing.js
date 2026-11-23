@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v16.00']);
+NEON_FILES.push(['engine/fishing.js', 'v16.01']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -261,6 +261,32 @@ function fishKeep() {
   addItem(key, out.tier);
   Sound.buy(); setMsg(`> ${ITEMS[key].name.toLowerCase()} in your loot.`, C.accent);
   f.card = null;
+}
+// FRAG at the PIER (Greg, meat notes 2026-11-23): every fish on screen dies. A PHISH comes up a rarity lower, now and
+// then (FISH_FRAG.phish, +tier); gear comes up as corrupted software more often than not; shoes, chips and the DISC
+// give nothing (the DISC swims on). What comes up goes in your LOOT. No cast spent.
+const FISH_FRAG = { phish: 0.5, tierUp: 0.1, corrupt: 0.6 };
+const fishOnScreen = s => !s.hooked && s.x + s.look.length > 0 && s.x < L.wc;
+const fishFragOk = () => st.mode === 'fish' && !!st.fish && !st.fish.reel && !st.fish.card && !st.busy && !st.dying && st.fish.shapes.some(s => fishOnScreen(s) && s.out.key !== 'disc');
+function fishFrag(tier = 0) {
+  const f = st.fish, g = fishGeo(), r = Math.random;
+  const hit = f.shapes.filter(s => fishOnScreen(s) && s.out.key !== 'disc');
+  const got = [], corrupt = Object.keys(ITEMS).filter(k => ITEMS[k].corrupt && !ITEMS[k].quest);
+  for (const s of hit) {
+    const o = s.out, y = g.laneY(s.lane);
+    if (!reduced()) explode([...s.look].map((ch, i) => ({ ch, x: pxX(s.x + i), y: pxY(y), col: C.danger })), pxX(s.x + s.look.length / 2), pxY(y), { power: 0.6, grav: 0.6, life: [0.4, 0.9] });
+    if (o.kind === 'fish' && r() < FISH_FRAG.phish + FISH_FRAG.tierUp * tier) {
+      const rar = FISH_RARITY[Math.max(0, FISH_RARITY.indexOf(o.rarity) - 1)], key = 'phish_' + rar;
+      if (ITEMS[key]) { addItem(key, 0); got.push(key); }
+    } else if (o.kind === 'gear' && o.key !== 'disc' && corrupt.length && r() < FISH_FRAG.corrupt) {
+      const key = pickR(corrupt, r); addItem(key, 0); got.push(key);
+    }
+  }
+  f.shapes = f.shapes.filter(s => !hit.includes(s));
+  if (f.hook && f.hook.bite && hit.includes(f.hook.bite)) f.hook.bite = null;
+  Sound.trap(); shake(6, 0.4); flash(C.danger, 0.12, 0.3);
+  const ph = got.filter(k => ITEMS[k].fish).length, cr = got.length - ph;
+  setMsg(hit.length ? `> frag: ${hit.length} gone.${ph ? ` +${ph} PHISH` : ''}${cr ? ` +${cr} corrupted` : ''}${got.length ? ', in your loot.' : ' nothing worth keeping.'}` : '> frag: nothing to hit.', C.danger);
 }
 function fishThrowBack() { const f = st.fish; if (!f || !f.card) return; f.card = null; Sound.tick(); setMsg('> back in the stream.', C.mid); }
 

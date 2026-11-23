@@ -5,7 +5,7 @@
 // up to 5 x 3) and name (Greg, 2026-11-23). Moved out of engine/tutorial.js (the second audit); the function names kept
 // their tut prefix. Loads before engine/tutorial.js.
 'use strict';
-NEON_FILES.push(['engine/callouts.js', 'v16.00']);
+NEON_FILES.push(['engine/callouts.js', 'v16.01']);
 
 // How a callout looks and moves (POPS's, the default; a callout's own col / face / name go over it)
 const CALLOUT = {

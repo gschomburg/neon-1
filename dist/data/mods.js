@@ -1,6 +1,6 @@
 // NeoN+1 data/mods.js: Rarity tiers, items and mods: names, icons, tips, descriptions, prices. (Their effects are in engine/.)
 'use strict';
-NEON_FILES.push(['data/mods.js', 'v16.00']);
+NEON_FILES.push(['data/mods.js', 'v16.01']);
 
 // The ladder (the user, 2026-10-25): scrap (white) > common (green) > rare (blue) > epic (purple) > legendary (orange)
 // > exotic (gold). Legendary is as high as an upgrade goes; corp (boss) mods are legendary and never upgrade. Exotics
@@ -236,6 +236,11 @@ const ITEMS = {
   exorcist: { key: 'exorcist', name: 'EXORCIST', price: 45, rarity: 'rare', desc: 'in a corp: a rival hacker is kicked out of this corp.', tip: 'kick a rival out.',
     codex: 'the power of root compels you. in a corp with a rival hacker in it: they are thrown out, their bars and all, for the rest of the corp. the epic one throws them out of the whole run: they never come back.',
     tiers: [{}, { rarity: 'epic', desc: 'in a corp: a rival hacker is kicked out, and never comes back this run.', tip: 'kick a rival out for good.' }] },
+  // TAUNT and POSSESS (Greg, meat notes 2026-11-22; built 2026-11-23): rival gear you can use anywhere (engine/hackers.js)
+  taunt:  { key: 'taunt',  name: 'TAUNT',  price: 20, rarity: 'common', desc: 'in a corp: call a rival in. beat them for their pay, and maybe a chip.', tip: 'call a rival in.',
+    codex: 'trash talk on an open channel. in a corp layer with no rival in it, one of the cast hears you and comes in: they play the way they always do (they can steal a layer), and beating them pays, like a corp with the RIVAL anomaly. a rival you threw out (EXORCIST) stays out.' },
+  possess: { key: 'possess', name: 'POSSESS', price: 45, rarity: 'rare', desc: 'in a corp with a rival: ride them. your ICE hits take their bars, and they stop playing.', tip: 'a rival takes your hits.',
+    codex: 'you get in their head. in a corp with a rival in it (the one with the most bars): they stop playing, and every ICE hit you take costs them a bar, not your integrity. out of bars, they drop, and you take your hits again.' },
   stim:   { key: 'stim',   name: 'STIM',   price: 40, rarity: 'rare', desc: 'in a corp: max integrity +50% for this corp, healed up to it. after it, you keep what fits.', tip: '+50% int, this corp.',
     codex: 'a combat stim. for the rest of this corp your max integrity is half again as big, and you heal up to it. when you leave the corp it wears off: max integrity goes back, and you keep what fits (2 left stays 2). with ZOMBIE: your rot limit is half again as big (150 + 75) for the rest of the corp; after it, rot you are over by is gone.' },
   zeroday: { key: 'zeroday', name: '0DAY', price: 50, rarity: 'rare', desc: 'in a layer: the real node is marked.', tip: 'mark the real node.',

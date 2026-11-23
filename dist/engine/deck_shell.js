@@ -1,7 +1,7 @@
 // NeoN+1 engine/deck_shell.js: THE SHELL's charges and the commands the deck's SHELL and SUDO chips give (docs/SHELL.md).
 // Moved out of engine/deck.js (the second audit, 2026-11-23). Loads after engine/deck.js.
 'use strict';
-NEON_FILES.push(['engine/deck_shell.js', 'v16.00']);
+NEON_FILES.push(['engine/deck_shell.js', 'v16.01']);
 
 // ---------- THE SHELL's charges (docs/SHELL.md "Charges", Greg 2026-11-20) ----------
 // SHELL chips give charges (DECK_CHARGES) and their commands cost them (each command's cost: DECK_SHELL_CMDS). One pool:

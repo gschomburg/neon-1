@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v16.00']);
+NEON_FILES.push(['engine/active.js', 'v16.01']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -657,6 +657,7 @@ function whyNotItem(stack) {
   if (key === 'rewind' && inCorp && (st.corp.frozen || (st.lv && st.lv.frozen))) return 'time already stopped.';
   if (key === 'rewind' && inCorp && (stack.tier || 0) < 2 && !st.timer) return 'no clock running.';
   if (key === 'wall') return (stack.tier || 0) < 2 && st.run.shield >= FW_MAX ? `firewall is maxed: ${fwTag(FW_MAX)}.` : 'only inside a corp.';
+  if (key === 'frag' && st.mode === 'fish') return st.fish && (st.fish.reel || st.fish.card) ? 'not while you reel one in.' : 'no fish to hit.';
   if (!inCorp && key !== 'wall') return 'only inside a corp layer.';
   if (key === 'nuke' && st.corp.node.type === 'final') return 'too big to nuke.';
   if (key === 'nuke' && st.run.tutorial) return 'not in the training.';
@@ -666,6 +667,8 @@ function whyNotItem(stack) {
   if (key === 'egg') return 'already hatched one.';
   if (key === 'exorcist') return 'no rival here to kick out.';
   if (['leash', 'muzzle', 'honey'].includes(key)) return 'no rival here.';
+  if (key === 'taunt') return st.run.heaven ? 'nobody up here to hear you.' : hkRivals().length ? 'a rival is already here.' : st.lv && st.lv.n < 2 ? 'not on the public node.' : 'nobody answers.';
+  if (key === 'possess') return hkPossessed() ? `already riding ${hkName(hkPossessed().id).toLowerCase()}.` : 'no rival here to ride.';
   if (key === 'bone') return 'no rival here, or no ICE to throw it on.';
   if (key === 'zeroday' && (st.corp.zd || 0) >= ZD_ALL) return 'already marked, all corp.';
   if (BOSS_GEAR[key] && st.lv && st.lv.n > 1) return BOSS_GEAR[key].why(st.lv);
@@ -780,7 +783,7 @@ const GEAR = {
   allin: { ok: c => !!c.inLayer && st.corp.hasBoss && !itemOffHere('allin') && st.lv.n > 1 && st.lv.tiles[st.lv.safe].state === 'closed', use() { allIn(); } },
   tilt: { ok: c => c.layerGear && st.lv.rows > 1 && c.closed.length > 1, use: (tier, lv) => tiltBoard(lv) },
   shake: { ok: c => c.layerGear && c.closed.length > 1, use: (tier, lv) => shakeBoard(lv) },
-  frag: { ok: c => c.layerGear && c.closed.some(t => !isReal(t)), use: (tier, lv) => fragBoard(lv, tier) },
+  frag: { ok: c => (c.layerGear && c.closed.some(t => !isReal(t))) || fishFragOk(), use: (tier, lv) => st.mode === 'fish' ? fishFrag(tier) : fragBoard(lv, tier) },   // (at the PIER: engine/fishing.js)
   shoe: { ok: c => c.layerGear && c.closed.some(t => !isReal(t)), use(tier, lv) { throwShoe(lv); } },
   ping: { ok: c => ARMS.ping.on() || (c.layerGear && c.closed.length > 1) },   // armed: a tap cancels (ARMS)
   magnet: { ok: c => c.layerGear && c.closed.some(t => t.loaded), use(tier, lv) { magnetPull(lv, tier >= 1); } },
@@ -791,7 +794,9 @@ const GEAR = {
   muzzle: { ok: c => !!c.inLayer && !!st.corp && hkRivals().length > 0, use() { hkMuzzle(); } },
   honey: { ok: c => !!c.inLayer && !!st.corp && hkRivals().length > 0, use() { hkHoney(); } },
   bone: { ok: c => !!c.inLayer && !!st.corp && hkRivals().length > 0 && hkIce(st.lv).length > 0 && !st.lv.bone, use(tier, lv) { hkBone(lv); } },
-  exorcist: { ok: c => !!c.inLayer && !!st.corp && hkList().some(h => h.side === 'bad' && !h.out), use(tier) { exorcise(tier); } },   // EXORCIST: a rival here   // (ZOMBIE: no rot this corp: stimUp)
+  exorcist: { ok: c => !!c.inLayer && !!st.corp && hkList().some(h => h.side === 'bad' && !h.out), use(tier) { exorcise(tier); } },
+  taunt: { ok: c => c.layerGear && !c.run.heaven && !hkRivals().length && !!hkTauntPick(), use() { hkTaunt(); } },   // (engine/hackers.js)
+  possess: { ok: c => !!c.inLayer && !!st.corp && hkRivals().length > 0 && !hkPossessed(), use() { hkPossess(); } },   // EXORCIST: a rival here   // (ZOMBIE: no rot this corp: stimUp)
   nuke: { ok: c => c.layerGear && st.corp.node.type === 'corp' && !c.run.tutorial && !st.mp, use: (tier, lv) => nukeCorp(lv) },
   rewind: {
     ok: c => c.layerGear && !st.corp.frozen && !st.lv.frozen && (c.tier >= 2 ? (!!st.timer || !!st.corp.def.tick) : !!st.timer),

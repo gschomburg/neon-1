@@ -1,6 +1,6 @@
 // NeoN+1 engine/panels.js: Panels: rewards, markets, caches...
 'use strict';
-NEON_FILES.push(['engine/panels.js', 'v16.00']);
+NEON_FILES.push(['engine/panels.js', 'v16.01']);
 
 // ---------------- Panels ----------------
 // The title and the menu screens use the whole screen: no header, HUD or tray.
@@ -100,7 +100,7 @@ const ITEM_SHORT = { repeat: 'RPT', shovel: 'SHV', disc: 'DSC', dogtag: 'TAG', l
   remote: 'RMT', rollup: 'RLP', freeze: 'FRZ', blast: 'BLS', snitch: 'SNT', tithe: 'TTH', anchor: 'ANC', slomo: 'SLO', bees: 'BEE',
   call: 'CAL', call_pops: 'POP', call_b0y: 'B0Y', call_brick: 'BRK', call_null: 'NUL', call_nana: 'NAN', call_dialup: 'DIA', call_baud: 'BAU',
   call_mother: 'MOM', call_root: 'ROO', call_kludge: 'KLG', call_hype: 'HYP', lotto: 'LTO', ping: 'PNG', magnet: 'MAG',
-  encore: 'ENC', egg: 'EGG', exorcist: 'EXO', stim: 'STM', zeroday: '0DY', worm: 'WRM', skip: 'SKP', swap: 'SWP', fake: 'FAK', nuke: 'NUK', g0dexe: 'G0D' };
+  encore: 'ENC', egg: 'EGG', exorcist: 'EXO', taunt: 'TNT', possess: 'PSS', stim: 'STM', zeroday: '0DY', worm: 'WRM', skip: 'SKP', swap: 'SWP', fake: 'FAK', nuke: 'NUK', g0dexe: 'G0D' };
 // corrupted software: its code glitches too (data/mods.js glitchName)
 Object.defineProperties(ITEM_SHORT, { junkdata: { get: () => glitchName(['JNK'], 1) }, corrupt: { get: () => glitchName(['CRP'], 2) }, badsector: { get: () => glitchName(['BAD'], 3) } });
 const itemShort = key => ITEM_SHORT[key] || ITEMS[key].name.replace(/[^A-Z0-9]/g, '').slice(0, 3);

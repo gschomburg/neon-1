@@ -69,7 +69,7 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 
 ### REP and chip ideas (Greg, meat notes 2026-11-22)
 - **DANGEROUS CATCH:** built v15.56 (an OVERVOLT chip; SPEC). Its bites are how you earn FISH FOOD.
-- **FRAG at the PIER** (Greg, meat notes 2026-11-23): throw a FRAG into the stream and every fish on screen dies. You get
+- **FRAG at the PIER** (Greg, meat notes 2026-11-23): **built v16.01.** throw a FRAG into the stream and every fish on screen dies. You get
   some of it, not as much as catching it, and more of it corrupted?
 **Decided (Greg, 2026-11-22):** fill ELITE and SYSOP. The batches:
 1. [x] (v15.40) Ladders: a post's next level is its own post a level up (HARDENED, SEED MONEY, RESTOCK, DEADMAN to 75%,
@@ -155,9 +155,10 @@ unlocked by REP, and some quests unlock REP.
 ### 1. Gear and scrap mods
 **Greg, 2026-11-07:** "we are pretty good on gear for now."
 - **New gear ideas** (Greg, meat notes 2026-11-22; ideas only):
-  - **TAUNT:** gear that calls a rival to your corp.
+  - **TAUNT:** gear that calls a rival to your corp. **Built v16.01.**
   - **Hacker gear:** POSSESS / HIJACK: a rival's INT goes in front of yours, so ICE you hit hurts them. MEAT SHIELD
     (or PAIN MAPPER), a name for now: every crew member's bars add to yours, like BRICK; ICE hits them first. Maybe a chip.
+    **Built v16.01:** POSSESS (gear), MEAT SHIELD (a chip; Greg: off where crew is needed, b0y in heaven).
   - **Deck power:** gear that gives your deck more power, for a corp or for some clicks.
   - **GHOST:** a G0D.exe-like helper, weaker: it lasts a corp, then burns out. It knows nothing, but has lots of INT,
     and clicks nodes itself. Or a crew member that does nothing but carry INT (for MEAT SHIELD). Or a ghost of your
