@@ -1,7 +1,7 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v15.55']);
+NEON_FILES.push(['engine/feats.js', 'v15.56']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
@@ -62,7 +62,7 @@ function tallyRunEnd(run, win, rep) {
   best('bestDepth', run.depth);
   best('bestSpent', Math.max(0, (run.cr0 || 0) + run.earned - run.credits));
   if (run.earned >= 1000 && run.credits < 10) tally('easyCome');
-  if (!win && (st.mode === 'fish' || st.fish)) tally('diedFishing');   // FISH FOOD (nothing kills you at the pier yet)
+  if (!win && (run.diedPier || st.mode === 'fish')) tally('diedFishing');   // FISH FOOD (a DANGEROUS CATCH bite: engine/fishing.js fishBit)
   // ONE MORE TRY: a seed you've played before, deeper this time (save.seedBest: the deepest layer per seed, the last 200)
   const sb = save.seedBest || (save.seedBest = {}), was = sb[run.seed];
   if (was != null && run.depth > was) tally('seedBetter');

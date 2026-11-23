@@ -36,7 +36,7 @@ module.exports = { name: 'decktut', body: `
   check(DECK.pick && DECK.pick.id === 'PSU', 'CHOOSE: the picker');
   await tap('dkk_SC1'); await tap('dkgo');
   check(DECK.slots.PSU === 'SC1' && deckPower().on.has('BT1'), 'the cell in: FIRST AID has power');
-  await ok('d_power'); await ok('d_find');
+  await ok('d_power'); await ok('d_pwr'); await ok('d_find');
   await act('d_slot');
   check(DECK.sel.id === 'BT2', 'BT2 picked for you');
   await tap('dkchg'); await tap('dkk_TF1'); await tap('dkgo');

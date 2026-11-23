@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v15.55']);
+NEON_FILES.push(['engine/fishing.js', 'v15.56']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -23,7 +23,10 @@ const fishHead = s => s.dir > 0 ? s.x + s.look.length - 1 : s.x;   // the head's
 // The PIER's music: one of these at random each visit, level 3 while you reel (engine/boot.js)
 const FISH_TRACKS = ['lowpressure', 'plusone', 'sealegs'];
 const fishCost = () => Math.max(1, Math.round(costInt(ECON.fish.cast) * (legacyLv('bait') ? 0.5 : 1)));   // (BAIT SHOP: THE BOARD, half)
-const fishWorth = key => earnInt(ECON.fish[ITEMS[key].rarity] != null ? ECON.fish[ITEMS[key].rarity] : ECON.fish.common);
+// DANGEROUS CATCH (a chip, engine/deck.js): a PHISH you land bites 1 in 5 (-1 INT, and it can kill you: FISH FOOD); catches
+// run rarer (like DEEP WATER) and PHISH sells for more (ECON.fish.danger, dangerPay).
+const fishDanger = () => chipOn('DG3');
+const fishWorth = key => earnInt((ECON.fish[ITEMS[key].rarity] != null ? ECON.fish[ITEMS[key].rarity] : ECON.fish.common) * (fishDanger() ? ECON.fish.dangerPay : 1));
 // A catch's (made-up) size in KB: ITEMS[key].kb is its range (spread on a log scale; most land near the low end)
 const fishKB = (key, r) => { const [a, b] = ITEMS[key].kb || [1, 100]; return a * Math.pow(b / a, Math.pow(r(), 1.6)); };
 const fmtKB = kb => kb < 1 ? Math.max(1, Math.round(kb * 1024)) + ' B' : kb < 1024 ? (kb < 10 ? kb.toFixed(1) : Math.round(kb)) + ' KB'
@@ -67,11 +70,11 @@ function fishOutcome(r) {
   if (u < ECON.fish.shoe + ECON.fish.gear) {   // the loot pool, each rarity step damped
     const pool = Object.keys(ITEMS).filter(k => !ITEMS[k].corp && !ITEMS[k].fish && !ITEMS[k].crew && k !== 'shoe' && gearAllowed(k));
     const step = k => Math.max(0, RARITY_ORDER.indexOf(ITEMS[k].rarity) - RARITY_ORDER.indexOf('common'));
-    const deep = legacyLv('deep') > 0 || chipOn('PP2');   // (PIER PASS, a chip, the same)   // DEEP WATER (THE BOARD): the rarer steps damped less, corrupted software twice as likely again
+    const deep = legacyLv('deep') > 0 || chipOn('PP2') || fishDanger();   // (PIER PASS and DANGEROUS CATCH, chips, the same)   // DEEP WATER (THE BOARD): the rarer steps damped less, corrupted software twice as likely again
     const key = pickWeighted(pool, k => gearWeight(k) * Math.pow(ECON.fish.damp, step(k) * (deep ? 0.6 : 1)) * (ITEMS[k].corrupt ? (deep ? 4 : 2) : 1), r);   // (corrupted software: it washes up here)
     return { kind: 'gear', key, tier: 0, rarity: ITEMS[key].rarity };
   }
-  const rar = pickWeighted(FISH_RARITY, x => (ECON.fish.odds[FISH_RARITY.indexOf(x)] || 0) * (legacyLv('deep') || chipOn('PP2') ? Math.pow(1.6, FISH_RARITY.indexOf(x)) : 1), r);   // (DEEP WATER: rarer fish)
+  const rar = pickWeighted(FISH_RARITY, x => (ECON.fish.odds[FISH_RARITY.indexOf(x)] || 0) * (legacyLv('deep') || chipOn('PP2') || fishDanger() ? Math.pow(1.6, FISH_RARITY.indexOf(x)) : 1), r);   // (DEEP WATER: rarer fish)
   const key = pickR(FISH_KEYS.filter(k => ITEMS[k].rarity === rar), r) || pickR(FISH_KEYS, r);
   return { kind: 'fish', key, tier: 0, rarity: ITEMS[key].rarity };
 }
@@ -217,6 +220,15 @@ function fishCaught() {
   if (out.kind === 'shoe') tally('fishShoe');
   fishFanfare(out, fishGeo().top + 3);
   setMsg(out.kind === 'fish' ? `> phished: ${fmtKB(kb)}.` : out.kind === 'shoe' ? "> ...it's a shoe." : '> just gear.', C.money);
+  if (out.kind === 'fish' && fishDanger() && Math.random() < ECON.fish.danger) fishBit();
+}
+// DANGEROUS CATCH: it bit you. At 0 INT the run ends here (engine/runend.js die: no corp, so no CONTINUE, 1UP, ROOTKIT
+// or CHECKPOINT at the pier).
+function fishBit() {
+  const run = st.run;
+  hurt(1); Sound.trap(); flash(C.danger, 0.15, 0.3); shake(4, 0.3);
+  setMsg(`> it bit you. -1 INT.`, C.danger);
+  if (run.integrity <= 0) { st.fish.card = null; run.diedPier = true; die(); }
 }
 // The catch's sound: the market's reveal pop by rarity (engine/sound.js pop); a legendary gets confetti, a shoe a wah-wah
 function fishFanfare(out, y) {

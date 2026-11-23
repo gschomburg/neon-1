@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.55']);
+NEON_FILES.push(['engine/runend.js', 'v15.56']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -40,9 +40,9 @@ async function die() {
   lightsOn();
   st.busy = true;
   st.timer = null;
-  const safeTile = st.lv.tiles[st.lv.safe];
-  if (safeTile.state === 'closed') safeTile.state = 'reveal';
-  setMsg(zombie() ? '> you fell apart.' : bloodMoney() ? '> broke. real node revealed.' : '> traced. real node revealed.', C.danger);
+  const safeTile = st.lv && st.lv.tiles[st.lv.safe];   // (none at the PIER: DANGEROUS CATCH)
+  if (safeTile && safeTile.state === 'closed') safeTile.state = 'reveal';
+  setMsg(run0 && run0.diedPier ? '> eaten by the stream.' : zombie() ? '> you fell apart.' : bloodMoney() ? '> broke. real node revealed.' : '> traced. real node revealed.', C.danger);
   st.dying = true;      // the music powers down instead of cutting out
   Sound.death();
   await wait(1100);

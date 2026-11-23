@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v15.55']);
+NEON_FILES.push(['engine/tutorial.js', 'v15.56']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -383,15 +383,21 @@ function buildTutorial(ctx, now, under) {
   const r = tutRect(p.target, under);
   p.lay = p.mini ? tutMiniLayout(p, r, under) : tutLayout(p, r);
   T.head = under.filter(c => Math.round(c.cy) === 0 && c.ch && c.ch !== ' ');   // the header row (NeoN+1, the menu): drawn again on top
-  // the target pulses (scales up and down around its middle) once the arrow has landed: nodes and the
-  // HUD only (on buttons, items and map nodes the letters would slide off their color chips)
+  // the target pulses (scales up and down around its middle) once the arrow has landed: nodes and the HUD; anything
+  // else that asks for it (target.pulse: the deck's sockets, the bench's tabs: meat notes 2026-11-23). A pulse target's
+  // background tints scale with it (engine/render.js draws a bg's h), so its letters stay on their chips.
   const t = now - p.t0, land = tutTimes(p).land;
-  if (r && t >= land && (p.target.tile != null || p.target.hud != null)) {
-    const s = 1 + 0.045 * (1 - Math.cos((t - land) / 1100 * Math.PI * 2));
+  if (r && t >= land && (p.target.tile != null || p.target.hud != null || p.target.pulse)) {
+    const s = 1 + (p.target.pulse ? 0.09 : 0.045) * (1 - Math.cos((t - land) / 1100 * Math.PI * 2));
     const mx = r.x + (r.w - 1) / 2, my = r.y + (r.h - 1) / 2;
+    const inR = (x, y) => x >= r.x - 0.01 && x <= r.x + r.w - 0.99 && y >= r.y - 0.01 && y <= r.y + r.h - 0.99;
     for (const c of under) {
-      if (c.cx < r.x - 0.01 || c.cx > r.x + r.w - 0.99 || c.cy < r.y - 0.01 || c.cy > r.y + r.h - 0.99) continue;
+      if (!inR(c.cx, c.cy)) continue;
       c.cx = mx + (c.cx - mx) * s; c.cy = my + (c.cy - my) * s; c.sc = (c.sc || 1) * s;
+    }
+    if (p.target.pulse) for (const b of st.frameBgs || []) {   // (bg x / y are a cell's edge; a cell's middle is +0.5)
+      if (b.h || !inR(b.cx, b.cy) || b.cx + b.w > r.x + r.w + 0.01) continue;
+      b.cx = mx + 0.5 + (b.cx - mx - 0.5) * s; b.cy = my + 0.5 + (b.cy - my - 0.5) * s; b.w *= s; b.h = s;
     }
   }
   const l = p.lay;
@@ -729,9 +735,9 @@ async function benchTutScript(T) {
   // 1. SHRED: the kit's gear, for P R G
   await ask('b_shredtab', { btn: ['bt_shred'] }, onTab('shred'), { target: { btn: 'bt_shred' }, near: 'below' });
   shredPickKind('gear');
-  await say('b_shred', { target: { btn: 'shs_gear' } });
+  await say('b_shred', { target: { btn: 'shs_gear', pulse: true } });
   await ask('b_shredit', { btn: ['sh0', 'sh1', 'bkshred', 'shs_gear'] }, () => calm() && has('P', 'R', 'G'), { target: { btn: 'bkshred' }, near: 'below' });
-  await say('b_comps', { target: { btn: 'shs_mod' } });
+  await say('b_comps', { target: { btn: 'shs_mod', pulse: true } });   // (SHRED stays on GEAR: engine/bench.js shredKind)
 
   // 2. the BOOK: pin PURGE
   await ask('b_booktab', { btn: ['bt_book'] }, onTab('book'), { target: { btn: 'bt_book' }, near: 'below' });
@@ -741,9 +747,9 @@ async function benchTutScript(T) {
   await ask('b_pin', { btn: ['bkpin'] }, () => calm() && benchSave().pins.includes(BTUT.code), { target: { btn: 'bkpin' }, near: 'below' });
 
   // 3. BUILD: type it, ENTER
-  await ask('b_buildtab', { btn: ['bt_build'] }, onTab('build'), { target: { btn: 'bt_build' }, near: 'below' });
+  await ask('b_buildtab', { btn: ['bt_build', 'bkbook'] }, onTab('build'), { target: { btn: 'bt_build' }, near: 'below' });   // (or the BOOK's own BUILD: it doesn't fill the letters in here)
   await wait(450);
-  await say('b_pinned', { target: { btn: 'pin' + BTUT.code } });
+  await say('b_pinned', { target: { btn: 'pin' + BTUT.code, pulse: true } });
   await say('b_wild');
   await ask('b_type', { key: BTUT.code.split('').concat('DEL'), btn: ['bk_DEL'] }, () => calm() && (j => j.kind === 'ok' && j.code === BTUT.code)(benchJudge()),
     { target: { btn: 'pin' + BTUT.code } });
@@ -752,12 +758,12 @@ async function benchTutScript(T) {
   await wait(300);
 
   // 4. the LOCKER: take it
-  await say('b_locker', { target: { btn: 'bt_locker' } });
+  await say('b_locker', { target: { btn: 'bt_locker', pulse: true } });
   await ask('b_lockertab', { btn: ['bt_locker', 'lvtake'] }, () => onTab('locker')() && b().lkView === 'take', { target: { btn: 'bt_locker' }, near: 'below' });
   const at = benchSave().locker.findIndex(x => x && x.key === 'purge');
   b().lkSel = Math.max(0, at);
   await ask('b_take', { btn: ['lktake' + Math.max(0, at), 'bktake'] }, () => calm() && st.run.items.some(x => x.key === 'purge'), { target: { btn: 'bktake' }, near: 'below' });
-  await say('b_store', { target: { btn: 'lvstore' } });
+  await say('b_store', { target: { btn: 'lvstore', pulse: true } });
   await say('b_bye');
   benchTutEnd(T, true);
 }
@@ -808,17 +814,18 @@ async function deckTutScript(T) {
   await until(calm);
   await wait(500);
   await say('d_hello');
-  await say('d_nopower', { target: { btn: 'dkbar' }, at: 'above' });
+  await say('d_nopower', { target: { btn: 'dkbar', pulse: true }, at: 'above' });
   await ask('d_bar', { btn: ['dkbar'] }, () => calm() && d().sel.kind === 'socket' && d().sel.id === 'PSU', { target: { btn: 'dkbar' } });
   await wait(600);   // (the board scrolls down to it)
-  await ask('d_psu', { btn: picker(['dks_PSU', 'dkk_SC1']) }, () => powered('BT1') && d().slots.PSU === 'SC1' && !d().pick, { target: { btn: 'dkchg' } });
+  await ask('d_psu', { btn: picker(['dks_PSU', 'dkk_SC1']) }, () => powered('BT1') && d().slots.PSU === 'SC1' && !d().pick, { target: { btn: 'dks_PSU', pulse: true }, miniTarget: { btn: 'dkchg' } });
   await wait(400);
-  await say('d_power', { target: { btn: 'dktc' }, noArrow: true });
+  await say('d_power', { target: { btn: 'dks_BT1', pulse: true } });
+  { const pw = deckPower(); await say('d_pwr', { target: { btn: 'dktc', text: `mk ${deckMk(d().mk)} PWR ${pw.used}/${pw.budget}`, pulse: true }, at: 'below' }); }   // (the readout right of the tabs)
   await say('d_find');
   // your turn: TRUST FUND into BT2 (the board scrolls up to it, its card up)
   { const s = deckSock(DTUT.into); deckSelect({ kind: 'socket', id: s.id }); deckShow(s.y, s.h, deckViewRows()); }
   await wait(600);
-  await ask('d_slot', { btn: picker(['dks_' + DTUT.into, 'dkk_' + DTUT.yours]) }, () => powered(DTUT.into) && !d().pick, { target: { btn: 'dkchg' } });
+  await ask('d_slot', { btn: picker(['dks_' + DTUT.into, 'dkk_' + DTUT.yours]) }, () => powered(DTUT.into) && !d().pick, { target: { btn: 'dks_' + DTUT.into, pulse: true }, miniTarget: { btn: 'dkchg' } });
   await wait(400);
   await say('d_red');
   await say('d_slots', { target: { btn: 'dktb' } });

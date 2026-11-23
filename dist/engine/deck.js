@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.55']);
+NEON_FILES.push(['engine/deck.js', 'v15.56']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -146,6 +146,7 @@ const DECK_CHIPS = {
   LG2: ['LAG', 'ov', 'rare', 2, '-1 starting INT. layer clocks get 2 more seconds.', ['~~>', 'v-1'], '-1 INT, clocks +2s.'],
   UV1: ['UNDERVOLT', 'ov', 'common', 1, '+1 starting INT. -25% credits.', ['^+1', '$-%'], '+1 INT, -25% credits.'],
   PD2: ['PADDING', 'ov', 'rare', 1, '+2 starting INT. perfect layers pay no REP.', ['[=]', '^+2'], '+2 INT, perfects: no REP.'],
+  DG3: ['DANGEROUS CATCH', 'ov', 'rare', 1, 'at the PIER, 1 PHISH in 5 bites you when you land it: -1 INT. in return, catches run rarer and PHISH sells for half again as much.', ['<!<', 'BIT'], 'the pier bites. rarer, pricier.'],   // (Greg, meat notes 2026-11-22; engine/fishing.js fishDanger)
   // HEAT (free: they cost you, and pay REP)
   HN1: ['HUNTED', 'heat', 'rare', 0, 'rivals turn up in half the corps that had none. +25% REP.', ['>@<', 'HNT'], 'more rivals, +25% REP.'],
   SF2: ['SHORT FUSE', 'heat', 'common', 0, 'layer clocks lose 2 seconds. +20% REP.', ['-2s', 'SFZ'], 'clocks -2s, +20% REP.'],
@@ -182,7 +183,7 @@ const DECK_CHIP_TAGS = {
   BO1: ['you'], PO1: ['you'], WU3: ['you'], SPC: ['you'],
   DN1: ['you'], GL2: ['you', 'rules'], CH1: ['you', 'rules'], TP1: ['you', 'rules'], RE1: ['you'], LG2: ['you'], UV1: ['you', 'rules'], PD2: ['you', 'rules'],
   LW1: ['you'], TN2: ['you'], VE2: ['rules'], DM3: ['you'], PH3: ['rules'], SY4: ['you'], HF9: ['you'], SD6: ['you'], GC4: ['you'],
-  HN1: ['map', 'rules'], SF2: ['rules'], NM0: ['rules'], IF1: ['rules'], DC4: ['rules'], FG0: ['rules'], GT1: ['rules'],
+  DG3: ['you', 'rules'], HN1: ['map', 'rules'], SF2: ['rules'], NM0: ['rules'], IF1: ['rules'], DC4: ['rules'], FG0: ['rules'], GT1: ['rules'],
 };
 // The chips that don't do their whole job yet (Greg, 2026-11-16: mark them BETA, so we know they need more work). What's
 // missing, for us. They show BETA in your deck, and never drop (deckRollChip): the editor and THE SHELL give them.

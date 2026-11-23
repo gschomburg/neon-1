@@ -7,7 +7,7 @@
 // multipliers, % are shares (0.05 = 5%), cr are credits. Mod and item prices stay with the mods (data/mods.js), at a
 // unit of 10, scaled by the spend unit.
 'use strict';
-NEON_FILES.push(['data/economy.js', 'v15.55']);
+NEON_FILES.push(['data/economy.js', 'v15.56']);
 
 const ECON = {
   // ---- Units
@@ -173,6 +173,8 @@ const ECON = {
     rare: 1,   // earn: phish worth: rare (a rare catch)
     epic: 2.5,   // earn: phish worth: epic (an epic catch)
     legendary: 6,   // earn: phish worth: legendary (a legendary catch)
+    danger: 0.2,   // %: DANGEROUS CATCH bites (a chip: the chance a PHISH you land bites you, -1 INT)
+    dangerPay: 1.5,   // x: DANGEROUS CATCH pay (what PHISH sells for with the chip on)
   },
   // ---- Spending: the uplink
   uplink: {

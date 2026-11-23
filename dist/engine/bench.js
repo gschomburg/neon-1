@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.55']);
+NEON_FILES.push(['engine/bench.js', 'v15.56']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -378,11 +378,12 @@ function benchShredList() {
   return out;
 }
 // SHRED's sub-tabs (Greg, 2026-11-21): GEAR MODS LOOT, like the BOOK's; each one's count on its tab. It opens on the
-// first one with something in it.
+// first one with something in it (and moves on when yours runs out; not in the training, where POPS points at MODS
+// with GEAR still up: meat notes 2026-11-23).
 const SHRED_TABS = [['gear', 'GEAR'], ['mod', 'MODS'], ['loot', 'LOOT']];
 function shredKind() {
   const b = st.bench, all = benchShredList();
-  if (!b.shKind || !all.some(e => e.kind === b.shKind) && all.length) b.shKind = (SHRED_TABS.find(([k]) => all.some(e => e.kind === k)) || SHRED_TABS[0])[0];
+  if (!b.shKind || !all.some(e => e.kind === b.shKind) && all.length && !benchTutOn()) b.shKind = (SHRED_TABS.find(([k]) => all.some(e => e.kind === k)) || SHRED_TABS[0])[0];
   return b.shKind;
 }
 const benchShredShown = () => { const k = shredKind(); return benchShredList().filter(e => e.kind === k); };
@@ -950,7 +951,7 @@ function benchBookLines(T, B, X) {
   const pins = benchSave().pins, pinned = pins.includes(code), canBuild = seen && !lock && !miss;
   X({ gap: 2, row: [
     { text: pinned ? '[ UNPIN ]' : '[ PIN ]', id: 'bkpin', disabled: !seen, onTap: () => { const p = benchSave(); p.pins = pinned ? p.pins.filter(x => x !== code) : [code].concat(p.pins.filter(x => x !== code)).slice(0, BENCH.pins); persist(); Sound.tick(); } },
-    { text: '[ BUILD ]', id: 'bkbook', disabled: !canBuild, onTap: () => { if (!canBuild) return; b.pending = code; benchTab('build'); } },
+    { text: '[ BUILD ]', id: 'bkbook', disabled: !canBuild, onTap: () => { if (!canBuild) return; if (!benchTutOn()) b.pending = code; benchTab('build'); } },   // (the training: you type it yourself)
   ] });
   T(SEP, C.dim);
   const rows = Math.max(6, L.hc - 1 - 6 - 11 - 1 - (rq ? 1 : 0));

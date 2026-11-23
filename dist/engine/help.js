@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v15.55']);
+NEON_FILES.push(['engine/help.js', 'v15.56']);
 
 // ---------------- How to play ----------------
 // Two main tabs, each with a strip of sub-tabs under it (drawSubTabs, like THE CODEX's). Greg, 2026-11-23: BASICS
@@ -108,23 +108,24 @@ function buildNetPage(T, X) {
 }
 
 // TRAINING: POPS's trainings, to play (again). The WORKBENCH one waits for the WORKBENCH, the deck one for your deck
-// (Greg, 2026-11-23: the page shows, a training is locked till you have the thing).
+// (Greg, 2026-11-23: the page shows, a training is locked till you have the thing). The boxes are all one width, a
+// column wider than the text under them each side (HELP_W + 2: meat notes 2026-11-23).
 function buildTrainingPage(T, X) {
-  const { P } = helpKit(T, X);
+  const { P } = helpKit(T, X), w = HELP_W + 2;
   T('TRAINING'.padEnd(HELP_W), C.bright);
   T('');
   P('POPS walks you through it, one thing at a time. play one again any time.');
   T('');
-  X({ box: true, text: 'C O R P   T R A I N I N G', sub: '- a practice run -', id: 'tutorial', onTap: startTutorial, minW: 30 });
+  X({ box: true, text: 'C O R P   T R A I N I N G', sub: '- a practice run -', id: 'tutorial', onTap: startTutorial, w });
   P('nodes, ICE, gear, the map, a corp and its boss. firsthand.');
   T('');
   const bench = benchOpen();
-  X({ box: true, text: 'W O R K B E N C H', sub: bench ? '- shred it, build it -' : '- needs the WORKBENCH -', id: 'benchtut', onTap: () => { if (benchOpen()) startBenchTraining(); }, minW: 30, disabled: !bench });
+  X({ box: true, text: 'W O R K B E N C H', sub: bench ? '- shred it, build it -' : '- needs the WORKBENCH -', id: 'benchtut', onTap: () => { if (benchOpen()) startBenchTraining(); }, w, disabled: !bench });
   P(bench ? 'shred things into components, spell a code, build it. your own stuff is set aside: you get a kit.'
     : 'buy the WORKBENCH on THE BOARD (REP) and this one opens.');
   T('');
   const deck = !!save.deck;
-  X({ box: true, text: 'Y O U R   D E C K', sub: deck ? '- slots, chips, power -' : '- needs your deck (USER) -', id: 'decktut', onTap: () => { if (save.deck) startDeckTraining('help'); }, minW: 30, disabled: !deck });
+  X({ box: true, text: 'Y O U R   D E C K', sub: deck ? '- slots, chips, power -' : '- needs your deck (USER) -', id: 'decktut', onTap: () => { if (save.deck) startDeckTraining('help'); }, w, disabled: !deck });
   P(deck ? 'a deck of its own to practice on. yours stays as it is.' : 'reach USER on THE BOARD and you get a deck.');
 }
 
@@ -342,6 +343,7 @@ function openHelp(want) {
     // The up row is always the window's first row, the down row always its last.
     let used = 0;
     if (w.hasUp) { X({ text: w.canUp ? '[ ^ ^ ^  more  ^ ^ ^ ]' : '', invert: true, id: 'hup', onTap: () => scrollBy(-1) }); used++; }
+    else if (rowsArr.length < CONTENT_ROWS) { T(''); used++; }   // (a page that doesn't scroll starts a row down too, where the up row would be: every page's title on the same row. Meat notes 2026-11-23)
     const drawn = new Set();
     for (let i = top; i < top + w.shown; i++) {
       const r = rowsArr[i];

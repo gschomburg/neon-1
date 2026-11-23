@@ -54,6 +54,11 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
 
 ### Training: the deck and the workbench
 - **The deck training and the workbench training:** built v15.55 and v15.53 (SPEC). Both are on HOW TO PLAY > TRAINING.
+  Greg's first notes on them (meat notes 2026-11-23): done v15.56.
+- **Open:** a little flicker of POPS's popups between one and the next, now and then (Greg saw it at the start of
+  "STORE puts things in it for later..."). A frame-by-frame capture of TAKE -> STORE (headless Chrome) came out clean:
+  which step, which device?
+- **Open: CORP TRAINING's name** (Greg, 2026-11-23): BASICS reads best, but the BASICS tab is right above it. NEWB?
 
 ### The workbench
 - Built v15.33: SHRED's GEAR / MODS / LOOT sub-tabs, [ CLEAR ] under a good recipe, its music (AUGMENT, low; Greg).
@@ -62,8 +67,9 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   ELITE POST 1's place: ELITE needs real posts).
 
 ### REP and chip ideas (Greg, meat notes 2026-11-22)
-- **DANGEROUS CATCH** (a chip idea, meat notes 2026-11-22, later): fish can hurt you, 1 in 5; in return every catch sells
-  for more and runs rarer. And a feat for dying while fishing (section 8).
+- **DANGEROUS CATCH:** built v15.56 (an OVERVOLT chip; SPEC). Its bites are how you earn FISH FOOD.
+- **FRAG at the PIER** (Greg, meat notes 2026-11-23): throw a FRAG into the stream and every fish on screen dies. You get
+  some of it, not as much as catching it, and more of it corrupted?
 **Decided (Greg, 2026-11-22):** fill ELITE and SYSOP. The batches:
 1. [x] (v15.40) Ladders: a post's next level is its own post a level up (HARDENED, SEED MONEY, RESTOCK, DEADMAN to 75%,
    BETTER DROPS, LOYALTY CARD), and REP's sub-tabs (MSGS GUEST USER ELITE SYSOP).
@@ -101,6 +107,21 @@ The ideas as they came:
 
 ### The deck and chips
 - (Greg asked: is SPOILS a chip you start with? Yes: the deck comes with STOCK CELL and SPOILS, engine/deck.js DECK_START.)
+- **LOST LOOT** (Greg, meat notes 2026-11-23): a chip drops and your belt is full; today it's gone. Chips are hard to come
+  by, so a plain REP post. **Decided (Greg, 2026-11-23):**
+  - **Chips only** (ripped ones too). Where they get lost today: a DATA CACHE's swap when you keep what you have
+    (engine/deck.js deckCacheChip), a rival's drop with no room (deckRivalChip: silently), a PIER chip catch you can't
+    KEEP, a reward screen's swap.
+  - **A pool of 4 per run.** The message line says so: "> belt full: TRUST FUND went to LOST LOOT (2/4)."
+  - **Full: who goes.** Owned chips first, then the lowest rarity, then the oldest; the new chip counts too, so it can be
+    the one that goes. A common never pushes out an exotic, unless the exotic is owned and the common isn't. A notice
+    says which one went.
+  - **Only at a WORKBENCH** (a safehouse, BENCH LINK, REMOTE ACCESS): not the LOOT bag, that's too easy. A LOST
+    sub-tab under the LOCKER (TAKE STORE COMPS LOST), or its own tab. TAKE moves one onto your belt.
+  - **Cash out** and they come home like belt chips (deckHome); die and they're gone.
+  - **The switch:** KEEP / SHRED (no LOSE: Greg, shred is useful). SHRED turns a lost chip into its components at your
+    bench. On the post's card, or on the deck's CPU with its other switches.
+  - Open: its level and price (USER, about 200 REP, needs the WORKBENCH?).
 
 ### UI
 - **The map's node card** (Greg, meat notes 2026-11-22): once the WORKBENCH and the CHIP DEALER are unlocked, say so
@@ -474,7 +495,7 @@ unlocked by REP, and some quests unlock REP.
     blinking?
 
 ### 8. Achievements and cosmetics
-- (Greg, meat notes 2026-11-22) A rogue-like color palette. (The feat for dying while fishing is FISH FOOD, v15.54: it waits for a way to die there.)
+- (Greg, meat notes 2026-11-22) A rogue-like color palette. (The feat for dying while fishing is FISH FOOD, v15.54; DANGEROUS CATCH, v15.56, is the way to die there.)
 - The feats cover the achievement list (first win, NAKED, OMNIVORE, layer 50 / 100, perfect streaks, SPEEDRUN, BIG
   SPENDER, EASY COME, G0D SLAYER, WITH A SHOE / INFIDEL), and titles and logos unlock from them. Still open:
   hats / accessories, card frames, more titles ("SIGIL BREAKER"), cosmetics bought with REP.

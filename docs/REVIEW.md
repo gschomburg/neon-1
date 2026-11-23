@@ -14,6 +14,9 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **DANGEROUS CATCH** (v15.56): an OVERVOLT chip, rare, 1 power. 1 PHISH in 5 bites when you land it (-1 INT; gear, chips and shoes don't bite); rarer catches like DEEP WATER; PHISH sells for x1.5 (both numbers in ECON: the editor's ECONOMY tab). The rescues (CONTINUE, 1UP, ROOTKIT, CHECKPOINT) don't work at the pier: they put you back in a corp. OK, or should CHECKPOINT work there too?
+- [ ] **Your training notes** (v15.56): the pulse on the deck's sockets and the bench's tabs (a bit stronger than a node's, since they're small); the new power beat with the arrow on PWR; the reworded lines (components, where chips come from, sockets, the send-off). The flicker between popups: I couldn't catch it, see BACKLOG.
+
 - [ ] **The deck training** (v15.55): HOW TO PLAY > TRAINING > YOUR DECK, or a fresh deck's first open. Things I picked: FIRST AID starts slotted with no cell, you slot the STOCK CELL, then TRUST FUND in BT2; the feat is DECKHAND, no chip or title (your outline said "maybe a chip, a feat or a title"). The "too little power" example is a line from POPS, not something you do. In the real deck: no cell now says "NO POWER: slot a cell in PSU" and the PSU pulses red.
 
 - [ ] **The new feats** (v15.54): THE BOARD > FEATS has a TECH group now, and 8 more elsewhere (SPEC v15.54). Things to look at: POPS's lines on each; whether CRAFTY / TINKERER at 10 and SHREDDER at 100 feel right; FISH FOOD can't be earned yet (there's no player command to kill yourself; THE SHELL's run.die is dev only, and dev runs don't count). On an older save, opening THE BOARD hands out SYSOP / MK IV / COLLECTOR / MOVED IN at once if you've earned them: a few FEAT boxes in a row.

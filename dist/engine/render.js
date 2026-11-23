@@ -1,6 +1,6 @@
 // NeoN+1 engine/render.js: The render loop and small helpers.
 'use strict';
-NEON_FILES.push(['engine/render.js', 'v15.55']);
+NEON_FILES.push(['engine/render.js', 'v15.56']);
 
 // ---------------- Popup looks (the user, 2026-10-31) ----------------
 // Every popup-style box fills its background through popupBg(kind): its look is set here, in one place. A new popup
@@ -78,7 +78,7 @@ function render(now) {
   for (const b of bgs) {
     g.globalAlpha = b.alpha;
     g.fillStyle = b.col;
-    g.fillRect(L.ox + b.cx * L.cw, L.oy + b.cy * L.chh, b.w * L.cw, L.chh);
+    g.fillRect(L.ox + b.cx * L.cw, L.oy + b.cy * L.chh, b.w * L.cw, (b.h || 1) * L.chh);   // (h: a training target's pulse, engine/tutorial.js)
   }
   g.globalAlpha = 1;
   g.textAlign = 'center';

@@ -1,7 +1,7 @@
 // NeoN+1 engine/mapview.js: the run's map (buildMap), the results screen's map (drawMapView), and a node's info.
 // Moved out of engine/scene.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/mapview.js', 'v15.55']);
+NEON_FILES.push(['engine/mapview.js', 'v15.56']);
 
 // Map: final node at the top, start at the bottom. Edges are dotted lines.
 // x for a node; start / final nodes sit in the middle lane.
@@ -195,11 +195,18 @@ function buildMap(ctx) {
 
   // Info panel under the map
   const y0 = BOARD_Y + SECTOR_ROWS;
+  // A line wider than the screen (a corp's whole tell, from OMNI'S EYE or POPS's jack) scrolls as a ticker (engine/fx.js;
+  // meat notes 2026-11-23: it ran off both sides). t0: when this node's card came up.
+  const cardLine = (cy, ln, key) => {
+    if (ln.text.length <= L.wc) return putC(cy, ln.text, ln.col, 'map');
+    const tk = st.cardTick && st.cardTick.key === key ? st.cardTick : (st.cardTick = { key, t0: now });
+    put(1, cy, FX.ticker(ln.text, L.wc - 2, tk.t0, now, 6), ln.col, 'map');
+  };
   const id = st.mapSel || (avail.has(st.hoverNode) ? st.hoverNode : null);
   const peek = !id && (st.hoverNode && map[st.hoverNode] && !avail.has(st.hoverNode) ? st.hoverNode : st.mapPeek && map[st.mapPeek] ? st.mapPeek : null);
   if (peek) {   // a node you can't get to (yet): what it is, no button
     const pn = map[peek], info = nodeInfo(pn), been = run.visited.includes(pn.id);
-    info.lines.forEach((ln, k) => putC(y0 + k, ln.text, ln.col, 'map'));
+    info.lines.forEach((ln, k) => cardLine(y0 + k, ln, pn.id));
     if (canGoBack(pn)) drawBox(ctx, y0 + info.lines.length, { text: 'G O   B A C K   I N', id: 'goback', onTap: () => goBackIn(pn), minW: 22 });   // the market / PIER / cache you're on
     else putC(y0 + info.lines.length + 1, run.at === pn.id ? 'you are here.' : been ? (pn.type === 'corp' || pn.type === 'final' ? 'breached.' : 'been there.') : 'out of reach from here.', C.dim, 'map');
     return;
@@ -225,7 +232,7 @@ function buildMap(ctx) {
     const cur = FX.swapLines(extra.map(ln => ln.text), L.wc, sw.t0, now);
     lines = lines.filter(ln => !ln.swap || ln === extra[0]).map(ln => ln === extra[0] ? { text: cur.text, col: extra[cur.k].col } : ln);
   }
-  lines.forEach((ln, k) => putC(y0 + k, ln.text, ln.col, 'map'));
+  lines.forEach((ln, k) => cardLine(y0 + k, ln, id));
   if (st.mapSel && deckPhishHere(map[st.mapSel])) {   // PIER PASS (a chip: engine/deck.js): ENTER and PIER side by side, once a sector (Greg, 2026-11-22)
     const w = Math.min(16, Math.floor((L.wc - 2) / 2)), x = Math.floor((L.wc - 2 * w - 2) / 2);
     drawBox(ctx, y0 + lines.length, { text: info.action, id: 'enter', onTap: () => enterNode(map[st.mapSel]), w, x });

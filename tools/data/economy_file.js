@@ -143,6 +143,8 @@
     { path: 'fish.rare', kind: 'earn', label: 'phish worth: rare', note: 'a rare catch' },
     { path: 'fish.epic', kind: 'earn', label: 'phish worth: epic', note: 'an epic catch' },
     { path: 'fish.legendary', kind: 'earn', label: 'phish worth: legendary', note: 'a legendary catch' },
+    { path: 'fish.danger', kind: 'pct', label: 'DANGEROUS CATCH bites', note: 'a chip: the chance a PHISH you land bites you, -1 INT' },
+    { path: 'fish.dangerPay', kind: 'x', label: 'DANGEROUS CATCH pay', note: 'what PHISH sells for with the chip on' },
 
     { sec: 'Spending: the uplink', note: "Pushing on to the next sector: a fee for every mod you carry (by its rarity) plus a minimum, all times the sector you leave (1, 2, 3...). Mods you don't keep are sold." },
     { path: 'uplink.min', kind: 'spend', label: 'minimum', note: 'everyone pays this to push on, mods or not' },
