@@ -1,5 +1,7 @@
 # Beta Runner: ASCII art drop-off
 
+> **Out of date** (2026-11-23): the early art drop-off. The art sizes and where art lives now are in docs/LAYOUT.md (section 10).
+
 Put art here and I'll pull it into the game. One code block per piece, under a heading with its name.
 
 - **Title area:** 32 wide x 20 tall (the face + BETA RUNNER logo together).

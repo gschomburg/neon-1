@@ -30,6 +30,8 @@ Greg's raw notes.
 - Deploy: the user uploads `dist/` to gregschomburg.com/neon/.
 
 ## Screen space
+- **The full guide is docs/LAYOUT.md:** the grid and its rows, ways out, layers, the popups, UI parts, colors, art
+  budgets, text limits, and a checklist for a new screen. Read it before a new screen, popup or mockup; keep it current.
 - On a phone the board is 23 rows. A panel that runs over spills onto the mod tray: `buildTextBoard` doesn't squeeze. Count rows when you add lines to a screen.
 - **Item names: JACK IN THE BOX (15 characters) is the longest that fits** on the rewards screen and the market, right up
   against its rarity. Keep new mod and gear names at or under it (Greg, 2026-11-21).
