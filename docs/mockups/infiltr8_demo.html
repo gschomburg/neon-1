@@ -277,6 +277,7 @@ function armCells(f) {
 
 // ---------- the run ----------
 const MAX_INT = 4, TURNS = 150, OUT_TURNS = 45;
+const STEP_MS = 110;   // how long the @ takes to slide one step
 let S;
 // the clock toggle (a demo aid, Greg 2026-11-23): off, the turn count and the alarm stand still, so nothing traces you.
 // Cams and patrols still move. It stays as you set it across new runs.
@@ -317,6 +318,7 @@ function act(dx, dy) {
     const here = at(f, S.x, S.y);
     if (c === '=' && !T[here].duct) { say('the duct: in by a vent.', C.mid); return draw(); }   // (in and out of the ducts only by a vent)
     if (here === '=' && !T[c].duct) { say('out by a vent.', C.mid); return draw(); }
+    S.slide = { x: S.x, y: S.y, t: performance.now() };   // (draw() slides the @ over from here)
     S.x = nx; S.y = ny;
     f.trail.push([nx, ny]);
   }
@@ -487,7 +489,10 @@ function draw() {
   for (const c of f.cams) if (S.vis[c.y][c.x]) put(c.x, MAP_Y + c.y, c.dead ? 'x' : '◉', c.dead ? C.dim : c.seen ? C.money : C.danger, true);
   for (const p of f.pats) if (S.vis[p.y][p.x]) put(p.x, MAP_Y + p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, true, p.chase ? 'rgba(255,59,78,0.25)' : null);
   for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money, true);
-  put(S.x, MAP_Y + S.y, '@', S.inDuct ? C.rare : C.accent, true, red ? 'rgba(255,59,78,0.5)' : null);
+  // the @ slides a step over (STEP_MS) instead of popping: a dark tile under it hides the floor it passes
+  const sk = S.slide ? Math.min(1, (now - S.slide.t) / STEP_MS) : 1, se = 1 - (1 - sk) * (1 - sk);
+  const ax = sk < 1 ? S.slide.x + (S.x - S.slide.x) * se : S.x, ay = sk < 1 ? S.slide.y + (S.y - S.slide.y) * se : S.y;
+  put(ax, MAP_Y + ay, '@', S.inDuct ? C.rare : C.accent, true, red ? 'rgba(255,59,78,0.5)' : sk < 1 ? C.bg : null);
   for (const b of booms) { const k = (now - b.t) / 500; if (k < 1) for (const [dx, dy] of [[-2, 0], [2, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) put(b.x + Math.round(dx * (1 + k)), MAP_Y + b.y + Math.round(dy * (1 + k)), '*', k < 0.5 ? C.money : C.danger, true); }
   if (S.info && S.info.x != null) { const px = L.ox + S.info.x * L.cw, py = L.oy + (MAP_Y + S.info.y) * L.ch; g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); }
   // row 31: how this UI works
@@ -550,7 +555,7 @@ function draw() {
     if (u === 'stick') { g.strokeStyle = 'rgba(60,240,255,0.35)'; g.beginPath(); g.arc(G.x0, G.y0, stickDead() * 2, 0, Math.PI * 2); g.stroke(); g.strokeStyle = 'rgba(60,240,255,0.15)'; g.beginPath(); g.arc(G.x0, G.y0, stickDead(), 0, Math.PI * 2); g.stroke(); }
     g.fillStyle = 'rgba(60,240,255,0.45)'; g.beginPath(); g.arc(G.cx, G.cy, L.cw * 0.9, 0, Math.PI * 2); g.fill();
   }
-  if (booms.some(b => now - b.t < 500) || now - S.msgT < 1200 || now - flashT < 300) requestAnimationFrame(draw);
+  if (sk < 1 || booms.some(b => now - b.t < 500) || now - S.msgT < 1200 || now - flashT < 300) requestAnimationFrame(draw);
 }
 const wrap = (s, w) => { const out = []; let l = ''; for (const word of s.split(' ')) { if ((l + ' ' + word).trim().length > w) { out.push(l); l = word; } else l = (l + ' ' + word).trim(); } if (l) out.push(l); return out; };
 
