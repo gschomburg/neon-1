@@ -220,7 +220,7 @@ function outerWall(f, rooms, r) {
 // THE DUCTS: a vent in one room's wall, a duct through the void, a vent in another's
 function ducts(f, rooms, r) {
   const vents = [];
-  for (const o of rooms) for (let i = o.x + 1; i < o.x + o.w - 1; i++) for (const [y, oy] of [[o.y, -1], [o.y + o.h - 1, 1]]) if (at(f, i, y) === '#' && at(f, i, y + oy) === ' ') vents.push({ x: i, y, ox: i, oy: y + oy, o });
+  for (const o of rooms) for (let i = o.x + 1; i < o.x + o.w - 1; i++) for (const [y, oy] of [[o.y, -1], [o.y + o.h - 1, 1]]) if (at(f, i, y) === '#' && inb(i, y + oy) && at(f, i, y + oy) === ' ') vents.push({ x: i, y, ox: i, oy: y + oy, o });
   for (let tries = 0; tries < 30 && vents.length > 1; tries++) {
     const a = vents[Math.floor(r() * vents.length)], b = vents[Math.floor(r() * vents.length)];
     if (a.o === b.o) continue;
@@ -278,11 +278,15 @@ function armCells(f) {
 // ---------- the run ----------
 const MAX_INT = 4, TURNS = 150, OUT_TURNS = 45;
 let S;
+// the clock toggle (a demo aid, Greg 2026-11-23): off, the turn count and the alarm stand still, so nothing traces you.
+// Cams and patrols still move. It stays as you set it across new runs.
+let clockOff = false;
+function toggleClock() { clockOff = !clockOff; say(clockOff ? 'the clock is paused: no trace, no alarm countdown.' : 'the clock is running.', C.money); draw(); }
 function newRun(seed) {
   const floors = [floorRing(), floorGen(seed, 2, false), floorGen(seed, 3, true)];
   S = { seed, floors, fi: 0, x: floors[0].start.x, y: floors[0].start.y, int: MAX_INT, turn: 0, alarm: 0, have: false, alerts: 0,
     msg: 'INFILTR8. in by the door. the payload is on F3.', msgCol: C.accent, msgT: performance.now(), info: null, mode: 'pad',
-    gear: [{ key: 'FLARE', n: 1 }, { key: 'FRAG', n: 1 }], flare: 0, over: null, vis: null, inDuct: false };
+    gear: [{ key: 'FLARE', n: 4 }, { key: 'FRAG', n: 4 }], flare: 0, over: null, vis: null, inDuct: false };
   look();
   draw();
 }
@@ -332,12 +336,13 @@ function act(dx, dy) {
 }
 function tick() {
   const f = F();
-  S.turn++;
+  if (!clockOff) S.turn++;
   if (S.flare > 0) S.flare--;
-  if (S.alarm > 0) { S.alarm--; if (S.alarm === 0) say('the alarm\'s run out. they\'re coming for you.', C.danger); }
+  if (clockOff) { /* (paused: no countdown, no trace) */ }
+  else if (S.alarm > 0) { S.alarm--; if (S.alarm === 0) say('the alarm\'s run out. they\'re coming for you.', C.danger); }
   else if (S.have) { hurt('> traced: -1 INT. get out!'); if (S.over) return; }
-  if (S.turn === TURNS && !S.have) say('the trace clock is out. every turn now costs you.', C.danger);
-  if (S.turn > TURNS && !S.have && S.turn % 3 === 0) { hurt('> traced: -1 INT.'); if (S.over) return; }
+  if (!clockOff && S.turn === TURNS && !S.have) say('the trace clock is out. every turn now costs you.', C.danger);
+  if (!clockOff && S.turn > TURNS && !S.have && S.turn % 3 === 0) { hurt('> traced: -1 INT.'); if (S.over) return; }
   // the arm turns
   if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) hurt('> the ARM swept over you. -1 INT.'); if (S.over) return; }
   // cameras sweep, and look
@@ -449,8 +454,9 @@ function draw() {
   put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); put(5, 2, f.name, C.bright, true);
   put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent, true);
   put(0, 3, 'SUBNET', C.mid); if (S.have) put(7, 3, '· $', C.money, true);   // (the payload's in your pack)
-  if (S.have) putR(3, S.alarm > 0 ? `ALARM  out in ${String(S.alarm).padStart(2, '0')}` : 'ALARM  TRACED', C.danger, true);
-  else putR(3, `TURN ${String(S.turn).padStart(3, '0')}/${TURNS}`, S.turn > TURNS ? C.danger : C.money, true);
+  btn(11, 3, clockOff ? '[CLOCK OFF]' : '[CLOCK ON ]', 'clock', toggleClock, clockOff ? C.mid : C.money);
+  if (S.have) putR(3, S.alarm > 0 ? `ALARM  out in ${String(S.alarm).padStart(2, '0')}` : 'ALARM  TRACED', clockOff ? C.mid : C.danger, true);
+  else putR(3, `TURN ${String(S.turn).padStart(3, '0')}/${TURNS}`, clockOff ? C.mid : S.turn > TURNS ? C.danger : C.money, true);
   rule(4);
   // the info card (rows 5 and 7) round the message line (row 6)
   const inf = S.info;
@@ -663,6 +669,7 @@ addEventListener('keydown', ev => {
   if (k === 'enter' || k === 'e' || k === '>' || k === '<') return use();
   if (k === '1') return useGear('FLARE');
   if (k === '2') return useGear('FRAG');
+  if (k === 'p') return toggleClock();
   if (k === 'g') { S.mode = S.mode === 'pad' ? 'gear' : 'pad'; return draw(); }
   if (k === 'escape') { S.info = null; return draw(); }
 });
