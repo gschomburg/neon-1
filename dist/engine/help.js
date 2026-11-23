@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v15.54']);
+NEON_FILES.push(['engine/help.js', 'v15.55']);
 
 // ---------------- How to play ----------------
 // Two main tabs, each with a strip of sub-tabs under it (drawSubTabs, like THE CODEX's). Greg, 2026-11-23: BASICS
@@ -107,8 +107,8 @@ function buildNetPage(T, X) {
   P('spend REP on THE BOARD, from the title screen.');
 }
 
-// TRAINING: POPS's trainings, to play (again). The WORKBENCH one waits for the WORKBENCH (Greg, 2026-11-23: the page
-// shows, the training is locked till you own the post).
+// TRAINING: POPS's trainings, to play (again). The WORKBENCH one waits for the WORKBENCH, the deck one for your deck
+// (Greg, 2026-11-23: the page shows, a training is locked till you have the thing).
 function buildTrainingPage(T, X) {
   const { P } = helpKit(T, X);
   T('TRAINING'.padEnd(HELP_W), C.bright);
@@ -122,6 +122,10 @@ function buildTrainingPage(T, X) {
   X({ box: true, text: 'W O R K B E N C H', sub: bench ? '- shred it, build it -' : '- needs the WORKBENCH -', id: 'benchtut', onTap: () => { if (benchOpen()) startBenchTraining(); }, minW: 30, disabled: !bench });
   P(bench ? 'shred things into components, spell a code, build it. your own stuff is set aside: you get a kit.'
     : 'buy the WORKBENCH on THE BOARD (REP) and this one opens.');
+  T('');
+  const deck = !!save.deck;
+  X({ box: true, text: 'Y O U R   D E C K', sub: deck ? '- slots, chips, power -' : '- needs your deck (USER) -', id: 'decktut', onTap: () => { if (save.deck) startDeckTraining('help'); }, minW: 30, disabled: !deck });
+  P(deck ? 'a deck of its own to practice on. yours stays as it is.' : 'reach USER on THE BOARD and you get a deck.');
 }
 
 // ADVANCED (the user, 2026-10-26: the things the other pages and the training don't cover), in five sub-tabs

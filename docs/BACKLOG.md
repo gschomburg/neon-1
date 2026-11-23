@@ -53,21 +53,7 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   see? (TELL ON with a wrong dial would be a real bug.) Maybe say TELL ON whenever the tell happens to point true.
 
 ### Training: the deck and the workbench
-- **The deck's first time:** (built v15.32: POPS's call comes before the PAPERWORK card.) POPS's 6-line deck talk is too big for a first look: split it into its own training. POPS calls and offers it
-  ("there's a lot to go over here. need me to hold your hand?" / skip). Greg's outline:
-  - your deck lasts, like your REP buys
-  - start by slotting the PSU chip. A board with no PSU: that socket gets the power effects, and the no-power bar says
-    "slot a PSU" (tap it: scrolls to the PSU)
-  - chips go in sockets; you find them on runs and have to cash out with them; maybe craft them at a workbench, or take
-    them off other hackers
-  - chips need power; upgrade your PSU here; maybe an example of slotting one with too little power
-  - a quick "slot a chip" for the player to do
-  - the deck upgrades for REP, which opens more slots (REP, and you have to be ELITE or SYSOP)
-  - point out the SLOTS sub-tab
-  - at the end maybe a chip, a feat or a title
-  - then the PAPERWORK quest card
-- **The workbench training:** built v15.53 (SPEC). From HOW TO PLAY > TRAINING too. Still open: the deck's training
-  (above) goes on that page too once it's built.
+- **The deck training and the workbench training:** built v15.55 and v15.53 (SPEC). Both are on HOW TO PLAY > TRAINING.
 
 ### The workbench
 - Built v15.33: SHRED's GEAR / MODS / LOOT sub-tabs, [ CLEAR ] under a good recipe, its music (AUGMENT, low; Greg).

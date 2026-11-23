@@ -39,9 +39,9 @@ module.exports = { name: 'teach', body: `
   check(/give.mod/.test(benchShellLines().join(' ')), 'with ROOT: give.mod, give.gear');
   save.deck = save.deck || deckFreshSave(); save.deck.popsSeen = false;
   CALL_QUEUE.length = 0; st.callBox = null;
-  const calls = () => CALL_QUEUE.concat(st.callBox ? [st.callBox] : []).filter(c => c.who === 'pops' && c.lines.some(l => /socket/.test(l)));
+  const calls = () => CALL_QUEUE.concat(st.callBox ? [st.callBox] : []).filter(c => c.who === 'pops' && c.btns && /SHOW ME/.test(c.btns[0].text));
   openDeck();
-  check(save.deck.popsSeen && calls().length === 1, 'your deck, the first time: POPS trains you');
+  check(save.deck.popsSeen && calls().length === 1, 'your deck, the first time: POPS offers the training (v15.55)');
   openDeck();
   check(calls().length === 1, 'the second time: no call');
   CALL_QUEUE.length = 0; st.callBox = null;

@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v15.54']);
+NEON_FILES.push(['engine/tutorial.js', 'v15.55']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -26,7 +26,7 @@ const TUT = {
   name: 'POPS',
 };
 // on: the corp training's run, or the WORKBENCH training's bench (st.tut.bench: its own components and locker)
-const tutOn = () => !!(st.tut && (st.tut.bench ? st.bench : st.run && st.run.tutorial));
+const tutOn = () => !!(st.tut && (st.tut.deck ? DECK && DECK.train && st.mode === 'panel' : st.tut.bench ? st.bench : st.run && st.run.tutorial));
 const tutLine = id => (typeof TUT_COPY !== 'undefined' && TUT_COPY.find(l => l.id === id)) || { id, text: id };
 const tutFill = s => (s || '').replace(/\{name\}/g, () => profile().name || 'runner').replace(/\{int\}/g, () => st.run ? st.run.integrity : '');
 
@@ -144,6 +144,7 @@ async function endTutorial() {
 // running), start over and play forward.
 const tutIndex = id => (typeof TUT_COPY !== 'undefined' ? TUT_COPY.findIndex(l => l.id === id) : -1);
 async function tutJump(id) {
+  if (/^d_/.test(id)) { if (!st.tut && save.deck) startDeckTraining('help'); return; }   // (the deck training's lines)
   if (/^b_/.test(id)) { if (!st.tut && benchOpen()) startBenchTraining(); return; }   // (the WORKBENCH training's lines: it starts from the top)
   const T = st.tut;
   if (T && tutOn() && T.at && tutIndex(id) > tutIndex(T.at)) {
@@ -759,4 +760,70 @@ async function benchTutScript(T) {
   await say('b_store', { target: { btn: 'lvstore' } });
   await say('b_bye');
   benchTutEnd(T, true);
+}
+
+// ---------------- the deck training (Greg's outline, 2026-11-20; built 2026-11-23) ----------------
+// POPS walks you through your deck with the same popups: a board with a chip in and no cell (NO POWER: slot a cell in
+// PSU), slot the cell, power, where chips come from, slot one yourself, SLOTS and CHIPS, the mk upgrades. A training
+// deck (DECK.train: engine/deck.js) stands in for yours: nothing it does is saved. Started from your deck the first
+// time (POPS offers it: engine/deck.js openDeck) and from HOW TO PLAY > TRAINING. After it: a feat (DECKHAND), and from
+// your deck, ROOT's quest card. The words are in data/tutorial.js (the d_ lines).
+const DTUT = {
+  chips: { SC1: 1, FA1: 1, TF1: 1, SP3: 1 },   // the STOCK CELL to slot, FIRST AID waiting for power, TRUST FUND for you to slot
+  slots: { BT1: 'FA1', SPL: 'SP3' },
+  yours: 'TF1', into: 'BT2',
+};
+const deckTutOn = () => !!(st.tut && st.tut.deck);
+// from: 'deck' (your deck, the first time: back to it after) or 'help' (HOW TO PLAY > TRAINING)
+function startDeckTraining(from = 'help') {
+  if (st.tut) return;
+  const T = st.tut = { deck: true, from, pop: null, allow: null, spots: {}, started: true };
+  const go = () => {
+    DECK = Object.assign(deckView(), { real: false, train: true, rep: 0, mk: 2, fuse: false, blown: false, spoils: 0, glyph: null, favB: 'loot', crew: new Set(),
+      chips: Object.assign({}, DTUT.chips), slots: Object.assign({}, DTUT.slots), order: Object.keys(DTUT.slots), sw: new Set(), nemesis: null, archive: null, overclock: false, seenMk: 2 });
+    DECK.sel = { kind: 'socket', id: 'BT1' };
+    openPanel('THE DECK', deckLines, null, { full: true });
+    st.keyHandler = deckKey;
+    T.open = true;
+  };
+  swapTo(go);
+  deckTutScript(T).catch(() => {}).then(() => { if (st.tut === T) deckTutEnd(T, false); });
+}
+function deckTutEnd(T, done) {
+  if (st.tut !== T) return;
+  st.tut = null;
+  if (done) { save.stats = save.stats || {}; save.stats.deckTrained = 1; grantFeat('deckhand'); persist(); }
+  if (T.from === 'deck' && save.deck) swapTo(() => { openDeck(); if (!done) setTimeout(() => setMsg('> training over.', C.accent), 300); });
+  else swapTo(() => { DECK = null; openHelp('training'); setMsg(done ? '> deck training complete.' : '> training over.', C.accent); });
+}
+// Esc on the training deck (engine/deck.js deckKey): out, nothing earned.
+function deckTutQuit() { const T = st.tut; if (T && T.deck) { T.quit = true; if (T.pop) tutClose(T); } }
+async function deckTutScript(T) {
+  const alive = () => st.tut === T && !T.quit && (!T.open || !!(DECK && DECK.train));
+  const { until, say, ask } = tutKit(T, alive);
+  const d = () => DECK;
+  const calm = () => st.mode === 'panel' && DECK && DECK.train && !st.swap && !st.callBox && !st.featBox;
+  const powered = id => calm() && d().slots[id] && deckPower().on.has(id);
+  const picker = ids => ['dkchg', 'dkgo', 'dkbx', 'dkk_NONE', 'dkcard'].concat(ids);
+  await until(calm);
+  await wait(500);
+  await say('d_hello');
+  await say('d_nopower', { target: { btn: 'dkbar' }, at: 'above' });
+  await ask('d_bar', { btn: ['dkbar'] }, () => calm() && d().sel.kind === 'socket' && d().sel.id === 'PSU', { target: { btn: 'dkbar' } });
+  await wait(600);   // (the board scrolls down to it)
+  await ask('d_psu', { btn: picker(['dks_PSU', 'dkk_SC1']) }, () => powered('BT1') && d().slots.PSU === 'SC1' && !d().pick, { target: { btn: 'dkchg' } });
+  await wait(400);
+  await say('d_power', { target: { btn: 'dktc' }, noArrow: true });
+  await say('d_find');
+  // your turn: TRUST FUND into BT2 (the board scrolls up to it, its card up)
+  { const s = deckSock(DTUT.into); deckSelect({ kind: 'socket', id: s.id }); deckShow(s.y, s.h, deckViewRows()); }
+  await wait(600);
+  await ask('d_slot', { btn: picker(['dks_' + DTUT.into, 'dkk_' + DTUT.yours]) }, () => powered(DTUT.into) && !d().pick, { target: { btn: 'dkchg' } });
+  await wait(400);
+  await say('d_red');
+  await say('d_slots', { target: { btn: 'dktb' } });
+  await say('d_chips', { target: { btn: 'dktc' } });
+  await say('d_mk');
+  await say('d_bye');
+  deckTutEnd(T, true);
 }

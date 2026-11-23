@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **The deck training** (v15.55): HOW TO PLAY > TRAINING > YOUR DECK, or a fresh deck's first open. Things I picked: FIRST AID starts slotted with no cell, you slot the STOCK CELL, then TRUST FUND in BT2; the feat is DECKHAND, no chip or title (your outline said "maybe a chip, a feat or a title"). The "too little power" example is a line from POPS, not something you do. In the real deck: no cell now says "NO POWER: slot a cell in PSU" and the PSU pulses red.
+
 - [ ] **The new feats** (v15.54): THE BOARD > FEATS has a TECH group now, and 8 more elsewhere (SPEC v15.54). Things to look at: POPS's lines on each; whether CRAFTY / TINKERER at 10 and SHREDDER at 100 feel right; FISH FOOD can't be earned yet (there's no player command to kill yourself; THE SHELL's run.die is dev only, and dev runs don't count). On an older save, opening THE BOARD hands out SYSOP / MK IV / COLLECTOR / MOVED IN at once if you've earned them: a few FEAT boxes in a row.
 
 - [ ] **HOW TO PLAY's tabs** (v15.53): BASICS (INTRO NET TRAY TRAINING) and ADVANCED (RUNS BOARD DECK BENCH PIER). The DECK, BENCH and PIER pages are new: read them for anything wrong or missing. ADVANCED's strip fills the screen's width exactly, so a sixth sub-tab won't fit. HACKERS got split: RIVALS went on RUNS, CREW on BOARD.

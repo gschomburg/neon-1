@@ -9,7 +9,7 @@
 //   of:    said in place of that popup's do-this line (a wrong tap, the boss beaten): one way to say it per line,
 //          picked at random.
 'use strict';
-NEON_FILES.push(['data/tutorial.js', 'v15.54']);
+NEON_FILES.push(['data/tutorial.js', 'v15.55']);
 
 const TUT_COPY = [
   // the public net
@@ -85,4 +85,19 @@ const TUT_COPY = [
   { id: "b_take", text: "the LOCKER keeps 5 things between runs. take one out when you want it on your belt.", act: "TAKE the PURGE" },
   { id: "b_store", text: "STORE puts things in it for later. COMPS is every component you've banked." },
   { id: "b_bye", text: "that's the bench. shred what you don't need, build what you do.\n\nhere's a few components for your trouble. your own stuff's back." },
+  // the deck: power
+  { id: "d_hello", part: "the deck: power", text: "your deck, kid. it's a board, like the ones you breach. this one's yours, and it lasts: run after run, like what you buy with REP.\n\nthis is a practice one. yours stays as it is." },
+  { id: "d_nopower", text: "FIRST AID is slotted, but it's dead. see that red bar? no power." },
+  { id: "d_bar", text: "", act: "tap the red bar" },
+  { id: "d_psu", text: "the PSU socket. a cell goes here, and the cell powers everything else.", act: "slot the STOCK CELL" },
+  { id: "d_power", text: "lit up. PWR up top: what your chips use, out of what the cell gives. a better cell gives more." },
+  // the deck: chips
+  { id: "d_find", part: "the deck: chips", text: "chips come from runs: caches, the pier, markets, bosses. rivals carry some.\n\nthey ride home on your belt. cash out to keep them. die and they're gone. you can build them at a WORKBENCH too." },
+  { id: "d_slot", text: "your turn. TRUST FUND goes in BT2.", act: "slot TRUST FUND" },
+  { id: "d_red", text: "chips go on in the order you slot them. run out of power and the last ones in go red: they don't run." },
+  // the deck: the rest
+  { id: "d_slots", part: "the deck: the rest", text: "SLOTS is the board." },
+  { id: "d_chips", text: "CHIPS lists every chip you own. slot one from there too." },
+  { id: "d_mk", text: "the board grows. THE BOARD sells upgrades for REP: mk III at ELITE, mk IV at SYSOP. each one opens more sockets." },
+  { id: "d_bye", text: "that's your deck. what's slotted and powered when a run starts runs all run.\n\ngo find chips." },
 ];

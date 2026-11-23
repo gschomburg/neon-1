@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.54']);
+NEON_FILES.push(['engine/deck.js', 'v15.55']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -1332,7 +1332,7 @@ function deckArt() {   // the board, flat: every layer in order, but the ones dr
   }
   return (deckArtRows = g.map(r => r.join('')));
 }
-const deckOwned = () => DECK.real ? Object.keys(DECK.chips).filter(k => DECK_CHIPS[k] && DECK.chips[k] > 0) : Object.keys(DECK_CHIPS);
+const deckOwned = () => DECK.real || DECK.train ? Object.keys(DECK.chips).filter(k => DECK_CHIPS[k] && DECK.chips[k] > 0) : Object.keys(DECK_CHIPS);
 const deckSock = id => DECK_SOCKETS.find(s => s.id === id);
 const deckSlotOf = key => Object.keys(DECK.slots).find(k => DECK.slots[k] === key);
 const deckOpen = mk => mk <= DECK.mk && !(mk === 4 && (!DECK.fuse || DECK.blown));
@@ -1422,7 +1422,12 @@ function openDeck(o = {}) {
   openPanel('THE DECK', deckLines, null, { full: true });
   st.keyHandler = deckKey;
   // POPS first, then ROOT's QUEST card (Greg, 2026-11-21: the card came up before POPS had said what a deck is)
-  if (d.real && !save.deck.popsSeen) { save.deck.popsSeen = true; persist(); queueCall('pops', deckTrainLines()); }
+  if (d.real && !save.deck.popsSeen) {   // the first time: POPS offers the training; ROOT's card waits till after it (Greg, 2026-11-20)
+    save.deck.popsSeen = true; persist();
+    CALL_QUEUE.push({ who: 'pops', lines: ["your deck, kid. there's a lot to go over here.", 'need me to hold your hand?', '(HOW TO PLAY > TRAINING has it too.)'],
+      btns: [{ text: '[ SHOW ME ]', onTap: () => startDeckTraining('deck') }, { text: '[ SKIP ]', onTap: () => { queueCall('pops', deckTrainLines()); rootStart(); } }] });
+    return;
+  }
   if (d.real) rootStart();   // ROOT's quest starts here, or at a bench (engine/quests.js)
 }
 // The deck's training (Greg, 2026-11-20: "rough something in"): POPS, the first time you open your deck. Seen once
@@ -1445,6 +1450,7 @@ function deckLeave(tab = 'you') {
 }
 function deckKey(k) {
   const d = DECK; if (!d) return false;
+  if (d.train) { if (k === 'escape') deckTutQuit(); return true; }   // (the deck training: engine/tutorial.js)
   if (k === 'escape') { if (d.pick || d.cpu) { d.pick = null; d.cpu = null; Sound.tick(); } else if (d.carry) d.carry = null; else deckLeave(); return true; }
   const dd = k === 'arrowup' ? -1 : k === 'arrowdown' ? 1 : 0;
   if (d.pick && d.pick.keys) { if (dd) { d.pick.keys.move(dd); return true; } if (k === 'enter' || k === ' ') { d.pick.keys.go(); return true; } }
@@ -1826,7 +1832,8 @@ function deckHeader(ctx, y) {
         else x = deckBtn(ctx, g, x, y + 1 + ri, labels[i], C.bright, 'dkb_' + k, () => deckLeave(k));
       });
     });
-  } else {
+  } else if (d.train) g.put(0, y + 1, 'DECK · TRAINING', C.accent, true);   // (the deck training: engine/tutorial.js)
+  else {
     g.put(0, y + 1, 'DECK · DEV', C.danger, true); deckBtn(ctx, g, W - 7, y + 1, '[LEAVE]', C.mid, 'dkleave', () => deckLeave());
   }
   // the sub-tabs: SLOTS and CHIPS, in a strip (the same look as engine/textboard.js drawSubTabs), the power on the right
@@ -2014,6 +2021,7 @@ function deckBoard(ctx, y0, sa, under = null) {   // under: the picker's grid (t
   if (!deckOpen(4)) bput(25, 42, d.blown ? 'FUSE BLOWN' : 'mk IV', d.blown ? C.danger : C.dim);
   // the parts, then the sockets (on top, so their taps win)
   for (const p of DECK_PARTS) bhit(p.x, p.y, p.w, p.h, 'dkp_' + p.id, () => deckTapPart(p.id));
+  if (!d.slots.PSU && pw.off.length) { const s = deckSock('PSU'); bbg(s.x, s.y, s.w, s.h, C.danger, 0.15 + 0.2 * (Math.sin(now / 300) + 1) / 2); }   // (no cell: the PSU is where the power goes missing)
   for (const s of DECK_SOCKETS) {
     deckSocket(s, s.x, s.y, bput, bbg, bclr, { sel: d.sel.kind === 'socket' && d.sel.id === s.id, pw, now });
     bhit(s.x, s.y, s.w, s.h, 'dks_' + s.id, () => deckTapSocket(s, bv));
@@ -2355,7 +2363,8 @@ function deckCard(ctx, y0) {
   if (d.msg && now - d.msg.t < 2600) { g.put(0, y0, rule(W), C.dim); const s = ` ${d.msg.text} `.slice(0, W); g.clr(1, y0, s.length); g.put(1, y0, s, d.msg.col); }
   else if (d.carry) { g.put(0, y0, rule(W), C.dim); const s = ` slotting ${DECK_CHIPS[d.carry][0]}: tap a blinking socket `.slice(0, W); g.clr(1, y0, s.length); g.put(1, y0, s, C.accent); }
   else if (pw.off.length || pw.crewOff.length) {   // NO POWER: red, cycling through the chips (and CREW JACKS) that have none; a tap goes to the one showing
-    const offs = pw.off.map(id => ({ text: `NO POWER: ${DECK_CHIPS[d.slots[id]][0]} in ${id}`, go: () => { const s = deckSock(id); d.view = 'board'; deckSelect({ kind: 'socket', id }); deckShow(s.y, s.h, deckViewRows()); } }))
+    const psu = () => { const s = deckSock('PSU'); d.view = 'board'; d.pick = null; deckSelect({ kind: 'socket', id: 'PSU' }); deckShow(s.y, s.h, deckViewRows()); };
+    const offs = !d.slots.PSU && pw.off.length ? [{ text: 'NO POWER: slot a cell in PSU', go: psu }] : pw.off.map(id => ({ text: `NO POWER: ${DECK_CHIPS[d.slots[id]][0]} in ${id}`, go: () => { const s = deckSock(id); d.view = 'board'; deckSelect({ kind: 'socket', id }); deckShow(s.y, s.h, deckViewRows()); } }))
       .concat(pw.crewOff.map(c => ({ text: `NO POWER: ${HACKERS[c].name} in a jack`, go: () => { d.view = 'board'; deckCrewOpen(); d.pick.sel = c; } })));   // (Greg, 2026-11-22: it opens the jacks)
     const sw = FX.swapLines(offs.map(o => o.text), W - 2, 0, now, 1800);
     g.bg(0, y0, W, 1, st.hoverBtn === 'dkbar' ? C.accent : C.danger, 1); g.put(1, y0, sw.text, C.bg, true);

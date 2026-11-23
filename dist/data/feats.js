@@ -14,7 +14,7 @@
 //
 // The record's numbers (engine/feats.js counts them; practice runs don't count):
 //   runs  deaths  cashouts  corps  corpKinds (different corps breached)  layers  perfects  ice (ICE hits)  sectors
-//   ads (closed)  gear (used)  newb (finished the training)  benchTrained (finished the WORKBENCH training)
+//   ads (closed)  gear (used)  newb (finished the training)  benchTrained (finished the WORKBENCH training)  deckTrained
 //   seedBetter (a seed played again, deeper than before)  doubleCall (2 crew called into one layer)  phishSold
 //   fenceBuys  diedFishing (died at the pier)  bruteForce (a corp breached after losing 8+ INT in it)
 //   built builtGear builtMods builtChips builtExotic luckyBuild (a RUN ANYWAY that came out as something)  shreds
@@ -27,7 +27,7 @@
 //   once-offs (counted when they happen):  diedFirst (died in your first corp)  nakedSector (cleared a sector with no
 //   mods)  bossAt1 (beat a boss layer at 1 INT)  easyCome (earned 1000cr in a run and ended it with under 10)
 'use strict';
-NEON_FILES.push(['data/feats.js', 'v15.54']);
+NEON_FILES.push(['data/feats.js', 'v15.55']);
 
 const FEATS = [
   // ---- the basics: runs
@@ -35,6 +35,8 @@ const FEATS = [
     say: "that's the sim done. you're a newb now. officially. it's a step up from nothing." },
   { id: 'apprentice', name: 'APPRENTICE', group: 'runs', text: 'finish the WORKBENCH training.', stat: 'benchTrained', n: 1,
     say: "you can take a thing apart and put it back together. that's half of this job." },
+  { id: 'deckhand', name: 'DECKHAND', group: 'runs', text: 'finish the deck training.', stat: 'deckTrained', n: 1,
+    say: "now you know your way around a deck. go fill it." },
   { id: 'firstblood', name: 'FIRST BLOOD', group: 'runs', text: 'breach a corp.', stat: 'corps', n: 1,
     say: 'first corp down. the first one always feels like that.' },
   { id: 'sector1', name: 'SECTOR ONE', group: 'runs', text: 'clear a sector.', stat: 'sectors', n: 1,

@@ -1,7 +1,7 @@
 // NeoN+1 engine/feats.js: THE RECORD (save.stats), FEATS (data/feats.js), titles, the FEAT box, the * marks
 // and the progression wipe. The plan: docs/PROGRESSION.md.
 'use strict';
-NEON_FILES.push(['engine/feats.js', 'v15.54']);
+NEON_FILES.push(['engine/feats.js', 'v15.55']);
 
 // ---------------- The record ----------------
 // save.stats: one flat map of numbers (data/feats.js lists them). tally adds, best keeps the highest.
@@ -10,7 +10,7 @@ const FEAT_BY_ID = Object.fromEntries(FEATS.map(f => [f.id, f]));
 const statOf = k => (save.stats && save.stats[k]) || 0;
 const counting = () => !(st.run && (st.run.practice || st.run.tutorial)) && !st.mp && !(st.tut && st.tut.bench);   // (run kinds: engine/save.js; the WORKBENCH training)
 // home: counted out of a run too (the deck, THE BOARD): only multiplayer and the WORKBENCH training don't.
-const countingHome = () => !st.mp && !(st.tut && st.tut.bench);
+const countingHome = () => !st.mp && !(st.tut && (st.tut.bench || st.tut.deck));
 function tally(stat, by = 1, home = false) {
   if (!(home ? countingHome() : counting()) || !by) return;
   save.stats = save.stats || {};
