@@ -753,7 +753,9 @@ How you get G0D.exe (BACKLOG section 3) for real. Greg's notes, filed as he wrot
   - **The keyboard is the WORKBENCH's, at its real size** (engine/bench.js benchKbGeom: keys about 3 columns wide and 2
     rows tall, your count of each letter in the corner, colored by how many you hold). **Decided (Greg, 2026-11-22):**
     in this fight it drops its top SPECIAL row (wildcards, BLANKs, the DIVINE letters later). The rest (digits, QWERTY,
-    ASDF, ZXCV with DEL, and a G0D.exe key) takes about 10 of the phone's 23 rows, so the cult gets about 13.
+    ASDF, ZXCV with DEL, and a G0D.exe key where ENTER is) takes about 10 rows. The whole screen is 38 rows by 36
+    columns on a phone and on desktop alike (the game scales it; measured 2026-11-22), and the keyboard is 31% of it with
+    the SPECIAL row, 25% without. With no header the cult gets about 28 rows.
   - **Just the keyboard** (the WORKBENCH's, at the bottom); the rest of the screen is the cult's. No crafting area: the
     word on a cultist is the build. Cultists move about like rivals, chip-colored, each with a word; as you type, the
     letters fill in over it; finished, they fall apart and their letters refill your keyboard.
