@@ -201,6 +201,7 @@ All 182 glyphs, faces, logos and pictures fit their budgets (checked 2026-11-23)
 
 - **Item names: 15 characters at most** (JACK IN THE BOX): longer doesn't fit on the rewards screen and the market.
 - Mod codes 3 characters; gear codes 3 (`ITEM_SHORT`); chip codes 3 (two letters and a digit).
+- A REP post's description: 4 lines at 32 wide (REP_DESC_ROWS, engine/menus.js; THE BOARD's body is BOARD_BODY rows on every tab, so a taller card means raising it).
 - Feat names and titles: 16 at most. POPS's "do this" line: about 22. A glyph's lore lines: under 26.
 - Lines in a CALL or FEAT box: 32 wide (they wrap). Your hacker name on the deck's CPU: 13.
 - Lowercase for what people say; CAPITALS for names of things (mods, gear, corps, screens, buttons).
