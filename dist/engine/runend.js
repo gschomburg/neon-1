@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.50']);
+NEON_FILES.push(['engine/runend.js', 'v15.51']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -169,7 +169,7 @@ async function pushOn() {
   if (oneUpOpen(run)) run.oneUp = 1;   // the 1UP charges again every sector (used or not, you hold one)
   deckSector(run);   // DECAY (a chip: engine/deck.js)
   if (run.quest === 'h3av3n' && run.sector === 1) addHeavenSector(run.map, run.seed, 1);   // the H3AV3N seed: sector 2 is heaven (engine/heaven.js)
-  else addSector(run.map, run.seed, run.sector, run.forceEvent || null);   // (forceEvent: the editor's TESTING tab)
+  else addSector(run.map, run.seed, run.sector, run.forceEvent || null, deckFavor(run));   // (deckFavor: NEMESIS, FRESH, CASINO...)   // (forceEvent: the editor's TESTING tab)
   run.forceEvent = null; run.fence = [];   // what THE FENCE didn't sell back is gone
   st.result = null;
   // Beat OMNI (not skipped): its boss reward first, then the map climbs from the old

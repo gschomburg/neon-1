@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **FRESH, CASINO, CLOCK, DARK and NEMESIS** (v15.51): each corp slot has a 20% chance (12% for NEMESIS) to swap to one of theirs. Enough? Too much? NEMESIS used to be 3x weight; it should feel about the same.
+
 - [ ] **The UPLINK's buttons** (Greg, 2026-11-22: test it and see how it looks). PAY and EARN REP are big boxes, stacked; [ WORKBENCH ] (BENCH LINK) and [ SACRIFICE ] (a chip) are small buttons between them. Should SACRIFICE be a big box beside PAY, like ENTER | PIER and TAKE | SALVAGE? The UPLINK is the tightest screen on a phone (its rows are counted: engine/runend.js openUplink).
 - [ ] **TAKE and the SPOILS chip's box side by side** (rewards screen) and **ENTER | PIER** (PIER PASS): how do they look and feel?
 

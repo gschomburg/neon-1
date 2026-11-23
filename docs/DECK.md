@@ -179,6 +179,10 @@ Claude's ladder, so the 1UP always has somewhere to go:
 - **HAD3S and H3AV3N are curated:** lock every sector of both, so no chip or post (NEMESIS today) changes their corps.
   (Greg: they played fine last time; he hasn't played them in a while.) BACKLOG has it.
 
+**Built v15.51, a simpler way (Greg, 2026-11-22):** no placeholder corps. The map picks as always; then each corp slot may
+swap to a favored corp on a stream of its own (engine/map.js corpFavor), so no seed changes for anyone without a chip
+or NEMESIS, and with one only the swapped slots do. NEMESIS moved over too. The placeholder plan below is kept for the record.
+
 **Weighting a corp without scrambling the map** (Greg's idea, Claude's details). `pickCorps` (engine/map.js) picks a
 row's 3 corps by weight, one random number each. NEMESIS's 3x changes the total weight, which moves every boundary, so
 nearly every pick changes. Instead:

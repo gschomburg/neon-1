@@ -4,7 +4,7 @@
 // It's plain HTML over the canvas (a black field, white text, its own colours: the palettes don't touch it), so a
 // phone's keyboard, autocorrect and the browser's own text box all just work.
 'use strict';
-NEON_FILES.push(['engine/shell.js', 'v15.50']);
+NEON_FILES.push(['engine/shell.js', 'v15.51']);
 
 // ---------- helpers the commands share ----------
 // The editor's TESTING tab calls these too (engine/editor.js TEST), so the two can't drift. The ones that end a run
@@ -45,7 +45,7 @@ async function shellToSector(to, ev, end = shellEndRun) {
     const old = run.sector, boss = bossIdOf(old);
     run.at = boss; if (!run.visited.includes(boss)) run.visited.push(boss);
     run.sector++; run.sectorsCleared = (run.sectorsCleared || 0) + 1;
-    addSector(run.map, run.seed, run.sector, run.sector === to - 1 ? ev || null : null);
+    addSector(run.map, run.seed, run.sector, run.sector === to - 1 ? ev || null : null, deckFavor(run));
     run.fence = [];
     if (run.sector < to - 1) (run.evSeen = run.evSeen || []).push(run.sector);
     if (run.sector === to - 1) { await swapTo(() => toMap(old)); await shellSettle(); }
@@ -58,7 +58,7 @@ async function shellHad3sBoss(s, end = shellEndRun) {
   if (st.mode !== 'map') { toMap(); await shellSettle(); }
   if (st.evCard) closeEventCard();
   const run = st.run;
-  if (s >= 1) { run.sector = 1; addSector(run.map, run.seed, 1); }
+  if (s >= 1) { run.sector = 1; addSector(run.map, run.seed, 1, null, deckFavor(run)); }
   await enterNode(run.map[bossIdOf(s)], true); await shellSettle();
 }
 // H3AV3N in the real game: its map, or straight to a part of it.

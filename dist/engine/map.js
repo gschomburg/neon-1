@@ -1,6 +1,6 @@
 // NeoN+1 engine/map.js: The overworld map, corp picking by level, corp modifiers.
 'use strict';
-NEON_FILES.push(['engine/map.js', 'v15.50']);
+NEON_FILES.push(['engine/map.js', 'v15.51']);
 
 // ---------------- Overworld map ----------------
 // The map is made of sectors stacked upward. Each sector has 6 steps: its start (the
@@ -130,17 +130,33 @@ function pickCorps(r, target, k, boost = null) {
   return out;
 }
 
-// ev0: sector 1's event (INTO THE FIRE, a chip: engine/deck.js deckFireEvent); none otherwise.
-function genMap(seed, ev0 = null) {
+// Corps that come up more (engine/deck.js deckFavor): after a row's picks, each slot may swap to one of them, on its
+// own stream (rngFor(seed, 'favor', s, row, lane)), so the map's stream and every other pick stay the same. A
+// swapped-in corp has to fit the row's level; it can already be in the row (Greg, 2026-11-22: that's fine).
+function corpFavor(corps, fav, seed, s, ls, target) {
+  if (!fav || !fav.length) return corps;
+  return corps.map((k, lane) => {
+    const r = rngFor(seed, 'favor', s, ls, lane);
+    for (const f of fav) {
+      const pool = f.keys.filter(c => CORPS[c] && levelWeight(CORPS[c].level, target) > 0).sort();
+      if (pool.length && r() < f.p) return pickR(pool, r);
+    }
+    return k;
+  });
+}
+
+// ev0: sector 1's event (INTO THE FIRE, a chip: engine/deck.js deckFireEvent); none otherwise. fav: corps that come up
+// more (engine/deck.js deckFavor: chips, NEMESIS); none: the seed's own map, the same for everyone.
+function genMap(seed, ev0 = null, fav = null) {
   const nodes = {};
   nodes['0:1'] = { id: '0:1', step: 0, lane: 1, sector: 0, type: 'start', corp: 'public', tier: 0, next: [] };
-  addSector(nodes, seed, 0, ev0);
+  addSector(nodes, seed, 0, ev0, fav);
   return nodes;
 }
 
 // Add sector s on top of the map (its start node must already be there).
 // force: the sector event to use (the editor's TESTING tab); otherwise it's rolled from the seed (none on test seeds).
-function addSector(nodes, seed, s, force = null) {
+function addSector(nodes, seed, s, force = null, fav = null) {   // (fav: genMap)
   const r = s === 0 ? rngFor(seed, 'map') : rngFor(seed, 'map', s);
   const side = rngFor(seed, 'side', s);
   const base = SECTOR_STEPS * s;
@@ -168,8 +184,7 @@ function addSector(nodes, seed, s, force = null) {
   const has = k => ev === k || ev2 === k;
   const same = has('copypaste') ? pickCorps(rngFor(seed, 'copy', s), targetLevel(s, 3), 1)[0] : null;   // COPY PASTE: one corp everywhere
   const evBoost = has('timeismoney') ? k => timedCorp(k) ? 3 : 1 : null;   // TIME IS MONEY: timed corps come up more
-  const nem = typeof save !== 'undefined' && postOn('nemesis') && save.nemesis && CORPS[save.nemesis] ? save.nemesis : null;   // NEMESIS (THE BOARD): 3x
-  const boost = evBoost || nem ? k => (evBoost ? evBoost(k) : 1) * (k === nem ? 3 : 1) : null;
+  const boost = evBoost;   // (NEMESIS was a 3x weight here; it swaps slots now, like the chips: corpFavor)
   const lanes = has('gauntlet') ? [1] : [0, 1, 2];   // GAUNTLET: one line, no choices (a market in row 3)
   for (let ls = 1; ls <= 4; ls++) {
     if (!keep.has(ls) && !has('flush')) specs[ls] = specs[ls].map(() => 'corp');   // FLUSH keeps every rest stop...
@@ -180,6 +195,7 @@ function addSector(nodes, seed, s, force = null) {
     let corps = test === 'all' ? [0, 1, 2].map(j => order[(s * 12 + (ls - 1) * 3 + j) % order.length])
       : test ? [test, test, test] : pickCorps(r, targetLevel(s, ls), 3, boost);
     if (same) corps = [same, same, same];
+    else if (!test && !qev) corps = corpFavor(corps, fav, seed, s, ls, targetLevel(s, ls));   // NEMESIS, FRESH, CASINO... (engine/deck.js deckFavor)
     if (has('gauntlet')) types[1] = ls === 3 ? 'shop' : 'corp';
     if (qev && s === 0 && ls === 2) { const lane = types.indexOf('corp'); if (lane >= 0) corps[lane] = 'medix'; }   // HAD3S: MEDIX in sector 1 (where b0y ended up: docs/QUESTS.md)
     if (has('headfirst') && ls === 1) continue;   // HEAD FIRST: row 1 is the boss (below)

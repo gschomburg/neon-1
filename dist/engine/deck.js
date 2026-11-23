@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.50']);
+NEON_FILES.push(['engine/deck.js', 'v15.51']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -184,7 +184,6 @@ const DECK_CHIP_TAGS = {
 // The chips that don't do their whole job yet (Greg, 2026-11-16: mark them BETA, so we know they need more work). What's
 // missing, for us. They show BETA in your deck, and never drop (deckRollChip): the editor and THE SHELL give them.
 const DECK_BETA = {
-  FR5: 'corp weights scramble seeds: needs the placeholder corps (Seeds)', CS7: 'the same: placeholder corps', CK9: 'the same', DK6: 'the same',
   AD0: 'built; no way to get it yet (an ad corp\'s boss, BACKLOG)',
   SPC: 'built; no way to get it yet (beating the M0LD, BACKLOG)',
 };
@@ -411,7 +410,7 @@ function deckHome(run, win) {
 const chipOn = (key, run = st.run) => !!(run && run.chips && run.chips.includes(key));
 function deckRunChips(run) {
   deckGift();
-  if (!save.deck) return [];
+  if (!save.deck) return {};   // (an object: destructuring keys from an array gets its keys() method)
   const was = DECK; DECK = deckReal();
   const pw = deckPower(), d = DECK;
   let keys = [...pw.on].map(id => d.slots[id]).filter(k => DECK_CHIPS[k]);
@@ -434,6 +433,7 @@ function deckRunStart(run, opts = {}) {
   run.fav = fav != null ? fav : null; run.favB = favB || 'loot';   // your GLYPH (DECK_FAV_B)
   run.jacks = crew || {};   // CREW JACKS (DECK_JACKS): on with no chips too
   if (Object.keys(run.jacks).length) deckJackSector(run);   // (the first sector's PATCH, TUNNEL...)
+  { const fav = deckFavor(run, keys || []); if (fav.length) run.map = genMap(run.seed, null, fav); }   // NEMESIS, FRESH, CASINO...: sector 1 made again with them (the map comes before the chips)
   if (!keys || !keys.length) return;
   run.chips = keys; run.spoils = spoils || 0;
   deckCharges(run);   // THE SHELL's charges, full
@@ -537,6 +537,22 @@ function deckCollectorMod(run) {
   if (m && modRoom(m.key) && !clashWith(m.key)) { addMod(m.key, 0); return 'COLLECTOR 10/10: ' + MODS[m.key].name + '.'; }
   earn(60, run); return 'COLLECTOR 10/10: no room for a mod. +60cr.';
 }
+// ---------- corps that come up more (Greg, 2026-11-22) ----------
+// FRESH, CASINO, CLOCK, DARK (chips) and NEMESIS (THE BOARD) don't weight the map's corp picks any more: that moved every
+// pick, so a seed's whole map changed. The map picks its corps as always; then each corp slot may swap to one of these,
+// on a stream of its own (engine/map.js corpFavor). No chip or post: the same map as anyone's. With one: only the
+// swapped slots differ. Returns [{ keys, p }]: the corps, and the chance a slot swaps to one of them. Not in the quest
+// seeds (HAD3S, H3AV3N are curated), races or test seeds.
+const DECK_FAVOR = { CS7: ['luckeez', 'monty', 'bidblitz', 'drop4'], CK9: ['channel9', 'coldbrew', 'watchpoint', 'rydr'], DK6: ['blackout', 'noir', 'predator'] };
+const DECK_FAVOR_P = 0.2, DECK_NEM_P = 0.12;   // (NEMESIS: one corp, about what its old 3x weight gave)
+function deckFavor(run, keys = (run && run.chips) || []) {
+  if (!run || run.quest || run.heaven || run.tutorial || st.mp || testSeed(run.seed)) return [];
+  const out = [];
+  if (postOn('nemesis') && save.nemesis && CORPS[save.nemesis]) out.push({ keys: [save.nemesis], p: DECK_NEM_P });
+  for (const k of Object.keys(DECK_FAVOR)) if (keys.includes(k)) out.push({ keys: DECK_FAVOR[k].filter(c => CORPS[c]), p: DECK_FAVOR_P });
+  if (keys.includes('FR5')) out.push({ keys: Object.keys(CORPS).filter(c => !corpStat(c).breached), p: DECK_FAVOR_P });   // FRESH: the ones you haven't beaten
+  return out.filter(f => f.keys.length);
+}
 // ---------- the map chips (Greg, 2026-11-22: out of BETA) ----------
 // INTO THE FIRE (was EVENTS): sector 1 gets an event too, from its own stream, so the later sectors' events stay the
 // same. The map is made before the chips are known (engine/run.js startRun), so sector 1 is made again, with it.
@@ -546,7 +562,7 @@ function deckFireEvent(run) {
   const scales = eventScales(), next = rollEvent(run.seed, 1);
   const pool = Object.keys(SECTOR_EVENTS).filter(k => !SECTOR_EVENTS[k].quest && !EVENT_SIDE.includes(k) && !DECK_FIRE_SKIP.includes(k) && k !== next && eventWeight(k, scales) > 0).sort();
   if (!pool.length) return;
-  run.map = genMap(run.seed, pool[pickEventW(pool, rngFor(run.seed, 'fire'), scales)]);
+  run.map = genMap(run.seed, pool[pickEventW(pool, rngFor(run.seed, 'fire'), scales)], deckFavor(run));
 }
 // PIER PASS (Greg, 2026-11-22: a choice, not a node turned into a PIER, so you never lose your safehouse): once a
 // sector, a market, safehouse or cache you can go to also offers [ OR GO PHISHING ] (engine/mapview.js). Take it and
