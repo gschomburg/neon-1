@@ -51,6 +51,14 @@ bottom; it doesn't squeeze, so a panel that runs over spills onto the tray. Coun
 - **Row 0, left: the way out**, `[< TITLE]` (openPanel's `opts.top`, `TO_TITLE` in panels.js). The workbench draws its own
   top line: `NeoN+1` on the left, `[LEAVE >]` on the right.
 - A full-screen panel usually fills to the bottom with blank lines so it sits at the top (bench.js `benchLines` does).
+- **Nothing moves when you switch.** Tabs, sub-tabs and picking another entry must not change where the screen starts:
+  the text board centers what it's given, so a page one row shorter sits half a row lower, and the header jumps.
+  - Pad every tab to one height: THE BOARD pads each tab to `BOARD_BODY` rows (menus.js). A taller card means raising
+    `BOARD_BODY`, not just the card.
+  - An empty state is as tall as the full one: a locked REP level draws a blank card exactly as tall as a post's
+    (name, text, its line, the BUY box). It was a row short, and SYSOP moved the header (fixed 2026-11-23).
+  - A page that doesn't scroll keeps the scroll's rows: HOW TO PLAY starts a short page one row down, where a long
+    page's `[ ^ ^ ^ more ]` row is, so every page's title is on the same row.
 - Full-screen screens today: the title, the end screen, HOW TO PLAY, THE CODEX, THE BOARD and its tabs, YOUR DECK,
   SETTINGS, INFO, POPS's log, the LEADERBOARD, MULTIPLAYER, the WORKBENCH and the UPLINK (no [< TITLE] on the last two:
   they have their own ways on).
@@ -139,12 +147,19 @@ All in the text board (`buildTextBoard`, textboard.js) unless it says otherwise.
 - **Lists:** `scrollArea(X, T, s, items, rows)` (codex.js): exactly `rows` lines, with `[ ^ ^ ^  more  ^ ^ ^ ]` /
   `[ v v v  more  v v v ]` rows when it doesn't fit; the wheel and swipes scroll it (`st.scroll`). `scrollFollow` keeps
   the picked line in view. A list row: `{ list: true, id, sel, onTap, name, right, rightCol, badge | gear }`.
+- **Lists with details: tabs, then the list, then the details.** (Greg, 2026-11-23; FEATS, THE CODEX and the BOOK were
+  flipped to it as a try, v15.57.) The picked thing's card goes under the list, between two `SEP` rules: its head, its
+  text, then its action (BUY, TAKE, SHRED, PIN / BUILD). Markets, the CHIP DEALER, REP, SHRED, the LOCKER, the LOOT bag
+  and the swap all do it. Keep the card one height whatever is picked (pad short text), so the action doesn't jump.
+  A screen that draws its details first can move them: note `lines.length` before and after, then
+  `lines.push(...lines.splice(d0, d1 - d0))` after the list (codex.js, bench.js `benchBookLines`).
 - **An item's head:** `{ badge: modKey }` (a mod's badge), `{ gearHead: key, text }`, `{ tileInfo: glyph, lines }`
   (a node drawn beside 5 lines).
 - **Chips:** `putChip` (tray.js): text on its rarity's chip; `chipOf(rarity)` gives the colors.
 - **Moving text:** `FX.ticker(text, w, t0, now)`: one line that holds a beat, then scrolls. `FX.swapLines(lines, w,
   t0, now)`: lines that take turns on one row. Use them where it's tight (Decided, Greg 2026-11-05: stacked text
-  where it fits).
+  where it fits). Look for spare rows first: REP's post text got 4 rows instead of a ticker (2026-11-23), and a line
+  wider than the screen (the map card's tell) is the ticker's real job.
 - **Text field:** `Field` / `drawField` (textboard.js), e.g. the seed and the leaderboard initials.
 - **Your own drawing:** `X({ h: rows, draw: (ctx, y) => ... })` with `ctx.put(x, y, text, col, own, bold)`,
   `ctx.bg(x, y, w, col, alpha)`, `ctx.addHit(x, y, w, h, { kind: 'btn', id, onTap })`, `ctx.hl(...)` for the hover look.
@@ -215,4 +230,6 @@ All 182 glyphs, faces, logos and pictures fit their budgets (checked 2026-11-23)
 5. Colors by slot, rarity by chip. Text in the voice and the limits above.
 6. Art within its budget; mockups at 36 x 38.
 7. Keys: arrows / Enter work through the buttons; Esc goes back.
-8. A check in `tools/checks/tests/` that opens it (screenshots: a test's `#shots` hash, see tests/benchtut.js).
+8. A list? Tabs, the list, then the details with the action. Switch every tab and pick a short and a long entry: nothing
+   above should move.
+9. A check in `tools/checks/tests/` that opens it (screenshots: a test's `#shots` hash, see tests/benchtut.js).
