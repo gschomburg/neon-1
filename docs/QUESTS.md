@@ -767,6 +767,13 @@ How you get G0D.exe (BACKLOG section 3) for real. Greg's notes, filed as he wrot
   - **The cultists climb to the altar,** each carrying a letter of the ritual; one that makes it adds its letter to the
     cult's word (G, 0, D, maybe .EXE later). The word done: G0D is theirs, you lose. The clock is the ritual, not your INT.
     (Another option: one that reaches you steals a key.)
+  - **Payloads, not kills** (Greg, 2026-11-22, an idea): typing a word doesn't kill the cultist, it loads it with a payload;
+    when it reaches the priest (the altar), a loaded one explodes and hurts him. Or: the first time you type a word it
+    kills that cultist on the spot, but every one G0D.exe types afterwards is a payload that hurts the priest. Longer
+    words hurt more. (So the cultists reaching him isn't only bad: it's how he takes damage.)
+  - **More challenge: the priest attacks** (Greg, 2026-11-22, an idea): another stage. Once the cultists are gone, the priest
+    breaks out and starts shooting at your keyboard. Shields appear on the screen in front of the keyboard, each with a
+    word; type one out to make it real, and it reflects his shots back at him.
   - **The leader:** every follower you finish costs him a bar; when they thin out he comes down himself, with the longest
     word, one nobody has typed (G0D.exe can't help).
 - **The first boss ideas** (Greg, 2026-11-22: not these: the circle, the sigil, the race for the letters, escort, Pac-Man):
