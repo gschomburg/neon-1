@@ -150,7 +150,7 @@ function openCodex(want) {
     }
   };
 
-  openPanel('CODEX', (T, B, X) => {
+  openPanel('CODEX', (T, B, X, lines) => {
     const list = entries(), n = list.length, rows = rowsFor();
     sel = clamp(sel, 0, n - 1);
     top = clamp(top, 0, maxTop(n, rows));
@@ -163,7 +163,9 @@ function openCodex(want) {
     X({ gap: 1, row: tabs.map(([id, label, s]) => ({ text: `[${label}]`, id: 'tab_' + id, sel: main()[0] === id, onTap: () => setTab(s[0]) })) });
     X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, main()[2].map(s => ({ id: 'cxs_' + s, text: CX_SUB[s].toUpperCase(), on: tab === s, onTap: () => setTab(s) }))) });
 
-    // Details of the selected entry (5 rows; 10 for corps).
+    // Details of the selected entry (5 rows; 10 for corps). Drawn here, then moved under the list (the rule everywhere:
+    // tabs, the list, the details: Greg, 2026-11-23).
+    const d0 = lines.length;
     T(SEP, C.dim);
     const k = list[sel], seen = seenOf(k);
     // A found corp is shown in its own palette (if corp colors are on).
@@ -270,6 +272,7 @@ function openCodex(want) {
       for (let i = 3 + dl.length + tiers.length + (tiers.length ? 1 : 0) + own; i < 12; i++) T('');
     }
     T(SEP, C.dim);
+    const d1 = lines.length;
 
     // The list window, with "more" rows when there are entries above/below.
     const w = listWindow(top, n, rows);
@@ -309,6 +312,7 @@ function openCodex(want) {
     }
     if (w.hasDown) { X({ text: w.canDown ? '[ v v v  more  v v v ]' : '', invert: true, id: 'moredn', onTap: () => scrollBy(1) }); used++; }
     for (; used < rows; used++) T('');
+    lines.push(...lines.splice(d0, d1 - d0));   // (the details, under the list)
   }, '> codex open.', { full: true, top: TO_TITLE });
 
   // Keys: left/right = sub-tabs, up/down = move through the list, esc = back.

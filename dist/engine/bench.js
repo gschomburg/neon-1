@@ -625,7 +625,7 @@ function benchLines(T, B, X, lines) {
   else T('');
   if (b.tab === 'build') benchBuildLines(T, B, X);
   else if (b.tab === 'shred') benchShredLines(T, B, X);
-  else if (b.tab === 'book') benchBookLines(T, B, X);
+  else if (b.tab === 'book') benchBookLines(T, B, X, lines);
   else benchLockerLines(T, B, X);
   // fill to the bottom, so the screen sits at the top (the footer has the last row)
   const hOf = ln => ln.box ? (ln.sub ? 4 : 3) : ln.draw ? ln.h || 1 : 1;
@@ -926,12 +926,13 @@ function benchRootFound(sa) {
   CALL_QUEUE.push({ who: 'root', quest: { name: QUEST_INFO.root.name, step: `STEP ${v.at + 1}: ${v.name}` }, lines: QUEST_LINES.rootFirst, letter: ch, onClose: ad });
 }
 
-function benchBookLines(T, B, X) {
+function benchBookLines(T, B, X, lines) {
   const b = st.bench, codes = bookList(), R = benchRecipes();
   const found = codes.filter(c => save.seen[R[c].key] && recipeKnown(R[c])).length;   // (this tab's: GEAR, MODS or CHIPS)
   X({ h: 1, draw: (ctx, y) => { const x = Math.floor((L.wc - 32) / 2), n = `${benchCount()} comps`; ctx.put(x, y, `${found}/${codes.length} found`, C.mid, 'ui');   /* (no BOOK: the sub-tab over it says which list, Greg) */ ctx.put(x + 32 - n.length, y, n, C.mid, 'ui'); } });
   const rq = ['letters', 'spell'].includes(rootStep());   // ROOT's paperwork: its letters, over the recipes (engine/quests.js)
   if (rq) X({ h: 1, draw: (ctx, y) => rootLettersRow(ctx, Math.floor((L.wc - 32) / 2), y) });
+  const d0 = lines.length;   // (the details: drawn here, moved under the list at the end, like every list: Greg, 2026-11-23)
   T(SEP, C.dim);
   b.bkSel = clamp(b.bkSel, 0, codes.length - 1);
   const pick = i => { if (i !== b.bkSel) { b.bkSel = i; b.bkT = performance.now(); Sound.tick(); } };
@@ -954,6 +955,7 @@ function benchBookLines(T, B, X) {
     { text: '[ BUILD ]', id: 'bkbook', disabled: !canBuild, onTap: () => { if (!canBuild) return; if (!benchTutOn()) b.pending = code; benchTab('build'); } },   // (the training: you type it yourself)
   ] });
   T(SEP, C.dim);
+  const d1 = lines.length;
   const rows = Math.max(6, L.hc - 1 - 6 - 11 - 1 - (rq ? 1 : 0));
   const items = codes.map((c, i) => {
     const r = R[c], s = !!save.seen[r.key] && recipeKnown(r), vv = recipeView(r), mm = benchMissing(c), lk = recipeLocked(r);
@@ -964,6 +966,7 @@ function benchBookLines(T, B, X) {
   });
   scrollFollow(b.bkArea, b.bkSel, items.length, rows);
   scrollArea(X, T, b.bkArea, items, rows, 'bka');
+  lines.push(...lines.splice(d0, d1 - d0));
 }
 
 function benchLockerLines(T, B, X) {

@@ -239,7 +239,7 @@ function openBoard(tab) {
     setMsg(`> ${u.name.toLowerCase()} unlocked${u.costs.length > 1 ? `: level ${lv + 1}` : ''}.`, C.rep);
   };
   deckEnsure();   // USER and no deck yet (a save from before the deck): it's yours now, and POPS calls (engine/deck.js)
-  openPanel('THE BOARD', (T, B, X) => {
+  openPanel('THE BOARD', (T, B, X, panel) => {   // (panel: the lines drawn so far; FEATS moves its details under the list)
     st.scroll = null;
     T('+------------------------------+', C.dim);
     X({ text: '|  T H E   B O A R D   //  BBS |', colorAt: i => i === 0 || i === 31 ? C.dim : C.rep, bold: true });
@@ -329,11 +329,14 @@ function openBoard(tab) {
       const f = lines[featSel].f;
       seeFeat(f.id);   // looked at: its * goes
       t(`${done} of ${featsShown().length} done`, C.mid);
+      const d0 = panel.length;   // (the picked feat: drawn here, moved under the list, like every list: Greg, 2026-11-23)
+      t(SEP, C.dim);
       x({ text: f.name, col: featDone(f.id) ? C.rep : C.bright, bold: true });
       t(f.text, C.text);
       t(featProgText(f), featDone(f.id) ? C.rep : C.mid);
       t(f.title ? `gives the title "${f.title}"` : '', C.rep);
       t(SEP, C.dim);
+      const d1 = panel.length;
       const items = lines.map((l, i) => l.hdr
         ? { text: ('-- ' + l.hdr + ' ').padEnd(32, '-'), col: C.mid }
         : { list: true, id: 'ft' + i, onTap: () => { featSel = i; Sound.tick(); }, sel: i === featSel,
@@ -341,6 +344,7 @@ function openBoard(tab) {
           right: featProgText(l.f), rightCol: featDone(l.f.id) ? C.rep : C.mid });
       items.push({ text: '' }, { text: '-- STATS '.padEnd(32, '-'), col: C.mid }, ...boardStatItems());   // the record, under the feats
       scrollArea(x, t, featS, items, FEAT_LIST_ROWS, 'fl');
+      panel.push(...panel.splice(d0, d1 - d0));
     } else if (tab === 'crew') {
       scrollArea(x, t, crewS, crewItems(), BOARD_BODY, 'cl');
     } else if (tab === 'quests') questBoardLines(t, x);   // engine/quests.js
