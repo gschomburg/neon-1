@@ -94,15 +94,15 @@ module.exports = { name: 'root', body: `
   benchPlace('r'); check(st.bench.slots[0] === 'r' && !st.bench.slots[3], 'r goes in; the digit comes out (the 4th slot is a letter slot)');
   benchPlace('3'); check(!st.bench.slots.includes('3'), 'no digits while spelling ROOT');
   benchPlace('t'); benchPlace('o'); benchPlace('o');
-  check(st.bench.slots.join('') === 'rtoo' && benchJudge().kind === 'rbad', 'r t o o: not it: ' + benchJudge().kind);
+  check(st.bench.slots.join('') === 'rtoo' && benchJudge().kind === 'wbad', 'r t o o: not it: ' + benchJudge().kind);
   const before = JSON.stringify(save.bench.letters);
   benchBuild(); check(JSON.stringify(save.bench.letters) === before, 'a wrong word burns nothing');
   [3, 2, 1, 0].forEach(i => benchUnplace(i, true));
-  check(!benchRootMode(), 'cleared: back to three slots');
+  check(!benchWordMode(), 'cleared: back to three slots');
   // a * fills in
   save.bench.letters['*'] = 1;
   benchPlace('r'); benchPlace('*'); benchPlace('o'); benchPlace('t');
-  check(benchJudge().kind === 'root', 'r * o t is ROOT: ' + st.bench.slots.join(''));
+  check(benchJudge().kind === 'word' && benchJudge().w.id === 'root', 'r * o t is ROOT: ' + st.bench.slots.join(''));
   // other words can't use them
   [3, 2, 1, 0].forEach(i => benchUnplace(i, true));
   check(!Object.values(benchRecipes()).some(rc => /[a-z]/.test(rc.code)), 'no recipe has lowercase letters');

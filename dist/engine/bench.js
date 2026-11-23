@@ -26,10 +26,23 @@ const BENCH = {
   shred: { jumble: 950, suck: 320, drop: 170, fly: 520 },                // the shred
 };
 const BENCH_MISS = { fg: '#ff4fd8', bg: '#4a1240' };   // a letter you're missing (magenta: red is for the DIVINE letters)
-// ROOT's letters (its quest, PAPERWORK: engine/quests.js): lowercase r / o / t, on the quest color. They sit in the special
-// row, no recipe uses them, and they never burn: a wrong spell gives them back. In the slots they open a 4th letter slot.
-const isRootCh = ch => /^[a-z]$/.test(ch);
-const letterChip = ch => isRootCh(ch) ? { fg: C.bg, bg: C.rep } : chipOf(letterTier(ch));
+// SPECIAL WORDS: a quest's own letters, kept apart from the recipes', spelled in 4 slots (the x slot is the 4th): ROOT's
+// today (PAPERWORK: lowercase r / o / t on the quest color, engine/quests.js), the cult's DIVINE letters later
+// (docs/QUESTS.md). They sit in the SPECIAL row, no recipe uses them, and they never burn: a wrong word gives them back.
+// A word: id; word (a * fills one letter); isCh(ch): its letters; col(): their color (and the frame's); label: under the
+// 4th slot; mark: shown when it's right; lines: { hint, ok, bad(w), wild, sign, btn, built }; spend(): you build it
+// (its letters are gone: the quest notes it); sign(): after the build's charge; fine: the fine print it fills the
+// screen with.
+const BENCH_WORDS = [
+  { id: 'root', word: ROOT_WORD, isCh: ch => /^[a-z]$/.test(ch), col: () => C.rep, label: 'ROOT', mark: 'r??t',
+    lines: { hint: "r o o t: ROOT's paperwork.", ok: 'the paperwork, filled in.', bad: w => `${w}: that's not it.`, wild: 'a * fills in for one letter.',
+      sign: 'sign it', btn: '[ SIGN ]', built: '> build root: ...the paperwork went through.' },
+    spend: () => { questOf('root').signing = true; },   // (if the game closes before the scene ends, rootStart finishes it: engine/quests.js)
+    sign: () => rootSigned(), fine: '.,:;§#abcdefghijklmnopqrstuvwxyz' },
+];
+const benchWordOf = ch => (ch && BENCH_WORDS.find(w => w.isCh(ch))) || null;
+const isWordCh = ch => !!benchWordOf(ch);
+const letterChip = ch => { const w = benchWordOf(ch); return w ? { fg: C.bg, bg: w.col() } : chipOf(letterTier(ch)); };
 const BENCH_KB = KB_ROWS;   // (the keys: engine/keyboard.js)
 // A BLANK (Greg, 2026-11-21): an empty chip. It goes in the extra slot (the small 2x2 after the letters; inside, slot 4), and then
 // the three slots spell a chip's code (digits too: CD2, LW1). One BLANK, one chip. From shredding chips, now and then.
@@ -136,18 +149,19 @@ function benchMissing(code) {
 const missText = m => m.replace(BENCH_BLANK, '') + (m.includes(BENCH_BLANK) ? (m.length > 1 ? ' ' : '') + '+BLANK' : '');
 const benchWord = () => st.bench.slots.slice(0, 3).map(s => s || '').join('');
 // What the three slots spell: partial / ok (a recipe) / pick (a * fits several) / near (one letter off) / bad / lock.
-// ROOT's letters in the slots: the x slot is a 4th letter slot, and the word is ROOT's (engine/quests.js ROOT_WORD; a *
-// fills in for one). rpartial / root (it's right) / rbad.
-const benchRootMode = () => !!st.bench && st.bench.slots.some(isRootCh);
+// A special word's letters in the slots: the x slot is a 4th letter slot, and the word is that word's (a * fills in for
+// one). wpartial / word (it's right) / wbad, with the word as j.w.
+const benchWordMode = () => (st.bench && BENCH_WORDS.find(w => st.bench.slots.some(ch => ch && w.isCh(ch)))) || null;
 // A BLANK in its slot: the three slots spell a chip (the chip recipes only; digits go in the letter slots).
 const benchChipMode = () => !!st.bench && isBlank(st.bench.slots[4]);
 // The recipes the slots can spell now: chips with a BLANK in, everything else without (and only chips you've had).
 const benchPool = () => { const chip = benchChipMode(); return Object.values(benchRecipes()).filter(rc => (rc.kind === 'chip') === chip && recipeKnown(rc)); };
 function benchJudge() {
-  if (benchRootMode()) {
+  const wm = benchWordMode();
+  if (wm) {
     const s4 = st.bench.slots.slice(0, 4);
-    if (s4.some(x => !x)) return { kind: 'rpartial' };
-    return s4.every((x, i) => x === ROOT_WORD[i] || x === '*') ? { kind: 'root' } : { kind: 'rbad', w: s4.join('') };
+    if (s4.some(x => !x)) return { kind: 'wpartial', w: wm };
+    return s4.every((x, i) => x === wm.word[i] || x === '*') ? { kind: 'word', w: wm } : { kind: 'wbad', w: wm, typed: s4.join('') };
   }
   const s = st.bench.slots.slice(0, 3);
   if (s.some(x => !x)) return { kind: 'partial' };
@@ -165,7 +179,7 @@ function benchJudge() {
 // The codes that fit what's typed so far (a * fits anything).
 function benchMatches() {
   const s = st.bench.slots;
-  if (!s.slice(0, 3).some(Boolean) || benchRootMode()) return [];
+  if (!s.slice(0, 3).some(Boolean) || benchWordMode()) return [];
   const pool = benchChipMode() ? benchPool() : benchPool().concat(Object.values(benchRecipes()).filter(rc => rc.kind === 'chip' && recipeKnown(rc)));   // (no BLANK in: chips you've had come after, and tap: fill puts a BLANK in)
   return pool.filter(rc => [0, 1, 2].every(i => !s[i] || s[i] === '*' || rc.code[i] === s[i]))
     .sort((a, b) => !benchMissing(b.code) - !benchMissing(a.code)).slice(0, 3).map(rc => rc.code);
@@ -239,7 +253,9 @@ function benchPlace(ch, i) {
   const b = st.bench;
   if (!b || b.tab !== 'build' || benchBusy()) return;
   if (benchHave(ch) <= 0) return Sound.deny();
-  if (isRootCh(ch) || benchRootMode()) {   // ROOT's letters: four letter slots, no digits, no BLANK
+  const wm = benchWordMode(), wc = benchWordOf(ch);
+  if (wm && wc && wc !== wm) return Sound.deny();   // (two words' letters don't mix)
+  if (wc || wm) {   // a special word's letters: four letter slots, no digits, no BLANK
     if (isMult(ch) || ch === '1' || isBlank(ch) || b.slots[4]) return Sound.deny();
     if (b.slots[3] && isMult(b.slots[3])) benchUnplace(3, true);
     if (i == null || i > 3 || b.slots[i]) i = b.slots.slice(0, 4).findIndex(s => !s);
@@ -272,7 +288,7 @@ function benchUnplace(i, quiet = false) {
   if (!ch) return;
   b.slots[i] = null;
   if (!quiet && (i < 3 || !isMult(ch))) { b.fx.push({ ch, x: i < 3 ? b.slotX[i] : BENCH_BLANK_X, y: b.slotY, t0: performance.now() }); Sound.tick(); }
-  if (!benchRootMode() && b.slots[3] && !isMult(b.slots[3])) benchUnplace(3, quiet);   // the last of ROOT's letters out: the 4th slot is the x slot again
+  if (!benchWordMode() && b.slots[3] && !isMult(b.slots[3])) benchUnplace(3, quiet);   // the last of a word's letters out: the 4th slot is the x slot again
   if (i === 4) for (const j of [0, 1, 2]) if (isDigit(b.slots[j])) benchUnplace(j, quiet);   // the BLANK out: no more digits in the letter slots
 }
 function benchFill(code) {
@@ -305,16 +321,16 @@ function benchBuild(code = null, force = false) {
   const b = st.bench;
   if (!b || benchBusy()) return;
   const j = benchJudge();
-  if (j.kind === 'root') {   // ROOT's word: the letters (and a *) are spent, the build charges, then it's hijacked (rootSigned)
+  if (j.kind === 'word') {   // a special word: the letters (and a *) are spent, the build charges, then its sign() (ROOT: rootSigned)
     const letters = benchSave().letters;
-    for (const ch of b.slots.filter(Boolean)) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }   // (slot 5 is empty in ROOT's word: it wrote letters.null = NaN)
-    questOf('root').signing = true;   // (spent: if the game closes before the scene ends, rootStart finishes it: engine/quests.js)
-    b.anim = { t0: performance.now(), root: true, word: b.slots.join(''), slots: b.slots.slice(0, 4), x: b.slotX.concat(BENCH_BLANK_X), y: b.slotY };
+    for (const ch of b.slots.filter(Boolean)) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }   // (slot 5 is empty in a word: it wrote letters.null = NaN)
+    if (j.w.spend) j.w.spend();
+    b.anim = { t0: performance.now(), word: j.w.id, slots: b.slots.slice(0, 4), x: b.slotX.concat(BENCH_BLANK_X), y: b.slotY };
     b.slots = [null, null, null, null, null];
     persist();
     return Sound.charge(BENCH.build.charge / 1000);
   }
-  if (benchRootMode()) return Sound.deny();   // (ROOT's letters never go into anything else)
+  if (benchWordMode()) return Sound.deny();   // (a word's letters never go into anything else)
   if (!code) {
     if (j.kind === 'ok') code = j.code;
     else if ((j.kind === 'near' || j.kind === 'bad') && force) code = '?';
@@ -529,7 +545,7 @@ function benchKey(k) {
   const tk = k.length === 1 ? k.toUpperCase() : k === 'backspace' ? 'DEL' : k === 'enter' ? 'ENTER' : null;
   if (tk && !tutAllows('key', tk)) { tutNo(); return true; }
   if (k.length === 1 && /[a-z0-9*#]/.test(k)) {   // a letter types uppercase; ROOT's lowercase ones when you're spelling it, or have no uppercase one
-    const up = k.toUpperCase(), lo = /[a-z]/.test(k) && benchHave(k) > 0 && (benchRootMode() || benchHave(up) <= 0);
+    const up = k.toUpperCase(), lo = /[a-z]/.test(k) && isWordCh(k) && benchHave(k) > 0 && (benchWordMode() || benchHave(up) <= 0);
     Sound.keyclick(); benchPlace(lo ? k : up); return true;
   }
   if (k === 'backspace') { Sound.keyclick(); const i = [4, 3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); return true; }
@@ -662,7 +678,7 @@ function benchBuildLines(T, B, X) {
     // the prompt: $ build, a frame round three plain 3x3 slots, the x slot for a digit
     const sy = y0 + 9; b.slotY = sy; b.slotX = [10, 14, 18];
     put(1, sy + 1, '$', C.accent, 'board', true); put(3, sy + 1, 'build', C.accent, 'board', true);
-    const fw = 11, fc = !a && benchRootMode() ? C.rep : C.dim;   // (ROOT's letters: the frame goes the quest color)
+    const wm = !a && benchWordMode(), fw = 11, fc = wm ? wm.col() : C.dim;   // (a word's letters: the frame goes its color)
     put(9, sy - 1, '+' + '-'.repeat(fw) + '+', fc, 'board'); put(9, sy + 3, '+' + '-'.repeat(fw) + '+', fc, 'board');
     for (let r = 0; r < 3; r++) { put(9, sy + r, '|', fc, 'board'); put(10 + fw, sy + r, '|', fc, 'board'); }
     const cur = a ? -1 : b.slots.slice(0, 3).findIndex(s => !s), blink = Math.floor(now / 500) % 2;
@@ -675,14 +691,14 @@ function benchBuildLines(T, B, X) {
       }
       ctx.addHit(x, sy, 3, 3, { kind: 'benchslot', slot: i });
     });
-    // the extra slot: a digit 2-9 (x: a chance of that many) or a BLANK. With ROOT's letters in, it's their 4th letter.
-    const d = b.slots[3], rm = !a && benchRootMode();
-    if (rm) {
-      // ROOT's word: its 4th letter goes in the extra slot (Greg, 2026-11-21: "just make it work for the t")
-      const bx = BENCH_BLANK_X;
+    // the extra slot: a digit 2-9 (x: a chance of that many) or a BLANK. With a word's letters in, it's their 4th letter.
+    const d = b.slots[3];
+    if (wm) {
+      // a special word: its 4th letter goes in the extra slot (Greg, 2026-11-21: "just make it work for the t")
+      const bx = BENCH_BLANK_X, wcol = wm.col();
       if (d) benchBlock(ctx, bx, sy + 1, d, { t0: b.slotT[3], seed: 3, size: 2 });
-      else { put(bx, sy + 1, '::', C.rep, 'board'); put(bx, sy + 2, cur < 0 && blink ? '__' : '::', C.rep, 'board', cur < 0 && blink); }
-      put(bx, sy + 3, 'ROOT', C.rep, 'board');
+      else { put(bx, sy + 1, '::', wcol, 'board'); put(bx, sy + 2, cur < 0 && blink ? '__' : '::', wcol, 'board', cur < 0 && blink); }
+      put(bx, sy + 3, wm.label, wcol, 'board');
       ctx.addHit(bx, sy + 1, 2, 2, { kind: 'benchslot', slot: 3 });
     } else {
       // the extra slot (Greg, 2026-11-21: one slot for both): smaller (2x2) and dotted, so it reads as optional. It
@@ -697,12 +713,13 @@ function benchBuildLines(T, B, X) {
     }
     if (a) { benchBuildAnim(ctx, a); benchFx(ctx); benchLoot(ctx); return; }
     const j = benchJudge();
-    if (j.kind === 'root' || j.kind === 'rpartial' || j.kind === 'rbad') {   // ROOT's word (engine/quests.js PAPERWORK)
-      if (j.kind === 'root') { const x0 = Math.floor((L.wc - 24) / 2), ry = sy + 4; ctx.bg(x0, ry, 4, C.rep, 1); put(x0, ry, 'r??t', C.bg, 'board', true); put(x0 + 5, ry, 'sign it', C.bright, 'board', true); benchBtn(ctx, x0 + 14, ry, '[ SIGN ]', C.rep, 'bkbuild', () => benchBuild()); }   // (under the letters, like a build)
-      const y = sy + 5, l1 = j.kind === 'rbad' ? `${j.w}: that's not it.` : j.kind === 'root' ? 'the paperwork, filled in.' : "r o o t: ROOT's paperwork.", l2 = j.kind === 'root' ? '' : 'a * fills in for one letter.';
-      put(Math.floor((L.wc - l1.length) / 2), y, l1, j.kind === 'rbad' ? C.danger : C.rep, 'board');
+    if (j.kind === 'word' || j.kind === 'wpartial' || j.kind === 'wbad') {   // a special word (ROOT's: engine/quests.js PAPERWORK)
+      const W = j.w, wl = W.lines, wcol = W.col();
+      if (j.kind === 'word') { const x0 = Math.floor((L.wc - 24) / 2), ry = sy + 4; ctx.bg(x0, ry, W.mark.length, wcol, 1); put(x0, ry, W.mark, C.bg, 'board', true); put(x0 + W.mark.length + 1, ry, wl.sign, C.bright, 'board', true); benchBtn(ctx, x0 + 14, ry, wl.btn, wcol, 'bkbuild', () => benchBuild()); }   // (under the letters, like a build)
+      const y = sy + 5, l1 = j.kind === 'wbad' ? wl.bad(j.typed) : j.kind === 'word' ? wl.ok : wl.hint, l2 = j.kind === 'word' ? '' : wl.wild;
+      put(Math.floor((L.wc - l1.length) / 2), y, l1, j.kind === 'wbad' ? C.danger : wcol, 'board');
       if (l2) put(Math.floor((L.wc - l2.length) / 2), y + 1, l2, C.mid, 'board');
-      if (j.kind === 'rbad') { const r2 = '[ CLEAR ]'; benchBtn(ctx, Math.floor((L.wc - r2.length) / 2), y + 2, r2, C.bright, 'bkcancel', () => [3, 2, 1, 0].forEach(i => benchUnplace(i))); }
+      if (j.kind === 'wbad') { const r2 = '[ CLEAR ]'; benchBtn(ctx, Math.floor((L.wc - r2.length) / 2), y + 2, r2, C.bright, 'bkcancel', () => [3, 2, 1, 0].forEach(i => benchUnplace(i))); }
       benchFx(ctx); benchLoot(ctx); return;
     }
     if (j.kind === 'ok') {   // under the letters (Greg, 2026-11-21: the right side has the BLANK now): code, name, [ BUILD ]
@@ -765,12 +782,13 @@ function benchBuildAnim(ctx, a) {
   const T = BENCH.build, t = ctx.now - a.t0, put = ctx.put;
   const e1 = T.charge, e2 = e1 + T.split, e3 = e2 + T.form, e4 = e3 + T.hold, e5 = e4 + T.fly;
   const cx = 15, cy = a.y + 1;   // where it forms (over the middle slot)
-  if (a.root && t >= e1 + 500) {   // ROOT's word: it charges, the screen fills with fine print, then the scene takes over
-    st.bench.anim = null; benchSay('> build root: ...the paperwork went through.');
-    return rootSigned();
+  const W = a.word && BENCH_WORDS.find(w => w.id === a.word);
+  if (W && t >= e1 + 500) {   // a special word: it charges, the screen fills with fine print, then its sign() takes over (ROOT: the scene)
+    st.bench.anim = null; benchSay(W.lines.built);
+    return W.sign();
   }
-  if (a.root && t >= e1) {
-    for (let r = 0; r < 14; r++) put(0, a.y - 8 + r, Array.from({ length: L.wc }, (_, i) => hh(i, r + Math.floor(t / 50)) < (t - e1) / 500 ? '.,:;§#abcdefghijklmnopqrstuvwxyz'[Math.floor(hh(i + 3, r + Math.floor(t / 70)) * 32)] : ' ').join(''), C.rep, 'fx');
+  if (W && t >= e1) {
+    for (let r = 0; r < 14; r++) put(0, a.y - 8 + r, Array.from({ length: L.wc }, (_, i) => hh(i, r + Math.floor(t / 50)) < (t - e1) / 500 ? W.fine[Math.floor(hh(i + 3, r + Math.floor(t / 70)) * W.fine.length)] : ' ').join(''), W.col(), 'fx');
     return;
   }
   if (t < e1) {   // CHARGE
@@ -1073,7 +1091,7 @@ function benchKeys(now) {
   const press = b.press, pch = press && press.moved && press.px != null ? (press.kind === 'benchkey' ? press.key : b.slots[press.slot]) : null;
   kbDraw({
     top: G.top + off, live: b.kb.up && k >= 1 && !benchBusy(),
-    special: BENCH_SPECIAL.concat(ROOT_WORD.split('').filter((c, i, a) => a.indexOf(c) === i)).filter(ch => benchHave(ch) > 0),   // (ROOT's letters: engine/quests.js)
+    special: BENCH_SPECIAL.concat(...BENCH_WORDS.map(w => w.word.split('').filter((c, i, a) => a.indexOf(c) === i))).filter(ch => benchHave(ch) > 0),   // (the special words' letters: ROOT's)
     count: benchHave,
     del: () => { Sound.keyclick(); const i = [4, 3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); },
     enter: { label: 'ENTER', onTap: () => { Sound.keyclick(); benchBuild(); } },
