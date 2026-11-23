@@ -444,6 +444,7 @@ function draw() {
   const f = F();
   // header and HUD (rows 0-4)
   put(0, 0, 'NeoN+1', C.accent, true); btn(SW - 7, 0, '[ NEW ]', 'new', () => newRun(newSeed()));
+  btn(7, 0, `[UI ${ui + 1}/${UIS.length} ${UIS[ui].name}]`, 'ui', nextUI, C.money);
   rule(1);
   put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); put(5, 2, f.name, C.bright, true);
   put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent, true);
@@ -483,9 +484,36 @@ function draw() {
   put(S.x, MAP_Y + S.y, '@', S.inDuct ? C.rare : C.accent, true, red ? 'rgba(255,59,78,0.5)' : null);
   for (const b of booms) { const k = (now - b.t) / 500; if (k < 1) for (const [dx, dy] of [[-2, 0], [2, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) put(b.x + Math.round(dx * (1 + k)), MAP_Y + b.y + Math.round(dy * (1 + k)), '*', k < 0.5 ? C.money : C.danger, true); }
   if (S.info && S.info.x != null) { const px = L.ox + S.info.x * L.cw, py = L.oy + (MAP_Y + S.info.y) * L.ch; g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); }
+  // row 31: how this UI works
+  put(0, 31, UIS[ui].hint.slice(0, SW), C.dim);
   // the tray rows (32-36): the pad, or the gear
-  put(0, 32, '- '.repeat(18).trimEnd(), C.dim);
-  if (S.mode === 'pad') {
+  const u = UIS[ui].key;
+  if (u !== 'classic') {
+    // the condensed tray: USE and the gear stacked on the right, no swap
+    put(22, 32, '- '.repeat(7), C.dim);
+    btn(24, 33, '[   USE    ]', 'use', use, C.accent, '<>EFK'.includes(at(f, S.x, S.y)));
+    S.gear.forEach((gr, i) => btn(24, 34 + i, `[ ${gr.key.padEnd(5)} x${gr.n} ]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0));
+    const live = G && G.pad;
+    if (u === 'swipe' || u === 'stick') {
+      put(0, 32, '- '.repeat(11).trimEnd(), C.dim);
+      put(1, 33, u === 'swipe' ? 'swipe anywhere: step' : 'drag anywhere: walk', C.mid);
+      btn(1, 35, '[  ·  WAIT  ]', 'wait', () => act(0, 0), C.mid);
+    } else if (u === 'track') {
+      const col = live ? C.accent : C.mid;
+      put(0, 32, '┌' + '─'.repeat(19) + '┐', col);
+      for (let r = 33; r <= 35; r++) { put(0, r, '│', col); put(20, r, '│', col); }
+      put(0, 36, '└' + '─'.repeat(19) + '┘', col);
+      put(4, 34, 'drag  ·  tap', C.dim);
+    } else if (u === 'zone') {
+      const lit = d => live && G.dir && G.dir[0] === d[0] && G.dir[1] === d[1] ? C.accent : C.mid;
+      put(0, 32, '╲', C.dim); put(10, 32, '▲', lit([0, -1]), true); put(20, 32, '╱', C.dim);
+      put(5, 33, '╲', C.dim); put(15, 33, '╱', C.dim);
+      put(0, 34, '◄', lit([-1, 0]), true); put(10, 34, '·', C.mid, true); put(20, 34, '►', lit([1, 0]), true);
+      put(5, 35, '╱', C.dim); put(15, 35, '╲', C.dim);
+      put(0, 36, '╱', C.dim); put(10, 36, '▼', lit([0, 1]), true); put(20, 36, '╲', C.dim);
+    }
+  } else if (S.mode === 'pad') {
+    put(0, 32, '- '.repeat(18).trimEnd(), C.dim);
     btn(7, 33, '[ ▲ ]', 'up', () => act(0, -1));
     btn(1, 34, '[ ◄ ]', 'left', () => act(-1, 0)); btn(7, 34, '[ · ]', 'wait', () => act(0, 0), C.mid); btn(13, 34, '[ ► ]', 'right', () => act(1, 0));
     btn(7, 35, '[ ▼ ]', 'down', () => act(0, 1));
@@ -493,6 +521,7 @@ function draw() {
     btn(22, 35, '[ ⇄ GEAR ]', 'swap', () => { S.mode = 'gear'; draw(); }, C.mid);
     put(0, 36, 'keys: arrows / wasd, space waits, enter uses', C.dim);
   } else {
+    put(0, 32, '- '.repeat(18).trimEnd(), C.dim);
     S.gear.forEach((gr, i) => btn(1 + i * 12, 33, `[${gr.key} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0));
     put(1, 34, 'FLARE: see the whole floor, 6 turns.', C.mid);
     put(1, 35, 'FRAG: blows the 3x3 round you. loud.', C.mid);
@@ -509,22 +538,109 @@ function draw() {
     S.over.lines.forEach((l, i) => { const w = wrap(l, 32); w.forEach((s, j) => put(Math.floor((SW - s.length) / 2), y0 + 2 + i * 2 + j, s, C.text)); });
     btn(9, y0 + 8, '[ SAME SEED ]', 'again', () => newRun(S.seed)); btn(9, y0 + 10, '[ NEW  SEED ]', 'again2', () => newRun(newSeed()));
   }
+  // a finger on the trackpad, or the stick's ring and knob
+  if (G && G.cx != null && ((u === 'track' && G.pad) || u === 'stick')) {
+    g.lineWidth = 2;
+    if (u === 'stick') { g.strokeStyle = 'rgba(60,240,255,0.35)'; g.beginPath(); g.arc(G.x0, G.y0, stickDead() * 2, 0, Math.PI * 2); g.stroke(); g.strokeStyle = 'rgba(60,240,255,0.15)'; g.beginPath(); g.arc(G.x0, G.y0, stickDead(), 0, Math.PI * 2); g.stroke(); }
+    g.fillStyle = 'rgba(60,240,255,0.45)'; g.beginPath(); g.arc(G.cx, G.cy, L.cw * 0.9, 0, Math.PI * 2); g.fill();
+  }
   if (booms.some(b => now - b.t < 500) || now - S.msgT < 1200 || now - flashT < 300) requestAnimationFrame(draw);
 }
 const wrap = (s, w) => { const out = []; let l = ''; for (const word of s.split(' ')) { if ((l + ' ' + word).trim().length > w) { out.push(l); l = word; } else l = (l + ' ' + word).trim(); } if (l) out.push(l); return out; };
 
 // ---------- input ----------
 function cellAt(ev) { return { x: Math.floor((ev.clientX - L.ox) / L.cw), y: Math.floor((ev.clientY - L.oy) / L.ch) }; }
-cv.addEventListener('pointerdown', ev => {
-  const { x, y } = cellAt(ev);
-  const h = hits.find(h => h.fn && y === h.y && x >= h.x && x < h.x + h.w);
-  if (h) return h.fn();
-  if (S.over) return;
-  const mx = x, my = y - MAP_Y, f = F();
+// The UIs to try on a phone (Greg, 2026-11-23). The header's [UI] button steps through them; ?ui=2 picks one.
+//   CLASSIC PAD: the d-pad, and [⇄ GEAR] swaps the tray to the gear.
+//   SWIPE: swipe anywhere: one step that way (on the lift). Tap a cell next to you: a step; tap @: wait.
+//   TRACKPAD: the box on the left. Drag on it: a step each notch you drag (a flick is one). Tap it: wait.
+//   ZONE PAD: the left of the tray is cut in four wedges; touch one: a step, hold: keep going. The middle: wait.
+//   STICK: touch anywhere, drag past the ring: a step, hold: keep going. Like a floating thumbstick.
+// All but CLASSIC hold USE, FLARE and FRAG together on the right: no swap.
+const UIS = [
+  { key: 'classic', name: 'CLASSIC PAD', hint: 'the old pad. ⇄ GEAR for the gear.' },
+  { key: 'swipe', name: 'SWIPE', hint: 'swipe anywhere to step. tap @: wait' },
+  { key: 'track', name: 'TRACKPAD', hint: 'drag on the pad to step. tap: wait' },
+  { key: 'zone', name: 'ZONE PAD', hint: 'touch a side of the pad. hold: walk' },
+  { key: 'stick', name: 'STICK', hint: 'drag past the ring. hold: keep going' },
+];
+let ui = 0, G = null;   // G: the finger that's down
+try { ui = Math.max(0, Math.min(UIS.length - 1, +localStorage.getItem('neon.infiltr8.ui') || 0)); } catch (e) { /* private mode */ }
+{ const q = new URLSearchParams(location.search).get('ui'); if (q && +q >= 1 && +q <= UIS.length) ui = +q - 1; }
+function nextUI() {
+  ui = (ui + 1) % UIS.length; S.mode = 'pad';
+  try { localStorage.setItem('neon.infiltr8.ui', ui); } catch (e) { /* private mode */ }
+  say('UI ' + (ui + 1) + ': ' + UIS[ui].name + '.', C.money); draw();
+}
+const swipeMin = () => Math.max(14, L.cw * 1.4);   // less than this is a tap
+const notch = () => Math.max(22, L.cw * 2.6);       // the trackpad: a step each this far
+const stickDead = () => Math.max(16, L.cw * 1.8);   // the stick: past this ring, you walk
+const dirOf = (dx, dy) => Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)];
+const onPad = c => c.x <= 21 && c.y >= 32;          // the left of the tray (TRACKPAD, ZONE PAD)
+// a tap on the floor: next to you, a step; on you, a wait; anywhere else, what it is
+function mapTap(c) {
+  const mx = c.x, my = c.y - MAP_Y, f = F();
   if (!inb(mx, my)) return;
-  if (Math.abs(mx - S.x) + Math.abs(my - S.y) === 1) return act(mx - S.x, my - S.y);   // next to you: a step
-  S.info = infoAt(f, mx, my); draw();   // else: what is it
+  if (Math.abs(mx - S.x) + Math.abs(my - S.y) === 1) return act(mx - S.x, my - S.y);
+  if (mx === S.x && my === S.y && UIS[ui].key !== 'classic') return act(0, 0);
+  S.info = infoAt(f, mx, my); draw();
+}
+// hold to walk (ZONE PAD, STICK): the first step at once, the next after a beat, then quicker
+function holdTick() {
+  if (!G || !G.dir || S.over) return;
+  const now = performance.now(), wait = G.steps === 0 ? 0 : G.steps === 1 ? 380 : 190;
+  if (now - G.last < wait) return;
+  G.last = now; G.steps++; G.total++; act(G.dir[0], G.dir[1]);
+}
+function setDir(d) {
+  if (!d || !G.dir || d[0] !== G.dir[0] || d[1] !== G.dir[1]) G.steps = 0;
+  G.dir = d; holdTick(); draw();
+}
+function zoneDir(ev) {   // the wedge under the finger; the middle is a wait
+  const nx = (ev.clientX - (L.ox + 10.5 * L.cw)) / (10.5 * L.cw), ny = (ev.clientY - (L.oy + 34.5 * L.ch)) / (2.5 * L.ch);
+  return Math.hypot(nx, ny) < 0.3 ? 'wait' : dirOf(nx, ny);
+}
+cv.addEventListener('pointerdown', ev => {
+  const c = cellAt(ev);
+  const h = hits.find(h => h.fn && c.y === h.y && c.x >= h.x && c.x < h.x + h.w);
+  if (h) return h.fn();
+  if (S.over || G) return;
+  try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* fine */ }
+  const u = UIS[ui].key;
+  G = { id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, ax: ev.clientX, ay: ev.clientY, cx: ev.clientX, cy: ev.clientY, cell: c, pad: onPad(c), dir: null, steps: 0, total: 0, last: -1e9, timer: null };
+  if (u === 'zone' && G.pad) { const d = zoneDir(ev); if (d === 'wait') act(0, 0); else { G.timer = setInterval(holdTick, 30); setDir(d); } }
+  if (u === 'stick') G.timer = setInterval(holdTick, 30);
+  draw();
 });
+cv.addEventListener('pointermove', ev => {
+  if (!G || ev.pointerId !== G.id) return;
+  G.cx = ev.clientX; G.cy = ev.clientY;
+  const u = UIS[ui].key;
+  if (u === 'track' && G.pad) {
+    const dx = ev.clientX - G.ax, dy = ev.clientY - G.ay;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) >= notch()) { const d = dirOf(dx, dy); G.ax = ev.clientX; G.ay = ev.clientY; G.total++; act(d[0], d[1]); }
+    else draw();
+  } else if (u === 'zone' && G.pad && G.timer) {
+    const d = zoneDir(ev); setDir(d === 'wait' ? null : d);
+  } else if (u === 'stick') {
+    const dx = ev.clientX - G.x0, dy = ev.clientY - G.y0;
+    setDir(Math.hypot(dx, dy) >= stickDead() ? dirOf(dx, dy) : null);
+  }
+});
+function liftFinger(ev, cancel) {
+  if (!G || ev.pointerId !== G.id) return;
+  const g0 = G; clearInterval(g0.timer); G = null;
+  if (cancel || S.over) return draw();
+  const u = UIS[ui].key, dx = ev.clientX - g0.x0, dy = ev.clientY - g0.y0, far = Math.hypot(dx, dy) >= swipeMin();
+  if (u === 'track' && g0.pad) { if (!g0.total) { if (far) { const d = dirOf(dx, dy); act(d[0], d[1]); } else act(0, 0); } return draw(); }
+  if (u === 'zone' && g0.pad) return draw();
+  if (u === 'stick') { if (!g0.total && !far) mapTap(g0.cell); return draw(); }
+  if (u === 'swipe' && far) { const d = dirOf(dx, dy); return act(d[0], d[1]); }
+  if (!far) return mapTap(g0.cell);
+  draw();
+}
+cv.addEventListener('pointerup', ev => liftFinger(ev, false));
+cv.addEventListener('pointercancel', ev => liftFinger(ev, true));
 function infoAt(f, x, y) {
   const vis = S.vis[y][x], seen = f.seen[y][x];
   if (!vis && !seen) return { x, y, glyph: '?', name: 'UNKNOWN', text: 'not seen yet.' };

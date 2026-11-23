@@ -10,6 +10,9 @@ a CAM, a patrol on the middle ring); F2 and F3 come from the seed (rooms, pillar
 patrols, ducts between vents on F2, the trash chute). Turn based with fog of war; stairs; the payload on F3 sets off
 the alarm and shows your trail; out by your door (a clean job), the fire exit or the chute. Gear: FLARE, FRAG.
 `?seed=ABC` for a set seed.
+Phone controls to try (Greg, 2026-11-23): the header's [UI] button steps through CLASSIC PAD, SWIPE (swipe anywhere),
+TRACKPAD (drag on a box: a step a notch), ZONE PAD (four wedges, hold to walk) and STICK (a floating thumbstick).
+All but CLASSIC hold USE and the gear together on the right, with no swap. `?ui=3` picks one.
 
 Everything here is Claude's unless it says Greg. Greg's starting points:
 - A NetHack-style dungeon: sewers, tunnels, data mines. Turn based, fog of war or a light. Get in and out in a number
