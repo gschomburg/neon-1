@@ -40,13 +40,24 @@ code { color: var(--bright); }
 .k-d { color: var(--dim); } .k-m { color: var(--mid); } .k-t { color: var(--text); } .k-b { color: var(--bright); font-weight: 700; }
 .k-a { color: var(--accent); font-weight: 700; } .k-r { color: var(--danger); font-weight: 700; } .k-\$ { color: var(--money); }
 .k-p { color: var(--rep); font-weight: 700; }
-/* the keyboard's keys: chips by how many of the letter you hold (engine/bench.js letterTier: 10+ green, 5+ blue, 2+
-   purple, 1 orange), the one just pressed, one you're out of (an outline), the G0D.exe key. Two rows tall each. */
-.key { box-shadow: inset 2px 0 0 var(--bg), inset -2px 0 0 var(--bg); font-weight: 700; }
-.k-k1 { color: #0c3318; background: #6fdc84; } .k-k2 { color: #0b2a55; background: #7fb6ff; }
-.k-k3 { color: #2d0a4e; background: #c99bff; } .k-k4 { color: #4a1300; background: #ff8a4a; }
-.k-kA { color: var(--bg); background: var(--accent); } .k-k0 { color: var(--dim); box-shadow: inset 0 0 0 1px var(--dim); }
-.k-kG { color: var(--bg); background: var(--danger); } .k-kD { color: #1d2326; background: #d4dad9; }
+/* The keyboard, drawn like the game's canvas one (engine/bench.js benchKeys, benchKbGeom): a panel with a cyan line
+   on top, keys as solid chips the full width (10 a row, small gaps), about 1.3 times as tall as wide, the letter
+   centered and your count small in the bottom right (hex). Out: an outline. DEL grey on the left of the bottom row,
+   1.5 keys wide; on the right, where ENTER is, the fight's G0D.exe key. INT on the slim top row (the SPECIAL row's place). */
+.screen { display: flex; flex-direction: column; border: 1px solid var(--dim); width: max-content; max-width: 100%; }
+.screen .phone { border: 0; padding-bottom: 0; }
+.kbd { background: #0d1514; border-top: 1px solid var(--accent); padding: 6px 8px 10px; display: flex; flex-direction: column; gap: 4px; font-size: 16px; }
+.kbd .top { display: flex; justify-content: space-between; font-size: 12px; color: var(--mid); height: 18px; align-items: center; }
+.kbd .top b { color: var(--accent); letter-spacing: 1px; }
+.kbd .row { display: grid; grid-template-columns: repeat(20, 1fr); gap: 4px; }
+.kbd .k { grid-column: span 2; height: 42px; position: relative; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; border-bottom: 3px solid rgba(0, 0, 0, 0.28); }
+.kbd .k i { position: absolute; right: 3px; bottom: 1px; font-size: 10px; font-style: normal; }
+.kbd .w3 { grid-column: span 3; font-size: 12px; } .kbd .off1 { grid-column: 2 / span 2; }
+.kbd .c1 { color: #0c3318; background: #6fdc84; } .kbd .c2 { color: #0b2a55; background: #7fb6ff; }
+.kbd .c3 { color: #2d0a4e; background: #c99bff; } .kbd .c4 { color: #4a1300; background: #ff8a4a; }
+.kbd .c0 { color: var(--dim); background: transparent; border: 1px solid var(--dim); }
+.kbd .cA { color: var(--bg); background: var(--accent); } .kbd .cD { color: #1d2326; background: #d4dad9; }
+.kbd .cG { color: var(--bg); background: var(--danger); } .kbd .cGo { color: var(--danger); background: transparent; border: 1px solid var(--danger); }
 /* the cultists' words: KNOWN (G0D.exe has it: its red), its typed part; NEW (white), your typed part */
 .k-K { color: var(--danger); background: rgba(255, 59, 78, 0.16); }
 .k-Kf { color: var(--bg); background: var(--danger); font-weight: 700; }
@@ -63,17 +74,14 @@ code { color: var(--bright); }
 <div class="wrap">
   <div>
     <h1>THE CULT <b>FIGHT</b> <span style="color:var(--mid);font-size:14px">round 1</span></h1>
-    <p>Five takes on the G0D.exe quest's boss fight, on the game's 36 x 23 phone grid. The keyboard is the WORKBENCH's, at about its real size (the keys about 3 columns wide and 2 rows tall, your count of each letter in the corner), without its SPECIAL row (Greg, 2026-11-22): digits, QWERTY, ASDF, ZXCV with DEL and the G0D.exe key. It takes 10 rows, so the cult gets 13. No header: INT sits on the line over the keys, and the leader's bars by his name. The draft is in <code>docs/QUESTS.md</code> ("The G0D.exe quest: the cult"). THE PRIOR is a placeholder name.</p>
+    <p>Five takes on the G0D.exe quest's boss fight, on the game's 36 x 23 phone grid. The keyboard is the WORKBENCH's, drawn the way the game draws it (full width, solid chip keys colored by the letter's rarity, your count of it in the corner), without its SPECIAL row (Greg, 2026-11-22). The bottom row is DEL, Z to M, and where ENTER is, the fight's G0D.exe key (red: lit while it can help, an outline while it's busy). INT is on the slim top row. It takes about 9 of the phone's 23 rows, so the cult gets 14. No header: the leader's bars are by his name. The draft is in <code>docs/QUESTS.md</code> ("The G0D.exe quest: the cult"). THE PRIOR is a placeholder name.</p>
   </div>
   <div class="legend">
     <span><span class="k-K">MONTY</span> a word G0D.exe knows (its red)</span>
     <span><span class="k-Kf">MON</span><span class="k-K">TY</span> G0D.exe typing it</span>
     <span><span class="k-N">GLACIER</span><span class="k-q">?</span> a new word: yours</span>
     <span><span class="k-Nf">GLA</span><span class="k-N">CIER</span> you typing it</span>
-    <span><span class="k-k1 key"> E </span><span class="k-k2 key"> C </span><span class="k-k3 key"> B </span><span class="k-k4 key"> X </span> keys: lots of it, to 1 left</span>
-    <span><span class="k-k0 key"> K </span> out (1 INT to press)</span>
-    <span><span class="k-kA key"> A </span> just pressed</span>
-    <span><span class="k-X">G</span> a letter on the altar</span>
+        <span><span class="k-X">G</span> a letter on the altar</span>
   </div>
   <div id="mocks"></div>
 </div>
@@ -83,33 +91,21 @@ code { color: var(--bright); }
 'use strict';
 // ---------- data ----------
 // A row is markup: {k:text} colors text with key k (see the .k-* classes); bare text is the text color.
-// A row is at most 36 visible characters; shorter rows get padded. Each mockup is 23 rows: 13 for the cult, 10 keyboard.
+// A row is at most 36 visible characters; shorter rows get padded. Each mockup: 14 text rows for the cult, then the
+// keyboard (about 9 rows' worth, drawn as HTML).
 // DATA START
 const vis = s => Array.from(s.replace(/{([^:}]+):([^}]*)}/g, '$2')).length;
 const lr = (l, r) => l + ' '.repeat(Math.max(1, 36 - vis(l) - vis(r))) + r;   // left and right ends of a row
 const cen = s => ' '.repeat(Math.max(0, Math.floor((36 - vis(s)) / 2))) + s;   // centered
 const at = (n, s) => ' '.repeat(n) + s;   // n spaces in
-// The keyboard (engine/bench.js BENCH_KB, less the SPECIAL row): each key 3 wide and 2 rows tall, its letter on top and
-// your count in the corner under it (hex, as the bench shows it). out: keys you're out of; hit: the key just pressed.
-const HOLD = { E: 12, T: 10, A: 11, O: 9, I: 8, N: 10, S: 7, R: 9, L: 6, C: 5, D: 4, U: 5, M: 3, H: 4, P: 3, G: 2, Y: 2, B: 2, F: 2, W: 1, V: 1, K: 1, X: 1, J: 1, Q: 1, Z: 1,
-  0: 2, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1 };
-function kb({ out = '', hit = '', int = 4, max = 6, g0d = 'ready' } = {}) {
-  const n = ch => out.includes(ch) ? 0 : HOLD[ch] || 1;
-  const cls = ch => hit === ch ? 'kA' : !n(ch) ? 'k0' : n(ch) >= 10 ? 'k1' : n(ch) >= 5 ? 'k2' : n(ch) >= 2 ? 'k3' : 'k4';
-  const top = ch => '{' + cls(ch) + ': ' + ch + ' }';
-  const bot = ch => '{' + cls(ch) + ':  ' + (n(ch) ? (n(ch) > 15 ? '+' : n(ch).toString(16).toUpperCase()) : ' ') + '}';
-  const row = (keys, pad, pre = ['', ''], post = ['', '']) => [at(pad, pre[0] + keys.split('').map(top).join('') + post[0]), at(pad, pre[1] + keys.split('').map(bot).join('') + post[1])];
-  const pips = '{a:' + '#'.repeat(int) + '}{d:' + '-'.repeat(max - int) + '}';
-  const gk = g0d === 'busy' ? 'kG' : g0d === 'ready' ? 'kG' : 'k0';
-  return [
-    lr('{a:────}{m: INT }' + pips + ' ', '{a:' + (g0d === 'busy' ? 'G0D.exe typing' : '────────────') + '}{a:──}'),
-    ...row('1234567890', 3),
-    ...row('QWERTYUIOP', 3),
-    ...row('ASDFGHJKL', 4),
-    ...row('ZXCVBNM', 1, ['{' + gk + ':G0D.exe}', '{' + gk + ':       }'], ['{kD: DEL }', '{kD:     }']),
-    '',
-  ];
-}
+// The keyboard (engine/bench.js BENCH_KB, less the SPECIAL row): drawn as HTML under the phone's text rows (kbdHtml),
+// like the game's canvas keys. out: keys you're out of; hit: the key just pressed; g0d: 'ready' (lit) or 'busy' (typing).
+// It returns the 14th text row (a blank) and the keyboard's settings.
+// Each letter's chip color is its rarity in recipes (engine/bench.js letterTier: how often recipes use it), not how many
+// you hold: 1 common (green), 2 rare (blue), 3 epic (purple), 4 legendary (orange). Taken from the WORKBENCH's screenshot.
+const TIER = { E: 2, R: 1, T: 1, Y: 3, U: 3, I: 4, O: 2, P: 1, W: 2, Q: 4, A: 2, S: 1, D: 3, F: 1, G: 2, H: 2, J: 4, K: 3, L: 1, Z: 4, X: 2, C: 2, V: 3, B: 2, N: 2, M: 2 };
+const HOLD = { E: 12, T: 10, A: 11, O: 9, I: 8, N: 10, S: 7, R: 9, L: 6, C: 5, D: 4, U: 5, M: 3, H: 4, P: 3, G: 2, Y: 2, B: 2, F: 2, W: 1, V: 1, K: 1, X: 1, J: 1, Q: 1, Z: 1 };
+const kb = (o = {}) => ['', { kb: o }];
 const face = '{p:(}{r:°}{p:_}{r:°}{p:)}';   // THE PRIOR (a placeholder)
 const bars = (n, max) => '{r:' + '█'.repeat(n) + '}{d:' + '░'.repeat(max - n) + '}';
 
@@ -246,6 +242,15 @@ const MOCKS = [
   },
 ];
 // DATA END
+function kbdHtml({ out = '', hit = '', int = 4, max = 6, g0d = 'ready' } = {}) {
+  const n = ch => out.includes(ch) ? 0 : HOLD[ch] || 0;   // (digits: none held, as in a fresh WORKBENCH)
+  const c = ch => hit === ch ? 'cA' : !n(ch) ? 'c0' : 'c' + (TIER[ch] || 4);
+  const key = (ch, x = '') => '<div class="k ' + c(ch) + x + '">' + ch + (n(ch) ? '<i>' + (n(ch) > 15 ? '+' : n(ch).toString(16).toUpperCase()) + '</i>' : '') + '</div>';
+  const row = (keys, first = '') => '<div class="row">' + keys.split('').map((ch, i) => key(ch, i === 0 ? first : '')).join('') + '</div>';
+  return '<div class="kbd"><div class="top"><span>INT <b>' + '#'.repeat(int) + '</b>' + '-'.repeat(max - int) + '</span><span>' + (g0d === 'busy' ? '<b>G0D.exe typing</b>' : '') + '</span></div>' +
+    row('1234567890') + row('QWERTYUIOP') + row('ASDFGHJKL', ' off1') +
+    '<div class="row"><div class="k cD w3">DEL</div>' + 'ZXCVBNM'.split('').map(ch => key(ch)).join('') + '<div class="k w3 ' + (g0d === 'busy' ? 'cGo' : 'cG') + '">G0D.exe</div></div></div>';
+}
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 function rowHtml(row, name, i) {
   const w = vis(row);
@@ -253,7 +258,7 @@ function rowHtml(row, name, i) {
   row += ' '.repeat(Math.max(0, 36 - w));
   let out = '', last = 0;
   row.replace(/\{([^:}]+):([^}]*)\}/g, (m, k, txt, at) => {
-    out += esc(row.slice(last, at)) + '<span class="k-' + k + (k === 'q' ? ' blink' : '') + (/^k[0-9A-Z]$/.test(k) ? ' key' : '') + '">' + esc(txt) + '</span>';
+    out += esc(row.slice(last, at)) + '<span class="k-' + k + (k === 'q' ? ' blink' : '') + '">' + esc(txt) + '</span>';
     last = at + m.length;
     return m;
   });
@@ -261,11 +266,12 @@ function rowHtml(row, name, i) {
 }
 const root = document.getElementById('mocks');
 MOCKS.forEach((m, n) => {
-  if (m.rows.length !== 23) console.warn(m.name + ' has ' + m.rows.length + ' rows');
+  const kbo = (m.rows.find(x => typeof x === 'object') || {}).kb, text = m.rows.filter(x => typeof x === 'string');
+  if (text.length !== 14) console.warn(m.name + ' has ' + text.length + ' text rows');
   const sec = document.createElement('section');
   sec.innerHTML =
     '<h2>' + (n + 1) + '. ' + esc(m.name) + ' <span>· ' + esc(m.tag) + '</span></h2>' +
-    '<div class="mock"><pre class="phone" tabindex="0">' + m.rows.map((r, i) => '<span class="k-t">' + rowHtml(r, m.name, i) + '</span>').join('\n') + '</pre>' +
+    '<div class="mock"><div class="screen"><pre class="phone" tabindex="0">' + text.map((r, i) => '<span class="k-t">' + rowHtml(r, m.name, i) + '</span>').join('\n') + '</pre>' + kbdHtml(kbo) + '</div>' +
     '<div class="side"><h3>HOW IT COULD PLAY</h3><ul>' + m.how.map(h => '<li>' + h + '</li>').join('') + '</ul>' +
     '<div class="q"><b>NOTE</b> ' + m.note + '</div></div></div>';
   root.appendChild(sec);
