@@ -303,7 +303,7 @@ function openBoard(tab) {
           rightCol: max ? C.accent : !open ? C.mid : (save.rep || 0) >= cost ? C.rep : C.dim, tint: max ? C.accent : null };
       });
       scrollArea(x, t, repS, items, REP_LIST_ROWS, 'rl');
-      if (!u) { t(SEP, C.dim); for (let k = 0; k < 4 + REP_DESC_ROWS; k++) t(''); t(SEP, C.dim); return; }   // (a locked level, or no messages yet)
+      if (!u) { t(SEP, C.dim); for (let k = 0; k < 5 + REP_DESC_ROWS; k++) t(''); t(SEP, C.dim); return; }   // (a locked level, or no messages yet: as tall as a post's card, name + text + its line + the BUY box, so nothing moves)
       const lv = postLv(u.key), max = lv >= u.costs.length, cost = u.costs[lv], open = postOpen(u);
       t(SEP, C.dim);
       x({ text: u.name, col: C.bright, bold: true });
