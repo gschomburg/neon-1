@@ -121,7 +121,7 @@ Marks: **(checked)** Claude read the code path and confirmed it; the rest were c
 
 ### 4. Screens
 - **tutorial.js does five jobs** (836 lines): the gates and kit, the corp training, POPS's drawing, hints, the
-  WORKBENCH training, the deck training. Move drawing and hints to `engine/pops.js`; one `startTraining({ on, setup,
+  WORKBENCH training, the deck training. Move drawing and hints to `engine/callouts.js` (**Decided (Greg, 2026-11-23):** that name, not pops.js; a callout is anyone's, not only POPS's: its own palette and its own face art or picture, like b0y's blue hint already passes `col`, `face`, `name` to showHint); one `startTraining({ on, setup,
   script, end })` for the copied start / end code and tutOn's three-way check. The scripts stay code. Medium.
 - **Popup cards** still copied (feats.js, quests.js, events, hackers, ads): `drawCard`. Medium (old audit).
 - **List screens:** the CODEX and HOW TO PLAY re-implement `scrollArea`; the CODEX, HOW TO PLAY and THE BOARD repeat
@@ -169,7 +169,7 @@ draw nothing). The likeliest causes, in order:
 4. **Before the cult quest:** the keyboard out of the bench, the special-word hook, quest steps for every quest,
    per-seed definitions. **Done (v15.60).**
 5. **When next in the area:** split deck.js and CHIP_FX (before more chips); runkind.js and finishRun; tutorial.js into
-   pops.js + startTraining; drawCard; test setup into pageKit.
+   callouts.js + startTraining; drawCard; test setup into pageKit.
 
 **Fine as is:** OVERLAYS (draw, taps and keys walk one list), addHit's tap sizes and the training gate, drawSubTabs,
 tutKit, the shell's command table and charges, CALL_QUEUE / FEAT_QUEUE order, the bench's tabs, chipOn and the run's
