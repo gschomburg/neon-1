@@ -128,6 +128,7 @@ function floorGen(seed, n, last) {
     if (!links.slice(0, rooms.length - 1).every(([a, b]) => hall(f, a, b, r, halls))) continue;   // (the chain has to join up)
     for (const [a, b] of links.slice(rooms.length - 1)) hall(f, a, b, r, halls);
     { const d0 = bfs(f, rooms[0].x + 1, rooms[0].y + 1, c => T[c].walk && !T[c].duct || c === 'p'); if (!rooms.every(o => d0[o.y + 1][o.x + 1])) continue; }
+    f.junc = junctions(f, halls);
     // pillars in the big rooms
     for (const o of rooms) if (o.w >= 10 && o.h >= 6 && r() < 0.6) for (let i = o.x + 2; i < o.x + o.w - 2; i += 3) { set(f, i, o.y + 2, 'p'); if (o.h >= 7) set(f, i, o.y + o.h - 3, 'p'); }
     // stairs: up in the first room, down (or the payload) in the room farthest from it by walking
@@ -192,6 +193,8 @@ function doorOn(f, o, to, r, halls) {
 function routeHall(f, s, t, halls) {
   const ok = (x, y) => inb(x, y) && (at(f, x, y) === ' ' || halls.has(x + ',' + y) || (x === t.ox && y === t.oy));
   const nearWall = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([i, j]) => '#+'.includes(at(f, x + i, y + j)));
+  // (a new cell beside a hall that's there already costs a lot: two halls side by side read as one wide one)
+  const nearHall = (x, y) => !halls.has(x + ',' + y) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([i, j]) => halls.has((x + i) + ',' + (y + j)));
   const D = [[1, 0], [-1, 0], [0, 1], [0, -1]], best = new Map(), from = new Map(), buckets = [[[s.ox, s.oy, -1]]];
   best.set(s.ox + ',' + s.oy + ',-1', 0);
   for (let cost = 0; cost < buckets.length && cost < 600; cost++) for (const [x, y, d] of buckets[cost] || []) {
@@ -199,7 +202,7 @@ function routeHall(f, s, t, halls) {
     if (x === t.ox && y === t.oy) { const path = []; let k = x + ',' + y + ',' + d; while (k) { const [px, py] = k.split(',').map(Number); path.unshift([px, py]); k = from.get(k); } return path; }
     D.forEach(([i, j], nd) => {
       const nx = x + i, ny = y + j; if (!ok(nx, ny)) return;
-      const c = cost + 1 + (d >= 0 && d !== nd ? 3 : 0) + (nearWall(nx, ny) && !(nx === t.ox && ny === t.oy) ? 2 : 0), key = nx + ',' + ny + ',' + nd;
+      const c = cost + 1 + (d >= 0 && d !== nd ? 3 : 0) + (nearWall(nx, ny) && !(nx === t.ox && ny === t.oy) ? 2 : 0) + (nearHall(nx, ny) ? 8 : 0), key = nx + ',' + ny + ',' + nd;
       if (best.has(key) && best.get(key) <= c) return;
       best.set(key, c); from.set(key, x + ',' + y + ',' + d); (buckets[c] = buckets[c] || []).push([nx, ny, nd]);
     });
@@ -230,6 +233,19 @@ function ducts(f, rooms, r) {
     for (const [x, y] of path) set(f, x, y, '=');
     return;
   }
+}
+// Where halls meet or split: a hall cell with 3 or 4 ways on (a door counts), and not inside a 2 x 2 of floor (where two
+// halls do still run side by side, every cell has 3 ways on: no mark there). draw() shows them as JUNC_GLYPH.
+const JUNC_GLYPH = '◇';
+function junctions(f, halls) {
+  const J = new Set(), w = (x, y) => T[at(f, x, y)].walk && !T[at(f, x, y)].duct;
+  for (const k of halls) {
+    const [x, y] = k.split(',').map(Number);
+    if ([[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([i, j]) => w(x + i, y + j)).length < 3) continue;
+    if ([[-1, -1], [1, -1], [-1, 1], [1, 1]].some(([i, j]) => w(x + i, y) && w(x, y + j) && w(x + i, y + j))) continue;
+    J.add(k);
+  }
+  return J;
 }
 // walking distance from a cell (patrols' and the generator's)
 function bfs(f, sx, sy, ok = c => T[c].walk && !T[c].duct) {
@@ -481,6 +497,7 @@ function draw() {
       if (camCells.has(k)) bg = 'rgba(255,59,78,0.2)';
       if (armSet.has(k)) { ch = '━'; col = C.danger; }
       if (trail.has(k) && c === '.') { ch = '•'; col = C.rep; }
+      else if (c === '.' && f.junc && f.junc.has(k)) { ch = JUNC_GLYPH; col = C.mid; }
     }
     put(x, MAP_Y + y, ch, col, c === '<' || c === '>' || c === 'E', bg);
   }

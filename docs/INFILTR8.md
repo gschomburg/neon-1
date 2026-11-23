@@ -190,6 +190,93 @@ Most gear already has a meaning that carries over. The tray stays on screen, and
 - **New ones (maybe):** DISGUISE (one camera ignores you), SPOOF (a daemon thinks you're a daemon), CRATE (you hide
   in it, and it moves when you do).
 
+## Kit: what you bring in (Greg, 2026-11-23)
+The game's gear won't all port over: ZOMBIE, TRACER and lots of others mean nothing on a floor. So INFILTR8 gets
+its own kit, picked before you go in. Ways to do that (pick one or mix):
+- **Set loadouts:** choose one of 3 or 4 bags, each with a style. GHOST (DART GUN, LOOP TAPE, CLOAK, FLARE), BRUTE
+  (CHARGE x3, TASER, MED KIT), TRICKSTER (NOISEMAKER x2, SMOKE, HOLO DECOY, GRAPPLE).
+- **A counter at the door:** buy kit with CR before going in, a few slots to fill.
+- **Both:** a set loadout, plus one slot you buy.
+- A short list of game gear that does mean something here could still come in (FRAG, FLARE, SHOE, PING, FREEZE);
+  see "Your gear in there" above.
+
+FLARE stays. FRAG needs a new name in here, since FRAG is already the game's gear: **CHARGE**, BREACH, PIPE BOMB, C4.
+FLARE is game gear too, so it may want its own name as well (GLOWSTICK?).
+
+### 50 ideas, to cut down
+Names are 15 characters or less. Greg's are marked.
+
+**Seeing**
+1. **FLARE:** the whole floor, for 6 turns. (in the demo)
+2. **GLOWSTICK:** drop it. It lights 5 cells round where it lies, for the rest of the floor.
+3. **NIGHT VISION:** you see twice as far, for 10 turns.
+4. **SONAR:** shows everything that moves, through walls, for 1 turn. A little noise.
+5. **BLUEPRINT:** the floor's walls and doors, not what's in the rooms.
+6. **KEYHOLE:** stand at a door and see the room behind it.
+7. **PERISCOPE:** see round a corner, from a cell next to you.
+8. **BUG:** stick it on a wall. You see its room from anywhere on the floor.
+9. **CAM TAP:** put it on a CAM: you see what the CAM sees.
+10. **HEARTBEAT:** before you take the stairs, see where the next floor's patrols are.
+
+**Not being seen** (Greg: something to stop cameras, and more stealth)
+11. **DART GUN** (Greg's): puts a patrol to sleep for 8 turns. 3 darts, range 6.
+12. **JAMMER** (Greg's): a CAM goes dead for 10 turns.
+13. **SPRAY CAN:** blinds a CAM for good, but a patrol that walks by sees the paint and comes looking.
+14. **LOOP TAPE:** a CAM plays an old loop and doesn't see you for 12 turns.
+15. **CLOAK:** unseen for 4 turns. You can't use anything while it's on.
+16. **CARDBOARD BOX:** hide in it. Standing still, you're a box. Moving while seen: caught.
+17. **SOFT SHOES:** your steps make no noise (once noise is in).
+18. **UNIFORM:** patrols ignore you unless they're right next to you, for 15 turns.
+19. **SPOOF BADGE:** a CAM reads you as staff, once per CAM.
+20. **HOLO DECOY:** a copy of you appears; the CAMs and patrols go after it.
+21. **SHADOW SUIT:** in a cell no light falls on, CAMs past 4 cells don't see you.
+
+**Distractions** (Greg: a smoke grenade, and something you send off)
+22. **SMOKE** (Greg's): a 3x3 cloud for 6 turns. Nothing sees through it, you included.
+23. **NOISEMAKER** (Greg's): throw it up to 6 cells. Patrols go look.
+24. **RC CAR** (Greg's "send off"): you drive it for a few turns instead of yourself. Patrols chase it.
+25. **DRONE:** fly it over walls; it sees for you, and it's loud if it crashes.
+26. **PHONE RING:** a phone rings in a room you pick. The nearest patrol goes to answer it.
+27. **FIRE DRILL:** every patrol heads for the fire exit for 10 turns. The fire exit is then a loud way out.
+28. **GLITTER:** CAM cones in the room jump about at random for 6 turns.
+29. **FUSE PULL:** the lights go out. Everyone sees 3 cells, you too.
+30. **COIN:** flick it 3 cells. A small noise, but free: you have 5.
+
+**Moving**
+31. **GRAPPLE:** zip to any cell in a straight line, up to 6 away.
+32. **VENT KEY:** make a vent in the wall next to you. If there's a duct behind it, you're in.
+33. **LOCKPICK:** opens a locked door. Takes 3 turns.
+34. **ADRENALINE:** 2 steps a turn, for 5 turns.
+35. **ROPE:** go down a floor from where you stand. No stairs needed.
+36. **BLINK:** swap places with a thing you can see.
+37. **KNEE PADS:** duct steps cost 1 turn, not 2.
+
+**Breaking things**
+38. **CHARGE** (FRAG, renamed): blows the 3x3 round you. Loud. (in the demo)
+39. **THERMITE:** burns through one wall cell, quietly, over 3 turns.
+40. **BREACH:** a line of 5 through walls, in the way you face.
+41. **EMP:** every CAM and the ARM within 6 cells goes dead for 12 turns. Patrols are stunned for 2.
+42. **TASER:** a patrol next to you is out for 6 turns.
+43. **SNARE:** lay it down. A patrol that steps in it is stuck for 8 turns.
+44. **CALTROPS:** a 3x3 patrols cross at half speed.
+
+**Time and the trace**
+45. **COFFEE:** +20 turns on the trace clock.
+46. **SCRAMBLER:** +15 turns on the alarm countdown.
+47. **MED KIT:** +1 INT.
+
+**The job**
+48. **FAKE PAYLOAD:** leave it where the real one was. The alarm waits 10 turns.
+49. **SECOND BAG:** carry a second payload out (if bonus loot rooms come in).
+50. **LOOKOUT:** a crew member at your door. On the way out, they call out patrols near the exit.
+51. **GETAWAY VAN:** one way out (the fire exit or the chute) counts as a clean job, once.
+52. **EXIT MAP:** shows every way out on this floor.
+
+### Halls in the demo (Greg, 2026-11-23)
+Two generated halls sometimes ran side by side, and you couldn't tell where they crossed. Now a hall avoids running
+beside another one: side-by-side stretches dropped from about 2.2 to 0.2 per floor over 2,000 floors. Where halls
+meet or split there's a ◇ junction mark. Inside a doubled stretch, where it still happens, no mark is drawn.
+
 ## Rewards
 - **The corp counts as beaten**, as if you'd breached it: the map, the codex and the sector all treat it the same.
 - **No boss mod.** Instead, you get the payload, and the payload is the point:
