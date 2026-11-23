@@ -1,6 +1,6 @@
 // NeoN+1 engine/core.js: Tuning, the build number, constants, the palettes (resolved from palettes.js), the seeded RNG.
 'use strict';
-NEON_FILES.push(['engine/core.js', 'v15.61']);
+NEON_FILES.push(['engine/core.js', 'v16.00']);
 
 // ---------------- Tuning ----------------
 const CONFIG = {
@@ -31,15 +31,15 @@ const CONFIG = {
 
 // Build number: vMAJOR.MINOR. The minor ticks (+.01) with every update; the major changes only on
 // the user's call. The save slot follows the major only, so minor updates keep your progress.
-const VERSION = 'v15.61';
+const VERSION = 'v16.00';
 // In the palette editor (index.html?editor=1) the game keeps its own save, so yours is never touched.
 const EDITOR = /[?&]editor=1(&|$)/.test(location.search);
-const STORE_KEY = EDITOR ? 'beta_runner.editor.save' : 'beta_runner.v15.save';
-// A new major gets a new save slot: the first time v15 loads, it takes the newest older save
-// (v14, else v13, v12, v11) and a run in progress, so nobody starts over.
+const STORE_KEY = EDITOR ? 'beta_runner.editor.save' : 'beta_runner.v16.save';
+// A new major gets a new save slot: the first time v16 loads, it takes the newest older save
+// (v15, else v14, v13, v12, v11) and a run in progress, so nobody starts over.
 if (!EDITOR) try {
   if (!localStorage.getItem(STORE_KEY)) {
-    for (const from of ['beta_runner.v14.save', 'beta_runner.v13.save', 'beta_runner.v12.save', 'beta_runner.v11.save']) {
+    for (const from of ['beta_runner.v15.save', 'beta_runner.v14.save', 'beta_runner.v13.save', 'beta_runner.v12.save', 'beta_runner.v11.save']) {
       const old = localStorage.getItem(from);
       if (!old) continue;
       localStorage.setItem(STORE_KEY, old);

@@ -5,7 +5,7 @@
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
 // (POPS's popups themselves, their drawing and hints: engine/callouts.js)
-NEON_FILES.push(['engine/tutorial.js', 'v15.61']);
+NEON_FILES.push(['engine/tutorial.js', 'v16.00']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
