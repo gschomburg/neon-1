@@ -1,6 +1,6 @@
 // NeoN+1 engine/screens.js: Screens made of lines: the title, results, reveals.
 'use strict';
-NEON_FILES.push(['engine/screens.js', 'v15.56']);
+NEON_FILES.push(['engine/screens.js', 'v15.57']);
 
 // ---------- circuit traces (the title's, and the intro card's wires: engine/intro.js) ----------
 // Which way each trace char connects (n e s w). Two cells link when each has a port facing the other.
@@ -499,12 +499,15 @@ function swapLines() {
       lines.push({ text: itemLabel(s), chip: o.rarity, bold: true });
       desc(o.tip || o.desc);
       outName = o.name.toLowerCase();
-      go = () => { run.items.splice(sw.sel, 1); addItem(sw.key, sw.tier); Sound.buy(); setMsg(`> swapped ${outName} for ${v.name.toLowerCase()}.`, C.accent); done(); };
+      go = () => { run.items.splice(sw.sel, 1); addItem(sw.key, sw.tier); Sound.buy();
+        const lost = deckItemChip(s.key) ? lostLoot(s.key) : null;   // (a chip swapped out: LOST LOOT, engine/deck.js)
+        setMsg(lost ? '> ' + lost : `> swapped ${outName} for ${v.name.toLowerCase()}.`, lost ? C.rep : C.accent); done(); };
     } else { T('tap one of yours to see it.', C.dim); desc(''); }
   }
   lines.push({ box: true, text: 'S W A P', sub: go ? `- ${outName} is gone -`.slice(0, 26) : '- pick one above -', id: 'swgo', minW: 22,
     disabled: !go, onTap: () => { if (go) go(); else Sound.deny(); } });
-  lines.push({ text: '[ KEEP WHAT I HAVE ]', id: 'swkeep', onTap: () => { st.swap = null; Sound.ui(); } });
+  lines.push({ text: '[ KEEP WHAT I HAVE ]', id: 'swkeep', onTap: () => { st.swap = null; Sound.ui();
+    const lost = sw.kind === 'item' && deckItemChip(sw.key) ? lostLoot(sw.key) : null; if (lost) setMsg('> ' + lost, C.rep); } });   // (the chip you didn't take: LOST LOOT)
   return lines;
 }
 

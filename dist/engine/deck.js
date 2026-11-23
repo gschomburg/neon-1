@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.56']);
+NEON_FILES.push(['engine/deck.js', 'v15.57']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -244,7 +244,9 @@ const DECK_POSTS = ['HARDENED', 'SEED MONEY', 'GEAR SLOT', 'RESTOCK', 'SECOND WI
 // Only the ones with a real choice (Greg, 2026-11-15): STARTER POOL changes what the starter perk offers, STRAY is a pet
 // you might not want along, NEMESIS picks a corp (it cycles, or none). Posts that only help (TELL LIGHT, LUCKY START)
 // are just on. NEMESIS picks a corp ([<] CORP [>]: the PICKERS). (THE ARCHIVE was one too, v15.36-v15.37: it's a chip now.)
-const DECK_SWITCHES = ['starter', 'stray', 'nemesis'];
+// LOST LOOT's is KEEP / SHRED, not on / off (DECK_SWITCH_TEXT).
+const DECK_SWITCHES = ['starter', 'stray', 'nemesis', 'lostloot'];
+const DECK_SWITCH_TEXT = { lostloot: ['[keep]', '[shred]'] };
 const DECK_PICKERS = ['nemesis'];
 // THE ARCHIVE's mods (its chip, AR1): any you've found (seen), but no exotics, quest mods or hidden ones (deckRunStart)
 const archivePool = () => modsFound('minor', 'gen', 'corp').filter(k => save.seen[k] && !MODS[k].quest && !MODS[k].hidden)
@@ -401,7 +403,7 @@ function deckFishChip(out, f) {
 }
 // Cashing out (engine/runend.js endRun): the chips in your belt go home. Dying: they're gone.
 function deckHome(run, win) {
-  const chips = run.items.filter(s => deckItemChip(s.key));
+  const chips = run.items.filter(s => deckItemChip(s.key)).concat((run.lost || []).map(x => ({ key: x.key, n: 1 })));   // (LOST LOOT's come home too)
   if (!win || !chips.length || !save.deck || (run.practice && !EDITOR) || run.tutorial || st.mp) return;   // (the editor: its runs are practice, and its save is its own)
   save.deck.chips = save.deck.chips || {};
   // A chip home is unlocked: no extras (Greg, 2026-11-21). One you had already shreds into components on its own
@@ -418,6 +420,39 @@ function deckHome(run, win) {
   const lines = home.length ? ['chips home:', '', ...home.slice(0, 4).map(k => ({ chip: k })), ...home.slice(4).map(k => '  ' + DECK_CHIPS[k][0]), '', 'slot them: THE BOARD > DECK.'] : [];
   if (shred.length) lines.push(...(lines.length ? [''] : []), 'had already, shredded:', ...shred.map(n => '  ' + n), '  > ' + got.map(ch => isBlank(ch) ? 'BLANK' : ch).join(' '));
   FEAT_QUEUE.push({ head: 'YOUR DECK', lines: lines.concat(noShell && home.length ? ['', 'shell chips need THE SHELL.', rootStep() ? 'get ROOT: THE BOARD > QUESTS.' : 'open your deck. something lives in it.'] : []) });
+}
+
+// ---------- LOST LOOT (a REP post, USER; Greg, 2026-11-23: docs/BACKLOG.md) ----------
+// A chip that drops with your belt full (a DATA CACHE's or a reward's swap: KEEP WHAT I HAVE, or a chip you swap out; a
+// rival's drop; a PIER catch) goes to run.lost, up to LOST_MAX. You get them at a WORKBENCH (engine/bench.js: LOCKER >
+// LOST), and they come home when you cash out (deckHome). Full: one goes, shredded into components (it's the new one
+// when it's the least worth keeping): chips you own first, then the lowest rarity, then the oldest. The deck's CPU
+// switch: KEEP, or SHRED (every lost chip shreds at once). Returns what happened, for the message line, or null (no
+// post: lost, as before).
+const LOST_MAX = 4;
+const lostOn = () => legacyLv('lostloot') > 0 && !!save.bench;
+function lostLoot(ik, run = st.run) {
+  const k = deckItemChip(ik);
+  if (!k || !run || !lostOn()) return null;
+  const name = DECK_CHIPS[k][0], shred = kk => benchAutoShred(kk).map(ch => isBlank(ch) ? 'BLANK' : ch).join(' ');
+  if (!postOn('lostloot')) return `${name} shredded: ${shred(k)}.`;
+  const pool = run.lost || (run.lost = []);
+  const add = { key: ik, at: run.lostN = (run.lostN || 0) + 1 };
+  if (pool.length < LOST_MAX) { pool.push(add); return `${name} went to LOST LOOT (${pool.length}/${LOST_MAX}).`; }
+  const worth = x => { const c = deckItemChip(x.key); return [deckHave(c) > 0 ? 0 : 1, RARITY_ORDER.indexOf(DECK_CHIPS[c][2]), x.at]; };
+  const cmp = (a, b) => { const p = worth(a), q = worth(b); return p[0] - q[0] || p[1] - q[1] || p[2] - q[2]; };
+  const out = pool.concat(add).sort(cmp)[0];
+  const outName = DECK_CHIPS[deckItemChip(out.key)][0], bits = shred(deckItemChip(out.key));
+  if (out === add) return `LOST LOOT full: ${name} shredded (${bits}).`;
+  pool.splice(pool.indexOf(out), 1, add);
+  return `${name} went to LOST LOOT. full: ${outName} shredded (${bits}).`;
+}
+// TAKE at the WORKBENCH: onto your belt
+function lostTake(i, run = st.run) {
+  const x = run && run.lost && run.lost[i];
+  if (!x || !itemRoom(x.key, 0)) return Sound.deny();
+  run.lost.splice(i, 1); addItem(x.key, 0); Sound.buy();
+  return ITEMS[x.key].name;
 }
 
 // ---------- the chips in a run ----------
@@ -690,7 +725,7 @@ function deckRivalChip(h) {
   const r = rngFor(run.seed, 'rivalchip', st.corp.node.id, h.id);
   if (r() >= DECK_RIVAL_DROP * (chipOn('PH3') ? 2 : 1) && !DECK_ALWAYS) return null;
   const key = deckRollRipped(r, h.id), ik = deckChipItem(key);   // (HCF: its own CORE, far more often)
-  if (!itemRoom(ik, 0)) return null;
+  if (!itemRoom(ik, 0)) { const lost = lostLoot(ik); return lost ? `> ${hkName(h.id).toLowerCase()} dropped a chip, your belt's full: ${lost}` : null; }   // (LOST LOOT)
   addItem(ik, 0); deckRipFirst();
   return `> ${hkName(h.id).toLowerCase()} dropped a chip: ${DECK_CHIPS[key][0]}${deckHave(key) ? ' (OWNED)' : ''}. it's RIPPED. ${hkName(h.id).toLowerCase()} is gonna want that back.`;
 }
@@ -2344,9 +2379,10 @@ function deckCpu(ctx, y0, sa) {
       deckBtn(ctx, g, bx, y, '[<]', C.accent, 'dksw' + k + 'L', () => step(-1));
       deckBtn(ctx, g, bx + 4, y, (' '.repeat(l) + n).padEnd(nw), on ? C.accent : C.mid, 'dksw' + k, () => step(1));
       deckBtn(ctx, g, bx + nw + 5, y, '[>]', C.accent, 'dksw' + k + 'R', () => step(1));
-    } else deckBtn(ctx, g, x + w - (on ? 4 : 5), y, on ? '[on]' : '[off]', on ? C.accent : C.mid, 'dksw' + k, () => {
+    } else { const [ton, toff] = DECK_SWITCH_TEXT[k] || ['[on]', '[off]'], tt = on ? ton : toff;
+      deckBtn(ctx, g, x + w - tt.length, y, tt, on ? C.accent : C.mid, 'dksw' + k, () => {
       if (d.sw.has(k)) d.sw.delete(k); else d.sw.add(k);
-      Sound.tick(); });
+      Sound.tick(); }); }
     g.put(x, y + 1, FX.ticker(p.desc, w, d.cpu.t0 + i * 900, ctx.now, 6), on ? C.text : C.dim);
     y += 2;
   });

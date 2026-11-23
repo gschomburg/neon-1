@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.56']);
+NEON_FILES.push(['engine/bench.js', 'v15.57']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -619,7 +619,7 @@ function benchLines(T, B, X, lines) {
     });
   } });
   // sub-tabs (engine/textboard.js drawSubTabs): the BOOK's GEAR MODS CHIPS, the LOCKER's TAKE STORE, SHRED's GEAR MODS LOOT (Greg, 2026-11-21)
-  if (b.tab === 'locker') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, [['take', 'TAKE'], ['store', 'STORE'], ['comps', 'COMPS']].map(([v, t]) => ({ id: 'lv' + v, text: t, on: b.lkView === v, onTap: () => { if (b.lkView !== v) { b.lkView = v; b.lkT = performance.now(); Sound.tick(); } } }))) });
+  if (b.tab === 'locker') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, [['take', 'TAKE'], ['store', 'STORE'], ['comps', 'COMPS']].concat(lostOn() ? [['lost', 'LOST' + (st.run && (st.run.lost || []).length ? ' ' + st.run.lost.length : '')]] : []).map(([v, t]) => ({ id: 'lv' + v, text: t, on: b.lkView === v, onTap: () => { if (b.lkView !== v) { b.lkView = v; b.lkT = performance.now(); Sound.tick(); } } }))) });
   else if (b.tab === 'book') X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, BOOK_TABS.map(([k, t]) => ({ id: 'bks_' + k, text: t, on: bookKind() === k, onTap: () => bookPickKind(k) }))) });
   else if (b.tab === 'shred') { const all = benchShredList(), on = shredKind(); X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, SHRED_TABS.map(([k, t]) => { const n = all.filter(e => e.kind === k).length; return { id: 'shs_' + k, text: n ? `${t} ${n}` : t, on: on === k, onTap: () => shredPickKind(k) }; })) }); }
   else T('');
@@ -971,7 +971,9 @@ function benchLockerLines(T, B, X) {
   // (TAKE / STORE / COMPS: the sub-tab strip under the main tabs, benchLines. No rule under it: the TAKE page needs the
   // rows for BIG LOCKER's 10 slots, Greg 2026-11-22.)
   T('');
+  if (b.lkView === 'lost' && !lostOn()) b.lkView = 'take';
   if (b.lkView === 'comps') return benchCompsLines(T, X);
+  if (b.lkView === 'lost') return benchLostLines(T, X);
   const rowOf = (e, i, sel, onTap, right, rightCol) => {
     const v = e.kind === 'mod' ? modView(e.key, e.tier) : itemView(e.key, e.tier);
     const row = { list: true, id: 'lk' + b.lkView + i, sel, onTap, name: v.name + (e.n > 1 ? 'x' + e.n : ''), right, rightCol };
@@ -1006,6 +1008,29 @@ function benchLockerLines(T, B, X) {
     X(e.kind === 'mod' ? { badge: e.key, badgeTier: e.tier } : { gearHead: e.key, gearTier: e.tier, text: v.name });
     T(v.tip || '', C.text); X(box); }
   else { T(b.lkView === 'take' ? 'an empty slot.' : 'nothing on you.', C.mid); T('what you build lands here.', C.dim); T(''); T(''); T(''); T(''); }
+  T(SEP, C.dim);
+  T(b.log[b.log.length - 1].replace(/^> /, ''), C.accent);
+}
+
+// The LOCKER's LOST: LOST LOOT (a REP post: engine/deck.js lostLoot), the chips that dropped with your belt full. TAKE puts
+// one on your belt; the rest come home when you cash out.
+function benchLostLines(T, X) {
+  const b = st.bench, run = st.run, lost = (run && run.lost) || [];
+  T(`lost loot  ${lost.length}/${LOST_MAX}`, C.rep);
+  T('');
+  b.lsSel = clamp(b.lsSel || 0, 0, Math.max(0, lost.length - 1));
+  for (let i = 0; i < LOST_MAX; i++) { const x = lost[i];
+    if (x) X({ list: true, id: 'lklost' + i, sel: i === b.lsSel, onTap: () => { b.lsSel = i; b.lsT = performance.now(); Sound.tick(); }, name: ITEMS[x.key].name, gear: x.key, gearTier: 0, right: deckHave(deckItemChip(x.key)) ? 'OWNED' : 'chip', rightCol: C.mid });
+    else X({ list: true, id: 'lklostempty' + i, sel: false, name: ':  .  :  empty', faded: true }); }
+  T('');
+  T(SEP, C.dim);
+  const e = lost[b.lsSel];
+  if (e) { const v = itemView(e.key, 0); X({ gearHead: e.key, gearTier: 0, text: v.name });
+    const tip = v.tip || '', t0 = b.lsT || 0; X({ h: 1, draw: (ctx, y) => { const s = FX.ticker(tip, L.wc - 2, t0, ctx.now, 6); ctx.put(Math.floor((L.wc - s.length) / 2), y, s, C.text, 'ui'); } });   // (a chip's text is long: a ticker)
+    const room = itemRoom(e.key, 0);
+    X({ box: true, text: 'T A K E', sub: room ? '- onto your belt -' : '- your belt is full -', id: 'bklost', minW: 22, disabled: !room,
+      onTap: () => { const n = lostTake(b.lsSel); if (n) benchSay(`> ${n.toLowerCase()}: onto your belt.`); } }); }
+  else { T('nothing lost.', C.mid); T('a chip that drops with your belt full', C.dim); T('lands here. cash out to keep it.', C.dim); T(''); T(''); }
   T(SEP, C.dim);
   T(b.log[b.log.length - 1].replace(/^> /, ''), C.accent);
 }

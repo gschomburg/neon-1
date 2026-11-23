@@ -14,6 +14,8 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **LOST LOOT** (v15.57): THE BOARD > REP > USER, 200 REP. Things I picked: a chip you swap OUT of your belt goes to LOST too (it's lost for lack of room, like the one you don't take); a chip pushed out of a full pool is shredded (components), not just gone, and the message line says which; the LOST sub-tab shows its count (LOST 2). The switch is on the deck's CPU (SETTINGS), not on the post's card.
+
 - [ ] **DANGEROUS CATCH** (v15.56): an OVERVOLT chip, rare, 1 power. 1 PHISH in 5 bites when you land it (-1 INT; gear, chips and shoes don't bite); rarer catches like DEEP WATER; PHISH sells for x1.5 (both numbers in ECON: the editor's ECONOMY tab). The rescues (CONTINUE, 1UP, ROOTKIT, CHECKPOINT) don't work at the pier: they put you back in a corp. OK, or should CHECKPOINT work there too?
 - [ ] **Your training notes** (v15.56): the pulse on the deck's sockets and the bench's tabs (a bit stronger than a node's, since they're small); the new power beat with the arrow on PWR; the reworded lines (components, where chips come from, sockets, the send-off). The flicker between popups: I couldn't catch it, see BACKLOG.
 

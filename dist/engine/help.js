@@ -1,6 +1,6 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v15.56']);
+NEON_FILES.push(['engine/help.js', 'v15.57']);
 
 // ---------------- How to play ----------------
 // Two main tabs, each with a strip of sub-tabs under it (drawSubTabs, like THE CODEX's). Greg, 2026-11-23: BASICS
@@ -207,7 +207,7 @@ function buildBenchPage(T, X) {
   P('every code you can build, and what you\'re missing. pin 2 and they show over the keyboard.');
   T('');
   H('THE LOCKER');
-  P('what you build waits here, run after run (5 slots). take it onto your belt, or store things in it. your components are here too.');
+  P('what you build waits here, run after run (5 slots). take it onto your belt, or store things in it. your components are here too. with LOST LOOT (a REP post), so are the chips that dropped with your belt full: cash out to keep them.');
   T('');
   H('EXOTICS');
   P('shred one and you learn its blueprint. then you can build it.');

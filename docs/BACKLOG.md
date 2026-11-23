@@ -107,8 +107,8 @@ The ideas as they came:
 
 ### The deck and chips
 - (Greg asked: is SPOILS a chip you start with? Yes: the deck comes with STOCK CELL and SPOILS, engine/deck.js DECK_START.)
-- **LOST LOOT** (Greg, meat notes 2026-11-23): a chip drops and your belt is full; today it's gone. Chips are hard to come
-  by, so a plain REP post. **Decided (Greg, 2026-11-23):**
+- **LOST LOOT** (Greg, meat notes 2026-11-23): built v15.57 (SPEC). A chip drops and your belt is full; it was gone.
+  Chips are hard to come by, so a plain REP post. **Decided (Greg, 2026-11-23):**
   - **Chips only** (ripped ones too). Where they get lost today: a DATA CACHE's swap when you keep what you have
     (engine/deck.js deckCacheChip), a rival's drop with no room (deckRivalChip: silently), a PIER chip catch you can't
     KEEP, a reward screen's swap.
@@ -121,7 +121,7 @@ The ideas as they came:
   - **Cash out** and they come home like belt chips (deckHome); die and they're gone.
   - **The switch:** KEEP / SHRED (no LOSE: Greg, shred is useful). SHRED turns a lost chip into its components at your
     bench. On the post's card, or on the deck's CPU with its other switches.
-  - Open: its level and price (USER, about 200 REP, needs the WORKBENCH?).
+  - USER, 200 REP, needs the WORKBENCH (Greg: USER could use more options).
 
 ### UI
 - **The map's node card** (Greg, meat notes 2026-11-22): once the WORKBENCH and the CHIP DEALER are unlocked, say so

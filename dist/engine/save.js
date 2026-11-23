@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.56']);
+NEON_FILES.push(['engine/save.js', 'v15.57']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -111,6 +111,7 @@ const LEGACY = [
   { key: 'nemesis', tier: 2, name: 'NEMESIS', desc: 'pick a corp you have breached: it shows up more often.', costs: [120] },
   { key: 'starter', tier: 2, name: 'STARTER POOL', desc: 'the starter perk can offer general mods too.', costs: [150] },
   { key: 'steady', tier: 2, name: 'STEADY HANDS', desc: "at the pier, no catch moves faster than your line can follow.", costs: [300] },   // (Greg, 2026-11-06: a fast legendary PHISH outran LURE; engine/fishing.js FISH_STEADY)
+  { key: 'lostloot', tier: 2, name: 'LOST LOOT', needs: 'bench', desc: "a chip that drops with your belt full isn't lost: up to 4 wait at your WORKBENCH (LOCKER > LOST). cash out with them.", costs: [200] },   // (engine/deck.js lostLoot; Greg, 2026-11-23)
   { key: 'tellscope', tier: 2, name: 'TELL LIGHT', desc: 'every corp layer says if its tell is on: TELL ON / TELL OFF.', costs: [150] },   // (the user: know if a tell is active)
   // ---- 3 ELITE: your deck's mk III (engine/deck.js; you get the deck itself at USER), and placeholders
   // placeholder: a post that does nothing yet, so the level can be filled out and tried (Greg, 2026-11-16: swap them
