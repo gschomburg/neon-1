@@ -357,7 +357,7 @@ function overLines() {
     if (r.rep) lines.push({ text: `+${r.rep} REP banked   ${save.rep} REP`, col: C.money, bold: !!r.win });
     else T(`REP lost: ${r.repWorth} (cash out to bank it)`, C.dim);
   }
-  if (r.quest === 'had3s' && save.quests && save.quests.pops && save.quests.pops.step === 'd0g') lines.push({ text: `d0g: ${Math.min(save.quests.pops.d0g || 0, d0gWinsNeeded())} / ${d0gWinsNeeded()} for POPS`, col: C.rep, bold: true });   // HAD3S
+  for (const id of r.quest ? questsOn() : []) { const s = questStepInfo(id), cl = questCounterLine(id); if (cl && s.seed && s.seed.toLowerCase() === r.quest) lines.push({ text: cl + ' for ' + QUEST_INFO[id].from, col: C.rep, bold: true }); }   // (a step's counter on its seed: d0g's wins on HAD3S)
   if (r.newBest) T('** new best **', C.accent);
   else T(`best ${pad2(save.best)}   seed ${r.seed}`, C.mid);
   if (r.practice) T(r.quest ? 'quest run: not scored' : 'practice run: not scored', C.dangerDim);

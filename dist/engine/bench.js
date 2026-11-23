@@ -30,7 +30,7 @@ const BENCH_MISS = { fg: '#ff4fd8', bg: '#4a1240' };   // a letter you're missin
 // row, no recipe uses them, and they never burn: a wrong spell gives them back. In the slots they open a 4th letter slot.
 const isRootCh = ch => /^[a-z]$/.test(ch);
 const letterChip = ch => isRootCh(ch) ? { fg: C.bg, bg: C.rep } : chipOf(letterTier(ch));
-const BENCH_KB = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+const BENCH_KB = KB_ROWS;   // (the keys: engine/keyboard.js)
 // A BLANK (Greg, 2026-11-21): an empty chip. It goes in the extra slot (the small 2x2 after the letters; inside, slot 4), and then
 // the three slots spell a chip's code (digits too: CD2, LW1). One BLANK, one chip. From shredding chips, now and then.
 const BENCH_BLANK = '#', isBlank = ch => ch === BENCH_BLANK, BENCH_BLANK_X = 23;   // (its x on the BUILD screen: benchBuildLines)
@@ -1059,12 +1059,9 @@ function benchCompsLines(T, X) {
 }
 
 // ---------------- the keyboard layer (pixels; render.js calls this after the grid) ----------------
-function benchKbGeom() {
-  const gw = L.wc * L.cw, gap = Math.max(3, Math.round(L.cw * 0.35));
-  const kw = (gw - 9 * gap) / 10, kh = Math.min(kw * 1.3, L.chh * 2.2), pad = gap * 2;
-  const h = 5 * kh + 5 * gap + pad * 2;
-  return { x0: L.ox, gw, gap, kw, kh, pad, h, top: H - SAFE.b - h };
-}
+// The keyboard itself is engine/keyboard.js (kbDraw): the bench gives it its SPECIAL row, DEL, ENTER, its counts and its
+// slide in and out.
+const benchKbGeom = () => kbGeom(true);
 function benchKeys(now) {
   const b = st.bench;
   if (!b || st.mode !== 'panel' || st.panelFn !== benchLines || st.dev || st.pause) return;
@@ -1073,59 +1070,16 @@ function benchKeys(now) {
   const off = b.kb.up ? (1 - ease3(k)) * (G.h + SAFE.b + 8) : ease3(k) * (G.h + SAFE.b + 8);
   if (!b.kb.up && k >= 1) return;
   if (b.kb.up && k <= 0) return;
-  const top = G.top + off;
-  g.fillStyle = C.bg; g.fillRect(0, top, W, H - top + 2);
-  g.globalAlpha = 0.22; g.fillStyle = C.dim; g.fillRect(0, top, W, H - top + 2); g.globalAlpha = 1;
-  g.fillStyle = C.accent; g.fillRect(0, top, W, 1);
-  const live = b.kb.up && k >= 1 && !benchBusy();
-  const font = (w, px) => `${w} ${px}px ${DRAW_FONT.family}`;
-  const press = b.press;
-  const key = (x, y, w, ch, n, onTap = null, label = null, look = null) => {
-    const hov = st.ptr && st.ptr.x >= x && st.ptr.x <= x + w && st.ptr.y >= y && st.ptr.y <= y + G.kh && live;
-    if (n <= 0 && !onTap) {
-      g.strokeStyle = C.dim; g.lineWidth = 1; g.strokeRect(x + 0.5, y + 0.5, w - 1, G.kh - 1);
-      g.fillStyle = C.dim; g.font = font(DRAW_FONT.bold, Math.round(G.kh * 0.42)); g.fillText(ch, x + w / 2, y + G.kh / 2);
-      return;
-    }
-    const chip = look || letterChip(ch);
-    g.fillStyle = chip.bg; g.globalAlpha = hov ? 0.8 : 1; g.fillRect(x, y, w, G.kh); g.globalAlpha = 1;
-    g.fillStyle = 'rgba(0,0,0,0.28)'; g.fillRect(x, y + G.kh - 3, w, 3);
-    g.fillStyle = chip.fg; g.font = font(DRAW_FONT.bold, Math.round(label ? G.kh * 0.28 : G.kh * 0.46));
-    g.fillText(label || ch, x + w / 2, y + G.kh / 2 - 1);
-    if (!label && n > 0) { g.font = font(DRAW_FONT.bold, Math.round(G.kh * 0.24)); g.textAlign = 'right'; g.fillText(n > 15 ? '+' : n.toString(16).toUpperCase(), x + w - 2, y + G.kh - 8); g.textAlign = 'center'; }
-    const bid = 'bk_' + (label || ch);
-    if (live) hits.push(onTap ? { x, y, w, h: G.kh, kind: 'btn', id: bid, onTap: st.tut && !tutAllows('btn', bid) ? tutNo : onTap } : { x, y, w, h: G.kh, kind: 'benchkey', key: ch });   // (the training gates them: engine/tutorial.js)
-  };
-  g.textAlign = 'center'; g.textBaseline = 'middle';
-  let y = top + G.pad;
-  // the special row: wildcards (and later, the DIVINE letters)
-  g.fillStyle = C.mid; g.font = font(DRAW_FONT.weight, Math.round(G.kh * 0.24)); g.textAlign = 'left';
-  g.fillText('SPECIAL', G.x0, y + G.kh / 2); g.textAlign = 'center';
-  let x = G.x0 + G.kw * 1.6 + G.gap;
-  const sp = BENCH_SPECIAL.concat(ROOT_WORD.split('').filter((c, i, a) => a.indexOf(c) === i)).filter(ch => benchHave(ch) > 0);   // (ROOT's letters: engine/quests.js)
-  for (let i = 0; i < 6; i++) {
-    const ch = sp[i];
-    if (ch) key(x, y, G.kw, ch, benchHave(ch));
-    else { g.setLineDash([3, 3]); g.strokeStyle = C.dim; g.strokeRect(x + 0.5, y + 0.5, G.kw - 1, G.kh - 1); g.setLineDash([]); }
-    x += G.kw + G.gap;
-  }
-  y += G.kh + G.gap;
-  g.fillStyle = C.dim; g.fillRect(G.x0, y - G.gap / 2, G.gw, 1);
-  BENCH_KB.forEach((row, r) => {
-    const extra = r === 3 ? 2 * (G.kw * 1.5) + 2 * G.gap : 0;
-    let x = G.x0 + (G.gw - (row.length * G.kw + (row.length - 1) * G.gap + extra)) / 2;
-    if (r === 3) { key(x, y, G.kw * 1.5, 'DEL', 1, () => { Sound.keyclick(); const i = [4, 3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); }, 'DEL', chipOf('scrap')); x += G.kw * 1.5 + G.gap; }
-    for (const ch of row) { key(x, y, G.kw, ch, benchHave(ch)); x += G.kw + G.gap; }
-    if (r === 3) key(x, y, G.kw * 1.5, 'ENTER', 1, () => { Sound.keyclick(); benchBuild(); }, 'ENTER', { bg: C.accent, fg: C.bg });
-    y += G.kh + G.gap;
+  const press = b.press, pch = press && press.moved && press.px != null ? (press.kind === 'benchkey' ? press.key : b.slots[press.slot]) : null;
+  kbDraw({
+    top: G.top + off, live: b.kb.up && k >= 1 && !benchBusy(),
+    special: BENCH_SPECIAL.concat(ROOT_WORD.split('').filter((c, i, a) => a.indexOf(c) === i)).filter(ch => benchHave(ch) > 0),   // (ROOT's letters: engine/quests.js)
+    count: benchHave,
+    del: () => { Sound.keyclick(); const i = [4, 3, 2, 1, 0].find(i => b.slots[i]); if (i != null) benchUnplace(i); },
+    enter: { label: 'ENTER', onTap: () => { Sound.keyclick(); benchBuild(); } },
+    press: pch ? { ch: pch, px: press.px, py: press.py } : null,
+    gate: (bid, fn) => st.tut && !tutAllows('btn', bid) ? tutNo : fn,   // (the training gates them: engine/tutorial.js)
   });
-  // a key (or a slot's letter) riding your finger
-  if (press && press.moved && press.px != null) {
-    const ch = press.kind === 'benchkey' ? press.key : b.slots[press.slot];
-    if (ch) { const c = letterChip(ch), w = G.kw * 1.2, h = G.kh * 1.2;
-      g.globalAlpha = 0.9; g.fillStyle = c.bg; g.fillRect(press.px - w / 2, press.py - h * 0.8, w, h);
-      g.fillStyle = c.fg; g.font = font(DRAW_FONT.bold, Math.round(h * 0.5)); g.fillText(ch, press.px, press.py - h * 0.3); g.globalAlpha = 1; }
-  }
 }
 // One piece of a big letter (a cell with its part of a 3x size letter; render.js).
 function drawPiece(c) {

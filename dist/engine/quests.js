@@ -17,7 +17,12 @@ NEON_FILES.push(['engine/quests.js', 'v15.59']);
 
 // ---------------- State ----------------
 const QUEST_ODDS = { loot: 0.25, shop: 0.2, fish: 0.08, lost: 2 };   // the DISC's chance at each spot (x2 for a while after you lose one)
-const questOf = id => { save.quests = save.quests || {}; return save.quests[id] = save.quests[id] || { step: 'sector' }; };
+// (a quest not started yet begins on its own first step: it began on POPS's 'sector' for every quest. Audit 2026-11-23)
+const questOf = id => { save.quests = save.quests || {}; return save.quests[id] = save.quests[id] || { step: QUEST_INFO[id] ? QUEST_INFO[id].steps[0].key : 'sector' }; };
+// The quests you've started (a save entry and a QUEST_INFO), for what every quest does the same way: the step's carry
+// item at the UPLINK and on cash out, a step's scene ending it, its counter.
+const questsOn = () => Object.keys(save.quests || {}).filter(id => QUEST_INFO[id]);
+const questWho = id => QUEST_INFO[id].who || id;   // (who calls for it: a hacker id; POPS for 'pops', ROOT for 'root')
 const questOpen = () => statOf('sectors') >= 1 && hkCrewOn('pops');   // a sector cleared (ever) and POPS on the crew
 // Quests move in real runs (and in the neon editor, which has its own save); never in the training or multiplayer.
 const questRun = () => !!(st.run && !st.run.tutorial && !st.mp && (!st.run.practice || EDITOR));   // (run kinds: engine/save.js)
@@ -26,12 +31,12 @@ function questStep(id, step) { const q = questOf(id); q.step = step; q.news = tr
 // The steps and how each ends are data (QUEST_INFO in data/quests.js): the step you're on, and the one after it.
 const questStepInfo = id => QUEST_INFO[id].steps.find(s => s.key === questOf(id).step) || {};
 const questStepAfter = id => { const s = QUEST_INFO[id].steps; return s[s.findIndex(x => x.key === questOf(id).step) + 1] || null; };
-// On to the next step (crew: who joins now), with a QUEST card
-function questNext(id) {
+// On to the next step (crew: who joins now), with a QUEST card (card: false, the caller shows it later)
+function questNext(id, { card = true } = {}) {
   const s = questStepInfo(id), n = questStepAfter(id);
   if (!n) return;
   if (s.crew) { save.legacy = save.legacy || {}; save.legacy['crew_' + s.crew] = 1; }   // (no REP, no LVL: the user, 2026-11-04)
-  questStep(id, n.key); questCard(id);
+  questStep(id, n.key); if (card) questCard(id);
 }
 // T A K E   I T   T O   P O P S (a box's spaced-out words)
 const spacedOut = t => t.split(' ').map(w => [...w].join(' ')).join('   ');
@@ -43,8 +48,9 @@ function questView(id) {
   return { at, step, name: held ? step.held.name : step.name, goal: held ? step.held.goal : q.lost && step.lost ? step.lost : step.goal };
 }
 function questCarryLine() {
-  const s = questStepInfo('pops');
-  return s.carry && hasLoot(s.carry) && questRun() ? `+ cash out to bring ${QUEST_INFO.pops.from} the ${ITEMS[s.carry].name}` : null;
+  if (!questRun()) return null;
+  for (const id of questsOn()) { const s = questStepInfo(id); if (s.carry && hasLoot(s.carry)) return `+ cash out to bring ${QUEST_INFO[id].from} the ${ITEMS[s.carry].name}`; }
+  return null;
 }
 
 // ---------------- The DISC dropping ----------------
@@ -98,21 +104,31 @@ function questGot(key) {
 }
 // The run ends: died with it, and it can drop again (more often for a while).
 function questRunEnd(run, win) {
-  if (!run || !(run.loot || []).some(s => s.key === 'disc')) return;
-  if (!win) { const q = questOf('pops'); q.lost = true; persist(); }
+  if (!run || win) return;
+  for (const id of questsOn()) { const s = questStepInfo(id); if (s.carry && (run.loot || []).some(x => x.key === s.carry)) { questOf(id).lost = true; persist(); } }
 }
 // The UPLINK with the step's item (the DISC, the DOGTAG): POPS reminds you (once per uplink).
 function questUplink() {
-  const s = questStepInfo('pops');
-  if (s.carry && hasLoot(s.carry) && questRun()) queueCall('pops', QUEST_LINES[s.uplinkLine]);
+  if (!questRun()) return;
+  for (const id of questsOn()) { const s = questStepInfo(id); if (s.carry && hasLoot(s.carry) && QUEST_LINES[s.uplinkLine]) queueCall(questWho(id), QUEST_LINES[s.uplinkLine]); }
 }
 // CASH OUT with the step's item: the step is done (saved), and POPS asks for it once the results are up (its button:
 // the next step's scene, e.g. the DISC -> TAKE IT TO POPS, the DOGTAG -> GO TO POPS, the trace).
 function questCashOut(run) {
-  const s = questStepInfo('pops'), n = questStepAfter('pops');
-  if (!questRun() || !s.carry || !n || !(run.loot || []).some(x => x.key === s.carry)) return;
-  questStep('pops', n.key);
-  setTimeout(() => queueCall('pops', QUEST_LINES[s.doneLine], { text: `[ ${n.goTo} ]`, onTap: () => playScene(n.scene) }), 600);
+  if (!questRun()) return;
+  for (const id of questsOn()) {
+    const s = questStepInfo(id), n = questStepAfter(id);
+    if (!s.carry || !n || !(run.loot || []).some(x => x.key === s.carry)) continue;
+    questStep(id, n.key);
+    setTimeout(() => queueCall(questWho(id), QUEST_LINES[s.doneLine], n.scene ? { text: `[ ${n.goTo} ]`, onTap: () => playScene(n.scene) } : null), 600);
+  }
+}
+// A step's counter (step.counter: { key, label }, need: step.wins; DOG DAYS' d0g wins): the line THE BOARD and the end
+// screen show, or null
+function questCounterLine(id) {
+  const s = questStepInfo(id), c = s.counter; if (!c) return null;
+  const need = c.need || s.wins || 1;
+  return `${c.label}: ${Math.min(questOf(id)[c.key] || 0, need)} / ${need}`;
 }
 // ---------------- DOG DAYS (docs/QUESTS.md step 5) ----------------
 // The HAD3S seed: two sectors, THE HUNT in both (d0g in some corps and on the bosses), ZERO DAY on the map. A d0g win:
@@ -216,7 +232,8 @@ function rootSigned() {
 // the chip and the card.
 function rootJoins(call) {
   const q = questOf('root'); delete q.signing;
-  save.legacy = save.legacy || {}; save.legacy.crew_root = 1; questStep('root', 'done'); featSweep();   // (SIGN HERE's crew: ROOT is on your crew now)
+  if (q.step === 'spell') questNext('root', { card: false });   // (SIGN HERE's crew: ROOT is on your crew now, the step done: its data)
+  featSweep();
   rootLettersGone();
   if (!call) { deckQuestChip('MN1', 'ROOT moved in. it brought a chip.'); questCard('root'); return; }
   queueCall('root', QUEST_LINES.rootJoined, null, () => {
@@ -605,7 +622,7 @@ function sceneEnd() {
   if (!sc || sc.out) return;
   Sound.ui();
   const q0 = CALL_QUEUE.length;
-  if (questStepInfo('pops').scene === sc.id) questNext('pops');   // the step's scene: on to the next step, on a QUEST card
+  if (!sc.onEnd) for (const id of questsOn()) if (questStepInfo(id).scene === sc.id) questNext(id);   // the step's scene: on to the next step, on a QUEST card (any quest; one with its own onEnd moves itself: rootSigned)
   if (sc.fxLoop) { st.qScene = null; if (sc.onEnd) sc.onEnd(); return; }
   sc.out = { t0: performance.now(), card: CALL_QUEUE.length > q0 };
   st.hoverBtn = null;
@@ -717,7 +734,7 @@ function questBoardLines(T, X) {
   const over = step.key === 'done' && at === info.steps.length - 1;
   X({ text: over ? `COMPLETE: ${v.name}` : `STEP ${at + 1}: ${v.name}`, col: over ? C.accent : C.bright, bold: true });
   for (const l of wrapText(v.goal, 32)) T(l, C.text);
-  if (step.wins) { T(''); X({ text: `d0g: ${Math.min(q.d0g || 0, step.wins)} / ${step.wins}`, col: C.bright, bold: true }); }   // (DOG DAYS: the wins so far)
+  { const cl = questCounterLine(id); if (cl) { T(''); X({ text: cl, col: C.bright, bold: true }); } }   // (a step's counter: DOG DAYS' d0g wins)
   if (step.letters) { T(''); X({ h: 1, draw: (ctx, y) => rootLettersRow(ctx, Math.floor((L.wc - 32) / 2), y) }); }   // (PAPERWORK: r o o t, the ones you have)
   if (step.seed) {   // the seed POPS gave you, and (off the title, no run waiting) a link that starts it (the user, 2026-11-06)
     T('');

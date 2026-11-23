@@ -14,6 +14,9 @@
 //   scene: the cutscene that ends this step (a QUEST_SCENES id). Then a QUEST card shows the next step.
 //   goTo: the words on the button that plays the scene (THE BOARD > QUESTS, and the call before it)
 //   crew: a hacker who joins your crew when this step ends
+//   counter: { key, label } a count on the quest's save (q[key]) shown as "label: n / need" (need: counter.need or wins)
+//     on THE BOARD, and on the end screen of the step's seed
+// A quest's who: the hacker id that calls for it (default: the quest's own id, pops, root)
 // What happens during a step (the DISC dropping, d0g's wins, the OMNI raid) is code in engine/quests.js.
 // QUEST_LINES: what POPS says on his CALLS. Each is a list of lines; each line wraps in the box.
 // QUEST_SCENES: the cutscenes, a frame per tap:
@@ -40,7 +43,7 @@ const QUEST_INFO = {
         held: { name: 'GET OUT WITH THE DISC', goal: 'you have the DISC. beat the sector boss, then CASH OUT at the UPLINK with it.' },
         lost: 'you lost the DISC. another copy is out there. try MEDIX again, or any loot node, market or the PIER.' },
       { key: 'deliver', name: 'SAFEHOUSE', scene: 'disc', goTo: 'TAKE IT TO POPS', goal: 'you cashed out with the DISC. take it to POPS.' },
-      { key: 'd0g', name: 'DOG DAYS', carry: 'dogtag', uplinkLine: 'tagUplink', doneLine: 'traced', goal: "start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.", seed: 'HAD3S', wins: 10 },
+      { key: 'd0g', name: 'DOG DAYS', carry: 'dogtag', uplinkLine: 'tagUplink', doneLine: 'traced', goal: "start a run with the seed POPS gave you, HAD3S, and beat d0g ten times: finish a corp he's in before he takes its last node. he counts anywhere you find him.", seed: 'HAD3S', wins: 10, counter: { key: 'd0g', label: 'd0g' } },
       { key: 'trace', name: 'TRACE ROUTE', scene: 'prodigal', goTo: 'GO TO POPS', crew: 'b0y', goal: 'POPS got a hit on the serial on the DOGTAG. go see him.' },
       { key: 'raid', name: 'OMNI RAID', scene: 'gate', goal: "b0y rides with you ([b]) till the sector's done. call him in on the OMNI boss and break it with him there." },
       { key: 'g0d', name: 'G0D MODE', goal: 'start a run with the seed H3AV3N and beat G0D. b0y goes with you.', seed: 'H3AV3N' },
