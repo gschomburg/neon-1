@@ -8,7 +8,7 @@
 // in pixels over the bottom of the screen (render.js calls benchKeys); it slides up on BUILD and drops away elsewhere.
 // A digit after a code (the x slot) is a chance to build that many (gear).
 'use strict';
-NEON_FILES.push(['engine/bench.js', 'v15.52']);
+NEON_FILES.push(['engine/bench.js', 'v15.53']);
 
 const BENCH = {
   bonus: 0.25,   // a shred: the chance of one random bonus letter (weighted by how often recipes use it)
@@ -106,6 +106,7 @@ const bookCodes = () => Object.values(benchRecipes()).sort((a, b) => BOOK_KIND[a
   || RARITY_ORDER.indexOf(recipeDef(a).rarity) - RARITY_ORDER.indexOf(recipeDef(b).rarity)).map(rc => rc.code);
 
 function benchSave() {
+  if (st.tut && st.tut.bench) return st.tut.bench;   // the WORKBENCH training: its own components, locker and pins (engine/tutorial.js)
   if (!save.bench) save.bench = { letters: {}, locker: [], pins: [] };
   const b = save.bench;
   b.letters = b.letters || {}; b.pins = b.pins || [];
@@ -175,18 +176,22 @@ const benchBusy = () => { const b = st.bench; return !b || !!b.anim || !!b.shred
 // back: where LEAVE goes (BENCH LINK's UPLINK: engine/runend.js); else the map.
 function openBench(node, back = null) {
   benchSave();
-  rootLettersGone();   // (ROOT moved in: its spare r / o / t leave the bench. engine/quests.js)
+  const sim = benchTutOn();   // (the WORKBENCH training: no quests, no first-time call)
+  if (!sim) rootLettersGone();   // (ROOT moved in: its spare r / o / t leave the bench. engine/quests.js)
   node.bench = true;   // going back in here brings you back to the bench (engine/run.js canGoBack)
   st.bench = { node, tab: 'build', slots: [null, null, null, null, null], slotT: [0, 0, 0, 0, 0], slotX: [10, 14, 18], slotY: 15, fx: [], kb: { up: true, t0: performance.now() + 380 },
     log: ['> workbench online.'], shSel: 0, shArea: { top: 0 }, bkSel: 0, bkT: 0, bkArea: { top: 0 }, lkView: 'take', lkSel: 0, stSel: 0, press: null,
     anim: null, shredAnim: null, flash: null, back };
   benchPanel();
   const bs = benchSave();
+  if (sim) return;
   rootStart();   // ROOT's quest starts here, or in your deck (engine/quests.js)
-  if (!bs.popsSeen) {   // the first time: POPS explains it
+  if (!bs.popsSeen) {   // the first time: POPS offers the training (Greg, 2026-11-20), or just explains it
     bs.popsSeen = true; persist();
-    queueCall('pops', (benchCount() ? ["kid. a workbench. nice.", "shred what you carry: it comes apart into components.", "spell a code with them and it builds. what you build waits in the locker, run after run."]
-      : ["kid. a workbench. nice.", "you've got no components yet. shred something: gear, a mod, loot.", "then spell a code and it builds. it waits in the locker, run after run."]).concat(benchShellLines()));
+    const brief = () => queueCall('pops', (benchCount() ? ["shred what you carry: it comes apart into components.", "spell a code with them and it builds. what you build waits in the locker, run after run."]
+      : ["you've got no components yet. shred something: gear, a mod, loot.", "then spell a code and it builds. it waits in the locker, run after run."]).concat(benchShellLines()));
+    CALL_QUEUE.push({ who: 'pops', lines: ["kid. a workbench. nice.", "there's a lot to it. need me to hold your hand?", "(HOW TO PLAY > TRAINING has it too.)"],
+      btns: [{ text: '[ SHOW ME ]', onTap: () => startBenchTraining(node, back) }, { text: '[ SKIP ]', onTap: brief }] });
   }
 }
 // POPS's last line on your first bench (Greg, 2026-11-20): shredding epic and up unlocks it for THE SHELL's give.mod /
@@ -335,8 +340,8 @@ function benchBuild(code = null, force = false) {
   }
   const view = rc ? (rc.kind === 'mod' ? modView(rc.key, 0) : itemView(rc.key, 0)) : null;
   const spent = b.slots.slice(0, 3).concat(rc && rc.kind === 'mod' ? [] : [mult], [b.slots[4]]).filter(Boolean);   // (slot 4: the BLANK, spent on a chip)
-  const free = !!(st.run && st.run.freeBuild); if (free) st.run.freeBuild = false;   // FREE PRESS (a chip: engine/deck.js): the first build uses no letters
-  const kludge = !rc && !free && jackLv('kludge') > 0 && !b.kludged; if (kludge) b.kludged = true;   // KLUDGE (a CREW JACK: engine/deck.js): a failed build gives its letters back, once a WORKBENCH
+  const free = !!(st.run && st.run.freeBuild) && !benchTutOn(); if (free) st.run.freeBuild = false;   // FREE PRESS (a chip: engine/deck.js): the first build uses no letters
+  const kludge = !rc && !free && !benchTutOn() && jackLv('kludge') > 0 && !b.kludged; if (kludge) b.kludged = true;   // KLUDGE (a CREW JACK: engine/deck.js): a failed build gives its letters back, once a WORKBENCH
   if (!free && !kludge) for (const ch of spent) { letters[ch]--; if (letters[ch] <= 0) delete letters[ch]; }
   b.anim = { t0: performance.now(), word, slots: b.slots.slice(0, 3), x: b.slotX.slice(), y: b.slotY, rc, view, n, where, lucky: code === '?', mult, kludge };
   b.slots = [null, null, null, null, null];
@@ -435,11 +440,11 @@ function benchShred(e) {
   if (!cor && Math.random() < (BENCH.digit[v.rarity] || 0)) got.push(benchDigit());
   if (Math.random() < (cor ? BENCH.blank.corrupt : ITEMS[e.key] && ITEMS[e.key].chip ? BENCH.blank.chip : 0)) got.push(BENCH_BLANK);   // a BLANK: mostly from chips
   const learned = cor ? null : benchLearn(benchShredBpCode(e));   // a blueprint: exotics
-  if (!cor) { const sh = save.shredded || (save.shredded = {}); sh[e.key] = Math.max(sh[e.key] == null ? -1 : sh[e.key], e.tier || 0); }   // its top tier: give.mod / give.gear's epic+ (engine/deck.js deckGiveTiers)
+  if (!cor && !benchTutOn()) { const sh = save.shredded || (save.shredded = {}); sh[e.key] = Math.max(sh[e.key] == null ? -1 : sh[e.key], e.tier || 0); }   // its top tier: give.mod / give.gear's epic+ (engine/deck.js deckGiveTiers)
   if (e.kind === 'mod') removeMod(e.key);
   else if (--e.stack.n <= 0) e.list.splice(e.list.indexOf(e.stack), 1);
   benchAdd(got);
-  const quest = rootShredLetter(!!cor);   // ROOT's quest: one of its letters (engine/quests.js); banked now, gone if PH1SH eats it
+  const quest = benchTutOn() ? null : rootShredLetter(!!cor);   // ROOT's quest: one of its letters (engine/quests.js); banked now, gone if PH1SH eats it
   if (quest) benchAdd([quest]);
   persist();
   b.shredAnim = { t0: performance.now(), letters, got, name: v.name, rarity: v.rarity, quest };
@@ -505,8 +510,11 @@ function benchKey(k) {
   const b = st.bench;
   if (!b || st.callBox || st.phish) return false;
   if (benchBusy()) return k.length === 1;   // (swallow typing during a build / shred)
-  if (k === 'escape') { benchLeave(); return true; }
+  if (k === 'escape') { if (!tutAllows('btn', 'bkleave')) return true; benchLeave(); return true; }
   if (b.tab !== 'build') return false;
+  // (the WORKBENCH training: only the keys it asks for. engine/tutorial.js)
+  const tk = k.length === 1 ? k.toUpperCase() : k === 'backspace' ? 'DEL' : k === 'enter' ? 'ENTER' : null;
+  if (tk && !tutAllows('key', tk)) { tutNo(); return true; }
   if (k.length === 1 && /[a-z0-9*#]/.test(k)) {   // a letter types uppercase; ROOT's lowercase ones when you're spelling it, or have no uppercase one
     const up = k.toUpperCase(), lo = /[a-z]/.test(k) && benchHave(k) > 0 && (benchRootMode() || benchHave(up) <= 0);
     Sound.keyclick(); benchPlace(lo ? k : up); return true;
@@ -1044,7 +1052,8 @@ function benchKeys(now) {
     g.fillStyle = chip.fg; g.font = font(DRAW_FONT.bold, Math.round(label ? G.kh * 0.28 : G.kh * 0.46));
     g.fillText(label || ch, x + w / 2, y + G.kh / 2 - 1);
     if (!label && n > 0) { g.font = font(DRAW_FONT.bold, Math.round(G.kh * 0.24)); g.textAlign = 'right'; g.fillText(n > 15 ? '+' : n.toString(16).toUpperCase(), x + w - 2, y + G.kh - 8); g.textAlign = 'center'; }
-    if (live) hits.push(onTap ? { x, y, w, h: G.kh, kind: 'btn', id: 'bk_' + (label || ch), onTap } : { x, y, w, h: G.kh, kind: 'benchkey', key: ch });
+    const bid = 'bk_' + (label || ch);
+    if (live) hits.push(onTap ? { x, y, w, h: G.kh, kind: 'btn', id: bid, onTap: st.tut && !tutAllows('btn', bid) ? tutNo : onTap } : { x, y, w, h: G.kh, kind: 'benchkey', key: ch });   // (the training gates them: engine/tutorial.js)
   };
   g.textAlign = 'center'; g.textBaseline = 'middle';
   let y = top + G.pad;
@@ -1096,8 +1105,9 @@ function benchPointer(type, e) {
   if (!b || st.mode !== 'panel' || st.panelFn !== benchLines || st.dev || st.pause || st.swap || st.callBox || st.phish) return false;
   const [px, py] = ptXY(e);
   if (type === 'down') {
-    if (benchBusy() || b.tab !== 'build') return false;
+    if (benchBusy() || b.tab !== 'build' || (st.tut && st.tut.pop && st.tut.pop.ok)) return false;   // (a training popup takes the tap: engine/tutorial.js)
     const h = hitAt(px, py);
+    if (h && h.kind === 'benchkey' && !tutAllows('key', h.key)) { tutNo(); return true; }
     if (h && h.kind === 'benchkey') { b.press = { kind: 'benchkey', key: h.key, x: px, y: py, moved: false }; Sound.keyclick(); return true; }
     if (h && h.kind === 'benchslot' && b.slots[h.slot]) { b.press = { kind: 'benchslot', slot: h.slot, x: px, y: py, moved: false }; return true; }
     return false;

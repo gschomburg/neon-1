@@ -14,18 +14,20 @@
 //
 // The record's numbers (engine/feats.js counts them; practice runs don't count):
 //   runs  deaths  cashouts  corps  corpKinds (different corps breached)  layers  perfects  ice (ICE hits)  sectors
-//   ads (closed)  gear (used)  newb (finished the training)
+//   ads (closed)  gear (used)  newb (finished the training)  benchTrained (finished the WORKBENCH training)
 //   best*: the best a single run got:  bestDepth  bestStreak (perfects in a row)  bestSectors  bestHeld (credits at
 //   once)  bestSpent (credits spent in one run)
 //   once-offs (counted when they happen):  diedFirst (died in your first corp)  nakedSector (cleared a sector with no
 //   mods)  bossAt1 (beat a boss layer at 1 INT)  easyCome (earned 1000cr in a run and ended it with under 10)
 'use strict';
-NEON_FILES.push(['data/feats.js', 'v15.52']);
+NEON_FILES.push(['data/feats.js', 'v15.53']);
 
 const FEATS = [
   // ---- the basics: runs
   { id: 'newb', name: 'NEWB', group: 'runs', text: 'finish the training.', stat: 'newb', n: 1, title: 'NEWB',
     say: "that's the sim done. you're a newb now. officially. it's a step up from nothing." },
+  { id: 'apprentice', name: 'APPRENTICE', group: 'runs', text: 'finish the WORKBENCH training.', stat: 'benchTrained', n: 1,
+    say: "you can take a thing apart and put it back together. that's half of this job." },
   { id: 'firstblood', name: 'FIRST BLOOD', group: 'runs', text: 'breach a corp.', stat: 'corps', n: 1,
     say: 'first corp down. the first one always feels like that.' },
   { id: 'sector1', name: 'SECTOR ONE', group: 'runs', text: 'clear a sector.', stat: 'sectors', n: 1,

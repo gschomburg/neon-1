@@ -1,6 +1,6 @@
 // NeoN+1 engine/save.js: Save data, REP (legacy), and the run save for resuming.
 'use strict';
-NEON_FILES.push(['engine/save.js', 'v15.52']);
+NEON_FILES.push(['engine/save.js', 'v15.53']);
 
 // ---------------- Save data ----------------
 const freshSave = () => ({
@@ -245,7 +245,7 @@ function runSnapshot() {
   return { v: VERSION, run: r, corp: corp && corp.idx < (c.counts ? c.counts.length : 99) ? corp : null, pending: run.pending || null };
 }
 function saveRun() {
-  if (TABS.away) return;
+  if (TABS.away || (st.tut && st.tut.bench)) return;   // (the WORKBENCH training: your run's things are set aside for a kit; it saves once they're back)
   const snap = runSnapshot();
   if (!snap) return;
   try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch (e) { /* storage unavailable */ }

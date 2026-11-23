@@ -9,7 +9,7 @@
 //   of:    said in place of that popup's do-this line (a wrong tap, the boss beaten): one way to say it per line,
 //          picked at random.
 'use strict';
-NEON_FILES.push(['data/tutorial.js', 'v15.52']);
+NEON_FILES.push(['data/tutorial.js', 'v15.53']);
 
 const TUT_COPY = [
   // the public net
@@ -63,4 +63,26 @@ const TUT_COPY = [
   { id: "menu", text: "one more thing. tap NeoN+1 up top any time: it pauses the run. sound, colors, and the way out if you need it." },
   { id: "bye", text: "that's all i got, {name}. keep your integrity up and your head down.\n\ngood luck out there." },
   { id: "out", text: "jacking you out." },
+  // the WORKBENCH: hello
+  { id: "b_hello", part: "the WORKBENCH: hello", text: "a workbench. there's a lot to it, so we'll do it in the sim.\n\nyour own stuff is set aside. here's a kit you can wreck." },
+  // the WORKBENCH: SHRED
+  { id: "b_shredtab", part: "the WORKBENCH: SHRED", text: "first, SHRED. it takes things apart.", act: "tap SHRED" },
+  { id: "b_shred", text: "everything you carry is here: GEAR, MODS, LOOT. each comes apart into components: the letters of its code. PING is PNG." },
+  { id: "b_shredit", text: "we're making a PURGE. its code is PRG.\n\nshred your gear till you have a P, an R and a G.", act: "shred PING and ROUTE" },
+  { id: "b_comps", text: "those letters are components. they bank, run after run.\n\nmods and loot shred too. a mod you shred is gone for good. corrupted software comes apart into anything." },
+  // the WORKBENCH: the BOOK
+  { id: "b_booktab", part: "the WORKBENCH: the BOOK", text: "the BOOK has every code you can build, and what you're missing.", act: "tap BOOK" },
+  { id: "b_pin", text: "there's PURGE. you have its letters: ready. pin it and it shows up over the keyboard.", act: "tap PIN" },
+  // the WORKBENCH: BUILD
+  { id: "b_buildtab", part: "the WORKBENCH: BUILD", text: "", act: "tap BUILD" },
+  { id: "b_pinned", text: "your pin. the letters you have are lit up. the ones you're missing would be pink." },
+  { id: "b_wild", text: "see that * on the SPECIAL row, over the keys? it fits any letter. save it for one you're short of." },
+  { id: "b_type", text: "spell it on the keyboard. DEL takes one back.", act: "type P R G" },
+  { id: "b_build", text: "", act: "hit ENTER" },
+  // the WORKBENCH: the LOCKER
+  { id: "b_locker", part: "the WORKBENCH: the LOCKER", text: "built. it went up to the LOCKER." },
+  { id: "b_lockertab", text: "", act: "tap LOCKER" },
+  { id: "b_take", text: "the LOCKER keeps 5 things between runs. take one out when you want it on your belt.", act: "TAKE the PURGE" },
+  { id: "b_store", text: "STORE puts things in it for later. COMPS is every component you've banked." },
+  { id: "b_bye", text: "that's the bench. shred what you don't need, build what you do.\n\nhere's a few components for your trouble. your own stuff's back." },
 ];

@@ -1,19 +1,33 @@
 // NeoN+1 engine/help.js: HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/help.js', 'v15.52']);
+NEON_FILES.push(['engine/help.js', 'v15.53']);
 
 // ---------------- How to play ----------------
-const HELP_PAGES = [
-  { title: 'THE BASICS', tab: 'BASIC',
-    paragraph: "it's your job to breach the corps. each corp's data center is a stack of layers, each one a grid of nodes.\n" +
-      'one node per layer is real; the rest are ICE. guess the real node and tap it. ' +
-      'guess right and you move on to the next layer. guess wrong and the ICE hit costs you integrity\u00a0(INT). then keep guessing. ' +
-      'at 0 INT you crash. find the real node on the first try for bonus credits and +1 INT.',
-    training: true, nodeTile: true, lootTile: true },
-  { title: 'THE NET', tab: 'NET', build: buildNetPage },
-  { title: 'THE TRAY', tab: 'TRAY', build: buildTrayPage },
-  { title: 'ADVANCED', tab: 'MORE', build: buildAdvancedPage },
+// Two main tabs, each with a strip of sub-tabs under it (drawSubTabs, like THE CODEX's). Greg, 2026-11-23: BASICS
+// (INTRO, NET, TRAY, TRAINING) and ADVANCED. ADVANCED's five sub-tabs fill the 36 columns exactly: a sixth won't fit.
+const HELP_TABS = [
+  { tab: 'BASICS', pages: [
+    { id: 'intro', title: 'THE BASICS', tab: 'INTRO',
+      paragraph: "it's your job to breach the corps. each corp's data center is a stack of layers, each one a grid of nodes.\n" +
+        'one node per layer is real; the rest are ICE. guess the real node and tap it. ' +
+        'guess right and you move on to the next layer. guess wrong and the ICE hit costs you integrity\u00a0(INT). then keep guessing. ' +
+        'at 0 INT you crash. find the real node on the first try for bonus credits and +1 INT.',
+      nodeTile: true, lootTile: true },
+    { id: 'net', title: 'THE NET', tab: 'NET', build: buildNetPage },
+    { id: 'tray', title: 'THE TRAY', tab: 'TRAY', build: buildTrayPage },
+    { id: 'training', title: 'TRAINING', tab: 'TRAINING', build: buildTrainingPage },
+  ] },
+  { tab: 'ADVANCED', pages: [
+    { id: 'runs', title: 'RUNS', tab: 'RUNS', build: buildRunsPage },
+    { id: 'board', title: 'THE BOARD', tab: 'BOARD', build: buildBoardPage },
+    { id: 'deck', title: 'YOUR DECK', tab: 'DECK', build: buildDeckPage },
+    { id: 'bench', title: 'THE WORKBENCH', tab: 'BENCH', build: buildBenchPage },
+    { id: 'pier', title: 'THE PIER', tab: 'PIER', build: buildPierPage },
+  ] },
 ];
+const HELP_PAGES = HELP_TABS.flatMap(t => t.pages);
+const helpTabOf = i => HELP_TABS.findIndex(t => t.pages.includes(HELP_PAGES[i]));
+const HELP_LAST = { page: 0 };   // where you were (this session): HOW TO PLAY opens there again
 
 // ---- How to play page builders. One style everywhere: section headers in the
 // accent color, plain text under them, game things drawn the way they look in game.
@@ -93,10 +107,28 @@ function buildNetPage(T, X) {
   P('spend REP on THE BOARD, from the title screen.');
 }
 
-// ADVANCED: the things the other pages and the training don't cover (the user, 2026-10-26).
-function buildAdvancedPage(T, X) {
+// TRAINING: POPS's trainings, to play (again). The WORKBENCH one waits for the WORKBENCH (Greg, 2026-11-23: the page
+// shows, the training is locked till you own the post).
+function buildTrainingPage(T, X) {
+  const { P } = helpKit(T, X);
+  T('TRAINING'.padEnd(HELP_W), C.bright);
+  T('');
+  P('POPS walks you through it, one thing at a time. play one again any time.');
+  T('');
+  X({ box: true, text: 'C O R P   T R A I N I N G', sub: '- a practice run -', id: 'tutorial', onTap: startTutorial, minW: 30 });
+  P('nodes, ICE, gear, the map, a corp and its boss. firsthand.');
+  T('');
+  const bench = benchOpen();
+  X({ box: true, text: 'W O R K B E N C H', sub: bench ? '- shred it, build it -' : '- needs the WORKBENCH -', id: 'benchtut', onTap: () => { if (benchOpen()) startBenchTraining(); }, minW: 30, disabled: !bench });
+  P(bench ? 'shred things into components, spell a code, build it. your own stuff is set aside: you get a kit.'
+    : 'buy the WORKBENCH on THE BOARD (REP) and this one opens.');
+}
+
+// ADVANCED (the user, 2026-10-26: the things the other pages and the training don't cover), in five sub-tabs
+// (Greg, 2026-11-23).
+function buildRunsPage(T, X) {
   const { H, P } = helpKit(T, X);
-  T('ADVANCED'.padEnd(HELP_W), C.bright);
+  T('RUNS'.padEnd(HELP_W), C.bright);
   T('');
   H('INT');
   P("INT is your integrity: your health. ICE takes 1 (a boss can take more), a perfect pick heals 1. at 0 you're traced and the run is over.");
@@ -104,14 +136,8 @@ function buildAdvancedPage(T, X) {
   H('THE SEED');
   P('every run grows from a seed: the same seed makes the same map, the same corps and the same layers. the title shows yours: tap it to roll a new one. after a run, RETRY SEED plays the same one again. a seed you pick (typed, or RETRY SEED) is ranked on its own board: LEADERBOARD > SEEDS, not TODAY or ALL TIME.');
   T('');
-  H('REPUTATION (REP)');
-  P('cash out and you bank REP: for how deep you got, the corps you breached, your perfects, the credits you earned and the sectors you cleared. die and you bank nothing. spend REP at THE BOARD on upgrades for every run after.');
-  T('');
-  H('HACKERS');
-  P('RIVALS come into corps with the RIVAL anomaly (V): each one has its own trick (stealing the pay, denying nodes, covering glyphs...). breach the corp and you beat them; beat one 5 times for its logo. CREW come in when you use CALL gear and help for the rest of the corp. call one 5 times and they can join your crew on THE BOARD; then their own call gear turns up.');
-  T('');
-  H('THE BOARD AND FEATS');
-  P('THE BOARD (on the title, or tap your name) keeps what lasts between runs: YOU (your card: logo, title, color), REP (upgrades to buy: buy enough on one level and the next opens, and some feats open private posts), FEATS (your stats are under the list) and CREW. feats are things to do (breach 10 corps, 10 perfects in a row...); some give a title for your card. a * means something new.');
+  H('RIVALS');
+  P('RIVALS come into corps with the RIVAL anomaly (V): each one has its own trick (stealing the pay, denying nodes, covering glyphs...). breach the corp and you beat them; beat one 5 times for its logo.');
   T('');
   H('SECTOR EVENTS');
   P('from sector 2 on, every sector rolls an event: a card tells you what it is when the sector starts (tap the sector name on the map to see it again). most events put an anomaly on some of its corps, and on its boss; others change the whole sector: one corp everywhere, cheap markets, more loot, clocks that cost money.');
@@ -122,6 +148,80 @@ function buildAdvancedPage(T, X) {
   T('');
   H('THE UPLINK');
   P('beat a sector boss and you can push on to the next sector, but carrying your mods costs bandwidth: every mod has a fee by its rarity. keep what you can pay for, sell the rest, or cash out.');
+}
+
+function buildBoardPage(T, X) {
+  const { H, P } = helpKit(T, X);
+  T('THE BOARD'.padEnd(HELP_W), C.bright);
+  T('');
+  H('REPUTATION (REP)');
+  P('cash out and you bank REP: for how deep you got, the corps you breached, your perfects, the credits you earned and the sectors you cleared. die and you bank nothing. spend REP at THE BOARD on upgrades for every run after.');
+  T('');
+  H('THE BOARD');
+  P('THE BOARD (on the title, or tap your name) keeps what lasts between runs: YOU (your card: logo, title, color, and your deck), REP (upgrades to buy: buy enough on one level and the next opens, and some feats open private posts), FEATS (your stats are under the list), CREW and QUESTS. a * means something new.');
+  T('');
+  H('FEATS');
+  P('things to do: breach 10 corps, 10 perfects in a row... some give a title for your card.');
+  T('');
+  H('CREW');
+  P('CREW come in when you use CALL gear and help for the rest of the corp. call one 5 times and they can join your crew on THE BOARD; then their own call gear turns up.');
+}
+
+function buildDeckPage(T, X) {
+  const { H, P } = helpKit(T, X);
+  T('YOUR DECK'.padEnd(HELP_W), C.bright);
+  T('');
+  P('you get a deck at USER (a REP level). it lasts between runs, like your REP buys. THE BOARD > YOU > YOUR DECK.');
+  T('');
+  H('CHIPS');
+  P('slot chips into its sockets and they run, every run. each group of sockets does one kind of thing: what a run starts with, the run\'s rules, what happens when you die, what bosses give...');
+  T('');
+  H('POWER');
+  P('chips need power. the cell in the PSU socket is your budget. too little and a chip goes red and doesn\'t run. a better cell gives more.');
+  T('');
+  H('FINDING CHIPS');
+  P('caches, the pier, markets, corp bosses and rivals. a chip you find rides on your belt: cash out and it\'s yours. die and it\'s gone. you can build chips at a WORKBENCH too.');
+  T('');
+  H('MORE SOCKETS');
+  P('your deck levels up with REP posts on THE BOARD: each mk opens more sockets.');
+}
+
+function buildBenchPage(T, X) {
+  const { H, P } = helpKit(T, X);
+  T('THE WORKBENCH'.padEnd(HELP_W), C.bright);
+  T('');
+  P('a REP post on THE BOARD. it puts a workbench in every safehouse. what\'s on it stays between runs.');
+  T('');
+  H('SHRED');
+  P('take apart gear, mods or loot. each comes apart into components: the letters of its code (PURGE is PRG), sometimes a bonus letter, a * or a digit. corrupted software gives weirder stuff.');
+  T('');
+  H('BUILD');
+  P('spell a code on the keyboard and hit ENTER. a * fits any letter. a digit after the letters is a chance to build that many. a BLANK and a chip\'s code build that chip.');
+  T('');
+  H('THE BOOK');
+  P('every code you can build, and what you\'re missing. pin 2 and they show over the keyboard.');
+  T('');
+  H('THE LOCKER');
+  P('what you build waits here, run after run (5 slots). take it onto your belt, or store things in it. your components are here too.');
+  T('');
+  H('EXOTICS');
+  P('shred one and you learn its blueprint. then you can build it.');
+}
+
+function buildPierPage(T, X) {
+  const { H, P } = helpKit(T, X);
+  T('THE PIER'.padEnd(HELP_W), C.bright);
+  T('');
+  P('a stop on the map [~]. you phish the data stream. every cast costs credits.');
+  T('');
+  H('CAST');
+  P('tap to cast. hold and the hook sinks toward your finger; drag it up and down. things swim by and nose the hook.');
+  T('');
+  H('THE BITE');
+  P('when one turns red it bit. tap, then reel: hold to pull, let go to slack. keep it in the window till the bar fills.');
+  T('');
+  H('THE CATCH');
+  P("a mystery till it's in. PHISH (stolen data: black markets buy it), gear, sometimes a chip, corrupted software. sometimes a shoe. big ones lean rare, but not always.");
 }
 
 function buildTrayPage(T, X) {
@@ -158,11 +258,13 @@ function buildTrayPage(T, X) {
   for (const r of Object.keys(RARITY).filter(r => !RARITY[r].hidden)) X({ text: `${RARITY[r].label.padEnd(7)} ${ex[r]}`.padEnd(HELP_W), col: C.text, chips: true });
 }
 
-function openHelp() {
-  let page = 0, top = 0;   // top: first content line shown (pages scroll when they're too tall)
-  const show = i => { page = (i + HELP_PAGES.length) % HELP_PAGES.length; top = 0; st.boardStart = performance.now(); Sound.tick(); };
+// want: a page's id to open on (the WORKBENCH training comes back to 'training'); else where you were last.
+function openHelp(want) {
+  const wi = HELP_PAGES.findIndex(p => p.id === want);
+  let page = wi >= 0 ? wi : clamp(HELP_LAST.page, 0, HELP_PAGES.length - 1), top = 0;   // top: first content line shown (pages scroll when they're too tall)
+  const show = i => { page = HELP_LAST.page = (i + HELP_PAGES.length) % HELP_PAGES.length; top = 0; st.boardStart = performance.now(); Sound.tick(); };
   const go = d => show(page + d);
-  const CONTENT_ROWS = 30;   // the content window; every tab uses the same height (screen is full height)
+  const CONTENT_ROWS = 29;   // the content window; every tab uses the same height (screen is full height; the sub-tab strip took a row)
   const rowsOf = ln => ln.box ? (ln.sub ? 4 : 3) : ln.tileInfo ? TILE_H : 1;
 
   // A page's content as lines (built fresh each frame).
@@ -171,8 +273,7 @@ function openHelp() {
     const T = (text, col = C.text) => out.push({ text, col });
     const X = ln => out.push(ln);
     if (p.build) { p.build(T, X); return out; }
-    // THE BASICS: the training at the top, in the scroll area (the user, 2026-10-28)
-    if (p.training) { X({ box: true, text: 'C O R P   T R A I N I N G', sub: '- learn it firsthand -', id: 'tutorial', onTap: startTutorial, minW: 30 }); T(''); }
+    // (the trainings moved to their own sub-tab, TRAINING: Greg, 2026-11-23)
     // Sectioned pages skip the title (the tab names the page) and space their own sections.
     if (!p.sections) { T(p.title.padEnd(HELP_W), C.bright); T(''); }
     if (p.lines) for (const [text, col] of p.lines) T(text, col ? C[col] : C.text);
@@ -227,7 +328,9 @@ function openHelp() {
   openPanel('HOW TO PLAY', (T, B, X, lines) => {
     const p = HELP_PAGES[page];
     T('HOW TO PLAY', C.accent);
-    X({ gap: 1, row: HELP_PAGES.map((hp, i) => ({ text: `[${hp.tab}]`, id: 'htab' + i, sel: i === page, onTap: () => show(i) })) });
+    const ti = helpTabOf(page);
+    X({ gap: 2, row: HELP_TABS.map((t, i) => ({ text: `[${t.tab}]`, id: 'htab' + i, sel: i === ti, onTap: () => { if (i !== ti) show(HELP_PAGES.indexOf(t.pages[0])); } })) });
+    X({ h: 1, draw: (ctx, y) => drawSubTabs(ctx, y, HELP_TABS[ti].pages.map(sp => { const i = HELP_PAGES.indexOf(sp); return { id: 'hsub_' + sp.id, text: sp.tab, on: i === page, onTap: () => { if (i !== page) show(i); } }; })) });
     T(SEP, C.dim);
     const rowsArr = flatRows(p);
     top = clamp(top, 0, maxTopOf(rowsArr));
@@ -249,12 +352,13 @@ function openHelp() {
     T('');   // (the way out is top left: [< TITLE]; the training is a button at the top of THE BASICS)
   }, '> manual loaded.', { full: true, top: TO_TITLE });
   st.scroll = scrollBy;   // mouse wheel and swipe
-  // Keys: left/right or 1-4 = tabs, up/down = scroll (when the page scrolls), esc = back.
+  // Keys: left/right = every sub-tab in order (into the next main tab at the end, like THE CODEX), 1-2 = the main tabs,
+  // up/down = scroll (when the page scrolls), esc = back.
   st.keyHandler = k => {
-    const focusTab = () => { st.kbFocus = st.hoverBtn = 'htab' + page; };   // cursor follows the active tab
+    const focusTab = () => { st.kbFocus = st.hoverBtn = 'htab' + helpTabOf(page); };   // cursor follows the active tab
     if (k === 'arrowleft') { go(-1); focusTab(); return true; }
     if (k === 'arrowright') { go(1); focusTab(); return true; }
-    if (/^[1-9]$/.test(k) && Number(k) <= HELP_PAGES.length) { show(Number(k) - 1); focusTab(); return true; }
+    if (/^[1-9]$/.test(k) && Number(k) <= HELP_TABS.length) { show(HELP_PAGES.indexOf(HELP_TABS[Number(k) - 1].pages[0])); focusTab(); return true; }
     // Scrolling pages: up/down scroll; past the bottom the cursor moves to BACK, and up
     // from BACK resumes scrolling. At the very top, up puts the cursor on the tab.
     if ((k === 'arrowup' || k === 'arrowdown') && maxTopOf(flatRows(HELP_PAGES[page])) > 0) {
@@ -267,7 +371,7 @@ function openHelp() {
         if (top < max) scrollBy(1); else focus('back');
       } else {
         if (st.kbFocus === 'back') { unfocus(); Sound.tick(); return true; }
-        if (top > 0) scrollBy(-1); else focus('htab' + page);
+        if (top > 0) scrollBy(-1); else focus('htab' + helpTabOf(page));
       }
       return true;
     }

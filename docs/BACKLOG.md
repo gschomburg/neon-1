@@ -66,16 +66,8 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   - point out the SLOTS sub-tab
   - at the end maybe a chip, a feat or a title
   - then the PAPERWORK quest card
-- **The workbench training** (was in Medium and small, Greg 2026-11-20): same shape as the deck's, a quick intro then the
-  offer. Its own world, apart from your run: your gear swaps for a set kit, ROOT's quest popups stay out, and at the end
-  you're back in your run as you were. Greg's outline:
-  - SHRED: shred the set gear / mods for letters. You can shred mods, gear or loot, unless it's important. Letters come
-    from the item; some corrupted items give weirder stuff. Shred till you have PURGE's letters.
-  - the BOOK (auto, or POPS has you tap it): pin a recipe (PATCH).
-  - BUILD: go to the build page and type the letters (Greg leans to typing them), build.
-  - the LOCKER: what you build goes there; put it on your belt; the locker keeps 5 things for your next run.
-  - also explain the `*` (from the old item: it means "anything").
-- **Replay them** from HOW TO PLAY (both trainings).
+- **The workbench training:** built v15.53 (SPEC). From HOW TO PLAY > TRAINING too. Still open: the deck's training
+  (above) goes on that page too once it's built.
 
 ### The workbench
 - Built v15.33: SHRED's GEAR / MODS / LOOT sub-tabs, [ CLEAR ] under a good recipe, its music (AUGMENT, low; Greg).
@@ -133,8 +125,6 @@ The ideas as they came:
   maybe those just sit closer). The codex is above. Look at them all together.
 - **THE BOARD's name:** "BBS board"? Or a better name for the whole section (it was up for a rename once). BBS = bulletin
   board system.
-- **HOW TO PLAY** gets the tabs and sub-tabs: BASICS (INTRO: today's basics, NET, TRAY; TRAINING: the corp, workbench
-  and deck trainings) and ADVANCED (the deck, the workbench, phishing, crews and REP...). Sub-tabs to work out.
 - **The training's text:** make the capitals match (MOD is capitalized, mods isn't: maybe that's fine).
 - The LOOT bag's CLOSE is fine as it is (Greg).
 

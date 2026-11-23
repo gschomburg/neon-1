@@ -4,7 +4,7 @@
 // while a popup is up, only what it asks for works. What he says is in data/tutorial.js (the neon editor's
 // TRAINING tab). Started from the title ([ TRAINING ], until you've done it once) and from HOW TO PLAY.
 'use strict';
-NEON_FILES.push(['engine/tutorial.js', 'v15.52']);
+NEON_FILES.push(['engine/tutorial.js', 'v15.53']);
 
 const TUT = {
   palette: 'c_safeharbor',   // navy + teal: clearly not a normal run
@@ -25,7 +25,8 @@ const TUT = {
   timerChars: '@Oo.',        // a banter timer's spinners: each one steps through these, then it's gone
   name: 'POPS',
 };
-const tutOn = () => !!(st.tut && st.run && st.run.tutorial);
+// on: the corp training's run, or the WORKBENCH training's bench (st.tut.bench: its own components and locker)
+const tutOn = () => !!(st.tut && (st.tut.bench ? st.bench : st.run && st.run.tutorial));
 const tutLine = id => (typeof TUT_COPY !== 'undefined' && TUT_COPY.find(l => l.id === id)) || { id, text: id };
 const tutFill = s => (s || '').replace(/\{name\}/g, () => profile().name || 'runner').replace(/\{int\}/g, () => st.run ? st.run.integrity : '');
 
@@ -81,9 +82,9 @@ function tutAlt(p, id, ms, pre = '') {
 // Hover: only what the training lets you tap lights up (input.js asks).
 function tutHoverOk(h) {
   if (!h || !tutOn()) return true;
-  const k = { tile: 'pick', node: 'node', btn: 'btn', item: 'item', mod: 'mod' }[h.kind];
+  const k = { tile: 'pick', node: 'node', btn: 'btn', item: 'item', mod: 'mod', benchkey: 'key' }[h.kind];
   if (!k) return true;
-  const x = h.kind === 'tile' || h.kind === 'item' ? h.i : h.kind === 'mod' ? st.run && st.run.mods[h.i] : h.id;
+  const x = h.kind === 'tile' || h.kind === 'item' ? h.i : h.kind === 'mod' ? st.run && st.run.mods[h.i] : h.kind === 'benchkey' ? h.key : h.id;
   return tutAllows(k, x);
 }
 // An "ok" popup: a tap / Enter / Space finishes the entrance, then puts it away (input.js asks first).
@@ -143,6 +144,7 @@ async function endTutorial() {
 // running), start over and play forward.
 const tutIndex = id => (typeof TUT_COPY !== 'undefined' ? TUT_COPY.findIndex(l => l.id === id) : -1);
 async function tutJump(id) {
+  if (/^b_/.test(id)) { if (!st.tut && benchOpen()) startBenchTraining(); return; }   // (the WORKBENCH training's lines: it starts from the top)
   const T = st.tut;
   if (T && tutOn() && T.at && tutIndex(id) > tutIndex(T.at)) {
     T.auto = id;
@@ -177,10 +179,9 @@ function tutStop(T) {
   return stops.length ? stops[0].id : null;
 }
 
-// ---- the script (the words are in data/tutorial.js, by id)
-async function tutScript(T) {
-  // alive: the training run is still on (before it has started: just that the tutorial wasn't dropped)
-  const alive = () => st.tut === T && (!T.started || (st.run && st.run.tutorial && !st.run.ended));
+// ---- the popups' helpers, shared by the trainings (the corp training below, the WORKBENCH one at the end).
+// alive: is this training still on? until / say / ask throw once it isn't, which ends the script.
+function tutKit(T, alive) {
   const until = async f => {
     while (!f()) {
       if (!alive()) throw new Error('tutorial over');
@@ -190,10 +191,6 @@ async function tutScript(T) {
   };
   // playing forward (T.auto): skip this line? (reaching the line stops it)
   const skipping = id => { if (T.auto === id) T.auto = null; return !!T.auto; };
-  const calm = () => !st.busy && !st.wipe && !st.transitioning && !st.intro && !st.bossIntro && !st.ad && !st.hideAll;
-  const inLayer = () => st.mode === 'play' && st.lv && calm() && st.lv.readyAt != null;
-  const inPanel = () => st.mode === 'panel' && calm() && (!st.panelReveal || st.panelReveal.done);
-  const onMap = () => st.mode === 'map' && calm() && st.mapView && st.mapView.row === st.mapView.target;
   // the last popup finishes leaving (he pops out), a beat, then the next one comes in
   const show = async pop => {
     await until(() => !T.leaving || performance.now() - T.leaving.t0 > tutExitMs(T.leaving.pop));
@@ -236,6 +233,18 @@ async function tutScript(T) {
     });
     tutClose(T); T.allow = null;
   };
+  return { until, skipping, show, say, ask };
+}
+
+// ---- the script (the words are in data/tutorial.js, by id)
+async function tutScript(T) {
+  // alive: the training run is still on (before it has started: just that the tutorial wasn't dropped)
+  const alive = () => st.tut === T && (!T.started || (st.run && st.run.tutorial && !st.run.ended));
+  const { until, say, ask } = tutKit(T, alive);
+  const calm = () => !st.busy && !st.wipe && !st.transitioning && !st.intro && !st.bossIntro && !st.ad && !st.hideAll;
+  const inLayer = () => st.mode === 'play' && st.lv && calm() && st.lv.readyAt != null;
+  const inPanel = () => st.mode === 'panel' && calm() && (!st.panelReveal || st.panelReveal.done);
+  const onMap = () => st.mode === 'map' && calm() && st.mapView && st.mapView.row === st.mapView.target;
 
   // 1. the public net
   await until(() => st.run && st.run.tutorial);
@@ -442,7 +451,8 @@ function tutMiniLayout(p, r, cells = []) {
   const used = (y0, y1, x1) => cells.some(c => c.ch && c.ch !== ' ' && c.cy >= y0 - 0.5 && c.cy <= y1 + 0.5 && c.cx < x1);
   const span = Math.ceil((F.h + 6 * k) / L.chh / 2), wCells = 6 + p.act.length + 4;
   let below = r ? r.y + r.h + 1 : 6;
-  if (r && p.near === 'below') for (let y = r.y + r.h + span; y < L.hc - span - 1; y++) if (!used(y - span, y + span, wCells)) { below = y; break; }
+  const end = st.bench && st.bench.kb.up ? Math.floor((benchKbGeom().top - L.oy) / L.chh) - span : L.hc - span - 1;   // (the WORKBENCH keyboard is pixels, not cells: stay above it)
+  if (r && p.near === 'below') for (let y = r.y + r.h + span; y < end; y++) if (!used(y - span, y + span, wCells)) { below = y; break; }
   const row = r && p.near === 'below' ? below : r && p.near === 'right' ? r.y - 1 : 6;   // (right: a row above, clear of the item's description under it)
   const label = '> ' + p.act, cy = L.oy + (row + 0.5) * L.chh;
   const fx = r && p.near === 'right' ? L.ox + (r.x + r.w + 1) * L.cw : L.ox + 3 * k, px = fx + F.w + 10 * k, pw = g.measureText(label).width + 20 * k;
@@ -649,4 +659,104 @@ function hintTap(h) {
   if (!onTarget && now - Math.max(p.t0 + tutTimes(p).done, p.shownAt || 0) < TUT.okDelay) return true;
   tutClose(H); Sound.tick();
   return !onTarget;
+}
+
+// ---------------- the WORKBENCH training (Greg's outline, 2026-11-20; built 2026-11-23) ----------------
+// POPS walks you through the bench with the corp training's popups: SHRED a set kit for PURGE's letters, pin PURGE in
+// the BOOK, type it on BUILD, TAKE it from the LOCKER. Its own world: st.tut.bench stands in for save.bench (benchSave
+// hands it out while this runs), your belt, mods and loot are set aside for the kit, and the run isn't saved till
+// they're back (engine/save.js saveRun). At the end you're back where you were, with a feat (APPRENTICE) and a few
+// real components. Started from your first WORKBENCH (POPS offers it: engine/bench.js openBench) and from HOW TO PLAY >
+// TRAINING (engine/help.js). The words are in data/tutorial.js (the b_ lines).
+const BTUT = {
+  kit: { items: ['ping', 'route'], mods: ['tracer'], loot: ['sim', 'junkdata'] },   // PING (PNG) and ROUTE (RTE): a P, R and G between them
+  letters: { '*': 1 },   // a * on the SPECIAL row to point at
+  code: 'PRG',           // PURGE: what you shred for, pin and build
+  reward: 5,             // real components at the end (random, like a safehouse's: benchBonusLetter)
+};
+const benchTutOn = () => !!(st.tut && st.tut.bench);
+// node: the safehouse you're at (in a run; back: where its LEAVE goes). No node: from HOW TO PLAY, with a stand-in run.
+function startBenchTraining(node = null, back = null) {
+  if (st.tut || (st.transitioning && !node)) return;
+  const inRun = !!(node && st.run && !st.run.ended);
+  const T = st.tut = { bench: { letters: Object.assign({}, BTUT.letters), locker: Array(BENCH.locker).fill(null), pins: [], popsSeen: true, blankSeen: true, bpSeen: true },
+    pop: null, allow: null, spots: {}, started: true, inRun, runWas: st.run, node: node || { id: 'benchtut', type: 'rest' }, back };
+  const kit = { items: BTUT.kit.items.map(key => ({ key, tier: 0, n: 1 })), mods: BTUT.kit.mods.slice(), modTier: {}, loot: BTUT.kit.loot.map(key => ({ key, tier: 0, n: 1 })) };
+  if (inRun) { const r = st.run; T.held = { items: r.items, mods: r.mods, modTier: r.modTier, loot: r.loot }; Object.assign(r, kit); }
+  else st.run = Object.assign({ tutorial: true, benchTut: true, seed: 'BENCH', practice: true, map: {}, at: '0:1', visited: [], integrity: CONFIG.startIntegrity, maxInt: CONFIG.startIntegrity,
+    shield: 0, credits: 0, earned: 0, beltSlots: CONFIG.beltSlots, reroutes: 0, depth: 0, corps: 0, sector: 0, sectorsCleared: 0, resumes: 0, pending: null }, kit);
+  markSeen('purge');   // (the BOOK lists what you've seen: everyone's had a PURGE)
+  const go = () => { openBench(T.node, null); st.bench.log = ['> workbench online. (training sim)']; T.open = true; };
+  if (inRun) go(); else swapTo(go);
+  benchTutScript(T).catch(() => {}).then(() => { if (st.tut === T) benchTutEnd(T, false); });
+}
+// done: you finished it (the feat, the components). Either way your own things come back, and you're back at the bench
+// (a run's) or HOW TO PLAY.
+function benchTutEnd(T, done) {
+  if (st.tut !== T) return;
+  st.tut = null;
+  if (T.inRun) { Object.assign(st.run, T.held); saveRun(); }
+  else st.run = T.runWas;
+  const got = [];
+  if (done) {
+    for (let i = 0; i < BTUT.reward; i++) { const ch = benchBonusLetter(); if (ch) got.push(ch); }
+    benchAdd(got);
+    save.stats = save.stats || {}; save.stats.benchTrained = 1; grantFeat('apprentice');
+    persist();
+  }
+  const msg = got.length ? `> +${got.length} components: ${got.join(' ')}.` : '> training over.';
+  if (T.inRun) swapTo(() => { openBench(T.node, T.back); benchSay(msg); });
+  else swapTo(() => { st.bench = null; openHelp('training'); setMsg(msg, C.accent); });
+}
+// END TRAINING (the pause menu, engine/input.js): out, nothing earned.
+function benchTutQuit() {
+  const T = st.tut;
+  if (st.pause) togglePause();
+  if (T && T.bench) { T.quit = true; if (T.pop) tutClose(T); }
+}
+async function benchTutScript(T) {
+  const alive = () => st.tut === T && !T.quit && (!T.open || !!st.bench);   // (from HOW TO PLAY the bench opens a moment later)
+  const { until, say, ask } = tutKit(T, alive);
+  const b = () => st.bench;
+  const calm = () => st.mode === 'panel' && st.bench && !benchBusy() && !st.swap && !st.callBox && !st.featBox;
+  const onTab = t => () => calm() && b().tab === t;
+  const has = (...cs) => cs.every(ch => benchHave(ch) > 0);
+  await until(onTab('build'));
+  await wait(400);   // (the keyboard comes up)
+  await say('b_hello');
+
+  // 1. SHRED: the kit's gear, for P R G
+  await ask('b_shredtab', { btn: ['bt_shred'] }, onTab('shred'), { target: { btn: 'bt_shred' }, near: 'below' });
+  shredPickKind('gear');
+  await say('b_shred', { target: { btn: 'shs_gear' } });
+  await ask('b_shredit', { btn: ['sh0', 'sh1', 'bkshred', 'shs_gear'] }, () => calm() && has('P', 'R', 'G'), { target: { btn: 'bkshred' }, near: 'below' });
+  await say('b_comps', { target: { btn: 'shs_mod' } });
+
+  // 2. the BOOK: pin PURGE
+  await ask('b_booktab', { btn: ['bt_book'] }, onTab('book'), { target: { btn: 'bt_book' }, near: 'below' });
+  bookPickKind('gear');
+  const bi = bookList().indexOf(BTUT.code);
+  if (bi >= 0) { b().bkSel = bi; b().bkT = performance.now(); }
+  await ask('b_pin', { btn: ['bkpin'] }, () => calm() && benchSave().pins.includes(BTUT.code), { target: { btn: 'bkpin' }, near: 'below' });
+
+  // 3. BUILD: type it, ENTER
+  await ask('b_buildtab', { btn: ['bt_build'] }, onTab('build'), { target: { btn: 'bt_build' }, near: 'below' });
+  await wait(450);
+  await say('b_pinned', { target: { btn: 'pin' + BTUT.code } });
+  await say('b_wild');
+  await ask('b_type', { key: BTUT.code.split('').concat('DEL'), btn: ['bk_DEL'] }, () => calm() && (j => j.kind === 'ok' && j.code === BTUT.code)(benchJudge()),
+    { target: { btn: 'pin' + BTUT.code } });
+  const built = () => calm() && !b().anim && benchSave().locker.some(x => x && x.key === 'purge');
+  await ask('b_build', { key: ['ENTER'], btn: ['bk_ENTER', 'bkbuild'] }, built, { target: { btn: 'bkbuild' }, near: 'below' });
+  await wait(300);
+
+  // 4. the LOCKER: take it
+  await say('b_locker', { target: { btn: 'bt_locker' } });
+  await ask('b_lockertab', { btn: ['bt_locker', 'lvtake'] }, () => onTab('locker')() && b().lkView === 'take', { target: { btn: 'bt_locker' }, near: 'below' });
+  const at = benchSave().locker.findIndex(x => x && x.key === 'purge');
+  b().lkSel = Math.max(0, at);
+  await ask('b_take', { btn: ['lktake' + Math.max(0, at), 'bktake'] }, () => calm() && st.run.items.some(x => x.key === 'purge'), { target: { btn: 'bktake' }, near: 'below' });
+  await say('b_store', { target: { btn: 'lvstore' } });
+  await say('b_bye');
+  benchTutEnd(T, true);
 }

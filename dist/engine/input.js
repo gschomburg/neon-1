@@ -1,6 +1,6 @@
 // NeoN+1 engine/input.js: Pause, the keyboard cursor, pointer and keyboard input.
 'use strict';
-NEON_FILES.push(['engine/input.js', 'v15.52']);
+NEON_FILES.push(['engine/input.js', 'v15.53']);
 
 // ---------------- Pause menu ----------------
 // the NeoN+1 name in the header or Esc during a run. Stops clocks. Abandon goes to the title.
@@ -52,9 +52,10 @@ function pauseLines() {
   B(`[ corp colors: ${save.corpColors ? 'ON ' : 'OFF'} ]`, 'pccol', toggleCorpColors);
   B(`[ effects: ${save.effects === 'full' ? 'FULL   ' : 'REDUCED'} ]`, 'pfx', toggleEffects);
   B(`[ gear: ${save.tapMode === 'two' ? 'TAP TWICE' : 'TAP ONCE '} ]`, 'ptap', toggleTapMode);
-  if (save.deck || shellDev()) B('[ SHELL ]', 'pshell', () => { togglePause(); shellOpen(); });   // THE SHELL (engine/shell.js): how a phone opens it (a keyboard: `)
+  if ((save.deck || shellDev()) && !benchTutOn()) B('[ SHELL ]', 'pshell', () => { togglePause(); shellOpen(); });   // THE SHELL (engine/shell.js): how a phone opens it (a keyboard: `)
   audioLines(ln => lines.push(ln), 'p_');
   T('');
+  if (benchTutOn()) { B('[ END TRAINING ]', 'abandon', benchTutQuit); T('back to the bench as it was.', C.dim); return lines; }   // the WORKBENCH training (engine/tutorial.js): no run to abandon
   B(st.abandonArmed ? '[ TAP AGAIN TO ABANDON ]' : '[ ABANDON RUN ]', 'abandon', abandonRun);
   T(st.abandonArmed ? 'the run ends here.' : 'abandoned runs are not scored.', st.abandonArmed ? C.danger : C.dim);
   return lines;

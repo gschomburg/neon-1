@@ -14,6 +14,10 @@ to build is `docs/BACKLOG.md`.)
 
 ## Open
 
+- [ ] **HOW TO PLAY's tabs** (v15.53): BASICS (INTRO NET TRAY TRAINING) and ADVANCED (RUNS BOARD DECK BENCH PIER). The DECK, BENCH and PIER pages are new: read them for anything wrong or missing. ADVANCED's strip fills the screen's width exactly, so a sixth sub-tab won't fit. HACKERS got split: RIVALS went on RUNS, CREW on BOARD.
+
+- [ ] **The WORKBENCH training** (v15.53): play it from HOW TO PLAY > TRAINING, and get the offer on a fresh save's first WORKBENCH. Things I picked: PURGE all the way through (your outline said pin PATCH, but you shred for PURGE's letters, so I kept it to one item). The kit is PING, ROUTE, TRACER, a SIM and a JUNK.DAT. The feat is APPRENTICE, plus 5 random components. POPS's lines are in the editor's TRAINING tab (the b_ lines). Also: the "do this" pill sometimes sits over the bench's log line; is that OK?
+
 - [ ] **OWNED on chips** (v15.52): a chip your deck already has says OWNED on the belt, at the CHIP DEALER, on market and boss cards and in drop lines. Clear enough?
 
 - [ ] **How easy chips are to find, and BIOS choices** (Greg, 2026-11-22: last time chips felt hard to come by, and picking 2 BIOS chips was easy; that was before the new chips). Where chips come from: a DATA CACHE 20%, a PIER gear catch 25%, a corp boss's rewards 12%, a market 15%, a beaten rival 30% (ripped), the CHIP DEALER (a post). BIOS now has 13 chips for 2 sockets (FRESH, CASINO, CLOCK, DARK, INTO THE FIRE, ALMANAC, PIER PASS, QUIET, LOUD, +1 LAYER, BENCH LINK...). If drops feel stingy, the numbers are DECK_DROP, DECK_BOSS_CHIP, DECK_SHOP_CHIP, DECK_RIVAL_DROP (engine/deck.js). A 3rd BIOS socket (a REP post, like PARTY LINE) only if picking 2 feels too tight.
