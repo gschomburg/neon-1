@@ -144,7 +144,7 @@ The ideas as they came:
 ### Balance
 - **LEVERAGE** isn't a great exotic yet. Ideas: real debt without buying anything (take a loan, give your money away);
   let it go below -250 at the UPLINK.
-- **FRAG:** does it show explosions? A plop where each will land, then staggered radial booms.
+- **FRAG:** does it show explosions? A plop where each will land, then staggered radial booms. **Built v16.02.**
 - **The ELITE level** needs things to buy: its three posts are placeholders (engine/save.js elite1-3).
 
 ## Big features: the next layer of the game

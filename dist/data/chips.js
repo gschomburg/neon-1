@@ -3,7 +3,7 @@
 // numbers were in about ten tables). The old tables (DECK_INT, DECK_CHARGES...) are built from the entries, below.
 // Nothing here changes at load: engine/deck.js adds the RIPPED and "+n shell charges" words to the texts.
 'use strict';
-NEON_FILES.push(['data/chips.js', 'v16.01']);
+NEON_FILES.push(['data/chips.js', 'v16.02']);
 
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
 // with no power.

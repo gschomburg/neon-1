@@ -63,7 +63,8 @@ module.exports = { name: 'gear4', body: `
   addItem('frag', 0);
   check(canUse(run.items[slotOf('frag')]), 'FRAG: usable at the PIER');
   const casts0 = fishCasts();
-  useItem(slotOf('frag')); await sleep(300);
+  useItem(slotOf('frag')); for (let i = 0; i < 40 && st.busy; i++) await sleep(100); await sleep(200);
+  check(!st.busy, 'FRAG: the show is over');
   Object.assign(FISH_FRAG, was);
   check(f.shapes.length === 1 && f.shapes[0].out.key === 'disc', 'FRAG: every fish gone but the DISC');
   check((run.loot || []).some(s => s.key === 'phish_common') && (run.loot || []).some(s => ITEMS[s.key].corrupt), 'FRAG: a PHISH a rarity lower, and corrupted software (' + (run.loot || []).map(s => s.key).join() + ')');

@@ -2,7 +2,7 @@
 // board, the sockets, the cards, the picker, the CPU). Moved out of engine/deck.js (the second audit, 2026-11-23).
 // Loads after engine/deck_shell.js.
 'use strict';
-NEON_FILES.push(['engine/deck_screen.js', 'v16.01']);
+NEON_FILES.push(['engine/deck_screen.js', 'v16.02']);
 
 // ---------- the show (docs/DECK.md "Socketing gets a show", Greg 2026-11-16) ----------
 // A chip goes in with power: a burst of confetti and tech blobs (more the rarer it is), and a wave of light runs out of

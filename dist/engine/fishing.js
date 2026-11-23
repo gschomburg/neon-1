@@ -5,7 +5,7 @@
 // (hold to pull, let go to slack) until the catch bar fills. What bites is a mystery until it's in: PHISH (stolen data:
 // passwords, logins, blackmail; v13.71), gear, or a SHOE. A cast costs credits every time the hook goes in (ECON.fish).
 'use strict';
-NEON_FILES.push(['engine/fishing.js', 'v16.01']);
+NEON_FILES.push(['engine/fishing.js', 'v16.02']);
 
 const FISH_LANES = 7;
 const FISH_KEYS = Object.keys(ITEMS).filter(k => ITEMS[k].fish && !ITEMS[k].bag);   // the catches (not the PHISH you keep)
@@ -160,7 +160,7 @@ function fishTick(now) {
     const room = f.shapes.every(s => s.lane !== lane || (dir > 0 ? s.x > x0 + look.length + 4 : s.x + s.look.length + 4 < x0));
     if (room) f.shapes.push({ lane, x: x0, dir, out, look, size: lk.size, spd: 3 * f.lanes[lane], nosed: false });
   }
-  for (const s of f.shapes) if (!s.hooked && !(f.hook && f.hook.bite === s)) s.x += s.dir * s.spd * dt * (s.flee ? 2.5 : 1);
+  for (const s of f.shapes) if (!s.hooked && !s.fragged && !(f.hook && f.hook.bite === s)) s.x += s.dir * s.spd * dt * (s.flee ? 2.5 : 1);   // (a FRAG on its way: they freeze)
   f.shapes = f.shapes.filter(s => s.hooked || (s.dir > 0 ? s.x < L.wc + 12 : s.x > -12));
   // the hook: drifts left and right; held, it sinks (or rises) to the lane under your finger
   const hk = f.hook;
@@ -268,13 +268,22 @@ function fishKeep() {
 const FISH_FRAG = { phish: 0.5, tierUp: 0.1, corrupt: 0.6 };
 const fishOnScreen = s => !s.hooked && s.x + s.look.length > 0 && s.x < L.wc;
 const fishFragOk = () => st.mode === 'fish' && !!st.fish && !st.fish.reel && !st.fish.card && !st.busy && !st.dying && st.fish.shapes.some(s => fishOnScreen(s) && s.out.key !== 'disc');
-function fishFrag(tier = 0) {
+async function fishFrag(tier = 0) {
   const f = st.fish, g = fishGeo(), r = Math.random;
   const hit = f.shapes.filter(s => fishOnScreen(s) && s.out.key !== 'disc');
   const got = [], corrupt = Object.keys(ITEMS).filter(k => ITEMS[k].corrupt && !ITEMS[k].quest);
+  // the show (engine/active.js fragVolley): they freeze, a grenade lands on each, then each one blows up in turn
+  for (const s of hit) s.fragged = true;
+  st.busy = true; Sound.whiff(); setMsg('> frag out!', C.danger);
+  const mid = s => ({ x: pxX(s.x + (s.look.length - 1) / 2), y: pxY(g.laneY(s.lane)) });
+  await fragVolley(hit.map(mid), i => {
+    const s = hit[i], y = g.laneY(s.lane);
+    if (!reduced()) explode([...s.look].map((ch, k) => ({ ch, x: pxX(s.x + k), y: pxY(y), col: C.danger })), mid(s).x, mid(s).y, { power: 0.7, grav: 0.6, life: [0.5, 1] });
+    f.shapes = f.shapes.filter(x => x !== s);
+  }, () => st.fish === f);
+  if (st.fish !== f) { st.busy = false; return; }
   for (const s of hit) {
-    const o = s.out, y = g.laneY(s.lane);
-    if (!reduced()) explode([...s.look].map((ch, i) => ({ ch, x: pxX(s.x + i), y: pxY(y), col: C.danger })), pxX(s.x + s.look.length / 2), pxY(y), { power: 0.6, grav: 0.6, life: [0.4, 0.9] });
+    const o = s.out;
     if (o.kind === 'fish' && r() < FISH_FRAG.phish + FISH_FRAG.tierUp * tier) {
       const rar = FISH_RARITY[Math.max(0, FISH_RARITY.indexOf(o.rarity) - 1)], key = 'phish_' + rar;
       if (ITEMS[key]) { addItem(key, 0); got.push(key); }
@@ -284,7 +293,7 @@ function fishFrag(tier = 0) {
   }
   f.shapes = f.shapes.filter(s => !hit.includes(s));
   if (f.hook && f.hook.bite && hit.includes(f.hook.bite)) f.hook.bite = null;
-  Sound.trap(); shake(6, 0.4); flash(C.danger, 0.12, 0.3);
+  flash(C.danger, 0.12, 0.3); st.busy = false;
   const ph = got.filter(k => ITEMS[k].fish).length, cr = got.length - ph;
   setMsg(hit.length ? `> frag: ${hit.length} gone.${ph ? ` +${ph} PHISH` : ''}${cr ? ` +${cr} corrupted` : ''}${got.length ? ', in your loot.' : ' nothing worth keeping.'}` : '> frag: nothing to hit.', C.danger);
 }

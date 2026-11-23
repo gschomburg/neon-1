@@ -1,6 +1,6 @@
 // NeoN+1 engine/active.js: Mods you tap, and items.
 'use strict';
-NEON_FILES.push(['engine/active.js', 'v16.01']);
+NEON_FILES.push(['engine/active.js', 'v16.02']);
 
 // ---------------- Active mods ----------------
 function nodesAhead() {
@@ -356,12 +356,50 @@ async function shakeBoard(lv) {
 }
 // FRAG: hits random closed nodes (3 / 4 / 5 / 5 by step). ICE breaks; the real node clears the layer, no pay
 // (never at the legendary step, and never in corps with their own tap rules).
-// FRAG: a little explosion on each node it hits (the user, 2026-10-30).
-function fragBurst(t) {
+// FRAG, the show (Greg: a little explosion on each node, 2026-10-30; then "a plop where each will land, then staggered
+// radial booms"): each grenade is lobbed from the tray in turn and lands with a plop on its spot, where it sits blinking;
+// once they're all down they go off one after another, each a ring of sparks rushing out and debris. The PIER's FRAG
+// (engine/fishing.js fishFrag) throws the same ones at the fish. fragLob(x, y, delay, wait): pixels; it lands at
+// delay + FRAG_FX.fly and blinks till delay + wait. fragBoom(x, y): one boom.
+const FRAG_FX = { gap: 0.09, fly: 0.42, settle: 0.22, boomGap: 0.17 };   // seconds: between throws, the flight, a beat after the last lands, between booms
+function fragLob(x, y, delay, hold) {
   if (reduced()) return;
-  const c = tileCenter(t), cells = [], cols = [C.danger, C.money, C.bright];
-  for (let k = 0; k < 14; k++) cells.push({ ch: pickR(['*', '+', 'x', '#', '.', '`'], Math.random), x: c.x + rand(-1.5, 1.5) * L.cw, y: c.y + rand(-0.6, 0.6) * L.chh, col: pickR(cols, Math.random) });
-  explode(cells, c.x, c.y, { power: 0.55, grav: 0.5, life: [0.25, 0.55] });
+  const sx = pxX(L.wc / 2) + rand(-2, 2) * L.cw, sy = pxY(BOARD_Y + L.gh + 2), up = L.chh * 5, fly = FRAG_FX.fly, life = fly + hold;
+  parts.push({ mode: 'path', ch: 'o', col: C.danger, alpha: 1, t: -delay, life, path: k => {
+    const s = k * life;
+    if (s < fly) { const u = s / fly; return { x: sx + (x - sx) * u, y: sy + (y - sy) * u - Math.sin(Math.PI * u) * up, alpha: 1 }; }
+    const b = s - fly;   // landed: a little hop, then it sits there blinking
+    return { x, y: y - Math.max(0, Math.sin(Math.min(1, b / 0.16) * Math.PI)) * L.chh * 0.35, alpha: Math.floor(b / 0.12) % 2 ? 0.45 : 1 };
+  } });
+  setTimeout(() => { Sound.thunk(); }, (delay + fly) * 1000);
+}
+function fragBoom(x, y, big = 1) {
+  Sound.trap(); shake(4 + 2 * big);
+  if (reduced()) return;
+  const n = 14, R = L.cw * 3.2 * big;
+  for (let i = 0; i < n; i++) {   // the ring: rushes out from the middle and fades
+    const a = (i / n) * Math.PI * 2;
+    parts.push({ mode: 'path', ch: pickR(['*', '+', 'x', '#'], Math.random), col: i % 3 ? C.danger : C.money, alpha: 1, t: 0, life: 0.38, path: k => {
+      const e = 1 - (1 - k) * (1 - k);
+      return { x: x + Math.cos(a) * R * e, y: y + Math.sin(a) * R * e * 0.55, alpha: 1 - k };
+    } });
+  }
+  const cells = [], cols = [C.danger, C.money, C.bright];
+  for (let k = 0; k < 10; k++) cells.push({ ch: pickR(['*', '.', '`', 'x'], Math.random), x: x + rand(-1, 1) * L.cw, y: y + rand(-0.5, 0.5) * L.chh, col: pickR(cols, Math.random) });
+  explode(cells, x, y, { power: 0.5, grav: 0.5, life: [0.25, 0.55] });
+}
+// Lob one at each spot, then boom each in turn: onBoom(i) when the i-th goes off (return false to stop: the layer is
+// gone). Resolves when they're done.
+async function fragVolley(spots, onBoom, still = () => true) {
+  const F = FRAG_FX, n = spots.length, last = (n - 1) * F.gap + F.fly + F.settle;
+  spots.forEach((p, i) => fragLob(p.x, p.y, i * F.gap, last - i * F.gap - F.fly + i * F.boomGap));
+  if (!reduced()) await wait(last * 1000);
+  for (let i = 0; i < n; i++) {
+    if (!still()) return;
+    fragBoom(spots[i].x, spots[i].y);
+    if (onBoom(i) === false) return;
+    if (i < n - 1) await wait(reduced() ? 80 : F.boomGap * 1000);
+  }
 }
 async function fragBoard(lv, tier) {
   const r = layerRng('frag', lv.frags = (lv.frags || 0) + 1);
@@ -369,15 +407,15 @@ async function fragBoard(lv, tier) {
   const pool = lv.tiles.filter(t => t.state === 'closed' && !(spare && isReal(t)));
   const hits = shuffle(pool, r).slice(0, [3, 4, 5, 5][tier] || 3);
   st.busy = true;
-  Sound.trap(); shake(6); flash(C.danger, 0.15, 0.3);
-  let broke = 0;
-  for (const t of hits) {
-    await wait(150);
-    if (st.lv !== lv) return;
-    shake(4); fragBurst(t);
-    if (isReal(t)) return gearClear(lv, t, '> FRAG hit the real node. layer clear, no pay.');
+  Sound.whiff(); setMsg('> frag out!', C.danger);
+  let broke = 0, cleared = false;
+  await fragVolley(hits.map(t => tileCenter(t)), i => {
+    const t = hits[i];
+    if (isReal(t)) { cleared = true; gearClear(lv, t, '> FRAG hit the real node. layer clear, no pay.'); return false; }
     lockTile(t, C.danger, 'frag'); broke++;
-  }
+  }, () => st.lv === lv);
+  if (cleared || st.lv !== lv) return;
+  flash(C.danger, 0.12, 0.25);
   setMsg(broke ? `> frag: ${broke} ICE down.` : '> frag: nothing to hit.', C.danger);
   await wait(120);
   if (st.lv === lv) st.busy = false;

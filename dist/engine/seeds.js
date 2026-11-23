@@ -14,7 +14,7 @@
 //   uplink(run) the UPLINK's stand-in, or null for the usual one (H3AV3N's broken one in sector 1)
 //   sector(run) makes the next sector's map itself: true if it did (H3AV3N: sector 2 is heaven)
 'use strict';
-NEON_FILES.push(['engine/seeds.js', 'v16.01']);
+NEON_FILES.push(['engine/seeds.js', 'v16.02']);
 
 const SEED_DEFS = {
   // DOG DAYS (POPS's quest, step 5: engine/quests.js, engine/had3s.js): two sectors of THE HUNT, only the dog

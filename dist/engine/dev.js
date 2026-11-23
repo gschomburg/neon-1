@@ -1,6 +1,6 @@
 // NeoN+1 engine/dev.js: The dev menu.
 'use strict';
-NEON_FILES.push(['engine/dev.js', 'v16.01']);
+NEON_FILES.push(['engine/dev.js', 'v16.02']);
 
 // ---------------- Dev menu ----------------
 // Open with ~ (Shift + `) or Ctrl + `, once dev mode is on (dev.start in THE SHELL, ?dev=1, the editor), or the [DEV]
