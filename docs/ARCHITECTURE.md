@@ -1,151 +1,178 @@
-# Architecture audit (2026-11-05)
+# Architecture audit (2026-11-23, v15.57)
 
-A read-only pass over the whole codebase (about 27,000 lines in 150-odd files), done by five reviewers in parallel,
-one per area, then merged here. Nothing was changed. The counts are greps over `dist/` at v14.44.
+A read-only pass over the code, done by five reviewers in parallel (the deck and chips; the WORKBENCH, THE SHELL and
+quests; screens, UI and the trainings; the run, saving and feats; tools and checks), then merged here. Nothing was
+changed. The first audit (2026-11-05, v14.44) is docs/archive/ARCHITECTURE_2026-11-05.md; most of it is done.
 
-**Overall:** the corp system is already modular (74 of 78 corps live entirely in their own file through about 27
-hooks). The friction is in four places: mod and gear effects inlined in the engine, the special screens and
-cinematics wired by hand into three files, run state that has to be listed by hand to survive a reload, and the
-tools (no shared file core, checks that no longer catch anything).
+**Overall:** what the last pass built holds up (OVERLAYS, the golden checks, the shared harness, corp hooks, `earn()`).
+What grew since is the deck (deck.js is 2,550 lines), three trainings in one file, and ROOT's quest written as code
+in bench.js. The friction is in five places: chip numbers spread over ~10 tables, quest steps still moved by hand,
+"does this run count" checks that disagree, popup cards and list screens copied per screen, and a golden check that
+doesn't look at any of the new data.
 
-Status: **mostly done (2026-11-05),** on branches arch-pass and arch-pass-2. Items below say Done, Partly done, or nothing
-(still open). Still open: popup cards (`drawCard`), the `MODES` registry, hover/focus, `say()`, per-seed definitions.
+Marks: **(checked)** Claude read the code path and confirmed it; the rest were confirmed by the reviewer only.
 
-## Bugs found (verified)
+## Bugs
 
-- [x] **The economy tab drops 6 numbers on save.** **Done (2026-11-05):** fcb24ed. `data/economy.js` has `loot.valueShare`, `loot.boss`,
-  `loot.sector`, `loot.cache`, `modx.pickpocket`, `modx.pickpocketRare`; `tools/data/economy_file.js` doesn't know them
-  and the editor's Ctrl S writes the file without them. Fix: add them to its INFO; refuse to save while any are unknown.
-- [x] **A reload mid-corp loses some corp state.** **Done (2026-11-05):** one CORP_SAVE list (fcb24ed). `runSnapshot` (engine/save.js) lists ~30 corp fields by hand;
-  missing: `leash`, `muzzleTo`, `honeyTo` (engine/hackers.js: LEASH is a paid item), `express`, `invUsed` (run.js).
-- [x] **Abandoning a run with the DISC doesn't mark it lost.** **Done (2026-11-05):** fcb24ed. `abandonRun` (engine/input.js) writes its own history
-  entry and skips `questRunEnd` (also no `sector` / `seeded` in that entry).
-- [x] **An ad takes taps while the dev menu hides it.** **Done (2026-11-05):** fcb24ed. input.js: `if (st.ad) return adTap(...)` has no dev check; the
-  draw side skips the ad under the dev menu. (Same shape for the corp intro's tap.)
-- [ ] Small: the G0D DIE skip checks `G0D_END.beat` (heaven.js), not its own timing. (Still so; a comment marks it. Same 700ms.)
+### The deck and chips
+- [ ] **OMNI'S EYE drops from ordinary loot** (checked). `deckRollChip` (deck.js:330) doesn't filter the BOSS group;
+  OMNI isn't in `DECK_NO_DROP`. It's the only exotic that can drop, from caches, the PIER, markets, boss rewards; the
+  quest then gives a second one. The dealer and give.chip filter boss chips by hand.
+- [ ] **OVERCLOCK lowers the big cells** (checked). deck.js:1397 sets the cell to 15, so HCF'S CORE (18) drops to 15.
+  Should be `Math.max(15, cell)`.
+- [ ] **Power over 15 breaks the PSU readout.** The PSU socket prints hex used/budget in 5 columns (deck.js:1829);
+  HCF'S CORE (18) or REACTOR + SPIKE + POWER TAP (>15) runs past the socket. The comment at :195 says it always fits.
+- [ ] **BROWNOUT can pick HARDCORE** after HARDCORE has already turned the CRASH chips off (deck.js:469-471): CRASH
+  stays off and the +50% REP is lost. Pick the brownout first.
+- [ ] **BROWNOUT on SPIKE** keeps SPIKE's +2 power (counted from the slots) but skips its -1 INT.
+- [ ] **Practice and dev runs write to your real bench through chip drops.** `lostLoot`'s SHRED and a full pool shred
+  into save.bench and save.shredded (unlocking give.chip for it); `deckDrops` has no practice check. (From v15.57.)
+- [ ] **Greg to decide: a RIPPED chip in LOST LOOT** carries no heat: rivals don't come for it and can't take it back
+  (they only look at your belt), and it comes home on cash out.
+- Suspected: CHECKPOINT empties your belt and mods including quest gear (the other death chips skip quest gear).
 
-## 1. Content: mods, gear, corps (makes MONTY / FOSSIL / new mods cheap)
+### The WORKBENCH, THE SHELL, quests
+- [ ] **ROOT's build writes `letters.null = NaN`** (checked). bench.js:310 loops over all 5 slots; slot 4 is null in
+  ROOT's word. Until a reload the bench says "NaN components" and BUILD says you have none.
+- [ ] **ROOT's quest can lock for good:** the letters are spent and saved when you build, but the step only becomes
+  done when the PAPERWORK scene ends (quests.js:212). Close the tab in between and you're on 'spell' with no letters,
+  and nothing moves it back (`rootCheck` only runs after a shred gives a letter). Fix: finish the step when you build.
+- [ ] **A progress wipe breaks ROOT's quest:** `wipeProgress` clears save.legacy (crew_root goes) but keeps save.quests
+  (step 'done'), so ROOT never comes back and THE SHELL says "paperwork pending" for good. Next PROGRESS_EPOCH raise
+  would hit everyone. Suspected the same for b0y at POPS's 'raid' step.
+- Suspected: `playScene` drops an open CALL without its onClose (b0y's raid call vs the 'gate' scene); the editor's
+  FX preview of a scene moves POPS's quest on; [ CANCEL ] on a near-word leaves a BLANK in slot 5.
 
-- **Mod effects are inlined in the engine.** **Partly done (2026-11-05):** corp boss mods live in their corp files (`defineModFx`, 310299b); the other mods are still inline. `has('...')` for 63 mods across 13 engine files (56 calls in run.js);
-  a corp's boss mod effect goes in run.js or active.js (corpkit.js says so). Partial tables exist (`START_NOTE`,
-  `END_FX`, `HIT_FX`, `BOARD_FX`, `MOD_STAGE`). **Change:** one `MOD_FX[key] = { stage, start, note, pick, block,
-  hit, board, end, pay }` registry; corp files register their boss mod's effects. `payFor`'s 10 inline multipliers
-  become a `pay` entry. Medium, low risk (one table at a time).
-- **Gear is two parallel if-chains.** **Done (2026-11-05):** one `GEAR` table (ad24842). `canUse` and `gearFx` (active.js) each branch on ~35 keys (82 `key === `
-  checks); `BOSS_GEAR` already uses `{ ok, why, use }`. **Change:** all gear in one `GEAR_FX` table of that shape.
-  Medium, mechanical.
-- **Corp hooks are called ad hoc.** **Done (2026-11-05):** `corpHook` / `corpHas` / `corpFlag` (955e3dc). 21 sites spell `st.corp && st.corp.hasBoss && st.corp.def.X`, with guards that
-  disagree. **Change:** `corpHook(name, ...args)` / `corpFlag(name)`. Small.
-- **Corp hooks manage engine internals.** **Partly done (2026-11-05):** `layerReady`, `layerRng` (955e3dc). `tap` hooks reset `st.busy` / `lv.readyAt` themselves; the seed RNG line is
-  copied 22 times. **Change:** `tap` returns "handled", the engine resets; `corpRng(label, ...)`. Small.
-- **Ten flags used by exactly one corp** (`flip`, `cipher`, `dark`, `faith`, `surge`, `shot`, `tickets`,
-  `bossFlash`, `bossShrink`, `maskMs`) and corp keys named in engine code (chronos, apiary, old tells). A few general
-  hooks (`payMult`, `clockMax`, `layerStart`) absorb most. UPSIDE and CIPHER are screen-wide and fine in the engine.
-  Medium, not urgent.
-- **Gear knows corps** **Done (2026-11-05):** `onGear` (ca442f5). (TILT / SHAKE check GRAVITAS / ENTROPY). **Change:** a corp `onGear(key, lv)` hook; MONTY and
-  FOSSIL will need it too. Small.
-- **Small duplicates:** **Done (2026-11-05):** 955e3dc. `setCellOf` = `moveTile`; the free-cells loop copied 9 times; the decoy pick in 10 corps;
-  single-corp helpers living in corpkit.js. **Change:** `freeCells(lv)`, `decoys(k, n)`, move the rest home. Small.
-- **No list of all hooks;** **Done (2026-11-05):** docs/CORP_HOOKS.md, and check.js flags unknown keys (955e3dc). a misspelled hook does nothing. **Change:** one hook reference, and a check that flags
-  unknown keys on a corp def. Small.
+### Screens and input
+- [ ] **Esc on POPS's SHOW ME / SKIP offer loses it** (checked). `callKey` (quests.js:245) sends Esc to `callClose`,
+  which only runs onClose; the WORKBENCH offer (and the deck one) have none, and popsSeen is already saved: no
+  training, no brief. Enter always presses the first button; SKIP can't be reached by keys.
+- [ ] **Text past 36 columns, cut on both sides:** the CODEX corp card's boss line (SIMON 57, MONTY 41, FOSSIL 39) and
+  some intel lines; a FEATS card's text ("earn 1000cr in a run, end it with under 10." 44); REP's "opens:" line.
+- [ ] **The CODEX corp card isn't one height:** MONTY's rules wrap to 2 rows, so its card is 11 rows, not 10.
+- Suspected: the deck training can stick if it starts mid-transition (no `st.transitioning` guard, unlike the bench).
 
-**Adding a corp today:** its file, its logo, the script tag, its boss mod in data/mods.js, plus MOD_STAGE and an
-effect in run.js / active.js. With `MOD_FX`, the engine edits go away. MONTY and FOSSIL both fit the hooks as they are
-(`dress`, `tap` / `cellTap`, `fx`, `hint`); open points: the first MONTY pick vs the X-AXIS / Y-AXIS scans and ICE
-EATER, gear between picks, what counts as a FOSSIL pick. KEYLOGGER's line-by-line reveal could become a helper FOSSIL
-shares.
+### The run, saving, feats
+- [ ] **A 1UP clears practice and hacked:** `useOneUp` (oneup.js:41) restores the run from the corp's start and only
+  carries oneUp, stats and resumes. Cheat in a corp (practice), die, 1UP: the run counts again.
+- [ ] **Cheats carry into the next run:** `startRun` doesn't reset or check st.god / debug / freeTravel / devAccess.
+  With BACKDOOR: dev.start at the title, mode.god, start a run: it counts.
+- [ ] **Resume loses per-corp state** not in CORP_SAVE (save.js:228): `lost` (BRUTE FORCE), `flatlined` (once a corp),
+  `brickJack`, `boyTrayUsed`; G0D MAZE rebuilds its maze from the start on a reload.
+- [ ] **Dying at the PIER, the input stays live** (checked) (v15.56): during die()'s 1.1s beat you can still cast or
+  tap [LEAVE >] (leavePier and fishPointer don't check st.busy / dying); LEAVE goes to the map under the end screen.
+- [ ] **`kill -9` / `run.die` skip die()** (endRun directly): no codex loss, no CODEX chip; at the PIER it counts as
+  FISH FOOD (feats.js `|| st.mode === 'fish'`). (FISH FOOD should be `run.diedPier` only.)
+- Suspected: die() / endRun() have no re-entry guard (a second bite during the fall-out would bank twice); the
+  training run can die from a BLOCK or clock hit (only hurt() floors it at 1).
 
-## 2. Screens, input and cinematics
+### Tools
+- [ ] **`node tools/test.js nosuchtest` says "all good."** (checked): a typo'd name runs nothing and passes. Fail
+  when a name matches no test, and fail a test with 0 passes.
+- [ ] **The round-trip checks write the file:** economy_file.js always writes, the others when different; a failing
+  check fixes the file, so the next run passes. Add a `--check` mode (no write) for test.js.
+- [ ] **tools/checks/tell_odds.js crashes** (its own vm sandbox drifted from harness.loadGame).
 
-- **Overlays are wired by hand in three places, in three orders.** **Done (2026-11-05):** `OVERLAYS` (89cdfd0). Seven modal overlays (ad, event card, hacker card,
-  feat box, call box, cutscene, tutorial popup) plus boot, intros and the G0D sequences, each wired into
-  `buildScene`, pointerdown and keydown separately; draw order and input order already disagree (the ad bug above).
-  **Change:** one ordered `OVERLAYS` list `{ on, build, tap, key }` that all three loop over; hits tagged by layer.
+## Structure
+
+### 1. The deck: one file, ten tables
+- **Split deck.js along its sections:** data 10-295 (to `dist/data/chips.js`), drops / dealer / LOST LOOT 297-456,
+  chip effects 458-910, THE SHELL's commands 911-1210 (next to shell.js), state and power 1254-1495, the screen
+  1497-2546 (`engine/deck_screen.js`). First, pass the deck in: deckPower / deckOpen read the global DECK, and
+  `deckRunChips` swaps it with no try/finally. Medium.
+- **CHIP_FX:** a chip's numbers live in ~10 parallel tables (DECK_INT, DECK_CHARGES, DECK_CELL, DECK_HEAT_REP,
+  DECK_FAVOR, DECK_KITS, DECK_NO_DROP, DECK_RIPPED, the tags, inline multipliers). One `CHIP_FX[key] = { int, charges,
+  cell, rep, credits, price, give, mods, favor, kit }`, read by `chipSum` / `chipMult`; chips that act (CRASH, SHELL)
+  keep their hooks. The chip version of MOD_FX. Medium, low risk.
+- Chip effects are well contained otherwise: 49 of 69 `chipOn` calls are in deck.js. The 20 leaks into 12 files (AD0,
+  DG3, PP2, NM0, LK7, FI2, DN1, GE1, HS1, QT0, SX1, SR4, PD2, OMNI, FG0) become deck* helpers. Small.
+- `DECK_NO_DROP` copies LEGACY's chip list by hand: build it from LEGACY, and filter BOSS there. Small.
+- One-socket assumptions (one CRASH, one SPOILS, the KIT in BT1) will fail quietly when a second socket comes.
+
+### 2. Quests: before the next crew quest and the cult quest
+- **Steps still move two ways.** POPS's steps run on QUEST_INFO data, but five functions hard-code 'pops'
+  (sceneEnd, questCarryLine, questUplink, questCashOut), and ROOT sets its crew and step by hand (rootSigned) though
+  its step data says `crew: 'root'`. Loop them over every started quest; rootSigned calls `questNext('root')`. Medium.
+  Needed before any crew quest with a carry item or a scene (NANA's COOKIES, DIALUP's WALLET, KLUDGE's parts).
+- **Counters are one-off** (d0g's wins, ROOT's "/ 4" letters). A step `counter: { key, need, label }` drawn the same
+  way for all. Medium.
+- **ROOT lives in bench.js** (~10 places). Fine for one quest; the cult's DIVINE letters would be a second copy. Add
+  a bench "special word" hook (the word, its slots, onSign) first. Medium.
+- **The bench keyboard is wired to the bench;** the cult typing fight wants it with its own keys and ENTER. Pull out
+  `kbDraw(geom, { keys, count, onKey, onEnter, special })` before the fight's prototype. Medium.
+- **Quest seeds are special-cased in ~20 places** (`run.quest === 'had3s'`); BAUD's race and the cult seed add more.
+  A per-seed definition (old audit). Medium.
+- Small: `questOf(id)` defaults any quest to POPS's first step; QUEST_LINES is one flat list (lines per quest
+  instead); the quest dev commands are copied between shell.js and editor.js; dead `typeof rootOn` guards (6).
+- Still open from last time: one `say(who, text)` (G0DF_BLUE is now in 61 places).
+
+### 3. Run kinds and run ends
+- **"Does this count?" disagrees in ~15 places.** `counting()` and `countingHome()` disagree on the deck training;
+  `corpStat` breached / lost has no gate at all (practice runs, editor jumps and the training corp feed the codex,
+  FRESH, NEMESIS and logo unlocks); `grantFeat` skips counting() (MAZE LOST in practice); the 'Run kinds' table in
+  save.js lists 5 of them. Change: `engine/runkind.js` with named predicates and one table (old audit). Small-medium.
+- **One finishRun:** runs end through die, cashOut, eject, kill -9, the H3AV3N win (skips cashOut) and abandonRun (its
+  own bookkeeping). `finishRun(run, outcome)` for the bookkeeping, the end screen separate. Medium.
+- **Resume:** CORP_SAVE is a hand list that keeps slipping. Save st.corp whole minus a short runtime list, or a check
+  that diffs st.corp's keys against it. Medium.
+- save.js does five jobs (load, the one-tab guard, LEGACY's table, run kinds and REP, resume): LEGACY to
+  `dist/data/board.js`, the tab guard to its own file. runend.js mixes bookkeeping, the end screen and the UPLINK.
+  feats.js holds the FEAT box. Small each.
+
+### 4. Screens
+- **tutorial.js does five jobs** (836 lines): the gates and kit, the corp training, POPS's drawing, hints, the
+  WORKBENCH training, the deck training. Move drawing and hints to `engine/pops.js`; one `startTraining({ on, setup,
+  script, end })` for the copied start / end code and tutOn's three-way check. The scripts stay code. Medium.
+- **Popup cards** still copied (feats.js, quests.js, events, hackers, ads): `drawCard`. Medium (old audit).
+- **List screens:** the CODEX and HOW TO PLAY re-implement `scrollArea`; the CODEX, HOW TO PLAY and THE BOARD repeat
+  the same tab keys. `scrollArea` with a box-aware option and a `tabKeys` helper. Small-medium.
+- **Hover and focus:** 25 hand tints (`hoverBtn ===`); popups get no keyboard focus (the Esc bug). Small.
+- **Modes:** `st.mode ===` 31 times in scene.js, 24 in input.js (up from 30 / 18). The MODES registry is still the
+  big change, worth it only when a new mode comes (the cult fight is one). Large.
+
+### 5. Tools and checks
+- **The golden doesn't see the new data:** none of DECK_CHIPS (and the other DECK_ tables), FEATS, QUEST_INFO,
+  HACKERS, SECTOR_EVENTS, ECON, BENCH, TUT_COPY... are in check.js's NAMES. Add them and re-accept. Small.
+- **Coverage gaps:** the playtest plays tier 1 in god mode with a fresh save (no deck, anomalies, events). 11 chips
+  and 51 of 66 feats are never named in a test. No test for sector events, multiplayer, pets, the market, HAD3S, or
+  resume across a reload. scene_art.js, quest_dialog.js and music_view_check.js aren't in test.js.
+- **The editor can't edit** chips, feats, REP posts, quests, events, mods / items, hackers or pets (hand-edited).
+  Chips would need `dist/data/chips.js` first (section 1).
+- **Test setup copied:** start-a-run-and-get-to-the-map in ~29 tests; until / popIs / closeCalls / ready copied. Into
+  pageKit. All ~50 test pages start at once (Promise.all): likely why full runs are slow and flaky; a pool of ~6.
   Medium.
-- **The cell-writer loop is copied 7 times in `buildScene`,** **Done (2026-11-05):** `layerCtx()` (89cdfd0). and 35 more times in g0dproto / heaven. **Change:** a
-  `layerCtx()` factory. Small; do it first.
-- **Popup cards are copy-pasted** in 6 files (frame, title bar, catch-all hit, typewriter budget in 3). **Change:**
-  `drawCard(ctx, {...})`. Medium.
-- **Modes are if/else chains:** 10 `st.mode`s, about 20 flags, `st.mode ===` 30 times in scene.js and 18 in input.js,
-  ~22 early returns in pointerdown with uneven guards, `st` has 137 properties. **Change:** a `MODES` registry
-  `{ build, tick, pointer, key }`, one mode at a time (fish and the four G0D modes first). Large; worth it only with
-  the overlay list.
-- **Every G0D cinematic is a hand-rolled timeline:** five timing tables, five state slots, four copied skip
-  functions. **Change:** a small `Seq` helper and one `st.cine` slot. Medium; timing is tuned by eye, port one at a
-  time. **Done (2026-11-05):** `Seq` in engine/fx.js (`cue`, `canSkip`, `skipTip`) replaces the copied pieces;
-  every timing table is unchanged. tools/checks/tests/cutscenes.js plays them with the cinematics on. Dropped: one `st.cine`
-  slot, because merging `st.g0dFake` / `g0dDie` / `g0dEnd` changes the input and overlay checks for no visible gain.
-- **Hover:** `hl()` exists but 21 places tint by hand; modals get no keyboard focus (a CALL's second button can't be
-  reached by keys). Small.
-- **scene.js holds six subsystems** (1383 lines). Split into board / map view / text board files (only the script
-  order changes). Medium, low risk. **Done (2026-11-05):** scene.js is 371 lines (buildScene, overlays, layerCtx);
-  board.js, tray.js, mapview.js and textboard.js hold the rest.
+- Small: check.js loads the game twice; batch1446-1489 test files are named by version, not feature;
+  data/palettes_v1.js is dead and still stamped (to _trash/); stale tool comments.
 
-## 3. Run and state
+## POPS's popup flicker (open, BACKLOG)
 
-- **"Does this run count?" is five slightly different predicates** **Partly done (2026-11-05):** documented in engine/save.js 'Run kinds'; `run.mp` gone (89cdfd0). (`counting`, `questRun`, `statOn`, `oneUpOpen`,
-  the leaderboard guard); `st.mp` checked 115 times, `.practice` 50, `.tutorial` 36, literal quest names 18; `run.mp`
-  is never set (4 dead checks). **Change:** `engine/runkind.js` with named predicates (`runScored`, `runRanked`,
-  `runSaves`, `isQuest(id)`). Small to medium.
-- **Run state for resume is a hand list** **Done (2026-11-05):** CORP_SAVE (fcb24ed). (the bug above). **Change:** corp state in one bag saved whole, or save
-  everything but a short runtime list. Medium; test resume.
-- **Credit math copied 25 times** **Done (2026-11-05):** `earn()` (89cdfd0). (`credits += x; earned += x`), 5 adds skip `earned` with no note; REP banking
-  copied twice. **Change:** `earn / spend / refund / bankRep`. Small.
-- **Four ways a run ends,** **Partly done (2026-11-05):** one `noteHistory()` (fcb24ed). each recording differently. **Change:** one `finishRun(run, outcome)` and one history
-  entry builder. Medium.
-- **run.js is several systems in one file** (2030 lines): damage, the 1UP, the uplink, loot rolls, run end. Split by
-  its section headers; loot is spread over three files. Large total, each move low risk. **Done (2026-11-05):** run.js is 994 lines; damage.js, hits.js,
-  oneup.js, runend.js hold the rest, and the loot rolls moved to loot.js.
-- Lifecycle hooks all fire from run.js (traceable). A small `Hooks.on('runStart' ...)` bus is optional, only with the
-  split. Also: a `PENDING` resume table, an `askPanel` helper.
+No path draws a popup early or at full size (a new popup has no layout until its first frame, and its first frames
+draw nothing). The likeliest causes, in order:
+1. **The header row.** While a popup is up, row 0 is painted solid and redrawn from a copy taken when it came up
+   (`T.head`); between popups (the 120ms+ gap) row 0 is live again. So row 0 changes 2-3 times at every handoff. On
+   the bench row 0 holds the animated [LEAVE >], and on desktop a hover highlight there blinks off and on. Fix:
+   refresh T.head every frame.
+2. **A frame with no target** re-lays the tag centered, no arrow: the bench keyboard's keys are added after the scene
+   (never found), blinking HUD cells, disabled buttons. Fix: keep the last good rect.
+3. `buildTutorial` also runs inside wipe / snapshot builds, laying out from throwaway cells. Fix: only when collecting hits.
+4. Two clocks (performance.now vs the frame's time): benign as traced.
 
-## 4. Story and late game
-
-- **g0dproto.js is the real G0D fight** **Done (2026-11-05):** engine/g0dfight.js (7534c0e). but named a prototype (`G0DP` 286 times there, 84 elsewhere). **Change:**
-  rename to a fight module. Medium, mechanical; the editor's tuning keys move with it.
-- **Dead prototype code:** **Done (2026-11-05):** 7534c0e. a second maze (the real one is `HEAVEN.maze`), non-`real` branches, empty stubs. About 150
-  lines. Small.
-- **g0d.js says "nothing here runs in play"** **Done (2026-11-05):** 4bff70e. but `MOLD`, `moldCol` and its hash are used in 5+ files; four hashes
-  exist though fx.js says "the one hash". **Change:** move them into fx.js unchanged (same output). Small.
-- **Quest steps are data, moving between them is code** (17 `.step === ` checks). **Change:** step fields
-  (`advanceOn`, `uplinkLine`, `counter`...) before the first crew quest. Medium. **Done (2026-11-05):** how each step ends is data in
-  QUEST_INFO (`carry`, `uplinkLine`, `doneLine`, `scene`, `goTo`, `crew`; the next step is the next in the list). What
-  happens during a step (DISC drops, d0g wins, the OMNI raid) stays code until crew quests show what they share.
-  tools/checks/tests/quests.js walks the chain.
-- **Six ways a character talks;** b0y alone four ways, `G0DP_BLUE` hard-coded 36 times. **Change:** one
-  `say(who, text)` from the hacker's style. Small.
-- **Quest seeds are special-cased in the engine** (run.js, map.js, active.js, input.js). **Change:** a per-seed
-  definition like the corp hooks. Medium.
-
-## 5. Tools and checks
-
-- **The checks don't catch anything:** `tools/checks/check.js` compares against a baseline from 2026-10-22 that includes a
-  hash of every function, so any edit is a difference (3,672 now); it never fails; it has its own drifted copy of the
-  layer setup. **Change:** a small committed golden file (layers, maps, data; no code hashes), exit 1 on a
-  difference, `--accept`; one engine `layerSpecs(node)` the checks and editor share. Medium.
-- **Every test builds its own harness** (5 of them). **Change:** `tools/checks/harness.js` (vm load, headless Chrome page)
-  and one `tools/test.js` that runs the data round-trips, the golden and the playtest. Medium.
-- **No shared core for the `*_file.js` writers** (UMD wrapper, parse, stamp, quoting copied 3-4 times). **Change:**
-  `tools/data/data_file_core.js`. Medium. **Done (2026-11-05).**
-- **neon_editor.html is 3,407 lines** with `toGame`, `toast`, IndexedDB and save code copied per tab (TRAINING,
-  ECONOMY and FX even share one IndexedDB key). **Change:** `tools/editor/common.js` and one file per tab. Medium.
-  **Done (2026-11-05):** the page is the HTML only; the three tabs share one dist/data folder handle on purpose.
-- **palette_editor.html is a full copy** of the editor's palette tab (two writers for palettes.js). Drop it or share
-  a `palette_file.js`. Small. **Done (2026-11-05):** both (palette_file.js has a round-trip check in test.js).
-- Small: `data/palettes_v1.js` is dead but still stamped; art_file has no round-trip check; faces.js has a hand
-  comment the next save deletes; g0dproto.js ships to every player (could load only with ?editor / ?dev).
-
-**Fine as is:** stats.js, core.js, pet.js, had3s.js, intro.js, the tutorial's gating, `openChoice`, `Field`,
-`computeLayout`, the fx.js API, the text board toolkit (mostly), versioning and `bump.js`, sector events wiring,
-bench and fishing (data-driven).
+## Greg to decide
+- A RIPPED chip in LOST LOOT: no heat, rivals can't take it back. OK, or should LOST count as carrying it?
+- Practice runs feed the codex records (breached / lost) and logo unlocks. Gate them like feats?
+- CHECKPOINT at the PIER doesn't work (no corp). (Also in REVIEW.)
 
 ## Suggested order (Claude)
+1. **The bugs** (all small; the PIER and LOST LOOT ones first, they're today's).
+2. **Checks:** test.js fails on no match / 0 passes, `--check` for the round trips, the new tables in the golden.
+3. **The flicker fixes** (T.head every frame, keep the last rect): cheap, then you look again.
+4. **Before the cult quest:** the keyboard out of the bench, the special-word hook, quest steps for every quest,
+   per-seed definitions.
+5. **When next in the area:** split deck.js and CHIP_FX (before more chips); runkind.js and finishRun; tutorial.js into
+   pops.js + startTraining; drawCard; test setup into pageKit.
 
-1. **The bugs** (small, now).
-2. **Checks that work again** (golden file + shared harness): every refactor after this is safer.
-3. **Content wiring** (`MOD_FX`, `GEAR_FX`, `corpHook`, `corpRng`, `freeCells`): right before MONTY and FOSSIL, so
-   they're the first corps that need no engine edits.
-4. **Cheap cleanups:** run-kind predicates, `earn/spend`, `layerCtx`, `say()`, moving MOLD / hashes into fx.js,
-   deleting the dead prototype code.
-5. **Bigger moves when you next touch the area:** the overlay list and mode registry, splitting run.js and scene.js,
-   renaming g0dproto, the cinematic `Seq`, quest step data (before crew quests), the editor split.
+**Fine as is:** OVERLAYS (draw, taps and keys walk one list), addHit's tap sizes and the training gate, drawSubTabs,
+tutKit, the shell's command table and charges, CALL_QUEUE / FEAT_QUEUE order, the bench's tabs, chipOn and the run's
+chip snapshot, seeded drop streams, deckPersist's one write, harness.js and pageKit, the golden's design, the data
+file core, bump.js, the editor bridge (every message has a handler), and the tests for the deck, shell, sudo,
+dangercatch and lostloot (they check outcomes, not just drawing).
