@@ -1,6 +1,6 @@
 // NeoN+1 data/title.js: The title screen art: the face, the NeoN+1 name, the circuit traces.
 'use strict';
-NEON_FILES.push(['data/title.js', 'v15.60']);
+NEON_FILES.push(['data/title.js', 'v15.61']);
 
 // ---------------- Screens built from lines ----------------
 // Title cover art (the user's, from asXii: asxii_art/NeoN_1_screens_v06, "title: art FACE v2"): a face, half human

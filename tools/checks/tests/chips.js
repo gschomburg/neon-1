@@ -2,7 +2,7 @@
 // holds together, BETA chips never drop, the cells' power, and each chip's hook does its job in a run.
 module.exports = { name: 'chips', body: `
   const keys = Object.keys(DECK_CHIPS), RAR = ['scrap', 'common', 'rare', 'epic', 'legendary', 'exotic'];
-  const bad = keys.filter(k => { const c = DECK_CHIPS[k]; return c.length !== 7 || !DECK_GROUPS[c[1]] || !RAR.includes(c[2]) || !(c[3] >= 0 && c[3] <= 3) || c[5][0].length !== (c[1] === 'boss' ? 5 : 3) || !DECK_CHIP_TAGS[k]; });
+  const bad = keys.filter(k => { const c = DECK_CHIPS[k]; return (c.length !== 7 && c.length !== 8) || !DECK_GROUPS[c[1]] || !RAR.includes(c[2]) || !(c[3] >= 0 && c[3] <= 3) || c[5][0].length !== (c[1] === 'boss' ? 5 : 3) || !DECK_CHIP_TAGS[k]; });
   check(!bad.length, 'every chip: 7 fields, a group, a rarity, power 0-3, a face of the right width, tags: ' + bad.join(' '));
   check(new Set(keys.map(k => DECK_CHIPS[k][0])).size === keys.length, 'no two chips share a name');
   check(keys.length >= 70, 'the second set is in: ' + keys.length + ' chips');

@@ -76,11 +76,11 @@ Marks: **(checked)** Claude read the code path and confirmed it; the rest were c
 ## Structure
 
 ### 1. The deck: one file, ten tables
-- **Split deck.js along its sections:** data 10-295 (to `dist/data/chips.js`), drops / dealer / LOST LOOT 297-456,
+- [x] **Done (v15.61):** data/chips.js, deck_shell.js, deck_screen.js (deck.js 1,020 lines). The global DECK is still read directly. **Split deck.js along its sections:** data 10-295 (to `dist/data/chips.js`), drops / dealer / LOST LOOT 297-456,
   chip effects 458-910, THE SHELL's commands 911-1210 (next to shell.js), state and power 1254-1495, the screen
   1497-2546 (`engine/deck_screen.js`). First, pass the deck in: deckPower / deckOpen read the global DECK, and
   `deckRunChips` swaps it with no try/finally. Medium.
-- **CHIP_FX:** a chip's numbers live in ~10 parallel tables (DECK_INT, DECK_CHARGES, DECK_CELL, DECK_HEAT_REP,
+- [x] **Done (v15.61):** each chip's numbers are an 8th field on its entry; the old tables are built from them. **CHIP_FX:** a chip's numbers live in ~10 parallel tables (DECK_INT, DECK_CHARGES, DECK_CELL, DECK_HEAT_REP,
   DECK_FAVOR, DECK_KITS, DECK_NO_DROP, DECK_RIPPED, the tags, inline multipliers). One `CHIP_FX[key] = { int, charges,
   cell, rep, credits, price, give, mods, favor, kit }`, read by `chipSum` / `chipMult`; chips that act (CRASH, SHELL)
   keep their hooks. The chip version of MOD_FX. Medium, low risk.
