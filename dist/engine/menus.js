@@ -223,6 +223,7 @@ function openBoard(tab) {
   let repSub = (REP_SUBS.find(([k]) => repSubNew(k)) || [boardLevel()])[0];
   const repFirst = () => { const ls = repLines(repSub), i = ls.findIndex(l => l.post && postUnseen(l.post.key)); return i >= 0 ? i : ls.findIndex(l => l.post); };
   let repSel = repFirst();
+  let repDescT = {};   // (a long post description's ticker: which post, since when)
   scrollFollow(repS, repSel, repLines(repSub).length, REP_LIST_ROWS);
   const setRepSub = k => { if (k === repSub) return; repSub = k; repS.top = 0; repSel = repFirst(); scrollFollow(repS, repSel, repLines(repSub).length, REP_LIST_ROWS); Sound.tick(); };
   // FEATS starts on the first new one (or the first feat)
@@ -306,8 +307,15 @@ function openBoard(tab) {
       const lv = postLv(u.key), max = lv >= u.costs.length, cost = u.costs[lv], open = postOpen(u);
       t(SEP, C.dim);
       x({ text: u.name, col: C.bright, bold: true });
-      const dl = wrapText(u.levels ? u.levels[Math.min(lv, u.levels.length - 1)] : u.desc, 32);
-      for (let k = 0; k < 2; k++) t(dl[k] || '', C.text);
+      const desc = u.levels ? u.levels[Math.min(lv, u.levels.length - 1)] : u.desc, dl = wrapText(desc, 32);
+      // Two rows. A longer one (20 posts, e.g. LOST LOOT, SACRIFICE): the first row stays, the second scrolls the rest as a
+      // ticker (engine/fx.js; Greg, 2026-11-23: they were cut off after two lines). t0: when this post was picked.
+      if (dl.length <= 2) for (let k = 0; k < 2; k++) t(dl[k] || '', C.text);
+      else {
+        const rest = desc.slice(desc.indexOf(dl[0]) + dl[0].length).trim(), tk = repDescT.key === u.key ? repDescT : (repDescT = { key: u.key, t0: performance.now() });
+        t(dl[0].padEnd(32), C.text);
+        x({ h: 1, draw: (ctx, y) => ctx.put(Math.floor((L.wc - 32) / 2), y, FX.ticker(rest, 32, tk.t0, ctx.now, 6).padEnd(32), C.text, 'ui') });
+      }
       // the line under it: how it opens, its steps, or what it holds (LOCKER, NEMESIS)
       if (!open) t(`opens: ${FEAT_BY_ID[u.pm].text}`, C.mid);
       else if (u.key === 'nemesis' && lv) {
