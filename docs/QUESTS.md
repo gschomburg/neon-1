@@ -729,7 +729,7 @@ How you get G0D.exe (BACKLOG section 3) for real. Greg's notes, filed as he wrot
     going through nodes in a certain order. Maybe that's the only way the DIVINE letters show up. Stray from the route
     and they stop; get back on it and clear 3 corps, and they show up again.
   - **The letters:** random drops from corp bosses. Or you find BLANK chips you take to the WORKBENCH and forge: maybe
-    this is what THE CHROME FORGE is for.
+    this is what THE KILN (was THE CHROME FORGE) is for.
   - **Stacked corps:** corps on the map where every layer is a different corp's effect, say 3 corps jammed into one,
     like an OMNI that changes by layer. Maybe the whole palette changes each layer to that corp's.
   - Maybe this is where the NetHack stealth stuff comes in (BACKLOG section 12, docs/INFILTR8.md).
@@ -742,9 +742,11 @@ How you get G0D.exe (BACKLOG section 3) for real. Greg's notes, filed as he wrot
     the little eyes, then the big one).
   - **G0D.exe trained up:** typing to it in THE SHELL is interesting (it leads toward the typing game too). It only knows
     corps you've beaten, so the quest trains it.
-  - **THE CHROME FORGE** comes in here: where you craft special things, maybe the only place DIVINE letters can be used,
-    and maybe other special stuff. Probably not where the fight is: a dedicated seed for the fight, a dedicated seed for
-    the forge. Maybe two seeds with different versions of the forge.
+  - **THE KILN** (was THE CHROME FORGE) comes in here: where you craft special things, maybe the only place DIVINE letters
+    can be used, and maybe other special stuff. **Decided (Greg, 2026-11-22):** the first time you get to THE KILN, it's
+    the boss fight: maybe you craft G0D.exe there, and then the fight starts. After the fight you get another seed: just
+    THE KILN, another instance of it, to craft at. (Earlier: a seed for the fight and a seed for the forge, maybe two
+    versions of it.)
   - Brainstorms (2026-11-22): crafting as combat (hit ICE on purpose for its letters; catch their words back; one
     bench, two builders; the cultists are the letters), G0D.exe hands off (the run trains it; show it once; its brain
     is a board; fight for its soul in THE SHELL). Not kept for this fight but kept: BACKLOG "More boss seeds".
@@ -784,6 +786,23 @@ How you get G0D.exe (BACKLOG section 3) for real. Greg's notes, filed as he wrot
     can attack (tap) them back.
   - Or an escort mission: you defend a glyph from clicks. It moves around the map, cursors keep coming on and trying to
     click it, and you have to click them first.
+
+### Names and references (Greg and Claude, 2026-11-22; Greg: "all pretty solid", letting them churn)
+- **The golem** (Greg: "the golem is cool"): in Jewish folklore a golem is clay brought to life by writing a word on
+  it (emet, "truth"); erase a letter and it reads met, "dead", and it falls. That's the quest underneath: you bring
+  G0D.exe to life by spelling it, the cult is trying to do the same, the fight is over which letters get written. (The
+  same tradition has the world made by combining letters: the Sefer Yetzirah.) It never has to be explained in game.
+- **The cult are corpos** (Greg): crafters, but MBA cult upper management, jargon and all. Corpo douche beats the
+  Masons. Kept from the Mason idea: a craft guild, and three ranks that could be the fight's stages (apprentices,
+  fellowcrafts, then the leader), in corpo terms (associates, managers, the C-suite?). DEMIURGE (Plato's craftsman
+  god; it means "public craftsman") as a name or a product. Ideas for the cult's name: THE LODGE, THE CRAFT, DEMIURGE
+  INC., THE GUILD, ARCHITECTS (to redo in corpo speak).
+- **The leader: DOUG** (Greg: a stupid simple name). High Priest Doug, or a corporate title. DOUG might be a backronym
+  like G0D's (a MEDIX label): Director Of Unified Growth. Nobody has ever asked.
+- **Where:** Purgatory (Dante's is a mountain you climb, terrace by terrace: the STAIRS mockup), Limbo (in between),
+  LAZARUS (raised from the dead: the seed, the ritual, or what the cult calls the project).
+- **THE KILN** (Greg): where a golem's clay is fired. Short, and it's the forge's name now. (THE CHROME KILN was close.)
+- **Minecraft,** lightly: the crafting grid is 3 by 3, G0D is 3 letters; a ghostly god figure in its fan lore. A nod, no names.
 
 ## What it needs that doesn't exist yet
 - **Quest items:** a gear kind (quest color, QUEST tag, one at a time), the unlock gate, drop odds everywhere loot drops.

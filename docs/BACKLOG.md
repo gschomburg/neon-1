@@ -25,7 +25,7 @@ Details: docs/DECK.md (SUDO, BOSS, Chips) and docs/SHELL.md.
 - **More SUDO commands:** built v15.06: `mode.free`, `corp.jump`, `rm -rf`, `chmod`. `fork` v15.07 (QUANTUM's second real
   node for a corp, same glyph, full pay).
 - **Ripped chips:** built v15.08, the fence list v15.09 (docs/DECK.md "The sources"). The exotic one: **HCF'S CORE** (v15.52), a power 18 cell.
-- **The fuse node:** now **THE CHROME FORGE**, parked with the map nodes (section 5).
+- **The fuse node:** now **THE KILN** (was THE CHROME FORGE; Greg, 2026-11-22), the G0D.exe quest's (docs/QUESTS.md).
 - **Making chips at the workbench:** built v15.10 (a BLANK; docs/DECK.md "The workbench").
   **Decided (Greg, 2026-11-21), v15.14:** a chip you've seen is craftable (a market's, a corp boss's pick, your belt).
   **Decided (Greg, 2026-11-21), v15.22:** chips need no blueprint at all now, epic+ too: seen and the parts is enough.
@@ -429,8 +429,9 @@ unlocked by REP, and some quests unlock REP.
 - **A portal node** (Greg, meat notes 2026-11-08): a sector node that takes you to a quest seed, or a portal to
   another random place or seed.
 - **A pass on more store types and other non-corp map nodes** (Greg, 2026-11-21). In it:
-  - **THE CHROME FORGE** (was "the fuse node"; Greg: "the forge or maybe something more hackery"): bring 2 exotic mods,
-    fuse them into an exotic chip (docs/DECK.md "Mashing 2 mods together"). Maybe tied to a quest, or a custom seed.
+  - **THE KILN** (was THE CHROME FORGE, was "the fuse node"; **Decided (Greg, 2026-11-22):** THE KILN, short): bring 2
+    exotic mods, fuse them into an exotic chip (docs/DECK.md "Mashing 2 mods together"). It's tied to the G0D.exe quest
+    now: the only place that crafts with DIVINE letters, on seeds of its own (docs/QUESTS.md "The G0D.exe quest").
 
 ### 6. Anomalies and sector events (design: `docs/SECTOR_EVENTS.md`)
 - **Still open:** a THREAT level later; events on in sector 1 (moved to docs/DECK.md: the BIOS chip EVENTS); tying the sector boss to the

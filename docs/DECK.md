@@ -279,7 +279,8 @@ what changes what:
     - Or both: a known recipe makes its chip, and any other pair makes a plain BOOT chip of the two.
   - Its rarity is the lower of the two mods'.
   - Open: is fusing a WORKBENCH thing or a deck thing? (Greg's answer above: neither, a special node.) **Then (Greg,
-    2026-11-21):** the node is **THE CHROME FORGE**, parked for a pass on more map nodes (BACKLOG section 5).
+    2026-11-21):** the node is **THE CHROME FORGE**, parked for a pass on more map nodes (BACKLOG section 5). **Renamed
+    (Greg, 2026-11-22): THE KILN**, part of the G0D.exe quest (docs/QUESTS.md).
 - **By accident** (Greg): a failed craft now and then fuses its burnt components into a **SLAG** chip: junk with a
   small random effect, and once in a while something good. Some chips might only be found that way.
 - **Drops** (**Decided (Greg, 2026-11-16):** no chip for every corp; that's a lot, and it pollutes the pool).

@@ -847,3 +847,8 @@ _|__|   \_|___________|__|   \_|_ _
 Not tied to anything yet: a mod, gear, a chip, a corp or a feat.
 - **PWN:** "you own everything".
 - **OUTSOURCING.**
+
+## The G0D.exe quest (2026-11-22)
+
+Ideas for the cult, its leader and its places: docs/QUESTS.md "Names and references". The leader is DOUG.
+THE KILN (was THE CHROME FORGE).
