@@ -7,8 +7,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
 <style>
 /* The G0D.exe quest's boss fight, round 1: five ways the typing fight could look, on the game's 36 x 23 phone grid.
-   Same pieces in each: the keyboard at the bottom (INT on the spacebar, the G0D.exe key), the cultists with their
-   words, the cult leader and the altar. Notes: docs/QUESTS.md "The G0D.exe quest: the cult". */
+   Same pieces in each: the WORKBENCH's keyboard at the bottom (its real size: engine/bench.js benchKbGeom, less its
+   SPECIAL row), the cultists with their words, the cult leader and the altar. Notes: docs/QUESTS.md "The G0D.exe quest". */
 :root {
   color-scheme: dark;
   --bg: #06090a; --dim: #2c3a38; --mid: #5f7470; --text: #a9bdb7; --bright: #e6f4ef;
@@ -39,18 +39,21 @@ code { color: var(--bright); }
 /* text colors */
 .k-d { color: var(--dim); } .k-m { color: var(--mid); } .k-t { color: var(--text); } .k-b { color: var(--bright); font-weight: 700; }
 .k-a { color: var(--accent); font-weight: 700; } .k-r { color: var(--danger); font-weight: 700; } .k-\$ { color: var(--money); }
-.k-p { color: var(--rep); font-weight: 700; } .k-u { color: var(--rare); } .k-g { color: var(--green); }
-/* a key you pressed; a key you're out of */
-.k-A { color: var(--bg); background: var(--accent); font-weight: 700; }
-.k-D { color: var(--dim); text-decoration: line-through; }
+.k-p { color: var(--rep); font-weight: 700; }
+/* the keyboard's keys: chips by how many of the letter you hold (engine/bench.js letterTier: 10+ green, 5+ blue, 2+
+   purple, 1 orange), the one just pressed, one you're out of (an outline), the G0D.exe key. Two rows tall each. */
+.key { box-shadow: inset 2px 0 0 var(--bg), inset -2px 0 0 var(--bg); font-weight: 700; }
+.k-k1 { color: #0c3318; background: #6fdc84; } .k-k2 { color: #0b2a55; background: #7fb6ff; }
+.k-k3 { color: #2d0a4e; background: #c99bff; } .k-k4 { color: #4a1300; background: #ff8a4a; }
+.k-kA { color: var(--bg); background: var(--accent); } .k-k0 { color: var(--dim); box-shadow: inset 0 0 0 1px var(--dim); }
+.k-kG { color: var(--bg); background: var(--danger); } .k-kD { color: #1d2326; background: #d4dad9; }
 /* the cultists' words: KNOWN (G0D.exe has it: its red), its typed part; NEW (white), your typed part */
 .k-K { color: var(--danger); background: rgba(255, 59, 78, 0.16); }
 .k-Kf { color: var(--bg); background: var(--danger); font-weight: 700; }
 .k-N { color: var(--bright); background: rgba(230, 244, 239, 0.12); font-weight: 700; }
 .k-Nf { color: var(--bg); background: var(--accent); font-weight: 700; }
 .k-q { color: var(--money); font-weight: 700; }
-/* the leader and the altar */
-.k-L { color: var(--rep); background: rgba(162, 126, 245, 0.14); font-weight: 700; }
+/* the altar's letters */
 .k-X { color: var(--bg); background: var(--danger); font-weight: 800; }
 .blink { animation: blink 1s steps(2, start) infinite; }
 @keyframes blink { to { visibility: hidden; } }
@@ -60,15 +63,16 @@ code { color: var(--bright); }
 <div class="wrap">
   <div>
     <h1>THE CULT <b>FIGHT</b> <span style="color:var(--mid);font-size:14px">round 1</span></h1>
-    <p>Five takes on the G0D.exe quest's boss fight, on the game's 36 x 23 phone grid. The pieces are the same in each: the keyboard at the bottom, the cultists with their words, the cult leader and the altar. There is no header: INT is pips on the spacebar, and the leader's bars sit by his face. The draft is in <code>docs/QUESTS.md</code> ("The G0D.exe quest: the cult"). The cult and its leader have no names yet: THE PRIOR is a placeholder.</p>
+    <p>Five takes on the G0D.exe quest's boss fight, on the game's 36 x 23 phone grid. The keyboard is the WORKBENCH's, at about its real size (the keys about 3 columns wide and 2 rows tall, your count of each letter in the corner), without its SPECIAL row (Greg, 2026-11-22): digits, QWERTY, ASDF, ZXCV with DEL and the G0D.exe key. It takes 10 rows, so the cult gets 13. No header: INT sits on the line over the keys, and the leader's bars by his name. The draft is in <code>docs/QUESTS.md</code> ("The G0D.exe quest: the cult"). THE PRIOR is a placeholder name.</p>
   </div>
   <div class="legend">
     <span><span class="k-K">MONTY</span> a word G0D.exe knows (its red)</span>
     <span><span class="k-Kf">MON</span><span class="k-K">TY</span> G0D.exe typing it</span>
     <span><span class="k-N">GLACIER</span><span class="k-q">?</span> a new word: yours</span>
     <span><span class="k-Nf">GLA</span><span class="k-N">CIER</span> you typing it</span>
-    <span><span class="k-D">K</span> a key you're out of (1 INT to press)</span>
-    <span><span class="k-A">C</span> the key you just pressed</span>
+    <span><span class="k-k1 key"> E </span><span class="k-k2 key"> C </span><span class="k-k3 key"> B </span><span class="k-k4 key"> X </span> keys: lots of it, to 1 left</span>
+    <span><span class="k-k0 key"> K </span> out (1 INT to press)</span>
+    <span><span class="k-kA key"> A </span> just pressed</span>
     <span><span class="k-X">G</span> a letter on the altar</span>
   </div>
   <div id="mocks"></div>
@@ -79,46 +83,44 @@ code { color: var(--bright); }
 'use strict';
 // ---------- data ----------
 // A row is markup: {k:text} colors text with key k (see the .k-* classes); bare text is the text color.
-// A row is at most 36 visible characters; shorter rows get padded. tools: node checks the widths (see the note at the end).
+// A row is at most 36 visible characters; shorter rows get padded. Each mockup is 23 rows: 13 for the cult, 10 keyboard.
 // DATA START
 const vis = s => Array.from(s.replace(/{([^:}]+):([^}]*)}/g, '$2')).length;
 const lr = (l, r) => l + ' '.repeat(Math.max(1, 36 - vis(l) - vis(r))) + r;   // left and right ends of a row
 const cen = s => ' '.repeat(Math.max(0, Math.floor((36 - vis(s)) / 2))) + s;   // centered
 const at = (n, s) => ' '.repeat(n) + s;   // n spaces in
-// the keyboard: 3 rows of letters, then the spacebar (INT) and the G0D.exe key. out: keys you're out of; hit: the key
-// just pressed; counts: how many of each letter you hold (small digits), in place of the brackets
-const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
-function kb({ out = '', hit = '', counts = null, int = 4, max = 6, g0d = 'ready' } = {}) {
-  const key = ch => {
-    const k = out.includes(ch) ? 'D' : hit === ch ? 'A' : 't';
-    if (counts) { const n = counts[ch] || 0; return '{' + k + ':' + ch + '}{m:' + (n > 9 ? '⁺' : SUP[n]) + '} '; }
-    return '{d:[}{' + k + ':' + ch + '}{d:]}';
-  };
-  const row = (s, pad) => at(pad, s.split('').map(key).join(''));
+// The keyboard (engine/bench.js BENCH_KB, less the SPECIAL row): each key 3 wide and 2 rows tall, its letter on top and
+// your count in the corner under it (hex, as the bench shows it). out: keys you're out of; hit: the key just pressed.
+const HOLD = { E: 12, T: 10, A: 11, O: 9, I: 8, N: 10, S: 7, R: 9, L: 6, C: 5, D: 4, U: 5, M: 3, H: 4, P: 3, G: 2, Y: 2, B: 2, F: 2, W: 1, V: 1, K: 1, X: 1, J: 1, Q: 1, Z: 1,
+  0: 2, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1 };
+function kb({ out = '', hit = '', int = 4, max = 6, g0d = 'ready' } = {}) {
+  const n = ch => out.includes(ch) ? 0 : HOLD[ch] || 1;
+  const cls = ch => hit === ch ? 'kA' : !n(ch) ? 'k0' : n(ch) >= 10 ? 'k1' : n(ch) >= 5 ? 'k2' : n(ch) >= 2 ? 'k3' : 'k4';
+  const top = ch => '{' + cls(ch) + ': ' + ch + ' }';
+  const bot = ch => '{' + cls(ch) + ':  ' + (n(ch) ? (n(ch) > 15 ? '+' : n(ch).toString(16).toUpperCase()) : ' ') + '}';
+  const row = (keys, pad, pre = ['', ''], post = ['', '']) => [at(pad, pre[0] + keys.split('').map(top).join('') + post[0]), at(pad, pre[1] + keys.split('').map(bot).join('') + post[1])];
   const pips = '{a:' + '#'.repeat(int) + '}{d:' + '-'.repeat(max - int) + '}';
-  const gk = g0d === 'ready' ? '{X:G0D.exe}' : g0d === 'busy' ? '{r:G0D.exe}' : '{d:G0D.exe}';
+  const gk = g0d === 'busy' ? 'kG' : g0d === 'ready' ? 'kG' : 'k0';
   return [
-    '{d:────────────────────────────────────}',
-    counts ? row('QWERTYUIOP', 3) : row('QWERTYUIOP', 3),
-    counts ? row('ASDFGHJKL', 4) : row('ASDFGHJKL', 4) + ' ',
-    counts ? row('ZXCVBNM', 6) + ' {m:DEL}' : row('ZXCVBNM', 6) + '{d:[}{m:DEL}{d:]}',
-    '  {d:[}' + gk + '{d:]} {d:[    }{m:INT }' + pips + '{d:    ]}',
+    lr('{a:────}{m: INT }' + pips + ' ', '{a:' + (g0d === 'busy' ? 'G0D.exe typing' : '────────────') + '}{a:──}'),
+    ...row('1234567890', 3),
+    ...row('QWERTYUIOP', 3),
+    ...row('ASDFGHJKL', 4),
+    ...row('ZXCVBNM', 1, ['{' + gk + ':G0D.exe}', '{' + gk + ':       }'], ['{kD: DEL }', '{kD:     }']),
+    '',
   ];
 }
-const hood = ['{p: /^\\ }', '{p:(}{r:°}{p:_}{r:°}{p:)}', '{p:/|_|\\}'];   // THE PRIOR (a placeholder)
+const face = '{p:(}{r:°}{p:_}{r:°}{p:)}';   // THE PRIOR (a placeholder)
 const bars = (n, max) => '{r:' + '█'.repeat(n) + '}{d:' + '░'.repeat(max - n) + '}';
 
 const MOCKS = [
   {
     name: 'THE STAIRS', tag: 'two flights up to the altar',
     rows: [
-      lr('{m:[≡]}', '{m:STAGE 1/3}'),
-      lr('{p:THE PRIOR}', bars(7, 10)),
-      cen(hood[0]), cen(hood[1]), cen(hood[2]),
+      lr('{p:THE PRIOR} ' + face, bars(7, 10)),
       cen('{$:╔═}{X:G}{$:═}{X:0}{$:═}{d:_}{$:═╗}'),
-      cen('{$:╚═══════╝}'),
       at(3, '{d:‾‾|}                      {d:|‾‾}'),
-      at(3, '{K:LEDGER}{d:|}                  {d:|}{N:NOIR}{q:?}'),
+      at(3, '{K:LEDGER}{d:|}                {d:|}{N:NOIR}{q:?}'),
       at(6, '{d:‾‾|}              {d:|‾‾}'),
       at(4, '{Kf:SIM}{K:ON}{d:|}              {d:|}{K:APIARY}'),
       at(9, '{d:‾‾|}        {d:|‾‾}'),
@@ -126,104 +128,85 @@ const MOCKS = [
       at(12, '{d:‾‾|}  {d:|‾‾}'),
       at(9, '{K:MONTY}{d:|}  {d:|}{K:KERNEL}'),
       at(15, '{d:‾‾‾‾‾‾}'),
-      cen('{m:they climb. type them off.}'),
       '',
+      cen('{m:they climb. type them off.}'),
       ...kb({ out: 'KQZ', hit: 'A', g0d: 'busy' }),
     ],
     how: [
       '<b>The plain one.</b> Two flights of stairs meet at the altar at the top. Cultists step up a stair at a time, left and right.',
       'The higher a cultist gets, the closer its letter is to the altar. The altar has <b>G 0</b> so far; one more and it reads <b>G0D</b>.',
-      'G0D.exe (its key glows red while it works) is finishing <b>SIMON</b>; you\'re three letters into <b>GLACIER</b>.',
+      'G0D.exe (on the line over the keys: "G0D.exe typing") is finishing <b>SIMON</b>; you\'re three letters into <b>GLACIER</b>.',
       'THE PRIOR watches from the top, his bars by his name. Every cultist you finish takes one.',
     ],
-    note: 'Easy to read at a glance: up is bad. Two lanes keep it calm; more stairs (or a third flight) make a later stage harder.',
+    note: 'Easy to read at a glance: up is bad. Two lanes keep it calm; more stairs (or a third flight) make a later stage harder. With the real keyboard the stairs are short: 5 steps.',
   },
   {
     name: 'THE AISLES', tag: 'four lanes, like a rhythm game',
     rows: [
-      lr('{m:[≡]}', '{m:STAGE 2/3}'),
-      lr(hood[1] + ' {p:THE PRIOR}', bars(5, 10)),
+      lr(face + ' {p:THE PRIOR}', bars(5, 10)),
       cen('{$:═══╡ }{X:G}{$: }{X:0}{$: }{d:_}{$: ╞═══}'),
       at(1, '{d:│ ▲      │ ▲      │ ▲      │ ▲   │}'),
-      at(1, '{d:│}        {d:│}{K:NOIR}    {d:│}        {d:│}     {d:│}'),
-      at(1, '{d:│}        {d:│}        {d:│}        {d:│}     {d:│}'),
-      at(1, '{d:│}{Kf:LED}{K:GER}  {d:│}        {d:│}{N:SQUALOR}{q:?}{d:│}     {d:│}'),
+      at(1, '{d:│}{Kf:LED}{K:GER}  {d:│}{K:NOIR}    {d:│}{N:SQUALOR}{q:?}{d:│}     {d:│}'),
       at(1, '{d:│}        {d:│}        {d:│}        {d:│}     {d:│}'),
       at(1, '{d:│}        {d:│}{Nf:CHR}{N:ONOS}{q:?}{d:│}        {d:│}{K:MOCHI}{d:│}'),
-      at(1, '{d:│}        {d:│}        {d:│}        {d:│}     {d:│}'),
-      at(1, '{d:│}{K:MONTY}   {d:│}        {d:│}        {d:│}     {d:│}'),
-      at(1, '{d:│}        {d:│}        {d:│}{K:KERNEL}  {d:│}     {d:│}'),
+      at(1, '{d:│}{K:MONTY}   {d:│}        {d:│}{K:KERNEL}  {d:│}     {d:│}'),
       at(1, '{d:│}        {d:│}{K:SIMON}   {d:│}        {d:│}{K:SEEKR}{d:│}'),
       at(1, '{d:│}        {d:│}        {d:│}        {d:│}     {d:│}'),
-      at(1, '{d:│}{N:TELEPHONIX}{q:?}{d:}       {d:│}        {d:│}     {d:│}'),
+      at(1, '{d:│}{N:TELEPHONIX}{q:?}       {d:│}        {d:│}     {d:│}'),
+      at(1, '{d:└────────┴────────┴────────┴─────┘}'),
       cen('{m:4 aisles. they all walk up.}'),
       '',
-      at(1, '{d:└────────┴────────┴────────┴─────┘}'),
       ...kb({ out: 'KQXZJ', hit: 'R', int: 3, g0d: 'busy' }),
     ],
     how: [
       '<b>The rhythm game.</b> Four aisles run up to the altar row. Cultists walk up their aisle at their own pace.',
       'Lots of them at once: more than you could type. G0D.exe clears the red ones (it\'s typing LEDGER) while you take the white ones.',
       'You\'re on <b>CHRONOS</b>. <b>SQUALOR</b> and <b>TELEPHONIX</b> are new words waiting for you, and TELEPHONIX is a long one at the bottom: time to start.',
-      'Stage 2: more aisles, faster walkers. Your INT is down to 3 (you pressed a dark key or two).',
+      'Stage 2: faster walkers. Your INT is down to 3 (you pressed a key you were out of). J, K, Q, X and Z are out: outlined.',
     ],
-    note: 'The busiest look, and the most "type defender". It shows off G0D.exe best: a full screen, most of it red and handled.',
+    note: 'The busiest look, and the most "type defender". It shows off G0D.exe best: a full screen, most of it red and handled. The aisles are short with the real keyboard; the walkers would need to be slow.',
   },
   {
     name: 'THE CIRCLE', tag: 'the altar in the middle, they close in',
     rows: [
-      lr('{m:[≡]} ' + hood[1] + ' {p:THE PRIOR}', bars(9, 10)),
-      '',
+      lr(face + ' {p:THE PRIOR}', bars(9, 10)),
       at(2, '{K:APIARY}            {N:GRIDLOCK}{q:?}'),
-      at(14, '{d:·  ·  ·}'),
       at(7, '{d:·}  {K:NOIR}         {d:·}'),
-      at(5, '{d:·}                    {d:·}'),
       at(4, '{d:·}      {$:╔═════════╗}     {d:·}'),
       at(1, '{K:LEDGER}    {$:║ }{X:G}{$: }{d:_}{$: }{d:_}{$: ║}  {Nf:VER}{N:DANT}{q:?}'),
       at(4, '{d:·}      {$:╚═════════╝}     {d:·}'),
-      at(5, '{d:·}                    {d:·}'),
       at(7, '{d:·}      {Kf:MO}{K:NTY}      {d:·}'),
       at(10, '{d:·  ·  ·  ·  ·}'),
       at(3, '{K:SIMON}               {K:KERNEL}'),
       '',
       cen('{m:they walk in, to the middle.}'),
       '',
-      '{d:────────────────────────────────────}',
-      at(3, '{t:Q}{m:²} {t:W}{m:¹} {t:E}{m:⁶} {t:R}{m:³} {t:T}{m:⁴} {t:Y}{m:¹} {t:U}{m:²} {t:I}{m:³} {t:O}{m:⁴} {t:P}{m:¹}'),
-      at(4, '{A:A}{m:⁵} {t:S}{m:³} {t:D}{m:²} {t:F}{m:¹} {t:G}{m:¹} {t:H}{m:²} {D:J}{m:⁰} {D:K}{m:⁰} {t:L}{m:³}'),
-      at(6, '{D:Z}{m:⁰} {D:X}{m:⁰} {t:C}{m:²} {t:V}{m:¹} {t:B}{m:¹} {t:N}{m:⁴} {t:M}{m:²} {m:DEL}'),
-      '  {d:[}{X:G0D.exe}{d:]} {d:[    }{m:INT }{a:####}{d:--    ]}',
       '',
-      '',
+      ...kb({ out: 'JKXZ', hit: 'A' }),
     ],
     how: [
       '<b>The cramped one.</b> The altar sits in the middle; cultists walk in from every side, on dotted rings.',
       'Only <b>G</b> on the altar: early in the fight. THE PRIOR is nearly full.',
-      '<b>The keyboard shows how many of each letter you hold</b> (small digits). J, K, X and Z are out: a word with one costs you INT. You can see a problem coming: <b>KERNEL</b> needs a K. (G0D.exe knows KERNEL, so it\'s fine, if G0D.exe gets there in time.)',
+      '<b>The keys show how many of each letter you hold</b>, like the WORKBENCH. J, K, X and Z are out (outlined): a word with one costs you INT. You can see a problem coming: <b>KERNEL</b> needs a K. (G0D.exe knows KERNEL, so it\'s fine, if it gets there in time.)',
       'You\'re on <b>VERDANT</b>; G0D.exe is on <b>MONTY</b>.',
     ],
-    note: 'The counts make the "typing spends your letters" idea readable. Every mockup could have them; this one shows them. It loses some board rows to space, so it would get the counts and lose the stage line.',
+    note: 'With the real keyboard it keeps the most room around the altar. Every mockup now shows your counts, since the real keys do.',
   },
   {
     name: 'THE NET', tag: 'they climb the network map',
     rows: [
-      lr('{m:[≡]}', '{m:STAGE 1/3}'),
-      lr('{p:THE PRIOR}', bars(8, 10)),
-      cen('{X:[G]}{$:═}{X:[0]}{$:═}{d:[_]}  {p:(}{r:°}{p:_}{r:°}{p:)}'),
+      lr('{p:THE PRIOR} ' + face, bars(8, 10)),
+      cen('{X:[G]}{$:═}{X:[0]}{$:═}{d:[_]}'),
       cen('{$:╲  │  ╱}'),
       at(5, '{d:[$]}{d:· · · ·}{$:[‡]}{d:· · · ·}{d:[+]}'),
       at(6, '{d::}    {K:NOIR}  {d::}       {d::}'),
       at(5, '{d:[■]}{d:· · · ·}{d:[■]}{d:· · · ·}{d:[■]}'),
       at(3, '{N:SQUALOR}{q:?}       {d::}   {Kf:SEE}{K:KR}'),
       at(5, '{d:[■]}{d:· · · ·}{d:[■]}{d:· · · ·}{d:[■]}'),
-      at(6, '{d::}       {d::}       {d::}'),
-      at(5, '{d:[■]}{d:· · · ·}{d:[■]}{d:· · · ·}{d:[■]}'),
       at(2, '{K:MOCHI}    {Nf:TEL}{N:EPHONIX}{q:?}'),
-      at(5, '{d:[■]}{d:· · · ·}{d:[■]}{d:· · · ·}{d:[■]}'),
-      at(6, '{d::}       {d::}       {d::}'),
       at(5, '{d:[■]}{d:· · · ·}{a:[@]}{d:· · · ·}{d:[■]}'),
-      cen('{m:they hop the links to the altar.}'),
       '',
+      cen('{m:they hop the links to the altar.}'),
       '',
       ...kb({ out: 'QZ', hit: 'L' }),
     ],
@@ -233,15 +216,14 @@ const MOCKS = [
       'You\'re at <b>@</b>, the bottom. Their words ride with them; your typing reaches anywhere on the map.',
       'You\'re on <b>TELEPHONIX</b>. G0D.exe is on <b>SEEKR</b>.',
     ],
-    note: 'The most "NeoN+1": it\'s the network map you play on all run, now crawling with them. Links could matter: two cultists on one link slow down.',
+    note: 'The most "NeoN+1": it\'s the network map you play on all run, now crawling with them. With the real keyboard it\'s 4 rows of nodes, like a small sector.',
   },
   {
     name: 'THE HIGH PRIEST', tag: 'weird: his eyes are the cultists',
     rows: [
-      lr('{m:[≡]}', '{m:STAGE 3/3}'),
       cen('{p:._______________________.}'),
       cen('{p:/   .--.     .--.     .--.  \\}'),
-      at(3, '{p:|  (}{K:NOIR}{p:)   (}{Nf:BI}{N:TROT}{q:?}{p:) (}{K:EDO}{p:)|}'),
+      at(3, '{p:|  (}{K:NOIR}{p:)   (}{Nf:BI}{N:TROT}{q:?}{p:) (}{K:ECHO}{p:)|}'),
       at(3, '{p:|   \'--\'     \'--\'     \'--\'  |}'),
       at(3, '{p:|      .--.        .--.     |}'),
       at(3, '{p:|     (}{Kf:MON}{K:TY}{p:)     (}{K:SIMON}{p:)   |}'),
@@ -250,12 +232,8 @@ const MOCKS = [
       at(3, '{p:|         |}{X:G}{p: }{X:0}{p: }{X:D}{p: }{d:_}{p:|         |}'),
       at(3, '{p:|         \'-------\'         |}'),
       at(3, '{p:\\___________________________/}'),
-      cen(bars(3, 10)),
-      '',
-      cen('{m:his eyes are his followers.}'),
-      cen('{m:his mouth is the altar.}'),
+      cen('{p:THE PRIOR} ' + bars(3, 10)),
       cen('{m:G0D is spelled. .EXE is next.}'),
-      '',
       ...kb({ out: 'KQXZJW', hit: 'B', int: 2, g0d: 'busy' }),
     ],
     how: [
@@ -264,7 +242,7 @@ const MOCKS = [
       '<b>His mouth is the altar.</b> It spells as long as eyes are open: <b>G0D</b> is done, it wants <b>.EXE</b> next (stage 3). Close every eye and the mouth stops.',
       'Like G0D\'s own fight: the little eyes, then the big one. His bars are under his chin: 3 left.',
     ],
-    note: 'The most boss-like, and the most like G0D (the eyes). Less "type defender", more a face you\'re taking apart. Stage 1 could be the walking cultists, stage 3 this.',
+    note: 'The most boss-like, and the most like G0D (the eyes). It fits the real keyboard best: the face is a fixed size. Stage 1 could be the walking cultists, stage 3 this.',
   },
 ];
 // DATA END
@@ -275,7 +253,7 @@ function rowHtml(row, name, i) {
   row += ' '.repeat(Math.max(0, 36 - w));
   let out = '', last = 0;
   row.replace(/\{([^:}]+):([^}]*)\}/g, (m, k, txt, at) => {
-    out += esc(row.slice(last, at)) + '<span class="k-' + k + (k === 'q' ? ' blink' : '') + '">' + esc(txt) + '</span>';
+    out += esc(row.slice(last, at)) + '<span class="k-' + k + (k === 'q' ? ' blink' : '') + (/^k[0-9A-Z]$/.test(k) ? ' key' : '') + '">' + esc(txt) + '</span>';
     last = at + m.length;
     return m;
   });

@@ -750,6 +750,10 @@ How you get G0D.exe (BACKLOG section 3) for real. Greg's notes, filed as he wrot
     is a board; fight for its soul in THE SHELL). Not kept for this fight but kept: BACKLOG "More boss seeds".
 - **The fight, working draft (Greg, 2026-11-22: "decent for now", still thinking: will it be fun, what is it missing?):**
   Mockups: docs/mockups/cultfight.html (5 directions).
+  - **The keyboard is the WORKBENCH's, at its real size** (engine/bench.js benchKbGeom: keys about 3 columns wide and 2
+    rows tall, your count of each letter in the corner, colored by how many you hold). **Decided (Greg, 2026-11-22):**
+    in this fight it drops its top SPECIAL row (wildcards, BLANKs, the DIVINE letters later). The rest (digits, QWERTY,
+    ASDF, ZXCV with DEL, and a G0D.exe key) takes about 10 of the phone's 23 rows, so the cult gets about 13.
   - **Just the keyboard** (the WORKBENCH's, at the bottom); the rest of the screen is the cult's. No crafting area: the
     word on a cultist is the build. Cultists move about like rivals, chip-colored, each with a word; as you type, the
     letters fill in over it; finished, they fall apart and their letters refill your keyboard.
