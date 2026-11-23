@@ -27,7 +27,7 @@ Marks: **(checked)** Claude read the code path and confirmed it; the rest were c
 - [x] **BROWNOUT on SPIKE** **Done (v15.58):** BROWNOUT never picks SPIKE. keeps SPIKE's +2 power (counted from the slots) but skips its -1 INT.
 - [x] **Practice and dev runs write to your real bench through chip drops.** **Done (v15.58):** in practice a lost chip that goes is just gone. `lostLoot`'s SHRED and a full pool shred
   into save.bench and save.shredded (unlocking give.chip for it); `deckDrops` has no practice check. (From v15.57.)
-- [ ] **Greg to decide: a RIPPED chip in LOST LOOT** carries no heat: rivals don't come for it and can't take it back
+- [x] **Decided (Greg, 2026-11-23): keep it.** No heat till it's on your belt. **A RIPPED chip in LOST LOOT** carries no heat: rivals don't come for it and can't take it back
   (they only look at your belt), and it comes home on cash out.
 - Suspected: CHECKPOINT empties your belt and mods including quest gear (the other death chips skip quest gear).
 
@@ -131,15 +131,15 @@ Marks: **(checked)** Claude read the code path and confirmed it; the rest were c
   big change, worth it only when a new mode comes (the cult fight is one). Large.
 
 ### 5. Tools and checks
-- **The golden doesn't see the new data:** none of DECK_CHIPS (and the other DECK_ tables), FEATS, QUEST_INFO,
+- [x] **Done (v15.59):** the golden has 63 tables now. **The golden doesn't see the new data:** none of DECK_CHIPS (and the other DECK_ tables), FEATS, QUEST_INFO,
   HACKERS, SECTOR_EVENTS, ECON, BENCH, TUT_COPY... are in check.js's NAMES. Add them and re-accept. Small.
 - **Coverage gaps:** the playtest plays tier 1 in god mode with a fresh save (no deck, anomalies, events). 11 chips
   and 51 of 66 feats are never named in a test. No test for sector events, multiplayer, pets, the market, HAD3S, or
-  resume across a reload. scene_art.js, quest_dialog.js and music_view_check.js aren't in test.js.
+  resume across a reload. scene_art.js, quest_dialog.js and music_view_check.js aren't in test.js (**done v15.59:** both generators take --check, all three run in test.js).
 - **The editor can't edit** chips, feats, REP posts, quests, events, mods / items, hackers or pets (hand-edited).
   Chips would need `dist/data/chips.js` first (section 1).
 - **Test setup copied:** start-a-run-and-get-to-the-map in ~29 tests; until / popIs / closeCalls / ready copied. Into
-  pageKit. All ~50 test pages start at once (Promise.all): likely why full runs are slow and flaky; a pool of ~6.
+  pageKit. All ~50 test pages start at once (Promise.all): likely why full runs are slow and flaky; a pool of ~6 (**done v15.59**).
   Medium.
 - Small: check.js loads the game twice; batch1446-1489 test files are named by version, not feature;
   data/palettes_v1.js is dead and still stamped (to _trash/); stale tool comments.
@@ -157,10 +157,10 @@ draw nothing). The likeliest causes, in order:
 3. `buildTutorial` also runs inside wipe / snapshot builds, laying out from throwaway cells. Fix: only when collecting hits.
 4. Two clocks (performance.now vs the frame's time): benign as traced.
 
-## Greg to decide
-- A RIPPED chip in LOST LOOT: no heat, rivals can't take it back. OK, or should LOST count as carrying it?
-- Practice runs feed the codex records (breached / lost) and logo unlocks. Gate them like feats?
-- CHECKPOINT at the PIER doesn't work (no corp). (Also in REVIEW.)
+## Decided (Greg, 2026-11-23)
+- A RIPPED chip in LOST LOOT: no heat till it's on your belt (as built).
+- Practice runs feed the codex records (breached / lost) and logo unlocks: fine, as they are.
+- CHECKPOINT works at the PIER: a DANGEROUS CATCH bite puts you back on the map with nothing, full INT (v15.59).
 
 ## Suggested order (Claude)
 1. **The bugs** (all small; the PIER and LOST LOOT ones first, they're today's).

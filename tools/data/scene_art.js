@@ -2,7 +2,7 @@
 //   node tools/data/scene_art.js        rewrites the file from the saves listed in SOURCES
 // Each scene's art is the save's visible drawn layers (image tracing layers and hidden ones are skipped), by layer
 // name, at their canvas position. Which layers a scene shows, in what order and color: data/quests.js QUEST_SCENES.
-if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/data/scene_art.js   (rewrites dist/data/scene_art.js from the asXii saves in SOURCES)"); process.exit(0); }
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/data/scene_art.js [--check]   (rewrites dist/data/scene_art.js from the asXii saves in SOURCES)"); process.exit(0); }
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..', '..');
 const SOURCES = { disc: 'asxii_art/n_cutscene_01_v02.asxii.json', popshead: 'asxii_art/n_cutscene_01_pops_head.asxii.json',
@@ -31,5 +31,10 @@ for (const [key, file] of Object.entries(SOURCES)) {
   out.push('  } },');
 }
 out.push('};', '');
-fs.writeFileSync(path.join(ROOT, 'dist/data/scene_art.js'), out.join('\n'));
-console.log('data/scene_art.js: ' + Object.keys(SOURCES).join(', '));
+// --check: say whether it's up to date and write nothing (tools/test.js runs it so)
+const dest = path.join(ROOT, 'dist/data/scene_art.js'), text = out.join('\n'), same = fs.existsSync(dest) && fs.readFileSync(dest, 'utf8').replace(/\r\n/g, '\n') === text;
+if (process.argv.includes('--check')) { console.log('data/scene_art.js: ' + (same ? 'unchanged' : 'out of date: run node tools/data/scene_art.js')); process.exitCode = same ? 0 : 1; }
+else {
+  fs.writeFileSync(dest, text);
+  console.log('data/scene_art.js: ' + Object.keys(SOURCES).join(', '));
+}

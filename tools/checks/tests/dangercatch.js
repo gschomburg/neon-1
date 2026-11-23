@@ -1,4 +1,4 @@
-// tools/checks/tests/dangercatch.js: DANGEROUS CATCH (a chip, engine/fishing.js fishDanger, v15.56): PHISH sells for more
+// tools/checks/tests/dangercatch.js: DANGEROUS CATCH (a chip, engine/fishing.js fishDanger, v15.56; CHECKPOINT there v15.59): PHISH sells for more
 // with it on; a PHISH you land can bite (-1 INT); a bite at 0 INT ends the run at the pier, and that's FISH FOOD.
 // Run by tools/test.js (tools/checks/harness.js).
 module.exports = { name: 'dangercatch', body: `
@@ -31,6 +31,15 @@ module.exports = { name: 'dangercatch', body: `
   land();
   check(st.run.integrity === 2 && /bit you/.test(st.msg || ''), 'a bite: -1 INT (' + st.run.integrity + ', ' + st.msg + ')');
   st.fish.card = null;
+
+  // CHECKPOINT takes a bite at 1 INT: back on the map with nothing, full INT (Greg, 2026-11-23)
+  st.run.chips.push('CP0'); st.run.integrity = 1; st.run.credits = 50;
+  land();
+  for (let i = 0; i < 60 && st.mode !== 'map'; i++) await sleep(100);
+  check(!st.run.ended && st.mode === 'map' && st.run.integrity === st.run.maxInt && st.run.credits === 0 && st.run.checkpointUsed, 'CHECKPOINT at the pier: back on the map, broke, full INT (' + st.mode + ')');
+  await sleep(800);
+  await swapTo(() => openPier(Object.assign({}, node, { id: 'dg-pier2', type: 'pier' })));
+  await sleep(300);
 
   // a bite at 1 INT: the run ends at the pier, FISH FOOD
   const died0 = (save.stats && save.stats.diedFishing) || 0;

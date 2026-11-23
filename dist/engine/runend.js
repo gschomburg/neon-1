@@ -1,7 +1,7 @@
 // NeoN+1 engine/runend.js: the end of a run (die, endRun), the sector clear, and THE UPLINK between sectors.
 // Moved out of engine/run.js (2026-11-05).
 'use strict';
-NEON_FILES.push(['engine/runend.js', 'v15.58']);
+NEON_FILES.push(['engine/runend.js', 'v15.59']);
 
 async function die() {
   // CONTINUE?: once per corp, 10 seconds to pay and keep going. 100cr, +100 every time you use it.
@@ -35,6 +35,10 @@ async function die() {
   }
   if (run0 && deckCheckpoint(run0)) {   // CHECKPOINT (a chip): once a run, back with nothing but full INT (engine/deck.js)
     st.dieRun = null;
+    if (run0.diedPier) {   // (at the PIER: back on the map, broke)
+      run0.diedPier = false; st.fish = null; st.busy = false;
+      return swapTo(() => { toMap(); setMsg('> CHECKPOINT. you came back with nothing.', C.accent); });
+    }
     await wipeOut(0); showBoard('play'); resetTimer(); layerReady(st.lv);
     setMsg('> CHECKPOINT. you came back with nothing.', C.accent);
     return;

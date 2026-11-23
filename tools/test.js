@@ -25,6 +25,9 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
       const r = node(f, ['--check']);
       ok(r.ok && !/rewritten/.test(r.out), `${f}: ${last(r.out)}`);
     }
+    // the generators are up to date (their --check writes nothing), and the music view matches the game's music
+    for (const f of ['data/scene_art.js', 'data/quest_dialog.js']) { const r = node(f, ['--check']); ok(r.ok, `${f}: ${last(r.out)}`); }
+    { const r = node('checks/music_view_check.js'); ok(r.ok && /all match/.test(r.out), 'music_view_check.js: ' + last(r.out)); }
     // 2. the golden fingerprint
     const c = node('checks/check.js');
     ok(c.ok, 'check.js: ' + last(c.out));
@@ -34,7 +37,12 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
   const dir = path.join(__dirname, 'checks', 'tests');
   const tests = fs.readdirSync(dir).filter(f => f.endsWith('.js')).map(f => require(path.join(dir, f))).filter(t => !only.length || only.includes(t.name));
   for (const n of only) if (!tests.some(t => t.name === n)) ok(false, `tests/${n}: no test by that name`);   // (a typo ran nothing and said all good)
-  const results = await Promise.all(tests.map(t => H.runPage(H.testPage(H.GAME, H.wrapTest(t.body), { key: 'test-' + t.name }), { ms: 240000, query: t.query })));
+  // a pool of POOL pages at a time (all ~55 at once loaded the machine: slow, and the likely cause of flaky runs. Audit 2026-11-23)
+  const POOL = 6, results = [];
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(POOL, tests.length) }, async () => {
+    while (next < tests.length) { const i = next++, t = tests[i]; results[i] = await H.runPage(H.testPage(H.GAME, H.wrapTest(t.body), { key: 'test-' + t.name }), { ms: 240000, query: t.query }); }
+  }));
   tests.forEach((t, i) => {
     const r = results[i];
     if (r.error) return ok(false, `tests/${t.name}: ${r.error}`);

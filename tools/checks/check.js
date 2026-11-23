@@ -27,7 +27,11 @@ const DIR = path.join(__dirname, 'out');
 const NAMES = ['CONFIG', 'CORPS', 'FINAL', 'PUBLIC', 'CORP_TELL', 'CORP_ART', 'CODEX_CORPS', 'MODS', 'ITEMS', 'RARITY',
   'STAGES', 'MOD_STAGE', 'ANOMALIES', 'LEGACY', 'SONGS', 'MUSIC_FOR', 'SCALES', 'MOTIFS', 'GLYPHS',
   'NAME_A', 'NAME_B', 'NAME_C', 'HELP_PAGES', 'PALETTES', 'PLAYER_STYLES', 'LOCK_LABEL', 'TITLE', 'COVER', 'TITLE_NAME', 'TITLE_FACE_SPAN',
-  'START_NOTE', 'HIT_FX', 'END_FX', 'BOSS_GEAR', 'BOARD_FX', 'CIPHER_SYMS', 'RAINBOW', 'ZODIAC', 'LEX_WORDS'];
+  'START_NOTE', 'HIT_FX', 'END_FX', 'BOSS_GEAR', 'BOARD_FX', 'CIPHER_SYMS', 'RAINBOW', 'ZODIAC', 'LEX_WORDS',
+  // added 2026-11-23 (the second audit: the deck, feats, quests and the economy weren't covered)
+  'DECK_CHIPS', 'DECK_GROUPS', 'DECK_SOCKETS', 'DECK_JACKS', 'DECK_INT', 'DECK_CHARGES', 'DECK_CELL', 'DECK_HEAT_REP', 'DECK_KITS',
+  'DECK_NO_DROP', 'DECK_RIPPED', 'FEATS', 'QUEST_INFO', 'QUEST_LINES', 'HACKERS', 'SECTOR_EVENTS', 'ECON', 'BENCH', 'TUT_COPY',
+  'PETS', 'ADS', 'FX_LOOKS', 'BTUT', 'DTUT'];
 function load(file) {
   const g = require('./harness.js').loadGame(file, { hook: `window.__check = { genLayer, genMap, pickCorps, corpPlan, layerSpec, ${NAMES.join(', ')} };` });
   const G = g.window.__check;

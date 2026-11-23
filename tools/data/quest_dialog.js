@@ -1,7 +1,7 @@
 // Writes docs/QUEST_DIALOG.md: every quest's calls and scenes from dist/data/quests.js, as a script to read.
 // The words live in dist/data/quests.js: edit them there, then run: node tools/data/quest_dialog.js
 'use strict';
-if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/data/quest_dialog.js   (rewrites docs/QUEST_DIALOG.md from dist/data/quests.js)"); process.exit(0); }
+if (['-h', '--help'].includes(process.argv[2])) { console.log("usage: node tools/data/quest_dialog.js [--check]   (rewrites docs/QUEST_DIALOG.md from dist/data/quests.js)"); process.exit(0); }
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.join(__dirname, '..', '..');
 const src = fs.readFileSync(path.join(ROOT, 'dist/data/quests.js'), 'utf8');
@@ -77,5 +77,10 @@ for (const [id, q] of Object.entries(QUEST_INFO)) {
     P('');
   }
 }
-fs.writeFileSync(path.join(ROOT, 'docs/QUEST_DIALOG.md'), out.join('\n'));
-console.log('docs/QUEST_DIALOG.md written.');
+// --check: say whether it's up to date and write nothing (tools/test.js runs it so)
+const dest = path.join(ROOT, 'docs/QUEST_DIALOG.md'), text = out.join('\n'), same = fs.existsSync(dest) && fs.readFileSync(dest, 'utf8').replace(/\r\n/g, '\n') === text;
+if (process.argv.includes('--check')) { console.log('docs/QUEST_DIALOG.md: ' + (same ? 'unchanged' : 'out of date: run node tools/data/quest_dialog.js')); process.exitCode = same ? 0 : 1; }
+else {
+  fs.writeFileSync(dest, text);
+  console.log('docs/QUEST_DIALOG.md written.');
+}

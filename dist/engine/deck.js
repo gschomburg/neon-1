@@ -5,7 +5,7 @@
 // The board art: SCENE_ART.deck (asxii_art/deck_board_v06, copied in by tools/data/scene_art.js). The socket and part
 // spots below are read off that art: move them when the art moves.
 'use strict';
-NEON_FILES.push(['engine/deck.js', 'v15.58']);
+NEON_FILES.push(['engine/deck.js', 'v15.59']);
 
 // ---------- data: the first chip set (docs/DECK.md "The first chip set", Greg 2026-11-16) ----------
 // groups: [name, palette color key (only GLYPH's is used now: deckGroupCol), what it's for]. Not danger: red is a chip
@@ -851,7 +851,7 @@ function deckQuestChip(key, why) {
 }
 // CHECKPOINT (engine/runend.js die): once a run, back with nothing but full INT. Returns true if it took the death.
 function deckCheckpoint(run) {
-  if (!chipOn('CP0', run) || run.checkpointUsed || !st.lv || st.mp) return false;
+  if (!chipOn('CP0', run) || run.checkpointUsed || !(st.lv || run.diedPier) || st.mp) return false;   // (a bite at the PIER too: Greg, 2026-11-23)
   run.checkpointUsed = true;
   for (const k of run.mods.slice()) removeMod(k);
   run.items = []; run.credits = 0; run.integrity = run.maxInt;

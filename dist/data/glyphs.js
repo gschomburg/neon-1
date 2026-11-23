@@ -1,6 +1,6 @@
 // NeoN+1 data/glyphs.js: Node glyphs (the ASCII art on nodes) and their helpers.
 'use strict';
-NEON_FILES.push(['data/glyphs.js', 'v15.58']);
+NEON_FILES.push(['data/glyphs.js', 'v15.59']);
 
 // ---------------- Glyphs ----------------
 // The art, names and lore are in data/art/glyphs.js (ART_GLYPHS), edited in the neon editor.
