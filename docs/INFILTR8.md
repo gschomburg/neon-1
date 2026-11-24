@@ -357,6 +357,8 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   - EMP: a wave of noise rolling out, the CAMs flickering out one after another.
   - A CAM's alert: its cone flashes, a `!` pops and fades.
   - Down a vent: the floor above dissolves into noise as the pipes come in (the game's decrypt).
+  - THE BELT (Greg, 2026-11-24): animate it a bit, so it reads as moving (the marks were made plain and still: `>`
+    `<` `v` `^`). Crates sliding a cell over the turn, not jumping; the press `X` thumping down as a crate's crushed.
 
 ### The floor generator: procedural, with checks (Claude's take, 2026-11-23)
 - Hand-picking seeds doesn't last: a seed only means something to the generator that made it. Change the generator
