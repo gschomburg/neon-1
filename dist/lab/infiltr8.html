@@ -200,30 +200,44 @@ function floorRing() {
 // size; a room in each piece, filling most of it. So rooms spread over the whole floor (no big empty patches), and
 // their sizes vary with their pieces. Each cut also says which rooms are neighbours: links joins the nearest pair across
 // it (the halls follow those, so it all joins up; a piece left empty just has no link).
+// A floor's ORDER (Greg, 2026-11-23: these are office buildings, they want a little structure; but not every floor,
+// or they get dull and lose their corners): 0-1, from the seed. It's the chance, each time, that
+//   - a room fills its piece's full height (or width), so it lines up with the room beside it (bspRooms),
+//   - a cut reuses the line its sibling was cut at, so rows run across the floor (bspRooms),
+//   - two rooms that overlap get doors that face each other, a straight hall between (hall).
+// [share of floors (cumulative), order]: about 3 in 10 orderly, half mixed, 1 in 5 messy (as before).
+const ORDER = { orderly: [0.3, 0.9], mixed: [0.8, 0.5], messy: [1, 0.1] };
 const BSP = {
   minW: 10, minH: 7,     // the smallest piece: a 7 x 5 room, and a gap round it for halls (a cell of gap on each side)
   stopArea: 190,         // a piece this small (in cells) may stop being cut: bigger rooms, fewer of them
   stopChance: 0.45,
   emptyChance: 0,        // a piece left empty now and then (0.08 left big holes: empty 9x6 patches went 0.2 -> 1.8 a floor)
 };
-function bspRooms(r) {
+function bspRooms(r, order = 0) {
   const ri = (a, b) => a + Math.floor(r() * (b - a + 1)), rooms = [], links = [];
   const near = (A, B) => { let best = null, bd = 1e9; for (const a of A) for (const b of B) { const d = Math.hypot(a.cx - b.cx, (a.cy - b.cy) * 2); if (d < bd) { bd = d; best = [a, b]; } } return best; };
-  function cut(x, y, w, h, depth) {
+  function cut(x, y, w, h, depth, share = {}) {   // (share: what this piece's sibling did, to copy)
     const canV = w >= BSP.minW * 2, canH = h >= BSP.minH * 2;
     if ((!canV && !canH) || (depth >= 2 && w * h <= BSP.stopArea && r() < BSP.stopChance)) {
       if (depth >= 2 && r() < BSP.emptyChance) return [];
       // the room: most of the piece, a cell of gap inside its edges
-      const rw = ri(Math.max(7, Math.floor((w - 2) * 0.6)), w - 2), rh = ri(Math.max(5, Math.floor((h - 2) * 0.6)), h - 2);
-      const rx = x + 1 + ri(0, w - 2 - rw), ry = y + 1 + ri(0, h - 2 - rh);
+      let rw = ri(Math.max(7, Math.floor((w - 2) * 0.6)), w - 2), rh = ri(Math.max(5, Math.floor((h - 2) * 0.6)), h - 2);
+      let rx = x + 1 + ri(0, w - 2 - rw), ry = y + 1 + ri(0, h - 2 - rh);
+      // order: the full height of the piece (it lines up with the room beside it), sometimes the full width too
+      if (r() < order) { ry = y + 1; rh = h - 2; }
+      if (r() < order * 0.6) { rx = x + 1; rw = w - 2; }
       const o = { x: rx, y: ry, w: rw, h: rh, cx: rx + Math.floor(rw / 2), cy: ry + Math.floor(rh / 2), piece: { x, y, w, h } };
       rooms.push(o); return [o];
     }
     // cut across the longer side as it looks (a cell is about twice as tall as wide)
     const vert = canV && (!canH || (w * CHAR_W > h * LINE_H ? r() < 0.8 : r() < 0.2));
     let A, B;
-    if (vert) { const k = ri(BSP.minW, w - BSP.minW); A = cut(x, y, k, h, depth + 1); B = cut(x + k, y, w - k, h, depth + 1); }
-    else { const k = ri(BSP.minH, h - BSP.minH); A = cut(x, y, w, k, depth + 1); B = cut(x, y + k, w, h - k, depth + 1); }
+    // order: cut at the line the sibling piece was cut at (same way, same place), so the rows run on across
+    const same = share.vert === vert && share.at != null && r() < order, kids = {};
+    if (vert) { let k = same ? share.at - x : ri(BSP.minW, w - BSP.minW); if (k < BSP.minW || k > w - BSP.minW) k = ri(BSP.minW, w - BSP.minW);
+      share.vert = true; share.at = x + k; A = cut(x, y, k, h, depth + 1, kids); B = cut(x + k, y, w - k, h, depth + 1, kids); }
+    else { let k = same ? share.at - y : ri(BSP.minH, h - BSP.minH); if (k < BSP.minH || k > h - BSP.minH) k = ri(BSP.minH, h - BSP.minH);
+      share.vert = false; share.at = y + k; A = cut(x, y, w, k, depth + 1, kids); B = cut(x, y + k, w, h - k, depth + 1, kids); }
     if (A.length && B.length) links.push(near(A, B));
     return A.concat(B);
   }
@@ -233,7 +247,9 @@ function bspRooms(r) {
 function floorGen(seed, n, last) {
   const r = rngFrom(hashStr(seed + ':' + n)), ri = (a, b) => a + Math.floor(r() * (b - a + 1));
   for (let tries = 0; tries < 40; tries++) {
-    const f = newFloor(last ? 'THE VAULT' : 'THE STACKS'), { rooms, links } = bspRooms(r);
+    const f = newFloor(last ? 'THE VAULT' : 'THE STACKS'), st = r();
+    f.order = st < ORDER.orderly[0] ? ORDER.orderly[1] : st < ORDER.mixed[0] ? ORDER.mixed[1] : ORDER.messy[1];
+    const { rooms, links } = bspRooms(r, f.order);
     if (rooms.length < 5) continue;
     rooms.forEach(o => room(f, o.x, o.y, o.w, o.h));
     rooms.sort((a, b) => a.cx - b.cx || a.cy - b.cy);   // (rooms[0], the leftmost, gets the stairs up)
@@ -287,7 +303,16 @@ function floorGen(seed, n, last) {
 // A hall from a to b: a door on the side of each room that faces the other (not by a corner), and between them a path
 // through the empty space (and halls already there): it goes round rooms, likes straight runs, and keeps off walls.
 function hall(f, a, b, r, halls) {
-  const da = doorOn(f, a, b, r, halls), db = doorOn(f, b, a, r, halls);
+  // order: two rooms side by side (or one over the other) that overlap get their doors on the same row (column),
+  // facing, so the hall runs straight from one to the other
+  let wa = null, wb = null;
+  if (r() < (f.order || 0)) {
+    const lo = (p, q) => Math.max(p, q), span = (o, ax) => ax === 'y' ? [o.y + 2, o.y + o.h - 3] : [o.x + 2, o.x + o.w - 3];
+    const side = a.x + a.w <= b.x ? ['e', 'w', 'y'] : b.x + b.w <= a.x ? ['w', 'e', 'y'] : a.y + a.h <= b.y ? ['s', 'n', 'x'] : b.y + b.h <= a.y ? ['n', 's', 'x'] : null;
+    if (side) { const [p0, p1] = span(a, side[2]), [q0, q1] = span(b, side[2]), m0 = lo(p0, q0), m1 = Math.min(p1, q1);
+      if (m0 <= m1) { const at0 = m0 + Math.floor(r() * (m1 - m0 + 1)); wa = { side: side[0], at: at0 }; wb = { side: side[1], at: at0 }; } }
+  }
+  let da = doorOn(f, a, b, r, halls, wa), db = doorOn(f, b, a, r, halls, wb);
   if (!da || !db) return false;
   const path = routeHall(f, da, db, halls);
   if (!path) return false;
@@ -295,14 +320,16 @@ function hall(f, a, b, r, halls) {
   for (const [x, y] of path) { set(f, x, y, '.'); halls.add(x + ',' + y); }
   return true;
 }
-function doorOn(f, o, to, r, halls) {
+function doorOn(f, o, to, r, halls, want) {   // (want: { side, at }: that side, at that row or column, if it can)
   const dx = to.cx - o.cx, dy = to.cy - o.cy, horiz = Math.abs(dx) > Math.abs(dy) * 1.5;
   const sides = horiz ? [dx > 0 ? 'e' : 'w', dy > 0 ? 's' : 'n'] : [dy > 0 ? 's' : 'n', dx > 0 ? 'e' : 'w'];
+  if (want) sides.unshift(want.side);
   const free = (x, y) => at(f, x, y) === ' ' || halls.has(x + ',' + y);
   for (const sd of sides) {
     const opts = [];
     if (sd === 'n' || sd === 's') { const y = sd === 'n' ? o.y : o.y + o.h - 1, oy = sd === 'n' ? y - 1 : y + 1; for (let x = o.x + 2; x <= o.x + o.w - 3; x++) if (free(x, oy) && at(f, x, y + (sd === 'n' ? 1 : -1)) === '.') opts.push({ x, y, ox: x, oy, door: at(f, x, y) === '+' }); }
     else { const x = sd === 'w' ? o.x : o.x + o.w - 1, ox = sd === 'w' ? x - 1 : x + 1; for (let y = o.y + 2; y <= o.y + o.h - 3; y++) if (free(ox, y) && at(f, x + (sd === 'w' ? 1 : -1), y) === '.') opts.push({ x, y, ox, oy: y, door: at(f, x, y) === '+' }); }
+    if (want && sd === want.side && !want.tried) { want.tried = true; const hit = opts.find(p => (sd === 'n' || sd === 's' ? p.x : p.y) === want.at); if (hit) return hit; continue; }   // (no door there: on as usual)
     const old = opts.filter(p => p.door);   // a door already on that side: share it
     if (old.length) return old[0];
     if (opts.length) return opts[Math.floor(r() * opts.length)];
@@ -964,7 +991,8 @@ function viewerShow() {
   const w = stage.clientWidth - 2 * 46 - 12, h = stage.clientHeight - 12;
   drawFloorCard($('v-cvs'), fl, Math.max(6, Math.min(w / (MW * CHAR_W), h / (MH * LINE_H))));
   $('v-cap').innerHTML = (V.i + 1) + ' · <b>' + seed + '</b> · rooms ' + fl.rooms.length + ' · cams ' + fl.cams.length + ' · patrols ' + fl.pats.length +
-    ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0);
+    ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0) +
+    ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
   $('v-prev').disabled = V.i === 0;
 }
 function openViewer() { if (!V.seeds.length) V.seeds.push(newSeed()); $('viewer').hidden = false; viewerShow(); }
@@ -988,7 +1016,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { openViewer, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

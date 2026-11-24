@@ -357,6 +357,12 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   what goes wrong. Each problem becomes a **check** the generator runs, and a floor that fails is thrown out and
   made again ("every room reachable", "no CAM sees the stairs", "the payload room has cover").
 - Fixed layouts are for special floors only (a story floor, a boss floor), saved as data, like THE RING.
+- **Rooms by BSP** (binary space partitioning, built 2026-11-23): the floor cut in two, each half again, a room in each
+  piece. Rooms spread over the whole floor; halls join neighbours.
+- **Order** (Greg, 2026-11-23): these are office buildings, so floors want some structure, but not every floor, or
+  they get dull and lose their corners. Each floor gets an order from its seed (about 3 in 10 orderly, half mixed, 1 in
+  5 messy). Order is the chance that rooms side by side line up (same top and bottom walls), that rows of cuts line
+  up across the floor, and that two neighbours' doors face each other with a straight hall between.
 - The plan: the viewer; even room placement (BSP); things placed with purpose (CAMs on doors and the payload,
   patrols between the rooms that matter); then room types (terminals, THE CUBICLES, THE SERVER FARM, THE WAREHOUSE).
 
