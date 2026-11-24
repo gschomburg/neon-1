@@ -208,7 +208,10 @@ const T = {
   '>': { walk: 1, see: 1 }, 'E': { walk: 1, see: 1 }, 'F': { walk: 1, see: 1 }, 'K': { walk: 1, see: 1 }, 'p': { walk: 0, see: 0 },
   'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 }, 'g': { walk: 1, see: 1, hide: 1 }, '=': { walk: 0, see: 1, low: 1 }, '"': { walk: 1, see: 1, hide: 1 }, 'b': { walk: 1, see: 1 }, 'x': { walk: 0, see: 0 },
   'T': { walk: 0, see: 0, station: 1 },   // (a terminal's set in a wall: blocks sight as one)
-  'L': { walk: 0, see: 1, station: 1 }, 'R': { walk: 0, see: 1, station: 1 }, 'B': { walk: 0, see: 1, station: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
+  'L': { walk: 0, see: 1, station: 1 }, 'R': { walk: 0, see: 1, station: 1 }, 'B': { walk: 0, see: 1, station: 1 },
+  // (the set pieces' things, 2026-11-24: a vending machine and a coffee machine (THE BREAK ROOM), a sticky note (the
+  // CAPTCHA DOOR's answer), junk (THE TRASH: low cover), the hoverpad (THE ROOF: stand on it))
+  'V': { walk: 0, see: 0, station: 1 }, 'C': { walk: 0, see: 1, station: 1 }, 'N': { walk: 0, see: 1, station: 1 }, 'j': { walk: 0, see: 1, low: 1 }, 'H': { walk: 1, see: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
 };
 const WALLISH = '#+EFT';   // what joins up into box-drawn walls (a terminal's in a wall now; the chute, K, sits on a room's floor: not a wall. Greg, H3SDQ4)
 const INFO = {
@@ -220,6 +223,8 @@ const INFO = {
   '"': ['PLANT BEDS', 'step in: hidden unless right by you.'],
   'T': ['A TERMINAL', 'USE beside it: one thing it can do.'], 'L': ['A LOOT CACHE', 'USE beside it: something to carry out.'],
   'R': ['A RE-UP', 'USE beside it: INT, or a piece of gear.'], 'B': ['A BAG SWAP', 'USE beside it: trade your gear for a bag.'],
+  'V': ['A VENDING MACHINE', 'USE beside it: trade loot CR for gear.'], 'C': ['A COFFEE MACHINE', 'USE beside it: +1 INT. loud: +1 ALERT.'],
+  'N': ['A STICKY NOTE', 'someone wrote a password on it.'], 'j': ['JUNK', 'deleted files, piled up. low cover.'], 'H': ['THE HOVERPAD', 'stand on it, USE: call the hover. then hold out.'],
   'b': ['THE BELT', 'it carries you. off before the X.'], 'x': ['A CRATE', 'on the belt. nothing sees through.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
 };
 
@@ -361,6 +366,8 @@ const ROOM_TYPES = {   // what a type is called (the viewer's labels, a tap's in
   lab: ['THE LAB', 'benches: low cover.'],
   atrium: ['THE ATRIUM', 'plant beds: step in to hide.'],
   warehouse: ['THE WAREHOUSE', 'a belt of crates. ride it.'],
+  breakroom: ['THE BREAK ROOM', 'vending and coffee. the coffee\'s loud.'],
+  ceo: ['THE CEO\'S OFFICE', 'the best loot on the floor. watched.'],
 };
 function roomDoors(f, o) { const out = [], seen = new Set(); for (const [x, y] of o.cells) for (const [i, j] of D4) { const k = (x + i) + ',' + (y + j); if (at(f, x + i, y + j) === '+' && !seen.has(k)) { seen.add(k); out.push({ x: x + i, y: y + j }); } } return out; }
 function roomRoles(f, rooms, first, far) {
@@ -522,6 +529,51 @@ function lab(f, rooms, r, p = 0.5) {
   o.type = 'lab';
   const all8 = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j))) return false; return true; };
   for (let y = y0 + 1; y < o.y + o.h - 2; y += 3) for (let x = x0 + 1; x < o.x + o.w - 2; x++) if ((x - x0 - 1) % 5 < 3 && all8(x, y) && at(f, x, y) === '.') { set(f, x, y, '='); if (!roomJoined(f, o)) set(f, x, y, '.'); }
+}
+// a station against a room's wall (not by a door, not shutting the room off): for the set-piece rooms. f.stations.
+function wallStation(f, o, kind, r, extra = {}) {
+  const opts = shuffled(o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKvTLRBVCN'.includes(at(f, x + i, y + j)))), r);
+  for (const [x, y] of opts) { set(f, x, y, kind); if (roomJoined(f, o)) { (f.stations = f.stations || new Map()).set(x + ',' + y, Object.assign({ kind, used: false }, extra)); return [x, y]; } set(f, x, y, '.'); }
+  return null;
+}
+// THE BREAK ROOM (Greg, 2026-11-24): a mid-size room off the way (a side room if it can be): a VENDING machine (trade
+// loot CR for gear, as often as you can pay) and a COFFEE machine (+1 INT, but loud: +1 ALERT), a table in the middle.
+// About 1 floor in 3 (B.breakroom).
+function breakRoom(f, rooms, r, p = 0.35) {
+  const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && o.role !== 'closet' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 7 && o.w <= 14 && o.h >= 5 && o.h <= 9);
+  if (!opts.length || r() > p) return;
+  const sides = opts.filter(o => o.role === 'side'), o = (sides.length ? sides : opts)[Math.floor(r() * (sides.length ? sides : opts).length)];
+  o.type = 'breakroom';
+  const { x, y } = o.mid;
+  for (const dx of [-1, 0, 1]) if (o.set.has((x + dx) + ',' + y) && at(f, x + dx, y) === '.' && D4.every(([i, j]) => o.set.has((x + dx + i) + ',' + (y + j)))) { set(f, x + dx, y, '='); if (!roomJoined(f, o)) set(f, x + dx, y, '.'); }
+  wallStation(f, o, 'V', r); wallStation(f, o, 'C', r);
+}
+// THE CEO'S OFFICE (Greg, 2026-11-24): a side room (one door), the best loot cache (rich finds), a big desk, a plant;
+// a CAM inside, watching it (placed with the others: ceoCam). About 1 floor in 4 (B.ceo).
+const CEO_FINDS = [['THE CEO\'S BONUS', 140], ['MERGER PLANS', 120], ['A GOLD CREDSTICK', 110], ['BOARD MINUTES', 95], ['THE SLUSH FUND', 160], ['A PRIVATE KEY', 130]];
+function ceoOffice(f, rooms, r, p = 0.25) {
+  // (a side room, one door, if there's one big enough; else a room with 2 doors: side rooms that size were rare)
+  // (an office, not a hall: 140 cells at most, and no belt through it)
+  const fit = o => !o.type && o.role !== 'start' && o.role !== 'goal' && o.role !== 'closet' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 7 && o.h >= 5 && o.w * o.h <= 140
+    && !o.cells.some(([x, y]) => f.beltAt && f.beltAt.has(x + ',' + y));
+  const sides = rooms.filter(o => fit(o) && o.role === 'side'), opts = sides.length ? sides : rooms.filter(o => fit(o) && o.doors.length <= 2);
+  if (!opts.length || r() > p) return;
+  const o = opts.sort((a, b) => b.w * b.h - a.w * a.h)[0];
+  o.type = 'ceo';
+  const { x, y } = o.mid;
+  for (const dx of [-1, 0, 1]) if (at(f, x + dx, y) === '.' && D4.every(([i, j]) => o.set.has((x + dx + i) + ',' + (y + j)))) { set(f, x + dx, y, 'd'); if (!roomJoined(f, o)) set(f, x + dx, y, '.'); }
+  wallStation(f, o, 'L', r, { rich: true });
+  const corner = o.cells.find(([cx, cy]) => at(f, cx, cy) === '.' && D4.filter(([i, j]) => !o.set.has((cx + i) + ',' + (cy + j))).length === 2 && !D4.some(([i, j]) => at(f, cx + i, cy + j) === '+'));
+  if (corner) { set(f, corner[0], corner[1], 'g'); if (!roomJoined(f, o)) set(f, corner[0], corner[1], '.'); }
+}
+// the CEO's office's CAM: on its wall, facing in (after the other CAMs: they're placed again on each go)
+function ceoCam(f, rooms) {
+  const o = rooms.find(q => q.type === 'ceo'); if (!o) return;
+  const walls = [];
+  for (const [x, y] of o.cells) for (const [i, j] of D4) { const wx = x + i, wy = y + j; if (at(f, wx, wy) === '#' && !D4.some(([a, b]) => at(f, wx + a, wy + b) === '+') && !f.cams.some(c => c.x === wx && c.y === wy)) walls.push([wx, wy]); }
+  if (!walls.length) return;
+  const [wx, wy] = walls.sort((a, b) => Math.hypot(b[0] - o.mid.x, (b[1] - o.mid.y) * 2) - Math.hypot(a[0] - o.mid.x, (a[1] - o.mid.y) * 2))[0];   // (the far wall: it sees the whole room)
+  f.cams.push(cam(f, wx, wy, Math.atan2((o.mid.y - wy) * 2, o.mid.x - wx)));
 }
 // THE ATRIUM: a room (a hub if there is one) with a plant bed in each corner, a cell in from the walls (2 or 3 wide, 2
 // deep), and a statue in the middle. Beds you walk into: in one, CAMs and patrols see you only from right next to you.
@@ -688,7 +740,7 @@ function decor(f, rooms, r, B = { plants: 0.18, statue: 0.5 }) {
 // LIGHT, by room: the busy rooms are lit (a server farm, the vault, a lab, the cubicles, a factory, a warehouse, an
 // atrium), a restroom half the time, a plain room by the building's odds; halls and closets dark. f.lit: the lit
 // rooms' floor and the walls round it.
-const LIT_TYPES = { servers: 1, vault: 1, lab: 1, cubicles: 1, factory: 1, warehouse: 1, atrium: 1, restroom: 0.5 };
+const LIT_TYPES = { servers: 1, vault: 1, lab: 1, cubicles: 1, factory: 1, warehouse: 1, atrium: 1, restroom: 0.5, breakroom: 1, ceo: 1 };
 function lightRooms(f, rooms, r, p = 0.5) {
   f.lit = new Set();
   for (const o of rooms) {
@@ -703,7 +755,7 @@ function lightRooms(f, rooms, r, p = 0.5) {
 // spot they like (a cache, a re-up or a bag most of all); else a room's floor against its wall, never by a door, never
 // shutting part of the room off. f.stations: cell -> { kind, used }.
 function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) {
-  f.stations = new Map();
+  f.stations = f.stations || new Map();   // (a set-piece room may have put its own in already)
   const kinds = [];
   for (let k = 0, n = st.T[0] + Math.floor(r() * (st.T[1] - st.T[0] + 1)); k < n; k++) kinds.push('T');
   for (const k of ['L', 'L2', 'R', 'B']) if (st[k] && r() < st[k]) kinds.push(k === 'L2' ? 'L' : k);
@@ -721,7 +773,7 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
           const x = cx + dx, y = cy + dy, px = dy ? 1 : 0, py = dx ? 1 : 0;
           if (at(f, cx, cy) !== '.' || at(f, x, y) !== '#' || at(f, x + px, y + py) !== '#' || at(f, x - px, y - py) !== '#') continue;
           if (T[at(f, x + dx, y + dy)].walk || f.halls.has((x + dx) + ',' + (y + dy))) continue;
-          if (D4.some(([i, j]) => '+EFTLRB'.includes(at(f, x + i, y + j)) || '+EF'.includes(at(f, x + px * 2 * i, y + py * 2 * i)))) continue;
+          if (D4.some(([i, j]) => '+EFTLRBVCN'.includes(at(f, x + i, y + j)) || '+EF'.includes(at(f, x + px * 2 * i, y + py * 2 * i)))) continue;
           opts.push([x, y]);
         }
         if (!opts.length) continue;
@@ -737,7 +789,7 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
     }
     for (let t = 0; t < 40 && !placed; t++) {
       const o = plain[Math.floor(r() * plain.length)];
-      const opts = o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKvTLRB'.includes(at(f, x + i, y + j)) || (f.beltAt && f.beltAt.has((x + i) + ',' + (y + j)))));
+      const opts = o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKvTLRBVCN'.includes(at(f, x + i, y + j)) || (f.beltAt && f.beltAt.has((x + i) + ',' + (y + j)))));
       if (!opts.length) continue;
       const [x, y] = opts[Math.floor(r() * opts.length)];
       set(f, x, y, kind);
@@ -747,6 +799,8 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
   }
 }
 // what each does: its popup's title, a line, and its choices (each: a label, and what happens). Choosing spends it.
+const VEND_COST = 30;
+const crLeft = () => (S.loot || []).reduce((t, [, v]) => t + v, 0) - (S.spent || 0);   // (loot's CR, less what VENDING took)
 const LOOT_FINDS = [['A CREDSTICK', 40], ['PAYROLL DATA', 60], ['A KEYCARD DUMP', 30], ['SOURCE CODE', 70], ['PASSWORDS', 35], ['A PROTOTYPE', 80], ['CUSTOMER LISTS', 45], ['A SERVER KEY', 55]];
 // ---------- gear, passives and loadouts: in the game's shapes, so they port over (Greg, 2026-11-24) ----------
 // INF_ITEMS: data/mods.js ITEMS's shape (key, name, rarity, desc, tip; codex later), plus the item's numbers on its
@@ -900,7 +954,12 @@ function stationMenu(kind, f, key) {
     const list = pass('IPF') ? can : st.cmds.filter(k => can.includes(k)).slice(0, TERM_OFFER);
     return { title: 'TERMINAL', line: 'one thing, then it locks you out.' + (pass('IPF') ? ' ROOTKIT: every command.' : ''), opts: list.map(k => { const c = TERM_CMDS[k]; return [typeof c.name === 'function' ? c.name() : c.name, typeof c.note === 'function' ? c.note() : c.note, () => c.run(f)]; }) };
   }
-  if (kind === 'L') { const st = f.stations.get(key), pick = st.finds || (st.finds = shuffled(LOOT_FINDS, f.beltR).slice(0, 2));
+  // THE BREAK ROOM's machines. VENDING: your loot's CR for +1 of a gear you carry (CR_LEFT), again and again (keep: not
+  // spent). COFFEE: +1 INT, but loud (+1 ALERT).
+  if (kind === 'V') return { title: 'VENDING', line: 'you have ' + crLeft() + ' CR of loot to spend. ' + VEND_COST + ' CR a go.', keep: true, opts: S.gear.map(({ key: k }) => ['+1 ' + INF_ITEMS[k].name, INF_ITEMS[k].tip + '. you have ' + S.gear.find(g => g.key === k).n + '.',
+    () => { if (crLeft() < VEND_COST) return say('not enough CR. (loot buys it)', C.mid); S.spent = (S.spent || 0) + VEND_COST; S.gear.find(g => g.key === k).n++; say('VENDING: +1 ' + INF_ITEMS[k].name + '. -' + VEND_COST + ' CR.', C.money); }]) };
+  if (kind === 'C') return { title: 'COFFEE', line: 'it\'s an old machine. it makes a racket.', opts: [['DRINK', '+1 INT. loud: +1 ALERT.', () => { S.int = Math.min(MAX_INT, S.int + 1); heatUp(f, 'the coffee machine hisses. +1 INT.'); }]] };
+  if (kind === 'L') { const st = f.stations.get(key), pick = st.finds || (st.finds = shuffled(st.rich ? CEO_FINDS : LOOT_FINDS, f.beltR).slice(0, 2));
     return { title: 'LOOT CACHE', line: 'room for one of them.', opts: pick.map(([n, v]) => [n, v + ' CR', () => { (S.loot = S.loot || []).push([n, v]); say('you take ' + n.toLowerCase() + ': ' + v + ' CR.', C.money); }]) }; }
   if (kind === 'R') return { title: 'RE-UP', line: 'one of these.', opts: [
     ['+1 INT', 'INT ' + S.int + '/' + MAX_INT, () => { S.int = Math.min(MAX_INT, S.int + 1); say('RE-UP: +1 INT.', C.green); }],
@@ -955,9 +1014,12 @@ function closeLoadouts(k) {
   say(kitName() + ': ' + kitLine(), C.rep); draw();
 }
 // the station next to you (not spent), if any
-function stationBeside(f) {
-  for (const [i, j] of D4) { const k = (S.x + i) + ',' + (S.y + j), st = f.stations && f.stations.get(k); if (st && !st.used) return { key: k, st }; }
-  return null;
+function stationBeside(f) { return stationsBeside(f)[0] || null; }
+// every one beside you (ACTIONS lists each: a VENDING machine and a COFFEE machine side by side, say)
+function stationsBeside(f) {
+  const out = [];
+  for (const [i, j] of D4) { const k = (S.x + i) + ',' + (S.y + j), st = f.stations && f.stations.get(k); if (st && !st.used) out.push({ key: k, st }); }
+  return out;
 }
 function openStation(f, key, st) { S.popup = Object.assign(stationMenu(st.kind, f, key), { key, kind: st.kind }); draw(); }
 function chooseStation(i) {
@@ -967,6 +1029,7 @@ function chooseStation(i) {
   // ROOT: a terminal gives more picks (the same turn's worth: one tick for all of them)
   p.n = (p.n || 0) + 1;
   if (p.kind === 'T' && pass('IP2') && p.n < pass('IP2').picks) { f.stations.get(p.key).used = true; p.opts.splice(i, 1); p.line = 'ROOT: one more.'; look(); return draw(); }
+  if (p.keep) { S.popup = null; tick(); look(); return draw(); }   // (VENDING: not spent; each go a turn)
   f.stations.get(p.key).used = true; S.popup = null; tick(); look(); draw();
 }
 // can a CAM at (x, y) facing a see (tx, ty) as it sweeps (its cone plus its sweep: 90 degrees either way)?
@@ -1126,7 +1189,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
     for (const [fill, p] of shuffled([[serverFarm, B.servers], [cubicles, B.cubicles], [factory, B.factory], [lab, B.lab || 0], [atrium, B.atrium || 0], [warehouse, B.warehouse || 0]], r)) fill(f, rooms, r, p);
     lab(f, rooms, r, B.lab2 || 0);   // (a LAB building's second)
     serverFarm(f, rooms, r, B.servers2 || 0, 8, 6); serverFarm(f, rooms, r, B.servers3 || 0, 8, 6);   // (a data center's second and third)
-    restroom(f, rooms, r, B.restroom); decor(f, rooms, r, B);
+    restroom(f, rooms, r, B.restroom); breakRoom(f, rooms, r, B.breakroom ?? 0.35); ceoOffice(f, rooms, r, B.ceo ?? 0.25); decor(f, rooms, r, B);
     // pillars in the big rooms (not in a room with a type: it has its own things)
     // (only where the room's floor is all round it: a pillar never closes a gap or a corner; and never one that, with a
     // plant already in the corner, shuts a cell in: R75 F2)
@@ -1154,7 +1217,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
       placePats(f, rooms, r, last ? 2 : 1, first, spot);
       if (watched(f, way)) break;
     }
-    placeGuard(f, rooms, r, way, first);
+    placeGuard(f, rooms, r, way, first); ceoCam(f, rooms);
     f.rooms = rooms; f.roomOf = new Map(); for (const o of rooms) for (const [x, y] of o.cells) f.roomOf.set(x + ',' + y, o);
     return f;
   }
@@ -1660,7 +1723,7 @@ function use() {
 // [label, note, do it, short label]: what you stand on (stairs, a way out, a vent), a station or an open door beside
 // you, a PEEK each way there's an edge to lean round (peekDirs, worked out in look()), a CAM or the SCANNER beside you
 // to wreck (SABOTEUR). One: the button is that thing. More: it opens a menu of them (a plain popup).
-const STATION_NAME = { T: 'TERMINAL', L: 'LOOT CACHE', R: 'RE-UP', B: 'BAG SWAP' };
+const STATION_NAME = { T: 'TERMINAL', L: 'LOOT CACHE', R: 'RE-UP', B: 'BAG SWAP', V: 'VENDING', C: 'COFFEE' };
 const ARROW = (dx, dy) => dx > 0 ? '►' : dx < 0 ? '◄' : dy > 0 ? '▼' : '▲';
 function actions() {
   if (!S || S.over) return [];
@@ -1669,7 +1732,7 @@ function actions() {
   if (S.inDuct) return out;
   const tile = { '>': ['DOWN', 'the stairs down'], '<': ['UP', 'the stairs up'], E: ['LEAVE', 'out the way you came'], F: ['FIRE EXIT', 'out now. loud: less pay'], K: ['CHUTE', 'out, into the trash'] }[c];
   if (tile) out.push([tile[0], tile[1], use, tile[0] === 'FIRE EXIT' ? 'FIRE' : tile[0]]);
-  const sb = stationBeside(f); if (sb) out.push([STATION_NAME[sb.st.kind], 'use it', () => openStation(f, sb.key, sb.st), STATION_NAME[sb.st.kind]]);
+  for (const sb of stationsBeside(f)) if (STATION_NAME[sb.st.kind]) out.push([STATION_NAME[sb.st.kind], 'use it', () => openStation(f, sb.key, sb.st), STATION_NAME[sb.st.kind]]);
   const d = doorBeside(f); if (d) out.push(['CLOSE DOOR', 'shut it: nothing sees through', () => { f.open.delete(d + ''); say('you close the door.', C.text); tick(); look(); draw(); }, 'CLOSE']);
   for (const [dx, dy] of S.peekDirs || []) out.push(['PEEK ' + ARROW(dx, dy), 'lean out and look, without stepping out', () => peek(dx, dy), 'PEEK ' + ARROW(dx, dy)]);
   for (const a of sabotageTargets(f)) out.push(['WRECK ' + a.name, 'out for good. quiet', () => wreck(f, a), 'WRECK']);
@@ -1688,8 +1751,8 @@ function doAction() {
   S.popup = { title: 'ACTIONS', line: 'what now?', opts: list, plain: true }; draw();
 }
 function leave(head, line) {
-  const loot = (S.loot || []).reduce((t, [, v]) => t + v, 0);
-  S.over = { win: S.have, head, lines: [line, 'turns: ' + S.turn + '   seen: ' + S.alerts + '   INT: ' + S.int + '/' + MAX_INT].concat(loot ? ['loot: ' + (S.loot || []).length + ' finds, ' + loot + ' CR'] : []) }; draw();
+  const loot = crLeft();   // (less what VENDING took)
+  S.over ={ win: S.have, head, lines: [line, 'turns: ' + S.turn + '   seen: ' + S.alerts + '   INT: ' + S.int + '/' + MAX_INT].concat(loot ? ['loot: ' + (S.loot || []).length + ' finds, ' + loot + ' CR'] : []) }; draw();
 }
 // the nearest you can see of a list, within range (rows count double, as the cones)
 const nearest = (list, range) => list.filter(o => S.vis[o.y][o.x] && Math.hypot(o.x - S.x, (o.y - S.y) * 2) <= range).sort((a, b) => Math.hypot(a.x - S.x, (a.y - S.y) * 2) - Math.hypot(b.x - S.x, (b.y - S.y) * 2))[0];
@@ -1794,9 +1857,9 @@ function machineGlyph(f, x, y) {
   if ((n || s0) && !(e && w)) return '│';
   return e || w ? '─' : '●';
 }
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x', 'T': 'T', 'L': 'L', 'R': 'R', 'B': 'B' };
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x', 'T': 'T', 'L': 'L', 'R': 'R', 'B': 'B', 'V': 'V', 'C': 'c', 'N': 'n', 'j': '%', 'H': 'H' };
 // the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
-const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'T': 'accent', 'L': 'money', 'R': 'green', 'B': 'rep', 'm': 'mid', '#': 'mid' };
+const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'T': 'accent', 'L': 'money', 'R': 'green', 'B': 'rep', 'm': 'mid', '#': 'mid', 'V': 'money', 'C': 'rare', 'N': 'money', 'j': 'mid', 'H': 'accent' };
 
 function draw() {
   if (!S) return;
@@ -1970,7 +2033,7 @@ const LEGEND = () => [   // (three columns of 12: a name 9 at most)
   ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], ['G', 'GUARD', C.danger], [ARM_GLYPH, 'SCANNER', C.danger],
   ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
   ['◘', 'FIRE EXIT', C.green], ['▾', 'CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text], ['/', 'OPEN DOOR', C.text],
-  ['T', 'TERMINAL', C.accent], ['L', 'LOOT', C.money], ['R', 'RE-UP', C.green], ['B', 'BAG SWAP', C.rep], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
+  ['T', 'TERMINAL', C.accent], ['L', 'LOOT', C.money], ['R', 'RE-UP', C.green], ['B', 'BAG SWAP', C.rep], ['V', 'VENDING', C.money], ['c', 'COFFEE', C.rare], ['n', 'STICKY NOTE', C.money], ['%', 'JUNK *', C.mid], ['H', 'HOVERPAD', C.accent], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
   ['▄', 'DESK *', C.mid], ['Y', 'PLANT **', C.green], ['&', 'STATUE', C.bright], ['░', 'TANK', C.mid], ['=', 'BENCH *', C.mid], ['"', 'BEDS **', C.green], ['>', 'BELT', C.mid], ['X', 'PRESS', C.danger], ['a', 'CRATE', C.bg, C.leg],
 ];
 // THE HELP, as a dev popup (HTML): the legend in the game's colors, how the controls work, the keys

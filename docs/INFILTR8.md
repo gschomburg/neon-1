@@ -599,6 +599,20 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     wall-mounted SCANNER room, and the set-piece ideas above (THE ORACLE, THE PUSH ROOM, THE BREAK ROOM, THE CEO'S
     OFFICE, THE TRASH, A DATA MINE, A STAIRCASE MADE OF CABLES; security pieces like the SWEEP, TRIPWIRE, PRESSURE
     TILE, CAPTCHA DOOR, HONEYPOT).
+- **Set pieces and rooms: the batches** (Greg asked, 2026-11-24; Claude builds them in order, one commit each.
+  "Claude's take" marks a call made without Greg, to check):
+  1. **Rooms:** THE BREAK ROOM (a vending machine: trade loot CR for gear; a coffee machine: +1 INT, but loud, +1
+     ALERT), THE CEO'S OFFICE (a big desk, the best loot cache, a CAM inside).
+  2. **Floor security:** PRESSURE TILE (in halls, seen only close up; step on one: +1 ALERT and the nearest unit comes
+     to it), CAPTCHA DOOR (a locked door; ACTIONS: pick its glyph out of 4; the right one is on a STICKY NOTE in another
+     room; wrong: +1 ALERT and they shuffle).
+  3. **Things that move:** HONEYPOT (now and then a loot cache is a mimic: it wakes into a slow `M` that chases you and
+     hits for 2 INT), FLEA (gear: a scout bot; see the meat notes below).
+  4. **The chutes:** not ways out any more. Every chute drops you into THE TRASH, a room on the floor below; you can't
+     go back up it. Junk to hide behind, a cache of mostly junk.
+  5. **Floors:** THE DATA MINE (a building: dark, lots of halls and ducts, lots of loot), THE LAYER (a vault floor like
+     a game layer: one big room, little rooms inside it like nodes; one holds the payload).
+  6. **THE ROOF** (above F1; see Special floors).
 - **From the meat notes** (Greg, filed 2026-11-24):
   - **Already built:** watchers you've seen stay marked, even from another room (the TAGGED passive; the note
     suggests it for everyone, so maybe it's not a passive); PEEK into a door you walk up to, as an action (ACTIONS).
