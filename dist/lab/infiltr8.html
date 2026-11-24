@@ -57,6 +57,7 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
   <div class="v-bar">
     <b>FLOOR VIEWER</b>
     <select id="v-floor"><option value="2">F2 THE STACKS</option><option value="3">F3 THE VAULT</option></select>
+    <select id="v-bld" title="the building type (AUTO: the seed picks)"></select>
     <button id="v-reroll" type="button" title="a new seed for this floor (R)">REROLL</button>
     <button id="v-play" type="button">PLAY IT</button>
     <button id="v-close" type="button">CLOSE</button>
@@ -71,6 +72,7 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
 <div id="dev" hidden>
   <label for="dev-pal">palette</label><select id="dev-pal"></select>
   <label for="dev-ui">controls</label><select id="dev-ui"></select>
+  <label for="dev-bld">building</label><select id="dev-bld"></select>
   <label for="dev-floor">floor</label><select id="dev-floor"></select>
   <span></span><span class="dev-row"><button id="dev-up" type="button">▲ UP</button><button id="dev-down" type="button">▼ DOWN</button></span>
   <label for="dev-clock">clock off</label><input id="dev-clock" type="checkbox">
@@ -282,9 +284,9 @@ function pruneHalls(f, halls) {
 }
 // THE SERVER FARM: a big room on the way (not the start or the goal) full of rows of racks, an aisle round the edge
 // (a rack only where the room's floor is all round it, so a door or a gap is never blocked), gaps every few cells
-function serverFarm(f, rooms, r) {
+function serverFarm(f, rooms, r, p = 0.75) {
   const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 10 && o.h >= 7);
-  if (!opts.length || r() > 0.75) return;
+  if (!opts.length || r() > p) return;
   const o = shuffled(opts, r).sort((a, b) => (b.big ? 1 : 0) - (a.big ? 1 : 0))[0], x0 = o.x + 1, y0 = o.y + 1;
   o.type = 'servers';
   const all8 = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j))) return false; return true; };
@@ -295,9 +297,9 @@ function serverFarm(f, rooms, r) {
 //   ▄▄▄·
 //   ▄···
 //   ····
-function cubicles(f, rooms, r) {
+function cubicles(f, rooms, r, p = 0.75) {
   const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 10 && o.h >= 7);   // (10 x 7: 2 cubicles side by side, and the aisle round them)
-  if (!opts.length || r() > 0.75) return;
+  if (!opts.length || r() > p) return;
   const o = opts.sort((a, b) => b.w * b.h - a.w * a.h)[0], x0 = o.x + 2, y0 = o.y + 2;
   o.type = 'cubicles';
   const all8 = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j))) return false; return true; };
@@ -369,9 +371,9 @@ function closets(f, rooms, halls, r) {
 }
 // THE FACTORY: a big room (not the start or the goal) with a round tank in the middle, or two side by side; an aisle
 // round them (2 cells at the sides, 1 above and below). 3 in 4 floors that have the room (11 x 7 or bigger).
-function factory(f, rooms, r) {
+function factory(f, rooms, r, p = 0.75) {
   const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && o.role !== 'closet' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 11 && o.h >= 7);
-  if (!opts.length || r() > 0.75) return;
+  if (!opts.length || r() > p) return;
   const o = opts.sort((a, b) => b.w * b.h - a.w * a.h)[0], iw = o.w - 2, ih = o.h - 2;
   o.type = 'factory';
   const two = iw >= 18, tw = Math.min(two ? 7 : 9, two ? Math.floor((iw - 6) / 2) : iw - 4), th = Math.min(5, ih - 2);
@@ -386,9 +388,9 @@ function factory(f, rooms, r) {
 }
 // THE RESTROOM: stalls along the top or bottom wall: thin walls 2 long, every other cell, open at the front. A mid-size
 // room, on the side of things if it can be. About 1 floor in 3.
-function restroom(f, rooms, r) {
+function restroom(f, rooms, r, p = 0.35) {
   const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && o.role !== 'closet' && o.shape === 'box' && o.w >= 7 && o.w <= 13 && o.h >= 5 && o.h <= 8);
-  if (!opts.length || r() > 0.35) return;
+  if (!opts.length || r() > p) return;
   const o = (opts.filter(q => q.role === 'side').length ? opts.filter(q => q.role === 'side') : opts)[0], x0 = o.x + 1, top = r() < 0.5;
   o.type = 'restroom';
   const wy = top ? o.y : o.y + o.h - 1, dy = top ? 1 : -1;
@@ -406,15 +408,15 @@ function roomJoined(f, o) {
   return free.every(c => seen.has(c + ''));
 }
 // PLANTS in the corners of some plain rooms (low cover), a STATUE in the middle of some hubs (a lobby)
-function decor(f, rooms, r) {
+function decor(f, rooms, r, B = { plants: 0.18, statue: 0.5 }) {
   for (const o of rooms) {
     if (o.type || o.role === 'closet') continue;
-    if (r() < 0.18) {   // (0.35 put plants on 88% of floors: too many)
+    if (r() < B.plants) {   // (0.35 put plants on 88% of floors: too many; the building's odds now)
       const corners = shuffled(o.cells.filter(([x, y]) => at(f, x, y) === '.' && (!o.set.has((x - 1) + ',' + y) || !o.set.has((x + 1) + ',' + y)) && (!o.set.has(x + ',' + (y - 1)) || !o.set.has(x + ',' + (y + 1)))
         && !D4.some(([i, j]) => at(f, x + i, y + j) === '+')), r).slice(0, 1 + Math.floor(r() * 2));
       for (const [x, y] of corners) { set(f, x, y, 'g'); if (!roomJoined(f, o)) set(f, x, y, '.'); }
     }
-    if (o.role === 'hub' && o.w >= 9 && o.h >= 6 && r() < 0.5) {
+    if (o.role === 'hub' && o.w >= 9 && o.h >= 6 && r() < B.statue) {
       const { x, y } = o.mid;
       let clear = true; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j)) || at(f, x + i, y + j) !== '.') clear = false;
       if (clear) { set(f, x, y, 'u'); if (!roomJoined(f, o)) set(f, x, y, '.'); }
@@ -476,6 +478,20 @@ function watched(f, way) {
 //   - two rooms that overlap get doors that face each other, a straight hall between (hall).
 // [share of floors (cumulative), order]: about 3 in 10 orderly, half mixed, 1 in 5 messy (as before).
 const ORDER = { orderly: [0.3, 0.9], mixed: [0.8, 0.5], messy: [1, 0.1] };
+// BUILDING TYPES (Greg, 2026-11-23): the seed lays a floor out; the building sets the odds of what's in it. In the game
+// it'd come from the corp you're in (PARCELNET, MEGAMART: industrial; SEEKR, LEDGER: an office...); in the demo the
+// seed picks one, or the dev panel / the viewer forces one. Each odd: the chance that room type (or thing) goes in,
+// when a room fits it. order: the shares of orderly and mixed floors (the rest messy), as ORDER's.
+//   servers2: a data center can have a second server farm.
+//   bsp: changes to BSP's settings: an industrial building has more big halls (and so more room for a factory), a
+//   data center bigger rooms than an office (room for its server farms).
+const BUILDINGS = {
+  office:     { name: 'OFFICE',      share: 0.45, servers: 0.4,  servers2: 0,   cubicles: 0.9,  factory: 0,    restroom: 0.5,  plants: 0.25, statue: 0.6, order: [0.45, 0.85], bsp: {} },
+  industrial: { name: 'INDUSTRIAL',  share: 0.3,  servers: 0.15, servers2: 0,   cubicles: 0.15, factory: 0.95, restroom: 0.35, plants: 0.05, statue: 0.1, order: [0.15, 0.55], bsp: { bigChance: 0.7, bigArea: 520 }, minRooms: 4 },
+  data:       { name: 'DATA CENTER', share: 0.25, servers: 0.95, servers2: 0.7, cubicles: 0.2,  factory: 0.1,  restroom: 0.25, plants: 0.1,  statue: 0.3, order: [0.5, 0.9],   bsp: { bigChance: 0.4, bigArea: 450 } },
+};
+let buildingPick = 'auto';   // (the dev panel's and the viewer's choice: 'auto', or a key of BUILDINGS)
+function pickBuilding(r) { const v = r(); if (buildingPick !== 'auto') return buildingPick; let acc = 0; for (const [k, b] of Object.entries(BUILDINGS)) { acc += b.share; if (v < acc) return k; } return 'office'; }
 const BSP = {
   minW: 10, minH: 7,     // the smallest piece: a 7 x 5 room, and a gap round it for halls (a cell of gap on each side)
   stopArea: 190,         // a piece this small (in cells) may stop being cut: bigger rooms, fewer of them
@@ -484,14 +500,15 @@ const BSP = {
   bigArea: 400,
   emptyChance: 0,        // a piece left empty now and then (0.08 left big holes: empty 9x6 patches went 0.2 -> 1.8 a floor)
 };
-function bspRooms(r, order = 0) {
+function bspRooms(r, order = 0, tweak = {}) {
+  const P = Object.assign({}, BSP, tweak);   // (a building can change these: bigger rooms in an industrial one)
   const ri = (a, b) => a + Math.floor(r() * (b - a + 1)), rooms = [], links = [];
   const near = (A, B) => { let best = null, bd = 1e9; for (const a of A) for (const b of B) { const d = Math.hypot(a.cx - b.cx, (a.cy - b.cy) * 2); if (d < bd) { bd = d; best = [a, b]; } } return best; };
   function cut(x, y, w, h, depth, share = {}) {   // (share: what this piece's sibling did, to copy)
-    const canV = w >= BSP.minW * 2, canH = h >= BSP.minH * 2;
-    const big = depth >= 1 && w * h > BSP.stopArea && w * h <= BSP.bigArea && r() < BSP.bigChance;
-    if (big || (!canV && !canH) || (depth >= 2 && w * h <= BSP.stopArea && r() < BSP.stopChance)) {
-      if (depth >= 2 && r() < BSP.emptyChance) return [];
+    const canV = w >= P.minW * 2, canH = h >= P.minH * 2;
+    const big = depth >= 1 && w * h > P.stopArea && w * h <= P.bigArea && r() < P.bigChance;
+    if (big || (!canV && !canH) || (depth >= 2 && w * h <= P.stopArea && r() < P.stopChance)) {
+      if (depth >= 2 && r() < P.emptyChance) return [];
       // the room: most of the piece, a cell of gap inside its edges
       let rw = ri(Math.max(7, Math.floor((w - 2) * 0.6)), w - 2), rh = ri(Math.max(5, Math.floor((h - 2) * 0.6)), h - 2);
       let rx = x + 1 + ri(0, w - 2 - rw), ry = y + 1 + ri(0, h - 2 - rh);
@@ -507,9 +524,9 @@ function bspRooms(r, order = 0) {
     let A, B;
     // order: cut at the line the sibling piece was cut at (same way, same place), so the rows run on across
     const same = share.vert === vert && share.at != null && r() < order, kids = {};
-    if (vert) { let k = same ? share.at - x : ri(BSP.minW, w - BSP.minW); if (k < BSP.minW || k > w - BSP.minW) k = ri(BSP.minW, w - BSP.minW);
+    if (vert) { let k = same ? share.at - x : ri(P.minW, w - P.minW); if (k < P.minW || k > w - P.minW) k = ri(P.minW, w - P.minW);
       share.vert = true; share.at = x + k; A = cut(x, y, k, h, depth + 1, kids); B = cut(x + k, y, w - k, h, depth + 1, kids); }
-    else { let k = same ? share.at - y : ri(BSP.minH, h - BSP.minH); if (k < BSP.minH || k > h - BSP.minH) k = ri(BSP.minH, h - BSP.minH);
+    else { let k = same ? share.at - y : ri(P.minH, h - P.minH); if (k < P.minH || k > h - P.minH) k = ri(P.minH, h - P.minH);
       share.vert = false; share.at = y + k; A = cut(x, y, w, k, depth + 1, kids); B = cut(x, y + k, w, h - k, depth + 1, kids); }
     if (A.length && B.length) links.push(near(A, B));
     return A.concat(B);
@@ -517,13 +534,17 @@ function bspRooms(r, order = 0) {
   cut(0, 0, MW, MH, 0);
   return { rooms, links };
 }
-function floorGen(seed, n, last) {
+function floorGen(seed, n, last, bk0 = null, depth = 0) {
   const r = rngFrom(hashStr(seed + ':' + n)), ri = (a, b) => a + Math.floor(r() * (b - a + 1));
+  // the building: picked once (a retry below is the same building: picking it each time let a building whose floors
+  // fail more often, industrial, lose out to the others)
+  const bk = bk0 || pickBuilding(r), B = BUILDINGS[bk];
   for (let tries = 0; tries < 40; tries++) {
     const f = newFloor(last ? 'THE VAULT' : 'THE STACKS'), st = r();
-    f.order = st < ORDER.orderly[0] ? ORDER.orderly[1] : st < ORDER.mixed[0] ? ORDER.mixed[1] : ORDER.messy[1];
-    const { rooms, links } = bspRooms(r, f.order);
-    if (rooms.length < 5) continue;
+    f.building = bk;
+    f.order = st < B.order[0] ? ORDER.orderly[1] : st < B.order[1] ? ORDER.mixed[1] : ORDER.messy[1];
+    const { rooms, links } = bspRooms(r, f.order, B.bsp);
+    if (rooms.length < (B.minRooms || 5)) continue;
     rooms.forEach(o => { shapeRoom(o, r); drawRoom(f, o); });
     rooms.sort((a, b) => a.cx - b.cx || a.cy - b.cy);   // (rooms[0], the leftmost, gets the stairs up)
     // a loop or two: a pair of near rooms the cuts didn't join
@@ -548,8 +569,9 @@ function floorGen(seed, n, last) {
     f.halls = halls; f.junc = junctions(f, halls);
     // (the big-room types take turns going first: one floor's best room is a server farm, another's the cubicles or
     // the factory)
-    for (const fill of shuffled([serverFarm, cubicles, factory], r)) fill(f, rooms, r);
-    restroom(f, rooms, r); decor(f, rooms, r);
+    for (const [fill, p] of shuffled([[serverFarm, B.servers], [cubicles, B.cubicles], [factory, B.factory]], r)) fill(f, rooms, r, p);
+    serverFarm(f, rooms, r, B.servers2);   // (a second one: a data center's)
+    restroom(f, rooms, r, B.restroom); decor(f, rooms, r, B);
     // pillars in the big rooms (not in a room with a type: it has its own things)
     // (only where the room's floor is all round it: a pillar never closes a gap or a corner; and never one that, with a
     // plant already in the corner, shuts a cell in: R75 F2)
@@ -578,7 +600,9 @@ function floorGen(seed, n, last) {
     f.rooms = rooms; f.roomOf = new Map(); for (const o of rooms) for (const [x, y] of o.cells) f.roomOf.set(x + ',' + y, o);
     return f;
   }
-  return floorGen(seed + 'x', n, last);
+  // (40 goes and nothing: the seed again, a little changed; after 3 of those, an office, whose floors always come)
+  if (depth >= 8) throw new Error('floorGen: no floor for ' + seed);
+  return floorGen(seed + 'x', n, last, depth >= 3 ? 'office' : bk, depth + 1);
 }
 // A hall from a to b: a door on the side of each room that faces the other (not by a corner), and between them a path
 // through the empty space (and halls already there): it goes round rooms, likes straight runs, and keeps off walls.
@@ -1339,7 +1363,7 @@ function viewerShow() {
   $('v-cap').innerHTML = (V.i + 1) + ' · <b>' + seed + '</b> · rooms ' + fl.rooms.length + ' · cams ' + fl.cams.length + ' · patrols ' + fl.pats.length +
     ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0) +
     ' · the way ' + Math.max(0, fl.route.length - 1) + ' steps' +
-    ' · shapes ' + Object.entries(fl.rooms.reduce((m, o) => (m[o.big ? 'big ' + o.shape : o.shape] = (m[o.big ? 'big ' + o.shape : o.shape] || 0) + 1, m), {})).map(([k, v]) => v + ' ' + k).join(', ') + ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
+    ' · shapes ' + Object.entries(fl.rooms.reduce((m, o) => (m[o.big ? 'big ' + o.shape : o.shape] = (m[o.big ? 'big ' + o.shape : o.shape] || 0) + 1, m), {})).map(([k, v]) => v + ' ' + k).join(', ') + ' · ' + BUILDINGS[fl.building].name + (buildingPick === 'auto' ? '' : ' (set)') + ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
   $('v-prev').disabled = V.i === 0;
 }
 function openViewer() { if (!V.seeds.length) V.seeds.push(newSeed()); $('viewer').hidden = false; viewerShow(); }
@@ -1349,6 +1373,16 @@ $('dev-viewer').addEventListener('click', openViewer);
 $('v-prev').addEventListener('click', () => viewerStep(-1));
 $('v-next').addEventListener('click', () => viewerStep(1));
 $('v-floor').addEventListener('change', viewerShow);
+// the building: AUTO (the seed picks) or one of BUILDINGS, for the viewer and for a new run (the dev panel rebuilds
+// the run you're in on its seed, and keeps your floor)
+const bldOpts = '<option value="auto">AUTO</option>' + Object.entries(BUILDINGS).map(([k, b]) => '<option value="' + k + '">' + b.name + '</option>').join('');
+$('dev-bld').innerHTML = bldOpts; $('v-bld').innerHTML = bldOpts;
+function setBuilding(v, rerun) {
+  buildingPick = v; $('dev-bld').value = v; $('v-bld').value = v;
+  if (rerun && S) { const fi = S.fi; newRun(S.seed); if (fi) goFloor(fi); say('building: ' + (v === 'auto' ? 'AUTO (the seed picks)' : BUILDINGS[v].name) + '.', C.money); }
+}
+$('dev-bld').addEventListener('change', e => setBuilding(e.target.value, true));
+$('v-bld').addEventListener('change', e => { setBuilding(e.target.value, false); viewerShow(); });
 $('v-reroll').addEventListener('click', () => { V.seeds[V.i] = newSeed(); viewerShow(); });
 $('v-play').addEventListener('click', () => { const n = +$('v-floor').value; closeViewer(); newRun(V.seeds[V.i]); goFloor(n - 1); });
 $('v-close').addEventListener('click', closeViewer);
@@ -1363,7 +1397,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

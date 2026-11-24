@@ -396,6 +396,15 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     `§`: keep it for something. (`&` was the WATCHDOG's in the daemon ideas above: that one needs another mark.)
   - Nothing put in a room may shut part of it off (each one checked; a plant and a pillar once did together).
   - Dropped for now: chairs (clutter you can walk through, nothing to play with).
+- **Building types** (Greg, 2026-11-23; built the same day): the seed lays a floor out; the building type sets the odds
+  of what's in it, how big its rooms run, and how orderly it is. **OFFICE** (cubicles, restrooms, plants, a lobby
+  statue; tidy), **INDUSTRIAL** (big halls, factories; messy), **DATA CENTER** (server farms, sometimes two; tidy). In
+  the demo the seed picks one (AUTO) or the dev panel and the floor viewer force one. **In the game the corp you're in
+  picks it** (PARCELNET or MEGAMART industrial, SEEKR or LEDGER an office...), so a corp's floors feel like that corp.
+- **Room ideas for later** (Greg, 2026-11-23):
+  - **THE LAB:** benches, cabinets, maybe a clean room you need gear for. MEDIX's building type.
+  - **A plant room** (an ATRIUM or GREENHOUSE): beds of plants you can **step into** and hide in (walk-in cover, unlike
+    the potted plants, which you hide behind), a statue or a fountain in the middle.
   **The vault's duct** (Greg, 2026-11-23): half the F3 floors, the one duct runs into the vault, a second way in over
   the guarded door. Never from the start room or one close to it, so the vent has to be found. Otherwise no duct
   reaches the vault.
