@@ -16,6 +16,10 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #06090a; overflow: hidden; }
 canvas { display: block; touch-action: none; }
+/* a phone (Greg, 2026-11-24): a long press shouldn't select text (it caught the DEV button's), pop Safari's callout or
+   flash a tap highlight. A light pass: the game will have its own. The dev panel's dropdowns still work. */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+button { touch-action: manipulation; }
 /* the dev panel (Greg, 2026-11-23): plain form controls, folded away by its button. Two layouts, picked by devPlace():
    - beside the game (body.dev-side: a wide window, room on the left): both on the window's left edge.
    - a phone (no room beside): the button on the footer's right end, the panel across the map, big enough to tap.
@@ -209,6 +213,7 @@ const T = {
   'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 }, 'g': { walk: 1, see: 1, hide: 1 }, '=': { walk: 0, see: 1, low: 1 }, '"': { walk: 1, see: 1, hide: 1 }, 'b': { walk: 1, see: 1 }, 'x': { walk: 0, see: 0 },
   'T': { walk: 0, see: 0, station: 1 },   // (a terminal's set in a wall: blocks sight as one)
   'L': { walk: 0, see: 1, station: 1 }, 'R': { walk: 0, see: 1, station: 1 }, 'B': { walk: 0, see: 1, station: 1 },
+  'Q': { walk: 0, see: 1, station: 1 },   // (a CHIP RACK: a passive to add, Greg 2026-11-24)
   // (the set pieces' things, 2026-11-24: a vending machine and a coffee machine (THE BREAK ROOM), a sticky note (the
   // CAPTCHA DOOR's answer), junk (THE TRASH: low cover), the hoverpad (THE ROOF: stand on it))
   'V': { walk: 0, see: 0, station: 1 }, 'C': { walk: 0, see: 1, station: 1 }, 'N': { walk: 0, see: 1, station: 1 }, 'j': { walk: 0, see: 1, low: 1 }, 'H': { walk: 1, see: 1 }, 'w': { walk: 0, see: 1 }, 'o': { walk: 0, see: 1 }, 's': { walk: 0, see: 1, low: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
@@ -222,7 +227,7 @@ const INFO = {
   'u': ['A STATUE', 'nothing sees through it.'], '=': ['A BENCH', 'low cover: hide right behind it.'],
   '"': ['PLANT BEDS', 'step in: hidden unless right by you.'],
   'T': ['A TERMINAL', 'USE beside it: one thing it can do.'], 'L': ['A LOOT CACHE', 'USE beside it: something to carry out.'],
-  'R': ['A RE-UP', 'USE beside it: INT, or a piece of gear.'], 'B': ['A BAG SWAP', 'USE beside it: trade your gear for a bag.'],
+  'R': ['A RE-UP', 'USE beside it: INT, or a piece of gear.'], 'Q': ['A CHIP RACK', 'USE beside it: a new passive, for the rest of the run.'],'B': ['A BAG SWAP', 'USE beside it: trade your gear for a bag.'],
   'V': ['A VENDING MACHINE', 'USE beside it: trade loot CR for gear.'], 'C': ['A COFFEE MACHINE', 'USE beside it: +1 INT. loud: +1 ALERT.'],
   'N': ['A STICKY NOTE', 'someone wrote a password on it.'], 'w': ['THE PARAPET', 'the roof\'s edge. a long way down.'], 'o': ['THE EDGE', 'no parapet here. step off it: you fall.'], 's': ['SOLAR PANELS', 'low cover: hide right behind a row.'], 'j': ['JUNK', 'deleted files, piled up. low cover.'], 'H': ['THE HOVERPAD', 'stand on it, USE: call the hover. then hold out.'],
   'b': ['THE BELT', 'it carries you. off before the X.'], 'x': ['A CRATE', 'on the belt. nothing sees through.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
@@ -537,7 +542,7 @@ function lab(f, rooms, r, p = 0.5) {
 }
 // a station against a room's wall (not by a door, not shutting the room off): for the set-piece rooms. f.stations.
 function wallStation(f, o, kind, r, extra = {}) {
-  const opts = shuffled(o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKvTLRBVCN'.includes(at(f, x + i, y + j)))), r);
+  const opts = shuffled(o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKvTLRBQVCN'.includes(at(f, x + i, y + j)))), r);
   for (const [x, y] of opts) { set(f, x, y, kind); if (roomJoined(f, o)) { (f.stations = f.stations || new Map()).set(x + ',' + y, Object.assign({ kind, used: false }, extra)); return [x, y]; } set(f, x, y, '.'); }
   return null;
 }
@@ -872,6 +877,7 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
   const kinds = [];
   for (let k = 0, n = st.T[0] + Math.floor(r() * (st.T[1] - st.T[0] + 1)); k < n; k++) kinds.push('T');
   for (const k of ['L', 'L2', 'L3', 'R', 'B']) if (st[k] && r() < st[k]) kinds.push(k === 'L2' || k === 'L3' ? 'L' : k);
+  if (r() < (st.Q ?? CHIP_CHANCE)) kinds.push('Q');   // (a CHIP RACK: any building, CHIP_CHANCE a floor)
   // (a closet of 2 cells or more: in a closet of 1, the station would fill it, and its door would open onto it)
   const closets = shuffled(rooms.filter(o => o.type === 'closet' && o.cells.length >= 2), r), plain = rooms.filter(o => o.role !== 'closet');
   for (const kind of kinds) {
@@ -886,7 +892,7 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
           const x = cx + dx, y = cy + dy, px = dy ? 1 : 0, py = dx ? 1 : 0;
           if (at(f, cx, cy) !== '.' || at(f, x, y) !== '#' || at(f, x + px, y + py) !== '#' || at(f, x - px, y - py) !== '#') continue;
           if (T[at(f, x + dx, y + dy)].walk || f.halls.has((x + dx) + ',' + (y + dy))) continue;
-          if (D4.some(([i, j]) => '+EFTLRBVCN'.includes(at(f, x + i, y + j)) || '+EF'.includes(at(f, x + px * 2 * i, y + py * 2 * i)))) continue;
+          if (D4.some(([i, j]) => '+EFTLRBQVCN'.includes(at(f, x + i, y + j)) || '+EF'.includes(at(f, x + px * 2 * i, y + py * 2 * i)))) continue;
           opts.push([x, y]);
         }
         if (!opts.length) continue;
@@ -902,7 +908,7 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
     }
     for (let t = 0; t < 40 && !placed; t++) {
       const o = plain[Math.floor(r() * plain.length)];
-      const opts = o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKvTLRBVCN'.includes(at(f, x + i, y + j)) || (f.beltAt && f.beltAt.has((x + i) + ',' + (y + j)))));
+      const opts = o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKvTLRBQVCN'.includes(at(f, x + i, y + j)) || (f.beltAt && f.beltAt.has((x + i) + ',' + (y + j)))));
       if (!opts.length) continue;
       const [x, y] = opts[Math.floor(r() * opts.length)];
       set(f, x, y, kind);
@@ -968,6 +974,12 @@ const PASSIVES = Object.keys(INF_CHIPS).filter(k => INF_CHIPS[k][1] === 'infp');
 // a passive's numbers, if it's one you have (null if not): if (pass('IP3')) ... pass('IP3').ko
 const pass = k => S.passives.includes(k) ? INF_CHIPS[k][7] : null;
 const gearList = g => Object.entries(g).map(([k, n]) => INF_ITEMS[k].name + ' x' + n).join(', ');
+// You carry 2 kinds of gear at most (Greg, 2026-11-24): a RE-UP or VENDING only tops up what you have, and TURNCOAT's
+// UNIFORM only comes if you have room. (A CUSTOM loadout's 2 slots, or a preset's 2 kinds: the same 2.)
+const GEAR_SLOTS = 2;
+// CHIP RACKS (Greg, 2026-11-24): you start with your loadout's passives and can find more on the floors. The chance a
+// floor gets one (a building's st.Q can change it).
+const CHIP_CHANCE = 0.5;
 // what the passives set up front: COOL HEAD's longer ALERT meter
 function setPassives() { S.heatMax = pass('IPB') ? pass('IPB').meter : HEAT_MAX; S.heat = Math.min(S.heat || 0, S.heatMax - 1); }
 // how far you see in the dark: NIGHT EYES grows it the longer you've been in the dark (S.darkT: tick)
@@ -1080,6 +1092,9 @@ function stationMenu(kind, f, key) {
     ['+1 INT', 'INT ' + S.int + '/' + MAX_INT, () => { S.int = Math.min(MAX_INT, S.int + 1); say('RE-UP: +1 INT.', C.green); }],
     ...S.gear.map(({ key: k }) => ['+1 ' + INF_ITEMS[k].name, 'you have ' + gear(k).n, () => { gear(k).n++; say('RE-UP: +1 ' + INF_ITEMS[k].name + '.', C.green); }])] };
   if (kind === 'B') return { title: 'BAG SWAP', line: 'your loadout for another (all new).', opts: loadoutOpts(S.kit) };
+  // A CHIP RACK: 2 passives you don't have (its own draw, from the seed); take one and it's yours for the run
+  if (kind === 'Q') { const st = f.stations.get(key), pick = st.chips || (st.chips = shuffled(PASSIVES, rngFrom(hashStr(S.seed + ':chip:' + key + ':' + S.fi))).filter(k => !S.passives.includes(k)).slice(0, 2));
+    return { title: 'CHIP RACK', line: 'a passive, slotted in for the rest of the run. you have: ' + S.passives.map(p => INF_CHIPS[p][0]).join(', ') + '.', opts: pick.filter(k => !S.passives.includes(k)).map(k => [INF_CHIPS[k][0], INF_CHIPS[k][4], () => { S.passives.push(k); setPassives(); say('CHIP: ' + INF_CHIPS[k][0] + '. ' + INF_CHIPS[k][6], C.rare); }]) }; }
 }
 // the start of a run: pick a loadout. A DEV FORM (Greg, 2026-11-24): plain HTML over the game, scrolling, any length
 // of text, since the game will get its own screen for this. CLOSE keeps the one ticked: your last pick.
@@ -1136,9 +1151,15 @@ function stationsBeside(f) {
   for (const [i, j] of D4) { const k = (S.x + i) + ',' + (S.y + j), st = f.stations && f.stations.get(k); if (st && !st.used) out.push({ key: k, st }); }
   return out;
 }
+// YOUR KIT (Greg, 2026-11-24: a way to see your passives, as the legend): tap your kit's name in the HUD. Just to read.
+function openKit() {
+  S.popup = { title: 'YOUR KIT: ' + kitName(), line: 'what you have on you. (CHIP RACKS, ◊, add passives.)', info: true,
+    opts: S.passives.map(k => ['PASSIVE: ' + INF_CHIPS[k][0], INF_CHIPS[k][4]]).concat(S.gear.map(g => [INF_ITEMS[g.key].name + ' x' + g.n, INF_ITEMS[g.key].desc])) };
+  draw();
+}
 function openStation(f, key, st) { if (st.mimic) return wakeMimic(f, key); S.popup = Object.assign(stationMenu(st.kind, f, key), { key, kind: st.kind }); draw(); }
 function chooseStation(i) {
-  const p = S.popup, f = F(); if (!p || !p.opts[i]) return;
+  const p = S.popup, f = F(); if (!p || !p.opts[i] || p.info) return;
   if (p.plain) { S.popup = null; return p.opts[i][2](); }   // (the ACTIONS menu: each does its own turn)
   p.opts[i][2]();
   // ROOT: a terminal gives more picks (the same turn's worth: one tick for all of them)
@@ -1771,7 +1792,13 @@ function heatUp(f, why) {
 function trip(f) {
   for (const p of f.pats) if (!(p.ko > 0)) { p.chase = 8; p.lx = S.x; p.ly = S.y; }
   if (S.have || f.trip > 0) return;
-  f.trip = TRIP_TURNS; f.tx = S.x; f.ty = S.y; say('ALARM tripped. backup in ' + TRIP_TURNS + ' turns.', C.danger);
+  f.trip = tripTurns(); f.tx = S.x; f.ty = S.y; say('ALARM tripped. backup in ' + f.trip + ' turns.', C.danger);
+}
+// the backup clock (Greg, 2026-11-24): always enough to get out from where you are, and half again (OUT_PACE), and
+// never less than TRIP_TURNS. (THE ROOF: TRIP_TURNS; outTurns doesn't know it.)
+function tripTurns() {
+  const out = S.onRoof ? Infinity : outTurns(S.fi, S.x, S.y);
+  return isFinite(out) ? Math.max(TRIP_TURNS, Math.ceil(out * OUT_PACE)) : TRIP_TURNS;
 }
 // the trip clock ran out: a new patrol in by the stairs, out to where you were seen and back, on its round from then on
 function backup(f) {
@@ -1837,6 +1864,8 @@ function look() {
 // a turn: you did something (a step, a wait); then everything else steps
 function act(dx, dy) {
   if (S.over) return;
+  S.armed = null;   // (a tray button picked for a second tap: dropped)
+  if (dx || dy) S.info = null;   // (a step drops what you'd tapped: Greg, 2026-11-24)
   if (S.aim) { const a = S.aim; S.aim = null; if (dx || dy) return a === 'PEEK' ? peek(dx, dy) : throwNoise(dx, dy); say('no ' + a + '.', C.mid); return draw(); }   // (the way you pick: a PEEK, or where the NOISE goes)
   if (dx || dy) { S.peek = null; S.lastDir = [dx, dy]; }   // (a step ends a PEEK; a WAIT keeps looking. lastDir: where a FLEA heads)
   const f = F();
@@ -1857,7 +1886,7 @@ function act(dx, dy) {
         p.stun = 3; p.chase = 0; if (dodged()) say('it grabs at you and misses. DODGE.', C.money); else hurt('> the PATROL saw you coming. -1 INT.'); if (!S.over) tick(); look(); return draw(); }
         const ko = pass('IP3') ? pass('IP3').ko : KO_TURNS; p.ko = ko; p.chase = 0; p.stun = 0;
         p.blind = 0; say('you knock the ' + unitName(p) + ' out. ' + ko + ' turns.' + (S.heat ? ' ALERT clear.' : ''), C.accent); S.heat = 0;   // (a takedown clears the ALERT meter: Greg)
-        if (pass('IP7')) { const u = S.gear.find(g => g.key === 'uniform') || (S.gear.push({ key: 'uniform', n: 0 }), S.gear[S.gear.length - 1]); u.n += pass('IP7').uniform; say(S.msg + ' +1 UNIFORM.', C.accent); }   // (TURNCOAT)
+        if (pass('IP7')) { const u = S.gear.find(g => g.key === 'uniform') || (S.gear.length < GEAR_SLOTS ? (S.gear.push({ key: 'uniform', n: 0 }), S.gear[S.gear.length - 1]) : null); if (u) { u.n += pass('IP7').uniform; say(S.msg + ' +1 UNIFORM.', C.accent); } else say(S.msg + ' no room for its UNIFORM.', C.accent); }   // (TURNCOAT; GEAR_SLOTS)
         tick(); look(); return draw();
       } }
     S.slide = { x: S.x, y: S.y, t: performance.now() };   // (draw() slides the @ over from here)
@@ -2037,7 +2066,7 @@ function use() {
 // [label, note, do it, short label]: what you stand on (stairs, a way out, a vent), a station or an open door beside
 // you, a PEEK each way there's an edge to lean round (peekDirs, worked out in look()), a CAM or the SCANNER beside you
 // to wreck (SABOTEUR). One: the button is that thing. More: it opens a menu of them (a plain popup).
-const STATION_NAME = { T: 'TERMINAL', L: 'LOOT CACHE', R: 'RE-UP', B: 'BAG SWAP', V: 'VENDING', C: 'COFFEE' };
+const STATION_NAME = { T: 'TERMINAL', L: 'LOOT CACHE', R: 'RE-UP', B: 'BAG SWAP', Q: 'CHIP RACK', V: 'VENDING', C: 'COFFEE' };
 const ARROW = (dx, dy) => dx > 0 ? '►' : dx < 0 ? '◄' : dy > 0 ? '▼' : '▲';
 function actions() {
   if (!S || S.over) return [];
@@ -2151,6 +2180,24 @@ function btn(x, y, s, id, fn, col = C.accent, on = true) {
   put(x, y, s, on ? col : C.dim);
   hits.push({ x, y, w: [...s].length, h: 1, id, fn: on ? fn : null });
 }
+// a tray box (the four across): column i of 4, 9 wide, rows 33-36, a name and a line under it. Picked (S.armed): filled.
+function trayBox(i, label, sub, id, fn, col, on) {
+  const x = i * 9, lit = on && id && S.armed === id, c = on ? col : C.dim, mid = s => { s = s.slice(0, 7); const l = Math.floor((7 - s.length) / 2); return ' '.repeat(l) + s + ' '.repeat(7 - s.length - l); };
+  put(x, 33, '┌───────┐', c); put(x, 36, '└───────┘', c);
+  put(x, 34, '│', c); put(x + 8, 34, '│', c); put(x, 35, '│', c); put(x + 8, 35, '│', c);
+  put(x + 1, 34, mid(label), lit ? C.bg : c, false, lit ? c : null); put(x + 1, 35, mid(lit ? 'AGAIN' : sub), lit ? C.bg : on ? C.mid : C.dim, false, lit ? c : null);   // (picked: tap AGAIN)
+  hits.push({ x, y: 33, w: 9, h: 4, id, fn: on ? fn : null });
+}
+// TWO TAPS ON A PHONE (Greg, 2026-11-24, as the game's own buttons): the first tap picks it and says what it does, the
+// second does it. A mouse click or a key: at once. Anything else you do (a step, a wait, a tap on the map) drops the pick.
+function armTap(id, fn, it) {
+  return ev => {
+    if (!ev || ev.pointerType === 'mouse' || S.armed === id) { S.armed = null; return fn(); }
+    S.armed = id;
+    const a = actions()[0];
+    say(it ? it.name + ': ' + it.tip + '.' : a ? a[0] + ': ' + a[1] + '.' : '', C.accent); draw();
+  };
+}
 const rule = y => put(0, y, '- '.repeat(18).trimEnd(), C.dim);
 function wallGlyph(f, x, y) {
   const w = (i, j) => WALLISH.includes(at(f, i, j));
@@ -2178,9 +2225,9 @@ function machineGlyph(f, x, y) {
   if ((n || s0) && !(e && w)) return '│';
   return e || w ? '─' : '●';
 }
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x', 'T': 'T', 'L': 'L', 'R': 'R', 'B': 'B', 'V': 'V', 'C': 'c', 'N': 'n', 'j': '%', 'H': 'H', 'w': '▓', 'o': '▁', 's': '≡' };
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x', 'T': 'T', 'L': 'L', 'R': 'R', 'B': 'B', 'Q': '◊', 'V': 'V', 'C': 'c', 'N': 'n', 'j': '%', 'H': 'H', 'w': '▓', 'o': '▁', 's': '≡' };
 // the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
-const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'T': 'accent', 'L': 'money', 'R': 'green', 'B': 'rep', 'm': 'mid', '#': 'mid', 'V': 'money', 'C': 'rare', 'N': 'money', 'j': 'mid', 'H': 'accent', 'w': 'dim', 'o': 'danger', 's': 'rare' };
+const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'T': 'accent', 'L': 'money', 'R': 'green', 'B': 'rep', 'Q': 'rare', 'm': 'mid', '#': 'mid', 'V': 'money', 'C': 'rare', 'N': 'money', 'j': 'mid', 'H': 'accent', 'w': 'dim', 'o': 'danger', 's': 'rare' };
 
 function draw() {
   if (!S) return;
@@ -2196,7 +2243,7 @@ function draw() {
   put(0, 2, S.onRoof ? 'RF   ' : `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
   put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
   put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent);
-  put(0, 3, kitName(), C.mid);
+  btn(0, 3, kitName(), 'kit', openKit, C.accent);   // (tap: YOUR KIT, your passives and gear)
   // the ALERT meter (heatUp): a box a step, filled as you're seen
   put(8, 3, 'ALERT', C.mid); put(14, 3, '■'.repeat(S.heat) + '□'.repeat(S.heatMax - S.heat), S.heat ? C.danger : C.dim);
   if (S.have) put(15 + S.heatMax, 3, '$', C.money);   // (the payload's in your pack)
@@ -2292,17 +2339,27 @@ function draw() {
   // row 31: how this UI works
   // the tray rows (32-36): the pad, or the gear
   const u = UIS[ui].key;
-  if (u !== 'classic') {
+  if (u === 'swipe' || u === 'stick') {
+    // FOUR ACROSS (Greg, 2026-11-24): [WAIT] [ACTIONS] [GEAR 1] [GEAR 2], boxes 9 wide, rows 33-36. On a touch screen
+    // ACTIONS (when it would do its one thing) and the gear take two taps: the first picks it (lit), the second does it
+    // (armTap). WAIT is one tap. The how-to line goes above them.
+    put(0, 32, u === 'swipe' ? 'swipe anywhere: step · tap: info' : 'drag anywhere: walk · tap: info', C.dim);
+    const list = actions(), one = list.length === 1;
+    trayBox(0, 'WAIT', '·', 'wait', () => act(0, 0), C.mid, true);
+    trayBox(1, one ? list[0][3].slice(0, 7) : 'ACTIONS', list.length > 1 ? list.length + ' here' : one ? 'do it' : '-', 'use', one ? armTap('use', doAction) : doAction, C.accent, list.length > 0);
+    for (let i = 0; i < GEAR_SLOTS; i++) {
+      const gr = S.gear[i];
+      if (!gr) { trayBox(2 + i, '-', '', null, null, C.dim, false); continue; }
+      const it = INF_ITEMS[gr.key];
+      trayBox(2 + i, it.name, 'x' + gr.n, 'g' + gr.key, armTap('g' + gr.key, () => useGear(gr.key), it), it.loud ? C.danger : C.money, gr.n > 0);
+    }
+  } else if (u !== 'classic') {
     // the condensed tray: USE and the gear stacked on the right, no swap
     put(22, 32, '- '.repeat(7), C.dim);
     btn(24, 33, actLabel(10), 'use', doAction, C.accent, actions().length > 0);
     S.gear.forEach((gr, i) => btn(24, 34 + i, `[${INF_ITEMS[gr.key].name.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), INF_ITEMS[gr.key].loud ? C.danger : C.money, gr.n > 0));
     const live = G && G.pad;
-    if (u === 'swipe' || u === 'stick') {
-      put(0, 32, '- '.repeat(11).trimEnd(), C.dim);
-      put(1, 33, u === 'swipe' ? 'swipe anywhere: step' : 'drag anywhere: walk', C.mid);
-      btn(1, 35, '[  ·  WAIT  ]', 'wait', () => act(0, 0), C.mid);
-    } else if (u === 'track') {
+    if (u === 'track') {
       const col = live ? C.accent : C.mid;
       put(0, 32, '┌' + '─'.repeat(19) + '┐', col);
       for (let r = 33; r <= 35; r++) { put(0, r, '│', col); put(20, r, '│', col); }
@@ -2363,7 +2420,7 @@ const LEGEND = () => [   // (three columns of 12: a name 9 at most)
   ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], ['G', 'GUARD', C.danger], ['M', 'HONEYPOT', C.danger], ['D', 'DRONE', C.danger], ['f', 'YOUR FLEA', C.accent], [ARM_GLYPH, 'SCANNER', C.danger], ['¤', 'PRESSURE', C.danger], ['?', 'CAPTCHA', C.money], ['▓', 'PARAPET', C.dim], ['▁', 'EDGE: FALL', C.danger], ['≡', 'SOLAR *', C.rare],
   ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
   ['◘', 'FIRE EXIT', C.green], ['▾', 'CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text], ['/', 'OPEN DOOR', C.text],
-  ['T', 'TERMINAL', C.accent], ['L', 'LOOT', C.money], ['R', 'RE-UP', C.green], ['B', 'BAG SWAP', C.rep], ['V', 'VENDING', C.money], ['c', 'COFFEE', C.rare], ['n', 'STICKY NOTE', C.money], ['%', 'JUNK *', C.mid], ['H', 'HOVERPAD', C.accent], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
+  ['T', 'TERMINAL', C.accent], ['L', 'LOOT', C.money], ['R', 'RE-UP', C.green], ['B', 'BAG SWAP', C.rep], ['◊', 'CHIP RACK', C.rare], ['V', 'VENDING', C.money], ['c', 'COFFEE', C.rare], ['n', 'STICKY NOTE', C.money], ['%', 'JUNK *', C.mid], ['H', 'HOVERPAD', C.accent], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
   ['▄', 'DESK *', C.mid], ['Y', 'PLANT **', C.green], ['&', 'STATUE', C.bright], ['░', 'TANK', C.mid], ['=', 'BENCH *', C.mid], ['"', 'BEDS **', C.green], ['>', 'BELT', C.mid], ['X', 'PRESS', C.danger], ['a', 'CRATE', C.bg, C.leg],
 ];
 // THE HELP, as a dev popup (HTML): the legend in the game's colors, how the controls work, the keys
@@ -2465,10 +2522,30 @@ const STICK_LOOKS = (() => {
 const dirOf = (dx, dy) => Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)];
 const onPad = c => c.x <= 21 && c.y >= 32;          // the left of the tray (TRACKPAD, ZONE PAD)
 // a tap on the floor: next to you, a step; on you, a wait; anywhere else, what it is
-function mapTap(c) {
+// TAP SNAP (Greg, 2026-11-24: one cell is hard to hit with a finger). On a touch screen, a tap that isn't right on
+// something (or on you) takes the nearest thing worth tapping within TAP_SNAP rows of the finger: anything but floor
+// and walls (a station, a door, a unit, a CAM, cover...). Rows: a cell's height, so about 3 cells across, 1.5 up and down.
+const TAP_SNAP = 1.5;
+function tapWorth(f, x, y) {
+  if (!inb(x, y) || (x === S.x && y === S.y) || (!S.vis[y][x] && !f.seen[y][x]) || '# w'.includes(at(f, x, y))) return false;
+  const i = infoAt(f, x, y);
+  return !!i.name && !['WALL', 'DUCT', 'UNKNOWN', 'YOU'].includes(i.name) && !(at(f, x, y) === '.' && i.glyph === GLYPH['.']);
+}
+function snapTap(f, px, py) {
+  const R = TAP_SNAP * L.ch, cx = (px - L.ox) / L.cw, cy = (py - L.oy) / L.ch - MAP_Y;
+  let best = null, bd = Infinity;
+  for (let y = Math.floor(cy - TAP_SNAP - 1); y <= Math.ceil(cy + TAP_SNAP + 1); y++) for (let x = Math.floor(cx - R / L.cw - 1); x <= Math.ceil(cx + R / L.cw + 1); x++) {
+    const d = Math.hypot((x + 0.5 - cx) * L.cw, (y + 0.5 - cy) * L.ch);
+    if (d <= R && d < bd && tapWorth(f, x, y)) { best = [x, y]; bd = d; }
+  }
+  return best;
+}
+function mapTap(c, g0) {
   const mx = c.x, my = c.y - MAP_Y, f = F();
   if (!inb(mx, my)) return;
+  S.armed = null;
   if (S.ring) { const o = phoneRooms(f).find(o => o.set.has(mx + ',' + my)); if (o) return ringRoom(f, o); }   // (PHONE RING: a tap anywhere in a room with a #)
+  if (g0 && g0.touch && !(mx === S.x && my === S.y) && !tapWorth(f, mx, my)) { const s = snapTap(f, g0.x0, g0.y0); if (s) { S.info = infoAt(f, s[0], s[1]); return draw(); } }
   if (Math.abs(mx - S.x) + Math.abs(my - S.y) === 1) return act(mx - S.x, my - S.y);
   if (mx === S.x && my === S.y && UIS[ui].key !== 'classic') return act(0, 0);
   S.info = infoAt(f, mx, my); draw();
@@ -2490,14 +2567,15 @@ function zoneDir(ev) {   // the wedge under the finger; the middle is a wait
 }
 cv.addEventListener('pointerdown', ev => {
   const c = cellAt(ev);
-  const h = hits.find(h => h.fn && c.y === h.y && c.x >= h.x && c.x < h.x + h.w);
-  if (h) return h.fn();
+  const h = hits.find(h => h.fn && c.y >= h.y && c.y < h.y + (h.h || 1) && c.x >= h.x && c.x < h.x + h.w);
+  if (h) { if (ev.pointerType !== 'mouse') ev.preventDefault(); return h.fn(ev); }
+  if (hits.some(h => c.y >= h.y && c.y < h.y + (h.h || 1) && c.x >= h.x && c.x < h.x + h.w)) return;   // (a dimmed button: nothing, not a step)
   if (helpOpen) return toggleHelp();
   if (S.popup) return;   // (a tap off its buttons: nothing)
   if (S.over || G) return;
   try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* fine */ }
   const u = UIS[ui].key;
-  G = { id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, ax: ev.clientX, ay: ev.clientY, cx: ev.clientX, cy: ev.clientY, cell: c, pad: onPad(c), dir: null, steps: 0, total: 0, last: -1e9, timer: null };
+  G = { id: ev.pointerId, touch: ev.pointerType !== 'mouse', x0: ev.clientX, y0: ev.clientY, ax: ev.clientX, ay: ev.clientY, cx: ev.clientX, cy: ev.clientY, cell: c, pad: onPad(c), dir: null, steps: 0, total: 0, last: -1e9, timer: null };
   if (u === 'zone' && G.pad) { const d = zoneDir(ev); if (d === 'wait') act(0, 0); else { G.timer = setInterval(holdTick, 30); setDir(d); } }
   if (u === 'stick') G.timer = setInterval(holdTick, 30);
   draw();
@@ -2524,11 +2602,14 @@ function liftFinger(ev, cancel) {
   const u = UIS[ui].key, dx = ev.clientX - g0.x0, dy = ev.clientY - g0.y0, far = Math.hypot(dx, dy) >= swipeMin();
   if (u === 'track' && g0.pad) { if (!g0.total) { if (far) { const d = dirOf(dx, dy); act(d[0], d[1]); } else act(0, 0); } return draw(); }
   if (u === 'zone' && g0.pad) return draw();
-  if (u === 'stick') { if (!g0.total && !far) mapTap(g0.cell); return draw(); }
+  if (u === 'stick') { if (!g0.total && !far) mapTap(g0.cell, g0); return draw(); }
   if (u === 'swipe' && far) { const d = dirOf(dx, dy); return act(d[0], d[1]); }
-  if (!far) return mapTap(g0.cell);
+  if (!far) return mapTap(g0.cell, g0);
   draw();
 }
+// (a phone: no long-press menu on the board, no pinch zoom in iOS Safari, which ignores touch-action for that)
+cv.addEventListener('contextmenu', ev => ev.preventDefault());
+for (const t of ['gesturestart', 'gesturechange']) addEventListener(t, ev => ev.preventDefault());
 cv.addEventListener('pointerup', ev => liftFinger(ev, false));
 cv.addEventListener('pointercancel', ev => liftFinger(ev, true));
 function infoAt(f, x, y) {
@@ -2730,7 +2811,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, peek, actions, doAction, pickLoadout: closeLoadouts, givePassives: ks => { S.passives = ks; setPassives(); look(); }, youDark, TERM: TERM_CMDS, phoneRooms, phoneAt, mapTap, grabPayload: () => { takePayload(F()); tick(); look(); draw(); }, setUi: lk => { ui = UIS.findIndex(u => u.look === lk); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, peek, actions, doAction, pickLoadout: closeLoadouts, givePassives: ks => { S.passives = ks; setPassives(); look(); }, youDark, TERM: TERM_CMDS, phoneRooms, phoneAt, mapTap, grabPayload: () => { takePayload(F()); tick(); look(); draw(); }, setUi: lk => { ui = UIS.findIndex(u => u.look === lk); draw(); }, openKit, openStation, snapTap, tapWorth, trip: () => trip(F()), get L() { return L; }, INF_CHIPS };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

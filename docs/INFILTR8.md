@@ -561,6 +561,25 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   know about it (not now).
   **Decided (Greg, 2026-11-24):** the default stick is drawn as STICK 12 (kites + arrows, `dist/lab/stick_mockups.html`).
   On a touch screen, STICK 3-13 are drawn half again as big (they were small on a phone); the walk distance is the same.
+- **Phone pass, built 2026-11-24** (Greg's playtest on a phone):
+  - **Tap snap:** one cell is hard to hit with a finger. On a touch screen, a tap that isn't right on something takes
+    the nearest thing worth tapping (anything but floor and walls) within `TAP_SNAP` (1.5 rows: about 3 cells across).
+    A step drops what you'd tapped.
+  - **Lockdown, a light pass:** no text selection, no long-press callout, no tap flash, no pinch zoom on the board.
+    The game will need its own; redo it there.
+  - **The tray is four across** (SWIPE and the sticks): `[WAIT] [ACTIONS] [GEAR 1] [GEAR 2]`, boxes 9 wide. On a touch
+    screen, ACTIONS (when it would do its one thing) and the gear take two taps, as the game's buttons: the first
+    picks it (lit, AGAIN, and the message says what it does), the second does it. WAIT is one tap. A mouse or a key:
+    at once. CLASSIC, TRACKPAD and ZONE PAD keep the old tray.
+  - Not done, left as is for now: the terminal's popup nearer the buttons; the [?] legend down in the tray; the
+    actions that show on the info card (LONG ARM's GRAB).
+  - **The backup clock** (a tripped ALERT) is now enough to get out from where you are, and half again (`tripTurns`:
+    `OUT_PACE`), never under 20. The way-out ALARM already was (1.5 times the way out, plus 10).
+  - **2 kinds of gear, at most** (`GEAR_SLOTS`). RE-UP and VENDING only ever topped up what you carry; TURNCOAT's
+    UNIFORM now only comes if you have room.
+  - **CHIP RACKS** (◊, a station): you find more passives on the floors. About 1 floor in 2 (`CHIP_CHANCE`). It offers
+    2 you don't have; take one and it's yours for the run. No cap on how many you hold.
+  - **YOUR KIT:** tap your kit's name in the HUD: your passives and gear, to read.
 - **Ten more passives, built 2026-11-24** (IP5-IPE; see `INF_CHIPS`): LOW PROFILE (seen at 60% range), NIGHT EYES
   (dark sight 7 → 9 → 11 the longer you're in the dark), TURNCOAT (a takedown gives +1 UNIFORM), KNEE PADS (duct steps
   1 turn), EARS (patrols within 6 show through walls), DODGE (50%: a grab or the SCANNER misses), COOL HEAD (ALERT
