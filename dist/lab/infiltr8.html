@@ -1282,11 +1282,12 @@ function floorLayer(seed, n) {
   const big = { cells: [], set: new Set(), x: 0, y: 0, w: MW, h: MH, shape: 'box', role: 'hub', mid: { x: 18, y: 11 }, doors: [] };
   for (let y = 1; y < MH - 1; y++) for (let x = 1; x < MW - 1; x++) { big.cells.push([x, y]); big.set.add(x + ',' + y); }
   drawRoom(f, big);
-  // the nodes: a grid of little rooms (3 x 2 inside, 5 x 4 with their walls), a few left out, each nudged a cell
+  // the nodes: little rooms (3 x 2 inside, 5 x 4 with their walls) on an even grid, 4 across and 3 down, centred, as a
+  // layer's glyphs sit in rows and columns (Greg, 2026-11-24: no nudging off the grid); a few slots left empty
   const nodes = [];
   for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) {
     if (r() < 0.2 && nodes.length + (12 - row * 4 - col) > 6) continue;   // (a few gaps, but never fewer than 6 nodes)
-    const x0 = 4 + col * 8 + Math.floor(r() * 2), y0 = 2 + row * 7 + Math.floor(r() * 2);
+    const x0 = 5 + col * 7, y0 = 3 + row * 6;
     const o = { cells: [], set: new Set(), x: x0, y: y0, w: 5, h: 4, shape: 'box', role: 'side', type: 'node', mid: { x: x0 + 2, y: y0 + 1 } };
     for (let y = y0; y < y0 + 4; y++) for (let x = x0; x < x0 + 5; x++) {
       const inner = x > x0 && x < x0 + 4 && y > y0 && y < y0 + 3; set(f, x, y, inner ? '.' : '#'); big.set.delete(x + ',' + y);
