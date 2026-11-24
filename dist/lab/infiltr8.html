@@ -212,8 +212,10 @@ const T = {
   '>': { walk: 1, see: 1 }, 'E': { walk: 1, see: 1 }, 'F': { walk: 1, see: 1 }, 'K': { walk: 1, see: 1 }, 'p': { walk: 0, see: 0 },
   'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 }, 'g': { walk: 1, see: 1, hide: 1 }, '=': { walk: 0, see: 1, low: 1 }, '"': { walk: 1, see: 1, hide: 1 }, 'b': { walk: 1, see: 1 }, 'x': { walk: 0, see: 0 },
   'T': { walk: 0, see: 0, station: 1 },   // (a terminal's set in a wall: blocks sight as one)
-  'L': { walk: 0, see: 1, station: 1 }, 'R': { walk: 0, see: 1, station: 1 }, 'B': { walk: 0, see: 1, station: 1 },
-  'Q': { walk: 0, see: 1, station: 1 },   // (a CHIP RACK: a passive to add, Greg 2026-11-24)
+  // (a LOOT CACHE, a RE-UP, a BAG SWAP, a CHIP RACK: things on the floor you walk over, Greg 2026-11-24; USE them on or
+  // beside them. The machines (VENDING, COFFEE) and the TERMINAL in its wall still stop you.)
+  'L': { walk: 1, see: 1, station: 1 }, 'R': { walk: 1, see: 1, station: 1 }, 'B': { walk: 1, see: 1, station: 1 },
+  'Q': { walk: 1, see: 1, station: 1 },   // (a CHIP RACK: a passive to add, Greg 2026-11-24)
   // (the set pieces' things, 2026-11-24: a vending machine and a coffee machine (THE BREAK ROOM), a sticky note (the
   // CAPTCHA DOOR's answer), junk (THE TRASH: low cover), the hoverpad (THE ROOF: stand on it))
   'V': { walk: 0, see: 0, station: 1 }, 'C': { walk: 0, see: 1, station: 1 }, 'N': { walk: 0, see: 1, station: 1 }, 'j': { walk: 0, see: 1, low: 1 }, 'H': { walk: 1, see: 1 }, 'w': { walk: 0, see: 1 }, 'o': { walk: 0, see: 1 }, 's': { walk: 0, see: 1, low: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
@@ -226,8 +228,8 @@ const INFO = {
   'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], 'r': ['RACKS', 'servers. nothing sees through: hide in the rows.'], 'd': ['DESKS', 'low cover: hide right behind one.'], 'g': ['A PLANT', 'step in: hidden unless right by you.'],
   'u': ['A STATUE', 'nothing sees through it.'], '=': ['A BENCH', 'low cover: hide right behind it.'],
   '"': ['PLANT BEDS', 'step in: hidden unless right by you.'],
-  'T': ['A TERMINAL', 'USE beside it: one thing it can do.'], 'L': ['A LOOT CACHE', 'USE beside it: something to carry out.'],
-  'R': ['A RE-UP', 'USE beside it: INT, or a piece of gear.'], 'Q': ['A CHIP RACK', 'USE beside it: a new passive, for the rest of the run.'],'B': ['A BAG SWAP', 'USE beside it: trade your gear for a bag.'],
+  'T': ['A TERMINAL', 'USE beside it: one thing it can do.'], 'L': ['A LOOT CACHE', 'USE on or by it: something to carry out.'],
+  'R': ['A RE-UP', 'USE on or by it: INT, or a piece of gear.'], 'Q': ['A CHIP RACK', 'USE on or by it: a new passive, for the run.'],'B': ['A BAG SWAP', 'USE on or by it: trade your gear for a bag.'],
   'V': ['A VENDING MACHINE', 'USE beside it: trade loot CR for gear.'], 'C': ['A COFFEE MACHINE', 'USE beside it: +1 INT. loud: +1 ALERT.'],
   'N': ['A STICKY NOTE', 'someone wrote a password on it.'], 'w': ['THE PARAPET', 'the roof\'s edge. a long way down.'], 'o': ['THE EDGE', 'no parapet here. step off it: you fall.'], 's': ['SOLAR PANELS', 'low cover: hide right behind a row.'], 'j': ['JUNK', 'deleted files, piled up. low cover.'], 'H': ['THE HOVERPAD', 'stand on it, USE: call the hover. then hold out.'],
   'b': ['THE BELT', 'it carries you. off before the X.'], 'x': ['A CRATE', 'on the belt. nothing sees through.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
@@ -1148,7 +1150,7 @@ function stationBeside(f) { return stationsBeside(f)[0] || null; }
 // every one beside you (ACTIONS lists each: a VENDING machine and a COFFEE machine side by side, say)
 function stationsBeside(f) {
   const out = [];
-  for (const [i, j] of D4) { const k = (S.x + i) + ',' + (S.y + j), st = f.stations && f.stations.get(k); if (st && !st.used) out.push({ key: k, st }); }
+  for (const [i, j] of [[0, 0], ...D4]) { const k = (S.x + i) + ',' + (S.y + j), st = f.stations && f.stations.get(k); if (st && !st.used) out.push({ key: k, st }); }   // ([0, 0]: the one you stand on)
   return out;
 }
 // YOUR KIT (Greg, 2026-11-24: a way to see your passives, as the legend): tap your kit's name in the HUD. Just to read.
@@ -1907,6 +1909,7 @@ function act(dx, dy) {
     if (c === 'v') say(S.inDuct ? 'a vent. USE climbs out.' : 'a vent. USE drops into the duct.', C.rare);
     else if (S.inDuct) { /* (under the floor: what's up there isn't yours to use) */ }
     else if ('<>EFK'.includes(c)) say(INFO[c][0].toLowerCase() + '. USE ' + (c === '<' ? 'goes up.' : c === '>' ? 'goes down.' : 'leaves.'), C.accent);
+    else if ('LRBQ'.includes(c) && f.stations.get(S.x + ',' + S.y) && !f.stations.get(S.x + ',' + S.y).used) say(INFO[c][0].toLowerCase() + '. ACTIONS: use it.', C.accent);   // (one you walk over)
   }
   look();
   draw();

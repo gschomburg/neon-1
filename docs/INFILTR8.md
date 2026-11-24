@@ -580,6 +580,8 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   - **CHIP RACKS** (◊, a station): you find more passives on the floors. About 1 floor in 2 (`CHIP_CHANCE`). It offers
     2 you don't have; take one and it's yours for the run. No cap on how many you hold.
   - **YOUR KIT:** tap your kit's name in the HUD: your passives and gear, to read.
+- **Decided (Greg, 2026-11-24):** you walk over a LOOT CACHE, a RE-UP, a BAG SWAP and a CHIP RACK, and USE them on
+  them or beside them. The machines (VENDING, COFFEE) and the TERMINAL in its wall still stop you.
 - **Ten more passives, built 2026-11-24** (IP5-IPE; see `INF_CHIPS`): LOW PROFILE (seen at 60% range), NIGHT EYES
   (dark sight 7 → 9 → 11 the longer you're in the dark), TURNCOAT (a takedown gives +1 UNIFORM), KNEE PADS (duct steps
   1 turn), EARS (patrols within 6 show through walls), DODGE (50%: a grab or the SCANNER misses), COOL HEAD (ALERT
