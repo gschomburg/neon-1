@@ -441,7 +441,8 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
 
 ### Stations, light and doors (Greg, 2026-11-24; built the same day)
 - **Stations:** solid things you USE from beside them: a popup of choices, pick one (or a number key), and it's
-  spent; CLOSE spends nothing. A USE on the tile you stand on (stairs, a vent, a way out) comes first, then a station
+  spent; CLOSE spends nothing. (The demo's popup is a stand-in: **in the game, use the game's own popups**, their
+  style and how they work; Greg, 2026-11-24.) A USE on the tile you stand on (stairs, a vent, a way out) comes first, then a station
   beside you, then an open door beside you.
   - **`T` TERMINAL:** CAMS OFF (every CAM on the floor, 25 turns), MAP (the floor's layout and its ducts), or LIGHTS
     OUT (the power, 25 turns).
