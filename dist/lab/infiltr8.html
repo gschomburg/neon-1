@@ -373,6 +373,7 @@ function doorOn(f, o, to, r, halls, want) {   // (want: { side, at }: that side,
       const x = cx + dx2, y = cy + dy2, ox = x + dx2, oy = y + dy2;
       if (at(f, cx, cy) !== '.' || !wallish(x, y) || !free(ox, oy)) continue;
       if (!o.set.has((cx + px) + ',' + (cy + py)) || !o.set.has((cx - px) + ',' + (cy - py)) || !wallish(x + px, y + py) || !wallish(x - px, y - py)) continue;
+      if (at(f, x, y) !== '+' && (at(f, x + px, y + py) === '+' || at(f, x - px, y - py) === '+')) continue;   // (never a new door right beside a door: use that one)
       opts.push({ x, y, ox, oy, door: at(f, x, y) === '+' });
     }
     if (want && sd === want.side && !want.tried) { want.tried = true; const hit = opts.find(p => (sd === 'n' || sd === 's' ? p.x : p.y) === want.at); if (hit) return hit; continue; }   // (no door there: on as usual)
@@ -382,17 +383,24 @@ function doorOn(f, o, to, r, halls, want) {   // (want: { side, at }: that side,
   }
   return null;
 }
-// the cheapest path: 1 a step, +3 a turn, +2 next to a wall (bucket queue over x, y and the way you're going)
+// the cheapest path: 1 a step, +3 a turn, +2 next to a wall (bucket queue over x, y and the way you're going).
+// A door that has a hall already: the new one joins that hall wherever it meets it (Greg, 2026-11-23, seed 9SYPUX: one
+// ran on beside the other to the same door, and no junction showed). So it starts from anywhere on the hall at its own
+// door, and stops at the first cell of the hall at the other: a junction, not two halls side by side.
 function routeHall(f, s, t, halls) {
   const ok = (x, y) => inb(x, y) && (at(f, x, y) === ' ' || halls.has(x + ',' + y) || (x === t.ox && y === t.oy));
   const nearWall = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([i, j]) => '#+'.includes(at(f, x + i, y + j)));
   // (a new cell beside a hall that's there already costs a lot: two halls side by side read as one wide one)
   const nearHall = (x, y) => !halls.has(x + ',' + y) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([i, j]) => halls.has((x + i) + ',' + (y + j)));
-  const D = [[1, 0], [-1, 0], [0, 1], [0, -1]], best = new Map(), from = new Map(), buckets = [[[s.ox, s.oy, -1]]];
-  best.set(s.ox + ',' + s.oy + ',-1', 0);
+  const D = [[1, 0], [-1, 0], [0, 1], [0, -1]], best = new Map(), from = new Map(), buckets = [[]];
+  // the hall a door's outside cell is on (all of it, joined), or just that cell
+  const joined = (x, y) => { if (!halls.has(x + ',' + y)) return [[x, y]]; const out = [[x, y]], seen = new Set([x + ',' + y]);
+    for (let i = 0; i < out.length; i++) for (const [a, b] of D) { const k = (out[i][0] + a) + ',' + (out[i][1] + b); if (halls.has(k) && !seen.has(k)) { seen.add(k); out.push([out[i][0] + a, out[i][1] + b]); } } return out; };
+  const goal = new Set(joined(t.ox, t.oy).map(([x, y]) => x + ',' + y));
+  for (const [x, y] of joined(s.ox, s.oy)) { buckets[0].push([x, y, -1]); best.set(x + ',' + y + ',-1', 0); }
   for (let cost = 0; cost < buckets.length && cost < 600; cost++) for (const [x, y, d] of buckets[cost] || []) {
     if (best.get(x + ',' + y + ',' + d) !== cost) continue;
-    if (x === t.ox && y === t.oy) { const path = []; let k = x + ',' + y + ',' + d; while (k) { const [px, py] = k.split(',').map(Number); path.unshift([px, py]); k = from.get(k); } return path; }
+    if (goal.has(x + ',' + y)) { const path = []; let k = x + ',' + y + ',' + d; while (k) { const [px, py] = k.split(',').map(Number); path.unshift([px, py]); k = from.get(k); } return path; }
     D.forEach(([i, j], nd) => {
       const nx = x + i, ny = y + j; if (!ok(nx, ny)) return;
       const c = cost + 1 + (d >= 0 && d !== nd ? 3 : 0) + (nearWall(nx, ny) && !(nx === t.ox && ny === t.oy) ? 2 : 0) + (nearHall(nx, ny) ? 8 : 0), key = nx + ',' + ny + ',' + nd;
