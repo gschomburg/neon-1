@@ -1168,7 +1168,10 @@ function chooseStation(i) {
   p.n = (p.n || 0) + 1;
   if (p.kind === 'T' && pass('IP2') && p.n < pass('IP2').picks) { f.stations.get(p.key).used = true; p.opts.splice(i, 1); p.line = 'ROOT: one more.'; look(); return draw(); }
   if (p.keep) { S.popup = null; tick(); look(); return draw(); }   // (VENDING: not spent; each go a turn)
-  f.stations.get(p.key).used = true; S.popup = null; tick(); look(); draw();
+  f.stations.get(p.key).used = true; S.popup = null;
+  // (a LOOT CACHE you've taken from is gone: Greg, 2026-11-24)
+  if (p.kind === 'L') { const [x, y] = p.key.split(',').map(Number); set(f, x, y, '.'); f.stations.delete(p.key); }
+  tick(); look(); draw();
 }
 // can a CAM at (x, y) facing a see (tx, ty) as it sweeps (its cone plus its sweep: 90 degrees either way)?
 const camSweeps = (f, x, y, a, tx, ty) => { const d = Math.hypot(tx - x, (ty - y) * 2); if (d === 0 || d > (litAt(f, tx, ty) ? 14 : DARK_SEE)) return false;
@@ -2282,7 +2285,8 @@ function draw() {
     const k0 = x + ',' + y;
     let ch = c === '+' && doorOpen(f, x, y) ? '/' : c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === 'b' ? beltGlyph(f, x, y) : c === 'x' ? crateLetter(f, x, y) : c === '.' && f.halls.has(k0) ? (f.junc && f.junc.has(k0) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
     let col = T[c].station && f.stations && f.stations.get(x + ',' + y) && f.stations.get(x + ',' + y).used ? C.dim : c === 'b' && ch === 'X' ? C.danger : c === 'x' ? C.bg : C[TCOL[c]] || C.text, bg = c === 'x' && vis ? C.leg : null;   // (the press: red. a crate: a chip, its letter on the crate color)
-    if (!vis) { col = c === '.' ? C.seen : C.dim; }
+    if (!vis) { col = c === '.' ? C.seen : C.dim;
+      if (c === 'T' && pass('IPD') && f.stations.get(k0) && !f.stations.get(k0).used) col = C[TCOL.T]; }   // (BACKDOOR: a terminal you can still hack stays lit, out of sight too: Greg, 2026-11-24)
     else {
       const k = x + ',' + y;
       if (litAt(f, x, y) && !f.litAll && c !== 'x') bg = rgba(C.money, 0.05);   // (lit: a faint warm wash)

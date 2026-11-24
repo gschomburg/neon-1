@@ -582,6 +582,8 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   - **YOUR KIT:** tap your kit's name in the HUD: your passives and gear, to read.
 - **Decided (Greg, 2026-11-24):** you walk over a LOOT CACHE, a RE-UP, a BAG SWAP and a CHIP RACK, and USE them on
   them or beside them. The machines (VENDING, COFFEE) and the TERMINAL in its wall still stop you.
+- **Decided (Greg, 2026-11-24):** a LOOT CACHE you take from is gone (its cell is floor again). With BACKDOOR, every
+  terminal you've seen and can still hack stays lit on the map, out of sight too; a spent one dims as before.
 - **Ten more passives, built 2026-11-24** (IP5-IPE; see `INF_CHIPS`): LOW PROFILE (seen at 60% range), NIGHT EYES
   (dark sight 7 → 9 → 11 the longer you're in the dark), TURNCOAT (a takedown gives +1 UNIFORM), KNEE PADS (duct steps
   1 turn), EARS (patrols within 6 show through walls), DODGE (50%: a grab or the SCANNER misses), COOL HEAD (ALERT
