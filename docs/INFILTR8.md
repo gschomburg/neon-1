@@ -398,7 +398,7 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   - **THE RESTROOM:** stalls along one wall (thin walls, open at the front): duck into one.
   - **THE FACTORY:** a big room with a tank in the middle (two side by side in a wide one): a rounded box, `░`
     inside. The big rooms take turns: server farm, cubicles, factory. Later: THE WAREHOUSE's belt.
-  - **Plants** (`Y`, low cover) in the corners of some plain rooms; a **statue** (`&`) in the middle of some hubs.
+  - **Plants** (`Y`; you step into one and hide, as in the atrium's beds: Greg, 2026-11-24) in the corners of some plain rooms; a **statue** (`&`) in the middle of some hubs.
     **Decided (Greg, 2026-11-23):** plain characters for things where we can (`Y`, `&`, like `P` and `S`). Greg likes
     `§`: keep it for something. (`&` was the WATCHDOG's in the daemon ideas above: that one needs another mark.)
   - Nothing put in a room may shut part of it off (each one checked; a plant and a pillar once did together).
