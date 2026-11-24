@@ -277,6 +277,21 @@ Two generated halls sometimes ran side by side, and you couldn't tell where they
 beside another one: side-by-side stretches dropped from about 2.2 to 0.2 per floor over 2,000 floors. Where halls
 meet or split there's a ◇ junction mark. Inside a doubled stretch, where it still happens, no mark is drawn.
 
+### From playing the demo: not built yet (Greg, 2026-11-23)
+- **Real doors.** Right now a `+` is only a gap: you, patrols and every view go straight through. The idea:
+  - Doors start closed, and a closed door blocks sight, so you can't see into a room until you open it.
+  - Step into a closed door to open it (that's your turn). Taking a turn to close it behind you breaks a chasing
+    patrol's line of sight.
+  - Patrols open doors on their rounds. An open door you didn't open tells you something went through.
+  - Later: locked doors, opened with a LOCKPICK, a key card, or a CHARGE.
+- **Patrol line of sight.** Done in the demo: the cone shows, 90 degrees wide, the way the patrol last stepped. Still
+  to do: a patrol turns around at the end of its round with no warning. A `?` over it the turn before would make
+  trailing one a skill. (Also, the patrol's angle ignores the cells being twice as tall, though its range doesn't.
+  The cone is a little off up and down.)
+- **Takedown.** Sneaking up on a patrol gets you nothing yet, and you can even stand on its cell. The idea: step into
+  a patrol from behind or the side and it's out, quietly (for good, or for 20 turns). From the front, it catches
+  you, the same as now. The DART GUN and the TASER are then for patrols you can't get behind.
+
 ## Rewards
 - **The corp counts as beaten**, as if you'd breached it: the map, the codex and the sector all treat it the same.
 - **No boss mod.** Instead, you get the payload, and the payload is the point:
