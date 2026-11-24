@@ -47,6 +47,10 @@ buildBossIntro); ROOT's cutscene hides the bench keyboard (engine/bench.js bench
   way on is explored, the next row with somewhere new opens (engine/render.js availableNodes, the "pocket").
 - **HAD3S, CERBERUS and a ripped chip:** it was the rule: any layer a rival stole meant it took a ripped chip back.
   **Decided (Greg, 2026-11-21), built v15.31:** only the boss layer. Beat the boss and you keep them.
+- **b0y to LVL 2 on your crew** (Greg, meat notes 2026-11-24): is there a way? There's no REP buy for it. Maybe it's
+  because Greg's only at 7/10. Check how crew levels go up, and whether b0y's next level shows anywhere.
+- **The REP page's private messages** (Greg, meat notes 2026-11-24): "crew: brick LVL 2" runs into the "#####-----
+  5/10". Maybe drop the #### bars and just show 5/10 (or 2/5).
 - **TELEPHONIX's TELL LIGHT:** the corp side looks right: when a layer doesn't follow its tell, the dial points at a
   random node, and TELL LIGHT says TELL OFF. The quirk: that random node can be the real one, so TELL OFF shows while
   the dial is right (for every corp that dresses its nodes; engine/layers.js lv.tellOn). Open for Greg: what did you
@@ -132,11 +136,17 @@ The ideas as they came:
 - **Lists with an info box:** standardize above or below. FEATS shows it above, REP below (REP also has its buy area;
   maybe those just sit closer). The codex is above. Look at them all together.
 - **THE BOARD's name:** "BBS board"? Or a better name for the whole section (it was up for a rename once). BBS = bulletin
-  board system.
+  board system. More names (Greg, meat notes 2026-11-24): LEGACY, CLOUT.
+- **The mute keys** (Greg, meat notes 2026-11-24): swap them: N for sound effects, M for music (today M mutes and N is
+  music: engine/input.js, engine/leaders.js).
+- **The quest list** (Greg, meat notes 2026-11-24): once there are more quests, a short scroll area (about 5 lines) with
+  the quest's info below it, in place of the < > arrows. And highlight the main quest while it's active (SYSTEM
+  FAILURE). Wait till there are more quests.
 - **The training's text:** make the capitals match (MOD is capitalized, mods isn't: maybe that's fine).
 - The LOOT bag's CLOSE is fine as it is (Greg).
 
 ### Quests and story
+- **More pirate references** (Greg, meat notes 2026-11-24).
 - **The H3AV3N maze:** make the pattern more of a thing: a better intro, or a little popup from b0y.
 - **The MEDIX basement scene** should foreshadow the NetHack / INFILTR8 stuff: maybe a second panel of sneaking through
   the basement past a camera, in rooms, looking like what that mode ends up as.
