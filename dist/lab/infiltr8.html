@@ -911,11 +911,11 @@ function drawFloorCard(cvs, f, fs) {
   const cell = (cx, cy, c, col, bold) => { x.font = (bold ? 800 : 400) + ' ' + fs + 'px "JetBrains Mono", Consolas, monospace'; x.fillStyle = col; x.fillText(c, cx * cw + cw / 2, cy * ch + ch / 2 + fs * 0.06); };
   for (const d of f.ducts) for (const [dx, dy] of d.cells) { x.fillStyle = rgba(C.rare, 0.22); x.fillRect(dx * cw, dy * ch, cw, ch); }
   for (const c of f.cams) for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) if (inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, xx, yy)) { x.fillStyle = rgba(C.danger, 0.14); x.fillRect(xx * cw, yy * ch, cw, ch); }
-  for (const p of f.pats) for (const [px, py] of p.path) { x.fillStyle = rgba(C.leg, 0.14); x.fillRect(px * cw, py * ch, cw, ch); }
+  const walk = new Set(f.pats.flatMap(p => p.path.map(([px, py]) => px + ',' + py)));   // (a patrol's walk: its floor marks go red; a CAM's view is the red wash)
   for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) {
     const c = at(f, xx, yy); if (c === ' ') continue;
     const k = xx + ',' + yy, g0 = c === '#' ? wallGlyph(f, xx, yy) : c === '.' && f.halls.has(k) ? (f.junc && f.junc.has(k) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
-    cell(xx, yy, g0, C[TCOL[c]] || C.text, '<>EF'.includes(c));
+    cell(xx, yy, g0, walk.has(k) && '.+'.includes(c) ? C.danger : C[TCOL[c]] || C.text, '<>EF'.includes(c));
   }
   if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money, true);
   for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger, true);
