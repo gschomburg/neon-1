@@ -191,23 +191,57 @@ function floorRing() {
 }
 
 // ---------- F2, F3: from the seed ----------
-// Rooms (some with pillars), joined in a chain plus a loop or two by L-shaped halls; a door where a hall meets a wall.
+// Rooms by BSP (bspRooms: the floor cut in pieces, a room in each), some with pillars, joined by halls: the pairs the cuts
+// made (each cut joins its two sides, so it all joins up), plus a loop or two. A door where a hall meets a wall.
 // F2: stairs up and down, ducts between two vents, the trash chute. F3: stairs up, the payload in the far room, the fire
 // exit on an outside wall.
+// BSP (binary space partitioning): cut the floor in two, and each half in two again, till the pieces are about room
+// size; a room in each piece, filling most of it. So rooms spread over the whole floor (no big empty patches), and
+// their sizes vary with their pieces. Each cut also says which rooms are neighbours: links joins the nearest pair across
+// it (the halls follow those, so it all joins up; a piece left empty just has no link).
+const BSP = {
+  minW: 10, minH: 7,     // the smallest piece: a 7 x 5 room, and a gap round it for halls (a cell of gap on each side)
+  stopArea: 190,         // a piece this small (in cells) may stop being cut: bigger rooms, fewer of them
+  stopChance: 0.45,
+  emptyChance: 0,        // a piece left empty now and then (0.08 left big holes: empty 9x6 patches went 0.2 -> 1.8 a floor)
+};
+function bspRooms(r) {
+  const ri = (a, b) => a + Math.floor(r() * (b - a + 1)), rooms = [], links = [];
+  const near = (A, B) => { let best = null, bd = 1e9; for (const a of A) for (const b of B) { const d = Math.hypot(a.cx - b.cx, (a.cy - b.cy) * 2); if (d < bd) { bd = d; best = [a, b]; } } return best; };
+  function cut(x, y, w, h, depth) {
+    const canV = w >= BSP.minW * 2, canH = h >= BSP.minH * 2;
+    if ((!canV && !canH) || (depth >= 2 && w * h <= BSP.stopArea && r() < BSP.stopChance)) {
+      if (depth >= 2 && r() < BSP.emptyChance) return [];
+      // the room: most of the piece, a cell of gap inside its edges
+      const rw = ri(Math.max(7, Math.floor((w - 2) * 0.6)), w - 2), rh = ri(Math.max(5, Math.floor((h - 2) * 0.6)), h - 2);
+      const rx = x + 1 + ri(0, w - 2 - rw), ry = y + 1 + ri(0, h - 2 - rh);
+      const o = { x: rx, y: ry, w: rw, h: rh, cx: rx + Math.floor(rw / 2), cy: ry + Math.floor(rh / 2), piece: { x, y, w, h } };
+      rooms.push(o); return [o];
+    }
+    // cut across the longer side as it looks (a cell is about twice as tall as wide)
+    const vert = canV && (!canH || (w * CHAR_W > h * LINE_H ? r() < 0.8 : r() < 0.2));
+    let A, B;
+    if (vert) { const k = ri(BSP.minW, w - BSP.minW); A = cut(x, y, k, h, depth + 1); B = cut(x + k, y, w - k, h, depth + 1); }
+    else { const k = ri(BSP.minH, h - BSP.minH); A = cut(x, y, w, k, depth + 1); B = cut(x, y + k, w, h - k, depth + 1); }
+    if (A.length && B.length) links.push(near(A, B));
+    return A.concat(B);
+  }
+  cut(0, 0, MW, MH, 0);
+  return { rooms, links };
+}
 function floorGen(seed, n, last) {
   const r = rngFrom(hashStr(seed + ':' + n)), ri = (a, b) => a + Math.floor(r() * (b - a + 1));
   for (let tries = 0; tries < 40; tries++) {
-    const f = newFloor(last ? 'THE VAULT' : 'THE STACKS'), rooms = [];
-    for (let k = 0; k < 200 && rooms.length < 7; k++) {
-      const w = ri(7, 13), h = ri(5, 8), x = ri(0, MW - w), y = ri(0, MH - h);
-      if (rooms.some(o => x < o.x + o.w + 2 && o.x < x + w + 2 && y < o.y + o.h + 2 && o.y < y + h + 2)) continue;
-      rooms.push({ x, y, w, h, cx: x + Math.floor(w / 2), cy: y + Math.floor(h / 2) });
-    }
+    const f = newFloor(last ? 'THE VAULT' : 'THE STACKS'), { rooms, links } = bspRooms(r);
     if (rooms.length < 5) continue;
     rooms.forEach(o => room(f, o.x, o.y, o.w, o.h));
-    rooms.sort((a, b) => a.cx - b.cx || a.cy - b.cy);
-    const links = rooms.slice(1).map((o, i) => [rooms[i], o]);
-    for (let e = 0; e < 2; e++) { const a = rooms[ri(0, rooms.length - 1)], b = rooms[ri(0, rooms.length - 1)]; if (a !== b) links.push([a, b]); }
+    rooms.sort((a, b) => a.cx - b.cx || a.cy - b.cy);   // (rooms[0], the leftmost, gets the stairs up)
+    // a loop or two: a pair of near rooms the cuts didn't join
+    const joined = new Set(links.map(([a, b]) => rooms.indexOf(a) + '-' + rooms.indexOf(b)).concat(links.map(([a, b]) => rooms.indexOf(b) + '-' + rooms.indexOf(a))));
+    const near = [];
+    rooms.forEach((a, i) => rooms.forEach((b, j) => { if (i < j && !joined.has(i + '-' + j)) near.push([a, b, Math.hypot(a.cx - b.cx, (a.cy - b.cy) * 2)]); }));
+    near.sort((p, q) => p[2] - q[2]);
+    for (const [a, b] of near.slice(0, 4).sort(() => r() - 0.5).slice(0, ri(1, 2))) links.push([a, b]);
     const halls = new Set();
     if (!links.slice(0, rooms.length - 1).every(([a, b]) => hall(f, a, b, r, halls))) continue;   // (the chain has to join up)
     for (const [a, b] of links.slice(rooms.length - 1)) hall(f, a, b, r, halls);
