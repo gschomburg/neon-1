@@ -147,7 +147,7 @@ const INFO = {
   'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], 'r': ['RACKS', 'servers. nothing sees through: hide in the rows.'], 'd': ['DESKS', 'low cover: crouch right behind one.'], 'g': ['A PLANT', 'low cover: crouch right behind it.'],
   'u': ['A STATUE', 'nothing sees through it.'], '=': ['A BENCH', 'low cover: crouch right behind it.'],
   '"': ['PLANT BEDS', 'step in: hidden unless right by you.'],
-  'b': ['THE BELT', 'it carries you. off before the press.'], 'x': ['A CRATE', 'on the belt. nothing sees through.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
+  'b': ['THE BELT', 'it carries you. off before the X.'], 'x': ['A CRATE', 'on the belt. nothing sees through.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
 };
 
 // ---------- a floor ----------
@@ -483,14 +483,9 @@ function warehouse(f, rooms, r, p = 0.5) {
     if (!path || path.length < 8 || path.length > 34) continue;
     A.type = 'warehouse';
     const b = { cells: path };
-    // a tunnel's walls: the empty cells beside a stretch of belt outside the rooms
-    path.forEach(([x, y], i) => {
-      const k = x + ',' + y, inRoom = roomOfCell.has(k);
-      if (!inRoom && at(f, x, y) === ' ') { const [px, py] = i ? path[i - 1] : path[i + 1], perp = px === x ? [[1, 0], [-1, 0]] : [[0, 1], [0, -1]];
-        for (const [a, c] of perp) if (at(f, x + a, y + c) === ' ') set(f, x + a, y + c, '#'); }
-    });
+    // (across a gap between rooms it's open, no walls either side: Greg, 2026-11-24, didn't like the walled tunnels)
     path.forEach(([x, y], i) => { set(f, x, y, 'b'); f.beltAt.set(x + ',' + y, { b, i }); });
-    for (let i = 2; i < path.length - 2; i += 3 + Math.floor(r() * 2)) if (roomOfCell.has(path[i] + '')) set(f, path[i][0], path[i][1], 'x');   // (crates on it already, in rooms)
+    for (let i = 2; i < path.length - 2; i += 3 + Math.floor(r() * 2)) if (roomOfCell.has(path[i] + '')) putCrate(f, path[i][0], path[i][1], r);   // (crates on it already, in rooms)
     f.belts.push(b);
     return;
   }
@@ -535,9 +530,10 @@ function beltsStep(f) {
     for (let i = last; i >= 0; i--) {
       const [x, y] = c[i], you = !S.inDuct && S.x === x && S.y === y;
       if (at(f, x, y) === 'x') {
-        set(f, x, y, 'b');
+        const letter = crateLetter(f, x, y);
+        set(f, x, y, 'b'); if (f.crates) f.crates.delete(x + ',' + y);
         if (i + 1 >= last) { b.crushT = performance.now(); continue; }   // (onto the press: crushed)
-        set(f, c[i + 1][0], c[i + 1][1], 'x');
+        set(f, c[i + 1][0], c[i + 1][1], 'x'); (f.crates = f.crates || new Map()).set(c[i + 1][0] + ',' + c[i + 1][1], letter);
       } else if (you) {
         if (i >= last - 1) { shoveOff(f, b, c[last]); continue; }        // (onto the press, or on it: shoved off)
         S.slide = { x: S.x, y: S.y, t: performance.now() }; S.x = c[i + 1][0]; S.y = c[i + 1][1];
@@ -545,7 +541,7 @@ function beltsStep(f) {
     }
     // a new crate at the start, now and then, with room behind it
     const [sx, sy] = c[0];
-    if (at(f, sx, sy) === 'b' && at(f, c[1][0], c[1][1]) === 'b' && !(S.x === sx && S.y === sy) && f.beltR() < 0.3) set(f, sx, sy, 'x');
+    if (at(f, sx, sy) === 'b' && at(f, c[1][0], c[1][1]) === 'b' && !(S.x === sx && S.y === sy) && f.beltR() < 0.3) putCrate(f, sx, sy, f.beltR);
   }
 }
 // the press shoves you off the belt: to a free cell beside its last stretch, else back along the belt
@@ -1153,12 +1149,18 @@ function wallGlyph(f, x, y) {
   return ['▪', '│', '│', '│', '─', '└', '┌', '├', '─', '┘', '┐', '┤', '─', '┴', '┬', '┼'][k];
 }
 const CAM_GLYPH = '¢';
+// a belt cell's look: the way it goes from there (> < v ^), the press at its end an X (Greg, 2026-11-24: plain marks)
 function beltGlyph(f, x, y) {
-  const at0 = f.beltAt && f.beltAt.get(x + ',' + y); if (!at0) return '»';
-  const { b, i } = at0; if (i === b.cells.length - 1) return '▀';
-  const [nx, ny] = b.cells[i + 1], on = (i + (f.beltPhase || 0)) % 2;
-  return nx > x ? (on ? '›' : '»') : nx < x ? (on ? '‹' : '«') : ny > y ? (on ? '⇣' : '↓') : (on ? '⇡' : '↑');
+  const at0 = f.beltAt && f.beltAt.get(x + ',' + y); if (!at0) return '>';
+  const { b, i } = at0; if (i === b.cells.length - 1) return 'X';
+  const [nx, ny] = b.cells[i + 1];
+  return nx > x ? '>' : nx < x ? '<' : ny > y ? 'v' : '^';
 }
+// CRATES are chips (Greg, 2026-11-24): a lowercase letter on the crate color, saying what's in it. What the letters
+// mean is for later (gear, credits, loot...); for now any of these. The letter rides with its crate (f.crates).
+const CRATE_LETTERS = 'abcdefghkmnprstwxyz';
+function putCrate(f, x, y, r) { set(f, x, y, 'x'); (f.crates = f.crates || new Map()).set(x + ',' + y, CRATE_LETTERS[Math.floor(r() * CRATE_LETTERS.length)]); }
+const crateLetter = (f, x, y) => (f.crates && f.crates.get(x + ',' + y)) || 'x';
 function machineGlyph(f, x, y) {
   const m = (i, j) => at(f, i, j) === 'm', n = m(x, y - 1), s0 = m(x, y + 1), e = m(x + 1, y), w = m(x - 1, y);
   if (n && s0 && e && w) return '░';
@@ -1166,7 +1168,7 @@ function machineGlyph(f, x, y) {
   if ((n || s0) && !(e && w)) return '│';
   return e || w ? '─' : '●';
 }
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '»', 'x': '■' };
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x' };
 // the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
 const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'm': 'mid', '#': 'mid' };
 
@@ -1206,17 +1208,17 @@ function draw() {
     const c = at(f, x, y), vis = S.vis[y][x], seen = f.seen[y][x];
     if (c === ' ' || (!vis && !seen)) continue;
     const k0 = x + ',' + y;
-    let ch = c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === 'b' ? beltGlyph(f, x, y) : c === '.' && f.halls.has(k0) ? (f.junc && f.junc.has(k0) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
-    let col = ch === '▀' ? C.danger : C[TCOL[c]] || C.text, bg = null;   // (the press: red)
+    let ch = c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === 'b' ? beltGlyph(f, x, y) : c === 'x' ? crateLetter(f, x, y) : c === '.' && f.halls.has(k0) ? (f.junc && f.junc.has(k0) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
+    let col = c === 'b' && ch === 'X' ? C.danger : c === 'x' ? C.bg : C[TCOL[c]] || C.text, bg = c === 'x' && vis ? C.leg : null;   // (the press: red. a crate: a chip, its letter on the crate color)
     if (!vis) { col = c === '.' ? C.seen : C.dim; }
     else {
       const k = x + ',' + y;
       if (patCells.has(k)) bg = S.uniform > 0 ? rgba(C.money, 0.08) : rgba(C.leg, 0.13);   // (a patrol's view: orange, fainter than a CAM's)
-      if (camCells.has(k)) bg = rgba(C.danger, 0.2);
+      if (camCells.has(k) && c !== 'x') bg = rgba(C.danger, 0.2);
       if (armSet.has(k)) { ch = armBeam(f); col = C.danger; }
       if (trail.has(k) && c === '.') { ch = '•'; col = C.rep; }
     }
-    put(x, MAP_Y + y, ch, col, c === '<' || c === '>' || c === 'E', bg);
+    put(x, MAP_Y + y, ch, col, c === '<' || c === '>' || c === 'E' || c === 'x', bg);
   }
   // the ducts: a known one is a tint on the floor; down in one, the world above dims and the ducts show as pipes
   if (S.inDuct) { g.fillStyle = rgba(C.bg, 0.6); g.fillRect(L.ox, L.oy + MAP_Y * L.ch, SW * L.cw, MH * L.ch); }
@@ -1310,7 +1312,7 @@ const LEGEND = () => [   // (three columns of 12: a name 9 at most)
   ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
   ['◘', 'FIRE EXIT', C.green], ['▾', 'CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text],
   [HALL_GLYPH, 'HALL', C.dim], [JUNC_GLYPH, 'JUNCTION', C.dim], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
-  ['▄', 'DESK *', C.mid], ['Y', 'PLANT *', C.green], ['&', 'STATUE', C.bright], ['░', 'TANK', C.mid], ['=', 'BENCH *', C.mid], ['"', 'BEDS **', C.green], ['»', 'BELT', C.mid], ['■', 'CRATE', C.leg], ['•', 'TRAIL', C.rep],
+  ['▄', 'DESK *', C.mid], ['Y', 'PLANT *', C.green], ['&', 'STATUE', C.bright], ['░', 'TANK', C.mid], ['=', 'BENCH *', C.mid], ['"', 'BEDS **', C.green], ['>', 'BELT', C.mid], ['X', 'PRESS', C.danger], ['a', 'CRATE', C.bg, C.leg], ['•', 'TRAIL', C.rep],
 ];
 function drawHelp() {
   hits = hits.filter(h => h.id === 'help');   // (only [?] and GOT IT while it's up; a tap anywhere else closes it)
@@ -1436,8 +1438,8 @@ function infoAt(f, x, y) {
   if (f.payload && f.payload.x === x && f.payload.y === y) return { x, y, glyph: '$', name: 'THE PAYLOAD', text: 'take it and the alarm goes. then out.' };
   const c = at(f, x, y), i = INFO[c] || ['', ''], ro = f.roomOf && f.roomOf.get(x + ',' + y);
   if (c === '.' && ro && ro.type) return { x, y, glyph: GLYPH[c], name: ROOM_TYPES[ro.type][0], text: ROOM_TYPES[ro.type][1] + (vis ? '' : ' (seen before)') };
-  { const bt = c === 'b' && f.beltAt && f.beltAt.get(x + ',' + y); if (bt && bt.i === bt.b.cells.length - 1) return { x, y, glyph: '▀', name: 'THE PRESS', text: 'crushes crates. shoves you off.' }; }
-  return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === 'b' ? beltGlyph(f, x, y) : GLYPH[c] || c, name: i[0], text: i[1] + (vis ? '' : ' (seen before)') };
+  { const bt = c === 'b' && f.beltAt && f.beltAt.get(x + ',' + y); if (bt && bt.i === bt.b.cells.length - 1) return { x, y, glyph: 'X', name: 'THE PRESS', text: 'crushes crates. shoves you off.' }; }
+  return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === 'b' ? beltGlyph(f, x, y) : c === 'x' ? crateLetter(f, x, y) : GLYPH[c] || c, name: c === 'x' ? 'A CRATE: ' + crateLetter(f, x, y) : i[0], text: i[1] + (vis ? '' : ' (seen before)') };
 }
 addEventListener('keydown', ev => {
   if (ev.target && ev.target.closest && ev.target.closest('#dev, #v-floor')) return;   // (in the viewer, its buttons keep the arrow keys)
@@ -1517,9 +1519,10 @@ function drawFloorCard(cvs, f, fs) {
   const walk = new Set(f.pats.flatMap(p => p.path.map(([px, py]) => px + ',' + py)));   // (a patrol's walk: its floor marks go red; a CAM's view is the red wash)
   for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) {
     const c = at(f, xx, yy); if (c === ' ') continue;
-    const k = xx + ',' + yy, g0 = c === '#' ? wallGlyph(f, xx, yy) : c === 'm' ? machineGlyph(f, xx, yy) : c === 'b' ? beltGlyph(f, xx, yy) : c === '.' && f.halls.has(k) ? (f.junc && f.junc.has(k) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
+    const k = xx + ',' + yy, g0 = c === '#' ? wallGlyph(f, xx, yy) : c === 'm' ? machineGlyph(f, xx, yy) : c === 'b' ? beltGlyph(f, xx, yy) : c === 'x' ? crateLetter(f, xx, yy) : c === '.' && f.halls.has(k) ? (f.junc && f.junc.has(k) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
     const onWay = way.has(k) && '.+'.includes(c);
-    cell(xx, yy, g0, onWay ? C.accent : g0 === '▀' || (walk.has(k) && '.+'.includes(c)) ? C.danger : C[TCOL[c]] || C.text, '<>EF'.includes(c) || onWay);
+    if (c === 'x') { x.fillStyle = C.leg; x.fillRect(xx * cw, yy * ch, cw, ch); cell(xx, yy, g0, C.bg, true); continue; }   // (a crate: a chip)
+    cell(xx, yy, g0, onWay ? C.accent : (c === 'b' && g0 === 'X') || (walk.has(k) && '.+'.includes(c)) ? C.danger : C[TCOL[c]] || C.text, '<>EF'.includes(c) || onWay);
   }
   if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money, true);
   for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger, true);

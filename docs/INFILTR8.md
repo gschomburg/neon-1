@@ -407,14 +407,15 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   - **THE ATRIUM:** a plant bed (`"`) in each corner and a statue in the middle. You **step into** a bed and hide in
     it: a CAM or a patrol sees you there only from right next to you (the potted plants you hide behind). An
     office's room, mostly: on a third of office floors.
-  - **THE WAREHOUSE** (built 2026-11-24): a belt across a big room's middle row, wall to wall (`»` or `«`, flickering
-    as it moves). Each turn it moves everything on it a cell: crates (`■`, moving cover; nothing sees or walks through
-    one) and you. Stepping with it is 2 cells a turn. Its last cell is THE PRESS (`▀`, red): crates are crushed there,
+  - **THE WAREHOUSE** (built 2026-11-24): a belt (`>` `<` `v` `^`, the way it goes). Each turn it moves everything on
+    it a cell: crates (chips: a lowercase letter on the crate color, for what's in them, meaning for later; moving
+    cover, nothing sees or walks through one) and you. Stepping with it is 2 cells a turn. Its last cell is THE PRESS
+    (a red `X`; **Decided, Greg 2026-11-24:** plain marks, chips for the crates): crates are crushed there,
     and you're **shoved off to the side, unhurt** (**Decided, Greg 2026-11-24:** it doesn't hurt you; anything behind
     you has to move on). Patrols wait for a crate to pass. Industrial floors, mostly.
     **Room to room** (Greg, 2026-11-24): a belt works a little like a duct you can see. It starts in the warehouse and
-    ends in another room, at cells anywhere in them, turns corners in rooms (`»` `«` `↓` `↑`), and goes straight through
-    a wall (a hatch) or the gap between two rooms (a short tunnel, walled both sides). It never crosses a hall or a
+    ends in another room, at cells anywhere in them, turns corners in rooms, and goes straight through a wall (a hatch)
+    or the gap between two rooms (open: no walls either side; Greg didn't like the walled tunnels). It never crosses a hall or a
     door, nor runs beside one, and never goes into the vault or a closet. Ducts still run under it. Half the industrial
     floors get one. Later: a belt down a chute to the next floor.
   - **Shapes:** cross (a plus), ring (a corridor round a core, one way in: THE RING's idea, in big rooms), gallery (a
