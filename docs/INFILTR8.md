@@ -411,8 +411,12 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     as it moves). Each turn it moves everything on it a cell: crates (`■`, moving cover; nothing sees or walks through
     one) and you. Stepping with it is 2 cells a turn. Its last cell is THE PRESS (`▀`, red): crates are crushed there,
     and you're **shoved off to the side, unhurt** (**Decided, Greg 2026-11-24:** it doesn't hurt you; anything behind
-    you has to move on). Patrols wait for a crate to pass. Industrial floors, mostly (with the factory, about a third
-    of them get one). Later: a belt through a hatch into another room, or down a chute to the next floor.
+    you has to move on). Patrols wait for a crate to pass. Industrial floors, mostly.
+    **Room to room** (Greg, 2026-11-24): a belt works a little like a duct you can see. It starts in the warehouse and
+    ends in another room, at cells anywhere in them, turns corners in rooms (`»` `«` `↓` `↑`), and goes straight through
+    a wall (a hatch) or the gap between two rooms (a short tunnel, walled both sides). It never crosses a hall or a
+    door, nor runs beside one, and never goes into the vault or a closet. Ducts still run under it. Half the industrial
+    floors get one. Later: a belt down a chute to the next floor.
   - **Shapes:** cross (a plus), ring (a corridor round a core, one way in: THE RING's idea, in big rooms), gallery (a
     long room 3 across). A room rolls only among the shapes that fit it (rolling among all and falling back to a box
     made boxes 55% and the new ones all but never). Now: box 37%, L 27%, cut 18%, split 11%, cross 5%, ring and

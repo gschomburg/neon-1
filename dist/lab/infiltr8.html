@@ -458,21 +458,73 @@ function atrium(f, rooms, r, p = 0.3) {
   for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j)) || at(f, x + i, y + j) !== '.') clear = false;
   if (clear) { set(f, x, y, 'u'); if (!roomJoined(f, o)) set(f, x, y, '.'); }
 }
-// THE WAREHOUSE (Greg, 2026-11-23/24): a big room with a belt across its middle row, wall to wall, running one way.
-// Each turn (beltsStep) the belt moves everything on it a cell: crates (moving cover: nothing sees or walks through one),
+// THE WAREHOUSE (Greg, 2026-11-23/24): a belt that runs room to room, a little like a duct you can see. It starts in a
+// room (the WAREHOUSE) and ends in another, at a cell anywhere in them; it turns corners in rooms, and goes straight
+// through a wall (a hatch) or the gap between two rooms (a short tunnel, walled both sides). It never crosses a hall
+// or a door (nor runs beside one), and never goes into the vault or a closet; ducts still run under it.
+// Each turn (beltsStep) it moves everything on it a cell: crates (moving cover: nothing sees or walks through one),
 // and you, if you're on it. Its last cell is the PRESS: a crate that gets there is crushed; you're shoved off the belt
 // to the side, unhurt (anything behind you has to move on). New crates come on at its start now and then.
 function warehouse(f, rooms, r, p = 0.5) {
-  const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && o.role !== 'closet' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 12 && o.h >= 7);
+  const ok = o => !o.type && o.role !== 'closet' && o.role !== 'start';
+  const opts = rooms.filter(o => ok(o) && o.role !== 'goal' && o.cells.length >= 12);
   if (!opts.length || r() > p) return;
-  const o = opts.sort((a, b) => b.w * b.h - a.w * a.h)[0], y = o.mid.y, dir = r() < 0.5 ? 1 : -1;
-  o.type = 'warehouse';
-  const cells = o.cells.filter(([x, yy]) => yy === y && at(f, x, yy) === '.').sort((a, b) => (a[0] - b[0]) * dir);
-  if (cells.length < 8) { o.type = null; return; }
-  const b = { cells, dir, y };
-  cells.forEach(([x, yy], i) => { set(f, x, yy, 'b'); f.beltAt.set(x + ',' + yy, { b, i }); });
-  for (let i = 2; i < cells.length - 2; i += 3 + Math.floor(r() * 2)) set(f, cells[i][0], cells[i][1], 'x');   // (crates on it already)
-  f.belts.push(b);
+  const roomOfCell = new Map(); for (const o of rooms) for (const [x, y] of o.cells) roomOfCell.set(x + ',' + y, o);
+  for (let t = 0; t < 12; t++) {
+    const A = opts[Math.floor(r() * opts.length)];
+    // B: another room near A (by their middles), that the belt may end in
+    const Bs = rooms.filter(o => o !== A && ok(o) && Math.hypot(o.cx - A.cx, (o.cy - A.cy) * 2) < 30);
+    if (!Bs.length) continue;
+    const B = Bs[Math.floor(r() * Bs.length)];
+    const inner = o => o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.every(([i, j]) => o.set.has((x + i) + ',' + (y + j))) && !D4.some(([i, j]) => at(f, x + i, y + j) === '+'));
+    const sa = inner(A), sb = inner(B); if (!sa.length || !sb.length) continue;
+    const s0 = sa[Math.floor(r() * sa.length)], e0 = sb[Math.floor(r() * sb.length)];
+    const path = beltRoute(f, s0, e0, roomOfCell, ok);
+    if (!path || path.length < 8 || path.length > 34) continue;
+    A.type = 'warehouse';
+    const b = { cells: path };
+    // a tunnel's walls: the empty cells beside a stretch of belt outside the rooms
+    path.forEach(([x, y], i) => {
+      const k = x + ',' + y, inRoom = roomOfCell.has(k);
+      if (!inRoom && at(f, x, y) === ' ') { const [px, py] = i ? path[i - 1] : path[i + 1], perp = px === x ? [[1, 0], [-1, 0]] : [[0, 1], [0, -1]];
+        for (const [a, c] of perp) if (at(f, x + a, y + c) === ' ') set(f, x + a, y + c, '#'); }
+    });
+    path.forEach(([x, y], i) => { set(f, x, y, 'b'); f.beltAt.set(x + ',' + y, { b, i }); });
+    for (let i = 2; i < path.length - 2; i += 3 + Math.floor(r() * 2)) if (roomOfCell.has(path[i] + '')) set(f, path[i][0], path[i][1], 'x');   // (crates on it already, in rooms)
+    f.belts.push(b);
+    return;
+  }
+}
+// the belt's way from s to e (a bucket queue over x, y and the way it's going): room floor costs 1, a turn 3 (only on
+// room floor), a wall 4 and a gap 3 (straight through both: in one side, out the other). Never a hall, a door, or the
+// cell beside one; never a room that isn't ok (the vault, a closet).
+function beltRoute(f, s, e, roomOfCell, ok) {
+  const D = [[1, 0], [-1, 0], [0, 1], [0, -1]], best = new Map(), from = new Map(), buckets = [[[s[0], s[1], -1]]];
+  const nearHall = (x, y) => D.some(([i, j]) => f.halls.has((x + i) + ',' + (y + j)) || at(f, x + i, y + j) === '+');
+  const kind = (x, y) => {
+    if (!inb(x, y) || f.halls.has(x + ',' + y)) return null;
+    const c = at(f, x, y), o = roomOfCell.get(x + ',' + y);
+    if (o) return ok(o) && c === '.' && !D.some(([i, j]) => at(f, x + i, y + j) === '+') ? 'room' : null;
+    if (c === '#') return 'wall';
+    if (c === ' ') return nearHall(x, y) ? null : 'gap';
+    return null;
+  };
+  best.set(s + ',-1', 0);
+  for (let cost = 0; cost < buckets.length && cost < 400; cost++) for (const [x, y, d] of buckets[cost] || []) {
+    if (best.get(x + ',' + y + ',' + d) !== cost) continue;
+    if (x === e[0] && y === e[1]) { const path = []; let k = x + ',' + y + ',' + d; while (k) { const [a, b] = k.split(',').map(Number); path.unshift([a, b]); k = from.get(k); } return path; }
+    const here = kind(x, y);
+    D.forEach(([i, j], nd) => {
+      if (here !== 'room' && d >= 0 && nd !== d) return;   // (straight on through a wall or a gap)
+      if (d >= 0 && nd === (d ^ 1)) return;                // (never straight back)
+      const nx = x + i, ny = y + j, kk = kind(nx, ny); if (!kk) return;
+      if (kk === 'wall' && !(['#', '+'].includes(at(f, nx + j, ny + i)) && ['#', '+'].includes(at(f, nx - j, ny - i)))) return;   // (through a straight run of wall, not a corner)
+      const c = cost + (kk === 'room' ? 1 : kk === 'wall' ? 4 : 3) + (d >= 0 && nd !== d ? 3 : 0), key = nx + ',' + ny + ',' + nd;
+      if (best.has(key) && best.get(key) <= c) return;
+      best.set(key, c); from.set(key, x + ',' + y + ',' + d); (buckets[c] = buckets[c] || []).push([nx, ny, nd]);
+    });
+  }
+  return null;
 }
 // a turn of the belts (from tick): downstream first, so what's ahead has moved on before what's behind it moves
 function beltsStep(f) {
@@ -496,9 +548,10 @@ function beltsStep(f) {
     if (at(f, sx, sy) === 'b' && at(f, c[1][0], c[1][1]) === 'b' && !(S.x === sx && S.y === sy) && f.beltR() < 0.3) set(f, sx, sy, 'x');
   }
 }
-// the press shoves you off the belt: to a free cell beside it (up or down the belt's row), else back along the belt
+// the press shoves you off the belt: to a free cell beside its last stretch, else back along the belt
 function shoveOff(f, b, [px, py]) {
-  const opts = [[0, -1], [0, 1]].map(([i, j]) => [px + i, py + j]).filter(([x, y]) => T[at(f, x, y)].walk && at(f, x, y) !== 'b' && !(f.beltAt && f.beltAt.has(x + ',' + y)));
+  const [qx, qy] = b.cells[b.cells.length - 2] || [px - 1, py], side = qx === px ? [[1, 0], [-1, 0]] : [[0, -1], [0, 1]];
+  const opts = side.map(([i, j]) => [px + i, py + j]).filter(([x, y]) => T[at(f, x, y)].walk && at(f, x, y) !== 'b' && !(f.beltAt && f.beltAt.has(x + ',' + y)));
   const [nx, ny] = opts.length ? opts[Math.floor(f.beltR() * opts.length)] : b.cells[Math.max(0, b.cells.length - 3)];
   S.slide = { x: S.x, y: S.y, t: performance.now() }; S.x = nx; S.y = ny;
   b.crushT = performance.now(); flashT = performance.now();
@@ -1103,7 +1156,8 @@ const CAM_GLYPH = '¢';
 function beltGlyph(f, x, y) {
   const at0 = f.beltAt && f.beltAt.get(x + ',' + y); if (!at0) return '»';
   const { b, i } = at0; if (i === b.cells.length - 1) return '▀';
-  return b.dir > 0 ? ((i + (f.beltPhase || 0)) % 2 ? '›' : '»') : ((i + (f.beltPhase || 0)) % 2 ? '‹' : '«');
+  const [nx, ny] = b.cells[i + 1], on = (i + (f.beltPhase || 0)) % 2;
+  return nx > x ? (on ? '›' : '»') : nx < x ? (on ? '‹' : '«') : ny > y ? (on ? '⇣' : '↓') : (on ? '⇡' : '↑');
 }
 function machineGlyph(f, x, y) {
   const m = (i, j) => at(f, i, j) === 'm', n = m(x, y - 1), s0 = m(x, y + 1), e = m(x + 1, y), w = m(x - 1, y);
