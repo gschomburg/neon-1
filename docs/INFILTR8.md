@@ -376,6 +376,10 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   can still be reached), the payload at the back, a CAM on it. **THE SERVER FARM**: a big room on the way, rows of
   racks (`▒`: nothing sees or walks through) with an aisle round the edge; about 1 floor in 4. Halls left leading
   nowhere are pruned.
+- **THE CUBICLES** (built 2026-11-23): L-shaped desks (`▄`), 4 x 3 a cubicle, an aisle round the edge. **Low cover:**
+  you see over a desk; a CAM or a patrol does too, unless you're right next to it on the far side. CAM cones show the
+  shadow behind each desk. A floor's biggest room takes turns being the server farm or the cubicles; cubicles on
+  about 1 floor in 6 (they need a 10 x 7 room). Room labels in the viewer sit on a plain run of wall.
 - The plan: the viewer; even room placement (BSP); things placed with purpose (CAMs on doors and the payload,
   patrols between the rooms that matter); then room types (terminals, THE CUBICLES, THE SERVER FARM, THE WAREHOUSE).
 

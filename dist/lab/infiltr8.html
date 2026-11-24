@@ -135,14 +135,14 @@ const newSeed = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ2
 const T = {
   ' ': { walk: 0, see: 0 }, '#': { walk: 0, see: 0 }, '.': { walk: 1, see: 1 }, '+': { walk: 1, see: 1 }, '<': { walk: 1, see: 1 },
   '>': { walk: 1, see: 1 }, 'E': { walk: 1, see: 1 }, 'F': { walk: 1, see: 1 }, 'K': { walk: 1, see: 1 }, 'p': { walk: 0, see: 0 },
-  'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 },
+  'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 },
 };
 const WALLISH = '#+EFK';   // what joins up into box-drawn walls
 const INFO = {
   '#': ['WALL', 'it blocks you, and what sees.'], '.': ['FLOOR', ''], '+': ['DOOR', 'open. it doesn\'t block sight.'],
   '<': ['STAIRS UP', 'USE: up a floor.'], '>': ['STAIRS DOWN', 'USE: down a floor.'], 'E': ['THE WAY IN', 'your door. leave by it: a clean job.'],
   'F': ['FIRE EXIT', 'USE: out now. loud: less pay.'], 'K': ['TRASH CHUTE', 'USE: out, but you land in the trash.'],
-  'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], 'r': ['RACKS', 'servers. nothing sees through: hide in the rows.'], ' ': ['', ''],
+  'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], 'r': ['RACKS', 'servers. nothing sees through: hide in the rows.'], 'd': ['DESKS', 'low cover: crouch right behind one.'], ' ': ['', ''],
 };
 
 // ---------- a floor ----------
@@ -235,8 +235,9 @@ function drawRoom(f, o) {
 // F3's goal; THE SERVER FARM a big room on the way). CAMs and patrols are placed by role (placeCams, placePats).
 const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const ROOM_TYPES = {   // what a type is called (the viewer's labels, a tap's info)
-  vault: ['THE VAULT', 'the payload. one way in, and watched.'],
-  servers: ['THE SERVER FARM', 'rows of racks. nothing sees through them.'],
+  vault: ['THE VAULT', 'the payload. one way in, watched.'],
+  servers: ['THE SERVER FARM', 'rows of racks: nothing sees through.'],
+  cubicles: ['THE CUBICLES', 'desks: low cover. hide behind one.'],
 };
 function roomDoors(f, o) { const out = [], seen = new Set(); for (const [x, y] of o.cells) for (const [i, j] of D4) { const k = (x + i) + ',' + (y + j); if (at(f, x + i, y + j) === '+' && !seen.has(k)) { seen.add(k); out.push({ x: x + i, y: y + j }); } } return out; }
 function roomRoles(f, rooms, first, far) {
@@ -277,9 +278,25 @@ function serverFarm(f, rooms, r) {
   const all8 = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j))) return false; return true; };
   for (let y = y0 + 1; y < y0 + o.h - 3; y += 2) for (let x = x0 + 1; x < x0 + o.w - 3; x++) if ((x - x0 - 1) % 5 !== 4 && all8(x, y) && at(f, x, y) === '.') set(f, x, y, 'r');
 }
+// THE CUBICLES: a room (not the start or the goal; a hub is fine) of L-shaped desks, 4 wide by 3 tall a cubicle, an
+// aisle round the edge (a desk only where the room's floor is all round it). In the biggest room that fits, 3 in 4.
+//   ▄▄▄·
+//   ▄···
+//   ····
+function cubicles(f, rooms, r) {
+  const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 10 && o.h >= 7);   // (10 x 7: 2 cubicles side by side, and the aisle round them)
+  if (!opts.length || r() > 0.75) return;
+  const o = opts.sort((a, b) => b.w * b.h - a.w * a.h)[0], x0 = o.x + 2, y0 = o.y + 2;
+  o.type = 'cubicles';
+  const all8 = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j))) return false; return true; };
+  for (let y = y0; y < o.y + o.h - 2; y++) for (let x = x0; x < o.x + o.w - 2; x++) {
+    const ux = (x - x0) % 4, uy = (y - y0) % 3;
+    if (((uy === 0 && ux < 3) || (uy === 1 && ux === 0)) && all8(x, y) && at(f, x, y) === '.') set(f, x, y, 'd');
+  }
+}
 // can a CAM at (x, y) facing a see (tx, ty) as it sweeps (its cone plus its sweep: 90 degrees either way)?
 const camSweeps = (f, x, y, a, tx, ty) => { const d = Math.hypot(tx - x, (ty - y) * 2); if (d === 0 || d > 14) return false;
-  let diff = Math.atan2(ty - y, tx - x) - a; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); return Math.abs(diff) <= Math.PI / 2 && los(f, x, y, tx, ty); };
+  let diff = Math.atan2(ty - y, tx - x) - a; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); return Math.abs(diff) <= Math.PI / 2 && losLow(f, x, y, tx, ty); };
 // CAMs: in the goal first, then hubs, then rooms on the way through (the shortest walk), never the start. Each in an inside
 // corner, aimed at what matters in its room (the payload, or a door), and never one that sweeps over the stairs you arrive by.
 function placeCams(f, rooms, r, n, way) {
@@ -399,7 +416,8 @@ function floorGen(seed, n, last) {
     if (last) vaultRoom(f, rooms, far, first, dist);   // (F3's goal: THE VAULT, one way in)
     pruneHalls(f, halls);                               // (halls that lead nowhere now, gone)
     f.halls = halls; f.junc = junctions(f, halls);
-    serverFarm(f, rooms, r);
+    // (the big-room types take turns going first: one floor's best room is a server farm, another's the cubicles)
+    if (r() < 0.5) { serverFarm(f, rooms, r); cubicles(f, rooms, r); } else { cubicles(f, rooms, r); serverFarm(f, rooms, r); }
     // pillars in the big rooms (not in a room with a type: it has its own things)
     // (only where the room's floor is all round it: a pillar never closes a gap or a corner)
     const pillar = (o, x, y) => { if ([[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].every(([i, j]) => o.set.has((x + i) + ',' + (y + j))) && at(f, x, y) === '.') set(f, x, y, 'p'); };
@@ -578,7 +596,17 @@ function inCone(f, x, y, a, half, range, tx, ty) {
   const dx = tx - x, dy = (ty - y) * 2, d = Math.hypot(dx, dy);
   if (d === 0 || d > range) return false;
   let diff = Math.atan2(ty - y, tx - x) - a; diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-  return Math.abs(diff) <= half && los(f, x, y, tx, ty);
+  return Math.abs(diff) <= half && losLow(f, x, y, tx, ty);
+}
+// LOW COVER (Greg, 2026-11-23): desks. You see over them (look() uses los). A CAM or a patrol sees over them too, unless
+// what it's looking at is right next to one, on the far side: crouched behind it. (inCone and camSweeps use this.)
+function losLow(f, x0, y0, x1, y1) {
+  let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy, x = x0, y = y0;
+  for (;;) {
+    if (x === x1 && y === y1) return true;
+    if (!(x === x0 && y === y0)) { if (opaque(f, x, y)) return false; if (T[at(f, x, y)].low && Math.max(Math.abs(x - x1), Math.abs(y - y1)) <= 1) return false; }
+    const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; }
+  }
 }
 // line of sight: no opaque cell between (the end cell itself may be a wall: you see walls)
 function los(f, x0, y0, x1, y1) {
@@ -777,9 +805,9 @@ function wallGlyph(f, x, y) {
   return ['▪', '│', '│', '│', '─', '└', '┌', '├', '─', '┘', '┐', '┤', '─', '┴', '┬', '┼'][k];
 }
 const CAM_GLYPH = '¢';
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒' };
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄' };
 // the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
-const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', '#': 'mid' };
+const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', '#': 'mid' };
 
 function draw() {
   if (!S) return;
@@ -920,7 +948,7 @@ const LEGEND = () => [
   ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], [ARM_GLYPH, 'SCANNER', C.danger],
   ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DOWN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
   ['◘', 'FIRE EXIT', C.green], ['▾', 'TRASH CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text],
-  [HALL_GLYPH, 'HALL', C.dim], [JUNC_GLYPH, 'JUNCTION', C.dim], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid], ['•', 'YOUR TRAIL', C.rep],
+  [HALL_GLYPH, 'HALL', C.dim], [JUNC_GLYPH, 'JUNCTION', C.dim], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid], ['▄', 'DESKS (low)', C.mid], ['•', 'YOUR TRAIL', C.rep],
 ];
 function drawHelp() {
   hits = hits.filter(h => h.id === 'help');   // (only [?] and GOT IT while it's up; a tap anywhere else closes it)
@@ -1135,10 +1163,18 @@ function drawFloorCard(cvs, f, fs) {
   for (const p of f.pats) cell(p.x, p.y, 'P', C.danger, true);
   // each room's type (gold) or role (dim), on its top wall
   for (const o of f.rooms || []) {
-    const label = (o.type ? ROOM_TYPES[o.type][0].replace(/^THE /, '') : o.role === 'way' ? '' : o.role).slice(0, o.w - 2);
+    let label = o.type ? ROOM_TYPES[o.type][0].replace(/^THE /, '') : o.role === 'way' ? '' : o.role;
     if (!label) continue;
-    // (only over plain wall: a door or the fire exit on that wall still shows)
-    [...label].forEach((c, i) => { const lx = o.x + 1 + i; if (at(f, lx, o.y) !== '#') return; x.fillStyle = C.bg; x.fillRect(lx * cw, o.y * ch, cw, ch); cell(lx, o.y, c, o.type ? C.money : C.mid, !!o.type); });
+    // on a run of plain wall (no door or fire exit in it): the top wall's longest, else the bottom's; cut to fit
+    let best = null;
+    for (const wy of [o.y, o.y + o.h - 1]) for (let lx = o.x + 1, run = 0; lx <= o.x + o.w - 1; lx++) {
+      if (lx < o.x + o.w - 1 && at(f, lx, wy) === '#') { run++; continue; }
+      if (run && (!best || run > best.n) && (!best || best.n < label.length)) best = { x: lx - run, y: wy, n: run };
+      run = 0;
+    }
+    if (!best) continue;
+    label = label.slice(0, best.n);
+    [...label].forEach((c, i) => { const lx = best.x + i; x.fillStyle = C.bg; x.fillRect(lx * cw, best.y * ch, cw, ch); cell(lx, best.y, c, o.type ? C.money : C.mid, !!o.type); });
   }
 }
 function viewerShow() {
@@ -1175,7 +1211,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

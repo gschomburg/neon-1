@@ -26,6 +26,11 @@ const driver = `<script>
     document.getElementById('dev-up').click(); if (D.S.fi !== 1 || D.S.x !== D.S.floors[1].down.x) out.fails.push('dev UP: to F2 at its stairs down');
     document.getElementById('dev-down').click(); if (D.S.fi !== 2) out.fails.push('dev DOWN: to F3');
     D.setReveal(true); if (!D.S.vis.flat().every(Boolean)) out.fails.push('dev show all: not every cell'); D.setReveal(false);
+    // low cover: a desk hides you from a CAM only if you're right behind it; you see over it either way
+    { const L = D.sight, fl = L.newFloor('T'); for (let x = 0; x < 12; x++) L.set(fl, x, 5, '.'); L.set(fl, 5, 5, 'd');
+      if (L.losLow(fl, 0, 5, 6, 5)) out.fails.push('low cover: seen right behind a desk');
+      if (!L.losLow(fl, 0, 5, 8, 5)) out.fails.push('low cover: hidden 3 cells behind a desk');
+      if (!L.los(fl, 0, 5, 6, 5)) out.fails.push('low cover: you should see over a desk'); }
     // every palette draws
     for (let p = 0; p < D.PALS.length; p++) { D.setPal(p); D.draw(); }
     out.log.push(D.PALS.length + ' palettes');
