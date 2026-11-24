@@ -1688,8 +1688,9 @@ function drawFloorCard(cvs, f, fs) {
   // each room's type (gold) or role (grey): a little tag over its top-left corner, off the grid (Greg, 2026-11-24:
   // drawn into the wall's cells they read as part of the room), small, on a dark pill, like the caption under the
   // floor. A room on the top row: its tag just inside its top wall (above it would be off the floor).
-  // (10px, small as the footer's text; the LABELS button or L turns the layer off: V.labels)
-  const tf = 10;
+  // (the size of the caption under the floor, read off it so the two always match; the LABELS button or L turns the
+  // layer off: V.labels)
+  const tf = parseFloat(getComputedStyle($('v-cap')).fontSize) || 14;
   x.font = '400 ' + tf + 'px "JetBrains Mono", Consolas, monospace'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
   if (V.labels) for (const o of f.rooms || []) {
     const label = o.role === 'closet' ? '' : o.type ? ROOM_TYPES[o.type][0].replace(/^THE /, '').toLowerCase() : o.role === 'way' ? '' : o.role;
