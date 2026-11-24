@@ -16,6 +16,9 @@ under rooms, halls and walls to a vent in another room (2 on F2, 1 on F3). Once 
 shows as a faint tint. USE on a vent: down in. Inside, the floor above dims, the ducts show as pipes (`═║╔`), your
 chip is the duct color, nothing sees you, and a step costs 2 turns. USE at a vent: out. Where two ducts cross you can
 switch.
+Maybe later: **branching ducts.** For now a duct is one line with two vents, so it reads at a glance and stays a
+scarce safe route. A branch would be cheap: a second duct that starts mid-pipe works like a crossing does now. It
+could be the point of a special floor, like a MAINTENANCE LEVEL with a duct network.
 Phone controls to try (Greg, 2026-11-23): the header's [UI] button steps through CLASSIC PAD, SWIPE (swipe anywhere),
 TRACKPAD (drag on a box: a step a notch), ZONE PAD (four wedges, hold to walk) and STICK (a floating thumbstick).
 All but CLASSIC hold USE and the gear together on the right, with no swap. `?ui=3` picks one.
