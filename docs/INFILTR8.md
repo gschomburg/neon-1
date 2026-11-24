@@ -547,6 +547,11 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     two for INFILTR8), and `GEAR_USE` / the `pass()` spots become engine hooks.
 - **Dev-styled UI for what will change** (Greg, 2026-11-24): screens the game will redo get plain HTML dev forms, not
   the grid. First one: the LOADOUT pick at the start of a run (scrolls, full text for each passive and item).
+- **CUSTOM loadout** (Greg, 2026-11-24; built the same day): the form has two tabs, PREDEFINED and CUSTOM. CUSTOM is
+  2 passive dropdowns (not the same one twice) and 2 gear dropdowns, each showing its text once picked. A gear slot
+  gives the item's `stack` (what a preset gives: DARTS 3, FLARE 2, MED KIT 1...); the same item in both slots, twice as
+  many. No FRAG. Custom gets 2 passives to the presets' 1, so it's the stronger pick for now. Your picks and the tab
+  are remembered.
 - **More passive ideas** (Greg, 2026-11-24; not built):
   - CAMs and patrols you've seen stay marked on the map, facing the way they were looking, after you lose sight of them.
   - Hack a terminal you know about from a distance.

@@ -61,6 +61,15 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
 #kit-form ul { margin: 6px 0 0; padding-left: 18px; color: var(--mid); }
 #kit-form li { margin-top: 4px; }
 #kit-form i { color: var(--dim); font-style: normal; }
+#kit-form .kit-tabs { display: flex; gap: 8px; margin: 0 0 12px; }
+#kit-form .kit-tabs button { flex: 1; font: inherit; background: var(--bg); color: var(--mid); border: 1px solid var(--dim); min-height: 40px; cursor: pointer; }
+#kit-form .kit-tabs button.on { color: var(--accent); border-color: var(--accent); }
+#kit-custom label { display: block; color: var(--mid); margin-top: 10px; }
+#kit-custom select { font: 16px "JetBrains Mono", Consolas, monospace; background: var(--bg); color: var(--text); border: 1px solid var(--dim); padding: 4px; min-height: 40px; width: 100%; margin-top: 4px; }
+#kit-custom .kc-d { margin: 6px 0 0; color: var(--mid); }
+#kit-custom .kc-d b { color: var(--money); font-weight: 400; }
+#kit-custom .kc-sum { color: var(--text); margin: 14px 0 10px; }
+#kit-form .kit-use { font: inherit; background: var(--bg); color: var(--accent); border: 1px solid var(--accent); padding: 6px 14px; min-height: 44px; width: 100%; margin-bottom: 10px; cursor: pointer; }
 #kit-form .kit-close { font: inherit; background: var(--bg); color: var(--mid); border: 1px solid var(--dim); padding: 6px 14px; min-height: 40px; cursor: pointer; }
 [hidden] { display: none !important; }
 </style>
@@ -71,8 +80,18 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
 <div id="kit-form" hidden>
   <div class="kit-box">
     <h2>LOADOUT</h2>
-    <p class="kit-note">a passive and your gear. pick one (or press 1-4). a dev form: the game gets its own screen later.</p>
+    <p class="kit-note">a passive and your gear. a dev form: the game gets its own screen later.</p>
+    <div class="kit-tabs"><button type="button" id="kt-pre" data-tab="pre">PREDEFINED</button><button type="button" id="kt-custom" data-tab="custom">CUSTOM</button></div>
     <div id="kit-list"></div>
+    <div id="kit-custom" hidden>
+      <p class="kit-note">2 passives, 2 gear slots. the same gear in both slots: twice as many.</p>
+      <label for="kc-p0">PASSIVE 1</label><select id="kc-p0"></select><p class="kc-d" id="kc-p0-d"></p>
+      <label for="kc-p1">PASSIVE 2</label><select id="kc-p1"></select><p class="kc-d" id="kc-p1-d"></p>
+      <label for="kc-g0">GEAR 1</label><select id="kc-g0"></select><p class="kc-d" id="kc-g0-d"></p>
+      <label for="kc-g1">GEAR 2</label><select id="kc-g1"></select><p class="kc-d" id="kc-g1-d"></p>
+      <p class="kc-sum" id="kc-sum"></p>
+      <button class="kit-use" id="kc-use" type="button">GO IN WITH THIS</button>
+    </div>
     <button class="kit-close" id="kit-close" type="button">KEEP</button>
   </div>
 </div>
@@ -706,18 +725,18 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
 const LOOT_FINDS = [['A CREDSTICK', 40], ['PAYROLL DATA', 60], ['A KEYCARD DUMP', 30], ['SOURCE CODE', 70], ['PASSWORDS', 35], ['A PROTOTYPE', 80], ['CUSTOMER LISTS', 45], ['A SERVER KEY', 55]];
 // ---------- gear, passives and loadouts: in the game's shapes, so they port over (Greg, 2026-11-24) ----------
 // INF_ITEMS: data/mods.js ITEMS's shape (key, name, rarity, desc, tip; codex later), plus the item's numbers on its
-// entry. What each does: GEAR_USE[key], below. Names: 7 characters at most here (the tray's buttons); the game's
+// entry (stack: how many a loadout slot gives). What each does: GEAR_USE[key], below. Names: 7 characters at most here (the tray's buttons); the game's
 // limit is 15. Rarities are first guesses.
 const INF_ITEMS = {
-  flare:   { key: 'flare', name: 'FLARE', rarity: 'common', desc: 'light the whole floor: for 6 turns you see everything on it.', tip: 'the floor, 6 turns', turns: 6 },
-  uniform: { key: 'uniform', name: 'UNIFORM', rarity: 'rare', desc: 'patrols take you for staff for 15 turns: they walk on by unless they\'re right next to you. any chase stops.', tip: 'patrols pass you by', turns: 15 },
-  smoke:   { key: 'smoke', name: 'SMOKE', rarity: 'common', desc: 'a 3x3 cloud round you for 6 turns. nothing sees through it: not CAMs, not patrols, not you.', tip: 'a 3x3 cloud, 6 turns', turns: 6 },
-  jammer:  { key: 'jammer', name: 'JAMMER', rarity: 'rare', desc: 'the nearest CAM you can see (within 14) goes dead for 10 turns.', tip: 'a CAM dead 10 turns', turns: 10, range: 14 },
-  darts:   { key: 'darts', name: 'DARTS', rarity: 'rare', desc: 'a dart gun: the nearest patrol you can see (within 10) drops, out for 15 turns. quiet.', tip: 'a PATROL out 15', ko: 15, range: 10 },
-  medkit:  { key: 'medkit', name: 'MED KIT', rarity: 'common', desc: 'patch yourself up: +1 INT. works in a duct.', tip: '+1 INT', int: 1, duct: true },
-  noise:   { key: 'noise', name: 'NOISE', rarity: 'common', desc: 'throw it up to 6 cells, the way you pick (a wall stops it). patrols within 14 of where it lands go to look.', tip: 'throw: patrols look', range: 6, heard: 14 },
+  flare:   { key: 'flare', name: 'FLARE', rarity: 'common', desc: 'light the whole floor: for 6 turns you see everything on it.', tip: 'the floor, 6 turns', stack: 2, turns: 6 },
+  uniform: { key: 'uniform', name: 'UNIFORM', rarity: 'rare', desc: 'patrols take you for staff for 15 turns: they walk on by unless they\'re right next to you. any chase stops.', tip: 'patrols pass you by', stack: 2, turns: 15 },
+  smoke:   { key: 'smoke', name: 'SMOKE', rarity: 'common', desc: 'a 3x3 cloud round you for 6 turns. nothing sees through it: not CAMs, not patrols, not you.', tip: 'a 3x3 cloud, 6 turns', stack: 2, turns: 6 },
+  jammer:  { key: 'jammer', name: 'JAMMER', rarity: 'rare', desc: 'the nearest CAM you can see (within 14) goes dead for 10 turns.', tip: 'a CAM dead 10 turns', stack: 3, turns: 10, range: 14 },
+  darts:   { key: 'darts', name: 'DARTS', rarity: 'rare', desc: 'a dart gun: the nearest patrol you can see (within 10) drops, out for 15 turns. quiet.', tip: 'a PATROL out 15', stack: 3, ko: 15, range: 10 },
+  medkit:  { key: 'medkit', name: 'MED KIT', rarity: 'common', desc: 'patch yourself up: +1 INT. works in a duct.', tip: '+1 INT', stack: 1, int: 1, duct: true },
+  noise:   { key: 'noise', name: 'NOISE', rarity: 'common', desc: 'throw it up to 6 cells, the way you pick (a wall stops it). patrols within 14 of where it lands go to look.', tip: 'throw: patrols look', stack: 3, range: 6, heard: 14 },
   // (no loadout has FRAG now: Greg, 2026-11-24, no blowing things up till objects break properly)
-  frag:    { key: 'frag', name: 'FRAG', rarity: 'common', desc: 'blows the 3x3 round you: walls, CAMs, patrols. LOUD: every patrol comes.', tip: 'blows the 3x3. loud', loud: true },
+  frag:    { key: 'frag', name: 'FRAG', rarity: 'common', desc: 'blows the 3x3 round you: walls, CAMs, patrols. LOUD: every patrol comes.', tip: 'blows the 3x3. loud', stack: 2, loud: true },
 };
 // INF_CHIPS: data/chips.js's shape, one line each: [name, group, rarity, power, what it does, face (top, bottom),
 // tip, its numbers]. Two groups: 'infp' a PASSIVE, 'infk' a LOADOUT (a KIT, as the game's KNIGHT and CARE PACKAGE:
@@ -735,13 +754,29 @@ const INF_CHIPS = {
   IK4: ['RUNNER', 'infk', 'rare', 2, 'a KIT: SPRINTER, 3 NOISEs and 2 FLAREs.', ['[@]', 'RNR'], 'SPRINTER. NOISE x3, FLARE x2.', { kit: 1, passive: 'IP4', gear: { noise: 3, flare: 2 } }],
 };
 const KITS = Object.keys(INF_CHIPS).filter(k => INF_CHIPS[k][1] === 'infk');
-// your passive's numbers, if it's the one you have (null if not): if (pass('IP3')) ... pass('IP3').ko
-const pass = k => S.passive === k ? INF_CHIPS[k][7] : null;
+const PASSIVES = Object.keys(INF_CHIPS).filter(k => INF_CHIPS[k][1] === 'infp');
+// a passive's numbers, if it's one you have (null if not): if (pass('IP3')) ... pass('IP3').ko
+const pass = k => S.passives.includes(k) ? INF_CHIPS[k][7] : null;
 const gearList = g => Object.entries(g).map(([k, n]) => INF_ITEMS[k].name + ' x' + n).join(', ');
+const kitName = () => S.kit === 'CUSTOM' ? 'CUSTOM' : INF_CHIPS[S.kit][0];
+const kitLine = () => S.passives.map(p => INF_CHIPS[p][0]).join(' + ') + '. ' + S.gear.map(g => INF_ITEMS[g.key].name + ' x' + g.n).join(', ') + '.';
 function setLoadout(k) {
-  const lo = INF_CHIPS[k][7]; S.kit = k; S.passive = lo.passive;
+  if (k === 'CUSTOM') return setCustom();
+  const lo = INF_CHIPS[k][7]; S.kit = k; S.passives = [lo.passive];
   S.gear = Object.entries(lo.gear).map(([key, n]) => ({ key, n }));
   try { localStorage.setItem('neon.infiltr8.kit', k); } catch (e) { /* private mode */ }
+}
+// THE CUSTOM LOADOUT (Greg, 2026-11-24): 2 passives (not the same one twice) and 2 gear slots. A slot gives the item's
+// stack (INF_ITEMS: as many as a preset gives); the same item in both slots: twice as many. No FRAG (loud ones).
+// Remembered (neon.infiltr8.custom).
+const CUSTOM_GEAR = Object.keys(INF_ITEMS).filter(k => !INF_ITEMS[k].loud);
+let custom = { p: [PASSIVES[0], PASSIVES[1]], g: [CUSTOM_GEAR[0], CUSTOM_GEAR[1]] };
+try { const c = JSON.parse(localStorage.getItem('neon.infiltr8.custom')); if (c && c.p.every(k => PASSIVES.includes(k)) && c.g.every(k => CUSTOM_GEAR.includes(k)) && c.p[0] !== c.p[1]) custom = c; } catch (e) { /* none yet, or private mode */ }
+function setCustom() {
+  S.kit = 'CUSTOM'; S.passives = custom.p.slice();
+  const g = {}; for (const k of custom.g) g[k] = (g[k] || 0) + INF_ITEMS[k].stack;
+  S.gear = Object.entries(g).map(([key, n]) => ({ key, n }));
+  try { localStorage.setItem('neon.infiltr8.kit', 'CUSTOM'); localStorage.setItem('neon.infiltr8.custom', JSON.stringify(custom)); } catch (e) { /* private mode */ }
 }
 const loadoutOpts = skip => KITS.filter(k => k !== skip).map(k => { const c = INF_CHIPS[k], p = INF_CHIPS[c[7].passive];
   return [c[0] + ': ' + p[6].replace(/\.$/, ''), gearList(c[7].gear), () => { setLoadout(k); say(c[0] + ': ' + p[0] + '. ' + gearList(c[7].gear) + '.', C.rep); }]; });
@@ -769,13 +804,45 @@ function openLoadouts() {
   $('kit-list').innerHTML = KITS.map(k => { const c = INF_CHIPS[k], p = INF_CHIPS[c[7].passive];
     return '<button type="button" class="kit' + (k === S.kit ? ' on' : '') + '" data-kit="' + k + '"><span class="kit-name">' + c[0] + '</span>'
       + '<span class="kit-pass"><b>' + p[0] + '</b> (passive) ' + p[4] + '</span><ul>' + Object.entries(c[7].gear).map(([g, n]) => row(g, n)).join('') + '</ul></button>'; }).join('');
-  $('kit-close').textContent = 'KEEP ' + INF_CHIPS[S.kit][0];
+  // the CUSTOM tab: 2 passive dropdowns, 2 gear dropdowns, each with its text under it
+  const opt = (k, name) => '<option value="' + k + '">' + name + '</option>';
+  for (const i of [0, 1]) {
+    $('kc-p' + i).innerHTML = PASSIVES.map(k => opt(k, INF_CHIPS[k][0])).join(''); $('kc-p' + i).value = custom.p[i];
+    $('kc-g' + i).innerHTML = CUSTOM_GEAR.map(k => opt(k, INF_ITEMS[k].name + ' x' + INF_ITEMS[k].stack)).join(''); $('kc-g' + i).value = custom.g[i];
+  }
+  customShow();
+  $('kit-close').textContent = 'KEEP ' + kitName();
+  kitTab(kitTabNow);
   $('kit-form').hidden = false; S.form = true;
+}
+// the custom tab's texts, and the passives can't match (each dropdown greys out the other's pick)
+function customShow() {
+  for (const i of [0, 1]) {
+    const p = INF_CHIPS[custom.p[i]], it = INF_ITEMS[custom.g[i]];
+    for (const o of $('kc-p' + i).options) o.disabled = o.value === custom.p[1 - i];
+    $('kc-p' + i + '-d').innerHTML = '<b>' + p[0] + '</b> <i>' + p[2] + '</i><br>' + p[4];
+    $('kc-g' + i + '-d').innerHTML = '<b>' + it.name + ' x' + it.stack + '</b> <i>' + it.rarity + '</i><br>' + it.desc;
+  }
+  const g = {}; for (const k of custom.g) g[k] = (g[k] || 0) + INF_ITEMS[k].stack;
+  $('kc-sum').textContent = 'you go in with: ' + custom.p.map(k => INF_CHIPS[k][0]).join(' + ') + '. ' + gearList(g) + '.';
+}
+function customPick(which, i, v) {
+  custom[which][i] = v;
+  if (which === 'p' && custom.p[0] === custom.p[1]) custom.p[1 - i] = PASSIVES.find(k => k !== v);   // (never the same passive twice)
+  for (const j of [0, 1]) $('kc-p' + j).value = custom.p[j];
+  customShow();
+}
+// the form's two tabs: PREDEFINED and CUSTOM (remembered)
+let kitTabNow = 'pre'; try { if (localStorage.getItem('neon.infiltr8.kittab') === 'custom') kitTabNow = 'custom'; } catch (e) { /* private mode */ }
+function kitTab(t) {
+  kitTabNow = t; try { localStorage.setItem('neon.infiltr8.kittab', t); } catch (e) { /* private mode */ }
+  $('kit-list').hidden = t !== 'pre'; $('kit-custom').hidden = t !== 'custom';
+  for (const k of ['pre', 'custom']) $('kt-' + k).classList.toggle('on', k === t);
 }
 function closeLoadouts(k) {
   if (k) setLoadout(k);
   $('kit-form').hidden = true; S.form = false;
-  const c = INF_CHIPS[S.kit]; say(c[0] + ': ' + INF_CHIPS[c[7].passive][0] + '. ' + gearList(c[7].gear) + '.', C.rep); draw();
+  say(kitName() + ': ' + kitLine(), C.rep); draw();
 }
 // the station next to you (not spent), if any
 function stationBeside(f) {
@@ -1248,7 +1315,7 @@ function newRun(seed) {
   S = { seed, floors, fi: 0, x: floors[0].start.x, y: floors[0].start.y, int: MAX_INT, turn: 0, alarm: 0, have: false, alerts: 0,
     msg: 'INFILTR8. in by the door. the payload is on F3.', msgCol: C.accent, msgT: performance.now(), floorT: performance.now(), info: null, mode: 'pad',
     gear: [], heat: 0, heatMax: HEAT_MAX, quiet: 0, flare: 0, uniform: 0, over: null, vis: null, inDuct: false };
-  let kit = KITS[0]; try { const k = localStorage.getItem('neon.infiltr8.kit'); if (KITS.includes(k)) kit = k; } catch (e) { /* private mode */ }
+  let kit = KITS[0]; try { const k = localStorage.getItem('neon.infiltr8.kit'); if (KITS.includes(k) || k === 'CUSTOM') kit = k; } catch (e) { /* private mode */ }
   setLoadout(kit); openLoadouts();
   floorClock(F());
   look();
@@ -1536,7 +1603,7 @@ function draw() {
   put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
   put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
   put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent);
-  put(0, 3, INF_CHIPS[S.kit][0], C.mid);
+  put(0, 3, kitName(), C.mid);
   // the ALERT meter (heatUp): a box a step, filled as you're seen
   put(8, 3, 'ALERT', C.mid); put(14, 3, '■'.repeat(S.heat) + '□'.repeat(S.heatMax - S.heat), S.heat ? C.danger : C.dim);
   if (S.have) put(15 + S.heatMax, 3, '$', C.money);   // (the payload's in your pack)
@@ -1826,7 +1893,7 @@ addEventListener('keydown', ev => {
   if (!$('viewer').hidden) { if (ev.key === 'Escape') closeViewer(); if (ev.key === 'ArrowRight') viewerStep(1); if (ev.key === 'ArrowLeft') viewerStep(-1); if (ev.key === 'r' || ev.key === 'R') { V.seeds[V.i] = newSeed(); viewerShow(); } if (ev.key === 'l' || ev.key === 'L') toggleLabels(); return; }   // (the dev panel's controls take their own keys)
   const k = ev.key.toLowerCase();
   if (k === '?' || k === '/') return toggleHelp();
-  if (S.form) { if (k === 'escape') closeLoadouts(); else if (/^[1-9]$/.test(k) && KITS[+k - 1]) closeLoadouts(KITS[+k - 1]); return; }   // (the loadout form: its own keys)
+  if (S.form) { if (k === 'escape') closeLoadouts(); else if (kitTabNow === 'pre' && ev.target.tagName !== 'SELECT' && /^[1-9]$/.test(k) && KITS[+k - 1]) closeLoadouts(KITS[+k - 1]); return; }   // (the loadout form: its own keys)
   if (helpOpen) { if (k === 'escape' || k === 'enter' || k === ' ') { ev.preventDefault(); toggleHelp(); } return; }
   if (S.popup) { if (k === 'escape') { S.popup = null; draw(); } else if (/^[1-9]$/.test(k)) chooseStation(+k - 1); return; }
   const mv = { arrowup: [0, -1], w: [0, -1], k: [0, -1], arrowdown: [0, 1], s: [0, 1], j: [0, 1], arrowleft: [-1, 0], a: [-1, 0], h: [-1, 0], arrowright: [1, 0], d: [1, 0], l: [1, 0] }[k];
@@ -1875,6 +1942,9 @@ $('dev-clock').addEventListener('change', () => toggleClock());
 $('dev-timed').addEventListener('change', () => toggleTimed());
 $('kit-list').addEventListener('click', ev => { const b = ev.target.closest('[data-kit]'); if (b) closeLoadouts(b.dataset.kit); });
 $('kit-close').addEventListener('click', () => closeLoadouts());
+for (const k of ['pre', 'custom']) $('kt-' + k).addEventListener('click', () => kitTab(k));
+for (const [w, i] of [['p', 0], ['p', 1], ['g', 0], ['g', 1]]) $('kc-' + w + i).addEventListener('change', e => customPick(w, i, e.target.value));
+$('kc-use').addEventListener('click', () => closeLoadouts('CUSTOM'));
 $('dev-floor').addEventListener('change', e => goFloor(+e.target.value));
 $('dev-up').addEventListener('click', () => goFloor(S.fi - 1));
 $('dev-down').addEventListener('click', () => goFloor(S.fi + 1));
