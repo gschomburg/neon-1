@@ -137,7 +137,7 @@ const newSeed = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ2
 const T = {
   ' ': { walk: 0, see: 0 }, '#': { walk: 0, see: 0 }, '.': { walk: 1, see: 1 }, '+': { walk: 1, see: 1 }, '<': { walk: 1, see: 1 },
   '>': { walk: 1, see: 1 }, 'E': { walk: 1, see: 1 }, 'F': { walk: 1, see: 1 }, 'K': { walk: 1, see: 1 }, 'p': { walk: 0, see: 0 },
-  'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 }, 'g': { walk: 0, see: 1, low: 1 }, '=': { walk: 0, see: 1, low: 1 }, '"': { walk: 1, see: 1, hide: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
+  'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 }, 'g': { walk: 0, see: 1, low: 1 }, '=': { walk: 0, see: 1, low: 1 }, '"': { walk: 1, see: 1, hide: 1 }, 'b': { walk: 1, see: 1 }, 'x': { walk: 0, see: 0 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
 };
 const WALLISH = '#+EF';   // what joins up into box-drawn walls (the chute, K, sits on a room's floor now: not a wall. Greg, H3SDQ4)
 const INFO = {
@@ -146,7 +146,8 @@ const INFO = {
   'F': ['FIRE EXIT', 'USE: out now. loud: less pay.'], 'K': ['TRASH CHUTE', 'USE: out, but you land in the trash.'],
   'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], 'r': ['RACKS', 'servers. nothing sees through: hide in the rows.'], 'd': ['DESKS', 'low cover: crouch right behind one.'], 'g': ['A PLANT', 'low cover: crouch right behind it.'],
   'u': ['A STATUE', 'nothing sees through it.'], '=': ['A BENCH', 'low cover: crouch right behind it.'],
-  '"': ['PLANT BEDS', 'step in: hidden unless right by you.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
+  '"': ['PLANT BEDS', 'step in: hidden unless right by you.'],
+  'b': ['THE BELT', 'it carries you. off before the press.'], 'x': ['A CRATE', 'on the belt. nothing sees through.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
 };
 
 // ---------- a floor ----------
@@ -280,6 +281,7 @@ const ROOM_TYPES = {   // what a type is called (the viewer's labels, a tap's in
   nook: ['A NOOK', 'out of the way of the hall.'],
   lab: ['THE LAB', 'benches: low cover.'],
   atrium: ['THE ATRIUM', 'plant beds: step in to hide.'],
+  warehouse: ['THE WAREHOUSE', 'a belt of crates. ride it.'],
 };
 function roomDoors(f, o) { const out = [], seen = new Set(); for (const [x, y] of o.cells) for (const [i, j] of D4) { const k = (x + i) + ',' + (y + j); if (at(f, x + i, y + j) === '+' && !seen.has(k)) { seen.add(k); out.push({ x: x + i, y: y + j }); } } return out; }
 function roomRoles(f, rooms, first, far) {
@@ -456,6 +458,52 @@ function atrium(f, rooms, r, p = 0.3) {
   for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j)) || at(f, x + i, y + j) !== '.') clear = false;
   if (clear) { set(f, x, y, 'u'); if (!roomJoined(f, o)) set(f, x, y, '.'); }
 }
+// THE WAREHOUSE (Greg, 2026-11-23/24): a big room with a belt across its middle row, wall to wall, running one way.
+// Each turn (beltsStep) the belt moves everything on it a cell: crates (moving cover: nothing sees or walks through one),
+// and you, if you're on it. Its last cell is the PRESS: a crate that gets there is crushed; you're shoved off the belt
+// to the side, unhurt (anything behind you has to move on). New crates come on at its start now and then.
+function warehouse(f, rooms, r, p = 0.5) {
+  const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && o.role !== 'closet' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 12 && o.h >= 7);
+  if (!opts.length || r() > p) return;
+  const o = opts.sort((a, b) => b.w * b.h - a.w * a.h)[0], y = o.mid.y, dir = r() < 0.5 ? 1 : -1;
+  o.type = 'warehouse';
+  const cells = o.cells.filter(([x, yy]) => yy === y && at(f, x, yy) === '.').sort((a, b) => (a[0] - b[0]) * dir);
+  if (cells.length < 8) { o.type = null; return; }
+  const b = { cells, dir, y };
+  cells.forEach(([x, yy], i) => { set(f, x, yy, 'b'); f.beltAt.set(x + ',' + yy, { b, i }); });
+  for (let i = 2; i < cells.length - 2; i += 3 + Math.floor(r() * 2)) set(f, cells[i][0], cells[i][1], 'x');   // (crates on it already)
+  f.belts.push(b);
+}
+// a turn of the belts (from tick): downstream first, so what's ahead has moved on before what's behind it moves
+function beltsStep(f) {
+  if (!f.belts || !f.belts.length) return;
+  f.beltPhase = (f.beltPhase || 0) + 1;
+  for (const b of f.belts) {
+    const c = b.cells, last = c.length - 1;
+    for (let i = last; i >= 0; i--) {
+      const [x, y] = c[i], you = !S.inDuct && S.x === x && S.y === y;
+      if (at(f, x, y) === 'x') {
+        set(f, x, y, 'b');
+        if (i + 1 >= last) { b.crushT = performance.now(); continue; }   // (onto the press: crushed)
+        set(f, c[i + 1][0], c[i + 1][1], 'x');
+      } else if (you) {
+        if (i >= last - 1) { shoveOff(f, b, c[last]); continue; }        // (onto the press, or on it: shoved off)
+        S.slide = { x: S.x, y: S.y, t: performance.now() }; S.x = c[i + 1][0]; S.y = c[i + 1][1];
+      }
+    }
+    // a new crate at the start, now and then, with room behind it
+    const [sx, sy] = c[0];
+    if (at(f, sx, sy) === 'b' && at(f, c[1][0], c[1][1]) === 'b' && !(S.x === sx && S.y === sy) && f.beltR() < 0.3) set(f, sx, sy, 'x');
+  }
+}
+// the press shoves you off the belt: to a free cell beside it (up or down the belt's row), else back along the belt
+function shoveOff(f, b, [px, py]) {
+  const opts = [[0, -1], [0, 1]].map(([i, j]) => [px + i, py + j]).filter(([x, y]) => T[at(f, x, y)].walk && at(f, x, y) !== 'b' && !(f.beltAt && f.beltAt.has(x + ',' + y)));
+  const [nx, ny] = opts.length ? opts[Math.floor(f.beltR() * opts.length)] : b.cells[Math.max(0, b.cells.length - 3)];
+  S.slide = { x: S.x, y: S.y, t: performance.now() }; S.x = nx; S.y = ny;
+  b.crushT = performance.now(); flashT = performance.now();
+  say('the PRESS shoves you off the belt.', C.money);
+}
 // a room's floor all joined up (a thing just put in it didn't cut part of it off)
 function roomJoined(f, o) {
   const free = o.cells.filter(([x, y]) => T[at(f, x, y)].walk); if (!free.length) return true;
@@ -559,10 +607,10 @@ const ORDER = { orderly: [0.3, 0.9], mixed: [0.8, 0.5], messy: [1, 0.1] };
 //   bsp: changes to BSP's settings: an industrial building has more big halls (and so more room for a factory), a
 //   data center bigger rooms than an office (room for its server farms).
 const BUILDINGS = {
-  office:     { name: 'OFFICE',      share: 0.38, lab: 0.1, atrium: 0.7, servers: 0.4,  servers2: 0,   cubicles: 0.9,  factory: 0,    restroom: 0.5,  plants: 0.25, statue: 0.6, order: [0.45, 0.85], bsp: {} },
-  industrial: { name: 'INDUSTRIAL',  share: 0.25, lab: 0.1, atrium: 0.05,  servers: 0.15, servers2: 0,   cubicles: 0.15, factory: 0.95, restroom: 0.35, plants: 0.05, statue: 0.1, order: [0.15, 0.55], bsp: { bigChance: 0.7, bigArea: 520 }, minRooms: 4 },
-  data:       { name: 'DATA CENTER', share: 0.22, lab: 0.15, atrium: 0.1, servers: 0.95, servers2: 0.9, servers3: 0.5, racksIn: 0.5, cubicles: 0.2,  factory: 0.1,  restroom: 0.25, plants: 0.1,  statue: 0.3, order: [0.5, 0.9],   bsp: { bigChance: 0.4, bigArea: 450 } },
-  lab:        { name: 'LAB',         share: 0.15, lab: 0.95, lab2: 0.7, atrium: 0.3, servers: 0.3, servers2: 0, cubicles: 0.15, factory: 0.05, restroom: 0.3, plants: 0.3, statue: 0.2, order: [0.4, 0.85], bsp: {} },
+  office:     { name: 'OFFICE',      share: 0.38, warehouse: 0, lab: 0.1, atrium: 0.7, servers: 0.4,  servers2: 0,   cubicles: 0.9,  factory: 0,    restroom: 0.5,  plants: 0.25, statue: 0.6, order: [0.45, 0.85], bsp: {} },
+  industrial: { name: 'INDUSTRIAL',  share: 0.25, warehouse: 0.85, lab: 0.1, atrium: 0.05,  servers: 0.15, servers2: 0,   cubicles: 0.15, factory: 0.95, restroom: 0.35, plants: 0.05, statue: 0.1, order: [0.15, 0.55], bsp: { bigChance: 0.7, bigArea: 520 }, minRooms: 4 },
+  data:       { name: 'DATA CENTER', share: 0.22, warehouse: 0.1, lab: 0.15, atrium: 0.1, servers: 0.95, servers2: 0.9, servers3: 0.5, racksIn: 0.5, cubicles: 0.2,  factory: 0.1,  restroom: 0.25, plants: 0.1,  statue: 0.3, order: [0.5, 0.9],   bsp: { bigChance: 0.4, bigArea: 450 } },
+  lab:        { name: 'LAB',         share: 0.15, warehouse: 0.05, lab: 0.95, lab2: 0.7, atrium: 0.3, servers: 0.3, servers2: 0, cubicles: 0.15, factory: 0.05, restroom: 0.3, plants: 0.3, statue: 0.2, order: [0.4, 0.85], bsp: {} },
 };
 let buildingPick = 'auto';   // (the dev panel's and the viewer's choice: 'auto', or a key of BUILDINGS)
 function pickBuilding(r) { const v = r(); if (buildingPick !== 'auto') return buildingPick; let acc = 0; for (const [k, b] of Object.entries(BUILDINGS)) { acc += b.share; if (v < acc) return k; } return 'office'; }
@@ -615,7 +663,8 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
   const bk = bk0 || pickBuilding(r), B = BUILDINGS[bk];
   for (let tries = 0; tries < 40; tries++) {
     const f = newFloor(last ? 'THE VAULT' : 'THE STACKS'), st = r();
-    f.building = bk;
+    f.building = bk; f.belts = []; f.beltAt = new Map(); f.beltPhase = 0;
+    f.beltR = rngFrom(hashStr(seed + ':belts:' + n));   // (the belts' own draws, in play: the same seed plays the same)
     f.order = st < B.order[0] ? ORDER.orderly[1] : st < B.order[1] ? ORDER.mixed[1] : ORDER.messy[1];
     const { rooms, links } = bspRooms(r, f.order, B.bsp);
     if (rooms.length < (B.minRooms || 5)) continue;
@@ -643,7 +692,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
     f.halls = halls; f.junc = junctions(f, halls);
     // (the big-room types take turns going first: one floor's best room is a server farm, another's the cubicles or
     // the factory)
-    for (const [fill, p] of shuffled([[serverFarm, B.servers], [cubicles, B.cubicles], [factory, B.factory], [lab, B.lab || 0], [atrium, B.atrium || 0]], r)) fill(f, rooms, r, p);
+    for (const [fill, p] of shuffled([[serverFarm, B.servers], [cubicles, B.cubicles], [factory, B.factory], [lab, B.lab || 0], [atrium, B.atrium || 0], [warehouse, B.warehouse || 0]], r)) fill(f, rooms, r, p);
     lab(f, rooms, r, B.lab2 || 0);   // (a LAB building's second)
     serverFarm(f, rooms, r, B.servers2 || 0, 8, 6); serverFarm(f, rooms, r, B.servers3 || 0, 8, 6);   // (a data center's second and third)
     restroom(f, rooms, r, B.restroom); decor(f, rooms, r, B);
@@ -918,7 +967,7 @@ function act(dx, dy) {
   if (dx || dy) {
     const nx = S.x + dx, ny = S.y + dy, c = at(f, nx, ny);
     if (S.inDuct) { if (!ductLink(f, S.x, S.y, nx, ny)) { say('the duct doesn\'t go that way.', C.mid); return draw(); } }
-    else if (!T[c].walk) { say(c === 'p' ? 'a pillar.' : 'a wall.', C.mid); return draw(); }
+    else if (!T[c].walk) { say(c === 'p' ? 'a pillar.' : c === 'x' ? 'a crate.' : 'a wall.', C.mid); return draw(); }
     S.slide = { x: S.x, y: S.y, t: performance.now() };   // (draw() slides the @ over from here)
     S.x = nx; S.y = ny;
     f.trail.push([nx, ny]);
@@ -948,6 +997,7 @@ function tick() {
   else if (S.have) { hurt('> traced: -1 INT. get out!'); if (S.over) return; }
   if (!clockOff && S.turn === TURNS && !S.have) say('the trace clock is out. every turn now costs you.', C.danger);
   if (!clockOff && S.turn > TURNS && !S.have && S.turn % 3 === 0) { hurt('> traced: -1 INT.'); if (S.over) return; }
+  beltsStep(f);
   // the arm turns
   if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) { S.alerts++; hurt('> the SCANNER caught you. alert: -1 INT.'); if (S.over) return; for (const p of f.pats) { p.chase = 8; p.lx = S.x; p.ly = S.y; } } }
   // cameras sweep, and look
@@ -977,12 +1027,13 @@ function tick() {
         else p.chase = 0;
         if (!p.chase) { p.back = route(f, p.x, p.y, p.path[p.i][0], p.path[p.i][1]); }
       } else if (p.back && p.back.length > 1) {
-        p.back.shift(); const [nx, ny] = p.back[0]; p.fx = nx - p.x || p.fx; p.fy = ny - p.y; p.x = nx; p.y = ny;
+        if (at(f, p.back[1][0], p.back[1][1]) !== 'x') { p.back.shift(); const [nx, ny] = p.back[0]; p.fx = nx - p.x || p.fx; p.fy = ny - p.y; p.x = nx; p.y = ny; }   // (a crate in the way: it waits)
       } else {
         p.back = null;
         let ni = p.i + p.d;
         if (ni >= p.path.length || ni < 0) { if (p.loop) ni = (ni + p.path.length) % p.path.length; else { p.d = -p.d; ni = p.i + p.d; } }
-        const [nx, ny] = p.path[ni]; p.fx = nx - p.x || p.fx; p.fy = ny - p.y; p.x = nx; p.y = ny; p.i = ni;
+        const [nx, ny] = p.path[ni];
+        if (at(f, nx, ny) !== 'x') { p.fx = nx - p.x || p.fx; p.fy = ny - p.y; p.x = nx; p.y = ny; p.i = ni; }   // (a crate in the way: it waits)
       }
       if (p.x === S.x && p.y === S.y && !S.inDuct) { p.stun = 3; p.chase = 0; hurt('> a PATROL caught you. -1 INT.'); if (S.over) return; break; }
     }
@@ -1049,6 +1100,11 @@ function wallGlyph(f, x, y) {
   return ['▪', '│', '│', '│', '─', '└', '┌', '├', '─', '┘', '┐', '┤', '─', '┴', '┬', '┼'][k];
 }
 const CAM_GLYPH = '¢';
+function beltGlyph(f, x, y) {
+  const at0 = f.beltAt && f.beltAt.get(x + ',' + y); if (!at0) return '»';
+  const { b, i } = at0; if (i === b.cells.length - 1) return '▀';
+  return b.dir > 0 ? ((i + (f.beltPhase || 0)) % 2 ? '›' : '»') : ((i + (f.beltPhase || 0)) % 2 ? '‹' : '«');
+}
 function machineGlyph(f, x, y) {
   const m = (i, j) => at(f, i, j) === 'm', n = m(x, y - 1), s0 = m(x, y + 1), e = m(x + 1, y), w = m(x - 1, y);
   if (n && s0 && e && w) return '░';
@@ -1056,9 +1112,9 @@ function machineGlyph(f, x, y) {
   if ((n || s0) && !(e && w)) return '│';
   return e || w ? '─' : '●';
 }
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"' };
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '»', 'x': '■' };
 // the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
-const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'm': 'mid', '#': 'mid' };
+const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'm': 'mid', '#': 'mid' };
 
 function draw() {
   if (!S) return;
@@ -1096,8 +1152,8 @@ function draw() {
     const c = at(f, x, y), vis = S.vis[y][x], seen = f.seen[y][x];
     if (c === ' ' || (!vis && !seen)) continue;
     const k0 = x + ',' + y;
-    let ch = c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === '.' && f.halls.has(k0) ? (f.junc && f.junc.has(k0) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
-    let col = C[TCOL[c]] || C.text, bg = null;
+    let ch = c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === 'b' ? beltGlyph(f, x, y) : c === '.' && f.halls.has(k0) ? (f.junc && f.junc.has(k0) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
+    let col = ch === '▀' ? C.danger : C[TCOL[c]] || C.text, bg = null;   // (the press: red)
     if (!vis) { col = c === '.' ? C.seen : C.dim; }
     else {
       const k = x + ',' + y;
@@ -1200,7 +1256,7 @@ const LEGEND = () => [   // (three columns of 12: a name 9 at most)
   ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
   ['◘', 'FIRE EXIT', C.green], ['▾', 'CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text],
   [HALL_GLYPH, 'HALL', C.dim], [JUNC_GLYPH, 'JUNCTION', C.dim], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
-  ['▄', 'DESK *', C.mid], ['Y', 'PLANT *', C.green], ['&', 'STATUE', C.bright], ['░', 'TANK', C.mid], ['=', 'BENCH *', C.mid], ['"', 'BEDS **', C.green], ['•', 'TRAIL', C.rep],
+  ['▄', 'DESK *', C.mid], ['Y', 'PLANT *', C.green], ['&', 'STATUE', C.bright], ['░', 'TANK', C.mid], ['=', 'BENCH *', C.mid], ['"', 'BEDS **', C.green], ['»', 'BELT', C.mid], ['■', 'CRATE', C.leg], ['•', 'TRAIL', C.rep],
 ];
 function drawHelp() {
   hits = hits.filter(h => h.id === 'help');   // (only [?] and GOT IT while it's up; a tap anywhere else closes it)
@@ -1213,7 +1269,7 @@ function drawHelp() {
   put(1, y, 'CONTROLS: ' + UIS[ui].name, C.bright, true); y++;
   for (const l of wrap(UIS[ui].hint, SW - 2)) put(1, y++, l, C.text);
   y++;
-  for (const l of wrap('keys: wasd or arrows step, space waits, enter uses, 1 2 3 gear, p clock, ? this.', SW - 2)) put(1, y++, l, C.mid);
+  for (const l of wrap('keys: wasd/arrows step, space waits, enter uses, 1 2 3 gear, ? help', SW - 2)) put(1, y++, l, C.mid);
   btn(Math.floor((SW - 12) / 2), MAP_Y + MH - 2, '[ GOT IT ]', 'help', toggleHelp);
 }
 const wrap = (s, w) => { const out = []; let l = ''; for (const word of s.split(' ')) { if ((l + ' ' + word).trim().length > w) { out.push(l); l = word; } else l = (l + ' ' + word).trim(); } if (l) out.push(l); return out; };
@@ -1326,7 +1382,8 @@ function infoAt(f, x, y) {
   if (f.payload && f.payload.x === x && f.payload.y === y) return { x, y, glyph: '$', name: 'THE PAYLOAD', text: 'take it and the alarm goes. then out.' };
   const c = at(f, x, y), i = INFO[c] || ['', ''], ro = f.roomOf && f.roomOf.get(x + ',' + y);
   if (c === '.' && ro && ro.type) return { x, y, glyph: GLYPH[c], name: ROOM_TYPES[ro.type][0], text: ROOM_TYPES[ro.type][1] + (vis ? '' : ' (seen before)') };
-  return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : GLYPH[c] || c, name: i[0], text: i[1] + (vis ? '' : ' (seen before)') };
+  { const bt = c === 'b' && f.beltAt && f.beltAt.get(x + ',' + y); if (bt && bt.i === bt.b.cells.length - 1) return { x, y, glyph: '▀', name: 'THE PRESS', text: 'crushes crates. shoves you off.' }; }
+  return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === 'b' ? beltGlyph(f, x, y) : GLYPH[c] || c, name: i[0], text: i[1] + (vis ? '' : ' (seen before)') };
 }
 addEventListener('keydown', ev => {
   if (ev.target && ev.target.closest && ev.target.closest('#dev, #v-floor')) return;   // (in the viewer, its buttons keep the arrow keys)
@@ -1406,9 +1463,9 @@ function drawFloorCard(cvs, f, fs) {
   const walk = new Set(f.pats.flatMap(p => p.path.map(([px, py]) => px + ',' + py)));   // (a patrol's walk: its floor marks go red; a CAM's view is the red wash)
   for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) {
     const c = at(f, xx, yy); if (c === ' ') continue;
-    const k = xx + ',' + yy, g0 = c === '#' ? wallGlyph(f, xx, yy) : c === 'm' ? machineGlyph(f, xx, yy) : c === '.' && f.halls.has(k) ? (f.junc && f.junc.has(k) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
+    const k = xx + ',' + yy, g0 = c === '#' ? wallGlyph(f, xx, yy) : c === 'm' ? machineGlyph(f, xx, yy) : c === 'b' ? beltGlyph(f, xx, yy) : c === '.' && f.halls.has(k) ? (f.junc && f.junc.has(k) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
     const onWay = way.has(k) && '.+'.includes(c);
-    cell(xx, yy, g0, onWay ? C.accent : walk.has(k) && '.+'.includes(c) ? C.danger : C[TCOL[c]] || C.text, '<>EF'.includes(c) || onWay);
+    cell(xx, yy, g0, onWay ? C.accent : g0 === '▀' || (walk.has(k) && '.+'.includes(c)) ? C.danger : C[TCOL[c]] || C.text, '<>EF'.includes(c) || onWay);
   }
   if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money, true);
   for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger, true);

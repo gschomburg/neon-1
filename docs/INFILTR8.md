@@ -407,6 +407,12 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   - **THE ATRIUM:** a plant bed (`"`) in each corner and a statue in the middle. You **step into** a bed and hide in
     it: a CAM or a patrol sees you there only from right next to you (the potted plants you hide behind). An
     office's room, mostly: on a third of office floors.
+  - **THE WAREHOUSE** (built 2026-11-24): a belt across a big room's middle row, wall to wall (`»` or `«`, flickering
+    as it moves). Each turn it moves everything on it a cell: crates (`■`, moving cover; nothing sees or walks through
+    one) and you. Stepping with it is 2 cells a turn. Its last cell is THE PRESS (`▀`, red): crates are crushed there,
+    and you're **shoved off to the side, unhurt** (**Decided, Greg 2026-11-24:** it doesn't hurt you; anything behind
+    you has to move on). Patrols wait for a crate to pass. Industrial floors, mostly (with the factory, about a third
+    of them get one). Later: a belt through a hatch into another room, or down a chute to the next floor.
   - **Shapes:** cross (a plus), ring (a corridor round a core, one way in: THE RING's idea, in big rooms), gallery (a
     long room 3 across). A room rolls only among the shapes that fit it (rolling among all and falling back to a box
     made boxes 55% and the new ones all but never). Now: box 37%, L 27%, cut 18%, split 11%, cross 5%, ring and
