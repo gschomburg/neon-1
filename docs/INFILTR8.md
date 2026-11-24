@@ -401,10 +401,16 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   statue; tidy), **INDUSTRIAL** (big halls, factories; messy), **DATA CENTER** (server farms, sometimes two; tidy). In
   the demo the seed picks one (AUTO) or the dev panel and the floor viewer force one. **In the game the corp you're in
   picks it** (PARCELNET or MEGAMART industrial, SEEKR or LEDGER an office...), so a corp's floors feel like that corp.
-- **Room ideas for later** (Greg, 2026-11-23):
-  - **THE LAB:** benches, cabinets, maybe a clean room you need gear for. MEDIX's building type.
-  - **A plant room** (an ATRIUM or GREENHOUSE): beds of plants you can **step into** and hide in (walk-in cover, unlike
-    the potted plants, which you hide behind), a statue or a fountain in the middle.
+- **More rooms and shapes** (Greg's ideas 2026-11-23, built 2026-11-24):
+  - **THE LAB:** islands of benches (`=`, low cover). A **LAB** building type (MEDIX's): labs on half its floors.
+    Later: cabinets, a clean room you need gear for.
+  - **THE ATRIUM:** a plant bed (`"`) in each corner and a statue in the middle. You **step into** a bed and hide in
+    it: a CAM or a patrol sees you there only from right next to you (the potted plants you hide behind). An
+    office's room, mostly: on a third of office floors.
+  - **Shapes:** cross (a plus), ring (a corridor round a core, one way in: THE RING's idea, in big rooms), gallery (a
+    long room 3 across). A room rolls only among the shapes that fit it (rolling among all and falling back to a box
+    made boxes 55% and the new ones all but never). Now: box 37%, L 27%, cut 18%, split 11%, cross 5%, ring and
+    gallery 1% each (they need a big room).
   **The vault's duct** (Greg, 2026-11-23): half the F3 floors, the one duct runs into the vault, a second way in over
   the guarded door. Never from the start room or one close to it, so the vent has to be found. Otherwise no duct
   reaches the vault.
