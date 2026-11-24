@@ -212,6 +212,23 @@ its own kit, picked before you go in. Ways to do that (pick one or mix):
 - A short list of game gear that does mean something here could still come in (FRAG, FLARE, SHOE, PING, FREEZE);
   see "Your gear in there" above.
 
+**Leaning (Greg, 2026-11-23): a mini game, easy in and out.** Low difficulty, little to learn, little prep.
+- **Preset loadouts:** pick one and it just gives you the kit. No shop and no slots to fill.
+- **Pickups:** you find more kit lying about on the floor during a run.
+- **Terminals:** many of the ideas below aren't things you carry. They're things a terminal does. Find a terminal,
+  hack it, and pick one thing (each terminal is used once). For example:
+  - **LIGHTS OUT:** this floor goes dark (FUSE PULL). It needs lit and dark rooms.
+  - **CAMS OFF:** every CAM on this floor goes dead for a while (JAMMER / EMP / LOOP TAPE).
+  - **MAP:** shows the floor's walls and doors (BLUEPRINT), or every way out (EXIT MAP).
+  - **WHERE'S THE PAYLOAD:** marks it on the floor.
+  - **FIRE DRILL**, **PHONE RING:** the patrols go where you send them.
+  - **UNLOCK:** opens the locked doors on the floor (once doors are in).
+- So the ideas below split three ways: kit you carry (DART GUN, SMOKE, NOISEMAKER, UNIFORM...), things you pick up
+  on the floor, and terminal actions.
+- The demo is harder than this. Things to tune down: patrols move 2 steps a turn after the payload, so you can't
+  outrun them (make it 1); one CAM alert sends every patrol after you (make it the nearest); 4 INT (6?); CAMs see 14
+  cells (10?); once the alarm runs out, -1 INT every turn (every 3 turns?).
+
 FLARE stays. FRAG needs a new name in here, since FRAG is already the game's gear: **CHARGE**, BREACH, PIPE BOMB, C4.
 FLARE is game gear too, so it may want its own name as well (GLOWSTICK?).
 
