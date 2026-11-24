@@ -47,12 +47,35 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
 #v-cvs { display: block; touch-action: none; }
 #v-cap { text-align: center; color: var(--mid); padding: 0 12px 12px; }
 #v-cap b { color: var(--money); font-weight: 400; }
+/* the LOADOUT form (Greg, 2026-11-24): a dev form, not the game's grid. The game gets its own screen for this later,
+   so it's plain HTML: any length of text, and it scrolls. Over everything but the viewer. */
+#kit-form { position: fixed; inset: 0; z-index: 2; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; padding: 12px; font: 15px/1.4 "JetBrains Mono", Consolas, monospace; color: var(--text); }
+#kit-form .kit-box { background: var(--bg); border: 1px solid var(--dim); max-width: 560px; width: 100%; max-height: 100%; overflow: auto; padding: 14px; }
+#kit-form h2 { margin: 0 0 2px; font-size: 16px; color: var(--bright); }
+#kit-form .kit-note { color: var(--mid); margin: 0 0 12px; }
+#kit-form .kit { display: block; width: 100%; text-align: left; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--dim); padding: 10px 12px; margin: 0 0 10px; cursor: pointer; touch-action: manipulation; }
+#kit-form .kit.on { border-color: var(--accent); }
+#kit-form .kit:hover, #kit-form .kit:focus-visible { border-color: var(--money); outline: none; }
+#kit-form .kit-name { display: block; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+#kit-form .kit-pass b, #kit-form li b { color: var(--money); font-weight: 400; }
+#kit-form ul { margin: 6px 0 0; padding-left: 18px; color: var(--mid); }
+#kit-form li { margin-top: 4px; }
+#kit-form i { color: var(--dim); font-style: normal; }
+#kit-form .kit-close { font: inherit; background: var(--bg); color: var(--mid); border: 1px solid var(--dim); padding: 6px 14px; min-height: 40px; cursor: pointer; }
 [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
 <button id="dev-btn" type="button" title="the dev panel">DEV</button>
+<div id="kit-form" hidden>
+  <div class="kit-box">
+    <h2>LOADOUT</h2>
+    <p class="kit-note">a passive and your gear. pick one (or press 1-4). a dev form: the game gets its own screen later.</p>
+    <div id="kit-list"></div>
+    <button class="kit-close" id="kit-close" type="button">KEEP</button>
+  </div>
+</div>
 <div id="viewer" hidden>
   <div class="v-bar">
     <b>FLOOR VIEWER</b>
@@ -681,23 +704,47 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
 }
 // what each does: its popup's title, a line, and its choices (each: a label, and what happens). Choosing spends it.
 const LOOT_FINDS = [['A CREDSTICK', 40], ['PAYROLL DATA', 60], ['A KEYCARD DUMP', 30], ['SOURCE CODE', 70], ['PASSWORDS', 35], ['A PROTOTYPE', 80], ['CUSTOMER LISTS', 45], ['A SERVER KEY', 55]];
-// LOADOUTS (Greg, 2026-11-24): a passive and two kinds of gear. You pick one at the start of a run (the last pick is
-// the default); a BAG SWAP station changes it. Gear keys are 7 characters at most (the tray's buttons).
-// Passives: LOOP (a CAM needs 3 turns on you, not 2: tick), ROOT (2 picks a terminal: chooseStation), HEAVY HANDS
-// (takedowns KO_HEAVY, and from the front if it hasn't seen you: act), SPRINTER (the ALARM +50%: act).
-const LOADOUTS = {
-  GHOST: { passive: 'LOOP', what: 'CAMs need 3 turns', gear: { UNIFORM: 2, SMOKE: 2 } },
-  HACKER: { passive: 'ROOT', what: '2 picks a terminal', gear: { JAMMER: 3, FLARE: 2 } },
-  BRUTE: { passive: 'HEAVY HANDS', what: 'takedowns 60, any side', gear: { DARTS: 3, 'MED KIT': 1 } },
-  RUNNER: { passive: 'SPRINTER', what: 'the ALARM +50%', gear: { NOISE: 3, FLARE: 2 } },
+// ---------- gear, passives and loadouts: in the game's shapes, so they port over (Greg, 2026-11-24) ----------
+// INF_ITEMS: data/mods.js ITEMS's shape (key, name, rarity, desc, tip; codex later), plus the item's numbers on its
+// entry. What each does: GEAR_USE[key], below. Names: 7 characters at most here (the tray's buttons); the game's
+// limit is 15. Rarities are first guesses.
+const INF_ITEMS = {
+  flare:   { key: 'flare', name: 'FLARE', rarity: 'common', desc: 'light the whole floor: for 6 turns you see everything on it.', tip: 'the floor, 6 turns', turns: 6 },
+  uniform: { key: 'uniform', name: 'UNIFORM', rarity: 'rare', desc: 'patrols take you for staff for 15 turns: they walk on by unless they\'re right next to you. any chase stops.', tip: 'patrols pass you by', turns: 15 },
+  smoke:   { key: 'smoke', name: 'SMOKE', rarity: 'common', desc: 'a 3x3 cloud round you for 6 turns. nothing sees through it: not CAMs, not patrols, not you.', tip: 'a 3x3 cloud, 6 turns', turns: 6 },
+  jammer:  { key: 'jammer', name: 'JAMMER', rarity: 'rare', desc: 'the nearest CAM you can see (within 14) goes dead for 10 turns.', tip: 'a CAM dead 10 turns', turns: 10, range: 14 },
+  darts:   { key: 'darts', name: 'DARTS', rarity: 'rare', desc: 'a dart gun: the nearest patrol you can see (within 10) drops, out for 15 turns. quiet.', tip: 'a PATROL out 15', ko: 15, range: 10 },
+  medkit:  { key: 'medkit', name: 'MED KIT', rarity: 'common', desc: 'patch yourself up: +1 INT. works in a duct.', tip: '+1 INT', int: 1, duct: true },
+  noise:   { key: 'noise', name: 'NOISE', rarity: 'common', desc: 'throw it up to 6 cells, the way you pick (a wall stops it). patrols within 14 of where it lands go to look.', tip: 'throw: patrols look', range: 6, heard: 14 },
+  // (no loadout has FRAG now: Greg, 2026-11-24, no blowing things up till objects break properly)
+  frag:    { key: 'frag', name: 'FRAG', rarity: 'common', desc: 'blows the 3x3 round you: walls, CAMs, patrols. LOUD: every patrol comes.', tip: 'blows the 3x3. loud', loud: true },
 };
-const gearList = g => Object.entries(g).map(([k, n]) => k + ' x' + n).join(', ');
-function setLoadout(name) {
-  const lo = LOADOUTS[name]; S.kit = name; S.passive = lo.passive;
+// INF_CHIPS: data/chips.js's shape, one line each: [name, group, rarity, power, what it does, face (top, bottom),
+// tip, its numbers]. Two groups: 'infp' a PASSIVE, 'infk' a LOADOUT (a KIT, as the game's KNIGHT and CARE PACKAGE:
+// numbers.kit, with its passive and gear on the line, where the game's kits keep theirs in engine/deck.js). Power and
+// faces are first guesses. Where each passive works: pass('IP1') in tick (LOOP), chooseStation (ROOT), act (HEAVY
+// HANDS, SPRINTER).
+const INF_CHIPS = {
+  IP1: ['LOOP', 'infp', 'rare', 1, 'CAMs are slow to place you: a CAM needs 3 turns on you for a good look, not 2.', ['[~]', 'LOP'], 'CAMs need 3 turns.', { looks: 3 }],
+  IP2: ['ROOT', 'infp', 'rare', 1, 'root access: each TERMINAL gives you 2 picks, not 1.', ['[>]', 'RT_'], '2 picks a terminal.', { picks: 2 }],
+  IP3: ['HEAVY HANDS', 'infp', 'rare', 1, 'your takedowns last 60 turns, not 30, and work from the front too if the patrol hasn\'t seen you.', ['[#]', 'HVY'], 'takedowns 60, any side.', { ko: 60 }],
+  IP4: ['SPRINTER', 'infp', 'rare', 1, 'the way-out ALARM runs 50% longer.', ['[»]', 'SPR'], 'the ALARM +50%.', { alarm: 1.5 }],
+  IK1: ['GHOST', 'infk', 'rare', 2, 'a KIT: LOOP, 2 UNIFORMs and 2 SMOKEs.', ['[@]', 'GST'], 'LOOP. UNIFORM x2, SMOKE x2.', { kit: 1, passive: 'IP1', gear: { uniform: 2, smoke: 2 } }],
+  IK2: ['HACKER', 'infk', 'rare', 2, 'a KIT: ROOT, 3 JAMMERs and 2 FLAREs.', ['[@]', 'HKR'], 'ROOT. JAMMER x3, FLARE x2.', { kit: 1, passive: 'IP2', gear: { jammer: 3, flare: 2 } }],
+  IK3: ['BRUTE', 'infk', 'rare', 2, 'a KIT: HEAVY HANDS, 3 DARTS and a MED KIT.', ['[@]', 'BRT'], 'HEAVY HANDS. DARTS x3, MED KIT.', { kit: 1, passive: 'IP3', gear: { darts: 3, medkit: 1 } }],
+  IK4: ['RUNNER', 'infk', 'rare', 2, 'a KIT: SPRINTER, 3 NOISEs and 2 FLAREs.', ['[@]', 'RNR'], 'SPRINTER. NOISE x3, FLARE x2.', { kit: 1, passive: 'IP4', gear: { noise: 3, flare: 2 } }],
+};
+const KITS = Object.keys(INF_CHIPS).filter(k => INF_CHIPS[k][1] === 'infk');
+// your passive's numbers, if it's the one you have (null if not): if (pass('IP3')) ... pass('IP3').ko
+const pass = k => S.passive === k ? INF_CHIPS[k][7] : null;
+const gearList = g => Object.entries(g).map(([k, n]) => INF_ITEMS[k].name + ' x' + n).join(', ');
+function setLoadout(k) {
+  const lo = INF_CHIPS[k][7]; S.kit = k; S.passive = lo.passive;
   S.gear = Object.entries(lo.gear).map(([key, n]) => ({ key, n }));
-  try { localStorage.setItem('neon.infiltr8.kit', name); } catch (e) { /* private mode */ }
+  try { localStorage.setItem('neon.infiltr8.kit', k); } catch (e) { /* private mode */ }
 }
-const loadoutOpts = skip => Object.entries(LOADOUTS).filter(([name]) => name !== skip).map(([name, lo]) => [name + ': ' + lo.what, gearList(lo.gear), () => { setLoadout(name); say(name + ': ' + lo.passive + ', ' + gearList(lo.gear) + '.', C.rep); }]);
+const loadoutOpts = skip => KITS.filter(k => k !== skip).map(k => { const c = INF_CHIPS[k], p = INF_CHIPS[c[7].passive];
+  return [c[0] + ': ' + p[6].replace(/\.$/, ''), gearList(c[7].gear), () => { setLoadout(k); say(c[0] + ': ' + p[0] + '. ' + gearList(c[7].gear) + '.', C.rep); }]; });
 function stationMenu(kind, f, key) {
   const gear = k => S.gear.find(g => g.key === k);
   if (kind === 'T') return { title: 'TERMINAL', line: 'one thing, then it locks you out.', opts: [
@@ -712,14 +759,23 @@ function stationMenu(kind, f, key) {
     return { title: 'LOOT CACHE', line: 'room for one of them.', opts: pick.map(([n, v]) => [n, v + ' CR', () => { (S.loot = S.loot || []).push([n, v]); say('you take ' + n.toLowerCase() + ': ' + v + ' CR.', C.money); }]) }; }
   if (kind === 'R') return { title: 'RE-UP', line: 'one of these.', opts: [
     ['+1 INT', 'INT ' + S.int + '/' + MAX_INT, () => { S.int = Math.min(MAX_INT, S.int + 1); say('RE-UP: +1 INT.', C.green); }],
-    ...S.gear.map(({ key: k }) => ['+1 ' + k, 'you have ' + gear(k).n, () => { gear(k).n++; say('RE-UP: +1 ' + k + '.', C.green); }])] };
+    ...S.gear.map(({ key: k }) => ['+1 ' + INF_ITEMS[k].name, 'you have ' + gear(k).n, () => { gear(k).n++; say('RE-UP: +1 ' + INF_ITEMS[k].name + '.', C.green); }])] };
   if (kind === 'B') return { title: 'BAG SWAP', line: 'your loadout for another (all new).', opts: loadoutOpts(S.kit) };
 }
-// the start of a run: pick a loadout (CLOSE keeps the one shown first: your last pick)
+// the start of a run: pick a loadout. A DEV FORM (Greg, 2026-11-24): plain HTML over the game, scrolling, any length
+// of text, since the game will get its own screen for this. CLOSE keeps the one ticked: your last pick.
 function openLoadouts() {
-  const last = S.kit, opts = loadoutOpts(null);
-  opts.sort((a, b) => (b[0].startsWith(last + ':') ? 1 : 0) - (a[0].startsWith(last + ':') ? 1 : 0));
-  S.popup = { title: 'LOADOUT', line: 'a passive, and your gear.', opts, start: true };
+  const row = (k, n) => { const it = INF_ITEMS[k]; return '<li><b>' + it.name + ' x' + n + '</b> <i>' + it.rarity + '</i><br>' + it.desc + '</li>'; };
+  $('kit-list').innerHTML = KITS.map(k => { const c = INF_CHIPS[k], p = INF_CHIPS[c[7].passive];
+    return '<button type="button" class="kit' + (k === S.kit ? ' on' : '') + '" data-kit="' + k + '"><span class="kit-name">' + c[0] + '</span>'
+      + '<span class="kit-pass"><b>' + p[0] + '</b> (passive) ' + p[4] + '</span><ul>' + Object.entries(c[7].gear).map(([g, n]) => row(g, n)).join('') + '</ul></button>'; }).join('');
+  $('kit-close').textContent = 'KEEP ' + INF_CHIPS[S.kit][0];
+  $('kit-form').hidden = false; S.form = true;
+}
+function closeLoadouts(k) {
+  if (k) setLoadout(k);
+  $('kit-form').hidden = true; S.form = false;
+  const c = INF_CHIPS[S.kit]; say(c[0] + ': ' + INF_CHIPS[c[7].passive][0] + '. ' + gearList(c[7].gear) + '.', C.rep); draw();
 }
 // the station next to you (not spent), if any
 function stationBeside(f) {
@@ -729,10 +785,10 @@ function stationBeside(f) {
 function openStation(f, key, st) { S.popup = Object.assign(stationMenu(st.kind, f, key), { key, kind: st.kind }); draw(); }
 function chooseStation(i) {
   const p = S.popup, f = F(); if (!p || !p.opts[i]) return;
-  if (p.start) { p.opts[i][2](); S.popup = null; look(); return draw(); }   // (the loadout pick: no turn)
   p.opts[i][2]();
-  // ROOT: a terminal gives a second pick (the same turn's worth: one tick for both)
-  if (p.kind === 'T' && S.passive === 'ROOT' && !p.second) { f.stations.get(p.key).used = true; p.opts.splice(i, 1); p.second = true; p.line = 'ROOT: one more.'; look(); return draw(); }
+  // ROOT: a terminal gives more picks (the same turn's worth: one tick for all of them)
+  p.n = (p.n || 0) + 1;
+  if (p.kind === 'T' && pass('IP2') && p.n < pass('IP2').picks) { f.stations.get(p.key).used = true; p.opts.splice(i, 1); p.line = 'ROOT: one more.'; look(); return draw(); }
   f.stations.get(p.key).used = true; S.popup = null; tick(); look(); draw();
 }
 // can a CAM at (x, y) facing a see (tx, ty) as it sweeps (its cone plus its sweep: 90 degrees either way)?
@@ -1135,12 +1191,7 @@ const HEAT_MAX = 3, HEAT_FADE = 30;   // the ALERT meter (heatUp): its length, a
 const STEP_MS = 110;
 const DECRYPT_MS = 500;   // a floor's name, and the end screen's heading, decrypt in (the game's FX.decrypt)
 const PAT_HALF = Math.PI * 25 / 180, PAT_RANGE = 10;   // a patrol's view: 50 degrees wide (Greg, 2026-11-24; was 90), the way it last stepped (draw() shows it)
-const UNIFORM_TURNS = 15;   // UNIFORM: patrols ignore you unless right next to you
 const PAT_PACE = 2;         // a patrol on its round steps once every PAT_PACE turns (1 = every turn)
-const DART_KO = 15, DART_RANGE = 10;   // DARTS: the nearest PATROL you can see, in range, is out this long
-const JAM_TURNS = 10, SMOKE_TURNS = 6;   // JAMMER: the nearest CAM you can see; SMOKE: the 3x3 round you
-const NOISE_RANGE = 6, NOISE_HEARD = 14;  // NOISE: how far you throw it; how far off a patrol hears it
-const KO_HEAVY = 60;       // HEAVY HANDS: a BRUTE's takedowns
 const KO_TURNS = 30;       // a TAKEDOWN: how long a patrol's out   // how long the @ takes to slide one step
 let S;
 // the clock toggle (a demo aid, Greg 2026-11-23): off, the turn count and the alarm stand still, so nothing traces you.
@@ -1197,7 +1248,7 @@ function newRun(seed) {
   S = { seed, floors, fi: 0, x: floors[0].start.x, y: floors[0].start.y, int: MAX_INT, turn: 0, alarm: 0, have: false, alerts: 0,
     msg: 'INFILTR8. in by the door. the payload is on F3.', msgCol: C.accent, msgT: performance.now(), floorT: performance.now(), info: null, mode: 'pad',
     gear: [], heat: 0, heatMax: HEAT_MAX, quiet: 0, flare: 0, uniform: 0, over: null, vis: null, inDuct: false };
-  let kit = 'GHOST'; try { const k = localStorage.getItem('neon.infiltr8.kit'); if (LOADOUTS[k]) kit = k; } catch (e) { /* private mode */ }
+  let kit = KITS[0]; try { const k = localStorage.getItem('neon.infiltr8.kit'); if (KITS.includes(k)) kit = k; } catch (e) { /* private mode */ }
   setLoadout(kit); openLoadouts();
   floorClock(F());
   look();
@@ -1240,9 +1291,9 @@ function act(dx, dy) {
     { const p = !S.inDuct && f.pats.find(q => !q.dead && !(q.ko > 0) && q.x === nx && q.y === ny);
       if (p) {
         const front = (S.x - p.x) * p.fx + (S.y - p.y) * p.fy > 0;   // (you're on the side it's facing)
-        if (front && !(p.stun > 0) && !(S.passive === 'HEAVY HANDS' && !p.chase)) {   // (HEAVY HANDS: from the front too, if it hasn't seen you)
+        if (front && !(p.stun > 0) && !(pass('IP3') && !p.chase)) {   // (HEAVY HANDS: from the front too, if it hasn't seen you)
         p.stun = 3; p.chase = 0; hurt('> the PATROL saw you coming. -1 INT.'); if (!S.over) tick(); look(); return draw(); }
-        const ko = S.passive === 'HEAVY HANDS' ? KO_HEAVY : KO_TURNS; p.ko = ko; p.chase = 0; p.stun = 0;
+        const ko = pass('IP3') ? pass('IP3').ko : KO_TURNS; p.ko = ko; p.chase = 0; p.stun = 0;
         say('you knock the PATROL out. ' + ko + ' turns.' + (S.heat ? ' ALERT clear.' : ''), C.accent); S.heat = 0;   // (a takedown clears the ALERT meter: Greg)
         tick(); look(); return draw();
       } }
@@ -1255,7 +1306,7 @@ function act(dx, dy) {
   // the payload
   if (f.payload && S.x === f.payload.x && S.y === f.payload.y && !S.have) {
     const out = outTurns(S.fi, S.x, S.y);
-    S.have = true; S.alarm = Math.ceil((Math.ceil((isFinite(out) ? out : 40) * OUT_PACE) + OUT_SPARE) * (S.passive === 'SPRINTER' ? 1.5 : 1)); f.payload = null; f.trip = 0;
+    S.have = true; S.alarm = Math.ceil((Math.ceil((isFinite(out) ? out : 40) * OUT_PACE) + OUT_SPARE) * (pass('IP4') ? pass('IP4').alarm : 1));   // (SPRINTER) f.payload = null; f.trip = 0;
     say('you have it. ALARM. get out: your trail shows the way.', C.danger); flashT = performance.now();
   } else if (!S.over && (dx || dy)) {
     const c = at(f, S.x, S.y);
@@ -1310,7 +1361,7 @@ function tick() {
     c.k++; c.a = c.base + Math.sin(c.k * Math.PI / 4) * (Math.PI / 3);
     if (!S.inDuct && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, S.x, S.y)) {
       c.seen++; S.quiet = 0;
-      if (c.seen < (S.passive === 'LOOP' ? 3 : 2)) say('a CAM has you. ! get out of its cone.', C.money);   // (LOOP: it takes 3 turns)
+      if (c.seen < (pass('IP1') ? pass('IP1').looks : 2)) say('a CAM has you. ! get out of its cone.', C.money);   // (LOOP: it takes 3 turns)
       else { c.seen = 0; c.rest = 1; heatUp(f, '!! the CAM got a good look.'); }
     } else c.seen = 0;
   }
@@ -1369,34 +1420,29 @@ function leave(head, line) {
   const loot = (S.loot || []).reduce((t, [, v]) => t + v, 0);
   S.over = { win: S.have, head, lines: [line, 'turns: ' + S.turn + '   seen: ' + S.alerts + '   INT: ' + S.int + '/' + MAX_INT].concat(loot ? ['loot: ' + (S.loot || []).length + ' finds, ' + loot + ' CR'] : []) }; draw();
 }
-// gear: FLARE lights the floor for 6 turns; FRAG blows the 3 x 3 round you (walls, cameras, patrols) and is loud
-function useGear(k) {
-  if (S.over) return;
-  const g0 = S.gear.find(x => x.key === k); if (!g0 || g0.n <= 0) { say('none left.', C.mid); return draw(); }
-  const f = F();
-  if (S.inDuct && k !== 'MED KIT') { say('not in a duct.', C.mid); return draw(); }
-  // the nearest you can see of a list, within range (rows count double, as the cones)
-  const near = (list, range) => list.filter(o => S.vis[o.y][o.x] && Math.hypot(o.x - S.x, (o.y - S.y) * 2) <= range).sort((a, b) => Math.hypot(a.x - S.x, (a.y - S.y) * 2) - Math.hypot(b.x - S.x, (b.y - S.y) * 2))[0];
-  if (k === 'NOISE') { S.aim = S.aim === 'NOISE' ? null : 'NOISE'; say(S.aim ? 'NOISE: throw it which way?' : 'no NOISE.', S.aim ? C.accent : C.mid); return draw(); }
-  if (k === 'MED KIT' && S.int >= MAX_INT) { say('INT is full.', C.mid); return draw(); }
-  if (k === 'DARTS') {
-    const p = near(f.pats.filter(p => !p.dead && !(p.ko > 0)), DART_RANGE); if (!p) { say('no PATROL in range (' + DART_RANGE + ').', C.mid); return draw(); }
-    p.ko = DART_KO; p.chase = 0; p.stun = 0; say('DART: the PATROL drops. out ' + DART_KO + ' turns.', C.accent);
-  }
-  if (k === 'JAMMER') {
-    const c = near(f.cams.filter(c => !c.dead && !(c.off > 0)), 14); if (!c) { say('no CAM in sight.', C.mid); return draw(); }
-    c.off = JAM_TURNS; c.seen = 0; say('JAMMER: that CAM is dead ' + JAM_TURNS + ' turns.', C.accent);
-  }
-  if (k === 'SMOKE') {
+// the nearest you can see of a list, within range (rows count double, as the cones)
+const nearest = (list, range) => list.filter(o => S.vis[o.y][o.x] && Math.hypot(o.x - S.x, (o.y - S.y) * 2) <= range).sort((a, b) => Math.hypot(a.x - S.x, (a.y - S.y) * 2) - Math.hypot(b.x - S.x, (b.y - S.y) * 2))[0];
+// what each item does (INF_ITEMS has its text and numbers): (f, it) => false if it can't be used now (not spent, no turn)
+const GEAR_USE = {
+  flare(f, it) { S.flare = it.turns; say('FLARE: the whole floor, for ' + it.turns + ' turns.', C.money); },
+  uniform(f, it) { S.uniform = it.turns; for (const p of f.pats) p.chase = 0; say('UNIFORM: patrols take you for staff, ' + it.turns + ' turns. not up close.', C.money); },
+  smoke(f, it) {
     f.smoke = f.smoke || new Map();
-    for (let y = S.y - 1; y <= S.y + 1; y++) for (let x = S.x - 1; x <= S.x + 1; x++) if (T[at(f, x, y)].walk) f.smoke.set(x + ',' + y, SMOKE_TURNS);
-    say('SMOKE: nothing sees through it. ' + SMOKE_TURNS + ' turns.', C.money);
-  }
-  if (k === 'MED KIT') { S.int++; say('MED KIT: +1 INT.', C.green); }
-  g0.n--;
-  if (k === 'FLARE') { S.flare = 6; say('FLARE: the whole floor, for 6 turns.', C.money); }
-  if (k === 'UNIFORM') { S.uniform = UNIFORM_TURNS; for (const p of f.pats) p.chase = 0; say('UNIFORM: patrols take you for staff, ' + UNIFORM_TURNS + ' turns. not up close.', C.money); }
-  if (k === 'FRAG') {
+    for (let y = S.y - 1; y <= S.y + 1; y++) for (let x = S.x - 1; x <= S.x + 1; x++) if (T[at(f, x, y)].walk) f.smoke.set(x + ',' + y, it.turns);
+    say('SMOKE: nothing sees through it. ' + it.turns + ' turns.', C.money);
+  },
+  jammer(f, it) {
+    const c = nearest(f.cams.filter(c => !c.dead && !(c.off > 0)), it.range); if (!c) { say('no CAM in sight.', C.mid); return false; }
+    c.off = it.turns; c.seen = 0; say('JAMMER: that CAM is dead ' + it.turns + ' turns.', C.accent);
+  },
+  darts(f, it) {
+    const p = nearest(f.pats.filter(p => !p.dead && !(p.ko > 0)), it.range); if (!p) { say('no PATROL in range (' + it.range + ').', C.mid); return false; }
+    p.ko = it.ko; p.chase = 0; p.stun = 0; say('DART: the PATROL drops. out ' + it.ko + ' turns.', C.accent);
+  },
+  medkit(f, it) { if (S.int >= MAX_INT) { say('INT is full.', C.mid); return false; } S.int = Math.min(MAX_INT, S.int + it.int); say('MED KIT: +' + it.int + ' INT.', C.green); },
+  // (NOISE: pick the way first, as a PEEK; throwNoise spends it)
+  noise() { S.aim = S.aim === 'NOISE' ? null : 'NOISE'; say(S.aim ? 'NOISE: throw it which way?' : 'no NOISE.', S.aim ? C.accent : C.mid); return false; },
+  frag(f) {
     for (let y = S.y - 1; y <= S.y + 1; y++) for (let x = S.x - 1; x <= S.x + 1; x++) {
       if ('#p'.includes(at(f, x, y)) && x > 0 && y > 0 && x < MW - 1 && y < MH - 1) set(f, x, y, '.');
       for (const c of f.cams) if (c.x === x && c.y === y) c.dead = true;
@@ -1405,18 +1451,24 @@ function useGear(k) {
     for (const p of f.pats) { p.chase = 10; p.lx = S.x; p.ly = S.y; }
     booms.push({ x: S.x, y: S.y, t: performance.now() });
     say('FRAG: a hole in everything near you. LOUD: they\'re all coming.', C.danger);
-  }
-  tick(); look(); draw();
+  },
+};
+function useGear(k) {
+  if (S.over) return;
+  const g0 = S.gear.find(x => x.key === k), it = INF_ITEMS[k]; if (!g0 || g0.n <= 0) { say('none left.', C.mid); return draw(); }
+  if (S.inDuct && !it.duct) { say('not in a duct.', C.mid); return draw(); }
+  if (GEAR_USE[k](F(), it) === false) return draw();
+  g0.n--; tick(); look(); draw();
 }
 const booms = [];
-// NOISE: thrown up to NOISE_RANGE cells that way (a wall stops it); the patrols near where it lands go to look
+// NOISE: thrown up to its range that way (a wall stops it); the patrols near where it lands go to look
 function throwNoise(dx, dy) {
-  const f = F(), g0 = S.gear.find(x => x.key === 'NOISE'); if (!g0 || g0.n <= 0) return draw();
+  const f = F(), g0 = S.gear.find(x => x.key === 'noise'), it = INF_ITEMS.noise; if (!g0 || g0.n <= 0) return draw();
   let x = S.x, y = S.y;
-  for (let i = 0; i < NOISE_RANGE; i++) { const nx = x + dx, ny = y + dy; if (!T[at(f, nx, ny)].walk || opaque(f, nx, ny)) break; x = nx; y = ny; }
+  for (let i = 0; i < it.range; i++) { const nx = x + dx, ny = y + dy; if (!T[at(f, nx, ny)].walk || opaque(f, nx, ny)) break; x = nx; y = ny; }
   if (x === S.x && y === S.y) { say('a wall: nowhere to throw it.', C.mid); return draw(); }
   g0.n--; let n = 0;
-  for (const p of f.pats) if (!p.dead && !(p.ko > 0) && Math.hypot(p.x - x, (p.y - y) * 2) <= NOISE_HEARD) { p.chase = 6; p.lx = x; p.ly = y; n++; }
+  for (const p of f.pats) if (!p.dead && !(p.ko > 0) && Math.hypot(p.x - x, (p.y - y) * 2) <= it.heard) { p.chase = 6; p.lx = x; p.ly = y; n++; }
   booms.push({ x, y, t: performance.now() });
   say('NOISE: a clatter. ' + (n ? n + ' PATROL' + (n > 1 ? 's go' : ' goes') + ' to look.' : 'nobody near to hear.'), C.money);
   tick(); look(); draw();
@@ -1484,7 +1536,7 @@ function draw() {
   put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
   put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
   put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent);
-  put(0, 3, S.kit, C.mid);
+  put(0, 3, INF_CHIPS[S.kit][0], C.mid);
   // the ALERT meter (heatUp): a box a step, filled as you're seen
   put(8, 3, 'ALERT', C.mid); put(14, 3, '■'.repeat(S.heat) + '□'.repeat(S.heatMax - S.heat), S.heat ? C.danger : C.dim);
   if (S.have) put(15 + S.heatMax, 3, '$', C.money);   // (the payload's in your pack)
@@ -1561,7 +1613,7 @@ function draw() {
     // the condensed tray: USE and the gear stacked on the right, no swap
     btn(24, 32, '[   PEEK   ]', 'peek', togglePeek, S.aim === 'PEEK' ? C.money : C.accent, !S.inDuct);
     btn(24, 33, '[   USE    ]', 'use', use, C.accent, canUse(f));
-    S.gear.forEach((gr, i) => btn(24, 34 + i, `[${gr.key.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0));
+    S.gear.forEach((gr, i) => btn(24, 34 + i, `[${INF_ITEMS[gr.key].name.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), INF_ITEMS[gr.key].loud ? C.danger : C.money, gr.n > 0));
     const live = G && G.pad;
     if (u === 'swipe' || u === 'stick') {
       put(0, 32, '- '.repeat(11).trimEnd(), C.dim);
@@ -1592,8 +1644,7 @@ function draw() {
     put(0, 36, 'wasd, space wait, enter use, q peek', C.dim);
   } else {
     put(0, 32, '- '.repeat(18).trimEnd(), C.dim);
-    const tips = { FLARE: 'the floor, 6 turns', FRAG: 'blows the 3x3. loud', UNIFORM: 'patrols pass you by', SMOKE: 'a 3x3 cloud, 6 turns', JAMMER: 'a CAM dead 10 turns', DARTS: 'a PATROL out 15', 'MED KIT': '+1 INT', NOISE: 'throw: patrols look' };
-    S.gear.forEach((gr, i) => { btn(1, 33 + i, `[${gr.key.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0); put(14, 33 + i, tips[gr.key] || '', C.mid); });
+    S.gear.forEach((gr, i) => { const it = INF_ITEMS[gr.key]; btn(1, 33 + i, `[${it.name.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), it.loud ? C.danger : C.money, gr.n > 0); put(14, 33 + i, it.tip.slice(0, SW - 14), C.mid); });
     btn(26, 36, '[ ⇄ PAD ]', 'swap', () => { S.mode = 'pad'; draw(); }, C.mid);
     put(0, 36, 'keys 1 2 3, g swaps', C.dim);
   }
@@ -1775,6 +1826,7 @@ addEventListener('keydown', ev => {
   if (!$('viewer').hidden) { if (ev.key === 'Escape') closeViewer(); if (ev.key === 'ArrowRight') viewerStep(1); if (ev.key === 'ArrowLeft') viewerStep(-1); if (ev.key === 'r' || ev.key === 'R') { V.seeds[V.i] = newSeed(); viewerShow(); } if (ev.key === 'l' || ev.key === 'L') toggleLabels(); return; }   // (the dev panel's controls take their own keys)
   const k = ev.key.toLowerCase();
   if (k === '?' || k === '/') return toggleHelp();
+  if (S.form) { if (k === 'escape') closeLoadouts(); else if (/^[1-9]$/.test(k) && KITS[+k - 1]) closeLoadouts(KITS[+k - 1]); return; }   // (the loadout form: its own keys)
   if (helpOpen) { if (k === 'escape' || k === 'enter' || k === ' ') { ev.preventDefault(); toggleHelp(); } return; }
   if (S.popup) { if (k === 'escape') { S.popup = null; draw(); } else if (/^[1-9]$/.test(k)) chooseStation(+k - 1); return; }
   const mv = { arrowup: [0, -1], w: [0, -1], k: [0, -1], arrowdown: [0, 1], s: [0, 1], j: [0, 1], arrowleft: [-1, 0], a: [-1, 0], h: [-1, 0], arrowright: [1, 0], d: [1, 0], l: [1, 0] }[k];
@@ -1813,7 +1865,7 @@ function devPlace() {
   b.style.right = (innerWidth - right) + 'px'; b.style.top = (L.oy + 37 * L.ch) + 'px'; b.style.height = L.ch + 'px';   // the footer's right end (free)
   p.style.left = L.ox + 'px'; p.style.width = (SW * L.cw) + 'px'; p.style.top = (L.oy + MAP_Y * L.ch) + 'px';             // across the map
 }
-function devColors() { const d = document.documentElement.style; for (const k of ['bg', 'dim', 'mid', 'text', 'accent', 'money']) d.setProperty('--' + k, C[k]); }
+function devColors() { const d = document.documentElement.style; for (const k of ['bg', 'dim', 'mid', 'text', 'accent', 'money', 'bright']) d.setProperty('--' + k, C[k]); }
 $('dev-pal').innerHTML = PALS.map((k, i) => '<option value="' + i + '">' + GAME.PALETTES[k].name + '</option>').join('');
 $('dev-ui').innerHTML = UIS.map((u, i) => '<option value="' + i + '">' + (i + 1) + ' ' + u.name + '</option>').join('');
 $('dev-btn').addEventListener('click', () => { const p = $('dev'); p.hidden = !p.hidden; try { localStorage.setItem('neon.infiltr8.dev', p.hidden ? '0' : '1'); } catch (e) { /* private mode */ } devSync(); });
@@ -1821,6 +1873,8 @@ $('dev-pal').addEventListener('change', e => { setPal(+e.target.value); devColor
 $('dev-ui').addEventListener('change', e => { ui = +e.target.value - 1; nextUI(); });
 $('dev-clock').addEventListener('change', () => toggleClock());
 $('dev-timed').addEventListener('change', () => toggleTimed());
+$('kit-list').addEventListener('click', ev => { const b = ev.target.closest('[data-kit]'); if (b) closeLoadouts(b.dataset.kit); });
+$('kit-close').addEventListener('click', () => closeLoadouts());
 $('dev-floor').addEventListener('change', e => goFloor(+e.target.value));
 $('dev-up').addEventListener('click', () => goFloor(S.fi - 1));
 $('dev-down').addEventListener('click', () => goFloor(S.fi + 1));
@@ -1928,7 +1982,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, togglePeek };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, togglePeek, pickLoadout: closeLoadouts };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

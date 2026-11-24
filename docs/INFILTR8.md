@@ -536,6 +536,17 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   - **INT goes only to contact:** a patrol catching you, the SCANNER's beam, a clock running out.
   - **The SCANNER is a hazard now:** its beam burns you (-1 INT) and doesn't raise the meter.
   - Ideas: passives that make the meter longer (`S.heatMax`).
+- **Built in the game's shapes, to port over** (Greg, 2026-11-24: "not reinventing the wheel"). Still one file, but:
+  - **Gear:** `INF_ITEMS`, the shape of `data/mods.js` `ITEMS` (`key`, `name`, `rarity`, `desc`, `tip`), with its
+    numbers on the entry. What each does: `GEAR_USE[key]` (as the game's effects live in engine/, by key).
+  - **Passives and loadouts:** `INF_CHIPS`, chip lines in `data/chips.js`'s shape (`[name, group, rarity, power,
+    desc, face, tip, numbers]`). Passives are group `infp` (IP1-IP4); loadouts are KITs, group `infk` (IK1-IK4),
+    like the game's KNIGHT and CARE PACKAGE (`kit: 1`), with their passive and gear on the line. Code checks a passive
+    with `pass('IP3')` and reads its numbers from there. Power, faces and rarities are first guesses.
+  - Porting: the items go to `mods.js` (names can grow to 15 characters there), the chips to `chips.js` (a group or
+    two for INFILTR8), and `GEAR_USE` / the `pass()` spots become engine hooks.
+- **Dev-styled UI for what will change** (Greg, 2026-11-24): screens the game will redo get plain HTML dev forms, not
+  the grid. First one: the LOADOUT pick at the start of a run (scrolls, full text for each passive and item).
 - **More passive ideas** (Greg, 2026-11-24; not built):
   - CAMs and patrols you've seen stay marked on the map, facing the way they were looking, after you lose sight of them.
   - Hack a terminal you know about from a distance.
