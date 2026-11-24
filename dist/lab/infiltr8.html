@@ -16,14 +16,21 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #06090a; overflow: hidden; }
 canvas { display: block; touch-action: none; }
-/* the dev panel (Greg, 2026-11-23): plain form controls, folded away by its button. Both sit on the window's left edge
-   (on a wide window, out beside the game). */
-#dev-btn, #dev { position: fixed; left: 8px; font: 14.4px "JetBrains Mono", Consolas, monospace; color: var(--text); z-index: 2; }
-#dev-btn { top: 8px; background: var(--bg); border: 1px solid var(--dim); color: var(--money); padding: 3px 8px; cursor: pointer; }
-#dev { top: 40px; max-width: calc(100vw - 16px); background: var(--bg); border: 1px solid var(--dim); padding: 10px; display: grid; grid-template-columns: auto 1fr; gap: 7px 10px; align-items: center; opacity: 0.95; }
+/* the dev panel (Greg, 2026-11-23): plain form controls, folded away by its button. Two layouts, picked by devPlace():
+   - beside the game (body.dev-side: a wide window, room on the left): both on the window's left edge.
+   - a phone (no room beside): the button on the footer's right end, the panel across the map, big enough to tap.
+   (16px in the dropdowns: smaller, and an iPhone zooms the page when you tap one.) */
+#dev-btn, #dev { position: fixed; font: 16px "JetBrains Mono", Consolas, monospace; color: var(--text); z-index: 2; touch-action: manipulation; }
+#dev-btn { background: var(--bg); border: 1px solid var(--dim); color: var(--money); padding: 0 12px; cursor: pointer; }
+#dev { box-sizing: border-box; background: var(--bg); border: 1px solid var(--dim); padding: 12px; display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: center; opacity: 0.96; }
 #dev label { color: var(--mid); }
-#dev select { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--dim); padding: 3px; max-width: 100%; }
-#dev input[type=checkbox] { accent-color: var(--accent); justify-self: start; width: 17px; height: 17px; margin: 0; }
+#dev select { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--dim); padding: 4px; min-height: 40px; width: 100%; min-width: 0; }
+#dev input[type=checkbox] { accent-color: var(--accent); justify-self: start; width: 26px; height: 26px; margin: 0; }
+body.dev-side #dev-btn, body.dev-side #dev { left: 8px; font-size: 14.4px; }
+body.dev-side #dev-btn { top: 8px; padding: 3px 8px; }
+body.dev-side #dev { top: 40px; max-width: calc(100vw - 16px); padding: 10px; gap: 7px 10px; }
+body.dev-side #dev select { min-height: 0; padding: 3px; width: auto; }
+body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -559,7 +566,7 @@ function draw() {
   // the info card (rows 5 and 7) round the message line (row 6)
   const inf = S.info;
   if (inf) { put(0, 5, inf.glyph, C.bg, false, C.accent); put(2, 5, inf.name, C.bright, true); put(0, 7, inf.text.slice(0, SW), C.mid); }
-  else { put(0, 5, `seed ${S.seed}  ·  tap anything for its info`, C.dim); put(0, 7, '@ you  ' + CAM_GLYPH + ' cam  P patrol  $ payload  ▲▼ stairs', C.dim); }
+  else { put(0, 5, 'tap anything for its info', C.dim); put(0, 7, '@ you ' + CAM_GLYPH + ' cam P patrol $ payload ▲▼ up', C.dim); }   // (36 at most: the seed's in the footer)
   const mt = Math.min(S.msg.length, Math.floor((now - S.msgT) / 18)), red = now - flashT < 300;
   put(0, 6, ' '.repeat(SW), C.bg, false, red ? C.danger : S.msgCol === C.danger ? C.danger : C.seen);
   put(0, 6, ('> ' + S.msg).slice(0, Math.min(SW, mt + 2)), red || S.msgCol === C.danger ? C.bg : S.msgCol);
@@ -805,6 +812,15 @@ function devSync() {   // the controls show the game as it is (keys and the game
   const fl = $('dev-floor'); if (S && fl.options.length !== S.floors.length) fl.innerHTML = S.floors.map((n, i) => '<option value="' + i + '">F' + (i + 1) + ' ' + n.name + '</option>').join('');
   if (S) set('dev-floor', 'value', String(S.fi));
 }
+function devPlace() {
+  const side = L.ox >= 260, b = $('dev-btn'), p = $('dev');   // (room for the panel beside the game?)
+  document.body.classList.toggle('dev-side', side);
+  for (const k of ['left', 'right', 'top', 'width', 'height']) { b.style[k] = ''; p.style[k] = ''; }
+  if (side) return;   // (the CSS places them)
+  const right = L.ox + SW * L.cw;
+  b.style.right = (innerWidth - right) + 'px'; b.style.top = (L.oy + 37 * L.ch) + 'px'; b.style.height = L.ch + 'px';   // the footer's right end (free)
+  p.style.left = L.ox + 'px'; p.style.width = (SW * L.cw) + 'px'; p.style.top = (L.oy + MAP_Y * L.ch) + 'px';             // across the map
+}
 function devColors() { const d = document.documentElement.style; for (const k of ['bg', 'dim', 'mid', 'text', 'accent', 'money']) d.setProperty('--' + k, C[k]); }
 $('dev-pal').innerHTML = PALS.map((k, i) => '<option value="' + i + '">' + GAME.PALETTES[k].name + '</option>').join('');
 $('dev-ui').innerHTML = UIS.map((u, i) => '<option value="' + i + '">' + (i + 1) + ' ' + u.name + '</option>').join('');
@@ -815,8 +831,9 @@ $('dev-clock').addEventListener('change', () => toggleClock());
 $('dev-floor').addEventListener('change', e => goFloor(+e.target.value));
 $('dev-reveal').addEventListener('change', e => { devReveal = e.target.checked; look(); draw(); });
 try { if (localStorage.getItem('neon.infiltr8.dev') === '1') $('dev').hidden = false; } catch (e) { /* private mode */ }
+addEventListener('resize', devPlace);
 
-layout(); devColors();
+layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
