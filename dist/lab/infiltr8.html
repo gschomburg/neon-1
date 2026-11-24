@@ -211,7 +211,7 @@ const T = {
   'L': { walk: 0, see: 1, station: 1 }, 'R': { walk: 0, see: 1, station: 1 }, 'B': { walk: 0, see: 1, station: 1 },
   // (the set pieces' things, 2026-11-24: a vending machine and a coffee machine (THE BREAK ROOM), a sticky note (the
   // CAPTCHA DOOR's answer), junk (THE TRASH: low cover), the hoverpad (THE ROOF: stand on it))
-  'V': { walk: 0, see: 0, station: 1 }, 'C': { walk: 0, see: 1, station: 1 }, 'N': { walk: 0, see: 1, station: 1 }, 'j': { walk: 0, see: 1, low: 1 }, 'H': { walk: 1, see: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
+  'V': { walk: 0, see: 0, station: 1 }, 'C': { walk: 0, see: 1, station: 1 }, 'N': { walk: 0, see: 1, station: 1 }, 'j': { walk: 0, see: 1, low: 1 }, 'H': { walk: 1, see: 1 }, 'w': { walk: 0, see: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
 };
 const WALLISH = '#+EFT';   // what joins up into box-drawn walls (a terminal's in a wall now; the chute, K, sits on a room's floor: not a wall. Greg, H3SDQ4)
 const INFO = {
@@ -224,7 +224,7 @@ const INFO = {
   'T': ['A TERMINAL', 'USE beside it: one thing it can do.'], 'L': ['A LOOT CACHE', 'USE beside it: something to carry out.'],
   'R': ['A RE-UP', 'USE beside it: INT, or a piece of gear.'], 'B': ['A BAG SWAP', 'USE beside it: trade your gear for a bag.'],
   'V': ['A VENDING MACHINE', 'USE beside it: trade loot CR for gear.'], 'C': ['A COFFEE MACHINE', 'USE beside it: +1 INT. loud: +1 ALERT.'],
-  'N': ['A STICKY NOTE', 'someone wrote a password on it.'], 'j': ['JUNK', 'deleted files, piled up. low cover.'], 'H': ['THE HOVERPAD', 'stand on it, USE: call the hover. then hold out.'],
+  'N': ['A STICKY NOTE', 'someone wrote a password on it.'], 'w': ['THE PARAPET', 'the roof\'s edge. a long way down.'], 'j': ['JUNK', 'deleted files, piled up. low cover.'], 'H': ['THE HOVERPAD', 'stand on it, USE: call the hover. then hold out.'],
   'b': ['THE BELT', 'it carries you. off before the X.'], 'x': ['A CRATE', 'on the belt. nothing sees through.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
 };
 
@@ -266,6 +266,8 @@ function floorRing() {
   set(f, 34, 3, 'F');             // the fire exit, the outer ring's top right
   set(f, 12, 10, '>');            // the stairs down, in the core
   f.down = { x: 12, y: 10 };
+  set(f, 32, 20, '<');            // the stairs up to THE ROOF, the outer ring's bottom right (f.roofAt: not f.up, which is where you come down to)
+  f.roofAt = { x: 32, y: 20 };
   f.start = { x: 17, y: 21 };
   set(f, 9, 2, 'p'); set(f, 26, 2, 'p'); set(f, 9, 20, 'p'); set(f, 26, 20, 'p');   // pillars in the outer ring
   f.arm = { x: 18, y: 11, dir: 0 };
@@ -1054,8 +1056,8 @@ function exitNear(f, p) {
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (d[y][x] && 'FK<E'.includes(at(f, x, y)) && (!best || d[y][x] < d[best[1]][best[0]])) best = [x, y];
   return best;
 }
-const unitName = p => p.mimic ? 'HONEYPOT' : p.guard ? 'GUARD' : 'PATROL';
-const unitGlyph = p => p.mimic ? 'M' : p.guard ? 'G' : 'P';
+const unitName = p => p.mimic ? 'HONEYPOT' : p.drone ? 'DRONE' : p.guard ? 'GUARD' : 'PATROL';
+const unitGlyph = p => p.mimic ? 'M' : p.drone ? 'D' : p.guard ? 'G' : 'P';
 function stationMenu(kind, f, key) {
   const gear = k => S.gear.find(g => g.key === k);
   if (kind === 'T') {
@@ -1322,6 +1324,43 @@ function floorLayer(seed, n) {
   f.lit = new Set(); for (const o of nodes) { o.lit = true; for (const [x, y] of o.cells) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) f.lit.add((x + i) + ',' + (y + j)); }
   f.rooms = rooms; f.roomOf = new Map(); for (const o of rooms) for (const [x, y] of o.cells) f.roomOf.set(x + ',' + y, o);
   return f;
+}
+// THE ROOF (Greg, 2026-11-24; INFILTR8.md, Special floors): up the stairs from F1 (THE RING's bottom right). Outside: no
+// rooms, a parapet round the edge (you see over it), gravel, and things to hide behind: AC units (solid), roof vents
+// (low cover), a water tank, antennas. The stairwell hut on the left; THE HOVERPAD on the right. Stand on the pad:
+// CALL HOVER (loud: +1 ALERT, and everything up here heads for the pad), hold out HOVER_TURNS, then BOARD: out, the
+// cleaner way (a clean job if nobody saw you). Watched by SEARCHLIGHTs (CAMs on the parapet) and a DRONE (D: a patrol
+// that loops the roof). Not in S.floors: S.roof, S.onRoof (F()).
+const HOVER_TURNS = 6;
+function floorRoof(seed) {
+  const r = rngFrom(hashStr(seed + ':roof'));
+  const f = newFloor('THE ROOF'); f.roof = true; f.litAll = true; f.halls = new Set(); f.junc = new Set(); f.stations = new Map(); f.captcha = new Map(); f.ptiles = new Map(); f.rooms = [];
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) set(f, x, y, x === 0 || y === 0 || x === MW - 1 || y === MH - 1 ? 'w' : '.');
+  // the stairwell hut (its door east, the stairs down inside) and the hoverpad (3 x 3)
+  for (let y = 9; y <= 13; y++) for (let x = 3; x <= 7; x++) set(f, x, y, x === 3 || x === 7 || y === 9 || y === 13 ? '#' : '.');
+  set(f, 7, 11, '+'); set(f, 5, 11, '>'); f.down = { x: 5, y: 11 }; f.start = f.down;
+  for (let y = 10; y <= 12; y++) for (let x = 28; x <= 30; x++) set(f, x, y, 'H');
+  f.pad = { x: 29, y: 11 };
+  // things on it, each with a cell of clear round it (and never on the hut, the pad or the drone's loop: x 2, 33; y 2, 20)
+  const free = (x0, y0, w, h) => { for (let y = y0 - 1; y <= y0 + h; y++) for (let x = x0 - 1; x <= x0 + w; x++) if (at(f, x, y) !== '.' || x <= 2 || x >= MW - 3 || y <= 2 || y >= MH - 3) return false; return true; };
+  const put0 = (w, h, c, tries = 40) => { for (let t = 0; t < tries; t++) { const x0 = 3 + Math.floor(r() * (MW - 6 - w)), y0 = 3 + Math.floor(r() * (MH - 6 - h)); if (!free(x0, y0, w, h)) continue;
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) set(f, x, y, c); return true; } return false; };
+  put0(4, 3, 'm');                                        // the water tank
+  for (let k = 0; k < 7; k++) put0(2, 1 + Math.floor(r() * 2), 'p');   // AC units
+  for (let k = 0; k < 6; k++) put0(1, 1, '=');            // roof vents: low cover
+  for (let k = 0; k < 2; k++) put0(1, 1, 'u');            // antennas
+  // the DRONE: loops the roof, 2 in from the edge; the SEARCHLIGHTs: CAMs on the parapet, sweeping in
+  const ring = [[2, 2], [MW - 3, 2], [MW - 3, MH - 3], [2, MH - 3]], loop = [];
+  for (let i = 0; i < 4; i++) { const a = ring[i], b = ring[(i + 1) % 4], p = route(f, a[0], a[1], b[0], b[1]) || []; loop.push(...p.slice(i ? 1 : 0)); }
+  if (loop.length > 8) { loop.pop(); const d = pat(loop, true); d.drone = true; f.pats.push(d); }
+  for (const [x, y] of [[10 + Math.floor(r() * 6), 0], [MW - 10 - Math.floor(r() * 6), MH - 1]]) f.cams.push(cam(f, x, y, Math.atan2((11 - y) * 2, 18 - x)));
+  return f;
+}
+function callHover(f) {
+  S.hover = HOVER_TURNS;
+  for (const p of f.pats) if (!p.dead && !(p.ko > 0)) { p.chase = HOVER_TURNS + 6; p.lx = f.pad.x; p.ly = f.pad.y; }
+  heatUp(f, 'you call the hover. it\'s loud. ' + HOVER_TURNS + ' turns: hold out.');
+  tick(); look(); draw();
 }
 function floorGen(seed, n, last, bk0 = null, depth = 0) {
   // THE LAYER: a vault floor now and then (its own draw, so the other floors come out as they did), or picked
@@ -1665,8 +1704,8 @@ function backup(f) {
   const p = pat(r, false); p.beat = 0; f.pats.push(p); say('the ALERT\'s run out. backup is in.', C.danger);
 }
 function newRun(seed) {
-  const floors = [floorRing(), floorGen(seed, 2, false), floorGen(seed, 3, true)];
-  S = { seed, floors, fi: 0, x: floors[0].start.x, y: floors[0].start.y, int: MAX_INT, turn: 0, alarm: 0, have: false, alerts: 0,
+  const floors = [floorRing(), floorGen(seed, 2, false), floorGen(seed, 3, true)], roof = floorRoof(seed);
+  S = { seed, floors, roof, onRoof: false, fi: 0, x: floors[0].start.x, y: floors[0].start.y, int: MAX_INT, turn: 0, alarm: 0, have: false, alerts: 0,
     msg: 'INFILTR8. in by the door. the payload is on F3.', msgCol: C.accent, msgT: performance.now(), floorT: performance.now(), info: null, mode: 'pad',
     gear: [], heat: 0, heatMax: HEAT_MAX, quiet: 0, flare: 0, uniform: 0, over: null, vis: null, inDuct: false };
   let kit = KITS[0]; try { const k = localStorage.getItem('neon.infiltr8.kit'); if (KITS.includes(k) || k === 'CUSTOM') kit = k; } catch (e) { /* private mode */ }
@@ -1675,7 +1714,7 @@ function newRun(seed) {
   look();
   draw();
 }
-const F = () => S.floors[S.fi];
+const F = () => S.onRoof ? S.roof : S.floors[S.fi];   // (THE ROOF isn't in S.floors: up the stairs from F1, S.onRoof)
 function say(text, col = C.text) { S.msg = text; S.msgCol = col; S.msgT = performance.now(); }
 function hurt(text) {
   S.int--; say(text + (S.int > 0 ? '' : ''), C.danger); flashT = performance.now();
@@ -1786,6 +1825,7 @@ function tick() {
   const f = F();
   if (!clockOff) S.turn++;
   if (!S.inStep) S.stepRun = 0;   // (SPRINTER's run of steps: broken by anything else)
+  if (S.hover > 0 && !--S.hover) { S.hoverReady = true; say('the hover\'s down on the pad. get on it: BOARD.', C.green); }   // (THE ROOF)
   S.darkT = litAt(f, S.x, S.y) || S.inDuct ? 0 : (S.darkT || 0) + 1;   // (NIGHT EYES: turns in the dark)
   if (S.flare > 0) S.flare--;
   if (S.uniform > 0 && !--S.uniform) say('the UNIFORM is off. patrols see you again.', C.money);
@@ -1896,6 +1936,14 @@ function use() {
   const f = F(), c = at(f, S.x, S.y);
   if (c === 'v') { S.inDuct = !S.inDuct; say(S.inDuct ? 'down into the duct. nothing sees you. 2 turns a step.' : 'up and out of the vent.', C.rare); tick(); look(); return draw(); }
   if (S.inDuct) { say('in a duct: climb out at a vent.', C.mid); return draw(); }
+  // THE ROOF: up from F1's roof stairs; down from the roof's hut, back to them. The pad: call the hover, then board it.
+  if (c === '<' && !S.onRoof && S.fi === 0) { S.onRoof = true; S.floorT = performance.now(); const n = F(); S.x = n.down.x; S.y = n.down.y; floorClock(n); say('up and out: THE ROOF.', C.accent); tick(); look(); return draw(); }
+  if (c === '>' && S.onRoof) { S.onRoof = false; S.floorT = performance.now(); const n = F(); S.x = n.roofAt.x; S.y = n.roofAt.y; say('back down to F1: ' + n.name + '.', C.accent); tick(); look(); return draw(); }
+  if (c === 'H' && S.onRoof) {
+    if (S.hoverReady) return leave(S.alerts ? 'O F F   T H E   R O O F' : 'C L E A N   J O B', S.have ? 'the hover lifts you off the roof, with it.' + (S.alerts ? '' : ' nobody saw a thing.') : 'off the roof by hover, empty handed.');
+    if (!(S.hover > 0)) return callHover(f);
+    say('the hover\'s coming: ' + S.hover + ' turns. hold out.', C.money); return draw();
+  }
   if (c === '>') { S.fi++; S.floorT = performance.now(); const n = F(); S.x = n.up.x; S.y = n.up.y; floorClock(n); say('down to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
   if (c === '<') { S.fi--; S.floorT = performance.now(); const n = F(); S.x = n.down.x; S.y = n.down.y; say('up to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
   if (c === 'E') return leave(S.have ? (S.alerts ? 'O U T' : 'C L E A N   J O B') : 'O U T', S.have ? (S.alerts ? 'out the way you came, with it. they saw you, though.' : 'in and out the same door, with it. nobody saw a thing.') : 'out, empty handed.');
@@ -1919,6 +1967,7 @@ function actions() {
   if (S.inDuct) return out;
   const tile = { '>': ['DOWN', 'the stairs down'], '<': ['UP', 'the stairs up'], E: ['LEAVE', 'out the way you came'], F: ['FIRE EXIT', 'out now. loud: less pay'], K: ['CHUTE', 'down into THE TRASH, a floor below'] }[c];
   if (tile) out.push([tile[0], tile[1], use, tile[0] === 'FIRE EXIT' ? 'FIRE' : tile[0]]);
+  if (c === 'H' && S.onRoof) out.push(S.hoverReady ? ['BOARD', 'the hover: off the roof', use, 'BOARD'] : S.hover > 0 ? ['WAIT FOR IT', 'the hover: ' + S.hover + ' turns', () => act(0, 0), 'HOLD ' + S.hover] : ['CALL HOVER', 'loud: +1 ALERT, and they all come. then hold out ' + HOVER_TURNS + ' turns', use, 'CALL']);
   for (const sb of stationsBeside(f)) if (STATION_NAME[sb.st.kind]) out.push([STATION_NAME[sb.st.kind], 'use it', () => openStation(f, sb.key, sb.st), STATION_NAME[sb.st.kind]]);
   for (const [i, j] of D4) { const k = (S.x + i) + ',' + (S.y + j); if (captchaAt(f, S.x + i, S.y + j) && !doorOpen(f, S.x + i, S.y + j)) out.push(['CAPTCHA', 'the locked door: pick its glyph', () => tryCaptcha(f, k), 'CAPTCHA']); }
   const d = doorBeside(f); if (d) out.push(['CLOSE DOOR', 'shut it: nothing sees through', () => { f.open.delete(d + ''); say('you close the door.', C.text); tick(); look(); draw(); }, 'CLOSE']);
@@ -2050,9 +2099,9 @@ function machineGlyph(f, x, y) {
   if ((n || s0) && !(e && w)) return '│';
   return e || w ? '─' : '●';
 }
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x', 'T': 'T', 'L': 'L', 'R': 'R', 'B': 'B', 'V': 'V', 'C': 'c', 'N': 'n', 'j': '%', 'H': 'H' };
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x', 'T': 'T', 'L': 'L', 'R': 'R', 'B': 'B', 'V': 'V', 'C': 'c', 'N': 'n', 'j': '%', 'H': 'H', 'w': '▓' };
 // the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
-const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'T': 'accent', 'L': 'money', 'R': 'green', 'B': 'rep', 'm': 'mid', '#': 'mid', 'V': 'money', 'C': 'rare', 'N': 'money', 'j': 'mid', 'H': 'accent' };
+const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'T': 'accent', 'L': 'money', 'R': 'green', 'B': 'rep', 'm': 'mid', '#': 'mid', 'V': 'money', 'C': 'rare', 'N': 'money', 'j': 'mid', 'H': 'accent', 'w': 'dim' };
 
 function draw() {
   if (!S) return;
@@ -2065,7 +2114,7 @@ function draw() {
   // header and HUD (rows 0-4)
   put(0, 0, 'NeoN+1', C.accent, true); btn(SW - 7, 0, '[ NEW ]', 'new', () => newRun(newSeed())); btn(SW - 11, 0, '[?]', 'help', toggleHelp);
   rule(1);
-  put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
+  put(0, 2, S.onRoof ? 'RF   ' : `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
   put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
   put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent);
   put(0, 3, kitName(), C.mid);
@@ -2228,7 +2277,7 @@ let helpOpen = false;
 try { helpOpen = localStorage.getItem('neon.infiltr8.help') !== 'seen'; } catch (e) { helpOpen = true; }
 function toggleHelp() { helpOpen = !helpOpen; try { localStorage.setItem('neon.infiltr8.help', 'seen'); } catch (e) { /* private mode */ } draw(); }
 const LEGEND = () => [   // (three columns of 12: a name 9 at most)
-  ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], ['G', 'GUARD', C.danger], [ARM_GLYPH, 'SCANNER', C.danger],
+  ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], ['G', 'GUARD', C.danger], ['M', 'HONEYPOT', C.danger], ['D', 'DRONE', C.danger], ['f', 'YOUR FLEA', C.accent], [ARM_GLYPH, 'SCANNER', C.danger], ['¤', 'PRESSURE', C.danger], ['?', 'CAPTCHA', C.money], ['▓', 'PARAPET', C.dim],
   ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
   ['◘', 'FIRE EXIT', C.green], ['▾', 'CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text], ['/', 'OPEN DOOR', C.text],
   ['T', 'TERMINAL', C.accent], ['L', 'LOOT', C.money], ['R', 'RE-UP', C.green], ['B', 'BAG SWAP', C.rep], ['V', 'VENDING', C.money], ['c', 'COFFEE', C.rare], ['n', 'STICKY NOTE', C.money], ['%', 'JUNK *', C.mid], ['H', 'HOVERPAD', C.accent], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
@@ -2359,7 +2408,7 @@ function infoAt(f, x, y) {
   if (!vis && !seen) return { x, y, glyph: '?', name: 'UNKNOWN', text: 'not seen yet.' };
   if (x === S.x && y === S.y) return { x, y, glyph: '@', name: 'YOU', text: S.inDuct ? 'in a duct: unseen. 2 turns a step.' : 'INT ' + S.int + '/' + MAX_INT + '.' + (S.uniform > 0 ? ' in UNIFORM: ' + S.uniform + ' turns.' : '') };
   if (vis) {
-    const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: unitGlyph(p), name: unitName(p), text: p.ko > 0 ? 'out cold: ' + p.ko + ' turns.' : p.blind > 0 ? 'blind: ' + p.blind + ' turns. take it from any side.' : p.stun > 0 ? 'frozen: ' + p.stun + ' turns.' : p.mimic ? 'a loot node that bit back. slow; hits for 2.' : p.chase ? 'after you. break its line of sight.' : p.guard ? 'stands its post, looks about. from behind: take it down.' : 'walks its round. from behind: take it down.' };
+    const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: unitGlyph(p), name: unitName(p), text: p.ko > 0 ? 'out cold: ' + p.ko + ' turns.' : p.blind > 0 ? 'blind: ' + p.blind + ' turns. take it from any side.' : p.stun > 0 ? 'frozen: ' + p.stun + ' turns.' : p.mimic ? 'a loot node that bit back. slow; hits for 2.' : p.drone && !p.chase ? 'flies its loop round the roof. sees like a patrol.' : p.chase ? 'after you. break its line of sight.' : p.guard ? 'stands its post, looks about. from behind: take it down.' : 'walks its round. from behind: take it down.' };
     const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: CAM_GLYPH, name: 'CAM', text: 'sweeps a cone. 2 turns in it: +1 ALERT.' };
     if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: ARM_GLYPH, name: 'SCANNER', text: 'a narrow beam. turns an eighth a turn.' };
     if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: armBeam(f), name: 'SCANNER', text: 'its beam. in it: burned, -1 INT.' };
@@ -2399,7 +2448,7 @@ const $ = id => document.getElementById(id);
 function goFloor(i) {   // to another floor, at the stairs you'd come in by (down: its stairs up; up: its stairs down)
   if (i === S.fi || S.over) return;
   const n = S.floors[i], at0 = i > S.fi ? n.up : n.down;
-  S.fi = i; S.inDuct = false; S.peek = null; S.aim = null; S.ring = false; S.floorT = performance.now(); floorClock(n);
+  S.fi = i; S.onRoof = false; S.inDuct = false; S.peek = null; S.aim = null; S.ring = false; S.floorT = performance.now(); floorClock(n);
   if (at0) { S.x = at0.x; S.y = at0.y; } else { S.x = n.start.x; S.y = n.start.y; }
   say('F' + (i + 1) + ': ' + n.name + '. (dev)', C.money); look(); draw();
 }

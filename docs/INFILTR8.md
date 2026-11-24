@@ -613,6 +613,27 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   5. **Floors:** THE DATA MINE (a building: dark, lots of halls and ducts, lots of loot), THE LAYER (a vault floor like
      a game layer: one big room, little rooms inside it like nodes; one holds the payload).
   6. **THE ROOF** (above F1; see Special floors).
+- **All 6 batches built 2026-11-24.** What came out, and Claude's takes to check:
+  1. **THE BREAK ROOM** (about 1 floor in 6): a vending machine `V` (30 CR of loot a go, for +1 of a gear you carry;
+     use it as often as you can pay; the end screen's loot is what's left) and a coffee machine `c` (+1 INT, +1 ALERT),
+     a table. **THE CEO'S OFFICE** (about 1 in 9): a mid-size room, a desk, a plant, a cache of rich finds (95-160 CR),
+     a CAM on the far wall. ACTIONS now lists every station beside you.
+  2. **PRESSURE TILES** (`¤`, about 1.4 a floor): on the halls of the way through; you spot one within 3 cells (or by
+     FLARE). **CAPTCHA DOORS** (`?`, about 1 floor in 5): a CEO's office if it has one door, else a side room; the
+     sticky note `n` is in another room (tap it in sight to read it). Claude's take: a patrol passing through opens it,
+     and an open door stays open, so you can slip in behind one.
+  3. **HONEYPOT** (about 1 floor in 14): a loot cache that's an `M`; it comes for you anywhere on the floor, a step
+     every other turn; takedowns, DARTS and BLINDER work on it. **FLEA**: in the custom loadout's gear list; drawn `f`.
+  4. **THE TRASH**: on the vault floor (390 in 400); F2's chute lands you in it (no trash room: at the stairs). Claude's
+     take: F1 has no chute; the chute is a shortcut down now, not a way out.
+  5. **THE DATA MINE** (1 building in 10): about 66 hall cells a floor (an office: 46), 4 ducts, 3 or so caches, about
+     1 room in 5 lit. **THE LAYER** (about 1 vault floor in 5; the dev panel's building list has it): 6-12 nodes; the
+     payload's node is the farthest from the stairs.
+  6. **THE ROOF**: up the stairs `▲` in THE RING's bottom right. A parapet `▓`, AC units, roof vents (low cover), a
+     water tank, antennas; the stairwell hut; the hoverpad `H`. CALL HOVER on the pad (+1 ALERT, and everything up
+     there heads for the pad), 6 turns, then BOARD: out (a clean job if nobody saw you). Two searchlights (CAMs on the
+     parapet) and a DRONE `D` looping the roof. Claude's take: it's lit (night, but open sky); the dev panel's floor
+     list doesn't have it (go by the stairs).
 - **From the meat notes** (Greg, filed 2026-11-24):
   - **Already built:** watchers you've seen stay marked, even from another room (the TAGGED passive; the note
     suggests it for everyone, so maybe it's not a passive); PEEK into a door you walk up to, as an action (ACTIONS).
