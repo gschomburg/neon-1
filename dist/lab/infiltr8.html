@@ -1678,20 +1678,17 @@ function drawFloorCard(cvs, f, fs) {
   if (f.payload) piece(f.payload.x, f.payload.y, '$', C.money);
   for (const c of f.cams) piece(c.x, c.y, CAM_GLYPH, C.danger);
   for (const p of f.pats) piece(p.x, p.y, 'P', C.danger);
-  // each room's type (gold) or role (dim), on its top wall
+  // each room's type (gold) or role (grey): a little tag over its top-left corner, off the grid (Greg, 2026-11-24:
+  // drawn into the wall's cells they read as part of the room), small, on a dark pill, like the caption under the
+  // floor. A room on the top row: its tag just inside its top wall (above it would be off the floor).
+  const tf = Math.max(9, Math.round(fs * 0.72));
+  x.font = '400 ' + tf + 'px "JetBrains Mono", Consolas, monospace'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
   for (const o of f.rooms || []) {
-    let label = o.role === 'closet' ? '' : o.type ? ROOM_TYPES[o.type][0].replace(/^THE /, '') : o.role === 'way' ? '' : o.role;
+    const label = o.role === 'closet' ? '' : o.type ? ROOM_TYPES[o.type][0].replace(/^THE /, '').toLowerCase() : o.role === 'way' ? '' : o.role;
     if (!label) continue;
-    // on a run of plain wall (no door or fire exit in it): the top wall's longest, else the bottom's; cut to fit
-    let best = null;
-    for (const wy of [o.y, o.y + o.h - 1]) for (let lx = o.x + 1, run = 0; lx <= o.x + o.w - 1; lx++) {
-      if (lx < o.x + o.w - 1 && at(f, lx, wy) === '#') { run++; continue; }
-      if (run && (!best || run > best.n) && (!best || best.n < label.length)) best = { x: lx - run, y: wy, n: run };
-      run = 0;
-    }
-    if (!best) continue;
-    label = label.slice(0, best.n);
-    [...label].forEach((c, i) => { const lx = best.x + i; x.fillStyle = C.bg; x.fillRect(lx * cw, best.y * ch, cw, ch); cell(lx, best.y, c, o.type ? C.money : C.mid, !!o.type); });
+    const w = x.measureText(label).width + 6, lx = o.x * cw + 2, by = o.y > 0 ? o.y * ch - 2 : (o.y + 1) * ch + tf;
+    x.fillStyle = rgba(C.bg, 0.85); x.fillRect(lx - 3, by - tf, w, tf + 4);
+    x.fillStyle = o.type ? C.money : C.mid; x.fillText(label, lx, by);
   }
 }
 function viewerShow() {
