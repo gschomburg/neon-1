@@ -284,8 +284,9 @@ function pruneHalls(f, halls) {
 }
 // THE SERVER FARM: a big room on the way (not the start or the goal) full of rows of racks, an aisle round the edge
 // (a rack only where the room's floor is all round it, so a door or a gap is never blocked), gaps every few cells
-function serverFarm(f, rooms, r, p = 0.75) {
-  const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 10 && o.h >= 7);
+// (minW, minH: a data center's extra server farms make do with smaller rooms)
+function serverFarm(f, rooms, r, p = 0.75, minW = 10, minH = 7) {
+  const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && o.role !== 'closet' && (o.shape === 'box' || o.shape === 'cut') && o.w >= minW && o.h >= minH);
   if (!opts.length || r() > p) return;
   const o = shuffled(opts, r).sort((a, b) => (b.big ? 1 : 0) - (a.big ? 1 : 0))[0], x0 = o.x + 1, y0 = o.y + 1;
   o.type = 'servers';
@@ -411,6 +412,20 @@ function roomJoined(f, o) {
 function decor(f, rooms, r, B = { plants: 0.18, statue: 0.5 }) {
   for (const o of rooms) {
     if (o.type || o.role === 'closet') continue;
+    // racks along a wall (B.racksIn: a data center): 2 to 4 in a row, a cell in from a corner, never in front of a door,
+    // each one only if the room stays joined up
+    if (B.racksIn && o.role !== 'start' && r() < B.racksIn) {
+      const sides = shuffled([[0, -1], [0, 1], [1, 0], [-1, 0]], r);
+      for (const [dx, dy] of sides) {
+        // the floor cells along that wall (a wall the other side of them), in order along it
+        const run = o.cells.filter(([x, y]) => at(f, x, y) === '.' && !o.set.has((x + dx) + ',' + (y + dy)) && !D4.some(([i, j]) => at(f, x + i, y + j) === '+'))
+          .sort((a, b) => dx ? a[1] - b[1] : a[0] - b[0]);
+        if (run.length < 4) continue;
+        const n = 2 + Math.floor(r() * 3), s0 = 1 + Math.floor(r() * Math.max(1, run.length - n - 1));
+        for (const [x, y] of run.slice(s0, s0 + n)) { set(f, x, y, 'r'); if (!roomJoined(f, o)) set(f, x, y, '.'); }
+        break;
+      }
+    }
     if (r() < B.plants) {   // (0.35 put plants on 88% of floors: too many; the building's odds now)
       const corners = shuffled(o.cells.filter(([x, y]) => at(f, x, y) === '.' && (!o.set.has((x - 1) + ',' + y) || !o.set.has((x + 1) + ',' + y)) && (!o.set.has(x + ',' + (y - 1)) || !o.set.has(x + ',' + (y + 1)))
         && !D4.some(([i, j]) => at(f, x + i, y + j) === '+')), r).slice(0, 1 + Math.floor(r() * 2));
@@ -482,13 +497,14 @@ const ORDER = { orderly: [0.3, 0.9], mixed: [0.8, 0.5], messy: [1, 0.1] };
 // it'd come from the corp you're in (PARCELNET, MEGAMART: industrial; SEEKR, LEDGER: an office...); in the demo the
 // seed picks one, or the dev panel / the viewer forces one. Each odd: the chance that room type (or thing) goes in,
 // when a room fits it. order: the shares of orderly and mixed floors (the rest messy), as ORDER's.
-//   servers2: a data center can have a second server farm.
+//   servers2, servers3: a data center's second and third server farms (in smaller rooms, 8 x 6 and up).
+//   racksIn: the chance a plain room gets a short row of racks along a wall (a data center's racks spill over).
 //   bsp: changes to BSP's settings: an industrial building has more big halls (and so more room for a factory), a
 //   data center bigger rooms than an office (room for its server farms).
 const BUILDINGS = {
   office:     { name: 'OFFICE',      share: 0.45, servers: 0.4,  servers2: 0,   cubicles: 0.9,  factory: 0,    restroom: 0.5,  plants: 0.25, statue: 0.6, order: [0.45, 0.85], bsp: {} },
   industrial: { name: 'INDUSTRIAL',  share: 0.3,  servers: 0.15, servers2: 0,   cubicles: 0.15, factory: 0.95, restroom: 0.35, plants: 0.05, statue: 0.1, order: [0.15, 0.55], bsp: { bigChance: 0.7, bigArea: 520 }, minRooms: 4 },
-  data:       { name: 'DATA CENTER', share: 0.25, servers: 0.95, servers2: 0.7, cubicles: 0.2,  factory: 0.1,  restroom: 0.25, plants: 0.1,  statue: 0.3, order: [0.5, 0.9],   bsp: { bigChance: 0.4, bigArea: 450 } },
+  data:       { name: 'DATA CENTER', share: 0.25, servers: 0.95, servers2: 0.9, servers3: 0.5, racksIn: 0.5, cubicles: 0.2,  factory: 0.1,  restroom: 0.25, plants: 0.1,  statue: 0.3, order: [0.5, 0.9],   bsp: { bigChance: 0.4, bigArea: 450 } },
 };
 let buildingPick = 'auto';   // (the dev panel's and the viewer's choice: 'auto', or a key of BUILDINGS)
 function pickBuilding(r) { const v = r(); if (buildingPick !== 'auto') return buildingPick; let acc = 0; for (const [k, b] of Object.entries(BUILDINGS)) { acc += b.share; if (v < acc) return k; } return 'office'; }
@@ -570,7 +586,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
     // (the big-room types take turns going first: one floor's best room is a server farm, another's the cubicles or
     // the factory)
     for (const [fill, p] of shuffled([[serverFarm, B.servers], [cubicles, B.cubicles], [factory, B.factory]], r)) fill(f, rooms, r, p);
-    serverFarm(f, rooms, r, B.servers2);   // (a second one: a data center's)
+    serverFarm(f, rooms, r, B.servers2 || 0, 8, 6); serverFarm(f, rooms, r, B.servers3 || 0, 8, 6);   // (a data center's second and third)
     restroom(f, rooms, r, B.restroom); decor(f, rooms, r, B);
     // pillars in the big rooms (not in a room with a type: it has its own things)
     // (only where the room's floor is all round it: a pillar never closes a gap or a corner; and never one that, with a
