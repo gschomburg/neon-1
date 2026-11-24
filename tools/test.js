@@ -28,6 +28,8 @@ const last = s => s.split('\n').filter(Boolean).pop() || '';
     // the generators are up to date (their --check writes nothing), and the music view matches the game's music
     for (const f of ['data/scene_art.js', 'data/quest_dialog.js']) { const r = node(f, ['--check']); ok(r.ok, `${f}: ${last(r.out)}`); }
     { const r = node('checks/music_view_check.js'); ok(r.ok && /all match/.test(r.out), 'music_view_check.js: ' + last(r.out)); }
+    // the lab pages (dist/lab/) still run on the game files they share
+    { const r = node('checks/lab_check.js'); ok(r.ok, 'lab_check.js: ' + last(r.out)); }
     // 2. the golden fingerprint
     const c = node('checks/check.js');
     ok(c.ok, 'check.js: ' + last(c.out));

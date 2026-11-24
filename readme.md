@@ -146,7 +146,8 @@ neon-1/
 │   ├── engine/             the code, one file per part (run.js, scene.js, board.js, map.js, music.js, fx.js: the effects library, ...)
 │   ├── data/               the game's data: mods, economy, music, quests, palettes, tutorial, fx (the effects' look), ...
 │   │   └── art/            the ASCII art: node glyphs, logos, faces, the world map, sector-clear pictures
-│   └── corps/              one file per corp (81)
+│   ├── corps/              one file per corp (81)
+│   └── lab/                pages that aren't the game, uploaded with it (not linked): infiltr8.html, the INFILTR8 demo
 ├── tools/                  dev scripts and editors (not deployed)
 │   ├── bump.js             change the build number everywhere
 │   ├── test.js             every automatic check in one go (exit 1 on a failure)

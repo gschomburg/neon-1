@@ -4,7 +4,7 @@
 section 12). The mockups: `docs/mockups/infiltr8.html` (round 1: 5 takes) and `docs/mockups/infiltr8_v2.html`
 (round 2: 5 VAULT FLOOR maps).
 
-**A playable demo** (Greg, 2026-11-23): `docs/mockups/infiltr8_demo.html`, outside the game (nothing from dist/). The real
+**A playable demo** (Greg, 2026-11-23): `dist/lab/infiltr8.html` (moved from docs/mockups/ 2026-11-23), outside the game: it loads only the game's palettes (a [PAL] button in the footer) and its effects (FX.decrypt on floor names and the end screen). The real
 screen (36 x 38, the 23 board rows are the floor, the tray rows hold the d-pad). F1 is THE RING by hand (the turning ARM,
 a CAM, a patrol on the middle ring); F2 and F3 come from the seed (rooms, pillars, halls, CAMs with their cones,
 patrols, ducts between vents on F2, the trash chute). Turn based with fog of war; stairs; the payload on F3 sets off

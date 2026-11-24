@@ -7,7 +7,8 @@
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
 <style>
-/* INFILTR8, a playable demo (Greg, 2026-11-23): not the game, and nothing from dist/ is loaded. The real screen: the
+/* INFILTR8, a playable demo (Greg, 2026-11-23): not the game. Lives in dist/lab/ (uploaded with the game, not linked
+   from it) so it can load the game's palettes (data/palettes.js, engine/core.js) and effects (engine/fx.js); nothing else. The real screen: the
    game's 36 x 38 grid (docs/LAYOUT.md), the 23 board rows are the floor, the tray rows hold the d-pad. Floors: F1 is
    THE RING (by hand), F2 and F3 come from the seed (rooms, halls, ducts). Turn based: you step, they step. Notes:
    docs/INFILTR8.md; the mockups: infiltr8.html, infiltr8_v2.html. */
@@ -19,14 +20,41 @@ canvas { display: block; touch-action: none; }
 </head>
 <body>
 <canvas id="cv"></canvas>
+<!-- the game's palettes and effects: these four files and nothing else (tools/bump.js keeps the ?v= in step) -->
+<script>window.NEON_FILES = [];</script>
+<script src="../data/palettes.js?v=16.02"></script>
+<script src="../engine/core.js?v=16.02"></script>
+<script src="../data/fx.js?v=16.02"></script>
+<script src="../engine/fx.js?v=16.02"></script>
+<script>
+// The bridge: the demo below has its own C, hashStr, newSeed... (they shadow the game's inside its function), so the
+// game's come through here. (FX colors a hacker's ink with hkInk: not loaded here, so plain text.)
+const GAME = { get C() { return C; }, PALETTES, CHIPS, applyPalette, mixHex, FX };
+if (typeof hkInk === 'undefined') window.hkInk = () => C.text;
+</script>
 <script>
 (() => {
 'use strict';
 // ---------- the screen: the game's grid (docs/LAYOUT.md) ----------
 const SW = 36, SH = 38, MAP_Y = 8, MW = 36, MH = 23;   // the board: rows 8-30, 36 x 23
 const LINE_H = 1.22, CHAR_W = 0.6;
-const C = { bg: '#06090a', dim: '#2c3a38', mid: '#5f7470', text: '#a9bdb7', bright: '#e6f4ef', accent: '#3cf0ff', danger: '#ff3b4e',
-  money: '#e8c66a', rep: '#a27ef5', rare: '#4aa3ff', green: '#6dff8f', leg: '#ff9a3c', seen: '#1b2624' };
+// The colors: the game's palette (GAME.C, set by applyPalette), plus a few of the demo's own made from it.
+const C = {};
+const PALS = Object.keys(GAME.PALETTES);
+let pal = 0;
+try { pal = Math.max(0, PALS.indexOf(localStorage.getItem('neon.infiltr8.pal'))); } catch (e) { /* private mode */ }
+{ const q = new URLSearchParams(location.search).get('pal'); if (q && PALS.includes(q)) pal = PALS.indexOf(q); }
+function setPal(i) {
+  pal = (i + PALS.length) % PALS.length; GAME.applyPalette(PALS[pal], true);
+  const P = GAME.C, was = Object.assign({}, C);
+  Object.assign(C, { bg: P.bg, dim: P.dim, mid: P.mid, text: P.text, bright: P.bright, accent: P.accent, danger: P.danger, money: P.money, rep: P.rep,
+    rare: P.rare, green: P.common, leg: GAME.CHIPS.legendary.bg, seen: GAME.mixHex(P.bg, P.dim, 0.45) });
+  // (the message keeps a color, not a slot: move it to the same slot in the new palette)
+  try { if (S && S.msgCol) { const k = Object.keys(was).find(k => was[k] === S.msgCol); if (k) S.msgCol = C[k]; } } catch (e) { /* (the first call: S isn't there yet) */ }
+  try { localStorage.setItem('neon.infiltr8.pal', PALS[pal]); } catch (e) { /* private mode */ }
+}
+setPal(pal);
+const rgba = (hex, a) => 'rgba(' + [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(',') + ',' + a + ')';
 const cv = document.getElementById('cv'), g = cv.getContext('2d');
 let L = {};
 function layout() {
@@ -294,6 +322,7 @@ function armCells(f) {
 // ---------- the run ----------
 const MAX_INT = 4, TURNS = 150, OUT_TURNS = 45;
 const STEP_MS = 110;
+const DECRYPT_MS = 500;   // a floor's name, and the end screen's heading, decrypt in (the game's FX.decrypt)
 const PAT_HALF = Math.PI / 4, PAT_RANGE = 10;   // a patrol's view: 90 degrees wide, the way it last stepped (draw() shows it)
 const UNIFORM_TURNS = 15;   // UNIFORM: patrols ignore you unless right next to you   // how long the @ takes to slide one step
 let S;
@@ -304,7 +333,7 @@ function toggleClock() { clockOff = !clockOff; say(clockOff ? 'the clock is paus
 function newRun(seed) {
   const floors = [floorRing(), floorGen(seed, 2, false), floorGen(seed, 3, true)];
   S = { seed, floors, fi: 0, x: floors[0].start.x, y: floors[0].start.y, int: MAX_INT, turn: 0, alarm: 0, have: false, alerts: 0,
-    msg: 'INFILTR8. in by the door. the payload is on F3.', msgCol: C.accent, msgT: performance.now(), info: null, mode: 'pad',
+    msg: 'INFILTR8. in by the door. the payload is on F3.', msgCol: C.accent, msgT: performance.now(), floorT: performance.now(), info: null, mode: 'pad',
     gear: [{ key: 'FLARE', n: 4 }, { key: 'FRAG', n: 4 }, { key: 'UNIFORM', n: 2 }], flare: 0, uniform: 0, over: null, vis: null, inDuct: false };
   look();
   draw();
@@ -315,7 +344,7 @@ function hurt(text) {
   S.int--; say(text + (S.int > 0 ? '' : ''), C.danger); flashT = performance.now();
   if (S.int <= 0) S.over = { win: false, head: 'T R A C E D', lines: ['they found you. the job is off.', 'turns: ' + S.turn] };
 }
-let flashT = 0;
+let flashT = -1e9;   // (the last hit: long ago)
 
 // what you see: line of sight, about 14 across, 7 down (a FLARE: all of it)
 function look() {
@@ -408,8 +437,8 @@ function tick() {
 function use() {
   if (S.over) return;
   const f = F(), c = at(f, S.x, S.y);
-  if (c === '>') { S.fi++; const n = F(); S.x = n.up.x; S.y = n.up.y; say('down to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
-  if (c === '<') { S.fi--; const n = F(); S.x = n.down.x; S.y = n.down.y; say('up to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
+  if (c === '>') { S.fi++; S.floorT = performance.now(); const n = F(); S.x = n.up.x; S.y = n.up.y; say('down to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
+  if (c === '<') { S.fi--; S.floorT = performance.now(); const n = F(); S.x = n.down.x; S.y = n.down.y; say('up to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
   if (c === 'E') return leave(S.have ? (S.alerts ? 'O U T' : 'C L E A N   J O B') : 'O U T', S.have ? (S.alerts ? 'out the way you came, with it. they saw you, though.' : 'in and out the same door, with it. nobody saw a thing.') : 'out, empty handed.');
   if (c === 'F') return leave('L O U D   E X I T', S.have ? 'out the fire exit, with it. every daemon heard. pay -30%.' : 'out the fire exit, empty handed. loud.');
   if (c === 'K') return leave('T H E   C H U T E', S.have ? 'down the chute with it. you land in the trash: your pack got shuffled.' : 'down the chute, empty handed.');
@@ -474,7 +503,8 @@ function draw() {
   put(0, 0, 'NeoN+1', C.accent, true); btn(SW - 7, 0, '[ NEW ]', 'new', () => newRun(newSeed()));
   btn(7, 0, `[UI ${ui + 1}/${UIS.length} ${UIS[ui].name}]`, 'ui', nextUI, C.money);
   rule(1);
-  put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); put(5, 2, f.name, C.bright, true);
+  put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
+  put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
   put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent, true);
   put(0, 3, 'SUBNET', C.mid); if (S.have) put(7, 3, '· $', C.money, true);   // (the payload's in your pack)
   btn(11, 3, clockOff ? '[CLOCK OFF]' : '[CLOCK ON ]', 'clock', toggleClock, clockOff ? C.mid : C.money);
@@ -501,8 +531,8 @@ function draw() {
     if (!vis) { col = c === '.' ? C.seen : C.dim; }
     else {
       const k = x + ',' + y;
-      if (patCells.has(k)) bg = S.uniform > 0 ? 'rgba(232,198,106,0.08)' : 'rgba(255,154,60,0.13)';   // (a patrol's view: orange, fainter than a CAM's)
-      if (camCells.has(k)) bg = 'rgba(255,59,78,0.2)';
+      if (patCells.has(k)) bg = S.uniform > 0 ? rgba(C.money, 0.08) : rgba(C.leg, 0.13);   // (a patrol's view: orange, fainter than a CAM's)
+      if (camCells.has(k)) bg = rgba(C.danger, 0.2);
       if (armSet.has(k)) { ch = '━'; col = C.danger; }
       if (trail.has(k) && c === '.') { ch = '•'; col = C.rep; }
       else if (c === '.' && f.junc && f.junc.has(k)) { ch = JUNC_GLYPH; col = C.mid; }
@@ -512,12 +542,12 @@ function draw() {
   if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) put(f.payload.x, MAP_Y + f.payload.y, '$', C.money, true);
   if (f.arm && S.vis[f.arm.y][f.arm.x]) put(f.arm.x, MAP_Y + f.arm.y, '◉', C.danger, true);
   for (const c of f.cams) if (S.vis[c.y][c.x]) put(c.x, MAP_Y + c.y, c.dead ? 'x' : '◉', c.dead ? C.dim : c.seen ? C.money : C.danger, true);
-  for (const p of f.pats) if (S.vis[p.y][p.x]) put(p.x, MAP_Y + p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, true, p.chase ? 'rgba(255,59,78,0.25)' : null);
+  for (const p of f.pats) if (S.vis[p.y][p.x]) put(p.x, MAP_Y + p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, true, p.chase ? rgba(C.danger, 0.25) : null);
   for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money, true);
   // the @ slides a step over (STEP_MS) instead of popping: a dark tile under it hides the floor it passes
   const sk = S.slide ? Math.min(1, (now - S.slide.t) / STEP_MS) : 1, se = 1 - (1 - sk) * (1 - sk);
   const ax = sk < 1 ? S.slide.x + (S.x - S.slide.x) * se : S.x, ay = sk < 1 ? S.slide.y + (S.y - S.slide.y) * se : S.y;
-  put(ax, MAP_Y + ay, '@', S.inDuct ? C.rare : S.uniform > 0 ? C.money : C.accent, true, red ? 'rgba(255,59,78,0.5)' : sk < 1 ? C.bg : null);
+  put(ax, MAP_Y + ay, '@', S.inDuct ? C.rare : S.uniform > 0 ? C.money : C.accent, true, red ? rgba(C.danger, 0.5) : sk < 1 ? C.bg : null);
   for (const b of booms) { const k = (now - b.t) / 500; if (k < 1) for (const [dx, dy] of [[-2, 0], [2, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) put(b.x + Math.round(dx * (1 + k)), MAP_Y + b.y + Math.round(dy * (1 + k)), '*', k < 0.5 ? C.money : C.danger, true); }
   if (S.info && S.info.x != null) { const px = L.ox + S.info.x * L.cw, py = L.oy + (MAP_Y + S.info.y) * L.ch; g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); }
   // row 31: how this UI works
@@ -564,22 +594,23 @@ function draw() {
     put(0, 36, 'keys 1 2 3, g swaps', C.dim);
   }
   // the footer (row 37)
-  put(0, 37, 'seed ' + S.seed, C.dim); putR(37, 'INFILTR8 demo', C.dim);
+  put(0, 37, 'seed ' + S.seed, C.dim); { const t = '[PAL ' + GAME.PALETTES[PALS[pal]].name + ']'; btn(SW - [...t].length, 37, t, 'pal', () => { setPal(pal + 1); say('palette: ' + GAME.PALETTES[PALS[pal]].name + '.', C.money); draw(); }, C.money); }
   // over: the result over the floor
   if (S.over) {
-    g.fillStyle = 'rgba(6,9,10,0.82)'; g.fillRect(L.ox, L.oy + MAP_Y * L.ch, SW * L.cw, MH * L.ch);
-    const y0 = MAP_Y + 8, hd = S.over.head;
-    put(Math.floor((SW - hd.length) / 2), y0, hd, S.over.win ? C.money : S.over.head.startsWith('T R A') ? C.danger : C.accent, true);
+    g.fillStyle = rgba(C.bg, 0.82); g.fillRect(L.ox, L.oy + MAP_Y * L.ch, SW * L.cw, MH * L.ch);
+    if (!S.over.t0) S.over.t0 = now;
+    const y0 = MAP_Y + 8, hd = S.over.head, hk = Math.min(1, (now - S.over.t0) / (DECRYPT_MS * 1.5));
+    put(Math.floor((SW - hd.length) / 2), y0, hk < 1 ? GAME.FX.decrypt(hd, hk, 9, now, true) : hd, S.over.win ? C.money : S.over.head.startsWith('T R A') ? C.danger : C.accent, true);
     S.over.lines.forEach((l, i) => { const w = wrap(l, 32); w.forEach((s, j) => put(Math.floor((SW - s.length) / 2), y0 + 2 + i * 2 + j, s, C.text)); });
     btn(9, y0 + 8, '[ SAME SEED ]', 'again', () => newRun(S.seed)); btn(9, y0 + 10, '[ NEW  SEED ]', 'again2', () => newRun(newSeed()));
   }
   // a finger on the trackpad, or the stick's ring and knob
   if (G && G.cx != null && ((u === 'track' && G.pad) || u === 'stick')) {
     g.lineWidth = 2;
-    if (u === 'stick') { g.strokeStyle = 'rgba(60,240,255,0.35)'; g.beginPath(); g.arc(G.x0, G.y0, stickDead() * 2, 0, Math.PI * 2); g.stroke(); g.strokeStyle = 'rgba(60,240,255,0.15)'; g.beginPath(); g.arc(G.x0, G.y0, stickDead(), 0, Math.PI * 2); g.stroke(); }
-    g.fillStyle = 'rgba(60,240,255,0.45)'; g.beginPath(); g.arc(G.cx, G.cy, L.cw * 0.9, 0, Math.PI * 2); g.fill();
+    if (u === 'stick') { g.strokeStyle = rgba(C.accent, 0.35); g.beginPath(); g.arc(G.x0, G.y0, stickDead() * 2, 0, Math.PI * 2); g.stroke(); g.strokeStyle = rgba(C.accent, 0.15); g.beginPath(); g.arc(G.x0, G.y0, stickDead(), 0, Math.PI * 2); g.stroke(); }
+    g.fillStyle = rgba(C.accent, 0.45); g.beginPath(); g.arc(G.cx, G.cy, L.cw * 0.9, 0, Math.PI * 2); g.fill();
   }
-  if (sk < 1 || booms.some(b => now - b.t < 500) || now - S.msgT < 1200 || now - flashT < 300) requestAnimationFrame(draw);
+  if (sk < 1 || nk < 1 || (S.over && now - S.over.t0 < DECRYPT_MS * 1.5) || booms.some(b => now - b.t < 500) || now - S.msgT < 1200 || now - flashT < 300) requestAnimationFrame(draw);
 }
 const wrap = (s, w) => { const out = []; let l = ''; for (const word of s.split(' ')) { if ((l + ' ' + word).trim().length > w) { out.push(l); l = word; } else l = (l + ' ' + word).trim(); } if (l) out.push(l); return out; };
 
@@ -708,7 +739,7 @@ layout();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { get S() { return S; }, act, use, useGear, newRun };   // (for a check)
+window.__demo = { get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

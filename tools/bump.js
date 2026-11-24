@@ -4,7 +4,7 @@
 //   node tools/bump.js music       (only: refresh the corp file lists in tools/music_view.html and neon_editor.html)
 //
 // Updates VERSION in dist/engine/core.js, dist/version.json, the stamp line at the top of every game file
-// (NEON_FILES.push([..., 'v12.01'])), and the ?v= on every local script link in dist/index.html
+// (NEON_FILES.push([..., 'v12.01'])), and the ?v= on every local script link in dist/index.html and dist/lab/*.html
 // (so phones fetch the new files), palettes.js included (the palette editor writes the stamp it
 // gets from the game, so reload the editor after a bump).
 // A new major also needs a new save slot (STORE_KEY in core.js): this tool reminds you.
@@ -45,8 +45,10 @@ const walk = d => { for (const e of fs.readdirSync(d, { withFileTypes: true })) 
 } } };
 walk(DIST);
 fs.writeFileSync(core, fs.readFileSync(core, 'utf8').replace(/const VERSION = 'v[\d.]+';/, `const VERSION = '${v}';`));
-const html = path.join(DIST, 'index.html');
-fs.writeFileSync(html, fs.readFileSync(html, 'utf8').replace(/(<script src="(?!https?:)[^"?]+)\?v=[\d.]+"/g, `$1?v=${num}"`));
+// the ?v= on the local script links: the game's page, and the lab pages (dist/lab/: they load a few game files)
+const labDir = path.join(DIST, 'lab');
+const pages = [path.join(DIST, 'index.html')].concat(fs.existsSync(labDir) ? fs.readdirSync(labDir).filter(n => n.endsWith('.html')).map(n => path.join(labDir, n)) : []);
+for (const html of pages) fs.writeFileSync(html, fs.readFileSync(html, 'utf8').replace(/(<script src="(?!https?:)[^"?]+)\?v=[\d.]+"/g, `$1?v=${num}"`));
 // dist/version.json: the hosted game checks it and offers an update when the server has a newer build
 fs.writeFileSync(path.join(DIST, 'version.json'), JSON.stringify({ version: v }) + String.fromCharCode(10));
 console.log(`build ${v}: VERSION, ${n} file stamps, the script links and version.json.`);
