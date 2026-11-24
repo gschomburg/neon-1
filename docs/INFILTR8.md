@@ -439,6 +439,18 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
 - The plan: the viewer; even room placement (BSP); things placed with purpose (CAMs on doors and the payload,
   patrols between the rooms that matter); then room types (terminals, THE CUBICLES, THE SERVER FARM, THE WAREHOUSE).
 
+### Special floors and set pieces (for when we get to the custom ones)
+- **THE ROOF** (Greg, 2026-11-24): a special exit **floor**, not a room. Stairs up from the top floor come out on the
+  roof, and somewhere on it is a **hoverpad** (`H`): call the hover and hold out the few turns till it lands. Being
+  outside: no rooms, no walls, just a low edge round it and rooftop things to hide behind (AC units, a water tank, the
+  stairwell hut, antennas); long sight lines, so cover counts most here. Its watchers: a drone or a searchlight
+  sweeping (as the SCANNER does), not CAMs. Its look: a different edge mark (a parapet), gravel for the floor, the sky
+  past the edge. The run's shape: down to the vault, then up and out by your door, or all the way up to the roof:
+  farther, but the cleaner way out. Its own generator: open space, an edge, scattered blocks, a stairwell, a pad.
+- **Dropped: windows** (Greg, 2026-11-24). Ideas were: outside windows that light a room, a window exit needing a
+  ROPE, a drone looking in from outside; inside glass walls you see through but can't walk through. Dropped because
+  they add fiddly rules for little play. (The roof took the "outside" part of the idea.)
+
 ## Rewards
 - **The corp counts as beaten**, as if you'd breached it: the map, the codex and the sector all treat it the same.
 - **No boss mod.** Instead, you get the payload, and the payload is the point:
