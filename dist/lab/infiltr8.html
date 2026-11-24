@@ -57,6 +57,7 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
   <div class="v-bar">
     <b>FLOOR VIEWER</b>
     <select id="v-floor"><option value="2">F2 THE STACKS</option><option value="3">F3 THE VAULT</option></select>
+    <button id="v-reroll" type="button" title="a new seed for this floor (R)">REROLL</button>
     <button id="v-play" type="button">PLAY IT</button>
     <button id="v-close" type="button">CLOSE</button>
   </div>
@@ -877,7 +878,7 @@ function infoAt(f, x, y) {
 }
 addEventListener('keydown', ev => {
   if (ev.target && ev.target.closest && ev.target.closest('#dev, #v-floor')) return;   // (in the viewer, its buttons keep the arrow keys)
-  if (!$('viewer').hidden) { if (ev.key === 'Escape') closeViewer(); if (ev.key === 'ArrowRight') viewerStep(1); if (ev.key === 'ArrowLeft') viewerStep(-1); return; }   // (the dev panel's controls take their own keys)
+  if (!$('viewer').hidden) { if (ev.key === 'Escape') closeViewer(); if (ev.key === 'ArrowRight') viewerStep(1); if (ev.key === 'ArrowLeft') viewerStep(-1); if (ev.key === 'r' || ev.key === 'R') { V.seeds[V.i] = newSeed(); viewerShow(); } return; }   // (the dev panel's controls take their own keys)
   const k = ev.key.toLowerCase();
   if (k === '?' || k === '/') return toggleHelp();
   if (helpOpen) { if (k === 'escape' || k === 'enter' || k === ' ') { ev.preventDefault(); toggleHelp(); } return; }
@@ -973,6 +974,7 @@ $('dev-viewer').addEventListener('click', openViewer);
 $('v-prev').addEventListener('click', () => viewerStep(-1));
 $('v-next').addEventListener('click', () => viewerStep(1));
 $('v-floor').addEventListener('change', viewerShow);
+$('v-reroll').addEventListener('click', () => { V.seeds[V.i] = newSeed(); viewerShow(); });
 $('v-play').addEventListener('click', () => { const n = +$('v-floor').value; closeViewer(); newRun(V.seeds[V.i]); goFloor(n - 1); });
 $('v-close').addEventListener('click', closeViewer);
 { let sx = null;   // a swipe on the floor: left for the next, right for the one before
