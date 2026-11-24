@@ -349,6 +349,10 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     NIGHT VISION.
   - A room's light could come with its type: THE SERVER FARM is bright, THE BREAK ROOM has a switch, THE CEO'S OFFICE
     is lit. The fiction: a lit room is part of the net in use, a dark one is idle memory.
+  - **The power** (Greg, 2026-11-24): killing the power (a terminal's LIGHTS OUT, a FUSE PULL) also **stops the
+    belts**. So it's a trade: the floor goes dark, but the crates stop moving (still cover, but now cover that stays
+    put) and the belt won't carry you anywhere. Open: does the power run anything else (the SCANNER, a factory's
+    tanks humming, CAMs on their own batteries or not)?
 - **Effects** (Greg, 2026-11-23, after Cogmind's ASCII particle effects: its lasers and blasts are animated characters
   on the grid). INFILTR8 can use the game's effects library (engine/fx.js; the lab page loads it):
   - THE SCANNER: a bright beam that leaves a short fading trail as it turns, not a jump an eighth a turn.
