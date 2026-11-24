@@ -705,7 +705,7 @@ function stationMenu(kind, f, key) {
     // (CAMS OFF is for good: Greg, 2026-11-24)
     ['CAMS OFF', 'this floor\'s CAMs off, for good', () => { for (const c of f.cams) c.off = Infinity; say('TERMINAL: this floor\'s CAMs are off for good.', C.accent); }],
     S.have ? ['ALARM DELAY', '+20 turns on the ALARM', () => { S.alarm += 20; say('TERMINAL: the ALARM is held off. +20 turns.', C.accent); }]
-      : ['ALARM OFF', 'ALERT off: patrols stand down', () => { f.trip = 0; for (const p of f.pats) p.chase = 0; say('TERMINAL: ALERT off. they stand down.', C.accent); }],
+      : ['ALARM OFF', 'ALERT clear, patrols stand down', () => { f.trip = 0; S.heat = 0; for (const p of f.pats) p.chase = 0; say('TERMINAL: ALERT clear. they stand down.', C.accent); }],
     ['MAP', 'this floor\'s layout and ducts', () => { for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (at(f, x, y) !== ' ') f.seen[y][x] = true; for (const d of f.ducts) d.known = true; say('TERMINAL: the floor\'s map is yours.', C.accent); }],
     ['LIGHTS OUT', 'power off 25 turns: all dark', () => { f.powerOff = 25; say('TERMINAL: the power\'s out. 25 turns.', C.accent); }]] };
   if (kind === 'L') { const st = f.stations.get(key), pick = st.finds || (st.finds = shuffled(LOOT_FINDS, f.beltR).slice(0, 2));
@@ -1112,7 +1112,7 @@ function los(f, x0, y0, x1, y1) {
   }
 }
 // THE SCANNER (Greg, 2026-11-23; was THE ARM): a narrow beam from its pivot, 8 ways round, till a wall stops it. Caught
-// in it: spotted at once (an alert, as a CAM's good look). (Later: one on a wall that slides back and forth: INFILTR8.md.)
+// in it: burned, -1 INT (Greg, 2026-11-24: it hurts; it doesn't raise the ALERT). (Later: one on a wall that slides back and forth: INFILTR8.md.)
 const ARM_DIRS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
 // its look: its pivot, and its beam drawn the way it points now (across, down, or on a slant)
 const ARM_GLYPH = 'S', armBeam = f => '━╲┃╱━╲┃╱'[f.arm.dir];
@@ -1128,9 +1128,10 @@ const MAX_INT = 4;
 // CLOCKS (Greg, 2026-11-24). The way in: no clock, unless TIMED (a mode: the dev panel, or T): then each floor gets its
 // own, FLOOR_PACE times its quickest route (stairs to stairs, or to the payload). The way out: the ALARM, OUT_PACE
 // times the quickest way out from the payload (outTurns: the nearest exit, up the stairs if need be), plus OUT_SPARE.
-// Tripping an alarm (a CAM's good look, the SCANNER) starts TRIP_TURNS on that floor: run out, and a new patrol comes
+// Tripping the alarm (the ALERT meter full: heatUp) starts TRIP_TURNS on that floor: run out, and a new patrol comes
 // in by the stairs (TRIP_MAX a floor). A TERMINAL's ALARM OFF stops it.
 const FLOOR_PACE = 3, OUT_PACE = 1.5, OUT_SPARE = 10, TRIP_TURNS = 20, TRIP_MAX = 2;
+const HEAT_MAX = 3, HEAT_FADE = 30;   // the ALERT meter (heatUp): its length, and the quiet turns it takes to drop 1
 const STEP_MS = 110;
 const DECRYPT_MS = 500;   // a floor's name, and the end screen's heading, decrypt in (the game's FX.decrypt)
 const PAT_HALF = Math.PI * 25 / 180, PAT_RANGE = 10;   // a patrol's view: 50 degrees wide (Greg, 2026-11-24; was 90), the way it last stepped (draw() shows it)
@@ -1168,11 +1169,20 @@ function outTurns(fi, x, y) {
   if (fi > 0 && f.up && d[f.up.y][f.up.x]) { const n = S.floors[fi - 1]; if (n.down) best = Math.min(best, d[f.up.y][f.up.x] + outTurns(fi - 1, n.down.x, n.down.y)); }
   return best;
 }
+// THE ALERT METER (Greg, 2026-11-24): being seen doesn't hurt; it fills the meter, for the whole run. A CAM's good look
+// or a patrol spotting you: +1. Full (S.heatMax): the alarm trips (trip) and the meter empties. It fades: -1 after
+// HEAT_FADE turns unseen. A takedown by hand clears it; so does a TERMINAL's ALARM OFF. (INT goes only to contact: a
+// patrol catching you, the SCANNER's beam, a clock running out.)
+function heatUp(f, why) {
+  S.alerts++; S.quiet = 0; S.heat = (S.heat || 0) + 1; flashT = performance.now();
+  if (S.heat < S.heatMax) return say(why + ' ALERT ' + S.heat + '/' + S.heatMax + '.', C.danger);
+  S.heat = 0; say(why + ' ALERT full.', C.danger); trip(f);
+}
 // a tripped alarm: the patrols come for where you were; TRIP_TURNS on the clock (the way in only: the way out has the ALARM)
 function trip(f) {
   for (const p of f.pats) if (!(p.ko > 0)) { p.chase = 8; p.lx = S.x; p.ly = S.y; }
   if (S.have || f.trip > 0) return;
-  f.trip = TRIP_TURNS; f.tx = S.x; f.ty = S.y; say('ALERT tripped. backup in ' + TRIP_TURNS + ' turns.', C.danger);
+  f.trip = TRIP_TURNS; f.tx = S.x; f.ty = S.y; say('ALARM tripped. backup in ' + TRIP_TURNS + ' turns.', C.danger);
 }
 // the trip clock ran out: a new patrol in by the stairs, out to where you were seen and back, on its round from then on
 function backup(f) {
@@ -1186,7 +1196,7 @@ function newRun(seed) {
   const floors = [floorRing(), floorGen(seed, 2, false), floorGen(seed, 3, true)];
   S = { seed, floors, fi: 0, x: floors[0].start.x, y: floors[0].start.y, int: MAX_INT, turn: 0, alarm: 0, have: false, alerts: 0,
     msg: 'INFILTR8. in by the door. the payload is on F3.', msgCol: C.accent, msgT: performance.now(), floorT: performance.now(), info: null, mode: 'pad',
-    gear: [], flare: 0, uniform: 0, over: null, vis: null, inDuct: false };
+    gear: [], heat: 0, heatMax: HEAT_MAX, quiet: 0, flare: 0, uniform: 0, over: null, vis: null, inDuct: false };
   let kit = 'GHOST'; try { const k = localStorage.getItem('neon.infiltr8.kit'); if (LOADOUTS[k]) kit = k; } catch (e) { /* private mode */ }
   setLoadout(kit); openLoadouts();
   floorClock(F());
@@ -1232,7 +1242,8 @@ function act(dx, dy) {
         const front = (S.x - p.x) * p.fx + (S.y - p.y) * p.fy > 0;   // (you're on the side it's facing)
         if (front && !(p.stun > 0) && !(S.passive === 'HEAVY HANDS' && !p.chase)) {   // (HEAVY HANDS: from the front too, if it hasn't seen you)
         p.stun = 3; p.chase = 0; hurt('> the PATROL saw you coming. -1 INT.'); if (!S.over) tick(); look(); return draw(); }
-        const ko = S.passive === 'HEAVY HANDS' ? KO_HEAVY : KO_TURNS; p.ko = ko; p.chase = 0; p.stun = 0; say('you knock the PATROL out. quiet. ' + ko + ' turns.', C.accent);
+        const ko = S.passive === 'HEAVY HANDS' ? KO_HEAVY : KO_TURNS; p.ko = ko; p.chase = 0; p.stun = 0;
+        say('you knock the PATROL out. ' + ko + ' turns.' + (S.heat ? ' ALERT clear.' : ''), C.accent); S.heat = 0;   // (a takedown clears the ALERT meter: Greg)
         tick(); look(); return draw();
       } }
     S.slide = { x: S.x, y: S.y, t: performance.now() };   // (draw() slides the @ over from here)
@@ -1285,11 +1296,12 @@ function tick() {
     if (f.clock < 0 && f.clock % 3 === 0) { hurt('> traced: -1 INT.'); if (S.over) return; }
   }
   if (!clockOff && f.trip > 0 && !--f.trip) backup(f);
+  if (!clockOff && S.heat > 0 && ++S.quiet >= HEAT_FADE) { S.heat--; S.quiet = 0; say('quiet a while: the ALERT drops to ' + S.heat + '/' + S.heatMax + '.', C.money); }
   if (f.smoke) for (const [k, t] of f.smoke) { if (t <= 1) f.smoke.delete(k); else f.smoke.set(k, t - 1); }   // (SMOKE clears)
   if (f.powerOff > 0 && !--f.powerOff) say('the power\'s back. lights on, belts running.', C.money);
   beltsStep(f);
   // the arm turns
-  if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) { S.alerts++; hurt('> the SCANNER caught you. alert: -1 INT.'); if (S.over) return; trip(f); } }
+  if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) { hurt('> the SCANNER beam burns you. -1 INT.'); if (S.over) return; } }   // (it hurts; it doesn't raise the ALERT: Greg, 2026-11-24)
   // cameras sweep, and look
   for (const c of f.cams) {
     if (c.dead) continue;
@@ -1297,9 +1309,9 @@ function tick() {
     if (c.rest > 0) { c.rest--; continue; }
     c.k++; c.a = c.base + Math.sin(c.k * Math.PI / 4) * (Math.PI / 3);
     if (!S.inDuct && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, S.x, S.y)) {
-      c.seen++;
+      c.seen++; S.quiet = 0;
       if (c.seen < (S.passive === 'LOOP' ? 3 : 2)) say('a CAM has you. ! get out of its cone.', C.money);   // (LOOP: it takes 3 turns)
-      else { S.alerts++; c.seen = 0; c.rest = 1; hurt('> !! the CAM got a good look. -1 INT.'); if (S.over) return; trip(f); }
+      else { c.seen = 0; c.rest = 1; heatUp(f, '!! the CAM got a good look.'); }
     } else c.seen = 0;
   }
   // patrols
@@ -1315,7 +1327,7 @@ function tick() {
     for (let s = 0; s < steps; s++) {
       // (in a UNIFORM a patrol walks past you: only right next to you does it look twice)
       const sees = !S.inDuct && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, S.x, S.y) && !(S.uniform > 0 && Math.abs(p.x - S.x) + Math.abs(p.y - S.y) > 1);
-      if (sees) { if (!p.chase) say('a PATROL saw you. it\'s coming.', C.danger); p.chase = 8; p.lx = S.x; p.ly = S.y; }
+      if (sees) { const fresh = !p.chase; p.chase = 8; S.quiet = 0; p.lx = S.x; p.ly = S.y; if (fresh) heatUp(f, 'a PATROL saw you. it\'s coming.'); }
       if (rests && !(p.chase > 0)) break;   // (a resting beat: it looked, it stays put)
       if (p.chase > 0) {
         p.chase--;
@@ -1472,12 +1484,14 @@ function draw() {
   put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
   put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
   put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent);
-  put(0, 3, S.kit, C.mid); if (S.have) put(7, 3, '· $', C.money);   // (the payload's in your pack)
-  if (clockOff) put(11, 3, 'CLOCK OFF', C.mid);
-  if (S.have) putR(3, S.alarm > 0 ? `ALARM  out in ${String(S.alarm).padStart(2, '0')}` : 'ALARM  TRACED', clockOff ? C.mid : C.danger);
-  else if (f.trip > 0) putR(3, `ALERT  backup in ${String(f.trip).padStart(2, '0')}`, clockOff ? C.mid : C.danger);
+  put(0, 3, S.kit, C.mid);
+  // the ALERT meter (heatUp): a box a step, filled as you're seen
+  put(8, 3, 'ALERT', C.mid); put(14, 3, '■'.repeat(S.heat) + '□'.repeat(S.heatMax - S.heat), S.heat ? C.danger : C.dim);
+  if (S.have) put(15 + S.heatMax, 3, '$', C.money);   // (the payload's in your pack)
+  if (S.have) putR(3, S.alarm > 0 ? `OUT IN ${String(S.alarm).padStart(2, '0')}` : 'TRACED', clockOff ? C.mid : C.danger);
+  else if (f.trip > 0) putR(3, `BACKUP IN ${String(f.trip).padStart(2, '0')}`, clockOff ? C.mid : C.danger);
   else if (timed && f.clock != null) putR(3, f.clock > 0 ? `FLOOR CLOCK ${String(f.clock).padStart(3, '0')}` : 'FLOOR CLOCK OUT', clockOff ? C.mid : f.clock > 0 ? C.money : C.danger);
-  else putR(3, `TURN ${String(S.turn).padStart(3, '0')}`, C.mid);
+  else putR(3, clockOff ? 'PAUSED' : `TURN ${String(S.turn).padStart(3, '0')}`, C.mid);
   rule(4);
   // the info card (rows 5 and 7) round the message line (row 6)
   const inf = S.info;
@@ -1744,9 +1758,9 @@ function infoAt(f, x, y) {
   if (x === S.x && y === S.y) return { x, y, glyph: '@', name: 'YOU', text: S.inDuct ? 'in a duct: unseen. 2 turns a step.' : 'INT ' + S.int + '/' + MAX_INT + '.' + (S.uniform > 0 ? ' in UNIFORM: ' + S.uniform + ' turns.' : '') };
   if (vis) {
     const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: 'P', name: 'PATROL', text: p.ko > 0 ? 'out cold: ' + p.ko + ' turns.' : p.chase ? 'after you. break its line of sight.' : 'walks its round. from behind: take it down.' };
-    const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: CAM_GLYPH, name: 'CAM', text: 'sweeps a cone. 2 turns in it: an alert.' };
+    const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: CAM_GLYPH, name: 'CAM', text: 'sweeps a cone. 2 turns in it: +1 ALERT.' };
     if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: ARM_GLYPH, name: 'SCANNER', text: 'a narrow beam. turns an eighth a turn.' };
-    if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: armBeam(f), name: 'SCANNER', text: 'its beam. in it: spotted, no grace.' };
+    if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: armBeam(f), name: 'SCANNER', text: 'its beam. in it: burned, -1 INT.' };
   }
   { const d = (f.under.get(x + ',' + y) || []).some(d => d.known); if (d && at(f, x, y) !== 'v') return { x, y, glyph: pipeGlyph(f, x, y), name: 'DUCT', text: 'under the floor. in and out by a vent.' }; }
   if (f.payload && f.payload.x === x && f.payload.y === y) return { x, y, glyph: '$', name: 'THE PAYLOAD', text: 'take it and the alarm goes. then out.' };

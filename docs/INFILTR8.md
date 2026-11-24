@@ -526,6 +526,16 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     where it lands go to look), FLARE x2.
   - **Dropped for now: CHARGE / FRAG** (Greg): explosions don't break objects yet, so DARTS took its place. The FRAG
     code is still there; no loadout carries it.
+- **The ALERT meter** (Greg, 2026-11-24; built the same day). Being seen doesn't hurt. It fills a meter in the header
+  (`ALERT ■■□`), one meter for the whole run.
+  - +1 when a CAM gets a good look, or when a patrol first spots you (it still chases).
+  - **Full (3): the alarm trips.** The patrols head for you, the backup timer starts (20 turns, then a patrol comes
+    in by the stairs), and the meter empties.
+  - **It fades:** -1 after 30 turns of nobody seeing you.
+  - **A takedown by hand clears it.** So does the terminal's ALARM OFF. (DARTS don't clear it.)
+  - **INT goes only to contact:** a patrol catching you, the SCANNER's beam, a clock running out.
+  - **The SCANNER is a hazard now:** its beam burns you (-1 INT) and doesn't raise the meter.
+  - Ideas: passives that make the meter longer (`S.heatMax`).
 - **More passive ideas** (Greg, 2026-11-24; not built):
   - CAMs and patrols you've seen stay marked on the map, facing the way they were looking, after you lose sight of them.
   - Hack a terminal you know about from a distance.
