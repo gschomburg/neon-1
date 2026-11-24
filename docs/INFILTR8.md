@@ -439,6 +439,29 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
 - The plan: the viewer; even room placement (BSP); things placed with purpose (CAMs on doors and the payload,
   patrols between the rooms that matter); then room types (terminals, THE CUBICLES, THE SERVER FARM, THE WAREHOUSE).
 
+### Stations, light and doors (Greg, 2026-11-24; built the same day)
+- **Stations:** solid things you USE from beside them: a popup of choices, pick one (or a number key), and it's
+  spent; CLOSE spends nothing. A USE on the tile you stand on (stairs, a vent, a way out) comes first, then a station
+  beside you, then an open door beside you.
+  - **`T` TERMINAL:** CAMS OFF (every CAM on the floor, 25 turns), MAP (the floor's layout and its ducts), or LIGHTS
+    OUT (the power, 25 turns).
+  - **`L` LOOT CACHE:** one of two finds to carry out (CR); the end screen counts your haul.
+  - **`R` RE-UP:** +1 INT, or +1 of a piece of gear.
+  - **`B` BAG SWAP:** your gear for a bag: GHOST (UNIFORMs, FLAREs), BRUTE (FRAGs), SCOUT (FLAREs). The start of the
+    preset loadouts.
+  - Placing: every floor a terminal at least. Tech buildings more terminals (a data center 2.5 a floor, a lab 2),
+    industrial ones more caches (1.3) and bags; an office a mix. A closet of 2 cells or more if there is one, else a
+    room's floor against its wall: never by a door, never shutting part of a room off.
+- **Light:** a room is lit or dark. Lit: a server farm, the vault, a lab, the cubicles, a factory, a warehouse, an
+  atrium; a restroom half the time; a plain room by the building's odds (an office 60%, industrial 35%); the room you
+  come in by, always. Halls and closets are dark. In the light, all see far; in the dark, CAMs and patrols see 5,
+  you 7 (the dark's on the sneaker's side). A lit room you can see has a faint warm wash.
+- **The power:** LIGHTS OUT (a terminal) cuts it for 25 turns: every room dark, the belts stopped (walk back along one).
+  CAMs run on, on batteries, but in the dark they see only close up.
+- **Real doors:** closed till opened; a closed door blocks sight, so a room's unknown till you open it. Step into one to
+  open it (that's your turn); USE beside an open one shuts it (a chasing patrol loses sight of you). Patrols open doors
+  on their rounds and leave them open (`/`): a door you didn't open, someone's been through.
+
 ### Special floors and set pieces (for when we get to the custom ones)
 - **THE ROOF** (Greg, 2026-11-24): a special exit **floor**, not a room. Stairs up from the top floor come out on the
   roof, and somewhere on it is a **hoverpad** (`H`): call the hover and hold out the few turns till it lands. Being
