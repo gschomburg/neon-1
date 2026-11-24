@@ -863,9 +863,26 @@ const TERM_CMDS = {
     run: f => { const p = f.pats.filter(p => !p.dead && !p.leave).sort((a, b) => Math.hypot(a.x - S.x, a.y - S.y) - Math.hypot(b.x - S.x, b.y - S.y))[0]; p.leave = true; p.chase = 0; say('TERMINAL: RECALL. one ' + unitName(p) + ' is called away.', C.accent); } },
   belts: { name: 'REVERSE BELTS', note: 'every belt on this floor runs the other way (the press moves to the other end).', when: f => f.belts && f.belts.length > 0,
     run: f => { for (const b of f.belts) { b.cells.reverse(); b.cells.forEach(([x, y], i) => f.beltAt.set(x + ',' + y, { b, i })); } say('TERMINAL: the belts run backwards.', C.accent); } },
+  ring: { name: 'PHONE RING', note: 'ring a phone in any room you\'ve seen: pick it on the map (each shows a #). the nearest patrol or guard goes to answer it.', when: f => f.pats.some(p => !p.dead) && phoneRooms(f).length > 1,
+    run: f => { S.ring = true; say('PHONE RING: tap a # to ring it.', C.accent); } },
   friendly: { name: 'FRIENDLY CAMS', note: 'this floor\'s CAMs work for you: they don\'t raise the ALERT, and you see what they see, live. what you see through them counts as seen (BLINDER, JAMMER).', when: f => !f.friendly && f.cams.some(c => !c.dead),
     run: f => { f.friendly = true; say('TERMINAL: the CAMs are yours. you see what they see.', C.accent); } },
 };
+// PHONE RING (Greg, 2026-11-24): pick it, and every room you've seen shows a phone (#, at its middle); tap one (anywhere
+// in that room) and the nearest patrol or guard (by walking) goes to answer it, then back to its round. Esc: no call.
+const phoneRooms = f => (f.rooms || []).filter(o => o.role !== 'closet' && o.cells.some(([x, y]) => f.seen[y][x]));
+// where a room's phone sits: its middle if that's floor (a ring or cross room's middle may not be), else the floor
+// cell nearest it
+const phoneAt = (f, o) => { const ok = o.cells.filter(([x, y]) => T[at(f, x, y)].walk && at(f, x, y) !== 'x'); return (ok.length ? ok : o.cells).slice().sort((a, b) => Math.hypot(a[0] - o.mid.x, a[1] - o.mid.y) - Math.hypot(b[0] - o.mid.x, b[1] - o.mid.y))[0]; };
+function ringRoom(f, o) {
+  S.ring = false;
+  const at0 = phoneAt(f, o);
+  const d = bfs(f, at0[0], at0[1]), units = f.pats.filter(p => !p.dead && !(p.ko > 0) && !(p.blind > 0) && !p.leave && d[p.y][p.x]);
+  const p = units.sort((a, b) => d[a.y][a.x] - d[b.y][b.x])[0];
+  if (!p) { say('the phone rings. nobody comes.', C.mid); return draw(); }
+  p.chase = Math.max(12, d[p.y][p.x] + 4); p.lx = at0[0]; p.ly = at0[1]; p.stun = 0;
+  say('the phone rings. a ' + unitName(p) + ' goes to answer it.', C.accent); draw();
+}
 // the nearest way out for a patrol (FIRE DRILL): a fire exit or chute on the floor, else the stairs up
 function exitNear(f, p) {
   const d = bfs(f, p.x, p.y); let best = null;
@@ -1626,7 +1643,7 @@ function placeGuard(f, rooms, r, way, first) {
 const canUse = f => { const c = at(f, S.x, S.y); return c === 'v' || (!S.inDuct && ('<>EFK'.includes(c) || !!stationBeside(f) || !!doorBeside(f))); };
 function use() {
   if (S.over) return;
-  S.peek = null; S.aim = null;   // (USE is doing something: no more leaning out)
+  S.peek = null; S.aim = null; S.ring = false;   // (USE is doing something: no more leaning out, no call to place)
   const f = F(), c = at(f, S.x, S.y);
   if (c === 'v') { S.inDuct = !S.inDuct; say(S.inDuct ? 'down into the duct. nothing sees you. 2 turns a step.' : 'up and out of the vent.', C.rare); tick(); look(); return draw(); }
   if (S.inDuct) { say('in a duct: climb out at a vent.', C.mid); return draw(); }
@@ -1877,6 +1894,8 @@ function draw() {
   put(ax, MAP_Y + ay, '@', C.bg, false, red ? C.danger : S.inDuct ? C.rare : S.uniform > 0 ? C.money : C.accent);
   for (const b of booms) { const k = (now - b.t) / 500; if (k < 1) for (const [dx, dy] of [[-2, 0], [2, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) put(b.x + Math.round(dx * (1 + k)), MAP_Y + b.y + Math.round(dy * (1 + k)), '*', k < 0.5 ? C.money : C.danger); }
   if (S.info && S.info.x != null) { const px = L.ox + S.info.x * L.cw, py = L.oy + (MAP_Y + S.info.y) * L.ch; g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); }
+  // PHONE RING: a # in each room you've seen, to tap
+  if (S.ring) for (const o of phoneRooms(f)) { const [x, y] = phoneAt(f, o); put(x, MAP_Y + y, '#', C.bg, false, C.accent); }
   // SMOKE: a haze over its cells
   if (f.smoke) { g.fillStyle = rgba(C.text, 0.3); for (const k of f.smoke.keys()) { const [x, y] = k.split(',').map(Number); if (S.vis[y][x]) g.fillRect(L.ox + x * L.cw, L.oy + (MAP_Y + y) * L.ch, L.cw, L.ch); } }
   // the cell you're leaning into (a PEEK): a dashed box
@@ -2011,6 +2030,7 @@ const onPad = c => c.x <= 21 && c.y >= 32;          // the left of the tray (TRA
 function mapTap(c) {
   const mx = c.x, my = c.y - MAP_Y, f = F();
   if (!inb(mx, my)) return;
+  if (S.ring) { const o = phoneRooms(f).find(o => o.set.has(mx + ',' + my)); if (o) return ringRoom(f, o); }   // (PHONE RING: a tap anywhere in a room with a #)
   if (Math.abs(mx - S.x) + Math.abs(my - S.y) === 1) return act(mx - S.x, my - S.y);
   if (mx === S.x && my === S.y && UIS[ui].key !== 'classic') return act(0, 0);
   S.info = infoAt(f, mx, my); draw();
@@ -2107,7 +2127,7 @@ addEventListener('keydown', ev => {
   if (k === 'p') return toggleClock();
   if (k === 't') return toggleTimed();
   if (k === 'g') { S.mode = S.mode === 'pad' ? 'gear' : 'pad'; return draw(); }
-  if (k === 'escape') { S.info = null; S.aim = null; return draw(); }
+  if (k === 'escape') { if (S.ring) say('no call.', C.mid); S.info = null; S.aim = null; S.ring = false; return draw(); }
 });
 
 // ---------- the dev panel ----------
@@ -2115,7 +2135,7 @@ const $ = id => document.getElementById(id);
 function goFloor(i) {   // to another floor, at the stairs you'd come in by (down: its stairs up; up: its stairs down)
   if (i === S.fi || S.over) return;
   const n = S.floors[i], at0 = i > S.fi ? n.up : n.down;
-  S.fi = i; S.inDuct = false; S.peek = null; S.aim = null; S.floorT = performance.now(); floorClock(n);
+  S.fi = i; S.inDuct = false; S.peek = null; S.aim = null; S.ring = false; S.floorT = performance.now(); floorClock(n);
   if (at0) { S.x = at0.x; S.y = at0.y; } else { S.x = n.start.x; S.y = n.start.y; }
   say('F' + (i + 1) + ': ' + n.name + '. (dev)', C.money); look(); draw();
 }
@@ -2258,7 +2278,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, peek, actions, doAction, pickLoadout: closeLoadouts, givePassives: ks => { S.passives = ks; setPassives(); look(); }, youDark, TERM: TERM_CMDS, grabPayload: () => { takePayload(F()); tick(); look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, peek, actions, doAction, pickLoadout: closeLoadouts, givePassives: ks => { S.passives = ks; setPassives(); look(); }, youDark, TERM: TERM_CMDS, phoneRooms, phoneAt, mapTap, grabPayload: () => { takePayload(F()); tick(); look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

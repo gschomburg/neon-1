@@ -574,7 +574,9 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   patrol and guard frozen 15 turns), FIRE DRILL (patrols head for the nearest way out, 10 turns), RECALL (the patrol
   nearest you walks off the floor), REVERSE BELTS (warehouse floors), FRIENDLY CAMS. A command only shows where it means
   something. **ROOTKIT** (a passive): every terminal offers all of them. (ROOT is still the 2-picks one.)
-  - Idea, not built: PHONE RING (send the nearest patrol to a room you pick): needs picking a spot on the map.
+  - **PHONE RING** (Greg, 2026-11-24; built the same day): pick it, and every room you've seen shows a phone (`#`).
+    Tap one (anywhere in that room) and the nearest patrol or guard, by walking distance, goes to answer it, then back
+    to its round. Esc: no call.
 - **FRIENDLY CAMS** (Greg): the floor's CAMs don't raise the ALERT, and you see what they see, live (their view is
   green). What you see through them counts as seen: BLINDER, JAMMER and LONG ARM work through them. (DARTS don't: a
   dart needs a line from you.)
