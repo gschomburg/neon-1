@@ -1305,6 +1305,20 @@ function floorLayer(seed, n) {
     set(f, dx, dy, '+'); o.doors = [{ x: dx, y: dy }];
     nodes.push(o);
   }
+  // THE EMPTY CELLS (Greg, 2026-11-24): set pieces in the gaps. A layer floor is OFFICE (plants to hide in, a pair of
+  // cubicles, pillars, benches, or bare) or INDUSTRIAL (about 1 in 3: a whole cell a block of machinery, else pillars or
+  // benches). Each stays inside its 7 x 5, so the halls round it stay open. f.layerKind.
+  f.layerKind = r() < 0.35 ? 'industrial' : 'office';
+  const fills = {
+    plants: (x0, y0) => { for (const [i, j] of [[1, 1], [5, 1], [1, 3], [5, 3]]) set(f, x0 + i, y0 + j, 'g'); set(f, x0 + 3, y0 + 2, 'g'); },
+    cubicles: (x0, y0) => { for (const [i, j] of [[1, 1], [2, 1], [3, 1], [1, 2], [3, 3], [4, 3], [5, 3], [5, 2]]) set(f, x0 + i, y0 + j, 'd'); },
+    pillars: (x0, y0) => { set(f, x0 + 2, y0 + 2, 'p'); set(f, x0 + 4, y0 + 2, 'p'); },
+    benches: (x0, y0) => { for (let i = 2; i <= 4; i++) { set(f, x0 + i, y0 + 1, '='); set(f, x0 + i, y0 + 3, '='); } },
+    machine: (x0, y0) => { for (let j = 0; j < Ly.h; j++) for (let i = 0; i < Ly.w; i++) set(f, x0 + i, y0 + j, 'm'); },
+    bare: () => {},
+  };
+  const kinds = f.layerKind === 'industrial' ? ['machine', 'machine', 'pillars', 'benches', 'bare'] : ['plants', 'cubicles', 'cubicles', 'pillars', 'benches', 'bare'];
+  for (let cell = 0; cell < 16; cell++) if (!cellsUsed.includes(cell)) fills[kinds[Math.floor(r() * kinds.length)]](Ly.x0 + (cell % 4) * (Ly.w + Ly.gx), Math.floor(cell / 4) * (Ly.h + Ly.gy));
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (at(f, x, y) === '.' && !nodes.some(o => o.set.has(x + ',' + y))) { big.cells.push([x, y]); big.set.add(x + ',' + y); }
   const rooms = [big, ...nodes];
   // the stairs up, the left-hand hall; the real node, the farthest from them; the fire exit, the right-hand hall

@@ -633,7 +633,10 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
      x 1 + col * 9, y row * 6): 34 x 23, the whole board, so no room is left over (the 2 spare columns are a hall down
      each side). A tile's border is the node's walls; its 5 x 3 inside, where a layer draws the glyph, is the floor.
      8 to 12 nodes on cells drawn at random, the rest empty open floor, as a layer (Greg: not every cell has one;
-     the game: n at most 12, CONFIG.maxNodes). The payload's node is the farthest from the stairs.
+     the game: n at most 12, CONFIG.maxNodes). The payload's node is the farthest from the stairs. **The empty cells**
+     (Greg, 2026-11-24) get set pieces: a layer floor is OFFICE (plants to hide in, a pair of cubicles, pillars,
+     benches, or bare) or INDUSTRIAL (about 1 in 3: a whole cell a 7 x 5 block of machinery, about 2.5 a floor; else
+     pillars or benches).
   6. **THE ROOF**: up the stairs `▲` in THE RING's bottom right. A parapet `▓`, AC units, roof vents (low cover), a
      water tank, antennas; the stairwell hut; the hoverpad `H`. CALL HOVER on the pad (+1 ALERT, and everything up
      there heads for the pad), 6 turns, then BOARD: out (a clean job if nobody saw you). Two searchlights (CAMs on the
