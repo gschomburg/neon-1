@@ -59,6 +59,7 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
     <select id="v-floor"><option value="2">F2 THE STACKS</option><option value="3">F3 THE VAULT</option></select>
     <select id="v-bld" title="the building type (AUTO: the seed picks)"></select>
     <button id="v-reroll" type="button" title="a new seed for this floor (R)">REROLL</button>
+    <button id="v-labels" type="button" title="the rooms' labels, on or off (L)">LABELS ON</button>
     <button id="v-play" type="button">PLAY IT</button>
     <button id="v-close" type="button">CLOSE</button>
   </div>
@@ -1590,7 +1591,7 @@ function infoAt(f, x, y) {
 }
 addEventListener('keydown', ev => {
   if (ev.target && ev.target.closest && ev.target.closest('#dev, #v-floor')) return;   // (in the viewer, its buttons keep the arrow keys)
-  if (!$('viewer').hidden) { if (ev.key === 'Escape') closeViewer(); if (ev.key === 'ArrowRight') viewerStep(1); if (ev.key === 'ArrowLeft') viewerStep(-1); if (ev.key === 'r' || ev.key === 'R') { V.seeds[V.i] = newSeed(); viewerShow(); } return; }   // (the dev panel's controls take their own keys)
+  if (!$('viewer').hidden) { if (ev.key === 'Escape') closeViewer(); if (ev.key === 'ArrowRight') viewerStep(1); if (ev.key === 'ArrowLeft') viewerStep(-1); if (ev.key === 'r' || ev.key === 'R') { V.seeds[V.i] = newSeed(); viewerShow(); } if (ev.key === 'l' || ev.key === 'L') toggleLabels(); return; }   // (the dev panel's controls take their own keys)
   const k = ev.key.toLowerCase();
   if (k === '?' || k === '/') return toggleHelp();
   if (helpOpen) { if (k === 'escape' || k === 'enter' || k === ' ') { ev.preventDefault(); toggleHelp(); } return; }
@@ -1648,7 +1649,13 @@ $('dev-reveal').addEventListener('change', e => { devReveal = e.target.checked; 
 // their start, with their walks; CAM cones; ducts), its seed and counts under it. ◄ ► (or the arrow keys, or a swipe)
 // slide to the floor before or after; past the last one there's always a new one. To find what the generator gets
 // wrong; each find becomes a check it runs (docs/INFILTR8.md). PLAY IT starts that seed on that floor.
-const V = { seeds: [], i: 0 };
+const V = { seeds: [], i: 0, labels: true };
+try { V.labels = localStorage.getItem('neon.infiltr8.vlabels') !== 'off'; } catch (e) { /* private mode */ }
+function toggleLabels() {
+  V.labels = !V.labels; $('v-labels').textContent = V.labels ? 'LABELS ON' : 'LABELS OFF';
+  try { localStorage.setItem('neon.infiltr8.vlabels', V.labels ? 'on' : 'off'); } catch (e) { /* private mode */ }
+  viewerShow();
+}
 function drawFloorCard(cvs, f, fs) {
   const cw = fs * CHAR_W, ch = fs * LINE_H, dpr = window.devicePixelRatio || 1;
   cvs.width = MW * cw * dpr; cvs.height = MH * ch * dpr; cvs.style.width = MW * cw + 'px'; cvs.style.height = MH * ch + 'px';
@@ -1681,9 +1688,10 @@ function drawFloorCard(cvs, f, fs) {
   // each room's type (gold) or role (grey): a little tag over its top-left corner, off the grid (Greg, 2026-11-24:
   // drawn into the wall's cells they read as part of the room), small, on a dark pill, like the caption under the
   // floor. A room on the top row: its tag just inside its top wall (above it would be off the floor).
-  const tf = Math.max(9, Math.round(fs * 0.72));
+  // (10px, small as the footer's text; the LABELS button or L turns the layer off: V.labels)
+  const tf = 10;
   x.font = '400 ' + tf + 'px "JetBrains Mono", Consolas, monospace'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
-  for (const o of f.rooms || []) {
+  if (V.labels) for (const o of f.rooms || []) {
     const label = o.role === 'closet' ? '' : o.type ? ROOM_TYPES[o.type][0].replace(/^THE /, '').toLowerCase() : o.role === 'way' ? '' : o.role;
     if (!label) continue;
     const w = x.measureText(label).width + 6, lx = o.x * cw + 2, by = o.y > 0 ? o.y * ch - 2 : (o.y + 1) * ch + tf;
@@ -1722,6 +1730,8 @@ function setBuilding(v, rerun) {
 $('dev-bld').addEventListener('change', e => setBuilding(e.target.value, true));
 $('v-bld').addEventListener('change', e => { setBuilding(e.target.value, false); viewerShow(); });
 $('v-reroll').addEventListener('click', () => { V.seeds[V.i] = newSeed(); viewerShow(); });
+$('v-labels').addEventListener('click', toggleLabels);
+$('v-labels').textContent = V.labels ? 'LABELS ON' : 'LABELS OFF';
 $('v-play').addEventListener('click', () => { const n = +$('v-floor').value; closeViewer(); newRun(V.seeds[V.i]); goFloor(n - 1); });
 $('v-close').addEventListener('click', closeViewer);
 { let sx = null;   // a swipe on the floor: left for the next, right for the one before
