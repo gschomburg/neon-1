@@ -137,7 +137,7 @@ const T = {
   '>': { walk: 1, see: 1 }, 'E': { walk: 1, see: 1 }, 'F': { walk: 1, see: 1 }, 'K': { walk: 1, see: 1 }, 'p': { walk: 0, see: 0 },
   'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 },
 };
-const WALLISH = '#+EFK';   // what joins up into box-drawn walls
+const WALLISH = '#+EF';   // what joins up into box-drawn walls (the chute, K, sits on a room's floor now: not a wall. Greg, H3SDQ4)
 const INFO = {
   '#': ['WALL', 'it blocks you, and what sees.'], '.': ['FLOOR', ''], '+': ['DOOR', 'open. it doesn\'t block sight.'],
   '<': ['STAIRS UP', 'USE: up a floor.'], '>': ['STAIRS DOWN', 'USE: down a floor.'], 'E': ['THE WAY IN', 'your door. leave by it: a clean job.'],
@@ -234,6 +234,10 @@ function drawRoom(f, o) {
 // more: routes pass through), side (1 door: a dead end), way (the rest). Room TYPES pick roles that fit them (THE VAULT is
 // F3's goal; THE SERVER FARM a big room on the way). CAMs and patrols are placed by role (placeCams, placePats).
 const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+// A shuffle from the seed (Fisher-Yates: one draw an item). Never sort(() => r() - 0.5): how often a sort calls its
+// comparator differs between engines, so Chrome and Node drew different numbers and built different floors from one
+// seed (found 2026-11-23, seed MNHDB4: the text dumps and stats didn't match the browser). A new array.
+function shuffled(a, r) { const out = a.slice(); for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; } return out; }
 const ROOM_TYPES = {   // what a type is called (the viewer's labels, a tap's info)
   vault: ['THE VAULT', 'the payload. one way in, watched.'],
   servers: ['THE SERVER FARM', 'rows of racks: nothing sees through.'],
@@ -276,7 +280,7 @@ function pruneHalls(f, halls) {
 function serverFarm(f, rooms, r) {
   const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 10 && o.h >= 7);
   if (!opts.length || r() > 0.75) return;
-  const o = opts.sort((a, b) => (b.big ? 1 : 0) - (a.big ? 1 : 0) || r() - 0.5)[0], x0 = o.x + 1, y0 = o.y + 1;
+  const o = shuffled(opts, r).sort((a, b) => (b.big ? 1 : 0) - (a.big ? 1 : 0))[0], x0 = o.x + 1, y0 = o.y + 1;
   o.type = 'servers';
   const all8 = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j))) return false; return true; };
   for (let y = y0 + 1; y < y0 + o.h - 3; y += 2) for (let x = x0 + 1; x < x0 + o.w - 3; x++) if ((x - x0 - 1) % 5 !== 4 && all8(x, y) && at(f, x, y) === '.') set(f, x, y, 'r');
@@ -406,7 +410,7 @@ function floorGen(seed, n, last) {
     const near = [];
     rooms.forEach((a, i) => rooms.forEach((b, j) => { if (i < j && !joined.has(i + '-' + j)) near.push([a, b, Math.hypot(a.cx - b.cx, (a.cy - b.cy) * 2)]); }));
     near.sort((p, q) => p[2] - q[2]);
-    for (const [a, b] of near.slice(0, 4).sort(() => r() - 0.5).slice(0, ri(1, 2))) links.push([a, b]);
+    for (const [a, b] of shuffled(near.slice(0, 4), r).slice(0, ri(1, 2))) links.push([a, b]);
     const halls = new Set();
     if (!links.slice(0, rooms.length - 1).every(([a, b]) => hall(f, a, b, r, halls))) continue;   // (the chain has to join up)
     for (const [a, b] of links.slice(rooms.length - 1)) hall(f, a, b, r, halls);
@@ -524,7 +528,7 @@ function routeHall(f, s, t, halls) {
 const corner = (f, x, y) => { const w = (i, j) => '#+'.includes(at(f, i, j)); return (w(x - 1, y) || w(x + 1, y)) && (w(x, y - 1) || w(x, y + 1)); };
 // a wall cell on the outside of one of these rooms (void beyond it): the fire exit
 function outerWall(f, rooms, r) {   // (a wall cell with the room's floor on one side and nothing on the other)
-  for (const o of rooms.sort(() => r() - 0.5)) {
+  for (const o of shuffled(rooms, r)) {
     const opts = [];
     for (const [cx, cy] of o.cells) for (const [dx, dy] of [[0, -1], [0, 1], [1, 0], [-1, 0]]) { const x = cx + dx, y = cy + dy; if (at(f, cx, cy) === '.' && at(f, x, y) === '#' && at(f, x + dx, y + dy) === ' ') opts.push({ x, y }); }
     if (opts.length) return opts[Math.floor(r() * opts.length)];
