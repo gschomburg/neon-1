@@ -742,7 +742,9 @@ function draw() {
   }
   // the ducts: a known one is a tint on the floor; down in one, the world above dims and the ducts show as pipes
   if (S.inDuct) { g.fillStyle = rgba(C.bg, 0.6); g.fillRect(L.ox, L.oy + MAP_Y * L.ch, SW * L.cw, MH * L.ch); }
-  for (const d of f.ducts) if (d.known || devReveal) for (const [x, y] of d.cells) {
+  // (each cell once: where two ducts cross, the tint doesn't double up and look like one over the other; Greg)
+  const ductCells = new Map(); for (const d of f.ducts) if (d.known || devReveal) for (const [x, y] of d.cells) ductCells.set(x + ',' + y, [x, y]);
+  for (const [x, y] of ductCells.values()) {
     if (S.inDuct) { put(x, MAP_Y + y, ' ', C.bg, false, C.bg); put(x, MAP_Y + y, at(f, x, y) === 'v' ? GLYPH.v : pipeGlyph(f, x, y), C.rare, false, rgba(C.rare, 0.18)); }
     else { g.fillStyle = rgba(C.rare, 0.16); g.fillRect(L.ox + x * L.cw, L.oy + (MAP_Y + y) * L.ch, L.cw, L.ch); }
   }
@@ -1024,7 +1026,7 @@ function drawFloorCard(cvs, f, fs) {
   x.strokeStyle = C.dim; x.lineWidth = 1; x.strokeRect(0.5, 0.5, MW * cw - 1, MH * ch - 1);   // (the floor's edge)
   x.textAlign = 'center'; x.textBaseline = 'middle';
   const cell = (cx, cy, c, col, bold) => { x.font = (bold ? 800 : 400) + ' ' + fs + 'px "JetBrains Mono", Consolas, monospace'; x.fillStyle = col; x.fillText(c, cx * cw + cw / 2, cy * ch + ch / 2 + fs * 0.06); };
-  for (const d of f.ducts) for (const [dx, dy] of d.cells) { x.fillStyle = rgba(C.rare, 0.22); x.fillRect(dx * cw, dy * ch, cw, ch); }
+  for (const [dx, dy] of new Map(f.ducts.flatMap(d => d.cells.map(c => [c + '', c]))).values()) { x.fillStyle = rgba(C.rare, 0.22); x.fillRect(dx * cw, dy * ch, cw, ch); }
   for (const c of f.cams) for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) if (inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, xx, yy)) { x.fillStyle = rgba(C.danger, 0.14); x.fillRect(xx * cw, yy * ch, cw, ch); }
   // the way through (Greg, 2026-11-23): the shortest walk from the stairs up to the payload (F3) or the stairs down (F2),
   // its floor marks in the accent color (over a patrol's red). f.route: its cells, for the caption.
