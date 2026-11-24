@@ -1026,11 +1026,17 @@ function drawFloorCard(cvs, f, fs) {
   const cell = (cx, cy, c, col, bold) => { x.font = (bold ? 800 : 400) + ' ' + fs + 'px "JetBrains Mono", Consolas, monospace'; x.fillStyle = col; x.fillText(c, cx * cw + cw / 2, cy * ch + ch / 2 + fs * 0.06); };
   for (const d of f.ducts) for (const [dx, dy] of d.cells) { x.fillStyle = rgba(C.rare, 0.22); x.fillRect(dx * cw, dy * ch, cw, ch); }
   for (const c of f.cams) for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) if (inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, xx, yy)) { x.fillStyle = rgba(C.danger, 0.14); x.fillRect(xx * cw, yy * ch, cw, ch); }
+  // the way through (Greg, 2026-11-23): the shortest walk from the stairs up to the payload (F3) or the stairs down (F2),
+  // its floor marks in the accent color (over a patrol's red). f.route: its cells, for the caption.
+  const goal = f.payload || f.down;
+  f.route = goal && f.up ? route(f, f.up.x, f.up.y, goal.x, goal.y) || [] : [];
+  const way = new Set(f.route.map(([px, py]) => px + ',' + py));
   const walk = new Set(f.pats.flatMap(p => p.path.map(([px, py]) => px + ',' + py)));   // (a patrol's walk: its floor marks go red; a CAM's view is the red wash)
   for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) {
     const c = at(f, xx, yy); if (c === ' ') continue;
     const k = xx + ',' + yy, g0 = c === '#' ? wallGlyph(f, xx, yy) : c === '.' && f.halls.has(k) ? (f.junc && f.junc.has(k) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
-    cell(xx, yy, g0, walk.has(k) && '.+'.includes(c) ? C.danger : C[TCOL[c]] || C.text, '<>EF'.includes(c));
+    const onWay = way.has(k) && '.+'.includes(c);
+    cell(xx, yy, g0, onWay ? C.accent : walk.has(k) && '.+'.includes(c) ? C.danger : C[TCOL[c]] || C.text, '<>EF'.includes(c) || onWay);
   }
   if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money, true);
   for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger, true);
@@ -1045,6 +1051,7 @@ function viewerShow() {
   drawFloorCard($('v-cvs'), fl, Math.max(6, Math.min(w / (MW * CHAR_W), h / (MH * LINE_H))));
   $('v-cap').innerHTML = (V.i + 1) + ' · <b>' + seed + '</b> · rooms ' + fl.rooms.length + ' · cams ' + fl.cams.length + ' · patrols ' + fl.pats.length +
     ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0) +
+    ' · the way ' + Math.max(0, fl.route.length - 1) + ' steps' +
     ' · shapes ' + Object.entries(fl.rooms.reduce((m, o) => (m[o.big ? 'big ' + o.shape : o.shape] = (m[o.big ? 'big ' + o.shape : o.shape] || 0) + 1, m), {})).map(([k, v]) => v + ' ' + k).join(', ') + ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
   $('v-prev').disabled = V.i === 0;
 }
