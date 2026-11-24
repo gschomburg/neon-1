@@ -137,7 +137,8 @@ const newSeed = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ2
 const T = {
   ' ': { walk: 0, see: 0 }, '#': { walk: 0, see: 0 }, '.': { walk: 1, see: 1 }, '+': { walk: 1, see: 1 }, '<': { walk: 1, see: 1 },
   '>': { walk: 1, see: 1 }, 'E': { walk: 1, see: 1 }, 'F': { walk: 1, see: 1 }, 'K': { walk: 1, see: 1 }, 'p': { walk: 0, see: 0 },
-  'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 }, 'g': { walk: 1, see: 1, hide: 1 }, '=': { walk: 0, see: 1, low: 1 }, '"': { walk: 1, see: 1, hide: 1 }, 'b': { walk: 1, see: 1 }, 'x': { walk: 0, see: 0 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
+  'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 }, 'g': { walk: 1, see: 1, hide: 1 }, '=': { walk: 0, see: 1, low: 1 }, '"': { walk: 1, see: 1, hide: 1 }, 'b': { walk: 1, see: 1 }, 'x': { walk: 0, see: 0 },
+  'T': { walk: 0, see: 1, station: 1 }, 'L': { walk: 0, see: 1, station: 1 }, 'R': { walk: 0, see: 1, station: 1 }, 'B': { walk: 0, see: 1, station: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
 };
 const WALLISH = '#+EF';   // what joins up into box-drawn walls (the chute, K, sits on a room's floor now: not a wall. Greg, H3SDQ4)
 const INFO = {
@@ -147,6 +148,8 @@ const INFO = {
   'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], 'r': ['RACKS', 'servers. nothing sees through: hide in the rows.'], 'd': ['DESKS', 'low cover: hide right behind one.'], 'g': ['A PLANT', 'step in: hidden unless right by you.'],
   'u': ['A STATUE', 'nothing sees through it.'], '=': ['A BENCH', 'low cover: hide right behind it.'],
   '"': ['PLANT BEDS', 'step in: hidden unless right by you.'],
+  'T': ['A TERMINAL', 'USE beside it: one thing it can do.'], 'L': ['A LOOT CACHE', 'USE beside it: something to carry out.'],
+  'R': ['A RE-UP', 'USE beside it: INT, or a piece of gear.'], 'B': ['A BAG SWAP', 'USE beside it: trade your gear for a bag.'],
   'b': ['THE BELT', 'it carries you. off before the X.'], 'x': ['A CRATE', 'on the belt. nothing sees through.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
 };
 
@@ -591,6 +594,63 @@ function decor(f, rooms, r, B = { plants: 0.18, statue: 0.5 }) {
     }
   }
 }
+// ---------- STATIONS (Greg, 2026-11-24) ----------
+// A TERMINAL (T), a LOOT CACHE (L), a RE-UP (R), a BAG SWAP (B): solid things you USE from beside them; a popup of
+// choices, pick one, and it's spent. Every floor gets a terminal at least (B.st: a building's counts). A closet is the
+// spot they like (a cache, a re-up or a bag most of all); else a room's floor against its wall, never by a door, never
+// shutting part of the room off. f.stations: cell -> { kind, used }.
+function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) {
+  f.stations = new Map();
+  const kinds = [];
+  for (let k = 0, n = st.T[0] + Math.floor(r() * (st.T[1] - st.T[0] + 1)); k < n; k++) kinds.push('T');
+  for (const k of ['L', 'L2', 'R', 'B']) if (st[k] && r() < st[k]) kinds.push(k === 'L2' ? 'L' : k);
+  // (a closet of 2 cells or more: in a closet of 1, the station would fill it, and its door would open onto it)
+  const closets = shuffled(rooms.filter(o => o.type === 'closet' && o.cells.length >= 2), r), plain = rooms.filter(o => o.role !== 'closet');
+  for (const kind of kinds) {
+    let placed = false;
+    // a closet first (a terminal less often: they're for the rooms)
+    if (closets.length && r() < (kind === 'T' ? 0.25 : 0.7)) {
+      const o = closets.shift(), cell = o.cells.find(([x, y]) => at(f, x, y) === '.' && !(o.doors[0] && Math.abs(o.doors[0].x - x) + Math.abs(o.doors[0].y - y) === 1 && o.cells.length > 1));
+      if (cell) { set(f, cell[0], cell[1], kind); f.stations.set(cell + '', { kind, used: false }); placed = true; }
+    }
+    for (let t = 0; t < 40 && !placed; t++) {
+      const o = plain[Math.floor(r() * plain.length)];
+      const opts = o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKv'.includes(at(f, x + i, y + j)) || (f.beltAt && f.beltAt.has((x + i) + ',' + (y + j)))));
+      if (!opts.length) continue;
+      const [x, y] = opts[Math.floor(r() * opts.length)];
+      set(f, x, y, kind);
+      if (!roomJoined(f, o)) { set(f, x, y, '.'); continue; }
+      f.stations.set(x + ',' + y, { kind, used: false }); placed = true;
+    }
+  }
+}
+// what each does: its popup's title, a line, and its choices (each: a label, and what happens). Choosing spends it.
+const LOOT_FINDS = [['A CREDSTICK', 40], ['PAYROLL DATA', 60], ['A KEYCARD DUMP', 30], ['SOURCE CODE', 70], ['PASSWORDS', 35], ['A PROTOTYPE', 80], ['CUSTOMER LISTS', 45], ['A SERVER KEY', 55]];
+const BAGS = { GHOST: { FLARE: 2, FRAG: 0, UNIFORM: 4 }, BRUTE: { FLARE: 1, FRAG: 5, UNIFORM: 0 }, SCOUT: { FLARE: 5, FRAG: 1, UNIFORM: 1 } };
+function stationMenu(kind, f, key) {
+  const gear = k => S.gear.find(g => g.key === k);
+  if (kind === 'T') return { title: 'TERMINAL', line: 'one thing, then it locks you out.', opts: [
+    ['CAMS OFF', 'every CAM on this floor, off for 25 turns', () => { for (const c of f.cams) c.off = 25; say('TERMINAL: the CAMs are off, 25 turns.', C.accent); }],
+    ['MAP', 'this floor\'s layout, and its ducts', () => { for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (at(f, x, y) !== ' ') f.seen[y][x] = true; for (const d of f.ducts) d.known = true; say('TERMINAL: the floor\'s map is yours.', C.accent); }],
+    ['LIGHTS OUT', 'the power off, 25 turns: dark, belts stopped', () => { f.powerOff = 25; say('TERMINAL: the power\'s out. 25 turns.', C.accent); }]] };
+  if (kind === 'L') { const st = f.stations.get(key), pick = st.finds || (st.finds = shuffled(LOOT_FINDS, f.beltR).slice(0, 2));
+    return { title: 'LOOT CACHE', line: 'room for one of them.', opts: pick.map(([n, v]) => [n, v + ' CR', () => { (S.loot = S.loot || []).push([n, v]); say('you take ' + n.toLowerCase() + ': ' + v + ' CR.', C.money); }]) }; }
+  if (kind === 'R') return { title: 'RE-UP', line: 'one of these.', opts: [
+    ['+1 INT', 'INT ' + S.int + '/' + MAX_INT, () => { S.int = Math.min(MAX_INT, S.int + 1); say('RE-UP: +1 INT.', C.green); }],
+    ...['FLARE', 'FRAG', 'UNIFORM'].map(k => ['+1 ' + k, 'you have ' + (gear(k) ? gear(k).n : 0), () => { gear(k).n++; say('RE-UP: +1 ' + k + '.', C.green); }])] };
+  if (kind === 'B') return { title: 'BAG SWAP', line: 'your gear for one of these.', opts: Object.entries(BAGS).map(([name, g]) => [name, Object.entries(g).filter(([, n]) => n).map(([k, n]) => k + ' x' + n).join(', '),
+    () => { for (const it of S.gear) it.n = g[it.key] || 0; say('BAG SWAP: the ' + name + ' bag.', C.rep); }]) };
+}
+// the station next to you (not spent), if any
+function stationBeside(f) {
+  for (const [i, j] of D4) { const k = (S.x + i) + ',' + (S.y + j), st = f.stations && f.stations.get(k); if (st && !st.used) return { key: k, st }; }
+  return null;
+}
+function openStation(f, key, st) { S.popup = Object.assign(stationMenu(st.kind, f, key), { key }); draw(); }
+function chooseStation(i) {
+  const p = S.popup, f = F(); if (!p || !p.opts[i]) return;
+  p.opts[i][2](); f.stations.get(p.key).used = true; S.popup = null; tick(); look(); draw();
+}
 // can a CAM at (x, y) facing a see (tx, ty) as it sweeps (its cone plus its sweep: 90 degrees either way)?
 const camSweeps = (f, x, y, a, tx, ty) => { const d = Math.hypot(tx - x, (ty - y) * 2); if (d === 0 || d > 14) return false;
   let diff = Math.atan2(ty - y, tx - x) - a; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); if (T[at(f, tx, ty)].hide && Math.max(Math.abs(tx - x), Math.abs(ty - y)) > 1) return false;
@@ -654,13 +714,15 @@ const ORDER = { orderly: [0.3, 0.9], mixed: [0.8, 0.5], messy: [1, 0.1] };
 //   servers2, servers3: a data center's second and third server farms (in smaller rooms, 8 x 6 and up).
 //   racksIn: the chance a plain room gets a short row of racks along a wall (a data center's racks spill over).
 //   lab, lab2: THE LAB, and a second one (a LAB building: MEDIX's). atrium: THE ATRIUM (an office's, mostly).
+//   st: the stations: T, terminals [at least, at most] (one on every floor); L (L2: a second), R, B: the chance of a
+//   loot cache, a re-up, a bag swap. Tech buildings have more terminals, industrial ones more caches and bags.
 //   bsp: changes to BSP's settings: an industrial building has more big halls (and so more room for a factory), a
 //   data center bigger rooms than an office (room for its server farms).
 const BUILDINGS = {
-  office:     { name: 'OFFICE',      share: 0.38, warehouse: 0, lab: 0.1, atrium: 0.7, servers: 0.4,  servers2: 0,   cubicles: 0.9,  factory: 0,    restroom: 0.5,  plants: 0.25, statue: 0.6, order: [0.45, 0.85], bsp: {} },
-  industrial: { name: 'INDUSTRIAL',  share: 0.25, warehouse: 0.85, lab: 0.1, atrium: 0.05,  servers: 0.15, servers2: 0,   cubicles: 0.15, factory: 0.95, restroom: 0.35, plants: 0.05, statue: 0.1, order: [0.15, 0.55], bsp: { bigChance: 0.7, bigArea: 520 }, minRooms: 4 },
-  data:       { name: 'DATA CENTER', share: 0.22, warehouse: 0.1, lab: 0.15, atrium: 0.1, servers: 0.95, servers2: 0.9, servers3: 0.5, racksIn: 0.5, cubicles: 0.2,  factory: 0.1,  restroom: 0.25, plants: 0.1,  statue: 0.3, order: [0.5, 0.9],   bsp: { bigChance: 0.4, bigArea: 450 } },
-  lab:        { name: 'LAB',         share: 0.15, warehouse: 0.05, lab: 0.95, lab2: 0.7, atrium: 0.3, servers: 0.3, servers2: 0, cubicles: 0.15, factory: 0.05, restroom: 0.3, plants: 0.3, statue: 0.2, order: [0.4, 0.85], bsp: {} },
+  office:     { name: 'OFFICE',      share: 0.38, st: { T: [1, 2], L: 0.4, R: 0.4, B: 0.3 }, warehouse: 0, lab: 0.1, atrium: 0.7, servers: 0.4,  servers2: 0,   cubicles: 0.9,  factory: 0,    restroom: 0.5,  plants: 0.25, statue: 0.6, order: [0.45, 0.85], bsp: {} },
+  industrial: { name: 'INDUSTRIAL',  share: 0.25, st: { T: [1, 1], L: 0.9, L2: 0.4, R: 0.5, B: 0.7 }, warehouse: 0.85, lab: 0.1, atrium: 0.05,  servers: 0.15, servers2: 0,   cubicles: 0.15, factory: 0.95, restroom: 0.35, plants: 0.05, statue: 0.1, order: [0.15, 0.55], bsp: { bigChance: 0.7, bigArea: 520 }, minRooms: 4 },
+  data:       { name: 'DATA CENTER', share: 0.22, st: { T: [2, 3], L: 0.3, R: 0.4, B: 0.2 }, warehouse: 0.1, lab: 0.15, atrium: 0.1, servers: 0.95, servers2: 0.9, servers3: 0.5, racksIn: 0.5, cubicles: 0.2,  factory: 0.1,  restroom: 0.25, plants: 0.1,  statue: 0.3, order: [0.5, 0.9],   bsp: { bigChance: 0.4, bigArea: 450 } },
+  lab:        { name: 'LAB',         share: 0.15, st: { T: [2, 2], L: 0.4, R: 0.6, B: 0.3 }, warehouse: 0.05, lab: 0.95, lab2: 0.7, atrium: 0.3, servers: 0.3, servers2: 0, cubicles: 0.15, factory: 0.05, restroom: 0.3, plants: 0.3, statue: 0.2, order: [0.4, 0.85], bsp: {} },
 };
 let buildingPick = 'auto';   // (the dev panel's and the viewer's choice: 'auto', or a key of BUILDINGS)
 function pickBuilding(r) { const v = r(); if (buildingPick !== 'auto') return buildingPick; let acc = 0; for (const [k, b] of Object.entries(BUILDINGS)) { acc += b.share; if (v < acc) return k; } return 'office'; }
@@ -763,6 +825,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
       if (pool.length) { const o = pool[ri(0, pool.length - 1)], s = spot(o); set(f, s.x, s.y, 'K'); }
     }
     ducts(f, rooms, r, last ? 1 : 2, dist);
+    placeStations(f, rooms, r, B.st);
     // CAMs and patrols, placed with purpose (placeCams, placePats); a few goes till the way through is watched
     const goal = f.payload || f.down, way = route(f, f.up.x, f.up.y, goal.x, goal.y) || [];
     for (let k = 0; k < 12; k++) {
@@ -1053,6 +1116,7 @@ function tick() {
   // cameras sweep, and look
   for (const c of f.cams) {
     if (c.dead) continue;
+    if (c.off > 0) { c.off--; continue; }   // (a TERMINAL turned it off)
     if (c.rest > 0) { c.rest--; continue; }
     c.k++; c.a = c.base + Math.sin(c.k * Math.PI / 4) * (Math.PI / 3);
     if (!S.inDuct && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, S.x, S.y)) {
@@ -1090,7 +1154,7 @@ function tick() {
   }
 }
 // USE: stairs, the ways out
-const canUse = f => { const c = at(f, S.x, S.y); return c === 'v' || (!S.inDuct && '<>EFK'.includes(c)); };
+const canUse = f => { const c = at(f, S.x, S.y); return c === 'v' || (!S.inDuct && ('<>EFK'.includes(c) || !!stationBeside(f))); };
 function use() {
   if (S.over) return;
   const f = F(), c = at(f, S.x, S.y);
@@ -1101,9 +1165,13 @@ function use() {
   if (c === 'E') return leave(S.have ? (S.alerts ? 'O U T' : 'C L E A N   J O B') : 'O U T', S.have ? (S.alerts ? 'out the way you came, with it. they saw you, though.' : 'in and out the same door, with it. nobody saw a thing.') : 'out, empty handed.');
   if (c === 'F') return leave('L O U D   E X I T', S.have ? 'out the fire exit, with it. every daemon heard. pay -30%.' : 'out the fire exit, empty handed. loud.');
   if (c === 'K') return leave('T H E   C H U T E', S.have ? 'down the chute with it. you land in the trash: your pack got shuffled.' : 'down the chute, empty handed.');
-  say('nothing to USE here. (stairs, a way out)', C.mid); draw();
+  { const sb = stationBeside(f); if (sb) return openStation(f, sb.key, sb.st); }
+  say('nothing to USE here. (stairs, a way out, a station)', C.mid); draw();
 }
-function leave(head, line) { S.over = { win: S.have, head, lines: [line, 'turns: ' + S.turn + '   seen: ' + S.alerts + '   INT: ' + S.int + '/' + MAX_INT] }; draw(); }
+function leave(head, line) {
+  const loot = (S.loot || []).reduce((t, [, v]) => t + v, 0);
+  S.over = { win: S.have, head, lines: [line, 'turns: ' + S.turn + '   seen: ' + S.alerts + '   INT: ' + S.int + '/' + MAX_INT].concat(loot ? ['loot: ' + (S.loot || []).length + ' finds, ' + loot + ' CR'] : []) }; draw();
+}
 // gear: FLARE lights the floor for 6 turns; FRAG blows the 3 x 3 round you (walls, cameras, patrols) and is loud
 function useGear(k) {
   if (S.over) return;
@@ -1170,9 +1238,9 @@ function machineGlyph(f, x, y) {
   if ((n || s0) && !(e && w)) return '│';
   return e || w ? '─' : '●';
 }
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x' };
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x', 'T': 'T', 'L': 'L', 'R': 'R', 'B': 'B' };
 // the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
-const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'm': 'mid', '#': 'mid' };
+const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'T': 'accent', 'L': 'money', 'R': 'green', 'B': 'rep', 'm': 'mid', '#': 'mid' };
 
 function draw() {
   if (!S) return;
@@ -1202,7 +1270,7 @@ function draw() {
   put(0, 6, ('> ' + S.msg).slice(0, Math.min(SW, mt + 2)), red || S.msgCol === C.danger ? C.bg : S.msgCol);
   // the floor (rows 8-30)
   const camCells = new Set(), armSet = new Set(armCells(f).map(([x, y]) => x + ',' + y));
-  for (const c of f.cams) if (!c.dead) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, x, y)) camCells.add(x + ',' + y);
+  for (const c of f.cams) if (!c.dead && !(c.off > 0)) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, x, y)) camCells.add(x + ',' + y);
   const patCells = new Set();
   for (const p of f.pats) if (!p.dead && !p.stun && S.vis[p.y][p.x]) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, x, y)) patCells.add(x + ',' + y);
   const trail = new Set(S.have ? f.trail.map(([x, y]) => x + ',' + y) : []);
@@ -1211,7 +1279,7 @@ function draw() {
     if (c === ' ' || (!vis && !seen)) continue;
     const k0 = x + ',' + y;
     let ch = c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === 'b' ? beltGlyph(f, x, y) : c === 'x' ? crateLetter(f, x, y) : c === '.' && f.halls.has(k0) ? (f.junc && f.junc.has(k0) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
-    let col = c === 'b' && ch === 'X' ? C.danger : c === 'x' ? C.bg : C[TCOL[c]] || C.text, bg = c === 'x' && vis ? C.leg : null;   // (the press: red. a crate: a chip, its letter on the crate color)
+    let col = T[c].station && f.stations && f.stations.get(x + ',' + y) && f.stations.get(x + ',' + y).used ? C.dim : c === 'b' && ch === 'X' ? C.danger : c === 'x' ? C.bg : C[TCOL[c]] || C.text, bg = c === 'x' && vis ? C.leg : null;   // (the press: red. a crate: a chip, its letter on the crate color)
     if (!vis) { col = c === '.' ? C.seen : C.dim; }
     else {
       const k = x + ',' + y;
@@ -1235,7 +1303,7 @@ function draw() {
   const piece = (x, y, ch, col, tint) => { put(x, MAP_Y + y, ' ', C.bg, false, C.bg); put(x, MAP_Y + y, ch, col, false, tint || null); };
   if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) piece(f.payload.x, f.payload.y, '$', C.money);
   if (f.arm && S.vis[f.arm.y][f.arm.x]) piece(f.arm.x, f.arm.y, ARM_GLYPH, C.danger);
-  for (const c of f.cams) if (S.vis[c.y][c.x]) piece(c.x, c.y, c.dead ? 'x' : CAM_GLYPH, c.dead ? C.dim : c.seen ? C.money : C.danger);
+  for (const c of f.cams) if (S.vis[c.y][c.x]) piece(c.x, c.y, c.dead ? 'x' : CAM_GLYPH, c.dead || c.off > 0 ? C.dim : c.seen ? C.money : C.danger);
   for (const p of f.pats) if (S.vis[p.y][p.x]) piece(p.x, p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, p.chase ? rgba(C.danger, 0.25) : null);
   for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money);
   // the @ slides a step over (STEP_MS) instead of popping. It's a chip: the bg color on its own color (accent; in a duct
@@ -1304,6 +1372,7 @@ function draw() {
     if (u === 'stick') { g.strokeStyle = rgba(C.accent, 0.35); g.beginPath(); g.arc(G.x0, G.y0, stickDead() * 2, 0, Math.PI * 2); g.stroke(); g.strokeStyle = rgba(C.accent, 0.15); g.beginPath(); g.arc(G.x0, G.y0, stickDead(), 0, Math.PI * 2); g.stroke(); }
     g.fillStyle = rgba(C.accent, 0.45); g.beginPath(); g.arc(G.cx, G.cy, L.cw * 0.9, 0, Math.PI * 2); g.fill();
   }
+  if (S.popup) drawPopup();
   if (helpOpen) drawHelp();
   if (sk < 1 || nk < 1 || (S.over && now - S.over.t0 < DECRYPT_MS * 1.5) || booms.some(b => now - b.t < 500) || now - S.msgT < 1200 || now - flashT < 300) requestAnimationFrame(draw);
 }
@@ -1316,8 +1385,8 @@ const LEGEND = () => [   // (three columns of 12: a name 9 at most)
   ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], [ARM_GLYPH, 'SCANNER', C.danger],
   ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
   ['◘', 'FIRE EXIT', C.green], ['▾', 'CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text],
-  [HALL_GLYPH, 'HALL', C.dim], [JUNC_GLYPH, 'JUNCTION', C.dim], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
-  ['▄', 'DESK *', C.mid], ['Y', 'PLANT **', C.green], ['&', 'STATUE', C.bright], ['░', 'TANK', C.mid], ['=', 'BENCH *', C.mid], ['"', 'BEDS **', C.green], ['>', 'BELT', C.mid], ['X', 'PRESS', C.danger], ['a', 'CRATE', C.bg, C.leg], ['•', 'TRAIL', C.rep],
+  ['T', 'TERMINAL', C.accent], ['L', 'LOOT', C.money], ['R', 'RE-UP', C.green], ['B', 'BAG SWAP', C.rep], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
+  ['▄', 'DESK *', C.mid], ['Y', 'PLANT **', C.green], ['&', 'STATUE', C.bright], ['░', 'TANK', C.mid], ['=', 'BENCH *', C.mid], ['"', 'BEDS **', C.green], ['>', 'BELT', C.mid], ['X', 'PRESS', C.danger], ['a', 'CRATE', C.bg, C.leg],
 ];
 function drawHelp() {
   hits = hits.filter(h => h.id === 'help');   // (only [?] and GOT IT while it's up; a tap anywhere else closes it)
@@ -1332,6 +1401,17 @@ function drawHelp() {
   y++;
   for (const l of wrap('keys: wasd/arrows step, space waits, enter uses, 1 2 3 gear, ? help', SW - 2)) put(1, y++, l, C.mid);
   btn(Math.floor((SW - 12) / 2), MAP_Y + MH - 2, '[ GOT IT ]', 'help', toggleHelp);
+}
+// a station's popup: its title, a line, its choices as buttons (1, 2, 3...), and CLOSE (nothing spent)
+function drawPopup() {
+  const p = S.popup;
+  hits = hits.filter(h => h.id === 'help');
+  const y0 = MAP_Y + 4, h = 6 + p.opts.length * 2;
+  g.fillStyle = rgba(C.bg, 0.96); g.fillRect(L.ox, L.oy + y0 * L.ch, SW * L.cw, h * L.ch);
+  g.strokeStyle = C.dim; g.lineWidth = 1; g.strokeRect(L.ox + 0.5, L.oy + y0 * L.ch + 0.5, SW * L.cw - 1, h * L.ch - 1);
+  put(1, y0 + 1, p.title, C.bright, true); put(1, y0 + 2, p.line, C.mid);
+  p.opts.forEach(([label, note], i) => { btn(1, y0 + 4 + i * 2, '[' + (i + 1) + '] ' + label, 'pop' + i, () => chooseStation(i), C.accent); put(3, y0 + 5 + i * 2, note.slice(0, SW - 4), C.mid); });
+  btn(1, y0 + h - 2, '[ CLOSE ]', 'popclose', () => { S.popup = null; draw(); }, C.mid);
 }
 const wrap = (s, w) => { const out = []; let l = ''; for (const word of s.split(' ')) { if ((l + ' ' + word).trim().length > w) { out.push(l); l = word; } else l = (l + ' ' + word).trim(); } if (l) out.push(l); return out; };
 
@@ -1392,6 +1472,7 @@ cv.addEventListener('pointerdown', ev => {
   const h = hits.find(h => h.fn && c.y === h.y && c.x >= h.x && c.x < h.x + h.w);
   if (h) return h.fn();
   if (helpOpen) return toggleHelp();
+  if (S.popup) return;   // (a tap off its buttons: nothing)
   if (S.over || G) return;
   try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* fine */ }
   const u = UIS[ui].key;
@@ -1452,6 +1533,7 @@ addEventListener('keydown', ev => {
   const k = ev.key.toLowerCase();
   if (k === '?' || k === '/') return toggleHelp();
   if (helpOpen) { if (k === 'escape' || k === 'enter' || k === ' ') { ev.preventDefault(); toggleHelp(); } return; }
+  if (S.popup) { if (k === 'escape') { S.popup = null; draw(); } else if (/^[1-9]$/.test(k)) chooseStation(+k - 1); return; }
   const mv = { arrowup: [0, -1], w: [0, -1], k: [0, -1], arrowdown: [0, 1], s: [0, 1], j: [0, 1], arrowleft: [-1, 0], a: [-1, 0], h: [-1, 0], arrowright: [1, 0], d: [1, 0], l: [1, 0] }[k];
   if (mv) { ev.preventDefault(); return act(mv[0], mv[1]); }
   if (k === ' ' || k === '.') { ev.preventDefault(); return act(0, 0); }
@@ -1594,7 +1676,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>
