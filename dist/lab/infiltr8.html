@@ -261,10 +261,13 @@ function vaultSpot(f, o, r) {
   const [x, y] = opts[Math.floor(r() * opts.length)] || [o.mid.x, o.mid.y];
   return { x, y };
 }
-// a hall cell with one way on, or none (a walled-up door's hall; a stub): gone, till there are none
+// a hall cell with one way on, or none (a walled-up door's hall; a stub): gone, till there are none. And a door with
+// nothing outside it any more (its hall went that way) is a wall again (Greg, 2026-11-23, seed 9DM432 F3: the vault's
+// walled-up door took the hall, and the server farm's door at the other end was left opening onto nothing).
 function pruneHalls(f, halls) {
   for (let more = true; more;) {
     more = false;
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (at(f, x, y) === '+' && D4.filter(([i, j]) => T[at(f, x + i, y + j)].walk).length <= 1) { set(f, x, y, '#'); more = true; }
     for (const k of [...halls]) { const [x, y] = k.split(',').map(Number); if (D4.filter(([i, j]) => T[at(f, x + i, y + j)].walk).length <= 1) { set(f, x, y, ' '); halls.delete(k); more = true; } }
   }
 }
@@ -414,7 +417,8 @@ function floorGen(seed, n, last) {
     if (!dist[far.mid.y][far.mid.x]) continue;   // (not joined up: try again)
     roomRoles(f, rooms, first, far);
     if (last) vaultRoom(f, rooms, far, first, dist);   // (F3's goal: THE VAULT, one way in)
-    pruneHalls(f, halls);                               // (halls that lead nowhere now, gone)
+    pruneHalls(f, halls);                               // (halls that lead nowhere now, gone, and their doors)
+    roomRoles(f, rooms, first, far);                    // (so again: a room's doors may have changed)
     f.halls = halls; f.junc = junctions(f, halls);
     // (the big-room types take turns going first: one floor's best room is a server farm, another's the cubicles)
     if (r() < 0.5) { serverFarm(f, rooms, r); cubicles(f, rooms, r); } else { cubicles(f, rooms, r); serverFarm(f, rooms, r); }
