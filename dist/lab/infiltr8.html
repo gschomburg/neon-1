@@ -1136,7 +1136,8 @@ function put(x, y, s, col = C.text, bold = false, bg = null) {
   });
 }
 const putR = (y, s, col, bold) => put(SW - [...s].length, y, s, col, bold);
-// (bold, as in the game: headings and names, and the pieces on the map. Buttons, the HUD and messages are plain.)
+// (bold, as in the game: headings and names. The map's marks, buttons, the HUD and messages are plain. Greg, 2026-11-24:
+// the map's pieces were bold and felt heavy; bold can come back on one that has to pop.)
 function btn(x, y, s, id, fn, col = C.accent, on = true) {
   put(x, y, s, on ? col : C.dim);
   hits.push({ x, y, w: [...s].length, h: 1, id, fn: on ? fn : null });
@@ -1218,7 +1219,7 @@ function draw() {
       if (armSet.has(k)) { ch = armBeam(f); col = C.danger; }
       if (trail.has(k) && c === '.') { ch = '•'; col = C.rep; }
     }
-    put(x, MAP_Y + y, ch, col, c === '<' || c === '>' || c === 'E' || c === 'x', bg);
+    put(x, MAP_Y + y, ch, col, false, bg);   // (the map's marks are plain: Greg, 2026-11-24)
   }
   // the ducts: a known one is a tint on the floor; down in one, the world above dims and the ducts show as pipes
   if (S.inDuct) { g.fillStyle = rgba(C.bg, 0.6); g.fillRect(L.ox, L.oy + MAP_Y * L.ch, SW * L.cw, MH * L.ch); }
@@ -1228,17 +1229,17 @@ function draw() {
     if (S.inDuct) { put(x, MAP_Y + y, ' ', C.bg, false, C.bg); put(x, MAP_Y + y, at(f, x, y) === 'v' ? GLYPH.v : pipeGlyph(f, x, y), C.rare, false, rgba(C.rare, 0.18)); }
     else { g.fillStyle = rgba(C.rare, 0.16); g.fillRect(L.ox + x * L.cw, L.oy + (MAP_Y + y) * L.ch, L.cw, L.ch); }
   }
-  if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) put(f.payload.x, MAP_Y + f.payload.y, '$', C.money, true);
-  if (f.arm && S.vis[f.arm.y][f.arm.x]) put(f.arm.x, MAP_Y + f.arm.y, ARM_GLYPH, C.danger, true);
-  for (const c of f.cams) if (S.vis[c.y][c.x]) put(c.x, MAP_Y + c.y, c.dead ? 'x' : CAM_GLYPH, c.dead ? C.dim : c.seen ? C.money : C.danger, true);
-  for (const p of f.pats) if (S.vis[p.y][p.x]) put(p.x, MAP_Y + p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, true, p.chase ? rgba(C.danger, 0.25) : null);
-  for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money, true);
+  if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) put(f.payload.x, MAP_Y + f.payload.y, '$', C.money);
+  if (f.arm && S.vis[f.arm.y][f.arm.x]) put(f.arm.x, MAP_Y + f.arm.y, ARM_GLYPH, C.danger);
+  for (const c of f.cams) if (S.vis[c.y][c.x]) put(c.x, MAP_Y + c.y, c.dead ? 'x' : CAM_GLYPH, c.dead ? C.dim : c.seen ? C.money : C.danger);
+  for (const p of f.pats) if (S.vis[p.y][p.x]) put(p.x, MAP_Y + p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, false, p.chase ? rgba(C.danger, 0.25) : null);
+  for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money);
   // the @ slides a step over (STEP_MS) instead of popping. It's a chip: the bg color on its own color (accent; in a duct
   // the rare blue, in a UNIFORM gold, hit: red), so it reads in every palette, light ones too.
   const sk = S.slide ? Math.min(1, (now - S.slide.t) / STEP_MS) : 1, se = 1 - (1 - sk) * (1 - sk);
   const ax = sk < 1 ? S.slide.x + (S.x - S.slide.x) * se : S.x, ay = sk < 1 ? S.slide.y + (S.y - S.slide.y) * se : S.y;
-  put(ax, MAP_Y + ay, '@', C.bg, true, red ? C.danger : S.inDuct ? C.rare : S.uniform > 0 ? C.money : C.accent);
-  for (const b of booms) { const k = (now - b.t) / 500; if (k < 1) for (const [dx, dy] of [[-2, 0], [2, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) put(b.x + Math.round(dx * (1 + k)), MAP_Y + b.y + Math.round(dy * (1 + k)), '*', k < 0.5 ? C.money : C.danger, true); }
+  put(ax, MAP_Y + ay, '@', C.bg, false, red ? C.danger : S.inDuct ? C.rare : S.uniform > 0 ? C.money : C.accent);
+  for (const b of booms) { const k = (now - b.t) / 500; if (k < 1) for (const [dx, dy] of [[-2, 0], [2, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) put(b.x + Math.round(dx * (1 + k)), MAP_Y + b.y + Math.round(dy * (1 + k)), '*', k < 0.5 ? C.money : C.danger); }
   if (S.info && S.info.x != null) { const px = L.ox + S.info.x * L.cw, py = L.oy + (MAP_Y + S.info.y) * L.ch; g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); }
   // row 31: how this UI works
   // the tray rows (32-36): the pad, or the gear
@@ -1320,7 +1321,7 @@ function drawHelp() {
   let y = MAP_Y + 1;
   put(1, y, 'WHAT YOU SEE', C.bright, true); y += 2;
   const lg = LEGEND(), rows = Math.ceil(lg.length / 3);
-  lg.forEach(([ch, name, col, bg], i) => { const x = 1 + Math.floor(i / rows) * 12, yy = y + (i % rows); put(x, yy, ch, col, true, bg || null); put(x + 2, yy, name, C.text); });
+  lg.forEach(([ch, name, col, bg], i) => { const x = 1 + Math.floor(i / rows) * 12, yy = y + (i % rows); put(x, yy, ch, col, false, bg || null); put(x + 2, yy, name, C.text); });
   y += rows; put(1, y, '* hide behind it.  ** hide in it.', C.mid); y += 2;
   put(1, y, 'CONTROLS: ' + UIS[ui].name, C.bright, true); y++;
   for (const l of wrap(UIS[ui].hint, SW - 2)) put(1, y++, l, C.text);
@@ -1521,12 +1522,12 @@ function drawFloorCard(cvs, f, fs) {
     const c = at(f, xx, yy); if (c === ' ') continue;
     const k = xx + ',' + yy, g0 = c === '#' ? wallGlyph(f, xx, yy) : c === 'm' ? machineGlyph(f, xx, yy) : c === 'b' ? beltGlyph(f, xx, yy) : c === 'x' ? crateLetter(f, xx, yy) : c === '.' && f.halls.has(k) ? (f.junc && f.junc.has(k) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
     const onWay = way.has(k) && '.+'.includes(c);
-    if (c === 'x') { x.fillStyle = C.leg; x.fillRect(xx * cw, yy * ch, cw, ch); cell(xx, yy, g0, C.bg, true); continue; }   // (a crate: a chip)
-    cell(xx, yy, g0, onWay ? C.accent : (c === 'b' && g0 === 'X') || (walk.has(k) && '.+'.includes(c)) ? C.danger : C[TCOL[c]] || C.text, '<>EF'.includes(c) || onWay);
+    if (c === 'x') { x.fillStyle = C.leg; x.fillRect(xx * cw, yy * ch, cw, ch); cell(xx, yy, g0, C.bg, false); continue; }   // (a crate: a chip)
+    cell(xx, yy, g0, onWay ? C.accent : (c === 'b' && g0 === 'X') || (walk.has(k) && '.+'.includes(c)) ? C.danger : C[TCOL[c]] || C.text, false);
   }
-  if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money, true);
-  for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger, true);
-  for (const p of f.pats) cell(p.x, p.y, 'P', C.danger, true);
+  if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money);
+  for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger);
+  for (const p of f.pats) cell(p.x, p.y, 'P', C.danger);
   // each room's type (gold) or role (dim), on its top wall
   for (const o of f.rooms || []) {
     let label = o.role === 'closet' ? '' : o.type ? ROOM_TYPES[o.type][0].replace(/^THE /, '') : o.role === 'way' ? '' : o.role;
