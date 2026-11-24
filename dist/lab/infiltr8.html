@@ -217,7 +217,7 @@ const WALLISH = '#+EFT';   // what joins up into box-drawn walls (a terminal's i
 const INFO = {
   '#': ['WALL', 'it blocks you, and what sees.'], '.': ['FLOOR', ''], '+': ['A DOOR', 'closed: blocks sight. step in to open.'],
   '<': ['STAIRS UP', 'USE: up a floor.'], '>': ['STAIRS DOWN', 'USE: down a floor.'], 'E': ['THE WAY IN', 'your door. leave by it: a clean job.'],
-  'F': ['FIRE EXIT', 'USE: out now. loud: less pay.'], 'K': ['TRASH CHUTE', 'USE: out, but you land in the trash.'],
+  'F': ['FIRE EXIT', 'USE: out now. loud: less pay.'], 'K': ['TRASH CHUTE', 'USE: down into THE TRASH, a floor below. no way back up it.'],
   'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], 'r': ['RACKS', 'servers. nothing sees through: hide in the rows.'], 'd': ['DESKS', 'low cover: hide right behind one.'], 'g': ['A PLANT', 'step in: hidden unless right by you.'],
   'u': ['A STATUE', 'nothing sees through it.'], '=': ['A BENCH', 'low cover: hide right behind it.'],
   '"': ['PLANT BEDS', 'step in: hidden unless right by you.'],
@@ -368,6 +368,7 @@ const ROOM_TYPES = {   // what a type is called (the viewer's labels, a tap's in
   warehouse: ['THE WAREHOUSE', 'a belt of crates. ride it.'],
   breakroom: ['THE BREAK ROOM', 'vending and coffee. the coffee\'s loud.'],
   ceo: ['THE CEO\'S OFFICE', 'the best loot on the floor. watched.'],
+  trash: ['THE TRASH', 'where the chutes land. junk, and now and then something good.'],
 };
 function roomDoors(f, o) { const out = [], seen = new Set(); for (const [x, y] of o.cells) for (const [i, j] of D4) { const k = (x + i) + ',' + (y + j); if (at(f, x + i, y + j) === '+' && !seen.has(k)) { seen.add(k); out.push({ x: x + i, y: y + j }); } } return out; }
 function roomRoles(f, rooms, first, far) {
@@ -655,6 +656,24 @@ function tryCaptcha(f, k) {
     else { c.opts = shuffled(c.opts, Math.random); heatUp(f, 'wrong glyph. the CAPTCHA beeps.'); }
     tick(); look(); draw(); }]) };
   draw();
+}
+// THE TRASH (Greg, 2026-11-24): where the chutes go. Not a way out any more: a chute drops you into THE TRASH on the
+// floor below (F2's chute: F3), and there's no going back up it. A mid-size room off the way (not the start, the goal or
+// a typed room), dark: piles of junk (low cover) and a cache of deleted files, mostly junk, now and then something good.
+// f.trash: where you land.
+const TRASH_FINDS = [['A BROKEN DRIVE', 5], ['OLD MEMOS', 8], ['A STAINED KEYCARD', 15], ['SHREDDED PAYROLL', 10], ['A DELETED BACKUP', 90]];
+function trashRoom(f, rooms, r) {
+  // (a mid-size box if there is one; else any plain room but the start and the goal: a chute always has somewhere to land)
+  let opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && o.role !== 'closet' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 7 && o.h >= 5 && o.w * o.h <= 160);
+  if (!opts.length) opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && o.role !== 'closet');
+  if (!opts.length) return;
+  const sides = opts.filter(o => o.role === 'side'), o = (sides.length ? sides : opts)[Math.floor(r() * (sides.length ? sides : opts).length)];
+  o.type = 'trash';
+  const inner = shuffled(o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.every(([i, j]) => o.set.has((x + i) + ',' + (y + j)) && at(f, x + i, y + j) !== '+')), r);
+  let n = 0; for (const [x, y] of inner) { if (n >= 3 + Math.floor(r() * 3)) break; set(f, x, y, 'j'); if (roomJoined(f, o)) n++; else set(f, x, y, '.'); }
+  wallStation(f, o, 'L', r, { trash: true });
+  const land = o.cells.filter(([x, y]) => at(f, x, y) === '.').sort((a, b) => Math.hypot(a[0] - o.mid.x, a[1] - o.mid.y) - Math.hypot(b[0] - o.mid.x, b[1] - o.mid.y))[0];
+  if (land) f.trash = { x: land[0], y: land[1] };
 }
 // the CEO's office's CAM: on its wall, facing in (after the other CAMs: they're placed again on each go)
 function ceoCam(f, rooms) {
@@ -1051,7 +1070,7 @@ function stationMenu(kind, f, key) {
   if (kind === 'V') return { title: 'VENDING', line: 'you have ' + crLeft() + ' CR of loot to spend. ' + VEND_COST + ' CR a go.', keep: true, opts: S.gear.map(({ key: k }) => ['+1 ' + INF_ITEMS[k].name, INF_ITEMS[k].tip + '. you have ' + S.gear.find(g => g.key === k).n + '.',
     () => { if (crLeft() < VEND_COST) return say('not enough CR. (loot buys it)', C.mid); S.spent = (S.spent || 0) + VEND_COST; S.gear.find(g => g.key === k).n++; say('VENDING: +1 ' + INF_ITEMS[k].name + '. -' + VEND_COST + ' CR.', C.money); }]) };
   if (kind === 'C') return { title: 'COFFEE', line: 'it\'s an old machine. it makes a racket.', opts: [['DRINK', '+1 INT. loud: +1 ALERT.', () => { S.int = Math.min(MAX_INT, S.int + 1); heatUp(f, 'the coffee machine hisses. +1 INT.'); }]] };
-  if (kind === 'L') { const st = f.stations.get(key), pick = st.finds || (st.finds = shuffled(st.rich ? CEO_FINDS : LOOT_FINDS, f.beltR).slice(0, 2));
+  if (kind === 'L') { const st = f.stations.get(key), pick = st.finds || (st.finds = shuffled(st.rich ? CEO_FINDS : st.trash ? TRASH_FINDS : LOOT_FINDS, f.beltR).slice(0, 2));
     return { title: 'LOOT CACHE', line: 'room for one of them.', opts: pick.map(([n, v]) => [n, v + ' CR', () => { (S.loot = S.loot || []).push([n, v]); say('you take ' + n.toLowerCase() + ': ' + v + ' CR.', C.money); }]) }; }
   if (kind === 'R') return { title: 'RE-UP', line: 'one of these.', opts: [
     ['+1 INT', 'INT ' + S.int + '/' + MAX_INT, () => { S.int = Math.min(MAX_INT, S.int + 1); say('RE-UP: +1 INT.', C.green); }],
@@ -1281,7 +1300,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
     for (const [fill, p] of shuffled([[serverFarm, B.servers], [cubicles, B.cubicles], [factory, B.factory], [lab, B.lab || 0], [atrium, B.atrium || 0], [warehouse, B.warehouse || 0]], r)) fill(f, rooms, r, p);
     lab(f, rooms, r, B.lab2 || 0);   // (a LAB building's second)
     serverFarm(f, rooms, r, B.servers2 || 0, 8, 6); serverFarm(f, rooms, r, B.servers3 || 0, 8, 6);   // (a data center's second and third)
-    restroom(f, rooms, r, B.restroom); breakRoom(f, rooms, r, B.breakroom ?? 0.35); ceoOffice(f, rooms, r, B.ceo ?? 0.25); decor(f, rooms, r, B);
+    restroom(f, rooms, r, B.restroom); breakRoom(f, rooms, r, B.breakroom ?? 0.35); ceoOffice(f, rooms, r, B.ceo ?? 0.25); if (last) trashRoom(f, rooms, r); decor(f, rooms, r, B);
     // pillars in the big rooms (not in a room with a type: it has its own things)
     // (only where the room's floor is all round it: a pillar never closes a gap or a corner; and never one that, with a
     // plant already in the corner, shuts a cell in: R75 F2)
@@ -1552,7 +1571,7 @@ function floorClock(f) {
 // (the ALARM's length uses it: OUT_PACE, OUT_SPARE)
 function outTurns(fi, x, y) {
   const f = S.floors[fi], d = bfs(f, x, y); let best = Infinity;
-  for (let j = 0; j < MH; j++) for (let i = 0; i < MW; i++) if (d[j][i] && 'EFK'.includes(at(f, i, j))) best = Math.min(best, d[j][i]);
+  for (let j = 0; j < MH; j++) for (let i = 0; i < MW; i++) if (d[j][i] && 'EF'.includes(at(f, i, j))) best = Math.min(best, d[j][i]);
   if (fi > 0 && f.up && d[f.up.y][f.up.x]) { const n = S.floors[fi - 1]; if (n.down) best = Math.min(best, d[f.up.y][f.up.x] + outTurns(fi - 1, n.down.x, n.down.y)); }
   return best;
 }
@@ -1815,7 +1834,8 @@ function use() {
   if (c === '<') { S.fi--; S.floorT = performance.now(); const n = F(); S.x = n.down.x; S.y = n.down.y; say('up to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
   if (c === 'E') return leave(S.have ? (S.alerts ? 'O U T' : 'C L E A N   J O B') : 'O U T', S.have ? (S.alerts ? 'out the way you came, with it. they saw you, though.' : 'in and out the same door, with it. nobody saw a thing.') : 'out, empty handed.');
   if (c === 'F') return leave('L O U D   E X I T', S.have ? 'out the fire exit, with it. every daemon heard. pay -30%.' : 'out the fire exit, empty handed. loud.');
-  if (c === 'K') return leave('T H E   C H U T E', S.have ? 'down the chute with it. you land in the trash: your pack got shuffled.' : 'down the chute, empty handed.');
+  // THE CHUTE: down into THE TRASH, a floor below (no trash room: the stairs up there). Not a way out any more.
+  if (c === 'K' && S.fi + 1 < S.floors.length) { S.fi++; S.floorT = performance.now(); const n = F(), at0 = n.trash || n.up; S.x = at0.x; S.y = at0.y; floorClock(n); say('down the chute. you land in THE TRASH.', C.accent); tick(); look(); return draw(); }
   { const sb = stationBeside(f); if (sb) return openStation(f, sb.key, sb.st); }
   { const d = doorBeside(f); if (d) { f.open.delete(d + ''); say('you close the door.', C.text); tick(); look(); return draw(); } }
   say('nothing to USE here. (stairs, a way out, a station)', C.mid); draw();
@@ -1831,7 +1851,7 @@ function actions() {
   const f = F(), c = at(f, S.x, S.y), out = [];
   if (c === 'v') out.push([S.inDuct ? 'CLIMB OUT' : 'DUCT', S.inDuct ? 'up and out of the vent' : 'down into the duct', use, S.inDuct ? 'OUT' : 'DUCT']);
   if (S.inDuct) return out;
-  const tile = { '>': ['DOWN', 'the stairs down'], '<': ['UP', 'the stairs up'], E: ['LEAVE', 'out the way you came'], F: ['FIRE EXIT', 'out now. loud: less pay'], K: ['CHUTE', 'out, into the trash'] }[c];
+  const tile = { '>': ['DOWN', 'the stairs down'], '<': ['UP', 'the stairs up'], E: ['LEAVE', 'out the way you came'], F: ['FIRE EXIT', 'out now. loud: less pay'], K: ['CHUTE', 'down into THE TRASH, a floor below'] }[c];
   if (tile) out.push([tile[0], tile[1], use, tile[0] === 'FIRE EXIT' ? 'FIRE' : tile[0]]);
   for (const sb of stationsBeside(f)) if (STATION_NAME[sb.st.kind]) out.push([STATION_NAME[sb.st.kind], 'use it', () => openStation(f, sb.key, sb.st), STATION_NAME[sb.st.kind]]);
   for (const [i, j] of D4) { const k = (S.x + i) + ',' + (S.y + j); if (captchaAt(f, S.x + i, S.y + j) && !doorOpen(f, S.x + i, S.y + j)) out.push(['CAPTCHA', 'the locked door: pick its glyph', () => tryCaptcha(f, k), 'CAPTCHA']); }
