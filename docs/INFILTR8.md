@@ -376,6 +376,9 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   can still be reached), the payload at the back, a CAM on it. **THE SERVER FARM**: a big room on the way, rows of
   racks (`▒`: nothing sees or walks through) with an aisle round the edge; about 1 floor in 4. Halls left leading
   nowhere are pruned.
+  **The vault's duct** (Greg, 2026-11-23): half the F3 floors, the one duct runs into the vault, a second way in over
+  the guarded door. Never from the start room or one close to it, so the vent has to be found. Otherwise no duct
+  reaches the vault.
 - **THE CUBICLES** (built 2026-11-23): L-shaped desks (`▄`), 4 x 3 a cubicle, an aisle round the edge. **Low cover:**
   you see over a desk; a CAM or a patrol does too, unless you're right next to it on the far side. CAM cones show the
   shadow behind each desk. A floor's biggest room takes turns being the server farm or the cubicles; cubicles on

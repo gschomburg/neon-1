@@ -436,7 +436,7 @@ function floorGen(seed, n, last) {
       const mid = rooms.filter(o => o !== first && o !== far);
       if (mid.length) { const o = mid[ri(0, mid.length - 1)], s = spot(o); set(f, s.x, s.y, 'K'); }
     }
-    ducts(f, rooms, r, last ? 1 : 2);
+    ducts(f, rooms, r, last ? 1 : 2, dist);
     // CAMs and patrols, placed with purpose (placeCams, placePats); a few goes till the way through is watched
     const goal = f.payload || f.down, way = route(f, f.up.x, f.up.y, goal.x, goal.y) || [];
     for (let k = 0; k < 12; k++) {
@@ -534,12 +534,22 @@ function outerWall(f, rooms, r) {   // (a wall cell with the room's floor on one
 // THE DUCTS (Greg, 2026-11-23): a layer under the floor. A vent is a hatch anywhere in a room's floor; the duct runs
 // under anything (rooms, halls, walls) to a vent in another room, with a bend or two. f.ducts: [{ cells, known }];
 // f.under: cell -> the ducts there (two where they cross). A duct is known (drawn as a tint) once you've seen one of its vents. In one: engine of use().
-function ducts(f, rooms, r, n) {
+// THE VAULT's duct (Greg, 2026-11-23): on F3, half the time the duct runs into the vault: a second way in, over the
+// guarded door. Never from the start room, nor from a room close to it (its walk from the start: a third of the vault's
+// at least), so it has to be found. The other half, no duct reaches the vault.
+const VAULT_DUCT = 0.5;
+function ducts(f, rooms, r, n, dist) {
+  const vault = rooms.find(o => o.type === 'vault'), start = rooms.find(o => o.role === 'start');
+  const walk = o => dist ? dist[o.mid.y][o.mid.x] || 0 : 0;
+  const toVault = vault && r() < VAULT_DUCT, farEnough = o => o !== start && (!vault || walk(o) >= walk(vault) / 3);
   const ventAt = o => { for (let k = 0; k < 30; k++) { const [x, y] = o.cells[Math.floor(r() * o.cells.length)];
     if (at(f, x, y) === '.' && !(f.payload && f.payload.x === x && f.payload.y === y)) return { x, y }; } return null; };
   for (let d = 0, tries = 0; d < n && tries < 40; tries++) {
-    const a = rooms[Math.floor(r() * rooms.length)], b = rooms[Math.floor(r() * rooms.length)];
+    let a = rooms[Math.floor(r() * rooms.length)], b = rooms[Math.floor(r() * rooms.length)];
+    if (toVault && d === 0 && tries < 30) { a = vault; const opts = rooms.filter(o => o !== vault && farEnough(o)); if (!opts.length) continue; b = opts[Math.floor(r() * opts.length)]; }
     if (a === b) continue;
+    if (vault && (a === vault || b === vault) && (a === start || b === start)) continue;   // (never the start room to the vault)
+    if (vault && !toVault && (a === vault || b === vault)) continue;   // (the vault gets its duct only when it's its turn: VAULT_DUCT)
     const va = ventAt(a), vb = ventAt(b); if (!va || !vb) continue;
     // a Z: across to a middle column, down, across (or down, across, down)
     const cells = [], add = (x, y) => { const l = cells[cells.length - 1]; if (!l || l[0] !== x || l[1] !== y) cells.push([x, y]); };
