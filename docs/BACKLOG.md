@@ -580,7 +580,7 @@ slots and give you different things; gems are like letter unlocks"). Mockups: `d
   can pick it instead of breaching a corp.
 - **The brainstorm and 5 mockups: `docs/INFILTR8.md`** (2026-11-17), `docs/mockups/infiltr8.html`.
 - **A warehouse** (meat notes 2026-11-22): a factory with boxes on a conveyor; stay behind them so a camera can't see
-  you. PARCELNET or MEGAMART.
+  you. PARCELNET or MEGAMART. Worked out in INFILTR8.md (THE WAREHOUSE): ride the belt, and a smasher at the end.
 
 ### 13. Other game modes (meat notes 2026-11-21)
 - Other games or mini-game modes to try: a **farm sim** (farming mold for chips and loot), **tower defense**, a
