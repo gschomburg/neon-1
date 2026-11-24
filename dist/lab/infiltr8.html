@@ -330,6 +330,8 @@ function los(f, x0, y0, x1, y1) {
 }
 // THE ARM: from its pivot, 8 ways round; it runs till a wall stops it
 const ARM_DIRS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+// THE ARM's look: its pivot, and its beam drawn the way it points now (across, down, or on a slant)
+const ARM_GLYPH = 'A', armBeam = f => '━╲┃╱━╲┃╱'[f.arm.dir];
 function armCells(f) {
   const a = f.arm; if (!a) return [];
   const [dx, dy] = ARM_DIRS[a.dir], out = [];
@@ -559,7 +561,7 @@ function draw() {
       const k = x + ',' + y;
       if (patCells.has(k)) bg = S.uniform > 0 ? rgba(C.money, 0.08) : rgba(C.leg, 0.13);   // (a patrol's view: orange, fainter than a CAM's)
       if (camCells.has(k)) bg = rgba(C.danger, 0.2);
-      if (armSet.has(k)) { ch = '━'; col = C.danger; }
+      if (armSet.has(k)) { ch = armBeam(f); col = C.danger; }
       if (trail.has(k) && c === '.') { ch = '•'; col = C.rep; }
     }
     put(x, MAP_Y + y, ch, col, c === '<' || c === '>' || c === 'E', bg);
@@ -571,7 +573,7 @@ function draw() {
     else { g.fillStyle = rgba(C.rare, 0.16); g.fillRect(L.ox + x * L.cw, L.oy + (MAP_Y + y) * L.ch, L.cw, L.ch); }
   }
   if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) put(f.payload.x, MAP_Y + f.payload.y, '$', C.money, true);
-  if (f.arm && S.vis[f.arm.y][f.arm.x]) put(f.arm.x, MAP_Y + f.arm.y, '◉', C.danger, true);
+  if (f.arm && S.vis[f.arm.y][f.arm.x]) put(f.arm.x, MAP_Y + f.arm.y, ARM_GLYPH, C.danger, true);
   for (const c of f.cams) if (S.vis[c.y][c.x]) put(c.x, MAP_Y + c.y, c.dead ? 'x' : CAM_GLYPH, c.dead ? C.dim : c.seen ? C.money : C.danger, true);
   for (const p of f.pats) if (S.vis[p.y][p.x]) put(p.x, MAP_Y + p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, true, p.chase ? rgba(C.danger, 0.25) : null);
   for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money, true);
@@ -746,8 +748,8 @@ function infoAt(f, x, y) {
   if (vis) {
     const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: 'P', name: 'PATROL', text: p.chase ? 'after you. break its line of sight.' : 'walks its round. sees the way it faces.' };
     const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: CAM_GLYPH, name: 'CAM', text: 'sweeps a cone. 2 turns in it: an alert.' };
-    if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: '◉', name: 'THE ARM', text: 'a sweep that turns, an eighth a turn.' };
-    if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: '━', name: 'THE ARM', text: 'where it is now. it turns next.' };
+    if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: ARM_GLYPH, name: 'THE ARM', text: 'a sweep that turns, an eighth a turn.' };
+    if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: armBeam(f), name: 'THE ARM', text: 'where it is now. it turns next.' };
   }
   { const d = (f.under.get(x + ',' + y) || []).some(d => d.known); if (d && at(f, x, y) !== 'v') return { x, y, glyph: pipeGlyph(f, x, y), name: 'DUCT', text: 'under the floor. in and out by a vent.' }; }
   if (f.payload && f.payload.x === x && f.payload.y === y) return { x, y, glyph: '$', name: 'THE PAYLOAD', text: 'take it and the alarm goes. then out.' };
