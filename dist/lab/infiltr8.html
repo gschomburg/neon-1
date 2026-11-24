@@ -558,7 +558,7 @@ function draw() {
   g.textAlign = 'center'; g.textBaseline = 'middle';
   const f = F();
   // header and HUD (rows 0-4)
-  put(0, 0, 'NeoN+1', C.accent, true); btn(SW - 7, 0, '[ NEW ]', 'new', () => newRun(newSeed()));
+  put(0, 0, 'NeoN+1', C.accent, true); btn(SW - 7, 0, '[ NEW ]', 'new', () => newRun(newSeed())); btn(SW - 11, 0, '[?]', 'help', toggleHelp);
   rule(1);
   put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
   put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
@@ -571,7 +571,7 @@ function draw() {
   // the info card (rows 5 and 7) round the message line (row 6)
   const inf = S.info;
   if (inf) { put(0, 5, inf.glyph, C.bg, false, C.accent); put(2, 5, inf.name, C.bright, true); put(0, 7, inf.text.slice(0, SW), C.mid); }
-  else { put(0, 5, 'tap anything for its info', C.dim); put(0, 7, '@ you ' + CAM_GLYPH + ' cam P patrol $ payload ▲▼ up', C.dim); }   // (36 at most: the seed's in the footer)
+  else put(0, 5, 'tap anything for its info. [?]: help', C.dim);   // (the legend and the controls' how-to: the [?] popup)
   const mt = Math.min(S.msg.length, Math.floor((now - S.msgT) / 18)), red = now - flashT < 300;
   put(0, 6, ' '.repeat(SW), C.bg, false, red ? C.danger : S.msgCol === C.danger ? C.danger : C.seen);
   put(0, 6, ('> ' + S.msg).slice(0, Math.min(SW, mt + 2)), red || S.msgCol === C.danger ? C.bg : S.msgCol);
@@ -616,7 +616,6 @@ function draw() {
   for (const b of booms) { const k = (now - b.t) / 500; if (k < 1) for (const [dx, dy] of [[-2, 0], [2, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) put(b.x + Math.round(dx * (1 + k)), MAP_Y + b.y + Math.round(dy * (1 + k)), '*', k < 0.5 ? C.money : C.danger, true); }
   if (S.info && S.info.x != null) { const px = L.ox + S.info.x * L.cw, py = L.oy + (MAP_Y + S.info.y) * L.ch; g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); }
   // row 31: how this UI works
-  put(0, 31, UIS[ui].hint.slice(0, SW), C.dim);
   // the tray rows (32-36): the pad, or the gear
   const u = UIS[ui].key;
   if (u !== 'classic') {
@@ -675,7 +674,33 @@ function draw() {
     if (u === 'stick') { g.strokeStyle = rgba(C.accent, 0.35); g.beginPath(); g.arc(G.x0, G.y0, stickDead() * 2, 0, Math.PI * 2); g.stroke(); g.strokeStyle = rgba(C.accent, 0.15); g.beginPath(); g.arc(G.x0, G.y0, stickDead(), 0, Math.PI * 2); g.stroke(); }
     g.fillStyle = rgba(C.accent, 0.45); g.beginPath(); g.arc(G.cx, G.cy, L.cw * 0.9, 0, Math.PI * 2); g.fill();
   }
+  if (helpOpen) drawHelp();
   if (sk < 1 || nk < 1 || (S.over && now - S.over.t0 < DECRYPT_MS * 1.5) || booms.some(b => now - b.t < 500) || now - S.msgT < 1200 || now - flashT < 300) requestAnimationFrame(draw);
+}
+// ---------- help: the [?] popup (Greg, 2026-11-23: the legend and the how-to don't need to be on screen all the time) ----------
+// Over the map: every mark and what it is, then how the controls you're on work. Opens on its own the first time.
+let helpOpen = false;
+try { helpOpen = localStorage.getItem('neon.infiltr8.help') !== 'seen'; } catch (e) { helpOpen = true; }
+function toggleHelp() { helpOpen = !helpOpen; try { localStorage.setItem('neon.infiltr8.help', 'seen'); } catch (e) { /* private mode */ } draw(); }
+const LEGEND = () => [
+  ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], [ARM_GLYPH, 'SCANNER', C.danger],
+  ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DOWN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
+  ['◘', 'FIRE EXIT', C.green], ['▾', 'TRASH CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text],
+  [HALL_GLYPH, 'HALL', C.dim], [JUNC_GLYPH, 'JUNCTION', C.dim], ['▪', 'PILLAR', C.mid], ['•', 'YOUR TRAIL', C.rep],
+];
+function drawHelp() {
+  hits = hits.filter(h => h.id === 'help');   // (only [?] and GOT IT while it's up; a tap anywhere else closes it)
+  g.fillStyle = rgba(C.bg, 0.94); g.fillRect(L.ox, L.oy + MAP_Y * L.ch, SW * L.cw, MH * L.ch);
+  let y = MAP_Y + 1;
+  put(1, y, 'WHAT YOU SEE', C.bright, true); y += 2;
+  const lg = LEGEND(), half = Math.ceil(lg.length / 2);
+  lg.forEach(([ch, name, col, bg], i) => { const x = i < half ? 1 : 19, yy = y + (i % half); put(x, yy, ch, col, true, bg || null); put(x + 2, yy, name, C.text); });
+  y += half + 1;
+  put(1, y, 'CONTROLS: ' + UIS[ui].name, C.bright, true); y++;
+  for (const l of wrap(UIS[ui].hint, SW - 2)) put(1, y++, l, C.text);
+  y++;
+  for (const l of wrap('keys: wasd or arrows step, space waits, enter uses, 1 2 3 gear, p clock, ? this.', SW - 2)) put(1, y++, l, C.mid);
+  btn(Math.floor((SW - 12) / 2), MAP_Y + MH - 2, '[ GOT IT ]', 'help', toggleHelp);
 }
 const wrap = (s, w) => { const out = []; let l = ''; for (const word of s.split(' ')) { if ((l + ' ' + word).trim().length > w) { out.push(l); l = word; } else l = (l + ' ' + word).trim(); } if (l) out.push(l); return out; };
 
@@ -689,11 +714,11 @@ function cellAt(ev) { return { x: Math.floor((ev.clientX - L.ox) / L.cw), y: Mat
 //   STICK: touch anywhere, drag past the ring: a step, hold: keep going. Like a floating thumbstick.
 // All but CLASSIC hold USE, FLARE and FRAG together on the right: no swap.
 const UIS = [
-  { key: 'classic', name: 'CLASSIC PAD', hint: 'the old pad. ⇄ GEAR for the gear.' },
-  { key: 'swipe', name: 'SWIPE', hint: 'swipe anywhere to step. tap @: wait' },
-  { key: 'track', name: 'TRACKPAD', hint: 'drag on the pad to step. tap: wait' },
-  { key: 'zone', name: 'ZONE PAD', hint: 'touch a side of the pad. hold: walk' },
-  { key: 'stick', name: 'STICK', hint: 'drag past the ring. hold: keep going' },
+  { key: 'classic', name: 'CLASSIC PAD', hint: 'the arrows step, · waits. [⇄ GEAR] swaps the pad for your gear and back. tap a cell next to you: a step.' },
+  { key: 'swipe', name: 'SWIPE', hint: 'swipe anywhere: a step that way. tap a cell next to you: a step. tap @, or WAIT: wait.' },
+  { key: 'track', name: 'TRACKPAD', hint: 'drag on the box: a step for each notch you drag (a flick is one). tap the box: wait.' },
+  { key: 'zone', name: 'ZONE PAD', hint: 'touch a side of the pad: a step that way. hold it: keep walking. the middle: wait.' },
+  { key: 'stick', name: 'STICK', hint: 'touch anywhere and drag past the ring: a step. hold: keep walking. slide round to turn.' },
 ];
 let ui = 0, G = null;   // G: the finger that's down
 try { ui = Math.max(0, Math.min(UIS.length - 1, +localStorage.getItem('neon.infiltr8.ui') || 0)); } catch (e) { /* private mode */ }
@@ -735,6 +760,7 @@ cv.addEventListener('pointerdown', ev => {
   const c = cellAt(ev);
   const h = hits.find(h => h.fn && c.y === h.y && c.x >= h.x && c.x < h.x + h.w);
   if (h) return h.fn();
+  if (helpOpen) return toggleHelp();
   if (S.over || G) return;
   try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* fine */ }
   const u = UIS[ui].key;
@@ -790,6 +816,8 @@ function infoAt(f, x, y) {
 addEventListener('keydown', ev => {
   if (ev.target && ev.target.closest && ev.target.closest('#dev')) return;   // (the dev panel's controls take their own keys)
   const k = ev.key.toLowerCase();
+  if (k === '?' || k === '/') return toggleHelp();
+  if (helpOpen) { if (k === 'escape' || k === 'enter' || k === ' ') { ev.preventDefault(); toggleHelp(); } return; }
   const mv = { arrowup: [0, -1], w: [0, -1], k: [0, -1], arrowdown: [0, 1], s: [0, 1], j: [0, 1], arrowleft: [-1, 0], a: [-1, 0], h: [-1, 0], arrowright: [1, 0], d: [1, 0], l: [1, 0] }[k];
   if (mv) { ev.preventDefault(); return act(mv[0], mv[1]); }
   if (k === ' ' || k === '.') { ev.preventDefault(); return act(0, 0); }
