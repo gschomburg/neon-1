@@ -663,9 +663,10 @@ const BAGS = { GHOST: { FLARE: 2, FRAG: 0, UNIFORM: 4 }, BRUTE: { FLARE: 1, FRAG
 function stationMenu(kind, f, key) {
   const gear = k => S.gear.find(g => g.key === k);
   if (kind === 'T') return { title: 'TERMINAL', line: 'one thing, then it locks you out.', opts: [
-    ['CAMS OFF', 'every CAM on this floor, off for 25 turns', () => { for (const c of f.cams) c.off = 25; say('TERMINAL: the CAMs are off, 25 turns.', C.accent); }],
-    ['MAP', 'this floor\'s layout, and its ducts', () => { for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (at(f, x, y) !== ' ') f.seen[y][x] = true; for (const d of f.ducts) d.known = true; say('TERMINAL: the floor\'s map is yours.', C.accent); }],
-    ['LIGHTS OUT', 'the power off, 25 turns: dark, belts stopped', () => { f.powerOff = 25; say('TERMINAL: the power\'s out. 25 turns.', C.accent); }]] };
+    // (each note fits the popup: 32 at most)
+    ['CAMS OFF', 'all the CAMs here off, 25 turns', () => { for (const c of f.cams) c.off = 25; say('TERMINAL: the CAMs are off, 25 turns.', C.accent); }],
+    ['MAP', 'this floor\'s layout and ducts', () => { for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (at(f, x, y) !== ' ') f.seen[y][x] = true; for (const d of f.ducts) d.known = true; say('TERMINAL: the floor\'s map is yours.', C.accent); }],
+    ['LIGHTS OUT', 'power off 25 turns: all dark', () => { f.powerOff = 25; say('TERMINAL: the power\'s out. 25 turns.', C.accent); }]] };
   if (kind === 'L') { const st = f.stations.get(key), pick = st.finds || (st.finds = shuffled(LOOT_FINDS, f.beltR).slice(0, 2));
     return { title: 'LOOT CACHE', line: 'room for one of them.', opts: pick.map(([n, v]) => [n, v + ' CR', () => { (S.loot = S.loot || []).push([n, v]); say('you take ' + n.toLowerCase() + ': ' + v + ' CR.', C.money); }]) }; }
   if (kind === 'R') return { title: 'RE-UP', line: 'one of these.', opts: [
@@ -1445,7 +1446,7 @@ function drawHelp() {
 function drawPopup() {
   const p = S.popup;
   hits = hits.filter(h => h.id === 'help');
-  const y0 = MAP_Y + 4, h = 6 + p.opts.length * 2;
+  const y0 = MAP_Y + 4, h = 7 + p.opts.length * 2;   // (a row clear above CLOSE)
   g.fillStyle = rgba(C.bg, 0.96); g.fillRect(L.ox, L.oy + y0 * L.ch, SW * L.cw, h * L.ch);
   g.strokeStyle = C.dim; g.lineWidth = 1; g.strokeRect(L.ox + 0.5, L.oy + y0 * L.ch + 0.5, SW * L.cw - 1, h * L.ch - 1);
   put(1, y0 + 1, p.title, C.bright, true); put(1, y0 + 2, p.line, C.mid);
