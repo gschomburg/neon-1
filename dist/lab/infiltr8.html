@@ -109,7 +109,7 @@ const opaque = (f, x, y) => !T[at(f, x, y)].see;
 
 // ---------- F1: THE RING (by hand: round 2's map 1) ----------
 // A core in a ring in a ring. The way in is at the bottom of the outer ring; every ring's door is on another side.
-// The core's ARM turns like a lighthouse, an eighth a turn; walls stop it. The stairs down are in the core.
+// The core's SCANNER (f.arm) turns, an eighth a turn; walls stop its beam. The stairs down are in the core.
 function floorRing() {
   const f = newFloor('THE RING');
   box(f, 1, 0, 34, 23); box(f, 5, 3, 26, 17); box(f, 10, 6, 16, 11);   // the outer ring, the middle ring, the core
@@ -328,10 +328,11 @@ function los(f, x0, y0, x1, y1) {
     const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; }
   }
 }
-// THE ARM: from its pivot, 8 ways round; it runs till a wall stops it
+// THE SCANNER (Greg, 2026-11-23; was THE ARM): a narrow beam from its pivot, 8 ways round, till a wall stops it. Caught
+// in it: spotted at once (an alert, as a CAM's good look). (Later: one on a wall that slides back and forth: INFILTR8.md.)
 const ARM_DIRS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
-// THE ARM's look: its pivot, and its beam drawn the way it points now (across, down, or on a slant)
-const ARM_GLYPH = 'A', armBeam = f => '━╲┃╱━╲┃╱'[f.arm.dir];
+// its look: its pivot, and its beam drawn the way it points now (across, down, or on a slant)
+const ARM_GLYPH = 'S', armBeam = f => '━╲┃╱━╲┃╱'[f.arm.dir];
 function armCells(f) {
   const a = f.arm; if (!a) return [];
   const [dx, dy] = ARM_DIRS[a.dir], out = [];
@@ -414,7 +415,7 @@ function tick() {
   if (!clockOff && S.turn === TURNS && !S.have) say('the trace clock is out. every turn now costs you.', C.danger);
   if (!clockOff && S.turn > TURNS && !S.have && S.turn % 3 === 0) { hurt('> traced: -1 INT.'); if (S.over) return; }
   // the arm turns
-  if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) hurt('> the ARM swept over you. -1 INT.'); if (S.over) return; }
+  if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) { S.alerts++; hurt('> the SCANNER caught you. alert: -1 INT.'); if (S.over) return; for (const p of f.pats) { p.chase = 8; p.lx = S.x; p.ly = S.y; } } }
   // cameras sweep, and look
   for (const c of f.cams) {
     if (c.dead) continue;
@@ -748,8 +749,8 @@ function infoAt(f, x, y) {
   if (vis) {
     const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: 'P', name: 'PATROL', text: p.chase ? 'after you. break its line of sight.' : 'walks its round. sees the way it faces.' };
     const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: CAM_GLYPH, name: 'CAM', text: 'sweeps a cone. 2 turns in it: an alert.' };
-    if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: ARM_GLYPH, name: 'THE ARM', text: 'a sweep that turns, an eighth a turn.' };
-    if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: armBeam(f), name: 'THE ARM', text: 'where it is now. it turns next.' };
+    if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: ARM_GLYPH, name: 'SCANNER', text: 'a narrow beam. turns an eighth a turn.' };
+    if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: armBeam(f), name: 'SCANNER', text: 'its beam. in it: spotted, no grace.' };
   }
   { const d = (f.under.get(x + ',' + y) || []).some(d => d.known); if (d && at(f, x, y) !== 'v') return { x, y, glyph: pipeGlyph(f, x, y), name: 'DUCT', text: 'under the floor. in and out by a vent.' }; }
   if (f.payload && f.payload.x === x && f.payload.y === y) return { x, y, glyph: '$', name: 'THE PAYLOAD', text: 'take it and the alarm goes. then out.' };

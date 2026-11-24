@@ -5,7 +5,7 @@ section 12). The mockups: `docs/mockups/infiltr8.html` (round 1: 5 takes) and `d
 (round 2: 5 VAULT FLOOR maps).
 
 **A playable demo** (Greg, 2026-11-23): `dist/lab/infiltr8.html` (moved from docs/mockups/ 2026-11-23), outside the game: it loads only the game's palettes (a [PAL] button in the footer) and its effects (FX.decrypt on floor names and the end screen). The real
-screen (36 x 38, the 23 board rows are the floor, the tray rows hold the d-pad). F1 is THE RING by hand (the turning ARM,
+screen (36 x 38, the 23 board rows are the floor, the tray rows hold the d-pad). F1 is THE RING by hand (the turning SCANNER,
 a CAM, a patrol on the middle ring); F2 and F3 come from the seed (rooms, pillars, halls, CAMs with their cones,
 patrols, the trash chute). Turn based with fog of war; stairs; the payload on F3 sets off
 the alarm and shows your trail; out by your door (a clean job), the fire exit or the chute. Gear: FLARE, FRAG, UNIFORM. Patrols show their view (a faint orange cone, the way they last stepped).
@@ -150,6 +150,10 @@ game's strength is short, readable choices.
 ### Security (the stealth side)
 - **CAM** (`◉`): a cone that turns a step each turn. Stops for a turn when it sees something.
 - **SWEEP** (`═`): a line that crosses a room one row each turn. Packets and walls block it.
+- **SCANNER** (`S`; Greg, 2026-11-23, was THE ARM): a narrow beam. Caught in it, you're spotted at once: an alert
+  (-1 INT, no clean job, the patrols come), with no grace turn like a CAM's. Not a searchlight: that's just another
+  CAM. In the demo it spins on a pivot in THE RING's core. It could also be mounted on a wall and slide back and
+  forth along it, sweeping the room the other way (not built yet).
 - **TRIPWIRE** (`┄`): a line you can't step on. You can see it only from close up, or with a light.
 - **PRESSURE TILE**: one in a hall. It tells the nearest daemon where you are.
 - **LOCKED DOOR**: a password (found on a sticky note in a room), a key card, a pushing puzzle, or a FRAG.
@@ -293,7 +297,7 @@ Names are 15 characters or less. Greg's are marked.
 38. **CHARGE** (FRAG, renamed): blows the 3x3 round you. Loud. (in the demo)
 39. **THERMITE:** burns through one wall cell, quietly, over 3 turns.
 40. **BREACH:** a line of 5 through walls, in the way you face.
-41. **EMP:** every CAM and the ARM within 6 cells goes dead for 12 turns. Patrols are stunned for 2.
+41. **EMP:** every CAM and SCANNER within 6 cells goes dead for 12 turns. Patrols are stunned for 2.
 42. **TASER:** a patrol next to you is out for 6 turns.
 43. **SNARE:** lay it down. A patrol that steps in it is stuck for 8 turns.
 44. **CALTROPS:** a 3x3 patrols cross at half speed.
