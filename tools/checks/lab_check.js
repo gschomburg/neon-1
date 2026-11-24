@@ -23,6 +23,8 @@ const driver = `<script>
     }
     // the dev panel's floor jump and show all
     D.newRun('LABDEV'); D.goFloor(2); if (D.S.fi !== 2 || D.S.x !== D.S.floors[2].up.x) out.fails.push('dev floor: to F3 at its stairs up');
+    document.getElementById('dev-up').click(); if (D.S.fi !== 1 || D.S.x !== D.S.floors[1].down.x) out.fails.push('dev UP: to F2 at its stairs down');
+    document.getElementById('dev-down').click(); if (D.S.fi !== 2) out.fails.push('dev DOWN: to F3');
     D.setReveal(true); if (!D.S.vis.flat().every(Boolean)) out.fails.push('dev show all: not every cell'); D.setReveal(false);
     // every palette draws
     for (let p = 0; p < D.PALS.length; p++) { D.setPal(p); D.draw(); }
