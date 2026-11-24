@@ -640,8 +640,17 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   6. **THE ROOF**: up the stairs `▲` in THE RING's bottom right. A parapet `▓`, AC units, roof vents (low cover), a
      water tank, antennas; the stairwell hut; the hoverpad `H`. CALL HOVER on the pad (+1 ALERT, and everything up
      there heads for the pad), 6 turns, then BOARD: out (a clean job if nobody saw you). Two searchlights (CAMs on the
-     parapet) and a DRONE `D` looping the roof. Claude's take: it's lit (night, but open sky); the dev panel's floor
-     list doesn't have it (go by the stairs).
+     parapet) and a DRONE `D` looping the roof. Claude's take: it's lit (night, but open sky). In the dev panel's floor
+     list and the floor viewer (THE ROOF) since 2026-11-24.
+     **Round 2** (Greg, 2026-11-24: "is the roof randomized at all?" It was only its cover): now from the seed,
+     - **its shape:** the board less 0 to 2 corner notches (an L, a step: 2 roofs in 3);
+     - **its edge:** parapet with 2 to 4 gaps of **open edge** (`▁`, red). Step off one and you **fall**: the run's over
+       (Greg's). Patrols and drones never go there;
+     - **its kind:** PLANT (AC units, a cooling tower, the tank), GARDEN (planters to hide in, benches, statues), SOLAR
+       (rows of panels `≡`: low cover, lanes between), MIXED;
+     - **the hut** near any corner, **the pad** well away from it, **1 or 2 sheds** (little rooms with a door: a cache,
+       a terminal or a re-up inside);
+     - **watchers by size:** a full roof 2 drones (an outer and an inner loop) and 3 searchlights; a notched one 1 and 2.
 - **From the meat notes** (Greg, filed 2026-11-24):
   - **Already built:** watchers you've seen stay marked, even from another room (the TAGGED passive; the note
     suggests it for everyone, so maybe it's not a passive); PEEK into a door you walk up to, as an action (ACTIONS).

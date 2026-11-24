@@ -211,7 +211,7 @@ const T = {
   'L': { walk: 0, see: 1, station: 1 }, 'R': { walk: 0, see: 1, station: 1 }, 'B': { walk: 0, see: 1, station: 1 },
   // (the set pieces' things, 2026-11-24: a vending machine and a coffee machine (THE BREAK ROOM), a sticky note (the
   // CAPTCHA DOOR's answer), junk (THE TRASH: low cover), the hoverpad (THE ROOF: stand on it))
-  'V': { walk: 0, see: 0, station: 1 }, 'C': { walk: 0, see: 1, station: 1 }, 'N': { walk: 0, see: 1, station: 1 }, 'j': { walk: 0, see: 1, low: 1 }, 'H': { walk: 1, see: 1 }, 'w': { walk: 0, see: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
+  'V': { walk: 0, see: 0, station: 1 }, 'C': { walk: 0, see: 1, station: 1 }, 'N': { walk: 0, see: 1, station: 1 }, 'j': { walk: 0, see: 1, low: 1 }, 'H': { walk: 1, see: 1 }, 'w': { walk: 0, see: 1 }, 'o': { walk: 0, see: 1 }, 's': { walk: 0, see: 1, low: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
 };
 const WALLISH = '#+EFT';   // what joins up into box-drawn walls (a terminal's in a wall now; the chute, K, sits on a room's floor: not a wall. Greg, H3SDQ4)
 const INFO = {
@@ -224,7 +224,7 @@ const INFO = {
   'T': ['A TERMINAL', 'USE beside it: one thing it can do.'], 'L': ['A LOOT CACHE', 'USE beside it: something to carry out.'],
   'R': ['A RE-UP', 'USE beside it: INT, or a piece of gear.'], 'B': ['A BAG SWAP', 'USE beside it: trade your gear for a bag.'],
   'V': ['A VENDING MACHINE', 'USE beside it: trade loot CR for gear.'], 'C': ['A COFFEE MACHINE', 'USE beside it: +1 INT. loud: +1 ALERT.'],
-  'N': ['A STICKY NOTE', 'someone wrote a password on it.'], 'w': ['THE PARAPET', 'the roof\'s edge. a long way down.'], 'j': ['JUNK', 'deleted files, piled up. low cover.'], 'H': ['THE HOVERPAD', 'stand on it, USE: call the hover. then hold out.'],
+  'N': ['A STICKY NOTE', 'someone wrote a password on it.'], 'w': ['THE PARAPET', 'the roof\'s edge. a long way down.'], 'o': ['THE EDGE', 'no parapet here. step off it: you fall.'], 's': ['SOLAR PANELS', 'low cover: hide right behind a row.'], 'j': ['JUNK', 'deleted files, piled up. low cover.'], 'H': ['THE HOVERPAD', 'stand on it, USE: call the hover. then hold out.'],
   'b': ['THE BELT', 'it carries you. off before the X.'], 'x': ['A CRATE', 'on the belt. nothing sees through.'], 'm': ['A TANK', 'machinery. nothing sees through it.'], ' ': ['', ''],
 };
 
@@ -370,6 +370,7 @@ const ROOM_TYPES = {   // what a type is called (the viewer's labels, a tap's in
   warehouse: ['THE WAREHOUSE', 'a belt of crates. ride it.'],
   breakroom: ['THE BREAK ROOM', 'vending and coffee. the coffee\'s loud.'],
   ceo: ['THE CEO\'S OFFICE', 'the best loot on the floor. watched.'],
+  shed: ['A SHED', 'a little room on the roof. something inside.'],
   node: ['A NODE', 'one of the layer\'s nodes. one of them holds the payload.'],
   trash: ['THE TRASH', 'where the chutes land. junk, and now and then something good.'],
 };
@@ -1347,35 +1348,90 @@ function floorLayer(seed, n) {
   f.rooms = rooms; f.roomOf = new Map(); for (const o of rooms) for (const [x, y] of o.cells) f.roomOf.set(x + ',' + y, o);
   return f;
 }
-// THE ROOF (Greg, 2026-11-24; INFILTR8.md, Special floors): up the stairs from F1 (THE RING's bottom right). Outside: no
-// rooms, a parapet round the edge (you see over it), gravel, and things to hide behind: AC units (solid), roof vents
-// (low cover), a water tank, antennas. The stairwell hut on the left; THE HOVERPAD on the right. Stand on the pad:
-// CALL HOVER (loud: +1 ALERT, and everything up here heads for the pad), hold out HOVER_TURNS, then BOARD: out, the
-// cleaner way (a clean job if nobody saw you). Watched by SEARCHLIGHTs (CAMs on the parapet) and a DRONE (D: a patrol
-// that loops the roof). Not in S.floors: S.roof, S.onRoof (F()).
+/// THE ROOF (Greg, 2026-11-24; INFILTR8.md, Special floors): up the stairs from F1 (THE RING's bottom right). Outside: no
+// halls, gravel, and things to hide behind. From the seed, more each time (Greg: "is the roof randomized at all?"):
+//   - its SHAPE: the whole board less 0 to 2 corner notches (an L, a step). Its EDGE: a parapet (w, you see over it)
+//     with gaps in it, open EDGE (o): step off and you fall, the run's over. Nothing else goes near it.
+//   - its KIND: PLANT (AC units, a cooling tower, the water tank), GARDEN (planters to hide in, benches, statues),
+//     SOLAR (rows of panels: low cover, lanes between), or MIXED (a bit of each).
+//   - the stairwell HUT near a corner; THE HOVERPAD (H, 3 x 3) well away from it; 1 or 2 SHEDS (little rooms with a
+//     door: a cache, a terminal or a re-up inside).
+//   - its watchers: SEARCHLIGHTs (CAMs on the parapet, 2 or 3) and DRONEs (D, patrols that loop it, 1 or 2): more on a
+//     bigger roof.
+// Stand on the pad: CALL HOVER (loud: +1 ALERT, and everything up here heads for the pad), hold out HOVER_TURNS, then
+// BOARD: out, the cleaner way (a clean job if nobody saw you). Not in S.floors: S.roof, S.onRoof (F()).
 const HOVER_TURNS = 6;
+const ROOF_KINDS = ['plant', 'garden', 'solar', 'mixed'];
 function floorRoof(seed) {
-  const r = rngFrom(hashStr(seed + ':roof'));
+  const r = rngFrom(hashStr(seed + ':roof')), ri = (a, b) => a + Math.floor(r() * (b - a + 1));
   const f = newFloor('THE ROOF'); f.roof = true; f.order = 1; f.litAll = true; f.halls = new Set(); f.junc = new Set(); f.stations = new Map(); f.captcha = new Map(); f.ptiles = new Map(); f.rooms = [];
-  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) set(f, x, y, x === 0 || y === 0 || x === MW - 1 || y === MH - 1 ? 'w' : '.');
-  // the stairwell hut (its door east, the stairs down inside) and the hoverpad (3 x 3)
-  for (let y = 9; y <= 13; y++) for (let x = 3; x <= 7; x++) set(f, x, y, x === 3 || x === 7 || y === 9 || y === 13 ? '#' : '.');
-  set(f, 7, 11, '+'); set(f, 5, 11, '>'); f.down = { x: 5, y: 11 }; f.start = f.down;
-  for (let y = 10; y <= 12; y++) for (let x = 28; x <= 30; x++) set(f, x, y, 'H');
-  f.pad = { x: 29, y: 11 };
-  // things on it, each with a cell of clear round it (and never on the hut, the pad or the drone's loop: x 2, 33; y 2, 20)
-  const free = (x0, y0, w, h) => { for (let y = y0 - 1; y <= y0 + h; y++) for (let x = x0 - 1; x <= x0 + w; x++) if (at(f, x, y) !== '.' || x <= 2 || x >= MW - 3 || y <= 2 || y >= MH - 3) return false; return true; };
-  const put0 = (w, h, c, tries = 40) => { for (let t = 0; t < tries; t++) { const x0 = 3 + Math.floor(r() * (MW - 6 - w)), y0 = 3 + Math.floor(r() * (MH - 6 - h)); if (!free(x0, y0, w, h)) continue;
-    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) set(f, x, y, c); return true; } return false; };
-  put0(4, 3, 'm');                                        // the water tank
-  for (let k = 0; k < 7; k++) put0(2, 1 + Math.floor(r() * 2), 'p');   // AC units
-  for (let k = 0; k < 6; k++) put0(1, 1, '=');            // roof vents: low cover
-  for (let k = 0; k < 2; k++) put0(1, 1, 'u');            // antennas
-  // the DRONE: loops the roof, 2 in from the edge; the SEARCHLIGHTs: CAMs on the parapet, sweeping in
-  const ring = [[2, 2], [MW - 3, 2], [MW - 3, MH - 3], [2, MH - 3]], loop = [];
-  for (let i = 0; i < 4; i++) { const a = ring[i], b = ring[(i + 1) % 4], p = route(f, a[0], a[1], b[0], b[1]) || []; loop.push(...p.slice(i ? 1 : 0)); }
-  if (loop.length > 8) { loop.pop(); const d = pat(loop, true); d.drone = true; f.pats.push(d); }
-  for (const [x, y] of [[10 + Math.floor(r() * 6), 0], [MW - 10 - Math.floor(r() * 6), MH - 1]]) f.cams.push(cam(f, x, y, Math.atan2((11 - y) * 2, 18 - x)));
+  f.roofKind = ROOF_KINDS[Math.floor(r() * ROOF_KINDS.length)];
+  // the shape: the board, less a notch or two out of its corners
+  const inRoof = Array.from({ length: MH }, () => Array(MW).fill(true));
+  for (const [cx, cy] of shuffled([[0, 0], [1, 0], [0, 1], [1, 1]], r).slice(0, ri(0, 2))) {
+    const w = ri(6, 13), h = ri(4, 8), x0 = cx ? MW - w : 0, y0 = cy ? MH - h : 0;
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) inRoof[y][x] = false;
+  }
+  const isIn = (x, y) => inb(x, y) && inRoof[y][x];
+  // the edge: a roof cell with outside (or the board's edge) next to it, 8 ways. Parapet, but for 2 to 4 gaps (open edge)
+  const edge = [];
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (isIn(x, y)) {
+    let out = false; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!isIn(x + i, y + j)) out = true;
+    if (out) edge.push([x, y]); else set(f, x, y, '.');
+  }
+  const gaps = shuffled(edge, r).slice(0, ri(2, 4));
+  for (const [x, y] of edge) set(f, x, y, gaps.some(([gx, gy]) => Math.abs(gx - x) + Math.abs(gy - y) <= 2) ? 'o' : 'w');
+  // free: a w x h block (and a cell of clear round it) all plain roof, and 2 or more from the edge
+  const clear = (x0, y0, w, h, m = 1) => { for (let y = y0 - m; y < y0 + h + m; y++) for (let x = x0 - m; x < x0 + w + m; x++) if (at(f, x, y) !== '.') return false;
+    for (let y = y0 - 2; y < y0 + h + 2; y++) for (let x = x0 - 2; x < x0 + w + 2; x++) if ('wo'.includes(at(f, x, y)) || !isIn(x, y)) return false; return true; };
+  const place = (w, h, draw, tries = 60, near = null) => {
+    for (let t = 0; t < tries; t++) {
+      const x0 = near ? near[0] + ri(-4, 4) : ri(2, MW - 3 - w), y0 = near ? near[1] + ri(-3, 3) : ri(2, MH - 3 - h);
+      if (clear(x0, y0, w, h)) { draw(x0, y0); return [x0, y0]; }
+    }
+    return null;
+  };
+  // the stairwell hut near a corner (its door on the side facing in), the pad well away from it
+  const box = (x0, y0, w, h, door) => { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) set(f, x, y, x === x0 || y === y0 || x === x0 + w - 1 || y === y0 + h - 1 ? '#' : '.'); set(f, door[0], door[1], '+'); };
+  const hutAt = (x0, y0) => { const left = x0 < MW / 2; box(x0, y0, 5, 5, [left ? x0 + 4 : x0, y0 + 2]); set(f, x0 + 2, y0 + 2, '>'); f.down = { x: x0 + 2, y: y0 + 2 }; };
+  let hut = null;
+  for (const c of shuffled([[4, 3], [MW - 9, 3], [4, MH - 8], [MW - 9, MH - 8]], r)) { hut = place(5, 5, hutAt, 40, c); if (hut) break; }
+  if (!hut) hut = place(5, 5, hutAt, 400);
+  f.start = f.down;
+  { const spots = [];
+    for (let y = 2; y < MH - 4; y++) for (let x = 2; x < MW - 4; x++) if (clear(x, y, 3, 3)) spots.push([x, y, Math.hypot(x - f.down.x, (y - f.down.y) * 2)]);
+    spots.sort((a, b) => b[2] - a[2]);
+    const [px, py] = spots[Math.floor(r() * Math.max(1, Math.ceil(spots.length * 0.3)))] || [MW - 8, 10];
+    for (let y = py; y < py + 3; y++) for (let x = px; x < px + 3; x++) set(f, x, y, 'H');
+    f.pad = { x: px + 1, y: py + 1 }; }
+  // sheds: little rooms with a door, something inside
+  for (let k = 0, n = ri(1, 2); k < n; k++) {
+    const w = ri(5, 7), h = ri(4, 5);
+    place(w, h, (x0, y0) => {
+      const sides = [[x0 + Math.floor(w / 2), y0], [x0 + Math.floor(w / 2), y0 + h - 1], [x0, y0 + Math.floor(h / 2)], [x0 + w - 1, y0 + Math.floor(h / 2)]];
+      box(x0, y0, w, h, sides[Math.floor(r() * 4)]);
+      const o = { cells: [], set: new Set(), x: x0, y: y0, w, h, shape: 'box', role: 'side', type: 'shed', mid: { x: x0 + Math.floor(w / 2), y: y0 + Math.floor(h / 2) } };
+      for (let y = y0 + 1; y < y0 + h - 1; y++) for (let x = x0 + 1; x < x0 + w - 1; x++) { o.cells.push([x, y]); o.set.add(x + ',' + y); }
+      f.rooms.push(o); wallStation(f, o, ['L', 'T', 'R'][Math.floor(r() * 3)], r);
+    });
+  }
+  // the kind's things
+  const fill = (w, h, c, n) => { for (let k = 0; k < n; k++) place(w, h, (x0, y0) => { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) set(f, x, y, c); }); };
+  const kind = f.roofKind;
+  if (kind === 'plant') { fill(4, 3, 'm', 1); fill(3, 3, 'm', 1); for (let k = 0; k < 9; k++) fill(2, 1 + Math.floor(r() * 2), 'p', 1); fill(1, 1, '=', 3); }
+  if (kind === 'garden') { for (let k = 0; k < 6; k++) fill(2, 2, 'g', 1); fill(3, 1, '=', 4); fill(1, 1, 'u', 2); }
+  if (kind === 'solar') { const rows = ri(3, 5); for (let k = 0; k < rows; k++) fill(ri(6, 10), 1, 's', 1); fill(2, 1, 'p', 3); }
+  if (kind === 'mixed') { fill(4, 3, 'm', 1); for (let k = 0; k < 5; k++) fill(2, 1 + Math.floor(r() * 2), 'p', 1); fill(1, 1, '=', 4); fill(2, 2, 'g', 2); fill(1, 1, 'u', 2); }
+  // the watchers: drones loop the roof (an outer ring, and an inner one on a big roof); searchlights on the parapet
+  const area = inRoof.flat().filter(Boolean).length, big = area > 760;   // (big: no notches, or hardly)
+  const nearCell = (tx, ty) => { let best = null, bd = 1e9; for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (at(f, x, y) === '.' && isIn(x, y)) { const d = Math.hypot(x - tx, (y - ty) * 2); if (d < bd) { bd = d; best = [x, y]; } } return best; };
+  const loopAt = inset => { const pts = [[inset, inset], [MW - 1 - inset, inset], [MW - 1 - inset, MH - 1 - inset], [inset, MH - 1 - inset]].map(([x, y]) => nearCell(x, y)), out = [];
+    for (let i = 0; i < 4; i++) { const a = pts[i], b = pts[(i + 1) % 4], p = a && b && route(f, a[0], a[1], b[0], b[1]); if (!p) return null; out.push(...p.slice(i ? 1 : 0)); }
+    out.pop(); return out.length > 8 ? out : null; };
+  for (const inset of big ? [2, 7] : [2]) { const l = loopAt(inset); if (l) { const d = pat(l, true); d.drone = true; d.i = Math.floor(r() * l.length); [d.x, d.y] = l[d.i]; f.pats.push(d); } }
+  const walls = shuffled(edge.filter(([x, y]) => at(f, x, y) === 'w' && D4.some(([i, j]) => at(f, x + i, y + j) === '.')), r);
+  const lights = [];
+  for (const [x, y] of walls) { if (lights.length >= (big ? 3 : 2)) break; if (lights.some(([a, b]) => Math.hypot(a - x, (b - y) * 2) < 20)) continue; lights.push([x, y]); f.cams.push(cam(f, x, y, Math.atan2((MH / 2 - y) * 2, MW / 2 - x))); }
   return f;
 }
 function callHover(f) {
@@ -1787,6 +1843,7 @@ function act(dx, dy) {
   if (dx || dy) {
     const nx = S.x + dx, ny = S.y + dy, c = at(f, nx, ny);
     if (S.inDuct) { if (!ductLink(f, S.x, S.y, nx, ny)) { say('the duct doesn\'t go that way.', C.mid); return draw(); } }
+    else if (c === 'o') { S.x = nx; S.y = ny; S.over = { win: false, head: 'F E L L', lines: ['you stepped off the edge of the roof.', 'a long way down. turns: ' + S.turn] }; return draw(); }   // (THE ROOF's open edge: Greg, 2026-11-24)
     else if (pass('IPE') && sabotageTargets(f).some(a => a.cam ? a.cam.x === nx && a.cam.y === ny : f.arm.x === nx && f.arm.y === ny)) return wreck(f, sabotageTargets(f).find(a => a.cam ? a.cam.x === nx && a.cam.y === ny : true));   // (SABOTEUR: step into it)
     else if (!T[c].walk) { say(c === 'p' ? 'a pillar.' : c === 'x' ? 'a crate.' : 'a wall.', C.mid); return draw(); }
     else if (c === '+' && !doorOpen(f, nx, ny) && captchaAt(f, nx, ny)) { say('locked: a CAPTCHA. ACTIONS: try it.', C.money); return draw(); }   // (no turn: you just found it's locked)
@@ -2121,9 +2178,9 @@ function machineGlyph(f, x, y) {
   if ((n || s0) && !(e && w)) return '│';
   return e || w ? '─' : '●';
 }
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x', 'T': 'T', 'L': 'L', 'R': 'R', 'B': 'B', 'V': 'V', 'C': 'c', 'N': 'n', 'j': '%', 'H': 'H', 'w': '▓' };
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒', 'd': '▄', 'g': 'Y', 'u': '&', '=': '=', '"': '"', 'b': '>', 'x': 'x', 'T': 'T', 'L': 'L', 'R': 'R', 'B': 'B', 'V': 'V', 'C': 'c', 'N': 'n', 'j': '%', 'H': 'H', 'w': '▓', 'o': '▁', 's': '≡' };
 // the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
-const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'T': 'accent', 'L': 'money', 'R': 'green', 'B': 'rep', 'm': 'mid', '#': 'mid', 'V': 'money', 'C': 'rare', 'N': 'money', 'j': 'mid', 'H': 'accent', 'w': 'dim' };
+const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', 'd': 'mid', 'g': 'green', 'u': 'bright', '=': 'mid', '"': 'green', 'b': 'mid', 'x': 'leg', 'T': 'accent', 'L': 'money', 'R': 'green', 'B': 'rep', 'm': 'mid', '#': 'mid', 'V': 'money', 'C': 'rare', 'N': 'money', 'j': 'mid', 'H': 'accent', 'w': 'dim', 'o': 'danger', 's': 'rare' };
 
 function draw() {
   if (!S) return;
@@ -2299,7 +2356,7 @@ let helpOpen = false;
 try { helpOpen = localStorage.getItem('neon.infiltr8.help') !== 'seen'; } catch (e) { helpOpen = true; }
 function toggleHelp() { helpOpen = !helpOpen; try { localStorage.setItem('neon.infiltr8.help', 'seen'); } catch (e) { /* private mode */ } draw(); }
 const LEGEND = () => [   // (three columns of 12: a name 9 at most)
-  ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], ['G', 'GUARD', C.danger], ['M', 'HONEYPOT', C.danger], ['D', 'DRONE', C.danger], ['f', 'YOUR FLEA', C.accent], [ARM_GLYPH, 'SCANNER', C.danger], ['¤', 'PRESSURE', C.danger], ['?', 'CAPTCHA', C.money], ['▓', 'PARAPET', C.dim],
+  ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], ['G', 'GUARD', C.danger], ['M', 'HONEYPOT', C.danger], ['D', 'DRONE', C.danger], ['f', 'YOUR FLEA', C.accent], [ARM_GLYPH, 'SCANNER', C.danger], ['¤', 'PRESSURE', C.danger], ['?', 'CAPTCHA', C.money], ['▓', 'PARAPET', C.dim], ['▁', 'EDGE: FALL', C.danger], ['≡', 'SOLAR *', C.rare],
   ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
   ['◘', 'FIRE EXIT', C.green], ['▾', 'CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text], ['/', 'OPEN DOOR', C.text],
   ['T', 'TERMINAL', C.accent], ['L', 'LOOT', C.money], ['R', 'RE-UP', C.green], ['B', 'BAG SWAP', C.rep], ['V', 'VENDING', C.money], ['c', 'COFFEE', C.rare], ['n', 'STICKY NOTE', C.money], ['%', 'JUNK *', C.mid], ['H', 'HOVERPAD', C.accent], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid],
@@ -2588,7 +2645,7 @@ function viewerShow() {
   $('v-cap').innerHTML = (V.i + 1) + ' · <b>' + seed + '</b> · rooms ' + fl.rooms.length + ' · cams ' + fl.cams.length + ' · patrols ' + fl.pats.length +
     ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0) +
     ' · the way ' + Math.max(0, fl.route.length - 1) + ' steps' +
-    ' · shapes ' + Object.entries(fl.rooms.reduce((m, o) => (m[o.big ? 'big ' + o.shape : o.shape] = (m[o.big ? 'big ' + o.shape : o.shape] || 0) + 1, m), {})).map(([k, v]) => v + ' ' + k).join(', ') + ' · ' + (fl.roof ? 'THE ROOF' : BUILDINGS[fl.building].name) + (buildingPick === 'auto' ? '' : ' (set)') + ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
+    ' · shapes ' + Object.entries(fl.rooms.reduce((m, o) => (m[o.big ? 'big ' + o.shape : o.shape] = (m[o.big ? 'big ' + o.shape : o.shape] || 0) + 1, m), {})).map(([k, v]) => v + ' ' + k).join(', ') + ' · ' + (fl.roof ? 'THE ROOF: ' + fl.roofKind.toUpperCase() : BUILDINGS[fl.building].name) + (buildingPick === 'auto' ? '' : ' (set)') + ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
   $('v-prev').disabled = V.i === 0;
 }
 function openViewer() { if (!V.seeds.length) V.seeds.push(newSeed()); $('viewer').hidden = false; viewerShow(); }
