@@ -2344,8 +2344,12 @@ function draw() {
   // a finger on the trackpad, or the stick's ring and knob
   if (G && G.cx != null && ((u === 'track' && G.pad) || u === 'stick')) {
     g.lineWidth = 2;
-    if (u === 'stick') { g.strokeStyle = rgba(C.accent, 0.35); g.beginPath(); g.arc(G.x0, G.y0, stickDead() * 2, 0, Math.PI * 2); g.stroke(); g.strokeStyle = rgba(C.accent, 0.15); g.beginPath(); g.arc(G.x0, G.y0, stickDead(), 0, Math.PI * 2); g.stroke(); }
-    g.fillStyle = rgba(C.accent, 0.45); g.beginPath(); g.arc(G.cx, G.cy, L.cw * 0.9, 0, Math.PI * 2); g.fill();
+    const look = u === 'stick' && UIS[ui].look;
+    if (look) { g.save(); STICK_LOOKS[look - 1](g, G.x0, G.y0, G.dir, G.cx, G.cy, Math.max(0, 1 - (performance.now() - G.last) / 180)); g.restore(); }   // (STICK A-F; save: F sets the font)
+    else {
+      if (u === 'stick') { g.strokeStyle = rgba(C.accent, 0.35); g.beginPath(); g.arc(G.x0, G.y0, stickDead() * 2, 0, Math.PI * 2); g.stroke(); g.strokeStyle = rgba(C.accent, 0.15); g.beginPath(); g.arc(G.x0, G.y0, stickDead(), 0, Math.PI * 2); g.stroke(); }
+      g.fillStyle = rgba(C.accent, 0.45); g.beginPath(); g.arc(G.cx, G.cy, L.cw * 0.9, 0, Math.PI * 2); g.fill();
+    }
   }
   syncPopup(); syncHelp();   // (HTML popups over the canvas)
   if (sk < 1 || nk < 1 || (S.over && now - S.over.t0 < DECRYPT_MS * 1.5) || booms.some(b => now - b.t < 500) || now - S.msgT < 1200 || now - flashT < 300) requestAnimationFrame(draw);
@@ -2399,6 +2403,8 @@ const UIS = [
   { key: 'track', name: 'TRACKPAD', hint: 'drag on the box: a step for each notch you drag (a flick is one). tap the box: wait.' },
   { key: 'zone', name: 'ZONE PAD', hint: 'touch a side of the pad: a step that way. hold it: keep walking. the middle: wait.' },
   { key: 'stick', name: 'STICK', hint: 'touch anywhere and drag past the ring: a step. hold: keep walking. slide round to turn.' },
+  // (STICK A-F, Greg 2026-11-24: the same stick, drawn as a 4-way pad: dist/lab/stick_mockups.html's looks 1-6)
+  ...['PLUS', 'CHEVRONS', 'PLUS + ARROWS', 'ZONES', 'BRACKETS', 'TYPED PAD'].map((n, i) => ({ key: 'stick', look: i + 1, name: 'STICK ' + 'ABCDEF'[i], hint: 'a stick drawn as a pad (' + n.toLowerCase() + '): touch anywhere and drag past the middle: a step. hold: keep walking.' })),
 ];
 let ui = 0, G = null;   // G: the finger that's down
 // (the STICK is the default, Greg 2026-11-24: the neatest, but the most hidden, so it needs telling about; later)
@@ -2413,6 +2419,45 @@ function nextUI() {
 const swipeMin = () => Math.max(14, L.cw * 1.4);   // less than this is a tap
 const notch = () => Math.max(22, L.cw * 2.6);       // the trackpad: a step each this far
 const stickDead = () => Math.max(16, L.cw * 1.8);   // the stick: past this ring, you walk
+// STICK A-F's looks (from dist/lab/stick_mockups.html, its looks 1-6: change one, change both). Each: (g, cx, cy: where
+// you touched; dir: [dx, dy] or null; fx, fy: your finger; pulse: 1 just as a step goes, to 0)
+const STICK_LOOKS = (() => {
+  const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]], same = (a, b) => a && b && a[0] === b[0] && a[1] === b[1];
+  const at = (cx, cy, [dx, dy], f, s) => [cx + dx * f - dy * s, cy + dy * f + dx * s];   // (forward f, sideways s)
+  const line = (g, pts, col, w = 2) => { g.strokeStyle = col; g.lineWidth = w; g.lineJoin = 'round'; g.lineCap = 'round'; g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); };
+  const armCol = (d, dir, p) => same(d, dir) ? rgba(C.accent, 0.75 + 0.25 * p) : rgba(C.accent, 0.3);
+  const knob = (g, fx, fy, a = 0.45) => { g.fillStyle = rgba(C.accent, a); g.beginPath(); g.arc(fx, fy, L.cw * 0.6, 0, Math.PI * 2); g.fill(); };
+  const plus = (cx, cy, a, L0) => { const pts = []; for (const d of DIRS) pts.push(at(cx, cy, d, a, -a), at(cx, cy, d, L0, -a), at(cx, cy, d, L0, a)); pts.push(pts[0]); return pts; };
+  return [
+    (g, cx, cy, dir, fx, fy, p) => { const D = stickDead(), a = D * 0.55, R = D * 2;   // A: the plus, outlined
+      line(g, plus(cx, cy, a, R), rgba(C.accent, 0.35));
+      if (dir) line(g, [at(cx, cy, dir, a, -a), at(cx, cy, dir, R, -a), at(cx, cy, dir, R, a), at(cx, cy, dir, a, a)], rgba(C.accent, 0.8 + 0.2 * p), 2.5);
+      knob(g, fx, fy); },
+    (g, cx, cy, dir, fx, fy, p) => { const D = stickDead();   // B: four chevrons
+      for (const d of DIRS) { const on = same(d, dir), f = D * 1.3 + (on ? 3 * p : 0), w = D * 0.45; line(g, [at(cx, cy, d, f - w * 0.7, -w), at(cx, cy, d, f, 0), at(cx, cy, d, f - w * 0.7, w)], armCol(d, dir, p), on ? 3 : 2); }
+      knob(g, fx, fy); },
+    (g, cx, cy, dir, fx, fy, p) => { const D = stickDead(), a = D * 0.6, R = D * 2;   // C: the plus with an arrow in each arm
+      line(g, plus(cx, cy, a, R), rgba(C.accent, 0.3));
+      for (const d of DIRS) { const on = same(d, dir), f = R - 7; line(g, [at(cx, cy, d, f - 5, -5), at(cx, cy, d, f, 0), at(cx, cy, d, f - 5, 5)], armCol(d, dir, p), on ? 2.5 : 1.5); }
+      knob(g, fx, fy); },
+    (g, cx, cy, dir, fx, fy, p) => { const D = stickDead(), R = D * 2;   // D: the 4 zones, a square cut by its diagonals
+      if (dir) { g.fillStyle = rgba(C.accent, 0.12 + 0.08 * p); g.beginPath(); g.moveTo(cx, cy); g.lineTo(...at(cx, cy, dir, R, -R)); g.lineTo(...at(cx, cy, dir, R, R)); g.closePath(); g.fill(); }
+      line(g, [[cx - R, cy - R], [cx + R, cy - R], [cx + R, cy + R], [cx - R, cy + R], [cx - R, cy - R]], rgba(C.accent, 0.3));
+      line(g, [[cx - R, cy - R], [cx + R, cy + R]], rgba(C.accent, 0.18), 1); line(g, [[cx + R, cy - R], [cx - R, cy + R]], rgba(C.accent, 0.18), 1);
+      g.strokeStyle = rgba(C.accent, 0.18); g.lineWidth = 1; g.strokeRect(cx - D * 0.7, cy - D * 0.7, D * 1.4, D * 1.4);
+      knob(g, fx, fy); },
+    (g, cx, cy, dir, fx, fy, p) => { const D = stickDead(), R = D * 2, k = 9;   // E: corner brackets, tick arrows
+      for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) line(g, [[cx + sx * R, cy + sy * (R - k)], [cx + sx * R, cy + sy * R], [cx + sx * (R - k), cy + sy * R]], rgba(C.accent, 0.35));
+      for (const d of DIRS) { const on = same(d, dir); line(g, [at(cx, cy, d, R - 9, -6), at(cx, cy, d, R - 2 + (on ? 2 * p : 0), 0), at(cx, cy, d, R - 9, 6)], armCol(d, dir, p), on ? 2.5 : 1.5); }
+      knob(g, fx, fy); },
+    (g, cx, cy, dir, fx, fy, p) => { const D = stickDead();   // F: the classic pad's glyphs, floating
+      g.font = '700 ' + Math.round(L.cw * 1.7) + 'px "JetBrains Mono", Consolas, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      const GL = { '0,-1': '▲', '1,0': '►', '0,1': '▼', '-1,0': '◄' };
+      for (const d of DIRS) { const on = same(d, dir), [x, y] = at(cx, cy, d, D * 1.5 + (on ? 2 * p : 0), 0); g.fillStyle = rgba(C.accent, on ? 0.95 : 0.3); g.fillText(GL[d + ''], x, y); }
+      g.fillStyle = rgba(C.accent, 0.3); g.fillText('·', cx, cy);
+      knob(g, fx, fy, 0.3); },
+  ];
+})();
 const dirOf = (dx, dy) => Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)];
 const onPad = c => c.x <= 21 && c.y >= 32;          // the left of the tray (TRACKPAD, ZONE PAD)
 // a tap on the floor: next to you, a step; on you, a wait; anywhere else, what it is
@@ -2681,7 +2726,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, peek, actions, doAction, pickLoadout: closeLoadouts, givePassives: ks => { S.passives = ks; setPassives(); look(); }, youDark, TERM: TERM_CMDS, phoneRooms, phoneAt, mapTap, grabPayload: () => { takePayload(F()); tick(); look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, peek, actions, doAction, pickLoadout: closeLoadouts, givePassives: ks => { S.passives = ks; setPassives(); look(); }, youDark, TERM: TERM_CMDS, phoneRooms, phoneAt, mapTap, grabPayload: () => { takePayload(F()); tick(); look(); draw(); }, setUi: lk => { ui = UIS.findIndex(u => u.look === lk); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>
