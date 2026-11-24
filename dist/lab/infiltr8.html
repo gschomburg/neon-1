@@ -41,12 +41,12 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
 #viewer .v-bar b { color: var(--accent); font-weight: 700; }
 #viewer .v-note { color: var(--mid); }
 #viewer select, #viewer button { font: 16px "JetBrains Mono", Consolas, monospace; background: var(--bg); color: var(--accent); border: 1px solid var(--dim); min-height: 36px; padding: 2px 10px; cursor: pointer; }
-#v-grid { display: flex; flex-wrap: wrap; gap: 14px; padding: 12px; }
-#v-grid .v-card { cursor: pointer; border: 1px solid var(--dim); padding: 6px; width: min-content; }
-#v-grid .v-card:hover { border-color: var(--accent); }
-#v-grid canvas { display: block; }
-#v-grid .v-cap { color: var(--mid); font-size: 12px; margin-top: 4px; }
-#v-grid .v-cap b { color: var(--money); font-weight: 400; }
+#viewer { display: flex; flex-direction: column; overflow: hidden; }
+#viewer .v-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px; }
+#viewer .v-arrow { min-height: 64px; min-width: 40px; font-size: 22px; padding: 0; flex: none; }
+#v-cvs { display: block; touch-action: none; }
+#v-cap { text-align: center; color: var(--mid); padding: 0 12px 12px; }
+#v-cap b { color: var(--money); font-weight: 400; }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -57,11 +57,15 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
   <div class="v-bar">
     <b>FLOOR VIEWER</b>
     <select id="v-floor"><option value="2">F2 THE STACKS</option><option value="3">F3 THE VAULT</option></select>
-    <button id="v-reroll" type="button">REROLL</button>
+    <button id="v-play" type="button">PLAY IT</button>
     <button id="v-close" type="button">CLOSE</button>
-    <span class="v-note">tap a floor to play it</span>
   </div>
-  <div id="v-grid"></div>
+  <div class="v-stage">
+    <button id="v-prev" class="v-arrow" type="button" title="the floor before (left arrow, or swipe right)">◄</button>
+    <canvas id="v-cvs"></canvas>
+    <button id="v-next" class="v-arrow" type="button" title="the next floor (right arrow, or swipe left)">►</button>
+  </div>
+  <div id="v-cap"></div>
 </div>
 <div id="dev" hidden>
   <label for="dev-pal">palette</label><select id="dev-pal"></select>
@@ -838,8 +842,8 @@ function infoAt(f, x, y) {
   return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : GLYPH[c] || c, name: i[0], text: i[1] + (vis ? '' : ' (seen before)') };
 }
 addEventListener('keydown', ev => {
-  if (ev.target && ev.target.closest && ev.target.closest('#dev, #viewer')) return;
-  if (!$('viewer').hidden) { if (ev.key === 'Escape') closeViewer(); return; }   // (the dev panel's controls take their own keys)
+  if (ev.target && ev.target.closest && ev.target.closest('#dev, #v-floor')) return;   // (in the viewer, its buttons keep the arrow keys)
+  if (!$('viewer').hidden) { if (ev.key === 'Escape') closeViewer(); if (ev.key === 'ArrowRight') viewerStep(1); if (ev.key === 'ArrowLeft') viewerStep(-1); return; }   // (the dev panel's controls take their own keys)
   const k = ev.key.toLowerCase();
   if (k === '?' || k === '/') return toggleHelp();
   if (helpOpen) { if (k === 'escape' || k === 'enter' || k === ' ') { ev.preventDefault(); toggleHelp(); } return; }
@@ -892,21 +896,22 @@ $('dev-down').addEventListener('click', () => goFloor(S.fi + 1));
 $('dev-reveal').addEventListener('change', e => { devReveal = e.target.checked; look(); draw(); });
 
 // ---------- the floor viewer (Greg, 2026-11-23) ----------
-// A dozen seeds' floors at once, the whole floor shown (as the generator made it: patrols at their start), with their
-// counts under them. To find what the generator gets wrong; each find becomes a check it runs (docs/INFILTR8.md).
-// Tap one to play that seed from that floor.
-const V_COUNT = 12;
-function drawFloorCard(cvs, f) {
-  const fs = Math.min(12, (innerWidth - 40) / (MW * CHAR_W)), cw = fs * CHAR_W,   // (12px, or less to fit a phone)
-    ch = fs * LINE_H, dpr = window.devicePixelRatio || 1;
+// One generated floor at a time, as big as the window lets it be: the whole floor as the generator made it (patrols at
+// their start, with their walks; CAM cones; ducts), its seed and counts under it. ◄ ► (or the arrow keys, or a swipe)
+// slide to the floor before or after; past the last one there's always a new one. To find what the generator gets
+// wrong; each find becomes a check it runs (docs/INFILTR8.md). PLAY IT starts that seed on that floor.
+const V = { seeds: [], i: 0 };
+function drawFloorCard(cvs, f, fs) {
+  const cw = fs * CHAR_W, ch = fs * LINE_H, dpr = window.devicePixelRatio || 1;
   cvs.width = MW * cw * dpr; cvs.height = MH * ch * dpr; cvs.style.width = MW * cw + 'px'; cvs.style.height = MH * ch + 'px';
   const x = cvs.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
   x.fillStyle = C.bg; x.fillRect(0, 0, MW * cw, MH * ch);
+  x.strokeStyle = C.dim; x.lineWidth = 1; x.strokeRect(0.5, 0.5, MW * cw - 1, MH * ch - 1);   // (the floor's edge)
   x.textAlign = 'center'; x.textBaseline = 'middle';
-  const cell = (cx, cy, c, col, bold, bg) => { if (bg) { x.fillStyle = bg; x.fillRect(cx * cw, cy * ch, cw + 0.5, ch + 0.5); }
-    x.font = (bold ? 800 : 400) + ' ' + fs + 'px "JetBrains Mono", Consolas, monospace'; x.fillStyle = col; x.fillText(c, cx * cw + cw / 2, cy * ch + ch / 2); };
+  const cell = (cx, cy, c, col, bold) => { x.font = (bold ? 800 : 400) + ' ' + fs + 'px "JetBrains Mono", Consolas, monospace'; x.fillStyle = col; x.fillText(c, cx * cw + cw / 2, cy * ch + ch / 2 + fs * 0.06); };
   for (const d of f.ducts) for (const [dx, dy] of d.cells) { x.fillStyle = rgba(C.rare, 0.22); x.fillRect(dx * cw, dy * ch, cw, ch); }
-  for (const c of f.cams) for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) if (inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, xx, yy)) { x.fillStyle = rgba(C.danger, 0.12); x.fillRect(xx * cw, yy * ch, cw, ch); }
+  for (const c of f.cams) for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) if (inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, xx, yy)) { x.fillStyle = rgba(C.danger, 0.14); x.fillRect(xx * cw, yy * ch, cw, ch); }
+  for (const p of f.pats) for (const [px, py] of p.path) { x.fillStyle = rgba(C.leg, 0.14); x.fillRect(px * cw, py * ch, cw, ch); }
   for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) {
     const c = at(f, xx, yy); if (c === ' ') continue;
     const k = xx + ',' + yy, g0 = c === '#' ? wallGlyph(f, xx, yy) : c === '.' && f.halls.has(k) ? (f.junc && f.junc.has(k) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
@@ -914,28 +919,32 @@ function drawFloorCard(cvs, f) {
   }
   if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money, true);
   for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger, true);
-  for (const p of f.pats) { for (const [px, py] of p.path) { x.fillStyle = rgba(C.danger, 0.08); x.fillRect(px * cw, py * ch, cw, ch); } cell(p.x, p.y, 'P', C.danger, true); }
+  for (const p of f.pats) cell(p.x, p.y, 'P', C.danger, true);
 }
-function openViewer(reroll) {
-  const n = +$('v-floor').value, grid = $('v-grid');
-  if (reroll || !openViewer.seeds) openViewer.seeds = Array.from({ length: V_COUNT }, () => newSeed());
-  grid.innerHTML = '';
-  for (const seed of openViewer.seeds) {
-    const fl = floorGen(seed, n, n === 3), card = document.createElement('div'), cvs = document.createElement('canvas'), cap = document.createElement('div');
-    card.className = 'v-card'; cap.className = 'v-cap';
-    drawFloorCard(cvs, fl);
-    cap.innerHTML = '<b>' + seed + '</b><br>rooms ' + fl.rooms.length + ' · cams ' + fl.cams.length + ' · patrols ' + fl.pats.length + ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0);
-    card.append(cvs, cap);
-    card.addEventListener('click', () => { closeViewer(); newRun(seed); goFloor(n - 1); });
-    grid.append(card);
-  }
-  $('viewer').hidden = false;
+function viewerShow() {
+  const n = +$('v-floor').value;
+  while (V.i >= V.seeds.length) V.seeds.push(newSeed());   // (past the last: a new one)
+  const seed = V.seeds[V.i], fl = floorGen(seed, n, n === 3), stage = document.querySelector('#viewer .v-stage');
+  // as big as fits: the stage less the two arrows
+  const w = stage.clientWidth - 2 * 46 - 12, h = stage.clientHeight - 12;
+  drawFloorCard($('v-cvs'), fl, Math.max(6, Math.min(w / (MW * CHAR_W), h / (MH * LINE_H))));
+  $('v-cap').innerHTML = (V.i + 1) + ' · <b>' + seed + '</b> · rooms ' + fl.rooms.length + ' · cams ' + fl.cams.length + ' · patrols ' + fl.pats.length +
+    ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0);
+  $('v-prev').disabled = V.i === 0;
 }
+function openViewer() { if (!V.seeds.length) V.seeds.push(newSeed()); $('viewer').hidden = false; viewerShow(); }
 function closeViewer() { $('viewer').hidden = true; }
-$('dev-viewer').addEventListener('click', () => openViewer(false));
-$('v-reroll').addEventListener('click', () => openViewer(true));
-$('v-floor').addEventListener('change', () => openViewer(false));
+const viewerStep = d => { V.i = Math.max(0, V.i + d); viewerShow(); };
+$('dev-viewer').addEventListener('click', openViewer);
+$('v-prev').addEventListener('click', () => viewerStep(-1));
+$('v-next').addEventListener('click', () => viewerStep(1));
+$('v-floor').addEventListener('change', viewerShow);
+$('v-play').addEventListener('click', () => { const n = +$('v-floor').value; closeViewer(); newRun(V.seeds[V.i]); goFloor(n - 1); });
 $('v-close').addEventListener('click', closeViewer);
+{ let sx = null;   // a swipe on the floor: left for the next, right for the one before
+  $('v-cvs').addEventListener('pointerdown', e => { sx = e.clientX; });
+  $('v-cvs').addEventListener('pointerup', e => { if (sx == null) return; const dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) viewerStep(dx < 0 ? 1 : -1); }); }
+addEventListener('resize', () => { if (!$('viewer').hidden) viewerShow(); });
 try { if (localStorage.getItem('neon.infiltr8.dev') === '1') $('dev').hidden = false; } catch (e) { /* private mode */ }
 addEventListener('resize', devPlace);
 
