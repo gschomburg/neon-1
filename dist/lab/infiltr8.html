@@ -35,12 +35,34 @@ body.dev-side #dev-btn { top: 8px; padding: 3px 8px; }
 body.dev-side #dev { top: 40px; max-width: calc(100vw - 16px); padding: 10px; gap: 7px 10px; }
 body.dev-side #dev select { min-height: 0; padding: 3px; width: auto; }
 body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
+/* the floor viewer: a dozen generated floors at once (to see what the generator gets wrong). Over everything. */
+#viewer { position: fixed; inset: 0; z-index: 3; background: var(--bg); color: var(--text); overflow: auto; font: 14px "JetBrains Mono", Consolas, monospace; }
+#viewer .v-bar { position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--dim); padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+#viewer .v-bar b { color: var(--accent); font-weight: 700; }
+#viewer .v-note { color: var(--mid); }
+#viewer select, #viewer button { font: 16px "JetBrains Mono", Consolas, monospace; background: var(--bg); color: var(--accent); border: 1px solid var(--dim); min-height: 36px; padding: 2px 10px; cursor: pointer; }
+#v-grid { display: flex; flex-wrap: wrap; gap: 14px; padding: 12px; }
+#v-grid .v-card { cursor: pointer; border: 1px solid var(--dim); padding: 6px; width: min-content; }
+#v-grid .v-card:hover { border-color: var(--accent); }
+#v-grid canvas { display: block; }
+#v-grid .v-cap { color: var(--mid); font-size: 12px; margin-top: 4px; }
+#v-grid .v-cap b { color: var(--money); font-weight: 400; }
 [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
 <button id="dev-btn" type="button" title="the dev panel">DEV</button>
+<div id="viewer" hidden>
+  <div class="v-bar">
+    <b>FLOOR VIEWER</b>
+    <select id="v-floor"><option value="2">F2 THE STACKS</option><option value="3">F3 THE VAULT</option></select>
+    <button id="v-reroll" type="button">REROLL</button>
+    <button id="v-close" type="button">CLOSE</button>
+    <span class="v-note">tap a floor to play it</span>
+  </div>
+  <div id="v-grid"></div>
+</div>
 <div id="dev" hidden>
   <label for="dev-pal">palette</label><select id="dev-pal"></select>
   <label for="dev-ui">controls</label><select id="dev-ui"></select>
@@ -48,6 +70,7 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
   <span></span><span class="dev-row"><button id="dev-up" type="button">▲ UP</button><button id="dev-down" type="button">▼ DOWN</button></span>
   <label for="dev-clock">clock off</label><input id="dev-clock" type="checkbox">
   <label for="dev-reveal">show all</label><input id="dev-reveal" type="checkbox">
+  <span></span><span class="dev-row"><button id="dev-viewer" type="button">FLOOR VIEWER</button></span>
 </div>
 <!-- the game's palettes and effects: these four files and nothing else (tools/bump.js keeps the ?v= in step) -->
 <script>window.NEON_FILES = [];</script>
@@ -217,6 +240,7 @@ function floorGen(seed, n, last) {
       const sa = spot(a), sb = spot(b), path = route(f, sa.x, sa.y, sb.x, sb.y);
       if (path && path.length > 6) { f.pats.push(pat(path, false)); p++; }
     }
+    f.rooms = rooms;
     return f;
   }
   return floorGen(seed + 'x', n, last);
@@ -814,7 +838,8 @@ function infoAt(f, x, y) {
   return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : GLYPH[c] || c, name: i[0], text: i[1] + (vis ? '' : ' (seen before)') };
 }
 addEventListener('keydown', ev => {
-  if (ev.target && ev.target.closest && ev.target.closest('#dev')) return;   // (the dev panel's controls take their own keys)
+  if (ev.target && ev.target.closest && ev.target.closest('#dev, #viewer')) return;
+  if (!$('viewer').hidden) { if (ev.key === 'Escape') closeViewer(); return; }   // (the dev panel's controls take their own keys)
   const k = ev.key.toLowerCase();
   if (k === '?' || k === '/') return toggleHelp();
   if (helpOpen) { if (k === 'escape' || k === 'enter' || k === ' ') { ev.preventDefault(); toggleHelp(); } return; }
@@ -865,6 +890,52 @@ $('dev-floor').addEventListener('change', e => goFloor(+e.target.value));
 $('dev-up').addEventListener('click', () => goFloor(S.fi - 1));
 $('dev-down').addEventListener('click', () => goFloor(S.fi + 1));
 $('dev-reveal').addEventListener('change', e => { devReveal = e.target.checked; look(); draw(); });
+
+// ---------- the floor viewer (Greg, 2026-11-23) ----------
+// A dozen seeds' floors at once, the whole floor shown (as the generator made it: patrols at their start), with their
+// counts under them. To find what the generator gets wrong; each find becomes a check it runs (docs/INFILTR8.md).
+// Tap one to play that seed from that floor.
+const V_COUNT = 12;
+function drawFloorCard(cvs, f) {
+  const fs = Math.min(12, (innerWidth - 40) / (MW * CHAR_W)), cw = fs * CHAR_W,   // (12px, or less to fit a phone)
+    ch = fs * LINE_H, dpr = window.devicePixelRatio || 1;
+  cvs.width = MW * cw * dpr; cvs.height = MH * ch * dpr; cvs.style.width = MW * cw + 'px'; cvs.style.height = MH * ch + 'px';
+  const x = cvs.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  x.fillStyle = C.bg; x.fillRect(0, 0, MW * cw, MH * ch);
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  const cell = (cx, cy, c, col, bold, bg) => { if (bg) { x.fillStyle = bg; x.fillRect(cx * cw, cy * ch, cw + 0.5, ch + 0.5); }
+    x.font = (bold ? 800 : 400) + ' ' + fs + 'px "JetBrains Mono", Consolas, monospace'; x.fillStyle = col; x.fillText(c, cx * cw + cw / 2, cy * ch + ch / 2); };
+  for (const d of f.ducts) for (const [dx, dy] of d.cells) { x.fillStyle = rgba(C.rare, 0.22); x.fillRect(dx * cw, dy * ch, cw, ch); }
+  for (const c of f.cams) for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) if (inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, xx, yy)) { x.fillStyle = rgba(C.danger, 0.12); x.fillRect(xx * cw, yy * ch, cw, ch); }
+  for (let yy = 0; yy < MH; yy++) for (let xx = 0; xx < MW; xx++) {
+    const c = at(f, xx, yy); if (c === ' ') continue;
+    const k = xx + ',' + yy, g0 = c === '#' ? wallGlyph(f, xx, yy) : c === '.' && f.halls.has(k) ? (f.junc && f.junc.has(k) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
+    cell(xx, yy, g0, C[TCOL[c]] || C.text, '<>EF'.includes(c));
+  }
+  if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money, true);
+  for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger, true);
+  for (const p of f.pats) { for (const [px, py] of p.path) { x.fillStyle = rgba(C.danger, 0.08); x.fillRect(px * cw, py * ch, cw, ch); } cell(p.x, p.y, 'P', C.danger, true); }
+}
+function openViewer(reroll) {
+  const n = +$('v-floor').value, grid = $('v-grid');
+  if (reroll || !openViewer.seeds) openViewer.seeds = Array.from({ length: V_COUNT }, () => newSeed());
+  grid.innerHTML = '';
+  for (const seed of openViewer.seeds) {
+    const fl = floorGen(seed, n, n === 3), card = document.createElement('div'), cvs = document.createElement('canvas'), cap = document.createElement('div');
+    card.className = 'v-card'; cap.className = 'v-cap';
+    drawFloorCard(cvs, fl);
+    cap.innerHTML = '<b>' + seed + '</b><br>rooms ' + fl.rooms.length + ' · cams ' + fl.cams.length + ' · patrols ' + fl.pats.length + ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0);
+    card.append(cvs, cap);
+    card.addEventListener('click', () => { closeViewer(); newRun(seed); goFloor(n - 1); });
+    grid.append(card);
+  }
+  $('viewer').hidden = false;
+}
+function closeViewer() { $('viewer').hidden = true; }
+$('dev-viewer').addEventListener('click', () => openViewer(false));
+$('v-reroll').addEventListener('click', () => openViewer(true));
+$('v-floor').addEventListener('change', () => openViewer(false));
+$('v-close').addEventListener('click', closeViewer);
 try { if (localStorage.getItem('neon.infiltr8.dev') === '1') $('dev').hidden = false; } catch (e) { /* private mode */ }
 addEventListener('resize', devPlace);
 
@@ -872,7 +943,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { openViewer, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

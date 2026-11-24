@@ -179,6 +179,11 @@ game's strength is short, readable choices.
 - **THE PUSH ROOM** (Greg's Sokoban): push packets onto ports to open the firewall (mockup 3).
 - **THE SERVER FARM:** rows of racks to hide between, with a sweep crossing.
 - **THE BREAK ROOM:** a vending machine (spend CR on gear), a coffee machine (+1 INT, but it's loud).
+- **THE CUBICLES** (Greg, 2026-11-23): a room of desks and cubicle walls: **low cover**. You see over it, but
+  crouched right behind it, CAMs and patrols can't see you. (The rule: low cover blocks a view of you only if you're
+  next to it, on the far side. It never blocks your own view.)
+- **Terminals in rooms** (Greg, 2026-11-23): a terminal can be just part of a room, like a LIGHT SWITCH on a wall.
+  It doesn't need a room of its own. See the terminals in Kit.
 - **THE CEO'S OFFICE:** the best payload, the most security.
 - **THE TRASH:** deleted files. Junk, and once in a while something good (the recycle bin, of course).
 - **A DATA MINE** (from the 11-15 note): you dig in the dark, with a light that runs down.
@@ -344,6 +349,16 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     NIGHT VISION.
   - A room's light could come with its type: THE SERVER FARM is bright, THE BREAK ROOM has a switch, THE CEO'S OFFICE
     is lit. The fiction: a lit room is part of the net in use, a dark one is idle memory.
+
+### The floor generator: procedural, with checks (Claude's take, 2026-11-23)
+- Hand-picking seeds doesn't last: a seed only means something to the generator that made it. Change the generator
+  and every seed makes a different floor.
+- So: the game stays procedural. The **floor viewer** (the demo's dev panel) shows a dozen floors at once, to find
+  what goes wrong. Each problem becomes a **check** the generator runs, and a floor that fails is thrown out and
+  made again ("every room reachable", "no CAM sees the stairs", "the payload room has cover").
+- Fixed layouts are for special floors only (a story floor, a boss floor), saved as data, like THE RING.
+- The plan: the viewer; even room placement (BSP); things placed with purpose (CAMs on doors and the payload,
+  patrols between the rooms that matter); then room types (terminals, THE CUBICLES, THE SERVER FARM, THE WAREHOUSE).
 
 ## Rewards
 - **The corp counts as beaten**, as if you'd breached it: the map, the codex and the sector all treat it the same.
