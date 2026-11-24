@@ -566,6 +566,26 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   TERMINAL you've seen, anywhere on the floor: HACK), SABOTEUR (wreck a CAM or the SCANNER: step into it, or WRECK from
   beside it). And SPRINTER now also makes every second step in a row free (nothing else moves); anything else costs a
   full turn and starts the count again, so moving never locks you out of an action.
+- **Every popup is a dev popup now** (Greg, 2026-11-24): the stations (TERMINAL, LOOT CACHE, RE-UP, BAG SWAP), the
+  ACTIONS menu and the help are plain HTML over the game, like the LOADOUT form: any length of text, scrolling. Once the
+  options and their limits settle, they come into the game in its own UI.
+- **The terminal's pool** (Greg, 2026-11-24; built the same day). Each terminal offers 4 commands from a pool (its own
+  draw from the seed: the same terminal, the same list): CAMS OFF, ALARM OFF / DELAY, MAP, LIGHTS OUT, LOCKDOWN (every
+  patrol and guard frozen 15 turns), FIRE DRILL (patrols head for the nearest way out, 10 turns), RECALL (the patrol
+  nearest you walks off the floor), REVERSE BELTS (warehouse floors), FRIENDLY CAMS. A command only shows where it means
+  something. **ROOTKIT** (a passive): every terminal offers all of them. (ROOT is still the 2-picks one.)
+  - Idea, not built: PHONE RING (send the nearest patrol to a room you pick): needs picking a spot on the map.
+- **FRIENDLY CAMS** (Greg): the floor's CAMs don't raise the ALERT, and you see what they see, live (their view is
+  green). What you see through them counts as seen: BLINDER, JAMMER and LONG ARM work through them. (DARTS don't: a
+  dart needs a line from you.)
+- **BLINDER** (gear, Greg): blind the nearest patrol or guard you can see, 10 turns. Blind, it sees nothing, stumbles
+  a step now and then, and you can take it down from any side. Not CAMs or the SCANNER. (Shown in the rare color.)
+- **GUARD** (`G`, a new unit, Greg): stands its post a few cells off the way through, looking at it, and looks about
+  (ahead, left, ahead, right). Seeing you, it gives chase, then goes back to its post. One per generated floor.
+- **LONG ARM** (a passive, Greg): take loot you can see from any distance (through a friendly CAM too): a LOOT CACHE,
+  or the payload itself (the ALARM's length then counts from where you are). Tap it, then GRAB.
+- **Fixed:** since SPRINTER went in, taking the payload left it on the map and didn't clear the backup timer (a
+  comment had swallowed the line). Now one function, `takePayload`.
 - **More passive ideas** (Greg, 2026-11-24; not built):
   - CAMs and patrols you've seen stay marked on the map, facing the way they were looking, after you lose sight of them.
   - Hack a terminal you know about from a distance.
