@@ -16,13 +16,14 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #06090a; overflow: hidden; }
 canvas { display: block; touch-action: none; }
-/* the dev panel (Greg, 2026-11-23): plain form controls over the map, folded away by its button. layout() places it. */
-#dev-btn, #dev { position: fixed; font: 12px "JetBrains Mono", Consolas, monospace; color: var(--text); z-index: 2; }
-#dev-btn { background: var(--bg); border: 1px solid var(--dim); color: var(--money); padding: 2px 6px; cursor: pointer; }
-#dev { background: var(--bg); border: 1px solid var(--dim); padding: 8px; display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: center; opacity: 0.95; }
+/* the dev panel (Greg, 2026-11-23): plain form controls, folded away by its button. Both sit on the window's left edge
+   (on a wide window, out beside the game). */
+#dev-btn, #dev { position: fixed; left: 8px; font: 14.4px "JetBrains Mono", Consolas, monospace; color: var(--text); z-index: 2; }
+#dev-btn { top: 8px; background: var(--bg); border: 1px solid var(--dim); color: var(--money); padding: 3px 8px; cursor: pointer; }
+#dev { top: 40px; max-width: calc(100vw - 16px); background: var(--bg); border: 1px solid var(--dim); padding: 10px; display: grid; grid-template-columns: auto 1fr; gap: 7px 10px; align-items: center; opacity: 0.95; }
 #dev label { color: var(--mid); }
-#dev select { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--dim); padding: 2px; max-width: 100%; }
-#dev input[type=checkbox] { accent-color: var(--accent); justify-self: start; }
+#dev select { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--dim); padding: 3px; max-width: 100%; }
+#dev input[type=checkbox] { accent-color: var(--accent); justify-self: start; width: 17px; height: 17px; margin: 0; }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -804,11 +805,6 @@ function devSync() {   // the controls show the game as it is (keys and the game
   const fl = $('dev-floor'); if (S && fl.options.length !== S.floors.length) fl.innerHTML = S.floors.map((n, i) => '<option value="' + i + '">F' + (i + 1) + ' ' + n.name + '</option>').join('');
   if (S) set('dev-floor', 'value', String(S.fi));
 }
-function devPlace() {   // the button on the footer's right, the panel over the top of the map
-  const b = $('dev-btn'), p = $('dev');
-  b.style.right = (innerWidth - (L.ox + SW * L.cw)) + 'px'; b.style.top = (L.oy + 37 * L.ch) + 'px'; b.style.height = L.ch + 'px'; b.style.lineHeight = '1';
-  p.style.right = b.style.right; p.style.top = (L.oy + MAP_Y * L.ch) + 'px'; p.style.maxWidth = Math.min(300, SW * L.cw) + 'px';
-}
 function devColors() { const d = document.documentElement.style; for (const k of ['bg', 'dim', 'mid', 'text', 'accent', 'money']) d.setProperty('--' + k, C[k]); }
 $('dev-pal').innerHTML = PALS.map((k, i) => '<option value="' + i + '">' + GAME.PALETTES[k].name + '</option>').join('');
 $('dev-ui').innerHTML = UIS.map((u, i) => '<option value="' + i + '">' + (i + 1) + ' ' + u.name + '</option>').join('');
@@ -819,9 +815,8 @@ $('dev-clock').addEventListener('change', () => toggleClock());
 $('dev-floor').addEventListener('change', e => goFloor(+e.target.value));
 $('dev-reveal').addEventListener('change', e => { devReveal = e.target.checked; look(); draw(); });
 try { if (localStorage.getItem('neon.infiltr8.dev') === '1') $('dev').hidden = false; } catch (e) { /* private mode */ }
-addEventListener('resize', devPlace);
 
-layout(); devPlace(); devColors();
+layout(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
