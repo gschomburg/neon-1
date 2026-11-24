@@ -123,7 +123,7 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
 <div id="viewer" hidden>
   <div class="v-bar">
     <b>FLOOR VIEWER</b>
-    <select id="v-floor"><option value="2">F2 THE STACKS</option><option value="3">F3 THE VAULT</option></select>
+    <select id="v-floor"><option value="2">F2 THE STACKS</option><option value="3">F3 THE VAULT</option><option value="4">THE ROOF</option></select>
     <select id="v-bld" title="the building type (AUTO: the seed picks)"></select>
     <button id="v-reroll" type="button" title="a new seed for this floor (R)">REROLL</button>
     <button id="v-labels" type="button" title="the rooms' labels, on or off (L)">LABELS ON</button>
@@ -1356,7 +1356,7 @@ function floorLayer(seed, n) {
 const HOVER_TURNS = 6;
 function floorRoof(seed) {
   const r = rngFrom(hashStr(seed + ':roof'));
-  const f = newFloor('THE ROOF'); f.roof = true; f.litAll = true; f.halls = new Set(); f.junc = new Set(); f.stations = new Map(); f.captcha = new Map(); f.ptiles = new Map(); f.rooms = [];
+  const f = newFloor('THE ROOF'); f.roof = true; f.order = 1; f.litAll = true; f.halls = new Set(); f.junc = new Set(); f.stations = new Map(); f.captcha = new Map(); f.ptiles = new Map(); f.rooms = [];
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) set(f, x, y, x === 0 || y === 0 || x === MW - 1 || y === MH - 1 ? 'w' : '.');
   // the stairwell hut (its door east, the stairs down inside) and the hoverpad (3 x 3)
   for (let y = 9; y <= 13; y++) for (let x = 3; x <= 7; x++) set(f, x, y, x === 3 || x === 7 || y === 9 || y === 13 ? '#' : '.');
@@ -2468,17 +2468,24 @@ addEventListener('keydown', ev => {
 // ---------- the dev panel ----------
 const $ = id => document.getElementById(id);
 function goFloor(i) {   // to another floor, at the stairs you'd come in by (down: its stairs up; up: its stairs down)
-  if (i === S.fi || S.over) return;
-  const n = S.floors[i], at0 = i > S.fi ? n.up : n.down;
+  if ((i === S.fi && !S.onRoof) || S.over) return;   // (on the roof, S.fi is still 0: F1 is somewhere to go)
+  const n = S.floors[i], at0 = S.onRoof && n.roofAt ? n.roofAt : S.onRoof || i > S.fi ? n.up : n.down;
   S.fi = i; S.onRoof = false; S.inDuct = false; S.peek = null; S.aim = null; S.ring = false; S.floorT = performance.now(); floorClock(n);
   if (at0) { S.x = at0.x; S.y = at0.y; } else { S.x = n.start.x; S.y = n.start.y; }
   say('F' + (i + 1) + ': ' + n.name + '. (dev)', C.money); look(); draw();
 }
+// (dev) straight up to THE ROOF, at its stairs down
+function goRoof() {
+  if (S.onRoof || S.over) return;
+  S.onRoof = true; S.inDuct = false; S.peek = null; S.aim = null; S.ring = false; S.floorT = performance.now();
+  const n = F(); S.x = n.down.x; S.y = n.down.y; floorClock(n);
+  say('RF: ' + n.name + '. (dev)', C.money); look(); draw();
+}
 function devSync() {   // the controls show the game as it is (keys and the game change things too)
   const set = (id, k, v) => { if ($(id)[k] !== v) $(id)[k] = v; };   // (only on a change: an open dropdown stays open)
   set('dev-pal', 'value', String(pal)); set('dev-ui', 'value', String(ui)); set('dev-clock', 'checked', clockOff); set('dev-timed', 'checked', timed); set('dev-reveal', 'checked', devReveal);
-  const fl = $('dev-floor'); if (S && fl.options.length !== S.floors.length) fl.innerHTML = S.floors.map((n, i) => '<option value="' + i + '">F' + (i + 1) + ' ' + n.name + '</option>').join('');
-  if (S) { set('dev-floor', 'value', String(S.fi)); set('dev-up', 'disabled', S.fi === 0); set('dev-down', 'disabled', S.fi === S.floors.length - 1); }
+  const fl = $('dev-floor'); if (S && fl.options.length !== S.floors.length + 1) fl.innerHTML = S.floors.map((n, i) => '<option value="' + i + '">F' + (i + 1) + ' ' + n.name + '</option>').join('') + '<option value="roof">RF THE ROOF</option>';   // (THE ROOF too: goRoof)
+  if (S) { set('dev-floor', 'value', S.onRoof ? 'roof' : String(S.fi)); set('dev-up', 'disabled', S.fi === 0); set('dev-down', 'disabled', S.fi === S.floors.length - 1); }
 }
 function devPlace() {
   const side = L.ox >= 260, b = $('dev-btn'), p = $('dev');   // (room for the panel beside the game?)
@@ -2506,7 +2513,7 @@ $('help-pop').addEventListener('click', ev => { if (ev.target === $('help-pop'))
 for (const k of ['pre', 'custom']) $('kt-' + k).addEventListener('click', () => kitTab(k));
 for (const [w, i] of [['p', 0], ['p', 1], ['g', 0], ['g', 1]]) $('kc-' + w + i).addEventListener('change', e => customPick(w, i, e.target.value));
 $('kc-use').addEventListener('click', () => closeLoadouts('CUSTOM'));
-$('dev-floor').addEventListener('change', e => goFloor(+e.target.value));
+$('dev-floor').addEventListener('change', e => e.target.value === 'roof' ? goRoof() : goFloor(+e.target.value));
 $('dev-up').addEventListener('click', () => goFloor(S.fi - 1));
 $('dev-down').addEventListener('click', () => goFloor(S.fi + 1));
 $('dev-reveal').addEventListener('change', e => { devReveal = e.target.checked; look(); draw(); });
@@ -2574,14 +2581,14 @@ function drawFloorCard(cvs, f, fs) {
 function viewerShow() {
   const n = +$('v-floor').value;
   while (V.i >= V.seeds.length) V.seeds.push(newSeed());   // (past the last: a new one)
-  const seed = V.seeds[V.i], fl = floorGen(seed, n, n === 3), stage = document.querySelector('#viewer .v-stage');
+  const seed = V.seeds[V.i], fl = n === 4 ? floorRoof(seed) : floorGen(seed, n, n === 3), stage = document.querySelector('#viewer .v-stage');
   // as big as fits: the stage less the two arrows
   const w = stage.clientWidth - 2 * 46 - 12, h = stage.clientHeight - 12;
   drawFloorCard($('v-cvs'), fl, Math.max(6, Math.min(w / (MW * CHAR_W), h / (MH * LINE_H))));
   $('v-cap').innerHTML = (V.i + 1) + ' · <b>' + seed + '</b> · rooms ' + fl.rooms.length + ' · cams ' + fl.cams.length + ' · patrols ' + fl.pats.length +
     ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0) +
     ' · the way ' + Math.max(0, fl.route.length - 1) + ' steps' +
-    ' · shapes ' + Object.entries(fl.rooms.reduce((m, o) => (m[o.big ? 'big ' + o.shape : o.shape] = (m[o.big ? 'big ' + o.shape : o.shape] || 0) + 1, m), {})).map(([k, v]) => v + ' ' + k).join(', ') + ' · ' + BUILDINGS[fl.building].name + (buildingPick === 'auto' ? '' : ' (set)') + ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
+    ' · shapes ' + Object.entries(fl.rooms.reduce((m, o) => (m[o.big ? 'big ' + o.shape : o.shape] = (m[o.big ? 'big ' + o.shape : o.shape] || 0) + 1, m), {})).map(([k, v]) => v + ' ' + k).join(', ') + ' · ' + (fl.roof ? 'THE ROOF' : BUILDINGS[fl.building].name) + (buildingPick === 'auto' ? '' : ' (set)') + ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
   $('v-prev').disabled = V.i === 0;
 }
 function openViewer() { if (!V.seeds.length) V.seeds.push(newSeed()); $('viewer').hidden = false; viewerShow(); }
@@ -2604,7 +2611,7 @@ $('v-bld').addEventListener('change', e => { setBuilding(e.target.value, false);
 $('v-reroll').addEventListener('click', () => { V.seeds[V.i] = newSeed(); viewerShow(); });
 $('v-labels').addEventListener('click', toggleLabels);
 $('v-labels').textContent = V.labels ? 'LABELS ON' : 'LABELS OFF';
-$('v-play').addEventListener('click', () => { const n = +$('v-floor').value; closeViewer(); newRun(V.seeds[V.i]); goFloor(n - 1); });
+$('v-play').addEventListener('click', () => { const n = +$('v-floor').value; closeViewer(); newRun(V.seeds[V.i]); if (n === 4) goRoof(); else goFloor(n - 1); });   // (4: THE ROOF)
 $('v-close').addEventListener('click', closeViewer);
 { let sx = null;   // a swipe on the floor: left for the next, right for the one before
   $('v-cvs').addEventListener('pointerdown', e => { sx = e.clientX; });
