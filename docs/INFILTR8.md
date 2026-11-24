@@ -291,6 +291,17 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
 - **Takedown.** Sneaking up on a patrol gets you nothing yet, and you can even stand on its cell. The idea: step into
   a patrol from behind or the side and it's out, quietly (for good, or for 20 turns). From the front, it catches
   you, the same as now. The DART GUN and the TASER are then for patrols you can't get behind.
+- **Lit and dark rooms.** In the demo you just see a set distance: a circle 15 cells across and about 7 rows up and
+  down, blocked by walls. Light plays no part. The idea is to make light the rule:
+  - **A lit room:** once you're at its door, or can see in, you see all of it. But the CAMs and patrols in it see you at
+    full range.
+  - **A dark room or hall:** you see 3 or 4 cells, and so do they. Dark hides you, but you're half blind, and a patrol
+    can be right on you.
+  - So crossing a lit room is the tense part, and the dark halls are where you slip around.
+  - Kit that gets a job from this: FUSE PULL (lights out), GLOWSTICK (a light of your own), SHADOW SUIT, SPRAY CAN,
+    NIGHT VISION.
+  - A room's light could come with its type: THE SERVER FARM is bright, THE BREAK ROOM has a switch, THE CEO'S OFFICE
+    is lit. The fiction: a lit room is part of the net in use, a dark one is idle memory.
 
 ## Rewards
 - **The corp counts as beaten**, as if you'd breached it: the map, the codex and the sector all treat it the same.
