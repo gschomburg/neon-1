@@ -1098,7 +1098,8 @@ const STEP_MS = 110;
 const DECRYPT_MS = 500;   // a floor's name, and the end screen's heading, decrypt in (the game's FX.decrypt)
 const PAT_HALF = Math.PI / 4, PAT_RANGE = 10;   // a patrol's view: 90 degrees wide, the way it last stepped (draw() shows it)
 const UNIFORM_TURNS = 15;   // UNIFORM: patrols ignore you unless right next to you
-const KO_TURNS = 30;        // a TAKEDOWN: how long a patrol's out   // how long the @ takes to slide one step
+const PAT_PACE = 2;         // a patrol on its round steps once every PAT_PACE turns (1 = every turn)
+const KO_TURNS = 30;       // a TAKEDOWN: how long a patrol's out   // how long the @ takes to slide one step
 let S;
 // the clock toggle (a demo aid, Greg 2026-11-23): off, the turn count and the alarm stand still, so nothing traces you.
 // Cams and patrols still move. It stays as you set it across new runs.
@@ -1200,10 +1201,15 @@ function tick() {
     if (p.dead) continue;
     if (p.ko > 0) { if (!--p.ko) { p.chase = 0; if (S.vis[p.y][p.x]) say('a PATROL comes to.', C.money); } continue; }   // (knocked out: nothing; then back to its round)
     if (p.stun > 0) { p.stun--; continue; }
+    // (on its round a patrol steps every PAT_PACE turns, so you can close in; it still looks every turn.
+    // Chasing, or with the alarm up or the payload in your bag, it moves every turn. The ? warning reads p.beat too.)
+    if (p.beat == null) p.beat = f.pats.indexOf(p);   // (staggered, so they don't all pause together)
+    const rests = steps === 1 && !(p.chase > 0) && ++p.beat % PAT_PACE !== 0;
     for (let s = 0; s < steps; s++) {
       // (in a UNIFORM a patrol walks past you: only right next to you does it look twice)
       const sees = !S.inDuct && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, S.x, S.y) && !(S.uniform > 0 && Math.abs(p.x - S.x) + Math.abs(p.y - S.y) > 1);
       if (sees) { if (!p.chase) say('a PATROL saw you. it\'s coming.', C.danger); p.chase = 8; p.lx = S.x; p.ly = S.y; }
+      if (rests && !(p.chase > 0)) break;   // (a resting beat: it looked, it stays put)
       if (p.chase > 0) {
         p.chase--;
         const r = route(f, p.x, p.y, p.lx, p.ly);
@@ -1378,7 +1384,8 @@ function draw() {
   for (const c of f.cams) if (S.vis[c.y][c.x]) piece(c.x, c.y, c.dead ? 'x' : CAM_GLYPH, c.dead || c.off > 0 ? C.dim : c.seen ? C.money : C.danger);
   for (const p of f.pats) if (S.vis[p.y][p.x]) piece(p.x, p.y, p.dead ? 'x' : 'P', p.dead || p.ko > 0 ? C.dim : p.stun ? C.mid : C.danger, p.chase && !(p.ko > 0) ? rgba(C.danger, 0.25) : null);
   // the TURN WARNING (Greg, 2026-11-24): a ? over a patrol the turn before it turns round at the end of its round
-  for (const p of f.pats) if (S.vis[p.y][p.x] && !p.dead && !(p.ko > 0) && !p.stun && !p.chase && !(p.back && p.back.length > 1) && !p.loop && (p.i + p.d >= p.path.length || p.i + p.d < 0))
+  for (const p of f.pats) if (S.vis[p.y][p.x] && !p.dead && !(p.ko > 0) && !p.stun && !p.chase && !(p.back && p.back.length > 1) && !p.loop && (p.i + p.d >= p.path.length || p.i + p.d < 0)
+    && (S.alarm > 0 || S.have || (p.beat + 1) % PAT_PACE === 0))   // (it steps next turn: PAT_PACE, in the tick)
     put(p.x, MAP_Y + p.y - 1 >= MAP_Y ? MAP_Y + p.y - 1 : MAP_Y + p.y + 1, '?', C.money);
   for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money);
   // the @ slides a step over (STEP_MS) instead of popping. It's a chip: the bg color on its own color (accent; in a duct

@@ -335,6 +335,9 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   **The turn warning** (built 2026-11-24): a `?` over a patrol the turn before it turns round at the end of its round,
   so trailing one is a skill. Still open (with the tuning): the cone's angle ignores the cells being twice as tall,
   though its range doesn't, so it's a little off up and down (CAMs share the code).
+  **Pace** (Greg, 2026-11-24): on its round a patrol steps every other turn (`PAT_PACE = 2`), so you can catch one up
+  from behind. It still looks every turn. Chasing you, or with the alarm up or the payload in your bag, it moves every
+  turn (two steps with the alarm or payload, as before). Patrols are staggered so they don't all rest on the same turn.
 - **Takedown** (built 2026-11-24): step into a patrol from behind or the side (by the way it's facing) and it's out,
   quietly, for 30 turns (it's your turn; no alert). A dim `P`: it doesn't move or see, you can step over it, and when it
   comes to it picks its round up again. From the front, it catches you (-1 INT), as ever; a stunned one goes down from
