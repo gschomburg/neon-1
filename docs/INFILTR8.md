@@ -367,6 +367,15 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   Box, cut corners (reads rounder), L (the inside corner is a blind spot), split (a wall across with a gap: two
   chambers), and big halls (BSP keeps two pieces' room as one, with pillar rows). Doors, CAMs (in inside corners),
   vents and spots all work from the cells. Still to come: cross, ring (a room in a room), gallery (long and thin).
+- **Roles and placement** (built 2026-11-23): each room gets a role from where it sits: start (stairs up), goal (stairs
+  down, or the payload), hub (3+ doors), side (1 door), way. CAMs go in the goal, hubs and rooms on the way through,
+  in an inside corner, aimed at a door or the payload; never in the start room, never sweeping the arrival stairs.
+  Patrols walk between the goal and hubs, not through the start room. The floor is placed again (up to 12 goes)
+  till the shortest way through crosses a CAM's sweep or a patrol's walk.
+- **Room types** (built 2026-11-23): **THE VAULT** is F3's goal: one way in (its other doors walled up, if every room
+  can still be reached), the payload at the back, a CAM on it. **THE SERVER FARM**: a big room on the way, rows of
+  racks (`▒`: nothing sees or walks through) with an aisle round the edge; about 1 floor in 4. Halls left leading
+  nowhere are pruned.
 - The plan: the viewer; even room placement (BSP); things placed with purpose (CAMs on doors and the payload,
   patrols between the rooms that matter); then room types (terminals, THE CUBICLES, THE SERVER FARM, THE WAREHOUSE).
 

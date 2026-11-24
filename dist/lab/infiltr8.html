@@ -135,14 +135,14 @@ const newSeed = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ2
 const T = {
   ' ': { walk: 0, see: 0 }, '#': { walk: 0, see: 0 }, '.': { walk: 1, see: 1 }, '+': { walk: 1, see: 1 }, '<': { walk: 1, see: 1 },
   '>': { walk: 1, see: 1 }, 'E': { walk: 1, see: 1 }, 'F': { walk: 1, see: 1 }, 'K': { walk: 1, see: 1 }, 'p': { walk: 0, see: 0 },
-  'v': { walk: 1, see: 1 },
+  'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 },
 };
 const WALLISH = '#+EFK';   // what joins up into box-drawn walls
 const INFO = {
   '#': ['WALL', 'it blocks you, and what sees.'], '.': ['FLOOR', ''], '+': ['DOOR', 'open. it doesn\'t block sight.'],
   '<': ['STAIRS UP', 'USE: up a floor.'], '>': ['STAIRS DOWN', 'USE: down a floor.'], 'E': ['THE WAY IN', 'your door. leave by it: a clean job.'],
   'F': ['FIRE EXIT', 'USE: out now. loud: less pay.'], 'K': ['TRASH CHUTE', 'USE: out, but you land in the trash.'],
-  'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], ' ': ['', ''],
+  'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], 'r': ['RACKS', 'servers. nothing sees through: hide in the rows.'], ' ': ['', ''],
 };
 
 // ---------- a floor ----------
@@ -229,6 +229,97 @@ function drawRoom(f, o) {
   for (const [x, y] of o.cells) set(f, x, y, '.');
   for (const [x, y] of o.cells) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j)) && at(f, x + i, y + j) === ' ') set(f, x + i, y + j, '#');
 }
+// ---------- ROLES, TYPES, PLACEMENT (Greg, 2026-11-23) ----------
+// A room's ROLE comes from where it sits: start (the stairs up), goal (the stairs down; the payload on F3), hub (3 doors or
+// more: routes pass through), side (1 door: a dead end), way (the rest). Room TYPES pick roles that fit them (THE VAULT is
+// F3's goal; THE SERVER FARM a big room on the way). CAMs and patrols are placed by role (placeCams, placePats).
+const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const ROOM_TYPES = {   // what a type is called (the viewer's labels, a tap's info)
+  vault: ['THE VAULT', 'the payload. one way in, and watched.'],
+  servers: ['THE SERVER FARM', 'rows of racks. nothing sees through them.'],
+};
+function roomDoors(f, o) { const out = [], seen = new Set(); for (const [x, y] of o.cells) for (const [i, j] of D4) { const k = (x + i) + ',' + (y + j); if (at(f, x + i, y + j) === '+' && !seen.has(k)) { seen.add(k); out.push({ x: x + i, y: y + j }); } } return out; }
+function roomRoles(f, rooms, first, far) {
+  for (const o of rooms) { o.doors = roomDoors(f, o); o.role = o === first ? 'start' : o === far ? 'goal' : o.doors.length >= 3 ? 'hub' : o.doors.length <= 1 ? 'side' : 'way'; }
+}
+// THE VAULT: F3's goal. One way in: its other doors are walled up, each only if every room can still be reached.
+function vaultRoom(f, rooms, o, first, dist) {
+  o.type = 'vault';
+  const keep = o.doors.slice().sort((a, b) => (dist[a.y][a.x] || 1e9) - (dist[b.y][b.x] || 1e9))[0];
+  for (const d of o.doors) if (d !== keep) {
+    set(f, d.x, d.y, '#');
+    const d0 = bfs(f, first.mid.x, first.mid.y);
+    if (!rooms.every(q => d0[q.mid.y][q.mid.x])) set(f, d.x, d.y, '+');   // (that one's needed: back it goes)
+  }
+  o.doors = roomDoors(f, o);
+}
+// the payload: far in from the vault's door (one of the 3 farthest floor cells)
+function vaultSpot(f, o, r) {
+  const d0 = o.doors[0] ? bfs(f, o.doors[0].x, o.doors[0].y) : null;
+  const opts = o.cells.filter(([x, y]) => at(f, x, y) === '.').sort((a, b) => d0 ? (d0[b[1]][b[0]] || 0) - (d0[a[1]][a[0]] || 0) : 0).slice(0, 3);
+  const [x, y] = opts[Math.floor(r() * opts.length)] || [o.mid.x, o.mid.y];
+  return { x, y };
+}
+// a hall cell with one way on, or none (a walled-up door's hall; a stub): gone, till there are none
+function pruneHalls(f, halls) {
+  for (let more = true; more;) {
+    more = false;
+    for (const k of [...halls]) { const [x, y] = k.split(',').map(Number); if (D4.filter(([i, j]) => T[at(f, x + i, y + j)].walk).length <= 1) { set(f, x, y, ' '); halls.delete(k); more = true; } }
+  }
+}
+// THE SERVER FARM: a big room on the way (not the start or the goal) full of rows of racks, an aisle round the edge
+// (a rack only where the room's floor is all round it, so a door or a gap is never blocked), gaps every few cells
+function serverFarm(f, rooms, r) {
+  const opts = rooms.filter(o => !o.type && o.role !== 'start' && o.role !== 'goal' && (o.shape === 'box' || o.shape === 'cut') && o.w >= 10 && o.h >= 7);
+  if (!opts.length || r() > 0.75) return;
+  const o = opts.sort((a, b) => (b.big ? 1 : 0) - (a.big ? 1 : 0) || r() - 0.5)[0], x0 = o.x + 1, y0 = o.y + 1;
+  o.type = 'servers';
+  const all8 = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j))) return false; return true; };
+  for (let y = y0 + 1; y < y0 + o.h - 3; y += 2) for (let x = x0 + 1; x < x0 + o.w - 3; x++) if ((x - x0 - 1) % 5 !== 4 && all8(x, y) && at(f, x, y) === '.') set(f, x, y, 'r');
+}
+// can a CAM at (x, y) facing a see (tx, ty) as it sweeps (its cone plus its sweep: 90 degrees either way)?
+const camSweeps = (f, x, y, a, tx, ty) => { const d = Math.hypot(tx - x, (ty - y) * 2); if (d === 0 || d > 14) return false;
+  let diff = Math.atan2(ty - y, tx - x) - a; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); return Math.abs(diff) <= Math.PI / 2 && los(f, x, y, tx, ty); };
+// CAMs: in the goal first, then hubs, then rooms on the way through (the shortest walk), never the start. Each in an inside
+// corner, aimed at what matters in its room (the payload, or a door), and never one that sweeps over the stairs you arrive by.
+function placeCams(f, rooms, r, n, way) {
+  const onWay = new Set(way.map(([x, y]) => x + ',' + y));
+  const rank = o => ({ goal: 0, hub: 1, way: 2, side: 3 }[o.role] ?? 9) - (o.cells.some(([x, y]) => onWay.has(x + ',' + y)) ? 0.6 : 0) + r() * 1.2;
+  for (const o of rooms.filter(o => o.role !== 'start').map(o => [o, rank(o)]).sort((a, b) => a[1] - b[1]).map(p => p[0])) {
+    if (f.cams.length >= n) break;
+    const targets = (f.payload && o.set.has(f.payload.x + ',' + f.payload.y) ? [f.payload] : []).concat(o.doors);
+    const corners = o.cells.filter(([x, y]) => at(f, x, y) === '.' && (!o.set.has((x - 1) + ',' + y) || !o.set.has((x + 1) + ',' + y)) && (!o.set.has(x + ',' + (y - 1)) || !o.set.has(x + ',' + (y + 1))));
+    const opts = [];
+    for (const [x, y] of corners) for (const t of targets) {
+      const d = Math.hypot(t.x - x, (t.y - y) * 2), a = Math.atan2(t.y - y, t.x - x);
+      if (d >= 3 && d <= 13 && los(f, x, y, t.x, t.y) && !(f.up && camSweeps(f, x, y, a, f.up.x, f.up.y))) opts.push({ x, y, a, pay: t === f.payload });
+    }
+    if (!opts.length) continue;
+    const pool = opts.some(p => p.pay) ? opts.filter(p => p.pay) : opts;   // (in the vault: on the payload)
+    const c = pool[Math.floor(r() * pool.length)];
+    f.cams.push(cam(f, c.x, c.y, c.a));
+  }
+}
+// patrols: the first walks between the goal and a hub (or a room on the way); the next between hubs and the rest. Not
+// through the room you arrive in, if it can help it.
+function placePats(f, rooms, r, n, first, spot) {
+  const pick = a => a[Math.floor(r() * a.length)], goal = rooms.find(o => o.role === 'goal');
+  const mid = rooms.filter(o => o.role === 'hub' || o.role === 'way'), hubs = rooms.filter(o => o.role === 'hub');
+  for (let p = 0, tries = 0; p < n && tries < 40; tries++) {
+    const a = p === 0 ? goal : pick(hubs.length ? hubs : mid.length ? mid : rooms.filter(o => o !== first));
+    const b = pick((p === 0 ? (hubs.length ? hubs : mid) : rooms).filter(o => o !== a && o !== first)) || pick(rooms.filter(o => o !== a));
+    if (!a || !b || a === b) continue;
+    const sa = spot(a), sb = spot(b), path = route(f, sa.x, sa.y, sb.x, sb.y);
+    if (!path || path.length <= 6) continue;
+    if (tries < 25 && path.some(([x, y]) => first.set.has(x + ',' + y))) continue;
+    f.pats.push(pat(path, false)); p++;
+  }
+}
+// is the way through watched: does a CAM's sweep or a patrol's walk touch it?
+function watched(f, way) {
+  const walk = new Set(f.pats.flatMap(p => p.path.map(([x, y]) => x + ',' + y)));
+  return way.some(([x, y]) => walk.has(x + ',' + y) || f.cams.some(c => camSweeps(f, c.x, c.y, c.base, x, y)));
+}
 // BSP (binary space partitioning): cut the floor in two, and each half in two again, till the pieces are about room
 // size; a room in each piece, filling most of it. So rooms spread over the whole floor (no big empty patches), and
 // their sizes vary with their pieces. Each cut also says which rooms are neighbours: links joins the nearest pair across
@@ -300,41 +391,39 @@ function floorGen(seed, n, last) {
     if (!links.slice(0, rooms.length - 1).every(([a, b]) => hall(f, a, b, r, halls))) continue;   // (the chain has to join up)
     for (const [a, b] of links.slice(rooms.length - 1)) hall(f, a, b, r, halls);
     { const d0 = bfs(f, rooms[0].mid.x, rooms[0].mid.y, c => T[c].walk && !T[c].duct || c === 'p'); if (!rooms.every(o => o.cells.every(([x, y]) => d0[y][x]))) continue; }   // (every cell of every room: a split's far chamber too)
-    f.halls = halls; f.junc = junctions(f, halls);
-    // pillars in the big rooms
-    // (only where the room's floor is all round it: a pillar never closes a gap or a corner)
-    const pillar = (o, x, y) => { if ([[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].every(([i, j]) => o.set.has((x + i) + ',' + (y + j))) && at(f, x, y) === '.') set(f, x, y, 'p'); };
-    for (const o of rooms) if (o.w >= 10 && o.h >= 6 && r() < (o.big ? 0.9 : 0.6) && (o.shape === 'box' || o.shape === 'cut')) for (let i = o.x + 2; i < o.x + o.w - 2; i += 3) { pillar(o, i, o.y + 2); if (o.h >= 7) pillar(o, i, o.y + o.h - 3); }
-    // stairs: up in the first room, down (or the payload) in the room farthest from it by walking
+    // the start (the stairs up) and the goal (the stairs down, or the payload): the room farthest from it by walking
     const first = rooms[0], dist = bfs(f, first.mid.x, first.mid.y);
     const far = rooms.slice(1).sort((a, b) => (dist[b.mid.y][b.mid.x] || 0) - (dist[a.mid.y][a.mid.x] || 0))[0];
     if (!dist[far.mid.y][far.mid.x]) continue;   // (not joined up: try again)
+    roomRoles(f, rooms, first, far);
+    if (last) vaultRoom(f, rooms, far, first, dist);   // (F3's goal: THE VAULT, one way in)
+    pruneHalls(f, halls);                               // (halls that lead nowhere now, gone)
+    f.halls = halls; f.junc = junctions(f, halls);
+    serverFarm(f, rooms, r);
+    // pillars in the big rooms (not in a room with a type: it has its own things)
+    // (only where the room's floor is all round it: a pillar never closes a gap or a corner)
+    const pillar = (o, x, y) => { if ([[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].every(([i, j]) => o.set.has((x + i) + ',' + (y + j))) && at(f, x, y) === '.') set(f, x, y, 'p'); };
+    for (const o of rooms) if (!o.type && o.w >= 10 && o.h >= 6 && r() < (o.big ? 0.9 : 0.6) && (o.shape === 'box' || o.shape === 'cut')) for (let i = o.x + 2; i < o.x + o.w - 2; i += 3) { pillar(o, i, o.y + 2); if (o.h >= 7) pillar(o, i, o.y + o.h - 3); }
     const spot = o => { for (let k = 0; k < 30; k++) { const [x, y] = o.cells[ri(0, o.cells.length - 1)]; if (at(f, x, y) === '.') return { x, y }; } return { x: o.mid.x, y: o.mid.y }; };
     f.up = spot(first); set(f, f.up.x, f.up.y, '<');
     if (last) {
-      f.payload = spot(far);
-      const wall = outerWall(f, rooms.filter(o => o !== first), r); if (wall) set(f, wall.x, wall.y, 'F');
+      f.payload = vaultSpot(f, far, r);
+      const wall = outerWall(f, rooms.filter(o => o !== first && o !== far), r); if (wall) set(f, wall.x, wall.y, 'F');
     } else {
       f.down = spot(far); set(f, f.down.x, f.down.y, '>');
       const mid = rooms.filter(o => o !== first && o !== far);
       if (mid.length) { const o = mid[ri(0, mid.length - 1)], s = spot(o); set(f, s.x, s.y, 'K'); }
     }
     ducts(f, rooms, r, last ? 1 : 2);
-    // cameras in room corners, looking in; patrols between two rooms
-    const camRooms = rooms.filter(o => o !== first).sort(() => r() - 0.5).slice(0, last ? 3 : 2);
-    for (const o of camRooms) {
-      const corners = o.cells.filter(([x, y]) => at(f, x, y) === '.' && (!o.set.has((x - 1) + ',' + y) || !o.set.has((x + 1) + ',' + y)) && (!o.set.has(x + ',' + (y - 1)) || !o.set.has(x + ',' + (y + 1))));   // (inside corners)
-      if (!corners.length) continue;
-      const [x, y] = corners[ri(0, corners.length - 1)];
-      f.cams.push(cam(f, x, y, Math.atan2(o.mid.y - y, o.mid.x - x)));
+    // CAMs and patrols, placed with purpose (placeCams, placePats); a few goes till the way through is watched
+    const goal = f.payload || f.down, way = route(f, f.up.x, f.up.y, goal.x, goal.y) || [];
+    for (let k = 0; k < 12; k++) {
+      f.cams = []; f.pats = [];
+      placeCams(f, rooms, r, last ? 3 : 2, way);
+      placePats(f, rooms, r, last ? 2 : 1, first, spot);
+      if (watched(f, way)) break;
     }
-    for (let p = 0, tries = 0; p < (last ? 2 : 1) && tries < 20; tries++) {   // two different rooms, a walk between them
-      const a = rooms[ri(1, rooms.length - 1)], b = rooms[ri(0, rooms.length - 1)];
-      if (a === b) continue;
-      const sa = spot(a), sb = spot(b), path = route(f, sa.x, sa.y, sb.x, sb.y);
-      if (path && path.length > 6) { f.pats.push(pat(path, false)); p++; }
-    }
-    f.rooms = rooms;
+    f.rooms = rooms; f.roomOf = new Map(); for (const o of rooms) for (const [x, y] of o.cells) f.roomOf.set(x + ',' + y, o);
     return f;
   }
   return floorGen(seed + 'x', n, last);
@@ -688,9 +777,9 @@ function wallGlyph(f, x, y) {
   return ['▪', '│', '│', '│', '─', '└', '┌', '├', '─', '┘', '┐', '┤', '─', '┴', '┬', '┼'][k];
 }
 const CAM_GLYPH = '¢';
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫' };
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', 'r': '▒' };
 // the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
-const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', '#': 'mid' };
+const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', 'r': 'mid', '#': 'mid' };
 
 function draw() {
   if (!S) return;
@@ -831,7 +920,7 @@ const LEGEND = () => [
   ['@', 'YOU', C.bg, C.accent], [CAM_GLYPH, 'CAM', C.danger], ['P', 'PATROL', C.danger], [ARM_GLYPH, 'SCANNER', C.danger],
   ['$', 'PAYLOAD', C.money], ['▲', 'STAIRS UP', C.bright], ['▼', 'STAIRS DOWN', C.bright], ['⌂', 'YOUR DOOR', C.accent],
   ['◘', 'FIRE EXIT', C.green], ['▾', 'TRASH CHUTE', C.green], ['▫', 'VENT', C.rare], ['+', 'DOOR', C.text],
-  [HALL_GLYPH, 'HALL', C.dim], [JUNC_GLYPH, 'JUNCTION', C.dim], ['▪', 'PILLAR', C.mid], ['•', 'YOUR TRAIL', C.rep],
+  [HALL_GLYPH, 'HALL', C.dim], [JUNC_GLYPH, 'JUNCTION', C.dim], ['▪', 'PILLAR', C.mid], ['▒', 'RACKS', C.mid], ['•', 'YOUR TRAIL', C.rep],
 ];
 function drawHelp() {
   hits = hits.filter(h => h.id === 'help');   // (only [?] and GOT IT while it's up; a tap anywhere else closes it)
@@ -955,7 +1044,8 @@ function infoAt(f, x, y) {
   }
   { const d = (f.under.get(x + ',' + y) || []).some(d => d.known); if (d && at(f, x, y) !== 'v') return { x, y, glyph: pipeGlyph(f, x, y), name: 'DUCT', text: 'under the floor. in and out by a vent.' }; }
   if (f.payload && f.payload.x === x && f.payload.y === y) return { x, y, glyph: '$', name: 'THE PAYLOAD', text: 'take it and the alarm goes. then out.' };
-  const c = at(f, x, y), i = INFO[c] || ['', ''];
+  const c = at(f, x, y), i = INFO[c] || ['', ''], ro = f.roomOf && f.roomOf.get(x + ',' + y);
+  if (c === '.' && ro && ro.type) return { x, y, glyph: GLYPH[c], name: ROOM_TYPES[ro.type][0], text: ROOM_TYPES[ro.type][1] + (vis ? '' : ' (seen before)') };
   return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : GLYPH[c] || c, name: i[0], text: i[1] + (vis ? '' : ' (seen before)') };
 }
 addEventListener('keydown', ev => {
@@ -1043,6 +1133,13 @@ function drawFloorCard(cvs, f, fs) {
   if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money, true);
   for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger, true);
   for (const p of f.pats) cell(p.x, p.y, 'P', C.danger, true);
+  // each room's type (gold) or role (dim), on its top wall
+  for (const o of f.rooms || []) {
+    const label = (o.type ? ROOM_TYPES[o.type][0].replace(/^THE /, '') : o.role === 'way' ? '' : o.role).slice(0, o.w - 2);
+    if (!label) continue;
+    // (only over plain wall: a door or the fire exit on that wall still shows)
+    [...label].forEach((c, i) => { const lx = o.x + 1 + i; if (at(f, lx, o.y) !== '#') return; x.fillStyle = C.bg; x.fillRect(lx * cw, o.y * ch, cw, ch); cell(lx, o.y, c, o.type ? C.money : C.mid, !!o.type); });
+  }
 }
 function viewerShow() {
   const n = +$('v-floor').value;
