@@ -2408,8 +2408,9 @@ const UIS = [
   ...[[3, 'plus + arrows'], [4, 'zones'], [9, 'zones + arrows'], [12, 'kites + arrows'], [13, 'arrowheads']].map(([n, what]) => ({ key: 'stick', look: n, name: 'STICK ' + n, hint: 'a stick drawn as a pad (' + what + '): touch anywhere and drag past the middle: a step. hold: keep walking.' })),
 ];
 let ui = 0, G = null;   // G: the finger that's down
-// (the STICK is the default, Greg 2026-11-24: the neatest, but the most hidden, so it needs telling about; later)
-ui = UIS.findIndex(u => u.key === 'stick');
+// (the STICK is the default, Greg 2026-11-24: the neatest, but the most hidden, so it needs telling about; later.
+// Drawn as STICK 12, Greg 2026-11-24)
+ui = UIS.findIndex(u => u.look === 12);
 try { const v = localStorage.getItem('neon.infiltr8.ui'); if (v != null) ui = Math.max(0, Math.min(UIS.length - 1, +v || 0)); } catch (e) { /* private mode */ }
 { const q = new URLSearchParams(location.search).get('ui'); if (q && +q >= 1 && +q <= UIS.length) ui = +q - 1; }
 function nextUI() {
@@ -2420,6 +2421,10 @@ function nextUI() {
 const swipeMin = () => Math.max(14, L.cw * 1.4);   // less than this is a tap
 const notch = () => Math.max(22, L.cw * 2.6);       // the trackpad: a step each this far
 const stickDead = () => Math.max(16, L.cw * 1.8);   // the stick: past this ring, you walk
+// STICK 3-13's drawn size: half again as big on a touch screen (Greg, 2026-11-24: small on a phone, fine on desktop).
+// Only the drawing grows; you still walk once you're past stickDead().
+const TOUCH = (() => { try { return matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
+const stickPad = () => stickDead() * (TOUCH ? 1.5 : 1);
 // STICK 3, 4, 9, 12, 13's looks: dist/lab/stick_mockups.html's looks by the same numbers (Greg, 2026-11-24: keep
 // those; change one, change both). Each: (g, cx, cy: where you touched; dir: [dx, dy] or null; fx, fy: your finger;
 // pulse: 1 just as a step goes, to 0)
@@ -2436,22 +2441,22 @@ const STICK_LOOKS = (() => {
   const zone = (cx, cy, dir, Q) => [[cx, cy], at(cx, cy, dir, Q, -Q), at(cx, cy, dir, Q, Q)];
   const kite = (cx, cy, d, K) => [[cx, cy], at(cx, cy, d, K / 2, -K / 2), at(cx, cy, d, K, 0), at(cx, cy, d, K / 2, K / 2)];
   return {
-    3: (g, cx, cy, dir, fx, fy, p) => { const D = stickDead(), a = D * 0.6, R = D * 2;   // the plus outline, an arrow in each arm
+    3: (g, cx, cy, dir, fx, fy, p) => { const D = stickPad(), a = D * 0.6, R = D * 2;   // the plus outline, an arrow in each arm
       const pts = []; for (const d of DIRS) pts.push(at(cx, cy, d, a, -a), at(cx, cy, d, R, -a), at(cx, cy, d, R, a)); pts.push(pts[0]);
       line(g, pts, rgba(C.accent, 0.3)); arrows(g, cx, cy, dir, p, R - 7); knob(g, fx, fy); },
-    4: (g, cx, cy, dir, fx, fy, p) => { const D = stickDead(), Q = D * 2;   // the zones: a square cut by its diagonals
+    4: (g, cx, cy, dir, fx, fy, p) => { const D = stickPad(), Q = D * 2;   // the zones: a square cut by its diagonals
       if (dir) fill(g, zone(cx, cy, dir, Q), rgba(C.accent, 0.12 + 0.08 * p));
       square(g, cx, cy, Q); g.strokeStyle = rgba(C.accent, 0.18); g.lineWidth = 1; g.strokeRect(cx - D * 0.7, cy - D * 0.7, D * 1.4, D * 1.4);
       knob(g, fx, fy); },
-    9: (g, cx, cy, dir, fx, fy, p) => { const D = stickDead(), Q = D * 2;   // the zones, an arrow in each
+    9: (g, cx, cy, dir, fx, fy, p) => { const D = stickPad(), Q = D * 2;   // the zones, an arrow in each
       if (dir) fill(g, zone(cx, cy, dir, Q), rgba(C.accent, 0.12 + 0.08 * p));
       square(g, cx, cy, Q); arrows(g, cx, cy, dir, p, Q * 0.68); knob(g, fx, fy); },
-    12: (g, cx, cy, dir, fx, fy, p) => { const D = stickDead(), K = D * 2.4, m = K / 2;   // the kites (the zones turned 45), an arrow in each
+    12: (g, cx, cy, dir, fx, fy, p) => { const D = stickPad(), K = D * 2.4, m = K / 2;   // the kites (the zones turned 45), an arrow in each
       if (dir) fill(g, kite(cx, cy, dir, K), rgba(C.accent, 0.12 + 0.08 * p));
       line(g, [[cx, cy - K], [cx + K, cy], [cx, cy + K], [cx - K, cy], [cx, cy - K]], rgba(C.accent, 0.3));
       line(g, [[cx - m, cy - m], [cx + m, cy + m]], rgba(C.accent, 0.18), 1); line(g, [[cx + m, cy - m], [cx - m, cy + m]], rgba(C.accent, 0.18), 1);
       arrows(g, cx, cy, dir, p, K * 0.62); knob(g, fx, fy); },
-    13: (g, cx, cy, dir, fx, fy, p) => { const D = stickDead(), R = D * 2;   // four arrowheads: outlined; the live one fills
+    13: (g, cx, cy, dir, fx, fy, p) => { const D = stickPad(), R = D * 2;   // four arrowheads: outlined; the live one fills
       for (const d of DIRS) { const on = same(d, dir), tri = [at(cx, cy, d, D * 0.9, -D * 0.55), at(cx, cy, d, R * 1.05 + (on ? 3 * p : 0), 0), at(cx, cy, d, D * 0.9, D * 0.55)];
         if (on) fill(g, tri, rgba(C.accent, 0.35 + 0.25 * p)); line(g, tri.concat([tri[0]]), armCol(d, dir, p), on ? 2.5 : 1.5); }
       knob(g, fx, fy); },

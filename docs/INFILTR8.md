@@ -559,6 +559,8 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   **PEEK is contextual now:** only by a door, or where a wall beside you ends, and only if leaning shows 3+ new cells.
 - **The STICK is the default control** (Greg, 2026-11-24): the neatest, but the most hidden. To do: make sure people
   know about it (not now).
+  **Decided (Greg, 2026-11-24):** the default stick is drawn as STICK 12 (kites + arrows, `dist/lab/stick_mockups.html`).
+  On a touch screen, STICK 3-13 are drawn half again as big (they were small on a phone); the walk distance is the same.
 - **Ten more passives, built 2026-11-24** (IP5-IPE; see `INF_CHIPS`): LOW PROFILE (seen at 60% range), NIGHT EYES
   (dark sight 7 → 9 → 11 the longer you're in the dark), TURNCOAT (a takedown gives +1 UNIFORM), KNEE PADS (duct steps
   1 turn), EARS (patrols within 6 show through walls), DODGE (50%: a grab or the SCANNER misses), COOL HEAD (ALERT
