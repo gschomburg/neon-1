@@ -478,8 +478,9 @@ function put(x, y, s, col = C.text, bold = false, bg = null) {
   });
 }
 const putR = (y, s, col, bold) => put(SW - [...s].length, y, s, col, bold);
+// (bold, as in the game: headings and names, and the pieces on the map. Buttons, the HUD and messages are plain.)
 function btn(x, y, s, id, fn, col = C.accent, on = true) {
-  put(x, y, s, on ? col : C.dim, true);
+  put(x, y, s, on ? col : C.dim);
   hits.push({ x, y, w: [...s].length, h: 1, id, fn: on ? fn : null });
 }
 const rule = y => put(0, y, '- '.repeat(18).trimEnd(), C.dim);
@@ -505,19 +506,19 @@ function draw() {
   rule(1);
   put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
   put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
-  put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent, true);
-  put(0, 3, 'SUBNET', C.mid); if (S.have) put(7, 3, '· $', C.money, true);   // (the payload's in your pack)
+  put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent);
+  put(0, 3, 'SUBNET', C.mid); if (S.have) put(7, 3, '· $', C.money);   // (the payload's in your pack)
   btn(11, 3, clockOff ? '[CLOCK OFF]' : '[CLOCK ON ]', 'clock', toggleClock, clockOff ? C.mid : C.money);
-  if (S.have) putR(3, S.alarm > 0 ? `ALARM  out in ${String(S.alarm).padStart(2, '0')}` : 'ALARM  TRACED', clockOff ? C.mid : C.danger, true);
-  else putR(3, `TURN ${String(S.turn).padStart(3, '0')}/${TURNS}`, clockOff ? C.mid : S.turn > TURNS ? C.danger : C.money, true);
+  if (S.have) putR(3, S.alarm > 0 ? `ALARM  out in ${String(S.alarm).padStart(2, '0')}` : 'ALARM  TRACED', clockOff ? C.mid : C.danger);
+  else putR(3, `TURN ${String(S.turn).padStart(3, '0')}/${TURNS}`, clockOff ? C.mid : S.turn > TURNS ? C.danger : C.money);
   rule(4);
   // the info card (rows 5 and 7) round the message line (row 6)
   const inf = S.info;
-  if (inf) { put(0, 5, inf.glyph, C.bg, true, C.accent); put(2, 5, inf.name, C.bright, true); put(0, 7, inf.text.slice(0, SW), C.mid); }
+  if (inf) { put(0, 5, inf.glyph, C.bg, false, C.accent); put(2, 5, inf.name, C.bright, true); put(0, 7, inf.text.slice(0, SW), C.mid); }
   else { put(0, 5, `seed ${S.seed}  ·  tap anything for its info`, C.dim); put(0, 7, '@ you  ◉ cam  P patrol  $ payload  ▲▼ stairs', C.dim); }
   const mt = Math.min(S.msg.length, Math.floor((now - S.msgT) / 18)), red = now - flashT < 300;
   put(0, 6, ' '.repeat(SW), C.bg, false, red ? C.danger : S.msgCol === C.danger ? C.danger : C.seen);
-  put(0, 6, ('> ' + S.msg).slice(0, Math.min(SW, mt + 2)), red || S.msgCol === C.danger ? C.bg : S.msgCol, true);
+  put(0, 6, ('> ' + S.msg).slice(0, Math.min(SW, mt + 2)), red || S.msgCol === C.danger ? C.bg : S.msgCol);
   // the floor (rows 8-30)
   const camCells = new Set(), armSet = new Set(armCells(f).map(([x, y]) => x + ',' + y));
   for (const c of f.cams) if (!c.dead) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, x, y)) camCells.add(x + ',' + y);
@@ -572,11 +573,11 @@ function draw() {
       put(4, 34, 'drag  ·  tap', C.dim);
     } else if (u === 'zone') {
       const lit = d => live && G.dir && G.dir[0] === d[0] && G.dir[1] === d[1] ? C.accent : C.mid;
-      put(0, 32, '╲', C.dim); put(10, 32, '▲', lit([0, -1]), true); put(20, 32, '╱', C.dim);
+      put(0, 32, '╲', C.dim); put(10, 32, '▲', lit([0, -1])); put(20, 32, '╱', C.dim);
       put(5, 33, '╲', C.dim); put(15, 33, '╱', C.dim);
-      put(0, 34, '◄', lit([-1, 0]), true); put(10, 34, '·', C.mid, true); put(20, 34, '►', lit([1, 0]), true);
+      put(0, 34, '◄', lit([-1, 0])); put(10, 34, '·', C.mid); put(20, 34, '►', lit([1, 0]));
       put(5, 35, '╱', C.dim); put(15, 35, '╲', C.dim);
-      put(0, 36, '╱', C.dim); put(10, 36, '▼', lit([0, 1]), true); put(20, 36, '╲', C.dim);
+      put(0, 36, '╱', C.dim); put(10, 36, '▼', lit([0, 1])); put(20, 36, '╲', C.dim);
     }
   } else if (S.mode === 'pad') {
     put(0, 32, '- '.repeat(18).trimEnd(), C.dim);
