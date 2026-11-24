@@ -1268,59 +1268,61 @@ function bspRooms(r, order = 0, tweak = {}) {
   cut(0, 0, MW, MH, 0);
   return { rooms, links };
 }
-// THE LAYER (Greg, 2026-11-24): a vault floor like one of the game's layers. One big room (the layer), dark, with
-// little rooms set in it in rows, like a layer's nodes (lit). One node is the real one: the payload, behind a CAPTCHA
-// half the time (its sticky note in another node). Other nodes hold loot, a re-up, a GUARD apiece (ICE). A terminal on
-// the outer wall, patrols walking the big room, CAMs on its walls, ducts node to node, the fire exit on the right.
-// About 1 vault floor in 5 (LAYER_CHANCE), or the dev panel's building THE LAYER.
+// THE LAYER (Greg, 2026-11-24): a vault floor laid out as one of the game's layers, to the cell. A layer is a 4 x 4 grid
+// of nodes, each a 7 x 5 tile, gaps of 2 across and 1 down: 34 x 23, the whole board (docs/LAYOUT.md; engine/core.js
+// TILE_W TILE_H GAP_X GAP_Y; engine/screen.js tileOrigin: x 1 + col * 9, y row * 6). Here each tile is a node's room:
+// its border the walls, the 5 x 3 inside (where a layer draws the glyph) the floor; the gaps between are the halls, and
+// the 2 spare columns a hall down each side. All 16 nodes, as a layer has. One is the real one: the payload, behind a
+// CAPTCHA half the time (its sticky note in another node). Others hold loot, a re-up, a GUARD (ICE), a terminal in a
+// wall; the rest are empty, decoys. Patrols walk the halls, CAMs on node walls watch them, ducts run node to node, the
+// fire exit's at the right-hand edge. The halls are dark; the nodes are lit. About 1 vault floor in 5 (LAYER_CHANCE),
+// or the dev panel's building THE LAYER.
 const LAYER_CHANCE = 0.2;
+const LAYER_TILE = { w: 7, h: 5, gx: 2, gy: 1, x0: 1 };   // (the game's TILE_W, TILE_H, GAP_X, GAP_Y, and L.gx on a 36-wide board)
 function floorLayer(seed, n) {
-  const r = rngFrom(hashStr(seed + ':layer:' + n));
-  const f = newFloor('THE LAYER'); f.building = 'layer'; f.belts = []; f.beltAt = new Map(); f.beltPhase = 0; f.beltR = rngFrom(hashStr(seed + ':belts:' + n));
+  const r = rngFrom(hashStr(seed + ':layer:' + n)), Ly = LAYER_TILE;
+  const f = newFloor('THE LAYER'); f.building = 'layer'; f.order = 1; f.belts = []; f.beltAt = new Map(); f.beltPhase = 0; f.beltR = rngFrom(hashStr(seed + ':belts:' + n));
   f.halls = new Set(); f.junc = new Set(); f.stations = new Map(); f.captcha = new Map(); f.ptiles = new Map();
-  // the big room: the whole floor
+  // the halls: every cell; then the 16 tiles over them
   const big = { cells: [], set: new Set(), x: 0, y: 0, w: MW, h: MH, shape: 'box', role: 'hub', mid: { x: 18, y: 11 }, doors: [] };
-  for (let y = 1; y < MH - 1; y++) for (let x = 1; x < MW - 1; x++) { big.cells.push([x, y]); big.set.add(x + ',' + y); }
-  drawRoom(f, big);
-  // the nodes: little rooms (3 x 2 inside, 5 x 4 with their walls) on an even grid, 4 across and 3 down, centred, as a
-  // layer's glyphs sit in rows and columns (Greg, 2026-11-24: no nudging off the grid); a few slots left empty
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) set(f, x, y, '.');
   const nodes = [];
-  for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) {
-    if (r() < 0.2 && nodes.length + (12 - row * 4 - col) > 6) continue;   // (a few gaps, but never fewer than 6 nodes)
-    const x0 = 5 + col * 7, y0 = 3 + row * 6;
-    const o = { cells: [], set: new Set(), x: x0, y: y0, w: 5, h: 4, shape: 'box', role: 'side', type: 'node', mid: { x: x0 + 2, y: y0 + 1 } };
-    for (let y = y0; y < y0 + 4; y++) for (let x = x0; x < x0 + 5; x++) {
-      const inner = x > x0 && x < x0 + 4 && y > y0 && y < y0 + 3; set(f, x, y, inner ? '.' : '#'); big.set.delete(x + ',' + y);
+  for (let row = 0; row < 4; row++) for (let col = 0; col < 4; col++) {
+    const x0 = Ly.x0 + col * (Ly.w + Ly.gx), y0 = row * (Ly.h + Ly.gy);
+    const o = { cells: [], set: new Set(), x: x0, y: y0, w: Ly.w, h: Ly.h, shape: 'box', role: 'side', type: 'node', mid: { x: x0 + 3, y: y0 + 2 }, row, col };
+    for (let y = y0; y < y0 + Ly.h; y++) for (let x = x0; x < x0 + Ly.w; x++) {
+      const inner = x > x0 && x < x0 + Ly.w - 1 && y > y0 && y < y0 + Ly.h - 1; set(f, x, y, inner ? '.' : '#');
       if (inner) { o.cells.push([x, y]); o.set.add(x + ',' + y); }
     }
     o.cx = o.mid.x; o.cy = o.mid.y;
-    const [dx, dy] = shuffled([[x0 + 2, y0], [x0 + 2, y0 + 3], [x0, y0 + 1 + Math.floor(r() * 2)], [x0 + 4, y0 + 1 + Math.floor(r() * 2)]], r)[0];
+    // its door: the middle of a side that faces a hall (not the board's top or bottom edge)
+    const sides = [[x0, y0 + 2], [x0 + Ly.w - 1, y0 + 2]].concat(row > 0 ? [[x0 + 3, y0]] : [], row < 3 ? [[x0 + 3, y0 + Ly.h - 1]] : []);
+    const [dx, dy] = sides[Math.floor(r() * sides.length)];
     set(f, dx, dy, '+'); o.doors = [{ x: dx, y: dy }];
     nodes.push(o);
   }
-  big.cells = big.cells.filter(([x, y]) => big.set.has(x + ',' + y));
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (at(f, x, y) === '.' && !nodes.some(o => o.set.has(x + ',' + y))) { big.cells.push([x, y]); big.set.add(x + ',' + y); }
   const rooms = [big, ...nodes];
-  // the stairs up, the left edge; the real node, the farthest from them; the fire exit, the right-hand wall
-  f.up = { x: 2, y: 11 }; set(f, 2, 11, '<');
-  const d = bfs(f, f.up.x, f.up.y), others = [];
+  // the stairs up, the left-hand hall; the real node, the farthest from them; the fire exit, the right-hand hall
+  f.up = { x: 0, y: 11 }; set(f, 0, 11, '<');
+  const d = bfs(f, f.up.x, f.up.y);
   const real = nodes.slice().sort((a, b) => (d[b.mid.y][b.mid.x] || 0) - (d[a.mid.y][a.mid.x] || 0))[0];
   real.type = 'vault'; real.role = 'goal'; f.payload = { x: real.mid.x, y: real.mid.y };
-  others.push(...shuffled(nodes.filter(o => o !== real), r));
-  set(f, MW - 1, 3 + Math.floor(r() * (MH - 6)), 'F');
-  // in the other nodes: loot (3), a re-up, a GUARD apiece in two (ICE), the CAPTCHA's note
+  const others = shuffled(nodes.filter(o => o !== real), r);
+  set(f, MW - 1, [5, 11, 17][Math.floor(r() * 3)], 'F');
+  // in the other nodes: loot (3), a re-up, a GUARD apiece in three (ICE), the CAPTCHA's note, a terminal; the rest empty
   for (const o of others.slice(0, 3)) wallStation(f, o, 'L', r);
-  if (others[3]) wallStation(f, others[3], 'R', r);
-  for (const o of others.slice(4, 6)) { const dd = o.doors[0], ax = dd.x - o.mid.x, ay = dd.y - o.mid.y, [fx, fy] = Math.abs(ax) >= Math.abs(ay) * 2 ? [Math.sign(ax), 0] : [0, Math.sign(ay)];
+  wallStation(f, others[3], 'R', r);
+  for (const o of others.slice(4, 7)) { const dd = o.doors[0], ax = dd.x - o.mid.x, ay = dd.y - o.mid.y, [fx, fy] = Math.abs(ax) >= Math.abs(ay) * 2 ? [Math.sign(ax), 0] : [0, Math.sign(ay)];
     const g = pat([[o.mid.x, o.mid.y]], true); Object.assign(g, { guard: true, fx, fy, base: [fx, fy], tw: 0 }); f.pats.push(g); }
-  if (r() < 0.5 && others.length > 6) { const at0 = wallStation(f, others[6], 'N', r);
+  if (r() < 0.5) { const at0 = wallStation(f, others[7], 'N', r);
     if (at0) { f.stations.delete(at0 + ''); const opts = shuffled(CAPTCHA_GLYPHS, r).slice(0, 4), dd = real.doors[0]; f.captcha.set(dd.x + ',' + dd.y, { glyph: opts[Math.floor(r() * 4)], opts, locked: true, note: at0 + '' }); } }
-  // a terminal in the top wall (nothing behind it: the edge)
-  for (const x of shuffled([...Array(MW - 6).keys()].map(i => i + 3), r)) if (at(f, x, 1) === '.' && at(f, x - 1, 0) === '#' && at(f, x + 1, 0) === '#') { set(f, x, 0, 'T'); f.stations.set(x + ',0', { kind: 'T', used: false }); break; }
-  // two patrols round the big room, corner to corner; CAMs on its walls, looking in
-  const corners = [[1, 1], [MW - 2, 1], [MW - 2, MH - 2], [1, MH - 2]];
-  for (const [a, b] of [[1, 3], [0, 2]]) { const p = route(f, corners[a][0], corners[a][1], corners[b][0], corners[b][1]); if (p && p.length > 6) f.pats.push(pat(p, false)); }
-  for (const [x, y] of [[MW - 2, 0], [18 + Math.floor(r() * 6), MH - 1]]) if (at(f, x, y) === '#') f.cams.push(cam(f, x, y, Math.atan2((11 - y) * 2, 18 - x)));
-  // ducts: node to node; the light: the nodes lit, the big room dark
+  { const o = others[8], tx = o.x + 2 + Math.floor(r() * 3), ty = o.doors[0].y === o.y ? o.y + Ly.h - 1 : o.y;   // (a terminal in its top or bottom wall: not the door's)
+    if (at(f, tx, ty) === '#') { set(f, tx, ty, 'T'); f.stations.set(tx + ',' + ty, { kind: 'T', used: false }); } }
+  // two patrols corner to corner through the halls; CAMs on node walls over the halls between the rows, looking down them
+  for (const [a, b] of [[[0, 0], [MW - 1, MH - 1]], [[MW - 1, 0], [0, MH - 1]]]) { const p = route(f, a[0], a[1], b[0], b[1]); if (p && p.length > 6) f.pats.push(pat(p, false)); }
+  for (const o of shuffled(nodes.filter(o => o.row < 3 && o !== real && at(f, o.x + 3, o.y + Ly.h - 1) === '#'), r).slice(0, 2)) f.cams.push(cam(f, o.x + 3, o.y + Ly.h - 1, Math.PI / 2));
+  // ducts: node to node; the light: the nodes lit, the halls dark
   ducts(f, rooms, r, 2, d);
   f.lit = new Set(); for (const o of nodes) { o.lit = true; for (const [x, y] of o.cells) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) f.lit.add((x + i) + ',' + (y + j)); }
   f.rooms = rooms; f.roomOf = new Map(); for (const o of rooms) for (const [x, y] of o.cells) f.roomOf.set(x + ',' + y, o);
