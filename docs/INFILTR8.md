@@ -349,6 +349,14 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     NIGHT VISION.
   - A room's light could come with its type: THE SERVER FARM is bright, THE BREAK ROOM has a switch, THE CEO'S OFFICE
     is lit. The fiction: a lit room is part of the net in use, a dark one is idle memory.
+- **Effects** (Greg, 2026-11-23, after Cogmind's ASCII particle effects: its lasers and blasts are animated characters
+  on the grid). INFILTR8 can use the game's effects library (engine/fx.js; the lab page loads it):
+  - THE SCANNER: a bright beam that leaves a short fading trail as it turns, not a jump an eighth a turn.
+  - DART GUN, TASER: a quick streak from you to the target (`-` `=` `─`), a spark where it hits.
+  - CHARGE (FRAG): a ring of characters that grows and breaks into glitch marks; walls crumble to rubble.
+  - EMP: a wave of noise rolling out, the CAMs flickering out one after another.
+  - A CAM's alert: its cone flashes, a `!` pops and fades.
+  - Down a vent: the floor above dissolves into noise as the pipes come in (the game's decrypt).
 
 ### The floor generator: procedural, with checks (Claude's take, 2026-11-23)
 - Hand-picking seeds doesn't last: a seed only means something to the generator that made it. Change the generator
