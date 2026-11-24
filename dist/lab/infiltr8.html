@@ -368,6 +368,7 @@ const ROOM_TYPES = {   // what a type is called (the viewer's labels, a tap's in
   warehouse: ['THE WAREHOUSE', 'a belt of crates. ride it.'],
   breakroom: ['THE BREAK ROOM', 'vending and coffee. the coffee\'s loud.'],
   ceo: ['THE CEO\'S OFFICE', 'the best loot on the floor. watched.'],
+  node: ['A NODE', 'one of the layer\'s nodes. one of them holds the payload.'],
   trash: ['THE TRASH', 'where the chutes land. junk, and now and then something good.'],
 };
 function roomDoors(f, o) { const out = [], seen = new Set(); for (const [x, y] of o.cells) for (const [i, j] of D4) { const k = (x + i) + ',' + (y + j); if (at(f, x + i, y + j) === '+' && !seen.has(k)) { seen.add(k); out.push({ x: x + i, y: y + j }); } } return out; }
@@ -850,11 +851,11 @@ function decor(f, rooms, r, B = { plants: 0.18, statue: 0.5 }) {
 // atrium), a restroom half the time, a plain room by the building's odds; halls and closets dark. f.lit: the lit
 // rooms' floor and the walls round it.
 const LIT_TYPES = { servers: 1, vault: 1, lab: 1, cubicles: 1, factory: 1, warehouse: 1, atrium: 1, restroom: 0.5, breakroom: 1, ceo: 1 };
-function lightRooms(f, rooms, r, p = 0.5) {
+function lightRooms(f, rooms, r, p = 0.5, dark = false) {   // (dark: a building's typed rooms go by its odds too: THE DATA MINE)
   f.lit = new Set();
   for (const o of rooms) {
     if (o.role === 'closet') continue;
-    o.lit = r() < (o.type ? (LIT_TYPES[o.type] ?? p) : p) || o.role === 'start';   // (the room you come in by: always lit, to get your bearings)
+    o.lit = r() < (o.type && !dark ? (LIT_TYPES[o.type] ?? p) : p) || o.role === 'start';   // (the room you come in by: always lit, to get your bearings)
     if (o.lit) for (const [x, y] of o.cells) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) f.lit.add((x + i) + ',' + (y + j));
   }
 }
@@ -867,7 +868,7 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
   f.stations = f.stations || new Map();   // (a set-piece room may have put its own in already)
   const kinds = [];
   for (let k = 0, n = st.T[0] + Math.floor(r() * (st.T[1] - st.T[0] + 1)); k < n; k++) kinds.push('T');
-  for (const k of ['L', 'L2', 'R', 'B']) if (st[k] && r() < st[k]) kinds.push(k === 'L2' ? 'L' : k);
+  for (const k of ['L', 'L2', 'L3', 'R', 'B']) if (st[k] && r() < st[k]) kinds.push(k === 'L2' || k === 'L3' ? 'L' : k);
   // (a closet of 2 cells or more: in a closet of 1, the station would fill it, and its door would open onto it)
   const closets = shuffled(rooms.filter(o => o.type === 'closet' && o.cells.length >= 2), r), plain = rooms.filter(o => o.role !== 'closet');
   for (const kind of kinds) {
@@ -1212,7 +1213,11 @@ const ORDER = { orderly: [0.3, 0.9], mixed: [0.8, 0.5], messy: [1, 0.1] };
 //   bsp: changes to BSP's settings: an industrial building has more big halls (and so more room for a factory), a
 //   data center bigger rooms than an office (room for its server farms).
 const BUILDINGS = {
-  office:     { name: 'OFFICE',      share: 0.38, lit: 0.6, st: { T: [1, 2], L: 0.4, R: 0.4, B: 0.3 }, warehouse: 0, lab: 0.1, atrium: 0.7, servers: 0.4,  servers2: 0,   cubicles: 0.9,  factory: 0,    restroom: 0.5,  plants: 0.25, statue: 0.6, order: [0.45, 0.85], bsp: {} },
+  // THE DATA MINE (Greg, 2026-11-24): a data center gone dark and dug out: small rooms (so lots of halls), more loops
+  // and ducts, nearly every room dark, and loot everywhere (L, L2, L3).
+  layer:      { name: 'THE LAYER (vault floors)', share: 0 },   // (never picked by the seed: floorGen draws it for vault floors; the dev panel can force it)
+  datamine:   { name: 'DATA MINE',   share: 0.1, lit: 0.1, dark: true, st: { T: [1, 2], L: 0.95, L2: 0.9, L3: 0.8, R: 0.5, B: 0.3 }, warehouse: 0, lab: 0, atrium: 0, servers: 0.7, servers2: 0.4, racksIn: 0.6, cubicles: 0, factory: 0, restroom: 0.1, plants: 0.02, statue: 0.05, breakroom: 0.1, ceo: 0, order: [0.2, 0.6], bsp: { stopArea: 120, stopChance: 0.25, bigChance: 0.02 }, ducts: 4, loops: [3, 5] },
+  office:     { name: 'OFFICE',      share: 0.28, lit: 0.6, st: { T: [1, 2], L: 0.4, R: 0.4, B: 0.3 }, warehouse: 0, lab: 0.1, atrium: 0.7, servers: 0.4,  servers2: 0,   cubicles: 0.9,  factory: 0,    restroom: 0.5,  plants: 0.25, statue: 0.6, order: [0.45, 0.85], bsp: {} },
   industrial: { name: 'INDUSTRIAL',  share: 0.25, lit: 0.35, st: { T: [1, 1], L: 0.9, L2: 0.4, R: 0.5, B: 0.7 }, warehouse: 0.85, lab: 0.1, atrium: 0.05,  servers: 0.15, servers2: 0,   cubicles: 0.15, factory: 0.95, restroom: 0.35, plants: 0.05, statue: 0.1, order: [0.15, 0.55], bsp: { bigChance: 0.7, bigArea: 520 }, minRooms: 4 },
   data:       { name: 'DATA CENTER', share: 0.22, lit: 0.5, st: { T: [2, 3], L: 0.3, R: 0.4, B: 0.2 }, warehouse: 0.1, lab: 0.15, atrium: 0.1, servers: 0.95, servers2: 0.9, servers3: 0.5, racksIn: 0.5, cubicles: 0.2,  factory: 0.1,  restroom: 0.25, plants: 0.1,  statue: 0.3, order: [0.5, 0.9],   bsp: { bigChance: 0.4, bigArea: 450 } },
   lab:        { name: 'LAB',         share: 0.15, lit: 0.6, st: { T: [2, 2], L: 0.4, R: 0.6, B: 0.3 }, warehouse: 0.05, lab: 0.95, lab2: 0.7, atrium: 0.3, servers: 0.3, servers2: 0, cubicles: 0.15, factory: 0.05, restroom: 0.3, plants: 0.3, statue: 0.2, order: [0.4, 0.85], bsp: {} },
@@ -1261,11 +1266,72 @@ function bspRooms(r, order = 0, tweak = {}) {
   cut(0, 0, MW, MH, 0);
   return { rooms, links };
 }
+// THE LAYER (Greg, 2026-11-24): a vault floor like one of the game's layers. One big room (the layer), dark, with
+// little rooms set in it in rows, like a layer's nodes (lit). One node is the real one: the payload, behind a CAPTCHA
+// half the time (its sticky note in another node). Other nodes hold loot, a re-up, a GUARD apiece (ICE). A terminal on
+// the outer wall, patrols walking the big room, CAMs on its walls, ducts node to node, the fire exit on the right.
+// About 1 vault floor in 5 (LAYER_CHANCE), or the dev panel's building THE LAYER.
+const LAYER_CHANCE = 0.2;
+function floorLayer(seed, n) {
+  const r = rngFrom(hashStr(seed + ':layer:' + n));
+  const f = newFloor('THE LAYER'); f.building = 'layer'; f.belts = []; f.beltAt = new Map(); f.beltPhase = 0; f.beltR = rngFrom(hashStr(seed + ':belts:' + n));
+  f.halls = new Set(); f.junc = new Set(); f.stations = new Map(); f.captcha = new Map(); f.ptiles = new Map();
+  // the big room: the whole floor
+  const big = { cells: [], set: new Set(), x: 0, y: 0, w: MW, h: MH, shape: 'box', role: 'hub', mid: { x: 18, y: 11 }, doors: [] };
+  for (let y = 1; y < MH - 1; y++) for (let x = 1; x < MW - 1; x++) { big.cells.push([x, y]); big.set.add(x + ',' + y); }
+  drawRoom(f, big);
+  // the nodes: a grid of little rooms (3 x 2 inside, 5 x 4 with their walls), a few left out, each nudged a cell
+  const nodes = [];
+  for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) {
+    if (r() < 0.2 && nodes.length + (12 - row * 4 - col) > 6) continue;   // (a few gaps, but never fewer than 6 nodes)
+    const x0 = 4 + col * 8 + Math.floor(r() * 2), y0 = 2 + row * 7 + Math.floor(r() * 2);
+    const o = { cells: [], set: new Set(), x: x0, y: y0, w: 5, h: 4, shape: 'box', role: 'side', type: 'node', mid: { x: x0 + 2, y: y0 + 1 } };
+    for (let y = y0; y < y0 + 4; y++) for (let x = x0; x < x0 + 5; x++) {
+      const inner = x > x0 && x < x0 + 4 && y > y0 && y < y0 + 3; set(f, x, y, inner ? '.' : '#'); big.set.delete(x + ',' + y);
+      if (inner) { o.cells.push([x, y]); o.set.add(x + ',' + y); }
+    }
+    o.cx = o.mid.x; o.cy = o.mid.y;
+    const [dx, dy] = shuffled([[x0 + 2, y0], [x0 + 2, y0 + 3], [x0, y0 + 1 + Math.floor(r() * 2)], [x0 + 4, y0 + 1 + Math.floor(r() * 2)]], r)[0];
+    set(f, dx, dy, '+'); o.doors = [{ x: dx, y: dy }];
+    nodes.push(o);
+  }
+  big.cells = big.cells.filter(([x, y]) => big.set.has(x + ',' + y));
+  const rooms = [big, ...nodes];
+  // the stairs up, the left edge; the real node, the farthest from them; the fire exit, the right-hand wall
+  f.up = { x: 2, y: 11 }; set(f, 2, 11, '<');
+  const d = bfs(f, f.up.x, f.up.y), others = [];
+  const real = nodes.slice().sort((a, b) => (d[b.mid.y][b.mid.x] || 0) - (d[a.mid.y][a.mid.x] || 0))[0];
+  real.type = 'vault'; real.role = 'goal'; f.payload = { x: real.mid.x, y: real.mid.y };
+  others.push(...shuffled(nodes.filter(o => o !== real), r));
+  set(f, MW - 1, 3 + Math.floor(r() * (MH - 6)), 'F');
+  // in the other nodes: loot (3), a re-up, a GUARD apiece in two (ICE), the CAPTCHA's note
+  for (const o of others.slice(0, 3)) wallStation(f, o, 'L', r);
+  if (others[3]) wallStation(f, others[3], 'R', r);
+  for (const o of others.slice(4, 6)) { const dd = o.doors[0], ax = dd.x - o.mid.x, ay = dd.y - o.mid.y, [fx, fy] = Math.abs(ax) >= Math.abs(ay) * 2 ? [Math.sign(ax), 0] : [0, Math.sign(ay)];
+    const g = pat([[o.mid.x, o.mid.y]], true); Object.assign(g, { guard: true, fx, fy, base: [fx, fy], tw: 0 }); f.pats.push(g); }
+  if (r() < 0.5 && others.length > 6) { const at0 = wallStation(f, others[6], 'N', r);
+    if (at0) { f.stations.delete(at0 + ''); const opts = shuffled(CAPTCHA_GLYPHS, r).slice(0, 4), dd = real.doors[0]; f.captcha.set(dd.x + ',' + dd.y, { glyph: opts[Math.floor(r() * 4)], opts, locked: true, note: at0 + '' }); } }
+  // a terminal in the top wall (nothing behind it: the edge)
+  for (const x of shuffled([...Array(MW - 6).keys()].map(i => i + 3), r)) if (at(f, x, 1) === '.' && at(f, x - 1, 0) === '#' && at(f, x + 1, 0) === '#') { set(f, x, 0, 'T'); f.stations.set(x + ',0', { kind: 'T', used: false }); break; }
+  // two patrols round the big room, corner to corner; CAMs on its walls, looking in
+  const corners = [[1, 1], [MW - 2, 1], [MW - 2, MH - 2], [1, MH - 2]];
+  for (const [a, b] of [[1, 3], [0, 2]]) { const p = route(f, corners[a][0], corners[a][1], corners[b][0], corners[b][1]); if (p && p.length > 6) f.pats.push(pat(p, false)); }
+  for (const [x, y] of [[MW - 2, 0], [18 + Math.floor(r() * 6), MH - 1]]) if (at(f, x, y) === '#') f.cams.push(cam(f, x, y, Math.atan2((11 - y) * 2, 18 - x)));
+  // ducts: node to node; the light: the nodes lit, the big room dark
+  ducts(f, rooms, r, 2, d);
+  f.lit = new Set(); for (const o of nodes) { o.lit = true; for (const [x, y] of o.cells) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) f.lit.add((x + i) + ',' + (y + j)); }
+  f.rooms = rooms; f.roomOf = new Map(); for (const o of rooms) for (const [x, y] of o.cells) f.roomOf.set(x + ',' + y, o);
+  return f;
+}
 function floorGen(seed, n, last, bk0 = null, depth = 0) {
+  // THE LAYER: a vault floor now and then (its own draw, so the other floors come out as they did), or picked
+  if (last && (bk0 === 'layer' || (!bk0 && buildingPick === 'layer') || (!bk0 && buildingPick === 'auto' && rngFrom(hashStr(seed + ':layer?' + n))() < LAYER_CHANCE))) return floorLayer(seed, n);
+  if (bk0 === 'layer') bk0 = 'office';   // (not a vault floor: an office)
   const r = rngFrom(hashStr(seed + ':' + n)), ri = (a, b) => a + Math.floor(r() * (b - a + 1));
   // the building: picked once (a retry below is the same building: picking it each time let a building whose floors
   // fail more often, industrial, lose out to the others)
-  const bk = bk0 || pickBuilding(r), B = BUILDINGS[bk];
+  let bk = bk0 || pickBuilding(r); if (bk === 'layer') bk = 'office';   // (THE LAYER is a vault floor only: an office above it)
+  const B = BUILDINGS[bk];
   for (let tries = 0; tries < 40; tries++) {
     const f = newFloor(last ? 'THE VAULT' : 'THE STACKS'), st = r();
     f.building = bk; f.belts = []; f.beltAt = new Map(); f.beltPhase = 0;
@@ -1280,7 +1346,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
     const near = [];
     rooms.forEach((a, i) => rooms.forEach((b, j) => { if (i < j && !joined.has(i + '-' + j)) near.push([a, b, Math.hypot(a.cx - b.cx, (a.cy - b.cy) * 2)]); }));
     near.sort((p, q) => p[2] - q[2]);
-    for (const [a, b] of shuffled(near.slice(0, 4), r).slice(0, ri(1, 2))) links.push([a, b]);
+    { const lp = B.loops || [1, 2]; for (const [a, b] of shuffled(near.slice(0, lp[1] + 2), r).slice(0, ri(lp[0], lp[1]))) links.push([a, b]); }   // (B.loops: a DATA MINE has more)
     const halls = new Set();
     if (!links.slice(0, rooms.length - 1).every(([a, b]) => hall(f, a, b, r, halls))) continue;   // (the chain has to join up)
     for (const [a, b] of links.slice(rooms.length - 1)) hall(f, a, b, r, halls);
@@ -1317,11 +1383,11 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
       const cl = mid.filter(o => o.role === 'closet'), pool = cl.length && r() < 0.5 ? cl : mid;   // (a closet half the time)
       if (pool.length) { const o = pool[ri(0, pool.length - 1)], s = spot(o); set(f, s.x, s.y, 'K'); }
     }
-    ducts(f, rooms, r, last ? 1 : 2, dist);
+    ducts(f, rooms, r, B.ducts || (last ? 1 : 2), dist);
     placeStations(f, rooms, r, B.st);
     placeCaptcha(f, rooms, r, B.captcha ?? 0.4);   // (after the stations: its note goes on a wall, as they do)
     placeHoneypot(f, r, B.honeypot ?? 0.15);
-    lightRooms(f, rooms, r, B.lit);
+    lightRooms(f, rooms, r, B.lit, B.dark);
     // CAMs and patrols, placed with purpose (placeCams, placePats); a few goes till the way through is watched
     const goal = f.payload || f.down, way = route(f, f.up.x, f.up.y, goal.x, goal.y) || [];
     for (let k = 0; k < 12; k++) {
