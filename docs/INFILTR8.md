@@ -445,7 +445,9 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   style and how they work; Greg, 2026-11-24.) A USE on the tile you stand on (stairs, a vent, a way out) comes first, then a station
   beside you, then an open door beside you.
   - **`T` TERMINAL:** CAMS OFF (every CAM on the floor, 25 turns), MAP (the floor's layout and its ducts), or LIGHTS
-    OUT (the power, 25 turns).
+    OUT (the power, 25 turns). **Set in a wall** (Greg, 2026-11-24: not free standing): a cell of a room's wall in a
+    straight run, used from the room's floor in front of it, with nothing to stand on behind it; it blocks sight as a
+    wall does, and the wall joins up to it.
   - **`L` LOOT CACHE:** one of two finds to carry out (CR); the end screen counts your haul.
   - **`R` RE-UP:** +1 INT, or +1 of a piece of gear.
   - **`B` BAG SWAP:** your gear for a bag: GHOST (UNIFORMs, FLAREs), BRUTE (FRAGs), SCOUT (FLAREs). The start of the

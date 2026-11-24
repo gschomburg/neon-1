@@ -138,9 +138,10 @@ const T = {
   ' ': { walk: 0, see: 0 }, '#': { walk: 0, see: 0 }, '.': { walk: 1, see: 1 }, '+': { walk: 1, see: 1 }, '<': { walk: 1, see: 1 },
   '>': { walk: 1, see: 1 }, 'E': { walk: 1, see: 1 }, 'F': { walk: 1, see: 1 }, 'K': { walk: 1, see: 1 }, 'p': { walk: 0, see: 0 },
   'v': { walk: 1, see: 1 }, 'r': { walk: 0, see: 0 }, 'd': { walk: 0, see: 1, low: 1 }, 'g': { walk: 1, see: 1, hide: 1 }, '=': { walk: 0, see: 1, low: 1 }, '"': { walk: 1, see: 1, hide: 1 }, 'b': { walk: 1, see: 1 }, 'x': { walk: 0, see: 0 },
-  'T': { walk: 0, see: 1, station: 1 }, 'L': { walk: 0, see: 1, station: 1 }, 'R': { walk: 0, see: 1, station: 1 }, 'B': { walk: 0, see: 1, station: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
+  'T': { walk: 0, see: 0, station: 1 },   // (a terminal's set in a wall: blocks sight as one)
+  'L': { walk: 0, see: 1, station: 1 }, 'R': { walk: 0, see: 1, station: 1 }, 'B': { walk: 0, see: 1, station: 1 }, 'u': { walk: 0, see: 0 }, 'm': { walk: 0, see: 0 },
 };
-const WALLISH = '#+EF';   // what joins up into box-drawn walls (the chute, K, sits on a room's floor now: not a wall. Greg, H3SDQ4)
+const WALLISH = '#+EFT';   // what joins up into box-drawn walls (a terminal's in a wall now; the chute, K, sits on a room's floor: not a wall. Greg, H3SDQ4)
 const INFO = {
   '#': ['WALL', 'it blocks you, and what sees.'], '.': ['FLOOR', ''], '+': ['A DOOR', 'closed: blocks sight. step in to open.'],
   '<': ['STAIRS UP', 'USE: up a floor.'], '>': ['STAIRS DOWN', 'USE: down a floor.'], 'E': ['THE WAY IN', 'your door. leave by it: a clean job.'],
@@ -641,6 +642,25 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
   const closets = shuffled(rooms.filter(o => o.type === 'closet' && o.cells.length >= 2), r), plain = rooms.filter(o => o.role !== 'closet');
   for (const kind of kinds) {
     let placed = false;
+    // a TERMINAL is set in a wall (Greg, 2026-11-24: not free standing): a cell of a room's wall in a straight run (wall
+    // either side of it along the wall), the room's floor in front of it, nothing you could stand on behind it (so you
+    // use it from the one room), and no door, way out or other station beside it
+    if (kind === 'T') {
+      for (let t = 0; t < 40 && !placed; t++) {
+        const o = plain[Math.floor(r() * plain.length)], opts = [];
+        for (const [cx, cy] of o.cells) for (const [dx, dy] of D4) {
+          const x = cx + dx, y = cy + dy, px = dy ? 1 : 0, py = dx ? 1 : 0;
+          if (at(f, cx, cy) !== '.' || at(f, x, y) !== '#' || at(f, x + px, y + py) !== '#' || at(f, x - px, y - py) !== '#') continue;
+          if (T[at(f, x + dx, y + dy)].walk || f.halls.has((x + dx) + ',' + (y + dy))) continue;
+          if (D4.some(([i, j]) => '+EFTLRB'.includes(at(f, x + i, y + j)) || '+EF'.includes(at(f, x + px * 2 * i, y + py * 2 * i)))) continue;
+          opts.push([x, y]);
+        }
+        if (!opts.length) continue;
+        const [x, y] = opts[Math.floor(r() * opts.length)];
+        set(f, x, y, 'T'); f.stations.set(x + ',' + y, { kind, used: false }); placed = true;
+      }
+      if (placed) continue;
+    }
     // a closet first (a terminal less often: they're for the rooms)
     if (closets.length && r() < (kind === 'T' ? 0.25 : 0.7)) {
       const o = closets.shift(), cell = o.cells.find(([x, y]) => at(f, x, y) === '.' && !(o.doors[0] && Math.abs(o.doors[0].x - x) + Math.abs(o.doors[0].y - y) === 1 && o.cells.length > 1));
@@ -648,7 +668,7 @@ function placeStations(f, rooms, r, st = { T: [1, 1], L: 0.3, R: 0.3, B: 0.3 }) 
     }
     for (let t = 0; t < 40 && !placed; t++) {
       const o = plain[Math.floor(r() * plain.length)];
-      const opts = o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKv'.includes(at(f, x + i, y + j)) || (f.beltAt && f.beltAt.has((x + i) + ',' + (y + j)))));
+      const opts = o.cells.filter(([x, y]) => at(f, x, y) === '.' && D4.some(([i, j]) => at(f, x + i, y + j) === '#') && !D4.some(([i, j]) => '+<>EFKvTLRB'.includes(at(f, x + i, y + j)) || (f.beltAt && f.beltAt.has((x + i) + ',' + (y + j)))));
       if (!opts.length) continue;
       const [x, y] = opts[Math.floor(r() * opts.length)];
       set(f, x, y, kind);
