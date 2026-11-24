@@ -293,7 +293,9 @@ function armCells(f) {
 
 // ---------- the run ----------
 const MAX_INT = 4, TURNS = 150, OUT_TURNS = 45;
-const STEP_MS = 110;   // how long the @ takes to slide one step
+const STEP_MS = 110;
+const PAT_HALF = Math.PI / 4, PAT_RANGE = 10;   // a patrol's view: 90 degrees wide, the way it last stepped (draw() shows it)
+const UNIFORM_TURNS = 15;   // UNIFORM: patrols ignore you unless right next to you   // how long the @ takes to slide one step
 let S;
 // the clock toggle (a demo aid, Greg 2026-11-23): off, the turn count and the alarm stand still, so nothing traces you.
 // Cams and patrols still move. It stays as you set it across new runs.
@@ -303,7 +305,7 @@ function newRun(seed) {
   const floors = [floorRing(), floorGen(seed, 2, false), floorGen(seed, 3, true)];
   S = { seed, floors, fi: 0, x: floors[0].start.x, y: floors[0].start.y, int: MAX_INT, turn: 0, alarm: 0, have: false, alerts: 0,
     msg: 'INFILTR8. in by the door. the payload is on F3.', msgCol: C.accent, msgT: performance.now(), info: null, mode: 'pad',
-    gear: [{ key: 'FLARE', n: 4 }, { key: 'FRAG', n: 4 }], flare: 0, over: null, vis: null, inDuct: false };
+    gear: [{ key: 'FLARE', n: 4 }, { key: 'FRAG', n: 4 }, { key: 'UNIFORM', n: 2 }], flare: 0, uniform: 0, over: null, vis: null, inDuct: false };
   look();
   draw();
 }
@@ -356,6 +358,7 @@ function tick() {
   const f = F();
   if (!clockOff) S.turn++;
   if (S.flare > 0) S.flare--;
+  if (S.uniform > 0 && !--S.uniform) say('the UNIFORM is off. patrols see you again.', C.money);
   if (clockOff) { /* (paused: no countdown, no trace) */ }
   else if (S.alarm > 0) { S.alarm--; if (S.alarm === 0) say('the alarm\'s run out. they\'re coming for you.', C.danger); }
   else if (S.have) { hurt('> traced: -1 INT. get out!'); if (S.over) return; }
@@ -380,7 +383,8 @@ function tick() {
     if (p.dead) continue;
     if (p.stun > 0) { p.stun--; continue; }
     for (let s = 0; s < steps; s++) {
-      const sees = !S.inDuct && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), Math.PI / 4, 10, S.x, S.y);
+      // (in a UNIFORM a patrol walks past you: only right next to you does it look twice)
+      const sees = !S.inDuct && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, S.x, S.y) && !(S.uniform > 0 && Math.abs(p.x - S.x) + Math.abs(p.y - S.y) > 1);
       if (sees) { if (!p.chase) say('a PATROL saw you. it\'s coming.', C.danger); p.chase = 8; p.lx = S.x; p.ly = S.y; }
       if (p.chase > 0) {
         p.chase--;
@@ -419,6 +423,7 @@ function useGear(k) {
   g0.n--;
   const f = F();
   if (k === 'FLARE') { S.flare = 6; say('FLARE: the whole floor, for 6 turns.', C.money); }
+  if (k === 'UNIFORM') { S.uniform = UNIFORM_TURNS; for (const p of f.pats) p.chase = 0; say('UNIFORM: patrols take you for staff, ' + UNIFORM_TURNS + ' turns. not up close.', C.money); }
   if (k === 'FRAG') {
     for (let y = S.y - 1; y <= S.y + 1; y++) for (let x = S.x - 1; x <= S.x + 1; x++) {
       if ('#p'.includes(at(f, x, y)) && x > 0 && y > 0 && x < MW - 1 && y < MH - 1) set(f, x, y, '.');
@@ -486,6 +491,8 @@ function draw() {
   // the floor (rows 8-30)
   const camCells = new Set(), armSet = new Set(armCells(f).map(([x, y]) => x + ',' + y));
   for (const c of f.cams) if (!c.dead) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, x, y)) camCells.add(x + ',' + y);
+  const patCells = new Set();
+  for (const p of f.pats) if (!p.dead && !p.stun && S.vis[p.y][p.x]) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, x, y)) patCells.add(x + ',' + y);
   const trail = new Set(S.have ? f.trail.map(([x, y]) => x + ',' + y) : []);
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
     const c = at(f, x, y), vis = S.vis[y][x], seen = f.seen[y][x];
@@ -494,6 +501,7 @@ function draw() {
     if (!vis) { col = c === '.' ? C.seen : C.dim; }
     else {
       const k = x + ',' + y;
+      if (patCells.has(k)) bg = S.uniform > 0 ? 'rgba(232,198,106,0.08)' : 'rgba(255,154,60,0.13)';   // (a patrol's view: orange, fainter than a CAM's)
       if (camCells.has(k)) bg = 'rgba(255,59,78,0.2)';
       if (armSet.has(k)) { ch = '━'; col = C.danger; }
       if (trail.has(k) && c === '.') { ch = '•'; col = C.rep; }
@@ -509,7 +517,7 @@ function draw() {
   // the @ slides a step over (STEP_MS) instead of popping: a dark tile under it hides the floor it passes
   const sk = S.slide ? Math.min(1, (now - S.slide.t) / STEP_MS) : 1, se = 1 - (1 - sk) * (1 - sk);
   const ax = sk < 1 ? S.slide.x + (S.x - S.slide.x) * se : S.x, ay = sk < 1 ? S.slide.y + (S.y - S.slide.y) * se : S.y;
-  put(ax, MAP_Y + ay, '@', S.inDuct ? C.rare : C.accent, true, red ? 'rgba(255,59,78,0.5)' : sk < 1 ? C.bg : null);
+  put(ax, MAP_Y + ay, '@', S.inDuct ? C.rare : S.uniform > 0 ? C.money : C.accent, true, red ? 'rgba(255,59,78,0.5)' : sk < 1 ? C.bg : null);
   for (const b of booms) { const k = (now - b.t) / 500; if (k < 1) for (const [dx, dy] of [[-2, 0], [2, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) put(b.x + Math.round(dx * (1 + k)), MAP_Y + b.y + Math.round(dy * (1 + k)), '*', k < 0.5 ? C.money : C.danger, true); }
   if (S.info && S.info.x != null) { const px = L.ox + S.info.x * L.cw, py = L.oy + (MAP_Y + S.info.y) * L.ch; g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); }
   // row 31: how this UI works
@@ -520,7 +528,7 @@ function draw() {
     // the condensed tray: USE and the gear stacked on the right, no swap
     put(22, 32, '- '.repeat(7), C.dim);
     btn(24, 33, '[   USE    ]', 'use', use, C.accent, '<>EFK'.includes(at(f, S.x, S.y)));
-    S.gear.forEach((gr, i) => btn(24, 34 + i, `[ ${gr.key.padEnd(5)} x${gr.n} ]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0));
+    S.gear.forEach((gr, i) => btn(24, 34 + i, `[${gr.key.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0));
     const live = G && G.pad;
     if (u === 'swipe' || u === 'stick') {
       put(0, 32, '- '.repeat(11).trimEnd(), C.dim);
@@ -547,14 +555,13 @@ function draw() {
     btn(7, 35, '[ ▼ ]', 'down', () => act(0, 1));
     btn(22, 33, '[  USE   ]', 'use', use, C.accent, '<>EFK'.includes(at(f, S.x, S.y)));
     btn(22, 35, '[ ⇄ GEAR ]', 'swap', () => { S.mode = 'gear'; draw(); }, C.mid);
-    put(0, 36, 'keys: arrows / wasd, space waits, enter uses', C.dim);
+    put(0, 36, 'wasd/arrows, space: wait, enter: use', C.dim);
   } else {
     put(0, 32, '- '.repeat(18).trimEnd(), C.dim);
-    S.gear.forEach((gr, i) => btn(1 + i * 12, 33, `[${gr.key} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0));
-    put(1, 34, 'FLARE: see the whole floor, 6 turns.', C.mid);
-    put(1, 35, 'FRAG: blows the 3x3 round you. loud.', C.mid);
-    btn(26, 33, '[ ⇄ PAD ]', 'swap', () => { S.mode = 'pad'; draw(); }, C.mid);
-    put(0, 36, 'keys: 1 flare, 2 frag, g swaps', C.dim);
+    const tips = { FLARE: 'the floor, 6 turns', FRAG: 'blows the 3x3. loud', UNIFORM: 'patrols pass you by' };
+    S.gear.forEach((gr, i) => { btn(1, 33 + i, `[${gr.key.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0); put(14, 33 + i, tips[gr.key] || '', C.mid); });
+    btn(26, 36, '[ ⇄ PAD ]', 'swap', () => { S.mode = 'pad'; draw(); }, C.mid);
+    put(0, 36, 'keys 1 2 3, g swaps', C.dim);
   }
   // the footer (row 37)
   put(0, 37, 'seed ' + S.seed, C.dim); putR(37, 'INFILTR8 demo', C.dim);
@@ -672,9 +679,9 @@ cv.addEventListener('pointercancel', ev => liftFinger(ev, true));
 function infoAt(f, x, y) {
   const vis = S.vis[y][x], seen = f.seen[y][x];
   if (!vis && !seen) return { x, y, glyph: '?', name: 'UNKNOWN', text: 'not seen yet.' };
-  if (x === S.x && y === S.y) return { x, y, glyph: '@', name: 'YOU', text: S.inDuct ? 'in a duct: unseen. 2 turns a step.' : 'INT ' + S.int + '/' + MAX_INT + '.' };
+  if (x === S.x && y === S.y) return { x, y, glyph: '@', name: 'YOU', text: S.inDuct ? 'in a duct: unseen. 2 turns a step.' : 'INT ' + S.int + '/' + MAX_INT + '.' + (S.uniform > 0 ? ' in UNIFORM: ' + S.uniform + ' turns.' : '') };
   if (vis) {
-    const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: 'P', name: 'PATROL', text: p.chase ? 'after you. break its line of sight.' : 'walks its round. it sees 5 ahead.' };
+    const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: 'P', name: 'PATROL', text: p.chase ? 'after you. break its line of sight.' : 'walks its round. sees the way it faces.' };
     const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: '◉', name: 'CAM', text: 'sweeps a cone. 2 turns in it: an alert.' };
     if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: '◉', name: 'THE ARM', text: 'a sweep that turns, an eighth a turn.' };
     if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: '━', name: 'THE ARM', text: 'where it is now. it turns next.' };
@@ -691,6 +698,7 @@ addEventListener('keydown', ev => {
   if (k === 'enter' || k === 'e' || k === '>' || k === '<') return use();
   if (k === '1') return useGear('FLARE');
   if (k === '2') return useGear('FRAG');
+  if (k === '3') return useGear('UNIFORM');
   if (k === 'p') return toggleClock();
   if (k === 'g') { S.mode = S.mode === 'pad' ? 'gear' : 'pad'; return draw(); }
   if (k === 'escape') { S.info = null; return draw(); }

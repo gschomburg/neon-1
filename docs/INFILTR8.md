@@ -8,7 +8,7 @@ section 12). The mockups: `docs/mockups/infiltr8.html` (round 1: 5 takes) and `d
 screen (36 x 38, the 23 board rows are the floor, the tray rows hold the d-pad). F1 is THE RING by hand (the turning ARM,
 a CAM, a patrol on the middle ring); F2 and F3 come from the seed (rooms, pillars, halls, CAMs with their cones,
 patrols, ducts between vents on F2, the trash chute). Turn based with fog of war; stairs; the payload on F3 sets off
-the alarm and shows your trail; out by your door (a clean job), the fire exit or the chute. Gear: FLARE, FRAG.
+the alarm and shows your trail; out by your door (a clean job), the fire exit or the chute. Gear: FLARE, FRAG, UNIFORM. Patrols show their view (a faint orange cone, the way they last stepped).
 `?seed=ABC` for a set seed.
 Phone controls to try (Greg, 2026-11-23): the header's [UI] button steps through CLASSIC PAD, SWIPE (swipe anywhere),
 TRACKPAD (drag on a box: a step a notch), ZONE PAD (four wedges, hold to walk) and STICK (a floating thumbstick).
@@ -226,7 +226,7 @@ Names are 15 characters or less. Greg's are marked.
 15. **CLOAK:** unseen for 4 turns. You can't use anything while it's on.
 16. **CARDBOARD BOX:** hide in it. Standing still, you're a box. Moving while seen: caught.
 17. **SOFT SHOES:** your steps make no noise (once noise is in).
-18. **UNIFORM:** patrols ignore you unless they're right next to you, for 15 turns.
+18. **UNIFORM:** patrols ignore you unless they're right next to you, for 15 turns. (Greg likes it; in the demo, x2.)
 19. **SPOOF BADGE:** a CAM reads you as staff, once per CAM.
 20. **HOLO DECOY:** a copy of you appears; the CAMs and patrols go after it.
 21. **SHADOW SUIT:** in a cell no light falls on, CAMs past 4 cells don't see you.
