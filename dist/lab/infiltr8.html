@@ -566,6 +566,51 @@ function ceoOffice(f, rooms, r, p = 0.25) {
   const corner = o.cells.find(([cx, cy]) => at(f, cx, cy) === '.' && D4.filter(([i, j]) => !o.set.has((cx + i) + ',' + (cy + j))).length === 2 && !D4.some(([i, j]) => at(f, cx + i, cy + j) === '+'));
   if (corner) { set(f, corner[0], corner[1], 'g'); if (!roomJoined(f, o)) set(f, corner[0], corner[1], '.'); }
 }
+// ---------- THINGS THAT MOVE (Greg, 2026-11-24) ----------
+// HONEYPOT: now and then (B.honeypot, about 1 floor in 6) a LOOT CACHE is a mimic. Open it (or GRAB it from afar) and
+// it wakes: +1 ALERT, and it's an M that comes for you wherever you are on the floor, slowly (a step every other
+// turn), and hits hard (-2 INT). You can take it down, dart it or blind it, as a patrol.
+function placeHoneypot(f, r, p = 0.15) {
+  const caches = [...f.stations.values()].filter(s => s.kind === 'L' && !s.rich);
+  if (caches.length && r() < p) caches[Math.floor(r() * caches.length)].mimic = true;
+}
+function wakeMimic(f, key) {
+  const [x, y] = key.split(',').map(Number);
+  f.stations.delete(key); set(f, x, y, '.');
+  const m = pat([[x, y]], true); Object.assign(m, { mimic: true, fx: Math.sign(S.x - x), fy: Math.sign(S.y - y) }); f.pats.push(m);
+  heatUp(f, 'the LOOT CACHE was a HONEYPOT. it\'s awake.');
+  tick(); look(); draw();
+}
+// a mimic's turn (tick): every other turn a step toward you; on you, it hits for 2
+function mimicStep(f, p) {
+  if (S.inDuct || (p.mt = !p.mt)) return;
+  const r = route(f, p.x, p.y, S.x, S.y); if (r && r.length > 1) patStep(f, p, r[1][0], r[1][1]);
+  if (p.x === S.x && p.y === S.y) {
+    if (dodged()) { p.stun = 1; return say('the HONEYPOT lunges and misses. DODGE.', C.money); }
+    p.stun = 3; S.int--; hurt('> the HONEYPOT bites. -2 INT.');
+  }
+}
+// FLEA (gear): a scout bot. Let go, it heads the way you last stepped, 3 cells a turn; it goes under doors, keeps to
+// the floor (no ducts), and turns at random now and then or when it's blocked. Nothing sees it. It stops to watch
+// when a patrol, guard or CAM comes into its view. You see what it sees (look()). Its battery: 40 turns.
+function fleasStep(f) {
+  if (!f.fleas) return;
+  const it = INF_ITEMS.flea, ok = (x, y) => T[at(f, x, y)].walk && !T[at(f, x, y)].duct;
+  for (const fl of f.fleas) {
+    if (--fl.t <= 0) { fl.dead = true; continue; }
+    const watching = f.pats.some(p => !p.dead && Math.hypot(p.x - fl.x, (p.y - fl.y) * 2) <= it.sight && los(f, fl.x, fl.y, p.x, p.y)) || f.cams.some(c => !c.dead && Math.hypot(c.x - fl.x, (c.y - fl.y) * 2) <= it.sight && los(f, fl.x, fl.y, c.x, c.y));
+    fl.watch = watching; if (watching) continue;
+    for (let s = 0; s < it.speed; s++) {
+      if (!ok(fl.x + fl.dx, fl.y + fl.dy) || Math.random() < 0.15) {
+        const dirs = D4.filter(([i, j]) => ok(fl.x + i, fl.y + j)), fwd = dirs.filter(([i, j]) => !(i === -fl.dx && j === -fl.dy));
+        const pick = (fwd.length ? fwd : dirs); if (!pick.length) break;
+        [fl.dx, fl.dy] = pick[Math.floor(Math.random() * pick.length)];
+      }
+      fl.x += fl.dx; fl.y += fl.dy;
+    }
+  }
+  if (f.fleas.some(fl => fl.dead)) { f.fleas = f.fleas.filter(fl => !fl.dead); say('a FLEA\'s battery dies.', C.mid); }
+}
 // ---------- FLOOR SECURITY (Greg, 2026-11-24) ----------
 // PRESSURE TILES: 1 or 2 a floor, in the halls on the way through (not beside a door). You spot one only close up (3
 // cells, or a FLARE); spotted, it stays marked. Step on one (you, not a patrol): it clicks, +1 ALERT, and the nearest
@@ -860,6 +905,7 @@ const INF_ITEMS = {
   medkit:  { key: 'medkit', name: 'MED KIT', rarity: 'common', desc: 'patch yourself up: +1 INT. works in a duct.', tip: '+1 INT', stack: 1, int: 1, duct: true },
   noise:   { key: 'noise', name: 'NOISE', rarity: 'common', desc: 'throw it up to 6 cells, the way you pick (a wall stops it). patrols within 14 of where it lands go to look.', tip: 'throw: patrols look', stack: 3, range: 6, heard: 14 },
   blinder: { key: 'blinder', name: 'BLINDER', rarity: 'rare', desc: 'blind the nearest patrol or guard you can see (through a friendly CAM too) for 10 turns. blind, it sees nothing and stumbles about now and then; take it down from any side. not CAMs or the SCANNER.', tip: 'blind one, 10 turns', stack: 2, turns: 10 },
+  flea:    { key: 'flea', name: 'FLEA', rarity: 'rare', desc: 'a tiny CAM bot. let it go and it scouts ahead the way you were going, 3 cells a turn, under doors, turning at random now and then. nothing sees it. it stops to watch when it finds a patrol, guard or CAM. you see what it sees. 40 turns of battery.', tip: 'a scout bot, 40 turns', stack: 2, speed: 3, turns: 40, sight: 8 },
   // (no loadout has FRAG now: Greg, 2026-11-24, no blowing things up till objects break properly)
   frag:    { key: 'frag', name: 'FRAG', rarity: 'common', desc: 'blows the 3x3 round you: walls, CAMs, patrols. LOUD: every patrol comes.', tip: 'blows the 3x3. loud', stack: 2, loud: true },
 };
@@ -988,7 +1034,8 @@ function exitNear(f, p) {
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (d[y][x] && 'FK<E'.includes(at(f, x, y)) && (!best || d[y][x] < d[best[1]][best[0]])) best = [x, y];
   return best;
 }
-const unitName = p => p.guard ? 'GUARD' : 'PATROL';
+const unitName = p => p.mimic ? 'HONEYPOT' : p.guard ? 'GUARD' : 'PATROL';
+const unitGlyph = p => p.mimic ? 'M' : p.guard ? 'G' : 'P';
 function stationMenu(kind, f, key) {
   const gear = k => S.gear.find(g => g.key === k);
   if (kind === 'T') {
@@ -1066,7 +1113,7 @@ function stationsBeside(f) {
   for (const [i, j] of D4) { const k = (S.x + i) + ',' + (S.y + j), st = f.stations && f.stations.get(k); if (st && !st.used) out.push({ key: k, st }); }
   return out;
 }
-function openStation(f, key, st) { S.popup = Object.assign(stationMenu(st.kind, f, key), { key, kind: st.kind }); draw(); }
+function openStation(f, key, st) { if (st.mimic) return wakeMimic(f, key); S.popup = Object.assign(stationMenu(st.kind, f, key), { key, kind: st.kind }); draw(); }
 function chooseStation(i) {
   const p = S.popup, f = F(); if (!p || !p.opts[i]) return;
   if (p.plain) { S.popup = null; return p.opts[i][2](); }   // (the ACTIONS menu: each does its own turn)
@@ -1254,6 +1301,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
     ducts(f, rooms, r, last ? 1 : 2, dist);
     placeStations(f, rooms, r, B.st);
     placeCaptcha(f, rooms, r, B.captcha ?? 0.4);   // (after the stations: its note goes on a wall, as they do)
+    placeHoneypot(f, r, B.honeypot ?? 0.15);
     lightRooms(f, rooms, r, B.lit);
     // CAMs and patrols, placed with purpose (placeCams, placePats); a few goes till the way through is watched
     const goal = f.payload || f.down, way = route(f, f.up.x, f.up.y, goal.x, goal.y) || [];
@@ -1570,6 +1618,9 @@ function look() {
   // FRIENDLY CAMS (a TERMINAL): what each live CAM sees right now, you see too (and it counts as seen: BLINDER, LONG ARM)
   if (f.friendly) for (const c of f.cams) if (!c.dead && !(c.off > 0))
     for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (!vis[y][x] && (x === c.x && y === c.y || inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, x, y))) { vis[y][x] = true; f.seen[y][x] = true; }
+  // FLEAs: what each sees (its sight, less in the dark), from where it is
+  for (const fl of f.fleas || []) { const it = INF_ITEMS.flea;
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (!vis[y][x] && Math.hypot(x - fl.x, (y - fl.y) * 2) <= (litAt(f, x, y) ? it.sight : DARK_SEE) && los(f, fl.x, fl.y, x, y)) { vis[y][x] = true; f.seen[y][x] = true; } }
   // PEEK: what you see from the cell you're leaning into, too
   if (S.peek && !S.inDuct) { const { x: px, y: py } = S.peek;
     for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (!vis[y][x] && Math.hypot(x - px, (y - py) * 2) <= (litAt(f, x, y) ? 15 : dark) && los(f, px, py, x, y)) { vis[y][x] = true; f.seen[y][x] = true; } }
@@ -1585,7 +1636,7 @@ function look() {
 function act(dx, dy) {
   if (S.over) return;
   if (S.aim) { const a = S.aim; S.aim = null; if (dx || dy) return a === 'PEEK' ? peek(dx, dy) : throwNoise(dx, dy); say('no ' + a + '.', C.mid); return draw(); }   // (the way you pick: a PEEK, or where the NOISE goes)
-  if (dx || dy) S.peek = null;   // (a step ends a PEEK; a WAIT keeps looking)
+  if (dx || dy) { S.peek = null; S.lastDir = [dx, dy]; }   // (a step ends a PEEK; a WAIT keeps looking. lastDir: where a FLEA heads)
   const f = F();
   if (dx || dy) {
     const nx = S.x + dx, ny = S.y + dy, c = at(f, nx, ny);
@@ -1666,7 +1717,7 @@ function tick() {
   if (!clockOff && S.heat > 0 && ++S.quiet >= HEAT_FADE) { S.heat--; S.quiet = 0; say('quiet a while: the ALERT drops to ' + S.heat + '/' + S.heatMax + '.', C.money); }
   if (f.smoke) for (const [k, t] of f.smoke) { if (t <= 1) f.smoke.delete(k); else f.smoke.set(k, t - 1); }   // (SMOKE clears)
   if (f.powerOff > 0 && !--f.powerOff) say('the power\'s back. lights on, belts running.', C.money);
-  beltsStep(f);
+  beltsStep(f); fleasStep(f);
   // the arm turns
   if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) { if (dodged()) say('the SCANNER beam sweeps past you. DODGE.', C.money); else { hurt('> the SCANNER beam burns you. -1 INT.'); if (S.over) return; } } }   // (it hurts; it doesn't raise the ALERT: Greg, 2026-11-24)
   // cameras sweep, and look
@@ -1694,6 +1745,7 @@ function tick() {
       if (!p.blind) { p.back = route(f, p.x, p.y, p.path[p.i][0], p.path[p.i][1]); if (S.vis[p.y][p.x]) say('the ' + unitName(p) + ' can see again.', C.money); }
       continue;
     }
+    if (p.mimic) { mimicStep(f, p); if (S.over) return; continue; }   // (a HONEYPOT: it only ever comes for you)
     // RECALL: it walks to the nearest way out (exitNear: stairs up, a fire exit, the chute) and is gone
     if (p.leave) {
       if (!p.exit) p.exit = exitNear(f, p) || [p.x, p.y];
@@ -1818,6 +1870,11 @@ const GEAR_USE = {
   jammer(f, it) {
     const c = nearest(f.cams.filter(c => !c.dead && !(c.off > 0)), it.range); if (!c) { say('no CAM in sight.', C.mid); return false; }
     c.off = it.turns; c.seen = 0; say('JAMMER: that CAM is dead ' + it.turns + ' turns.', C.accent);
+  },
+  flea(f, it) {
+    const [dx, dy] = S.lastDir || [1, 0];
+    (f.fleas = f.fleas || []).push({ x: S.x, y: S.y, dx, dy, t: it.turns, watch: false });
+    say('a FLEA skitters off ' + ARROW(dx, dy) + '. you see what it sees.', C.accent);
   },
   blinder(f, it) {
     const p = nearest(f.pats.filter(p => !p.dead && !(p.ko > 0) && !(p.blind > 0)), 99); if (!p) { say('nothing in sight to blind.', C.mid); return false; }
@@ -1953,7 +2010,7 @@ function draw() {
   const camCells = new Set(), armSet = new Set(armCells(f).map(([x, y]) => x + ',' + y));
   for (const c of f.cams) if (!c.dead && !(c.off > 0)) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, x, y)) camCells.add(x + ',' + y);
   const patCells = new Set();
-  for (const p of f.pats) if (!p.dead && !p.stun && !(p.ko > 0) && !(p.blind > 0) && S.vis[p.y][p.x]) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, x, y)) patCells.add(x + ',' + y);
+  for (const p of f.pats) if (!p.dead && !p.stun && !(p.ko > 0) && !(p.blind > 0) && !p.mimic && S.vis[p.y][p.x]) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, x, y)) patCells.add(x + ',' + y);
   const trail = new Set(S.have ? f.trail.map(([x, y]) => x + ',' + y) : []);
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
     const c = at(f, x, y), vis = S.vis[y][x], seen = f.seen[y][x];
@@ -1992,12 +2049,12 @@ function draw() {
   // way it faced). EARS: patrols near you show through walls, dimmed.
   if (pass('IPC')) {
     for (const c of f.cams) if (c.tag && !c.dead && !S.vis[c.y][c.x]) piece(c.x, c.y, CAM_GLYPH, C.dim);
-    for (const p of f.pats) if (p.tag && !p.dead && !S.vis[p.y][p.x] && !S.vis[p.tag.y][p.tag.x]) { piece(p.tag.x, p.tag.y, p.guard ? 'G' : 'P', C.dim); const ax = p.tag.x + p.tag.fx, ay = p.tag.y + p.tag.fy; if (inb(ax, ay) && !S.vis[ay][ax] && T[at(f, ax, ay)].walk) piece(ax, ay, ARROW(p.tag.fx, p.tag.fy), C.dim); }
+    for (const p of f.pats) if (p.tag && !p.dead && !S.vis[p.y][p.x] && !S.vis[p.tag.y][p.tag.x]) { piece(p.tag.x, p.tag.y, unitGlyph(p), C.dim); const ax = p.tag.x + p.tag.fx, ay = p.tag.y + p.tag.fy; if (inb(ax, ay) && !S.vis[ay][ax] && T[at(f, ax, ay)].walk) piece(ax, ay, ARROW(p.tag.fx, p.tag.fy), C.dim); }
   }
-  if (pass('IP9') && !S.inDuct) for (const p of f.pats) if (!p.dead && !S.vis[p.y][p.x] && Math.max(Math.abs(p.x - S.x), Math.abs(p.y - S.y)) <= pass('IP9').range) piece(p.x, p.y, p.guard ? 'G' : 'P', C.mid);
+  if (pass('IP9') && !S.inDuct) for (const p of f.pats) if (!p.dead && !S.vis[p.y][p.x] && Math.max(Math.abs(p.x - S.x), Math.abs(p.y - S.y)) <= pass('IP9').range) piece(p.x, p.y, unitGlyph(p), C.mid);
   for (const c of f.cams) if (S.vis[c.y][c.x]) piece(c.x, c.y, c.dead ? 'x' : CAM_GLYPH, c.dead || c.off > 0 ? C.dim : f.friendly ? C.green : c.seen ? C.money : C.danger);
   // patrols P, guards G: dim knocked out, mid stunned (LOCKDOWN too), rare blind
-  for (const p of f.pats) if (S.vis[p.y][p.x]) piece(p.x, p.y, p.dead ? 'x' : p.guard ? 'G' : 'P', p.dead || p.ko > 0 ? C.dim : p.blind > 0 ? C.rare : p.stun ? C.mid : C.danger, p.chase && !(p.ko > 0) ? rgba(C.danger, 0.25) : null);
+  for (const p of f.pats) if (S.vis[p.y][p.x]) piece(p.x, p.y, p.dead ? 'x' : unitGlyph(p), p.dead || p.ko > 0 ? C.dim : p.blind > 0 ? C.rare : p.stun ? C.mid : C.danger, p.chase && !(p.ko > 0) ? rgba(C.danger, 0.25) : null);
   // the TURN WARNING (Greg, 2026-11-24): a ? over a patrol the turn before it turns round at the end of its round
   for (const p of f.pats) if (S.vis[p.y][p.x] && !p.dead && !(p.ko > 0) && !p.stun && !(p.blind > 0) && !p.chase && !(p.back && p.back.length > 1) && !p.loop && (p.i + p.d >= p.path.length || p.i + p.d < 0)
     && (S.alarm > 0 || S.have || (p.beat + 1) % PAT_PACE === 0))   // (it steps next turn: PAT_PACE, in the tick)
@@ -2012,6 +2069,8 @@ function draw() {
   if (S.info && S.info.x != null) { const px = L.ox + S.info.x * L.cw, py = L.oy + (MAP_Y + S.info.y) * L.ch; g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); }
   // PHONE RING: a # in each room you've seen, to tap
   if (S.ring) for (const o of phoneRooms(f)) { const [x, y] = phoneAt(f, o); put(x, MAP_Y + y, '#', C.bg, false, C.accent); }
+  // FLEAs: an f (bright while it's stopped to watch something)
+  for (const fl of f.fleas || []) put(fl.x, MAP_Y + fl.y, 'f', fl.watch ? C.money : C.accent);
   // SMOKE: a haze over its cells
   if (f.smoke) { g.fillStyle = rgba(C.text, 0.3); for (const k of f.smoke.keys()) { const [x, y] = k.split(',').map(Number); if (S.vis[y][x]) g.fillRect(L.ox + x * L.cw, L.oy + (MAP_Y + y) * L.ch, L.cw, L.ch); } }
   // the cell you're leaning into (a PEEK): a dashed box
@@ -2214,7 +2273,7 @@ function infoAt(f, x, y) {
   if (!vis && !seen) return { x, y, glyph: '?', name: 'UNKNOWN', text: 'not seen yet.' };
   if (x === S.x && y === S.y) return { x, y, glyph: '@', name: 'YOU', text: S.inDuct ? 'in a duct: unseen. 2 turns a step.' : 'INT ' + S.int + '/' + MAX_INT + '.' + (S.uniform > 0 ? ' in UNIFORM: ' + S.uniform + ' turns.' : '') };
   if (vis) {
-    const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: p.guard ? 'G' : 'P', name: unitName(p), text: p.ko > 0 ? 'out cold: ' + p.ko + ' turns.' : p.blind > 0 ? 'blind: ' + p.blind + ' turns. take it from any side.' : p.stun > 0 ? 'frozen: ' + p.stun + ' turns.' : p.chase ? 'after you. break its line of sight.' : p.guard ? 'stands its post, looks about. from behind: take it down.' : 'walks its round. from behind: take it down.' };
+    const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: unitGlyph(p), name: unitName(p), text: p.ko > 0 ? 'out cold: ' + p.ko + ' turns.' : p.blind > 0 ? 'blind: ' + p.blind + ' turns. take it from any side.' : p.stun > 0 ? 'frozen: ' + p.stun + ' turns.' : p.mimic ? 'a loot node that bit back. slow; hits for 2.' : p.chase ? 'after you. break its line of sight.' : p.guard ? 'stands its post, looks about. from behind: take it down.' : 'walks its round. from behind: take it down.' };
     const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: CAM_GLYPH, name: 'CAM', text: 'sweeps a cone. 2 turns in it: +1 ALERT.' };
     if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: ARM_GLYPH, name: 'SCANNER', text: 'a narrow beam. turns an eighth a turn.' };
     if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: armBeam(f), name: 'SCANNER', text: 'its beam. in it: burned, -1 INT.' };
