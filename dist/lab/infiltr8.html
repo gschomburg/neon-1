@@ -76,6 +76,7 @@ body.dev-side #dev input[type=checkbox] { width: 17px; height: 17px; }
   <label for="dev-bld">building</label><select id="dev-bld"></select>
   <label for="dev-floor">floor</label><select id="dev-floor"></select>
   <span></span><span class="dev-row"><button id="dev-up" type="button">▲ UP</button><button id="dev-down" type="button">▼ DOWN</button></span>
+  <label for="dev-timed">timed</label><input id="dev-timed" type="checkbox">
   <label for="dev-clock">clock off</label><input id="dev-clock" type="checkbox">
   <label for="dev-reveal">show all</label><input id="dev-reveal" type="checkbox">
   <span></span><span class="dev-row"><button id="dev-viewer" type="button">FLOOR VIEWER</button></span>
@@ -685,7 +686,10 @@ function stationMenu(kind, f, key) {
   const gear = k => S.gear.find(g => g.key === k);
   if (kind === 'T') return { title: 'TERMINAL', line: 'one thing, then it locks you out.', opts: [
     // (each note fits the popup: 32 at most)
-    ['CAMS OFF', 'all the CAMs here off, 25 turns', () => { for (const c of f.cams) c.off = 25; say('TERMINAL: the CAMs are off, 25 turns.', C.accent); }],
+    // (CAMS OFF is for good: Greg, 2026-11-24)
+    ['CAMS OFF', 'this floor\'s CAMs off, for good', () => { for (const c of f.cams) c.off = Infinity; say('TERMINAL: this floor\'s CAMs are off for good.', C.accent); }],
+    S.have ? ['ALARM DELAY', '+20 turns on the ALARM', () => { S.alarm += 20; say('TERMINAL: the ALARM is held off. +20 turns.', C.accent); }]
+      : ['ALARM OFF', 'ALERT off: patrols stand down', () => { f.trip = 0; for (const p of f.pats) p.chase = 0; say('TERMINAL: ALERT off. they stand down.', C.accent); }],
     ['MAP', 'this floor\'s layout and ducts', () => { for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (at(f, x, y) !== ' ') f.seen[y][x] = true; for (const d of f.ducts) d.known = true; say('TERMINAL: the floor\'s map is yours.', C.accent); }],
     ['LIGHTS OUT', 'power off 25 turns: all dark', () => { f.powerOff = 25; say('TERMINAL: the power\'s out. 25 turns.', C.accent); }]] };
   if (kind === 'L') { const st = f.stations.get(key), pick = st.finds || (st.finds = shuffled(LOOT_FINDS, f.beltR).slice(0, 2));
@@ -708,7 +712,7 @@ function chooseStation(i) {
 }
 // can a CAM at (x, y) facing a see (tx, ty) as it sweeps (its cone plus its sweep: 90 degrees either way)?
 const camSweeps = (f, x, y, a, tx, ty) => { const d = Math.hypot(tx - x, (ty - y) * 2); if (d === 0 || d > (litAt(f, tx, ty) ? 14 : DARK_SEE)) return false;
-  let diff = Math.atan2(ty - y, tx - x) - a; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); if (T[at(f, tx, ty)].hide && Math.max(Math.abs(tx - x), Math.abs(ty - y)) > 1) return false;
+  let diff = Math.atan2((ty - y) * 2, tx - x) - a; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); if (T[at(f, tx, ty)].hide && Math.max(Math.abs(tx - x), Math.abs(ty - y)) > 1) return false;
   return Math.abs(diff) <= Math.PI / 2 && losLow(f, x, y, tx, ty); };
 // CAMs: in the goal first, then hubs, then rooms on the way through (the shortest walk), never the start. Each in an inside
 // corner, aimed at what matters in its room (the payload, or a door), and never one that sweeps over the stairs you arrive by.
@@ -721,7 +725,7 @@ function placeCams(f, rooms, r, n, way) {
     const corners = o.cells.filter(([x, y]) => at(f, x, y) === '.' && (!o.set.has((x - 1) + ',' + y) || !o.set.has((x + 1) + ',' + y)) && (!o.set.has(x + ',' + (y - 1)) || !o.set.has(x + ',' + (y + 1))));
     const opts = [];
     for (const [x, y] of corners) for (const t of targets) {
-      const d = Math.hypot(t.x - x, (t.y - y) * 2), a = Math.atan2(t.y - y, t.x - x);
+      const d = Math.hypot(t.x - x, (t.y - y) * 2), a = Math.atan2((t.y - y) * 2, t.x - x);   // (screen angle: inCone and camSweeps measure it so)
       if (d >= 3 && d <= 13 && los(f, x, y, t.x, t.y) && !(f.up && camSweeps(f, x, y, a, f.up.x, f.up.y))) opts.push({ x, y, a, pay: t === f.payload });
     }
     if (!opts.length) continue;
@@ -1057,7 +1061,9 @@ const pat = (path, loop) => ({ path, loop, i: 0, d: 1, x: path[0][0], y: path[0]
 function inCone(f, x, y, a, half, range, tx, ty) {
   const dx = tx - x, dy = (ty - y) * 2, d = Math.hypot(dx, dy);
   if (d === 0 || d > (litAt(f, tx, ty) ? range : Math.min(range, DARK_SEE))) return false;   // (in the dark, close up only)
-  let diff = Math.atan2(ty - y, tx - x) - a; diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+  // (the angle on screen too: dy counts double, so a cone looks as wide up and down as across. Greg, 2026-11-24;
+  // camSweeps does the same)
+  let diff = Math.atan2(dy, dx) - a; diff = Math.atan2(Math.sin(diff), Math.cos(diff));
   if (T[at(f, tx, ty)].hide && Math.max(Math.abs(tx - x), Math.abs(ty - y)) > 1) return false;   // (in plant beds: hidden)
   return Math.abs(diff) <= half && losLow(f, x, y, tx, ty);
 }
@@ -1093,10 +1099,16 @@ function armCells(f) {
 }
 
 // ---------- the run ----------
-const MAX_INT = 4, TURNS = 150, OUT_TURNS = 45;
+const MAX_INT = 4;
+// CLOCKS (Greg, 2026-11-24). The way in: no clock, unless TIMED (a mode: the dev panel, or T): then each floor gets its
+// own, FLOOR_PACE times its quickest route (stairs to stairs, or to the payload). The way out: the ALARM, OUT_PACE
+// times the quickest way out from the payload (outTurns: the nearest exit, up the stairs if need be), plus OUT_SPARE.
+// Tripping an alarm (a CAM's good look, the SCANNER) starts TRIP_TURNS on that floor: run out, and a new patrol comes
+// in by the stairs (TRIP_MAX a floor). A TERMINAL's ALARM OFF stops it.
+const FLOOR_PACE = 3, OUT_PACE = 1.5, OUT_SPARE = 10, TRIP_TURNS = 20, TRIP_MAX = 2;
 const STEP_MS = 110;
 const DECRYPT_MS = 500;   // a floor's name, and the end screen's heading, decrypt in (the game's FX.decrypt)
-const PAT_HALF = Math.PI / 4, PAT_RANGE = 10;   // a patrol's view: 90 degrees wide, the way it last stepped (draw() shows it)
+const PAT_HALF = Math.PI * 25 / 180, PAT_RANGE = 10;   // a patrol's view: 50 degrees wide (Greg, 2026-11-24; was 90), the way it last stepped (draw() shows it)
 const UNIFORM_TURNS = 15;   // UNIFORM: patrols ignore you unless right next to you
 const PAT_PACE = 2;         // a patrol on its round steps once every PAT_PACE turns (1 = every turn)
 const KO_TURNS = 30;       // a TAKEDOWN: how long a patrol's out   // how long the @ takes to slide one step
@@ -1106,11 +1118,47 @@ let S;
 let clockOff = false;
 let devReveal = false;   // the dev panel's "show all"
 function toggleClock() { clockOff = !clockOff; say(clockOff ? 'the clock is paused: no trace, no alarm countdown.' : 'the clock is running.', C.money); draw(); }
+// TIMED (a mode, remembered): the way in has a clock per floor
+let timed = false; try { timed = localStorage.getItem('neon.infiltr8.timed') === '1'; } catch (e) { /* private mode */ }
+function toggleTimed() {
+  timed = !timed; try { localStorage.setItem('neon.infiltr8.timed', timed ? '1' : '0'); } catch (e) { /* private mode */ }
+  if (S) floorClock(F());
+  say(timed ? 'TIMED: each floor has a clock.' : 'untimed: no clock on the way in.', C.money); draw();
+}
+// a floor's clock, set the first time you're on it in TIMED: FLOOR_PACE times its quickest route
+function floorClock(f) {
+  if (!timed || f.clock != null) return;
+  const a = f.up || f.start, b = f.payload || f.down, r = a && b && route(f, a.x, a.y, b.x, b.y);
+  f.clock = Math.max(30, Math.ceil((r ? r.length - 1 : 30) * FLOOR_PACE));
+}
+// the quickest way out from (x, y) on floor fi, in turns: the nearest exit here (and the USE), or up the stairs and on
+// (the ALARM's length uses it: OUT_PACE, OUT_SPARE)
+function outTurns(fi, x, y) {
+  const f = S.floors[fi], d = bfs(f, x, y); let best = Infinity;
+  for (let j = 0; j < MH; j++) for (let i = 0; i < MW; i++) if (d[j][i] && 'EFK'.includes(at(f, i, j))) best = Math.min(best, d[j][i]);
+  if (fi > 0 && f.up && d[f.up.y][f.up.x]) { const n = S.floors[fi - 1]; if (n.down) best = Math.min(best, d[f.up.y][f.up.x] + outTurns(fi - 1, n.down.x, n.down.y)); }
+  return best;
+}
+// a tripped alarm: the patrols come for where you were; TRIP_TURNS on the clock (the way in only: the way out has the ALARM)
+function trip(f) {
+  for (const p of f.pats) if (!(p.ko > 0)) { p.chase = 8; p.lx = S.x; p.ly = S.y; }
+  if (S.have || f.trip > 0) return;
+  f.trip = TRIP_TURNS; f.tx = S.x; f.ty = S.y; say('ALERT tripped. backup in ' + TRIP_TURNS + ' turns.', C.danger);
+}
+// the trip clock ran out: a new patrol in by the stairs, out to where you were seen and back, on its round from then on
+function backup(f) {
+  f.trips = (f.trips || 0) + 1;
+  const a = f.up || f.start; let r = a && route(f, a.x, a.y, f.tx, f.ty);
+  if (r && r.length < 2) { const n = D4.map(([i, j]) => [a.x + i, a.y + j]).find(([x, y]) => T[at(f, x, y)].walk && !T[at(f, x, y)].duct); r = n && [[a.x, a.y], n]; }   // (seen at the stairs: it paces there)
+  if (f.trips > TRIP_MAX || !r) return say('the ALERT\'s run out. they\'re looking for you.', C.danger);
+  const p = pat(r, false); p.beat = 0; f.pats.push(p); say('the ALERT\'s run out. backup is in.', C.danger);
+}
 function newRun(seed) {
   const floors = [floorRing(), floorGen(seed, 2, false), floorGen(seed, 3, true)];
   S = { seed, floors, fi: 0, x: floors[0].start.x, y: floors[0].start.y, int: MAX_INT, turn: 0, alarm: 0, have: false, alerts: 0,
     msg: 'INFILTR8. in by the door. the payload is on F3.', msgCol: C.accent, msgT: performance.now(), floorT: performance.now(), info: null, mode: 'pad',
     gear: [{ key: 'FLARE', n: 4 }, { key: 'FRAG', n: 4 }, { key: 'UNIFORM', n: 2 }], flare: 0, uniform: 0, over: null, vis: null, inDuct: false };
+  floorClock(F());
   look();
   draw();
 }
@@ -1158,7 +1206,8 @@ function act(dx, dy) {
   for (let k = 0; k < turns && !S.over; k++) tick();
   // the payload
   if (f.payload && S.x === f.payload.x && S.y === f.payload.y && !S.have) {
-    S.have = true; S.alarm = OUT_TURNS; f.payload = null;
+    const out = outTurns(S.fi, S.x, S.y);
+    S.have = true; S.alarm = Math.ceil((isFinite(out) ? out : 40) * OUT_PACE) + OUT_SPARE; f.payload = null; f.trip = 0;
     say('you have it. ALARM. get out: your trail shows the way.', C.danger); flashT = performance.now();
   } else if (!S.over && (dx || dy)) {
     const c = at(f, S.x, S.y);
@@ -1177,12 +1226,17 @@ function tick() {
   if (clockOff) { /* (paused: no countdown, no trace) */ }
   else if (S.alarm > 0) { S.alarm--; if (S.alarm === 0) say('the alarm\'s run out. they\'re coming for you.', C.danger); }
   else if (S.have) { hurt('> traced: -1 INT. get out!'); if (S.over) return; }
-  if (!clockOff && S.turn === TURNS && !S.have) say('the trace clock is out. every turn now costs you.', C.danger);
-  if (!clockOff && S.turn > TURNS && !S.have && S.turn % 3 === 0) { hurt('> traced: -1 INT.'); if (S.over) return; }
+  // the way in: TIMED's floor clock; and a tripped alarm's clock
+  if (!clockOff && !S.have && timed && f.clock != null) {
+    f.clock--;
+    if (f.clock === 0) say('this floor\'s clock is out. every 3 turns now costs you.', C.danger);
+    if (f.clock < 0 && f.clock % 3 === 0) { hurt('> traced: -1 INT.'); if (S.over) return; }
+  }
+  if (!clockOff && f.trip > 0 && !--f.trip) backup(f);
   if (f.powerOff > 0 && !--f.powerOff) say('the power\'s back. lights on, belts running.', C.money);
   beltsStep(f);
   // the arm turns
-  if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) { S.alerts++; hurt('> the SCANNER caught you. alert: -1 INT.'); if (S.over) return; for (const p of f.pats) { p.chase = 8; p.lx = S.x; p.ly = S.y; } } }
+  if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) { S.alerts++; hurt('> the SCANNER caught you. alert: -1 INT.'); if (S.over) return; trip(f); } }
   // cameras sweep, and look
   for (const c of f.cams) {
     if (c.dead) continue;
@@ -1192,7 +1246,7 @@ function tick() {
     if (!S.inDuct && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, S.x, S.y)) {
       c.seen++;
       if (c.seen === 1) say('a CAM has you. ! get out of its cone.', C.money);
-      else { S.alerts++; c.seen = 0; c.rest = 1; hurt('> !! the CAM got a good look. -1 INT.'); if (S.over) return; for (const p of f.pats) { p.chase = 8; p.lx = S.x; p.ly = S.y; } }
+      else { S.alerts++; c.seen = 0; c.rest = 1; hurt('> !! the CAM got a good look. -1 INT.'); if (S.over) return; trip(f); }
     } else c.seen = 0;
   }
   // patrols
@@ -1236,7 +1290,7 @@ function use() {
   const f = F(), c = at(f, S.x, S.y);
   if (c === 'v') { S.inDuct = !S.inDuct; say(S.inDuct ? 'down into the duct. nothing sees you. 2 turns a step.' : 'up and out of the vent.', C.rare); tick(); look(); return draw(); }
   if (S.inDuct) { say('in a duct: climb out at a vent.', C.mid); return draw(); }
-  if (c === '>') { S.fi++; S.floorT = performance.now(); const n = F(); S.x = n.up.x; S.y = n.up.y; say('down to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
+  if (c === '>') { S.fi++; S.floorT = performance.now(); const n = F(); S.x = n.up.x; S.y = n.up.y; floorClock(n); say('down to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
   if (c === '<') { S.fi--; S.floorT = performance.now(); const n = F(); S.x = n.down.x; S.y = n.down.y; say('up to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
   if (c === 'E') return leave(S.have ? (S.alerts ? 'O U T' : 'C L E A N   J O B') : 'O U T', S.have ? (S.alerts ? 'out the way you came, with it. they saw you, though.' : 'in and out the same door, with it. nobody saw a thing.') : 'out, empty handed.');
   if (c === 'F') return leave('L O U D   E X I T', S.have ? 'out the fire exit, with it. every daemon heard. pay -30%.' : 'out the fire exit, empty handed. loud.');
@@ -1336,7 +1390,9 @@ function draw() {
   put(0, 3, 'SUBNET', C.mid); if (S.have) put(7, 3, '· $', C.money);   // (the payload's in your pack)
   if (clockOff) put(11, 3, 'CLOCK OFF', C.mid);
   if (S.have) putR(3, S.alarm > 0 ? `ALARM  out in ${String(S.alarm).padStart(2, '0')}` : 'ALARM  TRACED', clockOff ? C.mid : C.danger);
-  else putR(3, `TURN ${String(S.turn).padStart(3, '0')}/${TURNS}`, clockOff ? C.mid : S.turn > TURNS ? C.danger : C.money);
+  else if (f.trip > 0) putR(3, `ALERT  backup in ${String(f.trip).padStart(2, '0')}`, clockOff ? C.mid : C.danger);
+  else if (timed && f.clock != null) putR(3, f.clock > 0 ? `FLOOR CLOCK ${String(f.clock).padStart(3, '0')}` : 'FLOOR CLOCK OUT', clockOff ? C.mid : f.clock > 0 ? C.money : C.danger);
+  else putR(3, `TURN ${String(S.turn).padStart(3, '0')}`, C.mid);
   rule(4);
   // the info card (rows 5 and 7) round the message line (row 6)
   const inf = S.info;
@@ -1625,6 +1681,7 @@ addEventListener('keydown', ev => {
   if (k === '2') return useGear('FRAG');
   if (k === '3') return useGear('UNIFORM');
   if (k === 'p') return toggleClock();
+  if (k === 't') return toggleTimed();
   if (k === 'g') { S.mode = S.mode === 'pad' ? 'gear' : 'pad'; return draw(); }
   if (k === 'escape') { S.info = null; return draw(); }
 });
@@ -1634,13 +1691,13 @@ const $ = id => document.getElementById(id);
 function goFloor(i) {   // to another floor, at the stairs you'd come in by (down: its stairs up; up: its stairs down)
   if (i === S.fi || S.over) return;
   const n = S.floors[i], at0 = i > S.fi ? n.up : n.down;
-  S.fi = i; S.inDuct = false; S.floorT = performance.now();
+  S.fi = i; S.inDuct = false; S.floorT = performance.now(); floorClock(n);
   if (at0) { S.x = at0.x; S.y = at0.y; } else { S.x = n.start.x; S.y = n.start.y; }
   say('F' + (i + 1) + ': ' + n.name + '. (dev)', C.money); look(); draw();
 }
 function devSync() {   // the controls show the game as it is (keys and the game change things too)
   const set = (id, k, v) => { if ($(id)[k] !== v) $(id)[k] = v; };   // (only on a change: an open dropdown stays open)
-  set('dev-pal', 'value', String(pal)); set('dev-ui', 'value', String(ui)); set('dev-clock', 'checked', clockOff); set('dev-reveal', 'checked', devReveal);
+  set('dev-pal', 'value', String(pal)); set('dev-ui', 'value', String(ui)); set('dev-clock', 'checked', clockOff); set('dev-timed', 'checked', timed); set('dev-reveal', 'checked', devReveal);
   const fl = $('dev-floor'); if (S && fl.options.length !== S.floors.length) fl.innerHTML = S.floors.map((n, i) => '<option value="' + i + '">F' + (i + 1) + ' ' + n.name + '</option>').join('');
   if (S) { set('dev-floor', 'value', String(S.fi)); set('dev-up', 'disabled', S.fi === 0); set('dev-down', 'disabled', S.fi === S.floors.length - 1); }
 }
@@ -1660,6 +1717,7 @@ $('dev-btn').addEventListener('click', () => { const p = $('dev'); p.hidden = !p
 $('dev-pal').addEventListener('change', e => { setPal(+e.target.value); devColors(); draw(); });
 $('dev-ui').addEventListener('change', e => { ui = +e.target.value - 1; nextUI(); });
 $('dev-clock').addEventListener('change', () => toggleClock());
+$('dev-timed').addEventListener('change', () => toggleTimed());
 $('dev-floor').addEventListener('change', e => goFloor(+e.target.value));
 $('dev-up').addEventListener('click', () => goFloor(S.fi - 1));
 $('dev-down').addEventListener('click', () => goFloor(S.fi + 1));
@@ -1767,7 +1825,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; } };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

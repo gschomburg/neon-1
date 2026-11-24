@@ -481,6 +481,39 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   ROPE, a drone looking in from outside; inside glass walls you see through but can't walk through. Dropped because
   they add fiddly rules for little play. (The roof took the "outside" part of the idea.)
 
+### Playtest notes, round 2 (Greg, 2026-11-24; not built yet)
+- **The way-in clock is far too short.** 150 turns barely gets you to the payload if you rush straight there, with no
+  waiting. Being urged on is good, but not being seen needs time to plan. Ideas: more turns; a clock per floor, set
+  from how long the quickest route takes; no clock on the way in at all; or the clock as a mode for the map.
+- **The way-out alarm stays** (it makes sense), but 45 turns is too short to get back out. It should always give you
+  enough to reach at least the nearest way out (the fire exit), so work it out from the route. A **decoy loot item**
+  could delay it.
+- **Being spotted:** could bring a new patrol in from a door, or at least send the guards to where you were seen. A
+  terminal command could shut the alarm off.
+- **Crates:** parts you can steal; or the letters of the corp you're in; or a **box you hide in and walk about in**
+  (Metal Gear style), which gets into moving crates around.
+- **Cones:** they feel odd and very hard to sneak past. Try them narrower; maybe a patrol sees in a straight line,
+  not a cone. Fix the cell-shape skew too.
+- **Effects:** later.
+- **Special floors:** soon.
+- **Difficulty:** patrols are about right now (with every-other-turn pace). The 8-turn chase is fine. Starting INT is
+  fine. **CAMs are the hard part.** Ways round them: a loadout that keeps CAMs from seeing you for your first 2
+  rounds, or ways to disable them. Leaning towards terminal commands knocking things out **for good**.
+- **Built from this (2026-11-24):**
+  - **No clock on the way in.** **TIMED** is a mode (dev panel, or T; remembered): each floor gets its own clock,
+    3x its quickest route (about 150-170 turns a floor). Out: -1 INT every 3 turns.
+  - **The way-out ALARM** is 1.5x the quickest way out from the payload (the nearest exit, up the stairs if need be)
+    plus 10. Over 200 seeds: 18 to 154 turns, median 79 (was 45 flat).
+  - **Tripping an alarm** (a CAM's good look, the SCANNER) on the way in: the patrols head for where you were, and an
+    **ALERT** clock starts (20 turns). Run out, and a **backup patrol** comes in by the stairs and walks out to that
+    spot and back (2 a floor at most).
+  - **TERMINAL:** CAMS OFF is now **for good** (that floor). New: **ALARM OFF** (stops an ALERT, patrols stand
+    down); on the way out it's **ALARM DELAY** (+20 turns). LIGHTS OUT stays 25 turns.
+  - **Cones:** a patrol's is 50 degrees (was 90). Angles are measured on screen now (cells are tall), so cones look
+    right up and down; CAMs too.
+- **Loadouts (later, just ideas):** a mix of passives plus 1 or 2 gear items. Unlocked by playing INFILTR8, or in the
+  main game. Could need its own deck-style screen, or sit at the bottom of the deck as chips.
+
 ## Rewards
 - **The corp counts as beaten**, as if you'd breached it: the map, the codex and the sector all treat it the same.
 - **No boss mod.** Instead, you get the payload, and the payload is the point:
