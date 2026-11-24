@@ -588,6 +588,33 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   or the payload itself (the ALARM's length then counts from where you are). Tap it, then GRAB.
 - **Fixed:** since SPRINTER went in, taking the payload left it on the map and didn't clear the backup timer (a
   comment had swallowed the line). Now one function, `takePayload`.
+- **Notes, 2026-11-24 (Greg):**
+  - **Decoy loot is a passive,** not gear: taking the payload, the ALARM waits a few turns before it starts (more
+    time to get going). Not built.
+  - **PEEK and plants:** plants don't block sight (yours or theirs: `see: 1`), so there's nothing to lean round; no
+    peek from inside or beside one is needed.
+  - **Noise:** your footsteps make no noise; no crouch or sneak mechanic, and it may not need one. Bombs and the like
+    could make noise, later.
+  - **Set pieces and room types come next** (Greg will have Claude work on them soon): THE ROOF and its hoverpad, the
+    wall-mounted SCANNER room, and the set-piece ideas above (THE ORACLE, THE PUSH ROOM, THE BREAK ROOM, THE CEO'S
+    OFFICE, THE TRASH, A DATA MINE, A STAIRCASE MADE OF CABLES; security pieces like the SWEEP, TRIPWIRE, PRESSURE
+    TILE, CAPTCHA DOOR, HONEYPOT).
+- **From the meat notes** (Greg, filed 2026-11-24):
+  - **Already built:** watchers you've seen stay marked, even from another room (the TAGGED passive; the note
+    suggests it for everyone, so maybe it's not a passive); PEEK into a door you walk up to, as an action (ACTIONS).
+  - **The way in as a map:** a map like a normal layer, with glyphs you walk round; the glyphs are rooms you go into.
+    Maybe it even is a layer you were just in: ICE you broke isn't there, or you know which room is the "real" node,
+    and that's where the loot is. Also: a map that looks like a deck, somehow.
+  - **Pause a CAM's turning** (gear or a terminal command).
+  - **Ducts toned down** when you're not in them (you see through them, over the rooms).
+  - **Effects:** tech blobs, or wires.
+  - **Wires you can cut:** a simpler way to kill the power than a terminal's LIGHTS OUT, maybe from range with a weapon.
+  - **The STICK, more squared off.** Taps: tap yourself to USE (not wait); tap anything that's not something to wait.
+  - **MIMICS,** more hacker themed: a loot node that turns into a slow enemy that chases you and hits hard. Rare.
+  - **Training:** it's going to need one (with teaching the stick).
+  - **FLEA** (gear): a tiny CAM bot you let go. It moves 3 cells a turn and scouts ahead for you; nothing sees it. It
+    stops to watch a patrol or a CAM when it finds one. Let go, it heads the way you were going; it goes under doors,
+    keeps out of ducts, and otherwise wanders a little at random.
 - (The passive ideas from round 2 are all built: TAGGED, BACKDOOR, LOW PROFILE, NIGHT EYES, SPRINTER's free step,
   TURNCOAT, KNEE PADS, EARS, DODGE, SABOTEUR. So are both terminal ideas, REVERSE BELTS and FRIENDLY CAMS, and the
   contextual PEEK. Still open from them: PEEK from inside a plant.)
