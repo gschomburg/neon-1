@@ -2238,7 +2238,7 @@ function draw() {
   g.textAlign = 'center'; g.textBaseline = 'middle';
   const f = F();
   // header and HUD (rows 0-4)
-  put(0, 0, 'NeoN+1', C.accent, true); btn(SW - 7, 0, '[ NEW ]', 'new', () => newRun(newSeed())); btn(SW - 11, 0, '[?]', 'help', toggleHelp);
+  put(0, 0, 'NeoN+1', C.accent, true); btn(SW - 7, 0, '[ NEW ]', 'new', () => newRun(newSeed())); if (!['swipe', 'stick'].includes(UIS[ui].key)) btn(SW - 11, 0, '[?]', 'help', toggleHelp);   // (SWIPE, the sticks: down in the tray)
   rule(1);
   put(0, 2, S.onRoof ? 'RF   ' : `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
   put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
@@ -2343,7 +2343,7 @@ function draw() {
     // FOUR ACROSS (Greg, 2026-11-24): [WAIT] [ACTIONS] [GEAR 1] [GEAR 2], boxes 9 wide, rows 33-36. On a touch screen
     // ACTIONS (when it would do its one thing) and the gear take two taps: the first picks it (lit), the second does it
     // (armTap). WAIT is one tap. The how-to line goes above them.
-    put(0, 32, u === 'swipe' ? 'swipe anywhere: step · tap: info' : 'drag anywhere: walk · tap: info', C.dim);
+    btn(3, 32, '[?]', 'help', toggleHelp);   // (the help, over WAIT: Greg, 2026-11-24. No how-to line: the help has it)
     const list = actions(), one = list.length === 1;
     trayBox(0, 'WAIT', '·', 'wait', () => act(0, 0), C.mid, true);
     trayBox(1, one ? list[0][3].slice(0, 7) : 'ACTIONS', list.length > 1 ? list.length + ' here' : one ? 'do it' : '-', 'use', one ? armTap('use', doAction) : doAction, C.accent, list.length > 0);
