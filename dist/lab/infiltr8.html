@@ -73,25 +73,25 @@ const newSeed = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ2
 
 // ---------- tiles ----------
 // ' ' void (outside everything)  '#' wall  '.' floor  '+' door  '<' stairs up  '>' stairs down  'E' the way in
-// 'F' fire exit  'K' trash chute  'p' pillar  'v' vent  '=' duct
+// 'F' fire exit  'K' trash chute  'p' pillar  'v' vent (a hatch in a room's floor: the ducts are a layer under the floor,
+// f.ducts / f.under, not tiles)
 const T = {
   ' ': { walk: 0, see: 0 }, '#': { walk: 0, see: 0 }, '.': { walk: 1, see: 1 }, '+': { walk: 1, see: 1 }, '<': { walk: 1, see: 1 },
   '>': { walk: 1, see: 1 }, 'E': { walk: 1, see: 1 }, 'F': { walk: 1, see: 1 }, 'K': { walk: 1, see: 1 }, 'p': { walk: 0, see: 0 },
-  'v': { walk: 1, see: 1, duct: 1 }, '=': { walk: 1, see: 0, duct: 1 },
+  'v': { walk: 1, see: 1 },
 };
-const WALLISH = '#+EFKv';   // what joins up into box-drawn walls
+const WALLISH = '#+EFK';   // what joins up into box-drawn walls
 const INFO = {
   '#': ['WALL', 'it blocks you, and what sees.'], '.': ['FLOOR', ''], '+': ['DOOR', 'open. it doesn\'t block sight.'],
   '<': ['STAIRS UP', 'USE: up a floor.'], '>': ['STAIRS DOWN', 'USE: down a floor.'], 'E': ['THE WAY IN', 'your door. leave by it: a clean job.'],
   'F': ['FIRE EXIT', 'USE: out now. loud: less pay.'], 'K': ['TRASH CHUTE', 'USE: out, but you land in the trash.'],
-  'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'into the ducts.'],
-  '=': ['DUCT', 'nothing sees you. 2 turns a step.'], ' ': ['', ''],
+  'p': ['PILLAR', 'hide behind it. nothing sees through.'], 'v': ['VENT', 'a hatch to the ducts. USE: in, or out.'], ' ': ['', ''],
 };
 
 // ---------- a floor ----------
 function newFloor(name) {
   const t = Array.from({ length: MH }, () => Array(MW).fill(' '));
-  return { name, t, seen: Array.from({ length: MH }, () => Array(MW).fill(false)), cams: [], pats: [], arm: null, payload: null, up: null, down: null, trail: [] };
+  return { halls: new Set(), ducts: [], under: new Map(), name, t, seen: Array.from({ length: MH }, () => Array(MW).fill(false)), cams: [], pats: [], arm: null, payload: null, up: null, down: null, trail: [] };
 }
 const inb = (x, y) => x >= 0 && y >= 0 && x < MW && y < MH;
 const at = (f, x, y) => inb(x, y) ? f.t[y][x] : ' ';
@@ -156,7 +156,7 @@ function floorGen(seed, n, last) {
     if (!links.slice(0, rooms.length - 1).every(([a, b]) => hall(f, a, b, r, halls))) continue;   // (the chain has to join up)
     for (const [a, b] of links.slice(rooms.length - 1)) hall(f, a, b, r, halls);
     { const d0 = bfs(f, rooms[0].x + 1, rooms[0].y + 1, c => T[c].walk && !T[c].duct || c === 'p'); if (!rooms.every(o => d0[o.y + 1][o.x + 1])) continue; }
-    f.junc = junctions(f, halls);
+    f.halls = halls; f.junc = junctions(f, halls);
     // pillars in the big rooms
     for (const o of rooms) if (o.w >= 10 && o.h >= 6 && r() < 0.6) for (let i = o.x + 2; i < o.x + o.w - 2; i += 3) { set(f, i, o.y + 2, 'p'); if (o.h >= 7) set(f, i, o.y + o.h - 3, 'p'); }
     // stairs: up in the first room, down (or the payload) in the room farthest from it by walking
@@ -172,8 +172,8 @@ function floorGen(seed, n, last) {
       f.down = spot(far); set(f, f.down.x, f.down.y, '>');
       const mid = rooms.filter(o => o !== first && o !== far);
       if (mid.length) { const o = mid[ri(0, mid.length - 1)], s = spot(o); set(f, s.x, s.y, 'K'); }
-      ducts(f, rooms, r);
     }
+    ducts(f, rooms, r, last ? 1 : 2);
     // cameras in room corners, looking in; patrols between two rooms
     const camRooms = rooms.filter(o => o !== first).sort(() => r() - 0.5).slice(0, last ? 3 : 2);
     for (const o of camRooms) {
@@ -248,23 +248,41 @@ function outerWall(f, rooms, r) {
   }
   return null;
 }
-// THE DUCTS: a vent in one room's wall, a duct through the void, a vent in another's
-function ducts(f, rooms, r) {
-  const vents = [];
-  for (const o of rooms) for (let i = o.x + 1; i < o.x + o.w - 1; i++) for (const [y, oy] of [[o.y, -1], [o.y + o.h - 1, 1]]) if (at(f, i, y) === '#' && inb(i, y + oy) && at(f, i, y + oy) === ' ') vents.push({ x: i, y, ox: i, oy: y + oy, o });
-  for (let tries = 0; tries < 30 && vents.length > 1; tries++) {
-    const a = vents[Math.floor(r() * vents.length)], b = vents[Math.floor(r() * vents.length)];
-    if (a.o === b.o) continue;
-    const path = route(f, a.ox, a.oy, b.ox, b.oy, c => c === ' ');
-    if (!path || path.length < 6 || path.length > 40) continue;
-    set(f, a.x, a.y, 'v'); set(f, b.x, b.y, 'v');
-    for (const [x, y] of path) set(f, x, y, '=');
-    return;
+// THE DUCTS (Greg, 2026-11-23): a layer under the floor. A vent is a hatch anywhere in a room's floor; the duct runs
+// under anything (rooms, halls, walls) to a vent in another room, with a bend or two. f.ducts: [{ cells, known }];
+// f.under: cell -> the ducts there (two where they cross). A duct is known (drawn as a tint) once you've seen one of its vents. In one: engine of use().
+function ducts(f, rooms, r, n) {
+  const ventAt = o => { for (let k = 0; k < 30; k++) { const x = o.x + 1 + Math.floor(r() * (o.w - 2)), y = o.y + 1 + Math.floor(r() * (o.h - 2));
+    if (at(f, x, y) === '.' && !(f.payload && f.payload.x === x && f.payload.y === y)) return { x, y }; } return null; };
+  for (let d = 0, tries = 0; d < n && tries < 40; tries++) {
+    const a = rooms[Math.floor(r() * rooms.length)], b = rooms[Math.floor(r() * rooms.length)];
+    if (a === b) continue;
+    const va = ventAt(a), vb = ventAt(b); if (!va || !vb) continue;
+    // a Z: across to a middle column, down, across (or down, across, down)
+    const cells = [], add = (x, y) => { const l = cells[cells.length - 1]; if (!l || l[0] !== x || l[1] !== y) cells.push([x, y]); };
+    const walk = (x0, y0, x1, y1) => { for (let x = x0; x !== x1; x += Math.sign(x1 - x0)) add(x, y0); for (let y = y0; y !== y1; y += Math.sign(y1 - y0)) add(x1, y); add(x1, y1); };
+    if (r() < 0.5) { const mx = Math.min(va.x, vb.x) + Math.floor(r() * (Math.abs(va.x - vb.x) + 1)); walk(va.x, va.y, mx, va.y); walk(mx, va.y, mx, vb.y); walk(mx, vb.y, vb.x, vb.y); }
+    else { const my = Math.min(va.y, vb.y) + Math.floor(r() * (Math.abs(va.y - vb.y) + 1)); walk(va.x, va.y, va.x, my); walk(va.x, my, vb.x, my); walk(vb.x, my, vb.x, vb.y); }
+    if (cells.length < 8) continue;
+    // (not alongside another duct: side by side they read as one, and you'd step from one to the other. Crossing is fine.)
+    if (cells.filter(([x, y]) => !f.under.has(x + ',' + y) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([i, j]) => f.under.has((x + i) + ',' + (y + j)))).length > 2) continue;
+    set(f, va.x, va.y, 'v'); set(f, vb.x, vb.y, 'v');
+    const duct = { cells, known: false }; f.ducts.push(duct);
+    for (const [x, y] of cells) { const k = x + ',' + y; f.under.set(k, (f.under.get(k) || []).concat(duct)); }
+    d++;
   }
+}
+// two cells on the same duct (a step in a duct, and a pipe's join, only go along one; where two cross, you can switch)
+const ductLink = (f, x0, y0, x1, y1) => { const a = f.under.get(x0 + ',' + y0) || [], b = f.under.get(x1 + ',' + y1) || []; return a.some(d => b.includes(d)); };
+// a duct cell's pipe: joins to its neighbours on the same duct (the same order as wallGlyph)
+function pipeGlyph(f, x, y) {
+  const u = (i, j) => ductLink(f, x, y, i, j);
+  const k = (u(x, y - 1) ? 1 : 0) | (u(x, y + 1) ? 2 : 0) | (u(x + 1, y) ? 4 : 0) | (u(x - 1, y) ? 8 : 0);
+  return ['═', '║', '║', '║', '═', '╚', '╔', '╠', '═', '╝', '╗', '╣', '═', '╩', '╦', '╬'][k];
 }
 // Where halls meet or split: a hall cell with 3 or 4 ways on (a door counts), and not inside a 2 x 2 of floor (where two
 // halls do still run side by side, every cell has 3 ways on: no mark there). draw() shows them as JUNC_GLYPH.
-const JUNC_GLYPH = '◇';
+const JUNC_GLYPH = 'o', HALL_GLYPH = ':';   // (a hall's floor, and where halls meet: the floor's color)
 function junctions(f, halls) {
   const J = new Set(), w = (x, y) => T[at(f, x, y)].walk && !T[at(f, x, y)].duct;
   for (const k of halls) {
@@ -350,9 +368,10 @@ let flashT = -1e9;   // (the last hit: long ago)
 function look() {
   const f = F(), vis = Array.from({ length: MH }, () => Array(MW).fill(false));
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
-    if (S.flare > 0 || (S.inDuct ? Math.abs(x - S.x) + Math.abs(y - S.y) <= 1 : Math.hypot(x - S.x, (y - S.y) * 2) <= 15 && los(f, S.x, S.y, x, y))) { vis[y][x] = true; f.seen[y][x] = true; }
+    if (S.inDuct ? x === S.x && y === S.y : S.flare > 0 || Math.hypot(x - S.x, (y - S.y) * 2) <= 15 && los(f, S.x, S.y, x, y)) { vis[y][x] = true; f.seen[y][x] = true; }
   }
   S.vis = vis;
+  for (const d of f.ducts) if (!d.known) { const [a, b] = [d.cells[0], d.cells[d.cells.length - 1]]; if (vis[a[1]][a[0]] || vis[b[1]][b[0]]) d.known = true; }
 }
 
 // a turn: you did something (a step, a wait); then everything else steps
@@ -361,15 +380,12 @@ function act(dx, dy) {
   const f = F();
   if (dx || dy) {
     const nx = S.x + dx, ny = S.y + dy, c = at(f, nx, ny);
-    if (!T[c].walk) { say(c === 'p' ? 'a pillar.' : 'a wall.', C.mid); return draw(); }
-    const here = at(f, S.x, S.y);
-    if (c === '=' && !T[here].duct) { say('the duct: in by a vent.', C.mid); return draw(); }   // (in and out of the ducts only by a vent)
-    if (here === '=' && !T[c].duct) { say('out by a vent.', C.mid); return draw(); }
+    if (S.inDuct) { if (!ductLink(f, S.x, S.y, nx, ny)) { say('the duct doesn\'t go that way.', C.mid); return draw(); } }
+    else if (!T[c].walk) { say(c === 'p' ? 'a pillar.' : 'a wall.', C.mid); return draw(); }
     S.slide = { x: S.x, y: S.y, t: performance.now() };   // (draw() slides the @ over from here)
     S.x = nx; S.y = ny;
     f.trail.push([nx, ny]);
   }
-  S.inDuct = at(f, S.x, S.y) === '=';
   const turns = S.inDuct ? 2 : 1;
   for (let k = 0; k < turns && !S.over; k++) tick();
   // the payload
@@ -378,7 +394,9 @@ function act(dx, dy) {
     say('you have it. ALARM. get out: your trail shows the way.', C.danger); flashT = performance.now();
   } else if (!S.over && (dx || dy)) {
     const c = at(f, S.x, S.y);
-    if ('<>EFK'.includes(c)) say(INFO[c][0].toLowerCase() + '. USE ' + (c === '<' ? 'goes up.' : c === '>' ? 'goes down.' : 'leaves.'), C.accent);
+    if (c === 'v') say(S.inDuct ? 'a vent. USE climbs out.' : 'a vent. USE drops into the duct.', C.rare);
+    else if (S.inDuct) { /* (under the floor: what's up there isn't yours to use) */ }
+    else if ('<>EFK'.includes(c)) say(INFO[c][0].toLowerCase() + '. USE ' + (c === '<' ? 'goes up.' : c === '>' ? 'goes down.' : 'leaves.'), C.accent);
   }
   look();
   draw();
@@ -434,9 +452,12 @@ function tick() {
   }
 }
 // USE: stairs, the ways out
+const canUse = f => { const c = at(f, S.x, S.y); return c === 'v' || (!S.inDuct && '<>EFK'.includes(c)); };
 function use() {
   if (S.over) return;
   const f = F(), c = at(f, S.x, S.y);
+  if (c === 'v') { S.inDuct = !S.inDuct; say(S.inDuct ? 'down into the duct. nothing sees you. 2 turns a step.' : 'up and out of the vent.', C.rare); tick(); look(); return draw(); }
+  if (S.inDuct) { say('in a duct: climb out at a vent.', C.mid); return draw(); }
   if (c === '>') { S.fi++; S.floorT = performance.now(); const n = F(); S.x = n.up.x; S.y = n.up.y; say('down to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
   if (c === '<') { S.fi--; S.floorT = performance.now(); const n = F(); S.x = n.down.x; S.y = n.down.y; say('up to F' + (S.fi + 1) + ': ' + n.name + '.', C.accent); tick(); look(); return draw(); }
   if (c === 'E') return leave(S.have ? (S.alerts ? 'O U T' : 'C L E A N   J O B') : 'O U T', S.have ? (S.alerts ? 'out the way you came, with it. they saw you, though.' : 'in and out the same door, with it. nobody saw a thing.') : 'out, empty handed.');
@@ -490,8 +511,10 @@ function wallGlyph(f, x, y) {
   const k = (n ? 1 : 0) | (s ? 2 : 0) | (e ? 4 : 0) | (wv ? 8 : 0);
   return ['▪', '│', '│', '│', '─', '└', '┌', '├', '─', '┘', '┐', '┤', '─', '┴', '┬', '┼'][k];
 }
-const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫', '=': '≡' };
-const TCOL = { '.': C.dim, '+': C.text, '<': C.bright, '>': C.bright, 'E': C.accent, 'F': C.green, 'K': C.green, 'p': C.mid, 'v': C.rare, '=': C.rare, '#': C.mid };
+const CAM_GLYPH = '¢';
+const GLYPH = { '.': '·', '+': '+', '<': '▲', '>': '▼', 'E': '⌂', 'F': '◘', 'K': '▾', 'p': '▪', 'v': '▫' };
+// the tiles' colors, by palette slot (looked up as it draws, so a palette switch takes)
+const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'accent', 'F': 'green', 'K': 'green', 'p': 'mid', 'v': 'rare', '#': 'mid' };
 
 function draw() {
   if (!S) return;
@@ -515,7 +538,7 @@ function draw() {
   // the info card (rows 5 and 7) round the message line (row 6)
   const inf = S.info;
   if (inf) { put(0, 5, inf.glyph, C.bg, false, C.accent); put(2, 5, inf.name, C.bright, true); put(0, 7, inf.text.slice(0, SW), C.mid); }
-  else { put(0, 5, `seed ${S.seed}  ·  tap anything for its info`, C.dim); put(0, 7, '@ you  ◉ cam  P patrol  $ payload  ▲▼ stairs', C.dim); }
+  else { put(0, 5, `seed ${S.seed}  ·  tap anything for its info`, C.dim); put(0, 7, '@ you  ' + CAM_GLYPH + ' cam  P patrol  $ payload  ▲▼ stairs', C.dim); }
   const mt = Math.min(S.msg.length, Math.floor((now - S.msgT) / 18)), red = now - flashT < 300;
   put(0, 6, ' '.repeat(SW), C.bg, false, red ? C.danger : S.msgCol === C.danger ? C.danger : C.seen);
   put(0, 6, ('> ' + S.msg).slice(0, Math.min(SW, mt + 2)), red || S.msgCol === C.danger ? C.bg : S.msgCol);
@@ -528,7 +551,9 @@ function draw() {
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
     const c = at(f, x, y), vis = S.vis[y][x], seen = f.seen[y][x];
     if (c === ' ' || (!vis && !seen)) continue;
-    let ch = c === '#' ? wallGlyph(f, x, y) : GLYPH[c] || c, col = TCOL[c] || C.text, bg = null;
+    const k0 = x + ',' + y;
+    let ch = c === '#' ? wallGlyph(f, x, y) : c === '.' && f.halls.has(k0) ? (f.junc && f.junc.has(k0) ? JUNC_GLYPH : HALL_GLYPH) : GLYPH[c] || c;
+    let col = C[TCOL[c]] || C.text, bg = null;
     if (!vis) { col = c === '.' ? C.seen : C.dim; }
     else {
       const k = x + ',' + y;
@@ -536,13 +561,18 @@ function draw() {
       if (camCells.has(k)) bg = rgba(C.danger, 0.2);
       if (armSet.has(k)) { ch = '━'; col = C.danger; }
       if (trail.has(k) && c === '.') { ch = '•'; col = C.rep; }
-      else if (c === '.' && f.junc && f.junc.has(k)) { ch = JUNC_GLYPH; col = C.mid; }
     }
     put(x, MAP_Y + y, ch, col, c === '<' || c === '>' || c === 'E', bg);
   }
+  // the ducts: a known one is a tint on the floor; down in one, the world above dims and the ducts show as pipes
+  if (S.inDuct) { g.fillStyle = rgba(C.bg, 0.6); g.fillRect(L.ox, L.oy + MAP_Y * L.ch, SW * L.cw, MH * L.ch); }
+  for (const d of f.ducts) if (d.known) for (const [x, y] of d.cells) {
+    if (S.inDuct) { put(x, MAP_Y + y, ' ', C.bg, false, C.bg); put(x, MAP_Y + y, at(f, x, y) === 'v' ? GLYPH.v : pipeGlyph(f, x, y), C.rare, false, rgba(C.rare, 0.18)); }
+    else { g.fillStyle = rgba(C.rare, 0.16); g.fillRect(L.ox + x * L.cw, L.oy + (MAP_Y + y) * L.ch, L.cw, L.ch); }
+  }
   if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) put(f.payload.x, MAP_Y + f.payload.y, '$', C.money, true);
   if (f.arm && S.vis[f.arm.y][f.arm.x]) put(f.arm.x, MAP_Y + f.arm.y, '◉', C.danger, true);
-  for (const c of f.cams) if (S.vis[c.y][c.x]) put(c.x, MAP_Y + c.y, c.dead ? 'x' : '◉', c.dead ? C.dim : c.seen ? C.money : C.danger, true);
+  for (const c of f.cams) if (S.vis[c.y][c.x]) put(c.x, MAP_Y + c.y, c.dead ? 'x' : CAM_GLYPH, c.dead ? C.dim : c.seen ? C.money : C.danger, true);
   for (const p of f.pats) if (S.vis[p.y][p.x]) put(p.x, MAP_Y + p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, true, p.chase ? rgba(C.danger, 0.25) : null);
   for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money, true);
   // the @ slides a step over (STEP_MS) instead of popping. It's a chip: the bg color on its own color (accent; in a duct
@@ -559,7 +589,7 @@ function draw() {
   if (u !== 'classic') {
     // the condensed tray: USE and the gear stacked on the right, no swap
     put(22, 32, '- '.repeat(7), C.dim);
-    btn(24, 33, '[   USE    ]', 'use', use, C.accent, '<>EFK'.includes(at(f, S.x, S.y)));
+    btn(24, 33, '[   USE    ]', 'use', use, C.accent, canUse(f));
     S.gear.forEach((gr, i) => btn(24, 34 + i, `[${gr.key.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0));
     const live = G && G.pad;
     if (u === 'swipe' || u === 'stick') {
@@ -585,7 +615,7 @@ function draw() {
     btn(7, 33, '[ ▲ ]', 'up', () => act(0, -1));
     btn(1, 34, '[ ◄ ]', 'left', () => act(-1, 0)); btn(7, 34, '[ · ]', 'wait', () => act(0, 0), C.mid); btn(13, 34, '[ ► ]', 'right', () => act(1, 0));
     btn(7, 35, '[ ▼ ]', 'down', () => act(0, 1));
-    btn(22, 33, '[  USE   ]', 'use', use, C.accent, '<>EFK'.includes(at(f, S.x, S.y)));
+    btn(22, 33, '[  USE   ]', 'use', use, C.accent, canUse(f));
     btn(22, 35, '[ ⇄ GEAR ]', 'swap', () => { S.mode = 'gear'; draw(); }, C.mid);
     put(0, 36, 'wasd/arrows, space: wait, enter: use', C.dim);
   } else {
@@ -715,10 +745,11 @@ function infoAt(f, x, y) {
   if (x === S.x && y === S.y) return { x, y, glyph: '@', name: 'YOU', text: S.inDuct ? 'in a duct: unseen. 2 turns a step.' : 'INT ' + S.int + '/' + MAX_INT + '.' + (S.uniform > 0 ? ' in UNIFORM: ' + S.uniform + ' turns.' : '') };
   if (vis) {
     const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: 'P', name: 'PATROL', text: p.chase ? 'after you. break its line of sight.' : 'walks its round. sees the way it faces.' };
-    const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: '◉', name: 'CAM', text: 'sweeps a cone. 2 turns in it: an alert.' };
+    const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: CAM_GLYPH, name: 'CAM', text: 'sweeps a cone. 2 turns in it: an alert.' };
     if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: '◉', name: 'THE ARM', text: 'a sweep that turns, an eighth a turn.' };
     if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: '━', name: 'THE ARM', text: 'where it is now. it turns next.' };
   }
+  { const d = (f.under.get(x + ',' + y) || []).some(d => d.known); if (d && at(f, x, y) !== 'v') return { x, y, glyph: pipeGlyph(f, x, y), name: 'DUCT', text: 'under the floor. in and out by a vent.' }; }
   if (f.payload && f.payload.x === x && f.payload.y === y) return { x, y, glyph: '$', name: 'THE PAYLOAD', text: 'take it and the alarm goes. then out.' };
   const c = at(f, x, y), i = INFO[c] || ['', ''];
   return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : GLYPH[c] || c, name: i[0], text: i[1] + (vis ? '' : ' (seen before)') };

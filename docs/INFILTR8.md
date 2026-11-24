@@ -7,9 +7,15 @@ section 12). The mockups: `docs/mockups/infiltr8.html` (round 1: 5 takes) and `d
 **A playable demo** (Greg, 2026-11-23): `dist/lab/infiltr8.html` (moved from docs/mockups/ 2026-11-23), outside the game: it loads only the game's palettes (a [PAL] button in the footer) and its effects (FX.decrypt on floor names and the end screen). The real
 screen (36 x 38, the 23 board rows are the floor, the tray rows hold the d-pad). F1 is THE RING by hand (the turning ARM,
 a CAM, a patrol on the middle ring); F2 and F3 come from the seed (rooms, pillars, halls, CAMs with their cones,
-patrols, ducts between vents on F2, the trash chute). Turn based with fog of war; stairs; the payload on F3 sets off
+patrols, the trash chute). Turn based with fog of war; stairs; the payload on F3 sets off
 the alarm and shows your trail; out by your door (a clean job), the fire exit or the chute. Gear: FLARE, FRAG, UNIFORM. Patrols show their view (a faint orange cone, the way they last stepped).
 `?seed=ABC` for a set seed.
+Glyphs (Greg, 2026-11-23): a room's floor `·`, a hall `:`, where halls meet `o` (all the floor's color), a CAM `¢`.
+**Ducts** (Greg, 2026-11-23): a layer under the floor. A vent is a hatch anywhere in a room's floor; the duct runs
+under rooms, halls and walls to a vent in another room (2 on F2, 1 on F3). Once you've seen a vent, its duct's route
+shows as a faint tint. USE on a vent: down in. Inside, the floor above dims, the ducts show as pipes (`═║╔`), your
+chip is the duct color, nothing sees you, and a step costs 2 turns. USE at a vent: out. Where two ducts cross you can
+switch.
 Phone controls to try (Greg, 2026-11-23): the header's [UI] button steps through CLASSIC PAD, SWIPE (swipe anywhere),
 TRACKPAD (drag on a box: a step a notch), ZONE PAD (four wedges, hold to walk) and STICK (a floating thumbstick).
 All but CLASSIC hold USE and the gear together on the right, with no swap. `?ui=3` picks one.
