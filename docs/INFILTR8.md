@@ -511,6 +511,10 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     down); on the way out it's **ALARM DELAY** (+20 turns). LIGHTS OUT stays 25 turns.
   - **Cones:** a patrol's is 50 degrees (was 90). Angles are measured on screen now (cells are tall), so cones look
     right up and down; CAMs too.
+- **PEEK** (Greg, 2026-11-24; built the same day): lean round a corner or into a doorway without stepping out.
+  PEEK (a button, or Q), then a way: you see from that cell as well as yours, till you step. A closed door: you crack
+  it and look through; it stays shut. It's a turn; WAIT keeps looking. Watchers still see you only where you stand
+  (later, maybe: one right by the peek cell spots you). A dashed box marks the cell.
 - **Loadouts (later, just ideas):** a mix of passives plus 1 or 2 gear items. Unlocked by playing INFILTR8, or in the
   main game. Could need its own deck-style screen, or sit at the bottom of the deck as chips.
 

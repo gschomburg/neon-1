@@ -1176,6 +1176,9 @@ function look() {
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
     if (S.inDuct ? x === S.x && y === S.y : S.flare > 0 || Math.hypot(x - S.x, (y - S.y) * 2) <= (litAt(f, x, y) ? 15 : DARK_SEE_YOU) && los(f, S.x, S.y, x, y)) { vis[y][x] = true; f.seen[y][x] = true; }
   }
+  // PEEK: what you see from the cell you're leaning into, too
+  if (S.peek && !S.inDuct) { const { x: px, y: py } = S.peek;
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (!vis[y][x] && Math.hypot(x - px, (y - py) * 2) <= (litAt(f, x, y) ? 15 : DARK_SEE_YOU) && los(f, px, py, x, y)) { vis[y][x] = true; f.seen[y][x] = true; } }
   for (const d of f.ducts) if (!d.known) { const [a, b] = [d.cells[0], d.cells[d.cells.length - 1]]; if (vis[a[1]][a[0]] || vis[b[1]][b[0]]) d.known = true; }
   S.vis = devReveal ? vis.map(row => row.map(() => true)) : vis;
 }
@@ -1183,6 +1186,8 @@ function look() {
 // a turn: you did something (a step, a wait); then everything else steps
 function act(dx, dy) {
   if (S.over) return;
+  if (S.peekArm) { S.peekArm = false; if (dx || dy) return peek(dx, dy); say('no PEEK.', C.mid); return draw(); }   // (the way you pick: a PEEK)
+  if (dx || dy) S.peek = null;   // (a step ends a PEEK; a WAIT keeps looking)
   const f = F();
   if (dx || dy) {
     const nx = S.x + dx, ny = S.y + dy, c = at(f, nx, ny);
@@ -1217,6 +1222,21 @@ function act(dx, dy) {
   }
   look();
   draw();
+}
+// PEEK (Greg, 2026-11-24): lean round a corner or into a doorway without stepping out. PEEK, then a way: you see from
+// that cell as well as yours (look()), till you step. Watchers still only see you where you stand. It's a turn; WAIT
+// keeps looking. A closed door: you crack it and look through (it stays shut).
+function togglePeek() {
+  if (S.over) return;
+  if (S.inDuct) { say('in a duct: nothing to lean round.', C.mid); return draw(); }
+  S.peekArm = !S.peekArm; say(S.peekArm ? 'PEEK: which way?' : 'no PEEK.', S.peekArm ? C.accent : C.mid); draw();
+}
+function peek(dx, dy) {
+  const f = F(), x = S.x + dx, y = S.y + dy, c = at(f, x, y);
+  if (!T[c].walk || T[c].duct) { say('a wall: nothing to look round.', C.mid); return draw(); }
+  S.peek = { x, y };
+  say(c === '+' && !doorOpen(f, x, y) ? 'door cracked. WAIT: keep looking.' : 'you lean out. WAIT: keep looking.', C.accent);
+  tick(); look(); draw();
 }
 function tick() {
   const f = F();
@@ -1287,6 +1307,7 @@ function tick() {
 const canUse = f => { const c = at(f, S.x, S.y); return c === 'v' || (!S.inDuct && ('<>EFK'.includes(c) || !!stationBeside(f) || !!doorBeside(f))); };
 function use() {
   if (S.over) return;
+  S.peek = null; S.peekArm = false;   // (USE is doing something: no more leaning out)
   const f = F(), c = at(f, S.x, S.y);
   if (c === 'v') { S.inDuct = !S.inDuct; say(S.inDuct ? 'down into the duct. nothing sees you. 2 turns a step.' : 'up and out of the vent.', C.rare); tick(); look(); return draw(); }
   if (S.inDuct) { say('in a duct: climb out at a vent.', C.mid); return draw(); }
@@ -1451,12 +1472,14 @@ function draw() {
   put(ax, MAP_Y + ay, '@', C.bg, false, red ? C.danger : S.inDuct ? C.rare : S.uniform > 0 ? C.money : C.accent);
   for (const b of booms) { const k = (now - b.t) / 500; if (k < 1) for (const [dx, dy] of [[-2, 0], [2, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) put(b.x + Math.round(dx * (1 + k)), MAP_Y + b.y + Math.round(dy * (1 + k)), '*', k < 0.5 ? C.money : C.danger); }
   if (S.info && S.info.x != null) { const px = L.ox + S.info.x * L.cw, py = L.oy + (MAP_Y + S.info.y) * L.ch; g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); }
+  // the cell you're leaning into (a PEEK): a dashed box
+  if (S.peek) { const px = L.ox + S.peek.x * L.cw, py = L.oy + (MAP_Y + S.peek.y) * L.ch; g.save(); g.setLineDash([2, 2]); g.strokeStyle = C.accent; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, L.cw - 1, L.ch - 1); g.restore(); }
   // row 31: how this UI works
   // the tray rows (32-36): the pad, or the gear
   const u = UIS[ui].key;
   if (u !== 'classic') {
     // the condensed tray: USE and the gear stacked on the right, no swap
-    put(22, 32, '- '.repeat(7), C.dim);
+    btn(24, 32, '[   PEEK   ]', 'peek', togglePeek, S.peekArm ? C.money : C.accent, !S.inDuct);
     btn(24, 33, '[   USE    ]', 'use', use, C.accent, canUse(f));
     S.gear.forEach((gr, i) => btn(24, 34 + i, `[${gr.key.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), gr.key === 'FRAG' ? C.danger : C.money, gr.n > 0));
     const live = G && G.pad;
@@ -1484,8 +1507,9 @@ function draw() {
     btn(1, 34, '[ ◄ ]', 'left', () => act(-1, 0)); btn(7, 34, '[ · ]', 'wait', () => act(0, 0), C.mid); btn(13, 34, '[ ► ]', 'right', () => act(1, 0));
     btn(7, 35, '[ ▼ ]', 'down', () => act(0, 1));
     btn(22, 33, '[  USE   ]', 'use', use, C.accent, canUse(f));
+    btn(22, 34, '[  PEEK  ]', 'peek', togglePeek, S.peekArm ? C.money : C.accent, !S.inDuct);
     btn(22, 35, '[ ⇄ GEAR ]', 'swap', () => { S.mode = 'gear'; draw(); }, C.mid);
-    put(0, 36, 'wasd/arrows, space: wait, enter: use', C.dim);
+    put(0, 36, 'wasd, space wait, enter use, q peek', C.dim);
   } else {
     put(0, 32, '- '.repeat(18).trimEnd(), C.dim);
     const tips = { FLARE: 'the floor, 6 turns', FRAG: 'blows the 3x3. loud', UNIFORM: 'patrols pass you by' };
@@ -1537,7 +1561,7 @@ function drawHelp() {
   put(1, y, 'CONTROLS: ' + UIS[ui].name, C.bright, true); y++;
   for (const l of wrap(UIS[ui].hint, SW - 2)) put(1, y++, l, C.text);
   y++;
-  for (const l of wrap('keys: wasd/arrows step, space waits, enter uses, 1 2 3 gear, ? help', SW - 2)) put(1, y++, l, C.mid);
+  for (const l of wrap('keys: wasd/arrows step, space waits, enter uses, q peeks, 1 2 3 gear, ? help', SW - 2)) put(1, y++, l, C.mid);
   btn(Math.floor((SW - 12) / 2), MAP_Y + MH - 2, '[ GOT IT ]', 'help', toggleHelp);
 }
 // a station's popup: its title, a line, its choices as buttons (1, 2, 3...), and CLOSE (nothing spent)
@@ -1682,8 +1706,9 @@ addEventListener('keydown', ev => {
   if (k === '3') return useGear('UNIFORM');
   if (k === 'p') return toggleClock();
   if (k === 't') return toggleTimed();
+  if (k === 'q') return togglePeek();
   if (k === 'g') { S.mode = S.mode === 'pad' ? 'gear' : 'pad'; return draw(); }
-  if (k === 'escape') { S.info = null; return draw(); }
+  if (k === 'escape') { S.info = null; S.peekArm = false; return draw(); }
 });
 
 // ---------- the dev panel ----------
@@ -1691,7 +1716,7 @@ const $ = id => document.getElementById(id);
 function goFloor(i) {   // to another floor, at the stairs you'd come in by (down: its stairs up; up: its stairs down)
   if (i === S.fi || S.over) return;
   const n = S.floors[i], at0 = i > S.fi ? n.up : n.down;
-  S.fi = i; S.inDuct = false; S.floorT = performance.now(); floorClock(n);
+  S.fi = i; S.inDuct = false; S.peek = null; S.peekArm = false; S.floorT = performance.now(); floorClock(n);
   if (at0) { S.x = at0.x; S.y = at0.y; } else { S.x = n.start.x; S.y = n.start.y; }
   say('F' + (i + 1) + ': ' + n.name + '. (dev)', C.money); look(); draw();
 }
@@ -1825,7 +1850,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; } };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, togglePeek };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>
