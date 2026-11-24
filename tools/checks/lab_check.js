@@ -21,6 +21,9 @@ const driver = `<script>
       for (let k = 0; k < 40 && !D.S.over; k++) { const d = [[1, 0], [-1, 0], [0, 1], [0, -1], [0, 0]][(i * 7 + k * 3) % 5]; D.act(d[0], d[1]); }
       if (D.S.floors.length !== 3) out.fails.push('LAB' + i + ': ' + D.S.floors.length + ' floors');
     }
+    // the dev panel's floor jump and show all
+    D.newRun('LABDEV'); D.goFloor(2); if (D.S.fi !== 2 || D.S.x !== D.S.floors[2].up.x) out.fails.push('dev floor: to F3 at its stairs up');
+    D.setReveal(true); if (!D.S.vis.flat().every(Boolean)) out.fails.push('dev show all: not every cell'); D.setReveal(false);
     // every palette draws
     for (let p = 0; p < D.PALS.length; p++) { D.setPal(p); D.draw(); }
     out.log.push(D.PALS.length + ' palettes');

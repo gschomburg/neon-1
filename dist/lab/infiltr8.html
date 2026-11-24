@@ -16,10 +16,26 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #06090a; overflow: hidden; }
 canvas { display: block; touch-action: none; }
+/* the dev panel (Greg, 2026-11-23): plain form controls over the map, folded away by its button. layout() places it. */
+#dev-btn, #dev { position: fixed; font: 12px "JetBrains Mono", Consolas, monospace; color: var(--text); z-index: 2; }
+#dev-btn { background: var(--bg); border: 1px solid var(--dim); color: var(--money); padding: 2px 6px; cursor: pointer; }
+#dev { background: var(--bg); border: 1px solid var(--dim); padding: 8px; display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: center; opacity: 0.95; }
+#dev label { color: var(--mid); }
+#dev select { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--dim); padding: 2px; max-width: 100%; }
+#dev input[type=checkbox] { accent-color: var(--accent); justify-self: start; }
+[hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
+<button id="dev-btn" type="button" title="the dev panel">DEV</button>
+<div id="dev" hidden>
+  <label for="dev-pal">palette</label><select id="dev-pal"></select>
+  <label for="dev-ui">controls</label><select id="dev-ui"></select>
+  <label for="dev-floor">floor</label><select id="dev-floor"></select>
+  <label for="dev-clock">clock off</label><input id="dev-clock" type="checkbox">
+  <label for="dev-reveal">show all</label><input id="dev-reveal" type="checkbox">
+</div>
 <!-- the game's palettes and effects: these four files and nothing else (tools/bump.js keeps the ?v= in step) -->
 <script>window.NEON_FILES = [];</script>
 <script src="../data/palettes.js?v=16.02"></script>
@@ -350,6 +366,7 @@ let S;
 // the clock toggle (a demo aid, Greg 2026-11-23): off, the turn count and the alarm stand still, so nothing traces you.
 // Cams and patrols still move. It stays as you set it across new runs.
 let clockOff = false;
+let devReveal = false;   // the dev panel's "show all"
 function toggleClock() { clockOff = !clockOff; say(clockOff ? 'the clock is paused: no trace, no alarm countdown.' : 'the clock is running.', C.money); draw(); }
 function newRun(seed) {
   const floors = [floorRing(), floorGen(seed, 2, false), floorGen(seed, 3, true)];
@@ -373,8 +390,8 @@ function look() {
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
     if (S.inDuct ? x === S.x && y === S.y : S.flare > 0 || Math.hypot(x - S.x, (y - S.y) * 2) <= 15 && los(f, S.x, S.y, x, y)) { vis[y][x] = true; f.seen[y][x] = true; }
   }
-  S.vis = vis;
   for (const d of f.ducts) if (!d.known) { const [a, b] = [d.cells[0], d.cells[d.cells.length - 1]]; if (vis[a[1]][a[0]] || vis[b[1]][b[0]]) d.known = true; }
+  S.vis = devReveal ? vis.map(row => row.map(() => true)) : vis;
 }
 
 // a turn: you did something (a step, a wait); then everything else steps
@@ -521,6 +538,7 @@ const TCOL = { '.': 'dim', '+': 'text', '<': 'bright', '>': 'bright', 'E': 'acce
 
 function draw() {
   if (!S) return;
+  devSync();
   const now = performance.now();
   hits = [];
   g.fillStyle = C.bg; g.fillRect(0, 0, innerWidth, innerHeight);
@@ -528,13 +546,12 @@ function draw() {
   const f = F();
   // header and HUD (rows 0-4)
   put(0, 0, 'NeoN+1', C.accent, true); btn(SW - 7, 0, '[ NEW ]', 'new', () => newRun(newSeed()));
-  btn(7, 0, `[UI ${ui + 1}/${UIS.length} ${UIS[ui].name}]`, 'ui', nextUI, C.money);
   rule(1);
   put(0, 2, `F${S.fi + 1}/${S.floors.length} `, C.text); const nk = Math.min(1, (now - S.floorT) / DECRYPT_MS);   // (the game's DECRYPT, engine/fx.js: the name comes clear)
   put(5, 2, nk < 1 ? GAME.FX.decrypt(f.name, nk, S.fi, now, true) : f.name, C.bright, true);
   put(SW - 9, 2, 'INT ', C.mid); put(SW - 5, 2, '#'.repeat(Math.max(0, S.int)) + '-'.repeat(MAX_INT - Math.max(0, S.int)), S.int <= 1 ? C.danger : C.accent);
   put(0, 3, 'SUBNET', C.mid); if (S.have) put(7, 3, '· $', C.money);   // (the payload's in your pack)
-  btn(11, 3, clockOff ? '[CLOCK OFF]' : '[CLOCK ON ]', 'clock', toggleClock, clockOff ? C.mid : C.money);
+  if (clockOff) put(11, 3, 'CLOCK OFF', C.mid);
   if (S.have) putR(3, S.alarm > 0 ? `ALARM  out in ${String(S.alarm).padStart(2, '0')}` : 'ALARM  TRACED', clockOff ? C.mid : C.danger);
   else putR(3, `TURN ${String(S.turn).padStart(3, '0')}/${TURNS}`, clockOff ? C.mid : S.turn > TURNS ? C.danger : C.money);
   rule(4);
@@ -569,7 +586,7 @@ function draw() {
   }
   // the ducts: a known one is a tint on the floor; down in one, the world above dims and the ducts show as pipes
   if (S.inDuct) { g.fillStyle = rgba(C.bg, 0.6); g.fillRect(L.ox, L.oy + MAP_Y * L.ch, SW * L.cw, MH * L.ch); }
-  for (const d of f.ducts) if (d.known) for (const [x, y] of d.cells) {
+  for (const d of f.ducts) if (d.known || devReveal) for (const [x, y] of d.cells) {
     if (S.inDuct) { put(x, MAP_Y + y, ' ', C.bg, false, C.bg); put(x, MAP_Y + y, at(f, x, y) === 'v' ? GLYPH.v : pipeGlyph(f, x, y), C.rare, false, rgba(C.rare, 0.18)); }
     else { g.fillStyle = rgba(C.rare, 0.16); g.fillRect(L.ox + x * L.cw, L.oy + (MAP_Y + y) * L.ch, L.cw, L.ch); }
   }
@@ -629,7 +646,7 @@ function draw() {
     put(0, 36, 'keys 1 2 3, g swaps', C.dim);
   }
   // the footer (row 37)
-  put(0, 37, 'seed ' + S.seed, C.dim); { const t = '[PAL ' + GAME.PALETTES[PALS[pal]].name + ']'; btn(SW - [...t].length, 37, t, 'pal', () => { setPal(pal + 1); say('palette: ' + GAME.PALETTES[PALS[pal]].name + '.', C.money); draw(); }, C.money); }
+  put(0, 37, 'seed ' + S.seed, C.dim);   // (the DEV button sits at the right of this row)
   // over: the result over the floor
   if (S.over) {
     g.fillStyle = rgba(C.bg, 0.82); g.fillRect(L.ox, L.oy + MAP_Y * L.ch, SW * L.cw, MH * L.ch);
@@ -758,6 +775,7 @@ function infoAt(f, x, y) {
   return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : GLYPH[c] || c, name: i[0], text: i[1] + (vis ? '' : ' (seen before)') };
 }
 addEventListener('keydown', ev => {
+  if (ev.target && ev.target.closest && ev.target.closest('#dev')) return;   // (the dev panel's controls take their own keys)
   const k = ev.key.toLowerCase();
   const mv = { arrowup: [0, -1], w: [0, -1], k: [0, -1], arrowdown: [0, 1], s: [0, 1], j: [0, 1], arrowleft: [-1, 0], a: [-1, 0], h: [-1, 0], arrowright: [1, 0], d: [1, 0], l: [1, 0] }[k];
   if (mv) { ev.preventDefault(); return act(mv[0], mv[1]); }
@@ -771,11 +789,43 @@ addEventListener('keydown', ev => {
   if (k === 'escape') { S.info = null; return draw(); }
 });
 
-layout();
+// ---------- the dev panel ----------
+const $ = id => document.getElementById(id);
+function goFloor(i) {   // to another floor, at the stairs you'd come in by (down: its stairs up; up: its stairs down)
+  if (i === S.fi || S.over) return;
+  const n = S.floors[i], at0 = i > S.fi ? n.up : n.down;
+  S.fi = i; S.inDuct = false; S.floorT = performance.now();
+  if (at0) { S.x = at0.x; S.y = at0.y; } else { S.x = n.start.x; S.y = n.start.y; }
+  say('F' + (i + 1) + ': ' + n.name + '. (dev)', C.money); look(); draw();
+}
+function devSync() {   // the controls show the game as it is (keys and the game change things too)
+  const set = (id, k, v) => { if ($(id)[k] !== v) $(id)[k] = v; };   // (only on a change: an open dropdown stays open)
+  set('dev-pal', 'value', String(pal)); set('dev-ui', 'value', String(ui)); set('dev-clock', 'checked', clockOff); set('dev-reveal', 'checked', devReveal);
+  const fl = $('dev-floor'); if (S && fl.options.length !== S.floors.length) fl.innerHTML = S.floors.map((n, i) => '<option value="' + i + '">F' + (i + 1) + ' ' + n.name + '</option>').join('');
+  if (S) set('dev-floor', 'value', String(S.fi));
+}
+function devPlace() {   // the button on the footer's right, the panel over the top of the map
+  const b = $('dev-btn'), p = $('dev');
+  b.style.right = (innerWidth - (L.ox + SW * L.cw)) + 'px'; b.style.top = (L.oy + 37 * L.ch) + 'px'; b.style.height = L.ch + 'px'; b.style.lineHeight = '1';
+  p.style.right = b.style.right; p.style.top = (L.oy + MAP_Y * L.ch) + 'px'; p.style.maxWidth = Math.min(300, SW * L.cw) + 'px';
+}
+function devColors() { const d = document.documentElement.style; for (const k of ['bg', 'dim', 'mid', 'text', 'accent', 'money']) d.setProperty('--' + k, C[k]); }
+$('dev-pal').innerHTML = PALS.map((k, i) => '<option value="' + i + '">' + GAME.PALETTES[k].name + '</option>').join('');
+$('dev-ui').innerHTML = UIS.map((u, i) => '<option value="' + i + '">' + (i + 1) + ' ' + u.name + '</option>').join('');
+$('dev-btn').addEventListener('click', () => { const p = $('dev'); p.hidden = !p.hidden; try { localStorage.setItem('neon.infiltr8.dev', p.hidden ? '0' : '1'); } catch (e) { /* private mode */ } devSync(); });
+$('dev-pal').addEventListener('change', e => { setPal(+e.target.value); devColors(); draw(); });
+$('dev-ui').addEventListener('change', e => { ui = +e.target.value - 1; nextUI(); });
+$('dev-clock').addEventListener('change', () => toggleClock());
+$('dev-floor').addEventListener('change', e => goFloor(+e.target.value));
+$('dev-reveal').addEventListener('change', e => { devReveal = e.target.checked; look(); draw(); });
+try { if (localStorage.getItem('neon.infiltr8.dev') === '1') $('dev').hidden = false; } catch (e) { /* private mode */ }
+addEventListener('resize', devPlace);
+
+layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); } };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>
