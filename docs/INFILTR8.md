@@ -331,13 +331,14 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
     patrol's line of sight.
   - Patrols open doors on their rounds. An open door you didn't open tells you something went through.
   - Later: locked doors, opened with a LOCKPICK, a key card, or a CHARGE.
-- **Patrol line of sight.** Done in the demo: the cone shows, 90 degrees wide, the way the patrol last stepped. Still
-  to do: a patrol turns around at the end of its round with no warning. A `?` over it the turn before would make
-  trailing one a skill. (Also, the patrol's angle ignores the cells being twice as tall, though its range doesn't.
-  The cone is a little off up and down.)
-- **Takedown.** Sneaking up on a patrol gets you nothing yet, and you can even stand on its cell. The idea: step into
-  a patrol from behind or the side and it's out, quietly (for good, or for 20 turns). From the front, it catches
-  you, the same as now. The DART GUN and the TASER are then for patrols you can't get behind.
+- **Patrol line of sight.** Done in the demo: the cone shows, 90 degrees wide, the way the patrol last stepped.
+  **The turn warning** (built 2026-11-24): a `?` over a patrol the turn before it turns round at the end of its round,
+  so trailing one is a skill. Still open (with the tuning): the cone's angle ignores the cells being twice as tall,
+  though its range doesn't, so it's a little off up and down (CAMs share the code).
+- **Takedown** (built 2026-11-24): step into a patrol from behind or the side (by the way it's facing) and it's out,
+  quietly, for 30 turns (it's your turn; no alert). A dim `P`: it doesn't move or see, you can step over it, and when it
+  comes to it picks its round up again. From the front, it catches you (-1 INT), as ever; a stunned one goes down from
+  any side. The DART GUN and the TASER are then for patrols you can't get behind.
 - **Lit and dark rooms.** In the demo you just see a set distance: a circle 15 cells across and about 7 rows up and
   down, blocked by walls. Light plays no part. The idea is to make light the rule:
   - **A lit room:** once you're at its door, or can see in, you see all of it. But the CAMs and patrols in it see you at

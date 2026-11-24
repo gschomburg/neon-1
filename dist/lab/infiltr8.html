@@ -1097,7 +1097,8 @@ const MAX_INT = 4, TURNS = 150, OUT_TURNS = 45;
 const STEP_MS = 110;
 const DECRYPT_MS = 500;   // a floor's name, and the end screen's heading, decrypt in (the game's FX.decrypt)
 const PAT_HALF = Math.PI / 4, PAT_RANGE = 10;   // a patrol's view: 90 degrees wide, the way it last stepped (draw() shows it)
-const UNIFORM_TURNS = 15;   // UNIFORM: patrols ignore you unless right next to you   // how long the @ takes to slide one step
+const UNIFORM_TURNS = 15;   // UNIFORM: patrols ignore you unless right next to you
+const KO_TURNS = 30;        // a TAKEDOWN: how long a patrol's out   // how long the @ takes to slide one step
 let S;
 // the clock toggle (a demo aid, Greg 2026-11-23): off, the turn count and the alarm stand still, so nothing traces you.
 // Cams and patrols still move. It stays as you set it across new runs.
@@ -1139,6 +1140,15 @@ function act(dx, dy) {
     if (S.inDuct) { if (!ductLink(f, S.x, S.y, nx, ny)) { say('the duct doesn\'t go that way.', C.mid); return draw(); } }
     else if (!T[c].walk) { say(c === 'p' ? 'a pillar.' : c === 'x' ? 'a crate.' : 'a wall.', C.mid); return draw(); }
     else if (c === '+' && !doorOpen(f, nx, ny)) { (f.open = f.open || new Set()).add(nx + ',' + ny); say('you open the door.', C.text); tick(); look(); return draw(); }   // (opening it is your turn)
+    // TAKEDOWN (Greg, 2026-11-24): step into a patrol from behind or the side (the way it's facing: fx, fy) and it's out,
+    // quietly, KO_TURNS (your turn). From the front: it catches you, as ever. A stunned one goes down from any side.
+    { const p = !S.inDuct && f.pats.find(q => !q.dead && !(q.ko > 0) && q.x === nx && q.y === ny);
+      if (p) {
+        const front = (S.x - p.x) * p.fx + (S.y - p.y) * p.fy > 0;   // (you're on the side it's facing)
+        if (front && !(p.stun > 0)) { p.stun = 3; p.chase = 0; hurt('> the PATROL saw you coming. -1 INT.'); if (!S.over) tick(); look(); return draw(); }
+        p.ko = KO_TURNS; p.chase = 0; p.stun = 0; say('you knock the PATROL out. quiet. ' + KO_TURNS + ' turns.', C.accent);
+        tick(); look(); return draw();
+      } }
     S.slide = { x: S.x, y: S.y, t: performance.now() };   // (draw() slides the @ over from here)
     S.x = nx; S.y = ny;
     f.trail.push([nx, ny]);
@@ -1188,6 +1198,7 @@ function tick() {
   const steps = S.alarm > 0 || S.have ? 2 : 1;
   for (const p of f.pats) {
     if (p.dead) continue;
+    if (p.ko > 0) { if (!--p.ko) { p.chase = 0; if (S.vis[p.y][p.x]) say('a PATROL comes to.', C.money); } continue; }   // (knocked out: nothing; then back to its round)
     if (p.stun > 0) { p.stun--; continue; }
     for (let s = 0; s < steps; s++) {
       // (in a UNIFORM a patrol walks past you: only right next to you does it look twice)
@@ -1332,7 +1343,7 @@ function draw() {
   const camCells = new Set(), armSet = new Set(armCells(f).map(([x, y]) => x + ',' + y));
   for (const c of f.cams) if (!c.dead && !(c.off > 0)) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, x, y)) camCells.add(x + ',' + y);
   const patCells = new Set();
-  for (const p of f.pats) if (!p.dead && !p.stun && S.vis[p.y][p.x]) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, x, y)) patCells.add(x + ',' + y);
+  for (const p of f.pats) if (!p.dead && !p.stun && !(p.ko > 0) && S.vis[p.y][p.x]) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (S.vis[y][x] && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, x, y)) patCells.add(x + ',' + y);
   const trail = new Set(S.have ? f.trail.map(([x, y]) => x + ',' + y) : []);
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
     const c = at(f, x, y), vis = S.vis[y][x], seen = f.seen[y][x];
@@ -1365,7 +1376,10 @@ function draw() {
   if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) piece(f.payload.x, f.payload.y, '$', C.money);
   if (f.arm && S.vis[f.arm.y][f.arm.x]) piece(f.arm.x, f.arm.y, ARM_GLYPH, C.danger);
   for (const c of f.cams) if (S.vis[c.y][c.x]) piece(c.x, c.y, c.dead ? 'x' : CAM_GLYPH, c.dead || c.off > 0 ? C.dim : c.seen ? C.money : C.danger);
-  for (const p of f.pats) if (S.vis[p.y][p.x]) piece(p.x, p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, p.chase ? rgba(C.danger, 0.25) : null);
+  for (const p of f.pats) if (S.vis[p.y][p.x]) piece(p.x, p.y, p.dead ? 'x' : 'P', p.dead || p.ko > 0 ? C.dim : p.stun ? C.mid : C.danger, p.chase && !(p.ko > 0) ? rgba(C.danger, 0.25) : null);
+  // the TURN WARNING (Greg, 2026-11-24): a ? over a patrol the turn before it turns round at the end of its round
+  for (const p of f.pats) if (S.vis[p.y][p.x] && !p.dead && !(p.ko > 0) && !p.stun && !p.chase && !(p.back && p.back.length > 1) && !p.loop && (p.i + p.d >= p.path.length || p.i + p.d < 0))
+    put(p.x, MAP_Y + p.y - 1 >= MAP_Y ? MAP_Y + p.y - 1 : MAP_Y + p.y + 1, '?', C.money);
   for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money);
   // the @ slides a step over (STEP_MS) instead of popping. It's a chip: the bg color on its own color (accent; in a duct
   // the rare blue, in a UNIFORM gold, hit: red), so it reads in every palette, light ones too.
@@ -1576,7 +1590,7 @@ function infoAt(f, x, y) {
   if (!vis && !seen) return { x, y, glyph: '?', name: 'UNKNOWN', text: 'not seen yet.' };
   if (x === S.x && y === S.y) return { x, y, glyph: '@', name: 'YOU', text: S.inDuct ? 'in a duct: unseen. 2 turns a step.' : 'INT ' + S.int + '/' + MAX_INT + '.' + (S.uniform > 0 ? ' in UNIFORM: ' + S.uniform + ' turns.' : '') };
   if (vis) {
-    const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: 'P', name: 'PATROL', text: p.chase ? 'after you. break its line of sight.' : 'walks its round. sees the way it faces.' };
+    const p = f.pats.find(p => p.x === x && p.y === y && !p.dead); if (p) return { x, y, glyph: 'P', name: 'PATROL', text: p.ko > 0 ? 'out cold: ' + p.ko + ' turns.' : p.chase ? 'after you. break its line of sight.' : 'walks its round. from behind: take it down.' };
     const c = f.cams.find(c => c.x === x && c.y === y && !c.dead); if (c) return { x, y, glyph: CAM_GLYPH, name: 'CAM', text: 'sweeps a cone. 2 turns in it: an alert.' };
     if (f.arm && f.arm.x === x && f.arm.y === y) return { x, y, glyph: ARM_GLYPH, name: 'SCANNER', text: 'a narrow beam. turns an eighth a turn.' };
     if (armCells(f).some(([ax, ay]) => ax === x && ay === y)) return { x, y, glyph: armBeam(f), name: 'SCANNER', text: 'its beam. in it: spotted, no grace.' };
