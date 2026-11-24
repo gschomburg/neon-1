@@ -196,6 +196,39 @@ function floorRing() {
 // made (each cut joins its two sides, so it all joins up), plus a loop or two. A door where a hall meets a wall.
 // F2: stairs up and down, ducts between two vents, the trash chute. F3: stairs up, the payload in the far room, the fire
 // exit on an outside wall.
+// ROOM SHAPES (Greg, 2026-11-23): a room is a set of floor cells (o.cells, o.set), inside its box (o.x, o.y, o.w, o.h:
+// the walls' outer edge). Its walls are drawn round whatever the cells make (drawRoom), so doors, CAMs and spots work
+// from the cells, not the box. o.mid: the cell nearest its middle (where walking distances are measured from).
+//   box   the whole box
+//   cut   its four inside corners cut off (it reads rounder)
+//   L     a corner of it cut away (the inside corner is a blind spot)
+//   split a wall across it with a gap: two chambers (peek round the gap)
+//   (big: a big hall, from BSP: two pieces' room as one; a box or cut, with pillars more often)
+const SHAPES = { box: 0.3, cut: 0.15, L: 0.3, split: 0.25 };   // (the odds; a shape that doesn't fit the room falls back to a box)
+function shapeRoom(o, r) {
+  const ri = (a, b) => a + Math.floor(r() * (b - a + 1)), x0 = o.x + 1, y0 = o.y + 1, iw = o.w - 2, ih = o.h - 2;
+  let roll = r(), shape = 'box';
+  for (const [k, p] of Object.entries(SHAPES)) { if (roll < p) { shape = k; break; } roll -= p; }
+  if (o.big && shape !== 'cut') shape = 'box';
+  const out = new Set();   // inside the box, but not the room's floor
+  if (shape === 'cut') for (const [x, y] of [[x0, y0], [x0 + iw - 1, y0], [x0, y0 + ih - 1], [x0 + iw - 1, y0 + ih - 1]]) out.add(x + ',' + y);
+  else if (shape === 'L' && iw >= 5 && ih >= 3) {   // (the arms left: 2 cells wide at least)
+    const cw = ri(Math.ceil(iw * 0.35), iw - 2), chh = ri(Math.max(1, Math.ceil(ih * 0.35)), ih - 2), cx = r() < 0.5 ? x0 : x0 + iw - cw, cy = r() < 0.5 ? y0 : y0 + ih - chh;
+    for (let y = cy; y < cy + chh; y++) for (let x = cx; x < cx + cw; x++) out.add(x + ',' + y);
+  } else if (shape === 'split' && (iw >= 9 || ih >= 5)) {
+    const gap = r() < 0.5 ? 1 : 2;
+    if (iw >= 9 && (ih < 5 || r() < 0.5)) { const px = x0 + ri(3, iw - 4), gy = ri(y0 + 1, y0 + ih - 1 - gap); for (let y = y0; y < y0 + ih; y++) if (y < gy || y >= gy + gap) out.add(px + ',' + y); }
+    else { const py = y0 + ri(2, ih - 3), gx = ri(x0 + 1, x0 + iw - 1 - gap); for (let x = x0; x < x0 + iw; x++) if (x < gx || x >= gx + gap) out.add(x + ',' + py); }
+  } else if (shape !== 'cut') shape = 'box';
+  o.shape = shape; o.cells = []; o.set = new Set();
+  for (let y = y0; y < y0 + ih; y++) for (let x = x0; x < x0 + iw; x++) if (!out.has(x + ',' + y)) { o.cells.push([x, y]); o.set.add(x + ',' + y); }
+  let best = 1e9; for (const [x, y] of o.cells) { const d = Math.hypot(x - o.cx, (y - o.cy) * 2); if (d < best) { best = d; o.mid = { x, y }; } }
+}
+// floor in the room's cells, a wall on every empty cell round them (a split's wall is one of those)
+function drawRoom(f, o) {
+  for (const [x, y] of o.cells) set(f, x, y, '.');
+  for (const [x, y] of o.cells) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!o.set.has((x + i) + ',' + (y + j)) && at(f, x + i, y + j) === ' ') set(f, x + i, y + j, '#');
+}
 // BSP (binary space partitioning): cut the floor in two, and each half in two again, till the pieces are about room
 // size; a room in each piece, filling most of it. So rooms spread over the whole floor (no big empty patches), and
 // their sizes vary with their pieces. Each cut also says which rooms are neighbours: links joins the nearest pair across
@@ -211,6 +244,8 @@ const BSP = {
   minW: 10, minH: 7,     // the smallest piece: a 7 x 5 room, and a gap round it for halls (a cell of gap on each side)
   stopArea: 190,         // a piece this small (in cells) may stop being cut: bigger rooms, fewer of them
   stopChance: 0.45,
+  bigChance: 0.12,       // a piece up to bigArea may stop as one big hall (THE WAREHOUSE, THE CUBICLES later)
+  bigArea: 400,
   emptyChance: 0,        // a piece left empty now and then (0.08 left big holes: empty 9x6 patches went 0.2 -> 1.8 a floor)
 };
 function bspRooms(r, order = 0) {
@@ -218,7 +253,8 @@ function bspRooms(r, order = 0) {
   const near = (A, B) => { let best = null, bd = 1e9; for (const a of A) for (const b of B) { const d = Math.hypot(a.cx - b.cx, (a.cy - b.cy) * 2); if (d < bd) { bd = d; best = [a, b]; } } return best; };
   function cut(x, y, w, h, depth, share = {}) {   // (share: what this piece's sibling did, to copy)
     const canV = w >= BSP.minW * 2, canH = h >= BSP.minH * 2;
-    if ((!canV && !canH) || (depth >= 2 && w * h <= BSP.stopArea && r() < BSP.stopChance)) {
+    const big = depth >= 1 && w * h > BSP.stopArea && w * h <= BSP.bigArea && r() < BSP.bigChance;
+    if (big || (!canV && !canH) || (depth >= 2 && w * h <= BSP.stopArea && r() < BSP.stopChance)) {
       if (depth >= 2 && r() < BSP.emptyChance) return [];
       // the room: most of the piece, a cell of gap inside its edges
       let rw = ri(Math.max(7, Math.floor((w - 2) * 0.6)), w - 2), rh = ri(Math.max(5, Math.floor((h - 2) * 0.6)), h - 2);
@@ -226,7 +262,8 @@ function bspRooms(r, order = 0) {
       // order: the full height of the piece (it lines up with the room beside it), sometimes the full width too
       if (r() < order) { ry = y + 1; rh = h - 2; }
       if (r() < order * 0.6) { rx = x + 1; rw = w - 2; }
-      const o = { x: rx, y: ry, w: rw, h: rh, cx: rx + Math.floor(rw / 2), cy: ry + Math.floor(rh / 2), piece: { x, y, w, h } };
+      if (big) { rx = x + 1; ry = y + 1; rw = w - 2; rh = h - 2; }   // (a big hall fills its piece)
+      const o = { x: rx, y: ry, w: rw, h: rh, cx: rx + Math.floor(rw / 2), cy: ry + Math.floor(rh / 2), piece: { x, y, w, h }, big };
       rooms.push(o); return [o];
     }
     // cut across the longer side as it looks (a cell is about twice as tall as wide)
@@ -251,7 +288,7 @@ function floorGen(seed, n, last) {
     f.order = st < ORDER.orderly[0] ? ORDER.orderly[1] : st < ORDER.mixed[0] ? ORDER.mixed[1] : ORDER.messy[1];
     const { rooms, links } = bspRooms(r, f.order);
     if (rooms.length < 5) continue;
-    rooms.forEach(o => room(f, o.x, o.y, o.w, o.h));
+    rooms.forEach(o => { shapeRoom(o, r); drawRoom(f, o); });
     rooms.sort((a, b) => a.cx - b.cx || a.cy - b.cy);   // (rooms[0], the leftmost, gets the stairs up)
     // a loop or two: a pair of near rooms the cuts didn't join
     const joined = new Set(links.map(([a, b]) => rooms.indexOf(a) + '-' + rooms.indexOf(b)).concat(links.map(([a, b]) => rooms.indexOf(b) + '-' + rooms.indexOf(a))));
@@ -262,15 +299,17 @@ function floorGen(seed, n, last) {
     const halls = new Set();
     if (!links.slice(0, rooms.length - 1).every(([a, b]) => hall(f, a, b, r, halls))) continue;   // (the chain has to join up)
     for (const [a, b] of links.slice(rooms.length - 1)) hall(f, a, b, r, halls);
-    { const d0 = bfs(f, rooms[0].x + 1, rooms[0].y + 1, c => T[c].walk && !T[c].duct || c === 'p'); if (!rooms.every(o => d0[o.y + 1][o.x + 1])) continue; }
+    { const d0 = bfs(f, rooms[0].mid.x, rooms[0].mid.y, c => T[c].walk && !T[c].duct || c === 'p'); if (!rooms.every(o => o.cells.every(([x, y]) => d0[y][x]))) continue; }   // (every cell of every room: a split's far chamber too)
     f.halls = halls; f.junc = junctions(f, halls);
     // pillars in the big rooms
-    for (const o of rooms) if (o.w >= 10 && o.h >= 6 && r() < 0.6) for (let i = o.x + 2; i < o.x + o.w - 2; i += 3) { set(f, i, o.y + 2, 'p'); if (o.h >= 7) set(f, i, o.y + o.h - 3, 'p'); }
+    // (only where the room's floor is all round it: a pillar never closes a gap or a corner)
+    const pillar = (o, x, y) => { if ([[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].every(([i, j]) => o.set.has((x + i) + ',' + (y + j))) && at(f, x, y) === '.') set(f, x, y, 'p'); };
+    for (const o of rooms) if (o.w >= 10 && o.h >= 6 && r() < (o.big ? 0.9 : 0.6) && (o.shape === 'box' || o.shape === 'cut')) for (let i = o.x + 2; i < o.x + o.w - 2; i += 3) { pillar(o, i, o.y + 2); if (o.h >= 7) pillar(o, i, o.y + o.h - 3); }
     // stairs: up in the first room, down (or the payload) in the room farthest from it by walking
-    const first = rooms[0], dist = bfs(f, first.cx, first.cy);
-    const far = rooms.slice(1).sort((a, b) => (dist[b.cy][b.cx] || 0) - (dist[a.cy][a.cx] || 0))[0];
-    if (!dist[far.cy][far.cx]) continue;   // (not joined up: try again)
-    const spot = o => { for (let k = 0; k < 30; k++) { const x = ri(o.x + 1, o.x + o.w - 2), y = ri(o.y + 1, o.y + o.h - 2); if (at(f, x, y) === '.') return { x, y }; } return { x: o.cx, y: o.cy }; };
+    const first = rooms[0], dist = bfs(f, first.mid.x, first.mid.y);
+    const far = rooms.slice(1).sort((a, b) => (dist[b.mid.y][b.mid.x] || 0) - (dist[a.mid.y][a.mid.x] || 0))[0];
+    if (!dist[far.mid.y][far.mid.x]) continue;   // (not joined up: try again)
+    const spot = o => { for (let k = 0; k < 30; k++) { const [x, y] = o.cells[ri(0, o.cells.length - 1)]; if (at(f, x, y) === '.') return { x, y }; } return { x: o.mid.x, y: o.mid.y }; };
     f.up = spot(first); set(f, f.up.x, f.up.y, '<');
     if (last) {
       f.payload = spot(far);
@@ -284,10 +323,10 @@ function floorGen(seed, n, last) {
     // cameras in room corners, looking in; patrols between two rooms
     const camRooms = rooms.filter(o => o !== first).sort(() => r() - 0.5).slice(0, last ? 3 : 2);
     for (const o of camRooms) {
-      const corners = [[o.x + 1, o.y + 1], [o.x + o.w - 2, o.y + 1], [o.x + 1, o.y + o.h - 2], [o.x + o.w - 2, o.y + o.h - 2]].filter(([x, y]) => at(f, x, y) === '.');
+      const corners = o.cells.filter(([x, y]) => at(f, x, y) === '.' && (!o.set.has((x - 1) + ',' + y) || !o.set.has((x + 1) + ',' + y)) && (!o.set.has(x + ',' + (y - 1)) || !o.set.has(x + ',' + (y + 1))));   // (inside corners)
       if (!corners.length) continue;
       const [x, y] = corners[ri(0, corners.length - 1)];
-      f.cams.push(cam(f, x, y, Math.atan2(o.cy - y, o.cx - x)));
+      f.cams.push(cam(f, x, y, Math.atan2(o.mid.y - y, o.mid.x - x)));
     }
     for (let p = 0, tries = 0; p < (last ? 2 : 1) && tries < 20; tries++) {   // two different rooms, a walk between them
       const a = rooms[ri(1, rooms.length - 1)], b = rooms[ri(0, rooms.length - 1)];
@@ -324,11 +363,18 @@ function doorOn(f, o, to, r, halls, want) {   // (want: { side, at }: that side,
   const dx = to.cx - o.cx, dy = to.cy - o.cy, horiz = Math.abs(dx) > Math.abs(dy) * 1.5;
   const sides = horiz ? [dx > 0 ? 'e' : 'w', dy > 0 ? 's' : 'n'] : [dy > 0 ? 's' : 'n', dx > 0 ? 'e' : 'w'];
   if (want) sides.unshift(want.side);
-  const free = (x, y) => at(f, x, y) === ' ' || halls.has(x + ',' + y);
+  const free = (x, y) => at(f, x, y) === ' ' || halls.has(x + ',' + y), wallish = (x, y) => '#+'.includes(at(f, x, y));
+  const DIR = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
   for (const sd of sides) {
-    const opts = [];
-    if (sd === 'n' || sd === 's') { const y = sd === 'n' ? o.y : o.y + o.h - 1, oy = sd === 'n' ? y - 1 : y + 1; for (let x = o.x + 2; x <= o.x + o.w - 3; x++) if (free(x, oy) && at(f, x, y + (sd === 'n' ? 1 : -1)) === '.') opts.push({ x, y, ox: x, oy, door: at(f, x, y) === '+' }); }
-    else { const x = sd === 'w' ? o.x : o.x + o.w - 1, ox = sd === 'w' ? x - 1 : x + 1; for (let y = o.y + 2; y <= o.y + o.h - 3; y++) if (free(ox, y) && at(f, x + (sd === 'w' ? 1 : -1), y) === '.') opts.push({ x, y, ox, oy: y, door: at(f, x, y) === '+' }); }
+    // a wall cell on that side of one of the room's floor cells, open beyond it, and not by a corner (the room's floor
+    // goes on along the wall both ways, and so does the wall)
+    const [dx2, dy2] = DIR[sd], px = dy2 ? 1 : 0, py = dx2 ? 1 : 0, opts = [];
+    for (const [cx, cy] of o.cells) {
+      const x = cx + dx2, y = cy + dy2, ox = x + dx2, oy = y + dy2;
+      if (at(f, cx, cy) !== '.' || !wallish(x, y) || !free(ox, oy)) continue;
+      if (!o.set.has((cx + px) + ',' + (cy + py)) || !o.set.has((cx - px) + ',' + (cy - py)) || !wallish(x + px, y + py) || !wallish(x - px, y - py)) continue;
+      opts.push({ x, y, ox, oy, door: at(f, x, y) === '+' });
+    }
     if (want && sd === want.side && !want.tried) { want.tried = true; const hit = opts.find(p => (sd === 'n' || sd === 's' ? p.x : p.y) === want.at); if (hit) return hit; continue; }   // (no door there: on as usual)
     const old = opts.filter(p => p.door);   // a door already on that side: share it
     if (old.length) return old[0];
@@ -358,11 +404,10 @@ function routeHall(f, s, t, halls) {
 }
 const corner = (f, x, y) => { const w = (i, j) => '#+'.includes(at(f, i, j)); return (w(x - 1, y) || w(x + 1, y)) && (w(x, y - 1) || w(x, y + 1)); };
 // a wall cell on the outside of one of these rooms (void beyond it): the fire exit
-function outerWall(f, rooms, r) {
+function outerWall(f, rooms, r) {   // (a wall cell with the room's floor on one side and nothing on the other)
   for (const o of rooms.sort(() => r() - 0.5)) {
     const opts = [];
-    for (let i = o.x + 1; i < o.x + o.w - 1; i++) { if (at(f, i, o.y) === '#' && at(f, i, o.y - 1) === ' ') opts.push({ x: i, y: o.y }); if (at(f, i, o.y + o.h - 1) === '#' && at(f, i, o.y + o.h) === ' ') opts.push({ x: i, y: o.y + o.h - 1 }); }
-    for (let j = o.y + 1; j < o.y + o.h - 1; j++) { if (at(f, o.x, j) === '#' && at(f, o.x - 1, j) === ' ') opts.push({ x: o.x, y: j }); if (at(f, o.x + o.w - 1, j) === '#' && at(f, o.x + o.w, j) === ' ') opts.push({ x: o.x + o.w - 1, y: j }); }
+    for (const [cx, cy] of o.cells) for (const [dx, dy] of [[0, -1], [0, 1], [1, 0], [-1, 0]]) { const x = cx + dx, y = cy + dy; if (at(f, cx, cy) === '.' && at(f, x, y) === '#' && at(f, x + dx, y + dy) === ' ') opts.push({ x, y }); }
     if (opts.length) return opts[Math.floor(r() * opts.length)];
   }
   return null;
@@ -371,7 +416,7 @@ function outerWall(f, rooms, r) {
 // under anything (rooms, halls, walls) to a vent in another room, with a bend or two. f.ducts: [{ cells, known }];
 // f.under: cell -> the ducts there (two where they cross). A duct is known (drawn as a tint) once you've seen one of its vents. In one: engine of use().
 function ducts(f, rooms, r, n) {
-  const ventAt = o => { for (let k = 0; k < 30; k++) { const x = o.x + 1 + Math.floor(r() * (o.w - 2)), y = o.y + 1 + Math.floor(r() * (o.h - 2));
+  const ventAt = o => { for (let k = 0; k < 30; k++) { const [x, y] = o.cells[Math.floor(r() * o.cells.length)];
     if (at(f, x, y) === '.' && !(f.payload && f.payload.x === x && f.payload.y === y)) return { x, y }; } return null; };
   for (let d = 0, tries = 0; d < n && tries < 40; tries++) {
     const a = rooms[Math.floor(r() * rooms.length)], b = rooms[Math.floor(r() * rooms.length)];
@@ -992,7 +1037,7 @@ function viewerShow() {
   drawFloorCard($('v-cvs'), fl, Math.max(6, Math.min(w / (MW * CHAR_W), h / (MH * LINE_H))));
   $('v-cap').innerHTML = (V.i + 1) + ' · <b>' + seed + '</b> · rooms ' + fl.rooms.length + ' · cams ' + fl.cams.length + ' · patrols ' + fl.pats.length +
     ' · ducts ' + fl.ducts.length + ' · junctions ' + (fl.junc ? fl.junc.size : 0) +
-    ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
+    ' · shapes ' + Object.entries(fl.rooms.reduce((m, o) => (m[o.big ? 'big ' + o.shape : o.shape] = (m[o.big ? 'big ' + o.shape : o.shape] || 0) + 1, m), {})).map(([k, v]) => v + ' ' + k).join(', ') + ' · order ' + fl.order + (fl.order >= 0.9 ? ' (orderly)' : fl.order <= 0.1 ? ' (messy)' : ' (mixed)');
   $('v-prev').disabled = V.i === 0;
 }
 function openViewer() { if (!V.seeds.length) V.seeds.push(newSeed()); $('viewer').hidden = false; viewerShow(); }

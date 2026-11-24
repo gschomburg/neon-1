@@ -363,6 +363,10 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   they get dull and lose their corners. Each floor gets an order from its seed (about 3 in 10 orderly, half mixed, 1 in
   5 messy). Order is the chance that rooms side by side line up (same top and bottom walls), that rows of cuts line
   up across the floor, and that two neighbours' doors face each other with a straight hall between.
+- **Room shapes** (built 2026-11-23): a room is a set of floor cells, with walls drawn round whatever shape they make.
+  Box, cut corners (reads rounder), L (the inside corner is a blind spot), split (a wall across with a gap: two
+  chambers), and big halls (BSP keeps two pieces' room as one, with pillar rows). Doors, CAMs (in inside corners),
+  vents and spots all work from the cells. Still to come: cross, ring (a room in a room), gallery (long and thin).
 - The plan: the viewer; even room placement (BSP); things placed with purpose (CAMs on doors and the payload,
   patrols between the rooms that matter); then room types (terminals, THE CUBICLES, THE SERVER FARM, THE WAREHOUSE).
 
