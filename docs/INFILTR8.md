@@ -70,6 +70,9 @@ FORTY DOLLARS already had THE BBS with a RULES page to read.
    each with a catch: the FIRE EXIT (loud, less pay), the TRASH CHUTE (your pack gets shuffled), the WINDOW (needs a
    FLARE or a crew member). Your own door is a clean job. Idea: the alarm starts when you take the payload, so
    every run has a way-out half.
+   **Decided (Greg, 2026-11-23):** getting out is getting out. No exit costs you anything by default (the chute's
+   "pack gets shuffled" never meant anything). A job's own mod can change that: on an "unseen" job, say, the loud
+   FIRE EXIT cuts your pay.
 
 ## Names
 - **INFILTR8** for the action (the button next to BREACH), and **the SUBNET** for the place. That's what the doc and
