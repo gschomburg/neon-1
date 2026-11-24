@@ -741,13 +741,26 @@ const INF_ITEMS = {
 // INF_CHIPS: data/chips.js's shape, one line each: [name, group, rarity, power, what it does, face (top, bottom),
 // tip, its numbers]. Two groups: 'infp' a PASSIVE, 'infk' a LOADOUT (a KIT, as the game's KNIGHT and CARE PACKAGE:
 // numbers.kit, with its passive and gear on the line, where the game's kits keep theirs in engine/deck.js). Power and
-// faces are first guesses. Where each passive works: pass('IP1') in tick (LOOP), chooseStation (ROOT), act (HEAVY
-// HANDS, SPRINTER).
+// faces are first guesses. Where each passive works (search for its key): pass('IP1') LOOP, tick; IP2 ROOT,
+// chooseStation; IP3 HEAVY HANDS, act; IP4 SPRINTER, act; IP5 LOW PROFILE, tick (seenRange); IP6 NIGHT EYES, look
+// (youDark); IP7 TURNCOAT, act; IP8 KNEE PADS, act; IP9 EARS, draw; IPA DODGE, dodged(); IPB COOL HEAD, setPassives;
+// IPC TAGGED, look and draw; IPD BACKDOOR, draw (the info card's HACK); IPE SABOTEUR, actions and act (wreck).
 const INF_CHIPS = {
   IP1: ['LOOP', 'infp', 'rare', 1, 'CAMs are slow to place you: a CAM needs 3 turns on you for a good look, not 2.', ['[~]', 'LOP'], 'CAMs need 3 turns.', { looks: 3 }],
   IP2: ['ROOT', 'infp', 'rare', 1, 'root access: each TERMINAL gives you 2 picks, not 1.', ['[>]', 'RT_'], '2 picks a terminal.', { picks: 2 }],
   IP3: ['HEAVY HANDS', 'infp', 'rare', 1, 'your takedowns last 60 turns, not 30, and work from the front too if the patrol hasn\'t seen you.', ['[#]', 'HVY'], 'takedowns 60, any side.', { ko: 60 }],
-  IP4: ['SPRINTER', 'infp', 'rare', 1, 'the way-out ALARM runs 50% longer.', ['[»]', 'SPR'], 'the ALARM +50%.', { alarm: 1.5 }],
+  IP4: ['SPRINTER', 'infp', 'rare', 1, 'the way-out ALARM runs 50% longer, and every second step in a row is free: nothing else moves. anything but a step costs a full turn, as ever.', ['[»]', 'SPR'], 'ALARM +50%, free steps.', { alarm: 1.5, free: 2 }],
+  // (the rest: Greg's ideas, 2026-11-24)
+  IP5: ['LOW PROFILE', 'infp', 'rare', 1, 'harder to spot: CAMs and patrols only see you at 60% of their range.', ['[_]', 'LOW'], 'seen at 60% range.', { seen: 0.6 }],
+  IP6: ['NIGHT EYES', 'infp', 'rare', 1, 'your eyes adjust: the longer you stay in the dark, the farther you see in it (7, then 9, then 11, every 3 turns).', ['[o]', 'NGT'], 'see farther in the dark.', { from: 7, step: 2, every: 3, max: 11 }],
+  IP7: ['TURNCOAT', 'infp', 'rare', 1, 'every patrol you take down by hand gives you its UNIFORM (+1).', ['[P]', 'TRN'], 'takedowns: +1 UNIFORM.', { uniform: 1 }],
+  IP8: ['KNEE PADS', 'infp', 'common', 1, 'a step in a duct costs 1 turn, not 2.', ['[=]', 'KNE'], 'ducts: 1 turn a step.', { duct: 1 }],
+  IP9: ['EARS', 'infp', 'rare', 1, 'you hear them: patrols within 6 cells show through walls, dimmed.', ['[)]', 'EAR'], 'hear patrols through walls.', { range: 6 }],
+  IPA: ['DODGE', 'infp', 'rare', 1, 'half the time a patrol\'s grab or the SCANNER\'s beam misses you (a missed grab: the patrol stumbles a turn).', ['[~]', 'DDG'], '50%: a catch misses.', { chance: 0.5 }],
+  IPB: ['COOL HEAD', 'infp', 'rare', 1, 'the ALERT meter holds 5, not 3, before the alarm trips.', ['[■]', 'CLH'], 'ALERT meter 5.', { meter: 5 }],
+  IPC: ['TAGGED', 'infp', 'rare', 1, 'CAMs and patrols you\'ve seen stay marked where you last saw them, dimmed, with the way they faced.', ['[¢]', 'TAG'], 'watchers stay marked.', {}],
+  IPD: ['BACKDOOR', 'infp', 'epic', 2, 'hack any TERMINAL you\'ve seen, from anywhere on the floor: tap it, then HACK.', ['[T]', 'BKD'], 'hack seen terminals.', {}],
+  IPE: ['SABOTEUR', 'infp', 'rare', 1, 'wreck a CAM or the SCANNER for good: step into it, or WRECK it from beside it (ACTIONS).', ['[x]', 'SAB'], 'wreck CAMs, the SCANNER.', {}],
   IK1: ['GHOST', 'infk', 'rare', 2, 'a KIT: LOOP, 2 UNIFORMs and 2 SMOKEs.', ['[@]', 'GST'], 'LOOP. UNIFORM x2, SMOKE x2.', { kit: 1, passive: 'IP1', gear: { uniform: 2, smoke: 2 } }],
   IK2: ['HACKER', 'infk', 'rare', 2, 'a KIT: ROOT, 3 JAMMERs and 2 FLAREs.', ['[@]', 'HKR'], 'ROOT. JAMMER x3, FLARE x2.', { kit: 1, passive: 'IP2', gear: { jammer: 3, flare: 2 } }],
   IK3: ['BRUTE', 'infk', 'rare', 2, 'a KIT: HEAVY HANDS, 3 DARTS and a MED KIT.', ['[@]', 'BRT'], 'HEAVY HANDS. DARTS x3, MED KIT.', { kit: 1, passive: 'IP3', gear: { darts: 3, medkit: 1 } }],
@@ -758,11 +771,32 @@ const PASSIVES = Object.keys(INF_CHIPS).filter(k => INF_CHIPS[k][1] === 'infp');
 // a passive's numbers, if it's one you have (null if not): if (pass('IP3')) ... pass('IP3').ko
 const pass = k => S.passives.includes(k) ? INF_CHIPS[k][7] : null;
 const gearList = g => Object.entries(g).map(([k, n]) => INF_ITEMS[k].name + ' x' + n).join(', ');
+// what the passives set up front: COOL HEAD's longer ALERT meter
+function setPassives() { S.heatMax = pass('IPB') ? pass('IPB').meter : HEAT_MAX; S.heat = Math.min(S.heat || 0, S.heatMax - 1); }
+// how far you see in the dark: NIGHT EYES grows it the longer you've been in the dark (S.darkT: tick)
+const youDark = () => { const n = pass('IP6'); return n ? Math.min(n.max, n.from + n.step * Math.floor((S.darkT || 0) / n.every)) : DARK_SEE_YOU; };
+// how far a watcher sees YOU: LOW PROFILE cuts it
+const seenRange = r => r * (pass('IP5') ? pass('IP5').seen : 1);
+// DODGE: does this hit miss?
+const dodged = () => !!pass('IPA') && Math.random() < pass('IPA').chance;
+// SABOTEUR: the CAMs and the SCANNER right beside you (8 ways: CAMs sit in the walls)
+function sabotageTargets(f) {
+  if (!pass('IPE') || S.inDuct) return [];
+  const near = (x, y) => Math.max(Math.abs(x - S.x), Math.abs(y - S.y)) === 1, out = [];
+  for (const c of f.cams) if (!c.dead && near(c.x, c.y)) out.push({ name: 'CAM', cam: c });
+  if (f.arm && near(f.arm.x, f.arm.y)) out.push({ name: 'SCANNER', arm: true });
+  return out;
+}
+function wreck(f, a) {
+  if (a.cam) { a.cam.dead = true; say('you wreck the CAM. for good.', C.accent); }
+  else { f.arm = null; say('you wreck the SCANNER. for good.', C.accent); }
+  tick(); look(); draw();
+}
 const kitName = () => S.kit === 'CUSTOM' ? 'CUSTOM' : INF_CHIPS[S.kit][0];
 const kitLine = () => S.passives.map(p => INF_CHIPS[p][0]).join(' + ') + '. ' + S.gear.map(g => INF_ITEMS[g.key].name + ' x' + g.n).join(', ') + '.';
 function setLoadout(k) {
   if (k === 'CUSTOM') return setCustom();
-  const lo = INF_CHIPS[k][7]; S.kit = k; S.passives = [lo.passive];
+  const lo = INF_CHIPS[k][7]; S.kit = k; S.passives = [lo.passive]; setPassives();
   S.gear = Object.entries(lo.gear).map(([key, n]) => ({ key, n }));
   try { localStorage.setItem('neon.infiltr8.kit', k); } catch (e) { /* private mode */ }
 }
@@ -773,7 +807,7 @@ const CUSTOM_GEAR = Object.keys(INF_ITEMS).filter(k => !INF_ITEMS[k].loud);
 let custom = { p: [PASSIVES[0], PASSIVES[1]], g: [CUSTOM_GEAR[0], CUSTOM_GEAR[1]] };
 try { const c = JSON.parse(localStorage.getItem('neon.infiltr8.custom')); if (c && c.p.every(k => PASSIVES.includes(k)) && c.g.every(k => CUSTOM_GEAR.includes(k)) && c.p[0] !== c.p[1]) custom = c; } catch (e) { /* none yet, or private mode */ }
 function setCustom() {
-  S.kit = 'CUSTOM'; S.passives = custom.p.slice();
+  S.kit = 'CUSTOM'; S.passives = custom.p.slice(); setPassives();
   const g = {}; for (const k of custom.g) g[k] = (g[k] || 0) + INF_ITEMS[k].stack;
   S.gear = Object.entries(g).map(([key, n]) => ({ key, n }));
   try { localStorage.setItem('neon.infiltr8.kit', 'CUSTOM'); localStorage.setItem('neon.infiltr8.custom', JSON.stringify(custom)); } catch (e) { /* private mode */ }
@@ -852,6 +886,7 @@ function stationBeside(f) {
 function openStation(f, key, st) { S.popup = Object.assign(stationMenu(st.kind, f, key), { key, kind: st.kind }); draw(); }
 function chooseStation(i) {
   const p = S.popup, f = F(); if (!p || !p.opts[i]) return;
+  if (p.plain) { S.popup = null; return p.opts[i][2](); }   // (the ACTIONS menu: each does its own turn)
   p.opts[i][2]();
   // ROOT: a terminal gives more picks (the same turn's worth: one tick for all of them)
   p.n = (p.n || 0) + 1;
@@ -1331,15 +1366,29 @@ let flashT = -1e9;   // (the last hit: long ago)
 
 // what you see: line of sight, about 14 across, 7 down (a FLARE: all of it)
 function look() {
-  const f = F(), vis = Array.from({ length: MH }, () => Array(MW).fill(false));
+  const f = F(), vis = Array.from({ length: MH }, () => Array(MW).fill(false)), dark = youDark();   // (NIGHT EYES)
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
-    if (S.inDuct ? x === S.x && y === S.y : S.flare > 0 || Math.hypot(x - S.x, (y - S.y) * 2) <= (litAt(f, x, y) ? 15 : DARK_SEE_YOU) && los(f, S.x, S.y, x, y)) { vis[y][x] = true; f.seen[y][x] = true; }
+    if (S.inDuct ? x === S.x && y === S.y : S.flare > 0 || Math.hypot(x - S.x, (y - S.y) * 2) <= (litAt(f, x, y) ? 15 : dark) && los(f, S.x, S.y, x, y)) { vis[y][x] = true; f.seen[y][x] = true; }
+  }
+  // where a PEEK is worth it (ACTIONS shows one each way): an edge to lean round, a door (open or shut), or the end of
+  // a wall beside you; and leaning there shows at least 3 cells you can't see now
+  S.peekDirs = [];
+  if (!S.inDuct && S.flare <= 0) for (const [dx, dy] of D4) {
+    const tx = S.x + dx, ty = S.y + dy, tc = at(f, tx, ty); if (!T[tc].walk || T[tc].duct || (tx === (S.peek && S.peek.x) && ty === (S.peek && S.peek.y))) continue;
+    const edge = tc === '+' || [[dy, dx], [-dy, -dx]].some(([px, py]) => opaque(f, S.x + px, S.y + py) && !opaque(f, tx + px, ty + py));
+    if (!edge) continue;
+    let more = 0;
+    for (let y = 0; y < MH && more < 3; y++) for (let x = 0; x < MW && more < 3; x++) if (!vis[y][x] && at(f, x, y) !== ' ' && Math.hypot(x - tx, (y - ty) * 2) <= (litAt(f, x, y) ? 15 : dark) && los(f, tx, ty, x, y)) more++;
+    if (more >= 3) S.peekDirs.push([dx, dy]);
   }
   // PEEK: what you see from the cell you're leaning into, too
   if (S.peek && !S.inDuct) { const { x: px, y: py } = S.peek;
-    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (!vis[y][x] && Math.hypot(x - px, (y - py) * 2) <= (litAt(f, x, y) ? 15 : DARK_SEE_YOU) && los(f, px, py, x, y)) { vis[y][x] = true; f.seen[y][x] = true; } }
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (!vis[y][x] && Math.hypot(x - px, (y - py) * 2) <= (litAt(f, x, y) ? 15 : dark) && los(f, px, py, x, y)) { vis[y][x] = true; f.seen[y][x] = true; } }
   for (const d of f.ducts) if (!d.known) { const [a, b] = [d.cells[0], d.cells[d.cells.length - 1]]; if (vis[a[1]][a[0]] || vis[b[1]][b[0]]) d.known = true; }
   S.vis = devReveal ? vis.map(row => row.map(() => true)) : vis;
+  // TAGGED: where you last saw each watcher, and which way it faced (draw() shows them when out of sight)
+  for (const p of f.pats) if (S.vis[p.y][p.x]) p.tag = { x: p.x, y: p.y, fx: p.fx, fy: p.fy };
+  for (const c of f.cams) if (S.vis[c.y][c.x]) c.tag = true;
 }
 
 // a turn: you did something (a step, a wait); then everything else steps
@@ -1351,6 +1400,7 @@ function act(dx, dy) {
   if (dx || dy) {
     const nx = S.x + dx, ny = S.y + dy, c = at(f, nx, ny);
     if (S.inDuct) { if (!ductLink(f, S.x, S.y, nx, ny)) { say('the duct doesn\'t go that way.', C.mid); return draw(); } }
+    else if (pass('IPE') && sabotageTargets(f).some(a => a.cam ? a.cam.x === nx && a.cam.y === ny : f.arm.x === nx && f.arm.y === ny)) return wreck(f, sabotageTargets(f).find(a => a.cam ? a.cam.x === nx && a.cam.y === ny : true));   // (SABOTEUR: step into it)
     else if (!T[c].walk) { say(c === 'p' ? 'a pillar.' : c === 'x' ? 'a crate.' : 'a wall.', C.mid); return draw(); }
     else if (c === '+' && !doorOpen(f, nx, ny)) { (f.open = f.open || new Set()).add(nx + ',' + ny); say('you open the door.', C.text); tick(); look(); return draw(); }   // (opening it is your turn)
     // TAKEDOWN (Greg, 2026-11-24): step into a patrol from behind or the side (the way it's facing: fx, fy) and it's out,
@@ -1359,17 +1409,22 @@ function act(dx, dy) {
       if (p) {
         const front = (S.x - p.x) * p.fx + (S.y - p.y) * p.fy > 0;   // (you're on the side it's facing)
         if (front && !(p.stun > 0) && !(pass('IP3') && !p.chase)) {   // (HEAVY HANDS: from the front too, if it hasn't seen you)
-        p.stun = 3; p.chase = 0; hurt('> the PATROL saw you coming. -1 INT.'); if (!S.over) tick(); look(); return draw(); }
+        p.stun = 3; p.chase = 0; if (dodged()) say('it grabs at you and misses. DODGE.', C.money); else hurt('> the PATROL saw you coming. -1 INT.'); if (!S.over) tick(); look(); return draw(); }
         const ko = pass('IP3') ? pass('IP3').ko : KO_TURNS; p.ko = ko; p.chase = 0; p.stun = 0;
         say('you knock the PATROL out. ' + ko + ' turns.' + (S.heat ? ' ALERT clear.' : ''), C.accent); S.heat = 0;   // (a takedown clears the ALERT meter: Greg)
+        if (pass('IP7')) { const u = S.gear.find(g => g.key === 'uniform') || (S.gear.push({ key: 'uniform', n: 0 }), S.gear[S.gear.length - 1]); u.n += pass('IP7').uniform; say(S.msg + ' +1 UNIFORM.', C.accent); }   // (TURNCOAT)
         tick(); look(); return draw();
       } }
     S.slide = { x: S.x, y: S.y, t: performance.now() };   // (draw() slides the @ over from here)
     S.x = nx; S.y = ny;
     f.trail.push([nx, ny]);
   }
-  const turns = S.inDuct ? 2 : 1;
+  let turns = S.inDuct ? (pass('IP8') ? pass('IP8').duct : 2) : 1;   // (KNEE PADS)
+  // SPRINTER: every second step in a row is free (anything else, a wait too, starts the count again: tick)
+  if (dx || dy) { S.stepRun = (S.stepRun || 0) + 1; if (pass('IP4') && S.stepRun % pass('IP4').free === 0) turns = 0; }
+  S.inStep = !!(dx || dy);
   for (let k = 0; k < turns && !S.over; k++) tick();
+  S.inStep = false;
   // the payload
   if (f.payload && S.x === f.payload.x && S.y === f.payload.y && !S.have) {
     const out = outTurns(S.fi, S.x, S.y);
@@ -1384,14 +1439,10 @@ function act(dx, dy) {
   look();
   draw();
 }
-// PEEK (Greg, 2026-11-24): lean round a corner or into a doorway without stepping out. PEEK, then a way: you see from
-// that cell as well as yours (look()), till you step. Watchers still only see you where you stand. It's a turn; WAIT
-// keeps looking. A closed door: you crack it and look through (it stays shut).
-function togglePeek() {
-  if (S.over) return;
-  if (S.inDuct) { say('in a duct: nothing to lean round.', C.mid); return draw(); }
-  S.aim = S.aim === 'PEEK' ? null : 'PEEK'; say(S.aim ? 'PEEK: which way?' : 'no PEEK.', S.aim ? C.accent : C.mid); draw();
-}
+// PEEK (Greg, 2026-11-24): lean round a corner or into a doorway without stepping out. It's in ACTIONS only where
+// there's an edge to lean round (look(): S.peekDirs), one each way. You see from that cell as well as yours (look()),
+// till you step. Watchers still only see you where you stand. It's a turn; WAIT keeps looking. A closed door: you
+// crack it and look through (it stays shut).
 function peek(dx, dy) {
   const f = F(), x = S.x + dx, y = S.y + dy, c = at(f, x, y);
   if (!T[c].walk || T[c].duct) { say('a wall: nothing to look round.', C.mid); return draw(); }
@@ -1402,6 +1453,8 @@ function peek(dx, dy) {
 function tick() {
   const f = F();
   if (!clockOff) S.turn++;
+  if (!S.inStep) S.stepRun = 0;   // (SPRINTER's run of steps: broken by anything else)
+  S.darkT = litAt(f, S.x, S.y) || S.inDuct ? 0 : (S.darkT || 0) + 1;   // (NIGHT EYES: turns in the dark)
   if (S.flare > 0) S.flare--;
   if (S.uniform > 0 && !--S.uniform) say('the UNIFORM is off. patrols see you again.', C.money);
   if (clockOff) { /* (paused: no countdown, no trace) */ }
@@ -1419,14 +1472,14 @@ function tick() {
   if (f.powerOff > 0 && !--f.powerOff) say('the power\'s back. lights on, belts running.', C.money);
   beltsStep(f);
   // the arm turns
-  if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) { hurt('> the SCANNER beam burns you. -1 INT.'); if (S.over) return; } }   // (it hurts; it doesn't raise the ALERT: Greg, 2026-11-24)
+  if (f.arm) { f.arm.dir = (f.arm.dir + 1) % 8; if (!S.inDuct && armCells(f).some(([x, y]) => x === S.x && y === S.y)) { if (dodged()) say('the SCANNER beam sweeps past you. DODGE.', C.money); else { hurt('> the SCANNER beam burns you. -1 INT.'); if (S.over) return; } } }   // (it hurts; it doesn't raise the ALERT: Greg, 2026-11-24)
   // cameras sweep, and look
   for (const c of f.cams) {
     if (c.dead) continue;
     if (c.off > 0) { c.off--; continue; }   // (a TERMINAL turned it off)
     if (c.rest > 0) { c.rest--; continue; }
     c.k++; c.a = c.base + Math.sin(c.k * Math.PI / 4) * (Math.PI / 3);
-    if (!S.inDuct && inCone(f, c.x, c.y, c.a, Math.PI / 6, 14, S.x, S.y)) {
+    if (!S.inDuct && inCone(f, c.x, c.y, c.a, Math.PI / 6, seenRange(14), S.x, S.y)) {   // (LOW PROFILE: seenRange)
       c.seen++; S.quiet = 0;
       if (c.seen < (pass('IP1') ? pass('IP1').looks : 2)) say('a CAM has you. ! get out of its cone.', C.money);   // (LOOP: it takes 3 turns)
       else { c.seen = 0; c.rest = 1; heatUp(f, '!! the CAM got a good look.'); }
@@ -1444,7 +1497,7 @@ function tick() {
     const rests = steps === 1 && !(p.chase > 0) && ++p.beat % PAT_PACE !== 0;
     for (let s = 0; s < steps; s++) {
       // (in a UNIFORM a patrol walks past you: only right next to you does it look twice)
-      const sees = !S.inDuct && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, PAT_RANGE, S.x, S.y) && !(S.uniform > 0 && Math.abs(p.x - S.x) + Math.abs(p.y - S.y) > 1);
+      const sees = !S.inDuct && inCone(f, p.x, p.y, Math.atan2(p.fy, p.fx), PAT_HALF, seenRange(PAT_RANGE), S.x, S.y) && !(S.uniform > 0 && Math.abs(p.x - S.x) + Math.abs(p.y - S.y) > 1);
       if (sees) { const fresh = !p.chase; p.chase = 8; S.quiet = 0; p.lx = S.x; p.ly = S.y; if (fresh) heatUp(f, 'a PATROL saw you. it\'s coming.'); }
       if (rests && !(p.chase > 0)) break;   // (a resting beat: it looked, it stays put)
       if (p.chase > 0) {
@@ -1462,7 +1515,9 @@ function tick() {
         const [nx, ny] = p.path[ni];
         if (patStep(f, p, nx, ny)) p.i = ni;   // (a crate in the way: it waits; a closed door: it opens it)
       }
-      if (p.x === S.x && p.y === S.y && !S.inDuct) { p.stun = 3; p.chase = 0; hurt('> a PATROL caught you. -1 INT.'); if (S.over) return; break; }
+      if (p.x === S.x && p.y === S.y && !S.inDuct) {
+        if (dodged()) { p.stun = 1; say('a PATROL grabs at you and misses. DODGE.', C.money); break; }   // (DODGE: it stumbles a turn)
+        p.stun = 3; p.chase = 0; hurt('> a PATROL caught you. -1 INT.'); if (S.over) return; break; }
     }
   }
 }
@@ -1482,6 +1537,37 @@ function use() {
   { const sb = stationBeside(f); if (sb) return openStation(f, sb.key, sb.st); }
   { const d = doorBeside(f); if (d) { f.open.delete(d + ''); say('you close the door.', C.text); tick(); look(); return draw(); } }
   say('nothing to USE here. (stairs, a way out, a station)', C.mid); draw();
+}
+// ACTIONS (Greg, 2026-11-24): the tray's one contextual button. Everything you can do right here, right now, as
+// [label, note, do it, short label]: what you stand on (stairs, a way out, a vent), a station or an open door beside
+// you, a PEEK each way there's an edge to lean round (peekDirs, worked out in look()), a CAM or the SCANNER beside you
+// to wreck (SABOTEUR). One: the button is that thing. More: it opens a menu of them (a plain popup).
+const STATION_NAME = { T: 'TERMINAL', L: 'LOOT CACHE', R: 'RE-UP', B: 'BAG SWAP' };
+const ARROW = (dx, dy) => dx > 0 ? '►' : dx < 0 ? '◄' : dy > 0 ? '▼' : '▲';
+function actions() {
+  if (!S || S.over) return [];
+  const f = F(), c = at(f, S.x, S.y), out = [];
+  if (c === 'v') out.push([S.inDuct ? 'CLIMB OUT' : 'DUCT', S.inDuct ? 'up and out of the vent' : 'down into the duct', use, S.inDuct ? 'OUT' : 'DUCT']);
+  if (S.inDuct) return out;
+  const tile = { '>': ['DOWN', 'the stairs down'], '<': ['UP', 'the stairs up'], E: ['LEAVE', 'out the way you came'], F: ['FIRE EXIT', 'out now. loud: less pay'], K: ['CHUTE', 'out, into the trash'] }[c];
+  if (tile) out.push([tile[0], tile[1], use, tile[0] === 'FIRE EXIT' ? 'FIRE' : tile[0]]);
+  const sb = stationBeside(f); if (sb) out.push([STATION_NAME[sb.st.kind], 'use it', () => openStation(f, sb.key, sb.st), STATION_NAME[sb.st.kind]]);
+  const d = doorBeside(f); if (d) out.push(['CLOSE DOOR', 'shut it: nothing sees through', () => { f.open.delete(d + ''); say('you close the door.', C.text); tick(); look(); draw(); }, 'CLOSE']);
+  for (const [dx, dy] of S.peekDirs || []) out.push(['PEEK ' + ARROW(dx, dy), 'lean out and look, without stepping out', () => peek(dx, dy), 'PEEK ' + ARROW(dx, dy)]);
+  for (const a of sabotageTargets(f)) out.push(['WRECK ' + a.name, 'out for good. quiet', () => wreck(f, a), 'WRECK']);
+  return out;
+}
+// the button's label: the one action, or ACTIONS and how many (inside the brackets: w wide)
+function actLabel(w) {
+  const list = actions(), s = list.length === 1 ? list[0][3] : list.length ? 'ACTIONS ' + list.length : 'ACTIONS';
+  const pad = w - s.length, l = Math.max(0, Math.floor(pad / 2));
+  return '[' + ' '.repeat(l) + s + ' '.repeat(Math.max(0, pad - l)) + ']';
+}
+function doAction() {
+  const list = actions(); if (S.popup || S.form) return;
+  if (!list.length) { say('nothing to do here.', C.mid); return draw(); }
+  if (list.length === 1) return list[0][2]();
+  S.popup = { title: 'ACTIONS', line: 'what now?', opts: list, plain: true }; draw();
 }
 function leave(head, line) {
   const loot = (S.loot || []).reduce((t, [, v]) => t + v, 0);
@@ -1614,7 +1700,10 @@ function draw() {
   rule(4);
   // the info card (rows 5 and 7) round the message line (row 6)
   const inf = S.info;
-  if (inf) { put(0, 5, inf.glyph, C.bg, false, C.accent); put(2, 5, inf.name, C.bright, true); put(0, 7, inf.text.slice(0, SW), C.mid); }
+  if (inf) { put(0, 5, inf.glyph, C.bg, false, C.accent); put(2, 5, inf.name, C.bright, true); put(0, 7, inf.text.slice(0, SW), C.mid);
+    // BACKDOOR: a TERMINAL you've seen, anywhere on the floor: HACK it from here
+    const k = inf.x + ',' + inf.y, st = f.stations && f.stations.get(k);
+    if (pass('IPD') && st && st.kind === 'T' && !st.used && f.seen[inf.y][inf.x] && !S.inDuct && !S.over) btn(SW - 10, 5, '[  HACK  ]', 'hack', () => { S.info = null; openStation(f, k, st); }, C.accent); }
   else put(0, 5, 'tap anything for its info. [?]: help', C.dim);   // (the legend and the controls' how-to: the [?] popup)
   const mt = Math.min(S.msg.length, Math.floor((now - S.msgT) / 18)), red = now - flashT < 300;
   put(0, 6, ' '.repeat(SW), C.bg, false, red ? C.danger : S.msgCol === C.danger ? C.danger : C.seen);
@@ -1655,6 +1744,13 @@ function draw() {
   const piece = (x, y, ch, col, tint) => { put(x, MAP_Y + y, ' ', C.bg, false, C.bg); put(x, MAP_Y + y, ch, col, false, tint || null); };
   if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) piece(f.payload.x, f.payload.y, '$', C.money);
   if (f.arm && S.vis[f.arm.y][f.arm.x]) piece(f.arm.x, f.arm.y, ARM_GLYPH, C.danger);
+  // TAGGED: the watchers you've seen, out of sight now: dimmed, where you last saw them (a patrol: with an arrow the
+  // way it faced). EARS: patrols near you show through walls, dimmed.
+  if (pass('IPC')) {
+    for (const c of f.cams) if (c.tag && !c.dead && !S.vis[c.y][c.x]) piece(c.x, c.y, CAM_GLYPH, C.dim);
+    for (const p of f.pats) if (p.tag && !p.dead && !S.vis[p.y][p.x] && !S.vis[p.tag.y][p.tag.x]) { piece(p.tag.x, p.tag.y, 'P', C.dim); const ax = p.tag.x + p.tag.fx, ay = p.tag.y + p.tag.fy; if (inb(ax, ay) && !S.vis[ay][ax] && T[at(f, ax, ay)].walk) piece(ax, ay, ARROW(p.tag.fx, p.tag.fy), C.dim); }
+  }
+  if (pass('IP9') && !S.inDuct) for (const p of f.pats) if (!p.dead && !S.vis[p.y][p.x] && Math.max(Math.abs(p.x - S.x), Math.abs(p.y - S.y)) <= pass('IP9').range) piece(p.x, p.y, 'P', C.mid);
   for (const c of f.cams) if (S.vis[c.y][c.x]) piece(c.x, c.y, c.dead ? 'x' : CAM_GLYPH, c.dead || c.off > 0 ? C.dim : c.seen ? C.money : C.danger);
   for (const p of f.pats) if (S.vis[p.y][p.x]) piece(p.x, p.y, p.dead ? 'x' : 'P', p.dead || p.ko > 0 ? C.dim : p.stun ? C.mid : C.danger, p.chase && !(p.ko > 0) ? rgba(C.danger, 0.25) : null);
   // the TURN WARNING (Greg, 2026-11-24): a ? over a patrol the turn before it turns round at the end of its round
@@ -1678,8 +1774,8 @@ function draw() {
   const u = UIS[ui].key;
   if (u !== 'classic') {
     // the condensed tray: USE and the gear stacked on the right, no swap
-    btn(24, 32, '[   PEEK   ]', 'peek', togglePeek, S.aim === 'PEEK' ? C.money : C.accent, !S.inDuct);
-    btn(24, 33, '[   USE    ]', 'use', use, C.accent, canUse(f));
+    put(22, 32, '- '.repeat(7), C.dim);
+    btn(24, 33, actLabel(10), 'use', doAction, C.accent, actions().length > 0);
     S.gear.forEach((gr, i) => btn(24, 34 + i, `[${INF_ITEMS[gr.key].name.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), INF_ITEMS[gr.key].loud ? C.danger : C.money, gr.n > 0));
     const live = G && G.pad;
     if (u === 'swipe' || u === 'stick') {
@@ -1705,10 +1801,9 @@ function draw() {
     btn(7, 33, '[ ▲ ]', 'up', () => act(0, -1));
     btn(1, 34, '[ ◄ ]', 'left', () => act(-1, 0)); btn(7, 34, '[ · ]', 'wait', () => act(0, 0), C.mid); btn(13, 34, '[ ► ]', 'right', () => act(1, 0));
     btn(7, 35, '[ ▼ ]', 'down', () => act(0, 1));
-    btn(22, 33, '[  USE   ]', 'use', use, C.accent, canUse(f));
-    btn(22, 34, '[  PEEK  ]', 'peek', togglePeek, S.aim === 'PEEK' ? C.money : C.accent, !S.inDuct);
+    btn(22, 33, actLabel(10), 'use', doAction, C.accent, actions().length > 0);
     btn(22, 35, '[ ⇄ GEAR ]', 'swap', () => { S.mode = 'gear'; draw(); }, C.mid);
-    put(0, 36, 'wasd, space wait, enter use, q peek', C.dim);
+    put(0, 36, 'wasd, space wait, enter: actions', C.dim);
   } else {
     put(0, 32, '- '.repeat(18).trimEnd(), C.dim);
     S.gear.forEach((gr, i) => { const it = INF_ITEMS[gr.key]; btn(1, 33 + i, `[${it.name.padEnd(7)} x${gr.n}]`, 'g' + gr.key, () => useGear(gr.key), it.loud ? C.danger : C.money, gr.n > 0); put(14, 33 + i, it.tip.slice(0, SW - 14), C.mid); });
@@ -1759,7 +1854,7 @@ function drawHelp() {
   put(1, y, 'CONTROLS: ' + UIS[ui].name, C.bright, true); y++;
   for (const l of wrap(UIS[ui].hint, SW - 2)) put(1, y++, l, C.text);
   y++;
-  for (const l of wrap('keys: wasd/arrows step, space waits, enter uses, q peeks, 1 2 3 gear, ? help', SW - 2)) put(1, y++, l, C.mid);
+  for (const l of wrap('keys: wasd/arrows step, space waits, enter: actions, 1 2 3 gear, ? help', SW - 2)) put(1, y++, l, C.mid);
   btn(Math.floor((SW - 12) / 2), MAP_Y + MH - 2, '[ GOT IT ]', 'help', toggleHelp);
 }
 // a station's popup: its title, a line, its choices as buttons (1, 2, 3...), and CLOSE (nothing spent)
@@ -1792,7 +1887,9 @@ const UIS = [
   { key: 'stick', name: 'STICK', hint: 'touch anywhere and drag past the ring: a step. hold: keep walking. slide round to turn.' },
 ];
 let ui = 0, G = null;   // G: the finger that's down
-try { ui = Math.max(0, Math.min(UIS.length - 1, +localStorage.getItem('neon.infiltr8.ui') || 0)); } catch (e) { /* private mode */ }
+// (the STICK is the default, Greg 2026-11-24: the neatest, but the most hidden, so it needs telling about; later)
+ui = UIS.findIndex(u => u.key === 'stick');
+try { const v = localStorage.getItem('neon.infiltr8.ui'); if (v != null) ui = Math.max(0, Math.min(UIS.length - 1, +v || 0)); } catch (e) { /* private mode */ }
 { const q = new URLSearchParams(location.search).get('ui'); if (q && +q >= 1 && +q <= UIS.length) ui = +q - 1; }
 function nextUI() {
   ui = (ui + 1) % UIS.length; S.mode = 'pad';
@@ -1899,11 +1996,10 @@ addEventListener('keydown', ev => {
   const mv = { arrowup: [0, -1], w: [0, -1], k: [0, -1], arrowdown: [0, 1], s: [0, 1], j: [0, 1], arrowleft: [-1, 0], a: [-1, 0], h: [-1, 0], arrowright: [1, 0], d: [1, 0], l: [1, 0] }[k];
   if (mv) { ev.preventDefault(); return act(mv[0], mv[1]); }
   if (k === ' ' || k === '.') { ev.preventDefault(); return act(0, 0); }
-  if (k === 'enter' || k === 'e' || k === '>' || k === '<') return use();
+  if (k === 'enter' || k === 'e' || k === '>' || k === '<') return doAction();
   if (/^[1-4]$/.test(k)) return S.gear[+k - 1] && useGear(S.gear[+k - 1].key);   // (your gear, in the tray's order)
   if (k === 'p') return toggleClock();
   if (k === 't') return toggleTimed();
-  if (k === 'q') return togglePeek();
   if (k === 'g') { S.mode = S.mode === 'pad' ? 'gear' : 'pad'; return draw(); }
   if (k === 'escape') { S.info = null; S.aim = null; return draw(); }
 });
@@ -2052,7 +2148,7 @@ layout(); devPlace(); devColors();
 const qs = new URLSearchParams(location.search).get('seed');
 newRun((qs || newSeed()).toUpperCase());
 if (document.fonts) document.fonts.ready.then(draw);
-window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, togglePeek, pickLoadout: closeLoadouts };   // (for tools/checks/lab_check.js)   // (for a check)
+window.__demo = { chooseStation, setBuilding, sight: { los, losLow, newFloor, set }, openViewer, V, get S() { return S; }, act, use, useGear, newRun, setPal, PALS, draw, goFloor, setReveal: v => { devReveal = v; look(); draw(); }, outTurns, toggleTimed, get timed() { return timed; }, peek, actions, doAction, pickLoadout: closeLoadouts, givePassives: ks => { S.passives = ks; setPassives(); look(); }, youDark };   // (for tools/checks/lab_check.js)   // (for a check)
 })();
 </script>
 </body>

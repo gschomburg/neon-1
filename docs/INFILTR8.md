@@ -552,6 +552,20 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   gives the item's `stack` (what a preset gives: DARTS 3, FLARE 2, MED KIT 1...); the same item in both slots, twice as
   many. No FRAG. Custom gets 2 passives to the presets' 1, so it's the stronger pick for now. Your picks and the tab
   are remembered.
+- **ACTIONS: the tray's one contextual button** (Greg, 2026-11-24; built the same day). It replaced USE and PEEK.
+  It lists everything you can do right there: what you stand on (stairs, a way out, a vent), a station or an open
+  door beside you, a PEEK each way there's an edge to lean round, a CAM or SCANNER to wreck (SABOTEUR). With one, the
+  button is that thing (`[ PEEK ► ]`, `[ DOWN ]`); with more, `[ ACTIONS 3 ]` opens a menu. Enter does the same.
+  **PEEK is contextual now:** only by a door, or where a wall beside you ends, and only if leaning shows 3+ new cells.
+- **The STICK is the default control** (Greg, 2026-11-24): the neatest, but the most hidden. To do: make sure people
+  know about it (not now).
+- **Ten more passives, built 2026-11-24** (IP5-IPE; see `INF_CHIPS`): LOW PROFILE (seen at 60% range), NIGHT EYES
+  (dark sight 7 → 9 → 11 the longer you're in the dark), TURNCOAT (a takedown gives +1 UNIFORM), KNEE PADS (duct steps
+  1 turn), EARS (patrols within 6 show through walls), DODGE (50%: a grab or the SCANNER misses), COOL HEAD (ALERT
+  meter 5), TAGGED (watchers you've seen stay marked, dimmed, a patrol with the way it faced), BACKDOOR (tap any
+  TERMINAL you've seen, anywhere on the floor: HACK), SABOTEUR (wreck a CAM or the SCANNER: step into it, or WRECK from
+  beside it). And SPRINTER now also makes every second step in a row free (nothing else moves); anything else costs a
+  full turn and starts the count again, so moving never locks you out of an action.
 - **More passive ideas** (Greg, 2026-11-24; not built):
   - CAMs and patrols you've seen stay marked on the map, facing the way they were looking, after you lose sight of them.
   - Hack a terminal you know about from a distance.
