@@ -566,6 +566,51 @@ function ceoOffice(f, rooms, r, p = 0.25) {
   const corner = o.cells.find(([cx, cy]) => at(f, cx, cy) === '.' && D4.filter(([i, j]) => !o.set.has((cx + i) + ',' + (cy + j))).length === 2 && !D4.some(([i, j]) => at(f, cx + i, cy + j) === '+'));
   if (corner) { set(f, corner[0], corner[1], 'g'); if (!roomJoined(f, o)) set(f, corner[0], corner[1], '.'); }
 }
+// ---------- FLOOR SECURITY (Greg, 2026-11-24) ----------
+// PRESSURE TILES: 1 or 2 a floor, in the halls on the way through (not beside a door). You spot one only close up (3
+// cells, or a FLARE); spotted, it stays marked. Step on one (you, not a patrol): it clicks, +1 ALERT, and the nearest
+// patrol or guard comes to it. Then it's spent. f.ptiles: cell -> { armed, known }.
+function placeTiles(f, r, way) {
+  f.ptiles = new Map();
+  const opts = shuffled(way.filter(([x, y]) => f.halls.has(x + ',' + y) && !D4.some(([i, j]) => '+v'.includes(at(f, x + i, y + j)))), r);
+  for (const [x, y] of opts.slice(0, 1 + Math.floor(r() * 2))) f.ptiles.set(x + ',' + y, { armed: true, known: false });
+}
+function spotTiles(f) {   // (look(): within 3, or a FLARE)
+  if (!f.ptiles) return;
+  for (const [k, t] of f.ptiles) { if (t.known) continue; const [x, y] = k.split(',').map(Number); if (S.vis[y][x] && (S.flare > 0 || Math.hypot(x - S.x, (y - S.y) * 2) <= 4)) { t.known = true; say('a PRESSURE TILE in the floor. don\'t step on it.', C.money); } }
+}
+function stepTile(f) {
+  const t = !S.inDuct && f.ptiles && f.ptiles.get(S.x + ',' + S.y); if (!t || !t.armed) return;
+  t.armed = false; t.known = true;
+  const d = bfs(f, S.x, S.y), p = f.pats.filter(p => !p.dead && !(p.ko > 0) && !(p.blind > 0) && !p.leave && d[p.y][p.x]).sort((a, b) => d[a.y][a.x] - d[b.y][b.x])[0];
+  if (p) { p.chase = Math.max(10, d[p.y][p.x] + 4); p.lx = S.x; p.ly = S.y; }
+  heatUp(f, 'click. a PRESSURE TILE.' + (p ? ' someone\'s coming.' : ''));
+}
+// CAPTCHA DOOR: a locked door (the CEO's office's, if there is one, else a side room's), about 2 floors in 5. ACTIONS
+// beside it: pick its glyph out of 4. The right one is on a STICKY NOTE (n) in another room (tap it, in sight, to
+// read it). Wrong: +1 ALERT, and the 4 shuffle. A patrol has the code: it opens the door on its way, and an open door
+// is open. f.captcha: door cell -> { glyph, opts, locked, note }.
+const CAPTCHA_GLYPHS = ['Ω', '§', '¥', '∆', '◊', 'Ψ', 'Ж', 'Ξ'];
+const captchaAt = (f, x, y) => { const c = f.captcha && f.captcha.get(x + ',' + y); return c && c.locked ? c : null; };
+function placeCaptcha(f, rooms, r, p = 0.4) {
+  f.captcha = new Map();
+  if (r() > p) return;
+  const o = rooms.find(q => q.type === 'ceo' && q.doors.length === 1) || shuffled(rooms.filter(q => q.role === 'side' && !q.type && q.doors.length === 1 && q.cells.length >= 6), r)[0];
+  if (!o) return;
+  const others = rooms.filter(q => q !== o && q.role !== 'closet' && q.role !== 'goal'), at0 = others.length && wallStation(f, others[Math.floor(r() * others.length)], 'N', r);
+  if (!at0) return;
+  f.stations.delete(at0 + '');   // (a note isn't a station: you read it, from wherever you see it)
+  const opts = shuffled(CAPTCHA_GLYPHS, r).slice(0, 4), glyph = opts[Math.floor(r() * 4)], d = o.doors[0];
+  f.captcha.set(d.x + ',' + d.y, { glyph, opts, locked: true, note: at0 + '' });
+}
+function tryCaptcha(f, k) {
+  const c = f.captcha.get(k), [x, y] = k.split(',').map(Number);
+  S.popup = { title: 'CAPTCHA', line: 'which glyph opens it? (someone wrote it down: a STICKY NOTE somewhere.) wrong: +1 ALERT.', plain: true, opts: c.opts.map(g => [g, '', () => {
+    if (g === c.glyph) { c.locked = false; (f.open = f.open || new Set()).add(k); say('CAPTCHA: ' + g + '. the door opens.', C.accent); }
+    else { c.opts = shuffled(c.opts, Math.random); heatUp(f, 'wrong glyph. the CAPTCHA beeps.'); }
+    tick(); look(); draw(); }]) };
+  draw();
+}
 // the CEO's office's CAM: on its wall, facing in (after the other CAMs: they're placed again on each go)
 function ceoCam(f, rooms) {
   const o = rooms.find(q => q.type === 'ceo'); if (!o) return;
@@ -1208,6 +1253,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
     }
     ducts(f, rooms, r, last ? 1 : 2, dist);
     placeStations(f, rooms, r, B.st);
+    placeCaptcha(f, rooms, r, B.captcha ?? 0.4);   // (after the stations: its note goes on a wall, as they do)
     lightRooms(f, rooms, r, B.lit);
     // CAMs and patrols, placed with purpose (placeCams, placePats); a few goes till the way through is watched
     const goal = f.payload || f.down, way = route(f, f.up.x, f.up.y, goal.x, goal.y) || [];
@@ -1217,7 +1263,7 @@ function floorGen(seed, n, last, bk0 = null, depth = 0) {
       placePats(f, rooms, r, last ? 2 : 1, first, spot);
       if (watched(f, way)) break;
     }
-    placeGuard(f, rooms, r, way, first); ceoCam(f, rooms);
+    placeGuard(f, rooms, r, way, first); ceoCam(f, rooms); placeTiles(f, r, way);
     f.rooms = rooms; f.roomOf = new Map(); for (const o of rooms) for (const [x, y] of o.cells) f.roomOf.set(x + ',' + y, o);
     return f;
   }
@@ -1531,6 +1577,7 @@ function look() {
   S.vis = devReveal ? vis.map(row => row.map(() => true)) : vis;
   // TAGGED: where you last saw each watcher, and which way it faced (draw() shows them when out of sight)
   for (const p of f.pats) if (S.vis[p.y][p.x]) p.tag = { x: p.x, y: p.y, fx: p.fx, fy: p.fy };
+  spotTiles(f);   // (a PRESSURE TILE close up: spotted)
   for (const c of f.cams) if (S.vis[c.y][c.x]) c.tag = true;
 }
 
@@ -1545,6 +1592,7 @@ function act(dx, dy) {
     if (S.inDuct) { if (!ductLink(f, S.x, S.y, nx, ny)) { say('the duct doesn\'t go that way.', C.mid); return draw(); } }
     else if (pass('IPE') && sabotageTargets(f).some(a => a.cam ? a.cam.x === nx && a.cam.y === ny : f.arm.x === nx && f.arm.y === ny)) return wreck(f, sabotageTargets(f).find(a => a.cam ? a.cam.x === nx && a.cam.y === ny : true));   // (SABOTEUR: step into it)
     else if (!T[c].walk) { say(c === 'p' ? 'a pillar.' : c === 'x' ? 'a crate.' : 'a wall.', C.mid); return draw(); }
+    else if (c === '+' && !doorOpen(f, nx, ny) && captchaAt(f, nx, ny)) { say('locked: a CAPTCHA. ACTIONS: try it.', C.money); return draw(); }   // (no turn: you just found it's locked)
     else if (c === '+' && !doorOpen(f, nx, ny)) { (f.open = f.open || new Set()).add(nx + ',' + ny); say('you open the door.', C.text); tick(); look(); return draw(); }   // (opening it is your turn)
     // TAKEDOWN (Greg, 2026-11-24): step into a patrol from behind or the side (the way it's facing: fx, fy) and it's out,
     // quietly, KO_TURNS (your turn). From the front: it catches you, as ever. A stunned one goes down from any side.
@@ -1569,6 +1617,7 @@ function act(dx, dy) {
   for (let k = 0; k < turns && !S.over; k++) tick();
   S.inStep = false;
   // the payload
+  stepTile(f);   // (a PRESSURE TILE under you?)
   if (f.payload && S.x === f.payload.x && S.y === f.payload.y && !S.have) takePayload(f);
   else if (!S.over && (dx || dy)) {
     const c = at(f, S.x, S.y);
@@ -1733,6 +1782,7 @@ function actions() {
   const tile = { '>': ['DOWN', 'the stairs down'], '<': ['UP', 'the stairs up'], E: ['LEAVE', 'out the way you came'], F: ['FIRE EXIT', 'out now. loud: less pay'], K: ['CHUTE', 'out, into the trash'] }[c];
   if (tile) out.push([tile[0], tile[1], use, tile[0] === 'FIRE EXIT' ? 'FIRE' : tile[0]]);
   for (const sb of stationsBeside(f)) if (STATION_NAME[sb.st.kind]) out.push([STATION_NAME[sb.st.kind], 'use it', () => openStation(f, sb.key, sb.st), STATION_NAME[sb.st.kind]]);
+  for (const [i, j] of D4) { const k = (S.x + i) + ',' + (S.y + j); if (captchaAt(f, S.x + i, S.y + j) && !doorOpen(f, S.x + i, S.y + j)) out.push(['CAPTCHA', 'the locked door: pick its glyph', () => tryCaptcha(f, k), 'CAPTCHA']); }
   const d = doorBeside(f); if (d) out.push(['CLOSE DOOR', 'shut it: nothing sees through', () => { f.open.delete(d + ''); say('you close the door.', C.text); tick(); look(); draw(); }, 'CLOSE']);
   for (const [dx, dy] of S.peekDirs || []) out.push(['PEEK ' + ARROW(dx, dy), 'lean out and look, without stepping out', () => peek(dx, dy), 'PEEK ' + ARROW(dx, dy)]);
   for (const a of sabotageTargets(f)) out.push(['WRECK ' + a.name, 'out for good. quiet', () => wreck(f, a), 'WRECK']);
@@ -1920,6 +1970,9 @@ function draw() {
       if (armSet.has(k)) { ch = armBeam(f); col = C.danger; }
       if (trail.has(k) && c === '.') { ch = '•'; col = C.rep; }
     }
+    // a CAPTCHA DOOR, shut and locked: a ? (a PRESSURE TILE you've spotted: ¤, dim once it's gone off)
+    if (c === '+' && !doorOpen(f, x, y) && f.captcha && f.captcha.get(k0) && f.captcha.get(k0).locked) { ch = '?'; col = vis ? C.money : C.dim; }
+    { const pt = f.ptiles && f.ptiles.get(k0); if (pt && pt.known) { ch = '¤'; col = pt.armed && vis ? C.danger : C.dim; } }
     put(x, MAP_Y + y, ch, col, false, bg);   // (the map's marks are plain: Greg, 2026-11-24)
   }
   // the ducts: a known one is a tint on the floor; down in one, the world above dims and the ducts show as pipes
@@ -2171,6 +2224,9 @@ function infoAt(f, x, y) {
   const c = at(f, x, y), i = INFO[c] || ['', ''], ro = f.roomOf && f.roomOf.get(x + ',' + y);
   if (c === '.' && ro && ro.type) return { x, y, glyph: GLYPH[c], name: ROOM_TYPES[ro.type][0], text: ROOM_TYPES[ro.type][1] + (vis ? '' : ' (seen before)') };
   if (c === '+' && doorOpen(f, x, y)) return { x, y, glyph: '/', name: 'AN OPEN DOOR', text: 'USE beside it: close it.' };
+  if (c === '+' && captchaAt(f, x, y)) return { x, y, glyph: '?', name: 'A CAPTCHA DOOR', text: 'locked. ACTIONS beside it: pick its glyph.' };
+  if (c === 'N') { const cp = f.captcha && [...f.captcha.values()].find(q => q.note === x + ',' + y); return { x, y, glyph: 'n', name: 'A STICKY NOTE', text: vis && cp ? 'it says: ' + cp.glyph + '  (a CAPTCHA\'s answer)' : 'too far off to read.' }; }
+  { const pt = f.ptiles && f.ptiles.get(x + ',' + y); if (pt && pt.known) return { x, y, glyph: '¤', name: 'A PRESSURE TILE', text: pt.armed ? 'step on it: +1 ALERT, and someone comes.' : 'it\'s gone off. safe now.' }; }
   { const bt = c === 'b' && f.beltAt && f.beltAt.get(x + ',' + y); if (bt && bt.i === bt.b.cells.length - 1) return { x, y, glyph: 'X', name: 'THE PRESS', text: 'crushes crates. shoves you off.' }; }
   return { x, y, glyph: c === '#' ? wallGlyph(f, x, y) : c === 'm' ? machineGlyph(f, x, y) : c === 'b' ? beltGlyph(f, x, y) : c === 'x' ? crateLetter(f, x, y) : GLYPH[c] || c, name: c === 'x' ? 'A CRATE: ' + crateLetter(f, x, y) : i[0], text: i[1] + (vis ? '' : ' (seen before)') };
 }
