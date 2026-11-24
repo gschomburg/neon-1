@@ -28,7 +28,7 @@ main { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr
 </head>
 <body>
 <header>
-  <h1>THE STICK: 8 LOOKS</h1>
+  <h1>THE STICK: 13 LOOKS</h1>
   <p>it works as now: touch anywhere, drag past the middle and you step that way (4 ways), hold to keep walking. only the look changes. each tile shows itself; touch one and drag to try it.</p>
   <label for="pal">palette</label> <select id="pal"></select>
 </header>
@@ -126,6 +126,53 @@ main { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr
         g.fillStyle = rgba(C.accent, 0.35); g.beginPath(); g.arc(cx, cy, 2, 0, Math.PI * 2); g.fill();
         knob(g, fx, fy);
       } },
+    // (round 2, Greg 2026-11-24: more of 4, ZONES: with arrows, as 3; and turned 45 degrees, more solid, like the chevrons)
+    { name: '9. ZONES + ARROWS', note: '4\'s square and its diagonals, an arrow in each zone. the live one fills.',
+      draw(g, cx, cy, dir, fx, fy, p) {
+        const L = R;
+        if (dir) { g.fillStyle = rgba(C.accent, 0.12 + 0.08 * p); g.beginPath(); g.moveTo(cx, cy); g.lineTo(...at(cx, cy, dir, L, -L)); g.lineTo(...at(cx, cy, dir, L, L)); g.closePath(); g.fill(); }
+        line(g, [[cx - L, cy - L], [cx + L, cy - L], [cx + L, cy + L], [cx - L, cy + L], [cx - L, cy - L]], rgba(C.accent, 0.3));
+        line(g, [[cx - L, cy - L], [cx + L, cy + L]], rgba(C.accent, 0.18), 1); line(g, [[cx + L, cy - L], [cx - L, cy + L]], rgba(C.accent, 0.18), 1);
+        for (const d of DIRS) { const on = same(d, dir), f = L * 0.68; line(g, [at(cx, cy, d, f - 5, -6), at(cx, cy, d, f + 1, 0), at(cx, cy, d, f - 5, 6)], armCol(d, dir, p), on ? 2.5 : 1.5); }
+        knob(g, fx, fy);
+      } },
+    { name: '10. OPEN ZONES', note: 'the same, lighter: no box in the middle, the dividers stop short of it.',
+      draw(g, cx, cy, dir, fx, fy, p) {
+        const L = R, in0 = DEAD * 0.7;
+        if (dir) { g.fillStyle = rgba(C.accent, 0.1 + 0.08 * p); g.beginPath(); g.moveTo(...at(cx, cy, dir, in0, -in0)); g.lineTo(...at(cx, cy, dir, L, -L)); g.lineTo(...at(cx, cy, dir, L, L)); g.lineTo(...at(cx, cy, dir, in0, in0)); g.closePath(); g.fill(); }
+        line(g, [[cx - L, cy - L], [cx + L, cy - L], [cx + L, cy + L], [cx - L, cy + L], [cx - L, cy - L]], rgba(C.accent, 0.3));
+        for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) line(g, [[cx + sx * in0, cy + sy * in0], [cx + sx * L, cy + sy * L]], rgba(C.accent, 0.2), 1);
+        for (const d of DIRS) { const on = same(d, dir), f = L * 0.7; line(g, [at(cx, cy, d, f - 5, -6), at(cx, cy, d, f + 1 + (on ? 2 * p : 0), 0), at(cx, cy, d, f - 5, 6)], armCol(d, dir, p), on ? 3 : 1.5); }
+        knob(g, fx, fy);
+      } },
+    { name: '11. KITES', note: '4 turned 45 degrees: a diamond, its points the 4 ways, cut into 4 kites (still the real zones).',
+      draw(g, cx, cy, dir, fx, fy, p) {
+        const L = R * 1.2, m = L / 2;   // (a diamond's points at L; its sides' middles at (m, m))
+        const kite = d => [[cx, cy], at(cx, cy, d, m, -m), at(cx, cy, d, L, 0), at(cx, cy, d, m, m)];
+        if (dir) { g.fillStyle = rgba(C.accent, 0.14 + 0.08 * p); g.beginPath(); kite(dir).forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); g.fill(); }
+        line(g, [[cx, cy - L], [cx + L, cy], [cx, cy + L], [cx - L, cy], [cx, cy - L]], rgba(C.accent, 0.35));
+        line(g, [[cx - m, cy - m], [cx + m, cy + m]], rgba(C.accent, 0.2), 1); line(g, [[cx + m, cy - m], [cx - m, cy + m]], rgba(C.accent, 0.2), 1);
+        if (dir) line(g, kite(dir).concat([[cx, cy]]), rgba(C.accent, 0.8 + 0.2 * p), 2);
+        knob(g, fx, fy);
+      } },
+    { name: '12. KITES + ARROWS', note: 'the kites, an arrow in each.',
+      draw(g, cx, cy, dir, fx, fy, p) {
+        const L = R * 1.2, m = L / 2;
+        const kite = d => [[cx, cy], at(cx, cy, d, m, -m), at(cx, cy, d, L, 0), at(cx, cy, d, m, m)];
+        if (dir) { g.fillStyle = rgba(C.accent, 0.12 + 0.08 * p); g.beginPath(); kite(dir).forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); g.fill(); }
+        line(g, [[cx, cy - L], [cx + L, cy], [cx, cy + L], [cx - L, cy], [cx, cy - L]], rgba(C.accent, 0.3));
+        line(g, [[cx - m, cy - m], [cx + m, cy + m]], rgba(C.accent, 0.18), 1); line(g, [[cx + m, cy - m], [cx - m, cy + m]], rgba(C.accent, 0.18), 1);
+        for (const d of DIRS) { const on = same(d, dir), f = L * 0.62; line(g, [at(cx, cy, d, f - 5, -6), at(cx, cy, d, f + 1 + (on ? 2 * p : 0), 0), at(cx, cy, d, f - 5, 6)], armCol(d, dir, p), on ? 2.5 : 1.5); }
+        knob(g, fx, fy);
+      } },
+    { name: '13. ARROWHEADS', note: 'four outlined triangles round the middle, like the chevrons but solid. the live one fills.',
+      draw(g, cx, cy, dir, fx, fy, p) {
+        for (const d of DIRS) { const on = same(d, dir), f0 = DEAD * 0.9, f1 = R * 1.05 + (on ? 3 * p : 0), w = DEAD * 0.55;
+          const tri = [at(cx, cy, d, f0, -w), at(cx, cy, d, f1, 0), at(cx, cy, d, f0, w)];
+          if (on) { g.fillStyle = rgba(C.accent, 0.35 + 0.25 * p); g.beginPath(); tri.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); g.fill(); }
+          line(g, tri.concat([tri[0]]), armCol(d, dir, p), on ? 2.5 : 1.5); }
+        knob(g, fx, fy);
+      } },
     { name: '8. SNAP PLUS', note: 'a rounded cross; the knob doesn\'t follow your finger, it snaps to the arm you\'re in.',
       draw(g, cx, cy, dir, fx, fy, p) {
         const a = DEAD * 0.5, L = R;
@@ -140,7 +187,7 @@ main { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr
   ];
 
   // ---------- the tiles: a demo of each, or your finger ----------
-  const tiles = LOOKS.map(look => {
+  const tiles = LOOKS.slice().sort((a, b) => parseInt(a.name) - parseInt(b.name)).map(look => {   // (by their numbers)
     const el = document.createElement('div'); el.className = 'tile';
     el.innerHTML = '<canvas></canvas><b>' + look.name + '</b><span>' + look.note + '</span>';
     document.getElementById('tiles').appendChild(el);
