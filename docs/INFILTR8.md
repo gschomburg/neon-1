@@ -515,6 +515,33 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   PEEK (a button, or Q), then a way: you see from that cell as well as yours, till you step. A closed door: you crack
   it and look through; it stays shut. It's a turn; WAIT keeps looking. Watchers still see you only where you stand
   (later, maybe: one right by the peek cell spots you). A dashed box marks the cell.
+- **Loadouts, first four** (Greg, 2026-11-24; built the same day). A passive plus two kinds of gear, picked in a popup
+  at the start of a run (the last pick comes first; CLOSE keeps it). The BAG SWAP station changes your whole loadout.
+  - **GHOST:** LOOP (a CAM needs 3 turns on you, not 2). UNIFORM x2, SMOKE x2 (a 3x3 cloud for 6 turns that nothing
+    sees through).
+  - **HACKER:** ROOT (2 picks per terminal). JAMMER x3 (the nearest CAM you can see is dead for 10 turns), FLARE x2.
+  - **BRUTE:** HEAVY HANDS (takedowns last 60 turns, and work from the front if the patrol hasn't seen you).
+    DARTS x3 (the nearest patrol you can see, within 10, is out for 15 turns), MED KIT x1.
+  - **RUNNER:** SPRINTER (the way-out ALARM is 50% longer). NOISE x3 (throw it up to 6 cells, then the patrols near
+    where it lands go to look), FLARE x2.
+  - **Dropped for now: CHARGE / FRAG** (Greg): explosions don't break objects yet, so DARTS took its place. The FRAG
+    code is still there; no loadout carries it.
+- **More passive ideas** (Greg, 2026-11-24; not built):
+  - CAMs and patrols you've seen stay marked on the map, facing the way they were looking, after you lose sight of them.
+  - Hack a terminal you know about from a distance.
+  - More stealthy: patrols have to be closer to see you.
+  - See farther and farther in the dark.
+  - SPRINTER could also give a free move each turn. Open question: is it 2 actions, or a step plus any one action?
+    Simplest might be "a free step".
+  - Take a patrol out and you get its UNIFORM.
+  - KNEE PADS (duct steps 1 turn, not 2; they're 2 now).
+  - Hear through walls: see patrols and things through walls when you're close.
+  - DODGE: a 50% chance a patrol's catch or a SCANNER misses you.
+  - Takedowns on other units too (CAMs, SCANNERs), not just patrols.
+- **More terminal ideas** (Greg, 2026-11-24; not built): reverse a belt (a warehouse floor); make the floor's CAMs
+  friendly (they watch for you instead).
+- **PEEK, maybe contextual** (Greg): only when you're next to something to lean round (a corner, a door edge), or
+  from inside a plant. Open.
 - **Loadouts (later, just ideas):** a mix of passives plus 1 or 2 gear items. Unlocked by playing INFILTR8, or in the
   main game. Could need its own deck-style screen, or sit at the bottom of the deck as chips.
 
