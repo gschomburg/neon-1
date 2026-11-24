@@ -588,22 +588,9 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   or the payload itself (the ALARM's length then counts from where you are). Tap it, then GRAB.
 - **Fixed:** since SPRINTER went in, taking the payload left it on the map and didn't clear the backup timer (a
   comment had swallowed the line). Now one function, `takePayload`.
-- **More passive ideas** (Greg, 2026-11-24; not built):
-  - CAMs and patrols you've seen stay marked on the map, facing the way they were looking, after you lose sight of them.
-  - Hack a terminal you know about from a distance.
-  - More stealthy: patrols have to be closer to see you.
-  - See farther and farther in the dark.
-  - SPRINTER could also give a free move each turn. Open question: is it 2 actions, or a step plus any one action?
-    Simplest might be "a free step".
-  - Take a patrol out and you get its UNIFORM.
-  - KNEE PADS (duct steps 1 turn, not 2; they're 2 now).
-  - Hear through walls: see patrols and things through walls when you're close.
-  - DODGE: a 50% chance a patrol's catch or a SCANNER misses you.
-  - Takedowns on other units too (CAMs, SCANNERs), not just patrols.
-- **More terminal ideas** (Greg, 2026-11-24; not built): reverse a belt (a warehouse floor); make the floor's CAMs
-  friendly (they watch for you instead).
-- **PEEK, maybe contextual** (Greg): only when you're next to something to lean round (a corner, a door edge), or
-  from inside a plant. Open.
+- (The passive ideas from round 2 are all built: TAGGED, BACKDOOR, LOW PROFILE, NIGHT EYES, SPRINTER's free step,
+  TURNCOAT, KNEE PADS, EARS, DODGE, SABOTEUR. So are both terminal ideas, REVERSE BELTS and FRIENDLY CAMS, and the
+  contextual PEEK. Still open from them: PEEK from inside a plant.)
 - **Loadouts (later, just ideas):** a mix of passives plus 1 or 2 gear items. Unlocked by playing INFILTR8, or in the
   main game. Could need its own deck-style screen, or sit at the bottom of the deck as chips.
 
