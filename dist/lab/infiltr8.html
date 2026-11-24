@@ -1230,10 +1230,13 @@ function draw() {
     if (S.inDuct) { put(x, MAP_Y + y, ' ', C.bg, false, C.bg); put(x, MAP_Y + y, at(f, x, y) === 'v' ? GLYPH.v : pipeGlyph(f, x, y), C.rare, false, rgba(C.rare, 0.18)); }
     else { g.fillStyle = rgba(C.rare, 0.16); g.fillRect(L.ox + x * L.cw, L.oy + (MAP_Y + y) * L.ch, L.cw, L.ch); }
   }
-  if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) put(f.payload.x, MAP_Y + f.payload.y, '$', C.money);
-  if (f.arm && S.vis[f.arm.y][f.arm.x]) put(f.arm.x, MAP_Y + f.arm.y, ARM_GLYPH, C.danger);
-  for (const c of f.cams) if (S.vis[c.y][c.x]) put(c.x, MAP_Y + c.y, c.dead ? 'x' : CAM_GLYPH, c.dead ? C.dim : c.seen ? C.money : C.danger);
-  for (const p of f.pats) if (S.vis[p.y][p.x]) put(p.x, MAP_Y + p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, false, p.chase ? rgba(C.danger, 0.25) : null);
+  // the pieces: each one's cell cleared to the background first, so the floor's mark under it doesn't show through
+  // (Greg, 2026-11-24: a patrol's P sat on a floor dot). A tint (a chasing patrol's) goes over the cleared cell.
+  const piece = (x, y, ch, col, tint) => { put(x, MAP_Y + y, ' ', C.bg, false, C.bg); put(x, MAP_Y + y, ch, col, false, tint || null); };
+  if (f.payload && (S.vis[f.payload.y][f.payload.x] || f.seen[f.payload.y][f.payload.x])) piece(f.payload.x, f.payload.y, '$', C.money);
+  if (f.arm && S.vis[f.arm.y][f.arm.x]) piece(f.arm.x, f.arm.y, ARM_GLYPH, C.danger);
+  for (const c of f.cams) if (S.vis[c.y][c.x]) piece(c.x, c.y, c.dead ? 'x' : CAM_GLYPH, c.dead ? C.dim : c.seen ? C.money : C.danger);
+  for (const p of f.pats) if (S.vis[p.y][p.x]) piece(p.x, p.y, p.dead ? 'x' : 'P', p.dead ? C.dim : p.stun ? C.mid : C.danger, p.chase ? rgba(C.danger, 0.25) : null);
   for (const c of f.cams) if (c.seen && S.vis[c.y][c.x] && !c.dead) put(c.x, MAP_Y + c.y - 1 >= MAP_Y ? MAP_Y + c.y - 1 : MAP_Y + c.y + 1, '!', C.money);
   // the @ slides a step over (STEP_MS) instead of popping. It's a chip: the bg color on its own color (accent; in a duct
   // the rare blue, in a UNIFORM gold, hit: red), so it reads in every palette, light ones too.
@@ -1526,9 +1529,11 @@ function drawFloorCard(cvs, f, fs) {
     if (c === 'x') { x.fillStyle = C.leg; x.fillRect(xx * cw, yy * ch, cw, ch); cell(xx, yy, g0, C.bg, false); continue; }   // (a crate: a chip)
     cell(xx, yy, g0, onWay ? C.accent : (c === 'b' && g0 === 'X') || (walk.has(k) && '.+'.includes(c)) ? C.danger : C[TCOL[c]] || C.text, false);
   }
-  if (f.payload) cell(f.payload.x, f.payload.y, '$', C.money);
-  for (const c of f.cams) cell(c.x, c.y, CAM_GLYPH, C.danger);
-  for (const p of f.pats) cell(p.x, p.y, 'P', C.danger);
+  // (each piece on a cleared cell, as in the game)
+  const piece = (px, py, c, col) => { x.fillStyle = C.bg; x.fillRect(px * cw, py * ch, cw, ch); cell(px, py, c, col); };
+  if (f.payload) piece(f.payload.x, f.payload.y, '$', C.money);
+  for (const c of f.cams) piece(c.x, c.y, CAM_GLYPH, C.danger);
+  for (const p of f.pats) piece(p.x, p.y, 'P', C.danger);
   // each room's type (gold) or role (dim), on its top wall
   for (const o of f.rooms || []) {
     let label = o.role === 'closet' ? '' : o.type ? ROOM_TYPES[o.type][0].replace(/^THE /, '') : o.role === 'way' ? '' : o.role;
