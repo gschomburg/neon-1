@@ -172,8 +172,8 @@ game's strength is short, readable choices.
   - Every turn the belt moves its boxes one cell along. Boxes block sight, like a pillar, so your cover moves. Stay in
     a box's shadow while a CAM watches the room. When a box reaches the end, you're out in the open.
   - **Ride it:** step onto the belt and it carries you a cell each turn, as well as your own step. It can be a way into
-    another room, through a hatch in the wall.
-  - **The smasher:** at the end of the belt a press comes down every few turns. Get off before you reach it, or time it.
+    another room, through a hatch in the wall, or down a chute to the next floor.
+  - **The smasher** (the point of it: the ride has to end, so you have to get off): at the end of the belt a press comes down every few turns. Get off before you reach it, or time it.
     It costs INT, or it's the end of the run.
   - With a CARDBOARD BOX (kit) on, you ride the belt as a box. CAMs don't look twice.
 
