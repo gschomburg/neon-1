@@ -316,15 +316,22 @@ function closets(f, rooms, halls, r) {
   const voidAll = cells => cells.every(([x, y]) => inb(x, y) && at(f, x, y) === ' ');
   // try a closet from the door cell (dx, dy outward); open: a nook (no door). Its cells and the walls round them
   // (but the door's own line) must be void now.
-  function tryOne(x, y, dx, dy, open) {
+  function tryOne(x, y, dx, dy, open, onRoom = false) {   // (onRoom: built on a room's wall, its door in it)
     const px = dy ? 1 : 0, py = dx ? 1 : 0, w = r() < 0.5 ? 1 : 2, d = open ? 1 + (r() < 0.4 ? 1 : 0) : (r() < 0.5 ? 1 : 2);
     const shift = w === 2 && r() < 0.5 ? -1 : 0, cells = [];
     for (let k = 1; k <= d; k++) for (let j = 0; j < w; j++) cells.push([x + dx * k + px * (j + shift), y + dy * k + py * (j + shift)]);
     const set0 = new Set(cells.map(c => c + '')), ring = [];
     for (const [cx, cy] of cells) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const k = (cx + i) + ',' + (cy + j); if (!set0.has(k) && !(cx + i === x && cy + j === y)) ring.push([cx + i, cy + j]); }
     // (the ring may touch the door's wall line only where that's wall already: a room's wall; off a hall, void)
-    const okRing = ring.every(([a, b]) => inb(a, b) && (at(f, a, b) === ' ' || (at(f, a, b) === '#' && (dx ? a === x : b === y))));
-    if (!voidAll(cells) || !okRing) return null;
+    const onDoorLine = (a, b) => dx ? a === x : b === y;
+    const okRing = ring.every(([a, b]) => inb(a, b) && (at(f, a, b) === ' ' || (at(f, a, b) === '#' && onDoorLine(a, b))));
+    // and a gap round its walls: nothing built right against them (two walls side by side draw as a comb: Greg,
+    // SQHRB8 F2), but the room wall it's built on (a closet on a room), and halls (a hall can run beside a wall)
+    const ringSet = new Set(ring.map(c => c + '')), margin = [];
+    for (const [a, b] of ring) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const k = [a + i, b + j] + ''; if (!ringSet.has(k) && !set0.has((a + i) + ',' + (b + j)) && !(a + i === x && b + j === y)) margin.push([a + i, b + j]); }
+    const behind = (a, b) => dx ? (dx > 0 ? a < x : a > x) : (dy > 0 ? b < y : b > y);   // (the room's side of the door line)
+    const okMargin = margin.every(([a, b]) => !inb(a, b) || at(f, a, b) === ' ' || halls.has(a + ',' + b) || (onRoom && (onDoorLine(a, b) || behind(a, b))));
+    if (!voidAll(cells) || !okRing || !okMargin) return null;
     const o = { cells, set: new Set(cells.map(([a, b]) => a + ',' + b)), mid: { x: cells[0][0], y: cells[0][1] }, role: 'closet', type: open ? 'nook' : 'closet', shape: 'box',
       x: Math.min(...cells.map(c => c[0])) - 1, y: Math.min(...cells.map(c => c[1])) - 1, w: 0, h: 0, doors: [] };
     o.w = Math.max(...cells.map(c => c[0])) - o.x + 2; o.h = Math.max(...cells.map(c => c[1])) - o.y + 2; o.cx = o.mid.x; o.cy = o.mid.y;
@@ -337,17 +344,17 @@ function closets(f, rooms, halls, r) {
   const out = [];
   // on rooms: a door in a straight run of the room's wall, the room's floor behind it, no door beside it
   for (const o of shuffled(rooms, r)) {
-    if (out.filter(c => c.type === 'closet').length >= 2 || r() > 0.3) continue;
-    for (let t = 0; t < 12; t++) {
+    if (out.filter(c => c.type === 'closet').length >= 2 || r() > 0.5) continue;
+    for (let t = 0; t < 30; t++) {   // (the gap round its walls rules out a lot of spots: more tries)
       const [cx, cy] = o.cells[Math.floor(r() * o.cells.length)], [dx, dy] = DIRS[Math.floor(r() * 4)], x = cx + dx, y = cy + dy, px = dy ? 1 : 0, py = dx ? 1 : 0;
       if (at(f, cx, cy) !== '.' || at(f, x, y) !== '#' || at(f, x + px, y + py) !== '#' || at(f, x - px, y - py) !== '#') continue;
       if (!o.set.has((cx + px) + ',' + (cy + py)) || !o.set.has((cx - px) + ',' + (cy - py))) continue;
-      const c = tryOne(x, y, dx, dy, false); if (c) { c.on = o; out.push(c); break; }
+      const c = tryOne(x, y, dx, dy, false, true); if (c) { c.on = o; out.push(c); break; }
     }
   }
   // off halls: a closet now and then, and up to 3 nooks
   const hallCells = shuffled([...halls].map(k => k.split(',').map(Number)), r);
-  let hc = r() < 0.5 ? 1 : 0, nk = Math.floor(r() * 4);
+  let hc = r() < 0.6 ? 1 : 0, nk = 1 + Math.floor(r() * 3);
   for (const [hx, hy] of hallCells) {
     if (!hc && !nk) break;
     const [dx, dy] = DIRS[Math.floor(r() * 4)], x = hx + dx, y = hy + dy;
