@@ -384,6 +384,16 @@ meet or split there's a ◇ junction mark. Inside a doubled stretch, where it st
   can still be reached), the payload at the back, a CAM on it. **THE SERVER FARM**: a big room on the way, rows of
   racks (`▒`: nothing sees or walks through) with an aisle round the edge; about 1 floor in 4. Halls left leading
   nowhere are pruned.
+- **Closets, nooks, and things in rooms** (Greg, 2026-11-23; built the same day):
+  - **Closets:** a tiny room (1 x 2, 2 x 1 or 2 x 2 inside), one door, built out from a room's wall or off a hall.
+    The chute goes in one half the time; a duct can come up in one. Later: loot, a terminal.
+  - **Nooks:** the same off a hall, open (no door): 1 or 2 cells, out of the way of a patrol looking down the hall.
+  - **THE RESTROOM:** stalls along one wall (thin walls, open at the front): duck into one.
+  - **THE FACTORY:** a big room with a tank in the middle (two side by side in a wide one): a rounded box, `░`
+    inside. The big rooms take turns: server farm, cubicles, factory. Later: THE WAREHOUSE's belt.
+  - **Plants** (`♣`, low cover) in the corners of some plain rooms; a **statue** (`Ω`) in the middle of some hubs.
+  - Nothing put in a room may shut part of it off (each one checked; a plant and a pillar once did together).
+  - Dropped for now: chairs (clutter you can walk through, nothing to play with).
   **The vault's duct** (Greg, 2026-11-23): half the F3 floors, the one duct runs into the vault, a second way in over
   the guarded door. Never from the start room or one close to it, so the vent has to be found. Otherwise no duct
   reaches the vault.
