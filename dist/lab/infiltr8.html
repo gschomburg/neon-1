@@ -1272,7 +1272,8 @@ function bspRooms(r, order = 0, tweak = {}) {
 // of nodes, each a 7 x 5 tile, gaps of 2 across and 1 down: 34 x 23, the whole board (docs/LAYOUT.md; engine/core.js
 // TILE_W TILE_H GAP_X GAP_Y; engine/screen.js tileOrigin: x 1 + col * 9, y row * 6). Here each tile is a node's room:
 // its border the walls, the 5 x 3 inside (where a layer draws the glyph) the floor; the gaps between are the halls, and
-// the 2 spare columns a hall down each side. All 16 nodes, as a layer has. One is the real one: the payload, behind a
+// the 2 spare columns a hall down each side. 8 to 12 nodes on cells drawn at random, the others empty (open floor), as a
+// layer has (Greg, 2026-11-24: not every cell has one). One is the real one: the payload, behind a
 // CAPTCHA half the time (its sticky note in another node). Others hold loot, a re-up, a GUARD (ICE), a terminal in a
 // wall; the rest are empty, decoys. Patrols walk the halls, CAMs on node walls watch them, ducts run node to node, the
 // fire exit's at the right-hand edge. The halls are dark; the nodes are lit. About 1 vault floor in 5 (LAYER_CHANCE),
@@ -1286,8 +1287,11 @@ function floorLayer(seed, n) {
   // the halls: every cell; then the 16 tiles over them
   const big = { cells: [], set: new Set(), x: 0, y: 0, w: MW, h: MH, shape: 'box', role: 'hub', mid: { x: 18, y: 11 }, doors: [] };
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) set(f, x, y, '.');
-  const nodes = [];
-  for (let row = 0; row < 4; row++) for (let col = 0; col < 4; col++) {
+  // (not every cell has a node, as in a layer: the game puts n nodes on cells drawn at random, n at most 12,
+  // CONFIG.maxNodes (engine/run.js corpPlan, engine/layers.js genLayer). A vault floor is deep in: 8 to 12. An empty
+  // cell is open floor, part of the halls.)
+  const nodes = [], cellsUsed = shuffled([...Array(16).keys()], r).slice(0, 8 + Math.floor(r() * 5)).sort((a, b) => a - b);
+  for (const cell of cellsUsed) { const row = Math.floor(cell / 4), col = cell % 4;
     const x0 = Ly.x0 + col * (Ly.w + Ly.gx), y0 = row * (Ly.h + Ly.gy);
     const o = { cells: [], set: new Set(), x: x0, y: y0, w: Ly.w, h: Ly.h, shape: 'box', role: 'side', type: 'node', mid: { x: x0 + 3, y: y0 + 2 }, row, col };
     for (let y = y0; y < y0 + Ly.h; y++) for (let x = x0; x < x0 + Ly.w; x++) {
@@ -1310,15 +1314,16 @@ function floorLayer(seed, n) {
   real.type = 'vault'; real.role = 'goal'; f.payload = { x: real.mid.x, y: real.mid.y };
   const others = shuffled(nodes.filter(o => o !== real), r);
   set(f, MW - 1, [5, 11, 17][Math.floor(r() * 3)], 'F');
-  // in the other nodes: loot (3), a re-up, a GUARD apiece in three (ICE), the CAPTCHA's note, a terminal; the rest empty
-  for (const o of others.slice(0, 3)) wallStation(f, o, 'L', r);
-  wallStation(f, others[3], 'R', r);
-  for (const o of others.slice(4, 7)) { const dd = o.doors[0], ax = dd.x - o.mid.x, ay = dd.y - o.mid.y, [fx, fy] = Math.abs(ax) >= Math.abs(ay) * 2 ? [Math.sign(ax), 0] : [0, Math.sign(ay)];
-    const g = pat([[o.mid.x, o.mid.y]], true); Object.assign(g, { guard: true, fx, fy, base: [fx, fy], tw: 0 }); f.pats.push(g); }
-  if (r() < 0.5) { const at0 = wallStation(f, others[7], 'N', r);
-    if (at0) { f.stations.delete(at0 + ''); const opts = shuffled(CAPTCHA_GLYPHS, r).slice(0, 4), dd = real.doors[0]; f.captcha.set(dd.x + ',' + dd.y, { glyph: opts[Math.floor(r() * 4)], opts, locked: true, note: at0 + '' }); } }
-  { const o = others[8], tx = o.x + 2 + Math.floor(r() * 3), ty = o.doors[0].y === o.y ? o.y + Ly.h - 1 : o.y;   // (a terminal in its top or bottom wall: not the door's)
-    if (at(f, tx, ty) === '#') { set(f, tx, ty, 'T'); f.stations.set(tx + ',' + ty, { kind: 'T', used: false }); } }
+  // in the other nodes, in this order while there are nodes left (7 at the fewest): loot, a GUARD (ICE), loot, the
+  // terminal, a GUARD, the CAPTCHA's note, a re-up, loot, a GUARD; the rest empty, decoys
+  const guardIn = o => { const dd = o.doors[0], ax = dd.x - o.mid.x, ay = dd.y - o.mid.y, [fx, fy] = Math.abs(ax) >= Math.abs(ay) * 2 ? [Math.sign(ax), 0] : [0, Math.sign(ay)];
+    const g = pat([[o.mid.x, o.mid.y]], true); Object.assign(g, { guard: true, fx, fy, base: [fx, fy], tw: 0 }); f.pats.push(g); };
+  const termIn = o => { const tx = o.x + 2 + Math.floor(r() * 3), ty = o.doors[0].y === o.y ? o.y + Ly.h - 1 : o.y;   // (in its top or bottom wall: not the door's)
+    if (at(f, tx, ty) === '#') { set(f, tx, ty, 'T'); f.stations.set(tx + ',' + ty, { kind: 'T', used: false }); } };
+  const noteIn = o => { if (r() >= 0.5) return; const at0 = wallStation(f, o, 'N', r); if (!at0) return;   // (half the time: the real node behind a CAPTCHA)
+    f.stations.delete(at0 + ''); const opts = shuffled(CAPTCHA_GLYPHS, r).slice(0, 4), dd = real.doors[0]; f.captcha.set(dd.x + ',' + dd.y, { glyph: opts[Math.floor(r() * 4)], opts, locked: true, note: at0 + '' }); };
+  const jobs = [o => wallStation(f, o, 'L', r), guardIn, o => wallStation(f, o, 'L', r), termIn, guardIn, noteIn, o => wallStation(f, o, 'R', r), o => wallStation(f, o, 'L', r), guardIn];
+  others.forEach((o, i) => { if (jobs[i]) jobs[i](o); });
   // two patrols corner to corner through the halls; CAMs on node walls over the halls between the rows, looking down them
   for (const [a, b] of [[[0, 0], [MW - 1, MH - 1]], [[MW - 1, 0], [0, MH - 1]]]) { const p = route(f, a[0], a[1], b[0], b[1]); if (p && p.length > 6) f.pats.push(pat(p, false)); }
   for (const o of shuffled(nodes.filter(o => o.row < 3 && o !== real && at(f, o.x + 3, o.y + Ly.h - 1) === '#'), r).slice(0, 2)) f.cams.push(cam(f, o.x + 3, o.y + Ly.h - 1, Math.PI / 2));
